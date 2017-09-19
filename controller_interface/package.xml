@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format2.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="2">
+  <name>controller_interface</name>
+  <version>0.0.0</version>
+  <description>Description of controller_interface</description>
+  <maintainer email="karsten@osrfoundation.org">Karsten Knese</maintainer>
+  <license>Apache License 2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <build_depend>hardware_interface</build_depend>
+  <build_depend>rclcpp_lifecycle</build_depend>
+
+  <exec_depend>hardware_interface</exec_depend>
+  <exec_depend>rclcpp_lifecycle</exec_depend>
+
+  <test_depend>ament_cmake_gtest</test_depend>
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
