@@ -61,10 +61,10 @@ public:
 protected:
   std::weak_ptr<hardware_interface::RobotHardware> robot_hardware_;
   std::shared_ptr<rclcpp_lifecycle::LifecycleNode> lifecycle_node_;
-  std::shared_ptr<rclcpp::parameter_client::AsyncParametersClient> parameters_client_;
+  std::shared_ptr<rclcpp::AsyncParametersClient> parameters_client_;
 
 private:
-  std::shared_ptr<rclcpp::node::Node> parameter_client_node_;
+  std::shared_ptr<rclcpp::Node> parameter_client_node_;
 };
 
 }  // namespace controller_interface

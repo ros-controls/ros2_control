@@ -47,7 +47,7 @@ ControllerInterface::init(
     std::bind(&ControllerInterface::on_error, this, std::placeholders::_1));
 
   std::string remote_controller_parameter_server = "controller_parameter_server";
-  parameters_client_ = std::make_shared<rclcpp::parameter_client::AsyncParametersClient>(
+  parameters_client_ = std::make_shared<rclcpp::AsyncParametersClient>(
     lifecycle_node_->get_node_base_interface(),
     lifecycle_node_->get_node_topics_interface(),
     lifecycle_node_->get_node_graph_interface(),

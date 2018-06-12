@@ -31,7 +31,7 @@ class TestControllerManager : public ::testing::Test
 public:
   static void SetUpTestCase()
   {
-    rclcpp::utilities::init(0, nullptr);
+    rclcpp::init(0, nullptr);
   }
 
   void SetUp()

@@ -37,7 +37,7 @@ class ClassLoader;
 namespace controller_manager
 {
 
-class ControllerManager : public rclcpp::node::Node
+class ControllerManager : public rclcpp::Node
 {
 public:
   CONTROLLER_MANAGER_PUBLIC

@@ -22,14 +22,14 @@ namespace controller_parameter_server
 {
 
 ParameterServer::ParameterServer()
-: rclcpp::node::Node("controller_parameter_server")
+: rclcpp::Node("controller_parameter_server")
 {}
 
 void
 ParameterServer::init()
 {
   parameter_service_ =
-    std::make_shared<rclcpp::parameter_service::ParameterService>(shared_from_this());
+    std::make_shared<rclcpp::ParameterService>(shared_from_this());
 }
 
 void

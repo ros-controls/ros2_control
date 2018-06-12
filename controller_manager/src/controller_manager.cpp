@@ -130,7 +130,7 @@ ControllerManager::ControllerManager(
   std::shared_ptr<hardware_interface::RobotHardware> hw,
   std::shared_ptr<rclcpp::executor::Executor> executor,
   const std::string & manager_node_name)
-: rclcpp::node::Node(manager_node_name),
+: rclcpp::Node(manager_node_name),
   hw_(hw),
   executor_(executor)
 {}

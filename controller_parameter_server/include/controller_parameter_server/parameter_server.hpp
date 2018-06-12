@@ -25,7 +25,7 @@
 namespace controller_parameter_server
 {
 
-class ParameterServer : public rclcpp::node::Node
+class ParameterServer : public rclcpp::Node
 {
 public:
   CONTROLLER_PARAMETER_SERVER_PUBLIC
@@ -48,7 +48,7 @@ public:
   load_parameters(const std::string & key, const std::string & value);
 
 private:
-  std::shared_ptr<rclcpp::parameter_service::ParameterService> parameter_service_;
+  std::shared_ptr<rclcpp::ParameterService> parameter_service_;
 };
 
 }  // namespace controller_parameter_server

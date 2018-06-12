@@ -84,9 +84,9 @@ TEST_F(TestControllerParameterServer, load_config_file) {
   ps->init();
   ps->load_parameters(file_path);
 
-  auto client_node = std::make_shared<rclcpp::node::Node>("test_parameter_client_node");
+  auto client_node = std::make_shared<rclcpp::Node>("test_parameter_client_node");
   auto parameters_client =
-    std::make_shared<rclcpp::parameter_client::AsyncParametersClient>(client_node, ps->get_name());
+    std::make_shared<rclcpp::AsyncParametersClient>(client_node, ps->get_name());
 
   rclcpp::executors::MultiThreadedExecutor executor;
   executor.add_node(ps);
