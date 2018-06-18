@@ -43,10 +43,10 @@ TEST_F(TestControllerParameterServer, init_key_value) {
 
   std::map<std::string, std::string> parameters =
   {{
-     {"test_controller.joints.joint1", "joint1"},
-     {"test_controller.joints.joint2", "joint2"},
-     {"test_controller.joints.joint3", "joint3"}
-   }};
+      {"test_controller.joints.joint1", "joint1"},
+      {"test_controller.joints.joint2", "joint2"},
+      {"test_controller.joints.joint3", "joint3"}
+    }};
 
   for (auto param : parameters) {
     ps->load_parameters(param.first, param.second);
@@ -95,25 +95,25 @@ TEST_F(TestControllerParameterServer, load_config_file) {
 
   std::vector<std::string> expected_keys =
   {{
-     ".controller_name",
-     ".controller_list.0",
-     ".controller_list.1",
-     ".test_joint_controller.joints",
-     ".test_trajectory_controller.joints.0.joint1.name",
-     ".test_trajectory_controller.joints.1",
-     ".test_trajectory_controller.joints.2"
-   }};
+      ".controller_name",
+      ".controller_list.0",
+      ".controller_list.1",
+      ".test_joint_controller.joints",
+      ".test_trajectory_controller.joints.0.joint1.name",
+      ".test_trajectory_controller.joints.1",
+      ".test_trajectory_controller.joints.2"
+    }};
 
   std::vector<std::string> expected_values =
   {{
-     "my_controller",
-     "my_controller1",
-     "my_controller2",
-     "my_joint1",
-     "my_joint1",
-     "my_joint2",
-     "my_joint3"
-   }};
+      "my_controller",
+      "my_controller1",
+      "my_controller2",
+      "my_joint1",
+      "my_joint1",
+      "my_joint2",
+      "my_joint3"
+    }};
 
   auto parameter_future = parameters_client->get_parameters(expected_keys);
 
