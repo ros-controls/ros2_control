@@ -26,19 +26,8 @@ ParameterServer::ParameterServer()
 {}
 
 void
-ParameterServer::init()
-{
-  parameter_service_ =
-    std::make_shared<rclcpp::ParameterService>(shared_from_this());
-}
-
-void
 ParameterServer::load_parameters(const std::string & yaml_config_file)
 {
-  if (!parameter_service_) {
-    throw std::runtime_error("parameter server is not initialized");
-  }
-
   if (yaml_config_file.empty()) {
     throw std::runtime_error("yaml config file path is empty");
   }

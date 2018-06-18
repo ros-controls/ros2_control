@@ -38,17 +38,8 @@ protected:
   }
 };
 
-TEST_F(TestControllerParameterServer, init) {
-  auto ps = std::make_shared<controller_parameter_server::ParameterServer>();
-  EXPECT_THROW(ps->load_parameters("key", "value"), std::runtime_error);
-
-  ps->init();
-  EXPECT_NO_THROW(ps->load_parameters("key", "value"));
-}
-
 TEST_F(TestControllerParameterServer, init_key_value) {
   auto ps = std::make_shared<controller_parameter_server::ParameterServer>();
-  ps->init();
 
   std::map<std::string, std::string> parameters =
   {{
@@ -81,7 +72,6 @@ TEST_F(TestControllerParameterServer, load_config_file) {
   std::string file_path = std::string(yaml_file);
 
   auto ps = std::make_shared<controller_parameter_server::ParameterServer>();
-  ps->init();
   ps->load_parameters(file_path);
 
   auto client_node = std::make_shared<rclcpp::Node>("test_parameter_client_node");
