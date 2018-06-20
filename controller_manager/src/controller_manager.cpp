@@ -21,7 +21,7 @@
 #include "ament_index_cpp/get_resource.hpp"
 #include "ament_index_cpp/get_resources.hpp"
 
-#include "class_loader/class_loader.h"
+#include "class_loader/class_loader.hpp"
 
 #include "controller_interface/controller_interface.hpp"
 

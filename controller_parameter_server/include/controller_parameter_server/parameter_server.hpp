@@ -37,18 +37,11 @@ public:
 
   CONTROLLER_PARAMETER_SERVER_PUBLIC
   void
-  init();
-
-  CONTROLLER_PARAMETER_SERVER_PUBLIC
-  void
   load_parameters(const std::string & yaml_config_file);
 
   CONTROLLER_PARAMETER_SERVER_PUBLIC
   void
   load_parameters(const std::string & key, const std::string & value);
-
-private:
-  std::shared_ptr<rclcpp::ParameterService> parameter_service_;
 };
 
 }  // namespace controller_parameter_server

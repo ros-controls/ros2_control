@@ -34,7 +34,6 @@ int main(int argc, char ** argv)
   }
 
   auto ps = std::make_shared<controller_parameter_server::ParameterServer>();
-  ps->init();
   ps->load_parameters(argv[1]);
 
   rclcpp::spin(ps);
