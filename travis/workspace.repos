@@ -2,4 +2,4 @@ repositories:
   ros-controls/ros2_control:
     type: git
     url: https://github.com/ros-controls/ros2_control.git
-    version: bouncy
+    version: crystal

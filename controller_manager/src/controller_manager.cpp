@@ -78,7 +78,7 @@ parse_library_path(
   if (!ament_index_cpp::get_resource(resource_index, package_name, content, &base_path)) {
     auto error_msg = rcutils_format_string(
       allocator, "unable to load resource for package %s", package_name.c_str());
-    RCUTILS_LOG_ERROR(error_msg)
+    RCUTILS_LOG_ERROR(error_msg);
     throw std::runtime_error(error_msg);
   }
 
@@ -87,7 +87,7 @@ parse_library_path(
   if (controller_array.size == 0) {
     auto error_msg = rcutils_format_string(
       allocator, "no ros controllers found in package %s", package_name.c_str());
-    RCUTILS_LOG_ERROR(error_msg)
+    RCUTILS_LOG_ERROR(error_msg);
     throw std::runtime_error(error_msg);
   }
 
@@ -100,7 +100,7 @@ parse_library_path(
         allocator,
         "package resource content has wrong format. should be <class_name>;<library_path>",
         package_name.c_str());
-      RCUTILS_LOG_ERROR(error_msg)
+      RCUTILS_LOG_ERROR(error_msg);
       throw std::runtime_error(error_msg);
     }
 
@@ -117,7 +117,7 @@ parse_library_path(
   if (!controller_is_available) {
     auto error_msg = rcutils_format_string(
       allocator, "couldn't find controller class %s", class_name.c_str());
-    RCUTILS_LOG_ERROR(error_msg)
+    RCUTILS_LOG_ERROR(error_msg);
     throw std::runtime_error(error_msg);
   }
 
@@ -144,7 +144,7 @@ ControllerManager::load_controller(
   auto library_path = parse_library_path(package_name, class_name);
 
   RCUTILS_LOG_INFO("going to load controller %s from library %s\n",
-    class_name.c_str(), library_path.c_str())
+    class_name.c_str(), library_path.c_str());
 
   // let possible exceptions escalate
   auto loader = std::make_shared<class_loader::ClassLoader>(library_path);

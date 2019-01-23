@@ -33,11 +33,11 @@ TestController::update()
   return controller_interface::CONTROLLER_INTERFACE_RET_SUCCESS;
 }
 
-rcl_lifecycle_transition_key_t
+rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
 TestController::on_configure(const rclcpp_lifecycle::State & previous_state)
 {
   (void) previous_state;
-  return lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_SUCCESS;
+  return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
 }  // namespace test_controller

@@ -47,25 +47,25 @@ TEST_F(TestYamlParser, init) {
 
   std::vector<std::string> expected_keys =
   {{
-      ".controller_name",
-      ".controller_list.0",
-      ".controller_list.1",
-      ".test_joint_controller.joints",
-      ".test_trajectory_controller.joints.0.joint1.name",
-      ".test_trajectory_controller.joints.1",
-      ".test_trajectory_controller.joints.2"
-    }};
+    ".controller_name",
+    ".controller_list.0",
+    ".controller_list.1",
+    ".test_joint_controller.joints",
+    ".test_trajectory_controller.joints.0.joint1.name",
+    ".test_trajectory_controller.joints.1",
+    ".test_trajectory_controller.joints.2"
+  }};
 
   std::vector<std::string> expected_values =
   {{
-      "my_controller",
-      "my_controller1",
-      "my_controller2",
-      "my_joint1",
-      "my_joint1",
-      "my_joint2",
-      "my_joint3"
-    }};
+    "my_controller",
+    "my_controller1",
+    "my_controller2",
+    "my_joint1",
+    "my_joint1",
+    "my_joint2",
+    "my_joint3"
+  }};
 
   if (expected_keys.size() != expected_values.size()) {
     FAIL();

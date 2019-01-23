@@ -35,7 +35,7 @@ RobotHardware::register_joint_state_handle(const JointStateHandle * joint_handle
       }
       return false;
     }
-    );
+  );
   // handle exist already
   if (handle_pos != registered_joint_state_handles_.end()) {
     return HW_RET_ERROR;

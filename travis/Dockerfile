@@ -62,7 +62,7 @@ COPY ./workspace.repos $ROS2_WS
 WORKDIR $ROS2_WS
 RUN vcs import src < workspace.repos
 
-ENV ROS_DISTRO bouncy
+ENV ROS_DISTRO crystal
 # install dependencies
 RUN apt-get update && rosdep install -y \
     --from-paths src \
