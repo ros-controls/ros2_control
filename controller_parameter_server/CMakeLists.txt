@@ -13,7 +13,7 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rcutils REQUIRED)
-find_package(yaml-cpp 0.5.3 EXACT REQUIRED)
+find_package(yaml-cpp REQUIRED)
 
 message("yaml-cpp dir ${YAML_CPP_INCLUDE_DIR}")
 add_library(yaml_parser SHARED src/yaml_parser.cpp)
