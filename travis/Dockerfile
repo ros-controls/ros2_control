@@ -77,7 +77,8 @@ RUN ["/bin/bash", "-c", "source /opt/ros/$ROS_DISTRO/setup.bash && colcon \
     --cmake-args -DSECURITY=ON --no-warn-unused-cli \
     --symlink-install \
     --event-handler console_direct+"]
-RUN ["/bin/bash", "-c", "source $ROS2_WS/install/setup.bash && colcon \
+RUN ["/bin/bash", "-c", "source /opt/ros/$ROS_DISTRO/local_setup.bash && \
+    source $ROS2_WS/install/setup.bash && colcon \
     test \
     --event-handler console_direct+"]
 RUN colcon test-result
