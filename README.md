@@ -44,13 +44,13 @@ Both can be loaded through the controller manager from the [`ament_resource_inde
 
 What's new in ROS 2 are [Managed Nodes](https://github.com/ros2/ros2/wiki/Managed-Nodes).
 That means, every `LifecycleNode` adheres to an underlying state machine as described in the linked wiki page.
-We feature this for the [controller interface](https://github.com/ros-controls/ros2_control/blob/master/controller_interface/include/controller_interface/controller_interface.hpp) in this work and thus every controller implicitely has means to start and stop the controller.
+We feature this for the [controller interface](https://github.com/ros-controls/ros2_control/blob/crystal/controller_interface/include/controller_interface/controller_interface.hpp) in this work and thus every controller implicitely has means to start and stop the controller.
 Similar to the ROS 1 implementation, each controller has to implement two functions: `init` and `update`.
 We refer to the [ROS 1 wiki](http://wiki.ros.org/ros_control) for a general overview.
 
 ## Writing a demo for your own robot
 
-Similar as to the ROS 1 implementation, every hardware platform has to implement the [`robot_hardware_interface`](https://github.com/ros-controls/ros2_control/blob/master/hardware_interface/include/hardware_interface/robot_hardware_interface.hpp)
+Similar as to the ROS 1 implementation, every hardware platform has to implement the [`robot_hardware_interface`](https://github.com/ros-controls/ros2_control/blob/crystal/hardware_interface/include/hardware_interface/robot_hardware_interface.hpp)
 Essentially, these three functions are required for every hardware and have to be implemented in a hardware-dependent manner.
 
 ``` c++
