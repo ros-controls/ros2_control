@@ -1,7 +1,16 @@
-sudo: required
-
 services:
   - docker
 
-script:
-  - docker build travis/. --no-cache
+install:
+  - git clone --quiet --depth 1 https://github.com/mikaelarguedas/ros2ci.git .ros2ci
+
+matrix:
+  include:
+    - env: JOB_TYPE=crystal
+      script: .ros2ci/travis.bash $JOB_TYPE
+    # Uncomment the following to test against ROS 2 Dashing
+    # - env: JOB_TYPE=dashing
+    #   script: .ros2ci/travis.bash $JOB_TYPE
+    # Uncomment the following to test against ROS 2 nightly build
+    # - env: JOB_TYPE=nightly
+    #   script: .ros2ci/travis.bash $JOB_TYPE
