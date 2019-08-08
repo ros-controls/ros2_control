@@ -67,40 +67,36 @@ namespace
 std::string
 parse_library_path(
   const std::string & package_name,
-  const std::string & class_name)
+  const std::string & class_name,
+  const rclcpp::Logger logger)  // should be const ref when possible
 {
-  std::string library_path = "";
-
-  auto allocator = rcutils_get_default_allocator();
   // get node plugin resource from package
   std::string content;
   std::string base_path;
   if (!ament_index_cpp::get_resource(resource_index, package_name, content, &base_path)) {
-    auto error_msg = rcutils_format_string(
-      allocator, "unable to load resource for package %s", package_name.c_str());
-    RCUTILS_LOG_ERROR(error_msg);
+    auto error_msg = std::string("unable to load resource for package ") + package_name;
+    RCLCPP_ERROR(logger, error_msg);
     throw std::runtime_error(error_msg);
   }
 
+  auto allocator = rcutils_get_default_allocator();
   rcutils_string_array_t controller_array = rcutils_get_zero_initialized_string_array();
   rcutils_split(content.c_str(), '\n', allocator, &controller_array);
   if (controller_array.size == 0) {
-    auto error_msg = rcutils_format_string(
-      allocator, "no ros controllers found in package %s", package_name.c_str());
-    RCUTILS_LOG_ERROR(error_msg);
+    auto error_msg = std::string("no ros controllers found in package " + package_name);
+    RCLCPP_ERROR(logger, error_msg);
     throw std::runtime_error(error_msg);
   }
 
+  std::string library_path = "";
   bool controller_is_available = false;
   for (auto i = 0u; i < controller_array.size; ++i) {
     rcutils_string_array_t controller_details = rcutils_get_zero_initialized_string_array();
     rcutils_split(controller_array.data[i], ';', allocator, &controller_details);
     if (controller_details.size != 2) {
-      auto error_msg = rcutils_format_string(
-        allocator,
-        "package resource content has wrong format. should be <class_name>;<library_path>",
-        package_name.c_str());
-      RCUTILS_LOG_ERROR(error_msg);
+      auto error_msg = std::string("package resource content has wrong format") +
+        " - should be <class_name>;<library_path> but is " + controller_array.data[i];
+      RCLCPP_ERROR(logger, error_msg);
       throw std::runtime_error(error_msg);
     }
 
@@ -115,9 +111,8 @@ parse_library_path(
   }
 
   if (!controller_is_available) {
-    auto error_msg = rcutils_format_string(
-      allocator, "couldn't find controller class %s", class_name.c_str());
-    RCUTILS_LOG_ERROR(error_msg);
+    auto error_msg = std::string("couldn't find controller class ") + class_name;
+    RCLCPP_ERROR(logger, error_msg);
     throw std::runtime_error(error_msg);
   }
 
@@ -141,9 +136,9 @@ ControllerManager::load_controller(
   const std::string & class_name,
   const std::string & controller_name)
 {
-  auto library_path = parse_library_path(package_name, class_name);
+  auto library_path = parse_library_path(package_name, class_name, this->get_logger());
 
-  RCUTILS_LOG_INFO("going to load controller %s from library %s\n",
+  RCLCPP_INFO(this->get_logger(), "going to load controller %s from library %s",
     class_name.c_str(), library_path.c_str());
 
   // let possible exceptions escalate
