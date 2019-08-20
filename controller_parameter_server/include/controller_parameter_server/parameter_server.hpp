@@ -29,7 +29,11 @@ class ParameterServer : public rclcpp::Node
 {
 public:
   CONTROLLER_PARAMETER_SERVER_PUBLIC
-  ParameterServer();
+  explicit ParameterServer(
+    const rclcpp::NodeOptions & options = (
+      rclcpp::NodeOptions()
+      .allow_undeclared_parameters(true)
+      .automatically_declare_parameters_from_overrides(true)));
 
   CONTROLLER_PARAMETER_SERVER_PUBLIC
   virtual
