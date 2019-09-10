@@ -50,7 +50,7 @@ JointCommandHandle::get_cmd() const
 void
 JointCommandHandle::set_cmd(double cmd)
 {
-  THROW_ON_NULLPTR(cmd)
+  THROW_ON_NULLPTR(cmd_)
 
   * cmd_ = cmd;
 }
