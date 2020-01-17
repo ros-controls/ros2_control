@@ -30,12 +30,9 @@ RobotHardware::register_joint_state_handle(const JointStateHandle * joint_handle
   auto handle_pos = std::find_if(
     registered_joint_state_handles_.begin(), registered_joint_state_handles_.end(),
     [&](auto joint_handle_ptr) -> bool {
-      if (joint_handle_ptr->get_name() == joint_handle->get_name()) {
-        return true;
-      }
-      return false;
-    }
-  );
+      return joint_handle_ptr->get_name() == joint_handle->get_name();
+    });
+
   // handle exist already
   if (handle_pos != registered_joint_state_handles_.end()) {
     return HW_RET_ERROR;
