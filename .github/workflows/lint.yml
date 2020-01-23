@@ -1,0 +1,41 @@
+name: Lint ros2_control
+on:
+  pull_request:
+
+jobs:
+  ament_copyright:
+    name: ament_copyright
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v1
+    - uses: ros-tooling/setup-ros@0.0.13
+    - uses: ros-tooling/action-ros-lint@0.0.5
+      with:
+        linter: copyright
+        package-name: controller_interface controller_manager controller_parameter_server hardware_interface test_robot_hardware
+
+  ament_xmllint:
+    name: ament_xmllint
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v1
+    - uses: ros-tooling/setup-ros@0.0.13
+    - uses: ros-tooling/action-ros-lint@0.0.5
+      with:
+        linter: xmllint
+        package-name: controller_interface controller_manager controller_parameter_server hardware_interface test_robot_hardware
+
+  ament_lint_cpp:
+    name: ament_${{ matrix.linter }}
+    runs-on: ubuntu-18.04
+    strategy:
+      fail-fast: false
+      matrix:
+          linter: [cppcheck, cpplint, uncrustify]
+    steps:
+    - uses: actions/checkout@v1
+    - uses: ros-tooling/setup-ros@0.0.13
+    - uses: ros-tooling/action-ros-lint@0.0.5
+      with:
+        linter: ${{ matrix.linter }}
+        package-name: controller_interface controller_manager controller_parameter_server hardware_interface test_robot_hardware
