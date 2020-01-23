@@ -1,0 +1,28 @@
+name: Test ros2_control
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+  schedule:
+    # Run every morning to detect flakiness and broken dependencies
+    - cron: '17 8 * * *'
+
+jobs:
+  build_and_test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-18.04, macos-latest]
+    steps:
+      - uses: ros-tooling/setup-ros@0.0.13
+      - uses: ros-tooling/action-ros-ci@0.0.13
+        with:
+          package-name: controller_interface controller_manager controller_parameter_server hardware_interface test_robot_hardware
+          colcon-mixin-name: coverage-gcc
+          colcon-mixin-repository: https://raw.githubusercontent.com/colcon/colcon-mixin-repository/master/index.yaml
+      - uses: actions/upload-artifact@master
+        with:
+          name: colcon-logs-${{ matrix.os }}
+          path: ros_ws/log
