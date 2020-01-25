@@ -43,8 +43,8 @@ public:
   ~ControllerInterface() = default;
 
   CONTROLLER_INTERFACE_PUBLIC
-  controller_interface_ret_t
   virtual
+  controller_interface_ret_t
   init(
     std::weak_ptr<hardware_interface::RobotHardware> robot_hardware,
     const std::string & controller_name);
