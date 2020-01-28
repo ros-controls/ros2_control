@@ -21,8 +21,8 @@
 namespace controller_parameter_server
 {
 
-ParameterServer::ParameterServer()
-: rclcpp::Node("controller_parameter_server")
+ParameterServer::ParameterServer(const rclcpp::NodeOptions & options)
+: rclcpp::Node("controller_parameter_server", options)
 {}
 
 void

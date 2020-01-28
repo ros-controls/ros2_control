@@ -43,28 +43,24 @@ public:
   ~ControllerInterface() = default;
 
   CONTROLLER_INTERFACE_PUBLIC
-  controller_interface_ret_t
   virtual
+  controller_interface_ret_t
   init(
     std::weak_ptr<hardware_interface::RobotHardware> robot_hardware,
     const std::string & controller_name);
-
-  CONTROLLER_INTERFACE_PUBLIC
-  std::shared_ptr<rclcpp_lifecycle::LifecycleNode>
-  get_lifecycle_node();
 
   CONTROLLER_INTERFACE_PUBLIC
   virtual
   controller_interface_ret_t
   update() = 0;
 
+  CONTROLLER_INTERFACE_PUBLIC
+  std::shared_ptr<rclcpp_lifecycle::LifecycleNode>
+  get_lifecycle_node();
+
 protected:
   std::weak_ptr<hardware_interface::RobotHardware> robot_hardware_;
   std::shared_ptr<rclcpp_lifecycle::LifecycleNode> lifecycle_node_;
-  std::shared_ptr<rclcpp::AsyncParametersClient> parameters_client_;
-
-private:
-  std::shared_ptr<rclcpp::Node> parameter_client_node_;
 };
 
 }  // namespace controller_interface
