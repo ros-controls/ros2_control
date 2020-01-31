@@ -13,9 +13,9 @@ endif()
 find_package(ament_cmake)
 find_package(ament_cmake_core REQUIRED)
 find_package(ament_index_cpp REQUIRED)
-find_package(class_loader REQUIRED)
 find_package(controller_interface REQUIRED)
 find_package(hardware_interface REQUIRED)
+find_package(pluginlib REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rcpputils REQUIRED)
 
@@ -23,9 +23,9 @@ add_library(controller_manager SHARED src/controller_manager.cpp)
 target_include_directories(controller_manager PRIVATE include)
 ament_target_dependencies(controller_manager
   "ament_index_cpp"
-  "class_loader"
   "controller_interface"
   "hardware_interface"
+  "pluginlib"
   "rclcpp"
   "rcpputils"
 )
@@ -89,6 +89,12 @@ if(BUILD_TESTING)
     test_load_controller
     test_robot_hardware
   )
+
+  pluginlib_export_plugin_description_file(controller_interface test/test_controller.xml)
+
+  install(TARGETS test_controller
+    DESTINATION lib
+  )
 endif()
 
 ament_export_libraries(
@@ -98,7 +104,7 @@ ament_export_include_directories(
   include
 )
 ament_export_dependencies(
-  class_loader
+  pluginlib
 )
 ament_package(
   CONFIG_EXTRAS cmake/controller_manager_register_controller.cmake

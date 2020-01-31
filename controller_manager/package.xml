@@ -10,9 +10,9 @@
   <buildtool_depend>ament_cmake</buildtool_depend>
 
   <depend>ament_index_cpp</depend>
-  <depend>class_loader</depend>
   <depend>controller_interface</depend>
   <depend>hardware_interface</depend>
+  <depend>pluginlib</depend>
   <depend>rclcpp</depend>
   <depend>rcpputils</depend>
 

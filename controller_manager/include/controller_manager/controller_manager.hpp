@@ -26,6 +26,8 @@
 
 #include "hardware_interface/robot_hardware.hpp"
 
+#include "pluginlib/class_loader.hpp"
+
 #include "rclcpp/executor.hpp"
 #include "rclcpp/node.hpp"
 
@@ -53,9 +55,8 @@ public:
   CONTROLLER_MANAGER_PUBLIC
   std::shared_ptr<controller_interface::ControllerInterface>
   load_controller(
-    const std::string & package_name,
-    const std::string & class_name,
-    const std::string & controller_name);
+    const std::string & controller_name,
+    const std::string & controller_type);
 
   CONTROLLER_MANAGER_PUBLIC
   std::vector<std::shared_ptr<controller_interface::ControllerInterface>>
@@ -101,7 +102,8 @@ protected:
 private:
   std::shared_ptr<hardware_interface::RobotHardware> hw_;
   std::shared_ptr<rclcpp::executor::Executor> executor_;
-  std::vector<std::shared_ptr<class_loader::ClassLoader>> loaders_;
+  std::vector<std::shared_ptr<pluginlib::ClassLoader<controller_interface::ControllerInterface>>>
+  loaders_;
   std::vector<std::shared_ptr<controller_interface::ControllerInterface>> loaded_controllers_;
 };
 

@@ -21,8 +21,6 @@
 #include "ament_index_cpp/get_resource.hpp"
 #include "ament_index_cpp/get_resources.hpp"
 
-#include "class_loader/class_loader.hpp"
-
 #include "controller_interface/controller_interface.hpp"
 
 #include "lifecycle_msgs/msg/state.hpp"
@@ -106,25 +104,22 @@ ControllerManager::ControllerManager(
 : rclcpp::Node(manager_node_name),
   hw_(hw),
   executor_(executor)
-{}
+{
+  // add pluginlib loader by default
+  auto loader = std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
+    "controller_interface", "controller_interface::ControllerInterface");
+  loaders_.push_back(loader);
+}
 
 std::shared_ptr<controller_interface::ControllerInterface>
 ControllerManager::load_controller(
-  const std::string & package_name,
-  const std::string & class_name,
-  const std::string & controller_name)
+  const std::string & controller_name,
+  const std::string & controller_type)
 {
-  auto library_path = parse_library_path(package_name, class_name, this->get_logger());
+  RCUTILS_LOG_INFO("going to load controller %s\n", controller_name.c_str());
 
-  RCLCPP_INFO(
-    this->get_logger(), "going to load controller %s from library %s",
-    class_name.c_str(), library_path.c_str());
-
-  // let possible exceptions escalate
-  auto loader = std::make_shared<class_loader::ClassLoader>(library_path);
   std::shared_ptr<controller_interface::ControllerInterface> controller =
-    loader->createInstance<controller_interface::ControllerInterface>(class_name);
-  loaders_.push_back(loader);
+    loaders_[0]->createSharedInstance(controller_type);
 
   return add_controller_impl(controller, controller_name);
 }
