@@ -41,9 +41,6 @@ install(TARGETS controller_manager
 install(DIRECTORY include/
   DESTINATION include
 )
-install(DIRECTORY cmake/
-  DESTINATION share/${PROJECT_NAME}/cmake
-)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -61,11 +58,6 @@ if(BUILD_TESTING)
   target_include_directories(test_controller PRIVATE include)
   target_link_libraries(test_controller controller_manager)
   target_compile_definitions(test_controller PRIVATE "CONTROLLER_MANAGER_BUILDING_DLL")
-
-  include(cmake/controller_manager_register_controller.cmake)
-  controller_manager_register_controller(
-    test_controller "test_controller::TestController"
-    SKIP_INSTALL)
 
   ament_add_gtest(
     test_controller_manager
@@ -106,6 +98,4 @@ ament_export_include_directories(
 ament_export_dependencies(
   pluginlib
 )
-ament_package(
-  CONFIG_EXTRAS cmake/controller_manager_register_controller.cmake
-)
+ament_package()
