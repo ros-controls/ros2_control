@@ -18,85 +18,14 @@
 #include <string>
 #include <vector>
 
-#include "ament_index_cpp/get_resource.hpp"
-#include "ament_index_cpp/get_resources.hpp"
-
 #include "controller_interface/controller_interface.hpp"
 
 #include "lifecycle_msgs/msg/state.hpp"
 
-#include "rcpputils/filesystem_helper.hpp"
-
-#include "rcutils/format_string.h"
 #include "rcutils/logging_macros.h"
-#include "rcutils/split.h"
-#include "rcutils/types.h"
 
 namespace controller_manager
 {
-
-static constexpr const char * resource_index = "ros_controllers";
-
-namespace
-{
-
-std::string
-parse_library_path(
-  const std::string & package_name,
-  const std::string & class_name,
-  const rclcpp::Logger logger)  // should be const ref when possible
-{
-  // get node plugin resource from package
-  std::string content;
-  std::string base_path;
-  if (!ament_index_cpp::get_resource(resource_index, package_name, content, &base_path)) {
-    auto error_msg = std::string("unable to load resource for package ") + package_name;
-    RCLCPP_ERROR(logger, error_msg);
-    throw std::runtime_error(error_msg);
-  }
-
-  auto allocator = rcutils_get_default_allocator();
-  rcutils_string_array_t controller_array = rcutils_get_zero_initialized_string_array();
-  rcutils_split(content.c_str(), '\n', allocator, &controller_array);
-  if (controller_array.size == 0) {
-    auto error_msg = std::string("no ros controllers found in package " + package_name);
-    RCLCPP_ERROR(logger, error_msg);
-    throw std::runtime_error(error_msg);
-  }
-
-  std::string library_path = "";
-  bool controller_is_available = false;
-  for (auto i = 0u; i < controller_array.size; ++i) {
-    rcutils_string_array_t controller_details = rcutils_get_zero_initialized_string_array();
-    rcutils_split(controller_array.data[i], ';', allocator, &controller_details);
-    if (controller_details.size != 2) {
-      auto error_msg = std::string("package resource content has wrong format") +
-        " - should be <class_name>;<library_path> but is " + controller_array.data[i];
-      RCLCPP_ERROR(logger, error_msg);
-      throw std::runtime_error(error_msg);
-    }
-
-    if (strcmp(controller_details.data[0], class_name.c_str()) == 0) {
-      library_path = controller_details.data[1];
-      if (!rcpputils::fs::path(library_path).is_absolute()) {
-        library_path = base_path + "/" + controller_details.data[1];
-      }
-      controller_is_available = true;
-      break;
-    }
-  }
-
-  if (!controller_is_available) {
-    auto error_msg = std::string("couldn't find controller class ") + class_name;
-    RCLCPP_ERROR(logger, error_msg);
-    throw std::runtime_error(error_msg);
-  }
-
-  return library_path;
-}
-
-}  // namespace
-
 ControllerManager::ControllerManager(
   std::shared_ptr<hardware_interface::RobotHardware> hw,
   std::shared_ptr<rclcpp::executor::Executor> executor,
