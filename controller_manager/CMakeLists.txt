@@ -43,7 +43,10 @@ install(DIRECTORY include/
 )
 
 if(BUILD_TESTING)
+  find_package(ament_cmake_gmock REQUIRED)
+  find_package(ament_cmake_gtest REQUIRED)
   find_package(ament_lint_auto REQUIRED)
+
   ament_lint_auto_find_test_dependencies()
 
   ament_index_get_prefix_path(ament_index_build_path SKIP_AMENT_PREFIX_PATH)
@@ -70,7 +73,7 @@ if(BUILD_TESTING)
     test_robot_hardware
   )
 
-  ament_add_gtest(
+  ament_add_gmock(
     test_load_controller
     test/test_load_controller.cpp
     APPEND_ENV AMENT_PREFIX_PATH=${ament_index_build_path}_$<CONFIG>

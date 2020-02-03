@@ -58,6 +58,9 @@ public:
   std::vector<std::shared_ptr<controller_interface::ControllerInterface>>
   get_loaded_controller() const;
 
+  CONTROLLER_MANAGER_PUBLIC
+  void register_controller_loader(ControllerLoaderInterfaceSharedPtr loader);
+
   template<
     typename T,
     typename std::enable_if<std::is_convertible<

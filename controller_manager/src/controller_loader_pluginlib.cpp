@@ -33,4 +33,9 @@ controller_interface::ControllerInterfaceSharedPtr ControllerLoaderPluginlib::cr
   return loader_->createSharedInstance(controller_type);
 }
 
+bool ControllerLoaderPluginlib::is_available(const std::string & controller_type) const
+{
+  return loader_->isClassAvailable(controller_type);
+}
+
 }  // namespace controller_manager

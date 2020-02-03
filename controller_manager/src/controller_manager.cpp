@@ -19,6 +19,7 @@
 #include <vector>
 
 #include "controller_interface/controller_interface.hpp"
+
 #include "controller_manager/controller_loader_pluginlib.hpp"
 
 #include "lifecycle_msgs/msg/state.hpp"
@@ -27,16 +28,17 @@
 
 namespace controller_manager
 {
+
 ControllerManager::ControllerManager(
   std::shared_ptr<hardware_interface::RobotHardware> hw,
   std::shared_ptr<rclcpp::executor::Executor> executor,
   const std::string & manager_node_name)
 : rclcpp::Node(manager_node_name),
   hw_(hw),
-  executor_(executor)
-{
+  executor_(executor),
   // add pluginlib loader by default
-  loaders_.push_back(std::make_shared<ControllerLoaderPluginlib>());
+  loaders_({std::make_shared<ControllerLoaderPluginlib>()})
+{
 }
 
 std::shared_ptr<controller_interface::ControllerInterface>
@@ -44,10 +46,20 @@ ControllerManager::load_controller(
   const std::string & controller_name,
   const std::string & controller_type)
 {
-  RCUTILS_LOG_INFO("going to load controller %s\n", controller_name.c_str());
+  RCUTILS_LOG_INFO("Loading controller '%s'\n", controller_name.c_str());
 
-  std::shared_ptr<controller_interface::ControllerInterface> controller =
-    loaders_[0]->create(controller_type);
+  auto it = std::find_if(loaders_.cbegin(), loaders_.cend(),
+      [&](auto loader)
+      {return loader->is_available(controller_type);});
+
+  std::shared_ptr<controller_interface::ControllerInterface> controller(nullptr);
+  if (it != loaders_.cend()) {
+    controller = (*it)->create(controller_type);
+  } else {
+    const std::string error_msg("Loader for controller '" + controller_name + "' not found\n");
+    RCUTILS_LOG_ERROR("%s", error_msg.c_str());
+    throw std::runtime_error(error_msg);
+  }
 
   return add_controller_impl(controller, controller_name);
 }
@@ -56,6 +68,11 @@ std::vector<std::shared_ptr<controller_interface::ControllerInterface>>
 ControllerManager::get_loaded_controller() const
 {
   return loaded_controllers_;
+}
+
+void ControllerManager::register_controller_loader(ControllerLoaderInterfaceSharedPtr loader)
+{
+  loaders_.push_back(loader);
 }
 
 std::shared_ptr<controller_interface::ControllerInterface>

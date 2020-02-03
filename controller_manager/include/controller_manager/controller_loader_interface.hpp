@@ -37,6 +37,9 @@ public:
   CONTROLLER_MANAGER_PUBLIC
   virtual controller_interface::ControllerInterfaceSharedPtr create(
     const std::string & controller_type) = 0;
+
+  CONTROLLER_MANAGER_PUBLIC
+  virtual bool is_available(const std::string & controller_type) const = 0;
 };
 
 using ControllerLoaderInterfaceSharedPtr = std::shared_ptr<ControllerLoaderInterface>;

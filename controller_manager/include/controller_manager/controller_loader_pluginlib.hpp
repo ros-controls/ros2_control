@@ -37,6 +37,9 @@ public:
   CONTROLLER_MANAGER_PUBLIC
   controller_interface::ControllerInterfaceSharedPtr create(const std::string & controller_type);
 
+  CONTROLLER_MANAGER_PUBLIC
+  bool is_available(const std::string & controller_type) const;
+
 private:
   std::shared_ptr<pluginlib::ClassLoader<controller_interface::ControllerInterface>> loader_;
 };
