@@ -12,16 +12,16 @@ endif()
 
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rcpputils REQUIRED)
 find_package(rcutils REQUIRED)
 find_package(yaml_cpp_vendor REQUIRED)
 
 add_library(yaml_parser SHARED src/yaml_parser.cpp)
 target_include_directories(yaml_parser PUBLIC include)
-ament_target_dependencies(yaml_parser yaml_cpp_vendor)
+ament_target_dependencies(yaml_parser
+  rcpputils
+  yaml_cpp_vendor)
 target_compile_definitions(yaml_parser PRIVATE "CONTROLLER_PARAMETER_SERVER_BUILDING_DLL")
-if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  target_link_libraries(yaml_parser "stdc++fs")
-endif()
 
 add_library(parameter_server SHARED src/parameter_server.cpp)
 target_include_directories(parameter_server PUBLIC include)

@@ -12,35 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "controller_parameter_server/yaml_parser.hpp"
+
 #include <memory>
 #include <string>
 #include <unordered_map>
 
-#include "controller_parameter_server/yaml_parser.hpp"
-
-#ifdef __clang__
-// TODO(dirk-thomas) custom implementation until we can use libc++ 3.9
-namespace fs
-{
-class path
-{
-public:
-  explicit path(const std::string & p)
-  : path_(p)
-  {}
-  bool is_absolute()
-  {
-    return path_[0] == '/';
-  }
-
-private:
-  std::string path_;
-};
-}  // namespace fs
-#else
-# include <experimental/filesystem>
-namespace fs = std::experimental::filesystem;
-#endif
+#include "rcpputils/filesystem_helper.hpp"
 
 namespace controller_parameter_server
 {
@@ -79,7 +57,7 @@ get_key_values(
 void
 YamlParser::parse(const std::string & absolute_file_path)
 {
-  if (!fs::path(absolute_file_path).is_absolute()) {
+  if (!rcpputils::fs::path(absolute_file_path).is_absolute()) {
     throw std::runtime_error(std::string("no absolute file path given: ") + absolute_file_path);
   }
 
