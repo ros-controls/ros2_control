@@ -19,6 +19,7 @@
 #include <vector>
 
 #include "controller_interface/controller_interface.hpp"
+#include "controller_manager/controller_loader_pluginlib.hpp"
 
 #include "lifecycle_msgs/msg/state.hpp"
 
@@ -35,9 +36,7 @@ ControllerManager::ControllerManager(
   executor_(executor)
 {
   // add pluginlib loader by default
-  auto loader = std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
-    "controller_interface", "controller_interface::ControllerInterface");
-  loaders_.push_back(loader);
+  loaders_.push_back(std::make_shared<ControllerLoaderPluginlib>());
 }
 
 std::shared_ptr<controller_interface::ControllerInterface>
@@ -48,7 +47,7 @@ ControllerManager::load_controller(
   RCUTILS_LOG_INFO("going to load controller %s\n", controller_name.c_str());
 
   std::shared_ptr<controller_interface::ControllerInterface> controller =
-    loaders_[0]->createSharedInstance(controller_type);
+    loaders_[0]->create(controller_type);
 
   return add_controller_impl(controller, controller_name);
 }

@@ -22,6 +22,7 @@
 
 #include "controller_interface/controller_interface.hpp"
 
+#include "controller_manager/controller_loader_interface.hpp"
 #include "controller_manager/visibility_control.h"
 
 #include "hardware_interface/robot_hardware.hpp"
@@ -30,11 +31,6 @@
 
 #include "rclcpp/executor.hpp"
 #include "rclcpp/node.hpp"
-
-namespace class_loader
-{
-class ClassLoader;
-}  // namespace class_loader
 
 namespace controller_manager
 {
@@ -102,8 +98,7 @@ protected:
 private:
   std::shared_ptr<hardware_interface::RobotHardware> hw_;
   std::shared_ptr<rclcpp::executor::Executor> executor_;
-  std::vector<std::shared_ptr<pluginlib::ClassLoader<controller_interface::ControllerInterface>>>
-  loaders_;
+  std::vector<ControllerLoaderInterfaceSharedPtr> loaders_;
   std::vector<std::shared_ptr<controller_interface::ControllerInterface>> loaded_controllers_;
 };
 

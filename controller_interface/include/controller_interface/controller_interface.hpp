@@ -63,6 +63,8 @@ protected:
   std::shared_ptr<rclcpp_lifecycle::LifecycleNode> lifecycle_node_;
 };
 
+using ControllerInterfaceSharedPtr = std::shared_ptr<ControllerInterface>;
+
 }  // namespace controller_interface
 
 #endif  // CONTROLLER_INTERFACE__CONTROLLER_INTERFACE_HPP_
