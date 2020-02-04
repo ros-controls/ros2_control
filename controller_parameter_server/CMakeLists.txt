@@ -13,14 +13,11 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rcutils REQUIRED)
-find_package(yaml-cpp REQUIRED)
+find_package(yaml_cpp_vendor REQUIRED)
 
-message("yaml-cpp dir ${YAML_CPP_INCLUDE_DIR}")
 add_library(yaml_parser SHARED src/yaml_parser.cpp)
-target_include_directories(
-  yaml_parser PUBLIC include
-  yaml_parser PUBLIC ${YAML_CPP_INCLUDE_DIR})
-target_link_libraries(yaml_parser ${YAML_CPP_LIBRARIES})
+target_include_directories(yaml_parser PUBLIC include)
+ament_target_dependencies(yaml_parser yaml_cpp_vendor)
 target_compile_definitions(yaml_parser PRIVATE "CONTROLLER_PARAMETER_SERVER_BUILDING_DLL")
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   target_link_libraries(yaml_parser "stdc++fs")
@@ -78,6 +75,6 @@ ament_export_libraries(
   yaml_parser
 )
 ament_export_dependencies(
-  yaml-cpp
+  yaml_cpp_vendor
 )
 ament_package()
