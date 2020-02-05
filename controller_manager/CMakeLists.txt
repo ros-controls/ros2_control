@@ -32,6 +32,8 @@ ament_target_dependencies(controller_manager
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.
 target_compile_definitions(controller_manager PRIVATE "CONTROLLER_MANAGER_BUILDING_DLL")
+# prevent pluginlib from using boost
+target_compile_definitions(controller_manager PUBLIC "PLUGINLIB__DISABLE_BOOST_FUNCTIONS")
 
 install(TARGETS controller_manager
   RUNTIME DESTINATION bin
