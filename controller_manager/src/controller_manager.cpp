@@ -27,34 +27,12 @@
 
 #include "lifecycle_msgs/msg/state.hpp"
 
+#include "rcpputils/filesystem_helper.hpp"
+
 #include "rcutils/format_string.h"
 #include "rcutils/logging_macros.h"
 #include "rcutils/split.h"
 #include "rcutils/types.h"
-
-#ifdef __clang__
-// TODO(dirk-thomas) custom implementation until we can use libc++ 3.9
-namespace fs
-{
-class path
-{
-public:
-  explicit path(const std::string & p)
-  : path_(p)
-  {}
-  bool is_absolute()
-  {
-    return path_[0] == '/';
-  }
-
-private:
-  std::string path_;
-};
-}  // namespace fs
-#else
-# include <experimental/filesystem>
-namespace fs = std::experimental::filesystem;
-#endif
 
 namespace controller_manager
 {
@@ -102,7 +80,7 @@ parse_library_path(
 
     if (strcmp(controller_details.data[0], class_name.c_str()) == 0) {
       library_path = controller_details.data[1];
-      if (!fs::path(library_path).is_absolute()) {
+      if (!rcpputils::fs::path(library_path).is_absolute()) {
         library_path = base_path + "/" + controller_details.data[1];
       }
       controller_is_available = true;

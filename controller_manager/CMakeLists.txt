@@ -17,6 +17,7 @@ find_package(class_loader REQUIRED)
 find_package(controller_interface REQUIRED)
 find_package(hardware_interface REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rcpputils REQUIRED)
 
 add_library(controller_manager SHARED src/controller_manager.cpp)
 target_include_directories(controller_manager PRIVATE include)
@@ -26,10 +27,8 @@ ament_target_dependencies(controller_manager
   "controller_interface"
   "hardware_interface"
   "rclcpp"
+  "rcpputils"
 )
-if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  target_link_libraries(controller_manager "stdc++fs")
-endif()
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.
 target_compile_definitions(controller_manager PRIVATE "CONTROLLER_MANAGER_BUILDING_DLL")
