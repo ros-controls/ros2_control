@@ -72,32 +72,36 @@ TestRobotHardware::init()
     return ret;
   }
 
-  read_op_handle1 = hardware_interface::OperationModeHandle(read_op_handle_name1,
-      reinterpret_cast<hardware_interface::OperationMode *>(&read1));
+  read_op_handle1 = hardware_interface::OperationModeHandle(
+    read_op_handle_name1,
+    reinterpret_cast<hardware_interface::OperationMode *>(&read1));
   ret = register_operation_mode_handle(&read_op_handle1);
   if (ret != hardware_interface::HW_RET_OK) {
     RCUTILS_LOG_WARN("can't register operation mode handle %s", read_op_handle_name1.c_str());
     return ret;
   }
 
-  read_op_handle2 = hardware_interface::OperationModeHandle(read_op_handle_name2,
-      reinterpret_cast<hardware_interface::OperationMode *>(&read2));
+  read_op_handle2 = hardware_interface::OperationModeHandle(
+    read_op_handle_name2,
+    reinterpret_cast<hardware_interface::OperationMode *>(&read2));
   ret = register_operation_mode_handle(&read_op_handle2);
   if (ret != hardware_interface::HW_RET_OK) {
     RCUTILS_LOG_WARN("can't register operation mode handle %s", read_op_handle_name2.c_str());
     return ret;
   }
 
-  write_op_handle1 = hardware_interface::OperationModeHandle(write_op_handle_name1,
-      reinterpret_cast<hardware_interface::OperationMode *>(&write1));
+  write_op_handle1 = hardware_interface::OperationModeHandle(
+    write_op_handle_name1,
+    reinterpret_cast<hardware_interface::OperationMode *>(&write1));
   ret = register_operation_mode_handle(&write_op_handle1);
   if (ret != hardware_interface::HW_RET_OK) {
     RCUTILS_LOG_WARN("can't register operation mode handle %s", write_op_handle_name1.c_str());
     return ret;
   }
 
-  write_op_handle2 = hardware_interface::OperationModeHandle(write_op_handle_name2,
-      reinterpret_cast<hardware_interface::OperationMode *>(&write2));
+  write_op_handle2 = hardware_interface::OperationModeHandle(
+    write_op_handle_name2,
+    reinterpret_cast<hardware_interface::OperationMode *>(&write2));
   ret = register_operation_mode_handle(&write_op_handle2);
   if (ret != hardware_interface::HW_RET_OK) {
     RCUTILS_LOG_WARN("can't register operation mode handle %s", write_op_handle_name2.c_str());
