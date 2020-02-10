@@ -11,6 +11,7 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 find_package(ament_cmake REQUIRED)
+find_package(rcpputils REQUIRED)
 find_package(rcutils REQUIRED)
 
 add_library(
@@ -27,6 +28,7 @@ target_include_directories(
   include)
 ament_target_dependencies(
   hardware_interface
+  "rcpputils"
   "rcutils"
 )
 
@@ -52,6 +54,7 @@ if(BUILD_TESTING)
 
   ament_add_gtest(test_macros test/test_macros.cpp)
   target_include_directories(test_macros PRIVATE include)
+  ament_target_dependencies(test_macros "rcpputils")
 endif()
 
 ament_export_include_directories(
