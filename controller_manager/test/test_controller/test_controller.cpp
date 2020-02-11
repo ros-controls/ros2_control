@@ -42,7 +42,6 @@ TestController::on_configure(const rclcpp_lifecycle::State & previous_state)
 
 }  // namespace test_controller
 
-#include "class_loader/register_macro.hpp"
+#include "pluginlib/class_list_macros.hpp"
 
-CLASS_LOADER_REGISTER_CLASS(
-  test_controller::TestController, controller_interface::ControllerInterface)
+PLUGINLIB_EXPORT_CLASS(test_controller::TestController, controller_interface::ControllerInterface)

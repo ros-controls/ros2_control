@@ -18,86 +18,16 @@
 #include <string>
 #include <vector>
 
-#include "ament_index_cpp/get_resource.hpp"
-#include "ament_index_cpp/get_resources.hpp"
-
-#include "class_loader/class_loader.hpp"
-
 #include "controller_interface/controller_interface.hpp"
+
+#include "controller_manager/controller_loader_pluginlib.hpp"
 
 #include "lifecycle_msgs/msg/state.hpp"
 
-#include "rcpputils/filesystem_helper.hpp"
-
-#include "rcutils/format_string.h"
 #include "rcutils/logging_macros.h"
-#include "rcutils/split.h"
-#include "rcutils/types.h"
 
 namespace controller_manager
 {
-
-static constexpr const char * resource_index = "ros_controllers";
-
-namespace
-{
-
-std::string
-parse_library_path(
-  const std::string & package_name,
-  const std::string & class_name,
-  const rclcpp::Logger logger)  // should be const ref when possible
-{
-  // get node plugin resource from package
-  std::string content;
-  std::string base_path;
-  if (!ament_index_cpp::get_resource(resource_index, package_name, content, &base_path)) {
-    auto error_msg = std::string("unable to load resource for package ") + package_name;
-    RCLCPP_ERROR(logger, error_msg);
-    throw std::runtime_error(error_msg);
-  }
-
-  auto allocator = rcutils_get_default_allocator();
-  rcutils_string_array_t controller_array = rcutils_get_zero_initialized_string_array();
-  rcutils_split(content.c_str(), '\n', allocator, &controller_array);
-  if (controller_array.size == 0) {
-    auto error_msg = std::string("no ros controllers found in package " + package_name);
-    RCLCPP_ERROR(logger, error_msg);
-    throw std::runtime_error(error_msg);
-  }
-
-  std::string library_path = "";
-  bool controller_is_available = false;
-  for (auto i = 0u; i < controller_array.size; ++i) {
-    rcutils_string_array_t controller_details = rcutils_get_zero_initialized_string_array();
-    rcutils_split(controller_array.data[i], ';', allocator, &controller_details);
-    if (controller_details.size != 2) {
-      auto error_msg = std::string("package resource content has wrong format") +
-        " - should be <class_name>;<library_path> but is " + controller_array.data[i];
-      RCLCPP_ERROR(logger, error_msg);
-      throw std::runtime_error(error_msg);
-    }
-
-    if (strcmp(controller_details.data[0], class_name.c_str()) == 0) {
-      library_path = controller_details.data[1];
-      if (!rcpputils::fs::path(library_path).is_absolute()) {
-        library_path = base_path + "/" + controller_details.data[1];
-      }
-      controller_is_available = true;
-      break;
-    }
-  }
-
-  if (!controller_is_available) {
-    auto error_msg = std::string("couldn't find controller class ") + class_name;
-    RCLCPP_ERROR(logger, error_msg);
-    throw std::runtime_error(error_msg);
-  }
-
-  return library_path;
-}
-
-}  // namespace
 
 ControllerManager::ControllerManager(
   std::shared_ptr<hardware_interface::RobotHardware> hw,
@@ -105,26 +35,32 @@ ControllerManager::ControllerManager(
   const std::string & manager_node_name)
 : rclcpp::Node(manager_node_name),
   hw_(hw),
-  executor_(executor)
-{}
+  executor_(executor),
+  // add pluginlib loader by default
+  loaders_({std::make_shared<ControllerLoaderPluginlib>()})
+{
+}
 
 std::shared_ptr<controller_interface::ControllerInterface>
 ControllerManager::load_controller(
-  const std::string & package_name,
-  const std::string & class_name,
-  const std::string & controller_name)
+  const std::string & controller_name,
+  const std::string & controller_type)
 {
-  auto library_path = parse_library_path(package_name, class_name, this->get_logger());
+  RCUTILS_LOG_INFO("Loading controller '%s'\n", controller_name.c_str());
 
-  RCLCPP_INFO(
-    this->get_logger(), "going to load controller %s from library %s",
-    class_name.c_str(), library_path.c_str());
+  auto it = std::find_if(
+    loaders_.cbegin(), loaders_.cend(),
+    [&](auto loader)
+    {return loader->is_available(controller_type);});
 
-  // let possible exceptions escalate
-  auto loader = std::make_shared<class_loader::ClassLoader>(library_path);
-  std::shared_ptr<controller_interface::ControllerInterface> controller =
-    loader->createInstance<controller_interface::ControllerInterface>(class_name);
-  loaders_.push_back(loader);
+  std::shared_ptr<controller_interface::ControllerInterface> controller(nullptr);
+  if (it != loaders_.cend()) {
+    controller = (*it)->create(controller_type);
+  } else {
+    const std::string error_msg("Loader for controller '" + controller_name + "' not found\n");
+    RCUTILS_LOG_ERROR("%s", error_msg.c_str());
+    throw std::runtime_error(error_msg);
+  }
 
   return add_controller_impl(controller, controller_name);
 }
@@ -133,6 +69,11 @@ std::vector<std::shared_ptr<controller_interface::ControllerInterface>>
 ControllerManager::get_loaded_controller() const
 {
   return loaded_controllers_;
+}
+
+void ControllerManager::register_controller_loader(ControllerLoaderInterfaceSharedPtr loader)
+{
+  loaders_.push_back(loader);
 }
 
 std::shared_ptr<controller_interface::ControllerInterface>

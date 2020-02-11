@@ -22,17 +22,15 @@
 
 #include "controller_interface/controller_interface.hpp"
 
+#include "controller_manager/controller_loader_interface.hpp"
 #include "controller_manager/visibility_control.h"
 
 #include "hardware_interface/robot_hardware.hpp"
 
+#include "pluginlib/class_loader.hpp"
+
 #include "rclcpp/executor.hpp"
 #include "rclcpp/node.hpp"
-
-namespace class_loader
-{
-class ClassLoader;
-}  // namespace class_loader
 
 namespace controller_manager
 {
@@ -53,13 +51,15 @@ public:
   CONTROLLER_MANAGER_PUBLIC
   std::shared_ptr<controller_interface::ControllerInterface>
   load_controller(
-    const std::string & package_name,
-    const std::string & class_name,
-    const std::string & controller_name);
+    const std::string & controller_name,
+    const std::string & controller_type);
 
   CONTROLLER_MANAGER_PUBLIC
   std::vector<std::shared_ptr<controller_interface::ControllerInterface>>
   get_loaded_controller() const;
+
+  CONTROLLER_MANAGER_PUBLIC
+  void register_controller_loader(ControllerLoaderInterfaceSharedPtr loader);
 
   template<
     typename T,
@@ -101,7 +101,7 @@ protected:
 private:
   std::shared_ptr<hardware_interface::RobotHardware> hw_;
   std::shared_ptr<rclcpp::executor::Executor> executor_;
-  std::vector<std::shared_ptr<class_loader::ClassLoader>> loaders_;
+  std::vector<ControllerLoaderInterfaceSharedPtr> loaders_;
   std::vector<std::shared_ptr<controller_interface::ControllerInterface>> loaded_controllers_;
 };
 
