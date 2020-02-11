@@ -1,7 +1,7 @@
 # ros2_control
 
 ## CI
-linux: [![Build Status](https://travis-ci.org/ros-controls/ros2_control.svg?branch=crystal)](https://travis-ci.org/ros-controls/ros2_control)
+linux: [![Build Status](https://travis-ci.org/ros-controls/ros2_control.svg?branch=master)](https://travis-ci.org/ros-controls/ros2_control)
 
 ## Disclaimer
 
