@@ -48,9 +48,10 @@ ControllerManager::load_controller(
 {
   RCUTILS_LOG_INFO("Loading controller '%s'\n", controller_name.c_str());
 
-  auto it = std::find_if(loaders_.cbegin(), loaders_.cend(),
-      [&](auto loader)
-      {return loader->is_available(controller_type);});
+  auto it = std::find_if(
+    loaders_.cbegin(), loaders_.cend(),
+    [&](auto loader)
+    {return loader->is_available(controller_type);});
 
   std::shared_ptr<controller_interface::ControllerInterface> controller(nullptr);
   if (it != loaders_.cend()) {
