@@ -37,8 +37,16 @@ install(
 )
 
 if(BUILD_TESTING)
+  find_package(ament_cmake_gtest REQUIRED)
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()
+
+  ament_add_gtest(
+    test_transmission_parser
+    test/test_transmission_parser.cpp
+  )
+  target_include_directories(test_transmission_parser PUBLIC include)
+  target_link_libraries(test_transmission_parser transmission_parser)
 endif()
 
 ament_export_include_directories(

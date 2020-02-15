@@ -29,8 +29,21 @@ namespace transmission_interface
 class TRANSMISSION_INTERFACE_PUBLIC_TYPE TransmissionParser
 {
 public:
-  static bool parse_transmission_info(
-    const std::string & urdf, std::vector<TransmissionInfo> & transmissions);
+  explicit TransmissionParser(const std::string & urdf);
+
+  bool parse_transmission_info(std::vector<TransmissionInfo> & transmissions) const;
+
+  std::string get_error_msg() const;
+
+protected:
+  void set_error_msg(std::string error_msg) const;
+
+  void reset_error_msg() const;
+
+  mutable std::string error_msg_;
+
+  std::string urdf_;
+  tinyxml2::XMLDocument doc_;
 };
 
 }  // namespace transmission_interface
