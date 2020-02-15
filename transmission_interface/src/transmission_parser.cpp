@@ -14,7 +14,7 @@
 
 #include "transmission_interface/transmission_parser.hpp"
 
-#include <exception>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
