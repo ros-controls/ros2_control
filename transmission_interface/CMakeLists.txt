@@ -18,7 +18,7 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(tinyxml2_vendor REQUIRED)
-find_package(tinyxml2 REQUIRED)
+find_package(TinyXML2 REQUIRED)
 
 add_library(transmission_parser SHARED src/transmission_parser.cpp)
 target_include_directories(transmission_parser PUBLIC include)
