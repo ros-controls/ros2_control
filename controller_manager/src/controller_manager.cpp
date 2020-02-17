@@ -116,7 +116,8 @@ ControllerManager::load_controller(
 {
   auto library_path = parse_library_path(package_name, class_name, this->get_logger());
 
-  RCLCPP_INFO(this->get_logger(), "going to load controller %s from library %s",
+  RCLCPP_INFO(
+    this->get_logger(), "going to load controller %s from library %s",
     class_name.c_str(), library_path.c_str());
 
   // let possible exceptions escalate
