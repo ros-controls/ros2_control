@@ -101,6 +101,7 @@ ament_export_include_directories(
   include
 )
 ament_export_dependencies(
+  controller_interface
   pluginlib
 )
 ament_package()
