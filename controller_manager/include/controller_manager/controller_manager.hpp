@@ -27,8 +27,6 @@
 
 #include "hardware_interface/robot_hardware.hpp"
 
-#include "pluginlib/class_loader.hpp"
-
 #include "rclcpp/executor.hpp"
 #include "rclcpp/node.hpp"
 
