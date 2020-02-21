@@ -20,6 +20,8 @@
 #include "hardware_interface/robot_hardware.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 
+#include "rclcpp/rclcpp.hpp"
+
 #include "test_robot_hardware/visibility_control.h"
 
 namespace test_robot_hardware
@@ -84,6 +86,8 @@ public:
 
   hardware_interface::OperationModeHandle write_op_handle1;
   hardware_interface::OperationModeHandle write_op_handle2;
+
+  const rclcpp::Logger logger = rclcpp::get_logger("test_robot_hardware");
 };
 
 }  // namespace test_robot_hardware

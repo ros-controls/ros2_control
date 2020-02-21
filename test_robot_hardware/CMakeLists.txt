@@ -12,14 +12,14 @@ endif()
 
 find_package(ament_cmake REQUIRED)
 find_package(hardware_interface REQUIRED)
-find_package(rcutils REQUIRED)
+find_package(rclcpp REQUIRED)
 
 add_library(test_robot_hardware SHARED src/test_robot_hardware.cpp)
 target_include_directories(test_robot_hardware PRIVATE include)
 ament_target_dependencies(
   test_robot_hardware
   hardware_interface
-  rcutils
+  rclcpp
 )
 
 # Causes the visibility macros to use dllexport rather than dllimport,

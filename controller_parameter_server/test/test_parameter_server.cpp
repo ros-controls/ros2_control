@@ -87,10 +87,12 @@ TEST_F(TestControllerParameterServer, load_config_file) {
   std::this_thread::sleep_for(1s);
   while (!parameters_client->wait_for_service(1s)) {
     if (!rclcpp::ok()) {
-      RCUTILS_LOG_ERROR("Interrupted while waiting for the service. Exiting.");
+      RCLCPP_ERROR(
+        client_node->get_logger(),
+        "Interrupted while waiting for the service. Exiting.");
       FAIL();
     }
-    RCUTILS_LOG_INFO("service not available, waiting again...");
+    RCLCPP_INFO(client_node->get_logger(), "service not available, waiting again...");
   }
 
   std::vector<std::string> expected_keys =

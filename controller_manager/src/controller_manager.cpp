@@ -24,7 +24,7 @@
 
 #include "lifecycle_msgs/msg/state.hpp"
 
-#include "rcutils/logging_macros.h"
+#include "rclcpp/rclcpp.hpp"
 
 namespace controller_manager
 {
@@ -46,7 +46,7 @@ ControllerManager::load_controller(
   const std::string & controller_name,
   const std::string & controller_type)
 {
-  RCUTILS_LOG_INFO("Loading controller '%s'\n", controller_name.c_str());
+  RCLCPP_INFO(get_logger(), "Loading controller '%s'\n", controller_name.c_str());
 
   auto it = std::find_if(
     loaders_.cbegin(), loaders_.cend(),
@@ -58,7 +58,7 @@ ControllerManager::load_controller(
     controller = (*it)->create(controller_type);
   } else {
     const std::string error_msg("Loader for controller '" + controller_name + "' not found\n");
-    RCUTILS_LOG_ERROR("%s", error_msg.c_str());
+    RCLCPP_ERROR(get_logger(), "%s", error_msg.c_str());
     throw std::runtime_error(error_msg);
   }
 
