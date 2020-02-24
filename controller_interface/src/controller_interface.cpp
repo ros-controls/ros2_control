@@ -69,9 +69,9 @@ void ControllerInterface::load_params_from_yaml(const std::string & yaml_config_
 
 void ControllerInterface::load_params_from_yaml_node(YAML::Node& yaml_node)
 {
-  std::function<void(YAML::Node, const std::string&, 
+  std::function<void(YAML::Node, const std::string&,
     std::shared_ptr<rclcpp_lifecycle::LifecycleNode>&)>
-    feed_yaml_to_node_rec = 
+    feed_yaml_to_node_rec =
     [&](YAML::Node yaml_node, const std::string& key,
     std::shared_ptr<rclcpp_lifecycle::LifecycleNode>& node)
   {
@@ -84,8 +84,7 @@ void ControllerInterface::load_params_from_yaml_node(YAML::Node& yaml_node)
       node->declare_parameter(key);
       node->set_parameter({rclcpp::Parameter(key, val_str)});
       return;
-    }
-    else if (yaml_node.Type() == YAML::NodeType::Map) {
+    } else if (yaml_node.Type() == YAML::NodeType::Map) {
       for (auto yaml_node_it : yaml_node) {
         feed_yaml_to_node_rec(
           yaml_node_it.second, key + separator + yaml_node_it.first.as<std::string>(), node);
