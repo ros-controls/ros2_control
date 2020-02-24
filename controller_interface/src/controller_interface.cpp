@@ -79,7 +79,7 @@ void ControllerInterface::load_params_from_yaml_node(YAML::Node& yaml_node)
     if (yaml_node.Type() == YAML::NodeType::Scalar) {
       std::string val_str = yaml_node.as<std::string>();
 
-      // @todo: Do stricter typing for set_parameter value types. 
+      // TODO: Do stricter typing for set_parameter value types.
       // (ie. Numbers should be converted to int/double/etc instead of strings)
       node->declare_parameter(key);
       node->set_parameter({rclcpp::Parameter(key, val_str)});
