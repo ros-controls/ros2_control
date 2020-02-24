@@ -25,9 +25,9 @@
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
 
-namespace YAML 
+namespace YAML
 {
-  class Node;
+class Node;
 }
 
 namespace controller_interface
