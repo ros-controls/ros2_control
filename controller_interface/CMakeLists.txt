@@ -13,16 +13,19 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(hardware_interface REQUIRED)
 find_package(rclcpp_lifecycle REQUIRED)
+find_package(yaml_cpp_vendor REQUIRED)
 
 add_library(controller_interface SHARED src/controller_interface.cpp)
 target_include_directories(
   controller_interface
   PRIVATE
-  include)
+  include
+  "yaml_cpp_vendor")
 ament_target_dependencies(
   controller_interface
   "hardware_interface"
   "rclcpp_lifecycle"
+  "yaml_cpp_vendor"
 )
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.

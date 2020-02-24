@@ -25,12 +25,18 @@
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
 
+namespace YAML 
+{
+  class Node;
+}
+
 namespace controller_interface
 {
 
 using controller_interface_ret_t = std::uint8_t;
 static constexpr controller_interface_ret_t CONTROLLER_INTERFACE_RET_SUCCESS = 1;
 static constexpr controller_interface_ret_t CONTROLLER_INTERFACE_RET_ERROR = 0;
+
 
 class ControllerInterface : public rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface
 {
@@ -58,6 +64,8 @@ public:
   std::shared_ptr<rclcpp_lifecycle::LifecycleNode>
   get_lifecycle_node();
 
+  void load_params_from_yaml(const std::string & yaml_config_file);
+  void load_params_from_yaml_node(YAML::Node& yaml_node);
 protected:
   std::weak_ptr<hardware_interface::RobotHardware> robot_hardware_;
   std::shared_ptr<rclcpp_lifecycle::LifecycleNode> lifecycle_node_;
