@@ -19,8 +19,7 @@ add_library(controller_interface SHARED src/controller_interface.cpp)
 target_include_directories(
   controller_interface
   PRIVATE
-  include
-  "yaml_cpp_vendor")
+  include)
 ament_target_dependencies(
   controller_interface
   "hardware_interface"
