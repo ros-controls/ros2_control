@@ -37,7 +37,6 @@ using controller_interface_ret_t = std::uint8_t;
 static constexpr controller_interface_ret_t CONTROLLER_INTERFACE_RET_SUCCESS = 1;
 static constexpr controller_interface_ret_t CONTROLLER_INTERFACE_RET_ERROR = 0;
 
-
 class ControllerInterface : public rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface
 {
 public:
