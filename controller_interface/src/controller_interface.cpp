@@ -67,7 +67,7 @@ void ControllerInterface::load_params_from_yaml(const std::string & yaml_config_
   load_params_from_yaml_node(root_node);
 }
 
-void ControllerInterface::load_params_from_yaml_node(YAML::Node& yaml_node)
+void ControllerInterface::load_params_from_yaml_node(YAML::Node & yaml_node)
 {
   std::function<void(YAML::Node, const std::string&,
     std::shared_ptr<rclcpp_lifecycle::LifecycleNode>&)>
