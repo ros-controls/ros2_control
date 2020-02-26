@@ -66,6 +66,7 @@ public:
   void load_params_from_yaml(const std::string & yaml_config_file);
 
   void load_params_from_yaml_node(YAML::Node & yaml_node);
+
 protected:
   std::weak_ptr<hardware_interface::RobotHardware> robot_hardware_;
   std::shared_ptr<rclcpp_lifecycle::LifecycleNode> lifecycle_node_;
