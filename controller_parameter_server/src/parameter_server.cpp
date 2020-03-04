@@ -21,12 +21,12 @@
 namespace controller_parameter_server
 {
 
-ParameterServer::ParameterServer(const rclcpp::NodeOptions & options)
+ParameterServer::ParameterServer(const rclcpp::NodeOptions& options)
 : rclcpp::Node("controller_parameter_server", options)
 {}
 
 void
-ParameterServer::load_parameters(const std::string & yaml_config_file)
+ParameterServer::load_parameters(const std::string& yaml_config_file)
 {
   if (yaml_config_file.empty()) {
     throw std::runtime_error("yaml config file path is empty");
@@ -42,7 +42,7 @@ ParameterServer::load_parameters(const std::string & yaml_config_file)
 }
 
 void
-ParameterServer::load_parameters(const std::string & key, const std::string & value)
+ParameterServer::load_parameters(const std::string& key, const std::string& value)
 {
   this->set_parameters({rclcpp::Parameter(key, value)});
 }
