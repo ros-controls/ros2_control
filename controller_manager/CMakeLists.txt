@@ -17,7 +17,6 @@ find_package(controller_interface REQUIRED)
 find_package(hardware_interface REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(rcpputils REQUIRED)
 
 add_library(controller_manager SHARED src/controller_manager.cpp src/controller_loader_pluginlib.cpp)
 target_include_directories(controller_manager PRIVATE include)
@@ -27,7 +26,6 @@ ament_target_dependencies(controller_manager
   "hardware_interface"
   "pluginlib"
   "rclcpp"
-  "rcpputils"
 )
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.

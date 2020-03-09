@@ -122,6 +122,9 @@ int main()
 {
   // do all the init stuff
   
+  // Logger
+  const rclcpp::Logger logger = rclcpp::get_logger("my_robot_logger");
+  
   // create my_robot instance
   auto my_robot = std::make_shared<MyRobot>();
   
@@ -156,12 +159,12 @@ int main()
   // we can either configure each controller individually through its services
   // or we use the controller manager to configure every loaded controller
   if (cm.configure() != controller_interface::CONTROLLER_INTERFACE_RET_SUCCESS) {
-    RCUTILS_LOG_ERROR("at least one controller failed to configure")
+    RCLCPP_ERROR(logger, "at least one controller failed to configure")
     return -1;
   }
   // and activate all controller
   if (cm.activate() != controller_interface::CONTROLLER_INTERFACE_RET_SUCCESS) {
-    RCUTILS_LOG_ERROR("at least one controller failed to activate")
+    RCLCPP_ERROR(logger, "at least one controller failed to activate")
     return -1;
   }
 

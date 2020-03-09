@@ -65,6 +65,10 @@ if(BUILD_TESTING)
     test_parameter_server test/test_parameter_server.cpp
     ENV config_file=${test_config_file})
   target_link_libraries(test_parameter_server parameter_server)
+  ament_target_dependencies(
+    test_parameter_server
+    rclcpp
+  )
 endif()
 
 ament_export_include_directories(
