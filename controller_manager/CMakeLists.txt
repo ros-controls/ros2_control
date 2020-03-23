@@ -21,11 +21,11 @@ find_package(rclcpp REQUIRED)
 add_library(controller_manager SHARED src/controller_manager.cpp src/controller_loader_pluginlib.cpp)
 target_include_directories(controller_manager PRIVATE include)
 ament_target_dependencies(controller_manager
-  "ament_index_cpp"
-  "controller_interface"
-  "hardware_interface"
-  "pluginlib"
-  "rclcpp"
+  ament_index_cpp
+  controller_interface
+  hardware_interface
+  pluginlib
+  rclcpp
 )
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.

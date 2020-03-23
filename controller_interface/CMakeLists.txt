@@ -21,8 +21,8 @@ target_include_directories(
   include)
 ament_target_dependencies(
   controller_interface
-  "hardware_interface"
-  "rclcpp_lifecycle"
+  hardware_interface
+  rclcpp_lifecycle
 )
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.

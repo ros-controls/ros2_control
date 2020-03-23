@@ -28,8 +28,8 @@ target_include_directories(
   include)
 ament_target_dependencies(
   hardware_interface
-  "rclcpp"
-  "rcpputils"
+  rclcpp
+  rcpputils
 )
 
 # Causes the visibility macros to use dllexport rather than dllimport,
@@ -54,7 +54,7 @@ if(BUILD_TESTING)
 
   ament_add_gtest(test_macros test/test_macros.cpp)
   target_include_directories(test_macros PRIVATE include)
-  ament_target_dependencies(test_macros "rcpputils")
+  ament_target_dependencies(test_macros rcpputils)
 endif()
 
 ament_export_include_directories(
