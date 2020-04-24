@@ -61,94 +61,61 @@ RobotHardware::register_operation_mode_handle(OperationModeHandle * operation_mo
                                               operation_mode_handle);
 }
 
+template<typename T>
 hardware_interface_ret_t
-RobotHardware::get_joint_state_handle(
-  const std::string & name, const JointStateHandle ** joint_state_handle)
+get_handle(
+  std::vector<T *>& registered_handles, const std::string & name, T ** handle,
+  const std::string & logger_name)
 {
   if (name.empty()) {
     RCLCPP_ERROR(
-      rclcpp::get_logger("joint state handle"),
+      rclcpp::get_logger(logger_name),
       "cannot get handle! No name given");
     return HW_RET_ERROR;
   }
 
-  THROW_ON_NOT_NULLPTR(*joint_state_handle)
-
   auto handle_pos = std::find_if(
-    registered_joint_state_handles_.begin(), registered_joint_state_handles_.end(),
-    [&](auto joint_handle_ptr) -> bool {
-      return joint_handle_ptr->get_name() == name;
+    registered_handles.begin(), registered_handles.end(),
+    [&](auto handle_ptr) -> bool {
+      return handle_ptr->get_name() == name;
     });
 
-  if (handle_pos == registered_joint_state_handles_.end()) {
+  if (handle_pos == registered_handles.end()) {
     RCLCPP_ERROR(
-      rclcpp::get_logger("joint state handle"),
+      rclcpp::get_logger(logger_name),
       "cannot get handle. No joint %s found.\n", name.c_str());
     return HW_RET_ERROR;
   }
 
-  *joint_state_handle = *handle_pos;
+  *handle = *handle_pos;
   return HW_RET_OK;
+}
+
+hardware_interface_ret_t
+RobotHardware::get_joint_state_handle(
+  const std::string & name, const JointStateHandle ** joint_state_handle)
+{
+  THROW_ON_NOT_NULLPTR(*joint_state_handle)
+  return get_handle<const JointStateHandle>(registered_joint_state_handles_, name,
+                                            joint_state_handle, "joint state handle");
 }
 
 hardware_interface_ret_t
 RobotHardware::get_joint_command_handle(
   const std::string & name, JointCommandHandle ** joint_command_handle)
 {
-  if (name.empty()) {
-    RCLCPP_ERROR(
-      rclcpp::get_logger("joint cmd handle"),
-      "cannot get handle! No name given");
-    return HW_RET_ERROR;
-  }
-
   THROW_ON_NOT_NULLPTR(*joint_command_handle)
-
-  auto handle_pos = std::find_if(
-    registered_joint_command_handles_.begin(), registered_joint_command_handles_.end(),
-    [&](auto joint_handle_ptr) -> bool {
-      return joint_handle_ptr->get_name() == name;
-    });
-
-  if (handle_pos == registered_joint_command_handles_.end()) {
-    RCLCPP_ERROR(
-      rclcpp::get_logger("joint cmd handle"),
-      "cannot get handle. No joint %s found.\n", name.c_str());
-    return HW_RET_ERROR;
-  }
-
-  *joint_command_handle = *handle_pos;
-  return HW_RET_OK;
+  return get_handle<JointCommandHandle>(registered_joint_command_handles_, name,
+                                        joint_command_handle, "joint cmd handle");
 }
 
 hardware_interface_ret_t
 RobotHardware::get_operation_mode_handle(
   const std::string & name, OperationModeHandle ** operation_mode_handle)
 {
-  if (name.empty()) {
-    RCLCPP_ERROR(
-      rclcpp::get_logger("joint operation mode handle"),
-      "cannot get handle! No name given");
-    return HW_RET_ERROR;
-  }
-
   THROW_ON_NOT_NULLPTR(*operation_mode_handle)
-
-  auto handle_pos = std::find_if(
-    registered_operation_mode_handles_.begin(), registered_operation_mode_handles_.end(),
-    [&](auto operation_handle_ptr) -> bool {
-      return operation_handle_ptr->get_name() == name;
-    });
-
-  if (handle_pos == registered_operation_mode_handles_.end()) {
-    RCLCPP_ERROR(
-      rclcpp::get_logger("joint operation mode handle"),
-      "cannot get handle. No joint %s found.\n", name.c_str());
-    return HW_RET_ERROR;
-  }
-
-  *operation_mode_handle = *handle_pos;
-  return HW_RET_OK;
+  return get_handle<OperationModeHandle>(registered_operation_mode_handles_, name,
+                                         operation_mode_handle, "joint operation mode handle");
 }
 
 std::vector<std::string>
