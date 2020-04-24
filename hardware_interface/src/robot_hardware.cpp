@@ -19,6 +19,7 @@
 #include <vector>
 
 #include "hardware_interface/macros.hpp"
+#include "hardware_interface/operation_mode_handle.hpp"
 #include "rclcpp/rclcpp.hpp"
 
 namespace hardware_interface
@@ -118,26 +119,28 @@ RobotHardware::get_operation_mode_handle(
            operation_mode_handle, "joint operation mode handle");
 }
 
+template<typename T>
+std::vector<std::string>
+get_registered_names(std::vector<T *> & registered_handles)
+{
+  std::vector<std::string> names;
+  names.reserve(registered_handles.size());
+  for (auto handle : registered_handles) {
+    names.push_back(handle->get_name());
+  }
+  return names;
+}
+
 std::vector<std::string>
 RobotHardware::get_registered_joint_names()
 {
-  std::vector<std::string> joint_names;
-  joint_names.reserve(registered_joint_state_handles_.size());
-  for (auto joint_state_handle : registered_joint_state_handles_) {
-    joint_names.push_back(joint_state_handle->get_name());
-  }
-  return joint_names;
+  return get_registered_names<const JointStateHandle>(registered_joint_state_handles_);
 }
 
 std::vector<std::string>
 RobotHardware::get_registered_write_op_names()
 {
-  std::vector<std::string> op_names;
-  op_names.reserve(registered_operation_mode_handles_.size());
-  for (auto op_mode_handle : registered_operation_mode_handles_) {
-    op_names.push_back(op_mode_handle->get_name());
-  }
-  return op_names;
+  return get_registered_names<OperationModeHandle>(registered_operation_mode_handles_);
 }
 
 std::vector<const JointStateHandle *>
