@@ -24,55 +24,41 @@
 namespace hardware_interface
 {
 
+template<typename T>
 hardware_interface_ret_t
-RobotHardware::register_joint_state_handle(const JointStateHandle * joint_handle)
+register_handle(std::vector<T *>& registered_handles, T * handle)
 {
   auto handle_pos = std::find_if(
-    registered_joint_state_handles_.begin(), registered_joint_state_handles_.end(),
-    [&](auto joint_handle_ptr) -> bool {
-      return joint_handle_ptr->get_name() == joint_handle->get_name();
+    registered_handles.begin(), registered_handles.end(),
+    [&](auto handle_ptr) -> bool {
+      return handle_ptr->get_name() == handle->get_name();
     });
 
   // handle exist already
-  if (handle_pos != registered_joint_state_handles_.end()) {
+  if (handle_pos != registered_handles.end()) {
     return HW_RET_ERROR;
   }
-  registered_joint_state_handles_.push_back(joint_handle);
+  registered_handles.push_back(handle);
   return HW_RET_OK;
+}
+
+hardware_interface_ret_t
+RobotHardware::register_joint_state_handle(const JointStateHandle * joint_handle)
+{
+  return register_handle<const JointStateHandle>(registered_joint_state_handles_, joint_handle);
 }
 
 hardware_interface_ret_t
 RobotHardware::register_joint_command_handle(JointCommandHandle * joint_handle)
 {
-  auto handle_pos = std::find_if(
-    registered_joint_command_handles_.begin(), registered_joint_command_handles_.end(),
-    [&](auto joint_handle_ptr) -> bool {
-      return joint_handle_ptr->get_name() == joint_handle->get_name();
-    });
-
-  // handle exist already
-  if (handle_pos != registered_joint_command_handles_.end()) {
-    return HW_RET_ERROR;
-  }
-  registered_joint_command_handles_.push_back(joint_handle);
-  return HW_RET_OK;
+  return register_handle<JointCommandHandle>(registered_joint_command_handles_, joint_handle);
 }
 
 hardware_interface_ret_t
 RobotHardware::register_operation_mode_handle(OperationModeHandle * operation_mode_handle)
 {
-  auto operation_pos = std::find_if(
-    registered_operation_mode_handles_.begin(), registered_operation_mode_handles_.end(),
-    [&](auto operation_handle_ptr) -> bool {
-      return operation_handle_ptr->get_name() == operation_mode_handle->get_name();
-    });
-
-  // handle exist already
-  if (operation_pos != registered_operation_mode_handles_.end()) {
-    return HW_RET_ERROR;
-  }
-  registered_operation_mode_handles_.push_back(operation_mode_handle);
-  return HW_RET_OK;
+  return register_handle<OperationModeHandle>(registered_operation_mode_handles_,
+                                              operation_mode_handle);
 }
 
 hardware_interface_ret_t
