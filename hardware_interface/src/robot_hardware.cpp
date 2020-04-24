@@ -26,7 +26,7 @@ namespace hardware_interface
 
 template<typename T>
 hardware_interface_ret_t
-register_handle(std::vector<T *>& registered_handles, T * handle)
+register_handle(std::vector<T *> & registered_handles, T * handle)
 {
   auto handle_pos = std::find_if(
     registered_handles.begin(), registered_handles.end(),
@@ -58,13 +58,13 @@ hardware_interface_ret_t
 RobotHardware::register_operation_mode_handle(OperationModeHandle * operation_mode_handle)
 {
   return register_handle<OperationModeHandle>(registered_operation_mode_handles_,
-                                              operation_mode_handle);
+           operation_mode_handle);
 }
 
 template<typename T>
 hardware_interface_ret_t
 get_handle(
-  std::vector<T *>& registered_handles, const std::string & name, T ** handle,
+  std::vector<T *> & registered_handles, const std::string & name, T ** handle,
   const std::string & logger_name)
 {
   if (name.empty()) {
@@ -97,7 +97,7 @@ RobotHardware::get_joint_state_handle(
 {
   THROW_ON_NOT_NULLPTR(*joint_state_handle)
   return get_handle<const JointStateHandle>(registered_joint_state_handles_, name,
-                                            joint_state_handle, "joint state handle");
+           joint_state_handle, "joint state handle");
 }
 
 hardware_interface_ret_t
@@ -106,7 +106,7 @@ RobotHardware::get_joint_command_handle(
 {
   THROW_ON_NOT_NULLPTR(*joint_command_handle)
   return get_handle<JointCommandHandle>(registered_joint_command_handles_, name,
-                                        joint_command_handle, "joint cmd handle");
+           joint_command_handle, "joint cmd handle");
 }
 
 hardware_interface_ret_t
@@ -115,7 +115,7 @@ RobotHardware::get_operation_mode_handle(
 {
   THROW_ON_NOT_NULLPTR(*operation_mode_handle)
   return get_handle<OperationModeHandle>(registered_operation_mode_handles_, name,
-                                         operation_mode_handle, "joint operation mode handle");
+           operation_mode_handle, "joint operation mode handle");
 }
 
 std::vector<std::string>
