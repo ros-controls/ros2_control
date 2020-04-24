@@ -23,7 +23,7 @@ Once ROS 2 is successfully installed, an overlay workspace can be created for th
 $ mkdir -p ~/ros2_control_ws/src
 $ cd $_
 $ git clone https://github.com/ros-controls/ros2_control.git
-$ git clone https://github.com/ros-controls/ros2_controlllers.git
+$ git clone https://github.com/ros-controls/ros2_controllers.git
 ```
 
 We can then compile the overlay workspace. For this we first have to source the ROS 2 installation. In this case, we source the `setup.bash` from the Bouncy binary distribution for Ubuntu. Obviously, the path to the setup file is different on each platform and thus has to be adjusted. Once ROS 2 is sourced, we can compile the ros2_control packages.
