@@ -58,8 +58,9 @@ RobotHardware::register_joint_command_handle(JointCommandHandle * joint_handle)
 hardware_interface_ret_t
 RobotHardware::register_operation_mode_handle(OperationModeHandle * operation_mode_handle)
 {
-  return register_handle<OperationModeHandle>(registered_operation_mode_handles_,
-           operation_mode_handle);
+  return register_handle<OperationModeHandle>(
+    registered_operation_mode_handles_,
+    operation_mode_handle);
 }
 
 template<typename T>
@@ -97,8 +98,9 @@ RobotHardware::get_joint_state_handle(
   const std::string & name, const JointStateHandle ** joint_state_handle)
 {
   THROW_ON_NOT_NULLPTR(*joint_state_handle)
-  return get_handle<const JointStateHandle>(registered_joint_state_handles_, name,
-           joint_state_handle, "joint state handle");
+  return get_handle<const JointStateHandle>(
+    registered_joint_state_handles_, name,
+    joint_state_handle, "joint state handle");
 }
 
 hardware_interface_ret_t
@@ -106,8 +108,9 @@ RobotHardware::get_joint_command_handle(
   const std::string & name, JointCommandHandle ** joint_command_handle)
 {
   THROW_ON_NOT_NULLPTR(*joint_command_handle)
-  return get_handle<JointCommandHandle>(registered_joint_command_handles_, name,
-           joint_command_handle, "joint cmd handle");
+  return get_handle<JointCommandHandle>(
+    registered_joint_command_handles_, name,
+    joint_command_handle, "joint cmd handle");
 }
 
 hardware_interface_ret_t
@@ -115,8 +118,9 @@ RobotHardware::get_operation_mode_handle(
   const std::string & name, OperationModeHandle ** operation_mode_handle)
 {
   THROW_ON_NOT_NULLPTR(*operation_mode_handle)
-  return get_handle<OperationModeHandle>(registered_operation_mode_handles_, name,
-           operation_mode_handle, "joint operation mode handle");
+  return get_handle<OperationModeHandle>(
+    registered_operation_mode_handles_, name,
+    operation_mode_handle, "joint operation mode handle");
 }
 
 template<typename T>
