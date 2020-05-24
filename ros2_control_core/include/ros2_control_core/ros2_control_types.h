@@ -41,6 +41,10 @@ using return_type = int;
 static constexpr return_type ROS2C_RETURN_OK = 0;
 static constexpr return_type ROS2C_RETURN_ERROR = 1;
 
+static constexpr return_type ROS2C_RETURN_ACTUATOR_CLAIMED_ERROR = 10;
+static constexpr return_type ROS2C_RETURN_ACTUATOR_ALREADY_CLAIMED = 11;
+static constexpr return_type ROS2C_RETURN_ACTUATOR_NOT_CLAIMED = 11;
+static constexpr return_type ROS2C_RETURN_ACTUATOR_UNATHORIZED_UNCLAIM = 13;
 static constexpr return_type ROS2C_RETURN_ACTUATOR_CAN_NOT_READ = 20;
 
 class CommunicationInterfaceDescription

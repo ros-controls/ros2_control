@@ -21,7 +21,9 @@ find_package(rclcpp REQUIRED)
 
 ## COMPILE
 add_library(${PROJECT_NAME} SHARED
+  src/ros2_control_core/components/actuator.cpp
   src/ros2_control_core/components/robot.cpp
+  src/ros2_control_core/components/sensor.cpp
 )
 
 target_include_directories(${PROJECT_NAME}
@@ -58,7 +60,16 @@ if(BUILD_TESTING)
 endif()
 
 ## EXPORTS
-ament_export_libraries(${PROJECT_NAME})
-ament_export_include_directories(include)
+ament_export_dependencies(
+  control_msgs
+  pluginlib
+  rclcpp
+)
+ament_export_libraries(
+  ${PROJECT_NAME}
+)
+ament_export_include_directories(
+include
+)
 ament_package()
 

@@ -16,36 +16,39 @@
 #ifndef ROS2_CONTROL_CORE__COMPONENTS_SENSOR_HPP_
 #define ROS2_CONTROL_CORE__COMPONENTS_SENSOR_HPP_
 
+#include <string>
+
+#include "control_msgs/msg/interface_value.hpp"
+
 #include "rclcpp/macros.hpp"
 #include "rclcpp/rclcpp.hpp"
+
+#include "ros2_control_core/components/simple_component.hpp"
+#include "ros2_control_core/hardware/sensor_hardware.hpp"
 
 #include "ros2_control_core/ros2_control_types.h"
 #include "ros2_control_core/visibility_control.h"
 
-#include "ros2_control_core/components/simple_component.hpp"
-
-#include "ros2_control_core/hardware/sensor_hardware.hpp"
-
-
 namespace ros2_control_core_components
 {
 
-class Sensor : protected SimpleComponent< ros2_control_core_hardware::SensorHardware >
+class Sensor : public SimpleComponent< ros2_control_core_hardware::SensorHardware >
 {
 public:
-  RCLCPP_SHARED_PTR_DEFINITIONS(Sensor)
+  RCLCPP_SHARED_PTR_DEFINITIONS(Sensor);
 
   ROS2_CONTROL_CORE_PUBLIC Sensor() = default;
 
   ROS2_CONTROL_CORE_PUBLIC virtual ~Sensor() = default;
 
-  ROS2_CONTROL_CORE_PUBLIC virtual ros2_control_types::return_type read() = 0;
+  ROS2_CONTROL_CORE_PUBLIC ros2_control_types::return_type configure(const std::string parameters_path, const rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logging_interface, const rclcpp::node_interfaces::NodeParametersInterface::SharedPtr parameters_interface, const rclcpp::node_interfaces::NodeServicesInterface::SharedPtr services_interface);
 
-  template < class SensorDataType >
-  ROS2_CONTROL_CORE_PUBLIC ros2_control_types::return_type read(SensorDataType& data);
+//   ROS2_CONTROL_CORE_PUBLIC virtual ros2_control_types::return_type read() = 0;
 
-  template < class ActuatorDataType >
-  ROS2_CONTROL_CORE_PUBLIC ros2_control_types::return_type get_value(ActuatorDataType& data);
+  ROS2_CONTROL_CORE_PUBLIC ros2_control_types::return_type read(const control_msgs::msg::InterfaceValue data);
+
+//   template < class ActuatorDataType >
+//   ROS2_CONTROL_CORE_PUBLIC ros2_control_types::return_type get_value(ActuatorDataType& data);
 
 };
 

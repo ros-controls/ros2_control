@@ -34,33 +34,46 @@ template < typename ComponentHardwareType >
 class Component
 {
 public:
-  RCLCPP_SHARED_PTR_DEFINITIONS(Component);
+//   RCLCPP_SHARED_PTR_DEFINITIONS(Component);
 
   ROS2_CONTROL_CORE_PUBLIC Component() = default;
 
-  // This is here because of: https://isocpp.org/wiki/faq/templates#templates-defn-vs-decl
-
-  ROS2_CONTROL_CORE_PUBLIC Component(std::string parameters_path, std::string type, const rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logging_interface, const rclcpp::node_interfaces::NodeParametersInterface::SharedPtr parameters_interface, const rclcpp::node_interfaces::NodeServicesInterface::SharedPtr services_interface) : parameters_path_(parameters_path), type_(type), logger_(logging_interface->get_logger()), parameters_interface_(parameters_interface)
+  ROS2_CONTROL_CORE_PUBLIC Component(std::string parameters_path, std::string type, const rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logging_interface, const rclcpp::node_interfaces::NodeParametersInterface::SharedPtr parameters_interface, const rclcpp::node_interfaces::NodeServicesInterface::SharedPtr services_interface)
   {
-    parameters_interface_->declare_parameter(parameters_path_ + ".name");
+    configure(parameters_path, type, logging_interface, parameters_interface, services_interface);
   };
 
   ROS2_CONTROL_CORE_PUBLIC virtual ~Component() = default;
+
+  // This is here because of: https://isocpp.org/wiki/faq/templates#templates-defn-vs-decl
+  ROS2_CONTROL_CORE_PUBLIC ros2_control_types::return_type configure(std::string parameters_path, std::string type, const rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logging_interface, const rclcpp::node_interfaces::NodeParametersInterface::SharedPtr parameters_interface, const rclcpp::node_interfaces::NodeServicesInterface::SharedPtr services_interface)
+  {
+    parameters_path_ = parameters_path;
+    type_ = type;
+    logging_interface_ = logging_interface;
+    parameters_interface_ = parameters_interface;
+    services_interface_ = services_interface;
+
+    parameters_interface_->declare_parameter(parameters_path_ + ".name");
+
+    return ros2_control_types::ROS2C_RETURN_OK;
+  };
 
 //   ROS2_CONTROL_CORE_PUBLIC ros2_control_types::return_type init(ComponentDescriptionType description_in);
 
   // TODO: Remove if not used...
 //   ROS2_CONTROL_CORE_PUBLIC virtual ros2_control_types::return_type init(std::string name, ros2_control_types::HardwareDescription hardware_description);
 
-  ROS2_CONTROL_CORE_PUBLIC virtual ros2_control_types::return_type recover() = 0;
+//   ROS2_CONTROL_CORE_PUBLIC virtual ros2_control_types::return_type recover() = 0;
 
-  ROS2_CONTROL_CORE_PUBLIC virtual ros2_control_types::return_type stop() = 0;
+//   ROS2_CONTROL_CORE_PUBLIC virtual ros2_control_types::return_type stop() = 0;
 
 protected:
-  const std::string parameters_path_;
-  const std::string type_;
-  rclcpp::Logger logger_;
+  std::string parameters_path_;
+  std::string type_;
+  rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logging_interface_;
   rclcpp::node_interfaces::NodeParametersInterface::SharedPtr parameters_interface_;
+  rclcpp::node_interfaces::NodeServicesInterface::SharedPtr services_interface_;
 
   uint n_dof_;
 

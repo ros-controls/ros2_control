@@ -18,62 +18,55 @@
 
 #include <string>
 
+#include "control_msgs/msg/interface_value.hpp"
+
 #include "rclcpp/macros.hpp"
 #include "rclcpp/rclcpp.hpp"
 
+#include "ros2_control_core/components/simple_component.hpp"
+#include "ros2_control_core/hardware/actuator_hardware.hpp"
+
 #include "ros2_control_core/ros2_control_types.h"
 #include "ros2_control_core/visibility_control.h"
-
-#include "ros2_control_core/components/simple_component.hpp"
-
-#include "ros2_control_core/hardware/actuator_hardware.hpp"
 
 
 namespace ros2_control_core_components
 {
 
-  class Actuator : protected SimpleComponent< ros2_control_core_hardware::ActuatorHardware >
+class Actuator : public SimpleComponent< ros2_control_core_hardware::ActuatorHardware >
 {
 public:
   RCLCPP_SHARED_PTR_DEFINITIONS(Actuator)
 
   ROS2_CONTROL_CORE_PUBLIC Actuator() = default;
 
-  ROS2_CONTROL_CORE_PUBLIC Actuator(const std::string parameters_path, const rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logging_interface, const rclcpp::node_interfaces::NodeParametersInterface::SharedPtr parameters_interface, const rclcpp::node_interfaces::NodeServicesInterface::SharedPtr services_interface) : SimpleComponent(parameters_path, "Actuator", logging_interface, parameters_interface, services_interface)
-  {
-    parameters_interface_->declare_parameter(parameters_path_ + ".can_read");
-  };
-
   ROS2_CONTROL_CORE_PUBLIC virtual ~Actuator() = default;
 
-  ROS2_CONTROL_CORE_PUBLIC virtual ros2_control_types::return_type read() = 0;
+  ROS2_CONTROL_CORE_PUBLIC ros2_control_types::return_type configure(const std::string parameters_path, const rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logging_interface, const rclcpp::node_interfaces::NodeParametersInterface::SharedPtr parameters_interface, const rclcpp::node_interfaces::NodeServicesInterface::SharedPtr services_interface);
 
-  ROS2_CONTROL_CORE_PUBLIC virtual ros2_control_types::return_type write() = 0;
+//   ROS2_CONTROL_CORE_PUBLIC virtual ros2_control_types::return_type read() = 0;
 
-  template < class ActuatorDataType >
-  ROS2_CONTROL_CORE_PUBLIC ros2_control_types::return_type read(ActuatorDataType& data);
+//   ROS2_CONTROL_CORE_PUBLIC virtual ros2_control_types::return_type write() = 0;
 
-  template < class ActuatorDataType >
-  ROS2_CONTROL_CORE_PUBLIC ros2_control_types::return_type write(ActuatorDataType& data);
+  ROS2_CONTROL_CORE_PUBLIC ros2_control_types::return_type read(const control_msgs::msg::InterfaceValue data);
 
-  template < class ActuatorDataType >
-  ROS2_CONTROL_CORE_PUBLIC ros2_control_types::return_type set_value(ActuatorDataType& data);
+  ROS2_CONTROL_CORE_PUBLIC ros2_control_types::return_type write(const control_msgs::msg::InterfaceValue::SharedPtr data);
 
-  template < typename ActuatorDataType >
-  ROS2_CONTROL_CORE_PUBLIC ros2_control_types::return_type get_value(ActuatorDataType& data);
+//   ROS2_CONTROL_CORE_PUBLIC ros2_control_types::return_type set_value(const control_msgs::msg::InterfaceValue::SharedPtr data);
 
-  ROS2_CONTROL_CORE_PUBLIC virtual ros2_control_types::return_type claim(std::string claimer_id) = 0;
+//   ROS2_CONTROL_CORE_PUBLIC ros2_control_types::return_type get_value(const control_msgs::msg::InterfaceValue::SharedPtr data);
 
-  ROS2_CONTROL_CORE_PUBLIC virtual ros2_control_types::return_type unclaim(std::string claimer_id) = 0;
+  ROS2_CONTROL_CORE_PUBLIC ros2_control_types::return_type claim(const std::string claimer_id);
 
-  ROS2_CONTROL_CORE_PUBLIC virtual bool isClaimed() = 0;
+  ROS2_CONTROL_CORE_PUBLIC ros2_control_types::return_type unclaim(const std::string claimer_id);
 
-  ROS2_CONTROL_CORE_PUBLIC virtual bool canRead() = 0;
+  ROS2_CONTROL_CORE_PUBLIC bool isClaimed();
+
+  ROS2_CONTROL_CORE_PUBLIC bool canRead();
 
 protected:
   bool can_read = false;
-  std::string claimer;
-
+  std::string claimer = "";
 };
 
 }  // namespace ros2_control_core_components

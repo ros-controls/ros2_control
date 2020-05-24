@@ -17,7 +17,9 @@
 #define ROS2_CONTROL_CORE__LOADERS_PLUGINLIB_HPP_
 
 
+#include "ros2_control_core/components/actuator.hpp"
 #include "ros2_control_core/components/component.hpp"
+#include "ros2_control_core/components/sensor.hpp"
 #include "ros2_control_core/hardware/component_hardware.hpp"
 #include "ros2_control_core/visibility_control.h"
 
@@ -41,7 +43,7 @@ public:
   ROS2_CONTROL_CORE_PUBLIC
   std::shared_ptr<ROS2ControlType> create(const std::string & type)
   {
-    return loader_->createSharedInstance(type);
+    return std::shared_ptr<ROS2ControlType>(loader_->createUnmanagedInstance(type));
   };
 
   ROS2_CONTROL_CORE_PUBLIC
@@ -67,6 +69,22 @@ public:
 
 class ComponentLoaderPluginlib : public ComponentBaseLoaderPluginlib< ros2_control_core_hardware::ComponentHardware >
 {
+};
+
+class ActuatorLoaderPluginlib : public ROS2ControlLoaderPluginlib< ros2_control_core_components::Actuator >
+{
+public:
+  ROS2_CONTROL_CORE_PUBLIC ActuatorLoaderPluginlib() : ROS2ControlLoaderPluginlib< ros2_control_core_components::Actuator >("ros2_control_components", "ros2_control_core_components::Actuator") {};
+
+  ROS2_CONTROL_CORE_PUBLIC ~ActuatorLoaderPluginlib() = default;
+};
+
+class SensorLoaderPluginlib : public ROS2ControlLoaderPluginlib< ros2_control_core_components::Sensor >
+{
+public:
+  ROS2_CONTROL_CORE_PUBLIC SensorLoaderPluginlib() : ROS2ControlLoaderPluginlib< ros2_control_core_components::Sensor >("ros2_control_components", "ros2_control_core_components::Sensor") {};
+
+  ROS2_CONTROL_CORE_PUBLIC ~SensorLoaderPluginlib() = default;
 };
 
 

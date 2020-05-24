@@ -17,14 +17,6 @@
 using namespace ros2_control_core_components;
 
 
-// Robot::Robot(std::string name, const rclcpp::Node::SharedPtr node, std::string param_base_path) : Component(name)
-// {
-//   std::map<std::string, rclcpp::Parameter> params;
-//   node->get_parameters(param_base_path, params);
-//
-//   RCLCPP_INFO(node->get_logger(), "Robot Component created...");
-// }
-
 Robot::Robot(const std::string parameters_path, const rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logging_interface, const rclcpp::node_interfaces::NodeParametersInterface::SharedPtr parameters_interface, const rclcpp::node_interfaces::NodeServicesInterface::SharedPtr services_interface) : Component(parameters_path, "Robot", logging_interface, parameters_interface, services_interface)
 {
   parameters_interface_->declare_parameter(parameters_path_ + ".joints");
@@ -35,17 +27,28 @@ Robot::Robot(const std::string parameters_path, const rclcpp::node_interfaces::N
   n_dof_ = joints_.size();
 
   //TODO: is very suboptimal... maybe the base class shold not be templated... Because the robot should not access directly to Actuator/
-  ros2_control_core::ComponentLoaderPluginlib loader;
+  ros2_control_core::ActuatorLoaderPluginlib actuator_loader;
+  ros2_control_core::SensorLoaderPluginlib sensor_loader;
 
-  RCLCPP_WARN(logger_, parameters_interface_->get_parameter(parameters_path + ".joints").value_to_string());
+  RCLCPP_WARN(logging_interface_->get_logger(), parameters_interface_->get_parameter(parameters_path + ".joints").value_to_string());
 
   for (auto joint: joints_)
   {
     parameters_interface_->declare_parameter(parameters_path + ".actuators." + joint + ".type");
-    RCLCPP_WARN(logger_, parameters_interface_->get_parameter(parameters_path + ".actuators." + joint + ".type").as_string());
-    RCLCPP_WARN(logger_, "Is available: %s", (loader.is_available(parameters_interface_->get_parameter(parameters_path + ".actuators." + joint + ".type").as_string()) ? "true" : "false"));
+    RCLCPP_WARN(logging_interface_->get_logger(), parameters_interface_->get_parameter(parameters_path + ".actuators." + joint + ".type").as_string());
+    RCLCPP_WARN(logging_interface_->get_logger(), "Is available: %s", (actuator_loader.is_available(parameters_interface_->get_parameter(parameters_path + ".actuators." + joint + ".type").as_string()) ? "true" : "false"));
 
-//     actuators_[joint] = Actuator(parameters_path_ + ".actuators." + joint, logging_interface, parameters_interface, services_interface);
+    actuators_[joint] = actuator_loader.create(parameters_interface_->get_parameter(parameters_path + ".actuators." + joint + ".type").as_string());
+
+    actuators_[joint]->configure(parameters_path_ + ".actuators." + joint, logging_interface, parameters_interface, services_interface);
+
+    parameters_interface_->declare_parameter(parameters_path + ".sensors." + joint + ".type");
+    RCLCPP_WARN(logging_interface_->get_logger(), parameters_interface_->get_parameter(parameters_path + ".sensors." + joint + ".type").as_string());
+    RCLCPP_WARN(logging_interface_->get_logger(), "Is available: %s", (sensor_loader.is_available(parameters_interface_->get_parameter(parameters_path + ".sensors." + joint + ".type").as_string()) ? "true" : "false"));
+
+    sensors_[joint] = sensor_loader.create(parameters_interface_->get_parameter(parameters_path + ".sensors." + joint + ".type").as_string());
+
+    sensors_[joint]->configure(parameters_path_ + ".sensors." + joint, logging_interface, parameters_interface, services_interface);
   }
 
 //   std::map<std::string, rclcpp::Parameter> params;
@@ -56,15 +59,15 @@ Robot::Robot(const std::string parameters_path, const rclcpp::node_interfaces::N
 //
 //   for (auto const& param : params)
 //   {
-//     RCLCPP_WARN(logger_, "String: %s, value: %s", param.first, param.second.as_string());
+//     RCLCPP_WARN(logging_interface_->get_logger(), "String: %s, value: %s", param.first, param.second.as_string());
 //   }
 
-  RCLCPP_INFO(logger_, "Robot Component created...");
+RCLCPP_INFO(logging_interface_->get_logger(), "Robot Component created...");
 }
 
 ros2_control_types::return_type Robot::recover()
 {
-  RCLCPP_INFO(logger_, "Called recover in Robot class");
+  RCLCPP_INFO(logging_interface_->get_logger(), "Called recover in Robot class");
   return ros2_control_types::ROS2C_RETURN_OK;
 }
 
