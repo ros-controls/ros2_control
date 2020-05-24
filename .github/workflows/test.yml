@@ -28,7 +28,7 @@ jobs:
           name: codecov-umbrella
           yml: ./codecov.yml
           fail_ci_if_error: true
-      - uses: actions/upload-artifact@master
+      - uses: actions/upload-artifact@v1
         with:
           name: colcon-logs-${{ matrix.os }}
           path: ros_ws/log
