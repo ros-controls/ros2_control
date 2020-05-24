@@ -15,6 +15,7 @@ endif()
 find_package(ament_cmake REQUIRED)
 
 find_package(control_msgs REQUIRED)
+find_package(pluginlib REQUIRED)
 find_package(rclcpp REQUIRED)
 
 
@@ -29,6 +30,8 @@ target_include_directories(${PROJECT_NAME}
 
 ament_target_dependencies(${PROJECT_NAME}
   control_msgs
+  pluginlib
+  rclcpp
 )
 
 ## INSTALL

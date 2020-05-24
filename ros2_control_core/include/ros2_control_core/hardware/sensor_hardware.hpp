@@ -25,7 +25,7 @@
 namespace ros2_control_core_hardware
 {
 
-class SensorHardware : ComponentHardware< ros2_control_types::SensorHardwareDescription >
+class SensorHardware : ComponentHardware
 {
 public:
   ROS2_CONTROL_CORE_PUBLIC SensorHardware() = default;

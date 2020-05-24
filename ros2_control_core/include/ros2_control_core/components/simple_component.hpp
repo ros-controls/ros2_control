@@ -28,11 +28,18 @@
 namespace ros2_control_core_components
 {
 
-template < typename ComponentDescriptionType, typename ComponentHardwareType >
-class SimpleComponent : Component<ComponentDescriptionType, ComponentHardwareType>
+template < typename ComponentHardwareType >
+class SimpleComponent : protected Component< ComponentHardwareType >
 {
 public:
   ROS2_CONTROL_CORE_PUBLIC SimpleComponent() = default;
+
+  ROS2_CONTROL_CORE_PUBLIC SimpleComponent(const std::string parameters_path, const std::string type, const rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logging_interface, const rclcpp::node_interfaces::NodeParametersInterface::SharedPtr parameters_interface, const rclcpp::node_interfaces::NodeServicesInterface::SharedPtr services_interface) : Component< ComponentHardwareType >(parameters_path, type, logging_interface, parameters_interface, services_interface)
+  {
+    parameters_interface->declare_parameter(parameters_path + ".n_dof");
+    parameters_interface->declare_parameter(parameters_path + ".min_values");
+    parameters_interface->declare_parameter(parameters_path + ".max_values");
+  };
 
   ROS2_CONTROL_CORE_PUBLIC virtual ~SimpleComponent() = default;
 

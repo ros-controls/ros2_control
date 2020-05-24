@@ -17,27 +17,49 @@
 using namespace ros2_control_core_components;
 
 
-Robot::Robot(std::string name, const rclcpp::Node::SharedPtr node, std::string param_base_path) : Component(name), logger_(node->get_logger())
+// Robot::Robot(std::string name, const rclcpp::Node::SharedPtr node, std::string param_base_path) : Component(name)
+// {
+//   std::map<std::string, rclcpp::Parameter> params;
+//   node->get_parameters(param_base_path, params);
+//
+//   RCLCPP_INFO(node->get_logger(), "Robot Component created...");
+// }
+
+Robot::Robot(const std::string parameters_path, const rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logging_interface, const rclcpp::node_interfaces::NodeParametersInterface::SharedPtr parameters_interface, const rclcpp::node_interfaces::NodeServicesInterface::SharedPtr services_interface) : Component(parameters_path, "Robot", logging_interface, parameters_interface, services_interface)
 {
-  std::map<std::string, rclcpp::Parameter> params;
-  node->get_parameters(param_base_path, params);
+  parameters_interface_->declare_parameter(parameters_path_ + ".joints");
+  parameters_interface_->declare_parameter(parameters_path_ + ".is_modular");
 
-  RCLCPP_INFO(node->get_logger(), "Robot Component created...");
-}
+  // Create all Actuator and Sensors defined for each joints
+  joints_ = parameters_interface_->get_parameter(parameters_path + ".joints").as_string_array();
+  n_dof_ = joints_.size();
 
-Robot::Robot(const std::string name, const rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logging_interface, const rclcpp::node_interfaces::NodeParametersInterface::SharedPtr param_interface, const rclcpp::node_interfaces::NodeServicesInterface::SharedPtr services_interface, const std::string param_base_path) : Component(name), logger_(logging_interface->get_logger())
-{
-  std::map<std::string, rclcpp::Parameter> params;
+  //TODO: is very suboptimal... maybe the base class shold not be templated... Because the robot should not access directly to Actuator/
+  ros2_control_core::ComponentLoaderPluginlib loader;
 
+  RCLCPP_WARN(logger_, parameters_interface_->get_parameter(parameters_path + ".joints").value_to_string());
 
-  param_interface->get_parameters_by_prefix(param_base_path, params);
-
-  for (auto const& param : params)
+  for (auto joint: joints_)
   {
-    RCLCPP_WARN(logger_, "String: %s, value: %s", param.first, param.second.as_string());
+    parameters_interface_->declare_parameter(parameters_path + ".actuators." + joint + ".type");
+    RCLCPP_WARN(logger_, parameters_interface_->get_parameter(parameters_path + ".actuators." + joint + ".type").as_string());
+    RCLCPP_WARN(logger_, "Is available: %s", (loader.is_available(parameters_interface_->get_parameter(parameters_path + ".actuators." + joint + ".type").as_string()) ? "true" : "false"));
+
+//     actuators_[joint] = Actuator(parameters_path_ + ".actuators." + joint, logging_interface, parameters_interface, services_interface);
   }
 
-  RCLCPP_INFO(logging_interface->get_logger(), "Robot Component created...");
+//   std::map<std::string, rclcpp::Parameter> params;
+//
+//   param_interface->describe_parameters();
+//
+//   param_interface->get_parameters_by_prefix(param_base_path, params);
+//
+//   for (auto const& param : params)
+//   {
+//     RCLCPP_WARN(logger_, "String: %s, value: %s", param.first, param.second.as_string());
+//   }
+
+  RCLCPP_INFO(logger_, "Robot Component created...");
 }
 
 ros2_control_types::return_type Robot::recover()

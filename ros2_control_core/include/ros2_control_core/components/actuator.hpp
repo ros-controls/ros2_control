@@ -18,9 +18,11 @@
 
 #include <string>
 
-#include "ros2_control_core/visibility_control.h"
+#include "rclcpp/macros.hpp"
+#include "rclcpp/rclcpp.hpp"
 
 #include "ros2_control_core/ros2_control_types.h"
+#include "ros2_control_core/visibility_control.h"
 
 #include "ros2_control_core/components/simple_component.hpp"
 
@@ -30,10 +32,17 @@
 namespace ros2_control_core_components
 {
 
-class Actuator : private SimpleComponent< ros2_control_types::ActuatorDescription, ros2_control_core_hardware::ActuatorHardware >
+  class Actuator : protected SimpleComponent< ros2_control_core_hardware::ActuatorHardware >
 {
 public:
+  RCLCPP_SHARED_PTR_DEFINITIONS(Actuator)
+
   ROS2_CONTROL_CORE_PUBLIC Actuator() = default;
+
+  ROS2_CONTROL_CORE_PUBLIC Actuator(const std::string parameters_path, const rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logging_interface, const rclcpp::node_interfaces::NodeParametersInterface::SharedPtr parameters_interface, const rclcpp::node_interfaces::NodeServicesInterface::SharedPtr services_interface) : SimpleComponent(parameters_path, "Actuator", logging_interface, parameters_interface, services_interface)
+  {
+    parameters_interface_->declare_parameter(parameters_path_ + ".can_read");
+  };
 
   ROS2_CONTROL_CORE_PUBLIC virtual ~Actuator() = default;
 

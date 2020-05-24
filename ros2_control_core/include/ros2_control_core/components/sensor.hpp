@@ -16,9 +16,11 @@
 #ifndef ROS2_CONTROL_CORE__COMPONENTS_SENSOR_HPP_
 #define ROS2_CONTROL_CORE__COMPONENTS_SENSOR_HPP_
 
-#include "ros2_control_core/visibility_control.h"
+#include "rclcpp/macros.hpp"
+#include "rclcpp/rclcpp.hpp"
 
 #include "ros2_control_core/ros2_control_types.h"
+#include "ros2_control_core/visibility_control.h"
 
 #include "ros2_control_core/components/simple_component.hpp"
 
@@ -28,9 +30,11 @@
 namespace ros2_control_core_components
 {
 
-class Sensor : private SimpleComponent< ros2_control_types::SensorDescription, ros2_control_core_hardware::SensorHardware >
+class Sensor : protected SimpleComponent< ros2_control_core_hardware::SensorHardware >
 {
 public:
+  RCLCPP_SHARED_PTR_DEFINITIONS(Sensor)
+
   ROS2_CONTROL_CORE_PUBLIC Sensor() = default;
 
   ROS2_CONTROL_CORE_PUBLIC virtual ~Sensor() = default;

@@ -9,8 +9,9 @@
 
   <maintainer email="denis@stogl.de">Denis Štogl</maintainer>
 
-  <depend>rclcpp</depend>
   <depend>control_msgs</depend>
+  <depend>pluginlib</depend>
+  <depend>rclcpp</depend>
 
   <test_depend>ament_cmake_gtest</test_depend>
 

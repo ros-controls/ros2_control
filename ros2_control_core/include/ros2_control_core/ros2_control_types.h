@@ -25,9 +25,12 @@
 #include <map>
 #include <string>
 
+#include "rclcpp/rclcpp.hpp"
+
 #include "ros2_control_core/visibility_control.h"
 
 #include "control_msgs/msg/interface_value.hpp"
+
 
 // TODO: Do we need "ROS2_CONTROL_CORE_PUBLIC" before the variables?
 
@@ -51,34 +54,80 @@ public:
 class HardwareDescription
 {
 public:
-  std::string name;
+  std::string type;
   CommunicationInterfaceDescription comm_interface_descr;
-  std::map<std::string, std::string> params;
+//   std::map<std::string, std::string> params;
+  HardwareDescription() {
+    parameter_names_.push_back("type");
+  };
+
+  std::vector<std::string> get_parameter_names() {
+    add_child_parameters();
+
+    return parameter_names_;
+  };
+
+protected:
+  std::vector<std::string> parameter_names_;
+
+  virtual void add_child_parameters() = 0;
 };
 
-class ActuatorHardwareDescription : HardwareDescription
+class ActuatorHardwareDescription : public HardwareDescription
 {
+  void add_child_parameters()
+  {
+  };
 };
 
-class SensorHardwareDescription : HardwareDescription
+class SensorHardwareDescription : public HardwareDescription
 {
+  void add_child_parameters()
+  {
+  };
 };
 
-class RobotHardwareDescription : HardwareDescription
+class RobotHardwareDescription : public HardwareDescription
 {
+  void add_child_parameters()
+  {
+      parameter_names_.push_back("robot_hardware_example_param");
+  };
 };
 
-
+template < typename HardwareDescriptionType >
 class ComponentDescription
 {
 public:
   std::string name;
   const std::string type;
-  HardwareDescription hardware_descr;
+  HardwareDescriptionType hardware_descr;
   std::map<std::string, std::string> params;
+
+  ComponentDescription(std::string name, const std::string type) : name(name), type(type)
+  {
+    parameter_names_.push_back(name + ".name");
+  };
+
+  std::vector<std::string> get_parameter_names() {
+    add_child_parameters();
+
+    for (const std::string param: hardware_descr.get_parameter_names())
+    {
+        parameter_names_.push_back(name + "." + type + "Hardware." + param);
+    }
+
+    return parameter_names_;
+  };
+
+protected:
+  std::vector<std::string> parameter_names_;
+
+  virtual void add_child_parameters() = 0;
 };
 
-class SimpleComponentDescription : ComponentDescription
+template < typename HardwareDescriptionType >
+class SimpleComponentDescription : public ComponentDescription<HardwareDescriptionType>
 {
 public:
   uint8_t n_dof;
@@ -89,18 +138,33 @@ public:
 
 
 // typedef SimpleComponentDescription ActuatorDescription;
-class ActuatorDescription : SimpleComponentDescription
+class ActuatorDescription : public SimpleComponentDescription<ActuatorHardwareDescription>
 {
+  void add_child_parameters()
+  {
+  }
 };
 
 // typedef SimpleComponentDescription SensorDescription;
-class SensorDescription : SimpleComponentDescription
+class SensorDescription : public SimpleComponentDescription<SensorHardwareDescription>
 {
+  void add_child_parameters()
+  {
+  }
 };
 
-class RobotDescription : ComponentDescription
+class RobotDescription : public ComponentDescription<RobotHardwareDescription>
 {
+public:
   bool is_modular;
+
+  RobotDescription(std::string name, const std::string type) : ComponentDescription<RobotHardwareDescription>(name, type){};
+
+  void add_child_parameters()
+  {
+    parameter_names_.push_back(name + ".is_modular");
+    parameter_names_.push_back(name + ".joints");
+  }
 };
 
 }  // namespace ros2_control_core

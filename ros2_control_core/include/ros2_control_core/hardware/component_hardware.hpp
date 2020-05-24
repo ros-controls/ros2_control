@@ -16,27 +16,31 @@
 #ifndef ROS2_CONTROL_CORE__HARDWARE_COMPONENT_HARDWARE_HPP_
 #define ROS2_CONTROL_CORE__HARDWARE_COMPONENT_HARDWARE_HPP_
 
-#include "ros2_control_core/visibility_control.h"
+#include "rclcpp/macros.hpp"
+#include "rclcpp/rclcpp.hpp"
 
 #include "ros2_control_core/ros2_control_types.h"
+#include "ros2_control_core/visibility_control.h"
 
 #include "ros2_control_core/communication_interface/hardware_communication_interface.hpp"
 
 namespace ros2_control_core_hardware
 {
 
-template < typename ComponentHardwareDescriptionType >
+// template < typename ComponentHardwareDescriptionType >
 class ComponentHardware
 {
 public:
+  RCLCPP_SHARED_PTR_DEFINITIONS(ComponentHardware);
+
   ROS2_CONTROL_CORE_PUBLIC ComponentHardware() = default;
 
   ROS2_CONTROL_CORE_PUBLIC virtual ~ComponentHardware() = default;
 
-  ROS2_CONTROL_CORE_PUBLIC ros2_control_types::return_type init(ComponentHardwareDescriptionType description);
+//   ROS2_CONTROL_CORE_PUBLIC ros2_control_types::return_type init(ComponentHardwareDescriptionType description);
 
 protected:
-  ComponentHardwareDescriptionType description;
+//   ComponentHardwareDescriptionType description;
   ros2_control_core_communication_interface::HardwareCommunicationInterface communication_interface;
 
 };

@@ -18,30 +18,38 @@
 
 #include <string>
 
-#include "ros2_control_core/visibility_control.h"
+#include "rclcpp/macros.hpp"
+#include "rclcpp/rclcpp.hpp"
 
+#include "ros2_control_core/visibility_control.h"
 #include "ros2_control_core/ros2_control_types.h"
 
 #include "ros2_control_core/hardware/component_hardware.hpp"
 
+
 namespace ros2_control_core_components
 {
 
-template < typename ComponentDescriptionType, typename ComponentHardwareType >
+template < typename ComponentHardwareType >
 class Component
 {
 public:
+  RCLCPP_SHARED_PTR_DEFINITIONS(Component);
+
   ROS2_CONTROL_CORE_PUBLIC Component() = default;
 
-  ROS2_CONTROL_CORE_PUBLIC Component(std::string name){
-    this->name = name;
+  // This is here because of: https://isocpp.org/wiki/faq/templates#templates-defn-vs-decl
+
+  ROS2_CONTROL_CORE_PUBLIC Component(std::string parameters_path, std::string type, const rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logging_interface, const rclcpp::node_interfaces::NodeParametersInterface::SharedPtr parameters_interface, const rclcpp::node_interfaces::NodeServicesInterface::SharedPtr services_interface) : parameters_path_(parameters_path), type_(type), logger_(logging_interface->get_logger()), parameters_interface_(parameters_interface)
+  {
+    parameters_interface_->declare_parameter(parameters_path_ + ".name");
   };
 
   ROS2_CONTROL_CORE_PUBLIC virtual ~Component() = default;
 
-  ROS2_CONTROL_CORE_PUBLIC ros2_control_types::return_type init(ComponentDescriptionType description_in);
+//   ROS2_CONTROL_CORE_PUBLIC ros2_control_types::return_type init(ComponentDescriptionType description_in);
 
-  // TODO: Remove is not used...
+  // TODO: Remove if not used...
 //   ROS2_CONTROL_CORE_PUBLIC virtual ros2_control_types::return_type init(std::string name, ros2_control_types::HardwareDescription hardware_description);
 
   ROS2_CONTROL_CORE_PUBLIC virtual ros2_control_types::return_type recover() = 0;
@@ -49,9 +57,14 @@ public:
   ROS2_CONTROL_CORE_PUBLIC virtual ros2_control_types::return_type stop() = 0;
 
 protected:
-  std::string name;
-  ComponentDescriptionType description;
-  ComponentHardwareType hardware;
+  const std::string parameters_path_;
+  const std::string type_;
+  rclcpp::Logger logger_;
+  rclcpp::node_interfaces::NodeParametersInterface::SharedPtr parameters_interface_;
+
+  uint n_dof_;
+
+  ComponentHardwareType hardware_;
 };
 
 }  // namespace ros2_control_core_components
