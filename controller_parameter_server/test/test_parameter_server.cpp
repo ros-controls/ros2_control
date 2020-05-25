@@ -57,7 +57,7 @@ TEST_F(TestControllerParameterServer, init_key_value) {
 }
 
 void
-spin(rclcpp::executor::Executor * exe)
+spin(rclcpp::Executor * exe)
 {
   exe->spin();
 }
