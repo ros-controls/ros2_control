@@ -63,15 +63,46 @@ public:
   ROS2_CONTROL_CORE_PUBLIC ros2_control_types::return_type stop();
 
 
-
 protected:
   control_msgs::msg::DynamicJointState joint_states_;
 
   std::vector<std::string> joints_;
+  bool has_robots_;
+  bool has_tools_;
 
   std::map<std::string, Actuator::SharedPtr> actuators_;
   std::map<std::string, Sensor::SharedPtr> sensors_;
   std::map<std::string, Robot::SharedPtr> robots_;
+
+  std::map<std::string, Actuator::SharedPtr> tool_actuators_;
+  std::map<std::string, Sensor::SharedPtr> tool_sensors_;
+
+
+
+  template<typename T>
+  std::map<std::string, std::shared_ptr<T>> loadSubComponents(std::string parameters_prefix, const rclcpp::node_interfaces::NodeParametersInterface::SharedPtr parameters_interface, std::vector<std::string> name_list, ros2_control_core::ROS2ControlLoaderPluginlib<T> class_loader, rclcpp::Logger logger)
+  {
+    std::map<std::string, std::shared_ptr<T>> loaded_components;
+    std::string param_path;
+    std::string temp_parameter;
+    bool class_available;
+    for (auto name: name_list)
+    {
+      param_path = parameters_prefix + "." + name + ".type";
+      parameters_interface->declare_parameter(param_path);
+      temp_parameter = parameters_interface->get_parameter(param_path).as_string();
+      class_available = class_loader.is_available(temp_parameter);
+      if (class_available)
+      {
+        loaded_components[name] = class_loader.create(temp_parameter);
+      }
+      else
+      {
+        RCLCPP_WARN(logger, "Robot %s class is _not_ available.", temp_parameter.c_str());
+      }
+    }
+    return loaded_components;
+  };
 };
 
 }  // namespace ros2_control_core_components

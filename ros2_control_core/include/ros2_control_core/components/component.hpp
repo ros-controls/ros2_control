@@ -55,6 +55,7 @@ public:
     services_interface_ = services_interface;
 
     parameters_interface_->declare_parameter(parameters_path_ + ".name");
+    name_ = parameters_interface_->get_parameter(parameters_path_ + ".name").as_string();
 
     return ros2_control_types::ROS2C_RETURN_OK;
   };
@@ -69,11 +70,18 @@ public:
 //   ROS2_CONTROL_CORE_PUBLIC virtual ros2_control_types::return_type stop() = 0;
 
 protected:
+  /**
+   * @brief Components parameter prefix.
+   *
+   */
   std::string parameters_path_;
   std::string type_;
   rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logging_interface_;
   rclcpp::node_interfaces::NodeParametersInterface::SharedPtr parameters_interface_;
   rclcpp::node_interfaces::NodeServicesInterface::SharedPtr services_interface_;
+
+  std::string name_;
+
 
   uint n_dof_;
 

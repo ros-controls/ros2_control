@@ -20,49 +20,50 @@ using namespace ros2_control_core_components;
 Robot::Robot(const std::string parameters_path, const rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logging_interface, const rclcpp::node_interfaces::NodeParametersInterface::SharedPtr parameters_interface, const rclcpp::node_interfaces::NodeServicesInterface::SharedPtr services_interface) : Component(parameters_path, "Robot", logging_interface, parameters_interface, services_interface)
 {
   parameters_interface_->declare_parameter(parameters_path_ + ".joints");
-  parameters_interface_->declare_parameter(parameters_path_ + ".is_modular");
+  parameters_interface_->declare_parameter(parameters_path_ + ".has_robots", rclcpp::ParameterValue(false));
+  parameters_interface_->declare_parameter(parameters_path_ + ".has_tools", rclcpp::ParameterValue(false));
 
-  // Create all Actuator and Sensors defined for each joints
-  joints_ = parameters_interface_->get_parameter(parameters_path + ".joints").as_string_array();
+  rclcpp::Parameter param_joints = parameters_interface_->get_parameter(parameters_path + ".joints");
+  joints_ = param_joints.as_string_array();
   n_dof_ = joints_.size();
+  RCLCPP_DEBUG(logging_interface_->get_logger(), param_joints.as_string().c_str());
 
-  //TODO: is very suboptimal... maybe the base class shold not be templated... Because the robot should not access directly to Actuator/
   ros2_control_core::ActuatorLoaderPluginlib actuator_loader;
   ros2_control_core::SensorLoaderPluginlib sensor_loader;
+//   ros2_control_core::RobotLoaderPluginlib robot_loader;
 
-  RCLCPP_WARN(logging_interface_->get_logger(), parameters_interface_->get_parameter(parameters_path + ".joints").value_to_string());
+  std::string temp_parameter;
+  bool class_available;
 
-  for (auto joint: joints_)
+  // Create all Actuator and Sensors defined for each joints
+  actuators_ = loadSubComponents<ros2_control_core_components::Actuator>(parameters_path_ + ".actuators", parameters_interface_, joints_, actuator_loader, logging_interface_->get_logger());
+  sensors_ = loadSubComponents<ros2_control_core_components::Sensor>(parameters_path_ + ".sensors", parameters_interface_, joints_, sensor_loader, logging_interface_->get_logger());
+
+  // Initialize sub robots if available
+  has_robots_ = parameters_interface_->get_parameter(parameters_path_ + ".has_robots").as_bool();
+  if (has_robots_)
   {
-    parameters_interface_->declare_parameter(parameters_path + ".actuators." + joint + ".type");
-    RCLCPP_WARN(logging_interface_->get_logger(), parameters_interface_->get_parameter(parameters_path + ".actuators." + joint + ".type").as_string());
-    RCLCPP_WARN(logging_interface_->get_logger(), "Is available: %s", (actuator_loader.is_available(parameters_interface_->get_parameter(parameters_path + ".actuators." + joint + ".type").as_string()) ? "true" : "false"));
+    parameters_interface_->declare_parameter(parameters_path_ + ".robots" + ".robot_names");
+    std::vector<std::string> robot_names = parameters_interface_->get_parameter(parameters_path_ + ".robots" + ".robot_names").as_string_array();
 
-    actuators_[joint] = actuator_loader.create(parameters_interface_->get_parameter(parameters_path + ".actuators." + joint + ".type").as_string());
-
-    actuators_[joint]->configure(parameters_path_ + ".actuators." + joint, logging_interface, parameters_interface, services_interface);
-
-    parameters_interface_->declare_parameter(parameters_path + ".sensors." + joint + ".type");
-    RCLCPP_WARN(logging_interface_->get_logger(), parameters_interface_->get_parameter(parameters_path + ".sensors." + joint + ".type").as_string());
-    RCLCPP_WARN(logging_interface_->get_logger(), "Is available: %s", (sensor_loader.is_available(parameters_interface_->get_parameter(parameters_path + ".sensors." + joint + ".type").as_string()) ? "true" : "false"));
-
-    sensors_[joint] = sensor_loader.create(parameters_interface_->get_parameter(parameters_path + ".sensors." + joint + ".type").as_string());
-
-    sensors_[joint]->configure(parameters_path_ + ".sensors." + joint, logging_interface, parameters_interface, services_interface);
+//     robots = loadSubComponents<ros2_control_core_components::Robots>(parameters_path_ + ".robots", parameters_interface_, robot_names, robot_loader, logging_interface_->get_logger());
   }
 
-//   std::map<std::string, rclcpp::Parameter> params;
-//
-//   param_interface->describe_parameters();
-//
-//   param_interface->get_parameters_by_prefix(param_base_path, params);
-//
-//   for (auto const& param : params)
-//   {
-//     RCLCPP_WARN(logging_interface_->get_logger(), "String: %s, value: %s", param.first, param.second.as_string());
-//   }
+  // Initalize tool sensor and actuators
+  has_tools_ = parameters_interface_->get_parameter(parameters_path_ + ".has_tools").as_bool();
+  if (has_tools_)
+  {
+    parameters_interface_->declare_parameter(parameters_path_ + ".tools" + ".actuator_names", rclcpp::ParameterValue(std::vector<std::string>()));
+    parameters_interface_->declare_parameter(parameters_path_ + ".tools" + ".sensor_names", rclcpp::ParameterValue(std::vector<std::string>()));
+    std::vector<std::string> tool_actuator_names = parameters_interface_->get_parameter(parameters_path_ + ".tools" + ".actuator_names").as_string_array();
+    std::vector<std::string> tool_sensor_names = parameters_interface_->get_parameter(parameters_path_ + ".tools" + ".sensor_names").as_string_array();
 
-RCLCPP_INFO(logging_interface_->get_logger(), "Robot Component created...");
+    tool_actuators_ = loadSubComponents<ros2_control_core_components::Actuator>(parameters_path_ + ".tools.actuators", parameters_interface_, tool_actuator_names, actuator_loader, logging_interface_->get_logger());
+    tool_sensors_ = loadSubComponents<ros2_control_core_components::Sensor>(parameters_path_ + ".tools.sensors", parameters_interface_, tool_sensor_names, sensor_loader, logging_interface_->get_logger());
+  }
+
+
+  RCLCPP_INFO(logging_interface_->get_logger(), "Robot Component '" + name_ + "' created...");
 }
 
 ros2_control_types::return_type Robot::recover()
