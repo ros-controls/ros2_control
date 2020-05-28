@@ -80,26 +80,33 @@ protected:
 
 
   template<typename T>
+  std::shared_ptr<T> load_component_from_parameter(std::string parameter_name, const rclcpp::node_interfaces::NodeParametersInterface::SharedPtr parameters_interface, ros2_control_core::ROS2ControlLoaderPluginlib<T> class_loader, rclcpp::Logger logger)
+  {
+    std::shared_ptr<T> component;
+    std::string class_name;
+    bool class_available;
+
+    parameters_interface->declare_parameter(parameter_name);
+    class_name = parameters_interface->get_parameter(parameter_name).as_string();
+    class_available = class_loader.is_available(class_name);
+    if (class_available)
+    {
+      component = class_loader.create(class_name);
+    }
+    else
+    {
+      RCLCPP_WARN(logger, "Robot %s class is _not_ available.", class_name.c_str());
+    }
+    return component;
+  };
+
+  template<typename T>
   std::map<std::string, std::shared_ptr<T>> loadSubComponents(std::string parameters_prefix, const rclcpp::node_interfaces::NodeParametersInterface::SharedPtr parameters_interface, std::vector<std::string> name_list, ros2_control_core::ROS2ControlLoaderPluginlib<T> class_loader, rclcpp::Logger logger)
   {
     std::map<std::string, std::shared_ptr<T>> loaded_components;
-    std::string param_path;
-    std::string temp_parameter;
-    bool class_available;
     for (auto name: name_list)
     {
-      param_path = parameters_prefix + "." + name + ".type";
-      parameters_interface->declare_parameter(param_path);
-      temp_parameter = parameters_interface->get_parameter(param_path).as_string();
-      class_available = class_loader.is_available(temp_parameter);
-      if (class_available)
-      {
-        loaded_components[name] = class_loader.create(temp_parameter);
-      }
-      else
-      {
-        RCLCPP_WARN(logger, "Robot %s class is _not_ available.", temp_parameter.c_str());
-      }
+      loaded_components[name] = load_component_from_parameter<T>(parameters_prefix + "." + name + ".type", parameters_interface, class_loader, logger);
     }
     return loaded_components;
   };
