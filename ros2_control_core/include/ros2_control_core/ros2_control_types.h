@@ -47,6 +47,16 @@ static constexpr return_type ROS2C_RETURN_ACTUATOR_NOT_CLAIMED = 11;
 static constexpr return_type ROS2C_RETURN_ACTUATOR_UNATHORIZED_UNCLAIM = 13;
 static constexpr return_type ROS2C_RETURN_ACTUATOR_CAN_NOT_READ = 20;
 
+// TODO: Check if needed or lifecycle component can do this
+// using component_state_type = uint;
+// static constexpr component_state_type ROS2C_COMPONENT_STATE_LOADED = 1;
+// static constexpr component_state_type ROS2C_COMPONENT_STATE_CONFIGURED = 2;
+// static constexpr component_state_type ROS2C_COMPONENT_STATE_INITIALIZED = 3;
+// static constexpr component_state_type ROS2C_COMPONENT_STATE_STARTED = 4;
+// static constexpr component_state_type ROS2C_COMPONENT_STATE_STOPPED = 5;
+// static constexpr component_state_type ROS2C_COMPONENT_STATE_HALTED = 6;
+
+
 class CommunicationInterfaceDescription
 {
 public:

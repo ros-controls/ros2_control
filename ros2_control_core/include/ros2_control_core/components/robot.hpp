@@ -22,7 +22,8 @@
 #include "rclcpp/macros.hpp"
 #include "rclcpp/rclcpp.hpp"
 
-#include "ros2_control_core/loaders_pluginlib.hpp"
+#include "ros2_control_core/loaders_pluginlib_components.hpp"
+#include "ros2_control_core/loaders_pluginlib_hardware.hpp"
 #include "ros2_control_core/ros2_control_types.h"
 #include "ros2_control_core/visibility_control.h"
 
@@ -77,39 +78,6 @@ protected:
   std::map<std::string, Actuator::SharedPtr> tool_actuators_;
   std::map<std::string, Sensor::SharedPtr> tool_sensors_;
 
-
-
-  template<typename T>
-  std::shared_ptr<T> load_component_from_parameter(std::string parameter_name, const rclcpp::node_interfaces::NodeParametersInterface::SharedPtr parameters_interface, ros2_control_core::ROS2ControlLoaderPluginlib<T> class_loader, rclcpp::Logger logger)
-  {
-    std::shared_ptr<T> component;
-    std::string class_name;
-    bool class_available;
-
-    parameters_interface->declare_parameter(parameter_name);
-    class_name = parameters_interface->get_parameter(parameter_name).as_string();
-    class_available = class_loader.is_available(class_name);
-    if (class_available)
-    {
-      component = class_loader.create(class_name);
-    }
-    else
-    {
-      RCLCPP_WARN(logger, "Robot %s class is _not_ available.", class_name.c_str());
-    }
-    return component;
-  };
-
-  template<typename T>
-  std::map<std::string, std::shared_ptr<T>> loadSubComponents(std::string parameters_prefix, const rclcpp::node_interfaces::NodeParametersInterface::SharedPtr parameters_interface, std::vector<std::string> name_list, ros2_control_core::ROS2ControlLoaderPluginlib<T> class_loader, rclcpp::Logger logger)
-  {
-    std::map<std::string, std::shared_ptr<T>> loaded_components;
-    for (auto name: name_list)
-    {
-      loaded_components[name] = load_component_from_parameter<T>(parameters_prefix + "." + name + ".type", parameters_interface, class_loader, logger);
-    }
-    return loaded_components;
-  };
 };
 
 }  // namespace ros2_control_core_components

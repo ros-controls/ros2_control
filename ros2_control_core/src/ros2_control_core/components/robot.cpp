@@ -32,9 +32,6 @@ Robot::Robot(const std::string parameters_path, const rclcpp::node_interfaces::N
   ros2_control_core::SensorLoaderPluginlib sensor_loader;
 //   ros2_control_core::RobotLoaderPluginlib robot_loader;
 
-  std::string temp_parameter;
-  bool class_available;
-
   // Create all Actuator and Sensors defined for each joints
   actuators_ = loadSubComponents<ros2_control_core_components::Actuator>(parameters_path_ + ".actuators", parameters_interface_, joints_, actuator_loader, logging_interface_->get_logger());
   sensors_ = loadSubComponents<ros2_control_core_components::Sensor>(parameters_path_ + ".sensors", parameters_interface_, joints_, sensor_loader, logging_interface_->get_logger());
@@ -62,6 +59,8 @@ Robot::Robot(const std::string parameters_path, const rclcpp::node_interfaces::N
     tool_sensors_ = loadSubComponents<ros2_control_core_components::Sensor>(parameters_path_ + ".tools.sensors", parameters_interface_, tool_sensor_names, sensor_loader, logging_interface_->get_logger());
   }
 
+  ros2_control_core::RobotHardwareLoaderPluginlib hw_loader;
+  load_hardware(hw_loader);
 
   RCLCPP_INFO(logging_interface_->get_logger(), "Robot Component '" + name_ + "' created...");
 }

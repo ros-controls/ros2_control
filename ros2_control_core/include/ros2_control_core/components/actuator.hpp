@@ -26,6 +26,7 @@
 #include "ros2_control_core/components/simple_component.hpp"
 #include "ros2_control_core/hardware/actuator_hardware.hpp"
 
+#include "ros2_control_core/loaders_pluginlib_hardware.hpp"
 #include "ros2_control_core/ros2_control_types.h"
 #include "ros2_control_core/visibility_control.h"
 

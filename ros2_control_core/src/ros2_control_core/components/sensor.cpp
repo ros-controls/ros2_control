@@ -21,6 +21,9 @@ ros2_control_types::return_type Sensor::configure(const std::string parameters_p
   ros2_control_types::return_type ret = ros2_control_types::ROS2C_RETURN_OK;
   ret = SimpleComponent::configure(parameters_path, "Sensor", logging_interface, parameters_interface, services_interface);
 
+  ros2_control_core::SensorHardwareLoaderPluginlib hw_loader;
+  load_hardware(hw_loader);
+
   return ret;
 }
 

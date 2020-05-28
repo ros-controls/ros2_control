@@ -16,19 +16,8 @@
 #ifndef ROS2_CONTROL_CORE__LOADERS_PLUGINLIB_HPP_
 #define ROS2_CONTROL_CORE__LOADERS_PLUGINLIB_HPP_
 
-
-#include "ros2_control_core/components/actuator.hpp"
-#include "ros2_control_core/components/component.hpp"
-#include "ros2_control_core/components/sensor.hpp"
-
-#include "ros2_control_core/hardware/actuator_hardware.hpp"
-#include "ros2_control_core/hardware/component_hardware.hpp"
-#include "ros2_control_core/hardware/robot_hardware.hpp"
-#include "ros2_control_core/hardware/sensor_hardware.hpp"
-
-#include "ros2_control_core/visibility_control.h"
-
 #include "pluginlib/class_loader.hpp"
+#include "ros2_control_core/visibility_control.h"
 
 namespace ros2_control_core
 {
@@ -59,70 +48,6 @@ public:
 
 private:
   std::shared_ptr<pluginlib::ClassLoader< ROS2ControlType >> loader_;
-};
-
-// Create Loader for Components
-
-template < typename ComponentHardwareType >
-class ComponentBaseLoaderPluginlib : public ROS2ControlLoaderPluginlib< ros2_control_core_components::Component<ComponentHardwareType> >
-{
-public:
-  ROS2_CONTROL_CORE_PUBLIC ComponentBaseLoaderPluginlib() : ROS2ControlLoaderPluginlib< ros2_control_core_components::Component<ComponentHardwareType> >("ros2_control_core", "ros2_control_core_components::Component") {};
-
-  ROS2_CONTROL_CORE_PUBLIC ~ComponentBaseLoaderPluginlib() = default;
-};
-
-class ComponentLoaderPluginlib : public ComponentBaseLoaderPluginlib< ros2_control_core_hardware::ComponentHardware >
-{
-};
-
-class ActuatorLoaderPluginlib : public ROS2ControlLoaderPluginlib< ros2_control_core_components::Actuator >
-{
-public:
-  ROS2_CONTROL_CORE_PUBLIC ActuatorLoaderPluginlib() : ROS2ControlLoaderPluginlib< ros2_control_core_components::Actuator >("ros2_control_components", "ros2_control_core_components::Actuator") {};
-
-  ROS2_CONTROL_CORE_PUBLIC ~ActuatorLoaderPluginlib() = default;
-};
-
-class SensorLoaderPluginlib : public ROS2ControlLoaderPluginlib< ros2_control_core_components::Sensor >
-{
-public:
-  ROS2_CONTROL_CORE_PUBLIC SensorLoaderPluginlib() : ROS2ControlLoaderPluginlib< ros2_control_core_components::Sensor >("ros2_control_components", "ros2_control_core_components::Sensor") {};
-
-  ROS2_CONTROL_CORE_PUBLIC ~SensorLoaderPluginlib() = default;
-};
-
-
-class ComponentHardwareLoaderPluginlib : private ROS2ControlLoaderPluginlib< ros2_control_core_hardware::ComponentHardware >
-{
-public:
-  ROS2_CONTROL_CORE_PUBLIC ComponentHardwareLoaderPluginlib() : ROS2ControlLoaderPluginlib< ros2_control_core_hardware::ComponentHardware >("ros2_control_core", "ros2_control_core_hardware::ComponentHardware") {};
-
-  ROS2_CONTROL_CORE_PUBLIC ~ComponentHardwareLoaderPluginlib() = default;
-};
-
-class ActuatorHardwareLoaderPluginlib : public ROS2ControlLoaderPluginlib< ros2_control_core_hardware::ActuatorHardware >
-{
-public:
-  ROS2_CONTROL_CORE_PUBLIC ActuatorHardwareLoaderPluginlib() : ROS2ControlLoaderPluginlib< ros2_control_core_hardware::ActuatorHardware >("ros2_control_hardware", "ros2_control_core_hardware::ActuatorHardware") {};
-
-  ROS2_CONTROL_CORE_PUBLIC ~ActuatorHardwareLoaderPluginlib() = default;
-};
-
-class SensorHardwareLoaderPluginlib : public ROS2ControlLoaderPluginlib< ros2_control_core_hardware::SensorHardware >
-{
-public:
-  ROS2_CONTROL_CORE_PUBLIC SensorHardwareLoaderPluginlib() : ROS2ControlLoaderPluginlib< ros2_control_core_hardware::SensorHardware >("ros2_control_hardware", "ros2_control_core_hardware::SensorHardware") {};
-
-  ROS2_CONTROL_CORE_PUBLIC ~SensorHardwareLoaderPluginlib() = default;
-};
-
-class RobotHardwareLoaderPluginlib : public ROS2ControlLoaderPluginlib< ros2_control_core_hardware::RobotHardware >
-{
-public:
-  ROS2_CONTROL_CORE_PUBLIC RobotHardwareLoaderPluginlib() : ROS2ControlLoaderPluginlib< ros2_control_core_hardware::RobotHardware >("ros2_control_hardware", "ros2_control_core_hardware::RobotHardware") {};
-
-  ROS2_CONTROL_CORE_PUBLIC ~RobotHardwareLoaderPluginlib() = default;
 };
 
 }  // namespace ros2_control_core

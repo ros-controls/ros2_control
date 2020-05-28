@@ -21,10 +21,11 @@
 #include "rclcpp/macros.hpp"
 #include "rclcpp/rclcpp.hpp"
 
-#include "ros2_control_core/visibility_control.h"
-#include "ros2_control_core/ros2_control_types.h"
-
 #include "ros2_control_core/hardware/component_hardware.hpp"
+
+#include "ros2_control_core/loaders_pluginlib.hpp"
+#include "ros2_control_core/ros2_control_types.h"
+#include "ros2_control_core/visibility_control.h"
 
 
 namespace ros2_control_core_components
@@ -57,6 +58,9 @@ public:
     parameters_interface_->declare_parameter(parameters_path_ + ".name");
     name_ = parameters_interface_->get_parameter(parameters_path_ + ".name").as_string();
 
+    parameters_interface_->declare_parameter(parameters_path_ + ".has_hardware");
+    has_hardware_ = parameters_interface_->get_parameter(parameters_path_ + ".has_hardware").as_bool();
+
     return ros2_control_types::ROS2C_RETURN_OK;
   };
 
@@ -81,11 +85,55 @@ protected:
   rclcpp::node_interfaces::NodeServicesInterface::SharedPtr services_interface_;
 
   std::string name_;
-
+  bool has_hardware_;
 
   uint n_dof_;
+//   ros2_control_types::component_state_type state_ = 0;
 
-  ComponentHardwareType hardware_;
+  std::shared_ptr<ComponentHardwareType> hardware_;
+
+
+  template<typename T>
+  std::shared_ptr<T> load_component_from_parameter(std::string parameter_name, const rclcpp::node_interfaces::NodeParametersInterface::SharedPtr parameters_interface, ros2_control_core::ROS2ControlLoaderPluginlib<T> class_loader, rclcpp::Logger logger)
+  {
+    std::shared_ptr<T> component;
+    std::string class_name;
+    bool class_available;
+
+    parameters_interface->declare_parameter(parameter_name);
+    class_name = parameters_interface->get_parameter(parameter_name).as_string();
+    class_available = class_loader.is_available(class_name);
+    if (class_available)
+    {
+      component = class_loader.create(class_name);
+    }
+    else
+    {
+      RCLCPP_WARN(logger, "Robot %s class is _not_ available.", class_name.c_str());
+    }
+    return component;
+  };
+
+  template<typename T>
+  std::map<std::string, std::shared_ptr<T>> loadSubComponents(std::string parameters_prefix, const rclcpp::node_interfaces::NodeParametersInterface::SharedPtr parameters_interface, std::vector<std::string> name_list, ros2_control_core::ROS2ControlLoaderPluginlib<T> class_loader, rclcpp::Logger logger)
+  {
+    std::map<std::string, std::shared_ptr<T>> loaded_components;
+    for (auto name: name_list)
+    {
+      loaded_components[name] = load_component_from_parameter<T>(parameters_prefix + "." + name + ".type", parameters_interface, class_loader, logger);
+    }
+    return loaded_components;
+  };
+
+  template<typename T>
+  void load_hardware(ros2_control_core::ROS2ControlLoaderPluginlib<T> class_loader)
+  {
+    if (has_hardware_)
+    {
+      hardware_ = load_component_from_parameter(parameters_path_ + "." + type_ + "Hardware.type", parameters_interface_, class_loader, logging_interface_->get_logger());
+    }
+  };
+
 };
 
 }  // namespace ros2_control_core_components
