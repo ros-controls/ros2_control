@@ -23,12 +23,14 @@ ros2_control_types::return_type Actuator::configure(const std::string parameters
 
   parameters_interface_->declare_parameter(parameters_path_ + ".can_read");
 
-  ros2_control_core::ActuatorHardwareLoaderPluginlib hw_loader;
-  load_hardware(hw_loader);
+  if (has_hardware_)
+  {
+    ros2_control_utils::ROS2ControlLoaderPluginlib<ros2_control_core_hardware::ActuatorHardware> hw_loader("ros2_control_hardware", "ros2_control_core_hardware::ActuatorHardware");
+    load_and_configure_hardware(hw_loader);
+  }
 
   return ret;
 }
-
 
 ros2_control_types::return_type Actuator::read(const control_msgs::msg::InterfaceValue data)
 {

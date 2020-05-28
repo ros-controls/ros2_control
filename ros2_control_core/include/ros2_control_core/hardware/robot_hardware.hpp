@@ -25,7 +25,7 @@
 namespace ros2_control_core_hardware
 {
 
-class RobotHardware : ComponentHardware
+class RobotHardware : public ComponentHardware
 {
 public:
   ROS2_CONTROL_CORE_PUBLIC RobotHardware() = default;

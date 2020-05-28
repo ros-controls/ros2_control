@@ -22,9 +22,8 @@
 #include "rclcpp/macros.hpp"
 #include "rclcpp/rclcpp.hpp"
 
-#include "ros2_control_core/loaders_pluginlib_components.hpp"
-#include "ros2_control_core/loaders_pluginlib_hardware.hpp"
 #include "ros2_control_core/ros2_control_types.h"
+#include "ros2_control_core/ros2_control_utils.hpp"
 #include "ros2_control_core/visibility_control.h"
 
 #include "ros2_control_core/components/component.hpp"
@@ -47,11 +46,9 @@ public:
 
   ROS2_CONTROL_CORE_PUBLIC Robot() = default;
 
-  ROS2_CONTROL_CORE_PUBLIC Robot(std::string name, const rclcpp::Node::SharedPtr node, std::string param_base_path);
-
-  ROS2_CONTROL_CORE_PUBLIC Robot(const std::string parameters_path, const rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logging_interface,  const rclcpp::node_interfaces::NodeParametersInterface::SharedPtr parameters_interface, const rclcpp::node_interfaces::NodeServicesInterface::SharedPtr services_interface);
-
   ROS2_CONTROL_CORE_PUBLIC ~Robot() = default;
+
+  ROS2_CONTROL_CORE_PUBLIC ros2_control_types::return_type configure(const std::string parameters_path, const rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logging_interface,  const rclcpp::node_interfaces::NodeParametersInterface::SharedPtr parameters_interface, const rclcpp::node_interfaces::NodeServicesInterface::SharedPtr services_interface);
 
   ROS2_CONTROL_CORE_PUBLIC ros2_control_types::return_type init(ros2_control_types::RobotDescription description);
 

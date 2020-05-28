@@ -16,9 +16,11 @@
 
 using namespace ros2_control_core_components;
 
-
-Robot::Robot(const std::string parameters_path, const rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logging_interface, const rclcpp::node_interfaces::NodeParametersInterface::SharedPtr parameters_interface, const rclcpp::node_interfaces::NodeServicesInterface::SharedPtr services_interface) : Component(parameters_path, "Robot", logging_interface, parameters_interface, services_interface)
+ros2_control_types::return_type Robot::configure(const std::string parameters_path, const rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logging_interface, const rclcpp::node_interfaces::NodeParametersInterface::SharedPtr parameters_interface, const rclcpp::node_interfaces::NodeServicesInterface::SharedPtr services_interface)
 {
+  ros2_control_types::return_type ret = ros2_control_types::ROS2C_RETURN_OK;
+  ret = Component::configure(parameters_path, "Robot", logging_interface, parameters_interface, services_interface);
+
   parameters_interface_->declare_parameter(parameters_path_ + ".joints");
   parameters_interface_->declare_parameter(parameters_path_ + ".has_robots", rclcpp::ParameterValue(false));
   parameters_interface_->declare_parameter(parameters_path_ + ".has_tools", rclcpp::ParameterValue(false));
@@ -28,13 +30,13 @@ Robot::Robot(const std::string parameters_path, const rclcpp::node_interfaces::N
   n_dof_ = joints_.size();
   RCLCPP_DEBUG(logging_interface_->get_logger(), param_joints.as_string().c_str());
 
-  ros2_control_core::ActuatorLoaderPluginlib actuator_loader;
-  ros2_control_core::SensorLoaderPluginlib sensor_loader;
-//   ros2_control_core::RobotLoaderPluginlib robot_loader;
+  ros2_control_utils::ROS2ControlLoaderPluginlib<Actuator> actuator_loader("ros2_control_components", "ros2_control_core_components::Actuator");
+  ros2_control_utils::ROS2ControlLoaderPluginlib<Sensor> sensor_loader("ros2_control_components", "ros2_control_core_components::Sensor");
+  ros2_control_utils::ROS2ControlLoaderPluginlib<Robot> robot_loader("ros2_control_components", "ros2_control_core_components::Robot");
 
   // Create all Actuator and Sensors defined for each joints
-  actuators_ = loadSubComponents<ros2_control_core_components::Actuator>(parameters_path_ + ".actuators", parameters_interface_, joints_, actuator_loader, logging_interface_->get_logger());
-  sensors_ = loadSubComponents<ros2_control_core_components::Sensor>(parameters_path_ + ".sensors", parameters_interface_, joints_, sensor_loader, logging_interface_->get_logger());
+  actuators_ = ros2_control_utils::load_components_from_parameters<Actuator>(parameters_path_ + ".actuators", parameters_interface_, joints_, actuator_loader, logging_interface_->get_logger());
+  sensors_ = ros2_control_utils::load_components_from_parameters<Sensor>(parameters_path_ + ".sensors", parameters_interface_, joints_, sensor_loader, logging_interface_->get_logger());
 
   // Initialize sub robots if available
   has_robots_ = parameters_interface_->get_parameter(parameters_path_ + ".has_robots").as_bool();
@@ -43,7 +45,7 @@ Robot::Robot(const std::string parameters_path, const rclcpp::node_interfaces::N
     parameters_interface_->declare_parameter(parameters_path_ + ".robots" + ".robot_names");
     std::vector<std::string> robot_names = parameters_interface_->get_parameter(parameters_path_ + ".robots" + ".robot_names").as_string_array();
 
-//     robots = loadSubComponents<ros2_control_core_components::Robots>(parameters_path_ + ".robots", parameters_interface_, robot_names, robot_loader, logging_interface_->get_logger());
+    robots_= ros2_control_utils::load_components_from_parameters<Robot>(parameters_path_ + ".robots", parameters_interface_, robot_names, robot_loader, logging_interface_->get_logger());
   }
 
   // Initalize tool sensor and actuators
@@ -55,12 +57,15 @@ Robot::Robot(const std::string parameters_path, const rclcpp::node_interfaces::N
     std::vector<std::string> tool_actuator_names = parameters_interface_->get_parameter(parameters_path_ + ".tools" + ".actuator_names").as_string_array();
     std::vector<std::string> tool_sensor_names = parameters_interface_->get_parameter(parameters_path_ + ".tools" + ".sensor_names").as_string_array();
 
-    tool_actuators_ = loadSubComponents<ros2_control_core_components::Actuator>(parameters_path_ + ".tools.actuators", parameters_interface_, tool_actuator_names, actuator_loader, logging_interface_->get_logger());
-    tool_sensors_ = loadSubComponents<ros2_control_core_components::Sensor>(parameters_path_ + ".tools.sensors", parameters_interface_, tool_sensor_names, sensor_loader, logging_interface_->get_logger());
+    tool_actuators_ = ros2_control_utils::load_components_from_parameters<Actuator>(parameters_path_ + ".tools.actuators", parameters_interface_, tool_actuator_names, actuator_loader, logging_interface_->get_logger());
+    tool_sensors_ = ros2_control_utils::load_components_from_parameters<Sensor>(parameters_path_ + ".tools.sensors", parameters_interface_, tool_sensor_names, sensor_loader, logging_interface_->get_logger());
   }
 
-  ros2_control_core::RobotHardwareLoaderPluginlib hw_loader;
-  load_hardware(hw_loader);
+  if (has_hardware_)
+  {
+    ros2_control_utils::ROS2ControlLoaderPluginlib<ros2_control_core_hardware::RobotHardware> hw_loader("ros2_control_hardware", "ros2_control_core_hardware::RobotHardware");
+    load_and_configure_hardware(hw_loader);
+  }
 
   RCLCPP_INFO(logging_interface_->get_logger(), "Robot Component '" + name_ + "' created...");
 }

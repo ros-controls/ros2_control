@@ -26,11 +26,11 @@ namespace ros2_control_core_communication_interface
 class HardwareCommunicationInterface
 {
 public:
+  RCLCPP_SHARED_PTR_DEFINITIONS(HardwareCommunicationInterface);
+
   ROS2_CONTROL_CORE_PUBLIC HardwareCommunicationInterface() = default;
 
   ROS2_CONTROL_CORE_PUBLIC virtual ~HardwareCommunicationInterface() = default;
-
-  ROS2_CONTROL_CORE_PUBLIC ros2_control_types::return_type init(ros2_control_types::CommunicationInterfaceDescription description);
 
 protected:
   ros2_control_types::CommunicationInterfaceDescription description;

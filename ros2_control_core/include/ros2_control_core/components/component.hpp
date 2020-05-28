@@ -23,8 +23,8 @@
 
 #include "ros2_control_core/hardware/component_hardware.hpp"
 
-#include "ros2_control_core/loaders_pluginlib.hpp"
 #include "ros2_control_core/ros2_control_types.h"
+#include "ros2_control_core/ros2_control_utils.hpp"
 #include "ros2_control_core/visibility_control.h"
 
 
@@ -45,24 +45,6 @@ public:
   };
 
   ROS2_CONTROL_CORE_PUBLIC virtual ~Component() = default;
-
-  // This is here because of: https://isocpp.org/wiki/faq/templates#templates-defn-vs-decl
-  ROS2_CONTROL_CORE_PUBLIC ros2_control_types::return_type configure(std::string parameters_path, std::string type, const rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logging_interface, const rclcpp::node_interfaces::NodeParametersInterface::SharedPtr parameters_interface, const rclcpp::node_interfaces::NodeServicesInterface::SharedPtr services_interface)
-  {
-    parameters_path_ = parameters_path;
-    type_ = type;
-    logging_interface_ = logging_interface;
-    parameters_interface_ = parameters_interface;
-    services_interface_ = services_interface;
-
-    parameters_interface_->declare_parameter(parameters_path_ + ".name");
-    name_ = parameters_interface_->get_parameter(parameters_path_ + ".name").as_string();
-
-    parameters_interface_->declare_parameter(parameters_path_ + ".has_hardware");
-    has_hardware_ = parameters_interface_->get_parameter(parameters_path_ + ".has_hardware").as_bool();
-
-    return ros2_control_types::ROS2C_RETURN_OK;
-  };
 
 //   ROS2_CONTROL_CORE_PUBLIC ros2_control_types::return_type init(ComponentDescriptionType description_in);
 
@@ -93,45 +75,46 @@ protected:
   std::shared_ptr<ComponentHardwareType> hardware_;
 
 
-  template<typename T>
-  std::shared_ptr<T> load_component_from_parameter(std::string parameter_name, const rclcpp::node_interfaces::NodeParametersInterface::SharedPtr parameters_interface, ros2_control_core::ROS2ControlLoaderPluginlib<T> class_loader, rclcpp::Logger logger)
+  // This is here because of: https://isocpp.org/wiki/faq/templates#templates-defn-vs-decl
+  ros2_control_types::return_type configure(std::string parameters_path, std::string type, const rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logging_interface, const rclcpp::node_interfaces::NodeParametersInterface::SharedPtr parameters_interface, const rclcpp::node_interfaces::NodeServicesInterface::SharedPtr services_interface)
   {
-    std::shared_ptr<T> component;
-    std::string class_name;
-    bool class_available;
+    parameters_path_ = parameters_path;
+    type_ = type;
+    logging_interface_ = logging_interface;
+    parameters_interface_ = parameters_interface;
+    services_interface_ = services_interface;
 
-    parameters_interface->declare_parameter(parameter_name);
-    class_name = parameters_interface->get_parameter(parameter_name).as_string();
-    class_available = class_loader.is_available(class_name);
-    if (class_available)
-    {
-      component = class_loader.create(class_name);
-    }
-    else
-    {
-      RCLCPP_WARN(logger, "Robot %s class is _not_ available.", class_name.c_str());
-    }
-    return component;
+    parameters_interface_->declare_parameter(parameters_path_ + ".name");
+    name_ = parameters_interface_->get_parameter(parameters_path_ + ".name").as_string();
+
+    parameters_interface_->declare_parameter(parameters_path_ + ".has_hardware", rclcpp::ParameterValue(false));
+    has_hardware_ = parameters_interface_->get_parameter(parameters_path_ + ".has_hardware").as_bool();
+
+    return ros2_control_types::ROS2C_RETURN_OK;
   };
 
   template<typename T>
-  std::map<std::string, std::shared_ptr<T>> loadSubComponents(std::string parameters_prefix, const rclcpp::node_interfaces::NodeParametersInterface::SharedPtr parameters_interface, std::vector<std::string> name_list, ros2_control_core::ROS2ControlLoaderPluginlib<T> class_loader, rclcpp::Logger logger)
+  ros2_control_types::return_type load_hardware(ros2_control_utils::ROS2ControlLoaderPluginlib<T> class_loader)
   {
-    std::map<std::string, std::shared_ptr<T>> loaded_components;
-    for (auto name: name_list)
+    hardware_ = ros2_control_utils::load_component_from_parameter(parameters_path_ + "." + type_ + "Hardware.type", parameters_interface_, class_loader, logging_interface_->get_logger());
+
+    if (!hardware_)
     {
-      loaded_components[name] = load_component_from_parameter<T>(parameters_prefix + "." + name + ".type", parameters_interface, class_loader, logger);
+      RCLCPP_FATAL(logging_interface_->get_logger(), "%s: '%sHardware has to be defined if 'has_hardware=True'!", type_.c_str(), name_.c_str());
+      return ros2_control_types::ROS2C_RETURN_ERROR;
     }
-    return loaded_components;
+    return ros2_control_types::ROS2C_RETURN_OK;
   };
 
   template<typename T>
-  void load_hardware(ros2_control_core::ROS2ControlLoaderPluginlib<T> class_loader)
+  ros2_control_types::return_type load_and_configure_hardware(ros2_control_utils::ROS2ControlLoaderPluginlib<T> class_loader)
   {
-    if (has_hardware_)
+    if (load_hardware(class_loader) == ros2_control_types::ROS2C_RETURN_OK)
     {
-      hardware_ = load_component_from_parameter(parameters_path_ + "." + type_ + "Hardware.type", parameters_interface_, class_loader, logging_interface_->get_logger());
+      hardware_->configure(parameters_path_ + "." + type_ + "Hardware", logging_interface_, parameters_interface_, services_interface_);
+      return ros2_control_types::ROS2C_RETURN_OK;
     }
+    return ros2_control_types::ROS2C_RETURN_ERROR;
   };
 
 };

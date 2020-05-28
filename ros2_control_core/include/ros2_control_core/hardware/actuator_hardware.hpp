@@ -25,7 +25,7 @@
 namespace ros2_control_core_hardware
 {
 
-class ActuatorHardware : ComponentHardware
+class ActuatorHardware : public ComponentHardware
 {
 public:
   ROS2_CONTROL_CORE_PUBLIC ActuatorHardware() = default;
