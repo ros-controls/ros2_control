@@ -1,0 +1,25 @@
+<library path="ros2_control_hardware_actuators">
+  <class name="ros2_control_hardware/VelocityActuatorHardware" type="ros2_control_hardware_actuators::VelocityActuatorHardware" base_class_type="ros2_control_core_hardware::ActuatorHardware">
+    <description>
+      The velocity actuator provides virtual representation of velocity-only actuators.
+    </description>
+  </class>
+  <class name="ros2_control_hardware/PositionActuatorHardware" type="ros2_control_hardware_actuators::PositionActuatorHardware" base_class_type="ros2_control_core_hardware::ActuatorHardware">
+    <description>
+      The velocity actuator provides virtual representation of position-only actuators.
+    </description>
+  </class>
+</library>
+
+<library path="ros2_control_hardware_sensors">
+  <class name="ros2_control_hardware/VelocitySensorHardware" type="ros2_control_hardware_sensors::VelocitySensorHardware" base_class_type="ros2_control_core_hardware::SensorHardware">
+    <description>
+      The velocity sensor provides virtual representation of velocity-only sensors.
+    </description>
+  </class>
+  <class name="ros2_control_hardware/PositionSensorHardware" type="ros2_control_hardware_sensors::PositionSensorHardware" base_class_type="ros2_control_core_hardware::SensorHardware">
+    <description>
+      The velocity sensor provides virtual representation of position-only sensors.
+    </description>
+  </class>
+</library>

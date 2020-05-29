@@ -29,7 +29,6 @@
 namespace ros2_control_core_hardware
 {
 
-// template < typename ComponentHardwareDescriptionType >
 class ComponentHardware
 {
 public:
@@ -54,12 +53,16 @@ public:
         RCLCPP_FATAL(logging_interface->get_logger(), "Communicaiton interface has to be defined if 'has_communication_interface=True'!");
       }
     }
-  }
+  };
 
 protected:
   bool has_communication_interface_;
 
   ros2_control_core_communication_interface::HardwareCommunicationInterface::SharedPtr communication_interface_;
+
+// FIXME: make this matching over templates to have only specific component
+// Introduce BaseComponentHardware
+  std::vector<std::string> valid_interface_names_;
 };
 
 }  // namespace ros2_control_core_hardware

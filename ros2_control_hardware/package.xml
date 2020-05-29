@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>ros2_control_hardware</name>
+  <version>0.0.0</version>
+  <description>The package with implementation of robotic hardware for `ros2_control`-concept.</description>
+  <maintainer email="denis@stogl.de">stogl</maintainer>
+  <license>TODO: License declaration</license>
+
+  <maintainer email="denis@stogl.de">Denis Štogl</maintainer>
+
+  <depend>pluginlib</depend>
+  <depend>rclcpp</depend>
+  <depend>ros2_control_core</depend>
+
+  <test_depend>ament_cmake_gtest</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

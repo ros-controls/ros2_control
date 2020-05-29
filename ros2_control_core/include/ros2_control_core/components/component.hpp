@@ -35,8 +35,6 @@ template < typename ComponentHardwareType >
 class Component
 {
 public:
-//   RCLCPP_SHARED_PTR_DEFINITIONS(Component);
-
   ROS2_CONTROL_CORE_PUBLIC Component() = default;
 
   ROS2_CONTROL_CORE_PUBLIC Component(std::string parameters_path, std::string type, const rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logging_interface, const rclcpp::node_interfaces::NodeParametersInterface::SharedPtr parameters_interface, const rclcpp::node_interfaces::NodeServicesInterface::SharedPtr services_interface)
