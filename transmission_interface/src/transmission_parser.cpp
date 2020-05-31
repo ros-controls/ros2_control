@@ -13,98 +13,66 @@
 // limitations under the License.
 
 #include "transmission_interface/transmission_parser.hpp"
+#include "transmission_interface/transmission_info.hpp"
 
+#include <tinyxml2.h>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
+namespace
+{
+constexpr const auto kTransmissionTag = "transmission";
+constexpr const auto kJointTag = "joint";
+constexpr const auto kHardwareInterfaceTag = "hardwareInterface";
+}  // namespace
+
 namespace transmission_interface
 {
-
-static constexpr const char * kTransmissionTag = "transmission";
-static constexpr const char * kJointTag = "joint";
-static constexpr const char * kHardwareInterfaceTag = "hardwareInterface";
-
-TransmissionParser::TransmissionParser(const std::string & urdf)
-: urdf_(urdf)
+std::vector<TransmissionInfo> parse_transmissions_from_urdf(const std::string & urdf)
 {
-  if (urdf_.empty()) {
+  if (urdf.empty()) {
     throw std::runtime_error("empty URDF passed in to transmission parser");
   }
-  if (!doc_.Parse(urdf_.c_str()) && doc_.Error()) {
+
+  tinyxml2::XMLDocument doc;
+  if (!doc.Parse(urdf.c_str()) && doc.Error()) {
     throw std::runtime_error("invalid URDF passed in to transmission parser");
   }
-}
 
-bool TransmissionParser::parse_transmission_info(std::vector<TransmissionInfo> & transmissions)
-const
-{
+  std::vector<TransmissionInfo> transmissions;
   // Find joints in transmission tags
-  const tinyxml2::XMLElement * root_it = doc_.RootElement();
+  const tinyxml2::XMLElement * root_it = doc.RootElement();
   const tinyxml2::XMLElement * trans_it = root_it->FirstChildElement(kTransmissionTag);
   while (trans_it) {
     // Joint name
-    TransmissionInfo info;
     auto joint_it = trans_it->FirstChildElement(kJointTag);
     if (!joint_it) {
-      set_error_msg("no joint child element found");
-      return false;
+      throw std::runtime_error("no joint child element found");
     }
 
-    info.joint_name = joint_it->Attribute("name");
-    if (info.joint_name.empty()) {
-      set_error_msg("no joint name attribute set");
-      return false;
+    const std::string joint_name = joint_it->Attribute("name");
+    if (joint_name.empty()) {
+      throw std::runtime_error("no joint name attribute set");
     }
 
-    auto hardware_interface_it = joint_it->FirstChildElement(kHardwareInterfaceTag);
+    const auto hardware_interface_it = joint_it->FirstChildElement(kHardwareInterfaceTag);
     if (!hardware_interface_it) {
-      set_error_msg("no hardware interface tag found under transmission joint");
-      return false;
+      throw std::runtime_error(
+              "no hardware interface tag found under transmission joint" + joint_name);
     }
 
-    std::string hardware_interface = hardware_interface_it->GetText();
-    if (hardware_interface.empty()) {
-      set_error_msg(std::string("no hardware interface specified in joint ") + info.joint_name);
-      return false;
-    }
-    if (hardware_interface == "PositionJointInterface") {
-      info.joint_control_type = JointControlType::POSITION;
-    } else if (hardware_interface == "VelocityJointInterface") {
-      info.joint_control_type = JointControlType::VELOCITY;
-    } else if (hardware_interface == "EffortJointInterface") {
-      info.joint_control_type = JointControlType::EFFORT;
-    } else {
-      set_error_msg(hardware_interface + " is no valid hardware interface");
-      return false;
+    const std::string interface_name = hardware_interface_it->GetText();
+    if (interface_name.empty()) {
+      throw std::runtime_error("no hardware interface specified in joint " + joint_name);
     }
 
-    transmissions.push_back(info);
+    transmissions.push_back({joint_name, interface_name});
 
     trans_it = trans_it->NextSiblingElement(kTransmissionTag);
   }
 
-  return true;
-}
-
-std::string TransmissionParser::get_error_msg() const
-{
-  auto error = error_msg_;
-  reset_error_msg();
-  return error;
-}
-
-void TransmissionParser::set_error_msg(std::string error_msg) const
-{
-  if (!error_msg_.empty()) {
-    fprintf(stderr, "Warning: Overriding transmission parser error message\n");
-  }
-  error_msg_ = error_msg;
-}
-
-void TransmissionParser::reset_error_msg() const
-{
-  error_msg_ = "";
+  return transmissions;
 }
 
 }  // namespace transmission_interface

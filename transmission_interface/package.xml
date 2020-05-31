@@ -3,13 +3,14 @@
 <package format="3">
   <name>transmission_interface</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <description>transmission_interface contains data structures for representing mechanical transmissions, methods for propagating values between actuator and joint spaces and tooling to support this.</description>
   <maintainer email="bence.magyar.robotics@gmail.com">Bence Magyar</maintainer>
   <maintainer email="karsten@openrobotics.org">Karsten Knese</maintainer>
   <license>Apache License 2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
+  <depend>hardware_interface</depend>
   <depend>tinyxml2_vendor</depend>
 
   <test_depend>ament_lint_auto</test_depend>

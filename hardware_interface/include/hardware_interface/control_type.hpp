@@ -1,4 +1,4 @@
-// Copyright 2020 Open Source Robotics Foundation, Inc.
+// Copyright 2020 ros2_control development team
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,21 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef TRANSMISSION_INTERFACE__TRANSMISSION_INFO_HPP_
-#define TRANSMISSION_INTERFACE__TRANSMISSION_INFO_HPP_
+#ifndef HARDWARE_INTERFACE__CONTROL_TYPE_HPP_
+#define HARDWARE_INTERFACE__CONTROL_TYPE_HPP_
 
-#include <string>
-
-#include "hardware_interface/control_type.hpp"
-#include "transmission_interface/visibility_control.h"
-
-namespace transmission_interface
+namespace hardware_interface
 {
-struct TRANSMISSION_INTERFACE_PUBLIC_TYPE TransmissionInfo
-{
-  std::string joint_name;
-  std::string joint_control_type;
-};
 
-}  // namespace transmission_interface
-#endif  // TRANSMISSION_INTERFACE__TRANSMISSION_INFO_HPP_
+namespace joint_control_type
+{
+constexpr const auto POSITION = "PositionJointInterface";
+constexpr const auto VELOCITY = "VelocityJointInterface";
+constexpr const auto EFFORT = "EffortJointInterface";
+}  // namespace joint_control_type
+
+}  // namespace hardware_interface
+
+#endif  // HARDWARE_INTERFACE__CONTROL_TYPE_HPP_

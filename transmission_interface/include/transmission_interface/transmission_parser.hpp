@@ -15,8 +15,6 @@
 #ifndef TRANSMISSION_INTERFACE__TRANSMISSION_PARSER_HPP_
 #define TRANSMISSION_INTERFACE__TRANSMISSION_PARSER_HPP_
 
-#include <tinyxml2.h>
-
 #include <string>
 #include <vector>
 
@@ -25,26 +23,13 @@
 
 namespace transmission_interface
 {
-
-class TRANSMISSION_INTERFACE_PUBLIC_TYPE TransmissionParser
-{
-public:
-  explicit TransmissionParser(const std::string & urdf);
-
-  bool parse_transmission_info(std::vector<TransmissionInfo> & transmissions) const;
-
-  std::string get_error_msg() const;
-
-protected:
-  void set_error_msg(std::string error_msg) const;
-
-  void reset_error_msg() const;
-
-  mutable std::string error_msg_;
-
-  std::string urdf_;
-  tinyxml2::XMLDocument doc_;
-};
-
+/**
+ * /brief Parse transmission information from a URDF
+ * /param urdf A string containing the URDF xml
+ * /return parsed transmission information
+ * /throws std::runtime_error on malformed or empty xml
+ */
+TRANSMISSION_INTERFACE_PUBLIC
+std::vector<TransmissionInfo> parse_transmissions_from_urdf(const std::string & urdf);
 }  // namespace transmission_interface
 #endif  // TRANSMISSION_INTERFACE__TRANSMISSION_PARSER_HPP_
