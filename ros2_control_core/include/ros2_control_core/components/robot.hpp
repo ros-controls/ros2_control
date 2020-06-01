@@ -39,7 +39,7 @@
 namespace ros2_control_core_components
 {
 
-class Robot : protected Component< ros2_control_core_hardware::RobotHardware >
+class Robot : public Component< ros2_control_core_hardware::RobotHardware >
 {
 public:
   RCLCPP_SHARED_PTR_DEFINITIONS(Robot)
@@ -50,7 +50,7 @@ public:
 
   ROS2_CONTROL_CORE_PUBLIC ros2_control_types::return_type configure(const std::string parameters_path, const rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logging_interface,  const rclcpp::node_interfaces::NodeParametersInterface::SharedPtr parameters_interface, const rclcpp::node_interfaces::NodeServicesInterface::SharedPtr services_interface);
 
-  ROS2_CONTROL_CORE_PUBLIC ros2_control_types::return_type init(ros2_control_types::RobotDescription description);
+  ROS2_CONTROL_CORE_PUBLIC ros2_control_types::return_type init();
 
   ROS2_CONTROL_CORE_PUBLIC ros2_control_types::return_type recover();
 
@@ -64,7 +64,10 @@ public:
 protected:
   control_msgs::msg::DynamicJointState joint_states_;
 
-  std::vector<std::string> joints_;
+  std::vector<std::string> joint_names_;
+  std::vector<std::string> robot_names_;
+  std::vector<std::string> tool_actuator_names_;
+  std::vector<std::string> tool_sensor_names_;
   bool has_robots_;
   bool has_tools_;
 
@@ -74,6 +77,52 @@ protected:
 
   std::map<std::string, Actuator::SharedPtr> tool_actuators_;
   std::map<std::string, Sensor::SharedPtr> tool_sensors_;
+
+private:
+
+  ros2_control_types::return_type configure_components(std::string parameters_prefix, std::vector<std::string> name_list, std::map<std::string, auto> component_list)
+  {
+    ros2_control_types::return_type ret = ros2_control_types::ROS2C_RETURN_OK;
+    ros2_control_types::return_type temp_ret;
+    for (auto name: name_list)
+    {
+      if (component_list[name])
+      {
+        temp_ret = component_list[name]->configure(parameters_prefix + "." + name, logging_interface_, parameters_interface_, services_interface_);
+        if (temp_ret != ros2_control_types::ROS2C_RETURN_OK) {
+          ret = temp_ret;
+          RCLCPP_ERROR(logging_interface_->get_logger(), "%s: could not be configured!", (parameters_prefix + "." + name).c_str());
+        }
+      }
+      else
+      {
+        ret = ros2_control_types::ROS2C_RETURN_ERROR;
+        RCLCPP_ERROR(logging_interface_->get_logger(), "Component '%s' could not be configured because the refrerence is NULL!", name.c_str());
+      }
+    }
+    return ret;
+  };
+
+  ros2_control_types::return_type init_components(const std::map<std::string, auto> component_list){
+    ros2_control_types::return_type ret = ros2_control_types::ROS2C_RETURN_OK;
+    ros2_control_types::return_type temp_ret;
+    for (auto element: component_list)
+    {
+      auto component = element.second;
+      if (component)
+      {
+        temp_ret = component->init();
+        if (temp_ret != ros2_control_types::ROS2C_RETURN_OK) {
+          ret = temp_ret;
+        }
+      }
+      else
+      {
+        RCLCPP_ERROR(logging_interface_->get_logger(), "Component '%s' could not be initalized because the refrerence is NULL!", element.first.c_str());
+      }
+    }
+    return ret;
+  };
 
 };
 

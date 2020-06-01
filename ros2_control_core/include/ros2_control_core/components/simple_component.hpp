@@ -31,7 +31,7 @@ namespace ros2_control_core_components
 {
 
 template < typename ComponentHardwareType >
-class SimpleComponent : protected Component< ComponentHardwareType >
+class SimpleComponent : public Component< ComponentHardwareType >
 {
 public:
   ROS2_CONTROL_CORE_PUBLIC SimpleComponent() = default;
@@ -51,11 +51,10 @@ public:
     return ret;
   };
 
-
 protected:
   std::vector<std::string> valid_interface_names_;
   std::vector<std::string> interface_names_;
-  control_msgs::msg::InterfaceValue values_;
+  control_msgs::msg::InterfaceValue::SharedPtr values_;
 };
 
 }  // namespace ros2_control_core_components

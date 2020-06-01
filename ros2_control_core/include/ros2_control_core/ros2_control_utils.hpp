@@ -27,6 +27,7 @@
 
 #include "pluginlib/class_loader.hpp"
 #include "rclcpp/rclcpp.hpp"
+#include "ros2_control_core/ros2_control_types.h"
 #include "ros2_control_core/visibility_control.h"
 
 // TODO: Create util library instead of inline functions?
@@ -76,10 +77,12 @@ namespace ros2_control_utils
     if (class_available)
     {
       component = class_loader.create(class_name);
+      //FIXME:DEBUG
+      RCLCPP_INFO(logger, "%s class is loaded.", class_name.c_str());
     }
     else
     {
-      RCLCPP_WARN(logger, "Robot %s class is _not_ available.", class_name.c_str());
+      RCLCPP_WARN(logger, "%s: %s class is _not_ available.", parameter_name.c_str(), class_name.c_str());
     }
     return component;
   };

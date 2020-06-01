@@ -35,6 +35,8 @@ template < typename ComponentHardwareType >
 class Component
 {
 public:
+  RCLCPP_SHARED_PTR_DEFINITIONS(Component)
+
   ROS2_CONTROL_CORE_PUBLIC Component() = default;
 
   ROS2_CONTROL_CORE_PUBLIC Component(std::string parameters_path, std::string type, const rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logging_interface, const rclcpp::node_interfaces::NodeParametersInterface::SharedPtr parameters_interface, const rclcpp::node_interfaces::NodeServicesInterface::SharedPtr services_interface)
@@ -44,36 +46,8 @@ public:
 
   ROS2_CONTROL_CORE_PUBLIC virtual ~Component() = default;
 
-//   ROS2_CONTROL_CORE_PUBLIC ros2_control_types::return_type init(ComponentDescriptionType description_in);
+  ros2_control_types::return_type virtual configure(std::string parameters_path, const rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logging_interface, const rclcpp::node_interfaces::NodeParametersInterface::SharedPtr parameters_interface, const rclcpp::node_interfaces::NodeServicesInterface::SharedPtr services_interface) = 0;
 
-  // TODO: Remove if not used...
-//   ROS2_CONTROL_CORE_PUBLIC virtual ros2_control_types::return_type init(std::string name, ros2_control_types::HardwareDescription hardware_description);
-
-//   ROS2_CONTROL_CORE_PUBLIC virtual ros2_control_types::return_type recover() = 0;
-
-//   ROS2_CONTROL_CORE_PUBLIC virtual ros2_control_types::return_type stop() = 0;
-
-protected:
-  /**
-   * @brief Components parameter prefix.
-   *
-   */
-  std::string parameters_path_;
-  std::string type_;
-  rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logging_interface_;
-  rclcpp::node_interfaces::NodeParametersInterface::SharedPtr parameters_interface_;
-  rclcpp::node_interfaces::NodeServicesInterface::SharedPtr services_interface_;
-
-  std::string name_;
-  bool has_hardware_;
-
-  uint n_dof_;
-//   ros2_control_types::component_state_type state_ = 0;
-
-  std::shared_ptr<ComponentHardwareType> hardware_;
-
-
-  // This is here because of: https://isocpp.org/wiki/faq/templates#templates-defn-vs-decl
   ros2_control_types::return_type configure(std::string parameters_path, std::string type, const rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logging_interface, const rclcpp::node_interfaces::NodeParametersInterface::SharedPtr parameters_interface, const rclcpp::node_interfaces::NodeServicesInterface::SharedPtr services_interface)
   {
     parameters_path_ = parameters_path;
@@ -88,8 +62,52 @@ protected:
     parameters_interface_->declare_parameter(parameters_path_ + ".has_hardware", rclcpp::ParameterValue(false));
     has_hardware_ = parameters_interface_->get_parameter(parameters_path_ + ".has_hardware").as_bool();
 
+    RCLCPP_INFO(logging_interface_->get_logger(), "%s - %s: called configure!", type_.c_str(), name_.c_str());
+
     return ros2_control_types::ROS2C_RETURN_OK;
   };
+
+  ros2_control_types::return_type init()
+  {
+    ros2_control_types::return_type ret = ros2_control_types::ROS2C_RETURN_OK;
+    if (has_hardware_)
+    {
+      //FIXME:DEBUG
+      RCLCPP_INFO(logging_interface_->get_logger(), "'%s' calling hardware init.", name_.c_str());
+      ret = hardware_->init();
+    }
+    else
+    {
+      //FIXME:DEBUG
+      RCLCPP_INFO(logging_interface_->get_logger(), "'%s' component is initalized without hardware.", name_.c_str());
+    }
+    return ret;
+  };
+
+  //   ROS2_CONTROL_CORE_PUBLIC virtual ros2_control_types::return_type recover() = 0;
+
+  //   ROS2_CONTROL_CORE_PUBLIC virtual ros2_control_types::return_type stop() = 0;
+
+  std::string name_;
+
+protected:
+  /**
+   * @brief Components parameter prefix.
+   *
+   */
+  std::string parameters_path_;
+  std::string type_;
+  rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logging_interface_;
+  rclcpp::node_interfaces::NodeParametersInterface::SharedPtr parameters_interface_;
+  rclcpp::node_interfaces::NodeServicesInterface::SharedPtr services_interface_;
+
+
+  bool has_hardware_;
+
+  uint n_dof_;
+//   ros2_control_types::component_state_type state_ = 0;
+
+  std::shared_ptr<ComponentHardwareType> hardware_;
 
   template<typename T>
   ros2_control_types::return_type load_hardware(ros2_control_utils::ROS2ControlLoaderPluginlib<T> class_loader)
@@ -114,6 +132,7 @@ protected:
     }
     return ros2_control_types::ROS2C_RETURN_ERROR;
   };
+
 
 };
 

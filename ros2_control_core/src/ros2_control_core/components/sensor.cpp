@@ -23,7 +23,7 @@ ros2_control_types::return_type Sensor::configure(const std::string parameters_p
 
   if (has_hardware_)
   {
-    ros2_control_utils::ROS2ControlLoaderPluginlib<ros2_control_core_hardware::SensorHardware> hw_loader("ros2_control_hardware", "ros2_control_core_hardware::SensorHardware");
+    ros2_control_utils::ROS2ControlLoaderPluginlib<ros2_control_core_hardware::SensorHardware> hw_loader("ros2_control_core", "ros2_control_core_hardware::SensorHardware");
     load_and_configure_hardware(hw_loader);
   }
 

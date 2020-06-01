@@ -25,7 +25,7 @@ ros2_control_types::return_type Actuator::configure(const std::string parameters
 
   if (has_hardware_)
   {
-    ros2_control_utils::ROS2ControlLoaderPluginlib<ros2_control_core_hardware::ActuatorHardware> hw_loader("ros2_control_hardware", "ros2_control_core_hardware::ActuatorHardware");
+    ros2_control_utils::ROS2ControlLoaderPluginlib<ros2_control_core_hardware::ActuatorHardware> hw_loader("ros2_control_core", "ros2_control_core_hardware::ActuatorHardware");
     load_and_configure_hardware(hw_loader);
   }
 

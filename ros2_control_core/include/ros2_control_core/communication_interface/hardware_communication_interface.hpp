@@ -16,9 +16,9 @@
 #ifndef ROS2_CONTROL_CORE__COMMUNICATION_INTERFACE_HARDWARE_COMMUNICATION_INTERFACE_HPP_
 #define ROS2_CONTROL_CORE__COMMUNICATION_INTERFACE_HARDWARE_COMMUNICATION_INTERFACE_HPP_
 
+#include "ros2_control_core/ros2_control_types.h"
 #include "ros2_control_core/visibility_control.h"
 
-#include "ros2_control_core/ros2_control_types.h"
 
 namespace ros2_control_core_communication_interface
 {
@@ -32,9 +32,25 @@ public:
 
   ROS2_CONTROL_CORE_PUBLIC virtual ~HardwareCommunicationInterface() = default;
 
-protected:
-  ros2_control_types::CommunicationInterfaceDescription description;
+  ROS2_CONTROL_CORE_PUBLIC ros2_control_types::return_type configure(const std::string parameters_path, const rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logging_interface,  const rclcpp::node_interfaces::NodeParametersInterface::SharedPtr parameters_interface, const rclcpp::node_interfaces::NodeServicesInterface::SharedPtr services_interface)
+  {
+    parameters_path_ = parameters_path;
+    logging_interface_ = logging_interface;
+    parameters_interface_ = parameters_interface;
+    //FIXME:DEBUG
+    RCLCPP_INFO(logging_interface_->get_logger(), "%s is configured!", parameters_path_.c_str());
 
+    //TODO: Add call to library configure is needed
+    return ros2_control_types::ROS2C_RETURN_OK;
+  };
+
+  ROS2_CONTROL_CORE_PUBLIC virtual ros2_control_types::return_type init() = 0;
+
+protected:
+  std::string parameters_path_;
+
+  rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logging_interface_;
+  rclcpp::node_interfaces::NodeParametersInterface::SharedPtr parameters_interface_;
 };
 
 }  // ros2_control_core_hardware
