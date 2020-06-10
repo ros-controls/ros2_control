@@ -51,7 +51,7 @@ TEST_F(TestControllerManager, controller_lifecycle) {
 
   auto test_controller = std::make_shared<test_controller::TestController>();
   auto abstract_test_controller = cm.add_controller(test_controller, "test_controller");
-  EXPECT_EQ(1u, cm.get_loaded_controller().size());
+  EXPECT_EQ(1u, cm.get_loaded_controllers().size());
 
   EXPECT_EQ(controller_interface::CONTROLLER_INTERFACE_RET_SUCCESS, cm.update());
   EXPECT_EQ(1u, test_controller->internal_counter);

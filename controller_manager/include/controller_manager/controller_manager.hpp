@@ -54,7 +54,7 @@ public:
 
   CONTROLLER_MANAGER_PUBLIC
   std::vector<std::shared_ptr<controller_interface::ControllerInterface>>
-  get_loaded_controller() const;
+  get_loaded_controllers() const;
 
   CONTROLLER_MANAGER_PUBLIC
   void register_controller_loader(ControllerLoaderInterfaceSharedPtr loader);

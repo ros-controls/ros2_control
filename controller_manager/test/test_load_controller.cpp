@@ -77,10 +77,10 @@ TEST_F(TestControllerManager, load1_known_controller)
 {
   controller_manager::ControllerManager cm(robot, executor, "test_controller_manager");
   ASSERT_NO_THROW(cm.load_controller("test_controller_01", "test_controller"));
-  EXPECT_EQ(1u, cm.get_loaded_controller().size());
+  EXPECT_EQ(1u, cm.get_loaded_controllers().size());
 
   std::shared_ptr<controller_interface::ControllerInterface> abstract_test_controller =
-    cm.get_loaded_controller()[0];
+    cm.get_loaded_controllers()[0];
 
   auto lifecycle_node = abstract_test_controller->get_lifecycle_node();
   lifecycle_node->configure();
@@ -97,9 +97,9 @@ TEST_F(TestControllerManager, load2_known_controller)
   // load the controller with name1
   std::string controller_name1 = "test_controller1";
   ASSERT_NO_THROW(cm.load_controller(controller_name1, controller_type));
-  EXPECT_EQ(1u, cm.get_loaded_controller().size());
+  EXPECT_EQ(1u, cm.get_loaded_controllers().size());
   std::shared_ptr<controller_interface::ControllerInterface> abstract_test_controller1 =
-    cm.get_loaded_controller()[0];
+    cm.get_loaded_controllers()[0];
   EXPECT_STREQ(
     controller_name1.c_str(), abstract_test_controller1->get_lifecycle_node()->get_name());
   abstract_test_controller1->get_lifecycle_node()->configure();
@@ -110,9 +110,9 @@ TEST_F(TestControllerManager, load2_known_controller)
   // load the same controller again with a different name
   std::string controller_name2 = "test_controller2";
   ASSERT_NO_THROW(cm.load_controller(controller_name2, controller_type));
-  EXPECT_EQ(2u, cm.get_loaded_controller().size());
+  EXPECT_EQ(2u, cm.get_loaded_controllers().size());
   std::shared_ptr<controller_interface::ControllerInterface> abstract_test_controller2 =
-    cm.get_loaded_controller()[1];
+    cm.get_loaded_controllers()[1];
   EXPECT_STREQ(
     controller_name2.c_str(), abstract_test_controller2->get_lifecycle_node()->get_name());
   abstract_test_controller2->get_lifecycle_node()->configure();
@@ -127,7 +127,7 @@ TEST_F(TestControllerManager, update)
   ASSERT_NO_THROW(cm.load_controller("test_controller_01", "test_controller"));
 
   std::shared_ptr<controller_interface::ControllerInterface> abstract_test_controller =
-    cm.get_loaded_controller()[0];
+    cm.get_loaded_controllers()[0];
 
   auto lifecycle_node = abstract_test_controller->get_lifecycle_node();
   lifecycle_node->configure();
@@ -157,10 +157,10 @@ TEST_F(TestControllerManager, register_controller_loader)
   .WillOnce(Return(mock_controller));
 
   ASSERT_NO_THROW(cm.load_controller(mock_controller_name, mock_controller_type));
-  EXPECT_EQ(1u, cm.get_loaded_controller().size());
+  EXPECT_EQ(1u, cm.get_loaded_controllers().size());
 
   std::shared_ptr<controller_interface::ControllerInterface> abstract_test_controller =
-    cm.get_loaded_controller()[0];
+    cm.get_loaded_controllers()[0];
 
   auto lifecycle_node = abstract_test_controller->get_lifecycle_node();
   lifecycle_node->configure();
