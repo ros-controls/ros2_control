@@ -23,7 +23,7 @@
 
 namespace hardware_interface
 {
-/** A handle used to read the state of a single joint. */
+/** A handle used to get and set the command of a single joint. */
 class JointCommandHandle
 {
 public:
