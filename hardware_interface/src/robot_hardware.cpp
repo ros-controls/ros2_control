@@ -31,9 +31,7 @@ constexpr char kOperationModeLoggerName[] = "joint operation mode handle";
 
 template<typename T>
 hardware_interface_ret_t
-register_handle(
-  std::vector<T *> & registered_handles, T * handle,
-  const std::string & logger_name)
+register_handle(std::vector<T *> & registered_handles, T * handle, const std::string & logger_name)
 {
   auto handle_pos = std::find_if(
     registered_handles.begin(), registered_handles.end(),
