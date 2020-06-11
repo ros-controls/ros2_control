@@ -29,6 +29,13 @@ constexpr char kJointStateLoggerName[] = "joint state handle";
 constexpr char kJointCommandLoggerName[] = "joint cmd handle";
 constexpr char kOperationModeLoggerName[] = "joint operation mode handle";
 
+/// Register the handle to the handle list if the handle's name is not found.
+/**
+ * \param[in] registered_handles The handle list.
+ * \param[in] handle The handle to be registered.
+ * \param[in] logger_name The name of the logger.
+ * \return The return code, one of `HW_RET_OK` or `HW_RET_ERROR`.
+ */
 template<typename T>
 hardware_interface_ret_t
 register_handle(std::vector<T *> & registered_handles, T * handle, const std::string & logger_name)
@@ -77,11 +84,21 @@ RobotHardware::register_operation_mode_handle(OperationModeHandle * operation_mo
     kOperationModeLoggerName);
 }
 
+/// Find the handle by name from the registered handle list.
+/**
+ * \param[in] registered_handles The registered handle list.
+ * \param[in] name The handle's name.
+ * \param[in] logger_name The name of the logger.
+ * \param[out] handle the handle if found.
+ * \return The return code, one of `HW_RET_OK` or `HW_RET_ERROR`.
+ */
 template<typename T>
 hardware_interface_ret_t
 get_handle(
-  std::vector<T *> & registered_handles, const std::string & name, T ** handle,
-  const std::string & logger_name)
+  std::vector<T *> & registered_handles,
+  const std::string & name,
+  const std::string & logger_name,
+  T ** handle)
 {
   if (name.empty()) {
     RCLCPP_ERROR(
@@ -113,8 +130,10 @@ RobotHardware::get_joint_state_handle(
 {
   THROW_ON_NOT_NULLPTR(*joint_state_handle)
   return get_handle<const JointStateHandle>(
-    registered_joint_state_handles_, name,
-    joint_state_handle, kJointStateLoggerName);
+    registered_joint_state_handles_,
+    name,
+    kJointStateLoggerName,
+    joint_state_handle);
 }
 
 hardware_interface_ret_t
@@ -123,8 +142,10 @@ RobotHardware::get_joint_command_handle(
 {
   THROW_ON_NOT_NULLPTR(*joint_command_handle)
   return get_handle<JointCommandHandle>(
-    registered_joint_command_handles_, name,
-    joint_command_handle, kJointCommandLoggerName);
+    registered_joint_command_handles_,
+    name,
+    kJointCommandLoggerName,
+    joint_command_handle);
 }
 
 hardware_interface_ret_t
@@ -133,8 +154,10 @@ RobotHardware::get_operation_mode_handle(
 {
   THROW_ON_NOT_NULLPTR(*operation_mode_handle)
   return get_handle<OperationModeHandle>(
-    registered_operation_mode_handles_, name,
-    operation_mode_handle, kOperationModeLoggerName);
+    registered_operation_mode_handles_,
+    name,
+    kOperationModeLoggerName,
+    operation_mode_handle);
 }
 
 template<typename T>
