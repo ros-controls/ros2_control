@@ -24,10 +24,10 @@
 namespace transmission_interface
 {
 /**
- * /brief Parse transmission information from a URDF
- * /param urdf A string containing the URDF xml
- * /return parsed transmission information
- * /throws std::runtime_error on malformed or empty xml
+ * \brief Parse transmission information from a URDF
+ * \param urdf A string containing the URDF xml
+ * \return parsed transmission information
+ * \throws std::runtime_error on malformed or empty xml
  */
 TRANSMISSION_INTERFACE_PUBLIC
 std::vector<TransmissionInfo> parse_transmissions_from_urdf(const std::string & urdf);
