@@ -18,8 +18,7 @@
 
 #include "transmission_interface/transmission_parser.hpp"
 
-namespace testing
-{
+using namespace ::testing;  // NOLINT
 
 class TestTransmissionParser : public Test
 {
@@ -411,5 +410,3 @@ TEST_F(TestTransmissionParser, wrong_urdf_throws_error)
 {
   ASSERT_THROW(parse_transmissions_from_urdf(wrong_urdf_xml_), std::runtime_error);
 }
-
-}  // namespace testing
