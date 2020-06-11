@@ -54,6 +54,11 @@ public:
 
   CONTROLLER_MANAGER_PUBLIC
   std::vector<std::shared_ptr<controller_interface::ControllerInterface>>
+  get_loaded_controllers() const;
+
+  [[deprecated("get_loaded_controller is deprecated, it has been renamed to get_loaded_controllers")]]
+  CONTROLLER_MANAGER_PUBLIC
+  std::vector<std::shared_ptr<controller_interface::ControllerInterface>>
   get_loaded_controller() const;
 
   CONTROLLER_MANAGER_PUBLIC

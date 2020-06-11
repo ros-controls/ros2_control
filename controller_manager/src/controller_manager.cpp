@@ -66,7 +66,7 @@ ControllerManager::load_controller(
 }
 
 std::vector<std::shared_ptr<controller_interface::ControllerInterface>>
-ControllerManager::get_loaded_controller() const
+ControllerManager::get_loaded_controllers() const
 {
   return loaded_controllers_;
 }
