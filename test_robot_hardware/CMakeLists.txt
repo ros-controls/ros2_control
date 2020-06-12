@@ -49,6 +49,10 @@ if(BUILD_TESTING)
   endif()
 endif()
 
+ament_export_dependencies(
+  hardware_interface
+  rclcpp
+)
 ament_export_libraries(${PROJECT_NAME})
 ament_export_include_directories(include)
 ament_package()
