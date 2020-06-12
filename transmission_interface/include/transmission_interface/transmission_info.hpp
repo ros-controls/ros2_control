@@ -23,10 +23,10 @@
 namespace transmission_interface
 {
 
-struct TRANSMISSION_INTERFACE_PUBLIC_TYPE TransmissionInfo
+struct TransmissionInfo
 {
-  std::string joint_name;
-  std::string joint_control_type;
+  TRANSMISSION_INTERFACE_PUBLIC std::string joint_name;
+  TRANSMISSION_INTERFACE_PUBLIC std::string joint_control_type;
 };
 
 }  // namespace transmission_interface
