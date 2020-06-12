@@ -214,4 +214,11 @@ RobotHardware::get_registered_operation_mode_handles()
   return registered_operation_mode_handles_;
 }
 
+// NOTE: The interface between virtual robot representation "Robot"-class and hardware should be another way around! This is only temporary implementation to change compatibility step by step!
+hardware_interface_ret_t
+create_robot_from_urdf(const std::string & urdf)
+{
+  return HW_RET_OK;
+}
+
 }  // namespace hardware_interface
