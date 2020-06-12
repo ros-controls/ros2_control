@@ -29,6 +29,7 @@ constexpr const auto kHardwareInterfaceTag = "hardwareInterface";
 
 namespace transmission_interface
 {
+
 std::vector<TransmissionInfo> parse_transmissions_from_urdf(const std::string & urdf)
 {
   if (urdf.empty()) {

@@ -22,6 +22,7 @@
 
 namespace transmission_interface
 {
+
 struct TRANSMISSION_INTERFACE_PUBLIC_TYPE TransmissionInfo
 {
   std::string joint_name;
