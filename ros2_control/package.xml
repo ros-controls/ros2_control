@@ -16,6 +16,9 @@
   <exec_depend>controller_manager</exec_depend>
   <exec_depend>controller_parameter_server</exec_depend>
   <exec_depend>hardware_interface</exec_depend>
+  <exec_depend>transmision_interface</exec_depend>
+
+  <test_depend>test_robot_hardware</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>
