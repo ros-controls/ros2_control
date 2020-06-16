@@ -55,16 +55,15 @@ install(DIRECTORY include/
 )
 
 if(BUILD_TESTING)
-  find_package(ament_cmake_gtest REQUIRED)
+  find_package(ament_cmake_gmock REQUIRED)
 
-  ament_add_gtest(test_dummy test/test_dummy.cpp)
-  target_include_directories(test_dummy PRIVATE include)
-#   ament_target_dependencies(test_dummy rcpputils)
-
+  ament_add_gmock(test_component_parser test/test_component_parser.cpp)
+  target_include_directories(test_component_parser PRIVATE include)
+  target_link_libraries(test_component_parser component_parser tinyxml2)
 
   # Uncomment this before creating a new PR to check code quality
-#   find_package(ament_lint_auto REQUIRED)
-#   ament_lint_auto_find_test_dependencies()
+  find_package(ament_lint_auto REQUIRED)
+  ament_lint_auto_find_test_dependencies()
 endif()
 
 ament_export_dependencies(
