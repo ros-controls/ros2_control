@@ -104,8 +104,8 @@ ament_export_include_directories(
   include
 )
 ament_export_libraries(
-  hardware_interface
   component_parser
+  hardware_interface
 )
 ament_export_dependencies(
   control_msgs
