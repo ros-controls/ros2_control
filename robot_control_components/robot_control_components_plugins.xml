@@ -1,0 +1,30 @@
+<library path="robot_control_components_actuators">
+  <class name="robot_control_components/EffortActuator" type="robot_control_components_actuators::EffortActuator" base_class_type="robot_control_components::Actuator">
+    <description>
+      The effot actuator provides virtual representation of effot-only actuator.
+    </description>
+  </class>
+  <class name="robot_control_components/PositionActuator" type="robot_control_components_actuators::PositionActuator" base_class_type="robot_control_components::Actuator">
+    <description>
+      The position actuator provides virtual representation of position-only actuator.
+    </description>
+  </class>
+  <class name="robot_control_components/VelocityActuator" type="robot_control_components_actuators::VelocityActuator" base_class_type="robot_control_components::Actuator">
+    <description>
+      The velocity actuator provides virtual representation of velocity-only actuator.
+    </description>
+  </class>
+</library>
+
+<library path="robot_control_components_sensors">
+  <class name="robot_control_components/PositionSensor" type="robot_control_components_sensors::PositionSensor" base_class_type="robot_control_components::Sensor">
+    <description>
+      The position sensor provides virtual representation of position-only sensor.
+    </description>
+  </class>
+  <class name="robot_control_components/VelocitySensor" type="robot_control_components_sensors::VelocitySensor" base_class_type="robot_control_components::Sensor">
+    <description>
+      The velocity sensor provides virtual representation of velocity-only sensor.
+    </description>
+  </class>
+</library>

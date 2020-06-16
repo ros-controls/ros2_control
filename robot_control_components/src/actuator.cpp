@@ -44,7 +44,11 @@ components_ret_t Actuator::stop()
 
 components_ret_t Actuator::read()
 {
-  return ROS2C_RETURN_OK;
+  components_ret_t ret = ROS2C_RETURN_OK;
+  if (!can_read_) {
+    ret = ROS2C_RETURN_ACTUATOR_CAN_NOT_READ;
+  }
+  return ret;
 }
 
 components_ret_t Actuator::write()
@@ -61,14 +65,14 @@ components_ret_t Actuator::get_data(control_msgs::msg::InterfaceValue * data)
 
 components_ret_t Actuator::set_data(control_msgs::msg::InterfaceValue * data, std::string claimer_id)
 {
+  components_ret_t ret = ROS2C_RETURN_OK;
   if (!claimer_id_.compare(claimer_id)) {
     data_ = *data;
   }
   else {
-    // Shoud we throw or use RCLCPP_ERROR and error code in return?
-    throw std::runtime_error("trying to set data on actuator " + name_ + " with controller who is not claimer");
+    ret = ROS2C_RETURN_ACTUATOR_NON_CLAIMED_WRITE;
   }
-  return ROS2C_RETURN_OK;
+  return ret;
 }
 
 std::vector<std::string> Actuator::get_interface_names()
@@ -78,27 +82,30 @@ std::vector<std::string> Actuator::get_interface_names()
 
 components_ret_t Actuator::claim(const std::string claimer_id)
 {
+  components_ret_t ret = ROS2C_RETURN_OK;
   if (claimer_id_.empty()) {
     claimer_id_ = claimer_id;
   }
   else {
-    // Shoud we throw or use RCLCPP_ERROR and error code in return?
-    throw std::runtime_error("trying to claim blocked actuator " + name_);
+    ret = ROS2C_RETURN_ACTUATOR_ALREADY_CLAIMED;
   }
-  return ROS2C_RETURN_OK;
+  return ret;
 
 }
 
 components_ret_t Actuator::unclaim(const std::string claimer_id)
 {
-  if (!claimer_id_.compare(claimer_id)) {
+  components_ret_t ret = ROS2C_RETURN_OK;
+  if (claimer_id_.empty()) {
+    ret = ROS2C_RETURN_ACTUATOR_NOT_CLAIMED;
+  }
+  else if (!claimer_id_.compare(claimer_id)) {
     claimer_id_ = "";
   }
   else {
-    // Shoud we throw or use RCLCPP_ERROR and error code in return?
-    throw std::runtime_error("trying to unclaim actuator " + name_ + " with controller who is not claimer");
+    ret = ROS2C_RETURN_ACTUATOR_UNATHORIZED_UNCLAIM;
   }
-  return ROS2C_RETURN_OK;
+  return ret;
 }
 
 bool Actuator::isClaimed()

@@ -27,7 +27,14 @@ static constexpr components_ret_t ROS2C_RETURN_ACTUATOR_CLAIMED_ERROR = 10;
 static constexpr components_ret_t ROS2C_RETURN_ACTUATOR_ALREADY_CLAIMED = 11;
 static constexpr components_ret_t ROS2C_RETURN_ACTUATOR_NOT_CLAIMED = 11;
 static constexpr components_ret_t ROS2C_RETURN_ACTUATOR_UNATHORIZED_UNCLAIM = 13;
+static constexpr components_ret_t ROS2C_RETURN_ACTUATOR_NON_CLAIMED_WRITE = 15;
+
 static constexpr components_ret_t ROS2C_RETURN_ACTUATOR_CAN_NOT_READ = 20;
+
+
+constexpr const auto ROS2C_INTERFACE_POSITION = "position";
+constexpr const auto ROS2C_INTERFACE_VELOCITY = "velocity";
+constexpr const auto ROS2C_INTERFACE_EFFORT = "effor";
 
 }  // namespace robot_control_components
 #endif  // ROBOT_CONTROL_COMPONENTS__ROS2_CONTROL_TYPES_H_
