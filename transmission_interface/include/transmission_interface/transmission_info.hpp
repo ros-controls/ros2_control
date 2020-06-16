@@ -18,15 +18,14 @@
 #include <string>
 
 #include "hardware_interface/control_type.hpp"
-#include "transmission_interface/visibility_control.h"
 
 namespace transmission_interface
 {
 
 struct TransmissionInfo
 {
-  TRANSMISSION_INTERFACE_PUBLIC std::string joint_name;
-  TRANSMISSION_INTERFACE_PUBLIC std::string joint_control_type;
+  std::string joint_name;
+  std::string joint_control_type;
 };
 
 }  // namespace transmission_interface
