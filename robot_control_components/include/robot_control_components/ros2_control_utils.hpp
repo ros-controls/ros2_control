@@ -38,21 +38,21 @@ template < typename T >
 class ROS2ControlLoaderPluginlib
 {
 public:
-  ROS2_CONTROL_CORE_PUBLIC ROS2ControlLoaderPluginlib(const std::string package, const std::string base_type) : loader_(std::make_shared<pluginlib::ClassLoader< T >>(package, base_type))
+  ROBOT_CONTROL_COMPONENTS_PUBLIC ROS2ControlLoaderPluginlib(const std::string package, const std::string base_type) : loader_(std::make_shared<pluginlib::ClassLoader< T >>(package, base_type))
   {
   };
 
-  ROS2_CONTROL_CORE_PUBLIC
+  ROBOT_CONTROL_COMPONENTS_PUBLIC
   virtual ~ROS2ControlLoaderPluginlib() = default;
 
   // TODO: Add try-catch
-  ROS2_CONTROL_CORE_PUBLIC
+  ROBOT_CONTROL_COMPONENTS_PUBLIC
   std::shared_ptr<T> create(const std::string & type)
   {
     return std::shared_ptr<T>(loader_->createUnmanagedInstance(type));
   };
 
-  ROS2_CONTROL_CORE_PUBLIC
+  ROBOT_CONTROL_COMPONENTS_PUBLIC
   bool is_available(const std::string & type)
   {
     return loader_->isClassAvailable(type);

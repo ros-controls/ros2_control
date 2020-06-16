@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #ifndef ROBOT_CONTROL_COMPONENTS__ROBOT_HPP_
 #define ROBOT_CONTROL_COMPONENTS__ROBOT_HPP_
 
@@ -25,8 +24,10 @@
 #include "rclcpp/macros.hpp"
 #include "rclcpp/rclcpp.hpp"
 
+#include "robot_control_components/actuator.hpp"
+#include "robot_control_components/sensor.hpp"
+#include "robot_control_components/ros2_control_types.h"
 #include "robot_control_components/visibility_control.h"
-
 
 namespace robot_control_components
 {
@@ -36,9 +37,21 @@ class Robot
 public:
   RCLCPP_SHARED_PTR_DEFINITIONS(Robot)
 
-  ROS2_CONTROL_CORE_PUBLIC Robot() = default;
+  Robot() = default;
 
-  ROS2_CONTROL_CORE_PUBLIC ~Robot() = default;
+  ~Robot() = default;
+
+  ROBOT_CONTROL_COMPONENTS_PUBLIC components_ret_t configure(const std::string & urdf_string);
+
+
+protected:
+
+  control_msgs::msg::DynamicJointState joint_states_;
+
+  std::vector<std::string> joint_names_;
+
+  std::map<std::string, Actuator::SharedPtr> actuators_;
+  std::map<std::string, Sensor::SharedPtr> sensors_;
 
 };
 

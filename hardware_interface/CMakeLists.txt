@@ -13,6 +13,7 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rcpputils REQUIRED)
+find_package(robot_control_components REQUIRED)
 
 add_library(
   hardware_interface
@@ -30,6 +31,7 @@ ament_target_dependencies(
   hardware_interface
   rclcpp
   rcpputils
+  robot_control_components
 )
 
 # Causes the visibility macros to use dllexport rather than dllimport,
@@ -62,6 +64,9 @@ if(BUILD_TESTING)
   target_link_libraries(test_robot_hardware_interfaces hardware_interface)
 endif()
 
+ament_export_dependencies(
+  robot_control_components
+)
 ament_export_include_directories(
   include
 )

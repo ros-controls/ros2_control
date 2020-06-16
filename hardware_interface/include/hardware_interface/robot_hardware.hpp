@@ -82,11 +82,6 @@ public:
   std::vector<OperationModeHandle *>
   get_registered_operation_mode_handles();
 
-  // NOTE: The interface between virtual robot representation "Robot"-class and hardware should be another way around! This is only temporary implementation to change compatibility step by step!
-  HARDWARE_INTERFACE_PUBLIC
-  hardware_interface_ret_t
-  create_robot_from_urdf(const std::string & urdf);
-
 private:
   std::vector<const JointStateHandle *> registered_joint_state_handles_;
   std::vector<JointCommandHandle *> registered_joint_command_handles_;

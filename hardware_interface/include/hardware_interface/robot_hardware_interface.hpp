@@ -18,6 +18,8 @@
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/visibility_control.h"
 
+#include "robot_control_components/robot.hpp"
+
 namespace hardware_interface
 {
 

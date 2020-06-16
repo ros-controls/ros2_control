@@ -17,6 +17,46 @@
 namespace robot_control_components
 {
 
+components_ret_t Sensor::configure(ComponentInfo sensor_info)
+{
+  return ROS2C_RETURN_OK;
+}
 
+components_ret_t Sensor::init()
+{
+  return ROS2C_RETURN_OK;
+}
+
+components_ret_t Sensor::recover()
+{
+  return ROS2C_RETURN_OK;
+}
+
+components_ret_t Sensor::start()
+{
+  return ROS2C_RETURN_OK;
+}
+
+components_ret_t Sensor::stop()
+{
+  return ROS2C_RETURN_OK;
+}
+
+components_ret_t Sensor::read()
+{
+  return ROS2C_RETURN_OK;
+}
+
+components_ret_t Sensor::get_value(control_msgs::msg::InterfaceValue * data)
+{
+  // TODO: Add check is data are plausible
+  *data = data_;
+  return ROS2C_RETURN_OK;
+}
+
+std::vector<std::string> Sensor::get_interface_names()
+{
+  return interface_names_;
+};
 
 }  // namespace robot_control_components

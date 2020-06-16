@@ -24,6 +24,8 @@
 #include "rclcpp/macros.hpp"
 #include "rclcpp/rclcpp.hpp"
 
+#include "robot_control_components/component_info.hpp"
+#include "robot_control_components/ros2_control_types.h"
 #include "robot_control_components/visibility_control.h"
 
 
@@ -35,10 +37,50 @@ class Actuator
 public:
   RCLCPP_SHARED_PTR_DEFINITIONS(Actuator)
 
-  ROS2_CONTROL_CORE_PUBLIC Actuator() = default;
+  Actuator() = default;
 
-  ROS2_CONTROL_CORE_PUBLIC virtual ~Actuator() = default;
+  virtual ~Actuator() = default;
 
+  ROBOT_CONTROL_COMPONENTS_PUBLIC components_ret_t configure(ComponentInfo actuator_info);
+
+  ROBOT_CONTROL_COMPONENTS_PUBLIC components_ret_t init();
+
+  ROBOT_CONTROL_COMPONENTS_PUBLIC components_ret_t recover();
+
+  ROBOT_CONTROL_COMPONENTS_PUBLIC components_ret_t start();
+
+  ROBOT_CONTROL_COMPONENTS_PUBLIC components_ret_t stop();
+
+  ROBOT_CONTROL_COMPONENTS_PUBLIC components_ret_t read();
+
+  ROBOT_CONTROL_COMPONENTS_PUBLIC components_ret_t write();
+
+  ROBOT_CONTROL_COMPONENTS_PUBLIC components_ret_t get_data(control_msgs::msg::InterfaceValue * data);
+
+  ROBOT_CONTROL_COMPONENTS_PUBLIC components_ret_t set_data(control_msgs::msg::InterfaceValue * data, std::string claimer_id);
+
+  ROBOT_CONTROL_COMPONENTS_PUBLIC std::vector<std::string> get_interface_names();
+
+  ROBOT_CONTROL_COMPONENTS_PUBLIC components_ret_t claim(const std::string claimer_id);
+
+  ROBOT_CONTROL_COMPONENTS_PUBLIC components_ret_t unclaim(const std::string claimer_id);
+
+  ROBOT_CONTROL_COMPONENTS_PUBLIC bool isClaimed();
+
+  ROBOT_CONTROL_COMPONENTS_PUBLIC bool canRead();
+
+protected:
+  std::string name_;
+  std::string type_;
+  bool can_read_;
+  bool has_hardware_;
+  bool read_async_;
+
+  std::string claimer_id_;
+
+  std::vector<std::string> valid_interface_names_;
+  std::vector<std::string> interface_names_;
+  control_msgs::msg::InterfaceValue data_;
 };
 
 }  // namespace robot_control_components

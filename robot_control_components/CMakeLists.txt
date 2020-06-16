@@ -18,8 +18,14 @@ find_package(control_msgs REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(rclcpp REQUIRED)
 
+add_library(component_parser SHARED
+  src/utils/component_parser.cpp
+)
 
-## COMPILE
+target_include_directories(component_parser
+  PRIVATE include
+)
+
 add_library(${PROJECT_NAME} SHARED
   src/actuator.cpp
   src/robot.cpp
@@ -30,14 +36,17 @@ target_include_directories(${PROJECT_NAME}
   PRIVATE include
 )
 
+target_link_libraries(${PROJECT_NAME}
+  component_parser
+)
+
 ament_target_dependencies(${PROJECT_NAME}
   control_msgs
   pluginlib
   rclcpp
 )
 
-## INSTALL
-install(TARGETS ${PROJECT_NAME}
+install(TARGETS ${PROJECT_NAME} component_parser
   DESTINATION lib
 )
 
@@ -45,7 +54,6 @@ install(DIRECTORY include/
   DESTINATION include
 )
 
-## TESTS
 if(BUILD_TESTING)
   find_package(ament_cmake_gtest REQUIRED)
 
@@ -59,13 +67,13 @@ if(BUILD_TESTING)
 #   ament_lint_auto_find_test_dependencies()
 endif()
 
-## EXPORTS
 ament_export_dependencies(
   control_msgs
   pluginlib
   rclcpp
 )
 ament_export_libraries(
+  component_parser
   ${PROJECT_NAME}
 )
 ament_export_include_directories(
