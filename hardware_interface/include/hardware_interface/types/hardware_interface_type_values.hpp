@@ -1,4 +1,4 @@
-// Copyright 2017 Open Source Robotics Foundation, Inc.
+// Copyright 2020 ros2_control Development Team
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,12 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <gtest/gtest.h>
+#ifndef HARDWARE_INTERFACE__TYPES__HARDWARE_INTERFACE_TYPE_VALUES_HPP_
+#define HARDWARE_INTERFACE__TYPES__HARDWARE_INTERFACE_TYPE_VALUES_HPP_
 
-class TestDummy : public ::testing::Test
+namespace hardware_interface
 {
-protected:
-  static void SetUpTestCase()
-  {
-  }
-};
+constexpr const auto HW_IF_POSITION = "position";
+constexpr const auto HW_IF_VELOCITY = "velocity";
+constexpr const auto HW_IF_EFFORT = "effort";
+}  // namespace hardware_interface
+
+#endif  // HARDWARE_INTERFACE__TYPES__HARDWARE_INTERFACE_TYPE_VALUES_HPP_

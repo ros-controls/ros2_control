@@ -26,14 +26,14 @@ add_library(
 target_include_directories(
   hardware_interface
   PUBLIC
-  include)
+  include
+)
 ament_target_dependencies(
   hardware_interface
   control_msgs
   rclcpp
   rcpputils
 )
-
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.
 target_compile_definitions(hardware_interface PRIVATE "HARDWARE_INTERFACE_BUILDING_DLL")
@@ -76,11 +76,17 @@ if(BUILD_TESTING)
 
 endif()
 
+ament_export_dependencies(
+  rclcpp
+  rcpputils
+)
 ament_export_include_directories(
   include
 )
 ament_export_libraries(
-  hardware_interface)
+  hardware_interface
+)
 ament_export_dependencies(
-  control_msgs)
+  control_msgs
+)
 ament_package()
