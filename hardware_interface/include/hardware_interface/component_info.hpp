@@ -13,16 +13,14 @@
 // limitations under the License.
 
 
-#ifndef ROBOT_CONTROL_COMPONENTS__COMPONENT_INFO_HPP_
-#define ROBOT_CONTROL_COMPONENTS__COMPONENT_INFO_HPP_
+#ifndef HARDWARE_INTERFACE__COMPONENT_INFO_HPP_
+#define HARDWARE_INTERFACE__COMPONENT_INFO_HPP_
 
 #include <map>
 #include <string>
 #include <vector>
 
-#include "robot_control_components/visibility_control.h"
-
-namespace robot_control_components
+namespace hardware_interface
 {
 
 struct ComponentInfo
@@ -39,6 +37,6 @@ struct ComponentInfo
   std::map<std::string, std::string> hardware_parameters;
 };
 
-}  // namespace robot_control_components
+}  // namespace hardware_interface
 
-#endif  // ROBOT_CONTROL_COMPONENTS__COMPONENT_INFO_HPP_
+#endif  // HARDWARE_INTERFACE__COMPONENT_INFO_HPP_

@@ -4,17 +4,13 @@
   <name>robot_control_components</name>
   <version>0.0.0</version>
   <description>The main package for `ros2_control`-concept testing. The package implements the most important classes and tests them with `demo_robot` to enable functionality and test driven development.</description>
-  <maintainer email="denis@stogl.de">stogl</maintainer>
+  <maintainer email="denis@stogl.de">Denis Štogl</maintainer>
   <license>Apache License 2.0</license>
 
-  <maintainer email="denis@stogl.de">Denis Štogl</maintainer>
 
-  <depend>control_msgs</depend>
+  <depend>hardware_interface</depend>
   <depend>pluginlib</depend>
-  <depend>rclcpp</depend>
-  <depend>tinyxml2_vendor</depend>
 
-  <test_depend>ament_cmake_gmock</test_depend>
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
 

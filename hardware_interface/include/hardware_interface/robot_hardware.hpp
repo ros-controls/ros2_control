@@ -18,10 +18,13 @@
 #include <string>
 #include <vector>
 
+#include "hardware_interface/actuator.hpp"
 #include "hardware_interface/joint_command_handle.hpp"
 #include "hardware_interface/joint_state_handle.hpp"
 #include "hardware_interface/operation_mode_handle.hpp"
 #include "hardware_interface/robot_hardware_interface.hpp"
+#include "hardware_interface/sensor.hpp"
+#include "hardware_interface/system.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/visibility_control.h"
 
@@ -86,6 +89,10 @@ private:
   std::vector<const JointStateHandle *> registered_joint_state_handles_;
   std::vector<JointCommandHandle *> registered_joint_command_handles_;
   std::vector<OperationModeHandle *> registered_operation_mode_handles_;
+
+  std::vector<Actuator> actuators_;
+  std::vector<Sensor> sensors_;
+  std::vector<System> systems_;
 };
 
 }  // namespace hardware_interface

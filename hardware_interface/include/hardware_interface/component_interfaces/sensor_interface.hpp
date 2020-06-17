@@ -1,4 +1,4 @@
-// Copyright 2017 Open Source Robotics Foundation, Inc.
+// Copyright 2020 ROS2-Control Development Team
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,38 +12,52 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef HARDWARE_INTERFACE__ROBOT_HARDWARE_INTERFACE_HPP_
-#define HARDWARE_INTERFACE__ROBOT_HARDWARE_INTERFACE_HPP_
+#ifndef HARDWARE_INTERFACE__COMPONENT_INTERFACES__SENSOR_INTERFACE_HPP_
+#define HARDWARE_INTERFACE__COMPONENT_INTERFACES__SENSOR_INTERFACE_HPP_
 
+#include <string>
+
+#include "hardware_interface/component_info.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/visibility_control.h"
 
 namespace hardware_interface
 {
 
-class RobotHardwareInterface
+class SensorInterface
 {
 public:
   HARDWARE_INTERFACE_PUBLIC
-  RobotHardwareInterface() = default;
+  SensorInterface() = default;
 
   HARDWARE_INTERFACE_PUBLIC
   virtual
-  ~RobotHardwareInterface() = default;
+  ~SensorInterface() = default;
 
   HARDWARE_INTERFACE_PUBLIC
   virtual
-  return_type init() = 0;
+  hardware_interface_ret_t configure(const ComponentInfo & sensor_info) = 0;
 
   HARDWARE_INTERFACE_PUBLIC
   virtual
-  return_type read() = 0;
+  std::string get_interface_name() const = 0;
 
   HARDWARE_INTERFACE_PUBLIC
   virtual
-  return_type write() = 0;
+  hardware_interface_ret_t start() = 0;
+
+  HARDWARE_INTERFACE_PUBLIC
+  virtual
+  hardware_interface_ret_t stop() = 0;
+
+  HARDWARE_INTERFACE_PUBLIC
+  virtual
+  bool is_started() const = 0;
+
+  HARDWARE_INTERFACE_PUBLIC
+  virtual
+  hardware_interface_ret_t read(double & data) = 0;
 };
 
 }  // namespace hardware_interface
-
-#endif  // HARDWARE_INTERFACE__ROBOT_HARDWARE_INTERFACE_HPP_
+#endif  // HARDWARE_INTERFACE__COMPONENT_INTERFACES__SENSOR_INTERFACE_HPP_

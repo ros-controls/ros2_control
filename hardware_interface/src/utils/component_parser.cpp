@@ -12,29 +12,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "robot_control_components/component_parser.hpp"
-#include "robot_control_components/component_info.hpp"
+#include "hardware_interface/utils/component_parser.hpp"
 
 #include <stdexcept>
 #include <string>
 #include <tinyxml2.h>
 
+#include "hardware_interface/component_info.hpp"
+
 namespace
 {
-  constexpr const auto kRobotTag = "robot";
-  constexpr const auto kROS2ControlTag = "ros2_control";
-  constexpr const auto kHardwareTag = "hardware";
-  constexpr const auto kClassTypeTag = "classType";
-  constexpr const auto kParamTag = "param";
-  constexpr const auto kJointTag = "joint";
-  constexpr const auto kInterfaceNameTag = "interfaceName";
+constexpr const auto kRobotTag = "robot";
+constexpr const auto kROS2ControlTag = "ros2_control";
+constexpr const auto kHardwareTag = "hardware";
+constexpr const auto kClassTypeTag = "classType";
+constexpr const auto kParamTag = "param";
+constexpr const auto kJointTag = "joint";
+constexpr const auto kInterfaceNameTag = "interfaceName";
 
-  // For compleate reference of syntax - not used in parser
-  constexpr const auto kActuatorTag = "actuator";
-  constexpr const auto kSensorTag = "sensor";
+// For compleate reference of syntax - not used in parser
+//constexpr const auto kActuatorTag = "actuator";
+//constexpr const auto kSensorTag = "sensor";
 }  // namespace
 
-namespace robot_control_components
+namespace hardware_interface
+{
+namespace utils
 {
 
 ComponentInfo parse_robot_from_urdf(const std::string & urdf)
@@ -71,8 +74,7 @@ ComponentInfo parse_robot_from_urdf(const std::string & urdf)
   // Parse everything under ros2_control tag
   robot.hardware_class_type = "";
   const auto * ros2_control_child_it = ros2_control_it->FirstChildElement();
-  while (ros2_control_child_it)
-  {
+  while (ros2_control_child_it) {
     if (!std::string(kHardwareTag).compare(ros2_control_child_it->Name())) {
       const auto * type_it = ros2_control_child_it->FirstChildElement(kClassTypeTag);
       robot.hardware_class_type = type_it->GetText();
@@ -80,9 +82,8 @@ ComponentInfo parse_robot_from_urdf(const std::string & urdf)
       if (params_it) {
         robot.hardware_parameters = parse_parameters_from_xml(params_it);
       }
-    }
-    else {
-      robot.subcomponents.push_back( parse_component_from_xml(ros2_control_child_it) );
+    } else {
+      robot.subcomponents.push_back(parse_component_from_xml(ros2_control_child_it) );
     }
 
     ros2_control_child_it = ros2_control_child_it->NextSiblingElement();
@@ -121,12 +122,14 @@ ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it
   }
   const auto * interface_name_it = joint_it->FirstChildElement(kInterfaceNameTag);
   if (!interface_name_it) {
-    throw std::runtime_error("no interface names found for " + component.joint + " in " + component.name);
+    throw std::runtime_error(
+            "no interface names found for " + component.joint + " in " + component.name);
   }
   while (interface_name_it) {
     const std::string interface_name = interface_name_it->GetText();
     if (interface_name.empty()) {
-      throw std::runtime_error("no interface name value in " + component.joint + " of " + component.name);
+      throw std::runtime_error(
+              "no interface name value in " + component.joint + " of " + component.name);
     }
     component.interface_names.push_back(interface_name);
 
@@ -148,15 +151,15 @@ ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it
     if (params_it) {
       component.hardware_parameters = parse_parameters_from_xml(params_it);
     }
-  }
-  else {
+  } else {
     component.hardware_class_type = "";
   }
 
   return component;
 }
 
-std::map<std::string, std::string> parse_parameters_from_xml(const tinyxml2::XMLElement * params_it)
+std::map<std::string, std::string> parse_parameters_from_xml(
+  const tinyxml2::XMLElement * params_it)
 {
   std::map<std::string, std::string> parameters;
   while (params_it) {
@@ -176,4 +179,5 @@ std::map<std::string, std::string> parse_parameters_from_xml(const tinyxml2::XML
   return parameters;
 }
 
+}  // namespace utils
 }  // namespace robot_control_components

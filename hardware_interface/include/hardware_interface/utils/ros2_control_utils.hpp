@@ -34,13 +34,16 @@
 namespace ros2_control_utils
 {
 // Classes
-template < typename T >
+template<typename T>
 class ROS2ControlLoaderPluginlib
 {
 public:
-  ROBOT_CONTROL_COMPONENTS_PUBLIC ROS2ControlLoaderPluginlib(const std::string package, const std::string base_type) : loader_(std::make_shared<pluginlib::ClassLoader< T >>(package, base_type))
+  ROBOT_CONTROL_COMPONENTS_PUBLIC ROS2ControlLoaderPluginlib(
+    const std::string package,
+    const std::string base_type)
+  : loader_(std::make_shared<pluginlib::ClassLoader<T>>(package, base_type))
   {
-  };
+  }
 
   ROBOT_CONTROL_COMPONENTS_PUBLIC
   virtual ~ROS2ControlLoaderPluginlib() = default;
@@ -50,18 +53,17 @@ public:
   std::shared_ptr<T> create(const std::string & type)
   {
     return std::shared_ptr<T>(loader_->createUnmanagedInstance(type));
-  };
+  }
 
   ROBOT_CONTROL_COMPONENTS_PUBLIC
   bool is_available(const std::string & type)
   {
     return loader_->isClassAvailable(type);
-  };
+  }
 
 private:
-  std::shared_ptr<pluginlib::ClassLoader< T >> loader_;
+  std::shared_ptr<pluginlib::ClassLoader<T>> loader_;
 };
-
 
 
 }  // namespace ros2_control_utils

@@ -12,19 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
-#ifndef ROBOT_CONTROL_COMPONENTS__COMPONENT_PARSER_HPP_
-#define ROBOT_CONTROL_COMPONENTS__COMPONENT_PARSER_HPP_
+#ifndef HARDWARE_INTERFACE__UTILS__COMPONENT_PARSER_HPP_
+#define HARDWARE_INTERFACE__UTILS__COMPONENT_PARSER_HPP_
 
 #include <string>
 #include <tinyxml2.h>
 
-#include "robot_control_components/component_info.hpp"
-#include "robot_control_components/visibility_control.h"
+#include "hardware_interface/component_info.hpp"
+#include "hardware_interface/visibility_control.h"
 
-
-namespace robot_control_components
+namespace hardware_interface
 {
+namespace utils
+{
+
 /**
   * \brief Search XML snippet from URDF for informations about a control component.
   *
@@ -32,7 +33,7 @@ namespace robot_control_components
   * \return robot_control_components::ComponentInfo filled with informations about the robot
   * \throws std::runtime_error if a robot attribute or tag is not found
   */
-ROBOT_CONTROL_COMPONENTS_PUBLIC
+HARDWARE_INTERFACE_PUBLIC
 ComponentInfo parse_robot_from_urdf(const std::string & urdf);
 
 /**
@@ -42,7 +43,7 @@ ComponentInfo parse_robot_from_urdf(const std::string & urdf);
   * \return robot_control_components::ComponentInfo filled with informations about component
   * \throws std::runtime_error if a component attribute or tag is not found
   */
-ROBOT_CONTROL_COMPONENTS_PUBLIC
+HARDWARE_INTERFACE_PUBLIC
 ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it);
 
 /**
@@ -52,7 +53,10 @@ ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it
  * \return std::map< std::__cxx11::string, std::__cxx11::string > key-value map with parameters
  * \throws std::runtime_error if a component attribute or tag is not found
  */
-ROBOT_CONTROL_COMPONENTS_PUBLIC
-std::map<std::string, std::string> parse_parameters_from_xml(const tinyxml2::XMLElement * params_it);
-}  // namespace robot_control_components
-#endif  // ROBOT_CONTROL_COMPONENTS__COMPONENT_PARSER_HPP_
+HARDWARE_INTERFACE_PUBLIC
+std::map<std::string, std::string> parse_parameters_from_xml(
+  const tinyxml2::XMLElement * params_it);
+
+}  // namespace utils
+}  // namespace hardware_interface
+#endif  // HARDWARE_INTERFACE__UTILS__COMPONENT_PARSER_HPP_
