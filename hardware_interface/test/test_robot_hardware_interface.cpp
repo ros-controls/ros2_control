@@ -42,6 +42,8 @@ class MyTestRobotHardware : public RobotHardware
         return HW_RET_OK;
     }
 };
+
+const auto JOINT_NAME = "joint_1";
 }
 
 namespace testing
@@ -55,6 +57,13 @@ class TestRobotHardwareInterface : public Test
     }
 
     MyTestRobotHardware robot;
+    double pos_command_value = 0.0;
+    JointCommandHandle pos_command_handle{ JOINT_NAME, &pos_command_value };
+    double velocity_state_value = 0.0;
+    double effort_state_value = 0.0;
+    JointStateHandle state_handle{ JOINT_NAME, &pos_command_value, &velocity_state_value, &effort_state_value };
+    OperationMode mode = OperationMode::ACTIVE;
+    OperationModeHandle op_mode_handle{ JOINT_NAME, &mode };
 };
 
 TEST_F(TestRobotHardwareInterface, initialize)
@@ -71,6 +80,25 @@ TEST_F(TestRobotHardwareInterface, can_not_register_broken_handles)
     EXPECT_EQ(HW_RET_ERROR, robot.register_joint_state_handle(&broken_state_handle));
     OperationModeHandle broken_op_mode_handle;
     EXPECT_EQ(HW_RET_ERROR, robot.register_operation_mode_handle(&broken_op_mode_handle));
+}
+
+TEST_F(TestRobotHardwareInterface, can_register_proper_handles)
+{
+    EXPECT_EQ(HW_RET_OK, robot.register_joint_command_handle(&pos_command_handle));
+    EXPECT_EQ(HW_RET_OK, robot.register_joint_state_handle(&state_handle));
+    EXPECT_EQ(HW_RET_OK, robot.register_operation_mode_handle(&op_mode_handle));
+}
+
+TEST_F(TestRobotHardwareInterface, cannot_double_register_handles)
+{
+    EXPECT_EQ(HW_RET_OK, robot.register_joint_command_handle(&pos_command_handle));
+    EXPECT_EQ(HW_RET_ERROR, robot.register_joint_command_handle(&pos_command_handle));
+
+    EXPECT_EQ(HW_RET_OK, robot.register_joint_state_handle(&state_handle));
+    EXPECT_EQ(HW_RET_ERROR, robot.register_joint_state_handle(&state_handle));
+
+    EXPECT_EQ(HW_RET_OK, robot.register_operation_mode_handle(&op_mode_handle));
+    EXPECT_EQ(HW_RET_ERROR, robot.register_operation_mode_handle(&op_mode_handle));
 }
 
 }  // namespace testing
