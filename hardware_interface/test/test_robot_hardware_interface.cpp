@@ -45,7 +45,6 @@ class MyTestRobotHardware : public RobotHardware
 
 const auto JOINT_NAME = "joint_1";
 const auto NEW_JOINT_NAME = "joint_2";
-double dummy;
 }
 
 namespace testing
@@ -65,6 +64,13 @@ class TestRobotHardwareInterface : public Test
         robot.register_operation_mode_handle(&op_mode_handle);
     }
 
+    void SetUpNewHandles()
+    {
+        robot.register_joint_command_handle(&new_pos_command_handle);
+        robot.register_joint_state_handle(&new_state_handle);
+        robot.register_operation_mode_handle(&new_op_mode_handle);
+    }
+
     MyTestRobotHardware robot;
     double pos_command_value = 0.0;
     JointCommandHandle pos_command_handle{ JOINT_NAME, &pos_command_value };
@@ -73,6 +79,10 @@ class TestRobotHardwareInterface : public Test
     JointStateHandle state_handle{ JOINT_NAME, &pos_command_value, &velocity_state_value, &effort_state_value };
     OperationMode mode = OperationMode::ACTIVE;
     OperationModeHandle op_mode_handle{ JOINT_NAME, &mode };
+
+    JointCommandHandle new_pos_command_handle{ NEW_JOINT_NAME, &pos_command_value };
+    JointStateHandle new_state_handle{ NEW_JOINT_NAME, &pos_command_value, &velocity_state_value, &effort_state_value };
+    OperationModeHandle new_op_mode_handle{ NEW_JOINT_NAME, &mode };
 };
 
 TEST_F(TestRobotHardwareInterface, initialize)
@@ -110,53 +120,36 @@ TEST_F(TestRobotHardwareInterface, cannot_double_register_handles)
 TEST_F(TestRobotHardwareInterface, can_get_registered_joint_names)
 {
     SetUpHandles();
-
     EXPECT_THAT(robot.get_registered_joint_names(), ElementsAre(JOINT_NAME));
 
-    // let's add a new handle
-    JointStateHandle new_handle{ NEW_JOINT_NAME, &dummy, &dummy, &dummy };
-    EXPECT_EQ(HW_RET_OK, robot.register_joint_state_handle(&new_handle));
-
+    SetUpNewHandles();
     EXPECT_THAT(robot.get_registered_joint_names(), UnorderedElementsAre(JOINT_NAME, NEW_JOINT_NAME));
 }
 
 TEST_F(TestRobotHardwareInterface, can_get_registered_state_handles)
 {
     SetUpHandles();
-
     EXPECT_THAT(robot.get_registered_joint_state_handles(), SizeIs(1));
 
-    // let's add a new handle
-    JointStateHandle new_handle{ NEW_JOINT_NAME, &dummy, &dummy, &dummy };
-    EXPECT_EQ(HW_RET_OK, robot.register_joint_state_handle(&new_handle));
-
+    SetUpNewHandles();
     EXPECT_THAT(robot.get_registered_joint_state_handles(), SizeIs(2));
 }
 
 TEST_F(TestRobotHardwareInterface, can_get_registered_command_handles)
 {
     SetUpHandles();
-
     EXPECT_THAT(robot.get_registered_joint_command_handles(), SizeIs(1));
 
-    // let's add a new handle
-    JointCommandHandle new_handle{ NEW_JOINT_NAME, &dummy };
-    EXPECT_EQ(HW_RET_OK, robot.register_joint_command_handle(&new_handle));
-
+    SetUpNewHandles();
     EXPECT_THAT(robot.get_registered_joint_command_handles(), SizeIs(2));
 }
 
 TEST_F(TestRobotHardwareInterface, can_get_registered_op_mode_handles)
 {
     SetUpHandles();
-
     EXPECT_THAT(robot.get_registered_operation_mode_handles(), SizeIs(1));
 
-    // let's add a new handle
-    OperationMode dummy;
-    OperationModeHandle new_handle{ NEW_JOINT_NAME, &dummy };
-    EXPECT_EQ(HW_RET_OK, robot.register_operation_mode_handle(&new_handle));
-
+    SetUpNewHandles();
     EXPECT_THAT(robot.get_registered_operation_mode_handles(), SizeIs(2));
 }
 
@@ -164,17 +157,28 @@ TEST_F(TestRobotHardwareInterface, can_get_handles_by_name)
 {
     SetUpHandles();
 
-    const JointStateHandle* state_handle;
+    const JointStateHandle* state_handle = nullptr;
     EXPECT_EQ(HW_RET_OK, robot.get_joint_state_handle(JOINT_NAME, &state_handle));
-    EXPECT_EQ(HW_RET_ERROR, robot.get_joint_state_handle(JOINT_NAME, &state_handle));
+    state_handle = nullptr;
+    EXPECT_EQ(HW_RET_ERROR, robot.get_joint_state_handle(NEW_JOINT_NAME, &state_handle));
 
-    JointCommandHandle* cmd_handle;
+    JointCommandHandle* cmd_handle = nullptr;
     EXPECT_EQ(HW_RET_OK, robot.get_joint_command_handle(JOINT_NAME, &cmd_handle));
+    cmd_handle = nullptr;
     EXPECT_EQ(HW_RET_ERROR, robot.get_joint_command_handle(NEW_JOINT_NAME, &cmd_handle));
 
-    OperationModeHandle* op_mode_handle;
+    OperationModeHandle* op_mode_handle = nullptr;
     EXPECT_EQ(HW_RET_OK, robot.get_operation_mode_handle(JOINT_NAME, &op_mode_handle));
+    op_mode_handle = nullptr;
     EXPECT_EQ(HW_RET_ERROR, robot.get_operation_mode_handle(NEW_JOINT_NAME, &op_mode_handle));
+
+    SetUpNewHandles();
+    state_handle = nullptr;
+    EXPECT_EQ(HW_RET_OK, robot.get_joint_state_handle(NEW_JOINT_NAME, &state_handle));
+    cmd_handle = nullptr;
+    EXPECT_EQ(HW_RET_OK, robot.get_joint_command_handle(NEW_JOINT_NAME, &cmd_handle));
+    op_mode_handle = nullptr;
+    EXPECT_EQ(HW_RET_OK, robot.get_operation_mode_handle(NEW_JOINT_NAME, &op_mode_handle));
 }
 
 }  // namespace testing
