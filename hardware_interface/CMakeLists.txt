@@ -52,7 +52,7 @@ if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()
 
-  ament_add_gtest(test_macros test/test_macros.cpp)
+  ament_add_gmock(test_macros test/test_macros.cpp)
   target_include_directories(test_macros PRIVATE include)
   ament_target_dependencies(test_macros rcpputils)
 endif()
