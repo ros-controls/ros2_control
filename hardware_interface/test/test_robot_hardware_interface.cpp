@@ -160,4 +160,21 @@ TEST_F(TestRobotHardwareInterface, can_get_registered_op_mode_handles)
     EXPECT_THAT(robot.get_registered_operation_mode_handles(), SizeIs(2));
 }
 
+TEST_F(TestRobotHardwareInterface, can_get_handles_by_name)
+{
+    SetUpHandles();
+
+    const JointStateHandle* state_handle;
+    EXPECT_EQ(HW_RET_OK, robot.get_joint_state_handle(JOINT_NAME, &state_handle));
+    EXPECT_EQ(HW_RET_ERROR, robot.get_joint_state_handle(JOINT_NAME, &state_handle));
+
+    JointCommandHandle* cmd_handle;
+    EXPECT_EQ(HW_RET_OK, robot.get_joint_command_handle(JOINT_NAME, &cmd_handle));
+    EXPECT_EQ(HW_RET_ERROR, robot.get_joint_command_handle(NEW_JOINT_NAME, &cmd_handle));
+
+    OperationModeHandle* op_mode_handle;
+    EXPECT_EQ(HW_RET_OK, robot.get_operation_mode_handle(JOINT_NAME, &op_mode_handle));
+    EXPECT_EQ(HW_RET_ERROR, robot.get_operation_mode_handle(NEW_JOINT_NAME, &op_mode_handle));
+}
+
 }  // namespace testing
