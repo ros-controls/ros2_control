@@ -5,6 +5,7 @@
   <description>ROS2 ros_control hardware interface</description>
 
   <maintainer email="karsten@osrfoundation.org">Karsten Knese</maintainer>
+  <maintainer email="bence.magyar.robotics@gmail.com">Bence Magyar</maintainer>
   <license>Apache License 2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
