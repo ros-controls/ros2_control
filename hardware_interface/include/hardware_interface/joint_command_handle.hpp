@@ -26,38 +26,36 @@ namespace hardware_interface
 /** A handle used to get and set the command of a single joint. */
 class JointCommandHandle
 {
-public:
-  HARDWARE_INTERFACE_PUBLIC
-  JointCommandHandle();
+  public:
+    HARDWARE_INTERFACE_PUBLIC
+    JointCommandHandle();
 
-  /**
-   * The commmand handles are passive in terms of ownership.
-   * That means that the handles are only allowed to read/write
-   * the storage, however are not allowed to delete or reallocate
-   * this memory.
-   * \param name The name of the joint
-   * \param cmd A pointer to the storage for this joint's command
-   */
-  HARDWARE_INTERFACE_PUBLIC
-  JointCommandHandle(
-    const std::string & name,
-    double * cmd);
+    /**
+     * The commmand handles are passive in terms of ownership.
+     * That means that the handles are only allowed to read/write
+     * the storage, however are not allowed to delete or reallocate
+     * this memory.
+     * \param name The name of the joint
+     * \param cmd A pointer to the storage for this joint's command
+     */
+    HARDWARE_INTERFACE_PUBLIC
+    JointCommandHandle(const std::string& name, double* cmd);
 
-  HARDWARE_INTERFACE_PUBLIC
-  const std::string &
-  get_name() const;
+    HARDWARE_INTERFACE_PUBLIC
+    const std::string& get_name() const;
 
-  HARDWARE_INTERFACE_PUBLIC
-  double
-  get_cmd() const;
+    HARDWARE_INTERFACE_PUBLIC
+    double get_cmd() const;
 
-  HARDWARE_INTERFACE_PUBLIC
-  void
-  set_cmd(double cmd);
+    HARDWARE_INTERFACE_PUBLIC
+    void set_cmd(double cmd);
 
-private:
-  std::string name_;
-  double * cmd_;
+    HARDWARE_INTERFACE_PUBLIC
+    bool valid_pointers() const;
+
+  private:
+    std::string name_;
+    double* cmd_;
 };
 
 }  // namespace hardware_interface

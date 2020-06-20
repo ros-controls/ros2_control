@@ -21,38 +21,37 @@
 
 namespace hardware_interface
 {
-
-JointCommandHandle::JointCommandHandle()
-: name_(),
-  cmd_(nullptr)
-{}
-
-JointCommandHandle::JointCommandHandle(
-  const std::string & name,
-  double * cmd)
-: name_(name), cmd_(cmd)
+JointCommandHandle::JointCommandHandle() : name_(), cmd_(nullptr)
 {
-  THROW_ON_NULLPTR(cmd)
 }
 
-const std::string &
-JointCommandHandle::get_name() const
+JointCommandHandle::JointCommandHandle(const std::string& name, double* cmd) : name_(name), cmd_(cmd)
 {
-  return name_;
+    THROW_ON_NULLPTR(cmd)
 }
 
-double
-JointCommandHandle::get_cmd() const
+const std::string& JointCommandHandle::get_name() const
 {
-  return *cmd_;
+    return name_;
 }
 
-void
-JointCommandHandle::set_cmd(double cmd)
+double JointCommandHandle::get_cmd() const
 {
-  THROW_ON_NULLPTR(cmd_)
+    THROW_ON_NULLPTR(cmd_)
 
-  * cmd_ = cmd;
+    return *cmd_;
+}
+
+void JointCommandHandle::set_cmd(double cmd)
+{
+    THROW_ON_NULLPTR(cmd_)
+
+    *cmd_ = cmd;
+}
+
+bool JointCommandHandle::valid_pointers() const
+{
+    return cmd_;
 }
 
 }  // namespace hardware_interface

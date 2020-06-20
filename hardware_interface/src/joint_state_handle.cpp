@@ -21,53 +21,47 @@
 
 namespace hardware_interface
 {
-
-JointStateHandle::JointStateHandle()
-: name_(),
-  pos_(nullptr),
-  vel_(nullptr),
-  eff_(nullptr)
-{}
-
-JointStateHandle::JointStateHandle(
-  const std::string & name,
-  const double * pos,
-  const double * vel,
-  const double * eff)
-: name_(name), pos_(pos), vel_(vel), eff_(eff)
+JointStateHandle::JointStateHandle() : name_(), pos_(nullptr), vel_(nullptr), eff_(nullptr)
 {
-  THROW_ON_NULLPTR(pos)
-  THROW_ON_NULLPTR(vel)
-  THROW_ON_NULLPTR(eff)
 }
 
-const std::string &
-JointStateHandle::get_name() const
+JointStateHandle::JointStateHandle(const std::string& name, const double* pos, const double* vel, const double* eff)
+  : name_(name), pos_(pos), vel_(vel), eff_(eff)
 {
-  return name_;
+    THROW_ON_NULLPTR(pos)
+    THROW_ON_NULLPTR(vel)
+    THROW_ON_NULLPTR(eff)
 }
 
-double
-JointStateHandle::get_position() const
+const std::string& JointStateHandle::get_name() const
 {
-  THROW_ON_NULLPTR(pos_)
-
-  return *pos_;
+    return name_;
 }
 
-double
-JointStateHandle::get_velocity() const
+double JointStateHandle::get_position() const
 {
-  THROW_ON_NULLPTR(vel_)
+    THROW_ON_NULLPTR(pos_)
 
-  return *vel_;
+    return *pos_;
 }
 
-double
-JointStateHandle::get_effort() const
+double JointStateHandle::get_velocity() const
 {
-  THROW_ON_NULLPTR(eff_)
+    THROW_ON_NULLPTR(vel_)
 
-  return *eff_;
+    return *vel_;
 }
+
+double JointStateHandle::get_effort() const
+{
+    THROW_ON_NULLPTR(eff_)
+
+    return *eff_;
+}
+
+bool JointStateHandle::valid_pointers() const
+{
+    return pos_ && vel_ && eff_;
+}
+
 }  // namespace hardware_interface

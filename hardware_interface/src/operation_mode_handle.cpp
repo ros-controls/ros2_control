@@ -21,33 +21,30 @@
 
 namespace hardware_interface
 {
-
-OperationModeHandle::OperationModeHandle()
-: name_(),
-  mode_(nullptr)
-{}
-
-OperationModeHandle::OperationModeHandle(
-  const std::string & name,
-  OperationMode * mode)
-: name_(name),
-  mode_(mode)
+OperationModeHandle::OperationModeHandle() : name_(), mode_(nullptr)
 {
-  THROW_ON_NULLPTR(mode)
 }
 
-const std::string &
-OperationModeHandle::get_name() const
+OperationModeHandle::OperationModeHandle(const std::string& name, OperationMode* mode) : name_(name), mode_(mode)
 {
-  return name_;
+    THROW_ON_NULLPTR(mode)
 }
 
-void
-OperationModeHandle::set_mode(OperationMode mode)
+const std::string& OperationModeHandle::get_name() const
 {
-  THROW_ON_NULLPTR(mode_)
+    return name_;
+}
 
-  * mode_ = mode;
+void OperationModeHandle::set_mode(OperationMode mode)
+{
+    THROW_ON_NULLPTR(mode_)
+
+    *mode_ = mode;
+}
+
+bool OperationModeHandle::valid_pointers() const
+{
+    return mode_;
 }
 
 }  // namespace hardware_interface

@@ -65,12 +65,12 @@ TEST_F(TestRobotHardwareInterface, initialize)
 
 TEST_F(TestRobotHardwareInterface, can_not_register_broken_handles)
 {
-    JointCommandHandle command_handle;
-    EXPECT_EQ(HW_RET_ERROR, robot.register_joint_command_handle(&command_handle));
-    JointStateHandle state_handle;
-    EXPECT_EQ(HW_RET_ERROR, robot.register_joint_state_handle(&state_handle));
-    OperationModeHandle op_mode_handle;
-    EXPECT_EQ(HW_RET_ERROR, robot.register_operation_mode_handle(&op_mode_handle));
+    JointCommandHandle broken_command_handle;
+    EXPECT_EQ(HW_RET_ERROR, robot.register_joint_command_handle(&broken_command_handle));
+    JointStateHandle broken_state_handle;
+    EXPECT_EQ(HW_RET_ERROR, robot.register_joint_state_handle(&broken_state_handle));
+    OperationModeHandle broken_op_mode_handle;
+    EXPECT_EQ(HW_RET_ERROR, robot.register_operation_mode_handle(&broken_op_mode_handle));
 }
 
 }  // namespace testing
