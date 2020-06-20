@@ -23,43 +23,43 @@ namespace hardware_interface
 {
 /// Enum for Operation Mode.
 /** Operation can either be active or inactive */
-enum class HARDWARE_INTERFACE_PUBLIC_TYPE OperationMode : bool
+enum class HARDWARE_INTERFACE_PUBLIC_TYPE OperationMode: bool
 {
-    ACTIVE = true,
-    INACTIVE = false
+  ACTIVE = true,
+  INACTIVE = false
 };
 
 /// A handle for Operation Mode.
 /** Used to set status to active or inactive for operation such as read/write. */
 class OperationModeHandle
 {
-  public:
-    HARDWARE_INTERFACE_PUBLIC
-    OperationModeHandle();
+public:
+  HARDWARE_INTERFACE_PUBLIC
+  OperationModeHandle();
 
-    /// Constructor of Operation Mode.
-    /**
-     * The mode handles are passive in terms of ownership for the mode pointer.
-     * This means the handle is allowed to read and write the respective mode,
-     * however is not allowed to reallocate or delete the memory storage.
-     * \param name The name of the joint
-     * \param mode A pointer to the storage for this hardware's operation mode
-     */
-    HARDWARE_INTERFACE_PUBLIC
-    OperationModeHandle(const std::string& name, OperationMode* mode);
+  /// Constructor of Operation Mode.
+  /**
+   * The mode handles are passive in terms of ownership for the mode pointer.
+   * This means the handle is allowed to read and write the respective mode,
+   * however is not allowed to reallocate or delete the memory storage.
+   * \param name The name of the joint
+   * \param mode A pointer to the storage for this hardware's operation mode
+   */
+  HARDWARE_INTERFACE_PUBLIC
+  OperationModeHandle(const std::string & name, OperationMode * mode);
 
-    HARDWARE_INTERFACE_PUBLIC
-    const std::string& get_name() const;
+  HARDWARE_INTERFACE_PUBLIC
+  const std::string & get_name() const;
 
-    HARDWARE_INTERFACE_PUBLIC
-    void set_mode(OperationMode mode);
+  HARDWARE_INTERFACE_PUBLIC
+  void set_mode(OperationMode mode);
 
-    HARDWARE_INTERFACE_PUBLIC
-    bool valid_pointers() const;
+  HARDWARE_INTERFACE_PUBLIC
+  bool valid_pointers() const;
 
-  private:
-    std::string name_;
-    OperationMode* mode_;
+private:
+  std::string name_;
+  OperationMode * mode_;
 };
 
 }  // namespace hardware_interface

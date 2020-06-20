@@ -20,165 +20,161 @@
 #include "hardware_interface/robot_hardware.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 
-using namespace hardware_interface;
+namespace hw = hardware_interface;
 
 namespace
 {
-class MyTestRobotHardware : public RobotHardware
+class MyTestRobotHardware : public hw::RobotHardware
 {
-  public:
-    hardware_interface_ret_t init() override
-    {
-        return HW_RET_OK;
-    }
+public:
+  hw::hardware_interface_ret_t init() override
+  {
+    return hw::HW_RET_OK;
+  }
 
-    hardware_interface_ret_t read() override
-    {
-        return HW_RET_OK;
-    }
+  hw::hardware_interface_ret_t read() override
+  {
+    return hw::HW_RET_OK;
+  }
 
-    hardware_interface_ret_t write() override
-    {
-        return HW_RET_OK;
-    }
+  hw::hardware_interface_ret_t write() override
+  {
+    return hw::HW_RET_OK;
+  }
 };
 
 const auto JOINT_NAME = "joint_1";
 const auto NEW_JOINT_NAME = "joint_2";
-}
+}  // namespace
 
 namespace testing
 {
 class TestRobotHardwareInterface : public Test
 {
-  protected:
-    void SetUp()
-    {
-        robot.init();
-    }
+protected:
+  void SetUp()
+  {
+    robot.init();
+  }
 
-    void SetUpHandles()
-    {
-        robot.register_joint_command_handle(&pos_command_handle);
-        robot.register_joint_state_handle(&state_handle);
-        robot.register_operation_mode_handle(&op_mode_handle);
-    }
+  void SetUpHandles()
+  {
+    robot.register_joint_command_handle(&pos_command_handle);
+    robot.register_joint_state_handle(&state_handle);
+    robot.register_operation_mode_handle(&op_mode_handle);
+  }
 
-    void SetUpNewHandles()
-    {
-        robot.register_joint_command_handle(&new_pos_command_handle);
-        robot.register_joint_state_handle(&new_state_handle);
-        robot.register_operation_mode_handle(&new_op_mode_handle);
-    }
+  void SetUpNewHandles()
+  {
+    robot.register_joint_command_handle(&new_pos_command_handle);
+    robot.register_joint_state_handle(&new_state_handle);
+    robot.register_operation_mode_handle(&new_op_mode_handle);
+  }
 
-    MyTestRobotHardware robot;
-    double pos_command_value = 0.0;
-    JointCommandHandle pos_command_handle{ JOINT_NAME, &pos_command_value };
-    double velocity_state_value = 0.0;
-    double effort_state_value = 0.0;
-    JointStateHandle state_handle{ JOINT_NAME, &pos_command_value, &velocity_state_value, &effort_state_value };
-    OperationMode mode = OperationMode::ACTIVE;
-    OperationModeHandle op_mode_handle{ JOINT_NAME, &mode };
+  MyTestRobotHardware robot;
+  double pos_command_value = 0.0;
+  hw::JointCommandHandle pos_command_handle{JOINT_NAME, &pos_command_value};
+  double velocity_state_value = 0.0;
+  double effort_state_value = 0.0;
+  hw::JointStateHandle state_handle{JOINT_NAME, &pos_command_value, &velocity_state_value,
+    &effort_state_value};
+  hw::OperationMode mode = hw::OperationMode::ACTIVE;
+  hw::OperationModeHandle op_mode_handle{JOINT_NAME, &mode};
 
-    JointCommandHandle new_pos_command_handle{ NEW_JOINT_NAME, &pos_command_value };
-    JointStateHandle new_state_handle{ NEW_JOINT_NAME, &pos_command_value, &velocity_state_value, &effort_state_value };
-    OperationModeHandle new_op_mode_handle{ NEW_JOINT_NAME, &mode };
+  hw::JointCommandHandle new_pos_command_handle{NEW_JOINT_NAME, &pos_command_value};
+  hw::JointStateHandle new_state_handle{NEW_JOINT_NAME, &pos_command_value, &velocity_state_value,
+    &effort_state_value};
+  hw::OperationModeHandle new_op_mode_handle{NEW_JOINT_NAME, &mode};
 };
-
-TEST_F(TestRobotHardwareInterface, initialize)
-{
-    MyTestRobotHardware local_robot;
-    EXPECT_EQ(HW_RET_OK, local_robot.init());
-}
 
 TEST_F(TestRobotHardwareInterface, can_not_register_broken_handles)
 {
-    JointCommandHandle broken_command_handle;
-    EXPECT_EQ(HW_RET_ERROR, robot.register_joint_command_handle(&broken_command_handle));
-    JointStateHandle broken_state_handle;
-    EXPECT_EQ(HW_RET_ERROR, robot.register_joint_state_handle(&broken_state_handle));
-    OperationModeHandle broken_op_mode_handle;
-    EXPECT_EQ(HW_RET_ERROR, robot.register_operation_mode_handle(&broken_op_mode_handle));
+  hw::JointCommandHandle broken_command_handle;
+  EXPECT_EQ(hw::HW_RET_ERROR, robot.register_joint_command_handle(&broken_command_handle));
+  hw::JointStateHandle broken_state_handle;
+  EXPECT_EQ(hw::HW_RET_ERROR, robot.register_joint_state_handle(&broken_state_handle));
+  hw::OperationModeHandle broken_op_mode_handle;
+  EXPECT_EQ(hw::HW_RET_ERROR, robot.register_operation_mode_handle(&broken_op_mode_handle));
 }
 
 TEST_F(TestRobotHardwareInterface, can_register_proper_handles)
 {
-    EXPECT_EQ(HW_RET_OK, robot.register_joint_command_handle(&pos_command_handle));
-    EXPECT_EQ(HW_RET_OK, robot.register_joint_state_handle(&state_handle));
-    EXPECT_EQ(HW_RET_OK, robot.register_operation_mode_handle(&op_mode_handle));
+  EXPECT_EQ(hw::HW_RET_OK, robot.register_joint_command_handle(&pos_command_handle));
+  EXPECT_EQ(hw::HW_RET_OK, robot.register_joint_state_handle(&state_handle));
+  EXPECT_EQ(hw::HW_RET_OK, robot.register_operation_mode_handle(&op_mode_handle));
 }
 
 TEST_F(TestRobotHardwareInterface, cannot_double_register_handles)
 {
-    SetUpHandles();
+  SetUpHandles();
 
-    EXPECT_EQ(HW_RET_ERROR, robot.register_joint_command_handle(&pos_command_handle));
-    EXPECT_EQ(HW_RET_ERROR, robot.register_joint_state_handle(&state_handle));
-    EXPECT_EQ(HW_RET_ERROR, robot.register_operation_mode_handle(&op_mode_handle));
+  EXPECT_EQ(hw::HW_RET_ERROR, robot.register_joint_command_handle(&pos_command_handle));
+  EXPECT_EQ(hw::HW_RET_ERROR, robot.register_joint_state_handle(&state_handle));
+  EXPECT_EQ(hw::HW_RET_ERROR, robot.register_operation_mode_handle(&op_mode_handle));
 }
 
 TEST_F(TestRobotHardwareInterface, can_get_registered_joint_names)
 {
-    SetUpHandles();
-    EXPECT_THAT(robot.get_registered_joint_names(), ElementsAre(JOINT_NAME));
+  SetUpHandles();
+  EXPECT_THAT(robot.get_registered_joint_names(), ElementsAre(JOINT_NAME));
 
-    SetUpNewHandles();
-    EXPECT_THAT(robot.get_registered_joint_names(), UnorderedElementsAre(JOINT_NAME, NEW_JOINT_NAME));
+  SetUpNewHandles();
+  EXPECT_THAT(robot.get_registered_joint_names(), UnorderedElementsAre(JOINT_NAME, NEW_JOINT_NAME));
 }
 
 TEST_F(TestRobotHardwareInterface, can_get_registered_state_handles)
 {
-    SetUpHandles();
-    EXPECT_THAT(robot.get_registered_joint_state_handles(), SizeIs(1));
+  SetUpHandles();
+  EXPECT_THAT(robot.get_registered_joint_state_handles(), SizeIs(1));
 
-    SetUpNewHandles();
-    EXPECT_THAT(robot.get_registered_joint_state_handles(), SizeIs(2));
+  SetUpNewHandles();
+  EXPECT_THAT(robot.get_registered_joint_state_handles(), SizeIs(2));
 }
 
 TEST_F(TestRobotHardwareInterface, can_get_registered_command_handles)
 {
-    SetUpHandles();
-    EXPECT_THAT(robot.get_registered_joint_command_handles(), SizeIs(1));
+  SetUpHandles();
+  EXPECT_THAT(robot.get_registered_joint_command_handles(), SizeIs(1));
 
-    SetUpNewHandles();
-    EXPECT_THAT(robot.get_registered_joint_command_handles(), SizeIs(2));
+  SetUpNewHandles();
+  EXPECT_THAT(robot.get_registered_joint_command_handles(), SizeIs(2));
 }
 
 TEST_F(TestRobotHardwareInterface, can_get_registered_op_mode_handles)
 {
-    SetUpHandles();
-    EXPECT_THAT(robot.get_registered_operation_mode_handles(), SizeIs(1));
+  SetUpHandles();
+  EXPECT_THAT(robot.get_registered_operation_mode_handles(), SizeIs(1));
 
-    SetUpNewHandles();
-    EXPECT_THAT(robot.get_registered_operation_mode_handles(), SizeIs(2));
+  SetUpNewHandles();
+  EXPECT_THAT(robot.get_registered_operation_mode_handles(), SizeIs(2));
 }
 
 TEST_F(TestRobotHardwareInterface, can_get_handles_by_name)
 {
-    SetUpHandles();
+  SetUpHandles();
 
-    const JointStateHandle* state_handle = nullptr;
-    EXPECT_EQ(HW_RET_OK, robot.get_joint_state_handle(JOINT_NAME, &state_handle));
-    state_handle = nullptr;
-    EXPECT_EQ(HW_RET_ERROR, robot.get_joint_state_handle(NEW_JOINT_NAME, &state_handle));
+  const hw::JointStateHandle * state_handle = nullptr;
+  EXPECT_EQ(hw::HW_RET_OK, robot.get_joint_state_handle(JOINT_NAME, &state_handle));
+  state_handle = nullptr;
+  EXPECT_EQ(hw::HW_RET_ERROR, robot.get_joint_state_handle(NEW_JOINT_NAME, &state_handle));
 
-    JointCommandHandle* cmd_handle = nullptr;
-    EXPECT_EQ(HW_RET_OK, robot.get_joint_command_handle(JOINT_NAME, &cmd_handle));
-    cmd_handle = nullptr;
-    EXPECT_EQ(HW_RET_ERROR, robot.get_joint_command_handle(NEW_JOINT_NAME, &cmd_handle));
+  hw::JointCommandHandle * cmd_handle = nullptr;
+  EXPECT_EQ(hw::HW_RET_OK, robot.get_joint_command_handle(JOINT_NAME, &cmd_handle));
+  cmd_handle = nullptr;
+  EXPECT_EQ(hw::HW_RET_ERROR, robot.get_joint_command_handle(NEW_JOINT_NAME, &cmd_handle));
 
-    OperationModeHandle* op_mode_handle = nullptr;
-    EXPECT_EQ(HW_RET_OK, robot.get_operation_mode_handle(JOINT_NAME, &op_mode_handle));
-    op_mode_handle = nullptr;
-    EXPECT_EQ(HW_RET_ERROR, robot.get_operation_mode_handle(NEW_JOINT_NAME, &op_mode_handle));
+  hw::OperationModeHandle * op_mode_handle = nullptr;
+  EXPECT_EQ(hw::HW_RET_OK, robot.get_operation_mode_handle(JOINT_NAME, &op_mode_handle));
+  op_mode_handle = nullptr;
+  EXPECT_EQ(hw::HW_RET_ERROR, robot.get_operation_mode_handle(NEW_JOINT_NAME, &op_mode_handle));
 
-    SetUpNewHandles();
-    state_handle = nullptr;
-    EXPECT_EQ(HW_RET_OK, robot.get_joint_state_handle(NEW_JOINT_NAME, &state_handle));
-    cmd_handle = nullptr;
-    EXPECT_EQ(HW_RET_OK, robot.get_joint_command_handle(NEW_JOINT_NAME, &cmd_handle));
-    op_mode_handle = nullptr;
-    EXPECT_EQ(HW_RET_OK, robot.get_operation_mode_handle(NEW_JOINT_NAME, &op_mode_handle));
+  SetUpNewHandles();
+  state_handle = nullptr;
+  EXPECT_EQ(hw::HW_RET_OK, robot.get_joint_state_handle(NEW_JOINT_NAME, &state_handle));
+  cmd_handle = nullptr;
+  EXPECT_EQ(hw::HW_RET_OK, robot.get_joint_command_handle(NEW_JOINT_NAME, &cmd_handle));
+  op_mode_handle = nullptr;
+  EXPECT_EQ(hw::HW_RET_OK, robot.get_operation_mode_handle(NEW_JOINT_NAME, &op_mode_handle));
 }
 
 }  // namespace testing

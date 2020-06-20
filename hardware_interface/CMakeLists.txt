@@ -49,8 +49,8 @@ install(
   LIBRARY DESTINATION lib)
 
 if(BUILD_TESTING)
-  # find_package(ament_lint_auto REQUIRED)
-  # ament_lint_auto_find_test_dependencies()
+  find_package(ament_lint_auto REQUIRED)
+  ament_lint_auto_find_test_dependencies()
 
   find_package(ament_cmake_gmock REQUIRED)
   ament_add_gmock(test_macros test/test_macros.cpp)

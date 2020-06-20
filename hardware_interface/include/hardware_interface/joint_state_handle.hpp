@@ -25,43 +25,45 @@ namespace hardware_interface
 /** A handle used to read the state of a single joint. */
 class JointStateHandle
 {
-  public:
-    HARDWARE_INTERFACE_PUBLIC
-    JointStateHandle();
+public:
+  HARDWARE_INTERFACE_PUBLIC
+  JointStateHandle();
 
-    /**
-     * The joint handles are passive in terms of ownership.
-     * That means that the handles are only allowed to read/write
-     * the storage, however are not allowed to delete or reallocate
-     * this memory.
-     * \param name The name of the joint
-     * \param pos A pointer to the storage for this joint's position
-     * \param vel A pointer to the storage for this joint's velocity
-     * \param eff A pointer to the storage for this joint's effort (force or torque)
-     */
-    HARDWARE_INTERFACE_PUBLIC
-    JointStateHandle(const std::string& name, const double* pos, const double* vel, const double* eff);
+  /**
+   * The joint handles are passive in terms of ownership.
+   * That means that the handles are only allowed to read/write
+   * the storage, however are not allowed to delete or reallocate
+   * this memory.
+   * \param name The name of the joint
+   * \param pos A pointer to the storage for this joint's position
+   * \param vel A pointer to the storage for this joint's velocity
+   * \param eff A pointer to the storage for this joint's effort (force or torque)
+   */
+  HARDWARE_INTERFACE_PUBLIC
+  JointStateHandle(
+    const std::string & name, const double * pos, const double * vel,
+    const double * eff);
 
-    HARDWARE_INTERFACE_PUBLIC
-    const std::string& get_name() const;
+  HARDWARE_INTERFACE_PUBLIC
+  const std::string & get_name() const;
 
-    HARDWARE_INTERFACE_PUBLIC
-    double get_position() const;
+  HARDWARE_INTERFACE_PUBLIC
+  double get_position() const;
 
-    HARDWARE_INTERFACE_PUBLIC
-    double get_velocity() const;
+  HARDWARE_INTERFACE_PUBLIC
+  double get_velocity() const;
 
-    HARDWARE_INTERFACE_PUBLIC
-    double get_effort() const;
+  HARDWARE_INTERFACE_PUBLIC
+  double get_effort() const;
 
-    HARDWARE_INTERFACE_PUBLIC
-    bool valid_pointers() const;
+  HARDWARE_INTERFACE_PUBLIC
+  bool valid_pointers() const;
 
-  private:
-    std::string name_;
-    const double* pos_;
-    const double* vel_;
-    const double* eff_;
+private:
+  std::string name_;
+  const double * pos_;
+  const double * vel_;
+  const double * eff_;
 };
 
 }  // namespace hardware_interface
