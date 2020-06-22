@@ -16,7 +16,7 @@
 #ifndef HARDWARE_INTERFACE__COMPONENT_INFO_HPP_
 #define HARDWARE_INTERFACE__COMPONENT_INFO_HPP_
 
-#include <map>
+#include <unordered_map>
 #include <string>
 #include <vector>
 
@@ -30,11 +30,11 @@ struct ComponentInfo
   std::string class_type;
   std::string joint;
   std::vector<std::string> interface_names;
-  std::map<std::string, std::string> parameters;
+  std::unordered_map<std::string, std::string> parameters;
   std::vector<ComponentInfo> subcomponents;
 
   std::string hardware_class_type;
-  std::map<std::string, std::string> hardware_parameters;
+  std::unordered_map<std::string, std::string> hardware_parameters;
 };
 
 }  // namespace hardware_interface

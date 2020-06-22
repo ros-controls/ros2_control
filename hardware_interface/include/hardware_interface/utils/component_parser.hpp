@@ -17,6 +17,7 @@
 
 #include <string>
 #include <tinyxml2.h>
+#include <unordered_map>
 
 #include "hardware_interface/component_info.hpp"
 #include "hardware_interface/visibility_control.h"
@@ -54,7 +55,7 @@ ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it
  * \throws std::runtime_error if a component attribute or tag is not found
  */
 HARDWARE_INTERFACE_PUBLIC
-std::map<std::string, std::string> parse_parameters_from_xml(
+std::unordered_map<std::string, std::string> parse_parameters_from_xml(
   const tinyxml2::XMLElement * params_it);
 
 }  // namespace utils

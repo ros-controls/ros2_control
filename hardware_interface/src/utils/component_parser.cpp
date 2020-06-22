@@ -158,10 +158,10 @@ ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it
   return component;
 }
 
-std::map<std::string, std::string> parse_parameters_from_xml(
+std::unordered_map<std::string, std::string> parse_parameters_from_xml(
   const tinyxml2::XMLElement * params_it)
 {
-  std::map<std::string, std::string> parameters;
+  std::unordered_map<std::string, std::string> parameters;
   while (params_it) {
     // Fill the map with parameters
     const std::string parameter_name = params_it->Attribute("name");
