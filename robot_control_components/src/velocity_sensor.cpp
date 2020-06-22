@@ -13,7 +13,9 @@
 // limitations under the License.
 
 #include <string>
+#include <vector>
 
+#include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "hardware_interface/component_interfaces/sensor_interface.hpp"
 
 namespace robot_control_components
@@ -26,6 +28,8 @@ using hardware_interface::ComponentInfo;
 class VelocitySensor : public hardware_interface::SensorInterface
 {
 public:
+  std::vector<std::string> allowed_interfce_types;
+
   VelocitySensor() = default;
 
   ~VelocitySensor() = default;
@@ -33,6 +37,9 @@ public:
   hardware_interface_ret_t configure(const ComponentInfo & sensor_info)
   {
     (void) sensor_info;
+
+    allowed_interfce_types.push_back(hardware_interface::HW_IF_VELOCITY);
+
     return HW_RET_OK;
   }
 

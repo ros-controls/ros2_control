@@ -19,15 +19,14 @@
  * library cannot have, but the consuming code must have inorder to link.
  */
 
-#ifndef ROBOT_CONTROL_COMPONENTS__ROS2_CONTROL_UTILS_H_
-#define ROBOT_CONTROL_COMPONENTS__ROS2_CONTROL_UTILS_H_
+#ifndef HARDWARE_INTERFACE__UTILS__ROS2_CONTROL_UTILS_H_
+#define HARDWARE_INTERFACE__UTILS__ROS2_CONTROL_UTILS_H_
 
 #include <map>
 #include <string>
 
 #include "pluginlib/class_loader.hpp"
-#include "rclcpp/rclcpp.hpp"
-#include "robot_control_components/visibility_control.h"
+#include "hardware_interface/visibility_control.h"
 
 // TODO: Create util library instead of inline functions?
 
@@ -38,24 +37,24 @@ template<typename T>
 class ROS2ControlLoaderPluginlib
 {
 public:
-  ROBOT_CONTROL_COMPONENTS_PUBLIC ROS2ControlLoaderPluginlib(
+  HARDWARE_INTERFACE_PUBLIC ROS2ControlLoaderPluginlib(
     const std::string package,
     const std::string base_type)
   : loader_(std::make_shared<pluginlib::ClassLoader<T>>(package, base_type))
   {
   }
 
-  ROBOT_CONTROL_COMPONENTS_PUBLIC
+  HARDWARE_INTERFACE_PUBLIC
   virtual ~ROS2ControlLoaderPluginlib() = default;
 
   // TODO: Add try-catch
-  ROBOT_CONTROL_COMPONENTS_PUBLIC
+  HARDWARE_INTERFACE_PUBLIC
   std::shared_ptr<T> create(const std::string & type)
   {
     return std::shared_ptr<T>(loader_->createUnmanagedInstance(type));
   }
 
-  ROBOT_CONTROL_COMPONENTS_PUBLIC
+  HARDWARE_INTERFACE_PUBLIC
   bool is_available(const std::string & type)
   {
     return loader_->isClassAvailable(type);
@@ -68,4 +67,4 @@ private:
 
 }  // namespace ros2_control_utils
 
-#endif  // ROBOT_CONTROL_COMPONENTS__ROS2_CONTROL_UTILS_H_
+#endif  // HARDWARE_INTERFACE__UTILS__ROS2_CONTROL_UTILS_H_

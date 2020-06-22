@@ -85,6 +85,10 @@ public:
   std::vector<OperationModeHandle *>
   get_registered_operation_mode_handles();
 
+  HARDWARE_INTERFACE_PUBLIC
+  hardware_interface_ret_t
+  configure(const std::string & urdf_string);
+
 private:
   std::vector<const JointStateHandle *> registered_joint_state_handles_;
   std::vector<JointCommandHandle *> registered_joint_command_handles_;

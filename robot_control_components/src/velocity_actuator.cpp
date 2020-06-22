@@ -13,7 +13,9 @@
 // limitations under the License.
 
 #include <string>
+#include <vector>
 
+#include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "hardware_interface/component_interfaces/actuator_interface.hpp"
 
 namespace robot_control_components
@@ -26,6 +28,8 @@ using hardware_interface::ComponentInfo;
 class VelocityActuator : public hardware_interface::ActuatorInterface
 {
 public:
+  std::vector<std::string> allowed_interfce_types;
+
   VelocityActuator() = default;
 
   ~VelocityActuator() = default;
@@ -33,6 +37,9 @@ public:
   hardware_interface_ret_t configure(const ComponentInfo & actuator_info)
   {
     (void) actuator_info;
+
+    allowed_interfce_types.push_back(hardware_interface::HW_IF_VELOCITY);
+
     return hardware_interface::HW_RET_OK;
   }
 
