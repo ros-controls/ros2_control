@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "hardware_interface/utils/component_parser.hpp"
-
+#include <tinyxml2.h>
 #include <stdexcept>
 #include <string>
-#include <tinyxml2.h>
+#include <unordered_map>
 
+#include "hardware_interface/utils/component_parser.hpp"
 #include "hardware_interface/component_info.hpp"
 
 namespace
@@ -31,8 +31,8 @@ constexpr const auto kJointTag = "joint";
 constexpr const auto kInterfaceNameTag = "interfaceName";
 
 // For compleate reference of syntax - not used in parser
-//constexpr const auto kActuatorTag = "actuator";
-//constexpr const auto kSensorTag = "sensor";
+//  constexpr const auto kActuatorTag = "actuator";
+//  constexpr const auto kSensorTag = "sensor";
 }  // namespace
 
 namespace hardware_interface
@@ -180,4 +180,4 @@ std::unordered_map<std::string, std::string> parse_parameters_from_xml(
 }
 
 }  // namespace utils
-}  // namespace robot_control_components
+}  // namespace hardware_interface

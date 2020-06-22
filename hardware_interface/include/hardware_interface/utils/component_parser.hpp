@@ -15,8 +15,8 @@
 #ifndef HARDWARE_INTERFACE__UTILS__COMPONENT_PARSER_HPP_
 #define HARDWARE_INTERFACE__UTILS__COMPONENT_PARSER_HPP_
 
-#include <string>
 #include <tinyxml2.h>
+#include <string>
 #include <unordered_map>
 
 #include "hardware_interface/component_info.hpp"

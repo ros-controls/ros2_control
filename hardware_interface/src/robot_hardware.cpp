@@ -219,9 +219,9 @@ hardware_interface_ret_t RobotHardware::configure(const std::string & urdf_strin
 {
   try {
     ComponentInfo robot_info = utils::parse_robot_from_urdf(urdf_string);
-  }
-  catch (const std::runtime_error& e) {
-    RCLCPP_FATAL(rclcpp::get_logger("ros2_control_Robot"), "Error while parsing URDF: " + std::string(e.what()));
+  } catch (const std::runtime_error & e) {
+    RCLCPP_FATAL(rclcpp::get_logger(
+        "ros2_control_Robot"), "Error while parsing URDF: " + std::string(e.what()));
     return HW_RET_ERROR;
   }
 

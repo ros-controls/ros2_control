@@ -19,16 +19,17 @@
  * library cannot have, but the consuming code must have inorder to link.
  */
 
-#ifndef HARDWARE_INTERFACE__UTILS__ROS2_CONTROL_UTILS_H_
-#define HARDWARE_INTERFACE__UTILS__ROS2_CONTROL_UTILS_H_
+#ifndef HARDWARE_INTERFACE__UTILS__ROS2_CONTROL_UTILS_HPP_
+#define HARDWARE_INTERFACE__UTILS__ROS2_CONTROL_UTILS_HPP_
 
 #include <map>
+#include <memory>
 #include <string>
 
 #include "pluginlib/class_loader.hpp"
 #include "hardware_interface/visibility_control.h"
 
-// TODO: Create util library instead of inline functions?
+// TODO(destogl): Create util library instead of inline functions?
 
 namespace ros2_control_utils
 {
@@ -47,7 +48,6 @@ public:
   HARDWARE_INTERFACE_PUBLIC
   virtual ~ROS2ControlLoaderPluginlib() = default;
 
-  // TODO: Add try-catch
   HARDWARE_INTERFACE_PUBLIC
   std::shared_ptr<T> create(const std::string & type)
   {
@@ -67,4 +67,4 @@ private:
 
 }  // namespace ros2_control_utils
 
-#endif  // HARDWARE_INTERFACE__UTILS__ROS2_CONTROL_UTILS_H_
+#endif  // HARDWARE_INTERFACE__UTILS__ROS2_CONTROL_UTILS_HPP_
