@@ -44,6 +44,8 @@ JointCommandHandle::get_name() const
 double
 JointCommandHandle::get_cmd() const
 {
+  THROW_ON_NULLPTR(cmd_)
+
   return *cmd_;
 }
 
@@ -53,6 +55,11 @@ JointCommandHandle::set_cmd(double cmd)
   THROW_ON_NULLPTR(cmd_)
 
   * cmd_ = cmd;
+}
+
+bool JointCommandHandle::valid_pointers() const
+{
+  return cmd_;
 }
 
 }  // namespace hardware_interface

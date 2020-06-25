@@ -58,6 +58,9 @@ public:
   void
   set_mode(OperationMode mode);
 
+  HARDWARE_INTERFACE_PUBLIC
+  bool valid_pointers() const;
+
 private:
   std::string name_;
   OperationMode * mode_;

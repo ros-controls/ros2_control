@@ -70,4 +70,10 @@ JointStateHandle::get_effort() const
 
   return *eff_;
 }
+
+bool JointStateHandle::valid_pointers() const
+{
+  return pos_ && vel_ && eff_;
+}
+
 }  // namespace hardware_interface

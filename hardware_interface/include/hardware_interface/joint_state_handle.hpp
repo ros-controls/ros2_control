@@ -62,6 +62,9 @@ public:
   double
   get_effort() const;
 
+  HARDWARE_INTERFACE_PUBLIC
+  bool valid_pointers() const;
+
 private:
   std::string name_;
   const double * pos_;

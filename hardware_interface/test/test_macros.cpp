@@ -16,7 +16,7 @@
 
 #include "hardware_interface/macros.hpp"
 
-#include "gtest/gtest.h"
+#include "gmock/gmock.h"
 
 class TestMacros : public ::testing::Test
 {

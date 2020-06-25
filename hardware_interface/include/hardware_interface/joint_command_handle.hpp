@@ -55,6 +55,9 @@ public:
   void
   set_cmd(double cmd);
 
+  HARDWARE_INTERFACE_PUBLIC
+  bool valid_pointers() const;
+
 private:
   std::string name_;
   double * cmd_;

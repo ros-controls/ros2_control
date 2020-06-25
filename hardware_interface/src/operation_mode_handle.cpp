@@ -50,4 +50,9 @@ OperationModeHandle::set_mode(OperationMode mode)
   * mode_ = mode;
 }
 
+bool OperationModeHandle::valid_pointers() const
+{
+  return mode_;
+}
+
 }  // namespace hardware_interface

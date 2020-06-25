@@ -14,8 +14,8 @@ jobs:
     strategy:
       fail-fast: false
     steps:
-      - uses: ros-tooling/setup-ros@0.0.13
-      - uses: ros-tooling/action-ros-ci@0.0.13
+      - uses: ros-tooling/setup-ros@0.0.23
+      - uses: ros-tooling/action-ros-ci@0.0.17
         with:
           package-name: controller_interface controller_manager controller_parameter_server hardware_interface test_robot_hardware
           colcon-mixin-name: coverage-gcc

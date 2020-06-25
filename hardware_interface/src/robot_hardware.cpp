@@ -22,13 +22,15 @@
 #include "hardware_interface/operation_mode_handle.hpp"
 #include "rclcpp/rclcpp.hpp"
 
+namespace
+{
+constexpr auto kJointStateLoggerName = "joint state handle";
+constexpr auto kJointCommandLoggerName = "joint cmd handle";
+constexpr auto kOperationModeLoggerName = "joint operation mode handle";
+}
+
 namespace hardware_interface
 {
-
-constexpr char kJointStateLoggerName[] = "joint state handle";
-constexpr char kJointCommandLoggerName[] = "joint cmd handle";
-constexpr char kOperationModeLoggerName[] = "joint operation mode handle";
-
 /// Register the handle to the handle list if the handle's name is not found.
 /**
  * \param[in] registered_handles The handle list.
@@ -40,6 +42,16 @@ template<typename T>
 hardware_interface_ret_t
 register_handle(std::vector<T *> & registered_handles, T * handle, const std::string & logger_name)
 {
+  if (handle->get_name().empty()) {
+    RCLCPP_ERROR(rclcpp::get_logger(logger_name), "cannot register handle! No name is specified");
+    return HW_RET_ERROR;
+  }
+
+  if (!handle->valid_pointers()) {
+    RCLCPP_ERROR(rclcpp::get_logger(logger_name), "cannot register handle! Points to nullptr!");
+    return HW_RET_ERROR;
+  }
+
   auto handle_pos = std::find_if(
     registered_handles.begin(), registered_handles.end(),
     [&](auto handle_ptr) -> bool {
