@@ -60,7 +60,6 @@ if(BUILD_TESTING)
   ament_add_gmock(test_robot_hardware_interfaces test/test_robot_hardware_interface.cpp)
   target_include_directories(test_robot_hardware_interfaces PRIVATE include)
   target_link_libraries(test_robot_hardware_interfaces hardware_interface)
-
 endif()
 
 ament_export_include_directories(
