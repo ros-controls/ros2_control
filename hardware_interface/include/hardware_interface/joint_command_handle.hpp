@@ -39,16 +39,21 @@ public:
    * \param cmd A pointer to the storage for this joint's command
    */
   HARDWARE_INTERFACE_PUBLIC
-  JointCommandHandle(const std::string & name, double * cmd);
+  JointCommandHandle(
+    const std::string & name,
+    double * cmd);
 
   HARDWARE_INTERFACE_PUBLIC
-  const std::string & get_name() const;
+  const std::string &
+  get_name() const;
 
   HARDWARE_INTERFACE_PUBLIC
-  double get_cmd() const;
+  double
+  get_cmd() const;
 
   HARDWARE_INTERFACE_PUBLIC
-  void set_cmd(double cmd);
+  void
+  set_cmd(double cmd);
 
   HARDWARE_INTERFACE_PUBLIC
   bool valid_pointers() const;

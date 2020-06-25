@@ -46,13 +46,17 @@ public:
    * \param mode A pointer to the storage for this hardware's operation mode
    */
   HARDWARE_INTERFACE_PUBLIC
-  OperationModeHandle(const std::string & name, OperationMode * mode);
+  OperationModeHandle(
+    const std::string & name,
+    OperationMode * mode);
 
   HARDWARE_INTERFACE_PUBLIC
-  const std::string & get_name() const;
+  const std::string &
+  get_name() const;
 
   HARDWARE_INTERFACE_PUBLIC
-  void set_mode(OperationMode mode);
+  void
+  set_mode(OperationMode mode);
 
   HARDWARE_INTERFACE_PUBLIC
   bool valid_pointers() const;

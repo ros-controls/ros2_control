@@ -41,20 +41,26 @@ public:
    */
   HARDWARE_INTERFACE_PUBLIC
   JointStateHandle(
-    const std::string & name, const double * pos, const double * vel,
+    const std::string & name,
+    const double * pos,
+    const double * vel,
     const double * eff);
 
   HARDWARE_INTERFACE_PUBLIC
-  const std::string & get_name() const;
+  const std::string &
+  get_name() const;
 
   HARDWARE_INTERFACE_PUBLIC
-  double get_position() const;
+  double
+  get_position() const;
 
   HARDWARE_INTERFACE_PUBLIC
-  double get_velocity() const;
+  double
+  get_velocity() const;
 
   HARDWARE_INTERFACE_PUBLIC
-  double get_effort() const;
+  double
+  get_effort() const;
 
   HARDWARE_INTERFACE_PUBLIC
   bool valid_pointers() const;

@@ -21,13 +21,18 @@
 
 namespace hardware_interface
 {
+
 JointStateHandle::JointStateHandle()
-: name_(), pos_(nullptr), vel_(nullptr), eff_(nullptr)
-{
-}
+: name_(),
+  pos_(nullptr),
+  vel_(nullptr),
+  eff_(nullptr)
+{}
 
 JointStateHandle::JointStateHandle(
-  const std::string & name, const double * pos, const double * vel,
+  const std::string & name,
+  const double * pos,
+  const double * vel,
   const double * eff)
 : name_(name), pos_(pos), vel_(vel), eff_(eff)
 {
@@ -36,26 +41,30 @@ JointStateHandle::JointStateHandle(
   THROW_ON_NULLPTR(eff)
 }
 
-const std::string & JointStateHandle::get_name() const
+const std::string &
+JointStateHandle::get_name() const
 {
   return name_;
 }
 
-double JointStateHandle::get_position() const
+double
+JointStateHandle::get_position() const
 {
   THROW_ON_NULLPTR(pos_)
 
   return *pos_;
 }
 
-double JointStateHandle::get_velocity() const
+double
+JointStateHandle::get_velocity() const
 {
   THROW_ON_NULLPTR(vel_)
 
   return *vel_;
 }
 
-double JointStateHandle::get_effort() const
+double
+JointStateHandle::get_effort() const
 {
   THROW_ON_NULLPTR(eff_)
 
