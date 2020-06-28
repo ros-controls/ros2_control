@@ -68,6 +68,12 @@ if(BUILD_TESTING)
   target_include_directories(test_register_actuators PRIVATE include)
   target_link_libraries(test_register_actuators hardware_interface)
   ament_target_dependencies(test_register_actuators rcpputils)
+
+  ament_add_gmock(test_actuator_handle test/test_actuator_handle.cpp)
+  target_include_directories(test_actuator_handle PRIVATE include)
+  target_link_libraries(test_actuator_handle hardware_interface)
+  ament_target_dependencies(test_actuator_handle rcpputils)
+
 endif()
 
 ament_export_include_directories(

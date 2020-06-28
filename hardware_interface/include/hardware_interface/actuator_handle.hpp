@@ -18,6 +18,7 @@
 #include <string>
 
 #include "hardware_interface/actuator_handle.hpp"
+#include "hardware_interface/macros.hpp"
 #include "hardware_interface/visibility_control.h"
 
 namespace hardware_interface
@@ -55,12 +56,14 @@ public:
   HARDWARE_INTERFACE_PUBLIC
   double get_value() const
   {
+    THROW_ON_NULLPTR(value_ptr_);
     return *value_ptr_;
   }
 
   HARDWARE_INTERFACE_PUBLIC
   void set_value(double value)
   {
+    THROW_ON_NULLPTR(value_ptr_);
     *value_ptr_ = value;
   }
 

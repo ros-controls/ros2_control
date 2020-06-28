@@ -14,6 +14,7 @@
 
 #include <gmock/gmock.h>
 #include <string>
+#include <vector>
 #include "hardware_interface/robot_hardware.hpp"
 
 namespace hw = hardware_interface;
@@ -60,66 +61,102 @@ public:
   }
 
 protected:
-  DummyRobotHardware robot_hw;
+  DummyRobotHardware robot_hw_;
 };
 
 TEST_F(TestActuators, no_actuators_registered_return_empty_on_all_fronts)
 {
-  EXPECT_THAT(robot_hw.get_registered_actuators(), IsEmpty());
-  EXPECT_THAT(robot_hw.get_registered_actuator_names(), IsEmpty());
+  EXPECT_THAT(robot_hw_.get_registered_actuators(), IsEmpty());
+  EXPECT_THAT(robot_hw_.get_registered_actuator_names(), IsEmpty());
 
   hw::ActuatorHandle handle{"", ""};
-  EXPECT_EQ(HW_RET_ERROR, robot_hw.get_actuator_handle(handle));
+  EXPECT_EQ(HW_RET_ERROR, robot_hw_.get_actuator_handle(handle));
 }
 
 TEST_F(TestActuators, can_register_actuator_interfaces)
 {
-  EXPECT_EQ(HW_RET_OK, robot_hw.register_actuator(ACTUATOR_NAME, FOO_INTERFACE));
-  EXPECT_EQ(HW_RET_OK, robot_hw.register_actuator(ACTUATOR_NAME, BAR_INTERFACE));
+  EXPECT_EQ(HW_RET_OK, robot_hw_.register_actuator(ACTUATOR_NAME, FOO_INTERFACE));
+  EXPECT_EQ(HW_RET_OK, robot_hw_.register_actuator(ACTUATOR_NAME, BAR_INTERFACE));
 }
 
 TEST_F(TestActuators, can_not_double_register_actuator_interfaces)
 {
-  EXPECT_EQ(HW_RET_OK, robot_hw.register_actuator(ACTUATOR_NAME, FOO_INTERFACE));
-  EXPECT_EQ(HW_RET_OK, robot_hw.register_actuator(ACTUATOR_NAME, BAR_INTERFACE));
+  EXPECT_EQ(HW_RET_OK, robot_hw_.register_actuator(ACTUATOR_NAME, FOO_INTERFACE));
+  EXPECT_EQ(HW_RET_OK, robot_hw_.register_actuator(ACTUATOR_NAME, BAR_INTERFACE));
 
-  EXPECT_EQ(HW_RET_ERROR, robot_hw.register_actuator(ACTUATOR_NAME, FOO_INTERFACE));
-  EXPECT_EQ(HW_RET_ERROR, robot_hw.register_actuator(ACTUATOR_NAME, BAR_INTERFACE));
+  EXPECT_EQ(HW_RET_ERROR, robot_hw_.register_actuator(ACTUATOR_NAME, FOO_INTERFACE));
+  EXPECT_EQ(HW_RET_ERROR, robot_hw_.register_actuator(ACTUATOR_NAME, BAR_INTERFACE));
 }
 
 TEST_F(TestActuators, can_not_register_with_empty_fields)
 {
-  EXPECT_EQ(HW_RET_ERROR, robot_hw.register_actuator("", ""));
-  EXPECT_EQ(HW_RET_ERROR, robot_hw.register_actuator(ACTUATOR_NAME, ""));
-  EXPECT_EQ(HW_RET_ERROR, robot_hw.register_actuator("", FOO_INTERFACE));
+  EXPECT_EQ(HW_RET_ERROR, robot_hw_.register_actuator("", ""));
+  EXPECT_EQ(HW_RET_ERROR, robot_hw_.register_actuator(ACTUATOR_NAME, ""));
+  EXPECT_EQ(HW_RET_ERROR, robot_hw_.register_actuator("", FOO_INTERFACE));
 }
 
 TEST_F(TestActuators, can_not_get_non_registered_actuators_or_interfaces)
 {
-  EXPECT_EQ(HW_RET_OK, robot_hw.register_actuator(ACTUATOR_NAME, FOO_INTERFACE));
-  EXPECT_EQ(HW_RET_OK, robot_hw.register_actuator(ACTUATOR2_NAME, BAR_INTERFACE));
+  EXPECT_EQ(HW_RET_OK, robot_hw_.register_actuator(ACTUATOR_NAME, FOO_INTERFACE));
+  EXPECT_EQ(HW_RET_OK, robot_hw_.register_actuator(ACTUATOR2_NAME, BAR_INTERFACE));
 
   hw::ActuatorHandle handle1{ACTUATOR_NAME, BAR_INTERFACE};
-  EXPECT_EQ(HW_RET_ERROR, robot_hw.get_actuator_handle(handle1));
+  EXPECT_EQ(HW_RET_ERROR, robot_hw_.get_actuator_handle(handle1));
   hw::ActuatorHandle handle2{ACTUATOR2_NAME, FOO_INTERFACE};
-  EXPECT_EQ(HW_RET_ERROR, robot_hw.get_actuator_handle(handle2));
+  EXPECT_EQ(HW_RET_ERROR, robot_hw_.get_actuator_handle(handle2));
 }
 
 TEST_F(TestActuators, can_get_registered_actuators)
 {
-  EXPECT_EQ(HW_RET_OK, robot_hw.register_actuator(ACTUATOR_NAME, FOO_INTERFACE));
-  EXPECT_THAT(robot_hw.get_registered_actuator_names(), ElementsAre(ACTUATOR_NAME));
-  const auto registered_actuators = robot_hw.get_registered_actuators();
+  EXPECT_EQ(HW_RET_OK, robot_hw_.register_actuator(ACTUATOR_NAME, FOO_INTERFACE));
+  EXPECT_THAT(robot_hw_.get_registered_actuator_names(), ElementsAre(ACTUATOR_NAME));
+  const auto registered_actuators = robot_hw_.get_registered_actuators();
   EXPECT_THAT(registered_actuators, SizeIs(1));
   const auto & actuator_handle = registered_actuators[0];
   EXPECT_EQ(actuator_handle.get_name(), ACTUATOR_NAME);
   EXPECT_EQ(actuator_handle.get_interface_name(), FOO_INTERFACE);
 
-  EXPECT_EQ(HW_RET_OK, robot_hw.register_actuator(ACTUATOR_NAME, BAR_INTERFACE));
-  EXPECT_THAT(robot_hw.get_registered_actuator_names(), ElementsAre(ACTUATOR_NAME));
+  EXPECT_EQ(HW_RET_OK, robot_hw_.register_actuator(ACTUATOR_NAME, BAR_INTERFACE));
+  EXPECT_THAT(robot_hw_.get_registered_actuator_names(), ElementsAre(ACTUATOR_NAME));
 
-  EXPECT_EQ(HW_RET_OK, robot_hw.register_actuator(ACTUATOR2_NAME, FOO_INTERFACE));
+  EXPECT_EQ(HW_RET_OK, robot_hw_.register_actuator(ACTUATOR2_NAME, FOO_INTERFACE));
   EXPECT_THAT(
-    robot_hw.get_registered_actuator_names(),
+    robot_hw_.get_registered_actuator_names(),
     UnorderedElementsAre(ACTUATOR_NAME, ACTUATOR2_NAME));
+
+  std::vector<hw::ActuatorHandle> handles =
+  {{ACTUATOR_NAME, FOO_INTERFACE}, {ACTUATOR_NAME, BAR_INTERFACE},
+    {ACTUATOR2_NAME, FOO_INTERFACE}};
+
+  for (auto & handle : handles) {
+    EXPECT_EQ(HW_RET_OK, robot_hw_.get_actuator_handle(handle));
+  }
+}
+
+TEST_F(TestActuators, set_get_works_on_registered_actuators)
+{
+  ASSERT_EQ(HW_RET_OK, robot_hw_.register_actuator(ACTUATOR_NAME, FOO_INTERFACE));
+  ASSERT_EQ(HW_RET_OK, robot_hw_.register_actuator(ACTUATOR_NAME, BAR_INTERFACE));
+  ASSERT_EQ(HW_RET_OK, robot_hw_.register_actuator(ACTUATOR2_NAME, FOO_INTERFACE));
+  auto actuator_handles = robot_hw_.get_registered_actuators();
+
+  for (auto & handle : actuator_handles) {
+    const auto new_value = handle.get_value() + 1.337;
+    EXPECT_NO_THROW(handle.set_value(new_value));
+    EXPECT_DOUBLE_EQ(handle.get_value(), new_value);
+  }
+
+  std::vector<hw::ActuatorHandle> handles =
+  {{ACTUATOR_NAME, FOO_INTERFACE}, {ACTUATOR_NAME, BAR_INTERFACE},
+    {ACTUATOR2_NAME, FOO_INTERFACE}};
+
+  for (auto & handle : handles) {
+    EXPECT_ANY_THROW(handle.get_value());
+    EXPECT_ANY_THROW(handle.set_value(0.0));
+
+    EXPECT_EQ(HW_RET_OK, robot_hw_.get_actuator_handle(handle));
+    const auto new_value = handle.get_value() + 1.337;
+    EXPECT_NO_THROW(handle.set_value(new_value));
+    EXPECT_DOUBLE_EQ(handle.get_value(), new_value);
+  }
 }
