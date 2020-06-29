@@ -17,6 +17,8 @@
 #include <string>
 #include <vector>
 
+using hardware_interface::hardware_interface_ret_t;
+
 namespace test_robot_hardware
 {
 
