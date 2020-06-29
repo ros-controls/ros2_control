@@ -30,7 +30,7 @@ constexpr const auto kParamTag = "param";
 constexpr const auto kJointTag = "joint";
 constexpr const auto kInterfaceNameTag = "interfaceName";
 
-// For compleate reference of syntax - not used in parser
+// For complete reference of syntax - not used in parser
 //  constexpr const auto kActuatorTag = "actuator";
 //  constexpr const auto kSensorTag = "sensor";
 }  // namespace
@@ -55,15 +55,18 @@ ComponentInfo parse_robot_from_urdf(const std::string & urdf)
   const tinyxml2::XMLElement * robot_it = doc.RootElement();
 
   if (std::string(kRobotTag).compare(robot_it->Name())) {
-    throw std::runtime_error("the robot tag is not root element inURDF");
+    throw std::runtime_error("the robot tag is not root element in URDF");
   }
 
-  ComponentInfo robot;
-  robot.name = robot_it->Attribute("name");
-  if (robot.name.empty()) {
+  ComponentInfo system;
+  system.name = robot_it->Attribute("name");
+  if (system.name.empty()) {
     throw std::runtime_error("no robot name attribute set");
   }
-  robot.type = kRobotTag;
+  system.type = robot_it->Attribute("type");
+  if (system.type.empty()) {
+    throw std::runtime_error("no robot name attribute set");
+  }
 
   const tinyxml2::XMLElement * ros2_control_it = robot_it->FirstChildElement(kROS2ControlTag);
   const std::string name = ros2_control_it->Attribute("name");
@@ -72,24 +75,24 @@ ComponentInfo parse_robot_from_urdf(const std::string & urdf)
   }
 
   // Parse everything under ros2_control tag
-  robot.hardware_class_type = "";
+  system.hardware_class_type = "";
   const auto * ros2_control_child_it = ros2_control_it->FirstChildElement();
   while (ros2_control_child_it) {
     if (!std::string(kHardwareTag).compare(ros2_control_child_it->Name())) {
       const auto * type_it = ros2_control_child_it->FirstChildElement(kClassTypeTag);
-      robot.hardware_class_type = type_it->GetText();
+      system.hardware_class_type = type_it->GetText();
       const auto * params_it = ros2_control_child_it->FirstChildElement(kParamTag);
       if (params_it) {
-        robot.hardware_parameters = parse_parameters_from_xml(params_it);
+        system.hardware_parameters = parse_parameters_from_xml(params_it);
       }
     } else {
-      robot.subcomponents.push_back(parse_component_from_xml(ros2_control_child_it) );
+      system.subcomponents.push_back(parse_component_from_xml(ros2_control_child_it) );
     }
 
     ros2_control_child_it = ros2_control_child_it->NextSiblingElement();
   }
 
-  return robot;
+  return system;
 }
 
 ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it)

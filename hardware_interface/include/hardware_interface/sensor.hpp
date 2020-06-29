@@ -31,7 +31,11 @@ namespace hardware_interface
 class Sensor final
 {
 public:
-  explicit Sensor(std::unique_ptr<SensorInterface> impl)
+  Sensor() = default;
+
+  //TODO: Changed to shared because otherwise Actuator can not be added into a map
+//   explicit Sensor(std::unique_ptr<SensorInterface> impl)
+  explicit Sensor(std::shared_ptr<SensorInterface> impl)
   : impl_(std::move(impl))
   {}
 
@@ -68,7 +72,9 @@ public:
   }
 
 private:
-  std::unique_ptr<SensorInterface> impl_;
+  //TODO: Changed to shared because otherwise Actuator can not be added into a map
+  std::shared_ptr<SensorInterface> impl_;
+//   std::unique_ptr<SensorInterface> impl_;
 };
 
 }  // namespace hardware_interface

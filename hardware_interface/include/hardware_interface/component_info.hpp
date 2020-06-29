@@ -23,6 +23,10 @@
 namespace hardware_interface
 {
 
+constexpr const auto robotType = "robot";
+constexpr const auto actuatorType = "actuator";
+constexpr const auto sensorType = "sensor";
+
 struct ComponentInfo
 {
   std::string name;

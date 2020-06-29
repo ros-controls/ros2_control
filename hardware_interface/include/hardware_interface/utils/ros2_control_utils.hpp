@@ -48,10 +48,23 @@ public:
   HARDWARE_INTERFACE_PUBLIC
   virtual ~ROS2ControlLoaderPluginlib() = default;
 
+  [[deprecated]]
   HARDWARE_INTERFACE_PUBLIC
   std::shared_ptr<T> create(const std::string & type)
   {
+    return create_shared(type);
+  }
+
+  HARDWARE_INTERFACE_PUBLIC
+  std::shared_ptr<T> create_shared(const std::string & type)
+  {
     return std::shared_ptr<T>(loader_->createUnmanagedInstance(type));
+  }
+
+  HARDWARE_INTERFACE_PUBLIC
+  std::unique_ptr<T> create_unique(const std::string & type)
+  {
+    return std::unique_ptr<T>(loader_->createUnmanagedInstance(type));
   }
 
   HARDWARE_INTERFACE_PUBLIC

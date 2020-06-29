@@ -93,10 +93,6 @@ private:
   std::vector<const JointStateHandle *> registered_joint_state_handles_;
   std::vector<JointCommandHandle *> registered_joint_command_handles_;
   std::vector<OperationModeHandle *> registered_operation_mode_handles_;
-
-  std::vector<Actuator> actuators_;
-  std::vector<Sensor> sensors_;
-  std::vector<System> systems_;
 };
 
 }  // namespace hardware_interface

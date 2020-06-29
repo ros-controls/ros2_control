@@ -37,7 +37,7 @@ public:
 
   HARDWARE_INTERFACE_PUBLIC
   virtual
-  hardware_interface_ret_t configure(const ComponentInfo & sensor_info) = 0;
+  hardware_interface_ret_t configure(const ComponentInfo & system_info) = 0;
 
   HARDWARE_INTERFACE_PUBLIC
   virtual
@@ -63,6 +63,8 @@ public:
   virtual
   write(const std::vector<double> & data) = 0;
 };
+
+typedef SystemInterface RobotInterface;
 
 }  // namespace hardware_interface
 #endif  // HARDWARE_INTERFACE__COMPONENT_INTERFACES__SYSTEM_INTERFACE_HPP_

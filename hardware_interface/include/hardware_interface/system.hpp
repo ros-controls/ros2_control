@@ -37,9 +37,9 @@ public:
   virtual ~System() = default;
 
   HARDWARE_INTERFACE_PUBLIC
-  hardware_interface_ret_t configure(const ComponentInfo & sensor_info)
+  hardware_interface_ret_t configure(const ComponentInfo & system_info)
   {
-    return impl_->configure(sensor_info);
+    return impl_->configure(system_info);
   }
 
   HARDWARE_INTERFACE_PUBLIC
@@ -81,6 +81,8 @@ public:
 private:
   std::unique_ptr<SystemInterface> impl_;
 };
+
+typedef System Robot;
 
 }  // namespace hardware_interface
 #endif  // HARDWARE_INTERFACE__SYSTEM_HPP_
