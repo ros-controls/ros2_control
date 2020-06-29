@@ -17,7 +17,8 @@
 
 namespace hardware_interface
 {
-enum class HardwareReturnType {
+enum class HardwareReturnType
+{
   HW_RET_OK = 0,
   HW_RET_ERROR = 1,
 
