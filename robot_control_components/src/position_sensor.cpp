@@ -20,7 +20,6 @@ namespace robot_control_components
 {
 
 using hardware_interface::hardware_interface_ret_t;
-using hardware_interface::HW_RET_OK;
 using hardware_interface::ComponentInfo;
 
 class PositionSensor : public hardware_interface::SensorInterface
@@ -33,7 +32,7 @@ public:
   hardware_interface_ret_t configure(const ComponentInfo & sensor_info)
   {
     (void) sensor_info;
-    return HW_RET_OK;
+    return hardware_interface_ret_t::HW_RET_OK;
   }
 
   std::string get_interface_name() const
@@ -43,23 +42,23 @@ public:
 
   hardware_interface_ret_t start()
   {
-    return HW_RET_OK;
+    return hardware_interface_ret_t::HW_RET_OK;
   }
 
   hardware_interface_ret_t stop()
   {
-    return HW_RET_OK;
+    return hardware_interface_ret_t::HW_RET_OK;
   }
 
   bool is_started() const
   {
-    return HW_RET_OK;
+    return false;
   }
 
   hardware_interface_ret_t read(double & data)
   {
     (void) data;
-    return HW_RET_OK;
+    return hardware_interface_ret_t::HW_RET_OK;
   }
 };
 

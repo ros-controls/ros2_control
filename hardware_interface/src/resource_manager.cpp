@@ -27,7 +27,7 @@ hardware_interface_ret_t ResourceManager::parse_system_from_urdf(const std::stri
     system_info_ = utils::parse_robot_from_urdf(urdf_string);
   } catch (const std::runtime_error & e) {
     RCLCPP_FATAL(logger_, "Error while parsing URDF: " + std::string(e.what()));
-    return HW_RET_ERROR;
+    return hardware_interface_ret_t::HW_RET_ERROR;
   }
 
   if (system_info_.type == robotType) {
@@ -87,12 +87,12 @@ hardware_interface_ret_t ResourceManager::parse_system_from_urdf(const std::stri
     }
   }
 
-  return HW_RET_OK;
+  return hardware_interface_ret_t::HW_RET_OK;
 }
 
 hardware_interface_ret_t ResourceManager::init_system()
 {
-  hardware_interface_ret_t ret = HW_RET_OK;
+  hardware_interface_ret_t ret = hardware_interface_ret_t::HW_RET_OK;
 
 
   return ret;
