@@ -191,7 +191,8 @@ TEST_F(TestRobotHardwareInterface, can_get_handles_by_name)
   hw::OperationModeHandle * op_mode_handle = nullptr;
   EXPECT_EQ(hw_ret::HW_RET_OK, robot_.get_operation_mode_handle(JOINT_NAME, &op_mode_handle));
   op_mode_handle = nullptr;
-  EXPECT_EQ(hw_ret::HW_RET_ERROR, robot_.get_operation_mode_handle(NEW_JOINT_NAME, &op_mode_handle));
+  EXPECT_EQ(hw_ret::HW_RET_ERROR, 
+            robot_.get_operation_mode_handle(NEW_JOINT_NAME, &op_mode_handle));
 
   SetUpNewHandles();
   state_handle = nullptr;
