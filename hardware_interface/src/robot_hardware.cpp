@@ -44,12 +44,12 @@ register_handle(std::vector<T *> & registered_handles, T * handle, const std::st
 {
   if (handle->get_name().empty()) {
     RCLCPP_ERROR(rclcpp::get_logger(logger_name), "cannot register handle! No name is specified");
-    return HW_RET_ERROR;
+    return hardware_interface_ret_t::HW_RET_ERROR;
   }
 
   if (!handle->valid_pointers()) {
     RCLCPP_ERROR(rclcpp::get_logger(logger_name), "cannot register handle! Points to nullptr!");
-    return HW_RET_ERROR;
+    return hardware_interface_ret_t::HW_RET_ERROR;
   }
 
   auto handle_pos = std::find_if(
@@ -63,10 +63,10 @@ register_handle(std::vector<T *> & registered_handles, T * handle, const std::st
     RCLCPP_ERROR(
       rclcpp::get_logger(logger_name),
       "cannot register handle! Handle exists already");
-    return HW_RET_ERROR;
+    return hardware_interface_ret_t::HW_RET_ERROR;
   }
   registered_handles.push_back(handle);
-  return HW_RET_OK;
+  return hardware_interface_ret_t::HW_RET_OK;
 }
 
 hardware_interface_ret_t
@@ -116,7 +116,7 @@ get_handle(
     RCLCPP_ERROR(
       rclcpp::get_logger(logger_name),
       "cannot get handle! No name given");
-    return HW_RET_ERROR;
+    return hardware_interface_ret_t::HW_RET_ERROR;
   }
 
   auto handle_pos = std::find_if(
@@ -129,11 +129,11 @@ get_handle(
     RCLCPP_ERROR(
       rclcpp::get_logger(logger_name),
       "cannot get handle. No joint %s found.\n", name.c_str());
-    return HW_RET_ERROR;
+    return hardware_interface_ret_t::HW_RET_ERROR;
   }
 
   *handle = *handle_pos;
-  return HW_RET_OK;
+  return hardware_interface_ret_t::HW_RET_OK;
 }
 
 hardware_interface_ret_t

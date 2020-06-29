@@ -17,9 +17,20 @@
 
 namespace hardware_interface
 {
-using hardware_interface_ret_t = int;
-static constexpr hardware_interface_ret_t HW_RET_OK = 0;
-static constexpr hardware_interface_ret_t HW_RET_ERROR = 1;
+enum class HardwareReturnType {
+  HW_RET_OK = 0,
+  HW_RET_ERROR = 1,
+
+  HW_RET_CLAIMED_ERROR = 10,
+  HW_RET_ALREADY_CLAIMED = 11,
+  HW_RET_NOT_CLAIMED = 11,
+  HW_RET_UNATHORIZED_UNCLAIM = 13,
+  HW_RET_NON_CLAIMED_WRITE = 15,
+
+  HW_RET_CAN_NOT_READ = 20,
+};
+
+typedef HardwareReturnType hardware_interface_ret_t;
 }  // namespace hardware_interface
 
 #endif  // HARDWARE_INTERFACE__TYPES__HARDWARE_INTERFACE_RETURN_VALUES_HPP_
