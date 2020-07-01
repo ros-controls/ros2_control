@@ -26,6 +26,8 @@
 
 #include "rclcpp/rclcpp.hpp"
 
+using controller_interface::controller_interface_ret_t;
+
 namespace controller_manager
 {
 
@@ -91,10 +93,10 @@ ControllerManager::add_controller_impl(
 controller_interface::controller_interface_ret_t
 ControllerManager::update()
 {
-  auto ret = controller_interface::CONTROLLER_INTERFACE_RET_SUCCESS;
+  auto ret = controller_interface_ret_t::SUCCESS;
   for (auto loaded_controller : loaded_controllers_) {
     auto controller_ret = loaded_controller->update();
-    if (controller_ret != controller_interface::CONTROLLER_INTERFACE_RET_SUCCESS) {
+    if (controller_ret != controller_interface_ret_t::SUCCESS) {
       ret = controller_ret;
     }
   }
@@ -105,11 +107,11 @@ ControllerManager::update()
 controller_interface::controller_interface_ret_t
 ControllerManager::configure() const
 {
-  auto ret = controller_interface::CONTROLLER_INTERFACE_RET_SUCCESS;
+  auto ret = controller_interface_ret_t::SUCCESS;
   for (auto loaded_controller : loaded_controllers_) {
     auto controller_state = loaded_controller->get_lifecycle_node()->configure();
     if (controller_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
-      ret = controller_interface::CONTROLLER_INTERFACE_RET_ERROR;
+      ret = controller_interface_ret_t::ERROR;
     }
   }
 
@@ -119,11 +121,11 @@ ControllerManager::configure() const
 controller_interface::controller_interface_ret_t
 ControllerManager::activate() const
 {
-  auto ret = controller_interface::CONTROLLER_INTERFACE_RET_SUCCESS;
+  auto ret = controller_interface_ret_t::SUCCESS;
   for (auto loaded_controller : loaded_controllers_) {
     auto controller_state = loaded_controller->get_lifecycle_node()->activate();
     if (controller_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE) {
-      ret = controller_interface::CONTROLLER_INTERFACE_RET_ERROR;
+      ret = controller_interface_ret_t::ERROR;
     }
   }
 
@@ -133,11 +135,11 @@ ControllerManager::activate() const
 controller_interface::controller_interface_ret_t
 ControllerManager::deactivate() const
 {
-  auto ret = controller_interface::CONTROLLER_INTERFACE_RET_SUCCESS;
+  auto ret = controller_interface_ret_t::SUCCESS;
   for (auto loaded_controller : loaded_controllers_) {
     auto controller_state = loaded_controller->get_lifecycle_node()->deactivate();
     if (controller_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
-      ret = controller_interface::CONTROLLER_INTERFACE_RET_ERROR;
+      ret = controller_interface_ret_t::ERROR;
     }
   }
 
@@ -147,11 +149,11 @@ ControllerManager::deactivate() const
 controller_interface::controller_interface_ret_t
 ControllerManager::cleanup() const
 {
-  auto ret = controller_interface::CONTROLLER_INTERFACE_RET_SUCCESS;
+  auto ret = controller_interface_ret_t::SUCCESS;
   for (auto loaded_controller : loaded_controllers_) {
     auto controller_state = loaded_controller->get_lifecycle_node()->cleanup();
     if (controller_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED) {
-      ret = controller_interface::CONTROLLER_INTERFACE_RET_ERROR;
+      ret = controller_interface_ret_t::ERROR;
     }
   }
 

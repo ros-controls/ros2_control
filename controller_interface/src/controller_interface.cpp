@@ -46,7 +46,7 @@ ControllerInterface::init(
   lifecycle_node_->register_on_error(
     std::bind(&ControllerInterface::on_error, this, std::placeholders::_1));
 
-  return CONTROLLER_INTERFACE_RET_SUCCESS;
+  return controller_interface_ret_t::SUCCESS;
 }
 
 std::shared_ptr<rclcpp_lifecycle::LifecycleNode>
