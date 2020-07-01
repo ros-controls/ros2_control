@@ -39,17 +39,17 @@ namespace hardware_interface
  * \return The return code, one of `OK` or `ERROR`.
  */
 template<typename T>
-hardware_interface_ret_t
+return_type
 register_handle(std::vector<T *> & registered_handles, T * handle, const std::string & logger_name)
 {
   if (handle->get_name().empty()) {
     RCLCPP_ERROR(rclcpp::get_logger(logger_name), "cannot register handle! No name is specified");
-    return hardware_interface_ret_t::ERROR;
+    return return_type::ERROR;
   }
 
   if (!handle->valid_pointers()) {
     RCLCPP_ERROR(rclcpp::get_logger(logger_name), "cannot register handle! Points to nullptr!");
-    return hardware_interface_ret_t::ERROR;
+    return return_type::ERROR;
   }
 
   auto handle_pos = std::find_if(
@@ -63,13 +63,13 @@ register_handle(std::vector<T *> & registered_handles, T * handle, const std::st
     RCLCPP_ERROR(
       rclcpp::get_logger(logger_name),
       "cannot register handle! Handle exists already");
-    return hardware_interface_ret_t::ERROR;
+    return return_type::ERROR;
   }
   registered_handles.push_back(handle);
-  return hardware_interface_ret_t::OK;
+  return return_type::OK;
 }
 
-hardware_interface_ret_t
+return_type
 RobotHardware::register_joint_state_handle(const JointStateHandle * joint_handle)
 {
   return register_handle<const JointStateHandle>(
@@ -78,7 +78,7 @@ RobotHardware::register_joint_state_handle(const JointStateHandle * joint_handle
     kJointStateLoggerName);
 }
 
-hardware_interface_ret_t
+return_type
 RobotHardware::register_joint_command_handle(JointCommandHandle * joint_handle)
 {
   return register_handle<JointCommandHandle>(
@@ -87,7 +87,7 @@ RobotHardware::register_joint_command_handle(JointCommandHandle * joint_handle)
     kJointCommandLoggerName);
 }
 
-hardware_interface_ret_t
+return_type
 RobotHardware::register_operation_mode_handle(OperationModeHandle * operation_mode_handle)
 {
   return register_handle<OperationModeHandle>(
@@ -105,7 +105,7 @@ RobotHardware::register_operation_mode_handle(OperationModeHandle * operation_mo
  * \return The return code, one of `OK` or `ERROR`.
  */
 template<typename T>
-hardware_interface_ret_t
+return_type
 get_handle(
   std::vector<T *> & registered_handles,
   const std::string & name,
@@ -116,7 +116,7 @@ get_handle(
     RCLCPP_ERROR(
       rclcpp::get_logger(logger_name),
       "cannot get handle! No name given");
-    return hardware_interface_ret_t::ERROR;
+    return return_type::ERROR;
   }
 
   auto handle_pos = std::find_if(
@@ -129,14 +129,14 @@ get_handle(
     RCLCPP_ERROR(
       rclcpp::get_logger(logger_name),
       "cannot get handle. No joint %s found.\n", name.c_str());
-    return hardware_interface_ret_t::ERROR;
+    return return_type::ERROR;
   }
 
   *handle = *handle_pos;
-  return hardware_interface_ret_t::OK;
+  return return_type::OK;
 }
 
-hardware_interface_ret_t
+return_type
 RobotHardware::get_joint_state_handle(
   const std::string & name, const JointStateHandle ** joint_state_handle)
 {
@@ -148,7 +148,7 @@ RobotHardware::get_joint_state_handle(
     joint_state_handle);
 }
 
-hardware_interface_ret_t
+return_type
 RobotHardware::get_joint_command_handle(
   const std::string & name, JointCommandHandle ** joint_command_handle)
 {
@@ -160,7 +160,7 @@ RobotHardware::get_joint_command_handle(
     joint_command_handle);
 }
 
-hardware_interface_ret_t
+return_type
 RobotHardware::get_operation_mode_handle(
   const std::string & name, OperationModeHandle ** operation_mode_handle)
 {

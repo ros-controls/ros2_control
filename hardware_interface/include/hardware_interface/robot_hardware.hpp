@@ -39,27 +39,27 @@ public:
   ~RobotHardware() = default;
 
   HARDWARE_INTERFACE_PUBLIC
-  hardware_interface_ret_t
+  return_type
   register_joint_state_handle(const JointStateHandle * joint_handle);
 
   HARDWARE_INTERFACE_PUBLIC
-  hardware_interface_ret_t
+  return_type
   register_joint_command_handle(JointCommandHandle * joint_handle);
 
   HARDWARE_INTERFACE_PUBLIC
-  hardware_interface_ret_t
+  return_type
   register_operation_mode_handle(OperationModeHandle * operation_mode);
 
   HARDWARE_INTERFACE_PUBLIC
-  hardware_interface_ret_t
+  return_type
   get_joint_state_handle(const std::string & name, const JointStateHandle ** joint_state_handle);
 
   HARDWARE_INTERFACE_PUBLIC
-  hardware_interface_ret_t
+  return_type
   get_joint_command_handle(const std::string & name, JointCommandHandle ** joint_command_handle);
 
   HARDWARE_INTERFACE_PUBLIC
-  hardware_interface_ret_t
+  return_type
   get_operation_mode_handle(const std::string & name, OperationModeHandle ** operation_mode_handle);
 
   HARDWARE_INTERFACE_PUBLIC
