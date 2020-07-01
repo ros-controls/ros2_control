@@ -5,6 +5,10 @@ linux: [![Build Status](https://travis-ci.org/ros-controls/ros2_control.svg?bran
 
 ## Disclaimer
 
+`ros2_control` is under heavy development, to get an update of the project please either tag along to one of our working group meetings (see more on discourse) and/or check the resources below:
+* Actively tracked projects can be found here: https://github.com/orgs/ros-controls/projects
+* Consult the roadmap here: https://github.com/ros-controls/roadmap
+
 `ros2_control` is a proof of concept on how new features within ROS 2 can be elaborated and used in the context of robot control.
 We were keeping the vocabulary close the ROS 1 implemenation, however this is with no notion a migration, but rather a fresh new-write.
 We hope that this can be a starting point for migrating ros_control to ROS 2 at some point.
