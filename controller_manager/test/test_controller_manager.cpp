@@ -26,8 +26,6 @@
 
 #include "./test_controller/test_controller.hpp"
 
-using controller_interface::controller_interface_ret_t;
-
 class TestControllerManager : public ::testing::Test
 {
 public:
@@ -55,25 +53,25 @@ TEST_F(TestControllerManager, controller_lifecycle) {
   auto abstract_test_controller = cm.add_controller(test_controller, "test_controller");
   EXPECT_EQ(1u, cm.get_loaded_controllers().size());
 
-  EXPECT_EQ(controller_interface_ret_t::SUCCESS, cm.update());
+  EXPECT_EQ(controller_interface::return_type::SUCCESS, cm.update());
   EXPECT_EQ(1u, test_controller->internal_counter);
 
-  EXPECT_EQ(controller_interface_ret_t::SUCCESS, cm.configure());
+  EXPECT_EQ(controller_interface::return_type::SUCCESS, cm.configure());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
     test_controller->get_lifecycle_node()->get_current_state().id());
 
-  EXPECT_EQ(controller_interface_ret_t::SUCCESS, cm.activate());
+  EXPECT_EQ(controller_interface::return_type::SUCCESS, cm.activate());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
     test_controller->get_lifecycle_node()->get_current_state().id());
 
-  EXPECT_EQ(controller_interface_ret_t::SUCCESS, cm.deactivate());
+  EXPECT_EQ(controller_interface::return_type::SUCCESS, cm.deactivate());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
     test_controller->get_lifecycle_node()->get_current_state().id());
 
-  EXPECT_EQ(controller_interface_ret_t::SUCCESS, cm.cleanup());
+  EXPECT_EQ(controller_interface::return_type::SUCCESS, cm.cleanup());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
     test_controller->get_lifecycle_node()->get_current_state().id());

@@ -26,11 +26,11 @@ TestController::TestController()
 : controller_interface::ControllerInterface()
 {}
 
-controller_interface::controller_interface_ret_t
+controller_interface::return_type
 TestController::update()
 {
   ++internal_counter;
-  return controller_interface::controller_interface_ret_t::SUCCESS;
+  return controller_interface::return_type::SUCCESS;
 }
 
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
