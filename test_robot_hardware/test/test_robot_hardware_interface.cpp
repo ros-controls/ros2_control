@@ -22,7 +22,7 @@
 
 #include "test_robot_hardware/test_robot_hardware.hpp"
 
-using hw_ret = hardware_interface::hardware_interface_ret_t;
+using hw_ret = hardware_interface::return_type;
 
 class TestRobotHardwareInterface : public ::testing::Test
 {
