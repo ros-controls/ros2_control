@@ -81,14 +81,14 @@ MyRobot::init()
   for (auto & joint_name : joint_names) {
     hardware_interface::JointStateHandle state_handle(joint_name, &pos_[i], &vel_[i], &eff_[i]);
     joint_state_handles_[i] = state_handle;
-    if (register_joint_state_handle(&joint_state_handles_[i]) != hardware_interface::HW_RET_OK) {
+    if (register_joint_state_handle(&joint_state_handles_[i]) != hardware_interface::OK) {
       throw std::runtime_error("unable to register " + joint_state_handles_[i].get_name());
     }
 
     hardware_interface::JointCommandHandle command_handle(joint_name, &cmd_[i]);
     joint_command_handles_[i] = command_handle;
     if (register_joint_command_handle(&joint_command_handles_[i]) !=
-      hardware_interface::HW_RET_OK)
+      hardware_interface::OK)
     {
       throw std::runtime_error("unable to register " + joint_command_handles_[i].get_name());
     }
@@ -129,7 +129,7 @@ int main()
   auto my_robot = std::make_shared<MyRobot>();
   
   // initialize the robot
-  if (my_robot->init() != hardware_interface::HW_RET_OK) {
+  if (my_robot->init() != hardware_interface::OK) {
     fprintf(stderr, "failed to initialized yumi hardware\n");
     return -1;
   }
@@ -172,14 +172,14 @@ int main()
   hardware_interface::hardware_interface_ret_t ret;
   while (active) {
     ret = my_robot->read();
-    if (ret != hardware_interface::HW_RET_OK) {
+    if (ret != hardware_interface::OK) {
       fprintf(stderr, "read failed!\n");
     }
 
     cm.update();
 
     ret = my_robot->write();
-    if (ret != hardware_interface::HW_RET_OK) {
+    if (ret != hardware_interface::OK) {
       fprintf(stderr, "write failed!\n");
     }
 

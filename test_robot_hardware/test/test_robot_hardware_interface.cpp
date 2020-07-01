@@ -22,6 +22,8 @@
 
 #include "test_robot_hardware/test_robot_hardware.hpp"
 
+using hw_ret = hardware_interface::hardware_interface_ret_t;
+
 class TestRobotHardwareInterface : public ::testing::Test
 {
 protected:
@@ -44,21 +46,21 @@ protected:
 };
 
 TEST_F(TestRobotHardwareInterface, initialize) {
-  EXPECT_EQ(hardware_interface_ret_t::HW_RET_OK, robot.init());
+  EXPECT_EQ(hw_ret::OK, robot.init());
 }
 
 TEST_F(TestRobotHardwareInterface, get_registered_joint_handles) {
   robot.init();
 
-  auto ret = hardware_interface_ret_t::HW_RET_ERROR;
+  auto ret = hw_ret::ERROR;
   for (auto i = 0u; i < 3u; ++i) {
     const hardware_interface::JointStateHandle * js_ptr = nullptr;
     ret = robot.get_joint_state_handle(joint_names[i], &js_ptr);
-    EXPECT_EQ(hardware_interface_ret_t::HW_RET_OK, ret);
+    EXPECT_EQ(hw_ret::OK, ret);
     EXPECT_EQ(joint_pos_values[i], js_ptr->get_position());
     EXPECT_EQ(joint_vel_values[i], js_ptr->get_velocity());
     EXPECT_EQ(joint_eff_values[i], js_ptr->get_effort());
-    ret = hardware_interface_ret_t::HW_RET_ERROR;
+    ret = hw_ret::ERROR;
   }
 
   auto registered_joint_handles = robot.get_registered_joint_state_handles();
@@ -68,13 +70,13 @@ TEST_F(TestRobotHardwareInterface, get_registered_joint_handles) {
 TEST_F(TestRobotHardwareInterface, get_registered_command_handles) {
   robot.init();
 
-  auto ret = hardware_interface_ret_t::HW_RET_ERROR;
+  auto ret = hw_ret::ERROR;
   for (auto i = 0u; i < 3u; ++i) {
     hardware_interface::JointCommandHandle * jcmd_ptr = nullptr;
     ret = robot.get_joint_command_handle(joint_names[i], &jcmd_ptr);
-    EXPECT_EQ(hardware_interface_ret_t::HW_RET_OK, ret);
+    EXPECT_EQ(hw_ret::OK, ret);
     EXPECT_EQ(joint_cmd_values[i], jcmd_ptr->get_cmd());
-    ret = hardware_interface_ret_t::HW_RET_ERROR;
+    ret = hw_ret::ERROR;
   }
 
   auto registered_command_handles = robot.get_registered_joint_command_handles();

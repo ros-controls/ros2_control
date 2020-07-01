@@ -36,7 +36,7 @@ namespace hardware_interface
  * \param[in] registered_handles The handle list.
  * \param[in] handle The handle to be registered.
  * \param[in] logger_name The name of the logger.
- * \return The return code, one of `HW_RET_OK` or `HW_RET_ERROR`.
+ * \return The return code, one of `OK` or `ERROR`.
  */
 template<typename T>
 hardware_interface_ret_t
@@ -44,12 +44,12 @@ register_handle(std::vector<T *> & registered_handles, T * handle, const std::st
 {
   if (handle->get_name().empty()) {
     RCLCPP_ERROR(rclcpp::get_logger(logger_name), "cannot register handle! No name is specified");
-    return hardware_interface_ret_t::HW_RET_ERROR;
+    return hardware_interface_ret_t::ERROR;
   }
 
   if (!handle->valid_pointers()) {
     RCLCPP_ERROR(rclcpp::get_logger(logger_name), "cannot register handle! Points to nullptr!");
-    return hardware_interface_ret_t::HW_RET_ERROR;
+    return hardware_interface_ret_t::ERROR;
   }
 
   auto handle_pos = std::find_if(
@@ -63,10 +63,10 @@ register_handle(std::vector<T *> & registered_handles, T * handle, const std::st
     RCLCPP_ERROR(
       rclcpp::get_logger(logger_name),
       "cannot register handle! Handle exists already");
-    return hardware_interface_ret_t::HW_RET_ERROR;
+    return hardware_interface_ret_t::ERROR;
   }
   registered_handles.push_back(handle);
-  return hardware_interface_ret_t::HW_RET_OK;
+  return hardware_interface_ret_t::OK;
 }
 
 hardware_interface_ret_t
@@ -102,7 +102,7 @@ RobotHardware::register_operation_mode_handle(OperationModeHandle * operation_mo
  * \param[in] name The handle's name.
  * \param[in] logger_name The name of the logger.
  * \param[out] handle the handle if found.
- * \return The return code, one of `HW_RET_OK` or `HW_RET_ERROR`.
+ * \return The return code, one of `OK` or `ERROR`.
  */
 template<typename T>
 hardware_interface_ret_t
@@ -116,7 +116,7 @@ get_handle(
     RCLCPP_ERROR(
       rclcpp::get_logger(logger_name),
       "cannot get handle! No name given");
-    return hardware_interface_ret_t::HW_RET_ERROR;
+    return hardware_interface_ret_t::ERROR;
   }
 
   auto handle_pos = std::find_if(
@@ -129,11 +129,11 @@ get_handle(
     RCLCPP_ERROR(
       rclcpp::get_logger(logger_name),
       "cannot get handle. No joint %s found.\n", name.c_str());
-    return hardware_interface_ret_t::HW_RET_ERROR;
+    return hardware_interface_ret_t::ERROR;
   }
 
   *handle = *handle_pos;
-  return hardware_interface_ret_t::HW_RET_OK;
+  return hardware_interface_ret_t::OK;
 }
 
 hardware_interface_ret_t
