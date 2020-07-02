@@ -221,7 +221,7 @@ hardware_interface_ret_t RobotHardware::register_actuator(
 {
   if (actuator_name.empty() || interface_name.empty()) {
     RCLCPP_ERROR(rclcpp::get_logger(kActuatorLoggerName), "actuator name or interface is empty!");
-    return HW_RET_ERROR;
+    return return_type::ERROR;
   }
 
   const auto & names_list = registered_actuators_.joint_names;
@@ -232,7 +232,7 @@ hardware_interface_ret_t RobotHardware::register_actuator(
     iv.interface_names = {interface_name};
     iv.values = {default_value};
     registered_actuators_.interface_values.push_back(iv);
-    return HW_RET_OK;
+    return return_type::OK;
   } else {
     const auto index = std::distance(names_list.cbegin(), it);
     auto & ivs = registered_actuators_.interface_values[index];
@@ -241,13 +241,13 @@ hardware_interface_ret_t RobotHardware::register_actuator(
     if (it == interface_names.cend()) {
       ivs.interface_names.push_back(interface_name);
       ivs.values.push_back(default_value);
-      return HW_RET_OK;
+      return return_type::OK;
     } else {
       RCLCPP_ERROR_STREAM(
         rclcpp::get_logger(kActuatorLoggerName), "actuator with interface (" <<
           actuator_name << ":" << interface_name <<
           ") is already registered!");
-      return HW_RET_ERROR;
+      return return_type::ERROR;
     }
   }
 }
@@ -261,7 +261,7 @@ hardware_interface_ret_t RobotHardware::get_actuator_handle(ActuatorHandle & act
     RCLCPP_ERROR(
       rclcpp::get_logger(
         kActuatorLoggerName), "actuator name or interface is ill-defined!");
-    return HW_RET_ERROR;
+    return return_type::ERROR;
   }
 
   const auto & names_list = registered_actuators_.joint_names;
@@ -270,7 +270,7 @@ hardware_interface_ret_t RobotHardware::get_actuator_handle(ActuatorHandle & act
     RCLCPP_ERROR(
       rclcpp::get_logger(
         kActuatorLoggerName), "actuator with name %s not found!", actuator_name);
-    return HW_RET_ERROR;
+    return return_type::ERROR;
   }
 
   const auto index = std::distance(names_list.cbegin(), it);
@@ -280,15 +280,15 @@ hardware_interface_ret_t RobotHardware::get_actuator_handle(ActuatorHandle & act
   if (if_it != interface_names.cend()) {
     const auto value_index = std::distance(interface_names.cbegin(), if_it);
     actuator_handle = actuator_handle.with_value_ptr(&(ivs.values[value_index]));
-    return HW_RET_OK;
+    return return_type::OK;
   } else {
     RCLCPP_ERROR_STREAM(
       rclcpp::get_logger(kActuatorLoggerName),
       "actuator with interface (" << actuator_name << ":" << interface_name << ") wasn't found!");
-    return HW_RET_ERROR;
+    return return_type::ERROR;
   }
 
-  return HW_RET_ERROR;
+  return return_type::ERROR;
 }
 
 std::vector<ActuatorHandle> RobotHardware::get_registered_actuators()
