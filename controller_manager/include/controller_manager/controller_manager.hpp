@@ -76,23 +76,23 @@ public:
   }
 
   CONTROLLER_MANAGER_PUBLIC
-  controller_interface::controller_interface_ret_t
+  controller_interface::return_type
   update();
 
   CONTROLLER_MANAGER_PUBLIC
-  controller_interface::controller_interface_ret_t
+  controller_interface::return_type
   configure() const;
 
   CONTROLLER_MANAGER_PUBLIC
-  controller_interface::controller_interface_ret_t
+  controller_interface::return_type
   activate() const;
 
   CONTROLLER_MANAGER_PUBLIC
-  controller_interface::controller_interface_ret_t
+  controller_interface::return_type
   deactivate() const;
 
   CONTROLLER_MANAGER_PUBLIC
-  controller_interface::controller_interface_ret_t
+  controller_interface::return_type
   cleanup() const;
 
 protected:

@@ -28,9 +28,11 @@
 namespace controller_interface
 {
 
-using controller_interface_ret_t = std::uint8_t;
-static constexpr controller_interface_ret_t CONTROLLER_INTERFACE_RET_SUCCESS = 1;
-static constexpr controller_interface_ret_t CONTROLLER_INTERFACE_RET_ERROR = 0;
+enum class return_type : std::uint8_t
+{
+  SUCCESS = 0,
+  ERROR = 1,
+};
 
 class ControllerInterface : public rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface
 {
@@ -44,14 +46,14 @@ public:
 
   CONTROLLER_INTERFACE_PUBLIC
   virtual
-  controller_interface_ret_t
+  return_type
   init(
     std::weak_ptr<hardware_interface::RobotHardware> robot_hardware,
     const std::string & controller_name);
 
   CONTROLLER_INTERFACE_PUBLIC
   virtual
-  controller_interface_ret_t
+  return_type
   update() = 0;
 
   CONTROLLER_INTERFACE_PUBLIC

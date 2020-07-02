@@ -32,15 +32,15 @@ class TestRobotHardware : public hardware_interface::RobotHardware
 {
 public:
   TEST_ROBOT_HARDWARE_PUBLIC
-  hardware_interface::hardware_interface_ret_t
+  hardware_interface::return_type
   init();
 
   TEST_ROBOT_HARDWARE_PUBLIC
-  hardware_interface::hardware_interface_ret_t
+  hardware_interface::return_type
   read();
 
   TEST_ROBOT_HARDWARE_PUBLIC
-  hardware_interface::hardware_interface_ret_t
+  hardware_interface::return_type
   write();
 
   std::string joint_name1 = "joint1";

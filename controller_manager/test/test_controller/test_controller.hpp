@@ -35,7 +35,7 @@ public:
   ~TestController() = default;
 
   CONTROLLER_MANAGER_PUBLIC
-  controller_interface::controller_interface_ret_t
+  controller_interface::return_type
   update() override;
 
   CONTROLLER_MANAGER_PUBLIC

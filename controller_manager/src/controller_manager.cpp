@@ -88,13 +88,13 @@ ControllerManager::add_controller_impl(
   return loaded_controllers_.back();
 }
 
-controller_interface::controller_interface_ret_t
+controller_interface::return_type
 ControllerManager::update()
 {
-  auto ret = controller_interface::CONTROLLER_INTERFACE_RET_SUCCESS;
+  auto ret = controller_interface::return_type::SUCCESS;
   for (auto loaded_controller : loaded_controllers_) {
     auto controller_ret = loaded_controller->update();
-    if (controller_ret != controller_interface::CONTROLLER_INTERFACE_RET_SUCCESS) {
+    if (controller_ret != controller_interface::return_type::SUCCESS) {
       ret = controller_ret;
     }
   }
@@ -102,56 +102,56 @@ ControllerManager::update()
   return ret;
 }
 
-controller_interface::controller_interface_ret_t
+controller_interface::return_type
 ControllerManager::configure() const
 {
-  auto ret = controller_interface::CONTROLLER_INTERFACE_RET_SUCCESS;
+  auto ret = controller_interface::return_type::SUCCESS;
   for (auto loaded_controller : loaded_controllers_) {
     auto controller_state = loaded_controller->get_lifecycle_node()->configure();
     if (controller_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
-      ret = controller_interface::CONTROLLER_INTERFACE_RET_ERROR;
+      ret = controller_interface::return_type::ERROR;
     }
   }
 
   return ret;
 }
 
-controller_interface::controller_interface_ret_t
+controller_interface::return_type
 ControllerManager::activate() const
 {
-  auto ret = controller_interface::CONTROLLER_INTERFACE_RET_SUCCESS;
+  auto ret = controller_interface::return_type::SUCCESS;
   for (auto loaded_controller : loaded_controllers_) {
     auto controller_state = loaded_controller->get_lifecycle_node()->activate();
     if (controller_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE) {
-      ret = controller_interface::CONTROLLER_INTERFACE_RET_ERROR;
+      ret = controller_interface::return_type::ERROR;
     }
   }
 
   return ret;
 }
 
-controller_interface::controller_interface_ret_t
+controller_interface::return_type
 ControllerManager::deactivate() const
 {
-  auto ret = controller_interface::CONTROLLER_INTERFACE_RET_SUCCESS;
+  auto ret = controller_interface::return_type::SUCCESS;
   for (auto loaded_controller : loaded_controllers_) {
     auto controller_state = loaded_controller->get_lifecycle_node()->deactivate();
     if (controller_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
-      ret = controller_interface::CONTROLLER_INTERFACE_RET_ERROR;
+      ret = controller_interface::return_type::ERROR;
     }
   }
 
   return ret;
 }
 
-controller_interface::controller_interface_ret_t
+controller_interface::return_type
 ControllerManager::cleanup() const
 {
-  auto ret = controller_interface::CONTROLLER_INTERFACE_RET_SUCCESS;
+  auto ret = controller_interface::return_type::SUCCESS;
   for (auto loaded_controller : loaded_controllers_) {
     auto controller_state = loaded_controller->get_lifecycle_node()->cleanup();
     if (controller_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED) {
-      ret = controller_interface::CONTROLLER_INTERFACE_RET_ERROR;
+      ret = controller_interface::return_type::ERROR;
     }
   }
 

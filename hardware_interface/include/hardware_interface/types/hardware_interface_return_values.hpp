@@ -15,11 +15,25 @@
 #ifndef HARDWARE_INTERFACE__TYPES__HARDWARE_INTERFACE_RETURN_VALUES_HPP_
 #define HARDWARE_INTERFACE__TYPES__HARDWARE_INTERFACE_RETURN_VALUES_HPP_
 
+#include <cstdint>
+
 namespace hardware_interface
 {
-using hardware_interface_ret_t = int;
-static constexpr hardware_interface_ret_t HW_RET_OK = 0;
-static constexpr hardware_interface_ret_t HW_RET_ERROR = 1;
+enum class return_type : std::uint8_t
+{
+  OK = 0,
+  ERROR = 1,
+
+  CLAIMED_ERROR = 10,
+  ALREADY_CLAIMED = 11,
+  NOT_CLAIMED = 11,
+  UNATHORIZED_UNCLAIM = 13,
+  NON_CLAIMED_WRITE = 15,
+
+  CAN_NOT_READ = 20,
+};
+
+using hardware_interface_ret_t = return_type;
 }  // namespace hardware_interface
 
 #endif  // HARDWARE_INTERFACE__TYPES__HARDWARE_INTERFACE_RETURN_VALUES_HPP_

@@ -56,7 +56,7 @@ public:
 class ControllerMock : public controller_interface::ControllerInterface
 {
 public:
-  MOCK_METHOD0(update, controller_interface::controller_interface_ret_t(void));
+  MOCK_METHOD0(update, controller_interface::return_type(void));
 };
 
 class ControllerLoaderMock : public controller_manager::ControllerLoaderInterface

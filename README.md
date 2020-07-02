@@ -44,7 +44,7 @@ Both can be loaded through the controller manager from the [`ament_resource_inde
 
 What's new in ROS 2 are [Managed Nodes](https://github.com/ros2/ros2/wiki/Managed-Nodes).
 That means, every `LifecycleNode` adheres to an underlying state machine as described in the linked wiki page.
-We feature this for the [controller interface](https://github.com/ros-controls/ros2_control/blob/crystal/controller_interface/include/controller_interface/controller_interface.hpp) in this work and thus every controller implicitely has means to start and stop the controller.
+We feature this for the [controller interface](https://github.com/ros-controls/ros2_control/blob/crystal/controller_interface/include/controller_interface/controller_interface.hpp) in this work and thus every controller implicitly has means to start and stop the controller.
 Similar to the ROS 1 implementation, each controller has to implement two functions: `init` and `update`.
 We refer to the [ROS 1 wiki](http://wiki.ros.org/ros_control) for a general overview.
 
@@ -56,21 +56,21 @@ Essentially, these three functions are required for every hardware and have to b
 ``` c++
   HARDWARE_INTERFACE_PUBLIC
   virtual
-  hardware_interface_ret_t init() = 0;
+  return_type init() = 0;
 
   HARDWARE_INTERFACE_PUBLIC
   virtual
-  hardware_interface_ret_t read() = 0;
+  return_type read() = 0;
 
   HARDWARE_INTERFACE_PUBLIC
   virtual
-  hardware_interface_ret_t write() = 0;
+  return_type write() = 0;
 ```
 
 One possible example could be:
 
 ``` c++
-hardware_interface::hardware_interface_ret_t
+hardware_interface::return_type
 MyRobot::init()
 {
   auto joint_names = {
@@ -81,14 +81,14 @@ MyRobot::init()
   for (auto & joint_name : joint_names) {
     hardware_interface::JointStateHandle state_handle(joint_name, &pos_[i], &vel_[i], &eff_[i]);
     joint_state_handles_[i] = state_handle;
-    if (register_joint_state_handle(&joint_state_handles_[i]) != hardware_interface::HW_RET_OK) {
+    if (register_joint_state_handle(&joint_state_handles_[i]) != hardware_interface::OK) {
       throw std::runtime_error("unable to register " + joint_state_handles_[i].get_name());
     }
 
     hardware_interface::JointCommandHandle command_handle(joint_name, &cmd_[i]);
     joint_command_handles_[i] = command_handle;
     if (register_joint_command_handle(&joint_command_handles_[i]) !=
-      hardware_interface::HW_RET_OK)
+      hardware_interface::OK)
     {
       throw std::runtime_error("unable to register " + joint_command_handles_[i].get_name());
     }
@@ -96,13 +96,13 @@ MyRobot::init()
   }
 }
 
-hardware_interface::hardware_interface_ret_t
+hardware_interface::return_type
 MyRobot::read()
 {
   // do robot specific stuff to update the pos_, vel_, eff_ arrays
 }
 
-hardware_interface::hardware_interface_ret_t
+hardware_interface::return_type
 MyRobot::write()
 {
   // do robot specific stuff to apply the command values from cmd_ to the robot
@@ -129,7 +129,7 @@ int main()
   auto my_robot = std::make_shared<MyRobot>();
   
   // initialize the robot
-  if (my_robot->init() != hardware_interface::HW_RET_OK) {
+  if (my_robot->init() != hardware_interface::return_type::OK) {
     fprintf(stderr, "failed to initialized yumi hardware\n");
     return -1;
   }
@@ -169,17 +169,17 @@ int main()
   }
 
   // main loop
-  hardware_interface::hardware_interface_ret_t ret;
+  hardware_interface::return_type ret;
   while (active) {
     ret = my_robot->read();
-    if (ret != hardware_interface::HW_RET_OK) {
+    if (ret != hardware_interface::return_type::OK) {
       fprintf(stderr, "read failed!\n");
     }
 
     cm.update();
 
     ret = my_robot->write();
-    if (ret != hardware_interface::HW_RET_OK) {
+    if (ret != hardware_interface::return_type::OK) {
       fprintf(stderr, "write failed!\n");
     }
 

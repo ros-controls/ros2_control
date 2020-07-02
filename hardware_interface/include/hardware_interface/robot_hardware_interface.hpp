@@ -33,15 +33,15 @@ public:
 
   HARDWARE_INTERFACE_PUBLIC
   virtual
-  hardware_interface_ret_t init() = 0;
+  return_type init() = 0;
 
   HARDWARE_INTERFACE_PUBLIC
   virtual
-  hardware_interface_ret_t read() = 0;
+  return_type read() = 0;
 
   HARDWARE_INTERFACE_PUBLIC
   virtual
-  hardware_interface_ret_t write() = 0;
+  return_type write() = 0;
 };
 
 }  // namespace hardware_interface
