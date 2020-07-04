@@ -17,8 +17,8 @@
 #include <string>
 #include <unordered_map>
 
-#include "hardware_interface/utils/component_parser.hpp"
 #include "hardware_interface/component_info.hpp"
+#include "hardware_interface/utils/component_parser.hpp"
 
 namespace
 {
@@ -40,7 +40,7 @@ namespace hardware_interface
 namespace utils
 {
 
-ComponentInfo parse_robot_from_urdf(const std::string & urdf)
+SystemInfo parse_system_from_urdf(const std::string & urdf)
 {
   // Check if everything OK with URDF string
   if (urdf.empty()) {
@@ -58,14 +58,14 @@ ComponentInfo parse_robot_from_urdf(const std::string & urdf)
     throw std::runtime_error("the robot tag is not root element in URDF");
   }
 
-  ComponentInfo system;
+  SystemInfo system;
   system.name = robot_it->Attribute("name");
   if (system.name.empty()) {
     throw std::runtime_error("no robot name attribute set");
   }
   system.type = robot_it->Attribute("type");
   if (system.type.empty()) {
-    throw std::runtime_error("no robot name attribute set");
+    throw std::runtime_error("no robot type attribute set");
   }
 
   const tinyxml2::XMLElement * ros2_control_it = robot_it->FirstChildElement(kROS2ControlTag);

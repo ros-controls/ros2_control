@@ -35,7 +35,7 @@ namespace utils
   * \throws std::runtime_error if a robot attribute or tag is not found
   */
 HARDWARE_INTERFACE_PUBLIC
-ComponentInfo parse_robot_from_urdf(const std::string & urdf);
+SystemInfo parse_system_from_urdf(const std::string & urdf);
 
 /**
   * \brief Search XML snippet from URDF for informations about a control component.

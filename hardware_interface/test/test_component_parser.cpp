@@ -199,7 +199,7 @@ protected:
 
     valid_urdf_ros2_control_actuators_sensors_ =
       R"(
-  <ros2_control name="MinimalRobot">
+  <ros2_control name="MinimalRobot" type="robot">
     <hardware>
       <classType>ros2_control_demo_hardware/DemoRobotHardwareMinimal</classType>
       <param name="write_for_sec">2</param>
@@ -224,67 +224,130 @@ protected:
     </sensor>
   </ros2_control>
 )";
+
+    valid_urdf_ros2_control_actuators_sensors_hardware_ =
+      R"(
+  <ros2_control name="MinimalRobot">
+    <actuator name="joint1_position_actuator">
+      <classType>ros2_control_components/PositionActuator</classType>
+      <joint name="joint1">
+        <interfaceName>position</interfaceName>
+      </joint>
+      <param name="can_read">True</param>
+      <param name="min_values">-1</param>
+      <param name="max_values">1</param>
+      <hardware>
+        <classType>ros2_control_demo_hardware/DemoActuatorHardware</classType>
+        <param name="write_for_sec">1.23</param>
+      </hardware>
+    </actuator>
+    <sensor name="joint2_position_actuator">
+      <classType>ros2_control_components/PositionSensor</classType>
+      <joint name="joint2">
+        <interfaceName>position</interfaceName>
+      </joint>
+      <param name="min_values">-5</param>
+      <param name="max_values">1</param>
+      <hardware>
+        <classType>ros2_control_demo_hardware/DemoSensorHardware</classType>
+        <param name="read_for_sec">3</param>
+      </hardware>
+    </sensor>
+  </ros2_control>
+)";
   }
 
   std::string urdf_xml_head_, urdf_xml_tail_;
   std::string valid_urdf_ros2_control_actuators_only_, valid_urdf_ros2_control_actuators_sensors_;
+  std::string valid_urdf_ros2_control_actuators_sensors_hardware_;
 };
 
-using hardware_interface::utils::parse_robot_from_urdf;
+using hardware_interface::utils::parse_system_from_urdf;
 
 TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuators)
 {
   std::string urdf_to_test = urdf_xml_head_ + valid_urdf_ros2_control_actuators_only_ +
     urdf_xml_tail_;
-  const auto robot_info = parse_robot_from_urdf(urdf_to_test);
+  const auto system_info = parse_system_from_urdf(urdf_to_test);
 
-  EXPECT_EQ(robot_info.name, "MinimalRobot");
-  EXPECT_EQ(robot_info.class_type, "");
-  EXPECT_EQ(robot_info.hardware_class_type, "ros2_control_demo_hardware/DemoRobotHardwareMinimal");
-  ASSERT_THAT(robot_info.subcomponents, SizeIs(2));
-  ASSERT_THAT(robot_info.hardware_parameters, SizeIs(2));
-  EXPECT_EQ(robot_info.hardware_parameters.at("write_for_sec"), "2");
+  EXPECT_EQ(system_info.name, "MinimalRobot");
+  EXPECT_EQ(system_info.type, "robot");
+  EXPECT_EQ(system_info.hardware_class_type, "ros2_control_demo_hardware/DemoRobotHardwareMinimal");
+  ASSERT_THAT(system_info.subcomponents, SizeIs(2));
+  ASSERT_THAT(system_info.hardware_parameters, SizeIs(2));
+  EXPECT_EQ(system_info.hardware_parameters.at("write_for_sec"), "2");
 
-  EXPECT_EQ(robot_info.subcomponents[0].name, "joint1_position_actuator");
-  EXPECT_EQ(robot_info.subcomponents[0].type, "actuator");
-  EXPECT_EQ(robot_info.subcomponents[0].class_type, "ros2_control_components/PositionActuator");
-  EXPECT_EQ(robot_info.subcomponents[0].joint, "joint1");
-  ASSERT_THAT(robot_info.subcomponents[0].parameters, SizeIs(3));
+  EXPECT_EQ(system_info.subcomponents[0].name, "joint1_position_actuator");
+  EXPECT_EQ(system_info.subcomponents[0].type, "actuator");
+  EXPECT_EQ(system_info.subcomponents[0].class_type, "ros2_control_components/PositionActuator");
+  EXPECT_EQ(system_info.subcomponents[0].joint, "joint1");
+  ASSERT_THAT(system_info.subcomponents[0].parameters, SizeIs(3));
 
-  EXPECT_EQ(robot_info.subcomponents[1].parameters.at("can_read"), "True");
-  EXPECT_EQ(robot_info.subcomponents[1].hardware_class_type, "");
-  ASSERT_THAT(robot_info.subcomponents[1].hardware_parameters, SizeIs(0));
+  EXPECT_EQ(system_info.subcomponents[1].parameters.at("can_read"), "True");
+  EXPECT_EQ(system_info.subcomponents[1].hardware_class_type, "");
+  ASSERT_THAT(system_info.subcomponents[1].hardware_parameters, SizeIs(0));
 }
 
 TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuators_sensors)
 {
   std::string urdf_to_test = urdf_xml_head_ + valid_urdf_ros2_control_actuators_sensors_ +
     urdf_xml_tail_;
-  const auto robot_info = parse_robot_from_urdf(urdf_to_test);
+  const auto system_info = parse_system_from_urdf(urdf_to_test);
 
-  EXPECT_EQ(robot_info.name, "MinimalRobot");
-  EXPECT_EQ(robot_info.class_type, "");
-  EXPECT_EQ(robot_info.hardware_class_type, "ros2_control_demo_hardware/DemoRobotHardwareMinimal");
-  ASSERT_THAT(robot_info.subcomponents, SizeIs(2));
-  ASSERT_THAT(robot_info.hardware_parameters, SizeIs(2));
-  EXPECT_EQ(robot_info.hardware_parameters.at("write_for_sec"), "2");
+  EXPECT_EQ(system_info.name, "MinimalRobot");
+  EXPECT_EQ(system_info.type, "robot");
+  EXPECT_EQ(system_info.hardware_class_type, "ros2_control_demo_hardware/DemoRobotHardwareMinimal");
+  ASSERT_THAT(system_info.subcomponents, SizeIs(2));
+  ASSERT_THAT(system_info.hardware_parameters, SizeIs(2));
+  EXPECT_EQ(system_info.hardware_parameters.at("write_for_sec"), "2");
 
-  EXPECT_EQ(robot_info.subcomponents[0].name, "joint1_position_actuator");
-  EXPECT_EQ(robot_info.subcomponents[0].type, "actuator");
-  EXPECT_EQ(robot_info.subcomponents[0].class_type, "ros2_control_components/PositionActuator");
-  EXPECT_EQ(robot_info.subcomponents[0].joint, "joint1");
-  ASSERT_THAT(robot_info.subcomponents[0].parameters, SizeIs(3));
+  EXPECT_EQ(system_info.subcomponents[0].name, "joint1_position_actuator");
+  EXPECT_EQ(system_info.subcomponents[0].type, "actuator");
+  EXPECT_EQ(system_info.subcomponents[0].class_type, "ros2_control_components/PositionActuator");
+  EXPECT_EQ(system_info.subcomponents[0].joint, "joint1");
+  ASSERT_THAT(system_info.subcomponents[0].parameters, SizeIs(3));
 
-  EXPECT_EQ(robot_info.subcomponents[1].type, "sensor");
-  EXPECT_EQ(robot_info.subcomponents[1].class_type, "ros2_control_components/PositionSensor");
-  EXPECT_EQ(robot_info.subcomponents[1].parameters.at("min_values"), "-5");
-  EXPECT_EQ(robot_info.subcomponents[1].hardware_class_type, "");
-  ASSERT_THAT(robot_info.subcomponents[1].hardware_parameters, SizeIs(0));
+  EXPECT_EQ(system_info.subcomponents[1].type, "sensor");
+  EXPECT_EQ(system_info.subcomponents[1].class_type, "ros2_control_components/PositionSensor");
+  EXPECT_EQ(system_info.subcomponents[1].parameters.at("min_values"), "-5");
+  EXPECT_EQ(system_info.subcomponents[1].hardware_class_type, "");
+  ASSERT_THAT(system_info.subcomponents[1].hardware_parameters, SizeIs(0));
+}
+
+TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuators_sensors_hardware)
+{
+  std::string urdf_to_test = urdf_xml_head_ + valid_urdf_ros2_control_actuators_sensors_hardware_ +
+  urdf_xml_tail_;
+  const auto system_info = parse_system_from_urdf(urdf_to_test);
+
+  EXPECT_EQ(system_info.name, "MinimalRobot");
+  EXPECT_EQ(system_info.type, "robot");
+  EXPECT_EQ(system_info.hardware_class_type, "");
+  ASSERT_THAT(system_info.subcomponents, SizeIs(2));
+  ASSERT_THAT(system_info.hardware_parameters, SizeIs(0));
+
+  EXPECT_EQ(system_info.subcomponents[0].name, "joint1_position_actuator");
+  EXPECT_EQ(system_info.subcomponents[0].type, "actuator");
+  EXPECT_EQ(system_info.subcomponents[0].class_type, "ros2_control_components/PositionActuator");
+  EXPECT_EQ(system_info.subcomponents[0].joint, "joint1");
+  ASSERT_THAT(system_info.subcomponents[0].parameters, SizeIs(3));
+  EXPECT_EQ(system_info.subcomponents[0].hardware_class_type,
+            "ros2_control_demo_hardware/DemoActuatorHardware");
+  ASSERT_THAT(system_info.subcomponents[0].hardware_parameters, SizeIs(1));
+  EXPECT_EQ(system_info.subcomponents[0].hardware_parameters.at("write_for_sec"), "1.23");
+
+  EXPECT_EQ(system_info.subcomponents[1].type, "sensor");
+  EXPECT_EQ(system_info.subcomponents[1].class_type, "ros2_control_components/PositionSensor");
+  EXPECT_EQ(system_info.subcomponents[1].parameters.at("min_values"), "-5");
+  EXPECT_EQ(system_info.subcomponents[1].hardware_class_type,
+            "ros2_control_demo_hardware/DemoSensorHardware");
+  ASSERT_THAT(system_info.subcomponents[1].hardware_parameters, SizeIs(1));
+  EXPECT_EQ(system_info.subcomponents[1].hardware_parameters.at("read_for_sec"), "2");
 }
 
 TEST_F(TestComponentParser, empty_string_throws_error)
 {
-  ASSERT_THROW(parse_robot_from_urdf(""), std::runtime_error);
+  ASSERT_THROW(parse_system_from_urdf(""), std::runtime_error);
 }
 
 TEST_F(TestComponentParser, empty_urdf_throws_error)
@@ -292,5 +355,5 @@ TEST_F(TestComponentParser, empty_urdf_throws_error)
   const std::string empty_urdf =
     "<?xml version=\"1.0\"?><robot name=\"robot\" xmlns=\"http://www.ros.org\"></robot>";
 
-  ASSERT_THROW(parse_robot_from_urdf(empty_urdf), std::runtime_error);
+  ASSERT_THROW(parse_system_from_urdf(empty_urdf), std::runtime_error);
 }
