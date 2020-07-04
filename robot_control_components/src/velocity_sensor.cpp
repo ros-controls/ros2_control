@@ -21,8 +21,7 @@
 namespace robot_control_components
 {
 
-using hardware_interface::hardware_interface_ret_t;
-using hardware_interface::ComponentInfo;
+namespace hw = hardware_interface;
 
 class VelocitySensor : public hardware_interface::SensorInterface
 {
@@ -33,9 +32,9 @@ public:
 
   ~VelocitySensor() = default;
 
-  hardware_interface_ret_t configure(const ComponentInfo & /* sensor_info */)
+  hw::return_type configure(const hw::ComponentInfo & /* sensor_info */)
   {
-    return hardware_interface_ret_t::HW_RET_OK;
+    return hw::return_type::OK;
   }
 
   std::string get_interface_name() const
@@ -43,14 +42,14 @@ public:
     return "";
   }
 
-  hardware_interface_ret_t start()
+  hw::return_type start()
   {
-    return hardware_interface_ret_t::HW_RET_OK;
+    return hw::return_type::OK;
   }
 
-  hardware_interface_ret_t stop()
+  hw::return_type stop()
   {
-    return hardware_interface_ret_t::HW_RET_OK;
+    return hw::return_type::OK;
   }
 
   bool is_started() const
@@ -58,9 +57,9 @@ public:
     return false;
   }
 
-  hardware_interface_ret_t read(double & /* data */)
+  hw::return_type read(double & /* data */)
   {
-    return hardware_interface_ret_t::HW_RET_OK;
+    return hw::return_type::OK;
   }
 };
 
