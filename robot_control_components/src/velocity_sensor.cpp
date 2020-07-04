@@ -33,12 +33,8 @@ public:
 
   ~VelocitySensor() = default;
 
-  hardware_interface_ret_t configure(const ComponentInfo & sensor_info)
+  hardware_interface_ret_t configure(const ComponentInfo & /* sensor_info */)
   {
-    (void) sensor_info;
-
-    allowed_interfce_types.push_back(hardware_interface::HW_IF_VELOCITY);
-
     return hardware_interface_ret_t::HW_RET_OK;
   }
 
@@ -62,9 +58,8 @@ public:
     return false;
   }
 
-  hardware_interface_ret_t read(double & data)
+  hardware_interface_ret_t read(double & /* data */)
   {
-    (void) data;
     return hardware_interface_ret_t::HW_RET_OK;
   }
 };

@@ -53,27 +53,7 @@ ament_target_dependencies(
   TinyXML2
 )
 
-add_library(
-  resource_manager
-  src/resource_manager.cpp
-)
-target_include_directories(
-  resource_manager
-  PUBLIC
-  include
-)
-target_link_libraries(
-  resource_manager
-  component_parser
-  hardware_interface
-)
-
-ament_target_dependencies(
-  resource_manager
-  pluginlib
-  rclcpp
-  TinyXML2
-)
+target_compile_definitions(component_parser PRIVATE "HARDWARE_INTERFACE_BUILDING_DLL")
 
 install(
   DIRECTORY include/
@@ -81,7 +61,7 @@ install(
 )
 
 install(
-  TARGETS hardware_interface component_parser resource_manager
+  TARGETS hardware_interface component_parser
   RUNTIME DESTINATION bin
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib)
@@ -115,6 +95,5 @@ ament_export_include_directories(
 ament_export_libraries(
   hardware_interface
   component_parser
-  resource_manager
 )
 ament_package()

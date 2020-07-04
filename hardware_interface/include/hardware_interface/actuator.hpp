@@ -33,9 +33,7 @@ class Actuator final
 public:
   Actuator() = default;
 
-  //TODO: Changed to shared because otherwise Actuator can not be added into a map
-//   explicit Actuator(std::unique_ptr<ActuatorInterface> & impl)
-  explicit Actuator(std::shared_ptr<ActuatorInterface> & impl)
+  explicit Actuator(std::unique_ptr<ActuatorInterface> & impl)
   : impl_(std::move(impl))
   {}
 
@@ -84,9 +82,7 @@ public:
   }
 
 private:
-  //TODO: Changed to shared because otherwise Actuator can not be added into a map
-  std::shared_ptr<ActuatorInterface> impl_;
-//   std::unique_ptr<ActuatorInterface> impl_;
+  std::unique_ptr<ActuatorInterface> impl_;
 };
 
 }  // namespace hardware_interface
