@@ -29,9 +29,8 @@ public:
 
   ~PositionSensor() = default;
 
-  hardware_interface_ret_t configure(const ComponentInfo & sensor_info)
+  hardware_interface_ret_t configure(const ComponentInfo & /*sensor_info*/)
   {
-    (void) sensor_info;
     return hardware_interface_ret_t::HW_RET_OK;
   }
 

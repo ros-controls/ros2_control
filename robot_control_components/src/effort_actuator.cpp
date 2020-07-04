@@ -25,13 +25,8 @@ using hardware_interface::ComponentInfo;
 class EffortActuator : public hardware_interface::ActuatorInterface
 {
 public:
-  EffortActuator() = default;
-
-  ~EffortActuator() = default;
-
-  hardware_interface_ret_t configure(const ComponentInfo & actuator_info)
+  hardware_interface_ret_t configure(const ComponentInfo & /*actuator_info*/)
   {
-    (void) actuator_info;
     return hardware_interface_ret_t::HW_RET_OK;
   }
 
@@ -55,15 +50,13 @@ public:
     return false;
   }
 
-  hardware_interface_ret_t read(double & data)
+  hardware_interface_ret_t read(double & /*data*/)
   {
-    (void) data;
     return hardware_interface_ret_t::HW_RET_OK;
   }
 
-  hardware_interface_ret_t write(const double & data)
+  hardware_interface_ret_t write(const double & /*data*/)
   {
-    (void) data;
     return hardware_interface_ret_t::HW_RET_OK;
   }
 };

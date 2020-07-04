@@ -19,7 +19,7 @@ namespace hardware_interface
 {
 constexpr const auto HW_IF_POSITION = "position";
 constexpr const auto HW_IF_VELOCITY = "velocity";
-constexpr const auto HW_IF_EFFORT = "effor";
+constexpr const auto HW_IF_EFFORT = "effort";
 }  // namespace hardware_interface
 
 #endif  // HARDWARE_INTERFACE__TYPES__HARDWARE_INTERFACE_TYPE_VALUES_HPP_
