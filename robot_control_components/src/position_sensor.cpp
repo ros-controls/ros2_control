@@ -24,10 +24,6 @@ namespace hw = hardware_interface;
 class PositionSensor : public hardware_interface::SensorInterface
 {
 public:
-  PositionSensor() = default;
-
-  ~PositionSensor() = default;
-
   hw::return_type configure(const hw::ComponentInfo & /* sensor_info */)
   {
     return hw::return_type::OK;

@@ -26,12 +26,6 @@ namespace hw = hardware_interface;
 class VelocityActuator : public hardware_interface::ActuatorInterface
 {
 public:
-  std::vector<std::string> allowed_interfce_types;
-
-  VelocityActuator() = default;
-
-  ~VelocityActuator() = default;
-
   hw::return_type configure(const hw::ComponentInfo & /* actuator_info */)
   {
     return hw::return_type::OK;

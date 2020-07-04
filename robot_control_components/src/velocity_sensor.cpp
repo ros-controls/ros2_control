@@ -26,12 +26,6 @@ namespace hw = hardware_interface;
 class VelocitySensor : public hardware_interface::SensorInterface
 {
 public:
-  std::vector<std::string> allowed_interfce_types;
-
-  VelocitySensor() = default;
-
-  ~VelocitySensor() = default;
-
   hw::return_type configure(const hw::ComponentInfo & /* sensor_info */)
   {
     return hw::return_type::OK;
