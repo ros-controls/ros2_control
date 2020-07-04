@@ -39,7 +39,7 @@ public:
 
   HARDWARE_INTERFACE_PUBLIC
   virtual
-  hardware_interface_ret_t configure(const ComponentInfo & actuator_info) = 0;
+  return_type configure(const ComponentInfo & actuator_info) = 0;
 
   HARDWARE_INTERFACE_PUBLIC
   virtual
@@ -47,11 +47,11 @@ public:
 
   HARDWARE_INTERFACE_PUBLIC
   virtual
-  hardware_interface_ret_t start() = 0;
+  return_type start() = 0;
 
   HARDWARE_INTERFACE_PUBLIC
   virtual
-  hardware_interface_ret_t stop() = 0;
+  return_type stop() = 0;
 
   HARDWARE_INTERFACE_PUBLIC
   virtual
@@ -59,11 +59,11 @@ public:
 
   HARDWARE_INTERFACE_PUBLIC
   virtual
-  hardware_interface_ret_t read(double & data) = 0;
+  return_type read(double & data) = 0;
 
   HARDWARE_INTERFACE_PUBLIC
   virtual
-  hardware_interface_ret_t write(const double & data) = 0;
+  return_type write(const double & data) = 0;
 };
 
 }  // namespace hardware_interface

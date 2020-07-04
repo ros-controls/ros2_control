@@ -37,7 +37,7 @@ public:
 
   HARDWARE_INTERFACE_PUBLIC
   virtual
-  hardware_interface_ret_t configure(const ComponentInfo & system_info) = 0;
+  return_type configure(const SystemInfo & system_info) = 0;
 
   HARDWARE_INTERFACE_PUBLIC
   virtual
@@ -45,11 +45,11 @@ public:
 
   HARDWARE_INTERFACE_PUBLIC
   virtual
-  hardware_interface_ret_t start() = 0;
+  return_type start() = 0;
 
   HARDWARE_INTERFACE_PUBLIC
   virtual
-  hardware_interface_ret_t stop() = 0;
+  return_type stop() = 0;
 
   HARDWARE_INTERFACE_PUBLIC
   virtual
@@ -57,9 +57,9 @@ public:
 
   HARDWARE_INTERFACE_PUBLIC
   virtual
-  hardware_interface_ret_t read(std::vector<double> & data) = 0;
+  return_type read(std::vector<double> & data) = 0;
 
-  hardware_interface_ret_t
+  return_type
   virtual
   write(const std::vector<double> & data) = 0;
 };

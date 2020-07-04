@@ -40,25 +40,25 @@ public:
   virtual ~Sensor() = default;
 
   HARDWARE_INTERFACE_PUBLIC
-  hardware_interface_ret_t configure(const ComponentInfo & sensor_info)
+  return_type configure(const ComponentInfo & sensor_info)
   {
     return impl_->configure(sensor_info);
   }
 
   HARDWARE_INTERFACE_PUBLIC
-  hardware_interface_ret_t start()
+  return_type start()
   {
     return impl_->start();
   }
 
   HARDWARE_INTERFACE_PUBLIC
-  hardware_interface_ret_t stop()
+  return_type stop()
   {
     return impl_->stop();
   }
 
   HARDWARE_INTERFACE_PUBLIC
-  hardware_interface_ret_t read(double & data)
+  return_type read(double & data)
   {
     return impl_->read(data);
   }

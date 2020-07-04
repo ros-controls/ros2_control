@@ -37,7 +37,7 @@ public:
   virtual ~System() = default;
 
   HARDWARE_INTERFACE_PUBLIC
-  hardware_interface_ret_t configure(const ComponentInfo & system_info)
+  return_type configure(const SystemInfo & system_info)
   {
     return impl_->configure(system_info);
   }
@@ -49,13 +49,13 @@ public:
   }
 
   HARDWARE_INTERFACE_PUBLIC
-  hardware_interface_ret_t start()
+  return_type start()
   {
     return impl_->start();
   }
 
   HARDWARE_INTERFACE_PUBLIC
-  hardware_interface_ret_t stop()
+  return_type stop()
   {
     return impl_->stop();
   }
@@ -67,13 +67,13 @@ public:
   }
 
   HARDWARE_INTERFACE_PUBLIC
-  hardware_interface_ret_t read(std::vector<double> & data)
+  return_type read(std::vector<double> & data)
   {
     return impl_->read(data);
   }
 
   HARDWARE_INTERFACE_PUBLIC
-  hardware_interface_ret_t write(const std::vector<double> & data)
+  return_type write(const std::vector<double> & data)
   {
     return impl_->write(data);
   }

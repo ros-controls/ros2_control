@@ -86,7 +86,7 @@ public:
   get_registered_operation_mode_handles();
 
   HARDWARE_INTERFACE_PUBLIC
-  hardware_interface_ret_t
+  return_type
   configure(const std::string & urdf_string);
 
 private:

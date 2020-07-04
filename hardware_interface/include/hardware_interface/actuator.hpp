@@ -40,19 +40,19 @@ public:
   ~Actuator() = default;
 
   HARDWARE_INTERFACE_PUBLIC
-  hardware_interface_ret_t configure(const ComponentInfo & actuator_info)
+  return_type configure(const ComponentInfo & actuator_info)
   {
     return impl_->configure(actuator_info);
   }
 
   HARDWARE_INTERFACE_PUBLIC
-  hardware_interface_ret_t start()
+  return_type start()
   {
     return impl_->start();
   }
 
   HARDWARE_INTERFACE_PUBLIC
-  hardware_interface_ret_t stop()
+  return_type stop()
   {
     return impl_->stop();
   }
@@ -64,13 +64,13 @@ public:
   }
 
   HARDWARE_INTERFACE_PUBLIC
-  hardware_interface_ret_t read(double & data)
+  return_type read(double & data)
   {
     return impl_->read(data);
   }
 
   HARDWARE_INTERFACE_PUBLIC
-  hardware_interface_ret_t write(const double & data)
+  return_type write(const double & data)
   {
     return impl_->write(data);
   }
