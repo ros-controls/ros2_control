@@ -10,14 +10,14 @@ on:
 
 jobs:
   build_and_test:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
     steps:
       - uses: ros-tooling/setup-ros@0.0.23
       - uses: ros-tooling/action-ros-ci@0.0.17
         with:
-          package-name: controller_interface controller_manager hardware_interface test_robot_hardware
+          package-name: controller_interface controller_manager hardware_interface test_robot_hardware ros2_control
           colcon-mixin-name: coverage-gcc
           colcon-mixin-repository: https://raw.githubusercontent.com/colcon/colcon-mixin-repository/master/index.yaml
       - uses: codecov/codecov-action@v1
