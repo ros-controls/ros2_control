@@ -27,6 +27,7 @@ namespace
 constexpr auto kJointStateLoggerName = "joint state handle";
 constexpr auto kJointCommandLoggerName = "joint cmd handle";
 constexpr auto kOperationModeLoggerName = "joint operation mode handle";
+constexpr auto kActuatorLoggerName = "actuator handle";
 }
 
 namespace hardware_interface
@@ -212,6 +213,110 @@ std::vector<OperationModeHandle *>
 RobotHardware::get_registered_operation_mode_handles()
 {
   return registered_operation_mode_handles_;
+}
+
+hardware_interface_ret_t RobotHardware::register_actuator(
+  const std::string & actuator_name,
+  const std::string & interface_name, const double default_value)
+{
+  if (actuator_name.empty() || interface_name.empty()) {
+    RCLCPP_ERROR(rclcpp::get_logger(kActuatorLoggerName), "actuator name or interface is empty!");
+    return return_type::ERROR;
+  }
+
+  const auto & names_list = registered_actuators_.joint_names;
+  const auto it = std::find(names_list.cbegin(), names_list.cend(), actuator_name);
+  if (it == names_list.cend()) {
+    registered_actuators_.joint_names.push_back(actuator_name);
+    control_msgs::msg::InterfaceValue iv;
+    iv.interface_names = {interface_name};
+    iv.values = {default_value};
+    registered_actuators_.interface_values.push_back(iv);
+    return return_type::OK;
+  } else {
+    const auto index = std::distance(names_list.cbegin(), it);
+    auto & ivs = registered_actuators_.interface_values[index];
+    const auto interface_names = ivs.interface_names;
+    const auto it = std::find(interface_names.cbegin(), interface_names.cend(), interface_name);
+    if (it == interface_names.cend()) {
+      ivs.interface_names.push_back(interface_name);
+      ivs.values.push_back(default_value);
+      return return_type::OK;
+    } else {
+      RCLCPP_ERROR_STREAM(
+        rclcpp::get_logger(kActuatorLoggerName), "actuator with interface (" <<
+          actuator_name << ":" << interface_name <<
+          ") is already registered!");
+      return return_type::ERROR;
+    }
+  }
+}
+
+hardware_interface_ret_t RobotHardware::get_actuator_handle(ActuatorHandle & actuator_handle)
+{
+  const auto & actuator_name = actuator_handle.get_name();
+  const auto & interface_name = actuator_handle.get_interface_name();
+
+  if (actuator_name.empty() || interface_name.empty()) {
+    RCLCPP_ERROR(
+      rclcpp::get_logger(
+        kActuatorLoggerName), "actuator name or interface is ill-defined!");
+    return return_type::ERROR;
+  }
+
+  const auto & names_list = registered_actuators_.joint_names;
+  const auto it = std::find(names_list.cbegin(), names_list.cend(), actuator_name);
+  if (it == names_list.cend()) {
+    RCLCPP_ERROR(
+      rclcpp::get_logger(
+        kActuatorLoggerName), "actuator with name %s not found!", actuator_name);
+    return return_type::ERROR;
+  }
+
+  const auto index = std::distance(names_list.cbegin(), it);
+  auto & ivs = registered_actuators_.interface_values[index];
+  const auto interface_names = ivs.interface_names;
+  const auto if_it = std::find(interface_names.cbegin(), interface_names.cend(), interface_name);
+  if (if_it != interface_names.cend()) {
+    const auto value_index = std::distance(interface_names.cbegin(), if_it);
+    actuator_handle = actuator_handle.with_value_ptr(&(ivs.values[value_index]));
+    return return_type::OK;
+  } else {
+    RCLCPP_ERROR_STREAM(
+      rclcpp::get_logger(kActuatorLoggerName),
+      "actuator with interface (" << actuator_name << ":" << interface_name << ") wasn't found!");
+    return return_type::ERROR;
+  }
+
+  return return_type::ERROR;
+}
+
+std::vector<ActuatorHandle> RobotHardware::get_registered_actuators()
+{
+  std::vector<ActuatorHandle> result;
+  result.reserve(registered_actuators_.joint_names.size());    // rough estimate
+
+  auto & actuator_names = registered_actuators_.joint_names;
+  auto & interface_values = registered_actuators_.interface_values;
+
+  assert(registered_actuators_.joint_names.size() == registered_actuators_.interface_values.size());
+  for (size_t i = 0; i < actuator_names.size(); ++i) {
+    auto & actuator_interfaces = interface_values[i];
+    assert(actuator_interfaces.interface_names.size() == actuator_interfaces.values.size());
+
+    for (size_t j = 0; j < actuator_interfaces.interface_names.size(); ++j) {
+      result.emplace_back(
+        actuator_names[i], actuator_interfaces.interface_names[j],
+        &actuator_interfaces.values[j]);
+    }
+  }
+
+  return result;
+}
+
+const std::vector<std::string> & RobotHardware::get_registered_actuator_names()
+{
+  return registered_actuators_.joint_names;
 }
 
 }  // namespace hardware_interface

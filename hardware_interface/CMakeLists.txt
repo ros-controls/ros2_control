@@ -11,6 +11,7 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 find_package(ament_cmake REQUIRED)
+find_package(control_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rcpputils REQUIRED)
 
@@ -28,6 +29,7 @@ target_include_directories(
   include)
 ament_target_dependencies(
   hardware_interface
+  control_msgs
   rclcpp
   rcpputils
 )
@@ -53,6 +55,7 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 
   find_package(ament_cmake_gmock REQUIRED)
+
   ament_add_gmock(test_macros test/test_macros.cpp)
   target_include_directories(test_macros PRIVATE include)
   ament_target_dependencies(test_macros rcpputils)
@@ -60,6 +63,17 @@ if(BUILD_TESTING)
   ament_add_gmock(test_robot_hardware_interfaces test/test_robot_hardware_interface.cpp)
   target_include_directories(test_robot_hardware_interfaces PRIVATE include)
   target_link_libraries(test_robot_hardware_interfaces hardware_interface)
+
+  ament_add_gmock(test_register_actuators test/test_register_actuators.cpp)
+  target_include_directories(test_register_actuators PRIVATE include)
+  target_link_libraries(test_register_actuators hardware_interface)
+  ament_target_dependencies(test_register_actuators rcpputils)
+
+  ament_add_gmock(test_actuator_handle test/test_actuator_handle.cpp)
+  target_include_directories(test_actuator_handle PRIVATE include)
+  target_link_libraries(test_actuator_handle hardware_interface)
+  ament_target_dependencies(test_actuator_handle rcpputils)
+
 endif()
 
 ament_export_include_directories(
@@ -67,4 +81,6 @@ ament_export_include_directories(
 )
 ament_export_libraries(
   hardware_interface)
+ament_export_dependencies(
+  control_msgs)
 ament_package()
