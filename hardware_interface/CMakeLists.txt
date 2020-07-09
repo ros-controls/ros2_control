@@ -11,6 +11,7 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 find_package(ament_cmake REQUIRED)
+find_package(control_msgs REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rcpputils REQUIRED)
@@ -32,6 +33,7 @@ target_include_directories(
 )
 ament_target_dependencies(
   hardware_interface
+  control_msgs
   rclcpp
   rcpputils
 )
@@ -80,9 +82,20 @@ if(BUILD_TESTING)
   target_include_directories(test_robot_hardware_interfaces PRIVATE include)
   target_link_libraries(test_robot_hardware_interfaces hardware_interface)
 
+
   ament_add_gmock(test_component_parser test/test_component_parser.cpp)
   target_link_libraries(test_component_parser component_parser)
   ament_target_dependencies(test_component_parser TinyXML2)
+
+  ament_add_gmock(test_register_actuators test/test_register_actuators.cpp)
+  target_include_directories(test_register_actuators PRIVATE include)
+  target_link_libraries(test_register_actuators hardware_interface)
+  ament_target_dependencies(test_register_actuators rcpputils)
+
+  ament_add_gmock(test_actuator_handle test/test_actuator_handle.cpp)
+  target_include_directories(test_actuator_handle PRIVATE include)
+  target_link_libraries(test_actuator_handle hardware_interface)
+  ament_target_dependencies(test_actuator_handle rcpputils)
 endif()
 
 ament_export_dependencies(
@@ -96,4 +109,7 @@ ament_export_libraries(
   hardware_interface
   component_parser
 )
+  hardware_interface)
+ament_export_dependencies(
+  control_msgs)
 ament_package()

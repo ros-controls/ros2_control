@@ -15,10 +15,13 @@
 #ifndef HARDWARE_INTERFACE__ROBOT_HARDWARE_HPP_
 #define HARDWARE_INTERFACE__ROBOT_HARDWARE_HPP_
 
+#include <memory>
 #include <string>
 #include <vector>
 
 #include "hardware_interface/actuator.hpp"
+#include "control_msgs/msg/dynamic_joint_state.hpp"
+#include "hardware_interface/actuator_handle.hpp"
 #include "hardware_interface/joint_command_handle.hpp"
 #include "hardware_interface/joint_state_handle.hpp"
 #include "hardware_interface/operation_mode_handle.hpp"
@@ -30,7 +33,6 @@
 
 namespace hardware_interface
 {
-
 class RobotHardware : public RobotHardwareInterface
 {
 public:
@@ -89,11 +91,28 @@ public:
   return_type
   configure(const std::string & urdf_string);
 
+  HARDWARE_INTERFACE_PUBLIC
+  return_type register_actuator(
+    const std::string & name, const std::string & interface_name, double default_value = 0.0);
+
+  HARDWARE_INTERFACE_PUBLIC
+  return_type get_actuator_handle(ActuatorHandle & actuator_handle);
+
+  HARDWARE_INTERFACE_PUBLIC
+  const std::vector<std::string> & get_registered_actuator_names();
+
+  HARDWARE_INTERFACE_PUBLIC
+  std::vector<ActuatorHandle> get_registered_actuators();
+
 private:
   std::vector<const JointStateHandle *> registered_joint_state_handles_;
   std::vector<JointCommandHandle *> registered_joint_command_handles_;
   std::vector<OperationModeHandle *> registered_operation_mode_handles_;
+
+  control_msgs::msg::DynamicJointState registered_actuators_;
 };
+
+using RobotHardwareSharedPtr = std::shared_ptr<RobotHardware>;
 
 }  // namespace hardware_interface
 
