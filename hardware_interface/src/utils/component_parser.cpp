@@ -63,10 +63,6 @@ SystemInfo parse_system_from_urdf(const std::string & urdf)
   if (system.name.empty()) {
     throw std::runtime_error("no robot name attribute set");
   }
-  system.type = robot_it->Attribute("type");
-  if (system.type.empty()) {
-    throw std::runtime_error("no robot type attribute set");
-  }
 
   const tinyxml2::XMLElement * ros2_control_it = robot_it->FirstChildElement(kROS2ControlTag);
   if ( not ros2_control_it ) {
@@ -75,6 +71,10 @@ SystemInfo parse_system_from_urdf(const std::string & urdf)
   const std::string name = ros2_control_it->Attribute("name");
   if (name.empty()) {
     throw std::runtime_error("no attribute name in " + std::string(kROS2ControlTag) + " tag");
+  }
+  system.type = robot_it->Attribute("type");
+  if (system.type.empty()) {
+    throw std::runtime_error("no robot type attribute set");
   }
 
   // Parse everything under ros2_control tag
