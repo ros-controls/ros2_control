@@ -68,7 +68,7 @@ SystemInfo parse_system_from_urdf(const std::string & urdf)
   system.name = robot_it->Attribute("name");
 
   const tinyxml2::XMLElement * ros2_control_it = robot_it->FirstChildElement(kROS2ControlTag);
-  if ( not ros2_control_it ) {
+  if (!ros2_control_it) {
     throw std::runtime_error("no " + std::string(kROS2ControlTag) + " tag");
   }
   attr = ros2_control_it->FindAttribute("name");
