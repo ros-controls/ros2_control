@@ -170,7 +170,7 @@ protected:
 
     valid_urdf_ros2_control_joints_only_ =
       R"(
-  <ros2_control name="MinimalRobot">
+  <ros2_control name="MinimalRobot" type="robot">
     <hardware>
       <classType>ros2_control_demo_hardware/DemoRobotHardwareMinimal</classType>
       <param name="write_for_sec">2</param>
@@ -227,7 +227,7 @@ protected:
 
     valid_urdf_ros2_control_joints_sensors_hardware_ =
       R"(
-  <ros2_control name="MinimalRobot">
+  <ros2_control name="MinimalRobot"  type="robot">
     <joint name="joint1_position_actuator">
       <classType>ros2_control_components/PositionActuator</classType>
       <joint name="joint1">

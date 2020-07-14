@@ -59,23 +59,27 @@ SystemInfo parse_system_from_urdf(const std::string & urdf)
   }
 
   SystemInfo system;
-  system.name = robot_it->Attribute("name");
-  if (system.name.empty()) {
+  const tinyxml2::XMLAttribute * attr;
+
+  attr = robot_it->FindAttribute("name");
+  if (!attr) {
     throw std::runtime_error("no robot name attribute set");
   }
+  system.name = robot_it->Attribute("name");
 
   const tinyxml2::XMLElement * ros2_control_it = robot_it->FirstChildElement(kROS2ControlTag);
   if ( not ros2_control_it ) {
     throw std::runtime_error("no " + std::string(kROS2ControlTag) + " tag");
   }
-  const std::string name = ros2_control_it->Attribute("name");
-  if (name.empty()) {
+  attr = ros2_control_it->FindAttribute("name");
+  if (!attr) {
     throw std::runtime_error("no attribute name in " + std::string(kROS2ControlTag) + " tag");
   }
-  system.type = robot_it->Attribute("type");
-  if (system.type.empty()) {
-    throw std::runtime_error("no robot type attribute set");
+  attr = ros2_control_it->FindAttribute("type");
+  if (!attr) {
+    throw std::runtime_error("no attribute type in " + std::string(kROS2ControlTag) + " tag");
   }
+  system.type = ros2_control_it->Attribute("type");
 
   // Parse everything under ros2_control tag
   system.hardware_class_type = "";
@@ -101,12 +105,15 @@ SystemInfo parse_system_from_urdf(const std::string & urdf)
 ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it)
 {
   ComponentInfo component;
+  const tinyxml2::XMLAttribute * attr;
+
   // Find name, type and class for component
   component.type = component_it->Name();
-  component.name = component_it->Attribute("name");
-  if (component.name.empty()) {
+  attr = component_it->FindAttribute("name");
+  if (!attr) {
     throw std::runtime_error("no name attribute set in " + component.type + " tag");
   }
+  component.name = component_it->Attribute("name");
 
   const auto * classType_it = component_it->FirstChildElement(kClassTypeTag);
   if (!classType_it) {
@@ -122,10 +129,11 @@ ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it
   if (!joint_it) {
     throw std::runtime_error("no joint element found in  " + component.name);
   }
-  component.joint = joint_it->Attribute("name");
-  if (component.joint.empty()) {
+  attr = joint_it->FindAttribute("name");
+  if (!attr) {
     throw std::runtime_error("no joint attribute name found in " + component.name);
   }
+  component.joint = joint_it->Attribute("name");
   const auto * interface_name_it = joint_it->FirstChildElement(kInterfaceNameTag);
   if (!interface_name_it) {
     throw std::runtime_error(
@@ -139,7 +147,7 @@ ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it
     }
     component.interface_names.push_back(interface_name);
 
-    interface_name_it = interface_name_it->NextSiblingElement();
+    interface_name_it = interface_name_it->NextSiblingElement(kInterfaceNameTag);
   }
 
   // Parse paramter tags
@@ -168,19 +176,22 @@ std::unordered_map<std::string, std::string> parse_parameters_from_xml(
   const tinyxml2::XMLElement * params_it)
 {
   std::unordered_map<std::string, std::string> parameters;
+  const tinyxml2::XMLAttribute * attr;
+
   while (params_it) {
     // Fill the map with parameters
-    const std::string parameter_name = params_it->Attribute("name");
-    if (parameter_name.empty()) {
+    attr = params_it->FindAttribute("name");
+    if (!attr) {
       throw std::runtime_error("no parameter name attribute set in param tag");
     }
+    const std::string parameter_name = params_it->Attribute("name");
     const std::string parameter_value = params_it->GetText();
-    if (parameter_name.empty()) {
+    if (parameter_value.empty()) {
       throw std::runtime_error("no parameter value set for " + parameter_name);
     }
     parameters[parameter_name] = parameter_value;
 
-    params_it = params_it->NextSiblingElement();
+    params_it = params_it->NextSiblingElement(kParamTag);
   }
   return parameters;
 }
