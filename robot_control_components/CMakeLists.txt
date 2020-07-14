@@ -17,10 +17,10 @@ find_package(hardware_interface REQUIRED)
 find_package(pluginlib REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED
-  # actuators
-  src/effort_actuator.cpp
-  src/position_actuator.cpp
-  src/velocity_actuator.cpp
+  # joints
+  src/effort_joint.cpp
+  src/position_joint.cpp
+  src/velocity_joint.cpp
   # sensors
   src/position_sensor.cpp
   src/velocity_sensor.cpp

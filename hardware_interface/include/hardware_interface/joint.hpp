@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef HARDWARE_INTERFACE__ACTUATOR_HPP_
-#define HARDWARE_INTERFACE__ACTUATOR_HPP_
+#ifndef HARDWARE_INTERFACE__JOINT_HPP_
+#define HARDWARE_INTERFACE__JOINT_HPP_
 
 #include <algorithm>
 #include <memory>
@@ -21,23 +21,23 @@
 #include <utility>
 
 #include "hardware_interface/component_info.hpp"
-#include "hardware_interface/component_interfaces/actuator_interface.hpp"
+#include "hardware_interface/component_interfaces/joint_interface.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/visibility_control.h"
 
 namespace hardware_interface
 {
 
-class Actuator final
+class Joint final
 {
 public:
-  Actuator() = default;
+  Joint() = default;
 
-  explicit Actuator(std::unique_ptr<ActuatorInterface> & impl)
+  explicit Joint(std::unique_ptr<JointInterface> & impl)
   : impl_(std::move(impl))
   {}
 
-  ~Actuator() = default;
+  ~Joint() = default;
 
   HARDWARE_INTERFACE_PUBLIC
   return_type configure(const ComponentInfo & actuator_info)
@@ -82,8 +82,8 @@ public:
   }
 
 private:
-  std::unique_ptr<ActuatorInterface> impl_;
+  std::unique_ptr<JointInterface> impl_;
 };
 
 }  // namespace hardware_interface
-#endif  // HARDWARE_INTERFACE__ACTUATOR_HPP_
+#endif  // HARDWARE_INTERFACE__JOINT_HPP_

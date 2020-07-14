@@ -14,14 +14,14 @@
 
 #include <string>
 
-#include "hardware_interface/component_interfaces/actuator_interface.hpp"
+#include "hardware_interface/component_interfaces/joint_interface.hpp"
 
 namespace robot_control_components
 {
 
 namespace hw = hardware_interface;
 
-class EffortActuator : public hardware_interface::ActuatorInterface
+class EffortJoint : public hardware_interface::JointInterface
 {
 public:
   hw::return_type configure(const hw::ComponentInfo & /* actuator_info */)
@@ -64,4 +64,4 @@ public:
 
 #include "pluginlib/class_list_macros.hpp"
 PLUGINLIB_EXPORT_CLASS(
-  robot_control_components::EffortActuator, hardware_interface::ActuatorInterface)
+  robot_control_components::EffortJoint, hardware_interface::JointInterface)

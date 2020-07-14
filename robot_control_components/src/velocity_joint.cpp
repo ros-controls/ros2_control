@@ -13,15 +13,17 @@
 // limitations under the License.
 
 #include <string>
+#include <vector>
 
-#include "hardware_interface/component_interfaces/actuator_interface.hpp"
+#include "hardware_interface/types/hardware_interface_type_values.hpp"
+#include "hardware_interface/component_interfaces/joint_interface.hpp"
 
 namespace robot_control_components
 {
 
 namespace hw = hardware_interface;
 
-class PositionActuator : public hardware_interface::ActuatorInterface
+class VelocityJoint : public hardware_interface::JointInterface
 {
 public:
   hw::return_type configure(const hw::ComponentInfo & /* actuator_info */)
@@ -64,4 +66,4 @@ public:
 
 #include "pluginlib/class_list_macros.hpp"
 PLUGINLIB_EXPORT_CLASS(
-  robot_control_components::PositionActuator, hardware_interface::ActuatorInterface)
+  robot_control_components::VelocityJoint, hardware_interface::JointInterface)

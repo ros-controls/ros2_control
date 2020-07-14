@@ -18,7 +18,7 @@
 #include <string>
 #include <vector>
 
-#include "hardware_interface/actuator.hpp"
+#include "hardware_interface/joint.hpp"
 #include "hardware_interface/joint_command_handle.hpp"
 #include "hardware_interface/joint_state_handle.hpp"
 #include "hardware_interface/operation_mode_handle.hpp"

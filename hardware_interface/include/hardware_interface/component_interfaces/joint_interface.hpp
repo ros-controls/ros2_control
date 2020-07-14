@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef HARDWARE_INTERFACE__COMPONENT_INTERFACES__ACTUATOR_INTERFACE_HPP_
-#define HARDWARE_INTERFACE__COMPONENT_INTERFACES__ACTUATOR_INTERFACE_HPP_
+#ifndef HARDWARE_INTERFACE__COMPONENT_INTERFACES__JOINT_INTERFACE_HPP_
+#define HARDWARE_INTERFACE__COMPONENT_INTERFACES__JOINT_INTERFACE_HPP_
 
 #include <algorithm>
 #include <array>
@@ -27,15 +27,15 @@
 namespace hardware_interface
 {
 
-class ActuatorInterface
+class JointInterface
 {
 public:
   HARDWARE_INTERFACE_PUBLIC
-  ActuatorInterface() = default;
+  JointInterface() = default;
 
   HARDWARE_INTERFACE_PUBLIC
   virtual
-  ~ActuatorInterface() = default;
+  ~JointInterface() = default;
 
   HARDWARE_INTERFACE_PUBLIC
   virtual
@@ -67,4 +67,4 @@ public:
 };
 
 }  // namespace hardware_interface
-#endif  // HARDWARE_INTERFACE__COMPONENT_INTERFACES__ACTUATOR_INTERFACE_HPP_
+#endif  // HARDWARE_INTERFACE__COMPONENT_INTERFACES__JOINT_INTERFACE_HPP_

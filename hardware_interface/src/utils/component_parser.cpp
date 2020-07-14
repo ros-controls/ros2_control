@@ -31,7 +31,7 @@ constexpr const auto kJointTag = "joint";
 constexpr const auto kInterfaceNameTag = "interfaceName";
 
 // For complete reference of syntax - not used in parser
-//  constexpr const auto kActuatorTag = "actuator";
+//  constexpr const auto kJointTag = "joint";
 //  constexpr const auto kSensorTag = "sensor";
 }  // namespace
 
@@ -69,6 +69,9 @@ SystemInfo parse_system_from_urdf(const std::string & urdf)
   }
 
   const tinyxml2::XMLElement * ros2_control_it = robot_it->FirstChildElement(kROS2ControlTag);
+  if ( not ros2_control_it ) {
+    throw std::runtime_error("no " + std::string(kROS2ControlTag) + " tag");
+  }
   const std::string name = ros2_control_it->Attribute("name");
   if (name.empty()) {
     throw std::runtime_error("no attribute name in " + std::string(kROS2ControlTag) + " tag");
