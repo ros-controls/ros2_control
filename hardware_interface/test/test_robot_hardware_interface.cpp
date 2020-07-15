@@ -193,7 +193,6 @@ TEST_F(TestRobotHardwareInterface, can_get_handles_by_name)
   EXPECT_EQ(
     hw::return_type::ERROR,
     robot_.get_operation_mode_handle(NEW_JOINT_NAME, &op_mode_handle));
-
   SetUpNewHandles();
   state_handle = nullptr;
   EXPECT_EQ(hw::return_type::OK, robot_.get_joint_state_handle(NEW_JOINT_NAME, &state_handle));
