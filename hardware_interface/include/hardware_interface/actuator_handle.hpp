@@ -17,7 +17,6 @@
 
 #include <string>
 
-#include "hardware_interface/actuator_handle.hpp"
 #include "hardware_interface/macros.hpp"
 #include "hardware_interface/visibility_control.h"
 
