@@ -26,7 +26,7 @@
 
 #define THROW_ON_NULLPTR(pointer) \
   static_assert( \
-    rcpputils::is_pointer<std::remove_reference<decltype(pointer)>::type>::value, \
+    rcpputils::is_pointer<typename std::remove_reference<decltype(pointer)>::type>::value, \
     #pointer " has to be a pointer"); \
   if (!pointer) { \
     throw std::runtime_error( \
@@ -35,7 +35,7 @@
 
 #define THROW_ON_NOT_NULLPTR(pointer) \
   static_assert( \
-    rcpputils::is_pointer<std::remove_reference<decltype(pointer)>::type>::value, \
+    rcpputils::is_pointer<typename std::remove_reference<decltype(pointer)>::type>::value, \
     #pointer " has to be a pointer"); \
   if (pointer) { \
     throw std::runtime_error( \
