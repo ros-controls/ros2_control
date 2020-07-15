@@ -1,0 +1,27 @@
+<library path="robot_control_components">
+  <class name="robot_control_components/EffortJoints" type="robot_control_components::EffortJoints" base_class_type="hardware_interface::JointInterface">
+    <description>
+      The effot joint provides virtual representation of effot-only joint.
+    </description>
+  </class>
+  <class name="robot_control_components/PositionJoints" type="robot_control_components::PositionJoints" base_class_type="hardware_interface::JointInterface">
+    <description>
+      The position joint provides virtual representation of position-only joint.
+    </description>
+  </class>
+  <class name="robot_control_components/VelocityJoints" type="robot_control_components::VelocityJoints" base_class_type="hardware_interface::JointInterface">
+    <description>
+      The velocity joint provides virtual representation of velocity-only joint.
+    </description>
+  </class>
+  <class name="robot_control_components/PositionSensor" type="robot_control_components::PositionSensor" base_class_type="hardware_interface::SensorInterface">
+    <description>
+      The position sensor provides virtual representation of position-only sensor.
+    </description>
+  </class>
+  <class name="robot_control_components/VelocitySensor" type="robot_control_components::VelocitySensor" base_class_type="hardware_interface::SensorInterface">
+    <description>
+      The velocity sensor provides virtual representation of velocity-only sensor.
+    </description>
+  </class>
+</library>
