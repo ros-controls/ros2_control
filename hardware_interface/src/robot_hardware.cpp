@@ -45,12 +45,16 @@ return_type
 register_handle(std::vector<T *> & registered_handles, T * handle, const std::string & logger_name)
 {
   if (handle->get_name().empty()) {
-    RCLCPP_ERROR(rclcpp::get_logger(logger_name), "cannot register handle! No name is specified");
+    RCLCPP_ERROR_STREAM(
+      rclcpp::get_logger(
+        logger_name), "cannot register handle! No name is specified");
     return return_type::ERROR;
   }
 
   if (!handle->valid_pointers()) {
-    RCLCPP_ERROR(rclcpp::get_logger(logger_name), "cannot register handle! Points to nullptr!");
+    RCLCPP_ERROR_STREAM(
+      rclcpp::get_logger(
+        logger_name), "cannot register handle! Points to nullptr!");
     return return_type::ERROR;
   }
 
@@ -62,7 +66,7 @@ register_handle(std::vector<T *> & registered_handles, T * handle, const std::st
 
   // handle exists already
   if (handle_pos != registered_handles.end()) {
-    RCLCPP_ERROR(
+    RCLCPP_ERROR_STREAM(
       rclcpp::get_logger(logger_name),
       "cannot register handle! Handle exists already");
     return return_type::ERROR;
@@ -115,7 +119,7 @@ get_handle(
   T ** handle)
 {
   if (name.empty()) {
-    RCLCPP_ERROR(
+    RCLCPP_ERROR_STREAM(
       rclcpp::get_logger(logger_name),
       "cannot get handle! No name given");
     return return_type::ERROR;
@@ -128,9 +132,9 @@ get_handle(
     });
 
   if (handle_pos == registered_handles.end()) {
-    RCLCPP_ERROR(
-      rclcpp::get_logger(logger_name),
-      "cannot get handle. No joint %s found.\n", name.c_str());
+    RCLCPP_ERROR_STREAM(
+      rclcpp::get_logger(
+        logger_name), "cannot get handle. No joint " << name << " found.");
     return return_type::ERROR;
   }
 
@@ -226,7 +230,7 @@ hardware_interface_ret_t register_handle(
   const std::string & logger_name)
 {
   if (handle_name.empty() || interface_name.empty()) {
-    RCLCPP_ERROR(rclcpp::get_logger(logger_name), "handle name or interface is empty!");
+    RCLCPP_ERROR_STREAM(rclcpp::get_logger(logger_name), "handle name or interface is empty!");
     return return_type::ERROR;
   }
 
@@ -241,7 +245,7 @@ hardware_interface_ret_t register_handle(
     return return_type::OK;
   } else {
     const auto index = std::distance(names_list.cbegin(), it);
-    auto & ivs = registered.interface_values[index];
+    auto & ivs = registered.interface_values[static_cast<size_t>(index)];
     const auto interface_names = ivs.interface_names;
     const auto it = std::find(interface_names.cbegin(), interface_names.cend(), interface_name);
     if (it == interface_names.cend()) {
@@ -288,7 +292,7 @@ hardware_interface_ret_t get_handle(
   const auto & interface_name = handle.get_interface_name();
 
   if (handle_name.empty() || interface_name.empty()) {
-    RCLCPP_ERROR(
+    RCLCPP_ERROR_STREAM(
       rclcpp::get_logger(logger_name), "name or interface is ill-defined!");
     return return_type::ERROR;
   }
@@ -296,18 +300,19 @@ hardware_interface_ret_t get_handle(
   const auto & names_list = registered.joint_names;
   const auto it = std::find(names_list.cbegin(), names_list.cend(), handle_name);
   if (it == names_list.cend()) {
-    RCLCPP_ERROR(
-      rclcpp::get_logger(logger_name), "handle with name %s not found!", handle_name);
+    RCLCPP_ERROR_STREAM(
+      rclcpp::get_logger(
+        logger_name), "handle with name " << handle_name << " not found!");
     return return_type::ERROR;
   }
 
   const auto index = std::distance(names_list.cbegin(), it);
-  auto & ivs = registered.interface_values[index];
+  auto & ivs = registered.interface_values[static_cast<size_t>(index)];
   const auto interface_names = ivs.interface_names;
   const auto if_it = std::find(interface_names.cbegin(), interface_names.cend(), interface_name);
   if (if_it != interface_names.cend()) {
     const auto value_index = std::distance(interface_names.cbegin(), if_it);
-    handle = handle.with_value_ptr(&(ivs.values[value_index]));
+    handle = handle.with_value_ptr(&(ivs.values[static_cast<size_t>(value_index)]));
     return return_type::OK;
   } else {
     RCLCPP_ERROR_STREAM(
