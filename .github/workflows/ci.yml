@@ -9,7 +9,32 @@ on:
     - cron: '17 8 * * *'
 
 jobs:
-  build_and_test:
+  ci_main_release:
+    name: Industrial CI against release repository
+    strategy:
+      matrix:
+        env:
+          - {ROS_DISTRO: foxy, ROS_REPO: main}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: 'ros-industrial/industrial_ci@master'
+        env: ${{matrix.env}}
+
+  ci_testing_release:
+    name: Industrial CI against testing repository
+    strategy:
+      matrix:
+        env:
+          - {ROS_DISTRO: foxy, ROS_REPO: testing}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: 'ros-industrial/industrial_ci@master'
+        env: ${{matrix.env}}
+
+  ci_source:
+    name: ros-tooling CI from source
     runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
