@@ -40,9 +40,9 @@ public:
   ~Joint() = default;
 
   HARDWARE_INTERFACE_PUBLIC
-  return_type configure(const ComponentInfo & actuator_info)
+  return_type configure(const ComponentInfo & joint_info)
   {
-    return impl_->configure(actuator_info);
+    return impl_->configure(joint_info);
   }
 
   HARDWARE_INTERFACE_PUBLIC

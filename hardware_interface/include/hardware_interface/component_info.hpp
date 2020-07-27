@@ -80,7 +80,7 @@ struct SystemInfo
    */
   std::string name;
   /**
-   * \brief type of the system: robot, actuator or sensor. Note: URDF always needs a "robot" tag, nevertheless in terms of ros2_control, it can hold a definition for an actuator or sensor.
+   * \brief type of the system: robot, joints or sensor. Note: URDF always needs a "robot" tag, nevertheless in terms of ros2_control, it can hold a definition for an joint or sensor.
    */
   std::string type;
   /**
