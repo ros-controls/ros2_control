@@ -39,7 +39,7 @@ public:
 
   HARDWARE_INTERFACE_PUBLIC
   virtual
-  return_type configure(const ComponentInfo & actuator_info) = 0;
+  return_type configure(const ComponentInfo & joint_info) = 0;
 
   HARDWARE_INTERFACE_PUBLIC
   virtual
