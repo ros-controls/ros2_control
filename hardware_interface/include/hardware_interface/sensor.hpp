@@ -22,6 +22,7 @@
 
 #include "hardware_interface/component_info.hpp"
 #include "hardware_interface/component_interfaces/sensor_interface.hpp"
+#include "hardware_interface/types/hardware_interface_state_values.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/visibility_control.h"
 
@@ -33,16 +34,28 @@ class Sensor final
 public:
   Sensor() = default;
 
-  explicit Sensor(std::unique_ptr<SensorInterface> impl)
+  explicit Sensor(std::unique_ptr<SensorInterface> & impl)
   : impl_(std::move(impl))
   {}
 
-  virtual ~Sensor() = default;
+  ~Sensor() = default;
 
   HARDWARE_INTERFACE_PUBLIC
   return_type configure(const ComponentInfo & sensor_info)
   {
     return impl_->configure(sensor_info);
+  }
+
+  HARDWARE_INTERFACE_PUBLIC
+  return_type initalize(bool auto_start)
+  {
+    return impl_->initalize(auto_start);
+  }
+
+  HARDWARE_INTERFACE_PUBLIC
+  return_type recover(bool auto_start)
+  {
+    return impl_->recover(auto_start);
   }
 
   HARDWARE_INTERFACE_PUBLIC
@@ -55,6 +68,18 @@ public:
   return_type stop()
   {
     return impl_->stop();
+  }
+
+  HARDWARE_INTERFACE_PUBLIC
+  return_type halt()
+  {
+    return impl_->halt();
+  }
+
+  HARDWARE_INTERFACE_PUBLIC
+  component_state get_state()
+  {
+    return impl_->get_state();
   }
 
   HARDWARE_INTERFACE_PUBLIC
