@@ -24,13 +24,6 @@ namespace hardware_interface
 {
 
 /**
-  * \brief constants for types of components.
-  */
-constexpr const auto robotType = "robot";
-constexpr const auto actuatorType = "actuator";
-constexpr const auto sensorType = "sensor";
-
-/**
  * \brief This structure stores information about components defined in a robot's URDF.
  */
 struct ComponentInfo
