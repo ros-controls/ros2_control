@@ -24,13 +24,6 @@ namespace hardware_interface
 {
 
 /**
-  * \brief constants for types of components.
-  */
-constexpr const auto robotType = "robot";
-constexpr const auto actuatorType = "actuator";
-constexpr const auto sensorType = "sensor";
-
-/**
  * \brief This structure stores information about components defined in a robot's URDF.
  */
 struct ComponentInfo
@@ -40,7 +33,7 @@ struct ComponentInfo
    */
   std::string name;
   /**
-   * \brief type of the component: sensor or actuator.
+   * \brief type of the component: joint or sensor.
    */
   std::string type;
   /**
@@ -59,9 +52,9 @@ struct ComponentInfo
    * \brief (optional) key-value pairs of components parameters.
    */
   std::unordered_map<std::string, std::string> parameters;
-
   /**
-   * \brief (optional) hardware class of the component that will be dynamically loaded. If not defined, the system's hardware class has to be defined.
+   * \brief (optional) hardware class of the component that will be dynamically loaded.
+   * If not defined, the resources's hardware class has to be defined.
    */
   std::string hardware_class_type;
   /**
@@ -71,31 +64,33 @@ struct ComponentInfo
 };
 
 /**
- * \brief This structure stores informations about system defined in robot's URDF, i.e. "ros2_control"-tag.
+ * \brief This structure stores informations about ros2-control ressource defined in robot's URDF, i.e. "ros2_control"-tag.
+ * A ressource is composed from one or multiple joints, actuators or systems.
  */
-struct SystemInfo
+struct ControlRessourceInfo
 {
   /**
-   * \brief name of the system.
+   * \brief name of the ressource.
    */
   std::string name;
   /**
-   * \brief type of the system: robot, actuator or sensor. Note: URDF always needs a "robot" tag, nevertheless in terms of ros2_control, it can hold a definition for an actuator or sensor.
+   * \brief type of the ressource: system, modular or sensor.
+   * Note: URDF always needs a "robot" tag, nevertheless in terms of ros2_control, it can hold a definition for only a joint (e.g. motor) or sensor.
    */
   std::string type;
   /**
-   * \brief (optional) hardware class of the system, which will be dynamically loaded. If not defined, a hardware class for each subcomponent has to be defined.
+   * \brief (optional) hardware class of the system, which will be dynamically loaded.
+   * If not defined, a hardware class for each subcomponent has to be defined.
    */
   std::string hardware_class_type;
   /**
    * \brief (optional) key-value pairs for systems hardware.
    */
   std::unordered_map<std::string, std::string> hardware_parameters;
-
   /**
    * \brief list of subcomponents in the system, i.e., list of sensors and actuators.
    */
-  std::vector<ComponentInfo> subcomponents;
+  std::vector<ComponentInfo> components;
 };
 
 }  // namespace hardware_interface

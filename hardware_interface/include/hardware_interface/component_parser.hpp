@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef HARDWARE_INTERFACE__UTILS__COMPONENT_PARSER_HPP_
-#define HARDWARE_INTERFACE__UTILS__COMPONENT_PARSER_HPP_
+#ifndef HARDWARE_INTERFACE__COMPONENT_PARSER_HPP_
+#define HARDWARE_INTERFACE__COMPONENT_PARSER_HPP_
 
 #include <tinyxml2.h>
 #include <string>
@@ -24,18 +24,54 @@
 
 namespace hardware_interface
 {
-namespace utils
-{
 
 /**
   * \brief Search XML snippet from URDF for informations about a control component.
   *
   * \param urdf string with robot's URDF
-  * \return robot_control_components::ComponentInfo filled with informations about the robot
+  * \return vector filled with informations about robot's control ressources
   * \throws std::runtime_error if a robot attribute or tag is not found
   */
 HARDWARE_INTERFACE_PUBLIC
-SystemInfo parse_system_from_urdf(const std::string & urdf);
+std::vector<ControlRessourceInfo> parse_control_ressources_from_urdf(const std::string & urdf);
+
+/**
+ * \brief Parse a control ressource from an "ros2_control" tag.
+ *
+ * \param ros2_control_it pointer to ros2_control element with informtions about ressource.
+ * \return robot_control_components::ComponentInfo filled with informations about the robot
+ * \throws std::runtime_error if a attributes or tag are not found
+ */
+HARDWARE_INTERFACE_PUBLIC
+ControlRessourceInfo parse_ressource_from_xml(const tinyxml2::XMLElement * ros2_control_it);
+
+/**
+ * \brief Gets value of the attribute on an XMLelement.
+ * If attribute is not found throws an error.
+ *
+ * \param element_it XMLElement iterator to search for the attribute
+ * \param attribute_name atribute name to serach for and return value
+ * \param tag_name parent tag name where attribute is searched for (used for error output)
+ * \return attribute value
+ * \throws std::runtime_error if attribute is not found
+ */
+HARDWARE_INTERFACE_PUBLIC
+std::string get_attribute_value(const tinyxml2::XMLElement * element_it,
+  const char* attribute_name, const char* tag_name);
+
+/**
+ * \brief Gets value of the attribute on an XMLelement.
+ * If attribute is not found throws an error.
+ *
+ * \param element_it XMLElement iterator to search for the attribute
+ * \param attribute_name atribute name to serach for and return value
+ * \param tag_name parent tag name where attribute is searched for (used for error output)
+ * \return attribute value
+ * \throws std::runtime_error if attribute is not found
+ */
+HARDWARE_INTERFACE_PUBLIC
+std::string get_attribute_value(const tinyxml2::XMLElement * element_it,
+  const char* attribute_name, std::string tag_name);
 
 /**
   * \brief Search XML snippet from URDF for informations about a control component.
@@ -58,6 +94,5 @@ HARDWARE_INTERFACE_PUBLIC
 std::unordered_map<std::string, std::string> parse_parameters_from_xml(
   const tinyxml2::XMLElement * params_it);
 
-}  // namespace utils
 }  // namespace hardware_interface
-#endif  // HARDWARE_INTERFACE__UTILS__COMPONENT_PARSER_HPP_
+#endif  // HARDWARE_INTERFACE__COMPONENT_PARSER_HPP_
