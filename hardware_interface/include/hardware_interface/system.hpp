@@ -22,6 +22,8 @@
 
 #include "hardware_interface/component_info.hpp"
 #include "hardware_interface/component_interfaces/system_interface.hpp"
+#include "hardware_interface/types/hardware_interface_return_values.hpp"
+#include "hardware_interface/types/hardware_interface_state_values.hpp"
 #include "hardware_interface/visibility_control.h"
 
 namespace hardware_interface
@@ -37,7 +39,7 @@ public:
   virtual ~System() = default;
 
   HARDWARE_INTERFACE_PUBLIC
-  return_type configure(const SystemInfo & system_info)
+  return_type configure(const ComponentInfo & system_info)
   {
     return impl_->configure(system_info);
   }
@@ -61,9 +63,9 @@ public:
   }
 
   HARDWARE_INTERFACE_PUBLIC
-  bool is_started()
+  component_state get_state() const
   {
-    return impl_->is_started();
+    return impl_->get_state();
   }
 
   HARDWARE_INTERFACE_PUBLIC

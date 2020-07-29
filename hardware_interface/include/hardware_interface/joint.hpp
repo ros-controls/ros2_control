@@ -23,6 +23,7 @@
 #include "hardware_interface/component_info.hpp"
 #include "hardware_interface/component_interfaces/joint_interface.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
+#include "hardware_interface/types/hardware_interface_state_values.hpp"
 #include "hardware_interface/visibility_control.h"
 
 namespace hardware_interface
@@ -33,7 +34,7 @@ class Joint final
 public:
   Joint() = default;
 
-  explicit Joint(std::unique_ptr<JointInterface> & impl)
+  explicit Joint(std::unique_ptr<JointInterface> impl)
   : impl_(std::move(impl))
   {}
 
@@ -43,6 +44,12 @@ public:
   return_type configure(const ComponentInfo & joint_info)
   {
     return impl_->configure(joint_info);
+  }
+
+  HARDWARE_INTERFACE_PUBLIC
+  std::string get_interface_name() const
+  {
+    return impl_->get_interface_name();
   }
 
   HARDWARE_INTERFACE_PUBLIC
@@ -58,9 +65,9 @@ public:
   }
 
   HARDWARE_INTERFACE_PUBLIC
-  bool is_started() const
+  component_state get_state() const
   {
-    return impl_->is_started();
+    return impl_->get_state();
   }
 
   HARDWARE_INTERFACE_PUBLIC
@@ -73,12 +80,6 @@ public:
   return_type write(const double & data)
   {
     return impl_->write(data);
-  }
-
-  HARDWARE_INTERFACE_PUBLIC
-  std::string get_interface_name() const
-  {
-    return impl_->get_interface_name();
   }
 
 private:

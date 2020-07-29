@@ -22,6 +22,7 @@
 
 #include "hardware_interface/component_info.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
+#include "hardware_interface/types/hardware_interface_state_values.hpp"
 #include "hardware_interface/visibility_control.h"
 
 namespace hardware_interface
@@ -55,7 +56,7 @@ public:
 
   HARDWARE_INTERFACE_PUBLIC
   virtual
-  bool is_started() const = 0;
+  component_state get_state() const = 0;
 
   HARDWARE_INTERFACE_PUBLIC
   virtual
