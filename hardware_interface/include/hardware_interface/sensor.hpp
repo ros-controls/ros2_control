@@ -22,8 +22,8 @@
 
 #include "hardware_interface/component_info.hpp"
 #include "hardware_interface/component_interfaces/sensor_interface.hpp"
-#include "hardware_interface/types/hardware_interface_state_values.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
+#include "hardware_interface/types/hardware_interface_state_values.hpp"
 #include "hardware_interface/visibility_control.h"
 
 namespace hardware_interface
@@ -34,7 +34,7 @@ class Sensor final
 public:
   Sensor() = default;
 
-  explicit Sensor(std::unique_ptr<SensorInterface> & impl)
+  explicit Sensor(std::unique_ptr<SensorInterface> impl)
   : impl_(std::move(impl))
   {}
 
@@ -47,16 +47,11 @@ public:
   }
 
   HARDWARE_INTERFACE_PUBLIC
-  return_type initalize(bool auto_start)
+  std::string get_interface_name() const
   {
-    return impl_->initalize(auto_start);
+    return impl_->get_interface_name();
   }
 
-  HARDWARE_INTERFACE_PUBLIC
-  return_type recover(bool auto_start)
-  {
-    return impl_->recover(auto_start);
-  }
 
   HARDWARE_INTERFACE_PUBLIC
   return_type start()
@@ -71,13 +66,7 @@ public:
   }
 
   HARDWARE_INTERFACE_PUBLIC
-  return_type halt()
-  {
-    return impl_->halt();
-  }
-
-  HARDWARE_INTERFACE_PUBLIC
-  component_state get_state()
+  component_state get_state() const
   {
     return impl_->get_state();
   }
@@ -86,12 +75,6 @@ public:
   return_type read(double & data)
   {
     return impl_->read(data);
-  }
-
-  HARDWARE_INTERFACE_PUBLIC
-  std::string get_interface_name()
-  {
-    return impl_->get_interface_name();
   }
 
 private:

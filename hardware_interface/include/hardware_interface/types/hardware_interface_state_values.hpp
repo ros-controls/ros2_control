@@ -23,10 +23,8 @@ enum class component_state : std::uint8_t
 {
   UNKNOWN = 0,
   CONFIGURED = 1,
-  INITIALIZED = 2,
   STARTED = 3,
   STOPPED = 4,
-  HALTED = 5,
 };
 
 }  // namespace hardware_interface

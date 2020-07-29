@@ -43,7 +43,7 @@ struct ComponentInfo
   /**
    * \brief joint where component is placed.
    */
-  std::string joint;
+  std::vector<std::string> joints;
   /**
    * \brief name of the interface, e.g. "position", "velocity", etc. for meaning of data this component holds.
    */
@@ -54,41 +54,13 @@ struct ComponentInfo
   std::unordered_map<std::string, std::string> parameters;
 
   /**
-   * \brief (optional) hardware class of the component that will be dynamically loaded. If not defined, the system's hardware class has to be defined.
+   * \brief hardware class of the component that will be dynamically loaded.
    */
   std::string hardware_class_type;
   /**
    * \brief (optional) key-value pairs for components hardware.
    */
   std::unordered_map<std::string, std::string> hardware_parameters;
-};
-
-/**
- * \brief This structure stores informations about system defined in robot's URDF, i.e. "ros2_control"-tag.
- */
-struct SystemInfo
-{
-  /**
-   * \brief name of the system.
-   */
-  std::string name;
-  /**
-   * \brief type of the system: robot, joints or sensor. Note: URDF always needs a "robot" tag, nevertheless in terms of ros2_control, it can hold a definition for an joint or sensor.
-   */
-  std::string type;
-  /**
-   * \brief (optional) hardware class of the system, which will be dynamically loaded. If not defined, a hardware class for each subcomponent has to be defined.
-   */
-  std::string hardware_class_type;
-  /**
-   * \brief (optional) key-value pairs for systems hardware.
-   */
-  std::unordered_map<std::string, std::string> hardware_parameters;
-
-  /**
-   * \brief list of subcomponents in the system, i.e., list of sensors and actuators.
-   */
-  std::vector<ComponentInfo> subcomponents;
 };
 
 }  // namespace hardware_interface

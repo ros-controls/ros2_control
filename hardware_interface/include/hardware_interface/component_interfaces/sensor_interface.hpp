@@ -41,11 +41,7 @@ public:
 
   HARDWARE_INTERFACE_PUBLIC
   virtual
-  return_type initalize(bool auto_start) = 0;
-
-  HARDWARE_INTERFACE_PUBLIC
-  virtual
-  return_type recover(bool auto_start) = 0;
+  std::string get_interface_name() const = 0;
 
   HARDWARE_INTERFACE_PUBLIC
   virtual
@@ -57,19 +53,11 @@ public:
 
   HARDWARE_INTERFACE_PUBLIC
   virtual
-  return_type halt() = 0;
-
-  HARDWARE_INTERFACE_PUBLIC
-  virtual
   component_state get_state() const = 0;
 
   HARDWARE_INTERFACE_PUBLIC
   virtual
   return_type read(double & data) = 0;
-
-  HARDWARE_INTERFACE_PUBLIC
-  virtual
-  std::string get_interface_name() const = 0;
 };
 
 }  // namespace hardware_interface
