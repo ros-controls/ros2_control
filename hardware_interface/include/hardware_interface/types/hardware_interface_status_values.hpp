@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef HARDWARE_INTERFACE__TYPES__HARDWARE_INTERFACE_STATE_VALUES_HPP_
-#define HARDWARE_INTERFACE__TYPES__HARDWARE_INTERFACE_STATE_VALUES_HPP_
+#ifndef HARDWARE_INTERFACE__TYPES__HARDWARE_INTERFACE_STATUS_VALUES_HPP_
+#define HARDWARE_INTERFACE__TYPES__HARDWARE_INTERFACE_STATUS_VALUES_HPP_
 
 #include <cstdint>
 
 namespace hardware_interface
 {
-enum class component_state : std::uint8_t
+enum class hardware_interface_status : std::uint8_t
 {
   UNKNOWN = 0,
   CONFIGURED = 1,
@@ -29,4 +29,4 @@ enum class component_state : std::uint8_t
 
 }  // namespace hardware_interface
 
-#endif  // HARDWARE_INTERFACE__TYPES__HARDWARE_INTERFACE_STATE_VALUES_HPP_
+#endif  // HARDWARE_INTERFACE__TYPES__HARDWARE_INTERFACE_STATUS_VALUES_HPP_

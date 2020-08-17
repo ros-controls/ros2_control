@@ -15,75 +15,65 @@
 #ifndef HARDWARE_INTERFACE__JOINT_HPP_
 #define HARDWARE_INTERFACE__JOINT_HPP_
 
-#include <algorithm>
-#include <memory>
 #include <string>
-#include <utility>
+#include <vector>
 
-#include "hardware_interface/component_info.hpp"
-#include "hardware_interface/component_interfaces/joint_interface.hpp"
+#include "hardware_interface/hardware_and_component_info.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
-#include "hardware_interface/types/hardware_interface_state_values.hpp"
 #include "hardware_interface/visibility_control.h"
 
 namespace hardware_interface
 {
 
-class Joint final
+class Joint
 {
 public:
+  HARDWARE_INTERFACE_PUBLIC
   Joint() = default;
 
-  explicit Joint(std::unique_ptr<JointInterface> impl)
-  : impl_(std::move(impl))
-  {}
-
+  HARDWARE_INTERFACE_PUBLIC
+  virtual
   ~Joint() = default;
 
   HARDWARE_INTERFACE_PUBLIC
-  return_type configure(const ComponentInfo & joint_info)
-  {
-    return impl_->configure(joint_info);
-  }
+  virtual
+  return_type configure(const ComponentInfo & joint_info) = 0;
 
   HARDWARE_INTERFACE_PUBLIC
-  std::string get_interface_name() const
-  {
-    return impl_->get_interface_name();
-  }
+  virtual
+  std::vector<std::string> get_command_interfaces() const = 0;
 
   HARDWARE_INTERFACE_PUBLIC
-  return_type start()
-  {
-    return impl_->start();
-  }
+  virtual
+  std::vector<std::string> get_state_interfaces() const = 0;
 
-  HARDWARE_INTERFACE_PUBLIC
-  return_type stop()
-  {
-    return impl_->stop();
-  }
+  HARDWARE_INTERFACE_EXPORT
+  virtual
+  return_type get_command(
+    std::vector<double> & command,
+    std::vector<std::string> & interfaces) const = 0;
 
-  HARDWARE_INTERFACE_PUBLIC
-  component_state get_state() const
-  {
-    return impl_->get_state();
-  }
+  HARDWARE_INTERFACE_EXPORT
+  virtual
+  return_type set_command(
+    const std::vector<double> command,
+    std::vector<std::string> interfaces = std::vector<std::string>()) = 0;
 
-  HARDWARE_INTERFACE_PUBLIC
-  return_type read(double & data)
-  {
-    return impl_->read(data);
-  }
+  HARDWARE_INTERFACE_EXPORT
+  virtual
+  return_type get_state(
+    std::vector<double> & state,
+    std::vector<std::string> & interfaces) const = 0;
 
-  HARDWARE_INTERFACE_PUBLIC
-  return_type write(const double & data)
-  {
-    return impl_->write(data);
-  }
+  HARDWARE_INTERFACE_EXPORT
+  virtual
+  return_type set_state(
+    const std::vector<double> & state,
+    std::vector<std::string> interfaces = std::vector<std::string>()) = 0;
 
-private:
-  std::unique_ptr<JointInterface> impl_;
+protected:
+  std::vector<std::string> command_interfaces;
+  std::vector<std::string> state_interfaces;
 };
 
 }  // namespace hardware_interface

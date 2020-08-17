@@ -12,42 +12,36 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef HARDWARE_INTERFACE__SYSTEM_HPP_
-#define HARDWARE_INTERFACE__SYSTEM_HPP_
+#ifndef HARDWARE_INTERFACE__SYSTEM_HARDWARE_HPP_
+#define HARDWARE_INTERFACE__SYSTEM_HARDWARE_HPP_
 
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include "hardware_interface/component_info.hpp"
-#include "hardware_interface/component_interfaces/system_interface.hpp"
+#include "hardware_interface/hardware_and_component_info.hpp"
+#include "hardware_interface/system_hardware_interface.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
-#include "hardware_interface/types/hardware_interface_state_values.hpp"
+#include "hardware_interface/types/hardware_interface_status_values.hpp"
 #include "hardware_interface/visibility_control.h"
 
 namespace hardware_interface
 {
 
-class System final
+class SystemHardware final
 {
 public:
-  explicit System(std::unique_ptr<SystemInterface> impl)
+  explicit SystemHardware(std::unique_ptr<SystemHardwareInterface> impl)
   : impl_(std::move(impl))
   {}
 
-  virtual ~System() = default;
+  virtual ~SystemHardware() = default;
 
   HARDWARE_INTERFACE_PUBLIC
-  return_type configure(const ComponentInfo & system_info)
+  return_type configure(const HardwareInfo & system_info)
   {
     return impl_->configure(system_info);
-  }
-
-  HARDWARE_INTERFACE_PUBLIC
-  std::vector<std::string> get_interface_names()
-  {
-    return impl_->get_interface_names();
   }
 
   HARDWARE_INTERFACE_PUBLIC
@@ -63,28 +57,32 @@ public:
   }
 
   HARDWARE_INTERFACE_PUBLIC
-  component_state get_state() const
+  hardware_interface_status get_status() const
   {
-    return impl_->get_state();
+    return impl_->get_status();
   }
 
   HARDWARE_INTERFACE_PUBLIC
-  return_type read(std::vector<double> & data)
+  return_type read_sensors(std::vector<std::shared_ptr<Sensor>> & sensors)
   {
-    return impl_->read(data);
+    return impl_->read_sensors(sensors);
   }
 
   HARDWARE_INTERFACE_PUBLIC
-  return_type write(const std::vector<double> & data)
+  return_type read_joints(std::vector<std::shared_ptr<Joint>> & joints)
   {
-    return impl_->write(data);
+    return impl_->read_joints(joints);
+  }
+
+  HARDWARE_INTERFACE_PUBLIC
+  return_type write(const std::vector<std::shared_ptr<Joint>> & joints)
+  {
+    return impl_->write(joints);
   }
 
 private:
-  std::unique_ptr<SystemInterface> impl_;
+  std::unique_ptr<SystemHardwareInterface> impl_;
 };
 
-typedef System Robot;
-
 }  // namespace hardware_interface
-#endif  // HARDWARE_INTERFACE__SYSTEM_HPP_
+#endif  // HARDWARE_INTERFACE__SYSTEM_HARDWARE_HPP_
