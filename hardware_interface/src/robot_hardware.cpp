@@ -269,7 +269,7 @@ hardware_interface_ret_t RobotHardware::get_actuator_handle(ActuatorHandle & act
   if (it == names_list.cend()) {
     RCLCPP_ERROR(
       rclcpp::get_logger(
-        kActuatorLoggerName), "actuator with name %s not found!", actuator_name);
+        kActuatorLoggerName), "actuator with name %s not found!", actuator_name.c_str());
     return return_type::ERROR;
   }
 
