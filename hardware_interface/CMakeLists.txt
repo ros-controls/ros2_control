@@ -14,6 +14,8 @@ find_package(ament_cmake REQUIRED)
 find_package(control_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rcpputils REQUIRED)
+find_package(tinyxml2_vendor REQUIRED)
+find_package(TinyXML2 REQUIRED)
 
 add_library(
   hardware_interface
@@ -26,17 +28,33 @@ add_library(
 target_include_directories(
   hardware_interface
   PUBLIC
-  include)
+  include
+)
 ament_target_dependencies(
   hardware_interface
   control_msgs
   rclcpp
   rcpputils
 )
-
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.
 target_compile_definitions(hardware_interface PRIVATE "HARDWARE_INTERFACE_BUILDING_DLL")
+
+add_library(
+  component_parser
+  src/component_parser.cpp
+)
+target_include_directories(
+  component_parser
+  PUBLIC
+  include
+)
+ament_target_dependencies(
+  component_parser
+  TinyXML2
+)
+
+target_compile_definitions(component_parser PRIVATE "HARDWARE_INTERFACE_BUILDING_DLL")
 
 install(
   DIRECTORY include/
@@ -44,8 +62,7 @@ install(
 )
 
 install(
-  TARGETS
-  hardware_interface
+  TARGETS hardware_interface component_parser
   RUNTIME DESTINATION bin
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib)
@@ -64,6 +81,10 @@ if(BUILD_TESTING)
   target_include_directories(test_robot_hardware_interfaces PRIVATE include)
   target_link_libraries(test_robot_hardware_interfaces hardware_interface)
 
+  ament_add_gmock(test_component_parser test/test_component_parser.cpp)
+  target_link_libraries(test_component_parser component_parser)
+  ament_target_dependencies(test_component_parser TinyXML2)
+
   ament_add_gmock(test_register_actuators test/test_register_actuators.cpp)
   target_include_directories(test_register_actuators PRIVATE include)
   target_link_libraries(test_register_actuators hardware_interface)
@@ -73,14 +94,20 @@ if(BUILD_TESTING)
   target_include_directories(test_actuator_handle PRIVATE include)
   target_link_libraries(test_actuator_handle hardware_interface)
   ament_target_dependencies(test_actuator_handle rcpputils)
-
 endif()
 
+ament_export_dependencies(
+  rclcpp
+  rcpputils
+)
 ament_export_include_directories(
   include
 )
 ament_export_libraries(
-  hardware_interface)
+  hardware_interface
+  component_parser
+)
 ament_export_dependencies(
-  control_msgs)
+  control_msgs
+)
 ament_package()
