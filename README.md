@@ -41,9 +41,10 @@ $ colcon build
 
 ## Controller Architecture
 
-There are currently two controller available:
+There are currently three controllers available:
 * JointStateController
 * JointTrajectoryController
+* DiffDriveController
 
 Both can be loaded through the controller manager from the [`ament_resource_index`](https://github.com/ament/ament_cmake/blob/master/ament_cmake_core/doc/resource_index.md).
 
@@ -118,7 +119,7 @@ This robot hardware can then be loaded through the controller manager:
 
 ``` c++
 void
-spin(std::shared_ptr<rclcpp::executors::multi_threaded_executor::MultiThreadedExecutor> exe)
+spin(std::shared_ptr<rclcpp::executors::MultiThreadedExecutor> exe)
 {
   exe->spin();
 }
@@ -140,7 +141,7 @@ int main()
   }
   
   auto executor =
-    std::make_shared<rclcpp::executors::multi_threaded_executor::MultiThreadedExecutor>();
+    std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
   
   // start the controller manager with the robot hardware
   controller_manager::ControllerManager cm(my_robot, executor);
@@ -149,26 +150,24 @@ int main()
   // "ros_controllers::JointStateController" is the class we want to load
   // "my_robot_joint_state_controller" is the name for the node to spawn
   cm.load_controller(
-    "ros_controllers",
-    "ros_controllers::JointStateController",
-    "my_robot_joint_state_controller");
+    "my_robot_joint_state_controller",
+    "joint_state_controller/JointStateController");
   // load the trajectory controller
-  cm.load_controller(
-    "ros_controllers",
-    "ros_controllers::JointTrajectoryController",
-    "my_robot_joint_trajectory_controller");
+  cm.load_controller( 
+    "my_robot_joint_trajectory_controller",
+    "joint_trajectory_controller/JointTrajectoryController");
 
   // there is no async spinner in ROS 2, so we have to put the spin() in its own thread
   auto future_handle = std::async(std::launch::async, spin, executor);
 
   // we can either configure each controller individually through its services
   // or we use the controller manager to configure every loaded controller
-  if (cm.configure() != controller_interface::CONTROLLER_INTERFACE_RET_SUCCESS) {
+  if (cm.configure() != controller_interface::return_type::SUCCESS) {
     RCLCPP_ERROR(logger, "at least one controller failed to configure")
     return -1;
   }
   // and activate all controller
-  if (cm.activate() != controller_interface::CONTROLLER_INTERFACE_RET_SUCCESS) {
+  if (cm.activate() != controller_interface::return_type::SUCCESS) {
     RCLCPP_ERROR(logger, "at least one controller failed to activate")
     return -1;
   }
