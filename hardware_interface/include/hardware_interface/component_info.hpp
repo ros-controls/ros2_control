@@ -13,8 +13,8 @@
 // limitations under the License.
 
 
-#ifndef HARDWARE_INTERFACE__HARDWARE_AND_COMPONENT_INFO_HPP_
-#define HARDWARE_INTERFACE__HARDWARE_AND_COMPONENT_INFO_HPP_
+#ifndef HARDWARE_INTERFACE__COMPONENT_INFO_HPP_
+#define HARDWARE_INTERFACE__COMPONENT_INFO_HPP_
 
 #include <string>
 #include <unordered_map>
@@ -57,43 +57,5 @@ struct ComponentInfo
   std::unordered_map<std::string, std::string> parameters;
 };
 
-/**
- * \brief This structure stores information about hardware defined in a robot's URDF.
- */
-struct HardwareInfo
-{
-  /**
-   * \brief name of the hardware.
-   */
-  std::string name;
-  /**
-   * \brief type of the hardware: actuator, sensor or system.
-   */
-  std::string type;
-  /**
-   * \brief class of the hardware that will be dynamically loaded.
-   */
-  std::string hardware_class_type;
-  /**
-   * \brief (optional) key-value pairs for hardware parameters.
-   */
-  std::unordered_map<std::string, std::string> hardware_parameters;
-  /**
-   * \brief map of joints provided by the hardware where the key is the joint name.
-   * Required for Actuator and System Hardware.
-   */
-  std::unordered_map<std::string, ComponentInfo> joints;
-  /**
-   * \brief map of joints provided by the hardware where the key is the joint name.
-   * Required for Sensor and optional for System Hardware.
-   */
-  std::unordered_map<std::string, ComponentInfo> sensors;
-  /**
-   * \brief map of transmissions to calcualte ration between joints and physical actuators.
-   * Optional for Actuator and System Hardware.
-   */
-  std::unordered_map<std::string, ComponentInfo> transmissions;
-};
-
 }  // namespace hardware_interface
-#endif  // HARDWARE_INTERFACE__HARDWARE_AND_COMPONENT_INFO_HPP_
+#endif  // HARDWARE_INTERFACE__COMPONENT_INFO_HPP_
