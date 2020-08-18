@@ -20,8 +20,9 @@
 #include <string>
 #include <utility>
 
-#include "hardware_interface/hardware_and_component_info.hpp"
 #include "hardware_interface/actuator_hardware_interface.hpp"
+#include "hardware_interface/component_info.hpp"
+#include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/joint.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/hardware_interface_status_values.hpp"
