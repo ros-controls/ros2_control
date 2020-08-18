@@ -77,7 +77,6 @@ if(BUILD_TESTING)
   ament_add_gmock(test_component_interfaces test/test_component_interfaces.cpp)
   target_include_directories(test_component_interfaces PRIVATE include)
   target_link_libraries(test_component_interfaces hardware_interface)
-
 endif()
 
 ament_export_dependencies(

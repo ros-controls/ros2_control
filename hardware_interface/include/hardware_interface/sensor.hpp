@@ -42,10 +42,10 @@ public:
   ~Sensor() = default;
 
   /**
-   * @brief Configure senosr based on the description in the robot's URDF file.
+   * \brief Configure senosr based on the description in the robot's URDF file.
    *
-   * @param sensor_info structure with data from URDF.
-   * @return return_type::OK if required data are provided and is successfully parsed,
+   * \param sensor_info structure with data from URDF.
+   * \return return_type::OK if required data are provided and is successfully parsed,
    * return_type::ERROR otherwise.
    */
   HARDWARE_INTERFACE_PUBLIC
@@ -53,22 +53,22 @@ public:
   return_type configure(const ComponentInfo & sensor_info) = 0;
 
   /**
-   * @brief Provide the list of state interfaces configured for the sensor.
+   * \brief Provide the list of state interfaces configured for the sensor.
    *
-   * @return string list with state interfaces.
+   * \return string list with state interfaces.
    */
   HARDWARE_INTERFACE_PUBLIC
   virtual
   std::vector<std::string> get_state_interfaces() const = 0;
 
   /**
-   * @brief Get state list from the sensor. This function is used by the controller to get the
+   * \brief Get state list from the sensor. This function is used by the controller to get the
    * actual state of the hardware. The parameters state, and interfaces have the same order and
    * number of elements. Using the interfaces list, the controller can choose which values to get.
    *
-   * @param state list of doubles with states of the hardware.
-   * @param interfaces list of interfaces on which states have to be provided.
-   * @return return_type::OK the interfaces exist for the sensor and the values are set into
+   * \param state list of doubles with states of the hardware.
+   * \param interfaces list of interfaces on which states have to be provided.
+   * \return return_type::OK the interfaces exist for the sensor and the values are set into
    * state list, otherwise return_type::ERROR.
    */
   HARDWARE_INTERFACE_EXPORT
@@ -78,13 +78,13 @@ public:
     std::vector<std::string> & interfaces) const = 0;
 
   /**
-   * @brief Set state list for the sensor. This function is used by the hardware to set its actual
+   * \brief Set state list for the sensor. This function is used by the hardware to set its actual
    * state. The parameters state, and interfaces have the same order and number of elements. Using
    * the interfaces list, the hardware can choose which values to set.
    *
-   * @param state list of doubles with states of the hardware.
-   * @param interfaces list of interfaces on which states have to be provided.
-   * @return return_type::OK the interfaces exist for the sensor and the values are set from the
+   * \param state list of doubles with states of the hardware.
+   * \param interfaces list of interfaces on which states have to be provided.
+   * \return return_type::OK the interfaces exist for the sensor and the values are set from the
    * state list, otherwise return_type::ERROR.
    */
   HARDWARE_INTERFACE_EXPORT
