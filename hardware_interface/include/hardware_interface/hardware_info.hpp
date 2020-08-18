@@ -48,18 +48,18 @@ struct HardwareInfo
    * \brief map of joints provided by the hardware where the key is the joint name.
    * Required for Actuator and System Hardware.
    */
-  std::vector<ComponentInfo> joints;
+  std::unordered_map<std::string, ComponentInfo> joints;
   /**
    * \brief map of joints provided by the hardware where the key is the joint name.
    * Required for Sensor and optional for System Hardware.
    */
-  std::vector<ComponentInfo> sensors;
+  std::unordered_map<std::string, ComponentInfo> sensors;
   /**
    * \brief map of transmissions to calcualte ration between joints and physical actuators.
    * Optional for Actuator and System Hardware.
    */
-  std::vector<ComponentInfo> transmissions;
+  std::unordered_map<std::string, ComponentInfo> transmissions;
 };
 
 }  // namespace hardware_interface
-#endif  // HARDWARE_INTERFACE__HARDWARE_INFO_HPP_
+#endif  // HARDWARE_INTERFACE__HARDWARE_AND_COMPONENT_INFO_HPP_
