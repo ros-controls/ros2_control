@@ -20,31 +20,32 @@
 #include <unordered_map>
 #include <vector>
 
-#include "hardware_interface/hardware_and_component_info.hpp"
+#include "hardware_interface/component_info.hpp"
+#include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/visibility_control.h"
 
 namespace hardware_interface
 {
 
 /**
-  * \brief Search XML snippet from URDF for informations about a control component.
+  * \brief Search XML snippet from URDF for information about a control component.
   *
   * \param urdf string with robot's URDF
-  * \return vector filled with informations about robot's control ressources
+  * \return vector filled with information about robot's control resources
   * \throws std::runtime_error if a robot attribute or tag is not found
   */
 HARDWARE_INTERFACE_PUBLIC
-std::vector<HardwareInfo> parse_control_ressources_from_urdf(const std::string & urdf);
+std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & urdf);
 
 /**
- * \brief Parse a control ressource from an "ros2_control" tag.
+ * \brief Parse a control resource from an "ros2_control" tag.
  *
- * \param ros2_control_it pointer to ros2_control element with informtions about ressource.
- * \return robot_control_components::ComponentInfo filled with informations about the robot
+ * \param ros2_control_it pointer to ros2_control element with informtions about resource.
+ * \return robot_control_components::ComponentInfo filled with information about the robot
  * \throws std::runtime_error if a attributes or tag are not found
  */
 HARDWARE_INTERFACE_PUBLIC
-HardwareInfo parse_ressource_from_xml(const tinyxml2::XMLElement * ros2_control_it);
+HardwareInfo parse_resource_from_xml(const tinyxml2::XMLElement * ros2_control_it);
 
 /**
  * \brief Gets value of the attribute on an XMLelement.
@@ -77,21 +78,21 @@ std::string get_attribute_value(
   const char * attribute_name, std::string tag_name);
 
 /**
-  * \brief Search XML snippet from URDF for informations about a control component.
+  * \brief Search XML snippet from URDF for information about a control component.
   *
   * \param component_it pointer to the iterator where component info should be found
-  * \return robot_control_components::ComponentInfo filled with informations about component
+  * \return robot_control_components::ComponentInfo filled with information about component
   * \throws std::runtime_error if a component attribute or tag is not found
   */
 HARDWARE_INTERFACE_PUBLIC
 ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it);
 
 /**
- * @brief Search XML snippet for definition of interfaceTypes.
+ * \brief Search XML snippet for definition of interfaceTypes.
  *
- * @param interfaces_it pointer to the interator over interfaces
- * @param interfaceTag interface type tag (command or state)
- * @return std::vector< std::__cxx11::string > list of interface types
+ * \param interfaces_it pointer to the interator over interfaces
+ * \param interfaceTag interface type tag (command or state)
+ * \return std::vector< std::__cxx11::string > list of interface types
  * \throws std::runtime_error if the interfaceType text not set in a tag
  */
 HARDWARE_INTERFACE_PUBLIC
