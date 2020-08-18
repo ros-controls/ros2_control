@@ -169,7 +169,7 @@ public:
   }
 
 private:
-  ComponentInfo info;
+  ComponentInfo info_;
   std::vector<double> ft_values;
 };
 
