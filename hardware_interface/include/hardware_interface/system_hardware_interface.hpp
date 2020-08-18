@@ -85,7 +85,7 @@ public:
   /**
    * @brief Read data from the hardware into sensors using "set_state" function in the Sensor class.
    * This is used only if the system hardware has attached sensors.
-   * The function call from the RessourceManger is therefore optional.
+   * The function call from the resource manager is therefore optional.
    *
    * @param sensors list of sensors where data from the hardware are stored.
    * @return return_type:OK if everything worked as expected, return_type::ERROR otherwise.
