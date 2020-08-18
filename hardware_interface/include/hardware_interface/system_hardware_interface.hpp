@@ -107,7 +107,7 @@ public:
 
   /**
    * @brief Write data from the joints to the hardware using "get_command" function of the Joint class.
-   * This function is always called by the RessourceManger.
+   * This function is always called by the resource manager.
    *
    * @param joints list of joints from which data are written to the hardware.
    * @return return_type:OK if everything worked as expected, return_type::ERROR otherwise.
