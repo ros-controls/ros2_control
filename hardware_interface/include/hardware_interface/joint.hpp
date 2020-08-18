@@ -18,7 +18,8 @@
 #include <string>
 #include <vector>
 
-#include "hardware_interface/hardware_and_component_info.hpp"
+#include "hardware_interface/component_info.hpp"
+#include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/visibility_control.h"
 

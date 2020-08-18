@@ -17,9 +17,11 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include "hardware_interface/hardware_and_component_info.hpp"
-#include "hardware_interface/actuator_hardware_interface.hpp"
+
 #include "hardware_interface/actuator_hardware.hpp"
+#include "hardware_interface/actuator_hardware_interface.hpp"
+#include "hardware_interface/component_info.hpp"
+#include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/joint.hpp"
 #include "hardware_interface/sensor_hardware_interface.hpp"
 #include "hardware_interface/sensor_hardware.hpp"

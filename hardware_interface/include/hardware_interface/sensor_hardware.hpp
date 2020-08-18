@@ -21,7 +21,8 @@
 #include <utility>
 #include <vector>
 
-#include "hardware_interface/hardware_and_component_info.hpp"
+#include "hardware_interface/component_info.hpp"
+#include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/sensor.hpp"
 #include "hardware_interface/sensor_hardware_interface.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
