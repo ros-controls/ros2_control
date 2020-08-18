@@ -117,8 +117,8 @@ std::string get_attribute_value(
   const tinyxml2::XMLAttribute * attr;
   attr = element_it->FindAttribute(attribute_name);
   if (!attr) {
-    throw std::runtime_error("no attribute " + std::string(attribute_name) +
-            " in " + tag_name + " tag");
+    throw std::runtime_error(
+            "no attribute " + std::string(attribute_name) + " in " + tag_name + " tag");
   }
   return element_it->Attribute(attribute_name);
 }
