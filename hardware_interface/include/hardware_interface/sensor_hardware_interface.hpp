@@ -82,7 +82,7 @@ public:
 
   /**
    * @brief Read data from the hardware into sensors using "set_state" function in the Sensor class.
-   * This function is always called by the RessourceManger.
+   * This function is always called by the resource manager.
    *
    * @param sensors list of sensors where data from the hardware are stored.
    * @return return_type:OK if everything worked as expected, return_type::ERROR otherwise.
