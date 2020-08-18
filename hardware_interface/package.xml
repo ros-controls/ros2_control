@@ -13,7 +13,6 @@
   <depend>rclcpp</depend>
   <depend>rcpputils</depend>
   <depend>tinyxml2_vendor</depend>
-  <depend>TinyXML2</depend>
 
   <test_depend>ament_cmake_gmock</test_depend>
   <test_depend>ament_lint_auto</test_depend>

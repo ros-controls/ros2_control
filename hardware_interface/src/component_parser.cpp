@@ -18,7 +18,8 @@
 #include <unordered_map>
 #include <vector>
 
-#include "hardware_interface/hardware_and_component_info.hpp"
+#include "hardware_interface/component_info.hpp"
+#include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/component_parser.hpp"
 
 namespace
@@ -38,7 +39,7 @@ constexpr const auto kStateInterfaceTypeTag = "stateInterfaceType";
 namespace hardware_interface
 {
 
-std::vector<HardwareInfo> parse_control_ressources_from_urdf(const std::string & urdf)
+std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & urdf)
 {
   // Check if everything OK with URDF string
   if (urdf.empty()) {
@@ -63,14 +64,14 @@ std::vector<HardwareInfo> parse_control_ressources_from_urdf(const std::string &
 
   std::vector<HardwareInfo> hardware_info;
   while (ros2_control_it) {
-    hardware_info.push_back(parse_ressource_from_xml(ros2_control_it));
+    hardware_info.push_back(parse_resource_from_xml(ros2_control_it));
     ros2_control_it = ros2_control_it->NextSiblingElement(kROS2ControlTag);
   }
 
   return hardware_info;
 }
 
-HardwareInfo parse_ressource_from_xml(const tinyxml2::XMLElement * ros2_control_it)
+HardwareInfo parse_resource_from_xml(const tinyxml2::XMLElement * ros2_control_it)
 {
   HardwareInfo hardware;
   hardware.name = get_attribute_value(ros2_control_it, "name", kROS2ControlTag);

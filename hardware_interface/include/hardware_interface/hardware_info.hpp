@@ -62,4 +62,4 @@ struct HardwareInfo
 };
 
 }  // namespace hardware_interface
-#endif  // HARDWARE_INTERFACE__HARDWARE_AND_COMPONENT_INFO_HPP_
+#endif  // HARDWARE_INTERFACE__HARDWARE_INFO_HPP_
