@@ -1,2 +1,6 @@
+coverage:
+  precision: 2
+  round: down
+  range: "35...100"
 fixes:
   - "ros_ws/src/ros2_control/::"
