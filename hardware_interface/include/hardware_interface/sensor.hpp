@@ -27,7 +27,7 @@ namespace hardware_interface
 {
 
 /**
- * \brief Virtual Class for "Sensor" component used as a basic build block for the devices which
+ * \brief Base Class for "Sensor" component used as a basic build block for the devices which
  * provide data. A sensor can have one or more interfaces (e.g., force, acceleration, etc.) to
  * provide states for. The list of state interfaces defines this.
  */
@@ -58,8 +58,10 @@ public:
    * \return string list with state interfaces.
    */
   HARDWARE_INTERFACE_PUBLIC
-  virtual
-  std::vector<std::string> get_state_interfaces() const = 0;
+  std::vector<std::string> get_state_interfaces()
+  {
+    return info_.state_interfaces;
+  }
 
   /**
    * \brief Get state list from the sensor. This function is used by the controller to get the
@@ -68,14 +70,54 @@ public:
    *
    * \param state list of doubles with states of the hardware.
    * \param interfaces list of interfaces on which states have to be provided.
-   * \return return_type::OK the interfaces exist for the sensor and the values are set into
-   * state list, otherwise return_type::ERROR.
+   * \return return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL if state and interfaces arguments do not
+   * have the same length; return_type::INTERFACE_NOT_FOUND if one of provided interfaces is not
+   * defined for the sensor; return_type::OK otherwise.
    */
   HARDWARE_INTERFACE_EXPORT
-  virtual
   return_type get_state(
     std::vector<double> & state,
-    std::vector<std::string> & interfaces) const = 0;
+    const std::vector<std::string> & interfaces) const
+  {
+    if (interfaces.size() == 0) {
+      return return_type::INTERFACE_NOT_PROVIDED;
+    }
+    return_type ret = return_type::OK;
+    bool found;
+
+    for (const auto & interface : interfaces) {
+      found = false;
+      for (uint i = 0; i < info_.state_interfaces.size(); i++) {
+        if (!interface.compare(info_.state_interfaces[i])) {
+          state.push_back(states_[i]);
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        ret = return_type::INTERFACE_NOT_FOUND;
+        state.clear();
+        break;
+      }
+    }
+    return ret;
+  }
+
+  /**
+   * \brief Get complete state list from the sensor. This function is used by the controller to get
+   * complete actual state of the hardware. The state values have the same order as interfaces which
+   * can be recived by get_state_interfaces() function.
+   *
+   * \param state list of doubles with states of the hardware.
+   */
+  HARDWARE_INTERFACE_EXPORT
+  void get_complete_state(std::vector<double> & state) const
+  {
+    state.clear();
+    for (const auto & internal_state : states_) {
+      state.push_back(internal_state);
+    }
+  }
 
   /**
    * \brief Set state list for the sensor. This function is used by the hardware to set its actual
@@ -84,14 +126,78 @@ public:
    *
    * \param state list of doubles with states of the hardware.
    * \param interfaces list of interfaces on which states have to be provided.
-   * \return return_type::OK the interfaces exist for the sensor and the values are set from the
-   * state list, otherwise return_type::ERROR.
+   * \return return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL if state and interfaces arguments do not
+   * have the same length; return_type::INTERFACE_NOT_FOUND if one of provided interfaces is not
+   * defined for the sensor; return_type::OK otherwise.
    */
   HARDWARE_INTERFACE_EXPORT
-  virtual
   return_type set_state(
     const std::vector<double> & state,
-    std::vector<std::string> interfaces = std::vector<std::string>()) = 0;
+    const std::vector<std::string> & interfaces)
+  {
+    if (state.size() != interfaces.size()) {
+      return return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL;
+    }
+    return_type ret = return_type::OK;
+    bool found;
+
+    for (uint i = 0; i < info_.state_interfaces.size(); i++) {
+      found = false;
+      for (uint j = 0; j < info_.state_interfaces.size(); j++) {
+        if (!interfaces[i].compare(info_.state_interfaces[j])) {
+          states_[j] = state[i];
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        ret = return_type::INTERFACE_NOT_FOUND;
+        break;
+      }
+    }
+    return ret;
+  }
+
+  /**
+   * \brief Set complete state list from the sensor.This function is used by the hardware to set its
+   * complete actual state. The state values have the same order as interfaces which can be recived
+   * by get_state_interfaces() function.
+   *
+   * \param state list of doubles with states from the hardware.
+   * \return return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL is command size is not equal to number of
+   * joint's state interfaces, return_type::OK otherwise.
+   */
+  HARDWARE_INTERFACE_EXPORT
+  return_type set_complete_state(const std::vector<double> & state)
+  {
+    if (state.size() == states_.size()) {
+      for (uint i = 0; i < states_.size(); i++) {
+        states_[i] = state[i];
+      }
+    } else {
+      return return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL;
+    }
+    return return_type::OK;
+  }
+
+protected:
+  ComponentInfo info_;
+  std::vector<double> states_;
+
+  /**
+   * \brief Configure base sensor class based on the description in the robot's URDF file.
+   *
+   * \param joint_info structure with data from URDF.
+   * \return return_type::OK
+   */
+  return_type configure_base(const ComponentInfo & joint_info)
+  {
+    info_ = joint_info;
+    if (info_.state_interfaces.size() > 0) {
+      states_.resize(info_.state_interfaces.size());
+    }
+    return return_type::OK;
+  }
 };
 
 }  // namespace hardware_interface
