@@ -96,7 +96,7 @@ public:
 
   /**
    * @brief Read data fromt the hardware into joints using "set_state" function of the Joint class.
-   * This function is always called by the RessourceManger.
+   * This function is always called by the resource manager.
    *
    * @param joints list of joints where data from the hardware are stored.
    * @return return_type:OK if everything worked as expected, return_type::ERROR otherwise.
