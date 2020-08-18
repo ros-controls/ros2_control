@@ -13,8 +13,8 @@
 // limitations under the License.
 
 
-#ifndef HARDWARE_INTERFACE__HARDWARE_AND_COMPONENT_INFO_HPP_
-#define HARDWARE_INTERFACE__HARDWARE_AND_COMPONENT_INFO_HPP_
+#ifndef HARDWARE_INTERFACE__HARDWARE_INFO_HPP_
+#define HARDWARE_INTERFACE__HARDWARE_INFO_HPP_
 
 #include <string>
 #include <unordered_map>
@@ -22,40 +22,6 @@
 
 namespace hardware_interface
 {
-
-/**
- * \brief This structure stores information about components defined for a specific hardware
- * in robot's URDF.
- */
-struct ComponentInfo
-{
-  /**
-   * \brief name of the component.
-   */
-  std::string name;
-  /**
-   * \brief type of the component: sensor or actuator.
-   */
-  std::string type;
-  /**
-   * \brief component's class, which will be dynamically loaded.
-   */
-  std::string class_type;
-  /**
-   * \brief name of the command interfaces that can be set, e.g. "position", "velocity", etc.
-   * Used by joints.
-   */
-  std::vector<std::string> command_interfaces;
-  /**
-   * \brief name of the state interfaces that can be read, e.g. "position", "velocity", etc.
-   * Used by Joints and Sensors.
-   */
-  std::vector<std::string> state_interfaces;
-  /**
-   * \brief (optional) key-value pairs of components parameters.
-   */
-  std::unordered_map<std::string, std::string> parameters;
-};
 
 /**
  * \brief This structure stores information about hardware defined in a robot's URDF.
