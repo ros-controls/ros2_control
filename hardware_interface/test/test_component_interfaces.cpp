@@ -143,7 +143,7 @@ public:
     return return_type::OK;
   }
 
-  std::vector<std::string> get_interfaces() const override
+  std::vector<std::string> get_state_interfaces() const override
   {
     return info.state_interfaces;
   }
@@ -443,9 +443,9 @@ TEST_F(TestComponentInterfaces, sensor_example_component_works)
   DummyForceTorqueSensor sensor;
 
   EXPECT_EQ(sensor.configure(sensor_info), return_type::OK);
-  ASSERT_THAT(sensor.get_interfaces(), SizeIs(6));
-  EXPECT_EQ(sensor.get_interfaces()[0], "force_x");
-  EXPECT_EQ(sensor.get_interfaces()[5], "torque_z");
+  ASSERT_THAT(sensor.get_state_interfaces(), SizeIs(6));
+  EXPECT_EQ(sensor.get_state_interfaces()[0], "force_x");
+  EXPECT_EQ(sensor.get_state_interfaces()[5], "torque_z");
   std::vector<double> input = {5, 6.7, 2.5, 3.8, 8.9, 12.3};
   std::vector<double> output;
   std::vector<std::string> interfaces;
