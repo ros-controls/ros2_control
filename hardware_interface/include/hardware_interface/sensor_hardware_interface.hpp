@@ -44,10 +44,10 @@ public:
   ~SensorHardwareInterface() = default;
 
   /**
-   * @brief Configuration of the sensor from data parsed from the robot's URDF.
+   * \brief Configuration of the sensor from data parsed from the robot's URDF.
    *
-   * @param sensor_info structure with data from URDF.
-   * @return return_type::OK if required data are provided and can be parsed,
+   * \param sensor_info structure with data from URDF.
+   * \return return_type::OK if required data are provided and can be parsed,
    * return_type::ERROR otherwise.
    */
   HARDWARE_INTERFACE_PUBLIC
@@ -55,38 +55,38 @@ public:
   return_type configure(const HardwareInfo & sensor_info) = 0;
 
   /**
-   * @brief Start exchange data with the hardware.
+   * \brief Start exchange data with the hardware.
    *
-   * @return return_type:OK if everything worked as expected, return_type::ERROR otherwise.
+   * \return return_type:OK if everything worked as expected, return_type::ERROR otherwise.
    */
   HARDWARE_INTERFACE_PUBLIC
   virtual
   return_type start() = 0;
 
   /**
-   * @brief Stop exchange data with the hardware.
+   * \brief Stop exchange data with the hardware.
    *
-   * @return return_type:OK if everything worked as expected, return_type::ERROR otherwise.
+   * \return return_type:OK if everything worked as expected, return_type::ERROR otherwise.
    */
   HARDWARE_INTERFACE_PUBLIC
   virtual
   return_type stop() = 0;
 
   /**
-   * @brief Get current state of the system hardware.
+   * \brief Get current state of the system hardware.
    *
-   * @return hardware_interface_status current status.
+   * \return hardware_interface_status current status.
    */
   HARDWARE_INTERFACE_PUBLIC
   virtual
   hardware_interface_status get_status() const = 0;
 
   /**
-   * @brief Read data from the hardware into sensors using "set_state" function in the Sensor class.
+   * \brief Read data from the hardware into sensors using "set_state" function in the Sensor class.
    * This function is always called by the resource manager.
    *
-   * @param sensors list of sensors where data from the hardware are stored.
-   * @return return_type:OK if everything worked as expected, return_type::ERROR otherwise.
+   * \param sensors list of sensors where data from the hardware are stored.
+   * \return return_type:OK if everything worked as expected, return_type::ERROR otherwise.
    */
   HARDWARE_INTERFACE_PUBLIC
   virtual
