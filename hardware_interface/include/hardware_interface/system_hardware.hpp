@@ -76,9 +76,9 @@ public:
   }
 
   HARDWARE_INTERFACE_PUBLIC
-  return_type write(const std::vector<std::shared_ptr<Joint>> & joints)
+  return_type write_joints(const std::vector<std::shared_ptr<Joint>> & joints)
   {
-    return impl_->write(joints);
+    return impl_->write_joints(joints);
   }
 
 private:

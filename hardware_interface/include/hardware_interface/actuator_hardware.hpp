@@ -73,9 +73,9 @@ public:
   }
 
   HARDWARE_INTERFACE_PUBLIC
-  return_type write(const Joint & joint)
+  return_type write_joint(const Joint & joint)
   {
-    return impl_->write(joint);
+    return impl_->write_joint(joint);
   }
 
 private:

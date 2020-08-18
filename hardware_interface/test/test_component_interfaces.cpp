@@ -35,8 +35,10 @@ using namespace ::testing;  // NOLINT
 
 namespace hardware_interface
 {
+
 namespace hardware_interfaces_components_test
 {
+
 class DummyPositionJoint : public Joint
 {
 public:
@@ -214,7 +216,7 @@ class DummyActuatorHardware : public ActuatorHardwareInterface
     return joint.set_state(hw_values);
   }
 
-  return_type write(const Joint & joint) override
+  return_type write_joint(const Joint & joint) override
   {
     return joint.get_command(hw_values, interfaces);
   }
@@ -349,7 +351,7 @@ class DummySystemHardware : public SystemHardwareInterface
     return ret;
   }
 
-  return_type write(const std::vector<std::shared_ptr<Joint>> & joints) override
+  return_type write_joints(const std::vector<std::shared_ptr<Joint>> & joints) override
   {
     return_type ret = return_type::OK;
     for (const auto & joint : joints) {
@@ -483,7 +485,7 @@ TEST_F(TestComponentInterfaces, actuator_hardware_interface_works)
   ASSERT_THAT(output, SizeIs(1));
   EXPECT_EQ(output[0], 1.2);
   EXPECT_EQ(interfaces[0], "position");
-  EXPECT_EQ(actuator_hw.write(joint), return_type::OK);
+  EXPECT_EQ(actuator_hw.write_joint(joint), return_type::OK);
   EXPECT_EQ(actuator_hw.stop(), return_type::OK);
   EXPECT_EQ(actuator_hw.get_status(), hardware_interface_status::STOPPED);
 }
@@ -539,7 +541,7 @@ TEST_F(TestComponentInterfaces, system_interface_with_hardware_works)
   system_hw_info.hardware_parameters["example_api_version"] = "1.1";
   system_hw_info.hardware_parameters["example_param_write_for_sec"] = "2";
   system_hw_info.hardware_parameters["example_param_read_for_sec"] = "3";
-//
+
   EXPECT_EQ(system.configure(system_hw_info), return_type::OK);
   EXPECT_EQ(system.get_status(), hardware_interface_status::CONFIGURED);
   EXPECT_EQ(system.start(), return_type::OK);

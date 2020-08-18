@@ -45,10 +45,10 @@ public:
   ~ActuatorHardwareInterface() = default;
 
   /**
-   * @brief Configuration of the actuator from data parsed from the robot's URDF.
+   * \brief Configuration of the actuator from data parsed from the robot's URDF.
    *
-   * @param actuator_info structure with data from URDF.
-   * @return return_type::OK if required data are provided and can be parsed,
+   * \param actuator_info structure with data from URDF.
+   * \return return_type::OK if required data are provided and can be parsed,
    * return_type::ERROR otherwise.
    */
   HARDWARE_INTERFACE_PUBLIC
@@ -56,53 +56,53 @@ public:
   return_type configure(const HardwareInfo & actuator_info) = 0;
 
   /**
-   * @brief Start exchange data with the hardware.
+   * \brief Start exchange data with the hardware.
    *
-   * @return return_type:OK if everything worked as expected, return_type::ERROR otherwise.
+   * \return return_type:OK if everything worked as expected, return_type::ERROR otherwise.
    */
   HARDWARE_INTERFACE_PUBLIC
   virtual
   return_type start() = 0;
 
   /**
-   * @brief Stop exchange data with the hardware.
+   * \brief Stop exchange data with the hardware.
    *
-   * @return return_type:OK if everything worked as expected, return_type::ERROR otherwise.
+   * \return return_type:OK if everything worked as expected, return_type::ERROR otherwise.
    */
   HARDWARE_INTERFACE_PUBLIC
   virtual
   return_type stop() = 0;
 
   /**
-   * @brief Get current state of the system hardware.
+   * \brief Get current state of the system hardware.
    *
-   * @return hardware_interface_status current status.
+   * \return hardware_interface_status current status.
    */
   HARDWARE_INTERFACE_PUBLIC
   virtual
   hardware_interface_status get_status() const = 0;
 
   /**
-   * @brief Read data fromt the hardware into the joint using "set_state" function of the Joint class.
-   * This function is always called by the RessourceManger.
+   * \brief Read data fromt the hardware into the joint using "set_state" function of the Joint class.
+   * This function is always called by the resource manager.
    *
-   * @param joint joint where data from the hardware are stored.
-   * @return return_type:OK if everything worked as expected, return_type::ERROR otherwise.
+   * \param joint joint where data from the hardware are stored.
+   * \return return_type:OK if everything worked as expected, return_type::ERROR otherwise.
    */
   HARDWARE_INTERFACE_PUBLIC
   virtual
   return_type read_joint(Joint & joint) const = 0;
 
   /**
-   * @brief Write data from the joint to the hardware using "get_command" function of the Joint class.
-   * This function is always called by the RessourceManger.
+   * \brief Write data from the joint to the hardware using "get_command" function of the Joint class.
+   * This function is always called by the resource manager.
    *
-   * @param joint the joint from which data are written to the hardware.
-   * @return return_type:OK if everything worked as expected, return_type::ERROR otherwise.
+   * \param joint the joint from which data are written to the hardware.
+   * \return return_type:OK if everything worked as expected, return_type::ERROR otherwise.
    */
   HARDWARE_INTERFACE_PUBLIC
   virtual
-  return_type write(const Joint & joint) = 0;
+  return_type write_joint(const Joint & joint) = 0;
 };
 
 }  // namespace hardware_interface
