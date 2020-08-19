@@ -21,9 +21,7 @@
 
 #include "control_msgs/msg/dynamic_joint_state.hpp"
 #include "hardware_interface/actuator_handle.hpp"
-#include "hardware_interface/joint_command_handle.hpp"
 #include "hardware_interface/joint_handle.hpp"
-#include "hardware_interface/joint_state_handle.hpp"
 #include "hardware_interface/operation_mode_handle.hpp"
 #include "hardware_interface/robot_hardware_interface.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
@@ -43,45 +41,15 @@ public:
 
   HARDWARE_INTERFACE_PUBLIC
   return_type
-  register_joint_state_handle(const JointStateHandle * joint_handle);
-
-  HARDWARE_INTERFACE_PUBLIC
-  return_type
-  register_joint_command_handle(JointCommandHandle * joint_handle);
-
-  HARDWARE_INTERFACE_PUBLIC
-  return_type
   register_operation_mode_handle(OperationModeHandle * operation_mode);
-
-  HARDWARE_INTERFACE_PUBLIC
-  return_type
-  get_joint_state_handle(const std::string & name, const JointStateHandle ** joint_state_handle);
-
-  HARDWARE_INTERFACE_PUBLIC
-  return_type
-  get_joint_command_handle(const std::string & name, JointCommandHandle ** joint_command_handle);
 
   HARDWARE_INTERFACE_PUBLIC
   return_type
   get_operation_mode_handle(const std::string & name, OperationModeHandle ** operation_mode_handle);
 
-  /*
-  HARDWARE_INTERFACE_PUBLIC
-  std::vector<std::string>
-  get_registered_joint_names();
-  */
-
   HARDWARE_INTERFACE_PUBLIC
   std::vector<std::string>
   get_registered_write_op_names();
-
-  HARDWARE_INTERFACE_PUBLIC
-  std::vector<const JointStateHandle *>
-  get_registered_joint_state_handles();
-
-  HARDWARE_INTERFACE_PUBLIC
-  std::vector<JointCommandHandle *>
-  get_registered_joint_command_handles();
 
   HARDWARE_INTERFACE_PUBLIC
   std::vector<OperationModeHandle *>
@@ -133,8 +101,6 @@ public:
   std::vector<JointHandle> get_registered_joints();
 
 private:
-  std::vector<const JointStateHandle *> registered_joint_state_handles_;
-  std::vector<JointCommandHandle *> registered_joint_command_handles_;
   std::vector<OperationModeHandle *> registered_operation_mode_handles_;
 
   control_msgs::msg::DynamicJointState registered_actuators_;
