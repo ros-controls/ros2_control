@@ -20,6 +20,7 @@
 
 #include "hardware_interface/component_info.hpp"
 #include "hardware_interface/hardware_info.hpp"
+#include "hardware_interface/helpers/component_interface_management.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/visibility_control.h"
 
@@ -42,15 +43,23 @@ public:
   ~Joint() = default;
 
   /**
-   * \brief Configure joint based on the description in the robot's URDF file.
+   * \brief Configure base joint class based on the description in the robot's URDF file.
    *
    * \param joint_info structure with data from URDF.
    * \return return_type::OK if required data are provided and is successfully parsed,
    * return_type::ERROR otherwise.
    */
-  HARDWARE_INTERFACE_PUBLIC
-  virtual
-  return_type configure(const ComponentInfo & joint_info) = 0;
+  return_type configure(const ComponentInfo & joint_info)
+  {
+    info_ = joint_info;
+    if (info_.command_interfaces.size() > 0) {
+      commands_.resize(info_.command_interfaces.size());
+    }
+    if (info_.state_interfaces.size() > 0) {
+      states_.resize(info_.state_interfaces.size());
+    }
+    return return_type::OK;
+  }
 
   /**
    * \brief Provide the list of command interfaces configured for the joint.
@@ -84,35 +93,15 @@ public:
    * \param interfaces list of interfaces on which commands have to set.
    * \return return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL if command and interfaces arguments do not
    * have the same length; return_type::INTERFACE_NOT_FOUND if one of provided interfaces is not
-   * defined for the joint; return_type::OK otherwise.
+   * defined for the joint; return return_type::INTERFACE_NOT_PROVIDED if the list of interfaces
+   * is empty; return_type::OK otherwise.
    */
   HARDWARE_INTERFACE_EXPORT
   return_type get_command(
     std::vector<double> & command,
     const std::vector<std::string> & interfaces) const
   {
-    if (interfaces.size() == 0) {
-      return return_type::INTERFACE_NOT_PROVIDED;
-    }
-    return_type ret = return_type::OK;
-    bool found;
-
-    for (const auto & interface : interfaces) {
-      found = false;
-      for (uint i = 0; i < info_.command_interfaces.size(); i++) {
-        if (!interface.compare(info_.command_interfaces[i])) {
-          command.push_back(commands_[i]);
-          found = true;
-          break;
-        }
-      }
-      if (!found) {
-        ret = return_type::INTERFACE_NOT_FOUND;
-        command.clear();
-        break;
-      }
-    }
-    return ret;
+    return helpers::get_internal_values(command, interfaces, info_.command_interfaces, commands_);
   }
 
   /**
@@ -123,12 +112,9 @@ public:
    * \param command list of doubles with commands for the hardware.
    */
   HARDWARE_INTERFACE_EXPORT
-  void get_complete_command(std::vector<double> & command) const
+  void get_command(std::vector<double> & command) const
   {
-    command.clear();
-    for (const auto & internal_command : commands_) {
-      command.push_back(internal_command);
-    }
+    helpers::get_internal_values(command, commands_);
   }
 
   /**
@@ -142,6 +128,10 @@ public:
    * have the same length; return_type::COMMAND_OUT_OF_LIMITS if one of the command values is out
    * of limits; return_type::INTERFACE_NOT_FOUND if one of provided interfaces is not
    * defined for the joint; return_type::OK otherwise.
+   *
+   * \todo The error handling in this function could lead to incosistant command or state variables
+   * for different interfaces. This should be changed in the future.
+   * (see: https://github.com/ros-controls/ros2_control/issues/129)
    */
   HARDWARE_INTERFACE_EXPORT
   return_type set_command(
@@ -189,7 +179,7 @@ public:
    * of limits; return_type::OK otherwise.
    */
   HARDWARE_INTERFACE_EXPORT
-  return_type set_complete_command(const std::vector<double> & command)
+  return_type set_command(const std::vector<double> & command)
   {
     return_type ret = return_type::OK;
     if (command.size() == commands_.size()) {
@@ -216,35 +206,15 @@ public:
    * \param interfaces list of interfaces on which states have to be provided.
    * \return return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL if state and interfaces arguments do not
    * have the same length; return_type::INTERFACE_NOT_FOUND if one of provided interfaces is not
-   * defined for the joint; return_type::OK otherwise.
+   * defined for the joint; return return_type::INTERFACE_NOT_PROVIDED if the list of interfaces
+   * is empty; return_type::OK otherwise.
    */
   HARDWARE_INTERFACE_EXPORT
   return_type get_state(
     std::vector<double> & state,
     const std::vector<std::string> & interfaces) const
   {
-    if (interfaces.size() == 0) {
-      return return_type::INTERFACE_NOT_PROVIDED;
-    }
-    return_type ret = return_type::OK;
-    bool found;
-
-    for (const auto & interface : interfaces) {
-      found = false;
-      for (uint i = 0; i < info_.state_interfaces.size(); i++) {
-        if (!interface.compare(info_.state_interfaces[i])) {
-          state.push_back(states_[i]);
-          found = true;
-          break;
-        }
-      }
-      if (!found) {
-        ret = return_type::INTERFACE_NOT_FOUND;
-        state.clear();
-        break;
-      }
-    }
-    return ret;
+    return helpers::get_internal_values(state, interfaces, info_.state_interfaces, states_);
   }
 
   /**
@@ -255,12 +225,9 @@ public:
    * \param state list of doubles with states of the hardware.
    */
   HARDWARE_INTERFACE_EXPORT
-  void get_complete_state(std::vector<double> & state) const
+  void get_state(std::vector<double> & state) const
   {
-    state.clear();
-    for (const auto & internal_state : states_) {
-      state.push_back(internal_state);
-    }
+    helpers::get_internal_values(state, states_);
   }
 
   /**
@@ -279,27 +246,7 @@ public:
     const std::vector<double> & state,
     const std::vector<std::string> & interfaces)
   {
-    if (state.size() != interfaces.size()) {
-      return return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL;
-    }
-    return_type ret = return_type::OK;
-    bool found;
-
-    for (uint i = 0; i < interfaces.size(); i++) {
-      found = false;
-      for (uint j = 0; j < info_.state_interfaces.size(); j++) {
-        if (!interfaces[i].compare(info_.state_interfaces[j])) {
-          states_[j] = state[i];
-          found = true;
-          break;
-        }
-      }
-      if (!found) {
-        ret = return_type::INTERFACE_NOT_FOUND;
-        break;
-      }
-    }
-    return ret;
+    return helpers::set_internal_values(state, interfaces, info_.state_interfaces, states_);
   }
 
   /**
@@ -312,7 +259,7 @@ public:
    * joint's state interfaces, return_type::OK otherwise.
    */
   HARDWARE_INTERFACE_EXPORT
-  return_type set_complete_state(const std::vector<double> & state)
+  return_type set_state(const std::vector<double> & state)
   {
     if (state.size() == states_.size()) {
       for (uint i = 0; i < states_.size(); i++) {
@@ -337,24 +284,6 @@ protected:
   HARDWARE_INTERFACE_PUBLIC
   virtual
   return_type check_command_limits(const double & command, const std::string & interface) const = 0;
-
-  /**
-   * \brief Configure base joint class based on the description in the robot's URDF file.
-   *
-   * \param joint_info structure with data from URDF.
-   * \return return_type::OK
-   */
-  return_type configure_base(const ComponentInfo & joint_info)
-  {
-    info_ = joint_info;
-    if (info_.command_interfaces.size() > 0) {
-      commands_.resize(info_.command_interfaces.size());
-    }
-    if (info_.state_interfaces.size() > 0) {
-      states_.resize(info_.state_interfaces.size());
-    }
-    return return_type::OK;
-  }
 };
 
 }  // namespace hardware_interface
