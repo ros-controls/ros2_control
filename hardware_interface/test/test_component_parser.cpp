@@ -627,7 +627,7 @@ TEST_F(TestComponentParser, parameter_missing_name_throws_error)
 TEST_F(TestComponentParser, component_class_type_empty_throws_error)
 {
   const std::string broken_urdf_string = urdf_xml_head_ +
-  invalid_urdf_ros2_control_component_class_type_empty_ + urdf_xml_tail_;
+    invalid_urdf_ros2_control_component_class_type_empty_ + urdf_xml_tail_;
 
   ASSERT_THROW(parse_control_resources_from_urdf(broken_urdf_string), std::runtime_error);
 }
@@ -635,7 +635,7 @@ TEST_F(TestComponentParser, component_class_type_empty_throws_error)
 TEST_F(TestComponentParser, component_interface_type_empty_throws_error)
 {
   const std::string broken_urdf_string = urdf_xml_head_ +
-  invalid_urdf_ros2_control_component_interface_type_empty_ + urdf_xml_tail_;
+    invalid_urdf_ros2_control_component_interface_type_empty_ + urdf_xml_tail_;
 
   ASSERT_THROW(parse_control_resources_from_urdf(broken_urdf_string), std::runtime_error);
 }
@@ -643,7 +643,7 @@ TEST_F(TestComponentParser, component_interface_type_empty_throws_error)
 TEST_F(TestComponentParser, parameter_empty_throws_error)
 {
   const std::string broken_urdf_string = urdf_xml_head_ +
-  invalid_urdf_ros2_control_parameter_empty_ + urdf_xml_tail_;
+    invalid_urdf_ros2_control_parameter_empty_ + urdf_xml_tail_;
 
   ASSERT_THROW(parse_control_resources_from_urdf(broken_urdf_string), std::runtime_error);
 }
