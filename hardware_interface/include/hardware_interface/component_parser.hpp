@@ -63,6 +63,19 @@ std::string get_attribute_value(
   const char * attribute_name, const char * tag_name);
 
 /**
+ * \brief Gets value of the text between tags.
+ *
+ * \param element_it XMLElement iterator to search for the text.
+ * \param tag_name parent tag name where text is searched for (used for error output)
+ * \return text of for the tag
+ * \throws std::runtime_error if text is not found
+ */
+HARDWARE_INTERFACE_PUBLIC
+std::string get_text_for_element(
+  const tinyxml2::XMLElement * element_it,
+  const std::string & tag_name);
+
+/**
  * \brief Gets value of the attribute on an XMLelement.
  * If attribute is not found throws an error.
  *

@@ -86,7 +86,8 @@ HardwareInfo parse_resource_from_xml(const tinyxml2::XMLElement * ros2_control_i
   while (ros2_control_child_it) {
     if (!std::string(kHardwareTag).compare(ros2_control_child_it->Name())) {
       const auto * type_it = ros2_control_child_it->FirstChildElement(kClassTypeTag);
-      hardware.hardware_class_type = type_it->GetText();
+      hardware.hardware_class_type = get_text_for_element(
+        type_it, std::string("hardware ") + kClassTypeTag);
       const auto * params_it = ros2_control_child_it->FirstChildElement(kParamTag);
       if (params_it) {
         hardware.hardware_parameters = parse_parameters_from_xml(params_it);
@@ -126,6 +127,16 @@ std::string get_attribute_value(
   return element_it->Attribute(attribute_name);
 }
 
+std::string get_text_for_element(
+  const tinyxml2::XMLElement * element_it, const std::string & tag_name)
+{
+  const auto get_text_output = element_it->GetText();
+  if (!get_text_output) {
+    throw std::runtime_error("text not specified in the " + tag_name + " tag");
+  }
+  return get_text_output;
+}
+
 ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it)
 {
   ComponentInfo component;
@@ -138,10 +149,7 @@ ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it
   if (!classType_it) {
     throw std::runtime_error("no class type tag found in " + component.name);
   }
-  component.class_type = classType_it->GetText();
-  if (component.class_type.empty()) {
-    throw std::runtime_error("no class type specified in " + component.name);
-  }
+  component.class_type = get_text_for_element(classType_it, component.name + " " + kClassTypeTag);
 
   // Parse commandInterfaceType tags
   const auto * command_interfaces_it = component_it->FirstChildElement(kCommandInterfaceTypeTag);
@@ -172,10 +180,8 @@ std::vector<std::string> parse_interfaces_from_xml(
   std::vector<std::string> interfaces;
 
   while (interfaces_it) {
-    const std::string interface_type = interfaces_it->GetText();
-    if (interface_type.empty()) {
-      throw std::runtime_error("no interface type set in " + std::string(interfaceTag) + " tag");
-    }
+    const std::string interface_type = get_text_for_element(
+      interfaces_it, std::string(interfaceTag) + " type ");
     interfaces.push_back(interface_type);
     interfaces_it = interfaces_it->NextSiblingElement(interfaceTag);
   }
@@ -195,10 +201,7 @@ std::unordered_map<std::string, std::string> parse_parameters_from_xml(
       throw std::runtime_error("no parameter name attribute set in param tag");
     }
     const std::string parameter_name = params_it->Attribute("name");
-    const std::string parameter_value = params_it->GetText();
-    if (parameter_value.empty()) {
-      throw std::runtime_error("no parameter value set for " + parameter_name);
-    }
+    const std::string parameter_value = get_text_for_element(params_it, parameter_name);
     parameters[parameter_name] = parameter_value;
 
     params_it = params_it->NextSiblingElement(kParamTag);
