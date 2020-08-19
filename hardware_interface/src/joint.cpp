@@ -60,52 +60,12 @@ return_type Joint::set_command(
   const std::vector<double> & command,
   const std::vector<std::string> & interfaces)
 {
-  // check sizes
-  if (command.size() != interfaces.size()) {
-    return return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL;
-  }
-
-  return_type ret = return_type::OK;
-  bool found;
-  for (uint i = 0; i < interfaces.size(); i++) {
-    found = false;
-    for (uint j = 0; j < info_.command_interfaces.size(); j++) {
-      if (!interfaces[i].compare(info_.command_interfaces[j])) {
-        found = true;
-        if (check_command_limits(command[i], interfaces[i]) == return_type::OK) {
-          commands_[j] = command[i];
-        } else {
-          ret = return_type::COMMAND_OUT_OF_LIMITS;
-        }
-        break;
-      }
-    }
-    if (!found) {
-      ret = return_type::INTERFACE_NOT_FOUND;
-      break;
-    } else if (ret != return_type::OK) {
-      break;
-    }
-  }
-  return ret;
+  return helpers::set_internal_values(command, interfaces, info_.command_interfaces, commands_);
 }
 
 return_type Joint::set_command(const std::vector<double> & command)
 {
-  return_type ret = return_type::OK;
-  if (command.size() == commands_.size()) {
-    for (uint i = 0; i < commands_.size(); i++) {
-      if (check_command_limits(command[i], info_.command_interfaces[i]) == return_type::OK) {
-        commands_[i] = command[i];
-      } else {
-        ret = return_type::COMMAND_OUT_OF_LIMITS;
-        break;
-      }
-    }
-  } else {
-    ret = return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL;
-  }
-  return ret;
+  return helpers::set_internal_values(command, commands_);
 }
 
 return_type Joint::get_state(

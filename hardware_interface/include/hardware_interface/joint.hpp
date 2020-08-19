@@ -187,15 +187,6 @@ protected:
   ComponentInfo info_;
   std::vector<double> commands_;
   std::vector<double> states_;
-
-  /**
-   * @brief Specific joint logic for enforsing limits on the command.
-   *
-   * @return return_type::OK if all limits are respected; return_type::ERROR otherwise
-   */
-  HARDWARE_INTERFACE_PUBLIC
-  virtual
-  return_type check_command_limits(const double & command, const std::string & interface) const = 0;
 };
 
 }  // namespace hardware_interface
