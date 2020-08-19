@@ -43,9 +43,9 @@ namespace hardware_interfaces_components_test
 class DummyPositionJoint : public Joint
 {
 public:
-  return_type configure(const ComponentInfo & joint_info) override
+  return_type configure(const ComponentInfo & joint_info)
   {
-    if (configure_base(joint_info) != return_type::OK) {
+    if (Joint::configure(joint_info) != return_type::OK) {
       return return_type::ERROR;
     }
 
@@ -86,9 +86,9 @@ private:
 class DummyMultiJoint : public Joint
 {
 public:
-  return_type configure(const ComponentInfo & joint_info) override
+  return_type configure(const ComponentInfo & joint_info)
   {
-    if (configure_base(joint_info) != return_type::OK) {
+    if (Joint::configure(joint_info) != return_type::OK) {
       return return_type::ERROR;
     }
 
@@ -128,9 +128,9 @@ private:
 class DummyForceTorqueSensor : public Sensor
 {
 public:
-  return_type configure(const ComponentInfo & sensor_info) override
+  return_type configure(const ComponentInfo & sensor_info)
   {
-    if (configure_base(sensor_info) != return_type::OK) {
+    if (Sensor::configure(sensor_info) != return_type::OK) {
       return return_type::ERROR;
     }
 
@@ -248,7 +248,7 @@ class DummySensorHardware : public SensorHardwareInterface
   {
     return_type ret = return_type::OK;
     for (const auto & sensor : sensors) {
-      ret = sensor->set_complete_state(ft_hw_values_);
+      ret = sensor->set_state(ft_hw_values_);
       if (ret != return_type::OK) {
         break;
       }
@@ -306,7 +306,7 @@ class DummySystemHardware : public SystemHardwareInterface
   {
     return_type ret = return_type::OK;
     for (const auto & sensor : sensors) {
-      ret = sensor->set_complete_state(ft_hw_values_);
+      ret = sensor->set_state(ft_hw_values_);
       if (ret != return_type::OK) {
         break;
       }
@@ -432,14 +432,14 @@ TEST_F(TestComponentInterfaces, joint_example_component_works)
   EXPECT_EQ(joint.get_command(output, interfaces), return_type::INTERFACE_NOT_FOUND);
 
   input.clear();
-  EXPECT_EQ(joint.set_complete_command(input), return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL);
+  EXPECT_EQ(joint.set_command(input), return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL);
   input.push_back(5.77);
-  EXPECT_EQ(joint.set_complete_command(input), return_type::COMMAND_OUT_OF_LIMITS);
+  EXPECT_EQ(joint.set_command(input), return_type::COMMAND_OUT_OF_LIMITS);
   input.clear();
   input.push_back(2.1);
-  EXPECT_EQ(joint.set_complete_command(input), return_type::OK);
+  EXPECT_EQ(joint.set_command(input), return_type::OK);
 
-  joint.get_complete_command(output);
+  joint.get_command(output);
   ASSERT_THAT(output, SizeIs(1));
   EXPECT_EQ(output[0], 2.1);
 
@@ -447,9 +447,11 @@ TEST_F(TestComponentInterfaces, joint_example_component_works)
   interfaces.clear();
   input.clear();
   input.push_back(2.1);
-  EXPECT_EQ(joint.set_state(input, interfaces), return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL);
+  EXPECT_EQ(joint.set_state(input, interfaces), return_type::INTERFACE_NOT_PROVIDED);
   interfaces.push_back(hardware_interface::HW_IF_VELOCITY);
   EXPECT_EQ(joint.set_state(input, interfaces), return_type::INTERFACE_NOT_FOUND);
+  interfaces.push_back(hardware_interface::HW_IF_POSITION);
+  EXPECT_EQ(joint.set_state(input, interfaces), return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL);
   interfaces.clear();
   interfaces.push_back(hardware_interface::HW_IF_POSITION);
   input.clear();
@@ -468,11 +470,11 @@ TEST_F(TestComponentInterfaces, joint_example_component_works)
   EXPECT_EQ(joint.get_state(output, interfaces), return_type::INTERFACE_NOT_FOUND);
 
   input.clear();
-  EXPECT_EQ(joint.set_complete_state(input), return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL);
+  EXPECT_EQ(joint.set_state(input), return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL);
   input.push_back(2.1);
-  EXPECT_EQ(joint.set_complete_state(input), return_type::OK);
+  EXPECT_EQ(joint.set_state(input), return_type::OK);
 
-  joint.get_complete_state(output);
+  joint.get_state(output);
   ASSERT_THAT(output, SizeIs(1));
   EXPECT_EQ(output[0], 2.1);
 
@@ -534,17 +536,17 @@ TEST_F(TestComponentInterfaces, multi_joint_example_component_works)
   EXPECT_EQ(joint.get_command(output, interfaces), return_type::INTERFACE_NOT_FOUND);
 
   input.clear();
-  EXPECT_EQ(joint.set_complete_command(input), return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL);
+  EXPECT_EQ(joint.set_command(input), return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL);
   input.push_back(5.77);
-  EXPECT_EQ(joint.set_complete_command(input), return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL);
+  EXPECT_EQ(joint.set_command(input), return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL);
   input.push_back(2.1);
-  EXPECT_EQ(joint.set_complete_command(input), return_type::COMMAND_OUT_OF_LIMITS);
+  EXPECT_EQ(joint.set_command(input), return_type::COMMAND_OUT_OF_LIMITS);
   input.clear();
   input.push_back(1.2);
   input.push_back(0.4);
-  EXPECT_EQ(joint.set_complete_command(input), return_type::OK);
+  EXPECT_EQ(joint.set_command(input), return_type::OK);
 
-  joint.get_complete_command(output);
+  joint.get_command(output);
   ASSERT_THAT(output, SizeIs(2));
   EXPECT_EQ(output[1], 0.4);
 
@@ -552,9 +554,11 @@ TEST_F(TestComponentInterfaces, multi_joint_example_component_works)
   interfaces.clear();
   input.clear();
   input.push_back(2.1);
-  EXPECT_EQ(joint.set_state(input, interfaces), return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL);
+  EXPECT_EQ(joint.set_state(input, interfaces), return_type::INTERFACE_NOT_PROVIDED);
   interfaces.push_back(hardware_interface::HW_IF_EFFORT);
   EXPECT_EQ(joint.set_state(input, interfaces), return_type::INTERFACE_NOT_FOUND);
+  interfaces.push_back(hardware_interface::HW_IF_POSITION);
+  EXPECT_EQ(joint.set_state(input, interfaces), return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL);
   interfaces.clear();
   interfaces.push_back(hardware_interface::HW_IF_POSITION);
   input.clear();
@@ -570,12 +574,12 @@ TEST_F(TestComponentInterfaces, multi_joint_example_component_works)
   EXPECT_EQ(joint.get_state(output, interfaces), return_type::INTERFACE_NOT_FOUND);
 
   input.clear();
-  EXPECT_EQ(joint.set_complete_state(input), return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL);
+  EXPECT_EQ(joint.set_state(input), return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL);
   input.push_back(2.1);
   input.push_back(1.02);
-  EXPECT_EQ(joint.set_complete_state(input), return_type::OK);
+  EXPECT_EQ(joint.set_state(input), return_type::OK);
 
-  joint.get_complete_state(output);
+  joint.get_state(output);
   ASSERT_THAT(output, SizeIs(2));
   EXPECT_EQ(output[0], 2.1);
 }
@@ -599,10 +603,11 @@ TEST_F(TestComponentInterfaces, sensor_example_component_works)
 
   // State getters and setters
   interfaces.clear();
+  EXPECT_EQ(sensor.set_state(input, interfaces), return_type::INTERFACE_NOT_PROVIDED);
+  interfaces.push_back(hardware_interface::HW_IF_VELOCITY);
+  interfaces.push_back(hardware_interface::HW_IF_VELOCITY);
+  interfaces.push_back(hardware_interface::HW_IF_VELOCITY);
   EXPECT_EQ(sensor.set_state(input, interfaces), return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL);
-  interfaces.push_back(hardware_interface::HW_IF_VELOCITY);
-  interfaces.push_back(hardware_interface::HW_IF_VELOCITY);
-  interfaces.push_back(hardware_interface::HW_IF_VELOCITY);
   interfaces.push_back(hardware_interface::HW_IF_VELOCITY);
   interfaces.push_back(hardware_interface::HW_IF_VELOCITY);
   interfaces.push_back(hardware_interface::HW_IF_VELOCITY);
@@ -620,11 +625,11 @@ TEST_F(TestComponentInterfaces, sensor_example_component_works)
   EXPECT_EQ(sensor.get_state(output, interfaces), return_type::INTERFACE_NOT_FOUND);
 
   input.clear();
-  EXPECT_EQ(sensor.set_complete_state(input), return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL);
+  EXPECT_EQ(sensor.set_state(input), return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL);
   input = {5.23, 6.7, 2.5, 3.8, 8.9, 12.3};
-  EXPECT_EQ(sensor.set_complete_state(input), return_type::OK);
+  EXPECT_EQ(sensor.set_state(input), return_type::OK);
 
-  sensor.get_complete_state(output);
+  sensor.get_state(output);
   ASSERT_THAT(output, SizeIs(6));
   EXPECT_EQ(output[5], 12.3);
 
@@ -663,7 +668,7 @@ TEST_F(TestComponentInterfaces, actuator_hardware_interface_works)
 TEST_F(TestComponentInterfaces, sensor_interface_with_hardware_works)
 {
   SensorHardware sensor_hw(std::make_unique<DummySensorHardware>());
-  std::shared_ptr<DummyForceTorqueSensor> sensor(new DummyForceTorqueSensor);
+  std::shared_ptr<DummyForceTorqueSensor> sensor(std::make_shared<DummyForceTorqueSensor>());
 
   HardwareInfo sensor_hw_info;
   sensor_hw_info.name = "DummySensor";
@@ -692,13 +697,13 @@ TEST_F(TestComponentInterfaces, sensor_interface_with_hardware_works)
 TEST_F(TestComponentInterfaces, system_interface_with_hardware_works)
 {
   SystemHardware system(std::make_unique<DummySystemHardware>());
-  std::shared_ptr<DummyPositionJoint> joint1(new DummyPositionJoint());
-  std::shared_ptr<DummyPositionJoint> joint2(new DummyPositionJoint());
+  std::shared_ptr<DummyPositionJoint> joint1(std::make_shared<DummyPositionJoint>());
+  std::shared_ptr<DummyPositionJoint> joint2(std::make_shared<DummyPositionJoint>());
   std::vector<std::shared_ptr<Joint>> joints;
   joints.push_back(joint1);
   joints.push_back(joint2);
 
-  std::shared_ptr<DummyForceTorqueSensor> sensor(new DummyForceTorqueSensor);
+  std::shared_ptr<DummyForceTorqueSensor> sensor(std::make_shared<DummyForceTorqueSensor>());
   std::vector<std::shared_ptr<Sensor>> sensors;
   sensors.push_back(sensor);
 
