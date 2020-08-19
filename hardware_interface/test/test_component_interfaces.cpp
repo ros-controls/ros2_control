@@ -66,19 +66,6 @@ public:
     return return_type::OK;
   }
 
-  return_type check_command_limits(
-    const double & command,
-    const std::string & interface) const override
-  {
-    return_type ret = return_type::ERROR;
-    if (!interface.compare(HW_IF_POSITION)) {
-      if (command >= min_position_ && command <= max_position_) {
-        ret = return_type::OK;
-      }
-    }
-    return ret;
-  }
-
 private:
   double max_position_, min_position_;
 };
@@ -101,23 +88,6 @@ public:
     max_velocity_ = stod(info_.parameters["max_velocity"]);
     min_velocity_ = stod(info_.parameters["min_velocity"]);
     return return_type::OK;
-  }
-
-  return_type check_command_limits(
-    const double & command,
-    const std::string & interface) const override
-  {
-    return_type ret = return_type::ERROR;
-    if (!interface.compare(HW_IF_POSITION)) {
-      if (command >= min_position_ && command <= max_position_) {
-        ret = return_type::OK;
-      }
-    } else if (!interface.compare(HW_IF_VELOCITY)) {
-      if (command >= min_velocity_ && command <= max_velocity_) {
-        ret = return_type::OK;
-      }
-    }
-    return ret;
   }
 
 private:
@@ -408,14 +378,13 @@ TEST_F(TestComponentInterfaces, joint_example_component_works)
   std::vector<std::string> interfaces;
   std::vector<double> input;
   input.push_back(2.1);
-  EXPECT_EQ(joint.set_command(input, interfaces), return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL);
+  EXPECT_EQ(joint.set_command(input, interfaces), return_type::INTERFACE_NOT_PROVIDED);
   interfaces.push_back(hardware_interface::HW_IF_VELOCITY);
   EXPECT_EQ(joint.set_command(input, interfaces), return_type::INTERFACE_NOT_FOUND);
+  interfaces.push_back(hardware_interface::HW_IF_POSITION);
+  EXPECT_EQ(joint.set_command(input, interfaces), return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL);
   interfaces.clear();
   interfaces.push_back(hardware_interface::HW_IF_POSITION);
-  input.clear();
-  input.push_back(20.21);
-  EXPECT_EQ(joint.set_command(input, interfaces), return_type::COMMAND_OUT_OF_LIMITS);
   input.clear();
   input.push_back(1.2);
   EXPECT_EQ(joint.set_command(input, interfaces), return_type::OK);
@@ -433,9 +402,6 @@ TEST_F(TestComponentInterfaces, joint_example_component_works)
 
   input.clear();
   EXPECT_EQ(joint.set_command(input), return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL);
-  input.push_back(5.77);
-  EXPECT_EQ(joint.set_command(input), return_type::COMMAND_OUT_OF_LIMITS);
-  input.clear();
   input.push_back(2.1);
   EXPECT_EQ(joint.set_command(input), return_type::OK);
 
@@ -515,14 +481,13 @@ TEST_F(TestComponentInterfaces, multi_joint_example_component_works)
   std::vector<std::string> interfaces;
   std::vector<double> input;
   input.push_back(2.1);
-  EXPECT_EQ(joint.set_command(input, interfaces), return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL);
+  EXPECT_EQ(joint.set_command(input, interfaces), return_type::INTERFACE_NOT_PROVIDED);
   interfaces.push_back(hardware_interface::HW_IF_EFFORT);
   EXPECT_EQ(joint.set_command(input, interfaces), return_type::INTERFACE_NOT_FOUND);
+  interfaces.push_back(hardware_interface::HW_IF_VELOCITY);
+  EXPECT_EQ(joint.set_command(input, interfaces), return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL);
   interfaces.clear();
   interfaces.push_back(hardware_interface::HW_IF_VELOCITY);
-  input.clear();
-  input.push_back(20.21);
-  EXPECT_EQ(joint.set_command(input, interfaces), return_type::COMMAND_OUT_OF_LIMITS);
   input.clear();
   input.push_back(1.02);
   EXPECT_EQ(joint.set_command(input, interfaces), return_type::OK);
@@ -539,8 +504,6 @@ TEST_F(TestComponentInterfaces, multi_joint_example_component_works)
   EXPECT_EQ(joint.set_command(input), return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL);
   input.push_back(5.77);
   EXPECT_EQ(joint.set_command(input), return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL);
-  input.push_back(2.1);
-  EXPECT_EQ(joint.set_command(input), return_type::COMMAND_OUT_OF_LIMITS);
   input.clear();
   input.push_back(1.2);
   input.push_back(0.4);
