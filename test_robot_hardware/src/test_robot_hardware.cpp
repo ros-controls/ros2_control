@@ -14,6 +14,7 @@
 
 #include "test_robot_hardware/test_robot_hardware.hpp"
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -105,6 +106,50 @@ TestRobotHardware::init()
     RCLCPP_WARN(logger, "can't register operation mode handle %s", write_op_handle_name2.c_str());
     return ret;
   }
+
+  //
+
+  register_actuator("actuator1", "position", 1.1);
+  register_actuator("actuator1", "velocity", 1.2);
+  register_actuator("actuator1", "effort", 1.3);
+  register_actuator("actuator1", "position_command", 1.1);
+  register_actuator("actuator1", "velocity_command", 1.2);
+  register_actuator("actuator1", "effort_command", 1.3);
+
+  register_actuator("actuator2", "position", 2.1);
+  register_actuator("actuator2", "velocity", 2.2);
+  register_actuator("actuator2", "effort", 2.3);
+  register_actuator("actuator2", "position_command", 2.1);
+  register_actuator("actuator2", "velocity_command", 2.2);
+  register_actuator("actuator2", "effort_command", 2.3);
+
+  register_actuator("actuator3", "position", 3.1);
+  register_actuator("actuator3", "velocity", 3.2);
+  register_actuator("actuator3", "effort", 3.3);
+  register_actuator("actuator3", "position_command", 3.1);
+  register_actuator("actuator3", "velocity_command", 3.2);
+  register_actuator("actuator3", "effort_command", 3.3);
+
+  register_joint("joint1", "position", 1.1);
+  register_joint("joint1", "velocity", 1.2);
+  register_joint("joint1", "effort", 1.3);
+  register_joint("joint1", "position_command", 1.1);
+  register_joint("joint1", "velocity_command", 1.2);
+  register_joint("joint1", "effort_command", 1.3);
+
+  register_joint("joint2", "position", 2.1);
+  register_joint("joint2", "velocity", 2.2);
+  register_joint("joint2", "effort", 2.3);
+  register_joint("joint2", "position_command", 2.1);
+  register_joint("joint2", "velocity_command", 2.2);
+  register_joint("joint2", "effort_command", 2.3);
+
+  register_joint("joint3", "position", 3.1);
+  register_joint("joint3", "velocity", 3.2);
+  register_joint("joint3", "effort", 3.3);
+  register_joint("joint3", "position_command", 3.1);
+  register_joint("joint3", "velocity_command", 3.2);
+  register_joint("joint3", "effort_command", 3.3);
 
   return hardware_interface::return_type::OK;
 }
