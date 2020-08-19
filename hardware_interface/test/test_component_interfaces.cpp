@@ -336,8 +336,8 @@ class DummySystemHardware : public SystemHardwareInterface
     return_type ret = return_type::OK;
     for (const auto & joint : joints) {
       std::vector<double> values;
-      std::vector<std::string> interfaces;
-      ret = joint->set_state(values, interfaces);
+      std::vector<std::string> interfaces = joint->get_command_interfaces();
+      ret = joint->get_command(values, interfaces);
       if (ret != return_type::OK) {
         break;
       }
@@ -421,6 +421,9 @@ TEST_F(TestComponentInterfaces, joint_example_component_works)
   EXPECT_EQ(joint.set_command(input, interfaces), return_type::OK);
 
   std::vector<double> output;
+  interfaces.clear();
+  EXPECT_EQ(joint.get_command(output, interfaces), return_type::INTERFACE_NOT_PROVIDED);
+  interfaces.push_back(hardware_interface::HW_IF_POSITION);
   EXPECT_EQ(joint.get_command(output, interfaces), return_type::OK);
   ASSERT_THAT(output, SizeIs(1));
   EXPECT_EQ(output[0], 1.2);
@@ -454,6 +457,9 @@ TEST_F(TestComponentInterfaces, joint_example_component_works)
   EXPECT_EQ(joint.set_state(input, interfaces), return_type::OK);
 
   output.clear();
+  interfaces.clear();
+  EXPECT_EQ(joint.get_command(output, interfaces), return_type::INTERFACE_NOT_PROVIDED);
+  interfaces.push_back(hardware_interface::HW_IF_POSITION);
   EXPECT_EQ(joint.get_state(output, interfaces), return_type::OK);
   ASSERT_THAT(output, SizeIs(1));
   EXPECT_EQ(output[0], 1.2);
@@ -737,6 +743,8 @@ TEST_F(TestComponentInterfaces, system_interface_with_hardware_works)
   EXPECT_EQ(output[0], -0.7543);
   ASSERT_THAT(interfaces, SizeIs(1));
   EXPECT_EQ(interfaces[0], hardware_interface::HW_IF_POSITION);
+
+  EXPECT_EQ(system.write_joints(joints), return_type::OK);
 
   EXPECT_EQ(system.stop(), return_type::OK);
   EXPECT_EQ(system.get_status(), hardware_interface_status::STOPPED);
