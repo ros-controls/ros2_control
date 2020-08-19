@@ -495,6 +495,55 @@ protected:
     </joint>
   </ros2_control>
 )";
+
+    invalid_urdf_ros2_control_component_class_type_empty_ =
+      R"(
+  <ros2_control name="2DOF_System_Robot_Position_Only" type="system">
+    <hardware>
+      <classType>ros2_control_demo_hardware/2DOF_System_Hardware_Position_Only</classType>
+      <param name="example_param_write_for_sec">2</param>
+      <param name="example_param_read_for_sec">2</param>
+    </hardware>
+    <joint name="joint1">
+      <classType></classType>
+      <param name="min_position_value">-1</param>
+      <param name="max_position_value">1</param>
+    </joint>
+  </ros2_control>
+)";
+
+    invalid_urdf_ros2_control_component_interface_type_empty_ =
+      R"(
+  <ros2_control name="2DOF_System_Robot_Position_Only" type="system">
+    <hardware>
+      <classType>ros2_control_demo_hardware/2DOF_System_Hardware_Position_Only</classType>
+      <param name="example_param_write_for_sec">2</param>
+      <param name="example_param_read_for_sec">2</param>
+    </hardware>
+    <joint name="joint1">
+      <classType>ros2_control_components/PositionJoint</classType>
+      <stateInterfaceType></stateInterfaceType>
+      <param name="min_position_value">-1</param>
+      <param name="max_position_value">1</param>
+    </joint>
+  </ros2_control>
+)";
+
+    invalid_urdf_ros2_control_parameter_empty_ =
+      R"(
+  <ros2_control name="2DOF_System_Robot_Position_Only" type="system">
+    <hardware>
+      <classType>ros2_control_demo_hardware/2DOF_System_Hardware_Position_Only</classType>
+      <param name="example_param_write_for_sec"></param>
+      <param name="example_param_read_for_sec">2</param>
+    </hardware>
+    <joint name="joint1">
+      <classType>ros2_control_components/PositionJoint</classType>
+      <param name="min_position_value">-1</param>
+      <param name="max_position_value">1</param>
+    </joint>
+  </ros2_control>
+)";
   }
 
   std::string urdf_xml_head_, urdf_xml_tail_;
@@ -571,6 +620,31 @@ TEST_F(TestComponentParser, parameter_missing_name_throws_error)
 
   ASSERT_THROW(parse_control_resources_from_urdf(broken_urdf_string), std::runtime_error);
 }
+
+TEST_F(TestComponentParser, component_class_type_empty_throws_error)
+{
+  const std::string broken_urdf_string = urdf_xml_head_ +
+  invalid_urdf_ros2_control_component_class_type_empty_ + urdf_xml_tail_;
+
+  ASSERT_THROW(parse_control_resources_from_urdf(broken_urdf_string), std::runtime_error);
+}
+
+TEST_F(TestComponentParser, component_interface_type_empty_throws_error)
+{
+  const std::string broken_urdf_string = urdf_xml_head_ +
+  invalid_urdf_ros2_control_component_interface_type_empty_ + urdf_xml_tail_;
+
+  ASSERT_THROW(parse_control_resources_from_urdf(broken_urdf_string), std::runtime_error);
+}
+
+TEST_F(TestComponentParser, parameter_empty_throws_error)
+{
+  const std::string broken_urdf_string = urdf_xml_head_ +
+  invalid_urdf_ros2_control_parameter_empty_ + urdf_xml_tail_;
+
+  ASSERT_THROW(parse_control_resources_from_urdf(broken_urdf_string), std::runtime_error);
+}
+
 
 TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_one_interface)
 {
