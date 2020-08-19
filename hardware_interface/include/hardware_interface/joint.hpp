@@ -19,8 +19,6 @@
 #include <vector>
 
 #include "hardware_interface/component_info.hpp"
-#include "hardware_interface/hardware_info.hpp"
-#include "hardware_interface/helpers/component_interface_management.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/visibility_control.h"
 
@@ -49,17 +47,8 @@ public:
    * \return return_type::OK if required data are provided and is successfully parsed,
    * return_type::ERROR otherwise.
    */
-  return_type configure(const ComponentInfo & joint_info)
-  {
-    info_ = joint_info;
-    if (info_.command_interfaces.size() > 0) {
-      commands_.resize(info_.command_interfaces.size());
-    }
-    if (info_.state_interfaces.size() > 0) {
-      states_.resize(info_.state_interfaces.size());
-    }
-    return return_type::OK;
-  }
+  HARDWARE_INTERFACE_PUBLIC
+  return_type configure(const ComponentInfo & joint_info);
 
   /**
    * \brief Provide the list of command interfaces configured for the joint.
@@ -67,10 +56,7 @@ public:
    * \return string list with command interfaces.
    */
   HARDWARE_INTERFACE_PUBLIC
-  std::vector<std::string> get_command_interfaces() const
-  {
-    return info_.command_interfaces;
-  }
+  std::vector<std::string> get_command_interfaces() const;
 
   /**
    * \brief Provide the list of state interfaces configured for the joint.
@@ -78,10 +64,7 @@ public:
    * \return string list with state interfaces.
    */
   HARDWARE_INTERFACE_PUBLIC
-  std::vector<std::string> get_state_interfaces() const
-  {
-    return info_.state_interfaces;
-  }
+  std::vector<std::string> get_state_interfaces() const;
 
   /**
    * \brief Get command list from the joint. This function is used in the write function of the
@@ -99,10 +82,7 @@ public:
   HARDWARE_INTERFACE_EXPORT
   return_type get_command(
     std::vector<double> & command,
-    const std::vector<std::string> & interfaces) const
-  {
-    return helpers::get_internal_values(command, interfaces, info_.command_interfaces, commands_);
-  }
+    const std::vector<std::string> & interfaces) const;
 
   /**
    * \brief Get complete command list for the joint. This function is used by the hardware to get
@@ -112,10 +92,7 @@ public:
    * \param command list of doubles with commands for the hardware.
    */
   HARDWARE_INTERFACE_EXPORT
-  void get_command(std::vector<double> & command) const
-  {
-    helpers::get_internal_values(command, commands_);
-  }
+  void get_command(std::vector<double> & command) const;
 
   /**
    * \brief Set command list for the joint. This function is used by the controller to set the goal
@@ -136,37 +113,7 @@ public:
   HARDWARE_INTERFACE_EXPORT
   return_type set_command(
     const std::vector<double> & command,
-    const std::vector<std::string> & interfaces)
-  {
-    // check sizes
-    if (command.size() != interfaces.size()) {
-      return return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL;
-    }
-
-    return_type ret = return_type::OK;
-    bool found;
-    for (uint i = 0; i < interfaces.size(); i++) {
-      found = false;
-      for (uint j = 0; j < info_.command_interfaces.size(); j++) {
-        if (!interfaces[i].compare(info_.command_interfaces[j])) {
-          found = true;
-          if (check_command_limits(command[i], interfaces[i]) == return_type::OK) {
-            commands_[j] = command[i];
-          } else {
-            ret = return_type::COMMAND_OUT_OF_LIMITS;
-          }
-          break;
-        }
-      }
-      if (!found) {
-        ret = return_type::INTERFACE_NOT_FOUND;
-        break;
-      } else if (ret != return_type::OK) {
-        break;
-      }
-    }
-    return ret;
-  }
+    const std::vector<std::string> & interfaces);
 
   /**
    * \brief Get complete state list from the joint. This function is used by the hardware to get
@@ -179,23 +126,7 @@ public:
    * of limits; return_type::OK otherwise.
    */
   HARDWARE_INTERFACE_EXPORT
-  return_type set_command(const std::vector<double> & command)
-  {
-    return_type ret = return_type::OK;
-    if (command.size() == commands_.size()) {
-      for (uint i = 0; i < commands_.size(); i++) {
-        if (check_command_limits(command[i], info_.command_interfaces[i]) == return_type::OK) {
-          commands_[i] = command[i];
-        } else {
-          ret = return_type::COMMAND_OUT_OF_LIMITS;
-          break;
-        }
-      }
-    } else {
-      ret = return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL;
-    }
-    return ret;
-  }
+  return_type set_command(const std::vector<double> & command);
 
   /**
    * \brief Get state list from the joint. This function is used by the controller to get the
@@ -212,10 +143,7 @@ public:
   HARDWARE_INTERFACE_EXPORT
   return_type get_state(
     std::vector<double> & state,
-    const std::vector<std::string> & interfaces) const
-  {
-    return helpers::get_internal_values(state, interfaces, info_.state_interfaces, states_);
-  }
+    const std::vector<std::string> & interfaces) const;
 
   /**
    * \brief Get complete state list from the joint. This function is used by the controller to get
@@ -225,10 +153,7 @@ public:
    * \param state list of doubles with states of the hardware.
    */
   HARDWARE_INTERFACE_EXPORT
-  void get_state(std::vector<double> & state) const
-  {
-    helpers::get_internal_values(state, states_);
-  }
+  void get_state(std::vector<double> & state) const;
 
   /**
    * \brief Set state list for the joint. This function is used by the hardware to set its actual
@@ -244,10 +169,7 @@ public:
   HARDWARE_INTERFACE_EXPORT
   return_type set_state(
     const std::vector<double> & state,
-    const std::vector<std::string> & interfaces)
-  {
-    return helpers::set_internal_values(state, interfaces, info_.state_interfaces, states_);
-  }
+    const std::vector<std::string> & interfaces);
 
   /**
    * \brief Set complete state list from the joint.This function is used by the hardware to set its
@@ -259,17 +181,7 @@ public:
    * joint's state interfaces, return_type::OK otherwise.
    */
   HARDWARE_INTERFACE_EXPORT
-  return_type set_state(const std::vector<double> & state)
-  {
-    if (state.size() == states_.size()) {
-      for (uint i = 0; i < states_.size(); i++) {
-        states_[i] = state[i];
-      }
-    } else {
-      return return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL;
-    }
-    return return_type::OK;
-  }
+  return_type set_state(const std::vector<double> & state);
 
 protected:
   ComponentInfo info_;

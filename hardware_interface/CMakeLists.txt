@@ -53,8 +53,21 @@ ament_target_dependencies(
   component_parser
   TinyXML2
 )
-
 target_compile_definitions(component_parser PRIVATE "HARDWARE_INTERFACE_BUILDING_DLL")
+
+add_library(
+  control_components
+  SHARED
+  src/helpers/component_lists_management.cpp
+  src/joint.cpp
+  src/sensor.cpp
+)
+target_include_directories(
+  control_components
+  PUBLIC
+  include
+)
+target_compile_definitions(control_components PRIVATE "HARDWARE_INTERFACE_BUILDING_DLL")
 
 install(
   DIRECTORY include/
@@ -62,7 +75,9 @@ install(
 )
 
 install(
-  TARGETS hardware_interface component_parser
+  TARGETS
+  control_components
+  hardware_interface
   RUNTIME DESTINATION bin
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib)
@@ -97,7 +112,7 @@ if(BUILD_TESTING)
 
   ament_add_gmock(test_component_interfaces test/test_component_interfaces.cpp)
   target_include_directories(test_component_interfaces PRIVATE include)
-  target_link_libraries(test_component_interfaces hardware_interface)
+  target_link_libraries(test_component_interfaces control_components hardware_interface)
 endif()
 
 ament_export_dependencies(
@@ -109,6 +124,7 @@ ament_export_include_directories(
 )
 ament_export_libraries(
   component_parser
+  control_components
   hardware_interface
 )
 ament_export_dependencies(

@@ -19,8 +19,6 @@
 #include <vector>
 
 #include "hardware_interface/component_info.hpp"
-#include "hardware_interface/hardware_info.hpp"
-#include "hardware_interface/helpers/component_interface_management.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/visibility_control.h"
 
@@ -49,14 +47,8 @@ public:
    * \return return_type::OK if required data are provided and is successfully parsed,
    * return_type::ERROR otherwise.
    */
-  return_type configure(const ComponentInfo & joint_info)
-  {
-    info_ = joint_info;
-    if (info_.state_interfaces.size() > 0) {
-      states_.resize(info_.state_interfaces.size());
-    }
-    return return_type::OK;
-  }
+  HARDWARE_INTERFACE_PUBLIC
+  return_type configure(const ComponentInfo & joint_info);
 
   /**
    * \brief Provide the list of state interfaces configured for the sensor.
@@ -64,10 +56,7 @@ public:
    * \return string list with state interfaces.
    */
   HARDWARE_INTERFACE_PUBLIC
-  std::vector<std::string> get_state_interfaces()
-  {
-    return info_.state_interfaces;
-  }
+  std::vector<std::string> get_state_interfaces();
 
   /**
    * \brief Get state list from the sensor. This function is used by the controller to get the
@@ -84,10 +73,7 @@ public:
   HARDWARE_INTERFACE_EXPORT
   return_type get_state(
     std::vector<double> & state,
-    const std::vector<std::string> & interfaces) const
-  {
-    return helpers::get_internal_values(state, interfaces, info_.state_interfaces, states_);
-  }
+    const std::vector<std::string> & interfaces) const;
 
   /**
    * \brief Get complete state list from the sensor. This function is used by the controller to get
@@ -97,10 +83,7 @@ public:
    * \param state list of doubles with states of the hardware.
    */
   HARDWARE_INTERFACE_EXPORT
-  void get_state(std::vector<double> & state) const
-  {
-    helpers::get_internal_values(state, states_);
-  }
+  void get_state(std::vector<double> & state) const;
 
   /**
    * \brief Set state list for the sensor. This function is used by the hardware to set its actual
@@ -116,10 +99,7 @@ public:
   HARDWARE_INTERFACE_EXPORT
   return_type set_state(
     const std::vector<double> & state,
-    const std::vector<std::string> & interfaces)
-  {
-    return helpers::set_internal_values(state, interfaces, info_.state_interfaces, states_);
-  }
+    const std::vector<std::string> & interfaces);
 
   /**
    * \brief Set complete state list from the sensor.This function is used by the hardware to set its
@@ -131,10 +111,7 @@ public:
    * sensor's state interfaces, return_type::OK otherwise.
    */
   HARDWARE_INTERFACE_EXPORT
-  return_type set_state(const std::vector<double> & state)
-  {
-    return helpers::set_internal_values(state, states_);
-  }
+  return_type set_state(const std::vector<double> & state);
 
 protected:
   ComponentInfo info_;
