@@ -38,6 +38,28 @@ ament_target_dependencies(
 # which is appropriate when building the dll but not consuming it.
 target_compile_definitions(hardware_interface PRIVATE "HARDWARE_INTERFACE_BUILDING_DLL")
 
+add_library(
+  control_components
+  SHARED
+  src/helpers/component_lists_management.cpp
+  src/joint.cpp
+  src/sensor.cpp
+)
+target_include_directories(
+  control_components
+  PUBLIC
+  include
+)
+# ament_target_dependencies(
+#   control_components
+#   control_msgs
+#   rclcpp
+#   rcpputils
+# )
+# Causes the visibility macros to use dllexport rather than dllimport,
+# which is appropriate when building the dll but not consuming it.
+target_compile_definitions(control_components PRIVATE "HARDWARE_INTERFACE_BUILDING_DLL")
+
 install(
   DIRECTORY include/
   DESTINATION include
@@ -45,6 +67,7 @@ install(
 
 install(
   TARGETS
+  control_components
   hardware_interface
   RUNTIME DESTINATION bin
   ARCHIVE DESTINATION lib
@@ -76,7 +99,7 @@ if(BUILD_TESTING)
 
   ament_add_gmock(test_component_interfaces test/test_component_interfaces.cpp)
   target_include_directories(test_component_interfaces PRIVATE include)
-  target_link_libraries(test_component_interfaces hardware_interface)
+  target_link_libraries(test_component_interfaces control_components hardware_interface)
 endif()
 
 ament_export_dependencies(
@@ -87,6 +110,7 @@ ament_export_include_directories(
   include
 )
 ament_export_libraries(
+  control_components
   hardware_interface
 )
 ament_export_dependencies(
