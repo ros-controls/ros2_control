@@ -78,12 +78,13 @@ public:
   /**
    * \brief Get complete state list from the sensor. This function is used by the controller to get
    * complete actual state of the hardware. The state values have the same order as interfaces which
-   * can be recived by get_state_interfaces() function.
+   * can be recived by get_state_interfaces() function. Return value is used for API consistency.
    *
    * \param state list of doubles with states of the hardware.
+   * \return return_type::OK always.
    */
   HARDWARE_INTERFACE_EXPORT
-  void get_state(std::vector<double> & state) const;
+  return_type get_state(std::vector<double> & state) const;
 
   /**
    * \brief Set state list for the sensor. This function is used by the hardware to set its actual

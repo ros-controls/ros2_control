@@ -43,9 +43,9 @@ return_type Sensor::get_state(
   return helpers::get_internal_values(state, interfaces, info_.state_interfaces, states_);
 }
 
-void Sensor::get_state(std::vector<double> & state) const
+return_type Sensor::get_state(std::vector<double> & state) const
 {
-  helpers::get_internal_values(state, states_);
+  return helpers::get_internal_values(state, states_);
 }
 
 return_type Sensor::set_state(

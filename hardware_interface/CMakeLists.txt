@@ -58,7 +58,6 @@ target_compile_definitions(component_parser PRIVATE "HARDWARE_INTERFACE_BUILDING
 add_library(
   control_components
   SHARED
-  src/helpers/component_lists_management.cpp
   src/joint.cpp
   src/sensor.cpp
 )

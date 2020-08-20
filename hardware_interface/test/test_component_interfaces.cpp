@@ -405,7 +405,7 @@ TEST_F(TestComponentInterfaces, joint_example_component_works)
   input.push_back(2.1);
   EXPECT_EQ(joint.set_command(input), return_type::OK);
 
-  joint.get_command(output);
+  EXPECT_EQ(joint.get_command(output), return_type::OK);
   ASSERT_THAT(output, SizeIs(1));
   EXPECT_EQ(output[0], 2.1);
 
@@ -440,7 +440,7 @@ TEST_F(TestComponentInterfaces, joint_example_component_works)
   input.push_back(2.1);
   EXPECT_EQ(joint.set_state(input), return_type::OK);
 
-  joint.get_state(output);
+  EXPECT_EQ(joint.get_state(output), return_type::OK);
   ASSERT_THAT(output, SizeIs(1));
   EXPECT_EQ(output[0], 2.1);
 
@@ -509,7 +509,7 @@ TEST_F(TestComponentInterfaces, multi_joint_example_component_works)
   input.push_back(0.4);
   EXPECT_EQ(joint.set_command(input), return_type::OK);
 
-  joint.get_command(output);
+  EXPECT_EQ(joint.get_command(output), return_type::OK);
   ASSERT_THAT(output, SizeIs(2));
   EXPECT_EQ(output[1], 0.4);
 
@@ -542,7 +542,7 @@ TEST_F(TestComponentInterfaces, multi_joint_example_component_works)
   input.push_back(1.02);
   EXPECT_EQ(joint.set_state(input), return_type::OK);
 
-  joint.get_state(output);
+  EXPECT_EQ(joint.get_state(output), return_type::OK);
   ASSERT_THAT(output, SizeIs(2));
   EXPECT_EQ(output[0], 2.1);
 }
@@ -592,7 +592,7 @@ TEST_F(TestComponentInterfaces, sensor_example_component_works)
   input = {5.23, 6.7, 2.5, 3.8, 8.9, 12.3};
   EXPECT_EQ(sensor.set_state(input), return_type::OK);
 
-  sensor.get_state(output);
+  EXPECT_EQ(sensor.get_state(output), return_type::OK);
   ASSERT_THAT(output, SizeIs(6));
   EXPECT_EQ(output[5], 12.3);
 
