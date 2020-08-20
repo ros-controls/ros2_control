@@ -95,10 +95,6 @@ if(BUILD_TESTING)
   target_link_libraries(test_component_interfaces control_components hardware_interface)
 endif()
 
-ament_export_dependencies(
-  rclcpp
-  rcpputils
-)
 ament_export_include_directories(
   include
 )
@@ -108,5 +104,9 @@ ament_export_libraries(
 )
 ament_export_dependencies(
   control_msgs
+  rclcpp
+  rcpputils
+  tinyxml2_vendor
+  TinyXML2
 )
 ament_package()
