@@ -22,7 +22,6 @@
 #include "hardware_interface/actuator_hardware_interface.hpp"
 #include "hardware_interface/component_info.hpp"
 #include "hardware_interface/hardware_info.hpp"
-#include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "hardware_interface/joint.hpp"
 #include "hardware_interface/sensor_hardware_interface.hpp"
 #include "hardware_interface/sensor_hardware.hpp"
@@ -31,6 +30,7 @@
 #include "hardware_interface/system_hardware.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/hardware_interface_status_values.hpp"
+#include "hardware_interface/types/hardware_interface_type_values.hpp"
 
 using namespace ::testing;  // NOLINT
 
@@ -326,7 +326,6 @@ private:
 }  // namespace hardware_interfaces_components_test
 }  // namespace hardware_interface
 
-using hardware_interface::return_type;
 using hardware_interface::ComponentInfo;
 using hardware_interface::HardwareInfo;
 using hardware_interface::ActuatorHardware;
@@ -338,10 +337,11 @@ using hardware_interface::SensorHardwareInterface;
 using hardware_interface::SystemHardware;
 using hardware_interface::SystemHardwareInterface;
 using hardware_interface::hardware_interface_status;
+using hardware_interface::return_type;
 
-using hardware_interface::hardware_interfaces_components_test::DummyPositionJoint;
-using hardware_interface::hardware_interfaces_components_test::DummyMultiJoint;
 using hardware_interface::hardware_interfaces_components_test::DummyForceTorqueSensor;
+using hardware_interface::hardware_interfaces_components_test::DummyMultiJoint;
+using hardware_interface::hardware_interfaces_components_test::DummyPositionJoint;
 
 using hardware_interface::hardware_interfaces_components_test::DummyActuatorHardware;
 using hardware_interface::hardware_interfaces_components_test::DummySensorHardware;

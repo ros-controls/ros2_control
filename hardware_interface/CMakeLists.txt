@@ -95,10 +95,6 @@ if(BUILD_TESTING)
   target_include_directories(test_robot_hardware_interfaces PRIVATE include)
   target_link_libraries(test_robot_hardware_interfaces hardware_interface)
 
-  ament_add_gmock(test_component_parser test/test_component_parser.cpp)
-  target_link_libraries(test_component_parser component_parser)
-  ament_target_dependencies(test_component_parser TinyXML2)
-
   ament_add_gmock(test_register_actuators test/test_register_actuators.cpp)
   target_include_directories(test_register_actuators PRIVATE include)
   target_link_libraries(test_register_actuators hardware_interface)
@@ -109,15 +105,16 @@ if(BUILD_TESTING)
   target_link_libraries(test_actuator_handle hardware_interface)
   ament_target_dependencies(test_actuator_handle rcpputils)
 
+  ament_add_gmock(test_component_parser test/test_component_parser.cpp)
+  target_include_directories(test_component_parser PRIVATE include)
+  target_link_libraries(test_component_parser component_parser)
+  ament_target_dependencies(test_component_parser TinyXML2)
+
   ament_add_gmock(test_component_interfaces test/test_component_interfaces.cpp)
   target_include_directories(test_component_interfaces PRIVATE include)
   target_link_libraries(test_component_interfaces control_components hardware_interface)
 endif()
 
-ament_export_dependencies(
-  rclcpp
-  rcpputils
-)
 ament_export_include_directories(
   include
 )
@@ -128,5 +125,9 @@ ament_export_libraries(
 )
 ament_export_dependencies(
   control_msgs
+  rclcpp
+  rcpputils
+  tinyxml2_vendor
+  TinyXML2
 )
 ament_package()

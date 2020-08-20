@@ -1,10 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(robot_control_components)
-
-# Default to C99
-if(NOT CMAKE_C_STANDARD)
-  set(CMAKE_C_STANDARD 99)
-endif()
+project(ros2_control_components)
 
 # Default to C++14
 if(NOT CMAKE_CXX_STANDARD)
@@ -16,25 +11,21 @@ find_package(ament_cmake REQUIRED)
 find_package(hardware_interface REQUIRED)
 find_package(pluginlib REQUIRED)
 
-add_library(${PROJECT_NAME} SHARED
+add_library(
+  ${PROJECT_NAME}
+  SHARED
   # joints
-  src/effort_joint.cpp
   src/position_joint.cpp
-  src/velocity_joint.cpp
   # sensors
-  src/position_sensor.cpp
-  src/velocity_sensor.cpp
 )
-target_include_directories(${PROJECT_NAME}
-  PRIVATE include
-)
-ament_target_dependencies(${PROJECT_NAME}
+ament_target_dependencies(
+  ${PROJECT_NAME}
   hardware_interface
   pluginlib
 )
 
 pluginlib_export_plugin_description_file(
-  robot_control_components robot_control_components_plugins.xml)
+  ros2_control_components ros2_control_components_plugins.xml)
 
 install(TARGETS
   ${PROJECT_NAME}
@@ -44,9 +35,18 @@ install(TARGETS
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()
+
+  find_package(ament_cmake_gmock REQUIRED)
+
+  ament_add_gmock(test_joints test/test_joints.cpp)
+  ament_target_dependencies(test_joints hardware_interface pluginlib)
 endif()
 
+ament_export_libraries(
+  ros2_control_components
+)
 ament_export_dependencies(
+  control_components
   hardware_interface
   pluginlib
 )
