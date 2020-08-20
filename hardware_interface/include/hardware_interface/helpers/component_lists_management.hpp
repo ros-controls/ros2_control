@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef HARDWARE_INTERFACE__HELPERS__COMPONENTS_LISTS_MANAGEMENT_HPP_
-#define HARDWARE_INTERFACE__HELPERS__COMPONENTS_LISTS_MANAGEMENT_HPP_
+#ifndef HARDWARE_INTERFACE__HELPERS__COMPONENT_LISTS_MANAGEMENT_HPP_
+#define HARDWARE_INTERFACE__HELPERS__COMPONENT_LISTS_MANAGEMENT_HPP_
 
 #include <algorithm>
 #include <string>
@@ -142,4 +142,4 @@ inline return_type set_internal_values(
 
 }  // namespace helpers
 }  // namespace hardware_interface
-#endif  // HARDWARE_INTERFACE__HELPERS__COMPONENTS_LISTS_MANAGEMENT_HPP_
+#endif  // HARDWARE_INTERFACE__HELPERS__COMPONENT_LISTS_MANAGEMENT_HPP_
