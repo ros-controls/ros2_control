@@ -41,7 +41,6 @@ target_compile_definitions(hardware_interface PRIVATE "HARDWARE_INTERFACE_BUILDI
 add_library(
   control_components
   SHARED
-  src/helpers/component_lists_management.cpp
   src/joint.cpp
   src/sensor.cpp
 )
@@ -50,12 +49,6 @@ target_include_directories(
   PUBLIC
   include
 )
-# ament_target_dependencies(
-#   control_components
-#   control_msgs
-#   rclcpp
-#   rcpputils
-# )
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.
 target_compile_definitions(control_components PRIVATE "HARDWARE_INTERFACE_BUILDING_DLL")

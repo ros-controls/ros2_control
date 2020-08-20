@@ -51,9 +51,9 @@ return_type Joint::get_command(
   return helpers::get_internal_values(command, interfaces, info_.command_interfaces, commands_);
 }
 
-void Joint::get_command(std::vector<double> & command) const
+return_type Joint::get_command(std::vector<double> & command) const
 {
-  helpers::get_internal_values(command, commands_);
+  return helpers::get_internal_values(command, commands_);
 }
 
 return_type Joint::set_command(
@@ -74,9 +74,9 @@ return_type Joint::get_state(
   return helpers::get_internal_values(state, interfaces, info_.state_interfaces, states_);
 }
 
-void Joint::get_state(std::vector<double> & state) const
+return_type Joint::get_state(std::vector<double> & state) const
 {
-  helpers::get_internal_values(state, states_);
+  return helpers::get_internal_values(state, states_);
 }
 
 return_type Joint::set_state(

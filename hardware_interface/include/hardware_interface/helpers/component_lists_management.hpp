@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef HARDWARE_INTERFACE__HELPERS__COMPONENT_LISTS_MANAGEMENT_HPP_
-#define HARDWARE_INTERFACE__HELPERS__COMPONENT_LISTS_MANAGEMENT_HPP_
+#ifndef HARDWARE_INTERFACE__HELPERS__COMPONENTS_LISTS_MANAGEMENT_HPP_
+#define HARDWARE_INTERFACE__HELPERS__COMPONENTS_LISTS_MANAGEMENT_HPP_
 
+#include <algorithm>
 #include <string>
 #include <vector>
 
@@ -40,18 +41,43 @@ namespace helpers
   * not defined in int_interfaces; return return_type::INTERFACE_NOT_PROVIDED if queried_interfaces
   * list is is empty; return_type::OK otherwise.
   */
-return_type get_internal_values(
+inline return_type get_internal_values(
   std::vector<double> & values, const std::vector<std::string> & queried_interfaces,
-  const std::vector<std::string> & int_interfaces, const std::vector<double> & int_values);
+  const std::vector<std::string> & int_interfaces, const std::vector<double> & int_values)
+{
+  if (queried_interfaces.size() == 0) {
+    return return_type::INTERFACE_NOT_PROVIDED;
+  }
+
+  for (const auto & interface : queried_interfaces) {
+    auto it = std::find(
+      int_interfaces.begin(), int_interfaces.end(), interface);
+    if (it != int_interfaces.end()) {
+      values.push_back(int_values[std::distance(int_interfaces.begin(), it)]);
+    } else {
+      values.clear();
+      return return_type::INTERFACE_NOT_FOUND;
+    }
+  }
+  return return_type::OK;
+}
 
 /**
- * \brief Set all internal values to to other vector;
+ * \brief Set all internal values to to other vector. Return value is used for API consistency.
  *
  * \param values output list of values.
  * \param int_values internal values of the component.
+ * \return return_type::OK always.
  */
-void get_internal_values(
-  std::vector<double> & values, const std::vector<double> & int_values);
+inline return_type get_internal_values(
+  std::vector<double> & values, const std::vector<double> & int_values)
+{
+  values.clear();
+  for (const auto & int_value : int_values) {
+    values.push_back(int_value);
+  }
+  return return_type::OK;
+}
 
 /**
  * \brief set values for queried_interfaces to the int_values. int_values data structure matches
@@ -70,9 +96,28 @@ void get_internal_values(
  * for different interfaces. This should be changed in the future.
  * (see: https://github.com/ros-controls/ros2_control/issues/129)
  */
-return_type set_internal_values(
+inline return_type set_internal_values(
   const std::vector<double> & values, const std::vector<std::string> & queried_interfaces,
-  const std::vector<std::string> & int_interfaces, std::vector<double> & int_values);
+  const std::vector<std::string> & int_interfaces, std::vector<double> & int_values)
+{
+  if (queried_interfaces.size() == 0) {
+    return return_type::INTERFACE_NOT_PROVIDED;
+  }
+  if (values.size() != queried_interfaces.size()) {
+    return return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL;
+  }
+
+  for (auto q_it = queried_interfaces.begin(); q_it != queried_interfaces.end(); ++q_it) {
+    auto it = std::find(int_interfaces.begin(), int_interfaces.end(), *q_it);
+    if (it != int_interfaces.end()) {
+      int_values[std::distance(int_interfaces.begin(), it)] =
+        values[std::distance(queried_interfaces.begin(), q_it)];
+    } else {
+      return return_type::INTERFACE_NOT_FOUND;
+    }
+  }
+  return return_type::OK;
+}
 
 /**
  * \brief set all values to compoenents internal values.
@@ -82,10 +127,19 @@ return_type set_internal_values(
  * \return return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL if the size of the arguments is not equal,
  * return_type::OK otherwise.
  */
-return_type set_internal_values(
-  const std::vector<double> & values, std::vector<double> & int_values);
+inline return_type set_internal_values(
+  const std::vector<double> & values, std::vector<double> & int_values)
+{
+  if (values.size() == int_values.size()) {
+    for (uint i = 0; i < int_values.size(); i++) {
+      int_values[i] = values[i];
+    }
+  } else {
+    return return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL;
+  }
+  return return_type::OK;
+}
 
 }  // namespace helpers
-
 }  // namespace hardware_interface
-#endif  // HARDWARE_INTERFACE__HELPERS__COMPONENT_LISTS_MANAGEMENT_HPP_
+#endif  // HARDWARE_INTERFACE__HELPERS__COMPONENTS_LISTS_MANAGEMENT_HPP_

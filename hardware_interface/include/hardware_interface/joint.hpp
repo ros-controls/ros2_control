@@ -87,12 +87,13 @@ public:
   /**
    * \brief Get complete command list for the joint. This function is used by the hardware to get
    * complete command for it. The hardware valus have the same order as interfaces which
-   * can be recived by get_hardware_interfaces() function.
+   * can be recived by get_hardware_interfaces() function. Return value is used for API consistency.
    *
    * \param command list of doubles with commands for the hardware.
+   * \return return_type::OK always.
    */
   HARDWARE_INTERFACE_EXPORT
-  void get_command(std::vector<double> & command) const;
+  return_type get_command(std::vector<double> & command) const;
 
   /**
    * \brief Set command list for the joint. This function is used by the controller to set the goal
@@ -148,12 +149,13 @@ public:
   /**
    * \brief Get complete state list from the joint. This function is used by the controller to get
    * complete actual state of the hardware. The state values have the same order as interfaces which
-   * can be recived by get_state_interfaces() function.
+   * can be recived by get_state_interfaces() function. Return value is used for API consistency.
    *
    * \param state list of doubles with states of the hardware.
+   * \return return_type::OK always.
    */
   HARDWARE_INTERFACE_EXPORT
-  void get_state(std::vector<double> & state) const;
+  return_type get_state(std::vector<double> & state) const;
 
   /**
    * \brief Set state list for the joint. This function is used by the hardware to set its actual
