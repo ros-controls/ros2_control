@@ -204,10 +204,6 @@ protected:
       <stateInterfaceType>effort</stateInterfaceType>
       <param name="min_position_value">-1</param>
       <param name="max_position_value">1</param>
-      <param name="min_velocity_value">-1</param>
-      <param name="max_velocity_value">1</param>
-      <param name="min_effort_value">-0.5</param>
-      <param name="max_effort_value">0.5</param>
     </joint>
   </ros2_control>
 )";
@@ -713,7 +709,7 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_multi_interface
   ASSERT_THAT(hardware_info.joints[1].command_interfaces, SizeIs(1));
   ASSERT_THAT(hardware_info.joints[1].state_interfaces, SizeIs(3));
   EXPECT_EQ(hardware_info.joints[1].state_interfaces[2], "effort");
-  ASSERT_THAT(hardware_info.joints[1].parameters, SizeIs(6));
+  ASSERT_THAT(hardware_info.joints[1].parameters, SizeIs(2));
   EXPECT_EQ(hardware_info.joints[1].parameters.at("min_position_value"), "-1");
 }
 
