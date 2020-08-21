@@ -40,23 +40,23 @@ std::vector<std::string> Sensor::get_state_interfaces()
 return_type Sensor::get_state(
   std::vector<double> & state, const std::vector<std::string> & interfaces) const
 {
-  return helpers::get_internal_values(state, interfaces, info_.state_interfaces, states_);
+  return get_internal_values(state, interfaces, info_.state_interfaces, states_);
 }
 
 return_type Sensor::get_state(std::vector<double> & state) const
 {
-  return helpers::get_internal_values(state, states_);
+  return get_internal_values(state, states_);
 }
 
 return_type Sensor::set_state(
   const std::vector<double> & state, const std::vector<std::string> & interfaces)
 {
-  return helpers::set_internal_values(state, interfaces, info_.state_interfaces, states_);
+  return set_internal_values(state, interfaces, info_.state_interfaces, states_);
 }
 
 return_type Sensor::set_state(const std::vector<double> & state)
 {
-  return helpers::set_internal_values(state, states_);
+  return set_internal_values(state, states_);
 }
 
 }  // namespace hardware_interface

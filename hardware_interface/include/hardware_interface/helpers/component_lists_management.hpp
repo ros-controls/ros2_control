@@ -25,9 +25,6 @@
 namespace hardware_interface
 {
 
-namespace helpers
-{
-
 /**
   * \brief Get values for queried_interfaces from the int_values. int_values data structure matches
   * int_interfaces vector.
@@ -140,6 +137,5 @@ inline return_type set_internal_values(
   return return_type::OK;
 }
 
-}  // namespace helpers
 }  // namespace hardware_interface
 #endif  // HARDWARE_INTERFACE__HELPERS__COMPONENT_LISTS_MANAGEMENT_HPP_

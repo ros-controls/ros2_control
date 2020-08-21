@@ -48,46 +48,46 @@ std::vector<std::string> Joint::get_state_interfaces() const
 return_type Joint::get_command(
   std::vector<double> & command, const std::vector<std::string> & interfaces) const
 {
-  return helpers::get_internal_values(command, interfaces, info_.command_interfaces, commands_);
+  return get_internal_values(command, interfaces, info_.command_interfaces, commands_);
 }
 
 return_type Joint::get_command(std::vector<double> & command) const
 {
-  return helpers::get_internal_values(command, commands_);
+  return get_internal_values(command, commands_);
 }
 
 return_type Joint::set_command(
   const std::vector<double> & command,
   const std::vector<std::string> & interfaces)
 {
-  return helpers::set_internal_values(command, interfaces, info_.command_interfaces, commands_);
+  return set_internal_values(command, interfaces, info_.command_interfaces, commands_);
 }
 
 return_type Joint::set_command(const std::vector<double> & command)
 {
-  return helpers::set_internal_values(command, commands_);
+  return set_internal_values(command, commands_);
 }
 
 return_type Joint::get_state(
   std::vector<double> & state, const std::vector<std::string> & interfaces) const
 {
-  return helpers::get_internal_values(state, interfaces, info_.state_interfaces, states_);
+  return get_internal_values(state, interfaces, info_.state_interfaces, states_);
 }
 
 return_type Joint::get_state(std::vector<double> & state) const
 {
-  return helpers::get_internal_values(state, states_);
+  return get_internal_values(state, states_);
 }
 
 return_type Joint::set_state(
   const std::vector<double> & state, const std::vector<std::string> & interfaces)
 {
-  return helpers::set_internal_values(state, interfaces, info_.state_interfaces, states_);
+  return set_internal_values(state, interfaces, info_.state_interfaces, states_);
 }
 
 return_type Joint::set_state(const std::vector<double> & state)
 {
-  return helpers::set_internal_values(state, states_);
+  return set_internal_values(state, states_);
 }
 
 }  // namespace hardware_interface
