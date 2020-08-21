@@ -16,9 +16,10 @@
 #include <vector>
 
 #include "hardware_interface/component_info.hpp"
-#include "hardware_interface/helpers/component_lists_management.hpp"
 #include "hardware_interface/sensor.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
+
+#include "./component_lists_management.hpp"
 
 namespace hardware_interface
 {
