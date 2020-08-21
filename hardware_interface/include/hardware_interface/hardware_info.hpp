@@ -20,6 +20,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "hardware_interface/components/component_info.hpp"
+
 namespace hardware_interface
 {
 
@@ -48,17 +50,17 @@ struct HardwareInfo
    * \brief map of joints provided by the hardware where the key is the joint name.
    * Required for Actuator and System Hardware.
    */
-  std::unordered_map<std::string, ComponentInfo> joints;
+  std::unordered_map<std::string, components::ComponentInfo> joints;
   /**
    * \brief map of joints provided by the hardware where the key is the joint name.
    * Required for Sensor and optional for System Hardware.
    */
-  std::unordered_map<std::string, ComponentInfo> sensors;
+  std::unordered_map<std::string, components::ComponentInfo> sensors;
   /**
    * \brief map of transmissions to calcualte ration between joints and physical actuators.
    * Optional for Actuator and System Hardware.
    */
-  std::unordered_map<std::string, ComponentInfo> transmissions;
+  std::unordered_map<std::string, components::ComponentInfo> transmissions;
 };
 
 }  // namespace hardware_interface

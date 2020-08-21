@@ -15,14 +15,10 @@
 #ifndef HARDWARE_INTERFACE__ACTUATOR_HARDWARE_INTERFACE_HPP_
 #define HARDWARE_INTERFACE__ACTUATOR_HARDWARE_INTERFACE_HPP_
 
-#include <algorithm>
-#include <array>
-#include <string>
-#include <vector>
+#include <memory>
 
-#include "hardware_interface/component_info.hpp"
+#include "hardware_interface/components/joint.hpp"
 #include "hardware_interface/hardware_info.hpp"
-#include "hardware_interface/joint.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/hardware_interface_status_values.hpp"
 #include "hardware_interface/visibility_control.h"
@@ -91,7 +87,7 @@ public:
    */
   HARDWARE_INTERFACE_PUBLIC
   virtual
-  return_type read_joint(Joint & joint) const = 0;
+  return_type read_joint(std::shared_ptr<components::Joint> joint) const = 0;
 
   /**
    * \brief Write data from the joint to the hardware using "get_command" function of the Joint class.
@@ -102,7 +98,7 @@ public:
    */
   HARDWARE_INTERFACE_PUBLIC
   virtual
-  return_type write_joint(const Joint & joint) = 0;
+  return_type write_joint(const std::shared_ptr<components::Joint> joint) = 0;
 };
 
 }  // namespace hardware_interface

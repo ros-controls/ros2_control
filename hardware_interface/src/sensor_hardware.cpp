@@ -12,12 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef HARDWARE_INTERFACE__ACTUATOR_HARDWARE_HPP_
-#define HARDWARE_INTERFACE__ACTUATOR_HARDWARE_HPP_
-
 #include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
+#include "hardware_interface/sensor_hardware.hpp"
+
+#include "hardware_interface/components/component_info.hpp"
+#include "hardware_interface/components/sensor.hpp"
 #include "hardware_interface/hardware_info.hpp"
+#include "hardware_interface/sensor_hardware_interface.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/hardware_interface_status_values.hpp"
 #include "hardware_interface/visibility_control.h"
@@ -25,36 +30,33 @@
 namespace hardware_interface
 {
 
-namespace components
+SensorHardware::SensorHardware(std::unique_ptr<SensorHardwareInterface> impl)
+: impl_(std::move(impl))
+{}
+
+return_type SensorHardware::configure(const HardwareInfo & sensor_info)
 {
-class Joint;
-}  // namespace components
-class ActuatorHardwareInterface;
+  return impl_->configure(sensor_info);
+}
 
-class ActuatorHardware final
+return_type SensorHardware::start()
 {
-public:
-  ActuatorHardware() = default;
+  return impl_->start();
+}
 
-  explicit ActuatorHardware(std::unique_ptr<ActuatorHardwareInterface> impl);
+return_type SensorHardware::stop()
+{
+  return impl_->stop();
+}
 
-  ~ActuatorHardware() = default;
+hardware_interface_status SensorHardware::get_status() const
+{
+  return impl_->get_status();
+}
 
-  return_type configure(const HardwareInfo & actuator_info);
-
-  return_type start();
-
-  return_type stop();
-
-  hardware_interface_status get_status() const;
-
-  return_type read_joint(std::shared_ptr<components::Joint> joint);
-
-  return_type write_joint(const std::shared_ptr<components::Joint> joint);
-
-private:
-  std::unique_ptr<ActuatorHardwareInterface> impl_;
-};
+return_type SensorHardware::read_sensor(std::shared_ptr<components::Sensor> sensors)
+{
+  return impl_->read_sensor(sensors);
+}
 
 }  // namespace hardware_interface
-#endif  // HARDWARE_INTERFACE__ACTUATOR_HARDWARE_HPP_

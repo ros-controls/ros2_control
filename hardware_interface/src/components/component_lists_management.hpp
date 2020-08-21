@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef COMPONENT_LISTS_MANAGEMENT_HPP_
-#define COMPONENT_LISTS_MANAGEMENT_HPP_
+#ifndef COMPONENTS__COMPONENT_LISTS_MANAGEMENT_HPP_
+#define COMPONENTS__COMPONENT_LISTS_MANAGEMENT_HPP_
 
 #include <algorithm>
 #include <string>
@@ -23,6 +23,8 @@
 #include "hardware_interface/visibility_control.h"
 
 namespace hardware_interface
+{
+namespace components
 {
 
 /**
@@ -135,5 +137,6 @@ inline return_type set_internal_values(
   return return_type::OK;
 }
 
+}  // namespace components
 }  // namespace hardware_interface
-#endif  // COMPONENT_LISTS_MANAGEMENT_HPP_
+#endif  // COMPONENTS__COMPONENT_LISTS_MANAGEMENT_HPP_

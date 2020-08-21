@@ -15,13 +15,16 @@
 #include <string>
 #include <vector>
 
-#include "hardware_interface/component_info.hpp"
-#include "hardware_interface/joint.hpp"
+#include "hardware_interface/components/joint.hpp"
+
+#include "hardware_interface/components/component_info.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 
 #include "./component_lists_management.hpp"
 
 namespace hardware_interface
+{
+namespace components
 {
 
 return_type Joint::configure(const ComponentInfo & joint_info)
@@ -91,4 +94,5 @@ return_type Joint::set_state(const std::vector<double> & state)
   return set_internal_values(state, states_);
 }
 
+}  // namespace components
 }  // namespace hardware_interface

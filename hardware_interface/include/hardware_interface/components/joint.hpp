@@ -12,17 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef HARDWARE_INTERFACE__JOINT_HPP_
-#define HARDWARE_INTERFACE__JOINT_HPP_
+#ifndef HARDWARE_INTERFACE__COMPONENTS__JOINT_HPP_
+#define HARDWARE_INTERFACE__COMPONENTS__JOINT_HPP_
 
 #include <string>
 #include <vector>
 
-#include "hardware_interface/component_info.hpp"
+#include "hardware_interface/components/component_info.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/visibility_control.h"
 
 namespace hardware_interface
+{
+namespace components
 {
 
 /**
@@ -191,5 +193,6 @@ protected:
   std::vector<double> states_;
 };
 
+}  // namespace components
 }  // namespace hardware_interface
-#endif  // HARDWARE_INTERFACE__JOINT_HPP_
+#endif  // HARDWARE_INTERFACE__COMPONENTS__JOINT_HPP_
