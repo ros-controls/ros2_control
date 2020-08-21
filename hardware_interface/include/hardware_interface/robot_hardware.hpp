@@ -109,6 +109,14 @@ public:
   const std::vector<std::string> & get_registered_joint_names();
 
   HARDWARE_INTERFACE_PUBLIC
+  const std::vector<std::string> & get_registered_actuator_interface_names(
+    const std::string & actuator_name);
+
+  HARDWARE_INTERFACE_PUBLIC
+  const std::vector<std::string> & get_registered_joint_interface_names(
+    const std::string & joint_name);
+
+  HARDWARE_INTERFACE_PUBLIC
   std::vector<ActuatorHandle> get_registered_actuators();
 
   HARDWARE_INTERFACE_PUBLIC

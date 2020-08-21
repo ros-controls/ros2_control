@@ -121,6 +121,12 @@ TEST_F(TestJoints, can_get_registered_joints)
   EXPECT_THAT(
     robot_hw_.get_registered_joint_names(),
     UnorderedElementsAre(JOINT_NAME, JOINT2_NAME));
+  EXPECT_THAT(
+    robot_hw_.get_registered_joint_interface_names(JOINT_NAME),
+    UnorderedElementsAre(FOO_INTERFACE, BAR_INTERFACE));
+  EXPECT_THAT(
+    robot_hw_.get_registered_joint_interface_names(JOINT2_NAME),
+    UnorderedElementsAre(FOO_INTERFACE));
 
   std::vector<hw::JointHandle> handles =
   {{JOINT_NAME, FOO_INTERFACE}, {JOINT_NAME, BAR_INTERFACE},

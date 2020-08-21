@@ -121,6 +121,12 @@ TEST_F(TestActuators, can_get_registered_actuators)
   EXPECT_THAT(
     robot_hw_.get_registered_actuator_names(),
     UnorderedElementsAre(ACTUATOR_NAME, ACTUATOR2_NAME));
+  EXPECT_THAT(
+    robot_hw_.get_registered_actuator_interface_names(ACTUATOR_NAME),
+    UnorderedElementsAre(FOO_INTERFACE, BAR_INTERFACE));
+  EXPECT_THAT(
+    robot_hw_.get_registered_actuator_interface_names(ACTUATOR2_NAME),
+    UnorderedElementsAre(FOO_INTERFACE));
 
   std::vector<hw::ActuatorHandle> handles =
   {{ACTUATOR_NAME, FOO_INTERFACE}, {ACTUATOR_NAME, BAR_INTERFACE},

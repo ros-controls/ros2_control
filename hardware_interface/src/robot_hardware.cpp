@@ -346,6 +346,37 @@ const std::vector<std::string> & RobotHardware::get_registered_joint_names()
 }
 
 template<class HandleType>
+const std::vector<std::string> & get_registered_interface_names(
+  const std::string & name,
+  control_msgs::msg::DynamicJointState & registered)
+{
+  const auto & it = std::find(
+    registered.joint_names.begin(), registered.joint_names.end(), name);
+
+  if (it == registered.joint_names.end()) {
+    throw std::runtime_error(name + " not found");
+  }
+
+  // joint found, can safely cast here
+  const auto joint_index =
+    static_cast<uint64_t>(std::distance(registered.joint_names.begin(), it));
+
+  return registered.interface_values[joint_index].interface_names;
+}
+
+const std::vector<std::string> & RobotHardware::get_registered_actuator_interface_names(
+  const std::string & actuator_name)
+{
+  return get_registered_interface_names<ActuatorHandle>(actuator_name, registered_actuators_);
+}
+
+const std::vector<std::string> & RobotHardware::get_registered_joint_interface_names(
+  const std::string & joint_name)
+{
+  return get_registered_interface_names<JointHandle>(joint_name, registered_joints_);
+}
+
+template<class HandleType>
 std::vector<HandleType> get_registered_handles(control_msgs::msg::DynamicJointState & registered)
 {
   std::vector<HandleType> result;
