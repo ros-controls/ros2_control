@@ -164,3 +164,28 @@ TEST_F(TestJoints, set_get_works_on_registered_jointss)
     EXPECT_DOUBLE_EQ(handle.get_value(), new_value);
   }
 }
+
+TEST_F(TestJoints, can_get_registered_joints_of_interface)
+{
+  ASSERT_EQ(hw::return_type::OK, robot_hw_.register_joint(JOINT_NAME, FOO_INTERFACE));
+  ASSERT_EQ(hw::return_type::OK, robot_hw_.register_joint(JOINT_NAME, BAR_INTERFACE));
+  ASSERT_EQ(hw::return_type::OK, robot_hw_.register_joint(JOINT2_NAME, FOO_INTERFACE));
+
+  std::vector<hw::JointHandle> handles1;
+  ASSERT_EQ(hw::return_type::OK, robot_hw_.get_joint_handles(handles1, FOO_INTERFACE));
+  ASSERT_EQ(handles1.size(), 2ul);
+  for (const auto & handle : handles1) {
+    ASSERT_EQ(handle.get_interface_name(), FOO_INTERFACE);
+  }
+
+  std::vector<hw::JointHandle> handles2;
+  ASSERT_EQ(hw::return_type::OK, robot_hw_.get_joint_handles(handles2, BAR_INTERFACE));
+  ASSERT_EQ(handles2.size(), 1ul);
+  for (const auto & handle : handles2) {
+    ASSERT_EQ(handle.get_interface_name(), BAR_INTERFACE);
+  }
+
+  std::vector<hw::JointHandle> handles3;
+  ASSERT_EQ(hw::return_type::OK, robot_hw_.get_joint_handles(handles3, "NoInterface"));
+  ASSERT_TRUE(handles3.empty());
+}

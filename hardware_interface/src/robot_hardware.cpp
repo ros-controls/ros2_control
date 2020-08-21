@@ -335,6 +335,32 @@ hardware_interface_ret_t RobotHardware::get_joint_handle(JointHandle & joint_han
   return get_handle<JointHandle>(joint_handle, registered_joints_, kJointLoggerName);
 }
 
+template<class HandleType>
+hardware_interface_ret_t get_handles(
+  std::vector<HandleType> & handles,
+  std::vector<HandleType> && registered,
+  const std::string & interface_name)
+{
+  std::copy_if(
+    registered.begin(), registered.end(), std::back_inserter(handles), [&](const auto & handle) {
+      return handle.get_interface_name() == interface_name;
+    });
+  return return_type::OK;
+}
+
+hardware_interface_ret_t RobotHardware::get_actuator_handles(
+  std::vector<ActuatorHandle> & actuator_handles, const std::string & interface_name)
+{
+  return get_handles<ActuatorHandle>(actuator_handles, get_registered_actuators(), interface_name);
+}
+
+hardware_interface_ret_t RobotHardware::get_joint_handles(
+  std::vector<JointHandle> & joint_handles,
+  const std::string & interface_name)
+{
+  return get_handles<JointHandle>(joint_handles, get_registered_joints(), interface_name);
+}
+
 const std::vector<std::string> & RobotHardware::get_registered_actuator_names()
 {
   return registered_actuators_.joint_names;

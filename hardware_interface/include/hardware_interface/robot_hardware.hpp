@@ -103,6 +103,16 @@ public:
   hardware_interface_ret_t get_joint_handle(JointHandle & joint_handle);
 
   HARDWARE_INTERFACE_PUBLIC
+  hardware_interface_ret_t get_actuator_handles(
+    std::vector<ActuatorHandle> & actuator_handles,
+    const std::string & interface_name);
+
+  HARDWARE_INTERFACE_PUBLIC
+  hardware_interface_ret_t get_joint_handles(
+    std::vector<JointHandle> & joint_handles,
+    const std::string & interface_name);
+
+  HARDWARE_INTERFACE_PUBLIC
   const std::vector<std::string> & get_registered_actuator_names();
 
   HARDWARE_INTERFACE_PUBLIC
