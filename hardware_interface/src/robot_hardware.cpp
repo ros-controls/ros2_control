@@ -217,7 +217,8 @@ RobotHardware::get_registered_operation_mode_handles()
 
 hardware_interface_ret_t RobotHardware::register_actuator(
   const std::string & actuator_name,
-  const std::string & interface_name, const double default_value)
+  const std::string & interface_name,
+  const double default_value)
 {
   if (actuator_name.empty() || interface_name.empty()) {
     RCLCPP_ERROR(rclcpp::get_logger(kActuatorLoggerName), "actuator name or interface is empty!");
@@ -300,11 +301,11 @@ std::vector<ActuatorHandle> RobotHardware::get_registered_actuators()
   auto & interface_values = registered_actuators_.interface_values;
 
   assert(registered_actuators_.joint_names.size() == registered_actuators_.interface_values.size());
-  for (size_t i = 0; i < actuator_names.size(); ++i) {
+  for (auto i = 0u; i < actuator_names.size(); ++i) {
     auto & actuator_interfaces = interface_values[i];
     assert(actuator_interfaces.interface_names.size() == actuator_interfaces.values.size());
 
-    for (size_t j = 0; j < actuator_interfaces.interface_names.size(); ++j) {
+    for (auto j = 0u; j < actuator_interfaces.interface_names.size(); ++j) {
       result.emplace_back(
         actuator_names[i], actuator_interfaces.interface_names[j],
         &actuator_interfaces.values[j]);
