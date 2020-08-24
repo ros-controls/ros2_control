@@ -20,10 +20,13 @@ find_package(TinyXML2 REQUIRED)
 add_library(
   hardware_interface
   SHARED
+  src/actuator_hardware.cpp
   src/joint_command_handle.cpp
   src/joint_state_handle.cpp
   src/operation_mode_handle.cpp
   src/robot_hardware.cpp
+  src/sensor_hardware.cpp
+  src/system_hardware.cpp
 )
 target_include_directories(
   hardware_interface
@@ -56,17 +59,17 @@ ament_target_dependencies(
 target_compile_definitions(component_parser PRIVATE "HARDWARE_INTERFACE_BUILDING_DLL")
 
 add_library(
-  control_components
+  components
   SHARED
-  src/joint.cpp
-  src/sensor.cpp
+  src/components/joint.cpp
+  src/components/sensor.cpp
 )
 target_include_directories(
-  control_components
+  components
   PUBLIC
   include
 )
-target_compile_definitions(control_components PRIVATE "HARDWARE_INTERFACE_BUILDING_DLL")
+target_compile_definitions(components PRIVATE "HARDWARE_INTERFACE_BUILDING_DLL")
 
 install(
   DIRECTORY include/
@@ -75,7 +78,8 @@ install(
 
 install(
   TARGETS
-  control_components
+  component_parser
+  components
   hardware_interface
   RUNTIME DESTINATION bin
   ARCHIVE DESTINATION lib
@@ -112,7 +116,7 @@ if(BUILD_TESTING)
 
   ament_add_gmock(test_component_interfaces test/test_component_interfaces.cpp)
   target_include_directories(test_component_interfaces PRIVATE include)
-  target_link_libraries(test_component_interfaces control_components hardware_interface)
+  target_link_libraries(test_component_interfaces components hardware_interface)
 endif()
 
 ament_export_include_directories(
@@ -120,7 +124,7 @@ ament_export_include_directories(
 )
 ament_export_libraries(
   component_parser
-  control_components
+  components
   hardware_interface
 )
 ament_export_dependencies(

@@ -16,13 +16,11 @@
 #define HARDWARE_INTERFACE__SYSTEM_HARDWARE_INTERFACE_HPP_
 
 #include <memory>
-#include <string>
 #include <vector>
 
-#include "hardware_interface/component_info.hpp"
+#include "hardware_interface/components/joint.hpp"
+#include "hardware_interface/components/sensor.hpp"
 #include "hardware_interface/hardware_info.hpp"
-#include "hardware_interface/joint.hpp"
-#include "hardware_interface/sensor.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/hardware_interface_status_values.hpp"
 #include "hardware_interface/visibility_control.h"
@@ -93,7 +91,7 @@ public:
    */
   HARDWARE_INTERFACE_PUBLIC
   virtual
-  return_type read_sensors(std::vector<std::shared_ptr<Sensor>> & sensors) const = 0;
+  return_type read_sensors(std::vector<std::shared_ptr<components::Sensor>> & sensors) const = 0;
 
   /**
    * \brief Read data fromt the hardware into joints using "set_state" function of the Joint class.
@@ -104,7 +102,7 @@ public:
    */
   HARDWARE_INTERFACE_PUBLIC
   virtual
-  return_type read_joints(std::vector<std::shared_ptr<Joint>> & joints) const = 0;
+  return_type read_joints(std::vector<std::shared_ptr<components::Joint>> & joints) const = 0;
 
   /**
    * \brief Write data from the joints to the hardware using "get_command" function of the Joint class.
@@ -116,7 +114,7 @@ public:
   HARDWARE_INTERFACE_PUBLIC
   return_type
   virtual
-  write_joints(const std::vector<std::shared_ptr<Joint>> & joints) = 0;
+  write_joints(const std::vector<std::shared_ptr<components::Joint>> & joints) = 0;
 };
 
 }  // namespace hardware_interface

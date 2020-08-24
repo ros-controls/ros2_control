@@ -20,12 +20,12 @@
 
 #include "hardware_interface/actuator_hardware.hpp"
 #include "hardware_interface/actuator_hardware_interface.hpp"
-#include "hardware_interface/component_info.hpp"
+#include "hardware_interface/components/component_info.hpp"
+#include "hardware_interface/components/joint.hpp"
+#include "hardware_interface/components/sensor.hpp"
 #include "hardware_interface/hardware_info.hpp"
-#include "hardware_interface/joint.hpp"
 #include "hardware_interface/sensor_hardware_interface.hpp"
 #include "hardware_interface/sensor_hardware.hpp"
-#include "hardware_interface/sensor.hpp"
 #include "hardware_interface/system_hardware_interface.hpp"
 #include "hardware_interface/system_hardware.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
@@ -40,10 +40,10 @@ namespace hardware_interface
 namespace hardware_interfaces_components_test
 {
 
-class DummyPositionJoint : public Joint
+class DummyPositionJoint : public components::Joint
 {
 public:
-  return_type configure(const ComponentInfo & joint_info)
+  return_type configure(const components::ComponentInfo & joint_info)
   {
     if (Joint::configure(joint_info) != return_type::OK) {
       return return_type::ERROR;
@@ -70,10 +70,10 @@ private:
   double max_position_, min_position_;
 };
 
-class DummyMultiJoint : public Joint
+class DummyMultiJoint : public components::Joint
 {
 public:
-  return_type configure(const ComponentInfo & joint_info)
+  return_type configure(const components::ComponentInfo & joint_info)
   {
     if (Joint::configure(joint_info) != return_type::OK) {
       return return_type::ERROR;
@@ -95,10 +95,10 @@ private:
   double max_velocity_, min_velocity_;
 };
 
-class DummyForceTorqueSensor : public Sensor
+class DummyForceTorqueSensor : public components::Sensor
 {
 public:
-  return_type configure(const ComponentInfo & sensor_info)
+  return_type configure(const components::ComponentInfo & sensor_info)
   {
     if (Sensor::configure(sensor_info) != return_type::OK) {
       return return_type::ERROR;
@@ -158,16 +158,16 @@ class DummyActuatorHardware : public ActuatorHardwareInterface
     return status_;
   }
 
-  return_type read_joint(Joint & joint) const override
+  return_type read_joint(std::shared_ptr<components::Joint> joint) const override
   {
-    std::vector<std::string> interfaces = joint.get_state_interfaces();
-    return joint.set_state(hw_values_, interfaces);
+    std::vector<std::string> interfaces = joint->get_state_interfaces();
+    return joint->set_state(hw_values_, interfaces);
   }
 
-  return_type write_joint(const Joint & joint) override
+  return_type write_joint(const std::shared_ptr<components::Joint> joint) override
   {
-    std::vector<std::string> interfaces = joint.get_command_interfaces();
-    return joint.get_command(hw_values_, interfaces);
+    std::vector<std::string> interfaces = joint->get_command_interfaces();
+    return joint->get_command(hw_values_, interfaces);
   }
 
 private:
@@ -214,16 +214,9 @@ class DummySensorHardware : public SensorHardwareInterface
     return status_;
   }
 
-  return_type read_sensors(const std::vector<std::shared_ptr<Sensor>> & sensors) const override
+  return_type read_sensor(std::shared_ptr<components::Sensor> sensor) const override
   {
-    return_type ret = return_type::OK;
-    for (const auto & sensor : sensors) {
-      ret = sensor->set_state(ft_hw_values_);
-      if (ret != return_type::OK) {
-        break;
-      }
-    }
-    return ret;
+    return sensor->set_state(ft_hw_values_);
   }
 
 private:
@@ -272,7 +265,8 @@ class DummySystemHardware : public SystemHardwareInterface
     return status_;
   }
 
-  return_type read_sensors(std::vector<std::shared_ptr<Sensor>> & sensors) const override
+  return_type read_sensors(std::vector<std::shared_ptr<components::Sensor>> & sensors) const
+  override
   {
     return_type ret = return_type::OK;
     for (const auto & sensor : sensors) {
@@ -284,7 +278,7 @@ class DummySystemHardware : public SystemHardwareInterface
     return ret;
   }
 
-  return_type read_joints(std::vector<std::shared_ptr<Joint>> & joints) const override
+  return_type read_joints(std::vector<std::shared_ptr<components::Joint>> & joints) const override
   {
     return_type ret = return_type::OK;
     std::vector<std::string> interfaces;
@@ -301,7 +295,7 @@ class DummySystemHardware : public SystemHardwareInterface
     return ret;
   }
 
-  return_type write_joints(const std::vector<std::shared_ptr<Joint>> & joints) override
+  return_type write_joints(const std::vector<std::shared_ptr<components::Joint>> & joints) override
   {
     return_type ret = return_type::OK;
     for (const auto & joint : joints) {
@@ -326,18 +320,18 @@ private:
 }  // namespace hardware_interfaces_components_test
 }  // namespace hardware_interface
 
-using hardware_interface::ComponentInfo;
-using hardware_interface::HardwareInfo;
+using hardware_interface::components::ComponentInfo;
+using hardware_interface::components::Joint;
+using hardware_interface::components::Sensor;
 using hardware_interface::ActuatorHardware;
 using hardware_interface::ActuatorHardwareInterface;
-using hardware_interface::Joint;
-using hardware_interface::Sensor;
+using hardware_interface::HardwareInfo;
+using hardware_interface::hardware_interface_status;
+using hardware_interface::return_type;
 using hardware_interface::SensorHardware;
 using hardware_interface::SensorHardwareInterface;
 using hardware_interface::SystemHardware;
 using hardware_interface::SystemHardwareInterface;
-using hardware_interface::hardware_interface_status;
-using hardware_interface::return_type;
 
 using hardware_interface::hardware_interfaces_components_test::DummyForceTorqueSensor;
 using hardware_interface::hardware_interfaces_components_test::DummyMultiJoint;
@@ -603,23 +597,23 @@ TEST_F(TestComponentInterfaces, sensor_example_component_works)
 TEST_F(TestComponentInterfaces, actuator_hardware_interface_works)
 {
   ActuatorHardware actuator_hw(std::make_unique<DummyActuatorHardware>());
-  DummyPositionJoint joint;
+  auto joint = std::make_shared<DummyPositionJoint>();
 
   HardwareInfo actuator_hw_info;
   actuator_hw_info.name = "DummyActuatorHardware";
   actuator_hw_info.hardware_parameters["example_param_write_for_sec"] = "2";
   actuator_hw_info.hardware_parameters["example_param_read_for_sec"] = "3";
 
-  EXPECT_EQ(joint.configure(joint_info), return_type::OK);
+  EXPECT_EQ(joint->configure(joint_info), return_type::OK);
 
   EXPECT_EQ(actuator_hw.configure(actuator_hw_info), return_type::OK);
   EXPECT_EQ(actuator_hw.get_status(), hardware_interface_status::CONFIGURED);
   EXPECT_EQ(actuator_hw.start(), return_type::OK);
   EXPECT_EQ(actuator_hw.get_status(), hardware_interface_status::STARTED);
   EXPECT_EQ(actuator_hw.read_joint(joint), return_type::OK);
-  std::vector<std::string> interfaces = joint.get_state_interfaces();
+  std::vector<std::string> interfaces = joint->get_state_interfaces();
   std::vector<double> output;
-  EXPECT_EQ(joint.get_state(output, interfaces), return_type::OK);
+  EXPECT_EQ(joint->get_state(output, interfaces), return_type::OK);
   ASSERT_THAT(output, SizeIs(1));
   EXPECT_EQ(output[0], 1.2);
   EXPECT_EQ(interfaces[0], hardware_interface::HW_IF_POSITION);
@@ -631,7 +625,7 @@ TEST_F(TestComponentInterfaces, actuator_hardware_interface_works)
 TEST_F(TestComponentInterfaces, sensor_interface_with_hardware_works)
 {
   SensorHardware sensor_hw(std::make_unique<DummySensorHardware>());
-  std::shared_ptr<DummyForceTorqueSensor> sensor(std::make_shared<DummyForceTorqueSensor>());
+  auto sensor = std::make_shared<DummyForceTorqueSensor>();
 
   HardwareInfo sensor_hw_info;
   sensor_hw_info.name = "DummySensor";
@@ -643,9 +637,7 @@ TEST_F(TestComponentInterfaces, sensor_interface_with_hardware_works)
   EXPECT_EQ(sensor_hw.get_status(), hardware_interface_status::CONFIGURED);
   EXPECT_EQ(sensor_hw.start(), return_type::OK);
   EXPECT_EQ(sensor_hw.get_status(), hardware_interface_status::STARTED);
-  std::vector<std::shared_ptr<Sensor>> sensors;
-  sensors.push_back(sensor);
-  EXPECT_EQ(sensor_hw.read_sensors(sensors), return_type::OK);
+  EXPECT_EQ(sensor_hw.read_sensor(sensor), return_type::OK);
   std::vector<double> output;
   std::vector<std::string> interfaces = sensor->get_state_interfaces();
   EXPECT_EQ(sensor->get_state(output, interfaces), return_type::OK);
@@ -660,8 +652,8 @@ TEST_F(TestComponentInterfaces, sensor_interface_with_hardware_works)
 TEST_F(TestComponentInterfaces, system_interface_with_hardware_works)
 {
   SystemHardware system(std::make_unique<DummySystemHardware>());
-  std::shared_ptr<DummyPositionJoint> joint1(std::make_shared<DummyPositionJoint>());
-  std::shared_ptr<DummyPositionJoint> joint2(std::make_shared<DummyPositionJoint>());
+  auto joint1 = std::make_shared<DummyPositionJoint>();
+  auto joint2 = std::make_shared<DummyPositionJoint>();
   std::vector<std::shared_ptr<Joint>> joints;
   joints.push_back(joint1);
   joints.push_back(joint2);

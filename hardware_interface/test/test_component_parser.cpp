@@ -436,7 +436,7 @@ protected:
       <param name="max_velocity_value">1</param>
     </joint>
     <transmission name="transmission1">
-      <classType>transmission_interface/RotationToLinerTansmission</classType>
+      <classType>transmission_interface/RotationToLinearTansmission</classType>
       <param name="joint_to_actuator">${1024/PI}</param>
     </transmission>
   </ros2_control>
@@ -666,17 +666,19 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_one_interface)
 
   ASSERT_THAT(hardware_info.joints, SizeIs(2));
 
-  EXPECT_EQ(hardware_info.joints[0].name, "joint1");
-  EXPECT_EQ(hardware_info.joints[0].type, "joint");
-  EXPECT_EQ(hardware_info.joints[0].class_type, "ros2_control_components/PositionJoint");
-  ASSERT_THAT(hardware_info.joints[0].parameters, SizeIs(2));
-  EXPECT_EQ(hardware_info.joints[0].parameters.at("max_position_value"), "1");
+  const auto & joint1_component = hardware_info.joints.at("joint1");
+  EXPECT_EQ(joint1_component.name, "joint1");
+  EXPECT_EQ(joint1_component.type, "joint");
+  EXPECT_EQ(joint1_component.class_type, "ros2_control_components/PositionJoint");
+  ASSERT_THAT(joint1_component.parameters, SizeIs(2));
+  EXPECT_EQ(joint1_component.parameters.at("max_position_value"), "1");
 
-  EXPECT_EQ(hardware_info.joints[1].name, "joint2");
-  EXPECT_EQ(hardware_info.joints[1].type, "joint");
-  EXPECT_EQ(hardware_info.joints[1].class_type, "ros2_control_components/PositionJoint");
-  ASSERT_THAT(hardware_info.joints[1].parameters, SizeIs(2));
-  EXPECT_EQ(hardware_info.joints[1].parameters.at("min_position_value"), "-1");
+  const auto & joint2_component = hardware_info.joints.at("joint2");
+  EXPECT_EQ(joint2_component.name, "joint2");
+  EXPECT_EQ(joint2_component.type, "joint");
+  EXPECT_EQ(joint2_component.class_type, "ros2_control_components/PositionJoint");
+  ASSERT_THAT(joint2_component.parameters, SizeIs(2));
+  EXPECT_EQ(joint2_component.parameters.at("min_position_value"), "-1");
 }
 
 TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_multi_interface)
@@ -697,24 +699,26 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_multi_interface
 
   ASSERT_THAT(hardware_info.joints, SizeIs(2));
 
-  EXPECT_EQ(hardware_info.joints[0].name, "joint1");
-  EXPECT_EQ(hardware_info.joints[0].type, "joint");
-  EXPECT_EQ(hardware_info.joints[0].class_type, "ros2_control_components/MultiInterfaceJoint");
-  ASSERT_THAT(hardware_info.joints[0].command_interfaces, SizeIs(3));
-  EXPECT_EQ(hardware_info.joints[0].command_interfaces[0], "position");
-  ASSERT_THAT(hardware_info.joints[0].state_interfaces, SizeIs(3));
-  EXPECT_EQ(hardware_info.joints[0].state_interfaces[1], "velocity");
-  ASSERT_THAT(hardware_info.joints[0].parameters, SizeIs(6));
-  EXPECT_EQ(hardware_info.joints[0].parameters.at("min_effort_value"), "-0.5");
+  const auto & joint1_component = hardware_info.joints.at("joint1");
+  EXPECT_EQ(joint1_component.name, "joint1");
+  EXPECT_EQ(joint1_component.type, "joint");
+  EXPECT_EQ(joint1_component.class_type, "ros2_control_components/MultiInterfaceJoint");
+  ASSERT_THAT(joint1_component.command_interfaces, SizeIs(3));
+  ASSERT_THAT(joint1_component.state_interfaces, SizeIs(3));
+  ASSERT_THAT(joint1_component.parameters, SizeIs(6));
+  EXPECT_EQ(joint1_component.command_interfaces[0], "position");
+  EXPECT_EQ(joint1_component.state_interfaces[1], "velocity");
+  EXPECT_EQ(joint1_component.parameters.at("min_effort_value"), "-0.5");
 
-  EXPECT_EQ(hardware_info.joints[1].name, "joint2");
-  EXPECT_EQ(hardware_info.joints[1].type, "joint");
-  EXPECT_EQ(hardware_info.joints[1].class_type, "ros2_control_components/MultiInterfaceJoint");
-  ASSERT_THAT(hardware_info.joints[1].command_interfaces, SizeIs(1));
-  ASSERT_THAT(hardware_info.joints[1].state_interfaces, SizeIs(3));
-  EXPECT_EQ(hardware_info.joints[1].state_interfaces[2], "effort");
-  ASSERT_THAT(hardware_info.joints[1].parameters, SizeIs(6));
-  EXPECT_EQ(hardware_info.joints[1].parameters.at("min_position_value"), "-1");
+  const auto & joint2_component = hardware_info.joints.at("joint2");
+  EXPECT_EQ(joint2_component.name, "joint2");
+  EXPECT_EQ(joint2_component.type, "joint");
+  EXPECT_EQ(joint2_component.class_type, "ros2_control_components/MultiInterfaceJoint");
+  ASSERT_THAT(joint2_component.command_interfaces, SizeIs(1));
+  ASSERT_THAT(joint2_component.state_interfaces, SizeIs(3));
+  ASSERT_THAT(joint2_component.parameters, SizeIs(6));
+  EXPECT_EQ(joint2_component.state_interfaces[2], "effort");
+  EXPECT_EQ(joint2_component.parameters.at("min_position_value"), "-1");
 }
 
 TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_robot_with_sensor)
@@ -735,25 +739,28 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_robot_with_sens
 
   ASSERT_THAT(hardware_info.joints, SizeIs(2));
 
-  EXPECT_EQ(hardware_info.joints[0].name, "joint1");
-  EXPECT_EQ(hardware_info.joints[0].type, "joint");
-  EXPECT_EQ(hardware_info.joints[0].class_type, "ros2_control_components/PositionJoint");
-  ASSERT_THAT(hardware_info.joints[0].parameters, SizeIs(2));
-  EXPECT_EQ(hardware_info.joints[0].parameters.at("max_position_value"), "1");
+  const auto & joint1_component = hardware_info.joints.at("joint1");
+  EXPECT_EQ(joint1_component.name, "joint1");
+  EXPECT_EQ(joint1_component.type, "joint");
+  EXPECT_EQ(joint1_component.class_type, "ros2_control_components/PositionJoint");
+  ASSERT_THAT(joint1_component.parameters, SizeIs(2));
+  EXPECT_EQ(joint1_component.parameters.at("max_position_value"), "1");
 
-  EXPECT_EQ(hardware_info.joints[1].name, "joint2");
-  EXPECT_EQ(hardware_info.joints[1].type, "joint");
-  EXPECT_EQ(hardware_info.joints[1].class_type, "ros2_control_components/PositionJoint");
-  ASSERT_THAT(hardware_info.joints[1].parameters, SizeIs(2));
-  EXPECT_EQ(hardware_info.joints[1].parameters.at("min_position_value"), "-1");
+  const auto & joint2_component = hardware_info.joints.at("joint2");
+  EXPECT_EQ(joint2_component.name, "joint2");
+  EXPECT_EQ(joint2_component.type, "joint");
+  EXPECT_EQ(joint2_component.class_type, "ros2_control_components/PositionJoint");
+  ASSERT_THAT(joint2_component.parameters, SizeIs(2));
+  EXPECT_EQ(joint2_component.parameters.at("min_position_value"), "-1");
 
   ASSERT_THAT(hardware_info.sensors, SizeIs(1));
 
-  EXPECT_EQ(hardware_info.sensors[0].name, "tcp_fts_sensor");
-  EXPECT_EQ(hardware_info.sensors[0].type, "sensor");
-  EXPECT_EQ(hardware_info.sensors[0].class_type, "ros2_control_components/ForceTorqueSensor");
-  ASSERT_THAT(hardware_info.sensors[0].parameters, SizeIs(3));
-  EXPECT_EQ(hardware_info.sensors[0].parameters.at("frame_id"), "kuka_tcp");
+  const auto & sensor1_component = hardware_info.sensors.at("tcp_fts_sensor");
+  EXPECT_EQ(sensor1_component.name, "tcp_fts_sensor");
+  EXPECT_EQ(sensor1_component.type, "sensor");
+  EXPECT_EQ(sensor1_component.class_type, "ros2_control_components/ForceTorqueSensor");
+  ASSERT_THAT(sensor1_component.parameters, SizeIs(3));
+  EXPECT_EQ(sensor1_component.parameters.at("frame_id"), "kuka_tcp");
 }
 
 TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_robot_with_external_sensor)
@@ -762,47 +769,51 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_robot_with_exte
     valid_urdf_ros2_control_system_robot_with_external_sensor_ + urdf_xml_tail_;
   const auto control_hardware = parse_control_resources_from_urdf(urdf_to_test);
   ASSERT_THAT(control_hardware, SizeIs(2));
-  auto hardware_info = control_hardware.at(0);
+  const auto hardware1_info = control_hardware.at(0);
 
-  EXPECT_EQ(hardware_info.name, "2DOF_System_Robot_Position_Only_External_Sensor");
-  EXPECT_EQ(hardware_info.type, "system");
+  EXPECT_EQ(hardware1_info.name, "2DOF_System_Robot_Position_Only_External_Sensor");
+  EXPECT_EQ(hardware1_info.type, "system");
   EXPECT_EQ(
-    hardware_info.hardware_class_type,
+    hardware1_info.hardware_class_type,
     "ros2_control_demo_hardware/2DOF_System_Hardware_Position_Only");
-  ASSERT_THAT(hardware_info.hardware_parameters, SizeIs(2));
-  EXPECT_EQ(hardware_info.hardware_parameters.at("example_param_write_for_sec"), "2");
+  ASSERT_THAT(hardware1_info.hardware_parameters, SizeIs(2));
+  EXPECT_EQ(hardware1_info.hardware_parameters.at("example_param_write_for_sec"), "2");
 
-  ASSERT_THAT(hardware_info.joints, SizeIs(2));
+  ASSERT_THAT(hardware1_info.joints, SizeIs(2));
 
-  EXPECT_EQ(hardware_info.joints[0].name, "joint1");
-  EXPECT_EQ(hardware_info.joints[0].type, "joint");
-  EXPECT_EQ(hardware_info.joints[0].class_type, "ros2_control_components/PositionJoint");
-  ASSERT_THAT(hardware_info.joints[0].parameters, SizeIs(2));
-  EXPECT_EQ(hardware_info.joints[0].parameters.at("max_position_value"), "1");
+  const auto & joint1_component = hardware1_info.joints.at("joint1");
+  EXPECT_EQ(joint1_component.name, "joint1");
+  EXPECT_EQ(joint1_component.type, "joint");
+  EXPECT_EQ(joint1_component.class_type, "ros2_control_components/PositionJoint");
+  ASSERT_THAT(joint1_component.parameters, SizeIs(2));
+  EXPECT_EQ(joint1_component.parameters.at("max_position_value"), "1");
 
-  EXPECT_EQ(hardware_info.joints[1].name, "joint2");
-  EXPECT_EQ(hardware_info.joints[1].type, "joint");
-  EXPECT_EQ(hardware_info.joints[1].class_type, "ros2_control_components/PositionJoint");
-  ASSERT_THAT(hardware_info.joints[1].parameters, SizeIs(2));
-  EXPECT_EQ(hardware_info.joints[1].parameters.at("min_position_value"), "-1");
+  const auto & joint2_component = hardware1_info.joints.at("joint2");
+  EXPECT_EQ(joint2_component.name, "joint2");
+  EXPECT_EQ(joint2_component.type, "joint");
+  EXPECT_EQ(joint2_component.class_type, "ros2_control_components/PositionJoint");
+  ASSERT_THAT(joint2_component.parameters, SizeIs(2));
+  EXPECT_EQ(joint2_component.parameters.at("min_position_value"), "-1");
 
-  ASSERT_THAT(hardware_info.sensors, SizeIs(0));
+  ASSERT_THAT(hardware1_info.sensors, SizeIs(0));
 
-  hardware_info = control_hardware.at(1);
+  const auto hardware2_info = control_hardware.at(1);
 
-  EXPECT_EQ(hardware_info.name, "2DOF_System_Robot_ForceTorqueSensor");
-  EXPECT_EQ(hardware_info.type, "sensor");
-  EXPECT_EQ(hardware_info.hardware_class_type, "ros2_control_demo_hardware/2D_Sensor_Force_Torque");
-  ASSERT_THAT(hardware_info.hardware_parameters, SizeIs(1));
-  EXPECT_EQ(hardware_info.hardware_parameters.at("example_param_read_for_sec"), "0.43");
+  EXPECT_EQ(hardware2_info.name, "2DOF_System_Robot_ForceTorqueSensor");
+  EXPECT_EQ(hardware2_info.type, "sensor");
+  EXPECT_EQ(hardware2_info.hardware_class_type, "ros2_control_demo_hardware/2D_Sensor_Force_Torque");
+  ASSERT_THAT(hardware2_info.hardware_parameters, SizeIs(1));
+  EXPECT_EQ(hardware2_info.hardware_parameters.at("example_param_read_for_sec"), "0.43");
 
-  ASSERT_THAT(hardware_info.sensors, SizeIs(1));
-  EXPECT_EQ(hardware_info.sensors[0].name, "tcp_fts_sensor");
-  EXPECT_EQ(hardware_info.sensors[0].type, "sensor");
-  EXPECT_EQ(hardware_info.sensors[0].class_type, "ros2_control_components/ForceTorqueSensor");
-  ASSERT_THAT(hardware_info.sensors[0].parameters, SizeIs(3));
-  EXPECT_EQ(hardware_info.sensors[0].parameters.at("frame_id"), "kuka_tcp");
-  EXPECT_EQ(hardware_info.sensors[0].parameters.at("lower_limits"), "-100");
+  ASSERT_THAT(hardware2_info.sensors, SizeIs(1));
+
+  const auto & sensor1_component = hardware2_info.sensors.at("tcp_fts_sensor");
+  EXPECT_EQ(sensor1_component.name, "tcp_fts_sensor");
+  EXPECT_EQ(sensor1_component.type, "sensor");
+  EXPECT_EQ(sensor1_component.class_type, "ros2_control_components/ForceTorqueSensor");
+  ASSERT_THAT(sensor1_component.parameters, SizeIs(3));
+  EXPECT_EQ(sensor1_component.parameters.at("frame_id"), "kuka_tcp");
+  EXPECT_EQ(sensor1_component.parameters.at("lower_limits"), "-100");
 }
 
 TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_modular_robot)
@@ -811,39 +822,46 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_modular_robot
     urdf_xml_tail_;
   const auto control_hardware = parse_control_resources_from_urdf(urdf_to_test);
   ASSERT_THAT(control_hardware, SizeIs(2));
-  auto hardware_info = control_hardware.at(0);
+  auto hardware1_info = control_hardware.at(0);
 
-  EXPECT_EQ(hardware_info.name, "2DOF_Modular_Robot_joint1");
-  EXPECT_EQ(hardware_info.type, "actuator");
+  EXPECT_EQ(hardware1_info.name, "2DOF_Modular_Robot_joint1");
+  EXPECT_EQ(hardware1_info.type, "actuator");
   EXPECT_EQ(
-    hardware_info.hardware_class_type,
+    hardware1_info.hardware_class_type,
     "ros2_control_demo_hardware/Position_Actuator_Hadware");
-  ASSERT_THAT(hardware_info.hardware_parameters, SizeIs(2));
-  EXPECT_EQ(hardware_info.hardware_parameters.at("example_param_write_for_sec"), "1.23");
+  ASSERT_THAT(hardware1_info.hardware_parameters, SizeIs(2));
+  EXPECT_EQ(hardware1_info.hardware_parameters.at("example_param_write_for_sec"), "1.23");
 
-  ASSERT_THAT(hardware_info.joints, SizeIs(1));
-  EXPECT_EQ(hardware_info.joints[0].name, "joint1");
-  EXPECT_EQ(hardware_info.joints[0].type, "joint");
-  EXPECT_EQ(hardware_info.joints[0].class_type, "ros2_control_components/PositionJoint");
-  ASSERT_THAT(hardware_info.joints[0].parameters, SizeIs(2));
-  EXPECT_EQ(hardware_info.joints[0].parameters.at("max_position_value"), "1");
+  ASSERT_THAT(hardware1_info.joints, SizeIs(1));
 
-  hardware_info = control_hardware.at(1);
+  {
+    const auto & joint1_component = hardware1_info.joints.at("joint1");
+    EXPECT_EQ(joint1_component.name, "joint1");
+    EXPECT_EQ(joint1_component.type, "joint");
+    EXPECT_EQ(joint1_component.class_type, "ros2_control_components/PositionJoint");
+    ASSERT_THAT(joint1_component.parameters, SizeIs(2));
+    EXPECT_EQ(joint1_component.parameters.at("max_position_value"), "1");
+  }
+  const auto hardware2_info = control_hardware.at(1);
 
-  EXPECT_EQ(hardware_info.name, "2DOF_Modular_Robot_joint2");
-  EXPECT_EQ(hardware_info.type, "actuator");
+  EXPECT_EQ(hardware2_info.name, "2DOF_Modular_Robot_joint2");
+  EXPECT_EQ(hardware2_info.type, "actuator");
   EXPECT_EQ(
-    hardware_info.hardware_class_type,
+    hardware2_info.hardware_class_type,
     "ros2_control_demo_hardware/Position_Actuator_Hadware");
-  ASSERT_THAT(hardware_info.hardware_parameters, SizeIs(2));
-  EXPECT_EQ(hardware_info.hardware_parameters.at("example_param_read_for_sec"), "2.12");
+  ASSERT_THAT(hardware2_info.hardware_parameters, SizeIs(2));
+  EXPECT_EQ(hardware2_info.hardware_parameters.at("example_param_read_for_sec"), "2.12");
 
-  ASSERT_THAT(hardware_info.joints, SizeIs(1));
-  EXPECT_EQ(hardware_info.joints[0].name, "joint2");
-  EXPECT_EQ(hardware_info.joints[0].type, "joint");
-  EXPECT_EQ(hardware_info.joints[0].class_type, "ros2_control_components/PositionJoint");
-  ASSERT_THAT(hardware_info.joints[0].parameters, SizeIs(2));
-  EXPECT_EQ(hardware_info.joints[0].parameters.at("min_position_value"), "-1");
+  ASSERT_THAT(hardware2_info.joints, SizeIs(1));
+
+  {
+    const auto & joint2_component = hardware2_info.joints.at("joint2");
+    EXPECT_EQ(joint2_component.name, "joint2");
+    EXPECT_EQ(joint2_component.type, "joint");
+    EXPECT_EQ(joint2_component.class_type, "ros2_control_components/PositionJoint");
+    ASSERT_THAT(joint2_component.parameters, SizeIs(2));
+    EXPECT_EQ(joint2_component.parameters.at("min_position_value"), "-1");
+  }
 }
 
 TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_modular_robot_with_sensors)
@@ -852,94 +870,111 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_modular_robot
     valid_urdf_ros2_control_actuator_modular_robot_sensors_ + urdf_xml_tail_;
   const auto control_hardware = parse_control_resources_from_urdf(urdf_to_test);
   ASSERT_THAT(control_hardware, SizeIs(4));
-  auto hardware_info = control_hardware.at(0);
+  const auto hardware1_info = control_hardware.at(0);
 
-  EXPECT_EQ(hardware_info.name, "2DOF_Modular_Robot_joint1");
-  EXPECT_EQ(hardware_info.type, "actuator");
+  EXPECT_EQ(hardware1_info.name, "2DOF_Modular_Robot_joint1");
+  EXPECT_EQ(hardware1_info.type, "actuator");
   EXPECT_EQ(
-    hardware_info.hardware_class_type,
+    hardware1_info.hardware_class_type,
     "ros2_control_demo_hardware/Velocity_Actuator_Hadware");
-  ASSERT_THAT(hardware_info.hardware_parameters, SizeIs(2));
-  EXPECT_EQ(hardware_info.hardware_parameters.at("example_param_write_for_sec"), "1.23");
+  ASSERT_THAT(hardware1_info.hardware_parameters, SizeIs(2));
+  EXPECT_EQ(hardware1_info.hardware_parameters.at("example_param_write_for_sec"), "1.23");
 
-  ASSERT_THAT(hardware_info.joints, SizeIs(1));
-  EXPECT_EQ(hardware_info.joints[0].name, "joint1");
-  EXPECT_EQ(hardware_info.joints[0].type, "joint");
-  EXPECT_EQ(hardware_info.joints[0].class_type, "ros2_control_components/VelocityJoint");
-  ASSERT_THAT(hardware_info.joints[0].command_interfaces, SizeIs(1));
-  EXPECT_EQ(hardware_info.joints[0].command_interfaces[0], "velocity");
-  ASSERT_THAT(hardware_info.joints[0].parameters, SizeIs(2));
-  EXPECT_EQ(hardware_info.joints[0].parameters.at("max_velocity_value"), "1");
+  ASSERT_THAT(hardware1_info.joints, SizeIs(1));
+  {
+    const auto & joint1_component = hardware1_info.joints.at("joint1");
+    EXPECT_EQ(joint1_component.name, "joint1");
+    EXPECT_EQ(joint1_component.type, "joint");
+    EXPECT_EQ(joint1_component.class_type, "ros2_control_components/VelocityJoint");
+    ASSERT_THAT(joint1_component.command_interfaces, SizeIs(1));
+    EXPECT_EQ(joint1_component.command_interfaces[0], "velocity");
+    ASSERT_THAT(joint1_component.parameters, SizeIs(2));
+    EXPECT_EQ(joint1_component.parameters.at("max_velocity_value"), "1");
+  }
 
-  ASSERT_THAT(hardware_info.transmissions, SizeIs(1));
-  EXPECT_EQ(hardware_info.transmissions[0].name, "transmission1");
-  EXPECT_EQ(hardware_info.transmissions[0].type, "transmission");
-  EXPECT_EQ(hardware_info.transmissions[0].class_type, "transmission_interface/SimpleTansmission");
-  ASSERT_THAT(hardware_info.transmissions[0].parameters, SizeIs(1));
-  EXPECT_EQ(hardware_info.transmissions[0].parameters.at("joint_to_actuator"), "${1024/PI}");
+  ASSERT_THAT(hardware1_info.transmissions, SizeIs(1));
+  {
+    const auto & transmission1_component = hardware1_info.transmissions.at("transmission1");
+    EXPECT_EQ(transmission1_component.name, "transmission1");
+    EXPECT_EQ(transmission1_component.type, "transmission");
+    EXPECT_EQ(transmission1_component.class_type, "transmission_interface/SimpleTansmission");
+    ASSERT_THAT(transmission1_component.parameters, SizeIs(1));
+    EXPECT_EQ(transmission1_component.parameters.at("joint_to_actuator"), "${1024/PI}");
+  }
 
-  hardware_info = control_hardware.at(1);
+  const auto hardware2_info = control_hardware.at(1);
 
-  EXPECT_EQ(hardware_info.name, "2DOF_Modular_Robot_joint2");
-  EXPECT_EQ(hardware_info.type, "actuator");
+  EXPECT_EQ(hardware2_info.name, "2DOF_Modular_Robot_joint2");
+  EXPECT_EQ(hardware2_info.type, "actuator");
   EXPECT_EQ(
-    hardware_info.hardware_class_type,
+    hardware2_info.hardware_class_type,
     "ros2_control_demo_hardware/Velocity_Actuator_Hadware");
-  ASSERT_THAT(hardware_info.hardware_parameters, SizeIs(2));
-  EXPECT_EQ(hardware_info.hardware_parameters.at("example_param_read_for_sec"), "3");
+  ASSERT_THAT(hardware2_info.hardware_parameters, SizeIs(2));
+  EXPECT_EQ(hardware2_info.hardware_parameters.at("example_param_read_for_sec"), "3");
 
-  ASSERT_THAT(hardware_info.joints, SizeIs(1));
-  EXPECT_EQ(hardware_info.joints[0].name, "joint2");
-  EXPECT_EQ(hardware_info.joints[0].type, "joint");
-  EXPECT_EQ(hardware_info.joints[0].class_type, "ros2_control_components/VelocityJoint");
-  ASSERT_THAT(hardware_info.joints[0].command_interfaces, SizeIs(1));
-  EXPECT_EQ(hardware_info.joints[0].command_interfaces[0], "velocity");
-  ASSERT_THAT(hardware_info.joints[0].parameters, SizeIs(2));
-  EXPECT_EQ(hardware_info.joints[0].parameters.at("min_velocity_value"), "-1");
+  ASSERT_THAT(hardware2_info.joints, SizeIs(1));
+  {
+    const auto & joint2_component = hardware2_info.joints.at("joint2");
+    EXPECT_EQ(joint2_component.name, "joint2");
+    EXPECT_EQ(joint2_component.type, "joint");
+    EXPECT_EQ(joint2_component.class_type, "ros2_control_components/VelocityJoint");
+    ASSERT_THAT(joint2_component.command_interfaces, SizeIs(1));
+    EXPECT_EQ(joint2_component.command_interfaces[0], "velocity");
+    ASSERT_THAT(joint2_component.parameters, SizeIs(2));
+    EXPECT_EQ(joint2_component.parameters.at("min_velocity_value"), "-1");
+  }
 
-  hardware_info = control_hardware.at(2);
+  const auto hardware3_info = control_hardware.at(2);
 
-  EXPECT_EQ(hardware_info.name, "2DOF_System_Robot_Position_Sensor_joint1");
-  EXPECT_EQ(hardware_info.type, "sensor");
+  EXPECT_EQ(hardware3_info.name, "2DOF_System_Robot_Position_Sensor_joint1");
+  EXPECT_EQ(hardware3_info.type, "sensor");
   EXPECT_EQ(
-    hardware_info.hardware_class_type,
+    hardware3_info.hardware_class_type,
     "ros2_control_demo_hardware/Position_Sensor_Hardware");
-  ASSERT_THAT(hardware_info.hardware_parameters, SizeIs(1));
-  EXPECT_EQ(hardware_info.hardware_parameters.at("example_param_read_for_sec"), "2");
+  ASSERT_THAT(hardware3_info.hardware_parameters, SizeIs(1));
+  EXPECT_EQ(hardware3_info.hardware_parameters.at("example_param_read_for_sec"), "2");
 
-  ASSERT_THAT(hardware_info.sensors, SizeIs(0));
-  ASSERT_THAT(hardware_info.joints, SizeIs(1));
-  EXPECT_EQ(hardware_info.joints[0].name, "joint1");
-  EXPECT_EQ(hardware_info.joints[0].type, "joint");
-  EXPECT_EQ(hardware_info.joints[0].class_type, "ros2_control_components/PositionJoint");
-  ASSERT_THAT(hardware_info.joints[0].command_interfaces, SizeIs(0));
-  ASSERT_THAT(hardware_info.joints[0].state_interfaces, SizeIs(1));
-  EXPECT_EQ(hardware_info.joints[0].state_interfaces[0], "position");
-  ASSERT_THAT(hardware_info.joints[0].parameters, SizeIs(2));
-  EXPECT_EQ(hardware_info.joints[0].parameters.at("max_position_value"), "${PI}");
-  EXPECT_EQ(hardware_info.joints[0].parameters.at("min_position_value"), "${-PI}");
+  ASSERT_THAT(hardware3_info.joints, SizeIs(1));
+  {
+    const auto & joint1_component = hardware3_info.joints.at("joint1");
+    EXPECT_EQ(joint1_component.name, "joint1");
+    EXPECT_EQ(joint1_component.type, "joint");
+    EXPECT_EQ(joint1_component.class_type, "ros2_control_components/PositionJoint");
+    ASSERT_THAT(joint1_component.command_interfaces, SizeIs(0));
+    ASSERT_THAT(joint1_component.state_interfaces, SizeIs(1));
+    EXPECT_EQ(joint1_component.state_interfaces[0], "position");
+    ASSERT_THAT(joint1_component.parameters, SizeIs(2));
+    EXPECT_EQ(joint1_component.parameters.at("max_position_value"), "${PI}");
+    EXPECT_EQ(joint1_component.parameters.at("min_position_value"), "${-PI}");
+  }
 
-  hardware_info = control_hardware.at(3);
+  ASSERT_THAT(hardware3_info.sensors, SizeIs(0));
 
-  EXPECT_EQ(hardware_info.name, "2DOF_System_Robot_Position_Sensor_joint2");
-  EXPECT_EQ(hardware_info.type, "sensor");
+  const auto hardware4_info = control_hardware.at(3);
+
+  EXPECT_EQ(hardware4_info.name, "2DOF_System_Robot_Position_Sensor_joint2");
+  EXPECT_EQ(hardware4_info.type, "sensor");
   EXPECT_EQ(
-    hardware_info.hardware_class_type,
+    hardware4_info.hardware_class_type,
     "ros2_control_demo_hardware/Position_Sensor_Hardware");
-  ASSERT_THAT(hardware_info.hardware_parameters, SizeIs(1));
-  EXPECT_EQ(hardware_info.hardware_parameters.at("example_param_read_for_sec"), "2");
+  ASSERT_THAT(hardware4_info.hardware_parameters, SizeIs(1));
+  EXPECT_EQ(hardware4_info.hardware_parameters.at("example_param_read_for_sec"), "2");
 
-  ASSERT_THAT(hardware_info.sensors, SizeIs(0));
-  ASSERT_THAT(hardware_info.joints, SizeIs(1));
-  EXPECT_EQ(hardware_info.joints[0].name, "joint2");
-  EXPECT_EQ(hardware_info.joints[0].type, "joint");
-  EXPECT_EQ(hardware_info.joints[0].class_type, "ros2_control_components/PositionJoint");
-  ASSERT_THAT(hardware_info.joints[0].command_interfaces, SizeIs(0));
-  ASSERT_THAT(hardware_info.joints[0].state_interfaces, SizeIs(1));
-  EXPECT_EQ(hardware_info.joints[0].state_interfaces[0], "position");
-  ASSERT_THAT(hardware_info.joints[0].parameters, SizeIs(2));
-  EXPECT_EQ(hardware_info.joints[0].parameters.at("max_position_value"), "${PI}");
-  EXPECT_EQ(hardware_info.joints[0].parameters.at("min_position_value"), "${-PI}");
+  ASSERT_THAT(hardware4_info.joints, SizeIs(1));
+  {
+    const auto & joint2_component = hardware4_info.joints.at("joint2");
+    EXPECT_EQ(joint2_component.name, "joint2");
+    EXPECT_EQ(joint2_component.type, "joint");
+    EXPECT_EQ(joint2_component.class_type, "ros2_control_components/PositionJoint");
+    ASSERT_THAT(joint2_component.command_interfaces, SizeIs(0));
+    ASSERT_THAT(joint2_component.state_interfaces, SizeIs(1));
+    EXPECT_EQ(joint2_component.state_interfaces[0], "position");
+    ASSERT_THAT(joint2_component.parameters, SizeIs(2));
+    EXPECT_EQ(joint2_component.parameters.at("max_position_value"), "${PI}");
+    EXPECT_EQ(joint2_component.parameters.at("min_position_value"), "${-PI}");
+  }
+
+  ASSERT_THAT(hardware4_info.sensors, SizeIs(0));
 }
 
 TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_multi_joints_transmission)
@@ -959,29 +994,33 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_multi_joints_tr
   EXPECT_EQ(hardware_info.hardware_parameters.at("example_param_write_for_sec"), "1.23");
 
   ASSERT_THAT(hardware_info.joints, SizeIs(2));
-  EXPECT_EQ(hardware_info.joints[0].name, "joint1");
-  EXPECT_EQ(hardware_info.joints[0].type, "joint");
-  EXPECT_EQ(hardware_info.joints[0].class_type, "ros2_control_components/PositionJoint");
-  ASSERT_THAT(hardware_info.joints[0].parameters, SizeIs(2));
-  EXPECT_EQ(hardware_info.joints[0].parameters.at("max_position_value"), "1");
 
-  EXPECT_EQ(hardware_info.joints[1].name, "joint2");
-  EXPECT_EQ(hardware_info.joints[1].type, "joint");
-  EXPECT_EQ(hardware_info.joints[1].class_type, "ros2_control_components/PositionJoint");
-  ASSERT_THAT(hardware_info.joints[1].parameters, SizeIs(2));
-  EXPECT_EQ(hardware_info.joints[1].parameters.at("min_position_value"), "-1");
+  const auto & joint1_component = hardware_info.joints.at("joint1");
+  EXPECT_EQ(joint1_component.name, "joint1");
+  EXPECT_EQ(joint1_component.type, "joint");
+  EXPECT_EQ(joint1_component.class_type, "ros2_control_components/PositionJoint");
+  ASSERT_THAT(joint1_component.parameters, SizeIs(2));
+  EXPECT_EQ(joint1_component.parameters.at("max_position_value"), "1");
+
+  const auto & joint2_component = hardware_info.joints.at("joint2");
+  EXPECT_EQ(joint2_component.name, "joint2");
+  EXPECT_EQ(joint2_component.type, "joint");
+  EXPECT_EQ(joint2_component.class_type, "ros2_control_components/PositionJoint");
+  ASSERT_THAT(joint2_component.parameters, SizeIs(2));
+  EXPECT_EQ(joint2_component.parameters.at("min_position_value"), "-1");
 
   ASSERT_THAT(hardware_info.transmissions, SizeIs(1));
-  EXPECT_EQ(hardware_info.transmissions[0].name, "transmission1");
-  EXPECT_EQ(hardware_info.transmissions[0].type, "transmission");
+  const auto & transmission1_component = hardware_info.transmissions["transmission1"];
+  EXPECT_EQ(transmission1_component.name, "transmission1");
+  EXPECT_EQ(transmission1_component.type, "transmission");
   EXPECT_EQ(
-    hardware_info.transmissions[0].class_type,
+    transmission1_component.class_type,
     "transmission_interface/SomeComplex_2x2_Transmission");
-  ASSERT_THAT(hardware_info.transmissions[0].parameters, SizeIs(6));
-  EXPECT_EQ(hardware_info.transmissions[0].parameters.at("joint1_output1"), "1.5");
-  EXPECT_EQ(hardware_info.transmissions[0].parameters.at("joint1_output2"), "3.2");
-  EXPECT_EQ(hardware_info.transmissions[0].parameters.at("joint2_output1"), "3.1");
-  EXPECT_EQ(hardware_info.transmissions[0].parameters.at("joint2_output2"), "1.4");
+  ASSERT_THAT(transmission1_component.parameters, SizeIs(6));
+  EXPECT_EQ(transmission1_component.parameters.at("joint1_output1"), "1.5");
+  EXPECT_EQ(transmission1_component.parameters.at("joint1_output2"), "3.2");
+  EXPECT_EQ(transmission1_component.parameters.at("joint2_output1"), "3.1");
+  EXPECT_EQ(transmission1_component.parameters.at("joint2_output2"), "1.4");
 }
 
 TEST_F(TestComponentParser, successfully_parse_valid_urdf_sensor_only)
@@ -998,24 +1037,27 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_sensor_only)
   EXPECT_EQ(hardware_info.hardware_parameters.at("example_param_read_for_sec"), "2");
 
   ASSERT_THAT(hardware_info.sensors, SizeIs(2));
-  EXPECT_EQ(hardware_info.sensors[0].name, "sensor1");
-  EXPECT_EQ(hardware_info.sensors[0].type, "sensor");
-  EXPECT_EQ(hardware_info.sensors[0].class_type, "ros2_control_components/IMUSensor");
-  ASSERT_THAT(hardware_info.sensors[0].state_interfaces, SizeIs(2));
-  EXPECT_EQ(hardware_info.sensors[0].state_interfaces[0], "velocity");
-  EXPECT_EQ(hardware_info.sensors[0].state_interfaces[1], "acceleration");
-  ASSERT_THAT(hardware_info.sensors[0].parameters, SizeIs(4));
-  EXPECT_EQ(hardware_info.sensors[0].parameters.at("min_acceleration_value"), "-10");
-  EXPECT_EQ(hardware_info.sensors[0].parameters.at("max_velocity_value"), "23");
 
-  EXPECT_EQ(hardware_info.sensors[1].name, "sensor2");
-  EXPECT_EQ(hardware_info.sensors[1].type, "sensor");
-  EXPECT_EQ(hardware_info.sensors[1].class_type, "ros2_control_components/2DImageSensor");
-  ASSERT_THAT(hardware_info.sensors[1].state_interfaces, SizeIs(1));
-  EXPECT_EQ(hardware_info.sensors[1].state_interfaces[0], "image");
-  ASSERT_THAT(hardware_info.sensors[1].parameters, SizeIs(2));
-  EXPECT_EQ(hardware_info.sensors[1].parameters.at("min_image_value"), "0");
-  EXPECT_EQ(hardware_info.sensors[1].parameters.at("max_image_value"), "255");
+  const auto & sensor1_component = hardware_info.sensors.at("sensor1");
+  EXPECT_EQ(sensor1_component.name, "sensor1");
+  EXPECT_EQ(sensor1_component.type, "sensor");
+  EXPECT_EQ(sensor1_component.class_type, "ros2_control_components/IMUSensor");
+  ASSERT_THAT(sensor1_component.state_interfaces, SizeIs(2));
+  EXPECT_EQ(sensor1_component.state_interfaces[0], "velocity");
+  EXPECT_EQ(sensor1_component.state_interfaces[1], "acceleration");
+  ASSERT_THAT(sensor1_component.parameters, SizeIs(4));
+  EXPECT_EQ(sensor1_component.parameters.at("min_acceleration_value"), "-10");
+  EXPECT_EQ(sensor1_component.parameters.at("max_velocity_value"), "23");
+
+  const auto & sensor2_component = hardware_info.sensors.at("sensor2");
+  EXPECT_EQ(sensor2_component.name, "sensor2");
+  EXPECT_EQ(sensor2_component.type, "sensor");
+  EXPECT_EQ(sensor2_component.class_type, "ros2_control_components/2DImageSensor");
+  ASSERT_THAT(sensor2_component.state_interfaces, SizeIs(1));
+  EXPECT_EQ(sensor2_component.state_interfaces[0], "image");
+  ASSERT_THAT(sensor2_component.parameters, SizeIs(2));
+  EXPECT_EQ(sensor2_component.parameters.at("min_image_value"), "0");
+  EXPECT_EQ(sensor2_component.parameters.at("max_image_value"), "255");
 }
 
 TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_only)
@@ -1035,18 +1077,21 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_only)
   EXPECT_EQ(hardware_info.hardware_parameters.at("example_param_write_for_sec"), "1.13");
 
   ASSERT_THAT(hardware_info.joints, SizeIs(1));
-  EXPECT_EQ(hardware_info.joints[0].name, "joint1");
-  EXPECT_EQ(hardware_info.joints[0].type, "joint");
-  EXPECT_EQ(hardware_info.joints[0].class_type, "ros2_control_components/VelocityJoint");
-  ASSERT_THAT(hardware_info.joints[0].parameters, SizeIs(2));
-  EXPECT_EQ(hardware_info.joints[0].parameters.at("max_velocity_value"), "1");
+
+  const auto & joint1_component = hardware_info.joints.at("joint1");
+  EXPECT_EQ(joint1_component.name, "joint1");
+  EXPECT_EQ(joint1_component.type, "joint");
+  EXPECT_EQ(joint1_component.class_type, "ros2_control_components/VelocityJoint");
+  ASSERT_THAT(joint1_component.parameters, SizeIs(2));
+  EXPECT_EQ(joint1_component.parameters.at("max_velocity_value"), "1");
 
   ASSERT_THAT(hardware_info.transmissions, SizeIs(1));
-  EXPECT_EQ(hardware_info.transmissions[0].name, "transmission1");
-  EXPECT_EQ(hardware_info.transmissions[0].type, "transmission");
+  const auto & transmission1_component = hardware_info.transmissions["transmission1"];
+  EXPECT_EQ(transmission1_component.name, "transmission1");
+  EXPECT_EQ(transmission1_component.type, "transmission");
   EXPECT_EQ(
-    hardware_info.transmissions[0].class_type,
-    "transmission_interface/RotationToLinerTansmission");
-  ASSERT_THAT(hardware_info.transmissions[0].parameters, SizeIs(1));
-  EXPECT_EQ(hardware_info.transmissions[0].parameters.at("joint_to_actuator"), "${1024/PI}");
+    transmission1_component.class_type,
+    "transmission_interface/RotationToLinearTansmission");
+  ASSERT_THAT(transmission1_component.parameters, SizeIs(1));
+  EXPECT_EQ(transmission1_component.parameters.at("joint_to_actuator"), "${1024/PI}");
 }

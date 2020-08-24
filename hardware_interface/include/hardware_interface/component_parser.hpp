@@ -20,7 +20,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "hardware_interface/component_info.hpp"
+#include "hardware_interface/components/component_info.hpp"
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/visibility_control.h"
 
@@ -98,7 +98,7 @@ std::string get_attribute_value(
   * \throws std::runtime_error if a component attribute or tag is not found
   */
 HARDWARE_INTERFACE_PUBLIC
-ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it);
+components::ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it);
 
 /**
  * \brief Search XML snippet for definition of interfaceTypes.

@@ -12,13 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <iostream>
 #include <tinyxml2.h>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
-#include "hardware_interface/component_info.hpp"
+#include "hardware_interface/components/component_info.hpp"
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/component_parser.hpp"
 
@@ -93,11 +94,18 @@ HardwareInfo parse_resource_from_xml(const tinyxml2::XMLElement * ros2_control_i
         hardware.hardware_parameters = parse_parameters_from_xml(params_it);
       }
     } else if (!std::string(kJointTag).compare(ros2_control_child_it->Name())) {
-      hardware.joints.push_back(parse_component_from_xml(ros2_control_child_it) );
+      //std::cerr << "child name: " << get_attribute_value(ros2_control_child_it, "name", kJointTag) << std::endl;
+      hardware.joints.insert(
+        {get_attribute_value(ros2_control_child_it, "name", kJointTag),
+         parse_component_from_xml(ros2_control_child_it)});
     } else if (!std::string(kSensorTag).compare(ros2_control_child_it->Name())) {
-      hardware.sensors.push_back(parse_component_from_xml(ros2_control_child_it) );
+      hardware.sensors.insert(
+        {get_attribute_value(ros2_control_child_it, "name", kSensorTag),
+         parse_component_from_xml(ros2_control_child_it)});
     } else if (!std::string(kTransmissionTag).compare(ros2_control_child_it->Name())) {
-      hardware.transmissions.push_back(parse_component_from_xml(ros2_control_child_it) );
+      hardware.transmissions.insert(
+        {get_attribute_value(ros2_control_child_it, "name", kTransmissionTag),
+         parse_component_from_xml(ros2_control_child_it)});
     } else {
       throw std::runtime_error("invalid tag name " + std::string(ros2_control_child_it->Name()));
     }
@@ -137,9 +145,9 @@ std::string get_text_for_element(
   return get_text_output;
 }
 
-ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it)
+components::ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it)
 {
-  ComponentInfo component;
+  components::ComponentInfo component;
 
   // Find name, type and class of a component
   component.type = component_it->Name();
