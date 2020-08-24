@@ -801,7 +801,9 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_robot_with_exte
 
   EXPECT_EQ(hardware2_info.name, "2DOF_System_Robot_ForceTorqueSensor");
   EXPECT_EQ(hardware2_info.type, "sensor");
-  EXPECT_EQ(hardware2_info.hardware_class_type, "ros2_control_demo_hardware/2D_Sensor_Force_Torque");
+  EXPECT_EQ(
+    hardware2_info.hardware_class_type,
+    "ros2_control_demo_hardware/2D_Sensor_Force_Torque");
   ASSERT_THAT(hardware2_info.hardware_parameters, SizeIs(1));
   EXPECT_EQ(hardware2_info.hardware_parameters.at("example_param_read_for_sec"), "0.43");
 

@@ -155,11 +155,12 @@ inline return_type set_internal_values_with_limits(
     auto it = std::find(int_interfaces.begin(), int_interfaces.end(), *q_it);
     if (it != int_interfaces.end()) {
       if (values[std::distance(queried_interfaces.begin(), q_it)] >=
-          lower_limits[std::distance(int_interfaces.begin(), it)] &&
-          values[std::distance(queried_interfaces.begin(), q_it)] <=
-          upper_limits[std::distance(int_interfaces.begin(), it)]) {
+        lower_limits[std::distance(int_interfaces.begin(), it)] &&
+        values[std::distance(queried_interfaces.begin(), q_it)] <=
+        upper_limits[std::distance(int_interfaces.begin(), it)])
+      {
         int_values[std::distance(int_interfaces.begin(), it)] =
-        values[std::distance(queried_interfaces.begin(), q_it)];
+          values[std::distance(queried_interfaces.begin(), q_it)];
       } else {
         return return_type::VALUE_OUT_OF_LIMITS;
       }
