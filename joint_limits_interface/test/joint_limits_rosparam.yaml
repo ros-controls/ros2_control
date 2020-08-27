@@ -1,0 +1,66 @@
+joint_limits:
+  foo_joint:
+    has_position_limits: true
+    min_position: 0.0
+    max_position: 1.0
+    has_velocity_limits: true
+    max_velocity: 2.0
+    has_acceleration_limits: true
+    max_acceleration: 5.0
+    has_jerk_limits: true
+    max_jerk: 100.0
+    has_effort_limits: true
+    max_effort: 20.0
+    angle_wraparound: true # should be ignored, has position limits
+    has_soft_limits: true
+    k_position: 10.0
+    k_velocity: 20.0
+    soft_lower_limit: 0.1
+    soft_upper_limit: 0.9
+
+  yinfoo_joint:
+    has_position_limits: true
+    has_velocity_limits: true
+    has_acceleration_limits: true
+    has_jerk_limits: true
+    has_effort_limits: true
+
+  yangfoo_joint:
+    min_position: 0.0
+    max_position: 1.0
+    max_velocity: 2.0
+    max_acceleration: 5.0
+    max_jerk: 100.0
+    max_effort: 20.0
+
+  antifoo_joint:
+    has_position_limits: false
+    has_velocity_limits: false
+    has_acceleration_limits: false
+    has_jerk_limits: false
+    has_effort_limits: false
+    angle_wraparound: true # should be accepted, has no position limits
+
+  bar_joint:
+    has_velocity_limits: true
+    max_velocity: 2.0
+
+  baz_joint:
+    has_position_limits: true
+    # Missing min_position
+    max_position: 1.0
+
+  foobar_joint:
+    has_soft_limits: false
+    k_velocity: 20.0
+    k_position: 10.0
+    soft_lower_limit: 0.1
+    soft_upper_limit: 0.9
+
+  barbaz_joint:
+    has_soft_limits: false
+    k_position: 10.0
+    soft_lower_limit: 0.1
+    soft_upper_limit: 0.9
+
+

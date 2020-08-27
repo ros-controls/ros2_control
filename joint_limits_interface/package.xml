@@ -1,0 +1,31 @@
+<package format="2">
+  <name>joint_limits_interface</name>
+  <version>0.16.0</version>
+  <description>Interface for enforcing joint limits.</description>
+
+  <maintainer email="bence.magyar.robotics@gmail.com">Bence Magyar</maintainer>
+  <maintainer email="enrique.fernandez.perdomo@gmail.com">Enrique Fernandez</maintainer>
+  <maintainer email="mathias.luedtke@ipa.fraunhofer.de">Mathias Lüdtke</maintainer>
+
+  <license>BSD</license>
+
+  <url type="website">https://github.com/ros-controls/ros_control/wiki</url>
+  <url type="bugtracker">https://github.com/ros2-controls/ros_control/issues</url>
+  <url type="repository">https://github.com/ros2-controls/ros_control</url>
+
+  <author>Adolfo Rodriguez Tsouroukdissian</author>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>rclcpp</depend>
+  <depend>urdf</depend>
+
+  <build_depend>hardware_interface</build_depend>
+
+  <build_export_depend>hardware_interface</build_export_depend>
+
+  <test_depend>ament_cmake_gtest</test_depend>
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
