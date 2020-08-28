@@ -107,49 +107,22 @@ TestRobotHardware::init()
     return ret;
   }
 
-  //
+  // register actuators and joints
+  for (auto index = 0u; index < 3u; ++index) {
+    register_actuator(actuator_names[index], "position", pos_dflt_values[index]);
+    register_actuator(actuator_names[index], "velocity", vel_dflt_values[index]);
+    register_actuator(actuator_names[index], "effort", eff_dflt_values[index]);
+    register_actuator(actuator_names[index], "position_command", pos_dflt_values[index]);
+    register_actuator(actuator_names[index], "velocity_command", vel_dflt_values[index]);
+    register_actuator(actuator_names[index], "effort_command", eff_dflt_values[index]);
 
-  register_actuator("actuator1", "position", 1.1);
-  register_actuator("actuator1", "velocity", 1.2);
-  register_actuator("actuator1", "effort", 1.3);
-  register_actuator("actuator1", "position_command", 1.1);
-  register_actuator("actuator1", "velocity_command", 1.2);
-  register_actuator("actuator1", "effort_command", 1.3);
-
-  register_actuator("actuator2", "position", 2.1);
-  register_actuator("actuator2", "velocity", 2.2);
-  register_actuator("actuator2", "effort", 2.3);
-  register_actuator("actuator2", "position_command", 2.1);
-  register_actuator("actuator2", "velocity_command", 2.2);
-  register_actuator("actuator2", "effort_command", 2.3);
-
-  register_actuator("actuator3", "position", 3.1);
-  register_actuator("actuator3", "velocity", 3.2);
-  register_actuator("actuator3", "effort", 3.3);
-  register_actuator("actuator3", "position_command", 3.1);
-  register_actuator("actuator3", "velocity_command", 3.2);
-  register_actuator("actuator3", "effort_command", 3.3);
-
-  register_joint("joint1", "position", 1.1);
-  register_joint("joint1", "velocity", 1.2);
-  register_joint("joint1", "effort", 1.3);
-  register_joint("joint1", "position_command", 1.1);
-  register_joint("joint1", "velocity_command", 1.2);
-  register_joint("joint1", "effort_command", 1.3);
-
-  register_joint("joint2", "position", 2.1);
-  register_joint("joint2", "velocity", 2.2);
-  register_joint("joint2", "effort", 2.3);
-  register_joint("joint2", "position_command", 2.1);
-  register_joint("joint2", "velocity_command", 2.2);
-  register_joint("joint2", "effort_command", 2.3);
-
-  register_joint("joint3", "position", 3.1);
-  register_joint("joint3", "velocity", 3.2);
-  register_joint("joint3", "effort", 3.3);
-  register_joint("joint3", "position_command", 3.1);
-  register_joint("joint3", "velocity_command", 3.2);
-  register_joint("joint3", "effort_command", 3.3);
+    register_joint(joint_names[index], "position", pos_dflt_values[index]);
+    register_joint(joint_names[index], "velocity", vel_dflt_values[index]);
+    register_joint(joint_names[index], "effort", eff_dflt_values[index]);
+    register_joint(joint_names[index], "position_command", pos_dflt_values[index]);
+    register_joint(joint_names[index], "velocity_command", vel_dflt_values[index]);
+    register_joint(joint_names[index], "effort_command", eff_dflt_values[index]);
+  }
 
   return hardware_interface::return_type::OK;
 }
@@ -166,6 +139,34 @@ TestRobotHardware::write()
   pos1 = cmd1;
   pos2 = cmd2;
   pos3 = cmd3;
+
+  auto update_handle = [&](const std::string & joint_name, const std::string & interface_name)
+    {
+      auto get_handle = [&](const std::string & joint_name, const std::string & interface_name)
+        {
+          auto joint_handle = std::make_shared<hardware_interface::JointHandle>(
+            joint_name,
+            interface_name);
+          get_joint_handle(*joint_handle);
+          return joint_handle;
+        };
+
+      get_handle(
+        joint_name,
+        interface_name)->set_value(
+        get_handle(
+          joint_name,
+          interface_name + "_command")->get_value());
+    };
+
+  // update all the joint state handles with their respectives command values
+  const std::vector<std::string> interface_names = {"position", "velocity", "effort"};
+  for (const auto & joint_name : joint_names) {
+    for (const auto & interface_name : interface_names) {
+      update_handle(joint_name, interface_name);
+    }
+  }
+
   return hardware_interface::return_type::OK;
 }
 
