@@ -26,51 +26,6 @@ TestRobotHardware::init()
 {
   auto ret = hardware_interface::return_type::ERROR;
 
-  js1 = hardware_interface::JointStateHandle(
-    joint_name1, &pos1, &vel1, &eff1);
-  ret = register_joint_state_handle(&js1);
-  if (ret != hardware_interface::return_type::OK) {
-    RCLCPP_WARN(logger, "can't register joint state handle %s", joint_name1.c_str());
-    return ret;
-  }
-
-  js2 = hardware_interface::JointStateHandle(
-    joint_name2, &pos2, &vel2, &eff2);
-  ret = register_joint_state_handle(&js2);
-  if (ret != hardware_interface::return_type::OK) {
-    RCLCPP_WARN(logger, "can't register joint state handle %s", joint_name2.c_str());
-    return ret;
-  }
-
-  js3 = hardware_interface::JointStateHandle(
-    joint_name3, &pos3, &vel3, &eff3);
-  ret = register_joint_state_handle(&js3);
-  if (ret != hardware_interface::return_type::OK) {
-    RCLCPP_WARN(logger, "can't register joint state handle %s", joint_name3.c_str());
-    return ret;
-  }
-
-  jcmd1 = hardware_interface::JointCommandHandle(joint_name1, &cmd1);
-  ret = register_joint_command_handle(&jcmd1);
-  if (ret != hardware_interface::return_type::OK) {
-    RCLCPP_WARN(logger, "can't register joint command handle %s", joint_name1.c_str());
-    return ret;
-  }
-
-  jcmd2 = hardware_interface::JointCommandHandle(joint_name2, &cmd2);
-  ret = register_joint_command_handle(&jcmd2);
-  if (ret != hardware_interface::return_type::OK) {
-    RCLCPP_WARN(logger, "can't register joint command handle %s", joint_name2.c_str());
-    return ret;
-  }
-
-  jcmd3 = hardware_interface::JointCommandHandle(joint_name3, &cmd3);
-  ret = register_joint_command_handle(&jcmd3);
-  if (ret != hardware_interface::return_type::OK) {
-    RCLCPP_WARN(logger, "can't register joint command handle %s", joint_name3.c_str());
-    return ret;
-  }
-
   read_op_handle1 = hardware_interface::OperationModeHandle(
     read_op_handle_name1,
     reinterpret_cast<hardware_interface::OperationMode *>(&read1));
@@ -136,10 +91,6 @@ TestRobotHardware::read()
 hardware_interface::return_type
 TestRobotHardware::write()
 {
-  pos1 = cmd1;
-  pos2 = cmd2;
-  pos3 = cmd3;
-
   auto update_handle = [&](const std::string & joint_name, const std::string & interface_name)
     {
       auto get_handle = [&](const std::string & joint_name, const std::string & interface_name)

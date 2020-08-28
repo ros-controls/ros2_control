@@ -44,30 +44,10 @@ public:
   hardware_interface::return_type
   write();
 
-  std::string joint_name1 = "joint1";
-  std::string joint_name2 = "joint2";
-  std::string joint_name3 = "joint3";
-
   std::string read_op_handle_name1 = "read1";
   std::string read_op_handle_name2 = "read2";
   std::string write_op_handle_name1 = "write1";
   std::string write_op_handle_name2 = "write2";
-
-  double pos1 = 1.1;
-  double pos2 = 2.2;
-  double pos3 = 3.3;
-
-  double vel1 = 1.1;
-  double vel2 = 2.2;
-  double vel3 = 3.3;
-
-  double eff1 = 1.1;
-  double eff2 = 2.2;
-  double eff3 = 3.3;
-
-  double cmd1 = 1.1;
-  double cmd2 = 2.2;
-  double cmd3 = 3.3;
 
   std::vector<std::string> actuator_names = {"actuator1", "actuator2", "actuator3"};
   std::vector<std::string> joint_names = {"joint1", "joint2", "joint3"};
@@ -80,14 +60,6 @@ public:
   bool read2 = false;
   bool write1 = false;
   bool write2 = false;
-
-  hardware_interface::JointStateHandle js1;
-  hardware_interface::JointStateHandle js2;
-  hardware_interface::JointStateHandle js3;
-
-  hardware_interface::JointCommandHandle jcmd1;
-  hardware_interface::JointCommandHandle jcmd2;
-  hardware_interface::JointCommandHandle jcmd3;
 
   hardware_interface::OperationModeHandle read_op_handle1;
   hardware_interface::OperationModeHandle read_op_handle2;
