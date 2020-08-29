@@ -19,23 +19,23 @@ The work done in this repo (together with [`ros2_controllers`](https://github.co
 ## Getting Started
 
 In order to be able to compile these two repos, a complete ROS 2 installation is necessary.
-Please find instructions on how to install ROS 2 [here](https://github.com/ros2/ros2/wiki/Installation).
-At the time of writing, there exist binaries for ROS 2 (Bouncy Bolson) for all three major operating systems as well as detailed installation instructions when compiling from source.
+Please find instructions on how to install ROS 2 [here](https://index.ros.org/doc/ros2/Installation/#installationguide).
+At the time of writing, there exist binaries for ROS 2 (Foxy Fitzroy) for all three major operating systems as well as detailed installation instructions when compiling from source.
 
 Once ROS 2 is successfully installed, an overlay workspace can be created for the ros2_control packages.
 
 ``` bash
 $ mkdir -p ~/ros2_control_ws/src
-$ cd $_
-$ git clone https://github.com/ros-controls/ros2_control.git
-$ git clone https://github.com/ros-controls/ros2_controllers.git
+$ cd ~/ros2_control
+$ wget https://raw.githubusercontent.com/ros-controls/ros2_control/master/ros2_control/ros2_control.repos
+$ vcs import src < ros2_control.repos
 ```
 
-We can then compile the overlay workspace. For this we first have to source the ROS 2 installation. In this case, we source the `setup.bash` from the Bouncy binary distribution for Ubuntu. Obviously, the path to the setup file is different on each platform and thus has to be adjusted. Once ROS 2 is sourced, we can compile the ros2_control packages.
+We can then compile the overlay workspace. For this we first have to source the ROS 2 installation. In this case, we source the `setup.bash` from the Foxy binary distribution for Ubuntu. Obviously, the path to the setup file is different on each platform and thus has to be adjusted. Once ROS 2 is sourced, we can compile the ros2_control packages.
 
 ``` bash
 $ cd ~/ros2_control_ws
-$ source /opt/ros/bouncy/setup.bash # this has to be adjusted for ROS-Distro and/or OS
+$ source /opt/ros/foxy/setup.bash # this has to be adjusted for ROS-Distro and/or OS
 $ colcon build
 ```
 
