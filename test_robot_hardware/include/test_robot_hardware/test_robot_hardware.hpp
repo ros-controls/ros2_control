@@ -16,6 +16,7 @@
 #define TEST_ROBOT_HARDWARE__TEST_ROBOT_HARDWARE_HPP_
 
 #include <string>
+#include <vector>
 
 #include "hardware_interface/robot_hardware.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
@@ -67,6 +68,13 @@ public:
   double cmd1 = 1.1;
   double cmd2 = 2.2;
   double cmd3 = 3.3;
+
+  std::vector<std::string> actuator_names = {"actuator1", "actuator2", "actuator3"};
+  std::vector<std::string> joint_names = {"joint1", "joint2", "joint3"};
+
+  std::vector<double> pos_dflt_values = {1.1, 2.1, 3.1};
+  std::vector<double> vel_dflt_values = {1.2, 2.2, 3.2};
+  std::vector<double> eff_dflt_values = {1.3, 2.3, 3.3};
 
   bool read1 = false;
   bool read2 = false;

@@ -29,56 +29,55 @@ class TestRobotHardwareInterface : public ::testing::Test
 protected:
   void SetUp()
   {
-    joint_names = {robot.joint_name1, robot.joint_name2, robot.joint_name3};
-    joint_pos_values = {robot.pos1, robot.pos2, robot.pos3};
-    joint_vel_values = {robot.vel1, robot.vel2, robot.vel3};
-    joint_eff_values = {robot.eff1, robot.eff2, robot.eff3};
-    joint_cmd_values = {robot.cmd1, robot.cmd2, robot.cmd3};
+    joint_names_ = robot_.joint_names;
+
+    joint_pos_values_ = robot_.pos_dflt_values;
+    joint_vel_values_ = robot_.vel_dflt_values;
+    joint_eff_values_ = robot_.eff_dflt_values;
+
+    joint_pos_cmd_values_ = robot_.pos_dflt_values;
+    joint_vel_cmd_values_ = robot_.vel_dflt_values;
+    joint_eff_cmd_values_ = robot_.eff_dflt_values;
   }
 
-  test_robot_hardware::TestRobotHardware robot;
+  test_robot_hardware::TestRobotHardware robot_;
 
-  std::vector<std::string> joint_names;
-  std::vector<double> joint_pos_values;
-  std::vector<double> joint_vel_values;
-  std::vector<double> joint_eff_values;
-  std::vector<double> joint_cmd_values;
+  std::vector<std::string> joint_names_;
+
+  std::vector<double> joint_pos_values_;
+  std::vector<double> joint_vel_values_;
+  std::vector<double> joint_eff_values_;
+
+  std::vector<double> joint_pos_cmd_values_;
+  std::vector<double> joint_vel_cmd_values_;
+  std::vector<double> joint_eff_cmd_values_;
 };
 
 TEST_F(TestRobotHardwareInterface, initialize) {
-  EXPECT_EQ(hw_ret::OK, robot.init());
+  EXPECT_EQ(hw_ret::OK, robot_.init());
 }
 
 TEST_F(TestRobotHardwareInterface, get_registered_joint_handles) {
-  robot.init();
+  robot_.init();
 
   auto ret = hw_ret::ERROR;
   for (auto i = 0u; i < 3u; ++i) {
-    const hardware_interface::JointStateHandle * js_ptr = nullptr;
-    ret = robot.get_joint_state_handle(joint_names[i], &js_ptr);
-    EXPECT_EQ(hw_ret::OK, ret);
-    EXPECT_EQ(joint_pos_values[i], js_ptr->get_position());
-    EXPECT_EQ(joint_vel_values[i], js_ptr->get_velocity());
-    EXPECT_EQ(joint_eff_values[i], js_ptr->get_effort());
-    ret = hw_ret::ERROR;
+    auto get_handle = [&](const std::string joint_name, const std::string interface_name)
+      {
+        hardware_interface::JointHandle joint_handle(joint_name, interface_name);
+        ret = robot_.get_joint_handle(joint_handle);
+        return joint_handle;
+      };
+
+    EXPECT_EQ(get_handle(joint_names_[i], "position").get_value(), joint_pos_values_[i]);
+    EXPECT_EQ(get_handle(joint_names_[i], "velocity").get_value(), joint_vel_values_[i]);
+    EXPECT_EQ(get_handle(joint_names_[i], "effort").get_value(), joint_eff_values_[i]);
+
+    EXPECT_EQ(get_handle(joint_names_[i], "position_command").get_value(), joint_pos_values_[i]);
+    EXPECT_EQ(get_handle(joint_names_[i], "velocity_command").get_value(), joint_vel_values_[i]);
+    EXPECT_EQ(get_handle(joint_names_[i], "effort_command").get_value(), joint_eff_values_[i]);
   }
 
-  auto registered_joint_handles = robot.get_registered_joint_state_handles();
-  EXPECT_EQ(3u, registered_joint_handles.size());
-}
-
-TEST_F(TestRobotHardwareInterface, get_registered_command_handles) {
-  robot.init();
-
-  auto ret = hw_ret::ERROR;
-  for (auto i = 0u; i < 3u; ++i) {
-    hardware_interface::JointCommandHandle * jcmd_ptr = nullptr;
-    ret = robot.get_joint_command_handle(joint_names[i], &jcmd_ptr);
-    EXPECT_EQ(hw_ret::OK, ret);
-    EXPECT_EQ(joint_cmd_values[i], jcmd_ptr->get_cmd());
-    ret = hw_ret::ERROR;
-  }
-
-  auto registered_command_handles = robot.get_registered_joint_command_handles();
-  EXPECT_EQ(3u, registered_command_handles.size());
+  // 3 joints * 6 interfaces
+  EXPECT_EQ(robot_.get_registered_joints().size(), 3u * 6u);
 }
