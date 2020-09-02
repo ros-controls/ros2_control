@@ -50,7 +50,9 @@ TEST_F(TestControllerManager, controller_lifecycle) {
   controller_manager::ControllerManager cm(robot, executor, "test_controller_manager");
 
   auto test_controller = std::make_shared<test_controller::TestController>();
-  auto abstract_test_controller = cm.add_controller(test_controller, "test_controller");
+  auto abstract_test_controller = cm.add_controller(
+    test_controller, "test_controller",
+    "TestControllerType");
   EXPECT_EQ(1u, cm.get_loaded_controllers().size());
 
   EXPECT_EQ(controller_interface::return_type::SUCCESS, cm.update());

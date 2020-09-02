@@ -102,6 +102,7 @@ ament_export_include_directories(
 )
 ament_export_dependencies(
   controller_interface
+  controller_manager_msgs
   pluginlib
 )
 ament_package()

@@ -48,8 +48,7 @@ ControllerManager::ControllerManager(
 {
 }
 
-std::shared_ptr<controller_interface::ControllerInterface>
-ControllerManager::load_controller(
+controller_interface::ControllerInterfaceSharedPtr ControllerManager::load_controller(
   const std::string & controller_name,
   const std::string & controller_type)
 {
@@ -60,7 +59,7 @@ ControllerManager::load_controller(
     [&](auto loader)
     {return loader->is_available(controller_type);});
 
-  std::shared_ptr<controller_interface::ControllerInterface> controller(nullptr);
+  controller_interface::ControllerInterfaceSharedPtr controller(nullptr);
   if (it != loaders_.cend()) {
     controller = (*it)->create(controller_type);
   } else {
@@ -68,8 +67,12 @@ ControllerManager::load_controller(
     RCLCPP_ERROR(get_logger(), "%s", error_msg.c_str());
     throw std::runtime_error(error_msg);
   }
+  ControllerSpec controller_spec;
+  controller_spec.c = controller;
+  controller_spec.info.name = controller_name;
+  controller_spec.info.type = controller_type;
 
-  return add_controller_impl(controller, controller_name);
+  return add_controller_impl(controller_spec);
 }
 
 controller_interface::return_type ControllerManager::unload_controller(
@@ -83,7 +86,7 @@ controller_interface::return_type ControllerManager::unload_controller(
     }
     std::this_thread::sleep_for(std::chrono::microseconds(200));
   }
-  std::vector<std::shared_ptr<controller_interface::ControllerInterface>>
+  std::vector<ControllerSpec>
   & from = controllers_lists_[current_controllers_list_],
   & to = controllers_lists_[free_controllers_list];
   to.clear();
@@ -91,8 +94,8 @@ controller_interface::return_type ControllerManager::unload_controller(
   // Transfers the running controllers over, skipping the one to be removed and the running ones.
   bool removed = false;
   for (const auto & controller : from) {
-    if (controller->get_lifecycle_node()->get_name() == controller_name) {
-      if (isControllerRunning(*controller)) {
+    if (controller.info.name == controller_name) {
+      if (isControllerRunning(*controller.c)) {
         to.clear();
         RCLCPP_ERROR(
           get_logger(),
@@ -101,7 +104,7 @@ controller_interface::return_type ControllerManager::unload_controller(
         return controller_interface::return_type::ERROR;
       }
       RCLCPP_DEBUG(get_logger(), "Cleanup controller");
-      controller->get_lifecycle_node()->cleanup();
+      controller.c->get_lifecycle_node()->cleanup();
       removed = true;
     } else {
       to.push_back(controller);
@@ -137,8 +140,7 @@ controller_interface::return_type ControllerManager::unload_controller(
   return controller_interface::return_type::SUCCESS;
 }
 
-std::vector<std::shared_ptr<controller_interface::ControllerInterface>>
-ControllerManager::get_loaded_controllers() const
+std::vector<ControllerSpec> ControllerManager::get_loaded_controllers() const
 {
   return controllers_lists_[current_controllers_list_];
 }
@@ -249,7 +251,7 @@ controller_interface::return_type ControllerManager::switch_controller(
   for (const auto & controller : controllers) {
     bool in_stop_list = false;
     for (const auto & request : stop_request_) {
-      if (request == controller.get()) {
+      if (request == controller.c.get()) {
         in_stop_list = true;
         break;
       }
@@ -257,20 +259,20 @@ controller_interface::return_type ControllerManager::switch_controller(
 
     bool in_start_list = false;
     for (const auto & request : start_request_) {
-      if (request == controller.get()) {
+      if (request == controller.c.get()) {
         in_start_list = true;
         break;
       }
     }
 
 
-    const bool is_running = isControllerRunning(*controller);
+    const bool is_running = isControllerRunning(*controller.c);
 
     if (!is_running && in_stop_list) {  // check for double stop
       if (strictness == controller_manager_msgs::srv::SwitchController::Request::STRICT) {
         RCLCPP_ERROR_STREAM(
           get_logger(),
-          "Could not stop controller '" << controller->get_lifecycle_node()->get_name() <<
+          "Could not stop controller '" << controller.info.name <<
             "' since it is not running");
         stop_request_.clear();
         start_request_.clear();
@@ -278,13 +280,13 @@ controller_interface::return_type ControllerManager::switch_controller(
       } else {
         RCLCPP_DEBUG_STREAM(
           get_logger(),
-          "Could not stop controller '" << controller->get_lifecycle_node()->get_name() <<
+          "Could not stop controller '" << controller.info.name <<
             "' since it is not running");
         in_stop_list = false;
         stop_request_.erase(
           std::remove(
             stop_request_.begin(), stop_request_.end(),
-            controller.get()), stop_request_.end());
+            controller.c.get()), stop_request_.end());
       }
     }
 
@@ -292,7 +294,7 @@ controller_interface::return_type ControllerManager::switch_controller(
       if (strictness == controller_manager_msgs::srv::SwitchController::Request::STRICT) {
         RCLCPP_ERROR_STREAM(
           get_logger(),
-          "Controller '" << controller->get_lifecycle_node()->get_name() <<
+          "Controller '" << controller.info.name <<
             "' is already running");
         stop_request_.clear();
         start_request_.clear();
@@ -300,13 +302,13 @@ controller_interface::return_type ControllerManager::switch_controller(
       } else {
         RCLCPP_DEBUG_STREAM(
           get_logger(),
-          "Could not start controller '" << controller->get_lifecycle_node()->get_name() <<
+          "Could not start controller '" << controller.info.name <<
             "' since it is already running ");
         in_start_list = false;
         start_request_.erase(
           std::remove(
             start_request_.begin(), start_request_.end(),
-            controller.get()), start_request_.end());
+            controller.c.get()), start_request_.end());
       }
     }
 
@@ -379,10 +381,9 @@ controller_interface::return_type ControllerManager::switch_controller(
   return controller_interface::return_type::SUCCESS;
 }
 
-std::shared_ptr<controller_interface::ControllerInterface>
+controller_interface::ControllerInterfaceSharedPtr
 ControllerManager::add_controller_impl(
-  std::shared_ptr<controller_interface::ControllerInterface> controller,
-  const std::string & controller_name)
+  const ControllerSpec & controller)
 {
   // get reference to controller list
   int free_controllers_list = (current_controllers_list_ + 1) % 2;
@@ -392,35 +393,35 @@ ControllerManager::add_controller_impl(
     }
     std::this_thread::sleep_for(std::chrono::microseconds(200));
   }
-  std::vector<std::shared_ptr<controller_interface::ControllerInterface>>
+  std::vector<ControllerSpec>
   & from = controllers_lists_[current_controllers_list_],
   & to = controllers_lists_[free_controllers_list];
   to.clear();
 
   // Copy all controllers from the 'from' list to the 'to' list
-  for (const auto & controller : from) {
-    to.push_back(controller);
+  for (const auto & from_controller : from) {
+    to.push_back(from_controller);
   }
 
   // Checks that we're not duplicating controllers
-  for (const auto & controller : to) {
-    if (controller->get_lifecycle_node()->get_name() == controller_name) {
+  for (const auto & to_controller : to) {
+    if (controller.info.name == to_controller.info.name) {
       to.clear();
       RCLCPP_ERROR(
         get_logger(),
         "A controller named '%s' was already loaded inside the controller manager",
-        controller_name.c_str());
+        controller.info.name.c_str());
       return nullptr;
     }
   }
 
-  controller->init(hw_, controller_name);
+  controller.c->init(hw_, controller.info.name);
 
   // TODO(v-lopez) this should only be done if controller_manager is configured.
   // Probably the whole load_controller part should fail if the controller_manager
   // is not configured, should it implement a LifecycleNodeInterface
-  controller->get_lifecycle_node()->configure();
-  executor_->add_node(controller->get_lifecycle_node()->get_node_base_interface());
+  controller.c->get_lifecycle_node()->configure();
+  executor_->add_node(controller.c->get_lifecycle_node()->get_node_base_interface());
   to.emplace_back(controller);
 
   // Destroys the old controllers list when the realtime thread is finished with it.
@@ -434,7 +435,7 @@ ControllerManager::add_controller_impl(
   }
   from.clear();
 
-  return to.back();
+  return to.back().c;
 }
 
 controller_interface::ControllerInterface * ControllerManager::get_controller_by_name(
@@ -444,8 +445,8 @@ controller_interface::ControllerInterface * ControllerManager::get_controller_by
   std::lock_guard<std::recursive_mutex> guard(controllers_lock_);
 
   for (const auto & controller : controllers_lists_[current_controllers_list_]) {
-    if (controller->get_lifecycle_node()->get_name() == name) {
-      return controller.get();
+    if (controller.info.name == name) {
+      return controller.c.get();
     }
   }
   return nullptr;
@@ -587,8 +588,8 @@ ControllerManager::update()
   auto ret = controller_interface::return_type::SUCCESS;
   for (auto loaded_controller : controllers_lists_[used_by_realtime_]) {
     // TODO(v-lopez) we could cache this information
-    if (isControllerRunning(*loaded_controller)) {
-      auto controller_ret = loaded_controller->update();
+    if (isControllerRunning(*loaded_controller.c)) {
+      auto controller_ret = loaded_controller.c->update();
       if (controller_ret != controller_interface::return_type::SUCCESS) {
         ret = controller_ret;
       }
@@ -607,7 +608,7 @@ ControllerManager::configure() const
 {
   auto ret = controller_interface::return_type::SUCCESS;
   for (auto loaded_controller : controllers_lists_[current_controllers_list_]) {
-    auto controller_state = loaded_controller->get_lifecycle_node()->configure();
+    auto controller_state = loaded_controller.c->get_lifecycle_node()->configure();
     if (controller_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
       ret = controller_interface::return_type::ERROR;
     }
@@ -621,7 +622,7 @@ ControllerManager::activate() const
 {
   auto ret = controller_interface::return_type::SUCCESS;
   for (auto loaded_controller : controllers_lists_[current_controllers_list_]) {
-    auto controller_state = loaded_controller->get_lifecycle_node()->activate();
+    auto controller_state = loaded_controller.c->get_lifecycle_node()->activate();
     if (controller_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE) {
       ret = controller_interface::return_type::ERROR;
     }
@@ -635,7 +636,7 @@ ControllerManager::deactivate() const
 {
   auto ret = controller_interface::return_type::SUCCESS;
   for (auto loaded_controller : controllers_lists_[current_controllers_list_]) {
-    auto controller_state = loaded_controller->get_lifecycle_node()->deactivate();
+    auto controller_state = loaded_controller.c->get_lifecycle_node()->deactivate();
     if (controller_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
       ret = controller_interface::return_type::ERROR;
     }
@@ -649,7 +650,7 @@ ControllerManager::cleanup() const
 {
   auto ret = controller_interface::return_type::SUCCESS;
   for (auto loaded_controller : controllers_lists_[current_controllers_list_]) {
-    auto controller_state = loaded_controller->get_lifecycle_node()->cleanup();
+    auto controller_state = loaded_controller.c->get_lifecycle_node()->cleanup();
     if (controller_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED) {
       ret = controller_interface::return_type::ERROR;
     }

@@ -23,7 +23,9 @@
 #include "controller_interface/controller_interface.hpp"
 
 #include "controller_manager/controller_loader_interface.hpp"
+#include "controller_manager/controller_spec.hpp"
 #include "controller_manager/visibility_control.h"
+#include "controller_manager_msgs/srv/list_controllers.hpp"
 
 #include "hardware_interface/robot_hardware.hpp"
 
@@ -47,7 +49,7 @@ public:
   ~ControllerManager() = default;
 
   CONTROLLER_MANAGER_PUBLIC
-  std::shared_ptr<controller_interface::ControllerInterface>
+  controller_interface::ControllerInterfaceSharedPtr
   load_controller(
     const std::string & controller_name,
     const std::string & controller_type);
@@ -57,14 +59,7 @@ public:
     const std::string & controller_name);
 
   CONTROLLER_MANAGER_PUBLIC
-  std::vector<std::shared_ptr<controller_interface::ControllerInterface>>
-  get_loaded_controllers() const;
-
-  [[deprecated(
-    "get_loaded_controller is deprecated, it has been renamed to get_loaded_controllers")]]
-  CONTROLLER_MANAGER_PUBLIC
-  std::vector<std::shared_ptr<controller_interface::ControllerInterface>>
-  get_loaded_controller() const;
+  std::vector<ControllerSpec> get_loaded_controllers() const;
 
   CONTROLLER_MANAGER_PUBLIC
   void register_controller_loader(ControllerLoaderInterfaceSharedPtr loader);
@@ -73,10 +68,16 @@ public:
     typename T,
     typename std::enable_if<std::is_convertible<
       T *, controller_interface::ControllerInterface *>::value, T>::type * = nullptr>
-  std::shared_ptr<controller_interface::ControllerInterface>
-  add_controller(std::shared_ptr<T> controller, std::string controller_name)
+  controller_interface::ControllerInterfaceSharedPtr
+  add_controller(
+    std::shared_ptr<T> controller, std::string controller_name,
+    std::string controller_type)
   {
-    return add_controller_impl(controller, controller_name);
+    ControllerSpec controller_spec;
+    controller_spec.c = controller;
+    controller_spec.info.name = controller_name;
+    controller_spec.info.type = controller_type;
+    return add_controller_impl(controller_spec);
   }
 
   CONTROLLER_MANAGER_PUBLIC
@@ -108,10 +109,8 @@ public:
 
 protected:
   CONTROLLER_MANAGER_PUBLIC
-  std::shared_ptr<controller_interface::ControllerInterface>
-  add_controller_impl(
-    std::shared_ptr<controller_interface::ControllerInterface> controller,
-    const std::string & controller_name);
+  controller_interface::ControllerInterfaceSharedPtr
+  add_controller_impl(const ControllerSpec & controller);
 
   CONTROLLER_MANAGER_PUBLIC
   controller_interface::ControllerInterface * get_controller_by_name(const std::string & name);
@@ -128,6 +127,11 @@ protected:
   CONTROLLER_MANAGER_PUBLIC
   void start_controllers_asap();
 
+  CONTROLLER_MANAGER_PUBLIC
+  void list_controllers_srv_cb(
+    const std::shared_ptr<controller_manager_msgs::srv::ListControllers::Request> request,
+    std::shared_ptr<controller_manager_msgs::srv::ListControllers::Response> response);
+
 private:
   std::shared_ptr<hardware_interface::RobotHardware> hw_;
   std::shared_ptr<rclcpp::Executor> executor_;
@@ -139,7 +143,7 @@ private:
    *\{*/
   /// Mutex protecting the current controllers list
   std::recursive_mutex controllers_lock_;
-  std::vector<std::shared_ptr<controller_interface::ControllerInterface>> controllers_lists_[2];
+  std::vector<ControllerSpec> controllers_lists_[2];
   /// The index of the current controllers list
   int current_controllers_list_ = {0};
   /// The index of the controllers list being used in the real-time thread.
