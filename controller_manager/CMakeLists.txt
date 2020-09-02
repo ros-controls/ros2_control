@@ -14,6 +14,7 @@ find_package(ament_cmake)
 find_package(ament_cmake_core REQUIRED)
 find_package(ament_index_cpp REQUIRED)
 find_package(controller_interface REQUIRED)
+find_package(controller_manager_msgs REQUIRED)
 find_package(hardware_interface REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(rclcpp REQUIRED)
@@ -23,6 +24,7 @@ target_include_directories(controller_manager PRIVATE include)
 ament_target_dependencies(controller_manager
   ament_index_cpp
   controller_interface
+  controller_manager_msgs
   hardware_interface
   pluginlib
   rclcpp

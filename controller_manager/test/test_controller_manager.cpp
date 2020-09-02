@@ -54,7 +54,10 @@ TEST_F(TestControllerManager, controller_lifecycle) {
   EXPECT_EQ(1u, cm.get_loaded_controllers().size());
 
   EXPECT_EQ(controller_interface::return_type::SUCCESS, cm.update());
-  EXPECT_EQ(1u, test_controller->internal_counter);
+  EXPECT_EQ(
+    0u,
+    test_controller->internal_counter) <<
+    "Update should not reached an unconfigured and deactivated controller";
 
   EXPECT_EQ(controller_interface::return_type::SUCCESS, cm.configure());
   EXPECT_EQ(
@@ -65,6 +68,9 @@ TEST_F(TestControllerManager, controller_lifecycle) {
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
     test_controller->get_lifecycle_node()->get_current_state().id());
+
+  EXPECT_EQ(controller_interface::return_type::SUCCESS, cm.update());
+  EXPECT_EQ(1u, test_controller->internal_counter);
 
   EXPECT_EQ(controller_interface::return_type::SUCCESS, cm.deactivate());
   EXPECT_EQ(
