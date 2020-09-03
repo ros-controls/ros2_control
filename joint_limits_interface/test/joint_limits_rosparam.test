@@ -1,4 +1,0 @@
-<launch>
-  <rosparam command="load" ns="test" file="$(find joint_limits_interface)/test/joint_limits_rosparam.yaml" />
-  <test test-name="joint_limits_rosparam_test" pkg="joint_limits_interface" type="joint_limits_rosparam_test"/>
-</launch>

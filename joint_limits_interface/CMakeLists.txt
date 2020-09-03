@@ -3,46 +3,55 @@ project(joint_limits_interface)
 
 find_package(ament_cmake REQUIRED)
 find_package(hardware_interface REQUIRED)
+find_package(rclcpp REQUIRED)
 find_package(urdf REQUIRED)
 
-###########
-## Build ##
-###########
+if(BUILD_TESTING)
+  find_package(ament_cmake_gtest REQUIRED)
+  find_package(ament_lint_auto REQUIRED)
+  find_package(launch_testing_ament_cmake REQUIRED)
 
-# Specify header include paths
+  ament_lint_auto_find_test_dependencies()
 
-
-#############
-## Testing ##
-#############
-if(0)
-#if(BUILD_TESTING)
-  find_package(ament_cmake_gmock REQUIRED)
-
-  ament_add_gmock(joint_limits_interface_test test/joint_limits_interface_test.cpp)
-  target_link_libraries(joint_limits_interface_test ${LIBS})
-
-  ament_add_gmock(joint_limits_urdf_test test/joint_limits_urdf_test.cpp)
-  target_link_libraries(joint_limits_urdf_test ${LIBS})
-
-if(0) #todo: figure out how this ports over to ament
-  add_rostest_gtest(joint_limits_rosparam_test
-    test/joint_limits_rosparam.test
-    test/joint_limits_rosparam_test.cpp
+  ament_add_gtest(joint_limits_interface_test test/joint_limits_interface_test.cpp)
+  target_include_directories(joint_limits_interface_test PUBLIC include)
+  ament_target_dependencies(joint_limits_interface_test
+    hardware_interface
+    rclcpp
   )
-  target_link_libraries(joint_limits_rosparam_test ${LIBS})
-endif()
-  
-endif()
 
-#############
-## Install ##
-#############
+  add_executable(joint_limits_rosparam_test test/joint_limits_rosparam_test.cpp)
+  target_include_directories(joint_limits_rosparam_test PUBLIC
+    include
+    ${GTEST_INCLUDE_DIRS}
+  )
+  target_link_libraries(joint_limits_rosparam_test ${GTEST_LIBRARIES})
+  ament_target_dependencies(joint_limits_rosparam_test
+    rclcpp
+  )
+  add_launch_test(test/joint_limits_rosparam.launch.py)
+  install(TARGETS
+    joint_limits_rosparam_test
+    DESTINATION lib/${PROJECT_NAME}
+  )
+  install(FILES
+    test/joint_limits_rosparam.yaml
+    DESTINATION share/${PROJECT_NAME}/test
+  )
+
+  ament_add_gtest(joint_limits_urdf_test test/joint_limits_urdf_test.cpp)
+  target_include_directories(joint_limits_urdf_test PUBLIC include)
+  ament_target_dependencies(joint_limits_urdf_test
+    rclcpp
+  )
+endif()
 
 # Install headers
 install(DIRECTORY include/${PROJECT_NAME}/
   DESTINATION include/${PROJECT_NAME}
 )
+
 ament_export_include_directories(include)
+ament_export_dependencies(rclcpp urdf)
 
 ament_package()

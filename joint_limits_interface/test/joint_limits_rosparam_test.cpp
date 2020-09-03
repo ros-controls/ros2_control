@@ -1,50 +1,67 @@
-///////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2013, PAL Robotics S.L.
+// Copyright 2013, PAL Robotics S.L. All rights reserved.
+// All rights reserved.
+//
+// Software License Agreement (BSD License 2.0)
 //
 // Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are met:
-//   * Redistributions of source code must retain the above copyright notice,
-//     this list of conditions and the following disclaimer.
-//   * Redistributions in binary form must reproduce the above copyright
-//     notice, this list of conditions and the following disclaimer in the
-//     documentation and/or other materials provided with the distribution.
-//   * Neither the name of PAL Robotics S.L. nor the names of its
-//     contributors may be used to endorse or promote products derived from
-//     this software without specific prior written permission.
+// modification, are permitted provided that the following conditions
+// are met:
 //
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
-// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+//  * Redistributions of source code must retain the above copyright
+//    notice, this list of conditions and the following disclaimer.
+//  * Redistributions in binary form must reproduce the above
+//    copyright notice, this list of conditions and the following
+//    disclaimer in the documentation and/or other materials provided
+//    with the distribution.
+//  * Neither the name of the copyright holders nor the names of its
+//    contributors may be used to endorse or promote products derived
+//    from this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+// FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+// COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+// BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+// LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+// CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+// LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+// ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
-//////////////////////////////////////////////////////////////////////////////
 
 /// \author Adolfo Rodriguez Tsouroukdissian
 
 #include <gtest/gtest.h>
-#include <joint_limits_interface/joint_limits_rosparam.h>
 
-using std::string;
-using namespace joint_limits_interface;
+#include <joint_limits_interface/joint_limits_rosparam.hpp>
 
+#include <rclcpp/rclcpp.hpp>
 
-TEST(JointLimitsRosParamTest, GetJointLimits)
+#include <memory>
+
+class JointLimitsRosParamTest : public ::testing::Test
 {
-  using namespace joint_limits_interface;
+protected:
+  void SetUp()
+  {
+    rclcpp::NodeOptions node_options;
+    node_options.allow_undeclared_parameters(true)
+    .automatically_declare_parameters_from_overrides(true);
 
-  ros::NodeHandle nh("test");
+    node_ = rclcpp::Node::make_shared("JointLimitsRosparamTestNode", node_options);
+  }
 
+  rclcpp::Node::SharedPtr node_;
+};
+
+TEST_F(JointLimitsRosParamTest, GetJointLimits)
+{
   // Invalid specification
   {
-    JointLimits limits;
-    EXPECT_FALSE(getJointLimits("~bad_joint", nh, limits));
-    EXPECT_FALSE(getJointLimits("unknown_joint", nh, limits));
+    joint_limits_interface::JointLimits limits;
+    EXPECT_FALSE(getJointLimits("bad_joint", node_, limits));
+    EXPECT_FALSE(getJointLimits("unknown_joint", node_, limits));
 
     EXPECT_FALSE(limits.has_position_limits);
     EXPECT_FALSE(limits.has_velocity_limits);
@@ -55,8 +72,8 @@ TEST(JointLimitsRosParamTest, GetJointLimits)
 
   // Get full specification from parameter server
   {
-    JointLimits limits;
-    EXPECT_TRUE(getJointLimits("foo_joint", nh, limits));
+    joint_limits_interface::JointLimits limits;
+    EXPECT_TRUE(getJointLimits("foo_joint", node_, limits));
 
     EXPECT_TRUE(limits.has_position_limits);
     EXPECT_EQ(0.0, limits.min_position);
@@ -79,8 +96,8 @@ TEST(JointLimitsRosParamTest, GetJointLimits)
 
   // Specifying flags but not values should set nothing
   {
-    JointLimits limits;
-    EXPECT_TRUE(getJointLimits("yinfoo_joint", nh, limits));
+    joint_limits_interface::JointLimits limits;
+    EXPECT_TRUE(getJointLimits("yinfoo_joint", node_, limits));
 
     EXPECT_FALSE(limits.has_position_limits);
     EXPECT_FALSE(limits.has_velocity_limits);
@@ -91,8 +108,8 @@ TEST(JointLimitsRosParamTest, GetJointLimits)
 
   // Specifying values but not flags should set nothing
   {
-    JointLimits limits;
-    EXPECT_TRUE(getJointLimits("yangfoo_joint", nh, limits));
+    joint_limits_interface::JointLimits limits;
+    EXPECT_TRUE(getJointLimits("yangfoo_joint", node_, limits));
 
     EXPECT_FALSE(limits.has_position_limits);
     EXPECT_FALSE(limits.has_velocity_limits);
@@ -103,15 +120,15 @@ TEST(JointLimitsRosParamTest, GetJointLimits)
 
   // Disable already set values
   {
-    JointLimits limits;
-    EXPECT_TRUE(getJointLimits("foo_joint", nh, limits));
+    joint_limits_interface::JointLimits limits;
+    EXPECT_TRUE(getJointLimits("foo_joint", node_, limits));
     EXPECT_TRUE(limits.has_position_limits);
     EXPECT_TRUE(limits.has_velocity_limits);
     EXPECT_TRUE(limits.has_acceleration_limits);
     EXPECT_TRUE(limits.has_jerk_limits);
     EXPECT_TRUE(limits.has_effort_limits);
 
-    EXPECT_TRUE(getJointLimits("antifoo_joint", nh, limits));
+    EXPECT_TRUE(getJointLimits("antifoo_joint", node_, limits));
     EXPECT_FALSE(limits.has_position_limits);
     EXPECT_FALSE(limits.has_velocity_limits);
     EXPECT_FALSE(limits.has_acceleration_limits);
@@ -122,16 +139,16 @@ TEST(JointLimitsRosParamTest, GetJointLimits)
 
   // Incomplete position limits specification does not get loaded
   {
-    JointLimits limits;
-    EXPECT_TRUE(getJointLimits("baz_joint", nh, limits));
+    joint_limits_interface::JointLimits limits;
+    EXPECT_TRUE(getJointLimits("baz_joint", node_, limits));
 
     EXPECT_FALSE(limits.has_position_limits);
   }
 
   // Override only one field, leave all others unchanged
   {
-    JointLimits limits, limits_ref;
-    EXPECT_TRUE(getJointLimits("bar_joint", nh, limits));
+    joint_limits_interface::JointLimits limits, limits_ref;
+    EXPECT_TRUE(getJointLimits("bar_joint", node_, limits));
 
     EXPECT_EQ(limits_ref.has_position_limits, limits.has_position_limits);
     EXPECT_EQ(limits_ref.min_position, limits.min_position);
@@ -154,23 +171,19 @@ TEST(JointLimitsRosParamTest, GetJointLimits)
   }
 }
 
-TEST(JointLimitsRosParamTest, GetSoftJointLimits)
+TEST_F(JointLimitsRosParamTest, GetSoftJointLimits)
 {
-  using namespace joint_limits_interface;
-
-  ros::NodeHandle nh("test");
-
   // Invalid specification
   {
-    SoftJointLimits soft_limits;
-    EXPECT_FALSE(getSoftJointLimits("~bad_joint", nh, soft_limits));
-    EXPECT_FALSE(getSoftJointLimits("unknown_joint", nh, soft_limits));
+    joint_limits_interface::SoftJointLimits soft_limits;
+    EXPECT_FALSE(getSoftJointLimits("bad_joint", node_, soft_limits));
+    EXPECT_FALSE(getSoftJointLimits("unknown_joint", node_, soft_limits));
   }
 
   // Get full specification from parameter server
   {
-    SoftJointLimits soft_limits;
-    EXPECT_TRUE(getSoftJointLimits("foo_joint", nh, soft_limits));
+    joint_limits_interface::SoftJointLimits soft_limits;
+    EXPECT_TRUE(getSoftJointLimits("foo_joint", node_, soft_limits));
 
     EXPECT_EQ(10.0, soft_limits.k_position);
     EXPECT_EQ(20.0, soft_limits.k_velocity);
@@ -180,18 +193,14 @@ TEST(JointLimitsRosParamTest, GetSoftJointLimits)
 
   // Skip parsing soft limits if has_soft_limits is false
   {
-    SoftJointLimits soft_limits, soft_limits_ref;
-    EXPECT_FALSE(getSoftJointLimits("foobar_joint", nh, soft_limits));
-    EXPECT_EQ(soft_limits.k_position, soft_limits_ref.k_position);
-    EXPECT_EQ(soft_limits.k_velocity, soft_limits_ref.k_velocity);
-    EXPECT_EQ(soft_limits.min_position, soft_limits_ref.min_position);
-    EXPECT_EQ(soft_limits.max_position, soft_limits_ref.max_position);
+    joint_limits_interface::SoftJointLimits soft_limits, soft_limits_ref;
+    EXPECT_FALSE(getSoftJointLimits("foobar_joint", node_, soft_limits));
   }
 
   // Incomplete soft limits specification does not get loaded
   {
-    SoftJointLimits soft_limits, soft_limits_ref;
-    EXPECT_FALSE(getSoftJointLimits("barbaz_joint", nh, soft_limits));
+    joint_limits_interface::SoftJointLimits soft_limits, soft_limits_ref;
+    EXPECT_FALSE(getSoftJointLimits("barbaz_joint", node_, soft_limits));
     EXPECT_EQ(soft_limits.k_position, soft_limits_ref.k_position);
     EXPECT_EQ(soft_limits.k_velocity, soft_limits_ref.k_velocity);
     EXPECT_EQ(soft_limits.min_position, soft_limits_ref.min_position);
@@ -199,9 +208,11 @@ TEST(JointLimitsRosParamTest, GetSoftJointLimits)
   }
 }
 
-int main(int argc, char** argv)
+int main(int argc, char ** argv)
 {
+  rclcpp::init(argc, argv);
   testing::InitGoogleTest(&argc, argv);
-  ros::init(argc, argv, "JointLimitsRosparamTestNode");
-  return RUN_ALL_TESTS();
+  int ret = RUN_ALL_TESTS();
+  rclcpp::shutdown();
+  return ret;
 }
