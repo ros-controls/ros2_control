@@ -18,25 +18,43 @@ find_package(rcpputils REQUIRED)
 add_library(
   hardware_interface
   SHARED
+  src/actuator_hardware.cpp
   src/joint_command_handle.cpp
   src/joint_state_handle.cpp
   src/operation_mode_handle.cpp
   src/robot_hardware.cpp
+  src/sensor_hardware.cpp
+  src/system_hardware.cpp
 )
 target_include_directories(
   hardware_interface
   PUBLIC
-  include)
+  include
+)
 ament_target_dependencies(
   hardware_interface
   control_msgs
   rclcpp
   rcpputils
 )
-
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.
 target_compile_definitions(hardware_interface PRIVATE "HARDWARE_INTERFACE_BUILDING_DLL")
+
+add_library(
+  components
+  SHARED
+  src/components/joint.cpp
+  src/components/sensor.cpp
+)
+target_include_directories(
+  components
+  PUBLIC
+  include
+)
+# Causes the visibility macros to use dllexport rather than dllimport,
+# which is appropriate when building the dll but not consuming it.
+target_compile_definitions(components PRIVATE "HARDWARE_INTERFACE_BUILDING_DLL")
 
 install(
   DIRECTORY include/
@@ -45,6 +63,7 @@ install(
 
 install(
   TARGETS
+  components
   hardware_interface
   RUNTIME DESTINATION bin
   ARCHIVE DESTINATION lib
@@ -69,18 +88,38 @@ if(BUILD_TESTING)
   target_link_libraries(test_register_actuators hardware_interface)
   ament_target_dependencies(test_register_actuators rcpputils)
 
+  ament_add_gmock(test_register_joints test/test_register_joints.cpp)
+  target_include_directories(test_register_joints PRIVATE include)
+  target_link_libraries(test_register_joints hardware_interface)
+  ament_target_dependencies(test_register_joints rcpputils)
+
   ament_add_gmock(test_actuator_handle test/test_actuator_handle.cpp)
   target_include_directories(test_actuator_handle PRIVATE include)
   target_link_libraries(test_actuator_handle hardware_interface)
   ament_target_dependencies(test_actuator_handle rcpputils)
 
+  ament_add_gmock(test_joint_handle test/test_joint_handle.cpp)
+  target_include_directories(test_joint_handle PRIVATE include)
+  target_link_libraries(test_joint_handle hardware_interface)
+  ament_target_dependencies(test_joint_handle rcpputils)
+
+  ament_add_gmock(test_component_interfaces test/test_component_interfaces.cpp)
+  target_include_directories(test_component_interfaces PRIVATE include)
+  target_link_libraries(test_component_interfaces components hardware_interface)
 endif()
 
 ament_export_include_directories(
   include
 )
 ament_export_libraries(
-  hardware_interface)
+  components
+  hardware_interface
+)
 ament_export_dependencies(
-  control_msgs)
+  control_msgs
+  rclcpp
+  rcpputils
+  tinyxml2_vendor
+  TinyXML2
+)
 ament_package()

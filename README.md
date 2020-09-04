@@ -19,31 +19,32 @@ The work done in this repo (together with [`ros2_controllers`](https://github.co
 ## Getting Started
 
 In order to be able to compile these two repos, a complete ROS 2 installation is necessary.
-Please find instructions on how to install ROS 2 [here](https://github.com/ros2/ros2/wiki/Installation).
-At the time of writing, there exist binaries for ROS 2 (Bouncy Bolson) for all three major operating systems as well as detailed installation instructions when compiling from source.
+Please find instructions on how to install ROS 2 [here](https://index.ros.org/doc/ros2/Installation/#installationguide).
+At the time of writing, there exist binaries for ROS 2 (Foxy Fitzroy) for all three major operating systems as well as detailed installation instructions when compiling from source.
 
 Once ROS 2 is successfully installed, an overlay workspace can be created for the ros2_control packages.
 
 ``` bash
 $ mkdir -p ~/ros2_control_ws/src
-$ cd $_
-$ git clone https://github.com/ros-controls/ros2_control.git
-$ git clone https://github.com/ros-controls/ros2_controllers.git
+$ cd ~/ros2_control
+$ wget https://raw.githubusercontent.com/ros-controls/ros2_control/master/ros2_control/ros2_control.repos
+$ vcs import src < ros2_control.repos
 ```
 
-We can then compile the overlay workspace. For this we first have to source the ROS 2 installation. In this case, we source the `setup.bash` from the Bouncy binary distribution for Ubuntu. Obviously, the path to the setup file is different on each platform and thus has to be adjusted. Once ROS 2 is sourced, we can compile the ros2_control packages.
+We can then compile the overlay workspace. For this we first have to source the ROS 2 installation. In this case, we source the `setup.bash` from the Foxy binary distribution for Ubuntu. Obviously, the path to the setup file is different on each platform and thus has to be adjusted. Once ROS 2 is sourced, we can compile the ros2_control packages.
 
 ``` bash
 $ cd ~/ros2_control_ws
-$ source /opt/ros/bouncy/setup.bash # this has to be adjusted for ROS-Distro and/or OS
+$ source /opt/ros/foxy/setup.bash # this has to be adjusted for ROS-Distro and/or OS
 $ colcon build
 ```
 
 ## Controller Architecture
 
-There are currently two controller available:
+There are currently three controllers available:
 * JointStateController
 * JointTrajectoryController
+* DiffDriveController
 
 Both can be loaded through the controller manager from the [`ament_resource_index`](https://github.com/ament/ament_cmake/blob/master/ament_cmake_core/doc/resource_index.md).
 
@@ -118,7 +119,7 @@ This robot hardware can then be loaded through the controller manager:
 
 ``` c++
 void
-spin(std::shared_ptr<rclcpp::executors::multi_threaded_executor::MultiThreadedExecutor> exe)
+spin(std::shared_ptr<rclcpp::executors::MultiThreadedExecutor> exe)
 {
   exe->spin();
 }
@@ -140,7 +141,7 @@ int main()
   }
   
   auto executor =
-    std::make_shared<rclcpp::executors::multi_threaded_executor::MultiThreadedExecutor>();
+    std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
   
   // start the controller manager with the robot hardware
   controller_manager::ControllerManager cm(my_robot, executor);
@@ -149,26 +150,24 @@ int main()
   // "ros_controllers::JointStateController" is the class we want to load
   // "my_robot_joint_state_controller" is the name for the node to spawn
   cm.load_controller(
-    "ros_controllers",
-    "ros_controllers::JointStateController",
-    "my_robot_joint_state_controller");
+    "my_robot_joint_state_controller",
+    "joint_state_controller/JointStateController");
   // load the trajectory controller
-  cm.load_controller(
-    "ros_controllers",
-    "ros_controllers::JointTrajectoryController",
-    "my_robot_joint_trajectory_controller");
+  cm.load_controller( 
+    "my_robot_joint_trajectory_controller",
+    "joint_trajectory_controller/JointTrajectoryController");
 
   // there is no async spinner in ROS 2, so we have to put the spin() in its own thread
   auto future_handle = std::async(std::launch::async, spin, executor);
 
   // we can either configure each controller individually through its services
   // or we use the controller manager to configure every loaded controller
-  if (cm.configure() != controller_interface::CONTROLLER_INTERFACE_RET_SUCCESS) {
+  if (cm.configure() != controller_interface::return_type::SUCCESS) {
     RCLCPP_ERROR(logger, "at least one controller failed to configure")
     return -1;
   }
   // and activate all controller
-  if (cm.activate() != controller_interface::CONTROLLER_INTERFACE_RET_SUCCESS) {
+  if (cm.activate() != controller_interface::return_type::SUCCESS) {
     RCLCPP_ERROR(logger, "at least one controller failed to activate")
     return -1;
   }

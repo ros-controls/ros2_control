@@ -31,6 +31,12 @@ enum class return_type : std::uint8_t
   NON_CLAIMED_WRITE = 15,
 
   CAN_NOT_READ = 20,
+
+  INTERFACE_NOT_FOUND = 30,
+  INTERFACE_VALUE_SIZE_NOT_EQUAL = 31,
+  INTERFACE_NOT_PROVIDED = 32,
+
+  COMMAND_OUT_OF_LIMITS = 40,
 };
 
 using hardware_interface_ret_t = return_type;

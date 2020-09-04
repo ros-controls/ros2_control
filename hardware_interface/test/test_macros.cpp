@@ -32,6 +32,7 @@ class A
 
 TEST_F(TestMacros, throw_on_null) {
   int * i_ptr = nullptr;
+  // cppcheck-suppress unknownMacro
   EXPECT_ANY_THROW(THROW_ON_NULLPTR(i_ptr));
 
   A * a_ptr = nullptr;
