@@ -20,9 +20,7 @@
 #include <utility>
 #include <vector>
 
-#include "hardware_interface/component_info.hpp"
 #include "hardware_interface/hardware_info.hpp"
-#include "hardware_interface/system_hardware_interface.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/hardware_interface_status_values.hpp"
 #include "hardware_interface/visibility_control.h"
@@ -30,56 +28,41 @@
 namespace hardware_interface
 {
 
+namespace components
+{
+class Joint;
+class Sensor;
+}  // namespace components
+class SystemHardwareInterface;
+
 class SystemHardware final
 {
 public:
-  explicit SystemHardware(std::unique_ptr<SystemHardwareInterface> impl)
-  : impl_(std::move(impl))
-  {}
+  HARDWARE_INTERFACE_PUBLIC
+  explicit SystemHardware(std::unique_ptr<SystemHardwareInterface> impl);
 
   virtual ~SystemHardware() = default;
 
   HARDWARE_INTERFACE_PUBLIC
-  return_type configure(const HardwareInfo & system_info)
-  {
-    return impl_->configure(system_info);
-  }
+  return_type configure(const HardwareInfo & system_info);
 
   HARDWARE_INTERFACE_PUBLIC
-  return_type start()
-  {
-    return impl_->start();
-  }
+  return_type start();
 
   HARDWARE_INTERFACE_PUBLIC
-  return_type stop()
-  {
-    return impl_->stop();
-  }
+  return_type stop();
 
   HARDWARE_INTERFACE_PUBLIC
-  hardware_interface_status get_status() const
-  {
-    return impl_->get_status();
-  }
+  hardware_interface_status get_status() const;
 
   HARDWARE_INTERFACE_PUBLIC
-  return_type read_sensors(std::vector<std::shared_ptr<Sensor>> & sensors)
-  {
-    return impl_->read_sensors(sensors);
-  }
+  return_type read_sensors(std::vector<std::shared_ptr<components::Sensor>> & sensors);
 
   HARDWARE_INTERFACE_PUBLIC
-  return_type read_joints(std::vector<std::shared_ptr<Joint>> & joints)
-  {
-    return impl_->read_joints(joints);
-  }
+  return_type read_joints(std::vector<std::shared_ptr<components::Joint>> & joints);
 
   HARDWARE_INTERFACE_PUBLIC
-  return_type write_joints(const std::vector<std::shared_ptr<Joint>> & joints)
-  {
-    return impl_->write_joints(joints);
-  }
+  return_type write_joints(const std::vector<std::shared_ptr<components::Joint>> & joints);
 
 private:
   std::unique_ptr<SystemHardwareInterface> impl_;

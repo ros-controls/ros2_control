@@ -20,6 +20,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "hardware_interface/components/component_info.hpp"
+
 namespace hardware_interface
 {
 

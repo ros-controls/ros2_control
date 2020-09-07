@@ -121,6 +121,12 @@ TEST_F(TestActuators, can_get_registered_actuators)
   EXPECT_THAT(
     robot_hw_.get_registered_actuator_names(),
     UnorderedElementsAre(ACTUATOR_NAME, ACTUATOR2_NAME));
+  EXPECT_THAT(
+    robot_hw_.get_registered_actuator_interface_names(ACTUATOR_NAME),
+    UnorderedElementsAre(FOO_INTERFACE, BAR_INTERFACE));
+  EXPECT_THAT(
+    robot_hw_.get_registered_actuator_interface_names(ACTUATOR2_NAME),
+    UnorderedElementsAre(FOO_INTERFACE));
 
   std::vector<hw::ActuatorHandle> handles =
   {{ACTUATOR_NAME, FOO_INTERFACE}, {ACTUATOR_NAME, BAR_INTERFACE},
@@ -157,4 +163,29 @@ TEST_F(TestActuators, set_get_works_on_registered_actuators)
     EXPECT_NO_THROW(handle.set_value(new_value));
     EXPECT_DOUBLE_EQ(handle.get_value(), new_value);
   }
+}
+
+TEST_F(TestActuators, can_get_registered_actuators_of_interface)
+{
+  ASSERT_EQ(hw::return_type::OK, robot_hw_.register_actuator(ACTUATOR_NAME, FOO_INTERFACE));
+  ASSERT_EQ(hw::return_type::OK, robot_hw_.register_actuator(ACTUATOR_NAME, BAR_INTERFACE));
+  ASSERT_EQ(hw::return_type::OK, robot_hw_.register_actuator(ACTUATOR2_NAME, FOO_INTERFACE));
+
+  std::vector<hw::ActuatorHandle> handles1;
+  ASSERT_EQ(hw::return_type::OK, robot_hw_.get_actuator_handles(handles1, FOO_INTERFACE));
+  ASSERT_EQ(handles1.size(), 2ul);
+  for (const auto & handle : handles1) {
+    ASSERT_EQ(handle.get_interface_name(), FOO_INTERFACE);
+  }
+
+  std::vector<hw::ActuatorHandle> handles2;
+  ASSERT_EQ(hw::return_type::OK, robot_hw_.get_actuator_handles(handles2, BAR_INTERFACE));
+  ASSERT_EQ(handles2.size(), 1ul);
+  for (const auto & handle : handles2) {
+    ASSERT_EQ(handle.get_interface_name(), BAR_INTERFACE);
+  }
+
+  std::vector<hw::ActuatorHandle> handles3;
+  ASSERT_EQ(hw::return_type::OK, robot_hw_.get_actuator_handles(handles3, "NoInterface"));
+  ASSERT_TRUE(handles3.empty());
 }

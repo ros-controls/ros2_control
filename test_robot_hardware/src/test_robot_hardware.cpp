@@ -14,6 +14,7 @@
 
 #include "test_robot_hardware/test_robot_hardware.hpp"
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -106,6 +107,23 @@ TestRobotHardware::init()
     return ret;
   }
 
+  // register actuators and joints
+  for (auto index = 0u; index < 3u; ++index) {
+    register_actuator(actuator_names[index], "position", pos_dflt_values[index]);
+    register_actuator(actuator_names[index], "velocity", vel_dflt_values[index]);
+    register_actuator(actuator_names[index], "effort", eff_dflt_values[index]);
+    register_actuator(actuator_names[index], "position_command", pos_dflt_values[index]);
+    register_actuator(actuator_names[index], "velocity_command", vel_dflt_values[index]);
+    register_actuator(actuator_names[index], "effort_command", eff_dflt_values[index]);
+
+    register_joint(joint_names[index], "position", pos_dflt_values[index]);
+    register_joint(joint_names[index], "velocity", vel_dflt_values[index]);
+    register_joint(joint_names[index], "effort", eff_dflt_values[index]);
+    register_joint(joint_names[index], "position_command", pos_dflt_values[index]);
+    register_joint(joint_names[index], "velocity_command", vel_dflt_values[index]);
+    register_joint(joint_names[index], "effort_command", eff_dflt_values[index]);
+  }
+
   return hardware_interface::return_type::OK;
 }
 
@@ -121,6 +139,34 @@ TestRobotHardware::write()
   pos1 = cmd1;
   pos2 = cmd2;
   pos3 = cmd3;
+
+  auto update_handle = [&](const std::string & joint_name, const std::string & interface_name)
+    {
+      auto get_handle = [&](const std::string & joint_name, const std::string & interface_name)
+        {
+          auto joint_handle = std::make_shared<hardware_interface::JointHandle>(
+            joint_name,
+            interface_name);
+          get_joint_handle(*joint_handle);
+          return joint_handle;
+        };
+
+      get_handle(
+        joint_name,
+        interface_name)->set_value(
+        get_handle(
+          joint_name,
+          interface_name + "_command")->get_value());
+    };
+
+  // update all the joint state handles with their respectives command values
+  const std::vector<std::string> interface_names = {"position", "velocity", "effort"};
+  for (const auto & joint_name : joint_names) {
+    for (const auto & interface_name : interface_names) {
+      update_handle(joint_name, interface_name);
+    }
+  }
+
   return hardware_interface::return_type::OK;
 }
 
