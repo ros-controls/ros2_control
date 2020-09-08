@@ -16,6 +16,7 @@
 #define HARDWARE_INTERFACE__SENSOR_HARDWARE_INTERFACE_HPP_
 
 #include <memory>
+#include <vector>
 
 #include "hardware_interface/components/sensor.hpp"
 #include "hardware_interface/hardware_info.hpp"
@@ -82,12 +83,13 @@ public:
    * \brief Read data from the hardware into sensors using "set_state" function in the Sensor class.
    * This function is always called by the resource manager.
    *
-   * \param sensors sensor where data from the hardware are stored.
+   * \param sensors list of sensors where data from the hardware are stored.
    * \return return_type:OK if everything worked as expected, return_type::ERROR otherwise.
    */
   HARDWARE_INTERFACE_PUBLIC
   virtual
-  return_type read_sensor(std::shared_ptr<components::Sensor> sensor) const = 0;
+  return_type read_sensors(const std::vector<std::shared_ptr<components::Sensor>> & sensors) const =
+  0;
 };
 
 }  // namespace hardware_interface

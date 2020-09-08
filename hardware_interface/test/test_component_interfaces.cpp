@@ -214,9 +214,17 @@ class DummySensorHardware : public SensorHardwareInterface
     return status_;
   }
 
-  return_type read_sensor(std::shared_ptr<components::Sensor> sensor) const override
+  return_type read_sensors(const std::vector<std::shared_ptr<components::Sensor>> & sensors) const
+  override
   {
-    return sensor->set_state(ft_hw_values_);
+    return_type ret = return_type::OK;
+    for (const auto & sensor : sensors) {
+      ret = sensor->set_state(ft_hw_values_);
+      if (ret != return_type::OK) {
+        break;
+      }
+    }
+    return ret;
   }
 
 private:
@@ -332,7 +340,6 @@ using hardware_interface::SensorHardware;
 using hardware_interface::SensorHardwareInterface;
 using hardware_interface::SystemHardware;
 using hardware_interface::SystemHardwareInterface;
-
 using hardware_interface::hardware_interfaces_components_test::DummyForceTorqueSensor;
 using hardware_interface::hardware_interfaces_components_test::DummyMultiJoint;
 using hardware_interface::hardware_interfaces_components_test::DummyPositionJoint;
@@ -637,7 +644,9 @@ TEST_F(TestComponentInterfaces, sensor_interface_with_hardware_works)
   EXPECT_EQ(sensor_hw.get_status(), hardware_interface_status::CONFIGURED);
   EXPECT_EQ(sensor_hw.start(), return_type::OK);
   EXPECT_EQ(sensor_hw.get_status(), hardware_interface_status::STARTED);
-  EXPECT_EQ(sensor_hw.read_sensor(sensor), return_type::OK);
+  std::vector<std::shared_ptr<Sensor>> sensors;
+  sensors.push_back(sensor);
+  EXPECT_EQ(sensor_hw.read_sensors(sensors), return_type::OK);
   std::vector<double> output;
   std::vector<std::string> interfaces = sensor->get_state_interfaces();
   EXPECT_EQ(sensor->get_state(output, interfaces), return_type::OK);

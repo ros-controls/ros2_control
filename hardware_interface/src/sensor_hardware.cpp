@@ -54,9 +54,10 @@ hardware_interface_status SensorHardware::get_status() const
   return impl_->get_status();
 }
 
-return_type SensorHardware::read_sensor(std::shared_ptr<components::Sensor> sensors)
+return_type SensorHardware::read_sensors(
+  const std::vector<std::shared_ptr<components::Sensor>> & sensors)
 {
-  return impl_->read_sensor(sensors);
+  return impl_->read_sensors(sensors);
 }
 
 }  // namespace hardware_interface
