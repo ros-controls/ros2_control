@@ -214,7 +214,8 @@ class DummySensorHardware : public SensorHardwareInterface
     return status_;
   }
 
-  return_type read_sensors(const std::vector<std::shared_ptr<components::Sensor>> & sensors) const override
+  return_type read_sensors(const std::vector<std::shared_ptr<components::Sensor>> & sensors) const
+  override
   {
     return_type ret = return_type::OK;
     for (const auto & sensor : sensors) {

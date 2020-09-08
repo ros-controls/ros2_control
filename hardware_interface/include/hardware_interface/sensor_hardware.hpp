@@ -56,7 +56,7 @@ public:
   hardware_interface_status get_status() const;
 
   HARDWARE_INTERFACE_PUBLIC
-  return_type read_sensor(std::shared_ptr<components::Sensor> sensor);
+  return_type read_sensors(const std::vector<std::shared_ptr<components::Sensor>> & sensors);
 
 private:
   std::unique_ptr<SensorHardwareInterface> impl_;

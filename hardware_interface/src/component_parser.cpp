@@ -18,7 +18,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "hardware_interface/component_info.hpp"
+#include "hardware_interface/components/component_info.hpp"
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/component_parser.hpp"
 
@@ -137,9 +137,9 @@ std::string get_text_for_element(
   return get_text_output;
 }
 
-ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it)
+components::ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it)
 {
-  ComponentInfo component;
+  components::ComponentInfo component;
 
   // Find name, type and class of a component
   component.type = component_it->Name();

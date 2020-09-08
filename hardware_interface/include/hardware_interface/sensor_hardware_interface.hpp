@@ -16,6 +16,7 @@
 #define HARDWARE_INTERFACE__SENSOR_HARDWARE_INTERFACE_HPP_
 
 #include <memory>
+#include <vector>
 
 #include "hardware_interface/components/sensor.hpp"
 #include "hardware_interface/hardware_info.hpp"
@@ -87,7 +88,8 @@ public:
    */
   HARDWARE_INTERFACE_PUBLIC
   virtual
-  return_type read_sensors(const std::vector<std::shared_ptr<components::Sensor>> & sensors) const = 0;
+  return_type read_sensors(const std::vector<std::shared_ptr<components::Sensor>> & sensors) const =
+  0;
 };
 
 }  // namespace hardware_interface
