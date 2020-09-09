@@ -14,8 +14,16 @@ find_package(ament_cmake REQUIRED)
 find_package(builtin_interfaces REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
+set(msg_files
+  msg/ControllerState.msg
+)
 set(srv_files
+  srv/ListControllers.srv
+  srv/ListControllerTypes.srv
+  srv/LoadController.srv
+  srv/ReloadControllerLibraries.srv
   srv/SwitchController.srv
+  srv/UnloadController.srv
 )
 
 if(BUILD_TESTING)
@@ -24,6 +32,7 @@ if(BUILD_TESTING)
 endif()
 
 rosidl_generate_interfaces(${PROJECT_NAME}
+  ${msg_files}
   ${srv_files}
   DEPENDENCIES builtin_interfaces
   ADD_LINTER_TESTS
