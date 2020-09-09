@@ -580,6 +580,45 @@ void ControllerManager::start_controllers_asap()
 #endif
 }
 
+void ControllerManager::list_controllers_srv_cb(
+  const std::shared_ptr<controller_manager_msgs::srv::ListControllers::Request>,
+  std::shared_ptr<controller_manager_msgs::srv::ListControllers::Response> response)
+{
+  // lock services
+  RCLCPP_DEBUG(get_logger(), "list controller service called");
+  std::lock_guard<std::mutex> services_guard(services_lock_);
+  RCLCPP_DEBUG(get_logger(), "list controller service locked");
+
+  // lock controllers to get all names/types/states
+  std::lock_guard<std::recursive_mutex> controller_guard(controllers_lock_);
+  auto & controllers = controllers_lists_[current_controllers_list_];
+  response->controller.resize(controllers.size());
+
+  for (size_t i = 0; i < controllers.size(); ++i) {
+    controller_manager_msgs::msg::ControllerState & cs = response->controller[i];
+    cs.name = controllers[i].info.name;
+    cs.type = controllers[i].info.type;
+    cs.state = controllers[i].c->get_lifecycle_node()->get_current_state().label();
+
+#ifdef TODO_IMPLEMENT_RESOURCE_CHECKING
+    cs.claimed_resources.clear();
+    typedef std::vector<hardware_interface::InterfaceResources> ClaimedResVec;
+    typedef ClaimedResVec::const_iterator ClaimedResIt;
+    const ClaimedResVec & c_resources = controllers[i].info.claimed_resources;
+    for (const auto & c_resource : c_resources) {
+      controller_manager_msgs::HardwareInterfaceResources iface_res;
+      iface_res.hardware_interface = c_resource.hardware_interface;
+      std::copy(
+        c_resource.resources.begin(), c_resource.resources.end(),
+        std::back_inserter(iface_res.resources));
+      cs.claimed_resources.push_back(iface_res);
+    }
+#endif
+  }
+
+  RCLCPP_DEBUG(get_logger(), "list controller service finished");
+}
+
 controller_interface::return_type
 ControllerManager::update()
 {
@@ -604,8 +643,14 @@ ControllerManager::update()
 }
 
 controller_interface::return_type
-ControllerManager::configure() const
+ControllerManager::configure()
 {
+  using namespace std::placeholders;
+  list_controllers_service_ = create_service<controller_manager_msgs::srv::ListControllers>(
+    "list_controllers", std::bind(
+      &ControllerManager::list_controllers_srv_cb, this, _1,
+      _2));
+
   auto ret = controller_interface::return_type::SUCCESS;
   for (auto loaded_controller : controllers_lists_[current_controllers_list_]) {
     auto controller_state = loaded_controller.c->get_lifecycle_node()->configure();

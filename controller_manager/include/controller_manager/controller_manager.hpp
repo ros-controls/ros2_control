@@ -93,7 +93,7 @@ public:
 
   CONTROLLER_MANAGER_PUBLIC
   controller_interface::return_type
-  configure() const;
+  configure();
 
   CONTROLLER_MANAGER_PUBLIC
   controller_interface::return_type
@@ -149,6 +149,11 @@ private:
   /// The index of the controllers list being used in the real-time thread.
   int used_by_realtime_ = {-1};
 
+  /// mutex copied from ROS1 Control, protects service callbacks
+  /// not needed if we're guaranteed that the callbacks don't come from multiple threads
+  std::mutex services_lock_;
+  rclcpp::Service<controller_manager_msgs::srv::ListControllers>::SharedPtr
+    list_controllers_service_;
 
   std::vector<controller_interface::ControllerInterface *> start_request_, stop_request_;
 #ifdef TODO_IMPLEMENT_RESOURCE_CHECKING
