@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef COMPONENTS__COMPONENT_LISTS_MANAGEMENT_HPP_
-#define COMPONENTS__COMPONENT_LISTS_MANAGEMENT_HPP_
+#ifndef HARDWARE_INTERFACE__COMPONENTS__COMPONENT_LISTS_MANAGEMENT_HPP_
+#define HARDWARE_INTERFACE__COMPONENTS__COMPONENT_LISTS_MANAGEMENT_HPP_
 
 #include <algorithm>
 #include <string>
@@ -119,6 +119,58 @@ inline return_type set_internal_values(
 }
 
 /**
+ * \brief set values for queried_interfaces to the int_values considering the value limits.
+ * int_values, lower_limits and upper_limits data structure matches int_interfaces vector.
+ *
+ * \param values values to set.
+ * \param queried_interfaces interfaces for which values are queried.
+ * \param int_interfaces full list of interfaces of a component.
+ * \param int_values internal values of a component.
+ * \param lower_limits list of lower limits.
+ * \param upper_limits list of upper limits.
+ * \return return return_type::INTERFACE_NOT_PROVIDED if
+ * queried_interfaces list is is empty; return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL if values and
+ * queried_interfaces arguments do not have the same length; return_type::VALUE_OUT_OF_LIMITS if a
+ * value is not in the limits; return_type::INTERFACE_NOT_FOUND if
+ * one of queried_interfaces is not defined in int_interfaces; return_type::OK otherwise.
+ *
+ * \todo The error handling in this function could lead to incosistant command or state variables
+ * for different interfaces. This should be changed in the future.
+ * (see: https://github.com/ros-controls/ros2_control/issues/129)
+ */
+inline return_type set_internal_values_with_limits(
+  const std::vector<double> & values, const std::vector<std::string> & queried_interfaces,
+  const std::vector<std::string> & int_interfaces, std::vector<double> & int_values,
+  const std::vector<double> & lower_limits, const std::vector<double> & upper_limits)
+{
+  if (queried_interfaces.size() == 0) {
+    return return_type::INTERFACE_NOT_PROVIDED;
+  }
+  if (values.size() != queried_interfaces.size()) {
+    return return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL;
+  }
+
+  for (auto q_it = queried_interfaces.begin(); q_it != queried_interfaces.end(); ++q_it) {
+    auto it = std::find(int_interfaces.begin(), int_interfaces.end(), *q_it);
+    if (it != int_interfaces.end()) {
+      if (values[std::distance(queried_interfaces.begin(), q_it)] >=
+        lower_limits[std::distance(int_interfaces.begin(), it)] &&
+        values[std::distance(queried_interfaces.begin(), q_it)] <=
+        upper_limits[std::distance(int_interfaces.begin(), it)])
+      {
+        int_values[std::distance(int_interfaces.begin(), it)] =
+          values[std::distance(queried_interfaces.begin(), q_it)];
+      } else {
+        return return_type::VALUE_OUT_OF_LIMITS;
+      }
+    } else {
+      return return_type::INTERFACE_NOT_FOUND;
+    }
+  }
+  return return_type::OK;
+}
+
+/**
  * \brief set all values to compoenents internal values.
  *
  * \param values values to set.
@@ -137,6 +189,35 @@ inline return_type set_internal_values(
   return return_type::OK;
 }
 
+/**
+ * \brief set all values to compoenents internal values considering limits.
+ * int_values, lower_limits and upper_limits have the same data structure.
+ *
+ * \param values values to set.
+ * \param int_values internal values of a component.
+ * \param lower_limits list of lower limits.
+ * \param upper_limits list of upper limits.
+ * \return return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL if the size of the arguments is not equal;
+ * return_type::VALUE_OUT_OF_LIMITS if a value is not in the limits; return_type::OK otherwise.
+ */
+inline return_type set_internal_values_with_limits(
+  const std::vector<double> & values, std::vector<double> & int_values,
+  const std::vector<double> & lower_limits, const std::vector<double> & upper_limits)
+{
+  if (values.size() == int_values.size()) {
+    for (uint i = 0; i < int_values.size(); i++) {
+      if (values[i] >= lower_limits[i] && values[i] <= upper_limits[i]) {
+        int_values[i] = values[i];
+      } else {
+        return return_type::VALUE_OUT_OF_LIMITS;
+      }
+    }
+  } else {
+    return return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL;
+  }
+  return return_type::OK;
+}
+
 }  // namespace components
 }  // namespace hardware_interface
-#endif  // COMPONENTS__COMPONENT_LISTS_MANAGEMENT_HPP_
+#endif  // HARDWARE_INTERFACE__COMPONENTS__COMPONENT_LISTS_MANAGEMENT_HPP_

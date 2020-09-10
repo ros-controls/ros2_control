@@ -14,6 +14,7 @@
   <exec_depend>controller_interface</exec_depend>
   <exec_depend>controller_manager</exec_depend>
   <exec_depend>hardware_interface</exec_depend>
+  <exec_depend>ros2_control_components</exec_depend>
   <exec_depend>transmission_interface</exec_depend>
 
   <test_depend>test_robot_hardware</test_depend>

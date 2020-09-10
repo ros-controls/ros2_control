@@ -1,0 +1,7 @@
+<library path="ros2_control_components">
+  <class name="ros2_control_components/PositionJoint" type="ros2_control_components::PositionJoint" base_class_type="hardware_interface::components::Joint">
+    <description>
+      The position joint provides functionality of position-only joint with minimum and maximum limits.
+    </description>
+  </class>
+</library>
