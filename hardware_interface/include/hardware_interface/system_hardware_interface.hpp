@@ -55,6 +55,15 @@ public:
   return_type configure(const HardwareInfo & system_info) = 0;
 
   /**
+   * \brief Get name of the hardware.
+   *
+   * \return std::string name of the hardware defined in URDF.
+   */
+  HARDWARE_INTERFACE_PUBLIC
+  virtual
+  std::string get_name() const = 0;
+
+  /**
    * \brief Start exchange data with the hardware.
    *
    * \return return_type:OK if everything worked as expected, return_type::ERROR otherwise.

@@ -25,7 +25,7 @@ ament_target_dependencies(
 )
 
 pluginlib_export_plugin_description_file(
-  ros2_control_components ros2_control_components_plugins.xml)
+  hardware_interface ros2_control_components_plugins.xml)
 
 install(TARGETS
   ${PROJECT_NAME}

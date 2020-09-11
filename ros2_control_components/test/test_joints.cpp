@@ -130,7 +130,7 @@ TEST(PositionJointTest, position_joint_ok_test)
 TEST(PositionJointTest, position_joint_failure_test)
 {
   pluginlib::ClassLoader<hardware_interface::components::Joint> joint_component_loader(
-    "ros2_control_components", "hardware_interface::components::Joint");
+    "hardware_interface", "hardware_interface::components::Joint");
 
   std::shared_ptr<hardware_interface::components::Joint> joint =
     joint_component_loader.createSharedInstance("ros2_control_components/PositionJoint");
