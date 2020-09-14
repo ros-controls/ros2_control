@@ -19,6 +19,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "pluginlib/class_loader.hpp"
 
@@ -39,6 +40,12 @@ public:
 
   CONTROLLER_MANAGER_PUBLIC
   bool is_available(const std::string & controller_type) const;
+
+  CONTROLLER_MANAGER_PUBLIC
+  std::vector<std::string> getDeclaredClasses() override;
+
+  CONTROLLER_MANAGER_PUBLIC
+  void reload() override;
 
 private:
   std::shared_ptr<pluginlib::ClassLoader<controller_interface::ControllerInterface>> loader_;

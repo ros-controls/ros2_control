@@ -24,6 +24,8 @@
 namespace test_controller
 {
 
+constexpr char TEST_CONTROLLER_NAME[] = "test_controller_name";
+constexpr char TEST_CONTROLLER_TYPE[] = "test_controller";
 class TestController : public controller_interface::ControllerInterface
 {
 public:
@@ -43,6 +45,24 @@ public:
   on_configure(const rclcpp_lifecycle::State & previous_state) override;
 
   size_t internal_counter = 0;
+
+  // LifecycleNodeInterface interface
+
+public:
+  CallbackReturn on_deactivate(const rclcpp_lifecycle::State & previous_state)
+  {
+    RCLCPP_INFO(get_lifecycle_node()->get_logger(), "Deactivate");
+    return CallbackReturn::SUCCESS;
+  }
+
+  // LifecycleNodeInterface interface
+
+public:
+  CallbackReturn on_cleanup(const rclcpp_lifecycle::State & previous_state)
+  {
+    RCLCPP_INFO(get_lifecycle_node()->get_logger(), "Cleanup");
+    return CallbackReturn::SUCCESS;
+  }
 };
 
 }  // namespace test_controller

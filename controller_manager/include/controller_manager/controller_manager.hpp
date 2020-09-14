@@ -26,6 +26,11 @@
 #include "controller_manager/controller_spec.hpp"
 #include "controller_manager/visibility_control.h"
 #include "controller_manager_msgs/srv/list_controllers.hpp"
+#include "controller_manager_msgs/srv/list_controller_types.hpp"
+#include "controller_manager_msgs/srv/load_controller.hpp"
+#include "controller_manager_msgs/srv/reload_controller_libraries.hpp"
+#include "controller_manager_msgs/srv/switch_controller.hpp"
+#include "controller_manager_msgs/srv/unload_controller.hpp"
 
 #include "hardware_interface/robot_hardware.hpp"
 
@@ -38,6 +43,9 @@ namespace controller_manager
 class ControllerManager : public rclcpp::Node
 {
 public:
+  static constexpr bool WAIT_FOR_ALL_RESOURCES = false;
+  static constexpr double INFINITE_TIMEOUT = 0.0;
+
   CONTROLLER_MANAGER_PUBLIC
   ControllerManager(
     std::shared_ptr<hardware_interface::RobotHardware> hw,
@@ -53,6 +61,14 @@ public:
   load_controller(
     const std::string & controller_name,
     const std::string & controller_type);
+
+  /**
+   * @brief load_controller loads a controller by name, the type must be defined in the parameter server
+   */
+  CONTROLLER_MANAGER_PUBLIC
+  controller_interface::ControllerInterfaceSharedPtr
+  load_controller(
+    const std::string & controller_name);
 
   CONTROLLER_MANAGER_PUBLIC
   controller_interface::return_type unload_controller(
@@ -85,7 +101,8 @@ public:
   switch_controller(
     const std::vector<std::string> & start_controllers,
     const std::vector<std::string> & stop_controllers,
-    int strictness, bool start_asap, const rclcpp::Duration & timeout);
+    int strictness, bool start_asap = WAIT_FOR_ALL_RESOURCES,
+    const rclcpp::Duration & timeout = rclcpp::Duration(INFINITE_TIMEOUT));
 
   CONTROLLER_MANAGER_PUBLIC
   controller_interface::return_type
@@ -132,7 +149,35 @@ protected:
     const std::shared_ptr<controller_manager_msgs::srv::ListControllers::Request> request,
     std::shared_ptr<controller_manager_msgs::srv::ListControllers::Response> response);
 
+  CONTROLLER_MANAGER_PUBLIC
+  void list_controller_types_srv_cb(
+    const std::shared_ptr<controller_manager_msgs::srv::ListControllerTypes::Request> request,
+    std::shared_ptr<controller_manager_msgs::srv::ListControllerTypes::Response> response);
+
+  CONTROLLER_MANAGER_PUBLIC
+  void load_controller_service_cb(
+    const std::shared_ptr<controller_manager_msgs::srv::LoadController::Request> request,
+    std::shared_ptr<controller_manager_msgs::srv::LoadController::Response> response);
+
+  CONTROLLER_MANAGER_PUBLIC
+  void reload_controller_libraries_service_cb(
+    const std::shared_ptr<controller_manager_msgs::srv::ReloadControllerLibraries::Request> request,
+    std::shared_ptr<controller_manager_msgs::srv::ReloadControllerLibraries::Response> response);
+
+  CONTROLLER_MANAGER_PUBLIC
+  void switch_controller_service_cb(
+    const std::shared_ptr<controller_manager_msgs::srv::SwitchController::Request> request,
+    std::shared_ptr<controller_manager_msgs::srv::SwitchController::Response> response);
+
+  CONTROLLER_MANAGER_PUBLIC
+  void unload_controller_service_cb(
+    const std::shared_ptr<controller_manager_msgs::srv::UnloadController::Request> request,
+    std::shared_ptr<controller_manager_msgs::srv::UnloadController::Response> response);
+
 private:
+  void get_controller_names(std::vector<std::string> & names);
+
+
   std::shared_ptr<hardware_interface::RobotHardware> hw_;
   std::shared_ptr<rclcpp::Executor> executor_;
   std::vector<ControllerLoaderInterfaceSharedPtr> loaders_;
@@ -154,6 +199,17 @@ private:
   std::mutex services_lock_;
   rclcpp::Service<controller_manager_msgs::srv::ListControllers>::SharedPtr
     list_controllers_service_;
+  rclcpp::Service<controller_manager_msgs::srv::ListControllerTypes>::SharedPtr
+    list_controller_types_service_;
+  rclcpp::Service<controller_manager_msgs::srv::LoadController>::SharedPtr
+    load_controller_service_;
+  rclcpp::Service<controller_manager_msgs::srv::ReloadControllerLibraries>::SharedPtr
+    reload_controller_libraries_service_;
+  rclcpp::Service<controller_manager_msgs::srv::SwitchController>::SharedPtr
+    switch_controller_service_;
+  rclcpp::Service<controller_manager_msgs::srv::UnloadController>::SharedPtr
+    unload_controller_service_;
+
 
   std::vector<controller_interface::ControllerInterface *> start_request_, stop_request_;
 #ifdef TODO_IMPLEMENT_RESOURCE_CHECKING

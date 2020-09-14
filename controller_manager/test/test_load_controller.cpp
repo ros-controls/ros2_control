@@ -18,6 +18,8 @@
 #include <string>
 #include <vector>
 
+#include "controller_manager_test_common.hpp"
+
 #include "controller_interface/controller_interface.hpp"
 
 #include "controller_manager/controller_loader_interface.hpp"
@@ -26,52 +28,9 @@
 #include "controller_manager_msgs/srv/switch_controller.hpp"
 
 #include "lifecycle_msgs/msg/state.hpp"
-
-#include "rclcpp/utilities.hpp"
-
-#include "test_controller/test_controller.hpp"
-
-#include "test_robot_hardware/test_robot_hardware.hpp"
-
 using ::testing::_;
 using ::testing::Return;
 
-constexpr auto STRICT = controller_manager_msgs::srv::SwitchController::Request::STRICT;
-constexpr auto BEST_EFFORT = controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT;
-
-class TestControllerManager : public ::testing::Test
-{
-public:
-  static void SetUpTestCase()
-  {
-    rclcpp::init(0, nullptr);
-  }
-
-  void SetUp()
-  {
-    robot = std::make_shared<test_robot_hardware::TestRobotHardware>();
-    robot->init();
-
-    executor = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
-  }
-
-
-  std::shared_ptr<test_robot_hardware::TestRobotHardware> robot;
-  std::shared_ptr<rclcpp::Executor> executor;
-};
-
-class ControllerMock : public controller_interface::ControllerInterface
-{
-public:
-  MOCK_METHOD0(update, controller_interface::return_type(void));
-};
-
-class ControllerLoaderMock : public controller_manager::ControllerLoaderInterface
-{
-public:
-  MOCK_METHOD1(create, controller_interface::ControllerInterfaceSharedPtr(const std::string &));
-  MOCK_CONST_METHOD1(is_available, bool(const std::string &));
-};
 
 TEST_F(TestControllerManager, load_unknown_controller)
 {
@@ -83,7 +42,7 @@ TEST_F(TestControllerManager, load_unknown_controller)
 TEST_F(TestControllerManager, load1_known_controller)
 {
   controller_manager::ControllerManager cm(robot, executor, "test_controller_manager");
-  ASSERT_NO_THROW(cm.load_controller("test_controller_01", "test_controller"));
+  ASSERT_NO_THROW(cm.load_controller("test_controller_01", test_controller::TEST_CONTROLLER_TYPE));
   EXPECT_EQ(1u, cm.get_loaded_controllers().size());
 
   controller_manager::ControllerSpec abstract_test_controller =
@@ -99,7 +58,7 @@ TEST_F(TestControllerManager, load1_known_controller)
 TEST_F(TestControllerManager, load2_known_controller)
 {
   controller_manager::ControllerManager cm(robot, executor, "test_controller_manager");
-  std::string controller_type = "test_controller";
+  std::string controller_type = test_controller::TEST_CONTROLLER_TYPE;
 
   // load the controller with name1
   std::string controller_name1 = "test_controller1";
@@ -133,7 +92,7 @@ TEST_F(TestControllerManager, load2_known_controller)
 TEST_F(TestControllerManager, update)
 {
   controller_manager::ControllerManager cm(robot, executor, "test_controller_manager");
-  ASSERT_NO_THROW(cm.load_controller("test_controller_01", "test_controller"));
+  ASSERT_NO_THROW(cm.load_controller("test_controller_01", test_controller::TEST_CONTROLLER_TYPE));
 
   controller_manager::ControllerSpec abstract_test_controller =
     cm.get_loaded_controllers()[0];
@@ -183,7 +142,7 @@ TEST_F(TestControllerManager, switch_controller_empty)
   auto cm = std::make_shared<controller_manager::ControllerManager>(
     robot, executor,
     "test_controller_manager");
-  std::string controller_type = "test_controller";
+  std::string controller_type = test_controller::TEST_CONTROLLER_TYPE;
 
   // load the controller with name1
   std::string controller_name1 = "test_controller1";
@@ -289,7 +248,7 @@ TEST_F(TestControllerManager, switch_controller)
     robot, executor,
     "test_controller_manager");
   cm->configure();
-  std::string controller_type = "test_controller";
+  std::string controller_type = test_controller::TEST_CONTROLLER_TYPE;
 
   // load the controller with name1
   std::string controller_name1 = "test_controller1";
@@ -405,7 +364,7 @@ TEST_F(TestControllerManager, switch_multiple_controllers)
     robot, executor,
     "test_controller_manager");
   cm->configure();
-  std::string controller_type = "test_controller";
+  std::string controller_type = test_controller::TEST_CONTROLLER_TYPE;
 
   // load the controller with name1
   std::string controller_name1 = "test_controller1";
@@ -518,7 +477,7 @@ TEST_F(TestControllerManager, controller_lifecycle_states)
     robot, executor,
     "test_controller_manager");
   cm->configure();
-  std::string controller_type = "test_controller";
+  std::string controller_type = test_controller::TEST_CONTROLLER_TYPE;
 
   // load the controller with name1
   std::string controller_name1 = "test_controller1";
