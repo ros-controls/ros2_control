@@ -19,8 +19,6 @@
 
 #ifndef CONTROLLER_MANAGER__CONTROLLER_SPEC_HPP_
 #define CONTROLLER_MANAGER__CONTROLLER_SPEC_HPP_
-#pragma GCC diagnostic ignored "-Wextra"
-
 
 #include <map>
 #include <string>

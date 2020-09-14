@@ -75,6 +75,21 @@ controller_interface::ControllerInterfaceSharedPtr ControllerManager::load_contr
   return add_controller_impl(controller_spec);
 }
 
+controller_interface::ControllerInterfaceSharedPtr ControllerManager::load_controller(
+  const std::string & controller_name)
+{
+  const std::string param_name = controller_name + ".type";
+  std::string controller_type;
+  if (!has_parameter(param_name)) {
+    declare_parameter(param_name, rclcpp::ParameterValue());
+  }
+  if (!get_parameter(param_name, controller_type)) {
+    RCLCPP_ERROR(get_logger(), "'type' param not defined for %s", controller_name.c_str());
+    return nullptr;
+  }
+  return load_controller(controller_name, controller_type);
+}
+
 controller_interface::return_type ControllerManager::unload_controller(
   const std::string & controller_name)
 {
@@ -105,6 +120,7 @@ controller_interface::return_type ControllerManager::unload_controller(
       }
       RCLCPP_DEBUG(get_logger(), "Cleanup controller");
       controller.c->get_lifecycle_node()->cleanup();
+      executor_->remove_node(controller.c->get_lifecycle_node()->get_node_base_interface());
       removed = true;
     } else {
       to.push_back(controller);
@@ -619,6 +635,158 @@ void ControllerManager::list_controllers_srv_cb(
   RCLCPP_DEBUG(get_logger(), "list controller service finished");
 }
 
+void ControllerManager::list_controller_types_srv_cb(
+  const std::shared_ptr<controller_manager_msgs::srv::ListControllerTypes::Request>,
+  std::shared_ptr<controller_manager_msgs::srv::ListControllerTypes::Response> response)
+{
+  // lock services
+  RCLCPP_DEBUG(get_logger(), "list types service called");
+  std::lock_guard<std::mutex> guard(services_lock_);
+  RCLCPP_DEBUG(get_logger(), "list types service locked");
+
+  for (const auto & controller_loader : loaders_) {
+    std::vector<std::string> cur_types = controller_loader->getDeclaredClasses();
+    for (const auto & cur_type : cur_types) {
+      response->types.push_back(cur_type);
+      response->base_classes.push_back(controller_loader->getName());
+      RCLCPP_INFO(get_logger(), cur_type);
+    }
+  }
+
+  RCLCPP_DEBUG(get_logger(), "list types service finished");
+}
+
+void ControllerManager::load_controller_service_cb(
+  const std::shared_ptr<controller_manager_msgs::srv::LoadController::Request> request,
+  std::shared_ptr<controller_manager_msgs::srv::LoadController::Response> response)
+{
+  // lock services
+  RCLCPP_DEBUG(get_logger(), "loading service called for controller '%s' ", request->name.c_str());
+  std::lock_guard<std::mutex> guard(services_lock_);
+  RCLCPP_DEBUG(get_logger(), "loading service locked");
+
+  response->ok = load_controller(request->name).get();
+
+  RCLCPP_DEBUG(
+    get_logger(), "loading service finished for controller '%s' ",
+    request->name.c_str());
+}
+
+void ControllerManager::reload_controller_libraries_service_cb(
+  const std::shared_ptr<controller_manager_msgs::srv::ReloadControllerLibraries::Request> request,
+  std::shared_ptr<controller_manager_msgs::srv::ReloadControllerLibraries::Response> response)
+{
+  // lock services
+  RCLCPP_DEBUG(get_logger(), "reload libraries service called");
+  std::lock_guard<std::mutex> guard(services_lock_);
+  RCLCPP_DEBUG(get_logger(), "reload libraries service locked");
+
+  // only reload libraries if no controllers are running
+  std::vector<std::string> loaded_controllers, running_controllers;
+  get_controller_names(loaded_controllers);
+  {
+    std::lock_guard<std::recursive_mutex> guard(controllers_lock_);
+    for (const auto & controller : controllers_lists_[current_controllers_list_]) {
+      if (isControllerRunning(*controller.c)) {
+        running_controllers.push_back(controller.info.name);
+      }
+    }
+  }
+  if (!running_controllers.empty() && !request->force_kill) {
+    RCLCPP_ERROR(
+      get_logger(), "Controller manager: Cannot reload controller libraries because"
+      " there are still %i controllers running",
+      (int)running_controllers.size());
+    response->ok = false;
+    return;
+  }
+
+  // stop running controllers if requested
+  if (!loaded_controllers.empty()) {
+    RCLCPP_INFO(get_logger(), "Controller manager: Stopping all running controllers");
+    std::vector<std::string> empty;
+    if (switch_controller(
+        empty, running_controllers,
+        controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT) !=
+      controller_interface::return_type::SUCCESS)
+    {
+      RCLCPP_ERROR(
+        get_logger(),
+        "Controller manager: Cannot reload controller libraries because failed to stop "
+        "running controllers");
+      response->ok = false;
+      return;
+    }
+    for (const auto & controller : loaded_controllers) {
+      if (unload_controller(controller) != controller_interface::return_type::SUCCESS) {
+        RCLCPP_ERROR(
+          get_logger(), "Controller manager: Cannot reload controller libraries because "
+          "failed to unload controller '%s'",
+          controller.c_str());
+        response->ok = false;
+        return;
+      }
+    }
+    get_controller_names(loaded_controllers);
+  }
+  assert(loaded_controllers.empty());
+
+  // Force a reload on all the PluginLoaders (internally, this recreates the plugin loaders)
+  for (const auto & controller_loader : loaders_) {
+    controller_loader->reload();
+    RCLCPP_INFO(
+      get_logger(), "Controller manager: reloaded controller libraries for '%s'",
+      controller_loader->getName().c_str());
+  }
+
+  response->ok = true;
+
+  RCLCPP_DEBUG(get_logger(), "reload libraries service finished");
+}
+
+void ControllerManager::switch_controller_service_cb(
+  const std::shared_ptr<controller_manager_msgs::srv::SwitchController::Request> request,
+  std::shared_ptr<controller_manager_msgs::srv::SwitchController::Response> response)
+{
+  // lock services
+  RCLCPP_DEBUG(get_logger(), "switching service called");
+  std::lock_guard<std::mutex> guard(services_lock_);
+  RCLCPP_DEBUG(get_logger(), "switching service locked");
+
+  response->ok = switch_controller(
+    request->start_controllers, request->stop_controllers, request->strictness,
+    request->start_asap, request->timeout) == controller_interface::return_type::SUCCESS;
+
+  RCLCPP_DEBUG(get_logger(), "switching service finished");
+}
+
+void ControllerManager::unload_controller_service_cb(
+  const std::shared_ptr<controller_manager_msgs::srv::UnloadController::Request> request,
+  std::shared_ptr<controller_manager_msgs::srv::UnloadController::Response> response)
+{
+  // lock services
+  RCLCPP_DEBUG(
+    get_logger(), "unloading service called for controller '%s' ",
+    request->name.c_str());
+  std::lock_guard<std::mutex> guard(services_lock_);
+  RCLCPP_DEBUG(get_logger(), "unloading service locked");
+
+  response->ok = unload_controller(request->name) == controller_interface::return_type::SUCCESS;
+
+  RCLCPP_DEBUG(
+    get_logger(), "unloading service finished for controller '%s' ",
+    request->name.c_str());
+}
+
+void ControllerManager::get_controller_names(std::vector<std::string> & names)
+{
+  std::lock_guard<std::recursive_mutex> guard(controllers_lock_);
+  names.clear();
+  for (const auto & controller : controllers_lists_[current_controllers_list_]) {
+    names.push_back(controller.info.name);
+  }
+}
+
 controller_interface::return_type
 ControllerManager::update()
 {
@@ -645,13 +813,37 @@ ControllerManager::update()
 controller_interface::return_type
 ControllerManager::configure()
 {
+  auto ret = controller_interface::return_type::SUCCESS;
+
+
   using namespace std::placeholders;
   list_controllers_service_ = create_service<controller_manager_msgs::srv::ListControllers>(
     "list_controllers", std::bind(
       &ControllerManager::list_controllers_srv_cb, this, _1,
       _2));
+  list_controller_types_service_ =
+    create_service<controller_manager_msgs::srv::ListControllerTypes>(
+    "list_controller_types", std::bind(
+      &ControllerManager::list_controller_types_srv_cb, this, _1,
+      _2));
+  load_controller_service_ = create_service<controller_manager_msgs::srv::LoadController>(
+    "load_controller", std::bind(
+      &ControllerManager::load_controller_service_cb, this, _1,
+      _2));
+  reload_controller_libraries_service_ =
+    create_service<controller_manager_msgs::srv::ReloadControllerLibraries>(
+    "reload_controller_libraries", std::bind(
+      &ControllerManager::reload_controller_libraries_service_cb, this, _1,
+      _2));
+  switch_controller_service_ = create_service<controller_manager_msgs::srv::SwitchController>(
+    "switch_controller", std::bind(
+      &ControllerManager::switch_controller_service_cb, this, _1,
+      _2));
+  unload_controller_service_ = create_service<controller_manager_msgs::srv::UnloadController>(
+    "unload_controller", std::bind(
+      &ControllerManager::unload_controller_service_cb, this, _1,
+      _2));
 
-  auto ret = controller_interface::return_type::SUCCESS;
   for (auto loaded_controller : controllers_lists_[current_controllers_list_]) {
     auto controller_state = loaded_controller.c->get_lifecycle_node()->configure();
     if (controller_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
