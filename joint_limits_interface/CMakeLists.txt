@@ -15,39 +15,32 @@ if(BUILD_TESTING)
 
   ament_add_gtest(joint_limits_interface_test test/joint_limits_interface_test.cpp)
   target_include_directories(joint_limits_interface_test PUBLIC include)
-  ament_target_dependencies(joint_limits_interface_test
-    hardware_interface
-    rclcpp
-  )
+  ament_target_dependencies(joint_limits_interface_test hardware_interface rclcpp)
 
   add_executable(joint_limits_rosparam_test test/joint_limits_rosparam_test.cpp)
-  target_include_directories(joint_limits_rosparam_test PUBLIC
-    include
-    ${GTEST_INCLUDE_DIRS}
-  )
+  target_include_directories(joint_limits_rosparam_test PUBLIC include ${GTEST_INCLUDE_DIRS})
   target_link_libraries(joint_limits_rosparam_test ${GTEST_LIBRARIES})
-  ament_target_dependencies(joint_limits_rosparam_test
-    rclcpp
-  )
+  ament_target_dependencies(joint_limits_rosparam_test rclcpp)
   add_launch_test(test/joint_limits_rosparam.launch.py)
-  install(TARGETS
+  install(
+    TARGETS
     joint_limits_rosparam_test
     DESTINATION lib/${PROJECT_NAME}
   )
-  install(FILES
+  install(
+    FILES
     test/joint_limits_rosparam.yaml
     DESTINATION share/${PROJECT_NAME}/test
   )
 
   ament_add_gtest(joint_limits_urdf_test test/joint_limits_urdf_test.cpp)
   target_include_directories(joint_limits_urdf_test PUBLIC include)
-  ament_target_dependencies(joint_limits_urdf_test
-    rclcpp
-  )
+  ament_target_dependencies(joint_limits_urdf_test rclcpp)
 endif()
 
 # Install headers
-install(DIRECTORY include/${PROJECT_NAME}/
+install(
+  DIRECTORY include/${PROJECT_NAME}/
   DESTINATION include/${PROJECT_NAME}
 )
 

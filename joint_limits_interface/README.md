@@ -17,7 +17,7 @@ There are two main elements involved in setting up a joint limits interface:
    - **Loading from URDF** There are convenience methods for loading joint limits information
      (position, velocity and effort), as well as soft joint limits information from the URDF.
    - **Loading from ROS params** There are convenience methods for loading joint limits from the ROS parameter server
-     (position, velocity, acceleration, jerk and effort).Parameter specification is the same used in MoveIt,
+     (position, velocity, acceleration, jerk and effort). Parameter specification is the same used in MoveIt,
      with the addition that we also parse jerk and effort limits.
 
  - **Joint limits interface**

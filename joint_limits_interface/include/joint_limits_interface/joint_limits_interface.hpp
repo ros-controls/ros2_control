@@ -565,101 +565,100 @@ private:
   double max_vel_limit_;
 };
 
-#if 0
-/**
- * \brief Interface for enforcing joint limits.
- *
- * \tparam HandleType %Handle type. Must implement the following methods:
- *  \code
- *   void enforceLimits();
- *   std::string get_name() const;
- *  \endcode
- */
-template<class HandleType>
-class joint_limits_interface::JointLimitsInterface
-  : public hardware_interface::ResourceManager<HandleType>
-{
-public:
-  HandleType getHandle(const std::string & name)
-  {
-    // Rethrow exception with a meaningful type
-    try {
-      return this->hardware_interface::ResourceManager<HandleType>::getHandle(name);
-    } catch (const std::logic_error & e) {
-      throw joint_limits_interface::JointLimitsInterfaceException(e.what());
-    }
-  }
-
-  /** \name Real-Time Safe Functions
-   *\{*/
-  /** \brief Enforce limits for all managed handles. */
-  void enforceLimits(const rclcpp::Duration & period)
-  {
-    for (auto && resource_name_and_handle : this->resource_map_) {
-      resource_name_and_handle.second.enforceLimits(period);
-    }
-  }
-  /*\}*/
-};
-
-/** Interface for enforcing limits on a position-controlled joint through saturation. */
-class PositionJointSaturationInterface
-  : public joint_limits_interface::JointLimitsInterface<PositionJointSaturationHandle>
-{
-public:
-  /** \name Real-Time Safe Functions
-   *\{*/
-  /** \brief Reset all managed handles. */
-  void reset()
-  {
-    for (auto && resource_name_and_handle : this->resource_map_) {
-      resource_name_and_handle.second.reset();
-    }
-  }
-  /*\}*/
-};
-
-/** Interface for enforcing limits on a position-controlled joint with soft position limits. */
-class PositionJointSoftLimitsInterface
-  : public joint_limits_interface::JointLimitsInterface<PositionJointSoftLimitsHandle>
-{
-public:
-  /** \name Real-Time Safe Functions
-   *\{*/
-  /** \brief Reset all managed handles. */
-  void reset()
-  {
-    for (auto && resource_name_and_handle : this->resource_map_) {
-      resource_name_and_handle.second.reset();
-    }
-  }
-  /*\}*/
-};
-
-/** Interface for enforcing limits on an effort-controlled joint through saturation. */
-class EffortJointSaturationInterface
-  : public joint_limits_interface::JointLimitsInterface<EffortJointSaturationHandle>
-{
-};
-
-/** Interface for enforcing limits on an effort-controlled joint with soft position limits. */
-class EffortJointSoftLimitsInterface
-  : public joint_limits_interface::JointLimitsInterface<EffortJointSoftLimitsHandle>
-{
-};
-
-/** Interface for enforcing limits on a velocity-controlled joint through saturation. */
-class VelocityJointSaturationInterface
-  : public joint_limits_interface::JointLimitsInterface<VelocityJointSaturationHandle>
-{
-};
-
-/** Interface for enforcing limits on a velocity-controlled joint with soft position limits. */
-class VelocityJointSoftLimitsInterface
-  : public joint_limits_interface::JointLimitsInterface<VelocityJointSoftLimitsHandle>
-{
-};
-#endif
+// TODO(anyone): Port this to ROS 2
+// //**
+//  * \brief Interface for enforcing joint limits.
+//  *
+//  * \tparam HandleType %Handle type. Must implement the following methods:
+//  *  \code
+//  *   void enforceLimits();
+//  *   std::string get_name() const;
+//  *  \endcode
+//  */
+// template<class HandleType>
+// class joint_limits_interface::JointLimitsInterface
+//   : public hardware_interface::ResourceManager<HandleType>
+// {
+// public:
+//   HandleType getHandle(const std::string & name)
+//   {
+//     // Rethrow exception with a meaningful type
+//     try {
+//       return this->hardware_interface::ResourceManager<HandleType>::getHandle(name);
+//     } catch (const std::logic_error & e) {
+//       throw joint_limits_interface::JointLimitsInterfaceException(e.what());
+//     }
+//   }
+//
+//   /** \name Real-Time Safe Functions
+//    *\{*/
+//   /** \brief Enforce limits for all managed handles. */
+//   void enforceLimits(const rclcpp::Duration & period)
+//   {
+//     for (auto && resource_name_and_handle : this->resource_map_) {
+//       resource_name_and_handle.second.enforceLimits(period);
+//     }
+//   }
+//   /*\}*/
+// };
+//
+// /** Interface for enforcing limits on a position-controlled joint through saturation. */
+// class PositionJointSaturationInterface
+//   : public joint_limits_interface::JointLimitsInterface<PositionJointSaturationHandle>
+// {
+// public:
+//   /** \name Real-Time Safe Functions
+//    *\{*/
+//   /** \brief Reset all managed handles. */
+//   void reset()
+//   {
+//     for (auto && resource_name_and_handle : this->resource_map_) {
+//       resource_name_and_handle.second.reset();
+//     }
+//   }
+//   /*\}*/
+// };
+//
+// /** Interface for enforcing limits on a position-controlled joint with soft position limits. */
+// class PositionJointSoftLimitsInterface
+//   : public joint_limits_interface::JointLimitsInterface<PositionJointSoftLimitsHandle>
+// {
+// public:
+//   /** \name Real-Time Safe Functions
+//    *\{*/
+//   /** \brief Reset all managed handles. */
+//   void reset()
+//   {
+//     for (auto && resource_name_and_handle : this->resource_map_) {
+//       resource_name_and_handle.second.reset();
+//     }
+//   }
+//   /*\}*/
+// };
+//
+// /** Interface for enforcing limits on an effort-controlled joint through saturation. */
+// class EffortJointSaturationInterface
+//   : public joint_limits_interface::JointLimitsInterface<EffortJointSaturationHandle>
+// {
+// };
+//
+// /** Interface for enforcing limits on an effort-controlled joint with soft position limits. */
+// class EffortJointSoftLimitsInterface
+//   : public joint_limits_interface::JointLimitsInterface<EffortJointSoftLimitsHandle>
+// {
+// };
+//
+// /** Interface for enforcing limits on a velocity-controlled joint through saturation. */
+// class VelocityJointSaturationInterface
+//   : public joint_limits_interface::JointLimitsInterface<VelocityJointSaturationHandle>
+// {
+// };
+//
+// /** Interface for enforcing limits on a velocity-controlled joint with soft position limits. */
+// class VelocityJointSoftLimitsInterface
+//   : public joint_limits_interface::JointLimitsInterface<VelocityJointSoftLimitsHandle>
+// {
+// };
 }  // namespace joint_limits_interface
 
 #endif  // JOINT_LIMITS_INTERFACE__JOINT_LIMITS_INTERFACE_HPP_

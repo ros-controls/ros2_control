@@ -112,29 +112,6 @@ protected:
 
 class JointLimitsHandleTest : public JointLimitsTest, public ::testing::Test {};
 
-// #ifndef NDEBUG // NOTE: This test validates assertion triggering, hence only gets compiled in
-//  debug mode
-// TEST_F(JointLimitsHandleTest, AssertionTriggering)
-// {
-//   // Data with invalid pointers should trigger an assertion
-//   EXPECT_DEATH(PositionJointSoftLimitsHandle().enforceLimits(period), ".*");
-//   EXPECT_DEATH(EffortJointSoftLimitsHandle().enforceLimits(period), ".*");
-//   EXPECT_DEATH(VelocityJointSaturationHandle().enforceLimits(period), ".*");
-//
-//   // Negative period should trigger an assertion
-//   EXPECT_DEATH(
-//     PositionJointSoftLimitsHandle(
-//       cmd_handle, limits,
-//       soft_limits).enforceLimits(ros::Duration(-0.1)), ".*");
-//
-//   limits.has_acceleration_limits = true;
-//   EXPECT_DEATH(
-//     VelocityJointSaturationHandle(cmd_handle, limits).enforceLimits(
-//       ros::Duration(
-//         -0.1)), ".*");
-// }
-// #endif // NDEBUG
-
 TEST_F(JointLimitsHandleTest, HandleConstruction)
 {
   {
@@ -535,7 +512,7 @@ protected:
   hardware_interface::JointCommandHandle cmd_handle2;
   hardware_interface::JointStateHandle state_handle2;
 };
-//
+
 // TEST_F(JointLimitsInterfaceTest, InterfaceRegistration)
 // {
 //   // Populate interface
