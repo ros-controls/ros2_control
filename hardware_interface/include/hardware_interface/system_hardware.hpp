@@ -47,6 +47,9 @@ public:
   return_type configure(const HardwareInfo & system_info);
 
   HARDWARE_INTERFACE_PUBLIC
+  std::string get_name() const;
+
+  HARDWARE_INTERFACE_PUBLIC
   return_type start();
 
   HARDWARE_INTERFACE_PUBLIC

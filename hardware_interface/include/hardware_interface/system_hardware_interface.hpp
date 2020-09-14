@@ -16,6 +16,7 @@
 #define HARDWARE_INTERFACE__SYSTEM_HARDWARE_INTERFACE_HPP_
 
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "hardware_interface/components/joint.hpp"
@@ -53,6 +54,15 @@ public:
   HARDWARE_INTERFACE_PUBLIC
   virtual
   return_type configure(const HardwareInfo & system_info) = 0;
+
+  /**
+   * \brief Get name of the hardware.
+   *
+   * \return std::string name of the hardware defined in URDF.
+   */
+  HARDWARE_INTERFACE_PUBLIC
+  virtual
+  std::string get_name() const = 0;
 
   /**
    * \brief Start exchange data with the hardware.

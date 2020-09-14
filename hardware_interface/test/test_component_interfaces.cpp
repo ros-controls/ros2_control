@@ -246,6 +246,11 @@ class DummySystemHardware : public SystemHardwareInterface
     return return_type::OK;
   }
 
+  std::string get_name() const override
+  {
+    return info_.name;
+  }
+
   return_type start() override
   {
     if (status_ == hardware_interface_status::CONFIGURED ||

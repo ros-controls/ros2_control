@@ -33,11 +33,23 @@ target_compile_definitions(controller_manager PRIVATE "CONTROLLER_MANAGER_BUILDI
 # prevent pluginlib from using boost
 target_compile_definitions(controller_manager PUBLIC "PLUGINLIB__DISABLE_BOOST_FUNCTIONS")
 
-install(TARGETS controller_manager
+add_library(resource_manager SHARED src/resource_manager.cpp)
+target_include_directories(resource_manager PRIVATE include)
+ament_target_dependencies(resource_manager
+  hardware_interface
+  pluginlib
+  rclcpp
+)
+# Causes the visibility macros to use dllexport rather than dllimport,
+# which is appropriate when building the dll but not consuming it.
+target_compile_definitions(resource_manager PRIVATE "CONTROLLER_MANAGER_BUILDING_DLL")
+
+install(TARGETS controller_manager resource_manager
   RUNTIME DESTINATION bin
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
 )
+
 install(DIRECTORY include/
   DESTINATION include
 )
@@ -94,12 +106,15 @@ endif()
 
 ament_export_libraries(
   controller_manager
+  resource_manager
 )
 ament_export_include_directories(
   include
 )
 ament_export_dependencies(
   controller_interface
+  hardware_interface
   pluginlib
+  rclcpp
 )
 ament_package()

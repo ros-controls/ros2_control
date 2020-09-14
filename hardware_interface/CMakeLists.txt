@@ -45,6 +45,7 @@ target_compile_definitions(hardware_interface PRIVATE "HARDWARE_INTERFACE_BUILDI
 
 add_library(
   component_parser
+  SHARED
   src/component_parser.cpp
 )
 target_include_directories(

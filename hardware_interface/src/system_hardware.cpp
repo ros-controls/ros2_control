@@ -40,6 +40,11 @@ return_type SystemHardware::configure(const HardwareInfo & system_info)
   return impl_->configure(system_info);
 }
 
+std::string SystemHardware::get_name() const
+{
+  return impl_->get_name();
+}
+
 return_type SystemHardware::start()
 {
   return impl_->start();
