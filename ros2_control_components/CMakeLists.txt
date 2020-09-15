@@ -42,6 +42,8 @@ if(BUILD_TESTING)
 
   ament_add_gmock(test_joints test/test_joints.cpp)
   ament_target_dependencies(test_joints hardware_interface pluginlib)
+  # prevent pluginlib from using boost
+  target_compile_definitions(test_joints PUBLIC "PLUGINLIB__DISABLE_BOOST_FUNCTIONS")
 endif()
 
 ament_export_libraries(
