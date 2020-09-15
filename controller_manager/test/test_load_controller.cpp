@@ -50,7 +50,7 @@ public:
   }
 
   std::shared_ptr<test_robot_hardware::TestRobotHardware> robot;
-  std::shared_ptr<rclcpp::Executor> executor;
+  std::shared_ptr<rclcpp::executor::Executor> executor;
 };
 
 class ControllerMock : public controller_interface::ControllerInterface

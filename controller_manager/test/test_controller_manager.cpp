@@ -43,7 +43,7 @@ public:
   }
 
   std::shared_ptr<test_robot_hardware::TestRobotHardware> robot;
-  std::shared_ptr<rclcpp::Executor> executor;
+  std::shared_ptr<rclcpp::executor::Executor> executor;
 };
 
 TEST_F(TestControllerManager, controller_lifecycle) {

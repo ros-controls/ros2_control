@@ -16,7 +16,6 @@
 #define HARDWARE_INTERFACE__SYSTEM_HARDWARE_INTERFACE_HPP_
 
 #include <memory>
-#include <string>
 #include <vector>
 
 #include "hardware_interface/components/joint.hpp"
