@@ -12,23 +12,25 @@ find_package(hardware_interface REQUIRED)
 find_package(pluginlib REQUIRED)
 
 add_library(
-  ${PROJECT_NAME}
+  ros2_control_components
   SHARED
   # joints
   src/position_joint.cpp
   # sensors
 )
 ament_target_dependencies(
-  ${PROJECT_NAME}
+  ros2_control_components
   hardware_interface
   pluginlib
 )
+# prevent pluginlib from using boost
+target_compile_definitions(ros2_control_components PUBLIC "PLUGINLIB__DISABLE_BOOST_FUNCTIONS")
 
 pluginlib_export_plugin_description_file(
   hardware_interface ros2_control_components_plugins.xml)
 
 install(TARGETS
-  ${PROJECT_NAME}
+  ros2_control_components
   DESTINATION lib
 )
 
