@@ -281,7 +281,6 @@ controller_interface::return_type ControllerManager::switch_controller(
       }
     }
 
-
     const bool is_running = isControllerRunning(*controller.c);
 
     if (!is_running && in_stop_list) {  // check for double stop
@@ -814,7 +813,6 @@ controller_interface::return_type
 ControllerManager::configure()
 {
   auto ret = controller_interface::return_type::SUCCESS;
-
 
   using namespace std::placeholders;
   list_controllers_service_ = create_service<controller_manager_msgs::srv::ListControllers>(
