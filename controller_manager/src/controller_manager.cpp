@@ -186,11 +186,10 @@ controller_interface::return_type ControllerManager::switch_controller(
     RCLCPP_DEBUG(get_logger(), "- stopping controller '%s'", controller.c_str());
   }
 
-  controller_interface::ControllerInterface * ct;
   // list all controllers to stop
   for (const auto & controller : stop_controllers) {
-    ct = get_controller_by_name(controller);
-    if (ct == nullptr) {
+    controller_interface::ControllerInterfaceSharedPtr ct = get_controller_by_name(controller);
+    if (!ct.get()) {
       if (strictness == controller_manager_msgs::srv::SwitchController::Request::STRICT) {
         RCLCPP_ERROR(
           get_logger(),
@@ -216,8 +215,8 @@ controller_interface::return_type ControllerManager::switch_controller(
 
   // list all controllers to start
   for (const auto & controller : start_controllers) {
-    ct = get_controller_by_name(controller);
-    if (ct == nullptr) {
+    controller_interface::ControllerInterfaceSharedPtr ct = get_controller_by_name(controller);
+    if (!ct.get()) {
       if (strictness == controller_manager_msgs::srv::SwitchController::Request::STRICT) {
         RCLCPP_ERROR(
           get_logger(),
@@ -256,7 +255,7 @@ controller_interface::return_type ControllerManager::switch_controller(
   for (const auto & controller : controllers) {
     bool in_stop_list = false;
     for (const auto & request : stop_request_) {
-      if (request == controller.c.get()) {
+      if (request == controller.c) {
         in_stop_list = true;
         break;
       }
@@ -264,7 +263,7 @@ controller_interface::return_type ControllerManager::switch_controller(
 
     bool in_start_list = false;
     for (const auto & request : start_request_) {
-      if (request == controller.c.get()) {
+      if (request == controller.c) {
         in_start_list = true;
         break;
       }
@@ -290,7 +289,7 @@ controller_interface::return_type ControllerManager::switch_controller(
         stop_request_.erase(
           std::remove(
             stop_request_.begin(), stop_request_.end(),
-            controller.c.get()), stop_request_.end());
+            controller.c), stop_request_.end());
       }
     }
 
@@ -312,7 +311,7 @@ controller_interface::return_type ControllerManager::switch_controller(
         start_request_.erase(
           std::remove(
             start_request_.begin(), start_request_.end(),
-            controller.c.get()), start_request_.end());
+            controller.c), start_request_.end());
       }
     }
 
@@ -435,7 +434,7 @@ ControllerManager::add_controller_impl(
   return to.back().c;
 }
 
-controller_interface::ControllerInterface * ControllerManager::get_controller_by_name(
+controller_interface::ControllerInterfaceSharedPtr ControllerManager::get_controller_by_name(
   const std::string & name)
 {
   // lock controllers
@@ -443,7 +442,7 @@ controller_interface::ControllerInterface * ControllerManager::get_controller_by
 
   for (const auto & controller : rt_controllers_wrapper_.get_updated_list(guard)) {
     if (controller.info.name == name) {
-      return controller.c.get();
+      return controller.c;
     }
   }
   return nullptr;
