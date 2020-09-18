@@ -93,17 +93,9 @@ controller_interface::ControllerInterfaceSharedPtr ControllerManager::load_contr
 controller_interface::return_type ControllerManager::unload_controller(
   const std::string & controller_name)
 {
-  // get reference to controller list
-  int free_controllers_list = (current_controllers_list_ + 1) % 2;
-  while (rclcpp::ok() && free_controllers_list == used_by_realtime_) {
-    if (!rclcpp::ok()) {
-      return controller_interface::return_type::ERROR;
-    }
-    std::this_thread::sleep_for(std::chrono::microseconds(200));
-  }
-  std::vector<ControllerSpec>
-  & from = controllers_lists_[current_controllers_list_],
-  & to = controllers_lists_[free_controllers_list];
+  std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
+  std::vector<ControllerSpec> & to = rt_controllers_wrapper_.get_unused_list(guard);
+  const std::vector<ControllerSpec> & from = rt_controllers_wrapper_.get_updated_list(guard);
   to.clear();
 
   // Transfers the running controllers over, skipping the one to be removed and the running ones.
@@ -140,16 +132,11 @@ controller_interface::return_type ControllerManager::unload_controller(
 
   // Destroys the old controllers list when the realtime thread is finished with it.
   RCLCPP_DEBUG(get_logger(), "Realtime switches over to new controller list");
-  int former_current_controllers_list_ = current_controllers_list_;
-  current_controllers_list_ = free_controllers_list;
-  while (rclcpp::ok() && used_by_realtime_ == former_current_controllers_list_) {
-    if (!rclcpp::ok()) {
-      return controller_interface::return_type::ERROR;
-    }
-    std::this_thread::sleep_for(std::chrono::microseconds(200));
-  }
+  rt_controllers_wrapper_.switch_updated_list(guard);
+  std::vector<ControllerSpec> & new_unused_list = rt_controllers_wrapper_.get_unused_list(
+    guard);
   RCLCPP_DEBUG(get_logger(), "Destruct controller");
-  from.clear();
+  new_unused_list.clear();
   RCLCPP_DEBUG(get_logger(), "Destruct controller finished");
 
   RCLCPP_DEBUG(get_logger(), "Successfully unloaded controller '%s'", controller_name.c_str());
@@ -158,7 +145,8 @@ controller_interface::return_type ControllerManager::unload_controller(
 
 std::vector<ControllerSpec> ControllerManager::get_loaded_controllers() const
 {
-  return controllers_lists_[current_controllers_list_];
+  std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
+  return rt_controllers_wrapper_.get_updated_list(guard);
 }
 
 void ControllerManager::register_controller_loader(ControllerLoaderInterfaceSharedPtr loader)
@@ -197,9 +185,6 @@ controller_interface::return_type ControllerManager::switch_controller(
   for (const auto & controller : stop_controllers) {
     RCLCPP_DEBUG(get_logger(), "- stopping controller '%s'", controller.c_str());
   }
-
-  // lock controllers
-  std::lock_guard<std::recursive_mutex> guard(controllers_lock_);
 
   controller_interface::ControllerInterface * ct;
   // list all controllers to stop
@@ -263,7 +248,11 @@ controller_interface::return_type ControllerManager::switch_controller(
   switch_stop_list_.clear();
 #endif
 
-  const auto & controllers = controllers_lists_[current_controllers_list_];
+  // lock controllers
+  std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
+
+  const std::vector<ControllerSpec> & controllers =
+    rt_controllers_wrapper_.get_updated_list(guard);
   for (const auto & controller : controllers) {
     bool in_stop_list = false;
     for (const auto & request : stop_request_) {
@@ -400,17 +389,11 @@ controller_interface::ControllerInterfaceSharedPtr
 ControllerManager::add_controller_impl(
   const ControllerSpec & controller)
 {
-  // get reference to controller list
-  int free_controllers_list = (current_controllers_list_ + 1) % 2;
-  while (rclcpp::ok() && free_controllers_list == used_by_realtime_) {
-    if (!rclcpp::ok()) {
-      return nullptr;
-    }
-    std::this_thread::sleep_for(std::chrono::microseconds(200));
-  }
-  std::vector<ControllerSpec>
-  & from = controllers_lists_[current_controllers_list_],
-  & to = controllers_lists_[free_controllers_list];
+  // lock controllers
+  std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
+
+  std::vector<ControllerSpec> & to = rt_controllers_wrapper_.get_unused_list(guard);
+  const std::vector<ControllerSpec> & from = rt_controllers_wrapper_.get_updated_list(guard);
   to.clear();
 
   // Copy all controllers from the 'from' list to the 'to' list
@@ -441,15 +424,13 @@ ControllerManager::add_controller_impl(
   to.emplace_back(controller);
 
   // Destroys the old controllers list when the realtime thread is finished with it.
-  int former_current_controllers_list_ = current_controllers_list_;
-  current_controllers_list_ = free_controllers_list;
-  while (rclcpp::ok() && used_by_realtime_ == former_current_controllers_list_) {
-    if (!rclcpp::ok()) {
-      return nullptr;
-    }
-    std::this_thread::sleep_for(std::chrono::microseconds(200));
-  }
-  from.clear();
+  RCLCPP_DEBUG(get_logger(), "Realtime switches over to new controller list");
+  rt_controllers_wrapper_.switch_updated_list(guard);
+  RCLCPP_DEBUG(get_logger(), "Destruct controller");
+  std::vector<ControllerSpec> & new_unused_list = rt_controllers_wrapper_.get_unused_list(
+    guard);
+  new_unused_list.clear();
+  RCLCPP_DEBUG(get_logger(), "Destruct controller finished");
 
   return to.back().c;
 }
@@ -457,10 +438,10 @@ ControllerManager::add_controller_impl(
 controller_interface::ControllerInterface * ControllerManager::get_controller_by_name(
   const std::string & name)
 {
-  // Lock recursive mutex in this context
-  std::lock_guard<std::recursive_mutex> guard(controllers_lock_);
+  // lock controllers
+  std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
 
-  for (const auto & controller : controllers_lists_[current_controllers_list_]) {
+  for (const auto & controller : rt_controllers_wrapper_.get_updated_list(guard)) {
     if (controller.info.name == name) {
       return controller.c.get();
     }
@@ -605,9 +586,10 @@ void ControllerManager::list_controllers_srv_cb(
   std::lock_guard<std::mutex> services_guard(services_lock_);
   RCLCPP_DEBUG(get_logger(), "list controller service locked");
 
-  // lock controllers to get all names/types/states
-  std::lock_guard<std::recursive_mutex> controller_guard(controllers_lock_);
-  auto & controllers = controllers_lists_[current_controllers_list_];
+  // lock controllers
+  std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
+  const std::vector<ControllerSpec> & controllers =
+    rt_controllers_wrapper_.get_updated_list(guard);
   response->controller.resize(controllers.size());
 
   for (size_t i = 0; i < controllers.size(); ++i) {
@@ -685,8 +667,9 @@ void ControllerManager::reload_controller_libraries_service_cb(
   std::vector<std::string> loaded_controllers, running_controllers;
   get_controller_names(loaded_controllers);
   {
-    std::lock_guard<std::recursive_mutex> guard(controllers_lock_);
-    for (const auto & controller : controllers_lists_[current_controllers_list_]) {
+    // lock controllers
+    std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
+    for (const auto & controller : rt_controllers_wrapper_.get_updated_list(guard)) {
       if (isControllerRunning(*controller.c)) {
         running_controllers.push_back(controller.info.name);
       }
@@ -780,9 +763,11 @@ void ControllerManager::unload_controller_service_cb(
 
 void ControllerManager::get_controller_names(std::vector<std::string> & names)
 {
-  std::lock_guard<std::recursive_mutex> guard(controllers_lock_);
   names.clear();
-  for (const auto & controller : controllers_lists_[current_controllers_list_]) {
+
+  // lock controllers
+  std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
+  for (const auto & controller : rt_controllers_wrapper_.get_updated_list(guard)) {
     names.push_back(controller.info.name);
   }
 }
@@ -790,10 +775,11 @@ void ControllerManager::get_controller_names(std::vector<std::string> & names)
 controller_interface::return_type
 ControllerManager::update()
 {
-  used_by_realtime_ = current_controllers_list_;
+  std::vector<ControllerSpec> & rt_controller_list =
+    rt_controllers_wrapper_.get_used_by_rt_list();
 
   auto ret = controller_interface::return_type::SUCCESS;
-  for (auto loaded_controller : controllers_lists_[used_by_realtime_]) {
+  for (auto loaded_controller : rt_controller_list) {
     // TODO(v-lopez) we could cache this information
     // https://github.com/ros-controls/ros2_control/issues/153
     if (isControllerRunning(*loaded_controller.c)) {
@@ -844,7 +830,9 @@ ControllerManager::configure()
       &ControllerManager::unload_controller_service_cb, this, _1,
       _2));
 
-  for (auto loaded_controller : controllers_lists_[current_controllers_list_]) {
+  // lock controllers
+  std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
+  for (auto loaded_controller : rt_controllers_wrapper_.get_updated_list(guard)) {
     auto controller_state = loaded_controller.c->get_lifecycle_node()->configure();
     if (controller_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
       ret = controller_interface::return_type::ERROR;
@@ -855,10 +843,10 @@ ControllerManager::configure()
 }
 
 controller_interface::return_type
-ControllerManager::activate() const
+ControllerManager::activate()
 {
   auto ret = controller_interface::return_type::SUCCESS;
-  for (auto loaded_controller : controllers_lists_[current_controllers_list_]) {
+  for (auto loaded_controller : rt_controllers_wrapper_.get_used_by_rt_list()) {
     auto controller_state = loaded_controller.c->get_lifecycle_node()->activate();
     if (controller_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE) {
       ret = controller_interface::return_type::ERROR;
@@ -869,10 +857,10 @@ ControllerManager::activate() const
 }
 
 controller_interface::return_type
-ControllerManager::deactivate() const
+ControllerManager::deactivate()
 {
   auto ret = controller_interface::return_type::SUCCESS;
-  for (auto loaded_controller : controllers_lists_[current_controllers_list_]) {
+  for (auto loaded_controller : rt_controllers_wrapper_.get_used_by_rt_list()) {
     auto controller_state = loaded_controller.c->get_lifecycle_node()->deactivate();
     if (controller_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
       ret = controller_interface::return_type::ERROR;
@@ -883,10 +871,10 @@ ControllerManager::deactivate() const
 }
 
 controller_interface::return_type
-ControllerManager::cleanup() const
+ControllerManager::cleanup()
 {
   auto ret = controller_interface::return_type::SUCCESS;
-  for (auto loaded_controller : controllers_lists_[current_controllers_list_]) {
+  for (auto loaded_controller : rt_controllers_wrapper_.get_used_by_rt_list()) {
     auto controller_state = loaded_controller.c->get_lifecycle_node()->cleanup();
     if (controller_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED) {
       ret = controller_interface::return_type::ERROR;
@@ -894,6 +882,60 @@ ControllerManager::cleanup() const
   }
 
   return ret;
+}
+
+std::vector<ControllerSpec> &
+ControllerManager::RTControllerListWrapper::get_used_by_rt_list()
+{
+  used_by_realtime_controllers_index_ = updated_controllers_index_;
+  return controllers_lists_[used_by_realtime_controllers_index_];
+}
+
+std::vector<ControllerSpec> &
+ControllerManager::RTControllerListWrapper::get_unused_list(
+  const std::lock_guard<std::recursive_mutex> &)
+{
+  assert(controllers_lock_.try_lock());
+  controllers_lock_.unlock();
+  // Get the index to the outdated controller list
+  int free_controllers_list = get_other_list(updated_controllers_index_);
+
+  // Wait until the outdated controller list is not being used by the realtime thread
+  wait_until_rt_not_using(free_controllers_list);
+  return controllers_lists_[free_controllers_list];
+}
+
+const std::vector<ControllerSpec> & ControllerManager::RTControllerListWrapper::get_updated_list(
+  const std::lock_guard<std::recursive_mutex> &) const
+{
+  assert(controllers_lock_.try_lock());
+  controllers_lock_.unlock();
+  return controllers_lists_[updated_controllers_index_];
+}
+
+void ControllerManager::RTControllerListWrapper::switch_updated_list(
+  const std::lock_guard<std::recursive_mutex> &)
+{
+  assert(controllers_lock_.try_lock());
+  controllers_lock_.unlock();
+  int former_current_controllers_list_ = updated_controllers_index_;
+  updated_controllers_index_ = get_other_list(former_current_controllers_list_);
+  wait_until_rt_not_using(former_current_controllers_list_);
+}
+
+int ControllerManager::RTControllerListWrapper::get_other_list(int index) const
+{
+  return (index + 1) % 2;
+}
+
+void ControllerManager::RTControllerListWrapper::wait_until_rt_not_using(int index) const
+{
+  while (used_by_realtime_controllers_index_ == index) {
+    if (!rclcpp::ok()) {
+      throw std::runtime_error("rclcpp interrupted");
+    }
+    std::this_thread::sleep_for(std::chrono::microseconds(200));
+  }
 }
 
 }  // namespace controller_manager

@@ -118,15 +118,15 @@ public:
 
   CONTROLLER_MANAGER_PUBLIC
   controller_interface::return_type
-  activate() const;
+  activate();
 
   CONTROLLER_MANAGER_PUBLIC
   controller_interface::return_type
-  deactivate() const;
+  deactivate();
 
   CONTROLLER_MANAGER_PUBLIC
   controller_interface::return_type
-  cleanup() const;
+  cleanup();
 
 protected:
   CONTROLLER_MANAGER_PUBLIC
@@ -186,18 +186,71 @@ private:
   std::shared_ptr<rclcpp::Executor> executor_;
   std::vector<ControllerLoaderInterfaceSharedPtr> loaders_;
 
-  /** \name Controllers List
-   * The controllers list is double-buffered to avoid needing to lock the
-   * real-time thread when switching controllers in the non-real-time thread.
-   *\{*/
-  /// Mutex protecting the current controllers list
-  std::recursive_mutex controllers_lock_;
-  std::vector<ControllerSpec> controllers_lists_[2];
-  /// The index of the current controllers list
-  int current_controllers_list_ = {0};
-  /// The index of the controllers list being used in the real-time thread.
-  int used_by_realtime_ = {-1};
+  /**
+   * @brief The RTControllerListWrapper class wraps a  double-buffered list of controllers
+   * to avoid needing to lock the  real-time thread when switching controllers in
+   * the non-real-time thread.
+   *
+   * There's always an "updated" list and an "outdated" one
+   * There's always an "used by rt" list and an "unused by rt" list
+   *
+   * The updated state changes on the switch_updated_list()
+   * The rt usage state changes on the get_used_by_rt_list()
+   */
+  class RTControllerListWrapper
+  {
+public:
+    /**
+     * @brief get_used_by_rt_list Makes the "updated" list the "used by rt" list
+     * @warning Should only be called by the RT thread, noone should modify the
+     * updated list while it's being used
+     * @return reference to the updated list
+     */
+    std::vector<ControllerSpec> & get_used_by_rt_list();
 
+    /**
+     * @brief get_unused_list Waits until the "outdated" and "unused by rt"
+     *  lists match and returns a reference to it
+     * This referenced list can be modified safely until switch_updated_controller_list()
+     * is called, at this point the RT thread may start using it at any time
+     * @param guard Guard needed to make sure the caller is the only one accessing the unused by rt list
+     */
+    std::vector<ControllerSpec> & get_unused_list(
+      const std::lock_guard<std::recursive_mutex> & guard);
+
+    /**
+     * @brief get_updated_list Returns a const reference to the most updated list,
+     * @warning May or may not being used by the realtime thread, read-only reference for safety
+     * @param guard Guard needed to make sure the caller is the only one accessing the unused by rt list
+     */
+    const std::vector<ControllerSpec> & get_updated_list(
+      const std::lock_guard<std::recursive_mutex> & guard) const;
+
+    /**
+     * @brief switch_updated_list Switches the "updated" and "outdated" lists, and waits
+     *  until the RT thread is using the new "updated" list.
+     * @param guard Guard needed to make sure the caller is the only one accessing the unused by rt list
+     */
+    void switch_updated_list(const std::lock_guard<std::recursive_mutex> & guard);
+
+
+    // Mutex protecting the controllers list
+    // must be acquired before using any list other than the "used by rt"
+    mutable std::recursive_mutex controllers_lock_;
+
+private:
+    int get_other_list(int index) const;
+
+    void wait_until_rt_not_using(int index) const;
+
+    std::vector<ControllerSpec> controllers_lists_[2];
+    /// The index of the controller list with the most updated information
+    int updated_controllers_index_ = {0};
+    /// The index of the controllers list being used in the real-time thread.
+    int used_by_realtime_controllers_index_ = {-1};
+  };
+
+  RTControllerListWrapper rt_controllers_wrapper_;
   /// mutex copied from ROS1 Control, protects service callbacks
   /// not needed if we're guaranteed that the callbacks don't come from multiple threads
   std::mutex services_lock_;
