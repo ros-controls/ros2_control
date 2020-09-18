@@ -47,7 +47,7 @@ public:
   const std::string & getName() const {return name_;}
 
   CONTROLLER_MANAGER_PUBLIC
-  virtual std::vector<std::string> getDeclaredClasses() = 0;
+  virtual std::vector<std::string> getDeclaredClasses() const = 0;
 
   CONTROLLER_MANAGER_PUBLIC
   virtual void reload() = 0;

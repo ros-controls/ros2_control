@@ -38,7 +38,7 @@ struct ControllerInfo
 
   // TODO(v-lopez)
   /** Claimed resources, grouped by the hardware interface they belong to. */
-//  std::vector<InterfaceResources> claimed_resources;
+std::map<std::string, std::vector<std::string>> resources;
 };
 
 }  // namespace hardware_interface
