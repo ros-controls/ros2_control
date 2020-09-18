@@ -435,6 +435,7 @@ ControllerManager::add_controller_impl(
   // TODO(v-lopez) this should only be done if controller_manager is configured.
   // Probably the whole load_controller part should fail if the controller_manager
   // is not configured, should it implement a LifecycleNodeInterface
+  // https://github.com/ros-controls/ros2_control/issues/152
   controller.c->get_lifecycle_node()->configure();
   executor_->add_node(controller.c->get_lifecycle_node()->get_node_base_interface());
   to.emplace_back(controller);
@@ -794,6 +795,7 @@ ControllerManager::update()
   auto ret = controller_interface::return_type::SUCCESS;
   for (auto loaded_controller : controllers_lists_[used_by_realtime_]) {
     // TODO(v-lopez) we could cache this information
+    // https://github.com/ros-controls/ros2_control/issues/153
     if (isControllerRunning(*loaded_controller.c)) {
       auto controller_ret = loaded_controller.c->update();
       if (controller_ret != controller_interface::return_type::SUCCESS) {
