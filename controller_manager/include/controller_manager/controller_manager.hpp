@@ -86,8 +86,8 @@ public:
       T *, controller_interface::ControllerInterface *>::value, T>::type * = nullptr>
   controller_interface::ControllerInterfaceSharedPtr
   add_controller(
-    std::shared_ptr<T> controller, std::string controller_name,
-    std::string controller_type)
+    std::shared_ptr<T> controller, const std::string & controller_name,
+    const std::string & controller_type)
   {
     ControllerSpec controller_spec;
     controller_spec.c = controller;
@@ -189,7 +189,7 @@ private:
 
   /**
    * @brief The RTControllerListWrapper class wraps a  double-buffered list of controllers
-   * to avoid needing to lock the  real-time thread when switching controllers in
+   * to avoid needing to lock the real-time thread when switching controllers in
    * the non-real-time thread.
    *
    * There's always an "updated" list and an "outdated" one
@@ -246,9 +246,9 @@ private:
 
     std::vector<ControllerSpec> controllers_lists_[2];
     /// The index of the controller list with the most updated information
-    int updated_controllers_index_ = {0};
+    int updated_controllers_index_ = 0;
     /// The index of the controllers list being used in the real-time thread.
-    int used_by_realtime_controllers_index_ = {-1};
+    int used_by_realtime_controllers_index_ = -1;
   };
 
   RTControllerListWrapper rt_controllers_wrapper_;

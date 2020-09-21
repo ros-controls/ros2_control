@@ -25,7 +25,6 @@
 #include "controller_manager_msgs/srv/switch_controller.hpp"
 
 #include "lifecycle_msgs/msg/state.hpp"
-
 #include "rclcpp/rclcpp.hpp"
 
 namespace controller_manager
