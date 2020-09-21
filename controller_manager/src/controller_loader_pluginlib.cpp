@@ -38,7 +38,7 @@ bool ControllerLoaderPluginlib::is_available(const std::string & controller_type
   return loader_->isClassAvailable(controller_type);
 }
 
-std::vector<std::string> ControllerLoaderPluginlib::getDeclaredClasses()
+std::vector<std::string> ControllerLoaderPluginlib::getDeclaredClasses() const
 {
   return loader_->getDeclaredClasses();
 }

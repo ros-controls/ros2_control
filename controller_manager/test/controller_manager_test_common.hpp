@@ -73,7 +73,7 @@ public:
   {}
   MOCK_METHOD1(create, controller_interface::ControllerInterfaceSharedPtr(const std::string &));
   MOCK_CONST_METHOD1(is_available, bool(const std::string &));
-  std::vector<std::string> getDeclaredClasses() override
+  std::vector<std::string> getDeclaredClasses() const override
   {
     return {MOCK_TEST_CONTROLLER_NAME};
   }
