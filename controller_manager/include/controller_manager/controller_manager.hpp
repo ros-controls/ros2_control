@@ -196,18 +196,18 @@ private:
    * There's always an "used by rt" list and an "unused by rt" list
    *
    * The updated state changes on the switch_updated_list()
-   * The rt usage state changes on the get_used_by_rt_list()
+   * The rt usage state changes on the update_and_get_used_by_rt_list()
    */
   class RTControllerListWrapper
   {
 public:
     /**
-     * @brief get_used_by_rt_list Makes the "updated" list the "used by rt" list
-     * @warning Should only be called by the RT thread, noone should modify the
+     * @brief update_and_get_used_by_rt_list Makes the "updated" list the "used by rt" list
+     * @warning Should only be called by the RT thread, no one should modify the
      * updated list while it's being used
      * @return reference to the updated list
      */
-    std::vector<ControllerSpec> & get_used_by_rt_list();
+    std::vector<ControllerSpec> & update_and_get_used_by_rt_list();
 
     /**
      * @brief get_unused_list Waits until the "outdated" and "unused by rt"
@@ -240,6 +240,9 @@ public:
     mutable std::recursive_mutex controllers_lock_;
 
 private:
+    /**
+     * @brief get_other_list get the list not pointed by index
+     */
     int get_other_list(int index) const;
 
     void wait_until_rt_not_using(int index) const;

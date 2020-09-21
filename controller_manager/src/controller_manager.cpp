@@ -79,6 +79,13 @@ controller_interface::ControllerInterfaceSharedPtr ControllerManager::load_contr
 {
   const std::string param_name = controller_name + ".type";
   std::string controller_type;
+
+  // A priori we don't know the name of the controllers that will be loaded, so we cannot
+  // declare paramaters with their names.
+  // So when we're told to load a controller by name, we need to declare the parameter if
+  // we haven't done so, and then read it.
+
+  // Check if parameter has been declared
   if (!has_parameter(param_name)) {
     declare_parameter(param_name, rclcpp::ParameterValue());
   }
@@ -774,7 +781,7 @@ controller_interface::return_type
 ControllerManager::update()
 {
   std::vector<ControllerSpec> & rt_controller_list =
-    rt_controllers_wrapper_.get_used_by_rt_list();
+    rt_controllers_wrapper_.update_and_get_used_by_rt_list();
 
   auto ret = controller_interface::return_type::SUCCESS;
   for (auto loaded_controller : rt_controller_list) {
@@ -858,7 +865,7 @@ controller_interface::return_type
 ControllerManager::deactivate()
 {
   auto ret = controller_interface::return_type::SUCCESS;
-  for (auto loaded_controller : rt_controllers_wrapper_.get_used_by_rt_list()) {
+  for (auto loaded_controller : rt_controllers_wrapper_.update_and_get_used_by_rt_list()) {
     auto controller_state = loaded_controller.c->get_lifecycle_node()->deactivate();
     if (controller_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
       ret = controller_interface::return_type::ERROR;
@@ -872,7 +879,7 @@ controller_interface::return_type
 ControllerManager::cleanup()
 {
   auto ret = controller_interface::return_type::SUCCESS;
-  for (auto loaded_controller : rt_controllers_wrapper_.get_used_by_rt_list()) {
+  for (auto loaded_controller : rt_controllers_wrapper_.update_and_get_used_by_rt_list()) {
     auto controller_state = loaded_controller.c->get_lifecycle_node()->cleanup();
     if (controller_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED) {
       ret = controller_interface::return_type::ERROR;
@@ -883,7 +890,7 @@ ControllerManager::cleanup()
 }
 
 std::vector<ControllerSpec> &
-ControllerManager::RTControllerListWrapper::get_used_by_rt_list()
+ControllerManager::RTControllerListWrapper::update_and_get_used_by_rt_list()
 {
   used_by_realtime_controllers_index_ = updated_controllers_index_;
   return controllers_lists_[used_by_realtime_controllers_index_];
