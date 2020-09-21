@@ -851,13 +851,6 @@ controller_interface::return_type
 ControllerManager::activate()
 {
   auto ret = controller_interface::return_type::SUCCESS;
-  for (auto loaded_controller : rt_controllers_wrapper_.get_used_by_rt_list()) {
-    auto controller_state = loaded_controller.c->get_lifecycle_node()->activate();
-    if (controller_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE) {
-      ret = controller_interface::return_type::ERROR;
-    }
-  }
-
   return ret;
 }
 

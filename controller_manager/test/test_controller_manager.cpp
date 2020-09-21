@@ -15,6 +15,7 @@
 #include <gtest/gtest.h>
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "controller_manager/controller_manager.hpp"
 #include "controller_manager_msgs/srv/list_controllers.hpp"
@@ -47,6 +48,34 @@ TEST_F(TestControllerManager, controller_lifecycle) {
     test_controller->get_lifecycle_node()->get_current_state().id());
 
   EXPECT_EQ(controller_interface::return_type::SUCCESS, cm->activate());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_controller->get_lifecycle_node()->get_current_state().id()) <<
+    "Controllers should be started manually";
+
+  EXPECT_EQ(controller_interface::return_type::SUCCESS, cm->update());
+  EXPECT_EQ(0u, test_controller->internal_counter) << "Controller is not started";
+
+  // Start controller, will take effect at the end of the update function
+  std::vector<std::string> start_controllers = {test_controller::TEST_CONTROLLER_NAME};
+  std::vector<std::string> stop_controllers = {};
+  auto switch_future = std::async(
+    std::launch::async,
+    &controller_manager::ControllerManager::switch_controller, cm,
+    start_controllers, stop_controllers,
+    STRICT, true, rclcpp::Duration(0, 0));
+
+  ASSERT_EQ(
+    std::future_status::timeout,
+    switch_future.wait_for(std::chrono::milliseconds(100))) <<
+    "switch_controller should be blocking until next update cycle";
+
+  EXPECT_EQ(controller_interface::return_type::SUCCESS, cm->update());
+  EXPECT_EQ(0u, test_controller->internal_counter) << "Controller is started at the end of update";
+  EXPECT_EQ(
+    controller_interface::return_type::SUCCESS,
+    switch_future.get()
+  );
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
     test_controller->get_lifecycle_node()->get_current_state().id());
