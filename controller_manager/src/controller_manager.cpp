@@ -36,6 +36,11 @@ inline bool is_controller_running(controller_interface::ControllerInterface & co
          lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE;
 }
 
+bool controller_name_compare(const ControllerSpec & a, const std::string & name)
+{
+  return a.info.name == name;
+}
+
 ControllerManager::ControllerManager(
   std::shared_ptr<hardware_interface::RobotHardware> hw,
   std::shared_ptr<rclcpp::Executor> executor,
@@ -103,31 +108,15 @@ controller_interface::return_type ControllerManager::unload_controller(
   std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
   std::vector<ControllerSpec> & to = rt_controllers_wrapper_.get_unused_list(guard);
   const std::vector<ControllerSpec> & from = rt_controllers_wrapper_.get_updated_list(guard);
-  to.clear();
 
   // Transfers the running controllers over, skipping the one to be removed and the running ones.
-  bool removed = false;
-  for (const auto & controller : from) {
-    if (controller.info.name == controller_name) {
-      if (is_controller_running(*controller.c)) {
-        to.clear();
-        RCLCPP_ERROR(
-          get_logger(),
-          "Could not unload controller with name '%s' because it is still running",
-          controller_name.c_str());
-        return controller_interface::return_type::ERROR;
-      }
-      RCLCPP_DEBUG(get_logger(), "Cleanup controller");
-      controller.c->get_lifecycle_node()->cleanup();
-      executor_->remove_node(controller.c->get_lifecycle_node()->get_node_base_interface());
-      removed = true;
-    } else {
-      to.push_back(controller);
-    }
-  }
+  to = from;
 
-  // Fails if we could not remove the controllers
-  if (!removed) {
+  auto found_it = std::find_if(
+    to.begin(), to.end(),
+    std::bind(controller_name_compare, std::placeholders::_1, controller_name));
+  if (found_it == to.end()) {
+    // Fails if we could not remove the controllers
     to.clear();
     RCLCPP_ERROR(
       get_logger(),
@@ -136,6 +125,21 @@ controller_interface::return_type ControllerManager::unload_controller(
     return controller_interface::return_type::ERROR;
   }
 
+  auto & controller = *found_it;
+
+  if (is_controller_running(*controller.c)) {
+    to.clear();
+    RCLCPP_ERROR(
+      get_logger(),
+      "Could not unload controller with name '%s' because it is still running",
+      controller_name.c_str());
+    return controller_interface::return_type::ERROR;
+  }
+
+  RCLCPP_DEBUG(get_logger(), "Cleanup controller");
+  controller.c->get_lifecycle_node()->cleanup();
+  executor_->remove_node(controller.c->get_lifecycle_node()->get_node_base_interface());
+  to.erase(found_it);
 
   // Destroys the old controllers list when the realtime thread is finished with it.
   RCLCPP_DEBUG(get_logger(), "Realtime switches over to new controller list");
@@ -260,22 +264,15 @@ controller_interface::return_type ControllerManager::switch_controller(
 
   const std::vector<ControllerSpec> & controllers =
     rt_controllers_wrapper_.get_updated_list(guard);
-  for (const auto & controller : controllers) {
-    bool in_stop_list = false;
-    for (const auto & request : stop_request_) {
-      if (request == controller.c) {
-        in_stop_list = true;
-        break;
-      }
-    }
 
-    bool in_start_list = false;
-    for (const auto & request : start_request_) {
-      if (request == controller.c) {
-        in_start_list = true;
-        break;
-      }
-    }
+  for (const auto & controller : controllers) {
+    auto stop_list_it = std::find(
+      stop_request_.begin(), stop_request_.end(), controller.c);
+    bool in_stop_list = stop_list_it != stop_request_.end();
+
+    auto start_list_it = std::find(
+      start_request_.begin(), start_request_.end(), controller.c);
+    bool in_start_list = start_list_it != start_request_.end();
 
     const bool is_running = is_controller_running(*controller.c);
 
@@ -294,10 +291,7 @@ controller_interface::return_type ControllerManager::switch_controller(
           "Could not stop controller '" << controller.info.name <<
             "' since it is not running");
         in_stop_list = false;
-        stop_request_.erase(
-          std::remove(
-            stop_request_.begin(), stop_request_.end(),
-            controller.c), stop_request_.end());
+        stop_request_.erase(stop_list_it);
       }
     }
 
@@ -316,10 +310,7 @@ controller_interface::return_type ControllerManager::switch_controller(
           "Could not start controller '" << controller.info.name <<
             "' since it is already running ");
         in_start_list = false;
-        start_request_.erase(
-          std::remove(
-            start_request_.begin(), start_request_.end(),
-            controller.c), start_request_.end());
+        start_request_.erase(start_list_it);
       }
     }
 
@@ -401,23 +392,21 @@ ControllerManager::add_controller_impl(
 
   std::vector<ControllerSpec> & to = rt_controllers_wrapper_.get_unused_list(guard);
   const std::vector<ControllerSpec> & from = rt_controllers_wrapper_.get_updated_list(guard);
-  to.clear();
 
   // Copy all controllers from the 'from' list to the 'to' list
-  for (const auto & from_controller : from) {
-    to.push_back(from_controller);
-  }
+  to = from;
 
+  auto found_it = std::find_if(
+    to.begin(), to.end(),
+    std::bind(controller_name_compare, std::placeholders::_1, controller.info.name));
   // Checks that we're not duplicating controllers
-  for (const auto & to_controller : to) {
-    if (controller.info.name == to_controller.info.name) {
-      to.clear();
-      RCLCPP_ERROR(
-        get_logger(),
-        "A controller named '%s' was already loaded inside the controller manager",
-        controller.info.name.c_str());
-      return nullptr;
-    }
+  if (found_it != to.end()) {
+    to.clear();
+    RCLCPP_ERROR(
+      get_logger(),
+      "A controller named '%s' was already loaded inside the controller manager",
+      controller.info.name.c_str());
+    return nullptr;
   }
 
   controller.c->init(hw_, controller.info.name);
