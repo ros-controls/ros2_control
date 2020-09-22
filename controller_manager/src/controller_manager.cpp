@@ -635,10 +635,10 @@ void ControllerManager::list_controller_types_srv_cb(
   RCLCPP_DEBUG(get_logger(), "list types service locked");
 
   for (const auto & controller_loader : loaders_) {
-    std::vector<std::string> cur_types = controller_loader->getDeclaredClasses();
+    std::vector<std::string> cur_types = controller_loader->get_declared_classes();
     for (const auto & cur_type : cur_types) {
       response->types.push_back(cur_type);
-      response->base_classes.push_back(controller_loader->getName());
+      response->base_classes.push_back(controller_loader->get_name());
       RCLCPP_INFO(get_logger(), cur_type);
     }
   }
@@ -727,7 +727,7 @@ void ControllerManager::reload_controller_libraries_service_cb(
     controller_loader->reload();
     RCLCPP_INFO(
       get_logger(), "Controller manager: reloaded controller libraries for '%s'",
-      controller_loader->getName().c_str());
+      controller_loader->get_name().c_str());
   }
 
   response->ok = true;

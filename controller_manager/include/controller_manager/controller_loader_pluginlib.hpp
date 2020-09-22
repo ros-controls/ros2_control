@@ -42,7 +42,7 @@ public:
   bool is_available(const std::string & controller_type) const;
 
   CONTROLLER_MANAGER_PUBLIC
-  std::vector<std::string> getDeclaredClasses() const override;
+  std::vector<std::string> get_declared_classes() const override;
 
   CONTROLLER_MANAGER_PUBLIC
   void reload() override;

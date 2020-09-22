@@ -44,10 +44,10 @@ public:
   virtual bool is_available(const std::string & controller_type) const = 0;
 
   CONTROLLER_MANAGER_PUBLIC
-  const std::string & getName() const {return name_;}
+  const std::string & get_name() const {return name_;}
 
   CONTROLLER_MANAGER_PUBLIC
-  virtual std::vector<std::string> getDeclaredClasses() const = 0;
+  virtual std::vector<std::string> get_declared_classes() const = 0;
 
   CONTROLLER_MANAGER_PUBLIC
   virtual void reload() = 0;
