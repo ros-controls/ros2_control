@@ -29,7 +29,7 @@ jobs:
           - {ROS_DISTRO: foxy, ROS_REPO: testing}
     runs-on: ubuntu-latest
     steps:
-      - run: apt-get update -qq && apt-get upgrade
+      - run: sudo apt-get update -qq && sudo apt-get upgrade
       - uses: actions/checkout@v1
       - uses: 'ros-industrial/industrial_ci@master'
         env: ${{matrix.env}}
