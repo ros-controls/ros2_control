@@ -34,12 +34,10 @@ target_compile_definitions(controller_manager PRIVATE "CONTROLLER_MANAGER_BUILDI
 target_compile_definitions(controller_manager PUBLIC "PLUGINLIB__DISABLE_BOOST_FUNCTIONS")
 
 install(TARGETS controller_manager
-  RUNTIME DESTINATION bin
   LIBRARY DESTINATION lib/controller_manager
-  ARCHIVE DESTINATION lib
 )
 install(DIRECTORY include/
-  DESTINATION include
+  DESTINATION include/controller_manager
 )
 
 if(BUILD_TESTING)
@@ -88,7 +86,7 @@ if(BUILD_TESTING)
   pluginlib_export_plugin_description_file(controller_interface test/test_controller.xml)
 
   install(TARGETS test_controller
-    DESTINATION lib
+    DESTINATION lib/controller_manager
   )
 endif()
 
