@@ -10,12 +10,12 @@ on:
 
 jobs:
   ci_binary:
-    name: Industrial CI against testing repository
+    name: Binary job testing against latest release
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         env:
           - {ROS_DISTRO: foxy, ROS_REPO: testing}
-    runs-on: ubuntu-latest
     steps:
       - run: sudo apt-get update -qq && sudo apt-get upgrade
       - uses: actions/checkout@v1
@@ -23,7 +23,7 @@ jobs:
         env: ${{matrix.env}}
 
   ci_source:
-    name: ros-tooling CI from source
+    name: Source job testing against latest ROS2 source branches
     runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
