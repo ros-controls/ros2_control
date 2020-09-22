@@ -181,7 +181,7 @@ protected:
     std::shared_ptr<controller_manager_msgs::srv::UnloadController::Response> response);
 
 private:
-  void get_controller_names(std::vector<std::string> & names);
+  std::vector<std::string> get_controller_names();
 
   std::shared_ptr<hardware_interface::RobotHardware> hw_;
   std::shared_ptr<rclcpp::Executor> executor_;
@@ -200,7 +200,9 @@ private:
    */
   class RTControllerListWrapper
   {
-public:
+// *INDENT-OFF*
+  public:
+// *INDENT-ON*
     /**
      * @brief update_and_get_used_by_rt_list Makes the "updated" list the "used by rt" list
      * @warning Should only be called by the RT thread, no one should modify the
@@ -239,13 +241,17 @@ public:
     // must be acquired before using any list other than the "used by rt"
     mutable std::recursive_mutex controllers_lock_;
 
-private:
+// *INDENT-OFF*
+  private:
+// *INDENT-ON*
     /**
      * @brief get_other_list get the list not pointed by index
      */
     int get_other_list(int index) const;
 
-    void wait_until_rt_not_using(int index) const;
+    void wait_until_rt_not_using(
+      int index,
+      std::chrono::microseconds sleep_delay = std::chrono::microseconds(200)) const;
 
     std::vector<ControllerSpec> controllers_lists_[2];
     /// The index of the controller list with the most updated information

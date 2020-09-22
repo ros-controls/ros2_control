@@ -206,12 +206,11 @@ controller_interface::return_type ControllerManager::switch_controller(
           controller.c_str());
         stop_request_.clear();
         return controller_interface::return_type::ERROR;
-      } else {
-        RCLCPP_DEBUG(
-          get_logger(),
-          "Could not stop controller with name '%s' because no controller with this name exists",
-          controller.c_str());
       }
+      RCLCPP_DEBUG(
+        get_logger(),
+        "Could not stop controller with name '%s' because no controller with this name exists",
+        controller.c_str());
     } else {
       RCLCPP_DEBUG(
         get_logger(),
@@ -673,7 +672,7 @@ void ControllerManager::reload_controller_libraries_service_cb(
 
   // only reload libraries if no controllers are running
   std::vector<std::string> loaded_controllers, running_controllers;
-  get_controller_names(loaded_controllers);
+  loaded_controllers = get_controller_names();
   {
     // lock controllers
     std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
@@ -718,7 +717,7 @@ void ControllerManager::reload_controller_libraries_service_cb(
         return;
       }
     }
-    get_controller_names(loaded_controllers);
+    loaded_controllers = get_controller_names();
   }
   assert(loaded_controllers.empty());
 
@@ -769,15 +768,16 @@ void ControllerManager::unload_controller_service_cb(
     request->name.c_str());
 }
 
-void ControllerManager::get_controller_names(std::vector<std::string> & names)
+std::vector<std::string> ControllerManager::get_controller_names()
 {
-  names.clear();
+  std::vector<std::string> names;
 
   // lock controllers
   std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
   for (const auto & controller : rt_controllers_wrapper_.get_updated_list(guard)) {
     names.push_back(controller.info.name);
   }
+  return names;
 }
 
 controller_interface::return_type
@@ -929,13 +929,16 @@ int ControllerManager::RTControllerListWrapper::get_other_list(int index) const
   return (index + 1) % 2;
 }
 
-void ControllerManager::RTControllerListWrapper::wait_until_rt_not_using(int index) const
+void ControllerManager::RTControllerListWrapper::wait_until_rt_not_using(
+  int index,
+  std::chrono::microseconds sleep_period)
+const
 {
   while (used_by_realtime_controllers_index_ == index) {
     if (!rclcpp::ok()) {
       throw std::runtime_error("rclcpp interrupted");
     }
-    std::this_thread::sleep_for(std::chrono::microseconds(200));
+    std::this_thread::sleep_for(sleep_period);
   }
 }
 
