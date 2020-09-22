@@ -9,19 +9,7 @@ on:
     - cron: '17 8 * * *'
 
 jobs:
-        #  ci_main_release:
-        #    name: Industrial CI against release repository
-        #    strategy:
-        #      matrix:
-        #        env:
-        #          - {ROS_DISTRO: foxy, ROS_REPO: main}
-        #    runs-on: ubuntu-latest
-        #    steps:
-        #      - uses: actions/checkout@v1
-        #      - uses: 'ros-industrial/industrial_ci@master'
-        #        env: ${{matrix.env}}
-
-  ci_testing_release:
+  ci_binary:
     name: Industrial CI against testing repository
     strategy:
       matrix:
@@ -43,7 +31,9 @@ jobs:
       - uses: ros-tooling/setup-ros@0.0.23
       - uses: ros-tooling/action-ros-ci@0.0.17
         with:
-          package-name: controller_interface controller_manager hardware_interface test_robot_hardware ros2_control
+          # build all packages listed in the meta package
+          package-name:
+            ros2_control
           vcs-repo-file-url: |
             https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/ros2_control/ros2_control.repos
             https://raw.githubusercontent.com/ros2/ros2/master/ros2.repos
@@ -55,7 +45,6 @@ jobs:
           file: ros_ws/lcov/total_coverage.info
           flags: unittests
           name: codecov-umbrella
-          yml: ./codecov.yml
           fail_ci_if_error: true
       - uses: actions/upload-artifact@v1
         with:
