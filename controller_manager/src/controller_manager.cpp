@@ -199,58 +199,57 @@ controller_interface::return_type ControllerManager::switch_controller(
     RCLCPP_DEBUG(get_logger(), "- stopping controller '%s'", controller.c_str());
   }
 
-  // list all controllers to stop
-  for (const auto & controller : stop_controllers) {
-    controller_interface::ControllerInterfaceSharedPtr ct = get_controller_by_name(controller);
-    if (!ct.get()) {
-      if (strictness == controller_manager_msgs::srv::SwitchController::Request::STRICT) {
-        RCLCPP_ERROR(
-          get_logger(),
-          "Could not stop controller with name '%s' because no controller with this name exists",
-          controller.c_str());
-        stop_request_.clear();
-        return controller_interface::return_type::ERROR;
+  const auto foo = [this, strictness](const std::vector<std::string> & controller_list,
+      std::vector<controller_interface::ControllerInterfaceSharedPtr> & request_list,
+      const std::string & action)
+    {
+      // list all controllers to stop/start
+      for (const auto & controller : controller_list) {
+        controller_interface::ControllerInterfaceSharedPtr ct = get_controller_by_name(controller);
+        if (!ct.get()) {
+          if (strictness == controller_manager_msgs::srv::SwitchController::Request::STRICT) {
+            RCLCPP_ERROR(
+              get_logger(),
+              "Could not %s controller with name '%s' because no controller with this name exists",
+              action.c_str(),
+              controller.c_str());
+            return controller_interface::return_type::ERROR;
+          }
+          RCLCPP_DEBUG(
+            get_logger(),
+            "Could not %s controller with name '%s' because no controller with this name exists",
+            action.c_str(),
+            controller.c_str());
+        } else {
+          RCLCPP_DEBUG(
+            get_logger(),
+            "Found controller '%s' that needs to be %sed in list of controllers",
+            controller.c_str(),
+            action.c_str());
+          request_list.push_back(ct);
+        }
       }
       RCLCPP_DEBUG(
-        get_logger(),
-        "Could not stop controller with name '%s' because no controller with this name exists",
-        controller.c_str());
-    } else {
-      RCLCPP_DEBUG(
-        get_logger(),
-        "Found controller '%s' that needs to be stopped in list of controllers",
-        controller.c_str());
-      stop_request_.push_back(ct);
-    }
+        get_logger(), "%s request vector has size %i",
+        action.c_str(), (int)request_list.size());
+
+      return controller_interface::return_type::SUCCESS;
+    };
+
+  // list all controllers to stop
+  auto ret = foo(stop_controllers, stop_request_, "stop");
+  if (ret != controller_interface::return_type::SUCCESS) {
+    stop_request_.clear();
+    return ret;
   }
-  RCLCPP_DEBUG(get_logger(), "Stop request vector has size %i", (int)stop_request_.size());
 
   // list all controllers to start
-  for (const auto & controller : start_controllers) {
-    controller_interface::ControllerInterfaceSharedPtr ct = get_controller_by_name(controller);
-    if (!ct.get()) {
-      if (strictness == controller_manager_msgs::srv::SwitchController::Request::STRICT) {
-        RCLCPP_ERROR(
-          get_logger(),
-          "Could not start controller with name '%s' because no controller with this name exists",
-          controller.c_str());
-        stop_request_.clear();
-        start_request_.clear();
-        return controller_interface::return_type::ERROR;
-      } else {
-        RCLCPP_DEBUG(
-          get_logger(),
-          "Could not start controller with name '%s' because no controller with this name exists",
-          controller.c_str());
-      }
-    } else {
-      RCLCPP_DEBUG(
-        get_logger(), "Found controller '%s' that needs to be started in list of controllers",
-        controller.c_str());
-      start_request_.push_back(ct);
-    }
+  ret = foo(start_controllers, start_request_, "start");
+  if (ret != controller_interface::return_type::SUCCESS) {
+    stop_request_.clear();
+    start_request_.clear();
+    return ret;
   }
-  RCLCPP_DEBUG(get_logger(), "Start request vector has size %i", (int)start_request_.size());
 
 #ifdef TODO_IMPLEMENT_RESOURCE_CHECKING
   // Do the resource management checking
@@ -276,42 +275,42 @@ controller_interface::return_type ControllerManager::switch_controller(
 
     const bool is_running = is_controller_running(*controller.c);
 
-    if (!is_running && in_stop_list) {  // check for double stop
-      if (strictness == controller_manager_msgs::srv::SwitchController::Request::STRICT) {
-        RCLCPP_ERROR_STREAM(
-          get_logger(),
-          "Could not stop controller '" << controller.info.name <<
-            "' since it is not running");
-        stop_request_.clear();
-        start_request_.clear();
-        return controller_interface::return_type::ERROR;
-      } else {
+    auto handle_conflict = [&](const std::string & msg)
+      {
+        if (strictness == controller_manager_msgs::srv::SwitchController::Request::STRICT) {
+          RCLCPP_ERROR_STREAM(
+            get_logger(),
+            msg);
+          stop_request_.clear();
+          start_request_.clear();
+          return controller_interface::return_type::ERROR;
+        }
         RCLCPP_DEBUG_STREAM(
           get_logger(),
           "Could not stop controller '" << controller.info.name <<
             "' since it is not running");
-        in_stop_list = false;
-        stop_request_.erase(stop_list_it);
+        return controller_interface::return_type::SUCCESS;
+      };
+    if (!is_running && in_stop_list) {      // check for double stop
+      auto ret = handle_conflict(
+        "Could not stop controller '" + controller.info.name +
+        "' since it is not running");
+      if (ret != controller_interface::return_type::SUCCESS) {
+        return ret;
       }
+      in_stop_list = false;
+      stop_request_.erase(stop_list_it);
     }
 
     if (is_running && !in_stop_list && in_start_list) {  // check for doubled start
-      if (strictness == controller_manager_msgs::srv::SwitchController::Request::STRICT) {
-        RCLCPP_ERROR_STREAM(
-          get_logger(),
-          "Controller '" << controller.info.name <<
-            "' is already running");
-        stop_request_.clear();
-        start_request_.clear();
-        return controller_interface::return_type::ERROR;
-      } else {
-        RCLCPP_DEBUG_STREAM(
-          get_logger(),
-          "Could not start controller '" << controller.info.name <<
-            "' since it is already running ");
-        in_start_list = false;
-        start_request_.erase(start_list_it);
+      auto ret = handle_conflict(
+        "Could not start controller '" + controller.info.name +
+        "' since it is already running");
+      if (ret != controller_interface::return_type::SUCCESS) {
+        return ret;
       }
+      in_start_list = false;
+      start_request_.erase(start_list_it);
     }
 
 #ifdef TODO_IMPLEMENT_RESOURCE_CHECKING
