@@ -35,8 +35,7 @@ target_compile_definitions(controller_manager PUBLIC "PLUGINLIB__DISABLE_BOOST_F
 
 install(TARGETS controller_manager
   RUNTIME DESTINATION bin
-  LIBRARY DESTINATION lib
-  DESTINATION lib/controller_manager
+  LIBRARY DESTINATION lib/controller_manager
   ARCHIVE DESTINATION lib
 )
 install(DIRECTORY include/
