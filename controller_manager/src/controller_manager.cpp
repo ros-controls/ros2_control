@@ -30,11 +30,12 @@
 namespace controller_manager
 {
 
-bool is_controller_running(controller_interface::ControllerInterface & controller)
+inline bool is_controller_running(controller_interface::ControllerInterface & controller)
 {
   return controller.get_lifecycle_node()->get_current_state().id() ==
          lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE;
 }
+
 ControllerManager::ControllerManager(
   std::shared_ptr<hardware_interface::RobotHardware> hw,
   std::shared_ptr<rclcpp::Executor> executor,
@@ -162,7 +163,9 @@ void ControllerManager::register_controller_loader(ControllerLoaderInterfaceShar
 
 controller_interface::return_type ControllerManager::switch_controller(
   const std::vector<std::string> & start_controllers,
-  const std::vector<std::string> & stop_controllers, int strictness, bool start_asap,
+  const std::vector<std::string> & stop_controllers,
+  int strictness,
+  bool start_asap,
   const rclcpp::Duration & timeout)
 {
   switch_params_ = SwitchParams();

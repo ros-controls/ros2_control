@@ -105,7 +105,8 @@ public:
   switch_controller(
     const std::vector<std::string> & start_controllers,
     const std::vector<std::string> & stop_controllers,
-    int strictness, bool start_asap = WAIT_FOR_ALL_RESOURCES,
+    int strictness,
+    bool start_asap = WAIT_FOR_ALL_RESOURCES,
     const rclcpp::Duration & timeout = rclcpp::Duration(INFINITE_TIMEOUT));
 
   CONTROLLER_MANAGER_PUBLIC
@@ -181,7 +182,6 @@ protected:
 
 private:
   void get_controller_names(std::vector<std::string> & names);
-
 
   std::shared_ptr<hardware_interface::RobotHardware> hw_;
   std::shared_ptr<rclcpp::Executor> executor_;
