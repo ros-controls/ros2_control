@@ -10,7 +10,7 @@ on:
 
 jobs:
   ci_binary:
-    name: Binary job testing against latest release
+    name: Foxy binary job
     runs-on: ubuntu-latest
     strategy:
       matrix:
