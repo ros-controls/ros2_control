@@ -23,20 +23,22 @@ jobs:
         env: ${{matrix.env}}
 
   ci_source:
-    name: Source job testing against latest ROS2 source branches
+    name: Foxy source job
     runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
     steps:
       - uses: ros-tooling/setup-ros@0.0.23
+        with:
+          required-ros-distributions: foxy
       - uses: ros-tooling/action-ros-ci@0.0.17
         with:
+          source-ros-binary-installation: foxy
           # build all packages listed in the meta package
           package-name:
             ros2_control
           vcs-repo-file-url: |
             https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/ros2_control/ros2_control.repos
-            https://raw.githubusercontent.com/ros2/ros2/master/ros2.repos
           colcon-mixin-name: coverage-gcc
           colcon-mixin-repository: https://raw.githubusercontent.com/colcon/colcon-mixin-repository/master/index.yaml
       - uses: actions/upload-artifact@v1
