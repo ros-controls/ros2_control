@@ -36,6 +36,11 @@ jobs:
           source-ros-binary-installation: foxy
           # build all packages listed in the meta package
           package-name:
+            controller_interface
+            controller_manager
+            hardware_interface
+            test_robot_hardware
+            transmission_interface
             ros2_control
           vcs-repo-file-url: |
             https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/ros2_control/ros2_control.repos
