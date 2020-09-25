@@ -16,6 +16,7 @@ jobs:
       matrix:
         env:
           - {ROS_DISTRO: foxy, ROS_REPO: testing}
+          - {ROS_DISTRO: foxy, ROS_REPO: main}
     steps:
       - run: sudo apt-get update -qq && sudo apt-get upgrade
       - uses: actions/checkout@v1
