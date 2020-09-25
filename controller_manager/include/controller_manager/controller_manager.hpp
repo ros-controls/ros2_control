@@ -135,10 +135,6 @@ protected:
   add_controller_impl(const ControllerSpec & controller);
 
   CONTROLLER_MANAGER_PUBLIC
-  controller_interface::ControllerInterfaceSharedPtr get_controller_by_name(
-    const std::string & name);
-
-  CONTROLLER_MANAGER_PUBLIC
   void manage_switch();
 
   CONTROLLER_MANAGER_PUBLIC
@@ -277,7 +273,7 @@ private:
   rclcpp::Service<controller_manager_msgs::srv::UnloadController>::SharedPtr
     unload_controller_service_;
 
-  std::vector<controller_interface::ControllerInterfaceSharedPtr> start_request_, stop_request_;
+  std::vector<std::string> start_request_, stop_request_;
 #ifdef TODO_IMPLEMENT_RESOURCE_CHECKING
 //  std::list<hardware_interface::ControllerInfo> switch_start_list_, switch_stop_list_;
 #endif
