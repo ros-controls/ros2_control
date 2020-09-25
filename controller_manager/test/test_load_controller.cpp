@@ -239,7 +239,6 @@ TEST_F(TestControllerManager, switch_controller)
   auto cm = std::make_shared<controller_manager::ControllerManager>(
     robot_, executor_,
     "test_controller_manager");
-  cm->configure();
   std::string controller_type = test_controller::TEST_CONTROLLER_TYPE;
 
   // load the controller with name1
@@ -355,7 +354,6 @@ TEST_F(TestControllerManager, switch_multiple_controllers)
   auto cm = std::make_shared<controller_manager::ControllerManager>(
     robot_, executor_,
     "test_controller_manager");
-  cm->configure();
   std::string controller_type = test_controller::TEST_CONTROLLER_TYPE;
 
   // load the controller with name1
@@ -461,101 +459,4 @@ TEST_F(TestControllerManager, switch_multiple_controllers)
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
       abstract_test_controller2.c->get_lifecycle_node()->get_current_state().id());
   }
-}
-
-TEST_F(TestControllerManager, controller_lifecycle_states)
-{
-  auto cm = std::make_shared<controller_manager::ControllerManager>(
-    robot_, executor_,
-    "test_controller_manager");
-  cm->configure();
-  std::string controller_type = test_controller::TEST_CONTROLLER_TYPE;
-
-  // load the controller with name1
-  std::string controller_name1 = "test_controller1";
-  ASSERT_NO_THROW(cm->load_controller(controller_name1, controller_type));
-  EXPECT_EQ(1u, cm->get_loaded_controllers().size());
-  controller_manager::ControllerSpec abstract_test_controller1 =
-    cm->get_loaded_controllers()[0];
-
-  ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    abstract_test_controller1.c->get_lifecycle_node()->get_current_state().id());
-
-  RCLCPP_INFO(
-    cm->get_logger(),
-    "Starting stopped controller");
-  std::vector<std::string> start_controllers = {controller_name1};
-  std::vector<std::string> stop_controllers = {};
-  auto switch_future = std::async(
-    std::launch::async,
-    &controller_manager::ControllerManager::switch_controller, cm,
-    start_controllers, stop_controllers,
-    STRICT, true, rclcpp::Duration(0, 0));
-
-  ASSERT_EQ(
-    std::future_status::timeout,
-    switch_future.wait_for(std::chrono::milliseconds(100))) <<
-    "switch_controller should be blocking until next update cycle";
-  cm->update();
-  EXPECT_EQ(
-    controller_interface::return_type::SUCCESS,
-    switch_future.get()
-  );
-
-  ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
-    abstract_test_controller1.c->get_lifecycle_node()->get_current_state().id());
-
-
-  // Stop controller
-  start_controllers = {};
-  stop_controllers = {controller_name1};
-  RCLCPP_INFO(
-    cm->get_logger(),
-    "Stopping started controller");
-  switch_future = std::async(
-    std::launch::async,
-    &controller_manager::ControllerManager::switch_controller, cm,
-    start_controllers, stop_controllers,
-    STRICT, true, rclcpp::Duration(0, 0));
-
-  ASSERT_EQ(
-    std::future_status::timeout,
-    switch_future.wait_for(std::chrono::milliseconds(100))) <<
-    "switch_controller should be blocking until next update cycle";
-  cm->update();
-  EXPECT_EQ(
-    controller_interface::return_type::SUCCESS,
-    switch_future.get()
-  );
-
-  ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    abstract_test_controller1.c->get_lifecycle_node()->get_current_state().id());
-
-
-  RCLCPP_INFO(
-    cm->get_logger(),
-    "Unloading controller");
-  EXPECT_EQ(2, abstract_test_controller1.c.use_count());
-
-  auto unload_future = std::async(
-    std::launch::async,
-    &controller_manager::ControllerManager::unload_controller, cm,
-    controller_name1);
-
-  ASSERT_EQ(
-    std::future_status::timeout,
-    unload_future.wait_for(std::chrono::milliseconds(100))) <<
-    "unload_controller should be blocking until next update cycle";
-  cm->update();
-  EXPECT_EQ(
-    controller_interface::return_type::SUCCESS,
-    unload_future.get()
-  );
-  ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-    abstract_test_controller1.c->get_lifecycle_node()->get_current_state().id());
-  EXPECT_EQ(1, abstract_test_controller1.c.use_count());
 }

@@ -52,7 +52,6 @@ public:
 
     executor_->add_node(cm_);
 
-    EXPECT_EQ(controller_interface::return_type::SUCCESS, cm_->configure());
     executor_spin_future_ = std::async(
       std::launch::async, [this]() -> void {
         executor_->spin();

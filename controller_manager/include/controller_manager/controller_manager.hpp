@@ -113,22 +113,6 @@ public:
   controller_interface::return_type
   update();
 
-  CONTROLLER_MANAGER_PUBLIC
-  controller_interface::return_type
-  configure();
-
-  CONTROLLER_MANAGER_PUBLIC
-  controller_interface::return_type
-  activate();
-
-  CONTROLLER_MANAGER_PUBLIC
-  controller_interface::return_type
-  deactivate();
-
-  CONTROLLER_MANAGER_PUBLIC
-  controller_interface::return_type
-  cleanup();
-
 protected:
   CONTROLLER_MANAGER_PUBLIC
   controller_interface::ControllerInterfaceSharedPtr

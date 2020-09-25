@@ -51,6 +51,33 @@ ControllerManager::ControllerManager(
   // add pluginlib loader by default
   loaders_({std::make_shared<ControllerLoaderPluginlib>()})
 {
+  using namespace std::placeholders;
+  list_controllers_service_ = create_service<controller_manager_msgs::srv::ListControllers>(
+    "list_controllers", std::bind(
+      &ControllerManager::list_controllers_srv_cb, this, _1,
+      _2));
+  list_controller_types_service_ =
+    create_service<controller_manager_msgs::srv::ListControllerTypes>(
+    "list_controller_types", std::bind(
+      &ControllerManager::list_controller_types_srv_cb, this, _1,
+      _2));
+  load_controller_service_ = create_service<controller_manager_msgs::srv::LoadController>(
+    "load_controller", std::bind(
+      &ControllerManager::load_controller_service_cb, this, _1,
+      _2));
+  reload_controller_libraries_service_ =
+    create_service<controller_manager_msgs::srv::ReloadControllerLibraries>(
+    "reload_controller_libraries", std::bind(
+      &ControllerManager::reload_controller_libraries_service_cb, this, _1,
+      _2));
+  switch_controller_service_ = create_service<controller_manager_msgs::srv::SwitchController>(
+    "switch_controller", std::bind(
+      &ControllerManager::switch_controller_service_cb, this, _1,
+      _2));
+  unload_controller_service_ = create_service<controller_manager_msgs::srv::UnloadController>(
+    "unload_controller", std::bind(
+      &ControllerManager::unload_controller_service_cb, this, _1,
+      _2));
 }
 
 controller_interface::ControllerInterfaceSharedPtr ControllerManager::load_controller(
@@ -809,86 +836,6 @@ ControllerManager::update()
   if (switch_params_.do_switch) {
     manage_switch();
   }
-  return ret;
-}
-
-controller_interface::return_type
-ControllerManager::configure()
-{
-  auto ret = controller_interface::return_type::SUCCESS;
-
-  using namespace std::placeholders;
-  list_controllers_service_ = create_service<controller_manager_msgs::srv::ListControllers>(
-    "list_controllers", std::bind(
-      &ControllerManager::list_controllers_srv_cb, this, _1,
-      _2));
-  list_controller_types_service_ =
-    create_service<controller_manager_msgs::srv::ListControllerTypes>(
-    "list_controller_types", std::bind(
-      &ControllerManager::list_controller_types_srv_cb, this, _1,
-      _2));
-  load_controller_service_ = create_service<controller_manager_msgs::srv::LoadController>(
-    "load_controller", std::bind(
-      &ControllerManager::load_controller_service_cb, this, _1,
-      _2));
-  reload_controller_libraries_service_ =
-    create_service<controller_manager_msgs::srv::ReloadControllerLibraries>(
-    "reload_controller_libraries", std::bind(
-      &ControllerManager::reload_controller_libraries_service_cb, this, _1,
-      _2));
-  switch_controller_service_ = create_service<controller_manager_msgs::srv::SwitchController>(
-    "switch_controller", std::bind(
-      &ControllerManager::switch_controller_service_cb, this, _1,
-      _2));
-  unload_controller_service_ = create_service<controller_manager_msgs::srv::UnloadController>(
-    "unload_controller", std::bind(
-      &ControllerManager::unload_controller_service_cb, this, _1,
-      _2));
-
-  // lock controllers
-  std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
-  for (auto loaded_controller : rt_controllers_wrapper_.get_updated_list(guard)) {
-    auto controller_state = loaded_controller.c->get_lifecycle_node()->configure();
-    if (controller_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
-      ret = controller_interface::return_type::ERROR;
-    }
-  }
-
-  return ret;
-}
-
-controller_interface::return_type
-ControllerManager::activate()
-{
-  auto ret = controller_interface::return_type::SUCCESS;
-  return ret;
-}
-
-controller_interface::return_type
-ControllerManager::deactivate()
-{
-  auto ret = controller_interface::return_type::SUCCESS;
-  for (auto loaded_controller : rt_controllers_wrapper_.update_and_get_used_by_rt_list()) {
-    auto controller_state = loaded_controller.c->get_lifecycle_node()->deactivate();
-    if (controller_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
-      ret = controller_interface::return_type::ERROR;
-    }
-  }
-
-  return ret;
-}
-
-controller_interface::return_type
-ControllerManager::cleanup()
-{
-  auto ret = controller_interface::return_type::SUCCESS;
-  for (auto loaded_controller : rt_controllers_wrapper_.update_and_get_used_by_rt_list()) {
-    auto controller_state = loaded_controller.c->get_lifecycle_node()->cleanup();
-    if (controller_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED) {
-      ret = controller_interface::return_type::ERROR;
-    }
-  }
-
   return ret;
 }
 
