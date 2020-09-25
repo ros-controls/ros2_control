@@ -199,7 +199,7 @@ controller_interface::return_type ControllerManager::switch_controller(
     RCLCPP_DEBUG(get_logger(), "- stopping controller '%s'", controller.c_str());
   }
 
-  const auto foo = [this, strictness](const std::vector<std::string> & controller_list,
+  const auto list_controllers = [this, strictness](const std::vector<std::string> & controller_list,
       std::vector<std::string> & request_list,
       const std::string & action)
     {
@@ -245,14 +245,14 @@ controller_interface::return_type ControllerManager::switch_controller(
     };
 
   // list all controllers to stop
-  auto ret = foo(stop_controllers, stop_request_, "stop");
+  auto ret = list_controllers(stop_controllers, stop_request_, "stop");
   if (ret != controller_interface::return_type::SUCCESS) {
     stop_request_.clear();
     return ret;
   }
 
   // list all controllers to start
-  ret = foo(start_controllers, start_request_, "start");
+  ret = list_controllers(start_controllers, start_request_, "start");
   if (ret != controller_interface::return_type::SUCCESS) {
     stop_request_.clear();
     start_request_.clear();
@@ -373,7 +373,6 @@ controller_interface::return_type ControllerManager::switch_controller(
   switch_params_.init_time = rclcpp::Clock().now();
   switch_params_.timeout = timeout;
   switch_params_.do_switch = true;
-
 
   // wait until switch is finished
   RCLCPP_DEBUG(get_logger(), "Request atomic controller switch from realtime loop");

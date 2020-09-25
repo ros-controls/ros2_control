@@ -184,7 +184,7 @@ private:
   std::vector<ControllerLoaderInterfaceSharedPtr> loaders_;
 
   /**
-   * @brief The RTControllerListWrapper class wraps a  double-buffered list of controllers
+   * @brief The RTControllerListWrapper class wraps a double-buffered list of controllers
    * to avoid needing to lock the real-time thread when switching controllers in
    * the non-real-time thread.
    *
@@ -209,7 +209,7 @@ private:
 
     /**
      * @brief get_unused_list Waits until the "outdated" and "unused by rt"
-     *  lists match and returns a reference to it
+     * lists match and returns a reference to it
      * This referenced list can be modified safely until switch_updated_controller_list()
      * is called, at this point the RT thread may start using it at any time
      * @param guard Guard needed to make sure the caller is the only one accessing the unused by rt list
@@ -231,7 +231,6 @@ private:
      * @param guard Guard needed to make sure the caller is the only one accessing the unused by rt list
      */
     void switch_updated_list(const std::lock_guard<std::recursive_mutex> & guard);
-
 
     // Mutex protecting the controllers list
     // must be acquired before using any list other than the "used by rt"
