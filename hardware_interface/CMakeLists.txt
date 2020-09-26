@@ -42,30 +42,20 @@ ament_target_dependencies(
 target_compile_definitions(hardware_interface PRIVATE "HARDWARE_INTERFACE_BUILDING_DLL")
 
 add_library(
-  component_parser
-  src/component_parser.cpp
-)
-target_include_directories(
-  component_parser
-  PUBLIC
-  include
-)
-ament_target_dependencies(
-  component_parser
-  TinyXML2
-)
-target_compile_definitions(component_parser PRIVATE "HARDWARE_INTERFACE_BUILDING_DLL")
-
-add_library(
   components
   SHARED
   src/components/joint.cpp
   src/components/sensor.cpp
+  src/component_parser.cpp
 )
 target_include_directories(
   components
   PUBLIC
   include
+)
+ament_target_dependencies(
+  components
+  TinyXML2
 )
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.
@@ -78,7 +68,6 @@ install(
 
 install(
   TARGETS
-  component_parser
   components
   hardware_interface
   RUNTIME DESTINATION bin
@@ -124,19 +113,13 @@ if(BUILD_TESTING)
   target_link_libraries(test_component_interfaces components hardware_interface)
 
   ament_add_gmock(test_component_parser test/test_component_parser.cpp)
-  target_link_libraries(test_component_parser component_parser)
-  ament_target_dependencies(test_component_parser TinyXML2)
+  target_link_libraries(test_component_parser components)
 endif()
 
-ament_export_dependencies(
-  rclcpp
-  rcpputils
-)
 ament_export_include_directories(
   include
 )
 ament_export_libraries(
-  component_parser
   components
   hardware_interface
 )
