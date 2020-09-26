@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "hardware_interface/hardware_info.hpp"
+#include "hardware_interface/system_hardware_interface.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/hardware_interface_status_values.hpp"
 #include "hardware_interface/visibility_control.h"
@@ -33,13 +34,15 @@ namespace components
 class Joint;
 class Sensor;
 }  // namespace components
-class SystemHardwareInterface;
 
 class SystemHardware final
 {
 public:
   HARDWARE_INTERFACE_PUBLIC
   explicit SystemHardware(std::unique_ptr<SystemHardwareInterface> impl);
+
+  HARDWARE_INTERFACE_PUBLIC
+  explicit SystemHardware(SystemHardware && other) = default;
 
   virtual ~SystemHardware() = default;
 

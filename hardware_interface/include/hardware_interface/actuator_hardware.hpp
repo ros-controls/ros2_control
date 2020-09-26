@@ -17,6 +17,7 @@
 
 #include <memory>
 
+#include "hardware_interface/actuator_hardware_interface.hpp"
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/hardware_interface_status_values.hpp"
@@ -29,12 +30,13 @@ namespace components
 {
 class Joint;
 }  // namespace components
-class ActuatorHardwareInterface;
 
 class ActuatorHardware final
 {
 public:
   ActuatorHardware() = default;
+
+  explicit ActuatorHardware(ActuatorHardware && other) = default;
 
   explicit ActuatorHardware(std::unique_ptr<ActuatorHardwareInterface> impl);
 
