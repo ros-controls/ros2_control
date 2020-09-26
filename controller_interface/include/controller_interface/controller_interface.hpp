@@ -20,6 +20,7 @@
 
 #include "controller_interface/visibility_control.h"
 
+#include "hardware_interface/resource_manager.hpp"
 #include "hardware_interface/robot_hardware.hpp"
 
 #include "rclcpp/rclcpp.hpp"
@@ -65,7 +66,40 @@ protected:
   std::shared_ptr<rclcpp_lifecycle::LifecycleNode> lifecycle_node_;
 };
 
+class ControllerInterfaceNewComponents : public rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface
+{
+public:
+  CONTROLLER_INTERFACE_PUBLIC
+  ControllerInterfaceNewComponents() = default;
+
+  CONTROLLER_INTERFACE_PUBLIC
+  virtual
+  ~ControllerInterfaceNewComponents() = default;
+
+  CONTROLLER_INTERFACE_PUBLIC
+  virtual
+  return_type
+  init(
+    std::weak_ptr<resource_manager::ResourceManager> resource_manager,
+    const std::string & controller_name);
+
+  CONTROLLER_INTERFACE_PUBLIC
+  virtual
+  return_type
+  update() = 0;
+
+  CONTROLLER_INTERFACE_PUBLIC
+  std::shared_ptr<rclcpp_lifecycle::LifecycleNode>
+  get_lifecycle_node();
+
+protected:
+  std::weak_ptr<resource_manager::ResourceManager> resource_manager_;
+  std::shared_ptr<rclcpp_lifecycle::LifecycleNode> lifecycle_node_;
+};
+
 using ControllerInterfaceSharedPtr = std::shared_ptr<ControllerInterface>;
+using ControllerInterfaceNewComponentsSharedPtr =
+  std::shared_ptr<ControllerInterfaceNewComponents>;
 
 }  // namespace controller_interface
 

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "controller_manager/resource_manager.hpp"
+#include "hardware_interface/resource_manager.hpp"
 
 #include <map>
 #include <memory>

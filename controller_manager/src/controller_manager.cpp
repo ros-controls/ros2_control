@@ -158,4 +158,52 @@ ControllerManager::cleanup() const
   return ret;
 }
 
+ControllerManagerNewWithManager::ControllerManagerNewWithManager(
+  std::shared_ptr<resource_manager::ResourceManager> resource_manager,
+  std::shared_ptr<rclcpp::executor::Executor> executor,
+  const std::string & name)
+: resource_manager_(resource_manager),
+  executor_(executor),
+  // add pluginlib loader by default
+  loaders_({std::make_shared<ControllerLoaderPluginlibNewComponents>()})
+{
+}
+
+std::shared_ptr<controller_interface::ControllerInterfaceNewComponents>
+ControllerManagerNewWithManager::load_controller(
+  const std::string & controller_name,
+  const std::string & controller_type)
+{
+  // TODO(anyone): move this to the serice call
+//   RCLCPP_INFO(get_logger(), "Loading controller '%s'\n", controller_name.c_str());
+
+  auto it = std::find_if(
+    loaders_.cbegin(), loaders_.cend(),
+                         [&](auto loader)
+                         {return loader->is_available(controller_type);});
+
+  std::shared_ptr<controller_interface::ControllerInterfaceNewComponents> controller(nullptr);
+  if (it != loaders_.cend()) {
+    controller = (*it)->create_new_components(controller_type);
+  } else {
+    const std::string error_msg("Loader for controller '" + controller_name + "' not found\n");
+//     RCLCPP_ERROR(get_logger(), "%s", error_msg.c_str());
+    throw std::runtime_error(error_msg);
+  }
+
+  return add_controller_impl(controller, controller_name);
+}
+
+std::shared_ptr<controller_interface::ControllerInterfaceNewComponents>
+ControllerManagerNewWithManager::add_controller_impl(
+  std::shared_ptr<controller_interface::ControllerInterfaceNewComponents> controller,
+  const std::string & controller_name)
+{
+  controller->init(resource_manager_, controller_name);
+  executor_->add_node(controller->get_lifecycle_node()->get_node_base_interface());
+
+  loaded_controllers_.emplace_back(controller);
+  return loaded_controllers_.back();
+}
+
 }  // namespace controller_manager

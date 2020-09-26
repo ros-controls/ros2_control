@@ -37,11 +37,42 @@ public:
   CONTROLLER_MANAGER_PUBLIC
   controller_interface::ControllerInterfaceSharedPtr create(const std::string & controller_type);
 
+  // Only for the interface compatibility
+  CONTROLLER_MANAGER_PUBLIC
+  controller_interface::ControllerInterfaceNewComponentsSharedPtr create_new_components(
+    const std::string & controller_type);
+
   CONTROLLER_MANAGER_PUBLIC
   bool is_available(const std::string & controller_type) const;
 
 private:
   std::shared_ptr<pluginlib::ClassLoader<controller_interface::ControllerInterface>> loader_;
+};
+
+class ControllerLoaderPluginlibNewComponents : public ControllerLoaderInterface
+{
+public:
+  CONTROLLER_MANAGER_PUBLIC
+  ControllerLoaderPluginlibNewComponents();
+
+  CONTROLLER_MANAGER_PUBLIC
+  virtual ~ControllerLoaderPluginlibNewComponents() = default;
+
+  // Only for the interface compatibility
+  CONTROLLER_MANAGER_PUBLIC
+  controller_interface::ControllerInterfaceSharedPtr create(const std::string & controller_type);
+
+  //TODO(anyone) new loader with components - rename to create
+  CONTROLLER_MANAGER_PUBLIC
+  controller_interface::ControllerInterfaceNewComponentsSharedPtr create_new_components(
+    const std::string & controller_type);
+
+  CONTROLLER_MANAGER_PUBLIC
+  bool is_available(const std::string & controller_type) const;
+
+private:
+  std::shared_ptr<pluginlib::ClassLoader<controller_interface::ControllerInterfaceNewComponents>>
+    loader_;
 };
 
 }  // namespace controller_manager

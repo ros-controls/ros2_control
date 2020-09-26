@@ -18,7 +18,7 @@
 #include <memory>
 
 #include "controller_manager/controller_manager.hpp"
-#include "controller_manager/resource_manager.hpp"
+#include "hardware_interface/resource_manager.hpp"
 #include "rclcpp/rclcpp.hpp"
 
 using namespace std::chrono_literals;

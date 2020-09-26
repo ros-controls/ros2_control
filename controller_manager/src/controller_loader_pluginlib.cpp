@@ -33,9 +33,49 @@ controller_interface::ControllerInterfaceSharedPtr ControllerLoaderPluginlib::cr
   return loader_->createSharedInstance(controller_type);
 }
 
+// Only for the interface compatibilityv
+controller_interface::ControllerInterfaceNewComponentsSharedPtr
+ControllerLoaderPluginlib::create_new_components(
+  const std::string & /*controller_type*/)
+{
+  return nullptr;
+}
+
 bool ControllerLoaderPluginlib::is_available(const std::string & controller_type) const
 {
   return loader_->isClassAvailable(controller_type);
 }
+
+
+
+
+ControllerLoaderPluginlibNewComponents::ControllerLoaderPluginlibNewComponents()
+: ControllerLoaderInterface(),
+loader_(std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterfaceNewComponents>>(
+  "controller_interface", "controller_interface::ControllerInterfaceNewComponents"))
+{
+}
+
+bool ControllerLoaderPluginlibNewComponents::is_available(const std::string & controller_type) const
+{
+  return loader_->isClassAvailable(controller_type);
+}
+
+// Only for the interface compatibility
+CONTROLLER_MANAGER_PUBLIC
+controller_interface::ControllerInterfaceSharedPtr
+ControllerLoaderPluginlibNewComponents::create(const std::string & /*controller_type*/)
+{
+  return nullptr;
+}
+
+//TODO(anyone) new loader with components - rename to create
+controller_interface::ControllerInterfaceNewComponentsSharedPtr
+ControllerLoaderPluginlibNewComponents::create_new_components(
+  const std::string & controller_type)
+{
+  return loader_->createSharedInstance(controller_type);
+}
+
 
 }  // namespace controller_manager

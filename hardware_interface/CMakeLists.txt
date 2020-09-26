@@ -12,6 +12,7 @@ endif()
 
 find_package(ament_cmake REQUIRED)
 find_package(control_msgs REQUIRED)
+find_package(pluginlib REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rcpputils REQUIRED)
 find_package(tinyxml2_vendor REQUIRED)
@@ -74,6 +75,17 @@ target_include_directories(
 # which is appropriate when building the dll but not consuming it.
 target_compile_definitions(components PRIVATE "HARDWARE_INTERFACE_BUILDING_DLL")
 
+add_library(resource_manager SHARED src/resource_manager.cpp)
+target_include_directories(resource_manager PRIVATE include)
+target_link_libraries(resource_manager component_parser components hardware_interface)
+ament_target_dependencies(resource_manager
+  pluginlib
+  rclcpp
+)
+# Causes the visibility macros to use dllexport rather than dllimport,
+# which is appropriate when building the dll but not consuming it.
+target_compile_definitions(resource_manager PRIVATE "HARDWARE_INTERFACE_BUILDING_DLL")
+
 install(
   DIRECTORY include/
   DESTINATION include
@@ -84,6 +96,7 @@ install(
   component_parser
   components
   hardware_interface
+  resource_manager
   RUNTIME DESTINATION bin
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib)
@@ -142,6 +155,7 @@ ament_export_libraries(
   component_parser
   components
   hardware_interface
+  resource_manager
 )
 ament_export_dependencies(
   control_msgs

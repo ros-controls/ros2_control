@@ -33,20 +33,9 @@ target_compile_definitions(controller_manager PRIVATE "CONTROLLER_MANAGER_BUILDI
 # prevent pluginlib from using boost
 target_compile_definitions(controller_manager PUBLIC "PLUGINLIB__DISABLE_BOOST_FUNCTIONS")
 
-add_library(resource_manager SHARED src/resource_manager.cpp)
-target_include_directories(resource_manager PRIVATE include)
-ament_target_dependencies(resource_manager
-  hardware_interface
-  pluginlib
-  rclcpp
-)
-# Causes the visibility macros to use dllexport rather than dllimport,
-# which is appropriate when building the dll but not consuming it.
-target_compile_definitions(resource_manager PRIVATE "CONTROLLER_MANAGER_BUILDING_DLL")
-
 add_library(ros2_control_manager SHARED src/ros2_control_manager.cpp)
 target_include_directories(ros2_control_manager PRIVATE include)
-target_link_libraries(ros2_control_manager controller_manager resource_manager)
+target_link_libraries(ros2_control_manager controller_manager)
 ament_target_dependencies(ros2_control_manager
   controller_interface
   hardware_interface
@@ -61,10 +50,11 @@ target_include_directories(ros2_control_node PRIVATE include)
 target_link_libraries(ros2_control_node ros2_control_manager)
 ament_target_dependencies(ros2_control_node
   controller_interface
+  hardware_interface
   rclcpp
 )
 
-install(TARGETS controller_manager resource_manager ros2_control_manager ros2_control_node
+install(TARGETS controller_manager ros2_control_manager ros2_control_node
   RUNTIME DESTINATION bin
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
@@ -126,7 +116,6 @@ endif()
 
 ament_export_libraries(
   controller_manager
-  resource_manager
   ros2_control_manager
 )
 ament_export_include_directories(

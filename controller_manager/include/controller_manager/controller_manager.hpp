@@ -25,6 +25,7 @@
 #include "controller_manager/controller_loader_interface.hpp"
 #include "controller_manager/visibility_control.h"
 
+#include "hardware_interface/resource_manager.hpp"
 #include "hardware_interface/robot_hardware.hpp"
 
 #include "rclcpp/executor.hpp"
@@ -114,6 +115,7 @@ class ControllerManagerNewWithManager
 public:
   CONTROLLER_MANAGER_PUBLIC
   ControllerManagerNewWithManager(
+    std::shared_ptr<resource_manager::ResourceManager> resource_manager,
     std::shared_ptr<rclcpp::executor::Executor> executor,
     const std::string & name = "controller_manager");
 
@@ -121,10 +123,43 @@ public:
   virtual
   ~ControllerManagerNewWithManager() = default;
 
+  CONTROLLER_MANAGER_PUBLIC
+  std::shared_ptr<controller_interface::ControllerInterfaceNewComponents>
+  load_controller(
+    const std::string & controller_name,
+    const std::string & controller_type);
+
+  template<
+  typename T,
+  typename std::enable_if<std::is_convertible<
+  T *, controller_interface::ControllerInterfaceNewComponents *>::value, T>::type * = nullptr>
+  std::shared_ptr<controller_interface::ControllerInterfaceNewComponents>
+  add_controller(std::shared_ptr<T> controller, std::string controller_name)
+  {
+    return add_controller_impl(controller, controller_name);
+  }
+
+  CONTROLLER_MANAGER_PUBLIC
+  controller_interface::return_type
+  update();
+
+  CONTROLLER_MANAGER_PUBLIC
+  controller_interface::return_type
+  configure() const;
+
+protected:
+  CONTROLLER_MANAGER_PUBLIC
+  std::shared_ptr<controller_interface::ControllerInterfaceNewComponents>
+  add_controller_impl(
+    std::shared_ptr<controller_interface::ControllerInterfaceNewComponents> controller,
+    const std::string & controller_name);
+
 private:
+  std::shared_ptr<resource_manager::ResourceManager> resource_manager_;
   std::shared_ptr<rclcpp::executor::Executor> executor_;
   std::vector<ControllerLoaderInterfaceSharedPtr> loaders_;
-  std::vector<std::shared_ptr<controller_interface::ControllerInterface>> loaded_controllers_;
+  std::vector<controller_interface::ControllerInterfaceNewComponentsSharedPtr>
+    loaded_controllers_;
 };
 
 }  // namespace controller_manager

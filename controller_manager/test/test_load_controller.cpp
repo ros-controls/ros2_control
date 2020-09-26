@@ -63,6 +63,8 @@ class ControllerLoaderMock : public controller_manager::ControllerLoaderInterfac
 {
 public:
   MOCK_METHOD1(create, controller_interface::ControllerInterfaceSharedPtr(const std::string &));
+  MOCK_METHOD1(create_new_components,
+              controller_interface::ControllerInterfaceNewComponentsSharedPtr(const std::string &));
   MOCK_CONST_METHOD1(is_available, bool(const std::string &));
 };
 

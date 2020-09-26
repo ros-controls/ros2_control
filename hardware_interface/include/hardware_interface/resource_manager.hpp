@@ -21,7 +21,6 @@
 #include <utility>
 #include <vector>
 
-#include "controller_manager/visibility_control.h"
 #include "hardware_interface/actuator_hardware_interface.hpp"
 #include "hardware_interface/actuator_hardware.hpp"
 #include "hardware_interface/robot_hardware_interface.hpp"
@@ -30,6 +29,7 @@
 #include "hardware_interface/system_hardware_interface.hpp"
 #include "hardware_interface/system_hardware.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
+#include "hardware_interface/visibility_control.h"
 #include "pluginlib/class_loader.hpp"
 
 using hardware_interface::return_type;
@@ -40,28 +40,28 @@ namespace resource_manager
 class ResourceManager
 {
 public:
-  CONTROLLER_MANAGER_PUBLIC
+  HARDWARE_INTERFACE_PUBLIC
   ResourceManager();
 
-  CONTROLLER_MANAGER_PUBLIC
+  HARDWARE_INTERFACE_PUBLIC
   virtual
   ~ResourceManager() = default;
 
   //  Non real-time safe functions
-  CONTROLLER_MANAGER_PUBLIC
+  HARDWARE_INTERFACE_PUBLIC
   return_type load_and_configure_resources_from_urdf(std::string urdf_string);
 
-  CONTROLLER_MANAGER_PUBLIC
+  HARDWARE_INTERFACE_PUBLIC
   return_type start_all_resources();
 
-  CONTROLLER_MANAGER_PUBLIC
+  HARDWARE_INTERFACE_PUBLIC
   return_type stop_all_resources();
 
   //  Real-time safe functions (at least the goal is to be...)
-  CONTROLLER_MANAGER_PUBLIC
+  HARDWARE_INTERFACE_PUBLIC
   return_type read_all_resources();
 
-  CONTROLLER_MANAGER_PUBLIC
+  HARDWARE_INTERFACE_PUBLIC
   return_type write_all_resources();
 
 private:
