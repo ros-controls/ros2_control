@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "hardware_interface/hardware_info.hpp"
+#include "hardware_interface/sensor_hardware_interface.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/hardware_interface_status_values.hpp"
 #include "hardware_interface/visibility_control.h"
@@ -32,12 +33,13 @@ namespace components
 {
 class Sensor;
 }  // namespace components
-class SensorHardwareInterface;
 
 class SensorHardware final
 {
 public:
   SensorHardware() = default;
+
+  explicit SensorHardware(SensorHardware && other) = default;
 
   explicit SensorHardware(std::unique_ptr<SensorHardwareInterface> impl);
 

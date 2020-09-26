@@ -112,8 +112,8 @@ public:
    * \return return_type:OK if everything worked as expected, return_type::ERROR otherwise.
    */
   HARDWARE_INTERFACE_PUBLIC
-  return_type
   virtual
+  return_type
   write_joints(const std::vector<std::shared_ptr<components::Joint>> & joints) = 0;
 };
 

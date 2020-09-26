@@ -1,0 +1,20 @@
+<library path="test_hardware_resources">
+
+  <class name="test_actuator" type="TestActuator" base_class_type="hardware_interface::ActuatorHardwareInterface">
+    <description>
+      Test Hardware Actuator
+    </description>
+  </class>
+
+  <class name="test_sensor" type="TestSensor" base_class_type="hardware_interface::SensorHardwareInterface">
+    <description>
+      Test Hardware Sensor
+    </description>
+  </class>
+
+  <class name="test_system" type="TestSystem" base_class_type="hardware_interface::SystemHardwareInterface">
+    <description>
+      Test Hardware System
+    </description>
+  </class>
+</library>
