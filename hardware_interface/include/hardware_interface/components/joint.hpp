@@ -52,10 +52,18 @@ public:
   HARDWARE_INTERFACE_PUBLIC
   return_type configure(const ComponentInfo & joint_info);
 
+  // TODO(andyz): implement this
   /**
    * \brief Provide the list of command interfaces configured for the joint.
    *
-   * \return string list with command interfaces.
+   * \return vector of command interface names.
+   */
+  std::vector<std::string> get_command_interface_names() const;
+
+  /**
+   * \brief Provide the list of command interfaces configured for the joint.
+   *
+   * \return vector of command interfaces.
    */
   HARDWARE_INTERFACE_PUBLIC
   std::vector<InterfaceInfo> get_command_interfaces() const;

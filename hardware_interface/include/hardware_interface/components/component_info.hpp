@@ -36,9 +36,13 @@ struct InterfaceInfo
    */
   std::string name;
   /**
-   * \brief (optional) key-value pairs of components parameters, e.g. min_value and max_value.
+   * \brief (optional) minimal allowed values of the interface.
    */
-  std::unordered_map<std::string, double> parameters;
+  std::string min_values;
+  /**
+   * \brief (optional) maximal allowed values of the interface.
+   */
+  std::string max_values;
 };
 
 /**

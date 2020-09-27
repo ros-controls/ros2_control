@@ -184,18 +184,18 @@ protected:
     <joint name="joint1">
       <classType>ros2_control_components/MultiInterfaceJoint</classType>
       <commandInterfaceType name="position">
-        <param name="min_value">-1</param>
-        <param name="max_value">1</param>
+        <param name="min">-1</param>
+        <param name="max">1</param>
       </commandInterfaceType>
 
       <commandInterfaceType name="velocity">
-        <param name="min_value">-1</param>
-        <param name="max_value">1</param>
+        <param name="min">-1</param>
+        <param name="max">1</param>
       </commandInterfaceType>
 
       <commandInterfaceType name="effort">
-        <param name="min_value">-0.5</param>
-        <param name="max_value">0.5</param>
+        <param name="min">-0.5</param>
+        <param name="max">0.5</param>
       </commandInterfaceType>
 
       <stateInterfaceType>position</stateInterfaceType>
@@ -205,8 +205,8 @@ protected:
     <joint name="joint2">
       <classType>ros2_control_components/MultiInterfaceJoint</classType>
       <commandInterfaceType name="position">
-        <param name="min_value">-1</param>
-        <param name="max_value">1</param>
+        <param name="min">-1</param>
+        <param name="max">1</param>
       </commandInterfaceType>
 
       <stateInterfaceType>position</stateInterfaceType>

@@ -67,14 +67,10 @@ public:
       states_.resize(1);
     }
 
-    // TODO(andyz): Delete
-    max_position_ = stod(info_.parameters["max_position"]);
-    min_position_ = stod(info_.parameters["min_position"]);
+    // TODO(andyz): Add min/max parameters to the interface
+
     return return_type::OK;
   }
-
-private:
-  double max_position_, min_position_;
 };
 
 class DummyMultiJoint : public components::Joint
