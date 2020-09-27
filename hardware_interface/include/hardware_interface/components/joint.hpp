@@ -55,18 +55,25 @@ public:
   // TODO(andyz): implement this
   /**
    * \brief Provide the list of command interfaces configured for the joint.
-   *
    * \return vector of command interface names.
    */
+  HARDWARE_INTERFACE_PUBLIC
   std::vector<std::string> get_command_interface_names() const;
 
   /**
    * \brief Provide the list of command interfaces configured for the joint.
-   *
    * \return vector of command interfaces.
    */
   HARDWARE_INTERFACE_PUBLIC
   std::vector<InterfaceInfo> get_command_interfaces() const;
+
+  // TODO(andyz): implement this
+  /**
+   * \brief Provide the list of state interfaces configured for the joint.
+   * \return vector of state interface names.
+   */
+  HARDWARE_INTERFACE_PUBLIC
+  std::vector<std::string> get_state_interface_names() const;
 
   /**
    * \brief Provide the list of state interfaces configured for the joint.
@@ -83,7 +90,7 @@ public:
    * provide.
    *
    * \param command list of doubles with commands for the hardware.
-   * \param interfaces list of interfaces on which commands have to set.
+   * \param interfaces list of interface names to retrieve from.
    * \return return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL if command and interfaces arguments do not
    * have the same length; return_type::INTERFACE_NOT_FOUND if one of provided interfaces is not
    * defined for the joint; return return_type::INTERFACE_NOT_PROVIDED if the list of interfaces
@@ -92,7 +99,7 @@ public:
   HARDWARE_INTERFACE_EXPORT
   return_type get_command(
     std::vector<double> & command,
-    const std::vector<InterfaceInfo> & interfaces) const;
+    const std::vector<std::string> & interfaces) const;
 
   /**
    * \brief Get complete command list for the joint. This function is used by the hardware to get
@@ -111,7 +118,7 @@ public:
    * of elements. Using the interfaces list, the controller can choose which values to set.
    *
    * \param command list of doubles with commands for the hardware.
-   * \param interfaces list of interfaces on which commands have to be provided.
+   * \param interfaces list of interface names on which commands have to be provided.
    * \return return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL if command and interfaces arguments do not
    * have the same length; return_type::COMMAND_OUT_OF_LIMITS if one of the command values is out
    * of limits; return_type::INTERFACE_NOT_FOUND if one of provided interfaces is not
@@ -124,7 +131,7 @@ public:
   HARDWARE_INTERFACE_EXPORT
   return_type set_command(
     const std::vector<double> & command,
-    const std::vector<components::InterfaceInfo> & interfaces);
+    const std::vector<cstd::string> & interfaces);
 
   /**
    * \brief Get complete state list from the joint. This function is used by the hardware to get
@@ -139,13 +146,13 @@ public:
   HARDWARE_INTERFACE_EXPORT
   return_type set_command(const std::vector<double> & command);
 
-  /*
+  /**
    * \brief Get state list from the joint. This function is used by the controller to get the
    * actual state of the hardware. The parameters state, and interfaces have the same order and
    * number of elements. Using the interfaces list, the controller can choose which values to get.
    *
    * \param state list of doubles with states of the hardware.
-   * \param interfaces list of interfaces on which states have to be provided.
+   * \param interfaces list of interface names to provide for.
    * \return return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL if state and interfaces arguments do not
    * have the same length; return_type::INTERFACE_NOT_FOUND if one of provided interfaces is not
    * defined for the joint; return return_type::INTERFACE_NOT_PROVIDED if the list of interfaces
@@ -154,7 +161,7 @@ public:
   HARDWARE_INTERFACE_EXPORT
   return_type get_state(
     std::vector<double> & state,
-    const std::vector<components::InterfaceInfo> & interfaces) const;
+    const std::vector<std::string> & interfaces) const;
 
   /**
    * \brief Get complete state list from the joint. This function is used by the controller to get
@@ -173,7 +180,7 @@ public:
    * the interfaces list, the hardware can choose which values to set.
    *
    * \param state list of doubles with states of the hardware.
-   * \param interfaces list of interfaces on which states have to be provided.
+   * \param interfaces list of interface names to provide for.
    * \return return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL if state and interfaces arguments do not
    * have the same length; return_type::INTERFACE_NOT_FOUND if one of provided interfaces is not
    * defined for the joint; return_type::OK otherwise.
@@ -181,7 +188,7 @@ public:
   HARDWARE_INTERFACE_EXPORT
   return_type set_state(
     const std::vector<double> & state,
-    const std::vector<components::InterfaceInfo> & interfaces);
+    const std::vector<std::string> & interfaces);
 
   /**
    * \brief Set complete state list from the joint.This function is used by the hardware to set its

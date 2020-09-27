@@ -142,14 +142,14 @@ std::vector<components::InterfaceInfo> parse_interfaces_from_xml(
 {
   std::vector<components::InterfaceInfo> interfaces;
 
-  // TODO(andyz): parse optional attributes like min_value/max_value
+  // TODO(andyz): parse optional min/max attributes
   while (interfaces_it) {
     const std::string interface_type = get_text_for_element(
       interfaces_it, std::string(interfaceTag) + " type ");
     // TODO(andyz): select the proper type (switch statement?)
     // For now, just assume a position type
-    hardware_interface::components::InterfaceInfo position_interface;
-    position_interface.name = "position";
+    hardware_interface::components::InterfaceInfo interface;
+    interface.name = "position";
     interfaces.push_back(position_interface);
     interfaces_it = interfaces_it->NextSiblingElement(interfaceTag);
   }

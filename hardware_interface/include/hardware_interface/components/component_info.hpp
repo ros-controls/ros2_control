@@ -74,7 +74,7 @@ struct ComponentInfo
    */
   std::vector<InterfaceInfo> state_interfaces;
   /**
-   * \brief (optional) key-value pairs of components parameters, e.g. min_value and max_value.
+   * \brief (optional) key-value pairs of component parameters, e.g. min/max values or serial number.
    */
   std::unordered_map<std::string, std::string> parameters;
 };

@@ -27,21 +27,21 @@ namespace hardware_interface
 namespace components
 {
 /**
-  * \brief Get values for queried_interfaces from the int_values. int_values data structure matches
-  * int_interfaces vector.
+  * \brief Get values for queried_interfaces from the internal_values. internal_values data structure matches
+  * internal_interfaces vector.
   *
   * \param values values to return.
   * \param queried_interfaces interfaces for which values are queried.
-  * \param int_interfaces full list of interfaces of a component.
+  * \param internal_interfaces full list of interfaces of a component.
   * \param int_values internal values of a component.
   * \return return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL if values and queried_interfaces arguments
   * do not have the same length; return_type::INTERFACE_NOT_FOUND if one of queried_interfaces is
-  * not defined in int_interfaces; return return_type::INTERFACE_NOT_PROVIDED if queried_interfaces
+  * not defined in internal_interfaces; return return_type::INTERFACE_NOT_PROVIDED if queried_interfaces
   * list is is empty; return_type::OK otherwise.
   */
 inline return_type get_internal_values(
   std::vector<double> & values, const std::vector<InterfaceInfo> & queried_interfaces,
-  const std::vector<InterfaceInfo> & int_interfaces, const std::vector<double> & internal_values)
+  const std::vector<InterfaceInfo> & internal_interfaces, const std::vector<double> & internal_values)
 {
   // TODO(andyz)
   return return_type::OK;
@@ -66,16 +66,16 @@ inline return_type get_internal_values(
 
 /**
  * \brief set values for queried_interfaces to the internal_values. internal_values data structure matches
- * int_interfaces vector.
+ * internal_interfaces vector.
  *
  * \param values values to set.
  * \param queried_interfaces interfaces for which values are queried.
- * \param int_interfaces full list of interfaces of a component.
+ * \param internal_interfaces full list of interfaces of a component.
  * \param internal_values internal values of a component.
  * \return return return_type::INTERFACE_NOT_PROVIDED if
  * queried_interfaces list is is empty; return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL if values and
  * queried_interfaces arguments do not have the same length; return_type::INTERFACE_NOT_FOUND if
- * one of queried_interfaces is not defined in int_interfaces; return_type::OK otherwise.
+ * one of queried_interfaces is not defined in internal_interfaces; return_type::OK otherwise.
  *
  * \todo The error handling in this function could lead to incosistant command or state variables
  * for different interfaces. This should be changed in the future.
@@ -83,7 +83,7 @@ inline return_type get_internal_values(
  */
 inline return_type set_internal_values(
   const std::vector<double> & values, const std::vector<InterfaceInfo> & queried_interfaces,
-  const std::vector<InterfaceInfo> & int_interfaces, std::vector<double> & internal_values)
+  const std::vector<InterfaceInfo> & internal_interfaces, std::vector<double> & internal_values)
 {
   if (queried_interfaces.size() == 0) {
     return return_type::INTERFACE_NOT_PROVIDED;
@@ -94,9 +94,9 @@ inline return_type set_internal_values(
 
   // TODO(andyz): use .name member
   for (auto q_it = queried_interfaces.begin(); q_it != queried_interfaces.end(); ++q_it) {
-    auto it = std::find(int_interfaces.begin(), int_interfaces.end(), *q_it);
-    if (it != int_interfaces.end()) {
-      internal_values[std::distance(int_interfaces.begin(), it)] =
+    auto it = std::find(internal_interfaces.begin(), internal_interfaces.end(), *q_it);
+    if (it != internal_interfaces.end()) {
+      internal_values[std::distance(internal_interfaces.begin(), it)] =
         values[std::distance(queried_interfaces.begin(), q_it)];
     } else {
       return return_type::INTERFACE_NOT_FOUND;
