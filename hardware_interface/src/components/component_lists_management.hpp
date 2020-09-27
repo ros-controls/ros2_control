@@ -26,7 +26,6 @@ namespace hardware_interface
 {
 namespace components
 {
-
 /**
   * \brief Get values for queried_interfaces from the int_values. int_values data structure matches
   * int_interfaces vector.
@@ -41,23 +40,10 @@ namespace components
   * list is is empty; return_type::OK otherwise.
   */
 inline return_type get_internal_values(
-  std::vector<double> & values, const std::vector<std::string> & queried_interfaces,
-  const std::vector<std::string> & int_interfaces, const std::vector<double> & int_values)
+  std::vector<double> & values, const std::vector<InterfaceInfo> & queried_interfaces,
+  const std::vector<InterfaceInfo> & int_interfaces, const std::vector<double> & internal_values)
 {
-  if (queried_interfaces.size() == 0) {
-    return return_type::INTERFACE_NOT_PROVIDED;
-  }
-
-  for (const auto & interface : queried_interfaces) {
-    auto it = std::find(
-      int_interfaces.begin(), int_interfaces.end(), interface);
-    if (it != int_interfaces.end()) {
-      values.push_back(int_values[std::distance(int_interfaces.begin(), it)]);
-    } else {
-      values.clear();
-      return return_type::INTERFACE_NOT_FOUND;
-    }
-  }
+  // TODO(andyz)
   return return_type::OK;
 }
 
@@ -65,27 +51,27 @@ inline return_type get_internal_values(
  * \brief Set all internal values to to other vector. Return value is used for API consistency.
  *
  * \param values output list of values.
- * \param int_values internal values of the component.
+ * \param internal_values internal values of the component.
  * \return return_type::OK always.
  */
 inline return_type get_internal_values(
-  std::vector<double> & values, const std::vector<double> & int_values)
+  std::vector<double> & values, const std::vector<double> & internal_values)
 {
   values.clear();
-  for (const auto & int_value : int_values) {
+  for (const auto & int_value : internal_values) {
     values.push_back(int_value);
   }
   return return_type::OK;
 }
 
 /**
- * \brief set values for queried_interfaces to the int_values. int_values data structure matches
+ * \brief set values for queried_interfaces to the internal_values. internal_values data structure matches
  * int_interfaces vector.
  *
  * \param values values to set.
  * \param queried_interfaces interfaces for which values are queried.
  * \param int_interfaces full list of interfaces of a component.
- * \param int_values internal values of a component.
+ * \param internal_values internal values of a component.
  * \return return return_type::INTERFACE_NOT_PROVIDED if
  * queried_interfaces list is is empty; return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL if values and
  * queried_interfaces arguments do not have the same length; return_type::INTERFACE_NOT_FOUND if
@@ -96,8 +82,8 @@ inline return_type get_internal_values(
  * (see: https://github.com/ros-controls/ros2_control/issues/129)
  */
 inline return_type set_internal_values(
-  const std::vector<double> & values, const std::vector<std::string> & queried_interfaces,
-  const std::vector<std::string> & int_interfaces, std::vector<double> & int_values)
+  const std::vector<double> & values, const std::vector<InterfaceInfo> & queried_interfaces,
+  const std::vector<InterfaceInfo> & int_interfaces, std::vector<double> & internal_values)
 {
   if (queried_interfaces.size() == 0) {
     return return_type::INTERFACE_NOT_PROVIDED;
@@ -106,10 +92,11 @@ inline return_type set_internal_values(
     return return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL;
   }
 
+  // TODO(andyz): use .name member
   for (auto q_it = queried_interfaces.begin(); q_it != queried_interfaces.end(); ++q_it) {
     auto it = std::find(int_interfaces.begin(), int_interfaces.end(), *q_it);
     if (it != int_interfaces.end()) {
-      int_values[std::distance(int_interfaces.begin(), it)] =
+      internal_values[std::distance(int_interfaces.begin(), it)] =
         values[std::distance(queried_interfaces.begin(), q_it)];
     } else {
       return return_type::INTERFACE_NOT_FOUND;
@@ -122,15 +109,15 @@ inline return_type set_internal_values(
  * \brief set all values to compoenents internal values.
  *
  * \param values values to set.
- * \param int_values internal values of a component.
+ * \param internal_values internal values of a component.
  * \return return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL if the size of the arguments is not equal,
  * return_type::OK otherwise.
  */
 inline return_type set_internal_values(
-  const std::vector<double> & values, std::vector<double> & int_values)
+  const std::vector<double> & values, std::vector<double> & internal_values)
 {
-  if (values.size() == int_values.size()) {
-    int_values = values;
+  if (values.size() == internal_values.size()) {
+    internal_values = values;
   } else {
     return return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL;
   }

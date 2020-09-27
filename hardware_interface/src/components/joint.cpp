@@ -16,6 +16,7 @@
 #include <vector>
 
 #include "hardware_interface/components/joint.hpp"
+
 #include "hardware_interface/components/component_info.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 
@@ -38,18 +39,18 @@ return_type Joint::configure(const ComponentInfo & joint_info)
   return return_type::OK;
 }
 
-std::vector<std::string> Joint::get_command_interfaces() const
+std::vector<InterfaceInfo> Joint::get_command_interfaces() const
 {
   return info_.command_interfaces;
 }
 
-std::vector<std::string> Joint::get_state_interfaces() const
+std::vector<InterfaceInfo> Joint::get_state_interfaces() const
 {
   return info_.state_interfaces;
 }
 
 return_type Joint::get_command(
-  std::vector<double> & command, const std::vector<std::string> & interfaces) const
+  std::vector<double> & command, const std::vector<InterfaceInfo> & interfaces) const
 {
   return get_internal_values(command, interfaces, info_.command_interfaces, commands_);
 }
@@ -60,7 +61,8 @@ return_type Joint::get_command(std::vector<double> & command) const
 }
 
 return_type Joint::set_command(
-  const std::vector<double> & command, const std::vector<std::string> & interfaces)
+  const std::vector<double> & command,
+  const std::vector<components::InterfaceInfo> & interfaces)
 {
   return set_internal_values(command, interfaces, info_.command_interfaces, commands_);
 }
@@ -71,7 +73,7 @@ return_type Joint::set_command(const std::vector<double> & command)
 }
 
 return_type Joint::get_state(
-  std::vector<double> & state, const std::vector<std::string> & interfaces) const
+  std::vector<double> & state, const std::vector<components::InterfaceInfo> & interfaces) const
 {
   return get_internal_values(state, interfaces, info_.state_interfaces, states_);
 }
@@ -82,7 +84,7 @@ return_type Joint::get_state(std::vector<double> & state) const
 }
 
 return_type Joint::set_state(
-  const std::vector<double> & state, const std::vector<std::string> & interfaces)
+  const std::vector<double> & state, const std::vector<components::InterfaceInfo> & interfaces)
 {
   return set_internal_values(state, interfaces, info_.state_interfaces, states_);
 }

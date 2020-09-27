@@ -28,6 +28,23 @@ namespace components
  * \brief This structure stores information about components defined for a specific hardware
  * in robot's URDF.
  */
+struct InterfaceInfo
+{
+  /**
+   * \brief name of the command interfaces that can be set, e.g. "position", "velocity", etc.
+   * Used by joints.
+   */
+  std::string name;
+  /**
+   * \brief (optional) key-value pairs of components parameters, e.g. min_value and max_value.
+   */
+  std::unordered_map<std::string, double> parameters;
+};
+
+/**
+ * \brief This structure stores information about components defined for a specific hardware
+ * in robot's URDF.
+ */
 struct ComponentInfo
 {
   /**
@@ -46,14 +63,14 @@ struct ComponentInfo
    * \brief name of the command interfaces that can be set, e.g. "position", "velocity", etc.
    * Used by joints.
    */
-  std::vector<std::string> command_interfaces;
+  std::vector<InterfaceInfo> command_interfaces;
   /**
    * \brief name of the state interfaces that can be read, e.g. "position", "velocity", etc.
    * Used by Joints and Sensors.
    */
-  std::vector<std::string> state_interfaces;
+  std::vector<InterfaceInfo> state_interfaces;
   /**
-   * \brief (optional) key-value pairs of components parameters.
+   * \brief (optional) key-value pairs of components parameters, e.g. min_value and max_value.
    */
   std::unordered_map<std::string, std::string> parameters;
 };

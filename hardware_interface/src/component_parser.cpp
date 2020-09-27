@@ -132,20 +132,25 @@ std::unordered_map<std::string, std::string> parse_parameters_from_xml(
 /**
  * \brief Search XML snippet for definition of interfaceTypes.
  *
- * \param interfaces_it pointer to the interator over interfaces
+ * \param interfaces_it pointer to the iterator over interfaces
  * \param interfaceTag interface type tag (command or state)
  * \return std::vector< std::__cxx11::string > list of interface types
  * \throws std::runtime_error if the interfaceType text not set in a tag
  */
-std::vector<std::string> parse_interfaces_from_xml(
+std::vector<components::InterfaceInfo> parse_interfaces_from_xml(
   const tinyxml2::XMLElement * interfaces_it, const char * interfaceTag)
 {
-  std::vector<std::string> interfaces;
+  std::vector<components::InterfaceInfo> interfaces;
 
+  // TODO(andyz): parse optional attributes like min_value/max_value
   while (interfaces_it) {
     const std::string interface_type = get_text_for_element(
       interfaces_it, std::string(interfaceTag) + " type ");
-    interfaces.push_back(interface_type);
+    // TODO(andyz): select the proper type (switch statement?)
+    // For now, just assume a position type
+    hardware_interface::components::InterfaceInfo position_interface;
+    position_interface.name = "position";
+    interfaces.push_back(position_interface);
     interfaces_it = interfaces_it->NextSiblingElement(interfaceTag);
   }
   return interfaces;
@@ -173,12 +178,13 @@ components::ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * 
   component.class_type = get_text_for_element(classType_it, component.name + " " + kClassTypeTag);
 
   // Parse commandInterfaceType tags
+/*
   const auto * command_interfaces_it = component_it->FirstChildElement(kCommandInterfaceTypeTag);
   if (command_interfaces_it) {
     component.command_interfaces = parse_interfaces_from_xml(
       command_interfaces_it, kCommandInterfaceTypeTag);
   }
-
+*/
   // Parse stateInterfaceType tags
   const auto * state_interfaces_it = component_it->FirstChildElement(kStateInterfaceTypeTag);
   if (state_interfaces_it) {
