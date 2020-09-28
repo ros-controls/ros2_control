@@ -17,4 +17,17 @@
       Test Hardware System
     </description>
   </class>
+
+  <class name="test_joint_component" type="TestJointComponent" base_class_type="hardware_interface::components::Joint">
+    <description>
+      Test Joint Component
+    </description>
+  </class>
+
+  <class name="test_sensor_component" type="TestSensorComponent" base_class_type="hardware_interface::components::Sensor">
+    <description>
+      Test Sensor Component
+    </description>
+  </class>
+
 </library>

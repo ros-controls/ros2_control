@@ -84,7 +84,7 @@ public:
    * defined for the joint; return return_type::INTERFACE_NOT_PROVIDED if the list of interfaces
    * is empty; return_type::OK otherwise.
    */
-  HARDWARE_INTERFACE_EXPORT
+  HARDWARE_INTERFACE_PUBLIC
   virtual
   return_type get_command(
     std::vector<double> & command, const std::vector<std::string> & interfaces) const;
@@ -97,7 +97,7 @@ public:
    * \param command list of doubles with commands for the hardware.
    * \return return_type::OK always.
    */
-  HARDWARE_INTERFACE_EXPORT
+  HARDWARE_INTERFACE_PUBLIC
   virtual
   return_type get_command(std::vector<double> & command) const;
 
@@ -117,7 +117,7 @@ public:
    * for different interfaces. This should be changed in the future.
    * (see: https://github.com/ros-controls/ros2_control/issues/129)
    */
-  HARDWARE_INTERFACE_EXPORT
+  HARDWARE_INTERFACE_PUBLIC
   virtual
   return_type set_command(
     const std::vector<double> & command, const std::vector<std::string> & interfaces);
@@ -132,7 +132,7 @@ public:
    * joint's command interfaces; return_type::COMMAND_OUT_OF_LIMITS if one of the command values is out
    * of limits; return_type::OK otherwise.
    */
-  HARDWARE_INTERFACE_EXPORT
+  HARDWARE_INTERFACE_PUBLIC
   virtual
   return_type set_command(const std::vector<double> & command);
 
@@ -148,7 +148,7 @@ public:
    * defined for the joint; return return_type::INTERFACE_NOT_PROVIDED if the list of interfaces
    * is empty; return_type::OK otherwise.
    */
-  HARDWARE_INTERFACE_EXPORT
+  HARDWARE_INTERFACE_PUBLIC
   virtual
   return_type get_state(
     std::vector<double> & state,
@@ -162,7 +162,7 @@ public:
    * \param state list of doubles with states of the hardware.
    * \return return_type::OK always.
    */
-  HARDWARE_INTERFACE_EXPORT
+  HARDWARE_INTERFACE_PUBLIC
   virtual
   return_type get_state(std::vector<double> & state) const;
 
@@ -177,7 +177,7 @@ public:
    * have the same length; return_type::INTERFACE_NOT_FOUND if one of provided interfaces is not
    * defined for the joint; return_type::OK otherwise.
    */
-  HARDWARE_INTERFACE_EXPORT
+  HARDWARE_INTERFACE_PUBLIC
   virtual
   return_type set_state(
     const std::vector<double> & state, const std::vector<std::string> & interfaces);
@@ -191,7 +191,7 @@ public:
    * \return return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL is command size is not equal to number of
    * joint's state interfaces, return_type::OK otherwise.
    */
-  HARDWARE_INTERFACE_EXPORT
+  HARDWARE_INTERFACE_PUBLIC
   virtual
   return_type set_state(const std::vector<double> & state);
 
