@@ -108,9 +108,9 @@ if(BUILD_TESTING)
   )
 
   add_library(test_hardware_resources SHARED
-    test/test_hardware_resources/test_actuator_interface.cpp
-    test/test_hardware_resources/test_sensor_interface.cpp
-    test/test_hardware_resources/test_system_interface.cpp)
+    test/test_hardware_resources/test_actuator_hardware.cpp
+    test/test_hardware_resources/test_sensor_hardware.cpp
+    test/test_hardware_resources/test_system_hardware.cpp)
   ament_target_dependencies(test_hardware_resources
     hardware_interface
     pluginlib)
