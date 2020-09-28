@@ -17,10 +17,10 @@
 #include <vector>
 #include <utility>
 
+#include "hardware_interface/actuator_hardware.hpp"
 #include "hardware_interface/components/component_info.hpp"
 #include "hardware_interface/component_parser.hpp"
 #include "hardware_interface/hardware_info.hpp"
-#include "hardware_interface/actuator_hardware.hpp"
 #include "hardware_interface/sensor_hardware.hpp"
 #include "hardware_interface/system_hardware.hpp"
 
@@ -34,6 +34,12 @@ namespace controller_manager
 class ResourceStorage
 {
   static constexpr const char * pkg_name = "hardware_interface";
+
+  static constexpr const char * joint_component_interface_name =
+    "hardware_interface::components::Joint";
+  static constexpr const char * sensor_component_interface_name =
+    "hardware_interface::components::Sensor";
+
   static constexpr const char * actuator_interface_name =
     "hardware_interface::ActuatorHardwareInterface";
   static constexpr const char * sensor_interface_name =
@@ -43,12 +49,32 @@ class ResourceStorage
 
 public:
   ResourceStorage()
-  : actuator_loader_(pkg_name, actuator_interface_name),
+  : joint_component_loader_(pkg_name, joint_component_interface_name),
+    sensor_component_loader_(pkg_name, sensor_component_interface_name),
+    actuator_loader_(pkg_name, actuator_interface_name),
     sensor_loader_(pkg_name, sensor_interface_name),
     system_loader_(pkg_name, system_interface_name)
   {}
 
   ~ResourceStorage() = default;
+
+  void initialize_joint_component(
+    const hardware_interface::components::ComponentInfo & component_info)
+  {
+    joint_components_.emplace_back(
+      std::unique_ptr<hardware_interface::components::Joint>(
+        joint_component_loader_.createUnmanagedInstance(component_info.class_type)));
+    joint_components_.back()->configure(component_info);
+  }
+
+  void initialize_sensor_component(
+    const hardware_interface::components::ComponentInfo & component_info)
+  {
+    sensor_components_.emplace_back(
+      std::unique_ptr<hardware_interface::components::Sensor>(
+        sensor_component_loader_.createUnmanagedInstance(component_info.class_type)));
+    sensor_components_.back()->configure(component_info);
+  }
 
   template<class HardwareT, class HardwareInterfaceT>
   void initialize_hardware(
@@ -57,6 +83,8 @@ public:
     std::vector<HardwareT> & container)
   {
     // hardware_class_type has to match class name in plugin xml description
+    // TODO(karsten1987) extract package from hardware_class_type
+    // e.g.: <package_vendor>/<system_type>
     auto interface = std::unique_ptr<HardwareInterfaceT>(
       loader.createUnmanagedInstance(hardware_info.hardware_class_type));
     HardwareT actuator(std::move(interface));
@@ -88,6 +116,14 @@ public:
       hardware_info, system_loader_, systems_);
   }
 
+  // components plugins
+  pluginlib::ClassLoader<hardware_interface::components::Joint> joint_component_loader_;
+  pluginlib::ClassLoader<hardware_interface::components::Sensor> sensor_component_loader_;
+
+  std::vector<std::unique_ptr<hardware_interface::components::Joint>> joint_components_;
+  std::vector<std::unique_ptr<hardware_interface::components::Sensor>> sensor_components_;
+
+  // hardware plugins
   pluginlib::ClassLoader<hardware_interface::ActuatorHardwareInterface> actuator_loader_;
   pluginlib::ClassLoader<hardware_interface::SensorHardwareInterface> sensor_loader_;
   pluginlib::ClassLoader<hardware_interface::SystemHardwareInterface> system_loader_;
@@ -122,7 +158,25 @@ ResourceManager::ResourceManager(const std::string & urdf)
     if (hardware.type == system_type) {
       resource_storage_->initialize_system(hardware);
     }
+
+    for (const auto & joint : hardware.joints) {
+      resource_storage_->initialize_joint_component(joint);
+    }
+
+    for (const auto & sensor : hardware.sensors) {
+      resource_storage_->initialize_sensor_component(sensor);
+    }
   }
+}
+
+size_t ResourceManager::joint_components_size() const
+{
+  return resource_storage_->joint_components_.size();
+}
+
+size_t ResourceManager::sensor_components_size() const
+{
+  return resource_storage_->sensor_components_.size();
 }
 
 size_t ResourceManager::actuator_interfaces_size() const
@@ -139,5 +193,4 @@ size_t ResourceManager::system_interfaces_size() const
 {
   return resource_storage_->systems_.size();
 }
-
 }  // namespace controller_manager
