@@ -34,6 +34,10 @@ public:
 
   virtual ~ResourceManager();
 
+  size_t joint_components_size() const;
+
+  size_t sensor_components_size() const;
+
   size_t actuator_interfaces_size() const;
 
   size_t sensor_interfaces_size() const;

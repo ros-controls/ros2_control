@@ -145,6 +145,10 @@ TEST_F(TestResourceManager, initialization_empty) {
 TEST_F(TestResourceManager, initialization_with_urdf) {
   auto urdf = urdf_head_ + test_hardware_resource_system_ + urdf_tail_;
   controller_manager::ResourceManager rm(urdf);
+
+  EXPECT_EQ(3u, rm.joint_components_size());
+  EXPECT_EQ(1u, rm.sensor_components_size());
+
   EXPECT_EQ(1u, rm.actuator_interfaces_size());
   EXPECT_EQ(1u, rm.sensor_interfaces_size());
   EXPECT_EQ(1u, rm.system_interfaces_size());

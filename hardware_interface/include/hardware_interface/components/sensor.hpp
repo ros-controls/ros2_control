@@ -50,7 +50,8 @@ public:
    * return_type::ERROR otherwise.
    */
   HARDWARE_INTERFACE_PUBLIC
-  return_type configure(const ComponentInfo & joint_info);
+  virtual
+  return_type configure(const ComponentInfo & sensor_info);
 
   /**
    * \brief Provide the list of state interfaces configured for the sensor.
@@ -58,7 +59,8 @@ public:
    * \return string list with state interfaces.
    */
   HARDWARE_INTERFACE_PUBLIC
-  std::vector<std::string> get_state_interfaces();
+  virtual
+  std::vector<std::string> get_state_interfaces() const;
 
   /**
    * \brief Get state list from the sensor. This function is used by the controller to get the
@@ -72,7 +74,8 @@ public:
    * defined for the sensor; return return_type::INTERFACE_NOT_PROVIDED if the list of interfaces
    * is empty; return_type::OK otherwise.
    */
-  HARDWARE_INTERFACE_EXPORT
+  HARDWARE_INTERFACE_PUBLIC
+  virtual
   return_type get_state(
     std::vector<double> & state,
     const std::vector<std::string> & interfaces) const;
@@ -85,7 +88,8 @@ public:
    * \param state list of doubles with states of the hardware.
    * \return return_type::OK always.
    */
-  HARDWARE_INTERFACE_EXPORT
+  HARDWARE_INTERFACE_PUBLIC
+  virtual
   return_type get_state(std::vector<double> & state) const;
 
   /**
@@ -99,7 +103,8 @@ public:
    * have the same length; return_type::INTERFACE_NOT_FOUND if one of provided interfaces is not
    * defined for the sensor; return_type::OK otherwise.
    */
-  HARDWARE_INTERFACE_EXPORT
+  HARDWARE_INTERFACE_PUBLIC
+  virtual
   return_type set_state(
     const std::vector<double> & state,
     const std::vector<std::string> & interfaces);
@@ -113,7 +118,8 @@ public:
    * \return return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL is state size is not equal to number of
    * sensor's state interfaces, return_type::OK otherwise.
    */
-  HARDWARE_INTERFACE_EXPORT
+  HARDWARE_INTERFACE_PUBLIC
+  virtual
   return_type set_state(const std::vector<double> & state);
 
 protected:
