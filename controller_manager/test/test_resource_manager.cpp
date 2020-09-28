@@ -84,46 +84,45 @@ public:
 </robot>
 )";
 
-    // 1. Industrial Robots with only one interface
     test_hardware_resource_system_ =
       R"(
-  <ros2_control name="TestActuatorInterface" type="actuator">
+  <ros2_control name="TestActuatorHardware" type="actuator">
     <hardware>
-      <classType>test_actuator</classType>
+      <classType>test_actuator_hardware</classType>
       <param name="example_param_write_for_sec">2</param>
       <param name="example_param_read_for_sec">2</param>
     </hardware>
     <joint name="joint1">
-      <classType>ros2_control_components/PositionJoint</classType>
+      <classType>test_joint_component</classType>
       <param name="min_position_value">-1</param>
       <param name="max_position_value">1</param>
     </joint>
   </ros2_control>
-  <ros2_control name="TestSensorInterface" type="sensor">
+  <ros2_control name="TestSensorHardware" type="sensor">
     <hardware>
-      <classType>test_sensor</classType>
+      <classType>test_sensor_hardware</classType>
       <param name="example_param_write_for_sec">2</param>
       <param name="example_param_read_for_sec">2</param>
     </hardware>
     <sensor name="sensor1">
-      <classType>ros2_control_components/PositionJoint</classType>
+      <classType>test_sensor_component</classType>
       <param name="min_position_value">-1</param>
       <param name="max_position_value">1</param>
     </sensor>
   </ros2_control>
-  <ros2_control name="TestSystemInterface" type="system">
+  <ros2_control name="TestSystemHardware" type="system">
     <hardware>
-      <classType>test_system</classType>
+      <classType>test_system_hardware</classType>
       <param name="example_param_write_for_sec">2</param>
       <param name="example_param_read_for_sec">2</param>
     </hardware>
     <joint name="joint2">
-      <classType>ros2_control_components/PositionJoint</classType>
+      <classType>test_joint_component</classType>
       <param name="min_position_value">-1</param>
       <param name="max_position_value">1</param>
     </joint>
     <joint name="joint3">
-      <classType>ros2_control_components/PositionJoint</classType>
+      <classType>test_joint_component</classType>
       <param name="min_position_value">-1</param>
       <param name="max_position_value">1</param>
     </joint>
