@@ -53,29 +53,29 @@ ControllerManager::ControllerManager(
 {
   using namespace std::placeholders;
   list_controllers_service_ = create_service<controller_manager_msgs::srv::ListControllers>(
-    "list_controllers", std::bind(
+    "~/list_controllers", std::bind(
       &ControllerManager::list_controllers_srv_cb, this, _1,
       _2));
   list_controller_types_service_ =
     create_service<controller_manager_msgs::srv::ListControllerTypes>(
-    "list_controller_types", std::bind(
+    "~/list_controller_types", std::bind(
       &ControllerManager::list_controller_types_srv_cb, this, _1,
       _2));
   load_controller_service_ = create_service<controller_manager_msgs::srv::LoadController>(
-    "load_controller", std::bind(
+    "~/load_controller", std::bind(
       &ControllerManager::load_controller_service_cb, this, _1,
       _2));
   reload_controller_libraries_service_ =
     create_service<controller_manager_msgs::srv::ReloadControllerLibraries>(
-    "reload_controller_libraries", std::bind(
+    "~/reload_controller_libraries", std::bind(
       &ControllerManager::reload_controller_libraries_service_cb, this, _1,
       _2));
   switch_controller_service_ = create_service<controller_manager_msgs::srv::SwitchController>(
-    "switch_controller", std::bind(
+    "~/switch_controller", std::bind(
       &ControllerManager::switch_controller_service_cb, this, _1,
       _2));
   unload_controller_service_ = create_service<controller_manager_msgs::srv::UnloadController>(
-    "unload_controller", std::bind(
+    "~/unload_controller", std::bind(
       &ControllerManager::unload_controller_service_cb, this, _1,
       _2));
 }

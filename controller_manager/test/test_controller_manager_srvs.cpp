@@ -104,7 +104,7 @@ TEST_F(TestControllerManagerSrvs, list_controller_types)
   srv_executor.add_node(srv_node);
   rclcpp::Client<controller_manager_msgs::srv::ListControllerTypes>::SharedPtr client =
     srv_node->create_client<controller_manager_msgs::srv::ListControllerTypes>(
-    "list_controller_types");
+    "test_controller_manager/list_controller_types");
   auto request = std::make_shared<controller_manager_msgs::srv::ListControllerTypes::Request>();
 
   auto result = call_service_and_wait(*client, request, srv_executor);
@@ -143,7 +143,8 @@ TEST_F(TestControllerManagerSrvs, list_controllers_srv) {
   rclcpp::Node::SharedPtr srv_node = std::make_shared<rclcpp::Node>("srv_client");
   srv_executor.add_node(srv_node);
   rclcpp::Client<controller_manager_msgs::srv::ListControllers>::SharedPtr client =
-    srv_node->create_client<controller_manager_msgs::srv::ListControllers>("list_controllers");
+    srv_node->create_client<controller_manager_msgs::srv::ListControllers>(
+    "test_controller_manager/list_controllers");
   auto request = std::make_shared<controller_manager_msgs::srv::ListControllers::Request>();
 
   auto result = call_service_and_wait(*client, request, srv_executor);
@@ -202,7 +203,7 @@ TEST_F(TestControllerManagerSrvs, reload_controller_libraries_srv) {
   srv_executor.add_node(srv_node);
   rclcpp::Client<controller_manager_msgs::srv::ReloadControllerLibraries>::SharedPtr client =
     srv_node->create_client<controller_manager_msgs::srv::ReloadControllerLibraries>(
-    "reload_controller_libraries");
+    "test_controller_manager/reload_controller_libraries");
   auto request =
     std::make_shared<controller_manager_msgs::srv::ReloadControllerLibraries::Request>();
 
@@ -293,7 +294,7 @@ TEST_F(TestControllerManagerSrvs, load_controller_srv) {
   srv_executor.add_node(srv_node);
   rclcpp::Client<controller_manager_msgs::srv::LoadController>::SharedPtr client =
     srv_node->create_client<controller_manager_msgs::srv::LoadController>(
-    "load_controller");
+    "test_controller_manager/load_controller");
 
   auto request = std::make_shared<controller_manager_msgs::srv::LoadController::Request>();
   request->name = test_controller::TEST_CONTROLLER_NAME;
@@ -312,7 +313,7 @@ TEST_F(TestControllerManagerSrvs, unload_controller_srv) {
   srv_executor.add_node(srv_node);
   rclcpp::Client<controller_manager_msgs::srv::UnloadController>::SharedPtr client =
     srv_node->create_client<controller_manager_msgs::srv::UnloadController>(
-    "unload_controller");
+    "test_controller_manager/unload_controller");
 
   auto request = std::make_shared<controller_manager_msgs::srv::UnloadController::Request>();
   request->name = test_controller::TEST_CONTROLLER_NAME;
