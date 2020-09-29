@@ -31,19 +31,32 @@ namespace components
   * internal_interfaces vector.
   *
   * \param values values to return.
-  * \param queried_interfaces interfaces for which values are queried.
-  * \param internal_interfaces full list of interfaces of a component.
-  * \param int_values internal values of a component.
+  * \param queried_interfaces interface names for which values are queried.
+  * \param internal_interfaces full list of command OR state interfaces of a component.
+  * \param internal_values internal values of a component.
   * \return return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL if values and queried_interfaces arguments
   * do not have the same length; return_type::INTERFACE_NOT_FOUND if one of queried_interfaces is
   * not defined in internal_interfaces; return return_type::INTERFACE_NOT_PROVIDED if queried_interfaces
   * list is is empty; return_type::OK otherwise.
   */
 inline return_type get_internal_values(
-  std::vector<double> & values, const std::vector<InterfaceInfo> & queried_interfaces,
-  const std::vector<InterfaceInfo> & internal_interfaces, const std::vector<double> & internal_values)
+  std::vector<double> & values, const std::vector<std::string> & queried_interfaces,
+  const std::vector<std::string> & internal_interfaces, const std::vector<double> & internal_values)
 {
-  // TODO(andyz)
+ if (queried_interfaces.size() == 0) {
+    return return_type::INTERFACE_NOT_PROVIDED;
+  }
+
+  for (const auto & interface : queried_interfaces) {
+    auto it = std::find(
+      internal_interfaces.begin(), internal_interfaces.end(), interface);
+    if (it != internal_interfaces.end()) {
+      values.push_back(internal_values[std::distance(internal_interfaces.begin(), it)]);
+    } else {
+      values.clear();
+      return return_type::INTERFACE_NOT_FOUND;
+    }
+  }
   return return_type::OK;
 }
 
@@ -82,8 +95,8 @@ inline return_type get_internal_values(
  * (see: https://github.com/ros-controls/ros2_control/issues/129)
  */
 inline return_type set_internal_values(
-  const std::vector<double> & values, const std::vector<InterfaceInfo> & queried_interfaces,
-  const std::vector<InterfaceInfo> & internal_interfaces, std::vector<double> & internal_values)
+  const std::vector<double> & values, const std::vector<std::string> & queried_interfaces,
+  const std::vector<std::string> & internal_interfaces, std::vector<double> & internal_values)
 {
   if (queried_interfaces.size() == 0) {
     return return_type::INTERFACE_NOT_PROVIDED;
@@ -92,7 +105,6 @@ inline return_type set_internal_values(
     return return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL;
   }
 
-  // TODO(andyz): use .name member
   for (auto q_it = queried_interfaces.begin(); q_it != queried_interfaces.end(); ++q_it) {
     auto it = std::find(internal_interfaces.begin(), internal_interfaces.end(), *q_it);
     if (it != internal_interfaces.end()) {
@@ -102,6 +114,7 @@ inline return_type set_internal_values(
       return return_type::INTERFACE_NOT_FOUND;
     }
   }
+
   return return_type::OK;
 }
 

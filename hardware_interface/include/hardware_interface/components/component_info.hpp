@@ -38,11 +38,11 @@ struct InterfaceInfo
   /**
    * \brief (optional) minimal allowed values of the interface.
    */
-  std::string min_values;
+  std::string min;
   /**
    * \brief (optional) maximal allowed values of the interface.
    */
-  std::string max_values;
+  std::string max;
 };
 
 /**

@@ -52,7 +52,6 @@ public:
   HARDWARE_INTERFACE_PUBLIC
   return_type configure(const ComponentInfo & joint_info);
 
-  // TODO(andyz): implement this
   /**
    * \brief Provide the list of command interfaces configured for the joint.
    * \return vector of command interface names.
@@ -67,7 +66,6 @@ public:
   HARDWARE_INTERFACE_PUBLIC
   std::vector<InterfaceInfo> get_command_interfaces() const;
 
-  // TODO(andyz): implement this
   /**
    * \brief Provide the list of state interfaces configured for the joint.
    * \return vector of state interface names.
@@ -131,7 +129,7 @@ public:
   HARDWARE_INTERFACE_EXPORT
   return_type set_command(
     const std::vector<double> & command,
-    const std::vector<cstd::string> & interfaces);
+    const std::vector<std::string> & interfaces);
 
   /**
    * \brief Get complete state list from the joint. This function is used by the hardware to get

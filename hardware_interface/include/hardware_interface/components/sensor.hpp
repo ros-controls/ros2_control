@@ -52,13 +52,21 @@ public:
   HARDWARE_INTERFACE_PUBLIC
   return_type configure(const ComponentInfo & joint_info);
 
+  // TODO(andyz): implement this
+  /**
+   * \brief Provide the list of state interfaces configured for the joint.
+   * \return vector of state interface names.
+   */
+  HARDWARE_INTERFACE_PUBLIC
+  std::vector<std::string> get_state_interface_names() const;
+
   /**
    * \brief Provide the list of state interfaces configured for the sensor.
    *
-   * \return list of state interface names.
+   * \return list of state interfaces.
    */
   HARDWARE_INTERFACE_PUBLIC
-  std::vector<std::string> get_state_interfaces();
+  std::vector<components::InterfaceInfo> get_state_interfaces() const;
 
   /**
    * \brief Get state list from the sensor. This function is used by the controller to get the

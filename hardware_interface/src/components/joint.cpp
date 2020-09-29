@@ -39,6 +39,14 @@ return_type Joint::configure(const ComponentInfo & joint_info)
   return return_type::OK;
 }
 
+std::vector<std::string> Joint::get_command_interface_names() const
+{
+  std::vector<std::string> command_interface_names;
+  for (auto interface : info_.command_interfaces)
+    command_interface_names.push_back(interface.name);
+  return command_interface_names;
+}
+
 std::vector<InterfaceInfo> Joint::get_command_interfaces() const
 {
   return info_.command_interfaces;
@@ -50,9 +58,9 @@ std::vector<InterfaceInfo> Joint::get_state_interfaces() const
 }
 
 return_type Joint::get_command(
-  std::vector<double> & command, const std::vector<InterfaceInfo> & interfaces) const
+  std::vector<double> & command, const std::vector<std::string> & interfaces) const
 {
-  return get_internal_values(command, interfaces, info_.command_interfaces, commands_);
+  return get_internal_values(command, interfaces, get_command_interface_names(), commands_);
 }
 
 return_type Joint::get_command(std::vector<double> & command) const
@@ -62,9 +70,9 @@ return_type Joint::get_command(std::vector<double> & command) const
 
 return_type Joint::set_command(
   const std::vector<double> & command,
-  const std::vector<components::InterfaceInfo> & interfaces)
+  const std::vector<std::string> & interfaces)
 {
-  return set_internal_values(command, interfaces, info_.command_interfaces, commands_);
+  return set_internal_values(command, interfaces, get_command_interface_names(), commands_);
 }
 
 return_type Joint::set_command(const std::vector<double> & command)
@@ -72,10 +80,18 @@ return_type Joint::set_command(const std::vector<double> & command)
   return set_internal_values(command, commands_);
 }
 
-return_type Joint::get_state(
-  std::vector<double> & state, const std::vector<components::InterfaceInfo> & interfaces) const
+std::vector<std::string> Joint::get_state_interface_names() const
 {
-  return get_internal_values(state, interfaces, info_.state_interfaces, states_);
+  std::vector<std::string> state_interface_names;
+  for (auto interface : info_.state_interfaces)
+    state_interface_names.push_back(interface.name);
+  return state_interface_names;
+}
+
+return_type Joint::get_state(
+  std::vector<double> & state, const std::vector<std::string> & interfaces) const
+{
+  return get_internal_values(state, interfaces, get_state_interface_names(), states_);
 }
 
 return_type Joint::get_state(std::vector<double> & state) const
@@ -84,9 +100,9 @@ return_type Joint::get_state(std::vector<double> & state) const
 }
 
 return_type Joint::set_state(
-  const std::vector<double> & state, const std::vector<components::InterfaceInfo> & interfaces)
+  const std::vector<double> & state, const std::vector<std::string> & interfaces)
 {
-  return set_internal_values(state, interfaces, info_.state_interfaces, states_);
+  return set_internal_values(state, interfaces, get_state_interface_names(), states_);
 }
 
 return_type Joint::set_state(const std::vector<double> & state)

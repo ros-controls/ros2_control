@@ -142,17 +142,27 @@ std::vector<components::InterfaceInfo> parse_interfaces_from_xml(
 {
   std::vector<components::InterfaceInfo> interfaces;
 
+
   // TODO(andyz): parse optional min/max attributes
+
   while (interfaces_it) {
-    const std::string interface_type = get_text_for_element(
-      interfaces_it, std::string(interfaceTag) + " type ");
-    // TODO(andyz): select the proper type (switch statement?)
-    // For now, just assume a position type
     hardware_interface::components::InterfaceInfo interface;
-    interface.name = "position";
-    interfaces.push_back(position_interface);
+
+    // Joint interfaces have a name attribute
+    if (std::string(interfaceTag) == "commandInterfaceType") {
+      const std::string interface_name = get_attribute_value(interfaces_it, "name", std::string(interfaceTag));
+      interface.name = interface_name;
+    }
+    // State interfaces have an element to define the type, not a name attribute
+    if (std::string(interfaceTag) == "stateInterfaceType") {
+      const std::string interface_type = get_text_for_element(interfaces_it, std::string(interfaceTag) + " type ");
+      interface.name = interface_type;
+    }
+
+    interfaces.push_back(interface);
     interfaces_it = interfaces_it->NextSiblingElement(interfaceTag);
   }
+
   return interfaces;
 }
 
@@ -178,13 +188,12 @@ components::ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * 
   component.class_type = get_text_for_element(classType_it, component.name + " " + kClassTypeTag);
 
   // Parse commandInterfaceType tags
-/*
   const auto * command_interfaces_it = component_it->FirstChildElement(kCommandInterfaceTypeTag);
   if (command_interfaces_it) {
     component.command_interfaces = parse_interfaces_from_xml(
       command_interfaces_it, kCommandInterfaceTypeTag);
   }
-*/
+
   // Parse stateInterfaceType tags
   const auto * state_interfaces_it = component_it->FirstChildElement(kStateInterfaceTypeTag);
   if (state_interfaces_it) {

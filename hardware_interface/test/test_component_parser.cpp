@@ -173,6 +173,7 @@ protected:
 )";
 
 // 2. Industrial Robots with multiple interfaces (cannot be written at the same time)
+// Note, joint parameters can be any string
     valid_urdf_ros2_control_system_multi_interface_ =
       R"(
   <ros2_control name="2DOF_System_Robot_MultiInterface" type="system">
@@ -201,6 +202,8 @@ protected:
       <stateInterfaceType>position</stateInterfaceType>
       <stateInterfaceType>velocity</stateInterfaceType>
       <stateInterfaceType>effort</stateInterfaceType>
+
+      <param name="serial_number">A42B1</param>
     </joint>
     <joint name="joint2">
       <classType>ros2_control_components/MultiInterfaceJoint</classType>
@@ -212,6 +215,8 @@ protected:
       <stateInterfaceType>position</stateInterfaceType>
       <stateInterfaceType>velocity</stateInterfaceType>
       <stateInterfaceType>effort</stateInterfaceType>
+
+      <param name="serial_number">A42B2</param>
     </joint>
   </ros2_control>
 )";
@@ -313,16 +318,18 @@ protected:
       R"(
   <ros2_control name="2DOF_Modular_Robot_joint1"  type="actuator">
     <hardware>
-      <classType>ros2_control_demo_hardware/Velocity_Actuator_Hadware</classType>
+      <classType>ros2_control_demo_hardware/Velocity_Actuator_Hardware</classType>
       <param name="example_param_write_for_sec">1.23</param>
       <param name="example_param_read_for_sec">3</param>
     </hardware>
     <joint name="joint1">
       <classType>ros2_control_components/VelocityJoint</classType>
       <commandInterfaceType name="velocity">
-        <param name="min_velocity_value">-1</param>
-        <param name="max_velocity_value">1</param>
+        <param name="min">-1</param>
+        <param name="max">1</param>
       </commandInterfaceType>
+
+      <param name="example_param_current_rating">D</param>
     </joint>
     <transmission name="transmission1">
       <classType>transmission_interface/SimpleTansmission</classType>
@@ -331,15 +338,15 @@ protected:
   </ros2_control>
   <ros2_control name="2DOF_Modular_Robot_joint2"  type="actuator">
     <hardware>
-      <classType>ros2_control_demo_hardware/Velocity_Actuator_Hadware</classType>
+      <classType>ros2_control_demo_hardware/Velocity_Actuator_Hardware</classType>
       <param name="example_param_write_for_sec">1.23</param>
       <param name="example_param_read_for_sec">3</param>
     </hardware>
     <joint name="joint2">
       <classType>ros2_control_components/VelocityJoint</classType>
       <commandInterfaceType name="velocity">
-        <param name="min_velocity_value">-1</param>
-        <param name="max_velocity_value">1</param>
+        <param name="min">-1</param>
+        <param name="max">1</param>
       </commandInterfaceType>
     </joint>
   </ros2_control>
@@ -432,7 +439,7 @@ protected:
       R"(
   <ros2_control name="2DOF_Modular_Robot_joint1"  type="actuator">
     <hardware>
-      <classType>ros2_control_demo_hardware/Velocity_Actuator_Hadware</classType>
+      <classType>ros2_control_demo_hardware/Velocity_Actuator_Hardware</classType>
       <param name="example_param_write_for_sec">1.13</param>
       <param name="example_param_read_for_sec">3</param>
     </hardware>
@@ -710,8 +717,8 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_multi_interface
   EXPECT_EQ(hardware_info.joints[0].command_interfaces[0].name, "position");
   ASSERT_THAT(hardware_info.joints[0].state_interfaces, SizeIs(3));
   EXPECT_EQ(hardware_info.joints[0].state_interfaces[1].name, "velocity");
-  ASSERT_THAT(hardware_info.joints[0].parameters, SizeIs(6));
-  EXPECT_EQ(hardware_info.joints[0].parameters.at("min_effort_value"), "-0.5");
+  ASSERT_THAT(hardware_info.joints[0].parameters, SizeIs(1));
+  EXPECT_EQ(hardware_info.joints[0].parameters.at("serial_number"), "A42B1");
 
   EXPECT_EQ(hardware_info.joints[1].name, "joint2");
   EXPECT_EQ(hardware_info.joints[1].type, "joint");
@@ -719,8 +726,8 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_multi_interface
   ASSERT_THAT(hardware_info.joints[1].command_interfaces, SizeIs(1));
   ASSERT_THAT(hardware_info.joints[1].state_interfaces, SizeIs(3));
   EXPECT_EQ(hardware_info.joints[1].state_interfaces[2].name, "effort");
-  ASSERT_THAT(hardware_info.joints[1].parameters, SizeIs(2));
-  EXPECT_EQ(hardware_info.joints[1].parameters.at("min_position_value"), "-1");
+  ASSERT_THAT(hardware_info.joints[1].parameters, SizeIs(1));
+  EXPECT_EQ(hardware_info.joints[1].parameters.at("serial_number"), "A42B2");
 }
 
 TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_robot_with_sensor)
@@ -864,7 +871,7 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_modular_robot
   EXPECT_EQ(hardware_info.type, "actuator");
   EXPECT_EQ(
     hardware_info.hardware_class_type,
-    "ros2_control_demo_hardware/Velocity_Actuator_Hadware");
+    "ros2_control_demo_hardware/Velocity_Actuator_Hardware");
   ASSERT_THAT(hardware_info.hardware_parameters, SizeIs(2));
   EXPECT_EQ(hardware_info.hardware_parameters.at("example_param_write_for_sec"), "1.23");
 
@@ -874,8 +881,8 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_modular_robot
   EXPECT_EQ(hardware_info.joints[0].class_type, "ros2_control_components/VelocityJoint");
   ASSERT_THAT(hardware_info.joints[0].command_interfaces, SizeIs(1));
   EXPECT_EQ(hardware_info.joints[0].command_interfaces[0].name, "velocity");
-  ASSERT_THAT(hardware_info.joints[0].parameters, SizeIs(2));
-  EXPECT_EQ(hardware_info.joints[0].parameters.at("max_velocity_value"), "1");
+  ASSERT_THAT(hardware_info.joints[0].parameters, SizeIs(1));
+  EXPECT_EQ(hardware_info.joints[0].parameters.at("example_param_current_rating"), "D");
 
   ASSERT_THAT(hardware_info.transmissions, SizeIs(1));
   EXPECT_EQ(hardware_info.transmissions[0].name, "transmission1");
@@ -890,7 +897,7 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_modular_robot
   EXPECT_EQ(hardware_info.type, "actuator");
   EXPECT_EQ(
     hardware_info.hardware_class_type,
-    "ros2_control_demo_hardware/Velocity_Actuator_Hadware");
+    "ros2_control_demo_hardware/Velocity_Actuator_Hardware");
   ASSERT_THAT(hardware_info.hardware_parameters, SizeIs(2));
   EXPECT_EQ(hardware_info.hardware_parameters.at("example_param_read_for_sec"), "3");
 
@@ -900,8 +907,9 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_modular_robot
   EXPECT_EQ(hardware_info.joints[0].class_type, "ros2_control_components/VelocityJoint");
   ASSERT_THAT(hardware_info.joints[0].command_interfaces, SizeIs(1));
   EXPECT_EQ(hardware_info.joints[0].command_interfaces[0].name, "velocity");
-  ASSERT_THAT(hardware_info.joints[0].parameters, SizeIs(2));
-  EXPECT_EQ(hardware_info.joints[0].parameters.at("min_velocity_value"), "-1");
+  // TODO(andyz): parse min/max value for this joint
+//  ASSERT_THAT(hardware_info.joints[0].parameters, SizeIs(2));
+//  EXPECT_EQ(hardware_info.joints[0].parameters.at("min_velocity_value"), "-1");
 
   hardware_info = control_hardware.at(2);
 
@@ -1036,7 +1044,7 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_only)
   EXPECT_EQ(hardware_info.type, "actuator");
   EXPECT_EQ(
     hardware_info.hardware_class_type,
-    "ros2_control_demo_hardware/Velocity_Actuator_Hadware");
+    "ros2_control_demo_hardware/Velocity_Actuator_Hardware");
   ASSERT_THAT(hardware_info.hardware_parameters, SizeIs(2));
   EXPECT_EQ(hardware_info.hardware_parameters.at("example_param_write_for_sec"), "1.13");
 

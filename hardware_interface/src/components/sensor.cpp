@@ -36,7 +36,15 @@ return_type Sensor::configure(const ComponentInfo & joint_info)
   return return_type::OK;
 }
 
-std::vector<std::string> Sensor::get_state_interfaces()
+std::vector<std::string> Sensor::get_state_interface_names() const
+{
+  std::vector<std::string> state_interface_names;
+  for (auto interface : info_.state_interfaces)
+    state_interface_names.push_back(interface.name);
+  return state_interface_names;
+}
+
+std::vector<components::InterfaceInfo> Sensor::get_state_interfaces() const
 {
   return info_.state_interfaces;
 }
@@ -44,7 +52,7 @@ std::vector<std::string> Sensor::get_state_interfaces()
 return_type Sensor::get_state(
   std::vector<double> & state, const std::vector<std::string> & interfaces) const
 {
-  return get_internal_values(state, interfaces, info_.state_interfaces, states_);
+  return get_internal_values(state, interfaces, get_state_interface_names(), states_);
 }
 
 return_type Sensor::get_state(std::vector<double> & state) const
@@ -55,7 +63,7 @@ return_type Sensor::get_state(std::vector<double> & state) const
 return_type Sensor::set_state(
   const std::vector<double> & state, const std::vector<std::string> & interfaces)
 {
-  return set_internal_values(state, interfaces, info_.state_interfaces, states_);
+  return set_internal_values(state, interfaces, get_state_interface_names(), states_);
 }
 
 return_type Sensor::set_state(const std::vector<double> & state)
