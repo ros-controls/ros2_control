@@ -19,6 +19,7 @@
 #include <vector>
 
 #include "hardware_interface/components/component_info.hpp"
+#include "hardware_interface/components/sensor_interface.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/visibility_control.h"
 
@@ -32,7 +33,7 @@ namespace components
  * provide data. A sensor can have one or more interfaces (e.g., force, acceleration, etc.) to
  * provide states for. The list of state interfaces defines this.
  */
-class Sensor
+class Sensor : public SensorInterface
 {
 public:
   HARDWARE_INTERFACE_PUBLIC

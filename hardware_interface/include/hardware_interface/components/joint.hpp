@@ -19,6 +19,7 @@
 #include <vector>
 
 #include "hardware_interface/components/component_info.hpp"
+#include "hardware_interface/components/joint_interface.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/visibility_control.h"
 
@@ -32,7 +33,7 @@ namespace components
  * A joint is always 1-DoF and can have one or more interfaces (e.g., position, velocity, etc.)
  * A joint has to be able to receive command(s) and optionally can provide its state(s).
  */
-class Joint
+class Joint : public JointInterface
 {
 public:
   HARDWARE_INTERFACE_PUBLIC
