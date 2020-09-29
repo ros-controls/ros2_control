@@ -17,47 +17,60 @@
 #include <utility>
 #include <vector>
 
-#include "hardware_interface/sensor_hardware.hpp"
+#include "hardware_interface/hardware_resources/system_hardware.hpp"
 
 #include "hardware_interface/components/component_info.hpp"
+#include "hardware_interface/components/joint.hpp"
 #include "hardware_interface/components/sensor.hpp"
-#include "hardware_interface/hardware_info.hpp"
-#include "hardware_interface/sensor_hardware_interface.hpp"
+#include "hardware_interface/hardware_resources/hardware_info.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/hardware_interface_status_values.hpp"
 #include "hardware_interface/visibility_control.h"
 
 namespace hardware_interface
 {
+namespace hardware_resources
+{
 
-SensorHardware::SensorHardware(std::unique_ptr<SensorHardwareInterface> impl)
+SystemHardware::SystemHardware(std::unique_ptr<SystemHardwareInterface> impl)
 : impl_(std::move(impl))
 {}
 
-return_type SensorHardware::configure(const HardwareInfo & sensor_info)
+return_type SystemHardware::configure(const HardwareInfo & system_info)
 {
-  return impl_->configure(sensor_info);
+  return impl_->configure(system_info);
 }
 
-return_type SensorHardware::start()
+return_type SystemHardware::start()
 {
   return impl_->start();
 }
 
-return_type SensorHardware::stop()
+return_type SystemHardware::stop()
 {
   return impl_->stop();
 }
 
-hardware_interface_status SensorHardware::get_status() const
+hardware_interface_status SystemHardware::get_status() const
 {
   return impl_->get_status();
 }
 
-return_type SensorHardware::read_sensors(
-  const std::vector<std::shared_ptr<components::Sensor>> & sensors)
+return_type SystemHardware::read_sensors(std::vector<std::shared_ptr<components::Sensor>> & sensors)
 {
   return impl_->read_sensors(sensors);
 }
 
+return_type SystemHardware::read_joints(std::vector<std::shared_ptr<components::Joint>> & joints)
+{
+  return impl_->read_joints(joints);
+}
+
+return_type SystemHardware::write_joints(
+  const std::vector<std::shared_ptr<components::Joint>> & joints)
+{
+  return impl_->write_joints(joints);
+}
+
+}  // namespace hardware_resources
 }  // namespace hardware_interface

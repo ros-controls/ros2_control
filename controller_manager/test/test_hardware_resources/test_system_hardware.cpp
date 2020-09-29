@@ -21,7 +21,8 @@ using hardware_interface::hardware_interface_status;
 using hardware_interface::return_type;
 
 hardware_interface::return_type
-TestSystemHardware::configure(const hardware_interface::HardwareInfo & /* system_info */)
+TestSystemHardware::configure(
+  const hardware_interface::hardware_resources::HardwareInfo & /* system_info */)
 {
   return return_type::OK;
 }
@@ -67,4 +68,6 @@ TestSystemHardware::write_joints(
 
 #include "pluginlib/class_list_macros.hpp"  // NOLINT
 
-PLUGINLIB_EXPORT_CLASS(TestSystemHardware, hardware_interface::SystemHardwareInterface)
+PLUGINLIB_EXPORT_CLASS(
+  TestSystemHardware,
+  hardware_interface::hardware_resources::SystemHardwareInterface)

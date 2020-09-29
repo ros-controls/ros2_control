@@ -20,7 +20,8 @@ using hardware_interface::hardware_interface_status;
 using hardware_interface::return_type;
 
 return_type
-TestActuatorHardware::configure(const hardware_interface::HardwareInfo & /* actuator_info */)
+TestActuatorHardware::configure(
+  const hardware_interface::hardware_resources::HardwareInfo & /* actuator_info */)
 {
   return return_type::OK;
 }
@@ -59,4 +60,6 @@ TestActuatorHardware::write_joint(
 
 #include "pluginlib/class_list_macros.hpp"  // NOLINT
 
-PLUGINLIB_EXPORT_CLASS(TestActuatorHardware, hardware_interface::ActuatorHardwareInterface)
+PLUGINLIB_EXPORT_CLASS(
+  TestActuatorHardware,
+  hardware_interface::hardware_resources::ActuatorHardwareInterface)

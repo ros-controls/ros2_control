@@ -18,13 +18,13 @@
 #include <memory>
 #include <vector>
 
-#include "hardware_interface/sensor_hardware_interface.hpp"
+#include "hardware_interface/hardware_resources/sensor_hardware_interface.hpp"
 
-class TestSensorHardware : public hardware_interface::SensorHardwareInterface
+class TestSensorHardware : public hardware_interface::hardware_resources::SensorHardwareInterface
 {
 public:
   hardware_interface::return_type
-  configure(const hardware_interface::HardwareInfo & sensor_info) override;
+  configure(const hardware_interface::hardware_resources::HardwareInfo & sensor_info) override;
 
   hardware_interface::return_type
   start() override;

@@ -13,8 +13,8 @@
 // limitations under the License.
 
 
-#ifndef HARDWARE_INTERFACE__HARDWARE_INFO_HPP_
-#define HARDWARE_INTERFACE__HARDWARE_INFO_HPP_
+#ifndef HARDWARE_INTERFACE__HARDWARE_RESOURCES__HARDWARE_INFO_HPP_
+#define HARDWARE_INTERFACE__HARDWARE_RESOURCES__HARDWARE_INFO_HPP_
 
 #include <string>
 #include <unordered_map>
@@ -23,6 +23,8 @@
 #include "hardware_interface/components/component_info.hpp"
 
 namespace hardware_interface
+{
+namespace hardware_resources
 {
 
 /**
@@ -63,5 +65,6 @@ struct HardwareInfo
   std::vector<components::ComponentInfo> transmissions;
 };
 
+}  // namespace hardware_resources
 }  // namespace hardware_interface
-#endif  // HARDWARE_INTERFACE__HARDWARE_INFO_HPP_
+#endif  // HARDWARE_INTERFACE__HARDWARE_RESOURCES__HARDWARE_INFO_HPP_

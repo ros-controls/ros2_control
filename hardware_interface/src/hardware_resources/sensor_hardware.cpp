@@ -12,56 +12,54 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <algorithm>
 #include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 
-#include "hardware_interface/actuator_hardware.hpp"
+#include "hardware_interface/hardware_resources/sensor_hardware.hpp"
 
-#include "hardware_interface/actuator_hardware_interface.hpp"
 #include "hardware_interface/components/component_info.hpp"
-#include "hardware_interface/components/joint.hpp"
-#include "hardware_interface/hardware_info.hpp"
+#include "hardware_interface/components/sensor.hpp"
+#include "hardware_interface/hardware_resources/hardware_info.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/hardware_interface_status_values.hpp"
 #include "hardware_interface/visibility_control.h"
 
 namespace hardware_interface
 {
+namespace hardware_resources
+{
 
-ActuatorHardware::ActuatorHardware(std::unique_ptr<ActuatorHardwareInterface> impl)
+SensorHardware::SensorHardware(std::unique_ptr<SensorHardwareInterface> impl)
 : impl_(std::move(impl))
 {}
 
-return_type ActuatorHardware::configure(const HardwareInfo & actuator_info)
+return_type SensorHardware::configure(const HardwareInfo & sensor_info)
 {
-  return impl_->configure(actuator_info);
+  return impl_->configure(sensor_info);
 }
 
-return_type ActuatorHardware::start()
+return_type SensorHardware::start()
 {
   return impl_->start();
 }
 
-return_type ActuatorHardware::stop()
+return_type SensorHardware::stop()
 {
   return impl_->stop();
 }
 
-hardware_interface_status ActuatorHardware::get_status() const
+hardware_interface_status SensorHardware::get_status() const
 {
   return impl_->get_status();
 }
 
-return_type ActuatorHardware::read_joint(std::shared_ptr<components::Joint> joint)
+return_type SensorHardware::read_sensors(
+  const std::vector<std::shared_ptr<components::Sensor>> & sensors)
 {
-  return impl_->read_joint(joint);
+  return impl_->read_sensors(sensors);
 }
 
-return_type ActuatorHardware::write_joint(const std::shared_ptr<components::Joint> joint)
-{
-  return impl_->write_joint(joint);
-}
-
+}  // namespace hardware_resources
 }  // namespace hardware_interface

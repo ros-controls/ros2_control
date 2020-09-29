@@ -12,16 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef HARDWARE_INTERFACE__SYSTEM_HARDWARE_HPP_
-#define HARDWARE_INTERFACE__SYSTEM_HARDWARE_HPP_
+#ifndef HARDWARE_INTERFACE__HARDWARE_RESOURCES__SYSTEM_HARDWARE_HPP_
+#define HARDWARE_INTERFACE__HARDWARE_RESOURCES__SYSTEM_HARDWARE_HPP_
 
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include "hardware_interface/hardware_info.hpp"
-#include "hardware_interface/system_hardware_interface.hpp"
+#include "hardware_interface/hardware_resources/hardware_info.hpp"
+#include "hardware_interface/hardware_resources/system_hardware_interface.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/hardware_interface_status_values.hpp"
 #include "hardware_interface/visibility_control.h"
@@ -34,6 +34,9 @@ namespace components
 class Joint;
 class Sensor;
 }  // namespace components
+
+namespace hardware_resources
+{
 
 class SystemHardware final
 {
@@ -71,5 +74,6 @@ private:
   std::unique_ptr<SystemHardwareInterface> impl_;
 };
 
+}  // namespace hardware_resources
 }  // namespace hardware_interface
-#endif  // HARDWARE_INTERFACE__SYSTEM_HARDWARE_HPP_
+#endif  // HARDWARE_INTERFACE__HARDWARE_RESOURCES__SYSTEM_HARDWARE_HPP_

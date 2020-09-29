@@ -21,7 +21,8 @@ using hardware_interface::hardware_interface_status;
 using hardware_interface::return_type;
 
 return_type
-TestSensorHardware::configure(const hardware_interface::HardwareInfo & /* sensor_info */)
+TestSensorHardware::configure(
+  const hardware_interface::hardware_resources::HardwareInfo & /* sensor_info */)
 {
   return return_type::OK;
 }
@@ -53,4 +54,6 @@ TestSensorHardware::read_sensors(
 
 #include "pluginlib/class_list_macros.hpp"  // NOLINT
 
-PLUGINLIB_EXPORT_CLASS(TestSensorHardware, hardware_interface::SensorHardwareInterface)
+PLUGINLIB_EXPORT_CLASS(
+  TestSensorHardware,
+  hardware_interface::hardware_resources::SensorHardwareInterface)

@@ -18,13 +18,13 @@
 #include <memory>
 #include <vector>
 
-#include "hardware_interface/system_hardware_interface.hpp"
+#include "hardware_interface/hardware_resources/system_hardware_interface.hpp"
 
-class TestSystemHardware : public hardware_interface::SystemHardwareInterface
+class TestSystemHardware : public hardware_interface::hardware_resources::SystemHardwareInterface
 {
 public:
   hardware_interface::return_type
-  configure(const hardware_interface::HardwareInfo & system_info) override;
+  configure(const hardware_interface::hardware_resources::HardwareInfo & system_info) override;
 
   hardware_interface::return_type
   start() override;

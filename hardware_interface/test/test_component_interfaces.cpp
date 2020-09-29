@@ -18,16 +18,16 @@
 #include <unordered_map>
 #include <vector>
 
-#include "hardware_interface/actuator_hardware.hpp"
-#include "hardware_interface/actuator_hardware_interface.hpp"
 #include "hardware_interface/components/component_info.hpp"
 #include "hardware_interface/components/joint.hpp"
 #include "hardware_interface/components/sensor.hpp"
-#include "hardware_interface/hardware_info.hpp"
-#include "hardware_interface/sensor_hardware_interface.hpp"
-#include "hardware_interface/sensor_hardware.hpp"
-#include "hardware_interface/system_hardware_interface.hpp"
-#include "hardware_interface/system_hardware.hpp"
+#include "hardware_interface/hardware_resources/actuator_hardware.hpp"
+#include "hardware_interface/hardware_resources/actuator_hardware_interface.hpp"
+#include "hardware_interface/hardware_resources/hardware_info.hpp"
+#include "hardware_interface/hardware_resources/sensor_hardware_interface.hpp"
+#include "hardware_interface/hardware_resources/sensor_hardware.hpp"
+#include "hardware_interface/hardware_resources/system_hardware_interface.hpp"
+#include "hardware_interface/hardware_resources/system_hardware.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/hardware_interface_status_values.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
@@ -120,9 +120,9 @@ public:
   }
 };
 
-class DummyActuatorHardware : public ActuatorHardwareInterface
+class DummyActuatorHardware : public hardware_resources::ActuatorHardwareInterface
 {
-  return_type configure(const HardwareInfo & actuator_info) override
+  return_type configure(const hardware_resources::HardwareInfo & actuator_info) override
   {
     info_ = actuator_info;
     hw_read_time_ = stod(info_.hardware_parameters["example_param_read_for_sec"]);
@@ -171,15 +171,15 @@ class DummyActuatorHardware : public ActuatorHardwareInterface
   }
 
 private:
-  HardwareInfo info_;
+  hardware_resources::HardwareInfo info_;
   hardware_interface_status status_ = hardware_interface_status::UNKNOWN;
   std::vector<double> hw_values_ = {1.2};
   double hw_read_time_, hw_write_time_;
 };
 
-class DummySensorHardware : public SensorHardwareInterface
+class DummySensorHardware : public hardware_resources::SensorHardwareInterface
 {
-  return_type configure(const HardwareInfo & sensor_info) override
+  return_type configure(const hardware_resources::HardwareInfo & sensor_info) override
   {
     info_ = sensor_info;
     binary_to_voltage_factor_ = stod(info_.hardware_parameters["binary_to_voltage_factor"]);
@@ -228,15 +228,15 @@ class DummySensorHardware : public SensorHardwareInterface
   }
 
 private:
-  HardwareInfo info_;
+  hardware_resources::HardwareInfo info_;
   hardware_interface_status status_ = hardware_interface_status::UNKNOWN;
   double binary_to_voltage_factor_;
   std::vector<double> ft_hw_values_ = {1, -1.0, 3.4, 7.9, 5.5, 4.4};
 };
 
-class DummySystemHardware : public SystemHardwareInterface
+class DummySystemHardware : public hardware_resources::SystemHardwareInterface
 {
-  return_type configure(const HardwareInfo & system_info) override
+  return_type configure(const hardware_resources::HardwareInfo & system_info) override
   {
     info_ = system_info;
     api_version_ = stod(info_.hardware_parameters["example_api_version"]);
@@ -318,7 +318,7 @@ class DummySystemHardware : public SystemHardwareInterface
   }
 
 private:
-  HardwareInfo info_;
+  hardware_resources::HardwareInfo info_;
   hardware_interface_status status_;
   double hw_write_time_, hw_read_time_, api_version_;
   std::vector<double> ft_hw_values_ = {-3.5, -2.1, -8.7, -5.4, -9.0, -11.2};
@@ -331,18 +331,18 @@ private:
 using hardware_interface::components::ComponentInfo;
 using hardware_interface::components::Joint;
 using hardware_interface::components::Sensor;
-using hardware_interface::ActuatorHardware;
-using hardware_interface::ActuatorHardwareInterface;
-using hardware_interface::HardwareInfo;
-using hardware_interface::hardware_interface_status;
-using hardware_interface::return_type;
-using hardware_interface::SensorHardware;
-using hardware_interface::SensorHardwareInterface;
-using hardware_interface::SystemHardware;
-using hardware_interface::SystemHardwareInterface;
 using hardware_interface::hardware_interfaces_components_test::DummyForceTorqueSensor;
 using hardware_interface::hardware_interfaces_components_test::DummyMultiJoint;
 using hardware_interface::hardware_interfaces_components_test::DummyPositionJoint;
+using hardware_interface::hardware_interface_status;
+using hardware_interface::hardware_resources::ActuatorHardware;
+using hardware_interface::hardware_resources::ActuatorHardwareInterface;
+using hardware_interface::hardware_resources::HardwareInfo;
+using hardware_interface::hardware_resources::SensorHardware;
+using hardware_interface::hardware_resources::SensorHardwareInterface;
+using hardware_interface::hardware_resources::SystemHardware;
+using hardware_interface::hardware_resources::SystemHardwareInterface;
+using hardware_interface::return_type;
 
 using hardware_interface::hardware_interfaces_components_test::DummyActuatorHardware;
 using hardware_interface::hardware_interfaces_components_test::DummySensorHardware;

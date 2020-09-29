@@ -17,13 +17,14 @@
 
 #include <memory>
 
-#include "hardware_interface/actuator_hardware_interface.hpp"
+#include "hardware_interface/hardware_resources/actuator_hardware_interface.hpp"
 
-class TestActuatorHardware : public hardware_interface::ActuatorHardwareInterface
+class TestActuatorHardware : public hardware_interface::hardware_resources::
+  ActuatorHardwareInterface
 {
 public:
   hardware_interface::return_type
-  configure(const hardware_interface::HardwareInfo & actuator_info) override;
+  configure(const hardware_interface::hardware_resources::HardwareInfo & actuator_info) override;
 
   hardware_interface::return_type
   start() override;

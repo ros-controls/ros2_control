@@ -1,18 +1,18 @@
 <library path="test_hardware_resources">
 
-  <class name="test_actuator_hardware" type="TestActuatorHardware" base_class_type="hardware_interface::ActuatorHardwareInterface">
+  <class name="test_actuator_hardware" type="TestActuatorHardware" base_class_type="hardware_interface::hardware_resources::ActuatorHardwareInterface">
     <description>
       Test Hardware Actuator
     </description>
   </class>
 
-  <class name="test_sensor_hardware" type="TestSensorHardware" base_class_type="hardware_interface::SensorHardwareInterface">
+  <class name="test_sensor_hardware" type="TestSensorHardware" base_class_type="hardware_interface::hardware_resources::SensorHardwareInterface">
     <description>
       Test Hardware Sensor
     </description>
   </class>
 
-  <class name="test_system_hardware" type="TestSystemHardware" base_class_type="hardware_interface::SystemHardwareInterface">
+  <class name="test_system_hardware" type="TestSystemHardware" base_class_type="hardware_interface::hardware_resources::SystemHardwareInterface">
     <description>
       Test Hardware System
     </description>

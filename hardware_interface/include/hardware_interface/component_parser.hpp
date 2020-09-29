@@ -20,7 +20,7 @@
 #include <vector>
 
 #include "hardware_interface/components/component_info.hpp"
-#include "hardware_interface/hardware_info.hpp"
+#include "hardware_interface/hardware_resources/hardware_info.hpp"
 #include "hardware_interface/visibility_control.h"
 
 namespace hardware_interface
@@ -34,7 +34,8 @@ namespace hardware_interface
   * \throws std::runtime_error if a robot attribute or tag is not found
   */
 HARDWARE_INTERFACE_PUBLIC
-std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & urdf);
+std::vector<hardware_resources::HardwareInfo>
+parse_control_resources_from_urdf(const std::string & urdf);
 
 }  // namespace hardware_interface
 #endif  // HARDWARE_INTERFACE__COMPONENT_PARSER_HPP_

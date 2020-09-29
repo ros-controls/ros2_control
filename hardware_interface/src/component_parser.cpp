@@ -19,7 +19,7 @@
 #include <vector>
 
 #include "hardware_interface/components/component_info.hpp"
-#include "hardware_interface/hardware_info.hpp"
+#include "hardware_interface/hardware_resources/hardware_info.hpp"
 #include "hardware_interface/component_parser.hpp"
 
 namespace
@@ -41,6 +41,8 @@ namespace hardware_interface
 
 namespace detail
 {
+using hardware_resources::HardwareInfo;
+using components::ComponentInfo;
 /**
  * \brief Gets value of the text between tags.
  *
@@ -158,9 +160,9 @@ std::vector<std::string> parse_interfaces_from_xml(
   * \return robot_control_components::ComponentInfo filled with information about component
   * \throws std::runtime_error if a component attribute or tag is not found
   */
-components::ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it)
+ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it)
 {
-  components::ComponentInfo component;
+  ComponentInfo component;
 
   // Find name, type and class of a component
   component.type = component_it->Name();
@@ -237,7 +239,8 @@ HardwareInfo parse_resource_from_xml(const tinyxml2::XMLElement * ros2_control_i
 
 }  // namespace detail
 
-std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & urdf)
+std::vector<hardware_resources::HardwareInfo>
+parse_control_resources_from_urdf(const std::string & urdf)
 {
   // Check if everything OK with URDF string
   if (urdf.empty()) {
@@ -263,7 +266,7 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
     throw std::runtime_error("no " + std::string(kROS2ControlTag) + " tag");
   }
 
-  std::vector<HardwareInfo> hardware_info;
+  std::vector<hardware_resources::HardwareInfo> hardware_info;
   while (ros2_control_it) {
     hardware_info.push_back(detail::parse_resource_from_xml(ros2_control_it));
     ros2_control_it = ros2_control_it->NextSiblingElement(kROS2ControlTag);

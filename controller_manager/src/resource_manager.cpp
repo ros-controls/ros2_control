@@ -17,12 +17,12 @@
 #include <vector>
 #include <utility>
 
-#include "hardware_interface/actuator_hardware.hpp"
 #include "hardware_interface/components/component_info.hpp"
 #include "hardware_interface/component_parser.hpp"
-#include "hardware_interface/hardware_info.hpp"
-#include "hardware_interface/sensor_hardware.hpp"
-#include "hardware_interface/system_hardware.hpp"
+#include "hardware_interface/hardware_resources/actuator_hardware.hpp"
+#include "hardware_interface/hardware_resources/hardware_info.hpp"
+#include "hardware_interface/hardware_resources/sensor_hardware.hpp"
+#include "hardware_interface/hardware_resources/system_hardware.hpp"
 
 #include "pluginlib/class_loader.hpp"
 
@@ -41,11 +41,11 @@ class ResourceStorage
     "hardware_interface::components::Sensor";
 
   static constexpr const char * actuator_interface_name =
-    "hardware_interface::ActuatorHardwareInterface";
+    "hardware_interface::hardware_resources::ActuatorHardwareInterface";
   static constexpr const char * sensor_interface_name =
-    "hardware_interface::SensorHardwareInterface";
+    "hardware_interface::hardware_resources::SensorHardwareInterface";
   static constexpr const char * system_interface_name =
-    "hardware_interface::SystemHardwareInterface";
+    "hardware_interface::hardware_resources::SystemHardwareInterface";
 
 public:
   ResourceStorage()
@@ -78,7 +78,7 @@ public:
 
   template<class HardwareT, class HardwareInterfaceT>
   void initialize_hardware(
-    const hardware_interface::HardwareInfo & hardware_info,
+    const hardware_interface::hardware_resources::HardwareInfo & hardware_info,
     pluginlib::ClassLoader<HardwareInterfaceT> & loader,
     std::vector<HardwareT> & container)
   {
@@ -92,24 +92,25 @@ public:
     container.back().configure(hardware_info);
   }
 
-  void initialize_actuator(const hardware_interface::HardwareInfo & hardware_info)
+  void initialize_actuator(
+    const hardware_interface::hardware_resources::HardwareInfo & hardware_info)
   {
-    initialize_hardware<hardware_interface::ActuatorHardware,
-      hardware_interface::ActuatorHardwareInterface>(
+    initialize_hardware<hardware_interface::hardware_resources::ActuatorHardware,
+      hardware_interface::hardware_resources::ActuatorHardwareInterface>(
       hardware_info, actuator_loader_, actuators_);
   }
 
-  void initialize_sensor(const hardware_interface::HardwareInfo & hardware_info)
+  void initialize_sensor(const hardware_interface::hardware_resources::HardwareInfo & hardware_info)
   {
-    initialize_hardware<hardware_interface::SensorHardware,
-      hardware_interface::SensorHardwareInterface>(
+    initialize_hardware<hardware_interface::hardware_resources::SensorHardware,
+      hardware_interface::hardware_resources::SensorHardwareInterface>(
       hardware_info, sensor_loader_, sensors_);
   }
 
-  void initialize_system(const hardware_interface::HardwareInfo & hardware_info)
+  void initialize_system(const hardware_interface::hardware_resources::HardwareInfo & hardware_info)
   {
-    initialize_hardware<hardware_interface::SystemHardware,
-      hardware_interface::SystemHardwareInterface>(
+    initialize_hardware<hardware_interface::hardware_resources::SystemHardware,
+      hardware_interface::hardware_resources::SystemHardwareInterface>(
       hardware_info, system_loader_, systems_);
   }
 
@@ -121,13 +122,16 @@ public:
   std::vector<std::unique_ptr<hardware_interface::components::Sensor>> sensor_components_;
 
   // hardware plugins
-  pluginlib::ClassLoader<hardware_interface::ActuatorHardwareInterface> actuator_loader_;
-  pluginlib::ClassLoader<hardware_interface::SensorHardwareInterface> sensor_loader_;
-  pluginlib::ClassLoader<hardware_interface::SystemHardwareInterface> system_loader_;
+  pluginlib::ClassLoader<hardware_interface::hardware_resources::ActuatorHardwareInterface>
+  actuator_loader_;
+  pluginlib::ClassLoader<hardware_interface::hardware_resources::SensorHardwareInterface>
+  sensor_loader_;
+  pluginlib::ClassLoader<hardware_interface::hardware_resources::SystemHardwareInterface>
+  system_loader_;
 
-  std::vector<hardware_interface::ActuatorHardware> actuators_;
-  std::vector<hardware_interface::SensorHardware> sensors_;
-  std::vector<hardware_interface::SystemHardware> systems_;
+  std::vector<hardware_interface::hardware_resources::ActuatorHardware> actuators_;
+  std::vector<hardware_interface::hardware_resources::SensorHardware> sensors_;
+  std::vector<hardware_interface::hardware_resources::SystemHardware> systems_;
 };
 
 ResourceManager::ResourceManager()
