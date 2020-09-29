@@ -89,9 +89,11 @@ ResourceManager::load_and_configure_resources_from_urdf(std::string urdf_string)
         return ret;
       }
       joints.push_back(joint);
-      joint_to_hardware_mapping_[joint_info.name] = hardware_info.name;
+      command_interfaces_[joint_info.name] = joint->get_command_interfaces();
+      state_interfaces_[joint_info.name] = joint->get_state_interfaces();
+      joint_components_[joint_info.name] = joint;
     }
-    joint_components_[hardware_info.name] = joints;
+    joint_components_for_hardware_[hardware_info.name] = joints;
 
     // TODO(anyone): add implementation for sensors
   }
@@ -110,7 +112,7 @@ return_type ResourceManager::start_all_resources()
       return ret;
     }
     // initial read of joints
-    ret = system->read_joints(joint_components_[system->get_name()]);
+    ret = system->read_joints(joint_components_for_hardware_[system->get_name()]);
     if (ret != return_type::OK) {
       return ret;
     }
@@ -139,7 +141,7 @@ return_type ResourceManager::read_all_resources()
 {
   return_type ret = return_type::OK;
   for (auto system : systems_) {
-    ret = system->read_joints(joint_components_[system->get_name()]);
+    ret = system->read_joints(joint_components_for_hardware_[system->get_name()]);
     if (ret != return_type::OK) {
       return ret;
     }
@@ -153,7 +155,7 @@ return_type ResourceManager::write_all_resources()
 {
   return_type ret = return_type::OK;
   for (auto system : systems_) {
-    ret = system->write_joints(joint_components_[system->get_name()]);
+    ret = system->write_joints(joint_components_for_hardware_[system->get_name()]);
     if (ret != return_type::OK) {
       return ret;
     }
@@ -162,5 +164,62 @@ return_type ResourceManager::write_all_resources()
   // TODO(anyone): add sensors and actuators
   return ret;
 }
+
+return_type ResourceManager::check_command_interfaces(
+  const std::string & joint_name, const std::vector<std::string> & interfaces) const
+{
+  // Check joint existance
+  if (command_interfaces_.find(joint_name) == command_interfaces_.end()) {
+    //TODO(all): Do we need to return dedicated code?
+    return return_type::INTERFACE_NOT_FOUND;
+  }
+
+  // Check interface existance
+  for (const auto & interface : interfaces) {
+    if (std::find(command_interfaces_.at(joint_name).cbegin(),
+                  command_interfaces_.at(joint_name).cend(),
+                  interface) == command_interfaces_.at(joint_name).cend())
+    {
+      return return_type::INTERFACE_NOT_PROVIDED;
+    }
+  }
+
+  return return_type::OK;
+}
+
+return_type ResourceManager::check_state_interfaces()
+{
+  //TODO(anyone): the same logic as for command interfaces
+  return return_type::ERROR;
+}
+
+return_type ResourceManager::claim_command_handle(
+  const std::string& joint_name, const std::vector<std::string>  & interfaces,
+  std::shared_ptr<hardware_interface::components::Joint>& command_handle)
+{
+  // Check joint existance
+  if (joint_components_.find(joint_name) == joint_components_.end()) {
+    //TODO(all): Do we need to return dedicated code?
+    return return_type::INTERFACE_NOT_FOUND;
+  }
+
+  // check for each interface if already claimed
+  for (const auto & interface : interfaces) {
+    if (std::find(claimed_command_interfaces_.at(joint_name).cbegin(),
+      claimed_command_interfaces_.at(joint_name).cend(),
+                  interface) != claimed_command_interfaces_.at(joint_name).cend())
+    {
+      return return_type::ALREADY_CLAIMED;
+    }
+  }
+
+  command_handle = joint_components_[joint_name];
+  //TODO(anyone) this could be done with `insert`...
+  for (const auto & interface : interfaces) {
+    claimed_command_interfaces_[joint_name].push_back(interface);
+  }
+  return return_type::OK;
+}
+
 
 }  //  namespace resource_manager

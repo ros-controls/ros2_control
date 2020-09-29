@@ -64,19 +64,44 @@ public:
   HARDWARE_INTERFACE_PUBLIC
   return_type write_all_resources();
 
+  HARDWARE_INTERFACE_PUBLIC
+  return_type check_command_interfaces(
+    const std::string & joint_name, const std::vector<std::string> & interfaces) const;
+
+  HARDWARE_INTERFACE_PUBLIC
+  return_type check_state_interfaces();
+
+  HARDWARE_INTERFACE_PUBLIC
+  return_type claim_command_handle(
+    const std::string & joint_name, const std::vector<std::string> & interfaces,
+    std::shared_ptr<hardware_interface::components::Joint> & command_handle);
+
 private:
   // TODO(all): make this unique?
   std::vector<std::shared_ptr<hardware_interface::ActuatorHardware>> actuators_;
   std::vector<std::shared_ptr<hardware_interface::SensorHardware>> sensors_;
   std::vector<std::shared_ptr<hardware_interface::SystemHardware>> systems_;
 
+  std::map<std::string, std::shared_ptr<
+      hardware_interface::components::Joint>> joint_components_;
   std::map<std::string, std::vector<std::shared_ptr<
-      hardware_interface::components::Joint>>> joint_components_;
+      hardware_interface::components::Joint>>> joint_components_for_hardware_;
+  std::map<std::string, std::shared_ptr<
+      hardware_interface::components::Sensor>> sensor_components_;
   std::map<std::string, std::vector<std::shared_ptr<
-      hardware_interface::components::Sensor>>> sensor_components_;
+      hardware_interface::components::Sensor>>> sensor_components_for_hardware_;
 
-  // This is used to resolve a joint name to hardware when requested by the controller manager
-  std::map<std::string, std::string> joint_to_hardware_mapping_;
+  /**
+   * Map of joints and their command interfaces
+   */
+  std::map<std::string, std::vector<std::string>> command_interfaces_;
+
+  std::map<std::string, std::vector<std::string>> claimed_command_interfaces_;
+
+  /**
+   * Map of joints and their state interfaces
+   */
+  std::map<std::string, std::vector<std::string>> state_interfaces_;
 
   std::shared_ptr<pluginlib::ClassLoader<
       hardware_interface::ActuatorHardwareInterface>> actuator_loader_;
