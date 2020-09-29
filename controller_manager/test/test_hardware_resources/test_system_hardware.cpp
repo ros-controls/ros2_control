@@ -17,53 +17,52 @@
 
 #include "./test_system_hardware.hpp"
 
-hardware_interface::return_type
-TestSystemHardware::configure(const hardware_interface::HardwareInfo & system_info)
-{
-  fprintf(stderr, "configuring plugin with name %s\n", system_info.name.c_str());
-  return hardware_interface::return_type::OK;
-}
+using hardware_interface::hardware_interface_status;
+using hardware_interface::return_type;
 
 hardware_interface::return_type
+TestSystemHardware::configure(const hardware_interface::HardwareInfo & /* system_info */)
+{
+  return return_type::OK;
+}
+
+return_type
 TestSystemHardware::start()
 {
-  return hardware_interface::return_type::OK;
+  return return_type::OK;
 }
 
-hardware_interface::return_type
+return_type
 TestSystemHardware::stop()
 {
-  return hardware_interface::return_type::OK;
+  return return_type::OK;
 }
 
-hardware_interface::hardware_interface_status
+hardware_interface_status
 TestSystemHardware::get_status() const
 {
-  return hardware_interface::hardware_interface_status::UNKNOWN;
+  return hardware_interface_status::UNKNOWN;
 }
 
-hardware_interface::return_type
+return_type
 TestSystemHardware::read_sensors(
-  std::vector<std::shared_ptr<hardware_interface::components::Sensor>> & sensors) const
+  std::vector<std::shared_ptr<hardware_interface::components::Sensor>> & /* sensors */) const
 {
-  (void) sensors;
-  return hardware_interface::return_type::OK;
+  return return_type::OK;
 }
 
-hardware_interface::return_type
+return_type
 TestSystemHardware::read_joints(
-  std::vector<std::shared_ptr<hardware_interface::components::Joint>> & joints) const
+  std::vector<std::shared_ptr<hardware_interface::components::Joint>> & /* joints */) const
 {
-  (void) joints;
-  return hardware_interface::return_type::OK;
+  return return_type::OK;
 }
 
-hardware_interface::return_type
+return_type
 TestSystemHardware::write_joints(
-  const std::vector<std::shared_ptr<hardware_interface::components::Joint>> & joints)
+  const std::vector<std::shared_ptr<hardware_interface::components::Joint>> & /* joints */)
 {
-  (void) joints;
-  return hardware_interface::return_type::OK;
+  return return_type::OK;
 }
 
 #include "pluginlib/class_list_macros.hpp"  // NOLINT

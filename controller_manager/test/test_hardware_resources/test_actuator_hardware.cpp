@@ -16,45 +16,45 @@
 
 #include "./test_actuator_hardware.hpp"
 
-hardware_interface::return_type
-TestActuatorHardware::configure(const hardware_interface::HardwareInfo & actuator_info)
+using hardware_interface::hardware_interface_status;
+using hardware_interface::return_type;
+
+return_type
+TestActuatorHardware::configure(const hardware_interface::HardwareInfo & /* actuator_info */)
 {
-  fprintf(stderr, "configuring plugin with name %s\n", actuator_info.name.c_str());
-  return hardware_interface::return_type::OK;
+  return return_type::OK;
 }
 
-hardware_interface::return_type
+return_type
 TestActuatorHardware::start()
 {
-  return hardware_interface::return_type::OK;
+  return return_type::OK;
 }
 
-hardware_interface::return_type
+return_type
 TestActuatorHardware::stop()
 {
-  return hardware_interface::return_type::OK;
+  return return_type::OK;
 }
 
-hardware_interface::hardware_interface_status
+hardware_interface_status
 TestActuatorHardware::get_status() const
 {
-  return hardware_interface::hardware_interface_status::UNKNOWN;
+  return hardware_interface_status::UNKNOWN;
 }
 
-hardware_interface::return_type
+return_type
 TestActuatorHardware::read_joint(
-  std::shared_ptr<hardware_interface::components::Joint> joint) const
+  std::shared_ptr<hardware_interface::components::Joint>/* joint */) const
 {
-  (void) joint;
-  return hardware_interface::return_type::OK;
+  return return_type::OK;
 }
 
-hardware_interface::return_type
+return_type
 TestActuatorHardware::write_joint(
-  const std::shared_ptr<hardware_interface::components::Joint> joint)
+  const std::shared_ptr<hardware_interface::components::Joint>/* joint */)
 {
-  (void) joint;
-  return hardware_interface::return_type::OK;
+  return return_type::OK;
 }
 
 #include "pluginlib/class_list_macros.hpp"  // NOLINT
