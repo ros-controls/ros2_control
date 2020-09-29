@@ -17,37 +17,38 @@
 
 #include "./test_sensor_hardware.hpp"
 
-hardware_interface::return_type
-TestSensorHardware::configure(const hardware_interface::HardwareInfo & sensor_info)
+using hardware_interface::hardware_interface_status;
+using hardware_interface::return_type;
+
+return_type
+TestSensorHardware::configure(const hardware_interface::HardwareInfo & /* sensor_info */)
 {
-  fprintf(stderr, "configuring plugin with name %s\n", sensor_info.name.c_str());
-  return hardware_interface::return_type::OK;
+  return return_type::OK;
 }
 
-hardware_interface::return_type
+return_type
 TestSensorHardware::start()
 {
-  return hardware_interface::return_type::OK;
+  return return_type::OK;
 }
 
-hardware_interface::return_type
+return_type
 TestSensorHardware::stop()
 {
-  return hardware_interface::return_type::OK;
+  return return_type::OK;
 }
 
-hardware_interface::hardware_interface_status
+hardware_interface_status
 TestSensorHardware::get_status() const
 {
-  return hardware_interface::hardware_interface_status::UNKNOWN;
+  return hardware_interface_status::UNKNOWN;
 }
 
-hardware_interface::return_type
+return_type
 TestSensorHardware::read_sensors(
-  const std::vector<std::shared_ptr<hardware_interface::components::Sensor>> & sensors) const
+  const std::vector<std::shared_ptr<hardware_interface::components::Sensor>> & /* sensors */) const
 {
-  (void) sensors;
-  return hardware_interface::return_type::OK;
+  return return_type::OK;
 }
 
 #include "pluginlib/class_list_macros.hpp"  // NOLINT

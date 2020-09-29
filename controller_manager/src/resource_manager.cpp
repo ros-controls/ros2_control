@@ -94,25 +94,22 @@ public:
 
   void initialize_actuator(const hardware_interface::HardwareInfo & hardware_info)
   {
-    using HardwareT = hardware_interface::ActuatorHardware;
-    using HardwareInterfaceT = hardware_interface::ActuatorHardwareInterface;
-    initialize_hardware<HardwareT, HardwareInterfaceT>(
+    initialize_hardware<hardware_interface::ActuatorHardware,
+      hardware_interface::ActuatorHardwareInterface>(
       hardware_info, actuator_loader_, actuators_);
   }
 
   void initialize_sensor(const hardware_interface::HardwareInfo & hardware_info)
   {
-    using HardwareT = hardware_interface::SensorHardware;
-    using HardwareInterfaceT = hardware_interface::SensorHardwareInterface;
-    initialize_hardware<HardwareT, HardwareInterfaceT>(
+    initialize_hardware<hardware_interface::SensorHardware,
+      hardware_interface::SensorHardwareInterface>(
       hardware_info, sensor_loader_, sensors_);
   }
 
   void initialize_system(const hardware_interface::HardwareInfo & hardware_info)
   {
-    using HardwareT = hardware_interface::SystemHardware;
-    using HardwareInterfaceT = hardware_interface::SystemHardwareInterface;
-    initialize_hardware<HardwareT, HardwareInterfaceT>(
+    initialize_hardware<hardware_interface::SystemHardware,
+      hardware_interface::SystemHardwareInterface>(
       hardware_info, system_loader_, systems_);
   }
 

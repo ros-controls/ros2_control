@@ -18,11 +18,13 @@
 
 #include "./test_sensor_component.hpp"
 
-hardware_interface::return_type
-TestSensorComponent::configure(const hardware_interface::components::ComponentInfo & sensor_info)
+using hardware_interface::return_type;
+
+return_type
+TestSensorComponent::configure(
+  const hardware_interface::components::ComponentInfo & /* sensor_info */)
 {
-  fprintf(stderr, "configuring plugin with name %s\n", sensor_info.name.c_str());
-  return hardware_interface::return_type::OK;
+  return return_type::OK;
 }
 
 std::vector<std::string>

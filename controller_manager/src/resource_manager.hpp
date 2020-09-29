@@ -32,7 +32,7 @@ public:
 
   ResourceManager(const ResourceManager &) = delete;
 
-  virtual ~ResourceManager();
+  ~ResourceManager();
 
   size_t joint_components_size() const;
 

@@ -18,11 +18,13 @@
 
 #include "./test_joint_component.hpp"
 
-hardware_interface::return_type
-TestJointComponent::configure(const hardware_interface::components::ComponentInfo & joint_info)
+using hardware_interface::return_type;
+
+return_type
+TestJointComponent::configure(
+  const hardware_interface::components::ComponentInfo & /* joint_info */)
 {
-  fprintf(stderr, "configuring plugin with name %s\n", joint_info.name.c_str());
-  return hardware_interface::return_type::OK;
+  return return_type::OK;
 }
 
 std::vector<std::string>
