@@ -41,11 +41,19 @@ bool controller_name_compare(const ControllerSpec & a, const std::string & name)
   return a.info.name == name;
 }
 
+rclcpp::NodeOptions get_cm_node_options()
+{
+  rclcpp::NodeOptions node_options;
+  // Required for getting types of controllers to be loaded via service call
+  node_options.allow_undeclared_parameters(true);
+  return node_options;
+}
+
 ControllerManager::ControllerManager(
   std::shared_ptr<hardware_interface::RobotHardware> hw,
   std::shared_ptr<rclcpp::Executor> executor,
   const std::string & manager_node_name)
-: rclcpp::Node(manager_node_name),
+: rclcpp::Node(manager_node_name, get_cm_node_options()),
   hw_(hw),
   executor_(executor),
   // add pluginlib loader by default
