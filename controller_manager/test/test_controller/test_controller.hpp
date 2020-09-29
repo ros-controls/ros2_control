@@ -1,4 +1,4 @@
-// Copyright 2017 Open Source Robotics Foundation, Inc.
+// Copyright 2020 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,6 +24,8 @@
 namespace test_controller
 {
 
+constexpr char TEST_CONTROLLER_NAME[] = "test_controller_name";
+constexpr char TEST_CONTROLLER_TYPE[] = "test_controller";
 class TestController : public controller_interface::ControllerInterface
 {
 public:
