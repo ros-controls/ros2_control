@@ -12,13 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "gmock/gmock.h"
+#include <gmock/gmock.h>
+#include <string>
+#include <vector>
 
 #include "multi_interface_joint/multi_interface_joint.hpp"
 
 #include "hardware_interface/components/component_info.hpp"
+#include "hardware_interface/types/hardware_interface_type_values.hpp"
 
-class TestMultiInterfaceJoint : public testing::Test
+using namespace ::testing;  // NOLINT
+
+class TestMultiInterfaceJoint : public Test
 {
 };
 
@@ -54,95 +59,144 @@ TEST_F(TestMultiInterfaceJoint, wrong_initialized)
   }
 }
 
-//  joint_info.name = "DummyMultiJoint";
-//  joint_info.parameters["max_position"] = "3.14";
-//  joint_info.parameters["min_position"] = "-3.14";
-//  joint_info.parameters["max_velocity"] = "1.14";
-//  joint_info.parameters["min_velocity"] = "-1.14";
-//
-//  EXPECT_EQ(joint.configure(joint_info), return_type::ERROR);
-//
-//  joint_info.command_interfaces.push_back(hardware_interface::HW_IF_POSITION);
-//  joint_info.command_interfaces.push_back(hardware_interface::HW_IF_VELOCITY);
-//
-//  EXPECT_EQ(joint.configure(joint_info), return_type::OK);
-//
-//  ASSERT_THAT(joint.get_command_interfaces(), SizeIs(2));
-//  EXPECT_EQ(joint.get_command_interfaces()[0], hardware_interface::HW_IF_POSITION);
-//  ASSERT_THAT(joint.get_state_interfaces(), SizeIs(0));
-//
-//  joint_info.state_interfaces.push_back(hardware_interface::HW_IF_POSITION);
-//  joint_info.state_interfaces.push_back(hardware_interface::HW_IF_VELOCITY);
-//  EXPECT_EQ(joint.configure(joint_info), return_type::OK);
-//  ASSERT_THAT(joint.get_state_interfaces(), SizeIs(2));
-//  EXPECT_EQ(joint.get_command_interfaces()[1], hardware_interface::HW_IF_VELOCITY);
-//
-//  // Command getters and setters
-//  std::vector<std::string> interfaces;
-//  std::vector<double> input;
-//  input.push_back(2.1);
-//  EXPECT_EQ(joint.set_command(input, interfaces), return_type::INTERFACE_NOT_PROVIDED);
-//  interfaces.push_back(hardware_interface::HW_IF_EFFORT);
-//  EXPECT_EQ(joint.set_command(input, interfaces), return_type::INTERFACE_NOT_FOUND);
-//  interfaces.push_back(hardware_interface::HW_IF_VELOCITY);
-//  EXPECT_EQ(joint.set_command(input, interfaces), return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL);
-//  interfaces.clear();
-//  interfaces.push_back(hardware_interface::HW_IF_VELOCITY);
-//  input.clear();
-//  input.push_back(1.02);
-//  EXPECT_EQ(joint.set_command(input, interfaces), return_type::OK);
-//
-//  std::vector<double> output;
-//  EXPECT_EQ(joint.get_command(output, interfaces), return_type::OK);
-//  ASSERT_THAT(output, SizeIs(1));
-//  EXPECT_EQ(output[0], 1.02);
-//  interfaces.clear();
-//  interfaces.push_back(hardware_interface::HW_IF_EFFORT);
-//  EXPECT_EQ(joint.get_command(output, interfaces), return_type::INTERFACE_NOT_FOUND);
-//
-//  input.clear();
-//  EXPECT_EQ(joint.set_command(input), return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL);
-//  input.push_back(5.77);
-//  EXPECT_EQ(joint.set_command(input), return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL);
-//  input.clear();
-//  input.push_back(1.2);
-//  input.push_back(0.4);
-//  EXPECT_EQ(joint.set_command(input), return_type::OK);
-//
-//  EXPECT_EQ(joint.get_command(output), return_type::OK);
-//  ASSERT_THAT(output, SizeIs(2));
-//  EXPECT_EQ(output[1], 0.4);
-//
-//  // State getters and setters
-//  interfaces.clear();
-//  input.clear();
-//  input.push_back(2.1);
-//  EXPECT_EQ(joint.set_state(input, interfaces), return_type::INTERFACE_NOT_PROVIDED);
-//  interfaces.push_back(hardware_interface::HW_IF_EFFORT);
-//  EXPECT_EQ(joint.set_state(input, interfaces), return_type::INTERFACE_NOT_FOUND);
-//  interfaces.push_back(hardware_interface::HW_IF_POSITION);
-//  EXPECT_EQ(joint.set_state(input, interfaces), return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL);
-//  interfaces.clear();
-//  interfaces.push_back(hardware_interface::HW_IF_POSITION);
-//  input.clear();
-//  input.push_back(1.2);
-//  EXPECT_EQ(joint.set_state(input, interfaces), return_type::OK);
-//
-//  output.clear();
-//  EXPECT_EQ(joint.get_state(output, interfaces), return_type::OK);
-//  ASSERT_THAT(output, SizeIs(1));
-//  EXPECT_EQ(output[0], 1.2);
-//  interfaces.clear();
-//  interfaces.push_back(hardware_interface::HW_IF_EFFORT);
-//  EXPECT_EQ(joint.get_state(output, interfaces), return_type::INTERFACE_NOT_FOUND);
-//
-//  input.clear();
-//  EXPECT_EQ(joint.set_state(input), return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL);
-//  input.push_back(2.1);
-//  input.push_back(1.02);
-//  EXPECT_EQ(joint.set_state(input), return_type::OK);
-//
-//  EXPECT_EQ(joint.get_state(output), return_type::OK);
-//  ASSERT_THAT(output, SizeIs(2));
-//  EXPECT_EQ(output[0], 2.1);
-//}
+TEST_F(TestMultiInterfaceJoint, correct_initialized)
+{
+  {
+    hardware_interface::components::ComponentInfo joint_info;
+    joint_info.command_interfaces.push_back("position");
+    joint_info.command_interfaces.push_back("velocity");
+    joint_info.state_interfaces.push_back("effort");
+    multi_interface_joint::MultiInterfaceJoint joint;
+    EXPECT_EQ(hardware_interface::return_type::OK, joint.configure(joint_info));
+    ASSERT_EQ(2u, joint.get_command_interfaces().size());
+    ASSERT_EQ(1u, joint.get_state_interfaces().size());
+    EXPECT_EQ("position", joint.get_command_interfaces()[0]);
+    EXPECT_EQ("velocity", joint.get_command_interfaces()[1]);
+    EXPECT_EQ("effort", joint.get_state_interfaces()[0]);
+  }
+}
+
+TEST_F(TestMultiInterfaceJoint, getters_and_setters)
+{
+  multi_interface_joint::MultiInterfaceJoint joint;
+
+  hardware_interface::components::ComponentInfo joint_info;
+  joint_info.command_interfaces.push_back(hardware_interface::HW_IF_POSITION);
+  joint_info.command_interfaces.push_back(hardware_interface::HW_IF_VELOCITY);
+  joint_info.state_interfaces.push_back(hardware_interface::HW_IF_POSITION);
+  joint_info.state_interfaces.push_back(hardware_interface::HW_IF_VELOCITY);
+  ASSERT_EQ(
+    hardware_interface::return_type::OK, joint.configure(joint_info));
+
+  // Command getters and setters
+  std::vector<std::string> interfaces;
+  std::vector<double> input;
+  input.push_back(2.1);
+  EXPECT_EQ(
+    hardware_interface::return_type::INTERFACE_NOT_PROVIDED,
+    joint.set_command(input, interfaces));
+
+  interfaces.push_back(hardware_interface::HW_IF_EFFORT);
+  EXPECT_EQ(
+    hardware_interface::return_type::INTERFACE_NOT_FOUND,
+    joint.set_command(input, interfaces));
+
+  interfaces.push_back(hardware_interface::HW_IF_VELOCITY);
+  EXPECT_EQ(
+    hardware_interface::return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL,
+    joint.set_command(input, interfaces));
+
+  interfaces.clear();
+  input.clear();
+  interfaces.push_back(hardware_interface::HW_IF_VELOCITY);
+  input.push_back(1.02);
+  EXPECT_EQ(
+    hardware_interface::return_type::OK,
+    joint.set_command(input, interfaces));
+
+  std::vector<double> output;
+  EXPECT_EQ(
+    hardware_interface::return_type::OK,
+    joint.get_command(output, interfaces));
+  ASSERT_EQ(1u, output.size());
+  EXPECT_EQ(1.02, output[0]);
+
+  interfaces.clear();
+  interfaces.push_back(hardware_interface::HW_IF_EFFORT);
+  EXPECT_EQ(
+    hardware_interface::return_type::INTERFACE_NOT_FOUND,
+    joint.get_command(output, interfaces));
+
+  input.clear();
+  EXPECT_EQ(
+    hardware_interface::return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL,
+    joint.set_command(input));
+  input.push_back(5.77);
+  EXPECT_EQ(
+    hardware_interface::return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL,
+    joint.set_command(input));
+
+  input.clear();
+  input.push_back(1.2);
+  input.push_back(0.4);
+  EXPECT_EQ(
+    hardware_interface::return_type::OK,
+    joint.set_command(input));
+  EXPECT_EQ(
+    hardware_interface::return_type::OK,
+    joint.get_command(output));
+  ASSERT_EQ(2u, output.size());
+  EXPECT_EQ(0.4, output[1]);
+
+  // State getters and setters
+  interfaces.clear();
+  input.clear();
+  input.push_back(2.1);
+  EXPECT_EQ(
+    hardware_interface::return_type::INTERFACE_NOT_PROVIDED,
+    joint.set_state(input, interfaces));
+  interfaces.push_back(hardware_interface::HW_IF_EFFORT);
+  EXPECT_EQ(
+    hardware_interface::return_type::INTERFACE_NOT_FOUND,
+    joint.set_state(input, interfaces));
+  interfaces.push_back(hardware_interface::HW_IF_POSITION);
+  EXPECT_EQ(
+    hardware_interface::return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL,
+    joint.set_state(input, interfaces));
+
+  interfaces.clear();
+  interfaces.push_back(hardware_interface::HW_IF_POSITION);
+  input.clear();
+  input.push_back(1.2);
+  EXPECT_EQ(
+    hardware_interface::return_type::OK,
+    joint.set_state(input, interfaces));
+
+  output.clear();
+  EXPECT_EQ(
+    hardware_interface::return_type::OK,
+    joint.get_state(output, interfaces));
+  ASSERT_THAT(1u, output.size());
+  EXPECT_EQ(1.2, output[0]);
+
+  interfaces.clear();
+  interfaces.push_back(hardware_interface::HW_IF_EFFORT);
+  EXPECT_EQ(
+    hardware_interface::return_type::INTERFACE_NOT_FOUND,
+    joint.get_state(output, interfaces));
+
+  input.clear();
+  EXPECT_EQ(
+    hardware_interface::return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL,
+    joint.set_state(input));
+  input.push_back(2.1);
+  input.push_back(1.02);
+  EXPECT_EQ(
+    hardware_interface::return_type::OK,
+    joint.set_state(input));
+  EXPECT_EQ(
+    hardware_interface::return_type::OK,
+    joint.get_state(output));
+  ASSERT_EQ(2u, output.size());
+  EXPECT_EQ(2.1, output[0]);
+}
