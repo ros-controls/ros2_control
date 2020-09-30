@@ -45,14 +45,8 @@ class DummyPositionJoint : public components::JointInterface
 public:
   return_type configure(const components::ComponentInfo & joint_info)
   {
-    info_ = joint_info;
-
-    if (info_.command_interfaces.size() > 1 || info_.state_interfaces.size() > 1) {
-      return return_type::ERROR;
-    }
-
-    max_position_ = stod(info_.parameters["max_position"]);
-    min_position_ = stod(info_.parameters["min_position"]);
+    max_position_ = stod(joint_info.parameters.at("max_position"));
+    min_position_ = stod(joint_info.parameters.at("min_position"));
     return return_type::OK;
   }
 
@@ -150,7 +144,6 @@ private:
   double command_ = 0.0;
   double state_ = 0.0;
 
-  components::ComponentInfo info_;
   double max_position_, min_position_;
 };
 
@@ -159,16 +152,10 @@ class DummyMultiJoint : public components::JointInterface
 public:
   return_type configure(const components::ComponentInfo & joint_info)
   {
-    info_ = joint_info;
-
-    if (info_.command_interfaces.size() < 2) {
-      return return_type::ERROR;
-    }
-
-    max_position_ = stod(info_.parameters["max_position"]);
-    min_position_ = stod(info_.parameters["min_position"]);
-    max_velocity_ = stod(info_.parameters["max_velocity"]);
-    min_velocity_ = stod(info_.parameters["min_velocity"]);
+    max_position_ = stod(joint_info.parameters.at("max_position"));
+    min_position_ = stod(joint_info.parameters.at("min_position"));
+    max_velocity_ = stod(joint_info.parameters.at("max_velocity"));
+    min_velocity_ = stod(joint_info.parameters.at("min_velocity"));
     return return_type::OK;
   }
 
@@ -284,7 +271,6 @@ private:
   double state_pos_ = 0.0;
   double state_vel_ = 0.0;
 
-  components::ComponentInfo info_;
   double max_position_, min_position_;
   double max_velocity_, min_velocity_;
 };
