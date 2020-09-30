@@ -18,6 +18,8 @@
 #include <string>
 #include <vector>
 
+#include "./component_lists_management.hpp"
+
 namespace multi_interface_joint
 {
 
@@ -35,7 +37,7 @@ hardware_interface::return_type MultiInterfaceJoint::configure(
   auto has_duplicates = [](const std::vector<std::string> interfaces) -> bool
     {
       std::set<std::string> set(interfaces.begin(), interfaces.end());
-      return set.size() == interfaces.size();
+      return set.size() != interfaces.size();
     };
 
   // fail if command interfaces has duplicates
@@ -71,62 +73,50 @@ hardware_interface::return_type MultiInterfaceJoint::get_command(
   std::vector<double> & command,
   const std::vector<std::string> & interfaces) const
 {
-  (void) command;
-  (void) interfaces;
-  return hardware_interface::return_type::OK;
+  return get_internal_values(command, interfaces, command_interfaces_, command_values_);
 }
 
 hardware_interface::return_type MultiInterfaceJoint::get_command(
   std::vector<double> & command) const
 {
-  (void) command;
-  return hardware_interface::return_type::OK;
+  return get_internal_values(command, command_values_);
 }
 
 hardware_interface::return_type MultiInterfaceJoint::set_command(
   const std::vector<double> & command,
   const std::vector<std::string> & interfaces)
 {
-  (void) command;
-  (void) interfaces;
-  return hardware_interface::return_type::OK;
+  return set_internal_values(command, interfaces, command_interfaces_, command_values_);
 }
 
 hardware_interface::return_type MultiInterfaceJoint::set_command(
   const std::vector<double> & command)
 {
-  (void) command;
-  return hardware_interface::return_type::OK;
+  return set_internal_values(command, command_values_);
 }
 
 hardware_interface::return_type MultiInterfaceJoint::get_state(
   std::vector<double> & state,
   const std::vector<std::string> & interfaces) const
 {
-  (void) state;
-  (void) interfaces;
-  return hardware_interface::return_type::OK;
+  return get_internal_values(state, interfaces, state_interfaces_, state_values_);
 }
 
 hardware_interface::return_type MultiInterfaceJoint::get_state(std::vector<double> & state) const
 {
-  (void) state;
-  return hardware_interface::return_type::OK;
+  return get_internal_values(state, state_values_);
 }
 
 hardware_interface::return_type MultiInterfaceJoint::set_state(
   const std::vector<double> & state,
   const std::vector<std::string> & interfaces)
 {
-  (void) state;
-  (void) interfaces;
-  return hardware_interface::return_type::OK;
+  return set_internal_values(state, interfaces, state_interfaces_, state_values_);
 }
 
 hardware_interface::return_type MultiInterfaceJoint::set_state(const std::vector<double> & state)
 {
-  (void) state;
-  return hardware_interface::return_type::OK;
+  return set_internal_values(state, state_values_);
 }
 
 }  // namespace multi_interface_joint
