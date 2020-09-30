@@ -71,13 +71,15 @@ public:
   ControllerLoaderMock()
   : controller_manager::ControllerLoaderInterface("controller_interface::MockControllerInterface")
   {}
-  MOCK_METHOD1(create, controller_interface::ControllerInterfaceSharedPtr(const std::string &));
-  MOCK_CONST_METHOD1(is_available, bool(const std::string &));
+  MOCK_METHOD(
+    controller_interface::ControllerInterfaceSharedPtr, create, (const std::string &),
+    (override));
+  MOCK_METHOD(bool, is_available, (const std::string &), (const, override));
   std::vector<std::string> get_declared_classes() const override
   {
     return {MOCK_TEST_CONTROLLER_NAME};
   }
-  MOCK_METHOD0(reload, void());
+  MOCK_METHOD(void, reload, (), (override));
 };
 
 #endif  // CONTROLLER_MANAGER_TEST_COMMON_HPP_

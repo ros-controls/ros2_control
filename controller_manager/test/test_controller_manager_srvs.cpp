@@ -32,7 +32,6 @@ using ::testing::Return;
 
 using namespace std::chrono_literals;
 
-
 class TestControllerManagerSrvs : public TestControllerManager
 {
 public:
@@ -137,7 +136,6 @@ TEST_F(TestControllerManagerSrvs, list_controller_types)
     ::testing::Contains("controller_interface::MockControllerInterface"));
 }
 
-
 TEST_F(TestControllerManagerSrvs, list_controllers_srv) {
   rclcpp::executors::SingleThreadedExecutor srv_executor;
   rclcpp::Node::SharedPtr srv_node = std::make_shared<rclcpp::Node>("srv_client");
@@ -176,7 +174,6 @@ TEST_F(TestControllerManagerSrvs, list_controllers_srv) {
     result->controller.size());
   ASSERT_EQ("active", result->controller[0].state);
 
-
   cm_->switch_controller(
     {}, {test_controller::TEST_CONTROLLER_NAME},
     controller_manager_msgs::srv::SwitchController::Request::STRICT, true,
@@ -207,7 +204,6 @@ TEST_F(TestControllerManagerSrvs, reload_controller_libraries_srv) {
   auto request =
     std::make_shared<controller_manager_msgs::srv::ReloadControllerLibraries::Request>();
 
-
   std::shared_ptr<ControllerLoaderMock> mock_loader(new ControllerLoaderMock);
 
   cm_->register_controller_loader(mock_loader);
@@ -218,7 +214,6 @@ TEST_F(TestControllerManagerSrvs, reload_controller_libraries_srv) {
   EXPECT_CALL(*mock_loader, reload).Times(1);
   auto result = call_service_and_wait(*client, request, srv_executor);
   ASSERT_TRUE(result->ok);
-
 
   // Add a controller, but stopped
   auto test_controller = cm_->load_controller(
@@ -257,7 +252,6 @@ TEST_F(TestControllerManagerSrvs, reload_controller_libraries_srv) {
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
     test_controller->get_lifecycle_node()->get_current_state().id());
 
-
   // Failed reload due to active controller
   request->force_kill = false;
   EXPECT_CALL(*mock_loader, reload).Times(0);
@@ -277,7 +271,6 @@ TEST_F(TestControllerManagerSrvs, reload_controller_libraries_srv) {
   EXPECT_CALL(*mock_loader, reload).Times(1);
   result = call_service_and_wait(*client, request, srv_executor, true);
   ASSERT_TRUE(result->ok);
-
 
   ASSERT_EQ(
     test_controller.use_count(),
@@ -319,7 +312,6 @@ TEST_F(TestControllerManagerSrvs, unload_controller_srv) {
   request->name = test_controller::TEST_CONTROLLER_NAME;
   auto result = call_service_and_wait(*client, request, srv_executor);
   ASSERT_FALSE(result->ok) << "Controller not loaded: " << request->name;
-
 
   auto test_controller = std::make_shared<test_controller::TestController>();
   auto abstract_test_controller = cm_->add_controller(
