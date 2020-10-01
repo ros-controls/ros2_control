@@ -160,8 +160,7 @@ ControllerManager::cleanup() const
 
 ControllerManagerNewWithManager::ControllerManagerNewWithManager(
   std::shared_ptr<resource_manager::ResourceManager> resource_manager,
-  std::shared_ptr<rclcpp::executor::Executor> executor,
-  const std::string & name)
+  std::shared_ptr<rclcpp::executor::Executor> executor)
 : resource_manager_(resource_manager),
   executor_(executor),
   // add pluginlib loader by default
@@ -174,8 +173,7 @@ ControllerManagerNewWithManager::load_controller(
   const std::string & controller_name,
   const std::string & controller_type)
 {
-  // TODO(anyone): move this to the serice call
-//   RCLCPP_INFO(get_logger(), "Loading controller '%s'\n", controller_name.c_str());
+  RCLCPP_INFO(rclcpp::get_logger("ControllerManager"), "Loading controller '%s'\n", controller_name.c_str());
 
   auto it = std::find_if(
     loaders_.cbegin(), loaders_.cend(),
@@ -187,7 +185,7 @@ ControllerManagerNewWithManager::load_controller(
     controller = (*it)->create_new_components(controller_type);
   } else {
     const std::string error_msg("Loader for controller '" + controller_name + "' not found\n");
-//     RCLCPP_ERROR(get_logger(), "%s", error_msg.c_str());
+    RCLCPP_ERROR(rclcpp::get_logger("ControllerManager"), "%s", error_msg.c_str());
     throw std::runtime_error(error_msg);
   }
 
@@ -204,6 +202,51 @@ ControllerManagerNewWithManager::add_controller_impl(
 
   loaded_controllers_.emplace_back(controller);
   return loaded_controllers_.back();
+}
+
+controller_interface::return_type
+ControllerManagerNewWithManager::update()
+{
+  auto ret = controller_interface::return_type::SUCCESS;
+  for (auto loaded_controller : loaded_controllers_) {
+    RCLCPP_INFO(rclcpp::get_logger("ControllerManager"), "Updating controllers..");
+    RCLCPP_INFO(rclcpp::get_logger("ControllerManager"), "Loaded controller state ist active: "
+     + loaded_controller->get_lifecycle_node()->get_current_state().label());
+    auto controller_ret = loaded_controller->update();
+    if (controller_ret != controller_interface::return_type::SUCCESS) {
+      ret = controller_ret;
+    }
+  }
+
+  return ret;
+}
+
+controller_interface::return_type
+ControllerManagerNewWithManager::configure() const
+{
+  auto ret = controller_interface::return_type::SUCCESS;
+  for (auto loaded_controller : loaded_controllers_) {
+    auto controller_state = loaded_controller->get_lifecycle_node()->configure();
+    if (controller_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
+      ret = controller_interface::return_type::ERROR;
+    }
+  }
+
+  return ret;
+}
+
+controller_interface::return_type
+ControllerManagerNewWithManager::activate() const
+{
+  auto ret = controller_interface::return_type::SUCCESS;
+  for (auto loaded_controller : loaded_controllers_) {
+    auto controller_state = loaded_controller->get_lifecycle_node()->activate();
+    if (controller_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE) {
+      ret = controller_interface::return_type::ERROR;
+    }
+  }
+
+  return ret;
 }
 
 }  // namespace controller_manager

@@ -27,8 +27,8 @@ int main(int argc, char ** argv)
       std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
   std::string manager_node_name = "ros2_control_node";
   rclcpp::NodeOptions options;
-  //   options.allow_undeclared_parameters(true);
-  //   options.automatically_declare_parameters_from_overrides(true);
+  options.allow_undeclared_parameters(true);
+  options.automatically_declare_parameters_from_overrides(true);
   rclcpp::spin(
     std::make_shared<control_manager::ROS2ControlManager>(executor, manager_node_name, options));
   rclcpp::shutdown();

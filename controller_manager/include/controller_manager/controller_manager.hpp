@@ -116,8 +116,7 @@ public:
   CONTROLLER_MANAGER_PUBLIC
   ControllerManagerNewWithManager(
     std::shared_ptr<resource_manager::ResourceManager> resource_manager,
-    std::shared_ptr<rclcpp::executor::Executor> executor,
-    const std::string & name = "controller_manager");
+    std::shared_ptr<rclcpp::executor::Executor> executor);
 
   CONTROLLER_MANAGER_PUBLIC
   virtual
@@ -146,6 +145,10 @@ public:
   CONTROLLER_MANAGER_PUBLIC
   controller_interface::return_type
   configure() const;
+
+  CONTROLLER_MANAGER_PUBLIC
+  controller_interface::return_type
+  activate() const;
 
 protected:
   CONTROLLER_MANAGER_PUBLIC

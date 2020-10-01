@@ -45,7 +45,7 @@ private:
   rclcpp::TimerBase::SharedPtr timer_;
 
   std::unique_ptr<controller_manager::ControllerManagerNewWithManager> controller_manager_;
-  resource_manager::ResourceManager resource_manager_;
+  std::shared_ptr<resource_manager::ResourceManager> resource_manager_;
 };
 
 }  // namespace control_manager
