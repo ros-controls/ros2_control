@@ -42,13 +42,13 @@ public:
     }
 
     if (info_.command_interfaces.size() == 1 &&
-      !info_.command_interfaces[0].compare(hardware_interface::HW_IF_POSITION))
+        info_.command_interfaces[0].compare(hardware_interface::HW_IF_POSITION))
     {
       return return_type::COMPONENT_WRONG_INTERFACE;
     }
 
-    if (info_.command_interfaces.size() == 1 &&
-      !info_.command_interfaces[0].compare(hardware_interface::HW_IF_POSITION))
+    if (info_.state_interfaces.size() == 1 &&
+        info_.state_interfaces[0].compare(hardware_interface::HW_IF_POSITION))
     {
       return return_type::COMPONENT_WRONG_INTERFACE;
     }
@@ -67,18 +67,16 @@ public:
       }
     }
 
-    auto it = info_.parameters.find("min");
-    if (it == info_.parameters.end()) {
+    if (info_.parameters.find("min") == info_.parameters.end()) {
       return return_type::COMPONENT_MISSING_PARAMETER;
     }
-    it = info_.parameters.find("max");
-    if (it == info_.parameters.end()) {
+    if (info_.parameters.find("max") == info_.parameters.end()) {
       return return_type::COMPONENT_MISSING_PARAMETER;
     }
     lower_limits_.resize(1);
-    lower_limits_.push_back(stod(info_.parameters["min"]));
+    lower_limits_[0] = stod(info_.parameters["min"]);
     upper_limits_.resize(1);
-    upper_limits_.push_back(stod(info_.parameters["max"]));
+    upper_limits_[0] = stod(info_.parameters["max"]);
 
     return return_type::OK;
   }
