@@ -51,7 +51,7 @@ rclcpp::NodeOptions get_cm_node_options()
 
 ControllerManager::ControllerManager(
   std::shared_ptr<hardware_interface::RobotHardware> hw,
-  std::shared_ptr<rclcpp::executor::Executor> executor,
+  std::shared_ptr<rclcpp::Executor> executor,
   const std::string & manager_node_name)
 : rclcpp::Node(manager_node_name, get_cm_node_options()),
   hw_(hw),
@@ -906,7 +906,7 @@ const
 
 ControllerManagerNewWithManager::ControllerManagerNewWithManager(
   std::shared_ptr<resource_manager::ResourceManager> resource_manager,
-  std::shared_ptr<rclcpp::executor::Executor> executor)
+  std::shared_ptr<rclcpp::Executor> executor)
 : resource_manager_(resource_manager),
   executor_(executor),
   // add pluginlib loader by default

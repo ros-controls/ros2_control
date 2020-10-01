@@ -31,7 +31,7 @@ class ROS2ControlManager : public rclcpp::Node
 public:
   CONTROLLER_MANAGER_PUBLIC
   explicit ROS2ControlManager(
-    std::shared_ptr<rclcpp::executor::Executor> executor,
+    std::shared_ptr<rclcpp::Executor> executor,
     const std::string & manager_node_name = "control_manager",
     rclcpp::NodeOptions options = rclcpp::NodeOptions()
   );
@@ -39,7 +39,7 @@ public:
   void loop();
 
 private:
-  std::shared_ptr<rclcpp::executor::Executor> executor_;
+  std::shared_ptr<rclcpp::Executor> executor_;
 
   std::shared_ptr<rclcpp::SyncParametersClient> parameters_client_;
   rclcpp::TimerBase::SharedPtr timer_;

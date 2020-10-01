@@ -83,6 +83,8 @@ ament_target_dependencies(resource_manager
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.
 target_compile_definitions(resource_manager PRIVATE "HARDWARE_INTERFACE_BUILDING_DLL")
+# prevent pluginlib from using boost
+target_compile_definitions(resource_manager PUBLIC "PLUGINLIB__DISABLE_BOOST_FUNCTIONS")
 
 install(
   DIRECTORY include/

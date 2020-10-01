@@ -23,7 +23,7 @@ int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
 
-  std::shared_ptr<rclcpp::executor::Executor> executor =
+  std::shared_ptr<rclcpp::Executor> executor =
       std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
   std::string manager_node_name = "ros2_control_node";
   rclcpp::NodeOptions options;

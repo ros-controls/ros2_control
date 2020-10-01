@@ -50,7 +50,7 @@ public:
   CONTROLLER_MANAGER_PUBLIC
   ControllerManager(
     std::shared_ptr<hardware_interface::RobotHardware> hw,
-    std::shared_ptr<rclcpp::executor::Executor> executor,
+    std::shared_ptr<rclcpp::Executor> executor,
     const std::string & name = "controller_manager");
 
   CONTROLLER_MANAGER_PUBLIC
@@ -165,7 +165,7 @@ private:
   std::vector<std::string> get_controller_names();
 
   std::shared_ptr<hardware_interface::RobotHardware> hw_;
-  std::shared_ptr<rclcpp::executor::Executor> executor_;
+  std::shared_ptr<rclcpp::Executor> executor_;
   std::vector<ControllerLoaderInterfaceSharedPtr> loaders_;
 
   /**
@@ -283,7 +283,7 @@ public:
   CONTROLLER_MANAGER_PUBLIC
   ControllerManagerNewWithManager(
     std::shared_ptr<resource_manager::ResourceManager> resource_manager,
-    std::shared_ptr<rclcpp::executor::Executor> executor);
+    std::shared_ptr<rclcpp::Executor> executor);
 
   CONTROLLER_MANAGER_PUBLIC
   virtual
@@ -326,7 +326,7 @@ protected:
 
 private:
   std::shared_ptr<resource_manager::ResourceManager> resource_manager_;
-  std::shared_ptr<rclcpp::executor::Executor> executor_;
+  std::shared_ptr<rclcpp::Executor> executor_;
   std::vector<ControllerLoaderInterfaceSharedPtr> loaders_;
   std::vector<controller_interface::ControllerInterfaceNewComponentsSharedPtr>
     loaded_controllers_;

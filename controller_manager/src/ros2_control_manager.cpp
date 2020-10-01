@@ -27,7 +27,7 @@ namespace control_manager
 {
 
   ROS2ControlManager::ROS2ControlManager(
-    std::shared_ptr<rclcpp::executor::Executor> executor,
+    std::shared_ptr<rclcpp::Executor> executor,
     const std::string & manager_node_name,
     rclcpp::NodeOptions options
   ) : Node(manager_node_name, options)
