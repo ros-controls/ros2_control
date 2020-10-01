@@ -17,6 +17,9 @@
 #include <memory>
 #include <string>
 
+//TODO(denis): remove this
+#include <iostream>
+
 namespace controller_interface
 {
 
@@ -61,6 +64,7 @@ ControllerInterfaceNewComponents::init(
   const std::string & controller_name)
 {
   resource_manager_ = resource_manager;
+  std::cout << "LifecycleNode before creating: " << controller_name << std::endl;
   lifecycle_node_ = std::make_shared<rclcpp_lifecycle::LifecycleNode>(controller_name);
 
   lifecycle_node_->register_on_configure(
