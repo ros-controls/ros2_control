@@ -1,4 +1,4 @@
-<package format="2">
+<package format="3">
   <name>joint_limits_interface</name>
   <version>0.16.0</version>
   <description>Interface for enforcing joint limits.</description>
