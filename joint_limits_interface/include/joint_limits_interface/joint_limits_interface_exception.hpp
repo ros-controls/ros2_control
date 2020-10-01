@@ -45,9 +45,7 @@ public:
   explicit JointLimitsInterfaceException(const std::string & message)
   : msg(message) {}
 
-  virtual ~JointLimitsInterfaceException() throw() {}
-
-  virtual const char * what() const throw()
+  const char * what() const noexcept override
   {
     return msg.c_str();
   }
