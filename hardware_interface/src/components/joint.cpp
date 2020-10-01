@@ -12,7 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "hardware_interface/components/joint.hpp"
@@ -23,6 +25,10 @@ namespace hardware_interface
 {
 namespace components
 {
+
+Joint::Joint(std::unique_ptr<JointInterface> impl)
+: impl_(std::move(impl))
+{}
 
 return_type Joint::configure(const ComponentInfo & joint_info)
 {

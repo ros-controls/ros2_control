@@ -113,9 +113,11 @@ if(BUILD_TESTING)
     test/test_hardware_resources/test_sensor_component.cpp
     test/test_hardware_resources/test_sensor_hardware.cpp
     test/test_hardware_resources/test_system_hardware.cpp)
+  target_include_directories(test_hardware_resources PRIVATE include)
   ament_target_dependencies(test_hardware_resources
     hardware_interface
-    pluginlib)
+    pluginlib
+  )
   install(TARGETS test_hardware_resources
     DESTINATION lib
   )

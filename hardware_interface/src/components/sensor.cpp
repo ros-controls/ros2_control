@@ -12,7 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "hardware_interface/components/sensor.hpp"
@@ -26,40 +28,40 @@ namespace hardware_interface
 namespace components
 {
 
-return_type Sensor::configure(const ComponentInfo & joint_info)
+Sensor::Sensor(std::unique_ptr<SensorInterface> impl)
+: impl_(std::move(impl))
+{}
+
+return_type Sensor::configure(const ComponentInfo & sensor_info)
 {
-  info_ = joint_info;
-  if (info_.state_interfaces.size() > 0) {
-    states_.resize(info_.state_interfaces.size());
-  }
-  return return_type::OK;
+  return impl_->configure(sensor_info);
 }
 
 std::vector<std::string> Sensor::get_state_interfaces() const
 {
-  return info_.state_interfaces;
+  return impl_->get_state_interfaces();
 }
 
 return_type Sensor::get_state(
   std::vector<double> & state, const std::vector<std::string> & interfaces) const
 {
-  return get_internal_values(state, interfaces, info_.state_interfaces, states_);
+  return impl_->get_state(state, interfaces);
 }
 
 return_type Sensor::get_state(std::vector<double> & state) const
 {
-  return get_internal_values(state, states_);
+  return impl_->get_state(state);
 }
 
 return_type Sensor::set_state(
   const std::vector<double> & state, const std::vector<std::string> & interfaces)
 {
-  return set_internal_values(state, interfaces, info_.state_interfaces, states_);
+  return impl_->set_state(state, interfaces);
 }
 
 return_type Sensor::set_state(const std::vector<double> & state)
 {
-  return set_internal_values(state, states_);
+  return impl_->set_state(state);
 }
 
 }  // namespace components

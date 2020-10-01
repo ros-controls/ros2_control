@@ -20,19 +20,42 @@
 
 using hardware_interface::return_type;
 
-return_type
-TestSensorComponent::configure(
+return_type TestSensorComponent::configure(
   const hardware_interface::components::ComponentInfo & /* sensor_info */)
 {
   return return_type::OK;
 }
 
-std::vector<std::string>
-TestSensorComponent::get_state_interfaces() const
+std::vector<std::string> TestSensorComponent::get_state_interfaces() const
 {
   return {"test_state_interface"};
 }
 
+return_type TestSensorComponent::get_state(
+  std::vector<double> & /* state */,
+  const std::vector<std::string> & /* interfaces */) const
+{
+  return return_type::OK;
+}
+
+return_type TestSensorComponent::get_state(
+  std::vector<double> & /* state */) const
+{
+  return return_type::OK;
+}
+
+return_type TestSensorComponent::set_state(
+  const std::vector<double> & /* state */,
+  const std::vector<std::string> & /* interfaces */)
+{
+  return return_type::OK;
+}
+
+return_type TestSensorComponent::set_state(
+  const std::vector<double> & /* state */)
+{
+  return return_type::OK;
+}
 #include "pluginlib/class_list_macros.hpp"  // NOLINT
 
-PLUGINLIB_EXPORT_CLASS(TestSensorComponent, hardware_interface::components::Sensor)
+PLUGINLIB_EXPORT_CLASS(TestSensorComponent, hardware_interface::components::SensorInterface)
