@@ -53,7 +53,7 @@ public:
   }
 
   std::shared_ptr<test_robot_hardware::TestRobotHardware> robot_;
-  std::shared_ptr<rclcpp::Executor> executor_;
+  std::shared_ptr<rclcpp::executor::Executor> executor_;
 };
 
 class ControllerMock : public controller_interface::ControllerInterface
@@ -74,6 +74,9 @@ public:
   MOCK_METHOD(
     controller_interface::ControllerInterfaceSharedPtr, create, (const std::string &),
     (override));
+  MOCK_METHOD(
+    controller_interface::ControllerInterfaceNewComponentsSharedPtr, create_new_components,
+    (const std::string &), (override));
   MOCK_METHOD(bool, is_available, (const std::string &), (const, override));
   std::vector<std::string> get_declared_classes() const override
   {

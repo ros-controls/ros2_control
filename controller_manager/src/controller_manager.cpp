@@ -902,6 +902,7 @@ const
     }
     std::this_thread::sleep_for(sleep_period);
   }
+}
 
 ControllerManagerNewWithManager::ControllerManagerNewWithManager(
   std::shared_ptr<resource_manager::ResourceManager> resource_manager,
