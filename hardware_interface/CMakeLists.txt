@@ -22,8 +22,6 @@ add_library(
   hardware_interface
   SHARED
   src/actuator_hardware.cpp
-  src/joint_command_handle.cpp
-  src/joint_state_handle.cpp
   src/operation_mode_handle.cpp
   src/robot_hardware.cpp
   src/sensor_hardware.cpp

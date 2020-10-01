@@ -14,6 +14,7 @@ find_package(ament_cmake)
 find_package(ament_cmake_core REQUIRED)
 find_package(ament_index_cpp REQUIRED)
 find_package(controller_interface REQUIRED)
+find_package(controller_manager_msgs REQUIRED)
 find_package(hardware_interface REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(rclcpp REQUIRED)
@@ -23,6 +24,7 @@ target_include_directories(controller_manager PRIVATE include)
 ament_target_dependencies(controller_manager
   ament_index_cpp
   controller_interface
+  controller_manager_msgs
   hardware_interface
   pluginlib
   rclcpp
@@ -84,7 +86,7 @@ if(BUILD_TESTING)
   target_link_libraries(test_controller controller_manager)
   target_compile_definitions(test_controller PRIVATE "CONTROLLER_MANAGER_BUILDING_DLL")
 
-  ament_add_gtest(
+  ament_add_gmock(
     test_controller_manager
     test/test_controller_manager.cpp
   )
@@ -107,6 +109,18 @@ if(BUILD_TESTING)
     test_robot_hardware
   )
 
+  ament_add_gmock(
+    test_controller_manager_srvs
+    test/test_controller_manager_srvs.cpp
+    APPEND_ENV AMENT_PREFIX_PATH=${ament_index_build_path}_$<CONFIG>
+  )
+  target_include_directories(test_controller_manager_srvs PRIVATE include)
+  target_link_libraries(test_controller_manager_srvs controller_manager test_controller)
+  ament_target_dependencies(
+    test_controller_manager_srvs
+    test_robot_hardware
+  )
+
   pluginlib_export_plugin_description_file(controller_interface test/test_controller.xml)
 
   install(TARGETS test_controller
@@ -123,6 +137,7 @@ ament_export_include_directories(
 )
 ament_export_dependencies(
   controller_interface
+  controller_manager_msgs
   hardware_interface
   pluginlib
   rclcpp

@@ -16,15 +16,15 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 namespace controller_manager
 {
 
 ControllerLoaderPluginlib::ControllerLoaderPluginlib()
-: ControllerLoaderInterface(),
-  loader_(std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
-      "controller_interface", "controller_interface::ControllerInterface"))
+: ControllerLoaderInterface("controller_interface::ControllerInterface")
 {
+  reload();
 }
 
 controller_interface::ControllerInterfaceSharedPtr ControllerLoaderPluginlib::create(
@@ -45,9 +45,17 @@ bool ControllerLoaderPluginlib::is_available(const std::string & controller_type
 {
   return loader_->isClassAvailable(controller_type);
 }
+  
+std::vector<std::string> ControllerLoaderPluginlib::get_declared_classes() const
+{
+  return loader_->getDeclaredClasses();
+}
 
-
-
+void ControllerLoaderPluginlib::reload()
+{
+  loader_ = std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
+    "controller_interface", "controller_interface::ControllerInterface");
+}
 
 ControllerLoaderPluginlibNewComponents::ControllerLoaderPluginlibNewComponents()
 : ControllerLoaderInterface(),
@@ -76,6 +84,5 @@ ControllerLoaderPluginlibNewComponents::create_new_components(
 {
   return loader_->createSharedInstance(controller_type);
 }
-
 
 }  // namespace controller_manager

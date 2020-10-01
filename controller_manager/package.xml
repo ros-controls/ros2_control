@@ -11,6 +11,7 @@
 
   <depend>ament_index_cpp</depend>
   <depend>controller_interface</depend>
+  <depend>controller_manager_msgs</depend>
   <depend>hardware_interface</depend>
   <depend>pluginlib</depend>
   <depend>rclcpp</depend>

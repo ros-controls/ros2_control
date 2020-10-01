@@ -39,83 +39,39 @@ constexpr const auto kStateInterfaceTypeTag = "stateInterfaceType";
 namespace hardware_interface
 {
 
-std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & urdf)
+namespace detail
 {
-  // Check if everything OK with URDF string
-  if (urdf.empty()) {
-    throw std::runtime_error("empty URDF passed to robot");
+/**
+ * \brief Gets value of the text between tags.
+ *
+ * \param element_it XMLElement iterator to search for the text.
+ * \param tag_name parent tag name where text is searched for (used for error output)
+ * \return text of for the tag
+ * \throws std::runtime_error if text is not found
+ */
+std::string get_text_for_element(
+  const tinyxml2::XMLElement * element_it, const std::string & tag_name)
+{
+  const auto get_text_output = element_it->GetText();
+  if (!get_text_output) {
+    throw std::runtime_error("text not specified in the " + tag_name + " tag");
   }
-  tinyxml2::XMLDocument doc;
-  if (!doc.Parse(urdf.c_str()) && doc.Error()) {
-    throw std::runtime_error("invalid URDF passed in to robot parser");
-  }
-  if (doc.Error()) {
-    throw std::runtime_error("invalid URDF passed in to robot parser");
-  }
-
-  // Find robot tag
-  const tinyxml2::XMLElement * robot_it = doc.RootElement();
-
-  if (std::string(kRobotTag).compare(robot_it->Name())) {
-    throw std::runtime_error("the robot tag is not root element in URDF");
-  }
-
-  const tinyxml2::XMLElement * ros2_control_it = robot_it->FirstChildElement(kROS2ControlTag);
-  if (!ros2_control_it) {
-    throw std::runtime_error("no " + std::string(kROS2ControlTag) + " tag");
-  }
-
-  std::vector<HardwareInfo> hardware_info;
-  while (ros2_control_it) {
-    hardware_info.push_back(parse_resource_from_xml(ros2_control_it));
-    ros2_control_it = ros2_control_it->NextSiblingElement(kROS2ControlTag);
-  }
-
-  return hardware_info;
+  return get_text_output;
 }
 
-HardwareInfo parse_resource_from_xml(const tinyxml2::XMLElement * ros2_control_it)
-{
-  HardwareInfo hardware;
-  hardware.name = get_attribute_value(ros2_control_it, "name", kROS2ControlTag);
-  hardware.type = get_attribute_value(ros2_control_it, "type", kROS2ControlTag);
-
-  // Parse everything under ros2_control tag
-  hardware.hardware_class_type = "";
-  const auto * ros2_control_child_it = ros2_control_it->FirstChildElement();
-  while (ros2_control_child_it) {
-    if (!std::string(kHardwareTag).compare(ros2_control_child_it->Name())) {
-      const auto * type_it = ros2_control_child_it->FirstChildElement(kClassTypeTag);
-      hardware.hardware_class_type = get_text_for_element(
-        type_it, std::string("hardware ") + kClassTypeTag);
-      const auto * params_it = ros2_control_child_it->FirstChildElement(kParamTag);
-      if (params_it) {
-        hardware.hardware_parameters = parse_parameters_from_xml(params_it);
-      }
-    } else if (!std::string(kJointTag).compare(ros2_control_child_it->Name())) {
-      hardware.joints.push_back(parse_component_from_xml(ros2_control_child_it) );
-    } else if (!std::string(kSensorTag).compare(ros2_control_child_it->Name())) {
-      hardware.sensors.push_back(parse_component_from_xml(ros2_control_child_it) );
-    } else if (!std::string(kTransmissionTag).compare(ros2_control_child_it->Name())) {
-      hardware.transmissions.push_back(parse_component_from_xml(ros2_control_child_it) );
-    } else {
-      throw std::runtime_error("invalid tag name " + std::string(ros2_control_child_it->Name()));
-    }
-    ros2_control_child_it = ros2_control_child_it->NextSiblingElement();
-  }
-
-  return hardware;
-}
-
+/**
+ * \brief Gets value of the attribute on an XMLelement.
+ * If attribute is not found throws an error.
+ *
+ * \param element_it XMLElement iterator to search for the attribute
+ * \param attribute_name atribute name to serach for and return value
+ * \param tag_name parent tag name where attribute is searched for (used for error output)
+ * \return attribute value
+ * \throws std::runtime_error if attribute is not found
+ */
 std::string get_attribute_value(
-  const tinyxml2::XMLElement * element_it, const char * attribute_name,
-  const char * tag_name)
-{
-  return get_attribute_value(element_it, attribute_name, std::string(tag_name));
-}
-
-std::string get_attribute_value(
-  const tinyxml2::XMLElement * element_it, const char * attribute_name,
+  const tinyxml2::XMLElement * element_it,
+  const char * attribute_name,
   std::string tag_name)
 {
   const tinyxml2::XMLAttribute * attr;
@@ -127,16 +83,81 @@ std::string get_attribute_value(
   return element_it->Attribute(attribute_name);
 }
 
-std::string get_text_for_element(
-  const tinyxml2::XMLElement * element_it, const std::string & tag_name)
+/**
+ * \brief Gets value of the attribute on an XMLelement.
+ * If attribute is not found throws an error.
+ *
+ * \param element_it XMLElement iterator to search for the attribute
+ * \param attribute_name atribute name to serach for and return value
+ * \param tag_name parent tag name where attribute is searched for (used for error output)
+ * \return attribute value
+ * \throws std::runtime_error if attribute is not found
+ */
+std::string get_attribute_value(
+  const tinyxml2::XMLElement * element_it,
+  const char * attribute_name,
+  const char * tag_name)
 {
-  const auto get_text_output = element_it->GetText();
-  if (!get_text_output) {
-    throw std::runtime_error("text not specified in the " + tag_name + " tag");
-  }
-  return get_text_output;
+  return get_attribute_value(element_it, attribute_name, std::string(tag_name));
 }
 
+/**
+ * \brief Search XML snippet from URDF for parameters.
+ *
+ * \param params_it pointer to the iterator where parameters info should be found
+ * \return std::map< std::__cxx11::string, std::__cxx11::string > key-value map with parameters
+ * \throws std::runtime_error if a component attribute or tag is not found
+ */
+std::unordered_map<std::string, std::string> parse_parameters_from_xml(
+  const tinyxml2::XMLElement * params_it)
+{
+  std::unordered_map<std::string, std::string> parameters;
+  const tinyxml2::XMLAttribute * attr;
+
+  while (params_it) {
+    // Fill the map with parameters
+    attr = params_it->FindAttribute("name");
+    if (!attr) {
+      throw std::runtime_error("no parameter name attribute set in param tag");
+    }
+    const std::string parameter_name = params_it->Attribute("name");
+    const std::string parameter_value = get_text_for_element(params_it, parameter_name);
+    parameters[parameter_name] = parameter_value;
+
+    params_it = params_it->NextSiblingElement(kParamTag);
+  }
+  return parameters;
+}
+
+/**
+ * \brief Search XML snippet for definition of interfaceTypes.
+ *
+ * \param interfaces_it pointer to the interator over interfaces
+ * \param interfaceTag interface type tag (command or state)
+ * \return std::vector< std::__cxx11::string > list of interface types
+ * \throws std::runtime_error if the interfaceType text not set in a tag
+ */
+std::vector<std::string> parse_interfaces_from_xml(
+  const tinyxml2::XMLElement * interfaces_it, const char * interfaceTag)
+{
+  std::vector<std::string> interfaces;
+
+  while (interfaces_it) {
+    const std::string interface_type = get_text_for_element(
+      interfaces_it, std::string(interfaceTag) + " type ");
+    interfaces.push_back(interface_type);
+    interfaces_it = interfaces_it->NextSiblingElement(interfaceTag);
+  }
+  return interfaces;
+}
+
+/**
+  * \brief Search XML snippet from URDF for information about a control component.
+  *
+  * \param component_it pointer to the iterator where component info should be found
+  * \return robot_control_components::ComponentInfo filled with information about component
+  * \throws std::runtime_error if a component attribute or tag is not found
+  */
 components::ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it)
 {
   components::ComponentInfo component;
@@ -174,39 +195,81 @@ components::ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * 
   return component;
 }
 
-std::vector<std::string> parse_interfaces_from_xml(
-  const tinyxml2::XMLElement * interfaces_it, const char * interfaceTag)
+/**
+ * \brief Parse a control resource from an "ros2_control" tag.
+ *
+ * \param ros2_control_it pointer to ros2_control element with informtions about resource.
+ * \return robot_control_components::ComponentInfo filled with information about the robot
+ * \throws std::runtime_error if a attributes or tag are not found
+ */
+HardwareInfo parse_resource_from_xml(const tinyxml2::XMLElement * ros2_control_it)
 {
-  std::vector<std::string> interfaces;
+  HardwareInfo hardware;
+  hardware.name = get_attribute_value(ros2_control_it, "name", kROS2ControlTag);
+  hardware.type = get_attribute_value(ros2_control_it, "type", kROS2ControlTag);
 
-  while (interfaces_it) {
-    const std::string interface_type = get_text_for_element(
-      interfaces_it, std::string(interfaceTag) + " type ");
-    interfaces.push_back(interface_type);
-    interfaces_it = interfaces_it->NextSiblingElement(interfaceTag);
+  // Parse everything under ros2_control tag
+  hardware.hardware_class_type = "";
+  const auto * ros2_control_child_it = ros2_control_it->FirstChildElement();
+  while (ros2_control_child_it) {
+    if (!std::string(kHardwareTag).compare(ros2_control_child_it->Name())) {
+      const auto * type_it = ros2_control_child_it->FirstChildElement(kClassTypeTag);
+      hardware.hardware_class_type = get_text_for_element(
+        type_it, std::string("hardware ") + kClassTypeTag);
+      const auto * params_it = ros2_control_child_it->FirstChildElement(kParamTag);
+      if (params_it) {
+        hardware.hardware_parameters = parse_parameters_from_xml(params_it);
+      }
+    } else if (!std::string(kJointTag).compare(ros2_control_child_it->Name())) {
+      hardware.joints.push_back(parse_component_from_xml(ros2_control_child_it) );
+    } else if (!std::string(kSensorTag).compare(ros2_control_child_it->Name())) {
+      hardware.sensors.push_back(parse_component_from_xml(ros2_control_child_it) );
+    } else if (!std::string(kTransmissionTag).compare(ros2_control_child_it->Name())) {
+      hardware.transmissions.push_back(parse_component_from_xml(ros2_control_child_it) );
+    } else {
+      throw std::runtime_error("invalid tag name " + std::string(ros2_control_child_it->Name()));
+    }
+    ros2_control_child_it = ros2_control_child_it->NextSiblingElement();
   }
-  return interfaces;
+
+  return hardware;
 }
 
-std::unordered_map<std::string, std::string> parse_parameters_from_xml(
-  const tinyxml2::XMLElement * params_it)
+}  // namespace detail
+
+std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & urdf)
 {
-  std::unordered_map<std::string, std::string> parameters;
-  const tinyxml2::XMLAttribute * attr;
-
-  while (params_it) {
-    // Fill the map with parameters
-    attr = params_it->FindAttribute("name");
-    if (!attr) {
-      throw std::runtime_error("no parameter name attribute set in param tag");
-    }
-    const std::string parameter_name = params_it->Attribute("name");
-    const std::string parameter_value = get_text_for_element(params_it, parameter_name);
-    parameters[parameter_name] = parameter_value;
-
-    params_it = params_it->NextSiblingElement(kParamTag);
+  // Check if everything OK with URDF string
+  if (urdf.empty()) {
+    throw std::runtime_error("empty URDF passed to robot");
   }
-  return parameters;
+  tinyxml2::XMLDocument doc;
+  if (!doc.Parse(urdf.c_str()) && doc.Error()) {
+    throw std::runtime_error("invalid URDF passed in to robot parser");
+  }
+  if (doc.Error()) {
+    throw std::runtime_error("invalid URDF passed in to robot parser");
+  }
+
+  // Find robot tag
+  const tinyxml2::XMLElement * robot_it = doc.RootElement();
+
+  if (std::string(kRobotTag).compare(robot_it->Name())) {
+    throw std::runtime_error("the robot tag is not root element in URDF");
+  }
+
+  const tinyxml2::XMLElement * ros2_control_it = robot_it->FirstChildElement(kROS2ControlTag);
+  if (!ros2_control_it) {
+    throw std::runtime_error("no " + std::string(kROS2ControlTag) + " tag");
+  }
+
+  std::vector<HardwareInfo> hardware_info;
+  while (ros2_control_it) {
+    hardware_info.push_back(detail::parse_resource_from_xml(ros2_control_it));
+    ros2_control_it = ros2_control_it->NextSiblingElement(kROS2ControlTag);
+  }
+
+  return hardware_info;
 }
 
 }  // namespace hardware_interface

@@ -17,6 +17,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "controller_interface/controller_interface.hpp"
 
@@ -29,7 +30,8 @@ class ControllerLoaderInterface
 {
 public:
   CONTROLLER_MANAGER_PUBLIC
-  ControllerLoaderInterface() = default;
+  explicit ControllerLoaderInterface(const std::string & name)
+  : name_(name) {}
 
   CONTROLLER_MANAGER_PUBLIC
   virtual ~ControllerLoaderInterface() = default;
@@ -44,6 +46,18 @@ public:
 
   CONTROLLER_MANAGER_PUBLIC
   virtual bool is_available(const std::string & controller_type) const = 0;
+
+  CONTROLLER_MANAGER_PUBLIC
+  const std::string & get_name() const {return name_;}
+
+  CONTROLLER_MANAGER_PUBLIC
+  virtual std::vector<std::string> get_declared_classes() const = 0;
+
+  CONTROLLER_MANAGER_PUBLIC
+  virtual void reload() = 0;
+
+private:
+  const std::string name_;
 };
 
 using ControllerLoaderInterfaceSharedPtr = std::shared_ptr<ControllerLoaderInterface>;

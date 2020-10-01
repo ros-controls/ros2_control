@@ -24,8 +24,6 @@
 
 namespace
 {
-constexpr auto kJointStateLoggerName = "joint state handle";
-constexpr auto kJointCommandLoggerName = "joint cmd handle";
 constexpr auto kOperationModeLoggerName = "joint operation mode handle";
 constexpr auto kActuatorLoggerName = "actuator handle";
 constexpr auto kJointLoggerName = "joint handle";
@@ -73,24 +71,6 @@ register_handle(std::vector<T *> & registered_handles, T * handle, const std::st
   }
   registered_handles.push_back(handle);
   return return_type::OK;
-}
-
-return_type
-RobotHardware::register_joint_state_handle(const JointStateHandle * joint_handle)
-{
-  return register_handle<const JointStateHandle>(
-    registered_joint_state_handles_,
-    joint_handle,
-    kJointStateLoggerName);
-}
-
-return_type
-RobotHardware::register_joint_command_handle(JointCommandHandle * joint_handle)
-{
-  return register_handle<JointCommandHandle>(
-    registered_joint_command_handles_,
-    joint_handle,
-    kJointCommandLoggerName);
 }
 
 return_type
@@ -143,30 +123,6 @@ get_handle(
 }
 
 return_type
-RobotHardware::get_joint_state_handle(
-  const std::string & name, const JointStateHandle ** joint_state_handle)
-{
-  THROW_ON_NOT_NULLPTR(*joint_state_handle)
-  return get_handle<const JointStateHandle>(
-    registered_joint_state_handles_,
-    name,
-    kJointStateLoggerName,
-    joint_state_handle);
-}
-
-return_type
-RobotHardware::get_joint_command_handle(
-  const std::string & name, JointCommandHandle ** joint_command_handle)
-{
-  THROW_ON_NOT_NULLPTR(*joint_command_handle)
-  return get_handle<JointCommandHandle>(
-    registered_joint_command_handles_,
-    name,
-    kJointCommandLoggerName,
-    joint_command_handle);
-}
-
-return_type
 RobotHardware::get_operation_mode_handle(
   const std::string & name, OperationModeHandle ** operation_mode_handle)
 {
@@ -190,30 +146,10 @@ get_registered_names(std::vector<T *> & registered_handles)
   return names;
 }
 
-/*
-std::vector<std::string>
-RobotHardware::get_registered_joint_names()
-{
-  return get_registered_names<const JointStateHandle>(registered_joint_state_handles_);
-}
-*/
-
 std::vector<std::string>
 RobotHardware::get_registered_write_op_names()
 {
   return get_registered_names<OperationModeHandle>(registered_operation_mode_handles_);
-}
-
-std::vector<const JointStateHandle *>
-RobotHardware::get_registered_joint_state_handles()
-{
-  return registered_joint_state_handles_;
-}
-
-std::vector<JointCommandHandle *>
-RobotHardware::get_registered_joint_command_handles()
-{
-  return registered_joint_command_handles_;
 }
 
 std::vector<OperationModeHandle *>
