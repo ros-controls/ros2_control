@@ -15,6 +15,7 @@
 #ifndef HARDWARE_INTERFACE__COMPONENTS__JOINT_HPP_
 #define HARDWARE_INTERFACE__COMPONENTS__JOINT_HPP_
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -31,14 +32,12 @@ namespace components
 class Joint final
 {
 public:
-  HARDWARE_INTERFACE_PUBLIC
   Joint() = default;
 
   explicit Joint(Joint && other) = default;
 
   explicit Joint(std::unique_ptr<JointInterface> impl);
 
-  HARDWARE_INTERFACE_PUBLIC
   ~Joint() = default;
 
   HARDWARE_INTERFACE_PUBLIC

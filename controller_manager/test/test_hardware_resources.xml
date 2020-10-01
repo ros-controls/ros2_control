@@ -18,13 +18,13 @@
     </description>
   </class>
 
-  <class name="test_joint_component" type="TestJointComponent" base_class_type="hardware_interface::components::Joint">
+  <class name="test_joint_component" type="TestJointComponent" base_class_type="hardware_interface::components::JointInterface">
     <description>
       Test Joint Component
     </description>
   </class>
 
-  <class name="test_sensor_component" type="TestSensorComponent" base_class_type="hardware_interface::components::Sensor">
+  <class name="test_sensor_component" type="TestSensorComponent" base_class_type="hardware_interface::components::SensorInterface">
     <description>
       Test Sensor Component
     </description>

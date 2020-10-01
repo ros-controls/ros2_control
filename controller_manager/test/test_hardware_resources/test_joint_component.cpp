@@ -20,25 +20,74 @@
 
 using hardware_interface::return_type;
 
-return_type
-TestJointComponent::configure(
+return_type TestJointComponent::configure(
   const hardware_interface::components::ComponentInfo & /* joint_info */)
 {
   return return_type::OK;
 }
 
-std::vector<std::string>
-TestJointComponent::get_command_interfaces() const
+std::vector<std::string> TestJointComponent::get_command_interfaces() const
 {
   return {"test_command_interface"};
 }
 
-std::vector<std::string>
-TestJointComponent::get_state_interfaces() const
+std::vector<std::string> TestJointComponent::get_state_interfaces() const
 {
   return {"test_state_interface"};
 }
 
+return_type TestJointComponent::get_command(
+  std::vector<double> & /*command */,
+  const std::vector<std::string> & /* interfaces */) const
+{
+  return return_type::OK;
+}
+
+return_type TestJointComponent::get_command(
+  std::vector<double> & /* command */) const
+{
+  return return_type::OK;
+}
+
+return_type TestJointComponent::set_command(
+  const std::vector<double> & /* command */,
+  const std::vector<std::string> & /* interfaces */)
+{
+  return return_type::OK;
+}
+
+return_type TestJointComponent::set_command(
+  const std::vector<double> & /* command*/)
+{
+  return return_type::OK;
+}
+
+return_type TestJointComponent::get_state(
+  std::vector<double> & /* state */,
+  const std::vector<std::string> & /* interfaces */) const
+{
+  return return_type::OK;
+}
+
+return_type TestJointComponent::get_state(
+  std::vector<double> & /* state */) const
+{
+  return return_type::OK;
+}
+
+return_type TestJointComponent::set_state(
+  const std::vector<double> & /* state */,
+  const std::vector<std::string> & /* interfaces */)
+{
+  return return_type::OK;
+}
+
+return_type TestJointComponent::set_state(
+  const std::vector<double> & /* state */)
+{
+  return return_type::OK;
+}
+
 #include "pluginlib/class_list_macros.hpp"  // NOLINT
 
-PLUGINLIB_EXPORT_CLASS(TestJointComponent, hardware_interface::components::Joint)
+PLUGINLIB_EXPORT_CLASS(TestJointComponent, hardware_interface::components::JointInterface)

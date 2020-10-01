@@ -19,17 +19,58 @@
 #include <string>
 #include <vector>
 
-#include "hardware_interface/components/joint.hpp"
+#include "controller_manager/visibility_control.h"
 
-class TestJointComponent : public hardware_interface::components::Joint
+#include "hardware_interface/components/joint_interface.hpp"
+
+class TestJointComponent : public hardware_interface::components::JointInterface
 {
 public:
-  hardware_interface::return_type
-  configure(const hardware_interface::components::ComponentInfo & joint_info) override;
+  TestJointComponent() = default;
 
+  virtual ~TestJointComponent() = default;
+
+  CONTROLLER_MANAGER_PUBLIC
+  hardware_interface::return_type configure(
+    const hardware_interface::components::ComponentInfo & joint_info) override;
+
+  CONTROLLER_MANAGER_PUBLIC
   std::vector<std::string> get_command_interfaces() const override;
 
+  CONTROLLER_MANAGER_PUBLIC
   std::vector<std::string> get_state_interfaces() const override;
-};
 
+  CONTROLLER_MANAGER_PUBLIC
+  hardware_interface::return_type get_command(
+    std::vector<double> & command,
+    const std::vector<std::string> & interfaces) const override;
+
+  CONTROLLER_MANAGER_PUBLIC
+  hardware_interface::return_type get_command(
+    std::vector<double> & command) const override;
+
+  CONTROLLER_MANAGER_PUBLIC
+  hardware_interface::return_type set_command(
+    const std::vector<double> & command,
+    const std::vector<std::string> & interfaces) override;
+
+  CONTROLLER_MANAGER_PUBLIC
+  hardware_interface::return_type set_command(const std::vector<double> & command) override;
+
+  CONTROLLER_MANAGER_PUBLIC
+  hardware_interface::return_type get_state(
+    std::vector<double> & state,
+    const std::vector<std::string> & interfaces) const override;
+
+  CONTROLLER_MANAGER_PUBLIC
+  hardware_interface::return_type get_state(std::vector<double> & state) const override;
+
+  CONTROLLER_MANAGER_PUBLIC
+  hardware_interface::return_type set_state(
+    const std::vector<double> & state,
+    const std::vector<std::string> & interfaces) override;
+
+  CONTROLLER_MANAGER_PUBLIC
+  hardware_interface::return_type set_state(const std::vector<double> & state) override;
+};
 #endif  // TEST_HARDWARE_RESOURCES__TEST_JOINT_COMPONENT_HPP_

@@ -19,6 +19,8 @@
 
 #include "hardware_interface/actuator_hardware.hpp"
 #include "hardware_interface/components/component_info.hpp"
+#include "hardware_interface/components/joint.hpp"
+#include "hardware_interface/components/sensor.hpp"
 #include "hardware_interface/component_parser.hpp"
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/sensor_hardware.hpp"
@@ -36,9 +38,9 @@ class ResourceStorage
   static constexpr const char * pkg_name = "hardware_interface";
 
   static constexpr const char * joint_component_interface_name =
-    "hardware_interface::components::Joint";
+    "hardware_interface::components::JointInterface";
   static constexpr const char * sensor_component_interface_name =
-    "hardware_interface::components::Sensor";
+    "hardware_interface::components::SensorInterface";
 
   static constexpr const char * actuator_interface_name =
     "hardware_interface::ActuatorHardwareInterface";
@@ -58,22 +60,39 @@ public:
 
   ~ResourceStorage() = default;
 
+  template<class ComponentT, class ComponentInterfaceT>
+  void initialize_component(
+    const hardware_interface::components::ComponentInfo & component_info,
+    pluginlib::ClassLoader<ComponentInterfaceT> & loader,
+    std::vector<ComponentT> & container)
+  {
+    // hardware_class_type has to match class name in plugin xml description
+    // TODO(karsten1987) extract package from hardware_class_type
+    // e.g.: <package_vendor>/<system_type>
+    // TODO(dstoegl) why is it class_type here and "hardware_class_type" in hardware_info?
+    auto interface = std::unique_ptr<ComponentInterfaceT>(
+      loader.createUnmanagedInstance(component_info.class_type));
+    ComponentT actuator(std::move(interface));
+    container.emplace_back(std::move(actuator));
+    container.back().configure(component_info);
+  }
+
   void initialize_joint_component(
     const hardware_interface::components::ComponentInfo & component_info)
   {
-    joint_components_.emplace_back(
-      std::unique_ptr<hardware_interface::components::Joint>(
-        joint_component_loader_.createUnmanagedInstance(component_info.class_type)));
-    joint_components_.back()->configure(component_info);
+    initialize_component<
+      hardware_interface::components::Joint,
+      hardware_interface::components::JointInterface>(
+      component_info, joint_component_loader_, joint_components_);
   }
 
   void initialize_sensor_component(
     const hardware_interface::components::ComponentInfo & component_info)
   {
-    sensor_components_.emplace_back(
-      std::unique_ptr<hardware_interface::components::Sensor>(
-        sensor_component_loader_.createUnmanagedInstance(component_info.class_type)));
-    sensor_components_.back()->configure(component_info);
+    initialize_component<
+      hardware_interface::components::Sensor,
+      hardware_interface::components::SensorInterface>(
+      component_info, sensor_component_loader_, sensor_components_);
   }
 
   template<class HardwareT, class HardwareInterfaceT>
@@ -91,34 +110,36 @@ public:
     container.emplace_back(std::move(actuator));
     container.back().configure(hardware_info);
   }
-
   void initialize_actuator(const hardware_interface::HardwareInfo & hardware_info)
   {
-    initialize_hardware<hardware_interface::ActuatorHardware,
+    initialize_hardware<
+      hardware_interface::ActuatorHardware,
       hardware_interface::ActuatorHardwareInterface>(
       hardware_info, actuator_loader_, actuators_);
   }
 
   void initialize_sensor(const hardware_interface::HardwareInfo & hardware_info)
   {
-    initialize_hardware<hardware_interface::SensorHardware,
+    initialize_hardware<
+      hardware_interface::SensorHardware,
       hardware_interface::SensorHardwareInterface>(
       hardware_info, sensor_loader_, sensors_);
   }
 
   void initialize_system(const hardware_interface::HardwareInfo & hardware_info)
   {
-    initialize_hardware<hardware_interface::SystemHardware,
+    initialize_hardware<
+      hardware_interface::SystemHardware,
       hardware_interface::SystemHardwareInterface>(
       hardware_info, system_loader_, systems_);
   }
 
   // components plugins
-  pluginlib::ClassLoader<hardware_interface::components::Joint> joint_component_loader_;
-  pluginlib::ClassLoader<hardware_interface::components::Sensor> sensor_component_loader_;
+  pluginlib::ClassLoader<hardware_interface::components::JointInterface> joint_component_loader_;
+  pluginlib::ClassLoader<hardware_interface::components::SensorInterface> sensor_component_loader_;
 
-  std::vector<std::unique_ptr<hardware_interface::components::Joint>> joint_components_;
-  std::vector<std::unique_ptr<hardware_interface::components::Sensor>> sensor_components_;
+  std::vector<hardware_interface::components::Joint> joint_components_;
+  std::vector<hardware_interface::components::Sensor> sensor_components_;
 
   // hardware plugins
   pluginlib::ClassLoader<hardware_interface::ActuatorHardwareInterface> actuator_loader_;

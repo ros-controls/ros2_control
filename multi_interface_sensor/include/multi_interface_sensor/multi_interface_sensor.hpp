@@ -12,46 +12,54 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef TEST_HARDWARE_RESOURCES__TEST_SENSOR_COMPONENT_HPP_
-#define TEST_HARDWARE_RESOURCES__TEST_SENSOR_COMPONENT_HPP_
+#ifndef MULTI_INTERFACE_SENSOR__MULTI_INTERFACE_SENSOR_HPP_
+#define MULTI_INTERFACE_SENSOR__MULTI_INTERFACE_SENSOR_HPP_
 
-#include <memory>
 #include <string>
 #include <vector>
 
-#include "controller_manager/visibility_control.h"
+#include "multi_interface_sensor/visibility_control.h"
 
 #include "hardware_interface/components/sensor_interface.hpp"
 
-class TestSensorComponent : public hardware_interface::components::SensorInterface
+namespace multi_interface_sensor
+{
+
+class MultiInterfaceSensor : public hardware_interface::components::SensorInterface
 {
 public:
-  TestSensorComponent() = default;
+  MultiInterfaceSensor() = default;
 
-  virtual ~TestSensorComponent() = default;
+  virtual ~MultiInterfaceSensor() = default;
 
-  CONTROLLER_MANAGER_PUBLIC
-  hardware_interface::return_type
-  configure(const hardware_interface::components::ComponentInfo & sensor_info) override;
+  MULTI_INTERFACE_SENSOR_PUBLIC
+  hardware_interface::return_type configure(
+    const hardware_interface::components::ComponentInfo & sensor_info) override;
 
-  CONTROLLER_MANAGER_PUBLIC
+  MULTI_INTERFACE_SENSOR_PUBLIC
   std::vector<std::string> get_state_interfaces() const override;
 
-  CONTROLLER_MANAGER_PUBLIC
+  MULTI_INTERFACE_SENSOR_PUBLIC
   hardware_interface::return_type get_state(
     std::vector<double> & state,
     const std::vector<std::string> & interfaces) const override;
 
-  CONTROLLER_MANAGER_PUBLIC
+  MULTI_INTERFACE_SENSOR_PUBLIC
   hardware_interface::return_type get_state(std::vector<double> & state) const override;
 
-  CONTROLLER_MANAGER_PUBLIC
+  MULTI_INTERFACE_SENSOR_PUBLIC
   hardware_interface::return_type set_state(
     const std::vector<double> & state,
     const std::vector<std::string> & interfaces) override;
 
-  CONTROLLER_MANAGER_PUBLIC
+  MULTI_INTERFACE_SENSOR_PUBLIC
   hardware_interface::return_type set_state(const std::vector<double> & state) override;
+
+protected:
+  std::vector<std::string> state_interfaces_;
+  std::vector<double> state_values_;
 };
 
-#endif  // TEST_HARDWARE_RESOURCES__TEST_SENSOR_COMPONENT_HPP_
+}  // namespace multi_interface_sensor
+
+#endif  // MULTI_INTERFACE_SENSOR__MULTI_INTERFACE_SENSOR_HPP_
