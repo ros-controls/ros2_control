@@ -84,7 +84,7 @@ TEST(PositionJointTest, position_joint_only_command_inteface_test)
     "hardware_interface", "hardware_interface::components::Joint");
 
   std::shared_ptr<hardware_interface::components::Joint> joint =
-  joint_component_loader.createSharedInstance("ros2_control_components/PositionJoint");
+    joint_component_loader.createSharedInstance("ros2_control_components/PositionJoint");
 
   EXPECT_EQ(joint->configure(position_joint_info), return_type::OK);
   ASSERT_THAT(joint->get_command_interfaces(), SizeIs(1));
@@ -104,7 +104,7 @@ TEST(PositionJointTest, position_joint_only_state_error_test)
     "hardware_interface", "hardware_interface::components::Joint");
 
   std::shared_ptr<hardware_interface::components::Joint> joint =
-  joint_component_loader.createSharedInstance("ros2_control_components/PositionJoint");
+    joint_component_loader.createSharedInstance("ros2_control_components/PositionJoint");
 
   EXPECT_EQ(joint->configure(position_joint_info), return_type::COMPONENT_ONLY_STATE_DEFINED);
 }
@@ -118,7 +118,7 @@ TEST(PositionJointTest, position_joint_missing_params_test)
     "hardware_interface", "hardware_interface::components::Joint");
 
   std::shared_ptr<hardware_interface::components::Joint> joint =
-  joint_component_loader.createSharedInstance("ros2_control_components/PositionJoint");
+    joint_component_loader.createSharedInstance("ros2_control_components/PositionJoint");
 
   EXPECT_EQ(joint->configure(position_joint_info), return_type::COMPONENT_MISSING_PARAMETER);
 
@@ -164,7 +164,7 @@ TEST(PositionJointTest, position_joint_wrong_interface_test)
     "hardware_interface", "hardware_interface::components::Joint");
 
   std::shared_ptr<hardware_interface::components::Joint> joint =
-  joint_component_loader.createSharedInstance("ros2_control_components/PositionJoint");
+    joint_component_loader.createSharedInstance("ros2_control_components/PositionJoint");
 
   EXPECT_EQ(joint->configure(position_joint_info), return_type::COMPONENT_WRONG_INTERFACE);
 

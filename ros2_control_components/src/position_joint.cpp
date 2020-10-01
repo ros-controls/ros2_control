@@ -42,13 +42,13 @@ public:
     }
 
     if (info_.command_interfaces.size() == 1 &&
-        info_.command_interfaces[0].compare(hardware_interface::HW_IF_POSITION))
+      info_.command_interfaces[0].compare(hardware_interface::HW_IF_POSITION))
     {
       return return_type::COMPONENT_WRONG_INTERFACE;
     }
 
     if (info_.state_interfaces.size() == 1 &&
-        info_.state_interfaces[0].compare(hardware_interface::HW_IF_POSITION))
+      info_.state_interfaces[0].compare(hardware_interface::HW_IF_POSITION))
     {
       return return_type::COMPONENT_WRONG_INTERFACE;
     }
