@@ -43,7 +43,7 @@ namespace hardware_interfaces_components_test
 class DummyPositionJoint : public components::Joint
 {
 public:
-  return_type configure(const components::ComponentInfo & joint_info)
+  return_type configure(const components::ComponentInfo & joint_info) override
   {
     if (Joint::configure(joint_info) != return_type::OK) {
       return return_type::ERROR;
@@ -73,7 +73,7 @@ private:
 class DummyMultiJoint : public components::Joint
 {
 public:
-  return_type configure(const components::ComponentInfo & joint_info)
+  return_type configure(const components::ComponentInfo & joint_info) override
   {
     if (Joint::configure(joint_info) != return_type::OK) {
       return return_type::ERROR;
@@ -98,7 +98,7 @@ private:
 class DummyForceTorqueSensor : public components::Sensor
 {
 public:
-  return_type configure(const components::ComponentInfo & sensor_info)
+  return_type configure(const components::ComponentInfo & sensor_info) override
   {
     if (Sensor::configure(sensor_info) != return_type::OK) {
       return return_type::ERROR;

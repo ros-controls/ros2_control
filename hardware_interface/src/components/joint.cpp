@@ -61,8 +61,7 @@ return_type Joint::get_command(std::vector<double> & command) const
 }
 
 return_type Joint::set_command(
-  const std::vector<double> & command,
-  const std::vector<std::string> & interfaces)
+  const std::vector<double> & command, const std::vector<std::string> & interfaces)
 {
   return set_internal_values(command, interfaces, info_.command_interfaces, commands_);
 }

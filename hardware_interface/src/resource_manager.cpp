@@ -90,8 +90,10 @@ ResourceManager::load_and_configure_resources_from_urdf(std::string urdf_string)
       }
       joints.push_back(joint);
       command_interfaces_[joint_info.name] = joint->get_command_interfaces();
+      // TODO(anyone): add checking if Joint has state interfaces at all
       state_interfaces_[joint_info.name] = joint->get_state_interfaces();
       joint_components_[joint_info.name] = joint;
+      claimed_command_interfaces_[joint_info.name] = std::vector<std::string>();
     }
     joint_components_for_hardware_[hardware_info.name] = joints;
 
@@ -171,6 +173,8 @@ return_type ResourceManager::check_command_interfaces(
   // Check joint existance
   if (command_interfaces_.find(joint_name) == command_interfaces_.end()) {
     //TODO(all): Do we need to return dedicated code?
+    RCLCPP_ERROR(rclcpp::get_logger("ros2_control_ResourceManager"),
+                 "There is no command interface for " + joint_name);
     return return_type::INTERFACE_NOT_FOUND;
   }
 
@@ -180,6 +184,8 @@ return_type ResourceManager::check_command_interfaces(
                   command_interfaces_.at(joint_name).cend(),
                   interface) == command_interfaces_.at(joint_name).cend())
     {
+      RCLCPP_ERROR(rclcpp::get_logger("ros2_control_ResourceManager"),
+                   "There is no command interface '" + interface + "' found for " + joint_name);
       return return_type::INTERFACE_NOT_PROVIDED;
     }
   }
@@ -200,6 +206,8 @@ return_type ResourceManager::claim_command_handle(
   // Check joint existance
   if (joint_components_.find(joint_name) == joint_components_.end()) {
     //TODO(all): Do we need to return dedicated code?
+    RCLCPP_ERROR(rclcpp::get_logger("ros2_control_ResourceManager"),
+                 "There is no command handle interface for " + joint_name);
     return return_type::INTERFACE_NOT_FOUND;
   }
 
@@ -209,6 +217,8 @@ return_type ResourceManager::claim_command_handle(
       claimed_command_interfaces_.at(joint_name).cend(),
                   interface) != claimed_command_interfaces_.at(joint_name).cend())
     {
+      RCLCPP_ERROR(rclcpp::get_logger("ros2_control_ResourceManager"),
+                   "The interface '" + interface + "' for " + joint_name + " is already claimed");
       return return_type::ALREADY_CLAIMED;
     }
   }
