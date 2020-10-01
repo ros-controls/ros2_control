@@ -30,7 +30,7 @@ namespace ros2_control_components
 class PositionJoint : public Joint
 {
 public:
-  return_type configure(const ComponentInfo & joint_info)
+  return_type configure(const ComponentInfo & joint_info) override
   {
     if (Joint::configure(joint_info) != return_type::OK) {
       return return_type::ERROR;
@@ -67,31 +67,31 @@ public:
       }
     }
 
-    auto it = info_.parameters.find("min_value");
+    auto it = info_.parameters.find("min");
     if (it == info_.parameters.end()) {
       return return_type::COMPONENT_MISSING_PARAMETER;
     }
-    it = info_.parameters.find("max_value");
+    it = info_.parameters.find("max");
     if (it == info_.parameters.end()) {
       return return_type::COMPONENT_MISSING_PARAMETER;
     }
     lower_limits_.resize(1);
-    lower_limits_.push_back(stod(info_.parameters["min_value"]));
+    lower_limits_.push_back(stod(info_.parameters["min"]));
     upper_limits_.resize(1);
-    upper_limits_.push_back(stod(info_.parameters["max_value"]));
+    upper_limits_.push_back(stod(info_.parameters["max"]));
 
     return return_type::OK;
   }
 
   return_type set_command(
     const std::vector<double> & command,
-    const std::vector<std::string> & interfaces)
+    const std::vector<std::string> & interfaces) override
   {
     return hardware_interface::components::set_internal_values_with_limits(
       command, interfaces, info_.command_interfaces, commands_, lower_limits_, upper_limits_);
   }
 
-  return_type set_command(const std::vector<double> & command)
+  return_type set_command(const std::vector<double> & command) override
   {
     return hardware_interface::components::set_internal_values_with_limits(
       command, commands_, lower_limits_, upper_limits_);
