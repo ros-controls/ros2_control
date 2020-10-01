@@ -22,15 +22,14 @@
 
 #include "controller_interface/controller_interface.hpp"
 
-#include "controller_manager/controller_loader_interface.hpp"
 #include "controller_manager/controller_manager.hpp"
 
 #include "controller_manager_msgs/srv/switch_controller.hpp"
 
 #include "lifecycle_msgs/msg/state.hpp"
+
 using ::testing::_;
 using ::testing::Return;
-
 
 TEST_F(TestControllerManager, load_unknown_controller)
 {
@@ -104,6 +103,7 @@ TEST_F(TestControllerManager, update)
     abstract_test_controller.c->get_lifecycle_node()->get_current_state().id());
 }
 
+/*
 TEST_F(TestControllerManager, register_controller_loader)
 {
   controller_manager::ControllerManager cm(robot_, executor_, "test_controller_manager");
@@ -136,7 +136,7 @@ TEST_F(TestControllerManager, register_controller_loader)
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
     abstract_test_controller.c->get_lifecycle_node()->get_current_state().id());
 }
-
+*/
 TEST_F(TestControllerManager, switch_controller_empty)
 {
   auto cm = std::make_shared<controller_manager::ControllerManager>(

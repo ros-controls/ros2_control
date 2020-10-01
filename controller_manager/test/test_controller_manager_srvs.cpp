@@ -20,7 +20,6 @@
 
 #include "controller_manager_test_common.hpp"
 #include "controller_interface/controller_interface.hpp"
-#include "controller_manager/controller_loader_interface.hpp"
 #include "controller_manager/controller_manager.hpp"
 #include "controller_manager_msgs/srv/switch_controller.hpp"
 #include "controller_manager_msgs/srv/list_controller_types.hpp"
@@ -120,20 +119,20 @@ TEST_F(TestControllerManagerSrvs, list_controller_types)
     result->base_classes,
     ::testing::Contains("controller_interface::ControllerInterface"));
 
-  std::shared_ptr<ControllerLoaderMock> mock_loader(new ControllerLoaderMock);
+  // std::shared_ptr<ControllerLoaderMock> mock_loader(new ControllerLoaderMock);
 
-  cm_->register_controller_loader(mock_loader);
-  result = call_service_and_wait(*client, request, srv_executor);
-  ASSERT_EQ(
-    controller_types + 1,
-    result->types.size());
-  ASSERT_EQ(
-    result->types.size(),
-    result->base_classes.size());
-  ASSERT_THAT(result->types, ::testing::Contains("mock_test_controller"));
-  ASSERT_THAT(
-    result->base_classes,
-    ::testing::Contains("controller_interface::MockControllerInterface"));
+  // cm_->register_controller_loader(mock_loader);
+  // result = call_service_and_wait(*client, request, srv_executor);
+  // ASSERT_EQ(
+  //   controller_types + 1,
+  //   result->types.size());
+  // ASSERT_EQ(
+  //   result->types.size(),
+  //   result->base_classes.size());
+  // ASSERT_THAT(result->types, ::testing::Contains("mock_test_controller"));
+  // ASSERT_THAT(
+  //   result->base_classes,
+  //   ::testing::Contains("controller_interface::MockControllerInterface"));
 }
 
 TEST_F(TestControllerManagerSrvs, list_controllers_srv) {
@@ -194,92 +193,92 @@ TEST_F(TestControllerManagerSrvs, list_controllers_srv) {
     result->controller.size());
 }
 
-TEST_F(TestControllerManagerSrvs, reload_controller_libraries_srv) {
-  rclcpp::executors::SingleThreadedExecutor srv_executor;
-  rclcpp::Node::SharedPtr srv_node = std::make_shared<rclcpp::Node>("srv_client");
-  srv_executor.add_node(srv_node);
-  rclcpp::Client<controller_manager_msgs::srv::ReloadControllerLibraries>::SharedPtr client =
-    srv_node->create_client<controller_manager_msgs::srv::ReloadControllerLibraries>(
-    "test_controller_manager/reload_controller_libraries");
-  auto request =
-    std::make_shared<controller_manager_msgs::srv::ReloadControllerLibraries::Request>();
-
-  std::shared_ptr<ControllerLoaderMock> mock_loader(new ControllerLoaderMock);
-
-  cm_->register_controller_loader(mock_loader);
-
-  // Reload with no controllers running
-  request->force_kill = false;
-  EXPECT_CALL(*mock_loader, is_available(_)).WillRepeatedly(Return(false));
-  EXPECT_CALL(*mock_loader, reload).Times(1);
-  auto result = call_service_and_wait(*client, request, srv_executor);
-  ASSERT_TRUE(result->ok);
-
-  // Add a controller, but stopped
-  auto test_controller = cm_->load_controller(
-    test_controller::TEST_CONTROLLER_NAME,
-    test_controller::TEST_CONTROLLER_TYPE);
-
-  ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    test_controller->get_lifecycle_node()->get_current_state().id());
-  ASSERT_GT(
-    test_controller.use_count(),
-    1) << "Controller manager should have have a copy of this shared ptr";
-
-  request->force_kill = false;
-  EXPECT_CALL(*mock_loader, reload).Times(1);
-  RCLCPP_INFO(cm_->get_logger(), "Doing reload");
-  result = call_service_and_wait(*client, request, srv_executor, true);
-  ASSERT_TRUE(result->ok);
-  ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-    test_controller->get_lifecycle_node()->get_current_state().id());
-  ASSERT_EQ(
-    test_controller.use_count(),
-    1) << "No more references to the controller after reloading.";
-  test_controller.reset();
-
-  test_controller = cm_->load_controller(
-    test_controller::TEST_CONTROLLER_NAME,
-    test_controller::TEST_CONTROLLER_TYPE);
-  // Start Controller
-  cm_->switch_controller(
-    {test_controller::TEST_CONTROLLER_NAME}, {},
-    controller_manager_msgs::srv::SwitchController::Request::STRICT, true,
-    rclcpp::Duration(0, 0));
-  ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
-    test_controller->get_lifecycle_node()->get_current_state().id());
-
-  // Failed reload due to active controller
-  request->force_kill = false;
-  EXPECT_CALL(*mock_loader, reload).Times(0);
-  result = call_service_and_wait(*client, request, srv_executor);
-  ASSERT_FALSE(result->ok) << "Cannot reload if controllers are running";
-  ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
-    test_controller->get_lifecycle_node()->get_current_state().id());
-  ASSERT_GT(
-    test_controller.use_count(),
-    1) <<
-    "Controller manager should still have have a copy of "
-    "this shared ptr, no unloading was performed";
-
-  // Force stop active controller
-  request->force_kill = true;
-  EXPECT_CALL(*mock_loader, reload).Times(1);
-  result = call_service_and_wait(*client, request, srv_executor, true);
-  ASSERT_TRUE(result->ok);
-
-  ASSERT_EQ(
-    test_controller.use_count(),
-    1) << "No more references to the controller after reloading.";
-  ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-    test_controller->get_lifecycle_node()->get_current_state().id()) <<
-    "Controller should have been stopped and cleaned up with force_kill = true";
-}
+// TEST_F(TestControllerManagerSrvs, reload_controller_libraries_srv) {
+//   rclcpp::executors::SingleThreadedExecutor srv_executor;
+//   rclcpp::Node::SharedPtr srv_node = std::make_shared<rclcpp::Node>("srv_client");
+//   srv_executor.add_node(srv_node);
+//   rclcpp::Client<controller_manager_msgs::srv::ReloadControllerLibraries>::SharedPtr client =
+//     srv_node->create_client<controller_manager_msgs::srv::ReloadControllerLibraries>(
+//     "test_controller_manager/reload_controller_libraries");
+//   auto request =
+//     std::make_shared<controller_manager_msgs::srv::ReloadControllerLibraries::Request>();
+//
+//   std::shared_ptr<ControllerLoaderMock> mock_loader(new ControllerLoaderMock);
+//
+//   cm_->register_controller_loader(mock_loader);
+//
+//   // Reload with no controllers running
+//   request->force_kill = false;
+//   EXPECT_CALL(*mock_loader, is_available(_)).WillRepeatedly(Return(false));
+//   EXPECT_CALL(*mock_loader, reload).Times(1);
+//   auto result = call_service_and_wait(*client, request, srv_executor);
+//   ASSERT_TRUE(result->ok);
+//
+//   // Add a controller, but stopped
+//   auto test_controller = cm_->load_controller(
+//     test_controller::TEST_CONTROLLER_NAME,
+//     test_controller::TEST_CONTROLLER_TYPE);
+//
+//   ASSERT_EQ(
+//     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+//     test_controller->get_lifecycle_node()->get_current_state().id());
+//   ASSERT_GT(
+//     test_controller.use_count(),
+//     1) << "Controller manager should have have a copy of this shared ptr";
+//
+//   request->force_kill = false;
+//   EXPECT_CALL(*mock_loader, reload).Times(1);
+//   RCLCPP_INFO(cm_->get_logger(), "Doing reload");
+//   result = call_service_and_wait(*client, request, srv_executor, true);
+//   ASSERT_TRUE(result->ok);
+//   ASSERT_EQ(
+//     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+//     test_controller->get_lifecycle_node()->get_current_state().id());
+//   ASSERT_EQ(
+//     test_controller.use_count(),
+//     1) << "No more references to the controller after reloading.";
+//   test_controller.reset();
+//
+//   test_controller = cm_->load_controller(
+//     test_controller::TEST_CONTROLLER_NAME,
+//     test_controller::TEST_CONTROLLER_TYPE);
+//   // Start Controller
+//   cm_->switch_controller(
+//     {test_controller::TEST_CONTROLLER_NAME}, {},
+//     controller_manager_msgs::srv::SwitchController::Request::STRICT, true,
+//     rclcpp::Duration(0, 0));
+//   ASSERT_EQ(
+//     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+//     test_controller->get_lifecycle_node()->get_current_state().id());
+//
+//   // Failed reload due to active controller
+//   request->force_kill = false;
+//   EXPECT_CALL(*mock_loader, reload).Times(0);
+//   result = call_service_and_wait(*client, request, srv_executor);
+//   ASSERT_FALSE(result->ok) << "Cannot reload if controllers are running";
+//   ASSERT_EQ(
+//     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+//     test_controller->get_lifecycle_node()->get_current_state().id());
+//   ASSERT_GT(
+//     test_controller.use_count(),
+//     1) <<
+//     "Controller manager should still have have a copy of "
+//     "this shared ptr, no unloading was performed";
+//
+//   // Force stop active controller
+//   request->force_kill = true;
+//   EXPECT_CALL(*mock_loader, reload).Times(1);
+//   result = call_service_and_wait(*client, request, srv_executor, true);
+//   ASSERT_TRUE(result->ok);
+//
+//   ASSERT_EQ(
+//     test_controller.use_count(),
+//     1) << "No more references to the controller after reloading.";
+//   ASSERT_EQ(
+//     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+//     test_controller->get_lifecycle_node()->get_current_state().id()) <<
+//     "Controller should have been stopped and cleaned up with force_kill = true";
+// }
 
 TEST_F(TestControllerManagerSrvs, load_controller_srv) {
   rclcpp::executors::SingleThreadedExecutor srv_executor;

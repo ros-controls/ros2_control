@@ -21,14 +21,17 @@
 
 #include "controller_interface/controller_interface.hpp"
 
-#include "controller_manager/controller_loader_pluginlib.hpp"
 #include "controller_manager_msgs/srv/switch_controller.hpp"
 
 #include "lifecycle_msgs/msg/state.hpp"
+
 #include "rclcpp/rclcpp.hpp"
 
 namespace controller_manager
 {
+
+static constexpr const char * kControllerInterfaceName = "controller_interface";
+static constexpr const char * kControllerInterface = "controller_interface::ControllerInterface";
 
 inline bool is_controller_running(controller_interface::ControllerInterface & controller)
 {
@@ -56,8 +59,8 @@ ControllerManager::ControllerManager(
 : rclcpp::Node(manager_node_name, get_cm_node_options()),
   hw_(hw),
   executor_(executor),
-  // add pluginlib loader by default
-  loaders_({std::make_shared<ControllerLoaderPluginlib>()})
+  loader_(std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
+      kControllerInterfaceName, kControllerInterface))
 {
   using namespace std::placeholders;
   list_controllers_service_ = create_service<controller_manager_msgs::srv::ListControllers>(
@@ -94,19 +97,13 @@ controller_interface::ControllerInterfaceSharedPtr ControllerManager::load_contr
 {
   RCLCPP_INFO(get_logger(), "Loading controller '%s'\n", controller_name.c_str());
 
-  auto it = std::find_if(
-    loaders_.cbegin(), loaders_.cend(),
-    [&](auto loader)
-    {return loader->is_available(controller_type);});
-
-  controller_interface::ControllerInterfaceSharedPtr controller(nullptr);
-  if (it != loaders_.cend()) {
-    controller = (*it)->create(controller_type);
-  } else {
+  if (!loader_->isClassAvailable(controller_type)) {
     const std::string error_msg("Loader for controller '" + controller_name + "' not found\n");
     RCLCPP_ERROR(get_logger(), "%s", error_msg.c_str());
     throw std::runtime_error(error_msg);
   }
+
+  auto controller = loader_->createSharedInstance(controller_type);
   ControllerSpec controller_spec;
   controller_spec.c = controller;
   controller_spec.info.name = controller_name;
@@ -193,11 +190,6 @@ std::vector<ControllerSpec> ControllerManager::get_loaded_controllers() const
 {
   std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
   return rt_controllers_wrapper_.get_updated_list(guard);
-}
-
-void ControllerManager::register_controller_loader(ControllerLoaderInterfaceSharedPtr loader)
-{
-  loaders_.push_back(loader);
 }
 
 controller_interface::return_type ControllerManager::switch_controller(
@@ -675,13 +667,11 @@ void ControllerManager::list_controller_types_srv_cb(
   std::lock_guard<std::mutex> guard(services_lock_);
   RCLCPP_DEBUG(get_logger(), "list types service locked");
 
-  for (const auto & controller_loader : loaders_) {
-    std::vector<std::string> cur_types = controller_loader->get_declared_classes();
-    for (const auto & cur_type : cur_types) {
-      response->types.push_back(cur_type);
-      response->base_classes.push_back(controller_loader->get_name());
-      RCLCPP_INFO(get_logger(), cur_type);
-    }
+  auto cur_types = loader_->getDeclaredClasses();
+  for (const auto & cur_type : cur_types) {
+    response->types.push_back(cur_type);
+    response->base_classes.push_back(kControllerInterface);
+    RCLCPP_INFO(get_logger(), cur_type);
   }
 
   RCLCPP_DEBUG(get_logger(), "list types service finished");
@@ -764,12 +754,11 @@ void ControllerManager::reload_controller_libraries_service_cb(
   assert(loaded_controllers.empty());
 
   // Force a reload on all the PluginLoaders (internally, this recreates the plugin loaders)
-  for (const auto & controller_loader : loaders_) {
-    controller_loader->reload();
-    RCLCPP_INFO(
-      get_logger(), "Controller manager: reloaded controller libraries for '%s'",
-      controller_loader->get_name().c_str());
-  }
+  loader_ = std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
+    kControllerInterfaceName, kControllerInterface);
+  RCLCPP_INFO(
+    get_logger(), "Controller manager: reloaded controller libraries for '%s'",
+    kControllerInterfaceName);
 
   response->ok = true;
 

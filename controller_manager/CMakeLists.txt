@@ -19,7 +19,9 @@ find_package(hardware_interface REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(rclcpp REQUIRED)
 
-add_library(controller_manager SHARED src/controller_manager.cpp src/controller_loader_pluginlib.cpp)
+add_library(controller_manager SHARED
+  src/controller_manager.cpp
+)
 target_include_directories(controller_manager PRIVATE include)
 ament_target_dependencies(controller_manager
   ament_index_cpp
