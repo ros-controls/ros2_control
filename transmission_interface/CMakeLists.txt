@@ -12,23 +12,22 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-find_package(hardware_interface REQUIRED)
+#find_package(hardware_interface REQUIRED)    # todo: we should be using this for hardware interface constants
 find_package(tinyxml2_vendor REQUIRED)
-find_package(TinyXML2 REQUIRED)
+find_package(rclcpp REQUIRED)
+
+# todo: we should be using the URDF project to load our tranmissions from URDF
+#find_package(urdf REQUIRED)
 
 add_library(transmission_parser SHARED src/transmission_parser.cpp)
 target_include_directories(transmission_parser PUBLIC include)
-ament_target_dependencies(transmission_parser
-  hardware_interface
-  TinyXML2
-)
 target_compile_definitions(transmission_parser PRIVATE "TRANSMISSION_INTERFACE_BUILDING_DLL")
+ament_target_dependencies(transmission_parser rclcpp tinyxml2_vendor)
 
 install(
   DIRECTORY include/
   DESTINATION include
 )
-
 install(
   TARGETS transmission_parser
   RUNTIME DESTINATION bin
@@ -45,7 +44,9 @@ if(BUILD_TESTING)
     test_transmission_parser
     test/test_transmission_parser.cpp
   )
-  target_link_libraries(test_transmission_parser transmission_parser)
+  target_include_directories(test_transmission_parser PUBLIC include)
+  target_link_libraries(test_transmission_parser transmission_parser ${TinyXML_LIBRARY})
+  ament_target_dependencies(test_transmission_parser rclcpp tinyxml2_vendor)
 endif()
 
 ament_export_include_directories(
