@@ -12,12 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from controller_manager_msgs.srv import LoadController
-import rclpy
-from ros2cli.node.direct import DirectNode
 from ros2cli.node.strategy import add_arguments
 from ros2cli.verb import VerbExtension
-from ros2controlcli.api import unload_controller, LoadedControllerNameCompleter, add_controller_mgr_parsers
+from ros2controlcli.api import add_controller_mgr_parsers, LoadedControllerNameCompleter, \
+    unload_controller
 
 
 class UnloadVerb(VerbExtension):
@@ -31,6 +29,5 @@ class UnloadVerb(VerbExtension):
         add_controller_mgr_parsers(parser)
 
     def main(self, *, args):
-        node_name=args.controller_manager
         response = unload_controller(args.controller_manager, args.controller_name)
         return response.ok

@@ -14,18 +14,18 @@
 
 from ros2cli.node.strategy import add_arguments
 from ros2cli.verb import VerbExtension
-from ros2controlcli.api import list_controller_types, add_controller_mgr_parsers
+from ros2controlcli.api import add_controller_mgr_parsers, list_controller_types
 
 
 class ListTypesVerb(VerbExtension):
-    """Output the available controller types and theri base classes"""
+    """Output the available controller types and theri base classes."""
 
     def add_arguments(self, parser, cli_name):
         add_arguments(parser)
         add_controller_mgr_parsers(parser)
 
     def main(self, *, args):
-        response=list_controller_types(args.controller_manager)
-        types_and_classes=zip(response.types, response.base_classes)
+        response = list_controller_types(args.controller_manager)
+        types_and_classes = zip(response.types, response.base_classes)
         for c in types_and_classes:
-            print("{:70s} {}".format(c[0], c[1]))
+            print('{:70s} {}'.format(c[0], c[1]))

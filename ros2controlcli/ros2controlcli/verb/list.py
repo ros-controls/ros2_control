@@ -14,7 +14,7 @@
 
 from ros2cli.node.strategy import add_arguments
 from ros2cli.verb import VerbExtension
-from ros2controlcli.api import list_controllers, add_controller_mgr_parsers
+from ros2controlcli.api import add_controller_mgr_parsers, list_controllers
 
 
 class ListVerb(VerbExtension):
@@ -25,6 +25,6 @@ class ListVerb(VerbExtension):
         add_controller_mgr_parsers(parser)
 
     def main(self, *, args):
-        controllers=list_controllers(args.controller_manager).controller
+        controllers = list_controllers(args.controller_manager).controller
         for c in controllers:
-            print("{:20s}{:20s} {:10s}".format(c.name , "[" + c.type + "]", c.state))
+            print('{:20s}{:20s} {:10s}'.format(c.name, '[' + c.type + ']', c.state))

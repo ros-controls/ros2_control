@@ -14,11 +14,11 @@
 
 from ros2cli.node.strategy import add_arguments
 from ros2cli.verb import VerbExtension
-from ros2controlcli.api import reload_controller_libraries, add_controller_mgr_parsers
+from ros2controlcli.api import add_controller_mgr_parsers, reload_controller_libraries
 
 
 class ReloadLibrariesVerb(VerbExtension):
-    """Reload controller libraries"""
+    """Reload controller libraries."""
 
     def add_arguments(self, parser, cli_name):
         add_arguments(parser)
@@ -28,9 +28,9 @@ class ReloadLibrariesVerb(VerbExtension):
         add_controller_mgr_parsers(parser)
 
     def main(self, *, args):
-        response=reload_controller_libraries(args.controller_manager, force_kill=args.force_kill)
+        response = reload_controller_libraries(args.controller_manager, force_kill=args.force_kill)
         if response.ok:
-            print("Reload successful")
+            print('Reload successful')
         else:
-            print("Error in reload, check controller manager logs")
+            print('Error in reload, check controller manager logs')
         return response.ok
