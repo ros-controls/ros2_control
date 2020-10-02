@@ -919,7 +919,8 @@ ControllerManagerNewWithManager::load_controller(
   const std::string & controller_name,
   const std::string & controller_type)
 {
-  RCLCPP_INFO(rclcpp::get_logger("ControllerManager"),
+  RCLCPP_INFO(
+    rclcpp::get_logger("ControllerManager"),
     "Loading controller '%s'\n", controller_name.c_str());
 
   auto it = std::find_if(
@@ -957,7 +958,8 @@ ControllerManagerNewWithManager::update()
   auto ret = controller_interface::return_type::SUCCESS;
   for (auto loaded_controller : loaded_controllers_) {
     RCLCPP_INFO(rclcpp::get_logger("ControllerManager"), "Updating controllers..");
-    RCLCPP_INFO(rclcpp::get_logger("ControllerManager"), "Loaded controller state ist active: " +
+    RCLCPP_INFO(
+      rclcpp::get_logger("ControllerManager"), "Loaded controller state ist active: " +
       loaded_controller->get_lifecycle_node()->get_current_state().label());
     auto controller_ret = loaded_controller->update();
     if (controller_ret != controller_interface::return_type::SUCCESS) {

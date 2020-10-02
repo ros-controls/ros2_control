@@ -74,7 +74,8 @@ controller_interface::return_type ROS2ControlManager::configure()
   }
 
   // initialized controller_manager
-  controller_manager_.reset(new controller_manager::ControllerManagerNewWithManager(
+  controller_manager_.reset(
+    new controller_manager::ControllerManagerNewWithManager(
       resource_manager_, executor_));
 
   resource_manager_->start_all_resources();
@@ -85,7 +86,8 @@ controller_interface::return_type ROS2ControlManager::configure()
       RCLCPP_ERROR(this->get_logger(), "'type' parameter not set for " + controller);
       return controller_interface::return_type::ERROR;
     }
-    RCLCPP_DEBUG(this->get_logger(),
+    RCLCPP_DEBUG(
+      this->get_logger(),
       "loading " + controller + " of type: " + controller_type.value_to_string());
     controller_manager_->load_controller(controller, controller_type.value_to_string());
   }

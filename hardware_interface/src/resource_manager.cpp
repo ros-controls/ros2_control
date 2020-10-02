@@ -38,18 +38,22 @@ namespace resource_manager
 
 ResourceManager::ResourceManager()
 {
-  actuator_loader_.reset(new pluginlib::ClassLoader<hardware_interface::ActuatorHardwareInterface>(
+  actuator_loader_.reset(
+    new pluginlib::ClassLoader<hardware_interface::ActuatorHardwareInterface>(
       "hardware_interface", "hardware_interface::ActuatorHardwareInterface"));
-  sensor_loader_.reset(new pluginlib::ClassLoader<hardware_interface::SensorHardwareInterface>(
+  sensor_loader_.reset(
+    new pluginlib::ClassLoader<hardware_interface::SensorHardwareInterface>(
       "hardware_interface", "hardware_interface::SensorHardwareInterface"));
-  system_loader_.reset(new pluginlib::ClassLoader<hardware_interface::SystemHardwareInterface>(
+  system_loader_.reset(
+    new pluginlib::ClassLoader<hardware_interface::SystemHardwareInterface>(
       "hardware_interface", "hardware_interface::SystemHardwareInterface"));
 
-  joint_loader_.reset(new pluginlib::ClassLoader<hardware_interface::components::Joint>(
+  joint_loader_.reset(
+    new pluginlib::ClassLoader<hardware_interface::components::Joint>(
       "hardware_interface", "hardware_interface::components::Joint"));
 }
 
-//  Non real-time safe functions
+//  No real-time safe functions
 return_type
 ResourceManager::load_and_configure_resources_from_urdf(std::string urdf_string)
 {
@@ -58,7 +62,8 @@ ResourceManager::load_and_configure_resources_from_urdf(std::string urdf_string)
 
   return_type ret = return_type::OK;
   for (auto hardware_info : hardware_info_list) {
-    RCLCPP_INFO(rclcpp::get_logger("ros2_control_ResourceManager"),
+    RCLCPP_INFO(
+      rclcpp::get_logger("ros2_control_ResourceManager"),
       "Loading hardware plugin: " + hardware_info.hardware_class_type);
     if (!hardware_info.type.compare("system")) {
       // TODO(anyone): this here is really not nice...
@@ -73,14 +78,16 @@ ResourceManager::load_and_configure_resources_from_urdf(std::string urdf_string)
       systems_.push_back(system_hw);
       // TODO(anyone): do the same for loading sensors and actuators hardware
     } else {
-      RCLCPP_FATAL(rclcpp::get_logger("ros2_control_ResourceManager"),
+      RCLCPP_FATAL(
+        rclcpp::get_logger("ros2_control_ResourceManager"),
         "hardware type not recognized");
       return return_type::ERROR;
     }
 
     std::vector<std::shared_ptr<hardware_interface::components::Joint>> joints;
     for (auto joint_info : hardware_info.joints) {
-      RCLCPP_INFO(rclcpp::get_logger("ros2_control_ResourceManager"),
+      RCLCPP_INFO(
+        rclcpp::get_logger("ros2_control_ResourceManager"),
         "Loading joint plugin: " + joint_info.class_type);
       std::shared_ptr<hardware_interface::components::Joint> joint =
         joint_loader_->createSharedInstance(joint_info.class_type);
@@ -100,7 +107,8 @@ ResourceManager::load_and_configure_resources_from_urdf(std::string urdf_string)
     // TODO(anyone): add implementation for sensors
   }
 
-  RCLCPP_INFO(rclcpp::get_logger("ros2_control_ResourceManager"),
+  RCLCPP_INFO(
+    rclcpp::get_logger("ros2_control_ResourceManager"),
     "All hardware and component plugins loaded and configured successfully.");
   return return_type::OK;
 }
@@ -173,18 +181,21 @@ return_type ResourceManager::check_command_interfaces(
   // Check joint existance
   if (command_interfaces_.find(joint_name) == command_interfaces_.end()) {
     // TODO(all): Do we need to return dedicated code?
-    RCLCPP_ERROR(rclcpp::get_logger("ros2_control_ResourceManager"),
+    RCLCPP_ERROR(
+      rclcpp::get_logger("ros2_control_ResourceManager"),
       "There is no command interface for " + joint_name);
     return return_type::INTERFACE_NOT_FOUND;
   }
 
   // Check interface existance
   for (const auto & interface : interfaces) {
-    if (std::find(command_interfaces_.at(joint_name).cbegin(),
-      command_interfaces_.at(joint_name).cend(),
-      interface) == command_interfaces_.at(joint_name).cend())
+    if (std::find(
+        command_interfaces_.at(joint_name).cbegin(),
+        command_interfaces_.at(joint_name).cend(),
+        interface) == command_interfaces_.at(joint_name).cend())
     {
-      RCLCPP_ERROR(rclcpp::get_logger("ros2_control_ResourceManager"),
+      RCLCPP_ERROR(
+        rclcpp::get_logger("ros2_control_ResourceManager"),
         "There is no command interface '" + interface + "' found for " + joint_name);
       return return_type::INTERFACE_NOT_PROVIDED;
     }
@@ -206,18 +217,21 @@ return_type ResourceManager::claim_command_handle(
   // Check joint existance
   if (joint_components_.find(joint_name) == joint_components_.end()) {
     // TODO(all): Do we need to return dedicated code?
-    RCLCPP_ERROR(rclcpp::get_logger("ros2_control_ResourceManager"),
+    RCLCPP_ERROR(
+      rclcpp::get_logger("ros2_control_ResourceManager"),
       "There is no command handle interface for " + joint_name);
     return return_type::INTERFACE_NOT_FOUND;
   }
 
   // check for each interface if already claimed
   for (const auto & interface : interfaces) {
-    if (std::find(claimed_command_interfaces_.at(joint_name).cbegin(),
-      claimed_command_interfaces_.at(joint_name).cend(),
-      interface) != claimed_command_interfaces_.at(joint_name).cend())
+    if (std::find(
+        claimed_command_interfaces_.at(joint_name).cbegin(),
+        claimed_command_interfaces_.at(joint_name).cend(),
+        interface) != claimed_command_interfaces_.at(joint_name).cend())
     {
-      RCLCPP_ERROR(rclcpp::get_logger("ros2_control_ResourceManager"),
+      RCLCPP_ERROR(
+        rclcpp::get_logger("ros2_control_ResourceManager"),
         "The interface '" + interface + "' for " + joint_name + " is already claimed");
       return return_type::ALREADY_CLAIMED;
     }

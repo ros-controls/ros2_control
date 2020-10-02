@@ -31,9 +31,10 @@ int main(int argc, char ** argv)
   node_options.allow_undeclared_parameters(true);
   node_options.automatically_declare_parameters_from_overrides(true);
 
-  auto cm = std::make_shared<control_manager::ROS2ControlManager>(executor,
-      manager_node_name,
-      node_options);
+  auto cm = std::make_shared<control_manager::ROS2ControlManager>(
+    executor,
+    manager_node_name,
+    node_options);
   if (cm->configure() != controller_interface::return_type::SUCCESS) {
     rclcpp::shutdown();
     return 0;
