@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>ros2_control_components</name>
-  <version>0.0.1</version>
+  <version>0.0.2</version>
   <description>The package implements control components, i.e., joints and sensors, the logical building blocks of ros2_control system.
   </description>
   <maintainer email="denis@stogl.de">Denis Štogl</maintainer>
