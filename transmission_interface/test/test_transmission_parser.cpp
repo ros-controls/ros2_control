@@ -16,7 +16,6 @@
 #include <string>
 #include <vector>
 
-#include "hardware_interface/robot_hardware.hpp"
 #include "hardware_interface/control_type.hpp"
 #include "transmission_interface/transmission_parser.hpp"
 

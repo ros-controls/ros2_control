@@ -19,8 +19,6 @@
 #include <vector>
 #include <string>
 
-// TinyXML
-#include <tinyxml.h>
 
 namespace transmission_interface
 {
