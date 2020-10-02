@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <memory>
+#include <string>
 
 #include "controller_manager/ros2_control_manager.hpp"
 #include "rclcpp/rclcpp.hpp"
@@ -24,15 +25,15 @@ int main(int argc, char ** argv)
   rclcpp::init(argc, argv);
 
   std::shared_ptr<rclcpp::Executor> executor =
-      std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
+    std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
   std::string manager_node_name = "control_manager";
   rclcpp::NodeOptions node_options;
   node_options.allow_undeclared_parameters(true);
   node_options.automatically_declare_parameters_from_overrides(true);
 
   auto cm = std::make_shared<control_manager::ROS2ControlManager>(executor,
-                                                                  manager_node_name,
-                                                                  node_options);
+      manager_node_name,
+      node_options);
   if (cm->configure() != controller_interface::return_type::SUCCESS) {
     rclcpp::shutdown();
     return 0;

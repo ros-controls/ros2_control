@@ -66,7 +66,8 @@ protected:
   std::shared_ptr<rclcpp_lifecycle::LifecycleNode> lifecycle_node_;
 };
 
-class ControllerInterfaceNewComponents : public rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface
+class ControllerInterfaceNewComponents
+  : public rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface
 {
 public:
   CONTROLLER_INTERFACE_PUBLIC

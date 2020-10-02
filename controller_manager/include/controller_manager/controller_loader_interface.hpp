@@ -42,7 +42,7 @@ public:
 
   CONTROLLER_MANAGER_PUBLIC
   virtual controller_interface::ControllerInterfaceNewComponentsSharedPtr create_new_components(
-      const std::string & controller_type) = 0;
+    const std::string & controller_type) = 0;
 
   CONTROLLER_MANAGER_PUBLIC
   virtual bool is_available(const std::string & controller_type) const = 0;

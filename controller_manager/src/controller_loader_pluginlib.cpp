@@ -59,9 +59,11 @@ void ControllerLoaderPluginlib::reload()
 
 ControllerLoaderPluginlibNewComponents::ControllerLoaderPluginlibNewComponents()
 : ControllerLoaderInterface("controller_interface::ControllerInterfaceNewComponents"),
-loader_(
-  std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterfaceNewComponents>>(
-    "controller_interface", "controller_interface::ControllerInterfaceNewComponents"))
+  loader_(
+    std::make_shared<
+      pluginlib::ClassLoader<controller_interface::ControllerInterfaceNewComponents>>(
+      "controller_interface",
+      "controller_interface::ControllerInterfaceNewComponents"))
 {
 }
 
@@ -73,7 +75,7 @@ ControllerLoaderPluginlibNewComponents::create(const std::string & /*controller_
   return nullptr;
 }
 
-//TODO(anyone) new loader with components - rename to create
+// TODO(anyone) new loader with components - rename to create
 controller_interface::ControllerInterfaceNewComponentsSharedPtr
 ControllerLoaderPluginlibNewComponents::create_new_components(
   const std::string & controller_type)
@@ -94,7 +96,8 @@ bool ControllerLoaderPluginlibNewComponents::is_available(const std::string & co
 void ControllerLoaderPluginlibNewComponents::reload()
 {
   loader_ =
-  std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterfaceNewComponents>>(
+    std::make_shared<
+    pluginlib::ClassLoader<controller_interface::ControllerInterfaceNewComponents>>(
     "controller_interface", "controller_interface::ControllerInterfaceNewComponents");
 }
 

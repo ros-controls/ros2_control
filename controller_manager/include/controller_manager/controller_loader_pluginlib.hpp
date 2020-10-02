@@ -71,7 +71,7 @@ public:
   controller_interface::ControllerInterfaceSharedPtr
   create(const std::string & controller_type) override;
 
-  //TODO(anyone) new loader with components - rename to create
+  // TODO(anyone) new loader with components - rename to create
   CONTROLLER_MANAGER_PUBLIC
   controller_interface::ControllerInterfaceNewComponentsSharedPtr
   create_new_components(const std::string & controller_type) override;
@@ -87,7 +87,7 @@ public:
 
 private:
   std::shared_ptr<pluginlib::ClassLoader<controller_interface::ControllerInterfaceNewComponents>>
-    loader_;
+  loader_;
 };
 
 }  // namespace controller_manager

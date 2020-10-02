@@ -16,12 +16,11 @@
 #define CONTROLLER_MANAGER__ROS2_CONTROL_MANAGER_HPP_
 
 #include <memory>
+#include <string>
 
 #include "controller_manager/controller_manager.hpp"
 #include "hardware_interface/resource_manager.hpp"
 #include "rclcpp/rclcpp.hpp"
-
-using namespace std::chrono_literals;
 
 namespace control_manager
 {

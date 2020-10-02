@@ -296,9 +296,9 @@ public:
     const std::string & controller_type);
 
   template<
-  typename T,
-  typename std::enable_if<std::is_convertible<
-  T *, controller_interface::ControllerInterfaceNewComponents *>::value, T>::type * = nullptr>
+    typename T,
+    typename std::enable_if<std::is_convertible<
+      T *, controller_interface::ControllerInterfaceNewComponents *>::value, T>::type * = nullptr>
   std::shared_ptr<controller_interface::ControllerInterfaceNewComponents>
   add_controller(std::shared_ptr<T> controller, std::string controller_name)
   {
@@ -329,7 +329,7 @@ private:
   std::shared_ptr<rclcpp::Executor> executor_;
   std::vector<ControllerLoaderInterfaceSharedPtr> loaders_;
   std::vector<controller_interface::ControllerInterfaceNewComponentsSharedPtr>
-    loaded_controllers_;
+  loaded_controllers_;
 };
 
 }  // namespace controller_manager

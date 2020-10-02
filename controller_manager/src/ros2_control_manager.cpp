@@ -1,4 +1,3 @@
-
 // Copyright 2020 ROS2-Control Development Team
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +16,8 @@
 
 #include <chrono>
 #include <memory>
+#include <string>
+#include <vector>
 
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "rclcpp/rclcpp.hpp"
@@ -30,16 +31,15 @@ ROS2ControlManager::ROS2ControlManager(
   std::shared_ptr<rclcpp::Executor> executor,
   const std::string & manager_node_name,
   rclcpp::NodeOptions options)
-  : Node(manager_node_name, options),
-    executor_(executor)
+: Node(manager_node_name, options),
+  executor_(executor)
 {
 }
 
 controller_interface::return_type ROS2ControlManager::configure()
 {
-  //  Load robot_description parameter
-  //  TODO(all): should we use option with undeclared parameters or we should declare each of them?
-  //   this->declare_parameter("robot_description", "");
+  // TODO(all): Should we declare paramters? #168
+  // load robot_description parameter
   auto get_parameters_result = this->get_parameters({"robot_description"});
 
   //  Test the resulting vector of parameters
@@ -51,8 +51,8 @@ controller_interface::return_type ROS2ControlManager::configure()
   }
   std::string robot_description = get_parameters_result[0].value_to_string();
 
-  //  TODO(all): should we use option with undeclared parameters or we should declare each of them?
-  //   this->declare_parameter("controllers", std::vector<std::string>());
+  // TODO(all): Should we declare paramters? #168
+  // load controllers' names
   get_parameters_result = this->get_parameters({"controllers"});
   if ((get_parameters_result.size() != 1) ||
     (get_parameters_result[0].get_type() == rclcpp::ParameterType::PARAMETER_NOT_SET) ||
@@ -64,10 +64,10 @@ controller_interface::return_type ROS2ControlManager::configure()
   std::vector<std::string> controllers = get_parameters_result[0].as_string_array();
   RCLCPP_INFO(this->get_logger(), "found %d controllers", controllers.size());
 
-  //  initialize and configure resource_manager
+  // initialize and configure resource_manager
   resource_manager_.reset(new resource_manager::ResourceManager());
   if (resource_manager_->load_and_configure_resources_from_urdf(
-    robot_description) != hardware_interface::return_type::OK)
+      robot_description) != hardware_interface::return_type::OK)
   {
     RCLCPP_FATAL(this->get_logger(), "hardware type not recognized");
     return controller_interface::return_type::ERROR;
@@ -75,7 +75,7 @@ controller_interface::return_type ROS2ControlManager::configure()
 
   // initialized controller_manager
   controller_manager_.reset(new controller_manager::ControllerManagerNewWithManager(
-    resource_manager_, executor_));
+      resource_manager_, executor_));
 
   resource_manager_->start_all_resources();
 
@@ -86,7 +86,7 @@ controller_interface::return_type ROS2ControlManager::configure()
       return controller_interface::return_type::ERROR;
     }
     RCLCPP_DEBUG(this->get_logger(),
-                 "loading " + controller + " of type: " + controller_type.value_to_string());
+      "loading " + controller + " of type: " + controller_type.value_to_string());
     controller_manager_->load_controller(controller, controller_type.value_to_string());
   }
 

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef CONTROLLER_MANAGER__RESOURCE_MANAGER_HPP_
-#define CONTROLLER_MANAGER__RESOURCE_MANAGER_HPP_
+#ifndef HARDWARE_INTERFACE__RESOURCE_MANAGER_HPP_
+#define HARDWARE_INTERFACE__RESOURCE_MANAGER_HPP_
 
 #include <map>
 #include <memory>
@@ -115,4 +115,4 @@ private:
 
 }  //  namespace resource_manager
 
-#endif  // CONTROLLER_MANAGER__RESOURCE_MANAGER_HPP_
+#endif  // HARDWARE_INTERFACE__RESOURCE_MANAGER_HPP_

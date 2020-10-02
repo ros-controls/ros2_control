@@ -172,20 +172,20 @@ return_type ResourceManager::check_command_interfaces(
 {
   // Check joint existance
   if (command_interfaces_.find(joint_name) == command_interfaces_.end()) {
-    //TODO(all): Do we need to return dedicated code?
+    // TODO(all): Do we need to return dedicated code?
     RCLCPP_ERROR(rclcpp::get_logger("ros2_control_ResourceManager"),
-                 "There is no command interface for " + joint_name);
+      "There is no command interface for " + joint_name);
     return return_type::INTERFACE_NOT_FOUND;
   }
 
   // Check interface existance
   for (const auto & interface : interfaces) {
     if (std::find(command_interfaces_.at(joint_name).cbegin(),
-                  command_interfaces_.at(joint_name).cend(),
-                  interface) == command_interfaces_.at(joint_name).cend())
+      command_interfaces_.at(joint_name).cend(),
+      interface) == command_interfaces_.at(joint_name).cend())
     {
       RCLCPP_ERROR(rclcpp::get_logger("ros2_control_ResourceManager"),
-                   "There is no command interface '" + interface + "' found for " + joint_name);
+        "There is no command interface '" + interface + "' found for " + joint_name);
       return return_type::INTERFACE_NOT_PROVIDED;
     }
   }
@@ -195,19 +195,19 @@ return_type ResourceManager::check_command_interfaces(
 
 return_type ResourceManager::check_state_interfaces()
 {
-  //TODO(anyone): the same logic as for command interfaces
+  // TODO(anyone): the same logic as for command interfaces
   return return_type::ERROR;
 }
 
 return_type ResourceManager::claim_command_handle(
-  const std::string& joint_name, const std::vector<std::string>  & interfaces,
-  std::shared_ptr<hardware_interface::components::Joint>& command_handle)
+  const std::string & joint_name, const std::vector<std::string> & interfaces,
+  std::shared_ptr<hardware_interface::components::Joint> & command_handle)
 {
   // Check joint existance
   if (joint_components_.find(joint_name) == joint_components_.end()) {
-    //TODO(all): Do we need to return dedicated code?
+    // TODO(all): Do we need to return dedicated code?
     RCLCPP_ERROR(rclcpp::get_logger("ros2_control_ResourceManager"),
-                 "There is no command handle interface for " + joint_name);
+      "There is no command handle interface for " + joint_name);
     return return_type::INTERFACE_NOT_FOUND;
   }
 
@@ -215,16 +215,16 @@ return_type ResourceManager::claim_command_handle(
   for (const auto & interface : interfaces) {
     if (std::find(claimed_command_interfaces_.at(joint_name).cbegin(),
       claimed_command_interfaces_.at(joint_name).cend(),
-                  interface) != claimed_command_interfaces_.at(joint_name).cend())
+      interface) != claimed_command_interfaces_.at(joint_name).cend())
     {
       RCLCPP_ERROR(rclcpp::get_logger("ros2_control_ResourceManager"),
-                   "The interface '" + interface + "' for " + joint_name + " is already claimed");
+        "The interface '" + interface + "' for " + joint_name + " is already claimed");
       return return_type::ALREADY_CLAIMED;
     }
   }
 
   command_handle = joint_components_[joint_name];
-  //TODO(anyone) this could be done with `insert`...
+  // TODO(anyone) this could be done with `insert`...
   for (const auto & interface : interfaces) {
     claimed_command_interfaces_[joint_name].push_back(interface);
   }
@@ -232,4 +232,4 @@ return_type ResourceManager::claim_command_handle(
 }
 
 
-}  //  namespace resource_manager
+}  // namespace resource_manager
