@@ -47,7 +47,6 @@ if(BUILD_TESTING)
     test/test_transmission_parser.cpp
   )
   target_include_directories(test_transmission_parser PUBLIC include)
-  message(STATUS "tiny xml in ${TinyXML_LIBRARIES}")
   target_link_libraries(test_transmission_parser transmission_parser)
 endif()
 
