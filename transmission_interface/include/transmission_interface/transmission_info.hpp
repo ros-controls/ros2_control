@@ -50,8 +50,8 @@ struct ActuatorInfo
  */
 struct TransmissionInfo
 {
-  std::string joint_name;
-  std::string joint_control_type;
+  std::string name;
+  std::string control_type;
   std::vector<JointInfo> joints;
   std::vector<ActuatorInfo> actuators;
 };

@@ -54,8 +54,8 @@ bool TransmissionParser::parse(const std::string& urdf, std::vector<Transmission
     // Transmission name
     if(trans_it->Attribute("name"))
     {
-      transmission.joint_name = trans_it->Attribute("name");
-      if (transmission.joint_name.empty())
+      transmission.name = trans_it->Attribute("name");
+      if (transmission.name.empty())
       {
         RCLCPP_ERROR_STREAM(g_logger, "Empty name attribute specified for transmission.");
         throw std::runtime_error("Empty name attribute specified for transmission");
@@ -72,22 +72,22 @@ bool TransmissionParser::parse(const std::string& urdf, std::vector<Transmission
     if(!type_child)
     {
       RCLCPP_ERROR_STREAM(g_logger, "No type element found in transmission '"
-          << transmission.joint_name << "'.");
+          << transmission.name << "'.");
       throw std::runtime_error("No type element found in transmission");
     }
     if (!type_child->GetText())
     {
       RCLCPP_ERROR_STREAM(g_logger, "Skipping empty type element in transmission '"
-          << transmission.joint_name << "'.");
+          << transmission.name << "'.");
       throw std::runtime_error("empty type element in transmission");
     }
-    transmission.joint_control_type = type_child->GetText();
+    transmission.control_type = type_child->GetText();
 
     // Load joints
     if(!parseJoints(trans_it, transmission.joints))
     {
       RCLCPP_ERROR_STREAM(g_logger, "Failed to load joints for transmission '"
-          << transmission.joint_name << "'.");
+          << transmission.name << "'.");
       throw std::runtime_error("Failed to load joints for transmission");
     }
 
@@ -95,7 +95,7 @@ bool TransmissionParser::parse(const std::string& urdf, std::vector<Transmission
     if(!parseActuators(trans_it, transmission.actuators))
     {
       RCLCPP_ERROR_STREAM(g_logger, "Failed to load actuators for transmission '"
-          << transmission.joint_name << "'.");
+          << transmission.name << "'.");
       throw std::runtime_error("Failed to load actuators for transmission");
     }
 

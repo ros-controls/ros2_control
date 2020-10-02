@@ -395,8 +395,8 @@ TEST_F(TestTransmissionParser, successfully_parse_valid_urdf)
   ASSERT_THAT(transmissions, SizeIs(2));
 
   // first transmission
-  EXPECT_EQ("rrbot_tran1", transmissions[0].joint_name);
-  EXPECT_EQ("transmission_interface/SimpleTransmission", transmissions[0].joint_control_type);
+  EXPECT_EQ("rrbot_tran1", transmissions[0].name);
+  EXPECT_EQ("transmission_interface/SimpleTransmission", transmissions[0].control_type);
 
   ASSERT_THAT(transmissions[0].joints, SizeIs(1));
   ASSERT_THAT(transmissions[0].joints[0].hardware_interfaces, SizeIs(1));
@@ -410,8 +410,8 @@ TEST_F(TestTransmissionParser, successfully_parse_valid_urdf)
   EXPECT_EQ(1, transmissions[0].actuators[0].mechanical_reduction);
 
   // second transmission
-  EXPECT_EQ("rrbot_tran2", transmissions[1].joint_name);
-  EXPECT_EQ("transmission_interface/SimpleTransmission", transmissions[1].joint_control_type);
+  EXPECT_EQ("rrbot_tran2", transmissions[1].name);
+  EXPECT_EQ("transmission_interface/SimpleTransmission", transmissions[1].control_type);
 
   ASSERT_THAT(transmissions[1].joints, SizeIs(1));
   ASSERT_THAT(transmissions[1].joints[0].hardware_interfaces, SizeIs(1));
