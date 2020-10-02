@@ -109,17 +109,17 @@ if(BUILD_TESTING)
     test_robot_hardware
   )
 
-#   ament_add_gmock(
-#     test_controller_manager_srvs
-#     test/test_controller_manager_srvs.cpp
-#     APPEND_ENV AMENT_PREFIX_PATH=${ament_index_build_path}_$<CONFIG>
-#   )
-#   target_include_directories(test_controller_manager_srvs PRIVATE include)
-#   target_link_libraries(test_controller_manager_srvs controller_manager test_controller)
-#   ament_target_dependencies(
-#     test_controller_manager_srvs
-#     test_robot_hardware
-#   )
+  ament_add_gmock(
+    test_controller_manager_srvs
+    test/test_controller_manager_srvs.cpp
+    APPEND_ENV AMENT_PREFIX_PATH=${ament_index_build_path}_$<CONFIG>
+  )
+  target_include_directories(test_controller_manager_srvs PRIVATE include)
+  target_link_libraries(test_controller_manager_srvs controller_manager test_controller)
+  ament_target_dependencies(
+    test_controller_manager_srvs
+    test_robot_hardware
+  )
 
   pluginlib_export_plugin_description_file(controller_interface test/test_controller.xml)
 

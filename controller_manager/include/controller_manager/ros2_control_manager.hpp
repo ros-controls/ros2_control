@@ -36,16 +36,18 @@ public:
     rclcpp::NodeOptions options = rclcpp::NodeOptions()
   );
 
-  void loop();
+  CONTROLLER_MANAGER_PUBLIC
+  controller_interface::return_type configure();
 
 private:
-  std::shared_ptr<rclcpp::Executor> executor_;
+  void loop();
 
-  std::shared_ptr<rclcpp::SyncParametersClient> parameters_client_;
-  rclcpp::TimerBase::SharedPtr timer_;
+  std::shared_ptr<rclcpp::Executor> executor_;
 
   std::unique_ptr<controller_manager::ControllerManagerNewWithManager> controller_manager_;
   std::shared_ptr<resource_manager::ResourceManager> resource_manager_;
+
+  rclcpp::TimerBase::SharedPtr timer_;
 };
 
 }  // namespace control_manager

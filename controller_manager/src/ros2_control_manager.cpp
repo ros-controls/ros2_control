@@ -26,46 +26,40 @@ using namespace std::chrono_literals;
 namespace control_manager
 {
 
-  ROS2ControlManager::ROS2ControlManager(
-    std::shared_ptr<rclcpp::Executor> executor,
-    const std::string & manager_node_name,
-    rclcpp::NodeOptions options
-  ) : Node(manager_node_name, options)
+ROS2ControlManager::ROS2ControlManager(
+  std::shared_ptr<rclcpp::Executor> executor,
+  const std::string & manager_node_name,
+  rclcpp::NodeOptions options)
+  : Node(manager_node_name, options),
+    executor_(executor)
 {
-  executor_ = executor;
+}
 
-  parameters_client_ = std::make_shared<rclcpp::SyncParametersClient>(this);
-  while (!parameters_client_->wait_for_service(1s)) {
-    if (!rclcpp::ok()) {
-      RCLCPP_ERROR(this->get_logger(), "Interrupted while waiting for the service. Exiting.");
-      rclcpp::shutdown();
-    }
-    RCLCPP_INFO(this->get_logger(), "service not available, waiting again...");
-  }
-
+controller_interface::return_type ROS2ControlManager::configure()
+{
   //  Load robot_description parameter
-//  TODO(all): should we use option with undeclared parameters or we should declare each of them?
-//   this->declare_parameter("robot_description", "");
-  auto get_parameters_result = parameters_client_->get_parameters({"robot_description"});
+  //  TODO(all): should we use option with undeclared parameters or we should declare each of them?
+  //   this->declare_parameter("robot_description", "");
+  auto get_parameters_result = this->get_parameters({"robot_description"});
 
   //  Test the resulting vector of parameters
   if ((get_parameters_result.size() != 1) ||
-      (get_parameters_result[0].get_type() == rclcpp::ParameterType::PARAMETER_NOT_SET))
+    (get_parameters_result[0].get_type() == rclcpp::ParameterType::PARAMETER_NOT_SET))
   {
     RCLCPP_FATAL(this->get_logger(), "No robot_description parameter");
-    rclcpp::shutdown();
+    return controller_interface::return_type::ERROR;
   }
   std::string robot_description = get_parameters_result[0].value_to_string();
 
-//  TODO(all): should we use option with undeclared parameters or we should declare each of them?
-//   this->declare_parameter("controllers", std::vector<std::string>());
-  get_parameters_result = parameters_client_->get_parameters({"controllers"});
+  //  TODO(all): should we use option with undeclared parameters or we should declare each of them?
+  //   this->declare_parameter("controllers", std::vector<std::string>());
+  get_parameters_result = this->get_parameters({"controllers"});
   if ((get_parameters_result.size() != 1) ||
-      (get_parameters_result[0].get_type() == rclcpp::ParameterType::PARAMETER_NOT_SET) ||
-      (get_parameters_result[0].as_string_array().size() == 0))
+    (get_parameters_result[0].get_type() == rclcpp::ParameterType::PARAMETER_NOT_SET) ||
+    (get_parameters_result[0].as_string_array().size() == 0))
   {
     RCLCPP_FATAL(this->get_logger(), "controllers parameter not existing or empty");
-    rclcpp::shutdown();
+    return controller_interface::return_type::ERROR;
   }
   std::vector<std::string> controllers = get_parameters_result[0].as_string_array();
   RCLCPP_INFO(this->get_logger(), "found %d controllers", controllers.size());
@@ -76,7 +70,7 @@ namespace control_manager
     robot_description) != hardware_interface::return_type::OK)
   {
     RCLCPP_FATAL(this->get_logger(), "hardware type not recognized");
-    rclcpp::shutdown();
+    return controller_interface::return_type::ERROR;
   }
 
   // initialized controller_manager
@@ -89,7 +83,7 @@ namespace control_manager
     rclcpp::Parameter controller_type;
     if (!this->get_parameter(controller + ".type", controller_type)) {
       RCLCPP_ERROR(this->get_logger(), "'type' parameter not set for " + controller);
-      rclcpp::shutdown();
+      return controller_interface::return_type::ERROR;
     }
     RCLCPP_DEBUG(this->get_logger(),
                  "loading " + controller + " of type: " + controller_type.value_to_string());
@@ -98,14 +92,16 @@ namespace control_manager
 
   if (controller_manager_->configure() == controller_interface::return_type::ERROR) {
     RCLCPP_FATAL(this->get_logger(), "controller_manager could not configure controllers");
-    rclcpp::shutdown();
+    return controller_interface::return_type::ERROR;
   }
   if (controller_manager_->activate() == controller_interface::return_type::ERROR) {
     RCLCPP_FATAL(this->get_logger(), "controller_manager could not active controllers");
-    rclcpp::shutdown();
+    return controller_interface::return_type::ERROR;
   }
 
   timer_ = this->create_wall_timer(1000ms, std::bind(&ROS2ControlManager::loop, this));
+
+  return controller_interface::return_type::SUCCESS;
 }
 
 void ROS2ControlManager::loop()

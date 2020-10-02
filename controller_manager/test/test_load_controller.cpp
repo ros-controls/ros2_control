@@ -48,6 +48,9 @@ TEST_F(TestControllerManager, load1_known_controller)
     cm.get_loaded_controllers()[0];
 
   auto lifecycle_node = abstract_test_controller.c->get_lifecycle_node();
+
+  EXPECT_STREQ(lifecycle_node->get_name(), "test_controller_01");
+
   lifecycle_node->configure();
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,

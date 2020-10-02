@@ -25,12 +25,21 @@ int main(int argc, char ** argv)
 
   std::shared_ptr<rclcpp::Executor> executor =
       std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
-  std::string manager_node_name = "ros2_control_node";
-  rclcpp::NodeOptions options;
-  options.allow_undeclared_parameters(true);
-  options.automatically_declare_parameters_from_overrides(true);
-  rclcpp::spin(
-    std::make_shared<control_manager::ROS2ControlManager>(executor, manager_node_name, options));
+  std::string manager_node_name = "control_manager";
+  rclcpp::NodeOptions node_options;
+  node_options.allow_undeclared_parameters(true);
+  node_options.automatically_declare_parameters_from_overrides(true);
+
+  auto cm = std::make_shared<control_manager::ROS2ControlManager>(executor,
+                                                                  manager_node_name,
+                                                                  node_options);
+  if (cm->configure() != controller_interface::return_type::SUCCESS) {
+    rclcpp::shutdown();
+    return 0;
+  }
+
+  executor->add_node(cm);
+  executor->spin();
   rclcpp::shutdown();
   return 0;
 }
