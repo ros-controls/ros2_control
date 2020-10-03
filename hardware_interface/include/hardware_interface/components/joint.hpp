@@ -50,6 +50,7 @@ public:
    * return_type::ERROR otherwise.
    */
   HARDWARE_INTERFACE_PUBLIC
+  virtual
   return_type configure(const ComponentInfo & joint_info);
 
   /**
@@ -58,6 +59,7 @@ public:
    * \return string list with command interfaces.
    */
   HARDWARE_INTERFACE_PUBLIC
+  virtual
   std::vector<std::string> get_command_interfaces() const;
 
   /**
@@ -66,6 +68,7 @@ public:
    * \return string list with state interfaces.
    */
   HARDWARE_INTERFACE_PUBLIC
+  virtual
   std::vector<std::string> get_state_interfaces() const;
 
   /**
@@ -82,9 +85,9 @@ public:
    * is empty; return_type::OK otherwise.
    */
   HARDWARE_INTERFACE_EXPORT
+  virtual
   return_type get_command(
-    std::vector<double> & command,
-    const std::vector<std::string> & interfaces) const;
+    std::vector<double> & command, const std::vector<std::string> & interfaces) const;
 
   /**
    * \brief Get complete command list for the joint. This function is used by the hardware to get
@@ -95,6 +98,7 @@ public:
    * \return return_type::OK always.
    */
   HARDWARE_INTERFACE_EXPORT
+  virtual
   return_type get_command(std::vector<double> & command) const;
 
   /**
@@ -114,9 +118,9 @@ public:
    * (see: https://github.com/ros-controls/ros2_control/issues/129)
    */
   HARDWARE_INTERFACE_EXPORT
+  virtual
   return_type set_command(
-    const std::vector<double> & command,
-    const std::vector<std::string> & interfaces);
+    const std::vector<double> & command, const std::vector<std::string> & interfaces);
 
   /**
    * \brief Get complete state list from the joint. This function is used by the hardware to get
@@ -129,6 +133,7 @@ public:
    * of limits; return_type::OK otherwise.
    */
   HARDWARE_INTERFACE_EXPORT
+  virtual
   return_type set_command(const std::vector<double> & command);
 
   /**
@@ -144,6 +149,7 @@ public:
    * is empty; return_type::OK otherwise.
    */
   HARDWARE_INTERFACE_EXPORT
+  virtual
   return_type get_state(
     std::vector<double> & state,
     const std::vector<std::string> & interfaces) const;
@@ -157,6 +163,7 @@ public:
    * \return return_type::OK always.
    */
   HARDWARE_INTERFACE_EXPORT
+  virtual
   return_type get_state(std::vector<double> & state) const;
 
   /**
@@ -171,9 +178,9 @@ public:
    * defined for the joint; return_type::OK otherwise.
    */
   HARDWARE_INTERFACE_EXPORT
+  virtual
   return_type set_state(
-    const std::vector<double> & state,
-    const std::vector<std::string> & interfaces);
+    const std::vector<double> & state, const std::vector<std::string> & interfaces);
 
   /**
    * \brief Set complete state list from the joint.This function is used by the hardware to set its
@@ -185,6 +192,7 @@ public:
    * joint's state interfaces, return_type::OK otherwise.
    */
   HARDWARE_INTERFACE_EXPORT
+  virtual
   return_type set_state(const std::vector<double> & state);
 
 protected:
