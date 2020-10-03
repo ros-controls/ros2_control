@@ -16,6 +16,7 @@
 #define HARDWARE_INTERFACE__SYSTEM_HARDWARE_INTERFACE_HPP_
 
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "hardware_interface/components/joint.hpp"
@@ -52,7 +53,12 @@ public:
    */
   HARDWARE_INTERFACE_PUBLIC
   virtual
-  return_type configure(const HardwareInfo & system_info) = 0;
+  return_type configure(const HardwareInfo & system_info)
+  {
+    info_ = system_info;
+    status_ = hardware_interface::hardware_interface_status::CONFIGURED;
+    return return_type::OK;
+  }
 
   /**
    * \brief Start exchange data with the hardware.
@@ -73,13 +79,28 @@ public:
   return_type stop() = 0;
 
   /**
+   * \brief Get the name of the system hardware
+   *
+   * \return Get the name of the component as specified in the URDF
+   */
+  HARDWARE_INTERFACE_PUBLIC
+  virtual
+  std::string get_name() const
+  {
+    return info_.name;
+  }
+
+  /**
    * \brief Get current state of the system hardware.
    *
    * \return hardware_interface_status current status.
    */
   HARDWARE_INTERFACE_PUBLIC
   virtual
-  hardware_interface_status get_status() const = 0;
+  hardware_interface_status get_status() const
+  {
+    return status_;
+  }
 
   /**
    * \brief Read data from the hardware into sensors using "set_state" function in the Sensor class.
@@ -115,6 +136,10 @@ public:
   return_type
   virtual
   write_joints(const std::vector<std::shared_ptr<components::Joint>> & joints) = 0;
+
+protected:
+  hardware_interface::HardwareInfo info_;
+  hardware_interface::hardware_interface_status status_;
 };
 
 }  // namespace hardware_interface
