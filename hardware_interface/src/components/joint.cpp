@@ -18,9 +18,8 @@
 #include "hardware_interface/components/joint.hpp"
 
 #include "hardware_interface/components/component_info.hpp"
+#include "hardware_interface/components/component_lists_management.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
-
-#include "./component_lists_management.hpp"
 
 namespace hardware_interface
 {
@@ -61,8 +60,7 @@ return_type Joint::get_command(std::vector<double> & command) const
 }
 
 return_type Joint::set_command(
-  const std::vector<double> & command,
-  const std::vector<std::string> & interfaces)
+  const std::vector<double> & command, const std::vector<std::string> & interfaces)
 {
   return set_internal_values(command, interfaces, info_.command_interfaces, commands_);
 }
