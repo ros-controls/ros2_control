@@ -42,6 +42,7 @@
 #include <rcppmath/clamp.hpp>
 
 #include <string>
+#include <memory>
 
 
 // Floating-point value comparison threshold
