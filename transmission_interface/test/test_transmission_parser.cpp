@@ -427,7 +427,8 @@ TEST_F(TestTransmissionParser, successfully_parse_valid_urdf)
 
 TEST_F(TestTransmissionParser, empty_string_throws_error)
 {
-  //ASSERT_THROW(parse_transmissions_from_urdf(""), std::runtime_error);
+  ASSERT_THROW(transmission_interface::parse_transmissions_from_urdf(""),
+               std::runtime_error);
 }
 
 TEST_F(TestTransmissionParser, empty_urdf_returns_empty)
@@ -448,6 +449,7 @@ TEST_F(TestTransmissionParser, simpler_parse_transmissions_from_urdf_returns_lis
 
 TEST_F(TestTransmissionParser, wrong_urdf_throws_error)
 {
-  EXPECT_THROW(transmission_interface::parse_transmissions_from_urdf(wrong_urdf_xml_), std::runtime_error);
+  EXPECT_THROW(transmission_interface::parse_transmissions_from_urdf(wrong_urdf_xml_),
+               std::runtime_error);
   //ASSERT_THROW(parse_transmissions_from_urdf(wrong_urdf_xml_), std::runtime_error);
 }

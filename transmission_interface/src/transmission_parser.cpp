@@ -12,11 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <sstream>
 #include <transmission_interface/transmission_parser.hpp>
 
 // ROS
 #include <rclcpp/rclcpp.hpp>
+
+#include <sstream>
+
 
 namespace transmission_interface
 {
@@ -31,7 +33,8 @@ std::vector<TransmissionInfo> parse_transmissions_from_urdf(const std::string & 
 }
 
 
-bool TransmissionParser::parse(const std::string& urdf, std::vector<TransmissionInfo>& transmissions)
+bool TransmissionParser::parse
+    (const std::string& urdf, std::vector<TransmissionInfo>& transmissions)
 {
   // initialize TiXmlDocument doc with a string
   TiXmlDocument doc;
@@ -60,8 +63,7 @@ bool TransmissionParser::parse(const std::string& urdf, std::vector<Transmission
         RCLCPP_ERROR_STREAM(g_logger, "Empty name attribute specified for transmission.");
         throw std::runtime_error("Empty name attribute specified for transmission");
       }
-    }
-    else
+    } else
     {
       RCLCPP_ERROR_STREAM(g_logger, "No name attribute specified for transmission.");
       throw std::runtime_error("No name attribute specified for transmission");
@@ -184,7 +186,8 @@ bool TransmissionParser::parseJoints(TiXmlElement *trans_it, std::vector<JointIn
   return true;
 }
 
-bool TransmissionParser::parseActuators(TiXmlElement *trans_it, std::vector<ActuatorInfo>& actuators)
+bool TransmissionParser::parseActuators
+      (TiXmlElement *trans_it, std::vector<ActuatorInfo>& actuators)
 {
   // Loop through each available actuator
   TiXmlElement *actuator_it = nullptr;
@@ -203,8 +206,7 @@ bool TransmissionParser::parseActuators(TiXmlElement *trans_it, std::vector<Actu
         RCLCPP_ERROR_STREAM(g_logger, "Empty name attribute specified for actuator.");
         throw std::runtime_error("Empty name attribute specified for actuator");
       }
-    }
-    else
+    } else
     {
       RCLCPP_ERROR_STREAM(g_logger, "No name attribute specified for actuator.");
       throw std::runtime_error("No name attribute specified for actuator");
@@ -265,4 +267,4 @@ bool TransmissionParser::parseActuators(TiXmlElement *trans_it, std::vector<Actu
   return true;
 }
 
-} // namespace
+}  // namespace transmission_interface

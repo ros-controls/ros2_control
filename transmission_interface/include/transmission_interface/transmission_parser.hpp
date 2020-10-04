@@ -27,6 +27,9 @@
 // XML
 #include <tinyxml.h>
 
+#include <string>
+#include <vector>
+
 namespace transmission_interface
 {
 
@@ -34,7 +37,6 @@ namespace transmission_interface
 class TransmissionParser
 {
 public:
-
   /**
    * \brief Parses the transmission elements of a URDF
    * \param[in] urdf_string XML string of a valid URDF file that contains <tt>\<transmission\></tt> elements
@@ -59,7 +61,6 @@ protected:
    * \return true if successful
    */
   static bool parseActuators(TiXmlElement *trans_it, std::vector<ActuatorInfo>& actuators);
-
 }; // class
 
 
