@@ -453,5 +453,4 @@ TEST_F(TestTransmissionParser, wrong_urdf_throws_error)
   EXPECT_THROW(
     transmission_interface::parse_transmissions_from_urdf(wrong_urdf_xml_),
     std::runtime_error);
-  //ASSERT_THROW(parse_transmissions_from_urdf(wrong_urdf_xml_), std::runtime_error);
 }
