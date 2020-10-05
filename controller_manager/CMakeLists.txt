@@ -35,18 +35,6 @@ target_compile_definitions(controller_manager PRIVATE "CONTROLLER_MANAGER_BUILDI
 # prevent pluginlib from using boost
 target_compile_definitions(controller_manager PUBLIC "PLUGINLIB__DISABLE_BOOST_FUNCTIONS")
 
-# add_library(ros2_control_manager SHARED src/ros2_control_manager.cpp)
-# target_include_directories(ros2_control_manager PRIVATE include)
-# target_link_libraries(ros2_control_manager controller_manager)
-# ament_target_dependencies(ros2_control_manager
-#   controller_interface
-#   hardware_interface
-#   rclcpp
-# )
-# # Causes the visibility macros to use dllexport rather than dllimport,
-# # which is appropriate when building the dll but not consuming it.
-# target_compile_definitions(ros2_control_manager PRIVATE "CONTROLLER_MANAGER_BUILDING_DLL")
-
 add_executable(ros2_control_node src/ros2_control_node.cpp)
 target_include_directories(ros2_control_node PRIVATE include)
 target_link_libraries(ros2_control_node controller_manager)
@@ -58,7 +46,6 @@ ament_target_dependencies(ros2_control_node
 
 install(TARGETS controller_manager
   LIBRARY DESTINATION lib
-#   LIBRARY DESTINATION lib/${PROJECT_NAME}
 )
 
 install(TARGETS ros2_control_node
