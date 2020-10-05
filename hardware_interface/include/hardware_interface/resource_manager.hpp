@@ -52,29 +52,26 @@ public:
   return_type load_and_configure_resources_from_urdf(std::string urdf_string);
 
   HARDWARE_INTERFACE_PUBLIC
-  return_type start_all_resources();
-
-  HARDWARE_INTERFACE_PUBLIC
-  return_type stop_all_resources();
-
-  //  Real-time safe functions (at least the goal is to be...)
-  HARDWARE_INTERFACE_PUBLIC
-  return_type read_all_resources();
-
-  HARDWARE_INTERFACE_PUBLIC
-  return_type write_all_resources();
-
-  HARDWARE_INTERFACE_PUBLIC
   return_type check_command_interfaces(
     const std::string & joint_name, const std::vector<std::string> & interfaces) const;
-
-  HARDWARE_INTERFACE_PUBLIC
-  return_type check_state_interfaces();
 
   HARDWARE_INTERFACE_PUBLIC
   return_type claim_command_handle(
     const std::string & joint_name, const std::vector<std::string> & interfaces,
     std::shared_ptr<hardware_interface::components::Joint> & command_handle);
+
+  //  Real-time safe functions
+  HARDWARE_INTERFACE_PUBLIC
+  return_type start_all_resources();
+
+  HARDWARE_INTERFACE_PUBLIC
+  return_type stop_all_resources();
+
+  HARDWARE_INTERFACE_PUBLIC
+  return_type read_all_resources();
+
+  HARDWARE_INTERFACE_PUBLIC
+  return_type write_all_resources();
 
 private:
   // TODO(all): make this unique?

@@ -209,12 +209,6 @@ return_type ResourceManager::check_command_interfaces(
   return return_type::OK;
 }
 
-return_type ResourceManager::check_state_interfaces()
-{
-  // TODO(anyone): the same logic as for command interfaces
-  return return_type::ERROR;
-}
-
 return_type ResourceManager::claim_command_handle(
   const std::string & joint_name, const std::vector<std::string> & interfaces,
   std::shared_ptr<hardware_interface::components::Joint> & command_handle)

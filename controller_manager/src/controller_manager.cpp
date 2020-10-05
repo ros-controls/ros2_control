@@ -67,48 +67,36 @@ ControllerManager::ControllerManager(
   using namespace std::placeholders;
   list_controllers_service_ = create_service<controller_manager_msgs::srv::ListControllers>(
     "~/list_controllers",
-    std::bind(
-      &ControllerManager::list_controllers_srv_cb, this, _1,
-      _2),
-      rmw_qos_profile_services_default,
-      services_callback_group_);
+    std::bind(&ControllerManager::list_controllers_srv_cb, this, _1, _2),
+    rmw_qos_profile_services_default,
+    services_callback_group_);
   list_controller_types_service_ =
     create_service<controller_manager_msgs::srv::ListControllerTypes>(
     "~/list_controller_types",
-    std::bind(
-      &ControllerManager::list_controller_types_srv_cb, this, _1,
-      _2),
-      rmw_qos_profile_services_default,
-      services_callback_group_);
+    std::bind(&ControllerManager::list_controller_types_srv_cb, this, _1, _2),
+    rmw_qos_profile_services_default,
+    services_callback_group_);
   load_controller_service_ = create_service<controller_manager_msgs::srv::LoadController>(
     "~/load_controller",
-    std::bind(
-      &ControllerManager::load_controller_service_cb, this, _1,
-      _2),
-      rmw_qos_profile_services_default,
-      services_callback_group_);
+    std::bind(&ControllerManager::load_controller_service_cb, this, _1, _2),
+    rmw_qos_profile_services_default,
+    services_callback_group_);
   reload_controller_libraries_service_ =
     create_service<controller_manager_msgs::srv::ReloadControllerLibraries>(
     "~/reload_controller_libraries",
-    std::bind(
-      &ControllerManager::reload_controller_libraries_service_cb, this, _1,
-      _2),
-      rmw_qos_profile_services_default,
-      services_callback_group_);
+    std::bind(&ControllerManager::reload_controller_libraries_service_cb, this, _1, _2),
+    rmw_qos_profile_services_default,
+    services_callback_group_);
   switch_controller_service_ = create_service<controller_manager_msgs::srv::SwitchController>(
     "~/switch_controller",
-    std::bind(
-      &ControllerManager::switch_controller_service_cb, this, _1,
-      _2),
-      rmw_qos_profile_services_default,
-      services_callback_group_);
+    std::bind(&ControllerManager::switch_controller_service_cb, this, _1, _2),
+    rmw_qos_profile_services_default,
+    services_callback_group_);
   unload_controller_service_ = create_service<controller_manager_msgs::srv::UnloadController>(
     "~/unload_controller",
-    std::bind(
-      &ControllerManager::unload_controller_service_cb, this, _1,
-      _2),
-      rmw_qos_profile_services_default,
-      services_callback_group_);
+    std::bind(&ControllerManager::unload_controller_service_cb, this, _1, _2),
+    rmw_qos_profile_services_default,
+    services_callback_group_);
 }
 
 controller_interface::return_type ControllerManager::configure()
@@ -151,7 +139,7 @@ controller_interface::return_type ControllerManager::configure()
 
   // configure resource_manager
   if (resource_manager_->load_and_configure_resources_from_urdf(
-    robot_description) != hardware_interface::return_type::OK)
+      robot_description) != hardware_interface::return_type::OK)
   {
     RCLCPP_FATAL(get_logger(), "hardware type not recognized");
     return controller_interface::return_type::ERROR;
@@ -170,9 +158,9 @@ controller_interface::return_type ControllerManager::configure()
     load_controller(controller, controller_type.value_to_string());
   }
 
-  timer_ = create_wall_timer(std::chrono::milliseconds(1000),
-                             std::bind(&ControllerManager::update, this),
-                             realtime_callback_group_);
+  timer_ = create_wall_timer(std::chrono::milliseconds(update_time_ms),
+      std::bind(&ControllerManager::update, this),
+      realtime_callback_group_);
 
   return controller_interface::return_type::SUCCESS;
 }
@@ -566,7 +554,7 @@ void ControllerManager::manage_switch()
 #ifdef TODO_IMPLEMENT_RESOURCE_CHECKING
   // switch hardware interfaces (if any)
   if (!switch_params_.started) {
-    resource_manager_>doSwitch(switch_start_list_, switch_stop_list_);
+    resource_manager_->doSwitch(switch_start_list_, switch_stop_list_);
     switch_params_.started = true;
   }
 #endif

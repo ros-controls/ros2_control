@@ -21,7 +21,6 @@
 #include "controller_interface/visibility_control.h"
 
 #include "hardware_interface/resource_manager.hpp"
-#include "hardware_interface/robot_hardware.hpp"
 
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
@@ -67,7 +66,6 @@ protected:
 };
 
 using ControllerInterfaceSharedPtr = std::shared_ptr<ControllerInterface>;
-
 
 }  // namespace controller_interface
 

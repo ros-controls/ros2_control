@@ -117,11 +117,6 @@ public:
   controller_interface::return_type
   update();
 
-  //TODO(anyone) this should be removed adding only because server does not work
-  CONTROLLER_MANAGER_PUBLIC
-  controller_interface::return_type
-  ext_start_controllers();
-
 protected:
   CONTROLLER_MANAGER_PUBLIC
   controller_interface::ControllerInterfaceSharedPtr
