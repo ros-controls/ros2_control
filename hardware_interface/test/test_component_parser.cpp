@@ -907,9 +907,8 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_modular_robot
   EXPECT_EQ(hardware_info.joints[0].class_type, "ros2_control_components/VelocityJoint");
   ASSERT_THAT(hardware_info.joints[0].command_interfaces, SizeIs(1));
   EXPECT_EQ(hardware_info.joints[0].command_interfaces[0].name, "velocity");
-  // TODO(andyz): parse min/max value for this joint
-//  ASSERT_THAT(hardware_info.joints[0].parameters, SizeIs(2));
-//  EXPECT_EQ(hardware_info.joints[0].parameters.at("min_velocity_value"), "-1");
+  EXPECT_EQ(hardware_info.joints[0].command_interfaces[0].min, "-1");
+  EXPECT_EQ(hardware_info.joints[0].command_interfaces[0].max, "1");
 
   hardware_info = control_hardware.at(2);
 
