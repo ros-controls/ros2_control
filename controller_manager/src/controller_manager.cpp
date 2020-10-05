@@ -134,7 +134,7 @@ controller_interface::return_type ControllerManager::configure()
     RCLCPP_FATAL(get_logger(), "update_time parameter not existing or empty");
     return controller_interface::return_type::ERROR;
   }
-  double update_time_ms = get_parameters_result[0].as_double();
+  int update_time_ms = get_parameters_result[0].as_int();
   RCLCPP_INFO(get_logger(), "update time is %.3f ms", update_time_ms);
 
   // configure resource_manager
