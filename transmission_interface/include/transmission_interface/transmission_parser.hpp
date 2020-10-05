@@ -43,7 +43,7 @@ public:
    * \param[out] transmissions vector of loaded transmission meta data
    * \return true if parsing was successful
    */
-  static bool parse(const std::string& urdf_string, std::vector<TransmissionInfo>& transmissions);
+  static bool parse(const std::string & urdf_string, std::vector<TransmissionInfo> & transmissions);
 
 protected:
   /**
@@ -52,7 +52,7 @@ protected:
    * \param[out] joints resulting list of joints in the transmission
    * \return true if successful
    */
-  static bool parseJoints(TiXmlElement *trans_it, std::vector<JointInfo>& joints);
+  static bool parseJoints(TiXmlElement * trans_it, std::vector<JointInfo> & joints);
 
   /**
    * \brief Parses the actuator elements within transmission elements of a URDF
@@ -60,7 +60,7 @@ protected:
    * \param[out] actuators resulting list of actuators in the transmission
    * \return true if successful
    */
-  static bool parseActuators(TiXmlElement *trans_it, std::vector<ActuatorInfo>& actuators);
+  static bool parseActuators(TiXmlElement * trans_it, std::vector<ActuatorInfo> & actuators);
 }; // class
 
 
