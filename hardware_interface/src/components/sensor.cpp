@@ -16,7 +16,6 @@
 #include <vector>
 
 #include "hardware_interface/components/sensor.hpp"
-
 #include "hardware_interface/components/component_info.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 
@@ -36,7 +35,7 @@ return_type Sensor::configure(const ComponentInfo & joint_info)
   return return_type::OK;
 }
 
-std::vector<std::string> Sensor::get_state_interfaces()
+std::vector<std::string> Sensor::get_state_interfaces() const
 {
   return info_.state_interfaces;
 }
