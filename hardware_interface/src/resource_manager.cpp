@@ -33,6 +33,11 @@
 #include "pluginlib/class_loader.hpp"
 #include "rclcpp/rclcpp.hpp"
 
+namespace
+{
+constexpr const auto kLoggerName = "ros2_control_ResourceManager";
+}  // namespace
+
 namespace resource_manager
 {
 
@@ -63,7 +68,7 @@ ResourceManager::load_and_configure_resources_from_urdf(std::string urdf_string)
   return_type ret = return_type::OK;
   for (auto hardware_info : hardware_info_list) {
     RCLCPP_INFO(
-      rclcpp::get_logger("ros2_control_ResourceManager"),
+      rclcpp::get_logger(kLoggerName),
       "Loading hardware plugin: " + hardware_info.hardware_class_type);
     if (!hardware_info.type.compare("system")) {
       // TODO(anyone): this here is really not nice...
@@ -79,7 +84,7 @@ ResourceManager::load_and_configure_resources_from_urdf(std::string urdf_string)
       // TODO(anyone): do the same for loading sensors and actuators hardware
     } else {
       RCLCPP_FATAL(
-        rclcpp::get_logger("ros2_control_ResourceManager"),
+        rclcpp::get_logger(kLoggerName),
         "hardware type not recognized");
       return return_type::ERROR;
     }
@@ -87,7 +92,7 @@ ResourceManager::load_and_configure_resources_from_urdf(std::string urdf_string)
     std::vector<std::shared_ptr<hardware_interface::components::Joint>> joints;
     for (auto joint_info : hardware_info.joints) {
       RCLCPP_INFO(
-        rclcpp::get_logger("ros2_control_ResourceManager"),
+        rclcpp::get_logger(kLoggerName),
         "Loading joint plugin: " + joint_info.class_type);
       std::shared_ptr<hardware_interface::components::Joint> joint =
         joint_loader_->createSharedInstance(joint_info.class_type);
@@ -108,7 +113,7 @@ ResourceManager::load_and_configure_resources_from_urdf(std::string urdf_string)
   }
 
   RCLCPP_INFO(
-    rclcpp::get_logger("ros2_control_ResourceManager"),
+    rclcpp::get_logger(kLoggerName),
     "All hardware and component plugins loaded and configured successfully.");
   return return_type::OK;
 }
@@ -182,7 +187,7 @@ return_type ResourceManager::check_command_interfaces(
   if (command_interfaces_.find(joint_name) == command_interfaces_.end()) {
     // TODO(all): Do we need to return dedicated code?
     RCLCPP_ERROR(
-      rclcpp::get_logger("ros2_control_ResourceManager"),
+      rclcpp::get_logger(kLoggerName),
       "There is no command interface for " + joint_name);
     return return_type::INTERFACE_NOT_FOUND;
   }
@@ -195,7 +200,7 @@ return_type ResourceManager::check_command_interfaces(
         interface) == command_interfaces_.at(joint_name).cend())
     {
       RCLCPP_ERROR(
-        rclcpp::get_logger("ros2_control_ResourceManager"),
+        rclcpp::get_logger(kLoggerName),
         "There is no command interface '" + interface + "' found for " + joint_name);
       return return_type::INTERFACE_NOT_PROVIDED;
     }
@@ -218,7 +223,7 @@ return_type ResourceManager::claim_command_handle(
   if (joint_components_.find(joint_name) == joint_components_.end()) {
     // TODO(all): Do we need to return dedicated code?
     RCLCPP_ERROR(
-      rclcpp::get_logger("ros2_control_ResourceManager"),
+      rclcpp::get_logger(kLoggerName),
       "There is no command handle interface for " + joint_name);
     return return_type::INTERFACE_NOT_FOUND;
   }
@@ -231,7 +236,7 @@ return_type ResourceManager::claim_command_handle(
         interface) != claimed_command_interfaces_.at(joint_name).cend())
     {
       RCLCPP_ERROR(
-        rclcpp::get_logger("ros2_control_ResourceManager"),
+        rclcpp::get_logger(kLoggerName),
         "The interface '" + interface + "' for " + joint_name + " is already claimed");
       return return_type::ALREADY_CLAIMED;
     }
