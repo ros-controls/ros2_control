@@ -18,7 +18,8 @@
  * \author Dave Coleman
  */
 
-#pragma once
+#ifndef TRANSMISSION_INTERFACE__TRANSMISSION_PARSER_HPP_
+#define TRANSMISSION_INTERFACE__TRANSMISSION_PARSER_HPP_
 
 
 #include <transmission_interface/transmission_info.hpp>
@@ -61,7 +62,7 @@ protected:
    * \return true if successful
    */
   static bool parseActuators(TiXmlElement * trans_it, std::vector<ActuatorInfo> & actuators);
-}; // class
+};  // class
 
 
 /**
@@ -74,3 +75,5 @@ TRANSMISSION_INTERFACE_PUBLIC
 std::vector<TransmissionInfo> parse_transmissions_from_urdf(const std::string & urdf);
 
 }  // namespace transmission_interface
+
+#endif  // TRANSMISSION_INTERFACE__TRANSMISSION_PARSER_HPP_

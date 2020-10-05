@@ -18,6 +18,8 @@
 #include <rclcpp/rclcpp.hpp>
 
 #include <sstream>
+#include <string>
+#include <vector>
 
 
 namespace transmission_interface
@@ -102,8 +104,7 @@ bool TransmissionParser::parse(
 
     // Save loaded transmission
     transmissions.push_back(transmission);
-
-  } // end for <transmission>
+  }  // end for <transmission>
 
   if (transmissions.empty()) {
     RCLCPP_DEBUG_STREAM(g_logger, "No valid transmissions found.");

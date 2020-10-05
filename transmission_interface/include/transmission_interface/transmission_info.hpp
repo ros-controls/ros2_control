@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#pragma once
+#ifndef TRANSMISSION_INTERFACE__TRANSMISSION_INFO_HPP_
+#define TRANSMISSION_INTERFACE__TRANSMISSION_INFO_HPP_
 
 // C++ standard
 #include <vector>
@@ -55,4 +56,6 @@ struct TransmissionInfo
   std::vector<ActuatorInfo> actuators;
 };
 
-} // namespace transmission_interface
+}  // namespace transmission_interface
+
+#endif  // TRANSMISSION_INTERFACE__TRANSMISSION_INFO_HPP_
