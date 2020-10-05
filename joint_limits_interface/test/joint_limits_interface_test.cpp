@@ -104,13 +104,13 @@ public:
   }
 
 protected:
-    double pos, vel, eff, cmd;
-    std::string name;
-    rclcpp::Duration period;
-    std::shared_ptr<hardware_interface::JointHandle> cmd_handle;
-    std::shared_ptr<hardware_interface::JointHandle> pos_handle, vel_handle, eff_handle;
-    joint_limits_interface::JointLimits limits;
-    joint_limits_interface::SoftJointLimits soft_limits;
+  double pos, vel, eff, cmd;
+  std::string name;
+  rclcpp::Duration period;
+  std::shared_ptr<hardware_interface::JointHandle> cmd_handle;
+  std::shared_ptr<hardware_interface::JointHandle> pos_handle, vel_handle, eff_handle;
+  joint_limits_interface::JointLimits limits;
+  joint_limits_interface::SoftJointLimits soft_limits;
 };
 
 class JointLimitsHandleTest : public JointLimitsTest, public ::testing::Test {};
@@ -120,9 +120,10 @@ TEST_F(JointLimitsHandleTest, HandleConstruction)
   {
     joint_limits_interface::JointLimits limits_bad;
     EXPECT_THROW(
-      joint_limits_interface::PositionJointSoftLimitsHandle(pos_handle, cmd_handle,
-                                                            limits_bad, soft_limits),
-        joint_limits_interface::JointLimitsInterfaceException);
+      joint_limits_interface::PositionJointSoftLimitsHandle(
+        pos_handle, cmd_handle,
+        limits_bad, soft_limits),
+      joint_limits_interface::JointLimitsInterfaceException);
 
     // Print error messages. Requires manual output inspection, but exception message should be
     // descriptive
@@ -505,14 +506,12 @@ public:
   : JointLimitsTest(),
     pos2(0.0), vel2(0.0), eff2(0.0), cmd2(0.0),
     name2("joint2_name"),
-    cmd2_handle(std::make_shared<hardware_interface::JointHandle>
-        (name2, "position_command", &cmd2)),
-    pos2_handle(std::make_shared<hardware_interface::JointHandle>
-        (name2, "position", &pos2)),
-    vel2_handle(std::make_shared<hardware_interface::JointHandle>
-        (name2, "velocity", &vel2)),
-    eff2_handle(std::make_shared<hardware_interface::JointHandle>
-        (name2, "effort", &eff2))
+    cmd2_handle(std::make_shared<hardware_interface::JointHandle>(
+        name2, "position_command",
+        &cmd2)),
+    pos2_handle(std::make_shared<hardware_interface::JointHandle>(name2, "position", &pos2)),
+    vel2_handle(std::make_shared<hardware_interface::JointHandle>(name2, "velocity", &vel2)),
+    eff2_handle(std::make_shared<hardware_interface::JointHandle>(name2, "effort", &eff2))
   {}
 
 protected:
@@ -565,31 +564,31 @@ protected:
 // }
 //
 #if 0  // todo: implement the interfaces
- TEST_F(JointLimitsHandleTest, ResetSaturationInterface)
- {
-   // Populate interface
-   joint_limits_interface::PositionJointSaturationHandle limits_handle1
-      (pos_handle, cmd_handle, limits);
+TEST_F(JointLimitsHandleTest, ResetSaturationInterface)
+{
+  // Populate interface
+  joint_limits_interface::PositionJointSaturationHandle limits_handle1
+    (pos_handle, cmd_handle, limits);
 
-   PositionJointSaturationInterface iface;
-   iface.registerHandle(limits_handle1);
+  PositionJointSaturationInterface iface;
+  iface.registerHandle(limits_handle1);
 
-   iface.enforceLimits(period);  // initialize limit handles
+  iface.enforceLimits(period);  // initialize limit handles
 
-   const double max_increment = period.seconds() * limits.max_velocity;
+  const double max_increment = period.seconds() * limits.max_velocity;
 
-   cmd_handle->set_value(limits.max_position);
-   iface.enforceLimits(period);
+  cmd_handle->set_value(limits.max_position);
+  iface.enforceLimits(period);
 
-   EXPECT_NEAR(cmd_handle->get_value(), max_increment, EPS);
+  EXPECT_NEAR(cmd_handle->get_value(), max_increment, EPS);
 
-   iface.reset();
-   pos = limits.max_position;
-   cmd_handle->set_value(limits.max_position);
-   iface.enforceLimits(period);
+  iface.reset();
+  pos = limits.max_position;
+  cmd_handle->set_value(limits.max_position);
+  iface.enforceLimits(period);
 
-   EXPECT_NEAR(cmd_handle->get_value(), limits.max_position, EPS);
- }
+  EXPECT_NEAR(cmd_handle->get_value(), limits.max_position, EPS);
+}
 #endif
 
 // TEST_F(JointLimitsHandleTest, ResetSoftLimitsInterface)

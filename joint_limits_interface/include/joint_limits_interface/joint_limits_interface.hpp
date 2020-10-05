@@ -60,109 +60,114 @@ namespace joint_limits_interface
 /** \brief The base class of limit handles for enforcing position, velocity, and effort limits of
  * an effort-controlled joint.
  */
-class JointSaturationLimitHandle {
+class JointSaturationLimitHandle
+{
 public:
-    JointSaturationLimitHandle()
-        : prev_pos_(std::numeric_limits<double>::quiet_NaN()),
-          prev_vel_(0.0)
-    {}
+  JointSaturationLimitHandle()
+  : prev_pos_(std::numeric_limits<double>::quiet_NaN()),
+    prev_vel_(0.0)
+  {}
 
-    JointSaturationLimitHandle(
-        const std::shared_ptr<hardware_interface::JointHandle>& jposh,
-        const std::shared_ptr<hardware_interface::JointHandle>& jcmdh,
-        const JointLimits &limits)
-        : jposh_(jposh),
-          jcmdh_(jcmdh),
-          limits_(limits),
-          prev_pos_(std::numeric_limits<double>::quiet_NaN()),
-          prev_vel_(0.0)
-    {}
+  JointSaturationLimitHandle(
+    const std::shared_ptr<hardware_interface::JointHandle> & jposh,
+    const std::shared_ptr<hardware_interface::JointHandle> & jcmdh,
+    const JointLimits & limits)
+  : jposh_(jposh),
+    jcmdh_(jcmdh),
+    limits_(limits),
+    prev_pos_(std::numeric_limits<double>::quiet_NaN()),
+    prev_vel_(0.0)
+  {}
 
-    JointSaturationLimitHandle(
-        const std::shared_ptr<hardware_interface::JointHandle>& jposh,
-        const std::shared_ptr<hardware_interface::JointHandle>& jvelh,
-        const std::shared_ptr<hardware_interface::JointHandle>& jcmdh,
-        const JointLimits &limits)
-        : jposh_(jposh),
-          jvelh_(jvelh),
-          jcmdh_(jcmdh),
-          limits_(limits),
-          prev_pos_(std::numeric_limits<double>::quiet_NaN()),
-          prev_vel_(0.0)
-    {}
+  JointSaturationLimitHandle(
+    const std::shared_ptr<hardware_interface::JointHandle> & jposh,
+    const std::shared_ptr<hardware_interface::JointHandle> & jvelh,
+    const std::shared_ptr<hardware_interface::JointHandle> & jcmdh,
+    const JointLimits & limits)
+  : jposh_(jposh),
+    jvelh_(jvelh),
+    jcmdh_(jcmdh),
+    limits_(limits),
+    prev_pos_(std::numeric_limits<double>::quiet_NaN()),
+    prev_vel_(0.0)
+  {}
 
-    /** \return Joint name. */
-    std::string get_name() const {
-      return jposh_ ? jposh_->get_name()
-        : jvelh_ ? jvelh_->get_name()
-        : jcmdh_ ? jcmdh_->get_name()
-        : std::string();
-    }
+  /** \return Joint name. */
+  std::string get_name() const
+  {
+    return jposh_ ? jposh_->get_name() :
+           jvelh_ ? jvelh_->get_name() :
+           jcmdh_ ? jcmdh_->get_name() :
+           std::string();
+  }
 
-    /** \brief Sub-class implementation of limit enforcing policy.
-     */
-    virtual void enforceLimits(const rclcpp::Duration & period) = 0;
+  /** \brief Sub-class implementation of limit enforcing policy.
+   */
+  virtual void enforceLimits(const rclcpp::Duration & period) = 0;
 
-    /** \brief  clear stored state, causing it to reset next iteration
-     */
-    virtual void reset() {
-      prev_pos_ = std::numeric_limits<double>::quiet_NaN();
-      prev_vel_ = 0.0;
-    }
+  /** \brief  clear stored state, causing it to reset next iteration
+   */
+  virtual void reset()
+  {
+    prev_pos_ = std::numeric_limits<double>::quiet_NaN();
+    prev_vel_ = 0.0;
+  }
 
 protected:
-    std::shared_ptr<hardware_interface::JointHandle> jposh_;
-    std::shared_ptr<hardware_interface::JointHandle> jvelh_;
-    std::shared_ptr<hardware_interface::JointHandle> jcmdh_;
-    joint_limits_interface::JointLimits limits_;
+  std::shared_ptr<hardware_interface::JointHandle> jposh_;
+  std::shared_ptr<hardware_interface::JointHandle> jvelh_;
+  std::shared_ptr<hardware_interface::JointHandle> jcmdh_;
+  joint_limits_interface::JointLimits limits_;
 
-    // stored state - track position and velocity of last update
-    double prev_pos_;
-    double prev_vel_;
+  // stored state - track position and velocity of last update
+  double prev_pos_;
+  double prev_vel_;
 
-    /** \brief Return velocity for limit calculations.
-     *
-     * @param period Time since last measurement
-     * @return the velocity, from state if available, otherwise from previous position history.
-     */
-    double get_velocity(const rclcpp::Duration & period) const {
-      // if we have a handle to a velocity state we can directly return state velocity
-      // otherwise we will estimate velocity from previous position (command or state)
-      return jvelh_
-             ? jvelh_->get_value()
-             : (jposh_->get_value() - prev_pos_) / period.seconds();
-    }
+  /** \brief Return velocity for limit calculations.
+   *
+   * @param period Time since last measurement
+   * @return the velocity, from state if available, otherwise from previous position history.
+   */
+  double get_velocity(const rclcpp::Duration & period) const
+  {
+    // if we have a handle to a velocity state we can directly return state velocity
+    // otherwise we will estimate velocity from previous position (command or state)
+    return jvelh_ ?
+           jvelh_->get_value() :
+           (jposh_->get_value() - prev_pos_) / period.seconds();
+  }
 };
 
 
 /** \brief The base class of limit handles for enforcing position, velocity, and effort limits of
  * an effort-controlled joint that has soft-limits.
  */
-class JointSoftLimitsHandle : public JointSaturationLimitHandle {
+class JointSoftLimitsHandle : public JointSaturationLimitHandle
+{
 public:
-    JointSoftLimitsHandle() {}
+  JointSoftLimitsHandle() {}
 
-    JointSoftLimitsHandle(
-        const std::shared_ptr<hardware_interface::JointHandle>& jposh,
-        const std::shared_ptr<hardware_interface::JointHandle>& jcmdh,
-        const JointLimits &limits,
-        const SoftJointLimits & soft_limits)
-        : JointSaturationLimitHandle(jposh, jcmdh, limits),
-          soft_limits_(soft_limits)
-    {}
+  JointSoftLimitsHandle(
+    const std::shared_ptr<hardware_interface::JointHandle> & jposh,
+    const std::shared_ptr<hardware_interface::JointHandle> & jcmdh,
+    const JointLimits & limits,
+    const SoftJointLimits & soft_limits)
+  : JointSaturationLimitHandle(jposh, jcmdh, limits),
+    soft_limits_(soft_limits)
+  {}
 
-    JointSoftLimitsHandle(
-        const std::shared_ptr<hardware_interface::JointHandle>& jposh,
-        const std::shared_ptr<hardware_interface::JointHandle>& jvelh,
-        const std::shared_ptr<hardware_interface::JointHandle>& jcmdh,
-        const JointLimits &limits,
-        const SoftJointLimits & soft_limits)
-        : JointSaturationLimitHandle(jposh, jvelh, jcmdh, limits),
-          soft_limits_(soft_limits)
-    {}
+  JointSoftLimitsHandle(
+    const std::shared_ptr<hardware_interface::JointHandle> & jposh,
+    const std::shared_ptr<hardware_interface::JointHandle> & jvelh,
+    const std::shared_ptr<hardware_interface::JointHandle> & jcmdh,
+    const JointLimits & limits,
+    const SoftJointLimits & soft_limits)
+  : JointSaturationLimitHandle(jposh, jvelh, jcmdh, limits),
+    soft_limits_(soft_limits)
+  {}
 
 protected:
-    joint_limits_interface::SoftJointLimits soft_limits_;
+  joint_limits_interface::SoftJointLimits soft_limits_;
 };
 
 
@@ -174,8 +179,8 @@ public:
   PositionJointSaturationHandle() {}
 
   PositionJointSaturationHandle(
-    const std::shared_ptr<hardware_interface::JointHandle>& jposh,
-    const std::shared_ptr<hardware_interface::JointHandle>& jcmdh,
+    const std::shared_ptr<hardware_interface::JointHandle> & jposh,
+    const std::shared_ptr<hardware_interface::JointHandle> & jcmdh,
     const JointLimits & limits)
   : JointSaturationLimitHandle(jposh, jcmdh, limits)
   {
@@ -188,11 +193,11 @@ public:
     }
   }
 
-    /**
-   * \brief Enforce position and velocity limits for a joint that is not subject to soft limits.
-   *
-   * \param period Control period.
-   */
+/**
+ * \brief Enforce position and velocity limits for a joint that is not subject to soft limits.
+ *
+ * \param period Control period.
+ */
   void enforceLimits(const rclcpp::Duration & period)
   {
     if (std::isnan(prev_pos_)) {
@@ -262,11 +267,11 @@ public:
   {}
 
   PositionJointSoftLimitsHandle(
-    const std::shared_ptr<hardware_interface::JointHandle>& jposh,
-    const std::shared_ptr<hardware_interface::JointHandle>& jcmdh,
+    const std::shared_ptr<hardware_interface::JointHandle> & jposh,
+    const std::shared_ptr<hardware_interface::JointHandle> & jcmdh,
     const joint_limits_interface::JointLimits & limits,
     const joint_limits_interface::SoftJointLimits & soft_limits)
-    : JointSoftLimitsHandle(jposh, jcmdh, limits, soft_limits)
+  : JointSoftLimitsHandle(jposh, jcmdh, limits, soft_limits)
   {
     if (!limits.has_velocity_limits) {
       throw joint_limits_interface::JointLimitsInterfaceException(
@@ -349,11 +354,11 @@ public:
   EffortJointSaturationHandle() {}
 
   EffortJointSaturationHandle(
-      const std::shared_ptr<hardware_interface::JointHandle>& jposh,
-      const std::shared_ptr<hardware_interface::JointHandle>& jvelh,
-      const std::shared_ptr<hardware_interface::JointHandle>& jcmdh,
-      const joint_limits_interface::JointLimits & limits)
-      : JointSaturationLimitHandle(jposh, jvelh, jcmdh, limits)
+    const std::shared_ptr<hardware_interface::JointHandle> & jposh,
+    const std::shared_ptr<hardware_interface::JointHandle> & jvelh,
+    const std::shared_ptr<hardware_interface::JointHandle> & jcmdh,
+    const joint_limits_interface::JointLimits & limits)
+  : JointSaturationLimitHandle(jposh, jvelh, jcmdh, limits)
   {
     if (!limits.has_velocity_limits) {
       throw joint_limits_interface::JointLimitsInterfaceException(
@@ -368,10 +373,10 @@ public:
   }
 
   EffortJointSaturationHandle(
-      const std::shared_ptr<hardware_interface::JointHandle>& jh,
-      const std::shared_ptr<hardware_interface::JointHandle>& jcmdh,
-      const joint_limits_interface::JointLimits & limits)
-      : EffortJointSaturationHandle(jh, nullptr, jcmdh, limits)
+    const std::shared_ptr<hardware_interface::JointHandle> & jh,
+    const std::shared_ptr<hardware_interface::JointHandle> & jcmdh,
+    const joint_limits_interface::JointLimits & limits)
+  : EffortJointSaturationHandle(jh, nullptr, jcmdh, limits)
   {
   }
 
@@ -379,7 +384,7 @@ public:
    * \brief Enforce position, velocity, and effort limits for a joint that is not subject
    * to soft limits.
    */
-  void enforceLimits(const rclcpp::Duration &period) override
+  void enforceLimits(const rclcpp::Duration & period) override
   {
     double min_eff = -limits_.max_effort;
     double max_eff = limits_.max_effort;
@@ -416,12 +421,12 @@ public:
   EffortJointSoftLimitsHandle() {}
 
   EffortJointSoftLimitsHandle(
-    const std::shared_ptr<hardware_interface::JointHandle>& jposh,
-    const std::shared_ptr<hardware_interface::JointHandle>& jvelh,
-    const std::shared_ptr<hardware_interface::JointHandle>& jcmdh,
+    const std::shared_ptr<hardware_interface::JointHandle> & jposh,
+    const std::shared_ptr<hardware_interface::JointHandle> & jvelh,
+    const std::shared_ptr<hardware_interface::JointHandle> & jcmdh,
     const joint_limits_interface::JointLimits & limits,
     const joint_limits_interface::SoftJointLimits & soft_limits)
-    : JointSoftLimitsHandle(jposh, jvelh, jcmdh, limits, soft_limits)
+  : JointSoftLimitsHandle(jposh, jvelh, jcmdh, limits, soft_limits)
   {
     if (!limits.has_velocity_limits) {
       throw joint_limits_interface::JointLimitsInterfaceException(
@@ -436,11 +441,11 @@ public:
   }
 
   EffortJointSoftLimitsHandle(
-    const std::shared_ptr<hardware_interface::JointHandle>& jh,
-    const std::shared_ptr<hardware_interface::JointHandle>& jcmdh,
+    const std::shared_ptr<hardware_interface::JointHandle> & jh,
+    const std::shared_ptr<hardware_interface::JointHandle> & jcmdh,
     const joint_limits_interface::JointLimits & limits,
     const joint_limits_interface::SoftJointLimits & soft_limits)
-    : EffortJointSoftLimitsHandle(jh, nullptr, jcmdh, limits, soft_limits)
+  : EffortJointSoftLimitsHandle(jh, nullptr, jcmdh, limits, soft_limits)
   {
   }
 
@@ -450,7 +455,7 @@ public:
    * If the joint has no position limits (eg. a continuous joint), only velocity and effort limits
    * will be enforced.
    */
-  void enforceLimits(const rclcpp::Duration &period) override
+  void enforceLimits(const rclcpp::Duration & period) override
   {
     // Current state
     const double pos = jposh_->get_value();
@@ -506,10 +511,10 @@ public:
   VelocityJointSaturationHandle() {}
 
   VelocityJointSaturationHandle(
-    const std::shared_ptr<hardware_interface::JointHandle>& jvelh,  // currently unused
-    const std::shared_ptr<hardware_interface::JointHandle>& jcmdh,
+    const std::shared_ptr<hardware_interface::JointHandle> & jvelh,  // currently unused
+    const std::shared_ptr<hardware_interface::JointHandle> & jcmdh,
     const joint_limits_interface::JointLimits & limits)
-    : JointSaturationLimitHandle(nullptr, jvelh, jcmdh, limits)
+  : JointSaturationLimitHandle(nullptr, jvelh, jcmdh, limits)
   {
     if (!limits.has_velocity_limits) {
       throw joint_limits_interface::JointLimitsInterfaceException(
@@ -519,14 +524,14 @@ public:
   }
 
   VelocityJointSaturationHandle(
-      const std::shared_ptr<hardware_interface::JointHandle>& jcmdh,
-      const joint_limits_interface::JointLimits & limits)
-      : JointSaturationLimitHandle(nullptr, nullptr, jcmdh, limits)
+    const std::shared_ptr<hardware_interface::JointHandle> & jcmdh,
+    const joint_limits_interface::JointLimits & limits)
+  : JointSaturationLimitHandle(nullptr, nullptr, jcmdh, limits)
   {
     if (!limits.has_velocity_limits) {
       throw joint_limits_interface::JointLimitsInterfaceException(
-          "Cannot enforce limits for joint '" + get_name() +
-          "'. It has no velocity limits specification.");
+              "Cannot enforce limits for joint '" + get_name() +
+              "'. It has no velocity limits specification.");
     }
   }
 
@@ -572,12 +577,12 @@ public:
   VelocityJointSoftLimitsHandle() {}
 
   VelocityJointSoftLimitsHandle(
-    const std::shared_ptr<hardware_interface::JointHandle>& jposh,
-    const std::shared_ptr<hardware_interface::JointHandle>& jvelh,
-    const std::shared_ptr<hardware_interface::JointHandle>& jcmdh,
+    const std::shared_ptr<hardware_interface::JointHandle> & jposh,
+    const std::shared_ptr<hardware_interface::JointHandle> & jvelh,
+    const std::shared_ptr<hardware_interface::JointHandle> & jcmdh,
     const joint_limits_interface::JointLimits & limits,
     const joint_limits_interface::SoftJointLimits & soft_limits)
-    : JointSoftLimitsHandle(jposh, jvelh, jcmdh, limits, soft_limits)
+  : JointSoftLimitsHandle(jposh, jvelh, jcmdh, limits, soft_limits)
   {
     if (limits.has_velocity_limits) {
       max_vel_limit_ = limits.max_velocity;
