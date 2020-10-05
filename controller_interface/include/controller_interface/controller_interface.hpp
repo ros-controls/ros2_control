@@ -49,38 +49,6 @@ public:
   virtual
   return_type
   init(
-    std::weak_ptr<hardware_interface::RobotHardware> robot_hardware,
-    const std::string & controller_name);
-
-  CONTROLLER_INTERFACE_PUBLIC
-  virtual
-  return_type
-  update() = 0;
-
-  CONTROLLER_INTERFACE_PUBLIC
-  std::shared_ptr<rclcpp_lifecycle::LifecycleNode>
-  get_lifecycle_node();
-
-protected:
-  std::weak_ptr<hardware_interface::RobotHardware> robot_hardware_;
-  std::shared_ptr<rclcpp_lifecycle::LifecycleNode> lifecycle_node_;
-};
-
-class ControllerInterfaceNewComponents
-  : public rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface
-{
-public:
-  CONTROLLER_INTERFACE_PUBLIC
-  ControllerInterfaceNewComponents() = default;
-
-  CONTROLLER_INTERFACE_PUBLIC
-  virtual
-  ~ControllerInterfaceNewComponents() = default;
-
-  CONTROLLER_INTERFACE_PUBLIC
-  virtual
-  return_type
-  init(
     std::weak_ptr<resource_manager::ResourceManager> resource_manager,
     const std::string & controller_name);
 
@@ -99,8 +67,7 @@ protected:
 };
 
 using ControllerInterfaceSharedPtr = std::shared_ptr<ControllerInterface>;
-using ControllerInterfaceNewComponentsSharedPtr =
-  std::shared_ptr<ControllerInterfaceNewComponents>;
+
 
 }  // namespace controller_interface
 

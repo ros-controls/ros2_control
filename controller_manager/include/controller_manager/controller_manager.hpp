@@ -49,13 +49,16 @@ public:
 
   CONTROLLER_MANAGER_PUBLIC
   ControllerManager(
-    std::shared_ptr<hardware_interface::RobotHardware> hw,
     std::shared_ptr<rclcpp::Executor> executor,
     const std::string & name = "controller_manager");
 
   CONTROLLER_MANAGER_PUBLIC
   virtual
   ~ControllerManager() = default;
+
+  CONTROLLER_MANAGER_PUBLIC
+  controller_interface::return_type
+  configure();
 
   CONTROLLER_MANAGER_PUBLIC
   controller_interface::ControllerInterfaceSharedPtr
@@ -114,6 +117,11 @@ public:
   controller_interface::return_type
   update();
 
+  //TODO(anyone) this should be removed adding only because server does not work
+  CONTROLLER_MANAGER_PUBLIC
+  controller_interface::return_type
+  ext_start_controllers();
+
 protected:
   CONTROLLER_MANAGER_PUBLIC
   controller_interface::ControllerInterfaceSharedPtr
@@ -164,9 +172,15 @@ protected:
 private:
   std::vector<std::string> get_controller_names();
 
-  std::shared_ptr<hardware_interface::RobotHardware> hw_;
   std::shared_ptr<rclcpp::Executor> executor_;
   std::vector<ControllerLoaderInterfaceSharedPtr> loaders_;
+
+  std::shared_ptr<resource_manager::ResourceManager> resource_manager_;
+
+  rclcpp::callback_group::CallbackGroup::SharedPtr realtime_callback_group_;
+  rclcpp::callback_group::CallbackGroup::SharedPtr services_callback_group_;
+
+  rclcpp::TimerBase::SharedPtr timer_;
 
   /**
    * @brief The RTControllerListWrapper class wraps a double-buffered list of controllers
@@ -275,61 +289,6 @@ private:
   };
 
   SwitchParams switch_params_;
-};
-
-class ControllerManagerNewWithManager
-{
-public:
-  CONTROLLER_MANAGER_PUBLIC
-  ControllerManagerNewWithManager(
-    std::shared_ptr<resource_manager::ResourceManager> resource_manager,
-    std::shared_ptr<rclcpp::Executor> executor);
-
-  CONTROLLER_MANAGER_PUBLIC
-  virtual
-  ~ControllerManagerNewWithManager() = default;
-
-  CONTROLLER_MANAGER_PUBLIC
-  std::shared_ptr<controller_interface::ControllerInterfaceNewComponents>
-  load_controller(
-    const std::string & controller_name,
-    const std::string & controller_type);
-
-  template<
-    typename T,
-    typename std::enable_if<std::is_convertible<
-      T *, controller_interface::ControllerInterfaceNewComponents *>::value, T>::type * = nullptr>
-  std::shared_ptr<controller_interface::ControllerInterfaceNewComponents>
-  add_controller(std::shared_ptr<T> controller, std::string controller_name)
-  {
-    return add_controller_impl(controller, controller_name);
-  }
-
-  CONTROLLER_MANAGER_PUBLIC
-  controller_interface::return_type
-  update();
-
-  CONTROLLER_MANAGER_PUBLIC
-  controller_interface::return_type
-  configure() const;
-
-  CONTROLLER_MANAGER_PUBLIC
-  controller_interface::return_type
-  activate() const;
-
-protected:
-  CONTROLLER_MANAGER_PUBLIC
-  std::shared_ptr<controller_interface::ControllerInterfaceNewComponents>
-  add_controller_impl(
-    std::shared_ptr<controller_interface::ControllerInterfaceNewComponents> controller,
-    const std::string & controller_name);
-
-private:
-  std::shared_ptr<resource_manager::ResourceManager> resource_manager_;
-  std::shared_ptr<rclcpp::Executor> executor_;
-  std::vector<ControllerLoaderInterfaceSharedPtr> loaders_;
-  std::vector<controller_interface::ControllerInterfaceNewComponentsSharedPtr>
-  loaded_controllers_;
 };
 
 }  // namespace controller_manager

@@ -35,102 +35,104 @@ target_compile_definitions(controller_manager PRIVATE "CONTROLLER_MANAGER_BUILDI
 # prevent pluginlib from using boost
 target_compile_definitions(controller_manager PUBLIC "PLUGINLIB__DISABLE_BOOST_FUNCTIONS")
 
-add_library(ros2_control_manager SHARED src/ros2_control_manager.cpp)
-target_include_directories(ros2_control_manager PRIVATE include)
-target_link_libraries(ros2_control_manager controller_manager)
-ament_target_dependencies(ros2_control_manager
-  controller_interface
-  hardware_interface
-  rclcpp
-)
-# Causes the visibility macros to use dllexport rather than dllimport,
-# which is appropriate when building the dll but not consuming it.
-target_compile_definitions(ros2_control_manager PRIVATE "CONTROLLER_MANAGER_BUILDING_DLL")
+# add_library(ros2_control_manager SHARED src/ros2_control_manager.cpp)
+# target_include_directories(ros2_control_manager PRIVATE include)
+# target_link_libraries(ros2_control_manager controller_manager)
+# ament_target_dependencies(ros2_control_manager
+#   controller_interface
+#   hardware_interface
+#   rclcpp
+# )
+# # Causes the visibility macros to use dllexport rather than dllimport,
+# # which is appropriate when building the dll but not consuming it.
+# target_compile_definitions(ros2_control_manager PRIVATE "CONTROLLER_MANAGER_BUILDING_DLL")
 
 add_executable(ros2_control_node src/ros2_control_node.cpp)
 target_include_directories(ros2_control_node PRIVATE include)
-target_link_libraries(ros2_control_node ros2_control_manager)
+target_link_libraries(ros2_control_node controller_manager)
 ament_target_dependencies(ros2_control_node
   controller_interface
   hardware_interface
   rclcpp
 )
 
-install(TARGETS controller_manager ros2_control_manager ros2_control_node
-  RUNTIME DESTINATION bin
+install(TARGETS controller_manager
   LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
+#   LIBRARY DESTINATION lib/${PROJECT_NAME}
+)
+
+install(TARGETS ros2_control_node
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 
 install(DIRECTORY include/
   DESTINATION include
 )
 
-if(BUILD_TESTING)
-  find_package(ament_cmake_gmock REQUIRED)
-  find_package(ament_cmake_gtest REQUIRED)
-  find_package(ament_lint_auto REQUIRED)
-
-  ament_lint_auto_find_test_dependencies()
-
-  ament_index_get_prefix_path(ament_index_build_path SKIP_AMENT_PREFIX_PATH)
-  # Get the first item (it will be the build space version of the build path).
-  list(GET ament_index_build_path 0 ament_index_build_path)
-  if(WIN32)
-    # On Windows prevent CMake errors and prevent it being evaluated as a list.
-    string(REPLACE "\\" "/" ament_index_build_path "${ament_index_build_path}")
-  endif()
-
-  add_library(test_controller SHARED test/test_controller/test_controller.cpp)
-  target_include_directories(test_controller PRIVATE include)
-  target_link_libraries(test_controller controller_manager)
-  target_compile_definitions(test_controller PRIVATE "CONTROLLER_MANAGER_BUILDING_DLL")
-
-  ament_add_gmock(
-    test_controller_manager
-    test/test_controller_manager.cpp
-  )
-  target_include_directories(test_controller_manager PRIVATE include)
-  target_link_libraries(test_controller_manager controller_manager test_controller)
-  ament_target_dependencies(
-    test_controller_manager
-    test_robot_hardware
-  )
-
-  ament_add_gmock(
-    test_load_controller
-    test/test_load_controller.cpp
-    APPEND_ENV AMENT_PREFIX_PATH=${ament_index_build_path}_$<CONFIG>
-  )
-  target_include_directories(test_load_controller PRIVATE include)
-  target_link_libraries(test_load_controller controller_manager)
-  ament_target_dependencies(
-    test_load_controller
-    test_robot_hardware
-  )
-
-  ament_add_gmock(
-    test_controller_manager_srvs
-    test/test_controller_manager_srvs.cpp
-    APPEND_ENV AMENT_PREFIX_PATH=${ament_index_build_path}_$<CONFIG>
-  )
-  target_include_directories(test_controller_manager_srvs PRIVATE include)
-  target_link_libraries(test_controller_manager_srvs controller_manager test_controller)
-  ament_target_dependencies(
-    test_controller_manager_srvs
-    test_robot_hardware
-  )
-
-  pluginlib_export_plugin_description_file(controller_interface test/test_controller.xml)
-
-  install(TARGETS test_controller
-    DESTINATION lib
-  )
-endif()
+# if(BUILD_TESTING)
+#   find_package(ament_cmake_gmock REQUIRED)
+#   find_package(ament_cmake_gtest REQUIRED)
+#   find_package(ament_lint_auto REQUIRED)
+#
+#   ament_lint_auto_find_test_dependencies()
+#
+#   ament_index_get_prefix_path(ament_index_build_path SKIP_AMENT_PREFIX_PATH)
+#   # Get the first item (it will be the build space version of the build path).
+#   list(GET ament_index_build_path 0 ament_index_build_path)
+#   if(WIN32)
+#     # On Windows prevent CMake errors and prevent it being evaluated as a list.
+#     string(REPLACE "\\" "/" ament_index_build_path "${ament_index_build_path}")
+#   endif()
+#
+#   add_library(test_controller SHARED test/test_controller/test_controller.cpp)
+#   target_include_directories(test_controller PRIVATE include)
+#   target_link_libraries(test_controller controller_manager)
+#   target_compile_definitions(test_controller PRIVATE "CONTROLLER_MANAGER_BUILDING_DLL")
+#
+#   ament_add_gmock(
+#     test_controller_manager
+#     test/test_controller_manager.cpp
+#   )
+#   target_include_directories(test_controller_manager PRIVATE include)
+#   target_link_libraries(test_controller_manager controller_manager test_controller)
+#   ament_target_dependencies(
+#     test_controller_manager
+#     test_robot_hardware
+#   )
+#
+#   ament_add_gmock(
+#     test_load_controller
+#     test/test_load_controller.cpp
+#     APPEND_ENV AMENT_PREFIX_PATH=${ament_index_build_path}_$<CONFIG>
+#   )
+#   target_include_directories(test_load_controller PRIVATE include)
+#   target_link_libraries(test_load_controller controller_manager)
+#   ament_target_dependencies(
+#     test_load_controller
+#     test_robot_hardware
+#   )
+#
+#   ament_add_gmock(
+#     test_controller_manager_srvs
+#     test/test_controller_manager_srvs.cpp
+#     APPEND_ENV AMENT_PREFIX_PATH=${ament_index_build_path}_$<CONFIG>
+#   )
+#   target_include_directories(test_controller_manager_srvs PRIVATE include)
+#   target_link_libraries(test_controller_manager_srvs controller_manager test_controller)
+#   ament_target_dependencies(
+#     test_controller_manager_srvs
+#     test_robot_hardware
+#   )
+#
+#   pluginlib_export_plugin_description_file(controller_interface test/test_controller.xml)
+#
+#   install(TARGETS test_controller
+#     DESTINATION lib
+#   )
+# endif()
 
 ament_export_libraries(
   controller_manager
-  ros2_control_manager
 )
 ament_export_include_directories(
   include

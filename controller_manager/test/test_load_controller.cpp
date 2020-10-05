@@ -33,14 +33,14 @@ using ::testing::Return;
 
 TEST_F(TestControllerManager, load_unknown_controller)
 {
-  controller_manager::ControllerManager cm(robot_, executor_, "test_controller_manager");
+  controller_manager::ControllerManager cm(resource_manager_, executor_, "test_controller_manager");
   ASSERT_THROW(
     cm.load_controller("unknown_controller_name", "unknown_controller_type"), std::runtime_error);
 }
 
 TEST_F(TestControllerManager, load1_known_controller)
 {
-  controller_manager::ControllerManager cm(robot_, executor_, "test_controller_manager");
+  controller_manager::ControllerManager cm(resource_manager_, executor_, "test_controller_manager");
   ASSERT_NO_THROW(cm.load_controller("test_controller_01", test_controller::TEST_CONTROLLER_TYPE));
   EXPECT_EQ(1u, cm.get_loaded_controllers().size());
 
@@ -59,7 +59,7 @@ TEST_F(TestControllerManager, load1_known_controller)
 
 TEST_F(TestControllerManager, load2_known_controller)
 {
-  controller_manager::ControllerManager cm(robot_, executor_, "test_controller_manager");
+  controller_manager::ControllerManager cm(resource_manager_, executor_, "test_controller_manager");
   std::string controller_type = test_controller::TEST_CONTROLLER_TYPE;
 
   // load the controller with name1
@@ -93,7 +93,7 @@ TEST_F(TestControllerManager, load2_known_controller)
 
 TEST_F(TestControllerManager, update)
 {
-  controller_manager::ControllerManager cm(robot_, executor_, "test_controller_manager");
+  controller_manager::ControllerManager cm(resource_manager_, executor_, "test_controller_manager");
   ASSERT_NO_THROW(cm.load_controller("test_controller_01", test_controller::TEST_CONTROLLER_TYPE));
 
   controller_manager::ControllerSpec abstract_test_controller =
@@ -108,7 +108,7 @@ TEST_F(TestControllerManager, update)
 
 TEST_F(TestControllerManager, register_controller_loader)
 {
-  controller_manager::ControllerManager cm(robot_, executor_, "test_controller_manager");
+  controller_manager::ControllerManager cm(resource_manager_, executor_, "test_controller_manager");
 
   std::shared_ptr<ControllerLoaderMock> mock_loader(new ControllerLoaderMock);
   std::shared_ptr<ControllerMock> mock_controller(new ControllerMock);
@@ -142,7 +142,7 @@ TEST_F(TestControllerManager, register_controller_loader)
 TEST_F(TestControllerManager, switch_controller_empty)
 {
   auto cm = std::make_shared<controller_manager::ControllerManager>(
-    robot_, executor_,
+    resource_manager_, executor_,
     "test_controller_manager");
   std::string controller_type = test_controller::TEST_CONTROLLER_TYPE;
 
@@ -239,7 +239,7 @@ TEST_F(TestControllerManager, switch_controller_empty)
 TEST_F(TestControllerManager, switch_controller)
 {
   auto cm = std::make_shared<controller_manager::ControllerManager>(
-    robot_, executor_,
+    resource_manager_, executor_,
     "test_controller_manager");
   std::string controller_type = test_controller::TEST_CONTROLLER_TYPE;
 
@@ -354,7 +354,7 @@ TEST_F(TestControllerManager, switch_controller)
 TEST_F(TestControllerManager, switch_multiple_controllers)
 {
   auto cm = std::make_shared<controller_manager::ControllerManager>(
-    robot_, executor_,
+    resource_manager_, executor_,
     "test_controller_manager");
   std::string controller_type = test_controller::TEST_CONTROLLER_TYPE;
 

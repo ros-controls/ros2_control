@@ -31,11 +31,12 @@ rclcpp::NodeOptions get_cm_node_options()
 
 return_type
 ControllerInterface::init(
-  std::weak_ptr<hardware_interface::RobotHardware> robot_hardware,
+  std::weak_ptr<resource_manager::ResourceManager> resource_manager,
   const std::string & controller_name)
 {
-  robot_hardware_ = robot_hardware;
-  lifecycle_node_ = std::make_shared<rclcpp_lifecycle::LifecycleNode>(controller_name);
+  resource_manager_ = resource_manager;
+  lifecycle_node_ = std::make_shared<rclcpp_lifecycle::LifecycleNode>(controller_name,
+                                                                      get_cm_node_options());
 
   lifecycle_node_->register_on_configure(
     std::bind(&ControllerInterface::on_configure, this, std::placeholders::_1));
@@ -60,43 +61,6 @@ ControllerInterface::init(
 
 std::shared_ptr<rclcpp_lifecycle::LifecycleNode>
 ControllerInterface::get_lifecycle_node()
-{
-  return lifecycle_node_;
-}
-
-return_type
-ControllerInterfaceNewComponents::init(
-  std::weak_ptr<resource_manager::ResourceManager> resource_manager,
-  const std::string & controller_name)
-{
-  resource_manager_ = resource_manager;
-  lifecycle_node_ = std::make_shared<rclcpp_lifecycle::LifecycleNode>(
-    controller_name,
-    get_cm_node_options());
-
-  lifecycle_node_->register_on_configure(
-    std::bind(&ControllerInterface::on_configure, this, std::placeholders::_1));
-
-  lifecycle_node_->register_on_cleanup(
-    std::bind(&ControllerInterface::on_cleanup, this, std::placeholders::_1));
-
-  lifecycle_node_->register_on_activate(
-    std::bind(&ControllerInterface::on_activate, this, std::placeholders::_1));
-
-  lifecycle_node_->register_on_deactivate(
-    std::bind(&ControllerInterface::on_deactivate, this, std::placeholders::_1));
-
-  lifecycle_node_->register_on_shutdown(
-    std::bind(&ControllerInterface::on_shutdown, this, std::placeholders::_1));
-
-  lifecycle_node_->register_on_error(
-    std::bind(&ControllerInterface::on_error, this, std::placeholders::_1));
-
-  return return_type::SUCCESS;
-}
-
-std::shared_ptr<rclcpp_lifecycle::LifecycleNode>
-ControllerInterfaceNewComponents::get_lifecycle_node()
 {
   return lifecycle_node_;
 }
