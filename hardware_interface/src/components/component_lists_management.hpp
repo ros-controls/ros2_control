@@ -43,7 +43,7 @@ inline return_type get_internal_values(
   std::vector<double> & values, const std::vector<std::string> & queried_interfaces,
   const std::vector<std::string> & internal_interfaces, const std::vector<double> & internal_values)
 {
- if (queried_interfaces.size() == 0) {
+  if (queried_interfaces.size() == 0) {
     return return_type::INTERFACE_NOT_PROVIDED;
   }
 

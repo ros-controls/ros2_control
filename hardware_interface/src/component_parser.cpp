@@ -149,22 +149,29 @@ std::vector<components::InterfaceInfo> parse_interfaces_from_xml(
 
     // Joint interfaces have a name attribute
     if (std::string(interfaceTag) == "commandInterfaceType") {
-      const std::string interface_name = get_attribute_value(interfaces_it, "name", std::string(interfaceTag));
+      const std::string interface_name = get_attribute_value(
+        interfaces_it, "name",
+        std::string(interfaceTag));
       interface.name = interface_name;
 
       // Optional min/max attributes
       std::unordered_map<std::string, std::string> interface_params =
         parse_parameters_from_xml(interfaces_it->FirstChildElement(kParamTag));
-      std::unordered_map<std::string, std::string>::const_iterator interface_param = interface_params.find(kMinTag);
-      if (interface_param != interface_params.end())
+      std::unordered_map<std::string, std::string>::const_iterator interface_param =
+        interface_params.find(kMinTag);
+      if (interface_param != interface_params.end()) {
         interface.min = interface_param->second;
+      }
       interface_param = interface_params.find(kMaxTag);
-      if (interface_param != interface_params.end())
+      if (interface_param != interface_params.end()) {
         interface.max = interface_param->second;
+      }
     }
     // State interfaces have an element to define the type, not a name attribute
     if (std::string(interfaceTag) == "stateInterfaceType") {
-      const std::string interface_type = get_text_for_element(interfaces_it, std::string(interfaceTag) + " type ");
+      const std::string interface_type = get_text_for_element(
+        interfaces_it,
+        std::string(interfaceTag) + " type ");
       interface.name = interface_type;
     }
 

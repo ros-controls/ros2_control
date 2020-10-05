@@ -42,8 +42,9 @@ return_type Joint::configure(const ComponentInfo & joint_info)
 std::vector<std::string> Joint::get_command_interface_names() const
 {
   std::vector<std::string> command_interface_names;
-  for (auto interface : info_.command_interfaces)
+  for (auto interface : info_.command_interfaces) {
     command_interface_names.push_back(interface.name);
+  }
   return command_interface_names;
 }
 
@@ -83,8 +84,9 @@ return_type Joint::set_command(const std::vector<double> & command)
 std::vector<std::string> Joint::get_state_interface_names() const
 {
   std::vector<std::string> state_interface_names;
-  for (auto interface : info_.state_interfaces)
+  for (auto interface : info_.state_interfaces) {
     state_interface_names.push_back(interface.name);
+  }
   return state_interface_names;
 }
 
