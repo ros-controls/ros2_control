@@ -57,7 +57,7 @@ ControllerManager::ControllerManager(
   executor_(executor),
   // add pluginlib loader by default
   loaders_({std::make_shared<ControllerLoaderPluginlib>()}),
-  resource_manager_(std::make_shared<resource_manager::ResourceManager>())
+  resource_manager_(std::make_shared<hardware_interface::ResourceManager>())
 {
   realtime_callback_group_ = create_callback_group(
     rclcpp::callback_group::CallbackGroupType::MutuallyExclusive);

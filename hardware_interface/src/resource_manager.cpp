@@ -38,7 +38,7 @@ namespace
 constexpr const auto kLoggerName = "ros2_control_ResourceManager";
 }  // namespace
 
-namespace resource_manager
+namespace hardware_interface
 {
 
 ResourceManager::ResourceManager()

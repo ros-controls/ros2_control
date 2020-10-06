@@ -31,7 +31,7 @@ rclcpp::NodeOptions get_cm_node_options()
 
 return_type
 ControllerInterface::init(
-  std::weak_ptr<resource_manager::ResourceManager> resource_manager,
+  std::weak_ptr<hardware_interface::ResourceManager> resource_manager,
   const std::string & controller_name)
 {
   resource_manager_ = resource_manager;

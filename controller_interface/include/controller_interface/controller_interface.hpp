@@ -48,7 +48,7 @@ public:
   virtual
   return_type
   init(
-    std::weak_ptr<resource_manager::ResourceManager> resource_manager,
+    std::weak_ptr<hardware_interface::ResourceManager> resource_manager,
     const std::string & controller_name);
 
   CONTROLLER_INTERFACE_PUBLIC
@@ -61,7 +61,7 @@ public:
   get_lifecycle_node();
 
 protected:
-  std::weak_ptr<resource_manager::ResourceManager> resource_manager_;
+  std::weak_ptr<hardware_interface::ResourceManager> resource_manager_;
   std::shared_ptr<rclcpp_lifecycle::LifecycleNode> lifecycle_node_;
 };
 

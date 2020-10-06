@@ -34,7 +34,7 @@
 
 using hardware_interface::return_type;
 
-namespace resource_manager
+namespace hardware_interface
 {
 
 class ResourceManager

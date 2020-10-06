@@ -170,7 +170,7 @@ private:
   std::shared_ptr<rclcpp::Executor> executor_;
   std::vector<ControllerLoaderInterfaceSharedPtr> loaders_;
 
-  std::shared_ptr<resource_manager::ResourceManager> resource_manager_;
+  std::shared_ptr<hardware_interface::ResourceManager> resource_manager_;
 
   rclcpp::callback_group::CallbackGroup::SharedPtr realtime_callback_group_;
   rclcpp::callback_group::CallbackGroup::SharedPtr services_callback_group_;
