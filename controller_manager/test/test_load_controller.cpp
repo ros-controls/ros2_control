@@ -103,40 +103,6 @@ TEST_F(TestControllerManager, update)
     abstract_test_controller.c->get_lifecycle_node()->get_current_state().id());
 }
 
-/*
-TEST_F(TestControllerManager, register_controller_loader)
-{
-  controller_manager::ControllerManager cm(robot_, executor_, "test_controller_manager");
-
-  std::shared_ptr<ControllerLoaderMock> mock_loader(new ControllerLoaderMock);
-  std::shared_ptr<ControllerMock> mock_controller(new ControllerMock);
-
-  cm.register_controller_loader(mock_loader);
-
-  const std::string mock_controller_name = "mock_controller_01";
-  const std::string mock_controller_type = "mock_controller";
-
-  EXPECT_CALL(*mock_loader, is_available(mock_controller_type))
-  .Times(1)
-  .WillOnce(Return(true));
-
-  EXPECT_CALL(*mock_loader, create(mock_controller_type))
-  .Times(1)
-  .WillOnce(Return(mock_controller));
-
-  ASSERT_NO_THROW(cm.load_controller(mock_controller_name, mock_controller_type));
-  EXPECT_EQ(1u, cm.get_loaded_controllers().size());
-
-  controller_manager::ControllerSpec abstract_test_controller =
-    cm.get_loaded_controllers()[0];
-
-  auto lifecycle_node = abstract_test_controller.c->get_lifecycle_node();
-  lifecycle_node->configure();
-  EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    abstract_test_controller.c->get_lifecycle_node()->get_current_state().id());
-}
-*/
 TEST_F(TestControllerManager, switch_controller_empty)
 {
   auto cm = std::make_shared<controller_manager::ControllerManager>(

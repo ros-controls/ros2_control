@@ -118,21 +118,6 @@ TEST_F(TestControllerManagerSrvs, list_controller_types)
   ASSERT_THAT(
     result->base_classes,
     ::testing::Contains("controller_interface::ControllerInterface"));
-
-  // std::shared_ptr<ControllerLoaderMock> mock_loader(new ControllerLoaderMock);
-
-  // cm_->register_controller_loader(mock_loader);
-  // result = call_service_and_wait(*client, request, srv_executor);
-  // ASSERT_EQ(
-  //   controller_types + 1,
-  //   result->types.size());
-  // ASSERT_EQ(
-  //   result->types.size(),
-  //   result->base_classes.size());
-  // ASSERT_THAT(result->types, ::testing::Contains("mock_test_controller"));
-  // ASSERT_THAT(
-  //   result->base_classes,
-  //   ::testing::Contains("controller_interface::MockControllerInterface"));
 }
 
 TEST_F(TestControllerManagerSrvs, list_controllers_srv) {
