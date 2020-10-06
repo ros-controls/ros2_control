@@ -97,10 +97,7 @@ ControllerManager::ControllerManager(
     std::bind(&ControllerManager::unload_controller_service_cb, this, _1, _2),
     rmw_qos_profile_services_default,
     services_callback_group_);
-}
 
-controller_interface::return_type ControllerManager::configure()
-{
   // TODO(all): Should we declare paramters? #168
   // load robot_description parameter
   auto get_parameters_result = get_parameters({"robot_description"});
@@ -109,60 +106,30 @@ controller_interface::return_type ControllerManager::configure()
   if ((get_parameters_result.size() != 1) ||
     (get_parameters_result[0].get_type() == rclcpp::ParameterType::PARAMETER_NOT_SET))
   {
-    RCLCPP_FATAL(get_logger(), "No robot_description parameter");
-    return controller_interface::return_type::ERROR;
+    throw std::runtime_error("No robot_description parameter found");
   }
   std::string robot_description = get_parameters_result[0].value_to_string();
-
-  // TODO(all): Should we declare paramters? #168
-  // load controllers' names
-  get_parameters_result = get_parameters({"controllers"});
-  if ((get_parameters_result.size() != 1) ||
-    (get_parameters_result[0].get_type() == rclcpp::ParameterType::PARAMETER_NOT_SET) ||
-    (get_parameters_result[0].as_string_array().size() == 0))
-  {
-    RCLCPP_FATAL(get_logger(), "controllers parameter not existing or empty");
-    return controller_interface::return_type::ERROR;
-  }
-  std::vector<std::string> controllers = get_parameters_result[0].as_string_array();
-  RCLCPP_INFO(get_logger(), "found %d controllers", controllers.size());
 
   get_parameters_result = get_parameters({"update_time_ms"});
   if ((get_parameters_result.size() != 1) ||
     (get_parameters_result[0].get_type() == rclcpp::ParameterType::PARAMETER_NOT_SET))
   {
-    RCLCPP_FATAL(get_logger(), "update_time parameter not existing or empty");
-    return controller_interface::return_type::ERROR;
+    throw std::runtime_error("update_time parameter not existing or empty");
   }
   int update_time_ms = get_parameters_result[0].as_int();
   RCLCPP_INFO(get_logger(), "update time is %.3f ms", update_time_ms);
 
-  // configure resource_manager
-  if (resource_manager_->load_and_configure_resources_from_urdf(
-      robot_description) != hardware_interface::return_type::OK)
+  // initial configuration of resource_manager
+  if (resource_manager_->load_and_configure_resources_from_urdf(robot_description) !=
+    hardware_interface::return_type::OK)
   {
-    RCLCPP_FATAL(get_logger(), "hardware type not recognized");
-    return controller_interface::return_type::ERROR;
+    throw std::runtime_error("loading resources from 'robot_description' parameter failed");
   }
-
   resource_manager_->start_all_resources();
 
-  for (const auto & controller : controllers) {
-    rclcpp::Parameter controller_type;
-    if (!get_parameter(controller + ".type", controller_type)) {
-      RCLCPP_ERROR(get_logger(), "'type' parameter not set for " + controller);
-      return controller_interface::return_type::ERROR;
-    }
-    RCLCPP_DEBUG(
-      get_logger(), "loading " + controller + " of type: " + controller_type.value_to_string());
-    load_controller(controller, controller_type.value_to_string());
-  }
-
   timer_ = create_wall_timer(std::chrono::milliseconds(update_time_ms),
-      std::bind(&ControllerManager::update, this),
-      realtime_callback_group_);
-
-  return controller_interface::return_type::SUCCESS;
+                             std::bind(&ControllerManager::update, this),
+                             realtime_callback_group_);
 }
 
 controller_interface::ControllerInterfaceSharedPtr ControllerManager::load_controller(

@@ -31,10 +31,6 @@ int main(int argc, char ** argv)
   auto cm = std::make_shared<controller_manager::ControllerManager>(
     executor,
     manager_node_name);
-  if (cm->configure() != controller_interface::return_type::SUCCESS) {
-    rclcpp::shutdown();
-    return 0;
-  }
 
   executor->add_node(cm);
   executor->spin();
