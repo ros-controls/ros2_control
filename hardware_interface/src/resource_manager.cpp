@@ -35,7 +35,7 @@
 
 namespace
 {
-constexpr const auto kLoggerName = "ros2_control_ResourceManager";
+constexpr const auto kLoggerName = "ros2_control_resource_manager";
 }  // namespace
 
 namespace resource_manager
