@@ -60,25 +60,4 @@ public:
   MOCK_METHOD0(update, controller_interface::return_type(void));
 };
 
-/*
-constexpr char MOCK_TEST_CONTROLLER_NAME[] = "mock_test_controller";
-constexpr char MOCK_TEST_CONTROLLER_TYPE[] = "ControllerMock";
-
-class ControllerLoaderMock : public controller_manager::ControllerLoaderInterface
-{
-public:
-  ControllerLoaderMock()
-  : controller_manager::ControllerLoaderInterface("controller_interface::MockControllerInterface")
-  {}
-  MOCK_METHOD(
-    controller_interface::ControllerInterfaceSharedPtr, create, (const std::string &),
-    (override));
-  MOCK_METHOD(bool, is_available, (const std::string &), (const, override));
-  std::vector<std::string> get_declared_classes() const override
-  {
-    return {MOCK_TEST_CONTROLLER_NAME};
-  }
-  MOCK_METHOD(void, reload, (), (override));
-};
-*/
 #endif  // CONTROLLER_MANAGER_TEST_COMMON_HPP_
