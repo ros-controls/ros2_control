@@ -299,12 +299,12 @@ class DummySystemHardware : public SystemHardwareInterface
   {
     return_type ret = return_type::OK;
     std::vector<std::string> interfaces;
-    std::vector<double> jointernal_values;
+    std::vector<double> joint_values;
     for (uint i = 0; i < joints.size(); i++) {
-      jointernal_values.clear();
-      jointernal_values.push_back(joints_hw_values_[i]);
+      joint_values.clear();
+      joint_values.push_back(joints_hw_values_[i]);
       interfaces = joints[i]->get_state_interface_names();
-      ret = joints[i]->set_state(jointernal_values, interfaces);
+      ret = joints[i]->set_state(joint_values, interfaces);
       if (ret != return_type::OK) {
         break;
       }
