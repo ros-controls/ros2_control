@@ -45,7 +45,7 @@ public:
   /**
    * \brief Configure base sensor class based on the description in the robot's URDF file.
    *
-   * \param joint_info structure with data from URDF.
+   * \param sensor_info structure with data from URDF.
    * \return return_type::OK if required data are provided and is successfully parsed,
    * return_type::ERROR otherwise.
    */
