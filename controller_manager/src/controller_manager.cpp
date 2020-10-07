@@ -100,23 +100,18 @@ ControllerManager::ControllerManager(
 
   // TODO(all): Should we declare paramters? #168
   // load robot_description parameter
-  auto get_parameters_result = get_parameters({"robot_description"});
-
-  //  Test the resulting vector of parameters
-  if ((get_parameters_result.size() != 1) ||
-    (get_parameters_result[0].get_type() == rclcpp::ParameterType::PARAMETER_NOT_SET))
+  std::string robot_description;
+  if (!get_parameter("robot_description", robot_description))
   {
     throw std::runtime_error("No robot_description parameter found");
   }
-  std::string robot_description = get_parameters_result[0].value_to_string();
 
-  get_parameters_result = get_parameters({"update_time_ms"});
-  if ((get_parameters_result.size() != 1) ||
-    (get_parameters_result[0].get_type() == rclcpp::ParameterType::PARAMETER_NOT_SET))
+  // load controller_manager update time parameter
+  int update_time_ms;
+  if (!get_parameter("update_time_ms", update_time_ms))
   {
     throw std::runtime_error("update_time parameter not existing or empty");
   }
-  int update_time_ms = get_parameters_result[0].as_int();
   RCLCPP_INFO(get_logger(), "update time is %.3f ms", update_time_ms);
 
   // initial configuration of resource_manager

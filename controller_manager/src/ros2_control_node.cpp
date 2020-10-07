@@ -32,7 +32,7 @@ int main(int argc, char ** argv)
     executor,
     manager_node_name);
 
-  executor->spin(cm);
+  rclcpp::spin(cm);
   rclcpp::shutdown();
   return 0;
 }
