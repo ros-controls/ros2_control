@@ -33,14 +33,14 @@ controller_interface::ControllerInterfaceSharedPtr ControllerLoaderPluginlib::cr
   return loader_->createSharedInstance(controller_type);
 }
 
-std::vector<std::string> ControllerLoaderPluginlib::get_declared_classes() const
-{
-  return loader_->getDeclaredClasses();
-}
-
 bool ControllerLoaderPluginlib::is_available(const std::string & controller_type) const
 {
   return loader_->isClassAvailable(controller_type);
+}
+
+std::vector<std::string> ControllerLoaderPluginlib::get_declared_classes() const
+{
+  return loader_->getDeclaredClasses();
 }
 
 void ControllerLoaderPluginlib::reload()

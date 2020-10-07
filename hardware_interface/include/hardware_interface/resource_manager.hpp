@@ -15,9 +15,9 @@
 #ifndef HARDWARE_INTERFACE__RESOURCE_MANAGER_HPP_
 #define HARDWARE_INTERFACE__RESOURCE_MANAGER_HPP_
 
-#include <map>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -74,40 +74,39 @@ public:
   return_type write_all_resources();
 
 private:
-  // TODO(all): make this unique?
   std::vector<std::shared_ptr<hardware_interface::ActuatorHardware>> actuators_;
   std::vector<std::shared_ptr<hardware_interface::SensorHardware>> sensors_;
   std::vector<std::shared_ptr<hardware_interface::SystemHardware>> systems_;
 
-  std::map<std::string, std::shared_ptr<
+  std::unordered_map<std::string, std::shared_ptr<
       hardware_interface::components::Joint>> joint_components_;
-  std::map<std::string, std::vector<std::shared_ptr<
+  std::unordered_map<std::string, std::vector<std::shared_ptr<
       hardware_interface::components::Joint>>> joint_components_for_hardware_;
-  std::map<std::string, std::shared_ptr<
+  std::unordered_map<std::string, std::shared_ptr<
       hardware_interface::components::Sensor>> sensor_components_;
-  std::map<std::string, std::vector<std::shared_ptr<
+  std::unordered_map<std::string, std::vector<std::shared_ptr<
       hardware_interface::components::Sensor>>> sensor_components_for_hardware_;
 
   /**
    * Map of joints and their command interfaces
    */
-  std::map<std::string, std::vector<std::string>> command_interfaces_;
+  std::unordered_map<std::string, std::vector<std::string>> command_interfaces_;
 
-  std::map<std::string, std::vector<std::string>> claimed_command_interfaces_;
+  std::unordered_map<std::string, std::vector<std::string>> claimed_command_interfaces_;
 
   /**
    * Map of joints and their state interfaces
    */
-  std::map<std::string, std::vector<std::string>> state_interfaces_;
+  std::unordered_map<std::string, std::vector<std::string>> state_interfaces_;
 
-  std::shared_ptr<pluginlib::ClassLoader<
+  std::unique_ptr<pluginlib::ClassLoader<
       hardware_interface::ActuatorHardwareInterface>> actuator_loader_;
-  std::shared_ptr<pluginlib::ClassLoader<
+  std::unique_ptr<pluginlib::ClassLoader<
       hardware_interface::SensorHardwareInterface>> sensor_loader_;
-  std::shared_ptr<pluginlib::ClassLoader<
+  std::unique_ptr<pluginlib::ClassLoader<
       hardware_interface::SystemHardwareInterface>> system_loader_;
 
-  std::shared_ptr<pluginlib::ClassLoader<hardware_interface::components::Joint>> joint_loader_;
+  std::unique_ptr<pluginlib::ClassLoader<hardware_interface::components::Joint>> joint_loader_;
 };
 
 }  //  namespace resource_manager

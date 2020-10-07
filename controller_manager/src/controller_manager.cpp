@@ -871,7 +871,9 @@ controller_interface::return_type ControllerManager::update()
   std::vector<ControllerSpec> & rt_controller_list =
     rt_controllers_wrapper_.update_and_get_used_by_rt_list();
 
-  auto hw_ret = resource_manager_->read_all_resources();
+  if (resource_manager_->read_all_resources() != hardware_interface::return_type::OK) {
+   return controller_interface::return_type::ERROR;
+  }
 
   auto ret = controller_interface::return_type::SUCCESS;
   for (auto loaded_controller : rt_controller_list) {
@@ -885,10 +887,10 @@ controller_interface::return_type ControllerManager::update()
     }
   }
 
-  hw_ret = resource_manager_->write_all_resources();
-
-  if (hw_ret != hardware_interface::return_type::OK) {
-    ret = controller_interface::return_type::ERROR;
+  if (ret == controller_interface::return_type::SUCCESS) {
+    if (resource_manager_->write_all_resources() != hardware_interface::return_type::OK) {
+      ret =  controller_interface::return_type::ERROR;
+    }
   }
 
   // there are controllers to start/stop

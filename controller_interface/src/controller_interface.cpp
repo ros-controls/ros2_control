@@ -20,15 +20,6 @@
 namespace controller_interface
 {
 
-rclcpp::NodeOptions get_cm_node_options()
-{
-  rclcpp::NodeOptions node_options;
-  // Required for getting controllers paramaters without declaration
-  node_options.allow_undeclared_parameters(true);
-  node_options.automatically_declare_parameters_from_overrides(true);
-  return node_options;
-}
-
 return_type
 ControllerInterface::init(
   std::weak_ptr<hardware_interface::ResourceManager> resource_manager,
@@ -36,7 +27,8 @@ ControllerInterface::init(
 {
   resource_manager_ = resource_manager;
   lifecycle_node_ = std::make_shared<rclcpp_lifecycle::LifecycleNode>(controller_name,
-      get_cm_node_options());
+    rclcpp::NodeOptions().allow_undeclared_parameters(true).
+                          automatically_declare_parameters_from_overrides(true));
 
   lifecycle_node_->register_on_configure(
     std::bind(&ControllerInterface::on_configure, this, std::placeholders::_1));

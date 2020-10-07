@@ -45,7 +45,9 @@ ament_target_dependencies(ros2_control_node
 )
 
 install(TARGETS controller_manager
+  RUNTIME DESTINATION bin
   LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
 )
 
 install(TARGETS ros2_control_node

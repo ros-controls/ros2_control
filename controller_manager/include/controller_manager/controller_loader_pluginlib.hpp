@@ -36,14 +36,14 @@ public:
   virtual ~ControllerLoaderPluginlib() = default;
 
   CONTROLLER_MANAGER_PUBLIC
-  controller_interface::ControllerInterfaceSharedPtr
-  create(const std::string & controller_type) override;
-
-  CONTROLLER_MANAGER_PUBLIC
-  std::vector<std::string> get_declared_classes() const override;
+  controller_interface::ControllerInterfaceSharedPtr create(const std::string & controller_type)
+  override;
 
   CONTROLLER_MANAGER_PUBLIC
   bool is_available(const std::string & controller_type) const override;
+
+  CONTROLLER_MANAGER_PUBLIC
+  std::vector<std::string> get_declared_classes() const override;
 
   CONTROLLER_MANAGER_PUBLIC
   void reload() override;
