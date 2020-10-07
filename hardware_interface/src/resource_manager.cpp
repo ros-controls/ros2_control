@@ -36,6 +36,17 @@
 namespace
 {
 constexpr const auto kLoggerName = "ros2_control_resource_manager";
+
+// TODO(all): should be move those constants in a shared header with the parser?
+constexpr const auto kSystemTypeName = "system";
+
+constexpr const auto kPkgName = "hardware_interface";
+
+constexpr const auto kActuatorHardwareType = "hardware_interface::ActuatorHardwareInterface";
+constexpr const auto kSensorHardwareType = "hardware_interface::SensorHardwareInterface";
+constexpr const auto kSystemHardwareType = "hardware_interface::SystemHardwareInterface";
+
+constexpr const auto kJointComponentType = "hardware_interface::components::Joint";
 }  // namespace
 
 namespace hardware_interface
@@ -43,19 +54,19 @@ namespace hardware_interface
 
 ResourceManager::ResourceManager()
 {
-  actuator_loader_.reset(
-    new pluginlib::ClassLoader<hardware_interface::ActuatorHardwareInterface>(
-      "hardware_interface", "hardware_interface::ActuatorHardwareInterface"));
-  sensor_loader_.reset(
-    new pluginlib::ClassLoader<hardware_interface::SensorHardwareInterface>(
-      "hardware_interface", "hardware_interface::SensorHardwareInterface"));
-  system_loader_.reset(
-    new pluginlib::ClassLoader<hardware_interface::SystemHardwareInterface>(
-      "hardware_interface", "hardware_interface::SystemHardwareInterface"));
+  actuator_loader_ =
+    std::make_unique<pluginlib::ClassLoader<hardware_interface::ActuatorHardwareInterface>>(
+    kPkgName, kActuatorHardwareType);
+  sensor_loader_ =
+    std::make_unique<pluginlib::ClassLoader<hardware_interface::SensorHardwareInterface>>(
+    kPkgName, kSensorHardwareType);
+  system_loader_ =
+    std::make_unique<pluginlib::ClassLoader<hardware_interface::SystemHardwareInterface>>(
+    kPkgName, kSystemHardwareType);
 
-  joint_loader_.reset(
-    new pluginlib::ClassLoader<hardware_interface::components::Joint>(
-      "hardware_interface", "hardware_interface::components::Joint"));
+  joint_loader_ =
+    std::make_unique<pluginlib::ClassLoader<hardware_interface::components::Joint>>(
+    kPkgName, kJointComponentType);
 }
 
 //  No real-time safe functions
@@ -70,7 +81,7 @@ ResourceManager::load_and_configure_resources_from_urdf(std::string urdf_string)
     RCLCPP_INFO(
       rclcpp::get_logger(kLoggerName),
       "Loading hardware plugin: " + hardware_info.hardware_class_type);
-    if (!hardware_info.type.compare("system")) {
+    if (!hardware_info.type.compare(kSystemTypeName)) {
       // TODO(anyone): this here is really not nice...
       std::unique_ptr<hardware_interface::SystemHardwareInterface> sys_hw_if;
       sys_hw_if.reset(system_loader_->createUnmanagedInstance(hardware_info.hardware_class_type));
@@ -244,5 +255,4 @@ return_type ResourceManager::claim_command_handle(
   return return_type::OK;
 }
 
-
-}  // namespace resource_manager
+}  // namespace hardware_interface

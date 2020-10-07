@@ -109,6 +109,6 @@ private:
   std::unique_ptr<pluginlib::ClassLoader<hardware_interface::components::Joint>> joint_loader_;
 };
 
-}  //  namespace resource_manager
+}  //  namespace hardware_interface
 
 #endif  // HARDWARE_INTERFACE__RESOURCE_MANAGER_HPP_

@@ -101,15 +101,13 @@ ControllerManager::ControllerManager(
   // TODO(all): Should we declare paramters? #168
   // load robot_description parameter
   std::string robot_description;
-  if (!get_parameter("robot_description", robot_description))
-  {
+  if (!get_parameter("robot_description", robot_description)) {
     throw std::runtime_error("No robot_description parameter found");
   }
 
   // load controller_manager update time parameter
   int update_time_ms;
-  if (!get_parameter("update_time_ms", update_time_ms))
-  {
+  if (!get_parameter("update_time_ms", update_time_ms)) {
     throw std::runtime_error("update_time parameter not existing or empty");
   }
   RCLCPP_INFO(get_logger(), "update time is %.3f ms", update_time_ms);
@@ -122,9 +120,10 @@ ControllerManager::ControllerManager(
   }
   resource_manager_->start_all_resources();
 
-  timer_ = create_wall_timer(std::chrono::milliseconds(update_time_ms),
-                             std::bind(&ControllerManager::update, this),
-                             realtime_callback_group_);
+  timer_ = create_wall_timer(
+    std::chrono::milliseconds(update_time_ms),
+    std::bind(&ControllerManager::update, this),
+    realtime_callback_group_);
 }
 
 controller_interface::ControllerInterfaceSharedPtr ControllerManager::load_controller(
@@ -867,7 +866,7 @@ controller_interface::return_type ControllerManager::update()
     rt_controllers_wrapper_.update_and_get_used_by_rt_list();
 
   if (resource_manager_->read_all_resources() != hardware_interface::return_type::OK) {
-   return controller_interface::return_type::ERROR;
+    return controller_interface::return_type::ERROR;
   }
 
   auto ret = controller_interface::return_type::SUCCESS;
@@ -884,7 +883,7 @@ controller_interface::return_type ControllerManager::update()
 
   if (ret == controller_interface::return_type::SUCCESS) {
     if (resource_manager_->write_all_resources() != hardware_interface::return_type::OK) {
-      ret =  controller_interface::return_type::ERROR;
+      ret = controller_interface::return_type::ERROR;
     }
   }
 

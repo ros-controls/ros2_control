@@ -26,9 +26,10 @@ ControllerInterface::init(
   const std::string & controller_name)
 {
   resource_manager_ = resource_manager;
-  lifecycle_node_ = std::make_shared<rclcpp_lifecycle::LifecycleNode>(controller_name,
+  lifecycle_node_ = std::make_shared<rclcpp_lifecycle::LifecycleNode>(
+    controller_name,
     rclcpp::NodeOptions().allow_undeclared_parameters(true).
-                          automatically_declare_parameters_from_overrides(true));
+    automatically_declare_parameters_from_overrides(true));
 
   lifecycle_node_->register_on_configure(
     std::bind(&ControllerInterface::on_configure, this, std::placeholders::_1));
