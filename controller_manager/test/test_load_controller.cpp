@@ -22,15 +22,14 @@
 
 #include "controller_interface/controller_interface.hpp"
 
-#include "controller_manager/controller_loader_interface.hpp"
 #include "controller_manager/controller_manager.hpp"
 
 #include "controller_manager_msgs/srv/switch_controller.hpp"
 
 #include "lifecycle_msgs/msg/state.hpp"
+
 using ::testing::_;
 using ::testing::Return;
-
 
 TEST_F(TestControllerManager, load_unknown_controller)
 {
@@ -93,39 +92,6 @@ TEST_F(TestControllerManager, update)
 {
   controller_manager::ControllerManager cm(robot_, executor_, "test_controller_manager");
   ASSERT_NO_THROW(cm.load_controller("test_controller_01", test_controller::TEST_CONTROLLER_TYPE));
-
-  controller_manager::ControllerSpec abstract_test_controller =
-    cm.get_loaded_controllers()[0];
-
-  auto lifecycle_node = abstract_test_controller.c->get_lifecycle_node();
-  lifecycle_node->configure();
-  EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    abstract_test_controller.c->get_lifecycle_node()->get_current_state().id());
-}
-
-TEST_F(TestControllerManager, register_controller_loader)
-{
-  controller_manager::ControllerManager cm(robot_, executor_, "test_controller_manager");
-
-  std::shared_ptr<ControllerLoaderMock> mock_loader(new ControllerLoaderMock);
-  std::shared_ptr<ControllerMock> mock_controller(new ControllerMock);
-
-  cm.register_controller_loader(mock_loader);
-
-  const std::string mock_controller_name = "mock_controller_01";
-  const std::string mock_controller_type = "mock_controller";
-
-  EXPECT_CALL(*mock_loader, is_available(mock_controller_type))
-  .Times(1)
-  .WillOnce(Return(true));
-
-  EXPECT_CALL(*mock_loader, create(mock_controller_type))
-  .Times(1)
-  .WillOnce(Return(mock_controller));
-
-  ASSERT_NO_THROW(cm.load_controller(mock_controller_name, mock_controller_type));
-  EXPECT_EQ(1u, cm.get_loaded_controllers().size());
 
   controller_manager::ControllerSpec abstract_test_controller =
     cm.get_loaded_controllers()[0];
