@@ -26,9 +26,15 @@ namespace hardware_interface
 namespace components
 {
 
-Joint::Joint(std::unique_ptr<JointInterface> impl)
-: impl_(std::move(impl))
+Joint::Joint(std::shared_ptr<JointInterface> impl, Deleter deleter)
+: impl_(std::move(impl)),
+  deleter_(deleter)
 {}
+
+Joint::~Joint()
+{
+  if (deleter_) {deleter_();}
+}
 
 return_type Joint::configure(const ComponentInfo & joint_info)
 {

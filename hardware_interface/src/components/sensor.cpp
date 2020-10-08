@@ -28,9 +28,15 @@ namespace hardware_interface
 namespace components
 {
 
-Sensor::Sensor(std::unique_ptr<SensorInterface> impl)
-: impl_(std::move(impl))
+Sensor::Sensor(std::shared_ptr<SensorInterface> impl, Deleter deleter)
+: impl_(std::move(impl)),
+  deleter_(deleter)
 {}
+
+Sensor::~Sensor()
+{
+  if (deleter_) {deleter_();}
+}
 
 return_type Sensor::configure(const ComponentInfo & sensor_info)
 {

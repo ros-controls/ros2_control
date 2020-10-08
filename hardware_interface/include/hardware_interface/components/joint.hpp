@@ -29,16 +29,20 @@ namespace hardware_interface
 namespace components
 {
 
+using Deleter = std::function<void ()>;
+
 class Joint final
 {
 public:
   Joint() = default;
 
-  explicit Joint(Joint && other) = default;
+  Joint(Joint && other) = default;
 
-  explicit Joint(std::unique_ptr<JointInterface> impl);
+  HARDWARE_INTERFACE_PUBLIC
+  Joint(std::shared_ptr<JointInterface> impl, Deleter deleter);
 
-  ~Joint() = default;
+  HARDWARE_INTERFACE_PUBLIC
+  ~Joint();
 
   HARDWARE_INTERFACE_PUBLIC
   return_type configure(const ComponentInfo & joint_info);
@@ -79,7 +83,8 @@ public:
   return_type set_state(const std::vector<double> & state);
 
 private:
-  std::unique_ptr<JointInterface> impl_;
+  std::shared_ptr<JointInterface> impl_;
+  Deleter deleter_;
 };
 
 }  // namespace components

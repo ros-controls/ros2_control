@@ -12,13 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <gtest/gtest.h>
+#include <gmock/gmock.h>
 #include <memory>
 #include <string>
 
 #include "resource_manager.hpp"
 
-class TestResourceManager : public ::testing::Test
+using namespace ::testing;  // NOLINT
+
+class TestResourceManager : public Test
 {
 public:
   static void SetUpTestCase()
@@ -137,6 +139,11 @@ public:
 
 TEST_F(TestResourceManager, initialization_empty) {
   controller_manager::ResourceManager rm;
+
+  EXPECT_EQ(0u, rm.joint_components_size());
+  EXPECT_EQ(0u, rm.sensor_components_size());
+  EXPECT_FALSE(rm.sensor_exists("sensor1"));
+
   EXPECT_EQ(0u, rm.actuator_interfaces_size());
   EXPECT_EQ(0u, rm.sensor_interfaces_size());
   EXPECT_EQ(0u, rm.system_interfaces_size());
@@ -147,9 +154,42 @@ TEST_F(TestResourceManager, initialization_with_urdf) {
   controller_manager::ResourceManager rm(urdf);
 
   EXPECT_EQ(3u, rm.joint_components_size());
+  auto joint_component_names = rm.joint_components_name();
+  for (const auto & joint_name : {"joint1", "joint2", "joint3"}) {
+    EXPECT_NE(
+      joint_component_names.end(),
+      std::find(joint_component_names.begin(), joint_component_names.end(), joint_name));
+  }
+
   EXPECT_EQ(1u, rm.sensor_components_size());
+  EXPECT_EQ("sensor1", rm.sensor_components_name()[0]);
+  EXPECT_TRUE(rm.sensor_exists("sensor1")) << "sensor1 does not exist";
+  EXPECT_FALSE(rm.sensor_exists("non-existing-sensor"));
 
   EXPECT_EQ(1u, rm.actuator_interfaces_size());
+  EXPECT_EQ("TestActuatorHardware", rm.actuator_interfaces_name()[0]);
   EXPECT_EQ(1u, rm.sensor_interfaces_size());
+  EXPECT_EQ("TestSensorHardware", rm.sensor_interfaces_name()[0]);
   EXPECT_EQ(1u, rm.system_interfaces_size());
+  EXPECT_EQ("TestSystemHardware", rm.system_interfaces_name()[0]);
+}
+
+TEST_F(TestResourceManager, resource_claiming) {
+  auto urdf = urdf_head_ + test_hardware_resource_system_ + urdf_tail_;
+  controller_manager::ResourceManager rm(urdf);
+
+  EXPECT_EQ(1u, rm.sensor_components_size());
+  EXPECT_FALSE(rm.sensor_is_claimed("sensor1"));
+
+  {
+    auto sensor1 = rm.claim_sensor("sensor1");
+    EXPECT_TRUE(rm.sensor_is_claimed("sensor1"));
+    try {
+      auto sensor1_again = rm.claim_sensor("sensor1");
+      FAIL();
+    } catch (const std::runtime_error &) {
+      SUCCEED();
+    }
+  }
+  EXPECT_FALSE(rm.sensor_is_claimed("sensor1"));
 }

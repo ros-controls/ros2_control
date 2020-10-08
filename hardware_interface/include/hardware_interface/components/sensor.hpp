@@ -29,48 +29,46 @@ namespace hardware_interface
 namespace components
 {
 
+using Deleter = std::function<void ()>;
+
 class Sensor final
 {
 public:
-  HARDWARE_INTERFACE_PUBLIC
   Sensor() = default;
 
-  explicit Sensor(Sensor && other) = default;
+  HARDWARE_INTERFACE_PUBLIC
+  Sensor(std::shared_ptr<SensorInterface> impl, Deleter deleter);
 
-  explicit Sensor(std::unique_ptr<SensorInterface> impl);
+  Sensor(const Sensor & other) = default;
+
+  Sensor(Sensor && other) = default;
 
   HARDWARE_INTERFACE_PUBLIC
-  virtual
-  ~Sensor() = default;
+  ~Sensor();
 
   HARDWARE_INTERFACE_PUBLIC
-  virtual
   return_type configure(const ComponentInfo & sensor_info);
 
   HARDWARE_INTERFACE_PUBLIC
-  virtual
   std::vector<std::string> get_state_interfaces() const;
 
   HARDWARE_INTERFACE_PUBLIC
-  virtual
   return_type get_state(
     std::vector<double> & state, const std::vector<std::string> & interfaces) const;
 
   HARDWARE_INTERFACE_PUBLIC
-  virtual
   return_type get_state(std::vector<double> & state) const;
 
   HARDWARE_INTERFACE_PUBLIC
-  virtual
   return_type set_state(
     const std::vector<double> & state, const std::vector<std::string> & interfaces);
 
   HARDWARE_INTERFACE_PUBLIC
-  virtual
   return_type set_state(const std::vector<double> & state);
 
 private:
-  std::unique_ptr<SensorInterface> impl_;
+  std::shared_ptr<SensorInterface> impl_;
+  Deleter deleter_;
 };
 
 }  // namespace components

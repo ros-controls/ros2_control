@@ -123,12 +123,15 @@ if(BUILD_TESTING)
   pluginlib_export_plugin_description_file(
     hardware_interface test/test_hardware_resources.xml)
 
-  ament_add_gtest(
+  ament_add_gmock(
     test_resource_manager
     test/test_resource_manager.cpp
+    ENV ASAN_OPTIONS=detect_container_overflow=0
   )
   target_include_directories(test_resource_manager PRIVATE include src)
   target_link_libraries(test_resource_manager controller_manager)
+  set_target_properties(test_resource_manager PROPERTIES COMPILE_FLAGS "-fsanitize=undefined -fsanitize=address")
+  set_target_properties(test_resource_manager PROPERTIES LINK_FLAGS "-fsanitize=undefined -fsanitize=address")
 endif()
 
 ament_export_libraries(
