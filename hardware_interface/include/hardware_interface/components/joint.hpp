@@ -37,6 +37,8 @@ class Joint final
 public:
   Joint() = default;
 
+  Joint(const Joint & other) = default;
+
   Joint(Joint && other) = default;
 
   HARDWARE_INTERFACE_PUBLIC

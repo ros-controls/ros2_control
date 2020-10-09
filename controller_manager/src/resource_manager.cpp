@@ -182,7 +182,7 @@ ResourceManager::ResourceManager(const std::string & urdf)
     }
 
     for (const auto & joint : hardware.joints) {
-      claimed_resource_map_.insert({joint.name, false});
+      claimed_component_map_.insert({joint.name, false});
       auto deleter = std::bind(&ResourceManager::release_component, this, joint.name);
       resource_storage_->initialize_joint_component(joint, deleter);
       // TODO(karsten1987) Verify that parser warns when sensor and joint
@@ -190,7 +190,7 @@ ResourceManager::ResourceManager(const std::string & urdf)
     }
 
     for (const auto & sensor : hardware.sensors) {
-      claimed_resource_map_.insert({sensor.name, false});
+      claimed_component_map_.insert({sensor.name, false});
       auto deleter = std::bind(&ResourceManager::release_component, this, sensor.name);
       resource_storage_->initialize_sensor_component(sensor, deleter);
     }
@@ -200,15 +200,48 @@ ResourceManager::ResourceManager(const std::string & urdf)
 void ResourceManager::release_component(const std::string & component_id)
 {
   std::lock_guard<decltype(resource_lock_)> lg(resource_lock_);
-  claimed_resource_map_[component_id] = false;
+  claimed_component_map_[component_id] = false;
 }
 
-size_t ResourceManager::joint_components_size() const
+template<class ContainerT>
+inline auto component_exists(const std::string & component_name, const ContainerT & container)
+{
+  return container.find(component_name) != container.end();
+}
+
+template<class ContainerT>
+inline auto component_is_claimed(
+  const std::string & component_name,
+  const ContainerT & container,
+  const std::unordered_map<std::string, bool> & claimed_component_map)
+{
+  if (!component_exists(component_name, container)) {return false;}
+  return claimed_component_map.at(component_name);
+}
+
+template<class ContainerT>
+inline auto claim_component(
+  const std::string & component_name,
+  const ContainerT & container,
+  std::unordered_map<std::string, bool> & claimed_component_map)
+{
+  if (!component_exists(component_name, container)) {
+    throw std::runtime_error(std::string("component ") + component_name + " doesn't exist");
+  }
+  if (component_is_claimed(component_name, container, claimed_component_map)) {
+    throw std::runtime_error(std::string("component ") + component_name + " is already claimed");
+  }
+
+  claimed_component_map.at(component_name) = true;
+  return container.at(component_name);
+}
+
+size_t ResourceManager::joint_size() const
 {
   return resource_storage_->joint_components_.size();
 }
 
-std::vector<std::string> ResourceManager::joint_components_name() const
+std::vector<std::string> ResourceManager::joint_names() const
 {
   std::vector<std::string> ret;
   ret.reserve(resource_storage_->joint_components_.size());
@@ -219,12 +252,32 @@ std::vector<std::string> ResourceManager::joint_components_name() const
   return ret;
 }
 
-size_t ResourceManager::sensor_components_size() const
+bool ResourceManager::joint_exists(const std::string & joint_name) const
+{
+  return component_exists(joint_name, resource_storage_->joint_components_);
+}
+
+bool ResourceManager::joint_is_claimed(const std::string & joint_name) const
+{
+  std::lock_guard<decltype(resource_lock_)> lg(resource_lock_);
+  return component_is_claimed(
+    joint_name, resource_storage_->joint_components_, claimed_component_map_);
+}
+
+hardware_interface::components::Joint
+ResourceManager::claim_joint(const std::string & joint_name)
+{
+  std::lock_guard<decltype(resource_lock_)> lg(resource_lock_);
+  return claim_component(
+    joint_name, resource_storage_->joint_components_, claimed_component_map_);
+}
+
+size_t ResourceManager::sensor_size() const
 {
   return resource_storage_->sensor_components_.size();
 }
 
-std::vector<std::string> ResourceManager::sensor_components_name() const
+std::vector<std::string> ResourceManager::sensor_names() const
 {
   std::vector<std::string> ret;
   ret.reserve(resource_storage_->sensor_components_.size());
@@ -235,12 +288,32 @@ std::vector<std::string> ResourceManager::sensor_components_name() const
   return ret;
 }
 
-size_t ResourceManager::actuator_interfaces_size() const
+bool ResourceManager::sensor_exists(const std::string & sensor_name) const
+{
+  return component_exists(sensor_name, resource_storage_->sensor_components_);
+}
+
+bool ResourceManager::sensor_is_claimed(const std::string & sensor_name) const
+{
+  std::lock_guard<decltype(resource_lock_)> lg(resource_lock_);
+  return component_is_claimed(
+    sensor_name, resource_storage_->sensor_components_, claimed_component_map_);
+}
+
+hardware_interface::components::Sensor
+ResourceManager::claim_sensor(const std::string & sensor_name)
+{
+  std::lock_guard<decltype(resource_lock_)> lg(resource_lock_);
+  return claim_component(
+    sensor_name, resource_storage_->sensor_components_, claimed_component_map_);
+}
+
+size_t ResourceManager::actuator_interface_size() const
 {
   return resource_storage_->actuators_.size();
 }
 
-std::vector<std::string> ResourceManager::actuator_interfaces_name() const
+std::vector<std::string> ResourceManager::actuator_interface_names() const
 {
   std::vector<std::string> ret;
   ret.reserve(resource_storage_->actuators_.size());
@@ -251,12 +324,12 @@ std::vector<std::string> ResourceManager::actuator_interfaces_name() const
   return ret;
 }
 
-size_t ResourceManager::sensor_interfaces_size() const
+size_t ResourceManager::sensor_interface_size() const
 {
   return resource_storage_->sensors_.size();
 }
 
-std::vector<std::string> ResourceManager::sensor_interfaces_name() const
+std::vector<std::string> ResourceManager::sensor_interface_names() const
 {
   std::vector<std::string> ret;
   ret.reserve(resource_storage_->sensors_.size());
@@ -267,12 +340,12 @@ std::vector<std::string> ResourceManager::sensor_interfaces_name() const
   return ret;
 }
 
-size_t ResourceManager::system_interfaces_size() const
+size_t ResourceManager::system_interface_size() const
 {
   return resource_storage_->systems_.size();
 }
 
-std::vector<std::string> ResourceManager::system_interfaces_name() const
+std::vector<std::string> ResourceManager::system_interface_names() const
 {
   std::vector<std::string> ret;
   ret.reserve(resource_storage_->systems_.size());
@@ -281,34 +354,5 @@ std::vector<std::string> ResourceManager::system_interfaces_name() const
   }
 
   return ret;
-}
-
-hardware_interface::components::Sensor
-ResourceManager::claim_sensor(const std::string & sensor_id)
-{
-  std::lock_guard<decltype(resource_lock_)> lg(resource_lock_);
-  if (!sensor_exists(sensor_id)) {
-    throw std::runtime_error(std::string("sensor id") + sensor_id + " doesn't exist");
-  }
-  if (sensor_is_claimed(sensor_id)) {
-    throw std::runtime_error(std::string("sensor id") + sensor_id + " is already claimed");
-  }
-
-  claimed_resource_map_[sensor_id] = true;
-  return resource_storage_->sensor_components_[sensor_id];
-}
-
-bool ResourceManager::sensor_exists(const std::string & sensor_id) const
-{
-  return resource_storage_->sensor_components_.find(sensor_id) !=
-         resource_storage_->sensor_components_.end();
-}
-
-bool ResourceManager::sensor_is_claimed(const std::string & sensor_id) const
-{
-  std::lock_guard<decltype(resource_lock_)> lg(resource_lock_);
-  if (!sensor_exists(sensor_id)) {return false;}
-
-  return claimed_resource_map_.at(sensor_id);
 }
 }  // namespace controller_manager
