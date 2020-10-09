@@ -32,20 +32,43 @@ namespace components
 
 using Deleter = std::function<void ()>;
 
+/// Joint wrapper class
+/**
+ * The class represents a wrapper around an implementation of the JointInterface.
+ * This allows to represent various implementations under the same common API.
+ * Joint serves as a handle which can get claimed and loaned to each individual controller
+ * to obtain exclusive ownership over the component.
+ */
 class Joint final
 {
 public:
-  Joint() = default;
-
-  Joint(const Joint & other) = default;
-
-  Joint(Joint && other) = default;
-
+  /// Constructor for a joint component
+  /**
+   * The joint is constructed with a concrete JointInterface implementation.
+   * The second parameter serves as a callback upon destruction, which is used
+   * to cleanup the component or signal its destruction to other entities such
+   * as the resource manager within the controller manager.
+   *
+   * \param impl Shared pointer to a precise implementation of the joint component.
+   * \param deleter Callback function to be called upon destruction.
+   */
   HARDWARE_INTERFACE_PUBLIC
   Joint(std::shared_ptr<JointInterface> impl, Deleter deleter);
 
   HARDWARE_INTERFACE_PUBLIC
   ~Joint();
+
+  /// Access the underlying implementation
+  /**
+   * The function returns a reference to the implementation.
+   * This allows for a full-access API for optimal use.
+   *
+   * \note: The given template parameter has to be directly convertible.
+   * A wrongly specified template argument might lead to UB.
+   * \return Reference to the casted interface.
+   */
+  template<class ImplT>
+  auto & as() {return *std::static_pointer_cast<ImplT>(impl_);}
 
   HARDWARE_INTERFACE_PUBLIC
   return_type configure(const ComponentInfo & joint_info);

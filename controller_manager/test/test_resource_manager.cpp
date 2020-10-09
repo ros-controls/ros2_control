@@ -18,6 +18,9 @@
 
 #include "resource_manager.hpp"
 
+#include "test_hardware_resources/test_joint_component.hpp"
+#include "test_hardware_resources/test_sensor_component.hpp"
+
 using namespace ::testing;  // NOLINT
 
 class TestResourceManager : public Test
@@ -206,4 +209,34 @@ TEST_F(TestResourceManager, resource_claiming) {
     }
     EXPECT_FALSE(rm.joint_is_claimed(joint_name));
   }
+}
+
+TEST_F(TestResourceManager, interface_access) {
+  auto urdf = urdf_head_ + test_hardware_resource_system_ + urdf_tail_;
+  controller_manager::ResourceManager rm(urdf);
+
+  EXPECT_EQ(3u, rm.joint_size());
+  EXPECT_EQ(1u, rm.sensor_size());
+
+  {
+    auto joint1 = rm.claim_joint("joint1");
+    {
+      auto test_joint = joint1.as<TestJointComponent>();
+      EXPECT_TRUE(test_joint.return_true());
+      EXPECT_TRUE(rm.joint_is_claimed("joint1"));
+    }
+    EXPECT_TRUE(rm.joint_is_claimed("joint1"));
+  }
+  EXPECT_FALSE(rm.joint_is_claimed("joint1"));
+
+  {
+    auto sensor1 = rm.claim_sensor("sensor1");
+    {
+      auto test_sensor = sensor1.as<TestSensorComponent>();
+      EXPECT_TRUE(test_sensor.return_true());
+      EXPECT_TRUE(rm.sensor_is_claimed("sensor1"));
+    }
+    EXPECT_TRUE(rm.sensor_is_claimed("sensor1"));
+  }
+  EXPECT_FALSE(rm.sensor_is_claimed("sensor1"));
 }

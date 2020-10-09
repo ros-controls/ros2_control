@@ -32,20 +32,43 @@ namespace components
 
 using Deleter = std::function<void ()>;
 
+/// Sensor wrapper class
+/**
+ * The class represents a wrapper around an implementation of the SensorInterface.
+ * This allows to represent various implementations under the same common API.
+ * Sensor serves as a handle which can get claimed and loaned to each individual controller
+ * to obtain exclusive ownership over the component.
+ */
 class Sensor final
 {
 public:
-  Sensor() = default;
-
+  /// Constructor for a sensor component
+  /**
+   * The sensor is constructed with a precise SensorInterface implementation.
+   * The second parameter serves as a callback upon destruction, which is used
+   * to cleanup the component or signal its destruction to other entities such
+   * as the resource manager within the controller manager.
+   *
+   * \param impl Shared pointer to a precise implementation of the sensor component.
+   * \param deleter Callback function to be called upon destruction.
+   */
   HARDWARE_INTERFACE_PUBLIC
   Sensor(std::shared_ptr<SensorInterface> impl, Deleter deleter);
 
-  Sensor(const Sensor & other) = default;
-
-  Sensor(Sensor && other) = default;
-
   HARDWARE_INTERFACE_PUBLIC
   ~Sensor();
+
+  /// Access the underlying implementation
+  /**
+   * The function returns a reference to the implementation.
+   * This allows for a full-access API for optimal use.
+   *
+   * \note: The given template parameter has to be directly convertible.
+   * A wrongly specified template argument might lead to UB.
+   * \return Reference to the casted interface.
+   */
+  template<class ImplT>
+  auto & as() {return *std::static_pointer_cast<ImplT>(impl_);}
 
   HARDWARE_INTERFACE_PUBLIC
   return_type configure(const ComponentInfo & sensor_info);

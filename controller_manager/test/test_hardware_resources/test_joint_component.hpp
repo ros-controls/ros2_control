@@ -72,5 +72,8 @@ public:
 
   CONTROLLER_MANAGER_PUBLIC
   hardware_interface::return_type set_state(const std::vector<double> & state) override;
+
+  // Some additional API
+  bool return_true() const {return true;}
 };
 #endif  // TEST_HARDWARE_RESOURCES__TEST_JOINT_COMPONENT_HPP_

@@ -129,7 +129,7 @@ if(BUILD_TESTING)
     ENV ASAN_OPTIONS=detect_container_overflow=0
   )
   target_include_directories(test_resource_manager PRIVATE include src)
-  target_link_libraries(test_resource_manager controller_manager)
+  target_link_libraries(test_resource_manager controller_manager test_hardware_resources)
   set_target_properties(test_resource_manager PROPERTIES COMPILE_FLAGS "-fsanitize=undefined -fsanitize=address")
   set_target_properties(test_resource_manager PROPERTIES LINK_FLAGS "-fsanitize=undefined -fsanitize=address")
 endif()
