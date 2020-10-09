@@ -16,6 +16,7 @@
 #define RESOURCE_MANAGER_HPP_
 
 #include <memory>
+#include <mutex>
 #include <string>
 #include <unordered_map>
 #include <vector>

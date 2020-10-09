@@ -15,6 +15,7 @@
 #ifndef HARDWARE_INTERFACE__COMPONENTS__JOINT_HPP_
 #define HARDWARE_INTERFACE__COMPONENTS__JOINT_HPP_
 
+#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
