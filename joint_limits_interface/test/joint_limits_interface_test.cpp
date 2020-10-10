@@ -214,7 +214,7 @@ TEST_F(PositionJointSoftLimitsHandleTest, EnforceVelocityBounds)
       pos_handle, cmd_handle, limits, soft_limits);
     cmd = max_increment / 2.0;
     cmd_handle->set_value(cmd);
-    limits_handle.enforceLimits(period);
+    limits_handle.enforce_limits(period);
     EXPECT_NEAR(cmd, cmd_handle->get_value(), EPS);
   }
   {
@@ -222,7 +222,7 @@ TEST_F(PositionJointSoftLimitsHandleTest, EnforceVelocityBounds)
       pos_handle, cmd_handle, limits, soft_limits);
     cmd = -max_increment / 2.0;
     cmd_handle->set_value(cmd);
-    limits_handle.enforceLimits(period);
+    limits_handle.enforce_limits(period);
     EXPECT_NEAR(cmd, cmd_handle->get_value(), EPS);
   }
 
@@ -232,7 +232,7 @@ TEST_F(PositionJointSoftLimitsHandleTest, EnforceVelocityBounds)
       pos_handle, cmd_handle, limits, soft_limits);
     cmd = max_increment;
     cmd_handle->set_value(cmd);
-    limits_handle.enforceLimits(period);
+    limits_handle.enforce_limits(period);
     EXPECT_NEAR(cmd, cmd_handle->get_value(), EPS);
   }
   {
@@ -240,7 +240,7 @@ TEST_F(PositionJointSoftLimitsHandleTest, EnforceVelocityBounds)
       pos_handle, cmd_handle, limits, soft_limits);
     cmd = -max_increment;
     cmd_handle->set_value(cmd);
-    limits_handle.enforceLimits(period);
+    limits_handle.enforce_limits(period);
     EXPECT_NEAR(cmd, cmd_handle->get_value(), EPS);
   }
 
@@ -250,7 +250,7 @@ TEST_F(PositionJointSoftLimitsHandleTest, EnforceVelocityBounds)
       pos_handle, cmd_handle, limits, soft_limits);
     cmd = 2.0 * max_increment;
     cmd_handle->set_value(cmd);
-    limits_handle.enforceLimits(period);
+    limits_handle.enforce_limits(period);
     EXPECT_NEAR(max_increment, cmd_handle->get_value(), EPS);
   }
   {
@@ -258,7 +258,7 @@ TEST_F(PositionJointSoftLimitsHandleTest, EnforceVelocityBounds)
       pos_handle, cmd_handle, limits, soft_limits);
     cmd = -2.0 * max_increment;
     cmd_handle->set_value(cmd);
-    limits_handle.enforceLimits(period);
+    limits_handle.enforce_limits(period);
     EXPECT_NEAR(-max_increment, cmd_handle->get_value(), EPS);
   }
 }
@@ -279,13 +279,13 @@ TEST_F(PositionJointSoftLimitsHandleTest, EnforcePositionBounds)
     pos = soft_limits.max_position;
     // Try to get closer to the hard limit
     cmd_handle->set_value(limits.max_position);
-    limits_handle.enforceLimits(period);
+    limits_handle.enforce_limits(period);
     EXPECT_NEAR(pos_handle->get_value(), cmd_handle->get_value(), EPS);
 
     // OK to move away from hard limit
     // Try to go to workspace center
     cmd_handle->set_value(workspace_center);
-    limits_handle.enforceLimits(period);
+    limits_handle.enforce_limits(period);
     EXPECT_GT(pos_handle->get_value(), cmd_handle->get_value());
   }
 
@@ -298,13 +298,13 @@ TEST_F(PositionJointSoftLimitsHandleTest, EnforcePositionBounds)
     pos = soft_limits.min_position;
     // Try to get closer to the hard limit
     cmd_handle->set_value(limits.min_position);
-    limits_handle.enforceLimits(period);
+    limits_handle.enforce_limits(period);
     EXPECT_NEAR(pos_handle->get_value(), cmd_handle->get_value(), EPS);
 
     // OK to move away from hard limit
     // Try to go to workspace center
     cmd_handle->set_value(workspace_center);
-    limits_handle.enforceLimits(period);
+    limits_handle.enforce_limits(period);
     EXPECT_LT(pos_handle->get_value(), cmd_handle->get_value());
   }
 
@@ -318,13 +318,13 @@ TEST_F(PositionJointSoftLimitsHandleTest, EnforcePositionBounds)
     pos = (soft_limits.max_position + limits.max_position) / 2.0;
     // Try to get closer to the hard limit
     cmd_handle->set_value(limits.max_position);
-    limits_handle.enforceLimits(period);
+    limits_handle.enforce_limits(period);
     EXPECT_GT(pos_handle->get_value(), cmd_handle->get_value());
 
     // OK to move away from hard limit
     // Try to go to workspace center
     cmd_handle->set_value(workspace_center);
-    limits_handle.enforceLimits(period);
+    limits_handle.enforce_limits(period);
     EXPECT_GT(pos_handle->get_value(), cmd_handle->get_value());
   }
 
@@ -338,13 +338,13 @@ TEST_F(PositionJointSoftLimitsHandleTest, EnforcePositionBounds)
     pos = (soft_limits.min_position + limits.min_position) / 2.0;
     // Try to get closer to the hard limit
     cmd_handle->set_value(limits.min_position);
-    limits_handle.enforceLimits(period);
+    limits_handle.enforce_limits(period);
     EXPECT_LT(pos_handle->get_value(), cmd_handle->get_value());
 
     // OK to move away from hard limit
     // Try to go to workspace center
     cmd_handle->set_value(workspace_center);
-    limits_handle.enforceLimits(period);
+    limits_handle.enforce_limits(period);
     EXPECT_LT(pos_handle->get_value(), cmd_handle->get_value());
   }
 }
@@ -367,7 +367,7 @@ TEST_F(PositionJointSoftLimitsHandleTest, PathologicalSoftBounds)
     pos = limits.max_position;
     // Way beyond hard limit
     cmd_handle->set_value(2.0 * limits.max_position);
-    limits_handle.enforceLimits(period);
+    limits_handle.enforce_limits(period);
     EXPECT_NEAR(limits.max_position, cmd_handle->get_value(), EPS);
   }
 
@@ -381,7 +381,7 @@ TEST_F(PositionJointSoftLimitsHandleTest, PathologicalSoftBounds)
     pos = limits.min_position;
     // Way beyond hard limit
     cmd_handle->set_value(2.0 * limits.min_position);
-    limits_handle.enforceLimits(period);
+    limits_handle.enforce_limits(period);
     EXPECT_NEAR(limits.min_position, cmd_handle->get_value(), EPS);
   }
 }
@@ -400,34 +400,34 @@ TEST_F(VelocityJointSaturationHandleTest, EnforceVelocityBounds)
   // Velocity within bounds
   cmd = limits.max_velocity / 2.0;
   cmd_handle->set_value(cmd);
-  limits_handle.enforceLimits(period);
+  limits_handle.enforce_limits(period);
   EXPECT_NEAR(cmd, cmd_handle->get_value(), EPS);
 
   cmd = -limits.max_velocity / 2.0;
   cmd_handle->set_value(cmd);
-  limits_handle.enforceLimits(period);
+  limits_handle.enforce_limits(period);
   EXPECT_NEAR(cmd, cmd_handle->get_value(), EPS);
 
   // Velocity at bounds
   cmd = limits.max_velocity;
   cmd_handle->set_value(cmd);
-  limits_handle.enforceLimits(period);
+  limits_handle.enforce_limits(period);
   EXPECT_NEAR(cmd, cmd_handle->get_value(), EPS);
 
   cmd = -limits.max_velocity;
   cmd_handle->set_value(cmd);
-  limits_handle.enforceLimits(period);
+  limits_handle.enforce_limits(period);
   EXPECT_NEAR(cmd, cmd_handle->get_value(), EPS);
 
   // Velocity beyond bounds
   cmd = 2.0 * limits.max_velocity;
   cmd_handle->set_value(cmd);
-  limits_handle.enforceLimits(period);
+  limits_handle.enforce_limits(period);
   EXPECT_NEAR(limits.max_velocity, cmd_handle->get_value(), EPS);
 
   cmd = -2.0 * limits.max_velocity;
   cmd_handle->set_value(cmd);
-  limits_handle.enforceLimits(period);
+  limits_handle.enforce_limits(period);
   EXPECT_NEAR(-limits.max_velocity, cmd_handle->get_value(), EPS);
 }
 
@@ -449,12 +449,12 @@ TEST_F(VelocityJointSaturationHandleTest, EnforceAccelerationBounds)
   cmd_handle->set_value(limits.max_velocity / 2.0);
   // make sure the prev_cmd is registered
   // without triggering the acceleration limits
-  limits_handle.enforceLimits(long_enough);
+  limits_handle.enforce_limits(long_enough);
 
   // Try to go beyond +max velocity
   cmd = limits.max_velocity * 2.0;
   cmd_handle->set_value(cmd);
-  limits_handle.enforceLimits(period);
+  limits_handle.enforce_limits(period);
   // Max velocity bounded by velocity limit
   EXPECT_NEAR(limits.max_velocity, cmd_handle->get_value(), EPS);
 
@@ -462,12 +462,12 @@ TEST_F(VelocityJointSaturationHandleTest, EnforceAccelerationBounds)
   cmd_handle->set_value(limits.max_velocity / 2.0);
   // make sure the prev_cmd is registered
   // without triggering the acceleration limits
-  limits_handle.enforceLimits(long_enough);
+  limits_handle.enforce_limits(long_enough);
 
   // Try to go beyond -max velocity
   cmd = -limits.max_velocity * 2.0;
   cmd_handle->set_value(cmd);
-  limits_handle.enforceLimits(period);
+  limits_handle.enforce_limits(period);
   // Max velocity bounded by acceleration limit
   EXPECT_NEAR(-limits.max_velocity / 2.0, cmd_handle->get_value(), EPS);
 
@@ -476,12 +476,12 @@ TEST_F(VelocityJointSaturationHandleTest, EnforceAccelerationBounds)
   cmd_handle->set_value(-limits.max_velocity / 2.0);
   // make sure the prev_cmd is registered
   // without triggering the acceleration limits
-  limits_handle.enforceLimits(long_enough);
+  limits_handle.enforce_limits(long_enough);
 
   // Try to go beyond +max velocity
   cmd = limits.max_velocity * 2.0;
   cmd_handle->set_value(cmd);
-  limits_handle.enforceLimits(period);
+  limits_handle.enforce_limits(period);
   // Max velocity bounded by acceleration limit
   EXPECT_NEAR(limits.max_velocity / 2.0, cmd_handle->get_value(), EPS);
 
@@ -489,12 +489,12 @@ TEST_F(VelocityJointSaturationHandleTest, EnforceAccelerationBounds)
   cmd_handle->set_value(-limits.max_velocity / 2.0);
   // make sure the prev_cmd is registered
   // without triggering the acceleration limits
-  limits_handle.enforceLimits(long_enough);
+  limits_handle.enforce_limits(long_enough);
 
   // Try to go beyond -max velocity
   cmd = -limits.max_velocity * 2.0;
   cmd_handle->set_value(cmd);
-  limits_handle.enforceLimits(period);
+  limits_handle.enforce_limits(period);
   // Max velocity bounded by velocity limit
   EXPECT_NEAR(-limits.max_velocity, cmd_handle->get_value(), EPS);
 }
@@ -558,7 +558,7 @@ protected:
 //   // Try to get closer to the hard limit
 //   cmd_handle->set_value(limits.max_position);
 //   cmd_handle2.set_cmd(limits.max_position);
-//   iface.enforceLimits(period);
+//   iface.enforce_limits(period);
 //   EXPECT_GT(pos_handle->get_value(), cmd_handle->get_value());
 //   EXPECT_GT(cmd_handle2.getPosition(), cmd_handle2.get_cmd());
 // }
@@ -573,19 +573,19 @@ TEST_F(JointLimitsHandleTest, ResetSaturationInterface)
   PositionJointSaturationInterface iface;
   iface.registerHandle(limits_handle1);
 
-  iface.enforceLimits(period);  // initialize limit handles
+  iface.enforce_limits(period);  // initialize limit handles
 
   const double max_increment = period.seconds() * limits.max_velocity;
 
   cmd_handle->set_value(limits.max_position);
-  iface.enforceLimits(period);
+  iface.enforce_limits(period);
 
   EXPECT_NEAR(cmd_handle->get_value(), max_increment, EPS);
 
   iface.reset();
   pos = limits.max_position;
   cmd_handle->set_value(limits.max_position);
-  iface.enforceLimits(period);
+  iface.enforce_limits(period);
 
   EXPECT_NEAR(cmd_handle->get_value(), limits.max_position, EPS);
 }
@@ -599,19 +599,19 @@ TEST_F(JointLimitsHandleTest, ResetSaturationInterface)
 //   PositionJointSoftLimitsInterface iface;
 //   iface.registerHandle(limits_handle1);
 //
-//   iface.enforceLimits(period); // initialize limit handles
+//   iface.enforce_limits(period); // initialize limit handles
 //
 //   const double max_increment = period.seconds() * limits.max_velocity;
 //
 //   cmd_handle->set_value(limits.max_position);
-//   iface.enforceLimits(period);
+//   iface.enforce_limits(period);
 //
 //   EXPECT_NEAR(cmd_handle->get_value(), max_increment, EPS);
 //
 //   iface.reset();
 //   pos = limits.max_position;
 //   cmd_handle->set_value(soft_limits.max_position);
-//   iface.enforceLimits(period);
+//   iface.enforce_limits(period);
 //
 //   EXPECT_NEAR(cmd_handle->get_value(), soft_limits.max_position, EPS);
 //

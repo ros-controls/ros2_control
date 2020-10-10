@@ -125,8 +125,8 @@ public:
   void write(ros::Time time, ros::Duration period)
   {
     // Enforce joint limits for all registered handles
-    // Note: one can also enforce limits on a per-handle basis: handle.enforceLimits(period)
-    jnt_limits_interface_.enforceLimits(period);
+    // Note: one can also enforce limits on a per-handle basis: handle.enforce_limits(period)
+    jnt_limits_interface_.enforce_limits(period);
 
     // Propagate joint commands to actuators...
 

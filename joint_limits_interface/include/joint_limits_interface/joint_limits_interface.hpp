@@ -103,7 +103,7 @@ public:
 
   /** \brief Sub-class implementation of limit enforcing policy.
    */
-  virtual void enforceLimits(const rclcpp::Duration & period) = 0;
+  virtual void enforce_limits(const rclcpp::Duration & period) = 0;
 
   /** \brief  clear stored state, causing it to reset next iteration
    */
@@ -198,7 +198,7 @@ public:
  *
  * \param period Control period.
  */
-  void enforceLimits(const rclcpp::Duration & period)
+  void enforce_limits(const rclcpp::Duration & period)
   {
     if (std::isnan(prev_pos_)) {
       prev_pos_ = jposh_->get_value();
@@ -287,7 +287,7 @@ public:
    * enforced.
    * \param period Control period.
    */
-  void enforceLimits(const rclcpp::Duration & period) override
+  void enforce_limits(const rclcpp::Duration & period) override
   {
     assert(period.seconds() > 0.0);
 
@@ -384,7 +384,7 @@ public:
    * \brief Enforce position, velocity, and effort limits for a joint that is not subject
    * to soft limits.
    */
-  void enforceLimits(const rclcpp::Duration & period) override
+  void enforce_limits(const rclcpp::Duration & period) override
   {
     double min_eff = -limits_.max_effort;
     double max_eff = limits_.max_effort;
@@ -455,7 +455,7 @@ public:
    * If the joint has no position limits (eg. a continuous joint), only velocity and effort limits
    * will be enforced.
    */
-  void enforceLimits(const rclcpp::Duration & period) override
+  void enforce_limits(const rclcpp::Duration & period) override
   {
     // Current state
     const double pos = jposh_->get_value();
@@ -539,7 +539,7 @@ public:
    * \brief Enforce joint velocity and acceleration limits.
    * \param period Control period.
    */
-  void enforceLimits(const rclcpp::Duration & period) override
+  void enforce_limits(const rclcpp::Duration & period) override
   {
     // Velocity bounds
     double vel_low;
@@ -597,7 +597,7 @@ public:
    *
    * \param period Control period.
    */
-  void enforceLimits(const rclcpp::Duration & period)
+  void enforce_limits(const rclcpp::Duration & period)
   {
     double min_vel, max_vel;
     if (limits_.has_position_limits) {
@@ -634,7 +634,7 @@ private:
 //  *
 //  * \tparam HandleType %Handle type. Must implement the following methods:
 //  *  \code
-//  *   void enforceLimits();
+//  *   void enforce_limits();
 //  *   std::string get_name() const;
 //  *  \endcode
 //  */
@@ -656,10 +656,10 @@ private:
 //   /** \name Real-Time Safe Functions
 //    *\{*/
 //   /** \brief Enforce limits for all managed handles. */
-//   void enforceLimits(const rclcpp::Duration & period)
+//   void enforce_limits(const rclcpp::Duration & period)
 //   {
 //     for (auto && resource_name_and_handle : this->resource_map_) {
-//       resource_name_and_handle.second.enforceLimits(period);
+//       resource_name_and_handle.second.enforce_limits(period);
 //     }
 //   }
 //   /*\}*/
