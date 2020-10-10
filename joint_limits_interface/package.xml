@@ -4,8 +4,7 @@
   <description>Interface for enforcing joint limits.</description>
 
   <maintainer email="bence.magyar.robotics@gmail.com">Bence Magyar</maintainer>
-  <maintainer email="enrique.fernandez.perdomo@gmail.com">Enrique Fernandez</maintainer>
-  <maintainer email="mathias.luedtke@ipa.fraunhofer.de">Mathias Lüdtke</maintainer>
+  <maintainer email="jordan.palacios@pal-robotics.com">Jordan Palacios</maintainer>
 
   <license>BSD</license>
 
