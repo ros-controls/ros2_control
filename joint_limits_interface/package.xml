@@ -6,7 +6,7 @@
   <maintainer email="bence.magyar.robotics@gmail.com">Bence Magyar</maintainer>
   <maintainer email="jordan.palacios@pal-robotics.com">Jordan Palacios</maintainer>
 
-  <license>BSD</license>
+  <license>Apache License 2.0</license>
 
   <url type="website">https://github.com/ros-controls/ros2_control/wiki</url>
   <url type="bugtracker">https://github.com/ros-controls/ros2_control/issues</url>
