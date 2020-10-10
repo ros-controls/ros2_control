@@ -1,6 +1,6 @@
 <package format="3">
   <name>joint_limits_interface</name>
-  <version>0.16.0</version>
+  <version>0.0.0</version>
   <description>Interface for enforcing joint limits.</description>
 
   <maintainer email="bence.magyar.robotics@gmail.com">Bence Magyar</maintainer>
@@ -9,9 +9,9 @@
 
   <license>BSD</license>
 
-  <url type="website">https://github.com/ros-controls/ros_control/wiki</url>
-  <url type="bugtracker">https://github.com/ros2-controls/ros_control/issues</url>
-  <url type="repository">https://github.com/ros2-controls/ros_control</url>
+  <url type="website">https://github.com/ros-controls/ros2_control/wiki</url>
+  <url type="bugtracker">https://github.com/ros-controls/ros2_control/issues</url>
+  <url type="repository">https://github.com/ros-controls/ros2_control</url>
 
   <author>Adolfo Rodriguez Tsouroukdissian</author>
 
