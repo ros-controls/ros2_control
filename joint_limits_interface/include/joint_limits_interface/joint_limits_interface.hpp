@@ -65,14 +65,18 @@ class JointSaturationLimitHandle
 public:
   JointSaturationLimitHandle()
   : prev_pos_(std::numeric_limits<double>::quiet_NaN()),
-    prev_vel_(0.0)
+    prev_vel_(0.0),
+    jposh_(std::string(), "position"),
+    jvelh_(std::string(), "velocity"),
+    jcmdh_(std::string(), "position_command")
   {}
 
   JointSaturationLimitHandle(
-    const std::shared_ptr<hardware_interface::JointHandle> & jposh,
-    const std::shared_ptr<hardware_interface::JointHandle> & jcmdh,
+    const hardware_interface::JointHandle & jposh,
+    const hardware_interface::JointHandle & jcmdh,
     const JointLimits & limits)
   : jposh_(jposh),
+    jvelh_(std::string(), "velocity"),
     jcmdh_(jcmdh),
     limits_(limits),
     prev_pos_(std::numeric_limits<double>::quiet_NaN()),
@@ -80,9 +84,9 @@ public:
   {}
 
   JointSaturationLimitHandle(
-    const std::shared_ptr<hardware_interface::JointHandle> & jposh,
-    const std::shared_ptr<hardware_interface::JointHandle> & jvelh,
-    const std::shared_ptr<hardware_interface::JointHandle> & jcmdh,
+    const hardware_interface::JointHandle & jposh,
+    const hardware_interface::JointHandle & jvelh,
+    const hardware_interface::JointHandle & jcmdh,
     const JointLimits & limits)
   : jposh_(jposh),
     jvelh_(jvelh),
@@ -95,9 +99,9 @@ public:
   /** \return Joint name. */
   std::string get_name() const
   {
-    return jposh_ ? jposh_->get_name() :
-           jvelh_ ? jvelh_->get_name() :
-           jcmdh_ ? jcmdh_->get_name() :
+    return jposh_ ? jposh_.get_name() :
+           jvelh_ ? jvelh_.get_name() :
+           jcmdh_ ? jcmdh_.get_name() :
            std::string();
   }
 
@@ -114,9 +118,9 @@ public:
   }
 
 protected:
-  std::shared_ptr<hardware_interface::JointHandle> jposh_;
-  std::shared_ptr<hardware_interface::JointHandle> jvelh_;
-  std::shared_ptr<hardware_interface::JointHandle> jcmdh_;
+  hardware_interface::JointHandle jposh_;
+  hardware_interface::JointHandle jvelh_;
+  hardware_interface::JointHandle jcmdh_;
   joint_limits_interface::JointLimits limits_;
 
   // stored state - track position and velocity of last update
@@ -133,8 +137,8 @@ protected:
     // if we have a handle to a velocity state we can directly return state velocity
     // otherwise we will estimate velocity from previous position (command or state)
     return jvelh_ ?
-           jvelh_->get_value() :
-           (jposh_->get_value() - prev_pos_) / period.seconds();
+           jvelh_.get_value() :
+           (jposh_.get_value() - prev_pos_) / period.seconds();
   }
 };
 
@@ -148,8 +152,8 @@ public:
   JointSoftLimitsHandle() {}
 
   JointSoftLimitsHandle(
-    const std::shared_ptr<hardware_interface::JointHandle> & jposh,
-    const std::shared_ptr<hardware_interface::JointHandle> & jcmdh,
+    const hardware_interface::JointHandle & jposh,
+    const hardware_interface::JointHandle & jcmdh,
     const JointLimits & limits,
     const SoftJointLimits & soft_limits)
   : JointSaturationLimitHandle(jposh, jcmdh, limits),
@@ -157,9 +161,9 @@ public:
   {}
 
   JointSoftLimitsHandle(
-    const std::shared_ptr<hardware_interface::JointHandle> & jposh,
-    const std::shared_ptr<hardware_interface::JointHandle> & jvelh,
-    const std::shared_ptr<hardware_interface::JointHandle> & jcmdh,
+    const hardware_interface::JointHandle & jposh,
+    const hardware_interface::JointHandle & jvelh,
+    const hardware_interface::JointHandle & jcmdh,
     const JointLimits & limits,
     const SoftJointLimits & soft_limits)
   : JointSaturationLimitHandle(jposh, jvelh, jcmdh, limits),
@@ -179,8 +183,8 @@ public:
   PositionJointSaturationHandle() {}
 
   PositionJointSaturationHandle(
-    const std::shared_ptr<hardware_interface::JointHandle> & jposh,
-    const std::shared_ptr<hardware_interface::JointHandle> & jcmdh,
+    const hardware_interface::JointHandle & jposh,
+    const hardware_interface::JointHandle & jcmdh,
     const JointLimits & limits)
   : JointSaturationLimitHandle(jposh, jcmdh, limits)
   {
@@ -201,7 +205,7 @@ public:
   void enforce_limits(const rclcpp::Duration & period)
   {
     if (std::isnan(prev_pos_)) {
-      prev_pos_ = jposh_->get_value();
+      prev_pos_ = jposh_.get_value();
     }
 
     double min_pos, max_pos;
@@ -219,8 +223,8 @@ public:
     }
 
     // clamp command position to our computed min/max position
-    const double cmd = rcppmath::clamp(jcmdh_->get_value(), min_pos, max_pos);
-    jcmdh_->set_value(cmd);
+    const double cmd = rcppmath::clamp(jcmdh_.get_value(), min_pos, max_pos);
+    jcmdh_.set_value(cmd);
 
     prev_pos_ = cmd;
   }
@@ -267,8 +271,8 @@ public:
   {}
 
   PositionJointSoftLimitsHandle(
-    const std::shared_ptr<hardware_interface::JointHandle> & jposh,
-    const std::shared_ptr<hardware_interface::JointHandle> & jcmdh,
+    const hardware_interface::JointHandle & jposh,
+    const hardware_interface::JointHandle & jcmdh,
     const joint_limits_interface::JointLimits & limits,
     const joint_limits_interface::SoftJointLimits & soft_limits)
   : JointSoftLimitsHandle(jposh, jcmdh, limits, soft_limits)
@@ -294,7 +298,7 @@ public:
     // Current position
     if (std::isnan(prev_pos_)) {
       // Happens only once at initialization
-      prev_pos_ = jposh_->get_value();
+      prev_pos_ = jposh_.get_value();
     }
     const double pos = prev_pos_;
 
@@ -333,15 +337,15 @@ public:
 
     // Saturate position command according to bounds
     const double pos_cmd = rcppmath::clamp(
-      jcmdh_->get_value(),
+      jcmdh_.get_value(),
       pos_low,
       pos_high);
-    jcmdh_->set_value(pos_cmd);
+    jcmdh_.set_value(pos_cmd);
 
     // Cache variables
     // todo: shouldn't this just be pos_cmd? why call into the command handle to
     //  get what we have in the above line?
-    prev_pos_ = jcmdh_->get_value();
+    prev_pos_ = jcmdh_.get_value();
   }
 };
 
@@ -354,9 +358,9 @@ public:
   EffortJointSaturationHandle() {}
 
   EffortJointSaturationHandle(
-    const std::shared_ptr<hardware_interface::JointHandle> & jposh,
-    const std::shared_ptr<hardware_interface::JointHandle> & jvelh,
-    const std::shared_ptr<hardware_interface::JointHandle> & jcmdh,
+    const hardware_interface::JointHandle & jposh,
+    const hardware_interface::JointHandle & jvelh,
+    const hardware_interface::JointHandle & jcmdh,
     const joint_limits_interface::JointLimits & limits)
   : JointSaturationLimitHandle(jposh, jvelh, jcmdh, limits)
   {
@@ -373,10 +377,10 @@ public:
   }
 
   EffortJointSaturationHandle(
-    const std::shared_ptr<hardware_interface::JointHandle> & jh,
-    const std::shared_ptr<hardware_interface::JointHandle> & jcmdh,
+    const hardware_interface::JointHandle & jposh,
+    const hardware_interface::JointHandle & jcmdh,
     const joint_limits_interface::JointLimits & limits)
-  : EffortJointSaturationHandle(jh, nullptr, jcmdh, limits)
+  : EffortJointSaturationHandle(jposh, {std::string(), "velocity"}, jcmdh, limits)
   {
   }
 
@@ -390,7 +394,7 @@ public:
     double max_eff = limits_.max_effort;
 
     if (limits_.has_position_limits) {
-      const double pos = jposh_->get_value();
+      const double pos = jposh_.get_value();
       if (pos < limits_.min_position) {
         min_eff = 0.0;
       } else if (pos > limits_.max_position) {
@@ -405,8 +409,8 @@ public:
       max_eff = 0.0;
     }
 
-    double clamped = rcppmath::clamp(jcmdh_->get_value(), min_eff, max_eff);
-    jcmdh_->set_value(clamped);
+    double clamped = rcppmath::clamp(jcmdh_.get_value(), min_eff, max_eff);
+    jcmdh_.set_value(clamped);
   }
 };
 
@@ -421,9 +425,9 @@ public:
   EffortJointSoftLimitsHandle() {}
 
   EffortJointSoftLimitsHandle(
-    const std::shared_ptr<hardware_interface::JointHandle> & jposh,
-    const std::shared_ptr<hardware_interface::JointHandle> & jvelh,
-    const std::shared_ptr<hardware_interface::JointHandle> & jcmdh,
+    const hardware_interface::JointHandle & jposh,
+    const hardware_interface::JointHandle & jvelh,
+    const hardware_interface::JointHandle & jcmdh,
     const joint_limits_interface::JointLimits & limits,
     const joint_limits_interface::SoftJointLimits & soft_limits)
   : JointSoftLimitsHandle(jposh, jvelh, jcmdh, limits, soft_limits)
@@ -441,11 +445,11 @@ public:
   }
 
   EffortJointSoftLimitsHandle(
-    const std::shared_ptr<hardware_interface::JointHandle> & jh,
-    const std::shared_ptr<hardware_interface::JointHandle> & jcmdh,
+    const hardware_interface::JointHandle & jposh,
+    const hardware_interface::JointHandle & jcmdh,
     const joint_limits_interface::JointLimits & limits,
     const joint_limits_interface::SoftJointLimits & soft_limits)
-  : EffortJointSoftLimitsHandle(jh, nullptr, jcmdh, limits, soft_limits)
+  : EffortJointSoftLimitsHandle(jposh, {std::string(), "velocity"}, jcmdh, limits, soft_limits)
   {
   }
 
@@ -458,7 +462,7 @@ public:
   void enforce_limits(const rclcpp::Duration & period) override
   {
     // Current state
-    const double pos = jposh_->get_value();
+    const double pos = jposh_.get_value();
     const double vel = get_velocity(period);
 
     // Velocity bounds
@@ -495,10 +499,10 @@ public:
 
     // Saturate effort command according to bounds
     const double eff_cmd = rcppmath::clamp(
-      jcmdh_->get_value(),
+      jcmdh_.get_value(),
       soft_min_eff,
       soft_max_eff);
-    jcmdh_->set_value(eff_cmd);
+    jcmdh_.set_value(eff_cmd);
   }
 };
 
@@ -511,10 +515,10 @@ public:
   VelocityJointSaturationHandle() {}
 
   VelocityJointSaturationHandle(
-    const std::shared_ptr<hardware_interface::JointHandle> & jvelh,  // currently unused
-    const std::shared_ptr<hardware_interface::JointHandle> & jcmdh,
+    const hardware_interface::JointHandle & jvelh,  // currently unused
+    const hardware_interface::JointHandle & jcmdh,
     const joint_limits_interface::JointLimits & limits)
-  : JointSaturationLimitHandle(nullptr, jvelh, jcmdh, limits)
+  : JointSaturationLimitHandle({std::string(), "position"}, jvelh, jcmdh, limits)
   {
     if (!limits.has_velocity_limits) {
       throw joint_limits_interface::JointLimitsInterfaceException(
@@ -524,9 +528,12 @@ public:
   }
 
   VelocityJointSaturationHandle(
-    const std::shared_ptr<hardware_interface::JointHandle> & jcmdh,
+    const hardware_interface::JointHandle & jcmdh,
     const joint_limits_interface::JointLimits & limits)
-  : JointSaturationLimitHandle(nullptr, nullptr, jcmdh, limits)
+  : JointSaturationLimitHandle(
+      {std::string(), "position"},
+      {std::string(), "velocity"},
+      jcmdh, limits)
   {
     if (!limits.has_velocity_limits) {
       throw joint_limits_interface::JointLimitsInterfaceException(
@@ -558,13 +565,13 @@ public:
 
     // Saturate velocity command according to limits
     const double vel_cmd = rcppmath::clamp(
-      jcmdh_->get_value(),
+      jcmdh_.get_value(),
       vel_low,
       vel_high);
-    jcmdh_->set_value(vel_cmd);
+    jcmdh_.set_value(vel_cmd);
 
     // Cache variables
-    prev_vel_ = jcmdh_->get_value();
+    prev_vel_ = jcmdh_.get_value();
   }
 };
 
@@ -577,9 +584,9 @@ public:
   VelocityJointSoftLimitsHandle() {}
 
   VelocityJointSoftLimitsHandle(
-    const std::shared_ptr<hardware_interface::JointHandle> & jposh,
-    const std::shared_ptr<hardware_interface::JointHandle> & jvelh,
-    const std::shared_ptr<hardware_interface::JointHandle> & jcmdh,
+    const hardware_interface::JointHandle & jposh,
+    const hardware_interface::JointHandle & jvelh,
+    const hardware_interface::JointHandle & jcmdh,
     const joint_limits_interface::JointLimits & limits,
     const joint_limits_interface::SoftJointLimits & soft_limits)
   : JointSoftLimitsHandle(jposh, jvelh, jcmdh, limits, soft_limits)
@@ -602,7 +609,7 @@ public:
     double min_vel, max_vel;
     if (limits_.has_position_limits) {
       // Velocity bounds depend on the velocity limit and the proximity to the position limit.
-      const double pos = jposh_->get_value();
+      const double pos = jposh_.get_value();
       min_vel = rcppmath::clamp(
         -soft_limits_.k_position * (pos - soft_limits_.min_position),
         -max_vel_limit_, max_vel_limit_);
@@ -621,7 +628,7 @@ public:
       max_vel = std::min(vel + limits_.max_acceleration * delta_t, max_vel);
     }
 
-    jcmdh_->set_value(rcppmath::clamp(jcmdh_->get_value(), min_vel, max_vel));
+    jcmdh_.set_value(rcppmath::clamp(jcmdh_.get_value(), min_vel, max_vel));
   }
 
 private:
