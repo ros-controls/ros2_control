@@ -54,6 +54,10 @@
 #include "joint_limits_interface/joint_limits_interface_exception.hpp"
 
 
+#define DEFAULT_POSITION_HANDLE { std::string(), "position" }
+#define DEFAULT_VELOCITY_HANDLE { std::string(), "velocity" }
+#define DEFAULT_COMMAND_HANDLE { std::string(), "position_command" }
+
 namespace joint_limits_interface
 {
 
@@ -66,9 +70,9 @@ public:
   JointSaturationLimitHandle()
   : prev_pos_(std::numeric_limits<double>::quiet_NaN()),
     prev_vel_(0.0),
-    jposh_(std::string(), "position"),
-    jvelh_(std::string(), "velocity"),
-    jcmdh_(std::string(), "position_command")
+    jposh_(DEFAULT_POSITION_HANDLE),
+    jvelh_(DEFAULT_VELOCITY_HANDLE),
+    jcmdh_(DEFAULT_COMMAND_HANDLE)
   {}
 
   JointSaturationLimitHandle(
@@ -76,7 +80,7 @@ public:
     const hardware_interface::JointHandle & jcmdh,
     const JointLimits & limits)
   : jposh_(jposh),
-    jvelh_(std::string(), "velocity"),
+    jvelh_(DEFAULT_VELOCITY_HANDLE),
     jcmdh_(jcmdh),
     limits_(limits),
     prev_pos_(std::numeric_limits<double>::quiet_NaN()),
@@ -380,7 +384,7 @@ public:
     const hardware_interface::JointHandle & jposh,
     const hardware_interface::JointHandle & jcmdh,
     const joint_limits_interface::JointLimits & limits)
-  : EffortJointSaturationHandle(jposh, {std::string(), "velocity"}, jcmdh, limits)
+  : EffortJointSaturationHandle(jposh, DEFAULT_VELOCITY_HANDLE, jcmdh, limits)
   {
   }
 
@@ -449,7 +453,7 @@ public:
     const hardware_interface::JointHandle & jcmdh,
     const joint_limits_interface::JointLimits & limits,
     const joint_limits_interface::SoftJointLimits & soft_limits)
-  : EffortJointSoftLimitsHandle(jposh, {std::string(), "velocity"}, jcmdh, limits, soft_limits)
+  : EffortJointSoftLimitsHandle(jposh, DEFAULT_VELOCITY_HANDLE, jcmdh, limits, soft_limits)
   {
   }
 
@@ -518,7 +522,7 @@ public:
     const hardware_interface::JointHandle & jvelh,  // currently unused
     const hardware_interface::JointHandle & jcmdh,
     const joint_limits_interface::JointLimits & limits)
-  : JointSaturationLimitHandle({std::string(), "position"}, jvelh, jcmdh, limits)
+  : JointSaturationLimitHandle(DEFAULT_POSITION_HANDLE, jvelh, jcmdh, limits)
   {
     if (!limits.has_velocity_limits) {
       throw joint_limits_interface::JointLimitsInterfaceException(
@@ -530,10 +534,7 @@ public:
   VelocityJointSaturationHandle(
     const hardware_interface::JointHandle & jcmdh,
     const joint_limits_interface::JointLimits & limits)
-  : JointSaturationLimitHandle(
-      {std::string(), "position"},
-      {std::string(), "velocity"},
-      jcmdh, limits)
+  : JointSaturationLimitHandle(DEFAULT_POSITION_HANDLE, DEFAULT_VELOCITY_HANDLE, jcmdh, limits)
   {
     if (!limits.has_velocity_limits) {
       throw joint_limits_interface::JointLimitsInterfaceException(
