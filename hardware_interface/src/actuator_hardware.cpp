@@ -49,7 +49,7 @@ return_type ActuatorHardware::stop()
   return impl_->stop();
 }
 
-hardware_interface_status ActuatorHardware::get_status() const
+status ActuatorHardware::get_status() const
 {
   return impl_->get_status();
 }

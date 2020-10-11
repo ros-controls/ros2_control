@@ -75,11 +75,11 @@ public:
   /**
    * \brief Get current state of the system hardware.
    *
-   * \return hardware_interface_status current status.
+   * \return status current status.
    */
   HARDWARE_INTERFACE_PUBLIC
   virtual
-  hardware_interface_status get_status() const = 0;
+  status get_status() const = 0;
 
   /**
    * \brief Read data from the hardware into sensors using "set_state" function in the Sensor class.
