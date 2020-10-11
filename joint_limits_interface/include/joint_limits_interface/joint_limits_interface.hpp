@@ -54,9 +54,9 @@
 #include "joint_limits_interface/joint_limits_interface_exception.hpp"
 
 
-#define DEFAULT_POSITION_HANDLE { std::string(), "position" }
-#define DEFAULT_VELOCITY_HANDLE { std::string(), "velocity" }
-#define DEFAULT_COMMAND_HANDLE { std::string(), "position_command" }
+#define DEFAULT_POSITION_HANDLE {std::string(), "position"}
+#define DEFAULT_VELOCITY_HANDLE {std::string(), "velocity"}
+#define DEFAULT_COMMAND_HANDLE {std::string(), "position_command"}
 
 namespace joint_limits_interface
 {

@@ -35,6 +35,9 @@ public:
   {
   }
 
+  /// \brief returns true if handle references a value
+  inline operator bool() const {return value_ptr_ != nullptr;}
+
   HARDWARE_INTERFACE_PUBLIC
   HandleType with_value_ptr(double * value_ptr)
   {
