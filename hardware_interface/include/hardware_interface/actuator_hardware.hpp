@@ -46,7 +46,7 @@ public:
 
   return_type stop();
 
-  hardware_interface_status get_status() const;
+  status get_status() const;
 
   return_type read_joint(std::shared_ptr<components::Joint> joint);
 

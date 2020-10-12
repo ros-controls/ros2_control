@@ -19,7 +19,7 @@
 
 namespace hardware_interface
 {
-enum class hardware_interface_status : std::uint8_t
+enum class status : std::uint8_t
 {
   UNKNOWN = 0,
   CONFIGURED = 1,

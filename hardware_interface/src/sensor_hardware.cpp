@@ -49,7 +49,7 @@ return_type SensorHardware::stop()
   return impl_->stop();
 }
 
-hardware_interface_status SensorHardware::get_status() const
+status SensorHardware::get_status() const
 {
   return impl_->get_status();
 }

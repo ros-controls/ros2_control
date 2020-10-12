@@ -127,16 +127,16 @@ class DummyActuatorHardware : public ActuatorHardwareInterface
     info_ = actuator_info;
     hw_read_time_ = stod(info_.hardware_parameters["example_param_read_for_sec"]);
     hw_write_time_ = stod(info_.hardware_parameters["example_param_write_for_sec"]);
-    status_ = hardware_interface_status::CONFIGURED;
+    status_ = status::CONFIGURED;
     return return_type::OK;
   }
 
   return_type start() override
   {
-    if (status_ == hardware_interface_status::CONFIGURED ||
-      status_ == hardware_interface_status::STOPPED)
+    if (status_ == status::CONFIGURED ||
+      status_ == status::STOPPED)
     {
-      status_ = hardware_interface_status::STARTED;
+      status_ = status::STARTED;
     } else {
       return return_type::ERROR;
     }
@@ -145,15 +145,15 @@ class DummyActuatorHardware : public ActuatorHardwareInterface
 
   return_type stop() override
   {
-    if (status_ == hardware_interface_status::STARTED) {
-      status_ = hardware_interface_status::STOPPED;
+    if (status_ == status::STARTED) {
+      status_ = status::STOPPED;
     } else {
       return return_type::ERROR;
     }
     return return_type::OK;
   }
 
-  hardware_interface_status get_status() const override
+  status get_status() const override
   {
     return status_;
   }
@@ -172,7 +172,7 @@ class DummyActuatorHardware : public ActuatorHardwareInterface
 
 private:
   HardwareInfo info_;
-  hardware_interface_status status_ = hardware_interface_status::UNKNOWN;
+  status status_ = status::UNKNOWN;
   std::vector<double> hw_values_ = {1.2};
   double hw_read_time_, hw_write_time_;
 };
@@ -183,16 +183,16 @@ class DummySensorHardware : public SensorHardwareInterface
   {
     info_ = sensor_info;
     binary_to_voltage_factor_ = stod(info_.hardware_parameters["binary_to_voltage_factor"]);
-    status_ = hardware_interface_status::CONFIGURED;
+    status_ = status::CONFIGURED;
     return return_type::OK;
   }
 
   return_type start() override
   {
-    if (status_ == hardware_interface_status::CONFIGURED ||
-      status_ == hardware_interface_status::STOPPED)
+    if (status_ == status::CONFIGURED ||
+      status_ == status::STOPPED)
     {
-      status_ = hardware_interface_status::STARTED;
+      status_ = status::STARTED;
     } else {
       return return_type::ERROR;
     }
@@ -201,15 +201,15 @@ class DummySensorHardware : public SensorHardwareInterface
 
   return_type stop() override
   {
-    if (status_ == hardware_interface_status::STARTED) {
-      status_ = hardware_interface_status::STOPPED;
+    if (status_ == status::STARTED) {
+      status_ = status::STOPPED;
     } else {
       return return_type::ERROR;
     }
     return return_type::OK;
   }
 
-  hardware_interface_status get_status() const override
+  status get_status() const override
   {
     return status_;
   }
@@ -229,7 +229,7 @@ class DummySensorHardware : public SensorHardwareInterface
 
 private:
   HardwareInfo info_;
-  hardware_interface_status status_ = hardware_interface_status::UNKNOWN;
+  status status_ = status::UNKNOWN;
   double binary_to_voltage_factor_;
   std::vector<double> ft_hw_values_ = {1, -1.0, 3.4, 7.9, 5.5, 4.4};
 };
@@ -242,16 +242,16 @@ class DummySystemHardware : public SystemHardwareInterface
     api_version_ = stod(info_.hardware_parameters["example_api_version"]);
     hw_read_time_ = stod(info_.hardware_parameters["example_param_read_for_sec"]);
     hw_write_time_ = stod(info_.hardware_parameters["example_param_write_for_sec"]);
-    status_ = hardware_interface_status::CONFIGURED;
+    status_ = status::CONFIGURED;
     return return_type::OK;
   }
 
   return_type start() override
   {
-    if (status_ == hardware_interface_status::CONFIGURED ||
-      status_ == hardware_interface_status::STOPPED)
+    if (status_ == status::CONFIGURED ||
+      status_ == status::STOPPED)
     {
-      status_ = hardware_interface_status::STARTED;
+      status_ = status::STARTED;
     } else {
       return return_type::ERROR;
     }
@@ -260,15 +260,15 @@ class DummySystemHardware : public SystemHardwareInterface
 
   return_type stop() override
   {
-    if (status_ == hardware_interface_status::STARTED) {
-      status_ = hardware_interface_status::STOPPED;
+    if (status_ == status::STARTED) {
+      status_ = status::STOPPED;
     } else {
       return return_type::ERROR;
     }
     return return_type::OK;
   }
 
-  hardware_interface_status get_status() const override
+  status get_status() const override
   {
     return status_;
   }
@@ -319,7 +319,7 @@ class DummySystemHardware : public SystemHardwareInterface
 
 private:
   HardwareInfo info_;
-  hardware_interface_status status_;
+  status status_;
   double hw_write_time_, hw_read_time_, api_version_;
   std::vector<double> ft_hw_values_ = {-3.5, -2.1, -8.7, -5.4, -9.0, -11.2};
   std::vector<double> joints_hw_values_ = {-1.575, -0.7543};
@@ -334,7 +334,7 @@ using hardware_interface::components::Sensor;
 using hardware_interface::ActuatorHardware;
 using hardware_interface::ActuatorHardwareInterface;
 using hardware_interface::HardwareInfo;
-using hardware_interface::hardware_interface_status;
+using hardware_interface::status;
 using hardware_interface::return_type;
 using hardware_interface::SensorHardware;
 using hardware_interface::SensorHardwareInterface;
@@ -614,9 +614,9 @@ TEST_F(TestComponentInterfaces, actuator_hardware_interface_works)
   EXPECT_EQ(joint->configure(joint_info), return_type::OK);
 
   EXPECT_EQ(actuator_hw.configure(actuator_hw_info), return_type::OK);
-  EXPECT_EQ(actuator_hw.get_status(), hardware_interface_status::CONFIGURED);
+  EXPECT_EQ(actuator_hw.get_status(), status::CONFIGURED);
   EXPECT_EQ(actuator_hw.start(), return_type::OK);
-  EXPECT_EQ(actuator_hw.get_status(), hardware_interface_status::STARTED);
+  EXPECT_EQ(actuator_hw.get_status(), status::STARTED);
   EXPECT_EQ(actuator_hw.read_joint(joint), return_type::OK);
   std::vector<std::string> interfaces = joint->get_state_interfaces();
   std::vector<double> output;
@@ -626,7 +626,7 @@ TEST_F(TestComponentInterfaces, actuator_hardware_interface_works)
   EXPECT_EQ(interfaces[0], hardware_interface::HW_IF_POSITION);
   EXPECT_EQ(actuator_hw.write_joint(joint), return_type::OK);
   EXPECT_EQ(actuator_hw.stop(), return_type::OK);
-  EXPECT_EQ(actuator_hw.get_status(), hardware_interface_status::STOPPED);
+  EXPECT_EQ(actuator_hw.get_status(), status::STOPPED);
 }
 
 TEST_F(TestComponentInterfaces, sensor_interface_with_hardware_works)
@@ -641,9 +641,9 @@ TEST_F(TestComponentInterfaces, sensor_interface_with_hardware_works)
   EXPECT_EQ(sensor->configure(sensor_info), return_type::OK);
 
   EXPECT_EQ(sensor_hw.configure(sensor_hw_info), return_type::OK);
-  EXPECT_EQ(sensor_hw.get_status(), hardware_interface_status::CONFIGURED);
+  EXPECT_EQ(sensor_hw.get_status(), status::CONFIGURED);
   EXPECT_EQ(sensor_hw.start(), return_type::OK);
-  EXPECT_EQ(sensor_hw.get_status(), hardware_interface_status::STARTED);
+  EXPECT_EQ(sensor_hw.get_status(), status::STARTED);
   std::vector<std::shared_ptr<Sensor>> sensors;
   sensors.push_back(sensor);
   EXPECT_EQ(sensor_hw.read_sensors(sensors), return_type::OK);
@@ -654,7 +654,7 @@ TEST_F(TestComponentInterfaces, sensor_interface_with_hardware_works)
   ASSERT_THAT(interfaces, SizeIs(6));
   EXPECT_EQ(interfaces[1], "force_y");
   EXPECT_EQ(sensor_hw.stop(), return_type::OK);
-  EXPECT_EQ(sensor_hw.get_status(), hardware_interface_status::STOPPED);
+  EXPECT_EQ(sensor_hw.get_status(), status::STOPPED);
   EXPECT_EQ(sensor_hw.start(), return_type::OK);
 }
 
@@ -682,9 +682,9 @@ TEST_F(TestComponentInterfaces, system_interface_with_hardware_works)
   system_hw_info.hardware_parameters["example_param_read_for_sec"] = "3";
 
   EXPECT_EQ(system.configure(system_hw_info), return_type::OK);
-  EXPECT_EQ(system.get_status(), hardware_interface_status::CONFIGURED);
+  EXPECT_EQ(system.get_status(), status::CONFIGURED);
   EXPECT_EQ(system.start(), return_type::OK);
-  EXPECT_EQ(system.get_status(), hardware_interface_status::STARTED);
+  EXPECT_EQ(system.get_status(), status::STARTED);
 
   EXPECT_EQ(system.read_sensors(sensors), return_type::OK);
   std::vector<double> output;
@@ -716,5 +716,5 @@ TEST_F(TestComponentInterfaces, system_interface_with_hardware_works)
   EXPECT_EQ(system.write_joints(joints), return_type::OK);
 
   EXPECT_EQ(system.stop(), return_type::OK);
-  EXPECT_EQ(system.get_status(), hardware_interface_status::STOPPED);
+  EXPECT_EQ(system.get_status(), status::STOPPED);
 }
