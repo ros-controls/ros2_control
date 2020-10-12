@@ -32,7 +32,7 @@ public:
   hardware_interface::return_type
   stop() override;
 
-  hardware_interface::hardware_interface_status
+  hardware_interface::status
   get_status() const override;
 
   hardware_interface::return_type

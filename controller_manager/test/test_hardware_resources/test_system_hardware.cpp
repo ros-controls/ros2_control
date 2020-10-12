@@ -17,7 +17,7 @@
 
 #include "./test_system_hardware.hpp"
 
-using hardware_interface::hardware_interface_status;
+using hardware_interface::status;
 using hardware_interface::return_type;
 
 hardware_interface::return_type
@@ -38,10 +38,10 @@ TestSystemHardware::stop()
   return return_type::OK;
 }
 
-hardware_interface_status
+status
 TestSystemHardware::get_status() const
 {
-  return hardware_interface_status::UNKNOWN;
+  return status::UNKNOWN;
 }
 
 return_type
