@@ -20,7 +20,6 @@
 
 #include "controller_manager_test_common.hpp"
 #include "controller_interface/controller_interface.hpp"
-#include "controller_manager/controller_loader_interface.hpp"
 #include "controller_manager/controller_manager.hpp"
 #include "controller_manager_msgs/srv/switch_controller.hpp"
 #include "controller_manager_msgs/srv/list_controller_types.hpp"
@@ -119,21 +118,6 @@ TEST_F(TestControllerManagerSrvs, list_controller_types)
   ASSERT_THAT(
     result->base_classes,
     ::testing::Contains("controller_interface::ControllerInterface"));
-
-  std::shared_ptr<ControllerLoaderMock> mock_loader(new ControllerLoaderMock);
-
-  cm_->register_controller_loader(mock_loader);
-  result = call_service_and_wait(*client, request, srv_executor);
-  ASSERT_EQ(
-    controller_types + 1,
-    result->types.size());
-  ASSERT_EQ(
-    result->types.size(),
-    result->base_classes.size());
-  ASSERT_THAT(result->types, ::testing::Contains("mock_test_controller"));
-  ASSERT_THAT(
-    result->base_classes,
-    ::testing::Contains("controller_interface::MockControllerInterface"));
 }
 
 TEST_F(TestControllerManagerSrvs, list_controllers_srv) {
@@ -204,14 +188,8 @@ TEST_F(TestControllerManagerSrvs, reload_controller_libraries_srv) {
   auto request =
     std::make_shared<controller_manager_msgs::srv::ReloadControllerLibraries::Request>();
 
-  std::shared_ptr<ControllerLoaderMock> mock_loader(new ControllerLoaderMock);
-
-  cm_->register_controller_loader(mock_loader);
-
   // Reload with no controllers running
   request->force_kill = false;
-  EXPECT_CALL(*mock_loader, is_available(_)).WillRepeatedly(Return(false));
-  EXPECT_CALL(*mock_loader, reload).Times(1);
   auto result = call_service_and_wait(*client, request, srv_executor);
   ASSERT_TRUE(result->ok);
 
@@ -228,8 +206,6 @@ TEST_F(TestControllerManagerSrvs, reload_controller_libraries_srv) {
     1) << "Controller manager should have have a copy of this shared ptr";
 
   request->force_kill = false;
-  EXPECT_CALL(*mock_loader, reload).Times(1);
-  RCLCPP_INFO(cm_->get_logger(), "Doing reload");
   result = call_service_and_wait(*client, request, srv_executor, true);
   ASSERT_TRUE(result->ok);
   ASSERT_EQ(
@@ -254,7 +230,6 @@ TEST_F(TestControllerManagerSrvs, reload_controller_libraries_srv) {
 
   // Failed reload due to active controller
   request->force_kill = false;
-  EXPECT_CALL(*mock_loader, reload).Times(0);
   result = call_service_and_wait(*client, request, srv_executor);
   ASSERT_FALSE(result->ok) << "Cannot reload if controllers are running";
   ASSERT_EQ(
@@ -268,7 +243,6 @@ TEST_F(TestControllerManagerSrvs, reload_controller_libraries_srv) {
 
   // Force stop active controller
   request->force_kill = true;
-  EXPECT_CALL(*mock_loader, reload).Times(1);
   result = call_service_and_wait(*client, request, srv_executor, true);
   ASSERT_TRUE(result->ok);
 

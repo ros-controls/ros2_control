@@ -22,7 +22,6 @@
 
 #include "controller_interface/controller_interface.hpp"
 
-#include "controller_manager/controller_loader_interface.hpp"
 #include "controller_manager/controller_spec.hpp"
 #include "controller_manager/visibility_control.h"
 #include "controller_manager_msgs/srv/list_controllers.hpp"
@@ -34,6 +33,8 @@
 
 #include "hardware_interface/resource_manager.hpp"
 #include "hardware_interface/robot_hardware.hpp"
+
+#include "pluginlib/class_loader.hpp"
 
 #include "rclcpp/executor.hpp"
 #include "rclcpp/node.hpp"
@@ -80,9 +81,6 @@ public:
 
   CONTROLLER_MANAGER_PUBLIC
   std::vector<ControllerSpec> get_loaded_controllers() const;
-
-  CONTROLLER_MANAGER_PUBLIC
-  void register_controller_loader(ControllerLoaderInterfaceSharedPtr loader);
 
   template<
     typename T,
@@ -168,7 +166,7 @@ private:
   std::vector<std::string> get_controller_names();
 
   std::shared_ptr<rclcpp::Executor> executor_;
-  std::vector<ControllerLoaderInterfaceSharedPtr> loaders_;
+  std::shared_ptr<pluginlib::ClassLoader<controller_interface::ControllerInterface>> loader_;
 
   std::shared_ptr<hardware_interface::ResourceManager> resource_manager_;
 

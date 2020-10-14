@@ -1,0 +1,142 @@
+/**
+\mainpage
+\htmlinclude manifest.html
+
+joint_limits_interface contains data structures for representing joint limits, methods for
+populating them from common formats such as URDF and rosparam, and methods for enforcing limits on different kinds
+of joint commands.
+
+The joint_limits_interface is \e not used by controllers themselves (it does not implement a \p HardwareInterface) but instead operates after the controllers have updated, in the \p write() method (or equivalent) of the robot abstraction. Enforcing limits will \e overwrite the commands set by the controllers, it does not operate on a separate raw data buffer.
+
+\section codeapi Code API
+
+There are two main elements involved in setting up a joint_limits_interface:
+
+\subsection limits_representation Joint limits representation
+
+  - \ref joint_limits_interface::JointLimits "JointLimits" Position, velocity, acceleration, jerk and effort.
+  - \ref joint_limits_interface::SoftJointLimits "SoftJointLimits" Soft position limits, k_p, k_v (as described <a href="http://www.ros.org/wiki/pr2_controller_manager/safety_limits">here</a> ).
+  - \ref joint_limits_urdf.h "Convenience methods" for loading joint limits information (only position, velocity, effort), as well as soft joint limits information from the URDF.
+  - \ref joint_limits_rosparam.h "Convenience methods" for loading joint limits from ROS parameter server (all values). Parameter specification is the same used in MoveIt, with the addition that we also parse jerk and effort limits.
+
+\subsection limits_interface Joint limits interface
+
+For \b effort-controlled joints, \b position-controlled joints, and \b velocity-controlled joints, two types of interfaces have been created. The first is a saturation interface, used for joints that have normal limits but not soft limits. The second is an interface that implements soft limits, similar to the one used on the PR2.
+
+  - Effort-controlled joints
+    - Saturation: \ref joint_limits_interface::EffortJointSaturationHandle "Handle", \ref joint_limits_interface::EffortJointSaturationInterface "Interface"
+    - Soft limits: \ref joint_limits_interface::EffortJointSoftLimitsHandle "Handle", \ref joint_limits_interface::EffortJointSoftLimitsInterface "Interface"
+  - Position-controlled joints
+    - Saturation: \ref joint_limits_interface::PositionJointSaturationHandle "Handle", \ref joint_limits_interface::PositionJointSaturationInterface "Interface"
+    - Soft limits: \ref joint_limits_interface::PositionJointSoftLimitsHandle "Handle", \ref joint_limits_interface::PositionJointSoftLimitsInterface "Interface"
+  - Velocity-controlled joints
+    - Saturation: \ref joint_limits_interface::VelocityJointSaturationHandle "Handle", \ref joint_limits_interface::VelocityJointSaturationInterface "interface"
+    - Soft limits: \ref joint_limits_interface::VelocityJointSoftLimitsHandle "Handle", \ref joint_limits_interface::VelocityJointSoftLimitsInterface "Interface"
+
+\section example Examples
+
+\subsection limits_representation_example Joint limits representation
+
+The first example shows the different ways of populating joint limits data structures.
+
+\code
+#include <ros/ros.h>
+
+#include <joint_limits_interface/joint_limits.h>
+#include <joint_limits_interface/joint_limits_urdf.h>
+#include <joint_limits_interface/joint_limits_rosparam.h>
+
+int main(int argc, char** argv)
+{
+  // Init node handle and URDF model
+  ros::NodeHandle nh;
+  boost::shared_ptr<urdf::ModelInterface> urdf;
+  // ...initialize contents of urdf
+
+  // Data structures
+  joint_limits_interface::JointLimits limits;
+  joint_limits_interface::SoftJointLimits soft_limits;
+
+  // Manual value setting
+  limits.has_velocity_limits = true;
+  limits.max_velocity = 2.0;
+
+  // Populate (soft) joint limits from URDF
+  // Limits specified in URDF overwrite existing values in 'limits' and 'soft_limits'
+  // Limits not specified in URDF preserve their existing values
+  urdf::JointConstSharedPtr urdf_joint = urdf->getJoint("foo_joint");
+  const bool urdf_limits_ok = getJointLimits(urdf_joint, limits);
+  const bool urdf_soft_limits_ok = getSoftJointLimits(urdf_joint, soft_limits);
+
+  // Populate (soft) joint limits from the ros parameter server
+  // Limits specified in the parameter server overwrite existing values in 'limits' and 'soft_limits'
+  // Limits not specified in the parameter server preserve their existing values
+  const bool rosparam_limits_ok = getJointLimits("foo_joint", nh, limits);
+}
+\endcode
+
+A joint limits specification in YAML format that can be loaded to the ROS parameter server can be found
+\ref joint_limits_interface::getJointLimits(const std::string& joint_name, const ros::NodeHandle& nh, JointLimits& limits) "here".
+
+\subsection limits_interface_example Joint limits interface
+
+The second example integrates joint limits enforcing into an existing robot hardware implementation.
+
+\code
+#include <joint_limits_interface/joint_limits_interface.h>
+
+using namespace hardware_interface;
+using joint_limits_interface::JointLimits;
+using joint_limits_interface::SoftJointLimits;
+using joint_limits_interface::PositionJointSoftLimitsHandle;
+using joint_limits_interface::PositionJointSoftLimitsInterface;
+
+class MyRobot
+{
+public:
+  MyRobot() {}
+
+  bool init()
+  {
+    // Populate pos_cmd_interface_ with joint handles...
+
+    // Get joint handle of interest
+    JointHandle joint_handle = pos_cmd_interface_.getHandle("foo_joint");
+
+    JointLimits limits;
+    SoftJointLimits soft_limits;
+    // Populate with any of the methods presented in the previous example...
+
+    // Register handle in joint limits interface
+    PositionJointSoftLimitsHandle handle(joint_handle, // We read the state and read/write the command
+                                         limits,       // Limits spec
+                                         soft_limits)  // Soft limits spec
+
+    jnt_limits_interface_.registerHandle(handle);
+  }
+
+  void read(ros::Time time, ros::Duration period)
+  {
+    // Read actuator state from hardware...
+
+    // Propagate current actuator state to joints...
+  }
+
+  void write(ros::Time time, ros::Duration period)
+  {
+    // Enforce joint limits for all registered handles
+    // Note: one can also enforce limits on a per-handle basis: handle.enforceLimits(period)
+    jnt_limits_interface_.enforceLimits(period);
+
+    // Propagate joint commands to actuators...
+
+    // Send actuator command to hardware...
+  }
+
+private:
+  PositionJointInterface pos_cmd_interface_;
+  PositionJointSoftLimitsInterface jnt_limits_interface_;
+};
+\endcode
+
+*/

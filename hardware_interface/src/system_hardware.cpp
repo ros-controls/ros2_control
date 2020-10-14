@@ -55,7 +55,7 @@ return_type SystemHardware::stop()
   return impl_->stop();
 }
 
-hardware_interface_status SystemHardware::get_status() const
+status SystemHardware::get_status() const
 {
   return impl_->get_status();
 }

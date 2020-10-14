@@ -53,7 +53,7 @@ public:
   return_type stop();
 
   HARDWARE_INTERFACE_PUBLIC
-  hardware_interface_status get_status() const;
+  status get_status() const;
 
   HARDWARE_INTERFACE_PUBLIC
   return_type read_sensors(const std::vector<std::shared_ptr<components::Sensor>> & sensors);

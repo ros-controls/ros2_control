@@ -12,7 +12,7 @@ jobs:
     - uses: ros-tooling/action-ros-lint@0.0.5
       with:
         linter: copyright
-        package-name: controller_interface controller_manager hardware_interface test_robot_hardware
+        package-name: controller_interface controller_manager controller_manager_msgs hardware_interface joint_limits_interface test_robot_hardware transmission_interface
 
   ament_xmllint:
     name: ament_xmllint
@@ -23,7 +23,7 @@ jobs:
     - uses: ros-tooling/action-ros-lint@0.0.5
       with:
         linter: xmllint
-        package-name: controller_interface controller_manager hardware_interface test_robot_hardware
+        package-name: controller_interface controller_manager controller_manager_msgs hardware_interface joint_limits_interface test_robot_hardware transmission_interface
 
   ament_lint_cpp:
     name: ament_${{ matrix.linter }}
@@ -38,4 +38,4 @@ jobs:
     - uses: ros-tooling/action-ros-lint@0.0.5
       with:
         linter: ${{ matrix.linter }}
-        package-name: controller_interface controller_manager hardware_interface test_robot_hardware
+        package-name: controller_interface controller_manager controller_manager_msgs hardware_interface joint_limits_interface test_robot_hardware transmission_interface
