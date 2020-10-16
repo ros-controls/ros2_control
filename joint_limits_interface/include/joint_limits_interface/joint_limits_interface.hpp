@@ -380,7 +380,7 @@ public:
     const hardware_interface::JointHandle & jposh,
     const hardware_interface::JointHandle & jcmdh,
     const joint_limits_interface::JointLimits & limits)
-  : EffortJointSaturationHandle(jposh, "velocity", jcmdh, limits)
+  : EffortJointSaturationHandle(jposh, hardware_interface::JointHandle("velocity"), jcmdh, limits)
   {
   }
 
@@ -449,7 +449,8 @@ public:
     const hardware_interface::JointHandle & jcmdh,
     const joint_limits_interface::JointLimits & limits,
     const joint_limits_interface::SoftJointLimits & soft_limits)
-  : EffortJointSoftLimitsHandle(jposh, "velocity", jcmdh, limits, soft_limits)
+  : EffortJointSoftLimitsHandle(jposh,
+      hardware_interface::JointHandle("velocity"), jcmdh, limits, soft_limits)
   {
   }
 
@@ -518,7 +519,7 @@ public:
     const hardware_interface::JointHandle & jvelh,  // currently unused
     const hardware_interface::JointHandle & jcmdh,
     const joint_limits_interface::JointLimits & limits)
-  : JointLimitHandle("position", jvelh, jcmdh, limits)
+  : JointLimitHandle(hardware_interface::JointHandle("position"), jvelh, jcmdh, limits)
   {
     if (!limits.has_velocity_limits) {
       throw joint_limits_interface::JointLimitsInterfaceException(
@@ -530,7 +531,8 @@ public:
   VelocityJointSaturationHandle(
     const hardware_interface::JointHandle & jcmdh,
     const joint_limits_interface::JointLimits & limits)
-  : JointLimitHandle("position", "velocity", jcmdh, limits)
+  : JointLimitHandle(hardware_interface::JointHandle("position"),
+      hardware_interface::JointHandle("velocity"), jcmdh, limits)
   {
     if (!limits.has_velocity_limits) {
       throw joint_limits_interface::JointLimitsInterfaceException(
