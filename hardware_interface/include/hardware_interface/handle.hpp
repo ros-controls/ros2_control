@@ -36,14 +36,14 @@ public:
   }
 
   HARDWARE_INTERFACE_PUBLIC
-  Handle(const std::string & interface_name)
+  explicit Handle(const std::string & interface_name)
   : interface_name_(interface_name), value_ptr_(nullptr)
   {
   }
 
   HARDWARE_INTERFACE_PUBLIC
-  Handle(const char* interface_name)
-      : interface_name_(interface_name), value_ptr_(nullptr)
+  explicit Handle(const char * interface_name)
+  : interface_name_(interface_name), value_ptr_(nullptr)
   {
   }
 
@@ -83,7 +83,7 @@ public:
   }
 
   HARDWARE_INTERFACE_PUBLIC
-  void set_value(const std::string& name, double value)
+  void set_value(const std::string & name, double value)
   {
     THROW_ON_NULLPTR(value_ptr_);
     name_ = name;
@@ -91,7 +91,7 @@ public:
   }
 
   HARDWARE_INTERFACE_PUBLIC
-  void set_value(const char* name, double value)
+  void set_value(const char * name, double value)
   {
     THROW_ON_NULLPTR(value_ptr_);
     name_ = name;
