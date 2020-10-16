@@ -60,10 +60,10 @@ namespace joint_limits_interface
 /** \brief The base class of limit handles for enforcing position, velocity, and effort limits of
  * an effort-controlled joint.
  */
-class JointSaturationLimitHandle
+class JointLimitHandle
 {
 public:
-  JointSaturationLimitHandle()
+  JointLimitHandle()
   : prev_pos_(std::numeric_limits<double>::quiet_NaN()),
     prev_vel_(0.0),
     jposh_("position"),
@@ -71,7 +71,7 @@ public:
     jcmdh_("position_command")
   {}
 
-  JointSaturationLimitHandle(
+  JointLimitHandle(
     const hardware_interface::JointHandle & jposh,
     const hardware_interface::JointHandle & jcmdh,
     const JointLimits & limits)
@@ -83,7 +83,7 @@ public:
     prev_vel_(0.0)
   {}
 
-  JointSaturationLimitHandle(
+  JointLimitHandle(
     const hardware_interface::JointHandle & jposh,
     const hardware_interface::JointHandle & jvelh,
     const hardware_interface::JointHandle & jcmdh,
@@ -146,7 +146,7 @@ protected:
 /** \brief The base class of limit handles for enforcing position, velocity, and effort limits of
  * an effort-controlled joint that has soft-limits.
  */
-class JointSoftLimitsHandle : public JointSaturationLimitHandle
+class JointSoftLimitsHandle : public JointLimitHandle
 {
 public:
   JointSoftLimitsHandle() {}
@@ -156,7 +156,7 @@ public:
     const hardware_interface::JointHandle & jcmdh,
     const JointLimits & limits,
     const SoftJointLimits & soft_limits)
-  : JointSaturationLimitHandle(jposh, jcmdh, limits),
+  : JointLimitHandle(jposh, jcmdh, limits),
     soft_limits_(soft_limits)
   {}
 
@@ -166,7 +166,7 @@ public:
     const hardware_interface::JointHandle & jcmdh,
     const JointLimits & limits,
     const SoftJointLimits & soft_limits)
-  : JointSaturationLimitHandle(jposh, jvelh, jcmdh, limits),
+  : JointLimitHandle(jposh, jvelh, jcmdh, limits),
     soft_limits_(soft_limits)
   {}
 
@@ -177,7 +177,7 @@ protected:
 
 /** \brief A handle used to enforce position and velocity limits of a position-controlled joint that does not have
     soft limits. */
-class PositionJointSaturationHandle : public JointSaturationLimitHandle
+class PositionJointSaturationHandle : public JointLimitHandle
 {
 public:
   PositionJointSaturationHandle() {}
@@ -186,7 +186,7 @@ public:
     const hardware_interface::JointHandle & jposh,
     const hardware_interface::JointHandle & jcmdh,
     const JointLimits & limits)
-  : JointSaturationLimitHandle(jposh, jcmdh, limits)
+  : JointLimitHandle(jposh, jcmdh, limits)
   {
     if (limits_.has_position_limits) {
       min_pos_limit_ = limits_.min_position;
@@ -352,7 +352,7 @@ public:
 /** \brief A handle used to enforce position, velocity, and effort limits of an effort-controlled
  * joint that does not have soft limits.
  */
-class EffortJointSaturationHandle : public JointSaturationLimitHandle
+class EffortJointSaturationHandle : public JointLimitHandle
 {
 public:
   EffortJointSaturationHandle() {}
@@ -362,7 +362,7 @@ public:
     const hardware_interface::JointHandle & jvelh,
     const hardware_interface::JointHandle & jcmdh,
     const joint_limits_interface::JointLimits & limits)
-  : JointSaturationLimitHandle(jposh, jvelh, jcmdh, limits)
+  : JointLimitHandle(jposh, jvelh, jcmdh, limits)
   {
     if (!limits.has_velocity_limits) {
       throw joint_limits_interface::JointLimitsInterfaceException(
@@ -509,7 +509,7 @@ public:
 
 /** \brief A handle used to enforce velocity and acceleration limits of a velocity-controlled joint.
   */
-class VelocityJointSaturationHandle : public JointSaturationLimitHandle
+class VelocityJointSaturationHandle : public JointLimitHandle
 {
 public:
   VelocityJointSaturationHandle() {}
@@ -518,7 +518,7 @@ public:
     const hardware_interface::JointHandle & jvelh,  // currently unused
     const hardware_interface::JointHandle & jcmdh,
     const joint_limits_interface::JointLimits & limits)
-  : JointSaturationLimitHandle("position", jvelh, jcmdh, limits)
+  : JointLimitHandle("position", jvelh, jcmdh, limits)
   {
     if (!limits.has_velocity_limits) {
       throw joint_limits_interface::JointLimitsInterfaceException(
@@ -530,7 +530,7 @@ public:
   VelocityJointSaturationHandle(
     const hardware_interface::JointHandle & jcmdh,
     const joint_limits_interface::JointLimits & limits)
-  : JointSaturationLimitHandle("position", "velocity", jcmdh, limits)
+  : JointLimitHandle("position", "velocity", jcmdh, limits)
   {
     if (!limits.has_velocity_limits) {
       throw joint_limits_interface::JointLimitsInterfaceException(
