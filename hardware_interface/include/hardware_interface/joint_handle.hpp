@@ -27,13 +27,7 @@ namespace hardware_interface
 class JointHandle : public Handle<JointHandle>
 {
 public:
-  HARDWARE_INTERFACE_PUBLIC
-  JointHandle(
-    const std::string & name, const std::string & interface_name,
-    double * value_ptr = nullptr)
-  : Handle(name, interface_name, value_ptr)
-  {
-  }
+  using Handle<JointHandle>::Handle;
 };
 
 }  // namespace hardware_interface

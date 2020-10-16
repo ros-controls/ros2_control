@@ -35,6 +35,18 @@ public:
   {
   }
 
+  HARDWARE_INTERFACE_PUBLIC
+  Handle(const std::string & interface_name)
+  : interface_name_(interface_name), value_ptr_(nullptr)
+  {
+  }
+
+  HARDWARE_INTERFACE_PUBLIC
+  Handle(const char* interface_name)
+      : interface_name_(interface_name), value_ptr_(nullptr)
+  {
+  }
+
   /// \brief returns true if handle references a value
   inline operator bool() const {return value_ptr_ != nullptr;}
 
@@ -67,6 +79,22 @@ public:
   void set_value(double value)
   {
     THROW_ON_NULLPTR(value_ptr_);
+    *value_ptr_ = value;
+  }
+
+  HARDWARE_INTERFACE_PUBLIC
+  void set_value(const std::string& name, double value)
+  {
+    THROW_ON_NULLPTR(value_ptr_);
+    name_ = name;
+    *value_ptr_ = value;
+  }
+
+  HARDWARE_INTERFACE_PUBLIC
+  void set_value(const char* name, double value)
+  {
+    THROW_ON_NULLPTR(value_ptr_);
+    name_ = name;
     *value_ptr_ = value;
   }
 
