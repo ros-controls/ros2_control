@@ -349,13 +349,13 @@ std::vector<HandleType> get_registered_handles(control_msgs::msg::DynamicJointSt
 
   assert(registered.joint_names.size() == registered.interface_values.size());
   for (auto i = 0u; i < handle_names.size(); ++i) {
-    auto & joint_interfaces = interface_values[i];
-    assert(joint_interfaces.interface_names.size() == joint_interfaces.values.size());
+    auto & jointernal_interfaces = interface_values[i];
+    assert(jointernal_interfaces.interface_names.size() == jointernal_interfaces.values.size());
 
-    for (auto j = 0u; j < joint_interfaces.interface_names.size(); ++j) {
+    for (auto j = 0u; j < jointernal_interfaces.interface_names.size(); ++j) {
       result.emplace_back(
-        handle_names[i], joint_interfaces.interface_names[j],
-        &joint_interfaces.values[j]);
+        handle_names[i], jointernal_interfaces.interface_names[j],
+        &jointernal_interfaces.values[j]);
     }
   }
 

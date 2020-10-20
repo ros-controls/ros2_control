@@ -71,13 +71,13 @@ TEST_F(TestJoints, no_jointss_registered_return_empty_on_all_fronts)
   EXPECT_EQ(hw::return_type::ERROR, robot_hw_.get_joint_handle(handle));
 }
 
-TEST_F(TestJoints, can_register_joint_interfaces)
+TEST_F(TestJoints, can_register_jointernal_interfaces)
 {
   EXPECT_EQ(hw::return_type::OK, robot_hw_.register_joint(JOINT_NAME, FOO_INTERFACE));
   EXPECT_EQ(hw::return_type::OK, robot_hw_.register_joint(JOINT_NAME, BAR_INTERFACE));
 }
 
-TEST_F(TestJoints, can_not_double_register_joint_interfaces)
+TEST_F(TestJoints, can_not_double_register_jointernal_interfaces)
 {
   EXPECT_EQ(hw::return_type::OK, robot_hw_.register_joint(JOINT_NAME, FOO_INTERFACE));
   EXPECT_EQ(hw::return_type::OK, robot_hw_.register_joint(JOINT_NAME, BAR_INTERFACE));

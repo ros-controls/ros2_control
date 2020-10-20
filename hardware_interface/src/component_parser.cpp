@@ -34,6 +34,8 @@ constexpr const auto kSensorTag = "sensor";
 constexpr const auto kTransmissionTag = "transmission";
 constexpr const auto kCommandInterfaceTypeTag = "commandInterfaceType";
 constexpr const auto kStateInterfaceTypeTag = "stateInterfaceType";
+constexpr const auto kMinTag = "min";
+constexpr const auto kMaxTag = "max";
 }  // namespace
 
 namespace hardware_interface
@@ -64,7 +66,7 @@ std::string get_text_for_element(
  * If attribute is not found throws an error.
  *
  * \param element_it XMLElement iterator to search for the attribute
- * \param attribute_name atribute name to serach for and return value
+ * \param attribute_name attribute name to search for and return value
  * \param tag_name parent tag name where attribute is searched for (used for error output)
  * \return attribute value
  * \throws std::runtime_error if attribute is not found
@@ -88,7 +90,7 @@ std::string get_attribute_value(
  * If attribute is not found throws an error.
  *
  * \param element_it XMLElement iterator to search for the attribute
- * \param attribute_name atribute name to serach for and return value
+ * \param attribute_name atribute name to search for and return value
  * \param tag_name parent tag name where attribute is searched for (used for error output)
  * \return attribute value
  * \throws std::runtime_error if attribute is not found
@@ -132,22 +134,51 @@ std::unordered_map<std::string, std::string> parse_parameters_from_xml(
 /**
  * \brief Search XML snippet for definition of interfaceTypes.
  *
- * \param interfaces_it pointer to the interator over interfaces
+ * \param interfaces_it pointer to the iterator over interfaces
  * \param interfaceTag interface type tag (command or state)
  * \return std::vector< std::__cxx11::string > list of interface types
  * \throws std::runtime_error if the interfaceType text not set in a tag
  */
-std::vector<std::string> parse_interfaces_from_xml(
+std::vector<components::InterfaceInfo> parse_interfaces_from_xml(
   const tinyxml2::XMLElement * interfaces_it, const char * interfaceTag)
 {
-  std::vector<std::string> interfaces;
+  std::vector<components::InterfaceInfo> interfaces;
 
   while (interfaces_it) {
-    const std::string interface_type = get_text_for_element(
-      interfaces_it, std::string(interfaceTag) + " type ");
-    interfaces.push_back(interface_type);
+    hardware_interface::components::InterfaceInfo interface;
+
+    // Joint interfaces have a name attribute
+    if (std::string(interfaceTag) == "commandInterfaceType") {
+      const std::string interface_name = get_attribute_value(
+        interfaces_it, "name",
+        std::string(interfaceTag));
+      interface.name = interface_name;
+
+      // Optional min/max attributes
+      std::unordered_map<std::string, std::string> interface_params =
+        parse_parameters_from_xml(interfaces_it->FirstChildElement(kParamTag));
+      std::unordered_map<std::string, std::string>::const_iterator interface_param =
+        interface_params.find(kMinTag);
+      if (interface_param != interface_params.end()) {
+        interface.min = interface_param->second;
+      }
+      interface_param = interface_params.find(kMaxTag);
+      if (interface_param != interface_params.end()) {
+        interface.max = interface_param->second;
+      }
+    }
+    // State interfaces have an element to define the type, not a name attribute
+    if (std::string(interfaceTag) == "stateInterfaceType") {
+      const std::string interface_type = get_text_for_element(
+        interfaces_it,
+        std::string(interfaceTag) + " type ");
+      interface.name = interface_type;
+    }
+
+    interfaces.push_back(interface);
     interfaces_it = interfaces_it->NextSiblingElement(interfaceTag);
   }
+
   return interfaces;
 }
 

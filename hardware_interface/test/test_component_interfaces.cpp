@@ -52,22 +52,23 @@ public:
     if (info_.command_interfaces.size() > 1 || info_.state_interfaces.size() > 1) {
       return return_type::ERROR;
     }
+
+    hardware_interface::components::InterfaceInfo dummy_position_interface;
+    dummy_position_interface.name = HW_IF_POSITION;
+    dummy_position_interface.max = "1";
+    dummy_position_interface.min = "-1";
+
     if (info_.command_interfaces.size() == 0) {
-      info_.command_interfaces.push_back(HW_IF_POSITION);
+      info_.command_interfaces.push_back(dummy_position_interface);
       commands_.resize(1);
     }
     if (info_.state_interfaces.size() == 0) {
-      info_.state_interfaces.push_back(HW_IF_POSITION);
+      info_.state_interfaces.push_back(dummy_position_interface);
       states_.resize(1);
     }
 
-    max_position_ = stod(info_.parameters["max_position"]);
-    min_position_ = stod(info_.parameters["min_position"]);
     return return_type::OK;
   }
-
-private:
-  double max_position_, min_position_;
 };
 
 class DummyMultiJoint : public components::Joint
@@ -83,16 +84,11 @@ public:
       return return_type::ERROR;
     }
 
-    max_position_ = stod(info_.parameters["max_position"]);
-    min_position_ = stod(info_.parameters["min_position"]);
-    max_velocity_ = stod(info_.parameters["max_velocity"]);
-    min_velocity_ = stod(info_.parameters["min_velocity"]);
+    info_.command_interfaces = joint_info.command_interfaces;
+    info_.state_interfaces = joint_info.state_interfaces;
+
     return return_type::OK;
   }
-
-private:
-  double max_position_, min_position_;
-  double max_velocity_, min_velocity_;
 };
 
 class DummyForceTorqueSensor : public components::Sensor
@@ -108,12 +104,25 @@ public:
       return return_type::ERROR;
     }
     if (info_.state_interfaces.size() == 0) {
-      info_.state_interfaces.push_back("force_x");
-      info_.state_interfaces.push_back("force_y");
-      info_.state_interfaces.push_back("force_z");
-      info_.state_interfaces.push_back("torque_x");
-      info_.state_interfaces.push_back("torque_y");
-      info_.state_interfaces.push_back("torque_z");
+      hardware_interface::components::InterfaceInfo dummy_ft_interface;
+
+      dummy_ft_interface.name = "force_x";
+      info_.state_interfaces.push_back(dummy_ft_interface);
+
+      dummy_ft_interface.name = "force_y";
+      info_.state_interfaces.push_back(dummy_ft_interface);
+
+      dummy_ft_interface.name = "force_z";
+      info_.state_interfaces.push_back(dummy_ft_interface);
+
+      dummy_ft_interface.name = "torque_x";
+      info_.state_interfaces.push_back(dummy_ft_interface);
+
+      dummy_ft_interface.name = "torque_y";
+      info_.state_interfaces.push_back(dummy_ft_interface);
+
+      dummy_ft_interface.name = "torque_z";
+      info_.state_interfaces.push_back(dummy_ft_interface);
     }
     states_ = {1.34, 5.67, 8.21, 5.63, 5.99, 4.32};
     return return_type::OK;
@@ -160,13 +169,13 @@ class DummyActuatorHardware : public ActuatorHardwareInterface
 
   return_type read_joint(std::shared_ptr<components::Joint> joint) const override
   {
-    std::vector<std::string> interfaces = joint->get_state_interfaces();
+    std::vector<std::string> interfaces = joint->get_state_interface_names();
     return joint->set_state(hw_values_, interfaces);
   }
 
   return_type write_joint(const std::shared_ptr<components::Joint> joint) override
   {
-    std::vector<std::string> interfaces = joint->get_command_interfaces();
+    std::vector<std::string> interfaces = joint->get_command_interface_names();
     return joint->get_command(hw_values_, interfaces);
   }
 
@@ -294,7 +303,7 @@ class DummySystemHardware : public SystemHardwareInterface
     for (uint i = 0; i < joints.size(); i++) {
       joint_values.clear();
       joint_values.push_back(joints_hw_values_[i]);
-      interfaces = joints[i]->get_state_interfaces();
+      interfaces = joints[i]->get_state_interface_names();
       ret = joints[i]->set_state(joint_values, interfaces);
       if (ret != return_type::OK) {
         break;
@@ -308,7 +317,7 @@ class DummySystemHardware : public SystemHardwareInterface
     return_type ret = return_type::OK;
     for (const auto & joint : joints) {
       std::vector<double> values;
-      std::vector<std::string> interfaces = joint->get_command_interfaces();
+      std::vector<std::string> interfaces = joint->get_command_interface_names();
       ret = joint->get_command(values, interfaces);
       if (ret != return_type::OK) {
         break;
@@ -351,17 +360,17 @@ using hardware_interface::hardware_interfaces_components_test::DummySystemHardwa
 class TestComponentInterfaces : public Test
 {
 protected:
-  ComponentInfo joint_info;
-  ComponentInfo sensor_info;
+  ComponentInfo joint_info_;
+  ComponentInfo sensor_info_;
 
   void SetUp() override
   {
-    joint_info.name = "DummyPositionJoint";
-    joint_info.parameters["max_position"] = "3.14";
-    joint_info.parameters["min_position"] = "-3.14";
+    joint_info_.name = "DummyPositionJoint";
+    joint_info_.parameters["max_position"] = "3.14";
+    joint_info_.parameters["min_position"] = "-3.14";
 
-    sensor_info.name = "DummyForceTorqueSensor";
-    sensor_info.parameters["frame_id"] = "tcp_link";
+    sensor_info_.name = "DummyForceTorqueSensor";
+    sensor_info_.parameters["frame_id"] = "tcp_link";
   }
 };
 
@@ -369,11 +378,11 @@ TEST_F(TestComponentInterfaces, joint_example_component_works)
 {
   DummyPositionJoint joint;
 
-  EXPECT_EQ(joint.configure(joint_info), return_type::OK);
+  EXPECT_EQ(joint.configure(joint_info_), return_type::OK);
   ASSERT_THAT(joint.get_command_interfaces(), SizeIs(1));
-  EXPECT_EQ(joint.get_command_interfaces()[0], hardware_interface::HW_IF_POSITION);
+  EXPECT_EQ(joint.get_command_interfaces()[0].name, hardware_interface::HW_IF_POSITION);
   ASSERT_THAT(joint.get_state_interfaces(), SizeIs(1));
-  EXPECT_EQ(joint.get_state_interfaces()[0], hardware_interface::HW_IF_POSITION);
+  EXPECT_EQ(joint.get_state_interface_names()[0], hardware_interface::HW_IF_POSITION);
 
   // Command getters and setters
   std::vector<std::string> interfaces;
@@ -385,7 +394,7 @@ TEST_F(TestComponentInterfaces, joint_example_component_works)
   interfaces.push_back(hardware_interface::HW_IF_POSITION);
   EXPECT_EQ(joint.set_command(input, interfaces), return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL);
   interfaces.clear();
-  interfaces.push_back(hardware_interface::HW_IF_POSITION);
+  interfaces.push_back(joint.get_command_interface_names()[0]);
   input.clear();
   input.push_back(1.2);
   EXPECT_EQ(joint.set_command(input, interfaces), return_type::OK);
@@ -393,7 +402,7 @@ TEST_F(TestComponentInterfaces, joint_example_component_works)
   std::vector<double> output;
   interfaces.clear();
   EXPECT_EQ(joint.get_command(output, interfaces), return_type::INTERFACE_NOT_PROVIDED);
-  interfaces.push_back(hardware_interface::HW_IF_POSITION);
+  interfaces.push_back(joint.get_command_interface_names()[0]);
   EXPECT_EQ(joint.get_command(output, interfaces), return_type::OK);
   ASSERT_THAT(output, SizeIs(1));
   EXPECT_EQ(output[0], 1.2);
@@ -428,7 +437,7 @@ TEST_F(TestComponentInterfaces, joint_example_component_works)
   output.clear();
   interfaces.clear();
   EXPECT_EQ(joint.get_command(output, interfaces), return_type::INTERFACE_NOT_PROVIDED);
-  interfaces.push_back(hardware_interface::HW_IF_POSITION);
+  interfaces.push_back(joint.get_command_interface_names()[0]);
   EXPECT_EQ(joint.get_state(output, interfaces), return_type::OK);
   ASSERT_THAT(output, SizeIs(1));
   EXPECT_EQ(output[0], 1.2);
@@ -446,37 +455,45 @@ TEST_F(TestComponentInterfaces, joint_example_component_works)
   EXPECT_EQ(output[0], 2.1);
 
   // Test DummyPositionJoint
-  joint_info.command_interfaces.push_back(hardware_interface::HW_IF_POSITION);
-  joint_info.command_interfaces.push_back(hardware_interface::HW_IF_VELOCITY);
-  EXPECT_EQ(joint.configure(joint_info), return_type::ERROR);
+  // Cannot push a velocity interface
+  joint_info_.command_interfaces.push_back(joint.get_command_interfaces()[0]);
+  hardware_interface::components::InterfaceInfo velocity_interface;
+  velocity_interface.name = hardware_interface::HW_IF_VELOCITY;
+  joint_info_.command_interfaces.push_back(velocity_interface);
+  EXPECT_EQ(joint.configure(joint_info_), return_type::ERROR);
 }
 
 TEST_F(TestComponentInterfaces, multi_joint_example_component_works)
 {
   DummyMultiJoint joint;
 
-  joint_info.name = "DummyMultiJoint";
-  joint_info.parameters["max_position"] = "3.14";
-  joint_info.parameters["min_position"] = "-3.14";
-  joint_info.parameters["max_velocity"] = "1.14";
-  joint_info.parameters["min_velocity"] = "-1.14";
+  joint_info_.name = "DummyMultiJoint";
+  // Error if fewer than 2 interfaces for a MultiJoint
+  EXPECT_EQ(joint.configure(joint_info_), return_type::ERROR);
 
-  EXPECT_EQ(joint.configure(joint_info), return_type::ERROR);
+  // Define position and velocity interfaces
+  hardware_interface::components::InterfaceInfo position_interface;
+  position_interface.name = hardware_interface::HW_IF_POSITION;
+  position_interface.min = -1;
+  position_interface.max = 1;
+  joint_info_.command_interfaces.push_back(position_interface);
+  hardware_interface::components::InterfaceInfo velocity_interface;
+  velocity_interface.name = hardware_interface::HW_IF_VELOCITY;
+  joint_info_.command_interfaces.push_back(velocity_interface);
+  velocity_interface.min = -1;
+  velocity_interface.max = 1;
 
-  joint_info.command_interfaces.push_back(hardware_interface::HW_IF_POSITION);
-  joint_info.command_interfaces.push_back(hardware_interface::HW_IF_VELOCITY);
-
-  EXPECT_EQ(joint.configure(joint_info), return_type::OK);
+  EXPECT_EQ(joint.configure(joint_info_), return_type::OK);
 
   ASSERT_THAT(joint.get_command_interfaces(), SizeIs(2));
-  EXPECT_EQ(joint.get_command_interfaces()[0], hardware_interface::HW_IF_POSITION);
+  EXPECT_EQ(joint.get_command_interfaces()[0].name, hardware_interface::HW_IF_POSITION);
   ASSERT_THAT(joint.get_state_interfaces(), SizeIs(0));
 
-  joint_info.state_interfaces.push_back(hardware_interface::HW_IF_POSITION);
-  joint_info.state_interfaces.push_back(hardware_interface::HW_IF_VELOCITY);
-  EXPECT_EQ(joint.configure(joint_info), return_type::OK);
+  joint_info_.state_interfaces.push_back(velocity_interface);
+  joint_info_.state_interfaces.push_back(velocity_interface);
+  EXPECT_EQ(joint.configure(joint_info_), return_type::OK);
   ASSERT_THAT(joint.get_state_interfaces(), SizeIs(2));
-  EXPECT_EQ(joint.get_command_interfaces()[1], hardware_interface::HW_IF_VELOCITY);
+  EXPECT_EQ(joint.get_command_interfaces()[1].name, hardware_interface::HW_IF_VELOCITY);
 
   // Command getters and setters
   std::vector<std::string> interfaces;
@@ -523,8 +540,10 @@ TEST_F(TestComponentInterfaces, multi_joint_example_component_works)
   EXPECT_EQ(joint.set_state(input, interfaces), return_type::INTERFACE_NOT_FOUND);
   interfaces.push_back(hardware_interface::HW_IF_POSITION);
   EXPECT_EQ(joint.set_state(input, interfaces), return_type::INTERFACE_VALUE_SIZE_NOT_EQUAL);
+
+
   interfaces.clear();
-  interfaces.push_back(hardware_interface::HW_IF_POSITION);
+  interfaces.push_back(hardware_interface::HW_IF_VELOCITY);
   input.clear();
   input.push_back(1.2);
   EXPECT_EQ(joint.set_state(input, interfaces), return_type::OK);
@@ -552,10 +571,10 @@ TEST_F(TestComponentInterfaces, sensor_example_component_works)
 {
   DummyForceTorqueSensor sensor;
 
-  EXPECT_EQ(sensor.configure(sensor_info), return_type::OK);
+  EXPECT_EQ(sensor.configure(sensor_info_), return_type::OK);
   ASSERT_THAT(sensor.get_state_interfaces(), SizeIs(6));
-  EXPECT_EQ(sensor.get_state_interfaces()[0], "force_x");
-  EXPECT_EQ(sensor.get_state_interfaces()[5], "torque_z");
+  EXPECT_EQ(sensor.get_state_interface_names()[0], "force_x");
+  EXPECT_EQ(sensor.get_state_interface_names()[5], "torque_z");
   std::vector<double> input = {5.23, 6.7, 2.5, 3.8, 8.9, 12.3};
   std::vector<double> output;
   std::vector<std::string> interfaces;
@@ -577,7 +596,7 @@ TEST_F(TestComponentInterfaces, sensor_example_component_works)
   interfaces.push_back(hardware_interface::HW_IF_VELOCITY);
   EXPECT_EQ(sensor.set_state(input, interfaces), return_type::INTERFACE_NOT_FOUND);
   interfaces.clear();
-  interfaces = sensor.get_state_interfaces();
+  interfaces = sensor.get_state_interface_names();
   EXPECT_EQ(sensor.set_state(input, interfaces), return_type::OK);
 
   output.clear();
@@ -597,8 +616,8 @@ TEST_F(TestComponentInterfaces, sensor_example_component_works)
   ASSERT_THAT(output, SizeIs(6));
   EXPECT_EQ(output[5], 12.3);
 
-  sensor_info.parameters.clear();
-  EXPECT_EQ(sensor.configure(sensor_info), return_type::ERROR);
+  sensor_info_.parameters.clear();
+  EXPECT_EQ(sensor.configure(sensor_info_), return_type::ERROR);
 }
 
 TEST_F(TestComponentInterfaces, actuator_hardware_interface_works)
@@ -611,14 +630,14 @@ TEST_F(TestComponentInterfaces, actuator_hardware_interface_works)
   actuator_hw_info.hardware_parameters["example_param_write_for_sec"] = "2";
   actuator_hw_info.hardware_parameters["example_param_read_for_sec"] = "3";
 
-  EXPECT_EQ(joint->configure(joint_info), return_type::OK);
+  EXPECT_EQ(joint->configure(joint_info_), return_type::OK);
 
   EXPECT_EQ(actuator_hw.configure(actuator_hw_info), return_type::OK);
   EXPECT_EQ(actuator_hw.get_status(), status::CONFIGURED);
   EXPECT_EQ(actuator_hw.start(), return_type::OK);
   EXPECT_EQ(actuator_hw.get_status(), status::STARTED);
   EXPECT_EQ(actuator_hw.read_joint(joint), return_type::OK);
-  std::vector<std::string> interfaces = joint->get_state_interfaces();
+  std::vector<std::string> interfaces = joint->get_state_interface_names();
   std::vector<double> output;
   EXPECT_EQ(joint->get_state(output, interfaces), return_type::OK);
   ASSERT_THAT(output, SizeIs(1));
@@ -638,7 +657,7 @@ TEST_F(TestComponentInterfaces, sensor_interface_with_hardware_works)
   sensor_hw_info.name = "DummySensor";
   sensor_hw_info.hardware_parameters["binary_to_voltage_factor"] = "0.0048828125";
 
-  EXPECT_EQ(sensor->configure(sensor_info), return_type::OK);
+  EXPECT_EQ(sensor->configure(sensor_info_), return_type::OK);
 
   EXPECT_EQ(sensor_hw.configure(sensor_hw_info), return_type::OK);
   EXPECT_EQ(sensor_hw.get_status(), status::CONFIGURED);
@@ -648,7 +667,7 @@ TEST_F(TestComponentInterfaces, sensor_interface_with_hardware_works)
   sensors.push_back(sensor);
   EXPECT_EQ(sensor_hw.read_sensors(sensors), return_type::OK);
   std::vector<double> output;
-  std::vector<std::string> interfaces = sensor->get_state_interfaces();
+  std::vector<std::string> interfaces = sensor->get_state_interface_names();
   EXPECT_EQ(sensor->get_state(output, interfaces), return_type::OK);
   EXPECT_EQ(output[2], 3.4);
   ASSERT_THAT(interfaces, SizeIs(6));
@@ -671,9 +690,9 @@ TEST_F(TestComponentInterfaces, system_interface_with_hardware_works)
   std::vector<std::shared_ptr<Sensor>> sensors;
   sensors.push_back(sensor);
 
-  EXPECT_EQ(joint1->configure(joint_info), return_type::OK);
-  EXPECT_EQ(joint2->configure(joint_info), return_type::OK);
-  EXPECT_EQ(sensor->configure(sensor_info), return_type::OK);
+  EXPECT_EQ(joint1->configure(joint_info_), return_type::OK);
+  EXPECT_EQ(joint2->configure(joint_info_), return_type::OK);
+  EXPECT_EQ(sensor->configure(sensor_info_), return_type::OK);
 
   HardwareInfo system_hw_info;
   system_hw_info.name = "DummyActuatorHardware";
@@ -688,25 +707,28 @@ TEST_F(TestComponentInterfaces, system_interface_with_hardware_works)
 
   EXPECT_EQ(system.read_sensors(sensors), return_type::OK);
   std::vector<double> output;
-  std::vector<std::string> interfaces = sensor->get_state_interfaces();
-  EXPECT_EQ(sensor->get_state(output, interfaces), return_type::OK);
-  ASSERT_THAT(output, SizeIs(6));
-  EXPECT_EQ(output[2], -8.7);
-  ASSERT_THAT(interfaces, SizeIs(6));
-  EXPECT_EQ(interfaces[4], "torque_y");
+  {
+    std::vector<std::string> interfaces = sensor->get_state_interface_names();
+    EXPECT_EQ(sensor->get_state(output, interfaces), return_type::OK);
+    ASSERT_THAT(output, SizeIs(6));
+    EXPECT_EQ(output[2], -8.7);
+    ASSERT_THAT(interfaces, SizeIs(6));
+    EXPECT_EQ(interfaces[4], "torque_y");
+  }
   output.clear();
-  interfaces.clear();
 
   EXPECT_EQ(system.read_joints(joints), return_type::OK);
-  interfaces = joint1->get_command_interfaces();
-  EXPECT_EQ(joint1->get_state(output, interfaces), return_type::OK);
-  ASSERT_THAT(output, SizeIs(1));
-  EXPECT_EQ(output[0], -1.575);
-  ASSERT_THAT(interfaces, SizeIs(1));
-  EXPECT_EQ(interfaces[0], hardware_interface::HW_IF_POSITION);
+  {
+    std::vector<std::string> interfaces = joint1->get_command_interface_names();
+    EXPECT_EQ(joint1->get_state(output, interfaces), return_type::OK);
+    ASSERT_THAT(output, SizeIs(1));
+    EXPECT_EQ(output[0], -1.575);
+    ASSERT_THAT(interfaces, SizeIs(1));
+    EXPECT_EQ(interfaces[0], hardware_interface::HW_IF_POSITION);
+  }
   output.clear();
-  interfaces.clear();
-  interfaces = joint2->get_state_interfaces();
+
+  std::vector<std::string> interfaces = joint2->get_state_interface_names();
   EXPECT_EQ(joint2->get_state(output, interfaces), return_type::OK);
   ASSERT_THAT(output, SizeIs(1));
   EXPECT_EQ(output[0], -0.7543);
