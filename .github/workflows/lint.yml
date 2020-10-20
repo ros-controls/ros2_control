@@ -8,8 +8,8 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
     - uses: actions/checkout@v1
-    - uses: ros-tooling/setup-ros@0.0.13
-    - uses: ros-tooling/action-ros-lint@0.0.5
+    - uses: ros-tooling/setup-ros@0.0.26
+    - uses: ros-tooling/action-ros-lint@0.0.6
       with:
         linter: copyright
         package-name: controller_interface controller_manager controller_manager_msgs hardware_interface joint_limits_interface test_robot_hardware transmission_interface
@@ -19,8 +19,8 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
     - uses: actions/checkout@v1
-    - uses: ros-tooling/setup-ros@0.0.13
-    - uses: ros-tooling/action-ros-lint@0.0.5
+    - uses: ros-tooling/setup-ros@0.0.26
+    - uses: ros-tooling/action-ros-lint@0.0.6
       with:
         linter: xmllint
         package-name: controller_interface controller_manager controller_manager_msgs hardware_interface joint_limits_interface test_robot_hardware transmission_interface
@@ -34,8 +34,8 @@ jobs:
           linter: [cppcheck, cpplint, uncrustify]
     steps:
     - uses: actions/checkout@v1
-    - uses: ros-tooling/setup-ros@0.0.13
-    - uses: ros-tooling/action-ros-lint@0.0.5
+    - uses: ros-tooling/setup-ros@0.0.26
+    - uses: ros-tooling/action-ros-lint@0.0.6
       with:
         linter: ${{ matrix.linter }}
         package-name: controller_interface controller_manager controller_manager_msgs hardware_interface joint_limits_interface test_robot_hardware transmission_interface
