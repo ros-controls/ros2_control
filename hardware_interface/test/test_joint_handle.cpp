@@ -73,20 +73,3 @@ TEST(TestJointHandle, with_value_ptr_initializes_new_handle_correctly)
   EXPECT_ANY_THROW(handle.get_value());
   EXPECT_DOUBLE_EQ(new_handle.get_value(), value);
 }
-
-TEST(TestJointHandle, joint_command_handle)
-{
-  double value = 1.337;
-  JointCommandHandle handle{JOINT_NAME, FOO_INTERFACE, &value};
-  EXPECT_DOUBLE_EQ(handle.get_value(), value);
-  EXPECT_NO_THROW(handle.set_value(0.0));
-  EXPECT_DOUBLE_EQ(handle.get_value(), 0.0);
-}
-
-TEST(TestJointHandle, joint_state_handle)
-{
-  double value = 1.337;
-  JointStateHandle handle{JOINT_NAME, FOO_INTERFACE, &value};
-  EXPECT_DOUBLE_EQ(handle.get_value(), value);
-  // handle.set_value(5);  compiler error, no set_value function
-}

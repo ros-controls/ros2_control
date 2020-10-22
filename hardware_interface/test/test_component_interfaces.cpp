@@ -325,3 +325,4 @@ TEST(TestComponentInterfaces, dummy_system)
     ASSERT_EQ(hardware_interface::return_type::OK, system_hw.write());
   }
 }
+
