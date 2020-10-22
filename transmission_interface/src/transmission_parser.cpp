@@ -23,7 +23,15 @@
 namespace
 {
 constexpr const auto kTransmissionParserLoggerName = "transmission_parser";
-}
+
+constexpr const auto kTransmissionTag = "transmission";
+constexpr const auto kJointTag = "joint";
+constexpr const auto kActuatorTag = "actuator";
+constexpr const auto kTypeTag = "type";
+constexpr const auto kRoleTag = "role";
+constexpr const auto kHardwareInterfaceTag = "hardwareInterface";
+constexpr const auto kMechanicalReductionTag = "mechanicalReduction";
+}  // namespace
 
 namespace transmission_interface
 {
@@ -66,8 +74,8 @@ bool TransmissionParser::parse(
 
   // Constructs the transmissions by parsing custom xml.
   tinyxml2::XMLElement * trans_it = nullptr;
-  for (trans_it = root->FirstChildElement("transmission"); trans_it;
-    trans_it = trans_it->NextSiblingElement("transmission"))
+  for (trans_it = root->FirstChildElement(kTransmissionTag); trans_it;
+    trans_it = trans_it->NextSiblingElement(kTransmissionTag))
   {
     transmission_interface::TransmissionInfo transmission;
 
@@ -82,7 +90,7 @@ bool TransmissionParser::parse(
     }
 
     // Transmission type
-    tinyxml2::XMLElement * type_child = trans_it->FirstChildElement("type");
+    tinyxml2::XMLElement * type_child = trans_it->FirstChildElement(kTypeTag);
     if (!type_child) {
       throw std::runtime_error(
               "no type element found in transmission '" + transmission.name + "'.");
@@ -121,8 +129,8 @@ bool TransmissionParser::parse_joints(
 {
   // Loop through each available joint
   tinyxml2::XMLElement * joint_it = nullptr;
-  for (joint_it = trans_it->FirstChildElement("joint"); joint_it;
-    joint_it = joint_it->NextSiblingElement("joint"))
+  for (joint_it = trans_it->FirstChildElement(kJointTag); joint_it;
+    joint_it = joint_it->NextSiblingElement(kJointTag))
   {
     // Create new joint
     transmission_interface::JointInfo joint;
@@ -137,15 +145,15 @@ bool TransmissionParser::parse_joints(
       throw std::runtime_error("expected name attribute for joint.");
     }
 
-    tinyxml2::XMLElement * role_it = joint_it->FirstChildElement("role");
+    tinyxml2::XMLElement * role_it = joint_it->FirstChildElement(kRoleTag);
     if (role_it) {
       joint.role = role_it->GetText() ? role_it->GetText() : std::string();
     }
 
     // Hardware interfaces (required)
     tinyxml2::XMLElement * hw_iface_it = nullptr;
-    for (hw_iface_it = joint_it->FirstChildElement("hardwareInterface"); hw_iface_it;
-      hw_iface_it = hw_iface_it->NextSiblingElement("hardwareInterface"))
+    for (hw_iface_it = joint_it->FirstChildElement(kHardwareInterfaceTag); hw_iface_it;
+      hw_iface_it = hw_iface_it->NextSiblingElement(kHardwareInterfaceTag))
     {
       if (hw_iface_it->GetText()) {
         const std::string hw_iface_name = hw_iface_it->GetText();
@@ -173,8 +181,8 @@ bool TransmissionParser::parse_actuators(
 {
   // Loop through each available actuator
   tinyxml2::XMLElement * actuator_it = nullptr;
-  for (actuator_it = trans_it->FirstChildElement("actuator"); actuator_it;
-    actuator_it = actuator_it->NextSiblingElement("actuator"))
+  for (actuator_it = trans_it->FirstChildElement(kActuatorTag); actuator_it;
+    actuator_it = actuator_it->NextSiblingElement(kActuatorTag))
   {
     // Create new actuator
     transmission_interface::ActuatorInfo actuator;
@@ -191,8 +199,8 @@ bool TransmissionParser::parse_actuators(
 
     // Hardware interfaces (optional)
     tinyxml2::XMLElement * hw_iface_it = nullptr;
-    for (hw_iface_it = actuator_it->FirstChildElement("hardwareInterface"); hw_iface_it;
-      hw_iface_it = hw_iface_it->NextSiblingElement("hardwareInterface"))
+    for (hw_iface_it = actuator_it->FirstChildElement(kHardwareInterfaceTag); hw_iface_it;
+      hw_iface_it = hw_iface_it->NextSiblingElement(kHardwareInterfaceTag))
     {
       // Skipping empty hardware interface element in actuator
       if (hw_iface_it->GetText()) {
@@ -211,8 +219,8 @@ bool TransmissionParser::parse_actuators(
     // mechanical reduction (optional)
     actuator.mechanical_reduction = 1;
     tinyxml2::XMLElement * mechred_it = nullptr;
-    for (mechred_it = actuator_it->FirstChildElement("mechanicalReduction"); mechred_it;
-      mechred_it = mechred_it->NextSiblingElement("mechanicalReduction"))
+    for (mechred_it = actuator_it->FirstChildElement(kMechanicalReductionTag); mechred_it;
+      mechred_it = mechred_it->NextSiblingElement(kMechanicalReductionTag))
     {
       // optional tag, so no error if element is empty
       if (mechred_it->GetText()) {
