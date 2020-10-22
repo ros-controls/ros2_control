@@ -11,8 +11,8 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 find_package(ament_cmake REQUIRED)
-find_package(rclcpp REQUIRED)
 find_package(rcpputils REQUIRED)
+find_package(rcutils REQUIRED)
 
 add_library(
   hardware_interface
@@ -28,8 +28,8 @@ target_include_directories(
   include)
 ament_target_dependencies(
   hardware_interface
-  rclcpp
   rcpputils
+  rcutils
 )
 
 # Causes the visibility macros to use dllexport rather than dllimport,
