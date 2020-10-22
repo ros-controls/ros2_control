@@ -25,8 +25,7 @@
 #include <transmission_interface/transmission_info.hpp>
 #include <transmission_interface/visibility_control.h>
 
-// XML
-#include <tinyxml.h>
+#include <tinyxml2.h>
 
 #include <string>
 #include <vector>
@@ -46,7 +45,9 @@ public:
    * \return true if one or more transmissions were successfully parsed. False if the URDF contained no
    *         transmission elements.
    */
-  static bool parse(const std::string & urdf_string, std::vector<TransmissionInfo> & transmissions);
+  static bool parse(
+    const std::string & urdf_string,
+    std::vector<TransmissionInfo> & transmissions);
 
 protected:
   /**
@@ -56,7 +57,9 @@ protected:
    * \param[out] joints resulting list of joints in the transmission
    * \return true if joint information for a transmission was successfully parsed.
    */
-  static bool parse_joints(TiXmlElement * trans_it, std::vector<JointInfo> & joints);
+  static bool parse_joints(
+    tinyxml2::XMLElement * trans_it,
+    std::vector<JointInfo> & joints);
 
   /**
    * \brief Parses the actuator elements within transmission elements of a URDF
@@ -65,7 +68,9 @@ protected:
    * \param[out] actuators resulting list of actuators in the transmission
    * \return true if actuator information for a transmission was successfully parsed.
    */
-  static bool parse_actuators(TiXmlElement * trans_it, std::vector<ActuatorInfo> & actuators);
+  static bool parse_actuators(
+    tinyxml2::XMLElement * trans_it,
+    std::vector<ActuatorInfo> & actuators);
 };  // class
 
 

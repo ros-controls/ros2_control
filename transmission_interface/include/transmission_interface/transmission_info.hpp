@@ -29,8 +29,7 @@ struct JointInfo
 {
   std::string name;
   std::vector<std::string> hardware_interfaces;
-  std::string role_;
-  std::string xml_element_;
+  std::string role;
 };
 
 /**
@@ -41,7 +40,6 @@ struct ActuatorInfo
   std::string name;
   std::vector<std::string> hardware_interfaces;
   double mechanical_reduction;
-  std::string xml_element_;
 };
 
 /**

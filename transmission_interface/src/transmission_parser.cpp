@@ -48,18 +48,24 @@ bool TransmissionParser::parse(
   const std::string & urdf,
   std::vector<TransmissionInfo> & transmissions)
 {
+  if (urdf.empty()) {
+    throw std::runtime_error("empty URDF passed to robot");
+  }
+
   // initialize TiXmlDocument doc with a string
-  TiXmlDocument doc;
+  tinyxml2::XMLDocument doc;
   if (!doc.Parse(urdf.c_str()) && doc.Error()) {
     throw std::runtime_error("Can't parse transmissions. Invalid robot description.");
-    return false;
   }
 
   // Find joints in transmission tags
-  TiXmlElement * root = doc.RootElement();
+  tinyxml2::XMLElement * root = doc.RootElement();
+  if (root == nullptr) {
+    throw std::runtime_error("Can't parse transmissions. Invalid robot description.");
+  }
 
   // Constructs the transmissions by parsing custom xml.
-  TiXmlElement * trans_it = nullptr;
+  tinyxml2::XMLElement * trans_it = nullptr;
   for (trans_it = root->FirstChildElement("transmission"); trans_it;
     trans_it = trans_it->NextSiblingElement("transmission"))
   {
@@ -76,7 +82,7 @@ bool TransmissionParser::parse(
     }
 
     // Transmission type
-    TiXmlElement * type_child = trans_it->FirstChildElement("type");
+    tinyxml2::XMLElement * type_child = trans_it->FirstChildElement("type");
     if (!type_child) {
       throw std::runtime_error(
               "no type element found in transmission '" + transmission.name + "'.");
@@ -109,10 +115,12 @@ bool TransmissionParser::parse(
   return !transmissions.empty();
 }
 
-bool TransmissionParser::parse_joints(TiXmlElement * trans_it, std::vector<JointInfo> & joints)
+bool TransmissionParser::parse_joints(
+  tinyxml2::XMLElement * trans_it,
+  std::vector<JointInfo> & joints)
 {
   // Loop through each available joint
-  TiXmlElement * joint_it = nullptr;
+  tinyxml2::XMLElement * joint_it = nullptr;
   for (joint_it = trans_it->FirstChildElement("joint"); joint_it;
     joint_it = joint_it->NextSiblingElement("joint"))
   {
@@ -124,20 +132,18 @@ bool TransmissionParser::parse_joints(TiXmlElement * trans_it, std::vector<Joint
       joint.name = joint_it->Attribute("name");
       if (joint.name.empty()) {
         throw std::runtime_error("expected valid joint name attribute.");
-        continue;
       }
     } else {
       throw std::runtime_error("expected name attribute for joint.");
-      return false;
     }
 
-    TiXmlElement * role_it = joint_it->FirstChildElement("role");
+    tinyxml2::XMLElement * role_it = joint_it->FirstChildElement("role");
     if (role_it) {
-      joint.role_ = role_it->GetText() ? role_it->GetText() : std::string();
+      joint.role = role_it->GetText() ? role_it->GetText() : std::string();
     }
 
     // Hardware interfaces (required)
-    TiXmlElement * hw_iface_it = nullptr;
+    tinyxml2::XMLElement * hw_iface_it = nullptr;
     for (hw_iface_it = joint_it->FirstChildElement("hardwareInterface"); hw_iface_it;
       hw_iface_it = hw_iface_it->NextSiblingElement("hardwareInterface"))
     {
@@ -154,11 +160,6 @@ bool TransmissionParser::parse_joints(TiXmlElement * trans_it, std::vector<Joint
               "joint " + joint.name + " has no valid hardware interface.");
     }
 
-    // Joint xml element
-    std::stringstream ss;
-    ss << *joint_it;
-    joint.xml_element_ = ss.str();
-
     // Add joint to vector
     joints.push_back(joint);
   }
@@ -167,11 +168,11 @@ bool TransmissionParser::parse_joints(TiXmlElement * trans_it, std::vector<Joint
 }
 
 bool TransmissionParser::parse_actuators(
-  TiXmlElement * trans_it,
+  tinyxml2::XMLElement * trans_it,
   std::vector<ActuatorInfo> & actuators)
 {
   // Loop through each available actuator
-  TiXmlElement * actuator_it = nullptr;
+  tinyxml2::XMLElement * actuator_it = nullptr;
   for (actuator_it = trans_it->FirstChildElement("actuator"); actuator_it;
     actuator_it = actuator_it->NextSiblingElement("actuator"))
   {
@@ -189,7 +190,7 @@ bool TransmissionParser::parse_actuators(
     }
 
     // Hardware interfaces (optional)
-    TiXmlElement * hw_iface_it = nullptr;
+    tinyxml2::XMLElement * hw_iface_it = nullptr;
     for (hw_iface_it = actuator_it->FirstChildElement("hardwareInterface"); hw_iface_it;
       hw_iface_it = hw_iface_it->NextSiblingElement("hardwareInterface"))
     {
@@ -209,7 +210,7 @@ bool TransmissionParser::parse_actuators(
 
     // mechanical reduction (optional)
     actuator.mechanical_reduction = 1;
-    TiXmlElement * mechred_it = nullptr;
+    tinyxml2::XMLElement * mechred_it = nullptr;
     for (mechred_it = actuator_it->FirstChildElement("mechanicalReduction"); mechred_it;
       mechred_it = mechred_it->NextSiblingElement("mechanicalReduction"))
     {
@@ -219,11 +220,6 @@ bool TransmissionParser::parse_actuators(
         actuator.mechanical_reduction = atoi(value);
       }
     }
-
-    // Actuator xml element
-    std::stringstream ss;
-    ss << *actuator_it;
-    actuator.xml_element_ = ss.str();
 
     // Add actuator to vector
     actuators.push_back(actuator);
