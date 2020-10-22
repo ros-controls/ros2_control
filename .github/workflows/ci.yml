@@ -29,12 +29,12 @@ jobs:
     strategy:
       fail-fast: false
     steps:
-      - uses: ros-tooling/setup-ros@0.0.23
+      - uses: ros-tooling/setup-ros@0.0.26
         with:
           required-ros-distributions: foxy
-      - uses: ros-tooling/action-ros-ci@0.0.17
+      - uses: ros-tooling/action-ros-ci@0.0.19
         with:
-          source-ros-binary-installation: foxy
+          target-ros2-distro: foxy
           # build all packages listed in the meta package
           package-name:
             controller_interface
