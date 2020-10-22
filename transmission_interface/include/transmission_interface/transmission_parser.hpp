@@ -40,26 +40,30 @@ class TransmissionParser
 public:
   /**
    * \brief Parses the transmission elements of a URDF
+   * If parse errors occur a std::runtime_error will be thrown with a description of the problem.
    * \param[in] urdf_string XML string of a valid URDF file that contains <tt>\<transmission\></tt> elements
    * \param[out] transmissions vector of loaded transmission meta data
-   * \return true if parsing was successful
+   * \return true if one or more transmissions were successfully parsed. False if the URDF contained no
+   *         transmission elements.
    */
   static bool parse(const std::string & urdf_string, std::vector<TransmissionInfo> & transmissions);
 
 protected:
   /**
    * \brief Parses the joint elements within transmission elements of a URDF
+   * If parse errors occur a std::runtime_error will be thrown with a description of the problem.
    * \param[in] trans_it pointer to the current XML element being parsed
    * \param[out] joints resulting list of joints in the transmission
-   * \return true if successful
+   * \return true if joint information for a transmission was successfully parsed.
    */
   static bool parse_joints(TiXmlElement * trans_it, std::vector<JointInfo> & joints);
 
   /**
    * \brief Parses the actuator elements within transmission elements of a URDF
+   * If parse errors occur a std::runtime_error will be thrown with a description of the problem.
    * \param[in] trans_it pointer to the current XML element being parsed
    * \param[out] actuators resulting list of actuators in the transmission
-   * \return true if successful
+   * \return true if actuator information for a transmission was successfully parsed.
    */
   static bool parse_actuators(TiXmlElement * trans_it, std::vector<ActuatorInfo> & actuators);
 };  // class

@@ -434,11 +434,8 @@ TEST_F(TestTransmissionParser, empty_string_throws_error)
 
 TEST_F(TestTransmissionParser, empty_urdf_returns_empty)
 {
-  const std::string empty_urdf =
-    "<?xml version=\"1.0\"?><robot name=\"robot\" xmlns=\"http://www.ros.org\"></robot>";
-  TransmissionParser parser;
-  std::vector<TransmissionInfo> transmissions;
-  EXPECT_TRUE(parser.parse(empty_urdf, transmissions));
+  auto transmissions = transmission_interface::parse_transmissions_from_urdf(
+    "<?xml version=\"1.0\"?><robot name=\"robot\" xmlns=\"http://www.ros.org\"></robot>");
   ASSERT_THAT(transmissions, IsEmpty());
 }
 
