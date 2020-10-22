@@ -12,14 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef HARDWARE_INTERFACE__SYSTEM_HARDWARE_INTERFACE_HPP_
-#define HARDWARE_INTERFACE__SYSTEM_HARDWARE_INTERFACE_HPP_
+#ifndef HARDWARE_INTERFACE__COMPONENTS__SYSTEM_INTERFACE_HPP_
+#define HARDWARE_INTERFACE__COMPONENTS__SYSTEM_INTERFACE_HPP_
 
 #include <memory>
 #include <vector>
 
-#include "hardware_interface/components/joint.hpp"
-#include "hardware_interface/components/sensor.hpp"
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/hardware_interface_status_values.hpp"
@@ -27,21 +25,21 @@
 
 namespace hardware_interface
 {
+namespace components
+{
 
 /**
 * \brief Virtual Class to implement when integrating a complex system into ros2_control.
 * The common examples for these types of hardware are multi-joint systems with or without sensors
 * such as industrial or humanoid robots.
 */
-class SystemHardwareInterface
+class SystemInterface
 {
 public:
-  HARDWARE_INTERFACE_PUBLIC
-  SystemHardwareInterface() = default;
+  SystemInterface() = default;
 
-  HARDWARE_INTERFACE_PUBLIC
   virtual
-  ~SystemHardwareInterface() = default;
+  ~SystemInterface() = default;
 
   /**
    * \brief Configuration of the system from data parsed from the robot's URDF.
@@ -80,42 +78,8 @@ public:
   HARDWARE_INTERFACE_PUBLIC
   virtual
   status get_status() const = 0;
-
-  /**
-   * \brief Read data from the hardware into sensors using "set_state" function in the Sensor class.
-   * This is used only if the system hardware has attached sensors.
-   * The function call from the resource manager is therefore optional.
-   *
-   * \param sensors list of sensors where data from the hardware are stored.
-   * \return return_type:OK if everything worked as expected, return_type::ERROR otherwise.
-   */
-  HARDWARE_INTERFACE_PUBLIC
-  virtual
-  return_type read_sensors(std::vector<std::shared_ptr<components::Sensor>> & sensors) const = 0;
-
-  /**
-   * \brief Read data fromt the hardware into joints using "set_state" function of the Joint class.
-   * This function is always called by the resource manager.
-   *
-   * \param joints list of joints where data from the hardware are stored.
-   * \return return_type:OK if everything worked as expected, return_type::ERROR otherwise.
-   */
-  HARDWARE_INTERFACE_PUBLIC
-  virtual
-  return_type read_joints(std::vector<std::shared_ptr<components::Joint>> & joints) const = 0;
-
-  /**
-   * \brief Write data from the joints to the hardware using "get_command" function of the Joint class.
-   * This function is always called by the resource manager.
-   *
-   * \param joints list of joints from which data are written to the hardware.
-   * \return return_type:OK if everything worked as expected, return_type::ERROR otherwise.
-   */
-  HARDWARE_INTERFACE_PUBLIC
-  return_type
-  virtual
-  write_joints(const std::vector<std::shared_ptr<components::Joint>> & joints) = 0;
 };
 
+}  // namespace components
 }  // namespace hardware_interface
-#endif  // HARDWARE_INTERFACE__SYSTEM_HARDWARE_INTERFACE_HPP_
+#endif  // HARDWARE_INTERFACE__COMPONENTS__SYSTEM_INTERFACE_HPP_

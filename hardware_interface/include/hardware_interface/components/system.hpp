@@ -12,52 +12,50 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#ifndef HARDWARE_INTERFACE__COMPONENTS__SYSTEM_HPP_
+#define HARDWARE_INTERFACE__COMPONENTS__SYSTEM_HPP_
+
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include "hardware_interface/sensor_hardware.hpp"
-
-#include "hardware_interface/components/component_info.hpp"
-#include "hardware_interface/components/sensor.hpp"
 #include "hardware_interface/hardware_info.hpp"
-#include "hardware_interface/sensor_hardware_interface.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/hardware_interface_status_values.hpp"
 #include "hardware_interface/visibility_control.h"
 
 namespace hardware_interface
 {
-
-SensorHardware::SensorHardware(std::unique_ptr<SensorHardwareInterface> impl)
-: impl_(std::move(impl))
-{}
-
-return_type SensorHardware::configure(const HardwareInfo & sensor_info)
+namespace components
 {
-  return impl_->configure(sensor_info);
-}
 
-return_type SensorHardware::start()
+class SystemInterface;
+
+class System final
 {
-  return impl_->start();
-}
+public:
+  HARDWARE_INTERFACE_PUBLIC
+  explicit System(std::unique_ptr<SystemInterface> impl);
 
-return_type SensorHardware::stop()
-{
-  return impl_->stop();
-}
+  virtual ~System() = default;
 
-status SensorHardware::get_status() const
-{
-  return impl_->get_status();
-}
+  HARDWARE_INTERFACE_PUBLIC
+  return_type configure(const HardwareInfo & system_info);
 
-return_type SensorHardware::read_sensors(
-  const std::vector<std::shared_ptr<components::Sensor>> & sensors)
-{
-  return impl_->read_sensors(sensors);
-}
+  HARDWARE_INTERFACE_PUBLIC
+  return_type start();
 
+  HARDWARE_INTERFACE_PUBLIC
+  return_type stop();
+
+  HARDWARE_INTERFACE_PUBLIC
+  status get_status() const;
+
+private:
+  std::unique_ptr<SystemInterface> impl_;
+};
+
+}  // namespace components
 }  // namespace hardware_interface
+#endif  // HARDWARE_INTERFACE__COMPONENTS__SYSTEM_HPP_

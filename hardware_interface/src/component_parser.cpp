@@ -18,7 +18,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "hardware_interface/components/component_info.hpp"
+#include "hardware_interface/component_info.hpp"
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/component_parser.hpp"
 
@@ -139,13 +139,13 @@ std::unordered_map<std::string, std::string> parse_parameters_from_xml(
  * \return std::vector< std::__cxx11::string > list of interface types
  * \throws std::runtime_error if the interfaceType text not set in a tag
  */
-std::vector<components::InterfaceInfo> parse_interfaces_from_xml(
+std::vector<InterfaceInfo> parse_interfaces_from_xml(
   const tinyxml2::XMLElement * interfaces_it, const char * interfaceTag)
 {
-  std::vector<components::InterfaceInfo> interfaces;
+  std::vector<InterfaceInfo> interfaces;
 
   while (interfaces_it) {
-    hardware_interface::components::InterfaceInfo interface;
+    hardware_interface::InterfaceInfo interface;
 
     // Joint interfaces have a name attribute
     if (std::string(interfaceTag) == "commandInterfaceType") {
@@ -189,9 +189,9 @@ std::vector<components::InterfaceInfo> parse_interfaces_from_xml(
   * \return robot_control_components::ComponentInfo filled with information about component
   * \throws std::runtime_error if a component attribute or tag is not found
   */
-components::ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it)
+ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it)
 {
-  components::ComponentInfo component;
+  ComponentInfo component;
 
   // Find name, type and class of a component
   component.type = component_it->Name();

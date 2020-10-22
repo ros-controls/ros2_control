@@ -12,63 +12,46 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
-#include "hardware_interface/components/component_info.hpp"
 #include "hardware_interface/components/sensor.hpp"
-#include "hardware_interface/types/hardware_interface_return_values.hpp"
 
-#include "./component_lists_management.hpp"
+#include "hardware_interface/hardware_info.hpp"
+#include "hardware_interface/components/sensor_interface.hpp"
+#include "hardware_interface/types/hardware_interface_return_values.hpp"
+#include "hardware_interface/types/hardware_interface_status_values.hpp"
+#include "hardware_interface/visibility_control.h"
 
 namespace hardware_interface
 {
 namespace components
 {
 
-return_type Sensor::configure(const ComponentInfo & joint_info)
+Sensor::Sensor(std::unique_ptr<SensorInterface> impl)
+: impl_(std::move(impl))
+{}
+
+return_type Sensor::configure(const HardwareInfo & sensor_info)
 {
-  info_ = joint_info;
-  if (info_.state_interfaces.size() > 0) {
-    states_.resize(info_.state_interfaces.size());
-  }
-  return return_type::OK;
+  return impl_->configure(sensor_info);
 }
 
-std::vector<std::string> Sensor::get_state_interface_names() const
+return_type Sensor::start()
 {
-  std::vector<std::string> state_interface_names;
-  for (auto interface : info_.state_interfaces) {
-    state_interface_names.push_back(interface.name);
-  }
-  return state_interface_names;
+  return impl_->start();
 }
 
-std::vector<components::InterfaceInfo> Sensor::get_state_interfaces() const
+return_type Sensor::stop()
 {
-  return info_.state_interfaces;
+  return impl_->stop();
 }
 
-return_type Sensor::get_state(
-  std::vector<double> & state, const std::vector<std::string> & interfaces) const
+status Sensor::get_status() const
 {
-  return get_internal_values(state, interfaces, get_state_interface_names(), states_);
-}
-
-return_type Sensor::get_state(std::vector<double> & state) const
-{
-  return get_internal_values(state, states_);
-}
-
-return_type Sensor::set_state(
-  const std::vector<double> & state, const std::vector<std::string> & interfaces)
-{
-  return set_internal_values(state, interfaces, get_state_interface_names(), states_);
-}
-
-return_type Sensor::set_state(const std::vector<double> & state)
-{
-  return set_internal_values(state, states_);
+  return impl_->get_status();
 }
 
 }  // namespace components

@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef HARDWARE_INTERFACE__SENSOR_HARDWARE_HPP_
-#define HARDWARE_INTERFACE__SENSOR_HARDWARE_HPP_
-
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <utility>
-#include <vector>
 
+#include "hardware_interface/components/actuator.hpp"
+
+#include "hardware_interface/components/actuator_interface.hpp"
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/hardware_interface_status_values.hpp"
@@ -27,40 +27,32 @@
 
 namespace hardware_interface
 {
-
 namespace components
 {
-class Sensor;
-}  // namespace components
-class SensorHardwareInterface;
 
-class SensorHardware final
+Actuator::Actuator(std::unique_ptr<ActuatorInterface> impl)
+: impl_(std::move(impl))
+{}
+
+return_type Actuator::configure(const HardwareInfo & actuator_info)
 {
-public:
-  SensorHardware() = default;
+  return impl_->configure(actuator_info);
+}
 
-  explicit SensorHardware(std::unique_ptr<SensorHardwareInterface> impl);
+return_type Actuator::start()
+{
+  return impl_->start();
+}
 
-  ~SensorHardware() = default;
+return_type Actuator::stop()
+{
+  return impl_->stop();
+}
 
-  HARDWARE_INTERFACE_PUBLIC
-  return_type configure(const HardwareInfo & sensor_info);
+status Actuator::get_status() const
+{
+  return impl_->get_status();
+}
 
-  HARDWARE_INTERFACE_PUBLIC
-  return_type start();
-
-  HARDWARE_INTERFACE_PUBLIC
-  return_type stop();
-
-  HARDWARE_INTERFACE_PUBLIC
-  status get_status() const;
-
-  HARDWARE_INTERFACE_PUBLIC
-  return_type read_sensors(const std::vector<std::shared_ptr<components::Sensor>> & sensors);
-
-private:
-  std::unique_ptr<SensorHardwareInterface> impl_;
-};
-
+}  // namespace components
 }  // namespace hardware_interface
-#endif  // HARDWARE_INTERFACE__SENSOR_HARDWARE_HPP_

@@ -17,58 +17,42 @@
 #include <utility>
 #include <vector>
 
-#include "hardware_interface/system_hardware.hpp"
+#include "hardware_interface/components/system.hpp"
 
-#include "hardware_interface/components/component_info.hpp"
-#include "hardware_interface/components/joint.hpp"
-#include "hardware_interface/components/sensor.hpp"
 #include "hardware_interface/hardware_info.hpp"
-#include "hardware_interface/system_hardware_interface.hpp"
+#include "hardware_interface/components/system_interface.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/hardware_interface_status_values.hpp"
 #include "hardware_interface/visibility_control.h"
 
 namespace hardware_interface
 {
+namespace components
+{
 
-SystemHardware::SystemHardware(std::unique_ptr<SystemHardwareInterface> impl)
+System::System(std::unique_ptr<SystemInterface> impl)
 : impl_(std::move(impl))
 {}
 
-return_type SystemHardware::configure(const HardwareInfo & system_info)
+return_type System::configure(const HardwareInfo & system_info)
 {
   return impl_->configure(system_info);
 }
 
-return_type SystemHardware::start()
+return_type System::start()
 {
   return impl_->start();
 }
 
-return_type SystemHardware::stop()
+return_type System::stop()
 {
   return impl_->stop();
 }
 
-status SystemHardware::get_status() const
+status System::get_status() const
 {
   return impl_->get_status();
 }
 
-return_type SystemHardware::read_sensors(std::vector<std::shared_ptr<components::Sensor>> & sensors)
-{
-  return impl_->read_sensors(sensors);
-}
-
-return_type SystemHardware::read_joints(std::vector<std::shared_ptr<components::Joint>> & joints)
-{
-  return impl_->read_joints(joints);
-}
-
-return_type SystemHardware::write_joints(
-  const std::vector<std::shared_ptr<components::Joint>> & joints)
-{
-  return impl_->write_joints(joints);
-}
-
+}  // namespace components
 }  // namespace hardware_interface
