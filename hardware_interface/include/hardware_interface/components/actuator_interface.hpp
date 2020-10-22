@@ -18,6 +18,7 @@
 #include <memory>
 
 #include "hardware_interface/hardware_info.hpp"
+#include "hardware_interface/joint_handle.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/hardware_interface_status_values.hpp"
 #include "hardware_interface/visibility_control.h"
@@ -46,16 +47,38 @@ public:
    * \return return_type::OK if required data are provided and can be parsed,
    * return_type::ERROR otherwise.
    */
-  HARDWARE_INTERFACE_PUBLIC
   virtual
   return_type configure(const HardwareInfo & actuator_info) = 0;
+
+  /// Exports all state handles for this actuator.
+  /**
+   * The state handles have to be created and transfered according
+   * to the actuator info passed in for the configuration.
+   *
+   * Note the ownership over the state handles must be released.
+   *
+   * \return vector of state handles
+   */
+  virtual
+  std::vector<StateHandle> export_state_handles() = 0;
+
+  /// Exports all command handles for this actuator.
+  /**
+   * The command handles have to be created and transfered according
+   * to the actuator info passed in for the configuration.
+   *
+   * Note the ownership over the command handles must be released.
+   *
+   * \return vector of command handles
+   */
+  virtual
+  std::vector<CommandHandle> export_command_handles() = 0;
 
   /**
    * \brief Start exchange data with the hardware.
    *
    * \return return_type:OK if everything worked as expected, return_type::ERROR otherwise.
    */
-  HARDWARE_INTERFACE_PUBLIC
   virtual
   return_type start() = 0;
 
@@ -64,7 +87,6 @@ public:
    *
    * \return return_type:OK if everything worked as expected, return_type::ERROR otherwise.
    */
-  HARDWARE_INTERFACE_PUBLIC
   virtual
   return_type stop() = 0;
 
@@ -73,9 +95,29 @@ public:
    *
    * \return status current status.
    */
-  HARDWARE_INTERFACE_PUBLIC
   virtual
   status get_status() const = 0;
+
+  /// Read the current state values from the actuator.
+  /**
+   * The data readings from the physical hardware has to be updated
+   * and reflected accordingly in the exported state handles.
+   * That is, the data pointed by the handles shall be updated.
+   *
+   * \return return_type::OK if the read was successful, return_type::ERROR otherwise.
+   */
+  virtual
+  return_type read() = 0;
+
+  /// Write the current command values to the actuator.
+  /**
+   * The physical hardware shall be updated with the latest value from
+   * the exported command handles.
+   *
+   * \return return_type::OK if the read was successful, return_type::ERROR otherwise.
+   */
+  virtual
+  return_type write() = 0;
 };
 
 }  // namespace components

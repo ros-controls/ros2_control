@@ -52,7 +52,7 @@ struct HardwareInfo
    */
   std::vector<ComponentInfo> joints;
   /**
-   * \brief map of joints provided by the hardware where the key is the joint name.
+   * \brief map of sensors provided by the hardware where the key is the joint name.
    * Required for Sensor and optional for System Hardware.
    */
   std::vector<ComponentInfo> sensors;

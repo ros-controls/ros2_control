@@ -103,6 +103,9 @@ if(BUILD_TESTING)
   target_link_libraries(test_joint_handle hardware_interface)
   ament_target_dependencies(test_joint_handle rcpputils)
 
+  ament_add_gmock(test_component_interfaces test/test_component_interfaces.cpp)
+  target_link_libraries(test_component_interfaces hardware_interface)
+
   ament_add_gmock(test_component_parser test/test_component_parser.cpp)
   target_link_libraries(test_component_parser component_parser)
   ament_target_dependencies(test_component_parser TinyXML2)

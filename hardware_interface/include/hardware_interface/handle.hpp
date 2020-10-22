@@ -45,6 +45,14 @@ public:
   {
   }
 
+  ReadOnlyHandle(const ReadOnlyHandle & other) = default;
+
+  ReadOnlyHandle(ReadOnlyHandle && other) = default;
+
+  ReadOnlyHandle & operator=(const ReadOnlyHandle & other) = default;
+
+  ReadOnlyHandle & operator=(ReadOnlyHandle && other) = default;
+
   virtual ~ReadOnlyHandle() = default;
 
   /// \brief returns true if handle references a value
@@ -78,23 +86,33 @@ protected:
 };
 
 template<class HandleType>
-class Handle : public ReadOnlyHandle<HandleType>
+class ReadWriteHandle : public ReadOnlyHandle<HandleType>
 {
 public:
-  Handle(
+  ReadWriteHandle(
     const std::string & name,
     const std::string & interface_name,
     double * value_ptr = nullptr)
   : ReadOnlyHandle<HandleType>(name, interface_name, value_ptr)
   {}
 
-  explicit Handle(const std::string & interface_name)
+  explicit ReadWriteHandle(const std::string & interface_name)
   : ReadOnlyHandle<HandleType>(interface_name)
   {}
 
-  explicit Handle(const char * interface_name)
+  explicit ReadWriteHandle(const char * interface_name)
   : ReadOnlyHandle<HandleType>(interface_name)
   {}
+
+  ReadWriteHandle(const ReadWriteHandle & other) = default;
+
+  ReadWriteHandle(ReadWriteHandle && other) = default;
+
+  ReadWriteHandle & operator=(const ReadWriteHandle & other) = default;
+
+  ReadWriteHandle & operator=(ReadWriteHandle && other) = default;
+
+  virtual ~ReadWriteHandle() = default;
 
   void set_value(double value)
   {
@@ -115,6 +133,23 @@ public:
     this->name_ = name;
     *this->value_ptr_ = value;
   }
+};
+
+class StateHandle : public ReadOnlyHandle<StateHandle>
+{
+public:
+  StateHandle(const StateHandle & other) = delete;
+
+  StateHandle(StateHandle && other) = default;
+
+  using ReadOnlyHandle<StateHandle>::ReadOnlyHandle;
+};
+
+class CommandHandle : public ReadWriteHandle<CommandHandle>
+{
+public:
+
+  using ReadWriteHandle<CommandHandle>::ReadWriteHandle;
 };
 
 }  // namespace hardware_interface

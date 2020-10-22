@@ -17,6 +17,7 @@
 
 #include <memory>
 
+#include "hardware_interface/handle.hpp"
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/hardware_interface_status_values.hpp"
@@ -34,17 +35,34 @@ class Actuator final
 public:
   Actuator() = default;
 
+  HARDWARE_INTERFACE_PUBLIC
   explicit Actuator(std::unique_ptr<ActuatorInterface> impl);
 
   ~Actuator() = default;
 
+  HARDWARE_INTERFACE_PUBLIC
   return_type configure(const HardwareInfo & actuator_info);
 
+  HARDWARE_INTERFACE_PUBLIC
+  std::vector<StateHandle> export_state_handles();
+
+  HARDWARE_INTERFACE_PUBLIC
+  std::vector<CommandHandle> export_command_handles();
+
+  HARDWARE_INTERFACE_PUBLIC
   return_type start();
 
+  HARDWARE_INTERFACE_PUBLIC
   return_type stop();
 
+  HARDWARE_INTERFACE_PUBLIC
   status get_status() const;
+
+  HARDWARE_INTERFACE_PUBLIC
+  return_type read();
+
+  HARDWARE_INTERFACE_PUBLIC
+  return_type write();
 
 private:
   std::unique_ptr<ActuatorInterface> impl_;

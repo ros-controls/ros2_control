@@ -20,6 +20,7 @@
 #include <utility>
 #include <vector>
 
+#include "hardware_interface/handle.hpp"
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/hardware_interface_status_values.hpp"
@@ -44,6 +45,12 @@ public:
   return_type configure(const HardwareInfo & system_info);
 
   HARDWARE_INTERFACE_PUBLIC
+  std::vector<StateHandle> export_state_handles();
+
+  HARDWARE_INTERFACE_PUBLIC
+  std::vector<CommandHandle> export_command_handles();
+
+  HARDWARE_INTERFACE_PUBLIC
   return_type start();
 
   HARDWARE_INTERFACE_PUBLIC
@@ -51,6 +58,12 @@ public:
 
   HARDWARE_INTERFACE_PUBLIC
   status get_status() const;
+
+  HARDWARE_INTERFACE_PUBLIC
+  return_type read();
+
+  HARDWARE_INTERFACE_PUBLIC
+  return_type write();
 
 private:
   std::unique_ptr<SystemInterface> impl_;

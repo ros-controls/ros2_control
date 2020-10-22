@@ -20,24 +20,11 @@
 namespace hardware_interface
 {
 /** A handle used to get and set a value on a given joint interface. */
-class JointHandle : public Handle<JointHandle>
+class JointHandle : public ReadWriteHandle<JointHandle>
 {
 public:
-  using Handle<JointHandle>::Handle;
+  using ReadWriteHandle<JointHandle>::ReadWriteHandle;
 };
-
-class JointCommandHandle : public Handle<JointCommandHandle>
-{
-public:
-  using Handle<JointCommandHandle>::Handle;
-};
-
-class JointStateHandle : public ReadOnlyHandle<JointStateHandle>
-{
-public:
-  using ReadOnlyHandle<JointStateHandle>::ReadOnlyHandle;
-};
-
 }  // namespace hardware_interface
 
 #endif  // HARDWARE_INTERFACE__JOINT_HANDLE_HPP_
