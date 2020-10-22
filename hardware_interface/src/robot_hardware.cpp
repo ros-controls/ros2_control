@@ -20,7 +20,7 @@
 
 #include "hardware_interface/macros.hpp"
 #include "hardware_interface/operation_mode_handle.hpp"
-#include "rclcpp/rclcpp.hpp"
+#include "rcutils/logging_macros.h"
 
 namespace
 {
@@ -43,16 +43,12 @@ return_type
 register_handle(std::vector<T *> & registered_handles, T * handle, const std::string & logger_name)
 {
   if (handle->get_name().empty()) {
-    RCLCPP_ERROR_STREAM(
-      rclcpp::get_logger(
-        logger_name), "cannot register handle! No name is specified");
+    RCUTILS_LOG_ERROR_NAMED(logger_name.c_str(), "cannot register handle! No name is specified");
     return return_type::ERROR;
   }
 
   if (!handle->valid_pointers()) {
-    RCLCPP_ERROR_STREAM(
-      rclcpp::get_logger(
-        logger_name), "cannot register handle! Points to nullptr!");
+    RCUTILS_LOG_ERROR_NAMED(logger_name.c_str(), "cannot register handle! Points to nullptr!");
     return return_type::ERROR;
   }
 
@@ -64,9 +60,7 @@ register_handle(std::vector<T *> & registered_handles, T * handle, const std::st
 
   // handle exists already
   if (handle_pos != registered_handles.end()) {
-    RCLCPP_ERROR_STREAM(
-      rclcpp::get_logger(logger_name),
-      "cannot register handle! Handle exists already");
+    RCUTILS_LOG_ERROR_NAMED(logger_name.c_str(), "cannot register handle! Handle exists already");
     return return_type::ERROR;
   }
   registered_handles.push_back(handle);
@@ -99,9 +93,7 @@ get_handle(
   T ** handle)
 {
   if (name.empty()) {
-    RCLCPP_ERROR_STREAM(
-      rclcpp::get_logger(logger_name),
-      "cannot get handle! No name given");
+    RCUTILS_LOG_ERROR_NAMED(logger_name.c_str(), "cannot get handle! No name given");
     return return_type::ERROR;
   }
 
@@ -112,9 +104,9 @@ get_handle(
     });
 
   if (handle_pos == registered_handles.end()) {
-    RCLCPP_ERROR_STREAM(
-      rclcpp::get_logger(
-        logger_name), "cannot get handle. No joint " << name << " found.");
+    RCUTILS_LOG_ERROR_NAMED(
+      logger_name.c_str(), "cannot get handle. No joint %s found.",
+      name.c_str());
     return return_type::ERROR;
   }
 
@@ -166,7 +158,7 @@ hardware_interface_ret_t register_handle(
   const std::string & logger_name)
 {
   if (handle_name.empty() || interface_name.empty()) {
-    RCLCPP_ERROR_STREAM(rclcpp::get_logger(logger_name), "handle name or interface is empty!");
+    RCUTILS_LOG_ERROR_NAMED(logger_name.c_str(), "handle name or interface is empty!");
     return return_type::ERROR;
   }
 
@@ -189,10 +181,9 @@ hardware_interface_ret_t register_handle(
       ivs.values.push_back(default_value);
       return return_type::OK;
     } else {
-      RCLCPP_ERROR_STREAM(
-        rclcpp::get_logger(logger_name), "handle with interface (" <<
-          handle_name << ":" << interface_name <<
-          ") is already registered!");
+      RCUTILS_LOG_ERROR_NAMED(
+        logger_name.c_str(), "handle with interface (%s: %s) is already registered!",
+        handle_name.c_str(), interface_name.c_str());
       return return_type::ERROR;
     }
   }
@@ -228,17 +219,16 @@ hardware_interface_ret_t get_handle(
   const auto & interface_name = handle.get_interface_name();
 
   if (handle_name.empty() || interface_name.empty()) {
-    RCLCPP_ERROR_STREAM(
-      rclcpp::get_logger(logger_name), "name or interface is ill-defined!");
+    RCUTILS_LOG_ERROR_NAMED(logger_name.c_str(), "name or interface is ill-defined!");
     return return_type::ERROR;
   }
 
   const auto & names_list = registered.joint_names;
   const auto it = std::find(names_list.cbegin(), names_list.cend(), handle_name);
   if (it == names_list.cend()) {
-    RCLCPP_ERROR_STREAM(
-      rclcpp::get_logger(
-        logger_name), "handle with name " << handle_name << " not found!");
+    RCUTILS_LOG_ERROR_NAMED(
+      logger_name.c_str(), "handle with name %s not found!",
+      handle_name.c_str());
     return return_type::ERROR;
   }
 
@@ -251,10 +241,9 @@ hardware_interface_ret_t get_handle(
     handle = handle.with_value_ptr(&(ivs.values[static_cast<size_t>(value_index)]));
     return return_type::OK;
   } else {
-    RCLCPP_ERROR_STREAM(
-      rclcpp::get_logger(
-        logger_name),
-      "handle with interface (" << handle_name << ":" << interface_name << ") wasn't found!");
+    RCUTILS_LOG_ERROR_NAMED(
+      logger_name.c_str(),
+      "handle with interface (%s: %s) wasn't found!", handle_name.c_str(), interface_name.c_str());
     return return_type::ERROR;
   }
 
