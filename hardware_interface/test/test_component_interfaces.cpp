@@ -250,8 +250,7 @@ TEST(TestComponentInterfaces, dummy_actuator)
   command_handles[0].set_value(1.0);  // velocity
   ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.write());
 
-  for (auto step = 1u; step <= 10; ++step)
-  {
+  for (auto step = 1u; step <= 10; ++step) {
     ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.read());
 
     ASSERT_EQ(step, state_handles[0].get_value());  // position value
@@ -313,8 +312,7 @@ TEST(TestComponentInterfaces, dummy_system)
   command_handles[2].set_value(1.0);  // velocity
   ASSERT_EQ(hardware_interface::return_type::OK, system_hw.write());
 
-  for (auto step = 1u; step <= 10; ++step)
-  {
+  for (auto step = 1u; step <= 10; ++step) {
     ASSERT_EQ(hardware_interface::return_type::OK, system_hw.read());
 
     ASSERT_EQ(step, state_handles[0].get_value());  // position value
@@ -327,4 +325,3 @@ TEST(TestComponentInterfaces, dummy_system)
     ASSERT_EQ(hardware_interface::return_type::OK, system_hw.write());
   }
 }
-

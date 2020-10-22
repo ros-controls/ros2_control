@@ -16,6 +16,7 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "hardware_interface/components/actuator.hpp"
 #include "hardware_interface/components/actuator_interface.hpp"

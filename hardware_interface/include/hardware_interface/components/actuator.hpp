@@ -16,6 +16,7 @@
 #define HARDWARE_INTERFACE__COMPONENTS__ACTUATOR_HPP_
 
 #include <memory>
+#include <vector>
 
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/hardware_info.hpp"
