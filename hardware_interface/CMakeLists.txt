@@ -12,8 +12,8 @@ endif()
 
 find_package(ament_cmake REQUIRED)
 find_package(control_msgs REQUIRED)
-find_package(rclcpp REQUIRED)
 find_package(rcpputils REQUIRED)
+find_package(rcutils REQUIRED)
 find_package(tinyxml2_vendor REQUIRED)
 find_package(TinyXML2 REQUIRED)
 
@@ -34,7 +34,7 @@ target_include_directories(
 ament_target_dependencies(
   hardware_interface
   control_msgs
-  rclcpp
+  rcutils
   rcpputils
 )
 # Causes the visibility macros to use dllexport rather than dllimport,
@@ -128,10 +128,6 @@ if(BUILD_TESTING)
   ament_target_dependencies(test_component_parser TinyXML2)
 endif()
 
-ament_export_dependencies(
-  rclcpp
-  rcpputils
-)
 ament_export_include_directories(
   include
 )
@@ -142,7 +138,6 @@ ament_export_libraries(
 )
 ament_export_dependencies(
   control_msgs
-  rclcpp
   rcpputils
   tinyxml2_vendor
   TinyXML2
