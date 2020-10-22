@@ -32,7 +32,7 @@ public:
     const std::string & name,
     const std::string & interface_name,
     double * value_ptr = nullptr)
-  : name_(name), interface_name_(interface_name), value_ptr_(value_ptr)
+  : name_(std::move(name)), interface_name_(std::move(interface_name)), value_ptr_(value_ptr)
   {
   }
 
