@@ -15,11 +15,7 @@
 #ifndef HARDWARE_INTERFACE__JOINT_HANDLE_HPP_
 #define HARDWARE_INTERFACE__JOINT_HANDLE_HPP_
 
-#include <string>
-
 #include "hardware_interface/handle.hpp"
-#include "hardware_interface/macros.hpp"
-#include "hardware_interface/visibility_control.h"
 
 namespace hardware_interface
 {
@@ -28,6 +24,18 @@ class JointHandle : public Handle<JointHandle>
 {
 public:
   using Handle<JointHandle>::Handle;
+};
+
+class JointCommandHandle : public Handle<JointCommandHandle>
+{
+public:
+  using Handle<JointCommandHandle>::Handle;
+};
+
+class JointStateHandle : public ReadOnlyHandle<JointStateHandle>
+{
+public:
+  using ReadOnlyHandle<JointStateHandle>::ReadOnlyHandle;
 };
 
 }  // namespace hardware_interface

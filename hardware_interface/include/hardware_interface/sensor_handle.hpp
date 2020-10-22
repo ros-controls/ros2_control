@@ -12,24 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef HARDWARE_INTERFACE__ACTUATOR_HANDLE_HPP_
-#define HARDWARE_INTERFACE__ACTUATOR_HANDLE_HPP_
-
-#include <string>
+#ifndef HARDWARE_INTERFACE__SENSOR_HANDLE_HPP_
+#define HARDWARE_INTERFACE__SENSOR_HANDLE_HPP_
 
 #include "hardware_interface/handle.hpp"
-#include "hardware_interface/macros.hpp"
-#include "hardware_interface/visibility_control.h"
 
 namespace hardware_interface
 {
-/** A handle used to get and set a value on a given actuator interface. */
-class ActuatorHandle : public Handle<ActuatorHandle>
+/** A handle used to get a value on a given sensor interface. */
+class SensorHandle : public ReadOnlyHandle<SensorHandle>
 {
 public:
-  using Handle<ActuatorHandle>::Handle;
+  using ReadOnlyHandle<SensorHandle>::ReadOnlyHandle;
 };
 
 }  // namespace hardware_interface
 
-#endif  // HARDWARE_INTERFACE__ACTUATOR_HANDLE_HPP_
+#endif  // HARDWARE_INTERFACE__SENSOR_HANDLE_HPP_
