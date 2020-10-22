@@ -53,7 +53,7 @@ protected:
    * \param[out] joints resulting list of joints in the transmission
    * \return true if successful
    */
-  static bool parseJoints(TiXmlElement * trans_it, std::vector<JointInfo> & joints);
+  static bool parse_joints(TiXmlElement * trans_it, std::vector<JointInfo> & joints);
 
   /**
    * \brief Parses the actuator elements within transmission elements of a URDF
@@ -61,7 +61,7 @@ protected:
    * \param[out] actuators resulting list of actuators in the transmission
    * \return true if successful
    */
-  static bool parseActuators(TiXmlElement * trans_it, std::vector<ActuatorInfo> & actuators);
+  static bool parse_actuators(TiXmlElement * trans_it, std::vector<ActuatorInfo> & actuators);
 };  // class
 
 
@@ -73,7 +73,6 @@ protected:
  */
 TRANSMISSION_INTERFACE_PUBLIC
 std::vector<TransmissionInfo> parse_transmissions_from_urdf(const std::string & urdf);
-
 }  // namespace transmission_interface
 
 #endif  // TRANSMISSION_INTERFACE__TRANSMISSION_PARSER_HPP_

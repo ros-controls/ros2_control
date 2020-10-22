@@ -15,7 +15,6 @@
 #ifndef TRANSMISSION_INTERFACE__TRANSMISSION_INFO_HPP_
 #define TRANSMISSION_INTERFACE__TRANSMISSION_INFO_HPP_
 
-// C++ standard
 #include <vector>
 #include <string>
 

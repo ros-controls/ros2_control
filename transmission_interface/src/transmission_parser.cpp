@@ -14,12 +14,11 @@
 
 #include <transmission_interface/transmission_parser.hpp>
 
-// ROS
-#include <rclcpp/rclcpp.hpp>
-
 #include <sstream>
 #include <string>
 #include <vector>
+
+#include "rclcpp/rclcpp.hpp"
 
 
 namespace transmission_interface
@@ -74,8 +73,8 @@ bool TransmissionParser::parse(
     TiXmlElement * type_child = trans_it->FirstChildElement("type");
     if (!type_child) {
       RCLCPP_ERROR_STREAM(
-        g_logger, "No type element found in transmission '" <<
-          transmission.name << "'.");
+        g_logger,
+        "No type element found in transmission '" << transmission.name << "'.");
       throw std::runtime_error("No type element found in transmission");
     }
     if (!type_child->GetText()) {
@@ -87,7 +86,7 @@ bool TransmissionParser::parse(
     transmission.control_type = type_child->GetText();
 
     // Load joints
-    if (!parseJoints(trans_it, transmission.joints)) {
+    if (!parse_joints(trans_it, transmission.joints)) {
       RCLCPP_ERROR_STREAM(
         g_logger, "Failed to load joints for transmission '" <<
           transmission.name << "'.");
@@ -95,7 +94,7 @@ bool TransmissionParser::parse(
     }
 
     // Load actuators
-    if (!parseActuators(trans_it, transmission.actuators)) {
+    if (!parse_actuators(trans_it, transmission.actuators)) {
       RCLCPP_ERROR_STREAM(
         g_logger, "Failed to load actuators for transmission '" <<
           transmission.name << "'.");
@@ -113,7 +112,7 @@ bool TransmissionParser::parse(
   return true;
 }
 
-bool TransmissionParser::parseJoints(TiXmlElement * trans_it, std::vector<JointInfo> & joints)
+bool TransmissionParser::parse_joints(TiXmlElement * trans_it, std::vector<JointInfo> & joints)
 {
   // Loop through each available joint
   TiXmlElement * joint_it = nullptr;
@@ -180,7 +179,7 @@ bool TransmissionParser::parseJoints(TiXmlElement * trans_it, std::vector<JointI
   return true;
 }
 
-bool TransmissionParser::parseActuators(
+bool TransmissionParser::parse_actuators(
   TiXmlElement * trans_it,
   std::vector<ActuatorInfo> & actuators)
 {
