@@ -8,15 +8,12 @@ coverage:
         informational: true
         flags:
           - unittests
-    patch:
-      default:
-        informational: true
-        flags:
-          - unittests
+    patch: off
 fixes:
   - "ros_ws/src/ros2_control/::"
 comment:
   layout: "diff, flags, files"
+  behavior: default
 flags:
   unittests:
     paths:
