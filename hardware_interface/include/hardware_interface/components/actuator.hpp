@@ -39,6 +39,8 @@ public:
   HARDWARE_INTERFACE_PUBLIC
   explicit Actuator(std::unique_ptr<ActuatorInterface> impl);
 
+  Actuator(Actuator && other) = default;
+
   ~Actuator() = default;
 
   HARDWARE_INTERFACE_PUBLIC

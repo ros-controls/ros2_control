@@ -41,6 +41,8 @@ public:
   HARDWARE_INTERFACE_PUBLIC
   explicit Sensor(std::unique_ptr<SensorInterface> impl);
 
+  Sensor(Sensor && other) = default;
+
   ~Sensor() = default;
 
   HARDWARE_INTERFACE_PUBLIC
