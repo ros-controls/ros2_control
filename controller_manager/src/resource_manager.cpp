@@ -15,6 +15,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <unordered_map>
 #include <utility>
 
 #include "hardware_interface/components/actuator.hpp"
@@ -66,7 +67,28 @@ public:
       loader.createUnmanagedInstance(hardware_info.hardware_class_type));
     HardwareT actuator(std::move(interface));
     container.emplace_back(std::move(actuator));
-    container.back().configure(hardware_info);
+  }
+
+  template<class HardwareT>
+  void import_state_handles(HardwareT & hardware)
+  {
+    auto handles = hardware.export_state_handles();
+    for (auto i = 0u; i < handles.size(); ++i) {
+      auto key = handles[i].get_name() + "/" + handles[i].get_interface_name();
+      state_handle_map_.emplace(
+        std::make_pair(key, std::move(handles[i])));
+    }
+  }
+
+  template<class HardwareT>
+  void import_command_handles(HardwareT & hardware)
+  {
+    auto handles = hardware.export_command_handles();
+    for (auto i = 0u; i < handles.size(); ++i) {
+      auto key = handles[i].get_name() + "/" + handles[i].get_interface_name();
+      command_handle_map_.emplace(
+        std::make_pair(key, std::move(handles[i])));
+    }
   }
 
   void initialize_actuator(const hardware_interface::HardwareInfo & hardware_info)
@@ -74,6 +96,9 @@ public:
     initialize_hardware<hardware_interface::components::Actuator,
       hardware_interface::components::ActuatorInterface>(
       hardware_info, actuator_loader_, actuators_);
+    actuators_.back().configure(hardware_info);
+    import_state_handles(actuators_.back());
+    import_command_handles(actuators_.back());
   }
 
   void initialize_sensor(const hardware_interface::HardwareInfo & hardware_info)
@@ -81,6 +106,8 @@ public:
     initialize_hardware<hardware_interface::components::Sensor,
       hardware_interface::components::SensorInterface>(
       hardware_info, sensor_loader_, sensors_);
+    sensors_.back().configure(hardware_info);
+    import_state_handles(sensors_.back());
   }
 
   void initialize_system(const hardware_interface::HardwareInfo & hardware_info)
@@ -88,6 +115,9 @@ public:
     initialize_hardware<hardware_interface::components::System,
       hardware_interface::components::SystemInterface>(
       hardware_info, system_loader_, systems_);
+    systems_.back().configure(hardware_info);
+    import_state_handles(systems_.back());
+    import_command_handles(systems_.back());
   }
 
   // hardware plugins
@@ -98,6 +128,9 @@ public:
   std::vector<hardware_interface::components::Actuator> actuators_;
   std::vector<hardware_interface::components::Sensor> sensors_;
   std::vector<hardware_interface::components::System> systems_;
+
+  std::unordered_map<std::string, hardware_interface::StateHandle> state_handle_map_;
+  std::unordered_map<std::string, hardware_interface::CommandHandle> command_handle_map_;
 };
 
 ResourceManager::ResourceManager()
@@ -126,6 +159,24 @@ ResourceManager::ResourceManager(const std::string & urdf)
       resource_storage_->initialize_system(hardware);
     }
   }
+}
+
+std::vector<std::string> ResourceManager::state_handle_keys() const
+{
+  std::vector<std::string> keys;
+  for (const auto & item : resource_storage_->state_handle_map_) {
+    keys.push_back(std::get<0>(item));
+  }
+  return keys;
+}
+
+std::vector<std::string> ResourceManager::command_handle_keys() const
+{
+  std::vector<std::string> keys;
+  for (const auto & item : resource_storage_->command_handle_map_) {
+    keys.push_back(std::get<0>(item));
+  }
+  return keys;
 }
 
 size_t ResourceManager::actuator_interfaces_size() const

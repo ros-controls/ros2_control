@@ -33,6 +33,10 @@ class TestActuator : public hardware_interface::components::ActuatorInterface
   std::vector<StateHandle> export_state_handles() override
   {
     std::vector<StateHandle> state_handles;
+    state_handles.emplace_back(
+      hardware_interface::StateHandle("joint1", "position", &position_state_));
+    state_handles.emplace_back(
+      hardware_interface::StateHandle("joint1", "velocity", &velocity_state_));
 
     return state_handles;
   }
@@ -40,6 +44,8 @@ class TestActuator : public hardware_interface::components::ActuatorInterface
   std::vector<CommandHandle> export_command_handles() override
   {
     std::vector<CommandHandle> command_handles;
+    command_handles.emplace_back(
+      hardware_interface::CommandHandle("joint1", "velocity", &velocity_command_));
 
     return command_handles;
   }
@@ -70,6 +76,9 @@ class TestActuator : public hardware_interface::components::ActuatorInterface
   }
 
 private:
+  double position_state_ = 0.0;
+  double velocity_state_ = 0.0;
+  double velocity_command_ = 0.0;
   hardware_interface::HardwareInfo actuator_info_;
 };
 

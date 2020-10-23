@@ -17,6 +17,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 namespace controller_manager
 {
@@ -34,14 +35,15 @@ public:
 
   ~ResourceManager();
 
+  std::vector<std::string> state_handle_keys() const;
+
+  std::vector<std::string> command_handle_keys() const;
+
   size_t actuator_interfaces_size() const;
 
   size_t sensor_interfaces_size() const;
 
   size_t system_interfaces_size() const;
-
-  // loan_joint(const std::string & name);
-  // loan_sensor(const std::string & name);
 
 private:
   std::unique_ptr<ResourceStorage> resource_storage_;
