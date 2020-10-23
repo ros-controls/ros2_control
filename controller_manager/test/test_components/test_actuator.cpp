@@ -27,6 +27,12 @@ class TestActuator : public hardware_interface::components::ActuatorInterface
   return_type configure(const hardware_interface::HardwareInfo & actuator_info) override
   {
     actuator_info_ = actuator_info;
+    for (const auto & joint : actuator_info_.joints) {
+      fprintf(stderr, "joint info: %s\n", joint.name.c_str());
+      for (const auto & command_interface : joint.command_interfaces) {
+        fprintf(stderr, "\t%s\n", command_interface.name.c_str());
+      }
+    }
     return return_type::OK;
   }
 
