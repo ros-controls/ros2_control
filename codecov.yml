@@ -6,9 +6,13 @@ coverage:
     project:
       default:
         informational: true
+        flags:
+          - unittests
     patch:
       default:
         informational: true
+        flags:
+          - unittests
 fixes:
   - "ros_ws/src/ros2_control/::"
 comment:
