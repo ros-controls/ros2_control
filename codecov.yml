@@ -20,9 +20,9 @@ comment:
 flags:
   unittests:
     paths:
-      - src/controller_interface
-      - src/controller_manager
-      - src/hardware_interface
-      - src/joint_limits_interface
-      - src/test_robot_hardware
-      - src/transmission_interface
+      - controller_interface
+      - controller_manager
+      - hardware_interface
+      - joint_limits_interface
+      - test_robot_hardware
+      - transmission_interface
