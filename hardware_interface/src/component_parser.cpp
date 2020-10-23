@@ -27,15 +27,17 @@ namespace
 constexpr const auto kRobotTag = "robot";
 constexpr const auto kROS2ControlTag = "ros2_control";
 constexpr const auto kHardwareTag = "hardware";
-constexpr const auto kClassTypeTag = "classType";
+constexpr const auto kClassTypeTag = "plugin";
 constexpr const auto kParamTag = "param";
 constexpr const auto kJointTag = "joint";
 constexpr const auto kSensorTag = "sensor";
 constexpr const auto kTransmissionTag = "transmission";
-constexpr const auto kCommandInterfaceTypeTag = "commandInterfaceType";
-constexpr const auto kStateInterfaceTypeTag = "stateInterfaceType";
+constexpr const auto kCommandInterfaceTag = "command_interface";
+constexpr const auto kStateInterfaceTag = "state_interface";
 constexpr const auto kMinTag = "min";
 constexpr const auto kMaxTag = "max";
+constexpr const auto kNameAttribute = "name";
+constexpr const auto kTypeAttribute = "type";
 }  // namespace
 
 namespace hardware_interface
@@ -118,11 +120,11 @@ std::unordered_map<std::string, std::string> parse_parameters_from_xml(
 
   while (params_it) {
     // Fill the map with parameters
-    attr = params_it->FindAttribute("name");
+    attr = params_it->FindAttribute(kNameAttribute);
     if (!attr) {
       throw std::runtime_error("no parameter name attribute set in param tag");
     }
-    const std::string parameter_name = params_it->Attribute("name");
+    const std::string parameter_name = params_it->Attribute(kNameAttribute);
     const std::string parameter_value = get_text_for_element(params_it, parameter_name);
     parameters[parameter_name] = parameter_value;
 
@@ -139,47 +141,29 @@ std::unordered_map<std::string, std::string> parse_parameters_from_xml(
  * \return std::vector< std::__cxx11::string > list of interface types
  * \throws std::runtime_error if the interfaceType text not set in a tag
  */
-std::vector<InterfaceInfo> parse_interfaces_from_xml(
-  const tinyxml2::XMLElement * interfaces_it, const char * interfaceTag)
+components::InterfaceInfo parse_interfaces_from_xml(
+  const tinyxml2::XMLElement * interfaces_it)
 {
-  std::vector<InterfaceInfo> interfaces;
+  hardware_interface::components::InterfaceInfo interface;
 
-  while (interfaces_it) {
-    hardware_interface::InterfaceInfo interface;
+  const std::string interface_name = get_attribute_value(
+    interfaces_it, kNameAttribute, interfaces_it->Name());
+  interface.name = interface_name;
 
-    // Joint interfaces have a name attribute
-    if (std::string(interfaceTag) == "commandInterfaceType") {
-      const std::string interface_name = get_attribute_value(
-        interfaces_it, "name",
-        std::string(interfaceTag));
-      interface.name = interface_name;
-
-      // Optional min/max attributes
-      std::unordered_map<std::string, std::string> interface_params =
-        parse_parameters_from_xml(interfaces_it->FirstChildElement(kParamTag));
-      std::unordered_map<std::string, std::string>::const_iterator interface_param =
-        interface_params.find(kMinTag);
-      if (interface_param != interface_params.end()) {
-        interface.min = interface_param->second;
-      }
-      interface_param = interface_params.find(kMaxTag);
-      if (interface_param != interface_params.end()) {
-        interface.max = interface_param->second;
-      }
-    }
-    // State interfaces have an element to define the type, not a name attribute
-    if (std::string(interfaceTag) == "stateInterfaceType") {
-      const std::string interface_type = get_text_for_element(
-        interfaces_it,
-        std::string(interfaceTag) + " type ");
-      interface.name = interface_type;
-    }
-
-    interfaces.push_back(interface);
-    interfaces_it = interfaces_it->NextSiblingElement(interfaceTag);
+  // Optional min/max attributes
+  std::unordered_map<std::string, std::string> interface_params =
+    parse_parameters_from_xml(interfaces_it->FirstChildElement(kParamTag));
+  std::unordered_map<std::string, std::string>::const_iterator interface_param =
+    interface_params.find(kMinTag);
+  if (interface_param != interface_params.end()) {
+    interface.min = interface_param->second;
+  }
+  interface_param = interface_params.find(kMaxTag);
+  if (interface_param != interface_params.end()) {
+    interface.max = interface_param->second;
   }
 
-  return interfaces;
+  return interface;
 }
 
 /**
@@ -195,29 +179,23 @@ ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it
 
   // Find name, type and class of a component
   component.type = component_it->Name();
-  component.name = get_attribute_value(component_it, "name", component.type);
+  component.name = get_attribute_value(component_it, kNameAttribute, component.type);
 
-  const auto * classType_it = component_it->FirstChildElement(kClassTypeTag);
-  if (!classType_it) {
-    throw std::runtime_error("no class type tag found in " + component.name);
-  }
-  component.class_type = get_text_for_element(classType_it, component.name + " " + kClassTypeTag);
-
-  // Parse commandInterfaceType tags
-  const auto * command_interfaces_it = component_it->FirstChildElement(kCommandInterfaceTypeTag);
-  if (command_interfaces_it) {
-    component.command_interfaces = parse_interfaces_from_xml(
-      command_interfaces_it, kCommandInterfaceTypeTag);
+  // Parse all command interfaces
+  const auto * command_interfaces_it = component_it->FirstChildElement(kCommandInterfaceTag);
+  while (command_interfaces_it) {
+    component.command_interfaces.push_back(parse_interfaces_from_xml(command_interfaces_it));
+    command_interfaces_it = command_interfaces_it->NextSiblingElement(kCommandInterfaceTag);
   }
 
-  // Parse stateInterfaceType tags
-  const auto * state_interfaces_it = component_it->FirstChildElement(kStateInterfaceTypeTag);
-  if (state_interfaces_it) {
-    component.state_interfaces = parse_interfaces_from_xml(
-      state_interfaces_it, kStateInterfaceTypeTag);
+  // Parse state interfaces
+  const auto * state_interfaces_it = component_it->FirstChildElement(kStateInterfaceTag);
+  while (state_interfaces_it) {
+    component.state_interfaces.push_back(parse_interfaces_from_xml(state_interfaces_it));
+    state_interfaces_it = state_interfaces_it->NextSiblingElement(kStateInterfaceTag);
   }
 
-  // Parse paramter tags
+  // Parse parameters
   const auto * params_it = component_it->FirstChildElement(kParamTag);
   if (params_it) {
     component.parameters = parse_parameters_from_xml(params_it);
@@ -236,8 +214,8 @@ ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it
 HardwareInfo parse_resource_from_xml(const tinyxml2::XMLElement * ros2_control_it)
 {
   HardwareInfo hardware;
-  hardware.name = get_attribute_value(ros2_control_it, "name", kROS2ControlTag);
-  hardware.type = get_attribute_value(ros2_control_it, "type", kROS2ControlTag);
+  hardware.name = get_attribute_value(ros2_control_it, kNameAttribute, kROS2ControlTag);
+  hardware.type = get_attribute_value(ros2_control_it, kTypeAttribute, kROS2ControlTag);
 
   // Parse everything under ros2_control tag
   hardware.hardware_class_type = "";
