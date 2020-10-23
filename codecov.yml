@@ -10,4 +10,13 @@ coverage:
 fixes:
   - "ros_ws/src/ros2_control/::"
 comment:
-  layout: "diff, files"
+  layout: "diff, flags, files"
+flags:
+  unittests:
+    paths:
+      - src/controller_interface
+      - src/controller_manager
+      - src/hardware_interface
+      - src/joint_limits_interface
+      - src/test_robot_hardware
+      - src/transmission_interface
