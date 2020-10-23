@@ -4,9 +4,9 @@ coverage:
   range: "35...100"
   status:
     project:
-      default: false
+      informational: true
     patch:
-      default: false
+      informational: true
 fixes:
   - "ros_ws/src/ros2_control/::"
 comment:
