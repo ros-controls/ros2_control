@@ -38,7 +38,7 @@ public:
   HARDWARE_INTERFACE_PUBLIC
   explicit System(std::unique_ptr<SystemInterface> impl);
 
-  virtual ~System() = default;
+  ~System() = default;
 
   HARDWARE_INTERFACE_PUBLIC
   return_type configure(const HardwareInfo & system_info);

@@ -23,7 +23,6 @@
 #include "hardware_interface/components/system_interface.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/hardware_interface_status_values.hpp"
-#include "hardware_interface/visibility_control.h"
 
 namespace hardware_interface
 {
