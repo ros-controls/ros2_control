@@ -2,5 +2,12 @@ coverage:
   precision: 2
   round: down
   range: "35...100"
+  status:
+    project:
+      default: false
+    patch:
+      default: false
 fixes:
   - "ros_ws/src/ros2_control/::"
+comment:
+  layout: "diff, files"
