@@ -28,7 +28,7 @@ namespace transmission_interface
 struct JointInfo
 {
   std::string name;
-  std::vector<std::string> hardware_interfaces;
+  std::vector<std::string> interfaces;
   std::string role;
 };
 
@@ -38,7 +38,7 @@ struct JointInfo
 struct ActuatorInfo
 {
   std::string name;
-  std::vector<std::string> hardware_interfaces;
+  std::vector<std::string> interfaces;
   double mechanical_reduction;
 };
 
@@ -48,7 +48,7 @@ struct ActuatorInfo
 struct TransmissionInfo
 {
   std::string name;
-  std::string control_type;
+  std::string type;
   std::vector<JointInfo> joints;
   std::vector<ActuatorInfo> actuators;
 };

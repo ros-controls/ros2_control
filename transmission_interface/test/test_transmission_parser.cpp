@@ -16,7 +16,6 @@
 #include <string>
 #include <vector>
 
-#include "hardware_interface/control_type.hpp"
 #include "transmission_interface/transmission_parser.hpp"
 
 using namespace ::testing;  // NOLINT
@@ -383,45 +382,43 @@ public:
   std::string wrong_urdf_xml_;
 };
 
-using transmission_interface::TransmissionParser;
+using transmission_interface::parse_transmissions_from_urdf;
 using transmission_interface::TransmissionInfo;
 
 TEST_F(TestTransmissionParser, successfully_parse_valid_urdf)
 {
-  TransmissionParser parser;
-  std::vector<TransmissionInfo> transmissions;
-  EXPECT_TRUE(parser.parse(valid_urdf_xml_, transmissions));
+  const auto transmissions = parse_transmissions_from_urdf(valid_urdf_xml_);
 
   ASSERT_THAT(transmissions, SizeIs(2));
 
   // first transmission
   EXPECT_EQ("rrbot_tran1", transmissions[0].name);
-  EXPECT_EQ("transmission_interface/SimpleTransmission", transmissions[0].control_type);
+  EXPECT_EQ("transmission_interface/SimpleTransmission", transmissions[0].type);
 
   ASSERT_THAT(transmissions[0].joints, SizeIs(1));
-  ASSERT_THAT(transmissions[0].joints[0].hardware_interfaces, SizeIs(1));
+  ASSERT_THAT(transmissions[0].joints[0].interfaces, SizeIs(1));
   EXPECT_EQ("rrbot_joint1", transmissions[0].joints[0].name);
-  EXPECT_EQ("PositionJointInterface", transmissions[0].joints[0].hardware_interfaces[0]);
+  EXPECT_EQ("PositionJointInterface", transmissions[0].joints[0].interfaces[0]);
 
   ASSERT_THAT(transmissions[0].actuators, SizeIs(1));
-  ASSERT_THAT(transmissions[0].actuators[0].hardware_interfaces, SizeIs(1));
+  ASSERT_THAT(transmissions[0].actuators[0].interfaces, SizeIs(1));
   EXPECT_EQ("rrbot_motor1", transmissions[0].actuators[0].name);
-  EXPECT_EQ("PositionJointInterface", transmissions[0].actuators[0].hardware_interfaces[0]);
+  EXPECT_EQ("PositionJointInterface", transmissions[0].actuators[0].interfaces[0]);
   EXPECT_EQ(1, transmissions[0].actuators[0].mechanical_reduction);
 
   // second transmission
   EXPECT_EQ("rrbot_tran2", transmissions[1].name);
-  EXPECT_EQ("transmission_interface/SimpleTransmission", transmissions[1].control_type);
+  EXPECT_EQ("transmission_interface/SimpleTransmission", transmissions[1].type);
 
   ASSERT_THAT(transmissions[1].joints, SizeIs(1));
-  ASSERT_THAT(transmissions[1].joints[0].hardware_interfaces, SizeIs(1));
+  ASSERT_THAT(transmissions[1].joints[0].interfaces, SizeIs(1));
   EXPECT_EQ("rrbot_joint2", transmissions[1].joints[0].name);
-  EXPECT_EQ("VelocityJointInterface", transmissions[1].joints[0].hardware_interfaces[0]);
+  EXPECT_EQ("VelocityJointInterface", transmissions[1].joints[0].interfaces[0]);
 
   ASSERT_THAT(transmissions[1].actuators, SizeIs(1));
-  ASSERT_THAT(transmissions[1].actuators[0].hardware_interfaces, SizeIs(1));
+  ASSERT_THAT(transmissions[1].actuators[0].interfaces, SizeIs(1));
   EXPECT_EQ("rrbot_motor2", transmissions[1].actuators[0].name);
-  EXPECT_EQ("VelocityJointInterface", transmissions[1].actuators[0].hardware_interfaces[0]);
+  EXPECT_EQ("VelocityJointInterface", transmissions[1].actuators[0].interfaces[0]);
   EXPECT_EQ(60, transmissions[1].actuators[0].mechanical_reduction);
 }
 
@@ -434,15 +431,9 @@ TEST_F(TestTransmissionParser, empty_string_throws_error)
 
 TEST_F(TestTransmissionParser, empty_urdf_returns_empty)
 {
-  auto transmissions = transmission_interface::parse_transmissions_from_urdf(
+  const auto transmissions = transmission_interface::parse_transmissions_from_urdf(
     "<?xml version=\"1.0\"?><robot name=\"robot\" xmlns=\"http://www.ros.org\"></robot>");
   ASSERT_THAT(transmissions, IsEmpty());
-}
-
-TEST_F(TestTransmissionParser, simpler_parse_transmissions_from_urdf_returns_list)
-{
-  const auto transmissions = transmission_interface::parse_transmissions_from_urdf(valid_urdf_xml_);
-  ASSERT_THAT(transmissions, SizeIs(2));
 }
 
 TEST_F(TestTransmissionParser, wrong_urdf_throws_error)
