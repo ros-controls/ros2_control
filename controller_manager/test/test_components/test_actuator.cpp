@@ -27,12 +27,13 @@ class TestActuator : public hardware_interface::components::ActuatorInterface
   return_type configure(const hardware_interface::HardwareInfo & actuator_info) override
   {
     actuator_info_ = actuator_info;
-    for (const auto & joint : actuator_info_.joints) {
-      fprintf(stderr, "joint info: %s\n", joint.name.c_str());
-      for (const auto & command_interface : joint.command_interfaces) {
-        fprintf(stderr, "\t%s\n", command_interface.name.c_str());
-      }
-    }
+    // can only control one joint
+    if (actuator_info_.joints.size() != 1) {return return_type::ERROR;}
+    // can only control in position
+    if (actuator_info_.joints[0].command_interfaces.size() != 1) {return return_type::ERROR;}
+    // can only give feedback state for position and velocity
+    if (actuator_info_.joints[0].state_interfaces.size() != 2) {return return_type::ERROR;}
+
     return return_type::OK;
   }
 
@@ -40,9 +41,15 @@ class TestActuator : public hardware_interface::components::ActuatorInterface
   {
     std::vector<StateHandle> state_handles;
     state_handles.emplace_back(
-      hardware_interface::StateHandle("joint1", "position", &position_state_));
+      hardware_interface::StateHandle(
+        actuator_info_.joints[0].name,
+        actuator_info_.joints[0].state_interfaces[0].name,
+        &position_state_));
     state_handles.emplace_back(
-      hardware_interface::StateHandle("joint1", "velocity", &velocity_state_));
+      hardware_interface::StateHandle(
+        actuator_info_.joints[0].name,
+        actuator_info_.joints[0].state_interfaces[1].name,
+        &velocity_state_));
 
     return state_handles;
   }
@@ -51,7 +58,10 @@ class TestActuator : public hardware_interface::components::ActuatorInterface
   {
     std::vector<CommandHandle> command_handles;
     command_handles.emplace_back(
-      hardware_interface::CommandHandle("joint1", "velocity", &velocity_command_));
+      hardware_interface::CommandHandle(
+        actuator_info_.joints[0].name,
+        actuator_info_.joints[0].command_interfaces[0].name,
+        &velocity_command_));
 
     return command_handles;
   }

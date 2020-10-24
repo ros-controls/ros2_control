@@ -35,14 +35,50 @@ public:
 
   ~ResourceManager();
 
+  /// Returns all registered state handles keys.
+  /**
+   * The keys are collected from each loaded hardware component.
+   *
+   * \return vector of strings, containing all registered keys.
+   */
   std::vector<std::string> state_handle_keys() const;
 
+  /// Checks whether a handle is registered under the given key.
+  /**
+   * \return true if handle exist, false otherwise.
+   */
+  bool state_handle_exists(const std::string & key) const;
+
+  /// Returns all registered command handles keys.
+  /**
+   * The keys are collected from each loaded hardware component.
+   *
+   * \return vector of strings, containing all registered keys.
+   */
   std::vector<std::string> command_handle_keys() const;
 
+  /// Checks whether a handle is registered under the given key.
+  /**
+   * \return true if handle exist, false otherwise.
+   */
+  bool command_handle_exists(const std::string & key) const;
+
+  /// Return the number of loaded actuator components.
+  /**
+   * \return number of actuator components.
+   */
   size_t actuator_interfaces_size() const;
 
+  /// Return the number of loaded sensor components.
+  /**
+   * \return number of sensor components.
+   */
   size_t sensor_interfaces_size() const;
 
+  /// Return the number of loaded system components.
+  /**
+   * \return number of system components.
+   */
   size_t system_interfaces_size() const;
 
 private:

@@ -26,12 +26,19 @@ class TestSensor : public hardware_interface::components::SensorInterface
   return_type configure(const hardware_interface::HardwareInfo & sensor_info) override
   {
     sensor_info_ = sensor_info;
+    // can only give feedback state for velocity
+    if (sensor_info_.sensors[0].state_interfaces.size() != 1) {return return_type::ERROR;}
     return return_type::OK;
   }
 
   std::vector<StateHandle> export_state_handles() override
   {
     std::vector<StateHandle> state_handles;
+    state_handles.emplace_back(
+      hardware_interface::StateHandle(
+        sensor_info_.sensors[0].name,
+        sensor_info_.sensors[0].state_interfaces[0].name,
+        &velocity_state_));
 
     return state_handles;
   }
@@ -57,6 +64,7 @@ class TestSensor : public hardware_interface::components::SensorInterface
   }
 
 private:
+  double velocity_state_ = 0.0;
   hardware_interface::HardwareInfo sensor_info_;
 };
 

@@ -96,7 +96,9 @@ public:
     initialize_hardware<hardware_interface::components::Actuator,
       hardware_interface::components::ActuatorInterface>(
       hardware_info, actuator_loader_, actuators_);
-    actuators_.back().configure(hardware_info);
+    if (hardware_interface::return_type::OK != actuators_.back().configure(hardware_info)) {
+      throw std::runtime_error(std::string("failed to configure ") + hardware_info.name);
+    }
     import_state_handles(actuators_.back());
     import_command_handles(actuators_.back());
   }
@@ -170,6 +172,12 @@ std::vector<std::string> ResourceManager::state_handle_keys() const
   return keys;
 }
 
+bool ResourceManager::state_handle_exists(const std::string & key) const
+{
+  return resource_storage_->state_handle_map_.find(key) !=
+         resource_storage_->state_handle_map_.end();
+}
+
 std::vector<std::string> ResourceManager::command_handle_keys() const
 {
   std::vector<std::string> keys;
@@ -177,6 +185,12 @@ std::vector<std::string> ResourceManager::command_handle_keys() const
     keys.push_back(std::get<0>(item));
   }
   return keys;
+}
+
+bool ResourceManager::command_handle_exists(const std::string & key) const
+{
+  return resource_storage_->command_handle_map_.find(key) !=
+         resource_storage_->command_handle_map_.end();
 }
 
 size_t ResourceManager::actuator_interfaces_size() const

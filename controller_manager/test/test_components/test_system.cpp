@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <array>
 #include <memory>
 #include <vector>
 
@@ -33,6 +34,11 @@ class TestSystem : public hardware_interface::components::SystemInterface
   std::vector<StateHandle> export_state_handles() override
   {
     std::vector<StateHandle> state_handles;
+    for (auto i = 0u; i < system_info_.joints.size(); ++i) {
+      state_handles.emplace_back(
+        hardware_interface::StateHandle(
+          system_info_.joints[i].name, "position", &position_state_[i]));
+    }
 
     return state_handles;
   }
@@ -40,6 +46,11 @@ class TestSystem : public hardware_interface::components::SystemInterface
   std::vector<CommandHandle> export_command_handles() override
   {
     std::vector<CommandHandle> command_handles;
+    for (auto i = 0u; i < system_info_.joints.size(); ++i) {
+      command_handles.emplace_back(
+        hardware_interface::CommandHandle(
+          system_info_.joints[i].name, "velocity", &velocity_command_[i]));
+    }
 
     return command_handles;
   }
@@ -70,6 +81,8 @@ class TestSystem : public hardware_interface::components::SystemInterface
   }
 
 private:
+  std::array<double, 2> velocity_command_ = {0.0, 0.0};
+  std::array<double, 2> position_state_ = {0.0, 0.0};
   hardware_interface::HardwareInfo system_info_;
 };
 

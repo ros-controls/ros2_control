@@ -90,15 +90,17 @@ public:
       R"(
   <ros2_control name="TestActuatorHardware" type="actuator">
     <hardware>
-      <classType>test_actuator</classType>
+      <plugin>test_actuator</plugin>
     </hardware>
     <joint name="joint1">
       <command_interface name="position"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
     </joint>
   </ros2_control>
   <ros2_control name="TestSensorHardware" type="sensor">
     <hardware>
-      <classType>test_sensor</classType>
+      <plugin>test_sensor</plugin>
       <param name="example_param_write_for_sec">2</param>
       <param name="example_param_read_for_sec">2</param>
     </hardware>
@@ -108,7 +110,7 @@ public:
   </ros2_control>
   <ros2_control name="TestSystemHardware" type="system">
     <hardware>
-      <classType>test_system</classType>
+      <plugin>test_system</plugin>
       <param name="example_param_write_for_sec">2</param>
       <param name="example_param_read_for_sec">2</param>
     </hardware>
@@ -145,17 +147,16 @@ TEST_F(TestResourceManager, initialization_with_urdf) {
   EXPECT_EQ(1u, rm.system_interfaces_size());
 
   auto state_handle_keys = rm.state_handle_keys();
-  // extracting a list from an unordered_map doesn't yield deterministic results
-  // sort the list to make comparison clear.
-  std::sort(state_handle_keys.begin(), state_handle_keys.end());
-  ASSERT_EQ(2u, state_handle_keys.size());
-  EXPECT_EQ("joint1/position", state_handle_keys[0]);
-  EXPECT_EQ("joint1/velocity", state_handle_keys[1]);
+  ASSERT_EQ(5u, state_handle_keys.size());
+  EXPECT_TRUE(rm.state_handle_exists("joint1/position"));
+  EXPECT_TRUE(rm.state_handle_exists("joint1/velocity"));
+  EXPECT_TRUE(rm.state_handle_exists("sensor1/velocity"));
+  EXPECT_TRUE(rm.state_handle_exists("joint2/position"));
+  EXPECT_TRUE(rm.state_handle_exists("joint3/position"));
 
   auto command_handle_keys = rm.command_handle_keys();
-  // extracting a list from an unordered_map doesn't yield deterministic results
-  // sort the list to make comparison clear.
-  std::sort(command_handle_keys.begin(), command_handle_keys.end());
-  ASSERT_EQ(1u, command_handle_keys.size());
-  EXPECT_EQ("joint1/velocity", command_handle_keys[0]);
+  ASSERT_EQ(3u, command_handle_keys.size());
+  EXPECT_TRUE(rm.command_handle_exists("joint1/position"));
+  EXPECT_TRUE(rm.command_handle_exists("joint2/velocity"));
+  EXPECT_TRUE(rm.command_handle_exists("joint3/velocity"));
 }
