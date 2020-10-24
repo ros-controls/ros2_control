@@ -12,14 +12,13 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-find_package(rclcpp REQUIRED)
 find_package(hardware_interface REQUIRED)
 find_package(tinyxml2_vendor REQUIRED)
 find_package(TinyXML2 REQUIRED)
 
 add_library(transmission_parser SHARED src/transmission_parser.cpp)
 target_include_directories(transmission_parser PUBLIC include)
-ament_target_dependencies(transmission_parser rclcpp hardware_interface tinyxml2_vendor TinyXML2)
+ament_target_dependencies(transmission_parser hardware_interface tinyxml2_vendor TinyXML2)
 ament_export_dependencies(hardware_interface tinyxml2_vendor TinyXML2)
 target_compile_definitions(transmission_parser PRIVATE "TRANSMISSION_INTERFACE_BUILDING_DLL")
 
