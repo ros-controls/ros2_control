@@ -2,5 +2,24 @@ coverage:
   precision: 2
   round: down
   range: "35...100"
+  status:
+    project:
+      default:
+        informational: true
+        flags:
+          - unittests
+    patch: off
 fixes:
   - "ros_ws/src/ros2_control/::"
+comment:
+  layout: "diff, flags, files"
+  behavior: default
+flags:
+  unittests:
+    paths:
+      - controller_interface
+      - controller_manager
+      - hardware_interface
+      - joint_limits_interface
+      - test_robot_hardware
+      - transmission_interface
