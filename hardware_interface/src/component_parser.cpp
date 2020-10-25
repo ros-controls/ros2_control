@@ -153,7 +153,7 @@ components::InterfaceInfo parse_interfaces_from_xml(
   // Optional min/max attributes
   std::unordered_map<std::string, std::string> interface_params =
     parse_parameters_from_xml(interfaces_it->FirstChildElement(kParamTag));
-  std::unordered_map<std::string, std::string>::const_iterator interface_param =
+  auto interface_param =
     interface_params.find(kMinTag);
   if (interface_param != interface_params.end()) {
     interface.min = interface_param->second;
