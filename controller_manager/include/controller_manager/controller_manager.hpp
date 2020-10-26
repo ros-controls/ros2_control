@@ -165,6 +165,11 @@ private:
   std::shared_ptr<rclcpp::Executor> executor_;
   std::shared_ptr<pluginlib::ClassLoader<controller_interface::ControllerInterface>> loader_;
 
+  rclcpp::callback_group::CallbackGroup::SharedPtr realtime_callback_group_;
+  rclcpp::callback_group::CallbackGroup::SharedPtr services_callback_group_;
+
+  rclcpp::TimerBase::SharedPtr timer_;
+
   /**
    * @brief The RTControllerListWrapper class wraps a double-buffered list of controllers
    * to avoid needing to lock the real-time thread when switching controllers in
