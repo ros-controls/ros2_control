@@ -29,15 +29,15 @@ class ReadOnlyHandle
 {
 public:
   ReadOnlyHandle(
-    std::string name,
-    std::string interface_name,
+    const std::string & name,
+    const std::string & interface_name,
     double * value_ptr = nullptr)
-  : name_(std::move(name)), interface_name_(std::move(interface_name)), value_ptr_(value_ptr)
+  : name_(name), interface_name_(interface_name), value_ptr_(value_ptr)
   {
   }
 
-  explicit ReadOnlyHandle(std::string interface_name)
-  : interface_name_(std::move(interface_name)), value_ptr_(nullptr)
+  explicit ReadOnlyHandle(const std::string & interface_name)
+  : interface_name_(interface_name), value_ptr_(nullptr)
   {
   }
 
@@ -121,10 +121,10 @@ public:
     *this->value_ptr_ = value;
   }
 
-  void set_value(std::string name, double value)
+  void set_value(const std::string & name, double value)
   {
     THROW_ON_NULLPTR(this->value_ptr_);
-    this->name_ = std::move(name);
+    this->name_ = name;
     *this->value_ptr_ = value;
   }
 
