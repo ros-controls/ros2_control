@@ -49,6 +49,7 @@ rclcpp::NodeOptions get_cm_node_options()
   rclcpp::NodeOptions node_options;
   // Required for getting types of controllers to be loaded via service call
   node_options.allow_undeclared_parameters(true);
+  node_options.automatically_declare_parameters_from_overrides(true);
   return node_options;
 }
 
@@ -62,33 +63,63 @@ ControllerManager::ControllerManager(
   loader_(std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
       kControllerInterfaceName, kControllerInterface))
 {
+  realtime_callback_group_ = create_callback_group(
+    rclcpp::callback_group::CallbackGroupType::MutuallyExclusive);
+  services_callback_group_ = create_callback_group(
+    rclcpp::callback_group::CallbackGroupType::MutuallyExclusive);
+
   using namespace std::placeholders;
   list_controllers_service_ = create_service<controller_manager_msgs::srv::ListControllers>(
-    "~/list_controllers", std::bind(
-      &ControllerManager::list_controllers_srv_cb, this, _1,
-      _2));
+    "~/list_controllers",
+    std::bind(&ControllerManager::list_controllers_srv_cb, this, _1, _2),
+    rmw_qos_profile_services_default,
+    services_callback_group_);
   list_controller_types_service_ =
     create_service<controller_manager_msgs::srv::ListControllerTypes>(
-    "~/list_controller_types", std::bind(
-      &ControllerManager::list_controller_types_srv_cb, this, _1,
-      _2));
+    "~/list_controller_types",
+    std::bind(&ControllerManager::list_controller_types_srv_cb, this, _1, _2),
+    rmw_qos_profile_services_default,
+    services_callback_group_);
   load_controller_service_ = create_service<controller_manager_msgs::srv::LoadController>(
-    "~/load_controller", std::bind(
-      &ControllerManager::load_controller_service_cb, this, _1,
-      _2));
+    "~/load_controller",
+    std::bind(&ControllerManager::load_controller_service_cb, this, _1, _2),
+    rmw_qos_profile_services_default,
+    services_callback_group_);
   reload_controller_libraries_service_ =
     create_service<controller_manager_msgs::srv::ReloadControllerLibraries>(
-    "~/reload_controller_libraries", std::bind(
-      &ControllerManager::reload_controller_libraries_service_cb, this, _1,
-      _2));
+    "~/reload_controller_libraries",
+    std::bind(&ControllerManager::reload_controller_libraries_service_cb, this, _1, _2),
+    rmw_qos_profile_services_default,
+    services_callback_group_);
   switch_controller_service_ = create_service<controller_manager_msgs::srv::SwitchController>(
-    "~/switch_controller", std::bind(
-      &ControllerManager::switch_controller_service_cb, this, _1,
-      _2));
+    "~/switch_controller",
+    std::bind(&ControllerManager::switch_controller_service_cb, this, _1, _2),
+    rmw_qos_profile_services_default,
+    services_callback_group_);
   unload_controller_service_ = create_service<controller_manager_msgs::srv::UnloadController>(
-    "~/unload_controller", std::bind(
-      &ControllerManager::unload_controller_service_cb, this, _1,
-      _2));
+    "~/unload_controller",
+    std::bind(&ControllerManager::unload_controller_service_cb, this, _1, _2),
+    rmw_qos_profile_services_default,
+    services_callback_group_);
+
+  // TODO(all): Should we declare paramters? #168
+  // load robot_description parameter
+  std::string robot_description;
+  if (!get_parameter("robot_description", robot_description)) {
+    throw std::runtime_error("No robot_description parameter found");
+  }
+
+  // load controller_manager update time parameter
+  int update_time_ms;
+  if (!get_parameter("update_time_ms", update_time_ms)) {
+    throw std::runtime_error("update_time parameter not existing or empty");
+  }
+  RCLCPP_INFO(get_logger(), "update time is %.3f ms", update_time_ms);
+
+  timer_ = create_wall_timer(
+    std::chrono::milliseconds(update_time_ms),
+    std::bind(&ControllerManager::update, this),
+    realtime_callback_group_);
 }
 
 controller_interface::ControllerInterfaceSharedPtr ControllerManager::load_controller(
@@ -811,8 +842,7 @@ std::vector<std::string> ControllerManager::get_controller_names()
   return names;
 }
 
-controller_interface::return_type
-ControllerManager::update()
+controller_interface::return_type ControllerManager::update()
 {
   std::vector<ControllerSpec> & rt_controller_list =
     rt_controllers_wrapper_.update_and_get_used_by_rt_list();
@@ -843,8 +873,7 @@ ControllerManager::RTControllerListWrapper::update_and_get_used_by_rt_list()
   return controllers_lists_[used_by_realtime_controllers_index_];
 }
 
-std::vector<ControllerSpec> &
-ControllerManager::RTControllerListWrapper::get_unused_list(
+std::vector<ControllerSpec> & ControllerManager::RTControllerListWrapper::get_unused_list(
   const std::lock_guard<std::recursive_mutex> &)
 {
   assert(controllers_lock_.try_lock());
@@ -881,9 +910,7 @@ int ControllerManager::RTControllerListWrapper::get_other_list(int index) const
 }
 
 void ControllerManager::RTControllerListWrapper::wait_until_rt_not_using(
-  int index,
-  std::chrono::microseconds sleep_period)
-const
+  int index, std::chrono::microseconds sleep_period) const
 {
   while (used_by_realtime_controllers_index_ == index) {
     if (!rclcpp::ok()) {
