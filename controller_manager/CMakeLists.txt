@@ -37,11 +37,25 @@ target_compile_definitions(controller_manager PRIVATE "CONTROLLER_MANAGER_BUILDI
 # prevent pluginlib from using boost
 target_compile_definitions(controller_manager PUBLIC "PLUGINLIB__DISABLE_BOOST_FUNCTIONS")
 
+add_executable(ros2_control_node src/ros2_control_node.cpp)
+target_include_directories(ros2_control_node PRIVATE include)
+target_link_libraries(ros2_control_node controller_manager)
+ament_target_dependencies(ros2_control_node
+  controller_interface
+  hardware_interface
+  rclcpp
+)
+
 install(TARGETS controller_manager
   RUNTIME DESTINATION bin
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
 )
+
+install(TARGETS ros2_control_node
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
+)
+
 install(DIRECTORY include/
   DESTINATION include
 )
@@ -116,6 +130,8 @@ ament_export_include_directories(
 ament_export_dependencies(
   controller_interface
   controller_manager_msgs
+  hardware_interface
   pluginlib
+  rclcpp
 )
 ament_package()
