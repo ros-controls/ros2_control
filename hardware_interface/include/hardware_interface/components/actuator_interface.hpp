@@ -12,13 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef HARDWARE_INTERFACE__SENSOR_HARDWARE_INTERFACE_HPP_
-#define HARDWARE_INTERFACE__SENSOR_HARDWARE_INTERFACE_HPP_
+#ifndef HARDWARE_INTERFACE__COMPONENTS__ACTUATOR_INTERFACE_HPP_
+#define HARDWARE_INTERFACE__COMPONENTS__ACTUATOR_INTERFACE_HPP_
 
 #include <memory>
-#include <vector>
 
-#include "hardware_interface/components/sensor.hpp"
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/hardware_interface_status_values.hpp"
@@ -26,31 +24,31 @@
 
 namespace hardware_interface
 {
+namespace components
+{
 
 /**
-  * \brief Virtual Class to implement when integrating a stand-alone sensor into ros2_control.
-  * The typical examples are Force-Torque Sensor (FTS), Interial Measurement Unit (IMU).
+  * \brief Virtual Class to implement when integrating a 1 DoF actuator into ros2_control.
+  * The typical examples are conveyors or motors.
   */
-class SensorHardwareInterface
+class ActuatorInterface
 {
 public:
-  HARDWARE_INTERFACE_PUBLIC
-  SensorHardwareInterface() = default;
+  ActuatorInterface() = default;
 
-  HARDWARE_INTERFACE_PUBLIC
   virtual
-  ~SensorHardwareInterface() = default;
+  ~ActuatorInterface() = default;
 
   /**
-   * \brief Configuration of the sensor from data parsed from the robot's URDF.
+   * \brief Configuration of the actuator from data parsed from the robot's URDF.
    *
-   * \param sensor_info structure with data from URDF.
+   * \param actuator_info structure with data from URDF.
    * \return return_type::OK if required data are provided and can be parsed,
    * return_type::ERROR otherwise.
    */
   HARDWARE_INTERFACE_PUBLIC
   virtual
-  return_type configure(const HardwareInfo & sensor_info) = 0;
+  return_type configure(const HardwareInfo & actuator_info) = 0;
 
   /**
    * \brief Start exchange data with the hardware.
@@ -78,19 +76,8 @@ public:
   HARDWARE_INTERFACE_PUBLIC
   virtual
   status get_status() const = 0;
-
-  /**
-   * \brief Read data from the hardware into sensors using "set_state" function in the Sensor class.
-   * This function is always called by the resource manager.
-   *
-   * \param sensors list of sensors where data from the hardware are stored.
-   * \return return_type:OK if everything worked as expected, return_type::ERROR otherwise.
-   */
-  HARDWARE_INTERFACE_PUBLIC
-  virtual
-  return_type read_sensors(const std::vector<std::shared_ptr<components::Sensor>> & sensors) const =
-  0;
 };
 
+}  // namespace components
 }  // namespace hardware_interface
-#endif  // HARDWARE_INTERFACE__SENSOR_HARDWARE_INTERFACE_HPP_
+#endif  // HARDWARE_INTERFACE__COMPONENTS__ACTUATOR_INTERFACE_HPP_

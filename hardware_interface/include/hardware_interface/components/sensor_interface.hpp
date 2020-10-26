@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef HARDWARE_INTERFACE__ACTUATOR_HARDWARE_INTERFACE_HPP_
-#define HARDWARE_INTERFACE__ACTUATOR_HARDWARE_INTERFACE_HPP_
+#ifndef HARDWARE_INTERFACE__COMPONENTS__SENSOR_INTERFACE_HPP_
+#define HARDWARE_INTERFACE__COMPONENTS__SENSOR_INTERFACE_HPP_
 
 #include <memory>
+#include <vector>
 
-#include "hardware_interface/components/joint.hpp"
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/hardware_interface_status_values.hpp"
@@ -25,31 +25,31 @@
 
 namespace hardware_interface
 {
+namespace components
+{
 
 /**
-  * \brief Virtual Class to implement when integrating a 1 DoF actuator into ros2_control.
-  * The typical examples are conveyors or motors.
+  * \brief Virtual Class to implement when integrating a stand-alone sensor into ros2_control.
+  * The typical examples are Force-Torque Sensor (FTS), Interial Measurement Unit (IMU).
   */
-class ActuatorHardwareInterface
+class SensorInterface
 {
 public:
-  HARDWARE_INTERFACE_PUBLIC
-  ActuatorHardwareInterface() = default;
+  SensorInterface() = default;
 
-  HARDWARE_INTERFACE_PUBLIC
   virtual
-  ~ActuatorHardwareInterface() = default;
+  ~SensorInterface() = default;
 
   /**
-   * \brief Configuration of the actuator from data parsed from the robot's URDF.
+   * \brief Configuration of the sensor from data parsed from the robot's URDF.
    *
-   * \param actuator_info structure with data from URDF.
+   * \param sensor_info structure with data from URDF.
    * \return return_type::OK if required data are provided and can be parsed,
    * return_type::ERROR otherwise.
    */
   HARDWARE_INTERFACE_PUBLIC
   virtual
-  return_type configure(const HardwareInfo & actuator_info) = 0;
+  return_type configure(const HardwareInfo & sensor_info) = 0;
 
   /**
    * \brief Start exchange data with the hardware.
@@ -77,29 +77,8 @@ public:
   HARDWARE_INTERFACE_PUBLIC
   virtual
   status get_status() const = 0;
-
-  /**
-   * \brief Read data fromt the hardware into the joint using "set_state" function of the Joint class.
-   * This function is always called by the resource manager.
-   *
-   * \param joint joint where data from the hardware are stored.
-   * \return return_type:OK if everything worked as expected, return_type::ERROR otherwise.
-   */
-  HARDWARE_INTERFACE_PUBLIC
-  virtual
-  return_type read_joint(std::shared_ptr<components::Joint> joint) const = 0;
-
-  /**
-   * \brief Write data from the joint to the hardware using "get_command" function of the Joint class.
-   * This function is always called by the resource manager.
-   *
-   * \param joint the joint from which data are written to the hardware.
-   * \return return_type:OK if everything worked as expected, return_type::ERROR otherwise.
-   */
-  HARDWARE_INTERFACE_PUBLIC
-  virtual
-  return_type write_joint(const std::shared_ptr<components::Joint> joint) = 0;
 };
 
+}  // namespace components
 }  // namespace hardware_interface
-#endif  // HARDWARE_INTERFACE__ACTUATOR_HARDWARE_INTERFACE_HPP_
+#endif  // HARDWARE_INTERFACE__COMPONENTS__SENSOR_INTERFACE_HPP_

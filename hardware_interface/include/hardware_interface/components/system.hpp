@@ -12,16 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <algorithm>
+#ifndef HARDWARE_INTERFACE__COMPONENTS__SYSTEM_HPP_
+#define HARDWARE_INTERFACE__COMPONENTS__SYSTEM_HPP_
+
 #include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 
-#include "hardware_interface/actuator_hardware.hpp"
-
-#include "hardware_interface/actuator_hardware_interface.hpp"
-#include "hardware_interface/components/component_info.hpp"
-#include "hardware_interface/components/joint.hpp"
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/hardware_interface_status_values.hpp"
@@ -29,39 +27,35 @@
 
 namespace hardware_interface
 {
-
-ActuatorHardware::ActuatorHardware(std::unique_ptr<ActuatorHardwareInterface> impl)
-: impl_(std::move(impl))
-{}
-
-return_type ActuatorHardware::configure(const HardwareInfo & actuator_info)
+namespace components
 {
-  return impl_->configure(actuator_info);
-}
 
-return_type ActuatorHardware::start()
+class SystemInterface;
+
+class System final
 {
-  return impl_->start();
-}
+public:
+  HARDWARE_INTERFACE_PUBLIC
+  explicit System(std::unique_ptr<SystemInterface> impl);
 
-return_type ActuatorHardware::stop()
-{
-  return impl_->stop();
-}
+  ~System() = default;
 
-status ActuatorHardware::get_status() const
-{
-  return impl_->get_status();
-}
+  HARDWARE_INTERFACE_PUBLIC
+  return_type configure(const HardwareInfo & system_info);
 
-return_type ActuatorHardware::read_joint(std::shared_ptr<components::Joint> joint)
-{
-  return impl_->read_joint(joint);
-}
+  HARDWARE_INTERFACE_PUBLIC
+  return_type start();
 
-return_type ActuatorHardware::write_joint(const std::shared_ptr<components::Joint> joint)
-{
-  return impl_->write_joint(joint);
-}
+  HARDWARE_INTERFACE_PUBLIC
+  return_type stop();
 
+  HARDWARE_INTERFACE_PUBLIC
+  status get_status() const;
+
+private:
+  std::unique_ptr<SystemInterface> impl_;
+};
+
+}  // namespace components
 }  // namespace hardware_interface
+#endif  // HARDWARE_INTERFACE__COMPONENTS__SYSTEM_HPP_

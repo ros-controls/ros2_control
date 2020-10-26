@@ -12,16 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef HARDWARE_INTERFACE__COMPONENTS__COMPONENT_INFO_HPP_
-#define HARDWARE_INTERFACE__COMPONENTS__COMPONENT_INFO_HPP_
+#ifndef HARDWARE_INTERFACE__COMPONENT_INFO_HPP_
+#define HARDWARE_INTERFACE__COMPONENT_INFO_HPP_
 
 #include <string>
 #include <unordered_map>
 #include <vector>
 
 namespace hardware_interface
-{
-namespace components
 {
 
 /**
@@ -79,6 +77,5 @@ struct ComponentInfo
   std::unordered_map<std::string, std::string> parameters;
 };
 
-}  // namespace components
 }  // namespace hardware_interface
-#endif  // HARDWARE_INTERFACE__COMPONENTS__COMPONENT_INFO_HPP_
+#endif  // HARDWARE_INTERFACE__COMPONENT_INFO_HPP_
