@@ -41,7 +41,7 @@ class DummyActuator : public hardware_interface::components::ActuatorInterface
   hardware_interface::return_type configure(
     const hardware_interface::HardwareInfo & /* info */) override
   {
-    // We hardcode the actuator info
+    // We hardcode the info
     return hardware_interface::return_type::OK;
   }
 
@@ -107,7 +107,7 @@ class DummySensor : public hardware_interface::components::SensorInterface
   hardware_interface::return_type configure(
     const hardware_interface::HardwareInfo & /* info */) override
   {
-    // We hardcode the sensor info
+    // We hardcode the info
     return hardware_interface::return_type::OK;
   }
 
@@ -151,7 +151,7 @@ class DummySystem : public hardware_interface::components::SystemInterface
   hardware_interface::return_type configure(
     const hardware_interface::HardwareInfo & /* info */) override
   {
-    // We hardcode the actuator info
+    // We hardcode the info
     return hardware_interface::return_type::OK;
   }
 
