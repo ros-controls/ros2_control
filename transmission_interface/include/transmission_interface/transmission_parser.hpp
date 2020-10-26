@@ -12,19 +12,50 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+/**
+ * \file
+ * \brief Parses <tt>\<transmission\></tt> elements into corresponding structs from XML (URDF).
+ * \author Dave Coleman
+ */
+
 #ifndef TRANSMISSION_INTERFACE__TRANSMISSION_PARSER_HPP_
 #define TRANSMISSION_INTERFACE__TRANSMISSION_PARSER_HPP_
+
+
+#include <transmission_interface/transmission_info.hpp>
+#include <transmission_interface/visibility_control.h>
+
+#include <tinyxml2.h>
 
 #include <string>
 #include <vector>
 
-#include "transmission_interface/transmission_info.hpp"
-#include "transmission_interface/visibility_control.h"
-
 namespace transmission_interface
 {
+
 /**
- * \brief Parse transmission information from a URDF
+ * \brief Parses the joint elements within transmission elements of a URDF
+ * If parse errors occur a std::runtime_error will be thrown with a description of the problem.
+ * \param[in] trans_it pointer to the current XML element being parsed
+ * \param[out] joints resulting list of joints in the transmission
+ * \return true if joint information for a transmission was successfully parsed.
+ */
+TRANSMISSION_INTERFACE_PUBLIC
+std::vector<JointInfo> parse_joints(tinyxml2::XMLElement * trans_it);
+
+/**
+ * \brief Parses the actuator elements within transmission elements of a URDF
+ * If parse errors occur a std::runtime_error will be thrown with a description of the problem.
+ * \param[in] trans_it pointer to the current XML element being parsed
+ * \param[out] actuators resulting list of actuators in the transmission
+ * \return true if actuator information for a transmission was successfully parsed.
+ */
+TRANSMISSION_INTERFACE_PUBLIC
+std::vector<ActuatorInfo> parse_actuators(tinyxml2::XMLElement * trans_it);
+
+
+/**
+ * \brief Parse transmission information from a URDF.
  * \param urdf A string containing the URDF xml
  * \return parsed transmission information
  * \throws std::runtime_error on malformed or empty xml
@@ -32,4 +63,5 @@ namespace transmission_interface
 TRANSMISSION_INTERFACE_PUBLIC
 std::vector<TransmissionInfo> parse_transmissions_from_urdf(const std::string & urdf);
 }  // namespace transmission_interface
+
 #endif  // TRANSMISSION_INTERFACE__TRANSMISSION_PARSER_HPP_

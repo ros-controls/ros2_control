@@ -15,18 +15,44 @@
 #ifndef TRANSMISSION_INTERFACE__TRANSMISSION_INFO_HPP_
 #define TRANSMISSION_INTERFACE__TRANSMISSION_INFO_HPP_
 
+#include <vector>
 #include <string>
 
-#include "hardware_interface/control_type.hpp"
 
 namespace transmission_interface
 {
 
+/**
+ * \brief Contains semantic info about a given joint loaded from XML (URDF)
+ */
+struct JointInfo
+{
+  std::string name;
+  std::vector<std::string> interfaces;
+  std::string role;
+};
+
+/**
+ * \brief Contains semantic info about a given actuator loaded from XML (URDF)
+ */
+struct ActuatorInfo
+{
+  std::string name;
+  std::vector<std::string> interfaces;
+  double mechanical_reduction;
+};
+
+/**
+ * \brief Contains semantic info about a given transmission loaded from XML (URDF)
+ */
 struct TransmissionInfo
 {
-  std::string joint_name;
-  std::string joint_control_type;
+  std::string name;
+  std::string type;
+  std::vector<JointInfo> joints;
+  std::vector<ActuatorInfo> actuators;
 };
 
 }  // namespace transmission_interface
+
 #endif  // TRANSMISSION_INTERFACE__TRANSMISSION_INFO_HPP_
