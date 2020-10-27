@@ -141,10 +141,10 @@ std::unordered_map<std::string, std::string> parse_parameters_from_xml(
  * \return std::vector< std::__cxx11::string > list of interface types
  * \throws std::runtime_error if the interfaceType text not set in a tag
  */
-components::InterfaceInfo parse_interfaces_from_xml(
+hardware_interface::InterfaceInfo parse_interfaces_from_xml(
   const tinyxml2::XMLElement * interfaces_it)
 {
-  hardware_interface::components::InterfaceInfo interface;
+  hardware_interface::InterfaceInfo interface;
 
   const std::string interface_name = get_attribute_value(
     interfaces_it, kNameAttribute, interfaces_it->Name());
@@ -170,7 +170,7 @@ components::InterfaceInfo parse_interfaces_from_xml(
   * \brief Search XML snippet from URDF for information about a control component.
   *
   * \param component_it pointer to the iterator where component info should be found
-  * \return robot_control_components::ComponentInfo filled with information about component
+  * \return ComponentInfo filled with information about component
   * \throws std::runtime_error if a component attribute or tag is not found
   */
 ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it)
@@ -208,7 +208,7 @@ ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it
  * \brief Parse a control resource from an "ros2_control" tag.
  *
  * \param ros2_control_it pointer to ros2_control element with informtions about resource.
- * \return robot_control_components::ComponentInfo filled with information about the robot
+ * \return ComponentInfo filled with information about the robot
  * \throws std::runtime_error if a attributes or tag are not found
  */
 HardwareInfo parse_resource_from_xml(const tinyxml2::XMLElement * ros2_control_it)
