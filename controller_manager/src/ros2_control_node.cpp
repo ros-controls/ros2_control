@@ -16,7 +16,9 @@
 #include <string>
 
 #include "controller_manager/controller_manager.hpp"
+#include "hardware_interface/robot_hardware.hpp"
 #include "rclcpp/rclcpp.hpp"
+#include "test_robot_hardware/test_robot_hardware.hpp"
 
 using namespace std::chrono_literals;
 
@@ -24,11 +26,15 @@ int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
 
+
   std::shared_ptr<rclcpp::Executor> executor =
     std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
   std::string manager_node_name = "controller_manager";
 
   auto cm = std::make_shared<controller_manager::ControllerManager>(
+    // TODO(anyone): remove robot_hw when ResourceManager is added
+    // since RobotHW is not a plugin we had to take some type of robot
+    std::make_shared<test_robot_hardware::TestRobotHardware>(),
     executor,
     manager_node_name);
 
