@@ -29,7 +29,6 @@ TEST_F(TestControllerManager, controller_lifecycle) {
     robot_, executor_,
     "test_controller_manager");
 
-
   auto test_controller = std::make_shared<test_controller::TestController>();
   cm->add_controller(
     test_controller, test_controller::TEST_CONTROLLER_NAME,

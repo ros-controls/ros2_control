@@ -18,6 +18,8 @@ find_package(controller_manager_msgs REQUIRED)
 find_package(hardware_interface REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(rclcpp REQUIRED)
+#TODO(anyone): remove this when using ResourceManager
+find_package(test_robot_hardware REQUIRED)
 
 add_library(controller_manager SHARED
   src/controller_manager.cpp
@@ -44,6 +46,8 @@ ament_target_dependencies(ros2_control_node
   controller_interface
   hardware_interface
   rclcpp
+  #TODO(anyone): remove this when using ResourceManager
+  test_robot_hardware
 )
 
 install(TARGETS controller_manager
