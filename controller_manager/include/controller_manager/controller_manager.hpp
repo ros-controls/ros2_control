@@ -51,7 +51,7 @@ public:
   ControllerManager(
     std::shared_ptr<hardware_interface::RobotHardware> hw,
     std::shared_ptr<rclcpp::Executor> executor,
-    const std::string & name = "controller_manager");
+    const std::string & manager_node_name = "controller_manager");
 
   CONTROLLER_MANAGER_PUBLIC
   virtual

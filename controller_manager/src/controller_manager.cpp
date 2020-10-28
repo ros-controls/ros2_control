@@ -102,13 +102,16 @@ ControllerManager::ControllerManager(
     rmw_qos_profile_services_default,
     services_callback_group_);
 
-  // TODO(all): Should we declare paramters? #168
+  // TODO(all): Should we declare paramters? #168 - for now yes because of the tests
+  declare_parameter("robot_description", "");
   // load robot_description parameter
   std::string robot_description;
   if (!get_parameter("robot_description", robot_description)) {
     throw std::runtime_error("No robot_description parameter found");
   }
 
+  // Declare default controller manager rate of 100Hz
+  declare_parameter("update_time_ms", 10);
   // load controller_manager update time parameter
   int update_time_ms;
   if (!get_parameter("update_time_ms", update_time_ms)) {
