@@ -54,13 +54,9 @@ struct ComponentInfo
    */
   std::string name;
   /**
-   * \brief type of the component: sensor or actuator.
+   * \brief type of the component: sensor or joint.
    */
   std::string type;
-  /**
-   * \brief component's class, which will be dynamically loaded.
-   */
-  std::string class_type;
   /**
    * \brief name of the command interfaces that can be set, e.g. "position", "velocity", etc.
    * Used by joints.
