@@ -18,22 +18,14 @@
 #include <string>
 
 #include "hardware_interface/handle.hpp"
-#include "hardware_interface/macros.hpp"
-#include "hardware_interface/visibility_control.h"
 
 namespace hardware_interface
 {
 /** A handle used to get and set a value on a given actuator interface. */
-class ActuatorHandle : public Handle<ActuatorHandle>
+class ActuatorHandle : public ReadWriteHandle<ActuatorHandle>
 {
 public:
-  HARDWARE_INTERFACE_PUBLIC
-  ActuatorHandle(
-    const std::string & name, const std::string & interface_name,
-    double * value_ptr = nullptr)
-  : Handle(name, interface_name, value_ptr)
-  {
-  }
+  using ReadWriteHandle<ActuatorHandle>::ReadWriteHandle;
 };
 
 }  // namespace hardware_interface

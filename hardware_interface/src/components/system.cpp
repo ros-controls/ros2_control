@@ -19,6 +19,7 @@
 
 #include "hardware_interface/components/system.hpp"
 
+#include "hardware_interface/handle.hpp"
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/components/system_interface.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
@@ -38,6 +39,16 @@ return_type System::configure(const HardwareInfo & system_info)
   return impl_->configure(system_info);
 }
 
+std::vector<StateHandle> System::export_state_handles()
+{
+  return impl_->export_state_handles();
+}
+
+std::vector<CommandHandle> System::export_command_handles()
+{
+  return impl_->export_command_handles();
+}
+
 return_type System::start()
 {
   return impl_->start();
@@ -51,6 +62,16 @@ return_type System::stop()
 status System::get_status() const
 {
   return impl_->get_status();
+}
+
+return_type System::read()
+{
+  return impl_->read();
+}
+
+return_type System::write()
+{
+  return impl_->write();
 }
 
 }  // namespace components

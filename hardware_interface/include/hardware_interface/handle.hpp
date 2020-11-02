@@ -16,6 +16,7 @@
 #define HARDWARE_INTERFACE__HANDLE_HPP_
 
 #include <string>
+#include <utility>
 
 #include "hardware_interface/macros.hpp"
 #include "hardware_interface/visibility_control.h"
@@ -24,84 +25,135 @@ namespace hardware_interface
 {
 /** A handle used to get and set a value on a given interface. */
 template<class HandleType>
-class Handle
+class ReadOnlyHandle
 {
 public:
-  HARDWARE_INTERFACE_PUBLIC
-  Handle(
-    const std::string & name, const std::string & interface_name,
+  ReadOnlyHandle(
+    const std::string & name,
+    const std::string & interface_name,
     double * value_ptr = nullptr)
   : name_(name), interface_name_(interface_name), value_ptr_(value_ptr)
   {
   }
 
-  HARDWARE_INTERFACE_PUBLIC
-  explicit Handle(const std::string & interface_name)
+  explicit ReadOnlyHandle(const std::string & interface_name)
   : interface_name_(interface_name), value_ptr_(nullptr)
   {
   }
 
-  HARDWARE_INTERFACE_PUBLIC
-  explicit Handle(const char * interface_name)
+  explicit ReadOnlyHandle(const char * interface_name)
   : interface_name_(interface_name), value_ptr_(nullptr)
   {
   }
+
+  ReadOnlyHandle(const ReadOnlyHandle & other) = default;
+
+  ReadOnlyHandle(ReadOnlyHandle && other) = default;
+
+  ReadOnlyHandle & operator=(const ReadOnlyHandle & other) = default;
+
+  ReadOnlyHandle & operator=(ReadOnlyHandle && other) = default;
+
+  virtual ~ReadOnlyHandle() = default;
 
   /// \brief returns true if handle references a value
   inline operator bool() const {return value_ptr_ != nullptr;}
 
-  HARDWARE_INTERFACE_PUBLIC
   HandleType with_value_ptr(double * value_ptr)
   {
     return HandleType(name_, interface_name_, value_ptr);
   }
 
-  HARDWARE_INTERFACE_PUBLIC
   const std::string & get_name() const
   {
     return name_;
   }
 
-  HARDWARE_INTERFACE_PUBLIC
   const std::string & get_interface_name() const
   {
     return interface_name_;
   }
 
-  HARDWARE_INTERFACE_PUBLIC
   double get_value() const
   {
     THROW_ON_NULLPTR(value_ptr_);
     return *value_ptr_;
   }
 
-  HARDWARE_INTERFACE_PUBLIC
-  void set_value(double value)
-  {
-    THROW_ON_NULLPTR(value_ptr_);
-    *value_ptr_ = value;
-  }
-
-  HARDWARE_INTERFACE_PUBLIC
-  void set_value(const std::string & name, double value)
-  {
-    THROW_ON_NULLPTR(value_ptr_);
-    name_ = name;
-    *value_ptr_ = value;
-  }
-
-  HARDWARE_INTERFACE_PUBLIC
-  void set_value(const char * name, double value)
-  {
-    THROW_ON_NULLPTR(value_ptr_);
-    name_ = name;
-    *value_ptr_ = value;
-  }
-
 protected:
   std::string name_;
   std::string interface_name_;
   double * value_ptr_;
+};
+
+template<class HandleType>
+class ReadWriteHandle : public ReadOnlyHandle<HandleType>
+{
+public:
+  ReadWriteHandle(
+    const std::string & name,
+    const std::string & interface_name,
+    double * value_ptr = nullptr)
+  : ReadOnlyHandle<HandleType>(name, interface_name, value_ptr)
+  {}
+
+  explicit ReadWriteHandle(const std::string & interface_name)
+  : ReadOnlyHandle<HandleType>(interface_name)
+  {}
+
+  explicit ReadWriteHandle(const char * interface_name)
+  : ReadOnlyHandle<HandleType>(interface_name)
+  {}
+
+  ReadWriteHandle(const ReadWriteHandle & other) = default;
+
+  ReadWriteHandle(ReadWriteHandle && other) = default;
+
+  ReadWriteHandle & operator=(const ReadWriteHandle & other) = default;
+
+  ReadWriteHandle & operator=(ReadWriteHandle && other) = default;
+
+  virtual ~ReadWriteHandle() = default;
+
+  void set_value(double value)
+  {
+    THROW_ON_NULLPTR(this->value_ptr_);
+    *this->value_ptr_ = value;
+  }
+
+  void set_value(const std::string & name, double value)
+  {
+    THROW_ON_NULLPTR(this->value_ptr_);
+    this->name_ = name;
+    *this->value_ptr_ = value;
+  }
+
+  void set_value(const char * name, double value)
+  {
+    THROW_ON_NULLPTR(this->value_ptr_);
+    this->name_ = name;
+    *this->value_ptr_ = value;
+  }
+};
+
+class StateHandle : public ReadOnlyHandle<StateHandle>
+{
+public:
+  StateHandle(const StateHandle & other) = delete;
+
+  StateHandle(StateHandle && other) = default;
+
+  using ReadOnlyHandle<StateHandle>::ReadOnlyHandle;
+};
+
+class CommandHandle : public ReadWriteHandle<CommandHandle>
+{
+public:
+  CommandHandle(const CommandHandle & other) = delete;
+
+  CommandHandle(CommandHandle && other) = default;
+
+  using ReadWriteHandle<CommandHandle>::ReadWriteHandle;
 };
 
 }  // namespace hardware_interface

@@ -15,21 +15,16 @@
 #ifndef HARDWARE_INTERFACE__JOINT_HANDLE_HPP_
 #define HARDWARE_INTERFACE__JOINT_HANDLE_HPP_
 
-#include <string>
-
 #include "hardware_interface/handle.hpp"
-#include "hardware_interface/macros.hpp"
-#include "hardware_interface/visibility_control.h"
 
 namespace hardware_interface
 {
 /** A handle used to get and set a value on a given joint interface. */
-class JointHandle : public Handle<JointHandle>
+class JointHandle : public ReadWriteHandle<JointHandle>
 {
 public:
-  using Handle<JointHandle>::Handle;
+  using ReadWriteHandle<JointHandle>::ReadWriteHandle;
 };
-
 }  // namespace hardware_interface
 
 #endif  // HARDWARE_INTERFACE__JOINT_HANDLE_HPP_
