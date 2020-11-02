@@ -39,9 +39,9 @@ return_type Sensor::configure(const HardwareInfo & sensor_info)
   return impl_->configure(sensor_info);
 }
 
-std::vector<StateHandle> Sensor::export_state_handles()
+std::vector<StateInterface> Sensor::export_state_interfaces()
 {
-  return impl_->export_state_handles();
+  return impl_->export_state_interfaces();
 }
 
 return_type Sensor::start()

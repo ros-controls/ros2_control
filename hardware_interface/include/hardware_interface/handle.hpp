@@ -136,24 +136,24 @@ public:
   }
 };
 
-class StateHandle : public ReadOnlyHandle<StateHandle>
+class StateInterface : public ReadOnlyHandle<StateInterface>
 {
 public:
-  StateHandle(const StateHandle & other) = delete;
+  StateInterface(const StateInterface & other) = delete;
 
-  StateHandle(StateHandle && other) = default;
+  StateInterface(StateInterface && other) = default;
 
-  using ReadOnlyHandle<StateHandle>::ReadOnlyHandle;
+  using ReadOnlyHandle<StateInterface>::ReadOnlyHandle;
 };
 
-class CommandHandle : public ReadWriteHandle<CommandHandle>
+class CommandInterface : public ReadWriteHandle<CommandInterface>
 {
 public:
-  CommandHandle(const CommandHandle & other) = delete;
+  CommandInterface(const CommandInterface & other) = delete;
 
-  CommandHandle(CommandHandle && other) = default;
+  CommandInterface(CommandInterface && other) = default;
 
-  using ReadWriteHandle<CommandHandle>::ReadWriteHandle;
+  using ReadWriteHandle<CommandInterface>::ReadWriteHandle;
 };
 
 }  // namespace hardware_interface
