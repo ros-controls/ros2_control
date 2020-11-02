@@ -70,24 +70,24 @@ public:
   }
 
   template<class HardwareT>
-  void import_state_handles(HardwareT & hardware)
+  void import_state_interfaces(HardwareT & hardware)
   {
-    auto handles = hardware.export_state_handles();
-    for (auto i = 0u; i < handles.size(); ++i) {
-      auto key = handles[i].get_name() + "/" + handles[i].get_interface_name();
-      state_handle_map_.emplace(
-        std::make_pair(key, std::move(handles[i])));
+    auto interfaces = hardware.export_state_interfaces();
+    for (auto i = 0u; i < interfaces.size(); ++i) {
+      auto key = interfaces[i].get_name() + "/" + interfaces[i].get_interface_name();
+      state_interface_map_.emplace(
+        std::make_pair(key, std::move(interfaces[i])));
     }
   }
 
   template<class HardwareT>
-  void import_command_handles(HardwareT & hardware)
+  void import_command_interfaces(HardwareT & hardware)
   {
-    auto handles = hardware.export_command_handles();
-    for (auto i = 0u; i < handles.size(); ++i) {
-      auto key = handles[i].get_name() + "/" + handles[i].get_interface_name();
-      command_handle_map_.emplace(
-        std::make_pair(key, std::move(handles[i])));
+    auto interfaces = hardware.export_command_interfaces();
+    for (auto i = 0u; i < interfaces.size(); ++i) {
+      auto key = interfaces[i].get_name() + "/" + interfaces[i].get_interface_name();
+      command_interface_map_.emplace(
+        std::make_pair(key, std::move(interfaces[i])));
     }
   }
 
@@ -99,8 +99,8 @@ public:
     if (hardware_interface::return_type::OK != actuators_.back().configure(hardware_info)) {
       throw std::runtime_error(std::string("failed to configure ") + hardware_info.name);
     }
-    import_state_handles(actuators_.back());
-    import_command_handles(actuators_.back());
+    import_state_interfaces(actuators_.back());
+    import_command_interfaces(actuators_.back());
   }
 
   void initialize_sensor(const hardware_interface::HardwareInfo & hardware_info)
@@ -109,7 +109,7 @@ public:
       hardware_interface::components::SensorInterface>(
       hardware_info, sensor_loader_, sensors_);
     sensors_.back().configure(hardware_info);
-    import_state_handles(sensors_.back());
+    import_state_interfaces(sensors_.back());
   }
 
   void initialize_system(const hardware_interface::HardwareInfo & hardware_info)
@@ -118,8 +118,8 @@ public:
       hardware_interface::components::SystemInterface>(
       hardware_info, system_loader_, systems_);
     systems_.back().configure(hardware_info);
-    import_state_handles(systems_.back());
-    import_command_handles(systems_.back());
+    import_state_interfaces(systems_.back());
+    import_command_interfaces(systems_.back());
   }
 
   // hardware plugins
@@ -131,8 +131,8 @@ public:
   std::vector<hardware_interface::components::Sensor> sensors_;
   std::vector<hardware_interface::components::System> systems_;
 
-  std::unordered_map<std::string, hardware_interface::StateHandle> state_handle_map_;
-  std::unordered_map<std::string, hardware_interface::CommandHandle> command_handle_map_;
+  std::unordered_map<std::string, hardware_interface::StateInterface> state_interface_map_;
+  std::unordered_map<std::string, hardware_interface::CommandInterface> command_interface_map_;
 };
 
 ResourceManager::ResourceManager()
@@ -163,34 +163,34 @@ ResourceManager::ResourceManager(const std::string & urdf)
   }
 }
 
-std::vector<std::string> ResourceManager::state_handle_keys() const
+std::vector<std::string> ResourceManager::state_interface_keys() const
 {
   std::vector<std::string> keys;
-  for (const auto & item : resource_storage_->state_handle_map_) {
+  for (const auto & item : resource_storage_->state_interface_map_) {
     keys.push_back(std::get<0>(item));
   }
   return keys;
 }
 
-bool ResourceManager::state_handle_exists(const std::string & key) const
+bool ResourceManager::state_interface_exists(const std::string & key) const
 {
-  return resource_storage_->state_handle_map_.find(key) !=
-         resource_storage_->state_handle_map_.end();
+  return resource_storage_->state_interface_map_.find(key) !=
+         resource_storage_->state_interface_map_.end();
 }
 
-std::vector<std::string> ResourceManager::command_handle_keys() const
+std::vector<std::string> ResourceManager::command_interface_keys() const
 {
   std::vector<std::string> keys;
-  for (const auto & item : resource_storage_->command_handle_map_) {
+  for (const auto & item : resource_storage_->command_interface_map_) {
     keys.push_back(std::get<0>(item));
   }
   return keys;
 }
 
-bool ResourceManager::command_handle_exists(const std::string & key) const
+bool ResourceManager::command_interface_exists(const std::string & key) const
 {
-  return resource_storage_->command_handle_map_.find(key) !=
-         resource_storage_->command_handle_map_.end();
+  return resource_storage_->command_interface_map_.find(key) !=
+         resource_storage_->command_interface_map_.end();
 }
 
 size_t ResourceManager::actuator_interfaces_size() const

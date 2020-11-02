@@ -35,33 +35,33 @@ public:
 
   ~ResourceManager();
 
-  /// Returns all registered state handles keys.
+  /// Returns all registered state interfaces keys.
   /**
    * The keys are collected from each loaded hardware component.
    *
    * \return vector of strings, containing all registered keys.
    */
-  std::vector<std::string> state_handle_keys() const;
+  std::vector<std::string> state_interface_keys() const;
 
-  /// Checks whether a handle is registered under the given key.
+  /// Checks whether a interface is registered under the given key.
   /**
-   * \return true if handle exist, false otherwise.
+   * \return true if interface exist, false otherwise.
    */
-  bool state_handle_exists(const std::string & key) const;
+  bool state_interface_exists(const std::string & key) const;
 
-  /// Returns all registered command handles keys.
+  /// Returns all registered command interfaces keys.
   /**
    * The keys are collected from each loaded hardware component.
    *
    * \return vector of strings, containing all registered keys.
    */
-  std::vector<std::string> command_handle_keys() const;
+  std::vector<std::string> command_interface_keys() const;
 
-  /// Checks whether a handle is registered under the given key.
+  /// Checks whether a interface is registered under the given key.
   /**
-   * \return true if handle exist, false otherwise.
+   * \return true if interface exist, false otherwise.
    */
-  bool command_handle_exists(const std::string & key) const;
+  bool command_interface_exists(const std::string & key) const;
 
   /// Return the number of loaded actuator components.
   /**

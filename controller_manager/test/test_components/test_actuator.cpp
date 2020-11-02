@@ -19,8 +19,8 @@
 
 using hardware_interface::status;
 using hardware_interface::return_type;
-using hardware_interface::StateHandle;
-using hardware_interface::CommandHandle;
+using hardware_interface::StateInterface;
+using hardware_interface::CommandInterface;
 
 class TestActuator : public hardware_interface::components::ActuatorInterface
 {
@@ -37,33 +37,33 @@ class TestActuator : public hardware_interface::components::ActuatorInterface
     return return_type::OK;
   }
 
-  std::vector<StateHandle> export_state_handles() override
+  std::vector<StateInterface> export_state_interfaces() override
   {
-    std::vector<StateHandle> state_handles;
-    state_handles.emplace_back(
-      hardware_interface::StateHandle(
+    std::vector<StateInterface> state_interfaces;
+    state_interfaces.emplace_back(
+      hardware_interface::StateInterface(
         actuator_info_.joints[0].name,
         actuator_info_.joints[0].state_interfaces[0].name,
         &position_state_));
-    state_handles.emplace_back(
-      hardware_interface::StateHandle(
+    state_interfaces.emplace_back(
+      hardware_interface::StateInterface(
         actuator_info_.joints[0].name,
         actuator_info_.joints[0].state_interfaces[1].name,
         &velocity_state_));
 
-    return state_handles;
+    return state_interfaces;
   }
 
-  std::vector<CommandHandle> export_command_handles() override
+  std::vector<CommandInterface> export_command_interfaces() override
   {
-    std::vector<CommandHandle> command_handles;
-    command_handles.emplace_back(
-      hardware_interface::CommandHandle(
+    std::vector<CommandInterface> command_interfaces;
+    command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(
         actuator_info_.joints[0].name,
         actuator_info_.joints[0].command_interfaces[0].name,
         &velocity_command_));
 
-    return command_handles;
+    return command_interfaces;
   }
 
   return_type start() override

@@ -146,17 +146,17 @@ TEST_F(TestResourceManager, initialization_with_urdf) {
   EXPECT_EQ(1u, rm.sensor_interfaces_size());
   EXPECT_EQ(1u, rm.system_interfaces_size());
 
-  auto state_handle_keys = rm.state_handle_keys();
-  ASSERT_EQ(5u, state_handle_keys.size());
-  EXPECT_TRUE(rm.state_handle_exists("joint1/position"));
-  EXPECT_TRUE(rm.state_handle_exists("joint1/velocity"));
-  EXPECT_TRUE(rm.state_handle_exists("sensor1/velocity"));
-  EXPECT_TRUE(rm.state_handle_exists("joint2/position"));
-  EXPECT_TRUE(rm.state_handle_exists("joint3/position"));
+  auto state_interface_keys = rm.state_interface_keys();
+  ASSERT_EQ(5u, state_interface_keys.size());
+  EXPECT_TRUE(rm.state_interface_exists("joint1/position"));
+  EXPECT_TRUE(rm.state_interface_exists("joint1/velocity"));
+  EXPECT_TRUE(rm.state_interface_exists("sensor1/velocity"));
+  EXPECT_TRUE(rm.state_interface_exists("joint2/position"));
+  EXPECT_TRUE(rm.state_interface_exists("joint3/position"));
 
-  auto command_handle_keys = rm.command_handle_keys();
-  ASSERT_EQ(3u, command_handle_keys.size());
-  EXPECT_TRUE(rm.command_handle_exists("joint1/position"));
-  EXPECT_TRUE(rm.command_handle_exists("joint2/velocity"));
-  EXPECT_TRUE(rm.command_handle_exists("joint3/velocity"));
+  auto command_interface_keys = rm.command_interface_keys();
+  ASSERT_EQ(3u, command_interface_keys.size());
+  EXPECT_TRUE(rm.command_interface_exists("joint1/position"));
+  EXPECT_TRUE(rm.command_interface_exists("joint2/velocity"));
+  EXPECT_TRUE(rm.command_interface_exists("joint3/velocity"));
 }

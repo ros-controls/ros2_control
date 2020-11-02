@@ -19,7 +19,7 @@
 
 using hardware_interface::status;
 using hardware_interface::return_type;
-using hardware_interface::StateHandle;
+using hardware_interface::StateInterface;
 
 class TestSensor : public hardware_interface::components::SensorInterface
 {
@@ -31,16 +31,16 @@ class TestSensor : public hardware_interface::components::SensorInterface
     return return_type::OK;
   }
 
-  std::vector<StateHandle> export_state_handles() override
+  std::vector<StateInterface> export_state_interfaces() override
   {
-    std::vector<StateHandle> state_handles;
-    state_handles.emplace_back(
-      hardware_interface::StateHandle(
+    std::vector<StateInterface> state_interfaces;
+    state_interfaces.emplace_back(
+      hardware_interface::StateInterface(
         sensor_info_.sensors[0].name,
         sensor_info_.sensors[0].state_interfaces[0].name,
         &velocity_state_));
 
-    return state_handles;
+    return state_interfaces;
   }
 
   return_type start() override
