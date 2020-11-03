@@ -29,6 +29,19 @@ class ResourceManager
 public:
   ResourceManager();
 
+  /// Constructor for the Resource Manager.
+  /**
+   * The implementation loads the specified urdf and initializes the
+   * hardware components listed within as well as populate their respective
+   * state and command interfaces.
+   *
+   * If the interfaces ought to be validated, the constructor throws an exception
+   * in case the URDF lists interfaces which are not available.
+   *
+   * \param urdf string containing the URDF.
+   * \param validate_interfaces boolean argument indicating whether the exported
+   * interfaces ought to be validated. Defaults to true.
+   */
   explicit ResourceManager(
     const std::string & urdf, bool validate_interfaces = true);
 
