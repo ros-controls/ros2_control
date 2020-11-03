@@ -133,10 +133,6 @@ public:
   std::unordered_map<std::string, hardware_interface::CommandInterface> command_interface_map_;
 };
 
-ResourceManager::ResourceManager()
-: resource_storage_(std::make_unique<ResourceStorage>())
-{}
-
 ResourceManager::~ResourceManager() = default;
 
 ResourceManager::ResourceManager(const std::string & urdf, bool validate_interfaces)

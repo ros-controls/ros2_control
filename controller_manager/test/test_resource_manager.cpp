@@ -179,10 +179,7 @@ public:
 };
 
 TEST_F(TestResourceManager, initialization_empty) {
-  controller_manager::ResourceManager rm;
-  EXPECT_EQ(0u, rm.actuator_interfaces_size());
-  EXPECT_EQ(0u, rm.sensor_interfaces_size());
-  EXPECT_EQ(0u, rm.system_interfaces_size());
+  ASSERT_ANY_THROW(controller_manager::ResourceManager rm(""));
 }
 
 TEST_F(TestResourceManager, initialization_with_urdf) {

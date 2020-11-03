@@ -27,8 +27,6 @@ class ResourceStorage;
 class ResourceManager
 {
 public:
-  ResourceManager();
-
   /// Constructor for the Resource Manager.
   /**
    * The implementation loads the specified urdf and initializes the
