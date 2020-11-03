@@ -40,16 +40,16 @@ return_type Actuator::configure(const HardwareInfo & actuator_info)
   return impl_->configure(actuator_info);
 }
 
-std::vector<StateHandle> Actuator::export_state_handles()
+std::vector<StateInterface> Actuator::export_state_interfaces()
 {
   // TODO(karsten1987): Might be worth to do some brief sanity check here
-  return impl_->export_state_handles();
+  return impl_->export_state_interfaces();
 }
 
-std::vector<CommandHandle> Actuator::export_command_handles()
+std::vector<CommandInterface> Actuator::export_command_interfaces()
 {
   // TODO(karsten1987): Might be worth to do some brief sanity check here
-  return impl_->export_command_handles();
+  return impl_->export_command_interfaces();
 }
 
 return_type Actuator::start()

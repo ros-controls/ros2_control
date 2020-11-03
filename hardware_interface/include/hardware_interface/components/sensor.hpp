@@ -47,7 +47,7 @@ public:
   return_type configure(const HardwareInfo & sensor_info);
 
   HARDWARE_INTERFACE_PUBLIC
-  std::vector<StateHandle> export_state_handles();
+  std::vector<StateInterface> export_state_interfaces();
 
   HARDWARE_INTERFACE_PUBLIC
   return_type start();

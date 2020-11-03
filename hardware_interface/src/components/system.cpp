@@ -39,14 +39,14 @@ return_type System::configure(const HardwareInfo & system_info)
   return impl_->configure(system_info);
 }
 
-std::vector<StateHandle> System::export_state_handles()
+std::vector<StateInterface> System::export_state_interfaces()
 {
-  return impl_->export_state_handles();
+  return impl_->export_state_interfaces();
 }
 
-std::vector<CommandHandle> System::export_command_handles()
+std::vector<CommandInterface> System::export_command_interfaces()
 {
-  return impl_->export_command_handles();
+  return impl_->export_command_interfaces();
 }
 
 return_type System::start()

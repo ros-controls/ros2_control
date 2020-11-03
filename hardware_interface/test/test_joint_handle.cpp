@@ -16,8 +16,8 @@
 #include "hardware_interface/joint_handle.hpp"
 
 using hardware_interface::JointHandle;
-using hardware_interface::CommandHandle;
-using hardware_interface::StateHandle;
+using hardware_interface::CommandInterface;
+using hardware_interface::StateInterface;
 
 namespace
 {
@@ -25,21 +25,21 @@ constexpr auto JOINT_NAME = "joint_1";
 constexpr auto FOO_INTERFACE = "FooInterface";
 }  // namespace
 
-TEST(TestJointHandle, command_handle)
+TEST(TestJointHandle, command_interface)
 {
   double value = 1.337;
-  CommandHandle handle{JOINT_NAME, FOO_INTERFACE, &value};
-  EXPECT_DOUBLE_EQ(handle.get_value(), value);
-  EXPECT_NO_THROW(handle.set_value(0.0));
-  EXPECT_DOUBLE_EQ(handle.get_value(), 0.0);
+  CommandInterface interface{JOINT_NAME, FOO_INTERFACE, &value};
+  EXPECT_DOUBLE_EQ(interface.get_value(), value);
+  EXPECT_NO_THROW(interface.set_value(0.0));
+  EXPECT_DOUBLE_EQ(interface.get_value(), 0.0);
 }
 
-TEST(TestJointHandle, state_handle)
+TEST(TestJointHandle, state_interface)
 {
   double value = 1.337;
-  StateHandle handle{JOINT_NAME, FOO_INTERFACE, &value};
-  EXPECT_DOUBLE_EQ(handle.get_value(), value);
-  // handle.set_value(5);  compiler error, no set_value function
+  StateInterface interface{JOINT_NAME, FOO_INTERFACE, &value};
+  EXPECT_DOUBLE_EQ(interface.get_value(), value);
+  // interface.set_value(5);  compiler error, no set_value function
 }
 
 TEST(TestJointHandle, name_getters_work)

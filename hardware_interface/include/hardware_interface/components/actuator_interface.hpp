@@ -50,29 +50,29 @@ public:
   virtual
   return_type configure(const HardwareInfo & actuator_info) = 0;
 
-  /// Exports all state handles for this actuator.
+  /// Exports all state interfaces for this actuator.
   /**
-   * The state handles have to be created and transfered according
+   * The state interfaces have to be created and transfered according
    * to the actuator info passed in for the configuration.
    *
-   * Note the ownership over the state handles must be released.
+   * Note the ownership over the state interfaces is transfered to the caller.
    *
-   * \return vector of state handles
+   * \return vector of state interfaces
    */
   virtual
-  std::vector<StateHandle> export_state_handles() = 0;
+  std::vector<StateInterface> export_state_interfaces() = 0;
 
-  /// Exports all command handles for this actuator.
+  /// Exports all command interfaces for this actuator.
   /**
-   * The command handles have to be created and transfered according
+   * The command interfaces have to be created and transfered according
    * to the actuator info passed in for the configuration.
    *
-   * Note the ownership over the command handles must be released.
+   * Note the ownership over the state interfaces is transfered to the caller.
    *
-   * \return vector of command handles
+   * \return vector of command interfaces
    */
   virtual
-  std::vector<CommandHandle> export_command_handles() = 0;
+  std::vector<CommandInterface> export_command_interfaces() = 0;
 
   /**
    * \brief Start exchange data with the hardware.
@@ -101,8 +101,8 @@ public:
   /// Read the current state values from the actuator.
   /**
    * The data readings from the physical hardware has to be updated
-   * and reflected accordingly in the exported state handles.
-   * That is, the data pointed by the handles shall be updated.
+   * and reflected accordingly in the exported state interfaces.
+   * That is, the data pointed by the interfaces shall be updated.
    *
    * \return return_type::OK if the read was successful, return_type::ERROR otherwise.
    */
@@ -112,7 +112,7 @@ public:
   /// Write the current command values to the actuator.
   /**
    * The physical hardware shall be updated with the latest value from
-   * the exported command handles.
+   * the exported command interfaces.
    *
    * \return return_type::OK if the read was successful, return_type::ERROR otherwise.
    */
