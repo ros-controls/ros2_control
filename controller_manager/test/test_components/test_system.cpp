@@ -38,6 +38,12 @@ class TestSystem : public hardware_interface::components::SystemInterface
       state_interfaces.emplace_back(
         hardware_interface::StateInterface(
           system_info_.joints[i].name, "position", &position_state_[i]));
+      state_interfaces.emplace_back(
+        hardware_interface::StateInterface(
+          system_info_.joints[i].name, "velocity", &velocity_state_[i]));
+      state_interfaces.emplace_back(
+        hardware_interface::StateInterface(
+          system_info_.joints[i].name, "acceleration", &acceleration_state_[i]));
     }
 
     return state_interfaces;
@@ -83,6 +89,8 @@ class TestSystem : public hardware_interface::components::SystemInterface
 private:
   std::array<double, 2> velocity_command_ = {0.0, 0.0};
   std::array<double, 2> position_state_ = {0.0, 0.0};
+  std::array<double, 2> velocity_state_ = {0.0, 0.0};
+  std::array<double, 2> acceleration_state_ = {0.0, 0.0};
   hardware_interface::HardwareInfo system_info_;
 };
 

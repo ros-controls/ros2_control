@@ -52,8 +52,6 @@ public:
     system_loader_(pkg_name, system_interface_name)
   {}
 
-  ~ResourceStorage() = default;
-
   template<class HardwareT, class HardwareInterfaceT>
   void initialize_hardware(
     const hardware_interface::HardwareInfo & hardware_info,
@@ -141,7 +139,7 @@ ResourceManager::ResourceManager()
 
 ResourceManager::~ResourceManager() = default;
 
-ResourceManager::ResourceManager(const std::string & urdf)
+ResourceManager::ResourceManager(const std::string & urdf, bool validate_interfaces)
 : resource_storage_(std::make_unique<ResourceStorage>())
 {
   const std::string system_type = "system";
@@ -160,6 +158,53 @@ ResourceManager::ResourceManager(const std::string & urdf)
     if (hardware.type == system_type) {
       resource_storage_->initialize_system(hardware);
     }
+  }
+
+  auto validate_storage = [this, &hardware_info]() -> void
+    {
+      std::vector<std::string> missing_state_keys = {};
+      std::vector<std::string> missing_command_keys = {};
+
+      for (const auto & hardware : hardware_info) {
+        for (const auto & joint : hardware.joints) {
+          for (const auto & state_interface : joint.state_interfaces) {
+            if (!state_interface_exists(joint.name + "/" + state_interface.name)) {
+              missing_state_keys.emplace_back(joint.name + "/" + state_interface.name);
+            }
+          }
+          for (const auto & command_interface : joint.command_interfaces) {
+            if (!command_interface_exists(joint.name + "/" + command_interface.name)) {
+              missing_state_keys.emplace_back(joint.name + "/" + command_interface.name);
+            }
+          }
+        }
+        for (const auto & sensor : hardware.sensors) {
+          for (const auto & state_interface : sensor.state_interfaces) {
+            if (!state_interface_exists(sensor.name + "/" + state_interface.name)) {
+              missing_state_keys.emplace_back(sensor.name + "/" + state_interface.name);
+            }
+          }
+        }
+      }
+
+      if (!missing_state_keys.empty() || !missing_command_keys.empty()) {
+        std::string err_msg = "wrong state or command interface configuration.\n";
+        err_msg += "missing state interfaces:\n";
+        for (const auto & missing_key : missing_state_keys) {
+          err_msg += missing_key + "\t";
+        }
+        err_msg += "\nmissing command interfaces:\n";
+        for (const auto & missing_key : missing_command_keys) {
+          err_msg += missing_key + "\t";
+        }
+
+        throw std::runtime_error(err_msg);
+      }
+    };
+
+  // throw on missing state and command interfaces, not specified keys are being ignored
+  if (validate_interfaces) {
+    validate_storage();
   }
 }
 

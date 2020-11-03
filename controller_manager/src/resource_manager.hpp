@@ -29,7 +29,8 @@ class ResourceManager
 public:
   ResourceManager();
 
-  explicit ResourceManager(const std::string & urdf);
+  explicit ResourceManager(
+    const std::string & urdf, bool validate_interfaces = true);
 
   ResourceManager(const ResourceManager &) = delete;
 

@@ -27,12 +27,17 @@ class TestActuator : public hardware_interface::components::ActuatorInterface
   return_type configure(const hardware_interface::HardwareInfo & actuator_info) override
   {
     actuator_info_ = actuator_info;
-    // can only control one joint
-    if (actuator_info_.joints.size() != 1) {return return_type::ERROR;}
-    // can only control in position
-    if (actuator_info_.joints[0].command_interfaces.size() != 1) {return return_type::ERROR;}
-    // can only give feedback state for position and velocity
-    if (actuator_info_.joints[0].state_interfaces.size() != 2) {return return_type::ERROR;}
+
+    /*
+     * a hardware can optional prove for incorrect info here.
+     *
+     * // can only control one joint
+     * if (actuator_info_.joints.size() != 1) {return return_type::ERROR;}
+     * // can only control in position
+     * if (actuator_info_.joints[0].command_interfaces.size() != 1) {return return_type::ERROR;}
+     * // can only give feedback state for position and velocity
+     * if (actuator_info_.joints[0].state_interfaces.size() != 2) {return return_type::ERROR;}
+    */
 
     return return_type::OK;
   }
@@ -50,6 +55,11 @@ class TestActuator : public hardware_interface::components::ActuatorInterface
         actuator_info_.joints[0].name,
         actuator_info_.joints[0].state_interfaces[1].name,
         &velocity_state_));
+    state_interfaces.emplace_back(
+      hardware_interface::StateInterface(
+        actuator_info_.joints[0].name,
+        "some_unlisted_interface",
+        nullptr));
 
     return state_interfaces;
   }

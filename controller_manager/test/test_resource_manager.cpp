@@ -124,10 +124,57 @@ public:
     </joint>
   </ros2_control>
 )";
+
+    test_hardware_resource_system_missing_keys_ =
+      R"(
+  <ros2_control name="TestActuatorHardware" type="actuator">
+    <hardware>
+      <plugin>test_actuator</plugin>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position"/>
+      <command_interface name="does_not_exist"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="does_not_exist"/>
+    </joint>
+  </ros2_control>
+  <ros2_control name="TestSensorHardware" type="sensor">
+    <hardware>
+      <plugin>test_sensor</plugin>
+      <param name="example_param_write_for_sec">2</param>
+      <param name="example_param_read_for_sec">2</param>
+    </hardware>
+    <sensor name="sensor1">
+      <state_interface name="velocity"/>
+      <state_interface name="does_not_exist"/>
+    </sensor>
+  </ros2_control>
+  <ros2_control name="TestSystemHardware" type="system">
+    <hardware>
+      <plugin>test_system</plugin>
+      <param name="example_param_write_for_sec">2</param>
+      <param name="example_param_read_for_sec">2</param>
+    </hardware>
+    <joint name="joint2">
+      <command_interface name="velocity"/>
+      <command_interface name="does_not_exist"/>
+      <state_interface name="position"/>
+      <state_interface name="does_not_exist"/>
+    </joint>
+    <joint name="joint3">
+      <command_interface name="velocity"/>
+      <command_interface name="does_not_exist"/>
+      <state_interface name="position"/>
+      <state_interface name="does_not_exist"/>
+    </joint>
+  </ros2_control>
+)";
   }
 
   std::string urdf_head_;
   std::string test_hardware_resource_system_;
+  std::string test_hardware_resource_system_missing_keys_;
   std::string urdf_tail_;
 };
 
@@ -140,14 +187,20 @@ TEST_F(TestResourceManager, initialization_empty) {
 
 TEST_F(TestResourceManager, initialization_with_urdf) {
   auto urdf = urdf_head_ + test_hardware_resource_system_ + urdf_tail_;
-  controller_manager::ResourceManager rm(urdf);
+  ASSERT_NO_THROW(controller_manager::ResourceManager rm(urdf));
+}
+
+TEST_F(TestResourceManager, initialization_with_urdf_manual_validation) {
+  auto urdf = urdf_head_ + test_hardware_resource_system_ + urdf_tail_;
+  // we validate the results manually
+  controller_manager::ResourceManager rm(urdf, false);
 
   EXPECT_EQ(1u, rm.actuator_interfaces_size());
   EXPECT_EQ(1u, rm.sensor_interfaces_size());
   EXPECT_EQ(1u, rm.system_interfaces_size());
 
   auto state_interface_keys = rm.state_interface_keys();
-  ASSERT_EQ(5u, state_interface_keys.size());
+  ASSERT_EQ(10u, state_interface_keys.size());
   EXPECT_TRUE(rm.state_interface_exists("joint1/position"));
   EXPECT_TRUE(rm.state_interface_exists("joint1/velocity"));
   EXPECT_TRUE(rm.state_interface_exists("sensor1/velocity"));
@@ -159,4 +212,15 @@ TEST_F(TestResourceManager, initialization_with_urdf) {
   EXPECT_TRUE(rm.command_interface_exists("joint1/position"));
   EXPECT_TRUE(rm.command_interface_exists("joint2/velocity"));
   EXPECT_TRUE(rm.command_interface_exists("joint3/velocity"));
+}
+
+TEST_F(TestResourceManager, initialization_with_wrong_urdf) {
+  auto urdf = urdf_head_ + test_hardware_resource_system_missing_keys_ + urdf_tail_;
+  try {
+    controller_manager::ResourceManager rm(urdf);
+    FAIL();
+  } catch (const std::exception & e) {
+    std::cout << e.what() << std::endl;
+    SUCCEED() << e.what();
+  }
 }

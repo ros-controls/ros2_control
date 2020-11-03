@@ -18,7 +18,6 @@
 #include <unordered_map>
 #include <vector>
 
-#include "hardware_interface/component_info.hpp"
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/component_parser.hpp"
 
