@@ -193,8 +193,8 @@ int main()
   executor->cancel();
 }
 ```
+## Acknowledgements
 
-***
 <!-- 
     ROSIN acknowledgement from the ROSIN press kit
     @ https://github.com/rosin-project/press_kit
