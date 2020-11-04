@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <iostream>
 #include <memory>
 #include <string>
 #include <vector>
@@ -202,6 +203,24 @@ ResourceManager::ResourceManager(const std::string & urdf, bool validate_interfa
   if (validate_interfaces) {
     validate_storage();
   }
+
+  claimed_command_interface_map_.reserve(resource_storage_->command_interface_map_.size());
+  for (auto & command_interface_it : resource_storage_->command_interface_map_) {
+    const auto & interface_name = std::get<0>(command_interface_it);
+    claimed_command_interface_map_[interface_name] = false;
+    //// set deleter to command handle
+    //hardware_interface::CommandInterface::Deleter d = std::bind(
+    //  &ResourceManager::release_command_interface, this, interface_name);
+    //std::get<1>(command_interface_it).set_deleter(std::move(d));
+  }
+}
+
+// make this a lambda?
+void ResourceManager::release_command_interface(const std::string & key)
+{
+  std::lock_guard<decltype(resource_lock_)> lg(resource_lock_);
+  std::cout << "releasing " << key << std::endl;
+  claimed_command_interface_map_[key] = false;
 }
 
 std::vector<std::string> ResourceManager::state_interface_keys() const
@@ -219,6 +238,35 @@ bool ResourceManager::state_interface_exists(const std::string & key) const
          resource_storage_->state_interface_map_.end();
 }
 
+bool ResourceManager::command_interface_is_claimed(const std::string & key) const
+{
+  if (!command_interface_exists(key)) {
+    return false;
+  }
+
+  std::lock_guard<decltype(resource_lock_)> lg(resource_lock_);
+  return claimed_command_interface_map_.at(key);
+}
+
+LoanedCommandInterface ResourceManager::claim_command_interface(const std::string & key)
+{
+  if (!command_interface_exists(key)) {
+    throw std::runtime_error(
+            std::string("command interface with key") + key + " does not exist");
+  }
+
+  if (command_interface_is_claimed(key)) {
+    throw std::runtime_error(
+            std::string("command interface with key") + key + " is already claimed");
+  }
+
+  std::lock_guard<decltype(resource_lock_)> lg(resource_lock_);
+  claimed_command_interface_map_[key] = true;
+  return LoanedCommandInterface(
+    resource_storage_->command_interface_map_.at(key),
+    std::bind(&ResourceManager::release_command_interface, this, key));
+}
+
 std::vector<std::string> ResourceManager::command_interface_keys() const
 {
   std::vector<std::string> keys;
@@ -234,17 +282,17 @@ bool ResourceManager::command_interface_exists(const std::string & key) const
          resource_storage_->command_interface_map_.end();
 }
 
-size_t ResourceManager::actuator_interfaces_size() const
+size_t ResourceManager::actuator_components_size() const
 {
   return resource_storage_->actuators_.size();
 }
 
-size_t ResourceManager::sensor_interfaces_size() const
+size_t ResourceManager::sensor_components_size() const
 {
   return resource_storage_->sensors_.size();
 }
 
-size_t ResourceManager::system_interfaces_size() const
+size_t ResourceManager::system_components_size() const
 {
   return resource_storage_->systems_.size();
 }

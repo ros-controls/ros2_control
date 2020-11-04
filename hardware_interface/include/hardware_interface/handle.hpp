@@ -139,7 +139,7 @@ public:
 class StateInterface : public ReadOnlyHandle<StateInterface>
 {
 public:
-  StateInterface(const StateInterface & other) = delete;
+  StateInterface(const StateInterface & other) = default;
 
   StateInterface(StateInterface && other) = default;
 
@@ -149,6 +149,12 @@ public:
 class CommandInterface : public ReadWriteHandle<CommandInterface>
 {
 public:
+  /// CommandInterface copy constructor is actively deleted
+  /**
+   * Command interfaces are having a unique ownership and thus
+   * can't be copied in order to avoid simultaneous writes to
+   * the same resource.
+   */
   CommandInterface(const CommandInterface & other) = delete;
 
   CommandInterface(CommandInterface && other) = default;

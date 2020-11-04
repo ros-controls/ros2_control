@@ -192,9 +192,9 @@ TEST_F(TestResourceManager, initialization_with_urdf_manual_validation) {
   // we validate the results manually
   controller_manager::ResourceManager rm(urdf, false);
 
-  EXPECT_EQ(1u, rm.actuator_interfaces_size());
-  EXPECT_EQ(1u, rm.sensor_interfaces_size());
-  EXPECT_EQ(1u, rm.system_interfaces_size());
+  EXPECT_EQ(1u, rm.actuator_components_size());
+  EXPECT_EQ(1u, rm.sensor_components_size());
+  EXPECT_EQ(1u, rm.system_components_size());
 
   auto state_interface_keys = rm.state_interface_keys();
   ASSERT_EQ(10u, state_interface_keys.size());
@@ -219,5 +219,59 @@ TEST_F(TestResourceManager, initialization_with_wrong_urdf) {
   } catch (const std::exception & e) {
     std::cout << e.what() << std::endl;
     SUCCEED() << e.what();
+  }
+}
+
+TEST_F(TestResourceManager, initialization_with_urdf_unclaimed) {
+  auto urdf = urdf_head_ + test_hardware_resource_system_ + urdf_tail_;
+  // we validate the results manually
+  controller_manager::ResourceManager rm(urdf);
+
+  auto command_interface_keys = rm.command_interface_keys();
+  for (const auto & key : command_interface_keys) {
+    EXPECT_FALSE(rm.command_interface_is_claimed(key));
+  }
+  // state interfaces don't have to be locked, hence any arbitrary key
+  // should return false.
+  auto state_interface_keys = rm.state_interface_keys();
+  for (const auto & key : state_interface_keys) {
+    EXPECT_FALSE(rm.command_interface_is_claimed(key));
+  }
+}
+
+TEST_F(TestResourceManager, resource_claiming) {
+  auto urdf = urdf_head_ + test_hardware_resource_system_ + urdf_tail_;
+  controller_manager::ResourceManager rm(urdf);
+
+  const auto key = "joint1/position";
+  EXPECT_FALSE(rm.command_interface_is_claimed(key));
+
+  {
+    auto position_command_interface = rm.claim_command_interface(key);
+    EXPECT_TRUE(rm.command_interface_is_claimed(key));
+    try {
+      auto sensor1_again = rm.claim_command_interface(key);
+      FAIL();
+    } catch (const std::runtime_error &) {
+      SUCCEED();
+    }
+  }
+  EXPECT_FALSE(rm.command_interface_is_claimed(key));
+
+  for (const auto & key :
+    {"joint1/position", "joint1/position", "joint1/position", "joint2/velocity",
+      "joint3/velocity"})
+  {
+    {
+      auto interface = rm.claim_command_interface(key);
+      EXPECT_TRUE(rm.command_interface_is_claimed(key));
+      try {
+        auto interface_again = rm.claim_command_interface(key);
+        FAIL();
+      } catch (const std::runtime_error &) {
+        SUCCEED();
+      }
+    }
+    EXPECT_FALSE(rm.command_interface_is_claimed(key));
   }
 }
