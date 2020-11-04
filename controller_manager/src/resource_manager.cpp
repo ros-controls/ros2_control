@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <iostream>
 #include <memory>
 #include <string>
 #include <vector>
@@ -208,21 +207,25 @@ ResourceManager::ResourceManager(const std::string & urdf, bool validate_interfa
   for (auto & command_interface_it : resource_storage_->command_interface_map_) {
     const auto & interface_name = std::get<0>(command_interface_it);
     claimed_command_interface_map_[interface_name] = false;
-    //// set deleter to command handle
-    //hardware_interface::CommandInterface::Deleter d = std::bind(
-    //  &ResourceManager::release_command_interface, this, interface_name);
-    //std::get<1>(command_interface_it).set_deleter(std::move(d));
   }
 }
 
-// make this a lambda?
 void ResourceManager::release_command_interface(const std::string & key)
 {
   std::lock_guard<decltype(resource_lock_)> lg(resource_lock_);
-  std::cout << "releasing " << key << std::endl;
   claimed_command_interface_map_[key] = false;
 }
 
+LoanedStateInterface ResourceManager::claim_state_interface(const std::string & key)
+{
+  if (!state_interface_exists(key)) {
+    throw std::runtime_error(
+            std::string("state interface with key") + key + " does not exist");
+  }
+
+  std::lock_guard<decltype(resource_lock_)> lg(resource_lock_);
+  return LoanedStateInterface(resource_storage_->state_interface_map_.at(key));
+}
 std::vector<std::string> ResourceManager::state_interface_keys() const
 {
   std::vector<std::string> keys;

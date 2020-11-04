@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "controller_manager/loaned_command_interface.hpp"
+#include "controller_manager/loaned_state_interface.hpp"
 
 namespace controller_manager
 {
@@ -49,6 +50,17 @@ public:
   ResourceManager(const ResourceManager &) = delete;
 
   ~ResourceManager();
+
+  /// Claim a state interface given its key.
+  /**
+   * The resource is claimed as long as being in scope.
+   * Once the resource is going out of scope, the destructor
+   * returns.
+   *
+   * \param key String identifier which state interface to claim
+   * \return state interface
+   */
+  LoanedStateInterface claim_state_interface(const std::string & key);
 
   /// Returns all registered state interfaces keys.
   /**

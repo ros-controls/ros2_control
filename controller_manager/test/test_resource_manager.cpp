@@ -258,6 +258,7 @@ TEST_F(TestResourceManager, resource_claiming) {
   }
   EXPECT_FALSE(rm.command_interface_is_claimed(key));
 
+  // command interfaces can only be claimed once
   for (const auto & key :
     {"joint1/position", "joint1/position", "joint1/position", "joint2/velocity",
       "joint3/velocity"})
@@ -273,5 +274,21 @@ TEST_F(TestResourceManager, resource_claiming) {
       }
     }
     EXPECT_FALSE(rm.command_interface_is_claimed(key));
+  }
+
+  // state interfaces can be claimed multiple times
+  for (const auto & key :
+    {"joint1/position", "joint1/velocity", "sensor1/velocity", "joint2/position",
+      "joint3/position"})
+  {
+    {
+      auto interface = rm.claim_state_interface(key);
+      try {
+        auto interface_again = rm.claim_state_interface(key);
+        SUCCEED();
+      } catch (const std::runtime_error &) {
+        FAIL();
+      }
+    }
   }
 }
