@@ -22,14 +22,16 @@
 
 using namespace std::chrono_literals;
 
+constexpr const auto kLoggerName = "ros2_control_node";
+
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
 
-
   std::shared_ptr<rclcpp::Executor> executor =
     std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
   std::string manager_node_name = "controller_manager";
+  rclcpp::TimerBase::SharedPtr timer;
 
   auto cm = std::make_shared<controller_manager::ControllerManager>(
     // TODO(anyone): remove robot_hw when ResourceManager is added
@@ -37,6 +39,20 @@ int main(int argc, char ** argv)
     std::make_shared<test_robot_hardware::TestRobotHardware>(),
     executor,
     manager_node_name);
+
+  // Declare default controller manager rate of 100Hz
+  cm->declare_parameter("update_time_ms", 10);
+  // load controller_manager update time parameter
+  int update_time_ms;
+  if (!cm->get_parameter("update_time_ms", update_time_ms)) {
+    throw std::runtime_error("update_time parameter not existing or empty");
+  }
+  RCLCPP_INFO(rclcpp::get_logger(kLoggerName), "update time is %.3f ms", update_time_ms);
+
+  timer = cm->create_wall_timer(
+    std::chrono::milliseconds(update_time_ms),
+    std::bind(&controller_manager::ControllerManager::update, cm.get()),
+    cm->deterministic_callback_group_);
 
   executor->add_node(cm);
   executor->spin();

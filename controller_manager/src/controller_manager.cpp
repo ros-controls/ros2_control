@@ -63,9 +63,9 @@ ControllerManager::ControllerManager(
   loader_(std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
       kControllerInterfaceName, kControllerInterface))
 {
-  realtime_callback_group_ = create_callback_group(
+  deterministic_callback_group_ = create_callback_group(
     rclcpp::callback_group::CallbackGroupType::MutuallyExclusive);
-  services_callback_group_ = create_callback_group(
+  best_effort_callback_group_ = create_callback_group(
     rclcpp::callback_group::CallbackGroupType::MutuallyExclusive);
 
   using namespace std::placeholders;
@@ -73,34 +73,34 @@ ControllerManager::ControllerManager(
     "~/list_controllers",
     std::bind(&ControllerManager::list_controllers_srv_cb, this, _1, _2),
     rmw_qos_profile_services_default,
-    services_callback_group_);
+    best_effort_callback_group_);
   list_controller_types_service_ =
     create_service<controller_manager_msgs::srv::ListControllerTypes>(
     "~/list_controller_types",
     std::bind(&ControllerManager::list_controller_types_srv_cb, this, _1, _2),
     rmw_qos_profile_services_default,
-    services_callback_group_);
+    best_effort_callback_group_);
   load_controller_service_ = create_service<controller_manager_msgs::srv::LoadController>(
     "~/load_controller",
     std::bind(&ControllerManager::load_controller_service_cb, this, _1, _2),
     rmw_qos_profile_services_default,
-    services_callback_group_);
+    best_effort_callback_group_);
   reload_controller_libraries_service_ =
     create_service<controller_manager_msgs::srv::ReloadControllerLibraries>(
     "~/reload_controller_libraries",
     std::bind(&ControllerManager::reload_controller_libraries_service_cb, this, _1, _2),
     rmw_qos_profile_services_default,
-    services_callback_group_);
+    best_effort_callback_group_);
   switch_controller_service_ = create_service<controller_manager_msgs::srv::SwitchController>(
     "~/switch_controller",
     std::bind(&ControllerManager::switch_controller_service_cb, this, _1, _2),
     rmw_qos_profile_services_default,
-    services_callback_group_);
+    best_effort_callback_group_);
   unload_controller_service_ = create_service<controller_manager_msgs::srv::UnloadController>(
     "~/unload_controller",
     std::bind(&ControllerManager::unload_controller_service_cb, this, _1, _2),
     rmw_qos_profile_services_default,
-    services_callback_group_);
+    best_effort_callback_group_);
 
   // TODO(all): Should we declare paramters? #168 - for now yes because of the tests
   declare_parameter("robot_description", "");
@@ -109,20 +109,6 @@ ControllerManager::ControllerManager(
   if (!get_parameter("robot_description", robot_description)) {
     throw std::runtime_error("No robot_description parameter found");
   }
-
-  // Declare default controller manager rate of 100Hz
-  declare_parameter("update_time_ms", 10);
-  // load controller_manager update time parameter
-  int update_time_ms;
-  if (!get_parameter("update_time_ms", update_time_ms)) {
-    throw std::runtime_error("update_time parameter not existing or empty");
-  }
-  RCLCPP_INFO(get_logger(), "update time is %.3f ms", update_time_ms);
-
-  timer_ = create_wall_timer(
-    std::chrono::milliseconds(update_time_ms),
-    std::bind(&ControllerManager::update, this),
-    realtime_callback_group_);
 }
 
 controller_interface::ControllerInterfaceSharedPtr ControllerManager::load_controller(
