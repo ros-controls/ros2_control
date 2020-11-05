@@ -228,6 +228,7 @@ LoanedStateInterface ResourceManager::claim_state_interface(const std::string & 
   std::lock_guard<decltype(resource_lock_)> lg(resource_lock_);
   return LoanedStateInterface(resource_storage_->state_interface_map_.at(key));
 }
+
 std::vector<std::string> ResourceManager::state_interface_keys() const
 {
   std::vector<std::string> keys;
