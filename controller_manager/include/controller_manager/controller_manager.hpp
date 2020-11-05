@@ -111,6 +111,13 @@ public:
   controller_interface::return_type
   update();
 
+  /// Deterministic (real-time safe) callback group, e.g., update function.
+  /**
+   * @brief Deterministic (real-time safe) callback group for the update function. Default behavior
+   * is read hardware, update controller and finally write new values to the hardware.
+   */
+  rclcpp::callback_group::CallbackGroup::SharedPtr deterministic_callback_group_;
+
 protected:
   CONTROLLER_MANAGER_PUBLIC
   controller_interface::ControllerInterfaceSharedPtr
@@ -165,10 +172,12 @@ private:
   std::shared_ptr<rclcpp::Executor> executor_;
   std::shared_ptr<pluginlib::ClassLoader<controller_interface::ControllerInterface>> loader_;
 
-  rclcpp::callback_group::CallbackGroup::SharedPtr realtime_callback_group_;
-  rclcpp::callback_group::CallbackGroup::SharedPtr services_callback_group_;
-
-  rclcpp::TimerBase::SharedPtr timer_;
+  /// Best effort (non real-time safe) callback group, e.g., service callbacks.
+  /**
+   * @brief Best effort (non real-time safe) callback group for callbacks that can possibly break
+   * real-time requirements, for example, service callbacks.
+   */
+  rclcpp::callback_group::CallbackGroup::SharedPtr best_effort_callback_group_;
 
   /**
    * @brief The RTControllerListWrapper class wraps a double-buffered list of controllers
