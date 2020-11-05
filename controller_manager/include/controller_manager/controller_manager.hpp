@@ -174,7 +174,7 @@ private:
 
   /// Best effort (non real-time safe) callback group, e.g., service callbacks.
   /**
-   * @brief Best effort (non real-time safe) callback group for callbacks that can possibly break
+   * Best effort (non real-time safe) callback group for callbacks that can possibly break
    * real-time requirements, for example, service callbacks.
    */
   rclcpp::callback_group::CallbackGroup::SharedPtr best_effort_callback_group_;
