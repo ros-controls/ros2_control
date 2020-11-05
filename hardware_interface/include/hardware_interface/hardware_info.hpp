@@ -20,11 +20,59 @@
 #include <unordered_map>
 #include <vector>
 
-#include "hardware_interface/component_info.hpp"
-
 namespace hardware_interface
 {
 
+/**
+ * \brief This structure stores information about components defined for a specific hardware
+ * in robot's URDF.
+ */
+struct InterfaceInfo
+{
+  /**
+   * \brief name of the command interfaces that can be set, e.g. "position", "velocity", etc.
+   * Used by joints.
+   */
+  std::string name;
+  /**
+   * \brief (optional) minimal allowed values of the interface.
+   */
+  std::string min;
+  /**
+   * \brief (optional) maximal allowed values of the interface.
+   */
+  std::string max;
+};
+
+/**
+ * \brief This structure stores information about components defined for a specific hardware
+ * in robot's URDF.
+ */
+struct ComponentInfo
+{
+  /**
+   * \brief name of the component.
+   */
+  std::string name;
+  /**
+   * \brief type of the component: sensor or joint.
+   */
+  std::string type;
+  /**
+   * \brief name of the command interfaces that can be set, e.g. "position", "velocity", etc.
+   * Used by joints.
+   */
+  std::vector<InterfaceInfo> command_interfaces;
+  /**
+   * \brief name of the state interfaces that can be read, e.g. "position", "velocity", etc.
+   * Used by Joints and Sensors.
+   */
+  std::vector<InterfaceInfo> state_interfaces;
+  /**
+   * \brief (optional) key-value pairs of component parameters, e.g. min/max values or serial number.
+   */
+  std::unordered_map<std::string, std::string> parameters;
+};
 /**
  * \brief This structure stores information about hardware defined in a robot's URDF.
  */

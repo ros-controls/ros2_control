@@ -42,7 +42,7 @@ ament_target_dependencies(
 target_compile_definitions(hardware_interface PRIVATE "HARDWARE_INTERFACE_BUILDING_DLL")
 
 add_library(
-  component_parser
+  component_parser SHARED
   src/component_parser.cpp
 )
 target_include_directories(

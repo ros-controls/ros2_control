@@ -39,6 +39,8 @@ public:
   HARDWARE_INTERFACE_PUBLIC
   explicit System(std::unique_ptr<SystemInterface> impl);
 
+  System(System && other) = default;
+
   ~System() = default;
 
   HARDWARE_INTERFACE_PUBLIC

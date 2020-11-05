@@ -21,6 +21,7 @@ find_package(rclcpp REQUIRED)
 
 add_library(controller_manager SHARED
   src/controller_manager.cpp
+  src/resource_manager.cpp
 )
 target_include_directories(controller_manager PRIVATE include)
 ament_target_dependencies(controller_manager
@@ -65,6 +66,11 @@ if(BUILD_TESTING)
   target_include_directories(test_controller PRIVATE include)
   target_link_libraries(test_controller controller_manager)
   target_compile_definitions(test_controller PRIVATE "CONTROLLER_MANAGER_BUILDING_DLL")
+  pluginlib_export_plugin_description_file(
+    controller_interface test/test_controller/test_controller.xml)
+  install(TARGETS test_controller
+    DESTINATION lib
+  )
 
   ament_add_gmock(
     test_controller_manager
@@ -101,11 +107,25 @@ if(BUILD_TESTING)
     test_robot_hardware
   )
 
-  pluginlib_export_plugin_description_file(controller_interface test/test_controller.xml)
-
-  install(TARGETS test_controller
+  add_library(test_components SHARED
+    test/test_components/test_actuator.cpp
+    test/test_components/test_sensor.cpp
+    test/test_components/test_system.cpp)
+  ament_target_dependencies(test_components
+    hardware_interface
+    pluginlib)
+  install(TARGETS test_components
     DESTINATION lib
   )
+  pluginlib_export_plugin_description_file(
+    hardware_interface test/test_components/test_components.xml)
+
+  ament_add_gmock(
+    test_resource_manager
+    test/test_resource_manager.cpp
+  )
+  target_include_directories(test_resource_manager PRIVATE include src)
+  target_link_libraries(test_resource_manager controller_manager)
 endif()
 
 ament_export_libraries(
