@@ -79,17 +79,23 @@ public:
   }
 
   template<class HardwareT>
-  void import_command_interfaces(HardwareT & hardware)
+  void import_command_interfaces(
+    HardwareT & hardware,
+    std::unordered_map<std::string, bool> & claimed_command_interface_map)
   {
     auto interfaces = hardware.export_command_interfaces();
     for (auto i = 0u; i < interfaces.size(); ++i) {
       auto key = interfaces[i].get_name() + "/" + interfaces[i].get_interface_name();
       command_interface_map_.emplace(
         std::make_pair(key, std::move(interfaces[i])));
+      claimed_command_interface_map.emplace(
+        std::make_pair(key, false));
     }
   }
 
-  void initialize_actuator(const hardware_interface::HardwareInfo & hardware_info)
+  void initialize_actuator(
+    const hardware_interface::HardwareInfo & hardware_info,
+    std::unordered_map<std::string, bool> & claimed_command_interface_map)
   {
     initialize_hardware<hardware_interface::components::Actuator,
       hardware_interface::components::ActuatorInterface>(
@@ -98,7 +104,7 @@ public:
       throw std::runtime_error(std::string("failed to configure ") + hardware_info.name);
     }
     import_state_interfaces(actuators_.back());
-    import_command_interfaces(actuators_.back());
+    import_command_interfaces(actuators_.back(), claimed_command_interface_map);
   }
 
   void initialize_sensor(const hardware_interface::HardwareInfo & hardware_info)
@@ -110,14 +116,16 @@ public:
     import_state_interfaces(sensors_.back());
   }
 
-  void initialize_system(const hardware_interface::HardwareInfo & hardware_info)
+  void initialize_system(
+    const hardware_interface::HardwareInfo & hardware_info,
+    std::unordered_map<std::string, bool> & claimed_command_interface_map)
   {
     initialize_hardware<hardware_interface::components::System,
       hardware_interface::components::SystemInterface>(
       hardware_info, system_loader_, systems_);
     systems_.back().configure(hardware_info);
     import_state_interfaces(systems_.back());
-    import_command_interfaces(systems_.back());
+    import_command_interfaces(systems_.back(), claimed_command_interface_map);
   }
 
   // hardware plugins
@@ -146,13 +154,13 @@ ResourceManager::ResourceManager(const std::string & urdf, bool validate_interfa
 
   for (const auto & hardware : hardware_info) {
     if (hardware.type == actuator_type) {
-      resource_storage_->initialize_actuator(hardware);
+      resource_storage_->initialize_actuator(hardware, claimed_command_interface_map_);
     }
     if (hardware.type == sensor_type) {
       resource_storage_->initialize_sensor(hardware);
     }
     if (hardware.type == system_type) {
-      resource_storage_->initialize_system(hardware);
+      resource_storage_->initialize_system(hardware, claimed_command_interface_map_);
     }
   }
 
@@ -201,12 +209,6 @@ ResourceManager::ResourceManager(const std::string & urdf, bool validate_interfa
   // throw on missing state and command interfaces, not specified keys are being ignored
   if (validate_interfaces) {
     validate_storage();
-  }
-
-  claimed_command_interface_map_.reserve(resource_storage_->command_interface_map_.size());
-  for (auto & command_interface_it : resource_storage_->command_interface_map_) {
-    const auto & interface_name = std::get<0>(command_interface_it);
-    claimed_command_interface_map_[interface_name] = false;
   }
 }
 
@@ -285,14 +287,44 @@ bool ResourceManager::command_interface_exists(const std::string & key) const
          resource_storage_->command_interface_map_.end();
 }
 
+void ResourceManager::import_component(
+  std::unique_ptr<hardware_interface::components::ActuatorInterface> actuator)
+{
+  resource_storage_->actuators_.emplace_back(
+    hardware_interface::components::Actuator(
+      std::move(
+        actuator)));
+  resource_storage_->import_state_interfaces(resource_storage_->actuators_.back());
+  resource_storage_->import_command_interfaces(
+    resource_storage_->actuators_.back(), claimed_command_interface_map_);
+}
+
 size_t ResourceManager::actuator_components_size() const
 {
   return resource_storage_->actuators_.size();
 }
 
+void ResourceManager::import_component(
+  std::unique_ptr<hardware_interface::components::SensorInterface> sensor)
+{
+  resource_storage_->sensors_.emplace_back(
+    hardware_interface::components::Sensor(std::move(sensor)));
+  resource_storage_->import_state_interfaces(resource_storage_->sensors_.back());
+}
+
 size_t ResourceManager::sensor_components_size() const
 {
   return resource_storage_->sensors_.size();
+}
+
+void ResourceManager::import_component(
+  std::unique_ptr<hardware_interface::components::SystemInterface> system)
+{
+  resource_storage_->systems_.emplace_back(
+    hardware_interface::components::System(std::move(system)));
+  resource_storage_->import_state_interfaces(resource_storage_->systems_.back());
+  resource_storage_->import_command_interfaces(
+    resource_storage_->systems_.back(), claimed_command_interface_map_);
 }
 
 size_t ResourceManager::system_components_size() const

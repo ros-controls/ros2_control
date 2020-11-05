@@ -17,6 +17,9 @@
 #include <algorithm>
 #include <memory>
 #include <string>
+#include <vector>
+
+#include "hardware_interface/components/actuator_interface.hpp"
 
 #include "resource_manager.hpp"
 
@@ -291,4 +294,81 @@ TEST_F(TestResourceManager, resource_claiming) {
       }
     }
   }
+}
+
+class ExternalComponent : public hardware_interface::components::ActuatorInterface
+{
+  hardware_interface::return_type configure(const hardware_interface::HardwareInfo &) override
+  {
+    return hardware_interface::return_type::OK;
+  }
+
+  std::vector<hardware_interface::StateInterface> export_state_interfaces() override
+  {
+    std::vector<hardware_interface::StateInterface> state_interfaces;
+    state_interfaces.emplace_back(
+      hardware_interface::StateInterface(
+        "external_joint", "external_state_interface", nullptr));
+
+    return state_interfaces;
+  }
+
+  std::vector<hardware_interface::CommandInterface> export_command_interfaces() override
+  {
+    std::vector<hardware_interface::CommandInterface> command_interfaces;
+    command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(
+        "external_joint", "external_command_interface", nullptr));
+
+    return command_interfaces;
+  }
+
+  hardware_interface::return_type start() override
+  {
+    return hardware_interface::return_type::OK;
+  }
+
+  hardware_interface::return_type stop() override
+  {
+    return hardware_interface::return_type::OK;
+  }
+
+  hardware_interface::status get_status() const override
+  {
+    return hardware_interface::status::UNKNOWN;
+  }
+
+  hardware_interface::return_type read() override
+  {
+    return hardware_interface::return_type::OK;
+  }
+
+  hardware_interface::return_type write() override
+  {
+    return hardware_interface::return_type::OK;
+  }
+};
+
+TEST_F(TestResourceManager, post_initialization_add_components) {
+  auto urdf = urdf_head_ + test_hardware_resource_system_ + urdf_tail_;
+  // we validate the results manually
+  controller_manager::ResourceManager rm(urdf, false);
+
+  EXPECT_EQ(1u, rm.actuator_components_size());
+  EXPECT_EQ(1u, rm.sensor_components_size());
+  EXPECT_EQ(1u, rm.system_components_size());
+
+  ASSERT_EQ(10u, rm.state_interface_keys().size());
+  ASSERT_EQ(3u, rm.command_interface_keys().size());
+
+  rm.import_component(std::make_unique<ExternalComponent>());
+  EXPECT_EQ(2u, rm.actuator_components_size());
+
+  ASSERT_EQ(11u, rm.state_interface_keys().size());
+  EXPECT_TRUE(rm.state_interface_exists("external_joint/external_state_interface"));
+  ASSERT_EQ(4u, rm.command_interface_keys().size());
+  EXPECT_TRUE(rm.command_interface_exists("external_joint/external_command_interface"));
+
+  EXPECT_NO_THROW(rm.claim_state_interface("external_joint/external_state_interface"));
+  EXPECT_NO_THROW(rm.claim_command_interface("external_joint/external_command_interface"));
 }

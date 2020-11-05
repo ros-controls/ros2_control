@@ -23,6 +23,16 @@
 #include "controller_manager/loaned_command_interface.hpp"
 #include "controller_manager/loaned_state_interface.hpp"
 
+namespace hardware_interface
+{
+namespace components
+{
+class ActuatorInterface;
+class SensorInterface;
+class SystemInterface;
+}  // namespace components
+}  // namespace hardware_interface
+
 namespace controller_manager
 {
 
@@ -118,17 +128,54 @@ public:
    */
   size_t actuator_components_size() const;
 
+  /// Import a hardware component which is not listed in the URDF
+  /**
+   * Components which are initialized outside a URDF can be added post initialization.
+   *
+   * \note this might invalidate existing state and command interfaces and should thus
+   * not be called when a controller is running.
+   * \note given that no hardware_info is available, the component has to be configured
+   * externally and prior to the call to import.
+   * \param actuator pointer to the actuator interface.
+   */
+  void import_component(
+    std::unique_ptr<hardware_interface::components::ActuatorInterface> actuator);
+
   /// Return the number of loaded sensor components.
   /**
    * \return number of sensor components.
    */
   size_t sensor_components_size() const;
 
+  /// Import a hardware component which is not listed in the URDF
+  /**
+   * Components which are initialized outside a URDF can be added post initialization.
+   *
+   * \note this might invalidate existing state and command interfaces and should thus
+   * not be called when a controller is running.
+   * \note given that no hardware_info is available, the component has to be configured
+   * externally and prior to the call to import.
+   * \param sensor pointer to the sensor interface.
+   */
+  void import_component(std::unique_ptr<hardware_interface::components::SensorInterface> sensor);
+
   /// Return the number of loaded system components.
   /**
    * \return number of system components.
    */
   size_t system_components_size() const;
+
+  /// Import a hardware component which is not listed in the URDF
+  /**
+   * Components which are initialized outside a URDF can be added post initialization.
+   *
+   * \note this might invalidate existing state and command interfaces and should thus
+   * not be called when a controller is running.
+   * \note given that no hardware_info is available, the component has to be configured
+   * externally and prior to the call to import.
+   * \param system pointer to the system interface.
+   */
+  void import_component(std::unique_ptr<hardware_interface::components::SystemInterface> system);
 
 private:
   void release_command_interface(const std::string & key);
