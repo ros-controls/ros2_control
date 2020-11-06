@@ -1,4 +1,4 @@
-# Copyright 2019 Canonical Ldt.
+# Copyright 2020 PAL Robotics S.L.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,10 +19,6 @@ import rclpy
 from ros2cli.node.direct import DirectNode
 from ros2node.api import NodeNameCompleter
 from ros2param.api import call_list_parameters
-
-
-def get_hello_world():
-    return 'Hello, ROS 2 World !'
 
 
 def service_caller(service_name, service_type, request):
