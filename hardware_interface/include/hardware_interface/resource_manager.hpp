@@ -12,16 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RESOURCE_MANAGER_HPP_
-#define RESOURCE_MANAGER_HPP_
+#ifndef HARDWARE_INTERFACE__RESOURCE_MANAGER_HPP_
+#define HARDWARE_INTERFACE__RESOURCE_MANAGER_HPP_
 
 #include <memory>
+#include <mutex>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
-#include "controller_manager/loaned_command_interface.hpp"
-#include "controller_manager/loaned_state_interface.hpp"
+#include "hardware_interface/loaned_command_interface.hpp"
+#include "hardware_interface/loaned_state_interface.hpp"
 
 namespace hardware_interface
 {
@@ -31,10 +32,6 @@ class ActuatorInterface;
 class SensorInterface;
 class SystemInterface;
 }  // namespace components
-}  // namespace hardware_interface
-
-namespace controller_manager
-{
 
 class ResourceStorage;
 
@@ -139,7 +136,7 @@ public:
    * \param actuator pointer to the actuator interface.
    */
   void import_component(
-    std::unique_ptr<hardware_interface::components::ActuatorInterface> actuator);
+    std::unique_ptr<components::ActuatorInterface> actuator);
 
   /// Return the number of loaded sensor components.
   /**
@@ -157,7 +154,7 @@ public:
    * externally and prior to the call to import.
    * \param sensor pointer to the sensor interface.
    */
-  void import_component(std::unique_ptr<hardware_interface::components::SensorInterface> sensor);
+  void import_component(std::unique_ptr<components::SensorInterface> sensor);
 
   /// Return the number of loaded system components.
   /**
@@ -175,7 +172,7 @@ public:
    * externally and prior to the call to import.
    * \param system pointer to the system interface.
    */
-  void import_component(std::unique_ptr<hardware_interface::components::SystemInterface> system);
+  void import_component(std::unique_ptr<components::SystemInterface> system);
 
 private:
   void release_command_interface(const std::string & key);
@@ -187,5 +184,5 @@ private:
   std::unique_ptr<ResourceStorage> resource_storage_;
 };
 
-}  // namespace controller_manager
-#endif  // RESOURCE_MANAGER_HPP_
+}  // namespace hardware_interface
+#endif  // HARDWARE_INTERFACE__RESOURCE_MANAGER_HPP_

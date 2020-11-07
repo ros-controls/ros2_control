@@ -12,52 +12,57 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef CONTROLLER_MANAGER__LOANED_STATE_INTERFACE_HPP_
-#define CONTROLLER_MANAGER__LOANED_STATE_INTERFACE_HPP_
+#ifndef HARDWARE_INTERFACE__LOANED_COMMAND_INTERFACE_HPP_
+#define HARDWARE_INTERFACE__LOANED_COMMAND_INTERFACE_HPP_
 
 #include <utility>
 
 #include "hardware_interface/handle.hpp"
 
-namespace controller_manager
+namespace hardware_interface
 {
 
-class LoanedStateInterface
+class LoanedCommandInterface
 {
 public:
   using Deleter = std::function<void (void)>;
 
-  explicit LoanedStateInterface(hardware_interface::StateInterface & state_interface)
-  : LoanedStateInterface(state_interface, nullptr)
+  explicit LoanedCommandInterface(CommandInterface & command_interface)
+  : LoanedCommandInterface(command_interface, nullptr)
   {}
 
-  LoanedStateInterface(
-    hardware_interface::StateInterface & state_interface,
+  LoanedCommandInterface(
+    CommandInterface & command_interface,
     Deleter && deleter)
-  : state_interface_(state_interface),
+  : command_interface_(command_interface),
     deleter_(std::forward<Deleter>(deleter))
   {}
 
-  LoanedStateInterface(const LoanedStateInterface & other) = delete;
+  LoanedCommandInterface(const LoanedCommandInterface & other) = delete;
 
-  LoanedStateInterface(LoanedStateInterface && other) = default;
+  LoanedCommandInterface(LoanedCommandInterface && other) = default;
 
-  virtual ~LoanedStateInterface()
+  virtual ~LoanedCommandInterface()
   {
     if (deleter_) {
       deleter_();
     }
   }
 
+  void set_value(double val)
+  {
+    command_interface_.set_value(val);
+  }
+
   double get_value()
   {
-    return state_interface_.get_value();
+    return command_interface_.get_value();
   }
 
 private:
-  hardware_interface::StateInterface & state_interface_;
+  CommandInterface & command_interface_;
   Deleter deleter_;
 };
 
-}  // namespace controller_manager
-#endif  // CONTROLLER_MANAGER__LOANED_STATE_INTERFACE_HPP_
+}  // namespace hardware_interface
+#endif  // HARDWARE_INTERFACE__LOANED_COMMAND_INTERFACE_HPP_

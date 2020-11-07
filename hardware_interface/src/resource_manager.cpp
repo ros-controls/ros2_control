@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "hardware_interface/resource_manager.hpp"
+
 #include <memory>
 #include <string>
 #include <vector>
@@ -29,9 +31,7 @@
 
 #include "pluginlib/class_loader.hpp"
 
-#include "./resource_manager.hpp"
-
-namespace controller_manager
+namespace hardware_interface
 {
 
 class ResourceStorage
@@ -54,7 +54,7 @@ public:
 
   template<class HardwareT, class HardwareInterfaceT>
   void initialize_hardware(
-    const hardware_interface::HardwareInfo & hardware_info,
+    const HardwareInfo & hardware_info,
     pluginlib::ClassLoader<HardwareInterfaceT> & loader,
     std::vector<HardwareT> & container)
   {
@@ -94,34 +94,31 @@ public:
   }
 
   void initialize_actuator(
-    const hardware_interface::HardwareInfo & hardware_info,
+    const HardwareInfo & hardware_info,
     std::unordered_map<std::string, bool> & claimed_command_interface_map)
   {
-    initialize_hardware<hardware_interface::components::Actuator,
-      hardware_interface::components::ActuatorInterface>(
+    initialize_hardware<components::Actuator, components::ActuatorInterface>(
       hardware_info, actuator_loader_, actuators_);
-    if (hardware_interface::return_type::OK != actuators_.back().configure(hardware_info)) {
+    if (return_type::OK != actuators_.back().configure(hardware_info)) {
       throw std::runtime_error(std::string("failed to configure ") + hardware_info.name);
     }
     import_state_interfaces(actuators_.back());
     import_command_interfaces(actuators_.back(), claimed_command_interface_map);
   }
 
-  void initialize_sensor(const hardware_interface::HardwareInfo & hardware_info)
+  void initialize_sensor(const HardwareInfo & hardware_info)
   {
-    initialize_hardware<hardware_interface::components::Sensor,
-      hardware_interface::components::SensorInterface>(
+    initialize_hardware<components::Sensor, components::SensorInterface>(
       hardware_info, sensor_loader_, sensors_);
     sensors_.back().configure(hardware_info);
     import_state_interfaces(sensors_.back());
   }
 
   void initialize_system(
-    const hardware_interface::HardwareInfo & hardware_info,
+    const HardwareInfo & hardware_info,
     std::unordered_map<std::string, bool> & claimed_command_interface_map)
   {
-    initialize_hardware<hardware_interface::components::System,
-      hardware_interface::components::SystemInterface>(
+    initialize_hardware<components::System, components::SystemInterface>(
       hardware_info, system_loader_, systems_);
     systems_.back().configure(hardware_info);
     import_state_interfaces(systems_.back());
@@ -129,16 +126,16 @@ public:
   }
 
   // hardware plugins
-  pluginlib::ClassLoader<hardware_interface::components::ActuatorInterface> actuator_loader_;
-  pluginlib::ClassLoader<hardware_interface::components::SensorInterface> sensor_loader_;
-  pluginlib::ClassLoader<hardware_interface::components::SystemInterface> system_loader_;
+  pluginlib::ClassLoader<components::ActuatorInterface> actuator_loader_;
+  pluginlib::ClassLoader<components::SensorInterface> sensor_loader_;
+  pluginlib::ClassLoader<components::SystemInterface> system_loader_;
 
-  std::vector<hardware_interface::components::Actuator> actuators_;
-  std::vector<hardware_interface::components::Sensor> sensors_;
-  std::vector<hardware_interface::components::System> systems_;
+  std::vector<components::Actuator> actuators_;
+  std::vector<components::Sensor> sensors_;
+  std::vector<components::System> systems_;
 
-  std::unordered_map<std::string, hardware_interface::StateInterface> state_interface_map_;
-  std::unordered_map<std::string, hardware_interface::CommandInterface> command_interface_map_;
+  std::unordered_map<std::string, StateInterface> state_interface_map_;
+  std::unordered_map<std::string, CommandInterface> command_interface_map_;
 };
 
 ResourceManager::~ResourceManager() = default;
@@ -288,13 +285,10 @@ bool ResourceManager::command_interface_exists(const std::string & key) const
          resource_storage_->command_interface_map_.end();
 }
 
-void ResourceManager::import_component(
-  std::unique_ptr<hardware_interface::components::ActuatorInterface> actuator)
+void ResourceManager::import_component(std::unique_ptr<components::ActuatorInterface> actuator)
 {
   resource_storage_->actuators_.emplace_back(
-    hardware_interface::components::Actuator(
-      std::move(
-        actuator)));
+    components::Actuator(std::move(actuator)));
   resource_storage_->import_state_interfaces(resource_storage_->actuators_.back());
   resource_storage_->import_command_interfaces(
     resource_storage_->actuators_.back(), claimed_command_interface_map_);
@@ -305,11 +299,9 @@ size_t ResourceManager::actuator_components_size() const
   return resource_storage_->actuators_.size();
 }
 
-void ResourceManager::import_component(
-  std::unique_ptr<hardware_interface::components::SensorInterface> sensor)
+void ResourceManager::import_component(std::unique_ptr<components::SensorInterface> sensor)
 {
-  resource_storage_->sensors_.emplace_back(
-    hardware_interface::components::Sensor(std::move(sensor)));
+  resource_storage_->sensors_.emplace_back(components::Sensor(std::move(sensor)));
   resource_storage_->import_state_interfaces(resource_storage_->sensors_.back());
 }
 
@@ -318,11 +310,9 @@ size_t ResourceManager::sensor_components_size() const
   return resource_storage_->sensors_.size();
 }
 
-void ResourceManager::import_component(
-  std::unique_ptr<hardware_interface::components::SystemInterface> system)
+void ResourceManager::import_component(std::unique_ptr<components::SystemInterface> system)
 {
-  resource_storage_->systems_.emplace_back(
-    hardware_interface::components::System(std::move(system)));
+  resource_storage_->systems_.emplace_back(components::System(std::move(system)));
   resource_storage_->import_state_interfaces(resource_storage_->systems_.back());
   resource_storage_->import_command_interfaces(
     resource_storage_->systems_.back(), claimed_command_interface_map_);
@@ -332,4 +322,4 @@ size_t ResourceManager::system_components_size() const
 {
   return resource_storage_->systems_.size();
 }
-}  // namespace controller_manager
+}  // namespace hardware_interface

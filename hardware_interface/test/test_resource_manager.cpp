@@ -20,8 +20,7 @@
 #include <vector>
 
 #include "hardware_interface/components/actuator_interface.hpp"
-
-#include "resource_manager.hpp"
+#include "hardware_interface/resource_manager.hpp"
 
 class TestResourceManager : public ::testing::Test
 {
@@ -182,18 +181,18 @@ public:
 };
 
 TEST_F(TestResourceManager, initialization_empty) {
-  ASSERT_ANY_THROW(controller_manager::ResourceManager rm(""));
+  ASSERT_ANY_THROW(hardware_interface::ResourceManager rm(""));
 }
 
 TEST_F(TestResourceManager, initialization_with_urdf) {
   auto urdf = urdf_head_ + test_hardware_resource_system_ + urdf_tail_;
-  ASSERT_NO_THROW(controller_manager::ResourceManager rm(urdf));
+  ASSERT_NO_THROW(hardware_interface::ResourceManager rm(urdf));
 }
 
 TEST_F(TestResourceManager, initialization_with_urdf_manual_validation) {
   auto urdf = urdf_head_ + test_hardware_resource_system_ + urdf_tail_;
   // we validate the results manually
-  controller_manager::ResourceManager rm(urdf, false);
+  hardware_interface::ResourceManager rm(urdf, false);
 
   EXPECT_EQ(1u, rm.actuator_components_size());
   EXPECT_EQ(1u, rm.sensor_components_size());
@@ -217,7 +216,7 @@ TEST_F(TestResourceManager, initialization_with_urdf_manual_validation) {
 TEST_F(TestResourceManager, initialization_with_wrong_urdf) {
   auto urdf = urdf_head_ + test_hardware_resource_system_missing_keys_ + urdf_tail_;
   try {
-    controller_manager::ResourceManager rm(urdf);
+    hardware_interface::ResourceManager rm(urdf);
     FAIL();
   } catch (const std::exception & e) {
     std::cout << e.what() << std::endl;
@@ -228,7 +227,7 @@ TEST_F(TestResourceManager, initialization_with_wrong_urdf) {
 TEST_F(TestResourceManager, initialization_with_urdf_unclaimed) {
   auto urdf = urdf_head_ + test_hardware_resource_system_ + urdf_tail_;
   // we validate the results manually
-  controller_manager::ResourceManager rm(urdf);
+  hardware_interface::ResourceManager rm(urdf);
 
   auto command_interface_keys = rm.command_interface_keys();
   for (const auto & key : command_interface_keys) {
@@ -244,7 +243,7 @@ TEST_F(TestResourceManager, initialization_with_urdf_unclaimed) {
 
 TEST_F(TestResourceManager, resource_claiming) {
   auto urdf = urdf_head_ + test_hardware_resource_system_ + urdf_tail_;
-  controller_manager::ResourceManager rm(urdf);
+  hardware_interface::ResourceManager rm(urdf);
 
   const auto key = "joint1/position";
   EXPECT_FALSE(rm.command_interface_is_claimed(key));
@@ -352,7 +351,7 @@ class ExternalComponent : public hardware_interface::components::ActuatorInterfa
 TEST_F(TestResourceManager, post_initialization_add_components) {
   auto urdf = urdf_head_ + test_hardware_resource_system_ + urdf_tail_;
   // we validate the results manually
-  controller_manager::ResourceManager rm(urdf, false);
+  hardware_interface::ResourceManager rm(urdf, false);
 
   EXPECT_EQ(1u, rm.actuator_components_size());
   EXPECT_EQ(1u, rm.sensor_components_size());
