@@ -752,8 +752,18 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_robot_with_sens
   EXPECT_EQ(hardware_info.sensors[0].name, "tcp_fts_sensor");
   EXPECT_EQ(hardware_info.sensors[0].type, "sensor");
   EXPECT_THAT(hardware_info.sensors[0].state_interfaces, SizeIs(6));
+  EXPECT_THAT(hardware_info.sensors[0].command_interfaces, IsEmpty());
+  EXPECT_THAT(hardware_info.sensors[0].state_interfaces[0].name, "fx");
+  EXPECT_THAT(hardware_info.sensors[0].state_interfaces[1].name, "fy");
+  EXPECT_THAT(hardware_info.sensors[0].state_interfaces[2].name, "fz");
+  EXPECT_THAT(hardware_info.sensors[0].state_interfaces[3].name, "tx");
+  EXPECT_THAT(hardware_info.sensors[0].state_interfaces[4].name, "ty");
+  EXPECT_THAT(hardware_info.sensors[0].state_interfaces[5].name, "tz");
+
   ASSERT_THAT(hardware_info.sensors[0].parameters, SizeIs(3));
   EXPECT_EQ(hardware_info.sensors[0].parameters.at("frame_id"), "kuka_tcp");
+  EXPECT_EQ(hardware_info.sensors[0].parameters.at("lower_limits"), "-100");
+  EXPECT_EQ(hardware_info.sensors[0].parameters.at("upper_limits"), "100");
 }
 
 TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_robot_with_external_sensor)
@@ -792,8 +802,7 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_robot_with_exte
   ASSERT_THAT(hardware_info.sensors, SizeIs(1));
   EXPECT_EQ(hardware_info.sensors[0].name, "tcp_fts_sensor");
   EXPECT_EQ(hardware_info.sensors[0].type, "sensor");
-
-  // EXPECT_EQ(hardware_info.hardware_parameters.at("frame_id"), "kuka_tcp");
+  EXPECT_EQ(hardware_info.sensors[0].parameters.at("frame_id"), "kuka_tcp");
 }
 
 TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_modular_robot)
@@ -995,6 +1004,13 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_only)
   ASSERT_THAT(hardware_info.joints, SizeIs(1));
   EXPECT_EQ(hardware_info.joints[0].name, "joint1");
   EXPECT_EQ(hardware_info.joints[0].type, "joint");
+  ASSERT_THAT(hardware_info.joints[0].command_interfaces, SizeIs(1));
+  EXPECT_EQ(hardware_info.joints[0].command_interfaces[0].name, "velocity");
+  EXPECT_EQ(hardware_info.joints[0].command_interfaces[0].min, "-1");
+  EXPECT_EQ(hardware_info.joints[0].command_interfaces[0].max, "1");
+  ASSERT_THAT(hardware_info.joints[0].state_interfaces, SizeIs(1));
+  EXPECT_EQ(hardware_info.joints[0].state_interfaces[0].name, "velocity");
+
 
   ASSERT_THAT(hardware_info.transmissions, SizeIs(1));
   EXPECT_EQ(hardware_info.transmissions[0].name, "transmission1");
