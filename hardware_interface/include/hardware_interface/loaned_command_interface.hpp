@@ -12,14 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef CONTROLLER_MANAGER__LOANED_COMMAND_INTERFACE_HPP_
-#define CONTROLLER_MANAGER__LOANED_COMMAND_INTERFACE_HPP_
+#ifndef HARDWARE_INTERFACE__LOANED_COMMAND_INTERFACE_HPP_
+#define HARDWARE_INTERFACE__LOANED_COMMAND_INTERFACE_HPP_
 
+#include <functional>
 #include <utility>
 
 #include "hardware_interface/handle.hpp"
 
-namespace controller_manager
+namespace hardware_interface
 {
 
 class LoanedCommandInterface
@@ -27,12 +28,12 @@ class LoanedCommandInterface
 public:
   using Deleter = std::function<void (void)>;
 
-  explicit LoanedCommandInterface(hardware_interface::CommandInterface & command_interface)
+  explicit LoanedCommandInterface(CommandInterface & command_interface)
   : LoanedCommandInterface(command_interface, nullptr)
   {}
 
   LoanedCommandInterface(
-    hardware_interface::CommandInterface & command_interface,
+    CommandInterface & command_interface,
     Deleter && deleter)
   : command_interface_(command_interface),
     deleter_(std::forward<Deleter>(deleter))
@@ -60,9 +61,9 @@ public:
   }
 
 private:
-  hardware_interface::CommandInterface & command_interface_;
+  CommandInterface & command_interface_;
   Deleter deleter_;
 };
 
-}  // namespace controller_manager
-#endif  // CONTROLLER_MANAGER__LOANED_COMMAND_INTERFACE_HPP_
+}  // namespace hardware_interface
+#endif  // HARDWARE_INTERFACE__LOANED_COMMAND_INTERFACE_HPP_
