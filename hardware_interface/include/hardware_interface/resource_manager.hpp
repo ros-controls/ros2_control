@@ -177,7 +177,6 @@ public:
 private:
   void release_command_interface(const std::string & key);
 
-  // TODO(karsten1987): Optimize this with std::vector, maps are bad
   std::unordered_map<std::string, bool> claimed_command_interface_map_;
 
   mutable std::recursive_mutex resource_lock_;

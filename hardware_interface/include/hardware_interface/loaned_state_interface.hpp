@@ -50,12 +50,12 @@ public:
     }
   }
 
-  double get_value()
+  double get_value() const
   {
     return state_interface_.get_value();
   }
 
-private:
+protected:
   StateInterface & state_interface_;
   Deleter deleter_;
 };

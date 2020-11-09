@@ -251,11 +251,8 @@ TEST_F(TestResourceManager, resource_claiming) {
   {
     auto position_command_interface = rm.claim_command_interface(key);
     EXPECT_TRUE(rm.command_interface_is_claimed(key));
-    try {
-      auto sensor1_again = rm.claim_command_interface(key);
-      FAIL();
-    } catch (const std::runtime_error &) {
-      SUCCEED();
+    {
+      EXPECT_ANY_THROW(rm.claim_command_interface(key));
     }
   }
   EXPECT_FALSE(rm.command_interface_is_claimed(key));
@@ -268,11 +265,8 @@ TEST_F(TestResourceManager, resource_claiming) {
     {
       auto interface = rm.claim_command_interface(key);
       EXPECT_TRUE(rm.command_interface_is_claimed(key));
-      try {
-        auto interface_again = rm.claim_command_interface(key);
-        FAIL();
-      } catch (const std::runtime_error &) {
-        SUCCEED();
+      {
+        EXPECT_ANY_THROW(rm.claim_command_interface(key));
       }
     }
     EXPECT_FALSE(rm.command_interface_is_claimed(key));
@@ -285,11 +279,8 @@ TEST_F(TestResourceManager, resource_claiming) {
   {
     {
       auto interface = rm.claim_state_interface(key);
-      try {
-        auto interface_again = rm.claim_state_interface(key);
-        SUCCEED();
-      } catch (const std::runtime_error &) {
-        FAIL();
+      {
+        EXPECT_NO_THROW(rm.claim_state_interface(key));
       }
     }
   }

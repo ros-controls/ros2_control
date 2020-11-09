@@ -222,7 +222,6 @@ LoanedStateInterface ResourceManager::claim_state_interface(const std::string & 
             std::string("state interface with key") + key + " does not exist");
   }
 
-  std::lock_guard<decltype(resource_lock_)> lg(resource_lock_);
   return LoanedStateInterface(resource_storage_->state_interface_map_.at(key));
 }
 
@@ -258,12 +257,12 @@ LoanedCommandInterface ResourceManager::claim_command_interface(const std::strin
             std::string("command interface with key") + key + " does not exist");
   }
 
+  std::lock_guard<decltype(resource_lock_)> lg(resource_lock_);
   if (command_interface_is_claimed(key)) {
     throw std::runtime_error(
             std::string("command interface with key") + key + " is already claimed");
   }
 
-  std::lock_guard<decltype(resource_lock_)> lg(resource_lock_);
   claimed_command_interface_map_[key] = true;
   return LoanedCommandInterface(
     resource_storage_->command_interface_map_.at(key),
