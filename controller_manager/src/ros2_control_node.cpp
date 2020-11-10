@@ -50,7 +50,7 @@ int main(int argc, char ** argv)
   RCLCPP_INFO(rclcpp::get_logger(kLoggerName), "update rate is %d Hz", update_rate);
 
   timer = cm->create_wall_timer(
-    std::chrono::milliseconds(1000/update_rate),
+    std::chrono::milliseconds(1000 / update_rate),
     std::bind(&controller_manager::ControllerManager::update, cm.get()),
     cm->deterministic_callback_group_);
 
