@@ -35,7 +35,7 @@ if(BUILD_TESTING)
 
   ament_add_gtest(joint_limits_urdf_test test/joint_limits_urdf_test.cpp)
   target_include_directories(joint_limits_urdf_test PUBLIC include)
-  ament_target_dependencies(joint_limits_urdf_test rclcpp)
+  ament_target_dependencies(joint_limits_urdf_test rclcpp urdf)
 endif()
 
 # Install headers
