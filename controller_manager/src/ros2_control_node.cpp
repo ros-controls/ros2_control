@@ -41,16 +41,16 @@ int main(int argc, char ** argv)
     manager_node_name);
 
   // Declare default controller manager rate of 100Hz
-  cm->declare_parameter("update_time_ms", 10);
+  cm->declare_parameter("update_rate", 100);
   // load controller_manager update time parameter
-  int update_time_ms;
-  if (!cm->get_parameter("update_time_ms", update_time_ms)) {
-    throw std::runtime_error("update_time parameter not existing or empty");
+  int update_rate;
+  if (!cm->get_parameter("update_rate", update_rate)) {
+    throw std::runtime_error("update_rate parameter not existing or empty");
   }
-  RCLCPP_INFO(rclcpp::get_logger(kLoggerName), "update time is %.3f ms", update_time_ms);
+  RCLCPP_INFO(rclcpp::get_logger(kLoggerName), "update rate is %d Hz", update_rate);
 
   timer = cm->create_wall_timer(
-    std::chrono::milliseconds(update_time_ms),
+    std::chrono::milliseconds(1000/update_rate),
     std::bind(&controller_manager::ControllerManager::update, cm.get()),
     cm->deterministic_callback_group_);
 
