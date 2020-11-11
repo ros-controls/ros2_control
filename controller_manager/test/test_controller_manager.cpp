@@ -143,8 +143,8 @@ TEST_F(TestControllerManager, controller_parameters) {
   // controller_manager_parameter because it has no prefix
   // (and controller manager accepts all parameters)
   rclcpp::Parameter controller_manager_parameter("double_param", 0.5);
-  rclcpp::Parameter test_controller_parameter(test_controller::TEST_CONTROLLER_NAME + std::string(
-      ".int_param"), 123);
+  rclcpp::Parameter test_controller_parameter(
+    test_controller::TEST_CONTROLLER_NAME + std::string(".int_param"), 123);
 
 
   EXPECT_TRUE(cm->set_parameter(controller_manager_parameter).successful);
