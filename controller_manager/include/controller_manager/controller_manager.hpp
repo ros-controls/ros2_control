@@ -44,8 +44,8 @@ namespace controller_manager
 class ControllerManager : public rclcpp::Node
 {
 public:
-  static constexpr bool WAIT_FOR_ALL_RESOURCES = false;
-  static constexpr double INFINITE_TIMEOUT = 0.0;
+  static constexpr bool kWaitForAllResources = false;
+  static constexpr double kInfiniteTimeout = 0.0;
 
   CONTROLLER_MANAGER_PUBLIC
   ControllerManager(
@@ -104,8 +104,8 @@ public:
     const std::vector<std::string> & start_controllers,
     const std::vector<std::string> & stop_controllers,
     int strictness,
-    bool start_asap = WAIT_FOR_ALL_RESOURCES,
-    const rclcpp::Duration & timeout = rclcpp::Duration(INFINITE_TIMEOUT));
+    bool start_asap = kWaitForAllResources,
+    const rclcpp::Duration & timeout = rclcpp::Duration(kInfiniteTimeout));
 
   CONTROLLER_MANAGER_PUBLIC
   controller_interface::return_type
@@ -116,7 +116,7 @@ public:
    * Deterministic (real-time safe) callback group for the update function. Default behavior
    * is read hardware, update controller and finally write new values to the hardware.
    */
-  rclcpp::callback_group::CallbackGroup::SharedPtr deterministic_callback_group_;
+  rclcpp::CallbackGroup::SharedPtr deterministic_callback_group_;
 
 protected:
   CONTROLLER_MANAGER_PUBLIC
@@ -177,7 +177,7 @@ private:
    * Best effort (non real-time safe) callback group for callbacks that can possibly break
    * real-time requirements, for example, service callbacks.
    */
-  rclcpp::callback_group::CallbackGroup::SharedPtr best_effort_callback_group_;
+  rclcpp::CallbackGroup::SharedPtr best_effort_callback_group_;
 
   /**
    * @brief The RTControllerListWrapper class wraps a double-buffered list of controllers
