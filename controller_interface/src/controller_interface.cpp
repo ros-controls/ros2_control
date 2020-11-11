@@ -22,10 +22,10 @@ namespace controller_interface
 
 return_type
 ControllerInterface::init(
-  std::weak_ptr<hardware_interface::RobotHardware> robot_hardware,
+  std::weak_ptr<hardware_interface::ResourceManager> resource_manager,
   const std::string & controller_name)
 {
-  robot_hardware_ = robot_hardware;
+  resource_manager_ = resource_manager;
   lifecycle_node_ = std::make_shared<rclcpp_lifecycle::LifecycleNode>(
     controller_name,
     rclcpp::NodeOptions().allow_undeclared_parameters(true).

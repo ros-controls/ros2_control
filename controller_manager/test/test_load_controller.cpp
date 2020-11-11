@@ -31,21 +31,22 @@
 using ::testing::_;
 using ::testing::Return;
 
-TEST_F(TestControllerManager, load_unknown_controller)
+class TestLoadController : public ControllerManagerFixture
+{};
+
+TEST_F(TestLoadController, load_unknown_controller)
 {
-  controller_manager::ControllerManager cm(robot_, executor_, "test_controller_manager");
   ASSERT_THROW(
-    cm.load_controller("unknown_controller_name", "unknown_controller_type"), std::runtime_error);
+    cm_->load_controller("unknown_controller_name", "unknown_controller_type"), std::runtime_error);
 }
 
-TEST_F(TestControllerManager, load1_known_controller)
+TEST_F(TestLoadController, load1_known_controller)
 {
-  controller_manager::ControllerManager cm(robot_, executor_, "test_controller_manager");
-  ASSERT_NO_THROW(cm.load_controller("test_controller_01", test_controller::TEST_CONTROLLER_TYPE));
-  EXPECT_EQ(1u, cm.get_loaded_controllers().size());
+  ASSERT_NO_THROW(cm_->load_controller("test_controller_01", test_controller::TEST_CONTROLLER_TYPE));
+  EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
 
   controller_manager::ControllerSpec abstract_test_controller =
-    cm.get_loaded_controllers()[0];
+    cm_->get_loaded_controllers()[0];
 
   auto lifecycle_node = abstract_test_controller.c->get_lifecycle_node();
   lifecycle_node->configure();
@@ -54,17 +55,16 @@ TEST_F(TestControllerManager, load1_known_controller)
     abstract_test_controller.c->get_lifecycle_node()->get_current_state().id());
 }
 
-TEST_F(TestControllerManager, load2_known_controller)
+TEST_F(TestLoadController, load2_known_controller)
 {
-  controller_manager::ControllerManager cm(robot_, executor_, "test_controller_manager");
   std::string controller_type = test_controller::TEST_CONTROLLER_TYPE;
 
   // load the controller with name1
   std::string controller_name1 = "test_controller1";
-  ASSERT_NO_THROW(cm.load_controller(controller_name1, controller_type));
-  EXPECT_EQ(1u, cm.get_loaded_controllers().size());
+  ASSERT_NO_THROW(cm_->load_controller(controller_name1, controller_type));
+  EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
   controller_manager::ControllerSpec abstract_test_controller1 =
-    cm.get_loaded_controllers()[0];
+    cm_->get_loaded_controllers()[0];
   EXPECT_STREQ(
     controller_name1.c_str(), abstract_test_controller1.c->get_lifecycle_node()->get_name());
   abstract_test_controller1.c->get_lifecycle_node()->configure();
@@ -74,10 +74,10 @@ TEST_F(TestControllerManager, load2_known_controller)
 
   // load the same controller again with a different name
   std::string controller_name2 = "test_controller2";
-  ASSERT_NO_THROW(cm.load_controller(controller_name2, controller_type));
-  EXPECT_EQ(2u, cm.get_loaded_controllers().size());
+  ASSERT_NO_THROW(cm_->load_controller(controller_name2, controller_type));
+  EXPECT_EQ(2u, cm_->get_loaded_controllers().size());
   controller_manager::ControllerSpec abstract_test_controller2 =
-    cm.get_loaded_controllers()[1];
+    cm_->get_loaded_controllers()[1];
   EXPECT_STREQ(
     controller_name2.c_str(), abstract_test_controller2.c->get_lifecycle_node()->get_name());
   EXPECT_STREQ(
@@ -88,13 +88,12 @@ TEST_F(TestControllerManager, load2_known_controller)
     abstract_test_controller2.c->get_lifecycle_node()->get_current_state().id());
 }
 
-TEST_F(TestControllerManager, update)
+TEST_F(TestLoadController, update)
 {
-  controller_manager::ControllerManager cm(robot_, executor_, "test_controller_manager");
-  ASSERT_NO_THROW(cm.load_controller("test_controller_01", test_controller::TEST_CONTROLLER_TYPE));
+  ASSERT_NO_THROW(cm_->load_controller("test_controller_01", test_controller::TEST_CONTROLLER_TYPE));
 
   controller_manager::ControllerSpec abstract_test_controller =
-    cm.get_loaded_controllers()[0];
+    cm_->get_loaded_controllers()[0];
 
   auto lifecycle_node = abstract_test_controller.c->get_lifecycle_node();
   lifecycle_node->configure();
@@ -103,17 +102,14 @@ TEST_F(TestControllerManager, update)
     abstract_test_controller.c->get_lifecycle_node()->get_current_state().id());
 }
 
-TEST_F(TestControllerManager, switch_controller_empty)
+TEST_F(TestLoadController, switch_controller_empty)
 {
-  auto cm = std::make_shared<controller_manager::ControllerManager>(
-    robot_, executor_,
-    "test_controller_manager");
   std::string controller_type = test_controller::TEST_CONTROLLER_TYPE;
 
   // load the controller with name1
   std::string controller_name1 = "test_controller1";
-  ASSERT_NO_THROW(cm->load_controller(controller_name1, controller_type));
-  EXPECT_EQ(1u, cm->get_loaded_controllers().size());
+  ASSERT_NO_THROW(cm_->load_controller(controller_name1, controller_type));
+  EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
 
   const auto UNSPECIFIED = 0;
 
@@ -122,20 +118,20 @@ TEST_F(TestControllerManager, switch_controller_empty)
 
   EXPECT_EQ(
     controller_interface::return_type::SUCCESS,
-    cm->switch_controller(
+    cm_->switch_controller(
       start_controllers, stop_controllers,
       STRICT, true, rclcpp::Duration(0, 0))
   ) << "Switch with no controllers specified";
   EXPECT_EQ(
     controller_interface::return_type::SUCCESS,
-    cm->switch_controller(
+    cm_->switch_controller(
       start_controllers, stop_controllers,
       BEST_EFFORT, true, rclcpp::Duration(0, 0))
   ) << "Switch with no controllers specified";
 
   EXPECT_EQ(
     controller_interface::return_type::SUCCESS,
-    cm->switch_controller(
+    cm_->switch_controller(
       start_controllers, stop_controllers,
       UNSPECIFIED, true, rclcpp::Duration(0, 0))
   ) << "Switch with no controllers specified, unspecified strictness defaults to BEST_EFFORT";
@@ -145,21 +141,21 @@ TEST_F(TestControllerManager, switch_controller_empty)
   stop_controllers = {};
   EXPECT_EQ(
     controller_interface::return_type::ERROR,
-    cm->switch_controller(
+    cm_->switch_controller(
       start_controllers, stop_controllers,
       STRICT, true, rclcpp::Duration(0, 0))
   ) << "STRICT switch with nonexistent controller specified";
 
   EXPECT_EQ(
     controller_interface::return_type::SUCCESS,
-    cm->switch_controller(
+    cm_->switch_controller(
       start_controllers, stop_controllers,
       BEST_EFFORT, true, rclcpp::Duration(0, 0))
   ) << "BEST_EFFORT switch with nonexistent controller specified";
 
   EXPECT_EQ(
     controller_interface::return_type::SUCCESS,
-    cm->switch_controller(
+    cm_->switch_controller(
       start_controllers, stop_controllers,
       UNSPECIFIED, true, rclcpp::Duration(0, 0))
   ) << "Unspecified switch with nonexistent controller specified, defaults to BEST_EFFORT";
@@ -170,14 +166,14 @@ TEST_F(TestControllerManager, switch_controller_empty)
   stop_controllers = {"nonexistent_controller"};
   EXPECT_EQ(
     controller_interface::return_type::ERROR,
-    cm->switch_controller(
+    cm_->switch_controller(
       start_controllers, stop_controllers,
       STRICT, true, rclcpp::Duration(0, 0))
   ) << "STRICT switch with nonexistent controller specified";
 
   EXPECT_EQ(
     controller_interface::return_type::SUCCESS,
-    cm->switch_controller(
+    cm_->switch_controller(
       start_controllers, stop_controllers,
       BEST_EFFORT, true, rclcpp::Duration(0, 0))
   ) << "BEST_EFFORT switch with nonexistent controller specified";
@@ -187,32 +183,29 @@ TEST_F(TestControllerManager, switch_controller_empty)
   stop_controllers = {"nonexistent_controller"};
   EXPECT_EQ(
     controller_interface::return_type::ERROR,
-    cm->switch_controller(
+    cm_->switch_controller(
       start_controllers, stop_controllers,
       STRICT, true, rclcpp::Duration(0, 0))
   ) << "STRICT switch with nonexistent controller specified";
 
   EXPECT_EQ(
     controller_interface::return_type::SUCCESS,
-    cm->switch_controller(
+    cm_->switch_controller(
       start_controllers, stop_controllers,
       BEST_EFFORT, true, rclcpp::Duration(0, 0))
   ) << "BEST_EFFORT switch with nonexistent controller specified";
 }
 
-TEST_F(TestControllerManager, switch_controller)
+TEST_F(TestLoadController, switch_controller)
 {
-  auto cm = std::make_shared<controller_manager::ControllerManager>(
-    robot_, executor_,
-    "test_controller_manager");
   std::string controller_type = test_controller::TEST_CONTROLLER_TYPE;
 
   // load the controller with name1
   std::string controller_name1 = "test_controller1";
-  ASSERT_NO_THROW(cm->load_controller(controller_name1, controller_type));
-  EXPECT_EQ(1u, cm->get_loaded_controllers().size());
+  ASSERT_NO_THROW(cm_->load_controller(controller_name1, controller_type));
+  EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
   controller_manager::ControllerSpec abstract_test_controller1 =
-    cm->get_loaded_controllers()[0];
+    cm_->get_loaded_controllers()[0];
 
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
@@ -225,14 +218,14 @@ TEST_F(TestControllerManager, switch_controller)
 
     EXPECT_EQ(
       controller_interface::return_type::ERROR,
-      cm->switch_controller(
+      cm_->switch_controller(
         start_controllers, stop_controllers,
         STRICT, true, rclcpp::Duration(0, 0))
     ) << "STRICT switch with stopped controller specified";
 
     EXPECT_EQ(
       controller_interface::return_type::SUCCESS,
-      cm->switch_controller(
+      cm_->switch_controller(
         start_controllers, stop_controllers,
         BEST_EFFORT, true, rclcpp::Duration(0, 0))
     ) << "BEST_EFFORT switch stopped controller specified";
@@ -244,7 +237,7 @@ TEST_F(TestControllerManager, switch_controller)
     std::vector<std::string> stop_controllers = {};
     EXPECT_EQ(
       controller_interface::return_type::ERROR,
-      cm->switch_controller(
+      cm_->switch_controller(
         start_controllers, stop_controllers,
         STRICT, true, rclcpp::Duration(0, 0))
     ) << "STRICT switch with nonexistent controller specified";
@@ -253,7 +246,7 @@ TEST_F(TestControllerManager, switch_controller)
     stop_controllers = {"nonexistent_controller"};
     EXPECT_EQ(
       controller_interface::return_type::ERROR,
-      cm->switch_controller(
+      cm_->switch_controller(
         start_controllers, stop_controllers,
         STRICT, true, rclcpp::Duration(0, 0))
     ) << "STRICT switch with nonexistent controller specified";
@@ -262,13 +255,13 @@ TEST_F(TestControllerManager, switch_controller)
   // Only testing with STRICT now for simplicity
   { //  Test starting an stopped controller, and stopping afterwards
     RCLCPP_INFO(
-      cm->get_logger(),
+      cm_->get_logger(),
       "Starting stopped controller");
     std::vector<std::string> start_controllers = {controller_name1};
     std::vector<std::string> stop_controllers = {};
     auto switch_future = std::async(
       std::launch::async,
-      &controller_manager::ControllerManager::switch_controller, cm,
+      &controller_manager::ControllerManager::switch_controller, cm_,
       start_controllers, stop_controllers,
       STRICT, true, rclcpp::Duration(0, 0));
 
@@ -276,7 +269,7 @@ TEST_F(TestControllerManager, switch_controller)
       std::future_status::timeout,
       switch_future.wait_for(std::chrono::milliseconds(100))) <<
       "switch_controller should be blocking until next update cycle";
-    cm->update();
+    cm_->update();
     EXPECT_EQ(
       controller_interface::return_type::SUCCESS,
       switch_future.get()
@@ -291,11 +284,11 @@ TEST_F(TestControllerManager, switch_controller)
     start_controllers = {};
     stop_controllers = {controller_name1};
     RCLCPP_INFO(
-      cm->get_logger(),
+      cm_->get_logger(),
       "Stopping started controller");
     switch_future = std::async(
       std::launch::async,
-      &controller_manager::ControllerManager::switch_controller, cm,
+      &controller_manager::ControllerManager::switch_controller, cm_,
       start_controllers, stop_controllers,
       STRICT, true, rclcpp::Duration(0, 0));
 
@@ -303,7 +296,7 @@ TEST_F(TestControllerManager, switch_controller)
       std::future_status::timeout,
       switch_future.wait_for(std::chrono::milliseconds(100))) <<
       "switch_controller should be blocking until next update cycle";
-    cm->update();
+    cm_->update();
     EXPECT_EQ(
       controller_interface::return_type::SUCCESS,
       switch_future.get()
@@ -315,23 +308,20 @@ TEST_F(TestControllerManager, switch_controller)
   }
 }
 
-TEST_F(TestControllerManager, switch_multiple_controllers)
+TEST_F(TestLoadController, switch_multiple_controllers)
 {
-  auto cm = std::make_shared<controller_manager::ControllerManager>(
-    robot_, executor_,
-    "test_controller_manager");
   std::string controller_type = test_controller::TEST_CONTROLLER_TYPE;
 
   // load the controller with name1
   std::string controller_name1 = "test_controller1";
   std::string controller_name2 = "test_controller2";
-  ASSERT_NO_THROW(cm->load_controller(controller_name1, controller_type));
-  ASSERT_NO_THROW(cm->load_controller(controller_name2, controller_type));
-  EXPECT_EQ(2u, cm->get_loaded_controllers().size());
+  ASSERT_NO_THROW(cm_->load_controller(controller_name1, controller_type));
+  ASSERT_NO_THROW(cm_->load_controller(controller_name2, controller_type));
+  EXPECT_EQ(2u, cm_->get_loaded_controllers().size());
   controller_manager::ControllerSpec abstract_test_controller1 =
-    cm->get_loaded_controllers()[0];
+    cm_->get_loaded_controllers()[0];
   controller_manager::ControllerSpec abstract_test_controller2 =
-    cm->get_loaded_controllers()[1];
+    cm_->get_loaded_controllers()[1];
 
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
@@ -343,13 +333,13 @@ TEST_F(TestControllerManager, switch_multiple_controllers)
   // Only testing with STRICT now for simplicity
   { //  Test starting an stopped controller, and stopping afterwards
     RCLCPP_INFO(
-      cm->get_logger(),
+      cm_->get_logger(),
       "Starting stopped controller #1");
     std::vector<std::string> start_controllers = {controller_name1};
     std::vector<std::string> stop_controllers = {};
     auto switch_future = std::async(
       std::launch::async,
-      &controller_manager::ControllerManager::switch_controller, cm,
+      &controller_manager::ControllerManager::switch_controller, cm_,
       start_controllers, stop_controllers,
       STRICT, true, rclcpp::Duration(0, 0));
 
@@ -357,7 +347,7 @@ TEST_F(TestControllerManager, switch_multiple_controllers)
       std::future_status::timeout,
       switch_future.wait_for(std::chrono::milliseconds(100))) <<
       "switch_controller should be blocking until next update cycle";
-    cm->update();
+    cm_->update();
     EXPECT_EQ(
       controller_interface::return_type::SUCCESS,
       switch_future.get()
@@ -374,11 +364,11 @@ TEST_F(TestControllerManager, switch_multiple_controllers)
     start_controllers = {controller_name2};
     stop_controllers = {controller_name1};
     RCLCPP_INFO(
-      cm->get_logger(),
+      cm_->get_logger(),
       "Stopping controller #1, starting controller #2");
     switch_future = std::async(
       std::launch::async,
-      &controller_manager::ControllerManager::switch_controller, cm,
+      &controller_manager::ControllerManager::switch_controller, cm_,
       start_controllers, stop_controllers,
       STRICT, true, rclcpp::Duration(0, 0));
 
@@ -386,7 +376,7 @@ TEST_F(TestControllerManager, switch_multiple_controllers)
       std::future_status::timeout,
       switch_future.wait_for(std::chrono::milliseconds(100))) <<
       "switch_controller should be blocking until next update cycle";
-    cm->update();
+    cm_->update();
     EXPECT_EQ(
       controller_interface::return_type::SUCCESS,
       switch_future.get()
@@ -402,11 +392,11 @@ TEST_F(TestControllerManager, switch_multiple_controllers)
     start_controllers = {};
     stop_controllers = {controller_name2};
     RCLCPP_INFO(
-      cm->get_logger(),
+      cm_->get_logger(),
       "Stopping controller #1, starting controller #2");
     switch_future = std::async(
       std::launch::async,
-      &controller_manager::ControllerManager::switch_controller, cm,
+      &controller_manager::ControllerManager::switch_controller, cm_,
       start_controllers, stop_controllers,
       STRICT, true, rclcpp::Duration(0, 0));
 
@@ -414,12 +404,11 @@ TEST_F(TestControllerManager, switch_multiple_controllers)
       std::future_status::timeout,
       switch_future.wait_for(std::chrono::milliseconds(100))) <<
       "switch_controller should be blocking until next update cycle";
-    cm->update();
+    cm_->update();
     EXPECT_EQ(
       controller_interface::return_type::SUCCESS,
       switch_future.get()
     );
-
 
     ASSERT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,

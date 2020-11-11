@@ -138,17 +138,25 @@ public:
   std::unordered_map<std::string, CommandInterface> command_interface_map_;
 };
 
+ResourceManager::ResourceManager()
+: resource_storage_(std::make_unique<ResourceStorage>())
+{}
+
 ResourceManager::~ResourceManager() = default;
 
 ResourceManager::ResourceManager(const std::string & urdf, bool validate_interfaces)
 : resource_storage_(std::make_unique<ResourceStorage>())
+{
+  initialize_from_urdf(urdf, validate_interfaces);
+}
+
+void ResourceManager::initialize_from_urdf(const std::string & urdf, bool validate_interfaces)
 {
   const std::string system_type = "system";
   const std::string sensor_type = "sensor";
   const std::string actuator_type = "actuator";
 
   auto hardware_info = hardware_interface::parse_control_resources_from_urdf(urdf);
-
   for (const auto & hardware : hardware_info) {
     if (hardware.type == actuator_type) {
       resource_storage_->initialize_actuator(hardware, claimed_command_interface_map_);

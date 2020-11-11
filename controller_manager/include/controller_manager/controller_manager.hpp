@@ -31,7 +31,7 @@
 #include "controller_manager_msgs/srv/switch_controller.hpp"
 #include "controller_manager_msgs/srv/unload_controller.hpp"
 
-#include "hardware_interface/robot_hardware.hpp"
+#include "hardware_interface/resource_manager.hpp"
 
 #include "pluginlib/class_loader.hpp"
 
@@ -49,7 +49,12 @@ public:
 
   CONTROLLER_MANAGER_PUBLIC
   ControllerManager(
-    std::shared_ptr<hardware_interface::RobotHardware> hw,
+    std::unique_ptr<hardware_interface::ResourceManager> resource_manager,
+    std::shared_ptr<rclcpp::Executor> executor,
+    const std::string & manager_node_name = "controller_manager");
+
+  CONTROLLER_MANAGER_PUBLIC
+  ControllerManager(
     std::shared_ptr<rclcpp::Executor> executor,
     const std::string & manager_node_name = "controller_manager");
 
@@ -120,6 +125,9 @@ public:
 
 protected:
   CONTROLLER_MANAGER_PUBLIC
+  void init_services();
+
+  CONTROLLER_MANAGER_PUBLIC
   controller_interface::ControllerInterfaceSharedPtr
   add_controller_impl(const ControllerSpec & controller);
 
@@ -168,8 +176,9 @@ protected:
 private:
   std::vector<std::string> get_controller_names();
 
-  std::shared_ptr<hardware_interface::RobotHardware> hw_;
+  std::shared_ptr<hardware_interface::ResourceManager> resource_manager_;
   std::shared_ptr<rclcpp::Executor> executor_;
+
   std::shared_ptr<pluginlib::ClassLoader<controller_interface::ControllerInterface>> loader_;
 
   /// Best effort (non real-time safe) callback group, e.g., service callbacks.
