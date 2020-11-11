@@ -46,6 +46,7 @@ ControllerInterface::init(
   lifecycle_node_->register_on_error(
     std::bind(&ControllerInterface::on_error, this, std::placeholders::_1));
 
+  lifecycle_node_->declare_parameter("type", std::string());
   return return_type::SUCCESS;
 }
 

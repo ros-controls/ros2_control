@@ -40,6 +40,18 @@ TestController::on_configure(const rclcpp_lifecycle::State & previous_state)
   return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
+controller_interface::return_type TestController::init(
+  std::weak_ptr<hardware_interface::RobotHardware> robot_hardware,
+  const std::string & controller_name)
+{
+  auto result = ControllerInterface::init(robot_hardware, controller_name);
+  lifecycle_node_->declare_parameter<std::string>("string_param", DEFAULT_STR_PARAM_VALUE);
+  lifecycle_node_->declare_parameter<int>("int_param", DEFAULT_INT_PARAM_VALUE);
+  lifecycle_node_->declare_parameter<double>("double_param", DEFAULT_DOUBLE_PARAM_VALUE);
+
+  return result;
+}
+
 }  // namespace test_controller
 
 #include "pluginlib/class_list_macros.hpp"

@@ -15,8 +15,10 @@
 #include "controller_manager/controller_manager.hpp"
 
 #include <list>
+#include <map>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "controller_interface/controller_interface.hpp"
@@ -89,6 +91,11 @@ ControllerManager::ControllerManager(
     "~/unload_controller", std::bind(
       &ControllerManager::unload_controller_service_cb, this, _1,
       _2));
+  set_param_cb_handle_ =
+    add_on_set_parameters_callback(
+    std::bind(
+      &ControllerManager::on_parameter_set_callback, this,
+      _1));
 }
 
 controller_interface::ControllerInterfaceSharedPtr ControllerManager::load_controller(
@@ -416,6 +423,20 @@ controller_interface::return_type ControllerManager::switch_controller(
   return controller_interface::return_type::SUCCESS;
 }
 
+std::pair<std::string, std::string> split_param_name(const rclcpp::Parameter & param)
+{
+  const std::string & name = param.get_name();
+
+  size_t prefix_end = name.find('.');
+  if (prefix_end == std::string::npos) {
+    return std::make_pair(std::string(), std::string());  // Param has no prefix
+  }
+
+  const std::string prefix = name.substr(0, prefix_end);
+  const std::string sub_name = name.substr(prefix_end + 1);
+  return std::make_pair(prefix, sub_name);
+}
+
 controller_interface::ControllerInterfaceSharedPtr
 ControllerManager::add_controller_impl(
   const ControllerSpec & controller)
@@ -443,6 +464,29 @@ ControllerManager::add_controller_impl(
   }
 
   controller.c->init(hw_, controller.info.name);
+
+  RCLCPP_DEBUG(
+    get_logger(), "Setting parameters for controller %s",
+    controller.info.name.c_str());
+  std::map<std::string, rclcpp::Parameter> parameters;
+  get_parameters(controller.info.name, parameters);
+  for (const auto & param : parameters) {
+    RCLCPP_DEBUG(get_logger(), "Setting parameter %s", param.second.get_name().c_str());
+    std::string prefix, sub_name;
+    std::tie(prefix, sub_name) = split_param_name(param.second);
+    if (prefix.empty() || sub_name.empty()) {
+      continue;  // Param has no prefix
+    }
+    rclcpp::Parameter new_param(sub_name, param.second.get_parameter_value());
+    try {
+      controller.c->get_lifecycle_node()->set_parameter(new_param);
+    } catch (const rclcpp::exceptions::ParameterNotDeclaredException & e) {
+      RCLCPP_ERROR(
+        get_logger(),
+        e.what());
+      return nullptr;
+    }
+  }
 
   // TODO(v-lopez) this should only be done if controller_manager is configured.
   // Probably the whole load_controller part should fail if the controller_manager
@@ -797,6 +841,50 @@ void ControllerManager::unload_controller_service_cb(
   RCLCPP_DEBUG(
     get_logger(), "unloading service finished for controller '%s' ",
     request->name.c_str());
+}
+
+rcl_interfaces::msg::SetParametersResult ControllerManager::on_parameter_set_callback(
+  const std::vector<rclcpp::Parameter> & parameters)
+{
+  rcl_interfaces::msg::SetParametersResult result;
+  result.successful = true;
+
+  // Iterate over all parameters, to see if any of them are of one of the controllers and
+  // we need to push them to the controller's node
+  for (const auto & parameter : parameters) {
+    std::string prefix, sub_name;
+    std::tie(prefix, sub_name) = split_param_name(parameter);
+
+    if (prefix.empty() || sub_name.empty()) {
+      continue;  // Param has no prefix
+    }
+    rclcpp::Parameter new_param(sub_name, parameter.get_parameter_value());
+
+    std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
+    const std::vector<ControllerSpec> & controllers =
+      rt_controllers_wrapper_.get_updated_list(guard);
+    for (auto & c : controllers) {
+      if (c.info.name == prefix) {
+        RCLCPP_DEBUG(
+          get_logger(),
+          "Controller manager received param %s. "
+          "Copying it to controller %s's node with the name %s",
+          parameter.get_name().c_str(), prefix.c_str(), sub_name.c_str());
+        auto ctrl_result = c.c->get_lifecycle_node()->set_parameter(new_param);
+        if (!ctrl_result.successful) {
+          std::stringstream ss;
+          ss << "Failed to set parameter " << sub_name << " on controller " << prefix <<
+            ", reason: " << ctrl_result.reason;
+
+          RCLCPP_ERROR(get_logger(), "%s", ss.str().c_str());
+          result.successful = false;
+          result.reason += ss.str();
+        }
+        break;
+      }
+    }
+  }
+  return result;
 }
 
 std::vector<std::string> ControllerManager::get_controller_names()

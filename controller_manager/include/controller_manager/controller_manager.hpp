@@ -158,6 +158,10 @@ protected:
     const std::shared_ptr<controller_manager_msgs::srv::UnloadController::Request> request,
     std::shared_ptr<controller_manager_msgs::srv::UnloadController::Response> response);
 
+  CONTROLLER_MANAGER_PUBLIC
+  rcl_interfaces::msg::SetParametersResult
+  on_parameter_set_callback(const std::vector<rclcpp::Parameter> & parameters);
+
 private:
   std::vector<std::string> get_controller_names();
 
@@ -254,6 +258,7 @@ private:
   rclcpp::Service<controller_manager_msgs::srv::UnloadController>::SharedPtr
     unload_controller_service_;
 
+  rclcpp::Node::OnSetParametersCallbackHandle::SharedPtr set_param_cb_handle_;
   std::vector<std::string> start_request_, stop_request_;
 #ifdef TODO_IMPLEMENT_RESOURCE_CHECKING
 //  std::list<hardware_interface::ControllerInfo> switch_start_list_, switch_stop_list_;

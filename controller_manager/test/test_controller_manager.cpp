@@ -124,3 +124,77 @@ TEST_F(TestControllerManager, controller_lifecycle) {
     test_controller->get_lifecycle_node()->get_current_state().id());
   EXPECT_EQ(1, test_controller.use_count());
 }
+
+TEST_F(TestControllerManager, controller_parameters) {
+  auto cm = std::make_shared<controller_manager::ControllerManager>(
+    robot_, executor_,
+    "test_controller_manager");
+
+  auto executor_spin_future = std::async(
+    std::launch::async, [this]() -> void {
+      executor_->spin();
+    });
+
+  // controller_manager_parameter because it has no prefix
+  // (and controller manager accepts all parameters)
+  rclcpp::Parameter controller_manager_parameter("double_param", 0.5);
+  rclcpp::Parameter test_controller_parameter(test_controller::TEST_CONTROLLER_NAME + std::string(
+      ".int_param"), 123);
+
+
+  EXPECT_TRUE(cm->set_parameter(controller_manager_parameter).successful);
+  EXPECT_TRUE(cm->set_parameter(test_controller_parameter).successful);
+
+  auto test_controller = std::make_shared<test_controller::TestController>();
+  cm->add_controller(
+    test_controller, test_controller::TEST_CONTROLLER_NAME,
+    test_controller::TEST_CONTROLLER_TYPE);
+
+
+  std::string string_param;
+  int int_param;
+  double double_param;
+  // Default parameters are still present, except the one we set before loading the controller
+  EXPECT_TRUE(test_controller->get_lifecycle_node()->get_parameter("string_param", string_param));
+  EXPECT_TRUE(test_controller->get_lifecycle_node()->get_parameter("int_param", int_param));
+  EXPECT_TRUE(test_controller->get_lifecycle_node()->get_parameter("double_param", double_param));
+  EXPECT_EQ(string_param, test_controller::DEFAULT_STR_PARAM_VALUE) <<
+    "parameter should have default value";
+  EXPECT_EQ(int_param, 123) <<
+    "parameter should have updated value set by controller manager on load";
+  EXPECT_DOUBLE_EQ(double_param, test_controller::DEFAULT_DOUBLE_PARAM_VALUE) <<
+    "parameter should have default value";
+
+
+  // Update the controllers' parameters by setting the controller_manager parameters
+  rclcpp::Parameter runtime_changed_controller_param(
+    test_controller::TEST_CONTROLLER_NAME + std::string(".string_param"), "runtime changed");
+  EXPECT_TRUE(cm->set_parameter(runtime_changed_controller_param).successful);
+  EXPECT_TRUE(test_controller->get_lifecycle_node()->get_parameter("string_param", string_param));
+  EXPECT_EQ(string_param, "runtime changed");
+
+  // Attempt to set an invalid controller parameter
+  rclcpp::Parameter invalid_test_controller_parameter(
+    test_controller::TEST_CONTROLLER_NAME + std::string(".invalid_param"), 123);
+  EXPECT_ANY_THROW(cm->set_parameter(invalid_test_controller_parameter));
+
+
+  executor_->cancel();
+}
+
+TEST_F(TestControllerManager, controller_invalid_load_parameters) {
+  auto cm = std::make_shared<controller_manager::ControllerManager>(
+    robot_, executor_,
+    "test_controller_manager");
+
+  rclcpp::Parameter invalid_controller_parameter(
+    test_controller::TEST_CONTROLLER_NAME + std::string(".invalid_parameter"), 123);
+
+  EXPECT_TRUE(cm->set_parameter(invalid_controller_parameter).successful);
+
+  auto test_controller = std::make_shared<test_controller::TestController>();
+  ASSERT_FALSE(
+    cm->add_controller(
+      test_controller, test_controller::TEST_CONTROLLER_NAME,
+      test_controller::TEST_CONTROLLER_TYPE).get());
+}
