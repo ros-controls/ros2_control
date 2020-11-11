@@ -146,7 +146,6 @@ TEST_F(TestControllerManager, controller_parameters) {
   rclcpp::Parameter test_controller_parameter(
     test_controller::TEST_CONTROLLER_NAME + std::string(".int_param"), 123);
 
-
   EXPECT_TRUE(cm->set_parameter(controller_manager_parameter).successful);
   EXPECT_TRUE(cm->set_parameter(test_controller_parameter).successful);
 
@@ -154,7 +153,6 @@ TEST_F(TestControllerManager, controller_parameters) {
   cm->add_controller(
     test_controller, test_controller::TEST_CONTROLLER_NAME,
     test_controller::TEST_CONTROLLER_TYPE);
-
 
   std::string string_param;
   int int_param;
@@ -170,7 +168,6 @@ TEST_F(TestControllerManager, controller_parameters) {
   EXPECT_DOUBLE_EQ(double_param, test_controller::DEFAULT_DOUBLE_PARAM_VALUE) <<
     "parameter should have default value";
 
-
   // Update the controllers' parameters by setting the controller_manager parameters
   rclcpp::Parameter runtime_changed_controller_param(
     test_controller::TEST_CONTROLLER_NAME + std::string(".string_param"), "runtime changed");
@@ -182,7 +179,6 @@ TEST_F(TestControllerManager, controller_parameters) {
   rclcpp::Parameter invalid_test_controller_parameter(
     test_controller::TEST_CONTROLLER_NAME + std::string(".invalid_param"), 123);
   EXPECT_ANY_THROW(cm->set_parameter(invalid_test_controller_parameter));
-
 
   executor_->cancel();
 }
