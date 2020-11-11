@@ -20,7 +20,7 @@
 
 #include "controller_interface/visibility_control.h"
 
-#include "hardware_interface/robot_hardware.hpp"
+#include "hardware_interface/resource_manager.hpp"
 
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
@@ -48,7 +48,7 @@ public:
   virtual
   return_type
   init(
-    std::weak_ptr<hardware_interface::RobotHardware> robot_hardware,
+    std::weak_ptr<hardware_interface::ResourceManager> resource_manager,
     const std::string & controller_name);
 
   CONTROLLER_INTERFACE_PUBLIC
@@ -61,7 +61,7 @@ public:
   get_lifecycle_node();
 
 protected:
-  std::weak_ptr<hardware_interface::RobotHardware> robot_hardware_;
+  std::weak_ptr<hardware_interface::ResourceManager> resource_manager_;
   std::shared_ptr<rclcpp_lifecycle::LifecycleNode> lifecycle_node_;
 };
 

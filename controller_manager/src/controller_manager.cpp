@@ -54,14 +54,44 @@ rclcpp::NodeOptions get_cm_node_options()
 }
 
 ControllerManager::ControllerManager(
-  std::shared_ptr<hardware_interface::RobotHardware> hw,
   std::shared_ptr<rclcpp::Executor> executor,
   const std::string & manager_node_name)
 : rclcpp::Node(manager_node_name, get_cm_node_options()),
-  hw_(hw),
+  resource_manager_(std::make_shared<hardware_interface::ResourceManager>()),
   executor_(executor),
   loader_(std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
       kControllerInterfaceName, kControllerInterface))
+{
+  //declare_parameter("robot_description", "");
+
+  std::string robot_description = "";
+  get_parameter("robot_description", robot_description);
+  if (robot_description.empty()) {
+    throw std::runtime_error("unable to initialize resource manager, no robot description found.");
+  }
+
+  fprintf(stderr, "%s\n", robot_description.c_str());
+  resource_manager_->initialize_from_urdf(robot_description);
+  fprintf(stderr, "reosurce manager initlaized");
+
+  init_services();
+}
+
+ControllerManager::ControllerManager(
+  std::unique_ptr<hardware_interface::ResourceManager> resource_manager,
+  std::shared_ptr<rclcpp::Executor> executor,
+  const std::string & manager_node_name)
+: rclcpp::Node(manager_node_name, get_cm_node_options()),
+  resource_manager_(
+    std::shared_ptr<hardware_interface::ResourceManager>(resource_manager.release())),
+  executor_(executor),
+  loader_(std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
+      kControllerInterfaceName, kControllerInterface))
+{
+  init_services();
+}
+
+void ControllerManager::init_services()
 {
   deterministic_callback_group_ = create_callback_group(
     rclcpp::CallbackGroupType::MutuallyExclusive);
@@ -101,14 +131,6 @@ ControllerManager::ControllerManager(
     std::bind(&ControllerManager::unload_controller_service_cb, this, _1, _2),
     rmw_qos_profile_services_default,
     best_effort_callback_group_);
-
-  // TODO(all): Should we declare paramters? #168 - for now yes because of the tests
-  declare_parameter("robot_description", "");
-  // load robot_description parameter
-  std::string robot_description;
-  if (!get_parameter("robot_description", robot_description)) {
-    throw std::runtime_error("No robot_description parameter found");
-  }
 }
 
 controller_interface::ControllerInterfaceSharedPtr ControllerManager::load_controller(
@@ -462,7 +484,7 @@ ControllerManager::add_controller_impl(
     return nullptr;
   }
 
-  controller.c->init(hw_, controller.info.name);
+  controller.c->init(resource_manager_, controller.info.name);
 
   // TODO(v-lopez) this should only be done if controller_manager is configured.
   // Probably the whole load_controller part should fail if the controller_manager

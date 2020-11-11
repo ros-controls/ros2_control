@@ -34,9 +34,6 @@ int main(int argc, char ** argv)
   rclcpp::TimerBase::SharedPtr timer;
 
   auto cm = std::make_shared<controller_manager::ControllerManager>(
-    // TODO(anyone): remove robot_hw when ResourceManager is added
-    // since RobotHW is not a plugin we had to take some type of robot
-    std::make_shared<test_robot_hardware::TestRobotHardware>(),
     executor,
     manager_node_name);
 
