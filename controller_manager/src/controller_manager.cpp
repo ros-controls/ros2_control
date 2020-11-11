@@ -64,9 +64,9 @@ ControllerManager::ControllerManager(
       kControllerInterfaceName, kControllerInterface))
 {
   deterministic_callback_group_ = create_callback_group(
-    rclcpp::callback_group::CallbackGroupType::MutuallyExclusive);
+    rclcpp::CallbackGroupType::MutuallyExclusive);
   best_effort_callback_group_ = create_callback_group(
-    rclcpp::callback_group::CallbackGroupType::MutuallyExclusive);
+    rclcpp::CallbackGroupType::MutuallyExclusive);
 
   using namespace std::placeholders;
   list_controllers_service_ = create_service<controller_manager_msgs::srv::ListControllers>(
