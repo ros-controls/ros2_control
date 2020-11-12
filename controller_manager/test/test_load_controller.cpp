@@ -42,7 +42,10 @@ TEST_F(TestLoadController, load_unknown_controller)
 
 TEST_F(TestLoadController, load1_known_controller)
 {
-  ASSERT_NO_THROW(cm_->load_controller("test_controller_01", test_controller::TEST_CONTROLLER_TYPE));
+  ASSERT_NO_THROW(
+    cm_->load_controller(
+      "test_controller_01",
+      test_controller::TEST_CONTROLLER_TYPE));
   EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
 
   controller_manager::ControllerSpec abstract_test_controller =
@@ -90,7 +93,10 @@ TEST_F(TestLoadController, load2_known_controller)
 
 TEST_F(TestLoadController, update)
 {
-  ASSERT_NO_THROW(cm_->load_controller("test_controller_01", test_controller::TEST_CONTROLLER_TYPE));
+  ASSERT_NO_THROW(
+    cm_->load_controller(
+      "test_controller_01",
+      test_controller::TEST_CONTROLLER_TYPE));
 
   controller_manager::ControllerSpec abstract_test_controller =
     cm_->get_loaded_controllers()[0];

@@ -62,17 +62,13 @@ ControllerManager::ControllerManager(
   loader_(std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
       kControllerInterfaceName, kControllerInterface))
 {
-  //declare_parameter("robot_description", "");
-
   std::string robot_description = "";
   get_parameter("robot_description", robot_description);
   if (robot_description.empty()) {
     throw std::runtime_error("unable to initialize resource manager, no robot description found.");
   }
 
-  fprintf(stderr, "%s\n", robot_description.c_str());
   resource_manager_->initialize_from_urdf(robot_description);
-  fprintf(stderr, "reosurce manager initlaized");
 
   init_services();
 }
