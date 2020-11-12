@@ -21,18 +21,35 @@ ament_target_dependencies(
   hardware_interface
   rclcpp
 )
-
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.
 target_compile_definitions(test_robot_hardware PRIVATE "TEST_ROBOT_HARDWARE_BUILDING_DLL")
 
-install(DIRECTORY include/
-  DESTINATION include)
+add_library(test_components SHARED
+  src/test_single_joint_actuator.cpp
+  src/test_force_torque_sensor.cpp
+  src/test_two_joint_system.cpp
+)
+ament_target_dependencies(test_components
+  hardware_interface
+  pluginlib
+)
+pluginlib_export_plugin_description_file(
+  hardware_interface test_robot_components.xml
+)
 
-install(TARGETS test_robot_hardware
+install(DIRECTORY include/
+  DESTINATION include
+)
+
+install(TARGETS test_robot_hardware test_components
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
+)
+
+install(FILES test_robot_hardware.urdf
+  DESTINATION share/${PROJECT_NAME}/
 )
 
 if(BUILD_TESTING)
@@ -53,6 +70,6 @@ ament_export_dependencies(
   hardware_interface
   rclcpp
 )
-ament_export_libraries(${PROJECT_NAME})
+ament_export_libraries(test_robot_hardware, test_components)
 ament_export_include_directories(include)
 ament_package()

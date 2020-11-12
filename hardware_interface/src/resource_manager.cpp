@@ -110,7 +110,9 @@ public:
   {
     initialize_hardware<components::Sensor, components::SensorInterface>(
       hardware_info, sensor_loader_, sensors_);
-    sensors_.back().configure(hardware_info);
+    if (return_type::OK != sensors_.back().configure(hardware_info)) {
+      throw std::runtime_error(std::string("failed to configure ") + hardware_info.name);
+    }
     import_state_interfaces(sensors_.back());
   }
 
@@ -120,7 +122,9 @@ public:
   {
     initialize_hardware<components::System, components::SystemInterface>(
       hardware_info, system_loader_, systems_);
-    systems_.back().configure(hardware_info);
+    if (return_type::OK != systems_.back().configure(hardware_info)) {
+      throw std::runtime_error(std::string("failed to configure ") + hardware_info.name);
+    }
     import_state_interfaces(systems_.back());
     import_command_interfaces(systems_.back(), claimed_command_interface_map);
   }
