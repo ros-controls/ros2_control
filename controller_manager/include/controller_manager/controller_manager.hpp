@@ -24,6 +24,7 @@
 
 #include "controller_manager/controller_spec.hpp"
 #include "controller_manager/visibility_control.h"
+#include "controller_manager_msgs/srv/list_controller_interfaces.hpp"
 #include "controller_manager_msgs/srv/list_controllers.hpp"
 #include "controller_manager_msgs/srv/list_controller_types.hpp"
 #include "controller_manager_msgs/srv/load_controller.hpp"
@@ -142,6 +143,11 @@ protected:
 
   CONTROLLER_MANAGER_PUBLIC
   void start_controllers_asap();
+
+  CONTROLLER_MANAGER_PUBLIC
+  void list_controller_interfaces_srv_cb(
+    const std::shared_ptr<controller_manager_msgs::srv::ListControllerInterfaces::Request> request,
+    std::shared_ptr<controller_manager_msgs::srv::ListControllerInterfaces::Response> response);
 
   CONTROLLER_MANAGER_PUBLIC
   void list_controllers_srv_cb(
@@ -264,6 +270,8 @@ private:
   /// mutex copied from ROS1 Control, protects service callbacks
   /// not needed if we're guaranteed that the callbacks don't come from multiple threads
   std::mutex services_lock_;
+  rclcpp::Service<controller_manager_msgs::srv::ListControllerInterfaces>::SharedPtr
+    list_controller_interfaces_service_;
   rclcpp::Service<controller_manager_msgs::srv::ListControllers>::SharedPtr
     list_controllers_service_;
   rclcpp::Service<controller_manager_msgs::srv::ListControllerTypes>::SharedPtr
