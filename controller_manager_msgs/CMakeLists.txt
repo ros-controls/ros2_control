@@ -18,6 +18,7 @@ set(msg_files
   msg/ControllerState.msg
 )
 set(srv_files
+  srv/ListControllerInterfaces.srv
   srv/ListControllers.srv
   srv/ListControllerTypes.srv
   srv/LoadController.srv
