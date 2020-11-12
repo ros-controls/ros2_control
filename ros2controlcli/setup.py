@@ -37,6 +37,7 @@ ROS2 Control command  interface.""",
         ],
         'ros2controlcli.verb': [
             'list = ros2controlcli.verb.list:ListVerb',
+            'list_interfaces = ros2controlcli.verb.list_interfaces:ListInterfacesVerb',
             'list_types = ros2controlcli.verb.list_types:ListTypesVerb',
             'load = ros2controlcli.verb.load:LoadVerb',
             'reload_libraries = ros2controlcli.verb.reload_libraries:ReloadLibrariesVerb',
