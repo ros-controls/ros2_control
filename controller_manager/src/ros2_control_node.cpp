@@ -22,8 +22,6 @@
 
 using namespace std::chrono_literals;
 
-constexpr const auto kLoggerName = "ros2_control_node";
-
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
@@ -31,22 +29,19 @@ int main(int argc, char ** argv)
   std::shared_ptr<rclcpp::Executor> executor =
     std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
   std::string manager_node_name = "controller_manager";
-  rclcpp::TimerBase::SharedPtr timer;
 
   auto cm = std::make_shared<controller_manager::ControllerManager>(
     executor,
     manager_node_name);
 
-  // Declare default controller manager rate of 100Hz
-  cm->declare_parameter("update_rate", 100);
   // load controller_manager update time parameter
-  int update_rate;
+  int update_rate = 100;
   if (!cm->get_parameter("update_rate", update_rate)) {
     throw std::runtime_error("update_rate parameter not existing or empty");
   }
-  RCLCPP_INFO(rclcpp::get_logger(kLoggerName), "update rate is %d Hz", update_rate);
+  RCLCPP_INFO(cm->get_logger(), "update rate is %d Hz", update_rate);
 
-  timer = cm->create_wall_timer(
+  auto timer = cm->create_wall_timer(
     std::chrono::milliseconds(1000 / update_rate),
     std::bind(&controller_manager::ControllerManager::update, cm.get()),
     cm->deterministic_callback_group_);

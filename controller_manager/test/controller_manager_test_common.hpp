@@ -37,7 +37,7 @@ constexpr auto BEST_EFFORT = controller_manager_msgs::srv::SwitchController::Req
 namespace controller_manager_test
 {
 constexpr auto urdf =
-R"(
+  R"(
 <?xml version="1.0" encoding="utf-8"?>
 <robot name="MinimalRobot">
   <joint name="base_joint" type="fixed">
