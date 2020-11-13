@@ -24,8 +24,8 @@
 namespace test_controller
 {
 
-constexpr char TEST_CONTROLLER_NAME[] = "test_controller_name";
-constexpr char TEST_CONTROLLER_TYPE[] = "test_controller";
+constexpr char TEST_CONTROLLER_NAME[] = "controller_manager/test_controller_name";
+constexpr char TEST_CONTROLLER_TYPE[] = "controller_manager/test_controller_type";
 class TestController : public controller_interface::ControllerInterface
 {
 public:
