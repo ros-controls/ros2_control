@@ -25,12 +25,12 @@ ament_target_dependencies(
 # which is appropriate when building the dll but not consuming it.
 target_compile_definitions(test_robot_hardware PRIVATE "TEST_ROBOT_HARDWARE_BUILDING_DLL")
 
-add_library(test_components SHARED
+add_library(test_robot_hardware_components SHARED
   src/test_single_joint_actuator.cpp
   src/test_force_torque_sensor.cpp
   src/test_two_joint_system.cpp
 )
-ament_target_dependencies(test_components
+ament_target_dependencies(test_robot_hardware_components
   hardware_interface
   pluginlib
 )
@@ -42,7 +42,7 @@ install(DIRECTORY include/
   DESTINATION include
 )
 
-install(TARGETS test_robot_hardware test_components
+install(TARGETS test_robot_hardware test_robot_hardware_components
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
@@ -70,6 +70,6 @@ ament_export_dependencies(
   hardware_interface
   rclcpp
 )
-ament_export_libraries(test_robot_hardware, test_components)
+ament_export_libraries(test_robot_hardware test_robot_hardware_components)
 ament_export_include_directories(include)
 ament_package()

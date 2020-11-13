@@ -45,14 +45,13 @@ TEST_F(TestLoadController, load1_known_controller)
   ASSERT_NO_THROW(
     cm_->load_controller(
       "test_controller_01",
-      test_controller::TEST_CONTROLLER_TYPE));
+      test_controller::TEST_CONTROLLER_NAME));
   EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
 
   controller_manager::ControllerSpec abstract_test_controller =
     cm_->get_loaded_controllers()[0];
 
   auto lifecycle_node = abstract_test_controller.c->get_lifecycle_node();
-  lifecycle_node->configure();
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
     abstract_test_controller.c->get_lifecycle_node()->get_current_state().id());
@@ -60,7 +59,7 @@ TEST_F(TestLoadController, load1_known_controller)
 
 TEST_F(TestLoadController, load2_known_controller)
 {
-  std::string controller_type = test_controller::TEST_CONTROLLER_TYPE;
+  std::string controller_type = test_controller::TEST_CONTROLLER_NAME;
 
   // load the controller with name1
   std::string controller_name1 = "test_controller1";
@@ -70,7 +69,6 @@ TEST_F(TestLoadController, load2_known_controller)
     cm_->get_loaded_controllers()[0];
   EXPECT_STREQ(
     controller_name1.c_str(), abstract_test_controller1.c->get_lifecycle_node()->get_name());
-  abstract_test_controller1.c->get_lifecycle_node()->configure();
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
     abstract_test_controller1.c->get_lifecycle_node()->get_current_state().id());
@@ -85,7 +83,6 @@ TEST_F(TestLoadController, load2_known_controller)
     controller_name2.c_str(), abstract_test_controller2.c->get_lifecycle_node()->get_name());
   EXPECT_STREQ(
     controller_name2.c_str(), abstract_test_controller2.info.name.c_str());
-  abstract_test_controller2.c->get_lifecycle_node()->configure();
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
     abstract_test_controller2.c->get_lifecycle_node()->get_current_state().id());
@@ -96,13 +93,12 @@ TEST_F(TestLoadController, update)
   ASSERT_NO_THROW(
     cm_->load_controller(
       "test_controller_01",
-      test_controller::TEST_CONTROLLER_TYPE));
+      test_controller::TEST_CONTROLLER_NAME));
 
   controller_manager::ControllerSpec abstract_test_controller =
     cm_->get_loaded_controllers()[0];
 
   auto lifecycle_node = abstract_test_controller.c->get_lifecycle_node();
-  lifecycle_node->configure();
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
     abstract_test_controller.c->get_lifecycle_node()->get_current_state().id());
@@ -110,7 +106,7 @@ TEST_F(TestLoadController, update)
 
 TEST_F(TestLoadController, switch_controller_empty)
 {
-  std::string controller_type = test_controller::TEST_CONTROLLER_TYPE;
+  std::string controller_type = test_controller::TEST_CONTROLLER_NAME;
 
   // load the controller with name1
   std::string controller_name1 = "test_controller1";
@@ -141,7 +137,6 @@ TEST_F(TestLoadController, switch_controller_empty)
       start_controllers, stop_controllers,
       UNSPECIFIED, true, rclcpp::Duration(0, 0))
   ) << "Switch with no controllers specified, unspecified strictness defaults to BEST_EFFORT";
-
 
   start_controllers = {"nonexistent_controller"};
   stop_controllers = {};
@@ -184,7 +179,6 @@ TEST_F(TestLoadController, switch_controller_empty)
       BEST_EFFORT, true, rclcpp::Duration(0, 0))
   ) << "BEST_EFFORT switch with nonexistent controller specified";
 
-
   start_controllers = {"nonexistent_controller"};
   stop_controllers = {"nonexistent_controller"};
   EXPECT_EQ(
@@ -204,7 +198,7 @@ TEST_F(TestLoadController, switch_controller_empty)
 
 TEST_F(TestLoadController, switch_controller)
 {
-  std::string controller_type = test_controller::TEST_CONTROLLER_TYPE;
+  std::string controller_type = test_controller::TEST_CONTROLLER_NAME;
 
   // load the controller with name1
   std::string controller_name1 = "test_controller1";
@@ -216,7 +210,6 @@ TEST_F(TestLoadController, switch_controller)
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
     abstract_test_controller1.c->get_lifecycle_node()->get_current_state().id());
-
 
   {  //  Test stopping an stopped controller
     std::vector<std::string> start_controllers = {};
@@ -236,7 +229,6 @@ TEST_F(TestLoadController, switch_controller)
         BEST_EFFORT, true, rclcpp::Duration(0, 0))
     ) << "BEST_EFFORT switch stopped controller specified";
   }
-
 
   { //  STRICT Combination of valid controller + invalid controller
     std::vector<std::string> start_controllers = {controller_name1, "nonexistent_controller"};
@@ -285,7 +277,6 @@ TEST_F(TestLoadController, switch_controller)
       lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
       abstract_test_controller1.c->get_lifecycle_node()->get_current_state().id());
 
-
     // Stop controller
     start_controllers = {};
     stop_controllers = {controller_name1};
@@ -316,7 +307,7 @@ TEST_F(TestLoadController, switch_controller)
 
 TEST_F(TestLoadController, switch_multiple_controllers)
 {
-  std::string controller_type = test_controller::TEST_CONTROLLER_TYPE;
+  std::string controller_type = test_controller::TEST_CONTROLLER_NAME;
 
   // load the controller with name1
   std::string controller_name1 = "test_controller1";

@@ -1,4 +1,4 @@
-<library path="test_components">
+<library path="test_robot_hardware_components">
 
   <class name="test_robot_hardware/TestSingleJointActuator" type="test_robot_hardware::TestSingleJointActuator" base_class_type="hardware_interface::components::ActuatorInterface">
     <description>
