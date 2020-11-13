@@ -199,3 +199,55 @@ TEST_F(TestControllerManager, controller_invalid_load_parameters) {
       test_controller, test_controller::TEST_CONTROLLER_NAME,
       test_controller::TEST_CONTROLLER_TYPE).get());
 }
+
+
+TEST_F(TestControllerManager, test_controller_param_callback) {
+  auto cm = std::make_shared<controller_manager::ControllerManager>(
+    robot_, executor_,
+    "test_controller_manager");
+
+  auto executor_spin_future = std::async(
+    std::launch::async, [this]() -> void {
+      executor_->spin();
+    });
+  // This sleep is needed to prevent a too fast test from ending before the
+  // executor has began to spin, which causes it to hang
+  std::this_thread::sleep_for(50ms);
+
+  auto test_controller = std::make_shared<test_controller::TestController>();
+  cm->add_controller(
+    test_controller, test_controller::TEST_CONTROLLER_NAME,
+    test_controller::TEST_CONTROLLER_TYPE);
+
+  bool param_cb_called = false;
+  bool param_cb_return_success = true;
+  auto on_set_param_cb = [&](const std::vector<rclcpp::Parameter> &)
+    {
+      param_cb_called = true;
+      rcl_interfaces::msg::SetParametersResult result;
+      result.successful = param_cb_return_success;
+      return result;
+    };
+  auto cb_handle = test_controller->get_lifecycle_node()->add_on_set_parameters_callback(
+    on_set_param_cb);
+
+  std::string string_param;
+  // Update the controllers' parameters by setting the controller_manager parameters
+  rclcpp::Parameter runtime_changed_controller_param(
+    test_controller::TEST_CONTROLLER_NAME + std::string(".string_param"), "runtime changed");
+  EXPECT_TRUE(cm->set_parameter(runtime_changed_controller_param).successful);
+  EXPECT_TRUE(test_controller->get_lifecycle_node()->get_parameter("string_param", string_param));
+  EXPECT_EQ(string_param, "runtime changed");
+  EXPECT_TRUE(param_cb_called);
+
+  param_cb_return_success = false;
+  param_cb_called = false;
+  runtime_changed_controller_param = rclcpp::Parameter(
+    test_controller::TEST_CONTROLLER_NAME + std::string(".string_param"), "wrong value");
+  EXPECT_FALSE(cm->set_parameter(runtime_changed_controller_param).successful);
+  EXPECT_TRUE(test_controller->get_lifecycle_node()->get_parameter("string_param", string_param));
+  EXPECT_EQ(string_param, "runtime changed");
+  EXPECT_TRUE(param_cb_called);
+
+  executor_->cancel();
+}
