@@ -333,4 +333,28 @@ size_t ResourceManager::system_components_size() const
 {
   return resource_storage_->systems_.size();
 }
+
+void ResourceManager::read()
+{
+  for (auto & component : resource_storage_->actuators_) {
+    component.read();
+  }
+  for (auto & component : resource_storage_->sensors_) {
+    component.read();
+  }
+  for (auto & component : resource_storage_->systems_) {
+    component.read();
+  }
+}
+
+void ResourceManager::write()
+{
+  for (auto & component : resource_storage_->actuators_) {
+    component.write();
+  }
+  for (auto & component : resource_storage_->systems_) {
+    component.write();
+  }
+}
+
 }  // namespace hardware_interface

@@ -189,6 +189,12 @@ public:
    */
   void import_component(std::unique_ptr<components::SystemInterface> system);
 
+  /// Reads all loaded hardware components.
+  void read();
+
+  /// Write all loaded hardware components.
+  void write();
+
 private:
   void release_command_interface(const std::string & key);
 

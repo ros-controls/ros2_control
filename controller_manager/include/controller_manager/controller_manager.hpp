@@ -115,7 +115,7 @@ public:
 
   CONTROLLER_MANAGER_PUBLIC
   controller_interface::return_type
-  update();
+  update(bool update_resources = true);
 
   /// Deterministic (real-time safe) callback group, e.g., update function.
   /**

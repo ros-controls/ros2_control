@@ -21,6 +21,8 @@
 #include "controller_interface/visibility_control.h"
 
 #include "hardware_interface/resource_manager.hpp"
+#include "hardware_interface/loaned_command_interface.hpp"
+#include "hardware_interface/loaned_state_interface.hpp"
 
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
@@ -32,6 +34,19 @@ enum class return_type : std::uint8_t
 {
   SUCCESS = 0,
   ERROR = 1,
+};
+
+enum class configuration_type : std::uint8_t
+{
+  ALL = 0,
+  INDIVIDUAL = 1,
+  NONE = 2,
+};
+
+struct InterfaceConfiguration
+{
+  configuration_type type;
+  std::vector<std::string> names = {};
 };
 
 class ControllerInterface : public rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface
@@ -46,10 +61,24 @@ public:
 
   CONTROLLER_INTERFACE_PUBLIC
   virtual
+  InterfaceConfiguration command_interface_configuration() const = 0;
+
+  CONTROLLER_INTERFACE_PUBLIC
+  virtual
+  InterfaceConfiguration state_interface_configuration() const = 0;
+
+  CONTROLLER_INTERFACE_PUBLIC
+  void assign_interfaces(
+    std::vector<hardware_interface::LoanedCommandInterface> && command_interfaces,
+    std::vector<hardware_interface::LoanedStateInterface> && state_interfaces);
+
+  CONTROLLER_INTERFACE_PUBLIC
+  void release_interfaces();
+
+  CONTROLLER_INTERFACE_PUBLIC
+  virtual
   return_type
-  init(
-    std::weak_ptr<hardware_interface::ResourceManager> resource_manager,
-    const std::string & controller_name);
+  init(const std::string & controller_name);
 
   CONTROLLER_INTERFACE_PUBLIC
   virtual
@@ -61,7 +90,8 @@ public:
   get_lifecycle_node();
 
 protected:
-  std::weak_ptr<hardware_interface::ResourceManager> resource_manager_;
+  std::vector<hardware_interface::LoanedCommandInterface> command_interfaces_;
+  std::vector<hardware_interface::LoanedStateInterface> state_interfaces_;
   std::shared_ptr<rclcpp_lifecycle::LifecycleNode> lifecycle_node_;
 };
 
