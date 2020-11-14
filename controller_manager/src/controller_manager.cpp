@@ -138,7 +138,7 @@ controller_interface::ControllerInterfaceSharedPtr ControllerManager::load_contr
   const std::string & controller_name,
   const std::string & controller_type)
 {
-  RCLCPP_INFO(get_logger(), "Loading controller '%s'\n", controller_name.c_str());
+  RCLCPP_INFO(get_logger(), "Loading controller '%s'", controller_name.c_str());
 
   if (!loader_->isClassAvailable(controller_type)) {
     const std::string error_msg("Loader for controller '" + controller_name + "' not found\n");
@@ -485,7 +485,7 @@ ControllerManager::add_controller_impl(
     return nullptr;
   }
 
-  controller.c->init(resource_manager_, controller.info.name);
+  controller.c->init(controller.info.name);
 
   // TODO(v-lopez) this should only be done if controller_manager is configured.
   // Probably the whole load_controller part should fail if the controller_manager
@@ -601,6 +601,75 @@ void ControllerManager::start_controllers()
       continue;
     }
     auto controller = found_it->c;
+
+    bool assignment_successful = true;
+    // assign command interfaces to the controller
+    auto command_interface_config = controller->command_interface_configuration();
+    // default to controller_interface::configuration_type::NONE
+    std::vector<std::string> command_interface_names = {};
+    if (command_interface_config.type == controller_interface::configuration_type::ALL) {
+      command_interface_names = resource_manager_->command_interface_keys();
+    }
+    if (command_interface_config.type == controller_interface::configuration_type::INDIVIDUAL) {
+      command_interface_names = command_interface_config.names;
+    }
+    std::vector<hardware_interface::LoanedCommandInterface> command_loans;
+    command_loans.reserve(command_interface_names.size());
+    for (const auto & command_interface : command_interface_names) {
+      if (resource_manager_->command_interface_is_claimed(command_interface)) {
+        RCLCPP_ERROR(
+          get_logger(),
+          "Resource conflict when trying to start controller %s. Command interface %s is already claimed",
+          request.c_str(), command_interface.c_str());
+        assignment_successful = false;
+        break;
+      }
+      try{
+        command_loans.emplace_back(resource_manager_->claim_command_interface(command_interface));
+      } catch (const std::exception & e) {
+        RCLCPP_ERROR(
+          get_logger(),
+          "Can't activate controller %s.%s",
+          request.c_str(), e.what());
+        assignment_successful = false;
+        break;
+      }
+    }
+    // something went wrong during command interfaces, go skip the controller
+    if (!assignment_successful) {
+      continue;
+    }
+
+    // assign state interfaces to the controller
+    auto state_interface_config = controller->state_interface_configuration();
+    // default to controller_interface::configuration_type::NONE
+    std::vector<std::string> state_interface_names = {};
+    if (state_interface_config.type == controller_interface::configuration_type::ALL) {
+      state_interface_names = resource_manager_->state_interface_keys();
+    }
+    if (state_interface_config.type == controller_interface::configuration_type::INDIVIDUAL) {
+      state_interface_names = state_interface_config.names;
+    }
+    std::vector<hardware_interface::LoanedStateInterface> state_loans;
+    state_loans.reserve(state_interface_names.size());
+    for (const auto & state_interface : state_interface_names) {
+      try{
+        state_loans.emplace_back(resource_manager_->claim_state_interface(state_interface));
+      } catch (const std::exception & e) {
+        RCLCPP_ERROR(
+          get_logger(),
+          "Can't activate controller %s.%s",
+          request.c_str(), e.what());
+        assignment_successful = false;
+        break;
+      }
+    }
+    // something went wrong during state interfaces, go skip the controller
+    if (!assignment_successful) {
+      continue;
+    }
+    controller->assign_interfaces(std::move(command_loans), std::move(state_loans));
+
     const auto new_state = controller->get_lifecycle_node()->activate();
     if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE) {
       RCLCPP_ERROR(
@@ -862,8 +931,12 @@ std::vector<std::string> ControllerManager::get_controller_names()
   return names;
 }
 
-controller_interface::return_type ControllerManager::update()
+controller_interface::return_type ControllerManager::update(bool update_resources)
 {
+  if (update_resources) {
+    resource_manager_->read();
+  }
+
   std::vector<ControllerSpec> & rt_controller_list =
     rt_controllers_wrapper_.update_and_get_used_by_rt_list();
 
@@ -883,6 +956,11 @@ controller_interface::return_type ControllerManager::update()
   if (switch_params_.do_switch) {
     manage_switch();
   }
+
+  if (update_resources) {
+    resource_manager_->write();
+  }
+
   return ret;
 }
 

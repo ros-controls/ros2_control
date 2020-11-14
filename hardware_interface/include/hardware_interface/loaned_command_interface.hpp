@@ -50,6 +50,16 @@ public:
     }
   }
 
+  const std::string & get_name() const
+  {
+    return command_interface_.get_name();
+  }
+
+  const std::string & get_interface_name() const
+  {
+    return command_interface_.get_interface_name();
+  }
+
   void set_value(double val)
   {
     command_interface_.set_value(val);
