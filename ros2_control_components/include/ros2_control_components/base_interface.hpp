@@ -15,6 +15,8 @@
 #ifndef ROS2_CONTROL_COMPONENTS__BASE_INTERFACE_HPP_
 #define ROS2_CONTROL_COMPONENTS__BASE_INTERFACE_HPP_
 
+#include <string>
+
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/types/hardware_interface_status_values.hpp"
 
