@@ -22,7 +22,7 @@ constexpr const auto HW_IF_POSITION = "position";
 /// Constant defining velocity interface
 constexpr const auto HW_IF_VELOCITY = "velocity";
 /// Constant defining acceleration interface
-constexpr const auto HW_IF_EFFORT = "acceleration";
+constexpr const auto HW_IF_ACCELERATION = "acceleration";
 /// Constant defining effort interface
 constexpr const auto HW_IF_EFFORT = "effort";
 }  // namespace hardware_interface
