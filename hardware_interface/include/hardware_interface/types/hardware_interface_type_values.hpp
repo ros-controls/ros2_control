@@ -17,13 +17,9 @@
 
 namespace hardware_interface
 {
-/// Constant defining position interface
 constexpr const auto HW_IF_POSITION = "position";
-/// Constant defining velocity interface
 constexpr const auto HW_IF_VELOCITY = "velocity";
-/// Constant defining effort interface
 constexpr const auto HW_IF_EFFORT = "effort";
-
 }  // namespace hardware_interface
 
 #endif  // HARDWARE_INTERFACE__TYPES__HARDWARE_INTERFACE_TYPE_VALUES_HPP_
