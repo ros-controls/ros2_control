@@ -189,6 +189,12 @@ public:
    */
   void import_component(std::unique_ptr<components::SystemInterface> system);
 
+  /// Start all loaded hardware components.
+  void start_all();
+
+  /// Stops all loaded hardware components.
+  void stop_all();
+
   /// Reads all loaded hardware components.
   void read();
 

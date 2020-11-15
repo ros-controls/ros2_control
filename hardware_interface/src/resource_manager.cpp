@@ -334,6 +334,32 @@ size_t ResourceManager::system_components_size() const
   return resource_storage_->systems_.size();
 }
 
+void ResourceManager::start_all()
+{
+  for (auto & component : resource_storage_->actuators_) {
+    component.start();
+  }
+  for (auto & component : resource_storage_->sensors_) {
+    component.start();
+  }
+  for (auto & component : resource_storage_->systems_) {
+    component.start();
+  }
+}
+
+void ResourceManager::stop_all()
+{
+  for (auto & component : resource_storage_->actuators_) {
+    component.stop();
+  }
+  for (auto & component : resource_storage_->sensors_) {
+    component.stop();
+  }
+  for (auto & component : resource_storage_->systems_) {
+    component.stop();
+  }
+}
+
 void ResourceManager::read()
 {
   for (auto & component : resource_storage_->actuators_) {
