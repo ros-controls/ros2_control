@@ -190,7 +190,7 @@ TEST_F(TestControllerManagerSrvs, reload_controller_libraries_srv) {
 
   // Create a lambda to store the cleanup state change
   bool cleanup_called = false;
-  auto cleanup_lambda =
+  auto set_cleanup_called =
     [&](
     const rclcpp_lifecycle::State &)
     {
@@ -220,7 +220,7 @@ TEST_F(TestControllerManagerSrvs, reload_controller_libraries_srv) {
     1) << "Controller manager should have have a copy of this shared ptr";
 
   cleanup_called = false;
-  test_controller->get_lifecycle_node()->register_on_cleanup(cleanup_lambda);
+  test_controller->get_lifecycle_node()->register_on_cleanup(set_cleanup_called);
   test_controller.reset();  // destroy our copy of the controller
 
   request->force_kill = false;
@@ -260,7 +260,7 @@ TEST_F(TestControllerManagerSrvs, reload_controller_libraries_srv) {
     "this shared ptr, no unloading was performed";
 
   cleanup_called = false;
-  test_controller->get_lifecycle_node()->register_on_cleanup(cleanup_lambda);
+  test_controller->get_lifecycle_node()->register_on_cleanup(set_cleanup_called);
   test_controller.reset();  // destroy our copy of the controller
 
   // Force stop active controller
