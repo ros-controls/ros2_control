@@ -188,6 +188,16 @@ TEST_F(TestControllerManagerSrvs, reload_controller_libraries_srv) {
   auto request =
     std::make_shared<controller_manager_msgs::srv::ReloadControllerLibraries::Request>();
 
+  // Create a lambda to store the cleanup state change
+  bool cleanup_called = false;
+  auto set_cleanup_called =
+    [&](
+    const rclcpp_lifecycle::State &)
+    {
+      cleanup_called = true;
+      return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
+    };
+
   // Reload with no controllers running
   request->force_kill = false;
   auto result = call_service_and_wait(*client, request, srv_executor);
@@ -198,6 +208,10 @@ TEST_F(TestControllerManagerSrvs, reload_controller_libraries_srv) {
     test_controller::TEST_CONTROLLER_NAME,
     test_controller::TEST_CONTROLLER_TYPE);
 
+  // weak_ptr so the only controller shared_ptr instance is owned by the controller_manager and
+  // can be completely destroyed before reloading the library
+  std::weak_ptr<controller_interface::ControllerInterface> test_controller_weak(test_controller);
+
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
     test_controller->get_lifecycle_node()->get_current_state().id());
@@ -205,20 +219,24 @@ TEST_F(TestControllerManagerSrvs, reload_controller_libraries_srv) {
     test_controller.use_count(),
     1) << "Controller manager should have have a copy of this shared ptr";
 
+  cleanup_called = false;
+  test_controller->get_lifecycle_node()->register_on_cleanup(set_cleanup_called);
+  test_controller.reset();  // destroy our copy of the controller
+
   request->force_kill = false;
   result = call_service_and_wait(*client, request, srv_executor, true);
   ASSERT_TRUE(result->ok);
-  ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-    test_controller->get_lifecycle_node()->get_current_state().id());
+  ASSERT_TRUE(cleanup_called);
   ASSERT_EQ(
     test_controller.use_count(),
-    1) << "No more references to the controller after reloading.";
+    0) << "No more references to the controller after reloading.";
   test_controller.reset();
 
   test_controller = cm_->load_controller(
     test_controller::TEST_CONTROLLER_NAME,
     test_controller::TEST_CONTROLLER_TYPE);
+  test_controller_weak = test_controller;
+
   // Start Controller
   cm_->switch_controller(
     {test_controller::TEST_CONTROLLER_NAME}, {},
@@ -241,17 +259,19 @@ TEST_F(TestControllerManagerSrvs, reload_controller_libraries_srv) {
     "Controller manager should still have have a copy of "
     "this shared ptr, no unloading was performed";
 
+  cleanup_called = false;
+  test_controller->get_lifecycle_node()->register_on_cleanup(set_cleanup_called);
+  test_controller.reset();  // destroy our copy of the controller
+
   // Force stop active controller
   request->force_kill = true;
   result = call_service_and_wait(*client, request, srv_executor, true);
   ASSERT_TRUE(result->ok);
 
   ASSERT_EQ(
-    test_controller.use_count(),
-    1) << "No more references to the controller after reloading.";
-  ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-    test_controller->get_lifecycle_node()->get_current_state().id()) <<
+    test_controller_weak.use_count(),
+    0) << "No more references to the controller after reloading.";
+  ASSERT_TRUE(cleanup_called) <<
     "Controller should have been stopped and cleaned up with force_kill = true";
 }
 
