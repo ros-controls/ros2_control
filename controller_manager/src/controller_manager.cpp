@@ -17,6 +17,7 @@
 #include <list>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "controller_interface/controller_interface.hpp"
@@ -95,7 +96,8 @@ void ControllerManager::init_services()
     rclcpp::CallbackGroupType::MutuallyExclusive);
 
   using namespace std::placeholders;
-  list_controller_interfaces_service_ = create_service<controller_manager_msgs::srv::ListControllerInterfaces>(
+  list_controller_interfaces_service_ =
+    create_service<controller_manager_msgs::srv::ListControllerInterfaces>(
     "~/list_controller_interfaces",
     std::bind(&ControllerManager::list_controller_interfaces_srv_cb, this, _1, _2),
     rmw_qos_profile_services_default,
@@ -141,7 +143,11 @@ controller_interface::ControllerInterfaceSharedPtr ControllerManager::load_contr
   RCLCPP_INFO(get_logger(), "Loading controller '%s'", controller_name.c_str());
 
   if (!loader_->isClassAvailable(controller_type)) {
-    const std::string error_msg("Loader for controller '" + controller_name + "' not found\n");
+    const std::string error_msg("Loader for controller '" + controller_name + "' not found");
+    RCLCPP_ERROR(get_logger(), "available classes:");
+    for (const auto & c : loader_->getDeclaredClasses()) {
+      RCLCPP_ERROR(get_logger(), "%s", c.c_str());
+    }
     RCLCPP_ERROR(get_logger(), "%s", error_msg.c_str());
     throw std::runtime_error(error_msg);
   }
@@ -560,32 +566,6 @@ void ControllerManager::stop_controllers()
 
 void ControllerManager::start_controllers()
 {
-#ifdef TODO_IMPLEMENT_RESOURCE_CHECKING
-  // start controllers
-  if (robot_hw_->switchResult() == hardware_interface::RobotHW::SwitchState::DONE) {
-    for (const auto & request : start_request_) {
-      request->startRequest(time);
-    }
-
-    switch_params_.do_switch = false;
-  } else if (// NOLINT
-    (robot_hw_->switchResult() == hardware_interface::RobotHW::SwitchState::ERROR) ||
-    (switch_params_.timeout > 0.0 &&
-    (time - switch_params_.init_time).toSec() > switch_params_.timeout))
-  {
-    // abort controllers in case of error or timeout (if set)
-    for (const auto & request : start_request_) {
-      request->abortRequest(time);
-    }
-
-    switch_params_.do_switch = false;
-  } else {
-    // wait controllers
-    for (const auto & request : start_request_) {
-      request->waitRequest(time);
-    }
-  }
-#else
   //  Dummy implementation, replace with the code above when migrated
   std::vector<ControllerSpec> & rt_controller_list =
     rt_controllers_wrapper_.update_and_get_used_by_rt_list();
@@ -619,12 +599,12 @@ void ControllerManager::start_controllers()
       if (resource_manager_->command_interface_is_claimed(command_interface)) {
         RCLCPP_ERROR(
           get_logger(),
-          "Resource conflict when trying to start controller %s. Command interface %s is already claimed",
+          "Resource conflict for controller %s. Command interface %s is already claimed",
           request.c_str(), command_interface.c_str());
         assignment_successful = false;
         break;
       }
-      try{
+      try {
         command_loans.emplace_back(resource_manager_->claim_command_interface(command_interface));
       } catch (const std::exception & e) {
         RCLCPP_ERROR(
@@ -653,7 +633,7 @@ void ControllerManager::start_controllers()
     std::vector<hardware_interface::LoanedStateInterface> state_loans;
     state_loans.reserve(state_interface_names.size());
     for (const auto & state_interface : state_interface_names) {
-      try{
+      try {
         state_loans.emplace_back(resource_manager_->claim_state_interface(state_interface));
       } catch (const std::exception & e) {
         RCLCPP_ERROR(
@@ -681,7 +661,6 @@ void ControllerManager::start_controllers()
   }
   // All controllers started, switching done
   switch_params_.do_switch = false;
-#endif
 }
 
 void ControllerManager::start_controllers_asap()
@@ -791,7 +770,7 @@ void ControllerManager::list_controller_types_srv_cb(
   for (const auto & cur_type : cur_types) {
     response->types.push_back(cur_type);
     response->base_classes.push_back(kControllerInterface);
-    RCLCPP_INFO(get_logger(), cur_type);
+    RCLCPP_DEBUG(get_logger(), cur_type);
   }
 
   RCLCPP_DEBUG(get_logger(), "list types service finished");

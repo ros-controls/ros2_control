@@ -34,7 +34,7 @@ TEST_F(TestControllerManager, controller_lifecycle) {
   auto test_controller = std::make_shared<test_controller::TestController>();
   cm_->add_controller(
     test_controller, test_controller::TEST_CONTROLLER_NAME,
-    test_controller::TEST_CONTROLLER_TYPE);
+    test_controller::TEST_CONTROLLER_CLASS_NAME);
   EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
   EXPECT_EQ(2, test_controller.use_count());
 

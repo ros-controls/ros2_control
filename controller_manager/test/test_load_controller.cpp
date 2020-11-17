@@ -45,7 +45,7 @@ TEST_F(TestLoadController, load1_known_controller)
   ASSERT_NO_THROW(
     cm_->load_controller(
       "test_controller_01",
-      test_controller::TEST_CONTROLLER_NAME));
+      test_controller::TEST_CONTROLLER_CLASS_NAME));
   EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
 
   controller_manager::ControllerSpec abstract_test_controller =
@@ -59,7 +59,7 @@ TEST_F(TestLoadController, load1_known_controller)
 
 TEST_F(TestLoadController, load2_known_controller)
 {
-  std::string controller_type = test_controller::TEST_CONTROLLER_NAME;
+  std::string controller_type = test_controller::TEST_CONTROLLER_CLASS_NAME;
 
   // load the controller with name1
   std::string controller_name1 = "test_controller1";
@@ -93,7 +93,7 @@ TEST_F(TestLoadController, update)
   ASSERT_NO_THROW(
     cm_->load_controller(
       "test_controller_01",
-      test_controller::TEST_CONTROLLER_NAME));
+      test_controller::TEST_CONTROLLER_CLASS_NAME));
 
   controller_manager::ControllerSpec abstract_test_controller =
     cm_->get_loaded_controllers()[0];
@@ -106,7 +106,7 @@ TEST_F(TestLoadController, update)
 
 TEST_F(TestLoadController, switch_controller_empty)
 {
-  std::string controller_type = test_controller::TEST_CONTROLLER_NAME;
+  std::string controller_type = test_controller::TEST_CONTROLLER_CLASS_NAME;
 
   // load the controller with name1
   std::string controller_name1 = "test_controller1";
@@ -198,7 +198,7 @@ TEST_F(TestLoadController, switch_controller_empty)
 
 TEST_F(TestLoadController, switch_controller)
 {
-  std::string controller_type = test_controller::TEST_CONTROLLER_NAME;
+  std::string controller_type = test_controller::TEST_CONTROLLER_CLASS_NAME;
 
   // load the controller with name1
   std::string controller_name1 = "test_controller1";
@@ -307,7 +307,7 @@ TEST_F(TestLoadController, switch_controller)
 
 TEST_F(TestLoadController, switch_multiple_controllers)
 {
-  std::string controller_type = test_controller::TEST_CONTROLLER_NAME;
+  std::string controller_type = test_controller::TEST_CONTROLLER_CLASS_NAME;
 
   // load the controller with name1
   std::string controller_name1 = "test_controller1";
