@@ -208,10 +208,13 @@ TEST_F(TestControllerManagerSrvs, reload_controller_libraries_srv) {
   auto test_controller = cm_->load_controller(
     test_controller::TEST_CONTROLLER_NAME,
     test_controller::TEST_CONTROLLER_CLASS_NAME);
+<<<<<<< HEAD
 
   // weak_ptr so the only controller shared_ptr instance is owned by the controller_manager and
   // can be completely destroyed before reloading the library
   std::weak_ptr<controller_interface::ControllerInterface> test_controller_weak(test_controller);
+=======
+>>>>>>> adapt controller manager test
 
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
@@ -236,7 +239,10 @@ TEST_F(TestControllerManagerSrvs, reload_controller_libraries_srv) {
   test_controller = cm_->load_controller(
     test_controller::TEST_CONTROLLER_NAME,
     test_controller::TEST_CONTROLLER_CLASS_NAME);
+<<<<<<< HEAD
   test_controller_weak = test_controller;
+=======
+>>>>>>> adapt controller manager test
   // Start Controller
   cm_->switch_controller(
     {test_controller::TEST_CONTROLLER_NAME}, {},
