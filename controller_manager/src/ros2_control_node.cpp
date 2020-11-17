@@ -18,7 +18,6 @@
 #include "controller_manager/controller_manager.hpp"
 #include "hardware_interface/robot_hardware.hpp"
 #include "rclcpp/rclcpp.hpp"
-#include "test_robot_hardware/test_robot_hardware.hpp"
 
 using namespace std::chrono_literals;
 
