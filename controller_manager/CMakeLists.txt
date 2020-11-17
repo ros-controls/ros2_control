@@ -18,8 +18,6 @@ find_package(controller_manager_msgs REQUIRED)
 find_package(hardware_interface REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(rclcpp REQUIRED)
-#TODO(anyone): remove this when using ResourceManager
-find_package(test_robot_hardware REQUIRED)
 
 add_library(controller_manager SHARED
   src/controller_manager.cpp
@@ -46,8 +44,6 @@ ament_target_dependencies(ros2_control_node
   controller_interface
   hardware_interface
   rclcpp
-  #TODO(anyone): remove this when using ResourceManager
-  test_robot_hardware
 )
 
 install(TARGETS controller_manager
@@ -95,10 +91,6 @@ if(BUILD_TESTING)
   )
   target_include_directories(test_controller_manager PRIVATE include)
   target_link_libraries(test_controller_manager controller_manager test_controller)
-  ament_target_dependencies(
-    test_controller_manager
-    test_robot_hardware
-  )
 
   ament_add_gmock(
     test_load_controller
@@ -107,10 +99,6 @@ if(BUILD_TESTING)
   )
   target_include_directories(test_load_controller PRIVATE include)
   target_link_libraries(test_load_controller controller_manager)
-  ament_target_dependencies(
-    test_load_controller
-    test_robot_hardware
-  )
 
   ament_add_gmock(
     test_controller_manager_srvs
@@ -119,10 +107,6 @@ if(BUILD_TESTING)
   )
   target_include_directories(test_controller_manager_srvs PRIVATE include)
   target_link_libraries(test_controller_manager_srvs controller_manager test_controller)
-  ament_target_dependencies(
-    test_controller_manager_srvs
-    test_robot_hardware
-  )
 endif()
 
 ament_export_libraries(

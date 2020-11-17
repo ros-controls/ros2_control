@@ -29,7 +29,6 @@
 
 #include "rclcpp/utilities.hpp"
 #include "test_controller/test_controller.hpp"
-#include "test_robot_hardware/test_robot_hardware.hpp"
 
 constexpr auto STRICT = controller_manager_msgs::srv::SwitchController::Request::STRICT;
 constexpr auto BEST_EFFORT = controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT;
