@@ -110,7 +110,7 @@ TEST_F(TestControllerManagerSrvs, list_controller_types)
   ASSERT_EQ(
     controller_types,
     result->base_classes.size());
-  ASSERT_THAT(result->types, ::testing::Contains("test_controller"));
+  ASSERT_THAT(result->types, ::testing::Contains(test_controller::TEST_CONTROLLER_CLASS_NAME));
   ASSERT_THAT(
     result->base_classes,
     ::testing::Contains("controller_interface::ControllerInterface"));
@@ -133,14 +133,14 @@ TEST_F(TestControllerManagerSrvs, list_controllers_srv) {
   auto test_controller = std::make_shared<test_controller::TestController>();
   auto abstract_test_controller = cm_->add_controller(
     test_controller, test_controller::TEST_CONTROLLER_NAME,
-    test_controller::TEST_CONTROLLER_TYPE);
+    test_controller::TEST_CONTROLLER_CLASS_NAME);
   EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
   result = call_service_and_wait(*client, request, srv_executor);
   ASSERT_EQ(
     1u,
     result->controller.size());
   ASSERT_EQ(test_controller::TEST_CONTROLLER_NAME, result->controller[0].name);
-  ASSERT_EQ(test_controller::TEST_CONTROLLER_TYPE, result->controller[0].type);
+  ASSERT_EQ(test_controller::TEST_CONTROLLER_CLASS_NAME, result->controller[0].type);
   ASSERT_EQ("inactive", result->controller[0].state);
 
   cm_->switch_controller(
@@ -202,7 +202,7 @@ TEST_F(TestControllerManagerSrvs, reload_controller_libraries_srv) {
   // Add a controller, but stopped
   auto test_controller = cm_->load_controller(
     test_controller::TEST_CONTROLLER_NAME,
-    test_controller::TEST_CONTROLLER_TYPE);
+    test_controller::TEST_CONTROLLER_CLASS_NAME);
 
   // weak_ptr so the only controller shared_ptr instance is owned by the controller_manager and
   // can be completely destroyed before reloading the library
@@ -230,9 +230,8 @@ TEST_F(TestControllerManagerSrvs, reload_controller_libraries_srv) {
 
   test_controller = cm_->load_controller(
     test_controller::TEST_CONTROLLER_NAME,
-    test_controller::TEST_CONTROLLER_TYPE);
+    test_controller::TEST_CONTROLLER_CLASS_NAME);
   test_controller_weak = test_controller;
-
   // Start Controller
   cm_->switch_controller(
     {test_controller::TEST_CONTROLLER_NAME}, {},
@@ -284,7 +283,7 @@ TEST_F(TestControllerManagerSrvs, load_controller_srv) {
   auto result = call_service_and_wait(*client, request, srv_executor);
   ASSERT_FALSE(result->ok) << "There's no param specifying the type for " << request->name;
   rclcpp::Parameter joint_parameters(std::string(test_controller::TEST_CONTROLLER_NAME) + ".type",
-    test_controller::TEST_CONTROLLER_TYPE);
+    test_controller::TEST_CONTROLLER_CLASS_NAME);
   cm_->set_parameter(joint_parameters);
   result = call_service_and_wait(*client, request, srv_executor, true);
   ASSERT_TRUE(result->ok);
@@ -306,7 +305,7 @@ TEST_F(TestControllerManagerSrvs, unload_controller_srv) {
   auto test_controller = std::make_shared<test_controller::TestController>();
   auto abstract_test_controller = cm_->add_controller(
     test_controller, test_controller::TEST_CONTROLLER_NAME,
-    test_controller::TEST_CONTROLLER_TYPE);
+    test_controller::TEST_CONTROLLER_CLASS_NAME);
   EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
 
   result = call_service_and_wait(*client, request, srv_executor, true);

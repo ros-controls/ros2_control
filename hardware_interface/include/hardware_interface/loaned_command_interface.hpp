@@ -16,6 +16,7 @@
 #define HARDWARE_INTERFACE__LOANED_COMMAND_INTERFACE_HPP_
 
 #include <functional>
+#include <string>
 #include <utility>
 
 #include "hardware_interface/handle.hpp"

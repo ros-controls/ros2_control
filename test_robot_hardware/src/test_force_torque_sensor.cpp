@@ -33,9 +33,11 @@ class TestForceTorqueSensor : public hardware_interface::components::SensorInter
     const auto & state_interfaces = sensor_info_.sensors[0].state_interfaces;
     if (state_interfaces.size() != 6) {return return_type::ERROR;}
     for (const auto & ft_key : {"fx", "fy", "fz", "tx", "ty", "tz"}) {
-      if (std::find_if(state_interfaces.begin(), state_interfaces.end(), [&ft_key](const auto & interface_info) {
+      if (std::find_if(
+          state_interfaces.begin(), state_interfaces.end(), [&ft_key](const auto & interface_info) {
             return interface_info.name == ft_key;
-            }) == state_interfaces.end()) {
+          }) == state_interfaces.end())
+      {
         return return_type::ERROR;
       }
     }
