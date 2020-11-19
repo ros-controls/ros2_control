@@ -182,7 +182,8 @@ protected:
 private:
   std::vector<std::string> get_controller_names();
 
-  std::shared_ptr<hardware_interface::ResourceManager> resource_manager_;
+  std::unique_ptr<hardware_interface::ResourceManager> resource_manager_;
+
   std::shared_ptr<rclcpp::Executor> executor_;
 
   std::shared_ptr<pluginlib::ClassLoader<controller_interface::ControllerInterface>> loader_;

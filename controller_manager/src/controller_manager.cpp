@@ -58,7 +58,7 @@ ControllerManager::ControllerManager(
   std::shared_ptr<rclcpp::Executor> executor,
   const std::string & manager_node_name)
 : rclcpp::Node(manager_node_name, get_cm_node_options()),
-  resource_manager_(std::make_shared<hardware_interface::ResourceManager>()),
+  resource_manager_(std::make_unique<hardware_interface::ResourceManager>()),
   executor_(executor),
   loader_(std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
       kControllerInterfaceName, kControllerInterface))
@@ -79,8 +79,7 @@ ControllerManager::ControllerManager(
   std::shared_ptr<rclcpp::Executor> executor,
   const std::string & manager_node_name)
 : rclcpp::Node(manager_node_name, get_cm_node_options()),
-  resource_manager_(
-    std::shared_ptr<hardware_interface::ResourceManager>(resource_manager.release())),
+  resource_manager_(std::move(resource_manager)),
   executor_(executor),
   loader_(std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
       kControllerInterfaceName, kControllerInterface))
