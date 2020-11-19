@@ -24,9 +24,9 @@
 
 #include "controller_manager/controller_spec.hpp"
 #include "controller_manager/visibility_control.h"
-#include "controller_manager_msgs/srv/list_controller_interfaces.hpp"
 #include "controller_manager_msgs/srv/list_controllers.hpp"
 #include "controller_manager_msgs/srv/list_controller_types.hpp"
+#include "controller_manager_msgs/srv/list_hardware_interfaces.hpp"
 #include "controller_manager_msgs/srv/load_controller.hpp"
 #include "controller_manager_msgs/srv/reload_controller_libraries.hpp"
 #include "controller_manager_msgs/srv/switch_controller.hpp"
@@ -145,11 +145,6 @@ protected:
   void start_controllers_asap();
 
   CONTROLLER_MANAGER_PUBLIC
-  void list_controller_interfaces_srv_cb(
-    const std::shared_ptr<controller_manager_msgs::srv::ListControllerInterfaces::Request> request,
-    std::shared_ptr<controller_manager_msgs::srv::ListControllerInterfaces::Response> response);
-
-  CONTROLLER_MANAGER_PUBLIC
   void list_controllers_srv_cb(
     const std::shared_ptr<controller_manager_msgs::srv::ListControllers::Request> request,
     std::shared_ptr<controller_manager_msgs::srv::ListControllers::Response> response);
@@ -158,6 +153,11 @@ protected:
   void list_controller_types_srv_cb(
     const std::shared_ptr<controller_manager_msgs::srv::ListControllerTypes::Request> request,
     std::shared_ptr<controller_manager_msgs::srv::ListControllerTypes::Response> response);
+
+  CONTROLLER_MANAGER_PUBLIC
+  void list_hardware_interfaces_srv_cb(
+    const std::shared_ptr<controller_manager_msgs::srv::ListHardwareInterfaces::Request> request,
+    std::shared_ptr<controller_manager_msgs::srv::ListHardwareInterfaces::Response> response);
 
   CONTROLLER_MANAGER_PUBLIC
   void load_controller_service_cb(
@@ -270,12 +270,12 @@ private:
   /// mutex copied from ROS1 Control, protects service callbacks
   /// not needed if we're guaranteed that the callbacks don't come from multiple threads
   std::mutex services_lock_;
-  rclcpp::Service<controller_manager_msgs::srv::ListControllerInterfaces>::SharedPtr
-    list_controller_interfaces_service_;
   rclcpp::Service<controller_manager_msgs::srv::ListControllers>::SharedPtr
     list_controllers_service_;
   rclcpp::Service<controller_manager_msgs::srv::ListControllerTypes>::SharedPtr
     list_controller_types_service_;
+  rclcpp::Service<controller_manager_msgs::srv::ListHardwareInterfaces>::SharedPtr
+    list_hardware_interfaces_service_;
   rclcpp::Service<controller_manager_msgs::srv::LoadController>::SharedPtr
     load_controller_service_;
   rclcpp::Service<controller_manager_msgs::srv::ReloadControllerLibraries>::SharedPtr

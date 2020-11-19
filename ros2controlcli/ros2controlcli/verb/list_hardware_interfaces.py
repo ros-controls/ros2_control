@@ -14,10 +14,10 @@
 
 from ros2cli.node.direct import add_arguments
 from ros2cli.verb import VerbExtension
-from ros2controlcli.api import add_controller_mgr_parsers, list_controller_interfaces
+from ros2controlcli.api import add_controller_mgr_parsers, list_hardware_interfaces
 
 
-class ListInterfacesVerb(VerbExtension):
+class ListHardwareInterfacesVerb(VerbExtension):
     """Output the list of loaded controllers, their type and status."""
 
     def add_arguments(self, parser, cli_name):
@@ -25,12 +25,12 @@ class ListInterfacesVerb(VerbExtension):
         add_controller_mgr_parsers(parser)
 
     def main(self, *, args):
-        controller_interfaces = list_controller_interfaces(args.controller_manager)
-        controller_interfaces.command_interfaces.sort()
-        controller_interfaces.state_interfaces.sort()
+        hardware_interfaces = list_hardware_interfaces(args.controller_manager)
+        command_interfaces = sorted(hardware_interfaces.command_interfaces, key=lambda hwi: hwi.name)
+        state_interfaces = sorted(hardware_interfaces.state_interfaces, key=lambda hwi: hwi.name)
         print('command interfaces')
-        for command_interface in controller_interfaces.command_interfaces:
-            print('\t', command_interface)
+        for command_interface in command_interfaces:
+            print('\t%s [%s]' % (command_interface.name, 'claimed' if command_interface.is_claimed else 'unclaimed'))
         print('state interfaces')
-        for state_interface in controller_interfaces.state_interfaces:
-            print('\t', state_interface)
+        for state_interface in state_interfaces:
+            print('\t', state_interface.name)

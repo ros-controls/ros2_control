@@ -96,12 +96,6 @@ void ControllerManager::init_services()
     rclcpp::CallbackGroupType::MutuallyExclusive);
 
   using namespace std::placeholders;
-  list_controller_interfaces_service_ =
-    create_service<controller_manager_msgs::srv::ListControllerInterfaces>(
-    "~/list_controller_interfaces",
-    std::bind(&ControllerManager::list_controller_interfaces_srv_cb, this, _1, _2),
-    rmw_qos_profile_services_default,
-    best_effort_callback_group_);
   list_controllers_service_ = create_service<controller_manager_msgs::srv::ListControllers>(
     "~/list_controllers",
     std::bind(&ControllerManager::list_controllers_srv_cb, this, _1, _2),
@@ -111,6 +105,12 @@ void ControllerManager::init_services()
     create_service<controller_manager_msgs::srv::ListControllerTypes>(
     "~/list_controller_types",
     std::bind(&ControllerManager::list_controller_types_srv_cb, this, _1, _2),
+    rmw_qos_profile_services_default,
+    best_effort_callback_group_);
+  list_hardware_interfaces_service_ =
+    create_service<controller_manager_msgs::srv::ListHardwareInterfaces>(
+    "~/list_hardware_interfaces",
+    std::bind(&ControllerManager::list_hardware_interfaces_srv_cb, this, _1, _2),
     rmw_qos_profile_services_default,
     best_effort_callback_group_);
   load_controller_service_ = create_service<controller_manager_msgs::srv::LoadController>(
@@ -709,14 +709,6 @@ void ControllerManager::start_controllers_asap()
 #endif
 }
 
-void ControllerManager::list_controller_interfaces_srv_cb(
-  const std::shared_ptr<controller_manager_msgs::srv::ListControllerInterfaces::Request>,
-  std::shared_ptr<controller_manager_msgs::srv::ListControllerInterfaces::Response> response)
-{
-  response->state_interfaces = resource_manager_->state_interface_keys();
-  response->command_interfaces = resource_manager_->command_interface_keys();
-}
-
 void ControllerManager::list_controllers_srv_cb(
   const std::shared_ptr<controller_manager_msgs::srv::ListControllers::Request>,
   std::shared_ptr<controller_manager_msgs::srv::ListControllers::Response> response)
@@ -774,6 +766,26 @@ void ControllerManager::list_controller_types_srv_cb(
   }
 
   RCLCPP_DEBUG(get_logger(), "list types service finished");
+}
+
+void ControllerManager::list_hardware_interfaces_srv_cb(
+  const std::shared_ptr<controller_manager_msgs::srv::ListHardwareInterfaces::Request>,
+  std::shared_ptr<controller_manager_msgs::srv::ListHardwareInterfaces::Response> response)
+{
+  auto state_interface_names = resource_manager_->state_interface_keys();
+  for (const auto & state_interface_name : state_interface_names) {
+    controller_manager_msgs::msg::HardwareInterface hwi;
+    hwi.name = state_interface_name;
+    hwi.is_claimed = false;
+    response->state_interfaces.push_back(hwi);
+  }
+  auto command_interface_names =  resource_manager_->command_interface_keys();
+  for (const auto & command_interface_name : command_interface_names) {
+    controller_manager_msgs::msg::HardwareInterface hwi;
+    hwi.name = command_interface_name;
+    hwi.is_claimed = resource_manager_->command_interface_is_claimed(command_interface_name);
+    response->command_interfaces.push_back(hwi);
+  }
 }
 
 void ControllerManager::load_controller_service_cb(
