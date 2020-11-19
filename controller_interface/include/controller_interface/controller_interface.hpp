@@ -36,7 +36,7 @@ enum class return_type : std::uint8_t
   ERROR = 1,
 };
 
-enum class configuration_type : std::uint8_t
+enum class interface_configuration_type : std::uint8_t
 {
   ALL = 0,
   INDIVIDUAL = 1,
@@ -45,7 +45,7 @@ enum class configuration_type : std::uint8_t
 
 struct InterfaceConfiguration
 {
-  configuration_type type;
+  interface_configuration_type type;
   std::vector<std::string> names = {};
 };
 
