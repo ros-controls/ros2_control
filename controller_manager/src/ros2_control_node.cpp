@@ -16,7 +16,6 @@
 #include <string>
 
 #include "controller_manager/controller_manager.hpp"
-#include "hardware_interface/robot_hardware.hpp"
 #include "rclcpp/rclcpp.hpp"
 
 using namespace std::chrono_literals;
