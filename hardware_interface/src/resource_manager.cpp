@@ -151,10 +151,10 @@ ResourceManager::~ResourceManager() = default;
 ResourceManager::ResourceManager(const std::string & urdf, bool validate_interfaces)
 : resource_storage_(std::make_unique<ResourceStorage>())
 {
-  initialize_from_urdf(urdf, validate_interfaces);
+  load_urdf(urdf, validate_interfaces);
 }
 
-void ResourceManager::initialize_from_urdf(const std::string & urdf, bool validate_interfaces)
+void ResourceManager::load_urdf(const std::string & urdf, bool validate_interfaces)
 {
   const std::string system_type = "system";
   const std::string sensor_type = "sensor";

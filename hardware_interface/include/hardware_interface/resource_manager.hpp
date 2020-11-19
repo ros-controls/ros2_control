@@ -61,17 +61,17 @@ public:
 
   ~ResourceManager();
 
-  /// Initialize the resource manager based on a given URDF.
+  /// Load resources from on a given URDF.
   /**
    * The resource manager can be post initialized with a given URDF.
    * This is mainly used in conjunction with the default constructor
-   * in which the URDF might not be present at first initalization.
+   * in which the URDF might not be present at first initialization.
    *
    * \param urdf string containing the URDF.
    * \param validate_interfaces boolean argument indicating whether the exported
    * interfaces ought to be validated. Defaults to true.
    */
-  void initialize_from_urdf(const std::string & urdf, bool validate_interfaces = true);
+  void load_urdf(const std::string & urdf, bool validate_interfaces = true);
 
   /// Claim a state interface given its key.
   /**

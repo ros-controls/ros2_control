@@ -69,7 +69,7 @@ ControllerManager::ControllerManager(
     throw std::runtime_error("unable to initialize resource manager, no robot description found.");
   }
 
-  resource_manager_->initialize_from_urdf(robot_description);
+  resource_manager_->load_urdf(robot_description);
 
   init_services();
 }

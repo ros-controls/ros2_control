@@ -192,7 +192,7 @@ TEST_F(TestResourceManager, initialization_with_urdf) {
 TEST_F(TestResourceManager, post_initialization_with_urdf) {
   auto urdf = urdf_head_ + test_hardware_resource_system_ + urdf_tail_;
   hardware_interface::ResourceManager rm;
-  ASSERT_NO_THROW(rm.initialize_from_urdf(urdf));
+  ASSERT_NO_THROW(rm.load_urdf(urdf));
 }
 
 TEST_F(TestResourceManager, initialization_with_urdf_manual_validation) {
