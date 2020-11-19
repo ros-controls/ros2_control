@@ -21,7 +21,6 @@
 
 #include "controller_interface/visibility_control.h"
 
-#include "hardware_interface/resource_manager.hpp"
 #include "hardware_interface/loaned_command_interface.hpp"
 #include "hardware_interface/loaned_state_interface.hpp"
 
