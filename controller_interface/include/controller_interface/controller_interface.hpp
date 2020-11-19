@@ -36,6 +36,12 @@ enum class return_type : std::uint8_t
   ERROR = 1,
 };
 
+/// Indicating which interfaces are to be claimed.
+/**
+ * One might either claim all available command/state interfaces,
+ * specifying a set of individual interfaces,
+ * or none at all.
+ */
 enum class interface_configuration_type : std::uint8_t
 {
   ALL = 0,
@@ -43,6 +49,7 @@ enum class interface_configuration_type : std::uint8_t
   NONE = 2,
 };
 
+/// Configuring what command/state interfaces to claim.
 struct InterfaceConfiguration
 {
   interface_configuration_type type;
