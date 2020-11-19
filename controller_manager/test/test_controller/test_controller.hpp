@@ -42,13 +42,13 @@ public:
   controller_interface::InterfaceConfiguration command_interface_configuration() const override
   {
     return controller_interface::InterfaceConfiguration{
-      controller_interface::configuration_type::NONE};
+      controller_interface::interface_configuration_type::NONE};
   }
 
   controller_interface::InterfaceConfiguration state_interface_configuration() const override
   {
     return controller_interface::InterfaceConfiguration{
-      controller_interface::configuration_type::NONE};
+      controller_interface::interface_configuration_type::NONE};
   }
 
   CONTROLLER_MANAGER_PUBLIC
