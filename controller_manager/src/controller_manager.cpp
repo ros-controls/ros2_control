@@ -589,7 +589,9 @@ void ControllerManager::start_controllers()
     if (command_interface_config.type == controller_interface::interface_configuration_type::ALL) {
       command_interface_names = resource_manager_->command_interface_keys();
     }
-    if (command_interface_config.type == controller_interface::interface_configuration_type::INDIVIDUAL) {
+    if (command_interface_config.type ==
+      controller_interface::interface_configuration_type::INDIVIDUAL)
+    {
       command_interface_names = command_interface_config.names;
     }
     std::vector<hardware_interface::LoanedCommandInterface> command_loans;
@@ -626,7 +628,9 @@ void ControllerManager::start_controllers()
     if (state_interface_config.type == controller_interface::interface_configuration_type::ALL) {
       state_interface_names = resource_manager_->state_interface_keys();
     }
-    if (state_interface_config.type == controller_interface::interface_configuration_type::INDIVIDUAL) {
+    if (state_interface_config.type ==
+      controller_interface::interface_configuration_type::INDIVIDUAL)
+    {
       state_interface_names = state_interface_config.names;
     }
     std::vector<hardware_interface::LoanedStateInterface> state_loans;
@@ -778,7 +782,7 @@ void ControllerManager::list_hardware_interfaces_srv_cb(
     hwi.is_claimed = false;
     response->state_interfaces.push_back(hwi);
   }
-  auto command_interface_names =  resource_manager_->command_interface_keys();
+  auto command_interface_names = resource_manager_->command_interface_keys();
   for (const auto & command_interface_name : command_interface_names) {
     controller_manager_msgs::msg::HardwareInterface hwi;
     hwi.name = command_interface_name;
