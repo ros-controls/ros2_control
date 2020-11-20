@@ -57,11 +57,19 @@ public:
   virtual
   ~ControllerManager() = default;
 
+  /**
+   * @brief load_controller Create a controller instance and change its lifecycle state
+   * @param controller_name
+   * @param controller_type pluginlib type of controller
+   * @param target_state target lifecycle state, only valid UNCONFIGURED, INACTIVE and ACTIVE
+   */
   CONTROLLER_MANAGER_PUBLIC
   controller_interface::ControllerInterfaceSharedPtr
   load_controller(
     const std::string & controller_name,
-    const std::string & controller_type);
+    const std::string & controller_type,
+    const lifecycle_msgs::msg::State & target_state = lifecycle_msgs::msg::State().set__id(
+      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE));
 
   /**
    * @brief load_controller loads a controller by name, the type must be defined in the parameter server
@@ -69,7 +77,8 @@ public:
   CONTROLLER_MANAGER_PUBLIC
   controller_interface::ControllerInterfaceSharedPtr
   load_controller(
-    const std::string & controller_name);
+    const std::string & controller_name,
+    const lifecycle_msgs::msg::State & target_state);
 
   CONTROLLER_MANAGER_PUBLIC
   controller_interface::return_type unload_controller(
@@ -85,13 +94,14 @@ public:
   controller_interface::ControllerInterfaceSharedPtr
   add_controller(
     std::shared_ptr<T> controller, const std::string & controller_name,
-    const std::string & controller_type)
+    const std::string & controller_type,
+    const lifecycle_msgs::msg::State & target_state)
   {
     ControllerSpec controller_spec;
     controller_spec.c = controller;
     controller_spec.info.name = controller_name;
     controller_spec.info.type = controller_type;
-    return add_controller_impl(controller_spec);
+    return add_controller_impl(controller_spec, target_state);
   }
 
   /**
@@ -114,7 +124,9 @@ public:
 protected:
   CONTROLLER_MANAGER_PUBLIC
   controller_interface::ControllerInterfaceSharedPtr
-  add_controller_impl(const ControllerSpec & controller);
+  add_controller_impl(
+    const ControllerSpec & controller,
+    const lifecycle_msgs::msg::State & target_state);
 
   CONTROLLER_MANAGER_PUBLIC
   void manage_switch();

@@ -93,8 +93,22 @@ ControllerManager::ControllerManager(
 
 controller_interface::ControllerInterfaceSharedPtr ControllerManager::load_controller(
   const std::string & controller_name,
-  const std::string & controller_type)
+  const std::string & controller_type,
+  const lifecycle_msgs::msg::State & target_state)
 {
+  switch (target_state.id) {
+    case lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED:
+    case lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE:
+    case lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE:
+      break;
+    default:
+      RCLCPP_ERROR(
+        get_logger(), "Invalid target state %i loading controller '%s', valid states are "
+        "PRIMARY_STATE_UNCONFIGURED,  PRIMARY_STATE_INACTIVE, PRIMARY_STATE_ACTIVE",
+        target_state.id, controller_name.c_str());
+      return nullptr;
+  }
+
   RCLCPP_INFO(get_logger(), "Loading controller '%s'\n", controller_name.c_str());
 
   if (!loader_->isClassAvailable(controller_type)) {
@@ -109,11 +123,11 @@ controller_interface::ControllerInterfaceSharedPtr ControllerManager::load_contr
   controller_spec.info.name = controller_name;
   controller_spec.info.type = controller_type;
 
-  return add_controller_impl(controller_spec);
+  return add_controller_impl(controller_spec, target_state);
 }
 
 controller_interface::ControllerInterfaceSharedPtr ControllerManager::load_controller(
-  const std::string & controller_name)
+  const std::string & controller_name, const lifecycle_msgs::msg::State & target_state)
 {
   const std::string param_name = controller_name + ".type";
   std::string controller_type;
@@ -131,7 +145,7 @@ controller_interface::ControllerInterfaceSharedPtr ControllerManager::load_contr
     RCLCPP_ERROR(get_logger(), "'type' param not defined for %s", controller_name.c_str());
     return nullptr;
   }
-  return load_controller(controller_name, controller_type);
+  return load_controller(controller_name, controller_type, target_state);
 }
 
 controller_interface::return_type ControllerManager::unload_controller(
@@ -418,7 +432,8 @@ controller_interface::return_type ControllerManager::switch_controller(
 
 controller_interface::ControllerInterfaceSharedPtr
 ControllerManager::add_controller_impl(
-  const ControllerSpec & controller)
+  const ControllerSpec & controller,
+  const lifecycle_msgs::msg::State & target_state)
 {
   // lock controllers
   std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
@@ -444,11 +459,16 @@ ControllerManager::add_controller_impl(
 
   controller.c->init(hw_, controller.info.name);
 
-  // TODO(v-lopez) this should only be done if controller_manager is configured.
-  // Probably the whole load_controller part should fail if the controller_manager
-  // is not configured, should it implement a LifecycleNodeInterface
-  // https://github.com/ros-controls/ros2_control/issues/152
-  controller.c->get_lifecycle_node()->configure();
+  if ((target_state.id == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) ||
+    (target_state.id == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE))
+  {
+    RCLCPP_DEBUG(get_logger(), "Configuring controller %s", controller.info.name.c_str());
+    controller.c->get_lifecycle_node()->configure();
+    if (target_state.id == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE) {
+      RCLCPP_DEBUG(get_logger(), "Activating controller %s", controller.info.name.c_str());
+      controller.c->get_lifecycle_node()->activate();
+    }
+  }
   executor_->add_node(controller.c->get_lifecycle_node()->get_node_base_interface());
   to.emplace_back(controller);
 
@@ -686,7 +706,7 @@ void ControllerManager::load_controller_service_cb(
   std::lock_guard<std::mutex> guard(services_lock_);
   RCLCPP_DEBUG(get_logger(), "loading service locked");
 
-  response->ok = load_controller(request->name).get();
+  response->ok = load_controller(request->name, request->target_state).get();
 
   RCLCPP_DEBUG(
     get_logger(), "loading service finished for controller '%s' ",

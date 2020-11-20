@@ -34,8 +34,12 @@ using ::testing::Return;
 TEST_F(TestControllerManager, load_unknown_controller)
 {
   controller_manager::ControllerManager cm(robot_, executor_, "test_controller_manager");
+  lifecycle_msgs::msg::State target_state;
+  target_state.id = lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE;
   ASSERT_THROW(
-    cm.load_controller("unknown_controller_name", "unknown_controller_type"), std::runtime_error);
+    cm.load_controller(
+      "unknown_controller_name", "unknown_controller_type",
+      target_state), std::runtime_error);
 }
 
 TEST_F(TestControllerManager, load1_known_controller)
@@ -86,6 +90,28 @@ TEST_F(TestControllerManager, load2_known_controller)
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
     abstract_test_controller2.c->get_lifecycle_node()->get_current_state().id());
+}
+
+TEST_F(TestControllerManager, load_controller_states)
+{
+  controller_manager::ControllerManager cm(robot_, executor_, "test_controller_manager");
+  lifecycle_msgs::msg::State target_state;
+  target_state.id = lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED;
+  ASSERT_NO_THROW(
+    cm.load_controller(
+      "test_controller_01", test_controller::TEST_CONTROLLER_TYPE,
+      target_state));
+  EXPECT_EQ(1u, cm.get_loaded_controllers().size());
+
+  controller_manager::ControllerSpec abstract_test_controller =
+    cm.get_loaded_controllers()[0];
+
+  auto lifecycle_node = abstract_test_controller.c->get_lifecycle_node();
+  lifecycle_node->configure();
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    abstract_test_controller.c->get_lifecycle_node()->get_current_state().id());
+
 }
 
 TEST_F(TestControllerManager, update)

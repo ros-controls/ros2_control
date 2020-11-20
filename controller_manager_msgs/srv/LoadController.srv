@@ -5,6 +5,11 @@
 # The return value "ok" indicates if the controller was successfully
 # constructed and initialized or not.
 
+# target_state specify in which lifecycle state the controller should 
+# be left after loading
+# The only valid options are:
+# PRIMARY_STATE_UNCONFIGURED, PRIMARY_STATE_INACTIVE and PRIMARY_STATE_ACTIVE
 string name
+lifecycle_msgs/State target_state
 ---
 bool ok

@@ -135,9 +135,11 @@ TEST_F(TestControllerManagerSrvs, list_controllers_srv) {
     result->controller.size());
 
   auto test_controller = std::make_shared<test_controller::TestController>();
+  lifecycle_msgs::msg::State target_state;
+  target_state.id = lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE;
   auto abstract_test_controller = cm_->add_controller(
     test_controller, test_controller::TEST_CONTROLLER_NAME,
-    test_controller::TEST_CONTROLLER_TYPE);
+    test_controller::TEST_CONTROLLER_TYPE, target_state);
   EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
   result = call_service_and_wait(*client, request, srv_executor);
   ASSERT_EQ(
@@ -285,6 +287,7 @@ TEST_F(TestControllerManagerSrvs, load_controller_srv) {
 
   auto request = std::make_shared<controller_manager_msgs::srv::LoadController::Request>();
   request->name = test_controller::TEST_CONTROLLER_NAME;
+  request->target_state.id = lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE;
   auto result = call_service_and_wait(*client, request, srv_executor);
   ASSERT_FALSE(result->ok) << "There's no param specifying the type for " << request->name;
   rclcpp::Parameter joint_parameters(std::string(test_controller::TEST_CONTROLLER_NAME) + ".type",
@@ -308,9 +311,12 @@ TEST_F(TestControllerManagerSrvs, unload_controller_srv) {
   ASSERT_FALSE(result->ok) << "Controller not loaded: " << request->name;
 
   auto test_controller = std::make_shared<test_controller::TestController>();
+  lifecycle_msgs::msg::State target_state;
+  target_state.id = lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE;
   auto abstract_test_controller = cm_->add_controller(
     test_controller, test_controller::TEST_CONTROLLER_NAME,
-    test_controller::TEST_CONTROLLER_TYPE);
+    test_controller::TEST_CONTROLLER_TYPE,
+    target_state);
   EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
 
   result = call_service_and_wait(*client, request, srv_executor, true);

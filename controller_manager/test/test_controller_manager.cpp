@@ -30,10 +30,12 @@ TEST_F(TestControllerManager, controller_lifecycle) {
     "test_controller_manager");
 
 
+  lifecycle_msgs::msg::State target_state;
+  target_state.id = lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE;
   auto test_controller = std::make_shared<test_controller::TestController>();
   cm->add_controller(
     test_controller, test_controller::TEST_CONTROLLER_NAME,
-    test_controller::TEST_CONTROLLER_TYPE);
+    test_controller::TEST_CONTROLLER_TYPE, target_state);
   EXPECT_EQ(1u, cm->get_loaded_controllers().size());
   EXPECT_EQ(2, test_controller.use_count());
 
