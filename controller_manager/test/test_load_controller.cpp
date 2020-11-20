@@ -88,26 +88,46 @@ TEST_F(TestControllerManager, load2_known_controller)
     abstract_test_controller2.c->get_lifecycle_node()->get_current_state().id());
 }
 
-TEST_F(TestControllerManager, load_controller_states)
+TEST_F(TestControllerManager, load_controller_valid_states)
 {
   controller_manager::ControllerManager cm(robot_, executor_, "test_controller_manager");
-  lifecycle_msgs::msg::State target_state;
-  target_state.id = lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED;
-  ASSERT_NO_THROW(
-    cm.load_controller(
-      "test_controller_01", test_controller::TEST_CONTROLLER_TYPE,
-      target_state));
-  EXPECT_EQ(1u, cm.get_loaded_controllers().size());
 
-  controller_manager::ControllerSpec abstract_test_controller =
-    cm.get_loaded_controllers()[0];
+  for (const auto target_state_id : {lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE})
+  {
+    lifecycle_msgs::msg::State target_state;
+    target_state.id = target_state_id;
+    ASSERT_NO_THROW(
+      cm.load_controller(
+        test_controller::TEST_CONTROLLER_NAME, test_controller::TEST_CONTROLLER_TYPE,
+        target_state));
+    EXPECT_EQ(1u, cm.get_loaded_controllers().size());
 
-  auto lifecycle_node = abstract_test_controller.c->get_lifecycle_node();
-  lifecycle_node->configure();
-  EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    abstract_test_controller.c->get_lifecycle_node()->get_current_state().id());
+    controller_manager::ControllerSpec abstract_test_controller =
+      cm.get_loaded_controllers()[0];
 
+    EXPECT_EQ(
+      target_state_id,
+      abstract_test_controller.c->get_lifecycle_node()->get_current_state().id());
+    cm.unload_controller(test_controller::TEST_CONTROLLER_NAME);
+  }
+}
+
+TEST_F(TestControllerManager, load_controller_invalid_states)
+{
+  controller_manager::ControllerManager cm(robot_, executor_, "test_controller_manager");
+  for (const auto target_state_id : {lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN,
+      lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED,
+      lifecycle_msgs::msg::State::TRANSITION_STATE_CONFIGURING})
+  {
+    lifecycle_msgs::msg::State target_state;
+    target_state.id = target_state_id;
+    auto loaded_controller = cm.load_controller(
+      test_controller::TEST_CONTROLLER_NAME, test_controller::TEST_CONTROLLER_TYPE,
+      target_state);
+    ASSERT_FALSE(loaded_controller.get());
+  }
 }
 
 TEST_F(TestControllerManager, update)
