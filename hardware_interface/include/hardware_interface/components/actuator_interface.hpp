@@ -16,6 +16,7 @@
 #define HARDWARE_INTERFACE__COMPONENTS__ACTUATOR_INTERFACE_HPP_
 
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "hardware_interface/handle.hpp"
@@ -91,7 +92,15 @@ public:
   return_type stop() = 0;
 
   /**
-   * \brief Get current state of the system hardware.
+   * \brief Get name of the actuator hardware.
+   *
+   * \return std::string name.
+   */
+  virtual
+  std::string get_name() const = 0;
+
+  /**
+   * \brief Get current state of the actuator hardware.
    *
    * \return status current status.
    */
