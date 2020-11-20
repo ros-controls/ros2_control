@@ -51,8 +51,6 @@ TEST_F(TestControllerManager, load1_known_controller)
   controller_manager::ControllerSpec abstract_test_controller =
     cm.get_loaded_controllers()[0];
 
-  auto lifecycle_node = abstract_test_controller.c->get_lifecycle_node();
-  lifecycle_node->configure();
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
     abstract_test_controller.c->get_lifecycle_node()->get_current_state().id());
@@ -71,7 +69,6 @@ TEST_F(TestControllerManager, load2_known_controller)
     cm.get_loaded_controllers()[0];
   EXPECT_STREQ(
     controller_name1.c_str(), abstract_test_controller1.c->get_lifecycle_node()->get_name());
-  abstract_test_controller1.c->get_lifecycle_node()->configure();
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
     abstract_test_controller1.c->get_lifecycle_node()->get_current_state().id());
@@ -86,7 +83,6 @@ TEST_F(TestControllerManager, load2_known_controller)
     controller_name2.c_str(), abstract_test_controller2.c->get_lifecycle_node()->get_name());
   EXPECT_STREQ(
     controller_name2.c_str(), abstract_test_controller2.info.name.c_str());
-  abstract_test_controller2.c->get_lifecycle_node()->configure();
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
     abstract_test_controller2.c->get_lifecycle_node()->get_current_state().id());
@@ -122,8 +118,6 @@ TEST_F(TestControllerManager, update)
   controller_manager::ControllerSpec abstract_test_controller =
     cm.get_loaded_controllers()[0];
 
-  auto lifecycle_node = abstract_test_controller.c->get_lifecycle_node();
-  lifecycle_node->configure();
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
     abstract_test_controller.c->get_lifecycle_node()->get_current_state().id());
