@@ -25,8 +25,12 @@ class LoadVerb(VerbExtension):
         arg = parser.add_argument(
             'controller_name', help='Name of the controller')
         arg.completer = ControllerNameCompleter()
+        arg = parser.add_argument(
+            '--target_state', help='Target state of the controller after loading',
+            choices=['unconfigured', 'inactive', 'active'], default='inactive', required=False)
         add_controller_mgr_parsers(parser)
 
     def main(self, *, args):
-        response = load_controller(args.controller_manager, args.controller_name)
+        response = load_controller(args.controller_manager, args.controller_name,
+                                   args.target_state)
         return response.ok

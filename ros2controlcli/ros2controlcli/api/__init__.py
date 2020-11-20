@@ -19,6 +19,7 @@ import rclpy
 from ros2cli.node.direct import DirectNode
 from ros2node.api import NodeNameCompleter
 from ros2param.api import call_list_parameters
+from lifecycle_msgs.msg import State
 
 
 def service_caller(service_name, service_type, request):
@@ -71,9 +72,15 @@ def reload_controller_libraries(controller_manager_name, force_kill):
         request)
 
 
-def load_controller(controller_manager_name, controller_name):
+def load_controller(controller_manager_name, controller_name, target_state):
     request = LoadController.Request()
     request.name = controller_name
+    if target_state == "unconfigured":
+        request.target_state = State(id=State.PRIMARY_STATE_UNCONFIGURED)
+    elif target_state == "inactive":
+        request.target_state = State(id=State.PRIMARY_STATE_INACTIVE)
+    elif target_state == "active":
+        request.target_state = State(id=State.PRIMARY_STATE_ACTIVE)
     return service_caller('{}/load_controller'.format(controller_manager_name),
                           LoadController, request)
 
