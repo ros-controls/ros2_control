@@ -59,6 +59,11 @@ return_type System::stop()
   return impl_->stop();
 }
 
+std::string System::get_name() const
+{
+  return impl_->get_name();
+}
+
 status System::get_status() const
 {
   return impl_->get_status();

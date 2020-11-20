@@ -62,6 +62,11 @@ return_type Actuator::stop()
   return impl_->stop();
 }
 
+std::string Actuator::get_name() const
+{
+  return impl_->get_name();
+}
+
 status Actuator::get_status() const
 {
   return impl_->get_status();

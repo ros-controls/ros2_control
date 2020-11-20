@@ -54,6 +54,11 @@ return_type Sensor::stop()
   return impl_->stop();
 }
 
+std::string Sensor::get_name() const
+{
+  return impl_->get_name();
+}
+
 status Sensor::get_status() const
 {
   return impl_->get_status();
