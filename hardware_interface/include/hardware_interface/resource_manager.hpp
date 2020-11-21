@@ -24,6 +24,7 @@
 #include "hardware_interface/loaned_command_interface.hpp"
 #include "hardware_interface/loaned_state_interface.hpp"
 #include "hardware_interface/hardware_info.hpp"
+#include "hardware_interface/types/hardware_interface_status_values.hpp"
 
 namespace hardware_interface
 {
@@ -189,6 +190,12 @@ public:
    * \param system pointer to the system interface.
    */
   void import_component(std::unique_ptr<components::SystemInterface> system);
+
+  /// Return status for all components.
+  /**
+   * \return map of hardware names and their status
+   */
+  std::unordered_map<std::string, status> get_components_status();
 
   /// Start all loaded hardware components.
   void start_all();

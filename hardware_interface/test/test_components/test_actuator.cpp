@@ -15,6 +15,7 @@
 #include <memory>
 #include <vector>
 
+#include "hardware_interface/components/base_interface.hpp"
 #include "hardware_interface/components/actuator_interface.hpp"
 
 using hardware_interface::status;
@@ -22,21 +23,24 @@ using hardware_interface::return_type;
 using hardware_interface::StateInterface;
 using hardware_interface::CommandInterface;
 
-class TestActuator : public hardware_interface::components::ActuatorInterface
+class TestActuator : public
+  hardware_interface::components::BaseInterface<hardware_interface::components::ActuatorInterface>
 {
-  return_type configure(const hardware_interface::HardwareInfo & actuator_info) override
+  return_type configure(const hardware_interface::HardwareInfo & sensor_info) override
   {
-    actuator_info_ = actuator_info;
+    if (configure_default(sensor_info) != return_type::OK) {
+      return return_type::ERROR;
+    }
 
     /*
      * a hardware can optional prove for incorrect info here.
      *
      * // can only control one joint
-     * if (actuator_info_.joints.size() != 1) {return return_type::ERROR;}
+     * if (info_.joints.size() != 1) {return return_type::ERROR;}
      * // can only control in position
-     * if (actuator_info_.joints[0].command_interfaces.size() != 1) {return return_type::ERROR;}
+     * if (info_.joints[0].command_interfaces.size() != 1) {return return_type::ERROR;}
      * // can only give feedback state for position and velocity
-     * if (actuator_info_.joints[0].state_interfaces.size() != 2) {return return_type::ERROR;}
+     * if (info_.joints[0].state_interfaces.size() != 2) {return return_type::ERROR;}
     */
 
     return return_type::OK;
@@ -47,17 +51,17 @@ class TestActuator : public hardware_interface::components::ActuatorInterface
     std::vector<StateInterface> state_interfaces;
     state_interfaces.emplace_back(
       hardware_interface::StateInterface(
-        actuator_info_.joints[0].name,
-        actuator_info_.joints[0].state_interfaces[0].name,
+        info_.joints[0].name,
+        info_.joints[0].state_interfaces[0].name,
         &position_state_));
     state_interfaces.emplace_back(
       hardware_interface::StateInterface(
-        actuator_info_.joints[0].name,
-        actuator_info_.joints[0].state_interfaces[1].name,
+        info_.joints[0].name,
+        info_.joints[0].state_interfaces[1].name,
         &velocity_state_));
     state_interfaces.emplace_back(
       hardware_interface::StateInterface(
-        actuator_info_.joints[0].name,
+        info_.joints[0].name,
         "some_unlisted_interface",
         nullptr));
 
@@ -69,8 +73,8 @@ class TestActuator : public hardware_interface::components::ActuatorInterface
     std::vector<CommandInterface> command_interfaces;
     command_interfaces.emplace_back(
       hardware_interface::CommandInterface(
-        actuator_info_.joints[0].name,
-        actuator_info_.joints[0].command_interfaces[0].name,
+        info_.joints[0].name,
+        info_.joints[0].command_interfaces[0].name,
         &velocity_command_));
 
     return command_interfaces;
@@ -78,17 +82,14 @@ class TestActuator : public hardware_interface::components::ActuatorInterface
 
   return_type start() override
   {
+    status_ = status::STARTED;
     return return_type::OK;
   }
 
   return_type stop() override
   {
+    status_ = status::STOPPED;
     return return_type::OK;
-  }
-
-  status get_status() const override
-  {
-    return status::UNKNOWN;
   }
 
   return_type read() override
@@ -105,7 +106,6 @@ private:
   double position_state_ = 0.0;
   double velocity_state_ = 0.0;
   double velocity_command_ = 0.0;
-  hardware_interface::HardwareInfo actuator_info_;
 };
 
 #include "pluginlib/class_list_macros.hpp"  // NOLINT

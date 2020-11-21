@@ -88,7 +88,7 @@ public:
 </robot>
 )";
 
-    test_hardware_resource_system_ =
+    hardware_resources_for_test_ =
       R"(
   <ros2_control name="TestActuatorHardware" type="actuator">
     <hardware>
@@ -127,7 +127,7 @@ public:
   </ros2_control>
 )";
 
-    test_hardware_resource_system_missing_keys_ =
+    hardware_resources_for_test_missing_keys_ =
       R"(
   <ros2_control name="TestActuatorHardware" type="actuator">
     <hardware>
@@ -175,8 +175,8 @@ public:
   }
 
   std::string urdf_head_;
-  std::string test_hardware_resource_system_;
-  std::string test_hardware_resource_system_missing_keys_;
+  std::string hardware_resources_for_test_;
+  std::string hardware_resources_for_test_missing_keys_;
   std::string urdf_tail_;
 };
 
@@ -185,18 +185,18 @@ TEST_F(TestResourceManager, initialization_empty) {
 }
 
 TEST_F(TestResourceManager, initialization_with_urdf) {
-  auto urdf = urdf_head_ + test_hardware_resource_system_ + urdf_tail_;
+  auto urdf = urdf_head_ + hardware_resources_for_test_ + urdf_tail_;
   ASSERT_NO_THROW(hardware_interface::ResourceManager rm(urdf));
 }
 
 TEST_F(TestResourceManager, post_initialization_with_urdf) {
-  auto urdf = urdf_head_ + test_hardware_resource_system_ + urdf_tail_;
+  auto urdf = urdf_head_ + hardware_resources_for_test_ + urdf_tail_;
   hardware_interface::ResourceManager rm;
   ASSERT_NO_THROW(rm.load_urdf(urdf));
 }
 
 TEST_F(TestResourceManager, initialization_with_urdf_manual_validation) {
-  auto urdf = urdf_head_ + test_hardware_resource_system_ + urdf_tail_;
+  auto urdf = urdf_head_ + hardware_resources_for_test_ + urdf_tail_;
   // we validate the results manually
   hardware_interface::ResourceManager rm(urdf, false);
 
@@ -220,7 +220,7 @@ TEST_F(TestResourceManager, initialization_with_urdf_manual_validation) {
 }
 
 TEST_F(TestResourceManager, initialization_with_wrong_urdf) {
-  auto urdf = urdf_head_ + test_hardware_resource_system_missing_keys_ + urdf_tail_;
+  auto urdf = urdf_head_ + hardware_resources_for_test_missing_keys_ + urdf_tail_;
   try {
     hardware_interface::ResourceManager rm(urdf);
     FAIL();
@@ -231,7 +231,7 @@ TEST_F(TestResourceManager, initialization_with_wrong_urdf) {
 }
 
 TEST_F(TestResourceManager, initialization_with_urdf_unclaimed) {
-  auto urdf = urdf_head_ + test_hardware_resource_system_ + urdf_tail_;
+  auto urdf = urdf_head_ + hardware_resources_for_test_ + urdf_tail_;
   // we validate the results manually
   hardware_interface::ResourceManager rm(urdf);
 
@@ -247,8 +247,39 @@ TEST_F(TestResourceManager, initialization_with_urdf_unclaimed) {
   }
 }
 
+TEST_F(TestResourceManager, resource_status) {
+  auto urdf = urdf_head_ + hardware_resources_for_test_ + urdf_tail_;
+  hardware_interface::ResourceManager rm(urdf);
+
+  std::unordered_map<std::string, hardware_interface::status> status_map;
+
+  status_map = rm.get_components_status();
+  EXPECT_EQ(status_map["TestActuatorHardware"], hardware_interface::status::CONFIGURED);
+  EXPECT_EQ(status_map["TestSensorHardware"], hardware_interface::status::CONFIGURED);
+  EXPECT_EQ(status_map["TestSystemHardware"], hardware_interface::status::CONFIGURED);
+}
+
+TEST_F(TestResourceManager, starting_and_stopping_resources) {
+  auto urdf = urdf_head_ + hardware_resources_for_test_ + urdf_tail_;
+  hardware_interface::ResourceManager rm(urdf);
+
+  std::unordered_map<std::string, hardware_interface::status> status_map;
+
+  rm.start_all();
+  status_map = rm.get_components_status();
+  EXPECT_EQ(status_map["TestActuatorHardware"], hardware_interface::status::STARTED);
+  EXPECT_EQ(status_map["TestSensorHardware"], hardware_interface::status::STARTED);
+  EXPECT_EQ(status_map["TestSystemHardware"], hardware_interface::status::STARTED);
+
+  rm.stop_all();
+  status_map = rm.get_components_status();
+  EXPECT_EQ(status_map["TestActuatorHardware"], hardware_interface::status::STOPPED);
+  EXPECT_EQ(status_map["TestSensorHardware"], hardware_interface::status::STOPPED);
+  EXPECT_EQ(status_map["TestSystemHardware"], hardware_interface::status::STOPPED);
+}
+
 TEST_F(TestResourceManager, resource_claiming) {
-  auto urdf = urdf_head_ + test_hardware_resource_system_ + urdf_tail_;
+  auto urdf = urdf_head_ + hardware_resources_for_test_ + urdf_tail_;
   hardware_interface::ResourceManager rm(urdf);
 
   const auto key = "joint1/position";
@@ -342,6 +373,11 @@ class ExternalComponent : public hardware_interface::components::ActuatorInterfa
     return hardware_interface::return_type::OK;
   }
 
+  std::string get_name() const override
+  {
+    return std::string("ExternalComponent");
+  }
+
   hardware_interface::status get_status() const override
   {
     return hardware_interface::status::UNKNOWN;
@@ -359,7 +395,7 @@ class ExternalComponent : public hardware_interface::components::ActuatorInterfa
 };
 
 TEST_F(TestResourceManager, post_initialization_add_components) {
-  auto urdf = urdf_head_ + test_hardware_resource_system_ + urdf_tail_;
+  auto urdf = urdf_head_ + hardware_resources_for_test_ + urdf_tail_;
   // we validate the results manually
   hardware_interface::ResourceManager rm(urdf, false);
 
