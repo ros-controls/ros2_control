@@ -65,7 +65,8 @@ public:
       loader.createUnmanagedInstance(hardware_info.hardware_class_type));
     HardwareT hardware(std::move(interface));
     container.emplace_back(std::move(hardware));
-    hardware_status_map_.emplace(std::make_pair(container.back().get_name(), container.back().get_status()));
+    hardware_status_map_.emplace(
+      std::make_pair(container.back().get_name(), container.back().get_status()));
   }
 
   template<class HardwareT>
