@@ -21,7 +21,8 @@
 using std::vector;
 using transmission_interface::SimpleTransmission;
 using transmission_interface::Exception;
-using hardware_interface::CommandInterface;
+using transmission_interface::ActuatorHandle;
+using transmission_interface::JointHandle;
 
 // Floating-point value comparison threshold
 const double EPS = 1e-6;
@@ -167,8 +168,8 @@ protected:
   {
     // Effort interface
     {
-      auto actuator_handle = CommandInterface("joint1", interface_name, &a_val);
-      auto joint_handle = CommandInterface("joint1", interface_name, &j_val);
+      auto actuator_handle = ActuatorHandle("joint1", interface_name, &a_val);
+      auto joint_handle = JointHandle("joint1", interface_name, &j_val);
       trans.configure({joint_handle}, {actuator_handle});
 
       a_val = ref_val;
@@ -233,8 +234,8 @@ TEST_F(WhiteBoxTest, MoveJoint)
 
   // Effort interface
   {
-    auto actuator_handle = CommandInterface("joint1", "effort", &a_val);
-    auto joint_handle = CommandInterface("joint1", "effort", &j_val);
+    auto actuator_handle = ActuatorHandle("joint1", "effort", &a_val);
+    auto joint_handle = JointHandle("joint1", "effort", &j_val);
     trans.configure({joint_handle}, {actuator_handle});
 
     trans.actuator_to_joint();
@@ -243,8 +244,8 @@ TEST_F(WhiteBoxTest, MoveJoint)
 
   // Velocity interface
   {
-    auto actuator_handle = CommandInterface("joint1", "velocity", &a_val);
-    auto joint_handle = CommandInterface("joint1", "velocity", &j_val);
+    auto actuator_handle = ActuatorHandle("joint1", "velocity", &a_val);
+    auto joint_handle = JointHandle("joint1", "velocity", &j_val);
     trans.configure({joint_handle}, {actuator_handle});
 
     trans.actuator_to_joint();
@@ -253,8 +254,8 @@ TEST_F(WhiteBoxTest, MoveJoint)
 
   // Position interface
   {
-    auto actuator_handle = CommandInterface("joint1", "position", &a_val);
-    auto joint_handle = CommandInterface("joint1", "position", &j_val);
+    auto actuator_handle = ActuatorHandle("joint1", "position", &a_val);
+    auto joint_handle = JointHandle("joint1", "position", &j_val);
     trans.configure({joint_handle}, {actuator_handle});
 
     trans.actuator_to_joint();

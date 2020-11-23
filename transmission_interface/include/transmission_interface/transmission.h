@@ -14,13 +14,13 @@
 #ifndef TRANSMISSION_INTERFACE__TRANSMISSION_H_
 #define TRANSMISSION_INTERFACE__TRANSMISSION_H_
 
+#include "transmission_interface/handle.hpp"
 
 #include <cstddef>
 #include <string>
 #include <vector>
 #include <memory>
 #include <stdexcept>
-#include "hardware_interface/handle.hpp"
 
 
 namespace transmission_interface
@@ -51,8 +51,8 @@ public:
     virtual ~Transmission() = default;
 
     virtual void configure(
-      const std::vector < hardware_interface::CommandInterface > & joint_handles,
-      const std::vector < hardware_interface::CommandInterface > & actuator_handles) = 0;
+      const std::vector<JointHandle> & joint_handles,
+      const std::vector<ActuatorHandle> & actuator_handles) = 0;
 
     /**
      * \brief Transform \e effort variables from actuator to joint space.
@@ -85,7 +85,7 @@ public:
     virtual std::size_t num_joints() const = 0;
   };
 
-  typedef std::shared_ptr < Transmission > TransmissionSharedPtr;
+  typedef std::shared_ptr<Transmission> TransmissionSharedPtr;
 
 }  // namespace transmission_interface
 

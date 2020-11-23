@@ -90,8 +90,8 @@ public:
       const double joint_offset = 0.0);
 
     void configure(
-      const std::vector < hardware_interface::CommandInterface > & joint_handles,
-      const std::vector < hardware_interface::CommandInterface > & actuator_handles) override;
+      const std::vector<JointHandle> & joint_handles,
+      const std::vector<ActuatorHandle> & actuator_handles) override;
 
     /**
      * \brief Transform \e effort variables from actuator to joint space.
@@ -121,13 +121,13 @@ protected:
     double reduction_;
     double jnt_offset_;
 
-    hardware_interface::CommandInterface joint_position = {"", "", nullptr};
-    hardware_interface::CommandInterface joint_velocity = {"", "", nullptr};
-    hardware_interface::CommandInterface joint_effort = {"", "", nullptr};
+    JointHandle joint_position = {"", "", nullptr};
+    JointHandle joint_velocity = {"", "", nullptr};
+    JointHandle joint_effort = {"", "", nullptr};
 
-    hardware_interface::CommandInterface actuator_position = {"", "", nullptr};
-    hardware_interface::CommandInterface actuator_velocity = {"", "", nullptr};
-    hardware_interface::CommandInterface actuator_effort = {"", "", nullptr};
+    ActuatorHandle actuator_position = {"", "", nullptr};
+    ActuatorHandle actuator_velocity = {"", "", nullptr};
+    ActuatorHandle actuator_effort = {"", "", nullptr};
   };
 
   inline SimpleTransmission::SimpleTransmission(
@@ -141,8 +141,9 @@ protected:
     }
   }
 
-  hardware_interface::CommandInterface get_by_interface(
-    const std::vector < hardware_interface::CommandInterface > & handles,
+  template<class HandleType>
+  HandleType get_by_interface(
+    const std::vector<HandleType> & handles,
     const std::string & interface_name)
   {
     const auto result =
@@ -150,14 +151,14 @@ protected:
       handles.cbegin(), handles.cend(), [&interface_name](
         const auto handle) {return handle.get_interface_name() == interface_name;});
     if (result == handles.cend()) {
-      return hardware_interface::CommandInterface("", "", nullptr);
+      return HandleType("", "", nullptr);
     }
     return *result;
   }
 
   void SimpleTransmission::configure(
-    const std::vector < hardware_interface::CommandInterface > & joint_handles,
-    const std::vector < hardware_interface::CommandInterface > & actuator_handles)
+    const std::vector<JointHandle> & joint_handles,
+    const std::vector<ActuatorHandle> & actuator_handles)
   {
     // check that joint / act names are identical
     // check that joint interfaces and actuator interfaces match
