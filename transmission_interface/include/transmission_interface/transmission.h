@@ -14,7 +14,6 @@
 #ifndef TRANSMISSION_INTERFACE__TRANSMISSION_H_
 #define TRANSMISSION_INTERFACE__TRANSMISSION_H_
 
-#include "transmission_interface/handle.hpp"
 
 #include <cstddef>
 #include <string>
@@ -22,6 +21,7 @@
 #include <memory>
 #include <stdexcept>
 
+#include "transmission_interface/handle.hpp"
 
 namespace transmission_interface
 {
