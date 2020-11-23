@@ -45,8 +45,8 @@ namespace transmission_interface
  * \note Implementations of this interface must take care of realtime-safety if the code is to be run in realtime
  * contexts, as is often the case in robot control.
  */
-class Transmission
-{
+  class Transmission
+  {
 public:
     virtual ~Transmission() = default;
 

@@ -21,8 +21,8 @@
 namespace transmission_interface
 {
 
-class Exception: public std::exception
-{
+  class Exception: public std::exception
+  {
 public:
     explicit Exception(const std::string & message)
     : msg(message) {

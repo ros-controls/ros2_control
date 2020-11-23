@@ -77,8 +77,8 @@ namespace transmission_interface
  *
  * \ingroup transmission_types
  */
-class SimpleTransmission: public Transmission
-{
+  class SimpleTransmission: public Transmission
+  {
 public:
     /**
      * \param reduction Reduction ratio.
