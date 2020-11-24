@@ -22,11 +22,12 @@
 
 using hardware_interface::status;
 using hardware_interface::return_type;
-using hardware_interface::StateInterface;
 using hardware_interface::CommandInterface;
+using hardware_interface::StateInterface;
+using hardware_interface::components::BaseInterface;
+using hardware_interface::components::SystemInterface;
 
-class TestSystem : public
-  hardware_interface::components::BaseInterface<hardware_interface::components::SystemInterface>
+class TestSystem : public BaseInterface<SystemInterface>
 {
   std::vector<StateInterface> export_state_interfaces() override
   {

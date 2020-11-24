@@ -71,8 +71,8 @@ ControllerManager::ControllerManager(
 
   resource_manager_->load_urdf(robot_description);
 
-  //TODO(all): Here we should start only "auto-start" resources
-  resource_manager_->start_all();
+  // TODO(all): Here we should start only "auto-start" resources
+  resource_manager_->start_components();
 
   init_services();
 }
