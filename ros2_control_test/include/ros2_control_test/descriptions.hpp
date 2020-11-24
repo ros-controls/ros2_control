@@ -23,7 +23,7 @@
 namespace ros2_control_test
 {
 
-const auto urdf_head =
+std::string urdf_head =
   R"(
 <?xml version="1.0" encoding="utf-8"?>
 <robot name="MinimalRobot">
@@ -75,12 +75,12 @@ const auto urdf_head =
   </joint>
 )";
 
-const auto urdf_tail =
+std::string urdf_tail =
   R"(
 </robot>
 )";
 
-const auto hardware_resources_for_test =
+std::string hardware_resources =
   R"(
   <ros2_control name="TestActuatorHardware" type="actuator">
     <hardware>
@@ -119,7 +119,7 @@ const auto hardware_resources_for_test =
   </ros2_control>
 )";
 
-const auto hardware_resources_for_testmissing_keys =
+std::string hardware_resources_missing_keys =
   R"(
   <ros2_control name="TestActuatorHardware" type="actuator">
     <hardware>
@@ -166,7 +166,7 @@ const auto hardware_resources_for_testmissing_keys =
 )";
 
 
-const auto minimal_robot_urdf = urdf_head + hardware_resources_for_test + urdf_tail;
+std::string minimal_robot_urdf = urdf_head + hardware_resources + urdf_tail;
 
 }  // namespace ros2_control_test
 

@@ -61,6 +61,7 @@ install(
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
+  find_package(ros2_control_test REQUIRED)
   ament_lint_auto_find_test_dependencies()
 
   find_package(ament_cmake_gmock REQUIRED)
@@ -111,6 +112,8 @@ if(BUILD_TESTING)
     test_resource_manager
     test/test_resource_manager.cpp
   )
+  ament_target_dependencies(test_resource_manager
+    ros2_control_test)
   target_link_libraries(test_resource_manager hardware_interface)
 endif()
 
