@@ -353,7 +353,7 @@ std::unordered_map<std::string, status> ResourceManager::get_components_status()
   return resource_storage_->hardware_status_map_;
 }
 
-void ResourceManager::start_all()
+void ResourceManager::start_components()
 {
   for (auto & component : resource_storage_->actuators_) {
     component.start();
@@ -366,7 +366,7 @@ void ResourceManager::start_all()
   }
 }
 
-void ResourceManager::stop_all()
+void ResourceManager::stop_components()
 {
   for (auto & component : resource_storage_->actuators_) {
     component.stop();

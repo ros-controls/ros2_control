@@ -197,10 +197,10 @@ public:
   std::unordered_map<std::string, status> get_components_status();
 
   /// Start all loaded hardware components.
-  void start_all();
+  void start_components();
 
   /// Stops all loaded hardware components.
-  void stop_all();
+  void stop_components();
 
   /// Reads all loaded hardware components.
   void read();

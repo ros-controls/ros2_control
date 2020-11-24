@@ -22,9 +22,10 @@ using hardware_interface::status;
 using hardware_interface::return_type;
 using hardware_interface::StateInterface;
 using hardware_interface::CommandInterface;
+using hardware_interface::components::ActuatorInterface;
+using hardware_interface::components::BaseInterface;
 
-class TestActuator : public
-  hardware_interface::components::BaseInterface<hardware_interface::components::ActuatorInterface>
+class TestActuator : public BaseInterface<ActuatorInterface>
 {
   return_type configure(const hardware_interface::HardwareInfo & sensor_info) override
   {

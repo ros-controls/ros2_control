@@ -20,10 +20,11 @@
 
 using hardware_interface::status;
 using hardware_interface::return_type;
+using hardware_interface::components::BaseInterface;
+using hardware_interface::components::SensorInterface;
 using hardware_interface::StateInterface;
 
-class TestSensor : public
-  hardware_interface::components::BaseInterface<hardware_interface::components::SensorInterface>
+class TestSensor : public BaseInterface<SensorInterface>
 {
   return_type configure(const hardware_interface::HardwareInfo & sensor_info) override
   {
