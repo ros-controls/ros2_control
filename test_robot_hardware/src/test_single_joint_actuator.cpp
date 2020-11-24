@@ -39,9 +39,14 @@ class TestSingleJointActuator : public hardware_interface::components::ActuatorI
     if (command_interfaces[0].name != "position") {return return_type::ERROR;}
     // can only give feedback state for position and velocity
     const auto & state_interfaces = actuator_info_.joints[0].state_interfaces;
-    if (state_interfaces.size() != 1) {return return_type::ERROR;}
-    if (state_interfaces[0].name != "position") {return return_type::ERROR;}
-
+    if (state_interfaces.size() < 1) {return return_type::ERROR;}
+    for (const auto & state_interface : state_interfaces) {
+      if ((state_interface.name != "position") &&
+        (state_interface.name != "velocity"))
+      {
+        return return_type::ERROR;
+      }
+    }
     fprintf(stderr, "TestSingleJointActuator configured successfully.\n");
     return return_type::OK;
   }
@@ -56,6 +61,11 @@ class TestSingleJointActuator : public hardware_interface::components::ActuatorI
         joint_name,
         "position",
         &position_state_));
+    state_interfaces.emplace_back(
+      hardware_interface::StateInterface(
+        joint_name,
+        "velocity",
+        &velocity_state_));
 
     return state_interfaces;
   }
@@ -96,12 +106,14 @@ class TestSingleJointActuator : public hardware_interface::components::ActuatorI
 
   return_type write() override
   {
+    velocity_state_ = position_command_ - position_state_;
     position_state_ = position_command_;
     return return_type::OK;
   }
 
 private:
   double position_state_ = 0.0;
+  double velocity_state_ = 0.0;
   double position_command_ = 0.0;
   hardware_interface::HardwareInfo actuator_info_;
 };
