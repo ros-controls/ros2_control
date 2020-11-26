@@ -17,22 +17,27 @@
 #include <memory>
 #include <vector>
 
+#include "hardware_interface/components/base_interface.hpp"
 #include "hardware_interface/components/sensor_interface.hpp"
 
 using hardware_interface::status;
 using hardware_interface::return_type;
 using hardware_interface::StateInterface;
+using hardware_interface::components::BaseInterface;
+using hardware_interface::components::SensorInterface;
 
 namespace test_robot_hardware
 {
 
-class TestForceTorqueSensor : public hardware_interface::components::SensorInterface
+class TestForceTorqueSensor : public BaseInterface<SensorInterface>
 {
   return_type configure(const hardware_interface::HardwareInfo & sensor_info) override
   {
-    sensor_info_ = sensor_info;
+    if (configure_default(sensor_info) != return_type::OK) {
+      return return_type::ERROR;
+    }
 
-    const auto & state_interfaces = sensor_info_.sensors[0].state_interfaces;
+    const auto & state_interfaces = info_.sensors[0].state_interfaces;
     if (state_interfaces.size() != 6) {return return_type::ERROR;}
     for (const auto & ft_key : {"fx", "fy", "fz", "tx", "ty", "tz"}) {
       if (std::find_if(
@@ -52,7 +57,7 @@ class TestForceTorqueSensor : public hardware_interface::components::SensorInter
   {
     std::vector<StateInterface> state_interfaces;
 
-    const auto & sensor_name = sensor_info_.sensors[0].name;
+    const auto & sensor_name = info_.sensors[0].name;
     state_interfaces.emplace_back(
       hardware_interface::StateInterface(
         sensor_name,
@@ -97,11 +102,6 @@ class TestForceTorqueSensor : public hardware_interface::components::SensorInter
     return return_type::OK;
   }
 
-  status get_status() const override
-  {
-    return status::UNKNOWN;
-  }
-
   return_type read() override
   {
     values_.fx = fmod((values_.fx + 1.0), 10);
@@ -125,7 +125,6 @@ private:
   };
 
   FTValues values_;
-  hardware_interface::HardwareInfo sensor_info_;
 };
 
 }  // namespace test_robot_hardware
