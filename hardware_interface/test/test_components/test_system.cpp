@@ -16,6 +16,7 @@
 #include <memory>
 #include <vector>
 
+#include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "hardware_interface/components/system_interface.hpp"
 
 using hardware_interface::status;
@@ -37,13 +38,14 @@ class TestSystem : public hardware_interface::components::SystemInterface
     for (auto i = 0u; i < system_info_.joints.size(); ++i) {
       state_interfaces.emplace_back(
         hardware_interface::StateInterface(
-          system_info_.joints[i].name, "position", &position_state_[i]));
+          system_info_.joints[i].name, hardware_interface::HW_IF_POSITION, &position_state_[i]));
       state_interfaces.emplace_back(
         hardware_interface::StateInterface(
-          system_info_.joints[i].name, "velocity", &velocity_state_[i]));
+          system_info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &velocity_state_[i]));
       state_interfaces.emplace_back(
         hardware_interface::StateInterface(
-          system_info_.joints[i].name, "acceleration", &acceleration_state_[i]));
+          system_info_.joints[i].name,
+          hardware_interface::HW_IF_ACCELERATION, &acceleration_state_[i]));
     }
 
     return state_interfaces;
@@ -55,7 +57,7 @@ class TestSystem : public hardware_interface::components::SystemInterface
     for (auto i = 0u; i < system_info_.joints.size(); ++i) {
       command_interfaces.emplace_back(
         hardware_interface::CommandInterface(
-          system_info_.joints[i].name, "velocity", &velocity_command_[i]));
+          system_info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &velocity_command_[i]));
     }
 
     return command_interfaces;
