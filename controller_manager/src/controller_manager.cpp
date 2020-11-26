@@ -98,12 +98,6 @@ void ControllerManager::init_services()
     rclcpp::CallbackGroupType::MutuallyExclusive);
 
   using namespace std::placeholders;
-  list_controller_interfaces_service_ =
-    create_service<controller_manager_msgs::srv::ListControllerInterfaces>(
-    "~/list_controller_interfaces",
-    std::bind(&ControllerManager::list_controller_interfaces_srv_cb, this, _1, _2),
-    rmw_qos_profile_services_default,
-    best_effort_callback_group_);
   list_controllers_service_ = create_service<controller_manager_msgs::srv::ListControllers>(
     "~/list_controllers",
     std::bind(&ControllerManager::list_controllers_srv_cb, this, _1, _2),

@@ -35,13 +35,13 @@ class TestSystem : public BaseInterface<SystemInterface>
     for (auto i = 0u; i < info_.joints.size(); ++i) {
       state_interfaces.emplace_back(
         hardware_interface::StateInterface(
-          system_info_.joints[i].name, hardware_interface::HW_IF_POSITION, &position_state_[i]));
+          info_.joints[i].name, hardware_interface::HW_IF_POSITION, &position_state_[i]));
       state_interfaces.emplace_back(
         hardware_interface::StateInterface(
-          system_info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &velocity_state_[i]));
+          info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &velocity_state_[i]));
       state_interfaces.emplace_back(
         hardware_interface::StateInterface(
-          system_info_.joints[i].name,
+          info_.joints[i].name,
           hardware_interface::HW_IF_ACCELERATION, &acceleration_state_[i]));
     }
 
@@ -54,7 +54,7 @@ class TestSystem : public BaseInterface<SystemInterface>
     for (auto i = 0u; i < info_.joints.size(); ++i) {
       command_interfaces.emplace_back(
         hardware_interface::CommandInterface(
-          system_info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &velocity_command_[i]));
+          info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &velocity_command_[i]));
     }
 
     return command_interfaces;

@@ -18,6 +18,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <unordered_map>
 
 #include "hardware_interface/components/actuator_interface.hpp"
 #include "hardware_interface/resource_manager.hpp"

@@ -27,9 +27,9 @@ using hardware_interface::components::BaseInterface;
 
 class TestActuator : public BaseInterface<ActuatorInterface>
 {
-  return_type configure(const hardware_interface::HardwareInfo & sensor_info) override
+  return_type configure(const hardware_interface::HardwareInfo & info) override
   {
-    if (configure_default(sensor_info) != return_type::OK) {
+    if (configure_default(info) != return_type::OK) {
       return return_type::ERROR;
     }
 
