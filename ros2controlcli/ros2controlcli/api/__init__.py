@@ -14,7 +14,8 @@
 
 
 from controller_manager_msgs.srv import ListControllers, ListControllerTypes, \
-    LoadController, ReloadControllerLibraries, SwitchController, UnloadController
+    ListHardwareInterfaces, LoadController, ReloadControllerLibraries, \
+    SwitchController, UnloadController
 import rclpy
 from ros2cli.node.direct import DirectNode
 from ros2node.api import NodeNameCompleter
@@ -60,6 +61,12 @@ def list_controller_types(controller_manager_name):
     request = ListControllerTypes.Request()
     return service_caller(
         '{}/list_controller_types'.format(controller_manager_name), ListControllerTypes, request)
+
+
+def list_hardware_interfaces(controller_manager_name):
+    request = ListHardwareInterfaces.Request()
+    return service_caller('{}/list_hardware_interfaces'.format(controller_manager_name),
+                          ListHardwareInterfaces, request)
 
 
 def reload_controller_libraries(controller_manager_name, force_kill):

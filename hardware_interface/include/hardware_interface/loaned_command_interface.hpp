@@ -16,6 +16,7 @@
 #define HARDWARE_INTERFACE__LOANED_COMMAND_INTERFACE_HPP_
 
 #include <functional>
+#include <string>
 #include <utility>
 
 #include "hardware_interface/handle.hpp"
@@ -48,6 +49,16 @@ public:
     if (deleter_) {
       deleter_();
     }
+  }
+
+  const std::string & get_name() const
+  {
+    return command_interface_.get_name();
+  }
+
+  const std::string & get_interface_name() const
+  {
+    return command_interface_.get_interface_name();
   }
 
   void set_value(double val)

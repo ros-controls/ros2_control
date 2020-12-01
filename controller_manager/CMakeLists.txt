@@ -37,11 +37,25 @@ target_compile_definitions(controller_manager PRIVATE "CONTROLLER_MANAGER_BUILDI
 # prevent pluginlib from using boost
 target_compile_definitions(controller_manager PUBLIC "PLUGINLIB__DISABLE_BOOST_FUNCTIONS")
 
+add_executable(ros2_control_node src/ros2_control_node.cpp)
+target_include_directories(ros2_control_node PRIVATE include)
+target_link_libraries(ros2_control_node controller_manager)
+ament_target_dependencies(ros2_control_node
+  controller_interface
+  hardware_interface
+  rclcpp
+)
+
 install(TARGETS controller_manager
   RUNTIME DESTINATION bin
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
 )
+
+install(TARGETS ros2_control_node
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
+)
+
 install(DIRECTORY include/
   DESTINATION include
 )
@@ -77,10 +91,6 @@ if(BUILD_TESTING)
   )
   target_include_directories(test_controller_manager PRIVATE include)
   target_link_libraries(test_controller_manager controller_manager test_controller)
-  ament_target_dependencies(
-    test_controller_manager
-    test_robot_hardware
-  )
 
   ament_add_gmock(
     test_load_controller
@@ -89,10 +99,6 @@ if(BUILD_TESTING)
   )
   target_include_directories(test_load_controller PRIVATE include)
   target_link_libraries(test_load_controller controller_manager)
-  ament_target_dependencies(
-    test_load_controller
-    test_robot_hardware
-  )
 
   ament_add_gmock(
     test_controller_manager_srvs
@@ -101,10 +107,6 @@ if(BUILD_TESTING)
   )
   target_include_directories(test_controller_manager_srvs PRIVATE include)
   target_link_libraries(test_controller_manager_srvs controller_manager test_controller)
-  ament_target_dependencies(
-    test_controller_manager_srvs
-    test_robot_hardware
-  )
 endif()
 
 ament_export_libraries(
@@ -116,6 +118,8 @@ ament_export_include_directories(
 ament_export_dependencies(
   controller_interface
   controller_manager_msgs
+  hardware_interface
   pluginlib
+  rclcpp
 )
 ament_package()

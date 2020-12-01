@@ -189,6 +189,12 @@ TEST_F(TestResourceManager, initialization_with_urdf) {
   ASSERT_NO_THROW(hardware_interface::ResourceManager rm(urdf));
 }
 
+TEST_F(TestResourceManager, post_initialization_with_urdf) {
+  auto urdf = urdf_head_ + test_hardware_resource_system_ + urdf_tail_;
+  hardware_interface::ResourceManager rm;
+  ASSERT_NO_THROW(rm.load_urdf(urdf));
+}
+
 TEST_F(TestResourceManager, initialization_with_urdf_manual_validation) {
   auto urdf = urdf_head_ + test_hardware_resource_system_ + urdf_tail_;
   // we validate the results manually
@@ -283,6 +289,19 @@ TEST_F(TestResourceManager, resource_claiming) {
         EXPECT_NO_THROW(rm.claim_state_interface(key));
       }
     }
+  }
+
+  std::vector<hardware_interface::LoanedCommandInterface> interfaces;
+  const auto interface_names = {"joint1/position", "joint2/velocity", "joint3/velocity"};
+  for (const auto & key : interface_names) {
+    interfaces.emplace_back(rm.claim_command_interface(key));
+  }
+  for (const auto & key : interface_names) {
+    EXPECT_TRUE(rm.command_interface_is_claimed(key));
+  }
+  interfaces.clear();
+  for (const auto & key : interface_names) {
+    EXPECT_FALSE(rm.command_interface_is_claimed(key));
   }
 }
 

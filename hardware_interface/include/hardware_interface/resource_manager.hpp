@@ -38,6 +38,9 @@ class ResourceStorage;
 class ResourceManager
 {
 public:
+  /// Default constructor for the Resource Manager.
+  ResourceManager();
+
   /// Constructor for the Resource Manager.
   /**
    * The implementation loads the specified urdf and initializes the
@@ -57,6 +60,18 @@ public:
   ResourceManager(const ResourceManager &) = delete;
 
   ~ResourceManager();
+
+  /// Load resources from on a given URDF.
+  /**
+   * The resource manager can be post initialized with a given URDF.
+   * This is mainly used in conjunction with the default constructor
+   * in which the URDF might not be present at first initialization.
+   *
+   * \param urdf string containing the URDF.
+   * \param validate_interfaces boolean argument indicating whether the exported
+   * interfaces ought to be validated. Defaults to true.
+   */
+  void load_urdf(const std::string & urdf, bool validate_interfaces = true);
 
   /// Claim a state interface given its key.
   /**
@@ -173,6 +188,12 @@ public:
    * \param system pointer to the system interface.
    */
   void import_component(std::unique_ptr<components::SystemInterface> system);
+
+  /// Reads all loaded hardware components.
+  void read();
+
+  /// Write all loaded hardware components.
+  void write();
 
 private:
   void release_command_interface(const std::string & key);

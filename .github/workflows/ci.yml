@@ -41,7 +41,6 @@ jobs:
             controller_manager
             controller_manager_msgs
             hardware_interface
-            joint_limits_interface
             ros2_control
             test_robot_hardware
             transmission_interface

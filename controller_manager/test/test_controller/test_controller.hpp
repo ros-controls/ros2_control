@@ -24,8 +24,11 @@
 namespace test_controller
 {
 
+// indicating the node name under which the controller node
+// is being loaded.
 constexpr char TEST_CONTROLLER_NAME[] = "test_controller_name";
-constexpr char TEST_CONTROLLER_TYPE[] = "test_controller";
+// corresponds to the name listed within the pluginlib xml
+constexpr char TEST_CONTROLLER_CLASS_NAME[] = "controller_manager/test_controller";
 class TestController : public controller_interface::ControllerInterface
 {
 public:
@@ -35,6 +38,18 @@ public:
   CONTROLLER_MANAGER_PUBLIC
   virtual
   ~TestController() = default;
+
+  controller_interface::InterfaceConfiguration command_interface_configuration() const override
+  {
+    return controller_interface::InterfaceConfiguration{
+      controller_interface::interface_configuration_type::NONE};
+  }
+
+  controller_interface::InterfaceConfiguration state_interface_configuration() const override
+  {
+    return controller_interface::InterfaceConfiguration{
+      controller_interface::interface_configuration_type::NONE};
+  }
 
   CONTROLLER_MANAGER_PUBLIC
   controller_interface::return_type

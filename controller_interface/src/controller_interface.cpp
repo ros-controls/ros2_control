@@ -16,17 +16,19 @@
 
 #include <memory>
 #include <string>
+#include <utility>
+#include <vector>
 
 namespace controller_interface
 {
 
 return_type
-ControllerInterface::init(
-  std::weak_ptr<hardware_interface::RobotHardware> robot_hardware,
-  const std::string & controller_name)
+ControllerInterface::init(const std::string & controller_name)
 {
-  robot_hardware_ = robot_hardware;
-  lifecycle_node_ = std::make_shared<rclcpp_lifecycle::LifecycleNode>(controller_name);
+  lifecycle_node_ = std::make_shared<rclcpp_lifecycle::LifecycleNode>(
+    controller_name,
+    rclcpp::NodeOptions().allow_undeclared_parameters(true).
+    automatically_declare_parameters_from_overrides(true));
 
   lifecycle_node_->register_on_configure(
     std::bind(&ControllerInterface::on_configure, this, std::placeholders::_1));
@@ -47,6 +49,20 @@ ControllerInterface::init(
     std::bind(&ControllerInterface::on_error, this, std::placeholders::_1));
 
   return return_type::SUCCESS;
+}
+
+void ControllerInterface::assign_interfaces(
+  std::vector<hardware_interface::LoanedCommandInterface> && command_interfaces,
+  std::vector<hardware_interface::LoanedStateInterface> && state_interfaces)
+{
+  command_interfaces_ = std::forward<decltype(command_interfaces)>(command_interfaces);
+  state_interfaces_ = std::forward<decltype(state_interfaces)>(state_interfaces);
+}
+
+void ControllerInterface::release_interfaces()
+{
+  command_interfaces_.clear();
+  state_interfaces_.clear();
 }
 
 std::shared_ptr<rclcpp_lifecycle::LifecycleNode>

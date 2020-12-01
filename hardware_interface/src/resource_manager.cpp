@@ -110,7 +110,9 @@ public:
   {
     initialize_hardware<components::Sensor, components::SensorInterface>(
       hardware_info, sensor_loader_, sensors_);
-    sensors_.back().configure(hardware_info);
+    if (return_type::OK != sensors_.back().configure(hardware_info)) {
+      throw std::runtime_error(std::string("failed to configure ") + hardware_info.name);
+    }
     import_state_interfaces(sensors_.back());
   }
 
@@ -120,7 +122,9 @@ public:
   {
     initialize_hardware<components::System, components::SystemInterface>(
       hardware_info, system_loader_, systems_);
-    systems_.back().configure(hardware_info);
+    if (return_type::OK != systems_.back().configure(hardware_info)) {
+      throw std::runtime_error(std::string("failed to configure ") + hardware_info.name);
+    }
     import_state_interfaces(systems_.back());
     import_command_interfaces(systems_.back(), claimed_command_interface_map);
   }
@@ -138,17 +142,25 @@ public:
   std::unordered_map<std::string, CommandInterface> command_interface_map_;
 };
 
+ResourceManager::ResourceManager()
+: resource_storage_(std::make_unique<ResourceStorage>())
+{}
+
 ResourceManager::~ResourceManager() = default;
 
 ResourceManager::ResourceManager(const std::string & urdf, bool validate_interfaces)
 : resource_storage_(std::make_unique<ResourceStorage>())
+{
+  load_urdf(urdf, validate_interfaces);
+}
+
+void ResourceManager::load_urdf(const std::string & urdf, bool validate_interfaces)
 {
   const std::string system_type = "system";
   const std::string sensor_type = "sensor";
   const std::string actuator_type = "actuator";
 
   auto hardware_info = hardware_interface::parse_control_resources_from_urdf(urdf);
-
   for (const auto & hardware : hardware_info) {
     if (hardware.type == actuator_type) {
       resource_storage_->initialize_actuator(hardware, claimed_command_interface_map_);
@@ -321,4 +333,28 @@ size_t ResourceManager::system_components_size() const
 {
   return resource_storage_->systems_.size();
 }
+
+void ResourceManager::read()
+{
+  for (auto & component : resource_storage_->actuators_) {
+    component.read();
+  }
+  for (auto & component : resource_storage_->sensors_) {
+    component.read();
+  }
+  for (auto & component : resource_storage_->systems_) {
+    component.read();
+  }
+}
+
+void ResourceManager::write()
+{
+  for (auto & component : resource_storage_->actuators_) {
+    component.write();
+  }
+  for (auto & component : resource_storage_->systems_) {
+    component.write();
+  }
+}
+
 }  // namespace hardware_interface

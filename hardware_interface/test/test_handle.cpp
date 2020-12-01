@@ -13,9 +13,8 @@
 // limitations under the License.
 
 #include <gmock/gmock.h>
-#include "hardware_interface/joint_handle.hpp"
+#include "hardware_interface/handle.hpp"
 
-using hardware_interface::JointHandle;
 using hardware_interface::CommandInterface;
 using hardware_interface::StateInterface;
 
@@ -25,7 +24,7 @@ constexpr auto JOINT_NAME = "joint_1";
 constexpr auto FOO_INTERFACE = "FooInterface";
 }  // namespace
 
-TEST(TestJointHandle, command_interface)
+TEST(TestHandle, command_interface)
 {
   double value = 1.337;
   CommandInterface interface{JOINT_NAME, FOO_INTERFACE, &value};
@@ -34,7 +33,7 @@ TEST(TestJointHandle, command_interface)
   EXPECT_DOUBLE_EQ(interface.get_value(), 0.0);
 }
 
-TEST(TestJointHandle, state_interface)
+TEST(TestHandle, state_interface)
 {
   double value = 1.337;
   StateInterface interface{JOINT_NAME, FOO_INTERFACE, &value};
@@ -42,33 +41,33 @@ TEST(TestJointHandle, state_interface)
   // interface.set_value(5);  compiler error, no set_value function
 }
 
-TEST(TestJointHandle, name_getters_work)
+TEST(TestHandle, name_getters_work)
 {
-  JointHandle handle{JOINT_NAME, FOO_INTERFACE};
+  StateInterface handle{JOINT_NAME, FOO_INTERFACE};
   EXPECT_EQ(handle.get_name(), JOINT_NAME);
   EXPECT_EQ(handle.get_interface_name(), FOO_INTERFACE);
 }
 
-TEST(TestJointHandle, value_methods_throw_for_nullptr)
+TEST(TestHandle, value_methods_throw_for_nullptr)
 {
-  JointHandle handle{JOINT_NAME, FOO_INTERFACE};
+  CommandInterface handle{JOINT_NAME, FOO_INTERFACE};
   EXPECT_ANY_THROW(handle.get_value());
   EXPECT_ANY_THROW(handle.set_value(0.0));
 }
 
-TEST(TestJointHandle, value_methods_work_on_non_nullptr)
+TEST(TestHandle, value_methods_work_on_non_nullptr)
 {
   double value = 1.337;
-  JointHandle handle{JOINT_NAME, FOO_INTERFACE, &value};
+  CommandInterface handle{JOINT_NAME, FOO_INTERFACE, &value};
   EXPECT_DOUBLE_EQ(handle.get_value(), value);
   EXPECT_NO_THROW(handle.set_value(0.0));
   EXPECT_DOUBLE_EQ(handle.get_value(), 0.0);
 }
 
-TEST(TestJointHandle, with_value_ptr_initializes_new_handle_correctly)
+TEST(TestHandle, with_value_ptr_initializes_new_handle_correctly)
 {
   double value = 1.337;
-  JointHandle handle{JOINT_NAME, FOO_INTERFACE};
+  StateInterface handle{JOINT_NAME, FOO_INTERFACE};
   auto new_handle = handle.with_value_ptr(&value);
   EXPECT_ANY_THROW(handle.get_value());
   EXPECT_DOUBLE_EQ(new_handle.get_value(), value);
