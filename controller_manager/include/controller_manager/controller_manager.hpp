@@ -74,12 +74,10 @@ public:
    */
   CONTROLLER_MANAGER_PUBLIC
   controller_interface::ControllerInterfaceSharedPtr
-  load_controller(
-    const std::string & controller_name);
+  load_controller(const std::string & controller_name);
 
   CONTROLLER_MANAGER_PUBLIC
-  controller_interface::return_type unload_controller(
-    const std::string & controller_name);
+  controller_interface::return_type unload_controller(const std::string & controller_name);
 
   CONTROLLER_MANAGER_PUBLIC
   std::vector<ControllerSpec> get_loaded_controllers() const;
@@ -113,9 +111,15 @@ public:
     bool start_asap = kWaitForAllResources,
     const rclcpp::Duration & timeout = rclcpp::Duration(kInfiniteTimeout));
 
+
   CONTROLLER_MANAGER_PUBLIC
-  controller_interface::return_type
-  update(bool update_resources = true);
+  void read();
+
+  CONTROLLER_MANAGER_PUBLIC
+  controller_interface::return_type update();
+
+  CONTROLLER_MANAGER_PUBLIC
+  void write();
 
   /// Deterministic (real-time safe) callback group, e.g., update function.
   /**

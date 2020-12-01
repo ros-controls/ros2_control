@@ -925,12 +925,13 @@ std::vector<std::string> ControllerManager::get_controller_names()
   return names;
 }
 
-controller_interface::return_type ControllerManager::update(bool update_resources)
+void ControllerManager::read()
 {
-  if (update_resources) {
-    resource_manager_->read();
-  }
+  resource_manager_->read();
+}
 
+controller_interface::return_type ControllerManager::update()
+{
   std::vector<ControllerSpec> & rt_controller_list =
     rt_controllers_wrapper_.update_and_get_used_by_rt_list();
 
@@ -951,11 +952,12 @@ controller_interface::return_type ControllerManager::update(bool update_resource
     manage_switch();
   }
 
-  if (update_resources) {
-    resource_manager_->write();
-  }
-
   return ret;
+}
+
+void ControllerManager::write()
+{
+  resource_manager_->write();
 }
 
 std::vector<ControllerSpec> &

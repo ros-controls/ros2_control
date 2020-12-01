@@ -39,11 +39,13 @@ int main(int argc, char ** argv)
   }
   RCLCPP_INFO(cm->get_logger(), "update rate is %d Hz", update_rate);
 
-  std::function<controller_interface::return_type()> timer_cb =
-    std::bind(&controller_manager::ControllerManager::update, cm.get(), true);
   auto timer = cm->create_wall_timer(
     std::chrono::milliseconds(1000 / update_rate),
-    timer_cb,
+    [&cm]() {
+      cm->read();
+      cm->update();
+      cm->write();
+    },
     cm->deterministic_callback_group_);
 
   executor->add_node(cm);

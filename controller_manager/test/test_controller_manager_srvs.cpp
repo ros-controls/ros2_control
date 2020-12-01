@@ -41,9 +41,14 @@ public:
   void SetUp() override
   {
     ControllerManagerFixture::SetUp();
-    std::function<controller_interface::return_type()> timer_cb =
-      std::bind(&controller_manager::ControllerManager::update, cm_.get(), true);
-    update_timer_ = cm_->create_wall_timer(std::chrono::milliseconds(10), timer_cb);
+
+    update_timer_ = cm_->create_wall_timer(
+      std::chrono::milliseconds(10), [&]() {
+        cm_->read();
+        cm_->update();
+        cm_->write();
+      }
+    );
 
     executor_->add_node(cm_);
 
