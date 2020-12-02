@@ -27,7 +27,6 @@
 #include "hardware_interface/components/system.hpp"
 #include "hardware_interface/components/system_interface.hpp"
 #include "hardware_interface/component_parser.hpp"
-#include "hardware_interface/hardware_info.hpp"
 
 #include "pluginlib/class_loader.hpp"
 
@@ -160,7 +159,7 @@ void ResourceManager::load_urdf(const std::string & urdf, bool validate_interfac
   const std::string sensor_type = "sensor";
   const std::string actuator_type = "actuator";
 
-  auto hardware_info = hardware_interface::parse_control_resources_from_urdf(urdf);
+  const auto hardware_info = hardware_interface::parse_control_resources_from_urdf(urdf);
   for (const auto & hardware : hardware_info) {
     if (hardware.type == actuator_type) {
       resource_storage_->initialize_actuator(hardware, claimed_command_interface_map_);
@@ -173,51 +172,9 @@ void ResourceManager::load_urdf(const std::string & urdf, bool validate_interfac
     }
   }
 
-  auto validate_storage = [this, &hardware_info]() -> void
-    {
-      std::vector<std::string> missing_state_keys = {};
-      std::vector<std::string> missing_command_keys = {};
-
-      for (const auto & hardware : hardware_info) {
-        for (const auto & joint : hardware.joints) {
-          for (const auto & state_interface : joint.state_interfaces) {
-            if (!state_interface_exists(joint.name + "/" + state_interface.name)) {
-              missing_state_keys.emplace_back(joint.name + "/" + state_interface.name);
-            }
-          }
-          for (const auto & command_interface : joint.command_interfaces) {
-            if (!command_interface_exists(joint.name + "/" + command_interface.name)) {
-              missing_state_keys.emplace_back(joint.name + "/" + command_interface.name);
-            }
-          }
-        }
-        for (const auto & sensor : hardware.sensors) {
-          for (const auto & state_interface : sensor.state_interfaces) {
-            if (!state_interface_exists(sensor.name + "/" + state_interface.name)) {
-              missing_state_keys.emplace_back(sensor.name + "/" + state_interface.name);
-            }
-          }
-        }
-      }
-
-      if (!missing_state_keys.empty() || !missing_command_keys.empty()) {
-        std::string err_msg = "wrong state or command interface configuration.\n";
-        err_msg += "missing state interfaces:\n";
-        for (const auto & missing_key : missing_state_keys) {
-          err_msg += missing_key + "\t";
-        }
-        err_msg += "\nmissing command interfaces:\n";
-        for (const auto & missing_key : missing_command_keys) {
-          err_msg += missing_key + "\t";
-        }
-
-        throw std::runtime_error(err_msg);
-      }
-    };
-
   // throw on missing state and command interfaces, not specified keys are being ignored
   if (validate_interfaces) {
-    validate_storage();
+    validate_storage(hardware_info);
   }
 }
 
@@ -354,6 +311,49 @@ void ResourceManager::write()
   }
   for (auto & component : resource_storage_->systems_) {
     component.write();
+  }
+}
+
+void ResourceManager::validate_storage(
+  const std::vector<hardware_interface::HardwareInfo> & hardware_info) const
+{
+  std::vector<std::string> missing_state_keys = {};
+  std::vector<std::string> missing_command_keys = {};
+
+  for (const auto & hardware : hardware_info) {
+    for (const auto & joint : hardware.joints) {
+      for (const auto & state_interface : joint.state_interfaces) {
+        if (!state_interface_exists(joint.name + "/" + state_interface.name)) {
+          missing_state_keys.emplace_back(joint.name + "/" + state_interface.name);
+        }
+      }
+      for (const auto & command_interface : joint.command_interfaces) {
+        if (!command_interface_exists(joint.name + "/" + command_interface.name)) {
+          missing_state_keys.emplace_back(joint.name + "/" + command_interface.name);
+        }
+      }
+    }
+    for (const auto & sensor : hardware.sensors) {
+      for (const auto & state_interface : sensor.state_interfaces) {
+        if (!state_interface_exists(sensor.name + "/" + state_interface.name)) {
+          missing_state_keys.emplace_back(sensor.name + "/" + state_interface.name);
+        }
+      }
+    }
+  }
+
+  if (!missing_state_keys.empty() || !missing_command_keys.empty()) {
+    std::string err_msg = "wrong state or command interface configuration.\n";
+    err_msg += "missing state interfaces:\n";
+    for (const auto & missing_key : missing_state_keys) {
+      err_msg += missing_key + "\t";
+    }
+    err_msg += "\nmissing command interfaces:\n";
+    for (const auto & missing_key : missing_command_keys) {
+      err_msg += missing_key + "\t";
+    }
+
+    throw std::runtime_error(err_msg);
   }
 }
 

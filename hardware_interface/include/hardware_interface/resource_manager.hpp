@@ -23,6 +23,7 @@
 
 #include "hardware_interface/loaned_command_interface.hpp"
 #include "hardware_interface/loaned_state_interface.hpp"
+#include "hardware_interface/hardware_info.hpp"
 
 namespace hardware_interface
 {
@@ -196,6 +197,8 @@ public:
   void write();
 
 private:
+  void validate_storage(const std::vector<hardware_interface::HardwareInfo> & hardware_info) const;
+
   void release_command_interface(const std::string & key);
 
   std::unordered_map<std::string, bool> claimed_command_interface_map_;
