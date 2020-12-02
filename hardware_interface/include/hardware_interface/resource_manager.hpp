@@ -196,9 +196,9 @@ public:
   /// Write all loaded hardware components.
   void write();
 
+private:
   void validate_storage(const std::vector<hardware_interface::HardwareInfo> & hardware_info) const;
 
-private:
   void release_command_interface(const std::string & key);
 
   std::unordered_map<std::string, bool> claimed_command_interface_map_;
