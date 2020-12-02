@@ -82,7 +82,7 @@ class DummyActuator : public hardware_interface::components::ActuatorInterface
 
   std::string get_name() const override
   {
-    return std::string("DummyActuator");
+    return "DummyActuator";
   }
 
   hardware_interface::status get_status() const override
@@ -141,7 +141,7 @@ class DummySensor : public hardware_interface::components::SensorInterface
 
   std::string get_name() const override
   {
-    return std::string("DummySensor");
+    return "DummySensor";
   }
 
   hardware_interface::status get_status() const override
@@ -223,7 +223,7 @@ class DummySystem : public hardware_interface::components::SystemInterface
 
   std::string get_name() const override
   {
-    return std::string("DummySystem");
+    return "DummySystem";
   }
 
   hardware_interface::status get_status() const override

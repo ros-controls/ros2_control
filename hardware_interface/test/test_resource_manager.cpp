@@ -376,7 +376,7 @@ class ExternalComponent : public hardware_interface::components::ActuatorInterfa
 
   std::string get_name() const override
   {
-    return std::string("ExternalComponent");
+    return "ExternalComponent";
   }
 
   hardware_interface::status get_status() const override
