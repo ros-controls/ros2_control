@@ -16,6 +16,7 @@
 #define HARDWARE_INTERFACE__COMPONENTS__SYSTEM_INTERFACE_HPP_
 
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "hardware_interface/handle.hpp"
@@ -92,6 +93,14 @@ public:
    */
   virtual
   return_type stop() = 0;
+
+  /**
+   * \brief Get name of the system hardware.
+   *
+   * \return std::string name.
+   */
+  virtual
+  std::string get_name() const = 0;
 
   /**
    * \brief Get current state of the system hardware.

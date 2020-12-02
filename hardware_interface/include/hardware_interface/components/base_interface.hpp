@@ -12,16 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <memory>
+#ifndef HARDWARE_INTERFACE__COMPONENTS__BASE_INTERFACE_HPP_
+#define HARDWARE_INTERFACE__COMPONENTS__BASE_INTERFACE_HPP_
+
 #include <string>
-#include <utility>
-#include <vector>
 
-#include "hardware_interface/components/sensor.hpp"
-
-#include "hardware_interface/handle.hpp"
 #include "hardware_interface/hardware_info.hpp"
-#include "hardware_interface/components/sensor_interface.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/hardware_interface_status_values.hpp"
 
@@ -30,44 +26,38 @@ namespace hardware_interface
 namespace components
 {
 
-Sensor::Sensor(std::unique_ptr<SensorInterface> impl)
-: impl_(std::move(impl))
-{}
-
-return_type Sensor::configure(const HardwareInfo & sensor_info)
+template<class InterfaceType>
+class BaseInterface : public InterfaceType
 {
-  return impl_->configure(sensor_info);
-}
+public:
+  return_type configure(const HardwareInfo & info) override
+  {
+    info_ = info;
+    status_ = status::CONFIGURED;
+    return return_type::OK;
+  }
 
-std::vector<StateInterface> Sensor::export_state_interfaces()
-{
-  return impl_->export_state_interfaces();
-}
+  return_type configure_default(const HardwareInfo & info)
+  {
+    return BaseInterface<InterfaceType>::configure(info);
+  }
 
-return_type Sensor::start()
-{
-  return impl_->start();
-}
+  std::string get_name() const final
+  {
+    return info_.name;
+  }
 
-return_type Sensor::stop()
-{
-  return impl_->stop();
-}
+  status get_status() const final
+  {
+    return status_;
+  }
 
-std::string Sensor::get_name() const
-{
-  return impl_->get_name();
-}
-
-status Sensor::get_status() const
-{
-  return impl_->get_status();
-}
-
-return_type Sensor::read()
-{
-  return impl_->read();
-}
+protected:
+  HardwareInfo info_;
+  status status_;
+};
 
 }  // namespace components
 }  // namespace hardware_interface
+
+#endif  // HARDWARE_INTERFACE__COMPONENTS__BASE_INTERFACE_HPP_

@@ -15,34 +15,42 @@
 #include <memory>
 #include <vector>
 
+#include "hardware_interface/components/base_interface.hpp"
 #include "hardware_interface/components/actuator_interface.hpp"
+#include "hardware_interface/types/hardware_interface_type_values.hpp"
 
 using hardware_interface::status;
 using hardware_interface::return_type;
 using hardware_interface::StateInterface;
 using hardware_interface::CommandInterface;
+using hardware_interface::components::ActuatorInterface;
+using hardware_interface::components::BaseInterface;
 
 namespace test_robot_hardware
 {
 
-class TestSingleJointActuator : public hardware_interface::components::ActuatorInterface
+class TestSingleJointActuator : public BaseInterface<ActuatorInterface>
 {
   return_type configure(const hardware_interface::HardwareInfo & actuator_info) override
   {
-    actuator_info_ = actuator_info;
+    if (configure_default(actuator_info) != return_type::OK) {
+      return return_type::ERROR;
+    }
 
     // can only control one joint
-    if (actuator_info_.joints.size() != 1) {return return_type::ERROR;}
+    if (info_.joints.size() != 1) {return return_type::ERROR;}
     // can only control in position
-    const auto & command_interfaces = actuator_info_.joints[0].command_interfaces;
+    const auto & command_interfaces = info_.joints[0].command_interfaces;
     if (command_interfaces.size() != 1) {return return_type::ERROR;}
-    if (command_interfaces[0].name != "position") {return return_type::ERROR;}
+    if (command_interfaces[0].name != hardware_interface::HW_IF_POSITION) {
+      return return_type::ERROR;
+    }
     // can only give feedback state for position and velocity
-    const auto & state_interfaces = actuator_info_.joints[0].state_interfaces;
+    const auto & state_interfaces = info_.joints[0].state_interfaces;
     if (state_interfaces.size() < 1) {return return_type::ERROR;}
     for (const auto & state_interface : state_interfaces) {
-      if ((state_interface.name != "position") &&
-        (state_interface.name != "velocity"))
+      if ((state_interface.name != hardware_interface::HW_IF_POSITION) &&
+        (state_interface.name != hardware_interface::HW_IF_VELOCITY))
       {
         return return_type::ERROR;
       }
@@ -55,16 +63,16 @@ class TestSingleJointActuator : public hardware_interface::components::ActuatorI
   {
     std::vector<StateInterface> state_interfaces;
 
-    const auto & joint_name = actuator_info_.joints[0].name;
+    const auto & joint_name = info_.joints[0].name;
     state_interfaces.emplace_back(
       hardware_interface::StateInterface(
         joint_name,
-        "position",
+        hardware_interface::HW_IF_POSITION,
         &position_state_));
     state_interfaces.emplace_back(
       hardware_interface::StateInterface(
         joint_name,
-        "velocity",
+        hardware_interface::HW_IF_VELOCITY,
         &velocity_state_));
 
     return state_interfaces;
@@ -74,11 +82,11 @@ class TestSingleJointActuator : public hardware_interface::components::ActuatorI
   {
     std::vector<CommandInterface> command_interfaces;
 
-    const auto & joint_name = actuator_info_.joints[0].name;
+    const auto & joint_name = info_.joints[0].name;
     command_interfaces.emplace_back(
       hardware_interface::CommandInterface(
         joint_name,
-        "position",
+        hardware_interface::HW_IF_POSITION,
         &position_command_));
 
     return command_interfaces;
@@ -92,11 +100,6 @@ class TestSingleJointActuator : public hardware_interface::components::ActuatorI
   return_type stop() override
   {
     return return_type::OK;
-  }
-
-  status get_status() const override
-  {
-    return status::UNKNOWN;
   }
 
   return_type read() override
@@ -115,7 +118,6 @@ private:
   double position_state_ = 0.0;
   double velocity_state_ = 0.0;
   double position_command_ = 0.0;
-  hardware_interface::HardwareInfo actuator_info_;
 };
 
 }  // namespace test_robot_hardware

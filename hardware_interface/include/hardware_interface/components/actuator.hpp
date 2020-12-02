@@ -16,6 +16,7 @@
 #define HARDWARE_INTERFACE__COMPONENTS__ACTUATOR_HPP_
 
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "hardware_interface/handle.hpp"
@@ -57,6 +58,9 @@ public:
 
   HARDWARE_INTERFACE_PUBLIC
   return_type stop();
+
+  HARDWARE_INTERFACE_PUBLIC
+  std::string get_name() const;
 
   HARDWARE_INTERFACE_PUBLIC
   status get_status() const;

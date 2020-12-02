@@ -62,8 +62,10 @@ public:
     // e.g.: <package_vendor>/<system_type>
     auto interface = std::unique_ptr<HardwareInterfaceT>(
       loader.createUnmanagedInstance(hardware_info.hardware_class_type));
-    HardwareT actuator(std::move(interface));
-    container.emplace_back(std::move(actuator));
+    HardwareT hardware(std::move(interface));
+    container.emplace_back(std::move(hardware));
+    hardware_status_map_.emplace(
+      std::make_pair(container.back().get_name(), container.back().get_status()));
   }
 
   template<class HardwareT>
@@ -136,6 +138,8 @@ public:
   std::vector<components::Actuator> actuators_;
   std::vector<components::Sensor> sensors_;
   std::vector<components::System> systems_;
+
+  std::unordered_map<std::string, status> hardware_status_map_;
 
   std::unordered_map<std::string, StateInterface> state_interface_map_;
   std::unordered_map<std::string, CommandInterface> command_interface_map_;
@@ -289,6 +293,47 @@ void ResourceManager::import_component(std::unique_ptr<components::SystemInterfa
 size_t ResourceManager::system_components_size() const
 {
   return resource_storage_->systems_.size();
+}
+
+std::unordered_map<std::string, status> ResourceManager::get_components_status()
+{
+  for (auto & component : resource_storage_->actuators_) {
+    resource_storage_->hardware_status_map_[component.get_name()] = component.get_status();
+  }
+  for (auto & component : resource_storage_->sensors_) {
+    resource_storage_->hardware_status_map_[component.get_name()] = component.get_status();
+  }
+  for (auto & component : resource_storage_->systems_) {
+    resource_storage_->hardware_status_map_[component.get_name()] = component.get_status();
+  }
+
+  return resource_storage_->hardware_status_map_;
+}
+
+void ResourceManager::start_components()
+{
+  for (auto & component : resource_storage_->actuators_) {
+    component.start();
+  }
+  for (auto & component : resource_storage_->sensors_) {
+    component.start();
+  }
+  for (auto & component : resource_storage_->systems_) {
+    component.start();
+  }
+}
+
+void ResourceManager::stop_components()
+{
+  for (auto & component : resource_storage_->actuators_) {
+    component.stop();
+  }
+  for (auto & component : resource_storage_->sensors_) {
+    component.stop();
+  }
+  for (auto & component : resource_storage_->systems_) {
+    component.stop();
+  }
 }
 
 void ResourceManager::read()

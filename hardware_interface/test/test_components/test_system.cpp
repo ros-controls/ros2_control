@@ -16,35 +16,32 @@
 #include <memory>
 #include <vector>
 
-#include "hardware_interface/types/hardware_interface_type_values.hpp"
+#include "hardware_interface/components/base_interface.hpp"
 #include "hardware_interface/components/system_interface.hpp"
+#include "hardware_interface/types/hardware_interface_type_values.hpp"
 
 using hardware_interface::status;
 using hardware_interface::return_type;
-using hardware_interface::StateInterface;
 using hardware_interface::CommandInterface;
+using hardware_interface::StateInterface;
+using hardware_interface::components::BaseInterface;
+using hardware_interface::components::SystemInterface;
 
-class TestSystem : public hardware_interface::components::SystemInterface
+class TestSystem : public BaseInterface<SystemInterface>
 {
-  return_type configure(const hardware_interface::HardwareInfo & system_info) override
-  {
-    system_info_ = system_info;
-    return return_type::OK;
-  }
-
   std::vector<StateInterface> export_state_interfaces() override
   {
     std::vector<StateInterface> state_interfaces;
-    for (auto i = 0u; i < system_info_.joints.size(); ++i) {
+    for (auto i = 0u; i < info_.joints.size(); ++i) {
       state_interfaces.emplace_back(
         hardware_interface::StateInterface(
-          system_info_.joints[i].name, hardware_interface::HW_IF_POSITION, &position_state_[i]));
+          info_.joints[i].name, hardware_interface::HW_IF_POSITION, &position_state_[i]));
       state_interfaces.emplace_back(
         hardware_interface::StateInterface(
-          system_info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &velocity_state_[i]));
+          info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &velocity_state_[i]));
       state_interfaces.emplace_back(
         hardware_interface::StateInterface(
-          system_info_.joints[i].name,
+          info_.joints[i].name,
           hardware_interface::HW_IF_ACCELERATION, &acceleration_state_[i]));
     }
 
@@ -54,10 +51,10 @@ class TestSystem : public hardware_interface::components::SystemInterface
   std::vector<CommandInterface> export_command_interfaces() override
   {
     std::vector<CommandInterface> command_interfaces;
-    for (auto i = 0u; i < system_info_.joints.size(); ++i) {
+    for (auto i = 0u; i < info_.joints.size(); ++i) {
       command_interfaces.emplace_back(
         hardware_interface::CommandInterface(
-          system_info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &velocity_command_[i]));
+          info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &velocity_command_[i]));
     }
 
     return command_interfaces;
@@ -65,17 +62,14 @@ class TestSystem : public hardware_interface::components::SystemInterface
 
   return_type start() override
   {
+    status_ = status::STARTED;
     return return_type::OK;
   }
 
   return_type stop() override
   {
+    status_ = status::STOPPED;
     return return_type::OK;
-  }
-
-  status get_status() const override
-  {
-    return status::UNKNOWN;
   }
 
   return_type read() override
@@ -93,7 +87,6 @@ private:
   std::array<double, 2> position_state_ = {0.0, 0.0};
   std::array<double, 2> velocity_state_ = {0.0, 0.0};
   std::array<double, 2> acceleration_state_ = {0.0, 0.0};
-  hardware_interface::HardwareInfo system_info_;
 };
 
 #include "pluginlib/class_list_macros.hpp"  // NOLINT
