@@ -32,7 +32,7 @@ jobs:
       - uses: ros-tooling/setup-ros@0.0.26
         with:
           required-ros-distributions: foxy
-      - uses: ros-tooling/action-ros-ci@0.0.19
+      - uses: ros-tooling/action-ros-ci@0.1.0
         with:
           target-ros2-distro: foxy
           # build all packages listed in the meta package
