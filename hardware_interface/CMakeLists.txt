@@ -67,10 +67,6 @@ if(BUILD_TESTING)
   target_include_directories(test_macros PRIVATE include)
   ament_target_dependencies(test_macros rcpputils)
 
-  ament_add_gmock(test_actuator_handle test/test_actuator_handle.cpp)
-  target_link_libraries(test_actuator_handle hardware_interface)
-  ament_target_dependencies(test_actuator_handle rcpputils)
-
   ament_add_gmock(test_joint_handle test/test_handle.cpp)
   target_link_libraries(test_joint_handle hardware_interface)
   ament_target_dependencies(test_joint_handle rcpputils)
