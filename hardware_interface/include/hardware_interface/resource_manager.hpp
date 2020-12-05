@@ -28,13 +28,9 @@
 
 namespace hardware_interface
 {
-namespace components
-{
 class ActuatorInterface;
 class SensorInterface;
 class SystemInterface;
-}  // namespace components
-
 class ResourceStorage;
 
 class ResourceManager
@@ -152,8 +148,7 @@ public:
    * externally and prior to the call to import.
    * \param actuator pointer to the actuator interface.
    */
-  void import_component(
-    std::unique_ptr<components::ActuatorInterface> actuator);
+  void import_component(std::unique_ptr<ActuatorInterface> actuator);
 
   /// Return the number of loaded sensor components.
   /**
@@ -171,7 +166,7 @@ public:
    * externally and prior to the call to import.
    * \param sensor pointer to the sensor interface.
    */
-  void import_component(std::unique_ptr<components::SensorInterface> sensor);
+  void import_component(std::unique_ptr<SensorInterface> sensor);
 
   /// Return the number of loaded system components.
   /**
@@ -189,7 +184,7 @@ public:
    * externally and prior to the call to import.
    * \param system pointer to the system interface.
    */
-  void import_component(std::unique_ptr<components::SystemInterface> system);
+  void import_component(std::unique_ptr<SystemInterface> system);
 
   /// Return status for all components.
   /**

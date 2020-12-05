@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef HARDWARE_INTERFACE__COMPONENTS__SENSOR_INTERFACE_HPP_
-#define HARDWARE_INTERFACE__COMPONENTS__SENSOR_INTERFACE_HPP_
+#ifndef HARDWARE_INTERFACE__SENSOR_INTERFACE_HPP_
+#define HARDWARE_INTERFACE__SENSOR_INTERFACE_HPP_
 
 #include <memory>
 #include <string>
@@ -26,8 +26,6 @@
 #include "hardware_interface/visibility_control.h"
 
 namespace hardware_interface
-{
-namespace components
 {
 
 /**
@@ -108,6 +106,5 @@ public:
   return_type read() = 0;
 };
 
-}  // namespace components
 }  // namespace hardware_interface
-#endif  // HARDWARE_INTERFACE__COMPONENTS__SENSOR_INTERFACE_HPP_
+#endif  // HARDWARE_INTERFACE__SENSOR_INTERFACE_HPP_

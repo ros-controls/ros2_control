@@ -20,7 +20,7 @@
 #include <vector>
 #include <unordered_map>
 
-#include "hardware_interface/components/actuator_interface.hpp"
+#include "hardware_interface/actuator_interface.hpp"
 #include "hardware_interface/resource_manager.hpp"
 
 class TestResourceManager : public ::testing::Test
@@ -337,7 +337,7 @@ TEST_F(TestResourceManager, resource_claiming) {
   }
 }
 
-class ExternalComponent : public hardware_interface::components::ActuatorInterface
+class ExternalComponent : public hardware_interface::ActuatorInterface
 {
   hardware_interface::return_type configure(const hardware_interface::HardwareInfo &) override
   {

@@ -18,8 +18,8 @@
 #include <utility>
 #include <vector>
 
-#include "hardware_interface/components/actuator.hpp"
-#include "hardware_interface/components/actuator_interface.hpp"
+#include "hardware_interface/actuator.hpp"
+#include "hardware_interface/actuator_interface.hpp"
 
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/hardware_info.hpp"
@@ -27,8 +27,6 @@
 #include "hardware_interface/types/hardware_interface_status_values.hpp"
 
 namespace hardware_interface
-{
-namespace components
 {
 
 Actuator::Actuator(std::unique_ptr<ActuatorInterface> impl)
@@ -82,5 +80,4 @@ return_type Actuator::write()
   return impl_->write();
 }
 
-}  // namespace components
 }  // namespace hardware_interface

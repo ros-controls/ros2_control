@@ -15,14 +15,14 @@
 #include <memory>
 #include <vector>
 
-#include "hardware_interface/components/base_interface.hpp"
-#include "hardware_interface/components/sensor_interface.hpp"
+#include "hardware_interface/base_interface.hpp"
+#include "hardware_interface/sensor_interface.hpp"
 
-using hardware_interface::status;
+using hardware_interface::BaseInterface;
 using hardware_interface::return_type;
+using hardware_interface::SensorInterface;
 using hardware_interface::StateInterface;
-using hardware_interface::components::BaseInterface;
-using hardware_interface::components::SensorInterface;
+using hardware_interface::status;
 
 class TestSensor : public BaseInterface<SensorInterface>
 {
@@ -72,4 +72,4 @@ private:
 };
 
 #include "pluginlib/class_list_macros.hpp"  // NOLINT
-PLUGINLIB_EXPORT_CLASS(TestSensor, hardware_interface::components::SensorInterface)
+PLUGINLIB_EXPORT_CLASS(TestSensor, hardware_interface::SensorInterface)
