@@ -12,64 +12,59 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef HARDWARE_INTERFACE__COMPONENTS__SENSOR_HPP_
-#define HARDWARE_INTERFACE__COMPONENTS__SENSOR_HPP_
-
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include "hardware_interface/sensor.hpp"
+
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/hardware_info.hpp"
+#include "hardware_interface/sensor_interface.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/hardware_interface_status_values.hpp"
-#include "hardware_interface/visibility_control.h"
 
 namespace hardware_interface
 {
-namespace components
+
+Sensor::Sensor(std::unique_ptr<SensorInterface> impl)
+: impl_(std::move(impl))
+{}
+
+return_type Sensor::configure(const HardwareInfo & sensor_info)
 {
+  return impl_->configure(sensor_info);
+}
 
-class SensorInterface;
-
-class Sensor final
+std::vector<StateInterface> Sensor::export_state_interfaces()
 {
-public:
-  Sensor() = default;
+  return impl_->export_state_interfaces();
+}
 
-  HARDWARE_INTERFACE_PUBLIC
-  explicit Sensor(std::unique_ptr<SensorInterface> impl);
+return_type Sensor::start()
+{
+  return impl_->start();
+}
 
-  Sensor(Sensor && other) = default;
+return_type Sensor::stop()
+{
+  return impl_->stop();
+}
 
-  ~Sensor() = default;
+std::string Sensor::get_name() const
+{
+  return impl_->get_name();
+}
 
-  HARDWARE_INTERFACE_PUBLIC
-  return_type configure(const HardwareInfo & sensor_info);
+status Sensor::get_status() const
+{
+  return impl_->get_status();
+}
 
-  HARDWARE_INTERFACE_PUBLIC
-  std::vector<StateInterface> export_state_interfaces();
+return_type Sensor::read()
+{
+  return impl_->read();
+}
 
-  HARDWARE_INTERFACE_PUBLIC
-  return_type start();
-
-  HARDWARE_INTERFACE_PUBLIC
-  return_type stop();
-
-  HARDWARE_INTERFACE_PUBLIC
-  std::string get_name() const;
-
-  HARDWARE_INTERFACE_PUBLIC
-  status get_status() const;
-
-  HARDWARE_INTERFACE_PUBLIC
-  return_type read();
-
-private:
-  std::unique_ptr<SensorInterface> impl_;
-};
-
-}  // namespace components
 }  // namespace hardware_interface
-#endif  // HARDWARE_INTERFACE__COMPONENTS__SENSOR_HPP_

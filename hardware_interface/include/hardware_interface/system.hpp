@@ -12,11 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef HARDWARE_INTERFACE__COMPONENTS__ACTUATOR_HPP_
-#define HARDWARE_INTERFACE__COMPONENTS__ACTUATOR_HPP_
+#ifndef HARDWARE_INTERFACE__SYSTEM_HPP_
+#define HARDWARE_INTERFACE__SYSTEM_HPP_
 
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "hardware_interface/handle.hpp"
@@ -27,25 +28,21 @@
 
 namespace hardware_interface
 {
-namespace components
-{
 
-class ActuatorInterface;
+class SystemInterface;
 
-class Actuator final
+class System final
 {
 public:
-  Actuator() = default;
+  HARDWARE_INTERFACE_PUBLIC
+  explicit System(std::unique_ptr<SystemInterface> impl);
+
+  System(System && other) = default;
+
+  ~System() = default;
 
   HARDWARE_INTERFACE_PUBLIC
-  explicit Actuator(std::unique_ptr<ActuatorInterface> impl);
-
-  Actuator(Actuator && other) = default;
-
-  ~Actuator() = default;
-
-  HARDWARE_INTERFACE_PUBLIC
-  return_type configure(const HardwareInfo & actuator_info);
+  return_type configure(const HardwareInfo & system_info);
 
   HARDWARE_INTERFACE_PUBLIC
   std::vector<StateInterface> export_state_interfaces();
@@ -72,9 +69,8 @@ public:
   return_type write();
 
 private:
-  std::unique_ptr<ActuatorInterface> impl_;
+  std::unique_ptr<SystemInterface> impl_;
 };
 
-}  // namespace components
 }  // namespace hardware_interface
-#endif  // HARDWARE_INTERFACE__COMPONENTS__ACTUATOR_HPP_
+#endif  // HARDWARE_INTERFACE__SYSTEM_HPP_

@@ -20,12 +20,12 @@
 #include <unordered_map>
 #include <vector>
 
-#include "hardware_interface/components/actuator.hpp"
-#include "hardware_interface/components/actuator_interface.hpp"
-#include "hardware_interface/components/sensor_interface.hpp"
-#include "hardware_interface/components/sensor.hpp"
-#include "hardware_interface/components/system_interface.hpp"
-#include "hardware_interface/components/system.hpp"
+#include "hardware_interface/actuator.hpp"
+#include "hardware_interface/actuator_interface.hpp"
+#include "hardware_interface/sensor_interface.hpp"
+#include "hardware_interface/sensor.hpp"
+#include "hardware_interface/system_interface.hpp"
+#include "hardware_interface/system.hpp"
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/hardware_interface_status_values.hpp"
@@ -36,7 +36,7 @@ using namespace ::testing;  // NOLINT
 namespace test_components
 {
 
-class DummyActuator : public hardware_interface::components::ActuatorInterface
+class DummyActuator : public hardware_interface::ActuatorInterface
 {
   hardware_interface::return_type configure(
     const hardware_interface::HardwareInfo & /* info */) override
@@ -110,7 +110,7 @@ private:
   double velocity_command_ = 0.0;
 };
 
-class DummySensor : public hardware_interface::components::SensorInterface
+class DummySensor : public hardware_interface::SensorInterface
 {
   hardware_interface::return_type configure(
     const hardware_interface::HardwareInfo & /* info */) override
@@ -159,7 +159,7 @@ private:
   double voltage_level_ = 0x666;
 };
 
-class DummySystem : public hardware_interface::components::SystemInterface
+class DummySystem : public hardware_interface::SystemInterface
 {
   hardware_interface::return_type configure(
     const hardware_interface::HardwareInfo & /* info */) override
@@ -256,7 +256,7 @@ private:
 
 TEST(TestComponentInterfaces, dummy_actuator)
 {
-  hardware_interface::components::Actuator actuator_hw(
+  hardware_interface::Actuator actuator_hw(
     std::make_unique<test_components::DummyActuator>());
 
   hardware_interface::HardwareInfo mock_hw_info{};
@@ -289,7 +289,7 @@ TEST(TestComponentInterfaces, dummy_actuator)
 
 TEST(TestComponentInterfaces, dummy_sensor)
 {
-  hardware_interface::components::Sensor sensor_hw(
+  hardware_interface::Sensor sensor_hw(
     std::make_unique<test_components::DummySensor>());
 
   hardware_interface::HardwareInfo mock_hw_info{};
@@ -304,7 +304,7 @@ TEST(TestComponentInterfaces, dummy_sensor)
 
 TEST(TestComponentInterfaces, dummy_system)
 {
-  hardware_interface::components::System system_hw(
+  hardware_interface::System system_hw(
     std::make_unique<test_components::DummySystem>());
 
   hardware_interface::HardwareInfo mock_hw_info{};

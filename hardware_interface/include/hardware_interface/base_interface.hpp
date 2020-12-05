@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef HARDWARE_INTERFACE__COMPONENTS__BASE_INTERFACE_HPP_
-#define HARDWARE_INTERFACE__COMPONENTS__BASE_INTERFACE_HPP_
+#ifndef HARDWARE_INTERFACE__BASE_INTERFACE_HPP_
+#define HARDWARE_INTERFACE__BASE_INTERFACE_HPP_
 
 #include <string>
 
@@ -22,8 +22,6 @@
 #include "hardware_interface/types/hardware_interface_status_values.hpp"
 
 namespace hardware_interface
-{
-namespace components
 {
 
 template<class InterfaceType>
@@ -57,7 +55,6 @@ protected:
   status status_;
 };
 
-}  // namespace components
 }  // namespace hardware_interface
 
-#endif  // HARDWARE_INTERFACE__COMPONENTS__BASE_INTERFACE_HPP_
+#endif  // HARDWARE_INTERFACE__BASE_INTERFACE_HPP_

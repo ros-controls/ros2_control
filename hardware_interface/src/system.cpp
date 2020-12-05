@@ -17,17 +17,15 @@
 #include <utility>
 #include <vector>
 
-#include "hardware_interface/components/system.hpp"
+#include "hardware_interface/system.hpp"
 
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/hardware_info.hpp"
-#include "hardware_interface/components/system_interface.hpp"
+#include "hardware_interface/system_interface.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/hardware_interface_status_values.hpp"
 
 namespace hardware_interface
-{
-namespace components
 {
 
 System::System(std::unique_ptr<SystemInterface> impl)
@@ -79,5 +77,4 @@ return_type System::write()
   return impl_->write();
 }
 
-}  // namespace components
 }  // namespace hardware_interface

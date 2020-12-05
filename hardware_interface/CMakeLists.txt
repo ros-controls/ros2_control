@@ -21,11 +21,11 @@ find_package(TinyXML2 REQUIRED)
 add_library(
   hardware_interface
   SHARED
-  src/components/actuator.cpp
-  src/components/sensor.cpp
-  src/components/system.cpp
+  src/actuator.cpp
   src/component_parser.cpp
   src/resource_manager.cpp
+  src/sensor.cpp
+  src/system.cpp
 )
 target_include_directories(
   hardware_interface

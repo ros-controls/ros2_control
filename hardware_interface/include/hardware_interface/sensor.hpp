@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef HARDWARE_INTERFACE__COMPONENTS__SYSTEM_HPP_
-#define HARDWARE_INTERFACE__COMPONENTS__SYSTEM_HPP_
+#ifndef HARDWARE_INTERFACE__SENSOR_HPP_
+#define HARDWARE_INTERFACE__SENSOR_HPP_
 
 #include <memory>
 #include <string>
@@ -28,29 +28,26 @@
 
 namespace hardware_interface
 {
-namespace components
-{
 
-class SystemInterface;
+class SensorInterface;
 
-class System final
+class Sensor final
 {
 public:
-  HARDWARE_INTERFACE_PUBLIC
-  explicit System(std::unique_ptr<SystemInterface> impl);
-
-  System(System && other) = default;
-
-  ~System() = default;
+  Sensor() = default;
 
   HARDWARE_INTERFACE_PUBLIC
-  return_type configure(const HardwareInfo & system_info);
+  explicit Sensor(std::unique_ptr<SensorInterface> impl);
+
+  Sensor(Sensor && other) = default;
+
+  ~Sensor() = default;
+
+  HARDWARE_INTERFACE_PUBLIC
+  return_type configure(const HardwareInfo & sensor_info);
 
   HARDWARE_INTERFACE_PUBLIC
   std::vector<StateInterface> export_state_interfaces();
-
-  HARDWARE_INTERFACE_PUBLIC
-  std::vector<CommandInterface> export_command_interfaces();
 
   HARDWARE_INTERFACE_PUBLIC
   return_type start();
@@ -67,13 +64,9 @@ public:
   HARDWARE_INTERFACE_PUBLIC
   return_type read();
 
-  HARDWARE_INTERFACE_PUBLIC
-  return_type write();
-
 private:
-  std::unique_ptr<SystemInterface> impl_;
+  std::unique_ptr<SensorInterface> impl_;
 };
 
-}  // namespace components
 }  // namespace hardware_interface
-#endif  // HARDWARE_INTERFACE__COMPONENTS__SYSTEM_HPP_
+#endif  // HARDWARE_INTERFACE__SENSOR_HPP_

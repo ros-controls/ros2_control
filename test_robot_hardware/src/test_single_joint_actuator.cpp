@@ -15,16 +15,16 @@
 #include <memory>
 #include <vector>
 
-#include "hardware_interface/components/base_interface.hpp"
-#include "hardware_interface/components/actuator_interface.hpp"
+#include "hardware_interface/base_interface.hpp"
+#include "hardware_interface/actuator_interface.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 
 using hardware_interface::status;
 using hardware_interface::return_type;
 using hardware_interface::StateInterface;
 using hardware_interface::CommandInterface;
-using hardware_interface::components::ActuatorInterface;
-using hardware_interface::components::BaseInterface;
+using hardware_interface::ActuatorInterface;
+using hardware_interface::BaseInterface;
 
 namespace test_robot_hardware
 {
@@ -124,4 +124,4 @@ private:
 
 #include "pluginlib/class_list_macros.hpp"  // NOLINT
 PLUGINLIB_EXPORT_CLASS(
-  test_robot_hardware::TestSingleJointActuator, hardware_interface::components::ActuatorInterface)
+  test_robot_hardware::TestSingleJointActuator, hardware_interface::ActuatorInterface)
