@@ -40,6 +40,17 @@ TestController::on_configure(const rclcpp_lifecycle::State & previous_state)
   return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
+rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
+TestController::on_cleanup(
+  const rclcpp_lifecycle::State & previous_state)
+{
+  (void) previous_state;
+  if (cleanup_calls) {
+    (*cleanup_calls)++;
+  }
+  return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
+}
+
 }  // namespace test_controller
 
 #include "pluginlib/class_list_macros.hpp"

@@ -36,7 +36,7 @@ static constexpr const char * kControllerInterface = "controller_interface::Cont
 
 inline bool is_controller_running(controller_interface::ControllerInterface & controller)
 {
-  return controller.get_lifecycle_node()->get_current_state().id() ==
+  return controller.get_current_state().id() ==
          lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE;
 }
 
@@ -220,8 +220,8 @@ controller_interface::return_type ControllerManager::unload_controller(
   }
 
   RCLCPP_DEBUG(get_logger(), "Cleanup controller");
-  controller.c->get_lifecycle_node()->cleanup();
-  executor_->remove_node(controller.c->get_lifecycle_node()->get_node_base_interface());
+  controller.c->cleanup();
+  executor_->remove_node(controller.c->get_node());
   to.erase(found_it);
 
   // Destroys the old controllers list when the realtime thread is finished with it.
@@ -494,13 +494,8 @@ ControllerManager::add_controller_impl(
   }
 
   controller.c->init(controller.info.name);
-
-  // TODO(v-lopez) this should only be done if controller_manager is configured.
-  // Probably the whole load_controller part should fail if the controller_manager
-  // is not configured, should it implement a LifecycleNodeInterface
-  // https://github.com/ros-controls/ros2_control/issues/152
-  controller.c->get_lifecycle_node()->configure();
-  executor_->add_node(controller.c->get_lifecycle_node()->get_node_base_interface());
+  controller.c->configure();
+  executor_->add_node(controller.c->get_node());
   to.emplace_back(controller);
 
   // Destroys the old controllers list when the realtime thread is finished with it.
@@ -554,7 +549,7 @@ void ControllerManager::stop_controllers()
     }
     auto controller = found_it->c;
     if (is_controller_running(*controller)) {
-      const auto new_state = controller->get_lifecycle_node()->deactivate();
+      const auto new_state = controller->deactivate();
       if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
         RCLCPP_ERROR(
           get_logger(),
@@ -656,12 +651,12 @@ void ControllerManager::start_controllers()
     }
     controller->assign_interfaces(std::move(command_loans), std::move(state_loans));
 
-    const auto new_state = controller->get_lifecycle_node()->activate();
+    const auto new_state = controller->activate();
     if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE) {
       RCLCPP_ERROR(
         get_logger(),
         "After activating, controller %s is in state %s, expected Active",
-        controller->get_lifecycle_node()->get_name(),
+        controller->get_node()->get_name(),
         new_state.label().c_str());
     }
   }
@@ -734,7 +729,7 @@ void ControllerManager::list_controllers_srv_cb(
     controller_manager_msgs::msg::ControllerState & cs = response->controller[i];
     cs.name = controllers[i].info.name;
     cs.type = controllers[i].info.type;
-    cs.state = controllers[i].c->get_lifecycle_node()->get_current_state().label();
+    cs.state = controllers[i].c->get_current_state().label();
 
 #ifdef TODO_IMPLEMENT_RESOURCE_CHECKING
     cs.claimed_resources.clear();

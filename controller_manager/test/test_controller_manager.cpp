@@ -45,7 +45,7 @@ TEST_F(TestControllerManager, controller_lifecycle) {
 
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    test_controller->get_lifecycle_node()->get_current_state().id());
+    test_controller->get_current_state().id());
 
   EXPECT_EQ(controller_interface::return_type::SUCCESS, cm_->update());
   EXPECT_EQ(0u, test_controller->internal_counter) << "Controller is not started";
@@ -72,7 +72,7 @@ TEST_F(TestControllerManager, controller_lifecycle) {
   );
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
-    test_controller->get_lifecycle_node()->get_current_state().id());
+    test_controller->get_current_state().id());
 
   EXPECT_EQ(controller_interface::return_type::SUCCESS, cm_->update());
   EXPECT_EQ(1u, test_controller->internal_counter);
@@ -103,7 +103,7 @@ TEST_F(TestControllerManager, controller_lifecycle) {
 
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    test_controller->get_lifecycle_node()->get_current_state().id());
+    test_controller->get_current_state().id());
   auto unload_future = std::async(
     std::launch::async,
     &controller_manager::ControllerManager::unload_controller, cm_,
@@ -121,6 +121,6 @@ TEST_F(TestControllerManager, controller_lifecycle) {
 
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-    test_controller->get_lifecycle_node()->get_current_state().id());
+    test_controller->get_current_state().id());
   EXPECT_EQ(1, test_controller.use_count());
 }
