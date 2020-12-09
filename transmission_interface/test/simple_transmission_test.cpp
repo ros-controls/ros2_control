@@ -27,14 +27,16 @@ using transmission_interface::JointHandle;
 // Floating-point value comparison threshold
 const double EPS = 1e-6;
 
-TEST(PreconditionsTest, ExceptionThrowing)
+TEST(PreconditionsTest, ExceptionThrownWithInvalidParameters)
 {
   // Invalid instance creation: Transmission cannot have zero reduction
   EXPECT_THROW(SimpleTransmission(0.0), Exception);
   EXPECT_THROW(SimpleTransmission(0.0, 1.0), Exception);
   EXPECT_THROW(SimpleTransmission(0.0, -1.0), Exception);
+}
 
-  // Valid instance creation
+TEST(PreconditionsTest, NoExceptionsWithValidParameters)
+{
   EXPECT_NO_THROW(SimpleTransmission(1.0));
   EXPECT_NO_THROW(SimpleTransmission(1.0, 1.0));
   EXPECT_NO_THROW(SimpleTransmission(-1.0, 1.0));
@@ -52,8 +54,14 @@ TEST(PreconditionsTest, AccessorValidation)
   EXPECT_EQ(-1.0, trans.get_joint_offset());
 }
 
-// #ifndef NDEBUG
-// NOTE: This test validates assertion triggering, hence only gets compiled in debug mode
+TEST(PreconditionsTest, ConfigureFailsWithInvalidHandles)
+{
+  
+}
+
+
+
+
 // TEST(PreconditionsTest, AssertionTriggering)
 // {
 //   // Create input/output transmission data
@@ -136,7 +144,6 @@ TEST(PreconditionsTest, AccessorValidation)
 //   EXPECT_DEATH(trans.joint_to_actuatorPosition(j_good_data, a_bad_size),  ".*");
 //   EXPECT_DEATH(trans.joint_to_actuatorPosition(j_bad_size,  a_good_data), ".*");
 // }
-// #endif // NDEBUG
 
 
 class TransmissionSetup

@@ -121,13 +121,13 @@ protected:
     double reduction_;
     double jnt_offset_;
 
-    JointHandle joint_position = {"", "", nullptr};
-    JointHandle joint_velocity = {"", "", nullptr};
-    JointHandle joint_effort = {"", "", nullptr};
+    JointHandle joint_position_ = {"", "", nullptr};
+    JointHandle joint_velocity_ = {"", "", nullptr};
+    JointHandle joint_effort_ = {"", "", nullptr};
 
-    ActuatorHandle actuator_position = {"", "", nullptr};
-    ActuatorHandle actuator_velocity = {"", "", nullptr};
-    ActuatorHandle actuator_effort = {"", "", nullptr};
+    ActuatorHandle actuator_position_ = {"", "", nullptr};
+    ActuatorHandle actuator_velocity_ = {"", "", nullptr};
+    ActuatorHandle actuator_effort_ = {"", "", nullptr};
   };
 
   inline SimpleTransmission::SimpleTransmission(
@@ -151,58 +151,70 @@ protected:
       handles.cbegin(), handles.cend(), [&interface_name](
         const auto handle) {return handle.get_interface_name() == interface_name;});
     if (result == handles.cend()) {
-      return HandleType("", "", nullptr);
+      return HandleType(handles.cbegin()->get_name(), interface_name, nullptr);
     }
     return *result;
+  }
+
+  template <class T>
+  bool are_names_identical(const std::vector<T>& handles)
+  {
+    std::vector<std::string> names;
+    std::transform(handles.cbegin(), handles.cend(), std::back_inserter(names), [](const auto& handle){ return handle.get_name();});
+    return std::equal(names.cbegin() + 1, names.cend(), names.cbegin());
   }
 
   void SimpleTransmission::configure(
     const std::vector<JointHandle> & joint_handles,
     const std::vector<ActuatorHandle> & actuator_handles)
   {
-    // check that joint / act names are identical
-    // check that joint interfaces and actuator interfaces match
+    if ( !are_names_identical(joint_handles) )
+    {
+      throw Exception("Joint names given to transmissions should be identical!");
+    }
 
-    joint_position = get_by_interface(joint_handles, "position");
-    joint_velocity = get_by_interface(joint_handles, "velocity");
-    joint_effort = get_by_interface(joint_handles, "effort");
+    if ( !are_names_identical(actuator_handles) )
+    {
+      throw Exception("Actuator names given to transmissions should be identical!");
+    }
 
-    actuator_position = get_by_interface(actuator_handles, "position");
-    actuator_velocity = get_by_interface(actuator_handles, "velocity");
-    actuator_effort = get_by_interface(actuator_handles, "effort");
+    joint_position_ = get_by_interface(joint_handles, "position");
+    joint_velocity_ = get_by_interface(joint_handles, "velocity");
+    joint_effort_ = get_by_interface(joint_handles, "effort");
+
+    actuator_position_ = get_by_interface(actuator_handles, "position");
+    actuator_velocity_ = get_by_interface(actuator_handles, "velocity");
+    actuator_effort_ = get_by_interface(actuator_handles, "effort");
   }
 
   inline void SimpleTransmission::actuator_to_joint()
   {
-    if (joint_effort && actuator_effort) {
-      joint_effort.set_value(actuator_effort.get_value() * reduction_);
+    if (joint_effort_ && actuator_effort_) {
+      joint_effort_.set_value(actuator_effort_.get_value() * reduction_);
     }
 
-    if (joint_velocity && actuator_velocity) {
-      joint_velocity.set_value(actuator_velocity.get_value() / reduction_);
+    if (joint_velocity_ && actuator_velocity_) {
+      joint_velocity_.set_value(actuator_velocity_.get_value() / reduction_);
     }
 
-    if (joint_position && actuator_position) {
-      joint_position.set_value(actuator_position.get_value() / reduction_ + jnt_offset_);
+    if (joint_position_ && actuator_position_) {
+      joint_position_.set_value(actuator_position_.get_value() / reduction_ + jnt_offset_);
     }
-
-//   *jnt_data.absolute_position[0] = *act_data.absolute_position[0] / reduction_ + jnt_offset_;
-//   *jnt_data.torque_sensor[0] = *act_data.torque_sensor[0] * reduction_;
   }
 
 
   inline void SimpleTransmission::joint_to_actuator()
   {
-    if (joint_effort && actuator_effort) {
-      actuator_effort.set_value(joint_effort.get_value() / reduction_);
+    if (joint_effort_ && actuator_effort_) {
+      actuator_effort_.set_value(joint_effort_.get_value() / reduction_);
     }
 
-    if (joint_velocity && actuator_velocity) {
-      actuator_velocity.set_value(joint_velocity.get_value() * reduction_);
+    if (joint_velocity_ && actuator_velocity_) {
+      actuator_velocity_.set_value(joint_velocity_.get_value() * reduction_);
     }
 
-    if (joint_position && actuator_position) {
-      actuator_position.set_value((joint_position.get_value() - jnt_offset_) * reduction_);
+    if (joint_position_ && actuator_position_) {
+      actuator_position_.set_value((joint_position_.get_value() - jnt_offset_) * reduction_);
     }
   }
 
