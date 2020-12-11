@@ -337,13 +337,6 @@ controller_interface::return_type ControllerManager::switch_controller(
     return ret;
   }
 
-#ifdef TODO_IMPLEMENT_RESOURCE_CHECKING
-  // Do the resource management checking
-  std::list<hardware_interface::ControllerInfo> info_list;
-  switch_start_list_.clear();
-  switch_stop_list_.clear();
-#endif
-
   // lock controllers
   std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
 
@@ -398,47 +391,7 @@ controller_interface::return_type ControllerManager::switch_controller(
       in_start_list = false;
       start_request_.erase(start_list_it);
     }
-
-#ifdef TODO_IMPLEMENT_RESOURCE_CHECKING
-    if (is_running && in_stop_list && !in_start_list) {  // running and real stop
-      switch_stop_list_.push_back(info);
-    } else if (!is_running && !in_stop_list && in_start_list) {  // start, but no restart
-      switch_start_list_.push_back(info);
-    }
-
-    bool add_to_list = is_running;
-    if (in_stop_list) {
-      add_to_list = false;
-    }
-    if (in_start_list) {
-      add_to_list = true;
-    }
-
-    if (add_to_list) {
-      info_list.push_back(info);
-    }
-#endif
   }
-
-#ifdef TODO_IMPLEMENT_RESOURCE_CHECKING
-  bool in_conflict = robot_hw_->checkForConflict(info_list);
-  if (in_conflict) {
-    RCLCPP_ERROR(get_logger(), "Could not switch controllers, due to resource conflict");
-    stop_request_.clear();
-    start_request_.clear();
-    return controller_interface::return_type::ERROR;
-  }
-
-  if (!robot_hw_->prepareSwitch(switch_start_list_, switch_stop_list_)) {
-    RCLCPP_ERROR(
-      get_logger(),
-      "Could not switch controllers. The hardware interface combination "
-      "for the requested controllers is unfeasible.");
-    stop_request_.clear();
-    start_request_.clear();
-    return controller_interface::return_type::ERROR;
-  }
-#endif
 
   if (start_request_.empty() && stop_request_.empty()) {
     RCLCPP_INFO(get_logger(), "Empty start and stop list, not requesting switch");
@@ -512,14 +465,6 @@ ControllerManager::add_controller_impl(
 
 void ControllerManager::manage_switch()
 {
-#ifdef TODO_IMPLEMENT_RESOURCE_CHECKING
-  // switch hardware interfaces (if any)
-  if (!switch_params_.started) {
-    robot_hw_->doSwitch(switch_start_list_, switch_stop_list_);
-    switch_params_.started = true;
-  }
-#endif
-
   stop_controllers();
 
   // start controllers once the switch is fully complete
@@ -563,7 +508,6 @@ void ControllerManager::stop_controllers()
 
 void ControllerManager::start_controllers()
 {
-  //  Dummy implementation, replace with the code above when migrated
   std::vector<ControllerSpec> & rt_controller_list =
     rt_controllers_wrapper_.update_and_get_used_by_rt_list();
   for (const auto & request : start_request_) {
@@ -666,48 +610,8 @@ void ControllerManager::start_controllers()
 
 void ControllerManager::start_controllers_asap()
 {
-#ifdef TODO_IMPLEMENT_RESOURCE_CHECKING
-  // start controllers if possible
-  for (const auto & request : start_request_) {
-    if (!isControllerRunning(*request)) {
-      // find the info from this controller
-      for (const auto & controller : controllers_lists_[current_controllers_list_]) {
-        if (request == controller.c.get()) {
-          // ready to start
-          if (robot_hw_->switchResult(controller.info) ==
-            hardware_interface::RobotHW::SwitchState::DONE)
-          {
-            request->startRequest(time);
-          } else if ((robot_hw_->switchResult(controller.info) == // NOLINT
-            hardware_interface::RobotHW::SwitchState::ERROR) ||
-            (switch_params_.timeout > 0.0 &&
-            (time - switch_params_.init_time).toSec() > switch_params_.timeout)) // NOLINT
-          {
-            // abort on error or timeout (if set)
-            request->abortRequest(time);
-          } else {
-            // controller is waiting
-            request->waitRequest(time);
-          }
-        }
-        continue;
-      }
-    }
-  }
-
-  // all needed controllers started or aborted, switch done
-  if (std::all_of(
-      start_request_.begin(), start_request_.end(),
-      [](controller_interface::ControllerBase * request) {
-        return request->isRunning() || request->isAborted();
-      }))
-  {
-    switch_params_.do_switch = false;
-  }
-#else
-  //  Dummy implementation, replace with the code above when migrated
+  //  https://github.com/ros-controls/ros2_control/issues/263
   start_controllers();
-#endif
 }
 
 void ControllerManager::list_controllers_srv_cb(
@@ -730,21 +634,6 @@ void ControllerManager::list_controllers_srv_cb(
     cs.name = controllers[i].info.name;
     cs.type = controllers[i].info.type;
     cs.state = controllers[i].c->get_current_state().label();
-
-#ifdef TODO_IMPLEMENT_RESOURCE_CHECKING
-    cs.claimed_resources.clear();
-    typedef std::vector<hardware_interface::InterfaceResources> ClaimedResVec;
-    typedef ClaimedResVec::const_iterator ClaimedResIt;
-    const ClaimedResVec & c_resources = controllers[i].info.claimed_resources;
-    for (const auto & c_resource : c_resources) {
-      controller_manager_msgs::HardwareInterfaceResources iface_res;
-      iface_res.hardware_interface = c_resource.hardware_interface;
-      std::copy(
-        c_resource.resources.begin(), c_resource.resources.end(),
-        std::back_inserter(iface_res.resources));
-      cs.claimed_resources.push_back(iface_res);
-    }
-#endif
   }
 
   RCLCPP_DEBUG(get_logger(), "list controller service finished");

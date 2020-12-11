@@ -291,9 +291,6 @@ private:
     unload_controller_service_;
 
   std::vector<std::string> start_request_, stop_request_;
-#ifdef TODO_IMPLEMENT_RESOURCE_CHECKING
-//  std::list<hardware_interface::ControllerInfo> switch_start_list_, switch_stop_list_;
-#endif
 
   struct SwitchParams
   {
