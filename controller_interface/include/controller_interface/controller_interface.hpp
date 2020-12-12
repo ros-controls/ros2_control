@@ -23,9 +23,10 @@
 
 #include "hardware_interface/loaned_command_interface.hpp"
 #include "hardware_interface/loaned_state_interface.hpp"
+#include "lifecycle_msgs/msg/state.hpp"
 
 #include "rclcpp/rclcpp.hpp"
-#include "rclcpp_lifecycle/lifecycle_node.hpp"
+#include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 
 namespace controller_interface
 {
@@ -93,13 +94,40 @@ public:
   update() = 0;
 
   CONTROLLER_INTERFACE_PUBLIC
-  std::shared_ptr<rclcpp_lifecycle::LifecycleNode>
-  get_lifecycle_node();
+  std::shared_ptr<rclcpp::Node>
+  get_node();
+
+  /**
+   * The methods below are a substitute to the LifecycleNode methods with the same name.
+   * We cannot use a LifecycleNode because it would expose change
+   * state services to the rest of the ROS system.
+   * Only the Controller Manager should have possibility to change state of s controller.
+   *
+   * Hopefully in the future we can use a LifecycleNode where we disable modifications from the outside.
+   */
+  CONTROLLER_INTERFACE_PUBLIC
+  const rclcpp_lifecycle::State & configure();
+
+  CONTROLLER_INTERFACE_PUBLIC
+  const rclcpp_lifecycle::State & cleanup();
+
+  CONTROLLER_INTERFACE_PUBLIC
+  const rclcpp_lifecycle::State & deactivate();
+
+  CONTROLLER_INTERFACE_PUBLIC
+  const rclcpp_lifecycle::State & activate();
+
+  CONTROLLER_INTERFACE_PUBLIC
+  const rclcpp_lifecycle::State & shutdown();
+
+  CONTROLLER_INTERFACE_PUBLIC
+  const rclcpp_lifecycle::State & get_current_state() const;
 
 protected:
   std::vector<hardware_interface::LoanedCommandInterface> command_interfaces_;
   std::vector<hardware_interface::LoanedStateInterface> state_interfaces_;
-  std::shared_ptr<rclcpp_lifecycle::LifecycleNode> lifecycle_node_;
+  std::shared_ptr<rclcpp::Node> node_;
+  rclcpp_lifecycle::State lifecycle_state_;
 };
 
 using ControllerInterfaceSharedPtr = std::shared_ptr<ControllerInterface>;

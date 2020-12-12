@@ -59,7 +59,14 @@ public:
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
   on_configure(const rclcpp_lifecycle::State & previous_state) override;
 
+  CONTROLLER_MANAGER_PUBLIC
+  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
+  on_cleanup(const rclcpp_lifecycle::State & previous_state) override;
+
   size_t internal_counter = 0;
+  // Variable where we store when cleanup was called, pointer because the controller
+  // is usually destroyed after cleanup
+  size_t * cleanup_calls = nullptr;
 };
 
 }  // namespace test_controller

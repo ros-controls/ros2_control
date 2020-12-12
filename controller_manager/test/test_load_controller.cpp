@@ -51,10 +51,10 @@ TEST_F(TestLoadController, load1_known_controller)
   controller_manager::ControllerSpec abstract_test_controller =
     cm_->get_loaded_controllers()[0];
 
-  auto lifecycle_node = abstract_test_controller.c->get_lifecycle_node();
+  auto node = abstract_test_controller.c->get_node();
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    abstract_test_controller.c->get_lifecycle_node()->get_current_state().id());
+    abstract_test_controller.c->get_current_state().id());
 }
 
 TEST_F(TestLoadController, load2_known_controller)
@@ -68,10 +68,10 @@ TEST_F(TestLoadController, load2_known_controller)
   controller_manager::ControllerSpec abstract_test_controller1 =
     cm_->get_loaded_controllers()[0];
   EXPECT_STREQ(
-    controller_name1.c_str(), abstract_test_controller1.c->get_lifecycle_node()->get_name());
+    controller_name1.c_str(), abstract_test_controller1.c->get_node()->get_name());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    abstract_test_controller1.c->get_lifecycle_node()->get_current_state().id());
+    abstract_test_controller1.c->get_current_state().id());
 
   // load the same controller again with a different name
   std::string controller_name2 = "test_controller2";
@@ -80,12 +80,12 @@ TEST_F(TestLoadController, load2_known_controller)
   controller_manager::ControllerSpec abstract_test_controller2 =
     cm_->get_loaded_controllers()[1];
   EXPECT_STREQ(
-    controller_name2.c_str(), abstract_test_controller2.c->get_lifecycle_node()->get_name());
+    controller_name2.c_str(), abstract_test_controller2.c->get_node()->get_name());
   EXPECT_STREQ(
     controller_name2.c_str(), abstract_test_controller2.info.name.c_str());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    abstract_test_controller2.c->get_lifecycle_node()->get_current_state().id());
+    abstract_test_controller2.c->get_current_state().id());
 }
 
 TEST_F(TestLoadController, update)
@@ -98,10 +98,10 @@ TEST_F(TestLoadController, update)
   controller_manager::ControllerSpec abstract_test_controller =
     cm_->get_loaded_controllers()[0];
 
-  auto lifecycle_node = abstract_test_controller.c->get_lifecycle_node();
+  auto node = abstract_test_controller.c->get_node();
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    abstract_test_controller.c->get_lifecycle_node()->get_current_state().id());
+    abstract_test_controller.c->get_current_state().id());
 }
 
 TEST_F(TestLoadController, switch_controller_empty)
@@ -209,7 +209,7 @@ TEST_F(TestLoadController, switch_controller)
 
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    abstract_test_controller1.c->get_lifecycle_node()->get_current_state().id());
+    abstract_test_controller1.c->get_current_state().id());
 
   {  //  Test stopping an stopped controller
     std::vector<std::string> start_controllers = {};
@@ -275,7 +275,7 @@ TEST_F(TestLoadController, switch_controller)
 
     ASSERT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
-      abstract_test_controller1.c->get_lifecycle_node()->get_current_state().id());
+      abstract_test_controller1.c->get_current_state().id());
 
     // Stop controller
     start_controllers = {};
@@ -301,7 +301,7 @@ TEST_F(TestLoadController, switch_controller)
 
     ASSERT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-      abstract_test_controller1.c->get_lifecycle_node()->get_current_state().id());
+      abstract_test_controller1.c->get_current_state().id());
   }
 }
 
@@ -322,10 +322,10 @@ TEST_F(TestLoadController, switch_multiple_controllers)
 
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    abstract_test_controller1.c->get_lifecycle_node()->get_current_state().id());
+    abstract_test_controller1.c->get_current_state().id());
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    abstract_test_controller2.c->get_lifecycle_node()->get_current_state().id());
+    abstract_test_controller2.c->get_current_state().id());
 
   // Only testing with STRICT now for simplicity
   { //  Test starting an stopped controller, and stopping afterwards
@@ -352,10 +352,10 @@ TEST_F(TestLoadController, switch_multiple_controllers)
 
     ASSERT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
-      abstract_test_controller1.c->get_lifecycle_node()->get_current_state().id());
+      abstract_test_controller1.c->get_current_state().id());
     ASSERT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-      abstract_test_controller2.c->get_lifecycle_node()->get_current_state().id());
+      abstract_test_controller2.c->get_current_state().id());
 
     // Stop controller 1, start controller 2
     start_controllers = {controller_name2};
@@ -381,10 +381,10 @@ TEST_F(TestLoadController, switch_multiple_controllers)
 
     ASSERT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-      abstract_test_controller1.c->get_lifecycle_node()->get_current_state().id());
+      abstract_test_controller1.c->get_current_state().id());
     ASSERT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
-      abstract_test_controller2.c->get_lifecycle_node()->get_current_state().id());
+      abstract_test_controller2.c->get_current_state().id());
 
     start_controllers = {};
     stop_controllers = {controller_name2};
@@ -409,6 +409,6 @@ TEST_F(TestLoadController, switch_multiple_controllers)
 
     ASSERT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-      abstract_test_controller2.c->get_lifecycle_node()->get_current_state().id());
+      abstract_test_controller2.c->get_current_state().id());
   }
 }
