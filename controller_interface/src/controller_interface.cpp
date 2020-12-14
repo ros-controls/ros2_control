@@ -144,6 +144,9 @@ void ControllerInterface::release_interfaces()
 std::shared_ptr<rclcpp::Node>
 ControllerInterface::get_node()
 {
+  if (!node_.get()) {
+    throw std::runtime_error("Node hasn't been initialized yet!");
+  }
   return node_;
 }
 
