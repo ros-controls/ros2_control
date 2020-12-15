@@ -13,9 +13,9 @@
 # limitations under the License.
 
 
-from controller_manager_msgs.srv import ListControllers, ListControllerTypes, \
-    ListHardwareInterfaces, LoadController, ReloadControllerLibraries, \
-    SwitchController, UnloadController
+from controller_manager_msgs.srv import ConfigureController, ListControllers, \
+    ListControllerTypes, ListHardwareInterfaces, LoadController, \
+    ReloadControllerLibraries, SwitchController, UnloadController
 import rclpy
 from ros2cli.node.direct import DirectNode
 from ros2node.api import NodeNameCompleter
@@ -83,6 +83,13 @@ def load_controller(controller_manager_name, controller_name):
     request.name = controller_name
     return service_caller('{}/load_controller'.format(controller_manager_name),
                           LoadController, request)
+
+
+def configure_controller(controller_manager_name, controller_name):
+    request = ConfigureController.Request()
+    request.name = controller_name
+    return service_caller('{}/configure_controller'.format(controller_manager_name),
+                          ConfigureController, request)
 
 
 def switch_controllers(controller_manager_name, stop_controllers,
