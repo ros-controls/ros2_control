@@ -19,6 +19,7 @@ set(msg_files
   msg/HardwareInterface.msg
 )
 set(srv_files
+  srv/ConfigureController.srv
   srv/ListControllers.srv
   srv/ListControllerTypes.srv
   srv/ListHardwareInterfaces.srv
