@@ -41,14 +41,20 @@ TEST_F(TestControllerManager, controller_lifecycle) {
   EXPECT_EQ(
     0u,
     test_controller->internal_counter) <<
-    "Update should not reach an unstarted controller";
+    "Update should not reach an unconfigured controller";
 
   EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
     test_controller->get_current_state().id());
 
+  // configure controller
+  cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME);
   EXPECT_EQ(controller_interface::return_type::SUCCESS, cm_->update());
   EXPECT_EQ(0u, test_controller->internal_counter) << "Controller is not started";
+
+  EXPECT_EQ(
+      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+      test_controller->get_current_state().id());
 
   // Start controller, will take effect at the end of the update function
   std::vector<std::string> start_controllers = {test_controller::TEST_CONTROLLER_NAME};
