@@ -88,20 +88,24 @@ protected:
   rclcpp::Duration period;
   joint_limits_interface::JointLimits limits;
   joint_limits_interface::SoftJointLimits soft_limits;
-  
-  inline hardware_interface::CommandInterface command_handle() {
+
+  inline hardware_interface::CommandInterface command_handle()
+  {
     return hardware_interface::CommandInterface(name, "position_command", &cmd);
   }
 
-  inline hardware_interface::StateInterface position_handle() {
+  inline hardware_interface::StateInterface position_handle()
+  {
     return hardware_interface::StateInterface(name, "position", &pos);
   }
-  
-  inline hardware_interface::StateInterface velocity_handle() {
+
+  inline hardware_interface::StateInterface velocity_handle()
+  {
     return hardware_interface::StateInterface(name, "velocity", &vel);
   }
-  
-  inline hardware_interface::StateInterface effort_handle() {
+
+  inline hardware_interface::StateInterface effort_handle()
+  {
     return hardware_interface::StateInterface(name, "effort", &eff);
   }
 };
@@ -174,7 +178,8 @@ TEST_F(JointLimitsHandleTest, HandleConstruction)
     // Print error messages. Requires manual output inspection, but exception message should
     // be descriptive
     try {
-      joint_limits_interface::VelocityJointSaturationHandle(position_handle(), command_handle(), limits_bad);
+      joint_limits_interface::VelocityJointSaturationHandle(
+        position_handle(), command_handle(), limits_bad);
     } catch (const joint_limits_interface::JointLimitsInterfaceException & e) {
       RCLCPP_ERROR(rclcpp::get_logger("joint_limits_interface_test"), "%s", e.what());
     }
@@ -505,19 +510,23 @@ protected:
   double pos2, vel2, eff2, cmd2;
   std::string name2;
 
-  inline hardware_interface::CommandInterface command2_handle() {
+  inline hardware_interface::CommandInterface command2_handle()
+  {
     return hardware_interface::CommandInterface(name2, "position_command", &cmd2);
   }
 
-  inline hardware_interface::StateInterface position2_handle() {
+  inline hardware_interface::StateInterface position2_handle()
+  {
     return hardware_interface::StateInterface(name2, "position", &pos2);
   }
 
-  inline hardware_interface::StateInterface velocity2_handle() {
+  inline hardware_interface::StateInterface velocity2_handle()
+  {
     return hardware_interface::StateInterface(name2, "velocity", &vel2);
   }
 
-  inline hardware_interface::StateInterface effort2_handle() {
+  inline hardware_interface::StateInterface effort2_handle()
+  {
     return hardware_interface::StateInterface(name2, "effort", &eff2);
   }
 };
