@@ -8,8 +8,8 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
     - uses: actions/checkout@v1
-    - uses: ros-tooling/setup-ros@0.0.26
-    - uses: ros-tooling/action-ros-lint@0.0.6
+    - uses: ros-tooling/setup-ros@v0.1
+    - uses: ros-tooling/action-ros-lint@v0.1
       with:
         linter: copyright
         package-name:
@@ -26,8 +26,8 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
     - uses: actions/checkout@v1
-    - uses: ros-tooling/setup-ros@0.0.26
-    - uses: ros-tooling/action-ros-lint@0.0.6
+    - uses: ros-tooling/setup-ros@v0.1
+    - uses: ros-tooling/action-ros-lint@v0.1
       with:
         linter: xmllint
         package-name:
@@ -48,8 +48,8 @@ jobs:
           linter: [cppcheck, cpplint, uncrustify]
     steps:
     - uses: actions/checkout@v1
-    - uses: ros-tooling/setup-ros@0.0.26
-    - uses: ros-tooling/action-ros-lint@0.0.6
+    - uses: ros-tooling/setup-ros@v0.1
+    - uses: ros-tooling/action-ros-lint@v0.1
       with:
         linter: ${{ matrix.linter }}
         package-name:
