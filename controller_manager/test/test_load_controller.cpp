@@ -51,7 +51,6 @@ TEST_F(TestLoadController, load_and_configure_one_known_controller)
   controller_manager::ControllerSpec abstract_test_controller =
     cm_->get_loaded_controllers()[0];
 
-  auto node = abstract_test_controller.c->get_node();
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
     abstract_test_controller.c->get_current_state().id());
@@ -193,22 +192,6 @@ TEST_F(TestLoadController, configure_controller)
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
     abstract_test_controller1.c->get_current_state().id());
-}
-
-TEST_F(TestLoadController, update)
-{
-  ASSERT_NO_THROW(
-    cm_->load_controller(
-      "test_controller_01",
-      test_controller::TEST_CONTROLLER_CLASS_NAME));
-
-  controller_manager::ControllerSpec abstract_test_controller =
-    cm_->get_loaded_controllers()[0];
-
-  auto node = abstract_test_controller.c->get_node();
-  EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-    abstract_test_controller.c->get_current_state().id());
 }
 
 TEST_F(TestLoadController, switch_controller_empty)

@@ -278,10 +278,10 @@ controller_interface::return_type ControllerManager::configure_controller(
   }
 
   auto state = (*found_it).c->get_current_state();
-  if (state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
+  if (state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED) {
     RCLCPP_ERROR(
       get_logger(),
-      "controller %s is already configured and in Inactive state",
+      "controller %s is not in Unconfigured state",
       controller_name.c_str());
     return controller_interface::return_type::ERROR;
   }
