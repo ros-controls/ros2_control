@@ -63,11 +63,7 @@ public:
   JointLimitsTest()
   : pos(0.0), vel(0.0), eff(0.0), cmd(0.0),
     name("joint_name"),
-    period(0, 100000000),
-    cmd_handle(hardware_interface::JointHandle(name, "position_command", &cmd)),
-    pos_handle(hardware_interface::JointHandle(name, hardware_interface::HW_IF_POSITION, &pos)),
-    vel_handle(hardware_interface::JointHandle(name, hardware_interface::HW_IF_VELOCITY, &vel)),
-    eff_handle(hardware_interface::JointHandle(name, hardware_interface::HW_IF_EFFORT, &eff))
+    period(0, 100000000)
   {
     limits.has_position_limits = true;
     limits.min_position = -1.0;
@@ -90,10 +86,24 @@ protected:
   double pos, vel, eff, cmd;
   std::string name;
   rclcpp::Duration period;
-  hardware_interface::JointHandle cmd_handle;
-  hardware_interface::JointHandle pos_handle, vel_handle, eff_handle;
   joint_limits_interface::JointLimits limits;
   joint_limits_interface::SoftJointLimits soft_limits;
+  
+  inline hardware_interface::CommandInterface command_handle() {
+    return hardware_interface::CommandInterface(name, "position_command", &cmd);
+  }
+
+  inline hardware_interface::StateInterface position_handle() {
+    return hardware_interface::StateInterface(name, "position", &pos);
+  }
+  
+  inline hardware_interface::StateInterface velocity_handle() {
+    return hardware_interface::StateInterface(name, "velocity", &vel);
+  }
+  
+  inline hardware_interface::StateInterface effort_handle() {
+    return hardware_interface::StateInterface(name, "effort", &eff);
+  }
 };
 
 class JointLimitsHandleTest : public JointLimitsTest, public ::testing::Test {};
@@ -104,7 +114,7 @@ TEST_F(JointLimitsHandleTest, HandleConstruction)
     joint_limits_interface::JointLimits limits_bad;
     EXPECT_THROW(
       joint_limits_interface::PositionJointSoftLimitsHandle(
-        pos_handle, cmd_handle,
+        position_handle(), command_handle(),
         limits_bad, soft_limits),
       joint_limits_interface::JointLimitsInterfaceException);
 
@@ -112,7 +122,7 @@ TEST_F(JointLimitsHandleTest, HandleConstruction)
     // descriptive
     try {
       joint_limits_interface::PositionJointSoftLimitsHandle(
-        pos_handle, cmd_handle, limits_bad, soft_limits);
+        position_handle(), command_handle(), limits_bad, soft_limits);
     } catch (const joint_limits_interface::JointLimitsInterfaceException & e) {
       RCLCPP_ERROR(rclcpp::get_logger("joint_limits_interface_test"), "%s", e.what());
     }
@@ -123,14 +133,14 @@ TEST_F(JointLimitsHandleTest, HandleConstruction)
     limits_bad.has_effort_limits = true;
     EXPECT_THROW(
       joint_limits_interface::EffortJointSoftLimitsHandle(
-        pos_handle, cmd_handle, limits_bad,
+        position_handle(), command_handle(), limits_bad,
         soft_limits), joint_limits_interface::JointLimitsInterfaceException);
 
     // Print error messages. Requires manual output inspection,
     // but exception message should be descriptive
     try {
       joint_limits_interface::EffortJointSoftLimitsHandle(
-        pos_handle, cmd_handle, limits_bad, soft_limits);
+        position_handle(), command_handle(), limits_bad, soft_limits);
     } catch (const joint_limits_interface::JointLimitsInterfaceException & e) {
       RCLCPP_ERROR(rclcpp::get_logger("joint_limits_interface_test"), "%s", e.what());
     }
@@ -141,14 +151,14 @@ TEST_F(JointLimitsHandleTest, HandleConstruction)
     limits_bad.has_velocity_limits = true;
     EXPECT_THROW(
       joint_limits_interface::EffortJointSoftLimitsHandle(
-        pos_handle, cmd_handle, limits_bad,
+        position_handle(), command_handle(), limits_bad,
         soft_limits), joint_limits_interface::JointLimitsInterfaceException);
 
     // Print error messages. Requires manual output inspection, but exception message should
     // be descriptive
     try {
       joint_limits_interface::EffortJointSoftLimitsHandle(
-        pos_handle, cmd_handle, limits_bad, soft_limits);
+        position_handle(), command_handle(), limits_bad, soft_limits);
     } catch (const joint_limits_interface::JointLimitsInterfaceException & e) {
       RCLCPP_ERROR(rclcpp::get_logger("joint_limits_interface_test"), "%s", e.what());
     }
@@ -158,13 +168,13 @@ TEST_F(JointLimitsHandleTest, HandleConstruction)
     joint_limits_interface::JointLimits limits_bad;
     EXPECT_THROW(
       joint_limits_interface::VelocityJointSaturationHandle(
-        pos_handle, cmd_handle,
+        position_handle(), command_handle(),
         limits_bad), joint_limits_interface::JointLimitsInterfaceException);
 
     // Print error messages. Requires manual output inspection, but exception message should
     // be descriptive
     try {
-      joint_limits_interface::VelocityJointSaturationHandle(pos_handle, cmd_handle, limits_bad);
+      joint_limits_interface::VelocityJointSaturationHandle(position_handle(), command_handle(), limits_bad);
     } catch (const joint_limits_interface::JointLimitsInterfaceException & e) {
       RCLCPP_ERROR(rclcpp::get_logger("joint_limits_interface_test"), "%s", e.what());
     }
@@ -172,13 +182,13 @@ TEST_F(JointLimitsHandleTest, HandleConstruction)
 
   EXPECT_NO_THROW(
     joint_limits_interface::PositionJointSoftLimitsHandle(
-      pos_handle, cmd_handle, limits, soft_limits));
+      position_handle(), command_handle(), limits, soft_limits));
   EXPECT_NO_THROW(
     joint_limits_interface::EffortJointSoftLimitsHandle(
-      pos_handle, cmd_handle, limits, soft_limits));
+      position_handle(), command_handle(), limits, soft_limits));
   EXPECT_NO_THROW(
     joint_limits_interface::VelocityJointSaturationHandle(
-      pos_handle, cmd_handle, limits));
+      position_handle(), command_handle(), limits));
 }
 
 class PositionJointSoftLimitsHandleTest : public JointLimitsTest, public ::testing::Test {};
@@ -194,55 +204,55 @@ TEST_F(PositionJointSoftLimitsHandleTest, EnforceVelocityBounds)
   // Move slower than maximum velocity
   {
     joint_limits_interface::PositionJointSoftLimitsHandle limits_handle(
-      pos_handle, cmd_handle, limits, soft_limits);
+      position_handle(), command_handle(), limits, soft_limits);
     cmd = max_increment / 2.0;
-    cmd_handle.set_value(cmd);
+    command_handle().set_value(cmd);
     limits_handle.enforce_limits(period);
-    EXPECT_NEAR(cmd, cmd_handle.get_value(), EPS);
+    EXPECT_NEAR(cmd, command_handle().get_value(), EPS);
   }
   {
     joint_limits_interface::PositionJointSoftLimitsHandle limits_handle(
-      pos_handle, cmd_handle, limits, soft_limits);
+      position_handle(), command_handle(), limits, soft_limits);
     cmd = -max_increment / 2.0;
-    cmd_handle.set_value(cmd);
+    command_handle().set_value(cmd);
     limits_handle.enforce_limits(period);
-    EXPECT_NEAR(cmd, cmd_handle.get_value(), EPS);
+    EXPECT_NEAR(cmd, command_handle().get_value(), EPS);
   }
 
   // Move at maximum velocity
   {
     joint_limits_interface::PositionJointSoftLimitsHandle limits_handle(
-      pos_handle, cmd_handle, limits, soft_limits);
+      position_handle(), command_handle(), limits, soft_limits);
     cmd = max_increment;
-    cmd_handle.set_value(cmd);
+    command_handle().set_value(cmd);
     limits_handle.enforce_limits(period);
-    EXPECT_NEAR(cmd, cmd_handle.get_value(), EPS);
+    EXPECT_NEAR(cmd, command_handle().get_value(), EPS);
   }
   {
     joint_limits_interface::PositionJointSoftLimitsHandle limits_handle(
-      pos_handle, cmd_handle, limits, soft_limits);
+      position_handle(), command_handle(), limits, soft_limits);
     cmd = -max_increment;
-    cmd_handle.set_value(cmd);
+    command_handle().set_value(cmd);
     limits_handle.enforce_limits(period);
-    EXPECT_NEAR(cmd, cmd_handle.get_value(), EPS);
+    EXPECT_NEAR(cmd, command_handle().get_value(), EPS);
   }
 
   // Try to move faster than the maximum velocity, enforce velocity limits
   {
     joint_limits_interface::PositionJointSoftLimitsHandle limits_handle(
-      pos_handle, cmd_handle, limits, soft_limits);
+      position_handle(), command_handle(), limits, soft_limits);
     cmd = 2.0 * max_increment;
-    cmd_handle.set_value(cmd);
+    command_handle().set_value(cmd);
     limits_handle.enforce_limits(period);
-    EXPECT_NEAR(max_increment, cmd_handle.get_value(), EPS);
+    EXPECT_NEAR(max_increment, command_handle().get_value(), EPS);
   }
   {
     joint_limits_interface::PositionJointSoftLimitsHandle limits_handle(
-      pos_handle, cmd_handle, limits, soft_limits);
+      position_handle(), command_handle(), limits, soft_limits);
     cmd = -2.0 * max_increment;
-    cmd_handle.set_value(cmd);
+    command_handle().set_value(cmd);
     limits_handle.enforce_limits(period);
-    EXPECT_NEAR(-max_increment, cmd_handle.get_value(), EPS);
+    EXPECT_NEAR(-max_increment, command_handle().get_value(), EPS);
   }
 }
 
@@ -256,79 +266,79 @@ TEST_F(PositionJointSoftLimitsHandleTest, EnforcePositionBounds)
   // Current position == upper soft limit
   {
     joint_limits_interface::PositionJointSoftLimitsHandle limits_handle(
-      pos_handle, cmd_handle, limits, soft_limits);
+      position_handle(), command_handle(), limits, soft_limits);
 
     // Can't get any closer to hard limit (zero max velocity)
     pos = soft_limits.max_position;
     // Try to get closer to the hard limit
-    cmd_handle.set_value(limits.max_position);
+    command_handle().set_value(limits.max_position);
     limits_handle.enforce_limits(period);
-    EXPECT_NEAR(pos_handle.get_value(), cmd_handle.get_value(), EPS);
+    EXPECT_NEAR(position_handle().get_value(), command_handle().get_value(), EPS);
 
     // OK to move away from hard limit
     // Try to go to workspace center
-    cmd_handle.set_value(workspace_center);
+    command_handle().set_value(workspace_center);
     limits_handle.enforce_limits(period);
-    EXPECT_GT(pos_handle.get_value(), cmd_handle.get_value());
+    EXPECT_GT(position_handle().get_value(), command_handle().get_value());
   }
 
   // Current position == lower soft limit
   {
     joint_limits_interface::PositionJointSoftLimitsHandle limits_handle(
-      pos_handle, cmd_handle, limits, soft_limits);
+      position_handle(), command_handle(), limits, soft_limits);
 
     // Can't get any closer to hard limit (zero min velocity)
     pos = soft_limits.min_position;
     // Try to get closer to the hard limit
-    cmd_handle.set_value(limits.min_position);
+    command_handle().set_value(limits.min_position);
     limits_handle.enforce_limits(period);
-    EXPECT_NEAR(pos_handle.get_value(), cmd_handle.get_value(), EPS);
+    EXPECT_NEAR(position_handle().get_value(), command_handle().get_value(), EPS);
 
     // OK to move away from hard limit
     // Try to go to workspace center
-    cmd_handle.set_value(workspace_center);
+    command_handle().set_value(workspace_center);
     limits_handle.enforce_limits(period);
-    EXPECT_LT(pos_handle.get_value(), cmd_handle.get_value());
+    EXPECT_LT(position_handle().get_value(), command_handle().get_value());
   }
 
   // Current position > upper soft limit
   {
     joint_limits_interface::PositionJointSoftLimitsHandle limits_handle(
-      pos_handle, cmd_handle, limits, soft_limits);
+      position_handle(), command_handle(), limits, soft_limits);
 
     // Can't get any closer to hard limit (negative max velocity)
     // Halfway between soft and hard limit
     pos = (soft_limits.max_position + limits.max_position) / 2.0;
     // Try to get closer to the hard limit
-    cmd_handle.set_value(limits.max_position);
+    command_handle().set_value(limits.max_position);
     limits_handle.enforce_limits(period);
-    EXPECT_GT(pos_handle.get_value(), cmd_handle.get_value());
+    EXPECT_GT(position_handle().get_value(), command_handle().get_value());
 
     // OK to move away from hard limit
     // Try to go to workspace center
-    cmd_handle.set_value(workspace_center);
+    command_handle().set_value(workspace_center);
     limits_handle.enforce_limits(period);
-    EXPECT_GT(pos_handle.get_value(), cmd_handle.get_value());
+    EXPECT_GT(position_handle().get_value(), command_handle().get_value());
   }
 
   // Current position < lower soft limit
   {
     joint_limits_interface::PositionJointSoftLimitsHandle limits_handle(
-      pos_handle, cmd_handle, limits, soft_limits);
+      position_handle(), command_handle(), limits, soft_limits);
 
     // Can't get any closer to hard limit (positive min velocity)
     // Halfway between soft and hard limit
     pos = (soft_limits.min_position + limits.min_position) / 2.0;
     // Try to get closer to the hard limit
-    cmd_handle.set_value(limits.min_position);
+    command_handle().set_value(limits.min_position);
     limits_handle.enforce_limits(period);
-    EXPECT_LT(pos_handle.get_value(), cmd_handle.get_value());
+    EXPECT_LT(position_handle().get_value(), command_handle().get_value());
 
     // OK to move away from hard limit
     // Try to go to workspace center
-    cmd_handle.set_value(workspace_center);
+    command_handle().set_value(workspace_center);
     limits_handle.enforce_limits(period);
-    EXPECT_LT(pos_handle.get_value(), cmd_handle.get_value());
+    EXPECT_LT(position_handle().get_value(), command_handle().get_value());
   }
 }
 
@@ -343,29 +353,29 @@ TEST_F(PositionJointSoftLimitsHandleTest, PathologicalSoftBounds)
   // Current position == higher hard limit
   {
     joint_limits_interface::PositionJointSoftLimitsHandle limits_handle(
-      pos_handle, cmd_handle, limits, soft_limits);
+      position_handle(), command_handle(), limits, soft_limits);
 
     // Hit hard limit
     // On hard limit
     pos = limits.max_position;
     // Way beyond hard limit
-    cmd_handle.set_value(2.0 * limits.max_position);
+    command_handle().set_value(2.0 * limits.max_position);
     limits_handle.enforce_limits(period);
-    EXPECT_NEAR(limits.max_position, cmd_handle.get_value(), EPS);
+    EXPECT_NEAR(limits.max_position, command_handle().get_value(), EPS);
   }
 
   // Current position == lower hard limit
   {
     joint_limits_interface::PositionJointSoftLimitsHandle limits_handle(
-      pos_handle, cmd_handle, limits, soft_limits);
+      position_handle(), command_handle(), limits, soft_limits);
 
     // Hit hard limit
     // On hard limit
     pos = limits.min_position;
     // Way beyond hard limit
-    cmd_handle.set_value(2.0 * limits.min_position);
+    command_handle().set_value(2.0 * limits.min_position);
     limits_handle.enforce_limits(period);
-    EXPECT_NEAR(limits.min_position, cmd_handle.get_value(), EPS);
+    EXPECT_NEAR(limits.min_position, command_handle().get_value(), EPS);
   }
 }
 
@@ -375,43 +385,43 @@ TEST_F(VelocityJointSaturationHandleTest, EnforceVelocityBounds)
 {
   // Test setup
   joint_limits_interface::VelocityJointSaturationHandle limits_handle(
-    pos_handle, cmd_handle, limits);
+    position_handle(), command_handle(), limits);
 
   pos = 0.0;
   double cmd;
 
   // Velocity within bounds
   cmd = limits.max_velocity / 2.0;
-  cmd_handle.set_value(cmd);
+  command_handle().set_value(cmd);
   limits_handle.enforce_limits(period);
-  EXPECT_NEAR(cmd, cmd_handle.get_value(), EPS);
+  EXPECT_NEAR(cmd, command_handle().get_value(), EPS);
 
   cmd = -limits.max_velocity / 2.0;
-  cmd_handle.set_value(cmd);
+  command_handle().set_value(cmd);
   limits_handle.enforce_limits(period);
-  EXPECT_NEAR(cmd, cmd_handle.get_value(), EPS);
+  EXPECT_NEAR(cmd, command_handle().get_value(), EPS);
 
   // Velocity at bounds
   cmd = limits.max_velocity;
-  cmd_handle.set_value(cmd);
+  command_handle().set_value(cmd);
   limits_handle.enforce_limits(period);
-  EXPECT_NEAR(cmd, cmd_handle.get_value(), EPS);
+  EXPECT_NEAR(cmd, command_handle().get_value(), EPS);
 
   cmd = -limits.max_velocity;
-  cmd_handle.set_value(cmd);
+  command_handle().set_value(cmd);
   limits_handle.enforce_limits(period);
-  EXPECT_NEAR(cmd, cmd_handle.get_value(), EPS);
+  EXPECT_NEAR(cmd, command_handle().get_value(), EPS);
 
   // Velocity beyond bounds
   cmd = 2.0 * limits.max_velocity;
-  cmd_handle.set_value(cmd);
+  command_handle().set_value(cmd);
   limits_handle.enforce_limits(period);
-  EXPECT_NEAR(limits.max_velocity, cmd_handle.get_value(), EPS);
+  EXPECT_NEAR(limits.max_velocity, command_handle().get_value(), EPS);
 
   cmd = -2.0 * limits.max_velocity;
-  cmd_handle.set_value(cmd);
+  command_handle().set_value(cmd);
   limits_handle.enforce_limits(period);
-  EXPECT_NEAR(-limits.max_velocity, cmd_handle.get_value(), EPS);
+  EXPECT_NEAR(-limits.max_velocity, command_handle().get_value(), EPS);
 }
 
 TEST_F(VelocityJointSaturationHandleTest, EnforceAccelerationBounds)
@@ -420,7 +430,7 @@ TEST_F(VelocityJointSaturationHandleTest, EnforceAccelerationBounds)
   limits.has_acceleration_limits = true;
   limits.max_acceleration = limits.max_velocity / period.seconds();
   joint_limits_interface::VelocityJointSaturationHandle limits_handle(
-    pos_handle, cmd_handle, limits);
+    position_handle(), command_handle(), limits);
 
   pos = 0.0;
   double cmd;
@@ -429,57 +439,57 @@ TEST_F(VelocityJointSaturationHandleTest, EnforceAccelerationBounds)
 
   // Positive velocity
   // register last command
-  cmd_handle.set_value(limits.max_velocity / 2.0);
+  command_handle().set_value(limits.max_velocity / 2.0);
   // make sure the prev_cmd is registered
   // without triggering the acceleration limits
   limits_handle.enforce_limits(long_enough);
 
   // Try to go beyond +max velocity
   cmd = limits.max_velocity * 2.0;
-  cmd_handle.set_value(cmd);
+  command_handle().set_value(cmd);
   limits_handle.enforce_limits(period);
   // Max velocity bounded by velocity limit
-  EXPECT_NEAR(limits.max_velocity, cmd_handle.get_value(), EPS);
+  EXPECT_NEAR(limits.max_velocity, command_handle().get_value(), EPS);
 
   // register last command
-  cmd_handle.set_value(limits.max_velocity / 2.0);
+  command_handle().set_value(limits.max_velocity / 2.0);
   // make sure the prev_cmd is registered
   // without triggering the acceleration limits
   limits_handle.enforce_limits(long_enough);
 
   // Try to go beyond -max velocity
   cmd = -limits.max_velocity * 2.0;
-  cmd_handle.set_value(cmd);
+  command_handle().set_value(cmd);
   limits_handle.enforce_limits(period);
   // Max velocity bounded by acceleration limit
-  EXPECT_NEAR(-limits.max_velocity / 2.0, cmd_handle.get_value(), EPS);
+  EXPECT_NEAR(-limits.max_velocity / 2.0, command_handle().get_value(), EPS);
 
   // Negative velocity
   // register last command
-  cmd_handle.set_value(-limits.max_velocity / 2.0);
+  command_handle().set_value(-limits.max_velocity / 2.0);
   // make sure the prev_cmd is registered
   // without triggering the acceleration limits
   limits_handle.enforce_limits(long_enough);
 
   // Try to go beyond +max velocity
   cmd = limits.max_velocity * 2.0;
-  cmd_handle.set_value(cmd);
+  command_handle().set_value(cmd);
   limits_handle.enforce_limits(period);
   // Max velocity bounded by acceleration limit
-  EXPECT_NEAR(limits.max_velocity / 2.0, cmd_handle.get_value(), EPS);
+  EXPECT_NEAR(limits.max_velocity / 2.0, command_handle().get_value(), EPS);
 
   // register last command
-  cmd_handle.set_value(-limits.max_velocity / 2.0);
+  command_handle().set_value(-limits.max_velocity / 2.0);
   // make sure the prev_cmd is registered
   // without triggering the acceleration limits
   limits_handle.enforce_limits(long_enough);
 
   // Try to go beyond -max velocity
   cmd = -limits.max_velocity * 2.0;
-  cmd_handle.set_value(cmd);
+  command_handle().set_value(cmd);
   limits_handle.enforce_limits(period);
   // Max velocity bounded by velocity limit
-  EXPECT_NEAR(-limits.max_velocity, cmd_handle.get_value(), EPS);
+  EXPECT_NEAR(-limits.max_velocity, command_handle().get_value(), EPS);
 }
 
 class JointLimitsInterfaceTest : public JointLimitsTest, public ::testing::Test
@@ -488,35 +498,37 @@ public:
   JointLimitsInterfaceTest()
   : JointLimitsTest(),
     pos2(0.0), vel2(0.0), eff2(0.0), cmd2(0.0),
-    name2("joint2_name"),
-    cmd2_handle(std::make_shared<hardware_interface::JointHandle>(
-        name2, "position_command",
-        &cmd2)),
-    pos2_handle(std::make_shared<hardware_interface::JointHandle>(
-        name2,
-        hardware_interface::HW_IF_POSITION, &pos2)),
-    vel2_handle(std::make_shared<hardware_interface::JointHandle>(
-        name2,
-        hardware_interface::HW_IF_VELOCITY, &vel2)),
-    eff2_handle(std::make_shared<hardware_interface::JointHandle>(
-        name2,
-        hardware_interface::HW_IF_EFFORT, &eff2))
+    name2("joint2_name")
   {}
 
 protected:
   double pos2, vel2, eff2, cmd2;
   std::string name2;
-  std::shared_ptr<hardware_interface::JointHandle> cmd2_handle;
-  std::shared_ptr<hardware_interface::JointHandle> pos2_handle, vel2_handle, eff2_handle;
+
+  inline hardware_interface::CommandInterface command2_handle() {
+    return hardware_interface::CommandInterface(name2, "position_command", &cmd2);
+  }
+
+  inline hardware_interface::StateInterface position2_handle() {
+    return hardware_interface::StateInterface(name2, "position", &pos2);
+  }
+
+  inline hardware_interface::StateInterface velocity2_handle() {
+    return hardware_interface::StateInterface(name2, "velocity", &vel2);
+  }
+
+  inline hardware_interface::StateInterface effort2_handle() {
+    return hardware_interface::StateInterface(name2, "effort", &eff2);
+  }
 };
 
 // TEST_F(JointLimitsInterfaceTest, InterfaceRegistration)
 // {
 //   // Populate interface
 //   joint_limits_interface::PositionJointSoftLimitsHandle limits_handle1(
-//     pos_handle, cmd_handle, limits, soft_limits);
+//     position_handle(), command_handle(), limits, soft_limits);
 //   joint_limits_interface::PositionJointSoftLimitsHandle limits_handle2(
-//     pos_handle2, cmd_handle2, limits, soft_limits);
+//     position2_handle(), command2_handle(), limits, soft_limits);
 //
 //   joint_limits_interface::PositionJointSoftLimitsInterface iface;
 //   iface.registerHandle(limits_handle1);
@@ -545,11 +557,11 @@ protected:
 //   // Halfway between soft and hard limit
 //   pos = pos2 = (soft_limits.max_position + limits.max_position) / 2.0;
 //   // Try to get closer to the hard limit
-//   cmd_handle.set_value(limits.max_position);
-//   cmd_handle2.set_cmd(limits.max_position);
+//   command_handle().set_value(limits.max_position);
+//   command2_handle().set_cmd(limits.max_position);
 //   iface.enforce_limits(period);
-//   EXPECT_GT(pos_handle.get_value(), cmd_handle.get_value());
-//   EXPECT_GT(cmd_handle2.getPosition(), cmd_handle2.get_cmd());
+//   EXPECT_GT(position_handle().get_value(), command_handle().get_value());
+//   EXPECT_GT(command2_handle().getPosition(), command2_handle().get_cmd());
 // }
 //
 #if 0  // todo: implement the interfaces
@@ -557,7 +569,7 @@ TEST_F(JointLimitsHandleTest, ResetSaturationInterface)
 {
   // Populate interface
   joint_limits_interface::PositionJointSaturationHandle limits_handle1
-    (pos_handle, cmd_handle, limits);
+    (position_handle(), command_handle(), limits);
 
   PositionJointSaturationInterface iface;
   iface.registerHandle(limits_handle1);
@@ -566,24 +578,24 @@ TEST_F(JointLimitsHandleTest, ResetSaturationInterface)
 
   const double max_increment = period.seconds() * limits.max_velocity;
 
-  cmd_handle.set_value(limits.max_position);
+  command_handle().set_value(limits.max_position);
   iface.enforce_limits(period);
 
-  EXPECT_NEAR(cmd_handle.get_value(), max_increment, EPS);
+  EXPECT_NEAR(command_handle().get_value(), max_increment, EPS);
 
   iface.reset();
   pos = limits.max_position;
-  cmd_handle.set_value(limits.max_position);
+  command_handle().set_value(limits.max_position);
   iface.enforce_limits(period);
 
-  EXPECT_NEAR(cmd_handle.get_value(), limits.max_position, EPS);
+  EXPECT_NEAR(command_handle().get_value(), limits.max_position, EPS);
 }
 #endif
 
 // TEST_F(JointLimitsHandleTest, ResetSoftLimitsInterface)
 // {
 //   // Populate interface
-//   PositionJointSoftLimitsHandle limits_handle1(cmd_handle, limits, soft_limits);
+//   PositionJointSoftLimitsHandle limits_handle1(command_handle(), limits, soft_limits);
 //
 //   PositionJointSoftLimitsInterface iface;
 //   iface.registerHandle(limits_handle1);
@@ -592,17 +604,17 @@ TEST_F(JointLimitsHandleTest, ResetSaturationInterface)
 //
 //   const double max_increment = period.seconds() * limits.max_velocity;
 //
-//   cmd_handle.set_value(limits.max_position);
+//   command_handle().set_value(limits.max_position);
 //   iface.enforce_limits(period);
 //
-//   EXPECT_NEAR(cmd_handle.get_value(), max_increment, EPS);
+//   EXPECT_NEAR(command_handle().get_value(), max_increment, EPS);
 //
 //   iface.reset();
 //   pos = limits.max_position;
-//   cmd_handle.set_value(soft_limits.max_position);
+//   command_handle().set_value(soft_limits.max_position);
 //   iface.enforce_limits(period);
 //
-//   EXPECT_NEAR(cmd_handle.get_value(), soft_limits.max_position, EPS);
+//   EXPECT_NEAR(command_handle().get_value(), soft_limits.max_position, EPS);
 //
 // }
 
