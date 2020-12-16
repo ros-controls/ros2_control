@@ -21,11 +21,7 @@
 #include <vector>
 
 #include "controller_interface/controller_interface.hpp"
-
-// #include "controller_manager_msgs/srv/switch_controller.hpp"
-
 #include "lifecycle_msgs/msg/state.hpp"
-
 #include "rclcpp/rclcpp.hpp"
 
 namespace controller_manager
@@ -267,32 +263,25 @@ controller_interface::return_type ControllerManager::configure_controller(
     return controller_interface::return_type::ERROR;
   }
 
-  auto & controller = *found_it;
-
-  auto controller_state = controller.c->get_current_state();
-  // Allow configuring controller is loaded or stoped
-  if (controller_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE &&
-    controller_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
-  {
+  auto state = (*found_it).c->get_current_state();
+  if (state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
     RCLCPP_ERROR(
       get_logger(),
-      "Could not configure controller with name '%s' in state %s",
-      controller_name.c_str(),
-      controller_state.label().c_str());
+      "controller %s is already configured and in Inactive state",
+      controller_name.c_str());
     return controller_interface::return_type::ERROR;
   }
 
-  controller_state = controller.c->configure();
-
-  if (controller_state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
-    RCLCPP_DEBUG(
-      get_logger(), "Configuring controller '%s' was successful", controller_name.c_str());
-    return controller_interface::return_type::SUCCESS;
-  } else {
+  auto new_state = (*found_it).c->configure();
+  if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
     RCLCPP_ERROR(
-      get_logger(), "Configuring controller '%s' failed", controller_name.c_str());
+      get_logger(),
+      "After configuring, controller %s is in state %s, expected Inactive",
+      controller_name.c_str());
     return controller_interface::return_type::ERROR;
   }
+
+  return controller_interface::return_type::SUCCESS;
 }
 
 controller_interface::return_type ControllerManager::switch_controller(

@@ -29,6 +29,8 @@
 #include "controller_manager_msgs/srv/list_controller_types.hpp"
 #include "controller_manager_msgs/srv/list_hardware_interfaces.hpp"
 #include "controller_manager_msgs/srv/load_controller.hpp"
+#include "controller_manager_msgs/srv/load_configure_controller.hpp"
+#include "controller_manager_msgs/srv/load_start_controller.hpp"
 #include "controller_manager_msgs/srv/reload_controller_libraries.hpp"
 #include "controller_manager_msgs/srv/switch_controller.hpp"
 #include "controller_manager_msgs/srv/unload_controller.hpp"
@@ -184,6 +186,16 @@ protected:
   void configure_controller_service_cb(
     const std::shared_ptr<controller_manager_msgs::srv::ConfigureController::Request> request,
     std::shared_ptr<controller_manager_msgs::srv::ConfigureController::Response> response);
+
+  CONTROLLER_MANAGER_PUBLIC
+  void load_and_configure_controller_service_cb(
+    const std::shared_ptr<controller_manager_msgs::srv::LoadConfigureController::Request> request,
+    std::shared_ptr<controller_manager_msgs::srv::LoadConfigureController::Response> response);
+
+  CONTROLLER_MANAGER_PUBLIC
+  void load_and_start_controller_service_cb(
+    const std::shared_ptr<controller_manager_msgs::srv::LoadStartController::Request> request,
+    std::shared_ptr<controller_manager_msgs::srv::LoadStartController::Response> response);
 
   CONTROLLER_MANAGER_PUBLIC
   void reload_controller_libraries_service_cb(

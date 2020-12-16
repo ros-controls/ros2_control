@@ -37,19 +37,21 @@ ControllerInterface::init(const std::string & controller_name)
 
 const rclcpp_lifecycle::State & ControllerInterface::configure()
 {
-  switch (on_configure(lifecycle_state_)) {
-    case LifecycleNodeInterface::CallbackReturn::SUCCESS:
-      lifecycle_state_ = rclcpp_lifecycle::State(
-        lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-        "inactive");
-      break;
-    case LifecycleNodeInterface::CallbackReturn::ERROR:
-      on_error(lifecycle_state_);
-      lifecycle_state_ = rclcpp_lifecycle::State(
-        lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, "finalized");
-      break;
-    case LifecycleNodeInterface::CallbackReturn::FAILURE:
-      break;
+  if (lifecycle_state_.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED) {
+    switch (on_configure(lifecycle_state_)) {
+      case LifecycleNodeInterface::CallbackReturn::SUCCESS:
+        lifecycle_state_ = rclcpp_lifecycle::State(
+          lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+          "inactive");
+        break;
+      case LifecycleNodeInterface::CallbackReturn::ERROR:
+        on_error(lifecycle_state_);
+        lifecycle_state_ = rclcpp_lifecycle::State(
+          lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, "finalized");
+        break;
+      case LifecycleNodeInterface::CallbackReturn::FAILURE:
+        break;
+    }
   }
   return lifecycle_state_;
 }
