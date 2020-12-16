@@ -23,7 +23,9 @@ set(srv_files
   srv/ListControllers.srv
   srv/ListControllerTypes.srv
   srv/ListHardwareInterfaces.srv
+  srv/LoadConfigureController.srv
   srv/LoadController.srv
+  srv/LoadStartController.srv
   srv/ReloadControllerLibraries.srv
   srv/SwitchController.srv
   srv/UnloadController.srv

@@ -314,6 +314,10 @@ private:
     load_controller_service_;
   rclcpp::Service<controller_manager_msgs::srv::ConfigureController>::SharedPtr
     configure_controller_service_;
+  rclcpp::Service<controller_manager_msgs::srv::LoadConfigureController>::SharedPtr
+    load_and_configure_controller_service_;
+  rclcpp::Service<controller_manager_msgs::srv::LoadStartController>::SharedPtr
+    load_and_start_controller_service_;
   rclcpp::Service<controller_manager_msgs::srv::ReloadControllerLibraries>::SharedPtr
     reload_controller_libraries_service_;
   rclcpp::Service<controller_manager_msgs::srv::SwitchController>::SharedPtr
