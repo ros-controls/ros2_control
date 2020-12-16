@@ -122,7 +122,8 @@ TEST_F(TestLoadController, configure_controller)
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
     abstract_test_controller1.c->get_current_state().id());
 
-  EXPECT_EQ(cm_->configure_controller(controller_name1), controller_interface::return_type::SUCCESS);
+  EXPECT_EQ(
+    cm_->configure_controller(controller_name1), controller_interface::return_type::SUCCESS);
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
     abstract_test_controller1.c->get_current_state().id());

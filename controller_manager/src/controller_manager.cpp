@@ -123,17 +123,17 @@ void ControllerManager::init_services()
     best_effort_callback_group_);
   load_and_configure_controller_service_ =
     create_service<controller_manager_msgs::srv::LoadConfigureController>(
-      "~/load_and_configure_controller",
-      std::bind(&ControllerManager::load_and_configure_controller_service_cb, this, _1, _2),
-      rmw_qos_profile_services_default,
-      best_effort_callback_group_
+    "~/load_and_configure_controller",
+    std::bind(&ControllerManager::load_and_configure_controller_service_cb, this, _1, _2),
+    rmw_qos_profile_services_default,
+    best_effort_callback_group_
     );
   load_and_start_controller_service_ =
     create_service<controller_manager_msgs::srv::LoadStartController>(
-      "~/load_and_start_controller",
-      std::bind(&ControllerManager::load_and_start_controller_service_cb, this, _1, _2),
-      rmw_qos_profile_services_default,
-      best_effort_callback_group_
+    "~/load_and_start_controller",
+    std::bind(&ControllerManager::load_and_start_controller_service_cb, this, _1, _2),
+    rmw_qos_profile_services_default,
+    best_effort_callback_group_
     );
   reload_controller_libraries_service_ =
     create_service<controller_manager_msgs::srv::ReloadControllerLibraries>(
@@ -911,7 +911,7 @@ void ControllerManager::load_and_start_controller_service_cb(
   const std::shared_ptr<controller_manager_msgs::srv::LoadStartController::Request> request,
   std::shared_ptr<controller_manager_msgs::srv::LoadStartController::Response> response)
 {
-    // lock services
+  // lock services
   RCLCPP_DEBUG(
     get_logger(),
     "loading and starting service called for controller '%s' ",
@@ -933,8 +933,8 @@ void ControllerManager::load_and_start_controller_service_cb(
   std::vector<std::string> empty;
   if (response->ok) {
     if (switch_controller(
-      start_controller, empty,
-      controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT) !=
+        start_controller, empty,
+        controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT) !=
       controller_interface::return_type::SUCCESS)
     {
       response->ok = false;

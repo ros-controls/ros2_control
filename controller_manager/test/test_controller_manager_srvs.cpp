@@ -325,8 +325,9 @@ TEST_F(TestControllerManagerSrvs, load_controller_srv) {
   result = call_service_and_wait(*client, request, srv_executor, true);
   ASSERT_TRUE(result->ok);
   EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
-  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-            cm_->get_loaded_controllers()[0].c->get_current_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    cm_->get_loaded_controllers()[0].c->get_current_state().id());
 }
 
 TEST_F(TestControllerManagerSrvs, unload_controller_srv) {
@@ -375,8 +376,9 @@ TEST_F(TestControllerManagerSrvs, configure_controller_srv) {
   result = call_service_and_wait(*client, request, srv_executor, true);
   ASSERT_TRUE(result->ok);
   EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
-  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-            cm_->get_loaded_controllers()[0].c->get_current_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    cm_->get_loaded_controllers()[0].c->get_current_state().id());
 }
 
 TEST_F(TestControllerManagerSrvs, load_configure_controller_srv) {
@@ -384,7 +386,7 @@ TEST_F(TestControllerManagerSrvs, load_configure_controller_srv) {
   rclcpp::Node::SharedPtr srv_node = std::make_shared<rclcpp::Node>("srv_client");
   srv_executor.add_node(srv_node);
   rclcpp::Client<controller_manager_msgs::srv::LoadConfigureController>::SharedPtr client =
-  srv_node->create_client<controller_manager_msgs::srv::LoadConfigureController>(
+    srv_node->create_client<controller_manager_msgs::srv::LoadConfigureController>(
     "test_controller_manager/load_and_configure_controller");
 
   auto request = std::make_shared<controller_manager_msgs::srv::LoadConfigureController::Request>();
@@ -399,8 +401,9 @@ TEST_F(TestControllerManagerSrvs, load_configure_controller_srv) {
   ASSERT_TRUE(result->ok);
   EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
   EXPECT_EQ(test_controller::TEST_CONTROLLER_NAME, cm_->get_loaded_controllers()[0].info.name);
-  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-            cm_->get_loaded_controllers()[0].c->get_current_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    cm_->get_loaded_controllers()[0].c->get_current_state().id());
 }
 
 TEST_F(TestControllerManagerSrvs, load_start_controller_srv) {
@@ -408,7 +411,7 @@ TEST_F(TestControllerManagerSrvs, load_start_controller_srv) {
   rclcpp::Node::SharedPtr srv_node = std::make_shared<rclcpp::Node>("srv_client");
   srv_executor.add_node(srv_node);
   rclcpp::Client<controller_manager_msgs::srv::LoadStartController>::SharedPtr client =
-  srv_node->create_client<controller_manager_msgs::srv::LoadStartController>(
+    srv_node->create_client<controller_manager_msgs::srv::LoadStartController>(
     "test_controller_manager/load_and_start_controller");
 
   auto request = std::make_shared<controller_manager_msgs::srv::LoadStartController::Request>();
@@ -417,12 +420,13 @@ TEST_F(TestControllerManagerSrvs, load_start_controller_srv) {
   ASSERT_FALSE(result->ok) << "There's no param specifying the type for " << request->name;
   rclcpp::Parameter controller_type_parameter(
     std::string(test_controller::TEST_CONTROLLER_NAME) + ".type",
-                                              test_controller::TEST_CONTROLLER_CLASS_NAME);
+    test_controller::TEST_CONTROLLER_CLASS_NAME);
   cm_->set_parameter(controller_type_parameter);
   result = call_service_and_wait(*client, request, srv_executor, true);
   ASSERT_TRUE(result->ok);
   EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
   EXPECT_EQ(test_controller::TEST_CONTROLLER_NAME, cm_->get_loaded_controllers()[0].info.name);
-  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
-            cm_->get_loaded_controllers()[0].c->get_current_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    cm_->get_loaded_controllers()[0].c->get_current_state().id());
 }
