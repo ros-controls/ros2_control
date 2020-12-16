@@ -30,6 +30,7 @@
 #include <limits>
 #include <string>
 #include <memory>
+#include <utility>
 
 #include "joint_limits_interface/joint_limits.hpp"
 #include "joint_limits_interface/joint_limits_interface_exception.hpp"
