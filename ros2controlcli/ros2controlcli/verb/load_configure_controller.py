@@ -1,4 +1,4 @@
-# Copyright 2020 PAL Robotics S.L.
+# Copyright 2020 ros2_control development team
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,11 +15,11 @@
 from ros2cli.node.direct import add_arguments
 from ros2cli.verb import VerbExtension
 from ros2controlcli.api import add_controller_mgr_parsers, ControllerNameCompleter, \
-    configure_controller
+    load_configure_controller
 
 
-class ConfigureVerb(VerbExtension):
-    """Configure a controller in a controller manager."""
+class LoadConfigureControllerVerb(VerbExtension):
+    """Load and Configure a controller in a controller manager."""
 
     def add_arguments(self, parser, cli_name):
         add_arguments(parser)
@@ -29,5 +29,5 @@ class ConfigureVerb(VerbExtension):
         add_controller_mgr_parsers(parser)
 
     def main(self, *, args):
-        response = configure_controller(args.controller_manager, args.controller_name)
+        response = load_configure_controller(args.controller_manager, args.controller_name)
         return response.ok

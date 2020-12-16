@@ -15,6 +15,7 @@
 
 from controller_manager_msgs.srv import ConfigureController, ListControllers, \
     ListControllerTypes, ListHardwareInterfaces, LoadController, \
+    LoadConfigureController, LoadStartController, \
     ReloadControllerLibraries, SwitchController, UnloadController
 import rclpy
 from ros2cli.node.direct import DirectNode
@@ -90,6 +91,20 @@ def configure_controller(controller_manager_name, controller_name):
     request.name = controller_name
     return service_caller('{}/configure_controller'.format(controller_manager_name),
                           ConfigureController, request)
+
+
+def load_configure_controller(controller_manager_name, controller_name):
+    request = LoadConfigureController.Request()
+    request.name = controller_name
+    return service_caller('{}/load_and_configure_controller'.format(controller_manager_name),
+                          LoadConfigureController, request)
+
+
+def load_start_controller(controller_manager_name, controller_name):
+    request = LoadStartController.Request()
+    request.name = controller_name
+    return service_caller('{}/load_and_start_controller'.format(controller_manager_name),
+                          LoadStartController, request)
 
 
 def switch_controllers(controller_manager_name, stop_controllers,
