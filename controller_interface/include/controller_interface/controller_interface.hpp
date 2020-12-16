@@ -99,9 +99,9 @@ public:
 
   /**
    * The methods below are a substitute to the LifecycleNode methods with the same name.
-   * We cannot use a LifecycleNode because it would expose change
-   * state services to the rest of the ROS system.
-   * Only the Controller Manager should have possibility to change state of s controller.
+   * We cannot use a LifecycleNode because it would expose change-state services to the rest
+   * of the ROS system.
+   * Only the Controller Manager should have possibility to change state of a controller.
    *
    * Hopefully in the future we can use a LifecycleNode where we disable modifications from the outside.
    */
