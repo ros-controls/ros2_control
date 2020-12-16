@@ -53,8 +53,8 @@ TEST_F(TestControllerManager, controller_lifecycle) {
   EXPECT_EQ(0u, test_controller->internal_counter) << "Controller is not started";
 
   EXPECT_EQ(
-      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-      test_controller->get_current_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_controller->get_current_state().id());
 
   // Start controller, will take effect at the end of the update function
   std::vector<std::string> start_controllers = {test_controller::TEST_CONTROLLER_NAME};

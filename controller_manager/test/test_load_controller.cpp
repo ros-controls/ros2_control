@@ -51,7 +51,6 @@ TEST_F(TestLoadController, load_and_configure_one_known_controller)
   controller_manager::ControllerSpec abstract_test_controller =
     cm_->get_loaded_controllers()[0];
 
-  // TODO: Why do we need this node?
   auto node = abstract_test_controller.c->get_node();
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
@@ -105,7 +104,6 @@ TEST_F(TestLoadController, load_and_configure_two_known_controllers)
     abstract_test_controller2.c->get_current_state().id());
 }
 
-// TODO is this test needed??
 TEST_F(TestLoadController, update)
 {
   ASSERT_NO_THROW(
@@ -122,7 +120,6 @@ TEST_F(TestLoadController, update)
     abstract_test_controller.c->get_current_state().id());
 }
 
-// TODO: Add check where controller can not be started because it is not in inactive state
 TEST_F(TestLoadController, switch_controller_empty)
 {
   std::string controller_type = test_controller::TEST_CONTROLLER_CLASS_NAME;
@@ -309,16 +306,16 @@ TEST_F(TestLoadController, switch_controller)
     ASSERT_EQ(
       std::future_status::timeout,
       switch_future.wait_for(std::chrono::milliseconds(100))) <<
-        "switch_controller should be blocking until next update cycle";
-      cm_->update();
-      EXPECT_EQ(
-        controller_interface::return_type::SUCCESS,
-        switch_future.get()
-      );
+      "switch_controller should be blocking until next update cycle";
+    cm_->update();
+    EXPECT_EQ(
+      controller_interface::return_type::SUCCESS,
+      switch_future.get()
+    );
 
-      ASSERT_EQ(
-        lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
-        abstract_test_controller1.c->get_current_state().id());
+    ASSERT_EQ(
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+      abstract_test_controller1.c->get_current_state().id());
 
     // Stop controller
     start_controllers = {};
@@ -439,7 +436,7 @@ TEST_F(TestLoadController, switch_multiple_controllers)
     // Start controller 1 again
     RCLCPP_INFO(
       cm_->get_logger(),
-                "Starting stopped controller #1");
+      "Starting stopped controller #1");
     start_controllers = {controller_name1};
     stop_controllers = {};
     switch_future = std::async(
@@ -470,7 +467,7 @@ TEST_F(TestLoadController, switch_multiple_controllers)
     stop_controllers = {controller_name1};
     RCLCPP_INFO(
       cm_->get_logger(),
-                "Stopping controller #1, starting controller #2");
+      "Stopping controller #1, starting controller #2");
     switch_future = std::async(
       std::launch::async,
       &controller_manager::ControllerManager::switch_controller, cm_,

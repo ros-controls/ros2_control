@@ -354,7 +354,7 @@ TEST_F(TestControllerManagerSrvs, configure_controller_srv) {
   rclcpp::Node::SharedPtr srv_node = std::make_shared<rclcpp::Node>("srv_client");
   srv_executor.add_node(srv_node);
   rclcpp::Client<controller_manager_msgs::srv::ConfigureController>::SharedPtr client =
-  srv_node->create_client<controller_manager_msgs::srv::ConfigureController>(
+    srv_node->create_client<controller_manager_msgs::srv::ConfigureController>(
     "test_controller_manager/configure_controller");
 
   auto request = std::make_shared<controller_manager_msgs::srv::ConfigureController::Request>();

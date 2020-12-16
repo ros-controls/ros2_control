@@ -14,7 +14,8 @@
 
 from ros2cli.node.direct import add_arguments
 from ros2cli.verb import VerbExtension
-from ros2controlcli.api import add_controller_mgr_parsers, ControllerNameCompleter, configure_controller
+from ros2controlcli.api import add_controller_mgr_parsers, ControllerNameCompleter, \
+    configure_controller
 
 
 class ConfigureVerb(VerbExtension):

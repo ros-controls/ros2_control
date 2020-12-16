@@ -271,12 +271,12 @@ controller_interface::return_type ControllerManager::configure_controller(
 
   auto controller_state = controller.c->get_current_state();
   // Allow configuring controller is loaded or stoped
-  if (controller_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE and
-      controller_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED) {
+  if (controller_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE &&
+    controller_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
+  {
     RCLCPP_ERROR(
       get_logger(),
-      "Could not configure controller with name '%s' because its state %s is not \
-      'inactive' or 'unconfigured'",
+      "Could not configure controller with name '%s' in state %s",
       controller_name.c_str(),
       controller_state.label().c_str());
     return controller_interface::return_type::ERROR;
@@ -284,8 +284,7 @@ controller_interface::return_type ControllerManager::configure_controller(
 
   controller_state = controller.c->configure();
 
-  if (controller_state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
-  {
+  if (controller_state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
     RCLCPP_DEBUG(
       get_logger(), "Configuring controller '%s' was successful", controller_name.c_str());
     return controller_interface::return_type::SUCCESS;
