@@ -893,11 +893,7 @@ void ControllerManager::load_and_configure_controller_service_cb(
   response->ok = load_controller(request->name).get();
 
   if (response->ok) {
-    if (configure_controller(request->name) == controller_interface::return_type::SUCCESS) {
-      response->ok = true;
-    } else {
-      response->ok = false;
-    }
+    response->ok = configure_controller(request->name) == controller_interface::return_type::SUCCESS;
   }
 
   RCLCPP_DEBUG(
@@ -922,22 +918,16 @@ void ControllerManager::load_and_start_controller_service_cb(
   response->ok = load_controller(request->name).get();
 
   if (response->ok) {
-    if (configure_controller(request->name) == controller_interface::return_type::SUCCESS) {
-      response->ok = true;
-    } else {
-      response->ok = false;
-    }
+    response->ok = configure_controller(request->name) == controller_interface::return_type::SUCCESS) {
   }
 
   std::vector<std::string> start_controller = {request->name};
   std::vector<std::string> empty;
   if (response->ok) {
-    if (switch_controller(
+      response->ok = switch_controller(
         start_controller, empty,
-        controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT) !=
-      controller_interface::return_type::SUCCESS)
-    {
-      response->ok = false;
+        controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT) ==
+      controller_interface::return_type::SUCCESS
     }
   }
 
