@@ -19,13 +19,8 @@
 #include <vector>
 
 #include "controller_manager_test_common.hpp"
-
 #include "controller_interface/controller_interface.hpp"
-
 #include "controller_manager/controller_manager.hpp"
-
-#include "controller_manager_msgs/srv/switch_controller.hpp"
-
 #include "lifecycle_msgs/msg/state.hpp"
 
 using ::testing::_;
@@ -187,11 +182,27 @@ TEST_F(TestLoadController, configure_controller)
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
       abstract_test_controller1.c->get_current_state().id());
   }
-  // Can not configure inactive controller
+
+  std::shared_ptr<test_controller::TestController> test_controller =
+    std::dynamic_pointer_cast<test_controller::TestController>(abstract_test_controller1.c);
+  size_t cleanup_calls = 0;
+  test_controller->cleanup_calls = &cleanup_calls;
+  // Configure from inactive state: controller can no be cleaned-up
+  test_controller->simulate_cleanup_failure = true;
   EXPECT_EQ(cm_->configure_controller(controller_name1), controller_interface::return_type::ERROR);
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
     abstract_test_controller1.c->get_current_state().id());
+  EXPECT_EQ(0u, cleanup_calls);
+
+  // Configure from inactive state
+  test_controller->simulate_cleanup_failure = false;
+  EXPECT_EQ(
+    cm_->configure_controller(controller_name1), controller_interface::return_type::SUCCESS);
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    abstract_test_controller1.c->get_current_state().id());
+  EXPECT_EQ(1u, cleanup_calls);
 }
 
 TEST_F(TestLoadController, switch_controller_empty)

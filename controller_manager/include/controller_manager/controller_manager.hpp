@@ -25,6 +25,7 @@
 #include "controller_manager/controller_spec.hpp"
 #include "controller_manager/visibility_control.h"
 #include "controller_manager_msgs/srv/configure_controller.hpp"
+#include "controller_manager_msgs/srv/configure_start_controller.hpp"
 #include "controller_manager_msgs/srv/list_controllers.hpp"
 #include "controller_manager_msgs/srv/list_controller_types.hpp"
 #include "controller_manager_msgs/srv/list_hardware_interfaces.hpp"
@@ -198,6 +199,11 @@ protected:
     std::shared_ptr<controller_manager_msgs::srv::LoadStartController::Response> response);
 
   CONTROLLER_MANAGER_PUBLIC
+  void configure_and_start_controller_service_cb(
+    const std::shared_ptr<controller_manager_msgs::srv::ConfigureStartController::Request> request,
+    std::shared_ptr<controller_manager_msgs::srv::ConfigureStartController::Response> response);
+
+  CONTROLLER_MANAGER_PUBLIC
   void reload_controller_libraries_service_cb(
     const std::shared_ptr<controller_manager_msgs::srv::ReloadControllerLibraries::Request> request,
     std::shared_ptr<controller_manager_msgs::srv::ReloadControllerLibraries::Response> response);
@@ -318,6 +324,8 @@ private:
     load_and_configure_controller_service_;
   rclcpp::Service<controller_manager_msgs::srv::LoadStartController>::SharedPtr
     load_and_start_controller_service_;
+  rclcpp::Service<controller_manager_msgs::srv::ConfigureStartController>::SharedPtr
+    configure_and_start_controller_service_;
   rclcpp::Service<controller_manager_msgs::srv::ReloadControllerLibraries>::SharedPtr
     reload_controller_libraries_service_;
   rclcpp::Service<controller_manager_msgs::srv::SwitchController>::SharedPtr

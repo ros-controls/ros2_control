@@ -47,6 +47,8 @@ ROS2 Control command  interface.""",
                 ros2controlcli.verb.load_configure_controller:LoadConfigureControllerVerb',
             'load_start_controller = \
                 ros2controlcli.verb.load_start_controller:LoadStartControllerVerb',
+            'configure_start_controller = \
+                ros2controlcli.verb.configure_start_controller:ConfigureStartControllerVerb',
             'reload_controller_libraries = \
                 ros2controlcli.verb.reload_libraries:ReloadLibrariesVerb',
             'switch_controllers = ros2controlcli.verb.switch:SwitchVerb',

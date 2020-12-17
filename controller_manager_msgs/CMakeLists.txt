@@ -20,6 +20,7 @@ set(msg_files
 )
 set(srv_files
   srv/ConfigureController.srv
+  srv/ConfigureStartController.srv
   srv/ListControllers.srv
   srv/ListControllerTypes.srv
   srv/ListHardwareInterfaces.srv

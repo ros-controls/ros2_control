@@ -13,8 +13,8 @@
 # limitations under the License.
 
 
-from controller_manager_msgs.srv import ConfigureController, ListControllers, \
-    ListControllerTypes, ListHardwareInterfaces, LoadController, \
+from controller_manager_msgs.srv import ConfigureController, ConfigureStartController, \
+    ListControllers, ListControllerTypes, ListHardwareInterfaces, LoadController, \
     LoadConfigureController, LoadStartController, \
     ReloadControllerLibraries, SwitchController, UnloadController
 import rclpy
@@ -105,6 +105,13 @@ def load_start_controller(controller_manager_name, controller_name):
     request.name = controller_name
     return service_caller('{}/load_and_start_controller'.format(controller_manager_name),
                           LoadStartController, request)
+
+
+def configure_start_controller(controller_manager_name, controller_name):
+    request = ConfigureStartController.Request()
+    request.name = controller_name
+    return service_caller('{}/configure_and_start_controller'.format(controller_manager_name),
+                          ConfigureStartController, request)
 
 
 def switch_controllers(controller_manager_name, stop_controllers,

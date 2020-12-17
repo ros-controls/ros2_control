@@ -64,6 +64,7 @@ public:
   on_cleanup(const rclcpp_lifecycle::State & previous_state) override;
 
   size_t internal_counter = 0;
+  bool simulate_cleanup_failure = false;
   // Variable where we store when cleanup was called, pointer because the controller
   // is usually destroyed after cleanup
   size_t * cleanup_calls = nullptr;

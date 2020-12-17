@@ -135,6 +135,13 @@ void ControllerManager::init_services()
     rmw_qos_profile_services_default,
     best_effort_callback_group_
     );
+  configure_and_start_controller_service_ =
+    create_service<controller_manager_msgs::srv::ConfigureStartController>(
+    "~/configure_and_start_controller",
+    std::bind(&ControllerManager::configure_and_start_controller_service_cb, this, _1, _2),
+    rmw_qos_profile_services_default,
+    best_effort_callback_group_
+    );
   reload_controller_libraries_service_ =
     create_service<controller_manager_msgs::srv::ReloadControllerLibraries>(
     "~/reload_controller_libraries",
@@ -276,21 +283,41 @@ controller_interface::return_type ControllerManager::configure_controller(
       controller_name.c_str());
     return controller_interface::return_type::ERROR;
   }
+  auto controller = found_it->c;
 
-  auto state = (*found_it).c->get_current_state();
-  if (state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED) {
+  auto state = controller->get_current_state();
+  if (state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE ||
+    state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED)
+  {
     RCLCPP_ERROR(
       get_logger(),
-      "controller %s is not in Unconfigured state",
-      controller_name.c_str());
+      "controller %s can not be configured from %s state",
+      controller_name.c_str(),
+      state.label().c_str());
     return controller_interface::return_type::ERROR;
   }
 
-  auto new_state = (*found_it).c->configure();
+  auto new_state = controller->get_current_state();
+  if (state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
+    RCLCPP_DEBUG(
+      get_logger(),
+      "controller %s is cleaned-up before configuring",
+      controller_name.c_str());
+    new_state = controller->cleanup();
+    if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED) {
+      RCLCPP_ERROR(
+        get_logger(),
+        "controller %s can not be cleaned-up before configuring",
+        controller_name.c_str());
+      return controller_interface::return_type::ERROR;
+    }
+  }
+
+  new_state = controller->configure();
   if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
     RCLCPP_ERROR(
       get_logger(),
-      "After configuring, controller %s is in state %s, expected Inactive",
+      "after configuring, controller %s is in state %s, expected Inactive",
       controller_name.c_str());
     return controller_interface::return_type::ERROR;
   }
@@ -868,11 +895,8 @@ void ControllerManager::configure_controller_service_cb(
   std::lock_guard<std::mutex> guard(services_lock_);
   RCLCPP_DEBUG(get_logger(), "loading service locked");
 
-  if (configure_controller(request->name) == controller_interface::return_type::SUCCESS) {
-    response->ok = true;
-  } else {
-    response->ok = false;
-  }
+  response->ok =
+    configure_controller(request->name) == controller_interface::return_type::SUCCESS;
 
   RCLCPP_DEBUG(
     get_logger(), "configuring service finished for controller '%s' ", request->name.c_str());
@@ -893,7 +917,8 @@ void ControllerManager::load_and_configure_controller_service_cb(
   response->ok = load_controller(request->name).get();
 
   if (response->ok) {
-    response->ok = configure_controller(request->name) == controller_interface::return_type::SUCCESS;
+    response->ok =
+      configure_controller(request->name) == controller_interface::return_type::SUCCESS;
   }
 
   RCLCPP_DEBUG(
@@ -902,7 +927,6 @@ void ControllerManager::load_and_configure_controller_service_cb(
     request->name.c_str());
 }
 
-CONTROLLER_MANAGER_PUBLIC
 void ControllerManager::load_and_start_controller_service_cb(
   const std::shared_ptr<controller_manager_msgs::srv::LoadStartController::Request> request,
   std::shared_ptr<controller_manager_msgs::srv::LoadStartController::Response> response)
@@ -913,27 +937,59 @@ void ControllerManager::load_and_start_controller_service_cb(
     "loading and starting service called for controller '%s' ",
     request->name.c_str());
   std::lock_guard<std::mutex> guard(services_lock_);
-  RCLCPP_DEBUG(get_logger(), "loading and configure service locked");
+  RCLCPP_DEBUG(get_logger(), "loading and starting service locked");
 
   response->ok = load_controller(request->name).get();
 
   if (response->ok) {
-    response->ok = configure_controller(request->name) == controller_interface::return_type::SUCCESS) {
+    response->ok =
+      configure_controller(request->name) == controller_interface::return_type::SUCCESS;
   }
 
-  std::vector<std::string> start_controller = {request->name};
-  std::vector<std::string> empty;
   if (response->ok) {
-      response->ok = switch_controller(
-        start_controller, empty,
-        controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT) ==
-      controller_interface::return_type::SUCCESS
-    }
+    std::vector<std::string> start_controller = {request->name};
+    std::vector<std::string> empty;
+    response->ok =
+      switch_controller(
+      start_controller, empty,
+      controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT) ==
+      controller_interface::return_type::SUCCESS;
   }
 
   RCLCPP_DEBUG(
     get_logger(),
     "loading and starting service finished for controller '%s' ",
+    request->name.c_str());
+}
+
+void ControllerManager::configure_and_start_controller_service_cb(
+  const std::shared_ptr<controller_manager_msgs::srv::ConfigureStartController::Request> request,
+  std::shared_ptr<controller_manager_msgs::srv::ConfigureStartController::Response> response)
+{
+  // lock services
+  RCLCPP_DEBUG(
+    get_logger(),
+    "configuring and starting service called for controller '%s' ",
+    request->name.c_str());
+  std::lock_guard<std::mutex> guard(services_lock_);
+  RCLCPP_DEBUG(get_logger(), "configuring and starting service locked");
+
+  response->ok =
+    configure_controller(request->name) == controller_interface::return_type::SUCCESS;
+
+  if (response->ok) {
+    std::vector<std::string> start_controller = {request->name};
+    std::vector<std::string> empty;
+    response->ok =
+      switch_controller(
+      start_controller, empty,
+      controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT) ==
+      controller_interface::return_type::SUCCESS;
+  }
+
+  RCLCPP_DEBUG(
+    get_logger(),
+    "configuring and starting service finished for controller '%s' ",
     request->name.c_str());
 }
 
