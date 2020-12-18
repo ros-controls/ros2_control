@@ -27,10 +27,10 @@ import launch_testing.actions
 
 
 def generate_test_description():
-    joint_limits_interface_path = get_package_share_directory('joint_limits_interface')
+    joint_limits_interface_path = get_package_share_directory('hardware_interface')
 
     node_under_test = Node(
-        package='joint_limits_interface',
+        package='hardware_interface',
         executable='joint_limits_rosparam_test',
         output='screen',
         parameters=[os.path.join(joint_limits_interface_path,
