@@ -32,24 +32,29 @@ int main(int argc, char ** argv)
     executor,
     manager_node_name);
 
-  // load controller_manager update time parameter
-  int update_rate = 100;
-  if (!cm->get_parameter("update_rate", update_rate)) {
-    throw std::runtime_error("update_rate parameter not existing or empty");
-  }
-  RCLCPP_INFO(cm->get_logger(), "update rate is %d Hz", update_rate);
+  // TODO: Due to issues with the MutliThreadedExecutor, this control loop does not rely on the executor. When the
+  // MutliThreadedExecutor issues are fixes, this loop should be converted back to a timer.
+  std::thread cm_thread([cm]() {
+      // load controller_manager update time parameter
+      int update_rate = 100;
+      if (!cm->get_parameter("update_rate", update_rate)) {
+        throw std::runtime_error("update_rate parameter not existing or empty");
+      }
+      RCLCPP_INFO(cm->get_logger(), "update rate is %d Hz", update_rate);
 
-  auto timer = cm->create_wall_timer(
-    std::chrono::milliseconds(1000 / update_rate),
-    [&cm]() {
-      cm->read();
-      cm->update();
-      cm->write();
-    },
-    cm->deterministic_callback_group_);
+      while (rclcpp::ok()) {
+        cm->read();
+        cm->update();
+        cm->write();
+        struct timespec duration{};
+        duration.tv_nsec = 1000000000 / update_rate;
+        clock_nanosleep(CLOCK_MONOTONIC, 0, &duration, NULL);
+      }
+    });
 
   executor->add_node(cm);
   executor->spin();
+  cm_thread.join();
   rclcpp::shutdown();
   return 0;
 }

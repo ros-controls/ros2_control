@@ -92,8 +92,8 @@ ControllerManager::ControllerManager(
 
 void ControllerManager::init_services()
 {
-  deterministic_callback_group_ = create_callback_group(
-    rclcpp::CallbackGroupType::MutuallyExclusive);
+// deterministic_callback_group_ = create_callback_group(
+//   rclcpp::CallbackGroupType::MutuallyExclusive);
   best_effort_callback_group_ = create_callback_group(
     rclcpp::CallbackGroupType::MutuallyExclusive);
 

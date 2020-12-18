@@ -126,7 +126,7 @@ public:
    * Deterministic (real-time safe) callback group for the update function. Default behavior
    * is read hardware, update controller and finally write new values to the hardware.
    */
-  rclcpp::CallbackGroup::SharedPtr deterministic_callback_group_;
+  // rclcpp::CallbackGroup::SharedPtr deterministic_callback_group_;
 
 protected:
   CONTROLLER_MANAGER_PUBLIC
