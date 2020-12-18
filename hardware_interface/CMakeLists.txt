@@ -17,6 +17,7 @@ find_package(rcpputils REQUIRED)
 find_package(rcutils REQUIRED)
 find_package(tinyxml2_vendor REQUIRED)
 find_package(TinyXML2 REQUIRED)
+find_package(urdf REQUIRED)
 
 add_library(
   hardware_interface
@@ -38,6 +39,7 @@ ament_target_dependencies(
   pluginlib
   rcutils
   rcpputils
+  urdf
 )
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.
@@ -89,11 +91,15 @@ install(
 )
 
 if(BUILD_TESTING)
+  # todo: remove me!
+  find_package(rclcpp REQUIRED)
+
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()
 
   find_package(ament_cmake_gmock REQUIRED)
   find_package(ros2_control_test_assets REQUIRED)
+  find_package(launch_testing_ament_cmake REQUIRED)
 
   ament_add_gmock(test_macros test/test_macros.cpp)
   target_include_directories(test_macros PRIVATE include)
@@ -150,6 +156,31 @@ if(BUILD_TESTING)
     pluginlib
     ros2_control_test_assets
   )
+
+  # joint_limit_interface tests
+  ament_add_gmock(joint_limits_interface_test test/joint_limits/joint_limits_interface_test.cpp)
+  target_include_directories(joint_limits_interface_test PUBLIC include)
+  ament_target_dependencies(joint_limits_interface_test rclcpp)
+
+  add_executable(joint_limits_rosparam_test test/joint_limits/joint_limits_rosparam_test.cpp)
+  target_include_directories(joint_limits_rosparam_test PUBLIC include ${GTEST_INCLUDE_DIRS})
+  target_link_libraries(joint_limits_rosparam_test ${GTEST_LIBRARIES})
+  ament_target_dependencies(joint_limits_rosparam_test rclcpp)
+  add_launch_test(test/joint_limits/joint_limits_rosparam.launch.py)
+  install(
+          TARGETS
+          joint_limits_rosparam_test
+          DESTINATION lib/${PROJECT_NAME}
+  )
+  install(
+          FILES
+          test/joint_limits/joint_limits_rosparam.yaml
+          DESTINATION share/${PROJECT_NAME}/test
+  )
+
+  ament_add_gmock(joint_limits_urdf_test test/joint_limits/joint_limits_urdf_test.cpp)
+  target_include_directories(joint_limits_urdf_test PUBLIC include)
+  ament_target_dependencies(joint_limits_urdf_test rclcpp urdf)
 endif()
 
 ament_export_include_directories(
@@ -165,5 +196,6 @@ ament_export_dependencies(
   rcpputils
   tinyxml2_vendor
   TinyXML2
+  urdf
 )
 ament_package()
