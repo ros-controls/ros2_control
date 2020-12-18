@@ -46,11 +46,11 @@ class JointLimitHandle
 {
 public:
   JointLimitHandle()
-  : prev_pos_(std::numeric_limits<double>::quiet_NaN()),
-    prev_vel_(0.0),
-    jposh_("position"),
+  : jposh_("position"),
     jvelh_("velocity"),
-    jcmdh_("position_command")
+    jcmdh_("position_command"),
+    prev_pos_(std::numeric_limits<double>::quiet_NaN()),
+    prev_vel_(0.0)
   {}
 
   JointLimitHandle(
