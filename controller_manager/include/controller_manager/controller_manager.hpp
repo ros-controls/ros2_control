@@ -24,10 +24,14 @@
 
 #include "controller_manager/controller_spec.hpp"
 #include "controller_manager/visibility_control.h"
+#include "controller_manager_msgs/srv/configure_controller.hpp"
+#include "controller_manager_msgs/srv/configure_start_controller.hpp"
 #include "controller_manager_msgs/srv/list_controllers.hpp"
 #include "controller_manager_msgs/srv/list_controller_types.hpp"
 #include "controller_manager_msgs/srv/list_hardware_interfaces.hpp"
 #include "controller_manager_msgs/srv/load_controller.hpp"
+#include "controller_manager_msgs/srv/load_configure_controller.hpp"
+#include "controller_manager_msgs/srv/load_start_controller.hpp"
 #include "controller_manager_msgs/srv/reload_controller_libraries.hpp"
 #include "controller_manager_msgs/srv/switch_controller.hpp"
 #include "controller_manager_msgs/srv/unload_controller.hpp"
@@ -71,6 +75,8 @@ public:
 
   /**
    * @brief load_controller loads a controller by name, the type must be defined in the parameter server
+   * @param controller_name as a string.
+   * @see Documentation in controller_manager_msgs/LoadController.srv
    */
   CONTROLLER_MANAGER_PUBLIC
   controller_interface::ControllerInterfaceSharedPtr
@@ -99,7 +105,16 @@ public:
   }
 
   /**
-   * @brief switch_controller Stops some controllers and others.
+   * @brief configure_controller Configure controller by name calling their "configure" method.
+   * @param controller_name as a string.
+   * @see Documentation in controller_manager_msgs/ConfigureController.srv
+   */
+  CONTROLLER_MANAGER_PUBLIC
+  controller_interface::return_type
+  configure_controller(const std::string & controller_name);
+
+  /**
+   * @brief switch_controller Stops some controllers and start others.
    * @see Documentation in controller_manager_msgs/SwitchController.srv
    */
   CONTROLLER_MANAGER_PUBLIC
@@ -167,6 +182,26 @@ protected:
   void load_controller_service_cb(
     const std::shared_ptr<controller_manager_msgs::srv::LoadController::Request> request,
     std::shared_ptr<controller_manager_msgs::srv::LoadController::Response> response);
+
+  CONTROLLER_MANAGER_PUBLIC
+  void configure_controller_service_cb(
+    const std::shared_ptr<controller_manager_msgs::srv::ConfigureController::Request> request,
+    std::shared_ptr<controller_manager_msgs::srv::ConfigureController::Response> response);
+
+  CONTROLLER_MANAGER_PUBLIC
+  void load_and_configure_controller_service_cb(
+    const std::shared_ptr<controller_manager_msgs::srv::LoadConfigureController::Request> request,
+    std::shared_ptr<controller_manager_msgs::srv::LoadConfigureController::Response> response);
+
+  CONTROLLER_MANAGER_PUBLIC
+  void load_and_start_controller_service_cb(
+    const std::shared_ptr<controller_manager_msgs::srv::LoadStartController::Request> request,
+    std::shared_ptr<controller_manager_msgs::srv::LoadStartController::Response> response);
+
+  CONTROLLER_MANAGER_PUBLIC
+  void configure_and_start_controller_service_cb(
+    const std::shared_ptr<controller_manager_msgs::srv::ConfigureStartController::Request> request,
+    std::shared_ptr<controller_manager_msgs::srv::ConfigureStartController::Response> response);
 
   CONTROLLER_MANAGER_PUBLIC
   void reload_controller_libraries_service_cb(
@@ -283,6 +318,14 @@ private:
     list_hardware_interfaces_service_;
   rclcpp::Service<controller_manager_msgs::srv::LoadController>::SharedPtr
     load_controller_service_;
+  rclcpp::Service<controller_manager_msgs::srv::ConfigureController>::SharedPtr
+    configure_controller_service_;
+  rclcpp::Service<controller_manager_msgs::srv::LoadConfigureController>::SharedPtr
+    load_and_configure_controller_service_;
+  rclcpp::Service<controller_manager_msgs::srv::LoadStartController>::SharedPtr
+    load_and_start_controller_service_;
+  rclcpp::Service<controller_manager_msgs::srv::ConfigureStartController>::SharedPtr
+    configure_and_start_controller_service_;
   rclcpp::Service<controller_manager_msgs::srv::ReloadControllerLibraries>::SharedPtr
     reload_controller_libraries_service_;
   rclcpp::Service<controller_manager_msgs::srv::SwitchController>::SharedPtr

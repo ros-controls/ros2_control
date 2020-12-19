@@ -98,7 +98,7 @@ if(BUILD_TESTING)
     APPEND_ENV AMENT_PREFIX_PATH=${ament_index_build_path}_$<CONFIG>
   )
   target_include_directories(test_load_controller PRIVATE include)
-  target_link_libraries(test_load_controller controller_manager)
+  target_link_libraries(test_load_controller controller_manager test_controller)
 
   ament_add_gmock(
     test_controller_manager_srvs

@@ -99,6 +99,8 @@ public:
 
   /**
    * The methods below are a substitute to the LifecycleNode methods with the same name.
+   * The Life cycle is shown in ROS2 design document:
+   * https://design.ros2.org/articles/node_lifecycle.html
    * We cannot use a LifecycleNode because it would expose change-state services to the rest
    * of the ROS system.
    * Only the Controller Manager should have possibility to change state of a controller.
