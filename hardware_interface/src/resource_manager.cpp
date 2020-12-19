@@ -227,13 +227,13 @@ LoanedCommandInterface ResourceManager::claim_command_interface(const std::strin
 {
   if (!command_interface_exists(key)) {
     throw std::runtime_error(
-            std::string("command interface with key") + key + " does not exist");
+            std::string("Command interface with ") + key + " does not exist");
   }
 
   std::lock_guard<decltype(resource_lock_)> lg(resource_lock_);
   if (command_interface_is_claimed(key)) {
     throw std::runtime_error(
-            std::string("command interface with key") + key + " is already claimed");
+            std::string("Command interface with ") + key + " is already claimed");
   }
 
   claimed_command_interface_map_[key] = true;
