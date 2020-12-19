@@ -60,13 +60,11 @@ install(
   LIBRARY DESTINATION lib)
 
 if(BUILD_TESTING)
-  find_package(rclcpp REQUIRED)
-
+  find_package(ament_cmake_gmock REQUIRED)
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()
-
-  find_package(ament_cmake_gmock REQUIRED)
   find_package(launch_testing_ament_cmake REQUIRED)
+  find_package(rclcpp REQUIRED)
 
   ament_add_gmock(test_macros test/test_macros.cpp)
   target_include_directories(test_macros PRIVATE include)

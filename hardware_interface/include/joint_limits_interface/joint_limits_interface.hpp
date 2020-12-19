@@ -18,6 +18,7 @@
 #define JOINT_LIMITS_INTERFACE__JOINT_LIMITS_INTERFACE_HPP_
 
 #include <hardware_interface/handle.hpp>
+#include <hardware_interface/types/hardware_interface_type_values.hpp>
 
 #include <rclcpp/duration.hpp>
 #include <rclcpp/rclcpp.hpp>
@@ -46,11 +47,11 @@ class JointLimitHandle
 {
 public:
   JointLimitHandle()
-  : jposh_("position"),
-    jvelh_("velocity"),
+  : jposh_(hardware_interface::HW_IF_POSITION),
+    jvelh_(hardware_interface::HW_IF_VELOCITY),
     jcmdh_("position_command"),
     prev_pos_(std::numeric_limits<double>::quiet_NaN()),
-    prev_vel_(0.0)
+    prev_vel_(std::numeric_limits<double>::quiet_NaN())
   {}
 
   JointLimitHandle(
@@ -58,7 +59,7 @@ public:
     hardware_interface::CommandInterface && jcmdh,
     const JointLimits & limits)
   : jposh_(jposh),
-    jvelh_("velocity"),
+    jvelh_(hardware_interface::HW_IF_VELOCITY),
     jcmdh_(std::move(jcmdh)),
     limits_(limits),
     prev_pos_(std::numeric_limits<double>::quiet_NaN()),
@@ -364,7 +365,7 @@ public:
     const joint_limits_interface::JointLimits & limits)
   : EffortJointSaturationHandle(
       jposh,
-      hardware_interface::StateInterface("velocity"),
+      hardware_interface::StateInterface(hardware_interface::HW_IF_VELOCITY),
       std::move(jcmdh),
       limits)
   {
@@ -437,7 +438,7 @@ public:
     const joint_limits_interface::SoftJointLimits & soft_limits)
   : EffortJointSoftLimitsHandle(
       jposh,
-      hardware_interface::StateInterface("velocity"),
+      hardware_interface::StateInterface(hardware_interface::HW_IF_VELOCITY),
       std::move(jcmdh),
       limits,
       soft_limits)
@@ -525,8 +526,8 @@ public:
   VelocityJointSaturationHandle(
     hardware_interface::CommandInterface && jcmdh,
     const joint_limits_interface::JointLimits & limits)
-  : JointLimitHandle(hardware_interface::StateInterface("position"),
-      hardware_interface::StateInterface("velocity"), std::move(jcmdh), limits)
+  : JointLimitHandle(hardware_interface::StateInterface(hardware_interface::HW_IF_POSITION),
+      hardware_interface::StateInterface(hardware_interface::HW_IF_VELOCITY), std::move(jcmdh), limits)
   {
     if (!limits.has_velocity_limits) {
       throw joint_limits_interface::JointLimitsInterfaceException(
