@@ -91,7 +91,6 @@ install(
 )
 
 if(BUILD_TESTING)
-  # todo: remove me!
   find_package(rclcpp REQUIRED)
 
   find_package(ament_lint_auto REQUIRED)
