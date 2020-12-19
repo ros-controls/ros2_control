@@ -318,7 +318,8 @@ controller_interface::return_type ControllerManager::configure_controller(
     RCLCPP_ERROR(
       get_logger(),
       "after configuring, controller %s is in state %s, expected Inactive",
-      controller_name.c_str());
+      controller_name.c_str(),
+      state.label().c_str());
     return controller_interface::return_type::ERROR;
   }
 
@@ -633,7 +634,7 @@ void ControllerManager::start_controllers()
       } catch (const std::exception & e) {
         RCLCPP_ERROR(
           get_logger(),
-          "Can't activate controller %s.%s",
+          "Can't activate controller %s. %s",
           request.c_str(), e.what());
         assignment_successful = false;
         break;
