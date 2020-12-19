@@ -91,14 +91,14 @@ install(
 )
 
 if(BUILD_TESTING)
-  find_package(rclcpp REQUIRED)
-
+  find_package(ament_cmake_gmock REQUIRED)
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()
 
   find_package(ament_cmake_gmock REQUIRED)
   find_package(ros2_control_test_assets REQUIRED)
   find_package(launch_testing_ament_cmake REQUIRED)
+  find_package(rclcpp REQUIRED)
 
   ament_add_gmock(test_macros test/test_macros.cpp)
   target_include_directories(test_macros PRIVATE include)
@@ -132,7 +132,6 @@ if(BUILD_TESTING)
   test/test_hardware_components/test_single_joint_actuator.cpp
   test/test_hardware_components/test_force_torque_sensor.cpp
   test/test_hardware_components/test_two_joint_system.cpp
-  test/test_hardware_components/test_system_with_command_modes.cpp
   )
   target_link_libraries(test_hardware_components hardware_interface)
   ament_target_dependencies(test_hardware_components
