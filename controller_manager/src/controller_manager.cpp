@@ -291,7 +291,7 @@ controller_interface::return_type ControllerManager::configure_controller(
   {
     RCLCPP_ERROR(
       get_logger(),
-      "controller %s can not be configured from %s state",
+      "Controller %s can not be configured from %s state",
       controller_name.c_str(),
       state.label().c_str());
     return controller_interface::return_type::ERROR;
@@ -301,13 +301,13 @@ controller_interface::return_type ControllerManager::configure_controller(
   if (state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
     RCLCPP_DEBUG(
       get_logger(),
-      "controller %s is cleaned-up before configuring",
+      "Controller %s is cleaned-up before configuring",
       controller_name.c_str());
     new_state = controller->cleanup();
     if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED) {
       RCLCPP_ERROR(
         get_logger(),
-        "controller %s can not be cleaned-up before configuring",
+        "Controller %s can not be cleaned-up before configuring",
         controller_name.c_str());
       return controller_interface::return_type::ERROR;
     }
@@ -317,9 +317,9 @@ controller_interface::return_type ControllerManager::configure_controller(
   if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
     RCLCPP_ERROR(
       get_logger(),
-      "after configuring, controller %s is in state %s, expected Inactive",
+      "After configuring, controller %s is in state %s, expected Inactive",
       controller_name.c_str(),
-      state.label().c_str());
+      new_state.label().c_str());
     return controller_interface::return_type::ERROR;
   }
 
