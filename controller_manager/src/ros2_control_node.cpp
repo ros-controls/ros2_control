@@ -32,8 +32,10 @@ int main(int argc, char ** argv)
     executor,
     manager_node_name);
 
-  // TODO: Due to issues with the MutliThreadedExecutor, this control loop does not rely on the executor. When the
-  // MutliThreadedExecutor issues are fixes, this loop should be converted back to a timer.
+  // TODO(anyone): Due to issues with the MutliThreadedExecutor, this control loop does not rely on
+  // the executor (see issue #260).
+  // When the MutliThreadedExecutor issues are fixed (ros2/rclcpp#1168), this loop should be
+  // converted back to a timer.
   std::thread cm_thread([cm]() {
       // load controller_manager update time parameter
       int update_rate = 100;
