@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.0.1 (2020-12-22)
+------------------
 * Add configure controller service (`#272 <https://github.com/ros-controls/ros2_control/issues/272>`_)
 * Remove lifecycle node (`#261 <https://github.com/ros-controls/ros2_control/issues/261>`_)
 * Added starting of resources into CM and RM (`#240 <https://github.com/ros-controls/ros2_control/issues/240>`_)
