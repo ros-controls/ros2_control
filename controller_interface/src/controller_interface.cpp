@@ -28,8 +28,7 @@ ControllerInterface::init(const std::string & controller_name)
 {
   node_ = std::make_shared<rclcpp::Node>(
     controller_name,
-    rclcpp::NodeOptions().allow_undeclared_parameters(true).
-    automatically_declare_parameters_from_overrides(true));
+    rclcpp::NodeOptions().allow_undeclared_parameters(true));
   lifecycle_state_ = rclcpp_lifecycle::State(
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, "unconfigured");
   return return_type::SUCCESS;
