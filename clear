@@ -1,0 +1,165 @@
+[1mdiff --git a/controller_manager/src/controller_manager.cpp b/controller_manager/src/controller_manager.cpp[m
+[1mindex 021bb49..d1650e0 100644[m
+[1m--- a/controller_manager/src/controller_manager.cpp[m
+[1m+++ b/controller_manager/src/controller_manager.cpp[m
+[36m@@ -62,7 +62,7 @@[m [mControllerManager::ControllerManager([m
+   std::string robot_description = "";[m
+   get_parameter("robot_description", robot_description);[m
+   if (robot_description.empty()) {[m
+[31m-    throw std::runtime_error("unable to initialize resource manager, no robot description found.");[m
+[32m+[m[32m    throw std::runtime_error("UNABLE TO INITIALIZE RESOURCE MANAGER, NO ROBOT DESCRIPTION FOUND.");[m
+   }[m
+ [m
+   resource_manager_->load_urdf(robot_description);[m
+[36m@@ -164,11 +164,11 @@[m [mcontroller_interface::ControllerInterfaceSharedPtr ControllerManager::load_contr[m
+   const std::string & controller_name,[m
+   const std::string & controller_type)[m
+ {[m
+[31m-  RCLCPP_INFO(get_logger(), "Loading controller '%s'", controller_name.c_str());[m
+[32m+[m[32m  RCLCPP_INFO(get_logger(), "LOADING CONTROLLER '%s'", controller_name.c_str());[m
+ [m
+   if (!loader_->isClassAvailable(controller_type)) {[m
+[31m-    const std::string error_msg("Loader for controller '" + controller_name + "' not found");[m
+[31m-    RCLCPP_ERROR(get_logger(), "available classes:");[m
+[32m+[m[32m    const std::string error_msg("LOADER FOR CONTROLLER '" + controller_name + "' NOT FOUND");[m
+[32m+[m[32m    RCLCPP_ERROR(get_logger(), "AVAILABLE CLASSES:");[m
+     for (const auto & c : loader_->getDeclaredClasses()) {[m
+       RCLCPP_ERROR(get_logger(), "%s", c.c_str());[m
+     }[m
+[36m@@ -201,7 +201,7 @@[m [mcontroller_interface::ControllerInterfaceSharedPtr ControllerManager::load_contr[m
+     declare_parameter(param_name, rclcpp::ParameterValue());[m
+   }[m
+   if (!get_parameter(param_name, controller_type)) {[m
+[31m-    RCLCPP_ERROR(get_logger(), "'type' param not defined for %s", controller_name.c_str());[m
+[32m+[m[32m    RCLCPP_ERROR(get_logger(), "'type' PARAM NOT DEFINED FOR %s", controller_name.c_str());[m
+     return nullptr;[m
+   }[m
+   return load_controller(controller_name, controller_type);[m
+[36m@@ -225,7 +225,7 @@[m [mcontroller_interface::return_type ControllerManager::unload_controller([m
+     to.clear();[m
+     RCLCPP_ERROR([m
+       get_logger(),[m
+[31m-      "Could not unload controller with name '%s' because no controller with this name exists",[m
+[32m+[m[32m      "COULD NOT UNLOAD CONTROLLER WITH NAME '%s' BECAUSE NO CONTROLLER WITH THIS NAME EXISTS",[m
+       controller_name.c_str());[m
+     return controller_interface::return_type::ERROR;[m
+   }[m
+[36m@@ -236,26 +236,26 @@[m [mcontroller_interface::return_type ControllerManager::unload_controller([m
+     to.clear();[m
+     RCLCPP_ERROR([m
+       get_logger(),[m
+[31m-      "Could not unload controller with name '%s' because it is still running",[m
+[32m+[m[32m      "COULD NOT UNLOAD CONTROLLER WITH NAME '%s' BECAUSE IT IS STILL RUNNING",[m
+       controller_name.c_str());[m
+     return controller_interface::return_type::ERROR;[m
+   }[m
+ [m
+[31m-  RCLCPP_DEBUG(get_logger(), "Cleanup controller");[m
+[32m+[m[32m  RCLCPP_DEBUG(get_logger(), "CLEANUP CONTROLLER");[m
+   controller.c->cleanup();[m
+   executor_->remove_node(controller.c->get_node());[m
+   to.erase(found_it);[m
+ [m
+   // Destroys the old controllers list when the realtime thread is finished with it.[m
+[31m-  RCLCPP_DEBUG(get_logger(), "Realtime switches over to new controller list");[m
+[32m+[m[32m  RCLCPP_DEBUG(get_logger(), "REALTIME SWITCHES OVER TO NEW CONTROLLER LIST");[m
+   rt_controllers_wrapper_.switch_updated_list(guard);[m
+   std::vector<ControllerSpec> & new_unused_list = rt_controllers_wrapper_.get_unused_list([m
+     guard);[m
+[31m-  RCLCPP_DEBUG(get_logger(), "Destruct controller");[m
+[32m+[m[32m  RCLCPP_DEBUG(get_logger(), "DESTRUCT CONTROLLER");[m
+   new_unused_list.clear();[m
+[31m-  RCLCPP_DEBUG(get_logger(), "Destruct controller finished");[m
+[32m+[m[32m  RCLCPP_DEBUG(get_logger(), "DESTRUCT CONTROLLER FINISHED");[m
+ [m
+[31m-  RCLCPP_DEBUG(get_logger(), "Successfully unloaded controller '%s'", controller_name.c_str());[m
+[32m+[m[32m  RCLCPP_DEBUG(get_logger(), "SUCCESSFULLY UNLOADED CONTROLLER '%s'", controller_name.c_str());[m
+   return controller_interface::return_type::SUCCESS;[m
+ }[m
+ [m
+[36m@@ -268,7 +268,7 @@[m [mstd::vector<ControllerSpec> ControllerManager::get_loaded_controllers() const[m
+ controller_interface::return_type ControllerManager::configure_controller([m
+   const std::string & controller_name)[m
+ {[m
+[31m-  RCLCPP_INFO(get_logger(), "Configuring controller '%s'", controller_name.c_str());[m
+[32m+[m[32m  RCLCPP_INFO(get_logger(), "CONFIGURING CONTROLLER '%s'", controller_name.c_str());[m
+ [m
+   const auto & controllers = get_loaded_controllers();[m
+ [m
+[36m@@ -279,7 +279,7 @@[m [mcontroller_interface::return_type ControllerManager::configure_controller([m
+   if (found_it == controllers.end()) {[m
+     RCLCPP_ERROR([m
+       get_logger(),[m
+[31m-      "Could not configure controller with name '%s' because no controller with this name exists",[m
+[32m+[m[32m      "COULD NOT CONFIGURE CONTROLLER WITH NAME '%s' BECAUSE NO CONTROLLER WITH THIS NAME EXISTS",[m
+       controller_name.c_str());[m
+     return controller_interface::return_type::ERROR;[m
+   }[m
+[36m@@ -291,7 +291,7 @@[m [mcontroller_interface::return_type ControllerManager::configure_controller([m
+   {[m
+     RCLCPP_ERROR([m
+       get_logger(),[m
+[31m-      "Controller %s can not be configured from %s state",[m
+[32m+[m[32m      "CONTROLLER %s CAN NOT BE CONFIGURED FROM %s STATE",[m
+       controller_name.c_str(),[m
+       state.label().c_str());[m
+     return controller_interface::return_type::ERROR;[m
+[36m@@ -301,13 +301,13 @@[m [mcontroller_interface::return_type ControllerManager::configure_controller([m
+   if (state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {[m
+     RCLCPP_DEBUG([m
+       get_logger(),[m
+[31m-      "Controller %s is cleaned-up before configuring",[m
+[32m+[m[32m      "CONTROLLER %s IS CLEANED-UP BEFORE CONFIGURING",[m
+       controller_name.c_str());[m
+     new_state = controller->cleanup();[m
+     if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED) {[m
+       RCLCPP_ERROR([m
+         get_logger(),[m
+[31m-        "Controller %s can not be cleaned-up before configuring",[m
+[32m+[m[32m        "CONTROLLER %s CAN NOT BE CLEANED-UP BEFORE CONFIGURING",[m
+         controller_name.c_str());[m
+       return controller_interface::return_type::ERROR;[m
+     }[m
+[36m@@ -317,7 +317,7 @@[m [mcontroller_interface::return_type ControllerManager::configure_controller([m
+   if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {[m
+     RCLCPP_ERROR([m
+       get_logger(),[m
+[31m-      "After configuring, controller %s is in state %s, expected Inactive",[m
+[32m+[m[32m      "AFTER CONFIGURING, CONTROLLER %s IS IN STATE %s, EXPECTED INACTIVE",[m
+       controller_name.c_str(),[m
+       new_state.label().c_str());[m
+     return controller_interface::return_type::ERROR;[m
+[36m@@ -338,26 +338,26 @@[m [mcontroller_interface::return_type ControllerManager::switch_controller([m
+   if (!stop_request_.empty() || !start_request_.empty()) {[m
+     RCLCPP_FATAL([m
+       get_logger(),[m
+[31m-      "The internal stop and start request lists are not empty at the beginning of the "[m
+[31m-      "switchController() call. This should not happen.");[m
+[32m+[m[32m      "THE INTERNAL STOP AND START REQUEST LISTS ARE NOT EMPTY AT THE BEGINNING OF THE "[m
+[32m+[m[32m      "switchController() CALL. THIS SHOULD NOT HAPPEN.");[m
+   }[m
+ [m
+   if (strictness == 0) {[m
+     RCLCPP_WARN([m
+[31m-      get_logger(), "Controller Manager: To switch controllers you need to specify a "[m
+[31m-      "strictness level of controller_manager_msgs::SwitchController::STRICT "[m
+[32m+[m[32m      get_logger(), "CONTROLLER MANAGER: TO SWITCH CONTROLLERS YOU NEED TO SPECIFY A  "[m
+[32m+[m[32m      "STRICTNESS LEVEL OF controller_manager_msgs::SwitchController::STRICT "[m
+       "(%d) or ::BEST_EFFORT (%d). Defaulting to ::BEST_EFFORT.",[m
+       controller_manager_msgs::srv::SwitchController::Request::STRICT,[m
+       controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT);[m
+     strictness = controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT;[m
+   }[m
+ [m
+[31m-  RCLCPP_DEBUG(get_logger(), "switching controllers:");[m
+[32m+[m[32m  RCLCPP_DEBUG(get_logger(), "SWITCHING CONTROLLERS:");[m
+   for (const auto & controller : start_controllers) {[m
+[31m-    RCLCPP_DEBUG(get_logger(), "- starting controller '%s'", controller.c_str());[m
+[32m+[m[32m    RCLCPP_DEBUG(get_logger(), "- STARTING CONTROLLER '%s'", controller.c_str());[m
+   }[m
+   for (const auto & controller : stop_controllers) {[m
+[31m-    RCLCPP_DEBUG(get_logger(), "- stopping controller '%s'", controller.c_str());[m
+[32m+[m[32m    RCLCPP_DEBUG(get_logger(), "- STOPPING CONTROLLER '%s'", controller.c_str());[m
+   }[m
+ [m
+   const auto list_controllers = [this, strictness](const std::vector<std::string> & controller_list,[m
