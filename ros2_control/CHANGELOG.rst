@@ -2,8 +2,8 @@
 Changelog for package ros2_control
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.1 (2020-12-23)
+------------------
 * Remove transmission_interface from release, add ros2cli to ros_control (`#280 <https://github.com/ros-controls/ros2_control/issues/280>`_)
   * Remove transmission_interface from release, add ros2cli to ros_control
   metapackage
