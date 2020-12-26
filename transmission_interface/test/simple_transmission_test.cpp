@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <transmission_interface/simple_transmission.h>
+#include <transmission_interface/simple_transmission.hpp>
 
 #include <gmock/gmock.h>
 #include <vector>
@@ -56,10 +56,7 @@ TEST(PreconditionsTest, AccessorValidation)
 
 TEST(PreconditionsTest, ConfigureFailsWithInvalidHandles)
 {
-  
 }
-
-
 
 
 // TEST(PreconditionsTest, AssertionTriggering)

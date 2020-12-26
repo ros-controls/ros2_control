@@ -11,8 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-#ifndef TRANSMISSION_INTERFACE__TRANSMISSION_INTERFACE_EXCEPTION_H_
-#define TRANSMISSION_INTERFACE__TRANSMISSION_INTERFACE_EXCEPTION_H_
+#ifndef TRANSMISSION_INTERFACE__EXCEPTION_HPP_
+#define TRANSMISSION_INTERFACE__EXCEPTION_HPP_
 
 
 #include <exception>
@@ -21,18 +21,19 @@
 namespace transmission_interface
 {
 
-  class Exception: public std::exception
-  {
+class Exception : public std::exception
+{
 public:
-    explicit Exception(const std::string & message)
-    : msg(message) {
-    }
-    const char * what() const noexcept override {return msg.c_str();}
+  explicit Exception(const std::string & message)
+  : msg(message)
+  {
+  }
+  const char * what() const noexcept override {return msg.c_str();}
 
 private:
-    std::string msg;
-  };
+  std::string msg;
+};
 
 }  // namespace transmission_interface
 
-#endif  // TRANSMISSION_INTERFACE__TRANSMISSION_INTERFACE_EXCEPTION_H_
+#endif  // TRANSMISSION_INTERFACE__EXCEPTION_HPP_
