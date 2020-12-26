@@ -22,14 +22,6 @@ ament_target_dependencies(transmission_parser hardware_interface tinyxml2_vendor
 ament_export_dependencies(transmission_parser tinyxml2_vendor TinyXML2)
 target_compile_definitions(transmission_parser PRIVATE "TRANSMISSION_INTERFACE_BUILDING_DLL")
 
-#add_library(transmission_plugins SHARED
-#  include/transmission_interfrace/simple_transmission.h
-#)
-#target_include_directories(transmission_plugins PUBLIC include)
-#ament_target_dependencies(transmission_plugins hardware_interface tinyxml2_vendor TinyXML2)
-#ament_export_dependencies(transmission_plugins hardware_interface tinyxml2_vendor TinyXML2)
-#target_compile_definitions(transmission_plugins PRIVATE "TRANSMISSION_INTERFACE_BUILDING_DLL")
-
 install(
   DIRECTORY include/
   DESTINATION include
