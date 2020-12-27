@@ -36,12 +36,23 @@ ROS2 Control command  interface.""",
             'control = ros2controlcli.command.control:ControlCommand',
         ],
         'ros2controlcli.verb': [
-            'list = ros2controlcli.verb.list:ListVerb',
-            'list_types = ros2controlcli.verb.list_types:ListTypesVerb',
-            'load = ros2controlcli.verb.load:LoadVerb',
-            'reload_libraries = ros2controlcli.verb.reload_libraries:ReloadLibrariesVerb',
-            'switch = ros2controlcli.verb.switch:SwitchVerb',
-            'unload = ros2controlcli.verb.unload:UnloadVerb',
+            'list_controllers = ros2controlcli.verb.list:ListVerb',
+            'list_hardware_interfaces = \
+                    ros2controlcli.verb.list_hardware_interfaces:ListHardwareInterfacesVerb',
+            'list_controller_types = ros2controlcli.verb.list_types:ListTypesVerb',
+            'load_controller = ros2controlcli.verb.load:LoadVerb',
+            'configure_controller = \
+                ros2controlcli.verb.configure_controller:ConfigureControllerVerb',
+            'load_configure_controller = \
+                ros2controlcli.verb.load_configure_controller:LoadConfigureControllerVerb',
+            'load_start_controller = \
+                ros2controlcli.verb.load_start_controller:LoadStartControllerVerb',
+            'configure_start_controller = \
+                ros2controlcli.verb.configure_start_controller:ConfigureStartControllerVerb',
+            'reload_controller_libraries = \
+                ros2controlcli.verb.reload_libraries:ReloadLibrariesVerb',
+            'switch_controllers = ros2controlcli.verb.switch:SwitchVerb',
+            'unload_controller = ros2controlcli.verb.unload:UnloadVerb',
         ],
     }
 )

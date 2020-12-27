@@ -13,46 +13,146 @@
 // limitations under the License.
 
 #include "controller_interface/controller_interface.hpp"
+#include <lifecycle_msgs/msg/state.hpp>
 
 #include <memory>
 #include <string>
+#include <utility>
+#include <vector>
 
 namespace controller_interface
 {
 
 return_type
-ControllerInterface::init(
-  std::weak_ptr<hardware_interface::RobotHardware> robot_hardware,
-  const std::string & controller_name)
+ControllerInterface::init(const std::string & controller_name)
 {
-  robot_hardware_ = robot_hardware;
-  lifecycle_node_ = std::make_shared<rclcpp_lifecycle::LifecycleNode>(controller_name);
-
-  lifecycle_node_->register_on_configure(
-    std::bind(&ControllerInterface::on_configure, this, std::placeholders::_1));
-
-  lifecycle_node_->register_on_cleanup(
-    std::bind(&ControllerInterface::on_cleanup, this, std::placeholders::_1));
-
-  lifecycle_node_->register_on_activate(
-    std::bind(&ControllerInterface::on_activate, this, std::placeholders::_1));
-
-  lifecycle_node_->register_on_deactivate(
-    std::bind(&ControllerInterface::on_deactivate, this, std::placeholders::_1));
-
-  lifecycle_node_->register_on_shutdown(
-    std::bind(&ControllerInterface::on_shutdown, this, std::placeholders::_1));
-
-  lifecycle_node_->register_on_error(
-    std::bind(&ControllerInterface::on_error, this, std::placeholders::_1));
-
+  node_ = std::make_shared<rclcpp::Node>(
+    controller_name,
+    rclcpp::NodeOptions().allow_undeclared_parameters(true));
+  lifecycle_state_ = rclcpp_lifecycle::State(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, "unconfigured");
   return return_type::SUCCESS;
 }
 
-std::shared_ptr<rclcpp_lifecycle::LifecycleNode>
-ControllerInterface::get_lifecycle_node()
+const rclcpp_lifecycle::State & ControllerInterface::configure()
 {
-  return lifecycle_node_;
+  if (lifecycle_state_.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED) {
+    switch (on_configure(lifecycle_state_)) {
+      case LifecycleNodeInterface::CallbackReturn::SUCCESS:
+        lifecycle_state_ = rclcpp_lifecycle::State(
+          lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+          "inactive");
+        break;
+      case LifecycleNodeInterface::CallbackReturn::ERROR:
+        on_error(lifecycle_state_);
+        lifecycle_state_ = rclcpp_lifecycle::State(
+          lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, "finalized");
+        break;
+      case LifecycleNodeInterface::CallbackReturn::FAILURE:
+        break;
+    }
+  }
+  return lifecycle_state_;
+}
+
+const rclcpp_lifecycle::State & ControllerInterface::cleanup()
+{
+  switch (on_cleanup(lifecycle_state_)) {
+    case LifecycleNodeInterface::CallbackReturn::SUCCESS:
+      lifecycle_state_ = rclcpp_lifecycle::State(
+        lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, "unconfigured");
+      break;
+    case LifecycleNodeInterface::CallbackReturn::ERROR:
+      on_error(lifecycle_state_);
+      lifecycle_state_ = rclcpp_lifecycle::State(
+        lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, "finalized");
+      break;
+    case LifecycleNodeInterface::CallbackReturn::FAILURE:
+      break;
+  }
+  return lifecycle_state_;
+}
+const rclcpp_lifecycle::State & ControllerInterface::deactivate()
+{
+  switch (on_deactivate(lifecycle_state_)) {
+    case LifecycleNodeInterface::CallbackReturn::SUCCESS:
+      lifecycle_state_ = rclcpp_lifecycle::State(
+        lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, "inactive");
+      break;
+    case LifecycleNodeInterface::CallbackReturn::ERROR:
+      on_error(lifecycle_state_);
+      lifecycle_state_ = rclcpp_lifecycle::State(
+        lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, "finalized");
+      break;
+    case LifecycleNodeInterface::CallbackReturn::FAILURE:
+      break;
+  }
+  return lifecycle_state_;
+}
+const rclcpp_lifecycle::State & ControllerInterface::activate()
+{
+  if (lifecycle_state_.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
+    switch (on_activate(lifecycle_state_)) {
+      case LifecycleNodeInterface::CallbackReturn::SUCCESS:
+        lifecycle_state_ = rclcpp_lifecycle::State(
+          lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, "active");
+        break;
+      case LifecycleNodeInterface::CallbackReturn::ERROR:
+        on_error(lifecycle_state_);
+        lifecycle_state_ = rclcpp_lifecycle::State(
+          lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, "finalized");
+        break;
+      case LifecycleNodeInterface::CallbackReturn::FAILURE:
+        break;
+    }
+  }
+  return lifecycle_state_;
+}
+
+const rclcpp_lifecycle::State & ControllerInterface::shutdown()
+{
+  switch (on_activate(lifecycle_state_)) {
+    case LifecycleNodeInterface::CallbackReturn::SUCCESS:
+      lifecycle_state_ = rclcpp_lifecycle::State(
+        lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, "finalized");
+      break;
+    case LifecycleNodeInterface::CallbackReturn::ERROR:
+      on_error(lifecycle_state_);
+      lifecycle_state_ = rclcpp_lifecycle::State(
+        lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, "finalized");
+      break;
+    case LifecycleNodeInterface::CallbackReturn::FAILURE:
+      break;
+  }
+  return lifecycle_state_;
+}
+
+const rclcpp_lifecycle::State & ControllerInterface::get_current_state() const
+{
+  return lifecycle_state_;
+}
+
+void ControllerInterface::assign_interfaces(
+  std::vector<hardware_interface::LoanedCommandInterface> && command_interfaces,
+  std::vector<hardware_interface::LoanedStateInterface> && state_interfaces)
+{
+  command_interfaces_ = std::forward<decltype(command_interfaces)>(command_interfaces);
+  state_interfaces_ = std::forward<decltype(state_interfaces)>(state_interfaces);
+}
+
+void ControllerInterface::release_interfaces()
+{
+  command_interfaces_.clear();
+  state_interfaces_.clear();
+}
+
+std::shared_ptr<rclcpp::Node>
+ControllerInterface::get_node()
+{
+  if (!node_.get()) {
+    throw std::runtime_error("Node hasn't been initialized yet!");
+  }
+  return node_;
 }
 
 }  // namespace controller_interface

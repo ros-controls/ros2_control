@@ -17,13 +17,16 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "controller_interface/visibility_control.h"
 
-#include "hardware_interface/robot_hardware.hpp"
+#include "hardware_interface/loaned_command_interface.hpp"
+#include "hardware_interface/loaned_state_interface.hpp"
+#include "lifecycle_msgs/msg/state.hpp"
 
 #include "rclcpp/rclcpp.hpp"
-#include "rclcpp_lifecycle/lifecycle_node.hpp"
+#include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 
 namespace controller_interface
 {
@@ -32,6 +35,26 @@ enum class return_type : std::uint8_t
 {
   SUCCESS = 0,
   ERROR = 1,
+};
+
+/// Indicating which interfaces are to be claimed.
+/**
+ * One might either claim all available command/state interfaces,
+ * specifying a set of individual interfaces,
+ * or none at all.
+ */
+enum class interface_configuration_type : std::uint8_t
+{
+  ALL = 0,
+  INDIVIDUAL = 1,
+  NONE = 2,
+};
+
+/// Configuring what command/state interfaces to claim.
+struct InterfaceConfiguration
+{
+  interface_configuration_type type;
+  std::vector<std::string> names = {};
 };
 
 class ControllerInterface : public rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface
@@ -46,10 +69,24 @@ public:
 
   CONTROLLER_INTERFACE_PUBLIC
   virtual
+  InterfaceConfiguration command_interface_configuration() const = 0;
+
+  CONTROLLER_INTERFACE_PUBLIC
+  virtual
+  InterfaceConfiguration state_interface_configuration() const = 0;
+
+  CONTROLLER_INTERFACE_PUBLIC
+  void assign_interfaces(
+    std::vector<hardware_interface::LoanedCommandInterface> && command_interfaces,
+    std::vector<hardware_interface::LoanedStateInterface> && state_interfaces);
+
+  CONTROLLER_INTERFACE_PUBLIC
+  void release_interfaces();
+
+  CONTROLLER_INTERFACE_PUBLIC
+  virtual
   return_type
-  init(
-    std::weak_ptr<hardware_interface::RobotHardware> robot_hardware,
-    const std::string & controller_name);
+  init(const std::string & controller_name);
 
   CONTROLLER_INTERFACE_PUBLIC
   virtual
@@ -57,12 +94,42 @@ public:
   update() = 0;
 
   CONTROLLER_INTERFACE_PUBLIC
-  std::shared_ptr<rclcpp_lifecycle::LifecycleNode>
-  get_lifecycle_node();
+  std::shared_ptr<rclcpp::Node>
+  get_node();
+
+  /**
+   * The methods below are a substitute to the LifecycleNode methods with the same name.
+   * The Life cycle is shown in ROS2 design document:
+   * https://design.ros2.org/articles/node_lifecycle.html
+   * We cannot use a LifecycleNode because it would expose change-state services to the rest
+   * of the ROS system.
+   * Only the Controller Manager should have possibility to change state of a controller.
+   *
+   * Hopefully in the future we can use a LifecycleNode where we disable modifications from the outside.
+   */
+  CONTROLLER_INTERFACE_PUBLIC
+  const rclcpp_lifecycle::State & configure();
+
+  CONTROLLER_INTERFACE_PUBLIC
+  const rclcpp_lifecycle::State & cleanup();
+
+  CONTROLLER_INTERFACE_PUBLIC
+  const rclcpp_lifecycle::State & deactivate();
+
+  CONTROLLER_INTERFACE_PUBLIC
+  const rclcpp_lifecycle::State & activate();
+
+  CONTROLLER_INTERFACE_PUBLIC
+  const rclcpp_lifecycle::State & shutdown();
+
+  CONTROLLER_INTERFACE_PUBLIC
+  const rclcpp_lifecycle::State & get_current_state() const;
 
 protected:
-  std::weak_ptr<hardware_interface::RobotHardware> robot_hardware_;
-  std::shared_ptr<rclcpp_lifecycle::LifecycleNode> lifecycle_node_;
+  std::vector<hardware_interface::LoanedCommandInterface> command_interfaces_;
+  std::vector<hardware_interface::LoanedStateInterface> state_interfaces_;
+  std::shared_ptr<rclcpp::Node> node_;
+  rclcpp_lifecycle::State lifecycle_state_;
 };
 
 using ControllerInterfaceSharedPtr = std::shared_ptr<ControllerInterface>;

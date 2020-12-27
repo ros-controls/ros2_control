@@ -20,12 +20,12 @@
 #include <unordered_map>
 #include <vector>
 
-#include "hardware_interface/components/actuator.hpp"
-#include "hardware_interface/components/actuator_interface.hpp"
-#include "hardware_interface/components/sensor_interface.hpp"
-#include "hardware_interface/components/sensor.hpp"
-#include "hardware_interface/components/system_interface.hpp"
-#include "hardware_interface/components/system.hpp"
+#include "hardware_interface/actuator.hpp"
+#include "hardware_interface/actuator_interface.hpp"
+#include "hardware_interface/sensor_interface.hpp"
+#include "hardware_interface/sensor.hpp"
+#include "hardware_interface/system_interface.hpp"
+#include "hardware_interface/system.hpp"
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/hardware_interface_status_values.hpp"
@@ -36,7 +36,7 @@ using namespace ::testing;  // NOLINT
 namespace test_components
 {
 
-class DummyActuator : public hardware_interface::components::ActuatorInterface
+class DummyActuator : public hardware_interface::ActuatorInterface
 {
   hardware_interface::return_type configure(
     const hardware_interface::HardwareInfo & /* info */) override
@@ -50,9 +50,11 @@ class DummyActuator : public hardware_interface::components::ActuatorInterface
     // We can read a position and a velocity
     std::vector<hardware_interface::StateInterface> state_interfaces;
     state_interfaces.emplace_back(
-      hardware_interface::StateInterface("joint1", "position", &position_state_));
+      hardware_interface::StateInterface(
+        "joint1", hardware_interface::HW_IF_POSITION, &position_state_));
     state_interfaces.emplace_back(
-      hardware_interface::StateInterface("joint1", "velocity", &velocity_state_));
+      hardware_interface::StateInterface(
+        "joint1", hardware_interface::HW_IF_VELOCITY, &velocity_state_));
 
     return state_interfaces;
   }
@@ -62,7 +64,8 @@ class DummyActuator : public hardware_interface::components::ActuatorInterface
     // We can command in velocity
     std::vector<hardware_interface::CommandInterface> command_interfaces;
     command_interfaces.emplace_back(
-      hardware_interface::CommandInterface("joint1", "velocity", &velocity_command_));
+      hardware_interface::CommandInterface(
+        "joint1", hardware_interface::HW_IF_VELOCITY, &velocity_command_));
 
     return command_interfaces;
   }
@@ -75,6 +78,11 @@ class DummyActuator : public hardware_interface::components::ActuatorInterface
   hardware_interface::return_type stop() override
   {
     return hardware_interface::return_type::OK;
+  }
+
+  std::string get_name() const override
+  {
+    return "DummyActuator";
   }
 
   hardware_interface::status get_status() const override
@@ -102,7 +110,7 @@ private:
   double velocity_command_ = 0.0;
 };
 
-class DummySensor : public hardware_interface::components::SensorInterface
+class DummySensor : public hardware_interface::SensorInterface
 {
   hardware_interface::return_type configure(
     const hardware_interface::HardwareInfo & /* info */) override
@@ -131,6 +139,11 @@ class DummySensor : public hardware_interface::components::SensorInterface
     return hardware_interface::return_type::OK;
   }
 
+  std::string get_name() const override
+  {
+    return "DummySensor";
+  }
+
   hardware_interface::status get_status() const override
   {
     return hardware_interface::status::UNKNOWN;
@@ -146,7 +159,7 @@ private:
   double voltage_level_ = 0x666;
 };
 
-class DummySystem : public hardware_interface::components::SystemInterface
+class DummySystem : public hardware_interface::SystemInterface
 {
   hardware_interface::return_type configure(
     const hardware_interface::HardwareInfo & /* info */) override
@@ -160,17 +173,23 @@ class DummySystem : public hardware_interface::components::SystemInterface
     // We can read a position and a velocity
     std::vector<hardware_interface::StateInterface> state_interfaces;
     state_interfaces.emplace_back(
-      hardware_interface::StateInterface("joint1", "position", &position_state_[0]));
+      hardware_interface::StateInterface(
+        "joint1", hardware_interface::HW_IF_POSITION, &position_state_[0]));
     state_interfaces.emplace_back(
-      hardware_interface::StateInterface("joint1", "velocity", &velocity_state_[0]));
+      hardware_interface::StateInterface(
+        "joint1", hardware_interface::HW_IF_VELOCITY, &velocity_state_[0]));
     state_interfaces.emplace_back(
-      hardware_interface::StateInterface("joint2", "position", &position_state_[1]));
+      hardware_interface::StateInterface(
+        "joint2", hardware_interface::HW_IF_POSITION, &position_state_[1]));
     state_interfaces.emplace_back(
-      hardware_interface::StateInterface("joint2", "velocity", &velocity_state_[1]));
+      hardware_interface::StateInterface(
+        "joint2", hardware_interface::HW_IF_VELOCITY, &velocity_state_[1]));
     state_interfaces.emplace_back(
-      hardware_interface::StateInterface("joint3", "position", &position_state_[2]));
+      hardware_interface::StateInterface(
+        "joint3", hardware_interface::HW_IF_POSITION, &position_state_[2]));
     state_interfaces.emplace_back(
-      hardware_interface::StateInterface("joint3", "velocity", &velocity_state_[2]));
+      hardware_interface::StateInterface(
+        "joint3", hardware_interface::HW_IF_VELOCITY, &velocity_state_[2]));
 
     return state_interfaces;
   }
@@ -180,11 +199,14 @@ class DummySystem : public hardware_interface::components::SystemInterface
     // We can command in velocity
     std::vector<hardware_interface::CommandInterface> command_interfaces;
     command_interfaces.emplace_back(
-      hardware_interface::CommandInterface("joint1", "velocity", &velocity_command_[0]));
+      hardware_interface::CommandInterface(
+        "joint1", hardware_interface::HW_IF_VELOCITY, &velocity_command_[0]));
     command_interfaces.emplace_back(
-      hardware_interface::CommandInterface("joint2", "velocity", &velocity_command_[1]));
+      hardware_interface::CommandInterface(
+        "joint2", hardware_interface::HW_IF_VELOCITY, &velocity_command_[1]));
     command_interfaces.emplace_back(
-      hardware_interface::CommandInterface("joint3", "velocity", &velocity_command_[2]));
+      hardware_interface::CommandInterface(
+        "joint3", hardware_interface::HW_IF_VELOCITY, &velocity_command_[2]));
 
     return command_interfaces;
   }
@@ -197,6 +219,11 @@ class DummySystem : public hardware_interface::components::SystemInterface
   hardware_interface::return_type stop() override
   {
     return hardware_interface::return_type::OK;
+  }
+
+  std::string get_name() const override
+  {
+    return "DummySystem";
   }
 
   hardware_interface::status get_status() const override
@@ -229,7 +256,7 @@ private:
 
 TEST(TestComponentInterfaces, dummy_actuator)
 {
-  hardware_interface::components::Actuator actuator_hw(
+  hardware_interface::Actuator actuator_hw(
     std::make_unique<test_components::DummyActuator>());
 
   hardware_interface::HardwareInfo mock_hw_info{};
@@ -238,14 +265,14 @@ TEST(TestComponentInterfaces, dummy_actuator)
   auto state_interfaces = actuator_hw.export_state_interfaces();
   ASSERT_EQ(2u, state_interfaces.size());
   EXPECT_EQ("joint1", state_interfaces[0].get_name());
-  EXPECT_EQ("position", state_interfaces[0].get_interface_name());
+  EXPECT_EQ(hardware_interface::HW_IF_POSITION, state_interfaces[0].get_interface_name());
   EXPECT_EQ("joint1", state_interfaces[1].get_name());
-  EXPECT_EQ("velocity", state_interfaces[1].get_interface_name());
+  EXPECT_EQ(hardware_interface::HW_IF_VELOCITY, state_interfaces[1].get_interface_name());
 
   auto command_interfaces = actuator_hw.export_command_interfaces();
   ASSERT_EQ(1u, command_interfaces.size());
   EXPECT_EQ("joint1", command_interfaces[0].get_name());
-  EXPECT_EQ("velocity", command_interfaces[0].get_interface_name());
+  EXPECT_EQ(hardware_interface::HW_IF_VELOCITY, command_interfaces[0].get_interface_name());
 
   command_interfaces[0].set_value(1.0);  // velocity
   ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.write());
@@ -262,7 +289,7 @@ TEST(TestComponentInterfaces, dummy_actuator)
 
 TEST(TestComponentInterfaces, dummy_sensor)
 {
-  hardware_interface::components::Sensor sensor_hw(
+  hardware_interface::Sensor sensor_hw(
     std::make_unique<test_components::DummySensor>());
 
   hardware_interface::HardwareInfo mock_hw_info{};
@@ -277,7 +304,7 @@ TEST(TestComponentInterfaces, dummy_sensor)
 
 TEST(TestComponentInterfaces, dummy_system)
 {
-  hardware_interface::components::System system_hw(
+  hardware_interface::System system_hw(
     std::make_unique<test_components::DummySystem>());
 
   hardware_interface::HardwareInfo mock_hw_info{};
@@ -286,26 +313,26 @@ TEST(TestComponentInterfaces, dummy_system)
   auto state_interfaces = system_hw.export_state_interfaces();
   ASSERT_EQ(6u, state_interfaces.size());
   EXPECT_EQ("joint1", state_interfaces[0].get_name());
-  EXPECT_EQ("position", state_interfaces[0].get_interface_name());
+  EXPECT_EQ(hardware_interface::HW_IF_POSITION, state_interfaces[0].get_interface_name());
   EXPECT_EQ("joint1", state_interfaces[1].get_name());
-  EXPECT_EQ("velocity", state_interfaces[1].get_interface_name());
+  EXPECT_EQ(hardware_interface::HW_IF_VELOCITY, state_interfaces[1].get_interface_name());
   EXPECT_EQ("joint2", state_interfaces[2].get_name());
-  EXPECT_EQ("position", state_interfaces[2].get_interface_name());
+  EXPECT_EQ(hardware_interface::HW_IF_POSITION, state_interfaces[2].get_interface_name());
   EXPECT_EQ("joint2", state_interfaces[3].get_name());
-  EXPECT_EQ("velocity", state_interfaces[3].get_interface_name());
+  EXPECT_EQ(hardware_interface::HW_IF_VELOCITY, state_interfaces[3].get_interface_name());
   EXPECT_EQ("joint3", state_interfaces[4].get_name());
-  EXPECT_EQ("position", state_interfaces[4].get_interface_name());
+  EXPECT_EQ(hardware_interface::HW_IF_POSITION, state_interfaces[4].get_interface_name());
   EXPECT_EQ("joint3", state_interfaces[5].get_name());
-  EXPECT_EQ("velocity", state_interfaces[5].get_interface_name());
+  EXPECT_EQ(hardware_interface::HW_IF_VELOCITY, state_interfaces[5].get_interface_name());
 
   auto command_interfaces = system_hw.export_command_interfaces();
   ASSERT_EQ(3u, command_interfaces.size());
   EXPECT_EQ("joint1", command_interfaces[0].get_name());
-  EXPECT_EQ("velocity", command_interfaces[0].get_interface_name());
+  EXPECT_EQ(hardware_interface::HW_IF_VELOCITY, command_interfaces[0].get_interface_name());
   EXPECT_EQ("joint2", command_interfaces[1].get_name());
-  EXPECT_EQ("velocity", command_interfaces[1].get_interface_name());
+  EXPECT_EQ(hardware_interface::HW_IF_VELOCITY, command_interfaces[1].get_interface_name());
   EXPECT_EQ("joint3", command_interfaces[2].get_name());
-  EXPECT_EQ("velocity", command_interfaces[2].get_interface_name());
+  EXPECT_EQ(hardware_interface::HW_IF_VELOCITY, command_interfaces[2].get_interface_name());
 
   command_interfaces[0].set_value(1.0);  // velocity
   command_interfaces[1].set_value(1.0);  // velocity

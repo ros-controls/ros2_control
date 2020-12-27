@@ -13,8 +13,10 @@
 # limitations under the License.
 
 
-from controller_manager_msgs.srv import ListControllers, ListControllerTypes, \
-    LoadController, ReloadControllerLibraries, SwitchController, UnloadController
+from controller_manager_msgs.srv import ConfigureController, ConfigureStartController, \
+    ListControllers, ListControllerTypes, ListHardwareInterfaces, LoadController, \
+    LoadConfigureController, LoadStartController, \
+    ReloadControllerLibraries, SwitchController, UnloadController
 import rclpy
 from ros2cli.node.direct import DirectNode
 from ros2node.api import NodeNameCompleter
@@ -62,6 +64,12 @@ def list_controller_types(controller_manager_name):
         '{}/list_controller_types'.format(controller_manager_name), ListControllerTypes, request)
 
 
+def list_hardware_interfaces(controller_manager_name):
+    request = ListHardwareInterfaces.Request()
+    return service_caller('{}/list_hardware_interfaces'.format(controller_manager_name),
+                          ListHardwareInterfaces, request)
+
+
 def reload_controller_libraries(controller_manager_name, force_kill):
     request = ReloadControllerLibraries.Request()
     request.force_kill = force_kill
@@ -76,6 +84,34 @@ def load_controller(controller_manager_name, controller_name):
     request.name = controller_name
     return service_caller('{}/load_controller'.format(controller_manager_name),
                           LoadController, request)
+
+
+def configure_controller(controller_manager_name, controller_name):
+    request = ConfigureController.Request()
+    request.name = controller_name
+    return service_caller('{}/configure_controller'.format(controller_manager_name),
+                          ConfigureController, request)
+
+
+def load_configure_controller(controller_manager_name, controller_name):
+    request = LoadConfigureController.Request()
+    request.name = controller_name
+    return service_caller('{}/load_and_configure_controller'.format(controller_manager_name),
+                          LoadConfigureController, request)
+
+
+def load_start_controller(controller_manager_name, controller_name):
+    request = LoadStartController.Request()
+    request.name = controller_name
+    return service_caller('{}/load_and_start_controller'.format(controller_manager_name),
+                          LoadStartController, request)
+
+
+def configure_start_controller(controller_manager_name, controller_name):
+    request = ConfigureStartController.Request()
+    request.name = controller_name
+    return service_caller('{}/configure_and_start_controller'.format(controller_manager_name),
+                          ConfigureStartController, request)
 
 
 def switch_controllers(controller_manager_name, stop_controllers,

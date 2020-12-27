@@ -14,45 +14,42 @@ find_package(ament_cmake REQUIRED)
 find_package(hardware_interface REQUIRED)
 find_package(rclcpp REQUIRED)
 
-add_library(test_robot_hardware SHARED src/test_robot_hardware.cpp)
-target_include_directories(test_robot_hardware PRIVATE include)
-ament_target_dependencies(
-  test_robot_hardware
+add_library(test_robot_hardware_components SHARED
+  src/test_single_joint_actuator.cpp
+  src/test_force_torque_sensor.cpp
+  src/test_two_joint_system.cpp
+)
+ament_target_dependencies(test_robot_hardware_components
   hardware_interface
-  rclcpp
+  pluginlib
+)
+pluginlib_export_plugin_description_file(
+  hardware_interface test_robot_components.xml
 )
 
-# Causes the visibility macros to use dllexport rather than dllimport,
-# which is appropriate when building the dll but not consuming it.
-target_compile_definitions(test_robot_hardware PRIVATE "TEST_ROBOT_HARDWARE_BUILDING_DLL")
-
 install(DIRECTORY include/
-  DESTINATION include)
+  DESTINATION include
+)
 
-install(TARGETS test_robot_hardware
+install(TARGETS test_robot_hardware_components
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
 )
 
+install(FILES test_robot_hardware.urdf
+  DESTINATION share/${PROJECT_NAME}/
+)
+
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()
-
-  ament_add_gtest(test_robot_hardware_interface test/test_robot_hardware_interface.cpp)
-  if(TARGET test_robot_hardware_interface)
-    target_include_directories(test_robot_hardware_interface PRIVATE include)
-    target_link_libraries(
-      test_robot_hardware_interface
-      test_robot_hardware
-    )
-  endif()
 endif()
 
 ament_export_dependencies(
   hardware_interface
   rclcpp
 )
-ament_export_libraries(${PROJECT_NAME})
+ament_export_libraries(test_robot_hardware_components)
 ament_export_include_directories(include)
 ament_package()

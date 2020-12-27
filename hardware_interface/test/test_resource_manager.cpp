@@ -18,8 +18,9 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <unordered_map>
 
-#include "hardware_interface/components/actuator_interface.hpp"
+#include "hardware_interface/actuator_interface.hpp"
 #include "hardware_interface/resource_manager.hpp"
 #include "ros2_control_test/descriptions.hpp"
 
@@ -41,6 +42,11 @@ TEST_F(TestResourceManager, initialization_empty) {
 
 TEST_F(TestResourceManager, initialization_with_urdf) {
   ASSERT_NO_THROW(hardware_interface::ResourceManager rm(ros2_control_test::minimal_robot_urdf));
+}
+
+TEST_F(TestResourceManager, post_initialization_with_urdf) {
+  hardware_interface::ResourceManager rm;
+  ASSERT_NO_THROW(rm.load_urdf(ros2_control_test::minimal_robot_urdf));
 }
 
 TEST_F(TestResourceManager, initialization_with_urdf_manual_validation) {
@@ -95,6 +101,37 @@ TEST_F(TestResourceManager, initialization_with_urdf_unclaimed) {
   }
 }
 
+TEST_F(TestResourceManager, resource_status) {
+  auto urdf = urdf_head_ + hardware_resources_for_test_ + urdf_tail_;
+  hardware_interface::ResourceManager rm(urdf);
+
+  std::unordered_map<std::string, hardware_interface::status> status_map;
+
+  status_map = rm.get_components_status();
+  EXPECT_EQ(status_map["TestActuatorHardware"], hardware_interface::status::CONFIGURED);
+  EXPECT_EQ(status_map["TestSensorHardware"], hardware_interface::status::CONFIGURED);
+  EXPECT_EQ(status_map["TestSystemHardware"], hardware_interface::status::CONFIGURED);
+}
+
+TEST_F(TestResourceManager, starting_and_stopping_resources) {
+  auto urdf = urdf_head_ + hardware_resources_for_test_ + urdf_tail_;
+  hardware_interface::ResourceManager rm(urdf);
+
+  std::unordered_map<std::string, hardware_interface::status> status_map;
+
+  rm.start_components();
+  status_map = rm.get_components_status();
+  EXPECT_EQ(status_map["TestActuatorHardware"], hardware_interface::status::STARTED);
+  EXPECT_EQ(status_map["TestSensorHardware"], hardware_interface::status::STARTED);
+  EXPECT_EQ(status_map["TestSystemHardware"], hardware_interface::status::STARTED);
+
+  rm.stop_components();
+  status_map = rm.get_components_status();
+  EXPECT_EQ(status_map["TestActuatorHardware"], hardware_interface::status::STOPPED);
+  EXPECT_EQ(status_map["TestSensorHardware"], hardware_interface::status::STOPPED);
+  EXPECT_EQ(status_map["TestSystemHardware"], hardware_interface::status::STOPPED);
+}
+
 TEST_F(TestResourceManager, resource_claiming) {
   hardware_interface::ResourceManager rm(ros2_control_test::minimal_robot_urdf);
 
@@ -137,9 +174,22 @@ TEST_F(TestResourceManager, resource_claiming) {
       }
     }
   }
+
+  std::vector<hardware_interface::LoanedCommandInterface> interfaces;
+  const auto interface_names = {"joint1/position", "joint2/velocity", "joint3/velocity"};
+  for (const auto & key : interface_names) {
+    interfaces.emplace_back(rm.claim_command_interface(key));
+  }
+  for (const auto & key : interface_names) {
+    EXPECT_TRUE(rm.command_interface_is_claimed(key));
+  }
+  interfaces.clear();
+  for (const auto & key : interface_names) {
+    EXPECT_FALSE(rm.command_interface_is_claimed(key));
+  }
 }
 
-class ExternalComponent : public hardware_interface::components::ActuatorInterface
+class ExternalComponent : public hardware_interface::ActuatorInterface
 {
   hardware_interface::return_type configure(const hardware_interface::HardwareInfo &) override
   {
@@ -174,6 +224,11 @@ class ExternalComponent : public hardware_interface::components::ActuatorInterfa
   hardware_interface::return_type stop() override
   {
     return hardware_interface::return_type::OK;
+  }
+
+  std::string get_name() const override
+  {
+    return "ExternalComponent";
   }
 
   hardware_interface::status get_status() const override

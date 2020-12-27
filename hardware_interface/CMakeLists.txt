@@ -21,13 +21,11 @@ find_package(TinyXML2 REQUIRED)
 add_library(
   hardware_interface
   SHARED
-  src/components/actuator.cpp
-  src/components/sensor.cpp
-  src/components/system.cpp
+  src/actuator.cpp
   src/component_parser.cpp
-  src/operation_mode_handle.cpp
   src/resource_manager.cpp
-  src/robot_hardware.cpp
+  src/sensor.cpp
+  src/system.cpp
 )
 target_include_directories(
   hardware_interface
@@ -70,22 +68,7 @@ if(BUILD_TESTING)
   target_include_directories(test_macros PRIVATE include)
   ament_target_dependencies(test_macros rcpputils)
 
-  ament_add_gmock(test_robot_hardware_interfaces test/test_robot_hardware_interface.cpp)
-  target_link_libraries(test_robot_hardware_interfaces hardware_interface)
-
-  ament_add_gmock(test_register_actuators test/test_register_actuators.cpp)
-  target_link_libraries(test_register_actuators hardware_interface)
-  ament_target_dependencies(test_register_actuators rcpputils)
-
-  ament_add_gmock(test_register_joints test/test_register_joints.cpp)
-  target_link_libraries(test_register_joints hardware_interface)
-  ament_target_dependencies(test_register_joints rcpputils)
-
-  ament_add_gmock(test_actuator_handle test/test_actuator_handle.cpp)
-  target_link_libraries(test_actuator_handle hardware_interface)
-  ament_target_dependencies(test_actuator_handle rcpputils)
-
-  ament_add_gmock(test_joint_handle test/test_joint_handle.cpp)
+  ament_add_gmock(test_joint_handle test/test_handle.cpp)
   target_link_libraries(test_joint_handle hardware_interface)
   ament_target_dependencies(test_joint_handle rcpputils)
 

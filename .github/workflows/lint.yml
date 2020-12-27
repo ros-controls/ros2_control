@@ -8,22 +8,36 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
     - uses: actions/checkout@v1
-    - uses: ros-tooling/setup-ros@0.0.26
-    - uses: ros-tooling/action-ros-lint@0.0.6
+    - uses: ros-tooling/setup-ros@v0.1
+    - uses: ros-tooling/action-ros-lint@v0.1
       with:
         linter: copyright
-        package-name: controller_interface controller_manager controller_manager_msgs hardware_interface joint_limits_interface test_robot_hardware transmission_interface
+        package-name:
+          controller_interface
+          controller_manager
+          controller_manager_msgs
+          hardware_interface
+          ros2_control
+          test_robot_hardware
+          transmission_interface
 
   ament_xmllint:
     name: ament_xmllint
     runs-on: ubuntu-18.04
     steps:
     - uses: actions/checkout@v1
-    - uses: ros-tooling/setup-ros@0.0.26
-    - uses: ros-tooling/action-ros-lint@0.0.6
+    - uses: ros-tooling/setup-ros@v0.1
+    - uses: ros-tooling/action-ros-lint@v0.1
       with:
         linter: xmllint
-        package-name: controller_interface controller_manager controller_manager_msgs hardware_interface joint_limits_interface test_robot_hardware transmission_interface
+        package-name:
+          controller_interface
+          controller_manager
+          controller_manager_msgs
+          hardware_interface
+          ros2_control
+          test_robot_hardware
+          transmission_interface
 
   ament_lint_cpp:
     name: ament_${{ matrix.linter }}
@@ -34,8 +48,15 @@ jobs:
           linter: [cppcheck, cpplint, uncrustify]
     steps:
     - uses: actions/checkout@v1
-    - uses: ros-tooling/setup-ros@0.0.26
-    - uses: ros-tooling/action-ros-lint@0.0.6
+    - uses: ros-tooling/setup-ros@v0.1
+    - uses: ros-tooling/action-ros-lint@v0.1
       with:
         linter: ${{ matrix.linter }}
-        package-name: controller_interface controller_manager controller_manager_msgs hardware_interface joint_limits_interface test_robot_hardware transmission_interface
+        package-name:
+          controller_interface
+          controller_manager
+          controller_manager_msgs
+          hardware_interface
+          ros2_control
+          test_robot_hardware
+          transmission_interface

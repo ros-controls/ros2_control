@@ -120,20 +120,6 @@ public:
     THROW_ON_NULLPTR(this->value_ptr_);
     *this->value_ptr_ = value;
   }
-
-  void set_value(const std::string & name, double value)
-  {
-    THROW_ON_NULLPTR(this->value_ptr_);
-    this->name_ = name;
-    *this->value_ptr_ = value;
-  }
-
-  void set_value(const char * name, double value)
-  {
-    THROW_ON_NULLPTR(this->value_ptr_);
-    this->name_ = name;
-    *this->value_ptr_ = value;
-  }
 };
 
 class StateInterface : public ReadOnlyHandle<StateInterface>

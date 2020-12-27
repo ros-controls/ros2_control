@@ -15,19 +15,26 @@
 #include <memory>
 #include <vector>
 
-#include "hardware_interface/components/sensor_interface.hpp"
+#include "hardware_interface/base_interface.hpp"
+#include "hardware_interface/sensor_interface.hpp"
 
-using hardware_interface::status;
+using hardware_interface::BaseInterface;
 using hardware_interface::return_type;
+using hardware_interface::SensorInterface;
 using hardware_interface::StateInterface;
+using hardware_interface::status;
 
-class TestSensor : public hardware_interface::components::SensorInterface
+class TestSensor : public BaseInterface<SensorInterface>
 {
-  return_type configure(const hardware_interface::HardwareInfo & sensor_info) override
+  return_type configure(const hardware_interface::HardwareInfo & info) override
   {
-    sensor_info_ = sensor_info;
+    if (configure_default(info) != return_type::OK) {
+      return return_type::ERROR;
+    }
     // can only give feedback state for velocity
-    if (sensor_info_.sensors[0].state_interfaces.size() != 1) {return return_type::ERROR;}
+    if (info_.sensors[0].state_interfaces.size() != 1) {
+      return return_type::ERROR;
+    }
     return return_type::OK;
   }
 
@@ -36,8 +43,8 @@ class TestSensor : public hardware_interface::components::SensorInterface
     std::vector<StateInterface> state_interfaces;
     state_interfaces.emplace_back(
       hardware_interface::StateInterface(
-        sensor_info_.sensors[0].name,
-        sensor_info_.sensors[0].state_interfaces[0].name,
+        info_.sensors[0].name,
+        info_.sensors[0].state_interfaces[0].name,
         &velocity_state_));
 
     return state_interfaces;
@@ -45,17 +52,14 @@ class TestSensor : public hardware_interface::components::SensorInterface
 
   return_type start() override
   {
+    status_ = status::STARTED;
     return return_type::OK;
   }
 
   return_type stop() override
   {
+    status_ = status::STOPPED;
     return return_type::OK;
-  }
-
-  status get_status() const override
-  {
-    return status::UNKNOWN;
   }
 
   return_type read() override
@@ -65,8 +69,7 @@ class TestSensor : public hardware_interface::components::SensorInterface
 
 private:
   double velocity_state_ = 0.0;
-  hardware_interface::HardwareInfo sensor_info_;
 };
 
 #include "pluginlib/class_list_macros.hpp"  // NOLINT
-PLUGINLIB_EXPORT_CLASS(TestSensor, hardware_interface::components::SensorInterface)
+PLUGINLIB_EXPORT_CLASS(TestSensor, hardware_interface::SensorInterface)

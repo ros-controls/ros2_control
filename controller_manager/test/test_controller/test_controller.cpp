@@ -34,9 +34,22 @@ TestController::update()
 }
 
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
-TestController::on_configure(const rclcpp_lifecycle::State & previous_state)
+TestController::on_configure(const rclcpp_lifecycle::State & /*previous_state*/)
 {
-  (void) previous_state;
+  return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
+}
+
+rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
+TestController::on_cleanup(
+  const rclcpp_lifecycle::State & /*previous_state*/)
+{
+  if (simulate_cleanup_failure) {
+    return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::FAILURE;
+  }
+
+  if (cleanup_calls) {
+    (*cleanup_calls)++;
+  }
   return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 

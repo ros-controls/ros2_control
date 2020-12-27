@@ -23,21 +23,22 @@
 
 #include "hardware_interface/loaned_command_interface.hpp"
 #include "hardware_interface/loaned_state_interface.hpp"
+#include "hardware_interface/hardware_info.hpp"
+#include "hardware_interface/types/hardware_interface_status_values.hpp"
 
 namespace hardware_interface
-{
-namespace components
 {
 class ActuatorInterface;
 class SensorInterface;
 class SystemInterface;
-}  // namespace components
-
 class ResourceStorage;
 
 class ResourceManager
 {
 public:
+  /// Default constructor for the Resource Manager.
+  ResourceManager();
+
   /// Constructor for the Resource Manager.
   /**
    * The implementation loads the specified urdf and initializes the
@@ -57,6 +58,18 @@ public:
   ResourceManager(const ResourceManager &) = delete;
 
   ~ResourceManager();
+
+  /// Load resources from on a given URDF.
+  /**
+   * The resource manager can be post initialized with a given URDF.
+   * This is mainly used in conjunction with the default constructor
+   * in which the URDF might not be present at first initialization.
+   *
+   * \param urdf string containing the URDF.
+   * \param validate_interfaces boolean argument indicating whether the exported
+   * interfaces ought to be validated. Defaults to true.
+   */
+  void load_urdf(const std::string & urdf, bool validate_interfaces = true);
 
   /// Claim a state interface given its key.
   /**
@@ -135,8 +148,7 @@ public:
    * externally and prior to the call to import.
    * \param actuator pointer to the actuator interface.
    */
-  void import_component(
-    std::unique_ptr<components::ActuatorInterface> actuator);
+  void import_component(std::unique_ptr<ActuatorInterface> actuator);
 
   /// Return the number of loaded sensor components.
   /**
@@ -154,7 +166,7 @@ public:
    * externally and prior to the call to import.
    * \param sensor pointer to the sensor interface.
    */
-  void import_component(std::unique_ptr<components::SensorInterface> sensor);
+  void import_component(std::unique_ptr<SensorInterface> sensor);
 
   /// Return the number of loaded system components.
   /**
@@ -172,9 +184,29 @@ public:
    * externally and prior to the call to import.
    * \param system pointer to the system interface.
    */
-  void import_component(std::unique_ptr<components::SystemInterface> system);
+  void import_component(std::unique_ptr<SystemInterface> system);
+
+  /// Return status for all components.
+  /**
+   * \return map of hardware names and their status
+   */
+  std::unordered_map<std::string, status> get_components_status();
+
+  /// Start all loaded hardware components.
+  void start_components();
+
+  /// Stops all loaded hardware components.
+  void stop_components();
+
+  /// Reads all loaded hardware components.
+  void read();
+
+  /// Write all loaded hardware components.
+  void write();
 
 private:
+  void validate_storage(const std::vector<hardware_interface::HardwareInfo> & hardware_info) const;
+
   void release_command_interface(const std::string & key);
 
   std::unordered_map<std::string, bool> claimed_command_interface_map_;

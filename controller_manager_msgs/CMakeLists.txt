@@ -16,11 +16,17 @@ find_package(rosidl_default_generators REQUIRED)
 
 set(msg_files
   msg/ControllerState.msg
+  msg/HardwareInterface.msg
 )
 set(srv_files
+  srv/ConfigureController.srv
+  srv/ConfigureStartController.srv
   srv/ListControllers.srv
   srv/ListControllerTypes.srv
+  srv/ListHardwareInterfaces.srv
+  srv/LoadConfigureController.srv
   srv/LoadController.srv
+  srv/LoadStartController.srv
   srv/ReloadControllerLibraries.srv
   srv/SwitchController.srv
   srv/UnloadController.srv
