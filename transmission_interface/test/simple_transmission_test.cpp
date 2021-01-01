@@ -11,18 +11,21 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
-#include <transmission_interface/simple_transmission.hpp>
-
 #include <gmock/gmock.h>
-#include <vector>
 #include <string>
+#include <vector>
+
+#include "hardware_interface/types/hardware_interface_type_values.hpp"
+#include "transmission_interface/simple_transmission.hpp"
 
 using std::vector;
 using transmission_interface::SimpleTransmission;
 using transmission_interface::Exception;
 using transmission_interface::ActuatorHandle;
 using transmission_interface::JointHandle;
+using hardware_interface::HW_IF_POSITION;
+using hardware_interface::HW_IF_VELOCITY;
+using hardware_interface::HW_IF_EFFORT;
 
 // Floating-point value comparison threshold
 const double EPS = 1e-6;
@@ -56,92 +59,42 @@ TEST(PreconditionsTest, AccessorValidation)
 
 TEST(PreconditionsTest, ConfigureFailsWithInvalidHandles)
 {
+  SimpleTransmission trans(2.0, -1.0);
+  double dummy;
+
+  auto actuator_handle = ActuatorHandle("act1", HW_IF_POSITION, &dummy);
+  auto actuator2_handle = ActuatorHandle("act2", HW_IF_POSITION, &dummy);
+  auto joint_handle = JointHandle("joint1", HW_IF_POSITION, &dummy);
+  auto joint2_handle = JointHandle("joint2", HW_IF_POSITION, &dummy);
+
+  EXPECT_THROW(trans.configure({}, {}), transmission_interface::Exception);
+  EXPECT_THROW(trans.configure({joint_handle}, {}), transmission_interface::Exception);
+  EXPECT_THROW(trans.configure({}, {actuator_handle}), transmission_interface::Exception);
+
+  EXPECT_THROW(
+    trans.configure(
+      {joint_handle}, {actuator_handle,
+        actuator2_handle}), transmission_interface::Exception);
+  EXPECT_THROW(
+    trans.configure(
+      {joint_handle, joint2_handle},
+      {actuator_handle}), transmission_interface::Exception);
+
+  auto invalid_actuator_handle = ActuatorHandle("act1", HW_IF_VELOCITY, nullptr);
+  auto invalid_joint_handle = JointHandle("joint1", HW_IF_VELOCITY, nullptr);
+  EXPECT_THROW(
+    trans.configure(
+      {invalid_joint_handle},
+      {invalid_actuator_handle}), transmission_interface::Exception);
+  EXPECT_THROW(
+    trans.configure(
+      {}, {actuator_handle,
+        invalid_actuator_handle}), transmission_interface::Exception);
+  EXPECT_THROW(
+    trans.configure(
+      {invalid_joint_handle},
+      {actuator_handle}), transmission_interface::Exception);
 }
-
-
-// TEST(PreconditionsTest, AssertionTriggering)
-// {
-//   // Create input/output transmission data
-//   double a_val = 0.0;
-//   double j_val = 0.0;
-
-//   ActuatorData a_good_data;
-//   a_good_data.position = vector<double*>(1, &a_val);
-//   a_good_data.velocity = vector<double*>(1, &a_val);
-//   a_good_data.effort   = vector<double*>(1, &a_val);
-
-//   JointData j_good_data;
-//   j_good_data.position = vector<double*>(1, &j_val);
-//   j_good_data.velocity = vector<double*>(1, &j_val);
-//   j_good_data.effort   = vector<double*>(1, &j_val);
-
-//   ActuatorData a_bad_data;
-//   a_bad_data.position = vector<double*>(1);
-//   a_bad_data.velocity = vector<double*>(1);
-//   a_bad_data.effort   = vector<double*>(1);
-
-//   JointData j_bad_data;
-//   j_bad_data.position = vector<double*>(1);
-//   j_bad_data.velocity = vector<double*>(1);
-//   j_bad_data.effort   = vector<double*>(1);
-
-//   ActuatorData a_bad_size;
-//   JointData    j_bad_size;
-
-//   // Transmission instance
-//   SimpleTransmission trans = SimpleTransmission(1.0);
-
-//   // Data with invalid pointers should trigger an assertion
-//   EXPECT_DEATH(trans.actuator_to_jointEffort(a_bad_data,  j_bad_data),  ".*");
-//   EXPECT_DEATH(trans.actuator_to_jointEffort(a_good_data, j_bad_data),  ".*");
-//   EXPECT_DEATH(trans.actuator_to_jointEffort(a_bad_data,  j_good_data), ".*");
-
-//   EXPECT_DEATH(trans.actuator_to_jointVelocity(a_bad_data,  j_bad_data),  ".*");
-//   EXPECT_DEATH(trans.actuator_to_jointVelocity(a_good_data, j_bad_data),  ".*");
-//   EXPECT_DEATH(trans.actuator_to_jointVelocity(a_bad_data,  j_good_data), ".*");
-
-//   EXPECT_DEATH(trans.actuator_to_jointPosition(a_bad_data,  j_bad_data),  ".*");
-//   EXPECT_DEATH(trans.actuator_to_jointPosition(a_good_data, j_bad_data),  ".*");
-//   EXPECT_DEATH(trans.actuator_to_jointPosition(a_bad_data,  j_good_data), ".*");
-
-//   EXPECT_DEATH(trans.joint_to_actuatorEffort(j_bad_data,  a_bad_data),  ".*");
-//   EXPECT_DEATH(trans.joint_to_actuatorEffort(j_good_data, a_bad_data),  ".*");
-//   EXPECT_DEATH(trans.joint_to_actuatorEffort(j_bad_data,  a_good_data), ".*");
-
-//   EXPECT_DEATH(trans.joint_to_actuatorVelocity(j_bad_data,  a_bad_data),  ".*");
-//   EXPECT_DEATH(trans.joint_to_actuatorVelocity(j_good_data, a_bad_data),  ".*");
-//   EXPECT_DEATH(trans.joint_to_actuatorVelocity(j_bad_data,  a_good_data), ".*");
-
-//   EXPECT_DEATH(trans.joint_to_actuatorPosition(j_bad_data,  a_bad_data),  ".*");
-//   EXPECT_DEATH(trans.joint_to_actuatorPosition(j_good_data, a_bad_data),  ".*");
-//   EXPECT_DEATH(trans.joint_to_actuatorPosition(j_bad_data,  a_good_data), ".*");
-
-//   // Wrong parameter sizes should trigger an assertion
-//   EXPECT_DEATH(trans.actuator_to_jointEffort(a_bad_size,  j_bad_size),  ".*");
-//   EXPECT_DEATH(trans.actuator_to_jointEffort(a_good_data, j_bad_size),  ".*");
-//   EXPECT_DEATH(trans.actuator_to_jointEffort(a_bad_size,  j_good_data), ".*");
-
-//   EXPECT_DEATH(trans.actuator_to_jointVelocity(a_bad_size,  j_bad_size),  ".*");
-//   EXPECT_DEATH(trans.actuator_to_jointVelocity(a_good_data, j_bad_size),  ".*");
-//   EXPECT_DEATH(trans.actuator_to_jointVelocity(a_bad_size,  j_good_data), ".*");
-
-//   EXPECT_DEATH(trans.actuator_to_jointPosition(a_bad_size,  j_bad_size),  ".*");
-//   EXPECT_DEATH(trans.actuator_to_jointPosition(a_good_data, j_bad_size),  ".*");
-//   EXPECT_DEATH(trans.actuator_to_jointPosition(a_bad_size,  j_good_data), ".*");
-
-//   EXPECT_DEATH(trans.joint_to_actuatorEffort(j_bad_size,  a_bad_size),  ".*");
-//   EXPECT_DEATH(trans.joint_to_actuatorEffort(j_good_data, a_bad_size),  ".*");
-//   EXPECT_DEATH(trans.joint_to_actuatorEffort(j_bad_size,  a_good_data), ".*");
-
-//   EXPECT_DEATH(trans.joint_to_actuatorVelocity(j_bad_size,  a_bad_size),  ".*");
-//   EXPECT_DEATH(trans.joint_to_actuatorVelocity(j_good_data, a_bad_size),  ".*");
-//   EXPECT_DEATH(trans.joint_to_actuatorVelocity(j_bad_size,  a_good_data), ".*");
-
-//   EXPECT_DEATH(trans.joint_to_actuatorPosition(j_bad_size,  a_bad_size),  ".*");
-//   EXPECT_DEATH(trans.joint_to_actuatorPosition(j_good_data, a_bad_size),  ".*");
-//   EXPECT_DEATH(trans.joint_to_actuatorPosition(j_bad_size,  a_good_data), ".*");
-// }
-
 
 class TransmissionSetup
 {
@@ -172,7 +125,7 @@ protected:
   {
     // Effort interface
     {
-      auto actuator_handle = ActuatorHandle("joint1", interface_name, &a_val);
+      auto actuator_handle = ActuatorHandle("act1", interface_name, &a_val);
       auto joint_handle = JointHandle("joint1", interface_name, &j_val);
       trans.configure({joint_handle}, {actuator_handle});
 
@@ -191,25 +144,25 @@ TEST_P(BlackBoxTest, IdentityMap)
   SimpleTransmission trans = GetParam();
 
   // Test transmission for positive, zero, and negative inputs
-  testIdentityMap(trans, "position", 1.0);
+  testIdentityMap(trans, HW_IF_POSITION, 1.0);
   reset_values();
-  testIdentityMap(trans, "position", 0.0);
+  testIdentityMap(trans, HW_IF_POSITION, 0.0);
   reset_values();
-  testIdentityMap(trans, "position", -1.0);
-  reset_values();
-
-  testIdentityMap(trans, "velocity", 1.0);
-  reset_values();
-  testIdentityMap(trans, "velocity", 0.0);
-  reset_values();
-  testIdentityMap(trans, "velocity", -1.0);
+  testIdentityMap(trans, HW_IF_POSITION, -1.0);
   reset_values();
 
-  testIdentityMap(trans, "effort", 1.0);
+  testIdentityMap(trans, HW_IF_VELOCITY, 1.0);
   reset_values();
-  testIdentityMap(trans, "effort", 0.0);
+  testIdentityMap(trans, HW_IF_VELOCITY, 0.0);
   reset_values();
-  testIdentityMap(trans, "effort", -1.0);
+  testIdentityMap(trans, HW_IF_VELOCITY, -1.0);
+  reset_values();
+
+  testIdentityMap(trans, HW_IF_EFFORT, 1.0);
+  reset_values();
+  testIdentityMap(trans, HW_IF_EFFORT, 0.0);
+  reset_values();
+  testIdentityMap(trans, HW_IF_EFFORT, -1.0);
 }
 
 INSTANTIATE_TEST_CASE_P(
@@ -238,8 +191,8 @@ TEST_F(WhiteBoxTest, MoveJoint)
 
   // Effort interface
   {
-    auto actuator_handle = ActuatorHandle("joint1", "effort", &a_val);
-    auto joint_handle = JointHandle("joint1", "effort", &j_val);
+    auto actuator_handle = ActuatorHandle("act1", HW_IF_EFFORT, &a_val);
+    auto joint_handle = JointHandle("joint1", HW_IF_EFFORT, &j_val);
     trans.configure({joint_handle}, {actuator_handle});
 
     trans.actuator_to_joint();
@@ -248,8 +201,8 @@ TEST_F(WhiteBoxTest, MoveJoint)
 
   // Velocity interface
   {
-    auto actuator_handle = ActuatorHandle("joint1", "velocity", &a_val);
-    auto joint_handle = JointHandle("joint1", "velocity", &j_val);
+    auto actuator_handle = ActuatorHandle("act1", HW_IF_VELOCITY, &a_val);
+    auto joint_handle = JointHandle("joint1", HW_IF_VELOCITY, &j_val);
     trans.configure({joint_handle}, {actuator_handle});
 
     trans.actuator_to_joint();
@@ -258,17 +211,35 @@ TEST_F(WhiteBoxTest, MoveJoint)
 
   // Position interface
   {
-    auto actuator_handle = ActuatorHandle("joint1", "position", &a_val);
-    auto joint_handle = JointHandle("joint1", "position", &j_val);
+    auto actuator_handle = ActuatorHandle("act1", HW_IF_POSITION, &a_val);
+    auto joint_handle = JointHandle("joint1", HW_IF_POSITION, &j_val);
     trans.configure({joint_handle}, {actuator_handle});
 
     trans.actuator_to_joint();
     EXPECT_NEAR(1.1, j_val, EPS);
   }
+
+  // Mismatched interface is ignored
+  {
+    double unique_value = 13.37;
+
+    auto actuator_handle = ActuatorHandle("act1", HW_IF_POSITION, &a_val);
+    auto actuator_handle2 = ActuatorHandle("act1", HW_IF_VELOCITY, &unique_value);
+    auto joint_handle = JointHandle("joint1", HW_IF_POSITION, &j_val);
+    auto joint_handle2 = JointHandle("joint1", HW_IF_VELOCITY, &unique_value);
+
+    trans.configure({joint_handle, joint_handle2}, {actuator_handle});
+    trans.actuator_to_joint();
+    EXPECT_NEAR(unique_value, 13.37, EPS);
+
+    trans.configure({joint_handle}, {actuator_handle, actuator_handle2});
+    trans.actuator_to_joint();
+    EXPECT_NEAR(unique_value, 13.37, EPS);
+  }
 }
 
 int main(int argc, char ** argv)
 {
-  testing::InitGoogleTest(&argc, argv);
+  testing::InitGoogleMock(&argc, argv);
   return RUN_ALL_TESTS();
 }

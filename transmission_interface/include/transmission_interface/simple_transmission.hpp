@@ -171,21 +171,37 @@ void SimpleTransmission::configure(
   const std::vector<JointHandle> & joint_handles,
   const std::vector<ActuatorHandle> & actuator_handles)
 {
+  if (joint_handles.empty()) {
+    throw Exception("No joint handles were passed in");
+  }
+
+  if (actuator_handles.empty()) {
+    throw Exception("No actuator handles were passed in");
+  }
+
   if (!are_names_identical(joint_handles) ) {
-    throw Exception("Joint names given to transmissions should be identical!");
+    throw Exception("Joint names given to transmissions should be identical");
   }
 
   if (!are_names_identical(actuator_handles) ) {
-    throw Exception("Actuator names given to transmissions should be identical!");
+    throw Exception("Actuator names given to transmissions should be identical");
   }
 
   joint_position_ = get_by_interface(joint_handles, "position");
   joint_velocity_ = get_by_interface(joint_handles, "velocity");
   joint_effort_ = get_by_interface(joint_handles, "effort");
 
+  if (!joint_position_ && !joint_velocity_ && !joint_effort_) {
+    throw Exception("None of the provided joint handles are valid or from the required interfaces");
+  }
+
   actuator_position_ = get_by_interface(actuator_handles, "position");
   actuator_velocity_ = get_by_interface(actuator_handles, "velocity");
   actuator_effort_ = get_by_interface(actuator_handles, "effort");
+
+  if (!actuator_position_ && !actuator_velocity_ && !actuator_effort_) {
+    throw Exception("None of the provided joint handles are valid or from the required interfaces");
+  }
 }
 
 inline void SimpleTransmission::actuator_to_joint()
