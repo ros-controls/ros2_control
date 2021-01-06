@@ -169,6 +169,9 @@ const auto hardware_resources_missing_keys =
 const auto minimal_robot_urdf = std::string(urdf_head) + std::string(hardware_resources) +
   std::string(urdf_tail);
 
+const auto minimal_robot_missing_keys_urdf = std::string(urdf_head) +
+  std::string(hardware_resources_missing_keys) + std::string(urdf_tail);
+
 }  // namespace ros2_control_test_assets
 
 #endif  // ROS2_CONTROL_TEST_ASSETS__DESCRIPTIONS_HPP_

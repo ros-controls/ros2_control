@@ -74,11 +74,9 @@ TEST_F(TestResourceManager, initialization_with_urdf_manual_validation) {
 }
 
 TEST_F(TestResourceManager, initialization_with_wrong_urdf) {
-  auto urdf = ros2_control_test_assets::urdf_head +
-    ros2_control_test_assets::hardware_resources_missing_keys +
-    ros2_control_test_assets::urdf_tail;
   try {
-    hardware_interface::ResourceManager rm(urdf);
+    hardware_interface::ResourceManager rm(
+      ros2_control_test_assets::minimal_robot_missing_keys_urdf);
     FAIL();
   } catch (const std::exception & e) {
     std::cout << e.what() << std::endl;
