@@ -2,6 +2,22 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix update rate issues by working around MutliThreadedExecutor (`#275 <https://github.com/ros-controls/ros2_control/issues/275>`_)
+  * Fix update rate issues by working around MutliThreadedExecutor
+  Currently the MutliThreadedExecutor performance is very bad. This leads
+  to controllers not meeting their update rate. This PR is a temporary
+  workaround for these issues.
+  The current approach uses a `rclcpp` timer to execute the control loop.
+  When used in combination with the `MutliThreadedExecutor`, the timers
+  are not execute at their target frequency. I've converted the control
+  loop to a while loop on a separate thread that uses `nanosleep` to
+  execute the correct update rate. This means that `rclcpp` is not
+  involved in the execution and leads to much better performance.
+  * Address review comments by rewriting several comments
+* Contributors: Ramon Wijnands
+
 0.1.1 (2020-12-23)
 ------------------
 
