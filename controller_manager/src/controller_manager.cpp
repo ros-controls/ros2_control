@@ -88,8 +88,10 @@ ControllerManager::ControllerManager(
 
 void ControllerManager::init_services()
 {
-  deterministic_callback_group_ = create_callback_group(
-    rclcpp::CallbackGroupType::MutuallyExclusive);
+  // TODO(anyone): Due to issues with the MutliThreadedExecutor, this control loop does not rely on
+  // the executor (see issue #260).
+  // deterministic_callback_group_ = create_callback_group(
+  //   rclcpp::CallbackGroupType::MutuallyExclusive);
   best_effort_callback_group_ = create_callback_group(
     rclcpp::CallbackGroupType::MutuallyExclusive);
 
