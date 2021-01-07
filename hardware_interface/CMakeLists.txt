@@ -97,20 +97,15 @@ if(BUILD_TESTING)
   )
   target_link_libraries(test_hardware_components hardware_interface)
   ament_target_dependencies(test_hardware_components
-    pluginlib
+    pluginlib)
+  install(TARGETS test_hardware_components
+    DESTINATION lib
   )
   pluginlib_export_plugin_description_file(
     hardware_interface test/test_hardware_components/test_hardware_components.xml
   )
-  install(TARGETS test_hardware_components
-    LIBRARY DESTINATION lib
-  )
-  ament_export_libraries(test_hardware_components)
 
-  ament_add_gmock(
-    test_resource_manager
-    test/test_resource_manager.cpp
-  )
+  ament_add_gmock(test_resource_manager test/test_resource_manager.cpp)
   target_link_libraries(test_resource_manager hardware_interface)
 endif()
 
