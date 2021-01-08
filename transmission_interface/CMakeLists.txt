@@ -19,7 +19,6 @@ find_package(TinyXML2 REQUIRED)
 add_library(transmission_parser SHARED src/transmission_parser.cpp)
 target_include_directories(transmission_parser PUBLIC include)
 ament_target_dependencies(transmission_parser hardware_interface tinyxml2_vendor TinyXML2)
-ament_export_dependencies(hardware_interface tinyxml2_vendor TinyXML2)
 target_compile_definitions(transmission_parser PRIVATE "TRANSMISSION_INTERFACE_BUILDING_DLL")
 
 install(
@@ -44,6 +43,14 @@ if(BUILD_TESTING)
   )
   target_include_directories(test_transmission_parser PUBLIC include)
   target_link_libraries(test_transmission_parser transmission_parser)
+
+  ament_add_gmock(
+    test_simple_transmission
+    test/simple_transmission_test.cpp
+  )
+  target_include_directories(test_simple_transmission PUBLIC include hardware_interface)
+  target_link_libraries(test_simple_transmission transmission_parser)
+
 endif()
 
 ament_export_include_directories(
@@ -51,5 +58,10 @@ ament_export_include_directories(
 )
 ament_export_libraries(
   transmission_parser
+)
+ament_export_dependencies(
+  hardware_interface
+  tinyxml2_vendor
+  TinyXML2
 )
 ament_package()
