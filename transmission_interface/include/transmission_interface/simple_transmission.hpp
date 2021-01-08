@@ -82,33 +82,36 @@ class SimpleTransmission : public Transmission
 {
 public:
   /**
-   * \param reduction Reduction ratio.
+   * \param reduction Joint to actuator reduction ratio.
    * \param joint_offset Joint position offset used in the position mappings.
    * \pre Nonzero reduction value.
    */
   SimpleTransmission(
-    const double reduction,
+    const double joint_to_actuator_reduction,
     const double joint_offset = 0.0);
 
+  /**
+   * \brief Set up the data the transmission operates on.
+   * \param joint_handles Vector of interface handles of one joint
+   * \param actuator_handles Vector of interface handles of one actuator
+   * \pre Vectors are nonzero.
+   * \pre Joint handles share the same joint name and actuator handles share the same actuator name.
+   */
   void configure(
     const std::vector<JointHandle> & joint_handles,
     const std::vector<ActuatorHandle> & actuator_handles) override;
 
   /**
-   * \brief Transform \e effort variables from actuator to joint space.
-   * \param[in]  act_data Actuator-space variables.
-   * \param[out] jnt_data Joint-space variables.
-   * \pre Actuator and joint effort vectors must have size 1 and point to valid data.
-   *  To call this method it is not required that all other data vectors contain valid data, and can even remain empty.
+   * \brief Transform variables from actuator to joint space.
+   *  This method operates on the handles provided when configuring the transmission.
+   *  To call this method it is not required that all supported interface types are provided, e.g. one can supply only velocity handles
    */
   void actuator_to_joint() override;
 
   /**
-   * \brief Transform \e effort variables from joint to actuator space.
-   * \param[in]  jnt_data Joint-space variables.
-   * \param[out] act_data Actuator-space variables.
-   * \pre Actuator and joint effort vectors must have size 1 and point to valid data.
-   *  To call this method it is not required that all other data vectors contain valid data, and can even remain empty.
+   * \brief Transform variables from joint to actuator space.
+   *  This method operates on the handles provided when configuring the transmission.
+   *  To call this method it is not required that all supported interface types are provided, e.g. one can supply only velocity handles
    */
   void joint_to_actuator() override;
 
@@ -132,12 +135,12 @@ protected:
 };
 
 inline SimpleTransmission::SimpleTransmission(
-  const double reduction,
+  const double joint_to_actuator_reduction,
   const double joint_offset)
-: reduction_(reduction),
+: reduction_(joint_to_actuator_reduction),
   jnt_offset_(joint_offset)
 {
-  if (0.0 == reduction_) {
+  if (reduction_ == 0.0) {
     throw Exception("Transmission reduction ratio cannot be zero.");
   }
 }

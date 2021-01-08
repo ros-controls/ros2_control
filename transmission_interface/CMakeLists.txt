@@ -19,7 +19,6 @@ find_package(TinyXML2 REQUIRED)
 add_library(transmission_parser SHARED src/transmission_parser.cpp)
 target_include_directories(transmission_parser PUBLIC include)
 ament_target_dependencies(transmission_parser hardware_interface tinyxml2_vendor TinyXML2)
-ament_export_dependencies(transmission_parser tinyxml2_vendor TinyXML2)
 target_compile_definitions(transmission_parser PRIVATE "TRANSMISSION_INTERFACE_BUILDING_DLL")
 
 install(
@@ -59,5 +58,10 @@ ament_export_include_directories(
 )
 ament_export_libraries(
   transmission_parser
+)
+ament_export_dependencies(
+  hardware_interface
+  tinyxml2_vendor
+  TinyXML2
 )
 ament_package()
