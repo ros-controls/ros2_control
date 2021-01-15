@@ -7,7 +7,12 @@ if(NOT CMAKE_CXX_STANDARD)
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic)
+  add_compile_options(
+    -Wall -Wextra -Wpedantic
+    # required for clang when using INSTANTIATE_TEST_CASE_P
+    # remove once INSTANTIATE_TEST_SUITE_P is available to use in gtest
+    -Wno-gnu-zero-variadic-macro-arguments
+  )
 endif()
 
 # find dependencies
