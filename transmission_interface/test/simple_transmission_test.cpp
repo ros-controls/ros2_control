@@ -174,6 +174,8 @@ INSTANTIATE_TEST_CASE_P(
     SimpleTransmission(10.0, 1.0),
     SimpleTransmission(10.0, -1.0),
     SimpleTransmission(-10.0, 1.0),
+    // remove once INSTANTIATE_TEST_SUITE_P is available to use in gtest
+    // https://github.com/google/googletest/issues/1419
     // cppcheck-suppress syntaxError
     SimpleTransmission(-10.0, -1.0)), );
 
