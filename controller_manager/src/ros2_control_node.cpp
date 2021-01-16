@@ -14,6 +14,7 @@
 
 #include <memory>
 #include <string>
+#include <thread>
 
 #include "controller_manager/controller_manager.hpp"
 #include "rclcpp/rclcpp.hpp"
@@ -48,9 +49,7 @@ int main(int argc, char ** argv)
         cm->read();
         cm->update();
         cm->write();
-        struct timespec duration{};
-        duration.tv_nsec = 1000000000 / update_rate;
-        clock_nanosleep(CLOCK_MONOTONIC, 0, &duration, NULL);
+        std::this_thread::sleep_for(std::chrono::nanoseconds(1000000000 / update_rate));
       }
     });
 

@@ -20,8 +20,6 @@
 
 namespace
 {
-constexpr const auto kTransmissionParserLoggerName = "transmission_parser";
-
 constexpr const auto kTransmissionTag = "transmission";
 constexpr const auto kNameTag = "name";
 constexpr const auto kJointTag = "joint";
