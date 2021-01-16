@@ -1,7 +1,13 @@
 # ros2_control
 
-## CI
-linux: [![Build Status](https://travis-ci.org/ros-controls/ros2_control.svg?branch=master)](https://travis-ci.org/ros-controls/ros2_control)
+[![Licence](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+
+|         | Foxy    | Rolling
+|:-------:|:-------:|:-------:|
+| Branch  | [`foxy`](https://github.com/ros-controls/ros2_control/tree/master) | TBD
+| CI  | Linux: [![Build Status](https://github.com/ros-controls/ros2_control/workflows/Test%20ros2_control/badge.svg)](https://github.com/ros-controls/ros2_control/actions?query=workflow%3A"Test%20ros2_control")| TBD |
+| Linters  | [![Linters Status](https://github.com/ros-controls/ros2_control/workflows/Lint%20ros2_control/badge.svg)](https://github.com/ros-controls/ros2_control/actions?query=workflow%3A"Lint+ros2_control")| TBD |
+
 
 ## Disclaimer
 
