@@ -4,7 +4,10 @@
   <name>fake_generic_robot</name>
   <version>0.0.0</version>
   <description>The package implements generic system component for simple faking of robots. The component simply bounces the input commands back.</description>
-  <maintainer email="denis.stogl@picknik.ai">Denis Stogl</maintainer>
+  <author email="jafar@picknik.ai">Jafar Abdi</author>
+  <author email="denis@stogl.de">Denis Stogl</author>
+
+  <maintainer email="denis@stogl.de">Denis Stogl</maintainer>
   <license>Apache License 2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
