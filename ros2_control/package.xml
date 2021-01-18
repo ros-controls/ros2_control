@@ -11,6 +11,8 @@
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
+  <exec_depend>fake_generic_robot</exec_depend>
+
   <exec_depend>controller_interface</exec_depend>
   <exec_depend>controller_manager</exec_depend>
   <exec_depend>hardware_interface</exec_depend>
