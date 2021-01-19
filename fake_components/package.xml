@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>fake_generic_robot</name>
+  <name>fake_components</name>
   <version>0.0.0</version>
-  <description>The package implements generic system component for simple faking of robots. The component simply bounces the input commands back.</description>
+  <description>The package implements generic components for simple faking of hardware. The components simply bounces the input commands back.</description>
   <author email="jafar@picknik.ai">Jafar Abdi</author>
   <author email="denis@stogl.de">Denis Stogl</author>
 

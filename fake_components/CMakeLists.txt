@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(fake_generic_robot)
+project(fake_components)
 
 # Default to C99
 if(NOT CMAKE_C_STANDARD)

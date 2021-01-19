@@ -12,12 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef FAKE_GENERIC_ROBOT__FAKE_GENERIC_ROBOT_HPP_
-#define FAKE_GENERIC_ROBOT__FAKE_GENERIC_ROBOT_HPP_
+#ifndef FAKE_COMPONENTS__GENERIC_SYSTEM_HPP_
+#define FAKE_COMPONENTS__GENERIC_SYSTEM_HPP_
+
+namespace fake_components
+{
+
+// TODO(Jafar): Put here your port of the FakeJoint - the class should be FakeSystem
 
 
+typedef FakeSystem FakeRobot;
 
+}  // namespace fake_components
 
-
-
-#endif  // FAKE_GENERIC_ROBOT__FAKE_GENERIC_ROBOT_HPP_
+#endif  // FAKE_COMPONENTS__GENERIC_SYSTEM_HPP_

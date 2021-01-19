@@ -12,5 +12,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "fake_generic_robot/fake_generic_robot.hpp"
+#include "fake_components/generic_system.hpp"
 
