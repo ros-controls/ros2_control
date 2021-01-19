@@ -14,3 +14,63 @@
 
 #include "fake_components/generic_system.hpp"
 
+#include <rclcpp/rclcpp.hpp>
+
+#include <hardware_interface/types/hardware_interface_type_values.hpp>
+
+static const rclcpp::Logger LOGGER = rclcpp::get_logger("fake_joint_driver");
+
+namespace fake_components {
+
+std::vector<hardware_interface::StateInterface>
+FakeSystem::export_state_interfaces() {
+  std::vector<hardware_interface::StateInterface> state_interfaces;
+  for (uint i = 0; i < info_.joints.size(); i++) {
+    state_interfaces.emplace_back(hardware_interface::StateInterface(
+        info_.joints[i].name, hardware_interface::HW_IF_POSITION, &current_positions[i]));
+    state_interfaces.emplace_back(hardware_interface::StateInterface(
+        info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &current_velocities[i]));
+    state_interfaces.emplace_back(hardware_interface::StateInterface(
+        info_.joints[i].name, hardware_interface::HW_IF_EFFORT, &current_efforts[i]));
+  }
+
+  return state_interfaces;
+}
+
+std::vector<hardware_interface::CommandInterface>
+FakeSystem::export_command_interfaces() {
+  std::vector<hardware_interface::CommandInterface> command_interfaces;
+  for (uint i = 0; i < info_.joints.size(); i++) {
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(
+        info_.joints[i].name, hardware_interface::HW_IF_POSITION, &command_positions[i]));
+  }
+
+  return command_interfaces;
+}
+hardware_interface::return_type
+FakeSystem::configure(const hardware_interface::HardwareInfo &info) {
+  if (configure_default(info) != hardware_interface::return_type::OK) {
+    return hardware_interface::return_type::ERROR;
+  }
+  // Default start position is zero
+  command_positions.resize(info_.joints.size(), 0.0);
+  current_positions.resize(info_.joints.size(), 0.0);
+  current_velocities.resize(info_.joints.size(), 0.0);
+  current_efforts.resize(info_.joints.size(), 0.0);
+
+  for (size_t i = 0; i < info_.joints.size(); ++i) {
+    const auto &joint = info_.joints.at(i);
+    auto it = joint.parameters.find("start_position");
+    if (it != joint.parameters.end()) {
+      command_positions.at(i) = std::stod(it->second);
+      current_positions.at(i) = std::stod(it->second);
+    }
+  }
+  status_ = hardware_interface::status::CONFIGURED;
+  return hardware_interface::return_type::OK;
+}
+} // namespace fake_components
+
+#include "pluginlib/class_list_macros.hpp"
+PLUGINLIB_EXPORT_CLASS(fake_components::FakeSystem,
+                       hardware_interface::SystemInterface)
