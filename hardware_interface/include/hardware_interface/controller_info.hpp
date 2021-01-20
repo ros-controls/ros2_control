@@ -24,7 +24,7 @@ namespace hardware_interface
 {
 
 /// Controller Information
-/** 
+/**
  * This struct contains information about a given controller.
  */
 struct ControllerInfo

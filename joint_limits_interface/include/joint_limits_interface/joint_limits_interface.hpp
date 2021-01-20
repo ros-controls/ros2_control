@@ -366,7 +366,7 @@ public:
   /**
    * /// Enforce position, velocity, and effort limits for a joint that is not subject
    * to soft limits.
-   * 
+   *
    * \param[in] const rclcpp::Duration period Control period.
    */
   void enforce_limits(const rclcpp::Duration & period) override
@@ -440,7 +440,7 @@ public:
    *
    * If the joint has no position limits (eg. a continuous joint), only velocity and effort limits
    * will be enforced.
-   * 
+   *
    * \param[in] const rclcpp::Duration period Control period.
    */
   void enforce_limits(const rclcpp::Duration & period) override

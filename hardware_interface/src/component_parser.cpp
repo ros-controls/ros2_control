@@ -165,7 +165,7 @@ hardware_interface::InterfaceInfo parse_interfaces_from_xml(
 
 /// Search XML snippet from URDF for information about a control component.
 /**
-  * \param[in] const tinyxml2::XMLElement * component_it pointer to the iterator where component 
+  * \param[in] const tinyxml2::XMLElement * component_it pointer to the iterator where component
   * info should be found
   * \return ComponentInfo filled with information about component
   * \throws std::runtime_error if a component attribute or tag is not found
@@ -203,7 +203,7 @@ ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it
 
 /// Parse a control resource from an "ros2_control" tag.
 /**
- * \param[in] const tinyxml2::XMLElement * ros2_control_it pointer to ros2_control element 
+ * \param[in] const tinyxml2::XMLElement * ros2_control_it pointer to ros2_control element
  * with informations about resource.
  * \return ComponentInfo filled with information about the robot
  * \throws std::runtime_error if a attributes or tag are not found
