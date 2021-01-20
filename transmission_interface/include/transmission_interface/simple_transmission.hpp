@@ -26,9 +26,8 @@
 namespace transmission_interface
 {
 
+/// Implementation of a simple reducer transmission.
 /**
- * \brief Implementation of a simple reducer transmission.
- *
  * This transmission relates <b>one actuator</b> and <b>one joint</b> through a reductor (or amplifier).
  * Timing belts and gears are examples of this transmission type, and are illustrated below.
  * \image html simple_transmission.png
@@ -82,18 +81,18 @@ class SimpleTransmission : public Transmission
 {
 public:
   /**
-   * \param reduction Joint to actuator reduction ratio.
-   * \param joint_offset Joint position offset used in the position mappings.
+   * \param[in] const double joint_to_actuator_reduction Joint to actuator reduction ratio.
+   * \param[in] const double joint_offset Joint position offset used in the position mappings.
    * \pre Nonzero reduction value.
    */
   SimpleTransmission(
     const double joint_to_actuator_reduction,
     const double joint_offset = 0.0);
 
+  /// Set up the data the transmission operates on.
   /**
-   * \brief Set up the data the transmission operates on.
-   * \param joint_handles Vector of interface handles of one joint
-   * \param actuator_handles Vector of interface handles of one actuator
+   * \param[in] const std::vector<JointHandle> joint_handles Vector of interface handles of one joint
+   * \param[in] const std::vector<ActuatorHandle> actuator_handles Vector of interface handles of one actuator
    * \pre Vectors are nonzero.
    * \pre Joint handles share the same joint name and actuator handles share the same actuator name.
    */
@@ -101,15 +100,15 @@ public:
     const std::vector<JointHandle> & joint_handles,
     const std::vector<ActuatorHandle> & actuator_handles) override;
 
+  /// Transform variables from actuator to joint space.
   /**
-   * \brief Transform variables from actuator to joint space.
    *  This method operates on the handles provided when configuring the transmission.
    *  To call this method it is not required that all supported interface types are provided, e.g. one can supply only velocity handles
    */
   void actuator_to_joint() override;
 
+  /// Transform variables from joint to actuator space.
   /**
-   * \brief Transform variables from joint to actuator space.
    *  This method operates on the handles provided when configuring the transmission.
    *  To call this method it is not required that all supported interface types are provided, e.g. one can supply only velocity handles
    */

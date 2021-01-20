@@ -73,10 +73,11 @@ public:
     const std::string & controller_name,
     const std::string & controller_type);
 
+  /// load_controller loads a controller by name, the type must be defined in the parameter server.
   /**
-   * @brief load_controller loads a controller by name, the type must be defined in the parameter server
-   * @param controller_name as a string.
-   * @see Documentation in controller_manager_msgs/LoadController.srv
+   * \param[in] controller_name as a string.
+   * \return controller_interface::ControllerInterfaceSharedPtr controller
+   * \see Documentation in controller_manager_msgs/LoadController.srv
    */
   CONTROLLER_MANAGER_PUBLIC
   controller_interface::ControllerInterfaceSharedPtr
@@ -104,18 +105,22 @@ public:
     return add_controller_impl(controller_spec);
   }
 
+  /// configure_controller Configure controller by name calling their "configure" method.
   /**
-   * @brief configure_controller Configure controller by name calling their "configure" method.
-   * @param controller_name as a string.
-   * @see Documentation in controller_manager_msgs/ConfigureController.srv
+   * \param[in] controller_name as a string.
+   * \return controller_interface::return_type configure controller response
+   * \see Documentation in controller_manager_msgs/ConfigureController.srv
    */
   CONTROLLER_MANAGER_PUBLIC
   controller_interface::return_type
   configure_controller(const std::string & controller_name);
 
+  /// switch_controller Stops some controllers and start others.
   /**
-   * @brief switch_controller Stops some controllers and start others.
-   * @see Documentation in controller_manager_msgs/SwitchController.srv
+   * \param[in] std::vector<std::string> start_controllers is a list of controllers to start
+   * \param[in] std::vector<std::string> stop_controllers is a list of controllers to stop
+   * \param[in] int set level of strictness (BEST_EFFORT or STRICT)
+   * \see Documentation in controller_manager_msgs/SwitchController.srv
    */
   CONTROLLER_MANAGER_PUBLIC
   controller_interface::return_type
@@ -237,7 +242,7 @@ private:
   rclcpp::CallbackGroup::SharedPtr best_effort_callback_group_;
 
   /**
-   * @brief The RTControllerListWrapper class wraps a double-buffered list of controllers
+   * /// The RTControllerListWrapper class wraps a double-buffered list of controllers
    * to avoid needing to lock the real-time thread when switching controllers in
    * the non-real-time thread.
    *
@@ -252,36 +257,36 @@ private:
 // *INDENT-OFF*
   public:
 // *INDENT-ON*
+    /// update_and_get_used_by_rt_list Makes the "updated" list the "used by rt" list
     /**
-     * @brief update_and_get_used_by_rt_list Makes the "updated" list the "used by rt" list
-     * @warning Should only be called by the RT thread, no one should modify the
+     * \warning Should only be called by the RT thread, no one should modify the
      * updated list while it's being used
-     * @return reference to the updated list
+     * \return reference to the updated list
      */
     std::vector<ControllerSpec> & update_and_get_used_by_rt_list();
 
     /**
-     * @brief get_unused_list Waits until the "outdated" and "unused by rt"
+     * /// get_unused_list Waits until the "outdated" and "unused by rt"
      * lists match and returns a reference to it
      * This referenced list can be modified safely until switch_updated_controller_list()
      * is called, at this point the RT thread may start using it at any time
-     * @param guard Guard needed to make sure the caller is the only one accessing the unused by rt list
+     * \param[in] guard Guard needed to make sure the caller is the only one accessing the unused by rt list
      */
     std::vector<ControllerSpec> & get_unused_list(
       const std::lock_guard<std::recursive_mutex> & guard);
 
+    /// get_updated_list Returns a const reference to the most updated list.
     /**
-     * @brief get_updated_list Returns a const reference to the most updated list,
-     * @warning May or may not being used by the realtime thread, read-only reference for safety
-     * @param guard Guard needed to make sure the caller is the only one accessing the unused by rt list
+     * \warning May or may not being used by the realtime thread, read-only reference for safety
+     * \param[in] guard Guard needed to make sure the caller is the only one accessing the unused by rt list
      */
     const std::vector<ControllerSpec> & get_updated_list(
       const std::lock_guard<std::recursive_mutex> & guard) const;
 
     /**
-     * @brief switch_updated_list Switches the "updated" and "outdated" lists, and waits
+     * /// switch_updated_list Switches the "updated" and "outdated" lists, and waits
      *  until the RT thread is using the new "updated" list.
-     * @param guard Guard needed to make sure the caller is the only one accessing the unused by rt list
+     * \param[in] guard Guard needed to make sure the caller is the only one accessing the unused by rt list
      */
     void switch_updated_list(const std::lock_guard<std::recursive_mutex> & guard);
 
@@ -292,8 +297,9 @@ private:
 // *INDENT-OFF*
   private:
 // *INDENT-ON*
+    /// get_other_list get the list not pointed by index
     /**
-     * @brief get_other_list get the list not pointed by index
+     * \param[in] index int
      */
     int get_other_list(int index) const;
 

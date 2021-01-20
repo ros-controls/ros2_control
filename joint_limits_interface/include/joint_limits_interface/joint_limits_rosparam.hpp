@@ -26,9 +26,8 @@
 namespace joint_limits_interface
 {
 
+/// Populate a JointLimits instance from the ROS parameter server.
 /**
- * \brief Populate a JointLimits instance from the ROS parameter server.
- *
  * It is assumed that the following parameter structure is followed on the provided NodeHandle. Unspecified parameters
  * are simply not added to the joint limits specification.
  * \code
@@ -167,9 +166,8 @@ inline bool getJointLimits(
   return true;
 }
 
+/// Populate a SoftJointLimits instance from the ROS parameter server.
 /**
- * \brief Populate a SoftJointLimits instance from the ROS parameter server.
- *
  * It is assumed that the following parameter structure is followed on the provided NodeHandle. Only completely specified soft
  * joint limits specifications will be considered valid.
  * \code

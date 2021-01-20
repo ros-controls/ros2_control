@@ -38,7 +38,7 @@
 namespace joint_limits_interface
 {
 
-/** \brief The base class of limit handles for enforcing position, velocity, and effort limits of
+/** /// The base class of limit handles for enforcing position, velocity, and effort limits of
  * an effort-controlled joint.
  */
 class JointLimitHandle
@@ -86,11 +86,11 @@ public:
            std::string();
   }
 
-  /** \brief Sub-class implementation of limit enforcing policy.
+  /** /// Sub-class implementation of limit enforcing policy.
    */
   virtual void enforce_limits(const rclcpp::Duration & period) = 0;
 
-  /** \brief  clear stored state, causing it to reset next iteration
+  /** ///  clear stored state, causing it to reset next iteration
    */
   virtual void reset()
   {
@@ -108,7 +108,7 @@ protected:
   double prev_pos_;
   double prev_vel_;
 
-  /** \brief Return velocity for limit calculations.
+  /** /// Return velocity for limit calculations.
    *
    * @param period Time since last measurement
    * @return the velocity, from state if available, otherwise from previous position history.
@@ -124,7 +124,7 @@ protected:
 };
 
 
-/** \brief The base class of limit handles for enforcing position, velocity, and effort limits of
+/** /// The base class of limit handles for enforcing position, velocity, and effort limits of
  * an effort-controlled joint that has soft-limits.
  */
 class JointSoftLimitsHandle : public JointLimitHandle
@@ -156,7 +156,7 @@ protected:
 };
 
 
-/** \brief A handle used to enforce position and velocity limits of a position-controlled joint that does not have
+/** /// A handle used to enforce position and velocity limits of a position-controlled joint that does not have
     soft limits. */
 class PositionJointSaturationHandle : public JointLimitHandle
 {
@@ -178,10 +178,9 @@ public:
     }
   }
 
+/// Enforce position and velocity limits for a joint that is not subject to soft limits.
 /**
- * \brief Enforce position and velocity limits for a joint that is not subject to soft limits.
- *
- * \param period Control period.
+ * \param[in] const rclcpp::Duration period Control period.
  */
   void enforce_limits(const rclcpp::Duration & period)
   {
@@ -214,9 +213,8 @@ private:
   double min_pos_limit_, max_pos_limit_;
 };
 
+/// A handle used to enforce position and velocity limits of a position-controlled joint.
 /**
- * \brief A handle used to enforce position and velocity limits of a position-controlled joint.
- *
  * This class implements a very simple position and velocity limits enforcing policy, and tries to impose the least
  * amount of requisites on the underlying hardware platform.
  * This lowers considerably the entry barrier to use it, but also implies some limitations.
@@ -266,11 +264,11 @@ public:
   }
 
   /**
-   * \brief Enforce position and velocity limits for a joint subject to soft limits.
+   * /// Enforce position and velocity limits for a joint subject to soft limits.
    *
    * If the joint has no position limits (eg. a continuous joint), only velocity limits will be
    * enforced.
-   * \param period Control period.
+   * \param[in] const rclcpp::Duration period Control period.
    */
   void enforce_limits(const rclcpp::Duration & period) override
   {
@@ -330,7 +328,7 @@ public:
   }
 };
 
-/** \brief A handle used to enforce position, velocity, and effort limits of an effort-controlled
+/** /// A handle used to enforce position, velocity, and effort limits of an effort-controlled
  * joint that does not have soft limits.
  */
 class EffortJointSaturationHandle : public JointLimitHandle
@@ -366,8 +364,10 @@ public:
   }
 
   /**
-   * \brief Enforce position, velocity, and effort limits for a joint that is not subject
+   * /// Enforce position, velocity, and effort limits for a joint that is not subject
    * to soft limits.
+   * 
+   * \param[in] const rclcpp::Duration period Control period.
    */
   void enforce_limits(const rclcpp::Duration & period) override
   {
@@ -395,7 +395,7 @@ public:
   }
 };
 
-/** \brief A handle used to enforce position, velocity and effort limits of an effort-controlled
+/** /// A handle used to enforce position, velocity and effort limits of an effort-controlled
   * joint.
   */
 
@@ -436,10 +436,12 @@ public:
   }
 
   /**
-   * \brief Enforce position, velocity and effort limits for a joint subject to soft limits.
+   * /// Enforce position, velocity and effort limits for a joint subject to soft limits.
    *
    * If the joint has no position limits (eg. a continuous joint), only velocity and effort limits
    * will be enforced.
+   * 
+   * \param[in] const rclcpp::Duration period Control period.
    */
   void enforce_limits(const rclcpp::Duration & period) override
   {
@@ -489,7 +491,7 @@ public:
 };
 
 
-/** \brief A handle used to enforce velocity and acceleration limits of a velocity-controlled joint.
+/** /// A handle used to enforce velocity and acceleration limits of a velocity-controlled joint.
   */
 class VelocityJointSaturationHandle : public JointLimitHandle
 {
@@ -522,9 +524,9 @@ public:
     }
   }
 
+  /// Enforce joint velocity and acceleration limits.
   /**
-   * \brief Enforce joint velocity and acceleration limits.
-   * \param period Control period.
+   * \param[in] const rclcpp::Duration period Control period.
    */
   void enforce_limits(const rclcpp::Duration & period) override
   {
@@ -555,7 +557,7 @@ public:
   }
 };
 
-/** \brief A handle used to enforce position, velocity, and acceleration limits of a
+/** /// A handle used to enforce position, velocity, and acceleration limits of a
   * velocity-controlled joint.
   */
 class VelocityJointSoftLimitsHandle : public JointSoftLimitsHandle
@@ -579,10 +581,10 @@ public:
   }
 
   /**
-   * \brief Enforce position, velocity, and acceleration limits for a velocity-controlled joint
+   * /// Enforce position, velocity, and acceleration limits for a velocity-controlled joint
    * subject to soft limits.
    *
-   * \param period Control period.
+   * \param[in] const rclcpp::Duration period Control period.
    */
   void enforce_limits(const rclcpp::Duration & period)
   {
