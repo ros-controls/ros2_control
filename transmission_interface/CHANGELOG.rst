@@ -2,8 +2,8 @@
 Changelog for package transmission_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.3 (2021-01-21)
+------------------
 * Remove parser from install until reworked (`#301 <https://github.com/ros-controls/ros2_control/issues/301>`_)
 * Fix building on macOS with clang (`#292 <https://github.com/ros-controls/ros2_control/issues/292>`_)
 * Add simple transmission class (`#245 <https://github.com/ros-controls/ros2_control/issues/245>`_)
