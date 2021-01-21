@@ -25,12 +25,6 @@ install(
   DIRECTORY include/
   DESTINATION include
 )
-install(
-  TARGETS transmission_parser
-  RUNTIME DESTINATION bin
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-)
 
 if(BUILD_TESTING)
   find_package(ament_cmake_gmock REQUIRED)
@@ -55,9 +49,6 @@ endif()
 
 ament_export_include_directories(
   include
-)
-ament_export_libraries(
-  transmission_parser
 )
 ament_export_dependencies(
   hardware_interface
