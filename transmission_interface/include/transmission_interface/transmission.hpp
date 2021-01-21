@@ -55,7 +55,7 @@ public:
 
   /// Transform \e effort variables from actuator to joint space.
   /**
-   * \param[in]  act_data Actuator-space variables.
+   * \param[in] act_data Actuator-space variables.
    * \param[out] jnt_data Joint-space variables.
    * \pre All non-empty vectors must contain valid data and their size should be consistent with the number of
    * transmission actuators and joints.
@@ -65,7 +65,7 @@ public:
 
   /// Transform \e effort variables from joint to actuator space.
   /**
-  * \param[in]  jnt_data Joint-space variables.
+  * \param[in] jnt_data Joint-space variables.
   * \param[out] act_data Actuator-space variables.
   * \pre All non-empty vectors must contain valid data and their size should be consistent with the number of
   * transmission actuators and joints.

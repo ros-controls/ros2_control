@@ -29,10 +29,10 @@ namespace hardware_interface
  */
 struct ControllerInfo
 {
-  /** Controller name. */
+  /// Controller name.
   std::string name;
 
-  /** Controller type. */
+  /// Controller type.
   std::string type;
 
   // TODO(v-lopez)

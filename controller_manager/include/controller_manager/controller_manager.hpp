@@ -76,7 +76,7 @@ public:
   /// load_controller loads a controller by name, the type must be defined in the parameter server.
   /**
    * \param[in] controller_name as a string.
-   * \return controller_interface::ControllerInterfaceSharedPtr controller
+   * \return controller
    * \see Documentation in controller_manager_msgs/LoadController.srv
    */
   CONTROLLER_MANAGER_PUBLIC
@@ -108,7 +108,7 @@ public:
   /// configure_controller Configure controller by name calling their "configure" method.
   /**
    * \param[in] controller_name as a string.
-   * \return controller_interface::return_type configure controller response
+   * \return configure controller response
    * \see Documentation in controller_manager_msgs/ConfigureController.srv
    */
   CONTROLLER_MANAGER_PUBLIC
@@ -117,9 +117,9 @@ public:
 
   /// switch_controller Stops some controllers and start others.
   /**
-   * \param[in] std::vector<std::string> start_controllers is a list of controllers to start
-   * \param[in] std::vector<std::string> stop_controllers is a list of controllers to stop
-   * \param[in] int set level of strictness (BEST_EFFORT or STRICT)
+   * \param[in] start_controllers is a list of controllers to start
+   * \param[in] stop_controllers is a list of controllers to stop
+   * \param[in] set level of strictness (BEST_EFFORT or STRICT)
    * \see Documentation in controller_manager_msgs/SwitchController.srv
    */
   CONTROLLER_MANAGER_PUBLIC
@@ -242,7 +242,7 @@ private:
   rclcpp::CallbackGroup::SharedPtr best_effort_callback_group_;
 
   /**
-   * /// The RTControllerListWrapper class wraps a double-buffered list of controllers
+   * The RTControllerListWrapper class wraps a double-buffered list of controllers
    * to avoid needing to lock the real-time thread when switching controllers in
    * the non-real-time thread.
    *
@@ -266,7 +266,7 @@ private:
     std::vector<ControllerSpec> & update_and_get_used_by_rt_list();
 
     /**
-     * /// get_unused_list Waits until the "outdated" and "unused by rt"
+     * get_unused_list Waits until the "outdated" and "unused by rt"
      * lists match and returns a reference to it
      * This referenced list can be modified safely until switch_updated_controller_list()
      * is called, at this point the RT thread may start using it at any time
@@ -284,7 +284,7 @@ private:
       const std::lock_guard<std::recursive_mutex> & guard) const;
 
     /**
-     * /// switch_updated_list Switches the "updated" and "outdated" lists, and waits
+     * switch_updated_list Switches the "updated" and "outdated" lists, and waits
      *  until the RT thread is using the new "updated" list.
      * \param[in] guard Guard needed to make sure the caller is the only one accessing the unused by rt list
      */

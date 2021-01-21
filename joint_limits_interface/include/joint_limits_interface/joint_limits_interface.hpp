@@ -38,7 +38,7 @@
 namespace joint_limits_interface
 {
 
-/** /// The base class of limit handles for enforcing position, velocity, and effort limits of
+/** The base class of limit handles for enforcing position, velocity, and effort limits of
  * an effort-controlled joint.
  */
 class JointLimitHandle
@@ -77,7 +77,7 @@ public:
     prev_vel_(0.0)
   {}
 
-  /** \return Joint name. */
+  /// \return Joint name.
   std::string get_name() const
   {
     return jposh_ ? jposh_.get_name() :
@@ -86,12 +86,10 @@ public:
            std::string();
   }
 
-  /** /// Sub-class implementation of limit enforcing policy.
-   */
+  /// Sub-class implementation of limit enforcing policy.
   virtual void enforce_limits(const rclcpp::Duration & period) = 0;
 
-  /** ///  clear stored state, causing it to reset next iteration
-   */
+  /// Clear stored state, causing it to reset next iteration.
   virtual void reset()
   {
     prev_pos_ = std::numeric_limits<double>::quiet_NaN();
@@ -108,8 +106,8 @@ protected:
   double prev_pos_;
   double prev_vel_;
 
-  /** /// Return velocity for limit calculations.
-   *
+  /// Return velocity for limit calculations.
+  /**
    * @param period Time since last measurement
    * @return the velocity, from state if available, otherwise from previous position history.
    */
@@ -124,7 +122,7 @@ protected:
 };
 
 
-/** /// The base class of limit handles for enforcing position, velocity, and effort limits of
+/** The base class of limit handles for enforcing position, velocity, and effort limits of
  * an effort-controlled joint that has soft-limits.
  */
 class JointSoftLimitsHandle : public JointLimitHandle
@@ -156,7 +154,7 @@ protected:
 };
 
 
-/** /// A handle used to enforce position and velocity limits of a position-controlled joint that does not have
+/** A handle used to enforce position and velocity limits of a position-controlled joint that does not have
     soft limits. */
 class PositionJointSaturationHandle : public JointLimitHandle
 {
@@ -180,7 +178,7 @@ public:
 
 /// Enforce position and velocity limits for a joint that is not subject to soft limits.
 /**
- * \param[in] const rclcpp::Duration period Control period.
+ * \param[in] period Control period.
  */
   void enforce_limits(const rclcpp::Duration & period)
   {
@@ -263,12 +261,11 @@ public:
     }
   }
 
+  /// Enforce position and velocity limits for a joint subject to soft limits.
   /**
-   * /// Enforce position and velocity limits for a joint subject to soft limits.
-   *
    * If the joint has no position limits (eg. a continuous joint), only velocity limits will be
    * enforced.
-   * \param[in] const rclcpp::Duration period Control period.
+   * \param[in] period Control period.
    */
   void enforce_limits(const rclcpp::Duration & period) override
   {
@@ -328,7 +325,7 @@ public:
   }
 };
 
-/** /// A handle used to enforce position, velocity, and effort limits of an effort-controlled
+/** A handle used to enforce position, velocity, and effort limits of an effort-controlled
  * joint that does not have soft limits.
  */
 class EffortJointSaturationHandle : public JointLimitHandle
@@ -364,10 +361,10 @@ public:
   }
 
   /**
-   * /// Enforce position, velocity, and effort limits for a joint that is not subject
+   * Enforce position, velocity, and effort limits for a joint that is not subject
    * to soft limits.
    *
-   * \param[in] const rclcpp::Duration period Control period.
+   * \param[in] period Control period.
    */
   void enforce_limits(const rclcpp::Duration & period) override
   {
@@ -395,10 +392,7 @@ public:
   }
 };
 
-/** /// A handle used to enforce position, velocity and effort limits of an effort-controlled
-  * joint.
-  */
-
+/// A handle used to enforce position, velocity and effort limits of an effort-controlled joint.
 // TODO(anyone): This class is untested!. Update unit tests accordingly.
 class EffortJointSoftLimitsHandle : public JointSoftLimitsHandle
 {
@@ -435,13 +429,12 @@ public:
   {
   }
 
+  /// Enforce position, velocity and effort limits for a joint subject to soft limits.
   /**
-   * /// Enforce position, velocity and effort limits for a joint subject to soft limits.
-   *
    * If the joint has no position limits (eg. a continuous joint), only velocity and effort limits
    * will be enforced.
    *
-   * \param[in] const rclcpp::Duration period Control period.
+   * \param[in] period Control period.
    */
   void enforce_limits(const rclcpp::Duration & period) override
   {
@@ -491,8 +484,7 @@ public:
 };
 
 
-/** /// A handle used to enforce velocity and acceleration limits of a velocity-controlled joint.
-  */
+/// A handle used to enforce velocity and acceleration limits of a velocity-controlled joint.
 class VelocityJointSaturationHandle : public JointLimitHandle
 {
 public:
@@ -526,7 +518,7 @@ public:
 
   /// Enforce joint velocity and acceleration limits.
   /**
-   * \param[in] const rclcpp::Duration period Control period.
+   * \param[in] period Control period.
    */
   void enforce_limits(const rclcpp::Duration & period) override
   {
@@ -557,7 +549,7 @@ public:
   }
 };
 
-/** /// A handle used to enforce position, velocity, and acceleration limits of a
+/** A handle used to enforce position, velocity, and acceleration limits of a
   * velocity-controlled joint.
   */
 class VelocityJointSoftLimitsHandle : public JointSoftLimitsHandle
@@ -581,10 +573,10 @@ public:
   }
 
   /**
-   * /// Enforce position, velocity, and acceleration limits for a velocity-controlled joint
+   * Enforce position, velocity, and acceleration limits for a velocity-controlled joint
    * subject to soft limits.
    *
-   * \param[in] const rclcpp::Duration period Control period.
+   * \param[in] period Control period.
    */
   void enforce_limits(const rclcpp::Duration & period)
   {
@@ -619,7 +611,7 @@ private:
 
 // TODO(anyone): Port this to ROS 2
 // //**
-//  * \brief Interface for enforcing joint limits.
+//  * Interface for enforcing joint limits.
 //  *
 //  * \tparam HandleType %Handle type. Must implement the following methods:
 //  *  \code
@@ -644,7 +636,7 @@ private:
 //
 //   /** \name Real-Time Safe Functions
 //    *\{*/
-//   /** \brief Enforce limits for all managed handles. */
+//   /** Enforce limits for all managed handles. */
 //   void enforce_limits(const rclcpp::Duration & period)
 //   {
 //     for (auto && resource_name_and_handle : this->resource_map_) {
@@ -661,7 +653,7 @@ private:
 // public:
 //   /** \name Real-Time Safe Functions
 //    *\{*/
-//   /** \brief Reset all managed handles. */
+//   /** Reset all managed handles. */
 //   void reset()
 //   {
 //     for (auto && resource_name_and_handle : this->resource_map_) {
@@ -678,7 +670,7 @@ private:
 // public:
 //   /** \name Real-Time Safe Functions
 //    *\{*/
-//   /** \brief Reset all managed handles. */
+//   /** Reset all managed handles. */
 //   void reset()
 //   {
 //     for (auto && resource_name_and_handle : this->resource_map_) {

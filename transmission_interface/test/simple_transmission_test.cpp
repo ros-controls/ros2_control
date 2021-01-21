@@ -110,15 +110,17 @@ protected:
   }
 };
 
-/// \brief Exercises the actuator->joint->actuator roundtrip, which should yield the identity map.
+/// Exercises the actuator->joint->actuator roundtrip, which should yield the identity map.
 class BlackBoxTest : public TransmissionSetup,
   public ::testing::TestWithParam<SimpleTransmission>
 {
 protected:
-  /// \param trans Transmission instance.
-  /// \param interface_name The joint/actuator interface used
-  /// \param ref_val Reference value that will be transformed with the respective forward
-  /// and inverse transmission transformations.
+  /**
+   * \param[in] trans Transmission instance.
+   * \param[in] interface_name The joint/actuator interface used
+   * \param[in] ref_val Reference value that will be transformed with the respective forward
+   * and inverse transmission transformations.
+   */
   void testIdentityMap(
     SimpleTransmission & trans, const std::string & interface_name,
     const double ref_val)

@@ -43,7 +43,7 @@ public:
 
   /// Configuration of the system from data parsed from the robot's URDF.
   /**
-   * \param[in] const HardwareInfo system_info structure with data from URDF.
+   * \param[in] system_info structure with data from URDF.
    * \return return_type::OK if required data are provided and can be parsed,
    * return_type::ERROR otherwise.
    */
@@ -58,7 +58,7 @@ public:
    * Note the ownership over the state interfaces is transfered to the caller.
    *
    *
-   * \return std::vector<StateInterface> vector of state interfaces
+   * \return vector of state interfaces
    */
   virtual
   std::vector<StateInterface> export_state_interfaces() = 0;
@@ -70,7 +70,7 @@ public:
    *
    * Note the ownership over the state interfaces is transfered to the caller.
    *
-   * \return std::vector<CommandInterface> vector of command interfaces
+   * \return vector of command interfaces
    */
   virtual
   std::vector<CommandInterface> export_command_interfaces() = 0;
@@ -91,14 +91,14 @@ public:
 
   /// Get name of the system hardware.
   /**
-   * \return std::string name.
+   * \return name.
    */
   virtual
   std::string get_name() const = 0;
 
   /// Get current state of the system hardware.
   /**
-   * \return status current status.
+   * \return current status.
    */
   virtual
   status get_status() const = 0;

@@ -27,8 +27,8 @@ namespace hardware_interface
 
 /// Search XML snippet from URDF for information about a control component.
 /**
-  * \param[in] std::string urdf string with robot's URDF
-  * \return std::vector<HardwareInfo> vector filled with information about robot's control resources
+  * \param[in] urdf string with robot's URDF
+  * \return vector filled with information about robot's control resources
   * \throws std::runtime_error if a robot attribute or tag is not found
   */
 HARDWARE_INTERFACE_PUBLIC

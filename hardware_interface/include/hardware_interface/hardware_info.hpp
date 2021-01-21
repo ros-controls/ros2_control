@@ -23,89 +23,54 @@
 namespace hardware_interface
 {
 
-/**
- * /// This structure stores information about components defined for a specific hardware
- * in robot's URDF.
- */
+/// This structure stores information about components defined for a specific hardware in robot's URDF.
 struct InterfaceInfo
 {
-  /**
-   * /// name of the command interfaces that can be set, e.g. "position", "velocity", etc.
-   * Used by joints.
-   */
+  /// Name of the command interfaces that can be set, e.g. "position", "velocity", etc. Used by joints.
   std::string name;
-  /**
-   * /// (optional) minimal allowed values of the interface.
-   */
+  /// (Optional) Minimal allowed values of the interface.
   std::string min;
-  /**
-   * /// (optional) maximal allowed values of the interface.
-   */
+  /// (Optional) Maximal allowed values of the interface.
   std::string max;
 };
 
-/**
- * /// This structure stores information about components defined for a specific hardware
- * in robot's URDF.
- */
+/// This structure stores information about components defined for a specific hardware in robot's URDF.
 struct ComponentInfo
 {
-  /**
-   * /// name of the component.
-   */
+  /// Name of the component.
   std::string name;
-  /**
-   * /// type of the component: sensor or joint.
-   */
+  /// Type of the component: sensor or joint.
   std::string type;
-  /**
-   * /// name of the command interfaces that can be set, e.g. "position", "velocity", etc.
-   * Used by joints.
-   */
+  /// Name of the command interfaces that can be set, e.g. "position", "velocity", etc. Used by joints.
   std::vector<InterfaceInfo> command_interfaces;
-  /**
-   * /// name of the state interfaces that can be read, e.g. "position", "velocity", etc.
-   * Used by Joints and Sensors.
-   */
+  /// name of the state interfaces that can be read, e.g. "position", "velocity", etc. Used by Joints and Sensors.
   std::vector<InterfaceInfo> state_interfaces;
-  /**
-   * /// (optional) key-value pairs of component parameters, e.g. min/max values or serial number.
-   */
+  /// (Optional) Key-value pairs of component parameters, e.g. min/max values or serial number.
   std::unordered_map<std::string, std::string> parameters;
 };
-/**
- * /// This structure stores information about hardware defined in a robot's URDF.
- */
+/// This structure stores information about hardware defined in a robot's URDF.
 struct HardwareInfo
 {
-  /**
-   * /// name of the hardware.
-   */
+  /// Name of the hardware.
   std::string name;
-  /**
-   * /// type of the hardware: actuator, sensor or system.
-   */
+  /// Type of the hardware: actuator, sensor or system.
   std::string type;
-  /**
-   * /// class of the hardware that will be dynamically loaded.
-   */
+  /// Class of the hardware that will be dynamically loaded.
   std::string hardware_class_type;
-  /**
-   * /// (optional) key-value pairs for hardware parameters.
-   */
+  /// (Optional) Key-value pairs for hardware parameters.
   std::unordered_map<std::string, std::string> hardware_parameters;
   /**
-   * /// map of joints provided by the hardware where the key is the joint name.
+   * Map of joints provided by the hardware where the key is the joint name.
    * Required for Actuator and System Hardware.
    */
   std::vector<ComponentInfo> joints;
   /**
-   * /// map of sensors provided by the hardware where the key is the joint or link name.
+   * Map of sensors provided by the hardware where the key is the joint or link name.
    * Required for Sensor and optional for System Hardware.
    */
   std::vector<ComponentInfo> sensors;
   /**
-   * /// map of transmissions to calcualte ration between joints and physical actuators.
+   * Map of transmissions to calcualte ration between joints and physical actuators.
    * Optional for Actuator and System Hardware.
    */
   std::vector<ComponentInfo> transmissions;

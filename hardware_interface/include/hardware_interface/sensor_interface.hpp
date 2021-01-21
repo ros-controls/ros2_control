@@ -29,7 +29,7 @@ namespace hardware_interface
 {
 
 /**
-  * /// Virtual Class to implement when integrating a stand-alone sensor into ros2_control.
+  * Virtual Class to implement when integrating a stand-alone sensor into ros2_control.
   * The typical examples are Force-Torque Sensor (FTS), Interial Measurement Unit (IMU).
   */
 class SensorInterface
@@ -42,7 +42,7 @@ public:
 
   /// Configuration of the sensor from data parsed from the robot's URDF.
   /**
-   * \param[in] const HardwareInfo sensor_info structure with data from URDF.
+   * \param[in] sensor_info structure with data from URDF.
    * \return return_type::OK if required data are provided and can be parsed,
    * return_type::ERROR otherwise.
    */
@@ -77,14 +77,14 @@ public:
 
   /// Get name of the sensor hardware.
   /**
-   * \return std::string name.
+   * \return name.
    */
   virtual
   std::string get_name() const = 0;
 
   /// Get current state of the sensor hardware.
   /**
-   * \return status current status.
+   * \return current status.
    */
   virtual
   status get_status() const = 0;

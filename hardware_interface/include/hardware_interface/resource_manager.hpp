@@ -48,8 +48,8 @@ public:
    * If the interfaces ought to be validated, the constructor throws an exception
    * in case the URDF lists interfaces which are not available.
    *
-   * \param[in] std::string urdf string containing the URDF.
-   * \param[in] bool validate_interfaces boolean argument indicating whether the exported
+   * \param[in] urdf string containing the URDF.
+   * \param[in] validate_interfaces boolean argument indicating whether the exported
    * interfaces ought to be validated. Defaults to true.
    */
   explicit ResourceManager(
@@ -65,8 +65,8 @@ public:
    * This is mainly used in conjunction with the default constructor
    * in which the URDF might not be present at first initialization.
    *
-   * \param[in] std::string urdf string containing the URDF.
-   * \param[in] bool validate_interfaces boolean argument indicating whether the exported
+   * \param[in] urdf string containing the URDF.
+   * \param[in] validate_interfaces boolean argument indicating whether the exported
    * interfaces ought to be validated. Defaults to true.
    */
   void load_urdf(const std::string & urdf, bool validate_interfaces = true);
@@ -77,8 +77,8 @@ public:
    * Once the resource is going out of scope, the destructor
    * returns.
    *
-   * \param[in] std::string key String identifier which state interface to claim
-   * \return LoanedStateInterface state interface
+   * \param[in] key String identifier which state interface to claim
+   * \return state interface
    */
   LoanedStateInterface claim_state_interface(const std::string & key);
 
@@ -86,13 +86,13 @@ public:
   /**
    * The keys are collected from each loaded hardware component.
    *
-   * \return std::vector<std::string> vector of strings, containing all registered keys.
+   * \return Vector of strings, containing all registered keys.
    */
   std::vector<std::string> state_interface_keys() const;
 
   /// Checks whether a state interface is registered under the given key.
   /**
-   * \return bool true if interface exist, false otherwise.
+   * \return true if interface exist, false otherwise.
    */
   bool state_interface_exists(const std::string & key) const;
 
@@ -102,8 +102,8 @@ public:
    * \note the equivalent function does not exist for state interfaces.
    * These are solely read-only and can thus be used by multiple instances.
    *
-   * \param[in] std::string key string identifying the interface to check.
-   * \return bool true if interface is already claimed, false if available.
+   * \param[in] key string identifying the interface to check.
+   * \return true if interface is already claimed, false if available.
    */
   bool command_interface_is_claimed(const std::string & key) const;
 
@@ -113,8 +113,8 @@ public:
    * Once the resource is going out of scope, the destructor
    * returns and thus frees the resource to claimed by others.
    *
-   * \param[in] std::string key String identifier which command interface to claim
-   * \return LoanedCommandInterface command interface
+   * \param[in] key String identifier which command interface to claim
+   * \return command interface
    */
   LoanedCommandInterface claim_command_interface(const std::string & key);
 
@@ -122,20 +122,20 @@ public:
   /**
    * The keys are collected from each loaded hardware component.
    *
-   * \return std::vector<std::string> vector of strings, containing all registered keys.
+   * \return vector of strings, containing all registered keys.
    */
   std::vector<std::string> command_interface_keys() const;
 
   /// Checks whether a command interface is registered under the given key.
   /**
-   * \param[in] std::string key string identifying the interface to check.
-   * \return bool true if interface exist, false otherwise.
+   * \param[in] key string identifying the interface to check.
+   * \return true if interface exist, false otherwise.
    */
   bool command_interface_exists(const std::string & key) const;
 
   /// Return the number size_t of loaded actuator components.
   /**
-   * \return size_t number of actuator components.
+   * \return number of actuator components.
    */
   size_t actuator_components_size() const;
 
@@ -147,13 +147,13 @@ public:
    * not be called when a controller is running.
    * \note given that no hardware_info is available, the component has to be configured
    * externally and prior to the call to import.
-   * \param[in] std::unique_ptr<ActuatorInterface> actuator pointer to the actuator interface.
+   * \param[in] actuator pointer to the actuator interface.
    */
   void import_component(std::unique_ptr<ActuatorInterface> actuator);
 
   /// Return the number of loaded sensor components.
   /**
-   * \return size_t number of sensor components.
+   * \return number of sensor components.
    */
   size_t sensor_components_size() const;
 
@@ -165,7 +165,7 @@ public:
    * not be called when a controller is running.
    * \note given that no hardware_info is available, the component has to be configured
    * externally and prior to the call to import.
-   * \param[in] std::unique_ptr<SensorInterface> sensor pointer to the sensor interface.
+   * \param[in] sensor pointer to the sensor interface.
    */
   void import_component(std::unique_ptr<SensorInterface> sensor);
 
@@ -183,13 +183,13 @@ public:
    * not be called when a controller is running.
    * \note given that no hardware_info is available, the component has to be configured
    * externally and prior to the call to import.
-   * \param[in] std::unique_ptr<SystemInterface> system pointer to the system interface.
+   * \param[in] system pointer to the system interface.
    */
   void import_component(std::unique_ptr<SystemInterface> system);
 
   /// Return status for all components.
   /**
-   * \return std::unordered_map<std::string, status> map of hardware names and their status
+   * \return map of hardware names and their status
    */
   std::unordered_map<std::string, status> get_components_status();
 

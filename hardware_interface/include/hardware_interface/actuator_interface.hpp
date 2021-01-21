@@ -88,14 +88,14 @@ public:
 
   /// Get name of the actuator hardware.
   /**
-   * \return std::string name.
+   * \return name.
    */
   virtual
   std::string get_name() const = 0;
 
   /// Get current state of the actuator hardware.
   /**
-   * \return status current status.
+   * \return current status.
    */
   virtual
   status get_status() const = 0;

@@ -46,9 +46,9 @@ namespace detail
 {
 /// Gets value of the text between tags.
 /**
- * \param[in] const tinyxml2::XMLElement * element_it XMLElement iterator to search for the text.
- * \param[in] const std::string tag_name parent tag name where text is searched for (used for error output)
- * \return std::string text of for the tag
+ * \param[in] element_it XMLElement iterator to search for the text.
+ * \param[in] tag_name parent tag name where text is searched for (used for error output)
+ * \return text of for the tag
  * \throws std::runtime_error if text is not found
  */
 std::string get_text_for_element(
@@ -65,10 +65,10 @@ std::string get_text_for_element(
 /**
  * If attribute is not found throws an error.
  *
- * \param[in] const tinyxml2::XMLElement * element_it XMLElement iterator to search for the attribute
- * \param[in] const char * attribute_name attribute name to search for and return value
- * \param[in] std::string tag_name parent tag name where attribute is searched for (used for error output)
- * \return std::string attribute value
+ * \param[in] element_it XMLElement iterator to search for the attribute
+ * \param[in] attribute_name attribute name to search for and return value
+ * \param[in] tag_name parent tag name where attribute is searched for (used for error output)
+ * \return attribute value
  * \throws std::runtime_error if attribute is not found
  */
 std::string get_attribute_value(
@@ -89,10 +89,10 @@ std::string get_attribute_value(
 /**
  * If attribute is not found throws an error.
  *
- * \param[in] const tinyxml2::XMLElement * element_it XMLElement iterator to search for the attribute
- * \param[in] const char * attribute_name atribute name to search for and return value
- * \param[in] const char * tag_name parent tag name where attribute is searched for (used for error output)
- * \return std::string attribute value
+ * \param[in] element_it XMLElement iterator to search for the attribute
+ * \param[in] attribute_name atribute name to search for and return value
+ * \param[in] tag_name parent tag name where attribute is searched for (used for error output)
+ * \return attribute value
  * \throws std::runtime_error if attribute is not found
  */
 std::string get_attribute_value(
@@ -105,8 +105,8 @@ std::string get_attribute_value(
 
 /// Search XML snippet from URDF for parameters.
 /**
- * \param[in] const tinyxml2::XMLElement * params_it pointer to the iterator where parameters info should be found
- * \return std::map< std::__cxx11::string, std::__cxx11::string > key-value map with parameters
+ * \param[in] params_it pointer to the iterator where parameters info should be found
+ * \return key-value map with parameters
  * \throws std::runtime_error if a component attribute or tag is not found
  */
 std::unordered_map<std::string, std::string> parse_parameters_from_xml(
@@ -130,12 +130,11 @@ std::unordered_map<std::string, std::string> parse_parameters_from_xml(
   return parameters;
 }
 
+/// Search XML snippet for definition of interfaceTypes.
 /**
- * /// Search XML snippet for definition of interfaceTypes.
- *
- * \param[in] const tinyxml2::XMLElement * interfaces_it pointer to the iterator over interfaces
+ * \param[in] interfaces_it pointer to the iterator over interfaces
  * \param[in] interfaceTag interface type tag (command or state)
- * \return std::vector< std::__cxx11::string > list of interface types
+ * \return list of interface types
  * \throws std::runtime_error if the interfaceType text not set in a tag
  */
 hardware_interface::InterfaceInfo parse_interfaces_from_xml(
@@ -165,7 +164,7 @@ hardware_interface::InterfaceInfo parse_interfaces_from_xml(
 
 /// Search XML snippet from URDF for information about a control component.
 /**
-  * \param[in] const tinyxml2::XMLElement * component_it pointer to the iterator where component
+  * \param[in] component_it pointer to the iterator where component
   * info should be found
   * \return ComponentInfo filled with information about component
   * \throws std::runtime_error if a component attribute or tag is not found
@@ -203,9 +202,9 @@ ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it
 
 /// Parse a control resource from an "ros2_control" tag.
 /**
- * \param[in] const tinyxml2::XMLElement * ros2_control_it pointer to ros2_control element
+ * \param[in] ros2_control_it pointer to ros2_control element
  * with informations about resource.
- * \return ComponentInfo filled with information about the robot
+ * \return HardwareInfo filled with information about the robot
  * \throws std::runtime_error if a attributes or tag are not found
  */
 HardwareInfo parse_resource_from_xml(const tinyxml2::XMLElement * ros2_control_it)
