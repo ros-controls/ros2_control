@@ -52,10 +52,9 @@ int main(int argc, char ** argv)
         cm->update();
         cm->write();
         std::chrono::system_clock::time_point end = std::chrono::system_clock::now();
-        auto duration = end - begin;
         std::this_thread::sleep_for(
           std::chrono::nanoseconds(1000000000 / update_rate) -
-          std::chrono::duration_cast<std::chrono::nanoseconds>(duration));
+          std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin));
       }
     });
 
