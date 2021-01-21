@@ -2,6 +2,9 @@
 Changelog for package test_robot_hardware
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.1.2 (2021-01-06)
 ------------------
 
