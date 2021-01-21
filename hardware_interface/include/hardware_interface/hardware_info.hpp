@@ -23,10 +23,16 @@
 namespace hardware_interface
 {
 
-/// This structure stores information about components defined for a specific hardware in robot's URDF.
+/**
+ * This structure stores information about components defined for a specific hardware
+ * in robot's URDF.
+ */
 struct InterfaceInfo
 {
-  /// Name of the command interfaces that can be set, e.g. "position", "velocity", etc. Used by joints.
+  /**
+   * Name of the command interfaces that can be set, e.g. "position", "velocity", etc.
+   * Used by joints.
+   */
   std::string name;
   /// (Optional) Minimal allowed values of the interface.
   std::string min;
@@ -34,16 +40,25 @@ struct InterfaceInfo
   std::string max;
 };
 
-/// This structure stores information about components defined for a specific hardware in robot's URDF.
+/**
+ * This structure stores information about components defined for a specific hardware
+ * in robot's URDF.
+ */
 struct ComponentInfo
 {
   /// Name of the component.
   std::string name;
   /// Type of the component: sensor or joint.
   std::string type;
-  /// Name of the command interfaces that can be set, e.g. "position", "velocity", etc. Used by joints.
+  /**
+   * Name of the command interfaces that can be set, e.g. "position", "velocity", etc.
+   * Used by joints.
+   */
   std::vector<InterfaceInfo> command_interfaces;
-  /// name of the state interfaces that can be read, e.g. "position", "velocity", etc. Used by Joints and Sensors.
+  /**
+   * Name of the state interfaces that can be read, e.g. "position", "velocity", etc.
+   * Used by Joints and Sensors.
+   */
   std::vector<InterfaceInfo> state_interfaces;
   /// (Optional) Key-value pairs of component parameters, e.g. min/max values or serial number.
   std::unordered_map<std::string, std::string> parameters;
