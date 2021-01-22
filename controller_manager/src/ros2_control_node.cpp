@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <algorithm>
 #include <chrono>
 #include <memory>
 #include <string>
@@ -53,8 +54,10 @@ int main(int argc, char ** argv)
         cm->write();
         std::chrono::system_clock::time_point end = std::chrono::system_clock::now();
         std::this_thread::sleep_for(
-          std::chrono::nanoseconds(1000000000 / update_rate) -
-          std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin));
+          std::max(
+            std::chrono::nanoseconds(0),
+            std::chrono::nanoseconds(1000000000 / update_rate) -
+            std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin)));
       }
     });
 
