@@ -11,21 +11,24 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+//
+// Author: Jafar Abdi, Denis Stogl
 
 #ifndef FAKE_COMPONENTS__GENERIC_SYSTEM_HPP_
 #define FAKE_COMPONENTS__GENERIC_SYSTEM_HPP_
 
 #include "hardware_interface/base_interface.hpp"
-#include "hardware_interface/system_interface.hpp"
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/hardware_info.hpp"
+#include "hardware_interface/system_interface.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/hardware_interface_status_values.hpp"
 
-namespace fake_components {
+namespace fake_components
+{
 
-class FakeSystem : public hardware_interface::BaseInterface<
-                            hardware_interface::SystemInterface> {
+class GenericSystem : public hardware_interface::BaseInterface<hardware_interface::SystemInterface>
+{
 private:
   std::vector<double> command_positions;
   std::vector<double> current_positions;
@@ -63,7 +66,7 @@ public:
   }
 };
 
-typedef FakeSystem FakeRobot;
+typedef GenericSystem GenericRobot;
 
 } // namespace fake_components
 

@@ -11,19 +11,19 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+//
+// Author: Jafar Abdi, Denis Stogl
 
 #include "fake_components/generic_system.hpp"
 
+#include <hardware_interface/types/hardware_interface_type_values.hpp>
 #include <rclcpp/rclcpp.hpp>
 
-#include <hardware_interface/types/hardware_interface_type_values.hpp>
+namespace fake_components
+{
 
-static const rclcpp::Logger LOGGER = rclcpp::get_logger("fake_joint_driver");
-
-namespace fake_components {
-
-std::vector<hardware_interface::StateInterface>
-FakeSystem::export_state_interfaces() {
+std::vector<hardware_interface::StateInterface> GenericSystem::export_state_interfaces()
+{
   std::vector<hardware_interface::StateInterface> state_interfaces;
   for (uint i = 0; i < info_.joints.size(); i++) {
     state_interfaces.emplace_back(hardware_interface::StateInterface(
@@ -37,8 +37,8 @@ FakeSystem::export_state_interfaces() {
   return state_interfaces;
 }
 
-std::vector<hardware_interface::CommandInterface>
-FakeSystem::export_command_interfaces() {
+std::vector<hardware_interface::CommandInterface> GenericSystem::export_command_interfaces()
+{
   std::vector<hardware_interface::CommandInterface> command_interfaces;
   for (uint i = 0; i < info_.joints.size(); i++) {
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
@@ -48,10 +48,12 @@ FakeSystem::export_command_interfaces() {
   return command_interfaces;
 }
 hardware_interface::return_type
-FakeSystem::configure(const hardware_interface::HardwareInfo &info) {
+GenericSystem::configure(const hardware_interface::HardwareInfo &info)
+{
   if (configure_default(info) != hardware_interface::return_type::OK) {
     return hardware_interface::return_type::ERROR;
   }
+
   // Default start position is zero
   command_positions.resize(info_.joints.size(), 0.0);
   current_positions.resize(info_.joints.size(), 0.0);
@@ -66,11 +68,12 @@ FakeSystem::configure(const hardware_interface::HardwareInfo &info) {
       current_positions.at(i) = std::stod(it->second);
     }
   }
+
   status_ = hardware_interface::status::CONFIGURED;
   return hardware_interface::return_type::OK;
 }
+
 } // namespace fake_components
 
 #include "pluginlib/class_list_macros.hpp"
-PLUGINLIB_EXPORT_CLASS(fake_components::FakeSystem,
-                       hardware_interface::SystemInterface)
+PLUGINLIB_EXPORT_CLASS(fake_components::GenericSystem, hardware_interface::SystemInterface)

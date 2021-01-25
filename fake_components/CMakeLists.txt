@@ -1,11 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 project(fake_components)
 
-# Default to C99
-if(NOT CMAKE_C_STANDARD)
-  set(CMAKE_C_STANDARD 99)
-endif()
-
 # Default to C++14
 if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 14)
@@ -15,32 +10,71 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
-# find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(hardware_interface REQUIRED)
+find_package(pluginlib REQUIRED)
 find_package(rclcpp REQUIRED)
 
-include_directories(include)
+add_library(
+  fake_components
+  SHARED
+  src/generic_system.cpp
+)
+target_include_directories(
+  fake_components
+  PUBLIC
+  include
+)
+ament_target_dependencies(
+  fake_components
+  hardware_interface
+  rclcpp
+)
+# Causes the visibility macros to use dllexport rather than dllimport,
+# which is appropriate when building the dll but not consuming it.
+target_compile_definitions(fake_components PRIVATE "HARDWARE_INTERFACE_BUILDING_DLL")
+# prevent pluginlib from using boost
+target_compile_definitions(fake_components PUBLIC "PLUGINLIB__DISABLE_BOOST_FUNCTIONS")
 
-add_library(${PROJECT_NAME} SHARED src/generic_system.cpp)
+pluginlib_export_plugin_description_file(
+  hardware_interface fake_components_plugin_description.xml)
 
-ament_target_dependencies(${PROJECT_NAME}
-                          rclcpp
-                          hardware_interface
+install(
+  DIRECTORY include/
+  DESTINATION include
 )
 
-install(TARGETS ${PROJECT_NAME} DESTINATION lib)
+install(
+  TARGETS
+  fake_components
+  RUNTIME DESTINATION bin
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
-  # the following line skips the linter which checks for copyrights
-  # uncomment the line when a copyright and license is not present in all source files
-  #set(ament_cmake_copyright_FOUND TRUE)
-  # the following line skips cpplint (only works in a git repo)
-  # uncomment the line when this package is not in a git repo
-  #set(ament_cmake_cpplint_FOUND TRUE)
   ament_lint_auto_find_test_dependencies()
+
+  find_package(ament_cmake_gmock REQUIRED)
+
+  ament_add_gmock(test_generic_system test/test_generic_system.cpp)
+  target_include_directories(test_generic_system PRIVATE include)
+  ament_target_dependencies(test_generic_system
+    hardware_interface
+    pluginlib)
+
 endif()
 
-pluginlib_export_plugin_description_file(hardware_interface fake_components_plugin_description.xml)
+ament_export_include_directories(
+  include
+)
+ament_export_libraries(
+  fake_components
+)
+ament_export_dependencies(
+  hardware_interface
+  pluginlib
+  rclcpp
+)
 ament_package()
