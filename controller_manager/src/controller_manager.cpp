@@ -167,7 +167,7 @@ controller_interface::ControllerInterfaceSharedPtr ControllerManager::load_contr
   RCLCPP_INFO(get_logger(), "Loading controller '%s'", controller_name.c_str());
 
   if (!loader_->isClassAvailable(controller_type)) {
-    const std::string error_msg("Loader for controller '" + controller_name + "' Not found");
+    const std::string error_msg("Loader for controller '" + controller_name + "' not found.");
     RCLCPP_ERROR(get_logger(), "Available classes:");
     for (const auto & c : loader_->getDeclaredClasses()) {
       RCLCPP_ERROR(get_logger(), "%s", c.c_str());
@@ -201,7 +201,7 @@ controller_interface::ControllerInterfaceSharedPtr ControllerManager::load_contr
     declare_parameter(param_name, rclcpp::ParameterValue());
   }
   if (!get_parameter(param_name, controller_type)) {
-    RCLCPP_ERROR(get_logger(), "'type' Param not defined for '%s'", controller_name.c_str());
+    RCLCPP_ERROR(get_logger(), "'type' param not defined for '%s'.", controller_name.c_str());
     return nullptr;
   }
   return load_controller(controller_name, controller_type);
@@ -291,7 +291,7 @@ controller_interface::return_type ControllerManager::configure_controller(
   {
     RCLCPP_ERROR(
       get_logger(),
-      "Controller '%s' can not be configured from' %'s state",
+      "Controller '%s' can not be configured from '%'s state.",
       controller_name.c_str(),
       state.label().c_str());
     return controller_interface::return_type::ERROR;
@@ -317,7 +317,7 @@ controller_interface::return_type ControllerManager::configure_controller(
   if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
     RCLCPP_ERROR(
       get_logger(),
-      "After configuring, controller   '%s' is in state '%s' , expected inactive",
+      "After configuring, controller '%s' is in state '%s' , expected inactive.",
       controller_name.c_str(),
       new_state.label().c_str());
     return controller_interface::return_type::ERROR;
@@ -344,9 +344,9 @@ controller_interface::return_type ControllerManager::switch_controller(
 
   if (strictness == 0) {
     RCLCPP_WARN(
-      get_logger(), "Controller manager: to switch controllers you need to specify a  "
-      "Strictness level of controller_manager_msgs::SwitchController::STRICT "
-      "(%d) or ::Best_effort (%d). Defaulting to ::Best_effort",
+      get_logger(), "Controller Manager: to switch controllers you need to specify a "
+      "strictness level of controller_manager_msgs::SwitchController::STRICT "
+      "(%d) or ::BEST_EFFORT (%d). Defaulting to ::BEST_EFFORT",
       controller_manager_msgs::srv::SwitchController::Request::STRICT,
       controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT);
     strictness = controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT;
@@ -624,7 +624,7 @@ void ControllerManager::start_controllers()
       if (resource_manager_->command_interface_is_claimed(command_interface)) {
         RCLCPP_ERROR(
           get_logger(),
-          "Resource conflict for controller' %'s. Command interface  '%s' is already claimed",
+          "Resource conflict for controller '%s'. Command interface  '%s' is already claimed.",
           request.c_str(), command_interface.c_str());
         assignment_successful = false;
         break;
@@ -634,7 +634,7 @@ void ControllerManager::start_controllers()
       } catch (const std::exception & e) {
         RCLCPP_ERROR(
           get_logger(),
-          "Can't activate controller '%s'. '%s'",
+          "Can't activate controller '%s': %s",
           request.c_str(), e.what());
         assignment_successful = false;
         break;
@@ -665,7 +665,7 @@ void ControllerManager::start_controllers()
       } catch (const std::exception & e) {
         RCLCPP_ERROR(
           get_logger(),
-          "Can't activate controller '%s'.'%s'",
+          "Can't activate controller '%s': %s",
           request.c_str(), e.what());
         assignment_successful = false;
         break;
