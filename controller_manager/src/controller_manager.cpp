@@ -624,7 +624,7 @@ void ControllerManager::start_controllers()
       if (resource_manager_->command_interface_is_claimed(command_interface)) {
         RCLCPP_ERROR(
           get_logger(),
-          "Resource conflict for controller '%s'. Command interface  '%s' is already claimed.",
+          "Resource conflict for controller '%s'. Command interface '%s' is already claimed.",
           request.c_str(), command_interface.c_str());
         assignment_successful = false;
         break;
