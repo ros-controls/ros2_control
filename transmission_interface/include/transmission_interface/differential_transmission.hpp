@@ -16,13 +16,13 @@
 #define TRANSMISSION_INTERFACE__DIFFERENTIAL_TRANSMISSION_HPP_
 
 #include <cassert>
+#include <set>
 #include <string>
 #include <vector>
-#include <set>
 
-#include "transmission_interface/transmission.hpp"
-#include "transmission_interface/exception.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
+#include "transmission_interface/exception.hpp"
+#include "transmission_interface/transmission.hpp"
 
 namespace transmission_interface
 {
@@ -336,7 +336,6 @@ inline void DifferentialTransmission::actuator_to_joint()
   }
 }
 
-
 inline void DifferentialTransmission::joint_to_actuator()
 {
   const auto & ar = actuator_reduction_;
@@ -384,7 +383,6 @@ inline void DifferentialTransmission::joint_to_actuator()
   }
 }
 
-
 std::string DifferentialTransmission::get_handles_info() const
 {
   return std::string("Got the following handles:\n") +
@@ -396,7 +394,6 @@ std::string DifferentialTransmission::get_handles_info() const
     get_names(
       actuator_effort_));
 }
-
 
 }  // namespace transmission_interface
 

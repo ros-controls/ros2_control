@@ -28,7 +28,6 @@ using hardware_interface::HW_IF_POSITION;
 using hardware_interface::HW_IF_VELOCITY;
 using hardware_interface::HW_IF_EFFORT;
 using testing::DoubleNear;
-
 // Floating-point value comparison threshold
 const double EPS = 1e-6;
 

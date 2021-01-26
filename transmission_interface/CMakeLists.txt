@@ -52,7 +52,6 @@ if(BUILD_TESTING)
   target_include_directories(test_differential_transmission PUBLIC include test)
   target_link_libraries(test_differential_transmission transmission_parser)
 
-
 endif()
 
 ament_export_include_directories(
