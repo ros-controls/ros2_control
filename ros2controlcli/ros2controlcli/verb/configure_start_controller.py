@@ -17,6 +17,8 @@ from ros2cli.verb import VerbExtension
 from ros2controlcli.api import add_controller_mgr_parsers, ControllerNameCompleter, \
     configure_start_controller
 
+import sys
+
 
 class ConfigureStartControllerVerb(VerbExtension):
     """Configure and Start a controller in a controller manager."""
@@ -30,4 +32,7 @@ class ConfigureStartControllerVerb(VerbExtension):
 
     def main(self, *, args):
         response = configure_start_controller(args.controller_manager, args.controller_name)
+        if not response.ok:
+            print('Error configuring and starting controller, check '
+                  'controller_manager logs', file=sys.stderr)
         return not response.ok

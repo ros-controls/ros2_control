@@ -17,6 +17,8 @@ from ros2cli.verb import VerbExtension
 from ros2controlcli.api import add_controller_mgr_parsers, LoadedControllerNameCompleter, \
     switch_controllers
 
+import sys
+
 
 class SwitchVerb(VerbExtension):
     """Switch controllers in a controller manager."""
@@ -55,4 +57,6 @@ class SwitchVerb(VerbExtension):
             args.strict,
             args.start_asap,
             args.switch_timeout)
+        if not response.ok:
+            print('Error switching controllers, check controller_manager logs', file=sys.stderr)
         return not response.ok
