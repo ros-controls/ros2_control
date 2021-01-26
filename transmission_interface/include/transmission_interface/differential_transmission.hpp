@@ -20,6 +20,7 @@
 #include <string>
 #include <vector>
 
+#include "transmission_interface/accessor.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "transmission_interface/exception.hpp"
 #include "transmission_interface/transmission.hpp"
@@ -184,51 +185,6 @@ inline DifferentialTransmission::DifferentialTransmission(
   {
     throw Exception("Transmission reduction ratios cannot be zero.");
   }
-}
-
-
-template<typename T>
-std::string to_string(const std::vector<T> & list)
-{
-  std::stringstream ss;
-  ss << "[";
-  for (const auto & elem : list) {
-    ss << elem << ", ";
-  }
-
-  if (!list.empty()) {
-    ss.seekp(-2, std::ios_base::end);  // remove last ", "
-  }
-  ss << "]";
-  return ss.str();
-}
-
-template<class T>
-std::vector<std::string> get_names(const std::vector<T> & handles)
-{
-  std::set<std::string> names;
-  std::transform(
-    handles.cbegin(), handles.cend(), std::inserter(names, names.end()),
-    [](const auto & handle) {return handle.get_name();});
-  return std::vector<std::string>(names.begin(), names.end());
-}
-
-template<typename T>
-std::vector<T> get_ordered_handles(
-  const std::vector<T> & unordered_handles, const std::vector<std::string> & names,
-  const std::string & interface_type)
-{
-  std::vector<T> result;
-  for (const auto & name : names) {
-    for (auto & handle : unordered_handles) {
-      if ((handle.get_name() == name) &&
-        (handle.get_interface_name() == interface_type) && handle)
-      {
-        result.push_back(handle);
-      }
-    }
-  }
-  return result;
 }
 
 void DifferentialTransmission::configure(
