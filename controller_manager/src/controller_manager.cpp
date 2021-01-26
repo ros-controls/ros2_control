@@ -379,7 +379,7 @@ controller_interface::return_type ControllerManager::switch_controller(
           if (strictness == controller_manager_msgs::srv::SwitchController::Request::STRICT) {
             RCLCPP_ERROR(
               get_logger(),
-              "Could not '%s' controller with name '%s' because " + 
+              "Could not '%s' controller with name '%s' because " +
               "no controller with this name exists",
               action.c_str(),
               controller.c_str());
