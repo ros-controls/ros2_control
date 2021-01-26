@@ -33,4 +33,4 @@ class ReloadLibrariesVerb(VerbExtension):
             print('Reload successful')
         else:
             print('Error in reload, check controller manager logs')
-        return response.ok
+        return not response.ok

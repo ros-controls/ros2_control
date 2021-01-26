@@ -55,4 +55,4 @@ class SwitchVerb(VerbExtension):
             args.strict,
             args.start_asap,
             args.switch_timeout)
-        return response.ok
+        return not response.ok

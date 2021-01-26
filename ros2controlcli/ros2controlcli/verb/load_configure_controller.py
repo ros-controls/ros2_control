@@ -30,4 +30,4 @@ class LoadConfigureControllerVerb(VerbExtension):
 
     def main(self, *, args):
         response = load_configure_controller(args.controller_manager, args.controller_name)
-        return response.ok
+        return not response.ok
