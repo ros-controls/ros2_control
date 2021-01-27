@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # Copyright 2021 PAL Robotics S.L.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,11 +31,11 @@ def main(args=None):
     controller_name = args.controller_name
     controller_manager_name = args.controller_manager
 
+    # Ignore returncode, because message is already printed and we'll try to unload anyway
     ret = subprocess.run(["ros2", "control", "switch_controllers", "--stop-controllers",
                           controller_name, "--controller-manager", controller_manager_name])
     print("Stopped controller")
 
-    # Ignore returncode, because message is already printed and we'll try to unload anyway
     ret = subprocess.run(["ros2", "control", "unload_controller", controller_name,
                           "--controller-manager", controller_manager_name])
     if ret.returncode != 0:
