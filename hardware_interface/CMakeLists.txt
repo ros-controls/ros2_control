@@ -90,10 +90,22 @@ if(BUILD_TESTING)
   pluginlib_export_plugin_description_file(
     hardware_interface test/test_components/test_components.xml)
 
-  ament_add_gmock(
-    test_resource_manager
-    test/test_resource_manager.cpp
+  add_library(test_hardware_components SHARED
+  test/test_hardware_components/test_single_joint_actuator.cpp
+  test/test_hardware_components/test_force_torque_sensor.cpp
+  test/test_hardware_components/test_two_joint_system.cpp
   )
+  target_link_libraries(test_hardware_components hardware_interface)
+  ament_target_dependencies(test_hardware_components
+    pluginlib)
+  install(TARGETS test_hardware_components
+    DESTINATION lib
+  )
+  pluginlib_export_plugin_description_file(
+    hardware_interface test/test_hardware_components/test_hardware_components.xml
+  )
+
+  ament_add_gmock(test_resource_manager test/test_resource_manager.cpp)
   target_link_libraries(test_resource_manager hardware_interface)
 endif()
 

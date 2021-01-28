@@ -1,0 +1,20 @@
+<library path="test_hardware_components_components">
+
+  <class name="test_hardware_components/TestSingleJointActuator" type="test_hardware_components::TestSingleJointActuator" base_class_type="hardware_interface::ActuatorInterface">
+    <description>
+      Test actuator component for a single position joint
+    </description>
+  </class>
+
+  <class name="test_hardware_components/TestForceTorqueSensor" type="test_hardware_components::TestForceTorqueSensor" base_class_type="hardware_interface::SensorInterface">
+    <description>
+      Test sensor component emulating a force torque sensor
+    </description>
+  </class>
+
+  <class name="test_hardware_components/TestTwoJointSystem" type="test_hardware_components::TestTwoJointSystem" base_class_type="hardware_interface::SystemInterface">
+    <description>
+      Test system component for a two degree of freedom position joint robot
+    </description>
+  </class>
+</library>
