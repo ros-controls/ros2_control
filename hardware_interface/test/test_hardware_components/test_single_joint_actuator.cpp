@@ -26,7 +26,7 @@ using hardware_interface::CommandInterface;
 using hardware_interface::ActuatorInterface;
 using hardware_interface::BaseInterface;
 
-namespace test_robot_hardware
+namespace test_hardware_components
 {
 
 class TestSingleJointActuator : public BaseInterface<ActuatorInterface>
@@ -132,8 +132,8 @@ private:
   double position_command_ = 0.0;
 };
 
-}  // namespace test_robot_hardware
+}  // namespace test_hardware_components
 
 #include "pluginlib/class_list_macros.hpp"  // NOLINT
 PLUGINLIB_EXPORT_CLASS(
-  test_robot_hardware::TestSingleJointActuator, hardware_interface::ActuatorInterface)
+  test_hardware_components::TestSingleJointActuator, hardware_interface::ActuatorInterface)

@@ -26,7 +26,7 @@ using hardware_interface::StateInterface;
 using hardware_interface::BaseInterface;
 using hardware_interface::SensorInterface;
 
-namespace test_robot_hardware
+namespace test_hardware_components
 {
 
 class TestForceTorqueSensor : public BaseInterface<SensorInterface>
@@ -133,8 +133,8 @@ private:
   FTValues values_;
 };
 
-}  // namespace test_robot_hardware
+}  // namespace test_hardware_components
 
 #include "pluginlib/class_list_macros.hpp"  // NOLINT
 PLUGINLIB_EXPORT_CLASS(
-  test_robot_hardware::TestForceTorqueSensor, hardware_interface::SensorInterface)
+  test_hardware_components::TestForceTorqueSensor, hardware_interface::SensorInterface)

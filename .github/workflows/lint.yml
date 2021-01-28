@@ -23,5 +23,4 @@ jobs:
           controller_manager_msgs
           hardware_interface
           ros2_control
-          test_robot_hardware
           transmission_interface
