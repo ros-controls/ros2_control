@@ -27,8 +27,8 @@
 namespace transmission_interface
 {
 
+ /// Implementation of a differential transmission.
 /**
- * \brief Implementation of a differential transmission.
  *
  * This transmission relates <b>two actuators</b> and <b>two joints</b> through a differential mechanism, as illustrated
  * below.
@@ -105,9 +105,9 @@ class DifferentialTransmission : public Transmission
 {
 public:
   /**
-   * \param actuator_reduction Reduction ratio of actuators.
-   * \param joint_reduction    Reduction ratio of joints.
-   * \param joint_offset       Joint position offset used in the position mappings.
+   * \param[in] actuator_reduction Reduction ratio of actuators.
+   * \param[in] joint_reduction    Reduction ratio of joints.
+   * \param[in] joint_offset       Joint position offset used in the position mappings.
    * \pre Nonzero actuator and joint reduction values.
    */
   DifferentialTransmission(
@@ -115,19 +115,24 @@ public:
     const std::vector<double> & joint_reduction,
     const std::vector<double> & joint_offset = {0.0, 0.0});
 
+  /**
+   * \param[in] joint_handles     Handles of joint values.
+   * \param[in] actuator_handles  Handles of actuator values.
+   * \pre Handles are valid and matching in size
+   */
   void configure(
     const std::vector<JointHandle> & joint_handles,
     const std::vector<ActuatorHandle> & actuator_handles) override;
 
+  /// Transform variables from actuator to joint space.
   /**
-   * \brief Transform variables from actuator to joint space.
    * \pre Actuator and joint vectors must have size 2 and point to valid data.
    *  To call this method it is not required that all other data vectors contain valid data, and can even remain empty.
    */
   void actuator_to_joint() override;
 
+  /// Transform variables from joint to actuator space.
   /**
-   * \brief Transform variables from joint to actuator space.
    * \pre Actuator and joint vectors must have size 2 and point to valid data.
    *  To call this method it is not required that all other data vectors contain valid data, and can even remain empty.
    */
@@ -140,9 +145,7 @@ public:
   const std::vector<double> & get_joint_reduction()    const {return joint_reduction_;}
   const std::vector<double> & get_joint_offset()       const {return joint_offset_;}
 
-  /**
-   * \brief Get human-friendly report of handles
-   */
+  /// Get human-friendly report of handles
   std::string get_handles_info() const;
 
 protected:
