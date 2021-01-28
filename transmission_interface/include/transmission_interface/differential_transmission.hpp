@@ -27,7 +27,7 @@
 namespace transmission_interface
 {
 
- /// Implementation of a differential transmission.
+/// Implementation of a differential transmission.
 /**
  *
  * This transmission relates <b>two actuators</b> and <b>two joints</b> through a differential mechanism, as illustrated
