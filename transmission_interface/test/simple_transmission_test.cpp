@@ -240,9 +240,3 @@ TEST_F(WhiteBoxTest, MoveJoint)
     EXPECT_NEAR(unique_value, 13.37, EPS);
   }
 }
-
-int main(int argc, char ** argv)
-{
-  testing::InitGoogleMock(&argc, argv);
-  return RUN_ALL_TESTS();
-}

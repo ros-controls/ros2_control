@@ -43,14 +43,14 @@ if(BUILD_TESTING)
     test/simple_transmission_test.cpp
   )
   target_include_directories(test_simple_transmission PUBLIC include hardware_interface)
-  target_link_libraries(test_simple_transmission transmission_parser)
+  ament_target_dependencies(test_simple_transmission hardware_interface)
 
   ament_add_gmock(
     test_differential_transmission
     test/differential_transmission_test.cpp
   )
-  target_include_directories(test_differential_transmission PUBLIC include test)
-  target_link_libraries(test_differential_transmission transmission_parser)
+  target_include_directories(test_differential_transmission PUBLIC include hardware_interface)
+  ament_target_dependencies(test_differential_transmission hardware_interface)
 
 endif()
 
