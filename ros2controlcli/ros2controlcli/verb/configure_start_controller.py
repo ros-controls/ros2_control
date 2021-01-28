@@ -30,4 +30,4 @@ class ConfigureStartControllerVerb(VerbExtension):
 
     def main(self, *, args):
         response = configure_start_controller(args.controller_manager, args.controller_name)
-        return response.ok
+        return not response.ok
