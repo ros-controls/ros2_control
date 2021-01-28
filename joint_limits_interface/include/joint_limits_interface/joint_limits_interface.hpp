@@ -38,7 +38,8 @@
 namespace joint_limits_interface
 {
 
-/** The base class of limit handles for enforcing position, velocity, and effort limits of
+/**
+ * The base class of limit handles for enforcing position, velocity, and effort limits of
  * an effort-controlled joint.
  */
 class JointLimitHandle
@@ -325,7 +326,8 @@ public:
   }
 };
 
-/** A handle used to enforce position, velocity, and effort limits of an effort-controlled
+/**
+ * A handle used to enforce position, velocity, and effort limits of an effort-controlled
  * joint that does not have soft limits.
  */
 class EffortJointSaturationHandle : public JointLimitHandle
@@ -549,7 +551,8 @@ public:
   }
 };
 
-/** A handle used to enforce position, velocity, and acceleration limits of a
+/**
+ * A handle used to enforce position, velocity, and acceleration limits of a
   * velocity-controlled joint.
   */
 class VelocityJointSoftLimitsHandle : public JointSoftLimitsHandle
