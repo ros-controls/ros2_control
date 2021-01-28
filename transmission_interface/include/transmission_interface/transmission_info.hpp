@@ -22,9 +22,7 @@
 namespace transmission_interface
 {
 
-/**
- * \brief Contains semantic info about a given joint loaded from XML (URDF)
- */
+/// Contains semantic info about a given joint loaded from XML (URDF)
 struct JointInfo
 {
   std::string name;
@@ -32,9 +30,7 @@ struct JointInfo
   std::string role;
 };
 
-/**
- * \brief Contains semantic info about a given actuator loaded from XML (URDF)
- */
+/// Contains semantic info about a given actuator loaded from XML (URDF)
 struct ActuatorInfo
 {
   std::string name;
@@ -42,9 +38,7 @@ struct ActuatorInfo
   double mechanical_reduction;
 };
 
-/**
- * \brief Contains semantic info about a given transmission loaded from XML (URDF)
- */
+/// Contains semantic info about a given transmission loaded from XML (URDF)
 struct TransmissionInfo
 {
   std::string name;

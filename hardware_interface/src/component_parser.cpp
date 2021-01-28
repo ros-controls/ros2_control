@@ -44,11 +44,10 @@ namespace hardware_interface
 
 namespace detail
 {
+/// Gets value of the text between tags.
 /**
- * \brief Gets value of the text between tags.
- *
- * \param element_it XMLElement iterator to search for the text.
- * \param tag_name parent tag name where text is searched for (used for error output)
+ * \param[in] element_it XMLElement iterator to search for the text.
+ * \param[in] tag_name parent tag name where text is searched for (used for error output)
  * \return text of for the tag
  * \throws std::runtime_error if text is not found
  */
@@ -62,13 +61,13 @@ std::string get_text_for_element(
   return get_text_output;
 }
 
+/// Gets value of the attribute on an XMLelement.
 /**
- * \brief Gets value of the attribute on an XMLelement.
  * If attribute is not found throws an error.
  *
- * \param element_it XMLElement iterator to search for the attribute
- * \param attribute_name attribute name to search for and return value
- * \param tag_name parent tag name where attribute is searched for (used for error output)
+ * \param[in] element_it XMLElement iterator to search for the attribute
+ * \param[in] attribute_name attribute name to search for and return value
+ * \param[in] tag_name parent tag name where attribute is searched for (used for error output)
  * \return attribute value
  * \throws std::runtime_error if attribute is not found
  */
@@ -86,13 +85,13 @@ std::string get_attribute_value(
   return element_it->Attribute(attribute_name);
 }
 
+/// Gets value of the attribute on an XMLelement.
 /**
- * \brief Gets value of the attribute on an XMLelement.
  * If attribute is not found throws an error.
  *
- * \param element_it XMLElement iterator to search for the attribute
- * \param attribute_name atribute name to search for and return value
- * \param tag_name parent tag name where attribute is searched for (used for error output)
+ * \param[in] element_it XMLElement iterator to search for the attribute
+ * \param[in] attribute_name atribute name to search for and return value
+ * \param[in] tag_name parent tag name where attribute is searched for (used for error output)
  * \return attribute value
  * \throws std::runtime_error if attribute is not found
  */
@@ -104,11 +103,10 @@ std::string get_attribute_value(
   return get_attribute_value(element_it, attribute_name, std::string(tag_name));
 }
 
+/// Search XML snippet from URDF for parameters.
 /**
- * \brief Search XML snippet from URDF for parameters.
- *
- * \param params_it pointer to the iterator where parameters info should be found
- * \return std::map< std::__cxx11::string, std::__cxx11::string > key-value map with parameters
+ * \param[in] params_it pointer to the iterator where parameters info should be found
+ * \return key-value map with parameters
  * \throws std::runtime_error if a component attribute or tag is not found
  */
 std::unordered_map<std::string, std::string> parse_parameters_from_xml(
@@ -132,12 +130,11 @@ std::unordered_map<std::string, std::string> parse_parameters_from_xml(
   return parameters;
 }
 
+/// Search XML snippet for definition of interfaceTypes.
 /**
- * \brief Search XML snippet for definition of interfaceTypes.
- *
- * \param interfaces_it pointer to the iterator over interfaces
- * \param interfaceTag interface type tag (command or state)
- * \return std::vector< std::__cxx11::string > list of interface types
+ * \param[in] interfaces_it pointer to the iterator over interfaces
+ * \param[in] interfaceTag interface type tag (command or state)
+ * \return list of interface types
  * \throws std::runtime_error if the interfaceType text not set in a tag
  */
 hardware_interface::InterfaceInfo parse_interfaces_from_xml(
@@ -165,10 +162,10 @@ hardware_interface::InterfaceInfo parse_interfaces_from_xml(
   return interface;
 }
 
+/// Search XML snippet from URDF for information about a control component.
 /**
-  * \brief Search XML snippet from URDF for information about a control component.
-  *
-  * \param component_it pointer to the iterator where component info should be found
+  * \param[in] component_it pointer to the iterator where component
+  * info should be found
   * \return ComponentInfo filled with information about component
   * \throws std::runtime_error if a component attribute or tag is not found
   */
@@ -203,11 +200,11 @@ ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it
   return component;
 }
 
+/// Parse a control resource from an "ros2_control" tag.
 /**
- * \brief Parse a control resource from an "ros2_control" tag.
- *
- * \param ros2_control_it pointer to ros2_control element with informtions about resource.
- * \return ComponentInfo filled with information about the robot
+ * \param[in] ros2_control_it pointer to ros2_control element
+ * with informations about resource.
+ * \return HardwareInfo filled with information about the robot
  * \throws std::runtime_error if a attributes or tag are not found
  */
 HardwareInfo parse_resource_from_xml(const tinyxml2::XMLElement * ros2_control_it)

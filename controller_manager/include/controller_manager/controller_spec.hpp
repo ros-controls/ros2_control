@@ -28,8 +28,8 @@
 namespace controller_manager
 {
 
-/** \brief Controller Specification
- *
+/// Controller Specification
+/**
  * This struct contains both a pointer to a given controller, \ref c, as well
  * as information about the controller, \ref info.
  *
