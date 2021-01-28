@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+/// Parses <tt>\<transmission\></tt> elements into corresponding structs from XML (URDF).
 /**
  * \file
- * \brief Parses <tt>\<transmission\></tt> elements into corresponding structs from XML (URDF).
  * \author Dave Coleman
  */
 
@@ -33,8 +33,8 @@
 namespace transmission_interface
 {
 
+/// Parses the joint elements within transmission elements of a URDF
 /**
- * \brief Parses the joint elements within transmission elements of a URDF
  * If parse errors occur a std::runtime_error will be thrown with a description of the problem.
  * \param[in] trans_it pointer to the current XML element being parsed
  * \param[out] joints resulting list of joints in the transmission
@@ -43,8 +43,8 @@ namespace transmission_interface
 TRANSMISSION_INTERFACE_PUBLIC
 std::vector<JointInfo> parse_joints(tinyxml2::XMLElement * trans_it);
 
+/// Parses the actuator elements within transmission elements of a URDF
 /**
- * \brief Parses the actuator elements within transmission elements of a URDF
  * If parse errors occur a std::runtime_error will be thrown with a description of the problem.
  * \param[in] trans_it pointer to the current XML element being parsed
  * \param[out] actuators resulting list of actuators in the transmission
@@ -53,10 +53,9 @@ std::vector<JointInfo> parse_joints(tinyxml2::XMLElement * trans_it);
 TRANSMISSION_INTERFACE_PUBLIC
 std::vector<ActuatorInfo> parse_actuators(tinyxml2::XMLElement * trans_it);
 
-
+/// Parse transmission information from a URDF.
 /**
- * \brief Parse transmission information from a URDF.
- * \param urdf A string containing the URDF xml
+ * \param[in] urdf A string containing the URDF xml
  * \return parsed transmission information
  * \throws std::runtime_error on malformed or empty xml
  */

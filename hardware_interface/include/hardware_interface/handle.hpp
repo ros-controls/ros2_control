@@ -23,7 +23,7 @@
 
 namespace hardware_interface
 {
-/** A handle used to get and set a value on a given interface. */
+/// A handle used to get and set a value on a given interface.
 template<class HandleType>
 class ReadOnlyHandle
 {
@@ -56,7 +56,7 @@ public:
 
   virtual ~ReadOnlyHandle() = default;
 
-  /// \brief returns true if handle references a value
+  /// Returns true if handle references a value.
   inline operator bool() const {return value_ptr_ != nullptr;}
 
   HandleType with_value_ptr(double * value_ptr)
@@ -135,7 +135,7 @@ public:
 class CommandInterface : public ReadWriteHandle<CommandInterface>
 {
 public:
-  /// CommandInterface copy constructor is actively deleted
+  /// CommandInterface copy constructor is actively deleted.
   /**
    * Command interfaces are having a unique ownership and thus
    * can't be copied in order to avoid simultaneous writes to

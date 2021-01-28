@@ -26,9 +26,8 @@
 namespace transmission_interface
 {
 
+/// Abstract base class for representing mechanical transmissions.
 /**
- * \brief Abstract base class for representing mechanical transmissions.
- *
  * Mechanical transmissions transform effort/flow variables such that their product (power) remains constant.
  * Effort variables for linear and rotational domains are \e force and \e torque; while the flow variables are
  * respectively linear velocity and angular velocity.
@@ -54,9 +53,9 @@ public:
     const std::vector<JointHandle> & joint_handles,
     const std::vector<ActuatorHandle> & actuator_handles) = 0;
 
+  /// Transform \e effort variables from actuator to joint space.
   /**
-   * \brief Transform \e effort variables from actuator to joint space.
-   * \param[in]  act_data Actuator-space variables.
+   * \param[in] act_data Actuator-space variables.
    * \param[out] jnt_data Joint-space variables.
    * \pre All non-empty vectors must contain valid data and their size should be consistent with the number of
    * transmission actuators and joints.
@@ -64,9 +63,9 @@ public:
    */
   virtual void actuator_to_joint() = 0;
 
+  /// Transform \e effort variables from joint to actuator space.
   /**
-  * \brief Transform \e effort variables from joint to actuator space.
-  * \param[in]  jnt_data Joint-space variables.
+  * \param[in] jnt_data Joint-space variables.
   * \param[out] act_data Actuator-space variables.
   * \pre All non-empty vectors must contain valid data and their size should be consistent with the number of
   * transmission actuators and joints.

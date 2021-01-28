@@ -26,7 +26,7 @@ namespace joint_limits_interface
 {
 
 /**
- * \brief Populate a JointLimits instance from URDF joint data.
+ * Populate a JointLimits instance from URDF joint data.
  * \param[in] urdf_joint URDF joint.
  * \param[out] limits Where URDF joint limit data gets written into. Limits in \e urdf_joint will overwrite existing
  * values. Values in \e limits not present in \e urdf_joint remain unchanged.
@@ -61,7 +61,7 @@ inline bool getJointLimits(urdf::JointConstSharedPtr urdf_joint, JointLimits & l
 }
 
 /**
- * \brief Populate a SoftJointLimits instance from URDF joint data.
+ * Populate a SoftJointLimits instance from URDF joint data.
  * \param[in] urdf_joint URDF joint.
  * \param[out] soft_limits Where URDF soft joint limit data gets written into.
  * \return True if \e urdf_joint has a valid soft limits specification, false otherwise.
