@@ -434,9 +434,3 @@ TEST_F(WhiteBoxTest, MoveBothJoints)
     EXPECT_THAT(3.975, DoubleNear(j_val[1], EPS));
   }
 }
-
-int main(int argc, char ** argv)
-{
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

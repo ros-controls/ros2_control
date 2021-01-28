@@ -22,15 +22,15 @@
 #include <string>
 #include <vector>
 
-#include "transmission_interface/transmission.hpp"
-#include "transmission_interface/exception.hpp"
 #include "transmission_interface/accessor.hpp"
+#include "transmission_interface/exception.hpp"
+#include "transmission_interface/transmission.hpp"
 
 namespace transmission_interface
 {
 
+/// Implementation of a four-bar-linkage transmission.
 /**
-* \brief Implementation of a four-bar-linkage transmission.
 *
 * This transmission relates <b>two actuators</b> and <b>two joints</b> through a mechanism in which the state of the
 * first joint only depends on the first actuator, while the second joint depends on both actuators, as
@@ -116,21 +116,24 @@ public:
     const std::vector<double> & joint_reduction,
     const std::vector<double> & joint_offset = std::vector<double>(2, 0.0));
 
-
+  /**
+   * \param[in] joint_handles     Handles of joint values.
+   * \param[in] actuator_handles  Handles of actuator values.
+   * \pre Handles are valid and matching in size
+   */
   void configure(
     const std::vector<JointHandle> & joint_handles,
     const std::vector<ActuatorHandle> & actuator_handles) override;
 
-
+  /// Transform variables from actuator to joint space.
   /**
-   * \brief Transform variables from actuator to joint space.
    * \pre Actuator and joint vectors must have size 2 and point to valid data.
    *  To call this method it is not required that all other data vectors contain valid data, and can even remain empty.
    */
   void actuator_to_joint() override;
 
+  /// Transform variables from joint to actuator space.
   /**
-   * \brief Transform variables from joint to actuator space.
    * \pre Actuator and joint vectors must have size 2 and point to valid data.
    *  To call this method it is not required that all other data vectors contain valid data, and can even remain empty.
    */
@@ -143,9 +146,7 @@ public:
   const std::vector<double> & get_joint_reduction()    const {return joint_reduction_;}
   const std::vector<double> & get_joint_offset()       const {return joint_offset_;}
 
-  /**
-   * \brief Get human-friendly report of handles
-   */
+  /// Get human-friendly report of handles
   std::string get_handles_info() const;
 
 protected:
