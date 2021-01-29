@@ -17,6 +17,9 @@ import argparse
 import subprocess
 import time
 
+import rclpy
+from rclpy.node import Node
+
 
 def is_controller_loaded(controller_manager_name, controller_name):
     ret = subprocess.run(['ros2', 'control', 'list_controllers',
@@ -31,6 +34,7 @@ def is_controller_loaded(controller_manager_name, controller_name):
 
 def main(args=None):
 
+    rclpy.init(args=args)
     parser = argparse.ArgumentParser()
     parser.add_argument(
         'controller_name', help='Name of the controller')
@@ -50,50 +54,56 @@ def main(args=None):
     controller_manager_name = args.controller_manager
     param_file = args.param_file
 
-    if is_controller_loaded(controller_manager_name, controller_name):
-        print('Controller already loaded, skipping load_controller')
-    else:
-        ret = subprocess.run(['ros2', 'control', 'load_controller', controller_name,
+    node = Node('spawner_' + controller_name)
+    try:
+
+        if is_controller_loaded(controller_manager_name, controller_name):
+            node.get_logger().info('Controller already loaded, skipping load_controller')
+        else:
+            ret = subprocess.run(['ros2', 'control', 'load_controller', controller_name,
+                                  '--controller-manager', controller_manager_name])
+            if ret.returncode != 0:
+                # Error message printed by ros2 control
+                return ret.returncode
+            node.get_logger().info('Loaded ' + controller_name)
+
+        if param_file:
+            ret = subprocess.run(['ros2', 'param', 'load', controller_name,
+                                  param_file])
+            if ret.returncode != 0:
+                # Error message printed by ros2 param
+                return ret.returncode
+            node.get_logger().info('Loaded ' + param_file + ' into ' + controller_name)
+
+        ret = subprocess.run(['ros2', 'control', 'configure_start_controller', controller_name,
                               '--controller-manager', controller_manager_name])
         if ret.returncode != 0:
             # Error message printed by ros2 control
             return ret.returncode
-        print('Loaded ' + controller_name)
+        node.get_logger().info('Configured and started ' + controller_name)
 
-    if param_file:
-        ret = subprocess.run(['ros2', 'param', 'load', controller_name,
-                              param_file])
-        if ret.returncode != 0:
-            # Error message printed by ros2 param
-            return ret.returncode
-        print('Loaded ' + param_file + ' into ' + controller_name)
+        if not args.unload_on_kill:
+            return 0
+        try:
+            node.get_logger().info('Waiting until interrupt to unload controllers')
+            while True:
+                time.sleep(1)
+        except KeyboardInterrupt:
+            node.get_logger().info('Interrupt captured, stopping and unloading controller')
+            ret = subprocess.run(['ros2', 'control', 'switch_controllers', '--stop-controllers',
+                                  controller_name,
+                                  '--controller-manager', controller_manager_name])
+            node.get_logger().info('Stopped controller')
 
-    ret = subprocess.run(['ros2', 'control', 'configure_start_controller', controller_name,
-                          '--controller-manager', controller_manager_name])
-    if ret.returncode != 0:
-        # Error message printed by ros2 control
-        return ret.returncode
-    print('Configured and started ' + controller_name)
-
-    if not args.unload_on_kill:
-        return 0
-    try:
-        print('Waiting until interrupt to unload controllers')
-        while True:
-            time.sleep(1)
-    except KeyboardInterrupt:
-        print('Interrupt captured, unloading stopping and unloading controller')
-        ret = subprocess.run(['ros2', 'control', 'switch_controllers', '--stop-controllers',
-                              controller_name, '--controller-manager', controller_manager_name])
-        print('Stopped controller')
-
-        # Ignore returncode, because message is already printed and we'll try to unload anyway
-        ret = subprocess.run(['ros2', 'control', 'unload_controller', controller_name,
-                              '--controller-manager', controller_manager_name])
-        if ret.returncode != 0:
-            return ret.returncode
-        else:
-            print('Unloaded controller')
+            # Ignore returncode, because message is already printed and we'll try to unload anyway
+            ret = subprocess.run(['ros2', 'control', 'unload_controller', controller_name,
+                                  '--controller-manager', controller_manager_name])
+            if ret.returncode != 0:
+                return ret.returncode
+            else:
+                node.get_logger().info('Unloaded controller')
+    finally:
+        rclpy.shutdown()
 
 
 if __name__ == '__main__':
