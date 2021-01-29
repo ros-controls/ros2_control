@@ -15,6 +15,7 @@
 
 import argparse
 import subprocess
+import sys
 import time
 
 import rclpy
@@ -49,7 +50,8 @@ def main(args=None):
         help='Wait until this application is interrupted and unload controller',
         action='store_true')
 
-    args = parser.parse_args()
+    command_line_args = rclpy.utilities.remove_ros_args(args=sys.argv)[1:]
+    args = parser.parse_args(command_line_args)
     controller_name = args.controller_name
     controller_manager_name = args.controller_manager
     param_file = args.param_file

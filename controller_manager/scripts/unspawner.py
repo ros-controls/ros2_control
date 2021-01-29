@@ -16,6 +16,7 @@
 
 import argparse
 import subprocess
+import sys
 
 import rclpy
 from rclpy.node import Node
@@ -31,7 +32,8 @@ def main(args=None):
         '-c', '--controller-manager', help='Name of the controller manager ROS node',
         default='/controller_manager', required=False)
 
-    args = parser.parse_args()
+    command_line_args = rclpy.utilities.remove_ros_args(args=sys.argv)[1:]
+    args = parser.parse_args(command_line_args)
     controller_name = args.controller_name
     controller_manager_name = args.controller_manager
 
