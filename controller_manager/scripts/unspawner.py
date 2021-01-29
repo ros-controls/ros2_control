@@ -32,16 +32,16 @@ def main(args=None):
     controller_manager_name = args.controller_manager
 
     # Ignore returncode, because message is already printed and we'll try to unload anyway
-    ret = subprocess.run(["ros2", "control", "switch_controllers", "--stop-controllers",
-                          controller_name, "--controller-manager", controller_manager_name])
-    print("Stopped controller")
+    ret = subprocess.run(['ros2', 'control', 'switch_controllers', '--stop-controllers',
+                          controller_name, '--controller-manager', controller_manager_name])
+    print('Stopped controller')
 
-    ret = subprocess.run(["ros2", "control", "unload_controller", controller_name,
-                          "--controller-manager", controller_manager_name])
+    ret = subprocess.run(['ros2', 'control', 'unload_controller', controller_name,
+                          '--controller-manager', controller_manager_name])
     if ret.returncode != 0:
         return ret.returncode
     else:
-        print("Unloaded controller")
+        print('Unloaded controller')
 
 
 if __name__ == '__main__':

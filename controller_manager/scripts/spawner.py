@@ -19,12 +19,12 @@ import time
 
 
 def is_controller_loaded(controller_manager_name, controller_name):
-    ret = subprocess.run(["ros2", "control", "list_controllers",
-                          "--controller-manager", controller_manager_name], capture_output=True,
+    ret = subprocess.run(['ros2', 'control', 'list_controllers',
+                          '--controller-manager', controller_manager_name], capture_output=True,
                          encoding='utf8')
     output = str(ret.stdout)
     for line in output.splitlines():
-        if controller_name in line.split("[")[0]:
+        if controller_name in line.split('[')[0]:
             return True
     return False
 
@@ -51,49 +51,49 @@ def main(args=None):
     param_file = args.param_file
 
     if is_controller_loaded(controller_manager_name, controller_name):
-        print("Controller already loaded, skipping load_controller")
+        print('Controller already loaded, skipping load_controller')
     else:
-        ret = subprocess.run(["ros2", "control", "load_controller", controller_name,
-                              "--controller-manager", controller_manager_name])
+        ret = subprocess.run(['ros2', 'control', 'load_controller', controller_name,
+                              '--controller-manager', controller_manager_name])
         if ret.returncode != 0:
             # Error message printed by ros2 control
             return ret.returncode
-        print("Loaded " + controller_name)
+        print('Loaded ' + controller_name)
 
     if param_file:
-        ret = subprocess.run(["ros2", "param", "load", controller_name,
+        ret = subprocess.run(['ros2', 'param', 'load', controller_name,
                               param_file])
         if ret.returncode != 0:
             # Error message printed by ros2 param
             return ret.returncode
-        print("Loaded " + param_file + " into " + controller_name)
+        print('Loaded ' + param_file + ' into ' + controller_name)
 
-    ret = subprocess.run(["ros2", "control", "configure_start_controller", controller_name,
-                          "--controller-manager", controller_manager_name])
+    ret = subprocess.run(['ros2', 'control', 'configure_start_controller', controller_name,
+                          '--controller-manager', controller_manager_name])
     if ret.returncode != 0:
         # Error message printed by ros2 control
         return ret.returncode
-    print("Configured and started " + controller_name)
+    print('Configured and started ' + controller_name)
 
     if not args.unload_on_kill:
         return 0
     try:
-        print("Waiting until interrupt to unload controllers")
+        print('Waiting until interrupt to unload controllers')
         while True:
             time.sleep(1)
     except KeyboardInterrupt:
-        print("Interrupt captured, unloading stopping and unloading controller")
-        ret = subprocess.run(["ros2", "control", "switch_controllers", "--stop-controllers",
-                              controller_name, "--controller-manager", controller_manager_name])
-        print("Stopped controller")
+        print('Interrupt captured, unloading stopping and unloading controller')
+        ret = subprocess.run(['ros2', 'control', 'switch_controllers', '--stop-controllers',
+                              controller_name, '--controller-manager', controller_manager_name])
+        print('Stopped controller')
 
         # Ignore returncode, because message is already printed and we'll try to unload anyway
-        ret = subprocess.run(["ros2", "control", "unload_controller", controller_name,
-                              "--controller-manager", controller_manager_name])
+        ret = subprocess.run(['ros2', 'control', 'unload_controller', controller_name,
+                              '--controller-manager', controller_manager_name])
         if ret.returncode != 0:
             return ret.returncode
         else:
-            print("Unloaded controller")
+            print('Unloaded controller')
 
 
 if __name__ == '__main__':
