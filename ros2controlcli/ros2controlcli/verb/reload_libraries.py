@@ -16,6 +16,8 @@ from ros2cli.node.direct import add_arguments
 from ros2cli.verb import VerbExtension
 from ros2controlcli.api import add_controller_mgr_parsers, reload_controller_libraries
 
+import sys
+
 
 class ReloadLibrariesVerb(VerbExtension):
     """Reload controller libraries."""
@@ -32,5 +34,5 @@ class ReloadLibrariesVerb(VerbExtension):
         if response.ok:
             print('Reload successful')
         else:
-            print('Error in reload, check controller manager logs')
+            print('Error reloading libraries, check controller_manager logs', file=sys.stderr)
         return not response.ok
