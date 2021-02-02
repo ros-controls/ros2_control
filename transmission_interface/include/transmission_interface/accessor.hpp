@@ -15,10 +15,10 @@
 #ifndef TRANSMISSION_INTERFACE__ACCESSOR_HPP_
 #define TRANSMISSION_INTERFACE__ACCESSOR_HPP_
 
-#include <vector>
-#include <string>
-#include <set>
 #include <algorithm>
+#include <set>
+#include <string>
+#include <vector>
 
 template<typename T>
 std::string to_string(const std::vector<T> & list)

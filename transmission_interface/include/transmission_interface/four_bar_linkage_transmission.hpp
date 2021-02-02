@@ -17,7 +17,6 @@
 #ifndef TRANSMISSION_INTERFACE__FOUR_BAR_LINKAGE_TRANSMISSION_HPP_
 #define TRANSMISSION_INTERFACE__FOUR_BAR_LINKAGE_TRANSMISSION_HPP_
 
-
 #include <cassert>
 #include <string>
 #include <vector>
