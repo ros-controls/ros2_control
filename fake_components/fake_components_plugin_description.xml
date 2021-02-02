@@ -5,5 +5,10 @@
       Generic components for simple faking of system hardware.
     </description>
   </class>
+  <class name="fake_components/GenericRobot" type="fake_components::GenericRobot" base_class_type="hardware_interface::SystemInterface">
+    <description>
+      Generic components for simple faking of system hardware.
+    </description>
+  </class>
 
 </library>

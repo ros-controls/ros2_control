@@ -77,3 +77,4 @@ GenericSystem::configure(const hardware_interface::HardwareInfo &info)
 
 #include "pluginlib/class_list_macros.hpp"
 PLUGINLIB_EXPORT_CLASS(fake_components::GenericSystem, hardware_interface::SystemInterface)
+PLUGINLIB_EXPORT_CLASS(fake_components::GenericRobot, hardware_interface::SystemInterface)

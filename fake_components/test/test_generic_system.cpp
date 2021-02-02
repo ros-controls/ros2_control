@@ -99,10 +99,30 @@ protected:
     </joint>
   </ros2_control>
 )";
+
+    hardware_robot_2dof_ =
+      R"(
+  <ros2_control name="GenericRobot2dof" type="system">
+    <hardware>
+      <plugin>fake_components/GenericRobot</plugin>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <param name="start_position">1.57</param>
+    </joint>
+    <joint name="joint2">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <param name="start_position">0.7854</param>
+    </joint>
+  </ros2_control>
+)";
   }
 
   std::string urdf_head_;
   std::string hardware_system_2dof_;
+  std::string hardware_robot_2dof_;
   std::string urdf_tail_;
 };
 
@@ -110,3 +130,15 @@ TEST_F(TestGenericSystem, load_generic_system_2dof) {
   auto urdf = urdf_head_ + hardware_system_2dof_ + urdf_tail_;
   ASSERT_NO_THROW(hardware_interface::ResourceManager rm(urdf));
 }
+
+TEST_F(TestGenericSystem, load_generic_robot_2dof) {
+  auto urdf = urdf_head_ + hardware_system_2dof_ + urdf_tail_;
+  ASSERT_NO_THROW(hardware_interface::ResourceManager rm(urdf));
+}
+
+// TEST_F(TestGenericSystem, load_generic_system_2dof_check_interfaces) {
+//   auto urdf = urdf_head_ + hardware_system_2dof_ + urdf_tail_;
+//   ASSERT_NO_THROW(hardware_interface::ResourceManager rm(urdf));
+//
+//   EXPECT_EQ(1u, rm.sensor_components_size());
+// }
