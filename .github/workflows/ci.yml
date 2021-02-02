@@ -41,6 +41,7 @@ jobs:
             controller_manager_msgs
             hardware_interface
             ros2_control
+            ros2_control_test_assets
           vcs-repo-file-url: |
             https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/ros2_control/ros2_control.repos
           colcon-mixin-name: coverage-gcc
