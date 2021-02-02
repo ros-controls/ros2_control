@@ -40,6 +40,10 @@ def main(args=None):
     parser.add_argument(
         'controller_name', help='Name of the controller')
     parser.add_argument(
+        '-t', '--controller-type',
+        help='If not provided it should exist in the controller manager namespace',
+        default=None, required=False)
+    parser.add_argument(
         '-c', '--controller-manager', help='Name of the controller manager ROS node',
         default='/controller_manager', required=False)
     parser.add_argument(
@@ -55,9 +59,14 @@ def main(args=None):
     controller_name = args.controller_name
     controller_manager_name = args.controller_manager
     param_file = args.param_file
+    controller_type = args.controller_type
 
     node = Node('spawner_' + controller_name)
     try:
+
+        if controller_type:
+            ret = subprocess.run(['ros2', 'param', 'set', controller_manager_name,
+                                  controller_name + '.type', controller_type])
 
         if is_controller_loaded(controller_manager_name, controller_name):
             node.get_logger().info('Controller already loaded, skipping load_controller')
