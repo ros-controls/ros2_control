@@ -119,7 +119,7 @@ const auto hardware_resources =
   </ros2_control>
 )";
 
-const auto hardware_resources_missing_keys =
+const auto hardware_resources_missing_state_keys =
   R"(
   <ros2_control name="TestActuatorHardware" type="actuator">
     <hardware>
@@ -127,10 +127,8 @@ const auto hardware_resources_missing_keys =
     </hardware>
     <joint name="joint1">
       <command_interface name="position"/>
-      <command_interface name="does_not_exist"/>
       <state_interface name="position"/>
       <state_interface name="velocity"/>
-      <state_interface name="does_not_exist"/>
     </joint>
   </ros2_control>
   <ros2_control name="TestSensorHardware" type="sensor">
@@ -152,26 +150,67 @@ const auto hardware_resources_missing_keys =
     </hardware>
     <joint name="joint2">
       <command_interface name="velocity"/>
-      <command_interface name="does_not_exist"/>
       <state_interface name="position"/>
       <state_interface name="does_not_exist"/>
     </joint>
     <joint name="joint3">
       <command_interface name="velocity"/>
-      <command_interface name="does_not_exist"/>
       <state_interface name="position"/>
       <state_interface name="does_not_exist"/>
     </joint>
   </ros2_control>
 )";
 
+const auto hardware_resources_missing_command_keys =
+  R"(
+  <ros2_control name="TestActuatorHardware" type="actuator">
+    <hardware>
+      <plugin>test_actuator</plugin>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position"/>
+      <command_interface name="does_not_exist"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+  </ros2_control>
+  <ros2_control name="TestSensorHardware" type="sensor">
+    <hardware>
+      <plugin>test_sensor</plugin>
+      <param name="example_param_write_for_sec">2</param>
+      <param name="example_param_read_for_sec">2</param>
+    </hardware>
+    <sensor name="sensor1">
+      <state_interface name="velocity"/>
+    </sensor>
+  </ros2_control>
+  <ros2_control name="TestSystemHardware" type="system">
+    <hardware>
+      <plugin>test_system</plugin>
+      <param name="example_param_write_for_sec">2</param>
+      <param name="example_param_read_for_sec">2</param>
+    </hardware>
+    <joint name="joint2">
+      <command_interface name="velocity"/>
+      <command_interface name="does_not_exist"/>
+      <state_interface name="position"/>
+    </joint>
+    <joint name="joint3">
+      <command_interface name="velocity"/>
+      <command_interface name="does_not_exist"/>
+      <state_interface name="position"/>
+    </joint>
+  </ros2_control>
+)";
 
 const auto minimal_robot_urdf = std::string(urdf_head) + std::string(hardware_resources) +
   std::string(urdf_tail);
 
-const auto minimal_robot_missing_keys_urdf = std::string(urdf_head) +
-  std::string(hardware_resources_missing_keys) + std::string(urdf_tail);
+const auto minimal_robot_missing_state_keys_urdf = std::string(urdf_head) +
+  std::string(hardware_resources_missing_state_keys) + std::string(urdf_tail);
 
+const auto minimal_robot_missing_command_keys_urdf = std::string(urdf_head) +
+  std::string(hardware_resources_missing_command_keys) + std::string(urdf_tail);
 }  // namespace ros2_control_test_assets
 
 #endif  // ROS2_CONTROL_TEST_ASSETS__DESCRIPTIONS_HPP_

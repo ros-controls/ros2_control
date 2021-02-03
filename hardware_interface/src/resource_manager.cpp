@@ -374,7 +374,7 @@ void ResourceManager::validate_storage(
       }
       for (const auto & command_interface : joint.command_interfaces) {
         if (!command_interface_exists(joint.name + "/" + command_interface.name)) {
-          missing_state_keys.emplace_back(joint.name + "/" + command_interface.name);
+          missing_command_keys.emplace_back(joint.name + "/" + command_interface.name);
         }
       }
     }
