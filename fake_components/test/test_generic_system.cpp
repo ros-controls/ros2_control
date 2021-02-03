@@ -37,12 +37,12 @@ protected:
     <joint name="joint1">
       <command_interface name="position"/>
       <state_interface name="position"/>
-      <param name="start_position">1.57</param>
+      <param name="initial_position">1.57</param>
     </joint>
     <joint name="joint2">
       <command_interface name="position"/>
       <state_interface name="position"/>
-      <param name="start_position">0.7854</param>
+      <param name="initial_position">0.7854</param>
     </joint>
   </ros2_control>
 )";
@@ -56,12 +56,12 @@ protected:
     <joint name="joint1">
       <command_interface name="position"/>
       <state_interface name="position"/>
-      <param name="start_position">1.57</param>
+      <param name="initial_position">1.57</param>
     </joint>
     <joint name="joint2">
       <command_interface name="position"/>
       <state_interface name="position"/>
-      <param name="start_position">0.7854</param>
+      <param name="initial_position">0.7854</param>
     </joint>
   </ros2_control>
 )";
@@ -75,18 +75,18 @@ protected:
     <joint name="joint1">
       <command_interface name="position"/>
       <state_interface name="velocity"/>
-      <param name="start_position">1.57</param>
+      <param name="initial_position">1.57</param>
     </joint>
     <joint name="joint2">
       <command_interface name="acceleration"/>
       <state_interface name="position"/>
-      <param name="start_position">0.7854</param>
-      <param name="start_acceleration">0.8554</param>
+      <param name="initial_position">0.7854</param>
+      <param name="initial_acceleration">0.8554</param>
     </joint>
   </ros2_control>
 )";
 
-    hardware_system_2dof_functional_ =
+    hardware_system_2dof_functional_standard_interfaces_ =
       R"(
   <ros2_control name="GenericSystem2dof" type="system">
     <hardware>
@@ -97,16 +97,46 @@ protected:
       <command_interface name="velocity"/>
       <state_interface name="position"/>
       <state_interface name="velocity"/>
-      <param name="start_position">0.0</param>
-      <param name="start_velocity">0.0</param>
+      <param name="initial_position">0.0</param>
+      <param name="initial_velocity">0.0</param>
     </joint>
     <joint name="joint2">
       <command_interface name="position"/>
       <command_interface name="velocity"/>
       <state_interface name="position"/>
       <state_interface name="velocity"/>
-      <param name="start_position">0.0</param>
-      <param name="start_velocity">0.0</param>
+      <param name="initial_position">0.0</param>
+      <param name="initial_velocity">0.0</param>
+    </joint>
+  </ros2_control>
+)";
+
+    hardware_system_2dof_functional_with_other_interface_ =
+      R"(
+  <ros2_control name="GenericSystem2dof" type="system">
+    <hardware>
+      <plugin>fake_components/GenericSystem</plugin>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <param name="initial_position">0.0</param>
+      <param name="initial_velocity">0.0</param>
+    </joint>
+    <joint name="joint2">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <param name="initial_position">0.0</param>
+      <param name="initial_velocity">0.0</param>
+    </joint>
+    <joint name="voltage_output">
+      <command_interface name="voltage"/>
+      <state_interface name="voltage"/>
+      <param name="initial_voltage">0.5</param>
     </joint>
   </ros2_control>
 )";
@@ -115,7 +145,8 @@ protected:
   std::string hardware_robot_2dof_;
   std::string hardware_system_2dof_;
   std::string hardware_system_2dof_asymetric_;
-  std::string hardware_system_2dof_functional_;
+  std::string hardware_system_2dof_functional_standard_interfaces_;
+  std::string hardware_system_2dof_functional_with_other_interface_;
 };
 
 TEST_F(TestGenericSystem, load_generic_system_2dof) {
@@ -212,10 +243,10 @@ TEST_F(TestGenericSystem, load_generic_system_2dof_check_asymetric_interfaces) {
   ASSERT_EQ(0.8554, j2a_c.get_value());
 }
 
-// Test inspired by hardware_interface/test_resource_manager.cpp
 TEST_F(TestGenericSystem, load_generic_system_2dof_check_functionality) {
   auto urdf =
-    ros2_control_test_assets::urdf_xml_head_ + hardware_system_2dof_functional_ +
+    ros2_control_test_assets::urdf_xml_head_ +
+    hardware_system_2dof_functional_standard_interfaces_ +
     ros2_control_test_assets::urdf_xml_tail_;
   hardware_interface::ResourceManager rm(urdf);
 
@@ -296,4 +327,96 @@ TEST_F(TestGenericSystem, load_generic_system_2dof_check_functionality) {
   ASSERT_EQ(0.66, j1v_c.get_value());
   ASSERT_EQ(0.77, j2p_c.get_value());
   ASSERT_EQ(0.88, j2v_c.get_value());
+
+  rm.start_components();
+  status_map = rm.get_components_status();
+  EXPECT_EQ(status_map["GenericSystem2dof"], hardware_interface::status::STARTED);
+
+  rm.stop_components();
+  status_map = rm.get_components_status();
+  EXPECT_EQ(status_map["GenericSystem2dof"], hardware_interface::status::STOPPED);
+}
+
+TEST_F(TestGenericSystem, load_generic_system_2dof_check_other_interfaces) {
+  auto urdf =
+    ros2_control_test_assets::urdf_xml_head_ +
+    hardware_system_2dof_functional_with_other_interface_ +
+    ros2_control_test_assets::urdf_xml_tail_;
+  hardware_interface::ResourceManager rm(urdf);
+
+  // Check interfaces
+  EXPECT_EQ(1u, rm.system_components_size());
+  auto state_interface_keys = rm.state_interface_keys();
+  ASSERT_EQ(5u, state_interface_keys.size());
+  EXPECT_TRUE(rm.state_interface_exists("joint1/position"));
+  EXPECT_TRUE(rm.state_interface_exists("joint1/velocity"));
+  EXPECT_TRUE(rm.state_interface_exists("joint2/position"));
+  EXPECT_TRUE(rm.state_interface_exists("joint2/velocity"));
+  EXPECT_TRUE(rm.state_interface_exists("voltage_output/voltage"));
+
+  auto command_interface_keys = rm.state_interface_keys();
+  ASSERT_EQ(5u, command_interface_keys.size());
+  EXPECT_TRUE(rm.command_interface_exists("joint1/position"));
+  EXPECT_TRUE(rm.command_interface_exists("joint1/velocity"));
+  EXPECT_TRUE(rm.command_interface_exists("joint2/position"));
+  EXPECT_TRUE(rm.command_interface_exists("joint2/velocity"));
+  EXPECT_TRUE(rm.command_interface_exists("voltage_output/voltage"));
+
+  // Check initial values
+  hardware_interface::LoanedStateInterface j1p_s = rm.claim_state_interface("joint1/position");
+  hardware_interface::LoanedStateInterface j1v_s = rm.claim_state_interface("joint1/velocity");
+  hardware_interface::LoanedStateInterface j2p_s = rm.claim_state_interface("joint2/position");
+  hardware_interface::LoanedStateInterface j2v_s = rm.claim_state_interface("joint2/velocity");
+  hardware_interface::LoanedStateInterface vo_s =
+    rm.claim_state_interface("voltage_output/voltage");
+  hardware_interface::LoanedCommandInterface j1p_c = rm.claim_command_interface("joint1/position");
+  hardware_interface::LoanedCommandInterface j2p_c = rm.claim_command_interface("joint2/position");
+  hardware_interface::LoanedCommandInterface vo_c =
+    rm.claim_command_interface("voltage_output/voltage");
+
+  ASSERT_EQ(0.0, j1p_s.get_value());
+  ASSERT_EQ(0.0, j1v_s.get_value());
+  ASSERT_EQ(0.0, j2p_s.get_value());
+  ASSERT_EQ(0.0, j2v_s.get_value());
+  ASSERT_EQ(0.5, vo_s.get_value());
+  ASSERT_EQ(0.0, j1p_c.get_value());
+  ASSERT_EQ(0.0, j2p_c.get_value());
+  ASSERT_EQ(0.5, vo_c.get_value());
+
+  // set some new values in commands
+  j1p_c.set_value(0.11);
+  j2p_c.set_value(0.33);
+  vo_c.set_value(0.99);
+
+  // State values should not be changed
+  ASSERT_EQ(0.0, j1p_s.get_value());
+  ASSERT_EQ(0.0, j1v_s.get_value());
+  ASSERT_EQ(0.0, j2p_s.get_value());
+  ASSERT_EQ(0.0, j2v_s.get_value());
+  ASSERT_EQ(0.5, vo_s.get_value());
+  ASSERT_EQ(0.11, j1p_c.get_value());
+  ASSERT_EQ(0.33, j2p_c.get_value());
+  ASSERT_EQ(0.99, vo_c.get_value());
+
+  // write() does not chnage values
+  rm.write();
+  ASSERT_EQ(0.0, j1p_s.get_value());
+  ASSERT_EQ(0.0, j1v_s.get_value());
+  ASSERT_EQ(0.0, j2p_s.get_value());
+  ASSERT_EQ(0.0, j2v_s.get_value());
+  ASSERT_EQ(0.5, vo_s.get_value());
+  ASSERT_EQ(0.11, j1p_c.get_value());
+  ASSERT_EQ(0.33, j2p_c.get_value());
+  ASSERT_EQ(0.99, vo_c.get_value());
+
+  // read() mirrors commands to states
+  rm.read();
+  ASSERT_EQ(0.11, j1p_s.get_value());
+  ASSERT_EQ(0.0, j1v_s.get_value());
+  ASSERT_EQ(0.33, j2p_s.get_value());
+  ASSERT_EQ(0.99, vo_s.get_value());
+  ASSERT_EQ(0.0, j2v_s.get_value());
+  ASSERT_EQ(0.11, j1p_c.get_value());
+  ASSERT_EQ(0.33, j2p_c.get_value());
+  ASSERT_EQ(0.99, vo_c.get_value());
 }

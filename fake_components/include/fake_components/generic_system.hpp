@@ -64,17 +64,34 @@ public:
     return return_type::OK;
   }
 
-private:
-  // add variables for "standardized" interfaces in the following order
+protected:
+  /// Use standard interfaces for joints because they are relevant for dynamic behaviour
+  /**
+   * By sptliting the standard interfaces from other type, the users are able to inherit this
+   * class and simply create small "simulation" with desired dynamic behaviour.
+   * The advantage over using Gazebo is that enables "quick & dirty" tests of robot's URDF and
+   * controllers.
+   */
   const std::vector<std::string> standard_interfaces_ = {
     hardware_interface::HW_IF_POSITION,
     hardware_interface::HW_IF_VELOCITY,
     hardware_interface::HW_IF_ACCELERATION,
     hardware_interface::HW_IF_EFFORT
   };
-  /// The size of this vector is (standard_interfaces_ x nr_joints)
+  /// The size of this vector is (standard_interfaces_.size() x nr_joints)
   std::vector<std::vector<double>> hw_joint_commands_;
   std::vector<std::vector<double>> hw_joint_states_;
+
+  std::vector<std::string> other_interfaces_;
+  /// The size of this vector is (other_interfaces_.size() x nr_joints)
+  std::vector<std::vector<double>> hw_other_commands_;
+  std::vector<std::vector<double>> hw_other_states_;
+
+private:
+  void initialize_storage_vectors(
+    std::vector<std::vector<double>> & commands,
+    std::vector<std::vector<double>> & states,
+    const std::vector<std::string> & interfaces);
 };
 
 typedef GenericSystem GenericRobot;
