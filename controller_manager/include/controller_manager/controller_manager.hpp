@@ -129,8 +129,8 @@ public:
     const std::vector<std::string> & stop_controllers,
     int strictness,
     bool start_asap = kWaitForAllResources,
-    const rclcpp::Duration & timeout = rclcpp::Duration(kInfiniteTimeout));
-
+    const rclcpp::Duration & timeout =
+    rclcpp::Duration(static_cast<rcl_duration_value_t>(kInfiniteTimeout)));
 
   CONTROLLER_MANAGER_PUBLIC
   void read();
