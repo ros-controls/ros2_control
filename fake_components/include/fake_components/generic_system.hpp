@@ -17,6 +17,8 @@
 #ifndef FAKE_COMPONENTS__GENERIC_SYSTEM_HPP_
 #define FAKE_COMPONENTS__GENERIC_SYSTEM_HPP_
 
+#include <vector>
+
 #include "hardware_interface/base_interface.hpp"
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/hardware_info.hpp"
@@ -37,7 +39,7 @@ private:
 
 public:
   hardware_interface::return_type
-  configure(const hardware_interface::HardwareInfo &info) override;
+  configure(const hardware_interface::HardwareInfo & info) override;
 
   std::vector<hardware_interface::StateInterface>
   export_state_interfaces() override;
@@ -45,29 +47,33 @@ public:
   std::vector<hardware_interface::CommandInterface>
   export_command_interfaces() override;
 
-  hardware_interface::return_type start() override {
+  hardware_interface::return_type start() override
+  {
     status_ = hardware_interface::status::STARTED;
     return hardware_interface::return_type::OK;
   }
 
-  hardware_interface::return_type stop() override {
+  hardware_interface::return_type stop() override
+  {
     status_ = hardware_interface::status::STOPPED;
     return hardware_interface::return_type::OK;
   }
 
-  hardware_interface::return_type read() override {
+  hardware_interface::return_type read() override
+  {
     // only do loopback
     current_positions = command_positions;
     return hardware_interface::return_type::OK;
   }
 
-  hardware_interface::return_type write() override {
+  hardware_interface::return_type write() override
+  {
     return hardware_interface::return_type::OK;
   }
 };
 
 typedef GenericSystem GenericRobot;
 
-} // namespace fake_components
+}  // namespace fake_components
 
-#endif // FAKE_COMPONENTS__GENERIC_SYSTEM_HPP_
+#endif  // FAKE_COMPONENTS__GENERIC_SYSTEM_HPP_

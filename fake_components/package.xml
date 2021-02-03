@@ -4,10 +4,9 @@
   <name>fake_components</name>
   <version>0.0.0</version>
   <description>The package implements generic components for simple faking of hardware. The components simply bounces the input commands back.</description>
-  <author email="jafar@picknik.ai">Jafar Abdi</author>
-  <author email="denis@stogl.de">Denis Stogl</author>
-
+  <maintainer email="jafar@picknik.ai">Jafar Abdi</maintainer>
   <maintainer email="denis@stogl.de">Denis Stogl</maintainer>
+
   <license>Apache License 2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>

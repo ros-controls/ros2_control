@@ -136,9 +136,10 @@ TEST_F(TestGenericSystem, load_generic_robot_2dof) {
   ASSERT_NO_THROW(hardware_interface::ResourceManager rm(urdf));
 }
 
-// TEST_F(TestGenericSystem, load_generic_system_2dof_check_interfaces) {
-//   auto urdf = urdf_head_ + hardware_system_2dof_ + urdf_tail_;
-//   ASSERT_NO_THROW(hardware_interface::ResourceManager rm(urdf));
-//
-//   EXPECT_EQ(1u, rm.sensor_components_size());
-// }
+TEST_F(TestGenericSystem, load_generic_system_2dof_check_interfaces) {
+  auto urdf = urdf_head_ + hardware_system_2dof_ + urdf_tail_;
+  hardware_interface::ResourceManager rm(urdf);
+
+  EXPECT_EQ(1u, rm.system_components_size());
+  auto state_interface_keys
+}
