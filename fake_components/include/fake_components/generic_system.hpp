@@ -17,6 +17,7 @@
 #ifndef FAKE_COMPONENTS__GENERIC_SYSTEM_HPP_
 #define FAKE_COMPONENTS__GENERIC_SYSTEM_HPP_
 
+#include <string>
 #include <vector>
 
 #include "hardware_interface/base_interface.hpp"
@@ -25,20 +26,17 @@
 #include "hardware_interface/system_interface.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/hardware_interface_status_values.hpp"
+#include "hardware_interface/types/hardware_interface_type_values.hpp"
+
+using hardware_interface::return_type;
 
 namespace fake_components
 {
 
 class GenericSystem : public hardware_interface::BaseInterface<hardware_interface::SystemInterface>
 {
-private:
-  std::vector<double> command_positions;
-  std::vector<double> current_positions;
-  std::vector<double> current_velocities;
-  std::vector<double> current_efforts;
-
 public:
-  hardware_interface::return_type
+  return_type
   configure(const hardware_interface::HardwareInfo & info) override;
 
   std::vector<hardware_interface::StateInterface>
@@ -47,29 +45,36 @@ public:
   std::vector<hardware_interface::CommandInterface>
   export_command_interfaces() override;
 
-  hardware_interface::return_type start() override
+  return_type start() override
   {
     status_ = hardware_interface::status::STARTED;
-    return hardware_interface::return_type::OK;
+    return return_type::OK;
   }
 
-  hardware_interface::return_type stop() override
+  return_type stop() override
   {
     status_ = hardware_interface::status::STOPPED;
-    return hardware_interface::return_type::OK;
+    return return_type::OK;
   }
 
-  hardware_interface::return_type read() override
+  return_type read() override;
+
+  return_type write() override
   {
-    // only do loopback
-    current_positions = command_positions;
-    return hardware_interface::return_type::OK;
+    return return_type::OK;
   }
 
-  hardware_interface::return_type write() override
-  {
-    return hardware_interface::return_type::OK;
-  }
+private:
+  // add variables for "standardized" interfaces in the following order
+  const std::vector<std::string> standard_interfaces_ = {
+    hardware_interface::HW_IF_POSITION,
+    hardware_interface::HW_IF_VELOCITY,
+    hardware_interface::HW_IF_ACCELERATION,
+    hardware_interface::HW_IF_EFFORT
+  };
+  /// The size of this vector is (standard_interfaces_ x nr_joints)
+  std::vector<std::vector<double>> hw_joint_commands_;
+  std::vector<std::vector<double>> hw_joint_states_;
 };
 
 typedef GenericSystem GenericRobot;

@@ -57,12 +57,15 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 
   find_package(ament_cmake_gmock REQUIRED)
+  find_package(ros2_control_test_assets REQUIRED)
 
   ament_add_gmock(test_generic_system test/test_generic_system.cpp)
   target_include_directories(test_generic_system PRIVATE include)
   ament_target_dependencies(test_generic_system
     hardware_interface
-    pluginlib)
+    pluginlib
+    ros2_control_test_assets
+  )
 
 endif()
 
