@@ -2,6 +2,13 @@
 Changelog for package transmission_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add differential transmission (`#303 <https://github.com/ros-controls/ros2_control/issues/303>`_)
+* update doxygen style according to ros2 core standard (`#300 <https://github.com/ros-controls/ros2_control/issues/300>`_)
+* Add supporting images for simple transmission documentation (`#304 <https://github.com/ros-controls/ros2_control/issues/304>`_)
+* Contributors: Bence Magyar, João Victor Torres Borges
+
 0.1.3 (2021-01-21)
 ------------------
 * Remove parser from install until reworked (`#301 <https://github.com/ros-controls/ros2_control/issues/301>`_)
