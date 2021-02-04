@@ -16,10 +16,7 @@
 #include <string>
 
 #include "hardware_interface/component_parser.hpp"
-<<<<<<< HEAD
 #include "ros2_control_test_assets/descriptions.hpp"
-=======
->>>>>>> Moved example URDFs for parser/scenario tests to assets package
 #include "ros2_control_test_assets/components_urdfs.hpp"
 
 using namespace ::testing;  // NOLINT
