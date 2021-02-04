@@ -69,6 +69,12 @@ public:
   HARDWARE_INTERFACE_PUBLIC
   return_type write();
 
+  HARDWARE_INTERFACE_PUBLIC
+  return_type accept_state_resource_claim(const std::string & key);
+
+  HARDWARE_INTERFACE_PUBLIC
+  return_type accept_command_resource_claim(const std::string & key);
+
 private:
   std::unique_ptr<ActuatorInterface> impl_;
 };

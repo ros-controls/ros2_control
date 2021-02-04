@@ -18,7 +18,7 @@
 #include <memory>
 #include <string>
 #include <vector>
-
+#include <iostream>
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
@@ -128,6 +128,12 @@ public:
    */
   virtual
   return_type write() = 0;
+
+  virtual
+  return_type accept_state_resource_claim(const std::string & key) = 0;
+  
+  virtual
+  return_type accept_command_resource_claim(const std::string & key) = 0;
 };
 
 }  // namespace hardware_interface

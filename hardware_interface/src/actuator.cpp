@@ -80,4 +80,14 @@ return_type Actuator::write()
   return impl_->write();
 }
 
+return_type Actuator::accept_state_resource_claim(const std::string & key)
+{
+  return impl_->accept_state_resource_claim(key);
+}
+
+return_type Actuator::accept_command_resource_claim(const std::string & key)
+{
+  return impl_->accept_command_resource_claim(key);
+}
+
 }  // namespace hardware_interface

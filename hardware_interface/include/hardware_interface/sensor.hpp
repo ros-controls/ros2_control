@@ -64,6 +64,9 @@ public:
   HARDWARE_INTERFACE_PUBLIC
   return_type read();
 
+  HARDWARE_INTERFACE_PUBLIC
+  return_type accept_state_resource_claim(const std::string & key);
+
 private:
   std::unique_ptr<SensorInterface> impl_;
 };

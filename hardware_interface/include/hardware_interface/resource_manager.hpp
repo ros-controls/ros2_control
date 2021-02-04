@@ -209,6 +209,10 @@ private:
 
   void release_command_interface(const std::string & key);
 
+  void notify_state_resource_switching(const std::string & key);
+
+  void notify_command_resource_switching(const std::string & key);
+
   std::unordered_map<std::string, bool> claimed_command_interface_map_;
 
   mutable std::recursive_mutex resource_lock_;

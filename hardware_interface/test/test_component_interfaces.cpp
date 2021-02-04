@@ -104,6 +104,18 @@ class DummyActuator : public hardware_interface::ActuatorInterface
     return hardware_interface::return_type::OK;
   }
 
+  hardware_interface::return_type accept_state_resource_claim(const std::string & key) override
+  {
+    (void)key;
+    return hardware_interface::return_type::OK;
+  }
+
+  hardware_interface::return_type accept_command_resource_claim(const std::string & key) override
+  {
+    (void)key;
+    return hardware_interface::return_type::OK;
+  }
+
 private:
   double position_state_ = 0.0;
   double velocity_state_ = 0.0;
@@ -152,6 +164,12 @@ class DummySensor : public hardware_interface::SensorInterface
   hardware_interface::return_type read() override
   {
     // no-op, static value
+    return hardware_interface::return_type::OK;
+  }
+
+  hardware_interface::return_type accept_state_resource_claim(const std::string & key) override
+  {
+    (void)key;
     return hardware_interface::return_type::OK;
   }
 
@@ -243,6 +261,18 @@ class DummySystem : public hardware_interface::SystemInterface
       position_state_[i] += velocity_command_[0];
       velocity_state_[i] = velocity_command_[0];
     }
+    return hardware_interface::return_type::OK;
+  }
+
+  hardware_interface::return_type accept_state_resource_claim(const std::string & key) override
+  {
+    (void)key;
+    return hardware_interface::return_type::OK;
+  }
+
+  hardware_interface::return_type accept_command_resource_claim(const std::string & key) override
+  {
+    (void)key;
     return hardware_interface::return_type::OK;
   }
 
