@@ -2,8 +2,8 @@
 Changelog for package ros2_control_test_assets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.5 (2021-02-04)
+------------------
 * Add missing buildtool dep (`#319 <https://github.com/ros-controls/ros2_control/issues/319>`_)
 * Contributors: Bence Magyar
 
