@@ -16,6 +16,7 @@
 #include <string>
 
 #include "hardware_interface/component_parser.hpp"
+#include "ros2_control_test_assets/descriptions.hpp"
 #include "ros2_control_test_assets/components_urdfs.hpp"
 
 using namespace ::testing;  // NOLINT
@@ -56,9 +57,9 @@ TEST_F(TestComponentParser, string_robot_not_root_throws_error)
 TEST_F(TestComponentParser, invalid_child_throws_error)
 {
   const std::string broken_urdf_string =
-    std::string(ros2_control_test_assets::urdf_xml_head_) +
-    ros2_control_test_assets::invalid_urdf_ros2_control_invalid_child_ +
-    ros2_control_test_assets::urdf_xml_tail_;
+    std::string(ros2_control_test_assets::urdf_head) +
+    ros2_control_test_assets::invalid_urdf_ros2_control_invalid_child +
+    ros2_control_test_assets::urdf_tail;
 
   ASSERT_THROW(parse_control_resources_from_urdf(broken_urdf_string), std::runtime_error);
 }
@@ -66,9 +67,9 @@ TEST_F(TestComponentParser, invalid_child_throws_error)
 TEST_F(TestComponentParser, missing_attribute_throws_error)
 {
   const std::string broken_urdf_string =
-    std::string(ros2_control_test_assets::urdf_xml_head_) +
-    ros2_control_test_assets::invalid_urdf_ros2_control_missing_attribute_ +
-    ros2_control_test_assets::urdf_xml_tail_;
+    std::string(ros2_control_test_assets::urdf_head) +
+    ros2_control_test_assets::invalid_urdf_ros2_control_missing_attribute +
+    ros2_control_test_assets::urdf_tail;
 
   ASSERT_THROW(parse_control_resources_from_urdf(broken_urdf_string), std::runtime_error);
 }
@@ -76,9 +77,9 @@ TEST_F(TestComponentParser, missing_attribute_throws_error)
 TEST_F(TestComponentParser, parameter_missing_name_throws_error)
 {
   const std::string broken_urdf_string =
-    std::string(ros2_control_test_assets::urdf_xml_head_) +
-    ros2_control_test_assets::invalid_urdf_ros2_control_parameter_missing_name_ +
-    ros2_control_test_assets::urdf_xml_tail_;
+    std::string(ros2_control_test_assets::urdf_head) +
+    ros2_control_test_assets::invalid_urdf_ros2_control_parameter_missing_name +
+    ros2_control_test_assets::urdf_tail;
 
   ASSERT_THROW(parse_control_resources_from_urdf(broken_urdf_string), std::runtime_error);
 }
@@ -86,9 +87,9 @@ TEST_F(TestComponentParser, parameter_missing_name_throws_error)
 TEST_F(TestComponentParser, component_interface_type_empty_throws_error)
 {
   const std::string broken_urdf_string =
-    std::string(ros2_control_test_assets::urdf_xml_head_) +
-    ros2_control_test_assets::invalid_urdf_ros2_control_component_interface_type_empty_ +
-    ros2_control_test_assets::urdf_xml_tail_;
+    std::string(ros2_control_test_assets::urdf_head) +
+    ros2_control_test_assets::invalid_urdf_ros2_control_component_interface_type_empty +
+    ros2_control_test_assets::urdf_tail;
 
   ASSERT_THROW(parse_control_resources_from_urdf(broken_urdf_string), std::runtime_error);
 }
@@ -96,9 +97,9 @@ TEST_F(TestComponentParser, component_interface_type_empty_throws_error)
 TEST_F(TestComponentParser, parameter_empty_throws_error)
 {
   const std::string broken_urdf_string =
-    std::string(ros2_control_test_assets::urdf_xml_head_) +
-    ros2_control_test_assets::invalid_urdf_ros2_control_parameter_empty_ +
-    ros2_control_test_assets::urdf_xml_tail_;
+    std::string(ros2_control_test_assets::urdf_head) +
+    ros2_control_test_assets::invalid_urdf_ros2_control_parameter_empty +
+    ros2_control_test_assets::urdf_tail;
 
   ASSERT_THROW(parse_control_resources_from_urdf(broken_urdf_string), std::runtime_error);
 }
@@ -106,9 +107,9 @@ TEST_F(TestComponentParser, parameter_empty_throws_error)
 TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_one_interface)
 {
   std::string urdf_to_test =
-    std::string(ros2_control_test_assets::urdf_xml_head_) +
-    ros2_control_test_assets::valid_urdf_ros2_control_system_one_interface_ +
-    ros2_control_test_assets::urdf_xml_tail_;
+    std::string(ros2_control_test_assets::urdf_head) +
+    ros2_control_test_assets::valid_urdf_ros2_control_system_one_interface +
+    ros2_control_test_assets::urdf_tail;
   const auto control_hardware = parse_control_resources_from_urdf(urdf_to_test);
   ASSERT_THAT(control_hardware, SizeIs(1));
   const auto hardware_info = control_hardware.front();
@@ -145,9 +146,9 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_one_interface)
 TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_multi_interface)
 {
   std::string urdf_to_test =
-    std::string(ros2_control_test_assets::urdf_xml_head_) +
-    ros2_control_test_assets::valid_urdf_ros2_control_system_multi_interface_ +
-    ros2_control_test_assets::urdf_xml_tail_;
+    std::string(ros2_control_test_assets::urdf_head) +
+    ros2_control_test_assets::valid_urdf_ros2_control_system_multi_interface +
+    ros2_control_test_assets::urdf_tail;
   const auto control_hardware = parse_control_resources_from_urdf(urdf_to_test);
   ASSERT_THAT(control_hardware, SizeIs(1));
   const auto hardware_info = control_hardware.front();
@@ -180,9 +181,9 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_multi_interface
 TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_robot_with_sensor)
 {
   std::string urdf_to_test =
-    std::string(ros2_control_test_assets::urdf_xml_head_) +
-    ros2_control_test_assets::valid_urdf_ros2_control_system_robot_with_sensor_ +
-    ros2_control_test_assets::urdf_xml_tail_;
+    std::string(ros2_control_test_assets::urdf_head) +
+    ros2_control_test_assets::valid_urdf_ros2_control_system_robot_with_sensor +
+    ros2_control_test_assets::urdf_tail;
   const auto control_hardware = parse_control_resources_from_urdf(urdf_to_test);
   ASSERT_THAT(control_hardware, SizeIs(1));
   const auto hardware_info = control_hardware.front();
@@ -225,9 +226,9 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_robot_with_sens
 TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_robot_with_external_sensor)
 {
   std::string urdf_to_test =
-    std::string(ros2_control_test_assets::urdf_xml_head_) +
-    ros2_control_test_assets::valid_urdf_ros2_control_system_robot_with_external_sensor_ +
-    ros2_control_test_assets::urdf_xml_tail_;
+    std::string(ros2_control_test_assets::urdf_head) +
+    ros2_control_test_assets::valid_urdf_ros2_control_system_robot_with_external_sensor +
+    ros2_control_test_assets::urdf_tail;
   const auto control_hardware = parse_control_resources_from_urdf(urdf_to_test);
   ASSERT_THAT(control_hardware, SizeIs(2));
   auto hardware_info = control_hardware.at(0);
@@ -266,9 +267,9 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_robot_with_exte
 TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_modular_robot)
 {
   std::string urdf_to_test =
-    std::string(ros2_control_test_assets::urdf_xml_head_) +
-    ros2_control_test_assets::valid_urdf_ros2_control_actuator_modular_robot_ +
-    ros2_control_test_assets::urdf_xml_tail_;
+    std::string(ros2_control_test_assets::urdf_head) +
+    ros2_control_test_assets::valid_urdf_ros2_control_actuator_modular_robot +
+    ros2_control_test_assets::urdf_tail;
   const auto control_hardware = parse_control_resources_from_urdf(urdf_to_test);
   ASSERT_THAT(control_hardware, SizeIs(2));
   auto hardware_info = control_hardware.at(0);
@@ -303,9 +304,9 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_modular_robot
 TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_modular_robot_with_sensors)
 {
   std::string urdf_to_test =
-    std::string(ros2_control_test_assets::urdf_xml_head_) +
-    ros2_control_test_assets::valid_urdf_ros2_control_actuator_modular_robot_sensors_ +
-    ros2_control_test_assets::urdf_xml_tail_;
+    std::string(ros2_control_test_assets::urdf_head) +
+    ros2_control_test_assets::valid_urdf_ros2_control_actuator_modular_robot_sensors +
+    ros2_control_test_assets::urdf_tail;
   const auto control_hardware = parse_control_resources_from_urdf(urdf_to_test);
   ASSERT_THAT(control_hardware, SizeIs(4));
   auto hardware_info = control_hardware.at(0);
@@ -388,9 +389,9 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_modular_robot
 TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_multi_joints_transmission)
 {
   std::string urdf_to_test =
-    std::string(ros2_control_test_assets::urdf_xml_head_) +
-    ros2_control_test_assets::valid_urdf_ros2_control_system_muti_joints_transmission_ +
-    ros2_control_test_assets::urdf_xml_tail_;
+    std::string(ros2_control_test_assets::urdf_head) +
+    ros2_control_test_assets::valid_urdf_ros2_control_system_muti_joints_transmission +
+    ros2_control_test_assets::urdf_tail;
   const auto control_hardware = parse_control_resources_from_urdf(urdf_to_test);
   ASSERT_THAT(control_hardware, SizeIs(1));
   auto hardware_info = control_hardware.at(0);
@@ -425,9 +426,9 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_multi_joints_tr
 TEST_F(TestComponentParser, successfully_parse_valid_urdf_sensor_only)
 {
   std::string urdf_to_test =
-    std::string(ros2_control_test_assets::urdf_xml_head_) +
-    ros2_control_test_assets::valid_urdf_ros2_control_sensor_only_ +
-    ros2_control_test_assets::urdf_xml_tail_;
+    std::string(ros2_control_test_assets::urdf_head) +
+    ros2_control_test_assets::valid_urdf_ros2_control_sensor_only +
+    ros2_control_test_assets::urdf_tail;
   const auto control_hardware = parse_control_resources_from_urdf(urdf_to_test);
   ASSERT_THAT(control_hardware, SizeIs(1));
   auto hardware_info = control_hardware.at(0);
@@ -455,9 +456,9 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_sensor_only)
 TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_only)
 {
   std::string urdf_to_test =
-    std::string(ros2_control_test_assets::urdf_xml_head_) +
-    ros2_control_test_assets::valid_urdf_ros2_control_actuator_only_ +
-    ros2_control_test_assets::urdf_xml_tail_;
+    std::string(ros2_control_test_assets::urdf_head) +
+    ros2_control_test_assets::valid_urdf_ros2_control_actuator_only +
+    ros2_control_test_assets::urdf_tail;
   const auto control_hardware = parse_control_resources_from_urdf(urdf_to_test);
   ASSERT_THAT(control_hardware, SizeIs(1));
   auto hardware_info = control_hardware.at(0);
