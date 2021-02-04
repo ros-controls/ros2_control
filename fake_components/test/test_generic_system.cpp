@@ -86,7 +86,7 @@ protected:
   </ros2_control>
 )";
 
-    hardware_system_2dof_functional_standard_interfaces_ =
+    hardware_system_2dof_standard_interfaces_ =
       R"(
   <ros2_control name="GenericSystem2dof" type="system">
     <hardware>
@@ -111,7 +111,7 @@ protected:
   </ros2_control>
 )";
 
-    hardware_system_2dof_functional_with_other_interface_ =
+    hardware_system_2dof_with_other_interface_ =
       R"(
   <ros2_control name="GenericSystem2dof" type="system">
     <hardware>
@@ -140,13 +140,80 @@ protected:
     </joint>
   </ros2_control>
 )";
+
+    hardware_system_2dof_with_sensor_ =
+      R"(
+  <ros2_control name="GenericSystem2dof" type="system">
+    <hardware>
+      <plugin>fake_components/GenericSystem</plugin>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <param name="initial_position">0.0</param>
+      <param name="initial_velocity">0.0</param>
+    </joint>
+    <joint name="joint2">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <param name="initial_position">0.0</param>
+      <param name="initial_velocity">0.0</param>
+    </joint>
+    <sensor name="tcp_force_sensor">
+      <state_interface name="fx"/>
+      <state_interface name="fy"/>
+      <state_interface name="tx"/>
+      <state_interface name="ty"/>
+      <param name="frame_id">kuka_tcp</param>
+    </sensor>
+  </ros2_control>
+)";
+
+    hardware_system_2dof_with_sensor_fake_command_ =
+      R"(
+  <ros2_control name="GenericSystem2dof" type="system">
+    <hardware>
+      <plugin>fake_components/GenericSystem</plugin>
+      <param name="fake_sensor_commands">true</param>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <param name="initial_position">0.0</param>
+      <param name="initial_velocity">0.0</param>
+    </joint>
+    <joint name="joint2">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <param name="initial_position">0.0</param>
+      <param name="initial_velocity">0.0</param>
+    </joint>
+    <sensor name="tcp_force_sensor">
+      <state_interface name="fx"/>
+      <state_interface name="fy"/>
+      <state_interface name="tx"/>
+      <state_interface name="ty"/>
+      <param name="frame_id">kuka_tcp</param>
+    </sensor>
+  </ros2_control>
+)";
   }
 
   std::string hardware_robot_2dof_;
   std::string hardware_system_2dof_;
   std::string hardware_system_2dof_asymetric_;
-  std::string hardware_system_2dof_functional_standard_interfaces_;
-  std::string hardware_system_2dof_functional_with_other_interface_;
+  std::string hardware_system_2dof_standard_interfaces_;
+  std::string hardware_system_2dof_with_other_interface_;
+  std::string hardware_system_2dof_with_sensor_;
+  std::string hardware_system_2dof_with_sensor_fake_command_;
 };
 
 TEST_F(TestGenericSystem, load_generic_system_2dof) {
@@ -164,7 +231,7 @@ TEST_F(TestGenericSystem, load_generic_robot_2dof) {
 }
 
 // Test inspired by hardware_interface/test_resource_manager.cpp
-TEST_F(TestGenericSystem, load_generic_system_2dof_check_symetric_interfaces) {
+TEST_F(TestGenericSystem, generic_system_2dof_symetric_interfaces) {
   auto urdf =
     ros2_control_test_assets::urdf_xml_head_ + hardware_system_2dof_ +
     ros2_control_test_assets::urdf_xml_tail_;
@@ -172,13 +239,11 @@ TEST_F(TestGenericSystem, load_generic_system_2dof_check_symetric_interfaces) {
 
   // Check interfaces
   EXPECT_EQ(1u, rm.system_components_size());
-  auto state_interface_keys = rm.state_interface_keys();
-  ASSERT_EQ(2u, state_interface_keys.size());
+  ASSERT_EQ(2u, rm.state_interface_keys().size());
   EXPECT_TRUE(rm.state_interface_exists("joint1/position"));
   EXPECT_TRUE(rm.state_interface_exists("joint2/position"));
 
-  auto command_interface_keys = rm.state_interface_keys();
-  ASSERT_EQ(2u, command_interface_keys.size());
+  ASSERT_EQ(2u, rm.command_interface_keys().size());
   EXPECT_TRUE(rm.command_interface_exists("joint1/position"));
   EXPECT_TRUE(rm.command_interface_exists("joint2/position"));
 
@@ -195,7 +260,7 @@ TEST_F(TestGenericSystem, load_generic_system_2dof_check_symetric_interfaces) {
 }
 
 // Test inspired by hardware_interface/test_resource_manager.cpp
-TEST_F(TestGenericSystem, load_generic_system_2dof_check_asymetric_interfaces) {
+TEST_F(TestGenericSystem, generic_system_2dof_asymetric_interfaces) {
   auto urdf =
     ros2_control_test_assets::urdf_xml_head_ + hardware_system_2dof_asymetric_ +
     ros2_control_test_assets::urdf_xml_tail_;
@@ -203,8 +268,7 @@ TEST_F(TestGenericSystem, load_generic_system_2dof_check_asymetric_interfaces) {
 
   // Check interfaces
   EXPECT_EQ(1u, rm.system_components_size());
-  auto state_interface_keys = rm.state_interface_keys();
-  ASSERT_EQ(2u, state_interface_keys.size());
+  ASSERT_EQ(2u, rm.state_interface_keys().size());
   EXPECT_FALSE(rm.state_interface_exists("joint1/position"));
   EXPECT_TRUE(rm.state_interface_exists("joint1/velocity"));
   EXPECT_FALSE(rm.state_interface_exists("joint1/acceleration"));
@@ -212,8 +276,7 @@ TEST_F(TestGenericSystem, load_generic_system_2dof_check_asymetric_interfaces) {
   EXPECT_FALSE(rm.state_interface_exists("joint2/velocity"));
   EXPECT_FALSE(rm.state_interface_exists("joint2/acceleration"));
 
-  auto command_interface_keys = rm.state_interface_keys();
-  ASSERT_EQ(2u, command_interface_keys.size());
+  ASSERT_EQ(2u, rm.command_interface_keys().size());
   EXPECT_TRUE(rm.command_interface_exists("joint1/position"));
   EXPECT_FALSE(rm.command_interface_exists("joint1/velocity"));
   EXPECT_FALSE(rm.command_interface_exists("joint1/acceleration"));
@@ -243,10 +306,10 @@ TEST_F(TestGenericSystem, load_generic_system_2dof_check_asymetric_interfaces) {
   ASSERT_EQ(0.8554, j2a_c.get_value());
 }
 
-TEST_F(TestGenericSystem, load_generic_system_2dof_check_functionality) {
+TEST_F(TestGenericSystem, generic_system_2dof_functionality) {
   auto urdf =
     ros2_control_test_assets::urdf_xml_head_ +
-    hardware_system_2dof_functional_standard_interfaces_ +
+    hardware_system_2dof_standard_interfaces_ +
     ros2_control_test_assets::urdf_xml_tail_;
   hardware_interface::ResourceManager rm(urdf);
 
@@ -337,25 +400,23 @@ TEST_F(TestGenericSystem, load_generic_system_2dof_check_functionality) {
   EXPECT_EQ(status_map["GenericSystem2dof"], hardware_interface::status::STOPPED);
 }
 
-TEST_F(TestGenericSystem, load_generic_system_2dof_check_other_interfaces) {
+TEST_F(TestGenericSystem, generic_system_2dof_other_interfaces) {
   auto urdf =
     ros2_control_test_assets::urdf_xml_head_ +
-    hardware_system_2dof_functional_with_other_interface_ +
+    hardware_system_2dof_with_other_interface_ +
     ros2_control_test_assets::urdf_xml_tail_;
   hardware_interface::ResourceManager rm(urdf);
 
   // Check interfaces
   EXPECT_EQ(1u, rm.system_components_size());
-  auto state_interface_keys = rm.state_interface_keys();
-  ASSERT_EQ(5u, state_interface_keys.size());
+  ASSERT_EQ(5u, rm.state_interface_keys().size());
   EXPECT_TRUE(rm.state_interface_exists("joint1/position"));
   EXPECT_TRUE(rm.state_interface_exists("joint1/velocity"));
   EXPECT_TRUE(rm.state_interface_exists("joint2/position"));
   EXPECT_TRUE(rm.state_interface_exists("joint2/velocity"));
   EXPECT_TRUE(rm.state_interface_exists("voltage_output/voltage"));
 
-  auto command_interface_keys = rm.state_interface_keys();
-  ASSERT_EQ(5u, command_interface_keys.size());
+  ASSERT_EQ(5u, rm.command_interface_keys().size());
   EXPECT_TRUE(rm.command_interface_exists("joint1/position"));
   EXPECT_TRUE(rm.command_interface_exists("joint1/velocity"));
   EXPECT_TRUE(rm.command_interface_exists("joint2/position"));
@@ -419,4 +480,227 @@ TEST_F(TestGenericSystem, load_generic_system_2dof_check_other_interfaces) {
   ASSERT_EQ(0.11, j1p_c.get_value());
   ASSERT_EQ(0.33, j2p_c.get_value());
   ASSERT_EQ(0.99, vo_c.get_value());
+}
+
+
+TEST_F(TestGenericSystem, generic_system_2dof_sensor) {
+  auto urdf =
+    ros2_control_test_assets::urdf_xml_head_ +
+    hardware_system_2dof_with_sensor_ +
+    ros2_control_test_assets::urdf_xml_tail_;
+  hardware_interface::ResourceManager rm(urdf);
+
+  // Check interfaces
+  EXPECT_EQ(1u, rm.system_components_size());
+  ASSERT_EQ(8u, rm.state_interface_keys().size());
+  EXPECT_TRUE(rm.state_interface_exists("joint1/position"));
+  EXPECT_TRUE(rm.state_interface_exists("joint1/velocity"));
+  EXPECT_TRUE(rm.state_interface_exists("joint2/position"));
+  EXPECT_TRUE(rm.state_interface_exists("joint2/velocity"));
+  EXPECT_TRUE(rm.state_interface_exists("tcp_force_sensor/fx"));
+  EXPECT_TRUE(rm.state_interface_exists("tcp_force_sensor/fy"));
+  EXPECT_TRUE(rm.state_interface_exists("tcp_force_sensor/tx"));
+  EXPECT_TRUE(rm.state_interface_exists("tcp_force_sensor/ty"));
+
+  ASSERT_EQ(4u, rm.command_interface_keys().size());
+  EXPECT_TRUE(rm.command_interface_exists("joint1/position"));
+  EXPECT_TRUE(rm.command_interface_exists("joint1/velocity"));
+  EXPECT_TRUE(rm.command_interface_exists("joint2/position"));
+  EXPECT_TRUE(rm.command_interface_exists("joint2/velocity"));
+  EXPECT_FALSE(rm.command_interface_exists("tcp_force_sensor/fx"));
+  EXPECT_FALSE(rm.command_interface_exists("tcp_force_sensor/fy"));
+  EXPECT_FALSE(rm.command_interface_exists("tcp_force_sensor/tx"));
+  EXPECT_FALSE(rm.command_interface_exists("tcp_force_sensor/ty"));
+
+  // Check initial values
+  hardware_interface::LoanedStateInterface j1p_s = rm.claim_state_interface("joint1/position");
+  hardware_interface::LoanedStateInterface j1v_s = rm.claim_state_interface("joint1/velocity");
+  hardware_interface::LoanedStateInterface j2p_s = rm.claim_state_interface("joint2/position");
+  hardware_interface::LoanedStateInterface j2v_s = rm.claim_state_interface("joint2/velocity");
+  hardware_interface::LoanedStateInterface sfx_s = rm.claim_state_interface("tcp_force_sensor/fx");
+  hardware_interface::LoanedStateInterface sfy_s = rm.claim_state_interface("tcp_force_sensor/fy");
+  hardware_interface::LoanedStateInterface stx_s = rm.claim_state_interface("tcp_force_sensor/tx");
+  hardware_interface::LoanedStateInterface sty_s = rm.claim_state_interface("tcp_force_sensor/ty");
+  hardware_interface::LoanedCommandInterface j1p_c = rm.claim_command_interface("joint1/position");
+  hardware_interface::LoanedCommandInterface j2p_c = rm.claim_command_interface("joint2/position");
+  EXPECT_ANY_THROW(rm.claim_command_interface("tcp_force_sensor/fx"));
+  EXPECT_ANY_THROW(rm.claim_command_interface("tcp_force_sensor/fy"));
+  EXPECT_ANY_THROW(rm.claim_command_interface("tcp_force_sensor/tx"));
+  EXPECT_ANY_THROW(rm.claim_command_interface("tcp_force_sensor/ty"));
+
+  ASSERT_EQ(0.0, j1p_s.get_value());
+  ASSERT_EQ(0.0, j1v_s.get_value());
+  ASSERT_EQ(0.0, j2p_s.get_value());
+  ASSERT_EQ(0.0, j2v_s.get_value());
+  EXPECT_TRUE(std::isnan(sfx_s.get_value()));
+  EXPECT_TRUE(std::isnan(sfy_s.get_value()));
+  EXPECT_TRUE(std::isnan(stx_s.get_value()));
+  EXPECT_TRUE(std::isnan(sty_s.get_value()));
+  ASSERT_EQ(0.0, j1p_c.get_value());
+  ASSERT_EQ(0.0, j2p_c.get_value());
+
+  // set some new values in commands
+  j1p_c.set_value(0.11);
+  j2p_c.set_value(0.33);
+
+  // State values should not be changed
+  ASSERT_EQ(0.0, j1p_s.get_value());
+  ASSERT_EQ(0.0, j1v_s.get_value());
+  ASSERT_EQ(0.0, j2p_s.get_value());
+  ASSERT_EQ(0.0, j2v_s.get_value());
+  EXPECT_TRUE(std::isnan(sfx_s.get_value()));
+  EXPECT_TRUE(std::isnan(sfy_s.get_value()));
+  EXPECT_TRUE(std::isnan(stx_s.get_value()));
+  EXPECT_TRUE(std::isnan(sty_s.get_value()));
+  ASSERT_EQ(0.11, j1p_c.get_value());
+  ASSERT_EQ(0.33, j2p_c.get_value());
+
+  // write() does not chnage values
+  rm.write();
+  ASSERT_EQ(0.0, j1p_s.get_value());
+  ASSERT_EQ(0.0, j1v_s.get_value());
+  ASSERT_EQ(0.0, j2p_s.get_value());
+  ASSERT_EQ(0.0, j2v_s.get_value());
+  EXPECT_TRUE(std::isnan(sfx_s.get_value()));
+  EXPECT_TRUE(std::isnan(sfy_s.get_value()));
+  EXPECT_TRUE(std::isnan(stx_s.get_value()));
+  EXPECT_TRUE(std::isnan(sty_s.get_value()));
+  ASSERT_EQ(0.11, j1p_c.get_value());
+  ASSERT_EQ(0.33, j2p_c.get_value());
+
+  // read() mirrors commands to states
+  rm.read();
+  ASSERT_EQ(0.11, j1p_s.get_value());
+  ASSERT_EQ(0.0, j1v_s.get_value());
+  ASSERT_EQ(0.33, j2p_s.get_value());
+  EXPECT_TRUE(std::isnan(sfx_s.get_value()));
+  EXPECT_TRUE(std::isnan(sfy_s.get_value()));
+  EXPECT_TRUE(std::isnan(stx_s.get_value()));
+  EXPECT_TRUE(std::isnan(sty_s.get_value()));
+  ASSERT_EQ(0.0, j2v_s.get_value());
+  ASSERT_EQ(0.11, j1p_c.get_value());
+  ASSERT_EQ(0.33, j2p_c.get_value());
+}
+
+TEST_F(TestGenericSystem, generic_system_2dof_sensor_fake_command) {
+  auto urdf =
+    ros2_control_test_assets::urdf_xml_head_ +
+    hardware_system_2dof_with_sensor_fake_command_ +
+    ros2_control_test_assets::urdf_xml_tail_;
+  hardware_interface::ResourceManager rm(urdf);
+
+  // Check interfaces
+  EXPECT_EQ(1u, rm.system_components_size());
+  ASSERT_EQ(8u, rm.state_interface_keys().size());
+  EXPECT_TRUE(rm.state_interface_exists("joint1/position"));
+  EXPECT_TRUE(rm.state_interface_exists("joint1/velocity"));
+  EXPECT_TRUE(rm.state_interface_exists("joint2/position"));
+  EXPECT_TRUE(rm.state_interface_exists("joint2/velocity"));
+  EXPECT_TRUE(rm.state_interface_exists("tcp_force_sensor/fx"));
+  EXPECT_TRUE(rm.state_interface_exists("tcp_force_sensor/fy"));
+  EXPECT_TRUE(rm.state_interface_exists("tcp_force_sensor/tx"));
+  EXPECT_TRUE(rm.state_interface_exists("tcp_force_sensor/ty"));
+
+  ASSERT_EQ(8u, rm.command_interface_keys().size());
+  EXPECT_TRUE(rm.command_interface_exists("joint1/position"));
+  EXPECT_TRUE(rm.command_interface_exists("joint1/velocity"));
+  EXPECT_TRUE(rm.command_interface_exists("joint2/position"));
+  EXPECT_TRUE(rm.command_interface_exists("joint2/velocity"));
+  EXPECT_TRUE(rm.command_interface_exists("tcp_force_sensor/fx"));
+  EXPECT_TRUE(rm.command_interface_exists("tcp_force_sensor/fy"));
+  EXPECT_TRUE(rm.command_interface_exists("tcp_force_sensor/tx"));
+  EXPECT_TRUE(rm.command_interface_exists("tcp_force_sensor/ty"));
+
+  // Check initial values
+  hardware_interface::LoanedStateInterface j1p_s = rm.claim_state_interface("joint1/position");
+  hardware_interface::LoanedStateInterface j1v_s = rm.claim_state_interface("joint1/velocity");
+  hardware_interface::LoanedStateInterface j2p_s = rm.claim_state_interface("joint2/position");
+  hardware_interface::LoanedStateInterface j2v_s = rm.claim_state_interface("joint2/velocity");
+  hardware_interface::LoanedStateInterface sfx_s = rm.claim_state_interface("tcp_force_sensor/fx");
+  hardware_interface::LoanedStateInterface sfy_s = rm.claim_state_interface("tcp_force_sensor/fy");
+  hardware_interface::LoanedStateInterface stx_s = rm.claim_state_interface("tcp_force_sensor/tx");
+  hardware_interface::LoanedStateInterface sty_s = rm.claim_state_interface("tcp_force_sensor/ty");
+  hardware_interface::LoanedCommandInterface j1p_c = rm.claim_command_interface("joint1/position");
+  hardware_interface::LoanedCommandInterface j2p_c = rm.claim_command_interface("joint2/position");
+  hardware_interface::LoanedCommandInterface sfx_c =
+    rm.claim_command_interface("tcp_force_sensor/fx");
+  hardware_interface::LoanedCommandInterface sfy_c =
+    rm.claim_command_interface("tcp_force_sensor/fy");
+  hardware_interface::LoanedCommandInterface stx_c =
+    rm.claim_command_interface("tcp_force_sensor/tx");
+  hardware_interface::LoanedCommandInterface sty_c =
+    rm.claim_command_interface("tcp_force_sensor/ty");
+
+  ASSERT_EQ(0.0, j1p_s.get_value());
+  ASSERT_EQ(0.0, j1v_s.get_value());
+  ASSERT_EQ(0.0, j2p_s.get_value());
+  ASSERT_EQ(0.0, j2v_s.get_value());
+  EXPECT_TRUE(std::isnan(sfx_s.get_value()));
+  EXPECT_TRUE(std::isnan(sfy_s.get_value()));
+  EXPECT_TRUE(std::isnan(stx_s.get_value()));
+  EXPECT_TRUE(std::isnan(sty_s.get_value()));
+  ASSERT_EQ(0.0, j1p_c.get_value());
+  ASSERT_EQ(0.0, j2p_c.get_value());
+  EXPECT_TRUE(std::isnan(sfx_c.get_value()));
+  EXPECT_TRUE(std::isnan(sfy_c.get_value()));
+  EXPECT_TRUE(std::isnan(stx_c.get_value()));
+  EXPECT_TRUE(std::isnan(sty_c.get_value()));
+
+  // set some new values in commands
+  j1p_c.set_value(0.11);
+  j2p_c.set_value(0.33);
+  sfx_c.set_value(1.11);
+  sfy_c.set_value(2.22);
+  stx_c.set_value(3.33);
+  sty_c.set_value(4.44);
+
+  // State values should not be changed
+  ASSERT_EQ(0.0, j1p_s.get_value());
+  ASSERT_EQ(0.0, j1v_s.get_value());
+  ASSERT_EQ(0.0, j2p_s.get_value());
+  ASSERT_EQ(0.0, j2v_s.get_value());
+  EXPECT_TRUE(std::isnan(sfx_s.get_value()));
+  EXPECT_TRUE(std::isnan(sfy_s.get_value()));
+  EXPECT_TRUE(std::isnan(stx_s.get_value()));
+  EXPECT_TRUE(std::isnan(sty_s.get_value()));
+  ASSERT_EQ(0.11, j1p_c.get_value());
+  ASSERT_EQ(0.33, j2p_c.get_value());
+  ASSERT_EQ(1.11, sfx_c.get_value());
+  ASSERT_EQ(2.22, sfy_c.get_value());
+  ASSERT_EQ(3.33, stx_c.get_value());
+  ASSERT_EQ(4.44, sty_c.get_value());
+
+  // write() does not chnage values
+  rm.write();
+  ASSERT_EQ(0.0, j1p_s.get_value());
+  ASSERT_EQ(0.0, j1v_s.get_value());
+  ASSERT_EQ(0.0, j2p_s.get_value());
+  ASSERT_EQ(0.0, j2v_s.get_value());
+  EXPECT_TRUE(std::isnan(sfx_s.get_value()));
+  EXPECT_TRUE(std::isnan(sfy_s.get_value()));
+  EXPECT_TRUE(std::isnan(stx_s.get_value()));
+  EXPECT_TRUE(std::isnan(sty_s.get_value()));
+  ASSERT_EQ(0.11, j1p_c.get_value());
+  ASSERT_EQ(0.33, j2p_c.get_value());
+  ASSERT_EQ(1.11, sfx_c.get_value());
+  ASSERT_EQ(2.22, sfy_c.get_value());
+  ASSERT_EQ(3.33, stx_c.get_value());
+  ASSERT_EQ(4.44, sty_c.get_value());
+
+  // read() mirrors commands to states
+  rm.read();
+  ASSERT_EQ(0.11, j1p_s.get_value());
+  ASSERT_EQ(0.0, j1v_s.get_value());
+  ASSERT_EQ(0.33, j2p_s.get_value());
+  ASSERT_EQ(0.0, j2v_s.get_value());
+  ASSERT_EQ(1.11, sfx_s.get_value());
+  ASSERT_EQ(2.22, sfy_s.get_value());
+  ASSERT_EQ(3.33, stx_s.get_value());
+  ASSERT_EQ(4.44, sty_s.get_value());
+  ASSERT_EQ(0.11, j1p_c.get_value());
+  ASSERT_EQ(0.33, j2p_c.get_value());
+  ASSERT_EQ(1.11, sfx_c.get_value());
+  ASSERT_EQ(2.22, sfy_c.get_value());
+  ASSERT_EQ(3.33, stx_c.get_value());
+  ASSERT_EQ(4.44, sty_c.get_value());
 }

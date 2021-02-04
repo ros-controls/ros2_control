@@ -79,19 +79,34 @@ protected:
     hardware_interface::HW_IF_EFFORT
   };
   /// The size of this vector is (standard_interfaces_.size() x nr_joints)
-  std::vector<std::vector<double>> hw_joint_commands_;
-  std::vector<std::vector<double>> hw_joint_states_;
+  std::vector<std::vector<double>> joint_commands_;
+  std::vector<std::vector<double>> joint_states_;
 
   std::vector<std::string> other_interfaces_;
   /// The size of this vector is (other_interfaces_.size() x nr_joints)
-  std::vector<std::vector<double>> hw_other_commands_;
-  std::vector<std::vector<double>> hw_other_states_;
+  std::vector<std::vector<double>> other_commands_;
+  std::vector<std::vector<double>> other_states_;
+
+  std::vector<std::string> sensor_interfaces_;
+  /// The size of this vector is (other_interfaces_.size() x nr_joints)
+  std::vector<std::vector<double>> sensor_fake_commands_;
+  std::vector<std::vector<double>> sensor_states_;
 
 private:
+  template<typename HandleType>
+  bool get_interface(
+    const std::string & name,
+    const std::vector<std::string> & interface_list,
+    const std::string & interface_name, const uint vector_index,
+    std::vector<std::vector<double>> & values,
+    std::vector<HandleType> & interfaces);
+
   void initialize_storage_vectors(
     std::vector<std::vector<double>> & commands,
     std::vector<std::vector<double>> & states,
     const std::vector<std::string> & interfaces);
+
+  bool fake_sensor_command_interfaces;
 };
 
 typedef GenericSystem GenericRobot;
