@@ -2,6 +2,9 @@
 Changelog for package transmission_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.1.4 (2021-02-03)
 ------------------
 * Add differential transmission (`#303 <https://github.com/ros-controls/ros2_control/issues/303>`_)

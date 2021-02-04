@@ -2,6 +2,9 @@
 Changelog for package ros2_control
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.1.4 (2021-02-03)
 ------------------
 * Add test assets package (`#289 <https://github.com/ros-controls/ros2_control/issues/289>`_)
