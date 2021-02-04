@@ -76,25 +76,15 @@ TEST_F(TestResourceManager, initialization_with_urdf_manual_validation) {
 TEST_F(TestResourceManager, initialization_with_wrong_urdf) {
   // missing state keys
   {
-    try {
+    EXPECT_THROW(
       hardware_interface::ResourceManager rm(
-        ros2_control_test_assets::minimal_robot_missing_state_keys_urdf);
-      FAIL();
-    } catch (const std::exception & e) {
-      std::cout << e.what() << std::endl;
-      SUCCEED() << e.what();
-    }
+        ros2_control_test_assets::minimal_robot_missing_state_keys_urdf), std::exception);
   }
   // missing command keys
   {
-    try {
+    EXPECT_THROW(
       hardware_interface::ResourceManager rm(
-        ros2_control_test_assets::minimal_robot_missing_command_keys_urdf);
-      FAIL();
-    } catch (const std::exception & e) {
-      std::cout << e.what() << std::endl;
-      SUCCEED() << e.what();
-    }
+        ros2_control_test_assets::minimal_robot_missing_command_keys_urdf), std::exception);
   }
 }
 
