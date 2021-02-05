@@ -243,7 +243,8 @@ class ExternalComponent : public hardware_interface::ActuatorInterface
     return hardware_interface::return_type::OK;
   }
 
-  hardware_interface::return_type accept_command_resource_claim(const std::vector<std::string> & interfaces) override
+  hardware_interface::return_type accept_command_resource_claim(
+    const std::vector<std::string> & interfaces) override
   {
     (void)interfaces;
     return hardware_interface::return_type::OK;

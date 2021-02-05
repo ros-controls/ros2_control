@@ -14,6 +14,7 @@
 
 #include <memory>
 #include <vector>
+#include <string>
 
 #include "hardware_interface/base_interface.hpp"
 #include "hardware_interface/actuator_interface.hpp"
@@ -114,10 +115,10 @@ class TestSingleJointActuator : public BaseInterface<ActuatorInterface>
     return return_type::OK;
   }
 
-  hardware_interface::return_type accept_command_resource_claim(const std::vector<std::string> & interfaces) override
+  return_type accept_command_resource_claim(const std::vector<std::string> & interfaces) override
   {
     (void)interfaces;
-    return hardware_interface::return_type::OK;
+    return return_type::OK;
   }
 
 private:

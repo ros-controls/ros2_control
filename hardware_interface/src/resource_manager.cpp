@@ -239,7 +239,8 @@ LoanedCommandInterface ResourceManager::claim_command_interface(const std::strin
   std::vector<std::string> interface_keys{key};
   if (return_type::OK != notify_command_resource_claim(interface_keys)) {
     throw std::runtime_error(
-      std::string("HardwareInterface components did not accept command resource claim to ") + key);
+      std::string(
+        "HardwareInterface components did not accept command resource claim to ") + key);
   }
   claimed_command_interface_map_[key] = true;
   return LoanedCommandInterface(
@@ -341,7 +342,8 @@ void ResourceManager::stop_components()
   }
 }
 
-hardware_interface::return_type ResourceManager::notify_command_resource_claim(const std::vector<std::string> & interfaces)
+hardware_interface::return_type ResourceManager::notify_command_resource_claim(
+  const std::vector<std::string> & interfaces)
 {
   for (auto & component : resource_storage_->actuators_) {
     if (return_type::OK != component.accept_command_resource_claim(interfaces)) {

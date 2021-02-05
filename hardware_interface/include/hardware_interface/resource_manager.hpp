@@ -211,7 +211,8 @@ private:
 
   void release_command_interface(const std::string & key);
 
-  hardware_interface::return_type notify_command_resource_claim(const std::vector<std::string> & interfaces);
+  hardware_interface::return_type notify_command_resource_claim(
+    const std::vector<std::string> & interfaces);
 
   std::unordered_map<std::string, bool> claimed_command_interface_map_;
 

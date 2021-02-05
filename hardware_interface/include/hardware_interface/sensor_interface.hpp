@@ -99,7 +99,6 @@ public:
    */
   virtual
   return_type read() = 0;
-
 };
 
 }  // namespace hardware_interface
