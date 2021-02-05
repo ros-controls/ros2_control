@@ -347,19 +347,11 @@ hardware_interface::return_type ResourceManager::notify_command_resource_claim(
 {
   for (auto & component : resource_storage_->actuators_) {
     if (return_type::OK != component.accept_command_resource_claim(interfaces)) {
-      std::string error_msg = std::string("Hardware interface") + component.get_name() + " did not accept command interface claims: ";
-      for (std::string interface_key : interfaces) {
-        error_msg += ", " + interface_key;
-      }
       return return_type::ERROR;
     }
   }
   for (auto & component : resource_storage_->systems_) {
     if (return_type::OK != component.accept_command_resource_claim(interfaces)) {
-      std::string error_msg = std::string("Hardware interface") + component.get_name() + " did not accept command interface claims: ";
-      for (std::string interface_key : interfaces) {
-        error_msg += ", " + interface_key;
-      }
       return return_type::ERROR;
     }
   }
