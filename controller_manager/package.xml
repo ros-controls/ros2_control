@@ -15,6 +15,8 @@
   <depend>hardware_interface</depend>
   <depend>pluginlib</depend>
   <depend>ros2controlcli</depend>
+  <depend>ros2run</depend>
+  <depend>ros2param</depend>
   <depend>rclcpp</depend>
   <depend>rcpputils</depend>
 
