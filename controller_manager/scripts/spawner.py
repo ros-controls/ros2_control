@@ -113,9 +113,10 @@ def main(args=None):
                 return ret.returncode
             else:
                 node.get_logger().info('Unloaded controller')
+        return 0
     finally:
         rclpy.shutdown()
 
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())
