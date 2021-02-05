@@ -77,6 +77,7 @@ if(BUILD_TESTING)
 
   ament_add_gmock(test_component_parser test/test_component_parser.cpp)
   target_link_libraries(test_component_parser hardware_interface)
+  ament_target_dependencies(test_component_parser ros2_control_test_assets)
 
   add_library(test_components SHARED
     test/test_components/test_actuator.cpp
@@ -107,8 +108,8 @@ if(BUILD_TESTING)
   )
 
   ament_add_gmock(test_resource_manager test/test_resource_manager.cpp)
-  ament_target_dependencies(test_resource_manager ros2_control_test_assets)
   target_link_libraries(test_resource_manager hardware_interface)
+  ament_target_dependencies(test_resource_manager ros2_control_test_assets)
 endif()
 
 ament_export_include_directories(
