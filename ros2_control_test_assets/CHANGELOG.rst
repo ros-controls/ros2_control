@@ -2,6 +2,12 @@
 Changelog for package ros2_control_test_assets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* correct hardware interface validation in resource manager. (`#317 <https://github.com/ros-controls/ros2_control/issues/317>`_)
+* Add missing test dep (`#321 <https://github.com/ros-controls/ros2_control/issues/321>`_)
+* Contributors: Bence Magyar, Karsten Knese
+
 0.1.5 (2021-02-04)
 ------------------
 * Add missing buildtool dep (`#319 <https://github.com/ros-controls/ros2_control/issues/319>`_)
