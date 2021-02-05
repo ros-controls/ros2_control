@@ -100,8 +100,6 @@ public:
   virtual
   return_type read() = 0;
 
-  virtual
-  return_type accept_state_resource_claim(const std::string & key) = 0;
 };
 
 }  // namespace hardware_interface

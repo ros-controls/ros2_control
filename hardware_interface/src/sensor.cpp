@@ -67,9 +67,4 @@ return_type Sensor::read()
   return impl_->read();
 }
 
-return_type Sensor::accept_state_resource_claim(const std::string & key)
-{
-  return impl_->accept_state_resource_claim(key);
-}
-
 }  // namespace hardware_interface

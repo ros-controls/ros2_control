@@ -82,15 +82,9 @@ class TestSystem : public BaseInterface<SystemInterface>
     return return_type::OK;
   }
 
-  hardware_interface::return_type accept_state_resource_claim(const std::string & key) override
+  hardware_interface::return_type accept_command_resource_claim(const std::vector<std::string> & interfaces) override
   {
-    (void)key;
-    return hardware_interface::return_type::OK;
-  }
-
-  hardware_interface::return_type accept_command_resource_claim(const std::string & key) override
-  {
-    (void)key;
+    (void)interfaces;
     return hardware_interface::return_type::OK;
   }
 

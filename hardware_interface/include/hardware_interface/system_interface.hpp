@@ -125,10 +125,7 @@ public:
   return_type write() = 0;
 
   virtual
-  return_type accept_state_resource_claim(const std::string & key) = 0;
-  
-  virtual
-  return_type accept_command_resource_claim(const std::string & key) = 0;
+  return_type accept_command_resource_claim(const std::vector<std::string> & interfaces) = 0;
 };
 
 }  // namespace hardware_interface

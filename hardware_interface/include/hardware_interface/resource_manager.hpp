@@ -25,6 +25,7 @@
 #include "hardware_interface/loaned_state_interface.hpp"
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/types/hardware_interface_status_values.hpp"
+#include "hardware_interface/types/hardware_interface_return_values.hpp"
 
 namespace hardware_interface
 {
@@ -210,9 +211,7 @@ private:
 
   void release_command_interface(const std::string & key);
 
-  void notify_state_resource_switching(const std::string & key);
-
-  void notify_command_resource_switching(const std::string & key);
+  hardware_interface::return_type notify_command_resource_claim(const std::vector<std::string> & interfaces);
 
   std::unordered_map<std::string, bool> claimed_command_interface_map_;
 

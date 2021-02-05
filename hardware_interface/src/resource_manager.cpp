@@ -194,7 +194,6 @@ LoanedStateInterface ResourceManager::claim_state_interface(const std::string & 
     throw std::runtime_error(
             std::string("state interface with key") + key + " does not exist");
   }
-  notify_state_resource_switching(key);
   return LoanedStateInterface(resource_storage_->state_interface_map_.at(key));
 }
 
@@ -237,7 +236,11 @@ LoanedCommandInterface ResourceManager::claim_command_interface(const std::strin
   }
 
   // Notifying that a resource switching occurs so that components can change accordingly.
-  notify_command_resource_switching(key);
+  std::vector<std::string> interface_keys{key};
+  if (return_type::OK != notify_command_resource_claim(interface_keys)) {
+    throw std::runtime_error(
+      std::string("HardwareInterface components did not accept command resource claim to ") + key);
+  }
   claimed_command_interface_map_[key] = true;
   return LoanedCommandInterface(
     resource_storage_->command_interface_map_.at(key),
@@ -338,42 +341,27 @@ void ResourceManager::stop_components()
   }
 }
 
-void ResourceManager::notify_state_resource_switching(const std::string & key)
+hardware_interface::return_type ResourceManager::notify_command_resource_claim(const std::vector<std::string> & interfaces)
 {
   for (auto & component : resource_storage_->actuators_) {
-    if (return_type::OK != component.accept_state_resource_claim(key)) {
-      throw std::runtime_error(
-        std::string("Hardware interface") + component.get_name() + " did not accept resource claim: " + key);
-    }
-  }
-  for (auto & component : resource_storage_->sensors_) {
-    if (return_type::OK != component.accept_state_resource_claim(key)) {
-      throw std::runtime_error(
-        std::string("Hardware interface") + component.get_name() + " did not accept resource claim: " + key);
+    if (return_type::OK != component.accept_command_resource_claim(interfaces)) {
+      std::string error_msg = std::string("Hardware interface") + component.get_name() + " did not accept command interface claims: ";
+      for (std::string interface_key : interfaces) {
+        error_msg += ", " + interface_key;
+      }
+      return return_type::ERROR;
     }
   }
   for (auto & component : resource_storage_->systems_) {
-    if (return_type::OK != component.accept_state_resource_claim(key)) {
-      throw std::runtime_error(
-        std::string("Hardware interface ") + component.get_name() + " did not accept resource claim: " + key);
+    if (return_type::OK != component.accept_command_resource_claim(interfaces)) {
+      std::string error_msg = std::string("Hardware interface") + component.get_name() + " did not accept command interface claims: ";
+      for (std::string interface_key : interfaces) {
+        error_msg += ", " + interface_key;
+      }
+      return return_type::ERROR;
     }
   }
-}
-
-void ResourceManager::notify_command_resource_switching(const std::string & key)
-{
-  for (auto & component : resource_storage_->actuators_) {
-    if (return_type::OK != component.accept_command_resource_claim(key)) {
-      throw std::runtime_error(
-        std::string("Hardware interface") + component.get_name() + " did not accept resource claim: " + key);
-    }
-  }
-  for (auto & component : resource_storage_->systems_) {
-    if (return_type::OK != component.accept_command_resource_claim(key)) {
-      throw std::runtime_error(
-        std::string("Hardware interface ") + component.get_name() + " did not accept resource claim: " + key);
-    }
-  }
+  return return_type::OK;
 }
 
 void ResourceManager::read()

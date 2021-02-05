@@ -113,12 +113,6 @@ class TestForceTorqueSensor : public BaseInterface<SensorInterface>
     return return_type::OK;
   }
 
-  hardware_interface::return_type accept_state_resource_claim(const std::string & key) override
-  {
-    (void)key;
-    return hardware_interface::return_type::OK;
-  }
-
 private:
   struct FTValues
   {

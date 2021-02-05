@@ -104,15 +104,9 @@ class DummyActuator : public hardware_interface::ActuatorInterface
     return hardware_interface::return_type::OK;
   }
 
-  hardware_interface::return_type accept_state_resource_claim(const std::string & key) override
+  hardware_interface::return_type accept_command_resource_claim(const std::vector<std::string> & interfaces) override
   {
-    (void)key;
-    return hardware_interface::return_type::OK;
-  }
-
-  hardware_interface::return_type accept_command_resource_claim(const std::string & key) override
-  {
-    (void)key;
+    (void)interfaces;
     return hardware_interface::return_type::OK;
   }
 
@@ -164,12 +158,6 @@ class DummySensor : public hardware_interface::SensorInterface
   hardware_interface::return_type read() override
   {
     // no-op, static value
-    return hardware_interface::return_type::OK;
-  }
-
-  hardware_interface::return_type accept_state_resource_claim(const std::string & key) override
-  {
-    (void)key;
     return hardware_interface::return_type::OK;
   }
 
@@ -264,15 +252,9 @@ class DummySystem : public hardware_interface::SystemInterface
     return hardware_interface::return_type::OK;
   }
 
-  hardware_interface::return_type accept_state_resource_claim(const std::string & key) override
+  hardware_interface::return_type accept_command_resource_claim(const std::vector<std::string> & interfaces) override
   {
-    (void)key;
-    return hardware_interface::return_type::OK;
-  }
-
-  hardware_interface::return_type accept_command_resource_claim(const std::string & key) override
-  {
-    (void)key;
+    (void)interfaces;
     return hardware_interface::return_type::OK;
   }
 
