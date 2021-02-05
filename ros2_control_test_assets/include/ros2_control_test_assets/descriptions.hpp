@@ -31,9 +31,6 @@ const auto urdf_head =
 <!-- |    EDITING THIS FILE BY HAND IS NOT RECOMMENDED                                 | -->
 <!-- =================================================================================== -->
 <robot name="MinimalRobot">
-  <!--  <xacro:include filename="$(find ros2_control_demo_robot)/description/demo_2dof/robot_2dof.urdf.xacro" />
-  <xacro:include filename="$(find ros2_control_demo_robot)/description/demo_2dof/robot_2dof.gazebo.xacro" />
-  <xacro:include filename="$(find ros2_control_demo_robot)/description/demo_2dof/robot_2dof.ros2_control.xacro" />-->
   <!-- Used for fixing robot -->
   <link name="world"/>
   <gazebo reference="world">
@@ -128,20 +125,7 @@ const auto urdf_head =
     <child link="tool_link"/>
   </joint>
   <link name="tool_link">
-    </link>
-  <gazebo reference="base_link">
-    <material>Gazebo/Gray</material>
-  </gazebo>
-  <gazebo reference="link1">
-    <material>Gazebo/Gray</material>
-  </gazebo>
-  <gazebo reference="link2">
-    <material>Gazebo/Gray</material>
-  </gazebo>
-  <gazebo>
-    <plugin filename="libgazebo_ros_control.so" name="gazebo_ros_control">
-      </plugin>
-  </gazebo>
+  </link>
 )";
 
 const auto urdf_tail =
