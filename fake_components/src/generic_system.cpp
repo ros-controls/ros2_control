@@ -44,6 +44,15 @@ return_type GenericSystem::configure(const hardware_interface::HardwareInfo & in
 
   // Initialize storage for standard interfaces
   initialize_storage_vectors(joint_commands_, joint_states_, standard_interfaces_);
+  // set all values without initial values to 0
+  for (uint i = 0; i < info_.joints.size(); i++) {
+    for (uint j = 0; j < standard_interfaces_.size(); j++) {
+      if (std::isnan(joint_commands_[j][i])) {
+        joint_commands_[j][i] = 0.0;
+        joint_states_[j][i] = 0.0;
+      }
+    }
+  }
 
   // search for non-standard joint interfaces
   for (const auto & joint : info_.joints) {

@@ -98,16 +98,14 @@ protected:
       <command_interface name="velocity"/>
       <state_interface name="position"/>
       <state_interface name="velocity"/>
-      <param name="initial_position">0.0</param>
-      <param name="initial_velocity">0.0</param>
+      <param name="initial_position">3.45</param>
     </joint>
     <joint name="joint2">
       <command_interface name="position"/>
       <command_interface name="velocity"/>
       <state_interface name="position"/>
       <state_interface name="velocity"/>
-      <param name="initial_position">0.0</param>
-      <param name="initial_velocity">0.0</param>
+      <param name="initial_position">2.78</param>
     </joint>
   </ros2_control>
 )";
@@ -123,16 +121,16 @@ protected:
       <command_interface name="velocity"/>
       <state_interface name="position"/>
       <state_interface name="velocity"/>
-      <param name="initial_position">0.0</param>
-      <param name="initial_velocity">0.0</param>
+      <param name="initial_position">1.55</param>
+      <param name="initial_velocity">0.1</param>
     </joint>
     <joint name="joint2">
       <command_interface name="position"/>
       <command_interface name="velocity"/>
       <state_interface name="position"/>
       <state_interface name="velocity"/>
-      <param name="initial_position">0.0</param>
-      <param name="initial_velocity">0.0</param>
+      <param name="initial_position">0.65</param>
+      <param name="initial_velocity">0.2</param>
     </joint>
     <joint name="voltage_output">
       <command_interface name="voltage"/>
@@ -153,16 +151,12 @@ protected:
       <command_interface name="velocity"/>
       <state_interface name="position"/>
       <state_interface name="velocity"/>
-      <param name="initial_position">0.0</param>
-      <param name="initial_velocity">0.0</param>
     </joint>
     <joint name="joint2">
       <command_interface name="position"/>
       <command_interface name="velocity"/>
       <state_interface name="position"/>
       <state_interface name="velocity"/>
-      <param name="initial_position">0.0</param>
-      <param name="initial_velocity">0.0</param>
     </joint>
     <sensor name="tcp_force_sensor">
       <state_interface name="fx"/>
@@ -186,16 +180,12 @@ protected:
       <command_interface name="velocity"/>
       <state_interface name="position"/>
       <state_interface name="velocity"/>
-      <param name="initial_position">0.0</param>
-      <param name="initial_velocity">0.0</param>
     </joint>
     <joint name="joint2">
       <command_interface name="position"/>
       <command_interface name="velocity"/>
       <state_interface name="position"/>
       <state_interface name="velocity"/>
-      <param name="initial_position">0.0</param>
-      <param name="initial_velocity">0.0</param>
     </joint>
     <sensor name="tcp_force_sensor">
       <state_interface name="fx"/>
@@ -301,7 +291,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_asymetric_interfaces) {
   hardware_interface::LoanedCommandInterface j2a_c = rm.claim_command_interface(
     "joint2/acceleration");
 
-  EXPECT_TRUE(std::isnan(j1v_s.get_value()));
+  ASSERT_EQ(0.0, j1v_s.get_value());
   ASSERT_EQ(0.7854, j2p_s.get_value());
   ASSERT_EQ(1.57, j1p_c.get_value());
   ASSERT_EQ(0.8554, j2a_c.get_value());
@@ -329,13 +319,14 @@ TEST_F(TestGenericSystem, generic_system_2dof_functionality) {
   hardware_interface::LoanedCommandInterface j2p_c = rm.claim_command_interface("joint2/position");
   hardware_interface::LoanedCommandInterface j2v_c = rm.claim_command_interface("joint2/velocity");
 
-  ASSERT_EQ(0.0, j1p_s.get_value());
+  // Interfaces without initial value are se to 0
+  ASSERT_EQ(3.45, j1p_s.get_value());
   ASSERT_EQ(0.0, j1v_s.get_value());
-  ASSERT_EQ(0.0, j2p_s.get_value());
+  ASSERT_EQ(2.78, j2p_s.get_value());
   ASSERT_EQ(0.0, j2v_s.get_value());
-  ASSERT_EQ(0.0, j1p_c.get_value());
+  ASSERT_EQ(3.45, j1p_c.get_value());
   ASSERT_EQ(0.0, j1v_c.get_value());
-  ASSERT_EQ(0.0, j2p_c.get_value());
+  ASSERT_EQ(2.78, j2p_c.get_value());
   ASSERT_EQ(0.0, j2v_c.get_value());
 
   // set some new values in commands
@@ -345,9 +336,9 @@ TEST_F(TestGenericSystem, generic_system_2dof_functionality) {
   j2v_c.set_value(0.44);
 
   // State values should not be changed
-  ASSERT_EQ(0.0, j1p_s.get_value());
+  ASSERT_EQ(3.45, j1p_s.get_value());
   ASSERT_EQ(0.0, j1v_s.get_value());
-  ASSERT_EQ(0.0, j2p_s.get_value());
+  ASSERT_EQ(2.78, j2p_s.get_value());
   ASSERT_EQ(0.0, j2v_s.get_value());
   ASSERT_EQ(0.11, j1p_c.get_value());
   ASSERT_EQ(0.22, j1v_c.get_value());
@@ -356,9 +347,9 @@ TEST_F(TestGenericSystem, generic_system_2dof_functionality) {
 
   // write() does not chnage values
   rm.write();
-  ASSERT_EQ(0.0, j1p_s.get_value());
+  ASSERT_EQ(3.45, j1p_s.get_value());
   ASSERT_EQ(0.0, j1v_s.get_value());
-  ASSERT_EQ(0.0, j2p_s.get_value());
+  ASSERT_EQ(2.78, j2p_s.get_value());
   ASSERT_EQ(0.0, j2v_s.get_value());
   ASSERT_EQ(0.11, j1p_c.get_value());
   ASSERT_EQ(0.22, j1v_c.get_value());
@@ -436,13 +427,13 @@ TEST_F(TestGenericSystem, generic_system_2dof_other_interfaces) {
   hardware_interface::LoanedCommandInterface vo_c =
     rm.claim_command_interface("voltage_output/voltage");
 
-  ASSERT_EQ(0.0, j1p_s.get_value());
-  ASSERT_EQ(0.0, j1v_s.get_value());
-  ASSERT_EQ(0.0, j2p_s.get_value());
-  ASSERT_EQ(0.0, j2v_s.get_value());
+  ASSERT_EQ(1.55, j1p_s.get_value());
+  ASSERT_EQ(0.1, j1v_s.get_value());
+  ASSERT_EQ(0.65, j2p_s.get_value());
+  ASSERT_EQ(0.2, j2v_s.get_value());
   ASSERT_EQ(0.5, vo_s.get_value());
-  ASSERT_EQ(0.0, j1p_c.get_value());
-  ASSERT_EQ(0.0, j2p_c.get_value());
+  ASSERT_EQ(1.55, j1p_c.get_value());
+  ASSERT_EQ(0.65, j2p_c.get_value());
   ASSERT_EQ(0.5, vo_c.get_value());
 
   // set some new values in commands
@@ -451,10 +442,10 @@ TEST_F(TestGenericSystem, generic_system_2dof_other_interfaces) {
   vo_c.set_value(0.99);
 
   // State values should not be changed
-  ASSERT_EQ(0.0, j1p_s.get_value());
-  ASSERT_EQ(0.0, j1v_s.get_value());
-  ASSERT_EQ(0.0, j2p_s.get_value());
-  ASSERT_EQ(0.0, j2v_s.get_value());
+  ASSERT_EQ(1.55, j1p_s.get_value());
+  ASSERT_EQ(0.1, j1v_s.get_value());
+  ASSERT_EQ(0.65, j2p_s.get_value());
+  ASSERT_EQ(0.2, j2v_s.get_value());
   ASSERT_EQ(0.5, vo_s.get_value());
   ASSERT_EQ(0.11, j1p_c.get_value());
   ASSERT_EQ(0.33, j2p_c.get_value());
@@ -462,10 +453,10 @@ TEST_F(TestGenericSystem, generic_system_2dof_other_interfaces) {
 
   // write() does not chnage values
   rm.write();
-  ASSERT_EQ(0.0, j1p_s.get_value());
-  ASSERT_EQ(0.0, j1v_s.get_value());
-  ASSERT_EQ(0.0, j2p_s.get_value());
-  ASSERT_EQ(0.0, j2v_s.get_value());
+  ASSERT_EQ(1.55, j1p_s.get_value());
+  ASSERT_EQ(0.1, j1v_s.get_value());
+  ASSERT_EQ(0.65, j2p_s.get_value());
+  ASSERT_EQ(0.2, j2v_s.get_value());
   ASSERT_EQ(0.5, vo_s.get_value());
   ASSERT_EQ(0.11, j1p_c.get_value());
   ASSERT_EQ(0.33, j2p_c.get_value());
@@ -474,10 +465,10 @@ TEST_F(TestGenericSystem, generic_system_2dof_other_interfaces) {
   // read() mirrors commands to states
   rm.read();
   ASSERT_EQ(0.11, j1p_s.get_value());
-  ASSERT_EQ(0.0, j1v_s.get_value());
+  ASSERT_EQ(0.1, j1v_s.get_value());
   ASSERT_EQ(0.33, j2p_s.get_value());
   ASSERT_EQ(0.99, vo_s.get_value());
-  ASSERT_EQ(0.0, j2v_s.get_value());
+  ASSERT_EQ(0.2, j2v_s.get_value());
   ASSERT_EQ(0.11, j1p_c.get_value());
   ASSERT_EQ(0.33, j2p_c.get_value());
   ASSERT_EQ(0.99, vo_c.get_value());
