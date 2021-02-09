@@ -105,9 +105,8 @@ class DummyActuator : public hardware_interface::ActuatorInterface
   }
 
   hardware_interface::return_type accept_command_resource_claim(
-    const std::vector<std::string> & interfaces) override
+    const std::vector<std::string> & /*interfaces*/) override
   {
-    (void)interfaces;
     return hardware_interface::return_type::OK;
   }
 
@@ -254,9 +253,8 @@ class DummySystem : public hardware_interface::SystemInterface
   }
 
   hardware_interface::return_type accept_command_resource_claim(
-    const std::vector<std::string> & interfaces) override
+    const std::vector<std::string> & /*interfaces*/) override
   {
-    (void)interfaces;
     return hardware_interface::return_type::OK;
   }
 

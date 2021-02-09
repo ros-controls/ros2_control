@@ -115,9 +115,9 @@ class TestSingleJointActuator : public BaseInterface<ActuatorInterface>
     return return_type::OK;
   }
 
-  return_type accept_command_resource_claim(const std::vector<std::string> & interfaces) override
+  return_type accept_command_resource_claim(
+    const std::vector<std::string> & /*interfaces*/) override
   {
-    (void)interfaces;
     return return_type::OK;
   }
 
