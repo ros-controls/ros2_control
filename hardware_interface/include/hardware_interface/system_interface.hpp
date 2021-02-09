@@ -18,7 +18,7 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include <iostream>
+
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
