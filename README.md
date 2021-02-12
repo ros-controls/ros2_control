@@ -31,6 +31,12 @@ $ wget https://raw.githubusercontent.com/ros-controls/ros2_control/master/ros2_c
 $ vcs import src < ros2_control.repos
 ```
 
+We next need to install debian dependencies for the packages.  This will work on `foxy` with [rosdep](https://index.ros.org/doc/ros2/Installation/Crystal/Linux-Install-Binary/#installing-and-initializing-rosdep) installed and configured.
+
+``` bash
+$ rosdep install --from-paths src --ignore-src --rosdistro foxy -y
+```
+
 We can then compile the overlay workspace. For this we first have to source the ROS 2 installation. In this case, we source the `setup.bash` from the Foxy binary distribution for Ubuntu. Obviously, the path to the setup file is different on each platform and thus has to be adjusted. Once ROS 2 is sourced, we can compile the ros2_control packages.
 
 ``` bash
