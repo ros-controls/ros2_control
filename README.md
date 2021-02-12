@@ -31,7 +31,7 @@ $ wget https://raw.githubusercontent.com/ros-controls/ros2_control/master/ros2_c
 $ vcs import src < ros2_control.repos
 ```
 
-We next need to install debian dependencies for the packages.  This will work on `foxy` with [rosdep](https://index.ros.org/doc/ros2/Installation/Crystal/Linux-Install-Binary/#installing-and-initializing-rosdep) installed and configured.
+We next need to install debian dependencies for the packages.  This will work on `foxy` with [rosdep](https://index.ros.org/doc/ros2/Installation/Foxy/Linux-Install-Binary/#installing-and-initializing-rosdep) installed and configured.
 
 ``` bash
 $ rosdep install --from-paths src --ignore-src --rosdistro foxy -y
