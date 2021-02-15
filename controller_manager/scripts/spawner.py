@@ -20,6 +20,7 @@ import time
 
 import rclpy
 from rclpy.node import Node
+from rclpy.duration import Duration
 
 
 def is_controller_loaded(controller_manager_name, controller_name):
@@ -63,6 +64,21 @@ def main(args=None):
 
     node = Node('spawner_' + controller_name)
     try:
+
+        # Wait for controller_manager
+        timeout = node.get_clock().now() + Duration(seconds=10)
+        while node.get_clock().now() < timeout:
+            ret = subprocess.run(
+                ['ros2', 'service', 'type',
+                 '/' + controller_manager_name + '/load_and_start_controller'],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL)
+            if ret.returncode == 0:
+                break
+            node.get_logger().info(
+                'Waiting for {} services'.format(controller_manager_name),
+                throttle_duration_sec=2)
+            time.sleep(0.2)
 
         if controller_type:
             ret = subprocess.run(['ros2', 'param', 'set', controller_manager_name,
