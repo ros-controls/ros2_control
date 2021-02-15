@@ -183,14 +183,14 @@ int main()
   while (active) {
     ret = my_robot->read();
     if (ret != hardware_interface::return_type::OK) {
-      fprintf(stderr, "read failed!\n");
+      RCLCPP_ERROR(logger, "read failed!");
     }
 
     cm.update();
 
     ret = my_robot->write();
     if (ret != hardware_interface::return_type::OK) {
-      fprintf(stderr, "write failed!\n");
+      RCLCPP_ERROR(logger, "write failed!");
     }
 
     r.sleep();
