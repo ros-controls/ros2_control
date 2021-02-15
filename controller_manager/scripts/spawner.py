@@ -19,8 +19,8 @@ import sys
 import time
 
 import rclpy
-from rclpy.node import Node
 from rclpy.duration import Duration
+from rclpy.node import Node
 
 
 def is_controller_loaded(controller_manager_name, controller_name):
