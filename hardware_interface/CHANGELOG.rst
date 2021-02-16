@@ -2,6 +2,24 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.1.6 (2021-02-05)
+------------------
+* correct hardware interface validation in resource manager. (`#317 <https://github.com/ros-controls/ros2_control/issues/317>`_)
+* Contributors: Karsten Knese
+
+0.1.5 (2021-02-04)
+------------------
+
+0.1.4 (2021-02-03)
+------------------
+* Add test assets package (`#289 <https://github.com/ros-controls/ros2_control/issues/289>`_)
+* update doxygen style according to ros2 core standard (`#300 <https://github.com/ros-controls/ros2_control/issues/300>`_)
+* Move test_components from test_robot_hardware to hardware_interface package (`#288 <https://github.com/ros-controls/ros2_control/issues/288>`_)
+* Contributors: Denis Štogl, João Victor Torres Borges
+
+0.1.3 (2021-01-21)
+------------------
+
 0.1.2 (2021-01-06)
 ------------------
 

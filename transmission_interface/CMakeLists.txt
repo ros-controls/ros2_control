@@ -25,12 +25,6 @@ install(
   DIRECTORY include/
   DESTINATION include
 )
-install(
-  TARGETS transmission_parser
-  RUNTIME DESTINATION bin
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-)
 
 if(BUILD_TESTING)
   find_package(ament_cmake_gmock REQUIRED)
@@ -49,15 +43,19 @@ if(BUILD_TESTING)
     test/simple_transmission_test.cpp
   )
   target_include_directories(test_simple_transmission PUBLIC include hardware_interface)
-  target_link_libraries(test_simple_transmission transmission_parser)
+  ament_target_dependencies(test_simple_transmission hardware_interface)
+
+  ament_add_gmock(
+    test_differential_transmission
+    test/differential_transmission_test.cpp
+  )
+  target_include_directories(test_differential_transmission PUBLIC include hardware_interface)
+  ament_target_dependencies(test_differential_transmission hardware_interface)
 
 endif()
 
 ament_export_include_directories(
   include
-)
-ament_export_libraries(
-  transmission_parser
 )
 ament_export_dependencies(
   hardware_interface

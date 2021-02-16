@@ -27,7 +27,7 @@ using hardware_interface::CommandInterface;
 using hardware_interface::BaseInterface;
 using hardware_interface::SystemInterface;
 
-namespace test_robot_hardware
+namespace test_hardware_components
 {
 
 class TestTwoJointSystem : public BaseInterface<SystemInterface>
@@ -108,8 +108,8 @@ private:
   std::array<double, 2> position_state_ = {0.0, 0.0};
 };
 
-}  // namespace test_robot_hardware
+}  // namespace test_hardware_components
 
 #include "pluginlib/class_list_macros.hpp"  // NOLINT
 PLUGINLIB_EXPORT_CLASS(
-  test_robot_hardware::TestTwoJointSystem, hardware_interface::SystemInterface)
+  test_hardware_components::TestTwoJointSystem, hardware_interface::SystemInterface)

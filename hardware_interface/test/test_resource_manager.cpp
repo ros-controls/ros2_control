@@ -22,6 +22,7 @@
 
 #include "hardware_interface/actuator_interface.hpp"
 #include "hardware_interface/resource_manager.hpp"
+#include "ros2_control_test_assets/descriptions.hpp"
 
 class TestResourceManager : public ::testing::Test
 {
@@ -32,153 +33,7 @@ public:
 
   void SetUp()
   {
-    urdf_head_ =
-      R"(
-<?xml version="1.0" encoding="utf-8"?>
-<robot name="MinimalRobot">
-  <joint name="base_joint" type="fixed">
-    <origin rpy="0 0 0" xyz="0 0 0"/>
-    <parent link="world"/>
-    <child link="base_link"/>
-  </joint>
-  <link name="base_link">
-    <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <cylinder length="1" radius="0.1"/>
-      </geometry>
-    </collision>
-  </link>
-  <joint name="joint1" type="revolute">
-    <origin rpy="-1.57079632679 0 0" xyz="0 0 0.2"/>
-    <parent link="base_link"/>
-    <child link="link1"/>
-    <limit effort="0.1" lower="-3.14159265359" upper="3.14159265359" velocity="0.2"/>
-  </joint>
-  <link name="link1">
-    <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <cylinder length="1" radius="0.1"/>
-      </geometry>
-    </collision>
-  </link>
-  <joint name="joint2" type="revolute">
-    <origin rpy="1.57079632679 0 0" xyz="0 0 0.9"/>
-    <parent link="link1"/>
-    <child link="link2"/>
-    <limit effort="0.1" lower="-3.14159265359" upper="3.14159265359" velocity="0.2"/>
-  </joint>
-  <link name="link2">
-    <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <cylinder length="1" radius="0.1"/>
-      </geometry>
-    </collision>
-  </link>
-  <joint name="tool_joint" type="fixed">
-    <origin rpy="0 0 0" xyz="0 0 1"/>
-    <parent link="link2"/>
-    <child link="tool_link"/>
-  </joint>
-)";
-
-    urdf_tail_ =
-      R"(
-</robot>
-)";
-
-    hardware_resources_for_test_ =
-      R"(
-  <ros2_control name="TestActuatorHardware" type="actuator">
-    <hardware>
-      <plugin>test_actuator</plugin>
-    </hardware>
-    <joint name="joint1">
-      <command_interface name="position"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-    </joint>
-  </ros2_control>
-  <ros2_control name="TestSensorHardware" type="sensor">
-    <hardware>
-      <plugin>test_sensor</plugin>
-      <param name="example_param_write_for_sec">2</param>
-      <param name="example_param_read_for_sec">2</param>
-    </hardware>
-    <sensor name="sensor1">
-      <state_interface name="velocity"/>
-    </sensor>
-  </ros2_control>
-  <ros2_control name="TestSystemHardware" type="system">
-    <hardware>
-      <plugin>test_system</plugin>
-      <param name="example_param_write_for_sec">2</param>
-      <param name="example_param_read_for_sec">2</param>
-    </hardware>
-    <joint name="joint2">
-      <command_interface name="velocity"/>
-      <state_interface name="position"/>
-    </joint>
-    <joint name="joint3">
-      <command_interface name="velocity"/>
-      <state_interface name="position"/>
-    </joint>
-  </ros2_control>
-)";
-
-    hardware_resources_for_test_missing_keys_ =
-      R"(
-  <ros2_control name="TestActuatorHardware" type="actuator">
-    <hardware>
-      <plugin>test_actuator</plugin>
-    </hardware>
-    <joint name="joint1">
-      <command_interface name="position"/>
-      <command_interface name="does_not_exist"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-      <state_interface name="does_not_exist"/>
-    </joint>
-  </ros2_control>
-  <ros2_control name="TestSensorHardware" type="sensor">
-    <hardware>
-      <plugin>test_sensor</plugin>
-      <param name="example_param_write_for_sec">2</param>
-      <param name="example_param_read_for_sec">2</param>
-    </hardware>
-    <sensor name="sensor1">
-      <state_interface name="velocity"/>
-      <state_interface name="does_not_exist"/>
-    </sensor>
-  </ros2_control>
-  <ros2_control name="TestSystemHardware" type="system">
-    <hardware>
-      <plugin>test_system</plugin>
-      <param name="example_param_write_for_sec">2</param>
-      <param name="example_param_read_for_sec">2</param>
-    </hardware>
-    <joint name="joint2">
-      <command_interface name="velocity"/>
-      <command_interface name="does_not_exist"/>
-      <state_interface name="position"/>
-      <state_interface name="does_not_exist"/>
-    </joint>
-    <joint name="joint3">
-      <command_interface name="velocity"/>
-      <command_interface name="does_not_exist"/>
-      <state_interface name="position"/>
-      <state_interface name="does_not_exist"/>
-    </joint>
-  </ros2_control>
-)";
   }
-
-  std::string urdf_head_;
-  std::string hardware_resources_for_test_;
-  std::string hardware_resources_for_test_missing_keys_;
-  std::string urdf_tail_;
 };
 
 TEST_F(TestResourceManager, initialization_empty) {
@@ -186,20 +41,18 @@ TEST_F(TestResourceManager, initialization_empty) {
 }
 
 TEST_F(TestResourceManager, initialization_with_urdf) {
-  auto urdf = urdf_head_ + hardware_resources_for_test_ + urdf_tail_;
-  ASSERT_NO_THROW(hardware_interface::ResourceManager rm(urdf));
+  ASSERT_NO_THROW(
+    hardware_interface::ResourceManager rm(ros2_control_test_assets::minimal_robot_urdf));
 }
 
 TEST_F(TestResourceManager, post_initialization_with_urdf) {
-  auto urdf = urdf_head_ + hardware_resources_for_test_ + urdf_tail_;
   hardware_interface::ResourceManager rm;
-  ASSERT_NO_THROW(rm.load_urdf(urdf));
+  ASSERT_NO_THROW(rm.load_urdf(ros2_control_test_assets::minimal_robot_urdf));
 }
 
 TEST_F(TestResourceManager, initialization_with_urdf_manual_validation) {
-  auto urdf = urdf_head_ + hardware_resources_for_test_ + urdf_tail_;
   // we validate the results manually
-  hardware_interface::ResourceManager rm(urdf, false);
+  hardware_interface::ResourceManager rm(ros2_control_test_assets::minimal_robot_urdf, false);
 
   EXPECT_EQ(1u, rm.actuator_components_size());
   EXPECT_EQ(1u, rm.sensor_components_size());
@@ -221,20 +74,23 @@ TEST_F(TestResourceManager, initialization_with_urdf_manual_validation) {
 }
 
 TEST_F(TestResourceManager, initialization_with_wrong_urdf) {
-  auto urdf = urdf_head_ + hardware_resources_for_test_missing_keys_ + urdf_tail_;
-  try {
-    hardware_interface::ResourceManager rm(urdf);
-    FAIL();
-  } catch (const std::exception & e) {
-    std::cout << e.what() << std::endl;
-    SUCCEED() << e.what();
+  // missing state keys
+  {
+    EXPECT_THROW(
+      hardware_interface::ResourceManager rm(
+        ros2_control_test_assets::minimal_robot_missing_state_keys_urdf), std::exception);
+  }
+  // missing command keys
+  {
+    EXPECT_THROW(
+      hardware_interface::ResourceManager rm(
+        ros2_control_test_assets::minimal_robot_missing_command_keys_urdf), std::exception);
   }
 }
 
 TEST_F(TestResourceManager, initialization_with_urdf_unclaimed) {
-  auto urdf = urdf_head_ + hardware_resources_for_test_ + urdf_tail_;
   // we validate the results manually
-  hardware_interface::ResourceManager rm(urdf);
+  hardware_interface::ResourceManager rm(ros2_control_test_assets::minimal_robot_urdf);
 
   auto command_interface_keys = rm.command_interface_keys();
   for (const auto & key : command_interface_keys) {
@@ -249,8 +105,7 @@ TEST_F(TestResourceManager, initialization_with_urdf_unclaimed) {
 }
 
 TEST_F(TestResourceManager, resource_status) {
-  auto urdf = urdf_head_ + hardware_resources_for_test_ + urdf_tail_;
-  hardware_interface::ResourceManager rm(urdf);
+  hardware_interface::ResourceManager rm(ros2_control_test_assets::minimal_robot_urdf);
 
   std::unordered_map<std::string, hardware_interface::status> status_map;
 
@@ -261,8 +116,7 @@ TEST_F(TestResourceManager, resource_status) {
 }
 
 TEST_F(TestResourceManager, starting_and_stopping_resources) {
-  auto urdf = urdf_head_ + hardware_resources_for_test_ + urdf_tail_;
-  hardware_interface::ResourceManager rm(urdf);
+  hardware_interface::ResourceManager rm(ros2_control_test_assets::minimal_robot_urdf);
 
   std::unordered_map<std::string, hardware_interface::status> status_map;
 
@@ -280,8 +134,7 @@ TEST_F(TestResourceManager, starting_and_stopping_resources) {
 }
 
 TEST_F(TestResourceManager, resource_claiming) {
-  auto urdf = urdf_head_ + hardware_resources_for_test_ + urdf_tail_;
-  hardware_interface::ResourceManager rm(urdf);
+  hardware_interface::ResourceManager rm(ros2_control_test_assets::minimal_robot_urdf);
 
   const auto key = "joint1/position";
   EXPECT_FALSE(rm.command_interface_is_claimed(key));
@@ -396,9 +249,8 @@ class ExternalComponent : public hardware_interface::ActuatorInterface
 };
 
 TEST_F(TestResourceManager, post_initialization_add_components) {
-  auto urdf = urdf_head_ + hardware_resources_for_test_ + urdf_tail_;
   // we validate the results manually
-  hardware_interface::ResourceManager rm(urdf, false);
+  hardware_interface::ResourceManager rm(ros2_control_test_assets::minimal_robot_urdf, false);
 
   EXPECT_EQ(1u, rm.actuator_components_size());
   EXPECT_EQ(1u, rm.sensor_components_size());

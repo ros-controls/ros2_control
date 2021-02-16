@@ -2,6 +2,26 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.1.6 (2021-02-05)
+------------------
+
+0.1.5 (2021-02-04)
+------------------
+
+0.1.4 (2021-02-03)
+------------------
+* fix float conversion warning (`#312 <https://github.com/ros-controls/ros2_control/issues/312>`_)
+* update doxygen style according to ros2 core standard (`#300 <https://github.com/ros-controls/ros2_control/issues/300>`_)
+* Capitalized messages in controller_manager.cpp upto line669 (`#285 <https://github.com/ros-controls/ros2_control/issues/285>`_)
+* Sleep accurate duration on ros2_control_node (`#302 <https://github.com/ros-controls/ros2_control/issues/302>`_)
+* Contributors: Achinta-Choudhury, João Victor Torres Borges, Karsten Knese, Yutaka Kondo
+
+0.1.3 (2021-01-21)
+------------------
+* Fix building on macOS with clang (`#292 <https://github.com/ros-controls/ros2_control/issues/292>`_)
+ail.com>
+* Contributors: Karsten Knese
+
 0.1.2 (2021-01-06)
 ------------------
 * Fix update rate issues by working around MutliThreadedExecutor (`#275 <https://github.com/ros-controls/ros2_control/issues/275>`_)

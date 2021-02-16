@@ -38,3 +38,4 @@ class ListHardwareInterfacesVerb(VerbExtension):
         print('state interfaces')
         for state_interface in state_interfaces:
             print('\t', state_interface.name)
+        return 0

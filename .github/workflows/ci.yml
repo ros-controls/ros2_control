@@ -18,7 +18,6 @@ jobs:
           - {ROS_DISTRO: foxy, ROS_REPO: main}
           - {ROS_DISTRO: foxy, ROS_REPO: testing}
     steps:
-      - run: sudo apt-get update -qq && sudo apt-get upgrade
       - uses: actions/checkout@v1
       - uses: ros-industrial/industrial_ci@master
         env: ${{matrix.env}}
@@ -42,7 +41,7 @@ jobs:
             controller_manager_msgs
             hardware_interface
             ros2_control
-            test_robot_hardware
+            ros2_control_test_assets
           vcs-repo-file-url: |
             https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/ros2_control/ros2_control.repos
           colcon-mixin-name: coverage-gcc

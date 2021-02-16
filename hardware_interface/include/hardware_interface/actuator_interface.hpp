@@ -27,8 +27,8 @@
 namespace hardware_interface
 {
 
+/// Virtual Class to implement when integrating a 1 DoF actuator into ros2_control.
 /**
-  * \brief Virtual Class to implement when integrating a 1 DoF actuator into ros2_control.
   * The typical examples are conveyors or motors.
   */
 class ActuatorInterface
@@ -39,10 +39,9 @@ public:
   virtual
   ~ActuatorInterface() = default;
 
+  /// Configuration of the actuator from data parsed from the robot's URDF.
   /**
-   * \brief Configuration of the actuator from data parsed from the robot's URDF.
-   *
-   * \param actuator_info structure with data from URDF.
+   * \param[in] actuator_info structure with data from URDF.
    * \return return_type::OK if required data are provided and can be parsed,
    * return_type::ERROR otherwise.
    */
@@ -73,34 +72,30 @@ public:
   virtual
   std::vector<CommandInterface> export_command_interfaces() = 0;
 
+  /// Start exchange data with the hardware.
   /**
-   * \brief Start exchange data with the hardware.
-   *
    * \return return_type:OK if everything worked as expected, return_type::ERROR otherwise.
    */
   virtual
   return_type start() = 0;
 
+  /// Stop exchange data with the hardware.
   /**
-   * \brief Stop exchange data with the hardware.
-   *
    * \return return_type:OK if everything worked as expected, return_type::ERROR otherwise.
    */
   virtual
   return_type stop() = 0;
 
+  /// Get name of the actuator hardware.
   /**
-   * \brief Get name of the actuator hardware.
-   *
-   * \return std::string name.
+   * \return name.
    */
   virtual
   std::string get_name() const = 0;
 
+  /// Get current state of the actuator hardware.
   /**
-   * \brief Get current state of the actuator hardware.
-   *
-   * \return status current status.
+   * \return current status.
    */
   virtual
   status get_status() const = 0;

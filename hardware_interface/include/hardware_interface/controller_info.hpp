@@ -23,17 +23,16 @@
 namespace hardware_interface
 {
 
-/** \brief Controller Information
- *
+/// Controller Information
+/**
  * This struct contains information about a given controller.
- *
  */
 struct ControllerInfo
 {
-  /** Controller name. */
+  /// Controller name.
   std::string name;
 
-  /** Controller type. */
+  /// Controller type.
   std::string type;
 
   // TODO(v-lopez)
