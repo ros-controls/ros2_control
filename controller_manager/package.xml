@@ -13,6 +13,8 @@
   <depend>controller_interface</depend>
   <depend>controller_manager_msgs</depend>
   <depend>hardware_interface</depend>
+  <depend>launch</depend>
+  <depend>launch_ros</depend>
   <depend>pluginlib</depend>
   <depend>ros2controlcli</depend>
   <depend>ros2run</depend>

@@ -140,6 +140,9 @@ if(BUILD_TESTING)
   target_link_libraries(test_spawner_unspawner controller_manager test_controller)
 endif()
 
+# Install Python modules
+ament_python_install_package(${PROJECT_NAME})
+
 ament_export_libraries(
   controller_manager
 )
