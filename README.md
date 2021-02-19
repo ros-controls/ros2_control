@@ -11,7 +11,7 @@
 
 ## About
 This package is a part of the ros2_control framework. 
-For further description check the [documentation](https://ros-controls.github.io/control.ros.org/).
+For more, please check the [documentation](https://ros-controls.github.io/control.ros.org/).
 
 ## Acknowledgements
 
