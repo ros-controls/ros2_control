@@ -61,6 +61,9 @@ def generate_load_controller_launch_description(controller_name,
     if controller_type:
         spawner_arguments += ['--controller-type', controller_type]
 
+    if controller_params_file:
+        spawner_arguments += ['--param-file', controller_params_file]
+
     # Setting --unload-of-kill if launch arg unload_on_kill is "true"
     # See https://github.com/ros2/launch/issues/290
     spawner_arguments += [PythonExpression(
