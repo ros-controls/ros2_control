@@ -67,7 +67,7 @@ public:
 protected:
   /// Use standard interfaces for joints because they are relevant for dynamic behaviour
   /**
-   * By sptliting the standard interfaces from other type, the users are able to inherit this
+   * By splitting the standard interfaces from other type, the users are able to inherit this
    * class and simply create small "simulation" with desired dynamic behaviour.
    * The advantage over using Gazebo is that enables "quick & dirty" tests of robot's URDF and
    * controllers.
