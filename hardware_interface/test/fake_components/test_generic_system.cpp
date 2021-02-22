@@ -29,25 +29,6 @@ class TestGenericSystem : public ::testing::Test
 protected:
   void SetUp() override
   {
-    hardware_robot_2dof_ =
-      R"(
-  <ros2_control name="GenericRobot2dof" type="system">
-    <hardware>
-      <plugin>fake_components/GenericRobot</plugin>
-    </hardware>
-    <joint name="joint1">
-      <command_interface name="position"/>
-      <state_interface name="position"/>
-      <param name="initial_position">1.57</param>
-    </joint>
-    <joint name="joint2">
-      <command_interface name="position"/>
-      <state_interface name="position"/>
-      <param name="initial_position">0.7854</param>
-    </joint>
-  </ros2_control>
-)";
-
     hardware_system_2dof_ =
       R"(
   <ros2_control name="GenericSystem2dof" type="system">
@@ -210,13 +191,6 @@ protected:
 TEST_F(TestGenericSystem, load_generic_system_2dof) {
   auto urdf =
     ros2_control_test_assets::urdf_head + hardware_system_2dof_ +
-    ros2_control_test_assets::urdf_tail;
-  ASSERT_NO_THROW(hardware_interface::ResourceManager rm(urdf));
-}
-
-TEST_F(TestGenericSystem, load_generic_robot_2dof) {
-  auto urdf =
-    ros2_control_test_assets::urdf_head + hardware_robot_2dof_ +
     ros2_control_test_assets::urdf_tail;
   ASSERT_NO_THROW(hardware_interface::ResourceManager rm(urdf));
 }
