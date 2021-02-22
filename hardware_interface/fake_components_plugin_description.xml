@@ -1,0 +1,9 @@
+<library path="fake_components">
+
+  <class name="fake_components/GenericSystem" type="fake_components::GenericSystem" base_class_type="hardware_interface::SystemInterface">
+    <description>
+      Generic components for simple faking of system hardware.
+    </description>
+  </class>
+
+</library>
