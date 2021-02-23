@@ -20,6 +20,9 @@
 #include <string>
 #include <vector>
 
+namespace transmission_interface
+{
+
 template<typename T>
 std::string to_string(const std::vector<T> & list)
 {
@@ -41,27 +44,31 @@ std::vector<std::string> get_names(const std::vector<T> & handles)
 {
   std::set<std::string> names;
   std::transform(
-    handles.cbegin(), handles.cend(), std::inserter(names, names.end()),
+    handles.cbegin(), handles.cend(),
+    std::inserter(names, names.end()),
     [](const auto & handle) {return handle.get_name();});
   return std::vector<std::string>(names.begin(), names.end());
 }
 
 template<typename T>
 std::vector<T> get_ordered_handles(
-  const std::vector<T> & unordered_handles, const std::vector<std::string> & names,
+  const std::vector<T> & unordered_handles,
+  const std::vector<std::string> & names,
   const std::string & interface_type)
 {
   std::vector<T> result;
   for (const auto & name : names) {
-    for (auto & handle : unordered_handles) {
-      if ((handle.get_name() == name) &&
-        (handle.get_interface_name() == interface_type) && handle)
-      {
-        result.push_back(handle);
-      }
-    }
+    std::copy_if(
+      unordered_handles.cbegin(), unordered_handles.cend(),
+      std::back_inserter(result), [&](const auto & handle) {
+        return (handle.get_name() == name) &&
+        (handle.get_interface_name() == interface_type) &&
+        handle;
+      });
   }
   return result;
 }
+
+}  // namespace transmission_interface
 
 #endif  // TRANSMISSION_INTERFACE__ACCESSOR_HPP_
