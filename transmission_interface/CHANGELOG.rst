@@ -2,6 +2,11 @@
 Changelog for package transmission_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add four bar linkage transmission (`#307 <https://github.com/ros-controls/ros2_control/issues/307>`_)
+* Contributors: Bence Magyar
+
 0.1.6 (2021-02-05)
 ------------------
 
