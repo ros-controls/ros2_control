@@ -2,8 +2,8 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.2.1 (2021-03-02)
+------------------
 * Remove unused include (`#336 <https://github.com/ros-controls/ros2_control/issues/336>`_)
 * Contributors: Bence Magyar
 
