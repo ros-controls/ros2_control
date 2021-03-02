@@ -2,6 +2,11 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Remove unused include (`#336 <https://github.com/ros-controls/ros2_control/issues/336>`_)
+* Contributors: Bence Magyar
+
 0.2.0 (2021-02-26)
 ------------------
 * Add "Fake" components for simple integration of framework (`#323 <https://github.com/ros-controls/ros2_control/issues/323>`_)
