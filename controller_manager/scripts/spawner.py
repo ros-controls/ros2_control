@@ -64,7 +64,6 @@ def main(args=None):
 
     node = Node('spawner_' + controller_name)
     try:
-
         # Wait for controller_manager
         timeout = node.get_clock().now() + Duration(seconds=10)
         while node.get_clock().now() < timeout:
