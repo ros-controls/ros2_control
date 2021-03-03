@@ -79,13 +79,13 @@ def main(args=None):
                 throttle_duration_sec=2)
             time.sleep(0.2)
 
-        if controller_type:
-            ret = subprocess.run(['ros2', 'param', 'set', controller_manager_name,
-                                  controller_name + '.type', controller_type])
-
         if is_controller_loaded(controller_manager_name, controller_name):
             node.get_logger().info('Controller already loaded, skipping load_controller')
         else:
+            if controller_type:
+                ret = subprocess.run(['ros2', 'param', 'set', controller_manager_name,
+                                      controller_name + '.type', controller_type])
+
             ret = subprocess.run(['ros2', 'control', 'load_controller', controller_name,
                                   '--controller-manager', controller_manager_name])
             if ret.returncode != 0:
