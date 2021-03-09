@@ -177,6 +177,35 @@ protected:
     </sensor>
   </ros2_control>
 )";
+
+    hardware_system_2dof_with_sensor_fake_command_True_ =
+      R"(
+  <ros2_control name="GenericSystem2dof" type="system">
+    <hardware>
+      <plugin>fake_components/GenericSystem</plugin>
+      <param name="fake_sensor_commands">True</param>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+    <joint name="joint2">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+    <sensor name="tcp_force_sensor">
+      <state_interface name="fx"/>
+      <state_interface name="fy"/>
+      <state_interface name="tx"/>
+      <state_interface name="ty"/>
+      <param name="frame_id">kuka_tcp</param>
+    </sensor>
+  </ros2_control>
+)";
   }
 
   std::string hardware_robot_2dof_;
@@ -186,6 +215,7 @@ protected:
   std::string hardware_system_2dof_with_other_interface_;
   std::string hardware_system_2dof_with_sensor_;
   std::string hardware_system_2dof_with_sensor_fake_command_;
+  std::string hardware_system_2dof_with_sensor_fake_command_True_;
 };
 
 TEST_F(TestGenericSystem, load_generic_system_2dof) {
@@ -548,11 +578,8 @@ TEST_F(TestGenericSystem, generic_system_2dof_sensor) {
   ASSERT_EQ(0.33, j2p_c.get_value());
 }
 
-TEST_F(TestGenericSystem, generic_system_2dof_sensor_fake_command) {
-  auto urdf =
-    ros2_control_test_assets::urdf_head +
-    hardware_system_2dof_with_sensor_fake_command_ +
-    ros2_control_test_assets::urdf_tail;
+void test_generic_system_with_fake_sensor_commands(std::string urdf)
+{
   hardware_interface::ResourceManager rm(urdf);
 
   // Check interfaces
@@ -669,4 +696,22 @@ TEST_F(TestGenericSystem, generic_system_2dof_sensor_fake_command) {
   ASSERT_EQ(2.22, sfy_c.get_value());
   ASSERT_EQ(3.33, stx_c.get_value());
   ASSERT_EQ(4.44, sty_c.get_value());
+}
+
+TEST_F(TestGenericSystem, generic_system_2dof_sensor_fake_command) {
+  auto urdf =
+    ros2_control_test_assets::urdf_head +
+    hardware_system_2dof_with_sensor_fake_command_ +
+    ros2_control_test_assets::urdf_tail;
+
+  test_generic_system_with_fake_sensor_commands(urdf);
+}
+
+TEST_F(TestGenericSystem, generic_system_2dof_sensor_fake_command_True) {
+  auto urdf =
+    ros2_control_test_assets::urdf_head +
+    hardware_system_2dof_with_sensor_fake_command_True_ +
+    ros2_control_test_assets::urdf_tail;
+
+  test_generic_system_with_fake_sensor_commands(urdf);
 }

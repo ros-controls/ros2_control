@@ -37,9 +37,9 @@ return_type GenericSystem::configure(const hardware_interface::HardwareInfo & in
   // check if to create fake command interface for sensor
   auto it = info_.hardware_parameters.find("fake_sensor_commands");
   if (it != info_.hardware_parameters.end()) {
-    fake_sensor_command_interfaces = it->second == "true";
+    fake_sensor_command_interfaces_ = it->second == "true" || it->second == "True";
   } else {
-    fake_sensor_command_interfaces = false;
+    fake_sensor_command_interfaces_ = false;
   }
 
   // Initialize storage for standard interfaces
@@ -151,7 +151,7 @@ std::vector<hardware_interface::CommandInterface> GenericSystem::export_command_
   }
 
   // Fake sensor command interfaces
-  if (fake_sensor_command_interfaces) {
+  if (fake_sensor_command_interfaces_) {
     for (uint i = 0; i < info_.sensors.size(); i++) {
       const auto & sensor = info_.sensors[i];
       for (const auto & interface : sensor.state_interfaces) {
@@ -172,10 +172,10 @@ std::vector<hardware_interface::CommandInterface> GenericSystem::export_command_
 
 return_type GenericSystem::read()
 {
-  // only do loopback
+  // do loopback
   joint_states_ = joint_commands_;
   other_states_ = other_commands_;
-  if (fake_sensor_command_interfaces) {
+  if (fake_sensor_command_interfaces_) {
     sensor_states_ = sensor_fake_commands_;
   }
   return return_type::OK;
