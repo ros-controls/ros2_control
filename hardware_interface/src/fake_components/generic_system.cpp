@@ -37,6 +37,7 @@ return_type GenericSystem::configure(const hardware_interface::HardwareInfo & in
   // check if to create fake command interface for sensor
   auto it = info_.hardware_parameters.find("fake_sensor_commands");
   if (it != info_.hardware_parameters.end()) {
+    TODO(anyone): change this when there is parse_bool() function implemented (see ros2_control#339)
     fake_sensor_command_interfaces_ = it->second == "true" || it->second == "True";
   } else {
     fake_sensor_command_interfaces_ = false;
