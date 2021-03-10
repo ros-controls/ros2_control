@@ -106,7 +106,7 @@ private:
     std::vector<std::vector<double>> & states,
     const std::vector<std::string> & interfaces);
 
-  bool fake_sensor_command_interfaces;
+  bool fake_sensor_command_interfaces_;
 };
 
 typedef GenericSystem GenericRobot;
