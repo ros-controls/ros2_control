@@ -203,7 +203,7 @@ controller_interface::ControllerInterfaceSharedPtr ControllerManager::load_contr
     declare_parameter(param_name, rclcpp::ParameterValue());
   }
   if (!get_parameter(param_name, controller_type)) {
-    RCLCPP_ERROR(get_logger(), "'type' param not defined for '%s'.", controller_name.c_str());
+    RCLCPP_ERROR(get_logger(), "The 'type' param not defined for '%s'.", controller_name.c_str());
     return nullptr;
   }
   return load_controller(controller_name, controller_type);
@@ -293,7 +293,7 @@ controller_interface::return_type ControllerManager::configure_controller(
   {
     RCLCPP_ERROR(
       get_logger(),
-      "Controller '%s' can not be configured from '%'s state.",
+      "Controller '%s' can not be configured from '%s' state.",
       controller_name.c_str(),
       state.label().c_str());
     return controller_interface::return_type::ERROR;
@@ -684,7 +684,7 @@ void ControllerManager::start_controllers()
     if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE) {
       RCLCPP_ERROR(
         get_logger(),
-        "After activating, controller %s is in state %s, expected Active",
+        "After activating, controller '%s' is in state '%s', expected Active",
         controller->get_node()->get_name(),
         new_state.label().c_str());
     }

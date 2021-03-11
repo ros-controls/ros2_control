@@ -101,7 +101,7 @@ public:
     initialize_hardware<Actuator, ActuatorInterface>(
       hardware_info, actuator_loader_, actuators_);
     if (return_type::OK != actuators_.back().configure(hardware_info)) {
-      throw std::runtime_error(std::string("failed to configure ") + hardware_info.name);
+      throw std::runtime_error(std::string("Failed to configure '") + hardware_info.name + "'");
     }
     import_state_interfaces(actuators_.back());
     import_command_interfaces(actuators_.back(), claimed_command_interface_map);
@@ -112,7 +112,7 @@ public:
     initialize_hardware<Sensor, SensorInterface>(
       hardware_info, sensor_loader_, sensors_);
     if (return_type::OK != sensors_.back().configure(hardware_info)) {
-      throw std::runtime_error(std::string("failed to configure ") + hardware_info.name);
+      throw std::runtime_error(std::string("Failed to configure '") + hardware_info.name + "'");
     }
     import_state_interfaces(sensors_.back());
   }
@@ -124,7 +124,7 @@ public:
     initialize_hardware<System, SystemInterface>(
       hardware_info, system_loader_, systems_);
     if (return_type::OK != systems_.back().configure(hardware_info)) {
-      throw std::runtime_error(std::string("failed to configure ") + hardware_info.name);
+      throw std::runtime_error(std::string("Failed to configure '") + hardware_info.name + "'");
     }
     import_state_interfaces(systems_.back());
     import_command_interfaces(systems_.back(), claimed_command_interface_map);
@@ -192,7 +192,7 @@ LoanedStateInterface ResourceManager::claim_state_interface(const std::string & 
 {
   if (!state_interface_exists(key)) {
     throw std::runtime_error(
-            std::string("state interface with key") + key + " does not exist");
+            std::string("State interface with key '") + key + "' does not exist");
   }
 
   return LoanedStateInterface(resource_storage_->state_interface_map_.at(key));
@@ -227,13 +227,13 @@ LoanedCommandInterface ResourceManager::claim_command_interface(const std::strin
 {
   if (!command_interface_exists(key)) {
     throw std::runtime_error(
-            std::string("Command interface with ") + key + " does not exist");
+            std::string("Command interface with '") + key + "' does not exist");
   }
 
   std::lock_guard<decltype(resource_lock_)> lg(resource_lock_);
   if (command_interface_is_claimed(key)) {
     throw std::runtime_error(
-            std::string("Command interface with ") + key + " is already claimed");
+            std::string("Command interface with '") + key + "' is already claimed");
   }
 
   claimed_command_interface_map_[key] = true;
@@ -388,14 +388,14 @@ void ResourceManager::validate_storage(
   }
 
   if (!missing_state_keys.empty() || !missing_command_keys.empty()) {
-    std::string err_msg = "wrong state or command interface configuration.\n";
+    std::string err_msg = "Wrong state or command interface configuration.\n";
     err_msg += "missing state interfaces:\n";
     for (const auto & missing_key : missing_state_keys) {
-      err_msg += missing_key + "\t";
+      err_msg += "' " + missing_key + " '" + "\t";
     }
     err_msg += "\nmissing command interfaces:\n";
     for (const auto & missing_key : missing_command_keys) {
-      err_msg += missing_key + "\t";
+      err_msg += "' " + missing_key + " '" + "\t";
     }
 
     throw std::runtime_error(err_msg);
