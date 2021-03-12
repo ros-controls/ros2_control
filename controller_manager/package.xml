@@ -17,8 +17,8 @@
   <depend>launch_ros</depend>
   <depend>pluginlib</depend>
   <depend>ros2controlcli</depend>
-  <depend>ros2run</depend>
   <depend>ros2param</depend>
+  <depend>ros2run</depend>
   <depend>rclcpp</depend>
   <depend>rcpputils</depend>
 

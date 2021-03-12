@@ -48,7 +48,7 @@ def main(args=None):
         '-c', '--controller-manager', help='Name of the controller manager ROS node',
         default='/controller_manager', required=False)
     parser.add_argument(
-        '-p', '--param-file', help='Controller param file to be loaded into controller '
+        '-p', '--param-file', type=argparse.FileType('r'), help='Controller param file to be loaded into controller '
         'node before configure', required=False)
     parser.add_argument(
         '-u', '--unload-on-kill',

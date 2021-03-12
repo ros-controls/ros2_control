@@ -61,9 +61,9 @@ install(DIRECTORY include/
 )
 
 install(PROGRAMS
-        scripts/spawner.py
-        scripts/unspawner.py
-        DESTINATION lib/${PROJECT_NAME}
+  scripts/spawner.py
+  scripts/unspawner.py
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 if(BUILD_TESTING)
