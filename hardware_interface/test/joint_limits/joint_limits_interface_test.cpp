@@ -90,22 +90,22 @@ protected:
 
   inline hardware_interface::CommandInterface command_handle()
   {
-    return hardware_interface::CommandInterface(name, "position_command", &cmd);
+    return hardware_interface::CommandInterface(name, hardware_interface::HW_IF_POSITION, &cmd);
   }
 
   inline hardware_interface::StateInterface position_handle()
   {
-    return hardware_interface::StateInterface(name, "position", &pos);
+    return hardware_interface::StateInterface(name, hardware_interface::HW_IF_POSITION, &pos);
   }
 
   inline hardware_interface::StateInterface velocity_handle()
   {
-    return hardware_interface::StateInterface(name, "velocity", &vel);
+    return hardware_interface::StateInterface(name, hardware_interface::HW_IF_VELOCITY, &vel);
   }
 
   inline hardware_interface::StateInterface effort_handle()
   {
-    return hardware_interface::StateInterface(name, "effort", &eff);
+    return hardware_interface::StateInterface(name, hardware_interface::HW_IF_EFFORT, &eff);
   }
 };
 
@@ -511,22 +511,22 @@ protected:
 
   inline hardware_interface::CommandInterface command2_handle()
   {
-    return hardware_interface::CommandInterface(name2, "position_command", &cmd2);
+    return hardware_interface::CommandInterface(name2, hardware_interface::HW_IF_POSITION, &cmd2);
   }
 
   inline hardware_interface::StateInterface position2_handle()
   {
-    return hardware_interface::StateInterface(name2, "position", &pos2);
+    return hardware_interface::StateInterface(name2, hardware_interface::HW_IF_POSITION, &pos2);
   }
 
   inline hardware_interface::StateInterface velocity2_handle()
   {
-    return hardware_interface::StateInterface(name2, "velocity", &vel2);
+    return hardware_interface::StateInterface(name2, hardware_interface::HW_IF_VELOCITY, &vel2);
   }
 
   inline hardware_interface::StateInterface effort2_handle()
   {
-    return hardware_interface::StateInterface(name2, "effort", &eff2);
+    return hardware_interface::StateInterface(name2, hardware_interface::HW_IF_EFFORT, &eff2);
   }
 };
 
