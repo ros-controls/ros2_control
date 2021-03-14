@@ -48,33 +48,33 @@ class JointLimitHandle
 {
 public:
   JointLimitHandle()
-  : jposh_(hardware_interface::HW_IF_POSITION),
-    jvelh_(hardware_interface::HW_IF_VELOCITY),
-    jcmdh_(hardware_interface::HW_IF_POSITION),
+  : joint_position_interface_(hardware_interface::HW_IF_POSITION),
+    joint_velocity_interface_(hardware_interface::HW_IF_VELOCITY),
+    joint_command_interface_(hardware_interface::HW_IF_POSITION),
     prev_pos_(std::numeric_limits<double>::quiet_NaN()),
     prev_vel_(std::numeric_limits<double>::quiet_NaN())
   {}
 
   JointLimitHandle(
-    const hardware_interface::StateInterface & jposh,
-    hardware_interface::CommandInterface && jcmdh,
+    const hardware_interface::StateInterface & joint_position_interface,
+    hardware_interface::CommandInterface && joint_command_interface,
     const JointLimits & limits)
-  : jposh_(jposh),
-    jvelh_(hardware_interface::HW_IF_VELOCITY),
-    jcmdh_(std::move(jcmdh)),
+  : joint_position_interface_(joint_position_interface),
+    joint_velocity_interface_(hardware_interface::HW_IF_VELOCITY),
+    joint_command_interface_(std::move(joint_command_interface)),
     limits_(limits),
     prev_pos_(std::numeric_limits<double>::quiet_NaN()),
     prev_vel_(0.0)
   {}
 
   JointLimitHandle(
-    const hardware_interface::StateInterface & joint_pos_interface,
-    const hardware_interface::StateInterface & joint_vel_interface,
-    hardware_interface::CommandInterface && joint_cmd_interface,
+    const hardware_interface::StateInterface & joint_position_interface,
+    const hardware_interface::StateInterface & joint_velocity_interface,
+    hardware_interface::CommandInterface && joint_command_interface,
     const JointLimits & limits)
-  : jposh_(jposh),
-    jvelh_(jvelh),
-    jcmdh_(std::move(jcmdh)),
+  : joint_position_interface_(joint_position_interface),
+    joint_velocity_interface_(joint_velocity_interface),
+    joint_command_interface_(std::move(joint_command_interface)),
     limits_(limits),
     prev_pos_(std::numeric_limits<double>::quiet_NaN()),
     prev_vel_(0.0)
@@ -83,9 +83,9 @@ public:
   /// \return Joint name.
   std::string get_name() const
   {
-    return jposh_ ? jposh_.get_name() :
-           jvelh_ ? jvelh_.get_name() :
-           jcmdh_ ? jcmdh_.get_name() :
+    return joint_position_interface_ ? joint_position_interface_.get_name() :
+           joint_velocity_interface_ ? joint_velocity_interface_.get_name() :
+           joint_command_interface_ ? joint_command_interface_.get_name() :
            std::string();
   }
 
@@ -100,9 +100,9 @@ public:
   }
 
 protected:
-  hardware_interface::StateInterface jposh_;
-  hardware_interface::StateInterface jvelh_;
-  hardware_interface::CommandInterface jcmdh_;
+  hardware_interface::StateInterface joint_position_interface_;
+  hardware_interface::StateInterface joint_velocity_interface_;
+  hardware_interface::CommandInterface joint_command_interface_;
   joint_limits_interface::JointLimits limits_;
 
   // stored state - track position and velocity of last update
@@ -118,9 +118,9 @@ protected:
   {
     // if we have a handle to a velocity state we can directly return state velocity
     // otherwise we will estimate velocity from previous position (command or state)
-    return jvelh_ ?
-           jvelh_.get_value() :
-           (jposh_.get_value() - prev_pos_) / period.seconds();
+    return joint_velocity_interface_ ?
+           joint_velocity_interface_.get_value() :
+           (joint_position_interface_.get_value() - prev_pos_) / period.seconds();
   }
 };
 
@@ -134,21 +134,22 @@ public:
   JointSoftLimitsHandle() {}
 
   JointSoftLimitsHandle(
-    const hardware_interface::StateInterface & jposh,
-    hardware_interface::CommandInterface && jcmdh,
+    const hardware_interface::StateInterface & joint_position_interface,
+    hardware_interface::CommandInterface && joint_command_interface,
     const JointLimits & limits,
     const SoftJointLimits & soft_limits)
-  : JointLimitHandle(jposh, std::move(jcmdh), limits),
+  : JointLimitHandle(joint_position_interface, std::move(joint_command_interface), limits),
     soft_limits_(soft_limits)
   {}
 
   JointSoftLimitsHandle(
-    const hardware_interface::StateInterface & jposh,
-    const hardware_interface::StateInterface & jvelh,
-    hardware_interface::CommandInterface && jcmdh,
+    const hardware_interface::StateInterface & joint_position_interface,
+    const hardware_interface::StateInterface & joint_velocity_interface,
+    hardware_interface::CommandInterface && joint_command_interface,
     const JointLimits & limits,
     const SoftJointLimits & soft_limits)
-  : JointLimitHandle(jposh, jvelh, std::move(jcmdh), limits),
+  : JointLimitHandle(joint_position_interface, joint_velocity_interface,
+      std::move(joint_command_interface), limits),
     soft_limits_(soft_limits)
   {}
 
@@ -165,10 +166,10 @@ public:
   PositionJointSaturationHandle() {}
 
   PositionJointSaturationHandle(
-    const hardware_interface::StateInterface & jposh,
-    hardware_interface::CommandInterface && jcmdh,
+    const hardware_interface::StateInterface & joint_position_interface,
+    hardware_interface::CommandInterface && joint_command_interface,
     const JointLimits & limits)
-  : JointLimitHandle(jposh, std::move(jcmdh), limits)
+  : JointLimitHandle(joint_position_interface, std::move(joint_command_interface), limits)
   {
     if (limits_.has_position_limits) {
       min_pos_limit_ = limits_.min_position;
@@ -186,7 +187,7 @@ public:
   void enforce_limits(const rclcpp::Duration & period)
   {
     if (std::isnan(prev_pos_)) {
-      prev_pos_ = jposh_.get_value();
+      prev_pos_ = joint_position_interface_.get_value();
     }
 
     double min_pos, max_pos;
@@ -204,8 +205,8 @@ public:
     }
 
     // clamp command position to our computed min/max position
-    const double cmd = rcppmath::clamp(jcmdh_.get_value(), min_pos, max_pos);
-    jcmdh_.set_value(cmd);
+    const double cmd = rcppmath::clamp(joint_command_interface_.get_value(), min_pos, max_pos);
+    joint_command_interface_.set_value(cmd);
 
     prev_pos_ = cmd;
   }
@@ -251,11 +252,12 @@ public:
   {}
 
   PositionJointSoftLimitsHandle(
-    const hardware_interface::StateInterface & jposh,
-    hardware_interface::CommandInterface && jcmdh,
+    const hardware_interface::StateInterface & joint_position_interface,
+    hardware_interface::CommandInterface && joint_command_interface,
     const joint_limits_interface::JointLimits & limits,
     const joint_limits_interface::SoftJointLimits & soft_limits)
-  : JointSoftLimitsHandle(jposh, std::move(jcmdh), limits, soft_limits)
+  : JointSoftLimitsHandle(joint_position_interface, std::move(
+        joint_command_interface), limits, soft_limits)
   {
     if (!limits.has_velocity_limits) {
       throw joint_limits_interface::JointLimitsInterfaceException(
@@ -277,7 +279,7 @@ public:
     // Current position
     if (std::isnan(prev_pos_)) {
       // Happens only once at initialization
-      prev_pos_ = jposh_.get_value();
+      prev_pos_ = joint_position_interface_.get_value();
     }
     const double pos = prev_pos_;
 
@@ -316,15 +318,15 @@ public:
 
     // Saturate position command according to bounds
     const double pos_cmd = rcppmath::clamp(
-      jcmdh_.get_value(),
+      joint_command_interface_.get_value(),
       pos_low,
       pos_high);
-    jcmdh_.set_value(pos_cmd);
+    joint_command_interface_.set_value(pos_cmd);
 
     // Cache variables
     // todo: shouldn't this just be pos_cmd? why call into the command handle to
     //  get what we have in the above line?
-    prev_pos_ = jcmdh_.get_value();
+    prev_pos_ = joint_command_interface_.get_value();
   }
 };
 
@@ -338,11 +340,12 @@ public:
   EffortJointSaturationHandle() {}
 
   EffortJointSaturationHandle(
-    const hardware_interface::StateInterface & jposh,
-    const hardware_interface::StateInterface & jvelh,
-    hardware_interface::CommandInterface && jcmdh,
+    const hardware_interface::StateInterface & joint_position_interface,
+    const hardware_interface::StateInterface & joint_velocity_interface,
+    hardware_interface::CommandInterface && joint_command_interface,
     const joint_limits_interface::JointLimits & limits)
-  : JointLimitHandle(jposh, jvelh, std::move(jcmdh), limits)
+  : JointLimitHandle(joint_position_interface, joint_velocity_interface,
+      std::move(joint_command_interface), limits)
   {
     if (!limits.has_velocity_limits) {
       throw joint_limits_interface::JointLimitsInterfaceException(
@@ -357,13 +360,13 @@ public:
   }
 
   EffortJointSaturationHandle(
-    const hardware_interface::StateInterface & jposh,
-    hardware_interface::CommandInterface && jcmdh,
+    const hardware_interface::StateInterface & joint_position_interface,
+    hardware_interface::CommandInterface && joint_command_interface,
     const joint_limits_interface::JointLimits & limits)
   : EffortJointSaturationHandle(
-      jposh,
+      joint_position_interface,
       hardware_interface::StateInterface(hardware_interface::HW_IF_VELOCITY),
-      std::move(jcmdh),
+      std::move(joint_command_interface),
       limits)
   {
   }
@@ -380,7 +383,7 @@ public:
     double max_eff = limits_.max_effort;
 
     if (limits_.has_position_limits) {
-      const double pos = jposh_.get_value();
+      const double pos = joint_position_interface_.get_value();
       if (pos < limits_.min_position) {
         min_eff = 0.0;
       } else if (pos > limits_.max_position) {
@@ -395,8 +398,8 @@ public:
       max_eff = 0.0;
     }
 
-    double clamped = rcppmath::clamp(jcmdh_.get_value(), min_eff, max_eff);
-    jcmdh_.set_value(clamped);
+    double clamped = rcppmath::clamp(joint_command_interface_.get_value(), min_eff, max_eff);
+    joint_command_interface_.set_value(clamped);
   }
 };
 
@@ -408,12 +411,13 @@ public:
   EffortJointSoftLimitsHandle() {}
 
   EffortJointSoftLimitsHandle(
-    const hardware_interface::StateInterface & jposh,
-    const hardware_interface::StateInterface & jvelh,
-    hardware_interface::CommandInterface && jcmdh,
+    const hardware_interface::StateInterface & joint_position_interface,
+    const hardware_interface::StateInterface & joint_velocity_interface,
+    hardware_interface::CommandInterface && joint_command_interface,
     const joint_limits_interface::JointLimits & limits,
     const joint_limits_interface::SoftJointLimits & soft_limits)
-  : JointSoftLimitsHandle(jposh, jvelh, std::move(jcmdh), limits, soft_limits)
+  : JointSoftLimitsHandle(joint_position_interface, joint_velocity_interface,
+      std::move(joint_command_interface), limits, soft_limits)
   {
     if (!limits.has_velocity_limits) {
       throw joint_limits_interface::JointLimitsInterfaceException(
@@ -428,14 +432,14 @@ public:
   }
 
   EffortJointSoftLimitsHandle(
-    const hardware_interface::StateInterface & jposh,
-    hardware_interface::CommandInterface && jcmdh,
+    const hardware_interface::StateInterface & joint_position_interface,
+    hardware_interface::CommandInterface && joint_command_interface,
     const joint_limits_interface::JointLimits & limits,
     const joint_limits_interface::SoftJointLimits & soft_limits)
   : EffortJointSoftLimitsHandle(
-      jposh,
+      joint_position_interface,
       hardware_interface::StateInterface(hardware_interface::HW_IF_VELOCITY),
-      std::move(jcmdh),
+      std::move(joint_command_interface),
       limits,
       soft_limits)
   {
@@ -451,7 +455,7 @@ public:
   void enforce_limits(const rclcpp::Duration & period) override
   {
     // Current state
-    const double pos = jposh_.get_value();
+    const double pos = joint_position_interface_.get_value();
     const double vel = get_velocity(period);
 
     // Velocity bounds
@@ -488,10 +492,10 @@ public:
 
     // Saturate effort command according to bounds
     const double eff_cmd = rcppmath::clamp(
-      jcmdh_.get_value(),
+      joint_command_interface_.get_value(),
       soft_min_eff,
       soft_max_eff);
-    jcmdh_.set_value(eff_cmd);
+    joint_command_interface_.set_value(eff_cmd);
   }
 };
 
@@ -503,13 +507,13 @@ public:
   VelocityJointSaturationHandle() {}
 
   VelocityJointSaturationHandle(
-    const hardware_interface::StateInterface & jvelh,  // currently unused
-    hardware_interface::CommandInterface && jcmdh,
+    const hardware_interface::StateInterface & joint_velocity_interface,  // currently unused
+    hardware_interface::CommandInterface && joint_command_interface,
     const joint_limits_interface::JointLimits & limits)
   : JointLimitHandle(
-      hardware_interface::StateInterface(hardware_interface::HW_IF_POSITION),
-      jvelh,
-      std::move(jcmdh),
+      hardware_interface::StateInterface("position"),
+      joint_velocity_interface,
+      std::move(joint_command_interface),
       limits)
   {
     if (!limits.has_velocity_limits) {
@@ -520,10 +524,11 @@ public:
   }
 
   VelocityJointSaturationHandle(
-    hardware_interface::CommandInterface && jcmdh,
+    hardware_interface::CommandInterface && joint_command_interface,
     const joint_limits_interface::JointLimits & limits)
   : JointLimitHandle(hardware_interface::StateInterface(hardware_interface::HW_IF_POSITION),
-      hardware_interface::StateInterface(hardware_interface::HW_IF_VELOCITY), std::move(jcmdh), limits)
+      hardware_interface::StateInterface(hardware_interface::HW_IF_VELOCITY),
+      std::move(joint_command_interface), limits)
   {
     if (!limits.has_velocity_limits) {
       throw joint_limits_interface::JointLimitsInterfaceException(
@@ -555,13 +560,13 @@ public:
 
     // Saturate velocity command according to limits
     const double vel_cmd = rcppmath::clamp(
-      jcmdh_.get_value(),
+      joint_command_interface_.get_value(),
       vel_low,
       vel_high);
-    jcmdh_.set_value(vel_cmd);
+    joint_command_interface_.set_value(vel_cmd);
 
     // Cache variables
-    prev_vel_ = jcmdh_.get_value();
+    prev_vel_ = joint_command_interface_.get_value();
   }
 };
 
@@ -575,12 +580,13 @@ public:
   VelocityJointSoftLimitsHandle() {}
 
   VelocityJointSoftLimitsHandle(
-    const hardware_interface::StateInterface & jposh,
-    const hardware_interface::StateInterface & jvelh,
-    hardware_interface::CommandInterface && jcmdh,
+    const hardware_interface::StateInterface & joint_position_interface,
+    const hardware_interface::StateInterface & joint_velocity_interface,
+    hardware_interface::CommandInterface && joint_command_interface,
     const joint_limits_interface::JointLimits & limits,
     const joint_limits_interface::SoftJointLimits & soft_limits)
-  : JointSoftLimitsHandle(jposh, jvelh, std::move(jcmdh), limits, soft_limits)
+  : JointSoftLimitsHandle(joint_position_interface, joint_velocity_interface,
+      std::move(joint_command_interface), limits, soft_limits)
   {
     if (limits.has_velocity_limits) {
       max_vel_limit_ = limits.max_velocity;
@@ -600,7 +606,7 @@ public:
     double min_vel, max_vel;
     if (limits_.has_position_limits) {
       // Velocity bounds depend on the velocity limit and the proximity to the position limit.
-      const double pos = jposh_.get_value();
+      const double pos = joint_position_interface_.get_value();
       min_vel = rcppmath::clamp(
         -soft_limits_.k_position * (pos - soft_limits_.min_position),
         -max_vel_limit_, max_vel_limit_);
@@ -619,7 +625,10 @@ public:
       max_vel = std::min(vel + limits_.max_acceleration * delta_t, max_vel);
     }
 
-    jcmdh_.set_value(rcppmath::clamp(jcmdh_.get_value(), min_vel, max_vel));
+    joint_command_interface_.set_value(
+      rcppmath::clamp(
+        joint_command_interface_.get_value(),
+        min_vel, max_vel));
   }
 
 private:
