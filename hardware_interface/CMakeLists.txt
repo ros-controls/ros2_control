@@ -160,6 +160,10 @@ if(BUILD_TESTING)
   target_include_directories(joint_limits_interface_test PUBLIC include)
   ament_target_dependencies(joint_limits_interface_test rclcpp)
 
+  ament_add_gmock(joint_limits_interface_test_ros2 test/joint_limits/joint_limits_interface_test_ros2.cpp)
+  target_include_directories(joint_limits_interface_test_ros2 PUBLIC include)
+  ament_target_dependencies(joint_limits_interface_test_ros2 rclcpp)
+
   add_executable(joint_limits_rosparam_test test/joint_limits/joint_limits_rosparam_test.cpp)
   target_include_directories(joint_limits_rosparam_test PUBLIC include ${GTEST_INCLUDE_DIRS})
   target_link_libraries(joint_limits_rosparam_test ${GTEST_LIBRARIES})
