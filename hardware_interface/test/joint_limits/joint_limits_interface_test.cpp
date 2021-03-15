@@ -63,7 +63,9 @@ public:
   JointLimitsTest()
   : pos(0.0), vel(0.0), eff(0.0), cmd(0.0),
     name("joint_name"),
-    period(0, 100000000)
+    period(0, 100000000),
+    position_command_handle(
+      name, hardware_interface::HW_IF_POSITION, &cmd)
   {
     limits.has_position_limits = true;
     limits.min_position = -1.0;
@@ -88,10 +90,11 @@ protected:
   rclcpp::Duration period;
   joint_limits_interface::JointLimits limits;
   joint_limits_interface::SoftJointLimits soft_limits;
+  hardware_interface::CommandInterface position_command_handle;
 
-  inline hardware_interface::CommandInterface command_handle()
+  inline hardware_interface::CommandInterface & command_handle()
   {
-    return hardware_interface::CommandInterface(name, hardware_interface::HW_IF_POSITION, &cmd);
+    return position_command_handle;
   }
 
   inline hardware_interface::StateInterface position_handle()

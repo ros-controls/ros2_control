@@ -231,12 +231,12 @@ LoanedCommandInterface ResourceManager::claim_command_interface(const std::strin
             std::string("Command interface with '") + key + "' does not exist");
   }
 
-  std::lock_guard<decltype(resource_lock_)> lg(resource_lock_);
   if (command_interface_is_claimed(key)) {
     throw std::runtime_error(
             std::string("Command interface with '") + key + "' is already claimed");
   }
 
+  std::lock_guard<decltype(resource_lock_)> lg(resource_lock_);
   claimed_command_interface_map_[key] = true;
   return LoanedCommandInterface(
     resource_storage_->command_interface_map_.at(key),
