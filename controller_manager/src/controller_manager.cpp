@@ -579,8 +579,8 @@ void ControllerManager::stop_controllers()
     }
     auto controller = found_it->c;
     if (is_controller_running(*controller)) {
-      controller->release_interfaces();
       const auto new_state = controller->deactivate();
+      controller->release_interfaces();
       if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
         RCLCPP_ERROR(
           get_logger(),
