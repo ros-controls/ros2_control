@@ -93,7 +93,7 @@ TEST_F(TestReleaseInterfaces, switch_controllers_same_interface)
     auto switch_future = std::async(
       std::launch::async,
       &controller_manager::ControllerManager::switch_controller, cm_,
-        start_controllers, stop_controllers,
+      start_controllers, stop_controllers,
       STRICT, true, rclcpp::Duration(0, 0));
     ASSERT_EQ(
       std::future_status::timeout,
@@ -161,11 +161,6 @@ TEST_F(TestReleaseInterfaces, switch_controllers_same_interface)
       &controller_manager::ControllerManager::switch_controller, cm_,
       start_controllers, stop_controllers,
       STRICT, true, rclcpp::Duration(0, 0));
-    /*ASSERT_EQ(
-      std::future_status::timeout,
-      switch_future.wait_for(std::chrono::milliseconds(100))) <<
-      "switch_controller should be blocking until next update cycle";
-    cm_->update();*/
     EXPECT_EQ(
       controller_interface::return_type::ERROR,
       switch_future.get()
@@ -197,13 +192,13 @@ TEST_F(TestReleaseInterfaces, switch_controllers_same_interface)
   {  // Test starting both controllers at the same time
     RCLCPP_INFO(
       cm_->get_logger(),
-      "Starting both controllers at the same time");
+      "Starting both controllers at the same time (should notify about resource conflict)");
     std::vector<std::string> start_controllers = {controller_name1, controller_name2};
     std::vector<std::string> stop_controllers = {};
     auto switch_future = std::async(
       std::launch::async,
       &controller_manager::ControllerManager::switch_controller, cm_,
-        start_controllers, stop_controllers,
+      start_controllers, stop_controllers,
       STRICT, true, rclcpp::Duration(0, 0));
     ASSERT_EQ(
       std::future_status::timeout,
