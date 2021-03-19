@@ -45,8 +45,8 @@ return_type GenericSystem::configure(const hardware_interface::HardwareInfo & in
   // Initialize storage for standard interfaces
   initialize_storage_vectors(joint_commands_, joint_states_, standard_interfaces_);
   // set all values without initial values to 0
-  for (uint i = 0; i < info_.joints.size(); i++) {
-    for (uint j = 0; j < standard_interfaces_.size(); j++) {
+  for (auto i = 0u; i < info_.joints.size(); i++) {
+    for (auto j = 0u; j < standard_interfaces_.size(); j++) {
       if (std::isnan(joint_commands_[j][i])) {
         joint_commands_[j][i] = 0.0;
         joint_states_[j][i] = 0.0;
@@ -92,7 +92,7 @@ std::vector<hardware_interface::StateInterface> GenericSystem::export_state_inte
   std::vector<hardware_interface::StateInterface> state_interfaces;
 
   // Joints' state interfaces
-  for (uint i = 0; i < info_.joints.size(); i++) {
+  for (auto i = 0u; i < info_.joints.size(); i++) {
     const auto & joint = info_.joints[i];
     for (const auto & interface : joint.state_interfaces) {
       // Add interface: if not in the standard list than use "other" interface list
@@ -111,7 +111,7 @@ std::vector<hardware_interface::StateInterface> GenericSystem::export_state_inte
   }
 
   // Sensor state interfaces
-  for (uint i = 0; i < info_.sensors.size(); i++) {
+  for (auto i = 0u; i < info_.sensors.size(); i++) {
     const auto & sensor = info_.sensors[i];
     for (const auto & interface : sensor.state_interfaces) {
       if (!get_interface(
@@ -132,7 +132,7 @@ std::vector<hardware_interface::CommandInterface> GenericSystem::export_command_
   std::vector<hardware_interface::CommandInterface> command_interfaces;
 
   // Joints' state interfaces
-  for (uint i = 0; i < info_.joints.size(); i++) {
+  for (auto i = 0u; i < info_.joints.size(); i++) {
     const auto & joint = info_.joints[i];
     for (const auto & interface : joint.command_interfaces) {
       // Add interface: if not in the standard list than use "other" interface list
@@ -152,7 +152,7 @@ std::vector<hardware_interface::CommandInterface> GenericSystem::export_command_
 
   // Fake sensor command interfaces
   if (fake_sensor_command_interfaces_) {
-    for (uint i = 0; i < info_.sensors.size(); i++) {
+    for (auto i = 0u; i < info_.sensors.size(); i++) {
       const auto & sensor = info_.sensors[i];
       for (const auto & interface : sensor.state_interfaces) {
         if (!get_interface(
@@ -187,7 +187,7 @@ bool GenericSystem::get_interface(
   const std::string & name,
   const std::vector<std::string> & interface_list,
   const std::string & interface_name,
-  const uint vector_index,
+  const size_t vector_index,
   std::vector<std::vector<double>> & values,
   std::vector<HandleType> & interfaces)
 {
@@ -208,15 +208,15 @@ void GenericSystem::initialize_storage_vectors(
   // Initialize storage for all joints, regardless of their existance
   commands.resize(interfaces.size());
   states.resize(interfaces.size());
-  for (uint i = 0; i < interfaces.size(); i++) {
+  for (auto i = 0u; i < interfaces.size(); i++) {
     commands[i].resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
     states[i].resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
   }
 
   // Initialize with values from URDF
-  for (uint i = 0; i < info_.joints.size(); i++) {
+  for (auto i = 0u; i < info_.joints.size(); i++) {
     const auto & joint = info_.joints[i];
-    for (uint j = 0; j < interfaces.size(); j++) {
+    for (auto j = 0u; j < interfaces.size(); j++) {
       auto it = joint.parameters.find("initial_" + interfaces[j]);
       if (it != joint.parameters.end()) {
         commands[j][i] = std::stod(it->second);
