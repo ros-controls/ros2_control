@@ -107,6 +107,24 @@ if(BUILD_TESTING)
   )
   target_include_directories(test_controller_manager_srvs PRIVATE include)
   target_link_libraries(test_controller_manager_srvs controller_manager test_controller)
+
+  add_library(test_controller_with_interfaces SHARED test/test_controller_with_interfaces/test_controller_with_interfaces.cpp)
+  target_include_directories(test_controller_with_interfaces PRIVATE include)
+  target_link_libraries(test_controller_with_interfaces controller_manager)
+  target_compile_definitions(test_controller_with_interfaces PRIVATE "CONTROLLER_MANAGER_BUILDING_DLL")
+  pluginlib_export_plugin_description_file(
+    controller_interface test/test_controller_with_interfaces/test_controller_with_interfaces.xml)
+  install(TARGETS test_controller_with_interfaces
+    DESTINATION lib
+  )
+
+  ament_add_gmock(
+    test_release_interfaces
+    test/test_release_interfaces.cpp
+    APPEND_ENV AMENT_PREFIX_PATH=${ament_index_build_path}_$<CONFIG>
+  )
+  target_include_directories(test_release_interfaces PRIVATE include)
+  target_link_libraries(test_release_interfaces controller_manager test_controller_with_interfaces)
 endif()
 
 ament_export_libraries(

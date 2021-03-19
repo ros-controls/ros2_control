@@ -1,0 +1,9 @@
+<library path="test_controller_with_interfaces">
+
+  <class name="controller_manager/test_controller_with_interfaces" type="test_controller_with_interfaces::TestControllerWithInterfaces" base_class_type="controller_interface::ControllerInterface">
+    <description>
+      Controller used for testing
+    </description>
+  </class>
+
+</library>
