@@ -97,7 +97,8 @@ private:
   bool get_interface(
     const std::string & name,
     const std::vector<std::string> & interface_list,
-    const std::string & interface_name, const uint vector_index,
+    const std::string & interface_name,
+    const size_t vector_index,
     std::vector<std::vector<double>> & values,
     std::vector<HandleType> & interfaces);
 
