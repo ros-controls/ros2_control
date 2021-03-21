@@ -2,6 +2,16 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* release_interfaces when stopping controller (`#343 <https://github.com/ros-controls/ros2_control/issues/343>`_)
+  * release_interfaces when stopping controller
+  * Moved release_interfaces after deactivate
+  * First attempt at test_release_interfaces
+  * Switched to std::async with cm\_->update
+* Capatalized error message and put the controllers name and resource name inside quote (`#338 <https://github.com/ros-controls/ros2_control/issues/338>`_)
+* Contributors: mahaarbo, suab321321
+
 0.2.1 (2021-03-02)
 ------------------
 

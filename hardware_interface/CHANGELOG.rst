@@ -2,6 +2,12 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Capatalized error message and put the controllers name and resource name inside quote (`#338 <https://github.com/ros-controls/ros2_control/issues/338>`_)
+* Parse True and true in fakesystem, touch up variable name
+* Contributors: Denis Štogl, suab321321
+
 0.2.1 (2021-03-02)
 ------------------
 * Remove unused include (`#336 <https://github.com/ros-controls/ros2_control/issues/336>`_)
