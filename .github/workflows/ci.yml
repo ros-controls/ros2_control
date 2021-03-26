@@ -40,6 +40,7 @@ jobs:
             controller_manager
             controller_manager_msgs
             hardware_interface
+            ros2controlcli
             ros2_control
             ros2_control_test_assets
           vcs-repo-file-url: |

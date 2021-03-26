@@ -12,9 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from controller_manager import list_hardware_interfaces
+
 from ros2cli.node.direct import add_arguments
+from ros2cli.node.strategy import NodeStrategy
 from ros2cli.verb import VerbExtension
-from ros2controlcli.api import add_controller_mgr_parsers, list_hardware_interfaces
+from ros2controlcli.api import add_controller_mgr_parsers
 
 
 class ListHardwareInterfacesVerb(VerbExtension):
@@ -25,17 +28,18 @@ class ListHardwareInterfacesVerb(VerbExtension):
         add_controller_mgr_parsers(parser)
 
     def main(self, *, args):
-        hardware_interfaces = list_hardware_interfaces(args.controller_manager)
-        command_interfaces = sorted(
-                hardware_interfaces.command_interfaces, key=lambda hwi: hwi.name)
-        state_interfaces = sorted(
-                hardware_interfaces.state_interfaces, key=lambda hwi: hwi.name)
-        print('command interfaces')
-        for command_interface in command_interfaces:
-            print('\t%s [%s]' %
-                  (command_interface.name,
-                   'claimed' if command_interface.is_claimed else 'unclaimed'))
-        print('state interfaces')
-        for state_interface in state_interfaces:
-            print('\t', state_interface.name)
-        return 0
+        with NodeStrategy(args) as node:
+            hardware_interfaces = list_hardware_interfaces(node, args.controller_manager)
+            command_interfaces = sorted(
+                    hardware_interfaces.command_interfaces, key=lambda hwi: hwi.name)
+            state_interfaces = sorted(
+                    hardware_interfaces.state_interfaces, key=lambda hwi: hwi.name)
+            print('command interfaces')
+            for command_interface in command_interfaces:
+                print('\t%s [%s]' %
+                      (command_interface.name,
+                       'claimed' if command_interface.is_claimed else 'unclaimed'))
+            print('state interfaces')
+            for state_interface in state_interfaces:
+                print('\t', state_interface.name)
+            return 0

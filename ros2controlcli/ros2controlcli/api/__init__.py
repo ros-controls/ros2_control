@@ -13,13 +13,18 @@
 # limitations under the License.
 
 
-from controller_manager_msgs.srv import ConfigureController, ConfigureStartController, \
-    ListControllers, ListControllerTypes, ListHardwareInterfaces, LoadController, \
-    LoadConfigureController, LoadStartController, \
+from controller_manager_msgs.srv import \
+    ConfigureController, ConfigureStartController, \
+    ListControllers, ListControllerTypes, ListHardwareInterfaces, \
+    LoadConfigureController, LoadController, LoadStartController, \
     ReloadControllerLibraries, SwitchController, UnloadController
+
 import rclpy
+
 from ros2cli.node.direct import DirectNode
+
 from ros2node.api import NodeNameCompleter
+
 from ros2param.api import call_list_parameters
 
 

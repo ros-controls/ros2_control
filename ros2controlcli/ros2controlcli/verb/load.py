@@ -12,11 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from ros2cli.node.direct import add_arguments
-from ros2cli.verb import VerbExtension
-from ros2controlcli.api import add_controller_mgr_parsers, ControllerNameCompleter, load_controller
-
 import sys
+
+from controller_manager import load_controller
+
+from ros2cli.node.direct import add_arguments
+from ros2cli.node.strategy import NodeStrategy
+from ros2cli.verb import VerbExtension
+
+from ros2controlcli.api import add_controller_mgr_parsers, ControllerNameCompleter
 
 
 class LoadVerb(VerbExtension):
@@ -30,7 +34,8 @@ class LoadVerb(VerbExtension):
         add_controller_mgr_parsers(parser)
 
     def main(self, *, args):
-        response = load_controller(args.controller_manager, args.controller_name)
-        if not response.ok:
-            print('Error loading controller, check controller_manager logs', file=sys.stderr)
-        return not response.ok
+        with NodeStrategy(args) as node:
+            response = load_controller(node, args.controller_manager, args.controller_name)
+            if not response.ok:
+                print('Error loading controller, check controller_manager logs', file=sys.stderr)
+            return not response.ok

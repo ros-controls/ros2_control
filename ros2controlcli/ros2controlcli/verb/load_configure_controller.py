@@ -12,12 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sys
+
 from ros2cli.node.direct import add_arguments
 from ros2cli.verb import VerbExtension
+
 from ros2controlcli.api import add_controller_mgr_parsers, ControllerNameCompleter, \
     load_configure_controller
-
-import sys
 
 
 class LoadConfigureControllerVerb(VerbExtension):
