@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
-
 from controller_manager import unload_controller
 
 from ros2cli.node.direct import add_arguments
@@ -37,6 +35,5 @@ class UnloadVerb(VerbExtension):
         with NodeStrategy(args) as node:
             response = unload_controller(node, args.controller_manager, args.controller_name)
             if not response.ok:
-                print('Error unloading controllers, check controller_manager logs',
-                      file=sys.stderr)
-            return not response.ok
+                return 'Error unloading controllers, check controller_manager logs'
+            return 'Successfully unloaded controller {}'.format(args.controller_name)

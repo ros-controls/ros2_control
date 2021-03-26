@@ -12,9 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
-
-from controller_manager import load_controller
+from controller_manager import configure_controller, load_controller, switch_controllers
 
 from ros2cli.node.direct import add_arguments
 from ros2cli.node.strategy import NodeStrategy
@@ -31,11 +29,38 @@ class LoadVerb(VerbExtension):
         arg = parser.add_argument(
             'controller_name', help='Name of the controller')
         arg.completer = ControllerNameCompleter()
+        arg = parser.add_argument(
+            '--set-state',
+            choices=['configure', 'start'],
+            help='Set the state of the loaded controller')
         add_controller_mgr_parsers(parser)
 
     def main(self, *, args):
         with NodeStrategy(args) as node:
             response = load_controller(node, args.controller_manager, args.controller_name)
             if not response.ok:
-                print('Error loading controller, check controller_manager logs', file=sys.stderr)
-            return not response.ok
+                return 'Error loading controller, check controller_manager logs'
+
+            if not args.set_state:
+                return 'Successfully loaded controller {}'.format(args.controller_name)
+
+            # we in any case configure the controller
+            response = configure_controller(
+                node, args.controller_manager, args.controller_name)
+            if not response.ok:
+                return 'Error configuring controller'
+
+            if args.set_state == 'start':
+                response = switch_controllers(
+                    node,
+                    args.controller_manager,
+                    [],
+                    [args.controller_name],
+                    True,
+                    True,
+                    5.0)
+                if not response.ok:
+                    return 'Error starting controller, check controller_manager logs'
+
+            return 'Sucessfully loaded controller {} into state {}'.format(
+                args.controller_name, ('inactive' if args.set_state == 'configure' else 'active'))

@@ -38,6 +38,13 @@ def service_caller(node, service_name, service_type, request):
         raise RuntimeError('Exception while calling service: %r' % future.exception())
 
 
+def configure_controller(node, controller_manager_name, controller_name):
+    request = ConfigureController.Request()
+    request.name = controller_name
+    return service_caller(node, '{}/configure_controller'.format(controller_manager_name),
+                          ConfigureController, request)
+
+
 def list_controllers(node, controller_manager_name):
     request = ListControllers.Request()
     return service_caller(node, '{}/list_controllers'.format(controller_manager_name),
@@ -95,6 +102,7 @@ def unload_controller(node, controller_manager_name, controller_name):
 
 
 __all__ = [
+    'configure_controller',
     'list_controllers',
     'list_controller_types',
     'list_hardware_interfaces',

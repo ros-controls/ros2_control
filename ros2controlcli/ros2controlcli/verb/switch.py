@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
-
 from controller_manager import switch_controllers
 
 from ros2cli.node.direct import add_arguments
@@ -63,6 +61,5 @@ class SwitchVerb(VerbExtension):
                 args.start_asap,
                 args.switch_timeout)
             if not response.ok:
-                print('Error switching controllers, check controller_manager logs',
-                      file=sys.stderr)
-            return not response.ok
+                return 'Error switching controllers, check controller_manager logs'
+            return 'Successfully switched controllers'

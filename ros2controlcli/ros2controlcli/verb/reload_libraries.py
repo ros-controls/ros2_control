@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
-
 from controller_manager import reload_controller_libraries
 
 from ros2cli.node.direct import add_arguments
@@ -38,7 +36,5 @@ class ReloadLibrariesVerb(VerbExtension):
             response = reload_controller_libraries(
                 node, args.controller_manager, force_kill=args.force_kill)
             if response.ok:
-                print('Reload successful')
-            else:
-                print('Error reloading libraries, check controller_manager logs', file=sys.stderr)
-            return not response.ok
+                return 'Reload successful'
+            return 'Error reloading libraries, check controller_manager logs'
