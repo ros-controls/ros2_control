@@ -12,12 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from controller_manager_msgs.srv import ConfigureController, ConfigureStartController, \
-    ListControllers, ListControllerTypes, ListHardwareInterfaces, LoadController, \
-    LoadConfigureController, LoadStartController, \
-    ReloadControllerLibraries, SwitchController, UnloadController
+from controller_manager_msgs.srv import ConfigureController, \
+    ListControllers, ListControllerTypes, ListHardwareInterfaces, \
+    LoadController, ReloadControllerLibraries, SwitchController, UnloadController
+
 import rclpy
-from . import launch_utils
 
 
 def service_caller(node, service_name, service_type, request):
@@ -54,7 +53,8 @@ def list_controllers(node, controller_manager_name):
 def list_controller_types(node, controller_manager_name):
     request = ListControllerTypes.Request()
     return service_caller(node,
-        '{}/list_controller_types'.format(controller_manager_name), ListControllerTypes, request)
+                          '{}/list_controller_types'.format(controller_manager_name),
+                          ListControllerTypes, request)
 
 
 def list_hardware_interfaces(node, controller_manager_name):
@@ -74,9 +74,8 @@ def reload_controller_libraries(node, controller_manager_name, force_kill):
     request = ReloadControllerLibraries.Request()
     request.force_kill = force_kill
     return service_caller(node,
-        '{}/reload_controller_libraries'.format(controller_manager_name),
-        ReloadControllerLibraries,
-        request)
+                          '{}/reload_controller_libraries'.format(controller_manager_name),
+                          ReloadControllerLibraries, request)
 
 
 def switch_controllers(node, controller_manager_name, stop_controllers,

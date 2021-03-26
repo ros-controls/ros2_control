@@ -29,7 +29,7 @@ def generate_load_controller_launch_description(controller_name,
     'unload_on_kill' LaunchArguments and a Node action that runs the controller_manager
     spawner.py node to load and start a controller
 
-    Examples
+    Examples;
     --------
       # Assuming the controller type and controller parameters are known to the controller_manager
       generate_load_controller_launch_description('joint_state_controller')
