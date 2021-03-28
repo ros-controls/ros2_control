@@ -212,7 +212,7 @@ protected:
   <ros2_control name="GenericSystem2dof" type="system">
     <hardware>
       <plugin>fake_components/GenericSystem</plugin>
-      <param name="state_following_error_offset">-3</param>
+      <param name="state_following_offset">-3</param>
     </hardware>
     <joint name="joint1">
       <command_interface name="position"/>
