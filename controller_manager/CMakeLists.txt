@@ -60,6 +60,12 @@ install(DIRECTORY include/
   DESTINATION include
 )
 
+install(PROGRAMS
+  scripts/spawner.py
+  scripts/unspawner.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 if(BUILD_TESTING)
   find_package(ament_cmake_gmock REQUIRED)
   find_package(ament_cmake_gtest REQUIRED)
@@ -125,7 +131,17 @@ if(BUILD_TESTING)
   )
   target_include_directories(test_release_interfaces PRIVATE include)
   target_link_libraries(test_release_interfaces controller_manager test_controller_with_interfaces)
+
+  ament_add_gmock(
+    test_spawner_unspawner
+    test/test_spawner_unspawner.cpp
+  )
+  target_include_directories(test_spawner_unspawner PRIVATE include)
+  target_link_libraries(test_spawner_unspawner controller_manager test_controller)
 endif()
+
+# Install Python modules
+ament_python_install_package(${PROJECT_NAME})
 
 ament_export_libraries(
   controller_manager

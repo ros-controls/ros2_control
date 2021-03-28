@@ -13,9 +13,15 @@
   <depend>controller_interface</depend>
   <depend>controller_manager_msgs</depend>
   <depend>hardware_interface</depend>
+  <depend>launch</depend>
+  <depend>launch_ros</depend>
   <depend>pluginlib</depend>
   <depend>rclcpp</depend>
   <depend>rcpputils</depend>
+  <depend>ros2param</depend>
+  <depend>ros2run</depend>
+
+  <exec_depend>ros2controlcli</exec_depend>
 
   <test_depend>ament_cmake_gmock</test_depend>
   <test_depend>ament_cmake_gtest</test_depend>

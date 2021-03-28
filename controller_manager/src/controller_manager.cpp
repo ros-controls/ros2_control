@@ -773,7 +773,7 @@ void ControllerManager::load_controller_service_cb(
   std::lock_guard<std::mutex> guard(services_lock_);
   RCLCPP_DEBUG(get_logger(), "loading service locked");
 
-  response->ok = load_controller(request->name).get();
+  response->ok = load_controller(request->name).get() != nullptr;
 
   RCLCPP_DEBUG(
     get_logger(), "loading service finished for controller '%s' ", request->name.c_str());
