@@ -42,6 +42,14 @@ return_type GenericSystem::configure(const hardware_interface::HardwareInfo & in
     fake_sensor_command_interfaces_ = false;
   }
 
+  // check if there is a state following error offset defined
+  it = info_.hardware_parameters.find("state_following_error_offset");
+  if (it != info_.hardware_parameters.end()) {
+    state_following_error_offset_ = std::stod(it->second);
+  } else {
+    state_following_error_offset_ = 0.0;
+  }
+
   // Initialize storage for standard interfaces
   initialize_storage_vectors(joint_commands_, joint_states_, standard_interfaces_);
   // set all values without initial values to 0
@@ -173,7 +181,15 @@ std::vector<hardware_interface::CommandInterface> GenericSystem::export_command_
 return_type GenericSystem::read()
 {
   // do loopback
-  joint_states_ = joint_commands_;
+  if (state_following_error_offset_ == 0.0) {
+    joint_states_ = joint_commands_;
+  } else {
+    for (size_t i = 0; i < joint_states_.size(); ++i) {
+      for (size_t j = 0; j < joint_states_[i].size(); ++j) {
+        joint_states_[i][j] = joint_commands_[i][j] + state_following_error_offset_;
+      }
+    }
+  }
   other_states_ = other_commands_;
   if (fake_sensor_command_interfaces_) {
     sensor_states_ = sensor_fake_commands_;
