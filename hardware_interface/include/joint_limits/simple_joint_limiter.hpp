@@ -26,7 +26,8 @@
 
 namespace joint_limits
 {
-/// Implementation of simple joint limiter enforcing position, velocity, acceleration and effort limits without considering soft limits.
+/// Implementation of simple joint limiter enforcing position, velocity, acceleration and effort
+/// limits without considering soft limits.
 /**
  * This class implements a very simple position, velocity, acceleration and effort limits enforcing
  * policy, and tries to do this in hardware-agnostic way.

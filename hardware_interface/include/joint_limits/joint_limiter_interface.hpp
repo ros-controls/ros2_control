@@ -30,17 +30,19 @@
 
 namespace joint_limits
 {
-// TODO(all): there is possibility to use something like LoanedCommandInterface, still having copy-constructor on this level makes thing way easier and more readable
+// TODO(all): there is possibility to use something like LoanedCommandInterface.
+// Still, having copy-constructor on this level makes thing way easier and more readable
 // class LimiterCommandHandle
 
-template <class LimitsType>
+template<class LimitsType>
 class JointLimiterInterface
 {
 public:
   JointLimiterInterface(
-    LimitsType & limits, 
+    LimitsType & limits,
     std::vector<hardware_interface::StateInterface> & state_interfaces,
-    // Here could be used "LimiterCommandHandle" with copy-constructor to avid raw-pointer access/storage
+    // Here could be used "LimiterCommandHandle" with copy-constructor
+    // to avoid raw-pointer access/storage
     std::vector<hardware_interface::CommandInterface *> & command_interfaces)
   : limits_(limits),
     has_effort_command_(false),
@@ -52,14 +54,15 @@ public:
     if (command_interfaces.size() == 0) {
       throw std::runtime_error("At least one command interface has to be provided.");
     }
-    
+
     // Check if position-velocity-acceleration or effort commands are used
     if (
       std::find_if(
         command_interfaces.begin(), command_interfaces.end(),
         [](const hardware_interface::CommandInterface * interface) {
           return interface->get_name() == hardware_interface::HW_IF_EFFORT;
-        }) != command_interfaces.end()) {
+        }) != command_interfaces.end())
+    {
       has_effort_command_ = true;
       // Effort command interface has to be used as only interface
       if (command_interfaces.size() > 1) {
@@ -77,8 +80,9 @@ public:
           if (!has_effort_command_ || interface_name != hardware_interface::HW_IF_EFFORT) {
             virtual_command_storage_.push_back(0.0);
             auto i = virtual_command_storage_.size() - 1;  // last element
-            virtual_command_interfaces_.emplace_back(hardware_interface::CommandInterface(
-              "joint_limiter_virtual", interface_name, &virtual_command_storage_[i]));
+            virtual_command_interfaces_.emplace_back(
+              hardware_interface::CommandInterface(
+                "joint_limiter_virtual", interface_name, &virtual_command_storage_[i]));
             command_interfaces_.emplace_back(&virtual_command_interfaces_.back());
           }
         }
@@ -89,8 +93,9 @@ public:
         } else {
           virtual_state_storage_.push_back(0.0);
           auto i = virtual_state_storage_.size() - 1;  // last element
-          state_interfaces_.emplace_back(hardware_interface::StateInterface(
-            "joint_limiter_virtual", interface_name, &virtual_state_storage_[i]));
+          state_interfaces_.emplace_back(
+            hardware_interface::StateInterface(
+              "joint_limiter_virtual", interface_name, &virtual_state_storage_[i]));
         }
       }
     }
@@ -114,10 +119,7 @@ public:
 
   std::string get_name() const
   {
-    // Hopefully some interface exists. Simply go through all of them and return first name
-    for (const auto & interface : state_interfaces_) {
-      return interface.get_name();
-    }
+    // At least one command interface exists - return its name
     for (const auto & interface : command_interfaces_) {
       return interface->get_name();
     }

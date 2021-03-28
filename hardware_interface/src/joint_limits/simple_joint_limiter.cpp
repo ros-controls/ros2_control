@@ -16,8 +16,10 @@
 
 #include "joint_limits/simple_joint_limiter.hpp"
 
+#include <algorithm>
 #include <limits>
 #include <stdexcept>
+#include <vector>
 
 #include "rcppmath/clamp.hpp"
 
@@ -34,28 +36,31 @@ SimpleJointLimiter::SimpleJointLimiter(
       state_interfaces.begin(), state_interfaces.end(),
       [](const hardware_interface::StateInterface & interface) {
         return interface.get_name() == hardware_interface::HW_IF_POSITION;
-      }) == state_interfaces.end()) {
+      }) == state_interfaces.end())
+  {
     throw std::runtime_error(
-      "Simple joint limiter requires position state interface for joint '" + get_name() + "'.");
+            "Simple joint limiter requires position state interface for joint '" + get_name() +
+            "'.");
   }
 
   if (has_effort_command_) {
     if (!limits.has_velocity_limits) {
       throw std::runtime_error(
-        "Cannot enforce limits on effort command interface for joint '" + get_name() +
-        "'. It has no velocity limits specification.");
+              "Cannot enforce limits on effort command interface for joint '" + get_name() +
+              "'. It has no velocity limits specification.");
     }
     if (!limits.has_effort_limits) {
       throw std::runtime_error(
-        "Cannot enforce limits on effort command interface for joint '" + get_name() +
-        "'. It has no efforts limits specification.");
+              "Cannot enforce limits on effort command interface for joint '" + get_name() +
+              "'. It has no efforts limits specification.");
     }
     if (
       std::find_if(
         state_interfaces.begin(), state_interfaces.end(),
         [](const hardware_interface::StateInterface & interface) {
           return interface.get_name() == hardware_interface::HW_IF_VELOCITY;
-        }) != state_interfaces.end()) {
+        }) != state_interfaces.end())
+    {
       has_velocity_state_ = true;
     }
   }

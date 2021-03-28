@@ -155,6 +155,11 @@ if(BUILD_TESTING)
     ros2_control_test_assets
   )
 
+  # joint_limiter tests
+  ament_add_gmock(test_joint_limiter_interface test/joint_limits/test_joint_limiter_interface.cpp)
+  target_include_directories(test_joint_limiter_interface PUBLIC include)
+  ament_target_dependencies(test_joint_limiter_interface rcutils)
+
   # joint_limit_interface tests
   ament_add_gmock(joint_limits_interface_test test/joint_limits/joint_limits_interface_test.cpp)
   target_include_directories(joint_limits_interface_test PUBLIC include)

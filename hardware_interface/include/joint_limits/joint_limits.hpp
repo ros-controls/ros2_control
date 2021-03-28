@@ -54,7 +54,8 @@ struct JointLimits
 
 struct SoftJointLimits
 {
-  SoftJointLimits() : min_position(0.0), max_position(0.0), k_position(0.0), k_velocity(0.0) {}
+  SoftJointLimits()
+  : min_position(0.0), max_position(0.0), k_position(0.0), k_velocity(0.0) {}
 
   double min_position;
   double max_position;
