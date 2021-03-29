@@ -71,7 +71,9 @@ protected:
 int call_spawner(const std::string extra_args)
 {
   std::string spawner_script = "ros2 run controller_manager spawner.py ";
-  return std::system((spawner_script + extra_args).c_str());
+  auto ret = std::system((spawner_script + extra_args).c_str());
+  fprintf(stderr, "call return: %d\n", ret);
+  return ret;
 }
 
 int call_unspawner(const std::string extra_args)
