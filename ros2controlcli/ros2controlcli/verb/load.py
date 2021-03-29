@@ -63,4 +63,4 @@ class LoadVerb(VerbExtension):
                     return 'Error starting controller, check controller_manager logs'
 
             return 'Sucessfully loaded controller {} into state {}'.format(
-                args.controller_name, ('inactive' if args.set_state == 'configure' else 'active'))
+                args.controller_name, ('inactive' if args.state == 'configure' else 'active'))
