@@ -30,7 +30,7 @@ class LoadVerb(VerbExtension):
             'controller_name', help='Name of the controller')
         arg.completer = ControllerNameCompleter()
         arg = parser.add_argument(
-            '--set-state',
+            '--state',
             choices=['configure', 'start'],
             help='Set the state of the loaded controller')
         add_controller_mgr_parsers(parser)
@@ -41,7 +41,7 @@ class LoadVerb(VerbExtension):
             if not response.ok:
                 return 'Error loading controller, check controller_manager logs'
 
-            if not args.set_state:
+            if not args.state:
                 return 'Successfully loaded controller {}'.format(args.controller_name)
 
             # we in any case configure the controller
@@ -50,7 +50,7 @@ class LoadVerb(VerbExtension):
             if not response.ok:
                 return 'Error configuring controller'
 
-            if args.set_state == 'start':
+            if args.state == 'start':
                 response = switch_controllers(
                     node,
                     args.controller_manager,
