@@ -132,12 +132,12 @@ if(BUILD_TESTING)
   target_include_directories(test_release_interfaces PRIVATE include)
   target_link_libraries(test_release_interfaces controller_manager test_controller_with_interfaces)
 
-  #  ament_add_gmock(
-  #    test_spawner_unspawner
-  #    test/test_spawner_unspawner.cpp
-  #  )
-  #  target_include_directories(test_spawner_unspawner PRIVATE include)
-  #  target_link_libraries(test_spawner_unspawner controller_manager test_controller)
+  # ament_add_gmock(
+  #   test_spawner_unspawner
+  #   test/test_spawner_unspawner.cpp
+  # )
+  # target_include_directories(test_spawner_unspawner PRIVATE include)
+  # target_link_libraries(test_spawner_unspawner controller_manager test_controller)
 endif()
 
 # Install Python modules
