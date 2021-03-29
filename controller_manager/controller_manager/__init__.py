@@ -14,7 +14,7 @@
 
 from .controller_manager_services import configure_controller, \
         list_controller_types, list_controllers, list_hardware_interfaces, \
-        load_controller, reload_controller_libraries, switch_controllers, unload_controllers
+        load_controller, reload_controller_libraries, switch_controllers, unload_controller
 
 __all__ = [
     'configure_controller',
@@ -24,5 +24,5 @@ __all__ = [
     'load_controller',
     'reload_controller_libraries',
     'switch_controllers',
-    'unload_controllers',
+    'unload_controller',
 ]

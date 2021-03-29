@@ -13,6 +13,8 @@
 # limitations under the License.
 
 
+from controller_manager import list_controllers
+
 from controller_manager_msgs.srv import \
     ConfigureStartController, LoadConfigureController, LoadStartController
 
@@ -95,10 +97,11 @@ class LoadedControllerNameCompleter:
         self.valid_states = valid_states
 
     def __call__(self, prefix, parsed_args, **kwargs):
-        controllers = list_controllers(parsed_args.controller_manager).controller
-        return [
-            c.name for c in controllers
-            if c.state in self.valid_states]
+        with DirectNode(parsed_args) as node:
+            controllers = list_controllers(node, parsed_args.controller_manager).controller
+            return [
+                c.name for c in controllers
+                if c.state in self.valid_states]
 
 
 def add_controller_mgr_parsers(parser):
