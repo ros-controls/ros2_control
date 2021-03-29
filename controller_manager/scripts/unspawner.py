@@ -15,8 +15,9 @@
 
 
 import argparse
-import subprocess
 import sys
+
+from controller_manager import switch_controllers, unload_controller
 
 import rclpy
 from rclpy.node import Node
@@ -40,16 +41,23 @@ def main(args=None):
     node = Node('unspawner_' + controller_name)
     try:
         # Ignore returncode, because message is already printed and we'll try to unload anyway
-        ret = subprocess.run(['ros2', 'control', 'switch_controllers', '--stop-controllers',
-                              controller_name, '--controller-manager', controller_manager_name])
+        ret = switch_controllers(
+            node,
+            controller_manager_name,
+            [controller_name],
+            [],
+            True,
+            True,
+            5.0)
         node.get_logger().info('Stopped controller')
 
-        ret = subprocess.run(['ros2', 'control', 'unload_controller', controller_name,
-                              '--controller-manager', controller_manager_name])
-        if ret.returncode != 0:
-            return ret.returncode
-        else:
-            node.get_logger().info('Unloaded controller')
+        ret = unload_controller(node, controller_manager_name, controller_name)
+        if not ret.ok:
+            node.get_logger().info('Failed to unload controller')
+            return 1
+        node.get_logger().info('Unloaded controller')
+
+        return 0
     finally:
         rclpy.shutdown()
 
