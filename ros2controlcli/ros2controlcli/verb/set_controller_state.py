@@ -43,23 +43,21 @@ class SetControllerStateVerb(VerbExtension):
             try:
                 matched_controller = [c for c in controllers if c.name == args.controller_name][0]
             except IndexError:
-                return 'controller {} does not seem to be loaded'.format(args.controller_name)
+                return f'controller {args.controller_name} does not seem to be loaded'
 
             if args.state == 'configure':
                 if matched_controller.state != 'unconfigured':
-                    return "can't configure {} from its current state {}{}".format(
-                            matched_controller.name, matched_controller.state)
+                    return f"can't configure {matched_controller.name} from its current state {matched_controller.state}"
 
                 response = configure_controller(
                     node, args.controller_manager, args.controller_name)
                 if not response.ok:
                     return 'Error configuring controller, check controller_manager logs'
-                return 'successfully configured {}'.format(args.controller_name)
+                return f'successfully configured {args.controller_name}'
 
             if args.state == 'start':
                 if matched_controller.state != 'inactive':
-                    return "can't start {} from its current state {}".format(
-                            matched_controller.name, matched_controller.state)
+                    return f"can't start {matched_controller.name} from its current state {matched_controller.state}"
                 response = switch_controllers(
                     node,
                     args.controller_manager,
@@ -70,12 +68,12 @@ class SetControllerStateVerb(VerbExtension):
                     5.0)
                 if not response.ok:
                     return 'Error starting controller, check controller_manager logs'
-                return 'successfully started {}'.format(args.controller_name)
+                return f'successfully started {args.controller_name}'
 
             if args.state == 'stop':
                 if matched_controller.state != 'active':
-                    return "can't stop {} from its current state {}".format(
-                            matched_controller.name, matched_controller.state)
+                    return f"can't stop {matched_controller.name} from its current state {matched_controller.state}"
+
                 response = switch_controllers(
                     node,
                     args.controller_manager,
@@ -86,4 +84,4 @@ class SetControllerStateVerb(VerbExtension):
                     5.0)
                 if not response.ok:
                     return 'Error stopping controller, check controller_manager logs'
-                return 'successfully stopped {}'.format(args.controller_name)
+                return f'successfully stopped {args.controller_name}'
