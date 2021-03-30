@@ -32,17 +32,15 @@ def service_caller(service_name, service_type, request):
         rclpy.init()
 
         node = rclpy.create_node(
-            'ros2controlcli_{}_requester'.format(
-                service_name.replace(
-                    '/', '')))
+            f"ros2controlcli_{ service_name.replace('/', '') }_requester"
 
         cli = node.create_client(service_type, service_name)
 
         if not cli.service_is_ready():
-            node.get_logger().debug('waiting for service {} to become available...'
-                                    .format(service_name))
+            node.get_logger().debug(f'waiting for service {service_name} to become available...')
+
             if not cli.wait_for_service(2.0):
-                raise RuntimeError('Could not contact service {}'.format(service_name))
+                raise RuntimeError(f'Could not contact service {service_name}')
 
         node.get_logger().debug('requester: making request: %r\n' % request)
         future = cli.call_async(request)
@@ -59,21 +57,21 @@ def service_caller(service_name, service_type, request):
 def load_configure_controller(controller_manager_name, controller_name):
     request = LoadConfigureController.Request()
     request.name = controller_name
-    return service_caller('{}/load_and_configure_controller'.format(controller_manager_name),
+    return service_caller(f'{controller_manager_name}/load_and_configure_controller',
                           LoadConfigureController, request)
 
 
 def load_start_controller(controller_manager_name, controller_name):
     request = LoadStartController.Request()
     request.name = controller_name
-    return service_caller('{}/load_and_start_controller'.format(controller_manager_name),
+    return service_caller(f'{controller_manager_name}/load_and_start_controller',
                           LoadStartController, request)
 
 
 def configure_start_controller(controller_manager_name, controller_name):
     request = ConfigureStartController.Request()
     request.name = controller_name
-    return service_caller('{}/configure_and_start_controller'.format(controller_manager_name),
+    return service_caller(f'{controller_manager_name}/configure_and_start_controller',
                           ConfigureStartController, request)
 
 
