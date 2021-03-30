@@ -34,4 +34,4 @@ class LoadConfigureControllerVerb(VerbExtension):
         response = load_configure_controller(args.controller_manager, args.controller_name)
         if not response.ok:
             return 'Error loading and configuring controller, check controller_manager logs'
-        return 'Successfully loaded and configured controller {}'.format(args.controller_name)
+        return f'Successfully loaded and configured controller {args.controller_name}'
