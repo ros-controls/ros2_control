@@ -12,8 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from . import launch_utils
+from .controller_manager_services import configure_controller, \
+        list_controller_types, list_controllers, list_hardware_interfaces, \
+        load_controller, reload_controller_libraries, switch_controllers, unload_controller
 
 __all__ = [
-    'launch_utils',
+    'configure_controller',
+    'list_controller_types',
+    'list_controllers',
+    'list_hardware_interfaces',
+    'load_controller',
+    'reload_controller_libraries',
+    'switch_controllers',
+    'unload_controller',
 ]

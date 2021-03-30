@@ -14,10 +14,9 @@
 
 from ros2cli.node.direct import add_arguments
 from ros2cli.verb import VerbExtension
-from ros2controlcli.api import add_controller_mgr_parsers, ControllerNameCompleter, \
-    configure_start_controller
 
-import sys
+from ros2controlcli.api import add_controller_mgr_parsers, configure_start_controller, \
+    ControllerNameCompleter
 
 
 class ConfigureStartControllerVerb(VerbExtension):
@@ -31,8 +30,8 @@ class ConfigureStartControllerVerb(VerbExtension):
         add_controller_mgr_parsers(parser)
 
     def main(self, *, args):
+        print("deprecated warning: Please use either 'load --state' or 'set_state'")
         response = configure_start_controller(args.controller_manager, args.controller_name)
         if not response.ok:
-            print('Error configuring and starting controller, check '
-                  'controller_manager logs', file=sys.stderr)
-        return not response.ok
+            return 'Error configuring and starting controller, check controller_manager logs'
+        return 'Successfully configured and started controller {}'.format(args.controller_name)

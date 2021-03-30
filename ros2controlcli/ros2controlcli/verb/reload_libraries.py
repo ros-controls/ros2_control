@@ -12,11 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from ros2cli.node.direct import add_arguments
-from ros2cli.verb import VerbExtension
-from ros2controlcli.api import add_controller_mgr_parsers, reload_controller_libraries
+from controller_manager import reload_controller_libraries
 
-import sys
+from ros2cli.node.direct import add_arguments
+from ros2cli.node.strategy import NodeStrategy
+from ros2cli.verb import VerbExtension
+
+from ros2controlcli.api import add_controller_mgr_parsers
 
 
 class ReloadLibrariesVerb(VerbExtension):
@@ -30,9 +32,9 @@ class ReloadLibrariesVerb(VerbExtension):
         add_controller_mgr_parsers(parser)
 
     def main(self, *, args):
-        response = reload_controller_libraries(args.controller_manager, force_kill=args.force_kill)
-        if response.ok:
-            print('Reload successful')
-        else:
-            print('Error reloading libraries, check controller_manager logs', file=sys.stderr)
-        return not response.ok
+        with NodeStrategy(args) as node:
+            response = reload_controller_libraries(
+                node, args.controller_manager, force_kill=args.force_kill)
+            if response.ok:
+                return 'Reload successful'
+            return 'Error reloading libraries, check controller_manager logs'

@@ -12,12 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from ros2cli.node.direct import add_arguments
-from ros2cli.verb import VerbExtension
-from ros2controlcli.api import add_controller_mgr_parsers, LoadedControllerNameCompleter, \
-    unload_controller
+from controller_manager import unload_controller
 
-import sys
+from ros2cli.node.direct import add_arguments
+from ros2cli.node.strategy import NodeStrategy
+from ros2cli.verb import VerbExtension
+
+from ros2controlcli.api import add_controller_mgr_parsers, LoadedControllerNameCompleter
 
 
 class UnloadVerb(VerbExtension):
@@ -31,7 +32,8 @@ class UnloadVerb(VerbExtension):
         add_controller_mgr_parsers(parser)
 
     def main(self, *, args):
-        response = unload_controller(args.controller_manager, args.controller_name)
-        if not response.ok:
-            print('Error unloading controllers, check controller_manager logs', file=sys.stderr)
-        return not response.ok
+        with NodeStrategy(args) as node:
+            response = unload_controller(node, args.controller_manager, args.controller_name)
+            if not response.ok:
+                return 'Error unloading controllers, check controller_manager logs'
+            return 'Successfully unloaded controller {}'.format(args.controller_name)

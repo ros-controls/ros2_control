@@ -12,12 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from ros2cli.node.direct import add_arguments
-from ros2cli.verb import VerbExtension
-from ros2controlcli.api import add_controller_mgr_parsers, LoadedControllerNameCompleter, \
-    switch_controllers
+from controller_manager import switch_controllers
 
-import sys
+from ros2cli.node.direct import add_arguments
+from ros2cli.node.strategy import NodeStrategy
+from ros2cli.verb import VerbExtension
+
+from ros2controlcli.api import add_controller_mgr_parsers, LoadedControllerNameCompleter
 
 
 class SwitchVerb(VerbExtension):
@@ -50,13 +51,15 @@ class SwitchVerb(VerbExtension):
         add_controller_mgr_parsers(parser)
 
     def main(self, *, args):
-        response = switch_controllers(
-            args.controller_manager,
-            args.stop_controllers,
-            args.start_controllers,
-            args.strict,
-            args.start_asap,
-            args.switch_timeout)
-        if not response.ok:
-            print('Error switching controllers, check controller_manager logs', file=sys.stderr)
-        return not response.ok
+        with NodeStrategy(args) as node:
+            response = switch_controllers(
+                node,
+                args.controller_manager,
+                args.stop_controllers,
+                args.start_controllers,
+                args.strict,
+                args.start_asap,
+                args.switch_timeout)
+            if not response.ok:
+                return 'Error switching controllers, check controller_manager logs'
+            return 'Successfully switched controllers'
