@@ -44,13 +44,13 @@ def service_caller(service_name, service_type, request):
             if not cli.wait_for_service(2.0):
                 raise RuntimeError('Could not contact service {}'.format(service_name))
 
-        node.get_logger().debug('requester: making request: %r\n' % request)
+        node.get_logger().debug('requester: making request: {}\n'.format(request))
         future = cli.call_async(request)
         rclpy.spin_until_future_complete(node, future)
         if future.result() is not None:
             return future.result()
         else:
-            raise RuntimeError('Exception while calling service: %r' % future.exception())
+            raise RuntimeError('Exception while calling service: {}'.format(future.exception()))
     finally:
         node.destroy_node()
         rclpy.shutdown()
