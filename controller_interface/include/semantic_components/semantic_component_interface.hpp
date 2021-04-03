@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SEMANTIC_COMPONENTS__SEMANTIC_COMPONENT_INTERFACE_HPP
-#define SEMANTIC_COMPONENTS__SEMANTIC_COMPONENT_INTERFACE_HPP
+#ifndef SEMANTIC_COMPONENTS__SEMANTIC_COMPONENT_INTERFACE_HPP_
+#define SEMANTIC_COMPONENTS__SEMANTIC_COMPONENT_INTERFACE_HPP_
 
 #include <string>
 #include <vector>
@@ -27,7 +27,7 @@ namespace semantic_components
 class SemanticComponentInterface
 {
 public:
-  SemanticComponentInterface(const std::string & name, size_t size = 0)
+  explicit SemanticComponentInterface(const std::string & name, size_t size = 0)
   {
     name_ = name;
     interface_names_.reserve(size);
@@ -86,9 +86,8 @@ protected:
   std::string name_;
   std::vector<std::string> interface_names_;
   std::vector<std::reference_wrapper<hardware_interface::LoanedStateInterface>> state_interfaces_;
-
 };
 
 }  // namespace semantic_components
 
-#endif  // SEMANTIC_COMPONENTS__SEMANTIC_COMPONENT_INTERFACE_HPP
+#endif  // SEMANTIC_COMPONENTS__SEMANTIC_COMPONENT_INTERFACE_HPP_

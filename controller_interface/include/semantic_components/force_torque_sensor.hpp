@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SEMANTIC_COMPONENTS__FORCE_TORQUE_SENSOR_6D_HPP
-#define SEMANTIC_COMPONENTS__FORCE_TORQUE_SENSOR_6D_HPP
+#ifndef SEMANTIC_COMPONENTS__FORCE_TORQUE_SENSOR_HPP_
+#define SEMANTIC_COMPONENTS__FORCE_TORQUE_SENSOR_HPP_
 
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -29,7 +30,7 @@ class ForceTorqueSensor : public SemanticComponentInterface
 {
 public:
   /// Constructor for "standard" 6D FTS
-  ForceTorqueSensor(const std::string & name)
+  explicit ForceTorqueSensor(const std::string & name)
   : SemanticComponentInterface(name, 6)
   {
     existing_axes_.resize(6, true);
@@ -51,21 +52,23 @@ public:
    * The name should be in the following order:
    *   force X, force Y, force Z, torque X, torque Y, torque Z.
    */
-  ForceTorqueSensor(const std::string & interface_force_X, const std::string & interface_force_Y,
-                    const std::string & interface_force_Z, const std::string & interface_torque_X,
-                    const std::string & interface_torque_Y, const std::string & interface_torque_Z
-  ) : SemanticComponentInterface ("", 6)
+  ForceTorqueSensor(
+    const std::string & interface_force_X, const std::string & interface_force_Y,
+    const std::string & interface_force_Z, const std::string & interface_torque_X,
+    const std::string & interface_torque_Y, const std::string & interface_torque_Z
+  )
+  : SemanticComponentInterface("", 6)
   {
     auto check_and_add_interface =
       [this](const std::string & interface_name)
-    {
-      if (!interface_name.empty()) {
-        interface_names_.emplace_back(interface_name);
-        existing_axes_.emplace_back(true);
-      } else {
-        existing_axes_.emplace_back(false);
-      }
-    };
+      {
+        if (!interface_name.empty()) {
+          interface_names_.emplace_back(interface_name);
+          existing_axes_.emplace_back(true);
+        } else {
+          existing_axes_.emplace_back(false);
+        }
+      };
 
     existing_axes_.reserve(6);
     check_and_add_interface(interface_force_X);
@@ -108,7 +111,7 @@ public:
   {
     std::vector<double> torques;
     torques.reserve(3);
-    size_t nr_forces = std::count(existing_axes_.begin(), existing_axes_.begin()+3, true);
+    size_t nr_forces = std::count(existing_axes_.begin(), existing_axes_.begin() + 3, true);
     size_t interface_counter = 0;
     for (size_t i = 3; i < 6; ++i) {
       if (existing_axes_[i]) {
@@ -133,15 +136,15 @@ public:
   {
     size_t interface_counter = 0;
     auto assign_to_message_field =
-      [this, &interface_counter = interface_counter] (const bool axis_exists)
-    {
-      if (axis_exists) {
-        return state_interfaces_[interface_counter].get().get_value();
-        ++interface_counter;
-      } else {
-        return std::numeric_limits<double>::quiet_NaN();
-      }
-    };
+      [this, & interface_counter = interface_counter](const bool axis_exists)
+      {
+        if (axis_exists) {
+          return state_interfaces_[interface_counter].get().get_value();
+          ++interface_counter;
+        } else {
+          return std::numeric_limits<double>::quiet_NaN();
+        }
+      };
 
     geometry_msgs::msg::Wrench message;
 
@@ -159,9 +162,8 @@ protected:
   /// Vector with existing axes for sensors with less then 6D axes.
   // Order is: force X, force Y, force Z, torque X, torque Y, torque Z.
   std::vector<bool> existing_axes_;
-
 };
 
 }  // namespace semantic_components
 
-#endif  // SEMANTIC_COMPONENTS__FORCE_TORQUE_SENSOR_6D_HPP
+#endif  // SEMANTIC_COMPONENTS__FORCE_TORQUE_SENSOR_HPP_

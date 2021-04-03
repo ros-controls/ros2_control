@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef CONTROLLER_INTERFACE__HELPERS_HPP
-#define CONTROLLER_INTERFACE__HELPERS_HPP
+#ifndef CONTROLLER_INTERFACE__HELPERS_HPP_
+#define CONTROLLER_INTERFACE__HELPERS_HPP_
 
 #include <functional>
 #include <string>
@@ -45,13 +45,11 @@ bool get_ordered_interfaces(
   for (const auto & name : ordered_names) {
     for (auto & interface : unordered_interfaces) {
       if (!interface_type.empty()) {
-        if ((name == interface.get_name()) && (interface_type == interface.get_interface_name()))
-        {
+        if ((name == interface.get_name()) && (interface_type == interface.get_interface_name())) {
           ordered_interfaces.push_back(std::ref(interface));
         }
       } else {
-        if (name == interface.get_full_name())
-        {
+        if (name == interface.get_full_name()) {
           ordered_interfaces.push_back(std::ref(interface));
         }
       }
@@ -63,4 +61,4 @@ bool get_ordered_interfaces(
 
 }  // namespace controller_interface
 
-#endif  // CONTROLLER_INTERFACE__HELPERS_HPP
+#endif  // CONTROLLER_INTERFACE__HELPERS_HPP_
