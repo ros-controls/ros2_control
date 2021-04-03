@@ -75,6 +75,11 @@ public:
     return interface_name_;
   }
 
+  const std::string get_full_name() const
+  {
+    return name_ + "/" + interface_name_;
+  }
+
   double get_value() const
   {
     THROW_ON_NULLPTR(value_ptr_);
