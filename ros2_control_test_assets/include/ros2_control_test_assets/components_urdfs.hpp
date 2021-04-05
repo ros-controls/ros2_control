@@ -281,7 +281,7 @@ const auto valid_urdf_ros2_control_system_muti_joints_transmission =
     <transmission name="transmission1">
       <plugin>transmission_interface/SomeComplex2by2Transmission</plugin>
       <param name="joints">{joint1, joint2}</param>
-      <param name="output">{output2, output2}</param>
+      <param name="output">{output1, output2}</param>
       <param name="joint1_output1">1.5</param>
       <param name="joint1_output2">3.2</param>
       <param name="joint2_output1">3.1</param>
