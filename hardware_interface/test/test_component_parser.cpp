@@ -390,7 +390,7 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_multi_joints_tr
 {
   std::string urdf_to_test =
     std::string(ros2_control_test_assets::urdf_head) +
-    ros2_control_test_assets::valid_urdf_ros2_control_system_muti_joints_transmission +
+    ros2_control_test_assets::valid_urdf_ros2_control_system_multi_joints_transmission +
     ros2_control_test_assets::urdf_tail;
   const auto control_hardware = parse_control_resources_from_urdf(urdf_to_test);
   ASSERT_THAT(control_hardware, SizeIs(1));
