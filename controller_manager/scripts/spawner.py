@@ -14,6 +14,8 @@
 # limitations under the License.
 
 import argparse
+import errno
+import os
 import subprocess
 import sys
 import time
@@ -62,6 +64,10 @@ def main(args=None):
     controller_manager_name = args.controller_manager
     param_file = args.param_file
     controller_type = args.controller_type
+
+    if param_file and not os.path.isfile(param_file):
+        raise FileNotFoundError(
+            errno.ENOENT, os.strerror(errno.ENOENT), param_file)
 
     node = Node('spawner_' + controller_name)
     try:
