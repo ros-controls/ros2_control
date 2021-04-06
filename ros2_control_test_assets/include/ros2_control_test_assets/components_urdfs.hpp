@@ -256,7 +256,7 @@ const auto valid_urdf_ros2_control_actuator_modular_robot_sensors =
 
 // 7. Modular Robots with separate communication to each "actuator" with multi joints
 // Example for complex transmission (multi-joint/multi-actuator) - (system component is used)
-const auto valid_urdf_ros2_control_system_muti_joints_transmission =
+const auto valid_urdf_ros2_control_system_multi_joints_transmission =
   R"(
   <ros2_control name="RRBotModularWrist" type="system">
     <hardware>
@@ -281,7 +281,7 @@ const auto valid_urdf_ros2_control_system_muti_joints_transmission =
     <transmission name="transmission1">
       <plugin>transmission_interface/SomeComplex2by2Transmission</plugin>
       <param name="joints">{joint1, joint2}</param>
-      <param name="output">{output2, output2}</param>
+      <param name="output">{output1, output2}</param>
       <param name="joint1_output1">1.5</param>
       <param name="joint1_output2">3.2</param>
       <param name="joint2_output1">3.1</param>
