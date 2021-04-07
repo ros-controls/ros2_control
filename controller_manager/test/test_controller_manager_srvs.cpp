@@ -168,7 +168,7 @@ TEST_F(TestControllerManagerSrvs, list_controllers_srv) {
   ASSERT_EQ("inactive", result->controller[0].state);
 
   ASSERT_EQ(
-    controller_interface::return_type::SUCCESS,
+    controller_interface::return_type::OK,
     cm_->unload_controller(test_controller::TEST_CONTROLLER_NAME));
   result = call_service_and_wait(*client, request, srv_executor);
   ASSERT_EQ(0u, result->controller.size());

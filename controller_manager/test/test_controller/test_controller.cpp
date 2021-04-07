@@ -30,7 +30,7 @@ controller_interface::return_type
 TestController::update()
 {
   ++internal_counter;
-  return controller_interface::return_type::SUCCESS;
+  return controller_interface::return_type::OK;
 }
 
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
