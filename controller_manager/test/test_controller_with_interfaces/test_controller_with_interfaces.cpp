@@ -29,7 +29,7 @@ TestControllerWithInterfaces::TestControllerWithInterfaces()
 controller_interface::return_type
 TestControllerWithInterfaces::update()
 {
-  return controller_interface::return_type::SUCCESS;
+  return controller_interface::return_type::OK;
 }
 
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn

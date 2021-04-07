@@ -117,7 +117,7 @@ TEST_F(TestLoadController, configure_controller)
     abstract_test_controller1.c->get_current_state().id());
 
   EXPECT_EQ(
-    cm_->configure_controller(controller_name1), controller_interface::return_type::SUCCESS);
+    cm_->configure_controller(controller_name1), controller_interface::return_type::OK);
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
     abstract_test_controller1.c->get_current_state().id());
@@ -142,7 +142,7 @@ TEST_F(TestLoadController, configure_controller)
       "switch_controller should be blocking until next update cycle";
     cm_->update();
     EXPECT_EQ(
-      controller_interface::return_type::SUCCESS,
+      controller_interface::return_type::OK,
       switch_future.get()
     );
 
@@ -174,7 +174,7 @@ TEST_F(TestLoadController, configure_controller)
       "switch_controller should be blocking until next update cycle";
     cm_->update();
     EXPECT_EQ(
-      controller_interface::return_type::SUCCESS,
+      controller_interface::return_type::OK,
       switch_future.get()
     );
 
@@ -198,7 +198,7 @@ TEST_F(TestLoadController, configure_controller)
   // Configure from inactive state
   test_controller->simulate_cleanup_failure = false;
   EXPECT_EQ(
-    cm_->configure_controller(controller_name1), controller_interface::return_type::SUCCESS);
+    cm_->configure_controller(controller_name1), controller_interface::return_type::OK);
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
     abstract_test_controller1.c->get_current_state().id());
@@ -221,20 +221,20 @@ TEST_F(TestLoadController, switch_controller_empty)
     std::vector<std::string> stop_controllers = {};
 
     EXPECT_EQ(
-      controller_interface::return_type::SUCCESS,
+      controller_interface::return_type::OK,
       cm_->switch_controller(
         start_controllers, stop_controllers,
         STRICT, true, rclcpp::Duration(0, 0))
     ) << "Switch with no controllers specified";
     EXPECT_EQ(
-      controller_interface::return_type::SUCCESS,
+      controller_interface::return_type::OK,
       cm_->switch_controller(
         start_controllers, stop_controllers,
         BEST_EFFORT, true, rclcpp::Duration(0, 0))
     ) << "Switch with no controllers specified";
 
     EXPECT_EQ(
-      controller_interface::return_type::SUCCESS,
+      controller_interface::return_type::OK,
       cm_->switch_controller(
         start_controllers, stop_controllers,
         UNSPECIFIED, true, rclcpp::Duration(0, 0))
@@ -250,14 +250,14 @@ TEST_F(TestLoadController, switch_controller_empty)
     ) << "STRICT switch with nonexistent controller specified";
 
     EXPECT_EQ(
-      controller_interface::return_type::SUCCESS,
+      controller_interface::return_type::OK,
       cm_->switch_controller(
         start_controllers, stop_controllers,
         BEST_EFFORT, true, rclcpp::Duration(0, 0))
     ) << "BEST_EFFORT switch with nonexistent controller specified";
 
     EXPECT_EQ(
-      controller_interface::return_type::SUCCESS,
+      controller_interface::return_type::OK,
       cm_->switch_controller(
         start_controllers, stop_controllers,
         UNSPECIFIED, true, rclcpp::Duration(0, 0))
@@ -275,7 +275,7 @@ TEST_F(TestLoadController, switch_controller_empty)
     ) << "STRICT switch with nonexistent controller specified";
 
     EXPECT_EQ(
-      controller_interface::return_type::SUCCESS,
+      controller_interface::return_type::OK,
       cm_->switch_controller(
         start_controllers, stop_controllers,
         BEST_EFFORT, true, rclcpp::Duration(0, 0))
@@ -291,7 +291,7 @@ TEST_F(TestLoadController, switch_controller_empty)
     ) << "STRICT switch with nonexistent controller specified";
 
     EXPECT_EQ(
-      controller_interface::return_type::SUCCESS,
+      controller_interface::return_type::OK,
       cm_->switch_controller(
         start_controllers, stop_controllers,
         BEST_EFFORT, true, rclcpp::Duration(0, 0))
@@ -326,7 +326,7 @@ TEST_F(TestLoadController, switch_controller)
     ) << "STRICT switch with stopped controller specified";
 
     EXPECT_EQ(
-      controller_interface::return_type::SUCCESS,
+      controller_interface::return_type::OK,
       cm_->switch_controller(
         start_controllers, stop_controllers,
         BEST_EFFORT, true, rclcpp::Duration(0, 0))
@@ -374,7 +374,7 @@ TEST_F(TestLoadController, switch_controller)
       "switch_controller should be blocking until next update cycle";
     cm_->update();
     EXPECT_EQ(
-      controller_interface::return_type::SUCCESS,
+      controller_interface::return_type::OK,
       switch_future.get()
     );
 
@@ -396,7 +396,7 @@ TEST_F(TestLoadController, switch_controller)
       "switch_controller should be blocking until next update cycle";
     cm_->update();
     EXPECT_EQ(
-      controller_interface::return_type::SUCCESS,
+      controller_interface::return_type::OK,
       switch_future.get()
     );
 
@@ -423,7 +423,7 @@ TEST_F(TestLoadController, switch_controller)
       "switch_controller should be blocking until next update cycle";
     cm_->update();
     EXPECT_EQ(
-      controller_interface::return_type::SUCCESS,
+      controller_interface::return_type::OK,
       switch_future.get()
     );
 
@@ -477,7 +477,7 @@ TEST_F(TestLoadController, switch_multiple_controllers)
       "switch_controller should be blocking until next update cycle";
     cm_->update();
     EXPECT_EQ(
-      controller_interface::return_type::SUCCESS,
+      controller_interface::return_type::OK,
       switch_future.get()
     );
 
@@ -508,7 +508,7 @@ TEST_F(TestLoadController, switch_multiple_controllers)
       "switch_controller should be blocking until next update cycle";
     cm_->update();
     EXPECT_EQ(
-      controller_interface::return_type::SUCCESS,
+      controller_interface::return_type::OK,
       switch_future.get()
     );
 
@@ -541,7 +541,7 @@ TEST_F(TestLoadController, switch_multiple_controllers)
       "switch_controller should be blocking until next update cycle";
     cm_->update();
     EXPECT_EQ(
-      controller_interface::return_type::SUCCESS,
+      controller_interface::return_type::OK,
       switch_future.get()
     );
 
@@ -571,7 +571,7 @@ TEST_F(TestLoadController, switch_multiple_controllers)
       "switch_controller should be blocking until next update cycle";
     cm_->update();
     EXPECT_EQ(
-      controller_interface::return_type::SUCCESS,
+      controller_interface::return_type::OK,
       switch_future.get()
     );
 
@@ -601,7 +601,7 @@ TEST_F(TestLoadController, switch_multiple_controllers)
       "switch_controller should be blocking until next update cycle";
     cm_->update();
     EXPECT_EQ(
-      controller_interface::return_type::SUCCESS,
+      controller_interface::return_type::OK,
       switch_future.get()
     );
 

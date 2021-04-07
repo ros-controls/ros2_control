@@ -48,10 +48,10 @@ TEST_F(TestReleaseInterfaces, switch_controllers_same_interface)
 
   // Configure controllers
   ASSERT_EQ(
-    controller_interface::return_type::SUCCESS,
+    controller_interface::return_type::OK,
     cm_->configure_controller(controller_name1));
   ASSERT_EQ(
-    controller_interface::return_type::SUCCESS,
+    controller_interface::return_type::OK,
     cm_->configure_controller(controller_name2));
 
   ASSERT_EQ(
@@ -78,7 +78,7 @@ TEST_F(TestReleaseInterfaces, switch_controllers_same_interface)
       "switch_controller should be blocking until next update cycle";
     cm_->update();
     EXPECT_EQ(
-      controller_interface::return_type::SUCCESS,
+      controller_interface::return_type::OK,
       switch_future.get()
     );
     ASSERT_EQ(
@@ -107,7 +107,7 @@ TEST_F(TestReleaseInterfaces, switch_controllers_same_interface)
       "switch_controller should be blocking until next update cycle";
     cm_->update();
     EXPECT_EQ(
-      controller_interface::return_type::SUCCESS,
+      controller_interface::return_type::OK,
       switch_future.get()
     );
     ASSERT_EQ(
@@ -135,7 +135,7 @@ TEST_F(TestReleaseInterfaces, switch_controllers_same_interface)
       "switch_controller should be blocking until next update cycle";
     cm_->update();
     EXPECT_EQ(
-      controller_interface::return_type::SUCCESS,
+      controller_interface::return_type::OK,
       switch_future.get()
     );
     ASSERT_EQ(
@@ -163,7 +163,7 @@ TEST_F(TestReleaseInterfaces, switch_controllers_same_interface)
       "switch_controller should be blocking until next update cycle";
     cm_->update();
     EXPECT_EQ(
-      controller_interface::return_type::SUCCESS,
+      controller_interface::return_type::OK,
       switch_future.get()
     );
     ASSERT_EQ(
@@ -220,7 +220,7 @@ TEST_F(TestReleaseInterfaces, switch_controllers_same_interface)
       "switch_controller should be blocking until next update cycle";
     cm_->update();
     EXPECT_EQ(
-      controller_interface::return_type::SUCCESS,
+      controller_interface::return_type::OK,
       switch_future.get()
     );
     ASSERT_EQ(
@@ -248,7 +248,7 @@ TEST_F(TestReleaseInterfaces, switch_controllers_same_interface)
       "switch_controller should be blocking until next update cycle";
     cm_->update();
     EXPECT_EQ(
-      controller_interface::return_type::SUCCESS,
+      controller_interface::return_type::OK,
       switch_future.get()
     );
     ASSERT_EQ(
