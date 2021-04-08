@@ -20,6 +20,7 @@
 #include <string>
 #include <vector>
 
+#include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "transmission_interface/transmission.hpp"
 #include "transmission_interface/exception.hpp"
 
@@ -189,17 +190,17 @@ void SimpleTransmission::configure(
     throw Exception("Actuator names given to transmissions should be identical");
   }
 
-  joint_position_ = get_by_interface(joint_handles, "position");
-  joint_velocity_ = get_by_interface(joint_handles, "velocity");
-  joint_effort_ = get_by_interface(joint_handles, "effort");
+  joint_position_ = get_by_interface(joint_handles, hardware_interface::HW_IF_POSITION);
+  joint_velocity_ = get_by_interface(joint_handles, hardware_interface::HW_IF_VELOCITY);
+  joint_effort_ = get_by_interface(joint_handles, hardware_interface::HW_IF_EFFORT);
 
   if (!joint_position_ && !joint_velocity_ && !joint_effort_) {
     throw Exception("None of the provided joint handles are valid or from the required interfaces");
   }
 
-  actuator_position_ = get_by_interface(actuator_handles, "position");
-  actuator_velocity_ = get_by_interface(actuator_handles, "velocity");
-  actuator_effort_ = get_by_interface(actuator_handles, "effort");
+  actuator_position_ = get_by_interface(actuator_handles, hardware_interface::HW_IF_POSITION);
+  actuator_velocity_ = get_by_interface(actuator_handles, hardware_interface::HW_IF_VELOCITY);
+  actuator_effort_ = get_by_interface(actuator_handles, hardware_interface::HW_IF_EFFORT);
 
   if (!actuator_position_ && !actuator_velocity_ && !actuator_effort_) {
     throw Exception("None of the provided joint handles are valid or from the required interfaces");

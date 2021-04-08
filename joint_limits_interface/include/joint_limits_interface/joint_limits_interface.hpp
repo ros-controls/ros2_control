@@ -18,6 +18,7 @@
 #define JOINT_LIMITS_INTERFACE__JOINT_LIMITS_INTERFACE_HPP_
 
 #include <hardware_interface/joint_handle.hpp>
+#include <hardware_interface/types/hardware_interface_type_values.hpp>
 
 #include <rclcpp/duration.hpp>
 #include <rclcpp/rclcpp.hpp>
@@ -48,8 +49,8 @@ public:
   JointLimitHandle()
   : prev_pos_(std::numeric_limits<double>::quiet_NaN()),
     prev_vel_(0.0),
-    jposh_("position"),
-    jvelh_("velocity"),
+    jposh_(hardware_interface::HW_IF_POSITION),
+    jvelh_(hardware_interface::HW_IF_VELOCITY),
     jcmdh_("position_command")
   {}
 
@@ -58,7 +59,7 @@ public:
     const hardware_interface::JointHandle & jcmdh,
     const JointLimits & limits)
   : jposh_(jposh),
-    jvelh_("velocity"),
+    jvelh_(hardware_interface::HW_IF_VELOCITY),
     jcmdh_(jcmdh),
     limits_(limits),
     prev_pos_(std::numeric_limits<double>::quiet_NaN()),
@@ -358,7 +359,8 @@ public:
     const hardware_interface::JointHandle & jposh,
     const hardware_interface::JointHandle & jcmdh,
     const joint_limits_interface::JointLimits & limits)
-  : EffortJointSaturationHandle(jposh, hardware_interface::JointHandle("velocity"), jcmdh, limits)
+  : EffortJointSaturationHandle(jposh,
+      hardware_interface::JointHandle(hardware_interface::HW_IF_VELOCITY), jcmdh, limits)
   {
   }
 
@@ -427,7 +429,8 @@ public:
     const joint_limits_interface::JointLimits & limits,
     const joint_limits_interface::SoftJointLimits & soft_limits)
   : EffortJointSoftLimitsHandle(jposh,
-      hardware_interface::JointHandle("velocity"), jcmdh, limits, soft_limits)
+      hardware_interface::JointHandle(
+        hardware_interface::HW_IF_VELOCITY), jcmdh, limits, soft_limits)
   {
   }
 
@@ -496,7 +499,8 @@ public:
     const hardware_interface::JointHandle & jvelh,  // currently unused
     const hardware_interface::JointHandle & jcmdh,
     const joint_limits_interface::JointLimits & limits)
-  : JointLimitHandle(hardware_interface::JointHandle("position"), jvelh, jcmdh, limits)
+  : JointLimitHandle(hardware_interface::JointHandle(
+        hardware_interface::HW_IF_POSITION), jvelh, jcmdh, limits)
   {
     if (!limits.has_velocity_limits) {
       throw joint_limits_interface::JointLimitsInterfaceException(
@@ -508,8 +512,8 @@ public:
   VelocityJointSaturationHandle(
     const hardware_interface::JointHandle & jcmdh,
     const joint_limits_interface::JointLimits & limits)
-  : JointLimitHandle(hardware_interface::JointHandle("position"),
-      hardware_interface::JointHandle("velocity"), jcmdh, limits)
+  : JointLimitHandle(hardware_interface::JointHandle(hardware_interface::HW_IF_POSITION),
+      hardware_interface::JointHandle(hardware_interface::HW_IF_VELOCITY), jcmdh, limits)
   {
     if (!limits.has_velocity_limits) {
       throw joint_limits_interface::JointLimitsInterfaceException(
