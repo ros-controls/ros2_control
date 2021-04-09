@@ -61,6 +61,7 @@ public:
 
   HandleType with_value_ptr(double * value_ptr)
   {
+    [[deprecated("with_value_ptr is deprecated and will be removed in the next release")]]
     return HandleType(name_, interface_name_, value_ptr);
   }
 
