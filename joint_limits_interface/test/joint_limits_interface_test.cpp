@@ -16,6 +16,7 @@
 
 #include <gtest/gtest.h>
 
+#include <hardware_interface/types/hardware_interface_type_values.hpp>
 #include <joint_limits_interface/joint_limits_interface.hpp>
 
 #include <rclcpp/logging.hpp>
@@ -64,9 +65,9 @@ public:
     name("joint_name"),
     period(0, 100000000),
     cmd_handle(hardware_interface::JointHandle(name, "position_command", &cmd)),
-    pos_handle(hardware_interface::JointHandle(name, "position", &pos)),
-    vel_handle(hardware_interface::JointHandle(name, "velocity", &vel)),
-    eff_handle(hardware_interface::JointHandle(name, "effort", &eff))
+    pos_handle(hardware_interface::JointHandle(name, hardware_interface::HW_IF_POSITION, &pos)),
+    vel_handle(hardware_interface::JointHandle(name, hardware_interface::HW_IF_VELOCITY, &vel)),
+    eff_handle(hardware_interface::JointHandle(name, hardware_interface::HW_IF_EFFORT, &eff))
   {
     limits.has_position_limits = true;
     limits.min_position = -1.0;
@@ -491,9 +492,15 @@ public:
     cmd2_handle(std::make_shared<hardware_interface::JointHandle>(
         name2, "position_command",
         &cmd2)),
-    pos2_handle(std::make_shared<hardware_interface::JointHandle>(name2, "position", &pos2)),
-    vel2_handle(std::make_shared<hardware_interface::JointHandle>(name2, "velocity", &vel2)),
-    eff2_handle(std::make_shared<hardware_interface::JointHandle>(name2, "effort", &eff2))
+    pos2_handle(std::make_shared<hardware_interface::JointHandle>(
+        name2,
+        hardware_interface::HW_IF_POSITION, &pos2)),
+    vel2_handle(std::make_shared<hardware_interface::JointHandle>(
+        name2,
+        hardware_interface::HW_IF_VELOCITY, &vel2)),
+    eff2_handle(std::make_shared<hardware_interface::JointHandle>(
+        name2,
+        hardware_interface::HW_IF_EFFORT, &eff2))
   {}
 
 protected:
