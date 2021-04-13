@@ -1,6 +1,5 @@
-name: Test ros2_control
+name: Build & Test ros2_control with source-based setup
 on:
-  pull_request:
   push:
     branches:
       - master
@@ -9,19 +8,6 @@ on:
     - cron: '17 8 * * *'
 
 jobs:
-  ci_binary:
-    name: Foxy binary job
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        env:
-          - {ROS_DISTRO: foxy, ROS_REPO: main}
-          - {ROS_DISTRO: foxy, ROS_REPO: testing}
-    steps:
-      - uses: actions/checkout@v1
-      - uses: ros-industrial/industrial_ci@master
-        env: ${{matrix.env}}
-
   ci_source:
     name: Foxy source job
     runs-on: ubuntu-20.04
