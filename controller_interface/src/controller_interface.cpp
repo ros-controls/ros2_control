@@ -34,6 +34,17 @@ ControllerInterface::init(const std::string & controller_name)
   return return_type::OK;
 }
 
+return_type
+ControllerInterface::init(const std::string & controller_name, rclcpp::NodeOptions & node_options)
+{
+  node_ = std::make_shared<rclcpp::Node>(
+    controller_name,
+    node_options.allow_undeclared_parameters(true));
+  lifecycle_state_ = rclcpp_lifecycle::State(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, "unconfigured");
+  return return_type::OK;
+}
+
 const rclcpp_lifecycle::State & ControllerInterface::configure()
 {
   if (lifecycle_state_.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED) {
