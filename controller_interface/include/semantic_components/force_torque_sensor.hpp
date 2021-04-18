@@ -33,7 +33,6 @@ public:
   explicit ForceTorqueSensor(const std::string & name)
   : SemanticComponentInterface(name, 6)
   {
-    existing_axes_.resize(6, true);
     // If 6D FTS use standard names
     interface_names_.emplace_back(name_ + "/" + "force.x");
     interface_names_.emplace_back(name_ + "/" + "force.y");
@@ -53,30 +52,29 @@ public:
    *   force X, force Y, force Z, torque X, torque Y, torque Z.
    */
   ForceTorqueSensor(
-    const std::string & interface_force_X, const std::string & interface_force_Y,
-    const std::string & interface_force_Z, const std::string & interface_torque_X,
-    const std::string & interface_torque_Y, const std::string & interface_torque_Z
+    const std::string & interface_force_x, const std::string & interface_force_y,
+    const std::string & interface_force_z, const std::string & interface_torque_x,
+    const std::string & interface_torque_y, const std::string & interface_torque_z
   )
   : SemanticComponentInterface("", 6)
   {
     auto check_and_add_interface =
-      [this](const std::string & interface_name)
+      [this](const std::string & interface_name, const int index)
       {
         if (!interface_name.empty()) {
           interface_names_.emplace_back(interface_name);
-          existing_axes_.emplace_back(true);
+          existing_axes_[index] = true;
         } else {
-          existing_axes_.emplace_back(false);
+          existing_axes_[index] = false;
         }
       };
 
-    existing_axes_.reserve(6);
-    check_and_add_interface(interface_force_X);
-    check_and_add_interface(interface_force_Y);
-    check_and_add_interface(interface_force_Z);
-    check_and_add_interface(interface_torque_X);
-    check_and_add_interface(interface_torque_Y);
-    check_and_add_interface(interface_torque_Z);
+    check_and_add_interface(interface_force_x, 1);
+    check_and_add_interface(interface_force_y, 2);
+    check_and_add_interface(interface_force_z, 3);
+    check_and_add_interface(interface_torque_x, 4);
+    check_and_add_interface(interface_torque_y, 5);
+    check_and_add_interface(interface_torque_z, 6);
   }
 
   /// Return forces.
@@ -85,17 +83,16 @@ public:
    *
    * \return vector of size 3 with force values.
    */
-  std::vector<double> get_forces() const
+  std::array<double, 3> get_forces() const
   {
-    std::vector<double> forces;
-    forces.reserve(3);
+    std::array<double, 3> forces;
     size_t interface_counter = 0;
     for (size_t i = 0; i < 3; ++i) {
       if (existing_axes_[i]) {
-        forces.emplace_back(state_interfaces_[interface_counter].get().get_value());
+        forces[i] = state_interfaces_[interface_counter].get().get_value();
         ++interface_counter;
       } else {
-        forces.emplace_back(std::numeric_limits<double>::quiet_NaN());
+        forces[i] = std::numeric_limits<double>::quiet_NaN();
       }
     }
     return forces;
@@ -107,18 +104,17 @@ public:
    *
    * \return vector of size 3 with torque values.
    */
-  std::vector<double> get_torques() const
+  std::array<double, 3> get_torques() const
   {
-    std::vector<double> torques;
-    torques.reserve(3);
+    std::array<double, 3> torques;
     size_t nr_forces = std::count(existing_axes_.begin(), existing_axes_.begin() + 3, true);
     size_t interface_counter = 0;
     for (size_t i = 3; i < 6; ++i) {
       if (existing_axes_[i]) {
-        torques.emplace_back(state_interfaces_[nr_forces + interface_counter].get().get_value());
+        torques[i] = state_interfaces_[nr_forces + interface_counter].get().get_value();
         ++interface_counter;
       } else {
-        torques.emplace_back(std::numeric_limits<double>::quiet_NaN());
+        torques[i] = std::numeric_limits<double>::quiet_NaN();
       }
     }
     return torques;
@@ -139,8 +135,8 @@ public:
       [this, & interface_counter = interface_counter](const bool axis_exists)
       {
         if (axis_exists) {
-          return state_interfaces_[interface_counter].get().get_value();
           ++interface_counter;
+          return state_interfaces_[interface_counter].get().get_value();
         } else {
           return std::numeric_limits<double>::quiet_NaN();
         }
@@ -161,7 +157,7 @@ public:
 protected:
   /// Vector with existing axes for sensors with less then 6D axes.
   // Order is: force X, force Y, force Z, torque X, torque Y, torque Z.
-  std::vector<bool> existing_axes_;
+  std::array<bool, 6> existing_axes_;
 };
 
 }  // namespace semantic_components
