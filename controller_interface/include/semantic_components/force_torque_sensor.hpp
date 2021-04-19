@@ -69,12 +69,12 @@ public:
         }
       };
 
-    check_and_add_interface(interface_force_x, 1);
-    check_and_add_interface(interface_force_y, 2);
-    check_and_add_interface(interface_force_z, 3);
-    check_and_add_interface(interface_torque_x, 4);
-    check_and_add_interface(interface_torque_y, 5);
-    check_and_add_interface(interface_torque_z, 6);
+    check_and_add_interface(interface_force_x, 0);
+    check_and_add_interface(interface_force_y, 1);
+    check_and_add_interface(interface_force_z, 2);
+    check_and_add_interface(interface_torque_x, 3);
+    check_and_add_interface(interface_torque_y, 4);
+    check_and_add_interface(interface_torque_z, 5);
   }
 
   /// Return forces.
@@ -134,12 +134,12 @@ public:
     auto assign_to_message_field =
       [this, & interface_counter = interface_counter](const bool axis_exists)
       {
+        double return_value = std::numeric_limits<double>::quiet_NaN();
         if (axis_exists) {
+          return_value = state_interfaces_[interface_counter].get().get_value();
           ++interface_counter;
-          return state_interfaces_[interface_counter].get().get_value();
-        } else {
-          return std::numeric_limits<double>::quiet_NaN();
         }
+        return return_value;
       };
 
     geometry_msgs::msg::Wrench message;
