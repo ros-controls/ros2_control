@@ -175,7 +175,7 @@ controller_interface::ControllerInterfaceSharedPtr ControllerManager::load_contr
       RCLCPP_ERROR(get_logger(), "%s", c.c_str());
     }
     RCLCPP_ERROR(get_logger(), "%s", error_msg.c_str());
-    throw std::runtime_error(error_msg);
+    return nullptr;
   }
 
   auto controller = loader_->createSharedInstance(controller_type);
