@@ -47,6 +47,20 @@ std::vector<CommandInterface> System::export_command_interfaces()
   return impl_->export_command_interfaces();
 }
 
+return_type System::prepare_command_mode_switch(
+  const std::vector<std::string> & start_interfaces,
+  const std::vector<std::string> & stop_interfaces)
+{
+  return impl_->prepare_command_mode_switch(start_interfaces, stop_interfaces);
+}
+
+return_type System::perform_command_mode_switch(
+  const std::vector<std::string> & start_interfaces,
+  const std::vector<std::string> & stop_interfaces)
+{
+  return impl_->perform_command_mode_switch(start_interfaces, stop_interfaces);
+}
+
 return_type System::start()
 {
   return impl_->start();

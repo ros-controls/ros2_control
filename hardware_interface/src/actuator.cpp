@@ -50,6 +50,20 @@ std::vector<CommandInterface> Actuator::export_command_interfaces()
   return impl_->export_command_interfaces();
 }
 
+return_type Actuator::prepare_command_mode_switch(
+  const std::vector<std::string> & start_interfaces,
+  const std::vector<std::string> & stop_interfaces)
+{
+  return impl_->prepare_command_mode_switch(start_interfaces, stop_interfaces);
+}
+
+return_type Actuator::perform_command_mode_switch(
+  const std::vector<std::string> & start_interfaces,
+  const std::vector<std::string> & stop_interfaces)
+{
+  return impl_->perform_command_mode_switch(start_interfaces, stop_interfaces);
+}
+
 return_type Actuator::start()
 {
   return impl_->start();

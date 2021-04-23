@@ -310,6 +310,54 @@ std::unordered_map<std::string, status> ResourceManager::get_components_status()
   return resource_storage_->hardware_status_map_;
 }
 
+void ResourceManager::prepare_command_mode_switch(
+  const std::vector<std::string> & start_interfaces,
+  const std::vector<std::string> & stop_interfaces)
+{
+  for (auto & component : resource_storage_->actuators_) {
+    if (return_type::OK !=
+      component.prepare_command_mode_switch(start_interfaces, stop_interfaces))
+    {
+      throw std::runtime_error(
+              std::string("Component '") + component.get_name() +
+              "' did not accept new command resource combination");
+    }
+  }
+  for (auto & component : resource_storage_->systems_) {
+    if (return_type::OK !=
+      component.prepare_command_mode_switch(start_interfaces, stop_interfaces))
+    {
+      throw std::runtime_error(
+              std::string("Component '") + component.get_name() +
+              "' did not accept new command resource combination");
+    }
+  }
+}
+
+void ResourceManager::perform_command_mode_switch(
+  const std::vector<std::string> & start_interfaces,
+  const std::vector<std::string> & stop_interfaces)
+{
+  for (auto & component : resource_storage_->actuators_) {
+    if (return_type::OK !=
+      component.perform_command_mode_switch(start_interfaces, stop_interfaces))
+    {
+      throw std::runtime_error(
+              std::string("Component '") + component.get_name() +
+              "' could not perform switch.");
+    }
+  }
+  for (auto & component : resource_storage_->systems_) {
+    if (return_type::OK !=
+      component.perform_command_mode_switch(start_interfaces, stop_interfaces))
+    {
+      throw std::runtime_error(
+              std::string("Component '") + component.get_name() +
+              "' could not perform switch.");
+    }
+  }
+}
+
 void ResourceManager::start_components()
 {
   for (auto & component : resource_storage_->actuators_) {
