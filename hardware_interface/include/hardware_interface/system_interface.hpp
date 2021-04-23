@@ -79,11 +79,10 @@ public:
   /**
    * Prepare for any mode-switching required by the new command interface combination.
    *
-   * \note this is a non-realtime evaluation of whether a set of command interface claims are
+   * \note This is a non-realtime evaluation of whether a set of command interface claims are
    * possible, and call to start preparing data structures for the upcoming switch that will occur.
-   * \note switching relevant for other hardware interfaces is also evaluated by this function,
-   * so if an interface key is not relevant for this hardware the function should return
-   * return_type::OK.
+   * \note All starting and stopping interface keys are passed to all components, so the function should
+   * return return_type::OK by default when given interface keys not relevant for this component.
    * \param[in] start_interfaces vector of string identifiers for the command interfaces starting.
    * \param[in] stop_interfaces vector of string identifiers for the command interfacs stopping.
    * \return return_type::OK if the new command interface combination can be prepared,
@@ -101,10 +100,9 @@ public:
   /**
    * Perform the mode-switching for the new command interface combination.
    *
-   * \note this is part of the realtime update loop, and should be fast.
-   * \note switching relevant for other hardware interfaces is also evaluated by this function,
-   * so if an interface key is not relevant for this hardware the function should return
-   * return_type::OK.
+   * \note This is part of the realtime update loop, and should be fast.
+   * \note All starting and stopping interface keys are passed to all components, so the function should
+   * return return_type::OK by default when given interface keys not relevant for this component.
    * \param[in] start_interfaces vector of string identifiers for the command interfaces starting.
    * \param[in] stop_interfaces vector of string identifiers for the command interfacs stopping.
    * \return return_type::OK if the new command interface combination can be switched to,

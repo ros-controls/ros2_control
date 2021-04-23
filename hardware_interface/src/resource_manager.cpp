@@ -28,6 +28,8 @@
 #include "hardware_interface/system_interface.hpp"
 #include "hardware_interface/component_parser.hpp"
 
+#include "rclcpp/rclcpp.hpp"
+
 #include "pluginlib/class_loader.hpp"
 
 namespace hardware_interface
@@ -310,7 +312,7 @@ std::unordered_map<std::string, status> ResourceManager::get_components_status()
   return resource_storage_->hardware_status_map_;
 }
 
-void ResourceManager::prepare_command_mode_switch(
+bool ResourceManager::prepare_command_mode_switch(
   const std::vector<std::string> & start_interfaces,
   const std::vector<std::string> & stop_interfaces)
 {
@@ -318,23 +320,28 @@ void ResourceManager::prepare_command_mode_switch(
     if (return_type::OK !=
       component.prepare_command_mode_switch(start_interfaces, stop_interfaces))
     {
-      throw std::runtime_error(
-              std::string("Component '") + component.get_name() +
-              "' did not accept new command resource combination");
+      RCLCPP_ERROR(
+        rclcpp::get_logger(std::string("resource_manager")),
+        "Component '%s' did not accept new command resource combination",
+        component.get_name().c_str());
+      return false;
     }
   }
   for (auto & component : resource_storage_->systems_) {
     if (return_type::OK !=
       component.prepare_command_mode_switch(start_interfaces, stop_interfaces))
     {
-      throw std::runtime_error(
-              std::string("Component '") + component.get_name() +
-              "' did not accept new command resource combination");
+      RCLCPP_ERROR(
+        rclcpp::get_logger(std::string("resource_manager")),
+        "Component '%s' did not accept new command resource combination",
+        component.get_name().c_str());
+      return false;
     }
   }
+  return true;
 }
 
-void ResourceManager::perform_command_mode_switch(
+bool ResourceManager::perform_command_mode_switch(
   const std::vector<std::string> & start_interfaces,
   const std::vector<std::string> & stop_interfaces)
 {
@@ -342,20 +349,25 @@ void ResourceManager::perform_command_mode_switch(
     if (return_type::OK !=
       component.perform_command_mode_switch(start_interfaces, stop_interfaces))
     {
-      throw std::runtime_error(
-              std::string("Component '") + component.get_name() +
-              "' could not perform switch.");
+      RCLCPP_ERROR(
+        rclcpp::get_logger(std::string("resource_manager")),
+        "Component '%s' could not perform switch",
+        component.get_name().c_str());
+      return false;
     }
   }
   for (auto & component : resource_storage_->systems_) {
     if (return_type::OK !=
       component.perform_command_mode_switch(start_interfaces, stop_interfaces))
     {
-      throw std::runtime_error(
-              std::string("Component '") + component.get_name() +
-              "' could not perform switch.");
+      RCLCPP_ERROR(
+        rclcpp::get_logger("resource_manager"),
+        "Component '%s' could not perform switch",
+        component.get_name().c_str());
+      return false;
     }
   }
+  return true;
 }
 
 void ResourceManager::start_components()

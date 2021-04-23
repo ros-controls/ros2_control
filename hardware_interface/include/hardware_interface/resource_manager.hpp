@@ -206,8 +206,9 @@ public:
    * by default
    * \param[in] start_interfaces vector of string identifiers for the command interfaces starting.
    * \param[in] stop_interfaces vector of string identifiers for the command interfaces stopping.
+   * \return true if switch can be prepared, false if a component rejects switch request.
    */
-  void prepare_command_mode_switch(
+  bool prepare_command_mode_switch(
     const std::vector<std::string> & start_interfaces,
     const std::vector<std::string> & stop_interfaces);
 
@@ -220,8 +221,9 @@ public:
    * \note this is for realtime switching of the command interface.
    * \param[in] start_interfaces vector of string identifiers for the command interfaces starting.
    * \param[in] stop_interfaces vector of string identifiers for the command interfacs stopping.
+   * \return true if switch is performed, false if a component rejects switching.
    */
-  void perform_command_mode_switch(
+  bool perform_command_mode_switch(
     const std::vector<std::string> & start_interfaces,
     const std::vector<std::string> & stop_interfaces);
 

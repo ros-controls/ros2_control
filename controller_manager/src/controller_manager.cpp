@@ -347,7 +347,7 @@ controller_interface::return_type ControllerManager::switch_controller(
     RCLCPP_FATAL(
       get_logger(),
       "The internal stop and start requests command interface lists are not empty at the "
-      "switch_controller() call. This should not happend.");
+      "switch_controller() call. This should not happen.");
   }
   if (strictness == 0) {
     RCLCPP_WARN(
@@ -523,30 +523,17 @@ controller_interface::return_type ControllerManager::switch_controller(
   }
 
   if (!start_command_interface_request_.empty() || !stop_command_interface_request_.empty()) {
-    try {
-      resource_manager_->prepare_command_mode_switch(
-        start_command_interface_request_,
-        stop_command_interface_request_);
-    } catch (const std::exception & e) {
-      if (strictness == controller_manager_msgs::srv::SwitchController::Request::STRICT) {
-        RCLCPP_ERROR_STREAM(
+    if (!resource_manager_->prepare_command_mode_switch(
+      start_command_interface_request_,
+      stop_command_interface_request_)) {
+        RCLCPP_ERROR(
           get_logger(),
-          "Could not switch controllers since command mode switch was denied: " << e.what());
+          "Could not switch controllers since prepare command mode switch was rejected.");
         start_request_.clear();
         stop_request_.clear();
         start_command_interface_request_.clear();
         stop_command_interface_request_.clear();
         return controller_interface::return_type::ERROR;
-      } else {
-        RCLCPP_INFO_STREAM(
-          get_logger(),
-          "Could not switch controllers since command mode switch was denied: " << e.what());
-        start_request_.clear();
-        stop_request_.clear();
-        start_command_interface_request_.clear();
-        stop_command_interface_request_.clear();
-        return controller_interface::return_type::SUCCESS;
-      }
     }
   }
   // start the atomic controller switching
@@ -625,15 +612,12 @@ ControllerManager::add_controller_impl(
 void ControllerManager::manage_switch()
 {
   // Ask hardware interfaces to change mode
-  try {
-    resource_manager_->perform_command_mode_switch(
-      start_command_interface_request_,
-      stop_command_interface_request_);
-  } catch (std::exception & e) {
-    RCLCPP_ERROR(
-      get_logger(),
-      "Error while performing mode switch: %s",
-      e.what());
+  if (!resource_manager_->perform_command_mode_switch(
+    start_command_interface_request_,
+    stop_command_interface_request_)) {
+      RCLCPP_ERROR(
+        get_logger(),
+        "Error while performing mode switch.");
   }
 
   stop_controllers();
