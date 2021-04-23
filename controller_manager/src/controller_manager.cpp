@@ -443,17 +443,15 @@ controller_interface::return_type ControllerManager::switch_controller(
     auto handle_conflict = [&](const std::string & msg)
       {
         if (strictness == controller_manager_msgs::srv::SwitchController::Request::STRICT) {
-          RCLCPP_ERROR_STREAM(
-            get_logger(),
-            msg);
+          RCLCPP_ERROR(get_logger(), "%s", msg.c_str());
           stop_request_.clear();
           start_request_.clear();
           return controller_interface::return_type::ERROR;
         }
-        RCLCPP_DEBUG_STREAM(
+        RCLCPP_DEBUG(
           get_logger(),
-          "Could not stop controller '" << controller.info.name <<
-            "' since it is not running");
+          "Could not stop controller '%s' since it is not running",
+          controller.info.name.c_str());
         return controller_interface::return_type::OK;
       };
     if (!is_running && in_stop_list) {      // check for double stop
@@ -745,7 +743,7 @@ void ControllerManager::list_controller_types_srv_cb(
   for (const auto & cur_type : cur_types) {
     response->types.push_back(cur_type);
     response->base_classes.push_back(kControllerInterface);
-    RCLCPP_DEBUG_STREAM(get_logger(), cur_type);
+    RCLCPP_DEBUG(get_logger(), "%s", cur_type.c_str());
   }
 
   RCLCPP_DEBUG(get_logger(), "list types service finished");
