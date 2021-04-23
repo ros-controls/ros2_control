@@ -1,0 +1,9 @@
+<library path="test_controller_failed_init">
+
+  <class name="controller_manager/test_controller_failed_init" type="test_controller_failed_init::TestControllerFailedInit" base_class_type="controller_interface::ControllerInterface">
+    <description>
+      Controller used for testing
+    </description>
+  </class>
+
+</library>

@@ -34,6 +34,15 @@ TEST_F(TestLoadController, load_unknown_controller)
   ASSERT_EQ(cm_->load_controller("unknown_controller_name", "unknown_controller_type"), nullptr);
 }
 
+TEST_F(TestLoadController, load_controller_failed_init)
+{
+  ASSERT_EQ(
+    cm_->load_controller(
+      "test_controller_failed_init",
+      test_controller_failed_init::TEST_CONTROLLER_FAILED_INIT_CLASS_NAME),
+    nullptr);
+}
+
 TEST_F(TestLoadController, load_and_configure_one_known_controller)
 {
   ASSERT_NE(

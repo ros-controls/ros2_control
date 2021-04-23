@@ -381,7 +381,7 @@ controller_interface::return_type ControllerManager::switch_controller(
           if (strictness == controller_manager_msgs::srv::SwitchController::Request::STRICT) {
             RCLCPP_ERROR(
               get_logger(),
-              R"(Could not '%s' controller with name '%s' because 
+              R"(Could not '%s' controller with name '%s' because
                 no controller with this name exists)",
               action.c_str(),
               controller.c_str());
@@ -532,7 +532,14 @@ ControllerManager::add_controller_impl(
     return nullptr;
   }
 
-  controller.c->init(controller.info.name);
+  if (controller.c->init(controller.info.name) == controller_interface::return_type::ERROR) {
+    to.clear();
+    RCLCPP_ERROR(
+      get_logger(),
+      "Could not initialize the controller named '%s'",
+      controller.info.name.c_str());
+    return nullptr;
+  }
   executor_->add_node(controller.c->get_node());
   to.emplace_back(controller);
 
