@@ -538,7 +538,7 @@ protected:
 //   try {
 //     iface.getHandle("unknown_name");
 //   } catch (const JointLimitsInterfaceException & e) {
-//     ROS_ERROR_STREAM(e.what());
+//     ROS_ERROR("%s", e.what());
 //   }
 //
 //   // Enforce limits of all managed joints
