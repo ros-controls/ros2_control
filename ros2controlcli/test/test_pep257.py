@@ -20,4 +20,4 @@ import pytest
 @pytest.mark.pep257
 def test_pep257():
     rc = main(argv=[])
-    assert rc == 0, 'Found code style errors / warnings'
+    assert rc == 0, "Found code style errors / warnings"

@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #ifndef HARDWARE_INTERFACE__HARDWARE_INFO_HPP_
 #define HARDWARE_INTERFACE__HARDWARE_INFO_HPP_
 
@@ -22,7 +21,6 @@
 
 namespace hardware_interface
 {
-
 /**
  * This structure stores information about components defined for a specific hardware
  * in robot's URDF.
@@ -85,7 +83,7 @@ struct HardwareInfo
    */
   std::vector<ComponentInfo> sensors;
   /**
-   * Map of transmissions to calcualte ration between joints and physical actuators.
+   * Map of transmissions to calculate ration between joints and physical actuators.
    * Optional for Actuator and System Hardware.
    */
   std::vector<ComponentInfo> transmissions;

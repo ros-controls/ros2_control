@@ -32,18 +32,14 @@ using hardware_interface::return_type;
 
 namespace fake_components
 {
-
 class GenericSystem : public hardware_interface::BaseInterface<hardware_interface::SystemInterface>
 {
 public:
-  return_type
-  configure(const hardware_interface::HardwareInfo & info) override;
+  return_type configure(const hardware_interface::HardwareInfo & info) override;
 
-  std::vector<hardware_interface::StateInterface>
-  export_state_interfaces() override;
+  std::vector<hardware_interface::StateInterface> export_state_interfaces() override;
 
-  std::vector<hardware_interface::CommandInterface>
-  export_command_interfaces() override;
+  std::vector<hardware_interface::CommandInterface> export_command_interfaces() override;
 
   return_type start() override
   {
@@ -59,10 +55,7 @@ public:
 
   return_type read() override;
 
-  return_type write() override
-  {
-    return return_type::OK;
-  }
+  return_type write() override { return return_type::OK; }
 
 protected:
   /// Use standard interfaces for joints because they are relevant for dynamic behaviour
@@ -73,11 +66,8 @@ protected:
    * controllers.
    */
   const std::vector<std::string> standard_interfaces_ = {
-    hardware_interface::HW_IF_POSITION,
-    hardware_interface::HW_IF_VELOCITY,
-    hardware_interface::HW_IF_ACCELERATION,
-    hardware_interface::HW_IF_EFFORT
-  };
+    hardware_interface::HW_IF_POSITION, hardware_interface::HW_IF_VELOCITY,
+    hardware_interface::HW_IF_ACCELERATION, hardware_interface::HW_IF_EFFORT};
   /// The size of this vector is (standard_interfaces_.size() x nr_joints)
   std::vector<std::vector<double>> joint_commands_;
   std::vector<std::vector<double>> joint_states_;
@@ -93,18 +83,14 @@ protected:
   std::vector<std::vector<double>> sensor_states_;
 
 private:
-  template<typename HandleType>
+  template <typename HandleType>
   bool get_interface(
-    const std::string & name,
-    const std::vector<std::string> & interface_list,
-    const std::string & interface_name,
-    const size_t vector_index,
-    std::vector<std::vector<double>> & values,
-    std::vector<HandleType> & interfaces);
+    const std::string & name, const std::vector<std::string> & interface_list,
+    const std::string & interface_name, const size_t vector_index,
+    std::vector<std::vector<double>> & values, std::vector<HandleType> & interfaces);
 
   void initialize_storage_vectors(
-    std::vector<std::vector<double>> & commands,
-    std::vector<std::vector<double>> & states,
+    std::vector<std::vector<double>> & commands, std::vector<std::vector<double>> & states,
     const std::vector<std::string> & interfaces);
 
   bool fake_sensor_command_interfaces_;

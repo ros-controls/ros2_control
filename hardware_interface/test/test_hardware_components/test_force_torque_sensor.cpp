@@ -20,27 +20,32 @@
 #include "hardware_interface/base_interface.hpp"
 #include "hardware_interface/sensor_interface.hpp"
 
-using hardware_interface::status;
-using hardware_interface::return_type;
-using hardware_interface::StateInterface;
 using hardware_interface::BaseInterface;
+using hardware_interface::return_type;
 using hardware_interface::SensorInterface;
+using hardware_interface::StateInterface;
+using hardware_interface::status;
 
 namespace test_hardware_components
 {
-
 class TestForceTorqueSensor : public BaseInterface<SensorInterface>
 {
   return_type configure(const hardware_interface::HardwareInfo & sensor_info) override
   {
-    if (configure_default(sensor_info) != return_type::OK) {
+    if (configure_default(sensor_info) != return_type::OK)
+    {
       return return_type::ERROR;
     }
 
     const auto & state_interfaces = info_.sensors[0].state_interfaces;
-    if (state_interfaces.size() != 6) {return return_type::ERROR;}
-    for (const auto & ft_key : {"fx", "fy", "fz", "tx", "ty", "tz"}) {
-      if (std::find_if(
+    if (state_interfaces.size() != 6)
+    {
+      return return_type::ERROR;
+    }
+    for (const auto & ft_key : {"fx", "fy", "fz", "tx", "ty", "tz"})
+    {
+      if (
+        std::find_if(
           state_interfaces.begin(), state_interfaces.end(), [&ft_key](const auto & interface_info) {
             return interface_info.name == ft_key;
           }) == state_interfaces.end())
@@ -59,48 +64,24 @@ class TestForceTorqueSensor : public BaseInterface<SensorInterface>
 
     const auto & sensor_name = info_.sensors[0].name;
     state_interfaces.emplace_back(
-      hardware_interface::StateInterface(
-        sensor_name,
-        "fx",
-        &values_.fx));
+      hardware_interface::StateInterface(sensor_name, "fx", &values_.fx));
     state_interfaces.emplace_back(
-      hardware_interface::StateInterface(
-        sensor_name,
-        "fy",
-        &values_.fy));
+      hardware_interface::StateInterface(sensor_name, "fy", &values_.fy));
     state_interfaces.emplace_back(
-      hardware_interface::StateInterface(
-        sensor_name,
-        "fz",
-        &values_.fz));
+      hardware_interface::StateInterface(sensor_name, "fz", &values_.fz));
     state_interfaces.emplace_back(
-      hardware_interface::StateInterface(
-        sensor_name,
-        "tx",
-        &values_.tx));
+      hardware_interface::StateInterface(sensor_name, "tx", &values_.tx));
     state_interfaces.emplace_back(
-      hardware_interface::StateInterface(
-        sensor_name,
-        "ty",
-        &values_.ty));
+      hardware_interface::StateInterface(sensor_name, "ty", &values_.ty));
     state_interfaces.emplace_back(
-      hardware_interface::StateInterface(
-        sensor_name,
-        "tz",
-        &values_.tz));
+      hardware_interface::StateInterface(sensor_name, "tz", &values_.tz));
 
     return state_interfaces;
   }
 
-  return_type start() override
-  {
-    return return_type::OK;
-  }
+  return_type start() override { return return_type::OK; }
 
-  return_type stop() override
-  {
-    return return_type::OK;
-  }
+  return_type stop() override { return return_type::OK; }
 
   return_type read() override
   {

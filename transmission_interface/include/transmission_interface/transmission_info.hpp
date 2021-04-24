@@ -15,13 +15,11 @@
 #ifndef TRANSMISSION_INTERFACE__TRANSMISSION_INFO_HPP_
 #define TRANSMISSION_INTERFACE__TRANSMISSION_INFO_HPP_
 
-#include <vector>
 #include <string>
-
+#include <vector>
 
 namespace transmission_interface
 {
-
 /// Contains semantic info about a given joint loaded from XML (URDF)
 struct JointInfo
 {

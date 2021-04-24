@@ -18,14 +18,14 @@
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "transmission_interface/simple_transmission.hpp"
 
-using std::vector;
-using transmission_interface::SimpleTransmission;
-using transmission_interface::Exception;
-using transmission_interface::ActuatorHandle;
-using transmission_interface::JointHandle;
+using hardware_interface::HW_IF_EFFORT;
 using hardware_interface::HW_IF_POSITION;
 using hardware_interface::HW_IF_VELOCITY;
-using hardware_interface::HW_IF_EFFORT;
+using std::vector;
+using transmission_interface::ActuatorHandle;
+using transmission_interface::Exception;
+using transmission_interface::JointHandle;
+using transmission_interface::SimpleTransmission;
 
 // Floating-point value comparison threshold
 const double EPS = 1e-6;
@@ -72,28 +72,22 @@ TEST(PreconditionsTest, ConfigureFailsWithInvalidHandles)
   EXPECT_THROW(trans.configure({}, {actuator_handle}), transmission_interface::Exception);
 
   EXPECT_THROW(
-    trans.configure(
-      {joint_handle}, {actuator_handle,
-        actuator2_handle}), transmission_interface::Exception);
+    trans.configure({joint_handle}, {actuator_handle, actuator2_handle}),
+    transmission_interface::Exception);
   EXPECT_THROW(
-    trans.configure(
-      {joint_handle, joint2_handle},
-      {actuator_handle}), transmission_interface::Exception);
+    trans.configure({joint_handle, joint2_handle}, {actuator_handle}),
+    transmission_interface::Exception);
 
   auto invalid_actuator_handle = ActuatorHandle("act1", HW_IF_VELOCITY, nullptr);
   auto invalid_joint_handle = JointHandle("joint1", HW_IF_VELOCITY, nullptr);
   EXPECT_THROW(
-    trans.configure(
-      {invalid_joint_handle},
-      {invalid_actuator_handle}), transmission_interface::Exception);
+    trans.configure({invalid_joint_handle}, {invalid_actuator_handle}),
+    transmission_interface::Exception);
   EXPECT_THROW(
-    trans.configure(
-      {}, {actuator_handle,
-        invalid_actuator_handle}), transmission_interface::Exception);
+    trans.configure({}, {actuator_handle, invalid_actuator_handle}),
+    transmission_interface::Exception);
   EXPECT_THROW(
-    trans.configure(
-      {invalid_joint_handle},
-      {actuator_handle}), transmission_interface::Exception);
+    trans.configure({invalid_joint_handle}, {actuator_handle}), transmission_interface::Exception);
 }
 
 class TransmissionSetup
@@ -111,8 +105,7 @@ protected:
 };
 
 /// Exercises the actuator->joint->actuator roundtrip, which should yield the identity map.
-class BlackBoxTest : public TransmissionSetup,
-  public ::testing::TestWithParam<SimpleTransmission>
+class BlackBoxTest : public TransmissionSetup, public ::testing::TestWithParam<SimpleTransmission>
 {
 protected:
   /**
@@ -122,8 +115,7 @@ protected:
    * and inverse transmission transformations.
    */
   void testIdentityMap(
-    SimpleTransmission & trans, const std::string & interface_name,
-    const double ref_val)
+    SimpleTransmission & trans, const std::string & interface_name, const double ref_val)
   {
     // Effort interface
     {
@@ -168,21 +160,18 @@ TEST_P(BlackBoxTest, IdentityMap)
 }
 
 INSTANTIATE_TEST_CASE_P(
-  IdentityMap,
-  BlackBoxTest,
+  IdentityMap, BlackBoxTest,
   ::testing::Values(
-    SimpleTransmission(10.0),
-    SimpleTransmission(-10.0),
-    SimpleTransmission(10.0, 1.0),
-    SimpleTransmission(10.0, -1.0),
-    SimpleTransmission(-10.0, 1.0),
+    SimpleTransmission(10.0), SimpleTransmission(-10.0), SimpleTransmission(10.0, 1.0),
+    SimpleTransmission(10.0, -1.0), SimpleTransmission(-10.0, 1.0),
     // remove once INSTANTIATE_TEST_SUITE_P is available to use in gtest
     // https://github.com/google/googletest/issues/1419
     // cppcheck-suppress syntaxError
     SimpleTransmission(-10.0, -1.0)), );
 
-class WhiteBoxTest : public TransmissionSetup,
-  public ::testing::Test {};
+class WhiteBoxTest : public TransmissionSetup, public ::testing::Test
+{
+};
 
 TEST_F(WhiteBoxTest, MoveJoint)
 {

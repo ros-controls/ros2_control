@@ -21,9 +21,8 @@
 #ifndef TRANSMISSION_INTERFACE__TRANSMISSION_PARSER_HPP_
 #define TRANSMISSION_INTERFACE__TRANSMISSION_PARSER_HPP_
 
-
-#include <transmission_interface/transmission_info.hpp>
 #include <transmission_interface/visibility_control.h>
+#include <transmission_interface/transmission_info.hpp>
 
 #include <tinyxml2.h>
 
@@ -32,7 +31,6 @@
 
 namespace transmission_interface
 {
-
 /// Parses the joint elements within transmission elements of a URDF
 /**
  * If parse errors occur a std::runtime_error will be thrown with a description of the problem.

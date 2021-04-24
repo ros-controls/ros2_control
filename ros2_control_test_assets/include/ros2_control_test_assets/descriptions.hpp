@@ -22,7 +22,6 @@
 
 namespace ros2_control_test_assets
 {
-
 const auto urdf_head =
   R"(
 <?xml version="1.0" encoding="utf-8"?>
@@ -253,14 +252,16 @@ const auto hardware_resources_missing_command_keys =
   </ros2_control>
 )";
 
-const auto minimal_robot_urdf = std::string(urdf_head) + std::string(hardware_resources) +
+const auto minimal_robot_urdf =
+  std::string(urdf_head) + std::string(hardware_resources) + std::string(urdf_tail);
+
+const auto minimal_robot_missing_state_keys_urdf =
+  std::string(urdf_head) + std::string(hardware_resources_missing_state_keys) +
   std::string(urdf_tail);
 
-const auto minimal_robot_missing_state_keys_urdf = std::string(urdf_head) +
-  std::string(hardware_resources_missing_state_keys) + std::string(urdf_tail);
-
-const auto minimal_robot_missing_command_keys_urdf = std::string(urdf_head) +
-  std::string(hardware_resources_missing_command_keys) + std::string(urdf_tail);
+const auto minimal_robot_missing_command_keys_urdf =
+  std::string(urdf_head) + std::string(hardware_resources_missing_command_keys) +
+  std::string(urdf_tail);
 }  // namespace ros2_control_test_assets
 
 #endif  // ROS2_CONTROL_TEST_ASSETS__DESCRIPTIONS_HPP_

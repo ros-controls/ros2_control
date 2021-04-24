@@ -32,15 +32,16 @@ constexpr const auto kMechanicalReductionTag = "mechanicalReduction";
 
 namespace transmission_interface
 {
-
 std::vector<TransmissionInfo> parse_transmissions_from_urdf(const std::string & urdf)
 {
-  if (urdf.empty()) {
+  if (urdf.empty())
+  {
     throw std::runtime_error("empty URDF passed in to transmission parser");
   }
 
   tinyxml2::XMLDocument doc;
-  if (!doc.Parse(urdf.c_str()) && doc.Error()) {
+  if (!doc.Parse(urdf.c_str()) && doc.Error())
+  {
     throw std::runtime_error("invalid URDF passed in to transmission parser");
   }
 
@@ -48,37 +49,46 @@ std::vector<TransmissionInfo> parse_transmissions_from_urdf(const std::string & 
   tinyxml2::XMLElement * root_it = doc.RootElement();
   tinyxml2::XMLElement * trans_it = nullptr;
   for (trans_it = root_it->FirstChildElement(kTransmissionTag); trans_it;
-    trans_it = trans_it->NextSiblingElement(kTransmissionTag))
+       trans_it = trans_it->NextSiblingElement(kTransmissionTag))
   {
     transmission_interface::TransmissionInfo transmission;
 
-    if (trans_it->Attribute(kNameTag)) {
+    if (trans_it->Attribute(kNameTag))
+    {
       transmission.name = trans_it->Attribute(kNameTag);
-      if (transmission.name.empty()) {
+      if (transmission.name.empty())
+      {
         throw std::runtime_error("empty name attribute specified for transmission");
       }
-    } else {
+    }
+    else
+    {
       throw std::runtime_error("no name attribute specified for transmission");
     }
 
     // Transmission type
     tinyxml2::XMLElement * type_child = trans_it->FirstChildElement(kTypeTag);
-    if (!type_child) {
+    if (!type_child)
+    {
       throw std::runtime_error(
-              "no type element found in transmission '" + transmission.name + "'.");
+        "no type element found in transmission '" + transmission.name + "'.");
     }
-    if (!type_child->GetText()) {
+    if (!type_child->GetText())
+    {
       throw std::runtime_error(
-              "expected non-empty type element in transmission '" + transmission.name + "'.");
+        "expected non-empty type element in transmission '" + transmission.name + "'.");
     }
     transmission.type = type_child->GetText();
 
-    try {
+    try
+    {
       // Load joints
       transmission.joints = parse_joints(trans_it);
       // Load actuators
       transmission.actuators = parse_actuators(trans_it);
-    } catch (const std::runtime_error & ex) {
+    }
+    catch (const std::runtime_error & ex)
+    {
       // add the transmission name and rethrow
       throw std::runtime_error("transmission '" + transmission.name + "' " + ex.what());
     }
@@ -94,40 +104,47 @@ std::vector<JointInfo> parse_joints(tinyxml2::XMLElement * trans_it)
   std::vector<JointInfo> joints;
   // Loop through each available joint
   auto joint_it = trans_it->FirstChildElement(kJointTag);
-  if (!joint_it) {
+  if (!joint_it)
+  {
     throw std::runtime_error("no joint child element found");
   }
-  for (; joint_it; joint_it = joint_it->NextSiblingElement(kJointTag)) {
+  for (; joint_it; joint_it = joint_it->NextSiblingElement(kJointTag))
+  {
     transmission_interface::JointInfo joint;
 
     joint.name = joint_it->Attribute(kNameTag);
-    if (joint.name.empty()) {
+    if (joint.name.empty())
+    {
       throw std::runtime_error("no joint name attribute set");
     }
 
     const tinyxml2::XMLElement * role_it = joint_it->FirstChildElement(kRoleTag);
-    if (role_it) {
+    if (role_it)
+    {
       joint.role = role_it->GetText() ? role_it->GetText() : std::string();
     }
 
     // Interfaces (required)
     auto interface_it = joint_it->FirstChildElement(kHardwareInterfaceTag);
-    if (!interface_it) {
+    if (!interface_it)
+    {
       throw std::runtime_error(
-              "no hardware interface tag found under transmission joint" + joint.name);
+        "no hardware interface tag found under transmission joint" + joint.name);
     }
 
-    for (; interface_it; interface_it = interface_it->NextSiblingElement(kHardwareInterfaceTag)) {
+    for (; interface_it; interface_it = interface_it->NextSiblingElement(kHardwareInterfaceTag))
+    {
       const std::string interface_name = interface_it->GetText();
-      if (interface_name.empty()) {
+      if (interface_name.empty())
+      {
         throw std::runtime_error("no hardware interface specified in joint " + joint.name);
       }
       joint.interfaces.push_back(interface_name);
     }
 
-    if (joint.interfaces.empty()) {
-      throw std::runtime_error(
-              "joint " + joint.name + " has no valid hardware interface.");
+    if (joint.interfaces.empty())
+    {
+      throw std::runtime_error("joint " + joint.name + " has no valid hardware interface.");
     }
 
     joints.push_back(joint);
@@ -141,47 +158,57 @@ std::vector<ActuatorInfo> parse_actuators(tinyxml2::XMLElement * trans_it)
   std::vector<ActuatorInfo> actuators;
   // Loop through each available actuator
   auto actuator_it = trans_it->FirstChildElement(kActuatorTag);
-  if (!actuator_it) {
+  if (!actuator_it)
+  {
     throw std::runtime_error("no actuator child element found");
   }
 
-  for (; actuator_it; actuator_it = actuator_it->NextSiblingElement(kActuatorTag)) {
+  for (; actuator_it; actuator_it = actuator_it->NextSiblingElement(kActuatorTag))
+  {
     transmission_interface::ActuatorInfo actuator;
 
     actuator.name = actuator_it->Attribute(kNameTag);
-    if (actuator.name.empty()) {
+    if (actuator.name.empty())
+    {
       throw std::runtime_error("no actuator name attribute set");
     }
 
     // Hardware interfaces (optional)
     auto interface_it = actuator_it->FirstChildElement(kHardwareInterfaceTag);
-    if (!interface_it) {
+    if (!interface_it)
+    {
       throw std::runtime_error(
-              "no hardware interface tag found under transmission actuator" + actuator.name);
+        "no hardware interface tag found under transmission actuator" + actuator.name);
     }
 
-    for (; interface_it; interface_it = interface_it->NextSiblingElement(kHardwareInterfaceTag)) {
+    for (; interface_it; interface_it = interface_it->NextSiblingElement(kHardwareInterfaceTag))
+    {
       const std::string interface_name = interface_it->GetText();
-      if (interface_name.empty()) {
+      if (interface_name.empty())
+      {
         throw std::runtime_error("no hardware interface specified in actuator " + actuator.name);
       }
       actuator.interfaces.push_back(interface_name);
     }
 
-    if (actuator.interfaces.empty()) {
-      throw std::runtime_error(
-              "actuator " + actuator.name + " has no valid hardware interface.");
+    if (actuator.interfaces.empty())
+    {
+      throw std::runtime_error("actuator " + actuator.name + " has no valid hardware interface.");
     }
 
     // mechanical reduction (optional)
     actuator.mechanical_reduction = 1;
     auto mechred_it = actuator_it->FirstChildElement(kMechanicalReductionTag);
-    for (; mechred_it; mechred_it = mechred_it->NextSiblingElement(kMechanicalReductionTag)) {
+    for (; mechred_it; mechred_it = mechred_it->NextSiblingElement(kMechanicalReductionTag))
+    {
       // optional tag but if specified, it should not be empty!
       const std::string mech_red_str = mechred_it->GetText();
-      if (mech_red_str.empty()) {
+      if (mech_red_str.empty())
+      {
         throw std::runtime_error("mechanical reduction tag was specified without value");
-      } else {
+      }
+      else
+      {
         actuator.mechanical_reduction = atoi(mech_red_str.c_str());
       }
     }

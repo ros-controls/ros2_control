@@ -10,7 +10,7 @@ information to effectively respond to your bug report or contribution.
 ## Reporting Bugs/Feature Requests
 We welcome you to use the GitHub issue tracker to report bugs or suggest features.
 
-When filing an issue, please check [existing open][issues], or [recently closed][closed-issues], issues to make sure 
+When filing an issue, please check [existing open][issues], or [recently closed][closed-issues], issues to make sure
  somebody else hasn't already reported the issue.
 Please try to include as much information as you can. Details like these are incredibly useful:
 
@@ -45,7 +45,7 @@ GitHub provides additional documentation on [forking a repository](https://help.
 ## Finding contributions to work on
 Looking at the existing issues is a great way to find something to contribute on.
 As this project, by default, uses the default GitHub issue labels
-  (enhancement/bug/duplicate/help wanted/invalid/question/wontfix), looking at any ['help wanted'][help-wanted] issues 
+  (enhancement/bug/duplicate/help wanted/invalid/question/wontfix), looking at any ['help wanted'][help-wanted] issues
   is a great place to start.
 
 

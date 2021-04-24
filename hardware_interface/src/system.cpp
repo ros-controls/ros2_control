@@ -27,10 +27,7 @@
 
 namespace hardware_interface
 {
-
-System::System(std::unique_ptr<SystemInterface> impl)
-: impl_(std::move(impl))
-{}
+System::System(std::unique_ptr<SystemInterface> impl) : impl_(std::move(impl)) {}
 
 return_type System::configure(const HardwareInfo & system_info)
 {
@@ -47,34 +44,16 @@ std::vector<CommandInterface> System::export_command_interfaces()
   return impl_->export_command_interfaces();
 }
 
-return_type System::start()
-{
-  return impl_->start();
-}
+return_type System::start() { return impl_->start(); }
 
-return_type System::stop()
-{
-  return impl_->stop();
-}
+return_type System::stop() { return impl_->stop(); }
 
-std::string System::get_name() const
-{
-  return impl_->get_name();
-}
+std::string System::get_name() const { return impl_->get_name(); }
 
-status System::get_status() const
-{
-  return impl_->get_status();
-}
+status System::get_status() const { return impl_->get_status(); }
 
-return_type System::read()
-{
-  return impl_->read();
-}
+return_type System::read() { return impl_->read(); }
 
-return_type System::write()
-{
-  return impl_->write();
-}
+return_type System::write() { return impl_->write(); }
 
 }  // namespace hardware_interface

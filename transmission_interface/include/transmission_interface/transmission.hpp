@@ -14,18 +14,16 @@
 #ifndef TRANSMISSION_INTERFACE__TRANSMISSION_HPP_
 #define TRANSMISSION_INTERFACE__TRANSMISSION_HPP_
 
-
 #include <cstddef>
-#include <string>
-#include <vector>
 #include <memory>
 #include <stdexcept>
+#include <string>
+#include <vector>
 
 #include "transmission_interface/handle.hpp"
 
 namespace transmission_interface
 {
-
 /// Abstract base class for representing mechanical transmissions.
 /**
  * Mechanical transmissions transform effort/flow variables such that their product (power) remains constant.

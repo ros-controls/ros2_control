@@ -19,31 +19,31 @@
 //     https://gcc.gnu.org/wiki/Visibility
 
 #if defined _WIN32 || defined __CYGWIN__
-  #ifdef __GNUC__
-    #define CONTROLLER_INTERFACE_EXPORT __attribute__ ((dllexport))
-    #define CONTROLLER_INTERFACE_IMPORT __attribute__ ((dllimport))
-  #else
-    #define CONTROLLER_INTERFACE_EXPORT __declspec(dllexport)
-    #define CONTROLLER_INTERFACE_IMPORT __declspec(dllimport)
-  #endif
-  #ifdef CONTROLLER_INTERFACE_BUILDING_DLL
-    #define CONTROLLER_INTERFACE_PUBLIC CONTROLLER_INTERFACE_EXPORT
-  #else
-    #define CONTROLLER_INTERFACE_PUBLIC CONTROLLER_INTERFACE_IMPORT
-  #endif
-  #define CONTROLLER_INTERFACE_PUBLIC_TYPE CONTROLLER_INTERFACE_PUBLIC
-  #define CONTROLLER_INTERFACE_LOCAL
+#ifdef __GNUC__
+#define CONTROLLER_INTERFACE_EXPORT __attribute__((dllexport))
+#define CONTROLLER_INTERFACE_IMPORT __attribute__((dllimport))
 #else
-  #define CONTROLLER_INTERFACE_EXPORT __attribute__ ((visibility("default")))
-  #define CONTROLLER_INTERFACE_IMPORT
-  #if __GNUC__ >= 4
-    #define CONTROLLER_INTERFACE_PUBLIC __attribute__ ((visibility("default")))
-    #define CONTROLLER_INTERFACE_LOCAL  __attribute__ ((visibility("hidden")))
-  #else
-    #define CONTROLLER_INTERFACE_PUBLIC
-    #define CONTROLLER_INTERFACE_LOCAL
-  #endif
-  #define CONTROLLER_INTERFACE_PUBLIC_TYPE
+#define CONTROLLER_INTERFACE_EXPORT __declspec(dllexport)
+#define CONTROLLER_INTERFACE_IMPORT __declspec(dllimport)
+#endif
+#ifdef CONTROLLER_INTERFACE_BUILDING_DLL
+#define CONTROLLER_INTERFACE_PUBLIC CONTROLLER_INTERFACE_EXPORT
+#else
+#define CONTROLLER_INTERFACE_PUBLIC CONTROLLER_INTERFACE_IMPORT
+#endif
+#define CONTROLLER_INTERFACE_PUBLIC_TYPE CONTROLLER_INTERFACE_PUBLIC
+#define CONTROLLER_INTERFACE_LOCAL
+#else
+#define CONTROLLER_INTERFACE_EXPORT __attribute__((visibility("default")))
+#define CONTROLLER_INTERFACE_IMPORT
+#if __GNUC__ >= 4
+#define CONTROLLER_INTERFACE_PUBLIC __attribute__((visibility("default")))
+#define CONTROLLER_INTERFACE_LOCAL __attribute__((visibility("hidden")))
+#else
+#define CONTROLLER_INTERFACE_PUBLIC
+#define CONTROLLER_INTERFACE_LOCAL
+#endif
+#define CONTROLLER_INTERFACE_PUBLIC_TYPE
 #endif
 
 #endif  // CONTROLLER_INTERFACE__VISIBILITY_CONTROL_H_

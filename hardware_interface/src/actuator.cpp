@@ -28,10 +28,7 @@
 
 namespace hardware_interface
 {
-
-Actuator::Actuator(std::unique_ptr<ActuatorInterface> impl)
-: impl_(std::move(impl))
-{}
+Actuator::Actuator(std::unique_ptr<ActuatorInterface> impl) : impl_(std::move(impl)) {}
 
 return_type Actuator::configure(const HardwareInfo & actuator_info)
 {
@@ -50,34 +47,16 @@ std::vector<CommandInterface> Actuator::export_command_interfaces()
   return impl_->export_command_interfaces();
 }
 
-return_type Actuator::start()
-{
-  return impl_->start();
-}
+return_type Actuator::start() { return impl_->start(); }
 
-return_type Actuator::stop()
-{
-  return impl_->stop();
-}
+return_type Actuator::stop() { return impl_->stop(); }
 
-std::string Actuator::get_name() const
-{
-  return impl_->get_name();
-}
+std::string Actuator::get_name() const { return impl_->get_name(); }
 
-status Actuator::get_status() const
-{
-  return impl_->get_status();
-}
+status Actuator::get_status() const { return impl_->get_status(); }
 
-return_type Actuator::read()
-{
-  return impl_->read();
-}
+return_type Actuator::read() { return impl_->read(); }
 
-return_type Actuator::write()
-{
-  return impl_->write();
-}
+return_type Actuator::write() { return impl_->write(); }
 
 }  // namespace hardware_interface

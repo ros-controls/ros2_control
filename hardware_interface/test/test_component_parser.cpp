@@ -17,23 +17,21 @@
 
 #include "hardware_interface/component_parser.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
-#include "ros2_control_test_assets/descriptions.hpp"
 #include "ros2_control_test_assets/components_urdfs.hpp"
+#include "ros2_control_test_assets/descriptions.hpp"
 
 using namespace ::testing;  // NOLINT
 
 class TestComponentParser : public Test
 {
 protected:
-  void SetUp() override
-  {
-  }
+  void SetUp() override {}
 };
 
-using hardware_interface::parse_control_resources_from_urdf;
+using hardware_interface::HW_IF_EFFORT;
 using hardware_interface::HW_IF_POSITION;
 using hardware_interface::HW_IF_VELOCITY;
-using hardware_interface::HW_IF_EFFORT;
+using hardware_interface::parse_control_resources_from_urdf;
 
 TEST_F(TestComponentParser, empty_string_throws_error)
 {
@@ -195,8 +193,7 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_robot_with_sens
   EXPECT_EQ(hardware_info.name, "RRBotSystemWithSensor");
   EXPECT_EQ(hardware_info.type, "system");
   EXPECT_EQ(
-    hardware_info.hardware_class_type,
-    "ros2_control_demo_hardware/RRBotSystemWithSensorHardware");
+    hardware_info.hardware_class_type, "ros2_control_demo_hardware/RRBotSystemWithSensorHardware");
   ASSERT_THAT(hardware_info.hardware_parameters, SizeIs(2));
   EXPECT_EQ(hardware_info.hardware_parameters.at("example_param_write_for_sec"), "2");
 
@@ -281,8 +278,7 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_modular_robot
   EXPECT_EQ(hardware_info.name, "RRBotModularJoint1");
   EXPECT_EQ(hardware_info.type, "actuator");
   EXPECT_EQ(
-    hardware_info.hardware_class_type,
-    "ros2_control_demo_hardware/PositionActuatorHardware");
+    hardware_info.hardware_class_type, "ros2_control_demo_hardware/PositionActuatorHardware");
   ASSERT_THAT(hardware_info.hardware_parameters, SizeIs(2));
   EXPECT_EQ(hardware_info.hardware_parameters.at("example_param_write_for_sec"), "1.23");
 
@@ -295,8 +291,7 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_modular_robot
   EXPECT_EQ(hardware_info.name, "RRBotModularJoint2");
   EXPECT_EQ(hardware_info.type, "actuator");
   EXPECT_EQ(
-    hardware_info.hardware_class_type,
-    "ros2_control_demo_hardware/PositionActuatorHardware");
+    hardware_info.hardware_class_type, "ros2_control_demo_hardware/PositionActuatorHardware");
   ASSERT_THAT(hardware_info.hardware_parameters, SizeIs(2));
   EXPECT_EQ(hardware_info.hardware_parameters.at("example_param_read_for_sec"), "3");
 
@@ -318,8 +313,7 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_modular_robot
   EXPECT_EQ(hardware_info.name, "RRBotModularJoint1");
   EXPECT_EQ(hardware_info.type, "actuator");
   EXPECT_EQ(
-    hardware_info.hardware_class_type,
-    "ros2_control_demo_hardware/VelocityActuatorHardware");
+    hardware_info.hardware_class_type, "ros2_control_demo_hardware/VelocityActuatorHardware");
   ASSERT_THAT(hardware_info.hardware_parameters, SizeIs(2));
   EXPECT_EQ(hardware_info.hardware_parameters.at("example_param_write_for_sec"), "1.23");
 
@@ -332,7 +326,8 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_modular_robot
   ASSERT_THAT(hardware_info.transmissions, SizeIs(1));
   EXPECT_EQ(hardware_info.transmissions[0].name, "transmission1");
   EXPECT_EQ(hardware_info.transmissions[0].type, "transmission");
-// EXPECT_EQ(hardware_info.transmissions[0].class_type, "transmission_interface/SimpleTansmission");
+  // EXPECT_EQ(
+  // hardware_info.transmissions[0].class_type, "transmission_interface/SimpleTansmission");
   ASSERT_THAT(hardware_info.transmissions[0].parameters, SizeIs(1));
   EXPECT_EQ(hardware_info.transmissions[0].parameters.at("joint_to_actuator"), "${1024/PI}");
 
@@ -341,8 +336,7 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_modular_robot
   EXPECT_EQ(hardware_info.name, "RRBotModularJoint2");
   EXPECT_EQ(hardware_info.type, "actuator");
   EXPECT_EQ(
-    hardware_info.hardware_class_type,
-    "ros2_control_demo_hardware/VelocityActuatorHardware");
+    hardware_info.hardware_class_type, "ros2_control_demo_hardware/VelocityActuatorHardware");
   ASSERT_THAT(hardware_info.hardware_parameters, SizeIs(2));
   EXPECT_EQ(hardware_info.hardware_parameters.at("example_param_read_for_sec"), "3");
 
@@ -358,9 +352,7 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_modular_robot
 
   EXPECT_EQ(hardware_info.name, "RRBotModularPositionSensorJoint1");
   EXPECT_EQ(hardware_info.type, "sensor");
-  EXPECT_EQ(
-    hardware_info.hardware_class_type,
-    "ros2_control_demo_hardware/PositionSensorHardware");
+  EXPECT_EQ(hardware_info.hardware_class_type, "ros2_control_demo_hardware/PositionSensorHardware");
   ASSERT_THAT(hardware_info.hardware_parameters, SizeIs(1));
   EXPECT_EQ(hardware_info.hardware_parameters.at("example_param_read_for_sec"), "2");
 
@@ -371,7 +363,6 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_modular_robot
   ASSERT_THAT(hardware_info.joints[0].command_interfaces, IsEmpty());
   ASSERT_THAT(hardware_info.joints[0].state_interfaces, SizeIs(1));
   EXPECT_EQ(hardware_info.joints[0].state_interfaces[0].name, HW_IF_POSITION);
-
 
   hardware_info = control_hardware.at(3);
 
@@ -403,8 +394,7 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_multi_joints_tr
   EXPECT_EQ(hardware_info.name, "RRBotModularWrist");
   EXPECT_EQ(hardware_info.type, "system");
   EXPECT_EQ(
-    hardware_info.hardware_class_type,
-    "ros2_control_demo_hardware/ActuatorHardwareMultiDOF");
+    hardware_info.hardware_class_type, "ros2_control_demo_hardware/ActuatorHardwareMultiDOF");
   ASSERT_THAT(hardware_info.hardware_parameters, SizeIs(2));
   EXPECT_EQ(hardware_info.hardware_parameters.at("example_param_write_for_sec"), "1.23");
 
@@ -431,10 +421,9 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_multi_joints_tr
 
 TEST_F(TestComponentParser, successfully_parse_valid_urdf_sensor_only)
 {
-  std::string urdf_to_test =
-    std::string(ros2_control_test_assets::urdf_head) +
-    ros2_control_test_assets::valid_urdf_ros2_control_sensor_only +
-    ros2_control_test_assets::urdf_tail;
+  std::string urdf_to_test = std::string(ros2_control_test_assets::urdf_head) +
+                             ros2_control_test_assets::valid_urdf_ros2_control_sensor_only +
+                             ros2_control_test_assets::urdf_tail;
   const auto control_hardware = parse_control_resources_from_urdf(urdf_to_test);
   ASSERT_THAT(control_hardware, SizeIs(1));
   auto hardware_info = control_hardware.at(0);
@@ -461,10 +450,9 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_sensor_only)
 
 TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_only)
 {
-  std::string urdf_to_test =
-    std::string(ros2_control_test_assets::urdf_head) +
-    ros2_control_test_assets::valid_urdf_ros2_control_actuator_only +
-    ros2_control_test_assets::urdf_tail;
+  std::string urdf_to_test = std::string(ros2_control_test_assets::urdf_head) +
+                             ros2_control_test_assets::valid_urdf_ros2_control_actuator_only +
+                             ros2_control_test_assets::urdf_tail;
   const auto control_hardware = parse_control_resources_from_urdf(urdf_to_test);
   ASSERT_THAT(control_hardware, SizeIs(1));
   auto hardware_info = control_hardware.at(0);
@@ -472,8 +460,7 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_only)
   EXPECT_EQ(hardware_info.name, "ActuatorModularJoint1");
   EXPECT_EQ(hardware_info.type, "actuator");
   EXPECT_EQ(
-    hardware_info.hardware_class_type,
-    "ros2_control_demo_hardware/VelocityActuatorHardware");
+    hardware_info.hardware_class_type, "ros2_control_demo_hardware/VelocityActuatorHardware");
   ASSERT_THAT(hardware_info.hardware_parameters, SizeIs(2));
   EXPECT_EQ(hardware_info.hardware_parameters.at("example_param_write_for_sec"), "1.13");
 
@@ -486,7 +473,6 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_only)
   EXPECT_EQ(hardware_info.joints[0].command_interfaces[0].max, "1");
   ASSERT_THAT(hardware_info.joints[0].state_interfaces, SizeIs(1));
   EXPECT_EQ(hardware_info.joints[0].state_interfaces[0].name, HW_IF_VELOCITY);
-
 
   ASSERT_THAT(hardware_info.transmissions, SizeIs(1));
   EXPECT_EQ(hardware_info.transmissions[0].name, "transmission1");

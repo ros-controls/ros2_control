@@ -24,14 +24,12 @@
 namespace hardware_interface
 {
 /// A handle used to get and set a value on a given interface.
-template<class HandleType>
+template <class HandleType>
 class ReadOnlyHandle
 {
 public:
   ReadOnlyHandle(
-    const std::string & name,
-    const std::string & interface_name,
-    double * value_ptr = nullptr)
+    const std::string & name, const std::string & interface_name, double * value_ptr = nullptr)
   : name_(name), interface_name_(interface_name), value_ptr_(value_ptr)
   {
   }
@@ -57,23 +55,17 @@ public:
   virtual ~ReadOnlyHandle() = default;
 
   /// Returns true if handle references a value.
-  inline operator bool() const {return value_ptr_ != nullptr;}
+  inline operator bool() const { return value_ptr_ != nullptr; }
 
-  [[deprecated("with_value_ptr is deprecated and will be removed in the next release")]]
-  HandleType with_value_ptr(double * value_ptr)
+  [[deprecated("with_value_ptr is deprecated and will be removed in the next release")]] HandleType
+  with_value_ptr(double * value_ptr)
   {
     return HandleType(name_, interface_name_, value_ptr);
   }
 
-  const std::string & get_name() const
-  {
-    return name_;
-  }
+  const std::string & get_name() const { return name_; }
 
-  const std::string & get_interface_name() const
-  {
-    return interface_name_;
-  }
+  const std::string & get_interface_name() const { return interface_name_; }
 
   double get_value() const
   {
@@ -87,24 +79,24 @@ protected:
   double * value_ptr_;
 };
 
-template<class HandleType>
+template <class HandleType>
 class ReadWriteHandle : public ReadOnlyHandle<HandleType>
 {
 public:
   ReadWriteHandle(
-    const std::string & name,
-    const std::string & interface_name,
-    double * value_ptr = nullptr)
+    const std::string & name, const std::string & interface_name, double * value_ptr = nullptr)
   : ReadOnlyHandle<HandleType>(name, interface_name, value_ptr)
-  {}
+  {
+  }
 
   explicit ReadWriteHandle(const std::string & interface_name)
   : ReadOnlyHandle<HandleType>(interface_name)
-  {}
+  {
+  }
 
-  explicit ReadWriteHandle(const char * interface_name)
-  : ReadOnlyHandle<HandleType>(interface_name)
-  {}
+  explicit ReadWriteHandle(const char * interface_name) : ReadOnlyHandle<HandleType>(interface_name)
+  {
+  }
 
   ReadWriteHandle(const ReadWriteHandle & other) = default;
 

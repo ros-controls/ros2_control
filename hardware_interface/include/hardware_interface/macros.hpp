@@ -24,22 +24,23 @@
 #define __PRETTY_FUNCTION__ __FUNCTION__
 #endif
 
-#define THROW_ON_NULLPTR(pointer) \
-  static_assert( \
-    rcpputils::is_pointer<typename std::remove_reference<decltype(pointer)>::type>::value, \
-    #pointer " has to be a pointer"); \
-  if (!pointer) { \
-    throw std::runtime_error( \
-            std::string(__PRETTY_FUNCTION__) + " failed. "#pointer " is null."); \
-  } \
+#define THROW_ON_NULLPTR(pointer)                                                                  \
+  static_assert(                                                                                   \
+    rcpputils::is_pointer<typename std::remove_reference<decltype(pointer)>::type>::value,         \
+    #pointer " has to be a pointer");                                                              \
+  if (!pointer)                                                                                    \
+  {                                                                                                \
+    throw std::runtime_error(std::string(__PRETTY_FUNCTION__) + " failed. " #pointer " is null."); \
+  }
 
-#define THROW_ON_NOT_NULLPTR(pointer) \
-  static_assert( \
+#define THROW_ON_NOT_NULLPTR(pointer)                                                      \
+  static_assert(                                                                           \
     rcpputils::is_pointer<typename std::remove_reference<decltype(pointer)>::type>::value, \
-    #pointer " has to be a pointer"); \
-  if (pointer) { \
-    throw std::runtime_error( \
-            std::string(__PRETTY_FUNCTION__) + " failed. "#pointer " would leak memory"); \
-  } \
+    #pointer " has to be a pointer");                                                      \
+  if (pointer)                                                                             \
+  {                                                                                        \
+    throw std::runtime_error(                                                              \
+      std::string(__PRETTY_FUNCTION__) + " failed. " #pointer " would leak memory");       \
+  }
 
 #endif  // HARDWARE_INTERFACE__MACROS_HPP_

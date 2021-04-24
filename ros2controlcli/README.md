@@ -1,7 +1,7 @@
 # ros2controlcli
 Command line interface for controller manager
 
-## Verbs 
+## Verbs
 
 
 ### list
@@ -23,8 +23,8 @@ optional arguments:
 ```
 
 ```bash
-$ ros2 control list 
-test_controller_name[test_controller]    active 
+$ ros2 control list
+test_controller_name[test_controller]    active
 ```
 
 ### list_types
@@ -45,11 +45,11 @@ optional arguments:
                         Consider hidden nodes as well
 ```
 ```bash
-$ ros2 control list_types 
+$ ros2 control list_types
 diff_drive_controller/DiffDriveController                              controller_interface::ControllerInterface
 joint_state_controller/JointStateController                            controller_interface::ControllerInterface
 joint_trajectory_controller/JointTrajectoryController                  controller_interface::ControllerInterface
-test_controller      
+test_controller
 ```
 
 ### load

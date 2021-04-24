@@ -22,7 +22,6 @@
 
 namespace hardware_interface
 {
-
 /// Controller Information
 /**
  * This struct contains information about a given controller.
@@ -37,7 +36,7 @@ struct ControllerInfo
 
   // TODO(v-lopez)
   /** Claimed resources, grouped by the hardware interface they belong to. */
-//   std::map<std::string, std::vector<std::string>> resources;
+  //   std::map<std::string, std::vector<std::string>> resources;
 };
 
 }  // namespace hardware_interface

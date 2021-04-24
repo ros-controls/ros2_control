@@ -21,8 +21,8 @@
 #include "hardware_interface/loaned_command_interface.hpp"
 #include "hardware_interface/loaned_state_interface.hpp"
 #include "hardware_interface/resource_manager.hpp"
-#include "ros2_control_test_assets/descriptions.hpp"
 #include "ros2_control_test_assets/components_urdfs.hpp"
+#include "ros2_control_test_assets/descriptions.hpp"
 
 class TestGenericSystem : public ::testing::Test
 {
@@ -218,18 +218,18 @@ protected:
   std::string hardware_system_2dof_with_sensor_fake_command_True_;
 };
 
-TEST_F(TestGenericSystem, load_generic_system_2dof) {
-  auto urdf =
-    ros2_control_test_assets::urdf_head + hardware_system_2dof_ +
-    ros2_control_test_assets::urdf_tail;
+TEST_F(TestGenericSystem, load_generic_system_2dof)
+{
+  auto urdf = ros2_control_test_assets::urdf_head + hardware_system_2dof_ +
+              ros2_control_test_assets::urdf_tail;
   ASSERT_NO_THROW(hardware_interface::ResourceManager rm(urdf));
 }
 
 // Test inspired by hardware_interface/test_resource_manager.cpp
-TEST_F(TestGenericSystem, generic_system_2dof_symetric_interfaces) {
-  auto urdf =
-    ros2_control_test_assets::urdf_head + hardware_system_2dof_ +
-    ros2_control_test_assets::urdf_tail;
+TEST_F(TestGenericSystem, generic_system_2dof_symetric_interfaces)
+{
+  auto urdf = ros2_control_test_assets::urdf_head + hardware_system_2dof_ +
+              ros2_control_test_assets::urdf_tail;
   hardware_interface::ResourceManager rm(urdf);
 
   // Check interfaces
@@ -255,10 +255,10 @@ TEST_F(TestGenericSystem, generic_system_2dof_symetric_interfaces) {
 }
 
 // Test inspired by hardware_interface/test_resource_manager.cpp
-TEST_F(TestGenericSystem, generic_system_2dof_asymetric_interfaces) {
-  auto urdf =
-    ros2_control_test_assets::urdf_head + hardware_system_2dof_asymetric_ +
-    ros2_control_test_assets::urdf_tail;
+TEST_F(TestGenericSystem, generic_system_2dof_asymetric_interfaces)
+{
+  auto urdf = ros2_control_test_assets::urdf_head + hardware_system_2dof_asymetric_ +
+              ros2_control_test_assets::urdf_tail;
   hardware_interface::ResourceManager rm(urdf);
 
   // Check interfaces
@@ -292,8 +292,8 @@ TEST_F(TestGenericSystem, generic_system_2dof_asymetric_interfaces) {
   ASSERT_ANY_THROW(rm.claim_command_interface("joint1/acceleration"));
   ASSERT_ANY_THROW(rm.claim_command_interface("joint2/position"));
   ASSERT_ANY_THROW(rm.claim_command_interface("joint2/position"));
-  hardware_interface::LoanedCommandInterface j2a_c = rm.claim_command_interface(
-    "joint2/acceleration");
+  hardware_interface::LoanedCommandInterface j2a_c =
+    rm.claim_command_interface("joint2/acceleration");
 
   ASSERT_EQ(0.0, j1v_s.get_value());
   ASSERT_EQ(0.7854, j2p_s.get_value());
@@ -301,11 +301,10 @@ TEST_F(TestGenericSystem, generic_system_2dof_asymetric_interfaces) {
   ASSERT_EQ(0.8554, j2a_c.get_value());
 }
 
-TEST_F(TestGenericSystem, generic_system_2dof_functionality) {
-  auto urdf =
-    ros2_control_test_assets::urdf_head +
-    hardware_system_2dof_standard_interfaces_ +
-    ros2_control_test_assets::urdf_tail;
+TEST_F(TestGenericSystem, generic_system_2dof_functionality)
+{
+  auto urdf = ros2_control_test_assets::urdf_head + hardware_system_2dof_standard_interfaces_ +
+              ros2_control_test_assets::urdf_tail;
   hardware_interface::ResourceManager rm(urdf);
 
   // check is hardware is configured
@@ -349,7 +348,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_functionality) {
   ASSERT_EQ(0.33, j2p_c.get_value());
   ASSERT_EQ(0.44, j2v_c.get_value());
 
-  // write() does not chnage values
+  // write() does not change values
   rm.write();
   ASSERT_EQ(3.45, j1p_s.get_value());
   ASSERT_EQ(0.0, j1v_s.get_value());
@@ -396,11 +395,10 @@ TEST_F(TestGenericSystem, generic_system_2dof_functionality) {
   EXPECT_EQ(status_map["GenericSystem2dof"], hardware_interface::status::STOPPED);
 }
 
-TEST_F(TestGenericSystem, generic_system_2dof_other_interfaces) {
-  auto urdf =
-    ros2_control_test_assets::urdf_head +
-    hardware_system_2dof_with_other_interface_ +
-    ros2_control_test_assets::urdf_tail;
+TEST_F(TestGenericSystem, generic_system_2dof_other_interfaces)
+{
+  auto urdf = ros2_control_test_assets::urdf_head + hardware_system_2dof_with_other_interface_ +
+              ros2_control_test_assets::urdf_tail;
   hardware_interface::ResourceManager rm(urdf);
 
   // Check interfaces
@@ -455,7 +453,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_other_interfaces) {
   ASSERT_EQ(0.33, j2p_c.get_value());
   ASSERT_EQ(0.99, vo_c.get_value());
 
-  // write() does not chnage values
+  // write() does not change values
   rm.write();
   ASSERT_EQ(1.55, j1p_s.get_value());
   ASSERT_EQ(0.1, j1v_s.get_value());
@@ -478,12 +476,10 @@ TEST_F(TestGenericSystem, generic_system_2dof_other_interfaces) {
   ASSERT_EQ(0.99, vo_c.get_value());
 }
 
-
-TEST_F(TestGenericSystem, generic_system_2dof_sensor) {
-  auto urdf =
-    ros2_control_test_assets::urdf_head +
-    hardware_system_2dof_with_sensor_ +
-    ros2_control_test_assets::urdf_tail;
+TEST_F(TestGenericSystem, generic_system_2dof_sensor)
+{
+  auto urdf = ros2_control_test_assets::urdf_head + hardware_system_2dof_with_sensor_ +
+              ros2_control_test_assets::urdf_tail;
   hardware_interface::ResourceManager rm(urdf);
 
   // Check interfaces
@@ -551,7 +547,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_sensor) {
   ASSERT_EQ(0.11, j1p_c.get_value());
   ASSERT_EQ(0.33, j2p_c.get_value());
 
-  // write() does not chnage values
+  // write() does not change values
   rm.write();
   ASSERT_EQ(0.0, j1p_s.get_value());
   ASSERT_EQ(0.0, j1v_s.get_value());
@@ -663,7 +659,7 @@ void test_generic_system_with_fake_sensor_commands(std::string urdf)
   ASSERT_EQ(3.33, stx_c.get_value());
   ASSERT_EQ(4.44, sty_c.get_value());
 
-  // write() does not chnage values
+  // write() does not change values
   rm.write();
   ASSERT_EQ(0.0, j1p_s.get_value());
   ASSERT_EQ(0.0, j1v_s.get_value());
@@ -698,20 +694,19 @@ void test_generic_system_with_fake_sensor_commands(std::string urdf)
   ASSERT_EQ(4.44, sty_c.get_value());
 }
 
-TEST_F(TestGenericSystem, generic_system_2dof_sensor_fake_command) {
-  auto urdf =
-    ros2_control_test_assets::urdf_head +
-    hardware_system_2dof_with_sensor_fake_command_ +
-    ros2_control_test_assets::urdf_tail;
+TEST_F(TestGenericSystem, generic_system_2dof_sensor_fake_command)
+{
+  auto urdf = ros2_control_test_assets::urdf_head + hardware_system_2dof_with_sensor_fake_command_ +
+              ros2_control_test_assets::urdf_tail;
 
   test_generic_system_with_fake_sensor_commands(urdf);
 }
 
-TEST_F(TestGenericSystem, generic_system_2dof_sensor_fake_command_True) {
-  auto urdf =
-    ros2_control_test_assets::urdf_head +
-    hardware_system_2dof_with_sensor_fake_command_True_ +
-    ros2_control_test_assets::urdf_tail;
+TEST_F(TestGenericSystem, generic_system_2dof_sensor_fake_command_True)
+{
+  auto urdf = ros2_control_test_assets::urdf_head +
+              hardware_system_2dof_with_sensor_fake_command_True_ +
+              ros2_control_test_assets::urdf_tail;
 
   test_generic_system_with_fake_sensor_commands(urdf);
 }

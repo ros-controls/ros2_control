@@ -19,18 +19,13 @@
 
 namespace joint_limits_interface
 {
-
 /// An exception related to a \ref JointLimitsInterface
 class JointLimitsInterfaceException : public std::exception
 {
 public:
-  explicit JointLimitsInterfaceException(const std::string & message)
-  : msg(message) {}
+  explicit JointLimitsInterfaceException(const std::string & message) : msg(message) {}
 
-  const char * what() const noexcept override
-  {
-    return msg.c_str();
-  }
+  const char * what() const noexcept override { return msg.c_str(); }
 
 private:
   std::string msg;

@@ -38,7 +38,7 @@ Changelog for package controller_manager
 ------------------
 * fix float conversion warning (`#312 <https://github.com/ros-controls/ros2_control/issues/312>`_)
 * update doxygen style according to ros2 core standard (`#300 <https://github.com/ros-controls/ros2_control/issues/300>`_)
-* Capitalized messages in controller_manager.cpp upto line669 (`#285 <https://github.com/ros-controls/ros2_control/issues/285>`_)
+* Capitalized messages in controller_manager.cpp up to line669 (`#285 <https://github.com/ros-controls/ros2_control/issues/285>`_)
 * Sleep accurate duration on ros2_control_node (`#302 <https://github.com/ros-controls/ros2_control/issues/302>`_)
 * Contributors: Achinta-Choudhury, João Victor Torres Borges, Karsten Knese, Yutaka Kondo
 

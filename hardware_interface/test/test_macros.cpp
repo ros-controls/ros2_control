@@ -21,16 +21,15 @@
 class TestMacros : public ::testing::Test
 {
 protected:
-  static void SetUpTestCase()
-  {
-  }
+  static void SetUpTestCase() {}
 };
 
 class A
 {
 };
 
-TEST_F(TestMacros, throw_on_null) {
+TEST_F(TestMacros, throw_on_null)
+{
   int * i_ptr = nullptr;
   // cppcheck-suppress unknownMacro
   EXPECT_ANY_THROW(THROW_ON_NULLPTR(i_ptr));
@@ -39,7 +38,8 @@ TEST_F(TestMacros, throw_on_null) {
   EXPECT_ANY_THROW(THROW_ON_NULLPTR(a_ptr));
 
   std::vector<int *> vec_ptr(7);
-  for (auto ptr : vec_ptr) {
+  for (auto ptr : vec_ptr)
+  {
     EXPECT_ANY_THROW(THROW_ON_NULLPTR(ptr));
   }
 
@@ -53,7 +53,8 @@ TEST_F(TestMacros, throw_on_null) {
   */
 }
 
-TEST_F(TestMacros, throw_on_not_null) {
+TEST_F(TestMacros, throw_on_not_null)
+{
   int * i_ptr = new int();
   EXPECT_ANY_THROW(THROW_ON_NOT_NULLPTR(i_ptr));
 
@@ -61,7 +62,8 @@ TEST_F(TestMacros, throw_on_not_null) {
   EXPECT_ANY_THROW(THROW_ON_NOT_NULLPTR(a_ptr));
 
   std::vector<int *> vec_ptr;
-  for (auto i : {0, 1, 2}) {
+  for (auto i : {0, 1, 2})
+  {
     vec_ptr.push_back(i_ptr);
     EXPECT_ANY_THROW(THROW_ON_NOT_NULLPTR(vec_ptr[i]));
   }

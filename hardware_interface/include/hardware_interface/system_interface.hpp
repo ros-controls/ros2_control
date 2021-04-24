@@ -27,7 +27,6 @@
 
 namespace hardware_interface
 {
-
 /// Virtual Class to implement when integrating a complex system into ros2_control.
 /**
 * The common examples for these types of hardware are multi-joint systems with or without sensors
@@ -38,8 +37,7 @@ class SystemInterface
 public:
   SystemInterface() = default;
 
-  virtual
-  ~SystemInterface() = default;
+  virtual ~SystemInterface() = default;
 
   /// Configuration of the system from data parsed from the robot's URDF.
   /**
@@ -47,61 +45,54 @@ public:
    * \return return_type::OK if required data are provided and can be parsed,
    * return_type::ERROR otherwise.
    */
-  virtual
-  return_type configure(const HardwareInfo & system_info) = 0;
+  virtual return_type configure(const HardwareInfo & system_info) = 0;
 
   /// Exports all state interfaces for this system.
   /**
-   * The state interfaces have to be created and transfered according
+   * The state interfaces have to be created and transferred according
    * to the system info passed in for the configuration.
    *
-   * Note the ownership over the state interfaces is transfered to the caller.
+   * Note the ownership over the state interfaces is transferred to the caller.
    *
    *
    * \return vector of state interfaces
    */
-  virtual
-  std::vector<StateInterface> export_state_interfaces() = 0;
+  virtual std::vector<StateInterface> export_state_interfaces() = 0;
 
   /// Exports all command interfaces for this system.
   /**
-   * The command interfaces have to be created and transfered according
+   * The command interfaces have to be created and transferred according
    * to the system info passed in for the configuration.
    *
-   * Note the ownership over the state interfaces is transfered to the caller.
+   * Note the ownership over the state interfaces is transferred to the caller.
    *
    * \return vector of command interfaces
    */
-  virtual
-  std::vector<CommandInterface> export_command_interfaces() = 0;
+  virtual std::vector<CommandInterface> export_command_interfaces() = 0;
 
   /// Start exchange data with the hardware.
   /**
    * \return return_type:OK if everything worked as expected, return_type::ERROR otherwise.
    */
-  virtual
-  return_type start() = 0;
+  virtual return_type start() = 0;
 
   /// Stop exchange data with the hardware.
   /**
    * \return return_type:OK if everything worked as expected, return_type::ERROR otherwise.
    */
-  virtual
-  return_type stop() = 0;
+  virtual return_type stop() = 0;
 
   /// Get name of the system hardware.
   /**
    * \return name.
    */
-  virtual
-  std::string get_name() const = 0;
+  virtual std::string get_name() const = 0;
 
   /// Get current state of the system hardware.
   /**
    * \return current status.
    */
-  virtual
-  status get_status() const = 0;
+  virtual status get_status() const = 0;
 
   /// Read the current state values from the actuators and sensors within the system.
   /**
@@ -111,8 +102,7 @@ public:
    *
    * \return return_type::OK if the read was successful, return_type::ERROR otherwise.
    */
-  virtual
-  return_type read() = 0;
+  virtual return_type read() = 0;
 
   /// Write the current command values to the actuator within the system.
   /**
@@ -121,8 +111,7 @@ public:
    *
    * \return return_type::OK if the read was successful, return_type::ERROR otherwise.
    */
-  virtual
-  return_type write() = 0;
+  virtual return_type write() = 0;
 };
 
 }  // namespace hardware_interface

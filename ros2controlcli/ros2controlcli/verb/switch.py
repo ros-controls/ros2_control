@@ -27,27 +27,28 @@ class SwitchVerb(VerbExtension):
     def add_arguments(self, parser, cli_name):
         add_arguments(parser)
         arg = parser.add_argument(
-            '--stop-controllers',
-            nargs='*',
+            "--stop-controllers",
+            nargs="*",
             default=[],
-            help='Name of the controllers to be stopped')
-        arg.completer = LoadedControllerNameCompleter(['active'])
+            help="Name of the controllers to be stopped",
+        )
+        arg.completer = LoadedControllerNameCompleter(["active"])
         arg = parser.add_argument(
-            '--start-controllers',
-            nargs='*',
+            "--start-controllers",
+            nargs="*",
             default=[],
-            help='Name of the controllers to be started')
-        arg.completer = LoadedControllerNameCompleter(['inactive'])
+            help="Name of the controllers to be started",
+        )
+        arg.completer = LoadedControllerNameCompleter(["inactive"])
+        parser.add_argument("--strict", action="store_true", help="Strict switch")
+        parser.add_argument("--start-asap", action="store_true", help="Start asap controllers")
         parser.add_argument(
-            '--strict', action='store_true', help='Strict switch')
-        parser.add_argument(
-            '--start-asap', action='store_true', help='Start asap controllers')
-        parser.add_argument(
-            '--switch-timeout',
+            "--switch-timeout",
             default=5.0,
             required=False,
-            help='Timeout for switching controllers')
-        arg.completer = LoadedControllerNameCompleter(['inactive'])
+            help="Timeout for switching controllers",
+        )
+        arg.completer = LoadedControllerNameCompleter(["inactive"])
         add_controller_mgr_parsers(parser)
 
     def main(self, *, args):
@@ -59,7 +60,8 @@ class SwitchVerb(VerbExtension):
                 args.start_controllers,
                 args.strict,
                 args.start_asap,
-                args.switch_timeout)
+                args.switch_timeout,
+            )
             if not response.ok:
-                return 'Error switching controllers, check controller_manager logs'
-            return 'Successfully switched controllers'
+                return "Error switching controllers, check controller_manager logs"
+            return "Successfully switched controllers"

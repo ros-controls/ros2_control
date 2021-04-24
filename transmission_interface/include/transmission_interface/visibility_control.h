@@ -19,31 +19,31 @@
 //     https://gcc.gnu.org/wiki/Visibility
 
 #if defined _WIN32 || defined __CYGWIN__
-  #ifdef __GNUC__
-    #define TRANSMISSION_INTERFACE_EXPORT __attribute__ ((dllexport))
-    #define TRANSMISSION_INTERFACE_IMPORT __attribute__ ((dllimport))
-  #else
-    #define TRANSMISSION_INTERFACE_EXPORT __declspec(dllexport)
-    #define TRANSMISSION_INTERFACE_IMPORT __declspec(dllimport)
-  #endif
-  #ifdef TRANSMISSION_INTERFACE_BUILDING_DLL
-    #define TRANSMISSION_INTERFACE_PUBLIC TRANSMISSION_INTERFACE_EXPORT
-  #else
-    #define TRANSMISSION_INTERFACE_PUBLIC TRANSMISSION_INTERFACE_IMPORT
-  #endif
-  #define TRANSMISSION_INTERFACE_PUBLIC_TYPE TRANSMISSION_INTERFACE_PUBLIC
-  #define TRANSMISSION_INTERFACE_LOCAL
+#ifdef __GNUC__
+#define TRANSMISSION_INTERFACE_EXPORT __attribute__((dllexport))
+#define TRANSMISSION_INTERFACE_IMPORT __attribute__((dllimport))
 #else
-  #define TRANSMISSION_INTERFACE_EXPORT __attribute__ ((visibility("default")))
-  #define TRANSMISSION_INTERFACE_IMPORT
-  #if __GNUC__ >= 4
-    #define TRANSMISSION_INTERFACE_PUBLIC __attribute__ ((visibility("default")))
-    #define TRANSMISSION_INTERFACE_LOCAL  __attribute__ ((visibility("hidden")))
-  #else
-    #define TRANSMISSION_INTERFACE_PUBLIC
-    #define TRANSMISSION_INTERFACE_LOCAL
-  #endif
-  #define TRANSMISSION_INTERFACE_PUBLIC_TYPE
+#define TRANSMISSION_INTERFACE_EXPORT __declspec(dllexport)
+#define TRANSMISSION_INTERFACE_IMPORT __declspec(dllimport)
+#endif
+#ifdef TRANSMISSION_INTERFACE_BUILDING_DLL
+#define TRANSMISSION_INTERFACE_PUBLIC TRANSMISSION_INTERFACE_EXPORT
+#else
+#define TRANSMISSION_INTERFACE_PUBLIC TRANSMISSION_INTERFACE_IMPORT
+#endif
+#define TRANSMISSION_INTERFACE_PUBLIC_TYPE TRANSMISSION_INTERFACE_PUBLIC
+#define TRANSMISSION_INTERFACE_LOCAL
+#else
+#define TRANSMISSION_INTERFACE_EXPORT __attribute__((visibility("default")))
+#define TRANSMISSION_INTERFACE_IMPORT
+#if __GNUC__ >= 4
+#define TRANSMISSION_INTERFACE_PUBLIC __attribute__((visibility("default")))
+#define TRANSMISSION_INTERFACE_LOCAL __attribute__((visibility("hidden")))
+#else
+#define TRANSMISSION_INTERFACE_PUBLIC
+#define TRANSMISSION_INTERFACE_LOCAL
+#endif
+#define TRANSMISSION_INTERFACE_PUBLIC_TYPE
 #endif
 
 #endif  // TRANSMISSION_INTERFACE__VISIBILITY_CONTROL_H_

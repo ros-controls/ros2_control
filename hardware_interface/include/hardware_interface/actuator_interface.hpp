@@ -26,7 +26,6 @@
 
 namespace hardware_interface
 {
-
 /// Virtual Class to implement when integrating a 1 DoF actuator into ros2_control.
 /**
   * The typical examples are conveyors or motors.
@@ -36,8 +35,7 @@ class ActuatorInterface
 public:
   ActuatorInterface() = default;
 
-  virtual
-  ~ActuatorInterface() = default;
+  virtual ~ActuatorInterface() = default;
 
   /// Configuration of the actuator from data parsed from the robot's URDF.
   /**
@@ -45,60 +43,53 @@ public:
    * \return return_type::OK if required data are provided and can be parsed,
    * return_type::ERROR otherwise.
    */
-  virtual
-  return_type configure(const HardwareInfo & actuator_info) = 0;
+  virtual return_type configure(const HardwareInfo & actuator_info) = 0;
 
   /// Exports all state interfaces for this actuator.
   /**
-   * The state interfaces have to be created and transfered according
+   * The state interfaces have to be created and transferred according
    * to the actuator info passed in for the configuration.
    *
-   * Note the ownership over the state interfaces is transfered to the caller.
+   * Note the ownership over the state interfaces is transferred to the caller.
    *
    * \return vector of state interfaces
    */
-  virtual
-  std::vector<StateInterface> export_state_interfaces() = 0;
+  virtual std::vector<StateInterface> export_state_interfaces() = 0;
 
   /// Exports all command interfaces for this actuator.
   /**
-   * The command interfaces have to be created and transfered according
+   * The command interfaces have to be created and transferred according
    * to the actuator info passed in for the configuration.
    *
-   * Note the ownership over the state interfaces is transfered to the caller.
+   * Note the ownership over the state interfaces is transferred to the caller.
    *
    * \return vector of command interfaces
    */
-  virtual
-  std::vector<CommandInterface> export_command_interfaces() = 0;
+  virtual std::vector<CommandInterface> export_command_interfaces() = 0;
 
   /// Start exchange data with the hardware.
   /**
    * \return return_type:OK if everything worked as expected, return_type::ERROR otherwise.
    */
-  virtual
-  return_type start() = 0;
+  virtual return_type start() = 0;
 
   /// Stop exchange data with the hardware.
   /**
    * \return return_type:OK if everything worked as expected, return_type::ERROR otherwise.
    */
-  virtual
-  return_type stop() = 0;
+  virtual return_type stop() = 0;
 
   /// Get name of the actuator hardware.
   /**
    * \return name.
    */
-  virtual
-  std::string get_name() const = 0;
+  virtual std::string get_name() const = 0;
 
   /// Get current state of the actuator hardware.
   /**
    * \return current status.
    */
-  virtual
-  status get_status() const = 0;
+  virtual status get_status() const = 0;
 
   /// Read the current state values from the actuator.
   /**
@@ -108,8 +99,7 @@ public:
    *
    * \return return_type::OK if the read was successful, return_type::ERROR otherwise.
    */
-  virtual
-  return_type read() = 0;
+  virtual return_type read() = 0;
 
   /// Write the current command values to the actuator.
   /**
@@ -118,8 +108,7 @@ public:
    *
    * \return return_type::OK if the read was successful, return_type::ERROR otherwise.
    */
-  virtual
-  return_type write() = 0;
+  virtual return_type write() = 0;
 };
 
 }  // namespace hardware_interface

@@ -27,7 +27,6 @@
 
 namespace transmission_interface
 {
-
 /// Implementation of a differential transmission.
 /**
  *
@@ -112,8 +111,7 @@ public:
    * \pre Nonzero actuator and joint reduction values.
    */
   DifferentialTransmission(
-    const std::vector<double> & actuator_reduction,
-    const std::vector<double> & joint_reduction,
+    const std::vector<double> & actuator_reduction, const std::vector<double> & joint_reduction,
     const std::vector<double> & joint_offset = {0.0, 0.0});
 
   /**
@@ -139,12 +137,12 @@ public:
    */
   void joint_to_actuator() override;
 
-  std::size_t num_actuators() const override {return 2;}
-  std::size_t num_joints()    const override {return 2;}
+  std::size_t num_actuators() const override { return 2; }
+  std::size_t num_joints() const override { return 2; }
 
-  const std::vector<double> & get_actuator_reduction() const {return actuator_reduction_;}
-  const std::vector<double> & get_joint_reduction()    const {return joint_reduction_;}
-  const std::vector<double> & get_joint_offset()       const {return joint_offset_;}
+  const std::vector<double> & get_actuator_reduction() const { return actuator_reduction_; }
+  const std::vector<double> & get_joint_reduction() const { return joint_reduction_; }
+  const std::vector<double> & get_joint_offset() const { return joint_offset_; }
 
   /// Get human-friendly report of handles
   std::string get_handles_info() const;
@@ -164,23 +162,21 @@ protected:
 };
 
 inline DifferentialTransmission::DifferentialTransmission(
-  const std::vector<double> & actuator_reduction,
-  const std::vector<double> & joint_reduction,
+  const std::vector<double> & actuator_reduction, const std::vector<double> & joint_reduction,
   const std::vector<double> & joint_offset)
 : actuator_reduction_(actuator_reduction),
   joint_reduction_(joint_reduction),
   joint_offset_(joint_offset)
 {
-  if (num_actuators() != actuator_reduction_.size() ||
-    num_joints() != joint_reduction_.size() ||
+  if (
+    num_actuators() != actuator_reduction_.size() || num_joints() != joint_reduction_.size() ||
     num_joints() != joint_offset_.size())
   {
     throw Exception("Reduction and offset vectors must have size 2.");
   }
 
-  if (0.0 == actuator_reduction_[0] ||
-    0.0 == actuator_reduction_[1] ||
-    0.0 == joint_reduction_[0] ||
+  if (
+    0.0 == actuator_reduction_[0] || 0.0 == actuator_reduction_[1] || 0.0 == joint_reduction_[0] ||
     0.0 == joint_reduction_[1])
   {
     throw Exception("Transmission reduction ratios cannot be zero.");
@@ -191,58 +187,58 @@ void DifferentialTransmission::configure(
   const std::vector<JointHandle> & joint_handles,
   const std::vector<ActuatorHandle> & actuator_handles)
 {
-  if (joint_handles.empty()) {
+  if (joint_handles.empty())
+  {
     throw Exception("No joint handles were passed in");
   }
 
-  if (actuator_handles.empty()) {
+  if (actuator_handles.empty())
+  {
     throw Exception("No actuator handles were passed in");
   }
 
   const auto joint_names = get_names(joint_handles);
-  if (joint_names.size() != 2) {
+  if (joint_names.size() != 2)
+  {
     throw Exception(
-            "There should be exactly two unique joint names but was given " +
-            to_string(joint_names));
+      "There should be exactly two unique joint names but was given " + to_string(joint_names));
   }
   const auto actuator_names = get_names(actuator_handles);
-  if (actuator_names.size() != 2) {
+  if (actuator_names.size() != 2)
+  {
     throw Exception(
-            "There should be exactly two unique actuator names but was given " +
-            to_string(actuator_names));
+      "There should be exactly two unique actuator names but was given " +
+      to_string(actuator_names));
   }
 
-  joint_position_ = get_ordered_handles(
-    joint_handles, joint_names,
-    hardware_interface::HW_IF_POSITION);
-  joint_velocity_ = get_ordered_handles(
-    joint_handles, joint_names,
-    hardware_interface::HW_IF_VELOCITY);
+  joint_position_ =
+    get_ordered_handles(joint_handles, joint_names, hardware_interface::HW_IF_POSITION);
+  joint_velocity_ =
+    get_ordered_handles(joint_handles, joint_names, hardware_interface::HW_IF_VELOCITY);
   joint_effort_ = get_ordered_handles(joint_handles, joint_names, hardware_interface::HW_IF_EFFORT);
 
-  if (joint_position_.size() != 2 && joint_velocity_.size() != 2 && joint_effort_.size() != 2) {
+  if (joint_position_.size() != 2 && joint_velocity_.size() != 2 && joint_effort_.size() != 2)
+  {
     throw Exception("Not enough valid or required joint handles were presented.");
   }
 
-  actuator_position_ = get_ordered_handles(
-    actuator_handles, actuator_names,
-    hardware_interface::HW_IF_POSITION);
-  actuator_velocity_ = get_ordered_handles(
-    actuator_handles, actuator_names,
-    hardware_interface::HW_IF_VELOCITY);
-  actuator_effort_ = get_ordered_handles(
-    actuator_handles, actuator_names,
-    hardware_interface::HW_IF_EFFORT);
+  actuator_position_ =
+    get_ordered_handles(actuator_handles, actuator_names, hardware_interface::HW_IF_POSITION);
+  actuator_velocity_ =
+    get_ordered_handles(actuator_handles, actuator_names, hardware_interface::HW_IF_VELOCITY);
+  actuator_effort_ =
+    get_ordered_handles(actuator_handles, actuator_names, hardware_interface::HW_IF_EFFORT);
 
-  if (actuator_position_.size() != 2 && actuator_velocity_.size() != 2 &&
+  if (
+    actuator_position_.size() != 2 && actuator_velocity_.size() != 2 &&
     actuator_effort_.size() != 2)
   {
     throw Exception(
-            "Not enough valid or required actuator handles were presented. \n" +
-            get_handles_info() );
+      "Not enough valid or required actuator handles were presented. \n" + get_handles_info());
   }
 
-  if (joint_position_.size() != actuator_position_.size() &&
+  if (
+    joint_position_.size() != actuator_position_.size() &&
     joint_velocity_.size() != actuator_velocity_.size() &&
     joint_effort_.size() != actuator_effort_.size())
   {
@@ -257,41 +253,40 @@ inline void DifferentialTransmission::actuator_to_joint()
 
   auto & act_pos = actuator_position_;
   auto & joint_pos = joint_position_;
-  if (act_pos.size() == num_actuators() && joint_pos.size() == num_joints()) {
+  if (act_pos.size() == num_actuators() && joint_pos.size() == num_joints())
+  {
     assert(act_pos[0] && act_pos[1] && joint_pos[0] && joint_pos[1]);
 
     joint_pos[0].set_value(
-      (act_pos[0].get_value() / ar[0] + act_pos[1].get_value() / ar[1]) /
-      (2.0 * jr[0]) + joint_offset_[0]);
+      (act_pos[0].get_value() / ar[0] + act_pos[1].get_value() / ar[1]) / (2.0 * jr[0]) +
+      joint_offset_[0]);
     joint_pos[1].set_value(
-      (act_pos[0].get_value() / ar[0] - act_pos[1].get_value() / ar[1]) /
-      (2.0 * jr[1]) + joint_offset_[1]);
+      (act_pos[0].get_value() / ar[0] - act_pos[1].get_value() / ar[1]) / (2.0 * jr[1]) +
+      joint_offset_[1]);
   }
 
   auto & act_vel = actuator_velocity_;
   auto & joint_vel = joint_velocity_;
-  if (act_vel.size() == num_actuators() && joint_vel.size() == num_joints()) {
+  if (act_vel.size() == num_actuators() && joint_vel.size() == num_joints())
+  {
     assert(act_vel[0] && act_vel[1] && joint_vel[0] && joint_vel[1]);
 
     joint_vel[0].set_value(
-      (act_vel[0].get_value() / ar[0] + act_vel[1].get_value() / ar[1]) /
-      (2.0 * jr[0]));
+      (act_vel[0].get_value() / ar[0] + act_vel[1].get_value() / ar[1]) / (2.0 * jr[0]));
     joint_vel[1].set_value(
-      (act_vel[0].get_value() / ar[0] - act_vel[1].get_value() / ar[1]) /
-      (2.0 * jr[1]));
+      (act_vel[0].get_value() / ar[0] - act_vel[1].get_value() / ar[1]) / (2.0 * jr[1]));
   }
 
   auto & act_eff = actuator_effort_;
   auto & joint_eff = joint_effort_;
-  if (act_eff.size() == num_actuators() && joint_eff.size() == num_joints()) {
+  if (act_eff.size() == num_actuators() && joint_eff.size() == num_joints())
+  {
     assert(act_eff[0] && act_eff[1] && joint_eff[0] && joint_eff[1]);
 
     joint_eff[0].set_value(
-      jr[0] *
-      (act_eff[0].get_value() * ar[0] + act_eff[1].get_value() * ar[1]));
+      jr[0] * (act_eff[0].get_value() * ar[0] + act_eff[1].get_value() * ar[1]));
     joint_eff[1].set_value(
-      jr[1] *
-      (act_eff[0].get_value() * ar[0] - act_eff[1].get_value() * ar[1]));
+      jr[1] * (act_eff[0].get_value() * ar[0] - act_eff[1].get_value() * ar[1]));
   }
 }
 
@@ -302,56 +297,52 @@ inline void DifferentialTransmission::joint_to_actuator()
 
   auto & act_pos = actuator_position_;
   auto & joint_pos = joint_position_;
-  if (act_pos.size() == num_actuators() && joint_pos.size() == num_joints()) {
+  if (act_pos.size() == num_actuators() && joint_pos.size() == num_joints())
+  {
     assert(act_pos[0] && act_pos[1] && joint_pos[0] && joint_pos[1]);
 
-    double joints_offset_applied[2] = {joint_pos[0].get_value() - joint_offset_[0],
-      joint_pos[1].get_value() - joint_offset_[1]};
+    double joints_offset_applied[2] = {
+      joint_pos[0].get_value() - joint_offset_[0], joint_pos[1].get_value() - joint_offset_[1]};
     act_pos[0].set_value(
-      (joints_offset_applied[0] * jr[0] + joints_offset_applied[1] * jr[1]) *
-      ar[0]);
+      (joints_offset_applied[0] * jr[0] + joints_offset_applied[1] * jr[1]) * ar[0]);
     act_pos[1].set_value(
-      (joints_offset_applied[0] * jr[0] - joints_offset_applied[1] * jr[1]) *
-      ar[1]);
+      (joints_offset_applied[0] * jr[0] - joints_offset_applied[1] * jr[1]) * ar[1]);
   }
 
   auto & act_vel = actuator_velocity_;
   auto & joint_vel = joint_velocity_;
-  if (act_vel.size() == num_actuators() && joint_vel.size() == num_joints()) {
+  if (act_vel.size() == num_actuators() && joint_vel.size() == num_joints())
+  {
     assert(act_vel[0] && act_vel[1] && joint_vel[0] && joint_vel[1]);
 
     act_vel[0].set_value(
-      (joint_vel[0].get_value() * jr[0] + joint_vel[1].get_value() * jr[1]) *
-      ar[0]);
+      (joint_vel[0].get_value() * jr[0] + joint_vel[1].get_value() * jr[1]) * ar[0]);
     act_vel[1].set_value(
-      (joint_vel[0].get_value() * jr[0] - joint_vel[1].get_value() * jr[1]) *
-      ar[1]);
+      (joint_vel[0].get_value() * jr[0] - joint_vel[1].get_value() * jr[1]) * ar[1]);
   }
 
   auto & act_eff = actuator_effort_;
   auto & joint_eff = joint_effort_;
-  if (act_eff.size() == num_actuators() && joint_eff.size() == num_joints()) {
+  if (act_eff.size() == num_actuators() && joint_eff.size() == num_joints())
+  {
     assert(act_eff[0] && act_eff[1] && joint_eff[0] && joint_eff[1]);
 
     act_eff[0].set_value(
-      (joint_eff[0].get_value() / jr[0] + joint_eff[1].get_value() / jr[1]) /
-      (2.0 * ar[0]));
+      (joint_eff[0].get_value() / jr[0] + joint_eff[1].get_value() / jr[1]) / (2.0 * ar[0]));
     act_eff[1].set_value(
-      (joint_eff[0].get_value() / jr[0] - joint_eff[1].get_value() / jr[1]) /
-      (2.0 * ar[1]));
+      (joint_eff[0].get_value() / jr[0] - joint_eff[1].get_value() / jr[1]) / (2.0 * ar[1]));
   }
 }
 
 std::string DifferentialTransmission::get_handles_info() const
 {
   return std::string("Got the following handles:\n") +
-         "Joint position: " + to_string(get_names(joint_position_)) + ", Actuator position: " +
-         to_string(get_names(actuator_position_) ) + "\n" +
-         "Joint velocity: " + to_string(get_names(joint_velocity_)) + ", Actuator velocity: " +
-         to_string(get_names(actuator_velocity_) ) + "\n" +
-         "Joint effort: " + to_string(get_names(joint_effort_)) + ", Actuator effort: " + to_string(
-    get_names(
-      actuator_effort_));
+         "Joint position: " + to_string(get_names(joint_position_)) +
+         ", Actuator position: " + to_string(get_names(actuator_position_)) + "\n" +
+         "Joint velocity: " + to_string(get_names(joint_velocity_)) +
+         ", Actuator velocity: " + to_string(get_names(actuator_velocity_)) + "\n" +
+         "Joint effort: " + to_string(get_names(joint_effort_)) +
+         ", Actuator effort: " + to_string(get_names(actuator_effort_));
 }
 
 }  // namespace transmission_interface

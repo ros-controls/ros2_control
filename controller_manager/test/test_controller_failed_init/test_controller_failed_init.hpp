@@ -18,12 +18,11 @@
 #include <memory>
 #include <string>
 
-#include "controller_manager/controller_manager.hpp"
 #include "controller_interface/visibility_control.h"
+#include "controller_manager/controller_manager.hpp"
 
 namespace test_controller_failed_init
 {
-
 // indicating the node name under which the controller node
 // is being loaded.
 constexpr char TEST_CONTROLLER_NAME[] = "test_controller_failed_init_name";
@@ -37,12 +36,10 @@ public:
   TestControllerFailedInit();
 
   CONTROLLER_MANAGER_PUBLIC
-  virtual
-  ~TestControllerFailedInit() = default;
+  virtual ~TestControllerFailedInit() = default;
 
   CONTROLLER_INTERFACE_PUBLIC
-  controller_interface::return_type
-  init(const std::string & controller_name) override;
+  controller_interface::return_type init(const std::string & controller_name) override;
 
   controller_interface::InterfaceConfiguration command_interface_configuration() const override
   {
@@ -57,8 +54,7 @@ public:
   }
 
   CONTROLLER_MANAGER_PUBLIC
-  controller_interface::return_type
-  update() override;
+  controller_interface::return_type update() override;
 };
 
 }  // namespace test_controller_failed_init

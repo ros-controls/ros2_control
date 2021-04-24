@@ -17,14 +17,13 @@
 #ifndef JOINT_LIMITS_INTERFACE__JOINT_LIMITS_URDF_HPP_
 #define JOINT_LIMITS_INTERFACE__JOINT_LIMITS_URDF_HPP_
 
-#include <rclcpp/rclcpp.hpp>
-#include <urdf_model/joint.h>
 #include <urdf/urdfdom_compatibility.h>
+#include <urdf_model/joint.h>
 #include <joint_limits_interface/joint_limits.hpp>
+#include <rclcpp/rclcpp.hpp>
 
 namespace joint_limits_interface
 {
-
 /**
  * Populate a JointLimits instance from URDF joint data.
  * \param[in] urdf_joint URDF joint.
@@ -34,18 +33,21 @@ namespace joint_limits_interface
  */
 inline bool getJointLimits(urdf::JointConstSharedPtr urdf_joint, JointLimits & limits)
 {
-  if (!urdf_joint || !urdf_joint->limits) {
+  if (!urdf_joint || !urdf_joint->limits)
+  {
     return false;
   }
 
-  limits.has_position_limits = urdf_joint->type == urdf::Joint::REVOLUTE ||
-    urdf_joint->type == urdf::Joint::PRISMATIC;
-  if (limits.has_position_limits) {
+  limits.has_position_limits =
+    urdf_joint->type == urdf::Joint::REVOLUTE || urdf_joint->type == urdf::Joint::PRISMATIC;
+  if (limits.has_position_limits)
+  {
     limits.min_position = urdf_joint->limits->lower;
     limits.max_position = urdf_joint->limits->upper;
   }
 
-  if (!limits.has_position_limits && urdf_joint->type == urdf::Joint::CONTINUOUS) {
+  if (!limits.has_position_limits && urdf_joint->type == urdf::Joint::CONTINUOUS)
+  {
     limits.angle_wraparound = true;
   }
 
@@ -68,7 +70,8 @@ inline bool getJointLimits(urdf::JointConstSharedPtr urdf_joint, JointLimits & l
  */
 inline bool getSoftJointLimits(urdf::JointConstSharedPtr urdf_joint, SoftJointLimits & soft_limits)
 {
-  if (!urdf_joint || !urdf_joint->safety) {
+  if (!urdf_joint || !urdf_joint->safety)
+  {
     return false;
   }
 

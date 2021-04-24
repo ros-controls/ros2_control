@@ -19,9 +19,9 @@
 #include <string>
 #include <vector>
 
-#include "controller_manager_test_common.hpp"
 #include "controller_interface/controller_interface.hpp"
 #include "controller_manager/controller_manager.hpp"
+#include "controller_manager_test_common.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 
 using ::testing::_;
@@ -34,31 +34,24 @@ class TestLoadController : public ControllerManagerFixture
   {
     ControllerManagerFixture::SetUp();
 
-    update_timer_ = cm_->create_wall_timer(
-      std::chrono::milliseconds(10), [&]() {
-        cm_->read();
-        cm_->update();
-        cm_->write();
-      }
-    );
+    update_timer_ = cm_->create_wall_timer(std::chrono::milliseconds(10), [&]() {
+      cm_->read();
+      cm_->update();
+      cm_->write();
+    });
 
-    update_executor_ = std::make_shared<rclcpp::executors::MultiThreadedExecutor>(
-      rclcpp::ExecutorOptions(), 2);
+    update_executor_ =
+      std::make_shared<rclcpp::executors::MultiThreadedExecutor>(rclcpp::ExecutorOptions(), 2);
 
     update_executor_->add_node(cm_);
-    update_executor_spin_future_ = std::async(
-      std::launch::async, [this]() -> void {
-        update_executor_->spin();
-      });
+    update_executor_spin_future_ =
+      std::async(std::launch::async, [this]() -> void { update_executor_->spin(); });
     // This sleep is needed to prevent a too fast test from ending before the
     // executor has began to spin, which causes it to hang
     std::this_thread::sleep_for(50ms);
   }
 
-  void TearDown() override
-  {
-    update_executor_->cancel();
-  }
+  void TearDown() override { update_executor_->cancel(); }
 
 protected:
   rclcpp::TimerBase::SharedPtr update_timer_;
@@ -121,7 +114,8 @@ TEST_F(TestLoadController, spawner_test_type_in_arg)
   EXPECT_EQ(
     call_spawner(
       "ctrl_2 -c test_controller_manager -t " +
-      std::string(test_controller::TEST_CONTROLLER_CLASS_NAME)), 0);
+      std::string(test_controller::TEST_CONTROLLER_CLASS_NAME)),
+    0);
 
   ASSERT_EQ(cm_->get_loaded_controllers().size(), 1ul);
   auto ctrl_2 = cm_->get_loaded_controllers()[0];
@@ -135,15 +129,13 @@ TEST_F(TestLoadController, unload_on_kill)
   // Launch spawner.py with unload on kill
   // timeout command will kill it after the specified time with signal SIGINT
   std::stringstream ss;
-  ss << "timeout --signal=INT 5 " <<
-    "ros2 run controller_manager spawner.py " <<
-    "ctrl_3 -c test_controller_manager -t " <<
-    std::string(test_controller::TEST_CONTROLLER_CLASS_NAME) <<
-    " --unload-on-kill";
+  ss << "timeout --signal=INT 5 "
+     << "ros2 run controller_manager spawner.py "
+     << "ctrl_3 -c test_controller_manager -t "
+     << std::string(test_controller::TEST_CONTROLLER_CLASS_NAME) << " --unload-on-kill";
 
-  EXPECT_NE(
-    std::system(ss.str().c_str()),
-    0) << "timeout should have killed spawner and returned non 0 code";
+  EXPECT_NE(std::system(ss.str().c_str()), 0)
+    << "timeout should have killed spawner and returned non 0 code";
 
   ASSERT_EQ(cm_->get_loaded_controllers().size(), 0ul);
 }

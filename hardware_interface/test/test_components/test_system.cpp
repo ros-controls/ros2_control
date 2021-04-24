@@ -32,17 +32,14 @@ class TestSystem : public BaseInterface<SystemInterface>
   std::vector<StateInterface> export_state_interfaces() override
   {
     std::vector<StateInterface> state_interfaces;
-    for (auto i = 0u; i < info_.joints.size(); ++i) {
-      state_interfaces.emplace_back(
-        hardware_interface::StateInterface(
-          info_.joints[i].name, hardware_interface::HW_IF_POSITION, &position_state_[i]));
-      state_interfaces.emplace_back(
-        hardware_interface::StateInterface(
-          info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &velocity_state_[i]));
-      state_interfaces.emplace_back(
-        hardware_interface::StateInterface(
-          info_.joints[i].name,
-          hardware_interface::HW_IF_ACCELERATION, &acceleration_state_[i]));
+    for (auto i = 0u; i < info_.joints.size(); ++i)
+    {
+      state_interfaces.emplace_back(hardware_interface::StateInterface(
+        info_.joints[i].name, hardware_interface::HW_IF_POSITION, &position_state_[i]));
+      state_interfaces.emplace_back(hardware_interface::StateInterface(
+        info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &velocity_state_[i]));
+      state_interfaces.emplace_back(hardware_interface::StateInterface(
+        info_.joints[i].name, hardware_interface::HW_IF_ACCELERATION, &acceleration_state_[i]));
     }
 
     return state_interfaces;
@@ -51,10 +48,10 @@ class TestSystem : public BaseInterface<SystemInterface>
   std::vector<CommandInterface> export_command_interfaces() override
   {
     std::vector<CommandInterface> command_interfaces;
-    for (auto i = 0u; i < info_.joints.size(); ++i) {
-      command_interfaces.emplace_back(
-        hardware_interface::CommandInterface(
-          info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &velocity_command_[i]));
+    for (auto i = 0u; i < info_.joints.size(); ++i)
+    {
+      command_interfaces.emplace_back(hardware_interface::CommandInterface(
+        info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &velocity_command_[i]));
     }
 
     return command_interfaces;
@@ -72,15 +69,9 @@ class TestSystem : public BaseInterface<SystemInterface>
     return return_type::OK;
   }
 
-  return_type read() override
-  {
-    return return_type::OK;
-  }
+  return_type read() override { return return_type::OK; }
 
-  return_type write() override
-  {
-    return return_type::OK;
-  }
+  return_type write() override { return return_type::OK; }
 
 private:
   std::array<double, 2> velocity_command_ = {0.0, 0.0};
