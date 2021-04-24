@@ -19,9 +19,9 @@
 #include <string>
 #include <vector>
 
-#include <geometry_msgs/msg/wrench.hpp>
-#include <hardware_interface/loaned_state_interface.hpp>
-#include <semantic_components/semantic_component_interface.hpp>
+#include "geometry_msgs/msg/wrench.hpp"
+#include "hardware_interface/loaned_state_interface.hpp"
+#include "semantic_components/semantic_component_interface.hpp"
 
 namespace semantic_components
 {
