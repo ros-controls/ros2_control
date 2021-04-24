@@ -40,6 +40,9 @@ public:
     interface_names_.emplace_back(name_ + "/" + "torque.x");
     interface_names_.emplace_back(name_ + "/" + "torque.y");
     interface_names_.emplace_back(name_ + "/" + "torque.z");
+
+    // Set all interfaces existing
+    std::fill(existing_axes_.begin(), existing_axes_.end(), true);
   }
 
   /// Constructor for 6D FTS with custom interface names.
