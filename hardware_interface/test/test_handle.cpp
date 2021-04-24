@@ -63,12 +63,3 @@ TEST(TestHandle, value_methods_work_on_non_nullptr)
   EXPECT_NO_THROW(handle.set_value(0.0));
   EXPECT_DOUBLE_EQ(handle.get_value(), 0.0);
 }
-
-TEST(TestHandle, with_value_ptr_initializes_new_handle_correctly)
-{
-  double value = 1.337;
-  StateInterface handle{JOINT_NAME, FOO_INTERFACE};
-  auto new_handle = handle.with_value_ptr(&value);
-  EXPECT_ANY_THROW(handle.get_value());
-  EXPECT_DOUBLE_EQ(new_handle.get_value(), value);
-}

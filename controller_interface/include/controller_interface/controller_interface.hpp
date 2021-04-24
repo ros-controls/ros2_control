@@ -31,12 +31,16 @@
 namespace controller_interface
 {
 
+// TODO(karsten1987): Remove clang pragma within Galactic
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wc++17-extensions"
 enum class return_type : std::uint8_t
 {
   OK = 0,
   ERROR = 1,
   SUCCESS [[deprecated("Use controller_interface::return_type::OK instead.")]] = OK
 };
+#pragma clang diagnostic pop
 
 /// Indicating which interfaces are to be claimed.
 /**
