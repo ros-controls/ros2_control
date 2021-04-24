@@ -48,7 +48,9 @@ class SetControllerStateVerb(VerbExtension):
                 if matched_controller.state != "unconfigured":
                     return f"can't configure {matched_controller.name} from its current state {matched_controller.state}"
 
-                response = configure_controller(node, args.controller_manager, args.controller_name)
+                response = configure_controller(
+                    node, args.controller_manager, args.controller_name
+                )
                 if not response.ok:
                     return "Error configuring controller, check controller_manager logs"
                 return f"successfully configured {args.controller_name}"

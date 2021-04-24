@@ -61,7 +61,9 @@ def load_configure_controller(controller_manager_name, controller_name):
     request = LoadConfigureController.Request()
     request.name = controller_name
     return service_caller(
-        f"{controller_manager_name}/load_and_configure_controller", LoadConfigureController, request
+        f"{controller_manager_name}/load_and_configure_controller",
+        LoadConfigureController,
+        request,
     )
 
 

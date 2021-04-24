@@ -68,7 +68,10 @@ def list_controller_types(node, controller_manager_name):
 def list_hardware_interfaces(node, controller_manager_name):
     request = ListHardwareInterfaces.Request()
     return service_caller(
-        node, f"{controller_manager_name}/list_hardware_interfaces", ListHardwareInterfaces, request
+        node,
+        f"{controller_manager_name}/list_hardware_interfaces",
+        ListHardwareInterfaces,
+        request,
     )
 
 

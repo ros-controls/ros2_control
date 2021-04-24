@@ -42,7 +42,7 @@ repos:
     rev: 20.8b1
     hooks:
       - id: black
-        args: ["--line-length=100"]
+        args: ["--line-length=99"]
 
   # PEP 257
   - repo: https://github.com/FalconSocial/pre-commit-mirrors-pep257
