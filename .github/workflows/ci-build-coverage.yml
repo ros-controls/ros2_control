@@ -1,21 +1,24 @@
-name: Build & Test ros2_control with source-based setup
+name: Coverage Build
 on:
+  pull_request:
   push:
     branches:
       - master
   schedule:
-    # Run every morning to detect flakiness and broken dependencies
-    - cron: '17 8 * * *'
+    # Run every day to detect flakiness and broken dependencies
+    - cron: '07 7 * * *'
 
 jobs:
-  ci_source:
-    name: Foxy source job
+  coverage:
+    name: coverage build
     runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
     steps:
-      - uses: ros-tooling/setup-ros@v0.1
-      - uses: ros-tooling/action-ros-ci@v0.1
+      - uses: ros-tooling/setup-ros@0.0.26
+        with:
+          required-ros-distributions: foxy
+      - uses: ros-tooling/action-ros-ci@v0.2
         with:
           target-ros2-distro: foxy
           # build all packages listed in the meta package
@@ -28,11 +31,15 @@ jobs:
             ros2_control
             ros2_control_test_assets
           vcs-repo-file-url: |
-            https://raw.githubusercontent.com/ros2/ros2/foxy/ros2.repos
             https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/ros2_control/ros2_control.repos
-          colcon-mixin-name: coverage-gcc
+          colcon-defaults: |
+            {
+              "build": {
+                "mixin": ["coverage-gcc"]
+              }
+            }
           colcon-mixin-repository: https://raw.githubusercontent.com/colcon/colcon-mixin-repository/master/index.yaml
-      - uses: codecov/codecov-action@v1
+      - uses: codecov/codecov-action@v1.0.14
         with:
           file: ros_ws/lcov/total_coverage.info
           flags: unittests
