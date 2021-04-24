@@ -105,7 +105,7 @@ repos:
         stages: [commit]
         entry: ament_lint_cmake
         language: system
-        files: CMakeLists.txt$
+        files: CMakeLists\.txt$
 
   # Copyright
   - repo: local
@@ -123,11 +123,13 @@ repos:
     hooks:
       - id: doc8
         args: ['--max-line-length=100', '--ignore=D001']
+        exclude: CHANGELOG\.rst$
 
   - repo: https://github.com/pre-commit/pygrep-hooks
     rev: v1.8.0
     hooks:
       - id: rst-backticks
+        exclude: CHANGELOG\.rst$
       - id: rst-directive-colons
       - id: rst-inline-touching-normal
 
