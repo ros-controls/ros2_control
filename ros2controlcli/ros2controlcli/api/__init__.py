@@ -32,7 +32,7 @@ def service_caller(service_name, service_type, request):
         rclpy.init()
 
         node = rclpy.create_node(
-            f"ros2controlcli_{ service_name.replace('/', '') }_requester"
+            f"ros2controlcli_{ service_name.replace('/', '') }_requester")
 
         cli = node.create_client(service_type, service_name)
 
