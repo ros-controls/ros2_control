@@ -1,5 +1,7 @@
 name: Build & Test ros2_control with source-based setup
 on:
+  # TODO(karsten1987) Remove before merge
+  pull_request:
   push:
     branches:
       - master
@@ -9,7 +11,7 @@ on:
 
 jobs:
   ci_source:
-    name: Foxy source job
+    name: Foxy source job (GCC)
     runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
@@ -43,7 +45,7 @@ jobs:
           path: ros_ws/log
 
   ci_source_clang:
-    name: Foxy source job
+    name: Foxy source job (clang)
     runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
