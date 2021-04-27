@@ -40,7 +40,7 @@ public:
       // Can control in position or velocity
       const auto & command_interfaces = joint.command_interfaces;
       if (command_interfaces.size() != 2) {return hardware_interface::return_type::ERROR;}
-      for (auto & command_interface : command_interfaces) {
+      for (const auto & command_interface : command_interfaces) {
         if (command_interface.name != hardware_interface::HW_IF_POSITION &&
           command_interface.name != hardware_interface::HW_IF_VELOCITY)
         {
@@ -50,7 +50,7 @@ public:
       // Can give feedback state for position, velocity, and acceleration
       const auto & state_interfaces = joint.state_interfaces;
       if (state_interfaces.size() != 2) {return hardware_interface::return_type::ERROR;}
-      for (auto & state_interface : state_interfaces) {
+      for (const auto & state_interface : state_interfaces) {
         if (state_interface.name != hardware_interface::HW_IF_POSITION &&
           state_interface.name != hardware_interface::HW_IF_VELOCITY)
         {
@@ -66,7 +66,7 @@ public:
   std::vector<hardware_interface::StateInterface> export_state_interfaces() override
   {
     std::vector<hardware_interface::StateInterface> state_interfaces;
-    for (uint i = 0; i < info_.joints.size(); i++) {
+    for (auto i = 0u; i < info_.joints.size(); i++) {
       state_interfaces.emplace_back(
         hardware_interface::StateInterface(
           info_.joints[i].name, hardware_interface::HW_IF_POSITION, &position_state_[i]));
@@ -85,7 +85,7 @@ public:
   std::vector<hardware_interface::CommandInterface> export_command_interfaces() override
   {
     std::vector<hardware_interface::CommandInterface> command_interfaces;
-    for (uint i = 0; i < info_.joints.size(); i++) {
+    for (auto i = 0u; i < info_.joints.size(); i++) {
       command_interfaces.emplace_back(
         hardware_interface::CommandInterface(
           info_.joints[i].name, hardware_interface::HW_IF_POSITION, &position_command_[i]));
@@ -121,13 +121,13 @@ public:
 
   hardware_interface::return_type prepare_command_mode_switch(
     const std::vector<std::string> & start_interfaces,
-    const std::vector<std::string> & stop_interfaces)
+    const std::vector<std::string> & stop_interfaces) override
   {
     // Starting interfaces
     start_modes_.clear();
     stop_modes_.clear();
-    for (std::string key : start_interfaces) {
-      for (uint i = 0; i < info_.joints.size(); i++) {
+    for (const auto & key : start_interfaces) {
+      for (auto i = 0u; i < info_.joints.size(); i++) {
         if (key == info_.joints[i].name + "/" + hardware_interface::HW_IF_POSITION) {
           start_modes_.push_back(hardware_interface::HW_IF_POSITION);
         }
@@ -142,8 +142,8 @@ public:
     }
 
     // Stopping interfaces
-    for (std::string key : stop_interfaces) {
-      for (uint i = 0; i < info_.joints.size(); i++) {
+    for (const auto & key : stop_interfaces) {
+      for (auto i = 0u; i < info_.joints.size(); i++) {
         if (key.find(info_.joints[i].name) != std::string::npos) {
           stop_modes_.push_back(true);
         }
@@ -158,7 +158,7 @@ public:
 
   hardware_interface::return_type perform_command_mode_switch(
     const std::vector<std::string> & start_interfaces,
-    const std::vector<std::string> & /*stop_interfaces*/)
+    const std::vector<std::string> & /*stop_interfaces*/) override
   {
     // Test of failure in perform command mode switch
     // Fail if given an empty list.

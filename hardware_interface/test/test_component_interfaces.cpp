@@ -266,38 +266,46 @@ class DummySystemPreparePerform : public hardware_interface::SystemInterface
   {
     return {};
   }
+
   std::vector<hardware_interface::CommandInterface> export_command_interfaces() override
   {
     return {};
   }
+
   hardware_interface::return_type start() override
   {
     return hardware_interface::return_type::OK;
   }
+
   hardware_interface::return_type stop() override
   {
     return hardware_interface::return_type::OK;
   }
+
   std::string get_name() const override
   {
     return "DummySystemPreparePerform";
   }
+
   hardware_interface::status get_status() const override
   {
     return hardware_interface::status::UNKNOWN;
   }
+
   hardware_interface::return_type read() override
   {
     return hardware_interface::return_type::OK;
   }
+
   hardware_interface::return_type write() override
   {
     return hardware_interface::return_type::OK;
   }
+
   // Custom prepare/perform functions
   hardware_interface::return_type prepare_command_mode_switch(
     const std::vector<std::string> & start_interfaces,
-    const std::vector<std::string> & stop_interfaces)
+    const std::vector<std::string> & stop_interfaces) override
   {
     // Criteria to test against
     if (start_interfaces.size() != 1) {
@@ -308,9 +316,10 @@ class DummySystemPreparePerform : public hardware_interface::SystemInterface
     }
     return hardware_interface::return_type::OK;
   }
+
   hardware_interface::return_type perform_command_mode_switch(
     const std::vector<std::string> & start_interfaces,
-    const std::vector<std::string> & stop_interfaces)
+    const std::vector<std::string> & stop_interfaces) override
   {
     // Criteria to test against
     if (start_interfaces.size() != 1) {
