@@ -41,3 +41,30 @@ jobs:
         with:
           name: colcon-logs-${{ matrix.os }}
           path: ros_ws/log
+
+  ci_source_clang:
+    name: Foxy source job
+    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+    steps:
+      - uses: ros-tooling/setup-ros@v0.1
+      - uses: ros-tooling/action-ros-ci@v0.1
+        with:
+          target-ros2-distro: foxy
+          # build all packages listed in the meta package
+          package-name:
+            controller_interface
+          vcs-repo-file-url: |
+            https://raw.githubusercontent.com/ros2/ros2/foxy/ros2.repos
+            https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/ros2_control/ros2_control.repos
+          colcon-mixin-name: coverage-gcc
+          colcon-mixin-repository: https://raw.githubusercontent.com/colcon/colcon-mixin-repository/master/index.yaml
+          colcon-defaults: |
+          {
+            "build": {
+              "mixin": [
+                  "clang-libcxx"
+              ]
+            }
+          }
