@@ -17,7 +17,6 @@ find_package(rcpputils REQUIRED)
 find_package(rcutils REQUIRED)
 find_package(tinyxml2_vendor REQUIRED)
 find_package(TinyXML2 REQUIRED)
-find_package(rclcpp REQUIRED)
 
 add_library(
   hardware_interface
@@ -39,7 +38,6 @@ ament_target_dependencies(
   pluginlib
   rcutils
   rcpputils
-  rclcpp
 )
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.
