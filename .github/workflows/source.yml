@@ -61,10 +61,10 @@ jobs:
           colcon-mixin-name: coverage-gcc
           colcon-mixin-repository: https://raw.githubusercontent.com/colcon/colcon-mixin-repository/master/index.yaml
           colcon-defaults: |
-          {
-            "build": {
-              "mixin": [
-                  "clang-libcxx"
-              ]
+            {
+              "build": {
+                "mixin": [
+                    "clang-libcxx"
+                ]
+              }
             }
-          }
