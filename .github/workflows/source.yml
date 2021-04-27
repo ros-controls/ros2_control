@@ -57,6 +57,12 @@ jobs:
           # build all packages listed in the meta package
           package-name:
             controller_interface
+            controller_manager
+            controller_manager_msgs
+            hardware_interface
+            ros2controlcli
+            ros2_control
+            ros2_control_test_assets
           vcs-repo-file-url: |
             https://raw.githubusercontent.com/ros2/ros2/foxy/ros2.repos
             https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/ros2_control/ros2_control.repos

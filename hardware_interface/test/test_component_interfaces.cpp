@@ -239,7 +239,7 @@ class DummySystem : public hardware_interface::SystemInterface
 
   hardware_interface::return_type write() override
   {
-    for (auto i = 0; i < 3; ++i) {
+    for (uint i = 0; i < 3; ++i) {
       position_state_[i] += velocity_command_[0];
       velocity_state_[i] = velocity_command_[0];
     }
