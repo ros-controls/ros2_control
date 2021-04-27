@@ -524,16 +524,17 @@ controller_interface::return_type ControllerManager::switch_controller(
 
   if (!start_command_interface_request_.empty() || !stop_command_interface_request_.empty()) {
     if (!resource_manager_->prepare_command_mode_switch(
-      start_command_interface_request_,
-      stop_command_interface_request_)) {
-        RCLCPP_ERROR(
-          get_logger(),
-          "Could not switch controllers since prepare command mode switch was rejected.");
-        start_request_.clear();
-        stop_request_.clear();
-        start_command_interface_request_.clear();
-        stop_command_interface_request_.clear();
-        return controller_interface::return_type::ERROR;
+        start_command_interface_request_,
+        stop_command_interface_request_))
+    {
+      RCLCPP_ERROR(
+        get_logger(),
+        "Could not switch controllers since prepare command mode switch was rejected.");
+      start_request_.clear();
+      stop_request_.clear();
+      start_command_interface_request_.clear();
+      stop_command_interface_request_.clear();
+      return controller_interface::return_type::ERROR;
     }
   }
   // start the atomic controller switching
@@ -553,7 +554,7 @@ controller_interface::return_type ControllerManager::switch_controller(
   }
   start_request_.clear();
   stop_request_.clear();
-  
+
   start_command_interface_request_.clear();
   stop_command_interface_request_.clear();
   RCLCPP_DEBUG(get_logger(), "Successfully switched controllers");
@@ -613,11 +614,12 @@ void ControllerManager::manage_switch()
 {
   // Ask hardware interfaces to change mode
   if (!resource_manager_->perform_command_mode_switch(
-    start_command_interface_request_,
-    stop_command_interface_request_)) {
-      RCLCPP_ERROR(
-        get_logger(),
-        "Error while performing mode switch.");
+      start_command_interface_request_,
+      stop_command_interface_request_))
+  {
+    RCLCPP_ERROR(
+      get_logger(),
+      "Error while performing mode switch.");
   }
 
   stop_controllers();
