@@ -81,4 +81,23 @@
       <state_interface name="position"/>
     </joint>
   </ros2_control>
+  <ros2_control name="TestSystemCommandModes" type="system">
+    <hardware>
+      <plugin>test_robot_hardware/TestSystemCommandModes</plugin>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="acceleration"/>
+    </joint>
+    <joint name="joint2">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="acceleration"/>
+    </joint>
+  </ros2_control>
 </robot>

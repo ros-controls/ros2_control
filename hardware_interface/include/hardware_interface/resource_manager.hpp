@@ -193,6 +193,40 @@ public:
    */
   std::unordered_map<std::string, status> get_components_status();
 
+  /// Prepare the hardware components for a new command interface mode
+  /**
+   * Hardware components are asked to prepare a new command interface claim.
+   *
+   * \note this is intended for mode-switching when a hardware interface needs to change
+   * control mode depending on which command interface is claimed.
+   * \note this is for non-realtime preparing for and accepting new command resource
+   * combinations.
+   * \note accept_command_resource_claim is called on all actuators and system components
+   * and hardware interfaces should return hardware_interface::return_type::SUCCESS
+   * by default
+   * \param[in] start_interfaces vector of string identifiers for the command interfaces starting.
+   * \param[in] stop_interfaces vector of string identifiers for the command interfaces stopping.
+   * \return true if switch can be prepared, false if a component rejects switch request.
+   */
+  bool prepare_command_mode_switch(
+    const std::vector<std::string> & start_interfaces,
+    const std::vector<std::string> & stop_interfaces);
+
+  /// Notify the hardware components that realtime hardware mode switching should occur.
+  /**
+   * Hardware components are asked to perform the command interface mode switching.
+   *
+   * \note this is inteded for mode-switching when a hardware interface needs to change
+   * control mode depending on which command interface is claimed.
+   * \note this is for realtime switching of the command interface.
+   * \param[in] start_interfaces vector of string identifiers for the command interfaces starting.
+   * \param[in] stop_interfaces vector of string identifiers for the command interfacs stopping.
+   * \return true if switch is performed, false if a component rejects switching.
+   */
+  bool perform_command_mode_switch(
+    const std::vector<std::string> & start_interfaces,
+    const std::vector<std::string> & stop_interfaces);
+
   /// Start all loaded hardware components.
   void start_components();
 

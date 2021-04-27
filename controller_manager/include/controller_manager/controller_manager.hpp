@@ -342,6 +342,7 @@ private:
     unload_controller_service_;
 
   std::vector<std::string> start_request_, stop_request_;
+  std::vector<std::string> start_command_interface_request_, stop_command_interface_request_;
 
   struct SwitchParams
   {
