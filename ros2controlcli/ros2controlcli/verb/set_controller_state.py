@@ -46,8 +46,8 @@ class SetControllerStateVerb(VerbExtension):
 
             if args.state == 'configure':
                 if matched_controller.state != 'unconfigured':
-                    return f"can't configure {matched_controller.name} " \
-                           f"from its current state {matched_controller.state}"
+                    return f'cannot configure {matched_controller.name} ' \
+                           f'from its current state {matched_controller.state}'
 
                 response = configure_controller(
                     node, args.controller_manager, args.controller_name
@@ -58,8 +58,8 @@ class SetControllerStateVerb(VerbExtension):
 
             if args.state == 'start':
                 if matched_controller.state != 'inactive':
-                    return f"can't start {matched_controller.name} " \
-                           f"from its current state {matched_controller.state}"
+                    return f'cannot start {matched_controller.name} ' \
+                           f'from its current state {matched_controller.state}'
                 response = switch_controllers(
                     node, args.controller_manager, [], [args.controller_name], True, True, 5.0
                 )
@@ -69,8 +69,8 @@ class SetControllerStateVerb(VerbExtension):
 
             if args.state == 'stop':
                 if matched_controller.state != 'active':
-                    return f"can't stop {matched_controller.name} " \
-                           f"from its current state {matched_controller.state}"
+                    return f'cannot stop {matched_controller.name} ' \
+                           f'from its current state {matched_controller.state}'
 
                 response = switch_controllers(
                     node, args.controller_manager, [args.controller_name], [], True, True, 5.0
