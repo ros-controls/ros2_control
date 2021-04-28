@@ -36,4 +36,6 @@ class ConfigureStartControllerVerb(VerbExtension):
         response = configure_start_controller(args.controller_manager, args.controller_name)
         if not response.ok:
             return 'Error configuring and starting controller, check controller_manager logs'
-        return f'Successfully configured and started controller {args.controller_name}'
+
+        print(f'Successfully configured and started controller {args.controller_name}')
+        return 0

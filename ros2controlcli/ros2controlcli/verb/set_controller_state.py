@@ -54,7 +54,9 @@ class SetControllerStateVerb(VerbExtension):
                 )
                 if not response.ok:
                     return 'Error configuring controller, check controller_manager logs'
-                return f'successfully configured {args.controller_name}'
+
+                print(f'successfully configured {args.controller_name}')
+                return 0
 
             if args.state == 'start':
                 if matched_controller.state != 'inactive':
@@ -65,7 +67,9 @@ class SetControllerStateVerb(VerbExtension):
                 )
                 if not response.ok:
                     return 'Error starting controller, check controller_manager logs'
-                return f'successfully started {args.controller_name}'
+
+                print(f'successfully started {args.controller_name}')
+                return 0
 
             if args.state == 'stop':
                 if matched_controller.state != 'active':
@@ -77,4 +81,6 @@ class SetControllerStateVerb(VerbExtension):
                 )
                 if not response.ok:
                     return 'Error stopping controller, check controller_manager logs'
-                return f'successfully stopped {args.controller_name}'
+
+                print(f'successfully stopped {args.controller_name}')
+                return 0

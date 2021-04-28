@@ -36,4 +36,6 @@ class LoadStartControllerVerb(VerbExtension):
         response = load_start_controller(args.controller_manager, args.controller_name)
         if not response.ok:
             return 'Error loading and starting controller, check controller_manager logs'
-        return f'Successfully loaded and started controller {args.controller_name}'
+        
+        print(f'Successfully loaded and started controller {args.controller_name}')
+        return 0

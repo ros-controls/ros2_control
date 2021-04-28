@@ -33,4 +33,5 @@ class ListVerb(VerbExtension):
             controllers = list_controllers(node, args.controller_manager).controller
             for c in controllers:
                 print(f'{c.name:20s}[{c.type:20s}] {c.state:10s}')
+            
             return 0
