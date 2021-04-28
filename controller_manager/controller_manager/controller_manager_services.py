@@ -25,7 +25,7 @@ def service_caller(node, service_name, service_type, request):
     if not cli.service_is_ready():
         node.get_logger().debug('waiting for service {} to become available...'
                                 .format(service_name))
-        if not cli.wait_for_service(2.0):
+        if not cli.wait_for_service(10.0):
             raise RuntimeError('Could not contact service {}'.format(service_name))
 
     node.get_logger().debug('requester: making request: %r\n' % request)
