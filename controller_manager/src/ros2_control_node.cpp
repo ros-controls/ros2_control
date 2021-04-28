@@ -42,9 +42,7 @@ int main(int argc, char ** argv)
   std::thread cm_thread([cm]() {
       // load controller_manager update time parameter
       int update_rate = 100;
-      if (!cm->get_parameter("update_rate", update_rate)) {
-        throw std::runtime_error("update_rate parameter not existing or empty");
-      }
+      cm->get_parameter_or("update_rate", update_rate, update_rate);
       RCLCPP_INFO(cm->get_logger(), "update rate is %d Hz", update_rate);
 
       while (rclcpp::ok()) {
