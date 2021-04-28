@@ -26,8 +26,7 @@ class ConfigureControllerVerb(VerbExtension):
 
     def add_arguments(self, parser, cli_name):
         add_arguments(parser)
-        arg = parser.add_argument(
-            'controller_name', help='Name of the controller')
+        arg = parser.add_argument('controller_name', help='Name of the controller')
         arg.completer = ControllerNameCompleter()
         add_controller_mgr_parsers(parser)
 
