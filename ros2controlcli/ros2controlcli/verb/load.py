@@ -56,4 +56,5 @@ class LoadVerb(VerbExtension):
                 if not response.ok:
                     return 'Error starting controller, check controller_manager logs'
 
-            return f"Sucessfully loaded controller {args.controller_name} into state { 'inactive' if args.state == 'configure' else 'active' }"
+            return f"Sucessfully loaded controller {args.controller_name} into " \
+                   f"state { 'inactive' if args.state == 'configure' else 'active' }"
