@@ -9,8 +9,7 @@ setup(
     packages=find_packages(exclude=['test']),
     data_files=[
         ('share/' + package_name, ['package.xml']),
-        ('share/ament_index/resource_index/packages',
-            ['resource/' + package_name]),
+        ('share/ament_index/resource_index/packages', ['resource/' + package_name]),
     ],
     install_requires=['ros2cli'],
     zip_safe=True,
@@ -56,5 +55,5 @@ ROS2 Control command  interface.""",
             'switch_controllers = ros2controlcli.verb.switch:SwitchVerb',
             'unload_controller = ros2controlcli.verb.unload:UnloadVerb',
         ],
-    }
+    },
 )

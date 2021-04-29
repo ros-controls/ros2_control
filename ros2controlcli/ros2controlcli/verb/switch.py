@@ -30,23 +30,24 @@ class SwitchVerb(VerbExtension):
             '--stop-controllers',
             nargs='*',
             default=[],
-            help='Name of the controllers to be stopped')
+            help='Name of the controllers to be stopped',
+        )
         arg.completer = LoadedControllerNameCompleter(['active'])
         arg = parser.add_argument(
             '--start-controllers',
             nargs='*',
             default=[],
-            help='Name of the controllers to be started')
+            help='Name of the controllers to be started',
+        )
         arg.completer = LoadedControllerNameCompleter(['inactive'])
-        parser.add_argument(
-            '--strict', action='store_true', help='Strict switch')
-        parser.add_argument(
-            '--start-asap', action='store_true', help='Start asap controllers')
+        parser.add_argument('--strict', action='store_true', help='Strict switch')
+        parser.add_argument('--start-asap', action='store_true', help='Start asap controllers')
         parser.add_argument(
             '--switch-timeout',
             default=5.0,
             required=False,
-            help='Timeout for switching controllers')
+            help='Timeout for switching controllers',
+        )
         arg.completer = LoadedControllerNameCompleter(['inactive'])
         add_controller_mgr_parsers(parser)
 
@@ -59,7 +60,8 @@ class SwitchVerb(VerbExtension):
                 args.start_controllers,
                 args.strict,
                 args.start_asap,
-                args.switch_timeout)
+                args.switch_timeout,
+            )
             if not response.ok:
                 return 'Error switching controllers, check controller_manager logs'
             return 'Successfully switched controllers'
