@@ -63,16 +63,19 @@ def main(args=None):
     parser.add_argument(
         'controller_name', help='Name of the controller')
     parser.add_argument(
-        '-t', '--controller-type',
-        help='If not provided it should exist in the controller manager namespace',
-        default=None, required=False)
-    parser.add_argument(
         '-c', '--controller-manager', help='Name of the controller manager ROS node',
         default='/controller_manager', required=False)
     parser.add_argument(
         '-p', '--param-file',
         help='Controller param file to be loaded into controller node before configure',
         required=False)
+    parser.add_argument(
+        '--stopped', help='Load and configure the controller, however do not start them',
+        action='store_true', required=False)
+    parser.add_argument(
+        '-t', '--controller-type',
+        help='If not provided it should exist in the controller manager namespace',
+        default=None, required=False)
     parser.add_argument(
         '-u', '--unload-on-kill',
         help='Wait until this application is interrupted and unload controller',
@@ -120,41 +123,44 @@ def main(args=None):
             node.get_logger().info('Failed to configure controller')
             return 1
 
-        ret = switch_controllers(
-            node,
-            controller_manager_name,
-            [],
-            [controller_name],
-            True,
-            True,
-            5.0)
-        if not ret.ok:
-            node.get_logger().info('Failed to start controller')
-            return 1
+        if not args.stopped:
+            ret = switch_controllers(
+                node,
+                controller_manager_name,
+                [],
+                [controller_name],
+                True,
+                True,
+                5.0)
+            if not ret.ok:
+                node.get_logger().info('Failed to start controller')
+                return 1
 
-        node.get_logger().info('Configured and started ' + controller_name)
+            node.get_logger().info('Configured and started ' + controller_name)
 
         if not args.unload_on_kill:
             return 0
+
         try:
             node.get_logger().info('Waiting until interrupt to unload controllers')
             while True:
                 time.sleep(1)
         except KeyboardInterrupt:
-            node.get_logger().info('Interrupt captured, stopping and unloading controller')
-            ret = switch_controllers(
-                node,
-                controller_manager_name,
-                [controller_name],
-                [],
-                True,
-                True,
-                5.0)
-            if not ret.ok:
-                node.get_logger().info('Failed to stop controller')
-                return 1
+            if not args.stopped:
+                node.get_logger().info('Interrupt captured, stopping and unloading controller')
+                ret = switch_controllers(
+                    node,
+                    controller_manager_name,
+                    [controller_name],
+                    [],
+                    True,
+                    True,
+                    5.0)
+                if not ret.ok:
+                    node.get_logger().info('Failed to stop controller')
+                    return 1
 
-            node.get_logger().info('Stopped controller')
+                node.get_logger().info('Stopped controller')
 
             ret = unload_controller(node, controller_manager_name, controller_name)
             if not ret.ok:
