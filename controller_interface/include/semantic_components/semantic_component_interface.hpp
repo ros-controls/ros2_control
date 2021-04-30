@@ -64,8 +64,13 @@ public:
    * from 0 to size of values;
    * \return list of strings with state interface names for the semantic component.
    */
-  virtual std::vector<std::string> get_state_interface_types()
+  virtual std::vector<std::string> get_state_interface_names()
   {
+    if (interface_names_.empty()) {
+      for (auto i = 0u; i < interface_names_.capacity(); ++i) {
+        interface_names_.emplace_back(name_ + "_" + std::to_string(i+1));
+      }
+    }
     return interface_names_;
   }
 

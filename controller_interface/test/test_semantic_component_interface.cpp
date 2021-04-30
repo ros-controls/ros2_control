@@ -27,23 +27,58 @@ void SemanticComponentInterfaceTest::TearDown()
   semantic_component_.reset(nullptr);
 }
 
-TEST_F(SemanticComponentInterfaceTest, Validate_Semantic_Component)
+TEST_F(SemanticComponentInterfaceTest, validate_default_names)
 {
-  // create 'test_component' with 5 interfaces,
+  // create 'test_component' with 5 interfaces using default naming
   // e.g. test_component_1, test_component_2 so on...
-  semantic_component_ = std::make_unique<FriendSemanticComponentInterface>(component_name_, size_);
+  semantic_component_ = std::make_unique<TestableSemanticComponentInterface>(component_name_, size_);
 
   // validate the component name
   ASSERT_EQ(semantic_component_->name_, component_name_);
 
   // validate the space reserved for interface_names_ and state_interfaces_
   // Note : Using capacity() for state_interfaces_ as no such interfaces are defined yet
-  ASSERT_EQ(semantic_component_->interface_names_.size(), size_);
+  ASSERT_EQ(semantic_component_->interface_names_.capacity(), size_);
   ASSERT_EQ(semantic_component_->state_interfaces_.capacity(), size_);
 
   // validate the interface_names_
-  std::vector<std::string> temp_interface_names = semantic_component_->get_state_interface_types();
-  ASSERT_EQ(temp_interface_names, semantic_component_->interface_names_);
+  std::vector<std::string> interface_names = semantic_component_->get_state_interface_names();
+  ASSERT_EQ(interface_names, semantic_component_->interface_names_);
+
+  ASSERT_EQ(interface_names.size(), size_);
+  ASSERT_EQ(interface_names[0], component_name_ + "_1");
+  ASSERT_EQ(interface_names[1], component_name_ + "_2");
+  ASSERT_EQ(interface_names[2], component_name_ + "_3");
+  ASSERT_EQ(interface_names[3], component_name_ + "_4");
+  ASSERT_EQ(interface_names[4], component_name_ + "_5");
+}
+
+TEST_F(SemanticComponentInterfaceTest, validate_custom_names)
+{
+  // create 'test_component' with 5 interfaces using default naming
+  // e.g. test_component_1, test_component_2 so on...
+  semantic_component_ = std::make_unique<TestableSemanticComponentInterface>(size_);
+
+  // validate the component name
+  ASSERT_EQ(semantic_component_->name_, semantic_component_->test_name_);
+
+  // validate the space reserved for interface_names_ and state_interfaces_
+  // Note : Using capacity() for state_interfaces_ as no such interfaces are defined yet
+  ASSERT_EQ(semantic_component_->interface_names_.capacity(), size_);
+  ASSERT_EQ(semantic_component_->state_interfaces_.capacity(), size_);
+
+  // validate the interface_names_
+  std::vector<std::string> interface_names = semantic_component_->get_state_interface_names();
+  ASSERT_EQ(interface_names, semantic_component_->interface_names_);
+
+  ASSERT_EQ(interface_names.size(), size_);
+  ASSERT_EQ(interface_names[0], semantic_component_->test_name_ + "/5");
+  ASSERT_EQ(interface_names[1], semantic_component_->test_name_ + "/6");
+  ASSERT_EQ(interface_names[2], semantic_component_->test_name_ + "/7");
+  ASSERT_EQ(interface_names[3], semantic_component_->test_name_ + "/8");
+  ASSERT_EQ(interface_names[4], semantic_component_->test_name_ + "/9");
+}
+
 
   // validate assign_loaned_state_interfaces
   // // create interfaces and assign values to it
@@ -74,4 +109,4 @@ TEST_F(SemanticComponentInterfaceTest, Validate_Semantic_Component)
 
   // // validate the state_interfaces_ count
   // ASSERT_EQ(semantic_component_->state_interfaces_.size(), size_ - 2);
-}
+

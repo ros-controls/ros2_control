@@ -26,20 +26,30 @@
 
 #include "semantic_components/semantic_component_interface.hpp"
 
-// subclassing and friending so we can access member varibles
-class FriendSemanticComponentInterface : public semantic_components::
+// implementing and friending so we can access member varibles
+class TestableSemanticComponentInterface : public semantic_components::
   SemanticComponentInterface
 {
+  FRIEND_TEST(SemanticComponentInterfaceTest, validate_default_names);
+  FRIEND_TEST(SemanticComponentInterfaceTest, validate_custom_names);
+
 public:
-  explicit FriendSemanticComponentInterface(const std::string & name, size_t size)
+  // Use generation of interface names
+  explicit TestableSemanticComponentInterface(const std::string & name, size_t size)
   : SemanticComponentInterface(name, size)
+  {}
+  // Use custom interface names
+  explicit TestableSemanticComponentInterface(size_t size)
+  : SemanticComponentInterface("TestSemanticComponent", size)
   {
     // generate the interface_names_
-    for (size_t i = 1; i <= size; ++i) {
-      interface_names_.emplace_back(name_ + "_interface_" + std::to_string(i));
+    for (auto i = 0u; i < size; ++i) {
+      interface_names_.emplace_back(
+        std::string("TestSemanticComponent") + "/" + std::to_string(i+5));
     }
   }
-  FRIEND_TEST(SemanticComponentInterfaceTest, Validate_Semantic_Component);
+
+  std::string test_name_ = "TestSemanticComponent";
 };
 
 class SemanticComponentInterfaceTest : public ::testing::Test
@@ -50,7 +60,7 @@ public:
 protected:
   const std::string component_name_ = "test_component";
   const size_t size_ = 5;
-  std::unique_ptr<FriendSemanticComponentInterface> semantic_component_;
+  std::unique_ptr<TestableSemanticComponentInterface> semantic_component_;
 };
 
 #endif  // TEST_SEMANTIC_COMPONENT_INTERFACE_HPP_
