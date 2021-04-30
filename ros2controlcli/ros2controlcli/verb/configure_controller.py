@@ -35,4 +35,6 @@ class ConfigureControllerVerb(VerbExtension):
             response = configure_controller(node, args.controller_manager, args.controller_name)
             if not response.ok:
                 'Error configuring controller, check controller_manager logs'
-            return f'Successfully configured controller {args.controller_name}'
+
+            print(f'Successfully configured controller {args.controller_name}')
+            return 0
