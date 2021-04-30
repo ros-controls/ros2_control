@@ -23,6 +23,8 @@
 
 using namespace std::chrono_literals;
 
+const int DEFAULT_UPDATE_RATE = 100;
+
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
@@ -41,9 +43,9 @@ int main(int argc, char ** argv)
   // converted back to a timer.
   std::thread cm_thread([cm]() {
       // load controller_manager update time parameter
-      int update_rate = 100;
+      int update_rate = DEFAULT_UPDATE_RATE;
       if (!cm->get_parameter("update_rate", update_rate)) {
-        throw std::runtime_error("update_rate parameter not existing or empty");
+        RCLCPP_WARN(cm->get_logger(), "'update_rate' parameter not set, using default value.");
       }
       RCLCPP_INFO(cm->get_logger(), "update rate is %d Hz", update_rate);
 
