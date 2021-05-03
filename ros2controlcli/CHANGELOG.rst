@@ -2,6 +2,13 @@
 Changelog for package ros2controlcli
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* correct return values in CLI (`#401 <https://github.com/ros-controls/ros2_control/issues/401>`_)
+* [python] Update files in ros2controlcli to use format strings (`#358 <https://github.com/ros-controls/ros2_control/issues/358>`_)
+* Add starting doc for ros2controlcli (`#377 <https://github.com/ros-controls/ros2_control/issues/377>`_)
+* Contributors: Bence Magyar, Karsten Knese, NovusEdge
+
 0.4.0 (2021-04-07)
 ------------------
 * Remodel ros2controlcli, refactor spawner/unspawner and fix test (`#349 <https://github.com/ros-controls/ros2_control/issues/349>`_)

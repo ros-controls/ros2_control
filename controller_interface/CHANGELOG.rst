@@ -2,6 +2,13 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add NodeOptions parameter to init function of controller_interface (`#382 <https://github.com/ros-controls/ros2_control/issues/382>`_)
+* guard around pragmas (`#397 <https://github.com/ros-controls/ros2_control/issues/397>`_)
+* avoid deprecations (`#393 <https://github.com/ros-controls/ros2_control/issues/393>`_)
+* Contributors: Auguste Bourgois, Karsten Knese, Bence Magyar
+
 0.4.0 (2021-04-07)
 ------------------
 * Replace controller_interface return type SUCCESS by OK and mark SUCCESS as deprecated (`#374 <https://github.com/ros-controls/ros2_control/issues/374>`_)
