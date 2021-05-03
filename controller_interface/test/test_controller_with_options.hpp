@@ -31,11 +31,42 @@ class ControllerWithOptions : public controller_interface::ControllerInterface
 {
 public:
   ControllerWithOptions() = default;
-  controller_interface::return_type init(const std::string & controller_name) override;
-  controller_interface::InterfaceConfiguration command_interface_configuration() const override;
-  controller_interface::InterfaceConfiguration state_interface_configuration() const override;
-  controller_interface::return_type update() override;
+  controller_interface::return_type init(const std::string & controller_name) override
+  {
+    rclcpp::NodeOptions options;
+    options.allow_undeclared_parameters(true).automatically_declare_parameters_from_overrides(true);
+    auto result = ControllerInterface::init(controller_name, options);
+    if (result == controller_interface::return_type::ERROR) {
+      return result;
+    }
+    if (node_->get_parameters("parameter_list", params)) {
+      RCLCPP_INFO_STREAM(node_->get_logger(), "I found " << params.size() << " parameters.");
+      return controller_interface::return_type::OK;
+    } else {
+      return controller_interface::return_type::ERROR;
+    }
+  }
+
+  controller_interface::InterfaceConfiguration command_interface_configuration() const override
+  {
+    return controller_interface::InterfaceConfiguration{
+      controller_interface::interface_configuration_type::NONE};
+  }
+
+  controller_interface::InterfaceConfiguration state_interface_configuration() const override
+  {
+    return controller_interface::InterfaceConfiguration{
+      controller_interface::interface_configuration_type::NONE};
+  }
+
+  controller_interface::return_type update() override
+  {
+    return controller_interface::return_type::OK;
+  }
+
   std::map<std::string, double> params;
 };
 }  // namespace controller_with_options
+
+
 #endif  // TEST_CONTROLLER_WITH_OPTIONS_HPP_

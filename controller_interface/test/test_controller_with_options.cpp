@@ -17,42 +17,6 @@
 #include "test_controller_with_options.hpp"
 #include "rclcpp/rclcpp.hpp"
 
-namespace controller_with_options
-{
-controller_interface::return_type ControllerWithOptions::init(
-  const std::string & controller_name)
-{
-  rclcpp::NodeOptions options;
-  options.allow_undeclared_parameters(true).automatically_declare_parameters_from_overrides(true);
-  auto result = ControllerInterface::init(controller_name, options);
-  if (result == controller_interface::return_type::ERROR) {
-    return result;
-  }
-  if (node_->get_parameters("parameter_list", params)) {
-    RCLCPP_INFO_STREAM(node_->get_logger(), "I found " << params.size() << " parameters.");
-    return controller_interface::return_type::OK;
-  } else {
-    return controller_interface::return_type::ERROR;
-  }
-}
-controller_interface::InterfaceConfiguration
-ControllerWithOptions::command_interface_configuration() const
-{
-  return controller_interface::InterfaceConfiguration{
-    controller_interface::interface_configuration_type::NONE};
-}
-controller_interface::InterfaceConfiguration
-ControllerWithOptions::state_interface_configuration() const
-{
-  return controller_interface::InterfaceConfiguration{
-    controller_interface::interface_configuration_type::NONE};
-}
-controller_interface::return_type ControllerWithOptions::update()
-{
-  return controller_interface::return_type::OK;
-}
-}  // namespace controller_with_options
-
 class FriendControllerWithOptions : public controller_with_options::ControllerWithOptions
 {
   FRIEND_TEST(ControllerWithOption, init_with_overrides);
