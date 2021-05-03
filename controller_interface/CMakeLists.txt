@@ -38,8 +38,13 @@ install(TARGETS controller_interface
 )
 
 if(BUILD_TESTING)
+  find_package(ament_cmake_gmock REQUIRED)
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()
+
+  ament_add_gmock(test_controller_with_options test/test_controller_with_options.cpp)
+  target_link_libraries(test_controller_with_options controller_interface)
+  target_include_directories(test_controller_with_options PRIVATE include)
 endif()
 
 ament_export_dependencies(
