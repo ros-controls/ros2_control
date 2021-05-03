@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.5.0 (2021-05-03)
+------------------
 * Make controller manager update rate optional (`#404 <https://github.com/ros-controls/ros2_control/issues/404>`_)
 * Bump `wait_for_service` timeout to 10 seconds (`#403 <https://github.com/ros-controls/ros2_control/issues/403>`_)
 * introduce --stopped for spawner (`#402 <https://github.com/ros-controls/ros2_control/issues/402>`_)
