@@ -81,7 +81,7 @@ public:
   virtual std::vector<double> get_values() const
   {
     std::vector<double> values;
-    values.resize(state_interfaces_.size());
+    values.reserve(state_interfaces_.size());
     for (size_t i = 0; i < state_interfaces_.size(); ++i) {
       values.emplace_back(state_interfaces_[i].get().get_value());
     }

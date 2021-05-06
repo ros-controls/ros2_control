@@ -41,7 +41,7 @@ bool get_ordered_interfaces(
   std::vector<T> & unordered_interfaces, const std::vector<std::string> & ordered_names,
   const std::string & interface_type, std::vector<std::reference_wrapper<T>> & ordered_interfaces)
 {
-  //   ordered_interfaces.reserve(ordered_names.size());
+  ordered_interfaces.reserve(ordered_names.size());
   for (const auto & name : ordered_names) {
     for (auto & interface : unordered_interfaces) {
       if (!interface_type.empty()) {
@@ -57,6 +57,13 @@ bool get_ordered_interfaces(
   }
 
   return ordered_names.size() == ordered_interfaces.size();
+}
+
+bool interface_list_contains_interface_type(
+  const std::vector<std::string> & interface_type_list, const std::string & interface_type)
+{
+  return std::find(interface_type_list.begin(), interface_type_list.end(), interface_type) !=
+  interface_type_list.end();
 }
 
 }  // namespace controller_interface
