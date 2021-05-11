@@ -32,7 +32,7 @@ class LoadConfigureControllerVerb(VerbExtension):
         add_controller_mgr_parsers(parser)
 
     def main(self, *, args):
-        print("deprecated warning: Please use either 'load --state' or 'set_state'")
+        print("deprecated warning: Please use 'load_controller --set_state configure'")
         response = load_configure_controller(args.controller_manager, args.controller_name)
         if not response.ok:
             return 'Error loading and configuring controller, check controller_manager logs'

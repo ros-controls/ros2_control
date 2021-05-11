@@ -32,7 +32,7 @@ class LoadStartControllerVerb(VerbExtension):
         add_controller_mgr_parsers(parser)
 
     def main(self, *, args):
-        print("deprecated warning: Please use either 'load --state' or 'set_state'")
+        print("deprecated warning: Please use 'load_controller --set_state start'")
         response = load_start_controller(args.controller_manager, args.controller_name)
         if not response.ok:
             return 'Error loading and starting controller, check controller_manager logs'

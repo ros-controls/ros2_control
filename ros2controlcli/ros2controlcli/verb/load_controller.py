@@ -21,7 +21,7 @@ from ros2cli.verb import VerbExtension
 from ros2controlcli.api import add_controller_mgr_parsers, ControllerNameCompleter
 
 
-class LoadVerb(VerbExtension):
+class LoadControllerVerb(VerbExtension):
     """Load a controller in a controller manager."""
 
     def add_arguments(self, parser, cli_name):
@@ -29,7 +29,7 @@ class LoadVerb(VerbExtension):
         arg = parser.add_argument('controller_name', help='Name of the controller')
         arg.completer = ControllerNameCompleter()
         arg = parser.add_argument(
-            '--state',
+            '--set_state',
             choices=['configure', 'start'],
             help='Set the state of the loaded controller',
         )

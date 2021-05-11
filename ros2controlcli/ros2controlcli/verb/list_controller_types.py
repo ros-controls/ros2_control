@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from controller_manager import reload_controller_libraries
+from controller_manager import list_controller_types
 
 from ros2cli.node.direct import add_arguments
 from ros2cli.node.strategy import NodeStrategy
@@ -21,23 +21,18 @@ from ros2cli.verb import VerbExtension
 from ros2controlcli.api import add_controller_mgr_parsers
 
 
-class ReloadLibrariesVerb(VerbExtension):
-    """Reload controller libraries."""
+class ListControllerTypesVerb(VerbExtension):
+    """Output the available controller types and theri base classes."""
 
     def add_arguments(self, parser, cli_name):
         add_arguments(parser)
-        parser.add_argument(
-            '--force-kill', action='store_true', help='Force stop of loaded controllers'
-        )
         add_controller_mgr_parsers(parser)
 
     def main(self, *, args):
         with NodeStrategy(args) as node:
-            response = reload_controller_libraries(
-                node, args.controller_manager, force_kill=args.force_kill
-            )
-            if not response.ok:
-                return 'Error reloading libraries, check controller_manager logs'
+            response = list_controller_types(node, args.controller_manager)
+            types_and_classes = zip(response.types, response.base_classes)
+            for c in types_and_classes:
+                print(f'{c[0]:70s} {c[1]}')
 
-            print('Reload successful')
             return 0
