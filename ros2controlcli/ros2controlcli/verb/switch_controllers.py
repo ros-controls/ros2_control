@@ -21,7 +21,7 @@ from ros2cli.verb import VerbExtension
 from ros2controlcli.api import add_controller_mgr_parsers, LoadedControllerNameCompleter
 
 
-class SwitchVerb(VerbExtension):
+class SwitchControllersVerb(VerbExtension):
     """Switch controllers in a controller manager."""
 
     def add_arguments(self, parser, cli_name):

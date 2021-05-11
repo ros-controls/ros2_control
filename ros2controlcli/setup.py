@@ -49,11 +49,11 @@ ROS2 Control command  interface.""",
             'configure_start_controller = \
                 ros2controlcli.verb.configure_start_controller:ConfigureStartControllerVerb',
             'reload_controller_libraries = \
-                ros2controlcli.verb.reload_libraries:ReloadLibrariesVerb',
+                ros2controlcli.verb.reload_controller_libraries:ReloadControllerLibrariesVerb',
             'set_controller_state = \
                 ros2controlcli.verb.set_controller_state:SetControllerStateVerb',
-            'switch_controllers = ros2controlcli.verb.switch:SwitchVerb',
-            'unload_controller = ros2controlcli.verb.unload:UnloadVerb',
+            'switch_controllers = ros2controlcli.verb.switch_controllers:SwitchControllersVerb',
+            'unload_controller = ros2controlcli.verb.unload_controller:UnloadControllerVerb',
         ],
     },
 )

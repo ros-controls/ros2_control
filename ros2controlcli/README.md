@@ -3,62 +3,13 @@ Command line interface for controller manager
 
 ## Verbs 
 
-
-### list
-
-```bash
-$ ros2 control list -h
-usage: ros2 control list [-h] [--spin-time SPIN_TIME] [--no-daemon] [-c CONTROLLER_MANAGER] [--include-hidden-nodes]
-
-Output the list of loaded controllers, their type and status
-
-optional arguments:
-  -h, --help            show this help message and exit
-  --spin-time SPIN_TIME
-                        Spin time in seconds to wait for discovery (only applies when not using an already running daemon)
-  -c CONTROLLER_MANAGER, --controller-manager CONTROLLER_MANAGER
-                        Name of the controller manager ROS node
-  --include-hidden-nodes
-                        Consider hidden nodes as well
-```
+### configure_controller
 
 ```bash
-$ ros2 control list 
-test_controller_name[test_controller]    active 
-```
+$ ros2 control configure_controller -h
+usage: ros2 control configure_controller [-h] [--spin-time SPIN_TIME] [-c CONTROLLER_MANAGER] [--include-hidden-nodes] controller_name
 
-### list_types
-
-```bash
-$ ros2 control list_types -h
-usage: ros2 control list_types [-h] [--spin-time SPIN_TIME] [--no-daemon] [-c CONTROLLER_MANAGER] [--include-hidden-nodes]
-
-Output the available controller types and their base classes
-
-optional arguments:
-  -h, --help            show this help message and exit
-  --spin-time SPIN_TIME
-                        Spin time in seconds to wait for discovery (only applies when not using an already running daemon)
-  -c CONTROLLER_MANAGER, --controller-manager CONTROLLER_MANAGER
-                        Name of the controller manager ROS node
-  --include-hidden-nodes
-                        Consider hidden nodes as well
-```
-```bash
-$ ros2 control list_types 
-diff_drive_controller/DiffDriveController                              controller_interface::ControllerInterface
-joint_state_controller/JointStateController                            controller_interface::ControllerInterface
-joint_trajectory_controller/JointTrajectoryController                  controller_interface::ControllerInterface
-test_controller      
-```
-
-### load
-
-```bash
-$ ros2 control load -h
-usage: ros2 control load [-h] [--spin-time SPIN_TIME] [--no-daemon] [-c CONTROLLER_MANAGER] [--include-hidden-nodes] controller_name
-
-Load a controller in a controller manager
+Configure a controller in a controller manager
 
 positional arguments:
   controller_name       Name of the controller
@@ -73,11 +24,101 @@ optional arguments:
                         Consider hidden nodes as well
 ```
 
-### reload_libraries
+### list_controllers
 
 ```bash
-$ ros2 control reload_libraries -h
-usage: ros2 control reload_libraries [-h] [--spin-time SPIN_TIME] [--force-kill] [-c CONTROLLER_MANAGER] [--include-hidden-nodes]
+$ ros2 control list_controllers -h
+usage: ros2 control list_controllers [-h] [--spin-time SPIN_TIME] [-c CONTROLLER_MANAGER] [--include-hidden-nodes]
+
+Output the list of loaded controllers, their type and status
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --spin-time SPIN_TIME
+                        Spin time in seconds to wait for discovery (only applies when not using an already running daemon)
+  -c CONTROLLER_MANAGER, --controller-manager CONTROLLER_MANAGER
+                        Name of the controller manager ROS node
+  --include-hidden-nodes
+                        Consider hidden nodes as well
+```
+
+```bash
+$ ros2 control list_controllers
+test_controller_name[test_controller]    active 
+```
+
+### list_controller_types
+
+```bash
+$ ros2 control list_controller_types -h
+usage: ros2 control list_controllers [-h] [--spin-time SPIN_TIME] [-c CONTROLLER_MANAGER] [--include-hidden-nodes]
+
+Output the list of loaded controllers, their type and status
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --spin-time SPIN_TIME
+                        Spin time in seconds to wait for discovery (only applies when not using an already running daemon)
+  -c CONTROLLER_MANAGER, --controller-manager CONTROLLER_MANAGER
+                        Name of the controller manager ROS node
+  --include-hidden-nodes
+                        Consider hidden nodes as well
+```
+
+```bash
+$ ros2 control list_controller_types 
+diff_drive_controller/DiffDriveController                              controller_interface::ControllerInterface
+joint_state_controller/JointStateController                            controller_interface::ControllerInterface
+joint_trajectory_controller/JointTrajectoryController                  controller_interface::ControllerInterface
+test_controller      
+```
+
+### list_hardware_interfaces
+
+```bash
+$ ros2 control list_hardware_interfaces -h
+usage: ros2 control list_hardware_interfaces [-h] [--spin-time SPIN_TIME] [-c CONTROLLER_MANAGER] [--include-hidden-nodes]
+
+Output the list of loaded controllers, their type and status
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --spin-time SPIN_TIME
+                        Spin time in seconds to wait for discovery (only applies when not using an already running daemon)
+  -c CONTROLLER_MANAGER, --controller-manager CONTROLLER_MANAGER
+                        Name of the controller manager ROS node
+  --include-hidden-nodes
+                        Consider hidden nodes as well
+```
+
+### load_controller
+
+```bash
+$ ros2 control load -h
+usage: ros2 control load_controller [-h] [--spin-time SPIN_TIME] [--set_state {configure,start}] [-c CONTROLLER_MANAGER] [--include-hidden-nodes] controller_name
+
+Load a controller in a controller manager
+
+positional arguments:
+  controller_name       Name of the controller
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --spin-time SPIN_TIME
+                        Spin time in seconds to wait for discovery (only applies when not using an already running daemon)
+  --set_state {configure,start}
+                        Set the state of the loaded controller
+  -c CONTROLLER_MANAGER, --controller-manager CONTROLLER_MANAGER
+                        Name of the controller manager ROS node
+  --include-hidden-nodes
+                        Consider hidden nodes as well
+```
+
+### reload_controller_libraries
+
+```bash
+$ ros2 control reload_controller_libraries -h
+usage: ros2 control reload_controller_libraries [-h] [--spin-time SPIN_TIME] [--force-kill] [-c CONTROLLER_MANAGER] [--include-hidden-nodes]
 
 Reload controller libraries
 
@@ -92,13 +133,35 @@ optional arguments:
                         Consider hidden nodes as well
 ```
 
-### switch
+### set_controller_state
 
 ```bash
-$ ros2 control switch -h
-usage: ros2 control switch [-h] [--spin-time SPIN_TIME] [--no-daemon] [--stop-controllers [STOP_CONTROLLERS [STOP_CONTROLLERS ...]]]
-                           [--start-controllers [START_CONTROLLERS [START_CONTROLLERS ...]]] [--strict] [--start-asap]
-                           [--switch-timeout SWITCH_TIMEOUT] [-c CONTROLLER_MANAGER] [--include-hidden-nodes]
+$ ros2 control set_controller_state -h
+usage: ros2 control set_controller_state [-h] [--spin-time SPIN_TIME] [-c CONTROLLER_MANAGER] [--include-hidden-nodes] controller_name {configure,start,stop}
+
+Adjust the state of the controller
+
+positional arguments:
+  controller_name       Name of the controller to be changed
+  {configure,start,stop}
+                        State in which the controller should be changed to
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --spin-time SPIN_TIME
+                        Spin time in seconds to wait for discovery (only applies when not using an already running daemon)
+  -c CONTROLLER_MANAGER, --controller-manager CONTROLLER_MANAGER
+                        Name of the controller manager ROS node
+  --include-hidden-nodes
+                        Consider hidden nodes as well
+```
+
+### switch_controllers
+
+```bash
+$ ros2 control switch_controllers -h
+usage: ros2 control switch_controllers [-h] [--spin-time SPIN_TIME] [--stop-controllers [STOP_CONTROLLERS [STOP_CONTROLLERS ...]]] [--start-controllers [START_CONTROLLERS [START_CONTROLLERS ...]]] [--strict]
+                                       [--start-asap] [--switch-timeout SWITCH_TIMEOUT] [-c CONTROLLER_MANAGER] [--include-hidden-nodes]
 
 Switch controllers in a controller manager
 
@@ -124,11 +187,11 @@ optional arguments:
 
 
 
-### unload
+### unload_controller
 
 ```bash
-$ ros2 control unload -h
-usage: ros2 control unload [-h] [--spin-time SPIN_TIME] [--no-daemon] [-c CONTROLLER_MANAGER] [--include-hidden-nodes] controller_name
+$ ros2 control unload_controller -h
+usage: ros2 control unload_controller [-h] [--spin-time SPIN_TIME] [-c CONTROLLER_MANAGER] [--include-hidden-nodes] controller_name
 
 Unload a controller in a controller manager
 
