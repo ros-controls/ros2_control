@@ -22,7 +22,7 @@ from ros2controlcli.api import add_controller_mgr_parsers
 
 
 class ListControllerTypesVerb(VerbExtension):
-    """Output the available controller types and theri base classes."""
+    """Output the available controller types and their base classes."""
 
     def add_arguments(self, parser, cli_name):
         add_arguments(parser)

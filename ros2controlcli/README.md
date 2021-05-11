@@ -51,9 +51,9 @@ test_controller_name[test_controller]    active
 
 ```bash
 $ ros2 control list_controller_types -h
-usage: ros2 control list_controllers [-h] [--spin-time SPIN_TIME] [-c CONTROLLER_MANAGER] [--include-hidden-nodes]
+usage: ros2 control list_controller_types [-h] [--spin-time SPIN_TIME] [-c CONTROLLER_MANAGER] [--include-hidden-nodes]
 
-Output the list of loaded controllers, their type and status
+Output the available controller types and their base classes
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -70,7 +70,6 @@ $ ros2 control list_controller_types
 diff_drive_controller/DiffDriveController                              controller_interface::ControllerInterface
 joint_state_controller/JointStateController                            controller_interface::ControllerInterface
 joint_trajectory_controller/JointTrajectoryController                  controller_interface::ControllerInterface
-test_controller      
 ```
 
 ### list_hardware_interfaces
@@ -91,10 +90,21 @@ optional arguments:
                         Consider hidden nodes as well
 ```
 
+```bash
+$ ros2 control list_hardware_interfaces
+command interfaces
+	joint1/position [unclaimed]
+	joint2/position [unclaimed]
+state interfaces
+	 joint1/position
+	 joint2/position
+
+```
+
 ### load_controller
 
 ```bash
-$ ros2 control load -h
+$ ros2 control load_controller -h
 usage: ros2 control load_controller [-h] [--spin-time SPIN_TIME] [--set_state {configure,start}] [-c CONTROLLER_MANAGER] [--include-hidden-nodes] controller_name
 
 Load a controller in a controller manager
