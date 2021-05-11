@@ -98,7 +98,6 @@ command interfaces
 state interfaces
 	 joint1/position
 	 joint2/position
-
 ```
 
 ### load_controller
