@@ -23,11 +23,14 @@ class FriendControllerWithOptions : public controller_with_options::ControllerWi
   FRIEND_TEST(ControllerWithOption, init_without_overrides);
 };
 
+template<class T, size_t N>
+constexpr size_t arrlen(T (&)[N]) {return N;}
+
 TEST(ControllerWithOption, init_with_overrides) {
   // mocks the declaration of overrides parameters in a yaml file
-  int argc = 8;
-  char const * const argv[argc] = {"", "--ros-args", "-p", "parameter_list.parameter1:=1.", "-p",
+  char const * const argv[] = {"", "--ros-args", "-p", "parameter_list.parameter1:=1.", "-p",
     "parameter_list.parameter2:=2.", "-p", "parameter_list.parameter3:=3."};
+  int argc = arrlen(argv);
   rclcpp::init(argc, argv);
   // creates the controller
   FriendControllerWithOptions controller;
@@ -46,8 +49,8 @@ TEST(ControllerWithOption, init_with_overrides) {
 
 TEST(ControllerWithOption, init_without_overrides) {
   // mocks the declaration of overrides parameters in a yaml file
-  int argc = 1;
-  char const * const argv[argc] = {""};
+  char const * const argv[] = {""};
+  int argc = arrlen(argv);
   rclcpp::init(argc, argv);
   // creates the controller
   FriendControllerWithOptions controller;
