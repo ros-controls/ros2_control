@@ -31,7 +31,8 @@ TEST_F(SemanticComponentInterfaceTest, validate_default_names)
 {
   // create 'test_component' with 5 interfaces using default naming
   // e.g. test_component_1, test_component_2 so on...
-  semantic_component_ = std::make_unique<TestableSemanticComponentInterface>(component_name_, size_);
+  semantic_component_ =
+    std::make_unique<TestableSemanticComponentInterface>(component_name_, size_);
 
   // validate the component name
   ASSERT_EQ(semantic_component_->name_, component_name_);
@@ -55,8 +56,8 @@ TEST_F(SemanticComponentInterfaceTest, validate_default_names)
 
 TEST_F(SemanticComponentInterfaceTest, validate_custom_names)
 {
-  // create 'test_component' with 5 interfaces using default naming
-  // e.g. test_component_1, test_component_2 so on...
+  // create a component with 5 interfaces using custom naming
+  // as defined in the constructor
   semantic_component_ = std::make_unique<TestableSemanticComponentInterface>(size_);
 
   // validate the component name
@@ -79,34 +80,53 @@ TEST_F(SemanticComponentInterfaceTest, validate_custom_names)
   ASSERT_EQ(interface_names[4], semantic_component_->test_name_ + "/9");
 }
 
+TEST_F(SemanticComponentInterfaceTest, validate_state_interfaces)
+{
+  // create 'test_component' with 5 interfaces using default naming
+  // e.g. test_component_1, test_component_2 so on...
+  semantic_component_ =
+    std::make_unique<TestableSemanticComponentInterface>(component_name_, size_);
+
+  // generate the interface_names_
+  std::vector<std::string> interface_names = semantic_component_->get_state_interface_names();
 
   // validate assign_loaned_state_interfaces
-  // // create interfaces and assign values to it
-  // std::vector<double> interface_values = {1.1, 3.3, 5.5};
+  // create interfaces and assign values to it
+  std::vector<double> interface_values = {1.1, 3.3, 5.5};
 
-  // // assign 1.1 to interface_1, 3.3 to interface_3 and 5.5 to interface_5
-  // hardware_interface::StateInterface interface_1{
-  //   component_name_, semantic_component_->interface_names_[0], &interface_values[0]};
-  // hardware_interface::StateInterface interface_3{
-  //   component_name_, semantic_component_->interface_names_[2], &interface_values[1]};
-  // hardware_interface::StateInterface interface_5{
-  //   component_name_, semantic_component_->interface_names_[4], &interface_values[2]};
+  // assign 1.1 to interface_1, 3.3 to interface_3 and 5.5 to interface_5
+  hardware_interface::StateInterface interface_1{
+    component_name_, semantic_component_->interface_names_[0], &interface_values[0]};
+  hardware_interface::StateInterface interface_3{
+    component_name_, semantic_component_->interface_names_[2], &interface_values[1]};
+  hardware_interface::StateInterface interface_5{
+    component_name_, semantic_component_->interface_names_[4], &interface_values[2]};
 
-  // // create local state interface vector
-  // std::vector<hardware_interface::LoanedStateInterface> temp_state_interfaces;
+  // create local state interface vector
+  std::vector<hardware_interface::LoanedStateInterface> temp_state_interfaces;
 
-  // // insert the interfaces in jumbled sequence
-  // temp_state_interfaces.emplace_back(interface_5);
-  // temp_state_interfaces.emplace_back(interface_1);
-  // temp_state_interfaces.emplace_back(interface_3);
+  // insert the interfaces in jumbled sequence
+  temp_state_interfaces.emplace_back(interface_5);
+  temp_state_interfaces.emplace_back(interface_1);
+  temp_state_interfaces.emplace_back(interface_3);
 
-  // // now call the function to make them in order like interface_names
-  // semantic_component_->assign_loaned_state_interfaces(temp_state_interfaces);
+  // now call the function to make them in order like interface_names
+  semantic_component_->assign_loaned_state_interfaces(temp_state_interfaces);
 
-  // // validate the values of state_interfaces_
-  // std::vector<double> temp_values = semantic_component_->get_values();
-  // ASSERT_EQ(temp_values, interface_values);
+  // validate the count of state_interfaces_
+  ASSERT_EQ(semantic_component_->state_interfaces_.size(), 3u);
 
-  // // validate the state_interfaces_ count
-  // ASSERT_EQ(semantic_component_->state_interfaces_.size(), size_ - 2);
+  // validate the values of state_interfaces_ which should be
+  // in order as per interface_names_
+  std::vector<double> temp_values = semantic_component_->get_values();
+  ASSERT_EQ(temp_values, interface_values);
 
+  // release the state_interfaces_
+  semantic_component_->release_interfaces();
+
+  // validate the count of state_interfaces_
+  ASSERT_EQ(semantic_component_->state_interfaces_.size(), 0u);
+
+  // validate that release_interfaces() does not touch interface_names_
+  ASSERT_EQ(interface_names, semantic_component_->interface_names_);
+}

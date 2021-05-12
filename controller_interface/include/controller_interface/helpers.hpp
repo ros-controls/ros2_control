@@ -49,7 +49,7 @@ bool get_ordered_interfaces(
           ordered_interfaces.push_back(std::ref(interface));
         }
       } else {
-        if (name == interface.get_full_name()) {
+        if (name == interface.get_interface_name()) {
           ordered_interfaces.push_back(std::ref(interface));
         }
       }
@@ -62,8 +62,9 @@ bool get_ordered_interfaces(
 bool interface_list_contains_interface_type(
   const std::vector<std::string> & interface_type_list, const std::string & interface_type)
 {
-  return std::find(interface_type_list.begin(), interface_type_list.end(), interface_type) !=
-  interface_type_list.end();
+  return std::find(
+    interface_type_list.begin(), interface_type_list.end(),
+    interface_type) != interface_type_list.end();
 }
 
 }  // namespace controller_interface

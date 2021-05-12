@@ -68,7 +68,7 @@ public:
   {
     if (interface_names_.empty()) {
       for (auto i = 0u; i < interface_names_.capacity(); ++i) {
-        interface_names_.emplace_back(name_ + "_" + std::to_string(i+1));
+        interface_names_.emplace_back(name_ + "_" + std::to_string(i + 1));
       }
     }
     return interface_names_;

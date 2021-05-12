@@ -32,6 +32,7 @@ class TestableSemanticComponentInterface : public semantic_components::
 {
   FRIEND_TEST(SemanticComponentInterfaceTest, validate_default_names);
   FRIEND_TEST(SemanticComponentInterfaceTest, validate_custom_names);
+  FRIEND_TEST(SemanticComponentInterfaceTest, validate_state_interfaces);
 
 public:
   // Use generation of interface names
@@ -45,7 +46,7 @@ public:
     // generate the interface_names_
     for (auto i = 0u; i < size; ++i) {
       interface_names_.emplace_back(
-        std::string("TestSemanticComponent") + "/" + std::to_string(i+5));
+        std::string("TestSemanticComponent") + "/" + std::to_string(i + 5));
     }
   }
 
