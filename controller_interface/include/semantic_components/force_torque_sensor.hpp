@@ -43,6 +43,10 @@ public:
 
     // Set all interfaces existing
     std::fill(existing_axes_.begin(), existing_axes_.end(), true);
+
+    // Set default force and torque values to Nan
+    std::fill(forces_.begin(), forces_.end(), std::numeric_limits<double>::quiet_NaN());
+    std::fill(torques_.begin(), torques_.end(), std::numeric_limits<double>::quiet_NaN());
   }
 
   /// Constructor for 6D FTS with custom interface names.
@@ -78,6 +82,10 @@ public:
     check_and_add_interface(interface_torque_x, 3);
     check_and_add_interface(interface_torque_y, 4);
     check_and_add_interface(interface_torque_z, 5);
+
+    // Set default force and torque values to Nan
+    std::fill(forces_.begin(), forces_.end(), std::numeric_limits<double>::quiet_NaN());
+    std::fill(torques_.begin(), torques_.end(), std::numeric_limits<double>::quiet_NaN());
   }
 
   /// Return forces.
@@ -86,19 +94,15 @@ public:
    *
    * \return vector of size 3 with force values.
    */
-  std::array<double, 3> get_forces() const
+  std::array<double, 3> get_forces()
   {
-    std::array<double, 3> forces;
     size_t interface_counter = 0;
     for (size_t i = 0; i < 3; ++i) {
       if (existing_axes_[i]) {
-        forces[i] = state_interfaces_[interface_counter].get().get_value();
-        ++interface_counter;
-      } else {
-        forces[i] = std::numeric_limits<double>::quiet_NaN();
+        forces_[i] = state_interfaces_[interface_counter++].get().get_value();
       }
     }
-    return forces;
+    return forces_;
   }
 
   /// Return torque.
@@ -107,20 +111,16 @@ public:
    *
    * \return vector of size 3 with torque values.
    */
-  std::array<double, 3> get_torques() const
+  std::array<double, 3> get_torques()
   {
-    std::array<double, 3> torques;
     size_t nr_forces = std::count(existing_axes_.begin(), existing_axes_.begin() + 3, true);
-    size_t interface_counter = 0;
+
     for (size_t i = 3; i < 6; ++i) {
       if (existing_axes_[i]) {
-        torques[i] = state_interfaces_[nr_forces + interface_counter].get().get_value();
-        ++interface_counter;
-      } else {
-        torques[i] = std::numeric_limits<double>::quiet_NaN();
+        torques_[i - 3] = state_interfaces_[nr_forces++].get().get_value();
       }
     }
-    return torques;
+    return torques_;
   }
 
   /// Return Wrench message with forces and torques.
@@ -131,28 +131,21 @@ public:
    *
    * \return wrench message from values;
    */
-  geometry_msgs::msg::Wrench get_values_as_message() const
+  geometry_msgs::msg::Wrench get_values_as_message()
   {
-    size_t interface_counter = 0;
-    auto assign_to_message_field =
-      [this, & interface_counter = interface_counter](const bool axis_exists)
-      {
-        double return_value = std::numeric_limits<double>::quiet_NaN();
-        if (axis_exists) {
-          return_value = state_interfaces_[interface_counter].get().get_value();
-          ++interface_counter;
-        }
-        return return_value;
-      };
-
     geometry_msgs::msg::Wrench message;
 
-    message.force.x = assign_to_message_field(existing_axes_[0]);
-    message.force.y = assign_to_message_field(existing_axes_[1]);
-    message.force.z = assign_to_message_field(existing_axes_[2]);
-    message.torque.x = assign_to_message_field(existing_axes_[3]);
-    message.torque.y = assign_to_message_field(existing_axes_[4]);
-    message.torque.z = assign_to_message_field(existing_axes_[5]);
+    // call get_forces() and get_troque() to update with the latest values
+    get_forces();
+    get_torques();
+
+    // update the message values
+    message.force.x = forces_[0];
+    message.force.y = forces_[1];
+    message.force.z = forces_[2];
+    message.torque.x = torques_[0];
+    message.torque.y = torques_[1];
+    message.torque.z = torques_[2];
 
     return message;
   }
@@ -161,6 +154,8 @@ protected:
   /// Vector with existing axes for sensors with less then 6D axes.
   // Order is: force X, force Y, force Z, torque X, torque Y, torque Z.
   std::array<bool, 6> existing_axes_;
+  std::array<double, 3> forces_;
+  std::array<double, 3> torques_;
 };
 
 }  // namespace semantic_components
