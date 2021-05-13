@@ -44,7 +44,7 @@ public:
     // Set all interfaces existing
     std::fill(existing_axes_.begin(), existing_axes_.end(), true);
 
-    // Set default force and torque values to Nan
+    // Set default force and torque values to NaN
     std::fill(forces_.begin(), forces_.end(), std::numeric_limits<double>::quiet_NaN());
     std::fill(torques_.begin(), torques_.end(), std::numeric_limits<double>::quiet_NaN());
   }
@@ -83,7 +83,7 @@ public:
     check_and_add_interface(interface_torque_y, 4);
     check_and_add_interface(interface_torque_z, 5);
 
-    // Set default force and torque values to Nan
+    // Set default force and torque values to NaN
     std::fill(forces_.begin(), forces_.end(), std::numeric_limits<double>::quiet_NaN());
     std::fill(torques_.begin(), torques_.end(), std::numeric_limits<double>::quiet_NaN());
   }
@@ -99,7 +99,8 @@ public:
     size_t interface_counter = 0;
     for (size_t i = 0; i < 3; ++i) {
       if (existing_axes_[i]) {
-        forces_[i] = state_interfaces_[interface_counter++].get().get_value();
+        forces_[i] = state_interfaces_[interface_counter].get().get_value();
+        interface_counter++;
       }
     }
     return forces_;
@@ -113,11 +114,14 @@ public:
    */
   std::array<double, 3> get_torques()
   {
-    size_t nr_forces = std::count(existing_axes_.begin(), existing_axes_.begin() + 3, true);
+    // find out how many force interfaces are being used
+    // torque interfaces will be found from the next index onward
+    auto torque_start_index = std::count(existing_axes_.begin(), existing_axes_.begin() + 3, true);
 
     for (size_t i = 3; i < 6; ++i) {
       if (existing_axes_[i]) {
-        torques_[i - 3] = state_interfaces_[nr_forces++].get().get_value();
+        torques_[i - 3] = state_interfaces_[torque_start_index].get().get_value();
+        torque_start_index++;
       }
     }
     return torques_;

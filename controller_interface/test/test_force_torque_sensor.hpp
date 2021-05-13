@@ -32,11 +32,21 @@ class TestableForceTorqueSensor : public semantic_components::
 {
   FRIEND_TEST(ForceTorqueSensorTest, validate_all_with_default_names);
   FRIEND_TEST(ForceTorqueSensorTest, validate_all_with_custom_names);
+  FRIEND_TEST(ForceTorqueSensorTest, validate_all_custom_names);
 
 public:
   // Use generation of interface names
   explicit TestableForceTorqueSensor(const std::string & name)
   : ForceTorqueSensor(name)
+  {}
+  // Use custom interface names
+  explicit TestableForceTorqueSensor(
+    const std::string & interface_force_x, const std::string & interface_force_y,
+    const std::string & interface_force_z, const std::string & interface_torque_x,
+    const std::string & interface_torque_y, const std::string & interface_torque_z)
+  : ForceTorqueSensor(
+      interface_force_x, interface_force_y, interface_force_z,
+      interface_torque_x, interface_torque_y, interface_torque_z)
   {}
 };
 
