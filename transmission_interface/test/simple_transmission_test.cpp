@@ -179,7 +179,11 @@ INSTANTIATE_TEST_CASE_P(
     // remove once INSTANTIATE_TEST_SUITE_P is available to use in gtest
     // https://github.com/google/googletest/issues/1419
     // cppcheck-suppress syntaxError
+  #ifdef __APPLE__
     SimpleTransmission(-10.0, -1.0)), );
+  #else
+    SimpleTransmission(-10.0, -1.0)));
+#endif
 
 class WhiteBoxTest : public TransmissionSetup,
   public ::testing::Test {};
