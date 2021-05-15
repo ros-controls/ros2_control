@@ -25,10 +25,10 @@ namespace controller_interface
 namespace state_names
 {
 /// Constants defining string labels corresponding to lifecycle states
-const auto UNCONFIGURED = "unconfigured";
-const auto INACTIVE = "inactive";
-const auto ACTIVE = "active";
-const auto FINALIZED = "finalized";
+constexpr char UNCONFIGURED[] = "unconfigured";
+constexpr char INACTIVE[] = "inactive";
+constexpr char ACTIVE[] = "active";
+constexpr char FINALIZED[] = "finalized";
 }  // namespace state_names
 
 }  // namespace controller_interface
