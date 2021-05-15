@@ -17,6 +17,8 @@
 #ifndef CONTROLLER_INTERFACE__CONTROLLER_STATE_NAMES_HPP_
 #define CONTROLLER_INTERFACE__CONTROLLER_STATE_NAMES_HPP_
 
+#include <string>
+
 namespace controller_interface
 {
 
@@ -24,7 +26,7 @@ namespace state_names
 {
 /// Constants defining string labels corresponding to lifecycle states
 const std::string UNCONFIGURED = "unconfigured";
-const std::stringr INACTIVE = "inactive";
+const std::string INACTIVE = "inactive";
 const std::string ACTIVE = "active";
 const std::string FINALIZED = "finalized";
 }  // namespace state_names
