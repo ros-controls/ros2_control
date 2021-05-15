@@ -22,7 +22,7 @@ namespace controller_interface
 
 namespace state_names
 {
-/// Constant defining state labels
+/// Constants defining string labels corresponding to lifecycle states
 const std::string UNCONFIGURED = "unconfigured";
 const std::stringr INACTIVE = "inactive";
 const std::string ACTIVE = "active";
