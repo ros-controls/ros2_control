@@ -23,10 +23,10 @@ namespace controller_interface
 namespace state_names
 {
 /// Constant defining state labels
-constexpr char UNCONFIGURED[] = "unconfigured";
-constexpr char INACTIVE[] = "inactive";
-constexpr char ACTIVE[] = "active";
-constexpr char FINALIZED[] = "finalized";
+const std::string UNCONFIGURED = "unconfigured";
+const std::stringr INACTIVE = "inactive";
+const std::string ACTIVE = "active";
+const std::string FINALIZED = "finalized";
 }  // namespace state_names
 
 }  // namespace controller_interface
