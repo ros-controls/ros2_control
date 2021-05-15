@@ -29,6 +29,7 @@ constexpr const auto kROS2ControlTag = "ros2_control";
 constexpr const auto kHardwareTag = "hardware";
 constexpr const auto kClassTypeTag = "plugin";
 constexpr const auto kParamTag = "param";
+constexpr const auto kActuatorTag = "actuator";
 constexpr const auto kJointTag = "joint";
 constexpr const auto kSensorTag = "sensor";
 constexpr const auto kGPIOTag = "gpio";
@@ -309,6 +310,45 @@ ComponentInfo parse_complex_component_from_xml(
   return component;
 }
 
+/// Search XML snippet from URDF for information about a transmission.
+/**
+  * \param[in] transmission_it pointer to the iterator where transmission info should be found
+  * \return TransmissionInfo filled with information about transmission
+  * \throws std::runtime_error if an attribute or tag is not found
+  */
+TransmissionInfo parse_transmission_from_xml(const tinyxml2::XMLElement * transmission_it)
+{
+  TransmissionInfo transmission;
+
+  // Find name, type and class of a transmission
+  transmission.name = get_attribute_value(transmission_it, kNameAttribute, transmission_it->Name());
+  const auto * type_it = transmission_it->FirstChildElement(kClassTypeTag);
+  transmission.type = get_text_for_element( type_it, kClassTypeTag);
+
+
+  // // Parse all command interfaces
+  // const auto * command_interfaces_it = transmission_it->FirstChildElement(kCommandInterfaceTag);
+  // while (command_interfaces_it) {
+  //   transmission.command_interfaces.push_back(parse_interfaces_from_xml(command_interfaces_it));
+  //   command_interfaces_it = command_interfaces_it->NextSiblingElement(kCommandInterfaceTag);
+  // }
+
+  // // Parse state interfaces
+  // const auto * state_interfaces_it = transmission_it->FirstChildElement(kStateInterfaceTag);
+  // while (state_interfaces_it) {
+  //   transmission.state_interfaces.push_back(parse_interfaces_from_xml(state_interfaces_it));
+  //   state_interfaces_it = state_interfaces_it->NextSiblingElement(kStateInterfaceTag);
+  // }
+
+  // // Parse parameters
+  // const auto * params_it = transmission_it->FirstChildElement(kParamTag);
+  // if (params_it) {
+  //   transmission.parameters = parse_parameters_from_xml(params_it);
+  // }
+
+  return transmission;
+}
+
 /// Parse a control resource from an "ros2_control" tag.
 /**
  * \param[in] ros2_control_it pointer to ros2_control element
@@ -342,7 +382,7 @@ HardwareInfo parse_resource_from_xml(const tinyxml2::XMLElement * ros2_control_i
       hardware.gpios.push_back(
         parse_complex_component_from_xml(ros2_control_child_it));
     } else if (!std::string(kTransmissionTag).compare(ros2_control_child_it->Name())) {
-      hardware.transmissions.push_back(parse_component_from_xml(ros2_control_child_it) );
+      hardware.transmissions.push_back(parse_transmission_from_xml(ros2_control_child_it) );
     } else {
       throw std::runtime_error("invalid tag name " + std::string(ros2_control_child_it->Name()));
     }

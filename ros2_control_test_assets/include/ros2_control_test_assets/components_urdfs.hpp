@@ -279,13 +279,13 @@ const auto valid_urdf_ros2_control_system_multi_joints_transmission =
       <state_interface name="position"/>
     </joint>
     <transmission name="transmission1">
-      <plugin>transmission_interface/SomeComplex2by2Transmission</plugin>
-      <param name="joints">{joint1, joint2}</param>
-      <param name="output">{output1, output2}</param>
-      <param name="joint1_output1">1.5</param>
-      <param name="joint1_output2">3.2</param>
-      <param name="joint2_output1">3.1</param>
-      <param name="joint2_output2">1.4</param>
+      <plugin>transmission_interface/DifferentialTransmission</plugin>
+      <actuator name="joint1_motor" role="actuator1"/>
+      <actuator name="joint2_motor" role="actuator2"/>
+      <joint name="joint1" role="joint1" mechanical_reduction="10">
+        <offset>0.5</offset>
+      </joint>
+      <joint name="joint2" role="joint2" mechanical_reduction="50"/>
     </transmission>
   </ros2_control>
 )";

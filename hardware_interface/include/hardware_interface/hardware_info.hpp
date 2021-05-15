@@ -67,6 +67,35 @@ struct ComponentInfo
   /// (Optional) Key-value pairs of component parameters, e.g. min/max values or serial number.
   std::unordered_map<std::string, std::string> parameters;
 };
+
+/// Contains semantic info about a given joint loaded from XML (URDF)
+struct JointInfo
+{
+  std::string name;
+  std::vector<std::string> interfaces;
+  std::string role;
+  double mechanical_reduction = 1.0;
+  double offset = 0.0;
+};
+
+/// Contains semantic info about a given actuator loaded from XML (URDF)
+struct ActuatorInfo
+{
+  std::string name;
+  std::vector<std::string> interfaces;
+  std::string role;
+  double offset = 0.0;
+};
+
+/// Contains semantic info about a given transmission loaded from XML (URDF)
+struct TransmissionInfo
+{
+  std::string name;
+  std::string type;
+  std::vector<JointInfo> joints;
+  std::vector<ActuatorInfo> actuators;
+};
+
 /// This structure stores information about hardware defined in a robot's URDF.
 struct HardwareInfo
 {
@@ -94,10 +123,10 @@ struct HardwareInfo
    */
   std::vector<ComponentInfo> gpios;
   /**
-   * Map of transmissions to calcualte ration between joints and physical actuators.
+   * Map of transmissions to calculate ration between joints and physical actuators.
    * Optional for Actuator and System Hardware.
    */
-  std::vector<ComponentInfo> transmissions;
+  std::vector<TransmissionInfo> transmissions;
 };
 
 }  // namespace hardware_interface
