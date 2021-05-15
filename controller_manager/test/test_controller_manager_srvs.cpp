@@ -134,6 +134,10 @@ TEST_F(TestControllerManagerSrvs, list_controllers_srv) {
   ASSERT_EQ(0u, result->controller.size());
 
   auto test_controller = std::make_shared<test_controller::TestController>();
+  controller_interface::InterfaceConfiguration cfg =
+  {controller_interface::interface_configuration_type::INDIVIDUAL,
+    {"joint1/position", "joint2/velocity"}};
+  test_controller->set_command_interface_configuration(cfg);
   auto abstract_test_controller = cm_->add_controller(
     test_controller, test_controller::TEST_CONTROLLER_NAME,
     test_controller::TEST_CONTROLLER_CLASS_NAME);
@@ -143,11 +147,13 @@ TEST_F(TestControllerManagerSrvs, list_controllers_srv) {
   ASSERT_EQ(test_controller::TEST_CONTROLLER_NAME, result->controller[0].name);
   ASSERT_EQ(test_controller::TEST_CONTROLLER_CLASS_NAME, result->controller[0].type);
   ASSERT_EQ("unconfigured", result->controller[0].state);
+  ASSERT_TRUE(result->controller[0].claimed_interfaces.empty());
 
   cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME);
   result = call_service_and_wait(*client, request, srv_executor);
   ASSERT_EQ(1u, result->controller.size());
   ASSERT_EQ("inactive", result->controller[0].state);
+  ASSERT_TRUE(result->controller[0].claimed_interfaces.empty());
 
   cm_->switch_controller(
     {test_controller::TEST_CONTROLLER_NAME}, {},
@@ -157,6 +163,9 @@ TEST_F(TestControllerManagerSrvs, list_controllers_srv) {
   result = call_service_and_wait(*client, request, srv_executor);
   ASSERT_EQ(1u, result->controller.size());
   ASSERT_EQ("active", result->controller[0].state);
+  ASSERT_THAT(
+    result->controller[0].claimed_interfaces,
+    testing::ElementsAre("joint1/position", "joint2/velocity"));
 
   cm_->switch_controller(
     {}, {test_controller::TEST_CONTROLLER_NAME},
@@ -166,6 +175,31 @@ TEST_F(TestControllerManagerSrvs, list_controllers_srv) {
   result = call_service_and_wait(*client, request, srv_executor);
   ASSERT_EQ(1u, result->controller.size());
   ASSERT_EQ("inactive", result->controller[0].state);
+  ASSERT_TRUE(result->controller[0].claimed_interfaces.empty());
+
+  cfg = {controller_interface::interface_configuration_type::ALL};
+  test_controller->set_command_interface_configuration(cfg);
+  cm_->switch_controller(
+    {test_controller::TEST_CONTROLLER_NAME}, {},
+    controller_manager_msgs::srv::SwitchController::Request::STRICT, true,
+    rclcpp::Duration(0, 0));
+
+  result = call_service_and_wait(*client, request, srv_executor);
+  ASSERT_EQ(1u, result->controller.size());
+  ASSERT_EQ("active", result->controller[0].state);
+  ASSERT_THAT(
+    result->controller[0].claimed_interfaces,
+    testing::ElementsAre("joint3/velocity", "joint2/velocity", "joint1/position"));
+
+  cm_->switch_controller(
+    {}, {test_controller::TEST_CONTROLLER_NAME},
+    controller_manager_msgs::srv::SwitchController::Request::STRICT, true,
+    rclcpp::Duration(0, 0));
+
+  result = call_service_and_wait(*client, request, srv_executor);
+  ASSERT_EQ(1u, result->controller.size());
+  ASSERT_EQ("inactive", result->controller[0].state);
+  ASSERT_TRUE(result->controller[0].claimed_interfaces.empty());
 
   ASSERT_EQ(
     controller_interface::return_type::OK,

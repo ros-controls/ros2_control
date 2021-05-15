@@ -16,9 +16,7 @@
 #define HARDWARE_INTERFACE__CONTROLLER_INFO_HPP_
 
 #include <string>
-// TODO(v-lopez)
-// #include <vector>
-// #include <hardware_interface/interface_resources.h>
+#include <vector>
 
 namespace hardware_interface
 {
@@ -35,9 +33,8 @@ struct ControllerInfo
   /// Controller type.
   std::string type;
 
-  // TODO(v-lopez)
-  /** Claimed resources, grouped by the hardware interface they belong to. */
-//   std::map<std::string, std::vector<std::string>> resources;
+  /// List of claimed interfaces by the controller.
+  std::vector<std::string> claimed_interfaces;
 };
 
 }  // namespace hardware_interface

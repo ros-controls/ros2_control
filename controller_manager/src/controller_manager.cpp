@@ -550,6 +550,36 @@ controller_interface::return_type ControllerManager::switch_controller(
     }
     std::this_thread::sleep_for(std::chrono::microseconds(100));
   }
+
+  // copy the controllers spec from the used to the unused list
+  std::vector<ControllerSpec> & to = rt_controllers_wrapper_.get_unused_list(guard);
+  to = controllers;
+
+  // update the claimed interface controller info
+  for (auto & controller : to) {
+    if (controller.c->get_current_state().id() ==
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+    {
+      auto command_interface_config = controller.c->command_interface_configuration();
+      if (command_interface_config.type ==
+        controller_interface::interface_configuration_type::ALL)
+      {
+        controller.info.claimed_interfaces = resource_manager_->command_interface_keys();
+      }
+      if (command_interface_config.type ==
+        controller_interface::interface_configuration_type::INDIVIDUAL)
+      {
+        controller.info.claimed_interfaces = command_interface_config.names;
+      }
+    } else {
+      controller.info.claimed_interfaces.clear();
+    }
+  }
+  // switch lists
+  rt_controllers_wrapper_.switch_updated_list(guard);
+  // clear unused list
+  rt_controllers_wrapper_.get_unused_list(guard).clear();
+
   start_request_.clear();
   stop_request_.clear();
 
@@ -789,6 +819,7 @@ void ControllerManager::list_controllers_srv_cb(
     controller_manager_msgs::msg::ControllerState & cs = response->controller[i];
     cs.name = controllers[i].info.name;
     cs.type = controllers[i].info.type;
+    cs.claimed_interfaces = controllers[i].info.claimed_interfaces;
     cs.state = controllers[i].c->get_current_state().label();
   }
 
