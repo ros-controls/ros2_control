@@ -52,14 +52,20 @@ if(BUILD_TESTING)
     test/test_semantic_component_interface.cpp
   )
   target_include_directories(test_semantic_component_interface PRIVATE include)
-  ament_target_dependencies(test_semantic_component_interface hardware_interface)
+  ament_target_dependencies(
+    test_semantic_component_interface
+    hardware_interface
+  )
 
   ament_add_gmock(
     test_force_torque_sensor
     test/test_force_torque_sensor.cpp
   )
   target_include_directories(test_force_torque_sensor PRIVATE include)
-  ament_target_dependencies(test_force_torque_sensor hardware_interface)
+  ament_target_dependencies(
+    test_force_torque_sensor
+    hardware_interface
+  )
 endif()
 
 ament_export_dependencies(

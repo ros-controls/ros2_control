@@ -100,7 +100,7 @@ public:
     for (size_t i = 0; i < 3; ++i) {
       if (existing_axes_[i]) {
         forces_[i] = state_interfaces_[interface_counter].get().get_value();
-        interface_counter++;
+        ++interface_counter;
       }
     }
     return forces_;
@@ -116,12 +116,14 @@ public:
   {
     // find out how many force interfaces are being used
     // torque interfaces will be found from the next index onward
-    auto torque_start_index = std::count(existing_axes_.begin(), existing_axes_.begin() + 3, true);
+    auto torque_interface_counter = std::count(
+      existing_axes_.begin(),
+      existing_axes_.begin() + 3, true);
 
     for (size_t i = 3; i < 6; ++i) {
       if (existing_axes_[i]) {
-        torques_[i - 3] = state_interfaces_[torque_start_index].get().get_value();
-        torque_start_index++;
+        torques_[i - 3] = state_interfaces_[torque_interface_counter].get().get_value();
+        ++torque_interface_counter;
       }
     }
     return torques_;

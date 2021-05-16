@@ -60,7 +60,7 @@ public:
    * The function should be used in "state_interface_configuration()" of a controller to provide
    * standardized interface names semantic component.
    *
-   * \default Default implementation defined state interfaces as "name_NR" where NR is number
+   * \default Default implementation defined state interfaces as "name/NR" where NR is number
    * from 0 to size of values;
    * \return list of strings with state interface names for the semantic component.
    */
@@ -68,7 +68,7 @@ public:
   {
     if (interface_names_.empty()) {
       for (auto i = 0u; i < interface_names_.capacity(); ++i) {
-        interface_names_.emplace_back(name_ + "_" + std::to_string(i + 1));
+        interface_names_.emplace_back(name_ + "/" + std::to_string(i + 1));
       }
     }
     return interface_names_;

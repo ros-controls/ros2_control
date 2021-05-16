@@ -19,6 +19,7 @@
 #include <string>
 #include <vector>
 
+#include <ostream>
 
 namespace controller_interface
 {
@@ -50,6 +51,7 @@ bool get_ordered_interfaces(
         }
       } else {
         if (name == interface.get_full_name()) {
+          std::cout << "Found interface: " << name << std::endl;
           ordered_interfaces.push_back(std::ref(interface));
         }
       }

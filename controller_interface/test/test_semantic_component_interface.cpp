@@ -47,11 +47,11 @@ TEST_F(SemanticComponentInterfaceTest, validate_default_names)
   ASSERT_EQ(interface_names, semantic_component_->interface_names_);
 
   ASSERT_EQ(interface_names.size(), size_);
-  ASSERT_EQ(interface_names[0], component_name_ + "_1");
-  ASSERT_EQ(interface_names[1], component_name_ + "_2");
-  ASSERT_EQ(interface_names[2], component_name_ + "_3");
-  ASSERT_EQ(interface_names[3], component_name_ + "_4");
-  ASSERT_EQ(interface_names[4], component_name_ + "_5");
+  ASSERT_EQ(interface_names[0], component_name_ + "/1");
+  ASSERT_EQ(interface_names[1], component_name_ + "/2");
+  ASSERT_EQ(interface_names[2], component_name_ + "/3");
+  ASSERT_EQ(interface_names[3], component_name_ + "/4");
+  ASSERT_EQ(interface_names[4], component_name_ + "/5");
 }
 
 TEST_F(SemanticComponentInterfaceTest, validate_custom_names)
@@ -70,14 +70,17 @@ TEST_F(SemanticComponentInterfaceTest, validate_custom_names)
 
   // validate the interface_names_
   std::vector<std::string> interface_names = semantic_component_->get_state_interface_names();
-  ASSERT_EQ(interface_names, semantic_component_->interface_names_);
+  ASSERT_TRUE(
+    std::equal(
+      semantic_component_->interface_names_.begin(), semantic_component_->interface_names_.end(),
+      interface_names.begin(), interface_names.end()));
 
   ASSERT_EQ(interface_names.size(), size_);
-  ASSERT_EQ(interface_names[0], semantic_component_->test_name_ + "/5");
-  ASSERT_EQ(interface_names[1], semantic_component_->test_name_ + "/6");
-  ASSERT_EQ(interface_names[2], semantic_component_->test_name_ + "/7");
-  ASSERT_EQ(interface_names[3], semantic_component_->test_name_ + "/8");
-  ASSERT_EQ(interface_names[4], semantic_component_->test_name_ + "/9");
+  ASSERT_EQ(interface_names[0], semantic_component_->test_name_ + "/i5");
+  ASSERT_EQ(interface_names[1], semantic_component_->test_name_ + "/i6");
+  ASSERT_EQ(interface_names[2], semantic_component_->test_name_ + "/i7");
+  ASSERT_EQ(interface_names[3], semantic_component_->test_name_ + "/i8");
+  ASSERT_EQ(interface_names[4], semantic_component_->test_name_ + "/i9");
 }
 
 TEST_F(SemanticComponentInterfaceTest, validate_state_interfaces)
@@ -96,11 +99,11 @@ TEST_F(SemanticComponentInterfaceTest, validate_state_interfaces)
 
   // assign 1.1 to interface_1, 3.3 to interface_3 and 5.5 to interface_5
   hardware_interface::StateInterface interface_1{
-    component_name_, semantic_component_->interface_names_[0], &interface_values[0]};
+    component_name_, "1", &interface_values[0]};
   hardware_interface::StateInterface interface_3{
-    component_name_, semantic_component_->interface_names_[2], &interface_values[1]};
+    component_name_, "3", &interface_values[1]};
   hardware_interface::StateInterface interface_5{
-    component_name_, semantic_component_->interface_names_[4], &interface_values[2]};
+    component_name_, "5", &interface_values[2]};
 
   // create local state interface vector
   std::vector<hardware_interface::LoanedStateInterface> temp_state_interfaces;
@@ -128,5 +131,8 @@ TEST_F(SemanticComponentInterfaceTest, validate_state_interfaces)
   ASSERT_EQ(semantic_component_->state_interfaces_.size(), 0u);
 
   // validate that release_interfaces() does not touch interface_names_
-  ASSERT_EQ(interface_names, semantic_component_->interface_names_);
+  ASSERT_TRUE(
+    std::equal(
+      semantic_component_->interface_names_.begin(), semantic_component_->interface_names_.end(),
+      interface_names.begin(), interface_names.end()));
 }

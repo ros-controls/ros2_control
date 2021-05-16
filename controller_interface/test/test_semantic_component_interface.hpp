@@ -46,7 +46,7 @@ public:
     // generate the interface_names_
     for (auto i = 0u; i < size; ++i) {
       interface_names_.emplace_back(
-        std::string("TestSemanticComponent") + "/" + std::to_string(i + 5));
+        std::string("TestSemanticComponent") + "/i" + std::to_string(i + 5));
     }
   }
 
