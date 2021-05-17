@@ -168,6 +168,11 @@ TEST_P(BlackBoxTest, IdentityMap)
 }
 
 #ifdef __APPLE__
+#define INSTANTIATE_TEST_CASE_P_COMPAT ,
+#else
+#define INSTANTIATE_TEST_CASE_P_COMPAT
+#endif
+
 INSTANTIATE_TEST_CASE_P(
   IdentityMap,
   BlackBoxTest,
@@ -177,25 +182,9 @@ INSTANTIATE_TEST_CASE_P(
     SimpleTransmission(10.0, 1.0),
     SimpleTransmission(10.0, -1.0),
     SimpleTransmission(-10.0, 1.0),
-    // remove once INSTANTIATE_TEST_SUITE_P is available to use in gtest
-    // https://github.com/google/googletest/issues/1419
+    SimpleTransmission(-10.0, -1.0))
     // cppcheck-suppress syntaxError
-    SimpleTransmission(-10.0, -1.0)), );
-#else
-  INSTANTIATE_TEST_CASE_P(
-    IdentityMap,
-    BlackBoxTest,
-    ::testing::Values(
-      SimpleTransmission(10.0),
-      SimpleTransmission(-10.0),
-      SimpleTransmission(10.0, 1.0),
-      SimpleTransmission(10.0, -1.0),
-      SimpleTransmission(-10.0, 1.0),
-      // remove once INSTANTIATE_TEST_SUITE_P is available to use in gtest
-      // https://github.com/google/googletest/issues/1419
-      // cppcheck-suppress syntaxError
-      SimpleTransmission(-10.0, -1.0)));
-#endif
+    INSTANTIATE_TEST_CASE_P_COMPAT);
 
 class WhiteBoxTest : public TransmissionSetup,
   public ::testing::Test {};
