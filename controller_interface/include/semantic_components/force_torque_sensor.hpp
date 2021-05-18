@@ -92,7 +92,7 @@ public:
   /**
    * Return forces of a FTS.
    *
-   * \return vector of size 3 with force values.
+   * \return array of size 3 with force values.
    */
   std::array<double, 3> get_forces()
   {
@@ -110,7 +110,7 @@ public:
   /**
    * Return torques of a FTS.
    *
-   * \return vector of size 3 with torque values.
+   * \return array of size 3 with torque values.
    */
   std::array<double, 3> get_torques()
   {
