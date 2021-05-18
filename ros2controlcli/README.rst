@@ -1,0 +1,1 @@
+.. include :: doc/index.rst
