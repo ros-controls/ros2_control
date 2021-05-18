@@ -207,28 +207,27 @@ switch_controllers
 .. code-block:: console
 
     $ ros2 control switch_controllers -h
-    usage: ros2 control switch_controllers [-h] [--spin-time SPIN_TIME] [--stop-controllers [STOP_CONTROLLERS [STOP_CONTROLLERS ...]]] [--start-controllers [START_CONTROLLERS [START_CONTROLLERS ...]]] [--strict]
-                                          [--start-asap] [--switch-timeout SWITCH_TIMEOUT] [-c CONTROLLER_MANAGER] [--include-hidden-nodes]
+    usage: ros2 control switch_controllers [-h] [--spin-time SPIN_TIME] [--stop [STOP [STOP ...]]] [--start [START [START ...]]] [--strict] [--start-asap] [--switch-timeout SWITCH_TIMEOUT] [-c CONTROLLER_MANAGER]
+                                          [--include-hidden-nodes]
 
     Switch controllers in a controller manager
 
     optional arguments:
-      -h, --help            show this help message and exit
-      --spin-time SPIN_TIME
-                            Spin time in seconds to wait for discovery (only applies when not using an already running daemon)
-      --stop-controllers [STOP_CONTROLLERS [STOP_CONTROLLERS ...]]
-                            Name of the controllers to be stopped
-      --start-controllers [START_CONTROLLERS [START_CONTROLLERS ...]]
-                            Name of the controllers to be started
-      --strict              Strict switch
-      --start-asap          Start asap controllers
-      --switch-timeout SWITCH_TIMEOUT
-                            Timeout for switching controllers
-      -c CONTROLLER_MANAGER, --controller-manager CONTROLLER_MANAGER
-                            Name of the controller manager ROS node
-      --include-hidden-nodes
-                            Consider hidden nodes as well
-
+    -h, --help            show this help message and exit
+    --spin-time SPIN_TIME
+    Spin time in seconds to wait for discovery (only applies when not using an already running daemon)
+    --stop [STOP [STOP ...]]
+    Name of the controllers to be stopped
+    --start [START [START ...]]
+    Name of the controllers to be started
+    --strict              Strict switch
+    --start-asap          Start asap controllers
+    --switch-timeout SWITCH_TIMEOUT
+    Timeout for switching controllers
+    -c CONTROLLER_MANAGER, --controller-manager CONTROLLER_MANAGER
+    Name of the controller manager ROS node
+    --include-hidden-nodes
+                          Consider hidden nodes as well
 unload_controller
 -----------------
 

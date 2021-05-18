@@ -27,14 +27,14 @@ class SwitchControllersVerb(VerbExtension):
     def add_arguments(self, parser, cli_name):
         add_arguments(parser)
         arg = parser.add_argument(
-            '--stop-controllers',
+            '--stop',
             nargs='*',
             default=[],
             help='Name of the controllers to be stopped',
         )
         arg.completer = LoadedControllerNameCompleter(['active'])
         arg = parser.add_argument(
-            '--start-controllers',
+            '--start',
             nargs='*',
             default=[],
             help='Name of the controllers to be started',
