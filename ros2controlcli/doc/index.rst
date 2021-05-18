@@ -7,7 +7,6 @@ The following commands support interacting with the `controller_manager` from th
 
 Currently supported commands are
 
-    - ros2 control configure_controller
     - ros2 control list_controllers
     - ros2 control list_controller_types
     - ros2 control list_hardware_interfaces
@@ -19,32 +18,10 @@ Currently supported commands are
 
 Deprecated commands are
 
+    - ros2 control configure_controller
     - ros2 control configure_start_controller
     - ros2 control load_configure_controller
     - ros2 control load_start_controller
-
-configure_controller
---------------------
-
-.. code-block:: console
-    
-    $ ros2 control configure_controller -h
-    usage: ros2 control configure_controller [-h] [--spin-time SPIN_TIME] [-c CONTROLLER_MANAGER] [--include-hidden-nodes] controller_name
-
-    Configure a controller in a controller manager
-
-    positional arguments:
-      controller_name       Name of the controller
-
-    optional arguments:
-      -h, --help            show this help message and exit
-      --spin-time SPIN_TIME
-                            Spin time in seconds to wait for discovery (only applies when not using an already running daemon)
-      -c CONTROLLER_MANAGER, --controller-manager CONTROLLER_MANAGER
-                            Name of the controller manager ROS node
-      --include-hidden-nodes
-                            Consider hidden nodes as well
-
 
 list_controllers
 ----------------
