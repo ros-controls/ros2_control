@@ -208,7 +208,7 @@ protected:
 )";
 
     hardware_system_2dof_with_mimic_joint_ =
-        R"(
+      R"(
   <ros2_control name="GenericSystem2dof" type="system">
     <hardware>
       <plugin>fake_components/GenericSystem</plugin>
@@ -804,13 +804,12 @@ void test_generic_system_with_mimic_joint(std::string urdf)
   ASSERT_EQ(-0.1, j2v_s.get_value());
   ASSERT_EQ(0.11, j1p_c.get_value());
   ASSERT_EQ(0.05, j1v_c.get_value());
-
 }
 
 TEST_F(TestGenericSystem, hardware_system_2dof_with_mimic_joint) {
-auto urdf =
+  auto urdf =
     ros2_control_test_assets::urdf_head +
-        hardware_system_2dof_with_mimic_joint_ +
+    hardware_system_2dof_with_mimic_joint_ +
     ros2_control_test_assets::urdf_tail;
 
   test_generic_system_with_mimic_joint(urdf);
