@@ -331,8 +331,7 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_modular_robot
 
   ASSERT_THAT(hardware_info.transmissions, SizeIs(1));
   EXPECT_EQ(hardware_info.transmissions[0].name, "transmission1");
-  EXPECT_EQ(hardware_info.transmissions[0].type, "transmission");
-// EXPECT_EQ(hardware_info.transmissions[0].class_type, "transmission_interface/SimpleTansmission");
+  EXPECT_EQ(hardware_info.transmissions[0].type, "transmission_interface/SimpleTansmission");
   // ASSERT_THAT(hardware_info.transmissions[0].parameters, SizeIs(1));
   // EXPECT_EQ(hardware_info.transmissions[0].parameters.at("joint_to_actuator"), "${1024/PI}");
 
@@ -416,7 +415,7 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_multi_joints_tr
 
   ASSERT_THAT(hardware_info.transmissions, SizeIs(1));
   EXPECT_EQ(hardware_info.transmissions[0].name, "transmission1");
-  EXPECT_EQ(hardware_info.transmissions[0].type, "transmission");
+  EXPECT_EQ(hardware_info.transmissions[0].type, "transmission_interface/DifferentialTransmission");
   // EXPECT_EQ(
   //   hardware_info.transmissions[0].class_type,
   //   "transmission_interface/SomeComplex_2x2_Transmission");
@@ -490,10 +489,7 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_only)
 
   ASSERT_THAT(hardware_info.transmissions, SizeIs(1));
   EXPECT_EQ(hardware_info.transmissions[0].name, "transmission1");
-  EXPECT_EQ(hardware_info.transmissions[0].type, "transmission");
-  // EXPECT_EQ(
-  //   hardware_info.transmissions[0].class_type,
-  //   "transmission_interface/RotationToLinerTansmission");
+  EXPECT_EQ(hardware_info.transmissions[0].type, "transmission_interface/RotationToLinerTansmission");
   // ASSERT_THAT(hardware_info.transmissions[0].parameters, SizeIs(1));
   // EXPECT_EQ(hardware_info.transmissions[0].parameters.at("joint_to_actuator"), "${1024/PI}");
 }
