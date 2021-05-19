@@ -59,7 +59,7 @@ return_type GenericSystem::configure(const hardware_interface::HardwareInfo & in
     const auto & joint = info_.joints.at(i);
     if (joint.parameters.find("mimic") != joint.parameters.cend()) {
       const auto mimicked_joint_it = std::find_if(
-        info_.joints.cbegin(), info_.joints.cend(),
+        info_.joints.begin(), info_.joints.end(),
         [ & mimicked_joint = joint.parameters.at("mimic")](
           const hardware_interface::ComponentInfo & joint_info) {
           return joint_info.name == mimicked_joint;
@@ -71,7 +71,7 @@ return_type GenericSystem::configure(const hardware_interface::HardwareInfo & in
       }
       MimicJoint mimic_joint;
       mimic_joint.joint_index = i;
-      mimic_joint.mimicked_joint_index = std::distance(info_.joints.cbegin(), mimicked_joint_it);
+      mimic_joint.mimicked_joint_index = std::distance(info_.joints.begin(), mimicked_joint_it);
       auto param_it = joint.parameters.find("multiplier");
       if (param_it != joint.parameters.end()) {
         mimic_joint.multiplier = std::stod(joint.parameters.at("multiplier"));
@@ -200,7 +200,7 @@ return_type GenericSystem::read()
   // do loopback
   joint_states_ = joint_commands_;
   for (const auto & mimic_joint : mimic_joints_) {
-    for (auto i = 0u; i < standard_interfaces_.size(); ++i) {
+    for (auto i = 0u; i < joint_states_.size(); ++i) {
       joint_states_.at(i).at(mimic_joint.joint_index) = mimic_joint.multiplier *
         joint_states_.at(i).at(mimic_joint.mimicked_joint_index);
     }

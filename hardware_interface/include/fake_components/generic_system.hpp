@@ -81,8 +81,8 @@ protected:
 
   struct MimicJoint
   {
-    std::size_t joint_index{};
-    std::size_t mimicked_joint_index{};
+    std::size_t joint_index;
+    std::size_t mimicked_joint_index;
     double multiplier = 1.0;
   };
   std::vector<MimicJoint> mimic_joints_;
