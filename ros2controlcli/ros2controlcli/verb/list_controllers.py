@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from controller_manager import list_controller_types
+from controller_manager import list_controllers
 
 from ros2cli.node.direct import add_arguments
 from ros2cli.node.strategy import NodeStrategy
@@ -21,8 +21,8 @@ from ros2cli.verb import VerbExtension
 from ros2controlcli.api import add_controller_mgr_parsers
 
 
-class ListTypesVerb(VerbExtension):
-    """Output the available controller types and theri base classes."""
+class ListControllersVerb(VerbExtension):
+    """Output the list of loaded controllers, their type and status."""
 
     def add_arguments(self, parser, cli_name):
         add_arguments(parser)
@@ -30,9 +30,8 @@ class ListTypesVerb(VerbExtension):
 
     def main(self, *, args):
         with NodeStrategy(args) as node:
-            response = list_controller_types(node, args.controller_manager)
-            types_and_classes = zip(response.types, response.base_classes)
-            for c in types_and_classes:
-                print(f'{c[0]:70s} {c[1]}')
+            controllers = list_controllers(node, args.controller_manager).controller
+            for c in controllers:
+                print(f'{c.name:20s}[{c.type:20s}] {c.state:10s}')
 
             return 0

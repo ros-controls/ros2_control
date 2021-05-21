@@ -12,32 +12,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from controller_manager import reload_controller_libraries
+from controller_manager import unload_controller
 
 from ros2cli.node.direct import add_arguments
 from ros2cli.node.strategy import NodeStrategy
 from ros2cli.verb import VerbExtension
 
-from ros2controlcli.api import add_controller_mgr_parsers
+from ros2controlcli.api import add_controller_mgr_parsers, LoadedControllerNameCompleter
 
 
-class ReloadLibrariesVerb(VerbExtension):
-    """Reload controller libraries."""
+class UnloadControllerVerb(VerbExtension):
+    """Unload a controller in a controller manager."""
 
     def add_arguments(self, parser, cli_name):
         add_arguments(parser)
-        parser.add_argument(
-            '--force-kill', action='store_true', help='Force stop of loaded controllers'
-        )
+        arg = parser.add_argument('controller_name', help='Name of the controller')
+        arg.completer = LoadedControllerNameCompleter()
         add_controller_mgr_parsers(parser)
 
     def main(self, *, args):
         with NodeStrategy(args) as node:
-            response = reload_controller_libraries(
-                node, args.controller_manager, force_kill=args.force_kill
-            )
+            response = unload_controller(node, args.controller_manager, args.controller_name)
             if not response.ok:
-                return 'Error reloading libraries, check controller_manager logs'
+                return 'Error unloading controllers, check controller_manager logs'
 
-            print('Reload successful')
+            print(f'Successfully unloaded controller {args.controller_name}')
             return 0
