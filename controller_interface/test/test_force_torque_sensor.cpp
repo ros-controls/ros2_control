@@ -92,7 +92,8 @@ TEST_F(ForceTorqueSensorTest, validate_all_with_default_names)
   ASSERT_EQ(temp_torque_values, torque_values_);
 
   // validate get_values_as_message
-  geometry_msgs::msg::Wrench temp_message = force_torque_sensor_->get_values_as_message();
+  geometry_msgs::msg::Wrench temp_message;
+  ASSERT_TRUE(force_torque_sensor_->get_values_as_message(temp_message));
   ASSERT_EQ(temp_message.force.x, force_values_[0]);
   ASSERT_EQ(temp_message.force.y, force_values_[1]);
   ASSERT_EQ(temp_message.force.z, force_values_[2]);
@@ -173,7 +174,8 @@ TEST_F(ForceTorqueSensorTest, validate_all_with_custom_names)
   ASSERT_EQ(temp_torque_values[2], torque_values_[2]);
 
   // validate get_values_as_message
-  geometry_msgs::msg::Wrench temp_message = force_torque_sensor_->get_values_as_message();
+  geometry_msgs::msg::Wrench temp_message;
+  ASSERT_TRUE(force_torque_sensor_->get_values_as_message(temp_message));
   ASSERT_EQ(temp_message.force.x, force_values_[0]);
   ASSERT_TRUE(std::isnan(temp_message.force.y));
   ASSERT_EQ(temp_message.force.z, force_values_[2]);
@@ -259,7 +261,8 @@ TEST_F(ForceTorqueSensorTest, validate_all_custom_names)
   ASSERT_EQ(temp_torque_values[2], torque_values_[2]);
 
   // validate get_values_as_message
-  geometry_msgs::msg::Wrench temp_message = force_torque_sensor_->get_values_as_message();
+  geometry_msgs::msg::Wrench temp_message;
+  ASSERT_TRUE(force_torque_sensor_->get_values_as_message(temp_message));
   ASSERT_EQ(temp_message.force.x, force_values_[0]);
   ASSERT_EQ(temp_message.force.y, force_values_[1]);
   ASSERT_EQ(temp_message.force.z, force_values_[2]);

@@ -26,7 +26,7 @@
 namespace semantic_components
 {
 
-class ForceTorqueSensor : public SemanticComponentInterface
+class ForceTorqueSensor : public SemanticComponentInterface<geometry_msgs::msg::Wrench>
 {
 public:
   /// Constructor for "standard" 6D FTS
@@ -137,10 +137,8 @@ public:
    *
    * \return wrench message from values;
    */
-  geometry_msgs::msg::Wrench get_values_as_message()
+  bool get_values_as_message(geometry_msgs::msg::Wrench & message)
   {
-    geometry_msgs::msg::Wrench message;
-
     // call get_forces() and get_troque() to update with the latest values
     get_forces();
     get_torques();
@@ -153,7 +151,7 @@ public:
     message.torque.y = torques_[1];
     message.torque.z = torques_[2];
 
-    return message;
+    return true;
   }
 
 protected:

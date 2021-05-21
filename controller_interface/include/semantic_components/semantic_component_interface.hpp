@@ -24,6 +24,7 @@
 namespace semantic_components
 {
 
+template<typename MessageReturnType>
 class SemanticComponentInterface
 {
 public:
@@ -89,6 +90,15 @@ public:
       values.emplace_back(state_interfaces_[i].get().get_value());
     }
     return true;
+  }
+
+  /// Return values as MessageReturnType
+  /**
+   * \return false by default
+   */
+  bool get_values_as_message(MessageReturnType & message)
+  {
+    return false;
   }
 
 protected:
