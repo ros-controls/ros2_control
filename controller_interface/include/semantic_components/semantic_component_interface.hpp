@@ -76,16 +76,19 @@ public:
 
   /// Return all values.
   /**
-   * \return vector with all stored values;
+   * \return true if it gets all the values, else false
    */
-  virtual std::vector<double> get_values() const
+  bool get_values(std::vector<double> & values) const
   {
-    std::vector<double> values;
-    values.reserve(state_interfaces_.size());
+    // check we have sufficient memory
+    if (values.capacity() != state_interfaces_.size()) {
+      return false;
+    }
+    // insert all the values
     for (size_t i = 0; i < state_interfaces_.size(); ++i) {
       values.emplace_back(state_interfaces_[i].get().get_value());
     }
-    return values;
+    return true;
   }
 
 protected:
