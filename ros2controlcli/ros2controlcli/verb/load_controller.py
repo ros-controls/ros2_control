@@ -29,7 +29,7 @@ class LoadControllerVerb(VerbExtension):
         arg = parser.add_argument('controller_name', help='Name of the controller')
         arg.completer = ControllerNameCompleter()
         arg = parser.add_argument(
-            '--set_state',
+            '--set-state',
             choices=['configure', 'start'],
             help='Set the state of the loaded controller',
         )
