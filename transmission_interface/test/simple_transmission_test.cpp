@@ -179,7 +179,7 @@ INSTANTIATE_TEST_CASE_P(
     SimpleTransmission(-10.0, 1.0),
     SimpleTransmission(-10.0, -1.0))
   // cppcheck-suppress syntaxError
-  ,);
+  , );
 #else
 INSTANTIATE_TEST_CASE_P(
   IdentityMap,
