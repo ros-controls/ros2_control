@@ -2,6 +2,13 @@
 Changelog for package transmission_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Remove the with_value_ptr and class templatization for ReadOnlyHandle (`#379 <https://github.com/ros-controls/ros2_control/issues/379>`_)
+* Fix transmission interface test on OSX (`#419 <https://github.com/ros-controls/ros2_control/issues/419>`_)
+* Fix failing test on rolling (`#416 <https://github.com/ros-controls/ros2_control/issues/416>`_)
+* Contributors: El Jawad Alaa, Karsten Knese, Vatan Aksoy Tezer, Bence Magyar
+
 0.5.0 (2021-05-03)
 ------------------
 * Replace standard interfaces' hard-coded strings by constants (`#376 <https://github.com/ros-controls/ros2_control/issues/376>`_)

@@ -2,6 +2,17 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* List controller claimed interfaces (`#407 <https://github.com/ros-controls/ros2_control/issues/407>`_)
+  * List controllers now also shows the claimed interfaces
+  * Fixed tests that perform switches
+  Successfull controller switches require more than one call to update()
+  in order to update the controller list
+  * Can now set the command interface configuration
+  * Added checks for the claimed interfaces
+* Contributors: Jordan Palacios
+
 0.5.0 (2021-05-03)
 ------------------
 * Make controller manager update rate optional (`#404 <https://github.com/ros-controls/ros2_control/issues/404>`_)

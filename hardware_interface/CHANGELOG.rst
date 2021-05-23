@@ -2,6 +2,13 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Remove the with_value_ptr and class templatization for ReadOnlyHandle (`#379 <https://github.com/ros-controls/ros2_control/issues/379>`_)
+* fake_components: Add mimic joint to generic system (`#409 <https://github.com/ros-controls/ros2_control/issues/409>`_)
+* List controller claimed interfaces (`#407 <https://github.com/ros-controls/ros2_control/issues/407>`_)
+* Contributors: El Jawad Alaa, Jafar Abdi, Jordan Palacios, Bence Magyar
+
 0.5.0 (2021-05-03)
 ------------------
 * Make hardware interface types as const char array rather than const char pointer (`#408 <https://github.com/ros-controls/ros2_control/issues/408>`_)

@@ -2,6 +2,17 @@
 Changelog for package ros2controlcli
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Renaming ros2controlcli verbs (`#412 <https://github.com/ros-controls/ros2_control/issues/412>`_)
+  * Renamed verbs to match services
+  * README.rst redirects to docs/index.rst
+  * argument {start/stop}_controllers -> {start/stop}
+  * rst include did not work, try relative link
+  * Moved configure_controller doc to deprecated
+  * set_state -> set-state
+* Contributors: Mathias Hauan Arbo, Denis Štogl
+
 0.5.0 (2021-05-03)
 ------------------
 * correct return values in CLI (`#401 <https://github.com/ros-controls/ros2_control/issues/401>`_)

@@ -2,6 +2,12 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Added labels for controller states. (`#414 <https://github.com/ros-controls/ros2_control/issues/414>`_)
+* prevent variable-sized object initialization (`#411 <https://github.com/ros-controls/ros2_control/issues/411>`_)
+* Contributors: Denis Štogl, Karsten Knese, Bence Magyar
+
 0.5.0 (2021-05-03)
 ------------------
 * Add NodeOptions parameter to init function of controller_interface (`#382 <https://github.com/ros-controls/ros2_control/issues/382>`_)
