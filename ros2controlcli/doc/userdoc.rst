@@ -16,10 +16,6 @@ Currently supported commands are
     - ros2 control switch_controllers
     - ros2 control unload_controller
 
-Deprecated commands are
-
-    - ros2 control configure_controller
-
 list_controllers
 ----------------
 
