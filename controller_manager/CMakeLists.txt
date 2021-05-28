@@ -123,6 +123,10 @@ if(BUILD_TESTING)
   )
   target_include_directories(test_controller_manager_srvs PRIVATE include)
   target_link_libraries(test_controller_manager_srvs controller_manager test_controller)
+    ament_target_dependencies (
+    test_controller_manager_srvs
+    controller_manager_msgs
+  )
 
   add_library(test_controller_with_interfaces SHARED test/test_controller_with_interfaces/test_controller_with_interfaces.cpp)
   target_include_directories(test_controller_with_interfaces PRIVATE include)
