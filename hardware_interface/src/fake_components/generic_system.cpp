@@ -47,8 +47,7 @@ return_type GenericSystem::configure(const hardware_interface::HardwareInfo & in
   // set all values without initial values to 0
   for (auto i = 0u; i < info_.joints.size(); i++) {
     for (auto j = 0u; j < standard_interfaces_.size(); j++) {
-      if (std::isnan(joint_commands_[j][i])) {
-        joint_commands_[j][i] = 0.0;
+      if (std::isnan(joint_states_[j][i])) {
         joint_states_[j][i] = 0.0;
       }
     }
@@ -198,16 +197,36 @@ std::vector<hardware_interface::CommandInterface> GenericSystem::export_command_
 return_type GenericSystem::read()
 {
   // do loopback
-  joint_states_ = joint_commands_;
-  for (const auto & mimic_joint : mimic_joints_) {
-    for (auto i = 0u; i < joint_states_.size(); ++i) {
-      joint_states_.at(i).at(mimic_joint.joint_index) = mimic_joint.multiplier *
-        joint_states_.at(i).at(mimic_joint.mimicked_joint_index);
+  for (size_t i = 0; i < joint_states_.size(); ++i) {
+    for (size_t j = 0; j < joint_states_[i].size(); ++j) {
+      if (!std::isnan(joint_commands_[i][j])) {
+        joint_states_[i][j] = joint_commands_[i][j];
+      }
     }
   }
-  other_states_ = other_commands_;
+  for (const auto & mimic_joint : mimic_joints_) {
+    for (auto i = 0u; i < joint_states_.size(); ++i) {
+      joint_states_[i][mimic_joint.joint_index] = mimic_joint.multiplier *
+        joint_states_[i][mimic_joint.mimicked_joint_index];
+    }
+  }
+
+  for (size_t i = 0; i < other_states_.size(); ++i) {
+    for (size_t j = 0; j < other_states_[i].size(); ++j) {
+      if (!std::isnan(other_commands_[i][j])) {
+        other_states_[i][j] = other_commands_[i][j];
+      }
+    }
+  }
+
   if (fake_sensor_command_interfaces_) {
-    sensor_states_ = sensor_fake_commands_;
+    for (size_t i = 0; i < sensor_states_.size(); ++i) {
+      for (size_t j = 0; j < sensor_states_[i].size(); ++j) {
+        if (!std::isnan(sensor_fake_commands_[i][j])) {
+          sensor_states_[i][j] = sensor_fake_commands_[i][j];
+        }
+      }
+    }
   }
   return return_type::OK;
 }
@@ -250,7 +269,6 @@ void GenericSystem::initialize_storage_vectors(
     for (auto j = 0u; j < interfaces.size(); j++) {
       auto it = joint.parameters.find("initial_" + interfaces[j]);
       if (it != joint.parameters.end()) {
-        commands[j][i] = std::stod(it->second);
         states[j][i] = std::stod(it->second);
       }
     }
