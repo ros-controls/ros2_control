@@ -70,6 +70,9 @@ def main(args=None):
         help='Controller param file to be loaded into controller node before configure',
         required=False)
     parser.add_argument(
+        '--load-only', help='Only load the controller and leave unconfigured.',
+        action='store_true', required=False)
+    parser.add_argument(
         '--stopped', help='Load and configure the controller, however do not start them',
         action='store_true', required=False)
     parser.add_argument(
@@ -123,25 +126,26 @@ def main(args=None):
                 return ret.returncode
             node.get_logger().info('Loaded ' + param_file + ' into ' + controller_name)
 
-        ret = configure_controller(node, controller_manager_name, controller_name)
-        if not ret.ok:
-            node.get_logger().info('Failed to configure controller')
-            return 1
-
-        if not args.stopped:
-            ret = switch_controllers(
-                node,
-                controller_manager_name,
-                [],
-                [controller_name],
-                True,
-                True,
-                5.0)
+        if not args.load_only:
+            ret = configure_controller(node, controller_manager_name, controller_name)
             if not ret.ok:
-                node.get_logger().info('Failed to start controller')
+                node.get_logger().info('Failed to configure controller')
                 return 1
 
-            node.get_logger().info('Configured and started ' + controller_name)
+            if not args.stopped:
+                ret = switch_controllers(
+                    node,
+                    controller_manager_name,
+                    [],
+                    [controller_name],
+                    True,
+                    True,
+                    5.0)
+                if not ret.ok:
+                    node.get_logger().info('Failed to start controller')
+                    return 1
+
+                node.get_logger().info('Configured and started ' + controller_name)
 
         if not args.unload_on_kill:
             return 0
