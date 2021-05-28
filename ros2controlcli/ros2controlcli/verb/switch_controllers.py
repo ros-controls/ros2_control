@@ -56,8 +56,8 @@ class SwitchControllersVerb(VerbExtension):
             response = switch_controllers(
                 node,
                 args.controller_manager,
-                args.stop_controllers,
-                args.start_controllers,
+                args.stop,
+                args.start,
                 args.strict,
                 args.start_asap,
                 args.switch_timeout,
