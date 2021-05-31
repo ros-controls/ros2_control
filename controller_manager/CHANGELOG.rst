@@ -2,6 +2,11 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add missing dependency on controller_manager_msgs (`#426 <https://github.com/ros-controls/ros2_control/issues/426>`_)
+* Contributors: Denis Štogl
+
 0.6.0 (2021-05-23)
 ------------------
 * List controller claimed interfaces (`#407 <https://github.com/ros-controls/ros2_control/issues/407>`_)
