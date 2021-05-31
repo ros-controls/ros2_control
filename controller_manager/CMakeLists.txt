@@ -123,7 +123,7 @@ if(BUILD_TESTING)
   )
   target_include_directories(test_controller_manager_srvs PRIVATE include)
   target_link_libraries(test_controller_manager_srvs controller_manager test_controller)
-  ament_target_dependencies (
+  ament_target_dependencies(
     test_controller_manager_srvs
     controller_manager_msgs
   )
