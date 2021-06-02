@@ -66,6 +66,16 @@ if(BUILD_TESTING)
     test_force_torque_sensor
     hardware_interface
   )
+
+  ament_add_gmock(
+    test_imu_sensor
+    test/test_imu_sensor.cpp
+  )
+  target_include_directories(test_imu_sensor PRIVATE include)
+  ament_target_dependencies(
+    test_imu_sensor
+    hardware_interface
+  )
 endif()
 
 ament_export_dependencies(
