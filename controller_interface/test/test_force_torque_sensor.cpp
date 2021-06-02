@@ -18,6 +18,7 @@
 
 #include "test_force_torque_sensor.hpp"
 
+#include <cmath>
 #include <memory>
 #include <string>
 #include <vector>

@@ -96,7 +96,7 @@ public:
   /**
    * \return false by default
    */
-  bool get_values_as_message(MessageReturnType & message)
+  bool get_values_as_message(MessageReturnType & /* message */)
   {
     return false;
   }
