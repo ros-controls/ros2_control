@@ -49,6 +49,8 @@ public:
       interface_force_x, interface_force_y, interface_force_z,
       interface_torque_x, interface_torque_y, interface_torque_z)
   {}
+
+  virtual ~TestableForceTorqueSensor() = default;
 };
 
 class ForceTorqueSensorTest : public ::testing::Test

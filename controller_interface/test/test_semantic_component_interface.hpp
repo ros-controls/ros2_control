@@ -50,6 +50,8 @@ public:
     }
   }
 
+  virtual ~TestableSemanticComponentInterface() = default;
+
   std::string test_name_ = "TestSemanticComponent";
 };
 
