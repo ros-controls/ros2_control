@@ -15,7 +15,7 @@ jobs:
       fail-fast: false
     steps:
       - uses: ros-tooling/setup-ros@v0.2
-      - uses: ros-tooling/action-ros-ci@v0.1
+      - uses: ros-tooling/action-ros-ci@v0.2
         with:
           target-ros2-distro: foxy
           # build all packages listed in the meta package
