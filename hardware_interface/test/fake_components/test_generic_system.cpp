@@ -16,6 +16,7 @@
 
 #include <gmock/gmock.h>
 
+#include <cmath>
 #include <string>
 #include <unordered_map>
 
