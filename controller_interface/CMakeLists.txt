@@ -41,6 +41,7 @@ if(BUILD_TESTING)
   find_package(ament_cmake_gmock REQUIRED)
   find_package(ament_lint_auto REQUIRED)
   find_package(hardware_interface REQUIRED)
+  find_package(sensor_msgs REQUIRED)
   ament_lint_auto_find_test_dependencies()
 
   ament_add_gmock(test_controller_with_options test/test_controller_with_options.cpp)
@@ -75,12 +76,14 @@ if(BUILD_TESTING)
   ament_target_dependencies(
     test_imu_sensor
     hardware_interface
+    sensor_msgs
   )
 endif()
 
 ament_export_dependencies(
   hardware_interface
   rclcpp_lifecycle
+  sensor_msgs
 )
 ament_export_include_directories(
   include
