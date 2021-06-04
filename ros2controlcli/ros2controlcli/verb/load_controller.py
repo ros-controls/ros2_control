@@ -41,7 +41,7 @@ class LoadControllerVerb(VerbExtension):
             if not response.ok:
                 return 'Error loading controller, check controller_manager logs'
 
-            if not args.state:
+            if not args.set_state:
                 print(f'Successfully loaded controller {args.controller_name}')
                 return 0
 
@@ -50,7 +50,7 @@ class LoadControllerVerb(VerbExtension):
             if not response.ok:
                 return 'Error configuring controller'
 
-            if args.state == 'start':
+            if args.set_state == 'start':
                 response = switch_controllers(
                     node, args.controller_manager, [], [args.controller_name], True, True, 5.0
                 )
@@ -58,5 +58,5 @@ class LoadControllerVerb(VerbExtension):
                     return 'Error starting controller, check controller_manager logs'
 
             print(f'Sucessfully loaded controller {args.controller_name} into '
-                  f'state { "inactive" if args.state == "configure" else "active" }')
+                  f'state { "inactive" if args.set_state == "configure" else "active" }')
             return 0
