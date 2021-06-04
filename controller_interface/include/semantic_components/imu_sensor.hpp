@@ -19,7 +19,6 @@
 #include <string>
 #include <vector>
 
-#include "hardware_interface/loaned_state_interface.hpp"
 #include "semantic_components/semantic_component_interface.hpp"
 #include "sensor_msgs/msg/imu.hpp"
 

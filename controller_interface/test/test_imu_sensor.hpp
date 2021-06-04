@@ -27,7 +27,7 @@
 
 #include "semantic_components/imu_sensor.hpp"
 
-// implementing and friending so we can access member varibles
+// implementing and friending so we can access member variables
 class TestableIMUSensor : public semantic_components::
   IMUSensor
 {
@@ -38,6 +38,8 @@ public:
   explicit TestableIMUSensor(const std::string & name)
   : IMUSensor(name)
   {}
+
+  virtual ~TestableIMUSensor() = default;
 };
 
 class IMUSensorTest : public ::testing::Test
