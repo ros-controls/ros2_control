@@ -2,6 +2,13 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add imu_sensor semantic component (`#429 <https://github.com/ros-controls/ros2_control/issues/429>`_)
+* Fix osx warnings (`#428 <https://github.com/ros-controls/ros2_control/issues/428>`_)
+* Add FTS as first semantic components to simplify controllers. (`#370 <https://github.com/ros-controls/ros2_control/issues/370>`_)
+* Contributors: bailaC, Denis Štogl, Jordan Palacios, Karsten Knese, Victor Lopez
+
 0.6.1 (2021-05-31)
 ------------------
 

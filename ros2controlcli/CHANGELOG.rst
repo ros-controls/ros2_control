@@ -2,6 +2,11 @@
 Changelog for package ros2controlcli
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Updated arg reference to set_state from state since the argument name has been changed (`#433 <https://github.com/ros-controls/ros2_control/issues/433>`_)
+* Contributors: Andrew Lycas
+
 0.6.1 (2021-05-31)
 ------------------
 * Use correct names after changing arguments (`#425 <https://github.com/ros-controls/ros2_control/issues/425>`_)
