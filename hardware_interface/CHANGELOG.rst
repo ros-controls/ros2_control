@@ -2,8 +2,8 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.7.0 (2021-06-06)
+------------------
 * Add FTS as first semantic components to simplify controllers. (`#370 <https://github.com/ros-controls/ros2_control/issues/370>`_)
 * Contributors: bailaC, Denis Štogl, Jordan Palacios
 
