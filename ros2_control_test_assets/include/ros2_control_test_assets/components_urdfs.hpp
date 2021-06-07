@@ -332,6 +332,42 @@ const auto valid_urdf_ros2_control_actuator_only =
   </ros2_control>
 )";
 
+// 10. Industrial Robots with integrated GPIO
+const auto valid_urdf_ros2_control_system_robot_with_gpio =
+  R"(
+  <ros2_control name="RRBotSystemWithGPIO" type="system">
+    <hardware>
+      <plugin>ros2_control_demo_hardware/RRBotSystemWithGPIOHardware</plugin>
+      <param name="example_param_write_for_sec">2</param>
+      <param name="example_param_read_for_sec">2</param>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position">
+        <param name="min">-1</param>
+        <param name="max">1</param>
+      </command_interface>
+      <state_interface name="position"/>
+    </joint>
+    <joint name="joint2">
+      <command_interface name="position">
+        <param name="min">-1</param>
+        <param name="max">1</param>
+      </command_interface>
+      <state_interface name="position"/>
+    </joint>
+    <gpio name="flange_analog_IOs">
+      <command_interface name="analog_output1"/>
+      <state_interface name="analog_output1"/> <!-- Needed to know current state of the output -->
+      <state_interface name="analog_input1"/>
+      <state_interface name="analog_input2"/>
+    </gpio>
+    <gpio name="flange_vacuum">
+      <command_interface name="vacuum"/>
+      <state_interface name="vacuum"/> <!-- Needed to know current state of the input -->
+    </gpio>
+  </ros2_control>
+)";
+
 // Errors
 const auto invalid_urdf_ros2_control_invalid_child =
   R"(

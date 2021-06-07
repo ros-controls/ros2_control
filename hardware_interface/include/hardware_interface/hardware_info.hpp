@@ -48,16 +48,16 @@ struct ComponentInfo
 {
   /// Name of the component.
   std::string name;
-  /// Type of the component: sensor or joint.
+  /// Type of the component: sensor, joint, or GPIO.
   std::string type;
   /**
    * Name of the command interfaces that can be set, e.g. "position", "velocity", etc.
-   * Used by joints.
+   * Used by joints and GPIO.
    */
   std::vector<InterfaceInfo> command_interfaces;
   /**
    * Name of the state interfaces that can be read, e.g. "position", "velocity", etc.
-   * Used by Joints and Sensors.
+   * Used by Joints, Sensors and GPIO.
    */
   std::vector<InterfaceInfo> state_interfaces;
   /// (Optional) Key-value pairs of component parameters, e.g. min/max values or serial number.
@@ -84,6 +84,11 @@ struct HardwareInfo
    * Required for Sensor and optional for System Hardware.
    */
   std::vector<ComponentInfo> sensors;
+  /**
+   * Map of GPIO provided by the hardware where the key is a descriptive name of the GPIO.
+   * Optional for any hardware components.
+   */
+  std::vector<ComponentInfo> gpios;
   /**
    * Map of transmissions to calcualte ration between joints and physical actuators.
    * Optional for Actuator and System Hardware.

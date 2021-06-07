@@ -30,6 +30,7 @@ constexpr const auto kClassTypeTag = "plugin";
 constexpr const auto kParamTag = "param";
 constexpr const auto kJointTag = "joint";
 constexpr const auto kSensorTag = "sensor";
+constexpr const auto kGPIOTag = "gpio";
 constexpr const auto kTransmissionTag = "transmission";
 constexpr const auto kCommandInterfaceTag = "command_interface";
 constexpr const auto kStateInterfaceTag = "state_interface";
@@ -231,6 +232,8 @@ HardwareInfo parse_resource_from_xml(const tinyxml2::XMLElement * ros2_control_i
       hardware.sensors.push_back(parse_component_from_xml(ros2_control_child_it) );
     } else if (!std::string(kTransmissionTag).compare(ros2_control_child_it->Name())) {
       hardware.transmissions.push_back(parse_component_from_xml(ros2_control_child_it) );
+    } else if (!std::string(kGPIOTag).compare(ros2_control_child_it->Name())) {
+      hardware.gpios.push_back(parse_component_from_xml(ros2_control_child_it) );
     } else {
       throw std::runtime_error("invalid tag name " + std::string(ros2_control_child_it->Name()));
     }
