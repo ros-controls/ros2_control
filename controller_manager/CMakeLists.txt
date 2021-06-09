@@ -85,6 +85,7 @@ if(BUILD_TESTING)
   target_include_directories(test_controller PRIVATE include)
   target_link_libraries(test_controller controller_manager)
   target_compile_definitions(test_controller PRIVATE "CONTROLLER_MANAGER_BUILDING_DLL")
+  set_target_properties(test_controller PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
   pluginlib_export_plugin_description_file(
     controller_interface test/test_controller/test_controller.xml)
   install(TARGETS test_controller
