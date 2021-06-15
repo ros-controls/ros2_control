@@ -2,6 +2,11 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Remove forgoten debug output (`#439 <https://github.com/ros-controls/ros2_control/issues/439>`_)
+* Contributors: Denis Štogl
+
 0.7.0 (2021-06-06)
 ------------------
 * Add imu_sensor semantic component (`#429 <https://github.com/ros-controls/ros2_control/issues/429>`_)
