@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.7.1 (2021-06-15)
+------------------
 * Use namespace in controller_manager (`#435 <https://github.com/ros-controls/ros2_control/issues/435>`_)
 * Contributors: Jonatan Olofsson
 

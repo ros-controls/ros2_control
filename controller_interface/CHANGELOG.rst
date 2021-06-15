@@ -2,8 +2,8 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.7.1 (2021-06-15)
+------------------
 * Remove forgoten debug output (`#439 <https://github.com/ros-controls/ros2_control/issues/439>`_)
 * Contributors: Denis Štogl
 
