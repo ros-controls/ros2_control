@@ -1151,8 +1151,9 @@ ControllerManager::RTControllerListWrapper::update_and_get_used_by_rt_list()
 std::vector<ControllerSpec> & ControllerManager::RTControllerListWrapper::get_unused_list(
   const std::lock_guard<std::recursive_mutex> &)
 {
-  assert(controllers_lock_.try_lock());
-  controllers_lock_.unlock();
+  {
+    std::lock_guard<std::recursive_mutex> guard(controllers_lock_);
+  }
   // Get the index to the outdated controller list
   int free_controllers_list = get_other_list(updated_controllers_index_);
 
@@ -1164,16 +1165,18 @@ std::vector<ControllerSpec> & ControllerManager::RTControllerListWrapper::get_un
 const std::vector<ControllerSpec> & ControllerManager::RTControllerListWrapper::get_updated_list(
   const std::lock_guard<std::recursive_mutex> &) const
 {
-  assert(controllers_lock_.try_lock());
-  controllers_lock_.unlock();
+  {
+    std::lock_guard<std::recursive_mutex> guard(controllers_lock_);
+  }
   return controllers_lists_[updated_controllers_index_];
 }
 
 void ControllerManager::RTControllerListWrapper::switch_updated_list(
   const std::lock_guard<std::recursive_mutex> &)
 {
-  assert(controllers_lock_.try_lock());
-  controllers_lock_.unlock();
+  {
+    std::lock_guard<std::recursive_mutex> guard(controllers_lock_);
+  }
   int former_current_controllers_list_ = updated_controllers_index_;
   updated_controllers_index_ = get_other_list(former_current_controllers_list_);
   wait_until_rt_not_using(former_current_controllers_list_);
