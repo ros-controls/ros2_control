@@ -888,7 +888,7 @@ void ControllerManager::configure_controller_service_cb(
   RCLCPP_DEBUG(
     get_logger(), "configuring service called for controller '%s' ", request->name.c_str());
   std::lock_guard<std::mutex> guard(services_lock_);
-  RCLCPP_DEBUG(get_logger(), "loading service locked");
+  RCLCPP_DEBUG(get_logger(), "configuring service locked");
 
   response->ok =
     configure_controller(request->name) == controller_interface::return_type::OK;
