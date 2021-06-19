@@ -62,6 +62,7 @@ public:
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
   on_cleanup(const rclcpp_lifecycle::State & previous_state) override;
 
+  CONTROLLER_MANAGER_PUBLIC
   void set_command_interface_configuration(
     const controller_interface::InterfaceConfiguration & cfg);
 
