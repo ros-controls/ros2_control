@@ -98,7 +98,8 @@ def main(args=None):
 
     node = Node('spawner_' + controller_name)
     try:
-        if not wait_for_controller_manager(node, controller_manager_name, controller_manager_timeout):
+        if not wait_for_controller_manager(node, controller_manager_name,
+                                           controller_manager_timeout):
             node.get_logger().error('Controller manager not available')
             return 1
 
