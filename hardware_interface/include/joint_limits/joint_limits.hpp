@@ -14,20 +14,22 @@
 
 /// \author Adolfo Rodriguez Tsouroukdissian
 
-#ifndef JOINT_LIMITS_INTERFACE__JOINT_LIMITS_HPP_
-#define JOINT_LIMITS_INTERFACE__JOINT_LIMITS_HPP_
+#ifndef JOINT_LIMITS__JOINT_LIMITS_HPP_
+#define JOINT_LIMITS__JOINT_LIMITS_HPP_
 
-namespace joint_limits_interface
+#include <limits>
+
+namespace joint_limits
 {
 struct JointLimits
 {
   JointLimits()
-  : min_position(0.0),
-    max_position(0.0),
-    max_velocity(0.0),
-    max_acceleration(0.0),
-    max_jerk(0.0),
-    max_effort(0.0),
+  : min_position(std::numeric_limits<double>::quiet_NaN()),
+    max_position(std::numeric_limits<double>::quiet_NaN()),
+    max_velocity(std::numeric_limits<double>::quiet_NaN()),
+    max_acceleration(std::numeric_limits<double>::quiet_NaN()),
+    max_jerk(std::numeric_limits<double>::quiet_NaN()),
+    max_effort(std::numeric_limits<double>::quiet_NaN()),
     has_position_limits(false),
     has_velocity_limits(false),
     has_acceleration_limits(false),
@@ -54,7 +56,13 @@ struct JointLimits
 
 struct SoftJointLimits
 {
-  SoftJointLimits() : min_position(0.0), max_position(0.0), k_position(0.0), k_velocity(0.0) {}
+  SoftJointLimits()
+  : min_position(std::numeric_limits<double>::quiet_NaN()),
+    max_position(std::numeric_limits<double>::quiet_NaN()),
+    k_position(std::numeric_limits<double>::quiet_NaN()),
+    k_velocity(std::numeric_limits<double>::quiet_NaN())
+  {
+  }
 
   double min_position;
   double max_position;
@@ -62,6 +70,6 @@ struct SoftJointLimits
   double k_velocity;
 };
 
-}  // namespace joint_limits_interface
+}  // namespace joint_limits
 
-#endif  // JOINT_LIMITS_INTERFACE__JOINT_LIMITS_HPP_
+#endif  // JOINT_LIMITS__JOINT_LIMITS_HPP_

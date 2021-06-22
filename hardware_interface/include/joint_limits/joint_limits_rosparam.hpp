@@ -14,17 +14,60 @@
 
 /// \author Adolfo Rodriguez Tsouroukdissian
 
-#ifndef JOINT_LIMITS_INTERFACE__JOINT_LIMITS_ROSPARAM_HPP_
-#define JOINT_LIMITS_INTERFACE__JOINT_LIMITS_ROSPARAM_HPP_
+#ifndef JOINT_LIMITS__JOINT_LIMITS_ROSPARAM_HPP_
+#define JOINT_LIMITS__JOINT_LIMITS_ROSPARAM_HPP_
 
-#include <joint_limits_interface/joint_limits.hpp>
-
-#include <rclcpp/rclcpp.hpp>
-
+#include <limits>
 #include <string>
 
-namespace joint_limits_interface
+#include "joint_limits/joint_limits.hpp"
+#include "rclcpp/rclcpp.hpp"
+
+namespace joint_limits
 {
+inline bool declare_parameters(const std::string & joint_name, const rclcpp::Node::SharedPtr & node)
+{
+  const std::string param_base_name = "joint_limits." + joint_name;
+  try
+  {
+    node->declare_parameter<bool>(param_base_name + ".has_position_limits", false);
+    node->declare_parameter<double>(
+      param_base_name + ".min_position", std::numeric_limits<double>::quiet_NaN());
+    node->declare_parameter<double>(
+      param_base_name + ".max_position", std::numeric_limits<double>::quiet_NaN());
+    node->declare_parameter<bool>(param_base_name + ".has_velocity_limits", false);
+    node->declare_parameter<double>(
+      param_base_name + ".min_velocity", std::numeric_limits<double>::quiet_NaN());
+    node->declare_parameter<double>(
+      param_base_name + ".max_velocity", std::numeric_limits<double>::quiet_NaN());
+    node->declare_parameter<bool>(param_base_name + ".has_acceleration_limits", false);
+    node->declare_parameter<double>(
+      param_base_name + ".max_acceleration", std::numeric_limits<double>::quiet_NaN());
+    node->declare_parameter<bool>(param_base_name + ".has_jerk_limits", false);
+    node->declare_parameter<double>(
+      param_base_name + ".max_jerk", std::numeric_limits<double>::quiet_NaN());
+    node->declare_parameter<bool>(param_base_name + ".has_effort_limits", false);
+    node->declare_parameter<double>(
+      param_base_name + ".max_effort", std::numeric_limits<double>::quiet_NaN());
+    node->declare_parameter<bool>(param_base_name + ".angle_wraparound", false);
+    node->declare_parameter<bool>(param_base_name + ".has_soft_limits", false);
+    node->declare_parameter<double>(
+      param_base_name + ".k_position", std::numeric_limits<double>::quiet_NaN());
+    node->declare_parameter<double>(
+      param_base_name + ".k_velocity", std::numeric_limits<double>::quiet_NaN());
+    node->declare_parameter<double>(
+      param_base_name + ".soft_lower_limit", std::numeric_limits<double>::quiet_NaN());
+    node->declare_parameter<double>(
+      param_base_name + ".soft_upper_limit", std::numeric_limits<double>::quiet_NaN());
+  }
+  catch (const std::exception & ex)
+  {
+    RCLCPP_ERROR(node->get_logger(), "%s", ex.what());
+    return false;
+  }
+  return true;
+}
+
 /// Populate a JointLimits instance from the ROS parameter server.
 /**
  * It is assumed that the following parameter structure is followed on the provided NodeHandle. Unspecified parameters
@@ -58,7 +101,7 @@ namespace joint_limits_interface
  * existing values. Values in \p limits not specified in the parameter server remain unchanged.
  * \return True if a limits specification is found (ie. the \p joint_limits/joint_name parameter exists in \p node), false otherwise.
  */
-inline bool getJointLimits(
+inline bool get_joint_limits(
   const std::string & joint_name, const rclcpp::Node::SharedPtr & node, JointLimits & limits)
 {
   const std::string param_base_name = "joint_limits." + joint_name;
@@ -216,7 +259,7 @@ inline bool getJointLimits(
  * \return True if a complete soft limits specification is found (ie. if all \p k_position, \p k_velocity, \p soft_lower_limit and
  * \p soft_upper_limit exist in \p joint_limits/joint_name namespace), false otherwise.
  */
-inline bool getSoftJointLimits(
+inline bool get_soft_joint_limits(
   const std::string & joint_name, const rclcpp::Node::SharedPtr & node,
   SoftJointLimits & soft_limits)
 {
@@ -265,6 +308,6 @@ inline bool getSoftJointLimits(
   return false;
 }
 
-}  // namespace joint_limits_interface
+}  // namespace joint_limits
 
-#endif  // JOINT_LIMITS_INTERFACE__JOINT_LIMITS_ROSPARAM_HPP_
+#endif  // JOINT_LIMITS__JOINT_LIMITS_ROSPARAM_HPP_
