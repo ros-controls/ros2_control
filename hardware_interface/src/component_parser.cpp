@@ -17,6 +17,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <regex>
 
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/component_parser.hpp"
@@ -36,6 +37,8 @@ constexpr const auto kCommandInterfaceTag = "command_interface";
 constexpr const auto kStateInterfaceTag = "state_interface";
 constexpr const auto kMinTag = "min";
 constexpr const auto kMaxTag = "max";
+constexpr const auto kDataTypeAttribute = "data_type";
+constexpr const auto kSizeAttribute = "size";
 constexpr const auto kNameAttribute = "name";
 constexpr const auto kTypeAttribute = "type";
 }  // namespace
@@ -104,6 +107,56 @@ std::string get_attribute_value(
   return get_attribute_value(element_it, attribute_name, std::string(tag_name));
 }
 
+/// Parse optional size attribute
+/**
+ * Parses an XMLElement and returns the vector of suffixes to apply.
+ *
+ * Example behavior:
+ *  - size="3" returns the suffixes {"1","2","3"}
+ *  - size="1" returns the suffixes {"1"}
+ *  - size="" returns the suffixes {""}
+ *  - size="x y z" returns the suffixes {"x", "y", "z"}
+ *  - size="shoulder elbow wrist" returns the suffixes {"shoulder", "elbow", "wrist"}
+ *
+ *
+ * \param[in] elem XMLElement to check the size attribute to parse.
+ * \return vector of strings denoting the suffixes.
+ */
+std::vector<std::string> parse_size_attribute(
+  const tinyxml2::XMLElement * elem)
+{
+  const tinyxml2::XMLAttribute * attr = elem->FindAttribute(kSizeAttribute);
+  std::vector<std::string> suffixes;
+  // Is the attribute null as nothing was found?
+  if (!attr) {
+    suffixes.push_back("");
+    return suffixes;
+  }
+
+  // Try to parse it as a whitespace delimited list of strings
+  std::string s = attr->Value();
+  std::regex ws("\\s+");
+  std::sregex_token_iterator it(s.begin(), s.end(), ws, -1);
+  for (; it != std::sregex_token_iterator(); it++) {
+    suffixes.push_back(it->str());
+  }
+  if (suffixes.size() == 0) {
+    // Empty value
+    suffixes.push_back("");
+  } else if (suffixes.size() == 1) {
+    // Regex used since QueryIntValue parses "0 1 2" to value=0.
+    std::regex int_re("[1-9][0-9]*");
+    if (std::regex_match(suffixes[0], int_re)) {
+      int maxval = std::stoi(suffixes[0]);
+      suffixes.clear();
+      for (int i = 1; i <= maxval; i++) {
+        suffixes.push_back(std::to_string(i));
+      }
+    }
+  }
+  return suffixes;
+}
+
 /// Search XML snippet from URDF for parameters.
 /**
  * \param[in] params_it pointer to the iterator where parameters info should be found
@@ -160,6 +213,37 @@ hardware_interface::InterfaceInfo parse_interfaces_from_xml(
     interface.max = interface_param->second;
   }
 
+  // Optional data_type attribute
+  const tinyxml2::XMLAttribute * attr;
+  attr = interfaces_it->FindAttribute(kDataTypeAttribute);
+  if (!attr) {
+    interface.data_type = "double";
+  } else {
+    interface.data_type = interfaces_it->Attribute(kDataTypeAttribute);
+  }
+
+  return interface;
+}
+
+/// Search XML snippet for interface information.
+/**
+ * \param[in] interfaces_it pointer to the iterator over the interfaces.
+ * \param[in] suffix suffix to append to the interface name.
+ * \param[in] data_type data_type of handle. Defaults to double.
+ * \return InterfaceInfo filled with information about component.
+ * \throws std::runtime_error if an interface attribute or tag is not found.
+ */
+hardware_interface::InterfaceInfo parse_interfaces_from_xml(
+  const tinyxml2::XMLElement * interfaces_it,
+  std::string suffix,
+  std::string data_type)
+{
+  hardware_interface::InterfaceInfo interface;
+  interface = parse_interfaces_from_xml(interfaces_it);
+  interface.name += suffix;
+  if (data_type != "") {
+    interface.data_type = data_type;
+  }
   return interface;
 }
 
@@ -178,17 +262,32 @@ ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it
   component.type = component_it->Name();
   component.name = get_attribute_value(component_it, kNameAttribute, component.type);
 
+  // Find optional data_type specified by component
+  std::string data_type = "";
+  const char * val = component_it->Attribute(kDataTypeAttribute);
+  if (val) {
+    data_type = val;
+  }
+
   // Parse all command interfaces
   const auto * command_interfaces_it = component_it->FirstChildElement(kCommandInterfaceTag);
   while (command_interfaces_it) {
-    component.command_interfaces.push_back(parse_interfaces_from_xml(command_interfaces_it));
+    std::vector<std::string> suffixes = parse_size_attribute(command_interfaces_it);
+    for (std::string suffix : suffixes) {
+      component.command_interfaces.push_back(
+        parse_interfaces_from_xml(command_interfaces_it, suffix, data_type));
+    }
     command_interfaces_it = command_interfaces_it->NextSiblingElement(kCommandInterfaceTag);
   }
 
   // Parse state interfaces
   const auto * state_interfaces_it = component_it->FirstChildElement(kStateInterfaceTag);
   while (state_interfaces_it) {
-    component.state_interfaces.push_back(parse_interfaces_from_xml(state_interfaces_it));
+    std::vector<std::string> suffixes = parse_size_attribute(state_interfaces_it);
+    for (std::string suffix : suffixes) {
+      component.state_interfaces.push_back(
+        parse_interfaces_from_xml(state_interfaces_it, suffix, data_type));
+    }
     state_interfaces_it = state_interfaces_it->NextSiblingElement(kStateInterfaceTag);
   }
 
@@ -198,6 +297,21 @@ ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it
     component.parameters = parse_parameters_from_xml(params_it);
   }
 
+  return component;
+}
+
+/// Search XML snippet from URDF for information about a control component.
+/**
+ * \param[in] component_it pointer to the iterator where component
+ * info should befound
+ * \param[in] suffix suffix to append to the component name.
+ */
+ComponentInfo parse_component_from_xml(
+  const tinyxml2::XMLElement * component_it,
+  std::string suffix)
+{
+  ComponentInfo component = parse_component_from_xml(component_it);
+  component.name += suffix;
   return component;
 }
 
@@ -227,13 +341,25 @@ HardwareInfo parse_resource_from_xml(const tinyxml2::XMLElement * ros2_control_i
         hardware.hardware_parameters = parse_parameters_from_xml(params_it);
       }
     } else if (!std::string(kJointTag).compare(ros2_control_child_it->Name())) {
-      hardware.joints.push_back(parse_component_from_xml(ros2_control_child_it) );
+      std::vector<std::string> suffixes = parse_size_attribute(ros2_control_child_it);
+      for (std::string suffix : suffixes) {
+        hardware.joints.push_back(
+          parse_component_from_xml(ros2_control_child_it, suffix));
+      }
     } else if (!std::string(kSensorTag).compare(ros2_control_child_it->Name())) {
-      hardware.sensors.push_back(parse_component_from_xml(ros2_control_child_it) );
+      std::vector<std::string> suffixes = parse_size_attribute(ros2_control_child_it);
+      for (std::string suffix : suffixes) {
+        hardware.sensors.push_back(
+          parse_component_from_xml(ros2_control_child_it, suffix));
+      }
+    } else if (!std::string(kGPIOTag).compare(ros2_control_child_it->Name())) {
+      std::vector<std::string> suffixes = parse_size_attribute(ros2_control_child_it);
+      for (std::string suffix : suffixes) {
+        hardware.gpios.push_back(
+          parse_component_from_xml(ros2_control_child_it, suffix));
+      }
     } else if (!std::string(kTransmissionTag).compare(ros2_control_child_it->Name())) {
       hardware.transmissions.push_back(parse_component_from_xml(ros2_control_child_it) );
-    } else if (!std::string(kGPIOTag).compare(ros2_control_child_it->Name())) {
-      hardware.gpios.push_back(parse_component_from_xml(ros2_control_child_it) );
     } else {
       throw std::runtime_error("invalid tag name " + std::string(ros2_control_child_it->Name()));
     }

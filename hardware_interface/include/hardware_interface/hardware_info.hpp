@@ -38,6 +38,8 @@ struct InterfaceInfo
   std::string min;
   /// (Optional) Maximal allowed values of the interface.
   std::string max;
+  /// (Optional) The datatype of the interface, e.g. "bool", "int". Defaults to double.
+  std::string data_type;
 };
 
 /**
