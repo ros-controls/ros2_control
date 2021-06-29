@@ -528,14 +528,17 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_robot_with_gpio
   EXPECT_EQ(hardware_info.gpios[0].type, "gpio");
   EXPECT_THAT(hardware_info.gpios[0].state_interfaces, SizeIs(3));
   EXPECT_THAT(hardware_info.gpios[0].command_interfaces, SizeIs(1));
-  EXPECT_THAT(hardware_info.gpios[0].state_interfaces[0].name, "analog_output1");
-  EXPECT_THAT(hardware_info.gpios[0].state_interfaces[1].name, "analog_input1");
-  EXPECT_THAT(hardware_info.gpios[0].state_interfaces[2].name, "analog_input2");
+  EXPECT_EQ(hardware_info.gpios[0].state_interfaces[0].name, "analog_output1");
+  EXPECT_EQ(hardware_info.gpios[0].state_interfaces[1].name, "analog_input1");
+  EXPECT_EQ(hardware_info.gpios[0].state_interfaces[2].name, "analog_input2");
 
   EXPECT_EQ(hardware_info.gpios[1].name, "flange_vacuum");
   EXPECT_EQ(hardware_info.gpios[1].type, "gpio");
   EXPECT_THAT(hardware_info.gpios[1].state_interfaces, SizeIs(1));
   EXPECT_THAT(hardware_info.gpios[1].command_interfaces, SizeIs(1));
+  EXPECT_EQ(hardware_info.gpios[1].state_interfaces[0].name, "vacuum");
+  EXPECT_EQ(hardware_info.gpios[1].command_interfaces[0].name, "vacuum");
+}
 
 TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_with_size_and_data_type)
 {
