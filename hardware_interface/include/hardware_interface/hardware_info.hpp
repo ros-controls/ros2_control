@@ -31,7 +31,7 @@ struct InterfaceInfo
 {
   /**
    * Name of the command interfaces that can be set, e.g. "position", "velocity", etc.
-   * Used by joints.
+   * Used by joints and GPIOs.
    */
   std::string name;
   /// (Optional) Minimal allowed values of the interface.
