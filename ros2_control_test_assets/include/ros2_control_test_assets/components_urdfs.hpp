@@ -368,6 +368,30 @@ const auto valid_urdf_ros2_control_system_robot_with_gpio =
   </ros2_control>
 )";
 
+// 11. Industrial Robots using size and data_type attributes
+const auto valid_urdf_ros2_control_system_robot_with_size_and_data_type = 
+  R"(
+  <ros2_control name="RRBotSystemWithSizeAndDataType" type="system">
+    <hardware>
+      <plugin>ros2_control_demo_hardware/RRBotSystemWithSizeAndDataType</plugin>
+      <param name="example_param_write_for_sec">2</param>
+      <param name="example_param_read_for_sec">2</param>
+    </hardware>
+    <joint name="joint" size="2">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+    </joint>
+    <gpio name="flange_IOS">
+      <command_interface name="digital_output" size="2" data_type="bool"/>
+      <state_interface name="analog_input" size="0 1 2"/>
+    </gpio>
+    <sensor name="ft_" size="ee table">
+      <state_interface name="force." size="x y z"/>
+      <state_interface name="torque." size="x y z"/>
+    </sensor>
+  </ros2_control>
+)";
+
 // Errors
 const auto invalid_urdf_ros2_control_invalid_child =
   R"(
