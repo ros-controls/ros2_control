@@ -369,7 +369,7 @@ const auto valid_urdf_ros2_control_system_robot_with_gpio =
 )";
 
 // 11. Industrial Robots using size and data_type attributes
-const auto valid_urdf_ros2_control_system_robot_with_size_and_data_type = 
+const auto valid_urdf_ros2_control_system_robot_with_size_and_data_type =
   R"(
   <ros2_control name="RRBotSystemWithSizeAndDataType" type="system">
     <hardware>
