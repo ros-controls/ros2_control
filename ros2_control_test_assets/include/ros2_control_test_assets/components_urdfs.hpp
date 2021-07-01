@@ -377,18 +377,15 @@ const auto valid_urdf_ros2_control_system_robot_with_size_and_data_type =
       <param name="example_param_write_for_sec">2</param>
       <param name="example_param_read_for_sec">2</param>
     </hardware>
-    <joint name="joint" size="2">
+    <joint name="joint1">
       <command_interface name="position"/>
       <state_interface name="position"/>
     </joint>
     <gpio name="flange_IOS">
       <command_interface name="digital_output" size="2" data_type="bool"/>
-      <state_interface name="analog_input" size="0 1 2"/>
+      <state_interface name="analog_input" size="3"/>
+      <state_interface name="image" data_type="cv::Mat"/>
     </gpio>
-    <sensor name="ft_" size="ee table">
-      <state_interface name="force." size="x y z"/>
-      <state_interface name="torque." size="x y z"/>
-    </sensor>
   </ros2_control>
 )";
 
@@ -497,6 +494,29 @@ const auto invalid_urdf_ros2_control_parameter_empty =
   </ros2_control>
 )";
 
+const auto invalid_urdf2_ros2_control_illegal_size =
+  R"(
+  <ros2_control name="RRBotSystemWithIllegalSize" type="system">
+    <hardware>
+      <plugin>ros2_control_demo_hardware/RRBotSystemWithIllegalSize</plugin>
+    </hardware>
+    <gpio name="flange_IOS">
+      <command_interface name="digital_output" data_type="bool" size="-4"/>
+    </gpio>
+  </ros2_control>
+)";
+
+const auto invalid_urdf2_ros2_control_illegal_size2 =
+  R"(
+  <ros2_control name="RRBotSystemWithIllegalSize2" type="system">
+    <hardware>
+      <plugin>ros2_control_demo_hardware/RRBotSystemWithIllegalSize2</plugin>
+    </hardware>
+    <gpio name="flange_IOS">
+      <command_interface name="digital_output" data_type="bool" size="ILLEGAL"/>
+    </gpio>
+  </ros2_control>
+)";
 }  // namespace ros2_control_test_assets
 
 #endif  // ROS2_CONTROL_TEST_ASSETS__COMPONENTS_URDFS_HPP_

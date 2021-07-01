@@ -38,8 +38,10 @@ struct InterfaceInfo
   std::string min;
   /// (Optional) Maximal allowed values of the interface.
   std::string max;
-  /// (Optional) The datatype of the interface, e.g. "bool", "int". Defaults to double.
+  /// (Optional) The datatype of the interface, e.g. "bool", "int". Used by GPIOs.
   std::string data_type;
+  /// (Optional) If the handle is an array, the size of the array. Used by GPIOs.
+  int size;
 };
 
 /**
