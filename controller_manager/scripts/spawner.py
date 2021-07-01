@@ -21,19 +21,19 @@ import sys
 import time
 
 from controller_manager import configure_controller, list_controllers, \
-        load_controller, switch_controllers, unload_controller
+    load_controller, switch_controllers, unload_controller
 
 import rclpy
 from rclpy.duration import Duration
 from rclpy.node import Node
 
 
-def wait_for_controller_manager(node, controller_manager):
+def wait_for_controller_manager(node, controller_manager, timeout_duration):
     def full_name(n):
         return n[1] + ('' if n[1].endswith('/') else '/') + n[0]
 
     # Wait for controller_manager
-    timeout = node.get_clock().now() + Duration(seconds=10)
+    timeout = node.get_clock().now() + Duration(seconds=timeout_duration)
     while node.get_clock().now() < timeout:
         node_names_and_namespaces = node.get_node_names_and_namespaces()
         if any(full_name(n) == controller_manager for n in node_names_and_namespaces):
@@ -80,6 +80,9 @@ def main(args=None):
         '-u', '--unload-on-kill',
         help='Wait until this application is interrupted and unload controller',
         action='store_true')
+    parser.add_argument(
+        '--controller-manager-timeout',
+        help='Time to wait for the controller manager', required=False, default=10, type=int)
 
     command_line_args = rclpy.utilities.remove_ros_args(args=sys.argv)[1:]
     args = parser.parse_args(command_line_args)
@@ -87,6 +90,7 @@ def main(args=None):
     controller_manager_name = make_absolute(args.controller_manager)
     param_file = args.param_file
     controller_type = args.controller_type
+    controller_manager_timeout = args.controller_manager_timeout
 
     if param_file and not os.path.isfile(param_file):
         raise FileNotFoundError(
@@ -94,7 +98,8 @@ def main(args=None):
 
     node = Node('spawner_' + controller_name)
     try:
-        if not wait_for_controller_manager(node, controller_manager_name):
+        if not wait_for_controller_manager(node, controller_manager_name,
+                                           controller_manager_timeout):
             node.get_logger().error('Controller manager not available')
             return 1
 

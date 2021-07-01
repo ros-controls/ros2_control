@@ -2,6 +2,19 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.7.1 (2021-06-15)
+------------------
+* [FakeSystem] Set default command interface to NaN (`#424 <https://github.com/ros-controls/ros2_control/issues/424>`_)
+* Contributors: Denis Štogl, Bence Magyar
+
+0.7.0 (2021-06-06)
+------------------
+* Add FTS as first semantic components to simplify controllers. (`#370 <https://github.com/ros-controls/ros2_control/issues/370>`_)
+* Contributors: bailaC, Denis Štogl, Jordan Palacios
+
+0.6.1 (2021-05-31)
+------------------
+
 0.6.0 (2021-05-23)
 ------------------
 * Remove the with_value_ptr and class templatization for ReadOnlyHandle (`#379 <https://github.com/ros-controls/ros2_control/issues/379>`_)

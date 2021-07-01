@@ -2,6 +2,15 @@
 Changelog for package controller_manager_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.7.1 (2021-06-15)
+------------------
+
+0.7.0 (2021-06-06)
+------------------
+
+0.6.1 (2021-05-31)
+------------------
+
 0.6.0 (2021-05-23)
 ------------------
 * List controller claimed interfaces (`#407 <https://github.com/ros-controls/ros2_control/issues/407>`_)
