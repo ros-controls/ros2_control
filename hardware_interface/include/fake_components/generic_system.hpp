@@ -33,7 +33,8 @@ using hardware_interface::return_type;
 namespace fake_components
 {
 
-class GenericSystem : public hardware_interface::BaseInterface<hardware_interface::SystemInterface>
+class HARDWARE_INTERFACE_PUBLIC GenericSystem
+  : public hardware_interface::BaseInterface<hardware_interface::SystemInterface>
 {
 public:
   return_type

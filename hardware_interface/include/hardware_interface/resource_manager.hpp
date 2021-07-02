@@ -33,7 +33,7 @@ class SensorInterface;
 class SystemInterface;
 class ResourceStorage;
 
-class ResourceManager
+class HARDWARE_INTERFACE_PUBLIC ResourceManager
 {
 public:
   /// Default constructor for the Resource Manager.
