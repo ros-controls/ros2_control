@@ -120,12 +120,12 @@ std::size_t parse_size_attribute(
   const tinyxml2::XMLElement * elem)
 {
   const tinyxml2::XMLAttribute * attr = elem->FindAttribute(kSizeAttribute);
-  std::size_t size;
 
   if (!attr) {
     return 1;
   }
 
+  std::size_t size;
   // Regex used to check for non-zero positive int
   std::string s = attr->Value();
   std::regex int_re("[1-9][0-9]*");
