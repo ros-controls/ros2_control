@@ -110,11 +110,11 @@ std::string get_attribute_value(
 /// Parse optional size attribute
 /**
  * Parses an XMLElement and returns the value of the size attribute.
- * If not specified, defaults to 1. If not given a positive int, throws an error.
+ * If not specified, defaults to 1. If not given a positive integer, throws an error.
  *
  * \param[in] elem XMLElement that has the size attribute.
  * \return The size.
- * \throws std::runtime_error if not given a positive non-zero int as value.
+ * \throws std::runtime_error if not given a positive non-zero integer as value.
  */
 std::size_t parse_size_attribute(
   const tinyxml2::XMLElement * elem)
