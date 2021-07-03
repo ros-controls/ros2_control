@@ -61,7 +61,7 @@ struct ComponentInfo
   std::vector<InterfaceInfo> command_interfaces;
   /**
    * Name of the state interfaces that can be read, e.g. "position", "velocity", etc.
-   * Used by Joints, Sensors and GPIOs.
+   * Used by joints, sensors and GPIOs.
    */
   std::vector<InterfaceInfo> state_interfaces;
   /// (Optional) Key-value pairs of component parameters, e.g. min/max values or serial number.
