@@ -61,8 +61,10 @@ install(DIRECTORY include/
 )
 
 install(PROGRAMS
-  scripts/spawner.py
-  scripts/unspawner.py
+  scripts/spawner
+  scripts/spawner.py  # Deprecated
+  scripts/unspawner
+  scripts/unspawner.py  # Deprecated
   DESTINATION lib/${PROJECT_NAME}
 )
 
