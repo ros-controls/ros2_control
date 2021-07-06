@@ -88,6 +88,8 @@ public:
     std::fill(torques_.begin(), torques_.end(), std::numeric_limits<double>::quiet_NaN());
   }
 
+  virtual ~ForceTorqueSensor() = default;
+
   /// Return forces.
   /**
    * Return forces of a FTS.

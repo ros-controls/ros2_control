@@ -48,6 +48,8 @@ public:
     linear_acceleration_.fill(std::numeric_limits<double>::quiet_NaN());
   }
 
+  virtual ~IMUSensor() = default;
+
   /// Return orientation.
   /**
    * Return orientation reported by an IMU
