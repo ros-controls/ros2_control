@@ -65,7 +65,7 @@ def main(args=None):
 
 if __name__ == '__main__':
     warnings.warn(
-        "'unspawner.py' is deprecated, please use 'unspawner' (without .py extension",
+        "'unspawner.py' is deprecated, please use 'unspawner' (without .py extension)",
         DeprecationWarning
     )
     main()

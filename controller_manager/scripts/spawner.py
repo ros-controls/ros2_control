@@ -185,5 +185,5 @@ def main(args=None):
 
 if __name__ == '__main__':
     warnings.warn(
-        "'spawner.py' is deprecated, please use 'spawner' (without .py extension", DeprecationWarning)
+        "'spawner.py' is deprecated, please use 'spawner' (without .py extension)", DeprecationWarning)
     main()
