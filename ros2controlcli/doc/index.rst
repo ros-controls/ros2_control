@@ -209,6 +209,7 @@ unload_controller
 -----------------
 
 .. code-block:: console
+
     $ ros2 control unload_controller -h
     usage: ros2 control unload_controller [-h] [--spin-time SPIN_TIME] [-c CONTROLLER_MANAGER] [--include-hidden-nodes] controller_name
 
