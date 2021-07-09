@@ -9,11 +9,17 @@ find_package(ament_cmake REQUIRED)
 find_package(hardware_interface REQUIRED)
 find_package(rclcpp_lifecycle REQUIRED)
 
-add_library(controller_interface SHARED src/controller_interface.cpp)
+add_library(
+  controller_interface
+  SHARED
+  src/controller_interface.cpp
+  src/controller_parameters.cpp
+)
 target_include_directories(
   controller_interface
   PRIVATE
-  include)
+  include
+)
 ament_target_dependencies(
   controller_interface
   hardware_interface
