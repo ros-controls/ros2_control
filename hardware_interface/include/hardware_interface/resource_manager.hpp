@@ -274,16 +274,40 @@ public:
     const std::vector<std::string> & start_interfaces,
     const std::vector<std::string> & stop_interfaces);
 
-  /// Start all loaded hardware components.
-  void start_components();
+  /// Start hardware components.
+  /**
+   * Start hardware components defined in the list. If empty, start all components.
+   *
+   * \param[in] components_to_start vector of component names to start. Default: empty.
+   * \return true if all components are successfully started, false if at least one failed to start.
+   */
+  bool start_components(const std::vector<std::string> & components_to_start = {""});
 
-  /// Stops all loaded hardware components.
-  void stop_components();
+  /// Stops running hardware components.
+  /**
+   * Stop hardware components defined in the list. If empty, stop all components.
+   *
+   * \param[in] components_to_stop vector of component names to stop. Default: empty.
+   * \return true if all components are successfully stopped, false if at least one failed to stop.
+   */
+  bool stop_components(const std::vector<std::string> & components_to_stop = {""});
 
   /// Reads all loaded hardware components.
+  /**
+   * Reads from all active hardware components.
+   *
+   * Part of the real-time critical update loop.
+   * It is realtime-safe if used hadware interfaces are implemented adequately.
+   */
   void read();
 
   /// Write all loaded hardware components.
+  /**
+   * Writes to all active hardware components.
+   *
+   * Part of the real-time critical update loop.
+   * It is realtime-safe if used hadware interfaces are implemented adequately.
+   */
   void write();
 
 private:
