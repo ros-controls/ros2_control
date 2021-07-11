@@ -310,6 +310,18 @@ ComponentInfo parse_complex_component_from_xml(
   return component;
 }
 
+JointInfo parse_transmission_joint_from_xml(const tinyxml2::XMLElement * transmission_it)
+{
+  JointInfo joint_info;
+  return joint_info;
+}
+
+ActuatorInfo parse_transmission_actuator_from_xml(const tinyxml2::XMLElement * transmission_it)
+{
+  ActuatorInfo actuator_info;
+  return actuator_info;
+}
+
 /// Search XML snippet from URDF for information about a transmission.
 /**
   * \param[in] transmission_it pointer to the iterator where transmission info should be found
@@ -325,20 +337,19 @@ TransmissionInfo parse_transmission_from_xml(const tinyxml2::XMLElement * transm
   const auto * type_it = transmission_it->FirstChildElement(kClassTypeTag);
   transmission.type = get_text_for_element( type_it, kClassTypeTag);
 
+  // Parse joints
+  const auto * joint_it = transmission_it->FirstChildElement(kJointTag);
+  while (joint_it) {
+    transmission.joints.push_back(parse_transmission_joint_from_xml(joint_it));
+    joint_it = joint_it->NextSiblingElement(kJointTag);
+  }
 
-  // // Parse all command interfaces
-  // const auto * command_interfaces_it = transmission_it->FirstChildElement(kCommandInterfaceTag);
-  // while (command_interfaces_it) {
-  //   transmission.command_interfaces.push_back(parse_interfaces_from_xml(command_interfaces_it));
-  //   command_interfaces_it = command_interfaces_it->NextSiblingElement(kCommandInterfaceTag);
-  // }
-
-  // // Parse state interfaces
-  // const auto * state_interfaces_it = transmission_it->FirstChildElement(kStateInterfaceTag);
-  // while (state_interfaces_it) {
-  //   transmission.state_interfaces.push_back(parse_interfaces_from_xml(state_interfaces_it));
-  //   state_interfaces_it = state_interfaces_it->NextSiblingElement(kStateInterfaceTag);
-  // }
+  // Parse actuators
+  const auto * actuator_it = transmission_it->FirstChildElement(kActuatorTag);
+  while (actuator_it) {
+    transmission.actuators.push_back(parse_transmission_actuator_from_xml(actuator_it));
+    actuator_it = actuator_it->NextSiblingElement(kActuatorTag);
+  }
 
   // // Parse parameters
   // const auto * params_it = transmission_it->FirstChildElement(kParamTag);

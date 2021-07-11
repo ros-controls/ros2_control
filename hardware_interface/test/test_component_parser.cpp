@@ -332,8 +332,9 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_modular_robot
   ASSERT_THAT(hardware_info.transmissions, SizeIs(1));
   EXPECT_EQ(hardware_info.transmissions[0].name, "transmission1");
   EXPECT_EQ(hardware_info.transmissions[0].type, "transmission_interface/SimpleTansmission");
-  // ASSERT_THAT(hardware_info.transmissions[0].parameters, SizeIs(1));
-  // EXPECT_EQ(hardware_info.transmissions[0].parameters.at("joint_to_actuator"), "${1024/PI}");
+  ASSERT_THAT(hardware_info.transmissions[0].joints, SizeIs(1));
+  EXPECT_THAT(hardware_info.transmissions[0].joints[0].name, "joint");
+  EXPECT_THAT(hardware_info.transmissions[0].joints[0].mechanical_reduction, DoubleNear(1024.0 / M_PI, 0.0001));
 
   hardware_info = control_hardware.at(1);
 
@@ -416,16 +417,21 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_multi_joints_tr
   ASSERT_THAT(hardware_info.transmissions, SizeIs(1));
   EXPECT_EQ(hardware_info.transmissions[0].name, "transmission1");
   EXPECT_EQ(hardware_info.transmissions[0].type, "transmission_interface/DifferentialTransmission");
-  // EXPECT_EQ(
-  //   hardware_info.transmissions[0].class_type,
-  //   "transmission_interface/SomeComplex_2x2_Transmission");
-//   ASSERT_THAT(hardware_info.transmissions[0].parameters, SizeIs(6));
-//   EXPECT_EQ(hardware_info.transmissions[0].parameters.at("joints"), "{joint1, joint2}");
-//   EXPECT_EQ(hardware_info.transmissions[0].parameters.at("output"), "{output1, output2}");
-//   EXPECT_EQ(hardware_info.transmissions[0].parameters.at("joint1_output1"), "1.5");
-//   EXPECT_EQ(hardware_info.transmissions[0].parameters.at("joint1_output2"), "3.2");
-//   EXPECT_EQ(hardware_info.transmissions[0].parameters.at("joint2_output1"), "3.1");
-//   EXPECT_EQ(hardware_info.transmissions[0].parameters.at("joint2_output2"), "1.4");
+  ASSERT_THAT(hardware_info.transmissions[0].joints, SizeIs(2));
+  EXPECT_EQ(hardware_info.transmissions[0].joints[0].name, "joint1");
+  EXPECT_EQ(hardware_info.transmissions[0].joints[0].role, "joint1");
+  EXPECT_EQ(hardware_info.transmissions[0].joints[0].mechanical_reduction, 10.0);
+  EXPECT_EQ(hardware_info.transmissions[0].joints[0].offset, 0.5);
+  EXPECT_EQ(hardware_info.transmissions[0].joints[1].name, "joint2");
+  EXPECT_EQ(hardware_info.transmissions[0].joints[1].role, "joint2");
+  EXPECT_EQ(hardware_info.transmissions[0].joints[1].mechanical_reduction, 50.0);
+  EXPECT_EQ(hardware_info.transmissions[0].joints[1].offset, 0.0);
+
+  ASSERT_THAT(hardware_info.transmissions[0].actuators, SizeIs(2));
+  EXPECT_EQ(hardware_info.transmissions[0].actuators[0].name, "joint1_motor");
+  EXPECT_EQ(hardware_info.transmissions[0].actuators[0].role, "actuator1");
+  EXPECT_EQ(hardware_info.transmissions[0].actuators[1].name, "joint2_motor");
+  EXPECT_EQ(hardware_info.transmissions[0].actuators[1].role, "actuator2");
 }
 
 TEST_F(TestComponentParser, successfully_parse_valid_urdf_sensor_only)
@@ -534,6 +540,8 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_robot_with_gpio
   EXPECT_THAT(hardware_info.gpios[1].command_interfaces, SizeIs(1));
   EXPECT_EQ(hardware_info.gpios[1].state_interfaces[0].name, "vacuum");
   EXPECT_EQ(hardware_info.gpios[1].command_interfaces[0].name, "vacuum");
+
+  EXPECT_THAT(hardware_info.transmissions, IsEmpty());
 }
 
 TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_with_size_and_data_type)
