@@ -124,7 +124,7 @@ const rclcpp_lifecycle::State & ControllerInterface::activate()
 
 const rclcpp_lifecycle::State & ControllerInterface::shutdown()
 {
-  switch (on_activate(lifecycle_state_)) {
+  switch (on_shutdown(lifecycle_state_)) {
     case LifecycleNodeInterface::CallbackReturn::SUCCESS:
       lifecycle_state_ = rclcpp_lifecycle::State(
         lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, state_names::FINALIZED);
