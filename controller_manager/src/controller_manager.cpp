@@ -29,6 +29,11 @@ namespace controller_manager
 static constexpr const char * kControllerInterfaceName = "controller_interface";
 static constexpr const char * kControllerInterface = "controller_interface::ControllerInterface";
 
+inline bool is_controller_inactive(const controller_interface::ControllerInterface & controller)
+{
+  return controller.get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE;
+}
+
 inline bool is_controller_running(controller_interface::ControllerInterface & controller)
 {
   return controller.get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE;
@@ -382,7 +387,7 @@ controller_interface::return_type ControllerManager::switch_controller(
             action.c_str(), controller.c_str());
           return controller_interface::return_type::ERROR;
         }
-        RCLCPP_DEBUG(
+        RCLCPP_WARN(
           get_logger(),
           "Could not '%s' controller with name '%s' because no controller with this name exists",
           action.c_str(), controller.c_str());
@@ -452,6 +457,7 @@ controller_interface::return_type ControllerManager::switch_controller(
     bool in_start_list = start_list_it != start_request_.end();
 
     const bool is_running = is_controller_running(*controller.c);
+    const bool is_inactive = is_controller_inactive(*controller.c);
 
     auto handle_conflict = [&](const std::string & msg) {
       if (strictness == controller_manager_msgs::srv::SwitchController::Request::STRICT)
@@ -463,13 +469,13 @@ controller_interface::return_type ControllerManager::switch_controller(
         start_command_interface_request_.clear();
         return controller_interface::return_type::ERROR;
       }
-      RCLCPP_DEBUG(
-        get_logger(), "Could not stop controller '%s' since it is not running",
-        controller.info.name.c_str());
+      RCLCPP_DEBUG(get_logger(), "%s", msg.c_str());
       return controller_interface::return_type::OK;
     };
+
+    // check for double stop
     if (!is_running && in_stop_list)
-    {  // check for double stop
+    {
       auto ret = handle_conflict(
         "Could not stop controller '" + controller.info.name + "' since it is not running");
       if (ret != controller_interface::return_type::OK)
@@ -480,10 +486,25 @@ controller_interface::return_type ControllerManager::switch_controller(
       stop_request_.erase(stop_list_it);
     }
 
+    // check for doubled start
     if (is_running && !in_stop_list && in_start_list)
-    {  // check for doubled start
+    {
       auto ret = handle_conflict(
         "Could not start controller '" + controller.info.name + "' since it is already running");
+      if (ret != controller_interface::return_type::OK)
+      {
+        return ret;
+      }
+      in_start_list = false;
+      start_request_.erase(start_list_it);
+    }
+
+    // check for illegal start of an unconfigured/finalized controller
+    if (!is_inactive && !in_stop_list && in_start_list)
+    {
+      auto ret = handle_conflict(
+        "Could not start controller '" + controller.info.name +
+        "' since it is not in inactive state");
       if (ret != controller_interface::return_type::OK)
       {
         return ret;
