@@ -282,10 +282,13 @@ const auto valid_urdf_ros2_control_system_multi_joints_transmission =
       <plugin>transmission_interface/DifferentialTransmission</plugin>
       <actuator name="joint1_motor" role="actuator1"/>
       <actuator name="joint2_motor" role="actuator2"/>
-      <joint name="joint1" role="joint1" mechanical_reduction="10">
+      <joint name="joint1" role="joint1">
+        <mechanical_reduction>10</mechanical_reduction>
         <offset>0.5</offset>
       </joint>
-      <joint name="joint2" role="joint2" mechanical_reduction="50"/>
+      <joint name="joint2" role="joint2">
+        <mechanical_reduction>50</mechanical_reduction>
+      </joint>
     </transmission>
   </ros2_control>
 )";

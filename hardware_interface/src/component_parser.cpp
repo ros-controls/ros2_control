@@ -18,6 +18,7 @@
 #include <unordered_map>
 #include <vector>
 #include <regex>
+#include <iostream>
 
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/component_parser.hpp"
@@ -42,6 +43,9 @@ constexpr const auto kDataTypeAttribute = "data_type";
 constexpr const auto kSizeAttribute = "size";
 constexpr const auto kNameAttribute = "name";
 constexpr const auto kTypeAttribute = "type";
+constexpr const auto kRoleAttribute = "role";
+constexpr const auto kReductionAttribute = "mechanical_reduction";
+constexpr const auto kOffsetAttribute = "offset";
 }  // namespace
 
 namespace hardware_interface
@@ -106,6 +110,38 @@ std::string get_attribute_value(
   const char * tag_name)
 {
   return get_attribute_value(element_it, attribute_name, std::string(tag_name));
+}
+
+/// Gets value of the parameter on an XMLelement.
+/**
+ * If parameter is not found, returns specified default value
+ *
+ * \param[in] element_it XMLElement iterator to search for the attribute
+ * \param[in] attribute_name atribute name to search for and return value
+ * \param[in] default_value When the attribute is not found, this value is returned instead
+ * \return attribute value or default
+ */
+double get_parameter_value_or(
+  const tinyxml2::XMLElement * params_it,
+  const char * parameter_name,
+  const double default_value)
+{
+  while (params_it) {
+    // Fill the map with parameters
+    const auto tag_name = params_it->Name();
+    if(strcmp(tag_name, parameter_name) == 0)
+    {
+      const auto tag_text = params_it->GetText();
+      if (!tag_text) {
+        throw std::runtime_error("text not specified in the " + std::string(tag_name) + " tag");
+      }
+      std::cerr << "SUCCESSSSSSSSSSSss " << tag_name << " and param name was " << parameter_name << " and value was " << tag_text <<  std::endl;
+      return std::stod(tag_text);
+    }
+
+    params_it = params_it->NextSiblingElement();
+  }
+  return default_value;
 }
 
 /// Parse optional size attribute
@@ -310,15 +346,22 @@ ComponentInfo parse_complex_component_from_xml(
   return component;
 }
 
-JointInfo parse_transmission_joint_from_xml(const tinyxml2::XMLElement * transmission_it)
+JointInfo parse_transmission_joint_from_xml(const tinyxml2::XMLElement * element_it)
 {
   JointInfo joint_info;
+  joint_info.name = get_attribute_value(element_it, kNameAttribute, element_it->Name());
+  joint_info.role = get_attribute_value(element_it, kRoleAttribute, element_it->Name());
+  joint_info.mechanical_reduction =  get_parameter_value_or(element_it->FirstChildElement(), kReductionAttribute, 0.0);
+  joint_info.offset = get_parameter_value_or(element_it->FirstChildElement(), kOffsetAttribute, 0.0);
   return joint_info;
 }
 
-ActuatorInfo parse_transmission_actuator_from_xml(const tinyxml2::XMLElement * transmission_it)
+ActuatorInfo parse_transmission_actuator_from_xml(const tinyxml2::XMLElement * element_it)
 {
   ActuatorInfo actuator_info;
+  actuator_info.name = get_attribute_value(element_it, kNameAttribute, element_it->Name());
+  actuator_info.role = get_attribute_value(element_it, kRoleAttribute, element_it->Name());
+  actuator_info.offset = get_parameter_value_or(element_it->FirstChildElement(), kOffsetAttribute, 0.0);
   return actuator_info;
 }
 
@@ -350,12 +393,6 @@ TransmissionInfo parse_transmission_from_xml(const tinyxml2::XMLElement * transm
     transmission.actuators.push_back(parse_transmission_actuator_from_xml(actuator_it));
     actuator_it = actuator_it->NextSiblingElement(kActuatorTag);
   }
-
-  // // Parse parameters
-  // const auto * params_it = transmission_it->FirstChildElement(kParamTag);
-  // if (params_it) {
-  //   transmission.parameters = parse_parameters_from_xml(params_it);
-  // }
 
   return transmission;
 }
