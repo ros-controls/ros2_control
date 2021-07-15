@@ -94,6 +94,8 @@ struct TransmissionInfo
   std::string type;
   std::vector<JointInfo> joints;
   std::vector<ActuatorInfo> actuators;
+  /// (Optional) Key-value pairs of custom parameters
+  std::unordered_map<std::string, std::string> parameters;
 };
 
 /// This structure stores information about hardware defined in a robot's URDF.

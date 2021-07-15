@@ -217,7 +217,9 @@ const auto valid_urdf_ros2_control_actuator_modular_robot_sensors =
     </joint>
     <transmission name="transmission1">
       <plugin>transmission_interface/SimpleTansmission</plugin>
-      <param name="joint_to_actuator">${1024/PI}</param>
+      <joint name="joint1" role="joint1">
+        <mechanical_reduction>325.949</mechanical_reduction>
+      </joint>
     </transmission>
   </ros2_control>
   <ros2_control name="RRBotModularJoint2" type="actuator">
@@ -330,7 +332,7 @@ const auto valid_urdf_ros2_control_actuator_only =
     </joint>
     <transmission name="transmission1">
       <plugin>transmission_interface/RotationToLinerTansmission</plugin>
-      <param name="joint_to_actuator">${1024/PI}</param>
+      <param name="joint_to_actuator">325.949</param>
     </transmission>
   </ros2_control>
 )";

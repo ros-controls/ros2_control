@@ -394,7 +394,37 @@ TransmissionInfo parse_transmission_from_xml(const tinyxml2::XMLElement * transm
     actuator_it = actuator_it->NextSiblingElement(kActuatorTag);
   }
 
+  // Parse parameters
+  const auto * params_it = transmission_it->FirstChildElement(kParamTag);
+  if (params_it) {
+    transmission.parameters = parse_parameters_from_xml(params_it);
+  }
+
   return transmission;
+}
+
+/// Auto-fill some contents of transmission info based on context
+/**
+ * \param[in,out] hardware HardwareInfo structure with elements already parsed.
+ * \throws std::runtime_error
+ */
+void auto_fill_transmission_interfaces(HardwareInfo& hardware)
+{
+  for(auto transmission : hardware.transmissions)
+  {
+    // FILL JOINT INTERFACES HERE
+  }
+
+  // we parsed an actuator component, here we fill in more details
+  if(hardware.type == kActuatorTag)
+  {
+    if(!hardware.transmissions.joints.size() == 1)
+    {
+      throw std::runtime_error("Error while parsing '" + hardware.name + "'. There should be only one joint defined in this component.");
+    }
+
+    hardware.transmissions.push_back(ActuatorInfo{"actuator1", hardware.transmissions.joints[0].interfaces, "actuator1", 0.0});
+  }
 }
 
 /// Parse a control resource from an "ros2_control" tag.
@@ -436,6 +466,8 @@ HardwareInfo parse_resource_from_xml(const tinyxml2::XMLElement * ros2_control_i
     }
     ros2_control_child_it = ros2_control_child_it->NextSiblingElement();
   }
+
+  auto_fill_transmission_interfaces(hardware);
 
   return hardware;
 }

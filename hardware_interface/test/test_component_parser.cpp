@@ -333,8 +333,10 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_modular_robot
   EXPECT_EQ(hardware_info.transmissions[0].name, "transmission1");
   EXPECT_EQ(hardware_info.transmissions[0].type, "transmission_interface/SimpleTansmission");
   ASSERT_THAT(hardware_info.transmissions[0].joints, SizeIs(1));
-  EXPECT_THAT(hardware_info.transmissions[0].joints[0].name, "joint");
-  EXPECT_THAT(hardware_info.transmissions[0].joints[0].mechanical_reduction, DoubleNear(1024.0 / M_PI, 0.0001));
+  EXPECT_THAT(hardware_info.transmissions[0].joints[0].name, "joint1");
+  EXPECT_THAT(hardware_info.transmissions[0].joints[0].mechanical_reduction, DoubleNear(1024.0 / M_PI, 0.01));
+  ASSERT_THAT(hardware_info.transmissions[0].actuators, SizeIs(1));
+  EXPECT_THAT(hardware_info.transmissions[0].actuators[0].name, "actuator1");
 
   hardware_info = control_hardware.at(1);
 
@@ -496,8 +498,8 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_only)
   ASSERT_THAT(hardware_info.transmissions, SizeIs(1));
   EXPECT_EQ(hardware_info.transmissions[0].name, "transmission1");
   EXPECT_EQ(hardware_info.transmissions[0].type, "transmission_interface/RotationToLinerTansmission");
-  // ASSERT_THAT(hardware_info.transmissions[0].parameters, SizeIs(1));
-  // EXPECT_EQ(hardware_info.transmissions[0].parameters.at("joint_to_actuator"), "${1024/PI}");
+  ASSERT_THAT(hardware_info.transmissions[0].parameters, SizeIs(1));
+  EXPECT_EQ(hardware_info.transmissions[0].parameters.at("joint_to_actuator"), "325.949");
 }
 
 TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_robot_with_gpio)
