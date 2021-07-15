@@ -21,18 +21,18 @@ from ros2cli.verb import VerbExtension
 from ros2controlcli.api import add_controller_mgr_parsers, ControllerNameCompleter
 
 
-class LoadVerb(VerbExtension):
+class LoadControllerVerb(VerbExtension):
     """Load a controller in a controller manager."""
 
     def add_arguments(self, parser, cli_name):
         add_arguments(parser)
-        arg = parser.add_argument(
-            'controller_name', help='Name of the controller')
+        arg = parser.add_argument('controller_name', help='Name of the controller')
         arg.completer = ControllerNameCompleter()
         arg = parser.add_argument(
-            '--state',
+            '--set-state',
             choices=['configure', 'start'],
-            help='Set the state of the loaded controller')
+            help='Set the state of the loaded controller',
+        )
         add_controller_mgr_parsers(parser)
 
     def main(self, *, args):
@@ -41,26 +41,22 @@ class LoadVerb(VerbExtension):
             if not response.ok:
                 return 'Error loading controller, check controller_manager logs'
 
-            if not args.state:
-                return 'Successfully loaded controller {}'.format(args.controller_name)
+            if not args.set_state:
+                print(f'Successfully loaded controller {args.controller_name}')
+                return 0
 
             # we in any case configure the controller
-            response = configure_controller(
-                node, args.controller_manager, args.controller_name)
+            response = configure_controller(node, args.controller_manager, args.controller_name)
             if not response.ok:
                 return 'Error configuring controller'
 
-            if args.state == 'start':
+            if args.set_state == 'start':
                 response = switch_controllers(
-                    node,
-                    args.controller_manager,
-                    [],
-                    [args.controller_name],
-                    True,
-                    True,
-                    5.0)
+                    node, args.controller_manager, [], [args.controller_name], True, True, 5.0
+                )
                 if not response.ok:
                     return 'Error starting controller, check controller_manager logs'
 
-            return 'Sucessfully loaded controller {} into state {}'.format(
-                args.controller_name, ('inactive' if args.state == 'configure' else 'active'))
+            print(f'Sucessfully loaded controller {args.controller_name} into '
+                  f'state { "inactive" if args.set_state == "configure" else "active" }')
+            return 0

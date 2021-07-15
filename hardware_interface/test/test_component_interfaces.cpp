@@ -252,6 +252,86 @@ private:
   std::array<double, 3> velocity_command_ = {0.0, 0.0, 0.0};
 };
 
+class DummySystemPreparePerform : public hardware_interface::SystemInterface
+{
+  // Override the pure virtual functions with default behavior
+  hardware_interface::return_type configure(
+    const hardware_interface::HardwareInfo & /* info */) override
+  {
+    // We hardcode the info
+    return hardware_interface::return_type::OK;
+  }
+
+  std::vector<hardware_interface::StateInterface> export_state_interfaces() override
+  {
+    return {};
+  }
+
+  std::vector<hardware_interface::CommandInterface> export_command_interfaces() override
+  {
+    return {};
+  }
+
+  hardware_interface::return_type start() override
+  {
+    return hardware_interface::return_type::OK;
+  }
+
+  hardware_interface::return_type stop() override
+  {
+    return hardware_interface::return_type::OK;
+  }
+
+  std::string get_name() const override
+  {
+    return "DummySystemPreparePerform";
+  }
+
+  hardware_interface::status get_status() const override
+  {
+    return hardware_interface::status::UNKNOWN;
+  }
+
+  hardware_interface::return_type read() override
+  {
+    return hardware_interface::return_type::OK;
+  }
+
+  hardware_interface::return_type write() override
+  {
+    return hardware_interface::return_type::OK;
+  }
+
+  // Custom prepare/perform functions
+  hardware_interface::return_type prepare_command_mode_switch(
+    const std::vector<std::string> & start_interfaces,
+    const std::vector<std::string> & stop_interfaces) override
+  {
+    // Criteria to test against
+    if (start_interfaces.size() != 1) {
+      return hardware_interface::return_type::ERROR;
+    }
+    if (stop_interfaces.size() != 2) {
+      return hardware_interface::return_type::ERROR;
+    }
+    return hardware_interface::return_type::OK;
+  }
+
+  hardware_interface::return_type perform_command_mode_switch(
+    const std::vector<std::string> & start_interfaces,
+    const std::vector<std::string> & stop_interfaces) override
+  {
+    // Criteria to test against
+    if (start_interfaces.size() != 1) {
+      return hardware_interface::return_type::ERROR;
+    }
+    if (stop_interfaces.size() != 2) {
+      return hardware_interface::return_type::ERROR;
+    }
+    return hardware_interface::return_type::OK;
+  }
+};
+
 }  // namespace test_components
 
 TEST(TestComponentInterfaces, dummy_actuator)
@@ -285,6 +365,13 @@ TEST(TestComponentInterfaces, dummy_actuator)
 
     ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.write());
   }
+
+  EXPECT_EQ(
+    hardware_interface::return_type::OK,
+    actuator_hw.prepare_command_mode_switch({""}, {""}));
+  EXPECT_EQ(
+    hardware_interface::return_type::OK,
+    actuator_hw.perform_command_mode_switch({""}, {""}));
 }
 
 TEST(TestComponentInterfaces, dummy_sensor)
@@ -351,4 +438,42 @@ TEST(TestComponentInterfaces, dummy_system)
 
     ASSERT_EQ(hardware_interface::return_type::OK, system_hw.write());
   }
+
+  EXPECT_EQ(
+    hardware_interface::return_type::OK,
+    system_hw.prepare_command_mode_switch({}, {}));
+  EXPECT_EQ(
+    hardware_interface::return_type::OK,
+    system_hw.perform_command_mode_switch({}, {}));
+}
+
+TEST(TestComponentInterfaces, dummy_command_mode_system)
+{
+  hardware_interface::System system_hw(
+    std::make_unique<test_components::DummySystemPreparePerform>());
+  hardware_interface::HardwareInfo mock_hw_info{};
+  EXPECT_EQ(hardware_interface::return_type::OK, system_hw.configure(mock_hw_info));
+
+  std::vector<std::string> one_key = {"joint1/position"};
+  std::vector<std::string> two_keys = {"joint1/position", "joint1/velocity"};
+
+  // Only calls with (one_key, two_keys) should return OK
+  EXPECT_EQ(
+    hardware_interface::return_type::ERROR,
+    system_hw.prepare_command_mode_switch(one_key, one_key));
+  EXPECT_EQ(
+    hardware_interface::return_type::ERROR,
+    system_hw.perform_command_mode_switch(one_key, one_key));
+  EXPECT_EQ(
+    hardware_interface::return_type::OK,
+    system_hw.prepare_command_mode_switch(one_key, two_keys));
+  EXPECT_EQ(
+    hardware_interface::return_type::OK,
+    system_hw.perform_command_mode_switch(one_key, two_keys));
+  EXPECT_EQ(
+    hardware_interface::return_type::ERROR,
+    system_hw.prepare_command_mode_switch(two_keys, one_key));
+  EXPECT_EQ(
+    hardware_interface::return_type::ERROR,
+    system_hw.perform_command_mode_switch(two_keys, one_key));
 }

@@ -18,13 +18,13 @@
 namespace hardware_interface
 {
 /// Constant defining position interface
-constexpr const auto HW_IF_POSITION = "position";
+constexpr char HW_IF_POSITION[] = "position";
 /// Constant defining velocity interface
-constexpr const auto HW_IF_VELOCITY = "velocity";
+constexpr char HW_IF_VELOCITY[] = "velocity";
 /// Constant defining acceleration interface
-constexpr const auto HW_IF_ACCELERATION = "acceleration";
+constexpr char HW_IF_ACCELERATION[] = "acceleration";
 /// Constant defining effort interface
-constexpr const auto HW_IF_EFFORT = "effort";
+constexpr char HW_IF_EFFORT[] = "effort";
 }  // namespace hardware_interface
 
 #endif  // HARDWARE_INTERFACE__TYPES__HARDWARE_INTERFACE_TYPE_VALUES_HPP_

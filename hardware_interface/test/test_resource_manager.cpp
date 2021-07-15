@@ -270,3 +270,69 @@ TEST_F(TestResourceManager, post_initialization_add_components) {
   EXPECT_NO_THROW(rm.claim_state_interface("external_joint/external_state_interface"));
   EXPECT_NO_THROW(rm.claim_command_interface("external_joint/external_command_interface"));
 }
+
+TEST_F(TestResourceManager, default_prepare_perform_switch)
+{
+  hardware_interface::ResourceManager rm(ros2_control_test_assets::minimal_robot_urdf);
+  EXPECT_TRUE(rm.prepare_command_mode_switch({""}, {""}));
+  EXPECT_TRUE(rm.perform_command_mode_switch({""}, {""}));
+}
+
+const auto hardware_resources_command_modes =
+  R"(
+  <ros2_control name="TestSystemCommandModes" type="system">
+    <hardware>
+      <plugin>test_hardware_components/TestSystemCommandModes</plugin>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+    <joint name="joint2">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+  </ros2_control> 
+)";
+const auto command_mode_urdf = std::string(ros2_control_test_assets::urdf_head) +
+  std::string(hardware_resources_command_modes) + std::string(ros2_control_test_assets::urdf_tail);
+
+TEST_F(TestResourceManager, custom_prepare_perform_switch)
+{
+  hardware_interface::ResourceManager rm(command_mode_urdf);
+  // Scenarios defined by example criteria
+  std::vector<std::string> empty_keys = {};
+  std::vector<std::string> irrelevant_keys = {"elbow_joint/position", "should_joint/position"};
+  std::vector<std::string> illegal_single_key = {"joint1/position"};
+  std::vector<std::string> legal_keys_position = {"joint1/position", "joint2/position"};
+  std::vector<std::string> legal_keys_velocity = {"joint1/velocity", "joint2/velocity"};
+  // Default behavior for empty key lists
+  EXPECT_TRUE(rm.prepare_command_mode_switch(empty_keys, empty_keys));
+
+  // Default behavior when given irrelevant keys
+  EXPECT_TRUE(rm.prepare_command_mode_switch(irrelevant_keys, irrelevant_keys));
+  EXPECT_TRUE(rm.prepare_command_mode_switch(irrelevant_keys, empty_keys));
+  EXPECT_TRUE(rm.prepare_command_mode_switch(empty_keys, irrelevant_keys));
+
+  // The test hardware interface has a criteria that both joints must change mode
+  EXPECT_FALSE(rm.prepare_command_mode_switch(illegal_single_key, illegal_single_key));
+  EXPECT_FALSE(rm.prepare_command_mode_switch(illegal_single_key, empty_keys));
+  EXPECT_FALSE(rm.prepare_command_mode_switch(empty_keys, illegal_single_key));
+
+  // Test legal start keys
+  EXPECT_TRUE(rm.prepare_command_mode_switch(legal_keys_position, legal_keys_position));
+  EXPECT_TRUE(rm.prepare_command_mode_switch(legal_keys_velocity, legal_keys_velocity));
+  EXPECT_TRUE(rm.prepare_command_mode_switch(legal_keys_position, empty_keys));
+  EXPECT_TRUE(rm.prepare_command_mode_switch(empty_keys, legal_keys_position));
+  EXPECT_TRUE(rm.prepare_command_mode_switch(legal_keys_velocity, empty_keys));
+  EXPECT_TRUE(rm.prepare_command_mode_switch(empty_keys, legal_keys_velocity));
+
+  // Test rejection from perform_command_mode_switch, test hardware rejects empty start sets
+  EXPECT_TRUE(rm.perform_command_mode_switch(legal_keys_position, legal_keys_position));
+  EXPECT_FALSE(rm.perform_command_mode_switch(empty_keys, empty_keys));
+  EXPECT_FALSE(rm.perform_command_mode_switch(empty_keys, legal_keys_position));
+}

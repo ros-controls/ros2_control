@@ -17,6 +17,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <regex>
 
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/component_parser.hpp"
@@ -30,11 +31,14 @@ constexpr const auto kClassTypeTag = "plugin";
 constexpr const auto kParamTag = "param";
 constexpr const auto kJointTag = "joint";
 constexpr const auto kSensorTag = "sensor";
+constexpr const auto kGPIOTag = "gpio";
 constexpr const auto kTransmissionTag = "transmission";
 constexpr const auto kCommandInterfaceTag = "command_interface";
 constexpr const auto kStateInterfaceTag = "state_interface";
 constexpr const auto kMinTag = "min";
 constexpr const auto kMaxTag = "max";
+constexpr const auto kDataTypeAttribute = "data_type";
+constexpr const auto kSizeAttribute = "size";
 constexpr const auto kNameAttribute = "name";
 constexpr const auto kTypeAttribute = "type";
 }  // namespace
@@ -103,6 +107,61 @@ std::string get_attribute_value(
   return get_attribute_value(element_it, attribute_name, std::string(tag_name));
 }
 
+/// Parse optional size attribute
+/**
+ * Parses an XMLElement and returns the value of the size attribute.
+ * If not specified, defaults to 1. If not given a positive integer, throws an error.
+ *
+ * \param[in] elem XMLElement that has the size attribute.
+ * \return The size.
+ * \throws std::runtime_error if not given a positive non-zero integer as value.
+ */
+std::size_t parse_size_attribute(
+  const tinyxml2::XMLElement * elem)
+{
+  const tinyxml2::XMLAttribute * attr = elem->FindAttribute(kSizeAttribute);
+
+  if (!attr) {
+    return 1;
+  }
+
+  std::size_t size;
+  // Regex used to check for non-zero positive int
+  std::string s = attr->Value();
+  std::regex int_re("[1-9][0-9]*");
+  if (std::regex_match(s, int_re)) {
+    size = std::stoi(s);
+  } else {
+    throw std::runtime_error(
+            "Could not parse size tag in \"" + std::string(elem->Name()) + "\"." +
+            "Got \"" + s + "\", but expected a non-zero positive integer.");
+  }
+
+  return size;
+}
+
+/// Parse data_type attribute
+/**
+ * Parses an XMLElement and returns the value of the data_type attribute.
+ * Defaults to "double" if not specified.
+ *
+ * \param[in] elem XMLElement that has the data_type attribute.
+ * \return string specifying the data type.
+ */
+std::string parse_data_type_attribute(
+  const tinyxml2::XMLElement * elem)
+{
+  const tinyxml2::XMLAttribute * attr = elem->FindAttribute(kDataTypeAttribute);
+  std::string data_type;
+  if (!attr) {
+    data_type = "double";
+  } else {
+    data_type = attr->Value();
+  }
+
+  return data_type;
+}
+
 /// Search XML snippet from URDF for parameters.
 /**
  * \param[in] params_it pointer to the iterator where parameters info should be found
@@ -159,6 +218,10 @@ hardware_interface::InterfaceInfo parse_interfaces_from_xml(
     interface.max = interface_param->second;
   }
 
+  // Default to a single double
+  interface.data_type = "double";
+  interface.size = 1;
+
   return interface;
 }
 
@@ -200,6 +263,52 @@ ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it
   return component;
 }
 
+/// Search XML snippet from URDF for information about a complex component.
+/**
+ * A complex component can have a non-double data type specified on its interfaces,
+ *  and the interface may be an array of a fixed size of the data type.
+ *
+ * \param[in] component_it pointer to the iterator where component
+ * info should befound
+ * \throws std::runtime_error if a required component attribute or tag is not found.
+ */
+ComponentInfo parse_complex_component_from_xml(
+  const tinyxml2::XMLElement * component_it)
+{
+  ComponentInfo component;
+
+  // Find name, type and class of a component
+  component.type = component_it->Name();
+  component.name = get_attribute_value(component_it, kNameAttribute, component.type);
+
+  // Parse all command interfaces
+  const auto * command_interfaces_it = component_it->FirstChildElement(kCommandInterfaceTag);
+  while (command_interfaces_it) {
+    component.command_interfaces.push_back(parse_interfaces_from_xml(command_interfaces_it));
+    component.command_interfaces.back().data_type =
+      parse_data_type_attribute(command_interfaces_it);
+    component.command_interfaces.back().size = parse_size_attribute(command_interfaces_it);
+    command_interfaces_it = command_interfaces_it->NextSiblingElement(kCommandInterfaceTag);
+  }
+
+  // Parse state interfaces
+  const auto * state_interfaces_it = component_it->FirstChildElement(kStateInterfaceTag);
+  while (state_interfaces_it) {
+    component.state_interfaces.push_back(parse_interfaces_from_xml(state_interfaces_it));
+    component.state_interfaces.back().data_type = parse_data_type_attribute(state_interfaces_it);
+    component.state_interfaces.back().size = parse_size_attribute(state_interfaces_it);
+    state_interfaces_it = state_interfaces_it->NextSiblingElement(kStateInterfaceTag);
+  }
+
+  // Parse parameters
+  const auto * params_it = component_it->FirstChildElement(kParamTag);
+  if (params_it) {
+    component.parameters = parse_parameters_from_xml(params_it);
+  }
+
+  return component;
+}
+
 /// Parse a control resource from an "ros2_control" tag.
 /**
  * \param[in] ros2_control_it pointer to ros2_control element
@@ -229,6 +338,9 @@ HardwareInfo parse_resource_from_xml(const tinyxml2::XMLElement * ros2_control_i
       hardware.joints.push_back(parse_component_from_xml(ros2_control_child_it) );
     } else if (!std::string(kSensorTag).compare(ros2_control_child_it->Name())) {
       hardware.sensors.push_back(parse_component_from_xml(ros2_control_child_it) );
+    } else if (!std::string(kGPIOTag).compare(ros2_control_child_it->Name())) {
+      hardware.gpios.push_back(
+        parse_complex_component_from_xml(ros2_control_child_it));
     } else if (!std::string(kTransmissionTag).compare(ros2_control_child_it->Name())) {
       hardware.transmissions.push_back(parse_component_from_xml(ros2_control_child_it) );
     } else {

@@ -15,6 +15,8 @@
 // Author: Denis Stogl
 
 #include <gmock/gmock.h>
+
+#include <cmath>
 #include <string>
 #include <unordered_map>
 
@@ -207,6 +209,30 @@ protected:
   </ros2_control>
 )";
 
+    hardware_system_2dof_with_mimic_joint_ =
+      R"(
+  <ros2_control name="GenericSystem2dof" type="system">
+    <hardware>
+      <plugin>fake_components/GenericSystem</plugin>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <param name="initial_position">1.57</param>
+    </joint>
+    <joint name="joint2">
+      <param name="mimic">joint1</param>
+      <param name="multiplier">-2</param>
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+  </ros2_control>
+)";
+
     hardware_system_2dof_standard_interfaces_with_offset_ =
       R"(
   <ros2_control name="GenericSystem2dof" type="system">
@@ -240,6 +266,7 @@ protected:
   std::string hardware_system_2dof_with_sensor_;
   std::string hardware_system_2dof_with_sensor_fake_command_;
   std::string hardware_system_2dof_with_sensor_fake_command_True_;
+  std::string hardware_system_2dof_with_mimic_joint_;
   std::string hardware_system_2dof_standard_interfaces_with_offset_;
 };
 
@@ -275,8 +302,8 @@ TEST_F(TestGenericSystem, generic_system_2dof_symetric_interfaces) {
 
   ASSERT_EQ(1.57, j1p_s.get_value());
   ASSERT_EQ(0.7854, j2p_s.get_value());
-  ASSERT_EQ(1.57, j1p_c.get_value());
-  ASSERT_EQ(0.7854, j2p_c.get_value());
+  ASSERT_TRUE(std::isnan(j1p_c.get_value()));
+  ASSERT_TRUE(std::isnan(j2p_c.get_value()));
 }
 
 // Test inspired by hardware_interface/test_resource_manager.cpp
@@ -322,8 +349,8 @@ TEST_F(TestGenericSystem, generic_system_2dof_asymetric_interfaces) {
 
   ASSERT_EQ(0.0, j1v_s.get_value());
   ASSERT_EQ(0.7854, j2p_s.get_value());
-  ASSERT_EQ(1.57, j1p_c.get_value());
-  ASSERT_EQ(0.8554, j2a_c.get_value());
+  ASSERT_TRUE(std::isnan(j1p_c.get_value()));
+  ASSERT_TRUE(std::isnan(j2a_c.get_value()));
 }
 
 void generic_system_functional_test(std::string urdf, double offset = 0)
@@ -345,15 +372,15 @@ void generic_system_functional_test(std::string urdf, double offset = 0)
   hardware_interface::LoanedCommandInterface j2p_c = rm.claim_command_interface("joint2/position");
   hardware_interface::LoanedCommandInterface j2v_c = rm.claim_command_interface("joint2/velocity");
 
-  // Interfaces without initial value are se to 0
+  // State interfaces without initial value are set to 0
   ASSERT_EQ(3.45, j1p_s.get_value());
   ASSERT_EQ(0.0, j1v_s.get_value());
   ASSERT_EQ(2.78, j2p_s.get_value());
   ASSERT_EQ(0.0, j2v_s.get_value());
-  ASSERT_EQ(3.45, j1p_c.get_value());
-  ASSERT_EQ(0.0, j1v_c.get_value());
-  ASSERT_EQ(2.78, j2p_c.get_value());
-  ASSERT_EQ(0.0, j2v_c.get_value());
+  ASSERT_TRUE(std::isnan(j1p_c.get_value()));
+  ASSERT_TRUE(std::isnan(j1v_c.get_value()));
+  ASSERT_TRUE(std::isnan(j2p_c.get_value()));
+  ASSERT_TRUE(std::isnan(j2v_c.get_value()));
 
   // set some new values in commands
   j1p_c.set_value(0.11);
@@ -467,9 +494,9 @@ TEST_F(TestGenericSystem, generic_system_2dof_other_interfaces) {
   ASSERT_EQ(0.65, j2p_s.get_value());
   ASSERT_EQ(0.2, j2v_s.get_value());
   ASSERT_EQ(0.5, vo_s.get_value());
-  ASSERT_EQ(1.55, j1p_c.get_value());
-  ASSERT_EQ(0.65, j2p_c.get_value());
-  ASSERT_EQ(0.5, vo_c.get_value());
+  ASSERT_TRUE(std::isnan(j1p_c.get_value()));
+  ASSERT_TRUE(std::isnan(j2p_c.get_value()));
+  ASSERT_TRUE(std::isnan(vo_c.get_value()));
 
   // set some new values in commands
   j1p_c.set_value(0.11);
@@ -563,8 +590,8 @@ TEST_F(TestGenericSystem, generic_system_2dof_sensor) {
   EXPECT_TRUE(std::isnan(sfy_s.get_value()));
   EXPECT_TRUE(std::isnan(stx_s.get_value()));
   EXPECT_TRUE(std::isnan(sty_s.get_value()));
-  ASSERT_EQ(0.0, j1p_c.get_value());
-  ASSERT_EQ(0.0, j2p_c.get_value());
+  ASSERT_TRUE(std::isnan(j1p_c.get_value()));
+  ASSERT_TRUE(std::isnan(j2p_c.get_value()));
 
   // set some new values in commands
   j1p_c.set_value(0.11);
@@ -663,8 +690,8 @@ void test_generic_system_with_fake_sensor_commands(std::string urdf)
   EXPECT_TRUE(std::isnan(sfy_s.get_value()));
   EXPECT_TRUE(std::isnan(stx_s.get_value()));
   EXPECT_TRUE(std::isnan(sty_s.get_value()));
-  ASSERT_EQ(0.0, j1p_c.get_value());
-  ASSERT_EQ(0.0, j2p_c.get_value());
+  ASSERT_TRUE(std::isnan(j1p_c.get_value()));
+  ASSERT_TRUE(std::isnan(j2p_c.get_value()));
   EXPECT_TRUE(std::isnan(sfx_c.get_value()));
   EXPECT_TRUE(std::isnan(sfy_c.get_value()));
   EXPECT_TRUE(std::isnan(stx_c.get_value()));
@@ -745,6 +772,79 @@ TEST_F(TestGenericSystem, generic_system_2dof_sensor_fake_command_True) {
     ros2_control_test_assets::urdf_tail;
 
   test_generic_system_with_fake_sensor_commands(urdf);
+}
+
+void test_generic_system_with_mimic_joint(std::string urdf)
+{
+  hardware_interface::ResourceManager rm(urdf);
+
+  // Check interfaces
+  EXPECT_EQ(1u, rm.system_components_size());
+  ASSERT_EQ(4u, rm.state_interface_keys().size());
+  EXPECT_TRUE(rm.state_interface_exists("joint1/position"));
+  EXPECT_TRUE(rm.state_interface_exists("joint1/velocity"));
+  EXPECT_TRUE(rm.state_interface_exists("joint2/position"));
+  EXPECT_TRUE(rm.state_interface_exists("joint2/velocity"));
+
+  ASSERT_EQ(4u, rm.command_interface_keys().size());
+  EXPECT_TRUE(rm.command_interface_exists("joint1/position"));
+  EXPECT_TRUE(rm.command_interface_exists("joint1/velocity"));
+  EXPECT_TRUE(rm.command_interface_exists("joint2/position"));
+  EXPECT_TRUE(rm.command_interface_exists("joint2/velocity"));
+
+  // Check initial values
+  hardware_interface::LoanedStateInterface j1p_s = rm.claim_state_interface("joint1/position");
+  hardware_interface::LoanedStateInterface j1v_s = rm.claim_state_interface("joint1/velocity");
+  hardware_interface::LoanedStateInterface j2p_s = rm.claim_state_interface("joint2/position");
+  hardware_interface::LoanedStateInterface j2v_s = rm.claim_state_interface("joint2/velocity");
+  hardware_interface::LoanedCommandInterface j1p_c = rm.claim_command_interface("joint1/position");
+  hardware_interface::LoanedCommandInterface j1v_c = rm.claim_command_interface("joint1/velocity");
+
+  ASSERT_EQ(1.57, j1p_s.get_value());
+  ASSERT_EQ(0.0, j1v_s.get_value());
+  ASSERT_EQ(0.0, j2p_s.get_value());
+  ASSERT_EQ(0.0, j2v_s.get_value());
+  ASSERT_TRUE(std::isnan(j1p_c.get_value()));
+  ASSERT_TRUE(std::isnan(j1v_c.get_value()));
+
+  // set some new values in commands
+  j1p_c.set_value(0.11);
+  j1v_c.set_value(0.05);
+
+  // State values should not be changed
+  ASSERT_EQ(1.57, j1p_s.get_value());
+  ASSERT_EQ(0.0, j1v_s.get_value());
+  ASSERT_EQ(0.0, j2p_s.get_value());
+  ASSERT_EQ(0.0, j2v_s.get_value());
+  ASSERT_EQ(0.11, j1p_c.get_value());
+  ASSERT_EQ(0.05, j1v_c.get_value());
+
+  // write() does not change values
+  rm.write();
+  ASSERT_EQ(1.57, j1p_s.get_value());
+  ASSERT_EQ(0.0, j1v_s.get_value());
+  ASSERT_EQ(0.0, j2p_s.get_value());
+  ASSERT_EQ(0.0, j2v_s.get_value());
+  ASSERT_EQ(0.11, j1p_c.get_value());
+  ASSERT_EQ(0.05, j1v_c.get_value());
+
+  // read() mirrors commands to states
+  rm.read();
+  ASSERT_EQ(0.11, j1p_s.get_value());
+  ASSERT_EQ(0.05, j1v_s.get_value());
+  ASSERT_EQ(-0.22, j2p_s.get_value());
+  ASSERT_EQ(-0.1, j2v_s.get_value());
+  ASSERT_EQ(0.11, j1p_c.get_value());
+  ASSERT_EQ(0.05, j1v_c.get_value());
+}
+
+TEST_F(TestGenericSystem, hardware_system_2dof_with_mimic_joint) {
+  auto urdf =
+    ros2_control_test_assets::urdf_head +
+    hardware_system_2dof_with_mimic_joint_ +
+    ros2_control_test_assets::urdf_tail;
+
+  test_generic_system_with_mimic_joint(urdf);
 }
 
 TEST_F(TestGenericSystem, generic_system_2dof_functionality_with_offset) {

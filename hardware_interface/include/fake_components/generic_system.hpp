@@ -33,7 +33,8 @@ using hardware_interface::return_type;
 namespace fake_components
 {
 
-class GenericSystem : public hardware_interface::BaseInterface<hardware_interface::SystemInterface>
+class HARDWARE_INTERFACE_PUBLIC GenericSystem
+  : public hardware_interface::BaseInterface<hardware_interface::SystemInterface>
 {
 public:
   return_type
@@ -78,6 +79,15 @@ protected:
     hardware_interface::HW_IF_ACCELERATION,
     hardware_interface::HW_IF_EFFORT
   };
+
+  struct MimicJoint
+  {
+    std::size_t joint_index;
+    std::size_t mimicked_joint_index;
+    double multiplier = 1.0;
+  };
+  std::vector<MimicJoint> mimic_joints_;
+
   /// The size of this vector is (standard_interfaces_.size() x nr_joints)
   std::vector<std::vector<double>> joint_commands_;
   std::vector<std::vector<double>> joint_states_;

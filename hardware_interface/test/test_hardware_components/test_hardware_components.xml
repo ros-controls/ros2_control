@@ -1,4 +1,4 @@
-<library path="test_hardware_components_components">
+<library path="test_hardware_components">
 
   <class name="test_hardware_components/TestSingleJointActuator" type="test_hardware_components::TestSingleJointActuator" base_class_type="hardware_interface::ActuatorInterface">
     <description>
@@ -15,6 +15,12 @@
   <class name="test_hardware_components/TestTwoJointSystem" type="test_hardware_components::TestTwoJointSystem" base_class_type="hardware_interface::SystemInterface">
     <description>
       Test system component for a two degree of freedom position joint robot
+    </description>
+  </class>
+
+  <class name="test_hardware_components/TestSystemCommandModes" type="test_hardware_components::TestSystemCommandModes" base_class_type="hardware_interface::SystemInterface">
+    <description>
+      Test system component for a system with both position and velocity command modes
     </description>
   </class>
 </library>

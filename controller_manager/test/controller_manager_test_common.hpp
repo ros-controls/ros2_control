@@ -18,8 +18,10 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <chrono>
 #include <memory>
 #include <string>
+#include <thread>
 #include <vector>
 
 #include "controller_interface/controller_interface.hpp"
@@ -29,6 +31,7 @@
 
 #include "rclcpp/utilities.hpp"
 #include "test_controller/test_controller.hpp"
+#include "test_controller_failed_init/test_controller_failed_init.hpp"
 
 constexpr auto STRICT = controller_manager_msgs::srv::SwitchController::Request::STRICT;
 constexpr auto BEST_EFFORT = controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT;
@@ -143,10 +146,56 @@ public:
     cm_ = std::make_shared<controller_manager::ControllerManager>(
       std::make_unique<hardware_interface::ResourceManager>(controller_manager_test::urdf),
       executor_, "test_controller_manager");
+    run_updater_ = false;
+  }
+
+  void TearDown()
+  {
+    stopCmUpdater();
+  }
+
+  void startCmUpdater()
+  {
+    run_updater_ = true;
+    updater_ = std::thread(
+      [&](void) -> void {
+        while (run_updater_) {
+          cm_->update();
+          std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+      });
+  }
+
+  void stopCmUpdater()
+  {
+    if (run_updater_) {
+      run_updater_ = false;
+      updater_.join();
+    }
   }
 
   std::shared_ptr<rclcpp::Executor> executor_;
   std::shared_ptr<controller_manager::ControllerManager> cm_;
+
+  std::thread updater_;
+  bool run_updater_;
+};
+
+class ControllerManagerRunner
+{
+public:
+  explicit ControllerManagerRunner(ControllerManagerFixture * cmf)
+  : cmf_(cmf)
+  {
+    cmf_->startCmUpdater();
+  }
+
+  ~ControllerManagerRunner()
+  {
+    cmf_->stopCmUpdater();
+  }
+
+  ControllerManagerFixture * cmf_;
 };
 
 class ControllerMock : public controller_interface::ControllerInterface

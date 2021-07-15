@@ -31,15 +31,22 @@ class ListHardwareInterfacesVerb(VerbExtension):
         with NodeStrategy(args) as node:
             hardware_interfaces = list_hardware_interfaces(node, args.controller_manager)
             command_interfaces = sorted(
-                    hardware_interfaces.command_interfaces, key=lambda hwi: hwi.name)
+                hardware_interfaces.command_interfaces, key=lambda hwi: hwi.name
+            )
             state_interfaces = sorted(
-                    hardware_interfaces.state_interfaces, key=lambda hwi: hwi.name)
+                hardware_interfaces.state_interfaces, key=lambda hwi: hwi.name
+            )
             print('command interfaces')
             for command_interface in command_interfaces:
-                print('\t%s [%s]' %
-                      (command_interface.name,
-                       'claimed' if command_interface.is_claimed else 'unclaimed'))
+                print(
+                    '\t%s [%s]'
+                    % (
+                        command_interface.name,
+                        'claimed' if command_interface.is_claimed else 'unclaimed',
+                    )
+                )
             print('state interfaces')
             for state_interface in state_interfaces:
                 print('\t', state_interface.name)
+
             return 0

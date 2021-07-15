@@ -55,13 +55,37 @@ return_type GenericSystem::configure(const hardware_interface::HardwareInfo & in
   // set all values without initial values to 0
   for (auto i = 0u; i < info_.joints.size(); i++) {
     for (auto j = 0u; j < standard_interfaces_.size(); j++) {
-      if (std::isnan(joint_commands_[j][i])) {
-        joint_commands_[j][i] = 0.0;
+      if (std::isnan(joint_states_[j][i])) {
         joint_states_[j][i] = 0.0;
       }
     }
   }
 
+  // Search for mimic joints
+  for (auto i = 0u; i < info_.joints.size(); ++i) {
+    const auto & joint = info_.joints.at(i);
+    if (joint.parameters.find("mimic") != joint.parameters.cend()) {
+      const auto mimicked_joint_it = std::find_if(
+        info_.joints.begin(), info_.joints.end(),
+        [ & mimicked_joint = joint.parameters.at("mimic")](
+          const hardware_interface::ComponentInfo & joint_info) {
+          return joint_info.name == mimicked_joint;
+        });
+      if (mimicked_joint_it == info_.joints.cend()) {
+        throw std::runtime_error(
+                std::string(
+                  "Mimicked joint '") + joint.parameters.at("mimic") + "' not found");
+      }
+      MimicJoint mimic_joint;
+      mimic_joint.joint_index = i;
+      mimic_joint.mimicked_joint_index = std::distance(info_.joints.begin(), mimicked_joint_it);
+      auto param_it = joint.parameters.find("multiplier");
+      if (param_it != joint.parameters.end()) {
+        mimic_joint.multiplier = std::stod(joint.parameters.at("multiplier"));
+      }
+      mimic_joints_.push_back(mimic_joint);
+    }
+  }
   // search for non-standard joint interfaces
   for (const auto & joint : info_.joints) {
     for (const auto & interface : joint.command_interfaces) {
@@ -181,18 +205,36 @@ std::vector<hardware_interface::CommandInterface> GenericSystem::export_command_
 return_type GenericSystem::read()
 {
   // do loopback
-  if (state_following_offset_ == 0.0) {
-    joint_states_ = joint_commands_;
-  } else {
-    for (size_t i = 0; i < joint_states_.size(); ++i) {
-      for (size_t j = 0; j < joint_states_[i].size(); ++j) {
+  for (size_t i = 0; i < joint_states_.size(); ++i) {
+    for (size_t j = 0; j < joint_states_[i].size(); ++j) {
+      if (!std::isnan(joint_commands_[i][j])) {
         joint_states_[i][j] = joint_commands_[i][j] + state_following_offset_;
       }
     }
   }
-  other_states_ = other_commands_;
+  for (const auto & mimic_joint : mimic_joints_) {
+    for (auto i = 0u; i < joint_states_.size(); ++i) {
+      joint_states_[i][mimic_joint.joint_index] = mimic_joint.multiplier *
+        joint_states_[i][mimic_joint.mimicked_joint_index];
+    }
+  }
+
+  for (size_t i = 0; i < other_states_.size(); ++i) {
+    for (size_t j = 0; j < other_states_[i].size(); ++j) {
+      if (!std::isnan(other_commands_[i][j])) {
+        other_states_[i][j] = other_commands_[i][j];
+      }
+    }
+  }
+
   if (fake_sensor_command_interfaces_) {
-    sensor_states_ = sensor_fake_commands_;
+    for (size_t i = 0; i < sensor_states_.size(); ++i) {
+      for (size_t j = 0; j < sensor_states_[i].size(); ++j) {
+        if (!std::isnan(sensor_fake_commands_[i][j])) {
+          sensor_states_[i][j] = sensor_fake_commands_[i][j];
+        }
+      }
+    }
   }
   return return_type::OK;
 }
@@ -235,7 +277,6 @@ void GenericSystem::initialize_storage_vectors(
     for (auto j = 0u; j < interfaces.size(); j++) {
       auto it = joint.parameters.find("initial_" + interfaces[j]);
       if (it != joint.parameters.end()) {
-        commands[j][i] = std::stod(it->second);
         states[j][i] = std::stod(it->second);
       }
     }

@@ -76,7 +76,7 @@ TEST_F(TestReleaseInterfaces, switch_controllers_same_interface)
       std::future_status::timeout,
       switch_future.wait_for(std::chrono::milliseconds(100))) <<
       "switch_controller should be blocking until next update cycle";
-    cm_->update();
+    ControllerManagerRunner cm_runner(this);
     EXPECT_EQ(
       controller_interface::return_type::OK,
       switch_future.get()
@@ -105,7 +105,7 @@ TEST_F(TestReleaseInterfaces, switch_controllers_same_interface)
       std::future_status::timeout,
       switch_future.wait_for(std::chrono::milliseconds(100))) <<
       "switch_controller should be blocking until next update cycle";
-    cm_->update();
+    ControllerManagerRunner cm_runner(this);
     EXPECT_EQ(
       controller_interface::return_type::OK,
       switch_future.get()
@@ -133,7 +133,7 @@ TEST_F(TestReleaseInterfaces, switch_controllers_same_interface)
       std::future_status::timeout,
       switch_future.wait_for(std::chrono::milliseconds(100))) <<
       "switch_controller should be blocking until next update cycle";
-    cm_->update();
+    ControllerManagerRunner cm_runner(this);
     EXPECT_EQ(
       controller_interface::return_type::OK,
       switch_future.get()
@@ -161,7 +161,7 @@ TEST_F(TestReleaseInterfaces, switch_controllers_same_interface)
       std::future_status::timeout,
       switch_future.wait_for(std::chrono::milliseconds(100))) <<
       "switch_controller should be blocking until next update cycle";
-    cm_->update();
+    ControllerManagerRunner cm_runner(this);
     EXPECT_EQ(
       controller_interface::return_type::OK,
       switch_future.get()
@@ -190,7 +190,7 @@ TEST_F(TestReleaseInterfaces, switch_controllers_same_interface)
     //   std::future_status::timeout,
     //   switch_future.wait_for(std::chrono::milliseconds(100))) <<
     //   "switch_controller should be blocking until next update cycle";
-    // cm_->update();
+    // ControllerManagerRunner cm_runner(this);
     EXPECT_EQ(
       controller_interface::return_type::ERROR,
       switch_future.get()
@@ -218,7 +218,7 @@ TEST_F(TestReleaseInterfaces, switch_controllers_same_interface)
       std::future_status::timeout,
       switch_future.wait_for(std::chrono::milliseconds(100))) <<
       "switch_controller should be blocking until next update cycle";
-    cm_->update();
+    ControllerManagerRunner cm_runner(this);
     EXPECT_EQ(
       controller_interface::return_type::OK,
       switch_future.get()
@@ -246,7 +246,7 @@ TEST_F(TestReleaseInterfaces, switch_controllers_same_interface)
       std::future_status::timeout,
       switch_future.wait_for(std::chrono::milliseconds(100))) <<
       "switch_controller should be blocking until next update cycle";
-    cm_->update();
+    ControllerManagerRunner cm_runner(this);
     EXPECT_EQ(
       controller_interface::return_type::OK,
       switch_future.get()

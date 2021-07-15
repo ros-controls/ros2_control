@@ -72,6 +72,47 @@ public:
   virtual
   std::vector<CommandInterface> export_command_interfaces() = 0;
 
+  /// Prepare for a new command interface switch.
+  /**
+   * Prepare for any mode-switching required by the new command interface combination.
+   *
+   * \note This is a non-realtime evaluation of whether a set of command interface claims are
+   * possible, and call to start preparing data structures for the upcoming switch that will occur.
+   * \note All starting and stopping interface keys are passed to all components, so the function should
+   * return return_type::OK by default when given interface keys not relevant for this component.
+   * \param[in] start_interfaces vector of string identifiers for the command interfaces starting.
+   * \param[in] stop_interfaces vector of string identifiers for the command interfacs stopping.
+   * \return return_type::OK if the new command interface combination can be prepared,
+   * or if the interface key is not relevant to this system. Returns return_type::ERROR otherwise.
+   */
+  virtual
+  return_type prepare_command_mode_switch(
+    const std::vector<std::string> & /*start_interfaces*/,
+    const std::vector<std::string> & /*stop_interfaces*/)
+  {
+    return return_type::OK;
+  }
+
+  // Perform switching to the new command interface.
+  /**
+   * Perform the mode-switching for the new command interface combination.
+   *
+   * \note This is part of the realtime update loop, and should be fast.
+   * \note All starting and stopping interface keys are passed to all components, so the function should
+   * return return_type::OK by default when given interface keys not relevant for this component.
+   * \param[in] start_interfaces vector of string identifiers for the command interfaces starting.
+   * \param[in] stop_interfaces vector of string identifiers for the command interfacs stopping.
+   * \return return_type::OK if the new command interface combination can be switched to,
+   * or if the interface key is not relevant to this system. Returns return_type::ERROR otherwise.
+   */
+  virtual
+  return_type perform_command_mode_switch(
+    const std::vector<std::string> & /*start_interfaces*/,
+    const std::vector<std::string> & /*stop_interfaces*/)
+  {
+    return return_type::OK;
+  }
+
   /// Start exchange data with the hardware.
   /**
    * \return return_type:OK if everything worked as expected, return_type::ERROR otherwise.

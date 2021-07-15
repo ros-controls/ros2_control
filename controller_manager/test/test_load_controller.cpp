@@ -31,16 +31,25 @@ class TestLoadController : public ControllerManagerFixture
 
 TEST_F(TestLoadController, load_unknown_controller)
 {
-  ASSERT_THROW(
-    cm_->load_controller("unknown_controller_name", "unknown_controller_type"), std::runtime_error);
+  ASSERT_EQ(cm_->load_controller("unknown_controller_name", "unknown_controller_type"), nullptr);
+}
+
+TEST_F(TestLoadController, load_controller_failed_init)
+{
+  ASSERT_EQ(
+    cm_->load_controller(
+      "test_controller_failed_init",
+      test_controller_failed_init::TEST_CONTROLLER_FAILED_INIT_CLASS_NAME),
+    nullptr);
 }
 
 TEST_F(TestLoadController, load_and_configure_one_known_controller)
 {
-  ASSERT_NO_THROW(
+  ASSERT_NE(
     cm_->load_controller(
       "test_controller_01",
-      test_controller::TEST_CONTROLLER_CLASS_NAME));
+      test_controller::TEST_CONTROLLER_CLASS_NAME),
+    nullptr);
   EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
 
   controller_manager::ControllerSpec abstract_test_controller =
@@ -62,7 +71,7 @@ TEST_F(TestLoadController, load_and_configure_two_known_controllers)
 
   // load the controller with name1
   std::string controller_name1 = "test_controller1";
-  ASSERT_NO_THROW(cm_->load_controller(controller_name1, controller_type));
+  ASSERT_NE(cm_->load_controller(controller_name1, controller_type), nullptr);
   EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
   controller_manager::ControllerSpec abstract_test_controller1 =
     cm_->get_loaded_controllers()[0];
@@ -74,7 +83,7 @@ TEST_F(TestLoadController, load_and_configure_two_known_controllers)
 
   // load the same controller again with a different name
   std::string controller_name2 = "test_controller2";
-  ASSERT_NO_THROW(cm_->load_controller(controller_name2, controller_type));
+  ASSERT_NE(cm_->load_controller(controller_name2, controller_type), nullptr);
   EXPECT_EQ(2u, cm_->get_loaded_controllers().size());
   controller_manager::ControllerSpec abstract_test_controller2 =
     cm_->get_loaded_controllers()[1];
@@ -107,7 +116,7 @@ TEST_F(TestLoadController, configure_controller)
   EXPECT_EQ(cm_->configure_controller(controller_name1), controller_interface::return_type::ERROR);
 
   // load the controller with name1
-  ASSERT_NO_THROW(cm_->load_controller(controller_name1, controller_type));
+  ASSERT_NE(cm_->load_controller(controller_name1, controller_type), nullptr);
   EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
   controller_manager::ControllerSpec abstract_test_controller1 =
     cm_->get_loaded_controllers()[0];
@@ -140,7 +149,7 @@ TEST_F(TestLoadController, configure_controller)
       std::future_status::timeout,
       switch_future.wait_for(std::chrono::milliseconds(100))) <<
       "switch_controller should be blocking until next update cycle";
-    cm_->update();
+    ControllerManagerRunner cm_runner(this);
     EXPECT_EQ(
       controller_interface::return_type::OK,
       switch_future.get()
@@ -172,7 +181,7 @@ TEST_F(TestLoadController, configure_controller)
       std::future_status::timeout,
       switch_future.wait_for(std::chrono::milliseconds(100))) <<
       "switch_controller should be blocking until next update cycle";
-    cm_->update();
+    ControllerManagerRunner cm_runner(this);
     EXPECT_EQ(
       controller_interface::return_type::OK,
       switch_future.get()
@@ -211,7 +220,7 @@ TEST_F(TestLoadController, switch_controller_empty)
 
   // load the controller with name1
   std::string controller_name1 = "test_controller1";
-  ASSERT_NO_THROW(cm_->load_controller(controller_name1, controller_type));
+  ASSERT_NE(cm_->load_controller(controller_name1, controller_type), nullptr);
   EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
 
   const auto UNSPECIFIED = 0;
@@ -305,7 +314,7 @@ TEST_F(TestLoadController, switch_controller)
 
   // load the controller with name1
   std::string controller_name1 = "test_controller1";
-  ASSERT_NO_THROW(cm_->load_controller(controller_name1, controller_type));
+  ASSERT_NE(cm_->load_controller(controller_name1, controller_type), nullptr);
   EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
   controller_manager::ControllerSpec abstract_test_controller1 =
     cm_->get_loaded_controllers()[0];
@@ -372,11 +381,13 @@ TEST_F(TestLoadController, switch_controller)
       std::future_status::timeout,
       switch_future.wait_for(std::chrono::milliseconds(100))) <<
       "switch_controller should be blocking until next update cycle";
-    cm_->update();
-    EXPECT_EQ(
-      controller_interface::return_type::OK,
-      switch_future.get()
-    );
+    {
+      ControllerManagerRunner cm_runner(this);
+      EXPECT_EQ(
+        controller_interface::return_type::OK,
+        switch_future.get()
+      );
+    }
 
     ASSERT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
@@ -394,12 +405,13 @@ TEST_F(TestLoadController, switch_controller)
       std::future_status::timeout,
       switch_future.wait_for(std::chrono::milliseconds(100))) <<
       "switch_controller should be blocking until next update cycle";
-    cm_->update();
-    EXPECT_EQ(
-      controller_interface::return_type::OK,
-      switch_future.get()
-    );
-
+    {
+      ControllerManagerRunner cm_runner(this);
+      EXPECT_EQ(
+        controller_interface::return_type::OK,
+        switch_future.get()
+      );
+    }
     ASSERT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
       abstract_test_controller1.c->get_current_state().id());
@@ -421,7 +433,7 @@ TEST_F(TestLoadController, switch_controller)
       std::future_status::timeout,
       switch_future.wait_for(std::chrono::milliseconds(100))) <<
       "switch_controller should be blocking until next update cycle";
-    cm_->update();
+    ControllerManagerRunner cm_runner(this);
     EXPECT_EQ(
       controller_interface::return_type::OK,
       switch_future.get()
@@ -440,8 +452,8 @@ TEST_F(TestLoadController, switch_multiple_controllers)
   // load the controller with name1
   std::string controller_name1 = "test_controller1";
   std::string controller_name2 = "test_controller2";
-  ASSERT_NO_THROW(cm_->load_controller(controller_name1, controller_type));
-  ASSERT_NO_THROW(cm_->load_controller(controller_name2, controller_type));
+  ASSERT_NE(cm_->load_controller(controller_name1, controller_type), nullptr);
+  ASSERT_NE(cm_->load_controller(controller_name2, controller_type), nullptr);
   EXPECT_EQ(2u, cm_->get_loaded_controllers().size());
   controller_manager::ControllerSpec abstract_test_controller1 =
     cm_->get_loaded_controllers()[0];
@@ -475,7 +487,7 @@ TEST_F(TestLoadController, switch_multiple_controllers)
       std::future_status::timeout,
       switch_future.wait_for(std::chrono::milliseconds(100))) <<
       "switch_controller should be blocking until next update cycle";
-    cm_->update();
+    ControllerManagerRunner cm_runner(this);
     EXPECT_EQ(
       controller_interface::return_type::OK,
       switch_future.get()
@@ -506,7 +518,7 @@ TEST_F(TestLoadController, switch_multiple_controllers)
       std::future_status::timeout,
       switch_future.wait_for(std::chrono::milliseconds(100))) <<
       "switch_controller should be blocking until next update cycle";
-    cm_->update();
+    ControllerManagerRunner cm_runner(this);
     EXPECT_EQ(
       controller_interface::return_type::OK,
       switch_future.get()
@@ -539,7 +551,7 @@ TEST_F(TestLoadController, switch_multiple_controllers)
       std::future_status::timeout,
       switch_future.wait_for(std::chrono::milliseconds(100))) <<
       "switch_controller should be blocking until next update cycle";
-    cm_->update();
+    ControllerManagerRunner cm_runner(this);
     EXPECT_EQ(
       controller_interface::return_type::OK,
       switch_future.get()
@@ -569,7 +581,7 @@ TEST_F(TestLoadController, switch_multiple_controllers)
       std::future_status::timeout,
       switch_future.wait_for(std::chrono::milliseconds(100))) <<
       "switch_controller should be blocking until next update cycle";
-    cm_->update();
+    ControllerManagerRunner cm_runner(this);
     EXPECT_EQ(
       controller_interface::return_type::OK,
       switch_future.get()
@@ -599,7 +611,7 @@ TEST_F(TestLoadController, switch_multiple_controllers)
       std::future_status::timeout,
       switch_future.wait_for(std::chrono::milliseconds(100))) <<
       "switch_controller should be blocking until next update cycle";
-    cm_->update();
+    ControllerManagerRunner cm_runner(this);
     EXPECT_EQ(
       controller_interface::return_type::OK,
       switch_future.get()

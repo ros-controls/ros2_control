@@ -21,32 +21,33 @@ from ros2cli.verb import VerbExtension
 from ros2controlcli.api import add_controller_mgr_parsers, LoadedControllerNameCompleter
 
 
-class SwitchVerb(VerbExtension):
+class SwitchControllersVerb(VerbExtension):
     """Switch controllers in a controller manager."""
 
     def add_arguments(self, parser, cli_name):
         add_arguments(parser)
         arg = parser.add_argument(
-            '--stop-controllers',
+            '--stop',
             nargs='*',
             default=[],
-            help='Name of the controllers to be stopped')
+            help='Name of the controllers to be stopped',
+        )
         arg.completer = LoadedControllerNameCompleter(['active'])
         arg = parser.add_argument(
-            '--start-controllers',
+            '--start',
             nargs='*',
             default=[],
-            help='Name of the controllers to be started')
+            help='Name of the controllers to be started',
+        )
         arg.completer = LoadedControllerNameCompleter(['inactive'])
-        parser.add_argument(
-            '--strict', action='store_true', help='Strict switch')
-        parser.add_argument(
-            '--start-asap', action='store_true', help='Start asap controllers')
+        parser.add_argument('--strict', action='store_true', help='Strict switch')
+        parser.add_argument('--start-asap', action='store_true', help='Start asap controllers')
         parser.add_argument(
             '--switch-timeout',
             default=5.0,
             required=False,
-            help='Timeout for switching controllers')
+            help='Timeout for switching controllers',
+        )
         arg.completer = LoadedControllerNameCompleter(['inactive'])
         add_controller_mgr_parsers(parser)
 
@@ -55,11 +56,14 @@ class SwitchVerb(VerbExtension):
             response = switch_controllers(
                 node,
                 args.controller_manager,
-                args.stop_controllers,
-                args.start_controllers,
+                args.stop,
+                args.start,
                 args.strict,
                 args.start_asap,
-                args.switch_timeout)
+                args.switch_timeout,
+            )
             if not response.ok:
                 return 'Error switching controllers, check controller_manager logs'
-            return 'Successfully switched controllers'
+
+            print('Successfully switched controllers')
+            return 0

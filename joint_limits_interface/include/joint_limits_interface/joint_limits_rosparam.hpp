@@ -84,14 +84,17 @@ inline bool getJointLimits(
       !node->has_parameter(param_base_name + ".soft_lower_limit") &&
       !node->has_parameter(param_base_name + ".soft_upper_limit"))
     {
-      RCLCPP_ERROR_STREAM(
-        node->get_logger(), "No joint limits specification found for joint '" << joint_name <<
-          "' in the parameter server (node: " << std::string(
-          node->get_name()) + " param name: " + param_base_name << ").");
+      RCLCPP_ERROR(
+        node->get_logger(),
+        "No joint limits specification found for joint '%s' in the parameter server "
+        "(node: %s param name: %s).",
+        joint_name.c_str(),
+        node->get_name(),
+        param_base_name.c_str());
       return false;
     }
   } catch (const std::exception & ex) {
-    RCLCPP_ERROR_STREAM(node->get_logger(), ex.what());
+    RCLCPP_ERROR(node->get_logger(), "%s", ex.what());
     return false;
   }
 
@@ -200,14 +203,17 @@ inline bool getSoftJointLimits(
       !node->has_parameter(param_base_name + ".soft_lower_limit") &&
       !node->has_parameter(param_base_name + ".soft_upper_limit"))
     {
-      RCLCPP_DEBUG_STREAM(
-        node->get_logger(), "No soft joint limits specification found for joint '" << joint_name <<
-          "' in the parameter server (node: " << std::string(
-          node->get_name()) + " param name: " + param_base_name << ").");
+      RCLCPP_DEBUG(
+        node->get_logger(),
+        "No soft joint limits specification found for joint '%s' in the parameter server "
+        "(node: %s param name: %s).",
+        joint_name.c_str(),
+        node->get_name(),
+        param_base_name.c_str());
       return false;
     }
   } catch (const std::exception & ex) {
-    RCLCPP_ERROR_STREAM(node->get_logger(), ex.what());
+    RCLCPP_ERROR(node->get_logger(), "%s", ex.what());
     return false;
   }
 

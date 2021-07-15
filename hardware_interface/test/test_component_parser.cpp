@@ -497,3 +497,109 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_only)
   ASSERT_THAT(hardware_info.transmissions[0].parameters, SizeIs(1));
   EXPECT_EQ(hardware_info.transmissions[0].parameters.at("joint_to_actuator"), "${1024/PI}");
 }
+
+TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_robot_with_gpio)
+{
+  std::string urdf_to_test =
+    std::string(ros2_control_test_assets::urdf_head) +
+    ros2_control_test_assets::valid_urdf_ros2_control_system_robot_with_gpio +
+    ros2_control_test_assets::urdf_tail;
+  const auto control_hardware = parse_control_resources_from_urdf(urdf_to_test);
+  ASSERT_THAT(control_hardware, SizeIs(1));
+  auto hardware_info = control_hardware.front();
+
+  EXPECT_EQ(hardware_info.name, "RRBotSystemWithGPIO");
+  EXPECT_EQ(hardware_info.type, "system");
+  EXPECT_EQ(
+    hardware_info.hardware_class_type,
+    "ros2_control_demo_hardware/RRBotSystemWithGPIOHardware");
+
+  ASSERT_THAT(hardware_info.joints, SizeIs(2));
+
+  EXPECT_EQ(hardware_info.joints[0].name, "joint1");
+  EXPECT_EQ(hardware_info.joints[0].type, "joint");
+
+  EXPECT_EQ(hardware_info.joints[1].name, "joint2");
+  EXPECT_EQ(hardware_info.joints[1].type, "joint");
+
+  ASSERT_THAT(hardware_info.gpios, SizeIs(2));
+
+  EXPECT_EQ(hardware_info.gpios[0].name, "flange_analog_IOs");
+  EXPECT_EQ(hardware_info.gpios[0].type, "gpio");
+  EXPECT_THAT(hardware_info.gpios[0].state_interfaces, SizeIs(3));
+  EXPECT_THAT(hardware_info.gpios[0].command_interfaces, SizeIs(1));
+  EXPECT_EQ(hardware_info.gpios[0].state_interfaces[0].name, "analog_output1");
+  EXPECT_EQ(hardware_info.gpios[0].state_interfaces[1].name, "analog_input1");
+  EXPECT_EQ(hardware_info.gpios[0].state_interfaces[2].name, "analog_input2");
+
+  EXPECT_EQ(hardware_info.gpios[1].name, "flange_vacuum");
+  EXPECT_EQ(hardware_info.gpios[1].type, "gpio");
+  EXPECT_THAT(hardware_info.gpios[1].state_interfaces, SizeIs(1));
+  EXPECT_THAT(hardware_info.gpios[1].command_interfaces, SizeIs(1));
+  EXPECT_EQ(hardware_info.gpios[1].state_interfaces[0].name, "vacuum");
+  EXPECT_EQ(hardware_info.gpios[1].command_interfaces[0].name, "vacuum");
+}
+
+TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_with_size_and_data_type)
+{
+  std::string urdf_to_test =
+    std::string(ros2_control_test_assets::urdf_head) +
+    ros2_control_test_assets::valid_urdf_ros2_control_system_robot_with_size_and_data_type +
+    ros2_control_test_assets::urdf_tail;
+  const auto control_hardware = parse_control_resources_from_urdf(urdf_to_test);
+  ASSERT_THAT(control_hardware, SizeIs(1));
+  auto hardware_info = control_hardware.front();
+
+  EXPECT_EQ(hardware_info.name, "RRBotSystemWithSizeAndDataType");
+  EXPECT_EQ(hardware_info.type, "system");
+  EXPECT_EQ(
+    hardware_info.hardware_class_type,
+    "ros2_control_demo_hardware/RRBotSystemWithSizeAndDataType");
+
+  ASSERT_THAT(hardware_info.joints, SizeIs(1));
+
+  EXPECT_EQ(hardware_info.joints[0].name, "joint1");
+  EXPECT_EQ(hardware_info.joints[0].type, "joint");
+  EXPECT_THAT(hardware_info.joints[0].command_interfaces, SizeIs(1));
+  EXPECT_EQ(hardware_info.joints[0].command_interfaces[0].name, HW_IF_POSITION);
+  EXPECT_EQ(hardware_info.joints[0].command_interfaces[0].data_type, "double");
+  EXPECT_EQ(hardware_info.joints[0].command_interfaces[0].size, 1);
+  EXPECT_THAT(hardware_info.joints[0].state_interfaces, SizeIs(1));
+  EXPECT_EQ(hardware_info.joints[0].state_interfaces[0].name, HW_IF_POSITION);
+  EXPECT_EQ(hardware_info.joints[0].state_interfaces[0].data_type, "double");
+  EXPECT_EQ(hardware_info.joints[0].state_interfaces[0].size, 1);
+
+  ASSERT_THAT(hardware_info.gpios, SizeIs(1));
+
+  EXPECT_EQ(hardware_info.gpios[0].name, "flange_IOS");
+  EXPECT_EQ(hardware_info.gpios[0].type, "gpio");
+  EXPECT_THAT(hardware_info.gpios[0].command_interfaces, SizeIs(1));
+  EXPECT_EQ(hardware_info.gpios[0].command_interfaces[0].name, "digital_output");
+  EXPECT_EQ(hardware_info.gpios[0].command_interfaces[0].data_type, "bool");
+  EXPECT_EQ(hardware_info.gpios[0].command_interfaces[0].size, 2);
+  EXPECT_THAT(hardware_info.gpios[0].state_interfaces, SizeIs(2));
+  EXPECT_EQ(hardware_info.gpios[0].state_interfaces[0].name, "analog_input");
+  EXPECT_EQ(hardware_info.gpios[0].state_interfaces[0].data_type, "double");
+  EXPECT_EQ(hardware_info.gpios[0].state_interfaces[0].size, 3);
+  EXPECT_EQ(hardware_info.gpios[0].state_interfaces[1].name, "image");
+  EXPECT_EQ(hardware_info.gpios[0].state_interfaces[1].data_type, "cv::Mat");
+  EXPECT_EQ(hardware_info.gpios[0].state_interfaces[1].size, 1);
+}
+
+TEST_F(TestComponentParser, negative_size_throws_error)
+{
+  std::string urdf_to_test =
+    std::string(ros2_control_test_assets::urdf_head) +
+    ros2_control_test_assets::invalid_urdf2_ros2_control_illegal_size +
+    ros2_control_test_assets::urdf_tail;
+  ASSERT_THROW(parse_control_resources_from_urdf(urdf_to_test), std::runtime_error);
+}
+
+TEST_F(TestComponentParser, noninteger_size_throws_error)
+{
+  std::string urdf_to_test =
+    std::string(ros2_control_test_assets::urdf_head) +
+    ros2_control_test_assets::invalid_urdf2_ros2_control_illegal_size2 +
+    ros2_control_test_assets::urdf_tail;
+  ASSERT_THROW(parse_control_resources_from_urdf(urdf_to_test), std::runtime_error);
+}

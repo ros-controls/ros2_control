@@ -91,6 +91,16 @@ if(BUILD_TESTING)
     DESTINATION lib
   )
 
+  add_library(test_controller_failed_init SHARED test/test_controller_failed_init/test_controller_failed_init.cpp)
+  target_include_directories(test_controller_failed_init PRIVATE include)
+  target_link_libraries(test_controller_failed_init controller_manager)
+  target_compile_definitions(test_controller_failed_init PRIVATE "CONTROLLER_MANAGER_BUILDING_DLL")
+  pluginlib_export_plugin_description_file(
+    controller_interface test/test_controller_failed_init/test_controller_failed_init.xml)
+  install(TARGETS test_controller_failed_init
+    DESTINATION lib
+  )
+
   ament_add_gmock(
     test_controller_manager
     test/test_controller_manager.cpp
@@ -104,7 +114,7 @@ if(BUILD_TESTING)
     APPEND_ENV AMENT_PREFIX_PATH=${ament_index_build_path}_$<CONFIG>
   )
   target_include_directories(test_load_controller PRIVATE include)
-  target_link_libraries(test_load_controller controller_manager test_controller)
+  target_link_libraries(test_load_controller controller_manager test_controller test_controller_failed_init)
 
   ament_add_gmock(
     test_controller_manager_srvs
@@ -113,6 +123,10 @@ if(BUILD_TESTING)
   )
   target_include_directories(test_controller_manager_srvs PRIVATE include)
   target_link_libraries(test_controller_manager_srvs controller_manager test_controller)
+  ament_target_dependencies(
+    test_controller_manager_srvs
+    controller_manager_msgs
+  )
 
   add_library(test_controller_with_interfaces SHARED test/test_controller_with_interfaces/test_controller_with_interfaces.cpp)
   target_include_directories(test_controller_with_interfaces PRIVATE include)

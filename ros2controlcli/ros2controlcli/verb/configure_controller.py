@@ -26,8 +26,7 @@ class ConfigureControllerVerb(VerbExtension):
 
     def add_arguments(self, parser, cli_name):
         add_arguments(parser)
-        arg = parser.add_argument(
-            'controller_name', help='Name of the controller')
+        arg = parser.add_argument('controller_name', help='Name of the controller')
         arg.completer = ControllerNameCompleter()
         add_controller_mgr_parsers(parser)
 
@@ -36,4 +35,6 @@ class ConfigureControllerVerb(VerbExtension):
             response = configure_controller(node, args.controller_manager, args.controller_name)
             if not response.ok:
                 'Error configuring controller, check controller_manager logs'
-            return 'Successfully configured controller {}'.format(args.controller_name)
+
+            print(f'Successfully configured controller {args.controller_name}')
+            return 0

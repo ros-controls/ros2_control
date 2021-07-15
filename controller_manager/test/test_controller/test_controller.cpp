@@ -23,7 +23,8 @@ namespace test_controller
 {
 
 TestController::TestController()
-: controller_interface::ControllerInterface()
+: controller_interface::ControllerInterface(),
+  cmd_iface_cfg_{controller_interface::interface_configuration_type::NONE}
 {}
 
 controller_interface::return_type
@@ -51,6 +52,12 @@ TestController::on_cleanup(
     (*cleanup_calls)++;
   }
   return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
+}
+
+void TestController::set_command_interface_configuration(
+  const controller_interface::InterfaceConfiguration & cfg)
+{
+  cmd_iface_cfg_ = cfg;
 }
 
 }  // namespace test_controller

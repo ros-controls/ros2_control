@@ -2,6 +2,43 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.7.1 (2021-06-15)
+------------------
+* Use namespace in controller_manager (`#435 <https://github.com/ros-controls/ros2_control/issues/435>`_)
+* Contributors: Jonatan Olofsson
+
+0.7.0 (2021-06-06)
+------------------
+
+0.6.1 (2021-05-31)
+------------------
+* Add missing dependency on controller_manager_msgs (`#426 <https://github.com/ros-controls/ros2_control/issues/426>`_)
+* Contributors: Denis Štogl
+
+0.6.0 (2021-05-23)
+------------------
+* List controller claimed interfaces (`#407 <https://github.com/ros-controls/ros2_control/issues/407>`_)
+  * List controllers now also shows the claimed interfaces
+  * Fixed tests that perform switches
+  Successfull controller switches require more than one call to update()
+  in order to update the controller list
+  * Can now set the command interface configuration
+  * Added checks for the claimed interfaces
+* Contributors: Jordan Palacios
+
+0.5.0 (2021-05-03)
+------------------
+* Make controller manager update rate optional (`#404 <https://github.com/ros-controls/ros2_control/issues/404>`_)
+* Bump `wait_for_service` timeout to 10 seconds (`#403 <https://github.com/ros-controls/ros2_control/issues/403>`_)
+* introduce --stopped for spawner (`#402 <https://github.com/ros-controls/ros2_control/issues/402>`_)
+* hardware_interface mode switching using prepareSwitch doSwitch approach (`#348 <https://github.com/ros-controls/ros2_control/issues/348>`_)
+* Avoid std::stringstream (`#391 <https://github.com/ros-controls/ros2_control/issues/391>`_)
+* avoid deprecations (`#393 <https://github.com/ros-controls/ros2_control/issues/393>`_)
+* Use RCLCPP_DEBUG_STREAM for char * (`#389 <https://github.com/ros-controls/ros2_control/issues/389>`_)
+* Check controller_interface::init return value when loading (`#386 <https://github.com/ros-controls/ros2_control/issues/386>`_)
+* Do not throw when controller type is not found, return nullptr instead (`#387 <https://github.com/ros-controls/ros2_control/issues/387>`_)
+* Contributors: Auguste Bourgois, Karsten Knese, Matt Reynolds, Tyler Weaver, Mathias Hauan Arbo, Bence Magyar
+
 0.4.0 (2021-04-07)
 ------------------
 * Fix deprecation warnings: SUCCESS -> OK (`#375 <https://github.com/ros-controls/ros2_control/issues/375>`_)

@@ -56,12 +56,14 @@ public:
   ControllerManager(
     std::unique_ptr<hardware_interface::ResourceManager> resource_manager,
     std::shared_ptr<rclcpp::Executor> executor,
-    const std::string & manager_node_name = "controller_manager");
+    const std::string & manager_node_name = "controller_manager",
+    const std::string & namespace_ = "");
 
   CONTROLLER_MANAGER_PUBLIC
   ControllerManager(
     std::shared_ptr<rclcpp::Executor> executor,
-    const std::string & manager_node_name = "controller_manager");
+    const std::string & manager_node_name = "controller_manager",
+    const std::string & namespace_ = "");
 
   CONTROLLER_MANAGER_PUBLIC
   virtual
@@ -342,6 +344,7 @@ private:
     unload_controller_service_;
 
   std::vector<std::string> start_request_, stop_request_;
+  std::vector<std::string> start_command_interface_request_, stop_command_interface_request_;
 
   struct SwitchParams
   {

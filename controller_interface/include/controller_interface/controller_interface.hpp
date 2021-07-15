@@ -31,12 +31,20 @@
 namespace controller_interface
 {
 
+// TODO(karsten1987): Remove clang pragma within Galactic
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wc++17-extensions"
+#endif
 enum class return_type : std::uint8_t
 {
   OK = 0,
   ERROR = 1,
   SUCCESS [[deprecated("Use controller_interface::return_type::OK instead.")]] = OK
 };
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
 
 /// Indicating which interfaces are to be claimed.
 /**
@@ -88,6 +96,11 @@ public:
   virtual
   return_type
   init(const std::string & controller_name);
+
+  CONTROLLER_INTERFACE_PUBLIC
+  virtual
+  return_type
+  init(const std::string & controller_name, rclcpp::NodeOptions & node_options);
 
   CONTROLLER_INTERFACE_PUBLIC
   virtual

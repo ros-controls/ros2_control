@@ -41,8 +41,7 @@ public:
 
   controller_interface::InterfaceConfiguration command_interface_configuration() const override
   {
-    return controller_interface::InterfaceConfiguration{
-      controller_interface::interface_configuration_type::NONE};
+    return cmd_iface_cfg_;
   }
 
   controller_interface::InterfaceConfiguration state_interface_configuration() const override
@@ -63,11 +62,16 @@ public:
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
   on_cleanup(const rclcpp_lifecycle::State & previous_state) override;
 
+  CONTROLLER_MANAGER_PUBLIC
+  void set_command_interface_configuration(
+    const controller_interface::InterfaceConfiguration & cfg);
+
   size_t internal_counter = 0;
   bool simulate_cleanup_failure = false;
   // Variable where we store when cleanup was called, pointer because the controller
   // is usually destroyed after cleanup
   size_t * cleanup_calls = nullptr;
+  controller_interface::InterfaceConfiguration cmd_iface_cfg_;
 };
 
 }  // namespace test_controller

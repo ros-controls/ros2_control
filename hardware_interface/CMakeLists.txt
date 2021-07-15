@@ -127,6 +127,7 @@ if(BUILD_TESTING)
   test/test_hardware_components/test_single_joint_actuator.cpp
   test/test_hardware_components/test_force_torque_sensor.cpp
   test/test_hardware_components/test_two_joint_system.cpp
+  test/test_hardware_components/test_system_with_command_modes.cpp
   )
   target_link_libraries(test_hardware_components hardware_interface)
   ament_target_dependencies(test_hardware_components
