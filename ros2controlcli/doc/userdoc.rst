@@ -205,6 +205,7 @@ switch_controllers
     Name of the controller manager ROS node
     --include-hidden-nodes
                           Consider hidden nodes as well
+
 unload_controller
 -----------------
 
