@@ -1,4 +1,4 @@
-.. _framework:
+.. _ros2_control_framework:
 
 =====================
 Core functionalities
@@ -11,3 +11,11 @@ Features
 
 - :ref:`Command Line Interface (CLI) <ros2controlcli_userdoc>`
 
+
+Concepts
+========
+
+.. toctree::
+   :titlesonly:
+
+   Fake Components <../hardware_interface/doc/fake_components_userdoc.rst>
