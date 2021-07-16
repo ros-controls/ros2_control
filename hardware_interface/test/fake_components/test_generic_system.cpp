@@ -412,9 +412,9 @@ void generic_system_functional_test(std::string urdf, double offset = 0)
   // read() mirrors commands + offset to states
   rm.read();
   ASSERT_EQ(0.11 + offset, j1p_s.get_value());
-  ASSERT_EQ(0.22 + offset, j1v_s.get_value());
+  ASSERT_EQ(0.22, j1v_s.get_value());
   ASSERT_EQ(0.33 + offset, j2p_s.get_value());
-  ASSERT_EQ(0.44 + offset, j2v_s.get_value());
+  ASSERT_EQ(0.44, j2v_s.get_value());
   ASSERT_EQ(0.11, j1p_c.get_value());
   ASSERT_EQ(0.22, j1v_c.get_value());
   ASSERT_EQ(0.33, j2p_c.get_value());
@@ -428,9 +428,9 @@ void generic_system_functional_test(std::string urdf, double offset = 0)
 
   // state values should not be changed
   ASSERT_EQ(0.11 + offset, j1p_s.get_value());
-  ASSERT_EQ(0.22 + offset, j1v_s.get_value());
+  ASSERT_EQ(0.22, j1v_s.get_value());
   ASSERT_EQ(0.33 + offset, j2p_s.get_value());
-  ASSERT_EQ(0.44 + offset, j2v_s.get_value());
+  ASSERT_EQ(0.44, j2v_s.get_value());
   ASSERT_EQ(0.55, j1p_c.get_value());
   ASSERT_EQ(0.66, j1v_c.get_value());
   ASSERT_EQ(0.77, j2p_c.get_value());
