@@ -616,9 +616,8 @@ ControllerManager::add_controller_impl(
       controller.info.name.c_str());
     return nullptr;
   }
-  
-  if (controller.c->init(controller.info.name) == controller_interface::return_type::ERROR) {
 
+  if (controller.c->init(controller.info.name) == controller_interface::return_type::ERROR) {
     to.clear();
     RCLCPP_ERROR(
       get_logger(),
@@ -626,10 +625,10 @@ ControllerManager::add_controller_impl(
       controller.info.name.c_str());
     return nullptr;
   }
-  
+
   // ensure controller's `use_sim_time` parameter matches controller_manager's
-  const rclcpp::Parameter use_sim_time = this->get_parameter("use_sim_time");  
-  controller.c->get_node()->set_parameter(use_sim_time); 
+  const rclcpp::Parameter use_sim_time = this->get_parameter("use_sim_time");
+  controller.c->get_node()->set_parameter(use_sim_time);
 
   executor_->add_node(controller.c->get_node());
   to.emplace_back(controller);
