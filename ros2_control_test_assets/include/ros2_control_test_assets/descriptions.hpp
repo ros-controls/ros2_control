@@ -403,6 +403,25 @@ const auto minimal_robot_missing_state_keys_urdf =
 const auto minimal_robot_missing_command_keys_urdf =
   std::string(urdf_head) + std::string(hardware_resources_missing_command_keys) +
   std::string(urdf_tail);
+
+const auto TEST_ACTUATOR_HARDWARE_NAME = "TestActuatorHardware";
+const auto TEST_ACTUATOR_HARDWARE_TYPE = "actuator";
+const auto TEST_ACTUATOR_HARDWARE_CLASS_TYPE = "test_actuator";
+const auto TEST_ACTUATOR_HARDWARE_COMMAND_INTERFACES = {"joint1/position"};
+const auto TEST_ACTUATOR_HARDWARE_STATE_INTERFACES = {"joint1/position", "joint1/velocity"};
+
+const auto TEST_SENSOR_HARDWARE_NAME = "TestSensorHardware";
+const auto TEST_SENSOR_HARDWARE_TYPE = "sensor";
+const auto TEST_SENSOR_HARDWARE_CLASS_TYPE = "test_sensor";
+const auto TEST_SENSOR_HARDWARE_COMMAND_INTERFACES = {""};
+const auto TEST_SENSOR_HARDWARE_STATE_INTERFACES = {"sensor1/velocity"};
+
+const auto TEST_SYSTEM_HARDWARE_NAME = "TestSystemHardware";
+const auto TEST_SYSTEM_HARDWARE_TYPE = "system";
+const auto TEST_SYSTEM_HARDWARE_CLASS_TYPE = "test_system";
+const auto TEST_SYSTEM_HARDWARE_COMMAND_INTERFACES = {"joint2/velocity", "joint3/velocity"};
+const auto TEST_SYSTEM_HARDWARE_STATE_INTERFACES = {"joint2/position", "joint3/position"};
+
 }  // namespace ros2_control_test_assets
 
 #endif  // ROS2_CONTROL_TEST_ASSETS__DESCRIPTIONS_HPP_

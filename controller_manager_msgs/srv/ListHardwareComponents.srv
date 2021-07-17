@@ -1,0 +1,6 @@
+# The ListHardwareComponents service returns a list of hardware HardwareComponentsState
+# names/components_types/states/types of the components that are loaded inside the
+# resource_manager.
+
+---
+HardwareComponentsState[] component

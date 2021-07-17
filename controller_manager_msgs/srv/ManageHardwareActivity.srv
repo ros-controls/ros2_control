@@ -1,0 +1,9 @@
+# The ManageHardwareActivity service activates and deactivates hardware components in resource manager.
+# To activate compoenents, they have to be in "inactive" state.
+# To deactivate components, they have to be in "active" state.
+# Input parameters are lists of hardware-component names.
+
+string[] activate
+string[] deactivate
+---
+bool ok

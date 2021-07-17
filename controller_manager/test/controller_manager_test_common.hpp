@@ -35,8 +35,12 @@
 #include "test_controller/test_controller.hpp"
 #include "test_controller_failed_init/test_controller_failed_init.hpp"
 
+using namespace std::chrono_literals;
+
 constexpr auto STRICT = controller_manager_msgs::srv::SwitchController::Request::STRICT;
 constexpr auto BEST_EFFORT = controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT;
+
+const auto TEST_CM_NAME = "test_controller_manager";
 
 class ControllerManagerFixture : public ::testing::Test
 {
@@ -51,7 +55,7 @@ public:
     cm_ = std::make_shared<controller_manager::ControllerManager>(
       std::make_unique<hardware_interface::ResourceManager>(
         ros2_control_test_assets::minimal_robot_urdf),
-      executor_, "test_controller_manager");
+      executor_, TEST_CM_NAME);
     run_updater_ = false;
   }
 
@@ -83,6 +87,65 @@ public:
 
   std::thread updater_;
   bool run_updater_;
+};
+
+class TestControllerManagerSrvs : public ControllerManagerFixture
+{
+public:
+  TestControllerManagerSrvs() {}
+
+  void SetUp() override
+  {
+    ControllerManagerFixture::SetUp();
+    SetUpSrvsCMExecutor();
+  }
+
+  void SetUpSrvsCMExecutor()
+  {
+    update_timer_ = cm_->create_wall_timer(std::chrono::milliseconds(10), [&]() {
+      cm_->read();
+      cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
+      cm_->write();
+    });
+
+    executor_->add_node(cm_);
+
+    executor_spin_future_ = std::async(std::launch::async, [this]() -> void { executor_->spin(); });
+    // This sleep is needed to prevent a too fast test from ending before the
+    // executor has began to spin, which causes it to hang
+    std::this_thread::sleep_for(50ms);
+  }
+
+  // FIXME: This can be deleted!
+  void TearDown() override { executor_->cancel(); }
+
+  template <typename T>
+  std::shared_ptr<typename T::Response> call_service_and_wait(
+    rclcpp::Client<T> & client, std::shared_ptr<typename T::Request> request,
+    rclcpp::Executor & service_executor, bool update_controller_while_spinning = false)
+  {
+    EXPECT_TRUE(client.wait_for_service(std::chrono::milliseconds(500)));
+    auto result = client.async_send_request(request);
+    // Wait for the result.
+    if (update_controller_while_spinning)
+    {
+      while (service_executor.spin_until_future_complete(result, 50ms) !=
+             rclcpp::FutureReturnCode::SUCCESS)
+      {
+        cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
+      }
+    }
+    else
+    {
+      EXPECT_EQ(
+        service_executor.spin_until_future_complete(result), rclcpp::FutureReturnCode::SUCCESS);
+    }
+    return result.get();
+  }
+
+protected:
+  rclcpp::TimerBase::SharedPtr update_timer_;
+  std::future<void> executor_spin_future_;
 };
 
 class ControllerManagerRunner

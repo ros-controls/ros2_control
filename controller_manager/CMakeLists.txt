@@ -157,6 +157,14 @@ if(BUILD_TESTING)
   target_include_directories(test_spawner_unspawner PRIVATE include)
   target_link_libraries(test_spawner_unspawner controller_manager test_controller)
   ament_target_dependencies(test_spawner_unspawner ros2_control_test_assets)
+
+  ament_add_gmock(
+    test_hardware_management_srvs
+    test/test_hardware_management_srvs.cpp
+  )
+  target_include_directories(test_hardware_management_srvs PRIVATE include)
+  target_link_libraries(test_hardware_management_srvs controller_manager test_controller)
+  ament_target_dependencies(test_hardware_management_srvs ros2_control_test_assets)
 endif()
 
 # Install Python modules
