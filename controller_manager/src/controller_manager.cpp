@@ -628,8 +628,13 @@ ControllerManager::add_controller_impl(
 
   // ensure controller's `use_sim_time` parameter matches controller_manager's
   const rclcpp::Parameter use_sim_time = this->get_parameter("use_sim_time");
-  controller.c->get_node()->set_parameter(use_sim_time);
-
+  if (use_sim_time.as_bool()) {
+    RCLCPP_INFO(
+      get_logger(),
+      "Setting use_sim_time=True for %s to match controller manager "
+      "(see ros2_control#325 for details)", controller.info.name.c_str());
+    controller.c->get_node()->set_parameter(use_sim_time);
+  }
   executor_->add_node(controller.c->get_node());
   to.emplace_back(controller);
 
