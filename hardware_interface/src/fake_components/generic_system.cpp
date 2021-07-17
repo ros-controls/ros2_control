@@ -42,6 +42,14 @@ return_type GenericSystem::configure(const hardware_interface::HardwareInfo & in
     fake_sensor_command_interfaces_ = false;
   }
 
+  // check if there is a state following offset defined
+  it = info_.hardware_parameters.find("state_following_offset");
+  if (it != info_.hardware_parameters.end()) {
+    state_following_offset_ = std::stod(it->second);
+  } else {
+    state_following_offset_ = 0.0;
+  }
+
   // Initialize storage for standard interfaces
   initialize_storage_vectors(joint_commands_, joint_states_, standard_interfaces_);
   // set all values without initial values to 0
@@ -196,8 +204,15 @@ std::vector<hardware_interface::CommandInterface> GenericSystem::export_command_
 
 return_type GenericSystem::read()
 {
-  // do loopback
-  for (size_t i = 0; i < joint_states_.size(); ++i) {
+  // apply offset to positions only
+  for (size_t j = 0; j < joint_states_[POSITION_INTERFACE_INDEX].size(); ++j) {
+    if (!std::isnan(joint_commands_[POSITION_INTERFACE_INDEX][j])) {
+      joint_states_[POSITION_INTERFACE_INDEX][j] =
+        joint_commands_[POSITION_INTERFACE_INDEX][j] + state_following_offset_;
+    }
+  }
+  // do loopback on all other interfaces - starts from 1 because 0 index is position interface
+  for (size_t i = 1; i < joint_states_.size(); ++i) {
     for (size_t j = 0; j < joint_states_[i].size(); ++j) {
       if (!std::isnan(joint_commands_[i][j])) {
         joint_states_[i][j] = joint_commands_[i][j];

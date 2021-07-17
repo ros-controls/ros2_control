@@ -232,6 +232,30 @@ protected:
     </joint>
   </ros2_control>
 )";
+
+    hardware_system_2dof_standard_interfaces_with_offset_ =
+      R"(
+  <ros2_control name="GenericSystem2dof" type="system">
+    <hardware>
+      <plugin>fake_components/GenericSystem</plugin>
+      <param name="state_following_offset">-3</param>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <param name="initial_position">3.45</param>
+    </joint>
+    <joint name="joint2">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <param name="initial_position">2.78</param>
+    </joint>
+  </ros2_control>
+)";
   }
 
   std::string hardware_robot_2dof_;
@@ -243,6 +267,7 @@ protected:
   std::string hardware_system_2dof_with_sensor_fake_command_;
   std::string hardware_system_2dof_with_sensor_fake_command_True_;
   std::string hardware_system_2dof_with_mimic_joint_;
+  std::string hardware_system_2dof_standard_interfaces_with_offset_;
 };
 
 TEST_F(TestGenericSystem, load_generic_system_2dof) {
@@ -328,11 +353,8 @@ TEST_F(TestGenericSystem, generic_system_2dof_asymetric_interfaces) {
   ASSERT_TRUE(std::isnan(j2a_c.get_value()));
 }
 
-TEST_F(TestGenericSystem, generic_system_2dof_functionality) {
-  auto urdf =
-    ros2_control_test_assets::urdf_head +
-    hardware_system_2dof_standard_interfaces_ +
-    ros2_control_test_assets::urdf_tail;
+void generic_system_functional_test(std::string urdf, double offset = 0)
+{
   hardware_interface::ResourceManager rm(urdf);
 
   // check is hardware is configured
@@ -387,11 +409,11 @@ TEST_F(TestGenericSystem, generic_system_2dof_functionality) {
   ASSERT_EQ(0.33, j2p_c.get_value());
   ASSERT_EQ(0.44, j2v_c.get_value());
 
-  // read() mirrors commands to states
+  // read() mirrors commands + offset to states
   rm.read();
-  ASSERT_EQ(0.11, j1p_s.get_value());
+  ASSERT_EQ(0.11 + offset, j1p_s.get_value());
   ASSERT_EQ(0.22, j1v_s.get_value());
-  ASSERT_EQ(0.33, j2p_s.get_value());
+  ASSERT_EQ(0.33 + offset, j2p_s.get_value());
   ASSERT_EQ(0.44, j2v_s.get_value());
   ASSERT_EQ(0.11, j1p_c.get_value());
   ASSERT_EQ(0.22, j1v_c.get_value());
@@ -405,9 +427,9 @@ TEST_F(TestGenericSystem, generic_system_2dof_functionality) {
   j2v_c.set_value(0.88);
 
   // state values should not be changed
-  ASSERT_EQ(0.11, j1p_s.get_value());
+  ASSERT_EQ(0.11 + offset, j1p_s.get_value());
   ASSERT_EQ(0.22, j1v_s.get_value());
-  ASSERT_EQ(0.33, j2p_s.get_value());
+  ASSERT_EQ(0.33 + offset, j2p_s.get_value());
   ASSERT_EQ(0.44, j2v_s.get_value());
   ASSERT_EQ(0.55, j1p_c.get_value());
   ASSERT_EQ(0.66, j1v_c.get_value());
@@ -421,6 +443,15 @@ TEST_F(TestGenericSystem, generic_system_2dof_functionality) {
   rm.stop_components();
   status_map = rm.get_components_status();
   EXPECT_EQ(status_map["GenericSystem2dof"], hardware_interface::status::STOPPED);
+}
+
+TEST_F(TestGenericSystem, generic_system_2dof_functionality) {
+  auto urdf =
+    ros2_control_test_assets::urdf_head +
+    hardware_system_2dof_standard_interfaces_ +
+    ros2_control_test_assets::urdf_tail;
+
+  generic_system_functional_test(urdf);
 }
 
 TEST_F(TestGenericSystem, generic_system_2dof_other_interfaces) {
@@ -743,7 +774,6 @@ TEST_F(TestGenericSystem, generic_system_2dof_sensor_fake_command_True) {
   test_generic_system_with_fake_sensor_commands(urdf);
 }
 
-
 void test_generic_system_with_mimic_joint(std::string urdf)
 {
   hardware_interface::ResourceManager rm(urdf);
@@ -815,4 +845,13 @@ TEST_F(TestGenericSystem, hardware_system_2dof_with_mimic_joint) {
     ros2_control_test_assets::urdf_tail;
 
   test_generic_system_with_mimic_joint(urdf);
+}
+
+TEST_F(TestGenericSystem, generic_system_2dof_functionality_with_offset) {
+  auto urdf =
+    ros2_control_test_assets::urdf_head +
+    hardware_system_2dof_standard_interfaces_with_offset_ +
+    ros2_control_test_assets::urdf_tail;
+
+  generic_system_functional_test(urdf, -3);
 }
