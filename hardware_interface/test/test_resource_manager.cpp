@@ -319,7 +319,7 @@ TEST_F(TestResourceManager, starting_and_stopping_resources)
 
   std::unordered_map<std::string, rclcpp_lifecycle::State> status_map;
 
-  rm.start_components();
+  rm.activate_components();
   status_map = rm.get_components_states();
   EXPECT_EQ(
     status_map["TestActuatorHardware"].id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
@@ -334,7 +334,7 @@ TEST_F(TestResourceManager, starting_and_stopping_resources)
   EXPECT_EQ(
     status_map["TestSystemHardware"].label(), hardware_interface::lifecycle_state_names::ACTIVE);
 
-  rm.stop_components();
+  rm.deactivate_components();
   status_map = rm.get_components_states();
   EXPECT_EQ(
     status_map["TestActuatorHardware"].id(), lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);

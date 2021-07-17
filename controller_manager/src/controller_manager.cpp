@@ -80,7 +80,7 @@ ControllerManager::ControllerManager(
   std::vector<std::string> autostart_components = {""};
   get_parameter("autostart_components", autostart_components);
   // TODO(all): Here we should start only "auto-start" resources
-  resource_manager_->start_components(autostart_components);
+  resource_manager_->activate_components(autostart_components);
 
   init_services();
 }

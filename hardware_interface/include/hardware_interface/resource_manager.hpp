@@ -274,23 +274,23 @@ public:
     const std::vector<std::string> & start_interfaces,
     const std::vector<std::string> & stop_interfaces);
 
-  /// Start hardware components.
+  /// Activate hardware components.
   /**
-   * Start hardware components defined in the list. If empty, start all components.
+   * Activate hardware components defined in the list. If empty, activate all components.
    *
-   * \param[in] components_to_start vector of component names to start. Default: empty.
-   * \return true if all components are successfully started, false if at least one failed to start.
+   * \param[in] component_names vector of component names to activate. Default: empty.
+   * \return true if all components are successfully activated, false otherwise.
    */
-  bool start_components(const std::vector<std::string> & components_to_start = {""});
+  bool activate_components(const std::vector<std::string> & component_names = {""});
 
-  /// Stops running hardware components.
+  /// Deactivate running hardware components.
   /**
-   * Stop hardware components defined in the list. If empty, stop all components.
+   * Deactivate hardware components defined in the list. If empty, deactivate all components.
    *
-   * \param[in] components_to_stop vector of component names to stop. Default: empty.
-   * \return true if all components are successfully stopped, false if at least one failed to stop.
+   * \param[in] component_names vector of component names to deactivate. Default: empty.
+   * \return true if all components are successfully deactivated, false otherwise.
    */
-  bool stop_components(const std::vector<std::string> & components_to_stop = {""});
+  bool deactivate_components(const std::vector<std::string> & component_names = {""});
 
   /// Reads all loaded hardware components.
   /**

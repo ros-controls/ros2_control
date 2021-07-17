@@ -492,12 +492,12 @@ void generic_system_functional_test(const std::string & urdf, const double offse
   ASSERT_EQ(0.77, j2p_c.get_value());
   ASSERT_EQ(0.88, j2v_c.get_value());
 
-  rm.start_components();
+  rm.activate_components();
   states_map = rm.get_components_states();
   EXPECT_EQ(
     states_map["GenericSystem2dof"].label(), hardware_interface::lifecycle_state_names::ACTIVE);
 
-  rm.stop_components();
+  rm.deactivate_components();
   states_map = rm.get_components_states();
   EXPECT_EQ(
     states_map["GenericSystem2dof"].label(), hardware_interface::lifecycle_state_names::INACTIVE);
