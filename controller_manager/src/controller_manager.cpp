@@ -616,23 +616,6 @@ ControllerManager::add_controller_impl(
       controller.info.name.c_str());
     return nullptr;
   }
-
-  // TESTING use_sim_time matching    
-  const rclcpp::Parameter use_sim_time = this->get_parameter("use_sim_time");  
-  bool ust = use_sim_time.as_bool();
-  if(ust == true){
-    RCLCPP_ERROR(get_logger(), "controller_manager.use_sim_time: True");
-  }else{
-    RCLCPP_ERROR(get_logger(), "controller_manager.use_sim_time: False");
-  }
-  
-  //RCLCPP_ERROR(get_logger(), "controller_manager.use_sim_time: %s", use_sim_time.as_string());
-  
-//  const std::vector<rclcpp::Parameter> params = {use_sim_time};
-  
-//  rclcpp::NodeOptions node_options;
-  
-//  node_options.parameter_overrides(params);
   
   if (controller.c->init(controller.info.name) == controller_interface::return_type::ERROR) {
 
@@ -643,19 +626,11 @@ ControllerManager::add_controller_impl(
       controller.info.name.c_str());
     return nullptr;
   }
-  controller.c->get_node()->set_parameter(use_sim_time);
-    
-  const rclcpp::Parameter use_sim_time2 = controller.c->get_node()->get_parameter("use_sim_time");  
-  bool ust2 = use_sim_time2.as_bool();
-  if(ust2 == true){
-    RCLCPP_ERROR(get_logger(), "controller.use_sim_time: True");
-  }else{
-    RCLCPP_ERROR(get_logger(), "controller.use_sim_time: False");
-  }
   
-  //RCLCPP_ERROR(get_logger(), "controller.use_sim_time: %s", use_sim_time2.as_string());
-  // end of modified code
-  
+  // ensure controller's `use_sim_time` parameter matches controller_manager's
+  const rclcpp::Parameter use_sim_time = this->get_parameter("use_sim_time");  
+  controller.c->get_node()->set_parameter(use_sim_time); 
+
   executor_->add_node(controller.c->get_node());
   to.emplace_back(controller);
 
