@@ -80,6 +80,8 @@ protected:
     hardware_interface::HW_IF_EFFORT
   };
 
+  const size_t POSITION_INTERFACE_INDEX = 0;
+
   struct MimicJoint
   {
     std::size_t joint_index;

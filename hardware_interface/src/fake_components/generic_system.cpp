@@ -205,12 +205,13 @@ std::vector<hardware_interface::CommandInterface> GenericSystem::export_command_
 return_type GenericSystem::read()
 {
   // apply offset to positions only
-  for (size_t j = 0; j < joint_states_[0].size(); ++j) {
-    if (!std::isnan(joint_commands_[0][j])) {
-      joint_states_[0][j] = joint_commands_[0][j] + state_following_offset_;
+  for (size_t j = 0; j < joint_states_[POSITION_INTERFACE_INDEX].size(); ++j) {
+    if (!std::isnan(joint_commands_[POSITION_INTERFACE_INDEX][j])) {
+      joint_states_[POSITION_INTERFACE_INDEX][j] =
+        joint_commands_[POSITION_INTERFACE_INDEX][j] + state_following_offset_;
     }
   }
-  // do loopback on all other interfaces
+  // do loopback on all other interfaces - starts from 1 because 0 index is position interface
   for (size_t i = 1; i < joint_states_.size(); ++i) {
     for (size_t j = 0; j < joint_states_[i].size(); ++j) {
       if (!std::isnan(joint_commands_[i][j])) {
