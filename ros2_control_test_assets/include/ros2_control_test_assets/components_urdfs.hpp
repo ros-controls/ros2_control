@@ -332,7 +332,10 @@ const auto valid_urdf_ros2_control_actuator_only =
     </joint>
     <transmission name="transmission1">
       <plugin>transmission_interface/RotationToLinerTansmission</plugin>
-      <param name="joint_to_actuator">325.949</param>
+      <joint name="joint1" role="joint1">
+        <mechanical_reduction>325.949</mechanical_reduction>
+      </joint>
+      <param name="additional_special_parameter">1337</param>
     </transmission>
   </ros2_control>
 )";
@@ -522,6 +525,48 @@ const auto invalid_urdf2_ros2_control_illegal_size2 =
     </gpio>
   </ros2_control>
 )";
+
+const auto invalid_urdf2_hw_transmission_joint_mismatch =
+  R"(
+  <ros2_control name="ActuatorModularJoint1" type="actuator">
+    <hardware>
+      <plugin>ros2_control_demo_hardware/VelocityActuatorHardware</plugin>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="velocity">
+        <param name="min">-1</param>
+        <param name="max">1</param>
+      </command_interface>
+      <state_interface name="velocity"/>
+    </joint>
+    <transmission name="transmission1">
+      <plugin>transmission_interface/SimpleTransmission</plugin>
+      <joint name="joint31415" role="joint1"/>
+    </transmission>
+  </ros2_control>
+)";
+
+const auto invalid_urdf2_transmission_given_too_many_joints =
+  R"(
+  <ros2_control name="ActuatorModularJoint1" type="actuator">
+    <hardware>
+      <plugin>ros2_control_demo_hardware/VelocityActuatorHardware</plugin>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="velocity">
+        <param name="min">-1</param>
+        <param name="max">1</param>
+      </command_interface>
+      <state_interface name="velocity"/>
+    </joint>
+    <transmission name="transmission1">
+      <plugin>transmission_interface/SimpleTransmission</plugin>
+      <joint name="joint1" role="joint1"/>
+      <joint name="joint2" role="joint2"/>
+    </transmission>
+  </ros2_control>
+)";
+
 }  // namespace ros2_control_test_assets
 
 #endif  // ROS2_CONTROL_TEST_ASSETS__COMPONENTS_URDFS_HPP_

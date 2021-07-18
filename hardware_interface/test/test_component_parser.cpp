@@ -334,7 +334,9 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_modular_robot
   EXPECT_EQ(hardware_info.transmissions[0].type, "transmission_interface/SimpleTansmission");
   ASSERT_THAT(hardware_info.transmissions[0].joints, SizeIs(1));
   EXPECT_THAT(hardware_info.transmissions[0].joints[0].name, "joint1");
-  EXPECT_THAT(hardware_info.transmissions[0].joints[0].mechanical_reduction, DoubleNear(1024.0 / M_PI, 0.01));
+  EXPECT_THAT(
+    hardware_info.transmissions[0].joints[0].mechanical_reduction,
+    DoubleNear(1024.0 / M_PI, 0.01));
   ASSERT_THAT(hardware_info.transmissions[0].actuators, SizeIs(1));
   EXPECT_THAT(hardware_info.transmissions[0].actuators[0].name, "actuator1");
 
@@ -494,12 +496,25 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_only)
   ASSERT_THAT(hardware_info.joints[0].state_interfaces, SizeIs(1));
   EXPECT_EQ(hardware_info.joints[0].state_interfaces[0].name, HW_IF_VELOCITY);
 
-
   ASSERT_THAT(hardware_info.transmissions, SizeIs(1));
-  EXPECT_EQ(hardware_info.transmissions[0].name, "transmission1");
-  EXPECT_EQ(hardware_info.transmissions[0].type, "transmission_interface/RotationToLinerTansmission");
-  ASSERT_THAT(hardware_info.transmissions[0].parameters, SizeIs(1));
-  EXPECT_EQ(hardware_info.transmissions[0].parameters.at("joint_to_actuator"), "325.949");
+  const auto transmission = hardware_info.transmissions[0];
+  EXPECT_EQ(transmission.name, "transmission1");
+  EXPECT_EQ(transmission.type, "transmission_interface/RotationToLinerTansmission");
+  EXPECT_THAT(transmission.joints, SizeIs(1));
+  const auto joint = transmission.joints[0];
+  EXPECT_EQ(joint.name, "joint1");
+  EXPECT_EQ(joint.role, "joint1");
+  EXPECT_THAT(joint.interfaces, ElementsAre("velocity"));
+  EXPECT_THAT(joint.mechanical_reduction, DoubleEq(325.949));
+  EXPECT_THAT(joint.offset, DoubleEq(0.0));
+  EXPECT_THAT(transmission.actuators, SizeIs(1));
+  const auto actuator = transmission.actuators[0];
+  EXPECT_EQ(actuator.name, "actuator1");
+  EXPECT_EQ(actuator.role, "actuator1");
+  EXPECT_THAT(actuator.interfaces, ContainerEq(joint.interfaces));
+  EXPECT_THAT(actuator.offset, DoubleEq(0.0));
+  ASSERT_THAT(transmission.parameters, SizeIs(1));
+  EXPECT_EQ(transmission.parameters.at("additional_special_parameter"), "1337");
 }
 
 TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_robot_with_gpio)
@@ -606,6 +621,24 @@ TEST_F(TestComponentParser, noninteger_size_throws_error)
   std::string urdf_to_test =
     std::string(ros2_control_test_assets::urdf_head) +
     ros2_control_test_assets::invalid_urdf2_ros2_control_illegal_size2 +
+    ros2_control_test_assets::urdf_tail;
+  ASSERT_THROW(parse_control_resources_from_urdf(urdf_to_test), std::runtime_error);
+}
+
+TEST_F(TestComponentParser, transmission_and_component_joint_mismatch_throws_error)
+{
+  std::string urdf_to_test =
+    std::string(ros2_control_test_assets::urdf_head) +
+    ros2_control_test_assets::invalid_urdf2_hw_transmission_joint_mismatch +
+    ros2_control_test_assets::urdf_tail;
+  ASSERT_THROW(parse_control_resources_from_urdf(urdf_to_test), std::runtime_error);
+}
+
+TEST_F(TestComponentParser, transmission_given_too_many_joints_throws_error)
+{
+  std::string urdf_to_test =
+    std::string(ros2_control_test_assets::urdf_head) +
+    ros2_control_test_assets::invalid_urdf2_transmission_given_too_many_joints +
     ros2_control_test_assets::urdf_tail;
   ASSERT_THROW(parse_control_resources_from_urdf(urdf_to_test), std::runtime_error);
 }
