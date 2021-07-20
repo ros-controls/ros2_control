@@ -415,7 +415,7 @@ void auto_fill_transmission_interfaces(HardwareInfo & hardware)
 {
   for (auto & transmission : hardware.transmissions) {
     // fill joint interfaces for actuator from joints declared for this component
-    for (auto & joint: transmission.joints) {
+    for (auto & joint : transmission.joints) {
       auto found_it = std::find_if(
         hardware.joints.cbegin(), hardware.joints.cend(), [&joint](const auto & joint_info) {
           return joint.name == joint_info.name;
@@ -423,8 +423,9 @@ void auto_fill_transmission_interfaces(HardwareInfo & hardware)
 
       if (found_it == hardware.joints.cend()) {
         throw std::runtime_error(
-                "Error while parsing '" + hardware.name + "'. Transmission '" + transmission.name + "' declared joint '" + joint.name + "' is not available in component '" + hardware.name +
-                "'.");
+                "Error while parsing '" + hardware.name + "'. Transmission '" +
+                transmission.name + "' declared joint '" +
+                joint.name + "' is not available in component '" + hardware.name + "'.");
       }
 
       //  copy interface names from their definitions in the component
