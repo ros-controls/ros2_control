@@ -43,7 +43,7 @@ ControllerInterface::init(const std::string & controller_name, rclcpp::NodeOptio
     controller_name,
     node_options.allow_undeclared_parameters(true));
   lifecycle_state_ = rclcpp_lifecycle::State(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, "unconfigured");
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state_names::UNCONFIGURED);
   return return_type::OK;
 }
 
