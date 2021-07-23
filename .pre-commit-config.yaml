@@ -129,6 +129,4 @@ repos:
     hooks:
       - id: codespell
         args: ['--write-changes']
-        exclude: 
-          - CHANGELOG\.rst$
-          - \.(svg|pyc)$
+        exclude: CHANGELOG\.rst|\.(svg|pyc)$
