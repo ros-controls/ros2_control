@@ -51,10 +51,10 @@ public:
 
   /// Exports all state interfaces for this sensor.
   /**
-   * The state interfaces have to be created and transfered according
+   * The state interfaces have to be created and transferred according
    * to the sensor info passed in for the configuration.
    *
-   * Note the ownership over the state interfaces is transfered to the caller.
+   * Note the ownership over the state interfaces is transferred to the caller.
    *
    * \return std::vector<StateInterface> vector of state interfaces
    */

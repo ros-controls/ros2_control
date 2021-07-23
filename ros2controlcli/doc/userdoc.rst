@@ -45,9 +45,9 @@ list_controllers
 Example output:
 
 .. code-block:: console
-    
+
     $ ros2 control list_controllers
-    test_controller_name[test_controller]    active 
+    test_controller_name[test_controller]    active
 
 
 list_controller_types
@@ -73,7 +73,7 @@ Example output:
 
 .. code-block:: console
 
-    $ ros2 control list_controller_types 
+    $ ros2 control list_controller_types
     diff_drive_controller/DiffDriveController                              controller_interface::ControllerInterface
     joint_state_controller/JointStateController                            controller_interface::ControllerInterface
     joint_trajectory_controller/JointTrajectoryController                  controller_interface::ControllerInterface

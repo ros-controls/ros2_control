@@ -52,10 +52,10 @@ public:
 
   /// Exports all state interfaces for this system.
   /**
-   * The state interfaces have to be created and transfered according
+   * The state interfaces have to be created and transferred according
    * to the system info passed in for the configuration.
    *
-   * Note the ownership over the state interfaces is transfered to the caller.
+   * Note the ownership over the state interfaces is transferred to the caller.
    *
    *
    * \return vector of state interfaces
@@ -65,10 +65,10 @@ public:
 
   /// Exports all command interfaces for this system.
   /**
-   * The command interfaces have to be created and transfered according
+   * The command interfaces have to be created and transferred according
    * to the system info passed in for the configuration.
    *
-   * Note the ownership over the state interfaces is transfered to the caller.
+   * Note the ownership over the state interfaces is transferred to the caller.
    *
    * \return vector of command interfaces
    */
