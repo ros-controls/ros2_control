@@ -3,7 +3,7 @@
 Command Line Interface
 ======================
 
-The following commands support interacting with the `controller_manager` from the command line. They are available through the standard ROS2 CLI framework.
+The following commands support interacting with the ``controller_manager`` from the command line. They are available through the standard ROS2 CLI framework.
 
 Currently supported commands are
 
@@ -205,6 +205,7 @@ switch_controllers
     Name of the controller manager ROS node
     --include-hidden-nodes
                           Consider hidden nodes as well
+
 unload_controller
 -----------------
 
