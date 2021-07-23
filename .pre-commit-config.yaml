@@ -1,0 +1,132 @@
+
+# To use:
+#
+#     pre-commit run -a
+#
+# Or:
+#
+#     pre-commit install  # (runs every time you commit in git)
+#
+# To update this file:
+#
+#     pre-commit autoupdate
+#
+# See https://github.com/pre-commit/pre-commit
+
+repos:
+  # Standard hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v3.4.0
+    hooks:
+      - id: check-added-large-files
+      - id: check-ast
+      - id: check-case-conflict
+      - id: check-docstring-first
+      - id: check-merge-conflict
+      - id: check-symlinks
+      - id: check-xml
+      - id: check-yaml
+      - id: debug-statements
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+      - id: trailing-whitespace
+      - id: fix-byte-order-marker
+
+  # Python hooks
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v2.12.0
+    hooks:
+    -   id: pyupgrade
+        args: [--py36-plus]
+
+  # PEP 257
+  - repo: https://github.com/FalconSocial/pre-commit-mirrors-pep257
+    rev: v0.3.3
+    hooks:
+    - id: pep257
+      args: ["--ignore=D100,D101,D102,D103,D104,D105,D106,D107,D203,D212,D404"]
+
+  - repo: https://github.com/pycqa/flake8
+    rev: 3.9.0
+    hooks:
+    - id: flake8
+      args: ["--ignore=E501"]
+
+  # CPP hooks
+  - repo: local
+    hooks:
+      - id: ament_uncrustify
+        name: ament_uncrustify
+        description: Static code analysis of C/C++ files.
+        stages: [commit]
+        entry: ament_cppcheck
+        language: system
+        files: \.(h\+\+|h|hh|hxx|hpp|cuh|c|cc|cpp|cu|c\+\+|cxx|tpp|txx)$
+
+  - repo: local
+    hooks:
+      - id: ament_cppcheck
+        name: ament_cppcheck
+        description: Static code analysis of C/C++ files.
+        stages: [commit]
+        entry: ament_cppcheck
+        language: system
+        files: \.(h\+\+|h|hh|hxx|hpp|cuh|c|cc|cpp|cu|c\+\+|cxx|tpp|txx)$
+
+  # Maybe use https://github.com/cpplint/cpplint instead
+  - repo: local
+    hooks:
+      - id: ament_cpplint
+        name: ament_cpplint
+        description: Static code analysis of C/C++ files.
+        stages: [commit]
+        entry: ament_cpplint
+        language: system
+        files: \.(h\+\+|h|hh|hxx|hpp|cuh|c|cc|cpp|cu|c\+\+|cxx|tpp|txx)$
+        args: ["--linelength=100", "--filter=-whitespace/newline"]
+
+  # Cmake hooks
+  - repo: local
+    hooks:
+      - id: ament_lint_cmake
+        name: ament_lint_cmake
+        description: Check format of CMakeLists.txt files.
+        stages: [commit]
+        entry: ament_lint_cmake
+        language: system
+        files: CMakeLists\.txt$
+
+  # Copyright
+  - repo: local
+    hooks:
+      - id: ament_copyright
+        name: ament_copyright
+        description: Check if copyright notice is available in all files.
+        stages: [commit]
+        entry: ament_copyright
+        language: system
+
+  # Docs - RestructuredText hooks
+  - repo: https://github.com/PyCQA/doc8
+    rev: 0.9.0a1
+    hooks:
+      - id: doc8
+        args: ['--max-line-length=100', '--ignore=D001']
+        exclude: CHANGELOG\.rst$
+
+  - repo: https://github.com/pre-commit/pygrep-hooks
+    rev: v1.8.0
+    hooks:
+      - id: rst-backticks
+        exclude: CHANGELOG\.rst$
+      - id: rst-directive-colons
+      - id: rst-inline-touching-normal
+
+  # Spellcheck in comments and docs
+  # skipping of *.svg files is not working...
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.0.0
+    hooks:
+      - id: codespell
+        args: ['--write-changes']
+        exclude: \.(svg|pyc)$
