@@ -25,6 +25,10 @@
 
 using ::testing::_;
 using ::testing::Return;
+using test_controller::TEST_CONTROLLER_CLASS_NAME;
+const auto controller_name1 = "test_controller1";
+const auto controller_name2 = "test_controller2";
+
 
 class TestLoadController : public ControllerManagerFixture
 {};
@@ -47,8 +51,8 @@ TEST_F(TestLoadController, load_and_configure_one_known_controller)
 {
   ASSERT_NE(
     cm_->load_controller(
-      "test_controller_01",
-      test_controller::TEST_CONTROLLER_CLASS_NAME),
+      controller_name1,
+      TEST_CONTROLLER_CLASS_NAME),
     nullptr);
   EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
 
@@ -59,7 +63,7 @@ TEST_F(TestLoadController, load_and_configure_one_known_controller)
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
     abstract_test_controller.c->get_current_state().id());
 
-  cm_->configure_controller("test_controller_01");
+  cm_->configure_controller(controller_name1);
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
     abstract_test_controller.c->get_current_state().id());
@@ -67,41 +71,37 @@ TEST_F(TestLoadController, load_and_configure_one_known_controller)
 
 TEST_F(TestLoadController, load_and_configure_two_known_controllers)
 {
-  std::string controller_type = test_controller::TEST_CONTROLLER_CLASS_NAME;
-
   // load the controller with name1
-  std::string controller_name1 = "test_controller1";
-  ASSERT_NE(cm_->load_controller(controller_name1, controller_type), nullptr);
+  ASSERT_NE(cm_->load_controller(controller_name1, TEST_CONTROLLER_CLASS_NAME), nullptr);
   EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
   controller_manager::ControllerSpec abstract_test_controller1 =
     cm_->get_loaded_controllers()[0];
   EXPECT_STREQ(
-    controller_name1.c_str(), abstract_test_controller1.c->get_node()->get_name());
+    controller_name1, abstract_test_controller1.c->get_node()->get_name());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
     abstract_test_controller1.c->get_current_state().id());
 
   // load the same controller again with a different name
-  std::string controller_name2 = "test_controller2";
-  ASSERT_NE(cm_->load_controller(controller_name2, controller_type), nullptr);
+  ASSERT_NE(cm_->load_controller(controller_name2, TEST_CONTROLLER_CLASS_NAME), nullptr);
   EXPECT_EQ(2u, cm_->get_loaded_controllers().size());
   controller_manager::ControllerSpec abstract_test_controller2 =
     cm_->get_loaded_controllers()[1];
   EXPECT_STREQ(
-    controller_name2.c_str(), abstract_test_controller2.c->get_node()->get_name());
+    controller_name2, abstract_test_controller2.c->get_node()->get_name());
   EXPECT_STREQ(
-    controller_name2.c_str(), abstract_test_controller2.info.name.c_str());
+    controller_name2, abstract_test_controller2.info.name.c_str());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
     abstract_test_controller2.c->get_current_state().id());
 
   // Configure controllers
-  cm_->configure_controller("test_controller1");
+  cm_->configure_controller(controller_name1);
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
     abstract_test_controller1.c->get_current_state().id());
 
-  cm_->configure_controller("test_controller2");
+  cm_->configure_controller(controller_name2);
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
     abstract_test_controller2.c->get_current_state().id());
@@ -109,14 +109,11 @@ TEST_F(TestLoadController, load_and_configure_two_known_controllers)
 
 TEST_F(TestLoadController, configure_controller)
 {
-  std::string controller_type = test_controller::TEST_CONTROLLER_CLASS_NAME;
-  std::string controller_name1 = "test_controller1";
-
   // try configure not existing controller
   EXPECT_EQ(cm_->configure_controller(controller_name1), controller_interface::return_type::ERROR);
 
   // load the controller with name1
-  ASSERT_NE(cm_->load_controller(controller_name1, controller_type), nullptr);
+  ASSERT_NE(cm_->load_controller(controller_name1, TEST_CONTROLLER_CLASS_NAME), nullptr);
   EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
   controller_manager::ControllerSpec abstract_test_controller1 =
     cm_->get_loaded_controllers()[0];
@@ -216,11 +213,8 @@ TEST_F(TestLoadController, configure_controller)
 
 TEST_F(TestLoadController, switch_controller_empty)
 {
-  std::string controller_type = test_controller::TEST_CONTROLLER_CLASS_NAME;
-
   // load the controller with name1
-  std::string controller_name1 = "test_controller1";
-  ASSERT_NE(cm_->load_controller(controller_name1, controller_type), nullptr);
+  ASSERT_NE(cm_->load_controller(controller_name1, TEST_CONTROLLER_CLASS_NAME), nullptr);
   EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
 
   const auto UNSPECIFIED = 0;
@@ -310,11 +304,8 @@ TEST_F(TestLoadController, switch_controller_empty)
 
 TEST_F(TestLoadController, switch_controller)
 {
-  std::string controller_type = test_controller::TEST_CONTROLLER_CLASS_NAME;
-
   // load the controller with name1
-  std::string controller_name1 = "test_controller1";
-  ASSERT_NE(cm_->load_controller(controller_name1, controller_type), nullptr);
+  ASSERT_NE(cm_->load_controller(controller_name1, TEST_CONTROLLER_CLASS_NAME), nullptr);
   EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
   controller_manager::ControllerSpec abstract_test_controller1 =
     cm_->get_loaded_controllers()[0];
@@ -447,13 +438,9 @@ TEST_F(TestLoadController, switch_controller)
 
 TEST_F(TestLoadController, switch_multiple_controllers)
 {
-  std::string controller_type = test_controller::TEST_CONTROLLER_CLASS_NAME;
-
   // load the controller with name1
-  std::string controller_name1 = "test_controller1";
-  std::string controller_name2 = "test_controller2";
-  ASSERT_NE(cm_->load_controller(controller_name1, controller_type), nullptr);
-  ASSERT_NE(cm_->load_controller(controller_name2, controller_type), nullptr);
+  ASSERT_NE(cm_->load_controller(controller_name1, TEST_CONTROLLER_CLASS_NAME), nullptr);
+  ASSERT_NE(cm_->load_controller(controller_name2, TEST_CONTROLLER_CLASS_NAME), nullptr);
   EXPECT_EQ(2u, cm_->get_loaded_controllers().size());
   controller_manager::ControllerSpec abstract_test_controller1 =
     cm_->get_loaded_controllers()[0];
