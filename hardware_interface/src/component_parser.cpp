@@ -18,7 +18,6 @@
 #include <unordered_map>
 #include <vector>
 #include <regex>
-#include <iostream>
 
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/component_parser.hpp"
@@ -134,8 +133,6 @@ double get_parameter_value_or(
       if (!tag_text) {
         throw std::runtime_error("text not specified in the " + std::string(tag_name) + " tag");
       }
-      std::cerr << "SUCCESSSSSSSSSSSss " << tag_name << " and param name was " << parameter_name <<
-        " and value was " << tag_text << std::endl;
       return std::stod(tag_text);
     }
 
