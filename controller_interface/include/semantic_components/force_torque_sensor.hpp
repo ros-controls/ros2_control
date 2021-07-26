@@ -44,9 +44,9 @@ public:
     // Set all interfaces existing
     std::fill(existing_axes_.begin(), existing_axes_.end(), true);
 
-    // Set default force and torque values to NaN
-    std::fill(forces_.begin(), forces_.end(), std::numeric_limits<double>::quiet_NaN());
-    std::fill(torques_.begin(), torques_.end(), std::numeric_limits<double>::quiet_NaN());
+    // Set default force and torque values to 0.0 (as Rviz doesn't work with NaN)
+    std::fill(forces_.begin(), forces_.end(), 0.0);
+    std::fill(torques_.begin(), torques_.end(), 0.0);
   }
 
   /// Constructor for 6D FTS with custom interface names.
@@ -83,9 +83,9 @@ public:
     check_and_add_interface(interface_torque_y, 4);
     check_and_add_interface(interface_torque_z, 5);
 
-    // Set default force and torque values to NaN
-    std::fill(forces_.begin(), forces_.end(), std::numeric_limits<double>::quiet_NaN());
-    std::fill(torques_.begin(), torques_.end(), std::numeric_limits<double>::quiet_NaN());
+    // Set default force and torque values to 0.0 (as Rviz doesn't work with NaN)
+    std::fill(forces_.begin(), forces_.end(), 0.0);
+    std::fill(torques_.begin(), torques_.end(), 0.0);
   }
 
   virtual ~ForceTorqueSensor() = default;
