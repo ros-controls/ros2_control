@@ -3,7 +3,7 @@
 Command Line Interface
 ======================
 
-The following commands support interacting with the `controller_manager` from the command line. They are available through the standard ROS2 CLI framework.
+The following commands support interacting with the ``controller_manager`` from the command line. They are available through the standard ROS2 CLI framework.
 
 Currently supported commands are
 
@@ -45,9 +45,9 @@ list_controllers
 Example output:
 
 .. code-block:: console
-    
+
     $ ros2 control list_controllers
-    test_controller_name[test_controller]    active 
+    test_controller_name[test_controller]    active
 
 
 list_controller_types
@@ -73,7 +73,7 @@ Example output:
 
 .. code-block:: console
 
-    $ ros2 control list_controller_types 
+    $ ros2 control list_controller_types
     diff_drive_controller/DiffDriveController                              controller_interface::ControllerInterface
     joint_state_controller/JointStateController                            controller_interface::ControllerInterface
     joint_trajectory_controller/JointTrajectoryController                  controller_interface::ControllerInterface
@@ -205,6 +205,7 @@ switch_controllers
     Name of the controller manager ROS node
     --include-hidden-nodes
                           Consider hidden nodes as well
+
 unload_controller
 -----------------
 

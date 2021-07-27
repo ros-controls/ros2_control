@@ -26,7 +26,7 @@
 #include "geometry_msgs/msg/wrench.hpp"
 #include "semantic_components/semantic_component_interface.hpp"
 
-// implementing and friending so we can access member varibles
+// implementing and friending so we can access member variables
 class TestableSemanticComponentInterface : public semantic_components::
   SemanticComponentInterface<geometry_msgs::msg::Wrench>
 {

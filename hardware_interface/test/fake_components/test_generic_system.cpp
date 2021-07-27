@@ -398,7 +398,7 @@ void generic_system_functional_test(std::string urdf, double offset = 0)
   ASSERT_EQ(0.33, j2p_c.get_value());
   ASSERT_EQ(0.44, j2v_c.get_value());
 
-  // write() does not chnage values
+  // write() does not change values
   rm.write();
   ASSERT_EQ(3.45, j1p_s.get_value());
   ASSERT_EQ(0.0, j1v_s.get_value());
@@ -513,7 +513,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_other_interfaces) {
   ASSERT_EQ(0.33, j2p_c.get_value());
   ASSERT_EQ(0.99, vo_c.get_value());
 
-  // write() does not chnage values
+  // write() does not change values
   rm.write();
   ASSERT_EQ(1.55, j1p_s.get_value());
   ASSERT_EQ(0.1, j1v_s.get_value());
@@ -609,7 +609,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_sensor) {
   ASSERT_EQ(0.11, j1p_c.get_value());
   ASSERT_EQ(0.33, j2p_c.get_value());
 
-  // write() does not chnage values
+  // write() does not change values
   rm.write();
   ASSERT_EQ(0.0, j1p_s.get_value());
   ASSERT_EQ(0.0, j1v_s.get_value());
@@ -721,7 +721,7 @@ void test_generic_system_with_fake_sensor_commands(std::string urdf)
   ASSERT_EQ(3.33, stx_c.get_value());
   ASSERT_EQ(4.44, sty_c.get_value());
 
-  // write() does not chnage values
+  // write() does not change values
   rm.write();
   ASSERT_EQ(0.0, j1p_s.get_value());
   ASSERT_EQ(0.0, j1v_s.get_value());

@@ -27,7 +27,7 @@
 
 #include "semantic_components/force_torque_sensor.hpp"
 
-// implementing and friending so we can access member varibles
+// implementing and friending so we can access member variables
 class TestableForceTorqueSensor : public semantic_components::
   ForceTorqueSensor
 {

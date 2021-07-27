@@ -270,7 +270,7 @@ void GenericSystem::initialize_storage_vectors(
   std::vector<std::vector<double>> & states,
   const std::vector<std::string> & interfaces)
 {
-  // Initialize storage for all joints, regardless of their existance
+  // Initialize storage for all joints, regardless of their existence
   commands.resize(interfaces.size());
   states.resize(interfaces.size());
   for (auto i = 0u; i < interfaces.size(); i++) {

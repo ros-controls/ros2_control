@@ -296,7 +296,7 @@ const auto hardware_resources_command_modes =
       <state_interface name="position"/>
       <state_interface name="velocity"/>
     </joint>
-  </ros2_control> 
+  </ros2_control>
 )";
 const auto command_mode_urdf = std::string(ros2_control_test_assets::urdf_head) +
   std::string(hardware_resources_command_modes) + std::string(ros2_control_test_assets::urdf_tail);
