@@ -49,62 +49,52 @@ TEST_F(TestLoadController, load_controller_failed_init)
 
 TEST_F(TestLoadController, load_and_configure_one_known_controller)
 {
-  ASSERT_NE(
-    cm_->load_controller(
-      controller_name1,
-      TEST_CONTROLLER_CLASS_NAME),
-    nullptr);
+  auto controller_if = cm_->load_controller(controller_name1, TEST_CONTROLLER_CLASS_NAME);
+  ASSERT_NE(controller_if, nullptr);
   EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
-
-  controller_manager::ControllerSpec abstract_test_controller =
-    cm_->get_loaded_controllers()[0];
 
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-    abstract_test_controller.c->get_current_state().id());
+    controller_if->get_current_state().id());
 
   cm_->configure_controller(controller_name1);
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    abstract_test_controller.c->get_current_state().id());
+    controller_if->get_current_state().id());
 }
 
 TEST_F(TestLoadController, load_and_configure_two_known_controllers)
 {
   // load the controller with name1
-  ASSERT_NE(cm_->load_controller(controller_name1, TEST_CONTROLLER_CLASS_NAME), nullptr);
+  auto controller_if1 = cm_->load_controller(controller_name1, TEST_CONTROLLER_CLASS_NAME);
+  ASSERT_NE(controller_if1, nullptr);
   EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
-  controller_manager::ControllerSpec abstract_test_controller1 =
-    cm_->get_loaded_controllers()[0];
   EXPECT_STREQ(
-    controller_name1, abstract_test_controller1.c->get_node()->get_name());
+    controller_name1, controller_if1->get_node()->get_name());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-    abstract_test_controller1.c->get_current_state().id());
+    controller_if1->get_current_state().id());
 
   // load the same controller again with a different name
-  ASSERT_NE(cm_->load_controller(controller_name2, TEST_CONTROLLER_CLASS_NAME), nullptr);
+  auto controller_if2 = cm_->load_controller(controller_name2, TEST_CONTROLLER_CLASS_NAME);
+  ASSERT_NE(controller_if2, nullptr);
   EXPECT_EQ(2u, cm_->get_loaded_controllers().size());
-  controller_manager::ControllerSpec abstract_test_controller2 =
-    cm_->get_loaded_controllers()[1];
   EXPECT_STREQ(
-    controller_name2, abstract_test_controller2.c->get_node()->get_name());
-  EXPECT_STREQ(
-    controller_name2, abstract_test_controller2.info.name.c_str());
+    controller_name2, controller_if2->get_node()->get_name());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-    abstract_test_controller2.c->get_current_state().id());
+    controller_if2->get_current_state().id());
 
   // Configure controllers
   cm_->configure_controller(controller_name1);
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    abstract_test_controller1.c->get_current_state().id());
+    controller_if1->get_current_state().id());
 
   cm_->configure_controller(controller_name2);
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    abstract_test_controller2.c->get_current_state().id());
+    controller_if2->get_current_state().id());
 }
 
 
@@ -117,26 +107,24 @@ TEST_F(TestLoadController, configuring_non_loaded_controller_fails)
 TEST_F(TestLoadController, can_configure_loaded_controller)
 {
   // load the controller with name1
-  ASSERT_NE(cm_->load_controller(controller_name1, TEST_CONTROLLER_CLASS_NAME), nullptr);
-  EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
-  controller_manager::ControllerSpec abstract_test_controller1 =
-    cm_->get_loaded_controllers()[0];
+  auto controller_if = cm_->load_controller(controller_name1, TEST_CONTROLLER_CLASS_NAME);
+  ASSERT_NE(controller_if, nullptr);
 
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-    abstract_test_controller1.c->get_current_state().id());
+    controller_if->get_current_state().id());
 
-  EXPECT_EQ(
-    cm_->configure_controller(controller_name1), controller_interface::return_type::OK);
+  EXPECT_EQ(cm_->configure_controller(controller_name1), controller_interface::return_type::OK);
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    abstract_test_controller1.c->get_current_state().id());
+    controller_if->get_current_state().id());
 }
 
 TEST_F(TestLoadController, can_start_configured_controller)
 {
   // load and start controller with name1
-  ASSERT_NE(cm_->load_controller(controller_name1, TEST_CONTROLLER_CLASS_NAME), nullptr);
+  auto controller_if = cm_->load_controller(controller_name1, TEST_CONTROLLER_CLASS_NAME);
+  ASSERT_NE(controller_if, nullptr);
   EXPECT_EQ(
     cm_->configure_controller(controller_name1), controller_interface::return_type::OK);
 
@@ -164,18 +152,17 @@ TEST_F(TestLoadController, can_start_configured_controller)
       switch_future.get()
     );
 
-    controller_manager::ControllerSpec abstract_test_controller1 =
-      cm_->get_loaded_controllers()[0];
     ASSERT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
-      abstract_test_controller1.c->get_current_state().id());
+      controller_if->get_current_state().id());
   }
 }
 
 TEST_F(TestLoadController, can_not_configure_active_controller)
 {
   // load and start controller with name1
-  ASSERT_NE(cm_->load_controller(controller_name1, TEST_CONTROLLER_CLASS_NAME), nullptr);
+  auto controller_if = cm_->load_controller(controller_name1, TEST_CONTROLLER_CLASS_NAME);
+  ASSERT_NE(controller_if, nullptr);
   EXPECT_EQ(
     cm_->configure_controller(controller_name1), controller_interface::return_type::OK);
 
@@ -200,20 +187,19 @@ TEST_F(TestLoadController, can_not_configure_active_controller)
 
   // Can not configure active controller
   EXPECT_EQ(cm_->configure_controller(controller_name1), controller_interface::return_type::ERROR);
-  controller_manager::ControllerSpec abstract_test_controller1 =
-    cm_->get_loaded_controllers()[0];
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
-    abstract_test_controller1.c->get_current_state().id());
+    controller_if->get_current_state().id());
 }
 
 TEST_F(TestLoadController, can_stop_active_controller)
 {
+  auto controller_if = cm_->load_controller(controller_name1, TEST_CONTROLLER_CLASS_NAME);
+  ASSERT_NE(controller_if, nullptr);
+  EXPECT_EQ(
+    cm_->configure_controller(controller_name1), controller_interface::return_type::OK);
   // load and start controller with name1
   {
-    ASSERT_NE(cm_->load_controller(controller_name1, TEST_CONTROLLER_CLASS_NAME), nullptr);
-    EXPECT_EQ(
-      cm_->configure_controller(controller_name1), controller_interface::return_type::OK);
 
     auto switch_future = std::async(
       std::launch::async,
@@ -227,14 +213,11 @@ TEST_F(TestLoadController, can_stop_active_controller)
       "switch_controller should be blocking until next update cycle";
     ControllerManagerRunner cm_runner(this);
     EXPECT_EQ(
-      controller_interface::return_type::OK,
-      switch_future.get()
+      controller_interface::return_type::OK, switch_future.get()
     );
   }
   // Stop controller
-  RCLCPP_INFO(
-    cm_->get_logger(),
-    "Stopping started controller");
+  RCLCPP_INFO(cm_->get_logger(), "Stopping started controller");
   auto switch_future = std::async(
     std::launch::async,
     &controller_manager::ControllerManager::switch_controller, cm_,
@@ -246,26 +229,21 @@ TEST_F(TestLoadController, can_stop_active_controller)
     switch_future.wait_for(std::chrono::milliseconds(100))) <<
     "switch_controller should be blocking until next update cycle";
   ControllerManagerRunner cm_runner(this);
-  EXPECT_EQ(
-    controller_interface::return_type::OK,
-    switch_future.get()
-  );
+  EXPECT_EQ(controller_interface::return_type::OK, switch_future.get());
 
-  controller_manager::ControllerSpec abstract_test_controller1 =
-    cm_->get_loaded_controllers()[0];
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    abstract_test_controller1.c->get_current_state().id());
+    controller_if->get_current_state().id());
 }
 
 TEST_F(TestLoadController, inactive_controller_cannot_be_cleaned_up)
 {
+  auto controller_if = cm_->load_controller(controller_name1, TEST_CONTROLLER_CLASS_NAME);
+  ASSERT_NE(controller_if, nullptr);
+  EXPECT_EQ(
+    cm_->configure_controller(controller_name1), controller_interface::return_type::OK);
   // load and start controller with name1
   {
-    ASSERT_NE(cm_->load_controller(controller_name1, TEST_CONTROLLER_CLASS_NAME), nullptr);
-    EXPECT_EQ(
-      cm_->configure_controller(controller_name1), controller_interface::return_type::OK);
-
     auto switch_future = std::async(
       std::launch::async,
       &controller_manager::ControllerManager::switch_controller, cm_,
@@ -299,14 +277,12 @@ TEST_F(TestLoadController, inactive_controller_cannot_be_cleaned_up)
     switch_future.get()
   );
 
-  controller_manager::ControllerSpec abstract_test_controller1 =
-    cm_->get_loaded_controllers()[0];
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    abstract_test_controller1.c->get_current_state().id());
+    controller_if->get_current_state().id());
 
   std::shared_ptr<test_controller::TestController> test_controller =
-    std::dynamic_pointer_cast<test_controller::TestController>(abstract_test_controller1.c);
+    std::dynamic_pointer_cast<test_controller::TestController>(controller_if);
   size_t cleanup_calls = 0;
   test_controller->cleanup_calls = &cleanup_calls;
   // Configure from inactive state: controller can no be cleaned-up
@@ -314,18 +290,19 @@ TEST_F(TestLoadController, inactive_controller_cannot_be_cleaned_up)
   EXPECT_EQ(cm_->configure_controller(controller_name1), controller_interface::return_type::ERROR);
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    abstract_test_controller1.c->get_current_state().id());
+    controller_if->get_current_state().id());
   EXPECT_EQ(0u, cleanup_calls);
 }
 
 TEST_F(TestLoadController, inactive_controller_cannot_be_configured)
 {
+  auto controller_if = cm_->load_controller(controller_name1, TEST_CONTROLLER_CLASS_NAME);
+  ASSERT_NE(controller_if, nullptr);
+  EXPECT_EQ(
+    cm_->configure_controller(controller_name1), controller_interface::return_type::OK);
+
   // load and start controller with name1
   {
-    ASSERT_NE(cm_->load_controller(controller_name1, TEST_CONTROLLER_CLASS_NAME), nullptr);
-    EXPECT_EQ(
-      cm_->configure_controller(controller_name1), controller_interface::return_type::OK);
-
     auto switch_future = std::async(
       std::launch::async,
       &controller_manager::ControllerManager::switch_controller, cm_,
@@ -359,23 +336,20 @@ TEST_F(TestLoadController, inactive_controller_cannot_be_configured)
     switch_future.get()
   );
 
-  controller_manager::ControllerSpec abstract_test_controller1 =
-    cm_->get_loaded_controllers()[0];
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    abstract_test_controller1.c->get_current_state().id());
+    controller_if->get_current_state().id());
 
   std::shared_ptr<test_controller::TestController> test_controller =
-    std::dynamic_pointer_cast<test_controller::TestController>(abstract_test_controller1.c);
+    std::dynamic_pointer_cast<test_controller::TestController>(controller_if);
   size_t cleanup_calls = 0;
   test_controller->cleanup_calls = &cleanup_calls;
   // Configure from inactive state
   test_controller->simulate_cleanup_failure = false;
-  EXPECT_EQ(
-    cm_->configure_controller(controller_name1), controller_interface::return_type::OK);
+  EXPECT_EQ(cm_->configure_controller(controller_name1), controller_interface::return_type::OK);
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    abstract_test_controller1.c->get_current_state().id());
+    controller_if->get_current_state().id());
   EXPECT_EQ(1u, cleanup_calls);
 }
 
