@@ -4,7 +4,7 @@ Fake Components
 ----------------
 Fake components are trivial "simulations" of the hardware components, i.e., System, Sensor, and Actuator.
 They provide ideal behavior by mirroring commands to their states.
-The implement corresponding hardware interface can be laded instead of real hardware for offline testing of ros2_control framework.
+The corresponding hardware interface can be added instead of real hardware for offline testing of ros2_control framework.
 The main advantage is that you can test all the "piping" inside the framework without having access to the hardware.
 This means that you can test your controllers, broadcaster, launch files, and even integrations with, e.g., MoveIt.
 The main intention is to reduce debugging time on the physical hardware and boost your development.
