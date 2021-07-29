@@ -41,7 +41,7 @@ def generate_test_description():
         node_under_test,
         launch_testing.util.KeepAliveProc(),
         launch_testing.actions.ReadyToTest(),
-        ]), locals()
+    ]), locals()
 
 
 class TestJointLimitInterface(unittest.TestCase):

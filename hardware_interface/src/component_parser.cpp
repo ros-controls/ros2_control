@@ -94,7 +94,7 @@ std::string get_attribute_value(
  * If attribute is not found throws an error.
  *
  * \param[in] element_it XMLElement iterator to search for the attribute
- * \param[in] attribute_name atribute name to search for and return value
+ * \param[in] attribute_name attribute name to search for and return value
  * \param[in] tag_name parent tag name where attribute is searched for (used for error output)
  * \return attribute value
  * \throws std::runtime_error if attribute is not found
@@ -312,7 +312,7 @@ ComponentInfo parse_complex_component_from_xml(
 /// Parse a control resource from an "ros2_control" tag.
 /**
  * \param[in] ros2_control_it pointer to ros2_control element
- * with informations about resource.
+ * with information about resource.
  * \return HardwareInfo filled with information about the robot
  * \throws std::runtime_error if a attributes or tag are not found
  */

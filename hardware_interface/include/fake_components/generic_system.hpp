@@ -80,6 +80,8 @@ protected:
     hardware_interface::HW_IF_EFFORT
   };
 
+  const size_t POSITION_INTERFACE_INDEX = 0;
+
   struct MimicJoint
   {
     std::size_t joint_index;
@@ -118,6 +120,7 @@ private:
     const std::vector<std::string> & interfaces);
 
   bool fake_sensor_command_interfaces_;
+  double state_following_offset_;
 };
 
 typedef GenericSystem GenericRobot;

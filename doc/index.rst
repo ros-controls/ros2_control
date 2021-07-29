@@ -11,7 +11,6 @@ Features
 
 - :ref:`Command Line Interface (CLI) <ros2controlcli_userdoc>`
 
-
 Concepts
 ========
 

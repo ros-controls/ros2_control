@@ -94,7 +94,7 @@ struct HardwareInfo
    */
   std::vector<ComponentInfo> gpios;
   /**
-   * Map of transmissions to calcualte ration between joints and physical actuators.
+   * Map of transmissions to calculate ration between joints and physical actuators.
    * Optional for Actuator and System Hardware.
    */
   std::vector<ComponentInfo> transmissions;

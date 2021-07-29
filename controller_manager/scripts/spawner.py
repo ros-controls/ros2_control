@@ -40,7 +40,7 @@ def wait_for_controller_manager(node, controller_manager, timeout_duration):
             return True
 
         node.get_logger().info(
-            'Waiting for {} services'.format(controller_manager),
+            f'Waiting for {controller_manager} services',
             throttle_duration_sec=2)
         time.sleep(0.2)
 

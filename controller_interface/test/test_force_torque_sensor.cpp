@@ -117,7 +117,7 @@ TEST_F(ForceTorqueSensorTest, validate_all_with_custom_names)
     "", sensor_name_ + "/" + "torque.y", sensor_name_ + "/" + "torque.z");
 
   // validate the component name
-  // it should be "" as we specified the interface's names explicitely
+  // it should be "" as we specified the interface's names explicitly
   ASSERT_EQ(force_torque_sensor_->name_, "");
 
   // validate the space reserved for interface_names_ and state_interfaces_
@@ -200,7 +200,7 @@ TEST_F(ForceTorqueSensorTest, validate_all_custom_names)
     sensor_name_ + "/" + "torque.z");
 
   // validate the component name
-  // it should be "" as we specified the interface's names explicitely
+  // it should be "" as we specified the interface's names explicitly
   ASSERT_EQ(force_torque_sensor_->name_, "");
 
   // validate the space reserved for interface_names_ and state_interfaces_

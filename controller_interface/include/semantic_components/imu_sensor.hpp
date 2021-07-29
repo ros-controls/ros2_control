@@ -129,7 +129,7 @@ public:
   }
 
 protected:
-  // Order is: orientation X,Y,Z,W angular velocity X,Y,Z and linear accelaration X,Y,Z
+  // Order is: orientation X,Y,Z,W angular velocity X,Y,Z and linear acceleration X,Y,Z
   std::array<double, 4> orientation_;
   std::array<double, 3> angular_velocity_;
   std::array<double, 3> linear_acceleration_;
