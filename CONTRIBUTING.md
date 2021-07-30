@@ -21,19 +21,23 @@ Please try to include as much information as you can. Details like these are inc
 
 
 ## Contributing via Pull Requests
+The following guidance should be up-to-date, but the documentation as found [here](https://ros-controls.github.io/control.ros.org/contributing.html#pull-requests) should prove as the final say.
+
 Contributions via pull requests are much appreciated.
 Before sending us a pull request, please ensure that:
 
-1. You are working against the latest source on the *master* branch.
-2. You check existing open, and recently merged, pull requests to make sure someone else hasn't addressed the problem already.
-3. You open an issue to discuss any significant work - we would hate for your time to be wasted.
+1. Limited scope. Your PR should do one thing or one set of things. Avoid adding “random fixes” to PRs. Put those on separate PRs.
+2. Give your PR a descriptive title. Add a short summary, if required.
+3. Make sure the pipeline is green.
+4. Don’t be afraid to request reviews from maintainers.
+5. New code = new tests. If you are adding new functionality, always make sure to add some tests exercising the code and serving as live documentation of your original intention.
 
 To send us a pull request, please:
 
 1. Fork the repository.
 2. Modify the source; please focus on the specific change you are contributing.
   If you also reformat all the code, it will be hard for us to focus on your change.
-3. Ensure local tests pass. (`colcon test`)
+3. Ensure local tests pass. (`colcon test` and `pre-commit run` (requires you to install pre-commit by `pip3 install pre-commit`)
 4. Commit to your fork using clear commit messages.
 5. Send a pull request, answering any default questions in the pull request interface.
 6. Pay attention to any automated CI failures reported in the pull request, and stay involved in the conversation.
