@@ -116,7 +116,7 @@ std::string get_attribute_value(
  * If parameter is not found, returns specified default value
  *
  * \param[in] element_it XMLElement iterator to search for the attribute
- * \param[in] attribute_name atribute name to search for and return value
+ * \param[in] attribute_name attribute name to search for and return value
  * \param[in] default_value When the attribute is not found, this value is returned instead
  * \return attribute value or default
  */
