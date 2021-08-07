@@ -10,3 +10,11 @@ Features
 =========
 
 - :ref:`Command Line Interface (CLI) <ros2controlcli_userdoc>`
+
+Concepts
+========
+
+.. toctree::
+   :titlesonly:
+
+   Controller Manager <../controller_manager/doc/userdoc.rst>
