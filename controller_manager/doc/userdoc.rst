@@ -57,9 +57,3 @@ There are two scripts to interact with controller manager from launch files:
       -h, --help            show this help message and exit
       -c CONTROLLER_MANAGER, --controller-manager CONTROLLER_MANAGER
                             Name of the controller manager ROS node
-
-
-Utility scripts
-^^^^^^^^^^^^^^^
-
-- ``launch_utils.py`` - TBD
