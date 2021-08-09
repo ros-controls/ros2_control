@@ -389,6 +389,66 @@ TEST_P(SwitchTest, EmptyListOrNonExistentTest)
   ) << error_message;
 }
 
+// TODO: For Galactic+, follow up on https://github.com/ros-controls/ros2_control/issues/406
+#ifdef __APPLE__
+INSTANTIATE_TEST_CASE_P(
+  EmptyListOrNonExistentTest,
+  SwitchTest,
+  ::testing::Values(
+    // empty lists
+    std::make_tuple(
+      controller_interface::return_type::OK, UNSPECIFIED, EMPTY_STR_VEC,
+      EMPTY_STR_VEC, "Switch with no controllers specified"),
+    std::make_tuple(
+      controller_interface::return_type::OK, STRICT, EMPTY_STR_VEC, EMPTY_STR_VEC,
+      "Switch with no controllers specified"),
+    std::make_tuple(
+      controller_interface::return_type::OK, BEST_EFFORT, EMPTY_STR_VEC,
+      EMPTY_STR_VEC, "Switch with no controllers specified"),
+    // combination of empty and non-existent controller
+    std::make_tuple(
+      controller_interface::return_type::OK, UNSPECIFIED, NONEXISTENT_CONTROLLER,
+      EMPTY_STR_VEC, "Switch with nonexistent controller specified"),
+    std::make_tuple(
+      controller_interface::return_type::ERROR, STRICT, NONEXISTENT_CONTROLLER,
+      EMPTY_STR_VEC, "Switch with nonexistent start controller specified"),
+    std::make_tuple(
+      controller_interface::return_type::OK, BEST_EFFORT, NONEXISTENT_CONTROLLER,
+      EMPTY_STR_VEC, "Switch with nonexistent start controller specified"),
+    std::make_tuple(
+      controller_interface::return_type::OK, UNSPECIFIED, EMPTY_STR_VEC,
+      NONEXISTENT_CONTROLLER, "Switch with nonexistent stop controller specified"),
+    std::make_tuple(
+      controller_interface::return_type::ERROR, STRICT, EMPTY_STR_VEC,
+      NONEXISTENT_CONTROLLER, "Switch with nonexistent stop controller specified"),
+    std::make_tuple(
+      controller_interface::return_type::OK, BEST_EFFORT, EMPTY_STR_VEC,
+      NONEXISTENT_CONTROLLER, "Switch with nonexistent stop controller specified"),
+    std::make_tuple(
+      controller_interface::return_type::OK, UNSPECIFIED, NONEXISTENT_CONTROLLER,
+      NONEXISTENT_CONTROLLER, "Switch with nonexistent start and stop controllers specified"),
+    std::make_tuple(
+      controller_interface::return_type::ERROR, STRICT, NONEXISTENT_CONTROLLER,
+      NONEXISTENT_CONTROLLER, "Switch with nonexistent start and stop controllers specified"),
+    std::make_tuple(
+      controller_interface::return_type::OK, BEST_EFFORT, NONEXISTENT_CONTROLLER,
+      NONEXISTENT_CONTROLLER, "Switch with nonexistent start and stop controllers specified"),
+    // valid controller used
+    std::make_tuple(
+      controller_interface::return_type::ERROR, STRICT, NONEXISTENT_CONTROLLER,
+      VALID_CONTROLLER, "Switch with valid stopped controller specified"),
+    std::make_tuple(
+      controller_interface::return_type::OK, BEST_EFFORT, NONEXISTENT_CONTROLLER,
+      VALID_CONTROLLER, "Switch with valid stopped controller specified"),
+        std::make_tuple(
+      controller_interface::return_type::ERROR, STRICT, VALID_PLUS_NONEXISTENT_CONTROLLERS,
+      EMPTY_STR_VEC, "Switch with valid and nonexistent controller specified"),
+        std::make_tuple(
+      controller_interface::return_type::ERROR, STRICT, VALID_CONTROLLER,
+      NONEXISTENT_CONTROLLER, "Switch with  valid and nonexistent controller specified"))
+// cppcheck-suppress syntaxError
+  , );
+#else
 INSTANTIATE_TEST_CASE_P(
   EmptyListOrNonExistentTest,
   SwitchTest,
@@ -445,6 +505,7 @@ INSTANTIATE_TEST_CASE_P(
       controller_interface::return_type::ERROR, STRICT, VALID_CONTROLLER,
       NONEXISTENT_CONTROLLER, "Switch with  valid and nonexistent controller specified")
 ));
+#endif
 
 TEST_F(TestLoadController, starting_and_stopping_a_controller)
 {
@@ -583,7 +644,7 @@ TEST_F(TestLoadController, switch_multiple_controllers)
   }
 
   { // Stop controller 1, start controller 2
-    // Fails starting of contorller 2 because it is not configured
+    // Fails starting of controller 2 because it is not configured
     strvec start_controllers = {controller_name2};
     strvec stop_controllers = {controller_name1};
     RCLCPP_INFO(
