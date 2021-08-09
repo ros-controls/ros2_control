@@ -29,6 +29,7 @@ constexpr const auto kROS2ControlTag = "ros2_control";
 constexpr const auto kHardwareTag = "hardware";
 constexpr const auto kClassTypeTag = "plugin";
 constexpr const auto kParamTag = "param";
+constexpr const auto kActuatorTag = "actuator";
 constexpr const auto kJointTag = "joint";
 constexpr const auto kSensorTag = "sensor";
 constexpr const auto kGPIOTag = "gpio";
@@ -41,6 +42,9 @@ constexpr const auto kDataTypeAttribute = "data_type";
 constexpr const auto kSizeAttribute = "size";
 constexpr const auto kNameAttribute = "name";
 constexpr const auto kTypeAttribute = "type";
+constexpr const auto kRoleAttribute = "role";
+constexpr const auto kReductionAttribute = "mechanical_reduction";
+constexpr const auto kOffsetAttribute = "offset";
 }  // namespace
 
 namespace hardware_interface
@@ -94,7 +98,7 @@ std::string get_attribute_value(
  * If attribute is not found throws an error.
  *
  * \param[in] element_it XMLElement iterator to search for the attribute
- * \param[in] attribute_name atribute name to search for and return value
+ * \param[in] attribute_name attribute name to search for and return value
  * \param[in] tag_name parent tag name where attribute is searched for (used for error output)
  * \return attribute value
  * \throws std::runtime_error if attribute is not found
@@ -105,6 +109,36 @@ std::string get_attribute_value(
   const char * tag_name)
 {
   return get_attribute_value(element_it, attribute_name, std::string(tag_name));
+}
+
+/// Gets value of the parameter on an XMLelement.
+/**
+ * If parameter is not found, returns specified default value
+ *
+ * \param[in] element_it XMLElement iterator to search for the attribute
+ * \param[in] attribute_name attribute name to search for and return value
+ * \param[in] default_value When the attribute is not found, this value is returned instead
+ * \return attribute value or default
+ */
+double get_parameter_value_or(
+  const tinyxml2::XMLElement * params_it,
+  const char * parameter_name,
+  const double default_value)
+{
+  while (params_it) {
+    // Fill the map with parameters
+    const auto tag_name = params_it->Name();
+    if (strcmp(tag_name, parameter_name) == 0) {
+      const auto tag_text = params_it->GetText();
+      if (!tag_text) {
+        throw std::runtime_error("text not specified in the " + std::string(tag_name) + " tag");
+      }
+      return std::stod(tag_text);
+    }
+
+    params_it = params_it->NextSiblingElement();
+  }
+  return default_value;
 }
 
 /// Parse optional size attribute
@@ -309,10 +343,115 @@ ComponentInfo parse_complex_component_from_xml(
   return component;
 }
 
+JointInfo parse_transmission_joint_from_xml(const tinyxml2::XMLElement * element_it)
+{
+  JointInfo joint_info;
+  joint_info.name = get_attribute_value(element_it, kNameAttribute, element_it->Name());
+  joint_info.role = get_attribute_value(element_it, kRoleAttribute, element_it->Name());
+  joint_info.mechanical_reduction = get_parameter_value_or(
+    element_it->FirstChildElement(), kReductionAttribute, 0.0);
+  joint_info.offset =
+    get_parameter_value_or(element_it->FirstChildElement(), kOffsetAttribute, 0.0);
+  return joint_info;
+}
+
+ActuatorInfo parse_transmission_actuator_from_xml(const tinyxml2::XMLElement * element_it)
+{
+  ActuatorInfo actuator_info;
+  actuator_info.name = get_attribute_value(element_it, kNameAttribute, element_it->Name());
+  actuator_info.role = get_attribute_value(element_it, kRoleAttribute, element_it->Name());
+  actuator_info.offset = get_parameter_value_or(
+    element_it->FirstChildElement(), kOffsetAttribute, 0.0);
+  return actuator_info;
+}
+
+/// Search XML snippet from URDF for information about a transmission.
+/**
+  * \param[in] transmission_it pointer to the iterator where transmission info should be found
+  * \return TransmissionInfo filled with information about transmission
+  * \throws std::runtime_error if an attribute or tag is not found
+  */
+TransmissionInfo parse_transmission_from_xml(const tinyxml2::XMLElement * transmission_it)
+{
+  TransmissionInfo transmission;
+
+  // Find name, type and class of a transmission
+  transmission.name = get_attribute_value(transmission_it, kNameAttribute, transmission_it->Name());
+  const auto * type_it = transmission_it->FirstChildElement(kClassTypeTag);
+  transmission.type = get_text_for_element(type_it, kClassTypeTag);
+
+  // Parse joints
+  const auto * joint_it = transmission_it->FirstChildElement(kJointTag);
+  while (joint_it) {
+    transmission.joints.push_back(parse_transmission_joint_from_xml(joint_it));
+    joint_it = joint_it->NextSiblingElement(kJointTag);
+  }
+
+  // Parse actuators
+  const auto * actuator_it = transmission_it->FirstChildElement(kActuatorTag);
+  while (actuator_it) {
+    transmission.actuators.push_back(parse_transmission_actuator_from_xml(actuator_it));
+    actuator_it = actuator_it->NextSiblingElement(kActuatorTag);
+  }
+
+  // Parse parameters
+  const auto * params_it = transmission_it->FirstChildElement(kParamTag);
+  if (params_it) {
+    transmission.parameters = parse_parameters_from_xml(params_it);
+  }
+
+  return transmission;
+}
+
+/// Auto-fill some contents of transmission info based on context
+/**
+ * \param[in,out] hardware HardwareInfo structure with elements already parsed.
+ * \throws std::runtime_error
+ */
+void auto_fill_transmission_interfaces(HardwareInfo & hardware)
+{
+  for (auto & transmission : hardware.transmissions) {
+    // fill joint interfaces for actuator from joints declared for this component
+    for (auto & joint : transmission.joints) {
+      auto found_it = std::find_if(
+        hardware.joints.cbegin(), hardware.joints.cend(), [&joint](const auto & joint_info) {
+          return joint.name == joint_info.name;
+        });
+
+      if (found_it == hardware.joints.cend()) {
+        throw std::runtime_error(
+                "Error while parsing '" + hardware.name + "'. Transmission '" +
+                transmission.name + "' declared joint '" +
+                joint.name + "' is not available in component '" + hardware.name + "'.");
+      }
+
+      //  copy interface names from their definitions in the component
+      std::transform(
+        found_it->command_interfaces.cbegin(),
+        found_it->command_interfaces.cend(), std::back_inserter(joint.interfaces),
+        [](const auto & interface) {return interface.name;});
+    }
+
+    // we parsed an actuator component, here we fill in more details
+    if (hardware.type == kActuatorTag) {
+      if (transmission.joints.size() != 1) {
+        throw std::runtime_error(
+                "Error while parsing '" + hardware.name +
+                "'. There should be exactly one joint defined in this component but found " +
+                std::to_string(transmission.joints.size()));
+      }
+
+      transmission.actuators.push_back(
+        ActuatorInfo{"actuator1",
+          transmission.joints[0].interfaces, "actuator1", 0.0});
+    }
+  }
+}
+
 /// Parse a control resource from an "ros2_control" tag.
 /**
  * \param[in] ros2_control_it pointer to ros2_control element
- * with informations about resource.
+ * with information about resource.
  * \return HardwareInfo filled with information about the robot
  * \throws std::runtime_error if a attributes or tag are not found
  */
@@ -342,12 +481,14 @@ HardwareInfo parse_resource_from_xml(const tinyxml2::XMLElement * ros2_control_i
       hardware.gpios.push_back(
         parse_complex_component_from_xml(ros2_control_child_it));
     } else if (!std::string(kTransmissionTag).compare(ros2_control_child_it->Name())) {
-      hardware.transmissions.push_back(parse_component_from_xml(ros2_control_child_it) );
+      hardware.transmissions.push_back(parse_transmission_from_xml(ros2_control_child_it) );
     } else {
       throw std::runtime_error("invalid tag name " + std::string(ros2_control_child_it->Name()));
     }
     ros2_control_child_it = ros2_control_child_it->NextSiblingElement();
   }
+
+  auto_fill_transmission_interfaces(hardware);
 
   return hardware;
 }

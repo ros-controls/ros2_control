@@ -14,6 +14,7 @@
 
 #include "hardware_interface/resource_manager.hpp"
 
+#include <map>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -142,8 +143,8 @@ public:
 
   std::unordered_map<std::string, status> hardware_status_map_;
 
-  std::unordered_map<std::string, StateInterface> state_interface_map_;
-  std::unordered_map<std::string, CommandInterface> command_interface_map_;
+  std::map<std::string, StateInterface> state_interface_map_;
+  std::map<std::string, CommandInterface> command_interface_map_;
 };
 
 ResourceManager::ResourceManager()

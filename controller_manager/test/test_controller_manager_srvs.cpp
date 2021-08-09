@@ -189,7 +189,7 @@ TEST_F(TestControllerManagerSrvs, list_controllers_srv) {
   ASSERT_EQ("active", result->controller[0].state);
   ASSERT_THAT(
     result->controller[0].claimed_interfaces,
-    testing::ElementsAre("joint3/velocity", "joint2/velocity", "joint1/position"));
+    testing::ElementsAre("joint1/position", "joint2/velocity", "joint3/velocity"));
 
   cm_->switch_controller(
     {}, {test_controller::TEST_CONTROLLER_NAME},

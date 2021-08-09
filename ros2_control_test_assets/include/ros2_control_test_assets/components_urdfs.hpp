@@ -217,7 +217,9 @@ const auto valid_urdf_ros2_control_actuator_modular_robot_sensors =
     </joint>
     <transmission name="transmission1">
       <plugin>transmission_interface/SimpleTansmission</plugin>
-      <param name="joint_to_actuator">${1024/PI}</param>
+      <joint name="joint1" role="joint1">
+        <mechanical_reduction>325.949</mechanical_reduction>
+      </joint>
     </transmission>
   </ros2_control>
   <ros2_control name="RRBotModularJoint2" type="actuator">
@@ -279,13 +281,16 @@ const auto valid_urdf_ros2_control_system_multi_joints_transmission =
       <state_interface name="position"/>
     </joint>
     <transmission name="transmission1">
-      <plugin>transmission_interface/SomeComplex2by2Transmission</plugin>
-      <param name="joints">{joint1, joint2}</param>
-      <param name="output">{output1, output2}</param>
-      <param name="joint1_output1">1.5</param>
-      <param name="joint1_output2">3.2</param>
-      <param name="joint2_output1">3.1</param>
-      <param name="joint2_output2">1.4</param>
+      <plugin>transmission_interface/DifferentialTransmission</plugin>
+      <actuator name="joint1_motor" role="actuator1"/>
+      <actuator name="joint2_motor" role="actuator2"/>
+      <joint name="joint1" role="joint1">
+        <mechanical_reduction>10</mechanical_reduction>
+        <offset>0.5</offset>
+      </joint>
+      <joint name="joint2" role="joint2">
+        <mechanical_reduction>50</mechanical_reduction>
+      </joint>
     </transmission>
   </ros2_control>
 )";
@@ -327,7 +332,10 @@ const auto valid_urdf_ros2_control_actuator_only =
     </joint>
     <transmission name="transmission1">
       <plugin>transmission_interface/RotationToLinerTansmission</plugin>
-      <param name="joint_to_actuator">${1024/PI}</param>
+      <joint name="joint1" role="joint1">
+        <mechanical_reduction>325.949</mechanical_reduction>
+      </joint>
+      <param name="additional_special_parameter">1337</param>
     </transmission>
   </ros2_control>
 )";
@@ -517,6 +525,48 @@ const auto invalid_urdf2_ros2_control_illegal_size2 =
     </gpio>
   </ros2_control>
 )";
+
+const auto invalid_urdf2_hw_transmission_joint_mismatch =
+  R"(
+  <ros2_control name="ActuatorModularJoint1" type="actuator">
+    <hardware>
+      <plugin>ros2_control_demo_hardware/VelocityActuatorHardware</plugin>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="velocity">
+        <param name="min">-1</param>
+        <param name="max">1</param>
+      </command_interface>
+      <state_interface name="velocity"/>
+    </joint>
+    <transmission name="transmission1">
+      <plugin>transmission_interface/SimpleTransmission</plugin>
+      <joint name="joint31415" role="joint1"/>
+    </transmission>
+  </ros2_control>
+)";
+
+const auto invalid_urdf2_transmission_given_too_many_joints =
+  R"(
+  <ros2_control name="ActuatorModularJoint1" type="actuator">
+    <hardware>
+      <plugin>ros2_control_demo_hardware/VelocityActuatorHardware</plugin>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="velocity">
+        <param name="min">-1</param>
+        <param name="max">1</param>
+      </command_interface>
+      <state_interface name="velocity"/>
+    </joint>
+    <transmission name="transmission1">
+      <plugin>transmission_interface/SimpleTransmission</plugin>
+      <joint name="joint1" role="joint1"/>
+      <joint name="joint2" role="joint2"/>
+    </transmission>
+  </ros2_control>
+)";
+
 }  // namespace ros2_control_test_assets
 
 #endif  // ROS2_CONTROL_TEST_ASSETS__COMPONENTS_URDFS_HPP_

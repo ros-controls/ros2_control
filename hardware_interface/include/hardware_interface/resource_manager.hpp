@@ -216,7 +216,7 @@ public:
   /**
    * Hardware components are asked to perform the command interface mode switching.
    *
-   * \note this is inteded for mode-switching when a hardware interface needs to change
+   * \note this is intended for mode-switching when a hardware interface needs to change
    * control mode depending on which command interface is claimed.
    * \note this is for realtime switching of the command interface.
    * \param[in] start_interfaces vector of string identifiers for the command interfaces starting.

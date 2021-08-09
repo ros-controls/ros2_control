@@ -18,4 +18,5 @@ Concepts
 .. toctree::
    :titlesonly:
 
+   Controller Manager <../controller_manager/doc/userdoc.rst>
    Fake Components <../hardware_interface/doc/fake_components_userdoc.rst>
