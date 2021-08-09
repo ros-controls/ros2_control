@@ -352,145 +352,105 @@ TEST_F(TestLoadController, inactive_controller_cannot_be_configured)
   EXPECT_EQ(1u, cleanup_calls);
 }
 
-TEST_F(TestLoadController, switch_controller_empty)
-{
-  // load the controller with name1
-  ASSERT_NE(cm_->load_controller(controller_name1, TEST_CONTROLLER_CLASS_NAME), nullptr);
-  EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
+class SwitchTest : public TestLoadController,
+  public ::testing::WithParamInterface<std::tuple<controller_interface::return_type, int,
+    strvec, strvec, std::string>>
+{};
 
-  const auto UNSPECIFIED = 0;
+const auto UNSPECIFIED = 0;
+const auto EMPTY_STR_VEC = strvec{};
+const auto NONEXISTENT_CONTROLLER = strvec{"nonexistent_controller"};
+const auto VALID_CONTROLLER = strvec{controller_name1};
+const auto VALID_PLUS_NONEXISTENT_CONTROLLERS = strvec{controller_name1, "nonexistent_controller"};
 
-  { // test switch strictness
-    strvec start_controllers = {};
-    strvec stop_controllers = {};
-
-    EXPECT_EQ(
-      controller_interface::return_type::OK,
-      cm_->switch_controller(
-        start_controllers, stop_controllers,
-        STRICT, true, rclcpp::Duration(0, 0))
-    ) << "Switch with no controllers specified";
-    EXPECT_EQ(
-      controller_interface::return_type::OK,
-      cm_->switch_controller(
-        start_controllers, stop_controllers,
-        BEST_EFFORT, true, rclcpp::Duration(0, 0))
-    ) << "Switch with no controllers specified";
-
-    EXPECT_EQ(
-      controller_interface::return_type::OK,
-      cm_->switch_controller(
-        start_controllers, stop_controllers,
-        UNSPECIFIED, true, rclcpp::Duration(0, 0))
-    ) << "Switch with no controllers specified, unspecified strictness defaults to BEST_EFFORT";
-
-    start_controllers = {"nonexistent_controller"};
-    stop_controllers = {};
-    EXPECT_EQ(
-      controller_interface::return_type::ERROR,
-      cm_->switch_controller(
-        start_controllers, stop_controllers,
-        STRICT, true, rclcpp::Duration(0, 0))
-    ) << "STRICT switch with nonexistent controller specified";
-
-    EXPECT_EQ(
-      controller_interface::return_type::OK,
-      cm_->switch_controller(
-        start_controllers, stop_controllers,
-        BEST_EFFORT, true, rclcpp::Duration(0, 0))
-    ) << "BEST_EFFORT switch with nonexistent controller specified";
-
-    EXPECT_EQ(
-      controller_interface::return_type::OK,
-      cm_->switch_controller(
-        start_controllers, stop_controllers,
-        UNSPECIFIED, true, rclcpp::Duration(0, 0))
-    ) << "Unspecified switch with nonexistent controller specified, defaults to BEST_EFFORT";
-  }
-
-  { // From now on will only test STRICT and BEST_EFFORT
-    strvec start_controllers = {};
-    strvec stop_controllers = {"nonexistent_controller"};
-    EXPECT_EQ(
-      controller_interface::return_type::ERROR,
-      cm_->switch_controller(
-        start_controllers, stop_controllers,
-        STRICT, true, rclcpp::Duration(0, 0))
-    ) << "STRICT switch with nonexistent controller specified";
-
-    EXPECT_EQ(
-      controller_interface::return_type::OK,
-      cm_->switch_controller(
-        start_controllers, stop_controllers,
-        BEST_EFFORT, true, rclcpp::Duration(0, 0))
-    ) << "BEST_EFFORT switch with nonexistent controller specified";
-
-    start_controllers = {"nonexistent_controller"};
-    stop_controllers = {"nonexistent_controller"};
-    EXPECT_EQ(
-      controller_interface::return_type::ERROR,
-      cm_->switch_controller(
-        start_controllers, stop_controllers,
-        STRICT, true, rclcpp::Duration(0, 0))
-    ) << "STRICT switch with nonexistent controller specified";
-
-    EXPECT_EQ(
-      controller_interface::return_type::OK,
-      cm_->switch_controller(
-        start_controllers, stop_controllers,
-        BEST_EFFORT, true, rclcpp::Duration(0, 0))
-    ) << "BEST_EFFORT switch with nonexistent controller specified";
-  }
-}
-
-TEST_F(TestLoadController, switch_controller)
+TEST_P(SwitchTest, EmptyListOrNonExistentTest)
 {
   // load the controller with name1
   auto controller_if = cm_->load_controller(controller_name1, TEST_CONTROLLER_CLASS_NAME);
   ASSERT_NE(controller_if, nullptr);
+  EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
 
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
     controller_if->get_current_state().id());
 
-  {  //  Test stopping an stopped controller
-    strvec start_controllers = {};
-    strvec stop_controllers = {controller_name1};
+  auto params = GetParam();
+  auto result = std::get<0>(params);
+  auto strictness = std::get<1>(params);
+  auto start_controllers = std::get<2>(params);
+  auto stop_controllers = std::get<3>(params);
+  auto error_message = std::get<4>(params);
 
-    EXPECT_EQ(
-      controller_interface::return_type::ERROR,
-      cm_->switch_controller(
-        start_controllers, stop_controllers,
-        STRICT, true, rclcpp::Duration(0, 0))
-    ) << "STRICT switch with stopped controller specified";
+  EXPECT_EQ(
+    result,
+    cm_->switch_controller(
+      start_controllers, stop_controllers,
+      strictness, true, rclcpp::Duration(0, 0))
+  ) << error_message;
+}
 
-    EXPECT_EQ(
-      controller_interface::return_type::OK,
-      cm_->switch_controller(
-        start_controllers, stop_controllers,
-        BEST_EFFORT, true, rclcpp::Duration(0, 0))
-    ) << "BEST_EFFORT switch stopped controller specified";
-  }
+INSTANTIATE_TEST_CASE_P(
+  EmptyListOrNonExistentTest,
+  SwitchTest,
+  ::testing::Values(
+    // empty lists
+    std::make_tuple(
+      controller_interface::return_type::OK, UNSPECIFIED, EMPTY_STR_VEC,
+      EMPTY_STR_VEC, "Switch with no controllers specified"),
+    std::make_tuple(
+      controller_interface::return_type::OK, STRICT, EMPTY_STR_VEC, EMPTY_STR_VEC,
+      "Switch with no controllers specified"),
+    std::make_tuple(
+      controller_interface::return_type::OK, BEST_EFFORT, EMPTY_STR_VEC,
+      EMPTY_STR_VEC, "Switch with no controllers specified"),
+    // combination of empty and non-existent controller
+    std::make_tuple(
+      controller_interface::return_type::OK, UNSPECIFIED, NONEXISTENT_CONTROLLER,
+      EMPTY_STR_VEC, "Switch with nonexistent controller specified"),
+    std::make_tuple(
+      controller_interface::return_type::ERROR, STRICT, NONEXISTENT_CONTROLLER,
+      EMPTY_STR_VEC, "Switch with nonexistent start controller specified"),
+    std::make_tuple(
+      controller_interface::return_type::OK, BEST_EFFORT, NONEXISTENT_CONTROLLER,
+      EMPTY_STR_VEC, "Switch with nonexistent start controller specified"),
+    std::make_tuple(
+      controller_interface::return_type::OK, UNSPECIFIED, EMPTY_STR_VEC,
+      NONEXISTENT_CONTROLLER, "Switch with nonexistent stop controller specified"),
+    std::make_tuple(
+      controller_interface::return_type::ERROR, STRICT, EMPTY_STR_VEC,
+      NONEXISTENT_CONTROLLER, "Switch with nonexistent stop controller specified"),
+    std::make_tuple(
+      controller_interface::return_type::OK, BEST_EFFORT, EMPTY_STR_VEC,
+      NONEXISTENT_CONTROLLER, "Switch with nonexistent stop controller specified"),
+    std::make_tuple(
+      controller_interface::return_type::OK, UNSPECIFIED, NONEXISTENT_CONTROLLER,
+      NONEXISTENT_CONTROLLER, "Switch with nonexistent start and stop controllers specified"),
+    std::make_tuple(
+      controller_interface::return_type::ERROR, STRICT, NONEXISTENT_CONTROLLER,
+      NONEXISTENT_CONTROLLER, "Switch with nonexistent start and stop controllers specified"),
+    std::make_tuple(
+      controller_interface::return_type::OK, BEST_EFFORT, NONEXISTENT_CONTROLLER,
+      NONEXISTENT_CONTROLLER, "Switch with nonexistent start and stop controllers specified"),
+    // valid controller used
+    std::make_tuple(
+      controller_interface::return_type::ERROR, STRICT, NONEXISTENT_CONTROLLER,
+      VALID_CONTROLLER, "Switch with valid stopped controller specified"),
+    std::make_tuple(
+      controller_interface::return_type::OK, BEST_EFFORT, NONEXISTENT_CONTROLLER,
+      VALID_CONTROLLER, "Switch with valid stopped controller specified"),
+        std::make_tuple(
+      controller_interface::return_type::ERROR, STRICT, VALID_PLUS_NONEXISTENT_CONTROLLERS,
+      EMPTY_STR_VEC, "Switch with valid and nonexistent controller specified"),
+        std::make_tuple(
+      controller_interface::return_type::ERROR, STRICT, VALID_CONTROLLER,
+      NONEXISTENT_CONTROLLER, "Switch with  valid and nonexistent controller specified")
+));
 
-  { //  STRICT Combination of valid controller + invalid controller
-    strvec start_controllers = {controller_name1, "nonexistent_controller"};
-    strvec stop_controllers = {};
-    EXPECT_EQ(
-      controller_interface::return_type::ERROR,
-      cm_->switch_controller(
-        start_controllers, stop_controllers,
-        STRICT, true, rclcpp::Duration(0, 0))
-    ) << "STRICT switch with nonexistent controller specified";
-
-    start_controllers = {controller_name1};
-    stop_controllers = {"nonexistent_controller"};
-    EXPECT_EQ(
-      controller_interface::return_type::ERROR,
-      cm_->switch_controller(
-        start_controllers, stop_controllers,
-        STRICT, true, rclcpp::Duration(0, 0))
-    ) << "STRICT switch with nonexistent controller specified";
-  }
+TEST_F(TestLoadController, starting_and_stopping_a_controller)
+{
+  // load the controller with name1
+  auto controller_if = cm_->load_controller(controller_name1, TEST_CONTROLLER_CLASS_NAME);
+  ASSERT_NE(controller_if, nullptr);
 
   // Only testing with STRICT now for simplicity
   { //  Test starting an stopped controller, and stopping afterwards
