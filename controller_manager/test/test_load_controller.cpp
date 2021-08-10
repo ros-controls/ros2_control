@@ -390,7 +390,7 @@ TEST_P(SwitchTest, EmptyListOrNonExistentTest)
   ) << error_message;
 }
 
-// TODO: For Galactic+, follow up on https://github.com/ros-controls/ros2_control/issues/406
+// TODO(anyone): For Galactic+, follow up on https://github.com/ros-controls/ros2_control/issues/406
 #ifdef __APPLE__
 INSTANTIATE_TEST_CASE_P(
   EmptyListOrNonExistentTest,
