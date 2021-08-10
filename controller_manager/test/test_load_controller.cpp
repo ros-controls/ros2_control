@@ -441,10 +441,10 @@ INSTANTIATE_TEST_CASE_P(
     std::make_tuple(
       controller_interface::return_type::OK, BEST_EFFORT, NONEXISTENT_CONTROLLER,
       VALID_CONTROLLER, "Switch with valid stopped controller specified"),
-        std::make_tuple(
+    std::make_tuple(
       controller_interface::return_type::ERROR, STRICT, VALID_PLUS_NONEXISTENT_CONTROLLERS,
       EMPTY_STR_VEC, "Switch with valid and nonexistent controller specified"),
-        std::make_tuple(
+    std::make_tuple(
       controller_interface::return_type::ERROR, STRICT, VALID_CONTROLLER,
       NONEXISTENT_CONTROLLER, "Switch with  valid and nonexistent controller specified"))
 // cppcheck-suppress syntaxError
@@ -499,10 +499,10 @@ INSTANTIATE_TEST_CASE_P(
     std::make_tuple(
       controller_interface::return_type::OK, BEST_EFFORT, NONEXISTENT_CONTROLLER,
       VALID_CONTROLLER, "Switch with valid stopped controller specified"),
-        std::make_tuple(
+    std::make_tuple(
       controller_interface::return_type::ERROR, STRICT, VALID_PLUS_NONEXISTENT_CONTROLLERS,
       EMPTY_STR_VEC, "Switch with valid and nonexistent controller specified"),
-        std::make_tuple(
+    std::make_tuple(
       controller_interface::return_type::ERROR, STRICT, VALID_CONTROLLER,
       NONEXISTENT_CONTROLLER, "Switch with  valid and nonexistent controller specified")
 ));
