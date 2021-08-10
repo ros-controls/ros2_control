@@ -16,6 +16,7 @@
 #include <gtest/gtest.h>
 #include <memory>
 #include <string>
+#include <tuple>
 #include <vector>
 
 #include "controller_manager_test_common.hpp"
