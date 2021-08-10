@@ -66,9 +66,10 @@ public:
     return state_interface_.get_full_name();
   }
 
-  double get_value() const
+  template<class DataT = double>
+  DataT get_value() const
   {
-    return state_interface_.get_value();
+    return state_interface_.get_value<DataT>();
   }
 
 protected:

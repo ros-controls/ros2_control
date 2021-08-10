@@ -25,15 +25,18 @@ namespace transmission_interface
 class ActuatorHandle : public hardware_interface::ReadWriteHandle
 {
 public:
+  void set_value(double value) {
+    return hardware_interface::ReadWriteHandle::set_value<double>(value);
+  }
+  double get_value() {
+    return hardware_interface::ReadWriteHandle::get_value<double>();
+  }
+
   using hardware_interface::ReadWriteHandle::ReadWriteHandle;
 };
 
 /** A handle used to get and set a value on a given joint interface. */
-class JointHandle : public hardware_interface::ReadWriteHandle
-{
-public:
-  using hardware_interface::ReadWriteHandle::ReadWriteHandle;
-};
+using JointHandle = ActuatorHandle;
 
 }  // namespace transmission_interface
 

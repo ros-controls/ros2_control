@@ -33,6 +33,27 @@ TEST(TestHandle, command_interface)
   EXPECT_DOUBLE_EQ(interface.get_value(), 0.0);
 }
 
+TEST(TestHandle, complex_command_interface)
+{
+  struct Complex
+  {
+    std::string str;
+  };
+
+  std::string value = "Hello Complex Interface";
+  Complex c{value};
+
+  CommandInterface interface{JOINT_NAME, FOO_INTERFACE, &c};
+  EXPECT_EQ(interface.get_value<std::string>(), value);
+  // TODO(karsten1987): Make get_value (implicit as double) type safe on caller side.
+  // interface.get_value() is now undefined behavior.
+  // EXPECT_DOUBLE_EQ(interface.get_value(), 0.0);
+
+  value = "Hello Modified Complex Interface";
+  EXPECT_NO_THROW(interface.set_value<std::string>(value));
+  EXPECT_EQ(interface.get_value<std::string>(), value);
+}
+
 TEST(TestHandle, state_interface)
 {
   double value = 1.337;

@@ -36,6 +36,13 @@ using namespace ::testing;  // NOLINT
 namespace test_components
 {
 
+struct POD
+{
+  std::string str;
+  int i;
+  float f;
+};
+
 class DummyActuator : public hardware_interface::ActuatorInterface
 {
   hardware_interface::return_type configure(
@@ -125,6 +132,10 @@ class DummySensor : public hardware_interface::SensorInterface
     std::vector<hardware_interface::StateInterface> state_interfaces;
     state_interfaces.emplace_back(
       hardware_interface::StateInterface("joint1", "voltage", &voltage_level_));
+    // Any non-double data type can be exposed
+    state_interfaces.emplace_back(
+      hardware_interface::StateInterface(
+        "joint1", "custom_complex_pod", &complex_data_));
 
     return state_interfaces;
   }
@@ -157,6 +168,7 @@ class DummySensor : public hardware_interface::SensorInterface
 
 private:
   double voltage_level_ = 0x666;
+  POD complex_data_ = {"abc", 123, 456.f};
 };
 
 class DummySystem : public hardware_interface::SystemInterface
@@ -383,10 +395,15 @@ TEST(TestComponentInterfaces, dummy_sensor)
   EXPECT_EQ(hardware_interface::return_type::OK, sensor_hw.configure(mock_hw_info));
 
   auto state_interfaces = sensor_hw.export_state_interfaces();
-  ASSERT_EQ(1u, state_interfaces.size());
+  ASSERT_EQ(2u, state_interfaces.size());
   EXPECT_EQ("joint1", state_interfaces[0].get_name());
   EXPECT_EQ("voltage", state_interfaces[0].get_interface_name());
   EXPECT_EQ(0x666, state_interfaces[0].get_value());
+  EXPECT_EQ("joint1", state_interfaces[1].get_name());
+  EXPECT_EQ("custom_complex_pod", state_interfaces[1].get_interface_name());
+  EXPECT_EQ("abc", state_interfaces[1].get_value<test_components::POD>().str);
+  EXPECT_EQ(123, state_interfaces[1].get_value<test_components::POD>().i);
+  EXPECT_FLOAT_EQ(456.f, state_interfaces[1].get_value<test_components::POD>().f);
 }
 
 TEST(TestComponentInterfaces, dummy_system)

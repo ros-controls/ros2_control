@@ -66,14 +66,16 @@ public:
     return command_interface_.get_full_name();
   }
 
-  void set_value(double val)
+  template<class DataT = double>
+  void set_value(DataT val)
   {
-    command_interface_.set_value(val);
+    command_interface_.set_value<DataT>(val);
   }
 
-  double get_value() const
+  template<class DataT = double>
+  DataT get_value() const
   {
-    return command_interface_.get_value();
+    return command_interface_.get_value<DataT>();
   }
 
 protected:

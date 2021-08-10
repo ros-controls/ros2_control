@@ -30,20 +30,17 @@ public:
   ReadOnlyHandle(
     const std::string & name,
     const std::string & interface_name,
-    double * value_ptr = nullptr)
+    void * value_ptr = nullptr)
   : name_(name), interface_name_(interface_name), value_ptr_(value_ptr)
-  {
-  }
+  {}
 
   explicit ReadOnlyHandle(const std::string & interface_name)
   : interface_name_(interface_name), value_ptr_(nullptr)
-  {
-  }
+  {}
 
   explicit ReadOnlyHandle(const char * interface_name)
   : interface_name_(interface_name), value_ptr_(nullptr)
-  {
-  }
+  {}
 
   ReadOnlyHandle(const ReadOnlyHandle & other) = default;
 
@@ -73,16 +70,17 @@ public:
     return name_ + "/" + interface_name_;
   }
 
-  double get_value() const
+  template<class DataT>
+  DataT get_value() const
   {
     THROW_ON_NULLPTR(value_ptr_);
-    return *value_ptr_;
+    return *static_cast<DataT *>(value_ptr_);
   }
 
 protected:
   std::string name_;
   std::string interface_name_;
-  double * value_ptr_;
+  void * value_ptr_;
 };
 
 class ReadWriteHandle : public ReadOnlyHandle
@@ -91,7 +89,7 @@ public:
   ReadWriteHandle(
     const std::string & name,
     const std::string & interface_name,
-    double * value_ptr = nullptr)
+    void * value_ptr = nullptr)
   : ReadOnlyHandle(name, interface_name, value_ptr)
   {}
 
@@ -113,26 +111,35 @@ public:
 
   virtual ~ReadWriteHandle() = default;
 
-  void set_value(double value)
+  template<class DataT>
+  void set_value(DataT value)
   {
     THROW_ON_NULLPTR(this->value_ptr_);
-    *this->value_ptr_ = value;
+    *static_cast<DataT *>(this->value_ptr_) = value;
   }
 };
 
 class StateInterface : public ReadOnlyHandle
 {
 public:
+  using ReadOnlyHandle::ReadOnlyHandle;
+
   StateInterface(const StateInterface & other) = default;
 
   StateInterface(StateInterface && other) = default;
 
-  using ReadOnlyHandle::ReadOnlyHandle;
+  template<class DataT = double>
+  DataT get_value() const
+  {
+    return ReadOnlyHandle::get_value<DataT>();
+  }
 };
 
 class CommandInterface : public ReadWriteHandle
 {
 public:
+  using ReadWriteHandle::ReadWriteHandle;
+
   /// CommandInterface copy constructor is actively deleted.
   /**
    * Command interfaces are having a unique ownership and thus
@@ -143,7 +150,16 @@ public:
 
   CommandInterface(CommandInterface && other) = default;
 
-  using ReadWriteHandle::ReadWriteHandle;
+  template<class DataT = double>
+  DataT get_value() const
+  {
+    return ReadWriteHandle::get_value<DataT>();
+  }
+
+  template<class DataT = double>
+  void set_value(DataT value) {
+    return ReadWriteHandle::set_value<DataT>(value);
+  }
 };
 
 }  // namespace hardware_interface
