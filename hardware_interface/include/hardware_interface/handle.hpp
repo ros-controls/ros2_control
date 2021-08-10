@@ -157,7 +157,8 @@ public:
   }
 
   template<class DataT = double>
-  void set_value(DataT value) {
+  void set_value(DataT value)
+  {
     return ReadWriteHandle::set_value<DataT>(value);
   }
 };

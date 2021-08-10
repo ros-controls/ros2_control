@@ -13,6 +13,8 @@
 // limitations under the License.
 
 #include <gmock/gmock.h>
+#include <string>
+
 #include "hardware_interface/handle.hpp"
 
 using hardware_interface::CommandInterface;

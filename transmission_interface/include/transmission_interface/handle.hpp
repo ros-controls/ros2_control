@@ -25,10 +25,12 @@ namespace transmission_interface
 class ActuatorHandle : public hardware_interface::ReadWriteHandle
 {
 public:
-  void set_value(double value) {
+  void set_value(double value)
+  {
     return hardware_interface::ReadWriteHandle::set_value<double>(value);
   }
-  double get_value() {
+  double get_value()
+  {
     return hardware_interface::ReadWriteHandle::get_value<double>();
   }
 
