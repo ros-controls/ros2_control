@@ -58,7 +58,7 @@ $DIFF
 Don’t hesitate to ask questions or to get help if you feel like you are getting stuck. For example leave a comment below!
 Furthermore, you find helpful resources here:
 * [ROS2 Control Contribution Guide](https://ros-controls.github.io/control.ros.org/contributing.html)
-* [ROS Tutorials](https://wiki.ros.org/ROS/Tutorials)
+* [ROS2 Tutorials](https://docs.ros.org/en/foxy/Tutorials.html)
 * [ROS Answers](https://answers.ros.org/questions/)
 
 **Good luck with your first issue!**
