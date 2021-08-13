@@ -1,4 +1,4 @@
-.. _framework:
+.. _ros2_control_framework:
 
 =====================
 Core functionalities
@@ -11,6 +11,7 @@ Features
 
 - :ref:`Command Line Interface (CLI) <ros2controlcli_userdoc>`
 
+
 Concepts
 ========
 
@@ -18,3 +19,4 @@ Concepts
    :titlesonly:
 
    Controller Manager <../controller_manager/doc/userdoc.rst>
+   Fake Components <../hardware_interface/doc/fake_components_userdoc.rst>
