@@ -45,4 +45,4 @@ mimic (optional; string)
 
 
 multiplier (optional; double; default: 1; used if mimic joint is defined)
-  Mutiplier of values for mimicking joint defined in ``mimic`` parameter. Example: ``<param name="multiplier">-2</param>``.
+  Multiplier of values for mimicking joint defined in ``mimic`` parameter. Example: ``<param name="multiplier">-2</param>``.
