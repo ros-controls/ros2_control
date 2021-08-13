@@ -32,7 +32,7 @@ fake_sensor_commands (optional; boolean; default: false)
 position_state_following_offset (optional; double; default: 0.0)
   Following offset added to the commanded values when mirrored to states.
 
-  
+
 custom_interface_with_following_offset (optional; string; default: "")
   Mapping of offsetted commands to a custom interface.
 
@@ -42,7 +42,7 @@ Per-joint Parameters
 
 mimic (optional; string)
   Defined name of the joint to mimic. This is often used concept with parallel grippers. Example: ``<param name="mimic">joint1</param>``.
-  
-  
+
+
 multiplier (optional; double; default: 1; used if mimic joint is defined)
   Mutiplier of values for mimicking joint defined in ``mimic`` parameter. Example: ``<param name="multiplier">-2</param>``.
