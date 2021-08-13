@@ -28,9 +28,11 @@ Nothing. This issue is meant to welcome you to Open Source :) We are happy to wa
 
 - [ ] 🙋 **Claim this issue**: Comment below. If someone else has claimed it, ask if they've opened a pull request already and if they're stuck -- maybe you can help them solve a problem or move it along!
 
-- [ ] 🗄️ **Create a local workspace** for making your changes and testing [following these instructions](https://moveit.ros.org/install/source/) with the exception replace  the "Download Source Code" section with [these instructions](https://ros-controls.github.io/control.ros.org/getting_started.html#compiling).
+- [ ] 🗄️ **Create a local workspace** for making your changes and testing [following these instructions](https://docs.ros.org/en/foxy/Tutorials/Workspace/Creating-A-Workspace.html), for Step3 use "Download Source Code" section with [these instructions](https://ros-controls.github.io/control.ros.org/getting_started.html#compiling).
 
 - [ ] 🍴 **Fork the repository** using the handy button at the top of the repository page and **clone** it into `~/ws_ros2_control/src/ros-controls/ros2_control`, [here is a guide that you can follow](https://guides.github.com/activities/forking/) (You will have to remove or empty the existing `ros2_control` folder before cloning your own fork)
+
+- [ ] **Checkout a new branch** using `git checkout -b <branch_name>`
 
 - [ ] 📝 **Update** the file(s) `$FILENAME`by applying the change shown in the diff below.
 
