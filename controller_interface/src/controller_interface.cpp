@@ -24,22 +24,33 @@
 
 namespace controller_interface
 {
-return_type ControllerInterface::init(const std::string & controller_name)
+
+return_type
+ControllerInterface::on_init(const std::string & controller_name)
 {
-  node_ = std::make_shared<rclcpp::Node>(
-    controller_name, rclcpp::NodeOptions().allow_undeclared_parameters(true));
-  lifecycle_state_ = rclcpp_lifecycle::State(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state_names::UNCONFIGURED);
+  std::cout << controller_name << std::endl;   // temporary line to remove warning
   return return_type::OK;
 }
 
-return_type ControllerInterface::init(
-  const std::string & controller_name, rclcpp::NodeOptions & node_options)
+return_type
+ControllerInterface::init(const std::string & controller_name)
 {
-  node_ =
-    std::make_shared<rclcpp::Node>(controller_name, node_options.allow_undeclared_parameters(true));
-  lifecycle_state_ = rclcpp_lifecycle::State(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state_names::UNCONFIGURED);
+  node_ = std::make_shared<rclcpp::Node>(
+    controller_name,
+    rclcpp::NodeOptions().allow_undeclared_parameters(true));
+
+  switch (on_init(controller_name)) {
+    case return_type::OK:
+      lifecycle_state_ = rclcpp_lifecycle::State(
+        lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state_names::UNCONFIGURED);
+      break;
+    case return_type::ERROR:
+      on_error(lifecycle_state_);
+      lifecycle_state_ = rclcpp_lifecycle::State(
+        lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, state_names::FINALIZED);
+      break;
+  }
+
   return return_type::OK;
 }
 

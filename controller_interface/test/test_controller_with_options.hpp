@@ -16,7 +16,10 @@
 #define TEST_CONTROLLER_WITH_OPTIONS_HPP_
 
 #include <controller_interface/controller_interface.hpp>
+#include <controller_interface/controller_state_names.hpp>
+
 #include <map>
+#include <memory>
 #include <string>
 
 namespace controller_with_options
@@ -31,13 +34,25 @@ class ControllerWithOptions : public controller_interface::ControllerInterface
 {
 public:
   ControllerWithOptions() = default;
+  controller_interface::return_type on_init(const std::string & controller_name) override
+  {
+    std::cout << controller_name << std::endl;   // temporary line to remove warning
+    lifecycle_state_ = rclcpp_lifecycle::State(
+      lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+      controller_interface::state_names::UNCONFIGURED);
+    return controller_interface::return_type::OK;
+  }
+
   controller_interface::return_type init(const std::string & controller_name) override
   {
     rclcpp::NodeOptions options;
     options.allow_undeclared_parameters(true).automatically_declare_parameters_from_overrides(true);
-    auto result = ControllerInterface::init(controller_name, options);
-    if (result == controller_interface::return_type::ERROR)
-    {
+    node_ = std::make_shared<rclcpp::Node>(
+      controller_name,
+      options.allow_undeclared_parameters(true));
+
+    auto result = on_init(controller_name);
+    if (result == controller_interface::return_type::ERROR) {
       return result;
     }
     if (node_->get_parameters("parameter_list", params))
