@@ -1272,4 +1272,10 @@ int ControllerManager::get_update_rate() const {
   return update_rate_;
 }
 
+void ControllerManager::configure() {
+  if (!get_parameter("update_rate", update_rate_)) {
+      RCLCPP_WARN(get_logger(), "'update_rate' parameter not set, using default value.");
+  }
+}
+
 }  // namespace controller_manager

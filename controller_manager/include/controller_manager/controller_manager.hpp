@@ -146,6 +146,8 @@ public:
 
   //Per controller update rate support
   int get_update_rate() const;
+  
+  void configure();
 
 protected:
   CONTROLLER_MANAGER_PUBLIC
@@ -355,6 +357,7 @@ private:
   //Per controller update rate support
   int update_loop_counter_ = 0;
   int update_rate_ = 100;
+
 };
 
 }  // namespace controller_manager
