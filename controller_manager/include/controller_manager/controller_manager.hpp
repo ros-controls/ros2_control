@@ -349,6 +349,8 @@ private:
   };
 
   SwitchParams switch_params_;
+  //Per controller update rate support
+  int update_loop_counter = 0;
 };
 
 }  // namespace controller_manager

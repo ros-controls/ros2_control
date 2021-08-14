@@ -574,3 +574,24 @@ TEST_F(TestLoadController, switch_multiple_controllers)
     ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if2->get_state().id());
   }
 }
+
+TEST_F(TestLoadController, can_set_and_get_non_default_update_rate)
+{
+  auto controller_if = cm_->load_controller(
+    "test_controller_01",
+    test_controller::TEST_CONTROLLER_CLASS_NAME);
+  ASSERT_NE(controller_if, nullptr);
+
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    controller_if->get_state().id());
+
+  controller_if->get_node()->set_parameter({"update_rate", 1337});
+
+  cm_->configure_controller("test_controller_01");
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    controller_if->get_state().id());
+
+  EXPECT_EQ(1337, controller_if->get_update_rate());
+}
