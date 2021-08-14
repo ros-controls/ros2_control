@@ -1153,21 +1153,13 @@ controller_interface::return_type ControllerManager::update(
     rt_controllers_wrapper_.update_and_get_used_by_rt_list();
 
   auto ret = controller_interface::return_type::OK;
-<<<<<<< HEAD
-  for (auto loaded_controller : rt_controller_list)
-  {
-    // TODO(v-lopez) we could cache this information
-    // https://github.com/ros-controls/ros2_control/issues/153
-    if (is_controller_active(*loaded_controller.c))
-    {
-      auto controller_ret = loaded_controller.c->update(time, period);
-      if (controller_ret != controller_interface::return_type::OK)
-      {
-        ret = controller_ret;
 =======
+>>>>>>> d75b793... use cm update_rate inside the update() loop iinstead of main loop counter
   int main_update_rate = 100;
+=======
+>>>>>>> febf658... minor rebase corrections #2
   update_loop_counter_ += 1;
-  update_loop_counter_ %= main_update_rate;
+  update_loop_counter_ %= update_rate_;
 
   for (auto loaded_controller : rt_controller_list) {
     // TODO(v-lopez) we could cache this information
@@ -1187,7 +1179,6 @@ controller_interface::return_type ControllerManager::update(
         if (controller_ret != controller_interface::return_type::OK) {
           ret = controller_ret;
         }
->>>>>>> 6bb8dc1... add update_rate member field to controller manager
       }
     }
   }
@@ -1268,7 +1259,8 @@ void ControllerManager::RTControllerListWrapper::wait_until_rt_not_using(
   }
 }
 
-int ControllerManager::get_update_rate() const {
+int ControllerManager::get_update_rate() const 
+{
   return update_rate_;
 }
 

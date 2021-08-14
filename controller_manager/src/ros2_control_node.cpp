@@ -39,6 +39,7 @@ int main(int argc, char ** argv)
   // converted back to a timer.
   std::thread cm_thread([cm]() {
       // load controller_manager update time parameter
+      cm->configure();
       int update_rate = cm->get_update_rate();
       RCLCPP_INFO(cm->get_logger(), "update rate is %d Hz", update_rate);
 
