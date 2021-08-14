@@ -16,11 +16,12 @@
 #define TEST_CONTROLLER_WITH_OPTIONS_HPP_
 
 #include <controller_interface/controller_interface.hpp>
-#include <controller_interface/controller_state_names.hpp>
 
 #include <map>
 #include <memory>
 #include <string>
+
+#include <controller_interface/controller_state_names.hpp>
 
 namespace controller_with_options
 {
@@ -52,7 +53,8 @@ public:
       options.allow_undeclared_parameters(true));
 
     auto result = on_init(controller_name);
-    if (result == controller_interface::return_type::ERROR) {
+    if (result == controller_interface::return_type::ERROR)
+    {
       return result;
     }
     if (node_->get_parameters("parameter_list", params))

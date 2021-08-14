@@ -89,14 +89,10 @@ public:
   void release_interfaces();
 
   CONTROLLER_INTERFACE_PUBLIC
-  virtual
-  return_type
-  on_init(const std::string & controller_name);
+  virtual return_type on_init(const std::string & controller_name);
 
   CONTROLLER_INTERFACE_PUBLIC
-  virtual
-  return_type
-  init(const std::string & controller_name);
+  virtual return_type init(const std::string & controller_name);
 
   CONTROLLER_INTERFACE_PUBLIC
   virtual return_type update() = 0;
