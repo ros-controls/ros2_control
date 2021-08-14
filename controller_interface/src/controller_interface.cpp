@@ -24,16 +24,13 @@
 
 namespace controller_interface
 {
-
-return_type
-ControllerInterface::on_init(const std::string & controller_name)
+return_type ControllerInterface::on_init(const std::string & controller_name)
 {
   std::cout << controller_name << std::endl;   // temporary line to remove warning
   return return_type::OK;
 }
 
-return_type
-ControllerInterface::init(const std::string & controller_name)
+return_type ControllerInterface::init(const std::string & controller_name)
 {
   node_ = std::make_shared<rclcpp::Node>(
     controller_name,
