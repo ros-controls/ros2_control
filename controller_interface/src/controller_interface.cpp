@@ -24,14 +24,15 @@
 
 namespace controller_interface
 {
-return_type ControllerInterface::init(const std::string & controller_name)
+
+return_type
+ControllerInterface::init(const std::string & controller_name)
 {
   node_ = std::make_shared<rclcpp::Node>(
     controller_name, rclcpp::NodeOptions().allow_undeclared_parameters(true));
 
   return_type result = return_type::OK;
-  switch (on_init())
-  {
+  switch (on_init()) {
     case LifecycleNodeInterface::CallbackReturn::SUCCESS:
       lifecycle_state_ = rclcpp_lifecycle::State(
         lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state_names::UNCONFIGURED);

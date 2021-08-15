@@ -46,8 +46,7 @@ public:
     options.allow_undeclared_parameters(true).automatically_declare_parameters_from_overrides(true);
     node_ = std::make_shared<rclcpp::Node>(controller_name, options);
 
-    switch (on_init())
-    {
+    switch (on_init()) {
       case LifecycleNodeInterface::CallbackReturn::SUCCESS:
         lifecycle_state_ = rclcpp_lifecycle::State(
           lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,

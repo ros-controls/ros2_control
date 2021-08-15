@@ -31,8 +31,19 @@ TestControllerFailedInit::on_init()
   return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
-controller_interface::return_type TestControllerFailedInit::init(
-  const std::string & /* controller_name */)
+
+TestControllerFailedInit::TestControllerFailedInit()
+: controller_interface::ControllerInterface()
+{}
+
+rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
+TestControllerFailedInit::on_init()
+{
+  return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
+}
+
+controller_interface::return_type
+TestControllerFailedInit::init(const std::string & /* controller_name */)
 {
   return controller_interface::return_type::ERROR;
 }

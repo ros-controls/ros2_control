@@ -89,7 +89,9 @@ public:
   void release_interfaces();
 
   CONTROLLER_INTERFACE_PUBLIC
-  virtual LifecycleNodeInterface::CallbackReturn on_init() = 0;
+  virtual
+  LifecycleNodeInterface::CallbackReturn
+  on_init() = 0;
 
   CONTROLLER_INTERFACE_PUBLIC
   virtual return_type init(const std::string & controller_name);
