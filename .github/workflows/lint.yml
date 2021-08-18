@@ -1,4 +1,4 @@
-name: Lint ros2_control
+name: ROS Lint
 on:
   pull_request:
 
@@ -9,7 +9,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-          linter: [copyright, cppcheck, cpplint, flake8, pep257, uncrustify, xmllint]
+          linter: [copyright, cppcheck, lint_cmake]
     steps:
     - uses: actions/checkout@v1
     - uses: ros-tooling/setup-ros@v0.2
@@ -17,6 +17,29 @@ jobs:
       with:
         distribution: foxy
         linter: ${{ matrix.linter }}
+        package-name:
+          controller_interface
+          controller_manager
+          controller_manager_msgs
+          hardware_interface
+          ros2controlcli
+          ros2_control
+          ros2_control_test_assets
+          transmission_interface
+
+  ament_lint_cpplint:
+    name: ament_${{ matrix.linter }}
+    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+    steps:
+    - uses: actions/checkout@v1
+    - uses: ros-tooling/setup-ros@v0.2
+    - uses: ros-tooling/action-ros-lint@v0.1
+      with:
+        distribution: foxy
+        linter: cpplint
+        arguments: "--filter=-whitespace/newline"
         package-name:
           controller_interface
           controller_manager
