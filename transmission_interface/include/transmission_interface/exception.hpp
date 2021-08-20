@@ -14,21 +14,16 @@
 #ifndef TRANSMISSION_INTERFACE__EXCEPTION_HPP_
 #define TRANSMISSION_INTERFACE__EXCEPTION_HPP_
 
-
 #include <exception>
 #include <string>
 
 namespace transmission_interface
 {
-
 class Exception : public std::exception
 {
 public:
-  explicit Exception(const std::string & message)
-  : msg(message)
-  {
-  }
-  const char * what() const noexcept override {return msg.c_str();}
+  explicit Exception(const std::string & message) : msg(message) {}
+  const char * what() const noexcept override { return msg.c_str(); }
 
 private:
   std::string msg;

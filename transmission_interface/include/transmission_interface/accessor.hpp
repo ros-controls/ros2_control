@@ -22,48 +22,47 @@
 
 namespace transmission_interface
 {
-
-template<typename T>
+template <typename T>
 std::string to_string(const std::vector<T> & list)
 {
   std::stringstream ss;
   ss << "[";
-  for (const auto & elem : list) {
+  for (const auto & elem : list)
+  {
     ss << elem << ", ";
   }
 
-  if (!list.empty()) {
+  if (!list.empty())
+  {
     ss.seekp(-2, std::ios_base::end);  // remove last ", "
   }
   ss << "]";
   return ss.str();
 }
 
-template<class T>
+template <class T>
 std::vector<std::string> get_names(const std::vector<T> & handles)
 {
   std::set<std::string> names;
   std::transform(
-    handles.cbegin(), handles.cend(),
-    std::inserter(names, names.end()),
-    [](const auto & handle) {return handle.get_name();});
+    handles.cbegin(), handles.cend(), std::inserter(names, names.end()),
+    [](const auto & handle) { return handle.get_name(); });
   return std::vector<std::string>(names.begin(), names.end());
 }
 
-template<typename T>
+template <typename T>
 std::vector<T> get_ordered_handles(
-  const std::vector<T> & unordered_handles,
-  const std::vector<std::string> & names,
+  const std::vector<T> & unordered_handles, const std::vector<std::string> & names,
   const std::string & interface_type)
 {
   std::vector<T> result;
-  for (const auto & name : names) {
+  for (const auto & name : names)
+  {
     std::copy_if(
-      unordered_handles.cbegin(), unordered_handles.cend(),
-      std::back_inserter(result), [&](const auto & handle) {
-        return (handle.get_name() == name) &&
-        (handle.get_interface_name() == interface_type) &&
-        handle;
+      unordered_handles.cbegin(), unordered_handles.cend(), std::back_inserter(result),
+      [&](const auto & handle) {
+        return (handle.get_name() == name) && (handle.get_interface_name() == interface_type) &&
+               handle;
       });
   }
   return result;

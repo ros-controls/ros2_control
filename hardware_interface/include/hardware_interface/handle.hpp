@@ -28,9 +28,7 @@ class ReadOnlyHandle
 {
 public:
   ReadOnlyHandle(
-    const std::string & name,
-    const std::string & interface_name,
-    double * value_ptr = nullptr)
+    const std::string & name, const std::string & interface_name, double * value_ptr = nullptr)
   : name_(name), interface_name_(interface_name), value_ptr_(value_ptr)
   {
   }
@@ -56,22 +54,13 @@ public:
   virtual ~ReadOnlyHandle() = default;
 
   /// Returns true if handle references a value.
-  inline operator bool() const {return value_ptr_ != nullptr;}
+  inline operator bool() const { return value_ptr_ != nullptr; }
 
-  const std::string & get_name() const
-  {
-    return name_;
-  }
+  const std::string & get_name() const { return name_; }
 
-  const std::string & get_interface_name() const
-  {
-    return interface_name_;
-  }
+  const std::string & get_interface_name() const { return interface_name_; }
 
-  const std::string get_full_name() const
-  {
-    return name_ + "/" + interface_name_;
-  }
+  const std::string get_full_name() const { return name_ + "/" + interface_name_; }
 
   double get_value() const
   {
@@ -89,19 +78,14 @@ class ReadWriteHandle : public ReadOnlyHandle
 {
 public:
   ReadWriteHandle(
-    const std::string & name,
-    const std::string & interface_name,
-    double * value_ptr = nullptr)
+    const std::string & name, const std::string & interface_name, double * value_ptr = nullptr)
   : ReadOnlyHandle(name, interface_name, value_ptr)
-  {}
+  {
+  }
 
-  explicit ReadWriteHandle(const std::string & interface_name)
-  : ReadOnlyHandle(interface_name)
-  {}
+  explicit ReadWriteHandle(const std::string & interface_name) : ReadOnlyHandle(interface_name) {}
 
-  explicit ReadWriteHandle(const char * interface_name)
-  : ReadOnlyHandle(interface_name)
-  {}
+  explicit ReadWriteHandle(const char * interface_name) : ReadOnlyHandle(interface_name) {}
 
   ReadWriteHandle(const ReadWriteHandle & other) = default;
 

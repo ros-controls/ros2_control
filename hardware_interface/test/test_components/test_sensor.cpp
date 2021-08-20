@@ -28,11 +28,13 @@ class TestSensor : public BaseInterface<SensorInterface>
 {
   return_type configure(const hardware_interface::HardwareInfo & info) override
   {
-    if (configure_default(info) != return_type::OK) {
+    if (configure_default(info) != return_type::OK)
+    {
       return return_type::ERROR;
     }
     // can only give feedback state for velocity
-    if (info_.sensors[0].state_interfaces.size() != 1) {
+    if (info_.sensors[0].state_interfaces.size() != 1)
+    {
       return return_type::ERROR;
     }
     return return_type::OK;
@@ -41,11 +43,8 @@ class TestSensor : public BaseInterface<SensorInterface>
   std::vector<StateInterface> export_state_interfaces() override
   {
     std::vector<StateInterface> state_interfaces;
-    state_interfaces.emplace_back(
-      hardware_interface::StateInterface(
-        info_.sensors[0].name,
-        info_.sensors[0].state_interfaces[0].name,
-        &velocity_state_));
+    state_interfaces.emplace_back(hardware_interface::StateInterface(
+      info_.sensors[0].name, info_.sensors[0].state_interfaces[0].name, &velocity_state_));
 
     return state_interfaces;
   }
@@ -62,10 +61,7 @@ class TestSensor : public BaseInterface<SensorInterface>
     return return_type::OK;
   }
 
-  return_type read() override
-  {
-    return return_type::OK;
-  }
+  return_type read() override { return return_type::OK; }
 
 private:
   double velocity_state_ = 0.0;

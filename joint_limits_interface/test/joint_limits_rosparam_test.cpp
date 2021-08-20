@@ -28,8 +28,8 @@ protected:
   void SetUp()
   {
     rclcpp::NodeOptions node_options;
-    node_options.allow_undeclared_parameters(true)
-    .automatically_declare_parameters_from_overrides(true);
+    node_options.allow_undeclared_parameters(true).automatically_declare_parameters_from_overrides(
+      true);
 
     node_ = rclcpp::Node::make_shared("JointLimitsRosparamTestNode", node_options);
   }

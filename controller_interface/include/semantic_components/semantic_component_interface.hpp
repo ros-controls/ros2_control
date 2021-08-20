@@ -23,8 +23,7 @@
 
 namespace semantic_components
 {
-
-template<typename MessageReturnType>
+template <typename MessageReturnType>
 class SemanticComponentInterface
 {
 public:
@@ -51,10 +50,7 @@ public:
   }
 
   /// Release loaned interfaces from the hardware.
-  void release_interfaces()
-  {
-    state_interfaces_.clear();
-  }
+  void release_interfaces() { state_interfaces_.clear(); }
 
   /// Definition of state interface names for the component.
   /**
@@ -67,8 +63,10 @@ public:
    */
   virtual std::vector<std::string> get_state_interface_names()
   {
-    if (interface_names_.empty()) {
-      for (auto i = 0u; i < interface_names_.capacity(); ++i) {
+    if (interface_names_.empty())
+    {
+      for (auto i = 0u; i < interface_names_.capacity(); ++i)
+      {
         interface_names_.emplace_back(name_ + "/" + std::to_string(i + 1));
       }
     }
@@ -82,11 +80,13 @@ public:
   bool get_values(std::vector<double> & values) const
   {
     // check we have sufficient memory
-    if (values.capacity() != state_interfaces_.size()) {
+    if (values.capacity() != state_interfaces_.size())
+    {
       return false;
     }
     // insert all the values
-    for (size_t i = 0; i < state_interfaces_.size(); ++i) {
+    for (size_t i = 0; i < state_interfaces_.size(); ++i)
+    {
       values.emplace_back(state_interfaces_[i].get().get_value());
     }
     return true;
@@ -96,10 +96,7 @@ public:
   /**
    * \return false by default
    */
-  bool get_values_as_message(MessageReturnType & /* message */)
-  {
-    return false;
-  }
+  bool get_values_as_message(MessageReturnType & /* message */) { return false; }
 
 protected:
   std::string name_;

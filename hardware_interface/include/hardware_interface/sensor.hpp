@@ -28,7 +28,6 @@
 
 namespace hardware_interface
 {
-
 class SensorInterface;
 
 class Sensor final

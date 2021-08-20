@@ -23,22 +23,20 @@
 
 namespace hardware_interface
 {
-
 class LoanedCommandInterface
 {
 public:
-  using Deleter = std::function<void (void)>;
+  using Deleter = std::function<void(void)>;
 
   explicit LoanedCommandInterface(CommandInterface & command_interface)
   : LoanedCommandInterface(command_interface, nullptr)
-  {}
+  {
+  }
 
-  LoanedCommandInterface(
-    CommandInterface & command_interface,
-    Deleter && deleter)
-  : command_interface_(command_interface),
-    deleter_(std::forward<Deleter>(deleter))
-  {}
+  LoanedCommandInterface(CommandInterface & command_interface, Deleter && deleter)
+  : command_interface_(command_interface), deleter_(std::forward<Deleter>(deleter))
+  {
+  }
 
   LoanedCommandInterface(const LoanedCommandInterface & other) = delete;
 
@@ -46,35 +44,21 @@ public:
 
   virtual ~LoanedCommandInterface()
   {
-    if (deleter_) {
+    if (deleter_)
+    {
       deleter_();
     }
   }
 
-  const std::string & get_name() const
-  {
-    return command_interface_.get_name();
-  }
+  const std::string & get_name() const { return command_interface_.get_name(); }
 
-  const std::string & get_interface_name() const
-  {
-    return command_interface_.get_interface_name();
-  }
+  const std::string & get_interface_name() const { return command_interface_.get_interface_name(); }
 
-  const std::string get_full_name() const
-  {
-    return command_interface_.get_full_name();
-  }
+  const std::string get_full_name() const { return command_interface_.get_full_name(); }
 
-  void set_value(double val)
-  {
-    command_interface_.set_value(val);
-  }
+  void set_value(double val) { command_interface_.set_value(val); }
 
-  double get_value() const
-  {
-    return command_interface_.get_value();
-  }
+  double get_value() const { return command_interface_.get_value(); }
 
 protected:
   CommandInterface & command_interface_;

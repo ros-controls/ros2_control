@@ -17,17 +17,17 @@
 #include <vector>
 
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
-#include "transmission_interface/differential_transmission.hpp"
 #include "random_generator_utils.hpp"
+#include "transmission_interface/differential_transmission.hpp"
 
+using hardware_interface::HW_IF_EFFORT;
+using hardware_interface::HW_IF_POSITION;
+using hardware_interface::HW_IF_VELOCITY;
+using testing::DoubleNear;
+using transmission_interface::ActuatorHandle;
 using transmission_interface::DifferentialTransmission;
 using transmission_interface::Exception;
 using transmission_interface::JointHandle;
-using transmission_interface::ActuatorHandle;
-using hardware_interface::HW_IF_POSITION;
-using hardware_interface::HW_IF_VELOCITY;
-using hardware_interface::HW_IF_EFFORT;
-using testing::DoubleNear;
 // Floating-point value comparison threshold
 const double EPS = 1e-6;
 
@@ -62,8 +62,7 @@ TEST(PreconditionsTest, ExceptionThrowing)
   EXPECT_THROW(DifferentialTransmission(reduction_bad_size, reduction_good), Exception);
   EXPECT_THROW(DifferentialTransmission(reduction_good, reduction_bad_size), Exception);
   EXPECT_THROW(
-    DifferentialTransmission(reduction_good, reduction_good, offset_bad_size),
-    Exception);
+    DifferentialTransmission(reduction_good, reduction_good, offset_bad_size), Exception);
 
   // Valid instance creation
   EXPECT_NO_THROW(DifferentialTransmission(reduction_good, reduction_good));
@@ -76,9 +75,7 @@ TEST(PreconditionsTest, AccessorValidation)
   std::vector<double> jnt_reduction = {4.0, -4.0};
   std::vector<double> jnt_offset = {1.0, -1.0};
 
-  DifferentialTransmission trans(act_reduction,
-    jnt_reduction,
-    jnt_offset);
+  DifferentialTransmission trans(act_reduction, jnt_reduction, jnt_offset);
 
   EXPECT_EQ(2u, trans.num_actuators());
   EXPECT_EQ(2u, trans.num_joints());
@@ -111,21 +108,16 @@ void testConfigureWithBadHandles(std::string interface_name)
   EXPECT_THROW(trans.configure({j1_handle, j2_handle}, {a1_handle}), Exception);
   EXPECT_THROW(trans.configure({j1_handle}, {a1_handle, a2_handle}), Exception);
   EXPECT_THROW(
-    trans.configure({j1_handle, j2_handle, j3_handle}, {a1_handle, a2_handle}),
-    Exception);
+    trans.configure({j1_handle, j2_handle, j3_handle}, {a1_handle, a2_handle}), Exception);
   EXPECT_THROW(
-    trans.configure({j1_handle, j2_handle}, {a1_handle, a2_handle, a3_handle}),
-    Exception);
+    trans.configure({j1_handle, j2_handle}, {a1_handle, a2_handle, a3_handle}), Exception);
   EXPECT_THROW(
-    trans.configure(
-      {j1_handle, j2_handle, j3_handle}, {a1_handle, a2_handle,
-        a3_handle}), Exception);
+    trans.configure({j1_handle, j2_handle, j3_handle}, {a1_handle, a2_handle, a3_handle}),
+    Exception);
   EXPECT_THROW(trans.configure({j1_handle, j2_handle}, {invalid_a1_handle, a2_handle}), Exception);
   EXPECT_THROW(trans.configure({invalid_j1_handle, j2_handle}, {a1_handle, a2_handle}), Exception);
   EXPECT_THROW(
-    trans.configure(
-      {invalid_j1_handle, j2_handle}, {invalid_a1_handle,
-        a2_handle}), Exception);
+    trans.configure({invalid_j1_handle, j2_handle}, {invalid_a1_handle, a2_handle}), Exception);
 }
 
 TEST(ConfigureTest, FailsWithBadHandles)
@@ -155,8 +147,7 @@ protected:
   /// and inverse transmission transformations.
   /// \param interface_name The name of the interface to test, position, velocity, etc.
   void testIdentityMap(
-    DifferentialTransmission & trans,
-    const std::vector<double> & ref_val,
+    DifferentialTransmission & trans, const std::vector<double> & ref_val,
     const std::string & interface_name)
   {
     // set actuator values to reference
@@ -189,13 +180,16 @@ protected:
     // NOTE: Magic value
     RandomDoubleGenerator rand_gen(-1000.0, 1000.0);
 
-    while (out.size() < size) {
-      try {
-        DifferentialTransmission trans(randomVector(2, rand_gen),
-          randomVector(2, rand_gen),
-          randomVector(2, rand_gen));
+    while (out.size() < size)
+    {
+      try
+      {
+        DifferentialTransmission trans(
+          randomVector(2, rand_gen), randomVector(2, rand_gen), randomVector(2, rand_gen));
         out.push_back(trans);
-      } catch (const Exception &) {
+      }
+      catch (const Exception &)
+      {
         // NOTE: If by chance a perfect zero is produced by the random number generator,
         // construction will fail
         // We swallow the exception and move on to prevent a test crash.
@@ -212,13 +206,15 @@ TEST_F(BlackBoxTest, IdentityMap)
   auto transmission_test_instances = createTestInstances(100);
 
   // Test different transmission configurations...
-  for (auto && transmission : transmission_test_instances) {
+  for (auto && transmission : transmission_test_instances)
+  {
     // ...and for each transmission, different input values
     // NOTE: Magic value
     RandomDoubleGenerator rand_gen(-1000.0, 1000.0);
     // NOTE: Magic value
     const unsigned int input_value_trials = 100;
-    for (unsigned int i = 0; i < input_value_trials; ++i) {
+    for (unsigned int i = 0; i < input_value_trials; ++i)
+    {
       vector<double> input_value = randomVector(2, rand_gen);
       // Test each interface type separately
       testIdentityMap(transmission, input_value, HW_IF_POSITION);
@@ -228,8 +224,9 @@ TEST_F(BlackBoxTest, IdentityMap)
   }
 }
 
-
-class WhiteBoxTest : public TransmissionSetup {};
+class WhiteBoxTest : public TransmissionSetup
+{
+};
 
 TEST_F(WhiteBoxTest, DontMoveJoints)
 {

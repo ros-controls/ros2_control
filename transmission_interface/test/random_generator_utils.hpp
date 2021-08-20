@@ -17,7 +17,6 @@
 #ifndef RANDOM_GENERATOR_UTILS_HPP_
 #define RANDOM_GENERATOR_UTILS_HPP_
 
-
 #include <cstdlib>
 #include <ctime>
 #include <vector>
@@ -30,9 +29,7 @@ using std::vector;
 struct RandomDoubleGenerator
 {
 public:
-  RandomDoubleGenerator(double min_val, double max_val)
-  : min_val_(min_val),
-    max_val_(max_val)
+  RandomDoubleGenerator(double min_val, double max_val) : min_val_(min_val), max_val_(max_val)
   {
     srand(time(nullptr));
   }
@@ -48,13 +45,12 @@ private:
 };
 
 /// \brief Generator of a vector of pseudo-random doubles.
-vector<double> randomVector(
-  const vector<double>::size_type size,
-  RandomDoubleGenerator & generator)
+vector<double> randomVector(const vector<double>::size_type size, RandomDoubleGenerator & generator)
 {
   vector<double> out;
   out.reserve(size);
-  for (vector<double>::size_type i = 0; i < size; ++i) {
+  for (vector<double>::size_type i = 0; i < size; ++i)
+  {
     out.push_back(generator());
   }
   return out;

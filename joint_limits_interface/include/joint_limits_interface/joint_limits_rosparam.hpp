@@ -25,7 +25,6 @@
 
 namespace joint_limits_interface
 {
-
 /// Populate a JointLimits instance from the ROS parameter server.
 /**
  * It is assumed that the following parameter structure is followed on the provided NodeHandle. Unspecified parameters
@@ -60,12 +59,13 @@ namespace joint_limits_interface
  * \return True if a limits specification is found (ie. the \p joint_limits/joint_name parameter exists in \p node), false otherwise.
  */
 inline bool getJointLimits(
-  const std::string & joint_name, const rclcpp::Node::SharedPtr & node,
-  JointLimits & limits)
+  const std::string & joint_name, const rclcpp::Node::SharedPtr & node, JointLimits & limits)
 {
   const std::string param_base_name = "joint_limits." + joint_name;
-  try {
-    if (!node->has_parameter(param_base_name + ".has_position_limits") &&
+  try
+  {
+    if (
+      !node->has_parameter(param_base_name + ".has_position_limits") &&
       !node->has_parameter(param_base_name + ".min_position") &&
       !node->has_parameter(param_base_name + ".max_position") &&
       !node->has_parameter(param_base_name + ".has_velocity_limits") &&
@@ -88,23 +88,27 @@ inline bool getJointLimits(
         node->get_logger(),
         "No joint limits specification found for joint '%s' in the parameter server "
         "(node: %s param name: %s).",
-        joint_name.c_str(),
-        node->get_name(),
-        param_base_name.c_str());
+        joint_name.c_str(), node->get_name(), param_base_name.c_str());
       return false;
     }
-  } catch (const std::exception & ex) {
+  }
+  catch (const std::exception & ex)
+  {
     RCLCPP_ERROR(node->get_logger(), "%s", ex.what());
     return false;
   }
 
   // Position limits
   bool has_position_limits = false;
-  if (node->get_parameter(param_base_name + ".has_position_limits", has_position_limits)) {
-    if (!has_position_limits) {limits.has_position_limits = false;}
+  if (node->get_parameter(param_base_name + ".has_position_limits", has_position_limits))
+  {
+    if (!has_position_limits)
+    {
+      limits.has_position_limits = false;
+    }
     double min_pos, max_pos;
-    if (has_position_limits &&
-      node->get_parameter(param_base_name + ".min_position", min_pos) &&
+    if (
+      has_position_limits && node->get_parameter(param_base_name + ".min_position", min_pos) &&
       node->get_parameter(param_base_name + ".max_position", max_pos))
     {
       limits.has_position_limits = true;
@@ -113,7 +117,8 @@ inline bool getJointLimits(
     }
 
     bool angle_wraparound;
-    if (!has_position_limits &&
+    if (
+      !has_position_limits &&
       node->get_parameter(param_base_name + ".angle_wraparound", angle_wraparound))
     {
       limits.angle_wraparound = angle_wraparound;
@@ -122,10 +127,15 @@ inline bool getJointLimits(
 
   // Velocity limits
   bool has_velocity_limits = false;
-  if (node->get_parameter(param_base_name + ".has_velocity_limits", has_velocity_limits)) {
-    if (!has_velocity_limits) {limits.has_velocity_limits = false;}
+  if (node->get_parameter(param_base_name + ".has_velocity_limits", has_velocity_limits))
+  {
+    if (!has_velocity_limits)
+    {
+      limits.has_velocity_limits = false;
+    }
     double max_vel;
-    if (has_velocity_limits && node->get_parameter(param_base_name + ".max_velocity", max_vel)) {
+    if (has_velocity_limits && node->get_parameter(param_base_name + ".max_velocity", max_vel))
+    {
       limits.has_velocity_limits = true;
       limits.max_velocity = max_vel;
     }
@@ -133,10 +143,15 @@ inline bool getJointLimits(
 
   // Acceleration limits
   bool has_acceleration_limits = false;
-  if (node->get_parameter(param_base_name + ".has_acceleration_limits", has_acceleration_limits)) {
-    if (!has_acceleration_limits) {limits.has_acceleration_limits = false;}
+  if (node->get_parameter(param_base_name + ".has_acceleration_limits", has_acceleration_limits))
+  {
+    if (!has_acceleration_limits)
+    {
+      limits.has_acceleration_limits = false;
+    }
     double max_acc;
-    if (has_acceleration_limits &&
+    if (
+      has_acceleration_limits &&
       node->get_parameter(param_base_name + ".max_acceleration", max_acc))
     {
       limits.has_acceleration_limits = true;
@@ -146,10 +161,15 @@ inline bool getJointLimits(
 
   // Jerk limits
   bool has_jerk_limits = false;
-  if (node->get_parameter(param_base_name + ".has_jerk_limits", has_jerk_limits)) {
-    if (!has_jerk_limits) {limits.has_jerk_limits = false;}
+  if (node->get_parameter(param_base_name + ".has_jerk_limits", has_jerk_limits))
+  {
+    if (!has_jerk_limits)
+    {
+      limits.has_jerk_limits = false;
+    }
     double max_jerk;
-    if (has_jerk_limits && node->get_parameter(param_base_name + ".max_jerk", max_jerk)) {
+    if (has_jerk_limits && node->get_parameter(param_base_name + ".max_jerk", max_jerk))
+    {
       limits.has_jerk_limits = true;
       limits.max_jerk = max_jerk;
     }
@@ -157,10 +177,15 @@ inline bool getJointLimits(
 
   // Effort limits
   bool has_effort_limits = false;
-  if (node->get_parameter(param_base_name + ".has_effort_limits", has_effort_limits)) {
-    if (!has_effort_limits) {limits.has_effort_limits = false;}
+  if (node->get_parameter(param_base_name + ".has_effort_limits", has_effort_limits))
+  {
+    if (!has_effort_limits)
+    {
+      limits.has_effort_limits = false;
+    }
     double max_effort;
-    if (has_effort_limits && node->get_parameter(param_base_name + ".max_effort", max_effort)) {
+    if (has_effort_limits && node->get_parameter(param_base_name + ".max_effort", max_effort))
+    {
       limits.has_effort_limits = true;
       limits.max_effort = max_effort;
     }
@@ -196,8 +221,10 @@ inline bool getSoftJointLimits(
   SoftJointLimits & soft_limits)
 {
   const std::string param_base_name = "joint_limits." + joint_name;
-  try {
-    if (!node->has_parameter(param_base_name + ".has_soft_limits") &&
+  try
+  {
+    if (
+      !node->has_parameter(param_base_name + ".has_soft_limits") &&
       !node->has_parameter(param_base_name + ".k_velocity") &&
       !node->has_parameter(param_base_name + ".k_position") &&
       !node->has_parameter(param_base_name + ".soft_lower_limit") &&
@@ -207,21 +234,22 @@ inline bool getSoftJointLimits(
         node->get_logger(),
         "No soft joint limits specification found for joint '%s' in the parameter server "
         "(node: %s param name: %s).",
-        joint_name.c_str(),
-        node->get_name(),
-        param_base_name.c_str());
+        joint_name.c_str(), node->get_name(), param_base_name.c_str());
       return false;
     }
-  } catch (const std::exception & ex) {
+  }
+  catch (const std::exception & ex)
+  {
     RCLCPP_ERROR(node->get_logger(), "%s", ex.what());
     return false;
   }
 
   // Override soft limits if complete specification is found
   bool has_soft_limits;
-  if (node->get_parameter(param_base_name + ".has_soft_limits", has_soft_limits)) {
-    if (has_soft_limits &&
-      node->has_parameter(param_base_name + ".k_position") &&
+  if (node->get_parameter(param_base_name + ".has_soft_limits", has_soft_limits))
+  {
+    if (
+      has_soft_limits && node->has_parameter(param_base_name + ".k_position") &&
       node->has_parameter(param_base_name + ".k_velocity") &&
       node->has_parameter(param_base_name + ".soft_lower_limit") &&
       node->has_parameter(param_base_name + ".soft_upper_limit"))

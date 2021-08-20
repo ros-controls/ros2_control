@@ -28,16 +28,13 @@
 #include "semantic_components/imu_sensor.hpp"
 
 // implementing and friending so we can access member variables
-class TestableIMUSensor : public semantic_components::
-  IMUSensor
+class TestableIMUSensor : public semantic_components::IMUSensor
 {
   FRIEND_TEST(IMUSensorTest, validate_all);
 
 public:
   // Use generation of interface names
-  explicit TestableIMUSensor(const std::string & name)
-  : IMUSensor(name)
-  {}
+  explicit TestableIMUSensor(const std::string & name) : IMUSensor(name) {}
 
   virtual ~TestableIMUSensor() = default;
 };
@@ -48,7 +45,8 @@ public:
   void SetUp()
   {
     full_interface_names_.reserve(size_);
-    for (auto index = 0u; index < size_; ++index) {
+    for (auto index = 0u; index < size_; ++index)
+    {
       full_interface_names_.emplace_back(sensor_name_ + "/" + imu_interface_names_[index]);
     }
   }
@@ -64,9 +62,9 @@ protected:
   std::unique_ptr<TestableIMUSensor> imu_sensor_;
 
   std::vector<std::string> full_interface_names_;
-  const std::vector<std::string> imu_interface_names_ =
-  {"orientation.x", "orientation.y", "orientation.z", "orientation.w",
-    "angular_velocity.x", "angular_velocity.y", "angular_velocity.z", "linear_acceleration.x",
+  const std::vector<std::string> imu_interface_names_ = {
+    "orientation.x",         "orientation.y",        "orientation.z",      "orientation.w",
+    "angular_velocity.x",    "angular_velocity.y",   "angular_velocity.z", "linear_acceleration.x",
     "linear_acceleration.y", "linear_acceleration.z"};
 };
 

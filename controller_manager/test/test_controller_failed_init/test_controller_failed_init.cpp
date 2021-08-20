@@ -21,19 +21,17 @@
 
 namespace test_controller_failed_init
 {
+TestControllerFailedInit::TestControllerFailedInit() : controller_interface::ControllerInterface()
+{
+}
 
-TestControllerFailedInit::TestControllerFailedInit()
-: controller_interface::ControllerInterface()
-{}
-
-controller_interface::return_type
-TestControllerFailedInit::init(const std::string & /* controller_name */)
+controller_interface::return_type TestControllerFailedInit::init(
+  const std::string & /* controller_name */)
 {
   return controller_interface::return_type::ERROR;
 }
 
-controller_interface::return_type
-TestControllerFailedInit::update()
+controller_interface::return_type TestControllerFailedInit::update()
 {
   return controller_interface::return_type::OK;
 }
@@ -43,5 +41,4 @@ TestControllerFailedInit::update()
 #include "pluginlib/class_list_macros.hpp"
 
 PLUGINLIB_EXPORT_CLASS(
-  test_controller_failed_init::TestControllerFailedInit,
-  controller_interface::ControllerInterface)
+  test_controller_failed_init::TestControllerFailedInit, controller_interface::ControllerInterface)

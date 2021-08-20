@@ -18,12 +18,11 @@
 #include <memory>
 #include <string>
 
-#include "controller_manager/controller_manager.hpp"
 #include "controller_interface/visibility_control.h"
+#include "controller_manager/controller_manager.hpp"
 
 namespace test_controller
 {
-
 // indicating the node name under which the controller node
 // is being loaded.
 constexpr char TEST_CONTROLLER_NAME[] = "test_controller_name";
@@ -36,8 +35,7 @@ public:
   TestController();
 
   CONTROLLER_MANAGER_PUBLIC
-  virtual
-  ~TestController() = default;
+  virtual ~TestController() = default;
 
   controller_interface::InterfaceConfiguration command_interface_configuration() const override
   {
@@ -51,16 +49,15 @@ public:
   }
 
   CONTROLLER_MANAGER_PUBLIC
-  controller_interface::return_type
-  update() override;
+  controller_interface::return_type update() override;
 
   CONTROLLER_MANAGER_PUBLIC
-  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
-  on_configure(const rclcpp_lifecycle::State & previous_state) override;
+  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_configure(
+    const rclcpp_lifecycle::State & previous_state) override;
 
   CONTROLLER_MANAGER_PUBLIC
-  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
-  on_cleanup(const rclcpp_lifecycle::State & previous_state) override;
+  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_cleanup(
+    const rclcpp_lifecycle::State & previous_state) override;
 
   CONTROLLER_MANAGER_PUBLIC
   void set_command_interface_configuration(

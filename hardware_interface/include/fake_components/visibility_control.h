@@ -19,31 +19,31 @@
 //     https://gcc.gnu.org/wiki/Visibility
 
 #if defined _WIN32 || defined __CYGWIN__
-  #ifdef __GNUC__
-    #define FAKE_COMPONENTS_EXPORT __attribute__ ((dllexport))
-    #define FAKE_COMPONENTS_IMPORT __attribute__ ((dllimport))
-  #else
-    #define FAKE_COMPONENTS_EXPORT __declspec(dllexport)
-    #define FAKE_COMPONENTS_IMPORT __declspec(dllimport)
-  #endif
-  #ifdef FAKE_COMPONENTS_BUILDING_DLL
-    #define FAKE_COMPONENTS_PUBLIC FAKE_COMPONENTS_EXPORT
-  #else
-    #define FAKE_COMPONENTS_PUBLIC FAKE_COMPONENTS_IMPORT
-  #endif
-  #define FAKE_COMPONENTS_PUBLIC_TYPE FAKE_COMPONENTS_PUBLIC
-  #define FAKE_COMPONENTS_LOCAL
+#ifdef __GNUC__
+#define FAKE_COMPONENTS_EXPORT __attribute__((dllexport))
+#define FAKE_COMPONENTS_IMPORT __attribute__((dllimport))
 #else
-  #define FAKE_COMPONENTS_EXPORT __attribute__ ((visibility("default")))
-  #define FAKE_COMPONENTS_IMPORT
-  #if __GNUC__ >= 4
-    #define FAKE_COMPONENTS_PUBLIC __attribute__ ((visibility("default")))
-    #define FAKE_COMPONENTS_LOCAL  __attribute__ ((visibility("hidden")))
-  #else
-    #define FAKE_COMPONENTS_PUBLIC
-    #define FAKE_COMPONENTS_LOCAL
-  #endif
-  #define FAKE_COMPONENTS_PUBLIC_TYPE
+#define FAKE_COMPONENTS_EXPORT __declspec(dllexport)
+#define FAKE_COMPONENTS_IMPORT __declspec(dllimport)
+#endif
+#ifdef FAKE_COMPONENTS_BUILDING_DLL
+#define FAKE_COMPONENTS_PUBLIC FAKE_COMPONENTS_EXPORT
+#else
+#define FAKE_COMPONENTS_PUBLIC FAKE_COMPONENTS_IMPORT
+#endif
+#define FAKE_COMPONENTS_PUBLIC_TYPE FAKE_COMPONENTS_PUBLIC
+#define FAKE_COMPONENTS_LOCAL
+#else
+#define FAKE_COMPONENTS_EXPORT __attribute__((visibility("default")))
+#define FAKE_COMPONENTS_IMPORT
+#if __GNUC__ >= 4
+#define FAKE_COMPONENTS_PUBLIC __attribute__((visibility("default")))
+#define FAKE_COMPONENTS_LOCAL __attribute__((visibility("hidden")))
+#else
+#define FAKE_COMPONENTS_PUBLIC
+#define FAKE_COMPONENTS_LOCAL
+#endif
+#define FAKE_COMPONENTS_PUBLIC_TYPE
 #endif
 
 #endif  // FAKE_COMPONENTS__VISIBILITY_CONTROL_H_

@@ -28,8 +28,7 @@
 #include "semantic_components/force_torque_sensor.hpp"
 
 // implementing and friending so we can access member variables
-class TestableForceTorqueSensor : public semantic_components::
-  ForceTorqueSensor
+class TestableForceTorqueSensor : public semantic_components::ForceTorqueSensor
 {
   FRIEND_TEST(ForceTorqueSensorTest, validate_all_with_default_names);
   FRIEND_TEST(ForceTorqueSensorTest, validate_all_with_custom_names);
@@ -37,18 +36,17 @@ class TestableForceTorqueSensor : public semantic_components::
 
 public:
   // Use generation of interface names
-  explicit TestableForceTorqueSensor(const std::string & name)
-  : ForceTorqueSensor(name)
-  {}
+  explicit TestableForceTorqueSensor(const std::string & name) : ForceTorqueSensor(name) {}
   // Use custom interface names
   explicit TestableForceTorqueSensor(
     const std::string & interface_force_x, const std::string & interface_force_y,
     const std::string & interface_force_z, const std::string & interface_torque_x,
     const std::string & interface_torque_y, const std::string & interface_torque_z)
   : ForceTorqueSensor(
-      interface_force_x, interface_force_y, interface_force_z,
-      interface_torque_x, interface_torque_y, interface_torque_z)
-  {}
+      interface_force_x, interface_force_y, interface_force_z, interface_torque_x,
+      interface_torque_y, interface_torque_z)
+  {
+  }
 
   virtual ~TestableForceTorqueSensor() = default;
 };
@@ -59,7 +57,8 @@ public:
   void SetUp()
   {
     full_interface_names_.reserve(size_);
-    for (auto index = 0u; index < size_; ++index) {
+    for (auto index = 0u; index < size_; ++index)
+    {
       full_interface_names_.emplace_back(sensor_name_ + "/" + fts_interface_names_[index]);
     }
   }
@@ -74,8 +73,8 @@ protected:
   std::unique_ptr<TestableForceTorqueSensor> force_torque_sensor_;
 
   std::vector<std::string> full_interface_names_;
-  const std::vector<std::string> fts_interface_names_ = {"force.x", "force.y", "force.z",
-    "torque.x", "torque.y", "torque.z"};
+  const std::vector<std::string> fts_interface_names_ = {"force.x",  "force.y",  "force.z",
+                                                         "torque.x", "torque.y", "torque.z"};
 };
 
 #endif  // TEST_FORCE_TORQUE_SENSOR_HPP_

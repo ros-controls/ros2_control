@@ -27,10 +27,7 @@
 
 namespace hardware_interface
 {
-
-Sensor::Sensor(std::unique_ptr<SensorInterface> impl)
-: impl_(std::move(impl))
-{}
+Sensor::Sensor(std::unique_ptr<SensorInterface> impl) : impl_(std::move(impl)) {}
 
 return_type Sensor::configure(const HardwareInfo & sensor_info)
 {
@@ -42,29 +39,14 @@ std::vector<StateInterface> Sensor::export_state_interfaces()
   return impl_->export_state_interfaces();
 }
 
-return_type Sensor::start()
-{
-  return impl_->start();
-}
+return_type Sensor::start() { return impl_->start(); }
 
-return_type Sensor::stop()
-{
-  return impl_->stop();
-}
+return_type Sensor::stop() { return impl_->stop(); }
 
-std::string Sensor::get_name() const
-{
-  return impl_->get_name();
-}
+std::string Sensor::get_name() const { return impl_->get_name(); }
 
-status Sensor::get_status() const
-{
-  return impl_->get_status();
-}
+status Sensor::get_status() const { return impl_->get_status(); }
 
-return_type Sensor::read()
-{
-  return impl_->read();
-}
+return_type Sensor::read() { return impl_->read(); }
 
 }  // namespace hardware_interface
