@@ -55,13 +55,13 @@ repos:
   # CPP hooks
   - repo: local
     hooks:
-      - id: ament_uncrustify
-        name: ament_uncrustify
-        description: Static code analysis of C/C++ files.
-        stages: [commit]
-        entry: ament_cppcheck
+      - id: clang-format
+        name: clang-format
+        description: Format files with ClangFormat.
+        entry: clang-format-10
         language: system
-        files: \.(h\+\+|h|hh|hxx|hpp|cuh|c|cc|cpp|cu|c\+\+|cxx|tpp|txx)$
+        files: \.(c|cc|cxx|cpp|frag|glsl|h|hpp|hxx|ih|ispc|ipp|java|js|m|proto|vert)$
+        args: ['-fallback-style=none', '-i']
 
   - repo: local
     hooks:

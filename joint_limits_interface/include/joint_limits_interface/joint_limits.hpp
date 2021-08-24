@@ -19,7 +19,6 @@
 
 namespace joint_limits_interface
 {
-
 struct JointLimits
 {
   JointLimits()
@@ -35,7 +34,8 @@ struct JointLimits
     has_jerk_limits(false),
     has_effort_limits(false),
     angle_wraparound(false)
-  {}
+  {
+  }
 
   double min_position;
   double max_position;
@@ -54,12 +54,7 @@ struct JointLimits
 
 struct SoftJointLimits
 {
-  SoftJointLimits()
-  : min_position(0.0),
-    max_position(0.0),
-    k_position(0.0),
-    k_velocity(0.0)
-  {}
+  SoftJointLimits() : min_position(0.0), max_position(0.0), k_position(0.0), k_velocity(0.0) {}
 
   double min_position;
   double max_position;

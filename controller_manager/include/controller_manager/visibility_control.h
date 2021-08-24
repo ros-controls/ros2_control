@@ -19,31 +19,31 @@
 //     https://gcc.gnu.org/wiki/Visibility
 
 #if defined _WIN32 || defined __CYGWIN__
-  #ifdef __GNUC__
-    #define CONTROLLER_MANAGER_EXPORT __attribute__ ((dllexport))
-    #define CONTROLLER_MANAGER_IMPORT __attribute__ ((dllimport))
-  #else
-    #define CONTROLLER_MANAGER_EXPORT __declspec(dllexport)
-    #define CONTROLLER_MANAGER_IMPORT __declspec(dllimport)
-  #endif
-  #ifdef CONTROLLER_MANAGER_BUILDING_DLL
-    #define CONTROLLER_MANAGER_PUBLIC CONTROLLER_MANAGER_EXPORT
-  #else
-    #define CONTROLLER_MANAGER_PUBLIC CONTROLLER_MANAGER_IMPORT
-  #endif
-  #define CONTROLLER_MANAGER_PUBLIC_TYPE CONTROLLER_MANAGER_PUBLIC
-  #define CONTROLLER_MANAGER_LOCAL
+#ifdef __GNUC__
+#define CONTROLLER_MANAGER_EXPORT __attribute__((dllexport))
+#define CONTROLLER_MANAGER_IMPORT __attribute__((dllimport))
 #else
-  #define CONTROLLER_MANAGER_EXPORT __attribute__ ((visibility("default")))
-  #define CONTROLLER_MANAGER_IMPORT
-  #if __GNUC__ >= 4
-    #define CONTROLLER_MANAGER_PUBLIC __attribute__ ((visibility("default")))
-    #define CONTROLLER_MANAGER_LOCAL  __attribute__ ((visibility("hidden")))
-  #else
-    #define CONTROLLER_MANAGER_PUBLIC
-    #define CONTROLLER_MANAGER_LOCAL
-  #endif
-  #define CONTROLLER_MANAGER_PUBLIC_TYPE
+#define CONTROLLER_MANAGER_EXPORT __declspec(dllexport)
+#define CONTROLLER_MANAGER_IMPORT __declspec(dllimport)
+#endif
+#ifdef CONTROLLER_MANAGER_BUILDING_DLL
+#define CONTROLLER_MANAGER_PUBLIC CONTROLLER_MANAGER_EXPORT
+#else
+#define CONTROLLER_MANAGER_PUBLIC CONTROLLER_MANAGER_IMPORT
+#endif
+#define CONTROLLER_MANAGER_PUBLIC_TYPE CONTROLLER_MANAGER_PUBLIC
+#define CONTROLLER_MANAGER_LOCAL
+#else
+#define CONTROLLER_MANAGER_EXPORT __attribute__((visibility("default")))
+#define CONTROLLER_MANAGER_IMPORT
+#if __GNUC__ >= 4
+#define CONTROLLER_MANAGER_PUBLIC __attribute__((visibility("default")))
+#define CONTROLLER_MANAGER_LOCAL __attribute__((visibility("hidden")))
+#else
+#define CONTROLLER_MANAGER_PUBLIC
+#define CONTROLLER_MANAGER_LOCAL
+#endif
+#define CONTROLLER_MANAGER_PUBLIC_TYPE
 #endif
 
 #endif  // CONTROLLER_MANAGER__VISIBILITY_CONTROL_H_

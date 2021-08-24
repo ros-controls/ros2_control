@@ -24,9 +24,8 @@
 
 #include <rcppmath/clamp.hpp>
 
-#include <string>
 #include <memory>
-
+#include <string>
 
 // Floating-point value comparison threshold
 const double EPS = 1e-12;
@@ -56,12 +55,14 @@ TEST(SaturateTest, Saturate)
   EXPECT_NEAR(max, rcppmath::clamp(val, min, max), EPS);
 }
 
-
 class JointLimitsTest
 {
 public:
   JointLimitsTest()
-  : pos(0.0), vel(0.0), eff(0.0), cmd(0.0),
+  : pos(0.0),
+    vel(0.0),
+    eff(0.0),
+    cmd(0.0),
     name("joint_name"),
     period(0, 100000000),
     cmd_handle(hardware_interface::JointHandle(name, "position_command", &cmd)),
@@ -96,7 +97,9 @@ protected:
   joint_limits_interface::SoftJointLimits soft_limits;
 };
 
-class JointLimitsHandleTest : public JointLimitsTest, public ::testing::Test {};
+class JointLimitsHandleTest : public JointLimitsTest, public ::testing::Test
+{
+};
 
 TEST_F(JointLimitsHandleTest, HandleConstruction)
 {
@@ -104,16 +107,18 @@ TEST_F(JointLimitsHandleTest, HandleConstruction)
     joint_limits_interface::JointLimits limits_bad;
     EXPECT_THROW(
       joint_limits_interface::PositionJointSoftLimitsHandle(
-        pos_handle, cmd_handle,
-        limits_bad, soft_limits),
+        pos_handle, cmd_handle, limits_bad, soft_limits),
       joint_limits_interface::JointLimitsInterfaceException);
 
     // Print error messages. Requires manual output inspection, but exception message should be
     // descriptive
-    try {
+    try
+    {
       joint_limits_interface::PositionJointSoftLimitsHandle(
         pos_handle, cmd_handle, limits_bad, soft_limits);
-    } catch (const joint_limits_interface::JointLimitsInterfaceException & e) {
+    }
+    catch (const joint_limits_interface::JointLimitsInterfaceException & e)
+    {
       RCLCPP_ERROR(rclcpp::get_logger("joint_limits_interface_test"), "%s", e.what());
     }
   }
@@ -123,15 +128,18 @@ TEST_F(JointLimitsHandleTest, HandleConstruction)
     limits_bad.has_effort_limits = true;
     EXPECT_THROW(
       joint_limits_interface::EffortJointSoftLimitsHandle(
-        pos_handle, cmd_handle, limits_bad,
-        soft_limits), joint_limits_interface::JointLimitsInterfaceException);
+        pos_handle, cmd_handle, limits_bad, soft_limits),
+      joint_limits_interface::JointLimitsInterfaceException);
 
     // Print error messages. Requires manual output inspection,
     // but exception message should be descriptive
-    try {
+    try
+    {
       joint_limits_interface::EffortJointSoftLimitsHandle(
         pos_handle, cmd_handle, limits_bad, soft_limits);
-    } catch (const joint_limits_interface::JointLimitsInterfaceException & e) {
+    }
+    catch (const joint_limits_interface::JointLimitsInterfaceException & e)
+    {
       RCLCPP_ERROR(rclcpp::get_logger("joint_limits_interface_test"), "%s", e.what());
     }
   }
@@ -141,15 +149,18 @@ TEST_F(JointLimitsHandleTest, HandleConstruction)
     limits_bad.has_velocity_limits = true;
     EXPECT_THROW(
       joint_limits_interface::EffortJointSoftLimitsHandle(
-        pos_handle, cmd_handle, limits_bad,
-        soft_limits), joint_limits_interface::JointLimitsInterfaceException);
+        pos_handle, cmd_handle, limits_bad, soft_limits),
+      joint_limits_interface::JointLimitsInterfaceException);
 
     // Print error messages. Requires manual output inspection, but exception message should
     // be descriptive
-    try {
+    try
+    {
       joint_limits_interface::EffortJointSoftLimitsHandle(
         pos_handle, cmd_handle, limits_bad, soft_limits);
-    } catch (const joint_limits_interface::JointLimitsInterfaceException & e) {
+    }
+    catch (const joint_limits_interface::JointLimitsInterfaceException & e)
+    {
       RCLCPP_ERROR(rclcpp::get_logger("joint_limits_interface_test"), "%s", e.what());
     }
   }
@@ -157,31 +168,32 @@ TEST_F(JointLimitsHandleTest, HandleConstruction)
   {
     joint_limits_interface::JointLimits limits_bad;
     EXPECT_THROW(
-      joint_limits_interface::VelocityJointSaturationHandle(
-        pos_handle, cmd_handle,
-        limits_bad), joint_limits_interface::JointLimitsInterfaceException);
+      joint_limits_interface::VelocityJointSaturationHandle(pos_handle, cmd_handle, limits_bad),
+      joint_limits_interface::JointLimitsInterfaceException);
 
     // Print error messages. Requires manual output inspection, but exception message should
     // be descriptive
-    try {
+    try
+    {
       joint_limits_interface::VelocityJointSaturationHandle(pos_handle, cmd_handle, limits_bad);
-    } catch (const joint_limits_interface::JointLimitsInterfaceException & e) {
+    }
+    catch (const joint_limits_interface::JointLimitsInterfaceException & e)
+    {
       RCLCPP_ERROR(rclcpp::get_logger("joint_limits_interface_test"), "%s", e.what());
     }
   }
 
+  EXPECT_NO_THROW(joint_limits_interface::PositionJointSoftLimitsHandle(
+    pos_handle, cmd_handle, limits, soft_limits));
+  EXPECT_NO_THROW(joint_limits_interface::EffortJointSoftLimitsHandle(
+    pos_handle, cmd_handle, limits, soft_limits));
   EXPECT_NO_THROW(
-    joint_limits_interface::PositionJointSoftLimitsHandle(
-      pos_handle, cmd_handle, limits, soft_limits));
-  EXPECT_NO_THROW(
-    joint_limits_interface::EffortJointSoftLimitsHandle(
-      pos_handle, cmd_handle, limits, soft_limits));
-  EXPECT_NO_THROW(
-    joint_limits_interface::VelocityJointSaturationHandle(
-      pos_handle, cmd_handle, limits));
+    joint_limits_interface::VelocityJointSaturationHandle(pos_handle, cmd_handle, limits));
 }
 
-class PositionJointSoftLimitsHandleTest : public JointLimitsTest, public ::testing::Test {};
+class PositionJointSoftLimitsHandleTest : public JointLimitsTest, public ::testing::Test
+{
+};
 
 TEST_F(PositionJointSoftLimitsHandleTest, EnforceVelocityBounds)
 {
@@ -335,10 +347,10 @@ TEST_F(PositionJointSoftLimitsHandleTest, EnforcePositionBounds)
 TEST_F(PositionJointSoftLimitsHandleTest, PathologicalSoftBounds)
 {
   // Safety limits are past the hard limits
-  soft_limits.min_position = limits.min_position *
-    (1.0 - 0.5 * limits.min_position / std::abs(limits.min_position));
-  soft_limits.max_position = limits.max_position *
-    (1.0 + 0.5 * limits.max_position / std::abs(limits.max_position));
+  soft_limits.min_position =
+    limits.min_position * (1.0 - 0.5 * limits.min_position / std::abs(limits.min_position));
+  soft_limits.max_position =
+    limits.max_position * (1.0 + 0.5 * limits.max_position / std::abs(limits.max_position));
 
   // Current position == higher hard limit
   {
@@ -369,7 +381,9 @@ TEST_F(PositionJointSoftLimitsHandleTest, PathologicalSoftBounds)
   }
 }
 
-class VelocityJointSaturationHandleTest : public JointLimitsTest, public ::testing::Test {};
+class VelocityJointSaturationHandleTest : public JointLimitsTest, public ::testing::Test
+{
+};
 
 TEST_F(VelocityJointSaturationHandleTest, EnforceVelocityBounds)
 {
@@ -487,21 +501,21 @@ class JointLimitsInterfaceTest : public JointLimitsTest, public ::testing::Test
 public:
   JointLimitsInterfaceTest()
   : JointLimitsTest(),
-    pos2(0.0), vel2(0.0), eff2(0.0), cmd2(0.0),
+    pos2(0.0),
+    vel2(0.0),
+    eff2(0.0),
+    cmd2(0.0),
     name2("joint2_name"),
-    cmd2_handle(std::make_shared<hardware_interface::JointHandle>(
-        name2, "position_command",
-        &cmd2)),
+    cmd2_handle(
+      std::make_shared<hardware_interface::JointHandle>(name2, "position_command", &cmd2)),
     pos2_handle(std::make_shared<hardware_interface::JointHandle>(
-        name2,
-        hardware_interface::HW_IF_POSITION, &pos2)),
+      name2, hardware_interface::HW_IF_POSITION, &pos2)),
     vel2_handle(std::make_shared<hardware_interface::JointHandle>(
-        name2,
-        hardware_interface::HW_IF_VELOCITY, &vel2)),
+      name2, hardware_interface::HW_IF_VELOCITY, &vel2)),
     eff2_handle(std::make_shared<hardware_interface::JointHandle>(
-        name2,
-        hardware_interface::HW_IF_EFFORT, &eff2))
-  {}
+      name2, hardware_interface::HW_IF_EFFORT, &eff2))
+  {
+  }
 
 protected:
   double pos2, vel2, eff2, cmd2;

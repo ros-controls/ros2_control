@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "test_controller_with_options.hpp"
 #include <gtest/gtest.h>
 #include <string>
-#include "test_controller_with_options.hpp"
 #include "rclcpp/rclcpp.hpp"
 
 class FriendControllerWithOptions : public controller_with_options::ControllerWithOptions
@@ -23,13 +23,19 @@ class FriendControllerWithOptions : public controller_with_options::ControllerWi
   FRIEND_TEST(ControllerWithOption, init_without_overrides);
 };
 
-template<class T, size_t N>
-constexpr size_t arrlen(T (&)[N]) {return N;}
+template <class T, size_t N>
+constexpr size_t arrlen(T (&)[N])
+{
+  return N;
+}
 
-TEST(ControllerWithOption, init_with_overrides) {
+TEST(ControllerWithOption, init_with_overrides)
+{
   // mocks the declaration of overrides parameters in a yaml file
-  char const * const argv[] = {"", "--ros-args", "-p", "parameter_list.parameter1:=1.", "-p",
-    "parameter_list.parameter2:=2.", "-p", "parameter_list.parameter3:=3."};
+  char const * const argv[] = {"",   "--ros-args",
+                               "-p", "parameter_list.parameter1:=1.",
+                               "-p", "parameter_list.parameter2:=2.",
+                               "-p", "parameter_list.parameter3:=3."};
   int argc = arrlen(argv);
   rclcpp::init(argc, argv);
   // creates the controller
@@ -47,7 +53,8 @@ TEST(ControllerWithOption, init_with_overrides) {
   rclcpp::shutdown();
 }
 
-TEST(ControllerWithOption, init_without_overrides) {
+TEST(ControllerWithOption, init_without_overrides)
+{
   // mocks the declaration of overrides parameters in a yaml file
   char const * const argv[] = {""};
   int argc = arrlen(argv);

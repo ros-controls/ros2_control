@@ -25,13 +25,11 @@
 
 namespace semantic_components
 {
-
 class ForceTorqueSensor : public SemanticComponentInterface<geometry_msgs::msg::Wrench>
 {
 public:
   /// Constructor for "standard" 6D FTS
-  explicit ForceTorqueSensor(const std::string & name)
-  : SemanticComponentInterface(name, 6)
+  explicit ForceTorqueSensor(const std::string & name) : SemanticComponentInterface(name, 6)
   {
     // If 6D FTS use standard names
     interface_names_.emplace_back(name_ + "/" + "force.x");
@@ -61,20 +59,20 @@ public:
   ForceTorqueSensor(
     const std::string & interface_force_x, const std::string & interface_force_y,
     const std::string & interface_force_z, const std::string & interface_torque_x,
-    const std::string & interface_torque_y, const std::string & interface_torque_z
-  )
+    const std::string & interface_torque_y, const std::string & interface_torque_z)
   : SemanticComponentInterface("", 6)
   {
-    auto check_and_add_interface =
-      [this](const std::string & interface_name, const int index)
+    auto check_and_add_interface = [this](const std::string & interface_name, const int index) {
+      if (!interface_name.empty())
       {
-        if (!interface_name.empty()) {
-          interface_names_.emplace_back(interface_name);
-          existing_axes_[index] = true;
-        } else {
-          existing_axes_[index] = false;
-        }
-      };
+        interface_names_.emplace_back(interface_name);
+        existing_axes_[index] = true;
+      }
+      else
+      {
+        existing_axes_[index] = false;
+      }
+    };
 
     check_and_add_interface(interface_force_x, 0);
     check_and_add_interface(interface_force_y, 1);
@@ -99,8 +97,10 @@ public:
   std::array<double, 3> get_forces()
   {
     size_t interface_counter = 0;
-    for (size_t i = 0; i < 3; ++i) {
-      if (existing_axes_[i]) {
+    for (size_t i = 0; i < 3; ++i)
+    {
+      if (existing_axes_[i])
+      {
         forces_[i] = state_interfaces_[interface_counter].get().get_value();
         ++interface_counter;
       }
@@ -118,12 +118,13 @@ public:
   {
     // find out how many force interfaces are being used
     // torque interfaces will be found from the next index onward
-    auto torque_interface_counter = std::count(
-      existing_axes_.begin(),
-      existing_axes_.begin() + 3, true);
+    auto torque_interface_counter =
+      std::count(existing_axes_.begin(), existing_axes_.begin() + 3, true);
 
-    for (size_t i = 3; i < 6; ++i) {
-      if (existing_axes_[i]) {
+    for (size_t i = 3; i < 6; ++i)
+    {
+      if (existing_axes_[i])
+      {
         torques_[i - 3] = state_interfaces_[torque_interface_counter].get().get_value();
         ++torque_interface_counter;
       }

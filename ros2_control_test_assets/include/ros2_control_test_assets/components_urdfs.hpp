@@ -19,7 +19,6 @@
 
 namespace ros2_control_test_assets
 {
-
 // 1. Industrial Robots with only one interface
 const auto valid_urdf_ros2_control_system_one_interface =
   R"(
@@ -450,7 +449,6 @@ const auto invalid_urdf_ros2_control_parameter_missing_name =
     </joint>
   </ros2_control>
 )";
-
 
 const auto invalid_urdf_ros2_control_component_class_type_empty =
   R"(

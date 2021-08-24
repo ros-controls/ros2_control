@@ -16,8 +16,8 @@
 #define TEST_CONTROLLER_WITH_OPTIONS_HPP_
 
 #include <controller_interface/controller_interface.hpp>
-#include <string>
 #include <map>
+#include <string>
 
 namespace controller_with_options
 {
@@ -36,13 +36,17 @@ public:
     rclcpp::NodeOptions options;
     options.allow_undeclared_parameters(true).automatically_declare_parameters_from_overrides(true);
     auto result = ControllerInterface::init(controller_name, options);
-    if (result == controller_interface::return_type::ERROR) {
+    if (result == controller_interface::return_type::ERROR)
+    {
       return result;
     }
-    if (node_->get_parameters("parameter_list", params)) {
+    if (node_->get_parameters("parameter_list", params))
+    {
       RCLCPP_INFO_STREAM(node_->get_logger(), "I found " << params.size() << " parameters.");
       return controller_interface::return_type::OK;
-    } else {
+    }
+    else
+    {
       return controller_interface::return_type::ERROR;
     }
   }
@@ -67,6 +71,5 @@ public:
   std::map<std::string, double> params;
 };
 }  // namespace controller_with_options
-
 
 #endif  // TEST_CONTROLLER_WITH_OPTIONS_HPP_

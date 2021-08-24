@@ -20,37 +20,49 @@
 #include "hardware_interface/system_interface.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 
-using hardware_interface::status;
+using hardware_interface::BaseInterface;
+using hardware_interface::CommandInterface;
 using hardware_interface::return_type;
 using hardware_interface::StateInterface;
-using hardware_interface::CommandInterface;
-using hardware_interface::BaseInterface;
+using hardware_interface::status;
 using hardware_interface::SystemInterface;
 
 namespace test_hardware_components
 {
-
 class TestTwoJointSystem : public BaseInterface<SystemInterface>
 {
   return_type configure(const hardware_interface::HardwareInfo & system_info) override
   {
-    if (configure_default(system_info) != return_type::OK) {
+    if (configure_default(system_info) != return_type::OK)
+    {
       return return_type::ERROR;
     }
 
     // can only control two joint
-    if (info_.joints.size() != 2) {return return_type::ERROR;}
-    for (const auto & joint : info_.joints) {
+    if (info_.joints.size() != 2)
+    {
+      return return_type::ERROR;
+    }
+    for (const auto & joint : info_.joints)
+    {
       // can only control in position
       const auto & command_interfaces = joint.command_interfaces;
-      if (command_interfaces.size() != 1) {return return_type::ERROR;}
-      if (command_interfaces[0].name != hardware_interface::HW_IF_POSITION) {
+      if (command_interfaces.size() != 1)
+      {
+        return return_type::ERROR;
+      }
+      if (command_interfaces[0].name != hardware_interface::HW_IF_POSITION)
+      {
         return return_type::ERROR;
       }
       // can only give feedback state for position and velocity
       const auto & state_interfaces = joint.state_interfaces;
-      if (state_interfaces.size() != 1) {return return_type::ERROR;}
-      if (state_interfaces[0].name != hardware_interface::HW_IF_POSITION) {
+      if (state_interfaces.size() != 1)
+      {
+        return return_type::ERROR;
+      }
+      if (state_interfaces[0].name != hardware_interface::HW_IF_POSITION)
+      {
         return return_type::ERROR;
       }
     }
@@ -62,10 +74,10 @@ class TestTwoJointSystem : public BaseInterface<SystemInterface>
   std::vector<StateInterface> export_state_interfaces() override
   {
     std::vector<StateInterface> state_interfaces;
-    for (auto i = 0u; i < info_.joints.size(); ++i) {
-      state_interfaces.emplace_back(
-        hardware_interface::StateInterface(
-          info_.joints[i].name, hardware_interface::HW_IF_POSITION, &position_state_[i]));
+    for (auto i = 0u; i < info_.joints.size(); ++i)
+    {
+      state_interfaces.emplace_back(hardware_interface::StateInterface(
+        info_.joints[i].name, hardware_interface::HW_IF_POSITION, &position_state_[i]));
     }
 
     return state_interfaces;
@@ -74,34 +86,22 @@ class TestTwoJointSystem : public BaseInterface<SystemInterface>
   std::vector<CommandInterface> export_command_interfaces() override
   {
     std::vector<CommandInterface> command_interfaces;
-    for (auto i = 0u; i < info_.joints.size(); ++i) {
-      command_interfaces.emplace_back(
-        hardware_interface::CommandInterface(
-          info_.joints[i].name, hardware_interface::HW_IF_POSITION, &position_command_[i]));
+    for (auto i = 0u; i < info_.joints.size(); ++i)
+    {
+      command_interfaces.emplace_back(hardware_interface::CommandInterface(
+        info_.joints[i].name, hardware_interface::HW_IF_POSITION, &position_command_[i]));
     }
 
     return command_interfaces;
   }
 
-  return_type start() override
-  {
-    return return_type::OK;
-  }
+  return_type start() override { return return_type::OK; }
 
-  return_type stop() override
-  {
-    return return_type::OK;
-  }
+  return_type stop() override { return return_type::OK; }
 
-  return_type read() override
-  {
-    return return_type::OK;
-  }
+  return_type read() override { return return_type::OK; }
 
-  return_type write() override
-  {
-    return return_type::OK;
-  }
+  return_type write() override { return return_type::OK; }
 
 private:
   std::array<double, 2> position_command_ = {0.0, 0.0};

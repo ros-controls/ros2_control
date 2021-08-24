@@ -24,12 +24,10 @@
 
 namespace semantic_components
 {
-
 class IMUSensor : public SemanticComponentInterface<sensor_msgs::msg::Imu>
 {
 public:
-  explicit IMUSensor(const std::string & name)
-  : SemanticComponentInterface(name, 10)
+  explicit IMUSensor(const std::string & name) : SemanticComponentInterface(name, 10)
   {
     interface_names_.emplace_back(name_ + "/" + "orientation.x");
     interface_names_.emplace_back(name_ + "/" + "orientation.y");
@@ -59,7 +57,8 @@ public:
   std::array<double, 4> get_orientation()
   {
     size_t interface_offset = 0;
-    for (size_t i = 0; i < orientation_.size(); ++i) {
+    for (size_t i = 0; i < orientation_.size(); ++i)
+    {
       orientation_[i] = state_interfaces_[interface_offset + i].get().get_value();
     }
     return orientation_;
@@ -74,7 +73,8 @@ public:
   std::array<double, 3> get_angular_velocity()
   {
     size_t interface_offset = orientation_.size();
-    for (size_t i = 0; i < angular_velocity_.size(); ++i) {
+    for (size_t i = 0; i < angular_velocity_.size(); ++i)
+    {
       angular_velocity_[i] = state_interfaces_[interface_offset + i].get().get_value();
     }
     return angular_velocity_;
@@ -89,7 +89,8 @@ public:
   std::array<double, 3> get_linear_acceleration()
   {
     size_t interface_offset = orientation_.size() + angular_velocity_.size();
-    for (size_t i = 0; i < linear_acceleration_.size(); ++i) {
+    for (size_t i = 0; i < linear_acceleration_.size(); ++i)
+    {
       linear_acceleration_[i] = state_interfaces_[interface_offset + i].get().get_value();
     }
     return linear_acceleration_;

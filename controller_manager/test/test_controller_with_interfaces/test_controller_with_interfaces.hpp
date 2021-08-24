@@ -18,12 +18,11 @@
 #include <memory>
 #include <string>
 
-#include "controller_manager/controller_manager.hpp"
 #include "controller_interface/visibility_control.h"
+#include "controller_manager/controller_manager.hpp"
 
 namespace test_controller_with_interfaces
 {
-
 // Corresponds to the name listed within the pluginglib xml
 constexpr char TEST_CONTROLLER_WITH_INTERFACES_CLASS_NAME[] =
   "controller_manager/test_controller_with_interfaces";
@@ -36,8 +35,7 @@ public:
   TestControllerWithInterfaces();
 
   CONTROLLER_MANAGER_PUBLIC
-  virtual
-  ~TestControllerWithInterfaces() = default;
+  virtual ~TestControllerWithInterfaces() = default;
 
   controller_interface::InterfaceConfiguration command_interface_configuration() const override
   {
@@ -53,16 +51,15 @@ public:
   }
 
   CONTROLLER_MANAGER_PUBLIC
-  controller_interface::return_type
-  update() override;
+  controller_interface::return_type update() override;
 
   CONTROLLER_MANAGER_PUBLIC
-  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
-  on_configure(const rclcpp_lifecycle::State & previous_state) override;
+  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_configure(
+    const rclcpp_lifecycle::State & previous_state) override;
 
   CONTROLLER_MANAGER_PUBLIC
-  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
-  on_cleanup(const rclcpp_lifecycle::State & previous_state) override;
+  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_cleanup(
+    const rclcpp_lifecycle::State & previous_state) override;
 };
 
 }  // namespace test_controller_with_interfaces

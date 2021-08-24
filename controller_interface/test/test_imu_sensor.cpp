@@ -22,10 +22,7 @@
 #include <string>
 #include <vector>
 
-void IMUSensorTest::TearDown()
-{
-  imu_sensor_.reset(nullptr);
-}
+void IMUSensorTest::TearDown() { imu_sensor_.reset(nullptr); }
 
 TEST_F(IMUSensorTest, validate_all)
 {
@@ -41,40 +38,38 @@ TEST_F(IMUSensorTest, validate_all)
   ASSERT_EQ(imu_sensor_->state_interfaces_.capacity(), size_);
 
   // validate the default interface_names_
-  ASSERT_TRUE(
-    std::equal(
-      imu_sensor_->interface_names_.begin(), imu_sensor_->interface_names_.end(),
-      full_interface_names_.begin(), full_interface_names_.end()));
+  ASSERT_TRUE(std::equal(
+    imu_sensor_->interface_names_.begin(), imu_sensor_->interface_names_.end(),
+    full_interface_names_.begin(), full_interface_names_.end()));
 
   // get the interface names
   std::vector<std::string> interface_names = imu_sensor_->get_state_interface_names();
 
   // assign values to orientation
-  hardware_interface::StateInterface orientation_x{sensor_name_, imu_interface_names_[0],
-    &orientation_values_[0]};
-  hardware_interface::StateInterface orientation_y{sensor_name_, imu_interface_names_[1],
-    &orientation_values_[1]};
-  hardware_interface::StateInterface orientation_z{sensor_name_, imu_interface_names_[2],
-    &orientation_values_[2]};
-  hardware_interface::StateInterface orientation_w{sensor_name_, imu_interface_names_[3],
-    &orientation_values_[4]};
+  hardware_interface::StateInterface orientation_x{
+    sensor_name_, imu_interface_names_[0], &orientation_values_[0]};
+  hardware_interface::StateInterface orientation_y{
+    sensor_name_, imu_interface_names_[1], &orientation_values_[1]};
+  hardware_interface::StateInterface orientation_z{
+    sensor_name_, imu_interface_names_[2], &orientation_values_[2]};
+  hardware_interface::StateInterface orientation_w{
+    sensor_name_, imu_interface_names_[3], &orientation_values_[4]};
 
   // assign values to angular velocity
-  hardware_interface::StateInterface angular_velocity_x{sensor_name_, imu_interface_names_[4],
-    &angular_velocity_values_[0]};
-  hardware_interface::StateInterface angular_velocity_y{sensor_name_, imu_interface_names_[5],
-    &angular_velocity_values_[1]};
-  hardware_interface::StateInterface angular_velocity_z{sensor_name_, imu_interface_names_[6],
-    &angular_velocity_values_[2]};
+  hardware_interface::StateInterface angular_velocity_x{
+    sensor_name_, imu_interface_names_[4], &angular_velocity_values_[0]};
+  hardware_interface::StateInterface angular_velocity_y{
+    sensor_name_, imu_interface_names_[5], &angular_velocity_values_[1]};
+  hardware_interface::StateInterface angular_velocity_z{
+    sensor_name_, imu_interface_names_[6], &angular_velocity_values_[2]};
 
   // assign values to linear acceleration
-  hardware_interface::StateInterface linear_acceleration_x{sensor_name_, imu_interface_names_[7],
-    &linear_acceleration_values_[0]};
-  hardware_interface::StateInterface linear_acceleration_y{sensor_name_, imu_interface_names_[8],
-    &linear_acceleration_values_[1]};
-  hardware_interface::StateInterface linear_acceleration_z{sensor_name_, imu_interface_names_[9],
-    &linear_acceleration_values_[2]};
-
+  hardware_interface::StateInterface linear_acceleration_x{
+    sensor_name_, imu_interface_names_[7], &linear_acceleration_values_[0]};
+  hardware_interface::StateInterface linear_acceleration_y{
+    sensor_name_, imu_interface_names_[8], &linear_acceleration_values_[1]};
+  hardware_interface::StateInterface linear_acceleration_z{
+    sensor_name_, imu_interface_names_[9], &linear_acceleration_values_[2]};
 
   // create local state interface vector
   std::vector<hardware_interface::LoanedStateInterface> temp_state_interfaces;

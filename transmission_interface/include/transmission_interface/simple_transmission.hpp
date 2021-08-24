@@ -21,12 +21,11 @@
 #include <vector>
 
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
-#include "transmission_interface/transmission.hpp"
 #include "transmission_interface/exception.hpp"
+#include "transmission_interface/transmission.hpp"
 
 namespace transmission_interface
 {
-
 /// Implementation of a simple reducer transmission.
 /**
  * This transmission relates <b>one actuator</b> and <b>one joint</b> through a reductor (or amplifier).
@@ -86,9 +85,8 @@ public:
    * \param[in] joint_offset Joint position offset used in the position mappings.
    * \pre Nonzero reduction value.
    */
-  SimpleTransmission(
-    const double joint_to_actuator_reduction,
-    const double joint_offset = 0.0);
+  explicit SimpleTransmission(
+    const double joint_to_actuator_reduction, const double joint_offset = 0.0);
 
   /// Set up the data the transmission operates on.
   /**
@@ -115,11 +113,11 @@ public:
    */
   void joint_to_actuator() override;
 
-  std::size_t num_actuators() const override {return 1;}
-  std::size_t num_joints()    const override {return 1;}
+  std::size_t num_actuators() const override { return 1; }
+  std::size_t num_joints() const override { return 1; }
 
-  double get_actuator_reduction() const {return reduction_;}
-  double get_joint_offset()       const {return jnt_offset_;}
+  double get_actuator_reduction() const { return reduction_; }
+  double get_joint_offset() const { return jnt_offset_; }
 
 protected:
   double reduction_;
@@ -135,38 +133,36 @@ protected:
 };
 
 inline SimpleTransmission::SimpleTransmission(
-  const double joint_to_actuator_reduction,
-  const double joint_offset)
-: reduction_(joint_to_actuator_reduction),
-  jnt_offset_(joint_offset)
+  const double joint_to_actuator_reduction, const double joint_offset)
+: reduction_(joint_to_actuator_reduction), jnt_offset_(joint_offset)
 {
-  if (reduction_ == 0.0) {
+  if (reduction_ == 0.0)
+  {
     throw Exception("Transmission reduction ratio cannot be zero.");
   }
 }
 
-template<class HandleType>
+template <class HandleType>
 HandleType get_by_interface(
-  const std::vector<HandleType> & handles,
-  const std::string & interface_name)
+  const std::vector<HandleType> & handles, const std::string & interface_name)
 {
-  const auto result =
-    std::find_if(
-    handles.cbegin(), handles.cend(), [&interface_name](
-      const auto handle) {return handle.get_interface_name() == interface_name;});
-  if (result == handles.cend()) {
+  const auto result = std::find_if(
+    handles.cbegin(), handles.cend(),
+    [&interface_name](const auto handle) { return handle.get_interface_name() == interface_name; });
+  if (result == handles.cend())
+  {
     return HandleType(handles.cbegin()->get_name(), interface_name, nullptr);
   }
   return *result;
 }
 
-template<class T>
+template <class T>
 bool are_names_identical(const std::vector<T> & handles)
 {
   std::vector<std::string> names;
   std::transform(
     handles.cbegin(), handles.cend(), std::back_inserter(names),
-    [](const auto & handle) {return handle.get_name();});
+    [](const auto & handle) { return handle.get_name(); });
   return std::equal(names.cbegin() + 1, names.cend(), names.cbegin());
 }
 
@@ -174,19 +170,23 @@ void SimpleTransmission::configure(
   const std::vector<JointHandle> & joint_handles,
   const std::vector<ActuatorHandle> & actuator_handles)
 {
-  if (joint_handles.empty()) {
+  if (joint_handles.empty())
+  {
     throw Exception("No joint handles were passed in");
   }
 
-  if (actuator_handles.empty()) {
+  if (actuator_handles.empty())
+  {
     throw Exception("No actuator handles were passed in");
   }
 
-  if (!are_names_identical(joint_handles) ) {
+  if (!are_names_identical(joint_handles))
+  {
     throw Exception("Joint names given to transmissions should be identical");
   }
 
-  if (!are_names_identical(actuator_handles) ) {
+  if (!are_names_identical(actuator_handles))
+  {
     throw Exception("Actuator names given to transmissions should be identical");
   }
 
@@ -194,7 +194,8 @@ void SimpleTransmission::configure(
   joint_velocity_ = get_by_interface(joint_handles, hardware_interface::HW_IF_VELOCITY);
   joint_effort_ = get_by_interface(joint_handles, hardware_interface::HW_IF_EFFORT);
 
-  if (!joint_position_ && !joint_velocity_ && !joint_effort_) {
+  if (!joint_position_ && !joint_velocity_ && !joint_effort_)
+  {
     throw Exception("None of the provided joint handles are valid or from the required interfaces");
   }
 
@@ -202,38 +203,44 @@ void SimpleTransmission::configure(
   actuator_velocity_ = get_by_interface(actuator_handles, hardware_interface::HW_IF_VELOCITY);
   actuator_effort_ = get_by_interface(actuator_handles, hardware_interface::HW_IF_EFFORT);
 
-  if (!actuator_position_ && !actuator_velocity_ && !actuator_effort_) {
+  if (!actuator_position_ && !actuator_velocity_ && !actuator_effort_)
+  {
     throw Exception("None of the provided joint handles are valid or from the required interfaces");
   }
 }
 
 inline void SimpleTransmission::actuator_to_joint()
 {
-  if (joint_effort_ && actuator_effort_) {
+  if (joint_effort_ && actuator_effort_)
+  {
     joint_effort_.set_value(actuator_effort_.get_value() * reduction_);
   }
 
-  if (joint_velocity_ && actuator_velocity_) {
+  if (joint_velocity_ && actuator_velocity_)
+  {
     joint_velocity_.set_value(actuator_velocity_.get_value() / reduction_);
   }
 
-  if (joint_position_ && actuator_position_) {
+  if (joint_position_ && actuator_position_)
+  {
     joint_position_.set_value(actuator_position_.get_value() / reduction_ + jnt_offset_);
   }
 }
 
-
 inline void SimpleTransmission::joint_to_actuator()
 {
-  if (joint_effort_ && actuator_effort_) {
+  if (joint_effort_ && actuator_effort_)
+  {
     actuator_effort_.set_value(joint_effort_.get_value() / reduction_);
   }
 
-  if (joint_velocity_ && actuator_velocity_) {
+  if (joint_velocity_ && actuator_velocity_)
+  {
     actuator_velocity_.set_value(joint_velocity_.get_value() * reduction_);
   }
 
-  if (joint_position_ && actuator_position_) {
+  if (joint_position_ && actuator_position_)
+  {
     actuator_position_.set_value((joint_position_.get_value() - jnt_offset_) * reduction_);
   }
 }

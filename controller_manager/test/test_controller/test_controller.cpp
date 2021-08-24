@@ -21,14 +21,13 @@
 
 namespace test_controller
 {
-
 TestController::TestController()
 : controller_interface::ControllerInterface(),
   cmd_iface_cfg_{controller_interface::interface_configuration_type::NONE}
-{}
+{
+}
 
-controller_interface::return_type
-TestController::update()
+controller_interface::return_type TestController::update()
 {
   ++internal_counter;
   return controller_interface::return_type::OK;
@@ -41,14 +40,15 @@ TestController::on_configure(const rclcpp_lifecycle::State & /*previous_state*/)
 }
 
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
-TestController::on_cleanup(
-  const rclcpp_lifecycle::State & /*previous_state*/)
+TestController::on_cleanup(const rclcpp_lifecycle::State & /*previous_state*/)
 {
-  if (simulate_cleanup_failure) {
+  if (simulate_cleanup_failure)
+  {
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::FAILURE;
   }
 
-  if (cleanup_calls) {
+  if (cleanup_calls)
+  {
     (*cleanup_calls)++;
   }
   return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;

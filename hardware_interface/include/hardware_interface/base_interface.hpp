@@ -23,8 +23,7 @@
 
 namespace hardware_interface
 {
-
-template<class InterfaceType>
+template <class InterfaceType>
 class BaseInterface : public InterfaceType
 {
 public:
@@ -40,15 +39,9 @@ public:
     return BaseInterface<InterfaceType>::configure(info);
   }
 
-  std::string get_name() const final
-  {
-    return info_.name;
-  }
+  std::string get_name() const final { return info_.name; }
 
-  status get_status() const final
-  {
-    return status_;
-  }
+  status get_status() const final { return status_; }
 
 protected:
   HardwareInfo info_;

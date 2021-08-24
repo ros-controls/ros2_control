@@ -22,13 +22,13 @@
 #include <memory>
 #include <string>
 
-#include "gmock/gmock.h"
 #include "geometry_msgs/msg/wrench.hpp"
+#include "gmock/gmock.h"
 #include "semantic_components/semantic_component_interface.hpp"
 
 // implementing and friending so we can access member variables
-class TestableSemanticComponentInterface : public semantic_components::
-  SemanticComponentInterface<geometry_msgs::msg::Wrench>
+class TestableSemanticComponentInterface
+: public semantic_components::SemanticComponentInterface<geometry_msgs::msg::Wrench>
 {
   FRIEND_TEST(SemanticComponentInterfaceTest, validate_default_names);
   FRIEND_TEST(SemanticComponentInterfaceTest, validate_custom_names);
@@ -38,13 +38,15 @@ public:
   // Use generation of interface names
   explicit TestableSemanticComponentInterface(const std::string & name, size_t size)
   : SemanticComponentInterface<geometry_msgs::msg::Wrench>(name, size)
-  {}
+  {
+  }
   // Use custom interface names
   explicit TestableSemanticComponentInterface(size_t size)
   : SemanticComponentInterface("TestSemanticComponent", size)
   {
     // generate the interface_names_
-    for (auto i = 0u; i < size; ++i) {
+    for (auto i = 0u; i < size; ++i)
+    {
       interface_names_.emplace_back(
         std::string("TestSemanticComponent") + "/i" + std::to_string(i + 5));
     }

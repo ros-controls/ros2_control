@@ -23,10 +23,7 @@
 #include <string>
 #include <vector>
 
-void ForceTorqueSensorTest::TearDown()
-{
-  force_torque_sensor_.reset(nullptr);
-}
+void ForceTorqueSensorTest::TearDown() { force_torque_sensor_.reset(nullptr); }
 
 TEST_F(ForceTorqueSensorTest, validate_all_with_default_names)
 {
@@ -42,29 +39,28 @@ TEST_F(ForceTorqueSensorTest, validate_all_with_default_names)
   ASSERT_EQ(force_torque_sensor_->state_interfaces_.capacity(), size_);
 
   // validate the default interface_names_
-  ASSERT_TRUE(
-    std::equal(
-      force_torque_sensor_->interface_names_.begin(), force_torque_sensor_->interface_names_.end(),
-      full_interface_names_.begin(), full_interface_names_.end()));
+  ASSERT_TRUE(std::equal(
+    force_torque_sensor_->interface_names_.begin(), force_torque_sensor_->interface_names_.end(),
+    full_interface_names_.begin(), full_interface_names_.end()));
 
   // get the interface names
   std::vector<std::string> interface_names = force_torque_sensor_->get_state_interface_names();
 
   // assign values to force
-  hardware_interface::StateInterface force_x{sensor_name_, fts_interface_names_[0],
-    &force_values_[0]};
-  hardware_interface::StateInterface force_y{sensor_name_, fts_interface_names_[1],
-    &force_values_[1]};
-  hardware_interface::StateInterface force_z{sensor_name_, fts_interface_names_[2],
-    &force_values_[2]};
+  hardware_interface::StateInterface force_x{
+    sensor_name_, fts_interface_names_[0], &force_values_[0]};
+  hardware_interface::StateInterface force_y{
+    sensor_name_, fts_interface_names_[1], &force_values_[1]};
+  hardware_interface::StateInterface force_z{
+    sensor_name_, fts_interface_names_[2], &force_values_[2]};
 
   // assign values to torque
-  hardware_interface::StateInterface torque_x{sensor_name_, fts_interface_names_[3],
-    &torque_values_[0]};
-  hardware_interface::StateInterface torque_y{sensor_name_, fts_interface_names_[4],
-    &torque_values_[1]};
-  hardware_interface::StateInterface torque_z{sensor_name_, fts_interface_names_[5],
-    &torque_values_[2]};
+  hardware_interface::StateInterface torque_x{
+    sensor_name_, fts_interface_names_[3], &torque_values_[0]};
+  hardware_interface::StateInterface torque_y{
+    sensor_name_, fts_interface_names_[4], &torque_values_[1]};
+  hardware_interface::StateInterface torque_z{
+    sensor_name_, fts_interface_names_[5], &torque_values_[2]};
 
   // create local state interface vector
   std::vector<hardware_interface::LoanedStateInterface> temp_state_interfaces;
@@ -113,8 +109,8 @@ TEST_F(ForceTorqueSensorTest, validate_all_with_custom_names)
 {
   // create the force torque sensor with force.x, force.z and torque.y, torque.z
   force_torque_sensor_ = std::make_unique<TestableForceTorqueSensor>(
-    sensor_name_ + "/" + "force.x", "", sensor_name_ + "/" + "force.z",
-    "", sensor_name_ + "/" + "torque.y", sensor_name_ + "/" + "torque.z");
+    sensor_name_ + "/" + "force.x", "", sensor_name_ + "/" + "force.z", "",
+    sensor_name_ + "/" + "torque.y", sensor_name_ + "/" + "torque.z");
 
   // validate the component name
   // it should be "" as we specified the interface's names explicitly
@@ -135,16 +131,16 @@ TEST_F(ForceTorqueSensorTest, validate_all_with_custom_names)
   std::vector<std::string> interface_names = force_torque_sensor_->get_state_interface_names();
 
   // assign values to force.x and force.z
-  hardware_interface::StateInterface force_x{sensor_name_, fts_interface_names_[0],
-    &force_values_[0]};
-  hardware_interface::StateInterface force_z{sensor_name_, fts_interface_names_[2],
-    &force_values_[2]};
+  hardware_interface::StateInterface force_x{
+    sensor_name_, fts_interface_names_[0], &force_values_[0]};
+  hardware_interface::StateInterface force_z{
+    sensor_name_, fts_interface_names_[2], &force_values_[2]};
 
   // assign values to torque.y and torque.z
-  hardware_interface::StateInterface torque_y{sensor_name_, fts_interface_names_[4],
-    &torque_values_[1]};
-  hardware_interface::StateInterface torque_z{sensor_name_, fts_interface_names_[5],
-    &torque_values_[2]};
+  hardware_interface::StateInterface torque_y{
+    sensor_name_, fts_interface_names_[4], &torque_values_[1]};
+  hardware_interface::StateInterface torque_z{
+    sensor_name_, fts_interface_names_[5], &torque_values_[2]};
 
   // create local state interface vector
   std::vector<hardware_interface::LoanedStateInterface> temp_state_interfaces;
@@ -217,20 +213,20 @@ TEST_F(ForceTorqueSensorTest, validate_all_custom_names)
   ASSERT_EQ(force_torque_sensor_->interface_names_[5], sensor_name_ + "/" + "torque.z");
 
   // assign values to force
-  hardware_interface::StateInterface force_x{sensor_name_, fts_interface_names_[0],
-    &force_values_[0]};
-  hardware_interface::StateInterface force_y{sensor_name_, fts_interface_names_[1],
-    &force_values_[1]};
-  hardware_interface::StateInterface force_z{sensor_name_, fts_interface_names_[2],
-    &force_values_[2]};
+  hardware_interface::StateInterface force_x{
+    sensor_name_, fts_interface_names_[0], &force_values_[0]};
+  hardware_interface::StateInterface force_y{
+    sensor_name_, fts_interface_names_[1], &force_values_[1]};
+  hardware_interface::StateInterface force_z{
+    sensor_name_, fts_interface_names_[2], &force_values_[2]};
 
   // assign values to torque
-  hardware_interface::StateInterface torque_x{sensor_name_, fts_interface_names_[3],
-    &torque_values_[0]};
-  hardware_interface::StateInterface torque_y{sensor_name_, fts_interface_names_[4],
-    &torque_values_[1]};
-  hardware_interface::StateInterface torque_z{sensor_name_, fts_interface_names_[5],
-    &torque_values_[2]};
+  hardware_interface::StateInterface torque_x{
+    sensor_name_, fts_interface_names_[3], &torque_values_[0]};
+  hardware_interface::StateInterface torque_y{
+    sensor_name_, fts_interface_names_[4], &torque_values_[1]};
+  hardware_interface::StateInterface torque_z{
+    sensor_name_, fts_interface_names_[5], &torque_values_[2]};
 
   // create local state interface vector
   std::vector<hardware_interface::LoanedStateInterface> temp_state_interfaces;

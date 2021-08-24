@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #ifndef HARDWARE_INTERFACE__HARDWARE_INFO_HPP_
 #define HARDWARE_INTERFACE__HARDWARE_INFO_HPP_
 
@@ -22,7 +21,6 @@
 
 namespace hardware_interface
 {
-
 /**
  * This structure stores information about components defined for a specific hardware
  * in robot's URDF.

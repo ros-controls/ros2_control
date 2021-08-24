@@ -27,7 +27,6 @@
 
 namespace hardware_interface
 {
-
 class ActuatorInterface;
 
 class Actuator final

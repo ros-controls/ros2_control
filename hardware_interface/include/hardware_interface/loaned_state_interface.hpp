@@ -23,22 +23,20 @@
 
 namespace hardware_interface
 {
-
 class LoanedStateInterface
 {
 public:
-  using Deleter = std::function<void (void)>;
+  using Deleter = std::function<void(void)>;
 
   explicit LoanedStateInterface(StateInterface & state_interface)
   : LoanedStateInterface(state_interface, nullptr)
-  {}
+  {
+  }
 
-  LoanedStateInterface(
-    StateInterface & state_interface,
-    Deleter && deleter)
-  : state_interface_(state_interface),
-    deleter_(std::forward<Deleter>(deleter))
-  {}
+  LoanedStateInterface(StateInterface & state_interface, Deleter && deleter)
+  : state_interface_(state_interface), deleter_(std::forward<Deleter>(deleter))
+  {
+  }
 
   LoanedStateInterface(const LoanedStateInterface & other) = delete;
 
@@ -46,30 +44,19 @@ public:
 
   virtual ~LoanedStateInterface()
   {
-    if (deleter_) {
+    if (deleter_)
+    {
       deleter_();
     }
   }
 
-  const std::string & get_name() const
-  {
-    return state_interface_.get_name();
-  }
+  const std::string & get_name() const { return state_interface_.get_name(); }
 
-  const std::string & get_interface_name() const
-  {
-    return state_interface_.get_interface_name();
-  }
+  const std::string & get_interface_name() const { return state_interface_.get_interface_name(); }
 
-  const std::string get_full_name() const
-  {
-    return state_interface_.get_full_name();
-  }
+  const std::string get_full_name() const { return state_interface_.get_full_name(); }
 
-  double get_value() const
-  {
-    return state_interface_.get_value();
-  }
+  double get_value() const { return state_interface_.get_value(); }
 
 protected:
   StateInterface & state_interface_;

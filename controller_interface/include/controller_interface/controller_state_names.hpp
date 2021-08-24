@@ -21,7 +21,6 @@
 
 namespace controller_interface
 {
-
 namespace state_names
 {
 /// Constants defining string labels corresponding to lifecycle states

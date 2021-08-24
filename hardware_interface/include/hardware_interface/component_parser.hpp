@@ -24,7 +24,6 @@
 
 namespace hardware_interface
 {
-
 /// Search XML snippet from URDF for information about a control component.
 /**
   * \param[in] urdf string with robot's URDF

@@ -21,7 +21,6 @@
 
 namespace controller_interface
 {
-
 /// Reorder interfaces with references according to joint names or full interface names.
 /**
   * Method to reorder and check if all expected interfaces are provided for the joint.
@@ -35,20 +34,27 @@ namespace controller_interface
   * \param[out] ordered_interfaces vector with ordered interfaces.
   * \return true if all interfaces or joints in \p ordered_names are found, otherwise false.
   */
-template<typename T>
+template <typename T>
 bool get_ordered_interfaces(
   std::vector<T> & unordered_interfaces, const std::vector<std::string> & ordered_names,
   const std::string & interface_type, std::vector<std::reference_wrapper<T>> & ordered_interfaces)
 {
   ordered_interfaces.reserve(ordered_names.size());
-  for (const auto & name : ordered_names) {
-    for (auto & interface : unordered_interfaces) {
-      if (!interface_type.empty()) {
-        if ((name == interface.get_name()) && (interface_type == interface.get_interface_name())) {
+  for (const auto & name : ordered_names)
+  {
+    for (auto & interface : unordered_interfaces)
+    {
+      if (!interface_type.empty())
+      {
+        if ((name == interface.get_name()) && (interface_type == interface.get_interface_name()))
+        {
           ordered_interfaces.push_back(std::ref(interface));
         }
-      } else {
-        if (name == interface.get_full_name()) {
+      }
+      else
+      {
+        if (name == interface.get_full_name())
+        {
           ordered_interfaces.push_back(std::ref(interface));
         }
       }
@@ -61,9 +67,8 @@ bool get_ordered_interfaces(
 bool interface_list_contains_interface_type(
   const std::vector<std::string> & interface_type_list, const std::string & interface_type)
 {
-  return std::find(
-    interface_type_list.begin(), interface_type_list.end(),
-    interface_type) != interface_type_list.end();
+  return std::find(interface_type_list.begin(), interface_type_list.end(), interface_type) !=
+         interface_type_list.end();
 }
 
 }  // namespace controller_interface
