@@ -28,7 +28,7 @@ jobs:
           transmission_interface
 
   ament_lint_cpplint:
-    name: ament_${{ matrix.linter }}
+    name: ament_lint_cpplint
     runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
