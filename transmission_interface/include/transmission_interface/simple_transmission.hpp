@@ -85,7 +85,8 @@ public:
    * \param[in] joint_offset Joint position offset used in the position mappings.
    * \pre Nonzero reduction value.
    */
-  SimpleTransmission(const double joint_to_actuator_reduction, const double joint_offset = 0.0);
+  explicit SimpleTransmission(
+    const double joint_to_actuator_reduction, const double joint_offset = 0.0);
 
   /// Set up the data the transmission operates on.
   /**
