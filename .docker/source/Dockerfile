@@ -15,3 +15,8 @@ RUN rosdep update && \
 RUN cd $ROS_UNDERLAY/.. && \
         . /opt/ros/${ROS_DISTRO}/setup.sh && \
         colcon build
+
+# source entrypoint setup
+RUN sed --in-place --expression \
+      '$isource "$ROS_UNDERLAY/setup.bash"' \
+      /ros_entrypoint.sh
