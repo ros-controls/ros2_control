@@ -34,12 +34,6 @@ Nothing. This issue is meant to welcome you to Open Source :) We are happy to wa
 
 - [ ] **Checkout a new branch** using `git checkout -b <branch_name>`
 
-- [ ] 📝 **Update** the file(s) `$FILENAME`by applying the change shown in the diff below.
-
-```diff
-$DIFF
-```
-
 - [ ] 🤖 **Apply `pre-commit`** auto formatting, by running `pip3 install pre-commit` and running `pre-commit install` in the ros2_control repo.
 
 - [ ] 💾 **Commit and Push** your changes
