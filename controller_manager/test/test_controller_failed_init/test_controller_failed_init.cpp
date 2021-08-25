@@ -25,10 +25,6 @@ TestControllerFailedInit::TestControllerFailedInit() : controller_interface::Con
 {
 }
 
-TestControllerFailedInit::TestControllerFailedInit() : controller_interface::ControllerInterface()
-{
-}
-
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
 TestControllerFailedInit::on_init()
 {
