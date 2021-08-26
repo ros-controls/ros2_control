@@ -61,7 +61,9 @@ public:
     {
       RCLCPP_INFO_STREAM(node_->get_logger(), "I found " << params.size() << " parameters.");
       return controller_interface::return_type::OK;
-    } else {
+    }
+    else
+    {
       return controller_interface::return_type::ERROR;
     }
   }
