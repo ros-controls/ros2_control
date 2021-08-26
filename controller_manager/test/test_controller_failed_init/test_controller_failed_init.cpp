@@ -31,8 +31,8 @@ TestControllerFailedInit::on_init()
   return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
-controller_interface::return_type
-TestControllerFailedInit::init(const std::string & /* controller_name */)
+controller_interface::return_type TestControllerFailedInit::init(
+  const std::string & /* controller_name */)
 {
   return controller_interface::return_type::ERROR;
 }
