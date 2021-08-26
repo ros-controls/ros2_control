@@ -20,6 +20,10 @@
 #include "ros2_control_test_assets/components_urdfs.hpp"
 #include "ros2_control_test_assets/descriptions.hpp"
 
+#ifndef M_PI
+#define M_PI 3.1415926535897932384626433832795
+#endif
+
 using namespace ::testing;  // NOLINT
 
 class TestComponentParser : public Test
