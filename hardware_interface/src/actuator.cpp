@@ -25,14 +25,172 @@
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/hardware_interface_status_values.hpp"
+#include "hardware_interface/types/lifecycle_state_names.hpp"
+#include "lifecycle_msgs/msg/state.hpp"
+#include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
+#include "rclcpp_lifecycle/state.hpp"
+
+using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
 
 namespace hardware_interface
 {
-Actuator::Actuator(std::unique_ptr<ActuatorInterface> impl) : impl_(std::move(impl)) {}
-
-return_type Actuator::configure(const HardwareInfo & actuator_info)
+Actuator::Actuator(std::unique_ptr<ActuatorInterface> impl)
+: impl_(std::move(impl)),
+  lifecycle_state_(rclcpp_lifecycle::State(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN, lifecycle_state_names::UNKNOWN))
 {
-  return impl_->configure(actuator_info);
+}
+
+rclcpp_lifecycle::State Actuator::initialize(const HardwareInfo & actuator_info)
+{
+  if (lifecycle_state_.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN)
+  {
+    switch (impl_->on_init(actuator_info))
+    {
+      case CallbackReturn::SUCCESS:
+        lifecycle_state_ = rclcpp_lifecycle::State(
+          lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+          lifecycle_state_names::UNCONFIGURED);
+        break;
+      case CallbackReturn::FAILURE:
+      case CallbackReturn::ERROR:
+        // TODO(destogl): Add here output that critical error during initialization has happened
+        // and the URDF and plugin have to reloaded to continue
+        lifecycle_state_ = rclcpp_lifecycle::State(
+          lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, lifecycle_state_names::FINALIZED);
+        break;
+    }
+  }
+  return lifecycle_state_;
+}
+
+rclcpp_lifecycle::State Actuator::configure()
+{
+  if (lifecycle_state_.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
+  {
+    switch (impl_->on_configure())
+    {
+      case CallbackReturn::SUCCESS:
+        lifecycle_state_ = rclcpp_lifecycle::State(
+          lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, lifecycle_state_names::INACTIVE);
+        break;
+      case CallbackReturn::FAILURE:
+        lifecycle_state_ = rclcpp_lifecycle::State(
+          lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+          lifecycle_state_names::UNCONFIGURED);
+        break;
+      case CallbackReturn::ERROR:
+        lifecycle_state_ = error();
+        break;
+    }
+  }
+  return lifecycle_state_;
+}
+
+rclcpp_lifecycle::State Actuator::cleanup()
+{
+  if (lifecycle_state_.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
+  {
+    switch (impl_->on_cleanup())
+    {
+      case CallbackReturn::SUCCESS:
+        lifecycle_state_ = rclcpp_lifecycle::State(
+          lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+          lifecycle_state_names::UNCONFIGURED);
+        break;
+      case CallbackReturn::FAILURE:
+      case CallbackReturn::ERROR:
+        lifecycle_state_ = error();
+        break;
+    }
+  }
+  return lifecycle_state_;
+}
+
+rclcpp_lifecycle::State Actuator::shutdown()
+{
+  if (
+    lifecycle_state_.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN &&
+    lifecycle_state_.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED)
+  {
+    switch (impl_->on_shutdown(lifecycle_state_))
+    {
+      case CallbackReturn::SUCCESS:
+        lifecycle_state_ = rclcpp_lifecycle::State(
+          lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, lifecycle_state_names::FINALIZED);
+        break;
+      case CallbackReturn::FAILURE:
+      case CallbackReturn::ERROR:
+        lifecycle_state_ = error();
+        break;
+    }
+  }
+  return lifecycle_state_;
+}
+
+rclcpp_lifecycle::State Actuator::activate()
+{
+  if (lifecycle_state_.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
+  {
+    switch (impl_->on_activate())
+    {
+      case CallbackReturn::SUCCESS:
+        lifecycle_state_ = rclcpp_lifecycle::State(
+          lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, lifecycle_state_names::ACTIVE);
+        break;
+      case CallbackReturn::FAILURE:
+        lifecycle_state_ = rclcpp_lifecycle::State(
+          lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, lifecycle_state_names::INACTIVE);
+        break;
+      case CallbackReturn::ERROR:
+        lifecycle_state_ = error();
+        break;
+    }
+  }
+  return lifecycle_state_;
+}
+
+rclcpp_lifecycle::State Actuator::deactivate()
+{
+  if (lifecycle_state_.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+  {
+    switch (impl_->on_deactivate())
+    {
+      case CallbackReturn::SUCCESS:
+        lifecycle_state_ = rclcpp_lifecycle::State(
+          lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, lifecycle_state_names::INACTIVE);
+        break;
+      case CallbackReturn::FAILURE:
+        lifecycle_state_ = rclcpp_lifecycle::State(
+          lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, lifecycle_state_names::ACTIVE);
+        break;
+      case CallbackReturn::ERROR:
+        lifecycle_state_ = error();
+        break;
+    }
+  }
+  return lifecycle_state_;
+}
+
+rclcpp_lifecycle::State Actuator::error()
+{
+  if (lifecycle_state_.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN)
+  {
+    switch (impl_->on_error(lifecycle_state_))
+    {
+      case CallbackReturn::SUCCESS:
+        lifecycle_state_ = rclcpp_lifecycle::State(
+          lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+          lifecycle_state_names::UNCONFIGURED);
+        break;
+      case CallbackReturn::FAILURE:
+      case CallbackReturn::ERROR:
+        lifecycle_state_ = rclcpp_lifecycle::State(
+          lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, lifecycle_state_names::FINALIZED);
+        break;
+    }
+  }
+  return lifecycle_state_;
 }
 
 std::vector<StateInterface> Actuator::export_state_interfaces()
@@ -61,13 +219,9 @@ return_type Actuator::perform_command_mode_switch(
   return impl_->perform_command_mode_switch(start_interfaces, stop_interfaces);
 }
 
-return_type Actuator::start() { return impl_->start(); }
-
-return_type Actuator::stop() { return impl_->stop(); }
-
 std::string Actuator::get_name() const { return impl_->get_name(); }
 
-status Actuator::get_status() const { return impl_->get_status(); }
+const rclcpp_lifecycle::State & Actuator::get_current_state() const { return lifecycle_state_; }
 
 return_type Actuator::read() { return impl_->read(); }
 
