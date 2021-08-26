@@ -21,7 +21,7 @@
 #include <memory>
 #include <string>
 
-#include <controller_interface/controller_state_names.hpp>
+#include "controller_interface/controller_state_names.hpp"
 
 namespace controller_with_options
 {
@@ -61,9 +61,7 @@ public:
     {
       RCLCPP_INFO_STREAM(node_->get_logger(), "I found " << params.size() << " parameters.");
       return controller_interface::return_type::OK;
-    }
-    else
-    {
+    } else {
       return controller_interface::return_type::ERROR;
     }
   }
