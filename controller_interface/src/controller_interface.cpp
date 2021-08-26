@@ -24,7 +24,6 @@
 
 namespace controller_interface
 {
-
 return_type ControllerInterface::init(const std::string & controller_name)
 {
   node_ = std::make_shared<rclcpp::Node>(
