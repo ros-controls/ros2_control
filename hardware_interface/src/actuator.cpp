@@ -54,8 +54,6 @@ rclcpp_lifecycle::State Actuator::initialize(const HardwareInfo & actuator_info)
         break;
       case CallbackReturn::FAILURE:
       case CallbackReturn::ERROR:
-        // TODO(destogl): Add here output that critical error during initialization has happened
-        // and the URDF and plugin have to reloaded to continue
         lifecycle_state_ = rclcpp_lifecycle::State(
           lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, lifecycle_state_names::FINALIZED);
         break;
@@ -221,7 +219,7 @@ return_type Actuator::perform_command_mode_switch(
 
 std::string Actuator::get_name() const { return impl_->get_name(); }
 
-const rclcpp_lifecycle::State & Actuator::get_current_state() const { return lifecycle_state_; }
+const rclcpp_lifecycle::State & Actuator::get_state() const { return lifecycle_state_; }
 
 return_type Actuator::read() { return impl_->read(); }
 
