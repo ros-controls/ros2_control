@@ -1174,7 +1174,8 @@ void ControllerManager::list_hardware_components_srv_cb(
     component.name = it->second.name;
     component.type = it->second.type;
     component.class_type = it->second.class_type;
-    component.state = it->second.state.label();
+    component.state.id = it->second.state.id();
+    component.state.label = it->second.state.label();
 
     // TODO(destogl): Add list of command and state interfaces for component
     //     component.command_interfaces =
