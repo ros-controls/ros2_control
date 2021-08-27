@@ -36,7 +36,7 @@ public:
 
   CallbackReturn on_init_default(const HardwareInfo & info)
   {
-    return BaseInterface<InterfaceType>::configure(info);
+    return BaseInterface<InterfaceType>::on_init(info);
   }
 
   std::string get_name() const final { return info_.name; }

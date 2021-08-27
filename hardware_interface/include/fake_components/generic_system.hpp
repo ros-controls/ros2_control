@@ -25,7 +25,6 @@
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/system_interface.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
-#include "hardware_interface/types/hardware_interface_status_values.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 
 using hardware_interface::return_type;
@@ -36,33 +35,25 @@ class HARDWARE_INTERFACE_PUBLIC GenericSystem
 : public hardware_interface::BaseInterface<hardware_interface::SystemInterface>
 {
 public:
-  return_type configure(const hardware_interface::HardwareInfo & info) override;
+  CallbackReturn on_init(const hardware_interface::HardwareInfo & info) override;
 
   std::vector<hardware_interface::StateInterface> export_state_interfaces() override;
 
   std::vector<hardware_interface::CommandInterface> export_command_interfaces() override;
 
-  return_type start() override
-  {
-    status_ = hardware_interface::status::STARTED;
-    return return_type::OK;
-  }
+  CallbackReturn on_activate() override { return CallbackReturn::SUCCESS; }
 
-  return_type stop() override
-  {
-    status_ = hardware_interface::status::STOPPED;
-    return return_type::OK;
-  }
+  CallbackReturn on_deactivate() override { return CallbackReturn::SUCCESS; }
 
   return_type read() override;
 
   return_type write() override { return return_type::OK; }
 
 protected:
-  /// Use standard interfaces for joints because they are relevant for dynamic behaviour
+  /// Use standard interfaces for joints because they are relevant for dynamic behavior
   /**
    * By splitting the standard interfaces from other type, the users are able to inherit this
-   * class and simply create small "simulation" with desired dynamic behaviour.
+   * class and simply create small "simulation" with desired dynamic behavior.
    * The advantage over using Gazebo is that enables "quick & dirty" tests of robot's URDF and
    * controllers.
    */
