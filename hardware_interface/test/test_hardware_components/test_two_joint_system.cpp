@@ -24,24 +24,23 @@ using hardware_interface::BaseInterface;
 using hardware_interface::CommandInterface;
 using hardware_interface::return_type;
 using hardware_interface::StateInterface;
-using hardware_interface::status;
 using hardware_interface::SystemInterface;
 
 namespace test_hardware_components
 {
 class TestTwoJointSystem : public BaseInterface<SystemInterface>
 {
-  return_type configure(const hardware_interface::HardwareInfo & system_info) override
+  CallbackReturn on_init(const hardware_interface::HardwareInfo & system_info) override
   {
-    if (configure_default(system_info) != return_type::OK)
+    if (on_init_default(system_info) != CallbackReturn::SUCCESS)
     {
-      return return_type::ERROR;
+      return CallbackReturn::ERROR;
     }
 
     // can only control two joint
     if (info_.joints.size() != 2)
     {
-      return return_type::ERROR;
+      return CallbackReturn::ERROR;
     }
     for (const auto & joint : info_.joints)
     {
@@ -49,26 +48,26 @@ class TestTwoJointSystem : public BaseInterface<SystemInterface>
       const auto & command_interfaces = joint.command_interfaces;
       if (command_interfaces.size() != 1)
       {
-        return return_type::ERROR;
+        return CallbackReturn::ERROR;
       }
       if (command_interfaces[0].name != hardware_interface::HW_IF_POSITION)
       {
-        return return_type::ERROR;
+        return CallbackReturn::ERROR;
       }
       // can only give feedback state for position and velocity
       const auto & state_interfaces = joint.state_interfaces;
       if (state_interfaces.size() != 1)
       {
-        return return_type::ERROR;
+        return CallbackReturn::ERROR;
       }
       if (state_interfaces[0].name != hardware_interface::HW_IF_POSITION)
       {
-        return return_type::ERROR;
+        return CallbackReturn::ERROR;
       }
     }
 
     fprintf(stderr, "TestTwoJointSystem configured successfully.\n");
-    return return_type::OK;
+    return CallbackReturn::SUCCESS;
   }
 
   std::vector<StateInterface> export_state_interfaces() override
@@ -95,9 +94,9 @@ class TestTwoJointSystem : public BaseInterface<SystemInterface>
     return command_interfaces;
   }
 
-  return_type start() override { return return_type::OK; }
+  CallbackReturn on_activate() override { return CallbackReturn::SUCCESS; }
 
-  return_type stop() override { return return_type::OK; }
+  CallbackReturn on_deactivate() override { return CallbackReturn::SUCCESS; }
 
   return_type read() override { return return_type::OK; }
 

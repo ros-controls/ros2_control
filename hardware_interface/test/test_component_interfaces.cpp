@@ -28,8 +28,9 @@
 #include "hardware_interface/system.hpp"
 #include "hardware_interface/system_interface.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
-#include "hardware_interface/types/hardware_interface_status_values.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
+#include "hardware_interface/types/lifecycle_state_names.hpp"
+#include "lifecycle_msgs/msg/state.hpp"
 
 using namespace ::testing;  // NOLINT
 
@@ -37,11 +38,10 @@ namespace test_components
 {
 class DummyActuator : public hardware_interface::ActuatorInterface
 {
-  hardware_interface::return_type configure(
-    const hardware_interface::HardwareInfo & /* info */) override
+  CallbackReturn on_init(const hardware_interface::HardwareInfo & /* info */) override
   {
     // We hardcode the info
-    return hardware_interface::return_type::OK;
+    return CallbackReturn::SUCCESS;
   }
 
   std::vector<hardware_interface::StateInterface> export_state_interfaces() override
@@ -66,16 +66,11 @@ class DummyActuator : public hardware_interface::ActuatorInterface
     return command_interfaces;
   }
 
-  hardware_interface::return_type start() override { return hardware_interface::return_type::OK; }
+  CallbackReturn on_activate() override { return CallbackReturn::SUCCESS; }
 
-  hardware_interface::return_type stop() override { return hardware_interface::return_type::OK; }
+  CallbackReturn on_deactivate() override { return CallbackReturn::SUCCESS; }
 
   std::string get_name() const override { return "DummyActuator"; }
-
-  hardware_interface::status get_status() const override
-  {
-    return hardware_interface::status::UNKNOWN;
-  }
 
   hardware_interface::return_type read() override
   {
@@ -99,11 +94,10 @@ private:
 
 class DummySensor : public hardware_interface::SensorInterface
 {
-  hardware_interface::return_type configure(
-    const hardware_interface::HardwareInfo & /* info */) override
+  CallbackReturn on_init(const hardware_interface::HardwareInfo & /* info */) override
   {
     // We hardcode the info
-    return hardware_interface::return_type::OK;
+    return CallbackReturn::SUCCESS;
   }
 
   std::vector<hardware_interface::StateInterface> export_state_interfaces() override
@@ -116,16 +110,11 @@ class DummySensor : public hardware_interface::SensorInterface
     return state_interfaces;
   }
 
-  hardware_interface::return_type start() override { return hardware_interface::return_type::OK; }
+  CallbackReturn on_activate() override { return CallbackReturn::SUCCESS; }
 
-  hardware_interface::return_type stop() override { return hardware_interface::return_type::OK; }
+  CallbackReturn on_deactivate() override { return CallbackReturn::SUCCESS; }
 
   std::string get_name() const override { return "DummySensor"; }
-
-  hardware_interface::status get_status() const override
-  {
-    return hardware_interface::status::UNKNOWN;
-  }
 
   hardware_interface::return_type read() override
   {
@@ -139,11 +128,10 @@ private:
 
 class DummySystem : public hardware_interface::SystemInterface
 {
-  hardware_interface::return_type configure(
-    const hardware_interface::HardwareInfo & /* info */) override
+  CallbackReturn on_init(const hardware_interface::HardwareInfo & /* info */) override
   {
     // We hardcode the info
-    return hardware_interface::return_type::OK;
+    return CallbackReturn::SUCCESS;
   }
 
   std::vector<hardware_interface::StateInterface> export_state_interfaces() override
@@ -180,16 +168,11 @@ class DummySystem : public hardware_interface::SystemInterface
     return command_interfaces;
   }
 
-  hardware_interface::return_type start() override { return hardware_interface::return_type::OK; }
+  CallbackReturn on_activate() override { return CallbackReturn::SUCCESS; }
 
-  hardware_interface::return_type stop() override { return hardware_interface::return_type::OK; }
+  CallbackReturn on_deactivate() override { return CallbackReturn::SUCCESS; }
 
   std::string get_name() const override { return "DummySystem"; }
-
-  hardware_interface::status get_status() const override
-  {
-    return hardware_interface::status::UNKNOWN;
-  }
 
   hardware_interface::return_type read() override
   {
@@ -216,11 +199,10 @@ private:
 class DummySystemPreparePerform : public hardware_interface::SystemInterface
 {
   // Override the pure virtual functions with default behavior
-  hardware_interface::return_type configure(
-    const hardware_interface::HardwareInfo & /* info */) override
+  CallbackReturn on_init(const hardware_interface::HardwareInfo & /* info */) override
   {
     // We hardcode the info
-    return hardware_interface::return_type::OK;
+    return CallbackReturn::SUCCESS;
   }
 
   std::vector<hardware_interface::StateInterface> export_state_interfaces() override { return {}; }
@@ -230,16 +212,11 @@ class DummySystemPreparePerform : public hardware_interface::SystemInterface
     return {};
   }
 
-  hardware_interface::return_type start() override { return hardware_interface::return_type::OK; }
+  CallbackReturn on_activate() override { return CallbackReturn::SUCCESS; }
 
-  hardware_interface::return_type stop() override { return hardware_interface::return_type::OK; }
+  CallbackReturn on_deactivate() override { return CallbackReturn::SUCCESS; }
 
   std::string get_name() const override { return "DummySystemPreparePerform"; }
-
-  hardware_interface::status get_status() const override
-  {
-    return hardware_interface::status::UNKNOWN;
-  }
 
   hardware_interface::return_type read() override { return hardware_interface::return_type::OK; }
 
@@ -286,7 +263,9 @@ TEST(TestComponentInterfaces, dummy_actuator)
   hardware_interface::Actuator actuator_hw(std::make_unique<test_components::DummyActuator>());
 
   hardware_interface::HardwareInfo mock_hw_info{};
-  EXPECT_EQ(hardware_interface::return_type::OK, actuator_hw.configure(mock_hw_info));
+  auto state = actuator_hw.initialize(mock_hw_info);
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
 
   auto state_interfaces = actuator_hw.export_state_interfaces();
   ASSERT_EQ(2u, state_interfaces.size());
@@ -324,7 +303,9 @@ TEST(TestComponentInterfaces, dummy_sensor)
   hardware_interface::Sensor sensor_hw(std::make_unique<test_components::DummySensor>());
 
   hardware_interface::HardwareInfo mock_hw_info{};
-  EXPECT_EQ(hardware_interface::return_type::OK, sensor_hw.configure(mock_hw_info));
+  auto state = sensor_hw.initialize(mock_hw_info);
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
 
   auto state_interfaces = sensor_hw.export_state_interfaces();
   ASSERT_EQ(1u, state_interfaces.size());
@@ -338,7 +319,9 @@ TEST(TestComponentInterfaces, dummy_system)
   hardware_interface::System system_hw(std::make_unique<test_components::DummySystem>());
 
   hardware_interface::HardwareInfo mock_hw_info{};
-  EXPECT_EQ(hardware_interface::return_type::OK, system_hw.configure(mock_hw_info));
+  auto state = system_hw.initialize(mock_hw_info);
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
 
   auto state_interfaces = system_hw.export_state_interfaces();
   ASSERT_EQ(6u, state_interfaces.size());
@@ -392,7 +375,9 @@ TEST(TestComponentInterfaces, dummy_command_mode_system)
   hardware_interface::System system_hw(
     std::make_unique<test_components::DummySystemPreparePerform>());
   hardware_interface::HardwareInfo mock_hw_info{};
-  EXPECT_EQ(hardware_interface::return_type::OK, system_hw.configure(mock_hw_info));
+  auto state = system_hw.initialize(mock_hw_info);
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
 
   std::vector<std::string> one_key = {"joint1/position"};
   std::vector<std::string> two_keys = {"joint1/position", "joint1/velocity"};

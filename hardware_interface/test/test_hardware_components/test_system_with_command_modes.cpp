@@ -26,18 +26,17 @@ class TestSystemCommandModes
 : public hardware_interface::BaseInterface<hardware_interface::SystemInterface>
 {
 public:
-  hardware_interface::return_type configure(
-    const hardware_interface::HardwareInfo & system_info) override
+  CallbackReturn on_init(const hardware_interface::HardwareInfo & system_info) override
   {
-    if (configure_default(system_info) != hardware_interface::return_type::OK)
+    if (on_init_default(system_info) != CallbackReturn::SUCCESS)
     {
-      return hardware_interface::return_type::ERROR;
+      return CallbackReturn::ERROR;
     }
 
     // Can only control two joints
     if (info_.joints.size() != 2)
     {
-      return hardware_interface::return_type::ERROR;
+      return CallbackReturn::ERROR;
     }
     for (const hardware_interface::ComponentInfo & joint : info_.joints)
     {
@@ -45,7 +44,7 @@ public:
       const auto & command_interfaces = joint.command_interfaces;
       if (command_interfaces.size() != 2)
       {
-        return hardware_interface::return_type::ERROR;
+        return CallbackReturn::ERROR;
       }
       for (const auto & command_interface : command_interfaces)
       {
@@ -53,14 +52,14 @@ public:
           command_interface.name != hardware_interface::HW_IF_POSITION &&
           command_interface.name != hardware_interface::HW_IF_VELOCITY)
         {
-          return hardware_interface::return_type::ERROR;
+          return CallbackReturn::ERROR;
         }
       }
       // Can give feedback state for position, velocity, and acceleration
       const auto & state_interfaces = joint.state_interfaces;
       if (state_interfaces.size() != 2)
       {
-        return hardware_interface::return_type::ERROR;
+        return CallbackReturn::ERROR;
       }
       for (const auto & state_interface : state_interfaces)
       {
@@ -68,13 +67,13 @@ public:
           state_interface.name != hardware_interface::HW_IF_POSITION &&
           state_interface.name != hardware_interface::HW_IF_VELOCITY)
         {
-          return hardware_interface::return_type::ERROR;
+          return CallbackReturn::ERROR;
         }
       }
     }
 
     fprintf(stderr, "TestSystemCommandModes configured successfully.\n");
-    return hardware_interface::return_type::OK;
+    return CallbackReturn::SUCCESS;
   }
 
   std::vector<hardware_interface::StateInterface> export_state_interfaces() override
@@ -107,17 +106,9 @@ public:
     return command_interfaces;
   }
 
-  hardware_interface::return_type start() override
-  {
-    status_ = hardware_interface::status::STARTED;
-    return hardware_interface::return_type::OK;
-  }
+  CallbackReturn on_activate() override { return CallbackReturn::SUCCESS; }
 
-  hardware_interface::return_type stop() override
-  {
-    status_ = hardware_interface::status::STOPPED;
-    return hardware_interface::return_type::OK;
-  }
+  CallbackReturn on_deactivate() override { return CallbackReturn::SUCCESS; }
 
   hardware_interface::return_type read() override { return hardware_interface::return_type::OK; }
 
