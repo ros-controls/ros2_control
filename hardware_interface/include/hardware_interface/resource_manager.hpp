@@ -188,9 +188,9 @@ public:
 
   /// Return status for all components.
   /**
-   * \return map of hardware names and their status
+   * \return map of hardware names and their states
    */
-  std::unordered_map<std::string, status> get_components_status();
+  std::unordered_map<std::string, rclcpp_lifecycle::State> get_components_states();
 
   /// Prepare the hardware components for a new command interface mode
   /**
