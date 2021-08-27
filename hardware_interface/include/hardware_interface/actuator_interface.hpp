@@ -63,7 +63,7 @@ public:
    * \returns LifecycleNodeInterface::CallbackReturn::ERROR critical error has happened that
    * should be managed in "on_error" method.
    */
-  virtual CallbackReturn on_configure() = 0;
+  virtual CallbackReturn on_configure() { return CallbackReturn::SUCCESS; }
 
   /// Cleanup hardware configuration and stop communication with it.
   /**
@@ -76,7 +76,7 @@ public:
    * \returns LifecycleNodeInterface::CallbackReturn::ERROR critical error has happened that
    * should be managed in "on_error" method.
    */
-  virtual CallbackReturn on_cleanup() = 0;
+  virtual CallbackReturn on_cleanup() { return CallbackReturn::SUCCESS; }
 
   /// Shutdown hardware interface and prepare plugin for destruction.
   /**
@@ -88,7 +88,10 @@ public:
    * \returns LifecycleNodeInterface::CallbackReturn::ERROR critical error has happened that
    * should be managed in "on_error" method.
    */
-  virtual CallbackReturn on_shutdown(const rclcpp_lifecycle::State & previous_state) = 0;
+  virtual CallbackReturn on_shutdown(const rclcpp_lifecycle::State & /*previous_state*/)
+  {
+    return CallbackReturn::SUCCESS;
+  }
 
   /// Activate hardware power and enable its movement.
   /**
@@ -134,7 +137,10 @@ public:
    * \returns LifecycleNodeInterface::CallbackReturn::SUCCESS if everything worked as expected.
    * \returns LifecycleNodeInterface::CallbackReturn::FAILURE if any error happens.
    */
-  virtual CallbackReturn on_error(const State & previous_state) = 0;
+  virtual CallbackReturn on_error(const rclcpp_lifecycle::State & /*previous_state*/)
+  {
+    return CallbackReturn::SUCCESS;
+  }
 
   /// Exports all state interfaces for this actuator.
   /**
@@ -202,12 +208,6 @@ public:
    * \return name.
    */
   virtual std::string get_name() const = 0;
-
-  /// Get current state of the actuator hardware.
-  /**
-   * \return current status.
-   */
-  virtual status get_status() const = 0;
 
   /// Read the current state values from the actuator.
   /**
