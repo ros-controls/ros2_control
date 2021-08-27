@@ -112,66 +112,6 @@ TEST_F(TestResourceManager, initialization_with_urdf_unclaimed)
   }
 }
 
-TEST_F(TestResourceManager, resource_status)
-{
-  hardware_interface::ResourceManager rm(ros2_control_test_assets::minimal_robot_urdf);
-
-  std::unordered_map<std::string, rclcpp_lifecycle::State> status_map;
-
-  status_map = rm.get_components_states();
-  EXPECT_EQ(
-    status_map["TestActuatorHardware"].id(), lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
-  EXPECT_EQ(
-    status_map["TestActuatorHardware"].label(),
-    hardware_interface::lifecycle_state_names::INACTIVE);
-  EXPECT_EQ(
-    status_map["TestSensorHardware"].id(), lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
-  EXPECT_EQ(
-    status_map["TestSensorHardware"].label(), hardware_interface::lifecycle_state_names::INACTIVE);
-  EXPECT_EQ(
-    status_map["TestSystemHardware"].id(), lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
-  EXPECT_EQ(
-    status_map["TestSystemHardware"].label(), hardware_interface::lifecycle_state_names::INACTIVE);
-}
-
-TEST_F(TestResourceManager, starting_and_stopping_resources)
-{
-  hardware_interface::ResourceManager rm(ros2_control_test_assets::minimal_robot_urdf);
-
-  std::unordered_map<std::string, rclcpp_lifecycle::State> status_map;
-
-  rm.start_components();
-  status_map = rm.get_components_states();
-  EXPECT_EQ(
-    status_map["TestActuatorHardware"].id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
-  EXPECT_EQ(
-    status_map["TestActuatorHardware"].label(), hardware_interface::lifecycle_state_names::ACTIVE);
-  EXPECT_EQ(
-    status_map["TestSensorHardware"].id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
-  EXPECT_EQ(
-    status_map["TestSensorHardware"].label(), hardware_interface::lifecycle_state_names::ACTIVE);
-  EXPECT_EQ(
-    status_map["TestSystemHardware"].id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
-  EXPECT_EQ(
-    status_map["TestSystemHardware"].label(), hardware_interface::lifecycle_state_names::ACTIVE);
-
-  rm.stop_components();
-  status_map = rm.get_components_states();
-  EXPECT_EQ(
-    status_map["TestActuatorHardware"].id(), lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
-  EXPECT_EQ(
-    status_map["TestActuatorHardware"].label(),
-    hardware_interface::lifecycle_state_names::INACTIVE);
-  EXPECT_EQ(
-    status_map["TestSensorHardware"].id(), lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
-  EXPECT_EQ(
-    status_map["TestSensorHardware"].label(), hardware_interface::lifecycle_state_names::INACTIVE);
-  EXPECT_EQ(
-    status_map["TestSystemHardware"].id(), lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
-  EXPECT_EQ(
-    status_map["TestSystemHardware"].label(), hardware_interface::lifecycle_state_names::INACTIVE);
-}
-
 TEST_F(TestResourceManager, resource_claiming)
 {
   hardware_interface::ResourceManager rm(ros2_control_test_assets::minimal_robot_urdf);
@@ -349,4 +289,64 @@ TEST_F(TestResourceManager, custom_prepare_perform_switch)
   EXPECT_TRUE(rm.perform_command_mode_switch(legal_keys_position, legal_keys_position));
   EXPECT_FALSE(rm.perform_command_mode_switch(empty_keys, empty_keys));
   EXPECT_FALSE(rm.perform_command_mode_switch(empty_keys, legal_keys_position));
+}
+
+TEST_F(TestResourceManager, resource_status)
+{
+  hardware_interface::ResourceManager rm(ros2_control_test_assets::minimal_robot_urdf);
+
+  std::unordered_map<std::string, rclcpp_lifecycle::State> status_map;
+
+  status_map = rm.get_components_states();
+  EXPECT_EQ(
+    status_map["TestActuatorHardware"].id(), lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+  EXPECT_EQ(
+    status_map["TestActuatorHardware"].label(),
+    hardware_interface::lifecycle_state_names::INACTIVE);
+  EXPECT_EQ(
+    status_map["TestSensorHardware"].id(), lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+  EXPECT_EQ(
+    status_map["TestSensorHardware"].label(), hardware_interface::lifecycle_state_names::INACTIVE);
+  EXPECT_EQ(
+    status_map["TestSystemHardware"].id(), lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+  EXPECT_EQ(
+    status_map["TestSystemHardware"].label(), hardware_interface::lifecycle_state_names::INACTIVE);
+}
+
+TEST_F(TestResourceManager, starting_and_stopping_resources)
+{
+  hardware_interface::ResourceManager rm(ros2_control_test_assets::minimal_robot_urdf);
+
+  std::unordered_map<std::string, rclcpp_lifecycle::State> status_map;
+
+  rm.start_components();
+  status_map = rm.get_components_states();
+  EXPECT_EQ(
+    status_map["TestActuatorHardware"].id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+  EXPECT_EQ(
+    status_map["TestActuatorHardware"].label(), hardware_interface::lifecycle_state_names::ACTIVE);
+  EXPECT_EQ(
+    status_map["TestSensorHardware"].id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+  EXPECT_EQ(
+    status_map["TestSensorHardware"].label(), hardware_interface::lifecycle_state_names::ACTIVE);
+  EXPECT_EQ(
+    status_map["TestSystemHardware"].id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+  EXPECT_EQ(
+    status_map["TestSystemHardware"].label(), hardware_interface::lifecycle_state_names::ACTIVE);
+
+  rm.stop_components();
+  status_map = rm.get_components_states();
+  EXPECT_EQ(
+    status_map["TestActuatorHardware"].id(), lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+  EXPECT_EQ(
+    status_map["TestActuatorHardware"].label(),
+    hardware_interface::lifecycle_state_names::INACTIVE);
+  EXPECT_EQ(
+    status_map["TestSensorHardware"].id(), lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+  EXPECT_EQ(
+    status_map["TestSensorHardware"].label(), hardware_interface::lifecycle_state_names::INACTIVE);
+  EXPECT_EQ(
+    status_map["TestSystemHardware"].id(), lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+  EXPECT_EQ(
+    status_map["TestSystemHardware"].label(), hardware_interface::lifecycle_state_names::INACTIVE);
 }
