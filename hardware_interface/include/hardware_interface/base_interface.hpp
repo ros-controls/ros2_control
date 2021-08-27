@@ -1,4 +1,4 @@
-// Copyright 2020 ros2_control Development Team
+// Copyright 2021 ros2_control Development Team
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,8 +18,9 @@
 #include <string>
 
 #include "hardware_interface/hardware_info.hpp"
-#include "hardware_interface/types/hardware_interface_return_values.hpp"
-#include "hardware_interface/types/hardware_interface_status_values.hpp"
+#include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
+
+using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
 
 namespace hardware_interface
 {
@@ -27,25 +28,21 @@ template <class InterfaceType>
 class BaseInterface : public InterfaceType
 {
 public:
-  return_type configure(const HardwareInfo & info) override
+  CallbackReturn on_init(const HardwareInfo & info) override
   {
     info_ = info;
-    status_ = status::CONFIGURED;
-    return return_type::OK;
+    return CallbackReturn::SUCCESS;
   }
 
-  return_type configure_default(const HardwareInfo & info)
+  CallbackReturn on_init_default(const HardwareInfo & info)
   {
     return BaseInterface<InterfaceType>::configure(info);
   }
 
   std::string get_name() const final { return info_.name; }
 
-  status get_status() const final { return status_; }
-
 protected:
   HardwareInfo info_;
-  status status_;
 };
 
 }  // namespace hardware_interface
