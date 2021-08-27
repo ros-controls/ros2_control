@@ -13,7 +13,7 @@ Migration from Foxy to Galactic
 Between Foxy and Galactic we did substantial changes to interface of hardware components to enable management of their lifecycle.
 The following list shows mandatory changes when porting existing hardware components to Galactic:
 
-1. Rename ``configure" to ``on_init`` and change return type to ``CallbackReturn``
+1. Rename ``configure`` to ``on_init`` and change return type to ``CallbackReturn``
 1. If using BaseInterface then replace first thee lines in ``on_init`` to:
 
 .. code-block:: c++
