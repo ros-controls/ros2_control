@@ -110,14 +110,14 @@ public:
   template <typename ParameterT>
   auto auto_declare(const std::string & name, const ParameterT & default_value)
   {
-      if (!node_->has_parameter(name))
-      {
-          return node_->declare_parameter<ParameterT>(name, default_value);
-      }
-      else
-      {
-          return node_->get_parameter(name).get_value<ParameterT>();
-      }
+    if (!node_->has_parameter(name))
+    {
+      return node_->declare_parameter<ParameterT>(name, default_value);
+    }
+    else
+    {
+      return node_->get_parameter(name).get_value<ParameterT>();
+    }
   }
 
   /**
