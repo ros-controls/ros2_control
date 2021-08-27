@@ -1,5 +1,11 @@
 .. _ros2_control_framework:
 
+=================
+API Documentation
+=================
+
+API documentation is parsed by doxygen and can be found `here </api/index.html>`_
+
 =====================
 Core functionalities
 =====================
