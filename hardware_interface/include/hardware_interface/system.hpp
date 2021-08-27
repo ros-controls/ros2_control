@@ -25,6 +25,7 @@
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/hardware_interface_status_values.hpp"
 #include "hardware_interface/visibility_control.h"
+#include "rclcpp_lifecycle/state.hpp"
 
 namespace hardware_interface
 {
@@ -41,7 +42,25 @@ public:
   ~System() = default;
 
   HARDWARE_INTERFACE_PUBLIC
-  return_type configure(const HardwareInfo & system_info);
+  rclcpp_lifecycle::State initialize(const HardwareInfo & system_info);
+
+  HARDWARE_INTERFACE_PUBLIC
+  rclcpp_lifecycle::State configure();
+
+  HARDWARE_INTERFACE_PUBLIC
+  rclcpp_lifecycle::State cleanup();
+
+  HARDWARE_INTERFACE_PUBLIC
+  rclcpp_lifecycle::State shutdown();
+
+  HARDWARE_INTERFACE_PUBLIC
+  rclcpp_lifecycle::State activate();
+
+  HARDWARE_INTERFACE_PUBLIC
+  rclcpp_lifecycle::State deactivate();
+
+  HARDWARE_INTERFACE_PUBLIC
+  rclcpp_lifecycle::State error();
 
   HARDWARE_INTERFACE_PUBLIC
   std::vector<StateInterface> export_state_interfaces();
@@ -60,16 +79,10 @@ public:
     const std::vector<std::string> & stop_interfaces);
 
   HARDWARE_INTERFACE_PUBLIC
-  return_type start();
-
-  HARDWARE_INTERFACE_PUBLIC
-  return_type stop();
-
-  HARDWARE_INTERFACE_PUBLIC
   std::string get_name() const;
 
   HARDWARE_INTERFACE_PUBLIC
-  status get_status() const;
+  const rclcpp_lifecycle::State & get_state() const;
 
   HARDWARE_INTERFACE_PUBLIC
   return_type read();
@@ -79,6 +92,7 @@ public:
 
 private:
   std::unique_ptr<SystemInterface> impl_;
+  rclcpp_lifecycle::State lifecycle_state_;
 };
 
 }  // namespace hardware_interface
