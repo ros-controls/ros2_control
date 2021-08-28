@@ -2,6 +2,15 @@
 Changelog for package transmission_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Use clang format as code formatter (`#491 <https://github.com/ros-controls/ros2_control/issues/491>`_)
+* Transmission parsing v2 (`#471 <https://github.com/ros-controls/ros2_control/issues/471>`_)
+  * move parsing responsibility to hardware_interface
+  * parse transmission type
+  * Cleanup unused parser
+* Contributors: Bence Magyar, Denis Štogl
+
 0.7.1 (2021-06-15)
 ------------------
 
