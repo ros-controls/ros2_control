@@ -2,8 +2,8 @@
 Changelog for package ros2_control_test_assets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.8.0 (2021-08-28)
+------------------
 * Use clang format as code formatter (`#491 <https://github.com/ros-controls/ros2_control/issues/491>`_)
 * Transmission parsing v2 (`#471 <https://github.com/ros-controls/ros2_control/issues/471>`_)
 * Added GPIO parsing and test (`#436 <https://github.com/ros-controls/ros2_control/issues/436>`_)

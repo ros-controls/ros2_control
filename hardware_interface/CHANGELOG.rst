@@ -2,8 +2,8 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.8.0 (2021-08-28)
+------------------
 * Use clang format as code formatter (`#491 <https://github.com/ros-controls/ros2_control/issues/491>`_)
 * Fixup doc typo (`#492 <https://github.com/ros-controls/ros2_control/issues/492>`_)
 * Add docs for fake components (`#466 <https://github.com/ros-controls/ros2_control/issues/466>`_)

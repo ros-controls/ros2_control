@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.8.0 (2021-08-28)
+------------------
 * Use clang format as code formatter (`#491 <https://github.com/ros-controls/ros2_control/issues/491>`_)
 * Use example urdf from the test_assests package. (`#495 <https://github.com/ros-controls/ros2_control/issues/495>`_)
 * Separate controller manager test cases (`#476 <https://github.com/ros-controls/ros2_control/issues/476>`_)
