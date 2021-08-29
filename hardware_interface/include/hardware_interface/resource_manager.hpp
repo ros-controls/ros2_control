@@ -29,8 +29,6 @@
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/hardware_interface_status_values.hpp"
 
-#define COMPONENT_NAME_COMPARE [&](const auto & name) { return name == component.get_name(); }
-
 namespace hardware_interface
 {
 class ActuatorInterface;

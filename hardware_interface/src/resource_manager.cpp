@@ -34,8 +34,34 @@
 #include "pluginlib/class_loader.hpp"
 #include "rcutils/logging_macros.h"
 
+#define COMPONENT_NAME_COMPARE [&](const auto & name) { return name == component.get_name(); }
+
 namespace hardware_interface
 {
+auto trigger_hardware_state_transition =
+  [](
+    auto transition, const std::string hardware_name, const std::string & transition_name,
+    const lifecycle_msgs::msg::State::_id_type & target_state) {
+    RCUTILS_LOG_INFO_NAMED(
+      "resource_manager", "'%s' hardware '%s' ", transition_name.c_str(), hardware_name.c_str());
+
+    bool result = transition().id() == target_state;
+
+    if (result)
+    {
+      RCUTILS_LOG_INFO_NAMED(
+        "resource_manager", "Successful '%s' of hardware '%s'", transition_name.c_str(),
+        hardware_name.c_str());
+    }
+    else
+    {
+      RCUTILS_LOG_INFO_NAMED(
+        "resource_manager", "Failed to '%s' hardware '%s'", transition_name.c_str(),
+        hardware_name.c_str());
+    }
+    return result;
+  };
+
 class ResourceStorage
 {
   static constexpr const char * pkg_name = "hardware_interface";
@@ -100,24 +126,15 @@ public:
   template <class HardwareT>
   bool configure_hardware(HardwareT & hardware)
   {
-    RCUTILS_LOG_INFO_NAMED(
-      "resource_manager", "configure hardware '%s' ", hardware.get_name().c_str());
-
-    bool result = hardware.configure().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE;
+    bool result = trigger_hardware_state_transition(
+      std::bind(&HardwareT::configure, &hardware), "configure", hardware.get_name(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
 
     if (result)
     {
-      RCUTILS_LOG_INFO_NAMED(
-        "resource_manager", "Successful configuration of hardware '%s'",
-        hardware.get_name().c_str());
       import_state_interfaces(hardware);
       // TODO(destogl): change this
-      //       import_command_interfaces(hardware);
-    }
-    else
-    {
-      RCUTILS_LOG_INFO_NAMED(
-        "resource_manager", "Failed to configure hardware '%s'", hardware.get_name().c_str());
+      // import_non_movement_command_interfaces(hardware);
     }
     return result;
   }
@@ -125,21 +142,15 @@ public:
   template <class HardwareT>
   bool cleanup_hardware(HardwareT & hardware)
   {
-    RCUTILS_LOG_INFO_NAMED(
-      "resource_manager", "cleanup hardware '%s' ", hardware.get_name().c_str());
-
-    bool result = hardware.cleanup().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED;
+    bool result = trigger_hardware_state_transition(
+      std::bind(&HardwareT::cleanup, &hardware), "cleanup", hardware.get_name(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
 
     if (result)
     {
-      RCUTILS_LOG_INFO_NAMED(
-        "resource_manager", "Successful cleanup of hardware '%s'", hardware.get_name().c_str());
+      // TODO(destogl): change this
+      // deimport_non_movement_command_interfaces(hardware);
       // deimport_state_interfaces(hardware);
-    }
-    else
-    {
-      RCUTILS_LOG_INFO_NAMED(
-        "resource_manager", "Failed to cleanup hardware '%s'", hardware.get_name().c_str());
     }
     return result;
   }
@@ -147,21 +158,14 @@ public:
   template <class HardwareT>
   bool activate_hardware(HardwareT & hardware)
   {
-    RCUTILS_LOG_INFO_NAMED(
-      "resource_manager", "activate hardware '%s' ", hardware.get_name().c_str());
-
-    bool result = hardware.activate().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE;
+    bool result = trigger_hardware_state_transition(
+      std::bind(&HardwareT::activate, &hardware), "activate", hardware.get_name(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
 
     if (result)
     {
-      RCUTILS_LOG_INFO_NAMED(
-        "resource_manager", "Successful activation of hardware '%s'", hardware.get_name().c_str());
       // TODO(destogl): import command interfaces here
-    }
-    else
-    {
-      RCUTILS_LOG_INFO_NAMED(
-        "resource_manager", "Failed to activate hardware '%s'", hardware.get_name().c_str());
+      // import_movement_command_interfaces(hardware);
     }
     return result;
   }
@@ -169,24 +173,15 @@ public:
   template <class HardwareT>
   bool deactivate_hardware(HardwareT & hardware)
   {
-    RCUTILS_LOG_INFO_NAMED(
-      "resource_manager", "deactivate hardware '%s' ", hardware.get_name().c_str());
-
-    bool result = hardware.deactivate().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE;
+    bool result = trigger_hardware_state_transition(
+      std::bind(&HardwareT::deactivate, &hardware), "deactivate", hardware.get_name(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
 
     if (result)
     {
-      RCUTILS_LOG_INFO_NAMED(
-        "resource_manager", "Successful deactivation of hardware '%s'",
-        hardware.get_name().c_str());
-      import_state_interfaces(hardware);
+      // TODO(destogl): deimport command interfaces here
+      // deimport_movement_command_interfaces(hardware);
     }
-    else
-    {
-      RCUTILS_LOG_INFO_NAMED(
-        "resource_manager", "Failed to deactivate hardware '%s'", hardware.get_name().c_str());
-    }
-
     return result;
   }
 
@@ -420,6 +415,7 @@ bool ResourceManager::command_interface_exists(const std::string & key) const
          resource_storage_->command_interface_map_.end();
 }
 
+// TODO(destogl): This is only used in tests... should we check how to replace it?
 void ResourceManager::import_component(std::unique_ptr<ActuatorInterface> actuator)
 {
   resource_storage_->actuators_.emplace_back(Actuator(std::move(actuator)));
@@ -476,6 +472,7 @@ size_t ResourceManager::system_components_size() const
 {
   return resource_storage_->systems_.size();
 }
+// End of "used only in tests"
 
 std::unordered_map<std::string, HardwareComponentInfo> ResourceManager::get_components_status()
 {
@@ -585,6 +582,72 @@ auto execute_action_on_components_from_resource_storage =
     }
     return result;
   };
+
+return_type ResourceManager::configure_components(const std::vector<std::string> & component_names)
+{
+  using std::placeholders::_1;
+
+  return_type result = return_type::OK;
+
+  if (
+    execute_action_on_components_from_resource_storage(
+      std::bind(&ResourceStorage::configure_hardware<Actuator>, resource_storage_.get(), _1),
+      resource_storage_->actuators_, component_names) == return_type::ERROR)
+  {
+    result = return_type::ERROR;
+  }
+
+  if (
+    execute_action_on_components_from_resource_storage(
+      std::bind(&ResourceStorage::configure_hardware<Sensor>, resource_storage_.get(), _1),
+      resource_storage_->sensors_, component_names) == return_type::ERROR)
+  {
+    result = return_type::ERROR;
+  }
+
+  if (
+    execute_action_on_components_from_resource_storage(
+      std::bind(&ResourceStorage::configure_hardware<System>, resource_storage_.get(), _1),
+      resource_storage_->systems_, component_names) == return_type::ERROR)
+  {
+    result = return_type::ERROR;
+  }
+
+  return result;
+}
+
+return_type ResourceManager::cleanup_components(const std::vector<std::string> & component_names)
+{
+  using std::placeholders::_1;
+
+  return_type result = return_type::OK;
+
+  if (
+    execute_action_on_components_from_resource_storage(
+      std::bind(&ResourceStorage::cleanup_hardware<Actuator>, resource_storage_.get(), _1),
+      resource_storage_->actuators_, component_names) == return_type::ERROR)
+  {
+    result = return_type::ERROR;
+  }
+
+  if (
+    execute_action_on_components_from_resource_storage(
+      std::bind(&ResourceStorage::cleanup_hardware<Sensor>, resource_storage_.get(), _1),
+      resource_storage_->sensors_, component_names) == return_type::ERROR)
+  {
+    result = return_type::ERROR;
+  }
+
+  if (
+    execute_action_on_components_from_resource_storage(
+      std::bind(&ResourceStorage::cleanup_hardware<System>, resource_storage_.get(), _1),
+      resource_storage_->systems_, component_names) == return_type::ERROR)
+  {
+    result = return_type::ERROR;
+  }
+
+  return result;
+}
 
 return_type ResourceManager::activate_components(const std::vector<std::string> & component_names)
 {
