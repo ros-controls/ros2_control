@@ -101,6 +101,9 @@ void ControllerManager::init_resource_manager()
   std::vector<std::string> autostart_components = {""};
   get_parameter("autostart_components", autostart_components);
   resource_manager_->activate_components(autostart_components);
+  std::vector<std::string> autoconfigure_components = {""};
+  get_parameter("autoconfigure_components", autoconfigure_components);
+  resource_manager_->configure_components(autoconfigure_components);
 }
 
 void ControllerManager::init_services()
@@ -1231,6 +1234,21 @@ void ControllerManager::configure_hardware_component_srv_cb(
   const std::shared_ptr<controller_manager_msgs::srv::ConfigureHardwareComponent::Request> request,
   std::shared_ptr<controller_manager_msgs::srv::ConfigureHardwareComponent::Response> response)
 {
+  RCLCPP_INFO(get_logger(), "configure hardware component service called");
+  std::lock_guard<std::mutex> guard(services_lock_);
+  RCLCPP_INFO(get_logger(), "configure hardware component service locked");
+
+  RCLCPP_DEBUG(get_logger(), "configure hardware component '%s'", request->name.c_str());
+  if (
+    // TODO(destogl): Is it OK to call this without checking the name it will penetrate until HW
+    resource_manager_->configure_components({request->name}) != hardware_interface::return_type::OK)
+  {
+    RCLCPP_ERROR(get_logger(), "configure hardware component was not successful");
+    response->ok = false;
+    return;
+  }
+
+  RCLCPP_DEBUG(get_logger(), "configure hardware component service finished");
   response->ok = true;
 }
 
@@ -1238,6 +1256,21 @@ void ControllerManager::cleanup_hardware_component_srv_cb(
   const std::shared_ptr<controller_manager_msgs::srv::CleanupHardwareComponent::Request> request,
   std::shared_ptr<controller_manager_msgs::srv::CleanupHardwareComponent::Response> response)
 {
+  RCLCPP_INFO(get_logger(), "cleanup hardware component service called");
+  std::lock_guard<std::mutex> guard(services_lock_);
+  RCLCPP_INFO(get_logger(), "cleanup hardware component service locked");
+
+  RCLCPP_DEBUG(get_logger(), "cleanup hardware component '%s'", request->name.c_str());
+  if (
+    // TODO(destogl): Is it OK to call this without checking the name it will penetrate until HW
+    resource_manager_->cleanup_components({request->name}) != hardware_interface::return_type::OK)
+  {
+    RCLCPP_ERROR(get_logger(), "cleanup hardware component was not successful");
+    response->ok = false;
+    return;
+  }
+
+  RCLCPP_DEBUG(get_logger(), "cleanup hardware component service finished");
   response->ok = true;
 }
 
@@ -1245,6 +1278,21 @@ void ControllerManager::shutdown_hardware_component_srv_cb(
   const std::shared_ptr<controller_manager_msgs::srv::ShutdownHardwareComponent::Request> request,
   std::shared_ptr<controller_manager_msgs::srv::ShutdownHardwareComponent::Response> response)
 {
+  RCLCPP_INFO(get_logger(), "shutdown hardware component service called");
+  std::lock_guard<std::mutex> guard(services_lock_);
+  RCLCPP_INFO(get_logger(), "shutdown hardware component service locked");
+
+  RCLCPP_DEBUG(get_logger(), "shutdown hardware component '%s'", request->name.c_str());
+  if (
+    // TODO(destogl): Is it OK to call this without checking the name it will penetrate until HW
+    resource_manager_->shutdown_components({request->name}) != hardware_interface::return_type::OK)
+  {
+    RCLCPP_ERROR(get_logger(), "shutdown hardware component was not successful");
+    response->ok = false;
+    return;
+  }
+
+  RCLCPP_DEBUG(get_logger(), "shutdown hardware component service finished");
   response->ok = true;
 }
 

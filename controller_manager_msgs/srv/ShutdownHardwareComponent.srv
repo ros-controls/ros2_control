@@ -1,0 +1,9 @@
+# The ShutdownHardwareComponent service allows you to shutdown a single hardware component
+# inside resource manager.
+
+# To shutdown a hardware component, specify the "name" of the component / hardware interface.
+# The return value "ok" indicates if the component was successfully shutdown or not.
+
+string name
+---
+bool ok

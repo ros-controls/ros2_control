@@ -70,6 +70,8 @@ public:
       rclcpp::Parameter("robot_description", ros2_control_test_assets::minimal_robot_urdf));
     cm_->set_parameter(rclcpp::Parameter(
       "autostart_components", std::vector<std::string>({TEST_ACTUATOR_HARDWARE_NAME})));
+    cm_->set_parameter(rclcpp::Parameter(
+      "autoconfigure_components", std::vector<std::string>({TEST_SYSTEM_HARDWARE_NAME})));
 
     cm_->init_resource_manager();
 
