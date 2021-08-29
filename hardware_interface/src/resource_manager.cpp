@@ -156,6 +156,22 @@ public:
   }
 
   template <class HardwareT>
+  bool shutdown_hardware(HardwareT & hardware)
+  {
+    bool result = trigger_hardware_state_transition(
+      std::bind(&HardwareT::shutdown, &hardware), "shutdown", hardware.get_name(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+
+    if (result)
+    {
+      // TODO(destogl): change this - deimport all things if there is there are interfaces there
+      // deimport_non_movement_command_interfaces(hardware);
+      // deimport_state_interfaces(hardware);
+    }
+    return result;
+  }
+
+  template <class HardwareT>
   bool activate_hardware(HardwareT & hardware)
   {
     bool result = trigger_hardware_state_transition(
@@ -641,6 +657,39 @@ return_type ResourceManager::cleanup_components(const std::vector<std::string> &
   if (
     execute_action_on_components_from_resource_storage(
       std::bind(&ResourceStorage::cleanup_hardware<System>, resource_storage_.get(), _1),
+      resource_storage_->systems_, component_names) == return_type::ERROR)
+  {
+    result = return_type::ERROR;
+  }
+
+  return result;
+}
+
+return_type ResourceManager::shutdown_components(const std::vector<std::string> & component_names)
+{
+  using std::placeholders::_1;
+
+  return_type result = return_type::OK;
+
+  if (
+    execute_action_on_components_from_resource_storage(
+      std::bind(&ResourceStorage::shutdown_hardware<Actuator>, resource_storage_.get(), _1),
+      resource_storage_->actuators_, component_names) == return_type::ERROR)
+  {
+    result = return_type::ERROR;
+  }
+
+  if (
+    execute_action_on_components_from_resource_storage(
+      std::bind(&ResourceStorage::shutdown_hardware<Sensor>, resource_storage_.get(), _1),
+      resource_storage_->sensors_, component_names) == return_type::ERROR)
+  {
+    result = return_type::ERROR;
+  }
+
+  if (
+    execute_action_on_components_from_resource_storage(
+      std::bind(&ResourceStorage::shutdown_hardware<System>, resource_storage_.get(), _1),
       resource_storage_->systems_, component_names) == return_type::ERROR)
   {
     result = return_type::ERROR;

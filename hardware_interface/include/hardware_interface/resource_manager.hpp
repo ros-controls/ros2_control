@@ -277,6 +277,36 @@ public:
     const std::vector<std::string> & start_interfaces,
     const std::vector<std::string> & stop_interfaces);
 
+  /// Configure hardware components.
+  /**
+   * Configure hardware components defined in the list. If empty, configure all components.
+   *
+   * \param[in] component_names vector of component names to configure. Default: empty.
+   * \return hardware_interface::retun_type::OK if all components are successfully configured and
+   *         hardware_interface::return_type::ERROR if at least one failed to configure.
+   */
+  return_type configure_components(const std::vector<std::string> & component_names = {});
+
+  /// Cleanup hardware components.
+  /**
+   * Cleanup hardware components defined in the list. If empty, cleanup all components.
+   *
+   * \param[in] component_names vector of component names to cleanup. Default: empty.
+   * \return hardware_interface::retun_type::OK if all components are successfully cleaned-up and
+   *         hardware_interface::return_type::ERROR if at least one failed to cleanup.
+   */
+  return_type cleanup_components(const std::vector<std::string> & component_names = {});
+
+  /// Shutdown hardware components.
+  /**
+   * Shutdown hardware components defined in the list. If empty, shutdown all components.
+   *
+   * \param[in] component_names vector of component names to shutdown. Default: empty.
+   * \return hardware_interface::retun_type::OK if all components are successfully shutdown and
+   *         hardware_interface::return_type::ERROR if at least one failed to shutdown.
+   */
+  return_type shutdown_components(const std::vector<std::string> & component_names = {});
+
   /// Activate hardware components.
   /**
    * Activate hardware components defined in the list. If empty, activate all components.
