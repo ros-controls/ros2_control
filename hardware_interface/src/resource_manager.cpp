@@ -213,27 +213,24 @@ public:
   }
 
   template <class HardwareT>
-  void import_command_interfaces(
-    HardwareT & hardware, std::unordered_map<std::string, bool> & claimed_command_interface_map)
+  void import_command_interfaces(HardwareT & hardware)
   {
     auto interfaces = hardware.export_command_interfaces();
     for (auto i = 0u; i < interfaces.size(); ++i)
     {
       auto key = interfaces[i].get_name() + "/" + interfaces[i].get_interface_name();
       command_interface_map_.emplace(std::make_pair(key, std::move(interfaces[i])));
-      claimed_command_interface_map.emplace(std::make_pair(key, false));
+      claimed_command_interface_map_.emplace(std::make_pair(key, false));
     }
   }
 
-  void initialize_actuator(
-    const HardwareInfo & hardware_info,
-    std::unordered_map<std::string, bool> & claimed_command_interface_map)
+  void initialize_actuator(const HardwareInfo & hardware_info)
   {
     load_hardware<Actuator, ActuatorInterface>(hardware_info, actuator_loader_, actuators_);
     initialize_hardware(hardware_info, actuators_.back());
     configure_hardware(actuators_.back());
     import_state_interfaces(actuators_.back());
-    import_command_interfaces(actuators_.back(), claimed_command_interface_map);
+    import_command_interfaces(actuators_.back());
   }
 
   void initialize_sensor(const HardwareInfo & hardware_info)
@@ -244,26 +241,23 @@ public:
     import_state_interfaces(sensors_.back());
   }
 
-  void initialize_system(
-    const HardwareInfo & hardware_info,
-    std::unordered_map<std::string, bool> & claimed_command_interface_map)
+  void initialize_system(const HardwareInfo & hardware_info)
   {
     load_hardware<System, SystemInterface>(hardware_info, system_loader_, systems_);
     initialize_hardware(hardware_info, systems_.back());
     configure_hardware(systems_.back());
     import_state_interfaces(systems_.back());
-    import_command_interfaces(systems_.back(), claimed_command_interface_map);
+    import_command_interfaces(systems_.back());
   }
 
   void initialize_actuator(
-    std::unique_ptr<ActuatorInterface> actuator, const HardwareInfo & hardware_info,
-    std::unordered_map<std::string, bool> & claimed_command_interface_map)
+    std::unique_ptr<ActuatorInterface> actuator, const HardwareInfo & hardware_info)
   {
     this->actuators_.emplace_back(Actuator(std::move(actuator)));
     initialize_hardware(hardware_info, actuators_.back());
     configure_hardware(actuators_.back());
     import_state_interfaces(actuators_.back());
-    import_command_interfaces(actuators_.back(), claimed_command_interface_map);
+    import_command_interfaces(actuators_.back());
   }
 
   void initialize_sensor(
@@ -276,14 +270,13 @@ public:
   }
 
   void initialize_system(
-    std::unique_ptr<SystemInterface> system, const HardwareInfo & hardware_info,
-    std::unordered_map<std::string, bool> & claimed_command_interface_map)
+    std::unique_ptr<SystemInterface> system, const HardwareInfo & hardware_info)
   {
     this->systems_.emplace_back(System(std::move(system)));
     initialize_hardware(hardware_info, systems_.back());
     configure_hardware(systems_.back());
     import_state_interfaces(systems_.back());
-    import_command_interfaces(systems_.back(), claimed_command_interface_map);
+    import_command_interfaces(systems_.back());
   }
 
   // hardware plugins
@@ -299,6 +292,8 @@ public:
 
   std::map<std::string, StateInterface> state_interface_map_;
   std::map<std::string, CommandInterface> command_interface_map_;
+
+  std::unordered_map<std::string, bool> claimed_command_interface_map_;
 };
 
 ResourceManager::ResourceManager() : resource_storage_(std::make_unique<ResourceStorage>()) {}
@@ -318,24 +313,24 @@ void ResourceManager::load_urdf(const std::string & urdf, bool validate_interfac
   const std::string actuator_type = "actuator";
 
   const auto hardware_info = hardware_interface::parse_control_resources_from_urdf(urdf);
-  for (const auto & hardware : hardware_info)
+  for (const auto & individual_hardware_info : hardware_info)
   {
-    if (hardware.type == actuator_type)
+    if (individual_hardware_info.type == actuator_type)
     {
       std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
       std::lock_guard<std::recursive_mutex> guard_claimed(claimed_command_interfaces_lock_);
-      resource_storage_->initialize_actuator(hardware, claimed_command_interface_map_);
+      resource_storage_->initialize_actuator(individual_hardware_info);
     }
-    if (hardware.type == sensor_type)
+    if (individual_hardware_info.type == sensor_type)
     {
       std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
-      resource_storage_->initialize_sensor(hardware);
+      resource_storage_->initialize_sensor(individual_hardware_info);
     }
-    if (hardware.type == system_type)
+    if (individual_hardware_info.type == system_type)
     {
       std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
       std::lock_guard<std::recursive_mutex> guard_claimed(claimed_command_interfaces_lock_);
-      resource_storage_->initialize_system(hardware, claimed_command_interface_map_);
+      resource_storage_->initialize_system(individual_hardware_info);
     }
   }
 
@@ -383,9 +378,10 @@ bool ResourceManager::command_interface_is_claimed(const std::string & key) cons
   }
 
   std::lock_guard<std::recursive_mutex> guard_claimed(claimed_command_interfaces_lock_);
-  return claimed_command_interface_map_.at(key);
+  return resource_storage_->claimed_command_interface_map_.at(key);
 }
 
+// Called in "update"-thread
 LoanedCommandInterface ResourceManager::claim_command_interface(const std::string & key)
 {
   if (!command_interface_exists(key))
@@ -400,17 +396,18 @@ LoanedCommandInterface ResourceManager::claim_command_interface(const std::strin
       std::string("Command interface with '") + key + "' is already claimed");
   }
 
-  claimed_command_interface_map_[key] = true;
+  resource_storage_->claimed_command_interface_map_[key] = true;
   std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
   return LoanedCommandInterface(
     resource_storage_->command_interface_map_.at(key),
     std::bind(&ResourceManager::release_command_interface, this, key));
 }
 
+// Called in "update"-thread
 void ResourceManager::release_command_interface(const std::string & key)
 {
   std::lock_guard<std::recursive_mutex> guard_claimed(claimed_command_interfaces_lock_);
-  claimed_command_interface_map_[key] = false;
+  resource_storage_->claimed_command_interface_map_[key] = false;
 }
 
 std::vector<std::string> ResourceManager::command_interface_keys() const
@@ -436,8 +433,7 @@ void ResourceManager::import_component(std::unique_ptr<ActuatorInterface> actuat
 {
   resource_storage_->actuators_.emplace_back(Actuator(std::move(actuator)));
   resource_storage_->import_state_interfaces(resource_storage_->actuators_.back());
-  resource_storage_->import_command_interfaces(
-    resource_storage_->actuators_.back(), claimed_command_interface_map_);
+  resource_storage_->import_command_interfaces(resource_storage_->actuators_.back());
 }
 
 size_t ResourceManager::actuator_components_size() const
@@ -460,15 +456,13 @@ void ResourceManager::import_component(std::unique_ptr<SystemInterface> system)
 {
   resource_storage_->systems_.emplace_back(System(std::move(system)));
   resource_storage_->import_state_interfaces(resource_storage_->systems_.back());
-  resource_storage_->import_command_interfaces(
-    resource_storage_->systems_.back(), claimed_command_interface_map_);
+  resource_storage_->import_command_interfaces(resource_storage_->systems_.back());
 }
 
 void ResourceManager::import_component(
   std::unique_ptr<ActuatorInterface> actuator, const HardwareInfo & hardware_info)
 {
-  resource_storage_->initialize_actuator(
-    std::move(actuator), hardware_info, claimed_command_interface_map_);
+  resource_storage_->initialize_actuator(std::move(actuator), hardware_info);
 }
 
 void ResourceManager::import_component(
@@ -480,8 +474,7 @@ void ResourceManager::import_component(
 void ResourceManager::import_component(
   std::unique_ptr<SystemInterface> system, const HardwareInfo & hardware_info)
 {
-  resource_storage_->initialize_system(
-    std::move(system), hardware_info, claimed_command_interface_map_);
+  resource_storage_->initialize_system(std::move(system), hardware_info);
 }
 
 size_t ResourceManager::system_components_size() const
