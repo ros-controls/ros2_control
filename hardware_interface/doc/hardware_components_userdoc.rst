@@ -16,6 +16,20 @@ Error handling follows the `node lifecycle <https://design.ros2.org/articles/nod
 If successful ``CallbackReturn::SUCCESS`` is returned and hardware is again in ``UNCONFIGURED``  state, if any ``ERROR`` or ``FAILURE`` happens the hardware ends in ``FINALIZED`` state and can not be recovered.
 The only option is to reload the complete plugin, but there is currently no service for this in the Controller Manager.
 
+
+Lifecycle of Hardware Components
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Initialization
+,,,,,,,,,,,,,,,
+Immediately after a plugin in loaded and object created with default constructor, ``on_init`` method will be called providing hardware URDF configuration using ``HardwareInfo`` structure.
+In this stage you should initialize all memory you need and prepare storage for interfaces.
+The resource manager will claim export of all interfaces after this and store them internally.
+
+Configuration
+,,,,,,,,,,,,,,
+TBD
+
 Migration from Foxy to Galactic
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

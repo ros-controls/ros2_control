@@ -328,22 +328,22 @@ TEST_F(TestResourceManager, resource_status)
   // state
   EXPECT_EQ(
     status_map[TEST_ACTUATOR_HARDWARE_NAME].state.id(),
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
   EXPECT_EQ(
     status_map[TEST_ACTUATOR_HARDWARE_NAME].state.label(),
-    hardware_interface::lifecycle_state_names::INACTIVE);
+    hardware_interface::lifecycle_state_names::UNCONFIGURED);
   EXPECT_EQ(
     status_map[TEST_SENSOR_HARDWARE_NAME].state.id(),
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
   EXPECT_EQ(
     status_map[TEST_SENSOR_HARDWARE_NAME].state.label(),
-    hardware_interface::lifecycle_state_names::INACTIVE);
+    hardware_interface::lifecycle_state_names::UNCONFIGURED);
   EXPECT_EQ(
     status_map[TEST_SYSTEM_HARDWARE_NAME].state.id(),
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
   EXPECT_EQ(
     status_map[TEST_SYSTEM_HARDWARE_NAME].state.label(),
-    hardware_interface::lifecycle_state_names::INACTIVE);
+    hardware_interface::lifecycle_state_names::UNCONFIGURED);
 
   auto check_interfaces = [](
                             const std::vector<std::string> & interfaces,
@@ -355,6 +355,7 @@ TEST_F(TestResourceManager, resource_status)
     }
   };
 
+  // TODO(destogl): Correct this test... This can/should not work for now...
   check_interfaces(
     status_map[TEST_ACTUATOR_HARDWARE_NAME].command_interfaces,
     TEST_ACTUATOR_HARDWARE_COMMAND_INTERFACES);
@@ -374,160 +375,357 @@ TEST_F(TestResourceManager, resource_status)
     status_map[TEST_SYSTEM_HARDWARE_NAME].state_interfaces, TEST_SYSTEM_HARDWARE_STATE_INTERFACES);
 }
 
-TEST_F(TestResourceManager, starting_and_stopping_all_resources)
+TEST_F(TestResourceManager, lifecycle_all_resources)
 {
   hardware_interface::ResourceManager rm(ros2_control_test_assets::minimal_robot_urdf);
+
+  // All resources start as UNCONFIGURED
+  {
+    auto status_map = rm.get_components_status();
+    EXPECT_EQ(
+      status_map[TEST_ACTUATOR_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+    EXPECT_EQ(
+      status_map[TEST_ACTUATOR_HARDWARE_NAME].state.label(),
+      hardware_interface::lifecycle_state_names::UNCONFIGURED);
+    EXPECT_EQ(
+      status_map[TEST_SENSOR_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+    EXPECT_EQ(
+      status_map[TEST_SENSOR_HARDWARE_NAME].state.label(),
+      hardware_interface::lifecycle_state_names::UNCONFIGURED);
+    EXPECT_EQ(
+      status_map[TEST_SYSTEM_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+    EXPECT_EQ(
+      status_map[TEST_SYSTEM_HARDWARE_NAME].state.label(),
+      hardware_interface::lifecycle_state_names::UNCONFIGURED);
+  }
+
+  rm.configure_components();
+  {
+    auto status_map = rm.get_components_status();
+    EXPECT_EQ(
+      status_map[TEST_ACTUATOR_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+    EXPECT_EQ(
+      status_map[TEST_ACTUATOR_HARDWARE_NAME].state.label(),
+      hardware_interface::lifecycle_state_names::INACTIVE);
+    EXPECT_EQ(
+      status_map[TEST_SENSOR_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+    EXPECT_EQ(
+      status_map[TEST_SENSOR_HARDWARE_NAME].state.label(),
+      hardware_interface::lifecycle_state_names::INACTIVE);
+    EXPECT_EQ(
+      status_map[TEST_SYSTEM_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+    EXPECT_EQ(
+      status_map[TEST_SYSTEM_HARDWARE_NAME].state.label(),
+      hardware_interface::lifecycle_state_names::INACTIVE);
+  }
 
   rm.activate_components();
-  auto status_map = rm.get_components_status();
-  EXPECT_EQ(
-    status_map[TEST_ACTUATOR_HARDWARE_NAME].state.id(),
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
-  EXPECT_EQ(
-    status_map[TEST_ACTUATOR_HARDWARE_NAME].state.label(),
-    hardware_interface::lifecycle_state_names::ACTIVE);
-  EXPECT_EQ(
-    status_map[TEST_SENSOR_HARDWARE_NAME].state.id(),
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
-  EXPECT_EQ(
-    status_map[TEST_SENSOR_HARDWARE_NAME].state.label(),
-    hardware_interface::lifecycle_state_names::ACTIVE);
-  EXPECT_EQ(
-    status_map[TEST_SYSTEM_HARDWARE_NAME].state.id(),
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
-  EXPECT_EQ(
-    status_map[TEST_SYSTEM_HARDWARE_NAME].state.label(),
-    hardware_interface::lifecycle_state_names::ACTIVE);
+  {
+    auto status_map = rm.get_components_status();
+    EXPECT_EQ(
+      status_map[TEST_ACTUATOR_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+    EXPECT_EQ(
+      status_map[TEST_ACTUATOR_HARDWARE_NAME].state.label(),
+      hardware_interface::lifecycle_state_names::ACTIVE);
+    EXPECT_EQ(
+      status_map[TEST_SENSOR_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+    EXPECT_EQ(
+      status_map[TEST_SENSOR_HARDWARE_NAME].state.label(),
+      hardware_interface::lifecycle_state_names::ACTIVE);
+    EXPECT_EQ(
+      status_map[TEST_SYSTEM_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+    EXPECT_EQ(
+      status_map[TEST_SYSTEM_HARDWARE_NAME].state.label(),
+      hardware_interface::lifecycle_state_names::ACTIVE);
+  }
 
   rm.deactivate_components();
-  status_map = rm.get_components_status();
-  EXPECT_EQ(
-    status_map[TEST_ACTUATOR_HARDWARE_NAME].state.id(),
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
-  EXPECT_EQ(
-    status_map[TEST_ACTUATOR_HARDWARE_NAME].state.label(),
-    hardware_interface::lifecycle_state_names::INACTIVE);
-  EXPECT_EQ(
-    status_map[TEST_SENSOR_HARDWARE_NAME].state.id(),
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
-  EXPECT_EQ(
-    status_map[TEST_SENSOR_HARDWARE_NAME].state.label(),
-    hardware_interface::lifecycle_state_names::INACTIVE);
-  EXPECT_EQ(
-    status_map[TEST_SYSTEM_HARDWARE_NAME].state.id(),
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
-  EXPECT_EQ(
-    status_map[TEST_SYSTEM_HARDWARE_NAME].state.label(),
-    hardware_interface::lifecycle_state_names::INACTIVE);
+  {
+    auto status_map = rm.get_components_status();
+    EXPECT_EQ(
+      status_map[TEST_ACTUATOR_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+    EXPECT_EQ(
+      status_map[TEST_ACTUATOR_HARDWARE_NAME].state.label(),
+      hardware_interface::lifecycle_state_names::INACTIVE);
+    EXPECT_EQ(
+      status_map[TEST_SENSOR_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+    EXPECT_EQ(
+      status_map[TEST_SENSOR_HARDWARE_NAME].state.label(),
+      hardware_interface::lifecycle_state_names::INACTIVE);
+    EXPECT_EQ(
+      status_map[TEST_SYSTEM_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+    EXPECT_EQ(
+      status_map[TEST_SYSTEM_HARDWARE_NAME].state.label(),
+      hardware_interface::lifecycle_state_names::INACTIVE);
+  }
+
+  rm.cleanup_components();
+  {
+    auto status_map = rm.get_components_status();
+    EXPECT_EQ(
+      status_map[TEST_ACTUATOR_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+    EXPECT_EQ(
+      status_map[TEST_ACTUATOR_HARDWARE_NAME].state.label(),
+      hardware_interface::lifecycle_state_names::UNCONFIGURED);
+    EXPECT_EQ(
+      status_map[TEST_SENSOR_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+    EXPECT_EQ(
+      status_map[TEST_SENSOR_HARDWARE_NAME].state.label(),
+      hardware_interface::lifecycle_state_names::UNCONFIGURED);
+    EXPECT_EQ(
+      status_map[TEST_SYSTEM_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+    EXPECT_EQ(
+      status_map[TEST_SYSTEM_HARDWARE_NAME].state.label(),
+      hardware_interface::lifecycle_state_names::UNCONFIGURED);
+  }
+
+  rm.shutdown_components();
+  {
+    auto status_map = rm.get_components_status();
+    EXPECT_EQ(
+      status_map[TEST_ACTUATOR_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED);
+    EXPECT_EQ(
+      status_map[TEST_ACTUATOR_HARDWARE_NAME].state.label(),
+      hardware_interface::lifecycle_state_names::FINALIZED);
+    EXPECT_EQ(
+      status_map[TEST_SENSOR_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED);
+    EXPECT_EQ(
+      status_map[TEST_SENSOR_HARDWARE_NAME].state.label(),
+      hardware_interface::lifecycle_state_names::FINALIZED);
+    EXPECT_EQ(
+      status_map[TEST_SYSTEM_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED);
+    EXPECT_EQ(
+      status_map[TEST_SYSTEM_HARDWARE_NAME].state.label(),
+      hardware_interface::lifecycle_state_names::FINALIZED);
+  }
 }
 
-TEST_F(TestResourceManager, starting_and_stopping_resources)
+TEST_F(TestResourceManager, lifecycle_individual_resources)
 {
   hardware_interface::ResourceManager rm(ros2_control_test_assets::minimal_robot_urdf);
 
+  // All resources start as UNCONFIGURED
+  {
+    auto status_map = rm.get_components_status();
+    EXPECT_EQ(
+      status_map[TEST_ACTUATOR_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+    EXPECT_EQ(
+      status_map[TEST_ACTUATOR_HARDWARE_NAME].state.label(),
+      hardware_interface::lifecycle_state_names::UNCONFIGURED);
+    EXPECT_EQ(
+      status_map[TEST_SENSOR_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+    EXPECT_EQ(
+      status_map[TEST_SENSOR_HARDWARE_NAME].state.label(),
+      hardware_interface::lifecycle_state_names::UNCONFIGURED);
+    EXPECT_EQ(
+      status_map[TEST_SYSTEM_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+    EXPECT_EQ(
+      status_map[TEST_SYSTEM_HARDWARE_NAME].state.label(),
+      hardware_interface::lifecycle_state_names::UNCONFIGURED);
+  }
+
+  rm.configure_components({TEST_ACTUATOR_HARDWARE_NAME});
+  {
+    auto status_map = rm.get_components_status();
+    EXPECT_EQ(
+      status_map[TEST_ACTUATOR_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+    EXPECT_EQ(
+      status_map[TEST_ACTUATOR_HARDWARE_NAME].state.label(),
+      hardware_interface::lifecycle_state_names::INACTIVE);
+    EXPECT_EQ(
+      status_map[TEST_SENSOR_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+    EXPECT_EQ(
+      status_map[TEST_SENSOR_HARDWARE_NAME].state.label(),
+      hardware_interface::lifecycle_state_names::UNCONFIGURED);
+    EXPECT_EQ(
+      status_map[TEST_SYSTEM_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+    EXPECT_EQ(
+      status_map[TEST_SYSTEM_HARDWARE_NAME].state.label(),
+      hardware_interface::lifecycle_state_names::UNCONFIGURED);
+  }
+
   rm.activate_components({TEST_ACTUATOR_HARDWARE_NAME});
-  auto status_map = rm.get_components_status();
-  EXPECT_EQ(
-    status_map[TEST_ACTUATOR_HARDWARE_NAME].state.id(),
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
-  EXPECT_EQ(
-    status_map[TEST_ACTUATOR_HARDWARE_NAME].state.label(),
-    hardware_interface::lifecycle_state_names::ACTIVE);
-  EXPECT_EQ(
-    status_map[TEST_SENSOR_HARDWARE_NAME].state.id(),
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
-  EXPECT_EQ(
-    status_map[TEST_SENSOR_HARDWARE_NAME].state.label(),
-    hardware_interface::lifecycle_state_names::INACTIVE);
-  EXPECT_EQ(
-    status_map[TEST_SYSTEM_HARDWARE_NAME].state.id(),
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
-  EXPECT_EQ(
-    status_map[TEST_SYSTEM_HARDWARE_NAME].state.label(),
-    hardware_interface::lifecycle_state_names::INACTIVE);
+  {
+    auto status_map = rm.get_components_status();
+    EXPECT_EQ(
+      status_map[TEST_ACTUATOR_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+    EXPECT_EQ(
+      status_map[TEST_ACTUATOR_HARDWARE_NAME].state.label(),
+      hardware_interface::lifecycle_state_names::ACTIVE);
+    EXPECT_EQ(
+      status_map[TEST_SENSOR_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+    EXPECT_EQ(
+      status_map[TEST_SENSOR_HARDWARE_NAME].state.label(),
+      hardware_interface::lifecycle_state_names::UNCONFIGURED);
+    EXPECT_EQ(
+      status_map[TEST_SYSTEM_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+    EXPECT_EQ(
+      status_map[TEST_SYSTEM_HARDWARE_NAME].state.label(),
+      hardware_interface::lifecycle_state_names::UNCONFIGURED);
+  }
+
+  rm.configure_components({TEST_SENSOR_HARDWARE_NAME, TEST_SYSTEM_HARDWARE_NAME});
+  {
+    auto status_map = rm.get_components_status();
+    EXPECT_EQ(
+      status_map[TEST_ACTUATOR_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+    EXPECT_EQ(
+      status_map[TEST_ACTUATOR_HARDWARE_NAME].state.label(),
+      hardware_interface::lifecycle_state_names::ACTIVE);
+    EXPECT_EQ(
+      status_map[TEST_SENSOR_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+    EXPECT_EQ(
+      status_map[TEST_SENSOR_HARDWARE_NAME].state.label(),
+      hardware_interface::lifecycle_state_names::INACTIVE);
+    EXPECT_EQ(
+      status_map[TEST_SYSTEM_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+    EXPECT_EQ(
+      status_map[TEST_SYSTEM_HARDWARE_NAME].state.label(),
+      hardware_interface::lifecycle_state_names::INACTIVE);
+  }
 
   rm.activate_components({TEST_SENSOR_HARDWARE_NAME, TEST_SYSTEM_HARDWARE_NAME});
-  status_map = rm.get_components_status();
-  EXPECT_EQ(
-    status_map[TEST_ACTUATOR_HARDWARE_NAME].state.id(),
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
-  EXPECT_EQ(
-    status_map[TEST_ACTUATOR_HARDWARE_NAME].state.label(),
-    hardware_interface::lifecycle_state_names::ACTIVE);
-  EXPECT_EQ(
-    status_map[TEST_SENSOR_HARDWARE_NAME].state.id(),
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
-  EXPECT_EQ(
-    status_map[TEST_SENSOR_HARDWARE_NAME].state.label(),
-    hardware_interface::lifecycle_state_names::ACTIVE);
-  EXPECT_EQ(
-    status_map[TEST_SYSTEM_HARDWARE_NAME].state.id(),
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
-  EXPECT_EQ(
-    status_map[TEST_SYSTEM_HARDWARE_NAME].state.label(),
-    hardware_interface::lifecycle_state_names::ACTIVE);
+  {
+    auto status_map = rm.get_components_status();
+    EXPECT_EQ(
+      status_map[TEST_ACTUATOR_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+    EXPECT_EQ(
+      status_map[TEST_ACTUATOR_HARDWARE_NAME].state.label(),
+      hardware_interface::lifecycle_state_names::ACTIVE);
+    EXPECT_EQ(
+      status_map[TEST_SENSOR_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+    EXPECT_EQ(
+      status_map[TEST_SENSOR_HARDWARE_NAME].state.label(),
+      hardware_interface::lifecycle_state_names::ACTIVE);
+    EXPECT_EQ(
+      status_map[TEST_SYSTEM_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+    EXPECT_EQ(
+      status_map[TEST_SYSTEM_HARDWARE_NAME].state.label(),
+      hardware_interface::lifecycle_state_names::ACTIVE);
+  }
 
   rm.deactivate_components({TEST_ACTUATOR_HARDWARE_NAME, TEST_SENSOR_HARDWARE_NAME});
-  status_map = rm.get_components_status();
-  EXPECT_EQ(
-    status_map[TEST_ACTUATOR_HARDWARE_NAME].state.id(),
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
-  EXPECT_EQ(
-    status_map[TEST_ACTUATOR_HARDWARE_NAME].state.label(),
-    hardware_interface::lifecycle_state_names::INACTIVE);
-  EXPECT_EQ(
-    status_map[TEST_SENSOR_HARDWARE_NAME].state.id(),
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
-  EXPECT_EQ(
-    status_map[TEST_SENSOR_HARDWARE_NAME].state.label(),
-    hardware_interface::lifecycle_state_names::INACTIVE);
-  EXPECT_EQ(
-    status_map[TEST_SYSTEM_HARDWARE_NAME].state.id(),
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
-  EXPECT_EQ(
-    status_map[TEST_SYSTEM_HARDWARE_NAME].state.label(),
-    hardware_interface::lifecycle_state_names::ACTIVE);
+  {
+    auto status_map = rm.get_components_status();
+    EXPECT_EQ(
+      status_map[TEST_ACTUATOR_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+    EXPECT_EQ(
+      status_map[TEST_ACTUATOR_HARDWARE_NAME].state.label(),
+      hardware_interface::lifecycle_state_names::INACTIVE);
+    EXPECT_EQ(
+      status_map[TEST_SENSOR_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+    EXPECT_EQ(
+      status_map[TEST_SENSOR_HARDWARE_NAME].state.label(),
+      hardware_interface::lifecycle_state_names::INACTIVE);
+    EXPECT_EQ(
+      status_map[TEST_SYSTEM_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+    EXPECT_EQ(
+      status_map[TEST_SYSTEM_HARDWARE_NAME].state.label(),
+      hardware_interface::lifecycle_state_names::ACTIVE);
+  }
 
-  rm.activate_components({TEST_ACTUATOR_HARDWARE_NAME});
-  status_map = rm.get_components_status();
-  EXPECT_EQ(
-    status_map[TEST_ACTUATOR_HARDWARE_NAME].state.id(),
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
-  EXPECT_EQ(
-    status_map[TEST_ACTUATOR_HARDWARE_NAME].state.label(),
-    hardware_interface::lifecycle_state_names::ACTIVE);
-  EXPECT_EQ(
-    status_map[TEST_SENSOR_HARDWARE_NAME].state.id(),
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
-  EXPECT_EQ(
-    status_map[TEST_SENSOR_HARDWARE_NAME].state.label(),
-    hardware_interface::lifecycle_state_names::INACTIVE);
-  EXPECT_EQ(
-    status_map[TEST_SYSTEM_HARDWARE_NAME].state.id(),
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
-  EXPECT_EQ(
-    status_map[TEST_SYSTEM_HARDWARE_NAME].state.label(),
-    hardware_interface::lifecycle_state_names::ACTIVE);
+  rm.cleanup_components({TEST_SENSOR_HARDWARE_NAME});
+  {
+    auto status_map = rm.get_components_status();
+    EXPECT_EQ(
+      status_map[TEST_ACTUATOR_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+    EXPECT_EQ(
+      status_map[TEST_ACTUATOR_HARDWARE_NAME].state.label(),
+      hardware_interface::lifecycle_state_names::INACTIVE);
+    EXPECT_EQ(
+      status_map[TEST_SENSOR_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+    EXPECT_EQ(
+      status_map[TEST_SENSOR_HARDWARE_NAME].state.label(),
+      hardware_interface::lifecycle_state_names::UNCONFIGURED);
+    EXPECT_EQ(
+      status_map[TEST_SYSTEM_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+    EXPECT_EQ(
+      status_map[TEST_SYSTEM_HARDWARE_NAME].state.label(),
+      hardware_interface::lifecycle_state_names::ACTIVE);
+  }
 
-  rm.deactivate_components(
-    {TEST_ACTUATOR_HARDWARE_NAME, TEST_SENSOR_HARDWARE_NAME, TEST_SYSTEM_HARDWARE_NAME});
-  status_map = rm.get_components_status();
-  EXPECT_EQ(
-    status_map[TEST_ACTUATOR_HARDWARE_NAME].state.id(),
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
-  EXPECT_EQ(
-    status_map[TEST_ACTUATOR_HARDWARE_NAME].state.label(),
-    hardware_interface::lifecycle_state_names::INACTIVE);
-  EXPECT_EQ(
-    status_map[TEST_SENSOR_HARDWARE_NAME].state.id(),
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
-  EXPECT_EQ(
-    status_map[TEST_SENSOR_HARDWARE_NAME].state.label(),
-    hardware_interface::lifecycle_state_names::INACTIVE);
-  EXPECT_EQ(
-    status_map[TEST_SYSTEM_HARDWARE_NAME].state.id(),
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
-  EXPECT_EQ(
-    status_map[TEST_SYSTEM_HARDWARE_NAME].state.label(),
-    hardware_interface::lifecycle_state_names::INACTIVE);
+  rm.shutdown_components({TEST_ACTUATOR_HARDWARE_NAME, TEST_SYSTEM_HARDWARE_NAME});
+  {
+    auto status_map = rm.get_components_status();
+    EXPECT_EQ(
+      status_map[TEST_ACTUATOR_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED);
+    EXPECT_EQ(
+      status_map[TEST_ACTUATOR_HARDWARE_NAME].state.label(),
+      hardware_interface::lifecycle_state_names::FINALIZED);
+    EXPECT_EQ(
+      status_map[TEST_SENSOR_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+    EXPECT_EQ(
+      status_map[TEST_SENSOR_HARDWARE_NAME].state.label(),
+      hardware_interface::lifecycle_state_names::UNCONFIGURED);
+    EXPECT_EQ(
+      status_map[TEST_SYSTEM_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED);
+    EXPECT_EQ(
+      status_map[TEST_SYSTEM_HARDWARE_NAME].state.label(),
+      hardware_interface::lifecycle_state_names::FINALIZED);
+  }
+
+  rm.shutdown_components({TEST_SENSOR_HARDWARE_NAME});
+  {
+    auto status_map = rm.get_components_status();
+    EXPECT_EQ(
+      status_map[TEST_ACTUATOR_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED);
+    EXPECT_EQ(
+      status_map[TEST_ACTUATOR_HARDWARE_NAME].state.label(),
+      hardware_interface::lifecycle_state_names::FINALIZED);
+    EXPECT_EQ(
+      status_map[TEST_SENSOR_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED);
+    EXPECT_EQ(
+      status_map[TEST_SENSOR_HARDWARE_NAME].state.label(),
+      hardware_interface::lifecycle_state_names::FINALIZED);
+    EXPECT_EQ(
+      status_map[TEST_SYSTEM_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED);
+    EXPECT_EQ(
+      status_map[TEST_SYSTEM_HARDWARE_NAME].state.label(),
+      hardware_interface::lifecycle_state_names::FINALIZED);
+  }
 }

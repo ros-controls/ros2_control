@@ -133,8 +133,26 @@ public:
     if (result)
     {
       import_state_interfaces(hardware);
+      if (typeid(hardware) != typeid(Sensor))
+      {
+        //         import_command_interfaces(hardware);
+      }
       // TODO(destogl): change this
       // import_non_movement_command_interfaces(hardware);
+    }
+    return result;
+  }
+
+  bool configure_hardware(System & hardware)
+  {
+    bool result = trigger_hardware_state_transition(
+      std::bind(&System::configure, &hardware), "configure", hardware.get_name(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+
+    if (result)
+    {
+      import_state_interfaces(hardware);
+      import_command_interfaces(hardware);
     }
     return result;
   }
@@ -224,11 +242,11 @@ public:
     }
   }
 
+  // TODO(destogl): Propagate "false" up, if happens in initialize_hardware
   void initialize_actuator(const HardwareInfo & hardware_info)
   {
     load_hardware<Actuator, ActuatorInterface>(hardware_info, actuator_loader_, actuators_);
     initialize_hardware(hardware_info, actuators_.back());
-    configure_hardware(actuators_.back());
     import_state_interfaces(actuators_.back());
     import_command_interfaces(actuators_.back());
   }
@@ -237,7 +255,6 @@ public:
   {
     load_hardware<Sensor, SensorInterface>(hardware_info, sensor_loader_, sensors_);
     initialize_hardware(hardware_info, sensors_.back());
-    configure_hardware(sensors_.back());
     import_state_interfaces(sensors_.back());
   }
 
@@ -245,7 +262,6 @@ public:
   {
     load_hardware<System, SystemInterface>(hardware_info, system_loader_, systems_);
     initialize_hardware(hardware_info, systems_.back());
-    configure_hardware(systems_.back());
     import_state_interfaces(systems_.back());
     import_command_interfaces(systems_.back());
   }
@@ -255,7 +271,6 @@ public:
   {
     this->actuators_.emplace_back(Actuator(std::move(actuator)));
     initialize_hardware(hardware_info, actuators_.back());
-    configure_hardware(actuators_.back());
     import_state_interfaces(actuators_.back());
     import_command_interfaces(actuators_.back());
   }
@@ -265,7 +280,6 @@ public:
   {
     this->sensors_.emplace_back(Sensor(std::move(sensor)));
     initialize_hardware(hardware_info, sensors_.back());
-    configure_hardware(sensors_.back());
     import_state_interfaces(sensors_.back());
   }
 
@@ -274,7 +288,6 @@ public:
   {
     this->systems_.emplace_back(System(std::move(system)));
     initialize_hardware(hardware_info, systems_.back());
-    configure_hardware(systems_.back());
     import_state_interfaces(systems_.back());
     import_command_interfaces(systems_.back());
   }
@@ -290,9 +303,17 @@ public:
 
   std::unordered_map<std::string, HardwareComponentInfo> hardware_info_map_;
 
+  /// Storage of all available state interfaces
   std::map<std::string, StateInterface> state_interface_map_;
+  /// Storage of all available command interfaces
   std::map<std::string, CommandInterface> command_interface_map_;
 
+  /// Vectors with interfaces available to controllers (depending on hardware component state)
+  std::vector<std::string> available_state_interfaces_;
+  std::vector<std::string> available_command_interfaces_;
+
+  // TODO(destogl): Should we store this in a vector? It could make the access faster
+  /// List of all claimed command interfaces
   std::unordered_map<std::string, bool> claimed_command_interface_map_;
 };
 

@@ -416,7 +416,17 @@ void generic_system_functional_test(const std::string & urdf, const double offse
   auto status_map = rm.get_components_status();
   EXPECT_EQ(
     status_map["GenericSystem2dof"].state.label(),
+    hardware_interface::lifecycle_state_names::UNCONFIGURED);
+  rm.configure_components();
+  status_map = rm.get_components_status();
+  EXPECT_EQ(
+    status_map["GenericSystem2dof"].state.label(),
     hardware_interface::lifecycle_state_names::INACTIVE);
+  rm.activate_components();
+  status_map = rm.get_components_status();
+  EXPECT_EQ(
+    status_map["GenericSystem2dof"].state.label(),
+    hardware_interface::lifecycle_state_names::ACTIVE);
 
   // Check initial values
   hardware_interface::LoanedStateInterface j1p_s = rm.claim_state_interface("joint1/position");
@@ -491,12 +501,6 @@ void generic_system_functional_test(const std::string & urdf, const double offse
   ASSERT_EQ(0.66, j1v_c.get_value());
   ASSERT_EQ(0.77, j2p_c.get_value());
   ASSERT_EQ(0.88, j2v_c.get_value());
-
-  rm.activate_components();
-  status_map = rm.get_components_status();
-  EXPECT_EQ(
-    status_map["GenericSystem2dof"].state.label(),
-    hardware_interface::lifecycle_state_names::ACTIVE);
 
   rm.deactivate_components();
   status_map = rm.get_components_status();
