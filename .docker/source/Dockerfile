@@ -1,4 +1,4 @@
-ARG ROS_DISTRO="foxy"
+ARG ROS_DISTRO="galactic"
 FROM ros:${ROS_DISTRO}
 
 ENV ROS_UNDERLAY /root/ws_ros2_control/install
