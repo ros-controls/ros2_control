@@ -10,17 +10,17 @@ Helper scripts
 --------------
 There are two scripts to interact with controller manager from launch files:
 
-  1. ``spawner.py`` - loads, configures and start a controller on startup.
-  2. ``unspawner.py`` - stops and unloads a controller.
+  1. ``spawner`` - loads, configures and start a controller on startup.
+  2. ``unspawner`` - stops and unloads a controller.
 
 
-``spawner.py``
+``spawner``
 ^^^^^^^^^^^^^^
 
 .. code-block:: console
 
-    $ ros2 run controller_manager spawner.py -h
-    usage: spawner.py [-h] [-c CONTROLLER_MANAGER] [-p PARAM_FILE] [--load-only] [--stopped] [-t CONTROLLER_TYPE] [-u]
+    $ ros2 run controller_manager spawner -h
+    usage: spawner [-h] [-c CONTROLLER_MANAGER] [-p PARAM_FILE] [--load-only] [--stopped] [-t CONTROLLER_TYPE] [-u]
                       [--controller-manager-timeout CONTROLLER_MANAGER_TIMEOUT]
                       controller_name
 
@@ -42,13 +42,13 @@ There are two scripts to interact with controller manager from launch files:
                             Time to wait for the controller manager
 
 
-``unspawner.py``
+``unspawner``
 ^^^^^^^^^^^^^^^^
 
 .. code-block:: console
 
-    $ ros2 run controller_manager unspawner.py -h
-    usage: unspawner.py [-h] [-c CONTROLLER_MANAGER] controller_name
+    $ ros2 run controller_manager unspawner -h
+    usage: unspawner [-h] [-c CONTROLLER_MANAGER] controller_name
 
     positional arguments:
       controller_name       Name of the controller
