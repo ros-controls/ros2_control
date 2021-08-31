@@ -2,6 +2,16 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.8.0 (2021-08-28)
+------------------
+* Automatic parameter declaration - enable existence of undeclared parameters from overrides (`#504 <https://github.com/ros-controls/ros2_control/issues/504>`_)
+* Use clang format as code formatter (`#491 <https://github.com/ros-controls/ros2_control/issues/491>`_)
+* Add pre-commit setup. (`#473 <https://github.com/ros-controls/ros2_control/issues/473>`_)
+* Make controller_manager set controller's use_sim_time param when use_sim_time=True (`#468 <https://github.com/ros-controls/ros2_control/issues/468>`_)
+* Correct obviously wrong call in controller interface. (`#460 <https://github.com/ros-controls/ros2_control/issues/460>`_)
+* virtual destructors for semantic components (`#455 <https://github.com/ros-controls/ros2_control/issues/455>`_)
+* Contributors: Denis Štogl, Karsten Knese, Lovro Ivanov, Simon Honigmann
+
 0.7.1 (2021-06-15)
 ------------------
 * Remove forgoten debug output (`#439 <https://github.com/ros-controls/ros2_control/issues/439>`_)

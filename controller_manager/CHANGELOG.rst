@@ -2,6 +2,29 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.8.0 (2021-08-28)
+------------------
+* Use clang format as code formatter (`#491 <https://github.com/ros-controls/ros2_control/issues/491>`_)
+* Use example urdf from the test_assests package. (`#495 <https://github.com/ros-controls/ros2_control/issues/495>`_)
+* Separate controller manager test cases (`#476 <https://github.com/ros-controls/ros2_control/issues/476>`_)
+* Add Controller Manager docs (`#467 <https://github.com/ros-controls/ros2_control/issues/467>`_)
+* sort interfaces in resource manager (`#483 <https://github.com/ros-controls/ros2_control/issues/483>`_)
+* Add pre-commit setup. (`#473 <https://github.com/ros-controls/ros2_control/issues/473>`_)
+* Make controller_manager set controller's use_sim_time param when use_sim_time=True (`#468 <https://github.com/ros-controls/ros2_control/issues/468>`_)
+  * potential solution to controller_manager use_sim_time sharing issue
+  * removed debug print statements
+  * added INFO message to warn user that use_sim_time is being set automatically
+* Add load-only option into controller spawner (`#427 <https://github.com/ros-controls/ros2_control/issues/427>`_)
+* Fixes for windows (`#443 <https://github.com/ros-controls/ros2_control/issues/443>`_)
+  * Fix building on windows
+  * Fix MSVC linker error when building tests
+  * Fix hang when loading controller on windows
+  * Use better log for configuring controller
+  * Be consistent with visibility control
+  * Use try_lock throw exception on failure
+* Add an argument to define controller manager timeout (`#444 <https://github.com/ros-controls/ros2_control/issues/444>`_)
+* Contributors: Akash, Bence Magyar, Darko Lukić, Denis Štogl, Karsten Knese, Simon Honigmann
+
 0.7.1 (2021-06-15)
 ------------------
 * Use namespace in controller_manager (`#435 <https://github.com/ros-controls/ros2_control/issues/435>`_)

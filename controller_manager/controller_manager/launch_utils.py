@@ -23,11 +23,11 @@ def generate_load_controller_launch_description(controller_name,
                                                 controller_type=None,
                                                 controller_params_file=None):
     """
-    Generate launch description for loading a controller using spawner.py.
+    Generate launch description for loading a controller using spawner.
 
     Returns a list of LaunchDescription actions adding the 'controller_manager_name' and
     'unload_on_kill' LaunchArguments and a Node action that runs the controller_manager
-    spawner.py node to load and start a controller
+    spawner node to load and start a controller
 
     Examples # noqa: D416
     --------
@@ -71,7 +71,7 @@ def generate_load_controller_launch_description(controller_name,
             LaunchConfiguration('unload_on_kill'), '" else ""']
     )]
 
-    spawner = Node(package='controller_manager', executable='spawner.py',
+    spawner = Node(package='controller_manager', executable='spawner',
                    arguments=spawner_arguments, shell=True, output='screen')
 
     return LaunchDescription([

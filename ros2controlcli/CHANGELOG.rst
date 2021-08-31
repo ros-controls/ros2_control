@@ -2,6 +2,14 @@
 Changelog for package ros2controlcli
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.8.0 (2021-08-28)
+------------------
+* fix link to point to read-the-docs (`#496 <https://github.com/ros-controls/ros2_control/issues/496>`_)
+* Add pre-commit setup. (`#473 <https://github.com/ros-controls/ros2_control/issues/473>`_)
+* Add index, rename cli main doc. (`#465 <https://github.com/ros-controls/ros2_control/issues/465>`_)
+* fixes unload_controller issue (`#456 <https://github.com/ros-controls/ros2_control/issues/456>`_)
+* Contributors: Denis Štogl, Michael, Mathias Arbo
+
 0.7.1 (2021-06-15)
 ------------------
 

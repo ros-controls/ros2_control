@@ -15,7 +15,7 @@ jobs:
     - uses: ros-tooling/setup-ros@v0.2
     - uses: ros-tooling/action-ros-lint@v0.1
       with:
-        distribution: foxy
+        distribution: galactic
         linter: ${{ matrix.linter }}
         package-name:
           controller_interface
@@ -37,7 +37,7 @@ jobs:
     - uses: ros-tooling/setup-ros@v0.2
     - uses: ros-tooling/action-ros-lint@v0.1
       with:
-        distribution: foxy
+        distribution: galactic
         linter: cpplint
         arguments: "--filter=-whitespace/newline"
         package-name:

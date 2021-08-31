@@ -2,6 +2,32 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.8.0 (2021-08-28)
+------------------
+* Use clang format as code formatter (`#491 <https://github.com/ros-controls/ros2_control/issues/491>`_)
+* Fixup doc typo (`#492 <https://github.com/ros-controls/ros2_control/issues/492>`_)
+* Add docs for fake components (`#466 <https://github.com/ros-controls/ros2_control/issues/466>`_)
+* sort interfaces in resource manager (`#483 <https://github.com/ros-controls/ros2_control/issues/483>`_)
+* fix format (`#484 <https://github.com/ros-controls/ros2_control/issues/484>`_)
+* Transmission parsing v2 (`#471 <https://github.com/ros-controls/ros2_control/issues/471>`_)
+  * move parsing responsibility to hardware_interface
+  * parse transmission type
+  * Cleanup unused parser
+* Add pre-commit setup. (`#473 <https://github.com/ros-controls/ros2_control/issues/473>`_)
+* Extended GenericSystem with state offset options for testing some special control cases. (`#350 <https://github.com/ros-controls/ros2_control/issues/350>`_)
+  * Extended GenericSystem with state offset options for testing some special control cases.
+  * Better parameter name
+  * Apply offset only to position interfaces.
+* Added GPIO parsing and test (`#436 <https://github.com/ros-controls/ros2_control/issues/436>`_)
+* Fixes for windows (`#443 <https://github.com/ros-controls/ros2_control/issues/443>`_)
+  * Fix building on windows
+  * Fix MSVC linker error when building tests
+  * Fix hang when loading controller on windows
+  * Use better log for configuring controller
+  * Be consistent with visibility control
+  * Use try_lock throw exception on failure
+* Contributors: Akash, Bence Magyar, Denis Štogl, Karsten Knese, Mathias Arbo, Jafar Abdi
+
 0.7.1 (2021-06-15)
 ------------------
 * [FakeSystem] Set default command interface to NaN (`#424 <https://github.com/ros-controls/ros2_control/issues/424>`_)
