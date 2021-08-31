@@ -10,7 +10,7 @@ on:
 
 jobs:
   ci_binary:
-    name: Foxy binary job
+    name: Galactic binary job
     runs-on: ubuntu-latest
     strategy:
       matrix:

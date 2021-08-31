@@ -9,7 +9,7 @@ on:
 
 jobs:
   ci_source:
-    name: Foxy source job
+    name: Galactic source job
     runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
