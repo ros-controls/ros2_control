@@ -12,131 +12,170 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef CONTROLLER_INTERFACE__CONTROLLER_INTERFACE_HPP_
-#define CONTROLLER_INTERFACE__CONTROLLER_INTERFACE_HPP_
+#include "controller_interface/controller_interface.hpp"
 
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
-#include "controller_interface/visibility_control.h"
-
-#include "hardware_interface/loaned_command_interface.hpp"
-#include "hardware_interface/loaned_state_interface.hpp"
+#include "controller_interface/controller_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
-
-#include "rclcpp/rclcpp.hpp"
-#include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 
 namespace controller_interface
 {
-// TODO(karsten1987): Remove clang pragma within Galactic
-#ifdef __clang__
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wc++17-extensions"
-#endif
-enum class return_type : std::uint8_t
+return_type ControllerInterface::on_init(const std::string & controller_name)
 {
-  OK = 0,
-  ERROR = 1,
-  SUCCESS [[deprecated("Use controller_interface::return_type::OK instead.")]] = OK
-};
-#ifdef __clang__
-#pragma clang diagnostic pop
-#endif
+  std::cout << controller_name << std::endl;   // temporary line to remove warning
+  return return_type::OK;
+}
 
-/// Indicating which interfaces are to be claimed.
-/**
- * One might either claim all available command/state interfaces,
- * specifying a set of individual interfaces,
- * or none at all.
- */
-enum class interface_configuration_type : std::uint8_t
+return_type ControllerInterface::init(const std::string & controller_name)
 {
-  ALL = 0,
-  INDIVIDUAL = 1,
-  NONE = 2,
-};
+  node_ = std::make_shared<rclcpp::Node>(
+    controller_name,
+    rclcpp::NodeOptions().allow_undeclared_parameters(true));
 
-/// Configuring what command/state interfaces to claim.
-struct InterfaceConfiguration
+  switch (on_init(controller_name)) {
+    case return_type::OK:
+      lifecycle_state_ = rclcpp_lifecycle::State(
+        lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state_names::UNCONFIGURED);
+      break;
+    case return_type::ERROR:
+      on_error(lifecycle_state_);
+      lifecycle_state_ = rclcpp_lifecycle::State(
+        lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, state_names::FINALIZED);
+      break;
+  }
+
+  return return_type::OK;
+}
+
+const rclcpp_lifecycle::State & ControllerInterface::configure()
 {
-  interface_configuration_type type;
-  std::vector<std::string> names = {};
-};
+  if (lifecycle_state_.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
+  {
+    switch (on_configure(lifecycle_state_))
+    {
+      case LifecycleNodeInterface::CallbackReturn::SUCCESS:
+        lifecycle_state_ = rclcpp_lifecycle::State(
+          lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, state_names::INACTIVE);
+        break;
+      case LifecycleNodeInterface::CallbackReturn::ERROR:
+        on_error(lifecycle_state_);
+        lifecycle_state_ = rclcpp_lifecycle::State(
+          lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, state_names::FINALIZED);
+        break;
+      case LifecycleNodeInterface::CallbackReturn::FAILURE:
+        break;
+    }
+  }
+  return lifecycle_state_;
+}
 
-class ControllerInterface : public rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface
+const rclcpp_lifecycle::State & ControllerInterface::cleanup()
 {
-public:
-  CONTROLLER_INTERFACE_PUBLIC
-  ControllerInterface() = default;
+  switch (on_cleanup(lifecycle_state_))
+  {
+    case LifecycleNodeInterface::CallbackReturn::SUCCESS:
+      lifecycle_state_ = rclcpp_lifecycle::State(
+        lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state_names::UNCONFIGURED);
+      break;
+    case LifecycleNodeInterface::CallbackReturn::ERROR:
+      on_error(lifecycle_state_);
+      lifecycle_state_ = rclcpp_lifecycle::State(
+        lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, state_names::FINALIZED);
+      break;
+    case LifecycleNodeInterface::CallbackReturn::FAILURE:
+      break;
+  }
+  return lifecycle_state_;
+}
+const rclcpp_lifecycle::State & ControllerInterface::deactivate()
+{
+  switch (on_deactivate(lifecycle_state_))
+  {
+    case LifecycleNodeInterface::CallbackReturn::SUCCESS:
+      lifecycle_state_ = rclcpp_lifecycle::State(
+        lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, state_names::INACTIVE);
+      break;
+    case LifecycleNodeInterface::CallbackReturn::ERROR:
+      on_error(lifecycle_state_);
+      lifecycle_state_ = rclcpp_lifecycle::State(
+        lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, state_names::FINALIZED);
+      break;
+    case LifecycleNodeInterface::CallbackReturn::FAILURE:
+      break;
+  }
+  return lifecycle_state_;
+}
+const rclcpp_lifecycle::State & ControllerInterface::activate()
+{
+  if (lifecycle_state_.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
+  {
+    switch (on_activate(lifecycle_state_))
+    {
+      case LifecycleNodeInterface::CallbackReturn::SUCCESS:
+        lifecycle_state_ = rclcpp_lifecycle::State(
+          lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, state_names::ACTIVE);
+        break;
+      case LifecycleNodeInterface::CallbackReturn::ERROR:
+        on_error(lifecycle_state_);
+        lifecycle_state_ = rclcpp_lifecycle::State(
+          lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, state_names::FINALIZED);
+        break;
+      case LifecycleNodeInterface::CallbackReturn::FAILURE:
+        break;
+    }
+  }
+  return lifecycle_state_;
+}
 
-  CONTROLLER_INTERFACE_PUBLIC
-  virtual ~ControllerInterface() = default;
+const rclcpp_lifecycle::State & ControllerInterface::shutdown()
+{
+  switch (on_shutdown(lifecycle_state_))
+  {
+    case LifecycleNodeInterface::CallbackReturn::SUCCESS:
+      lifecycle_state_ = rclcpp_lifecycle::State(
+        lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, state_names::FINALIZED);
+      break;
+    case LifecycleNodeInterface::CallbackReturn::ERROR:
+      on_error(lifecycle_state_);
+      lifecycle_state_ = rclcpp_lifecycle::State(
+        lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, state_names::FINALIZED);
+      break;
+    case LifecycleNodeInterface::CallbackReturn::FAILURE:
+      break;
+  }
+  return lifecycle_state_;
+}
 
-  CONTROLLER_INTERFACE_PUBLIC
-  virtual InterfaceConfiguration command_interface_configuration() const = 0;
+const rclcpp_lifecycle::State & ControllerInterface::get_current_state() const
+{
+  return lifecycle_state_;
+}
 
-  CONTROLLER_INTERFACE_PUBLIC
-  virtual InterfaceConfiguration state_interface_configuration() const = 0;
+void ControllerInterface::assign_interfaces(
+  std::vector<hardware_interface::LoanedCommandInterface> && command_interfaces,
+  std::vector<hardware_interface::LoanedStateInterface> && state_interfaces)
+{
+  command_interfaces_ = std::forward<decltype(command_interfaces)>(command_interfaces);
+  state_interfaces_ = std::forward<decltype(state_interfaces)>(state_interfaces);
+}
 
-  CONTROLLER_INTERFACE_PUBLIC
-  void assign_interfaces(
-    std::vector<hardware_interface::LoanedCommandInterface> && command_interfaces,
-    std::vector<hardware_interface::LoanedStateInterface> && state_interfaces);
+void ControllerInterface::release_interfaces()
+{
+  command_interfaces_.clear();
+  state_interfaces_.clear();
+}
 
-  CONTROLLER_INTERFACE_PUBLIC
-  void release_interfaces();
-
-  CONTROLLER_INTERFACE_PUBLIC
-  virtual return_type on_init(const std::string & controller_name);
-
-  CONTROLLER_INTERFACE_PUBLIC
-  virtual return_type init(const std::string & controller_name);
-
-  CONTROLLER_INTERFACE_PUBLIC
-  virtual return_type update() = 0;
-
-  CONTROLLER_INTERFACE_PUBLIC
-  std::shared_ptr<rclcpp::Node> get_node();
-
-  /**
-   * The methods below are a substitute to the LifecycleNode methods with the same name.
-   * The Life cycle is shown in ROS2 design document:
-   * https://design.ros2.org/articles/node_lifecycle.html
-   * We cannot use a LifecycleNode because it would expose change-state services to the rest
-   * of the ROS system.
-   * Only the Controller Manager should have possibility to change state of a controller.
-   *
-   * Hopefully in the future we can use a LifecycleNode where we disable modifications from the outside.
-   */
-  CONTROLLER_INTERFACE_PUBLIC
-  const rclcpp_lifecycle::State & configure();
-
-  CONTROLLER_INTERFACE_PUBLIC
-  const rclcpp_lifecycle::State & cleanup();
-
-  CONTROLLER_INTERFACE_PUBLIC
-  const rclcpp_lifecycle::State & deactivate();
-
-  CONTROLLER_INTERFACE_PUBLIC
-  const rclcpp_lifecycle::State & activate();
-
-  CONTROLLER_INTERFACE_PUBLIC
-  const rclcpp_lifecycle::State & shutdown();
-
-  CONTROLLER_INTERFACE_PUBLIC
-  const rclcpp_lifecycle::State & get_current_state() const;
-
-protected:
-  std::vector<hardware_interface::LoanedCommandInterface> command_interfaces_;
-  std::vector<hardware_interface::LoanedStateInterface> state_interfaces_;
-  std::shared_ptr<rclcpp::Node> node_;
-  rclcpp_lifecycle::State lifecycle_state_;
-};
-
-using ControllerInterfaceSharedPtr = std::shared_ptr<ControllerInterface>;
+std::shared_ptr<rclcpp::Node> ControllerInterface::get_node()
+{
+  if (!node_.get())
+  {
+    throw std::runtime_error("Node hasn't been initialized yet!");
+  }
+  return node_;
+}
 
 }  // namespace controller_interface
-
-#endif  // CONTROLLER_INTERFACE__CONTROLLER_INTERFACE_HPP_
