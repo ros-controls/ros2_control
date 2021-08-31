@@ -30,17 +30,23 @@
 #include "hardware_interface/sensor_interface.hpp"
 #include "hardware_interface/system.hpp"
 #include "hardware_interface/system_interface.hpp"
+#include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 #include "pluginlib/class_loader.hpp"
 #include "rcutils/logging_macros.h"
 
 #define COMPONENT_NAME_COMPARE [&](const auto & name) { return name == component.get_name(); }
 
+#define MOVEMENT_INTERFACES_COMPARE                                                         \
+  [&](const auto & movement_interface) {                                                    \
+    return movement_interface == command_interface_map_.at(interface).get_interface_name(); \
+  }
+
 namespace hardware_interface
 {
 auto trigger_hardware_state_transition =
   [](
-    auto transition, const std::string hardware_name, const std::string & transition_name,
+    auto transition, const std::string transition_name, const std::string & hardware_name,
     const lifecycle_msgs::msg::State::_id_type & target_state) {
     RCUTILS_LOG_INFO_NAMED(
       "resource_manager", "'%s' hardware '%s' ", transition_name.c_str(), hardware_name.c_str());
@@ -132,27 +138,71 @@ public:
 
     if (result)
     {
-      import_state_interfaces(hardware);
-      if (typeid(hardware) != typeid(Sensor))
+      // TODO(destogl): is it better to check here if previous state was unconfigured instead of
+      // checking if each state already exists? Or we should somehow know that transition has
+      // happened and only then trigger this part of the code?
+      // On the other side this part of the code should never be executed in real-time critical
+      // thread, so it could be also OK as it is...
+      // @bmagyar what do you think?
+      for (const auto & interface : hardware_info_map_[hardware.get_name()].state_interfaces)
       {
-        //         import_command_interfaces(hardware);
+        // add all state interfaces to available list
+        auto found_it = std::find(
+          available_state_interfaces_.begin(), available_state_interfaces_.end(), interface);
+
+        if (found_it == available_state_interfaces_.end())
+        {
+          available_state_interfaces_.emplace_back(interface);
+          // TODO(destogl): change output to debug
+          RCUTILS_LOG_INFO_NAMED(
+            "resource_manager", "(hardware '%s'): '%s' state interface added into available list",
+            hardware.get_name().c_str(), interface.c_str());
+        }
+        else
+        {
+          // TODO(destogl): do here error management if interfaces are only partially added into
+          // "available" list - this should never be the case!
+          RCUTILS_LOG_WARN_NAMED(
+            "resource_manager",
+            "(hardware '%s'): '%s' state interface already in available list."
+            " This can happen due to multiple calls to 'configure'",
+            hardware.get_name().c_str(), interface.c_str());
+        }
       }
-      // TODO(destogl): change this
-      // import_non_movement_command_interfaces(hardware);
-    }
-    return result;
-  }
 
-  bool configure_hardware(System & hardware)
-  {
-    bool result = trigger_hardware_state_transition(
-      std::bind(&System::configure, &hardware), "configure", hardware.get_name(),
-      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+      // add "non-movement" command interfaces to available list
+      for (const auto & interface : hardware_info_map_[hardware.get_name()].command_interfaces)
+      {
+        // check if interface is non-movement interface
+        if (
+          std::find_if(
+            MOVEMENT_INTERFACES.begin(), MOVEMENT_INTERFACES.end(), MOVEMENT_INTERFACES_COMPARE) ==
+          MOVEMENT_INTERFACES.end())
+        {
+          auto found_it = std::find(
+            available_command_interfaces_.begin(), available_command_interfaces_.end(), interface);
 
-    if (result)
-    {
-      import_state_interfaces(hardware);
-      import_command_interfaces(hardware);
+          if (found_it == available_command_interfaces_.end())
+          {
+            available_command_interfaces_.emplace_back(interface);
+            // TODO(destogl): change output to debug
+            RCUTILS_LOG_INFO_NAMED(
+              "resource_manager",
+              "(hardware '%s'): '%s' non-movement command interface added into available list",
+              hardware.get_name().c_str(), interface.c_str());
+          }
+          else
+          {
+            // TODO(destogl): do here error management if interfaces are only partially added into
+            // "available" list - this should never be the case!
+            RCUTILS_LOG_WARN_NAMED(
+              "resource_manager",
+              "(hardware '%s'): '%s' non-movement command interface already in available list."
+              " This can happen due to multiple calls to 'configure'",
+              hardware.get_name().c_str(), interface.c_str());
+          }
+        }
+      }
     }
     return result;
   }
@@ -166,9 +216,65 @@ public:
 
     if (result)
     {
-      // TODO(destogl): change this
-      // deimport_non_movement_command_interfaces(hardware);
-      // deimport_state_interfaces(hardware);
+      // TODO(destogl): see comment in "configure_hardware"
+      // remove all "non-movement" command interfaces from available list
+      for (const auto & interface : hardware_info_map_[hardware.get_name()].command_interfaces)
+      {
+        // check if interface is non-movement interface
+        if (
+          std::find_if(
+            MOVEMENT_INTERFACES.begin(), MOVEMENT_INTERFACES.end(), MOVEMENT_INTERFACES_COMPARE) ==
+          MOVEMENT_INTERFACES.end())
+        {
+          auto found_it = std::find(
+            available_command_interfaces_.begin(), available_command_interfaces_.end(), interface);
+
+          if (found_it != available_command_interfaces_.end())
+          {
+            available_command_interfaces_.erase(found_it);
+            // TODO(destogl): change output to debug
+            RCUTILS_LOG_INFO_NAMED(
+              "resource_manager",
+              "(hardware '%s'): '%s' movement command removed from available list",
+              hardware.get_name().c_str(), interface.c_str());
+          }
+          else
+          {
+            // TODO(destogl): do here error management if interfaces are only partially added into
+            // "available" list - this should never be the case!
+            RCUTILS_LOG_WARN_NAMED(
+              "resource_manager",
+              "(hardware '%s'): '%s' movement command interface not in available list."
+              " This can happen due to multiple calls to 'cleanup'",
+              hardware.get_name().c_str(), interface.c_str());
+          }
+        }
+      }
+      // remove all state interfaces from available list
+      for (const auto & interface : hardware_info_map_[hardware.get_name()].state_interfaces)
+      {
+        auto found_it = std::find(
+          available_state_interfaces_.begin(), available_state_interfaces_.end(), interface);
+
+        if (found_it != available_state_interfaces_.end())
+        {
+          available_state_interfaces_.erase(found_it);
+          // TODO(destogl): change output to debug
+          RCUTILS_LOG_INFO_NAMED(
+            "resource_manager", "(hardware '%s'): '%s' state interface removed from available list",
+            hardware.get_name().c_str(), interface.c_str());
+        }
+        else
+        {
+          // TODO(destogl): do here error management if interfaces are only partially added into
+          // "available" list - this should never be the case!
+          RCUTILS_LOG_WARN_NAMED(
+            "resource_manager",
+            "(hardware '%s'): '%s' state interface not in available list. "
+            "This can happen due to multiple calls to 'cleanup'",
+            hardware.get_name().c_str(), interface.c_str());
+        }
+      }
     }
     return result;
   }
@@ -198,8 +304,40 @@ public:
 
     if (result)
     {
-      // TODO(destogl): import command interfaces here
-      // import_movement_command_interfaces(hardware);
+      // TODO(destogl): see comment in "configure_hardware"
+      // add "movement" command interfaces to available list
+      for (const auto & interface : hardware_info_map_[hardware.get_name()].command_interfaces)
+      {
+        // check if interface is non-movement interface
+        if (
+          std::find_if(
+            MOVEMENT_INTERFACES.begin(), MOVEMENT_INTERFACES.end(), MOVEMENT_INTERFACES_COMPARE) !=
+          MOVEMENT_INTERFACES.end())
+        {
+          auto found_it = std::find(
+            available_command_interfaces_.begin(), available_command_interfaces_.end(), interface);
+
+          if (found_it == available_command_interfaces_.end())
+          {
+            available_command_interfaces_.emplace_back(interface);
+            // TODO(destogl): change output to debug
+            RCUTILS_LOG_INFO_NAMED(
+              "resource_manager",
+              "(hardware '%s'): '%s' command interface added into available list",
+              hardware.get_name().c_str(), interface.c_str());
+          }
+          else
+          {
+            // TODO(destogl): do here error management if interfaces are only partially added into
+            // "available" list - this should never be the case!
+            RCUTILS_LOG_WARN_NAMED(
+              "resource_manager",
+              "(hardware '%s'): '%s' command interface already in available list."
+              " This can happen due to multiple calls to 'configure'",
+              hardware.get_name().c_str(), interface.c_str());
+          }
+        }
+      }
     }
     return result;
   }
@@ -213,8 +351,39 @@ public:
 
     if (result)
     {
-      // TODO(destogl): deimport command interfaces here
-      // deimport_movement_command_interfaces(hardware);
+      // TODO(destogl): see comment in "configure_hardware"
+      // remove all "movement" command interfaces from available list
+      for (const auto & interface : hardware_info_map_[hardware.get_name()].command_interfaces)
+      {
+        // check if interface is non-movement interface
+        if (
+          std::find_if(
+            MOVEMENT_INTERFACES.begin(), MOVEMENT_INTERFACES.end(), MOVEMENT_INTERFACES_COMPARE) !=
+          MOVEMENT_INTERFACES.end())
+        {
+          auto found_it = std::find(
+            available_command_interfaces_.begin(), available_command_interfaces_.end(), interface);
+
+          if (found_it != available_command_interfaces_.end())
+          {
+            available_command_interfaces_.erase(found_it);
+            // TODO(destogl): change output to debug
+            RCUTILS_LOG_INFO_NAMED(
+              "resource_manager", "(hardware '%s'): '%s' command removed from available list",
+              hardware.get_name().c_str(), interface.c_str());
+          }
+          else
+          {
+            // TODO(destogl): do here error management if interfaces are only partially added into
+            // "available" list - this should never be the case!
+            RCUTILS_LOG_WARN_NAMED(
+              "resource_manager",
+              "(hardware '%s'): '%s' command interface not in available list."
+              " This can happen due to multiple calls to 'cleanup'",
+              hardware.get_name().c_str(), interface.c_str());
+          }
+        }
+      }
     }
     return result;
   }
@@ -223,23 +392,35 @@ public:
   void import_state_interfaces(HardwareT & hardware)
   {
     auto interfaces = hardware.export_state_interfaces();
+    std::vector<std::string> interface_names;
+    interface_names.reserve(interfaces.size());
     for (auto i = 0u; i < interfaces.size(); ++i)
     {
-      auto key = interfaces[i].get_name() + "/" + interfaces[i].get_interface_name();
+      auto key = interfaces[i].get_full_name();
       state_interface_map_.emplace(std::make_pair(key, std::move(interfaces[i])));
+      interface_names.push_back(key);
     }
+    hardware_info_map_[hardware.get_name()].state_interfaces = interface_names;
+    available_state_interfaces_.reserve(
+      available_state_interfaces_.capacity() + interface_names.size());
   }
 
   template <class HardwareT>
   void import_command_interfaces(HardwareT & hardware)
   {
     auto interfaces = hardware.export_command_interfaces();
+    std::vector<std::string> interface_names;
+    interface_names.reserve(interfaces.size());
     for (auto i = 0u; i < interfaces.size(); ++i)
     {
-      auto key = interfaces[i].get_name() + "/" + interfaces[i].get_interface_name();
+      auto key = interfaces[i].get_full_name();
       command_interface_map_.emplace(std::make_pair(key, std::move(interfaces[i])));
       claimed_command_interface_map_.emplace(std::make_pair(key, false));
+      interface_names.push_back(key);
     }
+    hardware_info_map_[hardware.get_name()].command_interfaces = interface_names;
+    available_command_interfaces_.reserve(
+      available_command_interfaces_.capacity() + interface_names.size());
   }
 
   // TODO(destogl): Propagate "false" up, if happens in initialize_hardware
@@ -364,7 +545,7 @@ void ResourceManager::load_urdf(const std::string & urdf, bool validate_interfac
 
 LoanedStateInterface ResourceManager::claim_state_interface(const std::string & key)
 {
-  if (!state_interface_exists(key))
+  if (!state_interface_is_available(key))
   {
     throw std::runtime_error(std::string("State interface with key '") + key + "' does not exist");
   }
@@ -384,6 +565,11 @@ std::vector<std::string> ResourceManager::state_interface_keys() const
   return keys;
 }
 
+std::vector<std::string> ResourceManager::available_state_interfaces() const
+{
+  return resource_storage_->available_state_interfaces_;
+}
+
 bool ResourceManager::state_interface_exists(const std::string & key) const
 {
   std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
@@ -391,9 +577,19 @@ bool ResourceManager::state_interface_exists(const std::string & key) const
          resource_storage_->state_interface_map_.end();
 }
 
+bool ResourceManager::state_interface_is_available(const std::string & name) const
+{
+  std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
+  return std::find(
+           resource_storage_->available_state_interfaces_.begin(),
+           resource_storage_->available_state_interfaces_.end(),
+           name) != resource_storage_->available_state_interfaces_.end();
+}
+
+// CM API
 bool ResourceManager::command_interface_is_claimed(const std::string & key) const
 {
-  if (!command_interface_exists(key))
+  if (!command_interface_is_available(key))
   {
     return false;
   }
@@ -402,10 +598,10 @@ bool ResourceManager::command_interface_is_claimed(const std::string & key) cons
   return resource_storage_->claimed_command_interface_map_.at(key);
 }
 
-// Called in "update"-thread
+// CM API: Called in "update"-thread
 LoanedCommandInterface ResourceManager::claim_command_interface(const std::string & key)
 {
-  if (!command_interface_exists(key))
+  if (!command_interface_is_available(key))
   {
     throw std::runtime_error(std::string("Command interface with '") + key + "' does not exist");
   }
@@ -424,7 +620,7 @@ LoanedCommandInterface ResourceManager::claim_command_interface(const std::strin
     std::bind(&ResourceManager::release_command_interface, this, key));
 }
 
-// Called in "update"-thread
+// CM API: Called in "update"-thread
 void ResourceManager::release_command_interface(const std::string & key)
 {
   std::lock_guard<std::recursive_mutex> guard_claimed(claimed_command_interfaces_lock_);
@@ -442,11 +638,27 @@ std::vector<std::string> ResourceManager::command_interface_keys() const
   return keys;
 }
 
+std::vector<std::string> ResourceManager::available_command_interfaces() const
+{
+  std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
+  return resource_storage_->available_command_interfaces_;
+}
+
 bool ResourceManager::command_interface_exists(const std::string & key) const
 {
   std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
   return resource_storage_->command_interface_map_.find(key) !=
          resource_storage_->command_interface_map_.end();
+}
+
+// CM API
+bool ResourceManager::command_interface_is_available(const std::string & name) const
+{
+  std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
+  return std::find(
+           resource_storage_->available_command_interfaces_.begin(),
+           resource_storage_->available_command_interfaces_.end(),
+           name) != resource_storage_->available_command_interfaces_.end();
 }
 
 // TODO(destogl): This is only used in tests... should we check how to replace it?
@@ -604,6 +816,7 @@ auto execute_action_on_components_from_resource_storage =
 
       if (component_names.empty() || found_it != component_names.end())
       {
+        //         std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
         if (!action(component))
         {
           result = hardware_interface::return_type::ERROR;

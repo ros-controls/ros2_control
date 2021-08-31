@@ -92,11 +92,25 @@ public:
    */
   std::vector<std::string> state_interface_keys() const;
 
+  /// Returns all available state interfaces keys.
+  /**
+   * The keys are collected from the available list.
+   *
+   * \return Vector of strings, containing all available state interface names.
+   */
+  std::vector<std::string> available_state_interfaces() const;
+
   /// Checks whether a state interface is registered under the given key.
   /**
    * \return true if interface exist, false otherwise.
    */
   bool state_interface_exists(const std::string & key) const;
+
+  /// Checks whether a state interface is available under the given key.
+  /**
+   * \return true if interface is available, false otherwise.
+   */
+  bool state_interface_is_available(const std::string & name) const;
 
   /// Checks whether a command interface is already claimed.
   /**
@@ -128,12 +142,27 @@ public:
    */
   std::vector<std::string> command_interface_keys() const;
 
+  /// Returns all available command interfaces keys.
+  /**
+   * The keys are collected from the available list.
+   *
+   * \return vector of strings, containing all available command interface names.
+   */
+  std::vector<std::string> available_command_interfaces() const;
+
   /// Checks whether a command interface is registered under the given key.
   /**
    * \param[in] key string identifying the interface to check.
    * \return true if interface exist, false otherwise.
    */
   bool command_interface_exists(const std::string & key) const;
+
+  /// Checks whether a command interface is available under the given name.
+  /**
+   * \param[in] name string identifying the interface to check.
+   * \return true if interface is available, false otherwise.
+   */
+  bool command_interface_is_available(const std::string & interface) const;
 
   /// Return the number size_t of loaded actuator components.
   /**

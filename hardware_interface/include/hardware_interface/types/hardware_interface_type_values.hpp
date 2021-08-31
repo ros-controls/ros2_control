@@ -15,6 +15,8 @@
 #ifndef HARDWARE_INTERFACE__TYPES__HARDWARE_INTERFACE_TYPE_VALUES_HPP_
 #define HARDWARE_INTERFACE__TYPES__HARDWARE_INTERFACE_TYPE_VALUES_HPP_
 
+#include <vector>
+
 namespace hardware_interface
 {
 /// Constant defining position interface
@@ -25,6 +27,11 @@ constexpr char HW_IF_VELOCITY[] = "velocity";
 constexpr char HW_IF_ACCELERATION[] = "acceleration";
 /// Constant defining effort interface
 constexpr char HW_IF_EFFORT[] = "effort";
+
+// TODO(destogl): use "inline static const"-type when switched to C++17
+/// Definition of standard names for movement interfaces
+const std::vector<const char *> MOVEMENT_INTERFACES = {
+  HW_IF_POSITION, HW_IF_VELOCITY, HW_IF_ACCELERATION, HW_IF_EFFORT};
 }  // namespace hardware_interface
 
 #endif  // HARDWARE_INTERFACE__TYPES__HARDWARE_INTERFACE_TYPE_VALUES_HPP_
