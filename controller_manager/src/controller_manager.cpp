@@ -98,12 +98,14 @@ void ControllerManager::init_resource_manager()
   // TODO(destogl): manage this when there is an error - CM should not die because URDF is wrong...
   resource_manager_->load_urdf(robot_description);
 
-  std::vector<std::string> autostart_components = {""};
-  get_parameter("autostart_components", autostart_components);
-  resource_manager_->activate_components(autostart_components);
   std::vector<std::string> autoconfigure_components = {""};
   get_parameter("autoconfigure_components", autoconfigure_components);
   resource_manager_->configure_components(autoconfigure_components);
+
+  std::vector<std::string> autostart_components = {""};
+  get_parameter("autostart_components", autostart_components);
+  resource_manager_->configure_components(autostart_components);
+  resource_manager_->activate_components(autostart_components);
 }
 
 void ControllerManager::init_services()
@@ -471,7 +473,7 @@ controller_interface::return_type ControllerManager::switch_controller(
     std::vector<std::string> command_interface_names = {};
     if (command_interface_config.type == controller_interface::interface_configuration_type::ALL)
     {
-      command_interface_names = resource_manager_->command_interface_keys();
+      command_interface_names = resource_manager_->available_command_interfaces();
     }
     if (
       command_interface_config.type ==
@@ -617,7 +619,7 @@ controller_interface::return_type ControllerManager::switch_controller(
       auto command_interface_config = controller.c->command_interface_configuration();
       if (command_interface_config.type == controller_interface::interface_configuration_type::ALL)
       {
-        controller.info.claimed_interfaces = resource_manager_->command_interface_keys();
+        controller.info.claimed_interfaces = resource_manager_->available_command_interfaces();
       }
       if (
         command_interface_config.type ==
@@ -785,7 +787,7 @@ void ControllerManager::start_controllers()
     std::vector<std::string> command_interface_names = {};
     if (command_interface_config.type == controller_interface::interface_configuration_type::ALL)
     {
-      command_interface_names = resource_manager_->command_interface_keys();
+      command_interface_names = resource_manager_->available_command_interfaces();
     }
     if (
       command_interface_config.type ==
@@ -829,7 +831,7 @@ void ControllerManager::start_controllers()
     std::vector<std::string> state_interface_names = {};
     if (state_interface_config.type == controller_interface::interface_configuration_type::ALL)
     {
-      state_interface_names = resource_manager_->state_interface_keys();
+      state_interface_names = resource_manager_->available_state_interfaces();
     }
     if (
       state_interface_config.type == controller_interface::interface_configuration_type::INDIVIDUAL)
@@ -1216,6 +1218,8 @@ void ControllerManager::list_hardware_interfaces_srv_cb(
   {
     controller_manager_msgs::msg::HardwareInterface hwi;
     hwi.name = state_interface_name;
+    // TODO(destogl): this... and for cmd interfaces also
+    //     hwi.is_available = std::find(resource_manager_.)
     hwi.is_claimed = false;
     response->state_interfaces.push_back(hwi);
   }

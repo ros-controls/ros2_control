@@ -66,12 +66,14 @@ public:
       std::make_unique<hardware_interface::ResourceManager>(), executor_, TEST_CM_NAME);
     run_updater_ = false;
 
+    // TODO(destogl): separate this to init_tests method where parameter can be set for each test
+    // separately
     cm_->set_parameter(
       rclcpp::Parameter("robot_description", ros2_control_test_assets::minimal_robot_urdf));
     cm_->set_parameter(rclcpp::Parameter(
       "autostart_components", std::vector<std::string>({TEST_ACTUATOR_HARDWARE_NAME})));
     cm_->set_parameter(rclcpp::Parameter(
-      "autoconfigure_components", std::vector<std::string>({TEST_SYSTEM_HARDWARE_NAME})));
+      "autoconfigure_components", std::vector<std::string>({TEST_SENSOR_HARDWARE_NAME})));
 
     cm_->init_resource_manager();
 
@@ -114,6 +116,7 @@ public:
         {
           auto it = std::find(interface_names.begin(), interface_names.end(), interfaces[i].name);
           EXPECT_NE(it, interface_names.end());
+          // TODO(destogl): Add here is available status
           EXPECT_EQ(interfaces[i].is_claimed, is_claimed_status[i]);
         }
       };
@@ -175,7 +178,40 @@ public:
     request->deactivate = deactivate;
 
     auto result = call_service_and_wait(*mha_client, request, srv_executor);
+    return result->ok;
+  }
 
+  bool configure_hardware(const std::string & hardware_name)
+  {
+    rclcpp::executors::SingleThreadedExecutor srv_executor;
+    rclcpp::Node::SharedPtr mha_srv_node = std::make_shared<rclcpp::Node>("mha_srv_client");
+    srv_executor.add_node(mha_srv_node);
+    rclcpp::Client<controller_manager_msgs::srv::ConfigureHardwareComponent>::SharedPtr mha_client =
+      mha_srv_node->create_client<controller_manager_msgs::srv::ConfigureHardwareComponent>(
+        std::string(TEST_CM_NAME) + "/configure_hardware_component");
+    auto request =
+      std::make_shared<controller_manager_msgs::srv::ConfigureHardwareComponent::Request>();
+
+    request->name = hardware_name;
+
+    auto result = call_service_and_wait(*mha_client, request, srv_executor);
+    return result->ok;
+  }
+
+  bool cleanup_hardware(const std::string & hardware_name)
+  {
+    rclcpp::executors::SingleThreadedExecutor srv_executor;
+    rclcpp::Node::SharedPtr mha_srv_node = std::make_shared<rclcpp::Node>("mha_srv_client");
+    srv_executor.add_node(mha_srv_node);
+    rclcpp::Client<controller_manager_msgs::srv::CleanupHardwareComponent>::SharedPtr mha_client =
+      mha_srv_node->create_client<controller_manager_msgs::srv::CleanupHardwareComponent>(
+        std::string(TEST_CM_NAME) + "/cleanup_hardware_component");
+    auto request =
+      std::make_shared<controller_manager_msgs::srv::CleanupHardwareComponent::Request>();
+
+    request->name = hardware_name;
+
+    auto result = call_service_and_wait(*mha_client, request, srv_executor);
     return result->ok;
   }
 };
@@ -188,8 +224,8 @@ TEST_F(TestControllerManagerHWManagementSrvs, list_hardware_components)
     // actuator, sensor, system
     std::vector<uint8_t>(
       {LFC_STATE::PRIMARY_STATE_ACTIVE, LFC_STATE::PRIMARY_STATE_INACTIVE,
-       LFC_STATE::PRIMARY_STATE_INACTIVE}),
-    std::vector<std::string>({HW_STATE_ACTIVE, HW_STATE_INACTIVE, HW_STATE_INACTIVE}),
+       LFC_STATE::PRIMARY_STATE_UNCONFIGURED}),
+    std::vector<std::string>({HW_STATE_ACTIVE, HW_STATE_INACTIVE, HW_STATE_UNCONFIGURED}),
     std::vector<std::vector<std::vector<bool>>>({
       {{false}, {false, false}},         // actuator
       {{}, {false}},                     // sensor
@@ -197,15 +233,16 @@ TEST_F(TestControllerManagerHWManagementSrvs, list_hardware_components)
     }));
 }
 
-TEST_F(TestControllerManagerHWManagementSrvs, selective_start_components)
+// TODO(destogl): Add tests for testing controller loading also
+TEST_F(TestControllerManagerHWManagementSrvs, selective_activate_deactivate_components)
 {
   // Default status after start
   list_hardware_components_and_check(
     // actuator, sensor, system
     std::vector<uint8_t>(
       {LFC_STATE::PRIMARY_STATE_ACTIVE, LFC_STATE::PRIMARY_STATE_INACTIVE,
-       LFC_STATE::PRIMARY_STATE_INACTIVE}),
-    std::vector<std::string>({HW_STATE_ACTIVE, HW_STATE_INACTIVE, HW_STATE_INACTIVE}),
+       LFC_STATE::PRIMARY_STATE_UNCONFIGURED}),
+    std::vector<std::string>({HW_STATE_ACTIVE, HW_STATE_INACTIVE, HW_STATE_UNCONFIGURED}),
     std::vector<std::vector<std::vector<bool>>>({
       {{false}, {false, false}},         // actuator
       {{}, {false}},                     // sensor
@@ -214,24 +251,38 @@ TEST_F(TestControllerManagerHWManagementSrvs, selective_start_components)
 
   // Activate system
   manage_hardware_activity(
-    {TEST_SYSTEM_HARDWARE_NAME},  // activate
+    {TEST_SENSOR_HARDWARE_NAME},  // activate
     {}                            // deactivate
   );
   list_hardware_components_and_check(
     // actuator, sensor, system
     std::vector<uint8_t>(
-      {LFC_STATE::PRIMARY_STATE_ACTIVE, LFC_STATE::PRIMARY_STATE_INACTIVE,
-       LFC_STATE::PRIMARY_STATE_ACTIVE}),
-    std::vector<std::string>({HW_STATE_ACTIVE, HW_STATE_INACTIVE, HW_STATE_ACTIVE}),
+      {LFC_STATE::PRIMARY_STATE_ACTIVE, LFC_STATE::PRIMARY_STATE_ACTIVE,
+       LFC_STATE::PRIMARY_STATE_UNCONFIGURED}),
+    std::vector<std::string>({HW_STATE_ACTIVE, HW_STATE_ACTIVE, HW_STATE_UNCONFIGURED}),
     std::vector<std::vector<std::vector<bool>>>({
       {{false}, {false, false}},         // actuator
       {{}, {false}},                     // sensor
       {{false, false}, {false, false}},  // system
     }));
 
-  // Deactivate actuator; Activate sensor
+  // Configure Sensor
+  configure_hardware(TEST_SYSTEM_HARDWARE_NAME);
+  list_hardware_components_and_check(
+    // actuator, sensor, system
+    std::vector<uint8_t>(
+      {LFC_STATE::PRIMARY_STATE_ACTIVE, LFC_STATE::PRIMARY_STATE_ACTIVE,
+       LFC_STATE::PRIMARY_STATE_INACTIVE}),
+    std::vector<std::string>({HW_STATE_ACTIVE, HW_STATE_ACTIVE, HW_STATE_INACTIVE}),
+    std::vector<std::vector<std::vector<bool>>>({
+      {{false}, {false, false}},         // actuator
+      {{}, {false}},                     // sensor
+      {{false, false}, {false, false}},  // system
+    }));
+
+  // Deactivate actuator; Dual Activate sensor
   manage_hardware_activity(
-    {TEST_SENSOR_HARDWARE_NAME},   // activate
+    {TEST_SYSTEM_HARDWARE_NAME},   // activate
     {TEST_ACTUATOR_HARDWARE_NAME}  // deactivate
   );
   list_hardware_components_and_check(
@@ -276,6 +327,19 @@ TEST_F(TestControllerManagerHWManagementSrvs, selective_start_components)
       {LFC_STATE::PRIMARY_STATE_INACTIVE, LFC_STATE::PRIMARY_STATE_ACTIVE,
        LFC_STATE::PRIMARY_STATE_ACTIVE}),
     std::vector<std::string>({HW_STATE_INACTIVE, HW_STATE_ACTIVE, HW_STATE_ACTIVE}),
+    std::vector<std::vector<std::vector<bool>>>({
+      {{false}, {false, false}},         // actuator
+      {{}, {false}},                     // sensor
+      {{false, false}, {false, false}},  // system
+    }));
+
+  cleanup_hardware(TEST_ACTUATOR_HARDWARE_NAME);
+  list_hardware_components_and_check(
+    // actuator, sensor, system
+    std::vector<uint8_t>(
+      {LFC_STATE::PRIMARY_STATE_UNCONFIGURED, LFC_STATE::PRIMARY_STATE_ACTIVE,
+       LFC_STATE::PRIMARY_STATE_ACTIVE}),
+    std::vector<std::string>({HW_STATE_UNCONFIGURED, HW_STATE_ACTIVE, HW_STATE_ACTIVE}),
     std::vector<std::vector<std::vector<bool>>>({
       {{false}, {false, false}},         // actuator
       {{}, {false}},                     // sensor
