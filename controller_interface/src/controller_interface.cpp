@@ -24,31 +24,24 @@
 
 namespace controller_interface
 {
-return_type ControllerInterface::on_init(const std::string & controller_name)
-{
-  std::cout << controller_name << std::endl;   // temporary line to remove warning
-  return return_type::OK;
-}
-
 return_type ControllerInterface::init(const std::string & controller_name)
 {
   node_ = std::make_shared<rclcpp::Node>(
-    controller_name,
-    rclcpp::NodeOptions().allow_undeclared_parameters(true));
+    controller_name, rclcpp::NodeOptions().allow_undeclared_parameters(true));
 
-  switch (on_init(controller_name)) {
-    case return_type::OK:
+  return_type result = return_type::OK;
+  switch (on_init())
+  {
+    case LifecycleNodeInterface::CallbackReturn::SUCCESS:
       lifecycle_state_ = rclcpp_lifecycle::State(
         lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state_names::UNCONFIGURED);
       break;
-    case return_type::ERROR:
-      on_error(lifecycle_state_);
-      lifecycle_state_ = rclcpp_lifecycle::State(
-        lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, state_names::FINALIZED);
+    case LifecycleNodeInterface::CallbackReturn::ERROR:
+    case LifecycleNodeInterface::CallbackReturn::FAILURE:
+      result = return_type::ERROR;
       break;
   }
-
-  return return_type::OK;
+  return result;
 }
 
 const rclcpp_lifecycle::State & ControllerInterface::configure()
