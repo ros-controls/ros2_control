@@ -146,7 +146,7 @@ public:
   const rclcpp_lifecycle::State & shutdown();
 
   CONTROLLER_INTERFACE_PUBLIC
-  const rclcpp_lifecycle::State & get_current_state() const;
+  const rclcpp_lifecycle::State & get_state() const;
 
 protected:
   std::vector<hardware_interface::LoanedCommandInterface> command_interfaces_;
