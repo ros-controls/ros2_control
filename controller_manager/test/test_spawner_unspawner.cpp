@@ -73,12 +73,23 @@ int call_unspawner(const std::string extra_args)
   return std::system((spawner_script + extra_args).c_str());
 }
 
-TEST_F(TestLoadController, spawner_test_type_in_param)
+TEST_F(TestLoadController, spawner_with_no_arguments_errors)
 {
   EXPECT_NE(call_spawner(""), 0) << "Missing mandatory arguments";
-  EXPECT_NE(call_spawner("ctrl_1"), 0) << "Wrong controller manager name";
-  EXPECT_NE(call_spawner("ctrl_1 -c test_controller_manager"), 0) << "Missing .type parameter";
+}
 
+TEST_F(TestLoadController, spawner_without_manager_errors)
+{
+  EXPECT_NE(call_spawner("ctrl_1"), 0) << "Wrong controller manager name";
+}
+
+TEST_F(TestLoadController, spawner_without_type_parameter_or_arg_errors)
+{
+  EXPECT_NE(call_spawner("ctrl_1 -c test_controller_manager"), 0) << "Missing .type parameter";
+}
+
+TEST_F(TestLoadController, spawner_test_type_in_param)
+{
   cm_->set_parameter(rclcpp::Parameter("ctrl_1.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
 
   EXPECT_EQ(call_spawner("ctrl_1 -c test_controller_manager"), 0);
