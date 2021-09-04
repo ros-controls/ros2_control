@@ -49,7 +49,7 @@ class ControllerManager : public rclcpp::Node
 {
 public:
   static constexpr bool kWaitForAllResources = false;
-  static constexpr double kInfiniteTimeout = 0.0;
+  static constexpr auto kInfiniteTimeout = 0;
 
   CONTROLLER_MANAGER_PUBLIC
   ControllerManager(
@@ -123,8 +123,7 @@ public:
     const std::vector<std::string> & start_controllers,
     const std::vector<std::string> & stop_controllers, int strictness,
     bool start_asap = kWaitForAllResources,
-    const rclcpp::Duration & timeout =
-      rclcpp::Duration(static_cast<rcl_duration_value_t>(kInfiniteTimeout)));
+    const rclcpp::Duration & timeout = rclcpp::Duration::from_nanoseconds(kInfiniteTimeout));
 
   CONTROLLER_MANAGER_PUBLIC
   void read();
