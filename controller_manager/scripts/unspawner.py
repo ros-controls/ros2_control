@@ -68,4 +68,5 @@ if __name__ == '__main__':
         "'unspawner.py' is deprecated, please use 'unspawner' (without .py extension)",
         DeprecationWarning
     )
-    main()
+    ret = main()
+    sys.exit(ret)

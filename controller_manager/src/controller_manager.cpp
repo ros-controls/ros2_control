@@ -184,11 +184,12 @@ controller_interface::ControllerInterfaceSharedPtr ControllerManager::load_contr
   // Check if parameter has been declared
   if (!has_parameter(param_name))
   {
-    declare_parameter(param_name, rclcpp::ParameterValue());
+    declare_parameter(param_name, rclcpp::ParameterType::PARAMETER_STRING);
   }
   if (!get_parameter(param_name, controller_type))
   {
-    RCLCPP_ERROR(get_logger(), "The 'type' param not defined for '%s'.", controller_name.c_str());
+    RCLCPP_ERROR(
+      get_logger(), "The 'type' param was not defined for '%s'.", controller_name.c_str());
     return nullptr;
   }
   return load_controller(controller_name, controller_type);

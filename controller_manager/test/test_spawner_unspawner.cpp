@@ -63,22 +63,33 @@ protected:
 
 int call_spawner(const std::string extra_args)
 {
-  std::string spawner_script = "ros2 run controller_manager spawner.py ";
+  std::string spawner_script = "ros2 run controller_manager spawner ";
   return std::system((spawner_script + extra_args).c_str());
 }
 
 int call_unspawner(const std::string extra_args)
 {
-  std::string spawner_script = "ros2 run controller_manager unspawner.py ";
+  std::string spawner_script = "ros2 run controller_manager unspawner ";
   return std::system((spawner_script + extra_args).c_str());
+}
+
+TEST_F(TestLoadController, spawner_with_no_arguments_errors)
+{
+  EXPECT_NE(call_spawner(""), 0) << "Missing mandatory arguments";
+}
+
+TEST_F(TestLoadController, spawner_without_manager_errors)
+{
+  EXPECT_NE(call_spawner("ctrl_1"), 0) << "Wrong controller manager name";
+}
+
+TEST_F(TestLoadController, spawner_without_type_parameter_or_arg_errors)
+{
+  EXPECT_NE(call_spawner("ctrl_1 -c test_controller_manager"), 0) << "Missing .type parameter";
 }
 
 TEST_F(TestLoadController, spawner_test_type_in_param)
 {
-  EXPECT_NE(call_spawner(""), 0) << "Missing mandatory arguments";
-  EXPECT_NE(call_spawner("ctrl_1"), 0) << "Wrong controller manager name";
-  EXPECT_NE(call_spawner("ctrl_1 -c test_controller_manager"), 0) << "Missing .type parameter";
-
   cm_->set_parameter(rclcpp::Parameter("ctrl_1.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
 
   EXPECT_EQ(call_spawner("ctrl_1 -c test_controller_manager"), 0);
@@ -126,11 +137,11 @@ TEST_F(TestLoadController, spawner_test_type_in_arg)
 
 TEST_F(TestLoadController, unload_on_kill)
 {
-  // Launch spawner.py with unload on kill
+  // Launch spawner with unload on kill
   // timeout command will kill it after the specified time with signal SIGINT
   std::stringstream ss;
   ss << "timeout --signal=INT 5 "
-     << "ros2 run controller_manager spawner.py "
+     << "ros2 run controller_manager spawner "
      << "ctrl_3 -c test_controller_manager -t "
      << std::string(test_controller::TEST_CONTROLLER_CLASS_NAME) << " --unload-on-kill";
 

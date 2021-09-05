@@ -97,8 +97,7 @@ def main(args=None):
     controller_manager_timeout = args.controller_manager_timeout
 
     if param_file and not os.path.isfile(param_file):
-        raise FileNotFoundError(
-            errno.ENOENT, os.strerror(errno.ENOENT), param_file)
+        raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), param_file)
 
     node = Node('spawner_' + controller_name)
     try:
@@ -187,4 +186,5 @@ if __name__ == '__main__':
     warnings.warn(
         "'spawner.py' is deprecated, please use 'spawner' (without .py extension)",
         DeprecationWarning)
-    main()
+    ret = main()
+    sys.exit(ret)
