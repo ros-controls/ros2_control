@@ -31,7 +31,7 @@ static constexpr const char * kControllerInterface = "controller_interface::Cont
 
 inline bool is_controller_running(controller_interface::ControllerInterface & controller)
 {
-  return controller.get_current_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE;
+  return controller.get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE;
 }
 
 bool controller_name_compare(const ControllerSpec & a, const std::string & name)
@@ -274,7 +274,7 @@ controller_interface::return_type ControllerManager::configure_controller(
   }
   auto controller = found_it->c;
 
-  auto state = controller->get_current_state();
+  auto state = controller->get_state();
   if (
     state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE ||
     state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED)
@@ -285,7 +285,7 @@ controller_interface::return_type ControllerManager::configure_controller(
     return controller_interface::return_type::ERROR;
   }
 
-  auto new_state = controller->get_current_state();
+  auto new_state = controller->get_state();
   if (state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
   {
     RCLCPP_DEBUG(
@@ -550,7 +550,7 @@ controller_interface::return_type ControllerManager::switch_controller(
   // update the claimed interface controller info
   for (auto & controller : to)
   {
-    if (controller.c->get_current_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+    if (controller.c->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
     {
       auto command_interface_config = controller.c->command_interface_configuration();
       if (command_interface_config.type == controller_interface::interface_configuration_type::ALL)
@@ -834,7 +834,7 @@ void ControllerManager::list_controllers_srv_cb(
     cs.name = controllers[i].info.name;
     cs.type = controllers[i].info.type;
     cs.claimed_interfaces = controllers[i].info.claimed_interfaces;
-    cs.state = controllers[i].c->get_current_state().label();
+    cs.state = controllers[i].c->get_state().label();
   }
 
   RCLCPP_DEBUG(get_logger(), "list controller service finished");

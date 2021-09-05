@@ -146,10 +146,7 @@ const rclcpp_lifecycle::State & ControllerInterface::shutdown()
   return lifecycle_state_;
 }
 
-const rclcpp_lifecycle::State & ControllerInterface::get_current_state() const
-{
-  return lifecycle_state_;
-}
+const rclcpp_lifecycle::State & ControllerInterface::get_state() const { return lifecycle_state_; }
 
 void ControllerInterface::assign_interfaces(
   std::vector<hardware_interface::LoanedCommandInterface> && command_interfaces,

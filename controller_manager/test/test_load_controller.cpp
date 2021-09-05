@@ -56,12 +56,10 @@ TEST_F(TestLoadController, load_and_configure_one_known_controller)
   EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
 
   EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-    controller_if->get_current_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, controller_if->get_state().id());
 
   cm_->configure_controller(controller_name1);
-  EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if->get_current_state().id());
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if->get_state().id());
 }
 
 TEST_F(TestLoadController, load_and_configure_two_known_controllers)
@@ -72,8 +70,7 @@ TEST_F(TestLoadController, load_and_configure_two_known_controllers)
   EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
   EXPECT_STREQ(controller_name1, controller_if1->get_node()->get_name());
   EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-    controller_if1->get_current_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, controller_if1->get_state().id());
 
   // load the same controller again with a different name
   auto controller_if2 = cm_->load_controller(controller_name2, TEST_CONTROLLER_CLASS_NAME);
@@ -81,17 +78,14 @@ TEST_F(TestLoadController, load_and_configure_two_known_controllers)
   EXPECT_EQ(2u, cm_->get_loaded_controllers().size());
   EXPECT_STREQ(controller_name2, controller_if2->get_node()->get_name());
   EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-    controller_if2->get_current_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, controller_if2->get_state().id());
 
   // Configure controllers
   cm_->configure_controller(controller_name1);
-  EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if1->get_current_state().id());
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if1->get_state().id());
 
   cm_->configure_controller(controller_name2);
-  EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if2->get_current_state().id());
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if2->get_state().id());
 }
 
 TEST_F(TestLoadController, configuring_non_loaded_controller_fails)
@@ -107,12 +101,10 @@ TEST_F(TestLoadController, can_configure_loaded_controller)
   ASSERT_NE(controller_if, nullptr);
 
   ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-    controller_if->get_current_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, controller_if->get_state().id());
 
   EXPECT_EQ(cm_->configure_controller(controller_name1), controller_interface::return_type::OK);
-  ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if->get_current_state().id());
+  ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if->get_state().id());
 }
 
 TEST_F(TestLoadController, can_start_configured_controller)
@@ -137,8 +129,7 @@ TEST_F(TestLoadController, can_start_configured_controller)
     ControllerManagerRunner cm_runner(this);
     EXPECT_EQ(controller_interface::return_type::OK, switch_future.get());
 
-    ASSERT_EQ(
-      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, controller_if->get_current_state().id());
+    ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, controller_if->get_state().id());
   }
 }
 
@@ -163,8 +154,7 @@ TEST_F(TestLoadController, can_not_configure_active_controller)
 
   // Can not configure active controller
   EXPECT_EQ(cm_->configure_controller(controller_name1), controller_interface::return_type::ERROR);
-  ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, controller_if->get_current_state().id());
+  ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, controller_if->get_state().id());
 }
 
 TEST_F(TestLoadController, can_stop_active_controller)
@@ -194,8 +184,7 @@ TEST_F(TestLoadController, can_stop_active_controller)
   ControllerManagerRunner cm_runner(this);
   EXPECT_EQ(controller_interface::return_type::OK, switch_future.get());
 
-  ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if->get_current_state().id());
+  ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if->get_state().id());
 }
 
 TEST_F(TestLoadController, inactive_controller_cannot_be_cleaned_up)
@@ -224,8 +213,7 @@ TEST_F(TestLoadController, inactive_controller_cannot_be_cleaned_up)
   ControllerManagerRunner cm_runner(this);
   EXPECT_EQ(controller_interface::return_type::OK, switch_future.get());
 
-  ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if->get_current_state().id());
+  ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if->get_state().id());
 
   std::shared_ptr<test_controller::TestController> test_controller =
     std::dynamic_pointer_cast<test_controller::TestController>(controller_if);
@@ -234,8 +222,7 @@ TEST_F(TestLoadController, inactive_controller_cannot_be_cleaned_up)
   // Configure from inactive state: controller can no be cleaned-up
   test_controller->simulate_cleanup_failure = true;
   EXPECT_EQ(cm_->configure_controller(controller_name1), controller_interface::return_type::ERROR);
-  ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if->get_current_state().id());
+  ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if->get_state().id());
   EXPECT_EQ(0u, cleanup_calls);
 }
 
@@ -266,8 +253,7 @@ TEST_F(TestLoadController, inactive_controller_cannot_be_configured)
   ControllerManagerRunner cm_runner(this);
   EXPECT_EQ(controller_interface::return_type::OK, switch_future.get());
 
-  ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if->get_current_state().id());
+  ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if->get_state().id());
 
   std::shared_ptr<test_controller::TestController> test_controller =
     std::dynamic_pointer_cast<test_controller::TestController>(controller_if);
@@ -276,8 +262,7 @@ TEST_F(TestLoadController, inactive_controller_cannot_be_configured)
   // Configure from inactive state
   test_controller->simulate_cleanup_failure = false;
   EXPECT_EQ(cm_->configure_controller(controller_name1), controller_interface::return_type::OK);
-  ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if->get_current_state().id());
+  ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if->get_state().id());
   EXPECT_EQ(1u, cleanup_calls);
 }
 
@@ -302,8 +287,7 @@ TEST_P(SwitchTest, EmptyListOrNonExistentTest)
   EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
 
   ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-    controller_if->get_current_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, controller_if->get_state().id());
 
   auto params = GetParam();
   auto result = std::get<0>(params);
@@ -458,8 +442,7 @@ TEST_F(TestLoadController, starting_and_stopping_a_controller)
     }
 
     ASSERT_EQ(
-      lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-      controller_if->get_current_state().id());
+      lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, controller_if->get_state().id());
 
     // Activate configured controller
     cm_->configure_controller(controller_name1);
@@ -473,8 +456,7 @@ TEST_F(TestLoadController, starting_and_stopping_a_controller)
       ControllerManagerRunner cm_runner(this);
       EXPECT_EQ(controller_interface::return_type::OK, switch_future.get());
     }
-    ASSERT_EQ(
-      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, controller_if->get_current_state().id());
+    ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, controller_if->get_state().id());
   }
 
   {  // Stop controller
@@ -490,8 +472,7 @@ TEST_F(TestLoadController, starting_and_stopping_a_controller)
     ControllerManagerRunner cm_runner(this);
     EXPECT_EQ(controller_interface::return_type::OK, switch_future.get());
 
-    ASSERT_EQ(
-      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if->get_current_state().id());
+    ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if->get_state().id());
   }
 }
 
@@ -505,11 +486,9 @@ TEST_F(TestLoadController, switch_multiple_controllers)
   EXPECT_EQ(2u, cm_->get_loaded_controllers().size());
 
   ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-    controller_if1->get_current_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, controller_if1->get_state().id());
   ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-    controller_if2->get_current_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, controller_if2->get_state().id());
 
   // Only testing with STRICT now for simplicity
   {  //  Test starting an stopped controller, and stopping afterwards
@@ -528,11 +507,9 @@ TEST_F(TestLoadController, switch_multiple_controllers)
     ControllerManagerRunner cm_runner(this);
     EXPECT_EQ(controller_interface::return_type::OK, switch_future.get());
 
+    ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, controller_if1->get_state().id());
     ASSERT_EQ(
-      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, controller_if1->get_current_state().id());
-    ASSERT_EQ(
-      lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-      controller_if2->get_current_state().id());
+      lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, controller_if2->get_state().id());
   }
 
   {  // Stop controller 1, start controller 2
@@ -549,11 +526,9 @@ TEST_F(TestLoadController, switch_multiple_controllers)
     ControllerManagerRunner cm_runner(this);
     EXPECT_EQ(controller_interface::return_type::OK, switch_future.get());
 
+    ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if1->get_state().id());
     ASSERT_EQ(
-      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if1->get_current_state().id());
-    ASSERT_EQ(
-      lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-      controller_if2->get_current_state().id());
+      lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, controller_if2->get_state().id());
 
     // configure controller 2
     cm_->configure_controller(controller_name2);
@@ -572,10 +547,8 @@ TEST_F(TestLoadController, switch_multiple_controllers)
     ControllerManagerRunner cm_runner(this);
     EXPECT_EQ(controller_interface::return_type::OK, switch_future.get());
 
-    ASSERT_EQ(
-      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, controller_if1->get_current_state().id());
-    ASSERT_EQ(
-      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if2->get_current_state().id());
+    ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, controller_if1->get_state().id());
+    ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if2->get_state().id());
   }
 
   {  // Stop controller 1, start controller 2
@@ -591,10 +564,8 @@ TEST_F(TestLoadController, switch_multiple_controllers)
     ControllerManagerRunner cm_runner(this);
     EXPECT_EQ(controller_interface::return_type::OK, switch_future.get());
 
-    ASSERT_EQ(
-      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if1->get_current_state().id());
-    ASSERT_EQ(
-      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, controller_if2->get_current_state().id());
+    ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if1->get_state().id());
+    ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, controller_if2->get_state().id());
   }
 
   {  // stop controller 2
@@ -610,7 +581,6 @@ TEST_F(TestLoadController, switch_multiple_controllers)
     ControllerManagerRunner cm_runner(this);
     EXPECT_EQ(controller_interface::return_type::OK, switch_future.get());
 
-    ASSERT_EQ(
-      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if2->get_current_state().id());
+    ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if2->get_state().id());
   }
 }
