@@ -17,9 +17,6 @@
 
 #include <string>
 
-#include "hardware_interface/hardware_info.hpp"
-#include "hardware_interface/types/hardware_interface_status_values.hpp"
-
 namespace ros2_control_test_assets
 {
 const auto urdf_head =
