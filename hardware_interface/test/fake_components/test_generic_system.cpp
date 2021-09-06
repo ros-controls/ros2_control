@@ -1013,11 +1013,11 @@ TEST_F(TestGenericSystem, generic_system_2dof_functionality_with_offset_custom_i
   ASSERT_EQ(0.77, j2p_c.get_value());
   ASSERT_EQ(0.88, j2v_c.get_value());
 
-  rm.activate_components();
+  rm.start_components();
   status_map = rm.get_components_status();
   EXPECT_EQ(status_map["GenericSystem2dof"], hardware_interface::status::STARTED);
 
-  rm.deactivate_components();
+  rm.stop_components();
   status_map = rm.get_components_status();
   EXPECT_EQ(status_map["GenericSystem2dof"], hardware_interface::status::STOPPED);
 }
