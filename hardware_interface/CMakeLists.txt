@@ -42,8 +42,6 @@ ament_target_dependencies(
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.
 target_compile_definitions(hardware_interface PRIVATE "HARDWARE_INTERFACE_BUILDING_DLL")
-# prevent pluginlib from using boost
-target_compile_definitions(hardware_interface PUBLIC "PLUGINLIB__DISABLE_BOOST_FUNCTIONS")
 
 # Fake components
 add_library(
@@ -68,8 +66,6 @@ ament_target_dependencies(
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.
 target_compile_definitions(fake_components PRIVATE "HARDWARE_INTERFACE_BUILDING_DLL")
-# prevent pluginlib from using boost
-target_compile_definitions(fake_components PUBLIC "PLUGINLIB__DISABLE_BOOST_FUNCTIONS")
 
 pluginlib_export_plugin_description_file(
   hardware_interface fake_components_plugin_description.xml)
