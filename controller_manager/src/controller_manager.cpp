@@ -469,7 +469,7 @@ controller_interface::return_type ControllerManager::switch_controller(
         start_command_interface_request_.clear();
         return controller_interface::return_type::ERROR;
       }
-      RCLCPP_DEBUG(get_logger(), "%s", msg.c_str());
+      RCLCPP_WARN(get_logger(), "%s", msg.c_str());
       return controller_interface::return_type::OK;
     };
 
