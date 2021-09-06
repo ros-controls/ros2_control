@@ -29,8 +29,6 @@ ament_target_dependencies(controller_manager
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.
 target_compile_definitions(controller_manager PRIVATE "CONTROLLER_MANAGER_BUILDING_DLL")
-# prevent pluginlib from using boost
-target_compile_definitions(controller_manager PUBLIC "PLUGINLIB__DISABLE_BOOST_FUNCTIONS")
 
 add_executable(ros2_control_node src/ros2_control_node.cpp)
 target_include_directories(ros2_control_node PRIVATE include)
