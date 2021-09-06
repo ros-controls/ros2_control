@@ -207,7 +207,7 @@ controller_interface::return_type ControllerManager::unload_controller(
   std::vector<ControllerSpec> & to = rt_controllers_wrapper_.get_unused_list(guard);
   const std::vector<ControllerSpec> & from = rt_controllers_wrapper_.get_updated_list(guard);
 
-  // Transfers the running controllers over, skipping the one to be removed and the running ones.
+  // Transfers the active controllers over, skipping the one to be removed and the active ones.
   to = from;
 
   auto found_it = std::find_if(
@@ -230,7 +230,7 @@ controller_interface::return_type ControllerManager::unload_controller(
   {
     to.clear();
     RCLCPP_ERROR(
-      get_logger(), "Could not unload controller with name '%s' because it is still running",
+      get_logger(), "Could not unload controller with name '%s' because it is still active",
       controller_name.c_str());
     return controller_interface::return_type::ERROR;
   }
@@ -456,7 +456,7 @@ controller_interface::return_type ControllerManager::switch_controller(
       std::find(start_request_.begin(), start_request_.end(), controller.info.name);
     bool in_start_list = start_list_it != start_request_.end();
 
-    const bool is_running = is_controller_active(*controller.c);
+    const bool is_active = is_controller_active(*controller.c);
     const bool is_inactive = is_controller_inactive(*controller.c);
 
     auto handle_conflict = [&](const std::string & msg) {
@@ -474,10 +474,10 @@ controller_interface::return_type ControllerManager::switch_controller(
     };
 
     // check for double stop
-    if (!is_running && in_stop_list)
+    if (!is_active && in_stop_list)
     {
       auto ret = handle_conflict(
-        "Could not stop controller '" + controller.info.name + "' since it is not running");
+        "Could not stop controller '" + controller.info.name + "' since it is not active");
       if (ret != controller_interface::return_type::OK)
       {
         return ret;
@@ -487,10 +487,10 @@ controller_interface::return_type ControllerManager::switch_controller(
     }
 
     // check for doubled start
-    if (is_running && !in_stop_list && in_start_list)
+    if (is_active && !in_stop_list && in_start_list)
     {
       auto ret = handle_conflict(
-        "Could not start controller '" + controller.info.name + "' since it is already running");
+        "Could not start controller '" + controller.info.name + "' since it is already active");
       if (ret != controller_interface::return_type::OK)
       {
         return ret;
@@ -1027,7 +1027,7 @@ void ControllerManager::reload_controller_libraries_service_cb(
   std::lock_guard<std::mutex> guard(services_lock_);
   RCLCPP_DEBUG(get_logger(), "reload libraries service locked");
 
-  // only reload libraries if no controllers are running
+  // only reload libraries if no controllers are active
   std::vector<std::string> loaded_controllers, active_controllers;
   loaded_controllers = get_controller_names();
   {
@@ -1046,16 +1046,16 @@ void ControllerManager::reload_controller_libraries_service_cb(
     RCLCPP_ERROR(
       get_logger(),
       "Controller manager: Cannot reload controller libraries because"
-      " there are still %i controllers running",
+      " there are still %i active controllers",
       (int)active_controllers.size());
     response->ok = false;
     return;
   }
 
-  // stop running controllers if requested
+  // stop active controllers if requested
   if (!loaded_controllers.empty())
   {
-    RCLCPP_INFO(get_logger(), "Controller manager: Stopping all running controllers");
+    RCLCPP_INFO(get_logger(), "Controller manager: Stopping all active controllers");
     std::vector<std::string> empty;
     if (
       switch_controller(
@@ -1066,7 +1066,7 @@ void ControllerManager::reload_controller_libraries_service_cb(
       RCLCPP_ERROR(
         get_logger(),
         "Controller manager: Cannot reload controller libraries because failed to stop "
-        "running controllers");
+        "active controllers");
       response->ok = false;
       return;
     }
