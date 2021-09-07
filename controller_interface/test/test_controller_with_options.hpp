@@ -63,7 +63,7 @@ public:
       controller_interface::interface_configuration_type::NONE};
   }
 
-  controller_interface::return_type update() override
+  controller_interface::return_type update(rclcpp::Duration dt) override
   {
     return controller_interface::return_type::OK;
   }

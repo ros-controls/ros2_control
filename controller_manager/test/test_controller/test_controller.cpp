@@ -27,7 +27,7 @@ TestController::TestController()
 {
 }
 
-controller_interface::return_type TestController::update()
+controller_interface::return_type TestController::update(rclcpp::Duration dt)
 {
   ++internal_counter;
   return controller_interface::return_type::OK;

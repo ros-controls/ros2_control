@@ -54,7 +54,7 @@ public:
   }
 
   CONTROLLER_MANAGER_PUBLIC
-  controller_interface::return_type update() override;
+  controller_interface::return_type update(rclcpp::Duration dt) override;
 };
 
 }  // namespace test_controller_failed_init

@@ -26,7 +26,7 @@ TestControllerWithInterfaces::TestControllerWithInterfaces()
 {
 }
 
-controller_interface::return_type TestControllerWithInterfaces::update()
+controller_interface::return_type TestControllerWithInterfaces::update(rclcpp::Duration dt)
 {
   return controller_interface::return_type::OK;
 }

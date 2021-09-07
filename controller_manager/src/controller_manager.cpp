@@ -1125,7 +1125,7 @@ std::vector<std::string> ControllerManager::get_controller_names()
 
 void ControllerManager::read() { resource_manager_->read(); }
 
-controller_interface::return_type ControllerManager::update()
+controller_interface::return_type ControllerManager::update(rclcpp::Duration dt)
 {
   std::vector<ControllerSpec> & rt_controller_list =
     rt_controllers_wrapper_.update_and_get_used_by_rt_list();
@@ -1137,7 +1137,7 @@ controller_interface::return_type ControllerManager::update()
     // https://github.com/ros-controls/ros2_control/issues/153
     if (is_controller_running(*loaded_controller.c))
     {
-      auto controller_ret = loaded_controller.c->update();
+      auto controller_ret = loaded_controller.c->update(dt);
       if (controller_ret != controller_interface::return_type::OK)
       {
         ret = controller_ret;

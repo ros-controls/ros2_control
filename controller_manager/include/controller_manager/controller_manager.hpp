@@ -129,7 +129,7 @@ public:
   void read();
 
   CONTROLLER_MANAGER_PUBLIC
-  controller_interface::return_type update();
+  controller_interface::return_type update(rclcpp::Duration dt);
 
   CONTROLLER_MANAGER_PUBLIC
   void write();

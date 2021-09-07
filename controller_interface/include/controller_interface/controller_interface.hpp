@@ -95,7 +95,7 @@ public:
   virtual return_type init(const std::string & controller_name, rclcpp::NodeOptions & node_options);
 
   CONTROLLER_INTERFACE_PUBLIC
-  virtual return_type update() = 0;
+  virtual return_type update(rclcpp::Duration dt) = 0;
 
   CONTROLLER_INTERFACE_PUBLIC
   std::shared_ptr<rclcpp::Node> get_node();
