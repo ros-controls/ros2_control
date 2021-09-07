@@ -158,11 +158,15 @@ const auto hardware_resources =
     <joint name="joint2">
       <command_interface name="velocity"/>
       <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="acceleration"/>
       <command_interface name="max_acceleration" />
     </joint>
     <joint name="joint3">
       <command_interface name="velocity"/>
       <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="acceleration"/>
     </joint>
     <joint name="configuration">
       <command_interface name="max_tcp_jerk"/>
@@ -414,7 +418,8 @@ const auto TEST_ACTUATOR_HARDWARE_NAME = "TestActuatorHardware";
 const auto TEST_ACTUATOR_HARDWARE_TYPE = "actuator";
 const auto TEST_ACTUATOR_HARDWARE_CLASS_TYPE = "test_actuator";
 const auto TEST_ACTUATOR_HARDWARE_COMMAND_INTERFACES = {"joint1/position", "joint1/max_velocity"};
-const auto TEST_ACTUATOR_HARDWARE_STATE_INTERFACES = {"joint1/position", "joint1/velocity"};
+const auto TEST_ACTUATOR_HARDWARE_STATE_INTERFACES = {
+  "joint1/position", "joint1/velocity", "joint1/some_unlisted_interface"};
 
 const auto TEST_SENSOR_HARDWARE_NAME = "TestSensorHardware";
 const auto TEST_SENSOR_HARDWARE_TYPE = "sensor";
@@ -428,7 +433,8 @@ const auto TEST_SYSTEM_HARDWARE_CLASS_TYPE = "test_system";
 const auto TEST_SYSTEM_HARDWARE_COMMAND_INTERFACES = {
   "joint2/velocity", "joint2/max_acceleration", "joint3/velocity", "configuration/max_tcp_jerk"};
 const auto TEST_SYSTEM_HARDWARE_STATE_INTERFACES = {
-  "joint2/position", "joint3/position", "configuration/max_tcp_jerk"};
+  "joint2/position", "joint2/velocity",     "joint2/acceleration",       "joint3/position",
+  "joint3/velocity", "joint3/acceleration", "configuration/max_tcp_jerk"};
 
 }  // namespace ros2_control_test_assets
 

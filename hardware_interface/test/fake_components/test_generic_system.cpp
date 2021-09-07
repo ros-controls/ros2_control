@@ -952,9 +952,21 @@ TEST_F(TestGenericSystem, generic_system_2dof_functionality_with_offset_custom_i
   hardware_interface::ResourceManager rm(urdf);
 
   // check is hardware is configured
-  auto states_map = rm.get_components_states();
+  auto status_map = rm.get_components_status();
   EXPECT_EQ(
-    states_map["GenericSystem2dof"].label(), hardware_interface::lifecycle_state_names::INACTIVE);
+    status_map["GenericSystem2dof"].state.label(),
+    hardware_interface::lifecycle_state_names::UNCONFIGURED);
+
+  rm.configure_components();
+  status_map = rm.get_components_status();
+  EXPECT_EQ(
+    status_map["GenericSystem2dof"].state.label(),
+    hardware_interface::lifecycle_state_names::INACTIVE);
+  rm.activate_components();
+  status_map = rm.get_components_status();
+  EXPECT_EQ(
+    status_map["GenericSystem2dof"].state.label(),
+    hardware_interface::lifecycle_state_names::ACTIVE);
 
   // Check initial values
   hardware_interface::LoanedStateInterface j1p_s = rm.claim_state_interface("joint1/position");
@@ -1040,13 +1052,9 @@ TEST_F(TestGenericSystem, generic_system_2dof_functionality_with_offset_custom_i
   ASSERT_EQ(0.77, j2p_c.get_value());
   ASSERT_EQ(0.88, j2v_c.get_value());
 
-  rm.start_components();
-  states_map = rm.get_components_states();
+  rm.deactivate_components();
+  status_map = rm.get_components_status();
   EXPECT_EQ(
-    states_map["GenericSystem2dof"].label(), hardware_interface::lifecycle_state_names::ACTIVE);
-
-  rm.stop_components();
-  states_map = rm.get_components_states();
-  EXPECT_EQ(
-    states_map["GenericSystem2dof"].label(), hardware_interface::lifecycle_state_names::INACTIVE);
+    status_map["GenericSystem2dof"].state.label(),
+    hardware_interface::lifecycle_state_names::INACTIVE);
 }

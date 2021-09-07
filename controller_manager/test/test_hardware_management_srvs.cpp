@@ -94,6 +94,7 @@ public:
 
   void list_hardware_components_and_check(
     const std::vector<uint8_t> & hw_state_ids, const std::vector<std::string> & hw_state_labels,
+    const std::vector<std::vector<std::vector<bool>>> & hw_itfs_available_status,
     const std::vector<std::vector<std::vector<bool>>> & hw_itfs_claimed_status)
   {
     rclcpp::executors::SingleThreadedExecutor srv_executor;
@@ -111,12 +112,13 @@ public:
       [](
         const std::vector<controller_manager_msgs::msg::HardwareInterface> & interfaces,
         const std::vector<const char *> & interface_names,
-        const std::vector<bool> is_claimed_status) {
+        const std::vector<bool> is_available_status, const std::vector<bool> is_claimed_status) {
         for (auto i = 0ul; i < interfaces.size(); ++i)
         {
           auto it = std::find(interface_names.begin(), interface_names.end(), interfaces[i].name);
+          std::cout << "Interface name is: " << interfaces[i].name << std::endl;
           EXPECT_NE(it, interface_names.end());
-          // TODO(destogl): Add here is available status
+          EXPECT_EQ(interfaces[i].is_available, is_available_status[i]);
           EXPECT_EQ(interfaces[i].is_claimed, is_claimed_status[i]);
         }
       };
@@ -130,10 +132,10 @@ public:
           TEST_ACTUATOR_HARDWARE_CLASS_TYPE, hw_state_ids[0], hw_state_labels[0]);
         check_interfaces(
           component.command_interfaces, TEST_ACTUATOR_HARDWARE_COMMAND_INTERFACES,
-          hw_itfs_claimed_status[0][0]);
+          hw_itfs_available_status[0][0], hw_itfs_claimed_status[0][0]);
         check_interfaces(
           component.state_interfaces, TEST_ACTUATOR_HARDWARE_STATE_INTERFACES,
-          hw_itfs_claimed_status[0][1]);
+          hw_itfs_available_status[0][1], hw_itfs_claimed_status[0][1]);
       }
       if (component.name == TEST_SENSOR_HARDWARE_NAME)
       {
@@ -142,10 +144,10 @@ public:
           TEST_SENSOR_HARDWARE_CLASS_TYPE, hw_state_ids[1], hw_state_labels[1]);
         check_interfaces(
           component.command_interfaces, TEST_SENSOR_HARDWARE_COMMAND_INTERFACES,
-          hw_itfs_claimed_status[1][0]);
+          hw_itfs_available_status[1][0], hw_itfs_claimed_status[1][0]);
         check_interfaces(
           component.state_interfaces, TEST_SENSOR_HARDWARE_STATE_INTERFACES,
-          hw_itfs_claimed_status[1][1]);
+          hw_itfs_available_status[1][1], hw_itfs_claimed_status[1][1]);
       }
       if (component.name == TEST_SYSTEM_HARDWARE_NAME)
       {
@@ -154,10 +156,10 @@ public:
           TEST_SYSTEM_HARDWARE_CLASS_TYPE, hw_state_ids[2], hw_state_labels[2]);
         check_interfaces(
           component.command_interfaces, TEST_SYSTEM_HARDWARE_COMMAND_INTERFACES,
-          hw_itfs_claimed_status[2][0]);
+          hw_itfs_available_status[2][0], hw_itfs_claimed_status[2][0]);
         check_interfaces(
           component.state_interfaces, TEST_SYSTEM_HARDWARE_STATE_INTERFACES,
-          hw_itfs_claimed_status[2][1]);
+          hw_itfs_available_status[2][1], hw_itfs_claimed_status[2][1]);
       }
     }
   }
@@ -227,9 +229,16 @@ TEST_F(TestControllerManagerHWManagementSrvs, list_hardware_components)
        LFC_STATE::PRIMARY_STATE_UNCONFIGURED}),
     std::vector<std::string>({HW_STATE_ACTIVE, HW_STATE_INACTIVE, HW_STATE_UNCONFIGURED}),
     std::vector<std::vector<std::vector<bool>>>({
-      {{false}, {false, false}},         // actuator
+      // is available
+      {{true, true}, {true, true, true}},  // actuator
+      {{}, {true}},                        // sensor
+      {{false, false, false, false}, {false, false, false, false, false, false, false}},  // system
+    }),
+    std::vector<std::vector<std::vector<bool>>>({
+      // is claimed
+      {{false, false}, {false, false}},  // actuator
       {{}, {false}},                     // sensor
-      {{false, false}, {false, false}},  // system
+      {{false, false, false, false}, {false, false, false, false, false, false, false}},  // system
     }));
 }
 
@@ -244,9 +253,16 @@ TEST_F(TestControllerManagerHWManagementSrvs, selective_activate_deactivate_comp
        LFC_STATE::PRIMARY_STATE_UNCONFIGURED}),
     std::vector<std::string>({HW_STATE_ACTIVE, HW_STATE_INACTIVE, HW_STATE_UNCONFIGURED}),
     std::vector<std::vector<std::vector<bool>>>({
-      {{false}, {false, false}},         // actuator
+      // is available
+      {{true, true}, {true, true, true}},  // actuator
+      {{}, {true}},                        // sensor
+      {{false, false, false, false}, {false, false, false, false, false, false, false}},  // system
+    }),
+    std::vector<std::vector<std::vector<bool>>>({
+      // is claimed
+      {{false, false}, {false, false}},  // actuator
       {{}, {false}},                     // sensor
-      {{false, false}, {false, false}},  // system
+      {{false, false, false, false}, {false, false, false, false, false, false, false}},  // system
     }));
 
   // Activate system
@@ -261,9 +277,16 @@ TEST_F(TestControllerManagerHWManagementSrvs, selective_activate_deactivate_comp
        LFC_STATE::PRIMARY_STATE_UNCONFIGURED}),
     std::vector<std::string>({HW_STATE_ACTIVE, HW_STATE_ACTIVE, HW_STATE_UNCONFIGURED}),
     std::vector<std::vector<std::vector<bool>>>({
-      {{false}, {false, false}},         // actuator
+      // is available
+      {{true, true}, {true, true, true}},  // actuator
+      {{}, {true}},                        // sensor
+      {{false, false, false, false}, {false, false, false, false, false, false, false}},  // system
+    }),
+    std::vector<std::vector<std::vector<bool>>>({
+      // is claimed
+      {{false, false}, {false, false}},  // actuator
       {{}, {false}},                     // sensor
-      {{false, false}, {false, false}},  // system
+      {{false, false, false, false}, {false, false, false, false, false, false, false}},  // system
     }));
 
   // Configure Sensor
@@ -275,9 +298,16 @@ TEST_F(TestControllerManagerHWManagementSrvs, selective_activate_deactivate_comp
        LFC_STATE::PRIMARY_STATE_INACTIVE}),
     std::vector<std::string>({HW_STATE_ACTIVE, HW_STATE_ACTIVE, HW_STATE_INACTIVE}),
     std::vector<std::vector<std::vector<bool>>>({
-      {{false}, {false, false}},         // actuator
+      // is available
+      {{true, true}, {true, true, true}},                                        // actuator
+      {{}, {true}},                                                              // sensor
+      {{false, false, true, true}, {true, true, true, true, true, true, true}},  // system
+    }),
+    std::vector<std::vector<std::vector<bool>>>({
+      // is claimed
+      {{false, false}, {false, false}},  // actuator
       {{}, {false}},                     // sensor
-      {{false, false}, {false, false}},  // system
+      {{false, false, false, false}, {false, false, false, false, false, false, false}},  // system
     }));
 
   // Deactivate actuator; Dual Activate sensor
@@ -292,9 +322,16 @@ TEST_F(TestControllerManagerHWManagementSrvs, selective_activate_deactivate_comp
        LFC_STATE::PRIMARY_STATE_ACTIVE}),
     std::vector<std::string>({HW_STATE_INACTIVE, HW_STATE_ACTIVE, HW_STATE_ACTIVE}),
     std::vector<std::vector<std::vector<bool>>>({
-      {{false}, {false, false}},         // actuator
+      // is available
+      {{false, true}, {true, true, true}},                                     // actuator
+      {{}, {true}},                                                            // sensor
+      {{true, true, true, true}, {true, true, true, true, true, true, true}},  // system
+    }),
+    std::vector<std::vector<std::vector<bool>>>({
+      // is claimed
+      {{false, false}, {false, false}},  // actuator
       {{}, {false}},                     // sensor
-      {{false, false}, {false, false}},  // system
+      {{false, false, false, false}, {false, false, false, false, false, false, false}},  // system
     }));
 
   // Double activate system
@@ -310,9 +347,16 @@ TEST_F(TestControllerManagerHWManagementSrvs, selective_activate_deactivate_comp
        LFC_STATE::PRIMARY_STATE_ACTIVE}),
     std::vector<std::string>({HW_STATE_INACTIVE, HW_STATE_ACTIVE, HW_STATE_ACTIVE}),
     std::vector<std::vector<std::vector<bool>>>({
-      {{false}, {false, false}},         // actuator
+      // is available
+      {{false, true}, {true, true, true}},                                     // actuator
+      {{}, {true}},                                                            // sensor
+      {{true, true, true, true}, {true, true, true, true, true, true, true}},  // system
+    }),
+    std::vector<std::vector<std::vector<bool>>>({
+      // is claimed
+      {{false, false}, {false, false}},  // actuator
       {{}, {false}},                     // sensor
-      {{false, false}, {false, false}},  // system
+      {{false, false, false, false}, {false, false, false, false, false, false, false}},  // system
     }));
 
   // Double deactivate actuator
@@ -328,9 +372,16 @@ TEST_F(TestControllerManagerHWManagementSrvs, selective_activate_deactivate_comp
        LFC_STATE::PRIMARY_STATE_ACTIVE}),
     std::vector<std::string>({HW_STATE_INACTIVE, HW_STATE_ACTIVE, HW_STATE_ACTIVE}),
     std::vector<std::vector<std::vector<bool>>>({
-      {{false}, {false, false}},         // actuator
+      // is available
+      {{false, true}, {true, true, true}},                                     // actuator
+      {{}, {true}},                                                            // sensor
+      {{true, true, true, true}, {true, true, true, true, true, true, true}},  // system
+    }),
+    std::vector<std::vector<std::vector<bool>>>({
+      // is claimed
+      {{false, false}, {false, false}},  // actuator
       {{}, {false}},                     // sensor
-      {{false, false}, {false, false}},  // system
+      {{false, false, false, false}, {false, false, false, false, false, false, false}},  // system
     }));
 
   cleanup_hardware(TEST_ACTUATOR_HARDWARE_NAME);
@@ -341,9 +392,16 @@ TEST_F(TestControllerManagerHWManagementSrvs, selective_activate_deactivate_comp
        LFC_STATE::PRIMARY_STATE_ACTIVE}),
     std::vector<std::string>({HW_STATE_UNCONFIGURED, HW_STATE_ACTIVE, HW_STATE_ACTIVE}),
     std::vector<std::vector<std::vector<bool>>>({
-      {{false}, {false, false}},         // actuator
+      // is available
+      {{false, false}, {false, false}},                                        // actuator
+      {{}, {true}},                                                            // sensor
+      {{true, true, true, true}, {true, true, true, true, true, true, true}},  // system
+    }),
+    std::vector<std::vector<std::vector<bool>>>({
+      // is claimed
+      {{false, false}, {false, false}},  // actuator
       {{}, {false}},                     // sensor
-      {{false, false}, {false, false}},  // system
+      {{false, false, false, false}, {false, false, false, false, false, false, false}},  // system
     }));
 
   //   auto test_controller = std::make_shared<test_controller::TestController>();

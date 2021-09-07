@@ -1197,8 +1197,25 @@ void ControllerManager::list_hardware_components_srv_cb(
     component.state.id = it->second.state.id();
     component.state.label = it->second.state.label();
 
-    // TODO(destogl): Add list of command and state interfaces for component
-    //     component.command_interfaces =
+    component.command_interfaces.reserve(it->second.command_interfaces.size());
+    for (const auto & interface : it->second.command_interfaces)
+    {
+      controller_manager_msgs::msg::HardwareInterface hwi;
+      hwi.name = interface;
+      hwi.is_available = resource_manager_->command_interface_is_available(interface);
+      hwi.is_claimed = resource_manager_->command_interface_is_claimed(interface);
+      component.command_interfaces.push_back(hwi);
+    }
+
+    component.state_interfaces.reserve(it->second.state_interfaces.size());
+    for (const auto & interface : it->second.state_interfaces)
+    {
+      controller_manager_msgs::msg::HardwareInterface hwi;
+      hwi.name = interface;
+      hwi.is_available = resource_manager_->state_interface_is_available(interface);
+      hwi.is_claimed = false;
+      component.state_interfaces.push_back(hwi);
+    }
 
     response->component.push_back(component);
   }
@@ -1218,8 +1235,7 @@ void ControllerManager::list_hardware_interfaces_srv_cb(
   {
     controller_manager_msgs::msg::HardwareInterface hwi;
     hwi.name = state_interface_name;
-    // TODO(destogl): this... and for cmd interfaces also
-    //     hwi.is_available = std::find(resource_manager_.)
+    hwi.is_available = resource_manager_->state_interface_is_available(state_interface_name);
     hwi.is_claimed = false;
     response->state_interfaces.push_back(hwi);
   }
@@ -1228,6 +1244,7 @@ void ControllerManager::list_hardware_interfaces_srv_cb(
   {
     controller_manager_msgs::msg::HardwareInterface hwi;
     hwi.name = command_interface_name;
+    hwi.is_available = resource_manager_->command_interface_is_available(command_interface_name);
     hwi.is_claimed = resource_manager_->command_interface_is_claimed(command_interface_name);
     response->command_interfaces.push_back(hwi);
   }

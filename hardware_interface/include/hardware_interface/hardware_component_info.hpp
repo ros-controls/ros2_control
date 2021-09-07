@@ -23,7 +23,6 @@
 #include <string>
 #include <vector>
 
-#include "hardware_interface/types/hardware_interface_status_values.hpp"
 #include "rclcpp_lifecycle/state.hpp"
 
 namespace hardware_interface
