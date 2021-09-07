@@ -20,7 +20,7 @@
 #include "ros2_control_test_assets/components_urdfs.hpp"
 #include "ros2_control_test_assets/descriptions.hpp"
 
-#ifndef M_PI
+#ifdef _WIN32
 #define M_PI 3.1415926535897932384626433832795
 #endif
 
