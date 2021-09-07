@@ -1,4 +1,4 @@
-// Copyright 2021 ros2_control Development Team
+// Copyright 2020-2021 ros2_control Development Team
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,163 +31,159 @@
 
 using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
 
+// TODO(destogl): Add transition names also
 namespace hardware_interface
 {
-Actuator::Actuator(std::unique_ptr<ActuatorInterface> impl)
-: impl_(std::move(impl)),
-  lifecycle_state_(rclcpp_lifecycle::State(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN, lifecycle_state_names::UNKNOWN))
-{
-}
+Actuator::Actuator(std::unique_ptr<ActuatorInterface> impl) : impl_(std::move(impl)) {}
 
-rclcpp_lifecycle::State Actuator::initialize(const HardwareInfo & actuator_info)
+const rclcpp_lifecycle::State & Actuator::initialize(const HardwareInfo & actuator_info)
 {
-  if (lifecycle_state_.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN)
+  if (impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN)
   {
     switch (impl_->on_init(actuator_info))
     {
       case CallbackReturn::SUCCESS:
-        lifecycle_state_ = rclcpp_lifecycle::State(
+        impl_->set_state(rclcpp_lifecycle::State(
           lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-          lifecycle_state_names::UNCONFIGURED);
+          lifecycle_state_names::UNCONFIGURED));
         break;
       case CallbackReturn::FAILURE:
       case CallbackReturn::ERROR:
-        lifecycle_state_ = rclcpp_lifecycle::State(
-          lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, lifecycle_state_names::FINALIZED);
+        impl_->set_state(rclcpp_lifecycle::State(
+          lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, lifecycle_state_names::FINALIZED));
         break;
     }
   }
-  return lifecycle_state_;
+  return impl_->get_state();
 }
 
-rclcpp_lifecycle::State Actuator::configure()
+const rclcpp_lifecycle::State & Actuator::configure()
 {
-  if (lifecycle_state_.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
+  if (impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
   {
-    switch (impl_->on_configure())
+    switch (impl_->on_configure(impl_->get_state()))
     {
       case CallbackReturn::SUCCESS:
-        lifecycle_state_ = rclcpp_lifecycle::State(
-          lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, lifecycle_state_names::INACTIVE);
+        impl_->set_state(rclcpp_lifecycle::State(
+          lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, lifecycle_state_names::INACTIVE));
         break;
       case CallbackReturn::FAILURE:
-        lifecycle_state_ = rclcpp_lifecycle::State(
+        impl_->set_state(rclcpp_lifecycle::State(
           lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-          lifecycle_state_names::UNCONFIGURED);
+          lifecycle_state_names::UNCONFIGURED));
         break;
       case CallbackReturn::ERROR:
-        lifecycle_state_ = error();
+        impl_->set_state(error());
         break;
     }
   }
-  return lifecycle_state_;
+  return impl_->get_state();
 }
 
-rclcpp_lifecycle::State Actuator::cleanup()
+const rclcpp_lifecycle::State & Actuator::cleanup()
 {
-  if (lifecycle_state_.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
+  if (impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
   {
-    switch (impl_->on_cleanup())
+    switch (impl_->on_cleanup(impl_->get_state()))
     {
       case CallbackReturn::SUCCESS:
-        lifecycle_state_ = rclcpp_lifecycle::State(
+        impl_->set_state(rclcpp_lifecycle::State(
           lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-          lifecycle_state_names::UNCONFIGURED);
+          lifecycle_state_names::UNCONFIGURED));
         break;
       case CallbackReturn::FAILURE:
       case CallbackReturn::ERROR:
-        lifecycle_state_ = error();
+        impl_->set_state(error());
         break;
     }
   }
-  return lifecycle_state_;
+  return impl_->get_state();
 }
 
-rclcpp_lifecycle::State Actuator::shutdown()
+const rclcpp_lifecycle::State & Actuator::shutdown()
 {
   if (
-    lifecycle_state_.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN &&
-    lifecycle_state_.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED)
+    impl_->get_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN &&
+    impl_->get_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED)
   {
-    switch (impl_->on_shutdown(lifecycle_state_))
+    switch (impl_->on_shutdown(impl_->get_state()))
     {
       case CallbackReturn::SUCCESS:
-        lifecycle_state_ = rclcpp_lifecycle::State(
-          lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, lifecycle_state_names::FINALIZED);
+        impl_->set_state(rclcpp_lifecycle::State(
+          lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, lifecycle_state_names::FINALIZED));
         break;
       case CallbackReturn::FAILURE:
       case CallbackReturn::ERROR:
-        lifecycle_state_ = error();
+        impl_->set_state(error());
         break;
     }
   }
-  return lifecycle_state_;
+  return impl_->get_state();
 }
 
-rclcpp_lifecycle::State Actuator::activate()
+const rclcpp_lifecycle::State & Actuator::activate()
 {
-  if (lifecycle_state_.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
+  if (impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
   {
-    switch (impl_->on_activate())
+    switch (impl_->on_activate(impl_->get_state()))
     {
       case CallbackReturn::SUCCESS:
-        lifecycle_state_ = rclcpp_lifecycle::State(
-          lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, lifecycle_state_names::ACTIVE);
+        impl_->set_state(rclcpp_lifecycle::State(
+          lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, lifecycle_state_names::ACTIVE));
         break;
       case CallbackReturn::FAILURE:
-        lifecycle_state_ = rclcpp_lifecycle::State(
-          lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, lifecycle_state_names::INACTIVE);
+        impl_->set_state(rclcpp_lifecycle::State(
+          lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, lifecycle_state_names::INACTIVE));
         break;
       case CallbackReturn::ERROR:
-        lifecycle_state_ = error();
+        impl_->set_state(error());
         break;
     }
   }
-  return lifecycle_state_;
+  return impl_->get_state();
 }
 
-rclcpp_lifecycle::State Actuator::deactivate()
+const rclcpp_lifecycle::State & Actuator::deactivate()
 {
-  if (lifecycle_state_.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+  if (impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
   {
-    switch (impl_->on_deactivate())
+    switch (impl_->on_deactivate(impl_->get_state()))
     {
       case CallbackReturn::SUCCESS:
-        lifecycle_state_ = rclcpp_lifecycle::State(
-          lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, lifecycle_state_names::INACTIVE);
+        impl_->set_state(rclcpp_lifecycle::State(
+          lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, lifecycle_state_names::INACTIVE));
         break;
       case CallbackReturn::FAILURE:
-        lifecycle_state_ = rclcpp_lifecycle::State(
-          lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, lifecycle_state_names::ACTIVE);
+        impl_->set_state(rclcpp_lifecycle::State(
+          lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, lifecycle_state_names::ACTIVE));
         break;
       case CallbackReturn::ERROR:
-        lifecycle_state_ = error();
+        impl_->set_state(error());
         break;
     }
   }
-  return lifecycle_state_;
+  return impl_->get_state();
 }
 
-rclcpp_lifecycle::State Actuator::error()
+const rclcpp_lifecycle::State & Actuator::error()
 {
-  if (lifecycle_state_.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN)
+  if (impl_->get_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN)
   {
-    switch (impl_->on_error(lifecycle_state_))
+    switch (impl_->on_error(impl_->get_state()))
     {
       case CallbackReturn::SUCCESS:
-        lifecycle_state_ = rclcpp_lifecycle::State(
+        impl_->set_state(rclcpp_lifecycle::State(
           lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-          lifecycle_state_names::UNCONFIGURED);
+          lifecycle_state_names::UNCONFIGURED));
         break;
       case CallbackReturn::FAILURE:
       case CallbackReturn::ERROR:
-        lifecycle_state_ = rclcpp_lifecycle::State(
-          lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, lifecycle_state_names::FINALIZED);
+        impl_->set_state(rclcpp_lifecycle::State(
+          lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, lifecycle_state_names::FINALIZED));
         break;
     }
   }
-  return lifecycle_state_;
+  return impl_->get_state();
 }
 
 std::vector<StateInterface> Actuator::export_state_interfaces()
@@ -218,8 +214,9 @@ return_type Actuator::perform_command_mode_switch(
 
 std::string Actuator::get_name() const { return impl_->get_name(); }
 
-const rclcpp_lifecycle::State & Actuator::get_state() const { return lifecycle_state_; }
+const rclcpp_lifecycle::State & Actuator::get_state() const { return impl_->get_state(); }
 
+// TODO(destogl): Check here in which state hardware component is and do selective read/write
 return_type Actuator::read() { return impl_->read(); }
 
 return_type Actuator::write() { return impl_->write(); }

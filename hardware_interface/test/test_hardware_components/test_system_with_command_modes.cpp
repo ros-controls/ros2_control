@@ -16,19 +16,17 @@
 #include <string>
 #include <vector>
 
-#include "hardware_interface/base_interface.hpp"
 #include "hardware_interface/system_interface.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 
 namespace test_hardware_components
 {
-class TestSystemCommandModes
-: public hardware_interface::BaseInterface<hardware_interface::SystemInterface>
+class TestSystemCommandModes : public hardware_interface::SystemInterface
 {
 public:
   CallbackReturn on_init(const hardware_interface::HardwareInfo & system_info) override
   {
-    if (on_init_default(system_info) != CallbackReturn::SUCCESS)
+    if (hardware_interface::SystemInterface::on_init(system_info) != CallbackReturn::SUCCESS)
     {
       return CallbackReturn::ERROR;
     }
@@ -105,10 +103,6 @@ public:
 
     return command_interfaces;
   }
-
-  CallbackReturn on_activate() override { return CallbackReturn::SUCCESS; }
-
-  CallbackReturn on_deactivate() override { return CallbackReturn::SUCCESS; }
 
   hardware_interface::return_type read() override { return hardware_interface::return_type::OK; }
 

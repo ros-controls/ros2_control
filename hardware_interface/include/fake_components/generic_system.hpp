@@ -20,7 +20,6 @@
 #include <string>
 #include <vector>
 
-#include "hardware_interface/base_interface.hpp"
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/system_interface.hpp"
@@ -31,8 +30,7 @@ using hardware_interface::return_type;
 
 namespace fake_components
 {
-class HARDWARE_INTERFACE_PUBLIC GenericSystem
-: public hardware_interface::BaseInterface<hardware_interface::SystemInterface>
+class HARDWARE_INTERFACE_PUBLIC GenericSystem : public hardware_interface::SystemInterface
 {
 public:
   CallbackReturn on_init(const hardware_interface::HardwareInfo & info) override;
@@ -40,10 +38,6 @@ public:
   std::vector<hardware_interface::StateInterface> export_state_interfaces() override;
 
   std::vector<hardware_interface::CommandInterface> export_command_interfaces() override;
-
-  CallbackReturn on_activate() override { return CallbackReturn::SUCCESS; }
-
-  CallbackReturn on_deactivate() override { return CallbackReturn::SUCCESS; }
 
   return_type read() override;
 

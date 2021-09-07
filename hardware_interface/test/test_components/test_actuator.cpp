@@ -16,19 +16,17 @@
 #include <vector>
 
 #include "hardware_interface/actuator_interface.hpp"
-#include "hardware_interface/base_interface.hpp"
 
 using hardware_interface::ActuatorInterface;
-using hardware_interface::BaseInterface;
 using hardware_interface::CommandInterface;
 using hardware_interface::return_type;
 using hardware_interface::StateInterface;
 
-class TestActuator : public BaseInterface<ActuatorInterface>
+class TestActuator : public ActuatorInterface
 {
   CallbackReturn on_init(const hardware_interface::HardwareInfo & info) override
   {
-    if (on_init_default(info) != CallbackReturn::SUCCESS)
+    if (ActuatorInterface::on_init(info) != CallbackReturn::SUCCESS)
     {
       return CallbackReturn::ERROR;
     }
@@ -68,10 +66,6 @@ class TestActuator : public BaseInterface<ActuatorInterface>
 
     return command_interfaces;
   }
-
-  CallbackReturn on_activate() override { return CallbackReturn::SUCCESS; }
-
-  CallbackReturn on_deactivate() override { return CallbackReturn::SUCCESS; }
 
   return_type read() override { return return_type::OK; }
 

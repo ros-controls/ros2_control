@@ -17,21 +17,19 @@
 #include <memory>
 #include <vector>
 
-#include "hardware_interface/base_interface.hpp"
 #include "hardware_interface/sensor_interface.hpp"
 
-using hardware_interface::BaseInterface;
 using hardware_interface::return_type;
 using hardware_interface::SensorInterface;
 using hardware_interface::StateInterface;
 
 namespace test_hardware_components
 {
-class TestForceTorqueSensor : public BaseInterface<SensorInterface>
+class TestForceTorqueSensor : public SensorInterface
 {
   CallbackReturn on_init(const hardware_interface::HardwareInfo & sensor_info) override
   {
-    if (on_init_default(sensor_info) != CallbackReturn::SUCCESS)
+    if (SensorInterface::on_init(sensor_info) != CallbackReturn::SUCCESS)
     {
       return CallbackReturn::ERROR;
     }
@@ -77,10 +75,6 @@ class TestForceTorqueSensor : public BaseInterface<SensorInterface>
 
     return state_interfaces;
   }
-
-  CallbackReturn on_activate() override { return CallbackReturn::SUCCESS; }
-
-  CallbackReturn on_deactivate() override { return CallbackReturn::SUCCESS; }
 
   return_type read() override
   {

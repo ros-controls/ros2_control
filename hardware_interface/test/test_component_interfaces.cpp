@@ -66,10 +66,6 @@ class DummyActuator : public hardware_interface::ActuatorInterface
     return command_interfaces;
   }
 
-  CallbackReturn on_activate() override { return CallbackReturn::SUCCESS; }
-
-  CallbackReturn on_deactivate() override { return CallbackReturn::SUCCESS; }
-
   std::string get_name() const override { return "DummyActuator"; }
 
   hardware_interface::return_type read() override
@@ -109,10 +105,6 @@ class DummySensor : public hardware_interface::SensorInterface
 
     return state_interfaces;
   }
-
-  CallbackReturn on_activate() override { return CallbackReturn::SUCCESS; }
-
-  CallbackReturn on_deactivate() override { return CallbackReturn::SUCCESS; }
 
   std::string get_name() const override { return "DummySensor"; }
 
@@ -168,10 +160,6 @@ class DummySystem : public hardware_interface::SystemInterface
     return command_interfaces;
   }
 
-  CallbackReturn on_activate() override { return CallbackReturn::SUCCESS; }
-
-  CallbackReturn on_deactivate() override { return CallbackReturn::SUCCESS; }
-
   std::string get_name() const override { return "DummySystem"; }
 
   hardware_interface::return_type read() override
@@ -211,10 +199,6 @@ class DummySystemPreparePerform : public hardware_interface::SystemInterface
   {
     return {};
   }
-
-  CallbackReturn on_activate() override { return CallbackReturn::SUCCESS; }
-
-  CallbackReturn on_deactivate() override { return CallbackReturn::SUCCESS; }
 
   std::string get_name() const override { return "DummySystemPreparePerform"; }
 

@@ -14,18 +14,18 @@ Between Foxy and Galactic we did substantial changes to interface of hardware co
 The following list shows mandatory changes when porting existing hardware components to Galactic:
 
 1. Rename ``configure`` to ``on_init`` and change return type to ``CallbackReturn``
-1. If using BaseInterface then replace first thee lines in ``on_init`` to:
+1. If using BaseInterface then you should remove it and replace first three lines in ``on_init`` to:
 
 .. code-block:: c++
 
-   if (on_init_default(info) != CallbackReturn::SUCCESS)
+   if (hardware_interface::[Actuator|Sensor|System]Interface::on_init(info) != CallbackReturn::SUCCESS)
    {
      return CallbackReturn::ERROR;
    }
 
 1. Change last return of ``on_init`` to ``return CallbackReturn::SUCCESS;``;
 1. Remove all lines with ``status_ = ...`` or ``status::...``
-1. Rename ``start()`` to ``on_activate()`` and ``stop()`` to ``on_deactivate()``
+1. Rename ``start()`` to ``on_activate(const State & previous_state)`` and ``stop()`` to ``on_deactivate(const State & previous_state)``
 1. Change return type of ``on_activate`` and ``on_deactivate`` to ``CallbackReturn``
 1. Change last return of ``on_activate`` and ``on_deactivate`` to ``return CallbackReturn::SUCCESS;``
 1. If you have any ``return_type::ERROR`` in ``on_init``, ``on_activate``, or ``in_deactivate`` change to ``CallbackReturn::ERROR``

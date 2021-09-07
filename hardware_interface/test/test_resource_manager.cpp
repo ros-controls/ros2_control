@@ -235,11 +235,6 @@ TEST_F(TestResourceManager, resource_claiming)
 
 class ExternalComponent : public hardware_interface::ActuatorInterface
 {
-  CallbackReturn on_init(const hardware_interface::HardwareInfo &) override
-  {
-    return CallbackReturn::SUCCESS;
-  }
-
   std::vector<hardware_interface::StateInterface> export_state_interfaces() override
   {
     std::vector<hardware_interface::StateInterface> state_interfaces;
@@ -257,10 +252,6 @@ class ExternalComponent : public hardware_interface::ActuatorInterface
 
     return command_interfaces;
   }
-
-  CallbackReturn on_activate() override { return CallbackReturn::SUCCESS; }
-
-  CallbackReturn on_deactivate() override { return CallbackReturn::SUCCESS; }
 
   std::string get_name() const override { return "ExternalComponent"; }
 

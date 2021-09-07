@@ -43,25 +43,25 @@ public:
   ~Sensor() = default;
 
   HARDWARE_INTERFACE_PUBLIC
-  rclcpp_lifecycle::State initialize(const HardwareInfo & sensor_info);
+  const rclcpp_lifecycle::State & initialize(const HardwareInfo & sensor_info);
 
   HARDWARE_INTERFACE_PUBLIC
-  rclcpp_lifecycle::State configure();
+  const rclcpp_lifecycle::State & configure();
 
   HARDWARE_INTERFACE_PUBLIC
-  rclcpp_lifecycle::State cleanup();
+  const rclcpp_lifecycle::State & cleanup();
 
   HARDWARE_INTERFACE_PUBLIC
-  rclcpp_lifecycle::State shutdown();
+  const rclcpp_lifecycle::State & shutdown();
 
   HARDWARE_INTERFACE_PUBLIC
-  rclcpp_lifecycle::State activate();
+  const rclcpp_lifecycle::State & activate();
 
   HARDWARE_INTERFACE_PUBLIC
-  rclcpp_lifecycle::State deactivate();
+  const rclcpp_lifecycle::State & deactivate();
 
   HARDWARE_INTERFACE_PUBLIC
-  rclcpp_lifecycle::State error();
+  const rclcpp_lifecycle::State & error();
 
   HARDWARE_INTERFACE_PUBLIC
   std::vector<StateInterface> export_state_interfaces();
@@ -77,7 +77,6 @@ public:
 
 private:
   std::unique_ptr<SensorInterface> impl_;
-  rclcpp_lifecycle::State lifecycle_state_;
 };
 
 }  // namespace hardware_interface
