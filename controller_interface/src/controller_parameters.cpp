@@ -15,14 +15,16 @@
 /// \author: Denis Stogl
 
 #include "controller_interface/controller_parameters.hpp"
+
+#include <string>
+#include <vector>
+
 #include "rcutils/logging_macros.h"
 
 namespace controller_interface
 {
-  
 ControllerParameters::ControllerParameters(
-  int nr_bool_params, int nr_double_params, 
-  int nr_string_params, int nr_string_list_params)
+  int nr_bool_params, int nr_double_params, int nr_string_params, int nr_string_list_params)
 {
   bool_parameters_.reserve(nr_bool_params);
   double_parameters_.reserve(nr_double_params);
@@ -42,9 +44,9 @@ void ControllerParameters::declare_parameters(rclcpp::Node::SharedPtr node)
 
 /**
   * Gets all defined parameters from.
-  * 
+  *
   * \param[node] shared pointer to the node where parameters should be read.
-  * \return true if all parameters are read Successfully, false if a parameter is not provided or 
+  * \return true if all parameters are read Successfully, false if a parameter is not provided or
   * parameter configuration is wrong.
   */
 bool ControllerParameters::get_parameters(rclcpp::Node::SharedPtr node, bool check_validity)
@@ -55,53 +57,63 @@ bool ControllerParameters::get_parameters(rclcpp::Node::SharedPtr node, bool che
         get_parameters_from_list(node, double_parameters_) &&
         get_parameters_from_list(node, string_parameters_) &&
         get_parameters_from_list(node, string_list_parameters_);
-        
-  if (ret && check_validity) {
-        ret = check_if_parameters_are_valid();
+
+  if (ret && check_validity)
+  {
+    ret = check_if_parameters_are_valid();
   }
 
   return ret;
 }
 
-rcl_interfaces::msg::SetParametersResult
-ControllerParameters::set_parameter_callback(const std::vector<rclcpp::Parameter> & parameters)
+rcl_interfaces::msg::SetParametersResult ControllerParameters::set_parameter_callback(
+  const std::vector<rclcpp::Parameter> & parameters)
 {
   rcl_interfaces::msg::SetParametersResult result;
   result.successful = true;
-  
-  for (const auto & input_parameter : parameters) {
+
+  for (const auto & input_parameter : parameters)
+  {
     bool found = false;
-    
-    try {
+
+    try
+    {
       found = find_and_assign_parameter_value(bool_parameters_, input_parameter);
-      if (!found) {
+      if (!found)
+      {
         found = find_and_assign_parameter_value(double_parameters_, input_parameter);
       }
-      if (!found) {
+      if (!found)
+      {
         found = find_and_assign_parameter_value(string_parameters_, input_parameter);
       }
-      if (!found) {
+      if (!found)
+      {
         found = find_and_assign_parameter_value(string_list_parameters_, input_parameter);
       }
-      
-      RCUTILS_LOG_INFO_EXPRESSION_NAMED(found, logger_name_.c_str(),
+
+      RCUTILS_LOG_INFO_EXPRESSION_NAMED(
+        found, logger_name_.c_str(),
         "Dynamic parameters got changed! To update the parameters internally please "
         "restart the controller.");
-      
-    } catch (const rclcpp::exceptions::InvalidParameterTypeException & e) {
+    }
+    catch (const rclcpp::exceptions::InvalidParameterTypeException & e)
+    {
       result.successful = false;
       result.reason = e.what();
       RCUTILS_LOG_ERROR_NAMED(logger_name_.c_str(), "%s", result.reason.c_str());
       break;
-    } catch (const std::runtime_error & e) {
+    }
+    catch (const std::runtime_error & e)
+    {
       result.successful = false;
       result.reason = e.what();
       RCUTILS_LOG_ERROR_NAMED(logger_name_.c_str(), "%s", result.reason.c_str());
       break;
     }
   }
-  
+
   return result;
-}  
-  
+}
+
 }  // namespace controller_interface
