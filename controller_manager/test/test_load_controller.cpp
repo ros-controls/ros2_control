@@ -198,6 +198,35 @@ TEST_F(TestLoadController, can_stop_active_controller)
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if->get_current_state().id());
 }
 
+TEST_F(TestLoadController, can_not_start_finalized_controller)
+{
+  // load and start controller with name1
+  auto controller_if = cm_->load_controller(controller_name1, TEST_CONTROLLER_CLASS_NAME);
+  ASSERT_NE(controller_if, nullptr);
+
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, controller_if->get_state().id());
+
+  // Shutdown controller on purpose for testing
+  ASSERT_EQ(controller_if->shutdown().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED);
+
+  //  Start controller
+  strvec start_controllers = {controller_name1};
+  strvec stop_controllers = {};
+  auto switch_future = std::async(
+    std::launch::async, &controller_manager::ControllerManager::switch_controller, cm_,
+    start_controllers, stop_controllers, STRICT, true, rclcpp::Duration(0, 0));
+
+  ASSERT_EQ(std::future_status::ready, switch_future.wait_for(std::chrono::milliseconds(100)))
+    << "switch_controller should be blocking until next update cycle";
+  ControllerManagerRunner cm_runner(this);
+  EXPECT_EQ(controller_interface::return_type::ERROR, switch_future.get());
+
+  // Can not configure unconfigured controller
+  EXPECT_EQ(cm_->configure_controller(controller_name1), controller_interface::return_type::ERROR);
+  ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, controller_if->get_state().id());
+}
+
 TEST_F(TestLoadController, inactive_controller_cannot_be_cleaned_up)
 {
   auto controller_if = cm_->load_controller(controller_name1, TEST_CONTROLLER_CLASS_NAME);
@@ -439,8 +468,12 @@ TEST_F(TestLoadController, starting_and_stopping_a_controller)
   auto controller_if = cm_->load_controller(controller_name1, TEST_CONTROLLER_CLASS_NAME);
   ASSERT_NE(controller_if, nullptr);
 
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, controller_if->get_state().id());
+
   // Only testing with STRICT now for simplicity
-  {  //  Test starting an stopped controller, and stopping afterwards
+  {
+    // Test starting unconfigured controller, and starting configured afterwards
     RCLCPP_INFO(cm_->get_logger(), "Starting stopped controller");
     strvec start_controllers = {controller_name1};
     strvec stop_controllers = {};
@@ -450,11 +483,11 @@ TEST_F(TestLoadController, starting_and_stopping_a_controller)
       std::launch::async, &controller_manager::ControllerManager::switch_controller, cm_,
       start_controllers, stop_controllers, STRICT, true, rclcpp::Duration(0, 0));
 
-    ASSERT_EQ(std::future_status::timeout, switch_future.wait_for(std::chrono::milliseconds(100)))
+    ASSERT_EQ(std::future_status::ready, switch_future.wait_for(std::chrono::milliseconds(100)))
       << "switch_controller should be blocking until next update cycle";
     {
       ControllerManagerRunner cm_runner(this);
-      EXPECT_EQ(controller_interface::return_type::OK, switch_future.get());
+      EXPECT_EQ(controller_interface::return_type::ERROR, switch_future.get());
     }
 
     ASSERT_EQ(
@@ -536,8 +569,30 @@ TEST_F(TestLoadController, switch_multiple_controllers)
   }
 
   {  // Stop controller 1, start controller 2
-    // Fails starting of controller 2 because it is not configured
+    // Both fails because controller 2 because it is not configured and STRICT is used
     strvec start_controllers = {controller_name2};
+    strvec stop_controllers = {controller_name1};
+    RCLCPP_INFO(cm_->get_logger(), "Stopping controller #1, starting controller #2 fails");
+    auto switch_future = std::async(
+      std::launch::async, &controller_manager::ControllerManager::switch_controller, cm_,
+      start_controllers, stop_controllers, STRICT, true, rclcpp::Duration(0, 0));
+
+    ASSERT_EQ(std::future_status::ready, switch_future.wait_for(std::chrono::milliseconds(100)))
+      << "switch_controller should be blocking until next update cycle";
+    ControllerManagerRunner cm_runner(this);
+    EXPECT_EQ(controller_interface::return_type::ERROR, switch_future.get());
+
+    ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, controller_if1->get_state().id());
+    ASSERT_EQ(
+      lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+      controller_if2->get_current_state().id());
+
+    // configure controller 2
+    cm_->configure_controller(controller_name2);
+  }
+
+  {  // Stop controller 1
+    strvec start_controllers = {};
     strvec stop_controllers = {controller_name1};
     RCLCPP_INFO(cm_->get_logger(), "Stopping controller #1, starting controller #2 fails");
     auto switch_future = std::async(
@@ -549,14 +604,8 @@ TEST_F(TestLoadController, switch_multiple_controllers)
     ControllerManagerRunner cm_runner(this);
     EXPECT_EQ(controller_interface::return_type::OK, switch_future.get());
 
-    ASSERT_EQ(
-      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if1->get_current_state().id());
-    ASSERT_EQ(
-      lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-      controller_if2->get_current_state().id());
-
-    // configure controller 2
-    cm_->configure_controller(controller_name2);
+    ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if1->get_state().id());
+    ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if2->get_state().id());
   }
 
   {  // Start controller 1 again
