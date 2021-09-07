@@ -106,7 +106,9 @@ private:
     const std::vector<std::string> & interfaces);
 
   bool fake_sensor_command_interfaces_;
-  double state_following_offset_;
+  double position_state_following_offset_;
+  std::string custom_interface_with_following_offset_;
+  size_t index_custom_interface_with_following_offset_;
 };
 
 typedef GenericSystem GenericRobot;
