@@ -52,6 +52,9 @@ public:
   controller_interface::return_type update(rclcpp::Duration dt) override;
 
   CONTROLLER_MANAGER_PUBLIC
+  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_init() override;
+
+  CONTROLLER_MANAGER_PUBLIC
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_configure(
     const rclcpp_lifecycle::State & previous_state) override;
 

@@ -26,6 +26,12 @@ TestControllerWithInterfaces::TestControllerWithInterfaces()
 {
 }
 
+rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
+TestControllerWithInterfaces::on_init()
+{
+  return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
+}
+
 controller_interface::return_type TestControllerWithInterfaces::update(rclcpp::Duration dt)
 {
   return controller_interface::return_type::OK;
