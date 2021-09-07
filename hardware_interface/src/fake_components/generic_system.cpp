@@ -161,7 +161,7 @@ return_type GenericSystem::configure(const hardware_interface::HardwareInfo & in
     {
       RCUTILS_LOG_WARN_NAMED(
         "fake_generic_system",
-        "Custom interface with following offset '%s' does not exitst. Offset will not be applied",
+        "Custom interface with following offset '%s' does not exist. Offset will not be applied",
         custom_interface_with_following_offset_.c_str());
     }
   }
