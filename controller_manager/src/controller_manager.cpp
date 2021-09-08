@@ -31,7 +31,7 @@ static constexpr const char * kControllerInterface = "controller_interface::Cont
 
 inline bool is_controller_inactive(const controller_interface::ControllerInterface & controller)
 {
-  return controller.get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE;
+  return controller.get_current_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE;
 }
 
 inline bool is_controller_running(controller_interface::ControllerInterface & controller)
