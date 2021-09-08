@@ -49,7 +49,8 @@ int main(int argc, char ** argv)
     RCLCPP_INFO(cm->get_logger(), "update rate is %d Hz", update_rate);
 
 
-    std::chrono::system_clock::time_point begin = std::chrono::system_clock::now();
+    std::chrono::system_clock::time_point timepoint_start = std::chrono::system_clock::now();
+    std::chrono::system_clock::time_point begin = timepoint_start;
     std::this_thread::sleep_for(std::chrono::nanoseconds(1000000000 / update_rate));
     while (rclcpp::ok())
     {
@@ -57,6 +58,7 @@ int main(int argc, char ** argv)
       begin = std::chrono::system_clock::now();
       cm->read();
       cm->update(
+        rclcpp::Time(std::chrono::duration_cast<std::chrono::nanoseconds>(begin - timepoint_start).count()),
         rclcpp::Duration(std::chrono::duration_cast<std::chrono::nanoseconds>(begin - begin_last))
       );
       cm->write();

@@ -42,7 +42,7 @@ public:
 
     update_timer_ = cm_->create_wall_timer(std::chrono::milliseconds(10), [&]() {
       cm_->read();
-      cm_->update(rclcpp::Duration::from_seconds(0.01));
+      cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
       cm_->write();
     });
 
@@ -69,7 +69,7 @@ public:
       while (service_executor.spin_until_future_complete(result, 50ms) !=
              rclcpp::FutureReturnCode::SUCCESS)
       {
-        cm_->update(rclcpp::Duration::from_seconds(0.01));
+        cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
       }
     }
     else

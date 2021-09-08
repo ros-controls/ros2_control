@@ -37,7 +37,7 @@ controller_interface::return_type TestControllerFailedInit::init(
   return controller_interface::return_type::ERROR;
 }
 
-controller_interface::return_type TestControllerFailedInit::update(rclcpp::Duration dt)
+controller_interface::return_type TestControllerFailedInit::update(const rclcpp::Time& time, const rclcpp::Duration& period)
 {
   return controller_interface::return_type::OK;
 }
