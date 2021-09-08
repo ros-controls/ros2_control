@@ -63,7 +63,7 @@ public:
     updater_ = std::thread([&](void) -> void {
       while (run_updater_)
       {
-        cm_->update(rclcpp::Duration::from_nanoseconds(100000000));
+        cm_->update(rclcpp::Duration::from_seconds(0.01));
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
       }
     });
