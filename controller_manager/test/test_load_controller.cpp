@@ -205,7 +205,8 @@ TEST_F(TestLoadController, can_not_start_finalized_controller)
   ASSERT_NE(controller_if, nullptr);
 
   ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, controller_if->get_current_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    controller_if->get_current_state().id());
 
   // Shutdown controller on purpose for testing
   ASSERT_EQ(controller_if->shutdown().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED);
@@ -224,7 +225,8 @@ TEST_F(TestLoadController, can_not_start_finalized_controller)
 
   // Can not configure unconfigured controller
   EXPECT_EQ(cm_->configure_controller(controller_name1), controller_interface::return_type::ERROR);
-  ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, controller_if->get_current_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, controller_if->get_current_state().id());
 }
 
 TEST_F(TestLoadController, inactive_controller_cannot_be_cleaned_up)
@@ -469,7 +471,8 @@ TEST_F(TestLoadController, starting_and_stopping_a_controller)
   ASSERT_NE(controller_if, nullptr);
 
   ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, controller_if->get_current_state().id());
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    controller_if->get_current_state().id());
 
   // Only testing with STRICT now for simplicity
   {
@@ -582,7 +585,8 @@ TEST_F(TestLoadController, switch_multiple_controllers)
     ControllerManagerRunner cm_runner(this);
     EXPECT_EQ(controller_interface::return_type::ERROR, switch_future.get());
 
-    ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, controller_if1->get_current_state().id());
+    ASSERT_EQ(
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, controller_if1->get_current_state().id());
     ASSERT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
       controller_if2->get_current_state().id());
@@ -604,8 +608,10 @@ TEST_F(TestLoadController, switch_multiple_controllers)
     ControllerManagerRunner cm_runner(this);
     EXPECT_EQ(controller_interface::return_type::OK, switch_future.get());
 
-    ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if1->get_current_state().id());
-    ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if2->get_current_state().id());
+    ASSERT_EQ(
+      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if1->get_current_state().id());
+    ASSERT_EQ(
+      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if2->get_current_state().id());
   }
 
   {  // Start controller 1 again
