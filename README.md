@@ -4,7 +4,7 @@
 
 |         | Foxy    | Rolling
 |:-------:|:-------:|:-------:|
-| Branch  | [`master`](https://github.com/ros-controls/ros2_control/tree/master) | TBD
+| Branch  | [`foxy`](https://github.com/ros-controls/ros2_control/tree/foxy) | TBD
 | CI  | Linux: [![Build Status](https://github.com/ros-controls/ros2_control/workflows/Test%20ros2_control/badge.svg)](https://github.com/ros-controls/ros2_control/actions?query=workflow%3A"Test%20ros2_control")| TBD |
 | Linters  | [![Linters Status](https://github.com/ros-controls/ros2_control/workflows/Lint%20ros2_control/badge.svg)](https://github.com/ros-controls/ros2_control/actions?query=workflow%3A"Lint+ros2_control")| TBD |
 
