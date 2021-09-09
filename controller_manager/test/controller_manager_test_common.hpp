@@ -38,6 +38,22 @@
 constexpr auto STRICT = controller_manager_msgs::srv::SwitchController::Request::STRICT;
 constexpr auto BEST_EFFORT = controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT;
 
+class TestableControllerManager : public controller_manager::ControllerManager
+{
+public:
+  TestableControllerManager(
+    std::unique_ptr<hardware_interface::ResourceManager> resource_manager,
+    std::shared_ptr<rclcpp::Executor> executor,
+    const std::string & manager_node_name = "controller_manager",
+    const std::string & namespace_ = "")
+  : controller_manager::ControllerManager(
+      std::move(resource_manager), executor, manager_node_name, namespace_)
+  {
+  }
+
+  int get_internal_update_counter() { return update_loop_counter_; }
+};
+
 class ControllerManagerFixture : public ::testing::Test
 {
 public:

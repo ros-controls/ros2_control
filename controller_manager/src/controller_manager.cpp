@@ -1161,22 +1161,26 @@ controller_interface::return_type ControllerManager::update(
   update_loop_counter_ += 1;
   update_loop_counter_ %= update_rate_;
 
-  for (auto loaded_controller : rt_controller_list) {
+  for (auto loaded_controller : rt_controller_list)
+  {
     // TODO(v-lopez) we could cache this information
     // https://github.com/ros-controls/ros2_control/issues/153
-    if (is_controller_running(*loaded_controller.c)) {
-
+    if (is_controller_running(*loaded_controller.c))
+    {
       int controller_update_rate = loaded_controller.c->get_update_rate();
-      bool controller_go = controller_update_rate == 0 ||
-        ((update_loop_counter_ % controller_update_rate) == 0);
+      bool controller_go =
+        controller_update_rate == 0 || ((update_loop_counter_ % controller_update_rate) == 0);
       RCLCPP_INFO(
         get_logger(), "update_loop_counter: '%d ' controller_go: '%s ' controller_name: '%s '",
-        update_loop_counter_, controller_go ? "True" : "False", loaded_controller.info.name.c_str());
+        update_loop_counter_, controller_go ? "True" : "False",
+        loaded_controller.info.name.c_str());
 
-      if (controller_go) {
+      if (controller_go)
+      {
         auto controller_ret = loaded_controller.c->update();
 
-        if (controller_ret != controller_interface::return_type::OK) {
+        if (controller_ret != controller_interface::return_type::OK)
+        {
           ret = controller_ret;
         }
       }
@@ -1259,14 +1263,13 @@ void ControllerManager::RTControllerListWrapper::wait_until_rt_not_using(
   }
 }
 
-int ControllerManager::get_update_rate() const 
-{
-  return update_rate_;
-}
+unsigned int ControllerManager::get_update_rate() const { return update_rate_; }
 
-void ControllerManager::configure() {
-  if (!get_parameter("update_rate", update_rate_)) {
-      RCLCPP_WARN(get_logger(), "'update_rate' parameter not set, using default value.");
+void ControllerManager::configure()
+{
+  if (!get_parameter("update_rate", update_rate_))
+  {
+    RCLCPP_WARN(get_logger(), "'update_rate' parameter not set, using default value.");
   }
 }
 

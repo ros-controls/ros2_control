@@ -66,7 +66,6 @@ const rclcpp_lifecycle::State & ControllerInterface::configure()
     }
 
     update_rate_ = node_->get_parameter("update_rate").as_int();
-
   }
   return lifecycle_state_;
 }
@@ -173,10 +172,6 @@ std::shared_ptr<rclcpp::Node> ControllerInterface::get_node()
   return node_;
 }
 
-int ControllerInterface::get_update_rate() const
-{
-  return update_rate_;
-}
-
+int ControllerInterface::get_update_rate() const { return update_rate_; }
 
 }  // namespace controller_interface
