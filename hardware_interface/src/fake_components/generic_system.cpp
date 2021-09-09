@@ -47,6 +47,18 @@ return_type GenericSystem::configure(const hardware_interface::HardwareInfo & in
     fake_sensor_command_interfaces_ = false;
   }
 
+  // check if there is parameter that disables commands
+  // this way we simulate disconnected driver
+  it = info_.hardware_parameters.find("disable_commands");
+  if (it != info.hardware_parameters.end())
+  {
+    command_propagation_disabled_ = it->second == "true" || it->second == "True";
+  }
+  else
+  {
+    command_propagation_disabled_ = false;
+  }
+
   // process parameters about state following
   position_state_following_offset_ = 0.0;
   custom_interface_with_following_offset_ = "";
@@ -283,7 +295,7 @@ return_type GenericSystem::read()
   // apply offset to positions only
   for (size_t j = 0; j < joint_states_[POSITION_INTERFACE_INDEX].size(); ++j)
   {
-    if (!std::isnan(joint_commands_[POSITION_INTERFACE_INDEX][j]))
+    if (!std::isnan(joint_commands_[POSITION_INTERFACE_INDEX][j]) && !command_propagation_disabled_)
     {
       joint_states_[POSITION_INTERFACE_INDEX][j] =
         joint_commands_[POSITION_INTERFACE_INDEX][j] +

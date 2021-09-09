@@ -109,6 +109,7 @@ private:
   double position_state_following_offset_;
   std::string custom_interface_with_following_offset_;
   size_t index_custom_interface_with_following_offset_;
+    bool command_propagation_disabled_;
 };
 
 typedef GenericSystem GenericRobot;
