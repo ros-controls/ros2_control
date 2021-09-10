@@ -17,6 +17,7 @@
 #include "fake_components/generic_system.hpp"
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <iterator>
 #include <limits>
@@ -78,6 +79,7 @@ return_type GenericSystem::configure(const hardware_interface::HardwareInfo & in
 
   // Initialize storage for standard interfaces
   initialize_storage_vectors(joint_commands_, joint_states_, standard_interfaces_);
+
   // set all values without initial values to 0
   for (auto i = 0u; i < info_.joints.size(); i++)
   {
@@ -89,6 +91,10 @@ return_type GenericSystem::configure(const hardware_interface::HardwareInfo & in
       }
     }
   }
+
+  // set memory position vector to initial value
+  joint_pos_commands_old_.resize(joint_commands_[POSITION_INTERFACE_INDEX].size());
+  joint_pos_commands_old_ = joint_commands_[POSITION_INTERFACE_INDEX];
 
   // Search for mimic joints
   for (auto i = 0u; i < info_.joints.size(); ++i)
@@ -192,6 +198,15 @@ return_type GenericSystem::configure(const hardware_interface::HardwareInfo & in
   }
   initialize_storage_vectors(sensor_fake_commands_, sensor_states_, sensor_interfaces_);
 
+  stop_modes_ = {StoppingInterface::NONE, StoppingInterface::NONE, StoppingInterface::NONE,
+                 StoppingInterface::NONE, StoppingInterface::NONE, StoppingInterface::NONE};
+  start_modes_ = {hardware_interface::HW_IF_POSITION, hardware_interface::HW_IF_POSITION,
+                  hardware_interface::HW_IF_POSITION, hardware_interface::HW_IF_POSITION,
+                  hardware_interface::HW_IF_POSITION, hardware_interface::HW_IF_POSITION};
+  position_controller_running_ = false;
+  velocity_controller_running_ = false;
+  begin = std::chrono::system_clock::now();
+
   status_ = hardware_interface::status::CONFIGURED;
   return hardware_interface::return_type::OK;
 }
@@ -247,24 +262,35 @@ std::vector<hardware_interface::CommandInterface> GenericSystem::export_command_
   // Joints' state interfaces
   for (auto i = 0u; i < info_.joints.size(); i++)
   {
-    const auto & joint = info_.joints[i];
-    for (const auto & interface : joint.command_interfaces)
-    {
+//    const auto & joint = info_.joints[i];
+//    for (const auto & interface : joint.command_interfaces)
+//    {
+
+        command_interfaces.emplace_back(hardware_interface::CommandInterface(
+                info_.joints[i].name, hardware_interface::HW_IF_POSITION, &joint_commands_[POSITION_INTERFACE_INDEX][i]));
+
+        command_interfaces.emplace_back(hardware_interface::CommandInterface(
+                info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &joint_vel_commands_[i]));
+
+      command_interfaces.emplace_back(hardware_interface::CommandInterface(
+              info_.joints[i].name, hardware_interface::HW_IF_ACCELERATION, &joint_commands_[2][i]));
+
       // Add interface: if not in the standard list than use "other" interface list
-      if (!get_interface(
-            joint.name, standard_interfaces_, interface.name, i, joint_commands_,
-            command_interfaces))
-      {
-        if (!get_interface(
-              joint.name, other_interfaces_, interface.name, i, other_commands_,
-              command_interfaces))
-        {
-          throw std::runtime_error(
-            "Interface is not found in the standard nor other list. "
-            "This should never happen!");
-        }
-      }
-    }
+//      if (!get_interface(
+//            joint.name, standard_interfaces_, interface.name, i, joint_commands_,
+//            command_interfaces))
+//      {
+//
+//        if (!get_interface(
+//              joint.name, other_interfaces_, interface.name, i, other_commands_,
+//              command_interfaces))
+//        {
+//          throw std::runtime_error(
+//            "Interface is not found in the standard nor other list. "
+//            "This should never happen!");
+//        }
+//      }
+//    }
   }
 
   // Fake sensor command interfaces
@@ -290,20 +316,176 @@ std::vector<hardware_interface::CommandInterface> GenericSystem::export_command_
   return command_interfaces;
 }
 
+return_type GenericSystem::prepare_command_mode_switch(
+  const std::vector<std::string> & start_interfaces,
+  const std::vector<std::string> & stop_interfaces)
+{
+  hardware_interface::return_type ret_val = hardware_interface::return_type::OK;
+
+  start_modes_.clear();
+  stop_modes_.clear();
+
+  // Starting interfaces
+  // add start interface per joint in tmp var for later check
+  for (const auto & key : start_interfaces)
+  {
+    for (auto i = 0u; i < info_.joints.size(); i++)
+    {
+      if (key == info_.joints[i].name + "/" + hardware_interface::HW_IF_POSITION)
+      {
+        start_modes_.push_back(hardware_interface::HW_IF_POSITION);
+      }
+      if (key == info_.joints[i].name + "/" + hardware_interface::HW_IF_VELOCITY)
+      {
+        start_modes_.push_back(hardware_interface::HW_IF_VELOCITY);
+      }
+    }
+  }
+  // set new mode to all interfaces at the same time
+  if (start_modes_.size() != 0 && start_modes_.size() != info_.joints.size())
+  {
+    ret_val = hardware_interface::return_type::ERROR;
+  }
+
+  // all start interfaces must be the same - can't mix position and velocity control
+  if (
+    start_modes_.size() != 0 &&
+    !std::equal(start_modes_.begin() + 1, start_modes_.end(), start_modes_.begin()))
+  {
+    ret_val = hardware_interface::return_type::ERROR;
+  }
+
+  // Stopping interfaces
+  // add stop interface per joint in tmp var for later check
+  for (const auto & key : stop_interfaces)
+  {
+    for (auto i = 0u; i < info_.joints.size(); i++)
+    {
+      if (key == info_.joints[i].name + "/" + hardware_interface::HW_IF_POSITION)
+      {
+        stop_modes_.push_back(StoppingInterface::STOP_POSITION);
+      }
+      if (key == info_.joints[i].name + "/" + hardware_interface::HW_IF_VELOCITY)
+      {
+        stop_modes_.push_back(StoppingInterface::STOP_VELOCITY);
+      }
+    }
+  }
+  // stop all interfaces at the same time
+  if (
+    stop_modes_.size() != 0 &&
+    (stop_modes_.size() != info_.joints.size() ||
+     !std::equal(stop_modes_.begin() + 1, stop_modes_.end(), stop_modes_.begin())))
+  {
+    ret_val = hardware_interface::return_type::ERROR;
+  }
+
+  return ret_val;
+}
+
+return_type GenericSystem::perform_command_mode_switch(
+  const std::vector<std::string> & /*start_interfaces*/,
+  const std::vector<std::string> & /*stop_interfaces*/)
+{
+  hardware_interface::return_type ret_val = hardware_interface::return_type::OK;
+
+  position_controller_running_ = false;
+  velocity_controller_running_ = false;
+
+  if (
+    start_modes_.size() != 0 &&
+    std::find(start_modes_.begin(), start_modes_.end(), hardware_interface::HW_IF_POSITION) !=
+      start_modes_.end())
+  {
+    joint_commands_[POSITION_INTERFACE_INDEX] = joint_states_[POSITION_INTERFACE_INDEX];
+    position_controller_running_ = true;
+  }
+  else if (
+    start_modes_.size() != 0 &&
+    std::find(start_modes_.begin(), start_modes_.end(), hardware_interface::HW_IF_VELOCITY) !=
+      start_modes_.end())
+  {
+    joint_commands_[VELOCITY_INTERFACE_INDEX] = std::vector<double>(info_.joints.size(), 0.0);
+    velocity_controller_running_ = true;
+  }
+  return ret_val;
+}
+
 return_type GenericSystem::read()
 {
+  std::chrono::system_clock::time_point begin_last = begin;
+  begin = std::chrono::system_clock::now();
+  double period =
+    std::chrono::duration_cast<std::chrono::milliseconds>(begin - begin_last).count() / 1000.0;
+
+//  printf("#############################\n");
+//
+//  for (size_t i = 0; i<joint_commands_.size(); ++i)
+//  {
+//    printf("\n");
+//    for (size_t j = 0; j<joint_commands_[i].size(); ++j)
+//    {
+//
+//        printf(" %f ", joint_commands_[i][j]);
+//
+//    }
+//    printf("\n");
+//
+//  }
+//  printf("!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+
+//  printf("pos ctrl = %d\n", position_controller_running_);
+//  printf("vel ctrl = %d\n", velocity_controller_running_);
+//  printf("disable cmd = %d\n", command_propagation_disabled_);
+//  printf("period = %f\n", period);
+//  printf("vel cmd size = %d\n", joint_commands_[VELOCITY_INTERFACE_INDEX].size());
+
   // apply offset to positions only
   for (size_t j = 0; j < joint_states_[POSITION_INTERFACE_INDEX].size(); ++j)
   {
-    if (!std::isnan(joint_commands_[POSITION_INTERFACE_INDEX][j]) && !command_propagation_disabled_)
+    if (
+      !std::isnan(joint_commands_[POSITION_INTERFACE_INDEX][j]) && !command_propagation_disabled_ &&
+      position_controller_running_)
     {
       joint_states_[POSITION_INTERFACE_INDEX][j] =
         joint_commands_[POSITION_INTERFACE_INDEX][j] +
         (custom_interface_with_following_offset_.empty() ? position_state_following_offset_ : 0.0);
+
+      if (standard_interfaces_.size() > 1)
+        joint_states_[VELOCITY_INTERFACE_INDEX][j] =
+          (joint_commands_[POSITION_INTERFACE_INDEX][j] - joint_pos_commands_old_[j]) / period;
     }
   }
+
+  // velocity
+//  for (size_t j = 0; j < joint_commands_[VELOCITY_INTERFACE_INDEX].size(); ++j)
+  for (size_t j = 0; j < 2; ++j)
+
+  {
+    if (
+      !std::isnan(joint_commands_[VELOCITY_INTERFACE_INDEX][j]) && !command_propagation_disabled_ &&
+      velocity_controller_running_)
+    {
+//      joint_states_[POSITION_INTERFACE_INDEX][j] +=
+//        joint_commands_[VELOCITY_INTERFACE_INDEX][j] * period;
+
+      joint_states_[POSITION_INTERFACE_INDEX][j] +=
+              joint_vel_commands_[j] * period;
+
+
+//      joint_states_[VELOCITY_INTERFACE_INDEX][j] = joint_commands_[VELOCITY_INTERFACE_INDEX][j];
+
+      joint_states_[VELOCITY_INTERFACE_INDEX][j] = joint_vel_commands_[j];
+
+      joint_commands_[POSITION_INTERFACE_INDEX][j] = joint_states_[POSITION_INTERFACE_INDEX][j];
+    }
+  }
+
+  // remember old value of position
+  joint_pos_commands_old_ = joint_commands_[POSITION_INTERFACE_INDEX];
+
   // do loopback on all other interfaces - starts from 1 because 0 index is position interface
-  for (size_t i = 1; i < joint_states_.size(); ++i)
+  for (size_t i = 2; i < joint_states_.size(); ++i)
   {
     for (size_t j = 0; j < joint_states_[i].size(); ++j)
     {

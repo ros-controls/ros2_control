@@ -17,6 +17,7 @@
 #ifndef FAKE_COMPONENTS__GENERIC_SYSTEM_HPP_
 #define FAKE_COMPONENTS__GENERIC_SYSTEM_HPP_
 
+#include <chrono>
 #include <string>
 #include <vector>
 
@@ -32,6 +33,13 @@ using hardware_interface::return_type;
 
 namespace fake_components
 {
+enum StoppingInterface
+{
+  NONE,
+  STOP_POSITION,
+  STOP_VELOCITY
+};
+
 class HARDWARE_INTERFACE_PUBLIC GenericSystem
 : public hardware_interface::BaseInterface<hardware_interface::SystemInterface>
 {
@@ -58,6 +66,14 @@ public:
 
   return_type write() override { return return_type::OK; }
 
+  return_type prepare_command_mode_switch(
+    const std::vector<std::string> & start_interfaces,
+    const std::vector<std::string> & stop_interfaces) override;
+
+  return_type perform_command_mode_switch(
+    const std::vector<std::string> & start_interfaces,
+    const std::vector<std::string> & stop_interfaces) override;
+
 protected:
   /// Use standard interfaces for joints because they are relevant for dynamic behaviour
   /**
@@ -71,6 +87,7 @@ protected:
     hardware_interface::HW_IF_ACCELERATION, hardware_interface::HW_IF_EFFORT};
 
   const size_t POSITION_INTERFACE_INDEX = 0;
+  const size_t VELOCITY_INTERFACE_INDEX = 1;
 
   struct MimicJoint
   {
@@ -83,6 +100,7 @@ protected:
   /// The size of this vector is (standard_interfaces_.size() x nr_joints)
   std::vector<std::vector<double>> joint_commands_;
   std::vector<std::vector<double>> joint_states_;
+  double joint_vel_commands_[2];
 
   std::vector<std::string> other_interfaces_;
   /// The size of this vector is (other_interfaces_.size() x nr_joints)
@@ -109,7 +127,16 @@ private:
   double position_state_following_offset_;
   std::string custom_interface_with_following_offset_;
   size_t index_custom_interface_with_following_offset_;
-    bool command_propagation_disabled_;
+  bool command_propagation_disabled_;
+
+  // resources switching aux vars
+  std::vector<uint> stop_modes_;
+  std::vector<std::string> start_modes_;
+  bool position_controller_running_;
+  bool velocity_controller_running_;
+  std::chrono::system_clock::time_point begin;
+  // for velocity control, store last position command
+  std::vector<double> joint_pos_commands_old_;
 };
 
 typedef GenericSystem GenericRobot;
