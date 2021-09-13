@@ -418,28 +418,6 @@ return_type GenericSystem::read()
   double period =
     std::chrono::duration_cast<std::chrono::milliseconds>(begin - begin_last).count() / 1000.0;
 
-//  printf("#############################\n");
-//
-//  for (size_t i = 0; i<joint_commands_.size(); ++i)
-//  {
-//    printf("\n");
-//    for (size_t j = 0; j<joint_commands_[i].size(); ++j)
-//    {
-//
-//        printf(" %f ", joint_commands_[i][j]);
-//
-//    }
-//    printf("\n");
-//
-//  }
-//  printf("!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
-
-//  printf("pos ctrl = %d\n", position_controller_running_);
-//  printf("vel ctrl = %d\n", velocity_controller_running_);
-//  printf("disable cmd = %d\n", command_propagation_disabled_);
-//  printf("period = %f\n", period);
-//  printf("vel cmd size = %d\n", joint_commands_[VELOCITY_INTERFACE_INDEX].size());
-
   // apply offset to positions only
   for (size_t j = 0; j < joint_states_[POSITION_INTERFACE_INDEX].size(); ++j)
   {
