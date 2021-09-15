@@ -58,7 +58,8 @@ int main(int argc, char ** argv)
       begin = std::chrono::system_clock::now();
       cm->read();
       cm->update(
-        rclcpp::Time(std::chrono::duration_cast<std::chrono::nanoseconds>(begin - timepoint_start).count()),
+        rclcpp::Time(
+          std::chrono::duration_cast<std::chrono::nanoseconds>(begin - timepoint_start).count()),
         rclcpp::Duration(std::chrono::duration_cast<std::chrono::nanoseconds>(begin - begin_last))
       );
       cm->write();

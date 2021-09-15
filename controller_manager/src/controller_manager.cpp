@@ -1146,7 +1146,8 @@ std::vector<std::string> ControllerManager::get_controller_names()
 
 void ControllerManager::read() { resource_manager_->read(); }
 
-controller_interface::return_type ControllerManager::update(const rclcpp::Time& time, const rclcpp::Duration& period)
+controller_interface::return_type ControllerManager::update(const rclcpp::Time& time,
+                                                            const rclcpp::Duration& period)
 {
   std::vector<ControllerSpec> & rt_controller_list =
     rt_controllers_wrapper_.update_and_get_used_by_rt_list();

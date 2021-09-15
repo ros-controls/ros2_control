@@ -80,7 +80,8 @@ public:
       controller_interface::interface_configuration_type::NONE};
   }
 
-  controller_interface::return_type update(const rclcpp::Time& time, const rclcpp::Duration& period) override
+  controller_interface::return_type update(const rclcpp::Time& time,
+                                           const rclcpp::Duration& period) override
   {
     return controller_interface::return_type::OK;
   }
