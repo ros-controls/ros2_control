@@ -6,6 +6,7 @@
   <maintainer email="bence.magyar.robotics@gmail.com">Bence Magyar</maintainer>
   <maintainer email="jordan.palacios@pal-robotics.com">Jordan Palacios</maintainer>
   <maintainer email="karsten@openrobotics.org">Karsten Knese</maintainer>
+  <maintainer email="denis@stogl.de">Denis Štogl</maintainer>
 
   <license>Apache License 2.0</license>
 
@@ -13,9 +14,11 @@
 
   <exec_depend>controller_interface</exec_depend>
   <exec_depend>controller_manager</exec_depend>
+  <exec_depend>controller_manager_msgs</exec_depend>
   <exec_depend>hardware_interface</exec_depend>
-  <exec_depend>ros2controlcli</exec_depend>
   <exec_depend>ros2_control_test_assets</exec_depend>
+  <exec_depend>ros2controlcli</exec_depend>
+  <exec_depend>transmission_interface</exec_depend>
 
   <export>
     <build_type>ament_cmake</build_type>
