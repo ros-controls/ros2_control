@@ -1,0 +1,16 @@
+# The SetHardwareComponetState service allows to control life-cycle of a single hardware component
+# inside resource manager. The used states are defined in design document of LifecycleNodes:
+# https://design.ros2.org/articles/node_lifecycle.html
+
+# To control life-cycle of a hardware component, specify its "name" and "taget_state".
+# Target state may be defined by "id" using a constant from `lifecycle_msgs/msg/State` or a label
+# using definitions from `hardware_interface/types/lifecycle_state_names.hpp` file.
+# The return value "ok" indicates if component successfully changed its state to "target_state".
+# The return value "state" return current state of the hardware component. This is useful if return
+# value "ok" if 'false'.
+
+string name
+lifecycle_msgs/State target_state
+---
+bool ok
+lifecycle_msgs/State state

@@ -24,11 +24,18 @@
 #include "controller_manager_msgs/msg/hardware_components_state.hpp"
 #include "controller_manager_msgs/srv/list_controllers.hpp"
 #include "controller_manager_msgs/srv/manage_hardware_activity.hpp"
+#include "controller_manager_msgs/srv/set_hardware_component_state.hpp"
+#include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 #include "rclcpp/parameter.hpp"
 
 using ::testing::_;
 using ::testing::Return;
+
+using hardware_interface::lifecycle_state_names::ACTIVE;
+using hardware_interface::lifecycle_state_names::FINALIZED;
+using hardware_interface::lifecycle_state_names::INACTIVE;
+using hardware_interface::lifecycle_state_names::UNCONFIGURED;
 
 using ros2_control_test_assets::TEST_ACTUATOR_HARDWARE_CLASS_TYPE;
 using ros2_control_test_assets::TEST_ACTUATOR_HARDWARE_COMMAND_INTERFACES;
@@ -48,13 +55,7 @@ using ros2_control_test_assets::TEST_SYSTEM_HARDWARE_TYPE;
 
 using LFC_STATE = lifecycle_msgs::msg::State;
 
-using namespace std::chrono_literals;
-
-// TODO(destogl): Use somewhere pre-configured strings later
-const auto HW_STATE_UNCONFIGURED = "unconfigured";
-const auto HW_STATE_ACTIVE = "active";
-const auto HW_STATE_INACTIVE = "inactive";
-const auto HW_STATE_FINALIZED = "finalized";
+using namespace std::chrono_literals;  // NOLINT
 
 class TestControllerManagerHWManagementSrvs : public TestControllerManagerSrvs
 {
@@ -216,6 +217,27 @@ public:
     auto result = call_service_and_wait(*mha_client, request, srv_executor);
     return result->ok;
   }
+
+  bool set_hardware_component_state(
+    const std::string & hardware_name, const uint8_t target_state_id,
+    const std::string & target_state_label)
+  {
+    rclcpp::executors::SingleThreadedExecutor srv_executor;
+    rclcpp::Node::SharedPtr mha_srv_node = std::make_shared<rclcpp::Node>("mha_srv_client");
+    srv_executor.add_node(mha_srv_node);
+    rclcpp::Client<controller_manager_msgs::srv::SetHardwareComponentState>::SharedPtr mha_client =
+      mha_srv_node->create_client<controller_manager_msgs::srv::SetHardwareComponentState>(
+        std::string(TEST_CM_NAME) + "/set_hardware_component_state");
+    auto request =
+      std::make_shared<controller_manager_msgs::srv::SetHardwareComponentState::Request>();
+
+    request->name = hardware_name;
+    request->target_state.id = target_state_id;
+    request->target_state.label = target_state_label;
+
+    auto result = call_service_and_wait(*mha_client, request, srv_executor);
+    return result->ok;
+  }
 };
 
 TEST_F(TestControllerManagerHWManagementSrvs, list_hardware_components)
@@ -227,7 +249,7 @@ TEST_F(TestControllerManagerHWManagementSrvs, list_hardware_components)
     std::vector<uint8_t>(
       {LFC_STATE::PRIMARY_STATE_ACTIVE, LFC_STATE::PRIMARY_STATE_INACTIVE,
        LFC_STATE::PRIMARY_STATE_UNCONFIGURED}),
-    std::vector<std::string>({HW_STATE_ACTIVE, HW_STATE_INACTIVE, HW_STATE_UNCONFIGURED}),
+    std::vector<std::string>({ACTIVE, INACTIVE, UNCONFIGURED}),
     std::vector<std::vector<std::vector<bool>>>({
       // is available
       {{true, true}, {true, true, true}},  // actuator
@@ -251,7 +273,7 @@ TEST_F(TestControllerManagerHWManagementSrvs, selective_activate_deactivate_comp
     std::vector<uint8_t>(
       {LFC_STATE::PRIMARY_STATE_ACTIVE, LFC_STATE::PRIMARY_STATE_INACTIVE,
        LFC_STATE::PRIMARY_STATE_UNCONFIGURED}),
-    std::vector<std::string>({HW_STATE_ACTIVE, HW_STATE_INACTIVE, HW_STATE_UNCONFIGURED}),
+    std::vector<std::string>({ACTIVE, INACTIVE, UNCONFIGURED}),
     std::vector<std::vector<std::vector<bool>>>({
       // is available
       {{true, true}, {true, true, true}},  // actuator
@@ -265,7 +287,7 @@ TEST_F(TestControllerManagerHWManagementSrvs, selective_activate_deactivate_comp
       {{false, false, false, false}, {false, false, false, false, false, false, false}},  // system
     }));
 
-  // Activate system
+  // Activate sensor
   manage_hardware_activity(
     {TEST_SENSOR_HARDWARE_NAME},  // activate
     {}                            // deactivate
@@ -275,7 +297,7 @@ TEST_F(TestControllerManagerHWManagementSrvs, selective_activate_deactivate_comp
     std::vector<uint8_t>(
       {LFC_STATE::PRIMARY_STATE_ACTIVE, LFC_STATE::PRIMARY_STATE_ACTIVE,
        LFC_STATE::PRIMARY_STATE_UNCONFIGURED}),
-    std::vector<std::string>({HW_STATE_ACTIVE, HW_STATE_ACTIVE, HW_STATE_UNCONFIGURED}),
+    std::vector<std::string>({ACTIVE, ACTIVE, UNCONFIGURED}),
     std::vector<std::vector<std::vector<bool>>>({
       // is available
       {{true, true}, {true, true, true}},  // actuator
@@ -289,14 +311,14 @@ TEST_F(TestControllerManagerHWManagementSrvs, selective_activate_deactivate_comp
       {{false, false, false, false}, {false, false, false, false, false, false, false}},  // system
     }));
 
-  // Configure Sensor
+  // Configure System
   configure_hardware(TEST_SYSTEM_HARDWARE_NAME);
   list_hardware_components_and_check(
     // actuator, sensor, system
     std::vector<uint8_t>(
       {LFC_STATE::PRIMARY_STATE_ACTIVE, LFC_STATE::PRIMARY_STATE_ACTIVE,
        LFC_STATE::PRIMARY_STATE_INACTIVE}),
-    std::vector<std::string>({HW_STATE_ACTIVE, HW_STATE_ACTIVE, HW_STATE_INACTIVE}),
+    std::vector<std::string>({ACTIVE, ACTIVE, INACTIVE}),
     std::vector<std::vector<std::vector<bool>>>({
       // is available
       {{true, true}, {true, true, true}},                                        // actuator
@@ -310,7 +332,7 @@ TEST_F(TestControllerManagerHWManagementSrvs, selective_activate_deactivate_comp
       {{false, false, false, false}, {false, false, false, false, false, false, false}},  // system
     }));
 
-  // Deactivate actuator; Dual Activate sensor
+  // Activate System; Deactivate actuator;
   manage_hardware_activity(
     {TEST_SYSTEM_HARDWARE_NAME},   // activate
     {TEST_ACTUATOR_HARDWARE_NAME}  // deactivate
@@ -320,7 +342,7 @@ TEST_F(TestControllerManagerHWManagementSrvs, selective_activate_deactivate_comp
     std::vector<uint8_t>(
       {LFC_STATE::PRIMARY_STATE_INACTIVE, LFC_STATE::PRIMARY_STATE_ACTIVE,
        LFC_STATE::PRIMARY_STATE_ACTIVE}),
-    std::vector<std::string>({HW_STATE_INACTIVE, HW_STATE_ACTIVE, HW_STATE_ACTIVE}),
+    std::vector<std::string>({INACTIVE, ACTIVE, ACTIVE}),
     std::vector<std::vector<std::vector<bool>>>({
       // is available
       {{false, true}, {true, true, true}},                                     // actuator
@@ -345,7 +367,7 @@ TEST_F(TestControllerManagerHWManagementSrvs, selective_activate_deactivate_comp
     std::vector<uint8_t>(
       {LFC_STATE::PRIMARY_STATE_INACTIVE, LFC_STATE::PRIMARY_STATE_ACTIVE,
        LFC_STATE::PRIMARY_STATE_ACTIVE}),
-    std::vector<std::string>({HW_STATE_INACTIVE, HW_STATE_ACTIVE, HW_STATE_ACTIVE}),
+    std::vector<std::string>({INACTIVE, ACTIVE, ACTIVE}),
     std::vector<std::vector<std::vector<bool>>>({
       // is available
       {{false, true}, {true, true, true}},                                     // actuator
@@ -370,7 +392,7 @@ TEST_F(TestControllerManagerHWManagementSrvs, selective_activate_deactivate_comp
     std::vector<uint8_t>(
       {LFC_STATE::PRIMARY_STATE_INACTIVE, LFC_STATE::PRIMARY_STATE_ACTIVE,
        LFC_STATE::PRIMARY_STATE_ACTIVE}),
-    std::vector<std::string>({HW_STATE_INACTIVE, HW_STATE_ACTIVE, HW_STATE_ACTIVE}),
+    std::vector<std::string>({INACTIVE, ACTIVE, ACTIVE}),
     std::vector<std::vector<std::vector<bool>>>({
       // is available
       {{false, true}, {true, true, true}},                                     // actuator
@@ -390,11 +412,250 @@ TEST_F(TestControllerManagerHWManagementSrvs, selective_activate_deactivate_comp
     std::vector<uint8_t>(
       {LFC_STATE::PRIMARY_STATE_UNCONFIGURED, LFC_STATE::PRIMARY_STATE_ACTIVE,
        LFC_STATE::PRIMARY_STATE_ACTIVE}),
-    std::vector<std::string>({HW_STATE_UNCONFIGURED, HW_STATE_ACTIVE, HW_STATE_ACTIVE}),
+    std::vector<std::string>({UNCONFIGURED, ACTIVE, ACTIVE}),
     std::vector<std::vector<std::vector<bool>>>({
       // is available
       {{false, false}, {false, false}},                                        // actuator
       {{}, {true}},                                                            // sensor
+      {{true, true, true, true}, {true, true, true, true, true, true, true}},  // system
+    }),
+    std::vector<std::vector<std::vector<bool>>>({
+      // is claimed
+      {{false, false}, {false, false}},  // actuator
+      {{}, {false}},                     // sensor
+      {{false, false, false, false}, {false, false, false, false, false, false, false}},  // system
+    }));
+
+  //   auto test_controller = std::make_shared<test_controller::TestController>();
+  //   cm_->add_controller(
+  //     test_controller, test_controller::TEST_CONTROLLER_NAME,
+  //     test_controller::TEST_CONTROLLER_CLASS_NAME);
+  //   EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
+  //   EXPECT_EQ(2, test_controller.use_count());
+  //
+  //   EXPECT_EQ(controller_interface::return_type::OK, cm_->update());
+  //   EXPECT_EQ(
+  //     0u,
+  //     test_controller->internal_counter) <<
+  //     "Update should not reach an unconfigured controller";
+  //
+  //   EXPECT_EQ(
+  //     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+  //     test_controller->get_current_state().id());
+  //
+  //   // configure controller
+  //   cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME);
+  //   EXPECT_EQ(controller_interface::return_type::OK, cm_->update());
+  //   EXPECT_EQ(0u, test_controller->internal_counter) << "Controller is not started";
+  //
+  //   EXPECT_EQ(
+  //     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+  //     test_controller->get_current_state().id());
+  //
+  //   // Start controller, will take effect at the end of the update function
+  //   std::vector<std::string> start_controllers = {test_controller::TEST_CONTROLLER_NAME};
+  //   std::vector<std::string> stop_controllers = {};
+  //   auto switch_future = std::async(
+  //     std::launch::async,
+  //     &controller_manager::ControllerManager::switch_controller, cm_,
+  //     start_controllers, stop_controllers,
+  //     STRICT, true, rclcpp::Duration(0, 0));
+  //
+  //   ASSERT_EQ(
+  //     std::future_status::timeout,
+  //     switch_future.wait_for(std::chrono::milliseconds(100))) <<
+  //     "switch_controller should be blocking until next update cycle";
+  //
+  //   EXPECT_EQ(controller_interface::return_type::OK, cm_->update());
+  //   EXPECT_EQ(0u, test_controller->internal_counter) <<
+  //   "Controller is started at the end of update";
+  //   {
+  //     ControllerManagerRunner cm_runner(this);
+  //     EXPECT_EQ(
+  //       controller_interface::return_type::OK,
+  //       switch_future.get()
+  //     );
+  //   }
+  //   EXPECT_EQ(
+  //     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+  //     test_controller->get_current_state().id());
+  //
+  //   EXPECT_EQ(controller_interface::return_type::OK, cm_->update());
+  //   EXPECT_GE(test_controller->internal_counter, 1u);
+  //   auto last_internal_counter = test_controller->internal_counter;
+  //
+  //   // Stop controller, will take effect at the end of the update function
+  //   start_controllers = {};
+  //   stop_controllers = {test_controller::TEST_CONTROLLER_NAME};
+  //   switch_future = std::async(
+  //     std::launch::async,
+  //     &controller_manager::ControllerManager::switch_controller, cm_,
+  //     start_controllers, stop_controllers,
+  //     STRICT, true, rclcpp::Duration(0, 0));
+  //
+  //   ASSERT_EQ(
+  //     std::future_status::timeout,
+  //     switch_future.wait_for(std::chrono::milliseconds(100))) <<
+  //     "switch_controller should be blocking until next update cycle";
+  //
+  //   EXPECT_EQ(controller_interface::return_type::OK, cm_->update());
+  //   EXPECT_EQ(
+  //     last_internal_counter + 1u,
+  //     test_controller->internal_counter) <<
+  //     "Controller is stopped at the end of update, so it should have done one more update";
+  //   {
+  //     ControllerManagerRunner cm_runner(this);
+  //     EXPECT_EQ(
+  //       controller_interface::return_type::OK,
+  //       switch_future.get()
+  //     );
+  //   }
+  //
+  //   EXPECT_EQ(
+  //     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+  //     test_controller->get_current_state().id());
+  //   auto unload_future = std::async(
+  //     std::launch::async,
+  //     &controller_manager::ControllerManager::unload_controller, cm_,
+  //     test_controller::TEST_CONTROLLER_NAME);
+  //
+  //   ASSERT_EQ(
+  //     std::future_status::timeout,
+  //     unload_future.wait_for(std::chrono::milliseconds(100))) <<
+  //     "unload_controller should be blocking until next update cycle";
+  //   ControllerManagerRunner cm_runner(this);
+  //   EXPECT_EQ(
+  //     controller_interface::return_type::OK,
+  //     unload_future.get()
+  //   );
+  //
+  //   EXPECT_EQ(
+  //     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+  //     test_controller->get_current_state().id());
+  //   EXPECT_EQ(1, test_controller.use_count());
+}
+
+TEST_F(TestControllerManagerHWManagementSrvs, selective_activate_deactivate_components_set_state)
+{
+  using lifecycle_msgs::msg::State;
+
+  // Default status after start
+  list_hardware_components_and_check(
+    // actuator, sensor, system
+    std::vector<uint8_t>(
+      {LFC_STATE::PRIMARY_STATE_ACTIVE, LFC_STATE::PRIMARY_STATE_INACTIVE,
+       LFC_STATE::PRIMARY_STATE_UNCONFIGURED}),
+    std::vector<std::string>({ACTIVE, INACTIVE, UNCONFIGURED}),
+    std::vector<std::vector<std::vector<bool>>>({
+      // is available
+      {{true, true}, {true, true, true}},  // actuator
+      {{}, {true}},                        // sensor
+      {{false, false, false, false}, {false, false, false, false, false, false, false}},  // system
+    }),
+    std::vector<std::vector<std::vector<bool>>>({
+      // is claimed
+      {{false, false}, {false, false}},  // actuator
+      {{}, {false}},                     // sensor
+      {{false, false, false, false}, {false, false, false, false, false, false, false}},  // system
+    }));
+
+  // Activate sensor
+  set_hardware_component_state(TEST_SENSOR_HARDWARE_NAME, State::PRIMARY_STATE_ACTIVE, "");
+  list_hardware_components_and_check(
+    // actuator, sensor, system
+    std::vector<uint8_t>(
+      {LFC_STATE::PRIMARY_STATE_ACTIVE, LFC_STATE::PRIMARY_STATE_ACTIVE,
+       LFC_STATE::PRIMARY_STATE_UNCONFIGURED}),
+    std::vector<std::string>({ACTIVE, ACTIVE, UNCONFIGURED}),
+    std::vector<std::vector<std::vector<bool>>>({
+      // is available
+      {{true, true}, {true, true, true}},  // actuator
+      {{}, {true}},                        // sensor
+      {{false, false, false, false}, {false, false, false, false, false, false, false}},  // system
+    }),
+    std::vector<std::vector<std::vector<bool>>>({
+      // is claimed
+      {{false, false}, {false, false}},  // actuator
+      {{}, {false}},                     // sensor
+      {{false, false, false, false}, {false, false, false, false, false, false, false}},  // system
+    }));
+
+  // Activate system directly - it should do configure automatically; ID is determined from label
+  set_hardware_component_state(TEST_SYSTEM_HARDWARE_NAME, 0, ACTIVE);
+  list_hardware_components_and_check(
+    // actuator, sensor, system
+    std::vector<uint8_t>(
+      {LFC_STATE::PRIMARY_STATE_ACTIVE, LFC_STATE::PRIMARY_STATE_ACTIVE,
+       LFC_STATE::PRIMARY_STATE_ACTIVE}),
+    std::vector<std::string>({ACTIVE, ACTIVE, ACTIVE}),
+    std::vector<std::vector<std::vector<bool>>>({
+      // is available
+      {{true, true}, {true, true, true}},                                      // actuator
+      {{}, {true}},                                                            // sensor
+      {{true, true, true, true}, {true, true, true, true, true, true, true}},  // system
+    }),
+    std::vector<std::vector<std::vector<bool>>>({
+      // is claimed
+      {{false, false}, {false, false}},  // actuator
+      {{}, {false}},                     // sensor
+      {{false, false, false, false}, {false, false, false, false, false, false, false}},  // system
+    }));
+
+  // Deactivate actuator
+  set_hardware_component_state(TEST_ACTUATOR_HARDWARE_NAME, 0, INACTIVE);
+  list_hardware_components_and_check(
+    // actuator, sensor, system
+    std::vector<uint8_t>(
+      {LFC_STATE::PRIMARY_STATE_INACTIVE, LFC_STATE::PRIMARY_STATE_ACTIVE,
+       LFC_STATE::PRIMARY_STATE_ACTIVE}),
+    std::vector<std::string>({INACTIVE, ACTIVE, ACTIVE}),
+    std::vector<std::vector<std::vector<bool>>>({
+      // is available
+      {{false, true}, {true, true, true}},                                     // actuator
+      {{}, {true}},                                                            // sensor
+      {{true, true, true, true}, {true, true, true, true, true, true, true}},  // system
+    }),
+    std::vector<std::vector<std::vector<bool>>>({
+      // is claimed
+      {{false, false}, {false, false}},  // actuator
+      {{}, {false}},                     // sensor
+      {{false, false, false, false}, {false, false, false, false, false, false, false}},  // system
+    }));
+
+  // Double activate system
+  set_hardware_component_state(TEST_SYSTEM_HARDWARE_NAME, LFC_STATE::PRIMARY_STATE_ACTIVE, ACTIVE);
+  list_hardware_components_and_check(
+    // actuator, sensor, system
+    std::vector<uint8_t>(
+      {LFC_STATE::PRIMARY_STATE_INACTIVE, LFC_STATE::PRIMARY_STATE_ACTIVE,
+       LFC_STATE::PRIMARY_STATE_ACTIVE}),
+    std::vector<std::string>({INACTIVE, ACTIVE, ACTIVE}),
+    std::vector<std::vector<std::vector<bool>>>({
+      // is available
+      {{false, true}, {true, true, true}},                                     // actuator
+      {{}, {true}},                                                            // sensor
+      {{true, true, true, true}, {true, true, true, true, true, true, true}},  // system
+    }),
+    std::vector<std::vector<std::vector<bool>>>({
+      // is claimed
+      {{false, false}, {false, false}},  // actuator
+      {{}, {false}},                     // sensor
+      {{false, false, false, false}, {false, false, false, false, false, false, false}},  // system
+    }));
+
+  // Set sensor to UNCONFIGURED - inactive and cleanup transitions has to be automatically done
+  set_hardware_component_state(
+    TEST_SENSOR_HARDWARE_NAME, LFC_STATE::PRIMARY_STATE_UNCONFIGURED, UNCONFIGURED);
+  list_hardware_components_and_check(
+    // actuator, sensor, system
+    std::vector<uint8_t>(
+      {LFC_STATE::PRIMARY_STATE_INACTIVE, LFC_STATE::PRIMARY_STATE_UNCONFIGURED,
+       LFC_STATE::PRIMARY_STATE_ACTIVE}),
+    std::vector<std::string>({INACTIVE, UNCONFIGURED, ACTIVE}),
+    std::vector<std::vector<std::vector<bool>>>({
+      // is available
+      {{false, true}, {true, true, true}},                                     // actuator
+      {{}, {false}},                                                           // sensor
       {{true, true, true, true}, {true, true, true, true, true, true, true}},  // system
     }),
     std::vector<std::vector<std::vector<bool>>>({

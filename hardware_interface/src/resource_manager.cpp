@@ -36,6 +36,8 @@
 #include "rcutils/logging_macros.h"
 
 #define COMPONENT_NAME_COMPARE [&](const auto & name) { return name == component.get_name(); }
+#define COMPONENT_NAME_COMPARE_INV \
+  [&](const auto & component) { return component.get_name() == component_name; }
 
 #define MOVEMENT_INTERFACES_COMPARE                                                         \
   [&](const auto & movement_interface) {                                                    \
@@ -385,6 +387,105 @@ public:
         }
       }
     }
+    return result;
+  }
+
+  template <class HardwareT>
+  bool set_component_state(HardwareT & hardware, const rclcpp_lifecycle::State & target_state)
+  {
+    using lifecycle_msgs::msg::State;
+
+    bool result = false;
+
+    switch (target_state.id())
+    {
+      case State::PRIMARY_STATE_UNCONFIGURED:
+        switch (hardware.get_state().id())
+        {
+          case State::PRIMARY_STATE_UNCONFIGURED:
+            result = true;
+            break;
+          case State::PRIMARY_STATE_INACTIVE:
+            result = cleanup_hardware(hardware);
+            break;
+          case State::PRIMARY_STATE_ACTIVE:
+            result = deactivate_hardware(hardware);
+            if (result)
+            {
+              result = cleanup_hardware(hardware);
+            }
+            break;
+          case State::PRIMARY_STATE_FINALIZED:
+            result = false;
+            RCUTILS_LOG_WARN_NAMED(
+              "resource_manager", "hardware '%s' is in finalized state and can be only destroyed.",
+              hardware.get_name().c_str());
+            break;
+        }
+        break;
+      case State::PRIMARY_STATE_INACTIVE:
+        switch (hardware.get_state().id())
+        {
+          case State::PRIMARY_STATE_UNCONFIGURED:
+            result = configure_hardware(hardware);
+            break;
+          case State::PRIMARY_STATE_INACTIVE:
+            result = true;
+            break;
+          case State::PRIMARY_STATE_ACTIVE:
+            result = deactivate_hardware(hardware);
+            break;
+          case State::PRIMARY_STATE_FINALIZED:
+            result = false;
+            RCUTILS_LOG_WARN_NAMED(
+              "resource_manager", "hardware '%s' is in finalized state and can be only destroyed.",
+              hardware.get_name().c_str());
+            break;
+        }
+        break;
+      case State::PRIMARY_STATE_ACTIVE:
+        switch (hardware.get_state().id())
+        {
+          case State::PRIMARY_STATE_UNCONFIGURED:
+            result = configure_hardware(hardware);
+            if (result)
+            {
+              result = activate_hardware(hardware);
+            }
+            break;
+          case State::PRIMARY_STATE_INACTIVE:
+            result = activate_hardware(hardware);
+            break;
+          case State::PRIMARY_STATE_ACTIVE:
+            result = true;
+            break;
+          case State::PRIMARY_STATE_FINALIZED:
+            result = false;
+            RCUTILS_LOG_WARN_NAMED(
+              "resource_manager", "hardware '%s' is in finalized state and can be only destroyed.",
+              hardware.get_name().c_str());
+            break;
+        }
+        break;
+      case State::PRIMARY_STATE_FINALIZED:
+        switch (hardware.get_state().id())
+        {
+          case State::PRIMARY_STATE_UNCONFIGURED:
+            result = shutdown_hardware(hardware);
+            break;
+          case State::PRIMARY_STATE_INACTIVE:
+            result = shutdown_hardware(hardware);
+            break;
+          case State::PRIMARY_STATE_ACTIVE:
+            result = shutdown_hardware(hardware);
+            break;
+          case State::PRIMARY_STATE_FINALIZED:
+            result = true;
+            break;
+        }
+        break;
+    }
+
     return result;
   }
 
@@ -816,7 +917,8 @@ auto execute_action_on_components_from_resource_storage =
 
       if (component_names.empty() || found_it != component_names.end())
       {
-        //         std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
+        // TODO(destogl): something like
+        // --> std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
         if (!action(component))
         {
           result = hardware_interface::return_type::ERROR;
@@ -986,6 +1088,87 @@ return_type ResourceManager::deactivate_components(const std::vector<std::string
       resource_storage_->systems_, component_names) == return_type::ERROR)
   {
     result = return_type::ERROR;
+  }
+
+  return result;
+}
+
+return_type ResourceManager::set_component_state(
+  const std::string & component_name, rclcpp_lifecycle::State & target_state)
+{
+  using lifecycle_msgs::msg::State;
+  using std::placeholders::_1;
+  using std::placeholders::_2;
+
+  auto found_it = resource_storage_->hardware_info_map_.find(component_name);
+
+  if (found_it == resource_storage_->hardware_info_map_.end())
+  {
+    RCUTILS_LOG_INFO_NAMED(
+      "resource_manager", "Hardware Component with name '%s' does not exists",
+      component_name.c_str());
+    return return_type::ERROR;
+  }
+
+  return_type result = return_type::OK;
+
+  if (target_state.id() == 0)
+  {
+    if (target_state.label() == lifecycle_state_names::UNCONFIGURED)
+    {
+      target_state = rclcpp_lifecycle::State(
+        State::PRIMARY_STATE_UNCONFIGURED, lifecycle_state_names::UNCONFIGURED);
+    }
+    if (target_state.label() == lifecycle_state_names::INACTIVE)
+    {
+      target_state =
+        rclcpp_lifecycle::State(State::PRIMARY_STATE_INACTIVE, lifecycle_state_names::INACTIVE);
+    }
+    if (target_state.label() == lifecycle_state_names::ACTIVE)
+    {
+      target_state =
+        rclcpp_lifecycle::State(State::PRIMARY_STATE_ACTIVE, lifecycle_state_names::ACTIVE);
+    }
+    if (target_state.label() == lifecycle_state_names::FINALIZED)
+    {
+      target_state =
+        rclcpp_lifecycle::State(State::PRIMARY_STATE_FINALIZED, lifecycle_state_names::FINALIZED);
+    }
+  }
+
+  auto find_set_component_state = [&](auto action, auto & components) {
+    auto found_component_it =
+      std::find_if(components.begin(), components.end(), COMPONENT_NAME_COMPARE_INV);
+
+    if (found_component_it != components.end())
+    {
+      if (action(*found_component_it, target_state))
+      {
+        result = return_type::OK;
+      }
+      else
+      {
+        result = return_type::ERROR;
+      }
+      return true;
+    }
+    return false;
+  };
+
+  bool found = find_set_component_state(
+    std::bind(&ResourceStorage::set_component_state<Actuator>, resource_storage_.get(), _1, _2),
+    resource_storage_->actuators_);
+  if (!found)
+  {
+    found = find_set_component_state(
+      std::bind(&ResourceStorage::set_component_state<Sensor>, resource_storage_.get(), _1, _2),
+      resource_storage_->sensors_);
+  }
+  if (!found)
+  {
+    found = find_set_component_state(
+      std::bind(&ResourceStorage::set_component_state<System>, resource_storage_.get(), _1, _2),
+      resource_storage_->systems_);
   }
 
   return result;

@@ -191,6 +191,11 @@ void ControllerManager::init_services()
       "~/manage_hardware_activity",
       std::bind(&ControllerManager::manage_hardware_activity_srv_cb, this, _1, _2),
       rmw_qos_profile_services_default, best_effort_callback_group_);
+  set_hardware_component_state_service_ =
+    create_service<controller_manager_msgs::srv::SetHardwareComponentState>(
+      "~/set_hardware_component_state",
+      std::bind(&ControllerManager::set_hardware_component_state_srv_cb, this, _1, _2),
+      rmw_qos_profile_services_default, best_effort_callback_group_);
 }
 
 controller_interface::ControllerInterfaceSharedPtr ControllerManager::load_controller(
@@ -1461,6 +1466,41 @@ void ControllerManager::manage_hardware_activity_srv_cb(
   response->ok = true;
 
   RCLCPP_INFO(get_logger(), "manage hardware activity service finished");
+}
+
+void ControllerManager::set_hardware_component_state_srv_cb(
+  const std::shared_ptr<controller_manager_msgs::srv::SetHardwareComponentState::Request> request,
+  std::shared_ptr<controller_manager_msgs::srv::SetHardwareComponentState::Response> response)
+{
+  RCLCPP_INFO(get_logger(), "set hardware component state service called");
+  std::lock_guard<std::mutex> guard(services_lock_);
+  RCLCPP_INFO(get_logger(), "set hardware component state service locked");
+
+  RCLCPP_DEBUG(get_logger(), "set hardware component state '%s'", request->name.c_str());
+
+  auto hw_components_info = resource_manager_->get_components_status();
+  if (hw_components_info.find(request->name) != hw_components_info.end())
+  {
+    rclcpp_lifecycle::State target_state(
+      request->target_state.id,
+      // FIX(destogl): the ternary operator is needed because label in State constructor can not be
+      // empty string
+      request->target_state.label.empty() ? "-" : request->target_state.label);
+    response->ok =
+      (resource_manager_->set_component_state(request->name, target_state) ==
+       hardware_interface::return_type::OK);
+    hw_components_info = resource_manager_->get_components_status();
+    response->state.id = hw_components_info[request->name].state.id();
+    response->state.label = hw_components_info[request->name].state.label();
+  }
+  else
+  {
+    RCLCPP_ERROR(
+      get_logger(), "hardware component with name '%s' does not exist", request->name.c_str());
+    response->ok = false;
+  }
+
+  RCLCPP_DEBUG(get_logger(), "set hardware component state service finished");
 }
 
 std::vector<std::string> ControllerManager::get_controller_names()

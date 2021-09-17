@@ -355,6 +355,22 @@ public:
    */
   return_type deactivate_components(const std::vector<std::string> & component_names = {});
 
+  /// Sets state of hardware component.
+  /**
+   * Set set of hardware component if possible. Takes care of all transitions need to reach the
+   * target state.
+   * It implements the state machine from: https://design.ros2.org/articles/node_lifecycle.html
+   *
+   * The method is not part of the real-time critical update loop.
+   *
+   * \param[in] component_name component name to change state.
+   * \param[in] target_state target state to set for a hardware component.
+   * \return hardware_interface::retun_type::OK if component successfully switched its state and
+   *         hardware_interface::return_type::ERROR any of state transitions has failed.
+   */
+  return_type set_component_state(
+    const std::string & component_name, rclcpp_lifecycle::State & target_state);
+
   /// Reads all loaded hardware components.
   /**
    * Reads from all active hardware components.

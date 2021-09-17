@@ -1134,56 +1134,52 @@ TEST_F(TestResourceManager, resource_availability_and_claiming_in_lifecycle)
       std::bind(&hardware_interface::ResourceManager::state_interface_exists, &rm, _1), true);
   }
 
-  //   //   TODO(destogl): make this working
-  //   // When components are shutdown the interfaces do not exist anymore
-  //   rm.shutdown_components({TEST_ACTUATOR_HARDWARE_NAME, TEST_SYSTEM_HARDWARE_NAME});
-  //   {
-  //     check_interfaces(
-  //       TEST_ACTUATOR_HARDWARE_COMMAND_INTERFACES,
-  //       std::bind(&hardware_interface::ResourceManager::command_interface_exists, &rm, _1), false);
-  //     check_interfaces(
-  //       TEST_SYSTEM_HARDWARE_COMMAND_INTERFACES,
-  //       std::bind(&hardware_interface::ResourceManager::command_interface_exists, &rm, _1), false);
-  //
-  //     check_interfaces(
-  //       TEST_ACTUATOR_HARDWARE_STATE_INTERFACES,
-  //       std::bind(&hardware_interface::ResourceManager::state_interface_exists, &rm, _1), false);
-  //     check_interfaces(
-  //       TEST_SENSOR_HARDWARE_STATE_INTERFACES,
-  //       std::bind(&hardware_interface::ResourceManager::state_interface_exists, &rm, _1), true);
-  //     check_interfaces(
-  //       TEST_SYSTEM_HARDWARE_STATE_INTERFACES,
-  //       std::bind(&hardware_interface::ResourceManager::state_interface_exists, &rm, _1), false);
-  //
-  //     check_interfaces(
-  //       TEST_ACTUATOR_HARDWARE_COMMAND_INTERFACES,
-  //       std::bind(&hardware_interface::ResourceManager::command_interface_is_available, &rm, _1),
-  //       false);
-  //     check_interfaces(
-  //       TEST_SYSTEM_HARDWARE_COMMAND_INTERFACES,
-  //       std::bind(&hardware_interface::ResourceManager::command_interface_is_available, &rm, _1),
-  //       false);
-  //
-  //     check_interfaces(
-  //       TEST_ACTUATOR_HARDWARE_STATE_INTERFACES,
-  //       std::bind(&hardware_interface::ResourceManager::state_interface_is_available, &rm, _1),
-  //       false);
-  //     check_interfaces(
-  //       TEST_SENSOR_HARDWARE_STATE_INTERFACES,
-  //       std::bind(&hardware_interface::ResourceManager::state_interface_is_available, &rm, _1),
-  //       false);
-  //     check_interfaces(
-  //       TEST_SYSTEM_HARDWARE_STATE_INTERFACES,
-  //       std::bind(&hardware_interface::ResourceManager::state_interface_is_available, &rm, _1),
-  //       false);
-  //   }
-  //
-  //   // Nothing can be claimed
-  //   {
-  //     check_interface_claiming(
-  //       TEST_ACTUATOR_HARDWARE_STATE_INTERFACES, TEST_ACTUATOR_HARDWARE_COMMAND_INTERFACES, false);
-  //     check_interface_claiming(TEST_SENSOR_HARDWARE_STATE_INTERFACES, {}, false);
-  //     check_interface_claiming(
+  // //   TODO(destogl): make this working
+  // // When components are shutdown the interfaces do not exist anymore
+  // rm.shutdown_components({TEST_ACTUATOR_HARDWARE_NAME, TEST_SYSTEM_HARDWARE_NAME});
+  // {
+  //   check_interfaces(
+  //     TEST_ACTUATOR_HARDWARE_COMMAND_INTERFACES,
+  //     std::bind(&hardware_interface::ResourceManager::command_interface_exists, &rm, _1), false);
+  //   check_interfaces(
+  //     TEST_SYSTEM_HARDWARE_COMMAND_INTERFACES,
+  //     std::bind(&hardware_interface::ResourceManager::command_interface_exists, &rm, _1), false);
+  // //     check_interfaces(
+  //     TEST_ACTUATOR_HARDWARE_STATE_INTERFACES,
+  //     std::bind(&hardware_interface::ResourceManager::state_interface_exists, &rm, _1), false);
+  //   check_interfaces(
+  //     TEST_SENSOR_HARDWARE_STATE_INTERFACES,
+  //     std::bind(&hardware_interface::ResourceManager::state_interface_exists, &rm, _1), true);
+  //   check_interfaces(
+  //     TEST_SYSTEM_HARDWARE_STATE_INTERFACES,
+  //     std::bind(&hardware_interface::ResourceManager::state_interface_exists, &rm, _1), false);
+  // //     check_interfaces(
+  //     TEST_ACTUATOR_HARDWARE_COMMAND_INTERFACES,
+  //     std::bind(&hardware_interface::ResourceManager::command_interface_is_available, &rm, _1),
+  //     false);
+  //   check_interfaces(
+  //     TEST_SYSTEM_HARDWARE_COMMAND_INTERFACES,
+  //      std::bind(&hardware_interface::ResourceManager::command_interface_is_available, &rm, _1),
+  //      false);
+  //  //     check_interfaces(
+  //      TEST_ACTUATOR_HARDWARE_STATE_INTERFACES,
+  //      std::bind(&hardware_interface::ResourceManager::state_interface_is_available, &rm, _1),
+  //      false);
+  //    check_interfaces(
+  //      TEST_SENSOR_HARDWARE_STATE_INTERFACES,
+  //      std::bind(&hardware_interface::ResourceManager::state_interface_is_available, &rm, _1),
+  //      false);
+  //    check_interfaces(
+  //      TEST_SYSTEM_HARDWARE_STATE_INTERFACES,
+  //      std::bind(&hardware_interface::ResourceManager::state_interface_is_available, &rm, _1),
+  //      false);
+  //  }
+  //  //   // Nothing can be claimed
+  //  {
+  //    check_interface_claiming(
+  //    TEST_ACTUATOR_HARDWARE_STATE_INTERFACES, TEST_ACTUATOR_HARDWARE_COMMAND_INTERFACES, false);
+  //    check_interface_claiming(TEST_SENSOR_HARDWARE_STATE_INTERFACES, {}, false);
+  //    check_interface_claiming(
   //       TEST_SYSTEM_HARDWARE_STATE_INTERFACES, TEST_SYSTEM_HARDWARE_COMMAND_INTERFACES, false);
   //   }
 }
