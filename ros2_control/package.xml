@@ -5,7 +5,6 @@
   <description>Metapackage for ROS2 control related packages</description>
   <maintainer email="bence.magyar.robotics@gmail.com">Bence Magyar</maintainer>
   <maintainer email="jordan.palacios@pal-robotics.com">Jordan Palacios</maintainer>
-  <maintainer email="karsten@openrobotics.org">Karsten Knese</maintainer>
   <maintainer email="denis@stogl.de">Denis Štogl</maintainer>
 
   <license>Apache License 2.0</license>
