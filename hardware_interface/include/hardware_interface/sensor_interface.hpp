@@ -1,4 +1,4 @@
-// Copyright 2020 - 2021 ros2_control Development Team
+// Copyright 2021 ros2_control Development Team
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,36 +33,36 @@ namespace hardware_interface
 {
 /// Virtual Class to implement when integrating a stand-alone sensor into ros2_control.
 /**
-  * The typical examples are Force-Torque Sensor (FTS), Interial Measurement Unit (IMU).
-  *
-  * Methods return values have type rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
-  * with the following meaning:
-  *
-  * \returns CallbackReturn::SUCCESS method execution was successful.
-  * \returns CallbackReturn::FAILURE method execution has failed and and can be called again.
-  * \returns CallbackReturn::ERROR critical error has happened that should be managed in
-  * "on_error" method.
-  *
-  * The hardware ends after each method in a state with the following meaning:
-  *
-  * UNCONFIGURED (on_init, on_cleanup):
-  *   Hardware is initialized but communication is not started and therefore no interface is available.
-  *
-  * INACTIVE (on_configure, on_deactivate):
-  *   Communication with the hardware is started and it is configured.
-  *   States can be read and non-movement hardware interfaces commanded.
-  *   Hardware interfaces for movement will NOT be available.
-  *   Those interfaces are: HW_IF_POSITION, HW_IF_VELOCITY, HW_IF_ACCELERATION, and HW_IF_EFFORT.
-  *
-  * FINALIZED (on_shutdown):
-  *   Hardware interface is ready for unloading/destruction.
-  *   Allocated memory is cleaned up.
-  *
-  * ACTIVE (on_activate):
-  *   Power circuits of hardware are active and hardware can be moved, e.g., brakes are disabled.
-  *   Command interfaces for movement are available and have to be accepted.
-  *   Those interfaces are: HW_IF_POSITION, HW_IF_VELOCITY, HW_IF_ACCELERATION, and HW_IF_EFFORT.
-  */
+ * The typical examples are Force-Torque Sensor (FTS), Interial Measurement Unit (IMU).
+ *
+ * Methods return values have type rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
+ * with the following meaning:
+ *
+ * \returns CallbackReturn::SUCCESS method execution was successful.
+ * \returns CallbackReturn::FAILURE method execution has failed and and can be called again.
+ * \returns CallbackReturn::ERROR critical error has happened that should be managed in
+ * "on_error" method.
+ *
+ * The hardware ends after each method in a state with the following meaning:
+ *
+ * UNCONFIGURED (on_init, on_cleanup):
+ *   Hardware is initialized but communication is not started and therefore no interface is available.
+ *
+ * INACTIVE (on_configure, on_deactivate):
+ *   Communication with the hardware is started and it is configured.
+ *   States can be read and non-movement hardware interfaces commanded.
+ *   Hardware interfaces for movement will NOT be available.
+ *   Those interfaces are: HW_IF_POSITION, HW_IF_VELOCITY, HW_IF_ACCELERATION, and HW_IF_EFFORT.
+ *
+ * FINALIZED (on_shutdown):
+ *   Hardware interface is ready for unloading/destruction.
+ *   Allocated memory is cleaned up.
+ *
+ * ACTIVE (on_activate):
+ *   Power circuits of hardware are active and hardware can be moved, e.g., brakes are disabled.
+ *   Command interfaces for movement are available and have to be accepted.
+ *   Those interfaces are: HW_IF_POSITION, HW_IF_VELOCITY, HW_IF_ACCELERATION, and HW_IF_EFFORT.
+ */
 class SensorInterface : public rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface
 {
 public:
