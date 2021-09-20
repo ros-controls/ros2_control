@@ -1224,7 +1224,7 @@ void ControllerManager::list_hardware_components_srv_cb(
 
     response->component.push_back(component);
   }
-  RCLCPP_INFO(get_logger(), "list hardware components service finished");
+  RCLCPP_DEBUG(get_logger(), "list hardware components service finished");
 }
 
 void ControllerManager::list_hardware_interfaces_srv_cb(
@@ -1260,9 +1260,9 @@ void ControllerManager::configure_hardware_component_srv_cb(
   const std::shared_ptr<controller_manager_msgs::srv::ConfigureHardwareComponent::Request> request,
   std::shared_ptr<controller_manager_msgs::srv::ConfigureHardwareComponent::Response> response)
 {
-  RCLCPP_INFO(get_logger(), "configure hardware component service called");
+  RCLCPP_DEBUG(get_logger(), "configure hardware component service called");
   std::lock_guard<std::mutex> guard(services_lock_);
-  RCLCPP_INFO(get_logger(), "configure hardware component service locked");
+  RCLCPP_DEBUG(get_logger(), "configure hardware component service locked");
 
   RCLCPP_DEBUG(get_logger(), "configure hardware component '%s'", request->name.c_str());
   if (
@@ -1282,9 +1282,9 @@ void ControllerManager::cleanup_hardware_component_srv_cb(
   const std::shared_ptr<controller_manager_msgs::srv::CleanupHardwareComponent::Request> request,
   std::shared_ptr<controller_manager_msgs::srv::CleanupHardwareComponent::Response> response)
 {
-  RCLCPP_INFO(get_logger(), "cleanup hardware component service called");
+  RCLCPP_DEBUG(get_logger(), "cleanup hardware component service called");
   std::lock_guard<std::mutex> guard(services_lock_);
-  RCLCPP_INFO(get_logger(), "cleanup hardware component service locked");
+  RCLCPP_DEBUG(get_logger(), "cleanup hardware component service locked");
 
   RCLCPP_DEBUG(get_logger(), "cleanup hardware component '%s'", request->name.c_str());
   if (
@@ -1304,9 +1304,9 @@ void ControllerManager::shutdown_hardware_component_srv_cb(
   const std::shared_ptr<controller_manager_msgs::srv::ShutdownHardwareComponent::Request> request,
   std::shared_ptr<controller_manager_msgs::srv::ShutdownHardwareComponent::Response> response)
 {
-  RCLCPP_INFO(get_logger(), "shutdown hardware component service called");
+  RCLCPP_DEBUG(get_logger(), "shutdown hardware component service called");
   std::lock_guard<std::mutex> guard(services_lock_);
-  RCLCPP_INFO(get_logger(), "shutdown hardware component service locked");
+  RCLCPP_DEBUG(get_logger(), "shutdown hardware component service locked");
 
   RCLCPP_DEBUG(get_logger(), "shutdown hardware component '%s'", request->name.c_str());
   if (
@@ -1326,9 +1326,9 @@ void ControllerManager::manage_hardware_activity_srv_cb(
   const std::shared_ptr<controller_manager_msgs::srv::ManageHardwareActivity::Request> request,
   std::shared_ptr<controller_manager_msgs::srv::ManageHardwareActivity::Response> response)
 {
-  RCLCPP_INFO(get_logger(), "manage hardware activity service called");
+  RCLCPP_DEBUG(get_logger(), "manage hardware activity service called");
   std::lock_guard<std::mutex> guard(services_lock_);
-  RCLCPP_INFO(get_logger(), "manage hardware activity service locked");
+  RCLCPP_DEBUG(get_logger(), "manage hardware activity service locked");
 
   RCLCPP_DEBUG(get_logger(), "Changing hardware activity:");
   for (const auto & hardware : request->activate)
@@ -1465,16 +1465,16 @@ void ControllerManager::manage_hardware_activity_srv_cb(
 
   response->ok = true;
 
-  RCLCPP_INFO(get_logger(), "manage hardware activity service finished");
+  RCLCPP_DEBUG(get_logger(), "manage hardware activity service finished");
 }
 
 void ControllerManager::set_hardware_component_state_srv_cb(
   const std::shared_ptr<controller_manager_msgs::srv::SetHardwareComponentState::Request> request,
   std::shared_ptr<controller_manager_msgs::srv::SetHardwareComponentState::Response> response)
 {
-  RCLCPP_INFO(get_logger(), "set hardware component state service called");
+  RCLCPP_DEBUG(get_logger(), "set hardware component state service called");
   std::lock_guard<std::mutex> guard(services_lock_);
-  RCLCPP_INFO(get_logger(), "set hardware component state service locked");
+  RCLCPP_DEBUG(get_logger(), "set hardware component state service locked");
 
   RCLCPP_DEBUG(get_logger(), "set hardware component state '%s'", request->name.c_str());
 
