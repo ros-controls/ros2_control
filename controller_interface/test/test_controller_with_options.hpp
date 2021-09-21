@@ -56,7 +56,8 @@ public:
     }
     if (lifecycle_node_->get_parameters("parameter_list", params))
     {
-      RCLCPP_INFO_STREAM(lifecycle_node_->get_logger(), "I found " << params.size() << " parameters.");
+      RCLCPP_INFO_STREAM(
+        lifecycle_node_->get_logger(), "I found " << params.size() << " parameters.");
       return controller_interface::return_type::OK;
     }
     else

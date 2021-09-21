@@ -71,7 +71,9 @@ TEST_P(TestControllerManager, controller_lifecycle)
   EXPECT_EQ(0u, test_controller->internal_counter) << "Controller is not started";
   EXPECT_EQ(0u, test_controller2->internal_counter) << "Controller is not started";
 
-  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,  test_controller->get_lifecycle_node()->get_current_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_controller->get_lifecycle_node()->get_current_state().id());
 
   // Start controller, will take effect at the end of the update function
   std::vector<std::string> start_controllers = {"fake_controller", TEST_CONTROLLER2_NAME};
@@ -112,7 +114,9 @@ TEST_P(TestControllerManager, controller_lifecycle)
     ControllerManagerRunner cm_runner(this);
     EXPECT_EQ(controller_interface::return_type::OK, switch_future.get());
   }
-  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,  test_controller->get_lifecycle_node()->get_current_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    test_controller->get_lifecycle_node()->get_current_state().id());
 
   EXPECT_EQ(
     controller_interface::return_type::OK,

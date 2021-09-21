@@ -47,7 +47,7 @@ static const rmw_qos_profile_t rmw_qos_profile_services_hist_keep_all = {
 
 inline bool is_controller_inactive(const controller_interface::ControllerInterface & controller)
 {
-  return controller.get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE;
+  return controller.get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE;
 }
 
 inline bool is_controller_inactive(
@@ -781,9 +781,11 @@ void ControllerManager::stop_controllers()
       continue;
     }
     auto controller = found_it->c;
-    if (is_controller_active(*controller)) {
+    if (is_controller_active(*controller))
+    {
       const auto new_state = controller->get_lifecycle_node()->deactivate();
-      if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
+      if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
+      {
         RCLCPP_ERROR(
           get_logger(), "After deactivating, controller '%s' is in state '%s', expected Inactive",
           request.c_str(), new_state.label().c_str());
@@ -892,12 +894,11 @@ void ControllerManager::start_controllers()
     controller->assign_interfaces(std::move(command_loans), std::move(state_loans));
 
     const auto new_state = controller->get_lifecycle_node()->activate();
-    if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE) {
+    if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+    {
       RCLCPP_ERROR(
-        get_logger(),
-        "After activating, controller %s is in state %s, expected Active",
-        controller->get_lifecycle_node()->get_name(),
-        new_state.label().c_str());
+        get_logger(), "After activating, controller %s is in state %s, expected Active",
+        controller->get_lifecycle_node()->get_name(), new_state.label().c_str());
     }
   }
   // All controllers started, switching done

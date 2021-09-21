@@ -93,6 +93,9 @@ public:
   CONTROLLER_INTERFACE_PUBLIC
   unsigned int get_update_rate() const;
 
+  CONTROLLER_INTERFACE_PUBLIC
+  const rclcpp_lifecycle::State & get_state() const;
+
   /// Declare and initialize a parameter with a type.
   /**
    *

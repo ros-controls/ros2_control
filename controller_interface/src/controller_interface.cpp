@@ -26,9 +26,9 @@ namespace controller_interface
 return_type ControllerInterface::init(const std::string & controller_name)
 {
   lifecycle_node_ = std::make_shared<rclcpp_lifecycle::LifecycleNode>(
-    controller_name,
-    rclcpp::NodeOptions().allow_undeclared_parameters(true).
-    automatically_declare_parameters_from_overrides(true));
+    controller_name, rclcpp::NodeOptions()
+                       .allow_undeclared_parameters(true)
+                       .automatically_declare_parameters_from_overrides(true));
 
 
   return_type result = return_type::OK;
@@ -82,15 +82,18 @@ void ControllerInterface::release_interfaces()
   state_interfaces_.clear();
 }
 
-std::shared_ptr<rclcpp_lifecycle::LifecycleNode>
-ControllerInterface::get_lifecycle_node()
+std::shared_ptr<rclcpp_lifecycle::LifecycleNode> ControllerInterface::get_lifecycle_node()
 {
-
-  if(!lifecycle_node_.get())
+  if (!lifecycle_node_.get())
   {
     throw std::runtime_error("Lifecycle node hasn't been initialized yet!");
   }
   return lifecycle_node_;
+}
+
+const rclcpp_lifecycle::State & ControllerInterface::get_state() const
+{
+  return lifecycle_node_->get_current_state();
 }
 
 unsigned int ControllerInterface::get_update_rate() const { return update_rate_; }
