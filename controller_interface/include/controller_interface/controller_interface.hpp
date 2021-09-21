@@ -88,13 +88,13 @@ public:
   virtual return_type update(const rclcpp::Time & time, const rclcpp::Duration & period) = 0;
 
   CONTROLLER_INTERFACE_PUBLIC
-  std::shared_ptr<rclcpp_lifecycle::LifecycleNode> get_lifecycle_node();
-
-  CONTROLLER_INTERFACE_PUBLIC
-  unsigned int get_update_rate() const;
+  std::shared_ptr<rclcpp_lifecycle::LifecycleNode> get_node();
 
   CONTROLLER_INTERFACE_PUBLIC
   const rclcpp_lifecycle::State & get_state() const;
+
+  CONTROLLER_INTERFACE_PUBLIC
+  unsigned int get_update_rate() const;
 
   /// Declare and initialize a parameter with a type.
   /**
@@ -106,20 +106,20 @@ public:
   template <typename ParameterT>
   auto auto_declare(const std::string & name, const ParameterT & default_value)
   {
-    if (!lifecycle_node_->has_parameter(name))
+    if (!node_->has_parameter(name))
     {
-      return lifecycle_node_->declare_parameter<ParameterT>(name, default_value);
+      return node_->declare_parameter<ParameterT>(name, default_value);
     }
     else
     {
-      return lifecycle_node_->get_parameter(name).get_value<ParameterT>();
+      return node_->get_parameter(name).get_value<ParameterT>();
     }
   }
 
 protected:
   std::vector<hardware_interface::LoanedCommandInterface> command_interfaces_;
   std::vector<hardware_interface::LoanedStateInterface> state_interfaces_;
-  std::shared_ptr<rclcpp_lifecycle::LifecycleNode> lifecycle_node_;
+  std::shared_ptr<rclcpp_lifecycle::LifecycleNode> node_;
   unsigned int update_rate_ = 0;
 };
 

@@ -312,8 +312,8 @@ controller_interface::return_type ControllerManager::unload_controller(
   }
 
   RCLCPP_DEBUG(get_logger(), "Cleanup controller");
-  controller.c->get_lifecycle_node()->cleanup();
-  executor_->remove_node(controller.c->get_lifecycle_node()->get_node_base_interface());
+  controller.c->get_node()->cleanup();
+  executor_->remove_node(controller.c->get_node()->get_node_base_interface());
   to.erase(found_it);
 
   // Destroys the old controllers list when the realtime thread is finished with it.
@@ -355,7 +355,7 @@ controller_interface::return_type ControllerManager::configure_controller(
   }
   auto controller = found_it->c;
 
-  auto state = controller->get_lifecycle_node()->get_current_state();
+  auto state = controller->get_state();
   if (
     state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE ||
     state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED)
@@ -366,12 +366,12 @@ controller_interface::return_type ControllerManager::configure_controller(
     return controller_interface::return_type::ERROR;
   }
 
-  auto new_state = controller->get_lifecycle_node()->get_current_state();
+  auto new_state = controller->get_state();
   if (state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
   {
     RCLCPP_DEBUG(
       get_logger(), "Controller '%s' is cleaned-up before configuring", controller_name.c_str());
-    new_state = controller->get_lifecycle_node()->cleanup();
+    new_state = controller->get_node()->cleanup();
     if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
     {
       RCLCPP_ERROR(
@@ -381,7 +381,7 @@ controller_interface::return_type ControllerManager::configure_controller(
     }
   }
 
-  new_state = controller->get_lifecycle_node()->configure();
+  new_state = controller->get_node()->configure();
   if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
   {
     RCLCPP_ERROR(
@@ -722,9 +722,9 @@ controller_interface::ControllerInterfaceSharedPtr ControllerManager::add_contro
       "Setting use_sim_time=True for %s to match controller manager "
       "(see ros2_control#325 for details)",
       controller.info.name.c_str());
-    controller.c->get_lifecycle_node()->set_parameter(use_sim_time);
+    controller.c->get_node()->set_parameter(use_sim_time);
   }
-  executor_->add_node(controller.c->get_lifecycle_node()->get_node_base_interface());
+  executor_->add_node(controller.c->get_node()->get_node_base_interface());
   to.emplace_back(controller);
 
   // Destroys the old controllers list when the realtime thread is finished with it.
@@ -782,7 +782,7 @@ void ControllerManager::stop_controllers()
     auto controller = found_it->c;
     if (is_controller_active(*controller))
     {
-      const auto new_state = controller->get_lifecycle_node()->deactivate();
+      const auto new_state = controller->get_node()->deactivate();
       controller->release_interfaces();
       if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
       {
@@ -893,12 +893,12 @@ void ControllerManager::start_controllers()
     }
     controller->assign_interfaces(std::move(command_loans), std::move(state_loans));
 
-    const auto new_state = controller->get_lifecycle_node()->activate();
+    const auto new_state = controller->get_node()->activate();
     if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
     {
       RCLCPP_ERROR(
         get_logger(), "After activating, controller %s is in state %s, expected Active",
-        controller->get_lifecycle_node()->get_name(), new_state.label().c_str());
+        controller->get_node()->get_name(), new_state.label().c_str());
     }
   }
   // All controllers started, switching done

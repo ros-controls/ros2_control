@@ -25,47 +25,44 @@ namespace controller_interface
 {
 return_type ControllerInterface::init(const std::string & controller_name)
 {
-  lifecycle_node_ = std::make_shared<rclcpp_lifecycle::LifecycleNode>(
+  node_ = std::make_shared<rclcpp_lifecycle::LifecycleNode>(
     controller_name, rclcpp::NodeOptions()
                        .allow_undeclared_parameters(true)
                        .automatically_declare_parameters_from_overrides(true));
 
-
-  return_type result = return_type::OK;
   switch (on_init())
   {
     case LifecycleNodeInterface::CallbackReturn::SUCCESS:
       break;
     case LifecycleNodeInterface::CallbackReturn::ERROR:
     case LifecycleNodeInterface::CallbackReturn::FAILURE:
-      result = return_type::ERROR;
+      return return_type::ERROR;
       break;
   }
 
-  lifecycle_node_->register_on_configure(
+  node_->register_on_configure(
     std::bind(&ControllerInterface::on_configure, this, std::placeholders::_1));
 
-  lifecycle_node_->register_on_cleanup(
+  node_->register_on_cleanup(
     std::bind(&ControllerInterface::on_cleanup, this, std::placeholders::_1));
 
-  lifecycle_node_->register_on_activate(
+  node_->register_on_activate(
     std::bind(&ControllerInterface::on_activate, this, std::placeholders::_1));
 
-  lifecycle_node_->register_on_deactivate(
+  node_->register_on_deactivate(
     std::bind(&ControllerInterface::on_deactivate, this, std::placeholders::_1));
 
-  lifecycle_node_->register_on_shutdown(
+  node_->register_on_shutdown(
     std::bind(&ControllerInterface::on_shutdown, this, std::placeholders::_1));
 
-  lifecycle_node_->register_on_error(
-    std::bind(&ControllerInterface::on_error, this, std::placeholders::_1));
+  node_->register_on_error(std::bind(&ControllerInterface::on_error, this, std::placeholders::_1));
 
-  if (lifecycle_node_->has_parameter("update_rate"))
+  if (node_->has_parameter("update_rate"))
   {
-    update_rate_ = lifecycle_node_->get_parameter("update_rate").as_int();
+    update_rate_ = node_->get_parameter("update_rate").as_int();
   }
 
-  return result;
+  return return_type::OK;
 }
 
 void ControllerInterface::assign_interfaces(
@@ -82,18 +79,18 @@ void ControllerInterface::release_interfaces()
   state_interfaces_.clear();
 }
 
-std::shared_ptr<rclcpp_lifecycle::LifecycleNode> ControllerInterface::get_lifecycle_node()
+const rclcpp_lifecycle::State & ControllerInterface::get_state() const
 {
-  if (!lifecycle_node_.get())
+  return node_->get_current_state();
+}
+
+std::shared_ptr<rclcpp_lifecycle::LifecycleNode> ControllerInterface::get_node()
+{
+  if (!node_.get())
   {
     throw std::runtime_error("Lifecycle node hasn't been initialized yet!");
   }
-  return lifecycle_node_;
-}
-
-const rclcpp_lifecycle::State & ControllerInterface::get_state() const
-{
-  return lifecycle_node_->get_current_state();
+  return node_;
 }
 
 unsigned int ControllerInterface::get_update_rate() const { return update_rate_; }
