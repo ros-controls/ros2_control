@@ -98,17 +98,17 @@ TEST_F(TestLoadController, spawner_test_type_in_param)
   auto ctrl_1 = cm_->get_loaded_controllers()[0];
   ASSERT_EQ(ctrl_1.info.name, "ctrl_1");
   ASSERT_EQ(ctrl_1.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
-  ASSERT_EQ(ctrl_1.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+  ASSERT_EQ(ctrl_1.c->get_lifecycle_node()->get_current_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
 
   // Try to spawn again, it should fail because already active
   EXPECT_NE(call_spawner("ctrl_1 -c test_controller_manager"), 0) << "Cannot configure from active";
-  ctrl_1.c->deactivate();
+  ctrl_1.c->get_lifecycle_node()->deactivate();
   // We should be able to reconfigure and start a configured controller
   EXPECT_EQ(call_spawner("ctrl_1 -c test_controller_manager"), 0);
-  ctrl_1.c->cleanup();
+  ctrl_1.c->get_lifecycle_node()->cleanup();
   // We should be able to reconfigure and start am unconfigured loaded controller
   EXPECT_EQ(call_spawner("ctrl_1 -c test_controller_manager"), 0);
-  ASSERT_EQ(ctrl_1.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+  ASSERT_EQ(ctrl_1.c->get_lifecycle_node()->get_current_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
 
   // Unload and reload
   EXPECT_EQ(call_unspawner("ctrl_1 -c test_controller_manager"), 0);
@@ -116,7 +116,7 @@ TEST_F(TestLoadController, spawner_test_type_in_param)
   EXPECT_EQ(call_spawner("ctrl_1 -c test_controller_manager"), 0);
   ASSERT_EQ(cm_->get_loaded_controllers().size(), 1ul) << "Controller should have been loaded";
   ctrl_1 = cm_->get_loaded_controllers()[0];
-  ASSERT_EQ(ctrl_1.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+  ASSERT_EQ(ctrl_1.c->get_lifecycle_node()->get_current_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
 }
 
 TEST_F(TestLoadController, spawner_test_type_in_arg)
@@ -132,7 +132,7 @@ TEST_F(TestLoadController, spawner_test_type_in_arg)
   auto ctrl_2 = cm_->get_loaded_controllers()[0];
   ASSERT_EQ(ctrl_2.info.name, "ctrl_2");
   ASSERT_EQ(ctrl_2.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
-  ASSERT_EQ(ctrl_2.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+  ASSERT_EQ(ctrl_2.c->get_lifecycle_node()->get_current_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
 }
 
 TEST_F(TestLoadController, unload_on_kill)

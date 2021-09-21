@@ -44,22 +44,19 @@ public:
   {
     rclcpp::NodeOptions options;
     options.allow_undeclared_parameters(true).automatically_declare_parameters_from_overrides(true);
-    node_ = std::make_shared<rclcpp::Node>(controller_name, options);
+    lifecycle_node_ = std::make_shared<rclcpp_lifecycle::LifecycleNode>(controller_name, options);
 
     switch (on_init())
     {
       case LifecycleNodeInterface::CallbackReturn::SUCCESS:
-        lifecycle_state_ = rclcpp_lifecycle::State(
-          lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-          hardware_interface::lifecycle_state_names::UNCONFIGURED);
         break;
       case LifecycleNodeInterface::CallbackReturn::ERROR:
       case LifecycleNodeInterface::CallbackReturn::FAILURE:
         return controller_interface::return_type::ERROR;
     }
-    if (node_->get_parameters("parameter_list", params))
+    if (lifecycle_node_->get_parameters("parameter_list", params))
     {
-      RCLCPP_INFO_STREAM(node_->get_logger(), "I found " << params.size() << " parameters.");
+      RCLCPP_INFO_STREAM(lifecycle_node_->get_logger(), "I found " << params.size() << " parameters.");
       return controller_interface::return_type::OK;
     }
     else
