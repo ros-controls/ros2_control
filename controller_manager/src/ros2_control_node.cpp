@@ -44,7 +44,7 @@ int main(int argc, char ** argv)
 
     std::chrono::system_clock::time_point timepoint_start = std::chrono::system_clock::now();
     std::chrono::system_clock::time_point begin = timepoint_start;
-    std::this_thread::sleep_for(std::chrono::nanoseconds(1000000000 / update_rate));
+    std::this_thread::sleep_for(std::chrono::nanoseconds(1000000000 / cm->get_update_rate()));
     while (rclcpp::ok())
     {
       std::chrono::system_clock::time_point begin_last = begin;

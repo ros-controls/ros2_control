@@ -148,7 +148,7 @@ public:
   CONTROLLER_INTERFACE_PUBLIC
   const rclcpp_lifecycle::State & get_state() const;
 
-  int get_update_rate() const;
+  unsigned int get_update_rate() const;
 
 protected:
   std::vector<hardware_interface::LoanedCommandInterface> command_interfaces_;

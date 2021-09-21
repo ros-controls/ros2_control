@@ -127,7 +127,9 @@ TEST_F(TestControllerManager, per_controller_update_rate)
   EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
   EXPECT_EQ(2, test_controller.use_count());
 
-  EXPECT_EQ(controller_interface::return_type::OK, cm_->update());
+  EXPECT_EQ(
+    controller_interface::return_type::OK,
+    cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
   EXPECT_EQ(0u, test_controller->internal_counter)
     << "Update should not reach an unconfigured controller";
 
@@ -137,7 +139,9 @@ TEST_F(TestControllerManager, per_controller_update_rate)
   test_controller->get_node()->set_parameter({"update_rate", 4});
   // configure controller
   cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME);
-  EXPECT_EQ(controller_interface::return_type::OK, cm_->update());
+  EXPECT_EQ(
+    controller_interface::return_type::OK,
+    cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
   EXPECT_EQ(0u, test_controller->internal_counter) << "Controller is not started";
 
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, test_controller->get_state().id());
@@ -152,7 +156,9 @@ TEST_F(TestControllerManager, per_controller_update_rate)
   ASSERT_EQ(std::future_status::timeout, switch_future.wait_for(std::chrono::milliseconds(100)))
     << "switch_controller should be blocking until next update cycle";
 
-  EXPECT_EQ(controller_interface::return_type::OK, cm_->update());
+  EXPECT_EQ(
+    controller_interface::return_type::OK,
+    cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
   EXPECT_EQ(0u, test_controller->internal_counter) << "Controller is started at the end of update";
   {
     ControllerManagerRunner cm_runner(this);
@@ -161,11 +167,13 @@ TEST_F(TestControllerManager, per_controller_update_rate)
 
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, test_controller->get_state().id());
 
-  EXPECT_EQ(controller_interface::return_type::OK, cm_->update());
+  EXPECT_EQ(
+    controller_interface::return_type::OK,
+    cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
   EXPECT_GE(test_controller->internal_counter, 1u);
   EXPECT_EQ(test_controller->get_update_rate(), 4);
 }
-
+/* WIP
 TEST_F(TestControllerManager, inactive_controller_does_not_get_updated)
 {
   //trying to get the cm's internal update rate, but not sure what is the right way to do that
@@ -179,7 +187,9 @@ TEST_F(TestControllerManager, inactive_controller_does_not_get_updated)
   EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
   EXPECT_EQ(2, test_controller.use_count());
 
-  EXPECT_EQ(controller_interface::return_type::OK, cm_->update());
+  EXPECT_EQ(
+    controller_interface::return_type::OK,
+    cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
   EXPECT_EQ(0u, test_controller->internal_counter)
     << "Update should not reach an unconfigured controller";
 
@@ -189,14 +199,21 @@ TEST_F(TestControllerManager, inactive_controller_does_not_get_updated)
   test_controller->get_node()->set_parameter({"update_rate", 4});
   // configure controller
   cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME);
-  EXPECT_EQ(controller_interface::return_type::OK, cm_->update());
+  EXPECT_EQ(
+    controller_interface::return_type::OK,
+    cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
   EXPECT_EQ(0u, test_controller->internal_counter) << "Controller is not started";
 
   //"Attempt to update the controller a couple of times"
-  EXPECT_EQ(controller_interface::return_type::OK, cm_->update());
-  EXPECT_EQ(controller_interface::return_type::OK, cm_->update());
+  EXPECT_EQ(
+    controller_interface::return_type::OK,
+    cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
+  EXPECT_EQ(
+    controller_interface::return_type::OK,
+    cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
 
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, test_controller->get_state().id());
 
   //EXPECT_EQ(0, internal_update_counter);
 }
+*/

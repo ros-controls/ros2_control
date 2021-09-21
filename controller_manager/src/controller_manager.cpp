@@ -1153,11 +1153,6 @@ controller_interface::return_type ControllerManager::update(
     rt_controllers_wrapper_.update_and_get_used_by_rt_list();
 
   auto ret = controller_interface::return_type::OK;
-=======
->>>>>>> d75b793... use cm update_rate inside the update() loop iinstead of main loop counter
-  int main_update_rate = 100;
-=======
->>>>>>> febf658... minor rebase corrections #2
   update_loop_counter_ += 1;
   update_loop_counter_ %= update_rate_;
 
@@ -1165,19 +1160,23 @@ controller_interface::return_type ControllerManager::update(
   {
     // TODO(v-lopez) we could cache this information
     // https://github.com/ros-controls/ros2_control/issues/153
-    if (is_controller_running(*loaded_controller.c))
+    if (is_controller_active(*loaded_controller.c))
     {
-      int controller_update_rate = loaded_controller.c->get_update_rate();
+      unsigned int controller_update_rate = loaded_controller.c->get_update_rate();
+
       bool controller_go =
         controller_update_rate == 0 || ((update_loop_counter_ % controller_update_rate) == 0);
-      RCLCPP_INFO(
+      RCLCPP_DEBUG(
         get_logger(), "update_loop_counter: '%d ' controller_go: '%s ' controller_name: '%s '",
         update_loop_counter_, controller_go ? "True" : "False",
         loaded_controller.info.name.c_str());
 
       if (controller_go)
       {
-        auto controller_ret = loaded_controller.c->update();
+        auto controller_ret = loaded_controller.c->update(
+          time, controller_update_rate != update_rate_
+                  ? rclcpp::Duration::from_seconds(1.0 / controller_update_rate)
+                  : period);
 
         if (controller_ret != controller_interface::return_type::OK)
         {
