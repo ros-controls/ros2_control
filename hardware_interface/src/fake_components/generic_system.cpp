@@ -416,7 +416,7 @@ return_type GenericSystem::read()
 {
   std::chrono::system_clock::time_point begin_last = begin;
   begin = std::chrono::system_clock::now();
-  period_ =
+  double period =
     std::chrono::duration_cast<std::chrono::milliseconds>(begin - begin_last).count() / 1000.0;
 
   // apply offset to positions only
@@ -432,7 +432,7 @@ return_type GenericSystem::read()
 
       if (standard_interfaces_.size() > 1)
         joint_states_[VELOCITY_INTERFACE_INDEX][j] =
-          (joint_commands_[POSITION_INTERFACE_INDEX][j] - joint_pos_commands_old_[j]) / period_;
+          (joint_commands_[POSITION_INTERFACE_INDEX][j] - joint_pos_commands_old_[j]) / period;
     }
   }
 
@@ -444,7 +444,7 @@ return_type GenericSystem::read()
       velocity_controller_running_)
     {
       joint_states_[POSITION_INTERFACE_INDEX][j] +=
-        joint_commands_[VELOCITY_INTERFACE_INDEX][j] * period_;
+        joint_commands_[VELOCITY_INTERFACE_INDEX][j] * period;
 
       joint_states_[VELOCITY_INTERFACE_INDEX][j] = joint_commands_[VELOCITY_INTERFACE_INDEX][j];
 

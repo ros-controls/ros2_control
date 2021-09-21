@@ -136,7 +136,6 @@ private:
   std::chrono::system_clock::time_point begin;
   // for velocity control, store last position command
   std::vector<double> joint_pos_commands_old_;
-  double period_;
 };
 
 typedef GenericSystem GenericRobot;
