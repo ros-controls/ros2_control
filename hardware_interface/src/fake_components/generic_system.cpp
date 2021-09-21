@@ -336,19 +336,6 @@ return_type GenericSystem::prepare_command_mode_switch(
       }
     }
   }
-  // set new mode to all interfaces at the same time
-  if (start_modes_.size() != 0 && start_modes_.size() != info_.joints.size())
-  {
-    ret_val = hardware_interface::return_type::ERROR;
-  }
-
-  // all start interfaces must be the same - can't mix position and velocity control
-  if (
-    start_modes_.size() != 0 &&
-    !std::equal(start_modes_.begin() + 1, start_modes_.end(), start_modes_.begin()))
-  {
-    ret_val = hardware_interface::return_type::ERROR;
-  }
 
   // Stopping interfaces
   // add stop interface per joint in tmp var for later check
@@ -365,14 +352,6 @@ return_type GenericSystem::prepare_command_mode_switch(
         stop_modes_.push_back(StoppingInterface::STOP_VELOCITY);
       }
     }
-  }
-  // stop all interfaces at the same time
-  if (
-    stop_modes_.size() != 0 &&
-    (stop_modes_.size() != info_.joints.size() ||
-     !std::equal(stop_modes_.begin() + 1, stop_modes_.end(), stop_modes_.begin())))
-  {
-    ret_val = hardware_interface::return_type::ERROR;
   }
 
   return ret_val;
@@ -398,7 +377,8 @@ return_type GenericSystem::perform_command_mode_switch(
     }
     position_controller_running_ = true;
   }
-  else if (
+
+  if (
     start_modes_.size() != 0 &&
     std::find(start_modes_.begin(), start_modes_.end(), hardware_interface::HW_IF_VELOCITY) !=
       start_modes_.end())
@@ -430,7 +410,7 @@ return_type GenericSystem::read()
         joint_commands_[POSITION_INTERFACE_INDEX][j] +
         (custom_interface_with_following_offset_.empty() ? position_state_following_offset_ : 0.0);
 
-      if (standard_interfaces_.size() > 1)
+      if (info_.joints[j].state_interfaces.size() > 1)
         joint_states_[VELOCITY_INTERFACE_INDEX][j] =
           (joint_commands_[POSITION_INTERFACE_INDEX][j] - joint_pos_commands_old_[j]) / period;
     }
@@ -443,12 +423,14 @@ return_type GenericSystem::read()
       !std::isnan(joint_commands_[VELOCITY_INTERFACE_INDEX][j]) && !command_propagation_disabled_ &&
       velocity_controller_running_)
     {
-      joint_states_[POSITION_INTERFACE_INDEX][j] +=
-        joint_commands_[VELOCITY_INTERFACE_INDEX][j] * period;
+      if (!position_controller_running_)
+      {
+        joint_states_[POSITION_INTERFACE_INDEX][j] +=
+          joint_commands_[VELOCITY_INTERFACE_INDEX][j] * period;
+        joint_commands_[POSITION_INTERFACE_INDEX][j] = joint_states_[POSITION_INTERFACE_INDEX][j];
+      }
 
       joint_states_[VELOCITY_INTERFACE_INDEX][j] = joint_commands_[VELOCITY_INTERFACE_INDEX][j];
-
-      joint_commands_[POSITION_INTERFACE_INDEX][j] = joint_states_[POSITION_INTERFACE_INDEX][j];
     }
   }
 
