@@ -724,7 +724,6 @@ controller_interface::ControllerInterfaceSharedPtr ControllerManager::add_contro
       controller.info.name.c_str());
     controller.c->get_lifecycle_node()->set_parameter(use_sim_time);
   }
-  controller.c->get_lifecycle_node()->configure();
   executor_->add_node(controller.c->get_lifecycle_node()->get_node_base_interface());
   to.emplace_back(controller);
 
@@ -784,6 +783,7 @@ void ControllerManager::stop_controllers()
     if (is_controller_active(*controller))
     {
       const auto new_state = controller->get_lifecycle_node()->deactivate();
+      controller->release_interfaces();
       if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
       {
         RCLCPP_ERROR(
