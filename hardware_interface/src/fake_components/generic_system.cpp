@@ -97,9 +97,10 @@ return_type GenericSystem::configure(const hardware_interface::HardwareInfo & in
   joint_pos_commands_old_ = joint_commands_[POSITION_INTERFACE_INDEX];
 
   // joint velocity commands to zero
-  for (auto i = 0u; i < info_.joints.size(); ++i)
+  for (auto i = 0u; i < joint_commands_[VELOCITY_INTERFACE_INDEX].size(); ++i)
   {
     joint_vel_commands_[i] = 0.0;
+    joint_commands_[VELOCITY_INTERFACE_INDEX][i] = 0.0;
   }
 
   // Search for mimic joints
@@ -268,39 +269,44 @@ std::vector<hardware_interface::CommandInterface> GenericSystem::export_command_
   // Joints' state interfaces
   for (auto i = 0u; i < info_.joints.size(); i++)
   {
-    //    const auto & joint = info_.joints[i];
-    //    for (const auto & interface : joint.command_interfaces)
-    //    {
+    const auto & joint = info_.joints[i];
+    for (const auto & interface : joint.command_interfaces)
+    {
+//          command_interfaces.emplace_back(hardware_interface::CommandInterface(
+//            info_.joints[i].name, hardware_interface::HW_IF_POSITION,
+//            &joint_commands_[POSITION_INTERFACE_INDEX][i]));
 
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      info_.joints[i].name, hardware_interface::HW_IF_POSITION,
-      &joint_commands_[POSITION_INTERFACE_INDEX][i]));
+//          command_interfaces.emplace_back(hardware_interface::CommandInterface(
+//            info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &joint_vel_commands_[i]));
+//
+//          command_interfaces.emplace_back(hardware_interface::CommandInterface(
+//            info_.joints[i].name, hardware_interface::HW_IF_ACCELERATION, &joint_commands_[2][i]));
 
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &joint_vel_commands_[i]));
-
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      info_.joints[i].name, hardware_interface::HW_IF_ACCELERATION, &joint_commands_[2][i]));
-
-    // Add interface: if not in the standard list than use "other" interface list
-    //      if (!get_interface(
-    //            joint.name, standard_interfaces_, interface.name, i, joint_commands_,
-    //            command_interfaces))
-    //      {
-    //
-    //        if (!get_interface(
-    //              joint.name, other_interfaces_, interface.name, i, other_commands_,
-    //              command_interfaces))
-    //        {
-    //          throw std::runtime_error(
-    //            "Interface is not found in the standard nor other list. "
-    //            "This should never happen!");
-    //        }
-    //      }
-    //    }
+      // Add interface: if not in the standard list than use "other" interface list
+      if (!get_interface(
+            joint.name, standard_interfaces_, interface.name, i, joint_commands_,
+            command_interfaces))
+      {
+        if (!get_interface(
+              joint.name, other_interfaces_, interface.name, i, other_commands_,
+              command_interfaces))
+        {
+          throw std::runtime_error(
+            "Interface is not found in the standard nor other list. "
+            "This should never happen!");
+        }
+      }
+    }
   }
 
-  // Fake sensor command interfaces
+  for (auto i =0; i< command_interfaces.size(); ++i)
+  {
+
+    printf("%s %f\n", command_interfaces[i].get_full_name().c_str(), command_interfaces[i].get_value());
+
+  }
+
+    // Fake sensor command interfaces
   if (fake_sensor_command_interfaces_)
   {
     for (auto i = 0u; i < info_.sensors.size(); i++)
@@ -454,11 +460,14 @@ return_type GenericSystem::read()
       //      joint_states_[POSITION_INTERFACE_INDEX][j] +=
       //        joint_commands_[VELOCITY_INTERFACE_INDEX][j] * period;
 
-      joint_states_[POSITION_INTERFACE_INDEX][j] += joint_vel_commands_[j] * period;
+
+//      joint_states_[POSITION_INTERFACE_INDEX][j] += joint_vel_commands_[j] * period;
+      joint_states_[POSITION_INTERFACE_INDEX][j] += joint_commands_[VELOCITY_INTERFACE_INDEX][j] * period;
 
       //      joint_states_[VELOCITY_INTERFACE_INDEX][j] = joint_commands_[VELOCITY_INTERFACE_INDEX][j];
 
-      joint_states_[VELOCITY_INTERFACE_INDEX][j] = joint_vel_commands_[j];
+//      joint_states_[VELOCITY_INTERFACE_INDEX][j] = joint_vel_commands_[j];
+      joint_states_[VELOCITY_INTERFACE_INDEX][j] = joint_commands_[VELOCITY_INTERFACE_INDEX][j];
 
       joint_commands_[POSITION_INTERFACE_INDEX][j] = joint_states_[POSITION_INTERFACE_INDEX][j];
     }
@@ -532,7 +541,8 @@ bool GenericSystem::get_interface(
   if (it != interface_list.end())
   {
     auto j = std::distance(interface_list.begin(), it);
-    interfaces.emplace_back(name, *it, &values[j][vector_index]);
+    printf("%s %ld %ld %ld\n",interface_name.c_str(), j, vector_index, &values[j][vector_index] );
+    interfaces.emplace_back(HandleType(name, *it, (double*)&(values[j][vector_index])));
     return true;
   }
   return false;
