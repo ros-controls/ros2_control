@@ -28,7 +28,7 @@ TestController::TestController()
 }
 
 controller_interface::return_type TestController::update(
-  const rclcpp::Time & time, const rclcpp::Duration & period)
+  const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
 {
   ++internal_counter;
   return controller_interface::return_type::OK;
