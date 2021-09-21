@@ -100,7 +100,6 @@ protected:
   /// The size of this vector is (standard_interfaces_.size() x nr_joints)
   std::vector<std::vector<double>> joint_commands_;
   std::vector<std::vector<double>> joint_states_;
-  double joint_vel_commands_[2];
 
   std::vector<std::string> other_interfaces_;
   /// The size of this vector is (other_interfaces_.size() x nr_joints)
@@ -137,6 +136,7 @@ private:
   std::chrono::system_clock::time_point begin;
   // for velocity control, store last position command
   std::vector<double> joint_pos_commands_old_;
+  double period_;
 };
 
 typedef GenericSystem GenericRobot;

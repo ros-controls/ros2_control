@@ -97,9 +97,9 @@ return_type GenericSystem::configure(const hardware_interface::HardwareInfo & in
   joint_pos_commands_old_ = joint_commands_[POSITION_INTERFACE_INDEX];
 
   // joint velocity commands to zero
-  for (auto i = 0u; i < info_.joints.size(); ++i)
+  for (auto i = 0u; i < joint_commands_[VELOCITY_INTERFACE_INDEX].size(); ++i)
   {
-    joint_vel_commands_[i] = 0.0;
+    joint_commands_[VELOCITY_INTERFACE_INDEX][i] = 0.0;
   }
 
   // Search for mimic joints
@@ -268,36 +268,24 @@ std::vector<hardware_interface::CommandInterface> GenericSystem::export_command_
   // Joints' state interfaces
   for (auto i = 0u; i < info_.joints.size(); i++)
   {
-    //    const auto & joint = info_.joints[i];
-    //    for (const auto & interface : joint.command_interfaces)
-    //    {
-
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      info_.joints[i].name, hardware_interface::HW_IF_POSITION,
-      &joint_commands_[POSITION_INTERFACE_INDEX][i]));
-
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &joint_vel_commands_[i]));
-
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      info_.joints[i].name, hardware_interface::HW_IF_ACCELERATION, &joint_commands_[2][i]));
-
-    // Add interface: if not in the standard list than use "other" interface list
-    //      if (!get_interface(
-    //            joint.name, standard_interfaces_, interface.name, i, joint_commands_,
-    //            command_interfaces))
-    //      {
-    //
-    //        if (!get_interface(
-    //              joint.name, other_interfaces_, interface.name, i, other_commands_,
-    //              command_interfaces))
-    //        {
-    //          throw std::runtime_error(
-    //            "Interface is not found in the standard nor other list. "
-    //            "This should never happen!");
-    //        }
-    //      }
-    //    }
+    const auto & joint = info_.joints[i];
+    for (const auto & interface : joint.command_interfaces)
+    {
+      // Add interface: if not in the standard list than use "other" interface list
+      if (!get_interface(
+            joint.name, standard_interfaces_, interface.name, i, joint_commands_,
+            command_interfaces))
+      {
+        if (!get_interface(
+              joint.name, other_interfaces_, interface.name, i, other_commands_,
+              command_interfaces))
+        {
+          throw std::runtime_error(
+            "Interface is not found in the standard nor other list. "
+            "This should never happen!");
+        }
+      }
+    }
   }
 
   // Fake sensor command interfaces
@@ -404,7 +392,10 @@ return_type GenericSystem::perform_command_mode_switch(
     std::find(start_modes_.begin(), start_modes_.end(), hardware_interface::HW_IF_POSITION) !=
       start_modes_.end())
   {
-    joint_commands_[POSITION_INTERFACE_INDEX] = joint_states_[POSITION_INTERFACE_INDEX];
+    for (size_t i = 0; i < joint_commands_[POSITION_INTERFACE_INDEX].size(); ++i)
+    {
+      joint_commands_[POSITION_INTERFACE_INDEX][i] = joint_states_[POSITION_INTERFACE_INDEX][i];
+    }
     position_controller_running_ = true;
   }
   else if (
@@ -412,7 +403,10 @@ return_type GenericSystem::perform_command_mode_switch(
     std::find(start_modes_.begin(), start_modes_.end(), hardware_interface::HW_IF_VELOCITY) !=
       start_modes_.end())
   {
-    joint_commands_[VELOCITY_INTERFACE_INDEX] = std::vector<double>(info_.joints.size(), 0.0);
+    for (size_t i = 0; i < joint_commands_[VELOCITY_INTERFACE_INDEX].size(); ++i)
+    {
+      joint_commands_[VELOCITY_INTERFACE_INDEX][i] = 0.0;
+    }
     velocity_controller_running_ = true;
   }
   return ret_val;
@@ -422,7 +416,7 @@ return_type GenericSystem::read()
 {
   std::chrono::system_clock::time_point begin_last = begin;
   begin = std::chrono::system_clock::now();
-  double period =
+  period_ =
     std::chrono::duration_cast<std::chrono::milliseconds>(begin - begin_last).count() / 1000.0;
 
   // apply offset to positions only
@@ -438,27 +432,21 @@ return_type GenericSystem::read()
 
       if (standard_interfaces_.size() > 1)
         joint_states_[VELOCITY_INTERFACE_INDEX][j] =
-          (joint_commands_[POSITION_INTERFACE_INDEX][j] - joint_pos_commands_old_[j]) / period;
+          (joint_commands_[POSITION_INTERFACE_INDEX][j] - joint_pos_commands_old_[j]) / period_;
     }
   }
 
   // velocity
-  //  for (size_t j = 0; j < joint_commands_[VELOCITY_INTERFACE_INDEX].size(); ++j)
-  for (size_t j = 0; j < 2; ++j)
-
+  for (size_t j = 0; j < joint_commands_[VELOCITY_INTERFACE_INDEX].size(); ++j)
   {
     if (
       !std::isnan(joint_commands_[VELOCITY_INTERFACE_INDEX][j]) && !command_propagation_disabled_ &&
       velocity_controller_running_)
     {
-      //      joint_states_[POSITION_INTERFACE_INDEX][j] +=
-      //        joint_commands_[VELOCITY_INTERFACE_INDEX][j] * period;
+      joint_states_[POSITION_INTERFACE_INDEX][j] +=
+        joint_commands_[VELOCITY_INTERFACE_INDEX][j] * period_;
 
-      joint_states_[POSITION_INTERFACE_INDEX][j] += joint_vel_commands_[j] * period;
-
-      //      joint_states_[VELOCITY_INTERFACE_INDEX][j] = joint_commands_[VELOCITY_INTERFACE_INDEX][j];
-
-      joint_states_[VELOCITY_INTERFACE_INDEX][j] = joint_vel_commands_[j];
+      joint_states_[VELOCITY_INTERFACE_INDEX][j] = joint_commands_[VELOCITY_INTERFACE_INDEX][j];
 
       joint_commands_[POSITION_INTERFACE_INDEX][j] = joint_states_[POSITION_INTERFACE_INDEX][j];
     }
