@@ -897,7 +897,7 @@ void ControllerManager::start_controllers()
     if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
     {
       RCLCPP_ERROR(
-        get_logger(), "After activating, controller %s is in state %s, expected Active",
+        get_logger(), "After activating, controller '%s' is in state '%s', expected Active",
         controller->get_node()->get_name(), new_state.label().c_str());
     }
   }
