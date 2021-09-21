@@ -38,7 +38,7 @@ controller_interface::return_type TestControllerFailedInit::init(
 }
 
 controller_interface::return_type TestControllerFailedInit::update(
-  const rclcpp::Time & time, const rclcpp::Duration & period)
+  const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
 {
   return controller_interface::return_type::OK;
 }

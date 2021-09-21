@@ -33,7 +33,7 @@ TestControllerWithInterfaces::on_init()
 }
 
 controller_interface::return_type TestControllerWithInterfaces::update(
-  const rclcpp::Time & time, const rclcpp::Duration & period)
+  const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
 {
   return controller_interface::return_type::OK;
 }
