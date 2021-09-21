@@ -543,6 +543,8 @@ bool GenericSystem::get_interface(
     auto j = std::distance(interface_list.begin(), it);
     printf("%s %ld %ld %ld\n",interface_name.c_str(), j, vector_index, &values[j][vector_index] );
     interfaces.emplace_back(HandleType(name, *it, (double*)&(values[j][vector_index])));
+//    interfaces.emplace_back(name, *it, &values[j][vector_index]);
+
     return true;
   }
   return false;
