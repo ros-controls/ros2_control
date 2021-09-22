@@ -144,7 +144,7 @@ public:
   // the executor (see issue #260).
   // rclcpp::CallbackGroup::SharedPtr deterministic_callback_group_;
 
-  //Per controller update rate support
+  // Per controller update rate support
   unsigned int get_update_rate() const;
   void configure();
 
@@ -223,7 +223,7 @@ protected:
     const std::shared_ptr<controller_manager_msgs::srv::UnloadController::Request> request,
     std::shared_ptr<controller_manager_msgs::srv::UnloadController::Response> response);
 
-  //Per controller update rate support
+  // Per controller update rate support
   unsigned int update_loop_counter_ = 0;
   unsigned int update_rate_ = 100;
 

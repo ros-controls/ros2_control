@@ -65,7 +65,10 @@ const rclcpp_lifecycle::State & ControllerInterface::configure()
         break;
     }
 
-    update_rate_ = node_->get_parameter("update_rate").as_int();
+    if (node_->has_parameter("update_rate"))
+    {
+      update_rate_ = node_->get_parameter("update_rate").as_int();
+    }
   }
   return lifecycle_state_;
 }

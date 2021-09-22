@@ -171,7 +171,7 @@ TEST_F(TestControllerManager, per_controller_update_rate)
     controller_interface::return_type::OK,
     cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
   EXPECT_GE(test_controller->internal_counter, 1u);
-  EXPECT_EQ(test_controller->get_update_rate(), 4);
+  EXPECT_EQ(test_controller->get_update_rate(), 4u);
 }
 /* WIP
 TEST_F(TestControllerManager, inactive_controller_does_not_get_updated)
