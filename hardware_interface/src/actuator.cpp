@@ -216,9 +216,26 @@ std::string Actuator::get_name() const { return impl_->get_name(); }
 
 const rclcpp_lifecycle::State & Actuator::get_state() const { return impl_->get_state(); }
 
-// TODO(destogl): Check here in which state hardware component is and do selective read/write
-return_type Actuator::read() { return impl_->read(); }
+return_type Actuator::read()
+{
+  if (
+    impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
+    impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+  {
+    return impl_->read();
+  }
+  return return_type::ERROR;
+}
 
-return_type Actuator::write() { return impl_->write(); }
+return_type Actuator::write()
+{
+  if (
+    impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
+    impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+  {
+    return impl_->write();
+  }
+  return return_type::ERROR;
+}
 
 }  // namespace hardware_interface

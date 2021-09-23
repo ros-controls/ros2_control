@@ -193,6 +193,15 @@ std::string Sensor::get_name() const { return impl_->get_name(); }
 
 const rclcpp_lifecycle::State & Sensor::get_state() const { return impl_->get_state(); }
 
-return_type Sensor::read() { return impl_->read(); }
+return_type Sensor::read()
+{
+  if (
+    impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
+    impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+  {
+    return impl_->read();
+  }
+  return return_type::ERROR;
+}
 
 }  // namespace hardware_interface

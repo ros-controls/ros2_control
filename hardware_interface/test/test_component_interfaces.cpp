@@ -15,6 +15,7 @@
 #include <gmock/gmock.h>
 
 #include <array>
+#include <limits>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -31,11 +32,14 @@
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
+#include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 
 using namespace ::testing;  // NOLINT
 
 namespace test_components
 {
+using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
+
 class DummyActuator : public hardware_interface::ActuatorInterface
 {
   CallbackReturn on_init(const hardware_interface::HardwareInfo & /* info */) override
@@ -54,6 +58,14 @@ class DummyActuator : public hardware_interface::ActuatorInterface
       "joint1", hardware_interface::HW_IF_VELOCITY, &velocity_state_));
 
     return state_interfaces;
+  }
+
+  CallbackReturn on_configure(const rclcpp_lifecycle::State & /*previous_state*/) override
+  {
+    position_state_ = 0.0;
+    velocity_state_ = 0.0;
+
+    return CallbackReturn::SUCCESS;
   }
 
   std::vector<hardware_interface::CommandInterface> export_command_interfaces() override
@@ -82,9 +94,15 @@ class DummyActuator : public hardware_interface::ActuatorInterface
     return hardware_interface::return_type::OK;
   }
 
+  CallbackReturn on_shutdown(const rclcpp_lifecycle::State & /*previous_state*/) override
+  {
+    velocity_state_ = 0;
+    return CallbackReturn::SUCCESS;
+  }
+
 private:
-  double position_state_ = 0.0;
-  double velocity_state_ = 0.0;
+  double position_state_ = std::numeric_limits<double>::quiet_NaN();
+  double velocity_state_ = std::numeric_limits<double>::quiet_NaN();
   double velocity_command_ = 0.0;
 };
 
@@ -93,6 +111,12 @@ class DummySensor : public hardware_interface::SensorInterface
   CallbackReturn on_init(const hardware_interface::HardwareInfo & /* info */) override
   {
     // We hardcode the info
+    return CallbackReturn::SUCCESS;
+  }
+
+  CallbackReturn on_configure(const rclcpp_lifecycle::State & /*previous_state*/) override
+  {
+    voltage_level_ = 0.0;
     return CallbackReturn::SUCCESS;
   }
 
@@ -111,11 +135,13 @@ class DummySensor : public hardware_interface::SensorInterface
   hardware_interface::return_type read() override
   {
     // no-op, static value
+    voltage_level_ = voltage_level_hw_value_;
     return hardware_interface::return_type::OK;
   }
 
 private:
-  double voltage_level_ = 0x666;
+  double voltage_level_ = std::numeric_limits<double>::quiet_NaN();
+  double voltage_level_hw_value_ = 0x666;
 };
 
 class DummySystem : public hardware_interface::SystemInterface
@@ -123,6 +149,16 @@ class DummySystem : public hardware_interface::SystemInterface
   CallbackReturn on_init(const hardware_interface::HardwareInfo & /* info */) override
   {
     // We hardcode the info
+    return CallbackReturn::SUCCESS;
+  }
+
+  CallbackReturn on_configure(const rclcpp_lifecycle::State & /*previous_state*/) override
+  {
+    for (auto i = 0ul; i < 3; ++i)
+    {
+      position_state_[i] = 0.0;
+      velocity_state_[i] = 0.0;
+    }
     return CallbackReturn::SUCCESS;
   }
 
@@ -178,9 +214,22 @@ class DummySystem : public hardware_interface::SystemInterface
     return hardware_interface::return_type::OK;
   }
 
+  CallbackReturn on_shutdown(const rclcpp_lifecycle::State & /*previous_state*/) override
+  {
+    for (auto i = 0ul; i < 3; ++i)
+    {
+      velocity_state_[i] = 0.0;
+    }
+    return CallbackReturn::SUCCESS;
+  }
+
 private:
-  std::array<double, 3> position_state_ = {0.0, 0.0, 0.0};
-  std::array<double, 3> velocity_state_ = {0.0, 0.0, 0.0};
+  std::array<double, 3> position_state_ = {
+    std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
+    std::numeric_limits<double>::quiet_NaN()};
+  std::array<double, 3> velocity_state_ = {
+    std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
+    std::numeric_limits<double>::quiet_NaN()};
   std::array<double, 3> velocity_command_ = {0.0, 0.0, 0.0};
 };
 
@@ -263,17 +312,64 @@ TEST(TestComponentInterfaces, dummy_actuator)
   EXPECT_EQ("joint1", command_interfaces[0].get_name());
   EXPECT_EQ(hardware_interface::HW_IF_VELOCITY, command_interfaces[0].get_interface_name());
 
-  command_interfaces[0].set_value(1.0);  // velocity
-  ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.write());
+  double velocity_value = 1.0;
+  command_interfaces[0].set_value(velocity_value);  // velocity
+  ASSERT_EQ(hardware_interface::return_type::ERROR, actuator_hw.write());
 
-  for (auto step = 1u; step <= 10; ++step)
+  // Noting should change because it is UNCONFIGURED
+  for (auto step = 0u; step < 10; ++step)
+  {
+    ASSERT_EQ(hardware_interface::return_type::ERROR, actuator_hw.read());
+
+    ASSERT_TRUE(std::isnan(state_interfaces[0].get_value()));  // position value
+    ASSERT_TRUE(std::isnan(state_interfaces[1].get_value()));  // velocity
+
+    ASSERT_EQ(hardware_interface::return_type::ERROR, actuator_hw.write());
+  }
+
+  state = actuator_hw.configure();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::INACTIVE, state.label());
+
+  // Read and Write are working because it is INACTIVE
+  for (auto step = 0u; step < 10; ++step)
   {
     ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.read());
 
-    ASSERT_EQ(step, state_interfaces[0].get_value());  // position value
-    ASSERT_EQ(1u, state_interfaces[1].get_value());    // velocity
+    EXPECT_EQ(step * velocity_value, state_interfaces[0].get_value());      // position value
+    EXPECT_EQ(step ? velocity_value : 0, state_interfaces[1].get_value());  // velocity
 
     ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.write());
+  }
+
+  state = actuator_hw.activate();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::ACTIVE, state.label());
+
+  // Read and Write are working because it is ACTIVE
+  for (auto step = 0u; step < 10; ++step)
+  {
+    ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.read());
+
+    EXPECT_EQ((10 + step) * velocity_value, state_interfaces[0].get_value());  // position value
+    EXPECT_EQ(velocity_value, state_interfaces[1].get_value());                // velocity
+
+    ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.write());
+  }
+
+  state = actuator_hw.shutdown();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::FINALIZED, state.label());
+
+  // Noting should change because it is FINALIZED
+  for (auto step = 0u; step < 10; ++step)
+  {
+    ASSERT_EQ(hardware_interface::return_type::ERROR, actuator_hw.read());
+
+    EXPECT_EQ(20 * velocity_value, state_interfaces[0].get_value());  // position value
+    EXPECT_EQ(0, state_interfaces[1].get_value());                    // velocity
+
+    ASSERT_EQ(hardware_interface::return_type::ERROR, actuator_hw.write());
   }
 
   EXPECT_EQ(
@@ -295,6 +391,20 @@ TEST(TestComponentInterfaces, dummy_sensor)
   ASSERT_EQ(1u, state_interfaces.size());
   EXPECT_EQ("joint1", state_interfaces[0].get_name());
   EXPECT_EQ("voltage", state_interfaces[0].get_interface_name());
+  EXPECT_TRUE(std::isnan(state_interfaces[0].get_value()));
+
+  // Not updated because is is UNCONFIGURED
+  sensor_hw.read();
+  EXPECT_TRUE(std::isnan(state_interfaces[0].get_value()));
+
+  // Updated because is is INACTIVE
+  state = sensor_hw.configure();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::INACTIVE, state.label());
+  EXPECT_EQ(0.0, state_interfaces[0].get_value());
+
+  // It can read now
+  sensor_hw.read();
   EXPECT_EQ(0x666, state_interfaces[0].get_value());
 }
 
@@ -331,23 +441,82 @@ TEST(TestComponentInterfaces, dummy_system)
   EXPECT_EQ("joint3", command_interfaces[2].get_name());
   EXPECT_EQ(hardware_interface::HW_IF_VELOCITY, command_interfaces[2].get_interface_name());
 
-  command_interfaces[0].set_value(1.0);  // velocity
-  command_interfaces[1].set_value(1.0);  // velocity
-  command_interfaces[2].set_value(1.0);  // velocity
-  ASSERT_EQ(hardware_interface::return_type::OK, system_hw.write());
+  double velocity_value = 1.0;
+  command_interfaces[0].set_value(velocity_value);  // velocity
+  command_interfaces[1].set_value(velocity_value);  // velocity
+  command_interfaces[2].set_value(velocity_value);  // velocity
+  ASSERT_EQ(hardware_interface::return_type::ERROR, system_hw.write());
 
-  for (auto step = 1u; step <= 10; ++step)
+  // Noting should change because it is UNCONFIGURED
+  for (auto step = 0u; step < 10; ++step)
+  {
+    ASSERT_EQ(hardware_interface::return_type::ERROR, system_hw.read());
+
+    ASSERT_TRUE(std::isnan(state_interfaces[0].get_value()));  // position value
+    ASSERT_TRUE(std::isnan(state_interfaces[1].get_value()));  // velocity
+    ASSERT_TRUE(std::isnan(state_interfaces[2].get_value()));  // position value
+    ASSERT_TRUE(std::isnan(state_interfaces[3].get_value()));  // velocity
+    ASSERT_TRUE(std::isnan(state_interfaces[4].get_value()));  // position value
+    ASSERT_TRUE(std::isnan(state_interfaces[5].get_value()));  // velocity
+
+    ASSERT_EQ(hardware_interface::return_type::ERROR, system_hw.write());
+  }
+
+  state = system_hw.configure();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::INACTIVE, state.label());
+
+  // Read and Write are working because it is INACTIVE
+  for (auto step = 0u; step < 10; ++step)
   {
     ASSERT_EQ(hardware_interface::return_type::OK, system_hw.read());
 
-    ASSERT_EQ(step, state_interfaces[0].get_value());  // position value
-    ASSERT_EQ(1u, state_interfaces[1].get_value());    // velocity
-    ASSERT_EQ(step, state_interfaces[2].get_value());  // position value
-    ASSERT_EQ(1u, state_interfaces[3].get_value());    // velocity
-    ASSERT_EQ(step, state_interfaces[4].get_value());  // position value
-    ASSERT_EQ(1u, state_interfaces[5].get_value());    // velocity
+    EXPECT_EQ(step * velocity_value, state_interfaces[0].get_value());      // position value
+    EXPECT_EQ(step ? velocity_value : 0, state_interfaces[1].get_value());  // velocity
+    EXPECT_EQ(step * velocity_value, state_interfaces[2].get_value());      // position value
+    EXPECT_EQ(step ? velocity_value : 0, state_interfaces[3].get_value());  // velocity
+    EXPECT_EQ(step * velocity_value, state_interfaces[4].get_value());      // position value
+    EXPECT_EQ(step ? velocity_value : 0, state_interfaces[5].get_value());  // velocity
 
     ASSERT_EQ(hardware_interface::return_type::OK, system_hw.write());
+  }
+
+  state = system_hw.activate();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::ACTIVE, state.label());
+
+  // Read and Write are working because it is ACTIVE
+  for (auto step = 0u; step < 10; ++step)
+  {
+    ASSERT_EQ(hardware_interface::return_type::OK, system_hw.read());
+
+    EXPECT_EQ((10 + step) * velocity_value, state_interfaces[0].get_value());  // position value
+    EXPECT_EQ(velocity_value, state_interfaces[1].get_value());                // velocity
+    EXPECT_EQ((10 + step) * velocity_value, state_interfaces[2].get_value());  // position value
+    EXPECT_EQ(velocity_value, state_interfaces[3].get_value());                // velocity
+    EXPECT_EQ((10 + step) * velocity_value, state_interfaces[4].get_value());  // position value
+    EXPECT_EQ(velocity_value, state_interfaces[5].get_value());                // velocity
+
+    ASSERT_EQ(hardware_interface::return_type::OK, system_hw.write());
+  }
+
+  state = system_hw.shutdown();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::FINALIZED, state.label());
+
+  // Noting should change because it is FINALIZED
+  for (auto step = 0u; step < 10; ++step)
+  {
+    ASSERT_EQ(hardware_interface::return_type::ERROR, system_hw.read());
+
+    EXPECT_EQ(20 * velocity_value, state_interfaces[0].get_value());  // position value
+    EXPECT_EQ(0.0, state_interfaces[1].get_value());                  // velocity
+    EXPECT_EQ(20 * velocity_value, state_interfaces[2].get_value());  // position value
+    EXPECT_EQ(0.0, state_interfaces[3].get_value());                  // velocity
+    EXPECT_EQ(20 * velocity_value, state_interfaces[4].get_value());  // position value
+    EXPECT_EQ(0.0, state_interfaces[5].get_value());                  // velocity
+
+    ASSERT_EQ(hardware_interface::return_type::ERROR, system_hw.write());
   }
 
   EXPECT_EQ(hardware_interface::return_type::OK, system_hw.prepare_command_mode_switch({}, {}));
