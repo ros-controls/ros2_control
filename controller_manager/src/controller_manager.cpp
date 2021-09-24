@@ -62,6 +62,11 @@ ControllerManager::ControllerManager(
   loader_(std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
     kControllerInterfaceName, kControllerInterface))
 {
+  if (!get_parameter("update_rate", update_rate_))
+  {
+    RCLCPP_WARN(get_logger(), "'update_rate' parameter not set, using default value.");
+  }
+
   std::string robot_description = "";
   get_parameter("robot_description", robot_description);
   if (robot_description.empty())
@@ -1263,13 +1268,5 @@ void ControllerManager::RTControllerListWrapper::wait_until_rt_not_using(
 }
 
 unsigned int ControllerManager::get_update_rate() const { return update_rate_; }
-
-void ControllerManager::configure()
-{
-  if (!get_parameter("update_rate", update_rate_))
-  {
-    RCLCPP_WARN(get_logger(), "'update_rate' parameter not set, using default value.");
-  }
-}
 
 }  // namespace controller_manager

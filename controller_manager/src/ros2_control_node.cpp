@@ -38,8 +38,6 @@ int main(int argc, char ** argv)
   // When the MutliThreadedExecutor issues are fixed (ros2/rclcpp#1168), this loop should be
   // converted back to a timer.
   std::thread cm_thread([cm]() {
-    // load controller_manager update time parameter
-    cm->configure();
     RCLCPP_INFO(cm->get_logger(), "update rate is %d Hz", cm->get_update_rate());
 
     std::chrono::system_clock::time_point timepoint_start = std::chrono::system_clock::now();

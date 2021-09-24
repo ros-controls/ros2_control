@@ -146,7 +146,6 @@ public:
 
   // Per controller update rate support
   unsigned int get_update_rate() const;
-  void configure();
 
 protected:
   CONTROLLER_MANAGER_PUBLIC
