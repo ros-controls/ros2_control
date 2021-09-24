@@ -42,6 +42,7 @@ int main(int argc, char ** argv)
 
     std::chrono::system_clock::time_point timepoint_start = std::chrono::system_clock::now();
     std::chrono::system_clock::time_point begin = timepoint_start;
+    // Use nanoseconds to avoid chrono's rounding
     std::this_thread::sleep_for(std::chrono::nanoseconds(1000000000 / cm->get_update_rate()));
     while (rclcpp::ok())
     {
