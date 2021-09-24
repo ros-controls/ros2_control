@@ -1153,7 +1153,7 @@ controller_interface::return_type ControllerManager::update(
     rt_controllers_wrapper_.update_and_get_used_by_rt_list();
 
   auto ret = controller_interface::return_type::OK;
-  update_loop_counter_ += 1;
+  ++update_loop_counter_;
   update_loop_counter_ %= update_rate_;
 
   for (auto loaded_controller : rt_controller_list)
@@ -1162,7 +1162,7 @@ controller_interface::return_type ControllerManager::update(
     // https://github.com/ros-controls/ros2_control/issues/153
     if (is_controller_active(*loaded_controller.c))
     {
-      unsigned int controller_update_rate = loaded_controller.c->get_update_rate();
+      auto controller_update_rate = loaded_controller.c->get_update_rate();
 
       bool controller_go =
         controller_update_rate == 0 || ((update_loop_counter_ % controller_update_rate) == 0);
