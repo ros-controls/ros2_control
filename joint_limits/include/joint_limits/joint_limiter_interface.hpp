@@ -55,6 +55,7 @@ public:
   JOINT_LIMITS_PUBLIC virtual bool configure(
     const trajectory_msgs::msg::JointTrajectoryPoint & current_joint_states)
   {
+    // TODO(destogl): add checks for position
     return on_configure(current_joint_states);
   }
 
