@@ -148,11 +148,14 @@ public:
   CONTROLLER_INTERFACE_PUBLIC
   const rclcpp_lifecycle::State & get_state() const;
 
+  unsigned int get_update_rate() const;
+
 protected:
   std::vector<hardware_interface::LoanedCommandInterface> command_interfaces_;
   std::vector<hardware_interface::LoanedStateInterface> state_interfaces_;
   std::shared_ptr<rclcpp::Node> node_;
   rclcpp_lifecycle::State lifecycle_state_;
+  unsigned int update_rate_ = 0;
 };
 
 using ControllerInterfaceSharedPtr = std::shared_ptr<ControllerInterface>;
