@@ -51,7 +51,7 @@ int main(int argc, char ** argv)
       cm->read();
       cm->update(
         rclcpp::Time(
-          std::chrono::duration_cast<std::chrono::nanoseconds>(begin - timepoint_start).count()),
+          std::chrono::duration_cast<std::chrono::nanoseconds>(begin.time_since_epoch()).count()),
         rclcpp::Duration(std::chrono::duration_cast<std::chrono::nanoseconds>(begin - begin_last)));
       cm->write();
       std::chrono::system_clock::time_point end = std::chrono::system_clock::now();
