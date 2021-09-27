@@ -40,25 +40,22 @@ int main(int argc, char ** argv)
   std::thread cm_thread([cm]() {
     RCLCPP_INFO(cm->get_logger(), "update rate is %d Hz", cm->get_update_rate());
 
-    std::chrono::system_clock::time_point timepoint_start(std::chrono::nanoseconds(cm->now().nanoseconds()));
-    std::chrono::system_clock::time_point begin = timepoint_start;
+    rclcpp::Time begin = cm->now();
+
     // Use nanoseconds to avoid chrono's rounding
     std::this_thread::sleep_for(std::chrono::nanoseconds(1000000000 / cm->get_update_rate()));
     while (rclcpp::ok())
     {
-      std::chrono::system_clock::time_point begin_last = begin;
-      begin = std::chrono::system_clock::time_point(std::chrono::nanoseconds(cm->now().nanoseconds()));;
+      rclcpp::Time begin_last = begin;
+      begin = cm->now();
       cm->read();
-      cm->update(
-        rclcpp::Time(
-          std::chrono::duration_cast<std::chrono::nanoseconds>(begin.time_since_epoch()).count()),
-        rclcpp::Duration(std::chrono::duration_cast<std::chrono::nanoseconds>(begin - begin_last)));
+      cm->update(begin, begin - begin_last);
       cm->write();
-      std::chrono::system_clock::time_point end(std::chrono::nanoseconds(cm->now().nanoseconds()));;
+      rclcpp::Time end = cm->now();
       std::this_thread::sleep_for(std::max(
         std::chrono::nanoseconds(0),
         std::chrono::nanoseconds(1000000000 / cm->get_update_rate()) -
-          std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin)));
+          std::chrono::nanoseconds(end.nanoseconds() - begin.nanoseconds())));
     }
   });
 
