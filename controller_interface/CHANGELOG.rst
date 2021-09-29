@@ -2,6 +2,16 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Per controller update rate (`#513 <https://github.com/ros-controls/ros2_control/issues/513>`_)
+  * add update_rate member field to controller manager
+* added dt to controller interface and controller manager `#438 <https://github.com/ros-controls/ros2_control/issues/438>`_ (`#520 <https://github.com/ros-controls/ros2_control/issues/520>`_)
+* Methods controlling the lifecycle of controllers all have on\_ prefix
+* Do not manually set C++ version to 14 (`#516 <https://github.com/ros-controls/ros2_control/issues/516>`_)
+* rename get_current_state() to get_state() (`#512 <https://github.com/ros-controls/ros2_control/issues/512>`_)
+* Contributors: Bence Magyar, Denis Štogl, Dmitri Ignakov, Márk Szitanics, bailaC
+
 0.8.0 (2021-08-28)
 ------------------
 * Automatic parameter declaration - enable existence of undeclared parameters from overrides (`#504 <https://github.com/ros-controls/ros2_control/issues/504>`_)

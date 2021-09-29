@@ -2,6 +2,11 @@
 Changelog for package controller_manager_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Do not manually set C++ version to 14 (`#516 <https://github.com/ros-controls/ros2_control/issues/516>`_)
+* Contributors: Bence Magyar
+
 0.8.0 (2021-08-28)
 ------------------
 * Add pre-commit setup. (`#473 <https://github.com/ros-controls/ros2_control/issues/473>`_)
