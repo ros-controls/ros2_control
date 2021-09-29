@@ -24,7 +24,7 @@
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/loaned_command_interface.hpp"
 #include "hardware_interface/loaned_state_interface.hpp"
-#include "hardware_interface/types/hardware_interface_status_values.hpp"
+#include "rclcpp_lifecycle/state.hpp"
 
 namespace hardware_interface
 {
@@ -188,9 +188,9 @@ public:
 
   /// Return status for all components.
   /**
-   * \return map of hardware names and their status
+   * \return map of hardware names and their states
    */
-  std::unordered_map<std::string, status> get_components_status();
+  std::unordered_map<std::string, rclcpp_lifecycle::State> get_components_states();
 
   /// Prepare the hardware components for a new command interface mode
   /**

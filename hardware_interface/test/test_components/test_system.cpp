@@ -16,18 +16,15 @@
 #include <memory>
 #include <vector>
 
-#include "hardware_interface/base_interface.hpp"
 #include "hardware_interface/system_interface.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 
-using hardware_interface::BaseInterface;
 using hardware_interface::CommandInterface;
 using hardware_interface::return_type;
 using hardware_interface::StateInterface;
-using hardware_interface::status;
 using hardware_interface::SystemInterface;
 
-class TestSystem : public BaseInterface<SystemInterface>
+class TestSystem : public SystemInterface
 {
   std::vector<StateInterface> export_state_interfaces() override
   {
@@ -55,18 +52,6 @@ class TestSystem : public BaseInterface<SystemInterface>
     }
 
     return command_interfaces;
-  }
-
-  return_type start() override
-  {
-    status_ = status::STARTED;
-    return return_type::OK;
-  }
-
-  return_type stop() override
-  {
-    status_ = status::STOPPED;
-    return return_type::OK;
   }
 
   return_type read() override { return return_type::OK; }

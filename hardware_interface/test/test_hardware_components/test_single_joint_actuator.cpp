@@ -16,47 +16,44 @@
 #include <vector>
 
 #include "hardware_interface/actuator_interface.hpp"
-#include "hardware_interface/base_interface.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 
 using hardware_interface::ActuatorInterface;
-using hardware_interface::BaseInterface;
 using hardware_interface::CommandInterface;
 using hardware_interface::return_type;
 using hardware_interface::StateInterface;
-using hardware_interface::status;
 
 namespace test_hardware_components
 {
-class TestSingleJointActuator : public BaseInterface<ActuatorInterface>
+class TestSingleJointActuator : public ActuatorInterface
 {
-  return_type configure(const hardware_interface::HardwareInfo & actuator_info) override
+  CallbackReturn on_init(const hardware_interface::HardwareInfo & actuator_info) override
   {
-    if (configure_default(actuator_info) != return_type::OK)
+    if (ActuatorInterface::on_init(actuator_info) != CallbackReturn::SUCCESS)
     {
-      return return_type::ERROR;
+      return CallbackReturn::ERROR;
     }
 
     // can only control one joint
     if (info_.joints.size() != 1)
     {
-      return return_type::ERROR;
+      return CallbackReturn::ERROR;
     }
     // can only control in position
     const auto & command_interfaces = info_.joints[0].command_interfaces;
     if (command_interfaces.size() != 1)
     {
-      return return_type::ERROR;
+      return CallbackReturn::ERROR;
     }
     if (command_interfaces[0].name != hardware_interface::HW_IF_POSITION)
     {
-      return return_type::ERROR;
+      return CallbackReturn::ERROR;
     }
     // can only give feedback state for position and velocity
     const auto & state_interfaces = info_.joints[0].state_interfaces;
     if (state_interfaces.size() < 1)
     {
-      return return_type::ERROR;
+      return CallbackReturn::ERROR;
     }
     for (const auto & state_interface : state_interfaces)
     {
@@ -64,11 +61,11 @@ class TestSingleJointActuator : public BaseInterface<ActuatorInterface>
         (state_interface.name != hardware_interface::HW_IF_POSITION) &&
         (state_interface.name != hardware_interface::HW_IF_VELOCITY))
       {
-        return return_type::ERROR;
+        return CallbackReturn::ERROR;
       }
     }
     fprintf(stderr, "TestSingleJointActuator configured successfully.\n");
-    return return_type::OK;
+    return CallbackReturn::SUCCESS;
   }
 
   std::vector<StateInterface> export_state_interfaces() override
@@ -94,10 +91,6 @@ class TestSingleJointActuator : public BaseInterface<ActuatorInterface>
 
     return command_interfaces;
   }
-
-  return_type start() override { return return_type::OK; }
-
-  return_type stop() override { return return_type::OK; }
 
   return_type read() override { return return_type::OK; }
 

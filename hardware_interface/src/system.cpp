@@ -1,4 +1,4 @@
-// Copyright 2020 ros2_control Development Team
+// Copyright 2020 - 2021 ros2_control Development Team
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,26 +12,176 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "hardware_interface/system.hpp"
+
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include "hardware_interface/system.hpp"
-
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/system_interface.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
-#include "hardware_interface/types/hardware_interface_status_values.hpp"
+#include "hardware_interface/types/lifecycle_state_names.hpp"
+#include "lifecycle_msgs/msg/state.hpp"
+#include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
+#include "rclcpp_lifecycle/state.hpp"
+
+using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
 
 namespace hardware_interface
 {
 System::System(std::unique_ptr<SystemInterface> impl) : impl_(std::move(impl)) {}
 
-return_type System::configure(const HardwareInfo & system_info)
+const rclcpp_lifecycle::State & System::initialize(const HardwareInfo & system_info)
 {
-  return impl_->configure(system_info);
+  if (impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN)
+  {
+    switch (impl_->on_init(system_info))
+    {
+      case CallbackReturn::SUCCESS:
+        impl_->set_state(rclcpp_lifecycle::State(
+          lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+          lifecycle_state_names::UNCONFIGURED));
+        break;
+      case CallbackReturn::FAILURE:
+      case CallbackReturn::ERROR:
+        impl_->set_state(rclcpp_lifecycle::State(
+          lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, lifecycle_state_names::FINALIZED));
+        break;
+    }
+  }
+  return impl_->get_state();
+}
+
+const rclcpp_lifecycle::State & System::configure()
+{
+  if (impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
+  {
+    switch (impl_->on_configure(impl_->get_state()))
+    {
+      case CallbackReturn::SUCCESS:
+        impl_->set_state(rclcpp_lifecycle::State(
+          lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, lifecycle_state_names::INACTIVE));
+        break;
+      case CallbackReturn::FAILURE:
+        impl_->set_state(rclcpp_lifecycle::State(
+          lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+          lifecycle_state_names::UNCONFIGURED));
+        break;
+      case CallbackReturn::ERROR:
+        impl_->set_state(error());
+        break;
+    }
+  }
+  return impl_->get_state();
+}
+
+const rclcpp_lifecycle::State & System::cleanup()
+{
+  if (impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
+  {
+    switch (impl_->on_cleanup(impl_->get_state()))
+    {
+      case CallbackReturn::SUCCESS:
+        impl_->set_state(rclcpp_lifecycle::State(
+          lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+          lifecycle_state_names::UNCONFIGURED));
+        break;
+      case CallbackReturn::FAILURE:
+      case CallbackReturn::ERROR:
+        impl_->set_state(error());
+        break;
+    }
+  }
+  return impl_->get_state();
+}
+
+const rclcpp_lifecycle::State & System::shutdown()
+{
+  if (
+    impl_->get_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN &&
+    impl_->get_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED)
+  {
+    switch (impl_->on_shutdown(impl_->get_state()))
+    {
+      case CallbackReturn::SUCCESS:
+        impl_->set_state(rclcpp_lifecycle::State(
+          lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, lifecycle_state_names::FINALIZED));
+        break;
+      case CallbackReturn::FAILURE:
+      case CallbackReturn::ERROR:
+        impl_->set_state(error());
+        break;
+    }
+  }
+  return impl_->get_state();
+}
+
+const rclcpp_lifecycle::State & System::activate()
+{
+  if (impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
+  {
+    switch (impl_->on_activate(impl_->get_state()))
+    {
+      case CallbackReturn::SUCCESS:
+        impl_->set_state(rclcpp_lifecycle::State(
+          lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, lifecycle_state_names::ACTIVE));
+        break;
+      case CallbackReturn::FAILURE:
+        impl_->set_state(rclcpp_lifecycle::State(
+          lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, lifecycle_state_names::INACTIVE));
+        break;
+      case CallbackReturn::ERROR:
+        impl_->set_state(error());
+        break;
+    }
+  }
+  return impl_->get_state();
+}
+
+const rclcpp_lifecycle::State & System::deactivate()
+{
+  if (impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+  {
+    switch (impl_->on_deactivate(impl_->get_state()))
+    {
+      case CallbackReturn::SUCCESS:
+        impl_->set_state(rclcpp_lifecycle::State(
+          lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, lifecycle_state_names::INACTIVE));
+        break;
+      case CallbackReturn::FAILURE:
+        impl_->set_state(rclcpp_lifecycle::State(
+          lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, lifecycle_state_names::ACTIVE));
+        break;
+      case CallbackReturn::ERROR:
+        impl_->set_state(error());
+        break;
+    }
+  }
+  return impl_->get_state();
+}
+
+const rclcpp_lifecycle::State & System::error()
+{
+  if (impl_->get_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN)
+  {
+    switch (impl_->on_error(impl_->get_state()))
+    {
+      case CallbackReturn::SUCCESS:
+        impl_->set_state(rclcpp_lifecycle::State(
+          lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+          lifecycle_state_names::UNCONFIGURED));
+        break;
+      case CallbackReturn::FAILURE:
+      case CallbackReturn::ERROR:
+        impl_->set_state(rclcpp_lifecycle::State(
+          lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, lifecycle_state_names::FINALIZED));
+        break;
+    }
+  }
+  return impl_->get_state();
 }
 
 std::vector<StateInterface> System::export_state_interfaces()
@@ -58,16 +208,30 @@ return_type System::perform_command_mode_switch(
   return impl_->perform_command_mode_switch(start_interfaces, stop_interfaces);
 }
 
-return_type System::start() { return impl_->start(); }
-
-return_type System::stop() { return impl_->stop(); }
-
 std::string System::get_name() const { return impl_->get_name(); }
 
-status System::get_status() const { return impl_->get_status(); }
+const rclcpp_lifecycle::State & System::get_state() const { return impl_->get_state(); }
 
-return_type System::read() { return impl_->read(); }
+return_type System::read()
+{
+  if (
+    impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
+    impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+  {
+    return impl_->read();
+  }
+  return return_type::ERROR;
+}
 
-return_type System::write() { return impl_->write(); }
+return_type System::write()
+{
+  if (
+    impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
+    impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+  {
+    return impl_->write();
+  }
+  return return_type::ERROR;
+}
 
 }  // namespace hardware_interface

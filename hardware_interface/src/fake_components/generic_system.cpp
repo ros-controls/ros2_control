@@ -28,11 +28,11 @@
 
 namespace fake_components
 {
-return_type GenericSystem::configure(const hardware_interface::HardwareInfo & info)
+CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & info)
 {
-  if (configure_default(info) != return_type::OK)
+  if (hardware_interface::SystemInterface::on_init(info) != CallbackReturn::SUCCESS)
   {
-    return return_type::ERROR;
+    return CallbackReturn::ERROR;
   }
 
   // check if to create fake command interface for sensor
@@ -180,8 +180,7 @@ return_type GenericSystem::configure(const hardware_interface::HardwareInfo & in
   }
   initialize_storage_vectors(sensor_fake_commands_, sensor_states_, sensor_interfaces_);
 
-  status_ = hardware_interface::status::CONFIGURED;
-  return hardware_interface::return_type::OK;
+  return CallbackReturn::SUCCESS;
 }
 
 std::vector<hardware_interface::StateInterface> GenericSystem::export_state_interfaces()

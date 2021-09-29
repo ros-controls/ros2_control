@@ -15,6 +15,7 @@
 #include <gmock/gmock.h>
 
 #include <array>
+#include <limits>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -28,20 +29,23 @@
 #include "hardware_interface/system.hpp"
 #include "hardware_interface/system_interface.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
-#include "hardware_interface/types/hardware_interface_status_values.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
+#include "hardware_interface/types/lifecycle_state_names.hpp"
+#include "lifecycle_msgs/msg/state.hpp"
+#include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 
 using namespace ::testing;  // NOLINT
 
 namespace test_components
 {
+using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
+
 class DummyActuator : public hardware_interface::ActuatorInterface
 {
-  hardware_interface::return_type configure(
-    const hardware_interface::HardwareInfo & /* info */) override
+  CallbackReturn on_init(const hardware_interface::HardwareInfo & /* info */) override
   {
     // We hardcode the info
-    return hardware_interface::return_type::OK;
+    return CallbackReturn::SUCCESS;
   }
 
   std::vector<hardware_interface::StateInterface> export_state_interfaces() override
@@ -56,6 +60,14 @@ class DummyActuator : public hardware_interface::ActuatorInterface
     return state_interfaces;
   }
 
+  CallbackReturn on_configure(const rclcpp_lifecycle::State & /*previous_state*/) override
+  {
+    position_state_ = 0.0;
+    velocity_state_ = 0.0;
+
+    return CallbackReturn::SUCCESS;
+  }
+
   std::vector<hardware_interface::CommandInterface> export_command_interfaces() override
   {
     // We can command in velocity
@@ -66,16 +78,7 @@ class DummyActuator : public hardware_interface::ActuatorInterface
     return command_interfaces;
   }
 
-  hardware_interface::return_type start() override { return hardware_interface::return_type::OK; }
-
-  hardware_interface::return_type stop() override { return hardware_interface::return_type::OK; }
-
   std::string get_name() const override { return "DummyActuator"; }
-
-  hardware_interface::status get_status() const override
-  {
-    return hardware_interface::status::UNKNOWN;
-  }
 
   hardware_interface::return_type read() override
   {
@@ -91,19 +94,30 @@ class DummyActuator : public hardware_interface::ActuatorInterface
     return hardware_interface::return_type::OK;
   }
 
+  CallbackReturn on_shutdown(const rclcpp_lifecycle::State & /*previous_state*/) override
+  {
+    velocity_state_ = 0;
+    return CallbackReturn::SUCCESS;
+  }
+
 private:
-  double position_state_ = 0.0;
-  double velocity_state_ = 0.0;
+  double position_state_ = std::numeric_limits<double>::quiet_NaN();
+  double velocity_state_ = std::numeric_limits<double>::quiet_NaN();
   double velocity_command_ = 0.0;
 };
 
 class DummySensor : public hardware_interface::SensorInterface
 {
-  hardware_interface::return_type configure(
-    const hardware_interface::HardwareInfo & /* info */) override
+  CallbackReturn on_init(const hardware_interface::HardwareInfo & /* info */) override
   {
     // We hardcode the info
-    return hardware_interface::return_type::OK;
+    return CallbackReturn::SUCCESS;
+  }
+
+  CallbackReturn on_configure(const rclcpp_lifecycle::State & /*previous_state*/) override
+  {
+    voltage_level_ = 0.0;
+    return CallbackReturn::SUCCESS;
   }
 
   std::vector<hardware_interface::StateInterface> export_state_interfaces() override
@@ -116,34 +130,36 @@ class DummySensor : public hardware_interface::SensorInterface
     return state_interfaces;
   }
 
-  hardware_interface::return_type start() override { return hardware_interface::return_type::OK; }
-
-  hardware_interface::return_type stop() override { return hardware_interface::return_type::OK; }
-
   std::string get_name() const override { return "DummySensor"; }
-
-  hardware_interface::status get_status() const override
-  {
-    return hardware_interface::status::UNKNOWN;
-  }
 
   hardware_interface::return_type read() override
   {
     // no-op, static value
+    voltage_level_ = voltage_level_hw_value_;
     return hardware_interface::return_type::OK;
   }
 
 private:
-  double voltage_level_ = 0x666;
+  double voltage_level_ = std::numeric_limits<double>::quiet_NaN();
+  double voltage_level_hw_value_ = 0x666;
 };
 
 class DummySystem : public hardware_interface::SystemInterface
 {
-  hardware_interface::return_type configure(
-    const hardware_interface::HardwareInfo & /* info */) override
+  CallbackReturn on_init(const hardware_interface::HardwareInfo & /* info */) override
   {
     // We hardcode the info
-    return hardware_interface::return_type::OK;
+    return CallbackReturn::SUCCESS;
+  }
+
+  CallbackReturn on_configure(const rclcpp_lifecycle::State & /*previous_state*/) override
+  {
+    for (auto i = 0ul; i < 3; ++i)
+    {
+      position_state_[i] = 0.0;
+      velocity_state_[i] = 0.0;
+    }
+    return CallbackReturn::SUCCESS;
   }
 
   std::vector<hardware_interface::StateInterface> export_state_interfaces() override
@@ -180,16 +196,7 @@ class DummySystem : public hardware_interface::SystemInterface
     return command_interfaces;
   }
 
-  hardware_interface::return_type start() override { return hardware_interface::return_type::OK; }
-
-  hardware_interface::return_type stop() override { return hardware_interface::return_type::OK; }
-
   std::string get_name() const override { return "DummySystem"; }
-
-  hardware_interface::status get_status() const override
-  {
-    return hardware_interface::status::UNKNOWN;
-  }
 
   hardware_interface::return_type read() override
   {
@@ -207,20 +214,32 @@ class DummySystem : public hardware_interface::SystemInterface
     return hardware_interface::return_type::OK;
   }
 
+  CallbackReturn on_shutdown(const rclcpp_lifecycle::State & /*previous_state*/) override
+  {
+    for (auto i = 0ul; i < 3; ++i)
+    {
+      velocity_state_[i] = 0.0;
+    }
+    return CallbackReturn::SUCCESS;
+  }
+
 private:
-  std::array<double, 3> position_state_ = {0.0, 0.0, 0.0};
-  std::array<double, 3> velocity_state_ = {0.0, 0.0, 0.0};
+  std::array<double, 3> position_state_ = {
+    std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
+    std::numeric_limits<double>::quiet_NaN()};
+  std::array<double, 3> velocity_state_ = {
+    std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
+    std::numeric_limits<double>::quiet_NaN()};
   std::array<double, 3> velocity_command_ = {0.0, 0.0, 0.0};
 };
 
 class DummySystemPreparePerform : public hardware_interface::SystemInterface
 {
   // Override the pure virtual functions with default behavior
-  hardware_interface::return_type configure(
-    const hardware_interface::HardwareInfo & /* info */) override
+  CallbackReturn on_init(const hardware_interface::HardwareInfo & /* info */) override
   {
     // We hardcode the info
-    return hardware_interface::return_type::OK;
+    return CallbackReturn::SUCCESS;
   }
 
   std::vector<hardware_interface::StateInterface> export_state_interfaces() override { return {}; }
@@ -230,16 +249,7 @@ class DummySystemPreparePerform : public hardware_interface::SystemInterface
     return {};
   }
 
-  hardware_interface::return_type start() override { return hardware_interface::return_type::OK; }
-
-  hardware_interface::return_type stop() override { return hardware_interface::return_type::OK; }
-
   std::string get_name() const override { return "DummySystemPreparePerform"; }
-
-  hardware_interface::status get_status() const override
-  {
-    return hardware_interface::status::UNKNOWN;
-  }
 
   hardware_interface::return_type read() override { return hardware_interface::return_type::OK; }
 
@@ -286,7 +296,9 @@ TEST(TestComponentInterfaces, dummy_actuator)
   hardware_interface::Actuator actuator_hw(std::make_unique<test_components::DummyActuator>());
 
   hardware_interface::HardwareInfo mock_hw_info{};
-  EXPECT_EQ(hardware_interface::return_type::OK, actuator_hw.configure(mock_hw_info));
+  auto state = actuator_hw.initialize(mock_hw_info);
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
 
   auto state_interfaces = actuator_hw.export_state_interfaces();
   ASSERT_EQ(2u, state_interfaces.size());
@@ -300,17 +312,64 @@ TEST(TestComponentInterfaces, dummy_actuator)
   EXPECT_EQ("joint1", command_interfaces[0].get_name());
   EXPECT_EQ(hardware_interface::HW_IF_VELOCITY, command_interfaces[0].get_interface_name());
 
-  command_interfaces[0].set_value(1.0);  // velocity
-  ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.write());
+  double velocity_value = 1.0;
+  command_interfaces[0].set_value(velocity_value);  // velocity
+  ASSERT_EQ(hardware_interface::return_type::ERROR, actuator_hw.write());
 
-  for (auto step = 1u; step <= 10; ++step)
+  // Noting should change because it is UNCONFIGURED
+  for (auto step = 0u; step < 10; ++step)
+  {
+    ASSERT_EQ(hardware_interface::return_type::ERROR, actuator_hw.read());
+
+    ASSERT_TRUE(std::isnan(state_interfaces[0].get_value()));  // position value
+    ASSERT_TRUE(std::isnan(state_interfaces[1].get_value()));  // velocity
+
+    ASSERT_EQ(hardware_interface::return_type::ERROR, actuator_hw.write());
+  }
+
+  state = actuator_hw.configure();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::INACTIVE, state.label());
+
+  // Read and Write are working because it is INACTIVE
+  for (auto step = 0u; step < 10; ++step)
   {
     ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.read());
 
-    ASSERT_EQ(step, state_interfaces[0].get_value());  // position value
-    ASSERT_EQ(1u, state_interfaces[1].get_value());    // velocity
+    EXPECT_EQ(step * velocity_value, state_interfaces[0].get_value());      // position value
+    EXPECT_EQ(step ? velocity_value : 0, state_interfaces[1].get_value());  // velocity
 
     ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.write());
+  }
+
+  state = actuator_hw.activate();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::ACTIVE, state.label());
+
+  // Read and Write are working because it is ACTIVE
+  for (auto step = 0u; step < 10; ++step)
+  {
+    ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.read());
+
+    EXPECT_EQ((10 + step) * velocity_value, state_interfaces[0].get_value());  // position value
+    EXPECT_EQ(velocity_value, state_interfaces[1].get_value());                // velocity
+
+    ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.write());
+  }
+
+  state = actuator_hw.shutdown();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::FINALIZED, state.label());
+
+  // Noting should change because it is FINALIZED
+  for (auto step = 0u; step < 10; ++step)
+  {
+    ASSERT_EQ(hardware_interface::return_type::ERROR, actuator_hw.read());
+
+    EXPECT_EQ(20 * velocity_value, state_interfaces[0].get_value());  // position value
+    EXPECT_EQ(0, state_interfaces[1].get_value());                    // velocity
+
+    ASSERT_EQ(hardware_interface::return_type::ERROR, actuator_hw.write());
   }
 
   EXPECT_EQ(
@@ -324,12 +383,28 @@ TEST(TestComponentInterfaces, dummy_sensor)
   hardware_interface::Sensor sensor_hw(std::make_unique<test_components::DummySensor>());
 
   hardware_interface::HardwareInfo mock_hw_info{};
-  EXPECT_EQ(hardware_interface::return_type::OK, sensor_hw.configure(mock_hw_info));
+  auto state = sensor_hw.initialize(mock_hw_info);
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
 
   auto state_interfaces = sensor_hw.export_state_interfaces();
   ASSERT_EQ(1u, state_interfaces.size());
   EXPECT_EQ("joint1", state_interfaces[0].get_name());
   EXPECT_EQ("voltage", state_interfaces[0].get_interface_name());
+  EXPECT_TRUE(std::isnan(state_interfaces[0].get_value()));
+
+  // Not updated because is is UNCONFIGURED
+  sensor_hw.read();
+  EXPECT_TRUE(std::isnan(state_interfaces[0].get_value()));
+
+  // Updated because is is INACTIVE
+  state = sensor_hw.configure();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::INACTIVE, state.label());
+  EXPECT_EQ(0.0, state_interfaces[0].get_value());
+
+  // It can read now
+  sensor_hw.read();
   EXPECT_EQ(0x666, state_interfaces[0].get_value());
 }
 
@@ -338,7 +413,9 @@ TEST(TestComponentInterfaces, dummy_system)
   hardware_interface::System system_hw(std::make_unique<test_components::DummySystem>());
 
   hardware_interface::HardwareInfo mock_hw_info{};
-  EXPECT_EQ(hardware_interface::return_type::OK, system_hw.configure(mock_hw_info));
+  auto state = system_hw.initialize(mock_hw_info);
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
 
   auto state_interfaces = system_hw.export_state_interfaces();
   ASSERT_EQ(6u, state_interfaces.size());
@@ -364,23 +441,82 @@ TEST(TestComponentInterfaces, dummy_system)
   EXPECT_EQ("joint3", command_interfaces[2].get_name());
   EXPECT_EQ(hardware_interface::HW_IF_VELOCITY, command_interfaces[2].get_interface_name());
 
-  command_interfaces[0].set_value(1.0);  // velocity
-  command_interfaces[1].set_value(1.0);  // velocity
-  command_interfaces[2].set_value(1.0);  // velocity
-  ASSERT_EQ(hardware_interface::return_type::OK, system_hw.write());
+  double velocity_value = 1.0;
+  command_interfaces[0].set_value(velocity_value);  // velocity
+  command_interfaces[1].set_value(velocity_value);  // velocity
+  command_interfaces[2].set_value(velocity_value);  // velocity
+  ASSERT_EQ(hardware_interface::return_type::ERROR, system_hw.write());
 
-  for (auto step = 1u; step <= 10; ++step)
+  // Noting should change because it is UNCONFIGURED
+  for (auto step = 0u; step < 10; ++step)
+  {
+    ASSERT_EQ(hardware_interface::return_type::ERROR, system_hw.read());
+
+    ASSERT_TRUE(std::isnan(state_interfaces[0].get_value()));  // position value
+    ASSERT_TRUE(std::isnan(state_interfaces[1].get_value()));  // velocity
+    ASSERT_TRUE(std::isnan(state_interfaces[2].get_value()));  // position value
+    ASSERT_TRUE(std::isnan(state_interfaces[3].get_value()));  // velocity
+    ASSERT_TRUE(std::isnan(state_interfaces[4].get_value()));  // position value
+    ASSERT_TRUE(std::isnan(state_interfaces[5].get_value()));  // velocity
+
+    ASSERT_EQ(hardware_interface::return_type::ERROR, system_hw.write());
+  }
+
+  state = system_hw.configure();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::INACTIVE, state.label());
+
+  // Read and Write are working because it is INACTIVE
+  for (auto step = 0u; step < 10; ++step)
   {
     ASSERT_EQ(hardware_interface::return_type::OK, system_hw.read());
 
-    ASSERT_EQ(step, state_interfaces[0].get_value());  // position value
-    ASSERT_EQ(1u, state_interfaces[1].get_value());    // velocity
-    ASSERT_EQ(step, state_interfaces[2].get_value());  // position value
-    ASSERT_EQ(1u, state_interfaces[3].get_value());    // velocity
-    ASSERT_EQ(step, state_interfaces[4].get_value());  // position value
-    ASSERT_EQ(1u, state_interfaces[5].get_value());    // velocity
+    EXPECT_EQ(step * velocity_value, state_interfaces[0].get_value());      // position value
+    EXPECT_EQ(step ? velocity_value : 0, state_interfaces[1].get_value());  // velocity
+    EXPECT_EQ(step * velocity_value, state_interfaces[2].get_value());      // position value
+    EXPECT_EQ(step ? velocity_value : 0, state_interfaces[3].get_value());  // velocity
+    EXPECT_EQ(step * velocity_value, state_interfaces[4].get_value());      // position value
+    EXPECT_EQ(step ? velocity_value : 0, state_interfaces[5].get_value());  // velocity
 
     ASSERT_EQ(hardware_interface::return_type::OK, system_hw.write());
+  }
+
+  state = system_hw.activate();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::ACTIVE, state.label());
+
+  // Read and Write are working because it is ACTIVE
+  for (auto step = 0u; step < 10; ++step)
+  {
+    ASSERT_EQ(hardware_interface::return_type::OK, system_hw.read());
+
+    EXPECT_EQ((10 + step) * velocity_value, state_interfaces[0].get_value());  // position value
+    EXPECT_EQ(velocity_value, state_interfaces[1].get_value());                // velocity
+    EXPECT_EQ((10 + step) * velocity_value, state_interfaces[2].get_value());  // position value
+    EXPECT_EQ(velocity_value, state_interfaces[3].get_value());                // velocity
+    EXPECT_EQ((10 + step) * velocity_value, state_interfaces[4].get_value());  // position value
+    EXPECT_EQ(velocity_value, state_interfaces[5].get_value());                // velocity
+
+    ASSERT_EQ(hardware_interface::return_type::OK, system_hw.write());
+  }
+
+  state = system_hw.shutdown();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::FINALIZED, state.label());
+
+  // Noting should change because it is FINALIZED
+  for (auto step = 0u; step < 10; ++step)
+  {
+    ASSERT_EQ(hardware_interface::return_type::ERROR, system_hw.read());
+
+    EXPECT_EQ(20 * velocity_value, state_interfaces[0].get_value());  // position value
+    EXPECT_EQ(0.0, state_interfaces[1].get_value());                  // velocity
+    EXPECT_EQ(20 * velocity_value, state_interfaces[2].get_value());  // position value
+    EXPECT_EQ(0.0, state_interfaces[3].get_value());                  // velocity
+    EXPECT_EQ(20 * velocity_value, state_interfaces[4].get_value());  // position value
+    EXPECT_EQ(0.0, state_interfaces[5].get_value());                  // velocity
+
+    ASSERT_EQ(hardware_interface::return_type::ERROR, system_hw.write());
   }
 
   EXPECT_EQ(hardware_interface::return_type::OK, system_hw.prepare_command_mode_switch({}, {}));
@@ -392,7 +528,9 @@ TEST(TestComponentInterfaces, dummy_command_mode_system)
   hardware_interface::System system_hw(
     std::make_unique<test_components::DummySystemPreparePerform>());
   hardware_interface::HardwareInfo mock_hw_info{};
-  EXPECT_EQ(hardware_interface::return_type::OK, system_hw.configure(mock_hw_info));
+  auto state = system_hw.initialize(mock_hw_info);
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
 
   std::vector<std::string> one_key = {"joint1/position"};
   std::vector<std::string> two_keys = {"joint1/position", "joint1/velocity"};

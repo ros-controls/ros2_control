@@ -16,36 +16,33 @@
 #include <vector>
 
 #include "hardware_interface/actuator_interface.hpp"
-#include "hardware_interface/base_interface.hpp"
 
 using hardware_interface::ActuatorInterface;
-using hardware_interface::BaseInterface;
 using hardware_interface::CommandInterface;
 using hardware_interface::return_type;
 using hardware_interface::StateInterface;
-using hardware_interface::status;
 
-class TestActuator : public BaseInterface<ActuatorInterface>
+class TestActuator : public ActuatorInterface
 {
-  return_type configure(const hardware_interface::HardwareInfo & info) override
+  CallbackReturn on_init(const hardware_interface::HardwareInfo & info) override
   {
-    if (configure_default(info) != return_type::OK)
+    if (ActuatorInterface::on_init(info) != CallbackReturn::SUCCESS)
     {
-      return return_type::ERROR;
+      return CallbackReturn::ERROR;
     }
 
     /*
      * a hardware can optional prove for incorrect info here.
      *
      * // can only control one joint
-     * if (info_.joints.size() != 1) {return return_type::ERROR;}
+     * if (info_.joints.size() != 1) {return CallbackReturn::ERROR;}
      * // can only control in position
-     * if (info_.joints[0].command_interfaces.size() != 1) {return return_type::ERROR;}
+     * if (info_.joints[0].command_interfaces.size() != 1) {return CallbackReturn::ERROR;}
      * // can only give feedback state for position and velocity
-     * if (info_.joints[0].state_interfaces.size() != 2) {return return_type::ERROR;}
+     * if (info_.joints[0].state_interfaces.size() != 2) {return CallbackReturn::ERROR;}
     */
 
-    return return_type::OK;
+    return CallbackReturn::SUCCESS;
   }
 
   std::vector<StateInterface> export_state_interfaces() override
@@ -68,18 +65,6 @@ class TestActuator : public BaseInterface<ActuatorInterface>
       info_.joints[0].name, info_.joints[0].command_interfaces[0].name, &velocity_command_));
 
     return command_interfaces;
-  }
-
-  return_type start() override
-  {
-    status_ = status::STARTED;
-    return return_type::OK;
-  }
-
-  return_type stop() override
-  {
-    status_ = status::STOPPED;
-    return return_type::OK;
   }
 
   return_type read() override { return return_type::OK; }

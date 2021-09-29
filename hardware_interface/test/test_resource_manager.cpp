@@ -22,6 +22,8 @@
 
 #include "hardware_interface/actuator_interface.hpp"
 #include "hardware_interface/resource_manager.hpp"
+#include "hardware_interface/types/lifecycle_state_names.hpp"
+#include "lifecycle_msgs/msg/state.hpp"
 #include "ros2_control_test_assets/descriptions.hpp"
 
 class TestResourceManager : public ::testing::Test
@@ -114,31 +116,60 @@ TEST_F(TestResourceManager, resource_status)
 {
   hardware_interface::ResourceManager rm(ros2_control_test_assets::minimal_robot_urdf);
 
-  std::unordered_map<std::string, hardware_interface::status> status_map;
+  std::unordered_map<std::string, rclcpp_lifecycle::State> status_map;
 
-  status_map = rm.get_components_status();
-  EXPECT_EQ(status_map["TestActuatorHardware"], hardware_interface::status::CONFIGURED);
-  EXPECT_EQ(status_map["TestSensorHardware"], hardware_interface::status::CONFIGURED);
-  EXPECT_EQ(status_map["TestSystemHardware"], hardware_interface::status::CONFIGURED);
+  status_map = rm.get_components_states();
+  EXPECT_EQ(
+    status_map["TestActuatorHardware"].id(), lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+  EXPECT_EQ(
+    status_map["TestActuatorHardware"].label(),
+    hardware_interface::lifecycle_state_names::INACTIVE);
+  EXPECT_EQ(
+    status_map["TestSensorHardware"].id(), lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+  EXPECT_EQ(
+    status_map["TestSensorHardware"].label(), hardware_interface::lifecycle_state_names::INACTIVE);
+  EXPECT_EQ(
+    status_map["TestSystemHardware"].id(), lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+  EXPECT_EQ(
+    status_map["TestSystemHardware"].label(), hardware_interface::lifecycle_state_names::INACTIVE);
 }
 
 TEST_F(TestResourceManager, starting_and_stopping_resources)
 {
   hardware_interface::ResourceManager rm(ros2_control_test_assets::minimal_robot_urdf);
 
-  std::unordered_map<std::string, hardware_interface::status> status_map;
+  std::unordered_map<std::string, rclcpp_lifecycle::State> status_map;
 
   rm.start_components();
-  status_map = rm.get_components_status();
-  EXPECT_EQ(status_map["TestActuatorHardware"], hardware_interface::status::STARTED);
-  EXPECT_EQ(status_map["TestSensorHardware"], hardware_interface::status::STARTED);
-  EXPECT_EQ(status_map["TestSystemHardware"], hardware_interface::status::STARTED);
+  status_map = rm.get_components_states();
+  EXPECT_EQ(
+    status_map["TestActuatorHardware"].id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+  EXPECT_EQ(
+    status_map["TestActuatorHardware"].label(), hardware_interface::lifecycle_state_names::ACTIVE);
+  EXPECT_EQ(
+    status_map["TestSensorHardware"].id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+  EXPECT_EQ(
+    status_map["TestSensorHardware"].label(), hardware_interface::lifecycle_state_names::ACTIVE);
+  EXPECT_EQ(
+    status_map["TestSystemHardware"].id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+  EXPECT_EQ(
+    status_map["TestSystemHardware"].label(), hardware_interface::lifecycle_state_names::ACTIVE);
 
   rm.stop_components();
-  status_map = rm.get_components_status();
-  EXPECT_EQ(status_map["TestActuatorHardware"], hardware_interface::status::STOPPED);
-  EXPECT_EQ(status_map["TestSensorHardware"], hardware_interface::status::STOPPED);
-  EXPECT_EQ(status_map["TestSystemHardware"], hardware_interface::status::STOPPED);
+  status_map = rm.get_components_states();
+  EXPECT_EQ(
+    status_map["TestActuatorHardware"].id(), lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+  EXPECT_EQ(
+    status_map["TestActuatorHardware"].label(),
+    hardware_interface::lifecycle_state_names::INACTIVE);
+  EXPECT_EQ(
+    status_map["TestSensorHardware"].id(), lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+  EXPECT_EQ(
+    status_map["TestSensorHardware"].label(), hardware_interface::lifecycle_state_names::INACTIVE);
+  EXPECT_EQ(
+    status_map["TestSystemHardware"].id(), lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+  EXPECT_EQ(
+    status_map["TestSystemHardware"].label(), hardware_interface::lifecycle_state_names::INACTIVE);
 }
 
 TEST_F(TestResourceManager, resource_claiming)
@@ -204,11 +235,6 @@ TEST_F(TestResourceManager, resource_claiming)
 
 class ExternalComponent : public hardware_interface::ActuatorInterface
 {
-  hardware_interface::return_type configure(const hardware_interface::HardwareInfo &) override
-  {
-    return hardware_interface::return_type::OK;
-  }
-
   std::vector<hardware_interface::StateInterface> export_state_interfaces() override
   {
     std::vector<hardware_interface::StateInterface> state_interfaces;
@@ -227,16 +253,7 @@ class ExternalComponent : public hardware_interface::ActuatorInterface
     return command_interfaces;
   }
 
-  hardware_interface::return_type start() override { return hardware_interface::return_type::OK; }
-
-  hardware_interface::return_type stop() override { return hardware_interface::return_type::OK; }
-
   std::string get_name() const override { return "ExternalComponent"; }
-
-  hardware_interface::status get_status() const override
-  {
-    return hardware_interface::status::UNKNOWN;
-  }
 
   hardware_interface::return_type read() override { return hardware_interface::return_type::OK; }
 
