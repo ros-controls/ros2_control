@@ -34,6 +34,10 @@
 #include "lifecycle_msgs/msg/state.hpp"
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 
+// Values to send over command interface to trigger error in write and read methods
+static constexpr double RECOVERABLE_ERROR = 1.23456e20;
+static constexpr double UNRECOVERABLE_ERROR = 9.87654e20;
+
 using namespace ::testing;  // NOLINT
 
 namespace test_components
@@ -48,6 +52,20 @@ class DummyActuator : public hardware_interface::ActuatorInterface
     return CallbackReturn::SUCCESS;
   }
 
+  CallbackReturn on_configure(const rclcpp_lifecycle::State & /*previous_state*/) override
+  {
+    position_state_ = 0.0;
+    velocity_state_ = 0.0;
+
+    // reset command only if error is initiated
+    if (velocity_command_ == RECOVERABLE_ERROR || velocity_command_ == UNRECOVERABLE_ERROR)
+    {
+      velocity_command_ = 0.0;
+    }
+
+    return CallbackReturn::SUCCESS;
+  }
+
   std::vector<hardware_interface::StateInterface> export_state_interfaces() override
   {
     // We can read a position and a velocity
@@ -58,14 +76,6 @@ class DummyActuator : public hardware_interface::ActuatorInterface
       "joint1", hardware_interface::HW_IF_VELOCITY, &velocity_state_));
 
     return state_interfaces;
-  }
-
-  CallbackReturn on_configure(const rclcpp_lifecycle::State & /*previous_state*/) override
-  {
-    position_state_ = 0.0;
-    velocity_state_ = 0.0;
-
-    return CallbackReturn::SUCCESS;
   }
 
   std::vector<hardware_interface::CommandInterface> export_command_interfaces() override
@@ -82,12 +92,22 @@ class DummyActuator : public hardware_interface::ActuatorInterface
 
   hardware_interface::return_type read() override
   {
+    if (velocity_command_ == RECOVERABLE_ERROR || velocity_command_ == UNRECOVERABLE_ERROR)
+    {
+      return hardware_interface::return_type::ERROR;
+    }
+
     // no-op, state is getting propagated within write.
     return hardware_interface::return_type::OK;
   }
 
   hardware_interface::return_type write() override
   {
+    if (velocity_command_ == RECOVERABLE_ERROR || velocity_command_ == UNRECOVERABLE_ERROR)
+    {
+      return hardware_interface::return_type::ERROR;
+    }
+
     position_state_ += velocity_command_;
     velocity_state_ = velocity_command_;
 
@@ -98,6 +118,19 @@ class DummyActuator : public hardware_interface::ActuatorInterface
   {
     velocity_state_ = 0;
     return CallbackReturn::SUCCESS;
+  }
+
+  CallbackReturn on_error(const rclcpp_lifecycle::State & /*previous_state*/) override
+  {
+    if (velocity_command_ == RECOVERABLE_ERROR)
+    {
+      return CallbackReturn::SUCCESS;
+    }
+    if (velocity_command_ == UNRECOVERABLE_ERROR)
+    {
+      return CallbackReturn::FAILURE;
+    }
+    return CallbackReturn::ERROR;
   }
 
 private:
@@ -117,6 +150,7 @@ class DummySensor : public hardware_interface::SensorInterface
   CallbackReturn on_configure(const rclcpp_lifecycle::State & /*previous_state*/) override
   {
     voltage_level_ = 0.0;
+    read_calls_ = 0;
     return CallbackReturn::SUCCESS;
   }
 
@@ -134,14 +168,38 @@ class DummySensor : public hardware_interface::SensorInterface
 
   hardware_interface::return_type read() override
   {
+    ++read_calls_;
+    if (read_calls_ == 100)
+    {
+      return hardware_interface::return_type::ERROR;
+    }
+
     // no-op, static value
     voltage_level_ = voltage_level_hw_value_;
     return hardware_interface::return_type::OK;
   }
 
+  CallbackReturn on_error(const rclcpp_lifecycle::State & /*previous_state*/) override
+  {
+    if (!recoverable_error_happned_)
+    {
+      recoverable_error_happned_ = true;
+      return CallbackReturn::SUCCESS;
+    }
+    else
+    {
+      return CallbackReturn::ERROR;
+    }
+    return CallbackReturn::FAILURE;
+  }
+
 private:
   double voltage_level_ = std::numeric_limits<double>::quiet_NaN();
   double voltage_level_hw_value_ = 0x666;
+
+  // Helper variables to initiate error on read
+  int read_calls_ = 0;
+  bool recoverable_error_happned_ = false;
 };
 
 class DummySystem : public hardware_interface::SystemInterface
@@ -158,6 +216,14 @@ class DummySystem : public hardware_interface::SystemInterface
     {
       position_state_[i] = 0.0;
       velocity_state_[i] = 0.0;
+    }
+    // reset command only if error is initiated
+    if (velocity_command_[0] == RECOVERABLE_ERROR || velocity_command_[0] == UNRECOVERABLE_ERROR)
+    {
+      for (auto i = 0ul; i < 3; ++i)
+      {
+        velocity_command_[i] = 0.0;
+      }
     }
     return CallbackReturn::SUCCESS;
   }
@@ -200,12 +266,22 @@ class DummySystem : public hardware_interface::SystemInterface
 
   hardware_interface::return_type read() override
   {
+    if (velocity_command_[0] == RECOVERABLE_ERROR || velocity_command_[0] == UNRECOVERABLE_ERROR)
+    {
+      return hardware_interface::return_type::ERROR;
+    }
+
     // no-op, state is getting propagated within write.
     return hardware_interface::return_type::OK;
   }
 
   hardware_interface::return_type write() override
   {
+    if (velocity_command_[0] == RECOVERABLE_ERROR || velocity_command_[0] == UNRECOVERABLE_ERROR)
+    {
+      return hardware_interface::return_type::ERROR;
+    }
+
     for (auto i = 0; i < 3; ++i)
     {
       position_state_[i] += velocity_command_[0];
@@ -221,6 +297,19 @@ class DummySystem : public hardware_interface::SystemInterface
       velocity_state_[i] = 0.0;
     }
     return CallbackReturn::SUCCESS;
+  }
+
+  CallbackReturn on_error(const rclcpp_lifecycle::State & /*previous_state*/) override
+  {
+    if (velocity_command_[0] == RECOVERABLE_ERROR)
+    {
+      return CallbackReturn::SUCCESS;
+    }
+    if (velocity_command_[0] == UNRECOVERABLE_ERROR)
+    {
+      return CallbackReturn::ERROR;
+    }
+    return CallbackReturn::FAILURE;
   }
 
 private:
@@ -552,4 +641,270 @@ TEST(TestComponentInterfaces, dummy_command_mode_system)
   EXPECT_EQ(
     hardware_interface::return_type::ERROR,
     system_hw.perform_command_mode_switch(two_keys, one_key));
+}
+
+TEST(TestComponentInterfaces, dummy_actuator_read_error_behavior)
+{
+  hardware_interface::Actuator actuator_hw(std::make_unique<test_components::DummyActuator>());
+
+  hardware_interface::HardwareInfo mock_hw_info{};
+  auto state = actuator_hw.initialize(mock_hw_info);
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
+
+  auto state_interfaces = actuator_hw.export_state_interfaces();
+  auto command_interfaces = actuator_hw.export_command_interfaces();
+  state = actuator_hw.configure();
+  state = actuator_hw.activate();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::ACTIVE, state.label());
+
+  // Initiate recoverable error
+  command_interfaces[0].set_value(RECOVERABLE_ERROR);
+  ASSERT_EQ(hardware_interface::return_type::ERROR, actuator_hw.read());
+
+  state = actuator_hw.get_state();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
+
+  // activate again and expect reset values
+  state = actuator_hw.configure();
+  EXPECT_EQ(state_interfaces[0].get_value(), 0.0);
+  EXPECT_EQ(command_interfaces[0].get_value(), 0.0);
+
+  state = actuator_hw.activate();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::ACTIVE, state.label());
+
+  ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.read());
+  ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.write());
+
+  // Initiate unrecoverable error
+  command_interfaces[0].set_value(UNRECOVERABLE_ERROR);
+  ASSERT_EQ(hardware_interface::return_type::ERROR, actuator_hw.read());
+
+  state = actuator_hw.get_state();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::FINALIZED, state.label());
+
+  // can not change state anymore
+  state = actuator_hw.configure();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::FINALIZED, state.label());
+}
+
+TEST(TestComponentInterfaces, dummy_actuator_write_error_behavior)
+{
+  hardware_interface::Actuator actuator_hw(std::make_unique<test_components::DummyActuator>());
+
+  hardware_interface::HardwareInfo mock_hw_info{};
+  auto state = actuator_hw.initialize(mock_hw_info);
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
+
+  auto state_interfaces = actuator_hw.export_state_interfaces();
+  auto command_interfaces = actuator_hw.export_command_interfaces();
+  state = actuator_hw.configure();
+  state = actuator_hw.activate();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::ACTIVE, state.label());
+
+  // Initiate recoverable error
+  command_interfaces[0].set_value(RECOVERABLE_ERROR);
+  ASSERT_EQ(hardware_interface::return_type::ERROR, actuator_hw.write());
+
+  state = actuator_hw.get_state();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
+
+  // activate again and expect reset values
+  state = actuator_hw.configure();
+  EXPECT_EQ(state_interfaces[0].get_value(), 0.0);
+  EXPECT_EQ(command_interfaces[0].get_value(), 0.0);
+
+  state = actuator_hw.activate();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::ACTIVE, state.label());
+
+  ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.read());
+  ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.write());
+
+  // Initiate unrecoverable error
+  command_interfaces[0].set_value(UNRECOVERABLE_ERROR);
+  ASSERT_EQ(hardware_interface::return_type::ERROR, actuator_hw.write());
+
+  state = actuator_hw.get_state();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::FINALIZED, state.label());
+
+  // can not change state anymore
+  state = actuator_hw.configure();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::FINALIZED, state.label());
+}
+
+TEST(TestComponentInterfaces, dummy_sensor_read_error_behavior)
+{
+  hardware_interface::Sensor sensor_hw(std::make_unique<test_components::DummySensor>());
+
+  hardware_interface::HardwareInfo mock_hw_info{};
+  auto state = sensor_hw.initialize(mock_hw_info);
+
+  auto state_interfaces = sensor_hw.export_state_interfaces();
+  // Updated because is is INACTIVE
+  state = sensor_hw.configure();
+  state = sensor_hw.activate();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::ACTIVE, state.label());
+
+  // Initiate recoverable error - call read 99 times OK and on 100-time will return error
+  for (auto i = 1ul; i < 100; ++i)
+  {
+    ASSERT_EQ(hardware_interface::return_type::OK, sensor_hw.read());
+  }
+  ASSERT_EQ(hardware_interface::return_type::ERROR, sensor_hw.read());
+
+  state = sensor_hw.get_state();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
+
+  // activate again and expect reset values
+  state = sensor_hw.configure();
+  EXPECT_EQ(state_interfaces[0].get_value(), 0.0);
+
+  state = sensor_hw.activate();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::ACTIVE, state.label());
+
+  // Initiate unrecoverable error - call read 99 times OK and on 100-time will return error
+  for (auto i = 1ul; i < 100; ++i)
+  {
+    ASSERT_EQ(hardware_interface::return_type::OK, sensor_hw.read());
+  }
+  ASSERT_EQ(hardware_interface::return_type::ERROR, sensor_hw.read());
+
+  state = sensor_hw.get_state();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::FINALIZED, state.label());
+
+  // can not change state anymore
+  state = sensor_hw.configure();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::FINALIZED, state.label());
+}
+
+TEST(TestComponentInterfaces, dummy_system_read_error_behavior)
+{
+  hardware_interface::System system_hw(std::make_unique<test_components::DummySystem>());
+
+  hardware_interface::HardwareInfo mock_hw_info{};
+  auto state = system_hw.initialize(mock_hw_info);
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
+
+  auto state_interfaces = system_hw.export_state_interfaces();
+  auto command_interfaces = system_hw.export_command_interfaces();
+  state = system_hw.configure();
+  state = system_hw.activate();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::ACTIVE, state.label());
+
+  ASSERT_EQ(hardware_interface::return_type::OK, system_hw.read());
+  ASSERT_EQ(hardware_interface::return_type::OK, system_hw.write());
+
+  // Initiate recoverable error
+  command_interfaces[0].set_value(RECOVERABLE_ERROR);
+  ASSERT_EQ(hardware_interface::return_type::ERROR, system_hw.read());
+
+  state = system_hw.get_state();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
+
+  // activate again and expect reset values
+  state = system_hw.configure();
+  for (auto index = 0ul; index < 6; ++index)
+  {
+    EXPECT_EQ(state_interfaces[index].get_value(), 0.0);
+  }
+  for (auto index = 0ul; index < 3; ++index)
+  {
+    EXPECT_EQ(command_interfaces[index].get_value(), 0.0);
+  }
+  state = system_hw.activate();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::ACTIVE, state.label());
+
+  ASSERT_EQ(hardware_interface::return_type::OK, system_hw.read());
+  ASSERT_EQ(hardware_interface::return_type::OK, system_hw.write());
+
+  // Initiate unrecoverable error
+  command_interfaces[0].set_value(UNRECOVERABLE_ERROR);
+  ASSERT_EQ(hardware_interface::return_type::ERROR, system_hw.read());
+
+  state = system_hw.get_state();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::FINALIZED, state.label());
+
+  // can not change state anymore
+  state = system_hw.configure();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::FINALIZED, state.label());
+}
+
+TEST(TestComponentInterfaces, dummy_system_write_error_behavior)
+{
+  hardware_interface::System system_hw(std::make_unique<test_components::DummySystem>());
+
+  hardware_interface::HardwareInfo mock_hw_info{};
+  auto state = system_hw.initialize(mock_hw_info);
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
+
+  auto state_interfaces = system_hw.export_state_interfaces();
+  auto command_interfaces = system_hw.export_command_interfaces();
+  state = system_hw.configure();
+  state = system_hw.activate();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::ACTIVE, state.label());
+
+  ASSERT_EQ(hardware_interface::return_type::OK, system_hw.read());
+  ASSERT_EQ(hardware_interface::return_type::OK, system_hw.write());
+
+  // Initiate recoverable error
+  command_interfaces[0].set_value(RECOVERABLE_ERROR);
+  ASSERT_EQ(hardware_interface::return_type::ERROR, system_hw.write());
+
+  state = system_hw.get_state();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
+
+  // activate again and expect reset values
+  state = system_hw.configure();
+  for (auto index = 0ul; index < 6; ++index)
+  {
+    EXPECT_EQ(state_interfaces[index].get_value(), 0.0);
+  }
+  for (auto index = 0ul; index < 3; ++index)
+  {
+    EXPECT_EQ(command_interfaces[index].get_value(), 0.0);
+  }
+  state = system_hw.activate();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::ACTIVE, state.label());
+
+  ASSERT_EQ(hardware_interface::return_type::OK, system_hw.read());
+  ASSERT_EQ(hardware_interface::return_type::OK, system_hw.write());
+
+  // Initiate unrecoverable error
+  command_interfaces[0].set_value(UNRECOVERABLE_ERROR);
+  ASSERT_EQ(hardware_interface::return_type::ERROR, system_hw.write());
+
+  state = system_hw.get_state();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::FINALIZED, state.label());
+
+  // can not change state anymore
+  state = system_hw.configure();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::FINALIZED, state.label());
 }

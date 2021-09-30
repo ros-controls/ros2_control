@@ -218,24 +218,34 @@ const rclcpp_lifecycle::State & Actuator::get_state() const { return impl_->get_
 
 return_type Actuator::read()
 {
+  return_type result = return_type::ERROR;
   if (
     impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
     impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
   {
-    return impl_->read();
+    result = impl_->read();
+    if (result == return_type::ERROR)
+    {
+      error();
+    }
   }
-  return return_type::ERROR;
+  return result;
 }
 
 return_type Actuator::write()
 {
+  return_type result = return_type::ERROR;
   if (
     impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
     impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
   {
-    return impl_->write();
+    result = impl_->write();
+    if (result == return_type::ERROR)
+    {
+      error();
+    }
   }
-  return return_type::ERROR;
+  return result;
 }
 
 }  // namespace hardware_interface
