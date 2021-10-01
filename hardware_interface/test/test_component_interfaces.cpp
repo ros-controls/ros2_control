@@ -181,9 +181,9 @@ class DummySensor : public hardware_interface::SensorInterface
 
   CallbackReturn on_error(const rclcpp_lifecycle::State & /*previous_state*/) override
   {
-    if (!recoverable_error_happned_)
+    if (!recoverable_error_happened_)
     {
-      recoverable_error_happned_ = true;
+      recoverable_error_happened_ = true;
       return CallbackReturn::SUCCESS;
     }
     else
@@ -199,7 +199,7 @@ private:
 
   // Helper variables to initiate error on read
   int read_calls_ = 0;
-  bool recoverable_error_happned_ = false;
+  bool recoverable_error_happened_ = false;
 };
 
 class DummySystem : public hardware_interface::SystemInterface
