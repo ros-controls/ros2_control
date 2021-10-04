@@ -58,7 +58,8 @@ public:
    * \return true if all parameters are read Successfully, false if a parameter is not provided or
    * parameter configuration is wrong.
    */
-  virtual bool get_parameters(rclcpp::Node::SharedPtr node, bool check_validity = true);
+  virtual bool get_parameters(
+    rclcpp::Node::SharedPtr node, bool check_validity = true, bool update = true);
 
   virtual rcl_interfaces::msg::SetParametersResult set_parameter_callback(
     const std::vector<rclcpp::Parameter> & parameters);

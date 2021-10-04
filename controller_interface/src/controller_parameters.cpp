@@ -49,7 +49,8 @@ void ControllerParameters::declare_parameters(rclcpp::Node::SharedPtr node)
   * \return true if all parameters are read Successfully, false if a parameter is not provided or
   * parameter configuration is wrong.
   */
-bool ControllerParameters::get_parameters(rclcpp::Node::SharedPtr node, bool check_validity)
+bool ControllerParameters::get_parameters(
+  rclcpp::Node::SharedPtr node, bool check_validity, bool update)
 {
   bool ret = false;
 
@@ -61,6 +62,11 @@ bool ControllerParameters::get_parameters(rclcpp::Node::SharedPtr node, bool che
   if (ret && check_validity)
   {
     ret = check_if_parameters_are_valid();
+  }
+
+  if (ret && update)
+  {
+    this->update();
   }
 
   return ret;
