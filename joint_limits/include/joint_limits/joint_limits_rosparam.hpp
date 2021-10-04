@@ -259,7 +259,7 @@ inline bool get_joint_limits(
  * \return True if a complete soft limits specification is found (ie. if all \p k_position, \p k_velocity, \p soft_lower_limit and
  * \p soft_upper_limit exist in \p joint_limits/joint_name namespace), false otherwise.
  */
-inline bool get_soft_joint_limits(
+inline bool get_joint_limits(
   const std::string & joint_name, const rclcpp::Node::SharedPtr & node,
   SoftJointLimits & soft_limits)
 {

@@ -1,0 +1,29 @@
+<package format="3">
+  <name>joint_limits_enforcement_plugins</name>
+  <version>0.0.0</version>
+  <description>Package for handling of joint limits using external libraries for use in controllers or in hardware.</description>
+
+  <maintainer email="bence.magyar.robotics@gmail.com">Bence Magyar</maintainer>
+  <maintainer email="denis@stogl.de">Denis Štogl</maintainer>
+  <maintainer email="zelenak@picknik.ai">Andy Zelenak</maintainer>
+
+  <license>Apache License 2.0</license>
+
+  <url type="website">https://github.com/ros-controls/ros2_control/wiki</url>
+  <url type="bugtracker">https://github.com/ros-controls/ros2_control/issues</url>
+  <url type="repository">https://github.com/ros-controls/ros2_control</url>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>joint_limits</depend>
+  <depend>rclcpp</depend>
+  <depend>pluginlib</depend>
+  <depend>rcutils</depend>
+  <depend>ruckig</depend>
+
+  <test_depend>ament_cmake_gmock</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

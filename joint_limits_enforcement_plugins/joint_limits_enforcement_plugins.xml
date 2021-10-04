@@ -1,0 +1,9 @@
+<library path="ruckig_joint_limiter">
+  <class name="ruckig_joint_limiter/RuckigJointLimiter"
+         type="ruckig_joint_limiter::RuckigJointLimiter<joint_limits::JointLimits>"
+         base_class_type="joint_limits::JointLimiterInterface<joint_limits::JointLimits>">
+    <description>
+      Jerk-limited smoothing with the Ruckig library.
+    </description>
+  </class>
+</library>

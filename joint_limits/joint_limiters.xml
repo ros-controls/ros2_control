@@ -1,0 +1,9 @@
+<library path="simple_joint_limiter">
+  <class name="joint_limits/SimpleJointLimiter"
+         type="joint_limits::SimpleJointLimiter<joint_limits::JointLimits>"
+         base_class_type="joint_limits::JointLimiterInterface<joint_limits::JointLimits>">
+    <description>
+      Simple joint limiter using clamping approach.
+    </description>
+  </class>
+</library>
