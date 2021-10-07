@@ -26,16 +26,39 @@ class ListControllersVerb(VerbExtension):
 
     def add_arguments(self, parser, cli_name):
         add_arguments(parser)
+        parser.add_argument(
+            "--claimed-interfaces",
+            action="store_true",
+            help="List controller's claimed interfaces",
+        )
+        parser.add_argument(
+            "--required-state-interfaces",
+            action="store_true",
+            help="List controller's required state interfaces",
+        )
+        parser.add_argument(
+            "--required-command-interfaces",
+            action="store_true",
+            help="List controller's required command interfaces",
+        )
         add_controller_mgr_parsers(parser)
 
     def main(self, *, args):
         with NodeStrategy(args) as node:
             controllers = list_controllers(node, args.controller_manager).controller
             for c in controllers:
-                print(f'{c.name:20s}[{c.type:20s}] {c.state:10s}')
-                # TODO: please test this and make nice, readable formatting in the console
-                print(f'{c.claimed_interfaces}')
-                print(f'{c.required_command_interfaces}')
-                print(f'{c.required_state_interfaces}')
+                print(f"{c.name:20s}[{c.type:20s}] {c.state:10s}")
+                if args.claimed_interfaces:
+                    print("claimed interfaces")
+                    for claimed_interface in c.claimed_interfaces:
+                        print(f"\t{claimed_interface}")
+                if args.required_command_interfaces:
+                    print("required command interfaces")
+                    for required_command_interface in c.required_command_interfaces:
+                        print(f"\t{required_command_interface}")
+                if args.required_state_interfaces:
+                    print("required state interfaces")
+                    for required_state_interface in c.required_state_interfaces:
+                        print(f"\t{required_state_interface}")
 
             return 0
