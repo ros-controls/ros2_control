@@ -859,8 +859,36 @@ void ControllerManager::list_controllers_srv_cb(
     controller_manager_msgs::msg::ControllerState & cs = response->controller[i];
     cs.name = controllers[i].info.name;
     cs.type = controllers[i].info.type;
-    cs.claimed_interfaces = controllers[i].c->command_interface_configuration().names;
     cs.state = controllers[i].c->get_state().label();
+    cs.claimed_interfaces = controllers[i].info.claimed_interfaces;
+
+    // Get information about interfaces
+    auto command_interface_config = controllers[i].c->command_interface_configuration();
+    if (command_interface_config.type == controller_interface::interface_configuration_type::ALL)
+    {
+      // TODO: This could be too much, please test with CLI and the second option is better
+      cs.required_command_interfaces = resource_manager_->command_interface_keys();
+      // cs.required_command_interfaces = {"*ALL_AVAILABLE_COMMAND_INTERFACES*"};
+    }
+    if (
+      command_interface_config.type ==
+      controller_interface::interface_configuration_type::INDIVIDUAL)
+    {
+      cs.required_command_interfaces = command_interface_config.names;
+    }
+
+    auto state_interface_config = controllers[i].c->state_interface_configuration();
+    if (state_interface_config.type == controller_interface::interface_configuration_type::ALL)
+    {
+      // TODO: This could be too much, please test with CLI and the second option is better
+      cs.required_state_interfaces = resource_manager_->state_interface_keys();
+      // cs.required_state_interfaces = {"*ALL_AVAILABLE_COMMAND_INTERFACES*"};
+    }
+    if (
+      state_interface_config.type == controller_interface::interface_configuration_type::INDIVIDUAL)
+    {
+      cs.required_state_interfaces = state_interface_config.names;
+    }
   }
 
   RCLCPP_DEBUG(get_logger(), "list controller service finished");
