@@ -859,8 +859,8 @@ void ControllerManager::list_controllers_srv_cb(
     controller_manager_msgs::msg::ControllerState & cs = response->controller[i];
     cs.name = controllers[i].info.name;
     cs.type = controllers[i].info.type;
-    cs.state = controllers[i].c->get_state().label();
     cs.claimed_interfaces = controllers[i].info.claimed_interfaces;
+    cs.state = controllers[i].c->get_state().label();
 
     // Get information about interfaces
     auto command_interface_config = controllers[i].c->command_interface_configuration();
