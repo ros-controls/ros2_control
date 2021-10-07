@@ -866,11 +866,9 @@ void ControllerManager::list_controllers_srv_cb(
     auto command_interface_config = controllers[i].c->command_interface_configuration();
     if (command_interface_config.type == controller_interface::interface_configuration_type::ALL)
     {
-      // TODO: This could be too much, please test with CLI and the second option is better
       cs.required_command_interfaces = resource_manager_->command_interface_keys();
-      // cs.required_command_interfaces = {"*ALL_AVAILABLE_COMMAND_INTERFACES*"};
     }
-    if (
+    else if (
       command_interface_config.type ==
       controller_interface::interface_configuration_type::INDIVIDUAL)
     {
@@ -880,11 +878,9 @@ void ControllerManager::list_controllers_srv_cb(
     auto state_interface_config = controllers[i].c->state_interface_configuration();
     if (state_interface_config.type == controller_interface::interface_configuration_type::ALL)
     {
-      // TODO: This could be too much, please test with CLI and the second option is better
       cs.required_state_interfaces = resource_manager_->state_interface_keys();
-      // cs.required_state_interfaces = {"*ALL_AVAILABLE_COMMAND_INTERFACES*"};
     }
-    if (
+    else if (
       state_interface_config.type == controller_interface::interface_configuration_type::INDIVIDUAL)
     {
       cs.required_state_interfaces = state_interface_config.names;

@@ -66,6 +66,12 @@ void TestController::set_command_interface_configuration(
   cmd_iface_cfg_ = cfg;
 }
 
+void TestController::set_state_interface_configuration(
+  const controller_interface::InterfaceConfiguration & cfg)
+{
+  state_iface_cfg_ = cfg;
+}
+
 }  // namespace test_controller
 
 #include "pluginlib/class_list_macros.hpp"
