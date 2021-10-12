@@ -7,6 +7,15 @@ There are three types of hardware Actuator, Sensor and System.
 For details on each type check `Hardware Components description <https://ros-controls.github.io/control.ros.org/getting_started.html#hardware-components>`_.
 
 
+Handling of errors that happen during read() and write() calls
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If ``hardware_interface::return_type::ERROR`` is returned from ``read()`` or ``write()`` methods of a hardware interface, ``on_error(previous_state)`` method will be called to handle any error that happened.
+
+Error handling follows the `node lifecycle <https://design.ros2.org/articles/node_lifecycle.html>`_.
+If successful ``CallbackReturn::SUCCESS`` is returned and hardware is again in ``UNCONFIGURED``  state, if any ``ERROR`` or ``FAILURE`` happens the hardware ends in ``FINALIZED`` state and can not be recovered.
+The only option is to reload the complete plugin, but there is currently no service for this in the Controller Manager.
+
 Migration from Foxy to Galactic
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

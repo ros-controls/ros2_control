@@ -195,13 +195,18 @@ const rclcpp_lifecycle::State & Sensor::get_state() const { return impl_->get_st
 
 return_type Sensor::read()
 {
+  return_type result = return_type::ERROR;
   if (
     impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
     impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
   {
-    return impl_->read();
+    result = impl_->read();
+    if (result == return_type::ERROR)
+    {
+      error();
+    }
   }
-  return return_type::ERROR;
+  return result;
 }
 
 }  // namespace hardware_interface
