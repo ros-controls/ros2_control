@@ -35,8 +35,7 @@
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 
 // Values to send over command interface to trigger error in write and read methods
-static constexpr double RECOVERABLE_ERROR = 1.23456e20;
-static constexpr double UNRECOVERABLE_ERROR = 9.87654e20;
+static constexpr unsigned int TRIGGER_READ_WRITE_ERROR_CALLS = 10000;
 
 using namespace ::testing;  // NOLINT
 
@@ -57,11 +56,13 @@ class DummyActuator : public hardware_interface::ActuatorInterface
     position_state_ = 0.0;
     velocity_state_ = 0.0;
 
-    // reset command only if error is initiated
-    if (velocity_command_ == RECOVERABLE_ERROR || velocity_command_ == UNRECOVERABLE_ERROR)
+    if (recoverable_error_happened_)
     {
       velocity_command_ = 0.0;
     }
+
+    read_calls_ = 0;
+    write_calls_ = 0;
 
     return CallbackReturn::SUCCESS;
   }
@@ -92,7 +93,8 @@ class DummyActuator : public hardware_interface::ActuatorInterface
 
   hardware_interface::return_type read() override
   {
-    if (velocity_command_ == RECOVERABLE_ERROR || velocity_command_ == UNRECOVERABLE_ERROR)
+    ++read_calls_;
+    if (read_calls_ == TRIGGER_READ_WRITE_ERROR_CALLS)
     {
       return hardware_interface::return_type::ERROR;
     }
@@ -103,7 +105,8 @@ class DummyActuator : public hardware_interface::ActuatorInterface
 
   hardware_interface::return_type write() override
   {
-    if (velocity_command_ == RECOVERABLE_ERROR || velocity_command_ == UNRECOVERABLE_ERROR)
+    ++write_calls_;
+    if (write_calls_ == TRIGGER_READ_WRITE_ERROR_CALLS)
     {
       return hardware_interface::return_type::ERROR;
     }
@@ -122,21 +125,27 @@ class DummyActuator : public hardware_interface::ActuatorInterface
 
   CallbackReturn on_error(const rclcpp_lifecycle::State & /*previous_state*/) override
   {
-    if (velocity_command_ == RECOVERABLE_ERROR)
+    if (!recoverable_error_happened_)
     {
+      recoverable_error_happened_ = true;
       return CallbackReturn::SUCCESS;
     }
-    if (velocity_command_ == UNRECOVERABLE_ERROR)
+    else
     {
-      return CallbackReturn::FAILURE;
+      return CallbackReturn::ERROR;
     }
-    return CallbackReturn::ERROR;
+    return CallbackReturn::FAILURE;
   }
 
 private:
   double position_state_ = std::numeric_limits<double>::quiet_NaN();
   double velocity_state_ = std::numeric_limits<double>::quiet_NaN();
   double velocity_command_ = 0.0;
+
+  // Helper variables to initiate error on read
+  unsigned int read_calls_ = 0;
+  unsigned int write_calls_ = 0;
+  bool recoverable_error_happened_ = false;
 };
 
 class DummySensor : public hardware_interface::SensorInterface
@@ -169,7 +178,7 @@ class DummySensor : public hardware_interface::SensorInterface
   hardware_interface::return_type read() override
   {
     ++read_calls_;
-    if (read_calls_ == 100)
+    if (read_calls_ == TRIGGER_READ_WRITE_ERROR_CALLS)
     {
       return hardware_interface::return_type::ERROR;
     }
@@ -218,13 +227,17 @@ class DummySystem : public hardware_interface::SystemInterface
       velocity_state_[i] = 0.0;
     }
     // reset command only if error is initiated
-    if (velocity_command_[0] == RECOVERABLE_ERROR || velocity_command_[0] == UNRECOVERABLE_ERROR)
+    if (recoverable_error_happened_)
     {
       for (auto i = 0ul; i < 3; ++i)
       {
         velocity_command_[i] = 0.0;
       }
     }
+
+    read_calls_ = 0;
+    write_calls_ = 0;
+
     return CallbackReturn::SUCCESS;
   }
 
@@ -266,7 +279,8 @@ class DummySystem : public hardware_interface::SystemInterface
 
   hardware_interface::return_type read() override
   {
-    if (velocity_command_[0] == RECOVERABLE_ERROR || velocity_command_[0] == UNRECOVERABLE_ERROR)
+    ++read_calls_;
+    if (read_calls_ == TRIGGER_READ_WRITE_ERROR_CALLS)
     {
       return hardware_interface::return_type::ERROR;
     }
@@ -277,7 +291,8 @@ class DummySystem : public hardware_interface::SystemInterface
 
   hardware_interface::return_type write() override
   {
-    if (velocity_command_[0] == RECOVERABLE_ERROR || velocity_command_[0] == UNRECOVERABLE_ERROR)
+    ++write_calls_;
+    if (write_calls_ == TRIGGER_READ_WRITE_ERROR_CALLS)
     {
       return hardware_interface::return_type::ERROR;
     }
@@ -301,11 +316,12 @@ class DummySystem : public hardware_interface::SystemInterface
 
   CallbackReturn on_error(const rclcpp_lifecycle::State & /*previous_state*/) override
   {
-    if (velocity_command_[0] == RECOVERABLE_ERROR)
+    if (!recoverable_error_happened_)
     {
+      recoverable_error_happened_ = true;
       return CallbackReturn::SUCCESS;
     }
-    if (velocity_command_[0] == UNRECOVERABLE_ERROR)
+    else
     {
       return CallbackReturn::ERROR;
     }
@@ -320,6 +336,11 @@ private:
     std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
     std::numeric_limits<double>::quiet_NaN()};
   std::array<double, 3> velocity_command_ = {0.0, 0.0, 0.0};
+
+  // Helper variables to initiate error on read
+  unsigned int read_calls_ = 0;
+  unsigned int write_calls_ = 0;
+  bool recoverable_error_happened_ = false;
 };
 
 class DummySystemPreparePerform : public hardware_interface::SystemInterface
@@ -659,8 +680,14 @@ TEST(TestComponentInterfaces, dummy_actuator_read_error_behavior)
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::ACTIVE, state.label());
 
-  // Initiate recoverable error
-  command_interfaces[0].set_value(RECOVERABLE_ERROR);
+  ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.read());
+  ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.write());
+
+  // Initiate error on write (this is first time therefore recoverable)
+  for (auto i = 2ul; i < TRIGGER_READ_WRITE_ERROR_CALLS; ++i)
+  {
+    ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.read());
+  }
   ASSERT_EQ(hardware_interface::return_type::ERROR, actuator_hw.read());
 
   state = actuator_hw.get_state();
@@ -679,8 +706,11 @@ TEST(TestComponentInterfaces, dummy_actuator_read_error_behavior)
   ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.read());
   ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.write());
 
-  // Initiate unrecoverable error
-  command_interfaces[0].set_value(UNRECOVERABLE_ERROR);
+  // Initiate error on write (this is the second time therefore unrecoverable)
+  for (auto i = 2ul; i < TRIGGER_READ_WRITE_ERROR_CALLS; ++i)
+  {
+    ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.read());
+  }
   ASSERT_EQ(hardware_interface::return_type::ERROR, actuator_hw.read());
 
   state = actuator_hw.get_state();
@@ -709,8 +739,14 @@ TEST(TestComponentInterfaces, dummy_actuator_write_error_behavior)
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::ACTIVE, state.label());
 
-  // Initiate recoverable error
-  command_interfaces[0].set_value(RECOVERABLE_ERROR);
+  ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.read());
+  ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.write());
+
+  // Initiate error on write (this is first time therefore recoverable)
+  for (auto i = 2ul; i < TRIGGER_READ_WRITE_ERROR_CALLS; ++i)
+  {
+    ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.write());
+  }
   ASSERT_EQ(hardware_interface::return_type::ERROR, actuator_hw.write());
 
   state = actuator_hw.get_state();
@@ -729,8 +765,11 @@ TEST(TestComponentInterfaces, dummy_actuator_write_error_behavior)
   ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.read());
   ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.write());
 
-  // Initiate unrecoverable error
-  command_interfaces[0].set_value(UNRECOVERABLE_ERROR);
+  // Initiate error on write (this is the second time therefore unrecoverable)
+  for (auto i = 2ul; i < TRIGGER_READ_WRITE_ERROR_CALLS; ++i)
+  {
+    ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.write());
+  }
   ASSERT_EQ(hardware_interface::return_type::ERROR, actuator_hw.write());
 
   state = actuator_hw.get_state();
@@ -757,8 +796,10 @@ TEST(TestComponentInterfaces, dummy_sensor_read_error_behavior)
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::ACTIVE, state.label());
 
+  ASSERT_EQ(hardware_interface::return_type::OK, sensor_hw.read());
+
   // Initiate recoverable error - call read 99 times OK and on 100-time will return error
-  for (auto i = 1ul; i < 100; ++i)
+  for (auto i = 2ul; i < TRIGGER_READ_WRITE_ERROR_CALLS; ++i)
   {
     ASSERT_EQ(hardware_interface::return_type::OK, sensor_hw.read());
   }
@@ -777,7 +818,7 @@ TEST(TestComponentInterfaces, dummy_sensor_read_error_behavior)
   EXPECT_EQ(hardware_interface::lifecycle_state_names::ACTIVE, state.label());
 
   // Initiate unrecoverable error - call read 99 times OK and on 100-time will return error
-  for (auto i = 1ul; i < 100; ++i)
+  for (auto i = 1ul; i < TRIGGER_READ_WRITE_ERROR_CALLS; ++i)
   {
     ASSERT_EQ(hardware_interface::return_type::OK, sensor_hw.read());
   }
@@ -812,8 +853,11 @@ TEST(TestComponentInterfaces, dummy_system_read_error_behavior)
   ASSERT_EQ(hardware_interface::return_type::OK, system_hw.read());
   ASSERT_EQ(hardware_interface::return_type::OK, system_hw.write());
 
-  // Initiate recoverable error
-  command_interfaces[0].set_value(RECOVERABLE_ERROR);
+  // Initiate error on write (this is first time therefore recoverable)
+  for (auto i = 2ul; i < TRIGGER_READ_WRITE_ERROR_CALLS; ++i)
+  {
+    ASSERT_EQ(hardware_interface::return_type::OK, system_hw.read());
+  }
   ASSERT_EQ(hardware_interface::return_type::ERROR, system_hw.read());
 
   state = system_hw.get_state();
@@ -837,8 +881,11 @@ TEST(TestComponentInterfaces, dummy_system_read_error_behavior)
   ASSERT_EQ(hardware_interface::return_type::OK, system_hw.read());
   ASSERT_EQ(hardware_interface::return_type::OK, system_hw.write());
 
-  // Initiate unrecoverable error
-  command_interfaces[0].set_value(UNRECOVERABLE_ERROR);
+  // Initiate error on write (this is the second time therefore unrecoverable)
+  for (auto i = 2ul; i < TRIGGER_READ_WRITE_ERROR_CALLS; ++i)
+  {
+    ASSERT_EQ(hardware_interface::return_type::OK, system_hw.read());
+  }
   ASSERT_EQ(hardware_interface::return_type::ERROR, system_hw.read());
 
   state = system_hw.get_state();
@@ -870,8 +917,11 @@ TEST(TestComponentInterfaces, dummy_system_write_error_behavior)
   ASSERT_EQ(hardware_interface::return_type::OK, system_hw.read());
   ASSERT_EQ(hardware_interface::return_type::OK, system_hw.write());
 
-  // Initiate recoverable error
-  command_interfaces[0].set_value(RECOVERABLE_ERROR);
+  // Initiate error on write (this is first time therefore recoverable)
+  for (auto i = 2ul; i < TRIGGER_READ_WRITE_ERROR_CALLS; ++i)
+  {
+    ASSERT_EQ(hardware_interface::return_type::OK, system_hw.write());
+  }
   ASSERT_EQ(hardware_interface::return_type::ERROR, system_hw.write());
 
   state = system_hw.get_state();
@@ -895,8 +945,11 @@ TEST(TestComponentInterfaces, dummy_system_write_error_behavior)
   ASSERT_EQ(hardware_interface::return_type::OK, system_hw.read());
   ASSERT_EQ(hardware_interface::return_type::OK, system_hw.write());
 
-  // Initiate unrecoverable error
-  command_interfaces[0].set_value(UNRECOVERABLE_ERROR);
+  // Initiate error on write (this is the second time therefore unrecoverable)
+  for (auto i = 2ul; i < TRIGGER_READ_WRITE_ERROR_CALLS; ++i)
+  {
+    ASSERT_EQ(hardware_interface::return_type::OK, system_hw.write());
+  }
   ASSERT_EQ(hardware_interface::return_type::ERROR, system_hw.write());
 
   state = system_hw.get_state();
