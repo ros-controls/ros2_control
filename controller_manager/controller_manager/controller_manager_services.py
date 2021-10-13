@@ -19,13 +19,14 @@ from controller_manager_msgs.srv import ConfigureController, \
 import rclpy
 
 
-def service_caller(node, service_name, service_type, request):
+def service_caller(node, service_name, service_type, request, service_timeout=10.0):
     cli = node.create_client(service_type, service_name)
 
     if not cli.service_is_ready():
-        node.get_logger().debug('waiting for service {} to become available...'
-                                .format(service_name))
-        if not cli.wait_for_service(10.0):
+        print("Waiting {}".format(service_timeout))
+        node.get_logger().debug('waiting {} seconds for service {} to become available...'
+                                .format(service_timeout, service_name))
+        if not cli.wait_for_service(service_timeout):
             raise RuntimeError(f'Could not contact service {service_name}')
 
     node.get_logger().debug('requester: making request: %r\n' % request)
