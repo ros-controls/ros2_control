@@ -24,6 +24,8 @@ namespace controller_interface
 /// Reorder interfaces with references according to joint names or full interface names.
 /**
   * Method to reorder and check if all expected interfaces are provided for the joint.
+  * Fill `ordered_interfaces` with references from `unordered_interfaces` in the same order as in
+  * `ordered_names`.
   *
   * \param[in] unordered_interfaces vector with loaned unordered state or command interfaces.
   * \param[in] ordered_names vector with ordered names to order \p unordered_interfaces.
