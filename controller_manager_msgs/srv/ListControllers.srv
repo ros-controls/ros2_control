@@ -2,4 +2,4 @@
 # controllers that are loaded inside the controller_manager.
 
 ---
-ControllerState[] controller
+controller_manager_msgs/ControllerState[] controller

@@ -861,6 +861,30 @@ void ControllerManager::list_controllers_srv_cb(
     cs.type = controllers[i].info.type;
     cs.claimed_interfaces = controllers[i].info.claimed_interfaces;
     cs.state = controllers[i].c->get_state().label();
+
+    // Get information about interfaces
+    auto command_interface_config = controllers[i].c->command_interface_configuration();
+    if (command_interface_config.type == controller_interface::interface_configuration_type::ALL)
+    {
+      cs.required_command_interfaces = resource_manager_->command_interface_keys();
+    }
+    else if (
+      command_interface_config.type ==
+      controller_interface::interface_configuration_type::INDIVIDUAL)
+    {
+      cs.required_command_interfaces = command_interface_config.names;
+    }
+
+    auto state_interface_config = controllers[i].c->state_interface_configuration();
+    if (state_interface_config.type == controller_interface::interface_configuration_type::ALL)
+    {
+      cs.required_state_interfaces = resource_manager_->state_interface_keys();
+    }
+    else if (
+      state_interface_config.type == controller_interface::interface_configuration_type::INDIVIDUAL)
+    {
+      cs.required_state_interfaces = state_interface_config.names;
+    }
   }
 
   RCLCPP_DEBUG(get_logger(), "list controller service finished");
