@@ -49,16 +49,16 @@ class ListControllersVerb(VerbExtension):
             for c in controllers:
                 print(f'{c.name:20s}[{c.type:20s}] {c.state:10s}')
                 if args.claimed_interfaces:
-                    print('claimed interfaces:')
+                    print('\tclaimed interfaces:')
                     for claimed_interface in c.claimed_interfaces:
-                        print(f'\t{claimed_interface}')
+                        print(f'\t\t{claimed_interface}')
                 if args.required_command_interfaces:
-                    print('required command interfaces:')
+                    print('\trequired command interfaces:')
                     for required_command_interface in c.required_command_interfaces:
-                        print(f'\t{required_command_interface}')
+                        print(f'\t\t{required_command_interface}')
                 if args.required_state_interfaces:
-                    print('required state interfaces:')
+                    print('\trequired state interfaces:')
                     for required_state_interface in c.required_state_interfaces:
-                        print(f'\t{required_state_interface}')
+                        print(f'\t\t{required_state_interface}')
 
             return 0
