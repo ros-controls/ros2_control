@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.8.1 (2021-10-25)
+------------------
 * [ControllerManager] Fix method name upon fetching state of controller(s) (`#526 <https://github.com/ros-controls/ros2_control/issues/526>`_)
 * Controller Manager should not crash when trying to start finalized or unconfigured controller (`#461 <https://github.com/ros-controls/ros2_control/issues/461>`_) (`#524 <https://github.com/ros-controls/ros2_control/issues/524>`_)
 * Contributors: Denis Štogl, Lovro Ivanov

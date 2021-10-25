@@ -2,8 +2,8 @@
 Changelog for package ros2_control_test_assets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.8.1 (2021-10-25)
+------------------
 * Remove unnecessary includes (`#518 <https://github.com/ros-controls/ros2_control/issues/518>`_) (`#522 <https://github.com/ros-controls/ros2_control/issues/522>`_)
 * Contributors: mergify[bot]
 
