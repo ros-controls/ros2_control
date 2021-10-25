@@ -2,6 +2,11 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Quick fix 🏎: make doc on helpers clearer (`#553 <https://github.com/ros-controls/ros2_control/issues/553>`_)
+* Contributors: Denis Štogl
+
 1.0.0 (2021-09-29)
 ------------------
 * Per controller update rate (`#513 <https://github.com/ros-controls/ros2_control/issues/513>`_)

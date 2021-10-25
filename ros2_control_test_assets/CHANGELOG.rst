@@ -2,6 +2,11 @@
 Changelog for package ros2_control_test_assets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Moving diffbot_urdf to ros2_control_test_assets. (`#558 <https://github.com/ros-controls/ros2_control/issues/558>`_)
+* Contributors: bailaC
+
 1.0.0 (2021-09-29)
 ------------------
 * Remove unnecessary includes (`#518 <https://github.com/ros-controls/ros2_control/issues/518>`_)
