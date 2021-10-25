@@ -2,6 +2,9 @@
 Changelog for package controller_manager_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.8.0 (2021-08-28)
 ------------------
 * Add pre-commit setup. (`#473 <https://github.com/ros-controls/ros2_control/issues/473>`_)

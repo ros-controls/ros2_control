@@ -2,6 +2,12 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* add M_PI macro for windows foxy in test_component_parser.cpp (`#545 <https://github.com/ros-controls/ros2_control/issues/545>`_)
+* Extend GenericSystem by adding mapping of position with offset to custom interface. (`#469 <https://github.com/ros-controls/ros2_control/issues/469>`_) (`#523 <https://github.com/ros-controls/ros2_control/issues/523>`_)
+* Contributors: BenjaminHug8, Denis Štogl
+
 0.8.0 (2021-08-28)
 ------------------
 * Use clang format as code formatter (`#491 <https://github.com/ros-controls/ros2_control/issues/491>`_)
