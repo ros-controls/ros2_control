@@ -2,8 +2,8 @@
 Changelog for package ros2controlcli
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.1.0 (2021-10-25)
+------------------
 * Fixup formatting 🔧 of "list_controllers.py" and do not check formating on build stage. (`#555 <https://github.com/ros-controls/ros2_control/issues/555>`_)
   * Do not check formating on build stage.
   * Change formatting of strings.
