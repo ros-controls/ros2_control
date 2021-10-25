@@ -28,6 +28,20 @@ import rclpy
 from rclpy.duration import Duration
 from rclpy.node import Node
 
+# from https://stackoverflow.com/a/287944
+
+
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
 
 def wait_for_controller_manager(node, controller_manager, timeout_duration):
     def full_name(n):
@@ -112,11 +126,12 @@ def main(args=None):
             if controller_type:
                 ret = subprocess.run(['ros2', 'param', 'set', controller_manager_name,
                                       controller_name + '.type', controller_type])
-            ret = load_controller(node, controller_manager_name, controller_name)
+            ret = load_controller(
+                node, controller_manager_name, controller_name)
             if not ret.ok:
                 # Error message printed by ros2 control
                 return 1
-            node.get_logger().info('Loaded ' + controller_name)
+            node.get_logger().info(bcolors.OKBLUE + 'Loaded ' + controller_name + bcolors.ENDC)
 
         if param_file:
             ret = subprocess.run(['ros2', 'param', 'load', controller_name,
@@ -127,7 +142,8 @@ def main(args=None):
             node.get_logger().info('Loaded ' + param_file + ' into ' + controller_name)
 
         if not args.load_only:
-            ret = configure_controller(node, controller_manager_name, controller_name)
+            ret = configure_controller(
+                node, controller_manager_name, controller_name)
             if not ret.ok:
                 node.get_logger().info('Failed to configure controller')
                 return 1
@@ -145,7 +161,8 @@ def main(args=None):
                     node.get_logger().info('Failed to start controller')
                     return 1
 
-                node.get_logger().info('Configured and started ' + controller_name)
+                node.get_logger().info(bcolors.OKGREEN + 'Configured and started ' +
+                                       bcolors.OKCYAN + controller_name + bcolors.ENDC)
 
         if not args.unload_on_kill:
             return 0
@@ -171,7 +188,8 @@ def main(args=None):
 
                 node.get_logger().info('Stopped controller')
 
-            ret = unload_controller(node, controller_manager_name, controller_name)
+            ret = unload_controller(
+                node, controller_manager_name, controller_name)
             if not ret.ok:
                 node.get_logger().info('Failed to unload controller')
                 return 1
