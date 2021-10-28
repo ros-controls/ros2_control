@@ -40,6 +40,12 @@ int main(int argc, char ** argv)
   std::thread cm_thread([cm]() {
     RCLCPP_INFO(cm->get_logger(), "update rate is %d Hz", cm->get_update_rate());
 
+    // check if sleeping is used in the update loop
+    // if hardware interface uses blocking calls to the robot read/write methods,
+    // this parameter should be set to false
+    bool use_sleep_in_update_loop;
+    cm->get_parameter_or("use_sleep_in_update_loop", use_sleep_in_update_loop, true);
+
     rclcpp::Time begin = cm->now();
 
     // Use nanoseconds to avoid chrono's rounding
@@ -52,10 +58,14 @@ int main(int argc, char ** argv)
       cm->update(begin, begin - begin_last);
       cm->write();
       rclcpp::Time end = cm->now();
-      std::this_thread::sleep_for(std::max(
-        std::chrono::nanoseconds(0),
-        std::chrono::nanoseconds(1000000000 / cm->get_update_rate()) -
-          std::chrono::nanoseconds(end.nanoseconds() - begin.nanoseconds())));
+
+      if (use_sleep_in_update_loop)
+      {
+        std::this_thread::sleep_for(std::max(
+          std::chrono::nanoseconds(0),
+          std::chrono::nanoseconds(1000000000 / cm->get_update_rate()) -
+            std::chrono::nanoseconds(end.nanoseconds() - begin.nanoseconds())));
+      }
     }
   });
 
