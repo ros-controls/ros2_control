@@ -53,8 +53,8 @@ public:
 
   // A new generic method to do initialization checks
   template <class HardwareT>
-  void check_last_hardware_initialization_and_configure(std::vector<HardwareT> & container,
-    const HardwareInfo & hardware_info)
+  void check_last_hardware_initialization_and_configure(
+    std::vector<HardwareT> & container, const HardwareInfo & hardware_info)
   {
     if (
       container.back().initialize(hardware_info).id() !=
@@ -329,21 +329,21 @@ void ResourceManager::import_component(std::unique_ptr<SystemInterface> system)
     resource_storage_->systems_.back(), claimed_command_interface_map_);
 }
 
-void ResourceManager::import_component(std::unique_ptr<ActuatorInterface> actuator,
-  const HardwareInfo & hardware_info)
+void ResourceManager::import_component(
+  std::unique_ptr<ActuatorInterface> actuator, const HardwareInfo & hardware_info)
 {
   resource_storage_->initialize_actuator(
     std::move(actuator), hardware_info, claimed_command_interface_map_);
 }
 
-void ResourceManager::import_component(std::unique_ptr<SensorInterface> sensor,
-  const HardwareInfo & hardware_info)
+void ResourceManager::import_component(
+  std::unique_ptr<SensorInterface> sensor, const HardwareInfo & hardware_info)
 {
   resource_storage_->initialize_sensor(std::move(sensor), hardware_info);
 }
 
-void ResourceManager::import_component(std::unique_ptr<SystemInterface> system,
-  const HardwareInfo & hardware_info)
+void ResourceManager::import_component(
+  std::unique_ptr<SystemInterface> system, const HardwareInfo & hardware_info)
 {
   resource_storage_->initialize_system(
     std::move(system), hardware_info, claimed_command_interface_map_);
