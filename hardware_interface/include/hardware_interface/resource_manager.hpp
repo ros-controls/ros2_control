@@ -186,6 +186,48 @@ public:
    */
   void import_component(std::unique_ptr<SystemInterface> system);
 
+  /// Import a hardware component which is not listed in the URDF
+  /**
+   * Components which are initialized outside a URDF can be added post initialization.
+   *
+   * \note this might invalidate existing state and command interfaces and should thus
+   * not be called when a controller is running.
+   * \note given that no hardware_info is available, the component has to be configured
+   * externally and prior to the call to import.
+   * \param[in] actuator pointer to the actuator interface.
+   * \param[in]hardware_info hardware info
+   */
+  void import_component(std::unique_ptr<ActuatorInterface> actuator,
+      const HardwareInfo & hardware_info);
+
+  /// Import a hardware component which is not listed in the URDF
+  /**
+   * Components which are initialized outside a URDF can be added post initialization.
+   *
+   * \note this might invalidate existing state and command interfaces and should thus
+   * not be called when a controller is running.
+   * \note given that no hardware_info is available, the component has to be configured
+   * externally and prior to the call to import.
+   * \param[in] sensor pointer to the sensor interface.
+   * \param[in] hardware_info hardware info
+   */
+  void import_component(std::unique_ptr<SensorInterface> sensor,
+    const HardwareInfo & hardware_info);
+
+  /// Import a hardware component which is not listed in the URDF
+  /**
+   * Components which are initialized outside a URDF can be added post initialization.
+   *
+   * \note this might invalidate existing state and command interfaces and should thus
+   * not be called when a controller is running.
+   * \note given that no hardware_info is available, the component has to be configured
+   * externally and prior to the call to import.
+   * \param[in] system pointer to the system interface.
+   * \param[in] hardware_info hardware info
+   */
+  void import_component(std::unique_ptr<SystemInterface> system,
+    const HardwareInfo & hardware_info);
+
   /// Return status for all components.
   /**
    * \return map of hardware names and their states
