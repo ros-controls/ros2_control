@@ -41,6 +41,11 @@ class ListControllersVerb(VerbExtension):
             action='store_true',
             help='List controller\'s required command interfaces',
         )
+        parser.add_argument(
+            '--verbose', '-v',
+            action='store_true',
+            help='List controller\'s claimed interfaces, required state interfaces and required command interfaces',
+        )
         add_controller_mgr_parsers(parser)
 
     def main(self, *, args):
@@ -48,15 +53,15 @@ class ListControllersVerb(VerbExtension):
             controllers = list_controllers(node, args.controller_manager).controller
             for c in controllers:
                 print(f'{c.name:20s}[{c.type:20s}] {c.state:10s}')
-                if args.claimed_interfaces:
+                if args.claimed_interfaces or args.verbose:
                     print('\tclaimed interfaces:')
                     for claimed_interface in c.claimed_interfaces:
                         print(f'\t\t{claimed_interface}')
-                if args.required_command_interfaces:
+                if args.required_command_interfaces or args.verbose:
                     print('\trequired command interfaces:')
                     for required_command_interface in c.required_command_interfaces:
                         print(f'\t\t{required_command_interface}')
-                if args.required_state_interfaces:
+                if args.required_state_interfaces or args.verbose:
                     print('\trequired state interfaces:')
                     for required_state_interface in c.required_state_interfaces:
                         print(f'\t\t{required_state_interface}')
