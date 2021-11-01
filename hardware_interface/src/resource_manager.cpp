@@ -53,16 +53,16 @@ public:
 
   // A new generic method to do initialization checks
   template <class HardwareT>
-  void check_last_hardware_initialization_and_configure(
-    std::vector<HardwareT> & container, const HardwareInfo & hardware_info)
+  void check_hardware_initialization_and_configure(
+    HardwareT & hardware, const HardwareInfo & hardware_info)
   {
     if (
-      container.back().initialize(hardware_info).id() !=
+      hardware.initialize(hardware_info).id() !=
       lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
     {
       throw std::runtime_error(std::string("Failed to initialize '") + hardware_info.name + "'");
     }
-    if (container.back().configure().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
+    if (hardware.configure().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
     {
       throw std::runtime_error(std::string("Failed to configure '") + hardware_info.name + "'");
     }
@@ -113,7 +113,7 @@ public:
     std::unordered_map<std::string, bool> & claimed_command_interface_map)
   {
     initialize_hardware<Actuator, ActuatorInterface>(hardware_info, actuator_loader_, actuators_);
-    check_last_hardware_initialization_and_configure(actuators_, hardware_info);
+    check_hardware_initialization_and_configure(actuators_.back(), hardware_info);
     import_state_interfaces(actuators_.back());
     import_command_interfaces(actuators_.back(), claimed_command_interface_map);
   }
@@ -121,7 +121,7 @@ public:
   void initialize_sensor(const HardwareInfo & hardware_info)
   {
     initialize_hardware<Sensor, SensorInterface>(hardware_info, sensor_loader_, sensors_);
-    check_last_hardware_initialization_and_configure(sensors_, hardware_info);
+    check_hardware_initialization_and_configure(sensors_.back(), hardware_info);
     import_state_interfaces(sensors_.back());
   }
 
@@ -130,7 +130,7 @@ public:
     std::unordered_map<std::string, bool> & claimed_command_interface_map)
   {
     initialize_hardware<System, SystemInterface>(hardware_info, system_loader_, systems_);
-    check_last_hardware_initialization_and_configure(systems_, hardware_info);
+    check_hardware_initialization_and_configure(systems_.back(), hardware_info);
     import_state_interfaces(systems_.back());
     import_command_interfaces(systems_.back(), claimed_command_interface_map);
   }
@@ -140,7 +140,7 @@ public:
     std::unordered_map<std::string, bool> & claimed_command_interface_map)
   {
     this->actuators_.emplace_back(Actuator(std::move(actuator)));
-    check_last_hardware_initialization_and_configure(actuators_, hardware_info);
+    check_hardware_initialization_and_configure(actuators_.back(), hardware_info);
     import_state_interfaces(actuators_.back());
     import_command_interfaces(actuators_.back(), claimed_command_interface_map);
   }
@@ -149,7 +149,7 @@ public:
     std::unique_ptr<SensorInterface> sensor, const HardwareInfo & hardware_info)
   {
     this->sensors_.emplace_back(Sensor(std::move(sensor)));
-    check_last_hardware_initialization_and_configure(sensors_, hardware_info);
+    check_hardware_initialization_and_configure(sensors_.back(), hardware_info);
     import_state_interfaces(sensors_.back());
   }
 
@@ -158,7 +158,7 @@ public:
     std::unordered_map<std::string, bool> & claimed_command_interface_map)
   {
     this->systems_.emplace_back(System(std::move(system)));
-    check_last_hardware_initialization_and_configure(systems_, hardware_info);
+    check_hardware_initialization_and_configure(systems_.back(), hardware_info);
     import_state_interfaces(systems_.back());
     import_command_interfaces(systems_.back(), claimed_command_interface_map);
   }

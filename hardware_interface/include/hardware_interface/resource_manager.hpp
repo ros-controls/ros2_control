@@ -189,6 +189,8 @@ public:
   /// Import a hardware component which is not listed in the URDF
   /**
    * Components which are initialized outside a URDF can be added post initialization.
+   * Nevertheless, there should still be `HardwareInfo` available for this component,
+   * either parsed from a URDF string (easiest) or filled manually.
    *
    * \note this might invalidate existing state and command interfaces and should thus
    * not be called when a controller is running.
@@ -203,6 +205,8 @@ public:
   /// Import a hardware component which is not listed in the URDF
   /**
    * Components which are initialized outside a URDF can be added post initialization.
+   * Nevertheless, there should still be `HardwareInfo` available for this component,
+   * either parsed from a URDF string (easiest) or filled manually.
    *
    * \note this might invalidate existing state and command interfaces and should thus
    * not be called when a controller is running.
@@ -217,6 +221,8 @@ public:
   /// Import a hardware component which is not listed in the URDF
   /**
    * Components which are initialized outside a URDF can be added post initialization.
+   * Nevertheless, there should still be `HardwareInfo` available for this component,
+   * either parsed from a URDF string (easiest) or filled manually.
    *
    * \note this might invalidate existing state and command interfaces and should thus
    * not be called when a controller is running.
