@@ -20,7 +20,7 @@ Hardware Interface
   User impl....
 
 Hardware Components
-  Wrapper and abstraction of hardware interface to mange life cycle and access to methods of hardware interface from Resource Manager.
+  Wrapper and abstraction of hardware interface to manage life cycle and access to methods of hardware interface from Resource Manager.
 
 Resource Manager
   Class responsible for management of hardware components in ros2_control framework.
