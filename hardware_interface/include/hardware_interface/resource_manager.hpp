@@ -53,8 +53,11 @@ public:
    * \param[in] urdf string containing the URDF.
    * \param[in] validate_interfaces boolean argument indicating whether the exported
    * interfaces ought to be validated. Defaults to true.
+   * \param[in] activate_all boolean argument indicating if all resources should be immediately
+   * activated. Currently used only in tests. In "classical" application please use parameters
+   * "autostart_components" and "autoconfigure_components".
    */
-  explicit ResourceManager(const std::string & urdf, bool validate_interfaces = true);
+  explicit ResourceManager(const std::string & urdf, bool validate_interfaces = true, bool activate_all = false);
 
   ResourceManager(const ResourceManager &) = delete;
 
@@ -304,56 +307,6 @@ public:
   bool perform_command_mode_switch(
     const std::vector<std::string> & start_interfaces,
     const std::vector<std::string> & stop_interfaces);
-
-  /// Configure hardware components.
-  /**
-   * Configure hardware components defined in the list. If empty, configure all components.
-   *
-   * \param[in] component_names vector of component names to configure. Default: empty.
-   * \return hardware_interface::retun_type::OK if all components are successfully configured and
-   *         hardware_interface::return_type::ERROR if at least one failed to configure.
-   */
-  return_type configure_components(const std::vector<std::string> & component_names = {});
-
-  /// Cleanup hardware components.
-  /**
-   * Cleanup hardware components defined in the list. If empty, cleanup all components.
-   *
-   * \param[in] component_names vector of component names to cleanup. Default: empty.
-   * \return hardware_interface::retun_type::OK if all components are successfully cleaned-up and
-   *         hardware_interface::return_type::ERROR if at least one failed to cleanup.
-   */
-  return_type cleanup_components(const std::vector<std::string> & component_names = {});
-
-  /// Shutdown hardware components.
-  /**
-   * Shutdown hardware components defined in the list. If empty, shutdown all components.
-   *
-   * \param[in] component_names vector of component names to shutdown. Default: empty.
-   * \return hardware_interface::retun_type::OK if all components are successfully shutdown and
-   *         hardware_interface::return_type::ERROR if at least one failed to shutdown.
-   */
-  return_type shutdown_components(const std::vector<std::string> & component_names = {});
-
-  /// Activate hardware components.
-  /**
-   * Activate hardware components defined in the list. If empty, activate all components.
-   *
-   * \param[in] component_names vector of component names to activate. Default: empty.
-   * \return hardware_interface::retun_type::OK if all components are successfully activated and
-   *         hardware_interface::return_type::ERROR if at least one failed to activate.
-   */
-  return_type activate_components(const std::vector<std::string> & component_names = {});
-
-  /// Deactivate running hardware components.
-  /**
-   * Deactivate hardware components defined in the list. If empty, deactivate all components.
-   *
-   * \param[in] component_names vector of component names to deactivate. Default: empty.
-   * \return hardware_interface::retun_type::OK if all components are successfully deactivated and
-   *         hardware_interface::return_type::ERROR if at least one failed to deactivate.
-   */
-  return_type deactivate_components(const std::vector<std::string> & component_names = {});
 
   /// Sets state of hardware component.
   /**

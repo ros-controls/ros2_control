@@ -33,10 +33,8 @@
 #include "controller_manager_msgs/srv/load_configure_controller.hpp"
 #include "controller_manager_msgs/srv/load_controller.hpp"
 #include "controller_manager_msgs/srv/load_start_controller.hpp"
-#include "controller_manager_msgs/srv/manage_hardware_activity.hpp"
 #include "controller_manager_msgs/srv/reload_controller_libraries.hpp"
 #include "controller_manager_msgs/srv/set_hardware_component_state.hpp"
-#include "controller_manager_msgs/srv/shutdown_hardware_component.hpp"
 #include "controller_manager_msgs/srv/switch_controller.hpp"
 #include "controller_manager_msgs/srv/unload_controller.hpp"
 
@@ -235,27 +233,6 @@ protected:
     std::shared_ptr<controller_manager_msgs::srv::ListHardwareComponents::Response> response);
 
   CONTROLLER_MANAGER_PUBLIC
-  void configure_hardware_component_srv_cb(
-    const std::shared_ptr<controller_manager_msgs::srv::ConfigureHardwareComponent::Request>
-      request,
-    std::shared_ptr<controller_manager_msgs::srv::ConfigureHardwareComponent::Response> response);
-
-  CONTROLLER_MANAGER_PUBLIC
-  void cleanup_hardware_component_srv_cb(
-    const std::shared_ptr<controller_manager_msgs::srv::CleanupHardwareComponent::Request> request,
-    std::shared_ptr<controller_manager_msgs::srv::CleanupHardwareComponent::Response> response);
-
-  CONTROLLER_MANAGER_PUBLIC
-  void shutdown_hardware_component_srv_cb(
-    const std::shared_ptr<controller_manager_msgs::srv::ShutdownHardwareComponent::Request> request,
-    std::shared_ptr<controller_manager_msgs::srv::ShutdownHardwareComponent::Response> response);
-
-  CONTROLLER_MANAGER_PUBLIC
-  void manage_hardware_activity_srv_cb(
-    const std::shared_ptr<controller_manager_msgs::srv::ManageHardwareActivity::Request> request,
-    std::shared_ptr<controller_manager_msgs::srv::ManageHardwareActivity::Response> response);
-
-  CONTROLLER_MANAGER_PUBLIC
   void set_hardware_component_state_srv_cb(
     const std::shared_ptr<controller_manager_msgs::srv::SetHardwareComponentState::Request> request,
     std::shared_ptr<controller_manager_msgs::srv::SetHardwareComponentState::Response> response);
@@ -380,14 +357,6 @@ private:
     list_hardware_components_service_;
   rclcpp::Service<controller_manager_msgs::srv::ListHardwareInterfaces>::SharedPtr
     list_hardware_interfaces_service_;
-  rclcpp::Service<controller_manager_msgs::srv::ConfigureHardwareComponent>::SharedPtr
-    configure_hardware_component_service_;
-  rclcpp::Service<controller_manager_msgs::srv::CleanupHardwareComponent>::SharedPtr
-    cleanup_hardware_component_service_;
-  rclcpp::Service<controller_manager_msgs::srv::ShutdownHardwareComponent>::SharedPtr
-    shutdown_hardware_component_service_;
-  rclcpp::Service<controller_manager_msgs::srv::ManageHardwareActivity>::SharedPtr
-    manage_hardware_activity_service_;
   rclcpp::Service<controller_manager_msgs::srv::SetHardwareComponentState>::SharedPtr
     set_hardware_component_state_service_;
 

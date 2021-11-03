@@ -603,10 +603,20 @@ ResourceManager::ResourceManager() : resource_storage_(std::make_unique<Resource
 
 ResourceManager::~ResourceManager() = default;
 
-ResourceManager::ResourceManager(const std::string & urdf, bool validate_interfaces)
+ResourceManager::ResourceManager(const std::string & urdf, bool validate_interfaces, bool activate_all)
 : resource_storage_(std::make_unique<ResourceStorage>())
 {
   load_urdf(urdf, validate_interfaces);
+
+  if (activate_all)
+  {
+    for (auto const & hw_info : resource_storage_->hardware_info_map_)
+    {
+      using lifecycle_msgs::msg::State;
+      rclcpp_lifecycle::State state(State::PRIMARY_STATE_ACTIVE, lifecycle_state_names::ACTIVE);
+      set_component_state(hw_info.first, state);
+    }
+  }
 }
 
 void ResourceManager::load_urdf(const std::string & urdf, bool validate_interfaces)
@@ -904,193 +914,6 @@ bool ResourceManager::perform_command_mode_switch(
     }
   }
   return true;
-}
-
-auto execute_action_on_components_from_resource_storage =
-  [](auto action, auto & components, const std::vector<std::string> & component_names) {
-    hardware_interface::return_type result = hardware_interface::return_type::OK;
-
-    for (auto & component : components)
-    {
-      auto found_it =
-        std::find_if(component_names.begin(), component_names.end(), COMPONENT_NAME_COMPARE);
-
-      if (component_names.empty() || found_it != component_names.end())
-      {
-        // TODO(destogl): something like
-        // --> std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
-        if (!action(component))
-        {
-          result = hardware_interface::return_type::ERROR;
-        }
-      }
-    }
-    return result;
-  };
-
-return_type ResourceManager::configure_components(const std::vector<std::string> & component_names)
-{
-  using std::placeholders::_1;
-
-  return_type result = return_type::OK;
-
-  if (
-    execute_action_on_components_from_resource_storage(
-      std::bind(&ResourceStorage::configure_hardware<Actuator>, resource_storage_.get(), _1),
-      resource_storage_->actuators_, component_names) == return_type::ERROR)
-  {
-    result = return_type::ERROR;
-  }
-
-  if (
-    execute_action_on_components_from_resource_storage(
-      std::bind(&ResourceStorage::configure_hardware<Sensor>, resource_storage_.get(), _1),
-      resource_storage_->sensors_, component_names) == return_type::ERROR)
-  {
-    result = return_type::ERROR;
-  }
-
-  if (
-    execute_action_on_components_from_resource_storage(
-      std::bind(&ResourceStorage::configure_hardware<System>, resource_storage_.get(), _1),
-      resource_storage_->systems_, component_names) == return_type::ERROR)
-  {
-    result = return_type::ERROR;
-  }
-
-  return result;
-}
-
-return_type ResourceManager::cleanup_components(const std::vector<std::string> & component_names)
-{
-  using std::placeholders::_1;
-
-  return_type result = return_type::OK;
-
-  if (
-    execute_action_on_components_from_resource_storage(
-      std::bind(&ResourceStorage::cleanup_hardware<Actuator>, resource_storage_.get(), _1),
-      resource_storage_->actuators_, component_names) == return_type::ERROR)
-  {
-    result = return_type::ERROR;
-  }
-
-  if (
-    execute_action_on_components_from_resource_storage(
-      std::bind(&ResourceStorage::cleanup_hardware<Sensor>, resource_storage_.get(), _1),
-      resource_storage_->sensors_, component_names) == return_type::ERROR)
-  {
-    result = return_type::ERROR;
-  }
-
-  if (
-    execute_action_on_components_from_resource_storage(
-      std::bind(&ResourceStorage::cleanup_hardware<System>, resource_storage_.get(), _1),
-      resource_storage_->systems_, component_names) == return_type::ERROR)
-  {
-    result = return_type::ERROR;
-  }
-
-  return result;
-}
-
-return_type ResourceManager::shutdown_components(const std::vector<std::string> & component_names)
-{
-  using std::placeholders::_1;
-
-  return_type result = return_type::OK;
-
-  if (
-    execute_action_on_components_from_resource_storage(
-      std::bind(&ResourceStorage::shutdown_hardware<Actuator>, resource_storage_.get(), _1),
-      resource_storage_->actuators_, component_names) == return_type::ERROR)
-  {
-    result = return_type::ERROR;
-  }
-
-  if (
-    execute_action_on_components_from_resource_storage(
-      std::bind(&ResourceStorage::shutdown_hardware<Sensor>, resource_storage_.get(), _1),
-      resource_storage_->sensors_, component_names) == return_type::ERROR)
-  {
-    result = return_type::ERROR;
-  }
-
-  if (
-    execute_action_on_components_from_resource_storage(
-      std::bind(&ResourceStorage::shutdown_hardware<System>, resource_storage_.get(), _1),
-      resource_storage_->systems_, component_names) == return_type::ERROR)
-  {
-    result = return_type::ERROR;
-  }
-
-  return result;
-}
-
-return_type ResourceManager::activate_components(const std::vector<std::string> & component_names)
-{
-  using std::placeholders::_1;
-
-  return_type result = return_type::OK;
-
-  if (
-    execute_action_on_components_from_resource_storage(
-      std::bind(&ResourceStorage::activate_hardware<Actuator>, resource_storage_.get(), _1),
-      resource_storage_->actuators_, component_names) == return_type::ERROR)
-  {
-    result = return_type::ERROR;
-  }
-
-  if (
-    execute_action_on_components_from_resource_storage(
-      std::bind(&ResourceStorage::activate_hardware<Sensor>, resource_storage_.get(), _1),
-      resource_storage_->sensors_, component_names) == return_type::ERROR)
-  {
-    result = return_type::ERROR;
-  }
-
-  if (
-    execute_action_on_components_from_resource_storage(
-      std::bind(&ResourceStorage::activate_hardware<System>, resource_storage_.get(), _1),
-      resource_storage_->systems_, component_names) == return_type::ERROR)
-  {
-    result = return_type::ERROR;
-  }
-
-  return result;
-}
-
-return_type ResourceManager::deactivate_components(const std::vector<std::string> & component_names)
-{
-  using std::placeholders::_1;
-
-  return_type result = return_type::OK;
-
-  if (
-    execute_action_on_components_from_resource_storage(
-      std::bind(&ResourceStorage::deactivate_hardware<Actuator>, resource_storage_.get(), _1),
-      resource_storage_->actuators_, component_names) == return_type::ERROR)
-  {
-    result = return_type::ERROR;
-  }
-
-  if (
-    execute_action_on_components_from_resource_storage(
-      std::bind(&ResourceStorage::deactivate_hardware<Sensor>, resource_storage_.get(), _1),
-      resource_storage_->sensors_, component_names) == return_type::ERROR)
-  {
-    result = return_type::ERROR;
-  }
-
-  if (
-    execute_action_on_components_from_resource_storage(
-      std::bind(&ResourceStorage::deactivate_hardware<System>, resource_storage_.get(), _1),
-      resource_storage_->systems_, component_names) == return_type::ERROR)
-  {
-    result = return_type::ERROR;
-  }
-
-  return result;
 }
 
 return_type ResourceManager::set_component_state(

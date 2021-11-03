@@ -54,7 +54,7 @@ public:
     executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
     cm_ = std::make_shared<controller_manager::ControllerManager>(
       std::make_unique<hardware_interface::ResourceManager>(
-        ros2_control_test_assets::minimal_robot_urdf),
+        ros2_control_test_assets::minimal_robot_urdf, true, true),
       executor_, TEST_CM_NAME);
     run_updater_ = false;
   }
@@ -96,6 +96,7 @@ public:
 
   void SetUp() override
   {
+
     ControllerManagerFixture::SetUp();
     SetUpSrvsCMExecutor();
   }

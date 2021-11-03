@@ -24,6 +24,7 @@
 #include "hardware_interface/resource_manager.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
+#include "rclcpp_lifecycle/state.hpp"
 #include "ros2_control_test_assets/descriptions.hpp"
 
 using ros2_control_test_assets::TEST_ACTUATOR_HARDWARE_CLASS_TYPE;
@@ -49,6 +50,57 @@ public:
 
   void SetUp() {}
 };
+
+auto configure_components = [](hardware_interface::ResourceManager & rm, const std::vector<std::string> & components =  {"TestActuatorHardware", "TestSensorHardware", "TestSystemHardware"})
+{
+  using lifecycle_msgs::msg::State;
+  for (const auto & component : components)
+  {
+    rclcpp_lifecycle::State state(State::PRIMARY_STATE_INACTIVE, hardware_interface::lifecycle_state_names::INACTIVE);
+    rm.set_component_state(component, state);
+  }
+};
+
+auto activate_components = [](hardware_interface::ResourceManager & rm, const std::vector<std::string> & components =  {"TestActuatorHardware", "TestSensorHardware", "TestSystemHardware"})
+{
+  using lifecycle_msgs::msg::State;
+  for (const auto & component : components)
+  {
+    rclcpp_lifecycle::State state(State::PRIMARY_STATE_ACTIVE, hardware_interface::lifecycle_state_names::ACTIVE);
+    rm.set_component_state(component, state);
+  }
+};
+
+auto deactivate_components = [](hardware_interface::ResourceManager & rm, const std::vector<std::string> & components =  {"TestActuatorHardware", "TestSensorHardware", "TestSystemHardware"})
+{
+  using lifecycle_msgs::msg::State;
+  for (const auto & component : components)
+  {
+      rclcpp_lifecycle::State state(State::PRIMARY_STATE_INACTIVE, hardware_interface::lifecycle_state_names::INACTIVE);
+    rm.set_component_state(component, state);
+  }
+};
+
+auto cleanup_components = [](hardware_interface::ResourceManager & rm, const std::vector<std::string> & components =  {"TestActuatorHardware", "TestSensorHardware", "TestSystemHardware"})
+{
+  using lifecycle_msgs::msg::State;
+  for (const auto & component : components)
+  {
+    rclcpp_lifecycle::State state(State::PRIMARY_STATE_UNCONFIGURED, hardware_interface::lifecycle_state_names::UNCONFIGURED);
+    rm.set_component_state(component, state);
+  }
+};
+
+auto shutdown_components = [](hardware_interface::ResourceManager & rm, const std::vector<std::string> & components =  {"TestActuatorHardware", "TestSensorHardware", "TestSystemHardware"})
+{
+  using lifecycle_msgs::msg::State;
+  for (const auto & component : components)
+  {
+    rclcpp_lifecycle::State state(State::PRIMARY_STATE_FINALIZED, hardware_interface::lifecycle_state_names::FINALIZED);
+    rm.set_component_state(component, state);
+  }
+};
+
 
 TEST_F(TestResourceManager, initialization_empty)
 {
@@ -132,8 +184,7 @@ TEST_F(TestResourceManager, resource_claiming)
 {
   hardware_interface::ResourceManager rm(ros2_control_test_assets::minimal_robot_urdf);
   // Activate components to get all interfaces available
-  rm.configure_components();
-  rm.activate_components();
+  activate_components(rm);
 
   const auto key = "joint1/position";
   EXPECT_TRUE(rm.command_interface_is_available(key));
@@ -237,8 +288,7 @@ TEST_F(TestResourceManager, post_initialization_add_components)
   // we validate the results manually
   hardware_interface::ResourceManager rm(ros2_control_test_assets::minimal_robot_urdf, false);
   // Activate components to get all interfaces available
-  rm.configure_components();
-  rm.activate_components();
+  activate_components(rm);
 
   EXPECT_EQ(1u, rm.actuator_components_size());
   EXPECT_EQ(1u, rm.sensor_components_size());
@@ -269,8 +319,8 @@ TEST_F(TestResourceManager, default_prepare_perform_switch)
 {
   hardware_interface::ResourceManager rm(ros2_control_test_assets::minimal_robot_urdf);
   // Activate components to get all interfaces available
-  rm.configure_components();
-  rm.activate_components();
+  activate_components(rm);
+
   EXPECT_TRUE(rm.prepare_command_mode_switch({""}, {""}));
   EXPECT_TRUE(rm.perform_command_mode_switch({""}, {""}));
 }
@@ -434,7 +484,7 @@ TEST_F(TestResourceManager, lifecycle_all_resources)
       hardware_interface::lifecycle_state_names::UNCONFIGURED);
   }
 
-  rm.configure_components();
+  configure_components(rm);
   {
     auto status_map = rm.get_components_status();
     EXPECT_EQ(
@@ -457,7 +507,7 @@ TEST_F(TestResourceManager, lifecycle_all_resources)
       hardware_interface::lifecycle_state_names::INACTIVE);
   }
 
-  rm.activate_components();
+  activate_components(rm);
   {
     auto status_map = rm.get_components_status();
     EXPECT_EQ(
@@ -480,7 +530,7 @@ TEST_F(TestResourceManager, lifecycle_all_resources)
       hardware_interface::lifecycle_state_names::ACTIVE);
   }
 
-  rm.deactivate_components();
+  deactivate_components(rm);
   {
     auto status_map = rm.get_components_status();
     EXPECT_EQ(
@@ -503,7 +553,7 @@ TEST_F(TestResourceManager, lifecycle_all_resources)
       hardware_interface::lifecycle_state_names::INACTIVE);
   }
 
-  rm.cleanup_components();
+  cleanup_components(rm);
   {
     auto status_map = rm.get_components_status();
     EXPECT_EQ(
@@ -526,7 +576,7 @@ TEST_F(TestResourceManager, lifecycle_all_resources)
       hardware_interface::lifecycle_state_names::UNCONFIGURED);
   }
 
-  rm.shutdown_components();
+  shutdown_components(rm);
   {
     auto status_map = rm.get_components_status();
     EXPECT_EQ(
@@ -577,7 +627,7 @@ TEST_F(TestResourceManager, lifecycle_individual_resources)
       hardware_interface::lifecycle_state_names::UNCONFIGURED);
   }
 
-  rm.configure_components({TEST_ACTUATOR_HARDWARE_NAME});
+  configure_components(rm, {TEST_ACTUATOR_HARDWARE_NAME});
   {
     auto status_map = rm.get_components_status();
     EXPECT_EQ(
@@ -600,7 +650,7 @@ TEST_F(TestResourceManager, lifecycle_individual_resources)
       hardware_interface::lifecycle_state_names::UNCONFIGURED);
   }
 
-  rm.activate_components({TEST_ACTUATOR_HARDWARE_NAME});
+  activate_components(rm, {TEST_ACTUATOR_HARDWARE_NAME});
   {
     auto status_map = rm.get_components_status();
     EXPECT_EQ(
@@ -623,7 +673,7 @@ TEST_F(TestResourceManager, lifecycle_individual_resources)
       hardware_interface::lifecycle_state_names::UNCONFIGURED);
   }
 
-  rm.configure_components({TEST_SENSOR_HARDWARE_NAME, TEST_SYSTEM_HARDWARE_NAME});
+  configure_components(rm, {TEST_SENSOR_HARDWARE_NAME, TEST_SYSTEM_HARDWARE_NAME});
   {
     auto status_map = rm.get_components_status();
     EXPECT_EQ(
@@ -646,7 +696,7 @@ TEST_F(TestResourceManager, lifecycle_individual_resources)
       hardware_interface::lifecycle_state_names::INACTIVE);
   }
 
-  rm.activate_components({TEST_SENSOR_HARDWARE_NAME, TEST_SYSTEM_HARDWARE_NAME});
+  activate_components(rm, {TEST_SENSOR_HARDWARE_NAME, TEST_SYSTEM_HARDWARE_NAME});
   {
     auto status_map = rm.get_components_status();
     EXPECT_EQ(
@@ -669,7 +719,7 @@ TEST_F(TestResourceManager, lifecycle_individual_resources)
       hardware_interface::lifecycle_state_names::ACTIVE);
   }
 
-  rm.deactivate_components({TEST_ACTUATOR_HARDWARE_NAME, TEST_SENSOR_HARDWARE_NAME});
+  deactivate_components(rm, {TEST_ACTUATOR_HARDWARE_NAME, TEST_SENSOR_HARDWARE_NAME});
   {
     auto status_map = rm.get_components_status();
     EXPECT_EQ(
@@ -692,7 +742,7 @@ TEST_F(TestResourceManager, lifecycle_individual_resources)
       hardware_interface::lifecycle_state_names::ACTIVE);
   }
 
-  rm.cleanup_components({TEST_SENSOR_HARDWARE_NAME});
+  cleanup_components(rm, {TEST_SENSOR_HARDWARE_NAME});
   {
     auto status_map = rm.get_components_status();
     EXPECT_EQ(
@@ -715,7 +765,7 @@ TEST_F(TestResourceManager, lifecycle_individual_resources)
       hardware_interface::lifecycle_state_names::ACTIVE);
   }
 
-  rm.shutdown_components({TEST_ACTUATOR_HARDWARE_NAME, TEST_SYSTEM_HARDWARE_NAME});
+  shutdown_components(rm, {TEST_ACTUATOR_HARDWARE_NAME, TEST_SYSTEM_HARDWARE_NAME});
   {
     auto status_map = rm.get_components_status();
     EXPECT_EQ(
@@ -739,7 +789,7 @@ TEST_F(TestResourceManager, lifecycle_individual_resources)
   }
 
   // TODO(destogl): Watch-out this fails in output, why is this not caught?!!!
-  rm.shutdown_components({TEST_SENSOR_HARDWARE_NAME});
+  shutdown_components(rm, {TEST_SENSOR_HARDWARE_NAME});
   {
     auto status_map = rm.get_components_status();
     EXPECT_EQ(
@@ -864,7 +914,7 @@ TEST_F(TestResourceManager, resource_availability_and_claiming_in_lifecycle)
   }
 
   // When actuator is configured state- and non-moving command- interfaces become available
-  rm.configure_components({TEST_ACTUATOR_HARDWARE_NAME});
+  configure_components(rm, {TEST_ACTUATOR_HARDWARE_NAME});
   {
     check_interfaces(
       {"joint1/position"},
@@ -903,7 +953,7 @@ TEST_F(TestResourceManager, resource_availability_and_claiming_in_lifecycle)
   }
 
   // When actuator is activated all state- and command- interfaces become available
-  rm.activate_components({TEST_ACTUATOR_HARDWARE_NAME});
+  activate_components(rm, {TEST_ACTUATOR_HARDWARE_NAME});
   {
     check_interfaces(
       TEST_ACTUATOR_HARDWARE_COMMAND_INTERFACES,
@@ -958,7 +1008,7 @@ TEST_F(TestResourceManager, resource_availability_and_claiming_in_lifecycle)
 
   // When Sensor and System are configured their state-
   // and non-movement command- interfaces are available
-  rm.configure_components({TEST_SENSOR_HARDWARE_NAME, TEST_SYSTEM_HARDWARE_NAME});
+  configure_components(rm, {TEST_SENSOR_HARDWARE_NAME, TEST_SYSTEM_HARDWARE_NAME});
   {
     check_interfaces(
       TEST_ACTUATOR_HARDWARE_COMMAND_INTERFACES,
@@ -999,7 +1049,7 @@ TEST_F(TestResourceManager, resource_availability_and_claiming_in_lifecycle)
   }
 
   // All active - everything available
-  rm.activate_components({TEST_SENSOR_HARDWARE_NAME, TEST_SYSTEM_HARDWARE_NAME});
+  activate_components(rm, {TEST_SENSOR_HARDWARE_NAME, TEST_SYSTEM_HARDWARE_NAME});
   {
     check_interfaces(
       TEST_ACTUATOR_HARDWARE_COMMAND_INTERFACES,
@@ -1034,7 +1084,7 @@ TEST_F(TestResourceManager, resource_availability_and_claiming_in_lifecycle)
   }
 
   // When deactivated - movement interfaces are not available anymore
-  rm.deactivate_components({TEST_ACTUATOR_HARDWARE_NAME, TEST_SENSOR_HARDWARE_NAME});
+  deactivate_components(rm, {TEST_ACTUATOR_HARDWARE_NAME, TEST_SENSOR_HARDWARE_NAME});
   {
     check_interfaces(
       {"joint1/position"},
@@ -1074,7 +1124,7 @@ TEST_F(TestResourceManager, resource_availability_and_claiming_in_lifecycle)
   }
 
   // When sensor is cleaned up the interfaces are not available anymore
-  rm.cleanup_components({TEST_SENSOR_HARDWARE_NAME});
+  cleanup_components(rm, {TEST_SENSOR_HARDWARE_NAME});
   {
     check_interfaces(
       {"joint1/position"},
@@ -1136,7 +1186,7 @@ TEST_F(TestResourceManager, resource_availability_and_claiming_in_lifecycle)
 
   // //   TODO(destogl): make this working
   // // When components are shutdown the interfaces do not exist anymore
-  // rm.shutdown_components({TEST_ACTUATOR_HARDWARE_NAME, TEST_SYSTEM_HARDWARE_NAME});
+  // shutdown_components(rm, {TEST_ACTUATOR_HARDWARE_NAME, TEST_SYSTEM_HARDWARE_NAME});
   // {
   //   check_interfaces(
   //     TEST_ACTUATOR_HARDWARE_COMMAND_INTERFACES,
