@@ -19,6 +19,7 @@
 #include <cmath>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 #include "hardware_interface/loaned_command_interface.hpp"
 #include "hardware_interface/loaned_state_interface.hpp"
@@ -327,34 +328,42 @@ protected:
   std::string hardware_system_2dof_standard_interfaces_with_custom_interface_for_offset_missing_;
 };
 
-auto configure_components = [](hardware_interface::ResourceManager & rm, const std::vector<std::string> & components =  {"GenericSystem2dof"})
-{
+auto configure_components = [](
+                              hardware_interface::ResourceManager & rm,
+                              const std::vector<std::string> & components = {"GenericSystem2dof"}) {
   using lifecycle_msgs::msg::State;
   for (const auto & component : components)
   {
-    rclcpp_lifecycle::State state(State::PRIMARY_STATE_INACTIVE, hardware_interface::lifecycle_state_names::INACTIVE);
+    rclcpp_lifecycle::State state(
+      State::PRIMARY_STATE_INACTIVE, hardware_interface::lifecycle_state_names::INACTIVE);
     rm.set_component_state(component, state);
   }
 };
 
-auto activate_components = [](hardware_interface::ResourceManager & rm, const std::vector<std::string> & components =  {"GenericSystem2dof"})
-{
+auto activate_components = [](
+                             hardware_interface::ResourceManager & rm,
+                             const std::vector<std::string> & components = {"GenericSystem2dof"}) {
   using lifecycle_msgs::msg::State;
   for (const auto & component : components)
   {
-    rclcpp_lifecycle::State state(State::PRIMARY_STATE_ACTIVE, hardware_interface::lifecycle_state_names::ACTIVE);
+    rclcpp_lifecycle::State state(
+      State::PRIMARY_STATE_ACTIVE, hardware_interface::lifecycle_state_names::ACTIVE);
     rm.set_component_state(component, state);
   }
 };
 
-auto deactivate_components = [](hardware_interface::ResourceManager & rm, const std::vector<std::string> & components =  {"GenericSystem2dof"})
-{
-  for (const auto & component : components)
-  {
-    rclcpp_lifecycle::State state(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, hardware_interface::lifecycle_state_names::INACTIVE);
-    rm.set_component_state(component, state);
-  }
-};
+auto deactivate_components =
+  [](
+    hardware_interface::ResourceManager & rm,
+    const std::vector<std::string> & components = {"GenericSystem2dof"}) {
+    for (const auto & component : components)
+    {
+      rclcpp_lifecycle::State state(
+        lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+        hardware_interface::lifecycle_state_names::INACTIVE);
+      rm.set_component_state(component, state);
+    }
+  };
 
 TEST_F(TestGenericSystem, load_generic_system_2dof)
 {

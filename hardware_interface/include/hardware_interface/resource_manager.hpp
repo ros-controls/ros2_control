@@ -57,7 +57,8 @@ public:
    * activated. Currently used only in tests. In "classical" application please use parameters
    * "autostart_components" and "autoconfigure_components".
    */
-  explicit ResourceManager(const std::string & urdf, bool validate_interfaces = true, bool activate_all = false);
+  explicit ResourceManager(
+    const std::string & urdf, bool validate_interfaces = true, bool activate_all = false);
 
   ResourceManager(const ResourceManager &) = delete;
 

@@ -35,8 +35,6 @@
 #include "test_controller/test_controller.hpp"
 #include "test_controller_failed_init/test_controller_failed_init.hpp"
 
-using namespace std::chrono_literals;
-
 constexpr auto STRICT = controller_manager_msgs::srv::SwitchController::Request::STRICT;
 constexpr auto BEST_EFFORT = controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT;
 
@@ -96,7 +94,6 @@ public:
 
   void SetUp() override
   {
-
     ControllerManagerFixture::SetUp();
     SetUpSrvsCMExecutor();
   }
@@ -114,7 +111,7 @@ public:
     executor_spin_future_ = std::async(std::launch::async, [this]() -> void { executor_->spin(); });
     // This sleep is needed to prevent a too fast test from ending before the
     // executor has began to spin, which causes it to hang
-    std::this_thread::sleep_for(50ms);
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
   }
 
   // FIXME: This can be deleted!
@@ -130,7 +127,7 @@ public:
     // Wait for the result.
     if (update_controller_while_spinning)
     {
-      while (service_executor.spin_until_future_complete(result, 50ms) !=
+      while (service_executor.spin_until_future_complete(result, std::chrono::milliseconds(50)) !=
              rclcpp::FutureReturnCode::SUCCESS)
       {
         cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));

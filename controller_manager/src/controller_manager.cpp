@@ -104,7 +104,8 @@ void ControllerManager::init_resource_manager()
 
   std::vector<std::string> autoconfigure_components = {""};
   get_parameter("autoconfigure_components", autoconfigure_components);
-  rclcpp_lifecycle::State inactive_state(State::PRIMARY_STATE_INACTIVE, hardware_interface::lifecycle_state_names::INACTIVE);
+  rclcpp_lifecycle::State inactive_state(
+    State::PRIMARY_STATE_INACTIVE, hardware_interface::lifecycle_state_names::INACTIVE);
   for (const auto & component : autoconfigure_components)
   {
     resource_manager_->set_component_state(component, inactive_state);
@@ -112,7 +113,8 @@ void ControllerManager::init_resource_manager()
 
   std::vector<std::string> autostart_components = {""};
   get_parameter("autostart_components", autostart_components);
-  rclcpp_lifecycle::State active_state(State::PRIMARY_STATE_ACTIVE, hardware_interface::lifecycle_state_names::ACTIVE);
+  rclcpp_lifecycle::State active_state(
+    State::PRIMARY_STATE_ACTIVE, hardware_interface::lifecycle_state_names::ACTIVE);
   for (const auto & component : autostart_components)
   {
     resource_manager_->set_component_state(component, active_state);
