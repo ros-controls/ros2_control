@@ -2,8 +2,8 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.2.0 (2021-11-05)
+------------------
 * Import and Initialize components (`#566 <https://github.com/ros-controls/ros2_control/issues/566>`_)
 * Contributors: Alejandro Hernández Cordero
 
