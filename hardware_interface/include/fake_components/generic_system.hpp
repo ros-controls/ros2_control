@@ -79,6 +79,10 @@ protected:
   std::vector<std::vector<double>> sensor_fake_commands_;
   std::vector<std::vector<double>> sensor_states_;
 
+  std::vector<std::string> gpio_interfaces_;
+  std::vector<std::vector<double>> gpio_commands_;
+  std::vector<std::vector<double>> gpio_states_;
+
 private:
   template <typename HandleType>
   bool get_interface(
@@ -89,6 +93,8 @@ private:
   void initialize_storage_vectors(
     std::vector<std::vector<double>> & commands, std::vector<std::vector<double>> & states,
     const std::vector<std::string> & interfaces);
+
+  void populate_gpio_interfaces();
 
   bool fake_sensor_command_interfaces_;
   double position_state_following_offset_;

@@ -20,6 +20,7 @@
 #include <cmath>
 #include <iterator>
 #include <limits>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -180,6 +181,10 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
   }
   initialize_storage_vectors(sensor_fake_commands_, sensor_states_, sensor_interfaces_);
 
+  populate_gpio_interfaces();
+
+  initialize_storage_vectors(gpio_commands_, gpio_states_, gpio_interfaces_);
+
   return CallbackReturn::SUCCESS;
 }
 
@@ -216,6 +221,22 @@ std::vector<hardware_interface::StateInterface> GenericSystem::export_state_inte
     {
       if (!get_interface(
             sensor.name, sensor_interfaces_, interface.name, i, sensor_states_, state_interfaces))
+      {
+        throw std::runtime_error(
+          "Interface is not found in the standard nor other list. "
+          "This should never happen!");
+      }
+    }
+  }
+
+  // GPIO state interfaces
+  for (auto i = 0u; i < info_.gpios.size(); i++)
+  {
+    const auto & gpio = info_.gpios[i];
+    for (const auto & interface : gpio.state_interfaces)
+    {
+      if (!get_interface(
+            gpio.name, gpio_interfaces_, interface.name, i, gpio_states_, state_interfaces))
       {
         throw std::runtime_error(
           "Interface is not found in the standard nor other list. "
@@ -270,6 +291,22 @@ std::vector<hardware_interface::CommandInterface> GenericSystem::export_command_
             "Interface is not found in the standard nor other list. "
             "This should never happen!");
         }
+      }
+    }
+  }
+
+  // GPIO command interfaces
+  for (auto i = 0u; i < info_.gpios.size(); i++)
+  {
+    const auto & gpio = info_.gpios[i];
+    for (const auto & interface : gpio.command_interfaces)
+    {
+      if (!get_interface(
+            gpio.name, gpio_interfaces_, interface.name, i, gpio_commands_, command_interfaces))
+      {
+        throw std::runtime_error(
+          "Interface is not found in the standard nor other list. "
+          "This should never happen!");
       }
     }
   }
@@ -386,6 +423,29 @@ void GenericSystem::initialize_storage_vectors(
       }
     }
   }
+}
+
+// This method will populate the GPIO interface list, as there no standard interfaces
+void GenericSystem::populate_gpio_interfaces()
+{
+  std::set<std::string> interfaces_set;
+  for (auto i = 0u; i < info_.gpios.size(); i++)
+  {
+    const auto & gpio = info_.gpios[i];
+
+    for (auto j = 0u; j < gpio.command_interfaces.size(); j++)
+    {
+      interfaces_set.insert(gpio.command_interfaces[j].name);
+    }
+
+    for (auto j = 0u; j < gpio.state_interfaces.size(); j++)
+    {
+      interfaces_set.insert(gpio.state_interfaces[j].name);
+    }
+  }
+
+  gpio_interfaces_.resize(interfaces_set.size());
+  std::copy(interfaces_set.begin(), interfaces_set.end(), gpio_interfaces_.begin());
 }
 
 }  // namespace fake_components
