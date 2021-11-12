@@ -75,11 +75,12 @@ protected:
   std::vector<std::vector<double>> other_states_;
 
   std::vector<std::string> sensor_interfaces_;
-  /// The size of this vector is (other_interfaces_.size() x nr_joints)
+  /// The size of this vector is (sensor_interfaces_.size() x nr_joints)
   std::vector<std::vector<double>> sensor_fake_commands_;
   std::vector<std::vector<double>> sensor_states_;
 
   std::vector<std::string> gpio_interfaces_;
+  /// The size of this vector is (gpio_interfaces_.size() x nr_joints)
   std::vector<std::vector<double>> gpio_commands_;
   std::vector<std::vector<double>> gpio_states_;
 

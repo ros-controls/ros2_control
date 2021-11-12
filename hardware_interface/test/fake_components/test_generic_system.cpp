@@ -319,18 +319,20 @@ protected:
       <param name="example_param_read_for_sec">2</param>
     </hardware>
     <joint name="joint1">
-      <command_interface name="position">
-        <param name="min">-1</param>
-        <param name="max">1</param>
-      </command_interface>
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
       <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="actual_position"/>
+      <param name="initial_position">3.45</param>
     </joint>
     <joint name="joint2">
-      <command_interface name="position">
-        <param name="min">-1</param>
-        <param name="max">1</param>
-      </command_interface>
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
       <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="actual_position"/>
+      <param name="initial_position">2.78</param>
     </joint>
     <gpio name="flange_analog_IOs">
       <command_interface name="analog_output1" data_type="double"/>
@@ -360,75 +362,6 @@ protected:
   std::string hardware_system_2dof_standard_interfaces_with_custom_interface_for_offset_missing_;
   std::string valid_urdf_ros2_control_system_robot_with_gpio_;
 };
-
-TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_)
-{
-  auto urdf = ros2_control_test_assets::urdf_head + valid_urdf_ros2_control_system_robot_with_gpio_ +
-              ros2_control_test_assets::urdf_tail;
-  hardware_interface::ResourceManager rm(urdf);
-
-  // check is hardware is configured
-  std::unordered_map<std::string, rclcpp_lifecycle::State> states_map;
-  states_map = rm.get_components_states();
-  EXPECT_EQ(
-    states_map["GenericSystem2dof"].label(), hardware_interface::lifecycle_state_names::INACTIVE);
-
-  // Check initial values
-  hardware_interface::LoanedStateInterface gp1_s = rm.claim_state_interface("flange_analog_IOs/analog_output1");
-  hardware_interface::LoanedStateInterface gp2_s = rm.claim_state_interface("flange_vacuum/vacuum");
-  hardware_interface::LoanedCommandInterface gp1_c = rm.claim_command_interface("flange_analog_IOs/analog_output1");
-  hardware_interface::LoanedCommandInterface gp2_c = rm.claim_command_interface("flange_vacuum/vacuum");
-
-  // State interfaces without initial value are set to 0
-  ASSERT_EQ(0.0, gp1_s.get_value());
-  ASSERT_EQ(0.0, gp2_s.get_value());
-  ASSERT_TRUE(std::isnan(gp1_c.get_value()));
-  ASSERT_TRUE(std::isnan(gp2_c.get_value()));
-
-  // set some new values in commands
-  gp1_c.set_value(0.111);
-  gp2_c.set_value(0.222);
-
-  // State values should not be changed
-  ASSERT_EQ(0.0, gp1_s.get_value());
-  ASSERT_EQ(0.0, gp2_s.get_value());
-  ASSERT_EQ(0.111, gp1_c.get_value());
-  ASSERT_EQ(0.222, gp2_c.get_value());
-
-  // write() does not change values
-  rm.write();
-  ASSERT_EQ(0.0, gp1_s.get_value());
-  ASSERT_EQ(0.0, gp2_s.get_value());
-  ASSERT_EQ(0.111, gp1_c.get_value());
-  ASSERT_EQ(0.222, gp2_c.get_value());
-
-  // read() mirrors commands + offset to states
-  rm.read();
-  ASSERT_EQ(0.111, gp1_s.get_value());
-  ASSERT_EQ(0.222, gp2_s.get_value());
-  ASSERT_EQ(0.111, gp1_c.get_value());
-  ASSERT_EQ(0.222, gp2_c.get_value());
-
-  // set some new values in commands
-  gp1_c.set_value(0.333);
-  gp2_c.set_value(0.444);
-
-  // state values should not be changed
-  ASSERT_EQ(0.111, gp1_s.get_value());
-  ASSERT_EQ(0.222, gp2_s.get_value());
-  ASSERT_EQ(0.333, gp1_c.get_value());
-  ASSERT_EQ(0.444, gp2_c.get_value());
-
-  rm.start_components();
-  states_map = rm.get_components_states();
-  EXPECT_EQ(
-    states_map["GenericSystem2dof"].label(), hardware_interface::lifecycle_state_names::ACTIVE);
-
-  rm.stop_components();
-  states_map = rm.get_components_states();
-  EXPECT_EQ(
-    states_map["GenericSystem2dof"].label(), hardware_interface::lifecycle_state_names::INACTIVE);
-}
 
 TEST_F(TestGenericSystem, load_generic_system_2dof)
 {
@@ -1131,4 +1064,84 @@ TEST_F(TestGenericSystem, generic_system_2dof_functionality_with_offset_custom_i
   states_map = rm.get_components_states();
   EXPECT_EQ(
     states_map["GenericSystem2dof"].label(), hardware_interface::lifecycle_state_names::INACTIVE);
+}
+
+TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_)
+{
+  auto urdf = ros2_control_test_assets::urdf_head + valid_urdf_ros2_control_system_robot_with_gpio_ +
+              ros2_control_test_assets::urdf_tail;
+  hardware_interface::ResourceManager rm(urdf);
+
+  // check is hardware is configured
+  std::unordered_map<std::string, rclcpp_lifecycle::State> states_map;
+  states_map = rm.get_components_states();
+  EXPECT_EQ(
+    states_map["GenericSystem2dof"].label(), hardware_interface::lifecycle_state_names::INACTIVE);
+
+  // Check initial values
+  hardware_interface::LoanedStateInterface gp1_i1_s =
+    rm.claim_state_interface("flange_analog_IOs/analog_output1");
+  hardware_interface::LoanedStateInterface gp1_i2_s =
+    rm.claim_state_interface("flange_analog_IOs/analog_input1");
+  hardware_interface::LoanedStateInterface gp1_i3_s =
+    rm.claim_state_interface("flange_analog_IOs/analog_input2");
+  hardware_interface::LoanedStateInterface gp2_i1_s =
+    rm.claim_state_interface("flange_vacuum/vacuum");
+  hardware_interface::LoanedCommandInterface gp1_i1_c =
+    rm.claim_command_interface("flange_analog_IOs/analog_output1");
+  hardware_interface::LoanedCommandInterface gp2_i1_c =
+    rm.claim_command_interface("flange_vacuum/vacuum");
+
+  // State interfaces without initial value are set to 0
+  ASSERT_EQ(0.0, gp1_i1_s.get_value());
+  ASSERT_EQ(0.0, gp2_i1_s.get_value());
+  ASSERT_TRUE(std::isnan(gp1_i1_c.get_value()));
+  ASSERT_TRUE(std::isnan(gp2_i1_c.get_value()));
+
+  // set some new values in commands
+  gp1_i1_c.set_value(0.111);
+  gp2_i1_c.set_value(0.222);
+
+  // State values should not be changed
+  ASSERT_EQ(0.0, gp1_i1_s.get_value());
+  ASSERT_EQ(0.0, gp2_i1_s.get_value());
+  ASSERT_EQ(0.111, gp1_i1_c.get_value());
+  ASSERT_EQ(0.222, gp2_i1_c.get_value());
+
+  // write() does not change values
+  rm.write();
+  ASSERT_EQ(0.0, gp1_i1_s.get_value());
+  ASSERT_EQ(0.0, gp2_i1_s.get_value());
+  ASSERT_EQ(0.111, gp1_i1_c.get_value());
+  ASSERT_EQ(0.222, gp2_i1_c.get_value());
+
+  // read() mirrors commands + offset to states
+  rm.read();
+  ASSERT_EQ(0.111, gp1_i1_s.get_value());
+  ASSERT_EQ(0.222, gp2_i1_s.get_value());
+  ASSERT_EQ(0.111, gp1_i1_c.get_value());
+  ASSERT_EQ(0.222, gp2_i1_c.get_value());
+
+  // set some new values in commands
+  gp1_i1_c.set_value(0.333);
+  gp2_i1_c.set_value(0.444);
+
+  // state values should not be changed
+  ASSERT_EQ(0.111, gp1_i1_s.get_value());
+  ASSERT_EQ(0.222, gp2_i1_s.get_value());
+  ASSERT_EQ(0.333, gp1_i1_c.get_value());
+  ASSERT_EQ(0.444, gp2_i1_c.get_value());
+
+  rm.start_components();
+  states_map = rm.get_components_states();
+  EXPECT_EQ(
+    states_map["GenericSystem2dof"].label(), hardware_interface::lifecycle_state_names::ACTIVE);
+
+  rm.stop_components();
+  states_map = rm.get_components_states();
+  EXPECT_EQ(
+    states_map["GenericSystem2dof"].label(), hardware_interface::lifecycle_state_names::INACTIVE);
+
+  // check other functionalities are working well
+  generic_system_functional_test(urdf);
 }
