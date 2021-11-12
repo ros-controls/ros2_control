@@ -1068,8 +1068,8 @@ TEST_F(TestGenericSystem, generic_system_2dof_functionality_with_offset_custom_i
 
 TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_)
 {
-  auto urdf = ros2_control_test_assets::urdf_head + valid_urdf_ros2_control_system_robot_with_gpio_ +
-              ros2_control_test_assets::urdf_tail;
+  auto urdf = ros2_control_test_assets::urdf_head +
+              valid_urdf_ros2_control_system_robot_with_gpio_ + ros2_control_test_assets::urdf_tail;
   hardware_interface::ResourceManager rm(urdf);
 
   // check is hardware is configured
