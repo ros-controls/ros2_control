@@ -21,7 +21,7 @@
 #include <memory>
 #include <string>
 
-#include "controller_interface/controller_state_names.hpp"
+#include "hardware_interface/types/lifecycle_state_names.hpp"
 
 namespace controller_with_options
 {
@@ -51,7 +51,7 @@ public:
       case LifecycleNodeInterface::CallbackReturn::SUCCESS:
         lifecycle_state_ = rclcpp_lifecycle::State(
           lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-          controller_interface::state_names::UNCONFIGURED);
+          hardware_interface::lifecycle_state_names::UNCONFIGURED);
         break;
       case LifecycleNodeInterface::CallbackReturn::ERROR:
       case LifecycleNodeInterface::CallbackReturn::FAILURE:
