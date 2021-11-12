@@ -166,7 +166,7 @@ bool are_names_identical(const std::vector<T> & handles)
   return std::equal(names.cbegin() + 1, names.cend(), names.cbegin());
 }
 
-void SimpleTransmission::configure(
+inline void SimpleTransmission::configure(
   const std::vector<JointHandle> & joint_handles,
   const std::vector<ActuatorHandle> & actuator_handles)
 {
