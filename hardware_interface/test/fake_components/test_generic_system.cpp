@@ -1079,58 +1079,58 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_)
     states_map["GenericSystem2dof"].label(), hardware_interface::lifecycle_state_names::INACTIVE);
 
   // Check initial values
-  hardware_interface::LoanedStateInterface gp1_i1_s =
+  hardware_interface::LoanedStateInterface gpio1_a_o1_s =
     rm.claim_state_interface("flange_analog_IOs/analog_output1");
-  hardware_interface::LoanedStateInterface gp1_i2_s =
+  hardware_interface::LoanedStateInterface gpio1_a_i1_s =
     rm.claim_state_interface("flange_analog_IOs/analog_input1");
-  hardware_interface::LoanedStateInterface gp1_i3_s =
+  hardware_interface::LoanedStateInterface gpio1_a_o2_s =
     rm.claim_state_interface("flange_analog_IOs/analog_input2");
-  hardware_interface::LoanedStateInterface gp2_i1_s =
+  hardware_interface::LoanedStateInterface gpio2_vac_s =
     rm.claim_state_interface("flange_vacuum/vacuum");
-  hardware_interface::LoanedCommandInterface gp1_i1_c =
+  hardware_interface::LoanedCommandInterface gpio1_a_o1_c =
     rm.claim_command_interface("flange_analog_IOs/analog_output1");
-  hardware_interface::LoanedCommandInterface gp2_i1_c =
+  hardware_interface::LoanedCommandInterface gpio2_vac_c =
     rm.claim_command_interface("flange_vacuum/vacuum");
 
   // State interfaces without initial value are set to 0
-  ASSERT_EQ(0.0, gp1_i1_s.get_value());
-  ASSERT_EQ(0.0, gp2_i1_s.get_value());
-  ASSERT_TRUE(std::isnan(gp1_i1_c.get_value()));
-  ASSERT_TRUE(std::isnan(gp2_i1_c.get_value()));
+  ASSERT_EQ(0.0, gpio1_a_o1_s.get_value());
+  ASSERT_EQ(0.0, gpio2_vac_s.get_value());
+  ASSERT_TRUE(std::isnan(gpio1_a_o1_c.get_value()));
+  ASSERT_TRUE(std::isnan(gpio2_vac_c.get_value()));
 
   // set some new values in commands
-  gp1_i1_c.set_value(0.111);
-  gp2_i1_c.set_value(0.222);
+  gpio1_a_o1_c.set_value(0.111);
+  gpio2_vac_c.set_value(0.222);
 
   // State values should not be changed
-  ASSERT_EQ(0.0, gp1_i1_s.get_value());
-  ASSERT_EQ(0.0, gp2_i1_s.get_value());
-  ASSERT_EQ(0.111, gp1_i1_c.get_value());
-  ASSERT_EQ(0.222, gp2_i1_c.get_value());
+  ASSERT_EQ(0.0, gpio1_a_o1_s.get_value());
+  ASSERT_EQ(0.0, gpio2_vac_s.get_value());
+  ASSERT_EQ(0.111, gpio1_a_o1_c.get_value());
+  ASSERT_EQ(0.222, gpio2_vac_c.get_value());
 
   // write() does not change values
   rm.write();
-  ASSERT_EQ(0.0, gp1_i1_s.get_value());
-  ASSERT_EQ(0.0, gp2_i1_s.get_value());
-  ASSERT_EQ(0.111, gp1_i1_c.get_value());
-  ASSERT_EQ(0.222, gp2_i1_c.get_value());
+  ASSERT_EQ(0.0, gpio1_a_o1_s.get_value());
+  ASSERT_EQ(0.0, gpio2_vac_s.get_value());
+  ASSERT_EQ(0.111, gpio1_a_o1_c.get_value());
+  ASSERT_EQ(0.222, gpio2_vac_c.get_value());
 
   // read() mirrors commands + offset to states
   rm.read();
-  ASSERT_EQ(0.111, gp1_i1_s.get_value());
-  ASSERT_EQ(0.222, gp2_i1_s.get_value());
-  ASSERT_EQ(0.111, gp1_i1_c.get_value());
-  ASSERT_EQ(0.222, gp2_i1_c.get_value());
+  ASSERT_EQ(0.111, gpio1_a_o1_s.get_value());
+  ASSERT_EQ(0.222, gpio2_vac_s.get_value());
+  ASSERT_EQ(0.111, gpio1_a_o1_c.get_value());
+  ASSERT_EQ(0.222, gpio2_vac_c.get_value());
 
   // set some new values in commands
-  gp1_i1_c.set_value(0.333);
-  gp2_i1_c.set_value(0.444);
+  gpio1_a_o1_c.set_value(0.333);
+  gpio2_vac_c.set_value(0.444);
 
   // state values should not be changed
-  ASSERT_EQ(0.111, gp1_i1_s.get_value());
-  ASSERT_EQ(0.222, gp2_i1_s.get_value());
-  ASSERT_EQ(0.333, gp1_i1_c.get_value());
-  ASSERT_EQ(0.444, gp2_i1_c.get_value());
+  ASSERT_EQ(0.111, gpio1_a_o1_s.get_value());
+  ASSERT_EQ(0.222, gpio2_vac_s.get_value());
+  ASSERT_EQ(0.333, gpio1_a_o1_c.get_value());
+  ASSERT_EQ(0.444, gpio2_vac_c.get_value());
 
   rm.start_components();
   states_map = rm.get_components_states();
