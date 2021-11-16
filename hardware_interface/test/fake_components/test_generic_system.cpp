@@ -1226,7 +1226,6 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_fake_co
   hardware_interface::LoanedCommandInterface gpio2_vac_c =
     rm.claim_command_interface("flange_vacuum/vacuum");
 
-
   ASSERT_EQ(0.0, gpio1_a_o1_s.get_value());
   ASSERT_EQ(0.0, gpio1_a_i1_s.get_value());
   ASSERT_EQ(0.0, gpio1_a_o2_s.get_value());
