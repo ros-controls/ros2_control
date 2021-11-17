@@ -156,13 +156,12 @@ controller_interface::ControllerInterfaceSharedPtr ControllerManager::load_contr
 
   if (!loader_->isClassAvailable(controller_type))
   {
-    const std::string error_msg("Loader for controller '" + controller_name + "' not found.");
-    RCLCPP_ERROR(get_logger(), "Available classes:");
-    for (const auto & c : loader_->getDeclaredClasses())
+    RCLCPP_ERROR(get_logger(), "Loader for controller '%s' not found.", controller_name.c_str());
+    RCLCPP_INFO(get_logger(), "Available classes:");
+    for (const auto & available_class : loader_->getDeclaredClasses())
     {
-      RCLCPP_ERROR(get_logger(), "%s", c.c_str());
+      RCLCPP_INFO(get_logger(), "  %s", available_class.c_str());
     }
-    RCLCPP_ERROR(get_logger(), "%s", error_msg.c_str());
     return nullptr;
   }
 
