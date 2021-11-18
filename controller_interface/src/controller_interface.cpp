@@ -19,7 +19,7 @@
 #include <utility>
 #include <vector>
 
-#include "controller_interface/controller_state_names.hpp"
+#include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 
 namespace controller_interface
@@ -36,7 +36,8 @@ return_type ControllerInterface::init(const std::string & controller_name)
   {
     case LifecycleNodeInterface::CallbackReturn::SUCCESS:
       lifecycle_state_ = rclcpp_lifecycle::State(
-        lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state_names::UNCONFIGURED);
+        lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+        hardware_interface::lifecycle_state_names::UNCONFIGURED);
       break;
     case LifecycleNodeInterface::CallbackReturn::ERROR:
     case LifecycleNodeInterface::CallbackReturn::FAILURE:
@@ -54,12 +55,14 @@ const rclcpp_lifecycle::State & ControllerInterface::configure()
     {
       case LifecycleNodeInterface::CallbackReturn::SUCCESS:
         lifecycle_state_ = rclcpp_lifecycle::State(
-          lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, state_names::INACTIVE);
+          lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+          hardware_interface::lifecycle_state_names::INACTIVE);
         break;
       case LifecycleNodeInterface::CallbackReturn::ERROR:
         on_error(lifecycle_state_);
         lifecycle_state_ = rclcpp_lifecycle::State(
-          lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, state_names::FINALIZED);
+          lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED,
+          hardware_interface::lifecycle_state_names::FINALIZED);
         break;
       case LifecycleNodeInterface::CallbackReturn::FAILURE:
         break;
@@ -79,12 +82,14 @@ const rclcpp_lifecycle::State & ControllerInterface::cleanup()
   {
     case LifecycleNodeInterface::CallbackReturn::SUCCESS:
       lifecycle_state_ = rclcpp_lifecycle::State(
-        lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state_names::UNCONFIGURED);
+        lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+        hardware_interface::lifecycle_state_names::UNCONFIGURED);
       break;
     case LifecycleNodeInterface::CallbackReturn::ERROR:
       on_error(lifecycle_state_);
       lifecycle_state_ = rclcpp_lifecycle::State(
-        lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, state_names::FINALIZED);
+        lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED,
+        hardware_interface::lifecycle_state_names::FINALIZED);
       break;
     case LifecycleNodeInterface::CallbackReturn::FAILURE:
       break;
@@ -97,12 +102,14 @@ const rclcpp_lifecycle::State & ControllerInterface::deactivate()
   {
     case LifecycleNodeInterface::CallbackReturn::SUCCESS:
       lifecycle_state_ = rclcpp_lifecycle::State(
-        lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, state_names::INACTIVE);
+        lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+        hardware_interface::lifecycle_state_names::INACTIVE);
       break;
     case LifecycleNodeInterface::CallbackReturn::ERROR:
       on_error(lifecycle_state_);
       lifecycle_state_ = rclcpp_lifecycle::State(
-        lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, state_names::FINALIZED);
+        lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED,
+        hardware_interface::lifecycle_state_names::FINALIZED);
       break;
     case LifecycleNodeInterface::CallbackReturn::FAILURE:
       break;
@@ -117,12 +124,14 @@ const rclcpp_lifecycle::State & ControllerInterface::activate()
     {
       case LifecycleNodeInterface::CallbackReturn::SUCCESS:
         lifecycle_state_ = rclcpp_lifecycle::State(
-          lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, state_names::ACTIVE);
+          lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+          hardware_interface::lifecycle_state_names::ACTIVE);
         break;
       case LifecycleNodeInterface::CallbackReturn::ERROR:
         on_error(lifecycle_state_);
         lifecycle_state_ = rclcpp_lifecycle::State(
-          lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, state_names::FINALIZED);
+          lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED,
+          hardware_interface::lifecycle_state_names::FINALIZED);
         break;
       case LifecycleNodeInterface::CallbackReturn::FAILURE:
         break;
@@ -137,12 +146,14 @@ const rclcpp_lifecycle::State & ControllerInterface::shutdown()
   {
     case LifecycleNodeInterface::CallbackReturn::SUCCESS:
       lifecycle_state_ = rclcpp_lifecycle::State(
-        lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, state_names::FINALIZED);
+        lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED,
+        hardware_interface::lifecycle_state_names::FINALIZED);
       break;
     case LifecycleNodeInterface::CallbackReturn::ERROR:
       on_error(lifecycle_state_);
       lifecycle_state_ = rclcpp_lifecycle::State(
-        lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, state_names::FINALIZED);
+        lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED,
+        hardware_interface::lifecycle_state_names::FINALIZED);
       break;
     case LifecycleNodeInterface::CallbackReturn::FAILURE:
       break;
