@@ -1221,7 +1221,7 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_fake_co
     rm.claim_command_interface("flange_analog_IOs/analog_output1");
   hardware_interface::LoanedCommandInterface gpio1_a_i1_c =
     rm.claim_command_interface("flange_analog_IOs/analog_input1");
-  hardware_interface::LoanedCommandInterface gpio1_a_o2_c =
+  hardware_interface::LoanedCommandInterface gpio1_a_i2_c =
     rm.claim_command_interface("flange_analog_IOs/analog_input2");
   hardware_interface::LoanedCommandInterface gpio2_vac_c =
     rm.claim_command_interface("flange_vacuum/vacuum");
@@ -1232,13 +1232,13 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_fake_co
   ASSERT_EQ(0.0, gpio2_vac_s.get_value());
   EXPECT_TRUE(std::isnan(gpio1_a_o1_c.get_value()));
   EXPECT_TRUE(std::isnan(gpio1_a_i1_c.get_value()));
-  EXPECT_TRUE(std::isnan(gpio1_a_o2_c.get_value()));
+  EXPECT_TRUE(std::isnan(gpio1_a_i2_c.get_value()));
   EXPECT_TRUE(std::isnan(gpio2_vac_c.get_value()));
 
   // set some new values in commands
   gpio1_a_o1_c.set_value(0.11);
   gpio1_a_i1_c.set_value(0.33);
-  gpio1_a_o2_c.set_value(1.11);
+  gpio1_a_i2_c.set_value(1.11);
   gpio2_vac_c.set_value(2.22);
 
   // State values should not be changed
@@ -1249,7 +1249,7 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_fake_co
 
   ASSERT_EQ(0.11, gpio1_a_o1_c.get_value());
   ASSERT_EQ(0.33, gpio1_a_i1_c.get_value());
-  ASSERT_EQ(1.11, gpio1_a_o2_c.get_value());
+  ASSERT_EQ(1.11, gpio1_a_i2_c.get_value());
   ASSERT_EQ(2.22, gpio2_vac_c.get_value());
 
   // write() does not change values
@@ -1260,7 +1260,7 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_fake_co
   ASSERT_EQ(0.0, gpio2_vac_s.get_value());
   ASSERT_EQ(0.11, gpio1_a_o1_c.get_value());
   ASSERT_EQ(0.33, gpio1_a_i1_c.get_value());
-  ASSERT_EQ(1.11, gpio1_a_o2_c.get_value());
+  ASSERT_EQ(1.11, gpio1_a_i2_c.get_value());
   ASSERT_EQ(2.22, gpio2_vac_c.get_value());
 
   // read() mirrors commands to states
@@ -1271,6 +1271,6 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_fake_co
   ASSERT_EQ(2.22, gpio2_vac_s.get_value());
   ASSERT_EQ(0.11, gpio1_a_o1_c.get_value());
   ASSERT_EQ(0.33, gpio1_a_i1_c.get_value());
-  ASSERT_EQ(1.11, gpio1_a_o2_c.get_value());
+  ASSERT_EQ(1.11, gpio1_a_i2_c.get_value());
   ASSERT_EQ(2.22, gpio2_vac_c.get_value());
 }
