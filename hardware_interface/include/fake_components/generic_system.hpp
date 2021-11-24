@@ -96,8 +96,6 @@ private:
     std::vector<std::vector<double>> & commands, std::vector<std::vector<double>> & states,
     const std::vector<std::string> & interfaces);
 
-  void populate_gpio_interfaces();
-
   bool use_fake_gpio_command_interfaces_;
   bool use_fake_sensor_command_interfaces_;
   double position_state_following_offset_;

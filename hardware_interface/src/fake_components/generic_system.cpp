@@ -49,24 +49,25 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
     }
   };
 
-  auto populate_other_interfaces =
-    [](auto interface_list, auto standard_interfaces, auto & other_interfaces) {
-      for (const auto & interface : interface_list)
+  auto populate_non_standard_interfaces = [this](
+                                            auto interface_list, auto & non_standard_interfaces) {
+    for (const auto & interface : interface_list)
+    {
+      // add to list if non-standard interface
+      if (
+        std::find(standard_interfaces_.begin(), standard_interfaces_.end(), interface.name) ==
+        standard_interfaces_.end())
       {
-        // add to list if non-standard interface
         if (
-          std::find(standard_interfaces.begin(), standard_interfaces.end(), interface.name) ==
-          standard_interfaces.end())
+          std::find(
+            non_standard_interfaces.begin(), non_standard_interfaces.end(), interface.name) ==
+          non_standard_interfaces.end())
         {
-          if (
-            std::find(other_interfaces.begin(), other_interfaces.end(), interface.name) ==
-            other_interfaces.end())
-          {
-            other_interfaces.emplace_back(interface.name);
-          }
+          non_standard_interfaces.emplace_back(interface.name);
         }
       }
-    };
+    }
+  };
 
   // check if to create fake command interface for sensor
   auto it = info_.hardware_parameters.find("fake_sensor_commands");
@@ -148,11 +149,12 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
   for (const auto & joint : info_.joints)
   {
     // populate non-standard command interfaces to other_interfaces_
-    populate_other_interfaces(joint.command_interfaces, standard_interfaces_, other_interfaces_);
+    populate_non_standard_interfaces(joint.command_interfaces, other_interfaces_);
 
     // populate non-standard state interfaces to other_interfaces_
-    populate_other_interfaces(joint.state_interfaces, standard_interfaces_, other_interfaces_);
+    populate_non_standard_interfaces(joint.state_interfaces, other_interfaces_);
   }
+
   // Initialize storage for non-standard interfaces
   initialize_storage_vectors(other_commands_, other_states_, other_interfaces_);
 
@@ -193,7 +195,15 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
   }
   initialize_storage_vectors(sensor_fake_commands_, sensor_states_, sensor_interfaces_);
 
-  populate_gpio_interfaces();
+  // search for gpio interfaces
+  for (const auto & gpio : info_.gpios)
+  {
+    // populate non-standard command interfaces to gpio_interfaces_
+    populate_non_standard_interfaces(gpio.command_interfaces, gpio_interfaces_);
+
+    // populate non-standard state interfaces to gpio_interfaces_
+    populate_non_standard_interfaces(gpio.state_interfaces, gpio_interfaces_);
+  }
 
   // Fake gpio command interfaces
   if (use_fake_gpio_command_interfaces_)
@@ -459,29 +469,6 @@ void GenericSystem::initialize_storage_vectors(
       }
     }
   }
-}
-
-// This method will populate the GPIO interface list, as there no standard interfaces
-void GenericSystem::populate_gpio_interfaces()
-{
-  std::set<std::string> interfaces_set;
-  for (auto i = 0u; i < info_.gpios.size(); i++)
-  {
-    const auto & gpio = info_.gpios[i];
-
-    for (auto j = 0u; j < gpio.command_interfaces.size(); j++)
-    {
-      interfaces_set.insert(gpio.command_interfaces[j].name);
-    }
-
-    for (auto j = 0u; j < gpio.state_interfaces.size(); j++)
-    {
-      interfaces_set.insert(gpio.state_interfaces[j].name);
-    }
-  }
-
-  gpio_interfaces_.resize(interfaces_set.size());
-  std::copy(interfaces_set.begin(), interfaces_set.end(), gpio_interfaces_.begin());
 }
 
 }  // namespace fake_components
