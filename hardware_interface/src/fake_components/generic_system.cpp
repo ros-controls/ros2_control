@@ -73,11 +73,11 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
   if (it != info_.hardware_parameters.end())
   {
     // TODO(anyone): change this to parse_bool() (see ros2_control#339)
-    fake_sensor_command_interfaces_ = it->second == "true" || it->second == "True";
+    use_fake_sensor_command_interfaces_ = it->second == "true" || it->second == "True";
   }
   else
   {
-    fake_sensor_command_interfaces_ = false;
+    use_fake_sensor_command_interfaces_ = false;
   }
 
   // check if to create fake command interface for gpio
@@ -85,11 +85,11 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
   if (it != info_.hardware_parameters.end())
   {
     // TODO(anyone): change this to parse_bool() (see ros2_control#339)
-    fake_gpio_command_interfaces_ = it->second == "true" || it->second == "True";
+    use_fake_gpio_command_interfaces_ = it->second == "true" || it->second == "True";
   }
   else
   {
-    fake_gpio_command_interfaces_ = false;
+    use_fake_gpio_command_interfaces_ = false;
   }
 
   // process parameters about state following
@@ -196,7 +196,7 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
   populate_gpio_interfaces();
 
   // Fake gpio command interfaces
-  if (fake_gpio_command_interfaces_)
+  if (use_fake_gpio_command_interfaces_)
   {
     initialize_storage_vectors(gpio_fake_commands_, gpio_states_, gpio_interfaces_);
   }
@@ -312,7 +312,7 @@ std::vector<hardware_interface::CommandInterface> GenericSystem::export_command_
   }
 
   // Fake sensor command interfaces
-  if (fake_sensor_command_interfaces_)
+  if (use_fake_sensor_command_interfaces_)
   {
     populate_command_interfaces(
       "standard nor other", info_.sensors, sensor_interfaces_, sensor_fake_commands_,
@@ -320,7 +320,7 @@ std::vector<hardware_interface::CommandInterface> GenericSystem::export_command_
   }
 
   // Fake gpio command interfaces
-  if (fake_gpio_command_interfaces_)
+  if (use_fake_gpio_command_interfaces_)
   {
     populate_command_interfaces(
       "gpio", info_.gpios, gpio_interfaces_, gpio_fake_commands_, command_interfaces);
@@ -391,13 +391,13 @@ return_type GenericSystem::read()
     }
   }
 
-  if (fake_sensor_command_interfaces_)
+  if (use_fake_sensor_command_interfaces_)
   {
     mirror_command_to_state(0, sensor_states_, sensor_fake_commands_);
   }
 
   // do loopback on all gpio interfaces
-  if (fake_gpio_command_interfaces_)
+  if (use_fake_gpio_command_interfaces_)
   {
     mirror_command_to_state(0, gpio_states_, gpio_fake_commands_);
   }
