@@ -36,14 +36,14 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
     return CallbackReturn::ERROR;
   }
 
-  auto set_nan_to_zero = [](auto param_1, auto param_2, auto & param_3) {
-    for (auto i = 0u; i < param_1.size(); i++)
+  auto set_nan_to_zero = [](size_t param_1, size_t interface_size_, auto & states_) {
+    for (size_t i = 0; i < param_1; ++i)
     {
-      for (auto j = 0u; j < param_2.size(); j++)
+      for (size_t j = 0; j < interface_size_; ++j)
       {
-        if (std::isnan(param_3[j][i]))
+        if (std::isnan(states_[j][i]))
         {
-          param_3[j][i] = 0.0;
+          states_[j][i] = 0.0;
         }
       }
     }
@@ -113,7 +113,7 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
   initialize_storage_vectors(joint_commands_, joint_states_, standard_interfaces_);
 
   // set all values without initial values to 0
-  set_nan_to_zero(info_.joints, standard_interfaces_, joint_states_);
+  set_nan_to_zero(info_.joints.size(), standard_interfaces_.size(), joint_states_);
 
   // Search for mimic joints
   for (auto i = 0u; i < info_.joints.size(); ++i)
@@ -207,7 +207,7 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
   }
 
   // set all values without initial values to 0
-  set_nan_to_zero(info_.gpios, gpio_interfaces_, gpio_states_);
+  set_nan_to_zero(info_.gpios.size(), gpio_interfaces_.size(), gpio_states_);
 
   return CallbackReturn::SUCCESS;
 }
@@ -216,23 +216,23 @@ std::vector<hardware_interface::StateInterface> GenericSystem::export_state_inte
 {
   std::vector<hardware_interface::StateInterface> state_interfaces;
 
-  auto populate_state_interfaces = [this](
-                                     const std::string type, auto component, auto & interface_list,
-                                     auto & states_list, auto & target_interfaces) {
-    for (auto i = 0u; i < component.size(); i++)
-    {
-      const auto & elem = component[i];
-      for (const auto & interface : elem.state_interfaces)
+  auto populate_state_interfaces =
+    [this](auto component, auto & interface_list, auto & states_list, auto & target_interfaces) {
+      for (auto i = 0u; i < component.size(); i++)
       {
-        if (!get_interface(
-              elem.name, interface_list, interface.name, i, states_list, target_interfaces))
+        const auto & elem = component[i];
+        for (const auto & interface : elem.state_interfaces)
         {
-          throw std::runtime_error(
-            "Interface is not found in the " + type + " list. This should never happen!");
+          if (!get_interface(
+                elem.name, interface_list, interface.name, i, states_list, target_interfaces))
+          {
+            return false;
+          }
         }
       }
-    }
-  };
+
+      return true;
+    };
 
   // Joints' state interfaces
   for (auto i = 0u; i < info_.joints.size(); i++)
@@ -256,11 +256,18 @@ std::vector<hardware_interface::StateInterface> GenericSystem::export_state_inte
   }
 
   // Sensor state interfaces
-  populate_state_interfaces(
-    "standard nor other", info_.sensors, sensor_interfaces_, sensor_states_, state_interfaces);
+  if (!populate_state_interfaces(
+        info_.sensors, sensor_interfaces_, sensor_states_, state_interfaces))
+  {
+    throw std::runtime_error(
+      "Interface is not found in the standard nor other list. This should never happen!");
+  };
 
   // GPIO state interfaces
-  populate_state_interfaces("gpio", info_.gpios, gpio_interfaces_, gpio_states_, state_interfaces);
+  if (!populate_state_interfaces(info_.gpios, gpio_interfaces_, gpio_states_, state_interfaces))
+  {
+    throw std::runtime_error("Interface is not found in the gpio list. This should never happen!");
+  }
 
   return state_interfaces;
 }
