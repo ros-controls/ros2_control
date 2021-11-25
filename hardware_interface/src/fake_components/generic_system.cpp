@@ -206,18 +206,6 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
     initialize_storage_vectors(gpio_commands_, gpio_states_, gpio_interfaces_);
   }
 
-  // set all values without initial values to 0
-  for (auto i = 0u; i < info_.gpios.size(); i++)
-  {
-    for (auto j = 0u; j < gpio_interfaces_.size(); j++)
-    {
-      if (std::isnan(gpio_states_[j][i]))
-      {
-        gpio_states_[j][i] = 0.0;
-      }
-    }
-  }
-
   return CallbackReturn::SUCCESS;
 }
 
