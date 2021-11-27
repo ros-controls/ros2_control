@@ -70,7 +70,14 @@ ControllerManager::ControllerManager(
     RCLCPP_WARN(get_logger(), "'update_rate' parameter not set, using default value.");
   }
 
-  init_resource_manager();
+  std::string robot_description = "";
+  get_parameter("robot_description", robot_description);
+  if (robot_description.empty())
+  {
+    throw std::runtime_error("Unable to initialize resource manager, no robot description found.");
+  }
+
+  init_resource_manager(robot_description);
 
   init_services();
 }
@@ -88,15 +95,8 @@ ControllerManager::ControllerManager(
   init_services();
 }
 
-void ControllerManager::init_resource_manager()
+void ControllerManager::init_resource_manager(const std::string & robot_description)
 {
-  std::string robot_description = "";
-  get_parameter("robot_description", robot_description);
-  if (robot_description.empty())
-  {
-    throw std::runtime_error("Unable to initialize resource manager, no robot description found.");
-  }
-
   // TODO(destogl): manage this when there is an error - CM should not die because URDF is wrong...
   resource_manager_->load_urdf(robot_description);
 

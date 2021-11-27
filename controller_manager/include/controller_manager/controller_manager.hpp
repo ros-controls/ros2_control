@@ -70,7 +70,7 @@ public:
   virtual ~ControllerManager() = default;
 
   CONTROLLER_MANAGER_PUBLIC
-  void init_resource_manager();
+  void init_resource_manager(const std::string & robot_description);
 
   CONTROLLER_MANAGER_PUBLIC
   controller_interface::ControllerInterfaceSharedPtr load_controller(

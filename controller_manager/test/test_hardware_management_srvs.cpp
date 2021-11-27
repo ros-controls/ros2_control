@@ -75,7 +75,14 @@ public:
     cm_->set_parameter(rclcpp::Parameter(
       "autoconfigure_components", std::vector<std::string>({TEST_SENSOR_HARDWARE_NAME})));
 
-    cm_->init_resource_manager();
+    std::string robot_description = "";
+    cm_->get_parameter("robot_description", robot_description);
+    if (robot_description.empty())
+    {
+      throw std::runtime_error("Unable to initialize resource manager, no robot description found.");
+    }
+
+    cm_->init_resource_manager(robot_description);
 
     SetUpSrvsCMExecutor();
   }
