@@ -79,7 +79,8 @@ public:
     cm_->get_parameter("robot_description", robot_description);
     if (robot_description.empty())
     {
-      throw std::runtime_error("Unable to initialize resource manager, no robot description found.");
+      throw std::runtime_error(
+        "Unable to initialize resource manager, no robot description found.");
     }
 
     cm_->init_resource_manager(robot_description);
