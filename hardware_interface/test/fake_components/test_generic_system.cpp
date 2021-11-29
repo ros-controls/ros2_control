@@ -1197,18 +1197,23 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_fake_co
   EXPECT_EQ(
     states_map["GenericSystem2dof"].label(), hardware_interface::lifecycle_state_names::INACTIVE);
 
-  ASSERT_EQ(8, rm.state_interface_keys().size());
-  ASSERT_EQ(8, rm.command_interface_keys().size());
-
   // Check interfaces
   EXPECT_EQ(1u, rm.system_components_size());
   ASSERT_EQ(8u, rm.state_interface_keys().size());
+  EXPECT_TRUE(rm.state_interface_exists("joint1/position"));
+  EXPECT_TRUE(rm.state_interface_exists("joint1/velocity"));
+  EXPECT_TRUE(rm.state_interface_exists("joint2/position"));
+  EXPECT_TRUE(rm.state_interface_exists("joint2/velocity"));
   EXPECT_TRUE(rm.state_interface_exists("flange_analog_IOs/analog_output1"));
   EXPECT_TRUE(rm.state_interface_exists("flange_analog_IOs/analog_input1"));
   EXPECT_TRUE(rm.state_interface_exists("flange_analog_IOs/analog_input2"));
   EXPECT_TRUE(rm.state_interface_exists("flange_vacuum/vacuum"));
 
   ASSERT_EQ(8u, rm.command_interface_keys().size());
+  EXPECT_TRUE(rm.command_interface_exists("joint1/position"));
+  EXPECT_TRUE(rm.command_interface_exists("joint1/velocity"));
+  EXPECT_TRUE(rm.command_interface_exists("joint2/position"));
+  EXPECT_TRUE(rm.command_interface_exists("joint2/velocity"));
   EXPECT_TRUE(rm.command_interface_exists("flange_analog_IOs/analog_output1"));
   EXPECT_TRUE(rm.command_interface_exists("flange_analog_IOs/analog_input1"));
   EXPECT_TRUE(rm.command_interface_exists("flange_analog_IOs/analog_input2"));
