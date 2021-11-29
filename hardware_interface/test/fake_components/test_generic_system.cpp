@@ -1113,8 +1113,8 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_)
   EXPECT_EQ(
     states_map["GenericSystem2dof"].label(), hardware_interface::lifecycle_state_names::INACTIVE);
 
-ASSERT_EQ(rm.state_interface_keys().size(), 10);
-ASSERT_EQ(rm.command_interface_keys().size(), 6);
+  ASSERT_EQ(10, rm.state_interface_keys().size());
+  ASSERT_EQ(6, rm.command_interface_keys().size());
 
   // Check initial values
   hardware_interface::LoanedStateInterface gpio1_a_o1_s =
@@ -1197,8 +1197,8 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_fake_co
   EXPECT_EQ(
     states_map["GenericSystem2dof"].label(), hardware_interface::lifecycle_state_names::INACTIVE);
 
-ASSERT_EQ(rm.state_interface_keys().size(), 10);
-ASSERT_EQ(rm.command_interface_keys().size(), 10);
+  ASSERT_EQ(8, rm.state_interface_keys().size());
+  ASSERT_EQ(8, rm.command_interface_keys().size());
 
   // Check interfaces
   EXPECT_EQ(1u, rm.system_components_size());
