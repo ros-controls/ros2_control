@@ -1113,6 +1113,9 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_)
   EXPECT_EQ(
     states_map["GenericSystem2dof"].label(), hardware_interface::lifecycle_state_names::INACTIVE);
 
+ASSERT_EQ(rm.state_interface_keys().size(), 10);
+ASSERT_EQ(rm.command_interface_keys().size(), 6);
+
   // Check initial values
   hardware_interface::LoanedStateInterface gpio1_a_o1_s =
     rm.claim_state_interface("flange_analog_IOs/analog_output1");
