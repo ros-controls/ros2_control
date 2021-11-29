@@ -323,7 +323,6 @@ protected:
       <command_interface name="velocity"/>
       <state_interface name="position"/>
       <state_interface name="velocity"/>
-      <state_interface name="actual_position"/>
       <param name="initial_position">3.45</param>
     </joint>
     <joint name="joint2">
@@ -331,7 +330,6 @@ protected:
       <command_interface name="velocity"/>
       <state_interface name="position"/>
       <state_interface name="velocity"/>
-      <state_interface name="actual_position"/>
       <param name="initial_position">2.78</param>
     </joint>
     <gpio name="flange_analog_IOs">
@@ -1113,8 +1111,23 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_)
   EXPECT_EQ(
     states_map["GenericSystem2dof"].label(), hardware_interface::lifecycle_state_names::INACTIVE);
 
-  ASSERT_EQ(10, rm.state_interface_keys().size());
+  ASSERT_EQ(8u, rm.state_interface_keys().size());
   ASSERT_EQ(6, rm.command_interface_keys().size());
+  EXPECT_TRUE(rm.state_interface_exists("joint1/position"));
+  EXPECT_TRUE(rm.state_interface_exists("joint1/velocity"));
+  EXPECT_TRUE(rm.state_interface_exists("joint2/position"));
+  EXPECT_TRUE(rm.state_interface_exists("joint2/velocity"));
+  EXPECT_TRUE(rm.state_interface_exists("flange_analog_IOs/analog_output1"));
+  EXPECT_TRUE(rm.state_interface_exists("flange_analog_IOs/analog_input1"));
+  EXPECT_TRUE(rm.state_interface_exists("flange_analog_IOs/analog_input2"));
+  EXPECT_TRUE(rm.state_interface_exists("flange_vacuum/vacuum"));
+
+  EXPECT_TRUE(rm.command_interface_exists("joint1/position"));
+  EXPECT_TRUE(rm.command_interface_exists("joint1/velocity"));
+  EXPECT_TRUE(rm.command_interface_exists("joint2/position"));
+  EXPECT_TRUE(rm.command_interface_exists("joint2/velocity"));
+  EXPECT_TRUE(rm.command_interface_exists("flange_analog_IOs/analog_output1"));
+  EXPECT_TRUE(rm.command_interface_exists("flange_vacuum/vacuum"));
 
   // Check initial values
   hardware_interface::LoanedStateInterface gpio1_a_o1_s =
