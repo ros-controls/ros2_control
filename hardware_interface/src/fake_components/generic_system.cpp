@@ -93,6 +93,18 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
     use_fake_gpio_command_interfaces_ = false;
   }
 
+  // check if to create fake command interface for gpio
+  it = info_.hardware_parameters.find("fake_gpio_commands");
+  if (it != info_.hardware_parameters.end())
+  {
+    // TODO(anyone): change this to parse_bool() (see ros2_control#339)
+    fake_gpio_command_interfaces_ = it->second == "true" || it->second == "True";
+  }
+  else
+  {
+    fake_gpio_command_interfaces_ = false;
+  }
+
   // process parameters about state following
   position_state_following_offset_ = 0.0;
   custom_interface_with_following_offset_ = "";
@@ -216,9 +228,6 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
     initialize_storage_vectors(gpio_commands_, gpio_states_, gpio_interfaces_);
   }
 
-  // set all values without initial values to 0
-  set_nan_to_zero(info_.gpios.size(), gpio_interfaces_.size(), gpio_states_);
-
   return CallbackReturn::SUCCESS;
 }
 
@@ -277,6 +286,22 @@ std::vector<hardware_interface::StateInterface> GenericSystem::export_state_inte
   if (!populate_state_interfaces(info_.gpios, gpio_interfaces_, gpio_states_, state_interfaces))
   {
     throw std::runtime_error("Interface is not found in the gpio list. This should never happen!");
+  }
+
+  // GPIO state interfaces
+  for (auto i = 0u; i < info_.gpios.size(); i++)
+  {
+    const auto & gpio = info_.gpios[i];
+    for (const auto & interface : gpio.state_interfaces)
+    {
+      if (!get_interface(
+            gpio.name, gpio_interfaces_, interface.name, i, gpio_states_, state_interfaces))
+      {
+        throw std::runtime_error(
+          "Interface is not found in the standard nor other list. "
+          "This should never happen!");
+      }
+    }
   }
 
   return state_interfaces;
@@ -347,6 +372,44 @@ std::vector<hardware_interface::CommandInterface> GenericSystem::export_command_
   {
     populate_command_interfaces(
       "gpio", info_.gpios, gpio_interfaces_, gpio_commands_, command_interfaces);
+  }
+
+  // Fake gpio command interfaces
+  if (fake_gpio_command_interfaces_)
+  {
+    for (auto i = 0u; i < info_.gpios.size(); i++)
+    {
+      const auto & gpio = info_.gpios[i];
+      for (const auto & interface : gpio.state_interfaces)
+      {
+        if (!get_interface(
+              gpio.name, gpio_interfaces_, interface.name, i, gpio_fake_commands_,
+              command_interfaces))
+        {
+          throw std::runtime_error(
+            "Interface is not found in the gpio list. "
+            "This should never happen!");
+        }
+      }
+    }
+  }
+  // GPIO command interfaces (real commands)
+  else
+  {
+    for (auto i = 0u; i < info_.gpios.size(); i++)
+    {
+      const auto & gpio = info_.gpios[i];
+      for (const auto & interface : gpio.command_interfaces)
+      {
+        if (!get_interface(
+              gpio.name, gpio_interfaces_, interface.name, i, gpio_commands_, command_interfaces))
+        {
+          throw std::runtime_error(
+            "Interface is not found in the gpio list. "
+            "This should never happen!");
+        }
+      }
+    }
   }
 
   return command_interfaces;
@@ -470,7 +533,6 @@ void GenericSystem::initialize_storage_vectors(
     }
   }
 }
-
 }  // namespace fake_components
 
 #include "pluginlib/class_list_macros.hpp"

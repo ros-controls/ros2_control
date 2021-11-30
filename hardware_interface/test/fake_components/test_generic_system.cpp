@@ -1113,6 +1113,28 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_)
   EXPECT_EQ(
     states_map["GenericSystem2dof"].label(), hardware_interface::lifecycle_state_names::INACTIVE);
 
+  // Check interfaces
+  EXPECT_EQ(1u, rm.system_components_size());
+  ASSERT_EQ(10u, rm.state_interface_keys().size());
+  EXPECT_TRUE(rm.state_interface_exists("joint1/position"));
+  EXPECT_TRUE(rm.state_interface_exists("joint1/velocity"));
+  EXPECT_TRUE(rm.state_interface_exists("joint1/actual_position"));
+  EXPECT_TRUE(rm.state_interface_exists("joint2/position"));
+  EXPECT_TRUE(rm.state_interface_exists("joint2/velocity"));
+  EXPECT_TRUE(rm.state_interface_exists("joint2/actual_position"));
+  EXPECT_TRUE(rm.state_interface_exists("flange_analog_IOs/analog_output1"));
+  EXPECT_TRUE(rm.state_interface_exists("flange_analog_IOs/analog_input1"));
+  EXPECT_TRUE(rm.state_interface_exists("flange_analog_IOs/analog_input2"));
+  EXPECT_TRUE(rm.state_interface_exists("flange_vacuum/vacuum"));
+
+  ASSERT_EQ(6u, rm.command_interface_keys().size());
+  EXPECT_TRUE(rm.command_interface_exists("joint1/position"));
+  EXPECT_TRUE(rm.command_interface_exists("joint1/velocity"));
+  EXPECT_TRUE(rm.command_interface_exists("joint2/position"));
+  EXPECT_TRUE(rm.command_interface_exists("joint2/velocity"));
+  EXPECT_TRUE(rm.command_interface_exists("flange_analog_IOs/analog_output1"));
+  EXPECT_TRUE(rm.command_interface_exists("flange_vacuum/vacuum"));
+
   // Check initial values
   hardware_interface::LoanedStateInterface gpio1_a_o1_s =
     rm.claim_state_interface("flange_analog_IOs/analog_output1");
@@ -1128,8 +1150,8 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_)
     rm.claim_command_interface("flange_vacuum/vacuum");
 
   // State interfaces without initial value are set to 0
-  ASSERT_EQ(0.0, gpio1_a_o1_s.get_value());
-  ASSERT_EQ(0.0, gpio2_vac_s.get_value());
+  ASSERT_TRUE(std::isnan(gpio1_a_o1_s.get_value()));
+  ASSERT_TRUE(std::isnan(gpio2_vac_s.get_value()));
   ASSERT_TRUE(std::isnan(gpio1_a_o1_c.get_value()));
   ASSERT_TRUE(std::isnan(gpio2_vac_c.get_value()));
 
@@ -1138,15 +1160,15 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_)
   gpio2_vac_c.set_value(0.222);
 
   // State values should not be changed
-  ASSERT_EQ(0.0, gpio1_a_o1_s.get_value());
-  ASSERT_EQ(0.0, gpio2_vac_s.get_value());
+  ASSERT_TRUE(std::isnan(gpio1_a_o1_s.get_value()));
+  ASSERT_TRUE(std::isnan(gpio2_vac_s.get_value()));
   ASSERT_EQ(0.111, gpio1_a_o1_c.get_value());
   ASSERT_EQ(0.222, gpio2_vac_c.get_value());
 
   // write() does not change values
   rm.write();
-  ASSERT_EQ(0.0, gpio1_a_o1_s.get_value());
-  ASSERT_EQ(0.0, gpio2_vac_s.get_value());
+  ASSERT_TRUE(std::isnan(gpio1_a_o1_s.get_value()));
+  ASSERT_TRUE(std::isnan(gpio2_vac_s.get_value()));
   ASSERT_EQ(0.111, gpio1_a_o1_c.get_value());
   ASSERT_EQ(0.222, gpio2_vac_c.get_value());
 
@@ -1197,12 +1219,20 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_fake_co
   // Check interfaces
   EXPECT_EQ(1u, rm.system_components_size());
   ASSERT_EQ(8u, rm.state_interface_keys().size());
+  EXPECT_TRUE(rm.state_interface_exists("joint1/position"));
+  EXPECT_TRUE(rm.state_interface_exists("joint1/velocity"));
+  EXPECT_TRUE(rm.state_interface_exists("joint2/position"));
+  EXPECT_TRUE(rm.state_interface_exists("joint2/velocity"));
   EXPECT_TRUE(rm.state_interface_exists("flange_analog_IOs/analog_output1"));
   EXPECT_TRUE(rm.state_interface_exists("flange_analog_IOs/analog_input1"));
   EXPECT_TRUE(rm.state_interface_exists("flange_analog_IOs/analog_input2"));
   EXPECT_TRUE(rm.state_interface_exists("flange_vacuum/vacuum"));
 
   ASSERT_EQ(8u, rm.command_interface_keys().size());
+  EXPECT_TRUE(rm.command_interface_exists("joint1/position"));
+  EXPECT_TRUE(rm.command_interface_exists("joint1/velocity"));
+  EXPECT_TRUE(rm.command_interface_exists("joint2/position"));
+  EXPECT_TRUE(rm.command_interface_exists("joint2/velocity"));
   EXPECT_TRUE(rm.command_interface_exists("flange_analog_IOs/analog_output1"));
   EXPECT_TRUE(rm.command_interface_exists("flange_analog_IOs/analog_input1"));
   EXPECT_TRUE(rm.command_interface_exists("flange_analog_IOs/analog_input2"));
@@ -1226,10 +1256,10 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_fake_co
   hardware_interface::LoanedCommandInterface gpio2_vac_c =
     rm.claim_command_interface("flange_vacuum/vacuum");
 
-  ASSERT_EQ(0.0, gpio1_a_o1_s.get_value());
-  ASSERT_EQ(0.0, gpio1_a_i1_s.get_value());
-  ASSERT_EQ(0.0, gpio1_a_o2_s.get_value());
-  ASSERT_EQ(0.0, gpio2_vac_s.get_value());
+  EXPECT_TRUE(std::isnan(gpio1_a_o1_s.get_value()));
+  EXPECT_TRUE(std::isnan(gpio1_a_i1_s.get_value()));
+  EXPECT_TRUE(std::isnan(gpio1_a_o2_s.get_value()));
+  EXPECT_TRUE(std::isnan(gpio2_vac_s.get_value()));
   EXPECT_TRUE(std::isnan(gpio1_a_o1_c.get_value()));
   EXPECT_TRUE(std::isnan(gpio1_a_i1_c.get_value()));
   EXPECT_TRUE(std::isnan(gpio1_a_i2_c.get_value()));
@@ -1242,11 +1272,10 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_fake_co
   gpio2_vac_c.set_value(2.22);
 
   // State values should not be changed
-  ASSERT_EQ(0.0, gpio1_a_o1_s.get_value());
-  ASSERT_EQ(0.0, gpio1_a_i1_s.get_value());
-  ASSERT_EQ(0.0, gpio1_a_o2_s.get_value());
-  ASSERT_EQ(0.0, gpio2_vac_s.get_value());
-
+  EXPECT_TRUE(std::isnan(gpio1_a_o1_s.get_value()));
+  EXPECT_TRUE(std::isnan(gpio1_a_i1_s.get_value()));
+  EXPECT_TRUE(std::isnan(gpio1_a_o2_s.get_value()));
+  EXPECT_TRUE(std::isnan(gpio2_vac_s.get_value()));
   ASSERT_EQ(0.11, gpio1_a_o1_c.get_value());
   ASSERT_EQ(0.33, gpio1_a_i1_c.get_value());
   ASSERT_EQ(1.11, gpio1_a_i2_c.get_value());
@@ -1254,10 +1283,10 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_fake_co
 
   // write() does not change values
   rm.write();
-  ASSERT_EQ(0.0, gpio1_a_o1_s.get_value());
-  ASSERT_EQ(0.0, gpio1_a_i1_s.get_value());
-  ASSERT_EQ(0.0, gpio1_a_o2_s.get_value());
-  ASSERT_EQ(0.0, gpio2_vac_s.get_value());
+  EXPECT_TRUE(std::isnan(gpio1_a_o1_s.get_value()));
+  EXPECT_TRUE(std::isnan(gpio1_a_i1_s.get_value()));
+  EXPECT_TRUE(std::isnan(gpio1_a_o2_s.get_value()));
+  EXPECT_TRUE(std::isnan(gpio2_vac_s.get_value()));
   ASSERT_EQ(0.11, gpio1_a_o1_c.get_value());
   ASSERT_EQ(0.33, gpio1_a_i1_c.get_value());
   ASSERT_EQ(1.11, gpio1_a_i2_c.get_value());
