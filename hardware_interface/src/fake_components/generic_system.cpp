@@ -112,7 +112,6 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
 
   // Initialize storage for standard interfaces
   initialize_storage_vectors(joint_commands_, joint_states_, standard_interfaces_);
-
   // set all values without initial values to 0
   set_nan_to_zero(info_.joints.size(), standard_interfaces_.size(), joint_states_);
 
