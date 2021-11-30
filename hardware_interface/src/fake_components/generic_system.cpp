@@ -98,11 +98,11 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
   if (it != info_.hardware_parameters.end())
   {
     // TODO(anyone): change this to parse_bool() (see ros2_control#339)
-    fake_gpio_command_interfaces_ = it->second == "true" || it->second == "True";
+    use_fake_gpio_command_interfaces_ = it->second == "true" || it->second == "True";
   }
   else
   {
-    fake_gpio_command_interfaces_ = false;
+    use_fake_gpio_command_interfaces_ = false;
   }
 
   // process parameters about state following
