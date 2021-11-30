@@ -375,7 +375,7 @@ std::vector<hardware_interface::CommandInterface> GenericSystem::export_command_
   }
 
   // Fake gpio command interfaces
-  if (fake_gpio_command_interfaces_)
+  if (use_fake_gpio_command_interfaces_)
   {
     for (auto i = 0u; i < info_.gpios.size(); i++)
     {
