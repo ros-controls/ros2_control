@@ -93,18 +93,6 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
     use_fake_gpio_command_interfaces_ = false;
   }
 
-  // check if to create fake command interface for gpio
-  it = info_.hardware_parameters.find("fake_gpio_commands");
-  if (it != info_.hardware_parameters.end())
-  {
-    // TODO(anyone): change this to parse_bool() (see ros2_control#339)
-    use_fake_gpio_command_interfaces_ = it->second == "true" || it->second == "True";
-  }
-  else
-  {
-    use_fake_gpio_command_interfaces_ = false;
-  }
-
   // process parameters about state following
   position_state_following_offset_ = 0.0;
   custom_interface_with_following_offset_ = "";
