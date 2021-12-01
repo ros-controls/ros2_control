@@ -440,8 +440,9 @@ void GenericSystem::initialize_storage_vectors(
 }
 
 bool GenericSystem::populate_interfaces(
-  std::vector<hardware_interface::ComponentInfo> component, std::vector<std::string> & interface_list,
-  std::vector<std::vector<double>> & states_list, auto & target_interfaces)
+  std::vector<hardware_interface::ComponentInfo> component,
+  std::vector<std::string> & interface_list, std::vector<std::vector<double>> & states_list,
+  auto & target_interfaces)
 {
   for (auto i = 0u; i < component.size(); i++)
   {

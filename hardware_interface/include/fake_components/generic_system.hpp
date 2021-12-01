@@ -97,8 +97,9 @@ private:
     const std::vector<std::string> & interfaces);
 
   bool populate_interfaces(
-    std::vector<hardware_interface::ComponentInfo> component, std::vector<std::string> & interface_list,
-    std::vector<std::vector<double>> & states_list, auto & target_interfaces);
+    std::vector<hardware_interface::ComponentInfo> component,
+    std::vector<std::string> & interface_list, std::vector<std::vector<double>> & states_list,
+    auto & target_interfaces);
 
   bool use_fake_gpio_command_interfaces_;
   bool use_fake_sensor_command_interfaces_;
