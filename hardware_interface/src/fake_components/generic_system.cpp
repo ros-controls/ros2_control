@@ -36,19 +36,6 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
     return CallbackReturn::ERROR;
   }
 
-  auto set_nan_to_zero = [](size_t param_1, size_t interface_size_, auto & states_) {
-    for (size_t i = 0; i < param_1; ++i)
-    {
-      for (size_t j = 0; j < interface_size_; ++j)
-      {
-        if (std::isnan(states_[j][i]))
-        {
-          states_[j][i] = 0.0;
-        }
-      }
-    }
-  };
-
   auto populate_non_standard_interfaces = [this](
                                             auto interface_list, auto & non_standard_interfaces) {
     for (const auto & interface : interface_list)
@@ -113,7 +100,17 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
   // Initialize storage for standard interfaces
   initialize_storage_vectors(joint_commands_, joint_states_, standard_interfaces_);
   // set all values without initial values to 0
+  for (auto i = 0u; i < info_.joints.size(); i++)
   set_nan_to_zero(info_.joints.size(), standard_interfaces_.size(), joint_states_);
+  {
+    for (auto j = 0u; j < standard_interfaces_.size(); j++)
+    {
+      if (std::isnan(joint_states_[j][i]))
+      {
+        joint_states_[j][i] = 0.0;
+      }
+    }
+  }
 
   // Search for mimic joints
   for (auto i = 0u; i < info_.joints.size(); ++i)
@@ -245,14 +242,14 @@ std::vector<hardware_interface::StateInterface> GenericSystem::export_state_inte
 
   // Sensor state interfaces
   if (!populate_interfaces(
-        "state", info_.sensors, sensor_interfaces_, sensor_states_, state_interfaces))
+        info_.sensors, sensor_interfaces_, sensor_states_, state_interfaces, true))
   {
     throw std::runtime_error(
       "Interface is not found in the standard nor other list. This should never happen!");
   };
 
   // GPIO state interfaces
-  if (!populate_interfaces("state", info_.gpios, gpio_interfaces_, gpio_states_, state_interfaces))
+  if (!populate_interfaces(info_.gpios, gpio_interfaces_, gpio_states_, state_interfaces, true))
   {
     throw std::runtime_error("Interface is not found in the gpio list. This should never happen!");
   }
@@ -291,7 +288,7 @@ std::vector<hardware_interface::CommandInterface> GenericSystem::export_command_
   if (use_fake_sensor_command_interfaces_)
   {
     if (!populate_interfaces(
-          "state", info_.sensors, sensor_interfaces_, sensor_fake_commands_, command_interfaces))
+          info_.sensors, sensor_interfaces_, sensor_fake_commands_, command_interfaces, true))
     {
       throw std::runtime_error(
         "Interface is not found in the standard nor other list. This should never happen!");
@@ -302,7 +299,7 @@ std::vector<hardware_interface::CommandInterface> GenericSystem::export_command_
   if (use_fake_gpio_command_interfaces_)
   {
     if (!populate_interfaces(
-          "state", info_.gpios, gpio_interfaces_, gpio_fake_commands_, command_interfaces))
+          info_.gpios, gpio_interfaces_, gpio_fake_commands_, command_interfaces, true))
     {
       throw std::runtime_error(
         "Interface is not found in the gpio list. This should never happen!");
@@ -312,7 +309,7 @@ std::vector<hardware_interface::CommandInterface> GenericSystem::export_command_
   else
   {
     if (!populate_interfaces(
-          "command", info_.gpios, gpio_interfaces_, gpio_commands_, command_interfaces))
+          info_.gpios, gpio_interfaces_, gpio_commands_, command_interfaces, false))
     {
       throw std::runtime_error(
         "Interface is not found in the gpio list. This should never happen!");
@@ -442,18 +439,17 @@ void GenericSystem::initialize_storage_vectors(
 }
 
 bool GenericSystem::populate_interfaces(
-  std::string interface_type, std::vector<hardware_interface::ComponentInfo> component,
-  std::vector<std::string> & interface_list, std::vector<std::vector<double>> & states_list,
-  auto & target_interfaces)
+  const std::vector<hardware_interface::ComponentInfo> & components,
+  std::vector<std::string> & interface_names, std::vector<std::vector<double>> & storage,
+  auto & target_interfaces, bool use_state_interfaces)
 {
-  for (auto i = 0u; i < component.size(); i++)
+  for (const auto & component : components)
   {
-    const auto & elem = component[i];
-    auto interfaces = (interface_type == "state") ? elem.state_interfaces : elem.command_interfaces;
+    const auto interfaces = (use_state_interfaces) ? component.state_interfaces : component.command_interfaces;
     for (const auto & interface : interfaces)
     {
       if (!get_interface(
-            elem.name, interface_list, interface.name, i, states_list, target_interfaces))
+            component.name, interface_names, interface.name, i, storage, target_interfaces))
       {
         return false;
       }
