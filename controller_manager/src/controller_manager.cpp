@@ -1155,41 +1155,6 @@ void ControllerManager::list_hardware_components_srv_cb(
   std::lock_guard<std::mutex> guard(services_lock_);
   RCLCPP_DEBUG(get_logger(), "list hardware components service locked");
 
-  auto hw_components_info = resource_manager_->get_components_status();
-
-  response->component.reserve(hw_components_info.size());
-
-  for (auto it = hw_components_info.begin(); it != hw_components_info.end(); ++it)
-  {
-    auto component = controller_manager_msgs::msg::HardwareComponentState();
-    component.name = it->second.name;
-    component.type = it->second.type;
-    component.class_type = it->second.class_type;
-    component.state.id = it->second.state.id();
-    component.state.label = it->second.state.label();
-
-    component.command_interfaces.reserve(it->second.command_interfaces.size());
-    for (const auto & interface : it->second.command_interfaces)
-    {
-      controller_manager_msgs::msg::HardwareInterface hwi;
-      hwi.name = interface;
-      hwi.is_available = resource_manager_->command_interface_is_available(interface);
-      hwi.is_claimed = resource_manager_->command_interface_is_claimed(interface);
-      component.command_interfaces.push_back(hwi);
-    }
-
-    component.state_interfaces.reserve(it->second.state_interfaces.size());
-    for (const auto & interface : it->second.state_interfaces)
-    {
-      controller_manager_msgs::msg::HardwareInterface hwi;
-      hwi.name = interface;
-      hwi.is_available = resource_manager_->state_interface_is_available(interface);
-      hwi.is_claimed = false;
-      component.state_interfaces.push_back(hwi);
-    }
-
-    response->component.push_back(component);
-  }
   RCLCPP_DEBUG(get_logger(), "list hardware components service finished");
 }
 
@@ -1200,6 +1165,23 @@ void ControllerManager::list_hardware_interfaces_srv_cb(
   RCLCPP_DEBUG(get_logger(), "list hardware interfaces service called");
   std::lock_guard<std::mutex> guard(services_lock_);
   RCLCPP_DEBUG(get_logger(), "list hardware interfaces service locked");
+
+  auto state_interface_names = resource_manager_->state_interface_keys();
+  for (const auto & state_interface_name : state_interface_names)
+  {
+    controller_manager_msgs::msg::HardwareInterface hwi;
+    hwi.name = state_interface_name;
+    hwi.is_claimed = false;
+    response->state_interfaces.push_back(hwi);
+  }
+    auto command_interface_names = resource_manager_->command_interface_keys();
+    for (const auto & command_interface_name : command_interface_names)
+    {
+      controller_manager_msgs::msg::HardwareInterface hwi;
+      hwi.name = command_interface_name;
+      hwi.is_claimed = resource_manager_->command_interface_is_claimed(command_interface_name);
+      response->command_interfaces.push_back(hwi);
+    }
 
   RCLCPP_DEBUG(get_logger(), "list hardware interfaces service finished");
 }
