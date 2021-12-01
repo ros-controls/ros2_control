@@ -21,11 +21,8 @@
 #include <vector>
 
 #include "controller_interface/controller_interface.hpp"
-#include "controller_manager_msgs/msg/hardware_components_state.hpp"
-#include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 #include "rclcpp/rclcpp.hpp"
-#include "rclcpp_lifecycle/state.hpp"
 
 namespace controller_manager
 {
@@ -77,7 +74,10 @@ ControllerManager::ControllerManager(
     throw std::runtime_error("Unable to initialize resource manager, no robot description found.");
   }
 
-  init_resource_manager(robot_description);
+  resource_manager_->load_urdf(robot_description);
+
+  // TODO(all): Here we should start only "auto-start" resources
+  resource_manager_->start_components();
 
   init_services();
 }
@@ -93,32 +93,6 @@ ControllerManager::ControllerManager(
     kControllerInterfaceName, kControllerInterface))
 {
   init_services();
-}
-
-void ControllerManager::init_resource_manager(const std::string & robot_description)
-{
-  // TODO(destogl): manage this when there is an error - CM should not die because URDF is wrong...
-  resource_manager_->load_urdf(robot_description);
-
-  using lifecycle_msgs::msg::State;
-
-  std::vector<std::string> autoconfigure_components = {""};
-  get_parameter("autoconfigure_components", autoconfigure_components);
-  rclcpp_lifecycle::State inactive_state(
-    State::PRIMARY_STATE_INACTIVE, hardware_interface::lifecycle_state_names::INACTIVE);
-  for (const auto & component : autoconfigure_components)
-  {
-    resource_manager_->set_component_state(component, inactive_state);
-  }
-
-  std::vector<std::string> autostart_components = {""};
-  get_parameter("autostart_components", autostart_components);
-  rclcpp_lifecycle::State active_state(
-    State::PRIMARY_STATE_ACTIVE, hardware_interface::lifecycle_state_names::ACTIVE);
-  for (const auto & component : autostart_components)
-  {
-    resource_manager_->set_component_state(component, active_state);
-  }
 }
 
 void ControllerManager::init_services()
@@ -173,7 +147,6 @@ void ControllerManager::init_services()
     "~/unload_controller",
     std::bind(&ControllerManager::unload_controller_service_cb, this, _1, _2),
     rmw_qos_profile_services_default, best_effort_callback_group_);
-
   list_hardware_components_service_ =
     create_service<controller_manager_msgs::srv::ListHardwareComponents>(
       "~/list_hardware_components",
@@ -471,7 +444,7 @@ controller_interface::return_type ControllerManager::switch_controller(
     std::vector<std::string> command_interface_names = {};
     if (command_interface_config.type == controller_interface::interface_configuration_type::ALL)
     {
-      command_interface_names = resource_manager_->available_command_interfaces();
+      command_interface_names = resource_manager_->command_interface_keys();
     }
     if (
       command_interface_config.type ==
@@ -617,7 +590,7 @@ controller_interface::return_type ControllerManager::switch_controller(
       auto command_interface_config = controller.c->command_interface_configuration();
       if (command_interface_config.type == controller_interface::interface_configuration_type::ALL)
       {
-        controller.info.claimed_interfaces = resource_manager_->available_command_interfaces();
+        controller.info.claimed_interfaces = resource_manager_->command_interface_keys();
       }
       if (
         command_interface_config.type ==
@@ -785,7 +758,7 @@ void ControllerManager::start_controllers()
     std::vector<std::string> command_interface_names = {};
     if (command_interface_config.type == controller_interface::interface_configuration_type::ALL)
     {
-      command_interface_names = resource_manager_->available_command_interfaces();
+      command_interface_names = resource_manager_->command_interface_keys();
     }
     if (
       command_interface_config.type ==
@@ -829,7 +802,7 @@ void ControllerManager::start_controllers()
     std::vector<std::string> state_interface_names = {};
     if (state_interface_config.type == controller_interface::interface_configuration_type::ALL)
     {
-      state_interface_names = resource_manager_->available_state_interfaces();
+      state_interface_names = resource_manager_->state_interface_keys();
     }
     if (
       state_interface_config.type == controller_interface::interface_configuration_type::INDIVIDUAL)
@@ -1228,24 +1201,6 @@ void ControllerManager::list_hardware_interfaces_srv_cb(
   std::lock_guard<std::mutex> guard(services_lock_);
   RCLCPP_DEBUG(get_logger(), "list hardware interfaces service locked");
 
-  auto state_interface_names = resource_manager_->state_interface_keys();
-  for (const auto & state_interface_name : state_interface_names)
-  {
-    controller_manager_msgs::msg::HardwareInterface hwi;
-    hwi.name = state_interface_name;
-    hwi.is_available = resource_manager_->state_interface_is_available(state_interface_name);
-    hwi.is_claimed = false;
-    response->state_interfaces.push_back(hwi);
-  }
-  auto command_interface_names = resource_manager_->command_interface_keys();
-  for (const auto & command_interface_name : command_interface_names)
-  {
-    controller_manager_msgs::msg::HardwareInterface hwi;
-    hwi.name = command_interface_name;
-    hwi.is_available = resource_manager_->command_interface_is_available(command_interface_name);
-    hwi.is_claimed = resource_manager_->command_interface_is_claimed(command_interface_name);
-    response->command_interfaces.push_back(hwi);
-  }
   RCLCPP_DEBUG(get_logger(), "list hardware interfaces service finished");
 }
 
@@ -1258,27 +1213,6 @@ void ControllerManager::set_hardware_component_state_srv_cb(
   RCLCPP_DEBUG(get_logger(), "set hardware component state service locked");
 
   RCLCPP_DEBUG(get_logger(), "set hardware component state '%s'", request->name.c_str());
-
-  auto hw_components_info = resource_manager_->get_components_status();
-  if (hw_components_info.find(request->name) != hw_components_info.end())
-  {
-    rclcpp_lifecycle::State target_state(
-      request->target_state.id,
-      // the ternary operator is needed because label in State constructor cannot be an empty string
-      request->target_state.label.empty() ? "-" : request->target_state.label);
-    response->ok =
-      (resource_manager_->set_component_state(request->name, target_state) ==
-       hardware_interface::return_type::OK);
-    hw_components_info = resource_manager_->get_components_status();
-    response->state.id = hw_components_info[request->name].state.id();
-    response->state.label = hw_components_info[request->name].state.label();
-  }
-  else
-  {
-    RCLCPP_ERROR(
-      get_logger(), "hardware component with name '%s' does not exist", request->name.c_str());
-    response->ok = false;
-  }
 
   RCLCPP_DEBUG(get_logger(), "set hardware component state service finished");
 }
