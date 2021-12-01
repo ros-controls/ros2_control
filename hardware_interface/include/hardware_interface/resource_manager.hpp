@@ -54,8 +54,8 @@ public:
    * \param[in] validate_interfaces boolean argument indicating whether the exported
    * interfaces ought to be validated. Defaults to true.
    * \param[in] activate_all boolean argument indicating if all resources should be immediately
-   * activated. Currently used only in tests. In "classical" application please use parameters
-   * "autostart_components" and "autoconfigure_components".
+   * activated. Currently used only in tests. In typical applications use parameters
+   * "autostart_components" and "autoconfigure_components" instead.
    */
   explicit ResourceManager(
     const std::string & urdf, bool validate_interfaces = true, bool activate_all = false);
@@ -90,7 +90,6 @@ public:
   /// Returns all registered state interfaces keys.
   /**
    * The keys are collected from each loaded hardware component.
-   *
    * \return Vector of strings, containing all registered keys.
    */
   std::vector<std::string> state_interface_keys() const;
@@ -98,7 +97,6 @@ public:
   /// Returns all available state interfaces keys.
   /**
    * The keys are collected from the available list.
-   *
    * \return Vector of strings, containing all available state interface names.
    */
   std::vector<std::string> available_state_interfaces() const;
@@ -140,7 +138,6 @@ public:
   /// Returns all registered command interfaces keys.
   /**
    * The keys are collected from each loaded hardware component.
-   *
    * \return vector of strings, containing all registered keys.
    */
   std::vector<std::string> command_interface_keys() const;
@@ -148,7 +145,6 @@ public:
   /// Returns all available command interfaces keys.
   /**
    * The keys are collected from the available list.
-   *
    * \return vector of strings, containing all available command interface names.
    */
   std::vector<std::string> available_command_interfaces() const;
@@ -311,8 +307,8 @@ public:
 
   /// Sets state of hardware component.
   /**
-   * Set set of hardware component if possible. Takes care of all transitions need to reach the
-   * target state.
+   * Set set of hardware component if possible.
+   * Takes care of all transitions needed to reach the target state.
    * It implements the state machine from: https://design.ros2.org/articles/node_lifecycle.html
    *
    * The method is not part of the real-time critical update loop.

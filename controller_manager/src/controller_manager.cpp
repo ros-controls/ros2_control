@@ -1188,7 +1188,7 @@ void ControllerManager::list_hardware_components_srv_cb(
 
   for (auto it = hw_components_info.begin(); it != hw_components_info.end(); ++it)
   {
-    auto component = controller_manager_msgs::msg::HardwareComponentsState();
+    auto component = controller_manager_msgs::msg::HardwareComponentState();
     component.name = it->second.name;
     component.type = it->second.type;
     component.class_type = it->second.class_type;
@@ -1264,8 +1264,7 @@ void ControllerManager::set_hardware_component_state_srv_cb(
   {
     rclcpp_lifecycle::State target_state(
       request->target_state.id,
-      // FIX(destogl): the ternary operator is needed because label in State constructor can not be
-      // empty string
+      // the ternary operator is needed because label in State constructor cannot be an empty string
       request->target_state.label.empty() ? "-" : request->target_state.label);
     response->ok =
       (resource_manager_->set_component_state(request->name, target_state) ==

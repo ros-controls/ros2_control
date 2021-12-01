@@ -13,7 +13,7 @@ Lifecycle of Hardware Components
 Definitions and Nomenclature
 ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 
-Hardware interfaces use life cycle state machine `defined for ROS2 nodes <https://design.ros2.org/articles/node_lifecycle.html>`_.
+Hardware interfaces use the lifecycle state machine `defined for ROS2 nodes <https://design.ros2.org/articles/node_lifecycle.html>`_.
 There is only one addition to the state machine, that is the initialization method providing hardware configuration from URDF file as argument.
 
 Hardware Interface
@@ -23,31 +23,31 @@ Hardware Components
   Wrapper and abstraction of hardware interface to manage life cycle and access to methods of hardware interface from Resource Manager.
 
 Resource Manager
-  Class responsible for management of hardware components in ros2_control framework.
+  Class responsible for the management of hardware components in the ros2_control framework.
 
 "movement" command interfaces
-  interfaces responsbible for robot to move, i.e., influence its dynamic behavior.
+  Interfaces responsible for robot to move, i.e., influence its dynamic behavior.
   The interfaces are defined in `hardware_interface_type_values.hpp <https://github.com/ros-controls/ros2_control/blob/master/hardware_interface/include/hardware_interface/types/hardware_interface_type_values.hpp>`_. (TODO: add link to doxygen)
 
 "non-movement" command interfaces
-  all other interfaces that are not "movement" command interfaces (TODO: add link to def.)
+  All other interfaces that are not "movement" command interfaces (TODO: add link to def.)
 
 
 Initialization
 ,,,,,,,,,,,,,,,
-Immediately after a plugin in loaded and object created with default constructor, ``on_init`` method will be called providing hardware URDF configuration using ``HardwareInfo`` structure.
+Immediately after a plugin in loaded and the object created with the default constructor, the ``on_init`` method will be called providing hardware URDF configuration using the ``HardwareInfo`` structure.
 In this stage you should initialize all memory you need and prepare storage for interfaces.
-The resource manager will claim export of all interfaces after this and store them internally.
+The resource manager will export of all interfaces after this and store them internally.
 
 
 Configuration
 ,,,,,,,,,,,,,,
 Precondition is hardware interface state having id: ``lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED``.
-After configuration ``read`` and ``write`` methods will be called in the update loop.
-This means all internal state and commands variables has to be initialized.
-After successful call to ``on_configure``, Resource Manager makes all state interfaces and "non-movement" command interfaces available to controllers.
+After configuration, the ``read`` and ``write`` methods will be called in the update loop.
+This means all internal state and commands variables have to be initialized.
+After a successful call to ``on_configure``, all state interfaces and "non-movement" command interfaces should be available to controllers.
 
-NOTE: If using "non-movement" command interfaces to parameterize robot in ``lifecycle_msgs::msg::State::PRIMARY_STATE_CONFIGURED`` state please take care about current state in the ``write`` method of your Hardware Interface implementation.
+NOTE: If using "non-movement" command interfaces to parametrize the robot in the ``lifecycle_msgs::msg::State::PRIMARY_STATE_CONFIGURED`` state make sure to take care about current state in the ``write`` method of your Hardware Interface implementation.
 
 
 Handling of errors that happen during read() and write() calls

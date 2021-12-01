@@ -931,7 +931,7 @@ TEST_F(TestResourceManager, resource_availability_and_claiming_in_lifecycle)
       TEST_SYSTEM_HARDWARE_STATE_INTERFACES, TEST_SYSTEM_HARDWARE_COMMAND_INTERFACES, false);
   }
 
-  // When actuator is configured state- and non-moving command- interfaces become available
+  // When actuator is configured state- and non-movement command- interfaces become available
   configure_components(rm, {TEST_ACTUATOR_HARDWARE_NAME});
   {
     check_interfaces(
