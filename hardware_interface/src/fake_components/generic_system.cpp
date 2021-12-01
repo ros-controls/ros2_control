@@ -244,14 +244,15 @@ std::vector<hardware_interface::StateInterface> GenericSystem::export_state_inte
   }
 
   // Sensor state interfaces
-  if (!populate_interfaces(info_.sensors, sensor_interfaces_, sensor_states_, state_interfaces))
+  if (!populate_interfaces(
+        "state", info_.sensors, sensor_interfaces_, sensor_states_, state_interfaces))
   {
     throw std::runtime_error(
       "Interface is not found in the standard nor other list. This should never happen!");
   };
 
   // GPIO state interfaces
-  if (!populate_interfaces(info_.gpios, gpio_interfaces_, gpio_states_, state_interfaces))
+  if (!populate_interfaces("state", info_.gpios, gpio_interfaces_, gpio_states_, state_interfaces))
   {
     throw std::runtime_error("Interface is not found in the gpio list. This should never happen!");
   }
@@ -290,18 +291,18 @@ std::vector<hardware_interface::CommandInterface> GenericSystem::export_command_
   if (use_fake_sensor_command_interfaces_)
   {
     if (!populate_interfaces(
-          info_.sensors, sensor_interfaces_, sensor_fake_commands_, command_interfaces))
+          "state", info_.sensors, sensor_interfaces_, sensor_fake_commands_, command_interfaces))
     {
       throw std::runtime_error(
         "Interface is not found in the standard nor other list. This should never happen!");
     }
   }
 
-  // Fake gpio command interfaces
+  // Fake gpio command interfaces (consider all state interfaces for command interfaces)
   if (use_fake_gpio_command_interfaces_)
   {
     if (!populate_interfaces(
-          info_.gpios, gpio_interfaces_, gpio_fake_commands_, command_interfaces))
+          "state", info_.gpios, gpio_interfaces_, gpio_fake_commands_, command_interfaces))
     {
       throw std::runtime_error(
         "Interface is not found in the gpio list. This should never happen!");
@@ -310,7 +311,8 @@ std::vector<hardware_interface::CommandInterface> GenericSystem::export_command_
   // GPIO command interfaces (real command interfaces)
   else
   {
-    if (!populate_interfaces(info_.gpios, gpio_interfaces_, gpio_commands_, command_interfaces))
+    if (!populate_interfaces(
+          "command", info_.gpios, gpio_interfaces_, gpio_commands_, command_interfaces))
     {
       throw std::runtime_error(
         "Interface is not found in the gpio list. This should never happen!");
@@ -440,14 +442,15 @@ void GenericSystem::initialize_storage_vectors(
 }
 
 bool GenericSystem::populate_interfaces(
-  std::vector<hardware_interface::ComponentInfo> component,
+  std::string interface_type, std::vector<hardware_interface::ComponentInfo> component,
   std::vector<std::string> & interface_list, std::vector<std::vector<double>> & states_list,
   auto & target_interfaces)
 {
   for (auto i = 0u; i < component.size(); i++)
   {
     const auto & elem = component[i];
-    for (const auto & interface : elem.state_interfaces)
+    auto interfaces = (interface_type == "state") ? elem.state_interfaces : elem.command_interfaces;
+    for (const auto & interface : interfaces)
     {
       if (!get_interface(
             elem.name, interface_list, interface.name, i, states_list, target_interfaces))

@@ -97,7 +97,7 @@ private:
     const std::vector<std::string> & interfaces);
 
   bool populate_interfaces(
-    std::vector<hardware_interface::ComponentInfo> component,
+    std::string interface_type, std::vector<hardware_interface::ComponentInfo> component,
     std::vector<std::string> & interface_list, std::vector<std::vector<double>> & states_list,
     auto & target_interfaces);
 
