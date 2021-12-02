@@ -145,6 +145,7 @@ public:
   // rclcpp::CallbackGroup::SharedPtr deterministic_callback_group_;
 
   // Per controller update rate support
+  CONTROLLER_MANAGER_PUBLIC
   unsigned int get_update_rate() const;
 
 protected:
