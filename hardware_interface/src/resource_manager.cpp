@@ -39,11 +39,6 @@
 #define COMPONENT_NAME_COMPARE_INV \
   [&](const auto & component) { return component.get_name() == component_name; }
 
-#define MOVEMENT_INTERFACES_COMPARE                                                         \
-  [&](const auto & movement_interface) {                                                    \
-    return movement_interface == command_interface_map_.at(interface).get_interface_name(); \
-  }
-
 namespace hardware_interface
 {
 auto trigger_hardware_state_transition =
@@ -172,37 +167,32 @@ public:
         }
       }
 
-      // add "non-movement" command interfaces to available list
+      // add command interfaces to available list
       for (const auto & interface : hardware_info_map_[hardware.get_name()].command_interfaces)
       {
-        // check if interface is non-movement interface
-        if (
-          std::find_if(
-            MOVEMENT_INTERFACES.begin(), MOVEMENT_INTERFACES.end(), MOVEMENT_INTERFACES_COMPARE) ==
-          MOVEMENT_INTERFACES.end())
-        {
-          auto found_it = std::find(
-            available_command_interfaces_.begin(), available_command_interfaces_.end(), interface);
+        // TODO(destogl): check if interface should be available on configure
 
-          if (found_it == available_command_interfaces_.end())
-          {
-            available_command_interfaces_.emplace_back(interface);
-            // TODO(destogl): change output to debug
-            RCUTILS_LOG_INFO_NAMED(
-              "resource_manager",
-              "(hardware '%s'): '%s' non-movement command interface added into available list",
-              hardware.get_name().c_str(), interface.c_str());
-          }
-          else
-          {
-            // TODO(destogl): do here error management if interfaces are only partially added into
-            // "available" list - this should never be the case!
-            RCUTILS_LOG_WARN_NAMED(
-              "resource_manager",
-              "(hardware '%s'): '%s' non-movement command interface already in available list."
-              " This can happen due to multiple calls to 'configure'",
-              hardware.get_name().c_str(), interface.c_str());
-          }
+        auto found_it = std::find(
+          available_command_interfaces_.begin(), available_command_interfaces_.end(), interface);
+
+        if (found_it == available_command_interfaces_.end())
+        {
+          available_command_interfaces_.emplace_back(interface);
+          // TODO(destogl): change output to debug
+          RCUTILS_LOG_INFO_NAMED(
+            "resource_manager",
+            "(hardware '%s'): '%s' command interface added into available list",
+            hardware.get_name().c_str(), interface.c_str());
+        }
+        else
+        {
+          // TODO(destogl): do here error management if interfaces are only partially added into
+          // "available" list - this should never be the case!
+          RCUTILS_LOG_WARN_NAMED(
+            "resource_manager",
+            "(hardware '%s'): '%s' command interface already in available list."
+            " This can happen due to multiple calls to 'configure'",
+            hardware.get_name().c_str(), interface.c_str());
         }
       }
     }
@@ -219,37 +209,30 @@ public:
     if (result)
     {
       // TODO(destogl): see comment in "configure_hardware"
-      // remove all "non-movement" command interfaces from available list
+      // remove all command interfaces from available list
       for (const auto & interface : hardware_info_map_[hardware.get_name()].command_interfaces)
       {
-        // check if interface is non-movement interface
-        if (
-          std::find_if(
-            MOVEMENT_INTERFACES.begin(), MOVEMENT_INTERFACES.end(), MOVEMENT_INTERFACES_COMPARE) ==
-          MOVEMENT_INTERFACES.end())
-        {
-          auto found_it = std::find(
-            available_command_interfaces_.begin(), available_command_interfaces_.end(), interface);
+        auto found_it = std::find(
+          available_command_interfaces_.begin(), available_command_interfaces_.end(), interface);
 
-          if (found_it != available_command_interfaces_.end())
-          {
-            available_command_interfaces_.erase(found_it);
-            // TODO(destogl): change output to debug
-            RCUTILS_LOG_INFO_NAMED(
-              "resource_manager",
-              "(hardware '%s'): '%s' movement command removed from available list",
-              hardware.get_name().c_str(), interface.c_str());
-          }
-          else
-          {
-            // TODO(destogl): do here error management if interfaces are only partially added into
-            // "available" list - this should never be the case!
-            RCUTILS_LOG_WARN_NAMED(
-              "resource_manager",
-              "(hardware '%s'): '%s' movement command interface not in available list."
-              " This can happen due to multiple calls to 'cleanup'",
-              hardware.get_name().c_str(), interface.c_str());
-          }
+        if (found_it != available_command_interfaces_.end())
+        {
+          available_command_interfaces_.erase(found_it);
+          // TODO(destogl): change output to debug
+          RCUTILS_LOG_INFO_NAMED(
+            "resource_manager",
+            "(hardware '%s'): '%s' command removed from available list",
+            hardware.get_name().c_str(), interface.c_str());
+        }
+        else
+        {
+          // TODO(destogl): do here error management if interfaces are only partially added into
+          // "available" list - this should never be the case!
+          RCUTILS_LOG_WARN_NAMED(
+            "resource_manager",
+            "(hardware '%s'): '%s' command interface not in available list."
+            " This can happen due to multiple calls to 'cleanup'",
+            hardware.get_name().c_str(), interface.c_str());
         }
       }
       // remove all state interfaces from available list
@@ -306,41 +289,10 @@ public:
 
     if (result)
     {
-      // TODO(destogl): see comment in "configure_hardware"
-      // add "movement" command interfaces to available list
-      for (const auto & interface : hardware_info_map_[hardware.get_name()].command_interfaces)
-      {
-        // check if interface is non-movement interface
-        if (
-          std::find_if(
-            MOVEMENT_INTERFACES.begin(), MOVEMENT_INTERFACES.end(), MOVEMENT_INTERFACES_COMPARE) !=
-          MOVEMENT_INTERFACES.end())
-        {
-          auto found_it = std::find(
-            available_command_interfaces_.begin(), available_command_interfaces_.end(), interface);
-
-          if (found_it == available_command_interfaces_.end())
-          {
-            available_command_interfaces_.emplace_back(interface);
-            // TODO(destogl): change output to debug
-            RCUTILS_LOG_INFO_NAMED(
-              "resource_manager",
-              "(hardware '%s'): '%s' command interface added into available list",
-              hardware.get_name().c_str(), interface.c_str());
-          }
-          else
-          {
-            // TODO(destogl): do here error management if interfaces are only partially added into
-            // "available" list - this should never be the case!
-            RCUTILS_LOG_WARN_NAMED(
-              "resource_manager",
-              "(hardware '%s'): '%s' command interface already in available list."
-              " This can happen due to multiple calls to 'configure'",
-              hardware.get_name().c_str(), interface.c_str());
-          }
-        }
-      }
+    // TODO(destogl): make all command interfaces available (currently are
+    // all available)
     }
+
     return result;
   }
 
@@ -353,39 +305,8 @@ public:
 
     if (result)
     {
-      // TODO(destogl): see comment in "configure_hardware"
-      // remove all "movement" command interfaces from available list
-      for (const auto & interface : hardware_info_map_[hardware.get_name()].command_interfaces)
-      {
-        // check if interface is non-movement interface
-        if (
-          std::find_if(
-            MOVEMENT_INTERFACES.begin(), MOVEMENT_INTERFACES.end(), MOVEMENT_INTERFACES_COMPARE) !=
-          MOVEMENT_INTERFACES.end())
-        {
-          auto found_it = std::find(
-            available_command_interfaces_.begin(), available_command_interfaces_.end(), interface);
-
-          if (found_it != available_command_interfaces_.end())
-          {
-            available_command_interfaces_.erase(found_it);
-            // TODO(destogl): change output to debug
-            RCUTILS_LOG_INFO_NAMED(
-              "resource_manager", "(hardware '%s'): '%s' command removed from available list",
-              hardware.get_name().c_str(), interface.c_str());
-          }
-          else
-          {
-            // TODO(destogl): do here error management if interfaces are only partially added into
-            // "available" list - this should never be the case!
-            RCUTILS_LOG_WARN_NAMED(
-              "resource_manager",
-              "(hardware '%s'): '%s' command interface not in available list."
-              " This can happen due to multiple calls to 'cleanup'",
-              hardware.get_name().c_str(), interface.c_str());
-          }
-        }
-      }
+    // TODO(destogl): make all command interfaces unavailable that should be present on active only
+    // (currently are all available)
     }
     return result;
   }

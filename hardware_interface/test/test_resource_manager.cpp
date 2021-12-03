@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Authors: Karsten Kneese, Denis Stogl
+
 #include <gmock/gmock.h>
 
 #include <algorithm>
@@ -913,13 +915,13 @@ TEST_F(TestResourceManager, resource_availability_and_claiming_in_lifecycle)
       TEST_SYSTEM_HARDWARE_STATE_INTERFACES, TEST_SYSTEM_HARDWARE_COMMAND_INTERFACES, false);
   }
 
-  // When actuator is configured state- and non-movement command- interfaces become available
+  // When actuator is configured all interfaces become available
   configure_components(rm, {TEST_ACTUATOR_HARDWARE_NAME});
   {
     check_interfaces(
       {"joint1/position"},
       std::bind(&hardware_interface::ResourceManager::command_interface_is_available, &rm, _1),
-      false);
+      true);
     check_interfaces(
       {"joint1/max_velocity"},
       std::bind(&hardware_interface::ResourceManager::command_interface_is_available, &rm, _1),
@@ -942,9 +944,9 @@ TEST_F(TestResourceManager, resource_availability_and_claiming_in_lifecycle)
       false);
   }
 
-  // Can claim Actuator's state interfaces and non-moving command interfaces
+  // Can claim Actuator's interfaces
   {
-    check_interface_claiming({}, {"joint1/position"}, false);
+    check_interface_claiming({}, {"joint1/position"}, true);
     check_interface_claiming(
       TEST_ACTUATOR_HARDWARE_STATE_INTERFACES, {"joint1/max_velocity"}, true);
     check_interface_claiming(TEST_SENSOR_HARDWARE_STATE_INTERFACES, {}, false);
@@ -1007,7 +1009,7 @@ TEST_F(TestResourceManager, resource_availability_and_claiming_in_lifecycle)
   }
 
   // When Sensor and System are configured their state-
-  // and non-movement command- interfaces are available
+  // and command- interfaces are available
   configure_components(rm, {TEST_SENSOR_HARDWARE_NAME, TEST_SYSTEM_HARDWARE_NAME});
   {
     check_interfaces(
@@ -1017,7 +1019,7 @@ TEST_F(TestResourceManager, resource_availability_and_claiming_in_lifecycle)
     check_interfaces(
       {"joint2/velocity", "joint3/velocity"},
       std::bind(&hardware_interface::ResourceManager::command_interface_is_available, &rm, _1),
-      false);
+      true);
     check_interfaces(
       {"joint2/max_acceleration", "configuration/max_tcp_jerk"},
       std::bind(&hardware_interface::ResourceManager::command_interface_is_available, &rm, _1),
@@ -1037,12 +1039,12 @@ TEST_F(TestResourceManager, resource_availability_and_claiming_in_lifecycle)
   // Can claim:
   // - all Actuator's state interfaces and command interfaces
   // - sensor's state interfaces
-  // - system's state and non-moving command interfaces
+  // - system's state and command interfaces
   {
     check_interface_claiming(
       TEST_ACTUATOR_HARDWARE_STATE_INTERFACES, TEST_ACTUATOR_HARDWARE_COMMAND_INTERFACES, true);
     check_interface_claiming(TEST_SENSOR_HARDWARE_STATE_INTERFACES, {}, true);
-    check_interface_claiming({}, {"joint2/velocity", "joint3/velocity"}, false);
+    check_interface_claiming({}, {"joint2/velocity", "joint3/velocity"}, true);
     check_interface_claiming(
       TEST_SYSTEM_HARDWARE_STATE_INTERFACES,
       {"joint2/max_acceleration", "configuration/max_tcp_jerk"}, true);
@@ -1089,7 +1091,7 @@ TEST_F(TestResourceManager, resource_availability_and_claiming_in_lifecycle)
     check_interfaces(
       {"joint1/position"},
       std::bind(&hardware_interface::ResourceManager::command_interface_is_available, &rm, _1),
-      false);
+      true);
     check_interfaces(
       {"joint1/max_velocity"},
       std::bind(&hardware_interface::ResourceManager::command_interface_is_available, &rm, _1),
@@ -1111,11 +1113,11 @@ TEST_F(TestResourceManager, resource_availability_and_claiming_in_lifecycle)
   }
 
   // Can claim everything
-  // - actuator's state non-moving command interfaces
+  // - actuator's state and command interfaces
   // - sensor's state interfaces
-  // - system's state and non-moving command interfaces
+  // - system's state and command interfaces
   {
-    check_interface_claiming({}, {"joint1/position"}, false);
+    check_interface_claiming({}, {"joint1/position"}, true);
     check_interface_claiming(
       TEST_ACTUATOR_HARDWARE_STATE_INTERFACES, {"joint1/max_velocity"}, true);
     check_interface_claiming(TEST_SENSOR_HARDWARE_STATE_INTERFACES, {}, true);
@@ -1129,7 +1131,7 @@ TEST_F(TestResourceManager, resource_availability_and_claiming_in_lifecycle)
     check_interfaces(
       {"joint1/position"},
       std::bind(&hardware_interface::ResourceManager::command_interface_is_available, &rm, _1),
-      false);
+      true);
     check_interfaces(
       {"joint1/max_velocity"},
       std::bind(&hardware_interface::ResourceManager::command_interface_is_available, &rm, _1),
@@ -1152,11 +1154,11 @@ TEST_F(TestResourceManager, resource_availability_and_claiming_in_lifecycle)
   }
 
   // Can claim everything
-  // - actuator's state non-moving command interfaces
+  // - actuator's state and command interfaces
   // - no sensor's interface
-  // - system's state and non-moving command interfaces
+  // - system's state and command interfaces
   {
-    check_interface_claiming({}, {"joint1/position"}, false);
+    check_interface_claiming({}, {"joint1/position"}, true);
     check_interface_claiming(
       TEST_ACTUATOR_HARDWARE_STATE_INTERFACES, {"joint1/max_velocity"}, true);
     check_interface_claiming(TEST_SENSOR_HARDWARE_STATE_INTERFACES, {}, false);
@@ -1183,53 +1185,4 @@ TEST_F(TestResourceManager, resource_availability_and_claiming_in_lifecycle)
       TEST_SYSTEM_HARDWARE_STATE_INTERFACES,
       std::bind(&hardware_interface::ResourceManager::state_interface_exists, &rm, _1), true);
   }
-
-  // //   TODO(destogl): make this working
-  // // When components are shutdown the interfaces do not exist anymore
-  // shutdown_components(rm, {TEST_ACTUATOR_HARDWARE_NAME, TEST_SYSTEM_HARDWARE_NAME});
-  // {
-  //   check_interfaces(
-  //     TEST_ACTUATOR_HARDWARE_COMMAND_INTERFACES,
-  //     std::bind(&hardware_interface::ResourceManager::command_interface_exists, &rm, _1), false);
-  //   check_interfaces(
-  //     TEST_SYSTEM_HARDWARE_COMMAND_INTERFACES,
-  //     std::bind(&hardware_interface::ResourceManager::command_interface_exists, &rm, _1), false);
-  // //     check_interfaces(
-  //     TEST_ACTUATOR_HARDWARE_STATE_INTERFACES,
-  //     std::bind(&hardware_interface::ResourceManager::state_interface_exists, &rm, _1), false);
-  //   check_interfaces(
-  //     TEST_SENSOR_HARDWARE_STATE_INTERFACES,
-  //     std::bind(&hardware_interface::ResourceManager::state_interface_exists, &rm, _1), true);
-  //   check_interfaces(
-  //     TEST_SYSTEM_HARDWARE_STATE_INTERFACES,
-  //     std::bind(&hardware_interface::ResourceManager::state_interface_exists, &rm, _1), false);
-  // //     check_interfaces(
-  //     TEST_ACTUATOR_HARDWARE_COMMAND_INTERFACES,
-  //     std::bind(&hardware_interface::ResourceManager::command_interface_is_available, &rm, _1),
-  //     false);
-  //   check_interfaces(
-  //     TEST_SYSTEM_HARDWARE_COMMAND_INTERFACES,
-  //      std::bind(&hardware_interface::ResourceManager::command_interface_is_available, &rm, _1),
-  //      false);
-  //  //     check_interfaces(
-  //      TEST_ACTUATOR_HARDWARE_STATE_INTERFACES,
-  //      std::bind(&hardware_interface::ResourceManager::state_interface_is_available, &rm, _1),
-  //      false);
-  //    check_interfaces(
-  //      TEST_SENSOR_HARDWARE_STATE_INTERFACES,
-  //      std::bind(&hardware_interface::ResourceManager::state_interface_is_available, &rm, _1),
-  //      false);
-  //    check_interfaces(
-  //      TEST_SYSTEM_HARDWARE_STATE_INTERFACES,
-  //      std::bind(&hardware_interface::ResourceManager::state_interface_is_available, &rm, _1),
-  //      false);
-  //  }
-  //  //   // Nothing can be claimed
-  //  {
-  //    check_interface_claiming(
-  //    TEST_ACTUATOR_HARDWARE_STATE_INTERFACES, TEST_ACTUATOR_HARDWARE_COMMAND_INTERFACES, false);
-  //    check_interface_claiming(TEST_SENSOR_HARDWARE_STATE_INTERFACES, {}, false);
-  //    check_interface_claiming(
-  //       TEST_SYSTEM_HARDWARE_STATE_INTERFACES, TEST_SYSTEM_HARDWARE_COMMAND_INTERFACES, false);
-  //   }
 }
