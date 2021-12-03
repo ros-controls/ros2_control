@@ -173,7 +173,6 @@ void ControllerManager::init_services()
     "~/unload_controller",
     std::bind(&ControllerManager::unload_controller_service_cb, this, _1, _2),
     rmw_qos_profile_services_default, best_effort_callback_group_);
-
   list_hardware_components_service_ =
     create_service<controller_manager_msgs::srv::ListHardwareComponents>(
       "~/list_hardware_components",
@@ -1217,6 +1216,7 @@ void ControllerManager::list_hardware_components_srv_cb(
 
     response->component.push_back(component);
   }
+
   RCLCPP_DEBUG(get_logger(), "list hardware components service finished");
 }
 
@@ -1246,6 +1246,7 @@ void ControllerManager::list_hardware_interfaces_srv_cb(
     hwi.is_claimed = resource_manager_->command_interface_is_claimed(command_interface_name);
     response->command_interfaces.push_back(hwi);
   }
+
   RCLCPP_DEBUG(get_logger(), "list hardware interfaces service finished");
 }
 
