@@ -51,73 +51,55 @@ public:
   void SetUp() {}
 };
 
-auto configure_components =
-  [](
-    hardware_interface::ResourceManager & rm,
-    const std::vector<std::string> & components = {
-      "TestActuatorHardware", "TestSensorHardware", "TestSystemHardware"}) {
-    using lifecycle_msgs::msg::State;
-    for (const auto & component : components)
-    {
-      rclcpp_lifecycle::State state(
-        State::PRIMARY_STATE_INACTIVE, hardware_interface::lifecycle_state_names::INACTIVE);
-      rm.set_component_state(component, state);
-    }
+void set_components_state(
+  hardware_interface::ResourceManager & rm, const std::vector<std::string> & components,
+  const uint8_t state_id, const std::string & state_name)
+{
+  auto int_components = components;
+  if (int_components.empty())
+  {
+    int_components = {"TestActuatorHardware", "TestSensorHardware", "TestSystemHardware"};
+  }
+  for (const auto & component : int_components)
+  {
+    rclcpp_lifecycle::State state(state_id, state_name);
+    rm.set_component_state(component, state);
+  }
+}
+
+auto configure_components = [](
+    hardware_interface::ResourceManager & rm, const std::vector<std::string> & components = {}) {
+    set_components_state(
+      rm, components, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+      hardware_interface::lifecycle_state_names::INACTIVE);
   };
 
-auto activate_components =
-  [](
-    hardware_interface::ResourceManager & rm,
-    const std::vector<std::string> & components = {
-      "TestActuatorHardware", "TestSensorHardware", "TestSystemHardware"}) {
-    using lifecycle_msgs::msg::State;
-    for (const auto & component : components)
-    {
-      rclcpp_lifecycle::State state(
-        State::PRIMARY_STATE_ACTIVE, hardware_interface::lifecycle_state_names::ACTIVE);
-      rm.set_component_state(component, state);
-    }
+auto activate_components = [](
+    hardware_interface::ResourceManager & rm, const std::vector<std::string> & components = {}) {
+    set_components_state(
+      rm, components, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+      hardware_interface::lifecycle_state_names::ACTIVE);
   };
 
-auto deactivate_components =
-  [](
-    hardware_interface::ResourceManager & rm,
-    const std::vector<std::string> & components = {
-      "TestActuatorHardware", "TestSensorHardware", "TestSystemHardware"}) {
-    using lifecycle_msgs::msg::State;
-    for (const auto & component : components)
-    {
-      rclcpp_lifecycle::State state(
-        State::PRIMARY_STATE_INACTIVE, hardware_interface::lifecycle_state_names::INACTIVE);
-      rm.set_component_state(component, state);
-    }
+auto deactivate_components = [](
+    hardware_interface::ResourceManager & rm, const std::vector<std::string> & components = {}) {
+    set_components_state(
+      rm, components, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+      hardware_interface::lifecycle_state_names::INACTIVE);
   };
 
 auto cleanup_components = [](
-                            hardware_interface::ResourceManager & rm,
-                            const std::vector<std::string> & components = {
-                              "TestActuatorHardware", "TestSensorHardware", "TestSystemHardware"}) {
-  using lifecycle_msgs::msg::State;
-  for (const auto & component : components)
-  {
-    rclcpp_lifecycle::State state(
-      State::PRIMARY_STATE_UNCONFIGURED, hardware_interface::lifecycle_state_names::UNCONFIGURED);
-    rm.set_component_state(component, state);
-  }
+  hardware_interface::ResourceManager & rm, const std::vector<std::string> & components = {}) {
+  set_components_state(
+    rm, components, lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    hardware_interface::lifecycle_state_names::UNCONFIGURED);
 };
 
-auto shutdown_components =
-  [](
-    hardware_interface::ResourceManager & rm,
-    const std::vector<std::string> & components = {
-      "TestActuatorHardware", "TestSensorHardware", "TestSystemHardware"}) {
-    using lifecycle_msgs::msg::State;
-    for (const auto & component : components)
-    {
-      rclcpp_lifecycle::State state(
-        State::PRIMARY_STATE_FINALIZED, hardware_interface::lifecycle_state_names::FINALIZED);
-      rm.set_component_state(component, state);
-    }
+auto shutdown_components = [](
+    hardware_interface::ResourceManager & rm, const std::vector<std::string> & components = {}) {
+    set_components_state(
+      rm, components, lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED,
+      hardware_interface::lifecycle_state_names::FINALIZED);
   };
 
 TEST_F(TestResourceManager, initialization_empty)
