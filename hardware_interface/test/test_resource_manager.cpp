@@ -67,36 +67,36 @@ void set_components_state(
   }
 }
 
-auto configure_components = [](
-    hardware_interface::ResourceManager & rm, const std::vector<std::string> & components = {}) {
+auto configure_components =
+  [](hardware_interface::ResourceManager & rm, const std::vector<std::string> & components = {}) {
     set_components_state(
       rm, components, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
       hardware_interface::lifecycle_state_names::INACTIVE);
   };
 
-auto activate_components = [](
-    hardware_interface::ResourceManager & rm, const std::vector<std::string> & components = {}) {
+auto activate_components =
+  [](hardware_interface::ResourceManager & rm, const std::vector<std::string> & components = {}) {
     set_components_state(
       rm, components, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
       hardware_interface::lifecycle_state_names::ACTIVE);
   };
 
-auto deactivate_components = [](
-    hardware_interface::ResourceManager & rm, const std::vector<std::string> & components = {}) {
+auto deactivate_components =
+  [](hardware_interface::ResourceManager & rm, const std::vector<std::string> & components = {}) {
     set_components_state(
       rm, components, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
       hardware_interface::lifecycle_state_names::INACTIVE);
   };
 
-auto cleanup_components = [](
-  hardware_interface::ResourceManager & rm, const std::vector<std::string> & components = {}) {
-  set_components_state(
-    rm, components, lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-    hardware_interface::lifecycle_state_names::UNCONFIGURED);
-};
+auto cleanup_components =
+  [](hardware_interface::ResourceManager & rm, const std::vector<std::string> & components = {}) {
+    set_components_state(
+      rm, components, lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+      hardware_interface::lifecycle_state_names::UNCONFIGURED);
+  };
 
-auto shutdown_components = [](
-    hardware_interface::ResourceManager & rm, const std::vector<std::string> & components = {}) {
+auto shutdown_components =
+  [](hardware_interface::ResourceManager & rm, const std::vector<std::string> & components = {}) {
     set_components_state(
       rm, components, lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED,
       hardware_interface::lifecycle_state_names::FINALIZED);
