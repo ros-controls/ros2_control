@@ -1170,14 +1170,24 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_)
               valid_urdf_ros2_control_system_robot_with_gpio_ + ros2_control_test_assets::urdf_tail;
   hardware_interface::ResourceManager rm(urdf);
 
-  // check is hardware is configured
-  std::unordered_map<std::string, rclcpp_lifecycle::State> states_map;
-  states_map = rm.get_components_states();
+  // check is hardware is started
+  auto status_map = rm.get_components_status();
   EXPECT_EQ(
-    states_map["GenericSystem2dof"].label(), hardware_interface::lifecycle_state_names::INACTIVE);
+    status_map["GenericSystem2dof"].state.label(),
+            hardware_interface::lifecycle_state_names::UNCONFIGURED);
+  configure_components(rm);
+  status_map = rm.get_components_status();
+  EXPECT_EQ(
+    status_map["GenericSystem2dof"].state.label(),
+            hardware_interface::lifecycle_state_names::INACTIVE);
+  activate_components(rm);
+  status_map = rm.get_components_status();
+  EXPECT_EQ(
+    status_map["GenericSystem2dof"].state.label(),
+            hardware_interface::lifecycle_state_names::ACTIVE);
 
   ASSERT_EQ(8u, rm.state_interface_keys().size());
-  ASSERT_EQ(6, rm.command_interface_keys().size());
+  ASSERT_EQ(6u, rm.command_interface_keys().size());
   EXPECT_TRUE(rm.state_interface_exists("joint1/position"));
   EXPECT_TRUE(rm.state_interface_exists("joint1/velocity"));
   EXPECT_TRUE(rm.state_interface_exists("joint2/position"));
@@ -1248,16 +1258,6 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_)
   ASSERT_EQ(0.333, gpio1_a_o1_c.get_value());
   ASSERT_EQ(0.444, gpio2_vac_c.get_value());
 
-  rm.start_components();
-  states_map = rm.get_components_states();
-  EXPECT_EQ(
-    states_map["GenericSystem2dof"].label(), hardware_interface::lifecycle_state_names::ACTIVE);
-
-  rm.stop_components();
-  states_map = rm.get_components_states();
-  EXPECT_EQ(
-    states_map["GenericSystem2dof"].label(), hardware_interface::lifecycle_state_names::INACTIVE);
-
   // check other functionalities are working well
   generic_system_functional_test(urdf);
 }
@@ -1269,11 +1269,21 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_fake_co
               ros2_control_test_assets::urdf_tail;
   hardware_interface::ResourceManager rm(urdf);
 
-  // check is hardware is configured
-  std::unordered_map<std::string, rclcpp_lifecycle::State> states_map;
-  states_map = rm.get_components_states();
+  // check is hardware is started
+  auto status_map = rm.get_components_status();
   EXPECT_EQ(
-    states_map["GenericSystem2dof"].label(), hardware_interface::lifecycle_state_names::INACTIVE);
+    status_map["GenericSystem2dof"].state.label(),
+            hardware_interface::lifecycle_state_names::UNCONFIGURED);
+  configure_components(rm);
+  status_map = rm.get_components_status();
+  EXPECT_EQ(
+    status_map["GenericSystem2dof"].state.label(),
+            hardware_interface::lifecycle_state_names::INACTIVE);
+  activate_components(rm);
+  status_map = rm.get_components_status();
+  EXPECT_EQ(
+    status_map["GenericSystem2dof"].state.label(),
+            hardware_interface::lifecycle_state_names::ACTIVE);
 
   // Check interfaces
   EXPECT_EQ(1u, rm.system_components_size());
