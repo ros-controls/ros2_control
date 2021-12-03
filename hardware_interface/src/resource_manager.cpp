@@ -180,8 +180,7 @@ public:
           available_command_interfaces_.emplace_back(interface);
           // TODO(destogl): change output to debug
           RCUTILS_LOG_INFO_NAMED(
-            "resource_manager",
-            "(hardware '%s'): '%s' command interface added into available list",
+            "resource_manager", "(hardware '%s'): '%s' command interface added into available list",
             hardware.get_name().c_str(), interface.c_str());
         }
         else
@@ -220,8 +219,7 @@ public:
           available_command_interfaces_.erase(found_it);
           // TODO(destogl): change output to debug
           RCUTILS_LOG_INFO_NAMED(
-            "resource_manager",
-            "(hardware '%s'): '%s' command removed from available list",
+            "resource_manager", "(hardware '%s'): '%s' command removed from available list",
             hardware.get_name().c_str(), interface.c_str());
         }
         else
@@ -289,8 +287,8 @@ public:
 
     if (result)
     {
-    // TODO(destogl): make all command interfaces available (currently are
-    // all available)
+      // TODO(destogl): make all command interfaces available (currently are
+      // all available)
     }
 
     return result;
@@ -305,8 +303,8 @@ public:
 
     if (result)
     {
-    // TODO(destogl): make all command interfaces unavailable that should be present on active only
-    // (currently are all available)
+      // TODO(destogl): make all command interfaces unavailable that should be present only
+      // when active (currently are all available) also at inactive
     }
     return result;
   }
