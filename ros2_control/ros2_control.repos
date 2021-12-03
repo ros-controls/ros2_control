@@ -14,7 +14,11 @@ repositories:
   ros-controls/control_msgs:
     type: git
     url: https://github.com/ros-controls/control_msgs.git
+<<<<<<< HEAD
     version: galacitc-devel
+=======
+    version: galactic-devel
+>>>>>>> d51e99a (Point control_msgs to galactic branch (#587))
   angles:
     type: git
     url: https://github.com/ros/angles.git
