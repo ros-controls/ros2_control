@@ -399,41 +399,40 @@ protected:
   std::string valid_urdf_ros2_control_system_robot_with_gpio_fake_command_;
 };
 
+void set_components_state(
+  hardware_interface::ResourceManager & rm, const std::vector<std::string> & components,
+  const uint8_t state_id, const std::string & state_name)
+{
+  for (const auto & component : components)
+  {
+    rclcpp_lifecycle::State state(state_id, state_name);
+    rm.set_component_state(component, state);
+  }
+}
+
 auto configure_components = [](
                               hardware_interface::ResourceManager & rm,
                               const std::vector<std::string> & components = {"GenericSystem2dof"}) {
-  using lifecycle_msgs::msg::State;
-  for (const auto & component : components)
-  {
-    rclcpp_lifecycle::State state(
-      State::PRIMARY_STATE_INACTIVE, hardware_interface::lifecycle_state_names::INACTIVE);
-    rm.set_component_state(component, state);
-  }
+  set_components_state(
+    rm, components, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    hardware_interface::lifecycle_state_names::INACTIVE);
 };
 
 auto activate_components = [](
                              hardware_interface::ResourceManager & rm,
                              const std::vector<std::string> & components = {"GenericSystem2dof"}) {
-  using lifecycle_msgs::msg::State;
-  for (const auto & component : components)
-  {
-    rclcpp_lifecycle::State state(
-      State::PRIMARY_STATE_ACTIVE, hardware_interface::lifecycle_state_names::ACTIVE);
-    rm.set_component_state(component, state);
-  }
+  set_components_state(
+    rm, components, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    hardware_interface::lifecycle_state_names::ACTIVE);
 };
 
 auto deactivate_components =
   [](
     hardware_interface::ResourceManager & rm,
     const std::vector<std::string> & components = {"GenericSystem2dof"}) {
-    for (const auto & component : components)
-    {
-      rclcpp_lifecycle::State state(
-        lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-        hardware_interface::lifecycle_state_names::INACTIVE);
-      rm.set_component_state(component, state);
-    }
+    set_components_state(
+      rm, components, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+      hardware_interface::lifecycle_state_names::INACTIVE);
   };
 
 TEST_F(TestGenericSystem, load_generic_system_2dof)
@@ -1174,17 +1173,17 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_)
   auto status_map = rm.get_components_status();
   EXPECT_EQ(
     status_map["GenericSystem2dof"].state.label(),
-            hardware_interface::lifecycle_state_names::UNCONFIGURED);
+    hardware_interface::lifecycle_state_names::UNCONFIGURED);
   configure_components(rm);
   status_map = rm.get_components_status();
   EXPECT_EQ(
     status_map["GenericSystem2dof"].state.label(),
-            hardware_interface::lifecycle_state_names::INACTIVE);
+    hardware_interface::lifecycle_state_names::INACTIVE);
   activate_components(rm);
   status_map = rm.get_components_status();
   EXPECT_EQ(
     status_map["GenericSystem2dof"].state.label(),
-            hardware_interface::lifecycle_state_names::ACTIVE);
+    hardware_interface::lifecycle_state_names::ACTIVE);
 
   ASSERT_EQ(8u, rm.state_interface_keys().size());
   ASSERT_EQ(6u, rm.command_interface_keys().size());
@@ -1273,17 +1272,17 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_fake_co
   auto status_map = rm.get_components_status();
   EXPECT_EQ(
     status_map["GenericSystem2dof"].state.label(),
-            hardware_interface::lifecycle_state_names::UNCONFIGURED);
+    hardware_interface::lifecycle_state_names::UNCONFIGURED);
   configure_components(rm);
   status_map = rm.get_components_status();
   EXPECT_EQ(
     status_map["GenericSystem2dof"].state.label(),
-            hardware_interface::lifecycle_state_names::INACTIVE);
+    hardware_interface::lifecycle_state_names::INACTIVE);
   activate_components(rm);
   status_map = rm.get_components_status();
   EXPECT_EQ(
     status_map["GenericSystem2dof"].state.label(),
-            hardware_interface::lifecycle_state_names::ACTIVE);
+    hardware_interface::lifecycle_state_names::ACTIVE);
 
   // Check interfaces
   EXPECT_EQ(1u, rm.system_components_size());
