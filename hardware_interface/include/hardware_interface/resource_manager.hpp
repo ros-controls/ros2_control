@@ -339,6 +339,9 @@ public:
    */
   void write();
 
+  // Temporary method to keep old interface and reduce framework changes in PRs
+  void start_components();
+
 private:
   void validate_storage(const std::vector<hardware_interface::HardwareInfo> & hardware_info) const;
 

@@ -92,6 +92,8 @@ ControllerManager::ControllerManager(
   loader_(std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
     kControllerInterfaceName, kControllerInterface))
 {
+  resource_manager_->start_components();
+
   init_services();
 }
 
