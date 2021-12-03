@@ -1174,14 +1174,14 @@ void ControllerManager::list_hardware_interfaces_srv_cb(
     hwi.is_claimed = false;
     response->state_interfaces.push_back(hwi);
   }
-    auto command_interface_names = resource_manager_->command_interface_keys();
-    for (const auto & command_interface_name : command_interface_names)
-    {
-      controller_manager_msgs::msg::HardwareInterface hwi;
-      hwi.name = command_interface_name;
-      hwi.is_claimed = resource_manager_->command_interface_is_claimed(command_interface_name);
-      response->command_interfaces.push_back(hwi);
-    }
+  auto command_interface_names = resource_manager_->command_interface_keys();
+  for (const auto & command_interface_name : command_interface_names)
+  {
+    controller_manager_msgs::msg::HardwareInterface hwi;
+    hwi.name = command_interface_name;
+    hwi.is_claimed = resource_manager_->command_interface_is_claimed(command_interface_name);
+    response->command_interfaces.push_back(hwi);
+  }
 
   RCLCPP_DEBUG(get_logger(), "list hardware interfaces service finished");
 }
