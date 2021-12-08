@@ -1,5 +1,5 @@
 ARG ROS_DISTRO="galactic"
-FROM ros:${ROS_DISTRO}
+FROM ros:$ROS_DISTRO
 ARG BRANCH="master"
 
 ENV ROS_UNDERLAY /root/ws_ros2_control/install
