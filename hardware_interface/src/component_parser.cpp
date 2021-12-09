@@ -45,6 +45,7 @@ constexpr const auto kTypeAttribute = "type";
 constexpr const auto kRoleAttribute = "role";
 constexpr const auto kReductionAttribute = "mechanical_reduction";
 constexpr const auto kOffsetAttribute = "offset";
+constexpr const auto kInitialValueAttribute = "initial_value";
 }  // namespace
 
 namespace hardware_interface
@@ -256,6 +257,13 @@ hardware_interface::InterfaceInfo parse_interfaces_from_xml(
   if (interface_param != interface_params.end())
   {
     interface.max = interface_param->second;
+  }
+
+  // Optional initial_value attribute
+  interface_param = interface_params.find(kInitialValueAttribute);
+  if (interface_param != interface_params.end())
+  {
+    interface.initial_value = interface_param->second;
   }
 
   // Default to a single double
