@@ -20,6 +20,7 @@ import subprocess
 import sys
 import time
 import warnings
+import utils
 
 from controller_manager import configure_controller, list_controllers, \
     load_controller, switch_controllers, unload_controller
@@ -27,20 +28,6 @@ from controller_manager import configure_controller, list_controllers, \
 import rclpy
 from rclpy.duration import Duration
 from rclpy.node import Node
-
-# from https://stackoverflow.com/a/287944
-
-
-class bcolors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKCYAN = '\033[96m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
 
 
 def wait_for_controller_manager(node, controller_manager, timeout_duration):
@@ -131,7 +118,7 @@ def main(args=None):
             if not ret.ok:
                 # Error message printed by ros2 control
                 return 1
-            node.get_logger().info(bcolors.OKBLUE + 'Loaded ' + controller_name + bcolors.ENDC)
+            node.get_logger().info(utils.colors.OKBLUE + 'Loaded ' + controller_name + utils.colors.ENDC)
 
         if param_file:
             ret = subprocess.run(['ros2', 'param', 'load', controller_name,
@@ -161,8 +148,8 @@ def main(args=None):
                     node.get_logger().info('Failed to start controller')
                     return 1
 
-                node.get_logger().info(bcolors.OKGREEN + 'Configured and started ' +
-                                       bcolors.OKCYAN + controller_name + bcolors.ENDC)
+                node.get_logger().info(utils.colors.OKGREEN + 'Configured and started ' +
+                                       utils.colors.OKCYAN + controller_name + utils.colors.ENDC)
 
         if not args.unload_on_kill:
             return 0
