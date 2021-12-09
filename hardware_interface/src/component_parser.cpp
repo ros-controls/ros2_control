@@ -38,6 +38,7 @@ constexpr const auto kCommandInterfaceTag = "command_interface";
 constexpr const auto kStateInterfaceTag = "state_interface";
 constexpr const auto kMinTag = "min";
 constexpr const auto kMaxTag = "max";
+constexpr const auto kInitialValueTag = "initial_value";
 constexpr const auto kDataTypeAttribute = "data_type";
 constexpr const auto kSizeAttribute = "size";
 constexpr const auto kNameAttribute = "name";
@@ -45,7 +46,6 @@ constexpr const auto kTypeAttribute = "type";
 constexpr const auto kRoleAttribute = "role";
 constexpr const auto kReductionAttribute = "mechanical_reduction";
 constexpr const auto kOffsetAttribute = "offset";
-constexpr const auto kInitialValueAttribute = "initial_value";
 }  // namespace
 
 namespace hardware_interface
@@ -260,7 +260,7 @@ hardware_interface::InterfaceInfo parse_interfaces_from_xml(
   }
 
   // Optional initial_value attribute
-  interface_param = interface_params.find(kInitialValueAttribute);
+  interface_param = interface_params.find(kInitialValueTag);
   if (interface_param != interface_params.end())
   {
     interface.initial_value = interface_param->second;
