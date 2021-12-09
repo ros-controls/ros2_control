@@ -15,6 +15,7 @@
 #include <gtest/gtest.h>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "./test_controller/test_controller.hpp"
@@ -26,18 +27,26 @@
 using ::testing::_;
 using ::testing::Return;
 
-class TestControllerManager : public ControllerManagerFixture,
-                              public testing::WithParamInterface<int>
+class TestControllerManager
+: public ControllerManagerFixture,
+  public testing::WithParamInterface<std::pair<int, controller_interface::return_type>>
 {
 };
 
 TEST_P(TestControllerManager, controller_lifecycle)
 {
+  const auto param = GetParam();
+  auto strictness = param.first;
+  auto expected_return = param.second;
   auto test_controller = std::make_shared<test_controller::TestController>();
+  auto test_controller2 = std::make_shared<test_controller::TestController>();
+  constexpr char TEST_CONTROLLER2_NAME[] = "test_controller2_name";
   cm_->add_controller(
     test_controller, test_controller::TEST_CONTROLLER_NAME,
     test_controller::TEST_CONTROLLER_CLASS_NAME);
-  EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
+  cm_->add_controller(
+    test_controller2, TEST_CONTROLLER2_NAME, test_controller::TEST_CONTROLLER_CLASS_NAME);
+  EXPECT_EQ(2u, cm_->get_loaded_controllers().size());
   EXPECT_EQ(2, test_controller.use_count());
 
   EXPECT_EQ(
@@ -51,19 +60,34 @@ TEST_P(TestControllerManager, controller_lifecycle)
 
   // configure controller
   cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME);
+  // Comment out this line on purpose. Otherwise, the test will crash.
+  // cm_->configure_controller(TEST_CONTROLLER2_NAME);
   EXPECT_EQ(
     controller_interface::return_type::OK,
     cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
   EXPECT_EQ(0u, test_controller->internal_counter) << "Controller is not started";
+  EXPECT_EQ(0u, test_controller2->internal_counter) << "Controller is not started";
 
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, test_controller->get_state().id());
 
   // Start controller, will take effect at the end of the update function
-  std::vector<std::string> start_controllers = {test_controller::TEST_CONTROLLER_NAME};
+  std::vector<std::string> start_controllers = {"fake_controller", TEST_CONTROLLER2_NAME};
   std::vector<std::string> stop_controllers = {};
   auto switch_future = std::async(
     std::launch::async, &controller_manager::ControllerManager::switch_controller, cm_,
-    start_controllers, stop_controllers, GetParam(), true, rclcpp::Duration(0, 0));
+    start_controllers, stop_controllers, strictness, true, rclcpp::Duration(0, 0));
+
+  EXPECT_EQ(expected_return, switch_future.get());
+  EXPECT_EQ(
+    controller_interface::return_type::OK,
+    cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
+
+  // Start controller, will take effect at the end of the update function
+  start_controllers = {test_controller::TEST_CONTROLLER_NAME};
+  stop_controllers = {};
+  switch_future = std::async(
+    std::launch::async, &controller_manager::ControllerManager::switch_controller, cm_,
+    start_controllers, stop_controllers, strictness, true, rclcpp::Duration(0, 0));
 
   ASSERT_EQ(std::future_status::timeout, switch_future.wait_for(std::chrono::milliseconds(100)))
     << "switch_controller should be blocking until next update cycle";
@@ -89,7 +113,7 @@ TEST_P(TestControllerManager, controller_lifecycle)
   stop_controllers = {test_controller::TEST_CONTROLLER_NAME};
   switch_future = std::async(
     std::launch::async, &controller_manager::ControllerManager::switch_controller, cm_,
-    start_controllers, stop_controllers, GetParam(), true, rclcpp::Duration(0, 0));
+    start_controllers, stop_controllers, strictness, true, rclcpp::Duration(0, 0));
 
   ASSERT_EQ(std::future_status::timeout, switch_future.wait_for(std::chrono::milliseconds(100)))
     << "switch_controller should be blocking until next update cycle";
@@ -121,6 +145,7 @@ TEST_P(TestControllerManager, controller_lifecycle)
 
 TEST_P(TestControllerManager, per_controller_update_rate)
 {
+  auto strictness = GetParam().first;
   auto test_controller = std::make_shared<test_controller::TestController>();
   cm_->add_controller(
     test_controller, test_controller::TEST_CONTROLLER_NAME,
@@ -152,7 +177,7 @@ TEST_P(TestControllerManager, per_controller_update_rate)
   std::vector<std::string> stop_controllers = {};
   auto switch_future = std::async(
     std::launch::async, &controller_manager::ControllerManager::switch_controller, cm_,
-    start_controllers, stop_controllers, GetParam(), true, rclcpp::Duration(0, 0));
+    start_controllers, stop_controllers, strictness, true, rclcpp::Duration(0, 0));
 
   ASSERT_EQ(std::future_status::timeout, switch_future.wait_for(std::chrono::milliseconds(100)))
     << "switch_controller should be blocking until next update cycle";
@@ -175,5 +200,7 @@ TEST_P(TestControllerManager, per_controller_update_rate)
   EXPECT_EQ(test_controller->get_update_rate(), 4u);
 }
 
+auto strict_pair = std::make_pair(STRICT, controller_interface::return_type::ERROR);
+auto best_effort_pair = std::make_pair(BEST_EFFORT, controller_interface::return_type::OK);
 INSTANTIATE_TEST_SUITE_P(
-  test_strick_best_effort, TestControllerManager, testing::Values(STRICT, BEST_EFFORT));
+  test_strict_best_effort, TestControllerManager, testing::Values(strict_pair, best_effort_pair));
