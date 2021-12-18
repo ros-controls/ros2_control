@@ -174,6 +174,8 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_multi_interface
   EXPECT_EQ(hardware_info.joints[0].type, "joint");
   ASSERT_THAT(hardware_info.joints[0].command_interfaces, SizeIs(3));
   EXPECT_EQ(hardware_info.joints[0].command_interfaces[0].name, HW_IF_POSITION);
+  EXPECT_EQ(hardware_info.joints[0].command_interfaces[0].initial_value, "1.2");
+  EXPECT_EQ(hardware_info.joints[0].command_interfaces[1].initial_value, "3.4");
   ASSERT_THAT(hardware_info.joints[0].state_interfaces, SizeIs(3));
   EXPECT_EQ(hardware_info.joints[0].state_interfaces[1].name, HW_IF_VELOCITY);
 
