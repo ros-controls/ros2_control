@@ -59,10 +59,12 @@ const auto valid_urdf_ros2_control_system_multi_interface =
       <command_interface name="position">
         <param name="min">-1</param>
         <param name="max">1</param>
+        <param name="initial_value">1.2</param>
       </command_interface>
       <command_interface name="velocity">
         <param name="min">-1</param>
         <param name="max">1</param>
+        <param name="initial_value">3.4</param>
       </command_interface>
       <command_interface name="effort">
         <param name="min">-0.5</param>
