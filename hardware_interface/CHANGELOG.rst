@@ -2,6 +2,9 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.8.1 (2021-10-25)
 ------------------
 * add M_PI macro for windows foxy in test_component_parser.cpp (`#545 <https://github.com/ros-controls/ros2_control/issues/545>`_)

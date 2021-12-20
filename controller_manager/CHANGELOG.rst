@@ -2,6 +2,17 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Make output of not available controllers nicer and make it informative. (`#577 <https://github.com/ros-controls/ros2_control/issues/577>`_) (`#578 <https://github.com/ros-controls/ros2_control/issues/578>`_)
+  (cherry picked from commit a47a0347acd28a47b5095e4b206257e1520918ee)
+  Co-authored-by: Denis Štogl <destogl@users.noreply.github.com>
+* feat: add colored output into spawner.py (`#560 <https://github.com/ros-controls/ros2_control/issues/560>`_) (`#563 <https://github.com/ros-controls/ros2_control/issues/563>`_)
+  in order to highlight if controllers are loaded and configured and started.
+  (cherry picked from commit afa0e01989e5b923e5c330f71d9270b30f03276d)
+  Co-authored-by: Michael <50864015+fmros@users.noreply.github.com>
+* Contributors: mergify[bot]
+
 0.8.1 (2021-10-25)
 ------------------
 * [ControllerManager] Fix method name upon fetching state of controller(s) (`#526 <https://github.com/ros-controls/ros2_control/issues/526>`_)
