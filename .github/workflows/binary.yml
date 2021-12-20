@@ -7,6 +7,8 @@ on:
   schedule:
     # Run every morning to detect flakiness and broken dependencies
     - cron: '17 8 * * *'
+env:
+  ROS_DISTRO: galactic
 
 jobs:
   ci_binary:
@@ -15,9 +17,10 @@ jobs:
     strategy:
       matrix:
         env:
-          - {ROS_DISTRO: galactic, ROS_REPO: main}
-          - {ROS_DISTRO: galactic, ROS_REPO: testing}
+          - ROS_REPO: [main, testing]
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - uses: ros-industrial/industrial_ci@master
-        env: ${{matrix.env}}
+        env:
+          ROS_REPO: ${{matrix.env}}
+          ABICHECK_URL: github:ros-controls/ros2_control#${ROS_DISTRO}
