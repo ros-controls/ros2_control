@@ -16,11 +16,10 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        env:
-          - ROS_REPO: [main, testing]
+          ROS_REPO: [main, testing]
     steps:
       - uses: actions/checkout@v2
       - uses: ros-industrial/industrial_ci@master
         env:
-          ROS_REPO: ${{matrix.env}}
-          ABICHECK_URL: github:ros-controls/ros2_control#${ROS_DISTRO}
+          ROS_REPO: ${{matrix.ROS_REPO}}
+          ABICHECK_URL: github:ros-controls/ros2_control#${env.ROS_DISTRO}
