@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.9.0 (2021-12-20)
+------------------
 * Make output of not available controllers nicer and make it informative. (`#577 <https://github.com/ros-controls/ros2_control/issues/577>`_) (`#578 <https://github.com/ros-controls/ros2_control/issues/578>`_)
   (cherry picked from commit a47a0347acd28a47b5095e4b206257e1520918ee)
   Co-authored-by: Denis Štogl <destogl@users.noreply.github.com>
