@@ -2,6 +2,14 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* fix get_update_rate visibility in windows (`#586 <https://github.com/ros-controls/ros2_control/issues/586>`_) (`#588 <https://github.com/ros-controls/ros2_control/issues/588>`_)
+  (cherry picked from commit 3f4a55bd898d5ae16fbefb6b19822dce0dbeba2a)
+  Co-authored-by: Melvin Wang <melvin.mc.wang@gmail.com>
+* Make output of not available controller nicer and make it informational. (`#577 <https://github.com/ros-controls/ros2_control/issues/577>`_)
+* Contributors: Denis Štogl, mergify[bot]
+
 1.2.0 (2021-11-05)
 ------------------
 
