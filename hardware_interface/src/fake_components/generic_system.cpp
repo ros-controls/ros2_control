@@ -441,8 +441,8 @@ void GenericSystem::initialize_storage_vectors(
           states[index][i] = std::stod(interface.initial_value);
         }
         else
-        // Initialize the value in old way with warning message
         {
+          // Initialize the value in old way with warning message
           auto it2 = joint.parameters.find("initial_" + interface.name);
           if (it2 != joint.parameters.end())
           {
