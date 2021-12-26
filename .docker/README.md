@@ -1,11 +1,13 @@
 # ROS2 Control Docker Containers
 
-Meant to provide basic docker containers for CI or development purposes. To use them, make sure you have [Docker](https://docs.docker.com/get-docker/) installed, then build and run the image by following tag specific commands as described below:
+Meant to provide basic docker containers for CI or development purposes. To use them, make sure you have [Docker](https://docs.docker.com/get-docker/) installed. You then can pull the latest source or build image or build any version and run the image by following tag specific commands as described below:
 
 ## Source folder and tag
-Downloads and builds ros2_controls into a workspace for development use exactly as is found [here](https://ros-controls.github.io/control.ros.org/getting_started.html#compiling).
+Downloads and builds ros2_controls into a workspace for development use exactly as is found [here](https://ros-controls.github.io/control.ros.org/getting_started.html#compiling). This is primarily used for development and CI of ros2_control and related packages.
 
-This is primarily used for development and CI of ros2_control and related packages. To build and run the container, execute the following code in a terminal:
+You can pull a prebuilt image with this docker tag: `ghcr.io/ros-controls/ros2_control_source`.
+
+To build and run the container, execute the following code in a terminal:
 ```
 docker build --tag ros2_control:source --file .docker/source/Dockerfile .
 docker run -it ros2_control:source
@@ -28,9 +30,11 @@ docker run -it --mount type=volume,source=name-of-volume,destination=/root/ws_ro
 Note: this is probably the preferred solution as changes persist across rebuilds of container and doesn't require you to pull all repositories that you want to edit as they'll already be in the container.
 
 ## Release folder and tag
-Installs ros2_control in the base ros2 docker container as mentioned [here](https://ros-controls.github.io/control.ros.org/getting_started.html#getting-started).
+Installs ros2_control in the base ros2 docker container as mentioned [here](https://ros-controls.github.io/control.ros.org/getting_started.html#getting-started). This is mainly intended for development of external packages that rely on ros2_control.
 
-This is mainly intended for development of external packages that rely on ros2_control. It can be built and run by the following commands in the directory of the ros2_control repository:
+You can pull a prebuilt image using the following tag: `ghcr.io/ros2-controls/ros2_control_release`.
+
+It can be built and run by the following commands in the directory of the ros2_control repository:
 ```
 docker build --tag ros2_control:release --file .docker/release/Dockerfile .
 docker run -it ros2_control:release
