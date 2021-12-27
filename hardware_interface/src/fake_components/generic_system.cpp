@@ -436,7 +436,7 @@ void GenericSystem::initialize_storage_vectors(
         auto index = std::distance(interfaces.begin(), it);
 
         // Check the initial_value param is used
-        if (interface.initial_value != "")
+        if (!interface.initial_value.empty())
         {
           states[index][i] = std::stod(interface.initial_value);
         }
