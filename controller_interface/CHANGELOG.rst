@@ -2,6 +2,14 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* fix get_update_rate visibility in windows (`#586 <https://github.com/ros-controls/ros2_control/issues/586>`_)
+* Use lifecycle name constants from hardware interface in controller interface (`#575 <https://github.com/ros-controls/ros2_control/issues/575>`_)
+  * Use lifecycle name constants from hardware interface in controller interface
+  * Remove controller_state_names.hpp since it is not needed.
+* Contributors: Melvin Wang, Xi-Huang
+
 1.2.0 (2021-11-05)
 ------------------
 
