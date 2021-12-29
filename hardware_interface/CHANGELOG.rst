@@ -2,8 +2,8 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.0.0 (2021-12-29)
+------------------
 * Adding support for 'initial_value' parameter. (`#593 <https://github.com/ros-controls/ros2_control/issues/593>`_)
 * fix copy paste error in documentation (`#594 <https://github.com/ros-controls/ros2_control/issues/594>`_)
 * Use lambda functions in ros2_control generic_system for repetitive tasks (`#579 <https://github.com/ros-controls/ros2_control/issues/579>`_)
