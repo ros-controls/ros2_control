@@ -2,11 +2,11 @@ repositories:
   ros-controls/ros2_control:
     type: git
     url: https://github.com/ros-controls/ros2_control.git
-    version: master
+    version: foxy
   ros-controls/ros2_controllers:
     type: git
     url: https://github.com/ros-controls/ros2_controllers.git
-    version: master
+    version: foxy
   ros-controls/realtime_tools:
     type: git
     url: https://github.com/ros-controls/realtime_tools.git
