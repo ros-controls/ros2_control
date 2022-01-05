@@ -243,16 +243,18 @@ protected:
     <joint name="joint1">
       <command_interface name="position"/>
       <command_interface name="velocity"/>
-      <state_interface name="position"/>
+      <state_interface name="position">
+        <param name="initial_value">3.45</param>
+      </state_interface>
       <state_interface name="velocity"/>
-      <param name="initial_position">3.45</param>
     </joint>
     <joint name="joint2">
       <command_interface name="position"/>
       <command_interface name="velocity"/>
-      <state_interface name="position"/>
+      <state_interface name="position">
+        <param name="initial_value">2.78</param>
+      </state_interface>
       <state_interface name="velocity"/>
-      <param name="initial_position">2.78</param>
     </joint>
   </ros2_control>
 )";
@@ -308,6 +310,79 @@ protected:
     </joint>
   </ros2_control>
 )";
+<<<<<<< HEAD
+=======
+
+    valid_urdf_ros2_control_system_robot_with_gpio_ =
+      R"(
+  <ros2_control name="GenericSystem2dof" type="system">
+    <hardware>
+      <plugin>fake_components/GenericSystem</plugin>
+      <param name="example_param_write_for_sec">2</param>
+      <param name="example_param_read_for_sec">2</param>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <state_interface name="position">
+        <param name="initial_value">3.45</param>
+      </state_interface>
+      <state_interface name="velocity"/>
+    </joint>
+    <joint name="joint2">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <param name="initial_position">2.78</param>
+    </joint>
+    <gpio name="flange_analog_IOs">
+      <command_interface name="analog_output1" data_type="double"/>
+      <state_interface name="analog_output1"/>
+      <state_interface name="analog_input1"/>
+      <state_interface name="analog_input2"/>
+    </gpio>
+    <gpio name="flange_vacuum">
+      <command_interface name="vacuum"/>
+      <state_interface name="vacuum" data_type="double"/>
+    </gpio>
+  </ros2_control>
+)";
+
+    valid_urdf_ros2_control_system_robot_with_gpio_fake_command_ =
+      R"(
+  <ros2_control name="GenericSystem2dof" type="system">
+    <hardware>
+      <plugin>fake_components/GenericSystem</plugin>
+      <param name="fake_gpio_commands">True</param>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <param name="initial_position">3.45</param>
+    </joint>
+    <joint name="joint2">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <param name="initial_position">2.78</param>
+    </joint>
+    <gpio name="flange_analog_IOs">
+      <command_interface name="analog_output1" data_type="double"/>
+      <state_interface name="analog_output1"/>
+      <state_interface name="analog_input1"/>
+      <state_interface name="analog_input2"/>
+    </gpio>
+    <gpio name="flange_vacuum">
+      <command_interface name="vacuum"/>
+      <state_interface name="vacuum" data_type="double"/>
+    </gpio>
+  </ros2_control>
+)";
+>>>>>>> 8345f28 (Support of "initial_value" for the 'FakeSystem' (#598))
   }
 
   std::string hardware_robot_2dof_;
