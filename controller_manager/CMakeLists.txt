@@ -6,6 +6,7 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 find_package(ament_cmake REQUIRED)
+find_package(ament_cmake_python REQUIRED)
 find_package(ament_cmake_core REQUIRED)
 find_package(ament_index_cpp REQUIRED)
 find_package(controller_interface REQUIRED)
@@ -51,14 +52,6 @@ install(TARGETS ros2_control_node
 
 install(DIRECTORY include/
   DESTINATION include
-)
-
-install(PROGRAMS
-  scripts/spawner
-  scripts/spawner.py  # Deprecated
-  scripts/unspawner
-  scripts/unspawner.py  # Deprecated
-  DESTINATION lib/${PROJECT_NAME}
 )
 
 if(BUILD_TESTING)
@@ -160,7 +153,7 @@ if(BUILD_TESTING)
 endif()
 
 # Install Python modules
-ament_python_install_package(${PROJECT_NAME})
+ament_python_install_package(${PROJECT_NAME} SCRIPTS_DESTINATION lib/${PROJECT_NAME})
 
 ament_export_libraries(
   controller_manager
