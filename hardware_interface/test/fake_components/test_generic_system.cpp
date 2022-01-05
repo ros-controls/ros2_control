@@ -244,16 +244,18 @@ protected:
     <joint name="joint1">
       <command_interface name="position"/>
       <command_interface name="velocity"/>
-      <state_interface name="position"/>
+      <state_interface name="position">
+        <param name="initial_value">3.45</param>
+      </state_interface>
       <state_interface name="velocity"/>
-      <param name="initial_position">3.45</param>
     </joint>
     <joint name="joint2">
       <command_interface name="position"/>
       <command_interface name="velocity"/>
-      <state_interface name="position"/>
+      <state_interface name="position">
+        <param name="initial_value">2.78</param>
+      </state_interface>
       <state_interface name="velocity"/>
-      <param name="initial_position">2.78</param>
     </joint>
   </ros2_control>
 )";
@@ -321,9 +323,10 @@ protected:
     <joint name="joint1">
       <command_interface name="position"/>
       <command_interface name="velocity"/>
-      <state_interface name="position"/>
+      <state_interface name="position">
+        <param name="initial_value">3.45</param>
+      </state_interface>
       <state_interface name="velocity"/>
-      <param name="initial_position">3.45</param>
     </joint>
     <joint name="joint2">
       <command_interface name="position"/>

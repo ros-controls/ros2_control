@@ -426,12 +426,33 @@ void GenericSystem::initialize_storage_vectors(
   for (auto i = 0u; i < info_.joints.size(); i++)
   {
     const auto & joint = info_.joints[i];
-    for (auto j = 0u; j < interfaces.size(); j++)
+    for (const auto & interface : joint.state_interfaces)
     {
-      auto it = joint.parameters.find("initial_" + interfaces[j]);
-      if (it != joint.parameters.end())
+      auto it = std::find(interfaces.begin(), interfaces.end(), interface.name);
+
+      // If interface name is found in the interfaces list
+      if (it != interfaces.end())
       {
-        states[j][i] = std::stod(it->second);
+        auto index = std::distance(interfaces.begin(), it);
+
+        // Check the initial_value param is used
+        if (!interface.initial_value.empty())
+        {
+          states[index][i] = std::stod(interface.initial_value);
+        }
+        else
+        {
+          // Initialize the value in old way with warning message
+          auto it2 = joint.parameters.find("initial_" + interface.name);
+          if (it2 != joint.parameters.end())
+          {
+            states[index][i] = std::stod(it2->second);
+            RCUTILS_LOG_WARN_NAMED(
+              "fake_generic_system",
+              "The usage of initial_%s has been deprecated. Please use 'initial_value' instead.",
+              interface.name.c_str());
+          }
+        }
       }
     }
   }
