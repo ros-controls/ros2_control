@@ -458,10 +458,11 @@ void GenericSystem::initialize_storage_vectors(
   }
 }
 
+template <typename InterfaceType>
 bool GenericSystem::populate_interfaces(
   const std::vector<hardware_interface::ComponentInfo> & components,
   std::vector<std::string> & interface_names, std::vector<std::vector<double>> & storage,
-  auto & target_interfaces, bool using_state_interfaces)
+  std::vector<InterfaceType> & target_interfaces, bool using_state_interfaces)
 {
   for (auto i = 0u; i < components.size(); i++)
   {
