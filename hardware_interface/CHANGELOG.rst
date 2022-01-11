@@ -2,6 +2,12 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Removing 'auto' from function definition to support pre c++ 20 (`#608 <https://github.com/ros-controls/ros2_control/issues/608>`_)
+* Support of "initial_value" for the 'FakeSystem' (`#598 <https://github.com/ros-controls/ros2_control/issues/598>`_)
+* Contributors: bailaC, Denis Štogl
+
 2.0.0 (2021-12-29)
 ------------------
 * Adding support for 'initial_value' parameter. (`#593 <https://github.com/ros-controls/ros2_control/issues/593>`_)
