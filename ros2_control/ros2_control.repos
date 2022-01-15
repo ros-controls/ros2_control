@@ -15,7 +15,3 @@ repositories:
     type: git
     url: https://github.com/ros-controls/control_msgs.git
     version: galactic-devel
-  angles:
-    type: git
-    url: https://github.com/ros/angles.git
-    version: ros2
