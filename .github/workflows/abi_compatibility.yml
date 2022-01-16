@@ -1,6 +1,9 @@
-name: abi compatability check
+name: abi compatibility check
 on:
   pull_request:
+
+env:
+  ROS_DISTRO: foxy
 
 jobs:
   abi_check:
