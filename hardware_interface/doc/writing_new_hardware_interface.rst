@@ -51,7 +51,7 @@ The following is a step-by-step guide to create source files, basic tests, and c
 
    5. Implement ``on_cleanup`` method, which does the opposite of ``on_configure``.
 
-   6. Implement ``export_state_interfaces`` and ``export_command_interfaces`` where interfaces that hardware if offering are defined.
+   6. Implement ``export_state_interfaces`` and ``export_command_interfaces`` methods where interfaces that hardware offers are defined.
       For the ``Sensor``-type hardware interface there is no ``export_command_interfaces`` method.
       As a reminder, the full interface names have structure ``<joint_name>/<interface_type>``.
 
