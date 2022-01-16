@@ -8,7 +8,7 @@ on:
     # Run every morning to detect flakiness and broken dependencies
     - cron: '17 8 * * *'
 env:
-  ROS_DISTRO: galactic
+  ROS_DISTRO: foxy
 
 jobs:
   ci_binary:
@@ -16,13 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-<<<<<<< HEAD
-        env:
-          - {ROS_DISTRO: foxy, ROS_REPO: main}
-          - {ROS_DISTRO: foxy, ROS_REPO: testing}
-=======
           ROS_REPO: [main, testing]
->>>>>>> 6bc3da4 (ci: :construction_worker: Add ABI check to ros_indiustrial ci (#597))
     steps:
       - uses: actions/checkout@v2
       - uses: ros-industrial/industrial_ci@master
