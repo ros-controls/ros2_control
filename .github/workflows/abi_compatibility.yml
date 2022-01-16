@@ -1,18 +1,12 @@
-name: Build & Test ros2_control with binary install
+name: abi compatibility check
 on:
   pull_request:
-  push:
-    branches:
-      - master
-  schedule:
-    # Run every morning to detect flakiness and broken dependencies
-    - cron: '17 8 * * *'
+
 env:
   ROS_DISTRO: foxy
 
 jobs:
-  ci_binary:
-    name: Foxy binary job
+  abi_check:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -22,3 +16,5 @@ jobs:
       - uses: ros-industrial/industrial_ci@master
         env:
           ROS_REPO: ${{matrix.ROS_REPO}}
+          ABICHECK_URL: github:ros-controls/ros2_control#${{ github.base_ref }}
+          NOT_TEST_BUILD: true
