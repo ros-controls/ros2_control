@@ -2,6 +2,9 @@ name: abi compatibility check
 on:
   pull_request:
 
+env:
+  ROS_DISTRO: galactic
+
 jobs:
   abi_check:
     runs-on: ubuntu-latest
