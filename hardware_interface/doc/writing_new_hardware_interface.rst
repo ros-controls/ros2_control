@@ -70,13 +70,14 @@ The following is a step-by-step guide to create source files, basic tests, and c
    13. Implement ``write`` method that commands the hardware based on the values stored in internal variables defined in ``export_command_interfaces``.
 
    14. IMPORTANT: At the end of your file after the namespace is closed, add the ``PLUGINLIB_EXPORT_CLASS`` macro.
+
       For this you will need to include the ``"pluginlib/class_list_macros.hpp"`` header.
       As first parameters you should provide exact hardware interface class, e.g., ``<my_hardware_interface_package>::<RobotHardwareInterfaceName>``, and as second the base class, i.e., ``hardware_interface::(Actuator|Sensor|System)Interface``.
 
 5. **Writing export definition for pluginlib**
 
    1. Create the ``<my_hardware_interface_package>.xml`` file in the package and add a definition of the library and hardware interface's class which has to be visible for the pluginlib.
-      The easiest way to do that is to check definition for fake components in the `ros2_control <https://github.com/ros-controls/ros2_control/blob/master/hardware_interface/fake_components_plugin_description.xml>`_ package.
+      The easiest way to do that is to check definition for fake components in the `hardware_interface fake_components <https://github.com/ros-controls/ros2_control/blob/master/hardware_interface/fake_components_plugin_description.xml>`_ section.
 
    2. Usually, the plugin name is defined by the package (namespace) and the class name, e.g.,
       ``<my_hardware_interface_package>/<RobotHardwareInterfaceName>``.
