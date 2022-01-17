@@ -6,6 +6,14 @@ Hardware components represent abstraction of physical hardware in ros2_control f
 There are three types of hardware Actuator, Sensor and System.
 For details on each type check `Hardware Components description <https://ros-controls.github.io/control.ros.org/getting_started.html#hardware-components>`_.
 
+Guidelines and Best Practices
+*****************************
+
+.. toctree::
+   :titlesonly:
+
+   Writing a Hardware Interface <writing_new_hardware_interface.rst>
+
 
 Handling of errors that happen during read() and write() calls
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
