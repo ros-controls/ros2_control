@@ -15,7 +15,6 @@
 #ifndef HARDWARE_INTERFACE__RESOURCE_MANAGER_HPP_
 #define HARDWARE_INTERFACE__RESOURCE_MANAGER_HPP_
 
-#include <algorithm>
 #include <memory>
 #include <mutex>
 #include <string>

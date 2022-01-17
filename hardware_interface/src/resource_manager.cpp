@@ -35,20 +35,18 @@
 #include "pluginlib/class_loader.hpp"
 #include "rcutils/logging_macros.h"
 
-#define COMPONENT_NAME_COMPARE [&](const auto & name) { return name == component.get_name(); }
-#define COMPONENT_NAME_COMPARE_INV \
-  [&](const auto & component) { return component.get_name() == component_name; }
-
 namespace hardware_interface
 {
-auto trigger_hardware_state_transition =
+auto trigger_and_print_hardware_state_transition =
   [](
     auto transition, const std::string transition_name, const std::string & hardware_name,
     const lifecycle_msgs::msg::State::_id_type & target_state) {
     RCUTILS_LOG_INFO_NAMED(
       "resource_manager", "'%s' hardware '%s' ", transition_name.c_str(), hardware_name.c_str());
 
-    bool result = transition().id() == target_state;
+    const rclcpp_lifecycle::State new_state = transition();
+
+    bool result = new_state.id() == target_state;
 
     if (result)
     {
@@ -109,8 +107,9 @@ public:
     RCUTILS_LOG_INFO_NAMED(
       "resource_manager", "Initialize hardware '%s' ", hardware_info.name.c_str());
 
-    bool result = hardware.initialize(hardware_info).id() ==
-                  lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED;
+    const rclcpp_lifecycle::State new_state = hardware.initialize(hardware_info);
+
+    bool result = new_state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED;
 
     if (result)
     {
@@ -129,7 +128,7 @@ public:
   template <class HardwareT>
   bool configure_hardware(HardwareT & hardware)
   {
-    bool result = trigger_hardware_state_transition(
+    bool result = trigger_and_print_hardware_state_transition(
       std::bind(&HardwareT::configure, &hardware), "configure", hardware.get_name(),
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
 
@@ -150,8 +149,7 @@ public:
         if (found_it == available_state_interfaces_.end())
         {
           available_state_interfaces_.emplace_back(interface);
-          // TODO(destogl): change output to debug
-          RCUTILS_LOG_INFO_NAMED(
+          RCUTILS_LOG_DEBUG_NAMED(
             "resource_manager", "(hardware '%s'): '%s' state interface added into available list",
             hardware.get_name().c_str(), interface.c_str());
         }
@@ -171,15 +169,13 @@ public:
       for (const auto & interface : hardware_info_map_[hardware.get_name()].command_interfaces)
       {
         // TODO(destogl): check if interface should be available on configure
-
         auto found_it = std::find(
           available_command_interfaces_.begin(), available_command_interfaces_.end(), interface);
 
         if (found_it == available_command_interfaces_.end())
         {
           available_command_interfaces_.emplace_back(interface);
-          // TODO(destogl): change output to debug
-          RCUTILS_LOG_INFO_NAMED(
+          RCUTILS_LOG_DEBUG_NAMED(
             "resource_manager", "(hardware '%s'): '%s' command interface added into available list",
             hardware.get_name().c_str(), interface.c_str());
         }
@@ -201,13 +197,12 @@ public:
   template <class HardwareT>
   bool cleanup_hardware(HardwareT & hardware)
   {
-    bool result = trigger_hardware_state_transition(
+    bool result = trigger_and_print_hardware_state_transition(
       std::bind(&HardwareT::cleanup, &hardware), "cleanup", hardware.get_name(),
       lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
 
     if (result)
     {
-      // TODO(destogl): see comment in "configure_hardware"
       // remove all command interfaces from available list
       for (const auto & interface : hardware_info_map_[hardware.get_name()].command_interfaces)
       {
@@ -217,8 +212,7 @@ public:
         if (found_it != available_command_interfaces_.end())
         {
           available_command_interfaces_.erase(found_it);
-          // TODO(destogl): change output to debug
-          RCUTILS_LOG_INFO_NAMED(
+          RCUTILS_LOG_DEBUG_NAMED(
             "resource_manager", "(hardware '%s'): '%s' command removed from available list",
             hardware.get_name().c_str(), interface.c_str());
         }
@@ -242,8 +236,7 @@ public:
         if (found_it != available_state_interfaces_.end())
         {
           available_state_interfaces_.erase(found_it);
-          // TODO(destogl): change output to debug
-          RCUTILS_LOG_INFO_NAMED(
+          RCUTILS_LOG_DEBUG_NAMED(
             "resource_manager", "(hardware '%s'): '%s' state interface removed from available list",
             hardware.get_name().c_str(), interface.c_str());
         }
@@ -265,7 +258,7 @@ public:
   template <class HardwareT>
   bool shutdown_hardware(HardwareT & hardware)
   {
-    bool result = trigger_hardware_state_transition(
+    bool result = trigger_and_print_hardware_state_transition(
       std::bind(&HardwareT::shutdown, &hardware), "shutdown", hardware.get_name(),
       lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
 
@@ -281,14 +274,13 @@ public:
   template <class HardwareT>
   bool activate_hardware(HardwareT & hardware)
   {
-    bool result = trigger_hardware_state_transition(
+    bool result = trigger_and_print_hardware_state_transition(
       std::bind(&HardwareT::activate, &hardware), "activate", hardware.get_name(),
       lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
 
     if (result)
     {
-      // TODO(destogl): make all command interfaces available (currently are
-      // all available)
+      // TODO(destogl): make all command interfaces available (currently are all available)
     }
 
     return result;
@@ -297,7 +289,7 @@ public:
   template <class HardwareT>
   bool deactivate_hardware(HardwareT & hardware)
   {
-    bool result = trigger_hardware_state_transition(
+    bool result = trigger_and_print_hardware_state_transition(
       std::bind(&HardwareT::deactivate, &hardware), "deactivate", hardware.get_name(),
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
 
@@ -513,7 +505,6 @@ public:
   std::vector<std::string> available_state_interfaces_;
   std::vector<std::string> available_command_interfaces_;
 
-  // TODO(destogl): Should we store this in a vector? It could make the access faster
   /// List of all claimed command interfaces
   std::unordered_map<std::string, bool> claimed_command_interface_map_;
 };
@@ -881,7 +872,7 @@ return_type ResourceManager::set_component_state(
 
   auto find_set_component_state = [&](auto action, auto & components) {
     auto found_component_it =
-      std::find_if(components.begin(), components.end(), COMPONENT_NAME_COMPARE_INV);
+          std::find_if(components.begin(), components.end(), [&](const auto & component) { return component.get_name() == component_name; });
 
     if (found_component_it != components.end())
     {

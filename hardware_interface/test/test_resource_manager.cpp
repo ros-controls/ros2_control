@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Authors: Karsten Kneese, Denis Stogl
+// Authors: Karsten Knese, Denis Stogl
 
 #include <gmock/gmock.h>
 
@@ -446,7 +446,6 @@ TEST_F(TestResourceManager, resource_status)
   check_interfaces(
     status_map[TEST_ACTUATOR_HARDWARE_NAME].state_interfaces,
     TEST_ACTUATOR_HARDWARE_STATE_INTERFACES);
-  // TODO(destogl) we allow unlisted interfaces.... Is this OK? (@bmagyar)
   EXPECT_NE(
     std::find(
       status_map[TEST_ACTUATOR_HARDWARE_NAME].state_interfaces.begin(),
