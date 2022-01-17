@@ -683,35 +683,14 @@ bool ResourceManager::command_interface_is_available(const std::string & name) c
            name) != resource_storage_->available_command_interfaces_.end();
 }
 
-// TODO(destogl): This is only used in tests... should we check how to replace it?
-void ResourceManager::import_component(std::unique_ptr<ActuatorInterface> actuator)
-{
-  resource_storage_->actuators_.emplace_back(Actuator(std::move(actuator)));
-  resource_storage_->import_state_interfaces(resource_storage_->actuators_.back());
-  resource_storage_->import_command_interfaces(resource_storage_->actuators_.back());
-}
-
 size_t ResourceManager::actuator_components_size() const
 {
   return resource_storage_->actuators_.size();
 }
 
-void ResourceManager::import_component(std::unique_ptr<SensorInterface> sensor)
-{
-  resource_storage_->sensors_.emplace_back(Sensor(std::move(sensor)));
-  resource_storage_->import_state_interfaces(resource_storage_->sensors_.back());
-}
-
 size_t ResourceManager::sensor_components_size() const
 {
   return resource_storage_->sensors_.size();
-}
-
-void ResourceManager::import_component(std::unique_ptr<SystemInterface> system)
-{
-  resource_storage_->systems_.emplace_back(System(std::move(system)));
-  resource_storage_->import_state_interfaces(resource_storage_->systems_.back());
-  resource_storage_->import_command_interfaces(resource_storage_->systems_.back());
 }
 
 void ResourceManager::import_component(

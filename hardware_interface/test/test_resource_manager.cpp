@@ -299,9 +299,10 @@ TEST_F(TestResourceManager, post_initialization_add_components)
   ASSERT_EQ(11u, rm.state_interface_keys().size());
   ASSERT_EQ(6u, rm.command_interface_keys().size());
 
-  rm.import_component(std::make_unique<ExternalComponent>());
-  //   rm.configure_components({"ExternalComponent"});
-  //   rm.activate_components({"ExternalComponent"});
+  hardware_interface::HardwareInfo external_component_hw_info;
+  external_component_hw_info.name = "ExternalComponent";
+  external_component_hw_info.type = "actuator";
+  rm.import_component(std::make_unique<ExternalComponent>(), external_component_hw_info);
   EXPECT_EQ(2u, rm.actuator_components_size());
 
   ASSERT_EQ(12u, rm.state_interface_keys().size());
@@ -309,12 +310,19 @@ TEST_F(TestResourceManager, post_initialization_add_components)
   ASSERT_EQ(7u, rm.command_interface_keys().size());
   EXPECT_TRUE(rm.command_interface_exists("external_joint/external_command_interface"));
 
-  // TODO(destogl): repair this test!
-  // It fails because interfaces are not in available lists
-  // Also the test doesn't make any sense because we should never add a component like this,
-  // but through using URDF description
-  //   EXPECT_NO_THROW(rm.claim_state_interface("external_joint/external_state_interface"));
-  //   EXPECT_NO_THROW(rm.claim_command_interface("external_joint/external_command_interface"));
+  auto status_map = rm.get_components_status();
+  EXPECT_EQ(status_map["ExternalComponent"].state.id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+
+  configure_components(rm, {"ExternalComponent"});
+  status_map = rm.get_components_status();
+  EXPECT_EQ(status_map["ExternalComponent"].state.id(), lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+
+  activate_components(rm, {"ExternalComponent"});
+  status_map = rm.get_components_status();
+  EXPECT_EQ(status_map["ExternalComponent"].state.id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+
+  EXPECT_NO_THROW(rm.claim_state_interface("external_joint/external_state_interface"));
+  EXPECT_NO_THROW(rm.claim_command_interface("external_joint/external_command_interface"));
 }
 
 TEST_F(TestResourceManager, default_prepare_perform_switch)
