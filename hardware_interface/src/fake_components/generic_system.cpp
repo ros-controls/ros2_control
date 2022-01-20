@@ -224,7 +224,7 @@ std::vector<hardware_interface::StateInterface> GenericSystem::export_state_inte
     const auto & joint = info_.joints[i];
     for (const auto & interface : joint.state_interfaces)
     {
-      // Add interface: if not in the standard list than use "other" interface list
+      // Add interface: if not in the standard list then use "other" interface list
       if (!get_interface(
             joint.name, standard_interfaces_, interface.name, i, joint_states_, state_interfaces))
       {
@@ -451,6 +451,13 @@ void GenericSystem::initialize_storage_vectors(
               "fake_generic_system",
               "The usage of initial_%s has been deprecated. Please use 'initial_value' instead.",
               interface.name.c_str());
+          }
+          else
+          {
+            RCUTILS_LOG_WARN_NAMED(
+              "fake_generic_system",
+              "Parsing of initial interface values failed. Please check that all interfaces have "
+              "an initial value defined in the ros2_control.xacro and that it is formatted well.");
           }
         }
       }
