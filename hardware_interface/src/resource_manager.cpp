@@ -850,8 +850,9 @@ return_type ResourceManager::set_component_state(
   }
 
   auto find_set_component_state = [&](auto action, auto & components) {
-    auto found_component_it =
-          std::find_if(components.begin(), components.end(), [&](const auto & component) { return component.get_name() == component_name; });
+    auto found_component_it = std::find_if(
+      components.begin(), components.end(),
+      [&](const auto & component) { return component.get_name() == component_name; });
 
     if (found_component_it != components.end())
     {

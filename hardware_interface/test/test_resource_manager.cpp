@@ -311,15 +311,19 @@ TEST_F(TestResourceManager, post_initialization_add_components)
   EXPECT_TRUE(rm.command_interface_exists("external_joint/external_command_interface"));
 
   auto status_map = rm.get_components_status();
-  EXPECT_EQ(status_map["ExternalComponent"].state.id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  EXPECT_EQ(
+    status_map["ExternalComponent"].state.id(),
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
 
   configure_components(rm, {"ExternalComponent"});
   status_map = rm.get_components_status();
-  EXPECT_EQ(status_map["ExternalComponent"].state.id(), lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+  EXPECT_EQ(
+    status_map["ExternalComponent"].state.id(), lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
 
   activate_components(rm, {"ExternalComponent"});
   status_map = rm.get_components_status();
-  EXPECT_EQ(status_map["ExternalComponent"].state.id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+  EXPECT_EQ(
+    status_map["ExternalComponent"].state.id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
 
   EXPECT_NO_THROW(rm.claim_state_interface("external_joint/external_state_interface"));
   EXPECT_NO_THROW(rm.claim_command_interface("external_joint/external_command_interface"));
