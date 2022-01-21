@@ -64,6 +64,12 @@ class TestActuator : public ActuatorInterface
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
       info_.joints[0].name, info_.joints[0].command_interfaces[0].name, &velocity_command_));
 
+    if (info_.joints[0].command_interfaces.size() > 1)
+    {
+      command_interfaces.emplace_back(hardware_interface::CommandInterface(
+        info_.joints[0].name, info_.joints[0].command_interfaces[1].name, &max_velocity_command_));
+    }
+
     return command_interfaces;
   }
 
@@ -75,6 +81,7 @@ private:
   double position_state_ = 0.0;
   double velocity_state_ = 0.0;
   double velocity_command_ = 0.0;
+  double max_velocity_command_ = 0.0;
 };
 
 #include "pluginlib/class_list_macros.hpp"  // NOLINT

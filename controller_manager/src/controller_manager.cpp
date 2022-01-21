@@ -92,6 +92,8 @@ ControllerManager::ControllerManager(
   loader_(std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
     kControllerInterfaceName, kControllerInterface))
 {
+  resource_manager_->start_components();
+
   init_services();
 }
 
@@ -444,7 +446,7 @@ controller_interface::return_type ControllerManager::switch_controller(
     std::vector<std::string> command_interface_names = {};
     if (command_interface_config.type == controller_interface::interface_configuration_type::ALL)
     {
-      command_interface_names = resource_manager_->command_interface_keys();
+      command_interface_names = resource_manager_->available_command_interfaces();
     }
     if (
       command_interface_config.type ==
@@ -590,7 +592,7 @@ controller_interface::return_type ControllerManager::switch_controller(
       auto command_interface_config = controller.c->command_interface_configuration();
       if (command_interface_config.type == controller_interface::interface_configuration_type::ALL)
       {
-        controller.info.claimed_interfaces = resource_manager_->command_interface_keys();
+        controller.info.claimed_interfaces = resource_manager_->available_command_interfaces();
       }
       if (
         command_interface_config.type ==
@@ -758,7 +760,7 @@ void ControllerManager::start_controllers()
     std::vector<std::string> command_interface_names = {};
     if (command_interface_config.type == controller_interface::interface_configuration_type::ALL)
     {
-      command_interface_names = resource_manager_->command_interface_keys();
+      command_interface_names = resource_manager_->available_command_interfaces();
     }
     if (
       command_interface_config.type ==
@@ -802,7 +804,7 @@ void ControllerManager::start_controllers()
     std::vector<std::string> state_interface_names = {};
     if (state_interface_config.type == controller_interface::interface_configuration_type::ALL)
     {
-      state_interface_names = resource_manager_->state_interface_keys();
+      state_interface_names = resource_manager_->available_state_interfaces();
     }
     if (
       state_interface_config.type == controller_interface::interface_configuration_type::INDIVIDUAL)
@@ -1171,6 +1173,7 @@ void ControllerManager::list_hardware_interfaces_srv_cb(
   {
     controller_manager_msgs::msg::HardwareInterface hwi;
     hwi.name = state_interface_name;
+    hwi.is_available = resource_manager_->state_interface_is_available(state_interface_name);
     hwi.is_claimed = false;
     response->state_interfaces.push_back(hwi);
   }
@@ -1179,6 +1182,7 @@ void ControllerManager::list_hardware_interfaces_srv_cb(
   {
     controller_manager_msgs::msg::HardwareInterface hwi;
     hwi.name = command_interface_name;
+    hwi.is_available = resource_manager_->command_interface_is_available(command_interface_name);
     hwi.is_claimed = resource_manager_->command_interface_is_claimed(command_interface_name);
     response->command_interfaces.push_back(hwi);
   }
