@@ -454,10 +454,11 @@ void GenericSystem::initialize_storage_vectors(
           }
           else
           {
-            RCUTILS_LOG_WARN_NAMED(
+            RCUTILS_LOG_WARN_ONCE_NAMED(
               "fake_generic_system",
-              "Parsing of initial interface values failed. Please check that all interfaces have "
-              "an initial value defined in the ros2_control.xacro and that it is formatted well.");
+              "Parsing of optional initial interface values failed. Add initial values for every "
+              "state interface in the ros2_control.xacro like: \n"
+              "<param name=\"initial_position\">1.57</param>");
           }
         }
       }
