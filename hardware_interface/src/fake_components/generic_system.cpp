@@ -460,8 +460,7 @@ void GenericSystem::initialize_storage_vectors(
               "state interface in the ros2_control.xacro like: \n"
               "<state_interface name=\"position\"> \n"
               "  <param name=\"initial_value\">0.0</param> \n"
-              "</state_interface> \n"
-              );
+              "</state_interface> \n");
           }
         }
       }
