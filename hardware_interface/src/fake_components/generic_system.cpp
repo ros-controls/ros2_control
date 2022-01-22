@@ -458,7 +458,10 @@ void GenericSystem::initialize_storage_vectors(
               "fake_generic_system",
               "Parsing of optional initial interface values failed. Add initial values for every "
               "state interface in the ros2_control.xacro like: \n"
-              "<param name=\"initial_position\">1.57</param>");
+              "<state_interface name=\"position\"> \n"
+              "  <param name=\"initial_value\">0.0</param> \n"
+              "</state_interface> \n"
+              );
           }
         }
       }
