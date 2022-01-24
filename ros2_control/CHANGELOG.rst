@@ -2,6 +2,12 @@
 Changelog for package ros2_control
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Use correct ros-controls/realtime_tools branch (`#619 <https://github.com/ros-controls/ros2_control/issues/619>`_)
+* No need to get angles from source anymore, causes issues now (`#616 <https://github.com/ros-controls/ros2_control/issues/616>`_)
+* Contributors: Bence Magyar, Melvin Wang
+
 2.1.0 (2022-01-11)
 ------------------
 
