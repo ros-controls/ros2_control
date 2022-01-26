@@ -1,0 +1,56 @@
+name: Foxy Binary Build
+on:
+  pull_request:
+    branches:
+      - foxy
+  push:
+    branches:
+      - foxy
+  schedule:
+    # Run every day to detect flakiness and broken dependencies
+    - cron: '03 1 * * *'
+
+jobs:
+  foxy_binary:
+    name: foxy binary build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        env:
+          - {ROS_DISTRO: foxy, ROS_REPO: main}
+          - {ROS_DISTRO: foxy, ROS_REPO: testing}
+    env:
+      UPSTREAM_WORKSPACE: ros2_control-not-released.${{ matrix.env.ROS_DISTRO }}.repos
+      CCACHE_DIR: ${{ github.workspace }}/.ccache
+      BASEDIR: ${{ github.workspace }}/.work
+      CACHE_PREFIX: ${{ matrix.env.ROS_DISTRO }}-${{ matrix.env.ROS_REPO }}-binary
+    steps:
+      - uses: actions/checkout@v2
+      # The target directory cache doesn't include the source directory because
+      # that comes from the checkout.  See "prepare target_ws for cache" task below
+      - name: cache target_ws
+        if: ${{ ! matrix.env.CCOV }}
+        uses: pat-s/always-upload-cache@v2.1.5
+        with:
+          path: ${{ env.BASEDIR }}/target_ws
+          key: target_ws-${{ env.CACHE_PREFIX }}-${{ hashFiles('**/CMakeLists.txt', '**/package.xml') }}-${{ github.run_id }}
+          restore-keys: |
+            target_ws-${{ env.CACHE_PREFIX }}-${{ hashFiles('**/CMakeLists.txt', '**/package.xml') }}
+      - name: cache ccache
+        uses: pat-s/always-upload-cache@v2.1.5
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-${{ env.CACHE_PREFIX }}-${{ github.sha }}-${{ github.run_id }}
+          restore-keys: |
+            ccache-${{ env.CACHE_PREFIX }}-${{ github.sha }}
+            ccache-${{ env.CACHE_PREFIX }}
+      - uses: 'ros-industrial/industrial_ci@master'
+        with:
+          config: ${{toJSON(matrix.env)}}
+      - name: prepare target_ws for cache
+        if: ${{ always() && ! matrix.env.CCOV }}
+        run: |
+          du -sh ${{ env.BASEDIR }}/target_ws
+          sudo find ${{ env.BASEDIR }}/target_ws -wholename '*/test_results/*' -delete
+          sudo rm -rf ${{ env.BASEDIR }}/target_ws/src
+          du -sh ${{ env.BASEDIR }}/target_ws

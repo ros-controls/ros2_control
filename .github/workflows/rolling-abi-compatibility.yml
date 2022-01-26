@@ -1,0 +1,20 @@
+name: ABI Compatibility Check
+on:
+  pull_request:
+
+jobs:
+  abi_check:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        env:
+          - {ROS_DISTRO: rolling, ROS_REPO: main}
+          - {ROS_DISTRO: rolling, ROS_REPO: testing}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ros-industrial/industrial_ci@master
+        with:
+          config: ${{toJSON(matrix.env)}}
+        env:
+          ABICHECK_URL: github:${{ github.repository }}#${{ github.base_ref }}
+          NOT_TEST_BUILD: true

@@ -1,0 +1,31 @@
+name: Galactic RHEL Binary Build
+on:
+  pull_request:
+    branches:
+      - galactic
+  push:
+    branches:
+      - galactic
+  schedule:
+    # Run every day to detect flakiness and broken dependencies
+    - cron: '03 1 * * *'
+
+env:
+  # if changing this variable, also change jobs.RHEL.container to match
+  ROS_DISTRO: galactic
+
+jobs:
+  galactic_rhel_binary:
+    name: Galactic RHEL binary build
+    runs-on: ubuntu-latest
+    container: jaronl/ros:galactic-alma
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          path: src/ros2_controllers
+      - run: |
+          rosdep update
+          rosdep install -iy --from-path src/ros2_controllers
+          source /opt/ros/$ROS_DISTRO/setup.bash
+          colcon build
+          colcon test

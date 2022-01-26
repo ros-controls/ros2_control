@@ -19,7 +19,7 @@ jobs:
     - uses: actions/setup-python@v2
       with:
         python-version: 3.9.7
-    - name: Install clang-format-10
+    - name: Install system hooks
       run: sudo apt-get install clang-format-10 cppcheck
     - uses: pre-commit/action@v2.0.3
       with:

@@ -16,7 +16,7 @@
 repos:
   # Standard hooks
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v3.4.0
+    rev: v4.1.0
     hooks:
       - id: check-added-large-files
       - id: check-ast
@@ -36,7 +36,7 @@ repos:
 
   # Python hooks
   - repo: https://github.com/asottile/pyupgrade
-    rev: v2.12.0
+    rev: v2.31.0
     hooks:
     -   id: pyupgrade
         args: [--py36-plus]
@@ -49,7 +49,7 @@ repos:
       args: ["--ignore=D100,D101,D102,D103,D104,D105,D106,D107,D203,D212,D404"]
 
   - repo: https://github.com/pycqa/flake8
-    rev: 3.9.0
+    rev: 4.0.1
     hooks:
     - id: flake8
       args: ["--extend-ignore=E501"]
@@ -110,14 +110,14 @@ repos:
 
   # Docs - RestructuredText hooks
   - repo: https://github.com/PyCQA/doc8
-    rev: 0.9.0a1
+    rev: 0.10.1
     hooks:
       - id: doc8
         args: ['--max-line-length=100', '--ignore=D001']
         exclude: CHANGELOG\.rst$
 
   - repo: https://github.com/pre-commit/pygrep-hooks
-    rev: v1.8.0
+    rev: v1.9.0
     hooks:
       - id: rst-backticks
         exclude: CHANGELOG\.rst$
@@ -127,7 +127,7 @@ repos:
   # Spellcheck in comments and docs
   # skipping of *.svg files is not working...
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.0.0
+    rev: v2.1.0
     hooks:
       - id: codespell
         args: ['--write-changes']
