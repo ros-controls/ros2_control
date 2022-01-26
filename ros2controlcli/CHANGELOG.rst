@@ -2,6 +2,15 @@
 Changelog for package ros2controlcli
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.2.0 (2022-01-24)
+------------------
+
+2.1.0 (2022-01-11)
+------------------
+
+2.0.0 (2021-12-29)
+------------------
+
 1.2.0 (2021-11-05)
 ------------------
 * Add verbose flag to CLI command list_controllers (`#569 <https://github.com/ros-controls/ros2_control/issues/569>`_)

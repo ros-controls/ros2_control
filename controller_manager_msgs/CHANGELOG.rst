@@ -2,6 +2,17 @@
 Changelog for package controller_manager_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.2.0 (2022-01-24)
+------------------
+
+2.1.0 (2022-01-11)
+------------------
+
+2.0.0 (2021-12-29)
+------------------
+* Add service-skeletons for controlling hardware lifecycle. (`#585 <https://github.com/ros-controls/ros2_control/issues/585>`_)
+* Contributors: Denis Štogl
+
 1.2.0 (2021-11-05)
 ------------------
 

@@ -13,6 +13,9 @@
 This package is a part of the ros2_control framework.
 For more, please check the [documentation](https://ros-controls.github.io/control.ros.org/).
 
+## Docker images
+There are a few published docker images that come with the latest releases. More information about them can be found in the `.docker` folder. You can pull them under these tags: `ghcr.io/ros-controls/ros2_control_release` or `ghcr.io/ros-controls/ros2_control_source`.
+
 ## Acknowledgements
 
 <a href="http://rosin-project.eu">

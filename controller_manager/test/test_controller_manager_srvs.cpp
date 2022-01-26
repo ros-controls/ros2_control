@@ -130,7 +130,7 @@ TEST_F(TestControllerManagerSrvs, list_controllers_srv)
   auto abstract_test_controller = cm_->add_controller(
     test_controller, test_controller::TEST_CONTROLLER_NAME,
     test_controller::TEST_CONTROLLER_CLASS_NAME);
-  EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
+  ASSERT_EQ(1u, cm_->get_loaded_controllers().size());
   result = call_service_and_wait(*client, request, srv_executor);
   ASSERT_EQ(1u, result->controller.size());
   ASSERT_EQ(test_controller::TEST_CONTROLLER_NAME, result->controller[0].name);
@@ -201,16 +201,20 @@ TEST_F(TestControllerManagerSrvs, list_controllers_srv)
   ASSERT_EQ("active", result->controller[0].state);
   ASSERT_THAT(
     result->controller[0].claimed_interfaces,
-    testing::ElementsAre("joint1/position", "joint2/velocity", "joint3/velocity"));
+    testing::ElementsAre(
+      "joint1/position", "joint1/max_velocity", "joint2/velocity", "joint3/velocity",
+      "joint2/max_acceleration", "configuration/max_tcp_jerk"));
   ASSERT_THAT(
     result->controller[0].required_command_interfaces,
-    testing::ElementsAre("joint1/position", "joint2/velocity", "joint3/velocity"));
+    testing::ElementsAre(
+      "configuration/max_tcp_jerk", "joint1/max_velocity", "joint1/position",
+      "joint2/max_acceleration", "joint2/velocity", "joint3/velocity"));
   ASSERT_THAT(
     result->controller[0].required_state_interfaces,
     testing::ElementsAre(
-      "joint1/position", "joint1/some_unlisted_interface", "joint1/velocity", "joint2/acceleration",
-      "joint2/position", "joint2/velocity", "joint3/acceleration", "joint3/position",
-      "joint3/velocity", "sensor1/velocity"));
+      "configuration/max_tcp_jerk", "joint1/position", "joint1/some_unlisted_interface",
+      "joint1/velocity", "joint2/acceleration", "joint2/position", "joint2/velocity",
+      "joint3/acceleration", "joint3/position", "joint3/velocity", "sensor1/velocity"));
 
   cm_->switch_controller(
     {}, {test_controller::TEST_CONTROLLER_NAME},
@@ -222,13 +226,15 @@ TEST_F(TestControllerManagerSrvs, list_controllers_srv)
   ASSERT_TRUE(result->controller[0].claimed_interfaces.empty());
   ASSERT_THAT(
     result->controller[0].required_command_interfaces,
-    testing::ElementsAre("joint1/position", "joint2/velocity", "joint3/velocity"));
+    testing::ElementsAre(
+      "configuration/max_tcp_jerk", "joint1/max_velocity", "joint1/position",
+      "joint2/max_acceleration", "joint2/velocity", "joint3/velocity"));
   ASSERT_THAT(
     result->controller[0].required_state_interfaces,
     testing::ElementsAre(
-      "joint1/position", "joint1/some_unlisted_interface", "joint1/velocity", "joint2/acceleration",
-      "joint2/position", "joint2/velocity", "joint3/acceleration", "joint3/position",
-      "joint3/velocity", "sensor1/velocity"));
+      "configuration/max_tcp_jerk", "joint1/position", "joint1/some_unlisted_interface",
+      "joint1/velocity", "joint2/acceleration", "joint2/position", "joint2/velocity",
+      "joint3/acceleration", "joint3/position", "joint3/velocity", "sensor1/velocity"));
 
   ASSERT_EQ(
     controller_interface::return_type::OK,

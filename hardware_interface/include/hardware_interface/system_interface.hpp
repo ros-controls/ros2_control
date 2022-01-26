@@ -73,7 +73,7 @@ public:
   {
   }
 
-  /// SensorInterface copy constructor is actively deleted.
+  /// SystemInterface copy constructor is actively deleted.
   /**
    * Hardware interfaces are having a unique ownership and thus can't be copied in order to avoid
    * failed or simultaneous access to hardware.
