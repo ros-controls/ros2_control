@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       ROS_DISTRO: rolling
-    container: jaronl/ros:rolling-alma
+    container: jaronl/ros:galactic-alma
     steps:
       - uses: actions/checkout@v2
         with:
