@@ -10,22 +10,20 @@ on:
     # Run every day to detect flakiness and broken dependencies
     - cron: '03 1 * * *'
 
-env:
-  # if changing this variable, also change jobs.RHEL.container to match
-  ROS_DISTRO: rolling
-
 jobs:
   rolling_rhel_binary:
     name: Rolling RHEL binary build
     runs-on: ubuntu-latest
-    container: jaronl/ros:rolling-alma
+    env:
+      ROS_DISTRO: rolling
+    container: jaronl/ros:${{ env.ROS_DISTRO }}-alma
     steps:
       - uses: actions/checkout@v2
         with:
-          path: src/ros2_controllers
+          path: src/ros2_control
       - run: |
           rosdep update
-          rosdep install -iy --from-path src/ros2_controllers
-          source /opt/ros/$ROS_DISTRO/setup.bash
+          rosdep install -iy --from-path src/ros2_control
+          source /opt/ros/${{ env.ROS_DISTRO }}/setup.bash
           colcon build
           colcon test
