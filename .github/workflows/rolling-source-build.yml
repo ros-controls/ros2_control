@@ -24,10 +24,17 @@ jobs:
           target-ros2-distro: ${{ env.ROS_DISTRO }}
           # build all packages listed in the meta package
           package-name:
-            $PKG_NAME$
+            controller_interface
+            controller_manager
+            controller_manager_msgs
+            hardware_interface
+            ros2controlcli
+            ros2_control
+            ros2_control_test_assets
+            transmission_interface
           vcs-repo-file-url: |
             https://raw.githubusercontent.com/ros2/ros2/master/ros2.repos
-            https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/ros2_control.repos
+            https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/ros2_control.${{ env.ROS_DISTRO }}.repos?token=${{ secrets.GITHUB_TOKEN }}
           colcon-mixin-repository: https://raw.githubusercontent.com/colcon/colcon-mixin-repository/master/index.yaml
       - uses: actions/upload-artifact@v1
         with:
@@ -50,10 +57,17 @@ jobs:
           target-ros2-distro: ${{ env.ROS_DISTRO }}
           # build all packages listed in the meta package
           package-name:
-            $PKG_NAME$
+            controller_interface
+            controller_manager
+            controller_manager_msgs
+            hardware_interface
+            ros2controlcli
+            ros2_control
+            ros2_control_test_assets
+            transmission_interface
           vcs-repo-file-url: |
             https://raw.githubusercontent.com/ros2/ros2/master/ros2.repos
-            https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/ros2_control.repos
+            https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/ros2_control.${{ env.ROS_DISTRO }}.repos?token=${{ secrets.GITHUB_TOKEN }}
           colcon-mixin-repository: https://raw.githubusercontent.com/colcon/colcon-mixin-repository/master/index.yaml
       - uses: actions/upload-artifact@v1
         with:
