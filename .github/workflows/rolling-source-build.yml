@@ -27,7 +27,7 @@ jobs:
             $PKG_NAME$
           vcs-repo-file-url: |
             https://raw.githubusercontent.com/ros2/ros2/master/ros2.repos
-            https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/ros2_control.repos?token=${{ secrets.GITHUB_TOKEN }}
+            https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/ros2_control.repos
           colcon-mixin-repository: https://raw.githubusercontent.com/colcon/colcon-mixin-repository/master/index.yaml
       - uses: actions/upload-artifact@v1
         with:
@@ -53,7 +53,7 @@ jobs:
             $PKG_NAME$
           vcs-repo-file-url: |
             https://raw.githubusercontent.com/ros2/ros2/master/ros2.repos
-            https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/ros2_control.repos?token=${{ secrets.GITHUB_TOKEN }}
+            https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/ros2_control.repos
           colcon-mixin-repository: https://raw.githubusercontent.com/colcon/colcon-mixin-repository/master/index.yaml
       - uses: actions/upload-artifact@v1
         with:

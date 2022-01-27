@@ -26,7 +26,7 @@ jobs:
           package-name:
             $PKG_NAME$
           vcs-repo-file-url: |
-            https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/ros2_control-not-released.${{ env.ROS_DISTRO }}.repos?token=${{ secrets.GITHUB_TOKEN }}
+            https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/ros2_control-not-released.${{ env.ROS_DISTRO }}.repos
           colcon-defaults: |
             {
               "build": {
