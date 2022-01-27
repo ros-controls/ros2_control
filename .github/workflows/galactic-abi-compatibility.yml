@@ -1,6 +1,8 @@
 name: ABI Compatibility Check
 on:
   pull_request:
+    branches:
+      - galactic
 
 jobs:
   abi_check:

@@ -1,6 +1,8 @@
 name: ABI Compatibility Check
 on:
   pull_request:
+    branches:
+      - foxy
 
 jobs:
   abi_check:
