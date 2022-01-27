@@ -224,7 +224,7 @@ std::vector<hardware_interface::StateInterface> GenericSystem::export_state_inte
     const auto & joint = info_.joints[i];
     for (const auto & interface : joint.state_interfaces)
     {
-      // Add interface: if not in the standard list than use "other" interface list
+      // Add interface: if not in the standard list then use "other" interface list
       if (!get_interface(
             joint.name, standard_interfaces_, interface.name, i, joint_states_, state_interfaces))
       {
@@ -423,6 +423,7 @@ void GenericSystem::initialize_storage_vectors(
   }
 
   // Initialize with values from URDF
+  bool print_hint = false;
   for (auto i = 0u; i < info_.joints.size(); i++)
   {
     const auto & joint = info_.joints[i];
@@ -447,14 +448,25 @@ void GenericSystem::initialize_storage_vectors(
           if (it2 != joint.parameters.end())
           {
             states[index][i] = std::stod(it2->second);
-            RCUTILS_LOG_WARN_NAMED(
-              "fake_generic_system",
-              "The usage of initial_%s has been deprecated. Please use 'initial_value' instead.",
-              interface.name.c_str());
+            print_hint = true;
+          }
+          else
+          {
+            print_hint = true;
           }
         }
       }
     }
+  }
+  if (print_hint)
+  {
+    RCUTILS_LOG_WARN_ONCE_NAMED(
+      "fake_generic_system",
+      "Parsing of optional initial interface values failed or uses a deprecated format. Add "
+      "initial values for every state interface in the ros2_control.xacro. For example: \n"
+      "<state_interface name=\"velocity\"> \n"
+      "  <param name=\"initial_value\">0.0</param> \n"
+      "</state_interface>");
   }
 }
 
