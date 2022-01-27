@@ -15,7 +15,7 @@ jobs:
     name: Rolling RHEL binary build
     runs-on: ubuntu-latest
     env:
-      ROS_DISTRO: rolling
+      ROS_DISTRO: galactic
     container: jaronl/ros:galactic-alma
     steps:
       - uses: actions/checkout@v2
