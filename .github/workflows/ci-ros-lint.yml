@@ -18,7 +18,14 @@ jobs:
         distribution: rolling
         linter: ${{ matrix.linter }}
         package-name:
-          $PKG_NAME$
+          controller_interface
+          controller_manager
+          controller_manager_msgs
+          hardware_interface
+          ros2controlcli
+          ros2_control
+          ros2_control_test_assets
+          transmission_interface
 
   ament_lint_100:
     name: ament_${{ matrix.linter }}
@@ -36,4 +43,11 @@ jobs:
         linter: cpplint
         arguments: "--linelength=100 --filter=-whitespace/newline"
         package-name:
+          controller_interface
+          controller_manager
+          controller_manager_msgs
+          hardware_interface
+          ros2controlcli
           ros2_control
+          ros2_control_test_assets
+          transmission_interface
