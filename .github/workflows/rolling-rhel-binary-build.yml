@@ -22,8 +22,8 @@ jobs:
         with:
           path: src/ros2_control
       - run: |
+          source /opt/ros/${{ env.ROS_DISTRO }}/setup.bash
           rosdep update
           rosdep install -iy --from-path src/ros2_control
-          source /opt/ros/${{ env.ROS_DISTRO }}/setup.bash
           colcon build
           colcon test
