@@ -27,6 +27,7 @@
 
 /// \author Adolfo Rodriguez Tsouroukdissian
 
+#include <exception>
 #include <string>
 #include <gtest/gtest.h>
 #include <pluginlib/class_loader.hpp>
@@ -48,7 +49,10 @@ struct TransmissionPluginLoader
     {
       return class_loader_.createUniqueInstance(type);
     }
-    catch(...) {return std::shared_ptr<TransmissionLoader>();}
+    catch(std::exception& ex) {
+      std::cout << ex.what() << std::endl;
+    
+    return std::shared_ptr<TransmissionLoader>();}
   }
 
 private:
@@ -175,7 +179,7 @@ TEST(SimpleTransmissionLoaderTest, FullSpec)
         <state_interface name="velocity"/>
       </joint>
       <transmission name="transmission1">
-        <plugin>transmission_interface/SimpleTansmission</plugin>
+        <plugin>transmission_interface/SimpleTransmission</plugin>
         <joint name="joint1" role="joint1">
           <mechanical_reduction>325.949</mechanical_reduction>
         </joint>
@@ -218,30 +222,86 @@ TEST(SimpleTransmissionLoaderTest, FullSpec)
 
   
   std::vector<HardwareInfo> infos = parse_control_resources_from_urdf(urdf_to_test);
-  //ASSERT_EQ(1lu, infos[0].transmissions.size());
+  ASSERT_EQ(1lu, infos[0].transmissions.size());
 
+  for (int i = 0; i < (int)infos.size(); ++i) {
+    for (int j = 0; j < (int)infos[i].transmissions.size(); ++j) {
+        std::cout << infos[i].transmissions[j].type << std::endl;
+    }
+  }
   // Transmission loader
   TransmissionPluginLoader loader;
   std::shared_ptr<TransmissionLoader> transmission_loader = loader.create(infos[0].transmissions[0].type);
   ASSERT_TRUE(nullptr != transmission_loader);
 
-  //std::shared_ptr<Transmission> transmission;
-  //const TransmissionInfo& info = infos[0].transmissions[0];
-  //transmission = transmission_loader->load(info);
-  //ASSERT_TRUE(nullptr != transmission);
-  //ASSERT_STREQ(infos[0].transmissions[0].joints[0].role.c_str(),"");
+  std::shared_ptr<Transmission> transmission;
+  const TransmissionInfo& info = infos[0].transmissions[0];
+  transmission = transmission_loader->load(info);
+  ASSERT_TRUE(nullptr != transmission);
+  ASSERT_STREQ(infos[0].transmissions[0].joints[0].role.c_str(),"joint1");
 
   // Validate transmission
-  //SimpleTransmission* simple_transmission = dynamic_cast<SimpleTransmission*>(transmission.get());
-  //ASSERT_TRUE(nullptr != simple_transmission);
-  //EXPECT_EQ(325.949, simple_transmission->get_actuator_reduction());
-  //EXPECT_EQ( 0.0, simple_transmission->get_joint_offset());
+  SimpleTransmission* simple_transmission = dynamic_cast<SimpleTransmission*>(transmission.get());
+  ASSERT_TRUE(nullptr != simple_transmission);
+  EXPECT_EQ(325.949, simple_transmission->get_actuator_reduction());
+  EXPECT_EQ( 0.0, simple_transmission->get_joint_offset());
 }
-/*
+
 TEST(SimpleTransmissionLoaderTest, MinimalSpec)
 {
+std::string urdf_to_test = R"(
+  <?xml version="1.0"?>
+
+<robot name="robot" xmlns="http://www.ros.org">
+  <ros2_control>
+  <transmission name="simple_trans">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="foo_joint">
+      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="foo_actuator">
+      <!--<mechanicalReduction>50</mechanicalReduction>--> <!--Unspecified element -->
+    </actuator>
+  </transmission>
+
+  <transmission name="simple_trans">
+    <type>transmission_interface/SimpleTransmission</type>
+    <transmissionInterface>transmission_interface/ActuatorToJointStateInterface</transmissionInterface>
+    <joint name="foo_joint">
+      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="foo_actuator">
+      <mechanicalReduction>fifty</mechanicalReduction> <!-- Not a number -->
+    </actuator>
+  </transmission>
+
+  <transmission name="simple_trans">
+    <type>transmission_interface/SimpleTransmission</type>
+    <transmissionInterface>transmission_interface/ActuatorToJointStateInterface</transmissionInterface>
+    <joint name="foo_joint">
+      <offset>zero</offset> <!-- Not a number -->
+      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="foo_actuator">
+      <mechanicalReduction>50</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+  <transmission name="simple_trans">
+    <type>transmission_interface/SimpleTransmission</type>
+    <transmissionInterface>transmission_interface/ActuatorToJointStateInterface</transmissionInterface>
+    <joint name="foo_joint">
+      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="foo_actuator">
+      <mechanicalReduction>0</mechanicalReduction> <!-- Invalid value -->
+    </actuator>
+  </transmission>
+  </ros2_control>
+</robot>
+)";
   // Parse transmission info
-  std::vector<HardwareInfo> infos = parse_control_resources_from_urdf("test/urdf/simple_transmission_loader_minimal.urdf");
+  std::vector<HardwareInfo> infos = parse_control_resources_from_urdf(urdf_to_test);
   ASSERT_EQ(1lu, infos[0].transmissions.size());
 
   // Transmission loader
@@ -261,6 +321,7 @@ TEST(SimpleTransmissionLoaderTest, MinimalSpec)
   EXPECT_EQ( 0.0, simple_transmission->get_joint_offset());
 }
 
+/*
 TEST(SimpleTransmissionLoaderTest, InvalidSpec)
 {
   // Parse transmission info

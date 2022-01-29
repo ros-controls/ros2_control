@@ -19,7 +19,9 @@ install(
 )
 
 
-add_library(transmission_interface
+add_library(transmission_interface SHARED
+  include/transmission_interface/transmission_loader.hpp
+  include/transmission_interface/simple_transmission_loader.hpp
   src/simple_transmission_loader.cpp
 )
 
@@ -36,6 +38,7 @@ ament_target_dependencies(
 pluginlib_export_plugin_description_file(transmission_interface ros2_control_plugins.xml)
 
 install(TARGETS transmission_interface
+  EXPORT export_${PROJECT_NAME}
   RUNTIME DESTINATION bin
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
@@ -89,5 +92,6 @@ ament_export_dependencies(
 ament_export_libraries(
   transmission_interface
 )
+
 
 ament_package()

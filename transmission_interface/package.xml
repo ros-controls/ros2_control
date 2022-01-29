@@ -13,7 +13,7 @@
   <depend>hardware_interface</depend>
   
   
-  <build_depend>pluginlib</build_depend>
+  <depend>pluginlib</depend>
 
   <test_depend>ament_cmake_gmock</test_depend>
   <test_depend>ament_lint_auto</test_depend>
