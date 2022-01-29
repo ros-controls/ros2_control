@@ -1,41 +1,26 @@
-///////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2013, PAL Robotics S.L.
+// Copyright 2022 PAL Robotics S.L.
 //
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are met:
-//   * Redistributions of source code must retain the above copyright notice,
-//     this list of conditions and the following disclaimer.
-//   * Redistributions in binary form must reproduce the above copyright
-//     notice, this list of conditions and the following disclaimer in the
-//     documentation and/or other materials provided with the distribution.
-//   * Neither the name of PAL Robotics S.L. nor the names of its
-//     contributors may be used to endorse or promote products derived from
-//     this software without specific prior written permission.
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
 //
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
-// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-// POSSIBILITY OF SUCH DAMAGE.
-//////////////////////////////////////////////////////////////////////////////
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-/// \author Adolfo Rodriguez Tsouroukdissian
-
-#include <exception>
-#include <string>
+#include "transmission_interface/simple_transmission_loader.hpp"
 #include <gtest/gtest.h>
+#include <exception>
 #include <pluginlib/class_loader.hpp>
-#include "hardware_interface/types/hardware_interface_type_values.hpp"
+#include <string>
 #include "hardware_interface/component_parser.hpp"
 #include "hardware_interface/hardware_info.hpp"
+#include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "transmission_interface/simple_transmission.hpp"
-#include "transmission_interface/simple_transmission_loader.hpp"
 #include "transmission_interface/transmission_loader.hpp"
 
 using namespace transmission_interface;
@@ -43,23 +28,25 @@ using namespace hardware_interface;
 
 struct TransmissionPluginLoader
 {
-  std::shared_ptr<TransmissionLoader> create(const std::string& type)
+  std::shared_ptr<TransmissionLoader> create(const std::string & type)
   {
     try
     {
       return class_loader_.createUniqueInstance(type);
     }
-    catch(std::exception& ex) {
+    catch (std::exception & ex)
+    {
       std::cout << ex.what() << std::endl;
-    
-    return std::shared_ptr<TransmissionLoader>();}
+
+      return std::shared_ptr<TransmissionLoader>();
+    }
   }
 
 private:
   //must keep it alive because instance destroyers need it
-  pluginlib::ClassLoader<TransmissionLoader> class_loader_ = {"transmission_interface", "transmission_interface::TransmissionLoader"};
+  pluginlib::ClassLoader<TransmissionLoader> class_loader_ = {
+    "transmission_interface", "transmission_interface::TransmissionLoader"};
 };
-
 
 TEST(SimpleTransmissionLoaderTest, FullSpec)
 {
@@ -220,85 +207,57 @@ TEST(SimpleTransmissionLoaderTest, FullSpec)
   </robot>
   )";
 
-  
   std::vector<HardwareInfo> infos = parse_control_resources_from_urdf(urdf_to_test);
   ASSERT_EQ(1lu, infos[0].transmissions.size());
 
-  for (int i = 0; i < (int)infos.size(); ++i) {
-    for (int j = 0; j < (int)infos[i].transmissions.size(); ++j) {
-        std::cout << infos[i].transmissions[j].type << std::endl;
+  for (int i = 0; i < (int)infos.size(); ++i)
+  {
+    for (int j = 0; j < (int)infos[i].transmissions.size(); ++j)
+    {
+      std::cout << infos[i].transmissions[j].type << std::endl;
     }
   }
   // Transmission loader
   TransmissionPluginLoader loader;
-  std::shared_ptr<TransmissionLoader> transmission_loader = loader.create(infos[0].transmissions[0].type);
+  std::shared_ptr<TransmissionLoader> transmission_loader =
+    loader.create(infos[0].transmissions[0].type);
   ASSERT_TRUE(nullptr != transmission_loader);
 
   std::shared_ptr<Transmission> transmission;
-  const TransmissionInfo& info = infos[0].transmissions[0];
+  const TransmissionInfo & info = infos[0].transmissions[0];
   transmission = transmission_loader->load(info);
   ASSERT_TRUE(nullptr != transmission);
-  ASSERT_STREQ(infos[0].transmissions[0].joints[0].role.c_str(),"joint1");
+  ASSERT_STREQ(infos[0].transmissions[0].joints[0].role.c_str(), "joint1");
 
   // Validate transmission
-  SimpleTransmission* simple_transmission = dynamic_cast<SimpleTransmission*>(transmission.get());
+  SimpleTransmission * simple_transmission = dynamic_cast<SimpleTransmission *>(transmission.get());
   ASSERT_TRUE(nullptr != simple_transmission);
   EXPECT_EQ(325.949, simple_transmission->get_actuator_reduction());
-  EXPECT_EQ( 0.0, simple_transmission->get_joint_offset());
+  EXPECT_EQ(0.0, simple_transmission->get_joint_offset());
 }
 
 TEST(SimpleTransmissionLoaderTest, MinimalSpec)
 {
-std::string urdf_to_test = R"(
-  <?xml version="1.0"?>
+  std::string urdf_to_test = R"(
+ <?xml version="1.0"?>
 
-<robot name="robot" xmlns="http://www.ros.org">
-  <ros2_control>
-  <transmission name="simple_trans">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="foo_joint">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="foo_actuator">
-      <!--<mechanicalReduction>50</mechanicalReduction>--> <!--Unspecified element -->
-    </actuator>
-  </transmission>
-
-  <transmission name="simple_trans">
-    <type>transmission_interface/SimpleTransmission</type>
-    <transmissionInterface>transmission_interface/ActuatorToJointStateInterface</transmissionInterface>
-    <joint name="foo_joint">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="foo_actuator">
-      <mechanicalReduction>fifty</mechanicalReduction> <!-- Not a number -->
-    </actuator>
-  </transmission>
-
-  <transmission name="simple_trans">
-    <type>transmission_interface/SimpleTransmission</type>
-    <transmissionInterface>transmission_interface/ActuatorToJointStateInterface</transmissionInterface>
-    <joint name="foo_joint">
-      <offset>zero</offset> <!-- Not a number -->
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="foo_actuator">
-      <mechanicalReduction>50</mechanicalReduction>
-    </actuator>
-  </transmission>
-
-  <transmission name="simple_trans">
-    <type>transmission_interface/SimpleTransmission</type>
-    <transmissionInterface>transmission_interface/ActuatorToJointStateInterface</transmissionInterface>
-    <joint name="foo_joint">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="foo_actuator">
-      <mechanicalReduction>0</mechanicalReduction> <!-- Invalid value -->
-    </actuator>
-  </transmission>
+  <robot name="robot" xmlns="http://www.ros.org">
+  <ros2_control name="MinimalSpec" type="actuator">
+    <joint name="joint1">
+        <command_interface name="velocity">
+          <param name="min">-1</param>
+          <param name="max">1</param>
+        </command_interface>
+        <state_interface name="velocity"/>
+      </joint>
+      <transmission name="transmission1">
+        <plugin>transmission_interface/SimpleTransmission</plugin>
+        <joint name="joint1" role="joint1">
+          <mechanical_reduction>50</mechanical_reduction>
+        </joint>
+      </transmission>
   </ros2_control>
-</robot>
+  </robot>
 )";
   // Parse transmission info
   std::vector<HardwareInfo> infos = parse_control_resources_from_urdf(urdf_to_test);
@@ -306,42 +265,119 @@ std::string urdf_to_test = R"(
 
   // Transmission loader
   TransmissionPluginLoader loader;
-  std::shared_ptr<TransmissionLoader> transmission_loader = loader.create(infos[0].transmissions[0].type);
+  std::shared_ptr<TransmissionLoader> transmission_loader =
+    loader.create(infos[0].transmissions[0].type);
   ASSERT_TRUE(nullptr != transmission_loader);
 
   std::shared_ptr<Transmission> transmission;
-  const TransmissionInfo& info = infos[0].transmissions[0];
+  const TransmissionInfo & info = infos[0].transmissions[0];
   transmission = transmission_loader->load(info);
   ASSERT_TRUE(nullptr != transmission);
 
   // Validate transmission
-  SimpleTransmission* simple_transmission = dynamic_cast<SimpleTransmission*>(transmission.get());
+  SimpleTransmission * simple_transmission = dynamic_cast<SimpleTransmission *>(transmission.get());
   ASSERT_TRUE(nullptr != simple_transmission);
   EXPECT_EQ(50.0, simple_transmission->get_actuator_reduction());
-  EXPECT_EQ( 0.0, simple_transmission->get_joint_offset());
+  EXPECT_EQ(0.0, simple_transmission->get_joint_offset());
 }
 
+
+//TODO: Waiting for a fix to parsing
 /*
 TEST(SimpleTransmissionLoaderTest, InvalidSpec)
 {
+  std::string urdf_to_test = R"(
+
+  <?xml version="1.0"?>
+
+  <robot name="robot" xmlns="http://www.ros.org">
+  <ros2_control name="InvalidSpec" type="actuator">
+      <joint name="joint1">
+        <command_interface name="velocity">
+          <param name="min">-1</param>
+          <param name="max">1</param>
+        </command_interface>
+        <state_interface name="velocity"/>
+      </joint>
+      <transmission name="transmission1">
+        <plugin>transmission_interface/SimpleTransmission</plugin>
+        <joint name="joint1" role="joint1">
+          <!-- Unspecified element -->
+
+        </joint>
+      </transmission>
+
+      <joint name="joint2">
+        <command_interface name="velocity">
+          <param name="min">-1</param>
+          <param name="max">1</param>
+        </command_interface>
+        <state_interface name="velocity"/>
+      </joint>
+      <transmission name="transmission2">
+        <plugin>transmission_interface/SimpleTransmission</plugin>
+        <joint name="joint2" role="joint2">
+          <mechanical_reduction>50</mechanical_reduction> <!-- Not a number -->
+        </joint>
+      </transmission>
+
+      <joint name="joint3">
+        <command_interface name="velocity">
+          <param name="min">-1</param>
+          <param name="max">1</param>
+        </command_interface>
+        <state_interface name="velocity"/>
+      </joint>
+      <transmission name="transmission3">
+        <plugin>transmission_interface/SimpleTransmission</plugin>
+        <joint name="joint3" role="joint3">
+          <offset> 0</offset> <!-- Not a number -->
+          <mechanical_reduction>50</mechanical_reduction>
+        </joint>
+      </transmission>
+
+      <joint name="joint4">
+        <command_interface name="velocity">
+          <param name="min">-1</param>
+          <param name="max">1</param>
+        </command_interface>
+        <state_interface name="velocity"/>
+      </joint>
+      <transmission name="transmission4">
+        <plugin>transmission_interface/SimpleTransmission</plugin>
+        <joint name="joint4" role="joint4">
+          <mechanical_reduction>60</mechanical_reduction>           <!-- Invalid value -->
+        </joint>
+      </transmission>
+  </ros2_control>
+  </robot>
+)";
   // Parse transmission info
-  std::vector<HardwareInfo> infos = parse_control_resources_from_urdf("test/urdf/simple_transmission_loader_invalid.urdf");
+  std::vector<HardwareInfo> infos = parse_control_resources_from_urdf(urdf_to_test);
   ASSERT_EQ(4lu, infos[0].transmissions.size());
 
   // Transmission loader
-  TransmissionPluginLoader loader;
-  std::shared_ptr<TransmissionLoader> transmission_loader = loader.create(infos[0].transmissions[0].type);
-  ASSERT_TRUE(nullptr != transmission_loader);
 
-  for (const auto& info : infos[0].transmissions)
+  std::vector<TransmissionPluginLoader> loader(4);
+  std::vector<std::shared_ptr<TransmissionLoader>> transmission_loader(4);
+
+  for (int i = 0; i < 4; ++i)
   {
-    std::shared_ptr<Transmission> transmission;
-    transmission = transmission_loader->load(info);
+    transmission_loader[i] = loader[i].create(infos[0].transmissions[i].type);
+    ASSERT_TRUE(nullptr != transmission_loader[i]);
+  }
+
+  for (int i = 0; i < 4; ++i)
+  {
+    std::shared_ptr<Transmission> transmission = nullptr;
+    transmission = transmission_loader[i]->load(infos[0].transmissions[i]);
     ASSERT_TRUE(nullptr == transmission);
   }
 }
+
 */
-int main(int argc, char** argv)
+
+int main(int argc, char ** argv)
 {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

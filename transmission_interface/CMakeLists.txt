@@ -73,7 +73,7 @@ if(BUILD_TESTING)
   )
   target_include_directories(test_four_bar_linkage_transmission PUBLIC include hardware_interface)
   ament_target_dependencies(test_four_bar_linkage_transmission hardware_interface)
-  
+
   ament_add_gmock(
     test_simple_transmission_loader
     test/simple_transmission_loader_test.cpp

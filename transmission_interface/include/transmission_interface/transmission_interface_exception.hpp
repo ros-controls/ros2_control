@@ -14,21 +14,19 @@
 
 #pragma once
 
-// ros_control
-#include <transmission_interface/transmission.hpp>
-#include <transmission_interface/transmission_loader.hpp>
-#include <transmission_interface/transmission_parser.hpp>
+#include <exception>
+#include <string>
 
 namespace transmission_interface
 {
-/**
- * \brief Class for loading a simple transmission instance from configuration data.
- */
-class SimpleTransmissionLoader : public TransmissionLoader
+class TransmissionInterfaceException : public std::exception
 {
 public:
-  std::shared_ptr<Transmission> load(
-    const hardware_interface::TransmissionInfo & transmission_info) override;
+  explicit TransmissionInterfaceException(const std::string & message) : msg(message) {}
+  const char * what() const noexcept override { return msg.c_str(); }
+
+private:
+  std::string msg;
 };
 
 }  // namespace transmission_interface
