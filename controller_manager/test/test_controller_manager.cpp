@@ -40,10 +40,7 @@ class TestControllerManager : public ControllerManagerFixture,
 
 TEST_P(TestControllerManager, controller_lifecycle)
 {
-  const auto param = GetParam();
-  auto strictness = param.strictness;
-  auto expected_return = param.expected_return;
-  auto expected_counter = param.expected_counter;
+  const auto test_param = GetParam();
   auto test_controller = std::make_shared<test_controller::TestController>();
   auto test_controller2 = std::make_shared<test_controller::TestController>();
   constexpr char TEST_CONTROLLER2_NAME[] = "test_controller2_name";
@@ -66,7 +63,6 @@ TEST_P(TestControllerManager, controller_lifecycle)
 
   // configure controller
   cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME);
-  // Comment out this line on purpose. Otherwise, the test will crash.
   cm_->configure_controller(TEST_CONTROLLER2_NAME);
   EXPECT_EQ(
     controller_interface::return_type::OK,
@@ -89,20 +85,20 @@ TEST_P(TestControllerManager, controller_lifecycle)
   EXPECT_EQ(0u, test_controller2->internal_counter) << "Controller is started at the end of update";
   {
     ControllerManagerRunner cm_runner(this);
-    EXPECT_EQ(expected_return, switch_future.get());
+    EXPECT_EQ(test_param.expected_return, switch_future.get());
   }
 
   EXPECT_EQ(
     controller_interface::return_type::OK,
     cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
-  EXPECT_GE(test_controller2->internal_counter, expected_counter);
+  EXPECT_GE(test_controller2->internal_counter, test_param.expected_counter);
 
   // Start the real test controller, will take effect at the end of the update function
   start_controllers = {test_controller::TEST_CONTROLLER_NAME};
   stop_controllers = {};
   switch_future = std::async(
     std::launch::async, &controller_manager::ControllerManager::switch_controller, cm_,
-    start_controllers, stop_controllers, strictness, true, rclcpp::Duration(0, 0));
+    start_controllers, stop_controllers, test_param.strictness, true, rclcpp::Duration(0, 0));
 
   ASSERT_EQ(std::future_status::timeout, switch_future.wait_for(std::chrono::milliseconds(100)))
     << "switch_controller should be blocking until next update cycle";
