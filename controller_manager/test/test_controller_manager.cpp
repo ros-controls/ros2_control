@@ -124,7 +124,7 @@ TEST_P(TestControllerManager, controller_lifecycle)
   stop_controllers = {test_controller::TEST_CONTROLLER_NAME};
   switch_future = std::async(
     std::launch::async, &controller_manager::ControllerManager::switch_controller, cm_,
-    start_controllers, stop_controllers, strictness, true, rclcpp::Duration(0, 0));
+    start_controllers, stop_controllers, test_param.strictness, true, rclcpp::Duration(0, 0));
 
   ASSERT_EQ(std::future_status::timeout, switch_future.wait_for(std::chrono::milliseconds(100)))
     << "switch_controller should be blocking until next update cycle";
