@@ -75,9 +75,15 @@ protected:
   std::vector<std::vector<double>> other_states_;
 
   std::vector<std::string> sensor_interfaces_;
-  /// The size of this vector is (other_interfaces_.size() x nr_joints)
+  /// The size of this vector is (sensor_interfaces_.size() x nr_joints)
   std::vector<std::vector<double>> sensor_fake_commands_;
   std::vector<std::vector<double>> sensor_states_;
+
+  std::vector<std::string> gpio_interfaces_;
+  /// The size of this vector is (gpio_interfaces_.size() x nr_joints)
+  std::vector<std::vector<double>> gpio_fake_commands_;
+  std::vector<std::vector<double>> gpio_commands_;
+  std::vector<std::vector<double>> gpio_states_;
 
 private:
   template <typename HandleType>
@@ -90,6 +96,9 @@ private:
     std::vector<std::vector<double>> & commands, std::vector<std::vector<double>> & states,
     const std::vector<std::string> & interfaces);
 
+  void populate_gpio_interfaces();
+
+  bool fake_gpio_command_interfaces_;
   bool fake_sensor_command_interfaces_;
   double position_state_following_offset_;
   std::string custom_interface_with_following_offset_;
