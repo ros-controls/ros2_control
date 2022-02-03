@@ -27,17 +27,23 @@
 using ::testing::_;
 using ::testing::Return;
 
-class TestControllerManager
-: public ControllerManagerFixture,
-  public testing::WithParamInterface<std::pair<int, controller_interface::return_type>>
+struct Strictness
+{
+  int strictness = STRICT;
+  controller_interface::return_type expected_return;
+  unsigned int expected_counter;
+};
+class TestControllerManager : public ControllerManagerFixture,
+                              public testing::WithParamInterface<Strictness>
 {
 };
 
 TEST_P(TestControllerManager, controller_lifecycle)
 {
   const auto param = GetParam();
-  auto strictness = param.first;
-  auto expected_return = param.second;
+  auto strictness = param.strictness;
+  auto expected_return = param.expected_return;
+  auto expected_counter = param.expected_counter;
   auto test_controller = std::make_shared<test_controller::TestController>();
   auto test_controller2 = std::make_shared<test_controller::TestController>();
   constexpr char TEST_CONTROLLER2_NAME[] = "test_controller2_name";
@@ -61,7 +67,7 @@ TEST_P(TestControllerManager, controller_lifecycle)
   // configure controller
   cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME);
   // Comment out this line on purpose. Otherwise, the test will crash.
-  // cm_->configure_controller(TEST_CONTROLLER2_NAME);
+  cm_->configure_controller(TEST_CONTROLLER2_NAME);
   EXPECT_EQ(
     controller_interface::return_type::OK,
     cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
@@ -77,12 +83,21 @@ TEST_P(TestControllerManager, controller_lifecycle)
     std::launch::async, &controller_manager::ControllerManager::switch_controller, cm_,
     start_controllers, stop_controllers, strictness, true, rclcpp::Duration(0, 0));
 
-  EXPECT_EQ(expected_return, switch_future.get());
   EXPECT_EQ(
     controller_interface::return_type::OK,
     cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
+  EXPECT_EQ(0u, test_controller2->internal_counter) << "Controller is started at the end of update";
+  {
+    ControllerManagerRunner cm_runner(this);
+    EXPECT_EQ(expected_return, switch_future.get());
+  }
 
-  // Start controller, will take effect at the end of the update function
+  EXPECT_EQ(
+    controller_interface::return_type::OK,
+    cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
+  EXPECT_GE(test_controller2->internal_counter, expected_counter);
+
+  // Start the real test controller, will take effect at the end of the update function
   start_controllers = {test_controller::TEST_CONTROLLER_NAME};
   stop_controllers = {};
   switch_future = std::async(
@@ -145,7 +160,7 @@ TEST_P(TestControllerManager, controller_lifecycle)
 
 TEST_P(TestControllerManager, per_controller_update_rate)
 {
-  auto strictness = GetParam().first;
+  auto strictness = GetParam().strictness;
   auto test_controller = std::make_shared<test_controller::TestController>();
   cm_->add_controller(
     test_controller, test_controller::TEST_CONTROLLER_NAME,
@@ -200,7 +215,7 @@ TEST_P(TestControllerManager, per_controller_update_rate)
   EXPECT_EQ(test_controller->get_update_rate(), 4u);
 }
 
-auto strict_pair = std::make_pair(STRICT, controller_interface::return_type::ERROR);
-auto best_effort_pair = std::make_pair(BEST_EFFORT, controller_interface::return_type::OK);
+Strictness strict{STRICT, controller_interface::return_type::ERROR, 0u};
+Strictness best_effort{BEST_EFFORT, controller_interface::return_type::OK, 1u};
 INSTANTIATE_TEST_SUITE_P(
-  test_strict_best_effort, TestControllerManager, testing::Values(strict_pair, best_effort_pair));
+  test_strict_best_effort, TestControllerManager, testing::Values(strict, best_effort));
