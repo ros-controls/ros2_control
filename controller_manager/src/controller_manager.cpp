@@ -21,8 +21,11 @@
 #include <vector>
 
 #include "controller_interface/controller_interface.hpp"
+#include "controller_manager_msgs/msg/hardware_component_state.hpp"
+#include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 #include "rclcpp/rclcpp.hpp"
+#include "rclcpp_lifecycle/state.hpp"
 
 namespace controller_manager
 {
@@ -74,10 +77,7 @@ ControllerManager::ControllerManager(
     throw std::runtime_error("Unable to initialize resource manager, no robot description found.");
   }
 
-  resource_manager_->load_urdf(robot_description);
-
-  // TODO(all): Here we should start only "auto-start" resources
-  resource_manager_->start_components();
+  init_resource_manager(robot_description);
 
   init_services();
 }
@@ -92,9 +92,33 @@ ControllerManager::ControllerManager(
   loader_(std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
     kControllerInterfaceName, kControllerInterface))
 {
-  resource_manager_->start_components();
-
   init_services();
+}
+
+void ControllerManager::init_resource_manager(const std::string & robot_description)
+{
+  // TODO(destogl): manage this when there is an error - CM should not die because URDF is wrong...
+  resource_manager_->load_urdf(robot_description);
+
+  using lifecycle_msgs::msg::State;
+
+  std::vector<std::string> autoconfigure_components = {""};
+  get_parameter("autoconfigure_components", autoconfigure_components);
+  rclcpp_lifecycle::State inactive_state(
+    State::PRIMARY_STATE_INACTIVE, hardware_interface::lifecycle_state_names::INACTIVE);
+  for (const auto & component : autoconfigure_components)
+  {
+    resource_manager_->set_component_state(component, inactive_state);
+  }
+
+  std::vector<std::string> autostart_components = {""};
+  get_parameter("autostart_components", autostart_components);
+  rclcpp_lifecycle::State active_state(
+    State::PRIMARY_STATE_ACTIVE, hardware_interface::lifecycle_state_names::ACTIVE);
+  for (const auto & component : autostart_components)
+  {
+    resource_manager_->set_component_state(component, active_state);
+  }
 }
 
 void ControllerManager::init_services()
@@ -1151,11 +1175,47 @@ void ControllerManager::unload_controller_service_cb(
 
 void ControllerManager::list_hardware_components_srv_cb(
   const std::shared_ptr<controller_manager_msgs::srv::ListHardwareComponents::Request>,
-  std::shared_ptr<controller_manager_msgs::srv::ListHardwareComponents::Response> /*response*/)
+  std::shared_ptr<controller_manager_msgs::srv::ListHardwareComponents::Response> response)
 {
   RCLCPP_DEBUG(get_logger(), "list hardware components service called");
   std::lock_guard<std::mutex> guard(services_lock_);
   RCLCPP_DEBUG(get_logger(), "list hardware components service locked");
+
+  auto hw_components_info = resource_manager_->get_components_status();
+
+  response->component.reserve(hw_components_info.size());
+
+  for (auto it = hw_components_info.begin(); it != hw_components_info.end(); ++it)
+  {
+    auto component = controller_manager_msgs::msg::HardwareComponentState();
+    component.name = it->second.name;
+    component.type = it->second.type;
+    component.class_type = it->second.class_type;
+    component.state.id = it->second.state.id();
+    component.state.label = it->second.state.label();
+
+    component.command_interfaces.reserve(it->second.command_interfaces.size());
+    for (const auto & interface : it->second.command_interfaces)
+    {
+      controller_manager_msgs::msg::HardwareInterface hwi;
+      hwi.name = interface;
+      hwi.is_available = resource_manager_->command_interface_is_available(interface);
+      hwi.is_claimed = resource_manager_->command_interface_is_claimed(interface);
+      component.command_interfaces.push_back(hwi);
+    }
+
+    component.state_interfaces.reserve(it->second.state_interfaces.size());
+    for (const auto & interface : it->second.state_interfaces)
+    {
+      controller_manager_msgs::msg::HardwareInterface hwi;
+      hwi.name = interface;
+      hwi.is_available = resource_manager_->state_interface_is_available(interface);
+      hwi.is_claimed = false;
+      component.state_interfaces.push_back(hwi);
+    }
+
+    response->component.push_back(component);
+  }
 
   RCLCPP_DEBUG(get_logger(), "list hardware components service finished");
 }
@@ -1192,13 +1252,34 @@ void ControllerManager::list_hardware_interfaces_srv_cb(
 
 void ControllerManager::set_hardware_component_state_srv_cb(
   const std::shared_ptr<controller_manager_msgs::srv::SetHardwareComponentState::Request> request,
-  std::shared_ptr<controller_manager_msgs::srv::SetHardwareComponentState::Response> /*response*/)
+  std::shared_ptr<controller_manager_msgs::srv::SetHardwareComponentState::Response> response)
 {
   RCLCPP_DEBUG(get_logger(), "set hardware component state service called");
   std::lock_guard<std::mutex> guard(services_lock_);
   RCLCPP_DEBUG(get_logger(), "set hardware component state service locked");
 
   RCLCPP_DEBUG(get_logger(), "set hardware component state '%s'", request->name.c_str());
+
+  auto hw_components_info = resource_manager_->get_components_status();
+  if (hw_components_info.find(request->name) != hw_components_info.end())
+  {
+    rclcpp_lifecycle::State target_state(
+      request->target_state.id,
+      // the ternary operator is needed because label in State constructor cannot be an empty string
+      request->target_state.label.empty() ? "-" : request->target_state.label);
+    response->ok =
+      (resource_manager_->set_component_state(request->name, target_state) ==
+       hardware_interface::return_type::OK);
+    hw_components_info = resource_manager_->get_components_status();
+    response->state.id = hw_components_info[request->name].state.id();
+    response->state.label = hw_components_info[request->name].state.label();
+  }
+  else
+  {
+    RCLCPP_ERROR(
+      get_logger(), "hardware component with name '%s' does not exist", request->name.c_str());
+    response->ok = false;
+  }
 
   RCLCPP_DEBUG(get_logger(), "set hardware component state service finished");
 }
