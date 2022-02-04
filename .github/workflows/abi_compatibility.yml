@@ -17,5 +17,4 @@ jobs:
         env:
           ROS_REPO: ${{matrix.ROS_REPO}}
           ABICHECK_URL: github:ros-controls/ros2_control#${{ env.ROS_DISTRO }}
-          ABICHECK_MERGE: true
           NOT_TEST_BUILD: true
