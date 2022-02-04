@@ -77,7 +77,7 @@ TEST_P(TestControllerManager, controller_lifecycle)
   std::vector<std::string> stop_controllers = {};
   auto switch_future = std::async(
     std::launch::async, &controller_manager::ControllerManager::switch_controller, cm_,
-    start_controllers, stop_controllers, strictness, true, rclcpp::Duration(0, 0));
+    start_controllers, stop_controllers, test_param.strictness, true, rclcpp::Duration(0, 0));
 
   EXPECT_EQ(
     controller_interface::return_type::OK,
