@@ -25,7 +25,7 @@ add_library(transmission_interface SHARED
   src/simple_transmission_loader.cpp
 )
 
-target_include_directories(transmission_interface PUBLIC include )
+target_include_directories(transmission_interface PUBLIC include)
 
 
 ament_target_dependencies(
@@ -78,8 +78,8 @@ if(BUILD_TESTING)
     test_simple_transmission_loader
     test/simple_transmission_loader_test.cpp
   )
-  target_include_directories( test_simple_transmission_loader PUBLIC include hardware_interface)
-  ament_target_dependencies( test_simple_transmission_loader hardware_interface)
+  target_include_directories(test_simple_transmission_loader PUBLIC include hardware_interface)
+  ament_target_dependencies(test_simple_transmission_loader hardware_interface)
 endif()
 
 ament_export_include_directories(

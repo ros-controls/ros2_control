@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#pragma once
+#ifndef TRANSMISSION_INTERFACE__TRANSMISSION_INTERFACE_EXCEPTION_HPP_
+#define TRANSMISSION_INTERFACE__TRANSMISSION_INTERFACE_EXCEPTION_HPP_
 
 #include <exception>
 #include <string>
@@ -30,3 +31,5 @@ private:
 };
 
 }  // namespace transmission_interface
+
+#endif  // TRANSMISSION_INTERFACE__TRANSMISSION_INTERFACE_EXCEPTION_HPP_

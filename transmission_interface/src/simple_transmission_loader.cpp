@@ -12,20 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "transmission_interface/simple_transmission_loader.hpp"
+
+#include <rclcpp/logging.hpp>
+#include <rclcpp/rclcpp.hpp>
 
 // Pluginlib
 #include <pluginlib/class_list_macros.hpp>
+
+#include <memory>
 
 // ros2_control
 #include "hardware_interface/component_parser.hpp"
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "transmission_interface/simple_transmission.hpp"
-#include "transmission_interface/simple_transmission_loader.hpp"
 #include "transmission_interface/transmission_interface_exception.hpp"
-
-#include <rclcpp/logging.hpp>
-#include <rclcpp/rclcpp.hpp>
 
 namespace transmission_interface
 {

@@ -12,12 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#pragma once
+#ifndef TRANSMISSION_INTERFACE__SIMPLE_TRANSMISSION_LOADER_HPP_
+#define TRANSMISSION_INTERFACE__SIMPLE_TRANSMISSION_LOADER_HPP_
 
 // ros_control
 #include <transmission_interface/transmission.hpp>
 #include <transmission_interface/transmission_loader.hpp>
-#include <transmission_interface/transmission_parser.hpp>
+
+#include <memory>
 
 namespace transmission_interface
 {
@@ -32,3 +34,5 @@ public:
 };
 
 }  // namespace transmission_interface
+
+#endif  // TRANSMISSION_INTERFACE__SIMPLE_TRANSMISSION_LOADER_HPP_

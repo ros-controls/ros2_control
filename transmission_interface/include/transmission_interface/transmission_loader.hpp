@@ -12,7 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#pragma once
+#ifndef TRANSMISSION_INTERFACE__TRANSMISSION_LOADER_HPP_
+#define TRANSMISSION_INTERFACE__TRANSMISSION_LOADER_HPP_
+
+// TinyXML
+#include <tinyxml.h>
 
 // C++ standard
 #include <algorithm>
@@ -22,15 +26,12 @@
 #include <string>
 #include <vector>
 
-// TinyXML
-#include <tinyxml.h>
-
 // ros_control
 #include "hardware_interface/component_parser.hpp"
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 
-//#include <transmission_interface/transmission.h>
+// #include <transmission_interface/transmission.h>
 
 namespace transmission_interface
 {
@@ -49,3 +50,5 @@ public:
 };
 
 }  // namespace transmission_interface
+
+#endif  // TRANSMISSION_INTERFACE__TRANSMISSION_LOADER_HPP_

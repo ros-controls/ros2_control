@@ -13,19 +13,22 @@
 // limitations under the License.
 
 #include "transmission_interface/simple_transmission_loader.hpp"
+#include <pluginlib/class_loader.hpp>
+
 #include <gtest/gtest.h>
 #include <exception>
-#include <pluginlib/class_loader.hpp>
+#include <memory>
 #include <string>
+#include <vector>
+
 #include "hardware_interface/component_parser.hpp"
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "transmission_interface/simple_transmission.hpp"
 #include "transmission_interface/transmission_loader.hpp"
 
-using namespace transmission_interface;
-using namespace hardware_interface;
-
+namespace transmission_interface
+{
 struct TransmissionPluginLoader
 {
   std::shared_ptr<TransmissionLoader> create(const std::string & type)
@@ -43,7 +46,7 @@ struct TransmissionPluginLoader
   }
 
 private:
-  //must keep it alive because instance destroyers need it
+  // must keep it alive because instance destroyers need it
   pluginlib::ClassLoader<TransmissionLoader> class_loader_ = {
     "transmission_interface", "transmission_interface::TransmissionLoader"};
 };
@@ -207,12 +210,13 @@ TEST(SimpleTransmissionLoaderTest, FullSpec)
   </robot>
   )";
 
-  std::vector<HardwareInfo> infos = parse_control_resources_from_urdf(urdf_to_test);
+  std::vector<hardware_interface::HardwareInfo> infos =
+    hardware_interface::parse_control_resources_from_urdf(urdf_to_test);
   ASSERT_EQ(1lu, infos[0].transmissions.size());
 
-  for (int i = 0; i < (int)infos.size(); ++i)
+  for (int i = 0; i < static_cast<int>(infos.size()); ++i)
   {
-    for (int j = 0; j < (int)infos[i].transmissions.size(); ++j)
+    for (int j = 0; j < static_cast<int>(infos[i].transmissions.size()); ++j)
     {
       std::cout << infos[i].transmissions[j].type << std::endl;
     }
@@ -224,7 +228,7 @@ TEST(SimpleTransmissionLoaderTest, FullSpec)
   ASSERT_TRUE(nullptr != transmission_loader);
 
   std::shared_ptr<Transmission> transmission;
-  const TransmissionInfo & info = infos[0].transmissions[0];
+  const hardware_interface::TransmissionInfo & info = infos[0].transmissions[0];
   transmission = transmission_loader->load(info);
   ASSERT_TRUE(nullptr != transmission);
   ASSERT_STREQ(infos[0].transmissions[0].joints[0].role.c_str(), "joint1");
@@ -260,7 +264,8 @@ TEST(SimpleTransmissionLoaderTest, MinimalSpec)
   </robot>
 )";
   // Parse transmission info
-  std::vector<HardwareInfo> infos = parse_control_resources_from_urdf(urdf_to_test);
+  std::vector<hardware_interface::HardwareInfo> infos =
+    hardware_interface::parse_control_resources_from_urdf(urdf_to_test);
   ASSERT_EQ(1lu, infos[0].transmissions.size());
 
   // Transmission loader
@@ -270,7 +275,7 @@ TEST(SimpleTransmissionLoaderTest, MinimalSpec)
   ASSERT_TRUE(nullptr != transmission_loader);
 
   std::shared_ptr<Transmission> transmission;
-  const TransmissionInfo & info = infos[0].transmissions[0];
+  const hardware_interface::TransmissionInfo & info = infos[0].transmissions[0];
   transmission = transmission_loader->load(info);
   ASSERT_TRUE(nullptr != transmission);
 
@@ -281,8 +286,7 @@ TEST(SimpleTransmissionLoaderTest, MinimalSpec)
   EXPECT_EQ(0.0, simple_transmission->get_joint_offset());
 }
 
-
-//TODO: Waiting for a fix to parsing
+// TODO(someone): Waiting for a fix to parsing
 /*
 TEST(SimpleTransmissionLoaderTest, InvalidSpec)
 {
@@ -376,6 +380,7 @@ TEST(SimpleTransmissionLoaderTest, InvalidSpec)
 }
 
 */
+}  // namespace transmission_interface
 
 int main(int argc, char ** argv)
 {
