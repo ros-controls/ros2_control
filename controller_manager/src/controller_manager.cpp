@@ -1151,7 +1151,7 @@ void ControllerManager::unload_controller_service_cb(
 
 void ControllerManager::list_hardware_components_srv_cb(
   const std::shared_ptr<controller_manager_msgs::srv::ListHardwareComponents::Request>,
-  std::shared_ptr<controller_manager_msgs::srv::ListHardwareComponents::Response> response)
+  std::shared_ptr<controller_manager_msgs::srv::ListHardwareComponents::Response> /*response*/)
 {
   RCLCPP_DEBUG(get_logger(), "list hardware components service called");
   std::lock_guard<std::mutex> guard(services_lock_);
@@ -1192,7 +1192,7 @@ void ControllerManager::list_hardware_interfaces_srv_cb(
 
 void ControllerManager::set_hardware_component_state_srv_cb(
   const std::shared_ptr<controller_manager_msgs::srv::SetHardwareComponentState::Request> request,
-  std::shared_ptr<controller_manager_msgs::srv::SetHardwareComponentState::Response> response)
+  std::shared_ptr<controller_manager_msgs::srv::SetHardwareComponentState::Response> /*response*/)
 {
   RCLCPP_DEBUG(get_logger(), "set hardware component state service called");
   std::lock_guard<std::mutex> guard(services_lock_);
