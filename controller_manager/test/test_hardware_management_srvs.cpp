@@ -382,8 +382,8 @@ TEST_F(TestControllerManagerHWManagementSrvs, selective_activate_deactivate_comp
 
 TEST_F(TestControllerManagerHWManagementSrvsWithoutParams, test_default_activation_of_all_hardware)
 {
-  // "configure_components_on_start" and "activate_components_on_start" are not set (empty) therefore
-  // all hardware components are active
+  // "configure_components_on_start" and "activate_components_on_start" are not set (empty)
+  // therefore all hardware components are active
   list_hardware_components_and_check(
     // actuator, sensor, system
     std::vector<uint8_t>(
