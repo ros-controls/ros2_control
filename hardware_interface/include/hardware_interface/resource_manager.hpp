@@ -302,8 +302,13 @@ public:
    */
   void write();
 
-  // Temporary method to keep old interface and reduce framework changes in PRs
-  void start_components();
+  /// Activates all available hardware components in the system.
+  /**
+   * All available hardware components int the ros2_control framework are activated.
+   * This is used to preserve default behavior from previous versions where all hardware components
+   * are activated per default.
+   */
+  void activate_all_components();
 
 private:
   void validate_storage(const std::vector<hardware_interface::HardwareInfo> & hardware_info) const;

@@ -102,22 +102,29 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
 
   using lifecycle_msgs::msg::State;
 
-  std::vector<std::string> autoconfigure_components = {""};
-  get_parameter("autoconfigure_components", autoconfigure_components);
+  std::vector<std::string> configure_components_on_start = std::vector<std::string>({});
+  get_parameter("configure_components_on_start", configure_components_on_start);
   rclcpp_lifecycle::State inactive_state(
     State::PRIMARY_STATE_INACTIVE, hardware_interface::lifecycle_state_names::INACTIVE);
-  for (const auto & component : autoconfigure_components)
+  for (const auto & component : configure_components_on_start)
   {
     resource_manager_->set_component_state(component, inactive_state);
   }
 
-  std::vector<std::string> autostart_components = {""};
-  get_parameter("autostart_components", autostart_components);
+  std::vector<std::string> activate_components_on_start = std::vector<std::string>({});
+  get_parameter("activate_components_on_start", activate_components_on_start);
   rclcpp_lifecycle::State active_state(
     State::PRIMARY_STATE_ACTIVE, hardware_interface::lifecycle_state_names::ACTIVE);
-  for (const auto & component : autostart_components)
+  for (const auto & component : activate_components_on_start)
   {
     resource_manager_->set_component_state(component, active_state);
+  }
+
+  // if both parameter are empty or non-existing preserve behavior where all components are
+  // activated per default
+  if (configure_components_on_start.empty() && activate_components_on_start.empty())
+  {
+    resource_manager_->activate_all_components();
   }
 }
 
