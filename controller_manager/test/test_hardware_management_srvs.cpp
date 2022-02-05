@@ -124,7 +124,6 @@ public:
         for (auto i = 0ul; i < interfaces.size(); ++i)
         {
           auto it = std::find(interface_names.begin(), interface_names.end(), interfaces[i].name);
-          std::cout << "Interface name is: " << interfaces[i].name << std::endl;
           EXPECT_NE(it, interface_names.end());
           EXPECT_EQ(interfaces[i].is_available, is_available_status[i]);
           EXPECT_EQ(interfaces[i].is_claimed, is_claimed_status[i]);
@@ -295,7 +294,7 @@ TEST_F(TestControllerManagerHWManagementSrvs, selective_activate_deactivate_comp
     std::vector<std::string>({INACTIVE, ACTIVE, ACTIVE}),
     std::vector<std::vector<std::vector<bool>>>({
       // is available
-      {{false, true}, {true, true, true}},                                     // actuator
+      {{true, true}, {true, true, true}},                                      // actuator
       {{}, {true}},                                                            // sensor
       {{true, true, true, true}, {true, true, true, true, true, true, true}},  // system
     }),
@@ -316,7 +315,7 @@ TEST_F(TestControllerManagerHWManagementSrvs, selective_activate_deactivate_comp
     std::vector<std::string>({INACTIVE, ACTIVE, ACTIVE}),
     std::vector<std::vector<std::vector<bool>>>({
       // is available
-      {{false, true}, {true, true, true}},                                     // actuator
+      {{true, true}, {true, true, true}},                                     // actuator
       {{}, {true}},                                                            // sensor
       {{true, true, true, true}, {true, true, true, true, true, true, true}},  // system
     }),
@@ -338,7 +337,7 @@ TEST_F(TestControllerManagerHWManagementSrvs, selective_activate_deactivate_comp
     std::vector<std::string>({INACTIVE, UNCONFIGURED, ACTIVE}),
     std::vector<std::vector<std::vector<bool>>>({
       // is available
-      {{false, true}, {true, true, true}},                                     // actuator
+      {{true, true}, {true, true, true}},                                     // actuator
       {{}, {false}},                                                           // sensor
       {{true, true, true, true}, {true, true, true, true, true, true, true}},  // system
     }),
