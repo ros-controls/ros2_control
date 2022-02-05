@@ -193,7 +193,8 @@ public:
   }
 };
 
-class TestControllerManagerHWManagementSrvsWithoutParams : public TestControllerManagerHWManagementSrvs
+class TestControllerManagerHWManagementSrvsWithoutParams
+: public TestControllerManagerHWManagementSrvs
 {
 public:
   void SetUp() override
@@ -345,7 +346,7 @@ TEST_F(TestControllerManagerHWManagementSrvs, selective_activate_deactivate_comp
     std::vector<std::string>({INACTIVE, ACTIVE, ACTIVE}),
     std::vector<std::vector<std::vector<bool>>>({
       // is available
-      {{true, true}, {true, true, true}},                                     // actuator
+      {{true, true}, {true, true, true}},                                      // actuator
       {{}, {true}},                                                            // sensor
       {{true, true, true, true}, {true, true, true, true, true, true, true}},  // system
     }),
@@ -367,7 +368,7 @@ TEST_F(TestControllerManagerHWManagementSrvs, selective_activate_deactivate_comp
     std::vector<std::string>({INACTIVE, UNCONFIGURED, ACTIVE}),
     std::vector<std::vector<std::vector<bool>>>({
       // is available
-      {{true, true}, {true, true, true}},                                     // actuator
+      {{true, true}, {true, true, true}},                                      // actuator
       {{}, {false}},                                                           // sensor
       {{true, true, true, true}, {true, true, true, true, true, true, true}},  // system
     }),
@@ -391,8 +392,8 @@ TEST_F(TestControllerManagerHWManagementSrvsWithoutParams, test_default_activati
     std::vector<std::string>({ACTIVE, ACTIVE, ACTIVE}),
     std::vector<std::vector<std::vector<bool>>>({
       // is available
-      {{true, true}, {true, true, true}},  // actuator
-      {{}, {true}},                        // sensor
+      {{true, true}, {true, true, true}},                                      // actuator
+      {{}, {true}},                                                            // sensor
       {{true, true, true, true}, {true, true, true, true, true, true, true}},  // system
     }),
     std::vector<std::vector<std::vector<bool>>>({

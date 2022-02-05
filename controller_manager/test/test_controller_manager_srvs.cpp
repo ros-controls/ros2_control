@@ -147,7 +147,8 @@ TEST_F(TestControllerManagerSrvs, list_controllers_srv)
   ASSERT_THAT(
     result->controller[0].claimed_interfaces,
     testing::ElementsAre(
-      "joint2/velocity", "joint3/velocity", "joint2/max_acceleration", "configuration/max_tcp_jerk", "joint1/position", "joint1/max_velocity"));
+      "joint2/velocity", "joint3/velocity", "joint2/max_acceleration", "configuration/max_tcp_jerk",
+      "joint1/position", "joint1/max_velocity"));
   ASSERT_THAT(
     result->controller[0].required_command_interfaces,
     testing::ElementsAre(
