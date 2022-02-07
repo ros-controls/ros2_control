@@ -15,9 +15,6 @@
 #ifndef TRANSMISSION_INTERFACE__TRANSMISSION_LOADER_HPP_
 #define TRANSMISSION_INTERFACE__TRANSMISSION_LOADER_HPP_
 
-// TinyXML
-#include <tinyxml.h>
-
 // C++ standard
 #include <algorithm>
 #include <limits>
