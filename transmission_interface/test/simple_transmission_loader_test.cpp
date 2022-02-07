@@ -27,11 +27,10 @@
 #include "transmission_interface/simple_transmission.hpp"
 #include "transmission_interface/transmission_loader.hpp"
 
-namespace transmission_interface
+class TransmissionPluginLoader
 {
-struct TransmissionPluginLoader
-{
-  std::shared_ptr<TransmissionLoader> create(const std::string & type)
+public:
+  std::shared_ptr<transmission_interface::TransmissionLoader> create(const std::string & type)
   {
     try
     {
@@ -41,13 +40,13 @@ struct TransmissionPluginLoader
     {
       std::cout << ex.what() << std::endl;
 
-      return std::shared_ptr<TransmissionLoader>();
+      return std::shared_ptr<transmission_interface::TransmissionLoader>();
     }
   }
 
 private:
   // must keep it alive because instance destroyers need it
-  pluginlib::ClassLoader<TransmissionLoader> class_loader_ = {
+  pluginlib::ClassLoader<transmission_interface::TransmissionLoader> class_loader_ = {
     "transmission_interface", "transmission_interface::TransmissionLoader"};
 };
 
@@ -214,27 +213,21 @@ TEST(SimpleTransmissionLoaderTest, FullSpec)
     hardware_interface::parse_control_resources_from_urdf(urdf_to_test);
   ASSERT_EQ(1lu, infos[0].transmissions.size());
 
-  for (int i = 0; i < static_cast<int>(infos.size()); ++i)
-  {
-    for (int j = 0; j < static_cast<int>(infos[i].transmissions.size()); ++j)
-    {
-      std::cout << infos[i].transmissions[j].type << std::endl;
-    }
-  }
   // Transmission loader
   TransmissionPluginLoader loader;
-  std::shared_ptr<TransmissionLoader> transmission_loader =
+  std::shared_ptr<transmission_interface::TransmissionLoader> transmission_loader =
     loader.create(infos[0].transmissions[0].type);
   ASSERT_TRUE(nullptr != transmission_loader);
 
-  std::shared_ptr<Transmission> transmission;
+  std::shared_ptr<transmission_interface::Transmission> transmission;
   const hardware_interface::TransmissionInfo & info = infos[0].transmissions[0];
   transmission = transmission_loader->load(info);
   ASSERT_TRUE(nullptr != transmission);
   ASSERT_STREQ(infos[0].transmissions[0].joints[0].role.c_str(), "joint1");
 
   // Validate transmission
-  SimpleTransmission * simple_transmission = dynamic_cast<SimpleTransmission *>(transmission.get());
+  transmission_interface::SimpleTransmission * simple_transmission =
+    dynamic_cast<transmission_interface::SimpleTransmission *>(transmission.get());
   ASSERT_TRUE(nullptr != simple_transmission);
   EXPECT_EQ(325.949, simple_transmission->get_actuator_reduction());
   EXPECT_EQ(0.0, simple_transmission->get_joint_offset());
@@ -270,17 +263,18 @@ TEST(SimpleTransmissionLoaderTest, MinimalSpec)
 
   // Transmission loader
   TransmissionPluginLoader loader;
-  std::shared_ptr<TransmissionLoader> transmission_loader =
+  std::shared_ptr<transmission_interface::TransmissionLoader> transmission_loader =
     loader.create(infos[0].transmissions[0].type);
   ASSERT_TRUE(nullptr != transmission_loader);
 
-  std::shared_ptr<Transmission> transmission;
+  std::shared_ptr<transmission_interface::Transmission> transmission;
   const hardware_interface::TransmissionInfo & info = infos[0].transmissions[0];
   transmission = transmission_loader->load(info);
   ASSERT_TRUE(nullptr != transmission);
 
   // Validate transmission
-  SimpleTransmission * simple_transmission = dynamic_cast<SimpleTransmission *>(transmission.get());
+  transmission_interface::SimpleTransmission * simple_transmission =
+    dynamic_cast<transmission_interface::SimpleTransmission *>(transmission.get());
   ASSERT_TRUE(nullptr != simple_transmission);
   EXPECT_EQ(50.0, simple_transmission->get_actuator_reduction());
   EXPECT_EQ(0.0, simple_transmission->get_joint_offset());
@@ -380,7 +374,6 @@ TEST(SimpleTransmissionLoaderTest, InvalidSpec)
 }
 
 */
-}  // namespace transmission_interface
 
 int main(int argc, char ** argv)
 {
