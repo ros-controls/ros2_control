@@ -17,7 +17,6 @@
 #include <rclcpp/logging.hpp>
 #include <rclcpp/rclcpp.hpp>
 
-// Pluginlib
 #include <pluginlib/class_list_macros.hpp>
 
 #include <memory>
