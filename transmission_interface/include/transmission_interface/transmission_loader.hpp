@@ -15,7 +15,6 @@
 #ifndef TRANSMISSION_INTERFACE__TRANSMISSION_LOADER_HPP_
 #define TRANSMISSION_INTERFACE__TRANSMISSION_LOADER_HPP_
 
-// C++ standard
 #include <algorithm>
 #include <limits>
 #include <memory>
