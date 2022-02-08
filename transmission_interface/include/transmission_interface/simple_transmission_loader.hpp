@@ -15,7 +15,6 @@
 #ifndef TRANSMISSION_INTERFACE__SIMPLE_TRANSMISSION_LOADER_HPP_
 #define TRANSMISSION_INTERFACE__SIMPLE_TRANSMISSION_LOADER_HPP_
 
-// ros_control
 #include <transmission_interface/transmission.hpp>
 #include <transmission_interface/transmission_loader.hpp>
 
