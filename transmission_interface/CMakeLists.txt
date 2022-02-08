@@ -11,13 +11,10 @@ find_package(hardware_interface REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(rclcpp REQUIRED)
 
-
 install(
   DIRECTORY include/
   DESTINATION include
-
 )
-
 
 add_library(transmission_interface SHARED
   include/transmission_interface/transmission_loader.hpp
@@ -92,6 +89,5 @@ ament_export_dependencies(
 ament_export_libraries(
   transmission_interface
 )
-
 
 ament_package()

@@ -26,7 +26,6 @@
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 
-
 namespace transmission_interface
 {
 /**

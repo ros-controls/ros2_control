@@ -38,7 +38,7 @@ public:
     }
     catch (std::exception & ex)
     {
-      std::cout << ex.what() << std::endl;
+      std::cerr << ex.what() << std::endl;
 
       return std::shared_ptr<transmission_interface::TransmissionLoader>();
     }
