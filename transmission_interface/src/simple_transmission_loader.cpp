@@ -32,7 +32,6 @@ namespace transmission_interface
 std::shared_ptr<Transmission> SimpleTransmissionLoader::load(
   const hardware_interface::TransmissionInfo & transmission_info)
 {
-  // Transmission instance
   try
   {
     std::shared_ptr<Transmission> transmission(new SimpleTransmission(
