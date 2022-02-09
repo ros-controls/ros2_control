@@ -24,7 +24,6 @@ add_library(transmission_interface SHARED
 
 target_include_directories(transmission_interface PUBLIC include)
 
-
 ament_target_dependencies(
   transmission_interface
   pluginlib
