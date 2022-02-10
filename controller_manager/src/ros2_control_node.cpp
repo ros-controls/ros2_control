@@ -41,17 +41,19 @@ int main(int argc, char ** argv)
     RCLCPP_INFO(cm->get_logger(), "update rate is %d Hz", cm->get_update_rate());
 
     rclcpp::Time begin = cm->now();
+    rclcpp::Time begin_last(begin);
+    rclcpp::Time end(begin);
 
     // Use nanoseconds to avoid chrono's rounding
     std::this_thread::sleep_for(std::chrono::nanoseconds(1000000000 / cm->get_update_rate()));
     while (rclcpp::ok())
     {
-      rclcpp::Time begin_last = begin;
+      begin_last = begin;
       begin = cm->now();
       cm->read();
       cm->update(begin, begin - begin_last);
       cm->write();
-      rclcpp::Time end = cm->now();
+      end = cm->now();
       std::this_thread::sleep_for(std::max(
         std::chrono::nanoseconds(0),
         std::chrono::nanoseconds(1000000000 / cm->get_update_rate()) -
