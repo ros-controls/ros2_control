@@ -1,17 +1,23 @@
 pull_request_rules:
-  - name: Random Request Review PRs
-    conditions:
-      - "#review-requested=0"
+  - name: Assign Randomly two Maintainers for a Review
     actions:
       request_review:
-        users:
-          - jackcenter
-          - livanov93
-        random_count: 1
+        users_from_teams:
+          - ros2-maintainers
+        random_count: 2
+        
+  - name: Random Request Review PRs
+    conditions:
+      - "label=request-reviews"
+    actions:
+      request_review:
+        users_from_teams:
+          - ros2_control-reviewers
+        random_count: 3
 
   - name: Backport to galactic at reviewers discretion
     conditions:
-      - base=main
+      - base=master
       - "label=backport-galactic"
     actions:
       backport:
@@ -20,7 +26,7 @@ pull_request_rules:
 
   - name: Backport to foxy at reviewers discretion
     conditions:
-      - base=main
+      - base=master
       - "label=backport-foxy"
     actions:
       backport:
