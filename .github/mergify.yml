@@ -1,0 +1,45 @@
+pull_request_rules:
+  - name: Assign Randomly two Maintainers for a Review
+    conditions:
+      - -closed
+    actions:
+      request_reviews:
+        users_from_teams:
+          - ros2-maintainers
+        random_count: 2
+
+  - name: Random Request Review PRs
+    conditions:
+      - base=master
+      - "label=request-reviews"
+    actions:
+      request_reviews:
+        users_from_teams:
+          - ros2_control-reviewers
+        random_count: 3
+
+  - name: Backport to galactic at reviewers discretion
+    conditions:
+      - base=master
+      - "label=backport-galactic"
+    actions:
+      backport:
+        branches:
+          - galactic
+
+  - name: Backport to foxy at reviewers discretion
+    conditions:
+      - base=master
+      - "label=backport-foxy"
+    actions:
+      backport:
+        branches:
+          - foxy
+
+  - name: Ask to resolve conflict
+    conditions:
+      - conflict
+      - author!=mergify
+    actions:
+        comment:
+          message: This pull request is in conflict. Could you fix it @{{author}}?
