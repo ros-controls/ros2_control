@@ -5,7 +5,7 @@ pull_request_rules:
         users_from_teams:
           - ros2-maintainers
         random_count: 2
-        
+
   - name: Random Request Review PRs
     conditions:
       - "label=request-reviews"
