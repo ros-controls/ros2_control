@@ -1,0 +1,4 @@
+# Default reviewers for all pull requests.
+# Usually, at least on of the maintainers should approve PR before merging.
+# The best is if two maintainers do that.
+* @ros-controls/ros2-maintainers
