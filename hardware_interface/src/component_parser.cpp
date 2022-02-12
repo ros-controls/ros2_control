@@ -123,16 +123,22 @@ double get_parameter_value_or(
 {
   while (params_it)
   {
-    // Fill the map with parameters
-    const auto tag_name = params_it->Name();
-    if (strcmp(tag_name, parameter_name) == 0)
+    try
     {
-      const auto tag_text = params_it->GetText();
-      if (!tag_text)
+      // Fill the map with parameters
+      const auto tag_name = params_it->Name();
+      if (strcmp(tag_name, parameter_name) == 0)
       {
-        throw std::runtime_error("text not specified in the " + std::string(tag_name) + " tag");
+        const auto tag_text = params_it->GetText();
+        if (tag_text)
+        {
+          return std::stod(tag_text);
+        }
       }
-      return std::stod(tag_text);
+    }
+    catch (const std::exception & e)
+    {
+      return default_value;
     }
 
     params_it = params_it->NextSiblingElement();
@@ -368,7 +374,7 @@ JointInfo parse_transmission_joint_from_xml(const tinyxml2::XMLElement * element
   joint_info.name = get_attribute_value(element_it, kNameAttribute, element_it->Name());
   joint_info.role = get_attribute_value(element_it, kRoleAttribute, element_it->Name());
   joint_info.mechanical_reduction =
-    get_parameter_value_or(element_it->FirstChildElement(), kReductionAttribute, 0.0);
+    get_parameter_value_or(element_it->FirstChildElement(), kReductionAttribute, 1.0);
   joint_info.offset =
     get_parameter_value_or(element_it->FirstChildElement(), kOffsetAttribute, 0.0);
   return joint_info;
