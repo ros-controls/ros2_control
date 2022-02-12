@@ -13,6 +13,8 @@ activate_components_on_start (optional; list<string>; default: empty)
   Define which hardware components should be activated when controller manager is started.
   The names of the components are defined as attribute of ``<ros2_control>``-tag in ``robot_description``.
   All other components will stay ``UNCONFIGURED``.
+  If this and ``configure_components_on_start`` are empty, all available components will be activated.
+  If this or ``configure_components_on_start`` are not empty, any component not in either list will be in unconfigured state.
 
 
 configure_components_on_start (optional; list<string>; default: empty)
@@ -20,6 +22,7 @@ configure_components_on_start (optional; list<string>; default: empty)
   The names of the components are defined as attribute of ``<ros2_control>``-tag in ``robot_description``.
   All other components will stay ``UNCONFIGURED``.
   If this and ``activate_components_on_start`` are empty, all available components will be activated.
+  If this or ``activate_components_on_start`` are not empty, any component not in either list will be in unconfigured state.
 
 
 robot_description (mandatory; string)
