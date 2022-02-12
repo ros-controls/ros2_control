@@ -138,7 +138,7 @@ inline SimpleTransmission::SimpleTransmission(
 {
   if (reduction_ == 0.0)
   {
-    throw Exception("Transmission reduction ratio cannot be zero.");
+    throw std::invalid_argument("Transmission reduction ratio cannot be zero.");
   }
 }
 
