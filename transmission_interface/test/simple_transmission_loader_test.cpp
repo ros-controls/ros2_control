@@ -235,25 +235,25 @@ TEST(SimpleTransmissionLoaderTest, FullSpec)
 TEST(SimpleTransmissionLoaderTest, MinimalSpec)
 {
   std::string urdf_to_test = R"(
- <?xml version="1.0"?>
+<?xml version="1.0"?>
 
-  <robot name="robot" xmlns="http://www.ros.org">
+<robot name="robot" xmlns="http://www.ros.org">
   <ros2_control name="MinimalSpec" type="actuator">
     <joint name="joint1">
-        <command_interface name="velocity">
-          <param name="min">-1</param>
-          <param name="max">1</param>
-        </command_interface>
-        <state_interface name="velocity"/>
+      <command_interface name="velocity">
+        <param name="min">-1</param>
+        <param name="max">1</param>
+      </command_interface>
+      <state_interface name="velocity"/>
+    </joint>
+    <transmission name="transmission1">
+      <plugin>transmission_interface/SimpleTransmission</plugin>
+      <joint name="joint1" role="joint1">
+        <mechanical_reduction>50</mechanical_reduction>
       </joint>
-      <transmission name="transmission1">
-        <plugin>transmission_interface/SimpleTransmission</plugin>
-        <joint name="joint1" role="joint1">
-          <mechanical_reduction>50</mechanical_reduction>
-        </joint>
-      </transmission>
+    </transmission>
   </ros2_control>
-  </robot>
+</robot>
 )";
   // Parse transmission info
   std::vector<hardware_interface::HardwareInfo> infos =
