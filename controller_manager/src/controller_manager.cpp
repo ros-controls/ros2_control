@@ -1230,8 +1230,6 @@ controller_interface::return_type ControllerManager::update(
 
   for (auto loaded_controller : rt_controller_list)
   {
-    // TODO(v-lopez) we could cache this information
-    // https://github.com/ros-controls/ros2_control/issues/153
     if (is_controller_active(*loaded_controller.c))
     {
       auto controller_update_rate = loaded_controller.c->get_update_rate();
