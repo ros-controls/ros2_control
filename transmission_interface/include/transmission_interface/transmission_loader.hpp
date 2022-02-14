@@ -15,16 +15,9 @@
 #ifndef TRANSMISSION_INTERFACE__TRANSMISSION_LOADER_HPP_
 #define TRANSMISSION_INTERFACE__TRANSMISSION_LOADER_HPP_
 
-#include <algorithm>
-#include <limits>
 #include <memory>
-#include <sstream>
-#include <string>
-#include <vector>
 
-#include "hardware_interface/component_parser.hpp"
 #include "hardware_interface/hardware_info.hpp"
-#include "hardware_interface/types/hardware_interface_type_values.hpp"
 
 namespace transmission_interface
 {

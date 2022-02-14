@@ -12,9 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "transmission_interface/simple_transmission_loader.hpp"
-#include <pluginlib/class_loader.hpp>
-
 #include <gtest/gtest.h>
 #include <exception>
 #include <memory>
@@ -24,7 +21,9 @@
 #include "hardware_interface/component_parser.hpp"
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
+#include "pluginlib/class_loader.hpp"
 #include "transmission_interface/simple_transmission.hpp"
+#include "transmission_interface/simple_transmission_loader.hpp"
 #include "transmission_interface/transmission_loader.hpp"
 
 class TransmissionPluginLoader
