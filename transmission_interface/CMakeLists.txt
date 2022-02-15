@@ -75,6 +75,7 @@ if(BUILD_TESTING)
     test/simple_transmission_loader_test.cpp
   )
   target_include_directories(test_simple_transmission_loader PUBLIC include hardware_interface)
+  target_link_libraries(test_simple_transmission_loader gmock_main)
   ament_target_dependencies(test_simple_transmission_loader hardware_interface)
 endif()
 

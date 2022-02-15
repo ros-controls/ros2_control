@@ -446,9 +446,3 @@ TEST(SimpleTransmissionLoaderTest, mech_red_invalid_value)
   transmission = transmission_loader->load(trans);
   ASSERT_TRUE(nullptr == transmission);
 }
-
-int main(int argc, char ** argv)
-{
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
