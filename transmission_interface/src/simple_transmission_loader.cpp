@@ -23,7 +23,6 @@
 #include "rclcpp/logging.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "transmission_interface/simple_transmission.hpp"
-#include "transmission_interface/transmission_interface_exception.hpp"
 
 namespace transmission_interface
 {
