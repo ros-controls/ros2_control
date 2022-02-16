@@ -41,7 +41,7 @@ int main(int argc, char ** argv)
     RCLCPP_INFO(cm->get_logger(), "update rate is %d Hz", cm->get_update_rate());
 
     rclcpp::Time current_time = cm->now();
-    rclcpp::Time previous_time = begin;
+    rclcpp::Time previous_time = current_time;
     rclcpp::Time end_period = current_time;
 
     // Use nanoseconds to avoid chrono's rounding
@@ -51,8 +51,7 @@ int main(int argc, char ** argv)
     {
       // wait until we hit the end of the period
       end_period += period;
-      std::this_thread::sleep_for(std::chrono::nanoseconds(
-        (end_period - cm->now()).nanoseconds()));
+      std::this_thread::sleep_for(std::chrono::nanoseconds((end_period - cm->now()).nanoseconds()));
 
       // execute "real-time" update loop
       cm->read();
