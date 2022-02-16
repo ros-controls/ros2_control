@@ -1,0 +1,10 @@
+<library path="transmission_interface">
+  <!-- Transmission types -->
+  <class name="transmission_interface/SimpleTransmission"
+         type="transmission_interface::SimpleTransmissionLoader"
+         base_class_type="transmission_interface::TransmissionLoader">
+    <description>
+      Load configuration of a simple transmission from a URDF description.
+    </description>
+  </class>
+</library>
