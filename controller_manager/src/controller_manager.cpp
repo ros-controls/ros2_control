@@ -29,7 +29,7 @@ namespace controller_manager
 static constexpr const char * kControllerInterfaceName = "controller_interface";
 static constexpr const char * kControllerInterface = "controller_interface::ControllerInterface";
 
-// Changed services history QOS to keep all so we don't lose any client service calls
+// Changed services history QoS to keep all so we don't lose any client service calls
 static const rmw_qos_profile_t rmw_qos_profile_services_hist_keep_all = {
   RMW_QOS_POLICY_HISTORY_KEEP_ALL,
   1,  // message queue depth
