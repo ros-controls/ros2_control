@@ -47,10 +47,6 @@ int main(int argc, char ** argv)
     // Use nanoseconds to avoid chrono's rounding
     rclcpp::Duration period(std::chrono::nanoseconds(1000000000 / cm->get_update_rate()));
 
-    std::this_thread::sleep_for(std::chrono::nanoseconds(
-      (end_loop - cm->now()).nanoseconds()));  // wait until we hit the end of the period
-    end_loop += period;
-
     while (rclcpp::ok())
     {
       // wait until we hit the end of the period
