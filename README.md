@@ -36,7 +36,7 @@ More information: <a href="http://rosin-project.eu">rosin-project.eu</a>
      alt="eu_flag" height="45" align="left" >
 
 This project has received funding from the European Union’s Horizon 2020
-research and innovation programme under grant agreement no. 732287.
+research and innovation programe under grant agreement no. 732287.
 
 
 ### Explanation of different build types
