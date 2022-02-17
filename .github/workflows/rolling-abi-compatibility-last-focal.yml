@@ -10,7 +10,7 @@ jobs:
     strategy:
       matrix:
         env:
-          - {ROS_DISTRO: rolling, ROS_REPO: main}
+          - {ROS_DISTRO: rolling, ROS_REPO: main, OS_CODE_NAME: focal}
     env:
       BEFORE_INSTALL_UPSTREAM_DEPENDENCIES: |
           export ROSDISTRO_INDEX_URL=https://raw.githubusercontent.com/ros/rosdistro/rolling/2022-01-28/index-v4.yaml
