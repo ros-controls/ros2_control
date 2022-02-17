@@ -1,0 +1,25 @@
+name: ABI Compatibility Check - Last Focal
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  abi_check:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        env:
+          - {ROS_DISTRO: rolling, ROS_REPO: main}
+    env:
+      BEFORE_INSTALL_UPSTREAM_DEPENDENCIES: |
+          export ROSDISTRO_INDEX_URL=https://raw.githubusercontent.com/ros/rosdistro/rolling/2022-01-28/index-v4.yaml
+          rosdep update
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ros-industrial/industrial_ci@master
+        with:
+          config: ${{toJSON(matrix.env)}}
+        env:
+          ABICHECK_URL: github:${{ github.repository }}#${{ github.base_ref }}
+          NOT_TEST_BUILD: true

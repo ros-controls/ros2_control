@@ -16,13 +16,10 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      max-parallel: 1
       matrix:
         env:
-          - {ROS_DISTRO: rolling, ROS_REPO: main, OS_CODE_NAME: "focal"}
-          - {ROS_DISTRO: rolling, ROS_REPO: testing, OS_CODE_NAME: "focal"}
-          - {ROS_DISTRO: rolling, ROS_REPO: main, OS_CODE_NAME: "jammy"}
-          - {ROS_DISTRO: rolling, ROS_REPO: testing, OS_CODE_NAME: "jammy"}
+          - {ROS_DISTRO: rolling, ROS_REPO: main}
+          - {ROS_DISTRO: rolling, ROS_REPO: testing}
     env:
       UPSTREAM_WORKSPACE: ros2_control-not-released.${{ matrix.env.ROS_DISTRO }}.repos
       CCACHE_DIR: ${{ github.workspace }}/.ccache
