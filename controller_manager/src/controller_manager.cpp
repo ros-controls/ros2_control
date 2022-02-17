@@ -24,7 +24,8 @@
 #include "lifecycle_msgs/msg/state.hpp"
 #include "rclcpp/rclcpp.hpp"
 
-namespace {  // utility
+namespace
+{  // utility
 
 static constexpr const char * kControllerInterfaceName = "controller_interface";
 static constexpr const char * kControllerInterface = "controller_interface::ControllerInterface";
@@ -910,7 +911,8 @@ void ControllerManager::list_controllers_srv_cb(
         cs.required_state_interfaces = resource_manager_->state_interface_keys();
       }
       else if (
-        state_interface_config.type == controller_interface::interface_configuration_type::INDIVIDUAL)
+        state_interface_config.type ==
+        controller_interface::interface_configuration_type::INDIVIDUAL)
       {
         cs.required_state_interfaces = state_interface_config.names;
       }
