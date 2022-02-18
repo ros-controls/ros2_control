@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "./test_controller_failed_init.hpp"
+#include "test_controller_failed_init.hpp"
 
 #include <memory>
 #include <string>
