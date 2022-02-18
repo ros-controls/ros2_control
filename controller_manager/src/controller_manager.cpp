@@ -1192,17 +1192,17 @@ void ControllerManager::list_hardware_components_srv_cb(
 
   response->component.reserve(hw_components_info.size());
 
-  for (auto it = hw_components_info.begin(); it != hw_components_info.end(); ++it)
+  for (const auto & [component_name, component_info] : hw_components_info)
   {
     auto component = controller_manager_msgs::msg::HardwareComponentState();
-    component.name = it->second.name;
-    component.type = it->second.type;
-    component.class_type = it->second.class_type;
-    component.state.id = it->second.state.id();
-    component.state.label = it->second.state.label();
+    component.name = component_name;
+    component.type = component_info.type;
+    component.class_type = component_info.class_type;
+    component.state.id = component_info.state.id();
+    component.state.label = component_info.state.label();
 
-    component.command_interfaces.reserve(it->second.command_interfaces.size());
-    for (const auto & interface : it->second.command_interfaces)
+    component.command_interfaces.reserve(component_info.command_interfaces.size());
+    for (const auto & interface : component_info.command_interfaces)
     {
       controller_manager_msgs::msg::HardwareInterface hwi;
       hwi.name = interface;
@@ -1211,8 +1211,8 @@ void ControllerManager::list_hardware_components_srv_cb(
       component.command_interfaces.push_back(hwi);
     }
 
-    component.state_interfaces.reserve(it->second.state_interfaces.size());
-    for (const auto & interface : it->second.state_interfaces)
+    component.state_interfaces.reserve(component_info.state_interfaces.size());
+    for (const auto & interface : component_info.state_interfaces)
     {
       controller_manager_msgs::msg::HardwareInterface hwi;
       hwi.name = interface;
