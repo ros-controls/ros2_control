@@ -2,6 +2,11 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Extend FakeHardware to support <gpio>-tag (`#574 <https://github.com/ros-controls/ros2_control/issues/574>`_) (`#634 <https://github.com/ros-controls/ros2_control/issues/634>`_)
+* Contributors: Subhas Das
+
 1.3.0 (2021-12-21)
 ------------------
 
