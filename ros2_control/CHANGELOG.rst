@@ -2,8 +2,8 @@
 Changelog for package ros2_control
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.4.0 (2022-02-18)
+------------------
 * Use correct ros-controls/realtime_tools branch (`#619 <https://github.com/ros-controls/ros2_control/issues/619>`_) (`#621 <https://github.com/ros-controls/ros2_control/issues/621>`_)
 * No need to get angles from source anymore, causes issues now (backport `#616 <https://github.com/ros-controls/ros2_control/issues/616>`_) (`#617 <https://github.com/ros-controls/ros2_control/issues/617>`_)
 * Point ros-controls/ros2_control to galactic (`#602 <https://github.com/ros-controls/ros2_control/issues/602>`_)
