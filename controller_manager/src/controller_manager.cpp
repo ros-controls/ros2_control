@@ -24,8 +24,9 @@
 #include "lifecycle_msgs/msg/state.hpp"
 #include "rclcpp/rclcpp.hpp"
 
-namespace controller_manager
-{
+namespace
+{  // utility
+
 static constexpr const char * kControllerInterfaceName = "controller_interface";
 static constexpr const char * kControllerInterface = "controller_interface::ControllerInterface";
 
@@ -34,16 +35,32 @@ inline bool is_controller_inactive(const controller_interface::ControllerInterfa
   return controller.get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE;
 }
 
+inline bool is_controller_inactive(
+  const controller_interface::ControllerInterfaceSharedPtr & controller)
+{
+  return is_controller_inactive(*controller);
+}
+
 inline bool is_controller_active(controller_interface::ControllerInterface & controller)
 {
   return controller.get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE;
 }
 
-bool controller_name_compare(const ControllerSpec & a, const std::string & name)
+inline bool is_controller_active(
+  const controller_interface::ControllerInterfaceSharedPtr & controller)
+{
+  return is_controller_active(*controller);
+}
+
+bool controller_name_compare(const controller_manager::ControllerSpec & a, const std::string & name)
 {
   return a.info.name == name;
 }
 
+}  // namespace
+
+namespace controller_manager
+{
 rclcpp::NodeOptions get_cm_node_options()
 {
   rclcpp::NodeOptions node_options;
@@ -575,7 +592,7 @@ controller_interface::return_type ControllerManager::switch_controller(
   // update the claimed interface controller info
   for (auto & controller : to)
   {
-    if (controller.c->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+    if (is_controller_active(controller.c))
     {
       auto command_interface_config = controller.c->command_interface_configuration();
       if (command_interface_config.type == controller_interface::interface_configuration_type::ALL)
@@ -861,28 +878,32 @@ void ControllerManager::list_controllers_srv_cb(
     cs.claimed_interfaces = controllers[i].info.claimed_interfaces;
     cs.state = controllers[i].c->get_state().label();
 
-    // Get information about interfaces
-    auto command_interface_config = controllers[i].c->command_interface_configuration();
-    if (command_interface_config.type == controller_interface::interface_configuration_type::ALL)
+    // Get information about interfaces if controller are in 'inactive' or 'active' state
+    if (is_controller_active(controllers[i].c) || is_controller_inactive(controllers[i].c))
     {
-      cs.required_command_interfaces = resource_manager_->command_interface_keys();
-    }
-    else if (
-      command_interface_config.type ==
-      controller_interface::interface_configuration_type::INDIVIDUAL)
-    {
-      cs.required_command_interfaces = command_interface_config.names;
-    }
+      auto command_interface_config = controllers[i].c->command_interface_configuration();
+      if (command_interface_config.type == controller_interface::interface_configuration_type::ALL)
+      {
+        cs.required_command_interfaces = resource_manager_->command_interface_keys();
+      }
+      else if (
+        command_interface_config.type ==
+        controller_interface::interface_configuration_type::INDIVIDUAL)
+      {
+        cs.required_command_interfaces = command_interface_config.names;
+      }
 
-    auto state_interface_config = controllers[i].c->state_interface_configuration();
-    if (state_interface_config.type == controller_interface::interface_configuration_type::ALL)
-    {
-      cs.required_state_interfaces = resource_manager_->state_interface_keys();
-    }
-    else if (
-      state_interface_config.type == controller_interface::interface_configuration_type::INDIVIDUAL)
-    {
-      cs.required_state_interfaces = state_interface_config.names;
+      auto state_interface_config = controllers[i].c->state_interface_configuration();
+      if (state_interface_config.type == controller_interface::interface_configuration_type::ALL)
+      {
+        cs.required_state_interfaces = resource_manager_->state_interface_keys();
+      }
+      else if (
+        state_interface_config.type ==
+        controller_interface::interface_configuration_type::INDIVIDUAL)
+      {
+        cs.required_state_interfaces = state_interface_config.names;
+      }
     }
   }
 

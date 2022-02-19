@@ -137,12 +137,8 @@ TEST_F(TestControllerManagerSrvs, list_controllers_srv)
   ASSERT_EQ(test_controller::TEST_CONTROLLER_CLASS_NAME, result->controller[0].type);
   ASSERT_EQ("unconfigured", result->controller[0].state);
   ASSERT_TRUE(result->controller[0].claimed_interfaces.empty());
-  ASSERT_THAT(
-    result->controller[0].required_command_interfaces,
-    testing::ElementsAre("joint1/position", "joint2/velocity"));
-  ASSERT_THAT(
-    result->controller[0].required_state_interfaces,
-    testing::ElementsAre("joint1/position", "joint1/velocity", "joint2/position"));
+  ASSERT_TRUE(result->controller[0].required_command_interfaces.empty());
+  ASSERT_TRUE(result->controller[0].required_state_interfaces.empty());
 
   cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME);
   result = call_service_and_wait(*client, request, srv_executor);
