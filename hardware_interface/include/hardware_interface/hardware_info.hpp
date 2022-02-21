@@ -87,7 +87,7 @@ struct ActuatorInfo
   double offset = 0.0;
 };
 
-/// Contains semantic info about a given transmission loaded from URDF for a transmission
+/// Contains semantic info about a given transmission loaded from URDF
 struct TransmissionInfo
 {
   std::string name;
