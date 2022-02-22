@@ -236,11 +236,8 @@ TEST(SimpleTransmissionLoaderTest, FullSpec)
 TEST(SimpleTransmissionLoaderTest, only_mech_red_specified)
 {
   std::string urdf_to_test = R"(
-==== BASE ====
- <?xml version="1.0"?>
-
-  <robot name="robot" xmlns="http://www.ros.org">
-==== BASE ====
+<?xml version="1.0"?>
+<robot name="robot" xmlns="http://www.ros.org">
   <ros2_control name="MinimalSpec" type="actuator">
     <joint name="joint1">
       <command_interface name="velocity">
