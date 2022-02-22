@@ -22,6 +22,7 @@ namespace transmission_interface
 class Exception : public std::exception
 {
 public:
+  explicit Exception(const char * message) : msg(message) {}
   explicit Exception(const std::string & message) : msg(message) {}
   const char * what() const noexcept override { return msg.c_str(); }
 
