@@ -2,6 +2,11 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* added a fixed control period to loop (backport `#647 <https://github.com/ros-controls/ros2_control/issues/647>`_) (`#651 <https://github.com/ros-controls/ros2_control/issues/651>`_)
+* Contributors: Jack Center, Denis Štogl
+
 0.9.0 (2021-12-20)
 ------------------
 * Make output of not available controllers nicer and make it informative. (`#577 <https://github.com/ros-controls/ros2_control/issues/577>`_) (`#578 <https://github.com/ros-controls/ros2_control/issues/578>`_)
