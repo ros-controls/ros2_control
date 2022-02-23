@@ -23,7 +23,7 @@ jobs:
       CCACHE_DIR: ${{ github.workspace }}/.ccache
       BASEDIR: ${{ github.workspace }}/.work
       CACHE_PREFIX: ${{ matrix.env.ROS_DISTRO }}-${{ matrix.env.ROS_REPO }}-${{ matrix.env.OS_CODE_NAME }}-binary
-      # Use last released Rolling packcages for Focal
+      # Use last released Rolling packages for Focal
       BEFORE_INSTALL_UPSTREAM_DEPENDENCIES: |
           export ROSDISTRO_INDEX_URL=https://raw.githubusercontent.com/ros/rosdistro/rolling/2022-01-28/index-v4.yaml
           rosdep update
