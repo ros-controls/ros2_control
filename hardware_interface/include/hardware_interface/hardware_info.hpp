@@ -68,7 +68,7 @@ struct ComponentInfo
   std::unordered_map<std::string, std::string> parameters;
 };
 
-/// Contains semantic info about a given joint loaded from XML (URDF)
+/// Contains semantic info about a given joint loaded from URDF for a transmission
 struct JointInfo
 {
   std::string name;
@@ -78,7 +78,7 @@ struct JointInfo
   double offset = 0.0;
 };
 
-/// Contains semantic info about a given actuator loaded from XML (URDF)
+/// Contains semantic info about a given actuator loaded from URDF for a transmission
 struct ActuatorInfo
 {
   std::string name;
@@ -87,7 +87,7 @@ struct ActuatorInfo
   double offset = 0.0;
 };
 
-/// Contains semantic info about a given transmission loaded from XML (URDF)
+/// Contains semantic info about a given transmission loaded from URDF
 struct TransmissionInfo
 {
   std::string name;

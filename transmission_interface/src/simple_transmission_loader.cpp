@@ -23,7 +23,6 @@
 #include "rclcpp/logging.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "transmission_interface/simple_transmission.hpp"
-#include "transmission_interface/transmission_interface_exception.hpp"
 
 namespace transmission_interface
 {
@@ -32,11 +31,13 @@ std::shared_ptr<Transmission> SimpleTransmissionLoader::load(
 {
   try
   {
-    std::shared_ptr<Transmission> transmission(new SimpleTransmission(
-      transmission_info.joints[0].mechanical_reduction, transmission_info.joints[0].offset));
+    const auto mechanical_reduction = transmission_info.joints.at(0).mechanical_reduction;
+    const auto offset = transmission_info.joints.at(0).offset;
+    std::shared_ptr<Transmission> transmission(
+      new SimpleTransmission(mechanical_reduction, offset));
     return transmission;
   }
-  catch (const transmission_interface::TransmissionInterfaceException & ex)
+  catch (const Exception & ex)
   {
     RCLCPP_ERROR(
       rclcpp::get_logger("simple_transmission_loader"), "Failed to construct transmission '%s'",
