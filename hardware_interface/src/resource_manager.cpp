@@ -972,7 +972,7 @@ void ResourceManager::validate_storage(
 }
 
 // Temporary method to keep old interface and reduce framework changes in PRs
-void ResourceManager::start_components()
+void ResourceManager::activate_all_components()
 {
   using lifecycle_msgs::msg::State;
   rclcpp_lifecycle::State active_state(

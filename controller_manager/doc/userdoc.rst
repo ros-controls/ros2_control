@@ -6,6 +6,39 @@ Controller Manager is the main component in the ros2_control framework.
 It manages lifecycle of controllers, access to the hardware interfaces and offers services to the ROS-world.
 
 
+Parameters
+-----------
+
+activate_components_on_start (optional; list<string>; default: empty)
+  Define which hardware components should be activated when controller manager is started.
+  The names of the components are defined as attribute of ``<ros2_control>``-tag in ``robot_description``.
+  All other components will stay ``UNCONFIGURED``.
+  If this and ``configure_components_on_start`` are empty, all available components will be activated.
+  If this or ``configure_components_on_start`` are not empty, any component not in either list will be in unconfigured state.
+
+
+configure_components_on_start (optional; list<string>; default: empty)
+  Define which hardware components should be configured when controller manager is started.
+  The names of the components are defined as attribute of ``<ros2_control>``-tag in ``robot_description``.
+  All other components will stay ``UNCONFIGURED``.
+  If this and ``activate_components_on_start`` are empty, all available components will be activated.
+  If this or ``activate_components_on_start`` are not empty, any component not in either list will be in unconfigured state.
+
+
+robot_description (mandatory; string)
+  String with the URDF string as robot description.
+  This is usually result of the parsed description files by ``xacro`` command.
+
+update_rate (mandatory; double)
+  The frequency of controller manager's real-time update loop.
+  This loop reads states from hardware, updates controller and writes commands to hardware.
+
+
+<controller_name>.type
+  Name of a plugin exported using ``pluginlib`` for a controller.
+  This is a class from which controller's instance with name "``controller_name``" is created.
+
+
 Helper scripts
 --------------
 There are two scripts to interact with controller manager from launch files:
