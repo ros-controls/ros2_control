@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.10.0 (2022-02-23)
+-------------------
 * added a fixed control period to loop (backport `#647 <https://github.com/ros-controls/ros2_control/issues/647>`_) (`#651 <https://github.com/ros-controls/ros2_control/issues/651>`_)
 * Contributors: Jack Center, Denis Štogl
 
