@@ -2,6 +2,11 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix transmission loader tests (`#642 <https://github.com/ros-controls/ros2_control/issues/642>`_)
+* Contributors: Bence Magyar, Denis Štogl
+
 2.3.0 (2022-02-18)
 ------------------
 * Add a warning if an initial_value is not found for any interface (`#623 <https://github.com/ros-controls/ros2_control/issues/623>`_)

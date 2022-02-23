@@ -2,6 +2,11 @@
 Changelog for package transmission_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix transmission loader tests (`#642 <https://github.com/ros-controls/ros2_control/issues/642>`_)
+* Contributors: Bence Magyar, Denis Štogl
+
 2.3.0 (2022-02-18)
 ------------------
 * Port transmission loader plugins from ROS1 (`#633 <https://github.com/ros-controls/ros2_control/issues/633>`_)

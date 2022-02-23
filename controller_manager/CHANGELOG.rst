@@ -2,6 +2,12 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fixes of issue with seg-fault when checking interfaces on unconfigured controllers. (`#580 <https://github.com/ros-controls/ros2_control/issues/580>`_)
+* Update CM service QoS so that we don't lose service calls when using many controllers. (`#643 <https://github.com/ros-controls/ros2_control/issues/643>`_)
+* Contributors: Denis Štogl, Bence Magyar
+
 2.3.0 (2022-02-18)
 ------------------
 * added a fixed control period to loop (`#647 <https://github.com/ros-controls/ros2_control/issues/647>`_)
