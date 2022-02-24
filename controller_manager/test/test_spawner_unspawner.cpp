@@ -103,10 +103,11 @@ TEST_F(TestLoadController, spawner_test_type_in_param)
   // Try to spawn again, it should fail because already active
   EXPECT_NE(call_spawner("ctrl_1 -c test_controller_manager"), 0) << "Cannot configure from active";
   ctrl_1.c->get_node()->deactivate();
-  // We should be able to reconfigure and start a configured controller
+  // We should be able to reconfigure and activate a configured controller
   EXPECT_EQ(call_spawner("ctrl_1 -c test_controller_manager"), 0);
+  ctrl_1.c->get_node()->deactivate();
   ctrl_1.c->get_node()->cleanup();
-  // We should be able to reconfigure and start am unconfigured loaded controller
+  // We should be able to reconfigure and activate am unconfigured loaded controller
   EXPECT_EQ(call_spawner("ctrl_1 -c test_controller_manager"), 0);
   ASSERT_EQ(ctrl_1.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
 
