@@ -34,7 +34,6 @@ enum class return_type : std::uint8_t
 {
   OK = 0,
   ERROR = 1,
-  SUCCESS [[deprecated("Use controller_interface::return_type::OK instead.")]] = OK
 };
 
 /// Indicating which interfaces are to be claimed.
