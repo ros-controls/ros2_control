@@ -195,21 +195,15 @@ TEST_F(TestControllerManagerSrvs, reload_controller_libraries_srv)
   auto request =
     std::make_shared<controller_manager_msgs::srv::ReloadControllerLibraries::Request>();
 
-  // Create a lambda to store the cleanup state change
-  bool cleanup_called = false;
-  auto set_cleanup_called = [&](const rclcpp_lifecycle::State &) {
-    cleanup_called = true;
-    return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
-  };
-
   // Reload with no controllers running
   request->force_kill = false;
   auto result = call_service_and_wait(*client, request, srv_executor);
   ASSERT_TRUE(result->ok);
 
   // Add a controller, but unconfigured
-  auto test_controller = cm_->load_controller(
-    test_controller::TEST_CONTROLLER_NAME, test_controller::TEST_CONTROLLER_CLASS_NAME);
+  std::shared_ptr<test_controller::TestController> test_controller =
+    std::dynamic_pointer_cast<test_controller::TestController>(cm_->load_controller(
+      test_controller::TEST_CONTROLLER_NAME, test_controller::TEST_CONTROLLER_CLASS_NAME));
 
   // weak_ptr so the only controller shared_ptr instance is owned by the controller_manager and
   // can be completely destroyed before reloading the library
@@ -220,21 +214,21 @@ TEST_F(TestControllerManagerSrvs, reload_controller_libraries_srv)
   ASSERT_GT(test_controller.use_count(), 1)
     << "Controller manager should have have a copy of this shared ptr";
 
-  cleanup_called = false;
-  test_controller->get_node()->register_on_cleanup(set_cleanup_called);
+  size_t cleanup_calls = 0;
+  test_controller->cleanup_calls = &cleanup_calls;
   test_controller.reset();  // destroy our copy of the controller
 
   request->force_kill = false;
   result = call_service_and_wait(*client, request, srv_executor, true);
   ASSERT_TRUE(result->ok);
-  ASSERT_TRUE(cleanup_called);
+  ASSERT_EQ(cleanup_calls, 1u);
   ASSERT_EQ(test_controller.use_count(), 0)
     << "No more references to the controller after reloading.";
   test_controller.reset();
 
   // Add a controller, but inactive
-  test_controller = cm_->load_controller(
-    test_controller::TEST_CONTROLLER_NAME, test_controller::TEST_CONTROLLER_CLASS_NAME);
+  test_controller = std::dynamic_pointer_cast<test_controller::TestController>(cm_->load_controller(
+    test_controller::TEST_CONTROLLER_NAME, test_controller::TEST_CONTROLLER_CLASS_NAME));
   test_controller_weak = test_controller;
   cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME);
 
@@ -242,20 +236,20 @@ TEST_F(TestControllerManagerSrvs, reload_controller_libraries_srv)
   ASSERT_GT(test_controller.use_count(), 1)
     << "Controller manager should have have a copy of this shared ptr";
 
-  cleanup_called = false;
-  test_controller->get_node()->register_on_cleanup(set_cleanup_called);
+  cleanup_calls = 0;
+  test_controller->cleanup_calls = &cleanup_calls;
   test_controller.reset();  // destroy our copy of the controller
 
   request->force_kill = false;
   result = call_service_and_wait(*client, request, srv_executor, true);
   ASSERT_TRUE(result->ok);
-  ASSERT_TRUE(cleanup_called);
+  ASSERT_EQ(cleanup_calls, 1u);
   ASSERT_EQ(test_controller.use_count(), 0)
     << "No more references to the controller after reloading.";
   test_controller.reset();
 
-  test_controller = cm_->load_controller(
-    test_controller::TEST_CONTROLLER_NAME, test_controller::TEST_CONTROLLER_CLASS_NAME);
+  test_controller = std::dynamic_pointer_cast<test_controller::TestController>(cm_->load_controller(
+    test_controller::TEST_CONTROLLER_NAME, test_controller::TEST_CONTROLLER_CLASS_NAME));
   test_controller_weak = test_controller;
   cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME);
   // Start Controller
@@ -273,8 +267,8 @@ TEST_F(TestControllerManagerSrvs, reload_controller_libraries_srv)
     << "Controller manager should still have have a copy of "
        "this shared ptr, no unloading was performed";
 
-  cleanup_called = false;
-  test_controller->get_node()->register_on_cleanup(set_cleanup_called);
+  cleanup_calls = 0;
+  test_controller->cleanup_calls = &cleanup_calls;
   test_controller.reset();  // destroy our copy of the controller
 
   // Force stop active controller
@@ -284,7 +278,7 @@ TEST_F(TestControllerManagerSrvs, reload_controller_libraries_srv)
 
   ASSERT_EQ(test_controller_weak.use_count(), 0)
     << "No more references to the controller after reloading.";
-  ASSERT_TRUE(cleanup_called)
+  ASSERT_EQ(cleanup_calls, 1u)
     << "Controller should have been stopped and cleaned up with force_kill = true";
 }
 
