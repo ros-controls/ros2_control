@@ -79,10 +79,18 @@ public:
   void release_interfaces();
 
   CONTROLLER_INTERFACE_PUBLIC
-  virtual LifecycleNodeInterface::CallbackReturn on_init() = 0;
-
-  CONTROLLER_INTERFACE_PUBLIC
   virtual return_type init(const std::string & controller_name);
+
+  /// Custom configure method to read additional parameters for controller-nodes
+  /*
+   * Override default implementation for configure of LifecycleNode to get 'update_rate' parameter.
+   */
+  CONTROLLER_INTERFACE_PUBLIC
+  const rclcpp_lifecycle::State & configure();
+
+  /// Extending interface with initialization method which is individual for each controller
+  CONTROLLER_INTERFACE_PUBLIC
+  virtual LifecycleNodeInterface::CallbackReturn on_init() = 0;
 
   CONTROLLER_INTERFACE_PUBLIC
   virtual return_type update(const rclcpp::Time & time, const rclcpp::Duration & period) = 0;

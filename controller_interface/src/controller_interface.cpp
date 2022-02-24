@@ -30,6 +30,16 @@ return_type ControllerInterface::init(const std::string & controller_name)
                        .allow_undeclared_parameters(true)
                        .automatically_declare_parameters_from_overrides(true));
 
+  try
+  {
+    node_->declare_parameter("update_rate", 0);
+  }
+  catch (const std::exception & e)
+  {
+    fprintf(stderr, "Exception thrown during init stage with message: %s \n", e.what());
+    return return_type::ERROR;
+  }
+
   switch (on_init())
   {
     case LifecycleNodeInterface::CallbackReturn::SUCCESS:
@@ -57,12 +67,14 @@ return_type ControllerInterface::init(const std::string & controller_name)
 
   node_->register_on_error(std::bind(&ControllerInterface::on_error, this, std::placeholders::_1));
 
-  if (node_->has_parameter("update_rate"))
-  {
-    update_rate_ = node_->get_parameter("update_rate").as_int();
-  }
-
   return return_type::OK;
+}
+
+const rclcpp_lifecycle::State & ControllerInterface::configure()
+{
+  update_rate_ = node_->get_parameter("update_rate").as_int();
+
+  return node_->configure();
 }
 
 void ControllerInterface::assign_interfaces(
