@@ -30,8 +30,8 @@ TestController::TestController()
 controller_interface::InterfaceConfiguration TestController::command_interface_configuration() const
 {
   if (
-    lifecycle_state_.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
-    lifecycle_state_.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+    get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
+    get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
   {
     return cmd_iface_cfg_;
   }
@@ -45,8 +45,8 @@ controller_interface::InterfaceConfiguration TestController::command_interface_c
 controller_interface::InterfaceConfiguration TestController::state_interface_configuration() const
 {
   if (
-    lifecycle_state_.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
-    lifecycle_state_.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+    get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
+    get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
   {
     return state_iface_cfg_;
   }
@@ -83,27 +83,6 @@ CallbackReturn TestController::on_cleanup(const rclcpp_lifecycle::State & /*prev
     (*cleanup_calls)++;
   }
   return CallbackReturn::SUCCESS;
-}
-
-rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
-TestController::on_configure(const rclcpp_lifecycle::State & /*previous_state*/)
-{
-  return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
-}
-
-rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
-TestController::on_cleanup(const rclcpp_lifecycle::State & /*previous_state*/)
-{
-  if (simulate_cleanup_failure)
-  {
-    return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::FAILURE;
-  }
-
-  if (cleanup_calls)
-  {
-    (*cleanup_calls)++;
-  }
-  return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
 void TestController::set_command_interface_configuration(
