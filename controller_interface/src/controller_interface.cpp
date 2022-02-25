@@ -26,9 +26,11 @@ namespace controller_interface
 return_type ControllerInterface::init(const std::string & controller_name)
 {
   node_ = std::make_shared<rclcpp_lifecycle::LifecycleNode>(
-    controller_name, rclcpp::NodeOptions()
-                       .allow_undeclared_parameters(true)
-                       .automatically_declare_parameters_from_overrides(true));
+    controller_name,
+    rclcpp::NodeOptions()
+      .allow_undeclared_parameters(true)
+      .automatically_declare_parameters_from_overrides(true),
+    false);
 
   try
   {
