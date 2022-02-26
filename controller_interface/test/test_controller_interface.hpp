@@ -20,6 +20,8 @@
 
 using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
 
+constexpr char TEST_CONTROLLER_NAME[] = "testable_controller_interface";
+
 class TestableControllerInterface : public controller_interface::ControllerInterface
 {
 public:

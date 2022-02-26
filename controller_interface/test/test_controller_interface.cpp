@@ -26,7 +26,7 @@ constexpr size_t arrlen(T (&)[N])
   return N;
 }
 
-TEST(TestableControllerInterface, check_init)
+TEST(TestableControllerInterface, init)
 {
   char const * const argv[] = {""};
   int argc = arrlen(argv);
@@ -38,8 +38,7 @@ TEST(TestableControllerInterface, check_init)
   ASSERT_THROW(controller.get_node(), std::runtime_error);
 
   // initialize, create node
-  ASSERT_EQ(
-    controller.init("testable_controller_interface"), controller_interface::return_type::OK);
+  ASSERT_EQ(controller.init(TEST_CONTROLLER_NAME), controller_interface::return_type::OK);
   ASSERT_NO_THROW(controller.get_node());
 
   // update_rate is set to default 0
@@ -52,7 +51,7 @@ TEST(TestableControllerInterface, check_init)
   rclcpp::shutdown();
 }
 
-TEST(TestableControllerInterface, check_setting_update_rate_in_configure)
+TEST(TestableControllerInterface, setting_update_rate_in_configure)
 {
   // mocks the declaration of overrides parameters in a yaml file
   char const * const argv[] = {"", "--ros-args", "-p", "update_rate:=2812"};
@@ -61,8 +60,7 @@ TEST(TestableControllerInterface, check_setting_update_rate_in_configure)
 
   TestableControllerInterface controller;
   // initialize, create node
-  ASSERT_EQ(
-    controller.init("testable_controller_interface"), controller_interface::return_type::OK);
+  ASSERT_EQ(controller.init(TEST_CONTROLLER_NAME), controller_interface::return_type::OK);
 
   // initialize executor to be able to get parameter update
   auto executor =
@@ -99,7 +97,7 @@ TEST(TestableControllerInterface, check_setting_update_rate_in_configure)
   rclcpp::shutdown();
 }
 
-TEST(TestableControllerInterfaceInitError, check_init_with_failure)
+TEST(TestableControllerInterfaceInitError, init_with_error)
 {
   char const * const argv[] = {""};
   int argc = arrlen(argv);
@@ -108,13 +106,12 @@ TEST(TestableControllerInterfaceInitError, check_init_with_failure)
   TestableControllerInterfaceInitError controller;
 
   // initialize, create node
-  ASSERT_EQ(
-    controller.init("testable_controller_interface"), controller_interface::return_type::ERROR);
+  ASSERT_EQ(controller.init(TEST_CONTROLLER_NAME), controller_interface::return_type::ERROR);
 
   rclcpp::shutdown();
 }
 
-TEST(TestableControllerInterfaceInitFailure, check_init_with_failure)
+TEST(TestableControllerInterfaceInitFailure, init_with_failure)
 {
   char const * const argv[] = {""};
   int argc = arrlen(argv);
@@ -123,8 +120,7 @@ TEST(TestableControllerInterfaceInitFailure, check_init_with_failure)
   TestableControllerInterfaceInitFailure controller;
 
   // initialize, create node
-  ASSERT_EQ(
-    controller.init("testable_controller_interface"), controller_interface::return_type::ERROR);
+  ASSERT_EQ(controller.init(TEST_CONTROLLER_NAME), controller_interface::return_type::ERROR);
 
   rclcpp::shutdown();
 }
