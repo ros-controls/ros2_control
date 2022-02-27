@@ -12,13 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "./test_controller.hpp"
+#include "test_controller.hpp"
 
 #include <memory>
 #include <string>
 
 #include "lifecycle_msgs/msg/state.hpp"
-#include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 
 namespace test_controller
 {
@@ -65,30 +64,25 @@ controller_interface::return_type TestController::update(
   return controller_interface::return_type::OK;
 }
 
-rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn TestController::on_init()
+CallbackReturn TestController::on_init() { return CallbackReturn::SUCCESS; }
+
+CallbackReturn TestController::on_configure(const rclcpp_lifecycle::State & /*previous_state*/)
 {
-  return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
+  return CallbackReturn::SUCCESS;
 }
 
-rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
-TestController::on_configure(const rclcpp_lifecycle::State & /*previous_state*/)
-{
-  return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
-}
-
-rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
-TestController::on_cleanup(const rclcpp_lifecycle::State & /*previous_state*/)
+CallbackReturn TestController::on_cleanup(const rclcpp_lifecycle::State & /*previous_state*/)
 {
   if (simulate_cleanup_failure)
   {
-    return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::FAILURE;
+    return CallbackReturn::FAILURE;
   }
 
   if (cleanup_calls)
   {
     (*cleanup_calls)++;
   }
-  return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
+  return CallbackReturn::SUCCESS;
 }
 
 void TestController::set_command_interface_configuration(
