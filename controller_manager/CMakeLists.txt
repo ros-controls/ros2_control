@@ -94,6 +94,16 @@ if(BUILD_TESTING)
     DESTINATION lib
   )
 
+  add_library(test_chainable_controller SHARED test/test_chainable_controller/test_chainable_controller.cpp)
+  target_include_directories(test_chainable_controller PRIVATE include)
+  target_link_libraries(test_chainable_controller controller_manager)
+  target_compile_definitions(test_chainable_controller PRIVATE "CONTROLLER_MANAGER_BUILDING_DLL")
+  pluginlib_export_plugin_description_file(
+    controller_interface test/test_chainable_controller/test_chainable_controller.xml)
+  install(TARGETS test_chainable_controller
+    DESTINATION lib
+  )
+
   ament_add_gmock(
     test_controller_manager
     test/test_controller_manager.cpp
@@ -101,6 +111,14 @@ if(BUILD_TESTING)
   target_include_directories(test_controller_manager PRIVATE include)
   target_link_libraries(test_controller_manager controller_manager test_controller)
   ament_target_dependencies(test_controller_manager ros2_control_test_assets)
+
+  #ament_add_gmock(
+    #test_controllers_chaining_with_controller_manager
+    #test/test_controllers_chaining_with_controller_manager.cpp
+  #)
+  #target_include_directories(test_controllers_chaining_with_controller_manager PRIVATE include)
+  #target_link_libraries(test_controllers_chaining_with_controller_manager controller_manager test_controller)
+  #ament_target_dependencies(test_controllers_chaining_with_controller_manager ros2_control_test_assets)
 
   ament_add_gmock(
     test_controller_manager_with_namespace.cpp
