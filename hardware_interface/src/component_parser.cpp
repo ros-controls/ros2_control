@@ -385,6 +385,8 @@ ActuatorInfo parse_transmission_actuator_from_xml(const tinyxml2::XMLElement * e
   ActuatorInfo actuator_info;
   actuator_info.name = get_attribute_value(element_it, kNameAttribute, element_it->Name());
   actuator_info.role = get_attribute_value(element_it, kRoleAttribute, element_it->Name());
+  actuator_info.mechanical_reduction =
+    get_parameter_value_or(element_it->FirstChildElement(), kReductionAttribute, 1.0);
   actuator_info.offset =
     get_parameter_value_or(element_it->FirstChildElement(), kOffsetAttribute, 0.0);
   return actuator_info;
@@ -474,7 +476,7 @@ void auto_fill_transmission_interfaces(HardwareInfo & hardware)
       }
 
       transmission.actuators.push_back(
-        ActuatorInfo{"actuator1", transmission.joints[0].interfaces, "actuator1", 0.0});
+        ActuatorInfo{"actuator1", transmission.joints[0].interfaces, "actuator1", 1.0, 0.0});
     }
   }
 }

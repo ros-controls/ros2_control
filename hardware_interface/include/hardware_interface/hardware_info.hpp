@@ -84,6 +84,7 @@ struct ActuatorInfo
   std::string name;
   std::vector<std::string> interfaces;
   std::string role;
+  double mechanical_reduction = 1.0;
   double offset = 0.0;
 };
 
