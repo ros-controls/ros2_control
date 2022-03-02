@@ -117,8 +117,7 @@ TEST(DifferentialTransmissionLoaderTest, FullSpec)
   EXPECT_EQ(50.0, actuator_reduction[0]);
   EXPECT_EQ(-50.0, actuator_reduction[1]);
 
-  const std::vector<double> & joint_reduction =
-    differential_transmission->get_joint_reduction();
+  const std::vector<double> & joint_reduction = differential_transmission->get_joint_reduction();
   EXPECT_EQ(2.0, joint_reduction[0]);
   EXPECT_EQ(-2.0, joint_reduction[1]);
 
@@ -190,8 +189,7 @@ TEST(DifferentialTransmissionLoaderTest, only_mech_red_specified)
   EXPECT_EQ(50.0, actuator_reduction[0]);
   EXPECT_EQ(-50.0, actuator_reduction[1]);
 
-  const std::vector<double> & joint_reduction =
-    differential_transmission->get_joint_reduction();
+  const std::vector<double> & joint_reduction = differential_transmission->get_joint_reduction();
   EXPECT_EQ(1.0, joint_reduction[0]);
   EXPECT_EQ(1.0, joint_reduction[1]);
 
@@ -255,8 +253,7 @@ TEST(SimpleTransmissionLoaderTest, offset_and_mech_red_not_specified)
   EXPECT_EQ(1.0, actuator_reduction[0]);
   EXPECT_EQ(1.0, actuator_reduction[1]);
 
-  const std::vector<double> & joint_reduction =
-    differential_transmission->get_joint_reduction();
+  const std::vector<double> & joint_reduction = differential_transmission->get_joint_reduction();
   EXPECT_EQ(1.0, joint_reduction[0]);
   EXPECT_EQ(1.0, joint_reduction[1]);
 
@@ -329,8 +326,7 @@ TEST(DifferentialTransmissionLoaderTest, mechanical_reduction_not_a_number)
   EXPECT_EQ(1.0, actuator_reduction[0]);
   EXPECT_EQ(1.0, actuator_reduction[1]);
 
-  const std::vector<double> & joint_reduction =
-    differential_transmission->get_joint_reduction();
+  const std::vector<double> & joint_reduction = differential_transmission->get_joint_reduction();
   EXPECT_EQ(1.0, joint_reduction[0]);
   EXPECT_EQ(1.0, joint_reduction[1]);
 
@@ -405,8 +401,7 @@ TEST(DifferentialTransmissionLoaderTest, offset_ill_defined)
   EXPECT_EQ(50.0, actuator_reduction[0]);
   EXPECT_EQ(-50.0, actuator_reduction[1]);
 
-  const std::vector<double> & joint_reduction =
-    differential_transmission->get_joint_reduction();
+  const std::vector<double> & joint_reduction = differential_transmission->get_joint_reduction();
   EXPECT_EQ(2.0, joint_reduction[0]);
   EXPECT_EQ(-2.0, joint_reduction[1]);
 

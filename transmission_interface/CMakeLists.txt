@@ -91,7 +91,7 @@ if(BUILD_TESTING)
   target_include_directories(test_four_bar_linkage_transmission_loader PUBLIC include hardware_interface)
   ament_target_dependencies(test_four_bar_linkage_transmission_loader hardware_interface)
 
-    ament_add_gmock(
+  ament_add_gmock(
     test_differential_transmission_loader
     test/differential_transmission_loader_test.cpp
   )
