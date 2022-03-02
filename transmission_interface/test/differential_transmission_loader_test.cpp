@@ -22,8 +22,8 @@
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "pluginlib/class_loader.hpp"
-#include "transmission_interface/four_bar_linkage_transmission.hpp"
-#include "transmission_interface/four_bar_linkage_transmission_loader.hpp"
+#include "transmission_interface/differential_transmission.hpp"
+#include "transmission_interface/differential_transmission_loader.hpp"
 #include "transmission_interface/transmission_loader.hpp"
 
 using testing::SizeIs;
@@ -108,21 +108,21 @@ TEST(DifferentialTransmissionLoaderTest, FullSpec)
   ASSERT_TRUE(nullptr != transmission);
 
   // Validate transmission
-  transmission_interface::DifferentialTransmission * four_bar_linkage_transmission =
+  transmission_interface::DifferentialTransmission * differential_transmission =
     dynamic_cast<transmission_interface::DifferentialTransmission *>(transmission.get());
-  ASSERT_TRUE(nullptr != four_bar_linkage_transmission);
+  ASSERT_TRUE(nullptr != differential_transmission);
 
   const std::vector<double> & actuator_reduction =
-    four_bar_linkage_transmission->get_actuator_reduction();
+    differential_transmission->get_actuator_reduction();
   EXPECT_EQ(50.0, actuator_reduction[0]);
   EXPECT_EQ(-50.0, actuator_reduction[1]);
 
   const std::vector<double> & joint_reduction =
-    four_bar_linkage_transmission->get_joint_reduction();
+    differential_transmission->get_joint_reduction();
   EXPECT_EQ(2.0, joint_reduction[0]);
   EXPECT_EQ(-2.0, joint_reduction[1]);
 
-  const std::vector<double> & joint_offset = four_bar_linkage_transmission->get_joint_offset();
+  const std::vector<double> & joint_offset = differential_transmission->get_joint_offset();
   EXPECT_EQ(0.5, joint_offset[0]);
   EXPECT_EQ(-0.5, joint_offset[1]);
 }
@@ -182,20 +182,20 @@ TEST(DifferentialTransmissionLoaderTest, only_mech_red_specified)
   ASSERT_TRUE(nullptr != transmission);
 
   // Validate transmission
-  transmission_interface::DifferentialTransmission * four_bar_linkage_transmission =
+  transmission_interface::DifferentialTransmission * differential_transmission =
     dynamic_cast<transmission_interface::DifferentialTransmission *>(transmission.get());
 
   const std::vector<double> & actuator_reduction =
-    four_bar_linkage_transmission->get_actuator_reduction();
+    differential_transmission->get_actuator_reduction();
   EXPECT_EQ(50.0, actuator_reduction[0]);
   EXPECT_EQ(-50.0, actuator_reduction[1]);
 
   const std::vector<double> & joint_reduction =
-    four_bar_linkage_transmission->get_joint_reduction();
+    differential_transmission->get_joint_reduction();
   EXPECT_EQ(1.0, joint_reduction[0]);
   EXPECT_EQ(1.0, joint_reduction[1]);
 
-  const std::vector<double> & joint_offset = four_bar_linkage_transmission->get_joint_offset();
+  const std::vector<double> & joint_offset = differential_transmission->get_joint_offset();
   EXPECT_EQ(0.0, joint_offset[0]);
   EXPECT_EQ(0.0, joint_offset[1]);
 }
@@ -247,20 +247,20 @@ TEST(SimpleTransmissionLoaderTest, offset_and_mech_red_not_specified)
   ASSERT_TRUE(nullptr != transmission);
 
   // Validate transmission
-  transmission_interface::DifferentialTransmission * four_bar_linkage_transmission =
+  transmission_interface::DifferentialTransmission * differential_transmission =
     dynamic_cast<transmission_interface::DifferentialTransmission *>(transmission.get());
 
   const std::vector<double> & actuator_reduction =
-    four_bar_linkage_transmission->get_actuator_reduction();
+    differential_transmission->get_actuator_reduction();
   EXPECT_EQ(1.0, actuator_reduction[0]);
   EXPECT_EQ(1.0, actuator_reduction[1]);
 
   const std::vector<double> & joint_reduction =
-    four_bar_linkage_transmission->get_joint_reduction();
+    differential_transmission->get_joint_reduction();
   EXPECT_EQ(1.0, joint_reduction[0]);
   EXPECT_EQ(1.0, joint_reduction[1]);
 
-  const std::vector<double> & joint_offset = four_bar_linkage_transmission->get_joint_offset();
+  const std::vector<double> & joint_offset = differential_transmission->get_joint_offset();
   EXPECT_EQ(0.0, joint_offset[0]);
   EXPECT_EQ(0.0, joint_offset[1]);
 }
@@ -320,21 +320,21 @@ TEST(DifferentialTransmissionLoaderTest, mechanical_reduction_not_a_number)
   ASSERT_TRUE(nullptr != transmission);
 
   // Validate transmission
-  transmission_interface::DifferentialTransmission * four_bar_linkage_transmission =
+  transmission_interface::DifferentialTransmission * differential_transmission =
     dynamic_cast<transmission_interface::DifferentialTransmission *>(transmission.get());
 
   // default kicks in for ill-defined values
   const std::vector<double> & actuator_reduction =
-    four_bar_linkage_transmission->get_actuator_reduction();
+    differential_transmission->get_actuator_reduction();
   EXPECT_EQ(1.0, actuator_reduction[0]);
   EXPECT_EQ(1.0, actuator_reduction[1]);
 
   const std::vector<double> & joint_reduction =
-    four_bar_linkage_transmission->get_joint_reduction();
+    differential_transmission->get_joint_reduction();
   EXPECT_EQ(1.0, joint_reduction[0]);
   EXPECT_EQ(1.0, joint_reduction[1]);
 
-  const std::vector<double> & joint_offset = four_bar_linkage_transmission->get_joint_offset();
+  const std::vector<double> & joint_offset = differential_transmission->get_joint_offset();
   EXPECT_EQ(0.0, joint_offset[0]);
   EXPECT_EQ(0.0, joint_offset[1]);
 }
@@ -396,22 +396,22 @@ TEST(DifferentialTransmissionLoaderTest, offset_ill_defined)
   ASSERT_TRUE(nullptr != transmission);
 
   // Validate transmission
-  transmission_interface::DifferentialTransmission * four_bar_linkage_transmission =
+  transmission_interface::DifferentialTransmission * differential_transmission =
     dynamic_cast<transmission_interface::DifferentialTransmission *>(transmission.get());
 
   // default kicks in for ill-defined values
   const std::vector<double> & actuator_reduction =
-    four_bar_linkage_transmission->get_actuator_reduction();
+    differential_transmission->get_actuator_reduction();
   EXPECT_EQ(50.0, actuator_reduction[0]);
   EXPECT_EQ(-50.0, actuator_reduction[1]);
 
   const std::vector<double> & joint_reduction =
-    four_bar_linkage_transmission->get_joint_reduction();
+    differential_transmission->get_joint_reduction();
   EXPECT_EQ(2.0, joint_reduction[0]);
   EXPECT_EQ(-2.0, joint_reduction[1]);
 
   // default kicks in for ill-defined values
-  const std::vector<double> & joint_offset = four_bar_linkage_transmission->get_joint_offset();
+  const std::vector<double> & joint_offset = differential_transmission->get_joint_offset();
   EXPECT_EQ(0.0, joint_offset[0]);
   EXPECT_EQ(0.0, joint_offset[1]);
 }
