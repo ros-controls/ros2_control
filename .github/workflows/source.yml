@@ -30,7 +30,12 @@ jobs:
           vcs-repo-file-url: |
             https://raw.githubusercontent.com/ros2/ros2/galactic/ros2.repos
             https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/ros2_control/ros2_control.repos
-          colcon-mixin-name: coverage-gcc
+          colcon-defaults: |
+            {
+              "build": {
+                "mixin": ["coverage-gcc"]
+              }
+            }
           colcon-mixin-repository: https://raw.githubusercontent.com/colcon/colcon-mixin-repository/master/index.yaml
       - uses: codecov/codecov-action@v1
         with:
