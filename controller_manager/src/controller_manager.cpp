@@ -337,6 +337,7 @@ controller_interface::return_type ControllerManager::unload_controller(
   }
 
   RCLCPP_DEBUG(get_logger(), "Cleanup controller");
+  // TODO(destogl): remove reference interface is chainable; i.e., add a separate method for cleaning-up controllers?
   controller.c->get_node()->cleanup();
   executor_->remove_node(controller.c->get_node()->get_node_base_interface());
   to.erase(found_it);
@@ -396,6 +397,7 @@ controller_interface::return_type ControllerManager::configure_controller(
   {
     RCLCPP_DEBUG(
       get_logger(), "Controller '%s' is cleaned-up before configuring", controller_name.c_str());
+    // TODO(destogl): remove reference interface is chainable; i.e., add a separate method for cleaning-up controllers?
     new_state = controller->get_node()->cleanup();
     if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
     {
@@ -413,6 +415,21 @@ controller_interface::return_type ControllerManager::configure_controller(
       get_logger(), "After configuring, controller '%s' is in state '%s' , expected inactive.",
       controller_name.c_str(), new_state.label().c_str());
     return controller_interface::return_type::ERROR;
+  }
+
+  // CHAINABLE CONTROLLERS: get reference interfaces from chainable controllers
+  if (controller->is_chainable())
+  {
+    auto interfaces = controller->export_reference_interfaces();
+    //TODO(destogl): enable "interface_names" when controller_info_map_ is added
+    //     std::vector<std::string> interface_names;
+    //     interface_names.reserve(interfaces.size());
+    for (auto & interface : interfaces)
+    {
+      auto key = interface.get_full_name();
+      reference_interface_map_.emplace(std::make_pair(key, std::move(interface)));
+      claimed_reference_interface_map_.emplace(std::make_pair(key, false));
+    }
   }
 
   return controller_interface::return_type::OK;

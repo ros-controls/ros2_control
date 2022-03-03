@@ -112,14 +112,6 @@ if(BUILD_TESTING)
   target_link_libraries(test_controller_manager controller_manager test_controller)
   ament_target_dependencies(test_controller_manager ros2_control_test_assets)
 
-  #ament_add_gmock(
-    #test_controllers_chaining_with_controller_manager
-    #test/test_controllers_chaining_with_controller_manager.cpp
-  #)
-  #target_include_directories(test_controllers_chaining_with_controller_manager PRIVATE include)
-  #target_link_libraries(test_controllers_chaining_with_controller_manager controller_manager test_controller)
-  #ament_target_dependencies(test_controllers_chaining_with_controller_manager ros2_control_test_assets)
-
   ament_add_gmock(
     test_controller_manager_with_namespace.cpp
     test/test_controller_manager_with_namespace.cpp
@@ -136,6 +128,14 @@ if(BUILD_TESTING)
   target_include_directories(test_load_controller PRIVATE include)
   target_link_libraries(test_load_controller controller_manager test_controller test_controller_failed_init)
   ament_target_dependencies(test_load_controller ros2_control_test_assets)
+
+  ament_add_gmock(
+    test_controllers_chaining_with_controller_manager
+    test/test_controllers_chaining_with_controller_manager.cpp
+  )
+  target_include_directories(test_controllers_chaining_with_controller_manager PRIVATE include)
+  target_link_libraries(test_controllers_chaining_with_controller_manager controller_manager test_chainable_controller)
+  ament_target_dependencies(test_controllers_chaining_with_controller_manager ros2_control_test_assets)
 
   ament_add_gmock(
     test_controller_manager_srvs

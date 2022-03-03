@@ -15,9 +15,11 @@
 #ifndef CONTROLLER_MANAGER__CONTROLLER_MANAGER_HPP_
 #define CONTROLLER_MANAGER__CONTROLLER_MANAGER_HPP_
 
+#include <map>
 #include <memory>
 #include <string>
 #include <tuple>
+#include <unordered_map>
 #include <vector>
 
 #include "controller_interface/chainable_controller_interface.hpp"
@@ -40,6 +42,7 @@
 #include "controller_manager_msgs/srv/switch_controller.hpp"
 #include "controller_manager_msgs/srv/unload_controller.hpp"
 
+#include "hardware_interface/handle.hpp"
 #include "hardware_interface/resource_manager.hpp"
 
 #include "pluginlib/class_loader.hpp"
@@ -243,6 +246,11 @@ protected:
   // Per controller update rate support
   unsigned int update_loop_counter_ = 0;
   unsigned int update_rate_ = 100;
+
+  //TODO(destogl): 'public' is a temporary solution for tests it should be removed before merging.
+public:
+  std::map<std::string, hardware_interface::CommandInterface> reference_interface_map_;
+  std::unordered_map<std::string, bool> claimed_reference_interface_map_;
 
 private:
   std::vector<std::string> get_controller_names();
