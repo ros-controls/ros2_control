@@ -406,10 +406,10 @@ public:
     auto interfaces = hardware.export_state_interfaces();
     std::vector<std::string> interface_names;
     interface_names.reserve(interfaces.size());
-    for (auto i = 0u; i < interfaces.size(); ++i)
+    for (auto & interface : interfaces)
     {
-      auto key = interfaces[i].get_full_name();
-      state_interface_map_.emplace(std::make_pair(key, std::move(interfaces[i])));
+      auto key = interface.get_full_name();
+      state_interface_map_.emplace(std::make_pair(key, std::move(interface)));
       interface_names.push_back(key);
     }
     hardware_info_map_[hardware.get_name()].state_interfaces = interface_names;
@@ -423,10 +423,10 @@ public:
     auto interfaces = hardware.export_command_interfaces();
     std::vector<std::string> interface_names;
     interface_names.reserve(interfaces.size());
-    for (auto i = 0u; i < interfaces.size(); ++i)
+    for (auto & interface : interfaces)
     {
-      auto key = interfaces[i].get_full_name();
-      command_interface_map_.emplace(std::make_pair(key, std::move(interfaces[i])));
+      auto key = interface.get_full_name();
+      command_interface_map_.emplace(std::make_pair(key, std::move(interface)));
       claimed_command_interface_map_.emplace(std::make_pair(key, false));
       interface_names.push_back(key);
     }
