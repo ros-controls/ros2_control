@@ -1205,3 +1205,84 @@ TEST_F(TestResourceManager, resource_availability_and_claiming_in_lifecycle)
       std::bind(&hardware_interface::ResourceManager::state_interface_exists, &rm, _1), true);
   }
 }
+
+TEST_F(TestResourceManager, managing_controllers_reference_interfaces)
+{
+  hardware_interface::ResourceManager rm(ros2_control_test_assets::minimal_robot_urdf);
+
+  std::vector<std::string> FULL_REFERENCE_INTERFACE_NAMES = {
+    "test_controller/input1", "test_controller/input2", "test_controller/input3"};
+
+  std::vector<hardware_interface::CommandInterface> reference_interfaces;
+  std::vector<double> reference_interface_values = {1.0, 2.0, 3.0};
+  std::vector<std::string> reference_interface_names = {"input1", "input2", "input3"};
+
+  for (size_t i = 0; i < reference_interface_names.size(); ++i)
+  {
+    reference_interfaces.push_back(hardware_interface::CommandInterface(
+      "test_controller", reference_interface_names[i], &(reference_interface_values[i])));
+  }
+
+  auto ref_itf_names = rm.import_controller_reference_interfaces(reference_interfaces);
+
+  ASSERT_THAT(ref_itf_names, testing::ElementsAreArray(FULL_REFERENCE_INTERFACE_NAMES));
+
+  // check that all interfaces are imported properly
+  for (const auto & interface : FULL_REFERENCE_INTERFACE_NAMES)
+  {
+    EXPECT_TRUE(rm.command_interface_exists(interface));
+    EXPECT_TRUE(rm.command_interface_is_available(interface));
+    EXPECT_FALSE(rm.command_interface_is_claimed(interface));
+  }
+
+  // claim interfaces in a scope that deletes them after
+  {
+    auto claimed_itf1 = rm.claim_command_interface(FULL_REFERENCE_INTERFACE_NAMES[0]);
+    auto claimed_itf3 = rm.claim_command_interface(FULL_REFERENCE_INTERFACE_NAMES[2]);
+
+    for (const auto & interface : FULL_REFERENCE_INTERFACE_NAMES)
+    {
+      EXPECT_TRUE(rm.command_interface_exists(interface));
+      EXPECT_TRUE(rm.command_interface_is_available(interface));
+    }
+    EXPECT_TRUE(rm.command_interface_is_claimed(FULL_REFERENCE_INTERFACE_NAMES[0]));
+    EXPECT_FALSE(rm.command_interface_is_claimed(FULL_REFERENCE_INTERFACE_NAMES[1]));
+    EXPECT_TRUE(rm.command_interface_is_claimed(FULL_REFERENCE_INTERFACE_NAMES[2]));
+
+    // access interface value
+    EXPECT_EQ(claimed_itf1.get_value(), 1.0);
+    EXPECT_EQ(claimed_itf3.get_value(), 3.0);
+
+    claimed_itf1.set_value(11.1);
+    claimed_itf3.set_value(33.3);
+    EXPECT_EQ(claimed_itf1.get_value(), 11.1);
+    EXPECT_EQ(claimed_itf3.get_value(), 33.3);
+
+    EXPECT_EQ(reference_interface_values[0], 11.1);
+    EXPECT_EQ(reference_interface_values[1], 2.0);
+    EXPECT_EQ(reference_interface_values[2], 33.3);
+  }
+
+  // interfaces should be released now, but still managed by resource manager
+  for (const auto & interface : FULL_REFERENCE_INTERFACE_NAMES)
+  {
+    EXPECT_TRUE(rm.command_interface_exists(interface));
+    EXPECT_TRUE(rm.command_interface_is_available(interface));
+    EXPECT_FALSE(rm.command_interface_is_claimed(interface));
+  }
+
+  // Last written values should stay
+  EXPECT_EQ(reference_interface_values[0], 11.1);
+  EXPECT_EQ(reference_interface_values[1], 2.0);
+  EXPECT_EQ(reference_interface_values[2], 33.3);
+
+  // remove reference interfaces from resource manager
+  rm.remove_controller_reference_interfaces(ref_itf_names);
+
+  // they should not exist in resource manager
+  for (const auto & interface : FULL_REFERENCE_INTERFACE_NAMES)
+  {
+    EXPECT_FALSE(rm.command_interface_exists(interface));
+    EXPECT_FALSE(rm.command_interface_is_available(interface));
+  }
+}
