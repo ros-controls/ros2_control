@@ -114,6 +114,28 @@ public:
    */
   bool state_interface_is_available(const std::string & name) const;
 
+  /// Add controllers' reference interfaces to resource manager.
+  /**
+   * Interface for transferring management of reference interfaces to resource manager.
+   * When chaining controllers, reference interfaces are used as command interface of preceding
+   * controllers.
+   * Therefore, they should be managed in the same way as command interface of hardware.
+   *
+   * \param[in] interfaces list of controller's reference interfaces as CommandInterfaces.
+   * \return list of added reference interfaces
+   */
+  std::vector<std::string> import_controller_reference_interfaces(
+    std::vector<CommandInterface> & interfaces);
+
+  /// Remove controllers reference interfaces from resource manager.
+  /**
+   * Remove reference interfaces from resource manager, i.e., resource storage.
+   * The interfaces will be deleted from all internal maps and lists.
+   *
+   * \param[in] interface_names list of interface names that will be deleted from resource manager.
+   */
+  void remove_controller_reference_interfaces(const std::vector<std::string> & interface_names);
+
   /// Checks whether a command interface is already claimed.
   /**
    * Any command interface can only be claimed by a single instance.

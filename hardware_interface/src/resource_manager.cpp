@@ -221,7 +221,8 @@ public:
         {
           available_command_interfaces_.erase(found_it);
           RCUTILS_LOG_DEBUG_NAMED(
-            "resource_manager", "(hardware '%s'): '%s' command removed from available list",
+            "resource_manager",
+            "(hardware '%s'): '%s' command interface removed from available list",
             hardware.get_name().c_str(), interface.c_str());
         }
         else
@@ -275,6 +276,7 @@ public:
       // TODO(destogl): change this - deimport all things if there is there are interfaces there
       // deimport_non_movement_command_interfaces(hardware);
       // deimport_state_interfaces(hardware);
+      // use remove_command_interfaces(hardware);
     }
     return result;
   }
@@ -429,6 +431,11 @@ public:
   void import_command_interfaces(HardwareT & hardware)
   {
     auto interfaces = hardware.export_command_interfaces();
+    hardware_info_map_[hardware.get_name()].command_interfaces = add_command_interfaces(interfaces);
+  }
+
+  std::vector<std::string> add_command_interfaces(std::vector<CommandInterface> & interfaces)
+  {
     std::vector<std::string> interface_names;
     interface_names.reserve(interfaces.size());
     for (auto & interface : interfaces)
@@ -438,9 +445,29 @@ public:
       claimed_command_interface_map_.emplace(std::make_pair(key, false));
       interface_names.push_back(key);
     }
-    hardware_info_map_[hardware.get_name()].command_interfaces = interface_names;
     available_command_interfaces_.reserve(
       available_command_interfaces_.capacity() + interface_names.size());
+
+    return interface_names;
+  }
+
+  void remove_command_interfaces(const std::vector<std::string> & interface_names)
+  {
+    for (const auto & interface : interface_names)
+    {
+      command_interface_map_.erase(interface);
+      claimed_command_interface_map_.erase(interface);
+
+      auto found_it = std::find(
+        available_command_interfaces_.begin(), available_command_interfaces_.end(), interface);
+      if (found_it != available_command_interfaces_.end())
+      {
+        available_command_interfaces_.erase(found_it);
+        RCUTILS_LOG_DEBUG_NAMED(
+          "resource_manager", "'%s' command interface removed from available list",
+          interface.c_str());
+      }
+    }
   }
 
   // TODO(destogl): Propagate "false" up, if happens in initialize_hardware
@@ -616,7 +643,23 @@ bool ResourceManager::state_interface_is_available(const std::string & name) con
            name) != resource_storage_->available_state_interfaces_.end();
 }
 
-// CM API
+std::vector<std::string> ResourceManager::import_controller_reference_interfaces(
+  std::vector<CommandInterface> & interfaces)
+{
+  auto interface_names = resource_storage_->add_command_interfaces(interfaces);
+  resource_storage_->available_command_interfaces_.insert(
+    resource_storage_->available_command_interfaces_.end(), interface_names.begin(),
+    interface_names.end());
+  return interface_names;
+}
+
+void ResourceManager::remove_controller_reference_interfaces(
+  const std::vector<std::string> & interface_names)
+{
+  resource_storage_->remove_command_interfaces(interface_names);
+}
+
+// CM API: Called in "update"-thread
 bool ResourceManager::command_interface_is_claimed(const std::string & key) const
 {
   if (!command_interface_is_available(key))
