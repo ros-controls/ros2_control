@@ -457,16 +457,6 @@ public:
     {
       command_interface_map_.erase(interface);
       claimed_command_interface_map_.erase(interface);
-
-      auto found_it = std::find(
-        available_command_interfaces_.begin(), available_command_interfaces_.end(), interface);
-      if (found_it != available_command_interfaces_.end())
-      {
-        available_command_interfaces_.erase(found_it);
-        RCUTILS_LOG_DEBUG_NAMED(
-          "resource_manager", "'%s' command interface removed from available list",
-          interface.c_str());
-      }
     }
   }
 
@@ -530,6 +520,8 @@ public:
   std::vector<System> systems_;
 
   std::unordered_map<std::string, HardwareComponentInfo> hardware_info_map_;
+
+  std::unordered_map<std::string, std::vector<std::string>> controllers_reference_interfaces_map_;
 
   /// Storage of all available state interfaces
   std::map<std::string, StateInterface> state_interface_map_;
@@ -624,6 +616,7 @@ std::vector<std::string> ResourceManager::state_interface_keys() const
 
 std::vector<std::string> ResourceManager::available_state_interfaces() const
 {
+  std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
   return resource_storage_->available_state_interfaces_;
 }
 
@@ -643,19 +636,62 @@ bool ResourceManager::state_interface_is_available(const std::string & name) con
            name) != resource_storage_->available_state_interfaces_.end();
 }
 
-std::vector<std::string> ResourceManager::import_controller_reference_interfaces(
-  std::vector<CommandInterface> & interfaces)
+void ResourceManager::import_controller_reference_interfaces(
+  const std::string & controller_name, std::vector<CommandInterface> & interfaces)
 {
+  std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
+  std::lock_guard<std::recursive_mutex> guard_claimed(claimed_command_interfaces_lock_);
   auto interface_names = resource_storage_->add_command_interfaces(interfaces);
+  resource_storage_->controllers_reference_interfaces_map_[controller_name] = interface_names;
+}
+
+std::vector<std::string> ResourceManager::get_controller_reference_interface_names(
+  const std::string & controller_name)
+{
+  return resource_storage_->controllers_reference_interfaces_map_.at(controller_name);
+}
+
+void ResourceManager::make_controller_reference_interfaces_available(
+  const std::string & controller_name)
+{
+  auto interface_names =
+    resource_storage_->controllers_reference_interfaces_map_.at(controller_name);
+  std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
   resource_storage_->available_command_interfaces_.insert(
     resource_storage_->available_command_interfaces_.end(), interface_names.begin(),
     interface_names.end());
-  return interface_names;
 }
 
-void ResourceManager::remove_controller_reference_interfaces(
-  const std::vector<std::string> & interface_names)
+void ResourceManager::make_controller_reference_interfaces_unavailable(
+  const std::string & controller_name)
 {
+  auto interface_names =
+    resource_storage_->controllers_reference_interfaces_map_.at(controller_name);
+
+  std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
+  for (const auto & interface : interface_names)
+  {
+    auto found_it = std::find(
+      resource_storage_->available_command_interfaces_.begin(),
+      resource_storage_->available_command_interfaces_.end(), interface);
+    if (found_it != resource_storage_->available_command_interfaces_.end())
+    {
+      resource_storage_->available_command_interfaces_.erase(found_it);
+      RCUTILS_LOG_DEBUG_NAMED(
+        "resource_manager", "'%s' command interface removed from available list",
+        interface.c_str());
+    }
+  }
+}
+
+void ResourceManager::remove_controller_reference_interfaces(const std::string & controller_name)
+{
+  auto interface_names =
+    resource_storage_->controllers_reference_interfaces_map_.at(controller_name);
+  resource_storage_->controllers_reference_interfaces_map_.erase(controller_name);
+
+  std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
+  std::lock_guard<std::recursive_mutex> guard_claimed(claimed_command_interfaces_lock_);
   resource_storage_->remove_command_interfaces(interface_names);
 }
 

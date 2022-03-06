@@ -121,20 +121,50 @@ public:
    * controllers.
    * Therefore, they should be managed in the same way as command interface of hardware.
    *
+   * \param[in] controller_name name of the controller which reference interfaces are imported.
    * \param[in] interfaces list of controller's reference interfaces as CommandInterfaces.
-   * \return list of added reference interfaces
    */
-  std::vector<std::string> import_controller_reference_interfaces(
-    std::vector<CommandInterface> & interfaces);
+  void import_controller_reference_interfaces(
+    const std::string & controller_name, std::vector<CommandInterface> & interfaces);
+
+  /// Get list of reference interface of a controller.
+  /**
+   * Returns lists of stored reference interfaces names for a controller.
+   *
+   * \param[in] controller_name for which list of reference interface names is returned.
+   * \returns list of reference interface names.
+   */
+  std::vector<std::string> get_controller_reference_interface_names(
+    const std::string & controller_name);
+
+  /// Add controller's reference interface to available list.
+  /**
+   * Adds interfaces of a controller with given name to the available list. This method should be
+   * called when a controller gets activated with chained mode turned on. That means, the
+   * controller's reference interfaces can be used by another controller in chained architectures.
+   *
+   * \param[in] controller_name name of the controller which interfaces should become available.
+   */
+  void make_controller_reference_interfaces_available(const std::string & controller_name);
+
+  /// Remove controller's reference interface to available list.
+  /**
+   * Removes interfaces of a controller with given name from the available list. This method should
+   * be called when a controller gets deactivated and its reference interfaces cannot be used by
+   * another controller anymore.
+   *
+   * \param[in] controller_name name of the controller which interfaces should become unavailable.
+   */
+  void make_controller_reference_interfaces_unavailable(const std::string & controller_name);
 
   /// Remove controllers reference interfaces from resource manager.
   /**
    * Remove reference interfaces from resource manager, i.e., resource storage.
    * The interfaces will be deleted from all internal maps and lists.
    *
-   * \param[in] interface_names list of interface names that will be deleted from resource manager.
+   * \param[in] controller_name list of interface names that will be deleted from resource manager.
    */
-  void remove_controller_reference_interfaces(const std::vector<std::string> & interface_names);
+  void remove_controller_reference_interfaces(const std::string & controller_name);
 
   /// Checks whether a command interface is already claimed.
   /**
