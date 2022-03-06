@@ -34,7 +34,7 @@ return_type ControllerInterface::init(const std::string & controller_name)
 
   try
   {
-    node_->declare_parameter("update_rate", 0);
+    auto_declare<int>("update_rate", 0);
   }
   catch (const std::exception & e)
   {
@@ -49,7 +49,6 @@ return_type ControllerInterface::init(const std::string & controller_name)
     case LifecycleNodeInterface::CallbackReturn::ERROR:
     case LifecycleNodeInterface::CallbackReturn::FAILURE:
       return return_type::ERROR;
-      break;
   }
 
   node_->register_on_configure(
