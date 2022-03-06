@@ -337,7 +337,8 @@ controller_interface::return_type ControllerManager::unload_controller(
   }
 
   RCLCPP_DEBUG(get_logger(), "Cleanup controller");
-  // TODO(destogl): remove reference interface is chainable; i.e., add a separate method for cleaning-up controllers?
+  // TODO(destogl): remove reference interface is chainable; i.e., add a separate method for
+  // cleaning-up controllers?
   controller.c->get_node()->cleanup();
   executor_->remove_node(controller.c->get_node()->get_node_base_interface());
   to.erase(found_it);
@@ -397,7 +398,8 @@ controller_interface::return_type ControllerManager::configure_controller(
   {
     RCLCPP_DEBUG(
       get_logger(), "Controller '%s' is cleaned-up before configuring", controller_name.c_str());
-    // TODO(destogl): remove reference interface is chainable; i.e., add a separate method for cleaning-up controllers?
+    // TODO(destogl): remove reference interface is chainable; i.e., add a separate method for
+    // cleaning-up controllers?
     new_state = controller->get_node()->cleanup();
     if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
     {
@@ -420,16 +422,12 @@ controller_interface::return_type ControllerManager::configure_controller(
   // CHAINABLE CONTROLLERS: get reference interfaces from chainable controllers
   if (controller->is_chainable())
   {
+    RCLCPP_DEBUG(
+      get_logger(),
+      "Controller '%s' is chainable. Interfaces are being exported to resource manager.",
+      controller_name.c_str());
     auto interfaces = controller->export_reference_interfaces();
-    //TODO(destogl): enable "interface_names" when controller_info_map_ is added
-    //     std::vector<std::string> interface_names;
-    //     interface_names.reserve(interfaces.size());
-    for (auto & interface : interfaces)
-    {
-      auto key = interface.get_full_name();
-      reference_interface_map_.emplace(std::make_pair(key, std::move(interface)));
-      claimed_reference_interface_map_.emplace(std::make_pair(key, false));
-    }
+    resource_manager_->import_controller_reference_interfaces(controller_name, interfaces);
   }
 
   return controller_interface::return_type::OK;
@@ -541,6 +539,7 @@ controller_interface::return_type ControllerManager::switch_controller(
     return ret;
   }
 
+  // TODO(destogl): this should not be here, move this lower
   const auto list_interfaces = [this](
                                  const ControllerSpec controller,
                                  std::vector<std::string> & request_interface_list) {
@@ -672,7 +671,7 @@ controller_interface::return_type ControllerManager::switch_controller(
   switch_params_.do_switch = true;
 
   // wait until switch is finished
-  RCLCPP_DEBUG(get_logger(), "Request atomic controller switch from realtime loop");
+  RCLCPP_DEBUG(get_logger(), "Requested atomic controller switch from realtime loop");
   while (rclcpp::ok() && switch_params_.do_switch)
   {
     if (!rclcpp::ok())
@@ -793,6 +792,8 @@ void ControllerManager::manage_switch()
 
   stop_controllers();
 
+  // TODO(destogl): enable chained mode on controllers if needed
+
   // start controllers once the switch is fully complete
   if (!switch_params_.start_asap)
   {
@@ -803,6 +804,8 @@ void ControllerManager::manage_switch()
     // start controllers as soon as their required joints are done switching
     start_controllers_asap();
   }
+
+  // TODO(destogl): move here "do_switch = false"
 }
 
 void ControllerManager::stop_controllers()

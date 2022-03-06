@@ -17,6 +17,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "controller_interface/chainable_controller_interface.hpp"
 #include "controller_manager/visibility_control.h"
@@ -58,13 +59,13 @@ public:
   CallbackReturn on_configure(const rclcpp_lifecycle::State & previous_state) override;
 
   CONTROLLER_MANAGER_PUBLIC
+  CallbackReturn on_activate(const rclcpp_lifecycle::State & previous_state) override;
+
+  CONTROLLER_MANAGER_PUBLIC
   CallbackReturn on_cleanup(const rclcpp_lifecycle::State & previous_state) override;
 
   CONTROLLER_MANAGER_PUBLIC
   std::vector<hardware_interface::CommandInterface> on_export_reference_interfaces() override;
-
-  CONTROLLER_MANAGER_PUBLIC
-  bool on_set_chained_mode(bool chained_mode) override;
 
   // Testing-relevant methods
   CONTROLLER_MANAGER_PUBLIC

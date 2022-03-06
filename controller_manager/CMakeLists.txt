@@ -134,7 +134,7 @@ if(BUILD_TESTING)
     test/test_controllers_chaining_with_controller_manager.cpp
   )
   target_include_directories(test_controllers_chaining_with_controller_manager PRIVATE include)
-  target_link_libraries(test_controllers_chaining_with_controller_manager controller_manager test_chainable_controller)
+  target_link_libraries(test_controllers_chaining_with_controller_manager controller_manager test_chainable_controller test_controller)
   ament_target_dependencies(test_controllers_chaining_with_controller_manager ros2_control_test_assets)
 
   ament_add_gmock(

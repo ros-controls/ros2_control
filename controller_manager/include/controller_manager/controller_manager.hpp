@@ -247,15 +247,10 @@ protected:
   unsigned int update_loop_counter_ = 0;
   unsigned int update_rate_ = 100;
 
-  //TODO(destogl): 'public' is a temporary solution for tests it should be removed before merging.
-public:
-  std::map<std::string, hardware_interface::CommandInterface> reference_interface_map_;
-  std::unordered_map<std::string, bool> claimed_reference_interface_map_;
+  std::unique_ptr<hardware_interface::ResourceManager> resource_manager_;
 
 private:
   std::vector<std::string> get_controller_names();
-
-  std::unique_ptr<hardware_interface::ResourceManager> resource_manager_;
 
   std::shared_ptr<rclcpp::Executor> executor_;
 

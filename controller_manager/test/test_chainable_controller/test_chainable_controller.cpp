@@ -16,6 +16,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "lifecycle_msgs/msg/state.hpp"
 
@@ -68,22 +69,6 @@ controller_interface::return_type TestChainableController::update(
   if (!is_in_chained_mode())
   {
     auto joint_commands = rt_command_ptr_.readFromRT();
-
-    //no command received yet
-    if (!joint_commands || !(*joint_commands))
-    {
-      return controller_interface::return_type::OK;
-    }
-
-    if ((*joint_commands)->data.size() != reference_interfaces_.size())
-    {
-      RCLCPP_ERROR_THROTTLE(
-        get_node()->get_logger(), *node_->get_clock(), 1000,
-        "command size (%zu) does not match number of reference interfaces (%zu)",
-        (*joint_commands)->data.size(), reference_interfaces_.size());
-      return controller_interface::return_type::ERROR;
-    }
-
     reference_interfaces_ = (*joint_commands)->data;
   }
 
@@ -101,8 +86,37 @@ CallbackReturn TestChainableController::on_configure(
   const rclcpp_lifecycle::State & /*previous_state*/)
 {
   joints_command_subscriber_ = get_node()->create_subscription<CmdType>(
-    "~/commands", rclcpp::SystemDefaultsQoS(),
-    [this](const CmdType::SharedPtr msg) { rt_command_ptr_.writeFromNonRT(msg); });
+    "~/commands", rclcpp::SystemDefaultsQoS(), [this](const CmdType::SharedPtr msg) {
+      auto joint_commands = rt_command_ptr_.readFromNonRT();
+
+      if (msg->data.size() != (*joint_commands)->data.size())
+      {
+        rt_command_ptr_.writeFromNonRT(msg);
+      }
+      else
+      {
+        RCLCPP_ERROR_THROTTLE(
+          get_node()->get_logger(), *get_node()->get_clock(), 1000,
+          "command size (%zu) does not match number of reference interfaces (%zu)",
+          (*joint_commands)->data.size(), reference_interfaces_.size());
+      }
+    });
+
+  auto msg = std::make_shared<CmdType>();
+  msg->data.resize(reference_interfaces_.size());
+  rt_command_ptr_.writeFromNonRT(msg);
+
+  return CallbackReturn::SUCCESS;
+}
+
+CallbackReturn TestChainableController::on_activate(
+  const rclcpp_lifecycle::State & /*previous_state*/)
+{
+  if (!is_in_chained_mode())
+  {
+    auto msg = rt_command_ptr_.readFromRT();
+    (*msg)->data = reference_interfaces_;
+  }
 
   return CallbackReturn::SUCCESS;
 }
@@ -111,6 +125,7 @@ CallbackReturn TestChainableController::on_cleanup(
   const rclcpp_lifecycle::State & /*previous_state*/)
 {
   joints_command_subscriber_.reset();
+  return CallbackReturn::SUCCESS;
 }
 
 std::vector<hardware_interface::CommandInterface>
@@ -126,8 +141,6 @@ TestChainableController::on_export_reference_interfaces()
 
   return reference_interfaces;
 }
-
-bool TestChainableController::on_set_chained_mode(bool chained_mode) {}
 
 void TestChainableController::set_command_interface_configuration(
   const controller_interface::InterfaceConfiguration & cfg)

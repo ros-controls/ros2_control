@@ -23,23 +23,36 @@
 #include "controller_manager_test_common.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 #include "test_chainable_controller/test_chainable_controller.hpp"
+#include "test_controller/test_controller.hpp"
 
 using ::testing::_;
 using ::testing::Return;
 
-struct Strictness
+class TestableControllerManager : public controller_manager::ControllerManager
 {
-  int strictness = STRICT;
-  controller_interface::return_type expected_return;
-  unsigned int expected_counter;
+  FRIEND_TEST(TestControllerChainingWithControllerManager, test_loading_chained_controllers);
+
+public:
+  TestableControllerManager(
+    std::unique_ptr<hardware_interface::ResourceManager> resource_manager,
+    std::shared_ptr<rclcpp::Executor> executor,
+    const std::string & manager_node_name = "controller_manager",
+    const std::string & namespace_ = "")
+  : controller_manager::ControllerManager(
+      std::move(resource_manager), executor, manager_node_name, namespace_)
+  {
+  }
 };
-class TestControllerChainingWithControllerManager : public ControllerManagerFixture,
-                                                    public testing::WithParamInterface<Strictness>
+
+class TestControllerChainingWithControllerManager
+: public ControllerManagerFixture<TestableControllerManager>,
+  public testing::WithParamInterface<Strictness>
 {
+public:
   void SetUp()
   {
     executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
-    cm_ = std::make_shared<controller_manager::ControllerManager>(
+    cm_ = std::make_shared<TestableControllerManager>(
       std::make_unique<hardware_interface::ResourceManager>(
         ros2_control_test_assets::diffbot_urdf, true, true),
       executor_, TEST_CM_NAME);
@@ -60,14 +73,13 @@ TEST_P(TestControllerChainingWithControllerManager, test_loading_chained_control
     std::make_shared<test_chainable_controller::TestChainableController>();
   auto diff_drive_controller =
     std::make_shared<test_chainable_controller::TestChainableController>();
-  auto position_tracking_controller =
-    std::make_shared<test_chainable_controller::TestChainableController>();
+  auto position_tracking_controller = std::make_shared<test_controller::TestController>();
 
   // set controllers' names
   constexpr char PID_LEFT_WHEEL[] = "pid_left_wheel_controller";
   constexpr char PID_RIGHT_WHEEL[] = "pid_right_wheel_controller";
   constexpr char DIFF_DRIVE_CONTROLLER[] = "diff_drive_controller";
-  constexpr char POSITION_TRACKING[] = "position_tracking_controller";
+  constexpr char POSITION_TRACKING_CONTROLLER[] = "position_tracking_controller";
 
   // configure Left Wheel controller
   controller_interface::InterfaceConfiguration pid_left_cmd_ifs_cfg = {
@@ -116,7 +128,7 @@ TEST_P(TestControllerChainingWithControllerManager, test_loading_chained_control
     diff_drive_controller, DIFF_DRIVE_CONTROLLER,
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
   cm_->add_controller(
-    position_tracking_controller, POSITION_TRACKING,
+    position_tracking_controller, POSITION_TRACKING_CONTROLLER,
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
 
   EXPECT_EQ(4u, cm_->get_loaded_controllers().size());
@@ -138,114 +150,128 @@ TEST_P(TestControllerChainingWithControllerManager, test_loading_chained_control
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
     position_tracking_controller->get_state().id());
 
+  // Store initial values of command interfaces
+  size_t number_of_cmd_itfs = cm_->resource_manager_->command_interface_keys().size();
+
   // configure chainable controller and check exported interfaces
   cm_->configure_controller(PID_LEFT_WHEEL);
-  EXPECT_EQ(cm_->reference_interface_map_.size(), 1u);
-  EXPECT_EQ(cm_->claimed_reference_interface_map_.size(), 1u);
-  EXPECT_EQ(cm_->claimed_reference_interface_map_["pid_left_wheel_controller/velocity"], false);
   EXPECT_EQ(
     pid_left_wheel_controller->get_state().id(),
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
-  //   pid_left_wheel_controller->get_node()->cleanup();
+  EXPECT_EQ(cm_->resource_manager_->command_interface_keys().size(), number_of_cmd_itfs + 1);
+  for (const auto & interface : {"pid_left_wheel_controller/velocity"})
+  {
+    EXPECT_TRUE(cm_->resource_manager_->command_interface_exists(interface));
+    EXPECT_FALSE(cm_->resource_manager_->command_interface_is_available(interface));
+    EXPECT_FALSE(cm_->resource_manager_->command_interface_is_claimed(interface));
+  }
 
-  // configure controllers - after chained controllers are configured their interfaces get exported
-  //   EXPECT_TRUE(pid_lef)
+  cm_->configure_controller(PID_RIGHT_WHEEL);
+  EXPECT_EQ(
+    pid_right_wheel_controller->get_state().id(),
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+  EXPECT_EQ(cm_->resource_manager_->command_interface_keys().size(), number_of_cmd_itfs + 2);
+  for (const auto & interface : {"pid_right_wheel_controller/velocity"})
+  {
+    EXPECT_TRUE(cm_->resource_manager_->command_interface_exists(interface));
+    EXPECT_FALSE(cm_->resource_manager_->command_interface_is_available(interface));
+    EXPECT_FALSE(cm_->resource_manager_->command_interface_is_claimed(interface));
+  }
 
-  //   // configure controller
-  //   cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME);
-  //   cm_->configure_controller(TEST_CONTROLLER2_NAME);
-  //   EXPECT_EQ(
-  //     controller_interface::return_type::OK,
-  //     cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
-  //   EXPECT_EQ(0u, test_controller->internal_counter) << "Controller is not started";
-  //   EXPECT_EQ(0u, test_controller2->internal_counter) << "Controller is not started";
-  //
-  //   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, test_controller->get_state().id());
-  //
-  //   // Start controller, will take effect at the end of the update function
-  //   std::vector<std::string> start_controllers = {"fake_controller", TEST_CONTROLLER2_NAME};
-  //   std::vector<std::string> stop_controllers = {};
-  //   auto switch_future = std::async(
-  //     std::launch::async, &controller_manager::ControllerManager::switch_controller, cm_,
-  //     start_controllers, stop_controllers, test_param.strictness, true, rclcpp::Duration(0, 0));
-  //
-  //   EXPECT_EQ(
-  //     controller_interface::return_type::OK,
-  //     cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
-  //   EXPECT_EQ(0u, test_controller2->internal_counter) << "Controller is started at the end of update";
-  //   {
-  //     ControllerManagerRunner cm_runner(this);
-  //     EXPECT_EQ(test_param.expected_return, switch_future.get());
-  //   }
-  //
-  //   EXPECT_EQ(
-  //     controller_interface::return_type::OK,
-  //     cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
-  //   EXPECT_GE(test_controller2->internal_counter, test_param.expected_counter);
-  //
-  //   // Start the real test controller, will take effect at the end of the update function
-  //   start_controllers = {test_controller::TEST_CONTROLLER_NAME};
-  //   stop_controllers = {};
-  //   switch_future = std::async(
-  //     std::launch::async, &controller_manager::ControllerManager::switch_controller, cm_,
-  //     start_controllers, stop_controllers, test_param.strictness, true, rclcpp::Duration(0, 0));
-  //
-  //   ASSERT_EQ(std::future_status::timeout, switch_future.wait_for(std::chrono::milliseconds(100)))
-  //     << "switch_controller should be blocking until next update cycle";
-  //
-  //   EXPECT_EQ(
-  //     controller_interface::return_type::OK,
-  //     cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
-  //   EXPECT_EQ(0u, test_controller->internal_counter) << "Controller is started at the end of update";
-  //   {
-  //     ControllerManagerRunner cm_runner(this);
-  //     EXPECT_EQ(controller_interface::return_type::OK, switch_future.get());
-  //   }
-  //   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, test_controller->get_state().id());
-  //
-  //   EXPECT_EQ(
-  //     controller_interface::return_type::OK,
-  //     cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
-  //   EXPECT_GE(test_controller->internal_counter, 1u);
-  //   auto last_internal_counter = test_controller->internal_counter;
-  //
-  //   // Stop controller, will take effect at the end of the update function
-  //   start_controllers = {};
-  //   stop_controllers = {test_controller::TEST_CONTROLLER_NAME};
-  //   switch_future = std::async(
-  //     std::launch::async, &controller_manager::ControllerManager::switch_controller, cm_,
-  //     start_controllers, stop_controllers, test_param.strictness, true, rclcpp::Duration(0, 0));
-  //
-  //   ASSERT_EQ(std::future_status::timeout, switch_future.wait_for(std::chrono::milliseconds(100)))
-  //     << "switch_controller should be blocking until next update cycle";
-  //
-  //   EXPECT_EQ(
-  //     controller_interface::return_type::OK,
-  //     cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
-  //   EXPECT_EQ(last_internal_counter + 1u, test_controller->internal_counter)
-  //     << "Controller is stopped at the end of update, so it should have done one more update";
-  //   {
-  //     ControllerManagerRunner cm_runner(this);
-  //     EXPECT_EQ(controller_interface::return_type::OK, switch_future.get());
-  //   }
-  //
-  //   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, test_controller->get_state().id());
-  //   auto unload_future = std::async(
-  //     std::launch::async, &controller_manager::ControllerManager::unload_controller, cm_,
-  //     test_controller::TEST_CONTROLLER_NAME);
-  //
-  //   ASSERT_EQ(std::future_status::timeout, unload_future.wait_for(std::chrono::milliseconds(100)))
-  //     << "unload_controller should be blocking until next update cycle";
-  //   ControllerManagerRunner cm_runner(this);
-  //   EXPECT_EQ(controller_interface::return_type::OK, unload_future.get());
-  //
-  //   EXPECT_EQ(
-  //     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, test_controller->get_state().id());
-  //   EXPECT_EQ(1, test_controller.use_count());
+  cm_->configure_controller(DIFF_DRIVE_CONTROLLER);
+  EXPECT_EQ(
+    diff_drive_controller->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+  EXPECT_EQ(cm_->resource_manager_->command_interface_keys().size(), number_of_cmd_itfs + 5);
+  for (const auto & interface :
+       {"diff_drive_controller/vel_x", "diff_drive_controller/vel_y",
+        "diff_drive_controller/rot_z"})
+  {
+    EXPECT_TRUE(cm_->resource_manager_->command_interface_exists(interface));
+    EXPECT_FALSE(cm_->resource_manager_->command_interface_is_available(interface));
+    EXPECT_FALSE(cm_->resource_manager_->command_interface_is_claimed(interface));
+  }
+
+  cm_->configure_controller(POSITION_TRACKING_CONTROLLER);
+  EXPECT_EQ(
+    position_tracking_controller->get_state().id(),
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+  EXPECT_EQ(cm_->resource_manager_->command_interface_keys().size(), number_of_cmd_itfs + 5);
+
+  // set controllers to chained mode
+  pid_left_wheel_controller->set_chained_mode(true);
+  EXPECT_TRUE(pid_left_wheel_controller->is_in_chained_mode());
+  pid_right_wheel_controller->set_chained_mode(true);
+  EXPECT_TRUE(pid_right_wheel_controller->is_in_chained_mode());
+  diff_drive_controller->set_chained_mode(true);
+  EXPECT_TRUE(diff_drive_controller->is_in_chained_mode());
+
+  // make reference interface command_interface_is_available
+  cm_->resource_manager_->make_controller_reference_interfaces_available(PID_LEFT_WHEEL);
+  for (const auto & interface : {"pid_left_wheel_controller/velocity"})
+  {
+    EXPECT_TRUE(cm_->resource_manager_->command_interface_exists(interface));
+    EXPECT_TRUE(cm_->resource_manager_->command_interface_is_available(interface));
+    EXPECT_FALSE(cm_->resource_manager_->command_interface_is_claimed(interface));
+  }
+
+  cm_->resource_manager_->make_controller_reference_interfaces_available(PID_RIGHT_WHEEL);
+  for (const auto & interface : {"pid_right_wheel_controller/velocity"})
+  {
+    EXPECT_TRUE(cm_->resource_manager_->command_interface_exists(interface));
+    EXPECT_TRUE(cm_->resource_manager_->command_interface_is_available(interface));
+    EXPECT_FALSE(cm_->resource_manager_->command_interface_is_claimed(interface));
+  }
+
+  cm_->resource_manager_->make_controller_reference_interfaces_available(DIFF_DRIVE_CONTROLLER);
+  for (const auto & interface :
+       {"diff_drive_controller/vel_x", "diff_drive_controller/vel_y",
+        "diff_drive_controller/rot_z"})
+  {
+    EXPECT_TRUE(cm_->resource_manager_->command_interface_exists(interface));
+    EXPECT_TRUE(cm_->resource_manager_->command_interface_is_available(interface));
+    EXPECT_FALSE(cm_->resource_manager_->command_interface_is_claimed(interface));
+  }
+
+  EXPECT_THROW(
+    cm_->resource_manager_->make_controller_reference_interfaces_available(
+      POSITION_TRACKING_CONTROLLER),
+    std::out_of_range);
+
+  cm_->get_logger().set_level(rclcpp::Logger::Level::Debug);
+
+  // activate controllers
+  switch_test_controllers({PID_LEFT_WHEEL}, {}, test_param.strictness);
+  EXPECT_TRUE(cm_->resource_manager_->command_interface_is_claimed("wheel_left/velocity"));
+
+  switch_test_controllers({PID_RIGHT_WHEEL}, {}, test_param.strictness);
+  EXPECT_TRUE(cm_->resource_manager_->command_interface_is_claimed("wheel_right/velocity"));
+
+  // Diff-Drive Controller claims the reference interfaces of PID controllers
+  switch_test_controllers({DIFF_DRIVE_CONTROLLER}, {}, test_param.strictness);
+  for (const auto & interface :
+       {"pid_left_wheel_controller/velocity", "pid_right_wheel_controller/velocity"})
+  {
+    EXPECT_TRUE(cm_->resource_manager_->command_interface_exists(interface));
+    EXPECT_TRUE(cm_->resource_manager_->command_interface_is_available(interface));
+    EXPECT_TRUE(cm_->resource_manager_->command_interface_is_claimed(interface));
+  }
+
+  // Position-Tracking Controller uses reference interfaces of Diff-Drive Controller
+  switch_test_controllers({POSITION_TRACKING_CONTROLLER}, {}, test_param.strictness);
+  for (const auto & interface : {"diff_drive_controller/vel_x", "diff_drive_controller/vel_y"})
+  {
+    EXPECT_TRUE(cm_->resource_manager_->command_interface_exists(interface));
+    EXPECT_TRUE(cm_->resource_manager_->command_interface_is_available(interface));
+    EXPECT_TRUE(cm_->resource_manager_->command_interface_is_claimed(interface));
+  }
+  for (const auto & interface : {"diff_drive_controller/rot_z"})
+  {
+    EXPECT_TRUE(cm_->resource_manager_->command_interface_exists(interface));
+    EXPECT_TRUE(cm_->resource_manager_->command_interface_is_available(interface));
+    EXPECT_FALSE(cm_->resource_manager_->command_interface_is_claimed(interface));
+  }
 }
 
-Strictness strict{STRICT, controller_interface::return_type::ERROR, 0u};
-Strictness best_effort{BEST_EFFORT, controller_interface::return_type::OK, 1u};
 INSTANTIATE_TEST_SUITE_P(
   test_strict_best_effort, TestControllerChainingWithControllerManager,
   testing::Values(strict, best_effort));
