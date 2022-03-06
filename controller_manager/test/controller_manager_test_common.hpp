@@ -32,7 +32,6 @@
 #include "rclcpp/utilities.hpp"
 
 #include "ros2_control_test_assets/descriptions.hpp"
-#include "test_controller/test_controller.hpp"
 #include "test_controller_failed_init/test_controller_failed_init.hpp"
 
 constexpr auto STRICT = controller_manager_msgs::srv::SwitchController::Request::STRICT;
@@ -40,6 +39,21 @@ constexpr auto BEST_EFFORT = controller_manager_msgs::srv::SwitchController::Req
 
 const auto TEST_CM_NAME = "test_controller_manager";
 
+// Strictness structure for parameterized tests - shared between different tests
+struct Strictness
+{
+  int strictness = STRICT;
+  controller_interface::return_type expected_return;
+  unsigned int expected_counter;
+};
+Strictness strict{STRICT, controller_interface::return_type::ERROR, 0u};
+Strictness best_effort{BEST_EFFORT, controller_interface::return_type::OK, 1u};
+
+// Forward definition to avid compile error - defined at the end of the file
+template <typename CtrlMgr>
+class ControllerManagerRunner;
+
+template <typename CtrlMgr>
 class ControllerManagerFixture : public ::testing::Test
 {
 public:
@@ -50,7 +64,7 @@ public:
   void SetUp()
   {
     executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
-    cm_ = std::make_shared<controller_manager::ControllerManager>(
+    cm_ = std::make_shared<CtrlMgr>(
       std::make_unique<hardware_interface::ResourceManager>(
         ros2_control_test_assets::minimal_robot_urdf, true, true),
       executor_, TEST_CM_NAME);
@@ -80,14 +94,32 @@ public:
     }
   }
 
+  void switch_test_controllers(
+    const std::vector<std::string> & start_controllers,
+    const std::vector<std::string> & stop_controllers, const int strictness,
+    const std::future_status expected_future_status = std::future_status::timeout,
+    const controller_interface::return_type expected_return = controller_interface::return_type::OK)
+  {
+    // First activation not possible because controller not configured
+    auto switch_future = std::async(
+      std::launch::async, &controller_manager::ControllerManager::switch_controller, cm_,
+      start_controllers, stop_controllers, strictness, true, rclcpp::Duration(0, 0));
+
+    ASSERT_EQ(expected_future_status, switch_future.wait_for(std::chrono::milliseconds(100)))
+      << "switch_controller should be blocking until next update cycle";
+    ControllerManagerRunner<CtrlMgr> cm_runner(this);
+    EXPECT_EQ(expected_return, switch_future.get());
+  }
+
   std::shared_ptr<rclcpp::Executor> executor_;
-  std::shared_ptr<controller_manager::ControllerManager> cm_;
+  std::shared_ptr<CtrlMgr> cm_;
 
   std::thread updater_;
   bool run_updater_;
 };
 
-class TestControllerManagerSrvs : public ControllerManagerFixture
+class TestControllerManagerSrvs
+: public ControllerManagerFixture<controller_manager::ControllerManager>
 {
 public:
   TestControllerManagerSrvs() {}
@@ -146,17 +178,18 @@ protected:
   std::future<void> executor_spin_future_;
 };
 
+template <typename CtrlMgr>
 class ControllerManagerRunner
 {
 public:
-  explicit ControllerManagerRunner(ControllerManagerFixture * cmf) : cmf_(cmf)
+  explicit ControllerManagerRunner(ControllerManagerFixture<CtrlMgr> * cmf) : cmf_(cmf)
   {
     cmf_->startCmUpdater();
   }
 
   ~ControllerManagerRunner() { cmf_->stopCmUpdater(); }
 
-  ControllerManagerFixture * cmf_;
+  ControllerManagerFixture<CtrlMgr> * cmf_;
 };
 
 class ControllerMock : public controller_interface::ControllerInterface

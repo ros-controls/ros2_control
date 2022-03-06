@@ -27,14 +27,9 @@
 using ::testing::_;
 using ::testing::Return;
 
-struct Strictness
-{
-  int strictness = STRICT;
-  controller_interface::return_type expected_return;
-  unsigned int expected_counter;
-};
-class TestControllerManager : public ControllerManagerFixture,
-                              public testing::WithParamInterface<Strictness>
+class TestControllerManager
+: public ControllerManagerFixture<controller_manager::ControllerManager>,
+  public testing::WithParamInterface<Strictness>
 {
 };
 
@@ -211,7 +206,5 @@ TEST_P(TestControllerManager, per_controller_update_rate)
   EXPECT_EQ(test_controller->get_update_rate(), 4u);
 }
 
-Strictness strict{STRICT, controller_interface::return_type::ERROR, 0u};
-Strictness best_effort{BEST_EFFORT, controller_interface::return_type::OK, 1u};
 INSTANTIATE_TEST_SUITE_P(
   test_strict_best_effort, TestControllerManager, testing::Values(strict, best_effort));
