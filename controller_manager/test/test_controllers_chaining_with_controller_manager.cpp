@@ -28,6 +28,11 @@
 using ::testing::_;
 using ::testing::Return;
 
+class FriendTestChainableController : public test_chainable_controller::TestChainableController
+{
+  FRIEND_TEST(TestControllerChainingWithControllerManager, test_loading_chained_controllers);
+};
+
 class TestableControllerManager : public controller_manager::ControllerManager
 {
   FRIEND_TEST(TestControllerChainingWithControllerManager, test_loading_chained_controllers);
@@ -67,12 +72,9 @@ public:
 TEST_P(TestControllerChainingWithControllerManager, test_loading_chained_controllers)
 {
   const auto test_param = GetParam();
-  auto pid_left_wheel_controller =
-    std::make_shared<test_chainable_controller::TestChainableController>();
-  auto pid_right_wheel_controller =
-    std::make_shared<test_chainable_controller::TestChainableController>();
-  auto diff_drive_controller =
-    std::make_shared<test_chainable_controller::TestChainableController>();
+  auto pid_left_wheel_controller = std::make_shared<FriendTestChainableController>();
+  auto pid_right_wheel_controller = std::make_shared<FriendTestChainableController>();
+  auto diff_drive_controller = std::make_shared<FriendTestChainableController>();
   auto position_tracking_controller = std::make_shared<test_controller::TestController>();
 
   // set controllers' names
@@ -96,7 +98,7 @@ TEST_P(TestControllerChainingWithControllerManager, test_loading_chained_control
   controller_interface::InterfaceConfiguration pid_right_state_ifs_cfg = {
     controller_interface::interface_configuration_type::INDIVIDUAL, {"wheel_right/velocity"}};
   pid_right_wheel_controller->set_command_interface_configuration(pid_right_cmd_ifs_cfg);
-  pid_right_wheel_controller->set_state_interface_configuration(pid_left_state_ifs_cfg);
+  pid_right_wheel_controller->set_state_interface_configuration(pid_right_state_ifs_cfg);
   pid_right_wheel_controller->set_reference_interface_names({"velocity"});
 
   // configure Diff Drive controller
@@ -242,9 +244,12 @@ TEST_P(TestControllerChainingWithControllerManager, test_loading_chained_control
   // activate controllers
   switch_test_controllers({PID_LEFT_WHEEL}, {}, test_param.strictness);
   EXPECT_TRUE(cm_->resource_manager_->command_interface_is_claimed("wheel_left/velocity"));
+  ASSERT_EQ(pid_left_wheel_controller->internal_counter_, 1u);
 
   switch_test_controllers({PID_RIGHT_WHEEL}, {}, test_param.strictness);
   EXPECT_TRUE(cm_->resource_manager_->command_interface_is_claimed("wheel_right/velocity"));
+  ASSERT_EQ(pid_right_wheel_controller->internal_counter_, 1u);
+  ASSERT_EQ(pid_left_wheel_controller->internal_counter_, 3u);
 
   // Diff-Drive Controller claims the reference interfaces of PID controllers
   switch_test_controllers({DIFF_DRIVE_CONTROLLER}, {}, test_param.strictness);
@@ -255,6 +260,9 @@ TEST_P(TestControllerChainingWithControllerManager, test_loading_chained_control
     EXPECT_TRUE(cm_->resource_manager_->command_interface_is_available(interface));
     EXPECT_TRUE(cm_->resource_manager_->command_interface_is_claimed(interface));
   }
+  ASSERT_EQ(diff_drive_controller->internal_counter_, 1u);
+  ASSERT_EQ(pid_right_wheel_controller->internal_counter_, 3u);
+  ASSERT_EQ(pid_left_wheel_controller->internal_counter_, 5u);
 
   // Position-Tracking Controller uses reference interfaces of Diff-Drive Controller
   switch_test_controllers({POSITION_TRACKING_CONTROLLER}, {}, test_param.strictness);
@@ -270,6 +278,68 @@ TEST_P(TestControllerChainingWithControllerManager, test_loading_chained_control
     EXPECT_TRUE(cm_->resource_manager_->command_interface_is_available(interface));
     EXPECT_FALSE(cm_->resource_manager_->command_interface_is_claimed(interface));
   }
+  ASSERT_EQ(position_tracking_controller->internal_counter, 1u);
+  ASSERT_EQ(diff_drive_controller->internal_counter_, 3u);
+  ASSERT_EQ(pid_right_wheel_controller->internal_counter_, 5u);
+  ASSERT_EQ(pid_left_wheel_controller->internal_counter_, 7u);
+
+  // check data propagation through controllers and if individual controllers are working
+
+  // update 'Position Tracking' controller
+  for (auto & value : diff_drive_controller->reference_interfaces_)
+  {
+    ASSERT_EQ(value, 0.0);  // default reference values are 0.0
+  }
+  position_tracking_controller->external_commands_for_testing_[0] = 32.0;
+  position_tracking_controller->external_commands_for_testing_[1] = 128.0;
+  position_tracking_controller->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
+  ASSERT_EQ(position_tracking_controller->internal_counter, 2u);
+
+  ASSERT_EQ(diff_drive_controller->reference_interfaces_[0], 32.0);   // reference set to 32.0
+  ASSERT_EQ(diff_drive_controller->reference_interfaces_[1], 128.0);  // reference set to 128.0
+
+  // update 'Diff Drive' Controller
+  diff_drive_controller->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
+  ASSERT_EQ(diff_drive_controller->internal_counter_, 4u);
+  for (const auto & value : pid_left_wheel_controller->reference_interfaces_)
+  {
+    ASSERT_EQ(value, 32.0);  // default reference values are 0.0
+  }
+  for (auto & value : pid_right_wheel_controller->reference_interfaces_)
+  {
+    ASSERT_EQ(value, 128.0);  // default reference values are 0.0
+  }
+
+  // update PID controllers that are writing to hardware
+  pid_left_wheel_controller->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
+  ASSERT_EQ(pid_left_wheel_controller->internal_counter_, 8u);
+  pid_right_wheel_controller->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
+  ASSERT_EQ(pid_right_wheel_controller->internal_counter_, 6u);
+
+  // update hardware ('read' is  sufficient for test hardware)
+  cm_->resource_manager_->read();
+  for (const auto & itf : pid_left_wheel_controller->command_interfaces_)
+  {
+    ASSERT_EQ(itf.get_value(), 32.0);  // hardware calc: state = command / 2
+  }
+  for (const auto & itf : pid_left_wheel_controller->state_interfaces_)
+  {
+    ASSERT_EQ(itf.get_value(), 16.0);  // hardware calc: state = command / 2
+  }
+  for (const auto & itf : pid_right_wheel_controller->command_interfaces_)
+  {
+    ASSERT_EQ(itf.get_value(), 128.0);  // hardware calc: state = command / 2
+  }
+  for (const auto & itf : pid_right_wheel_controller->state_interfaces_)
+  {
+    ASSERT_EQ(itf.get_value(), 64.0);  // hardware calc: state = command / 2
+  }
+
+  // check controllers are working properly
+
+  //   pid_left_wheel_controller->reference_interfaces_[0] = 10.0;
+  //   pid_left_wheel_controller->state_interfaces_[0].set_value(2.0);
+  //   pid_left_wheel_controller->state_interfaces_[0].get_value()
 }
 
 INSTANTIATE_TEST_SUITE_P(

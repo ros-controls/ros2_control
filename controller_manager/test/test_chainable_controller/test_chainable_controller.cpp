@@ -66,6 +66,15 @@ controller_interface::return_type TestChainableController::update(
 {
   ++internal_counter_;
 
+  for (size_t i = 0; i < reference_interfaces_.size(); ++i)
+  {
+    RCLCPP_INFO(
+      get_node()->get_logger(),
+      "Value of reference interface '%s' before checking external input is %f",
+      (std::string(get_node()->get_name()) + "/" + reference_interface_names_[i]).c_str(),
+      reference_interfaces_[i]);
+  }
+
   if (!is_in_chained_mode())
   {
     auto joint_commands = rt_command_ptr_.readFromRT();
@@ -74,6 +83,11 @@ controller_interface::return_type TestChainableController::update(
 
   for (size_t i = 0; i < command_interfaces_.size(); ++i)
   {
+    RCLCPP_INFO(
+      get_node()->get_logger(),
+      "Value of reference interface '%s' before writing to command interface is %f",
+      (std::string(get_node()->get_name()) + "/" + reference_interface_names_[i]).c_str(),
+      reference_interfaces_[i]);
     command_interfaces_[i].set_value(reference_interfaces_[i] - state_interfaces_[i].get_value());
   }
 
@@ -136,7 +150,7 @@ TestChainableController::on_export_reference_interfaces()
   for (size_t i = 0; i < reference_interface_names_.size(); ++i)
   {
     reference_interfaces.push_back(hardware_interface::CommandInterface(
-      get_node()->get_name(), reference_interface_names_[i], &(reference_interfaces_[i])));
+      get_node()->get_name(), reference_interface_names_[i], &reference_interfaces_[i]));
   }
 
   return reference_interfaces;
