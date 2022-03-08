@@ -79,15 +79,18 @@ controller_interface::return_type TestChainableController::update(
   {
     auto joint_commands = rt_command_ptr_.readFromRT();
     reference_interfaces_ = (*joint_commands)->data;
+    for (size_t i = 0; i < reference_interfaces_.size(); ++i)
+    {
+      RCLCPP_INFO(
+        get_node()->get_logger(),
+        "Updated value of reference interface '%s' after applying external input is %f",
+        (std::string(get_node()->get_name()) + "/" + reference_interface_names_[i]).c_str(),
+        reference_interfaces_[i]);
+    }
   }
 
   for (size_t i = 0; i < command_interfaces_.size(); ++i)
   {
-    RCLCPP_INFO(
-      get_node()->get_logger(),
-      "Value of reference interface '%s' before writing to command interface is %f",
-      (std::string(get_node()->get_name()) + "/" + reference_interface_names_[i]).c_str(),
-      reference_interfaces_[i]);
     command_interfaces_[i].set_value(reference_interfaces_[i] - state_interfaces_[i].get_value());
   }
 
