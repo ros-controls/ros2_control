@@ -102,10 +102,12 @@ public:
     // Check for identical names
     if (hardware_info_map_.find(hardware_info.name) != hardware_info_map_.end())
     {
-      throw std::runtime_error("Hardware name " + hardware_info.name + " is duplicated. Please provide a unique 'name' in the URDF.");
+      throw std::runtime_error(
+        "Hardware name " + hardware_info.name +
+        " is duplicated. Please provide a unique 'name' in the URDF.");
     }
 
-    hardware_info_map_.insert(std::make_pair(component_info.name, component_info));  
+    hardware_info_map_.insert(std::make_pair(component_info.name, component_info));
   }
 
   template <class HardwareT>
