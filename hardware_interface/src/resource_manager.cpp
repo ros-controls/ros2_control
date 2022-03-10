@@ -434,7 +434,6 @@ public:
     for (auto & interface : interfaces)
     {
       auto key = interface.get_full_name();
-      RCUTILS_LOG_INFO_NAMED("resource_manager", "Command interface: '%s'", key.c_str());
       command_interface_map_.emplace(std::make_pair(key, std::move(interface)));
       claimed_command_interface_map_.emplace(std::make_pair(key, false));
       interface_names.push_back(key);
