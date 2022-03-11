@@ -49,6 +49,90 @@
 
 #include "rclcpp/executor.hpp"
 #include "rclcpp/node.hpp"
+#include "rclcpp/node_interfaces/node_logging_interface.hpp"
+#include "rclcpp/node_interfaces/node_parameters_interface.hpp"
+#include "rclcpp/parameter.hpp"
+
+namespace
+{  // utility
+/**
+ * \brief Read chained controllers configuration parameters and figure out groups
+ */
+inline bool load_chained_controller_configuration(
+  const rclcpp::node_interfaces::NodeParametersInterface::SharedPtr & node_params,
+  const rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr & node_logging,
+  std::vector<std::vector<std::string>> & chained_controllers_configuration)
+{
+  std::string param_prefix = "chained_controllers.";
+
+  if (node_params->has_parameter(param_prefix + "parallel_group_0"))
+  {
+    RCLCPP_ERROR(
+      node_logging->get_logger(),
+      "'parallel_group' indexes in chained_controllers parameter start "
+      "enumeration from 1 and not 0. Chained controller functionality will not be used.");
+    chained_controllers_configuration.clear();
+    return false;
+  }
+
+  for (size_t group_num = 1; group_num > chained_controllers_configuration.size(); ++group_num)
+  {
+    // Parameters in chain are prefixed with 'parallel_group_1'
+    const std::string group_n = param_prefix + "parallel_group_" + std::to_string(group_num);
+
+    // There is no need to declare parameters but just to check if they are there
+    rclcpp::Parameter param_group_list;
+    const bool got_group_list = node_params->get_parameter(group_n, param_group_list);
+
+    if (!got_group_list)
+    {
+      break;
+    }
+
+    // Make sure that the parameter has correct type
+    if (param_group_list.get_type() != rclcpp::PARAMETER_STRING_ARRAY)
+    {
+      RCLCPP_ERROR(
+        node_logging->get_logger(),
+        "%s must be a string array. "
+        "Chained controller functionality will not be used.",
+        group_n.c_str());
+      chained_controllers_configuration.clear();
+      return false;
+    }
+
+    std::vector<std::string> found_parallel_group =
+      param_group_list.get_parameter_value().get<std::vector<std::string>>();
+
+    // check if controller name is duplicated in any groups. It is not allowed to be.
+    for (const auto & parallel_group : chained_controllers_configuration)
+    {
+      for (const auto & controller_in_group : parallel_group)
+      {
+        for (const auto & found_controller : found_parallel_group)
+        {
+          if (controller_in_group == found_controller)
+          {
+            RCLCPP_ERROR(
+              node_logging->get_logger(),
+              "%s controller is duplicated in the chained controller configuration. "
+              "Chained controller functionality will not be used.",
+              found_controller.c_str());
+            chained_controllers_configuration.clear();
+            return false;
+          }
+        }
+      }
+    }
+
+    // Data are OK, we should add them to the configuration
+    chained_controllers_configuration.push_back(found_parallel_group);
+  }
+
+  return true;
+}
+
+}  // namespace
 
 namespace controller_manager
 {
@@ -246,6 +330,7 @@ protected:
   // Per controller update rate support
   unsigned int update_loop_counter_ = 0;
   unsigned int update_rate_ = 100;
+  std::vector<std::vector<std::string>> chained_controllers_configuration_;
 
   std::unique_ptr<hardware_interface::ResourceManager> resource_manager_;
 

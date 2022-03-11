@@ -105,6 +105,10 @@ ControllerManager::ControllerManager(
     RCLCPP_WARN(get_logger(), "'update_rate' parameter not set, using default value.");
   }
 
+  load_chained_controller_configuration(
+    get_node_parameters_interface(), get_node_logging_interface(),
+    chained_controllers_configuration_);
+
   std::string robot_description = "";
   get_parameter("robot_description", robot_description);
   if (robot_description.empty())

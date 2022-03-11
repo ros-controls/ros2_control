@@ -66,8 +66,6 @@ public:
       std::make_unique<hardware_interface::ResourceManager>(), executor_, TEST_CM_NAME);
     run_updater_ = false;
 
-    // TODO(destogl): separate this to init_tests method where parameter can be set for each test
-    // separately
     cm_->set_parameter(
       rclcpp::Parameter("robot_description", ros2_control_test_assets::minimal_robot_urdf));
     cm_->set_parameter(rclcpp::Parameter(
