@@ -28,10 +28,10 @@
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 #include "rclcpp_lifecycle/state.hpp"
 
-using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
-
 namespace hardware_interface
 {
+using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
+
 System::System(std::unique_ptr<SystemInterface> impl) : impl_(std::move(impl)) {}
 
 const rclcpp_lifecycle::State & System::initialize(const HardwareInfo & system_info)

@@ -30,6 +30,8 @@ using hardware_interface::return_type;
 
 namespace fake_components
 {
+using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
+
 class HARDWARE_INTERFACE_PUBLIC GenericSystem : public hardware_interface::SystemInterface
 {
 public:
