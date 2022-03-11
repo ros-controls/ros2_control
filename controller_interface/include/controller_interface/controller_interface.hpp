@@ -83,7 +83,7 @@ public:
 
   /// Custom configure method to read additional parameters for controller-nodes
   /*
-   * Override default implementation for configure of LifecycleNode to get 'update_rate' parameter.
+   * Override default implementation for configure of LifecycleNode to get parameters.
    */
   CONTROLLER_INTERFACE_PUBLIC
   const rclcpp_lifecycle::State & configure();
