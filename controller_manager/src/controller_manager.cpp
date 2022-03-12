@@ -449,7 +449,7 @@ controller_interface::return_type ControllerManager::switch_controller(
     RCLCPP_FATAL(
       get_logger(),
       "The internal stop and start request lists are not empty at the beginning of the "
-      "switchController() call. This should not happen.");
+      "switch_controller() call. This should not happen.");
   }
   if (!stop_command_interface_request_.empty() || !start_command_interface_request_.empty())
   {
@@ -498,19 +498,15 @@ controller_interface::return_type ControllerManager::switch_controller(
 
       if (found_it == updated_controllers.end())
       {
-        if (strictness == controller_manager_msgs::srv::SwitchController::Request::STRICT)
-        {
-          RCLCPP_ERROR(
-            get_logger(),
-            R"(Could not '%s' controller with name '%s' because
-                no controller with this name exists)",
-            action.c_str(), controller.c_str());
-          return controller_interface::return_type::ERROR;
-        }
         RCLCPP_WARN(
           get_logger(),
           "Could not '%s' controller with name '%s' because no controller with this name exists",
           action.c_str(), controller.c_str());
+        if (strictness == controller_manager_msgs::srv::SwitchController::Request::STRICT)
+        {
+          RCLCPP_ERROR(get_logger(), "Aborting, no controller is switched! ('STRICT' switch)");
+          return controller_interface::return_type::ERROR;
+        }
       }
       else
       {
@@ -526,7 +522,7 @@ controller_interface::return_type ControllerManager::switch_controller(
     return controller_interface::return_type::OK;
   };
 
-  // list all controllers to stop
+  // list all controllers to stop (check if all controllers exist)
   auto ret = list_controllers(stop_controllers, stop_request_, "stop");
   if (ret != controller_interface::return_type::OK)
   {
@@ -534,7 +530,7 @@ controller_interface::return_type ControllerManager::switch_controller(
     return ret;
   }
 
-  // list all controllers to start
+  // list all controllers to start (check if all controllers exist)
   ret = list_controllers(start_controllers, start_request_, "start");
   if (ret != controller_interface::return_type::OK)
   {
@@ -542,26 +538,6 @@ controller_interface::return_type ControllerManager::switch_controller(
     start_request_.clear();
     return ret;
   }
-
-  // TODO(destogl): this should not be here, move this lower
-  const auto list_interfaces = [this](
-                                 const ControllerSpec controller,
-                                 std::vector<std::string> & request_interface_list) {
-    auto command_interface_config = controller.c->command_interface_configuration();
-    std::vector<std::string> command_interface_names = {};
-    if (command_interface_config.type == controller_interface::interface_configuration_type::ALL)
-    {
-      command_interface_names = resource_manager_->available_command_interfaces();
-    }
-    if (
-      command_interface_config.type ==
-      controller_interface::interface_configuration_type::INDIVIDUAL)
-    {
-      command_interface_names = command_interface_config.names;
-    }
-    request_interface_list.insert(
-      request_interface_list.end(), command_interface_names.begin(), command_interface_names.end());
-  };
 
   // lock controllers
   std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
@@ -633,6 +609,26 @@ controller_interface::return_type ControllerManager::switch_controller(
       in_start_list = false;
       start_request_.erase(start_list_it);
     }
+
+    const auto list_interfaces = [this](
+                                   const ControllerSpec controller,
+                                   std::vector<std::string> & request_interface_list) {
+      auto command_interface_config = controller.c->command_interface_configuration();
+      std::vector<std::string> command_interface_names = {};
+      if (command_interface_config.type == controller_interface::interface_configuration_type::ALL)
+      {
+        command_interface_names = resource_manager_->available_command_interfaces();
+      }
+      if (
+        command_interface_config.type ==
+        controller_interface::interface_configuration_type::INDIVIDUAL)
+      {
+        command_interface_names = command_interface_config.names;
+      }
+      request_interface_list.insert(
+        request_interface_list.end(), command_interface_names.begin(),
+        command_interface_names.end());
+    };
 
     if (in_start_list)
     {
