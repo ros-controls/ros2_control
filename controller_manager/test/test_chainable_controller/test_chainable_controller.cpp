@@ -64,7 +64,7 @@ TestChainableController::state_interface_configuration() const
 controller_interface::return_type TestChainableController::update(
   const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
 {
-  ++internal_counter_;
+  ++internal_counter;
 
   for (size_t i = 0; i < reference_interfaces_.size(); ++i)
   {
