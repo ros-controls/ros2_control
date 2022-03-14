@@ -173,7 +173,9 @@ TEST_F(TestLoadedController, can_not_start_finalized_controller)
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, controller_if->get_state().id());
 
   // Shutdown controller on purpose for testing
-  ASSERT_EQ(controller_if->shutdown().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED);
+  ASSERT_EQ(
+    controller_if->get_node()->shutdown().id(),
+    lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED);
 
   //  Start controller
   start_test_controller(std::future_status::ready, controller_interface::return_type::ERROR);

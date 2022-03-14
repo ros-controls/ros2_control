@@ -221,7 +221,8 @@ TEST_F(TestControllerManagerSrvs, reload_controller_libraries_srv)
   request->force_kill = false;
   result = call_service_and_wait(*client, request, srv_executor, true);
   ASSERT_TRUE(result->ok);
-  ASSERT_EQ(cleanup_calls, 1u);
+  // Cleanup is not called from UNCONFIGURED: https://design.ros2.org/articles/node_lifecycle.html
+  ASSERT_EQ(cleanup_calls, 0u);
   ASSERT_EQ(test_controller.use_count(), 0)
     << "No more references to the controller after reloading.";
   test_controller.reset();

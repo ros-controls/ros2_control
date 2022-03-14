@@ -20,148 +20,63 @@
 #include <vector>
 
 #include "hardware_interface/types/lifecycle_state_names.hpp"
-#include "lifecycle_msgs/msg/state.hpp"
 
 namespace controller_interface
 {
 return_type ControllerInterface::init(const std::string & controller_name)
 {
-  node_ = std::make_shared<rclcpp::Node>(
-    controller_name, rclcpp::NodeOptions()
-                       .allow_undeclared_parameters(true)
-                       .automatically_declare_parameters_from_overrides(true));
+  node_ = std::make_shared<rclcpp_lifecycle::LifecycleNode>(
+    controller_name,
+    rclcpp::NodeOptions()
+      .allow_undeclared_parameters(true)
+      .automatically_declare_parameters_from_overrides(true),
+    false);  // disable LifecycleNode service interfaces
 
-  return_type result = return_type::OK;
+  try
+  {
+    auto_declare<int>("update_rate", 0);
+  }
+  catch (const std::exception & e)
+  {
+    fprintf(stderr, "Exception thrown during init stage with message: %s \n", e.what());
+    return return_type::ERROR;
+  }
+
   switch (on_init())
   {
     case LifecycleNodeInterface::CallbackReturn::SUCCESS:
-      lifecycle_state_ = rclcpp_lifecycle::State(
-        lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-        hardware_interface::lifecycle_state_names::UNCONFIGURED);
       break;
     case LifecycleNodeInterface::CallbackReturn::ERROR:
     case LifecycleNodeInterface::CallbackReturn::FAILURE:
-      result = return_type::ERROR;
-      break;
+      return return_type::ERROR;
   }
-  return result;
+
+  node_->register_on_configure(
+    std::bind(&ControllerInterface::on_configure, this, std::placeholders::_1));
+
+  node_->register_on_cleanup(
+    std::bind(&ControllerInterface::on_cleanup, this, std::placeholders::_1));
+
+  node_->register_on_activate(
+    std::bind(&ControllerInterface::on_activate, this, std::placeholders::_1));
+
+  node_->register_on_deactivate(
+    std::bind(&ControllerInterface::on_deactivate, this, std::placeholders::_1));
+
+  node_->register_on_shutdown(
+    std::bind(&ControllerInterface::on_shutdown, this, std::placeholders::_1));
+
+  node_->register_on_error(std::bind(&ControllerInterface::on_error, this, std::placeholders::_1));
+
+  return return_type::OK;
 }
 
 const rclcpp_lifecycle::State & ControllerInterface::configure()
 {
-  if (lifecycle_state_.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
-  {
-    switch (on_configure(lifecycle_state_))
-    {
-      case LifecycleNodeInterface::CallbackReturn::SUCCESS:
-        lifecycle_state_ = rclcpp_lifecycle::State(
-          lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-          hardware_interface::lifecycle_state_names::INACTIVE);
-        break;
-      case LifecycleNodeInterface::CallbackReturn::ERROR:
-        on_error(lifecycle_state_);
-        lifecycle_state_ = rclcpp_lifecycle::State(
-          lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED,
-          hardware_interface::lifecycle_state_names::FINALIZED);
-        break;
-      case LifecycleNodeInterface::CallbackReturn::FAILURE:
-        break;
-    }
+  update_rate_ = node_->get_parameter("update_rate").as_int();
 
-    if (node_->has_parameter("update_rate"))
-    {
-      update_rate_ = node_->get_parameter("update_rate").as_int();
-    }
-  }
-  return lifecycle_state_;
+  return node_->configure();
 }
-
-const rclcpp_lifecycle::State & ControllerInterface::cleanup()
-{
-  switch (on_cleanup(lifecycle_state_))
-  {
-    case LifecycleNodeInterface::CallbackReturn::SUCCESS:
-      lifecycle_state_ = rclcpp_lifecycle::State(
-        lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-        hardware_interface::lifecycle_state_names::UNCONFIGURED);
-      break;
-    case LifecycleNodeInterface::CallbackReturn::ERROR:
-      on_error(lifecycle_state_);
-      lifecycle_state_ = rclcpp_lifecycle::State(
-        lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED,
-        hardware_interface::lifecycle_state_names::FINALIZED);
-      break;
-    case LifecycleNodeInterface::CallbackReturn::FAILURE:
-      break;
-  }
-  return lifecycle_state_;
-}
-const rclcpp_lifecycle::State & ControllerInterface::deactivate()
-{
-  switch (on_deactivate(lifecycle_state_))
-  {
-    case LifecycleNodeInterface::CallbackReturn::SUCCESS:
-      lifecycle_state_ = rclcpp_lifecycle::State(
-        lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-        hardware_interface::lifecycle_state_names::INACTIVE);
-      break;
-    case LifecycleNodeInterface::CallbackReturn::ERROR:
-      on_error(lifecycle_state_);
-      lifecycle_state_ = rclcpp_lifecycle::State(
-        lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED,
-        hardware_interface::lifecycle_state_names::FINALIZED);
-      break;
-    case LifecycleNodeInterface::CallbackReturn::FAILURE:
-      break;
-  }
-  return lifecycle_state_;
-}
-const rclcpp_lifecycle::State & ControllerInterface::activate()
-{
-  if (lifecycle_state_.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
-  {
-    switch (on_activate(lifecycle_state_))
-    {
-      case LifecycleNodeInterface::CallbackReturn::SUCCESS:
-        lifecycle_state_ = rclcpp_lifecycle::State(
-          lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
-          hardware_interface::lifecycle_state_names::ACTIVE);
-        break;
-      case LifecycleNodeInterface::CallbackReturn::ERROR:
-        on_error(lifecycle_state_);
-        lifecycle_state_ = rclcpp_lifecycle::State(
-          lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED,
-          hardware_interface::lifecycle_state_names::FINALIZED);
-        break;
-      case LifecycleNodeInterface::CallbackReturn::FAILURE:
-        break;
-    }
-  }
-  return lifecycle_state_;
-}
-
-const rclcpp_lifecycle::State & ControllerInterface::shutdown()
-{
-  switch (on_shutdown(lifecycle_state_))
-  {
-    case LifecycleNodeInterface::CallbackReturn::SUCCESS:
-      lifecycle_state_ = rclcpp_lifecycle::State(
-        lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED,
-        hardware_interface::lifecycle_state_names::FINALIZED);
-      break;
-    case LifecycleNodeInterface::CallbackReturn::ERROR:
-      on_error(lifecycle_state_);
-      lifecycle_state_ = rclcpp_lifecycle::State(
-        lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED,
-        hardware_interface::lifecycle_state_names::FINALIZED);
-      break;
-    case LifecycleNodeInterface::CallbackReturn::FAILURE:
-      break;
-  }
-  return lifecycle_state_;
-}
-
-const rclcpp_lifecycle::State & ControllerInterface::get_state() const { return lifecycle_state_; }
 
 void ControllerInterface::assign_interfaces(
   std::vector<hardware_interface::LoanedCommandInterface> && command_interfaces,
@@ -177,11 +92,16 @@ void ControllerInterface::release_interfaces()
   state_interfaces_.clear();
 }
 
-std::shared_ptr<rclcpp::Node> ControllerInterface::get_node()
+const rclcpp_lifecycle::State & ControllerInterface::get_state() const
+{
+  return node_->get_current_state();
+}
+
+std::shared_ptr<rclcpp_lifecycle::LifecycleNode> ControllerInterface::get_node()
 {
   if (!node_.get())
   {
-    throw std::runtime_error("Node hasn't been initialized yet!");
+    throw std::runtime_error("Lifecycle node hasn't been initialized yet!");
   }
   return node_;
 }
