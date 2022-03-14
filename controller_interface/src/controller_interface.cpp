@@ -20,6 +20,7 @@
 #include <vector>
 
 #include "lifecycle_msgs/msg/state.hpp"
+#include "hardware_interface/types/lifecycle_state_names.hpp"
 
 namespace controller_interface
 {
@@ -30,7 +31,7 @@ return_type ControllerInterface::init(const std::string & controller_name)
     rclcpp::NodeOptions()
       .allow_undeclared_parameters(true)
       .automatically_declare_parameters_from_overrides(true),
-    false);
+    false);  // disable LifecycleNode service interfaces
 
   try
   {
