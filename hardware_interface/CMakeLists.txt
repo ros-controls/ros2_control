@@ -7,6 +7,7 @@ endif()
 
 find_package(ament_cmake REQUIRED)
 find_package(control_msgs REQUIRED)
+find_package(lifecycle_msgs REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(rclcpp_lifecycle REQUIRED)
 find_package(rcpputils REQUIRED)
@@ -31,6 +32,7 @@ target_include_directories(
 ament_target_dependencies(
   hardware_interface
   control_msgs
+  lifecycle_msgs
   pluginlib
   rclcpp_lifecycle
   rcutils
@@ -158,6 +160,8 @@ ament_export_libraries(
 )
 ament_export_dependencies(
   control_msgs
+  lifecycle_msgs
+  rclcpp_lifecycle
   pluginlib
   rcpputils
   tinyxml2_vendor
