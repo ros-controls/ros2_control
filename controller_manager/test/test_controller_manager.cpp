@@ -20,6 +20,7 @@
 
 #include "controller_manager/controller_manager.hpp"
 #include "controller_manager_msgs/srv/list_controllers.hpp"
+#include "controller_interface/controller_interface.hpp"
 #include "controller_manager_test_common.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 #include "test_controller/test_controller.hpp"
@@ -251,6 +252,118 @@ TEST_P(TestControllerManager, unknown_controllers)
   // EXPECT_EQ(
   //   lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, test_controller->get_state().id());
   // EXPECT_EQ(1, test_controller.use_count());
+}
+
+TEST_P(TestControllerManager, resource_conflict)
+{
+  const auto test_param = GetParam();
+  auto test_controller = std::make_shared<test_controller::TestController>();
+  auto test_controller_2 = std::make_shared<test_controller::TestController>();
+  auto test_controller_3 = std::make_shared<test_controller::TestController>();
+
+  constexpr char TEST_CONTROLLER_2_NAME[] = "test_controller_2_name";
+  constexpr char TEST_CONTROLLER_3_NAME[] = "test_controller_3_name";
+
+  // Specific the command interface configuration
+  controller_interface::InterfaceConfiguration cmd_cfg = {
+    controller_interface::interface_configuration_type::INDIVIDUAL,
+    {"joint1/position", "joint2/velocity"}};
+  controller_interface::InterfaceConfiguration state_cfg = {
+    controller_interface::interface_configuration_type::INDIVIDUAL,
+    {"joint1/position", "joint1/velocity", "joint2/position"}};
+
+  // Produce resource conflict for test_controller & test_controller_3
+  test_controller->set_command_interface_configuration(cmd_cfg);
+  test_controller->set_state_interface_configuration(state_cfg);
+
+  test_controller_3->set_command_interface_configuration(cmd_cfg);
+  test_controller_3->set_state_interface_configuration(state_cfg);
+
+  // Add controlles to the controller manager
+  cm_->add_controller(
+    test_controller, test_controller::TEST_CONTROLLER_NAME,
+    test_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    test_controller_2, TEST_CONTROLLER_2_NAME, 
+    test_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    test_controller_3, TEST_CONTROLLER_3_NAME, 
+    test_controller::TEST_CONTROLLER_CLASS_NAME);
+
+  EXPECT_EQ(3u, cm_->get_loaded_controllers().size());
+
+  EXPECT_EQ(
+    controller_interface::return_type::OK,
+    cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
+
+  // configure controller
+  cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME);
+  cm_->configure_controller(TEST_CONTROLLER_2_NAME);
+  cm_->configure_controller(TEST_CONTROLLER_3_NAME);
+
+  EXPECT_EQ(
+    controller_interface::return_type::OK,
+    cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
+  EXPECT_EQ(0u, test_controller->internal_counter) << "Controller is not started";
+  EXPECT_EQ(0u, test_controller_2->internal_counter) << "Controller is not started";
+  EXPECT_EQ(0u, test_controller_3->internal_counter) << "Controller is not started";
+
+  // Start test_controller, no conflicts expected
+  std::vector<std::string> start_controllers = {test_controller::TEST_CONTROLLER_NAME};
+  std::vector<std::string> stop_controllers = {};
+  auto switch_future = std::async(
+    std::launch::async, &controller_manager::ControllerManager::switch_controller, cm_,
+    start_controllers, stop_controllers, test_param.strictness, true, rclcpp::Duration(0, 0));
+
+  EXPECT_EQ(
+    controller_interface::return_type::OK,
+    cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
+  EXPECT_EQ(0u, test_controller->internal_counter)
+    << "Controller is started at the end of update";
+  {
+    ControllerManagerRunner cm_runner(this);
+    EXPECT_EQ(test_param.expected_return, switch_future.get());
+  }
+  EXPECT_EQ(
+    controller_interface::return_type::OK,
+    cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
+
+  // Start test_controller_2 and test_controller_3
+  // BEST_EFFORT: controller_2 can be started
+  // STRICT: controller_2 can NOT be started
+  start_controllers = {TEST_CONTROLLER_2_NAME, TEST_CONTROLLER_3_NAME};
+  stop_controllers = {};
+  switch_future = std::async(
+    std::launch::async, &controller_manager::ControllerManager::switch_controller, cm_,
+    start_controllers, stop_controllers, test_param.strictness, true, rclcpp::Duration(0, 0));
+
+  ASSERT_EQ(std::future_status::timeout, switch_future.wait_for(std::chrono::milliseconds(100)))
+    << "switch_controller should be blocking until next update cycle";
+
+  EXPECT_EQ(
+    controller_interface::return_type::OK,
+    cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
+  EXPECT_EQ(0u, test_controller_2->internal_counter) << "Controller is started at the end of update";
+  {
+    ControllerManagerRunner cm_runner(this);
+    EXPECT_EQ(controller_interface::return_type::OK, switch_future.get());
+  }
+
+  EXPECT_EQ(
+    controller_interface::return_type::OK,
+    cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
+  EXPECT_GE(test_controller->internal_counter, 1u);
+
+  // Should we expect two active controllers in best_effort?
+  unsigned int active_controllers_count = 0;
+  if (test_controller->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+    ++active_controllers_count;
+
+  if (test_controller_2->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+    ++active_controllers_count;
+
+  EXPECT_EQ(active_controllers_count, test_param.expected_active_contollers)
+    << "The number of active controllers should be: " << test_param.expected_active_contollers;
 }
 
 TEST_P(TestControllerManager, per_controller_update_rate)
