@@ -18,9 +18,9 @@
 #include <utility>
 #include <vector>
 
+#include "controller_interface/controller_interface.hpp"
 #include "controller_manager/controller_manager.hpp"
 #include "controller_manager_msgs/srv/list_controllers.hpp"
-#include "controller_interface/controller_interface.hpp"
 #include "controller_manager_test_common.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 #include "test_controller/test_controller.hpp"
@@ -217,41 +217,6 @@ TEST_P(TestControllerManager, unknown_controllers)
   EXPECT_EQ(active_controllers_count, test_param.expected_active_contollers)
     << "The number of active controllers should be: " << test_param.expected_active_contollers;
   auto last_internal_counter = test_controller->internal_counter;
-
-  // Stop controller, will take effect at the end of the update function
-  start_controllers = {};
-  stop_controllers = {test_controller::TEST_CONTROLLER_NAME};
-  switch_future = std::async(
-    std::launch::async, &controller_manager::ControllerManager::switch_controller, cm_,
-    start_controllers, stop_controllers, test_param.strictness, true, rclcpp::Duration(0, 0));
-
-  ASSERT_EQ(std::future_status::timeout, switch_future.wait_for(std::chrono::milliseconds(100)))
-    << "switch_controller should be blocking until next update cycle";
-
-  EXPECT_EQ(
-    controller_interface::return_type::OK,
-    cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
-  EXPECT_EQ(last_internal_counter + 1u, test_controller->internal_counter)
-    << "Controller is stopped at the end of update, so it should have done one more update";
-  {
-    ControllerManagerRunner cm_runner(this);
-    EXPECT_EQ(controller_interface::return_type::OK, switch_future.get());
-  }
-
-  // EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-  //  test_controller->get_state().id());
-  auto unload_future = std::async(
-    std::launch::async, &controller_manager::ControllerManager::unload_controller, cm_,
-    test_controller::TEST_CONTROLLER_NAME);
-
-  ASSERT_EQ(std::future_status::timeout, unload_future.wait_for(std::chrono::milliseconds(100)))
-    << "unload_controller should be blocking until next update cycle";
-  ControllerManagerRunner cm_runner(this);
-  EXPECT_EQ(controller_interface::return_type::OK, unload_future.get());
-
-  // EXPECT_EQ(
-  //   lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, test_controller->get_state().id());
-  // EXPECT_EQ(1, test_controller.use_count());
 }
 
 TEST_P(TestControllerManager, resource_conflict)
@@ -284,11 +249,9 @@ TEST_P(TestControllerManager, resource_conflict)
     test_controller, test_controller::TEST_CONTROLLER_NAME,
     test_controller::TEST_CONTROLLER_CLASS_NAME);
   cm_->add_controller(
-    test_controller_2, TEST_CONTROLLER_2_NAME, 
-    test_controller::TEST_CONTROLLER_CLASS_NAME);
+    test_controller_2, TEST_CONTROLLER_2_NAME, test_controller::TEST_CONTROLLER_CLASS_NAME);
   cm_->add_controller(
-    test_controller_3, TEST_CONTROLLER_3_NAME, 
-    test_controller::TEST_CONTROLLER_CLASS_NAME);
+    test_controller_3, TEST_CONTROLLER_3_NAME, test_controller::TEST_CONTROLLER_CLASS_NAME);
 
   EXPECT_EQ(3u, cm_->get_loaded_controllers().size());
 
@@ -318,8 +281,7 @@ TEST_P(TestControllerManager, resource_conflict)
   EXPECT_EQ(
     controller_interface::return_type::OK,
     cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
-  EXPECT_EQ(0u, test_controller->internal_counter)
-    << "Controller is started at the end of update";
+  EXPECT_EQ(0u, test_controller->internal_counter) << "Controller is started at the end of update";
   {
     ControllerManagerRunner cm_runner(this);
     EXPECT_EQ(test_param.expected_return, switch_future.get());
@@ -343,7 +305,8 @@ TEST_P(TestControllerManager, resource_conflict)
   EXPECT_EQ(
     controller_interface::return_type::OK,
     cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
-  EXPECT_EQ(0u, test_controller_2->internal_counter) << "Controller is started at the end of update";
+  EXPECT_EQ(0u, test_controller_2->internal_counter)
+    << "Controller is started at the end of update";
   {
     ControllerManagerRunner cm_runner(this);
     EXPECT_EQ(controller_interface::return_type::OK, switch_future.get());
