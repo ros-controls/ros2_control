@@ -18,6 +18,7 @@
 #include <utility>
 #include <vector>
 
+#include "controller_interface/controller_interface.hpp"
 #include "controller_manager/controller_manager.hpp"
 #include "controller_manager_msgs/srv/list_controllers.hpp"
 #include "controller_manager_test_common.hpp"
@@ -319,13 +320,12 @@ public:
     typename T, typename std::enable_if<
                   std::is_convertible<T *, controller_interface::ControllerInterface *>::value,
                   T>::type * = nullptr>
-  void SetToChainedModeAndCheckInterfaces(
+  void SetToChainedModeAndMakeReferenceInterfacesAvailable(
     std::shared_ptr<T> & controller, const std::string & controller_name,
     const std::vector<std::string> & reference_interfaces)
   {
     controller->set_chained_mode(true);
     EXPECT_TRUE(controller->is_in_chained_mode());
-
     // make reference interface command_interfaces available
     cm_->resource_manager_->make_controller_reference_interfaces_available(controller_name);
     for (const auto & interface : reference_interfaces)
@@ -340,18 +340,68 @@ public:
     typename T, typename std::enable_if<
                   std::is_convertible<T *, controller_interface::ControllerInterface *>::value,
                   T>::type * = nullptr>
-  void ActivateAndCheckController(
-    std::shared_ptr<T> & controller, const std::string & controller_name,
-    const std::vector<std::string> & claimed_command_itfs, size_t expected_internal_counter)
+  void check_after_de_activate(
+    std::shared_ptr<T> & controller, const std::vector<std::string> & claimed_command_itfs,
+    size_t expected_internal_counter, const controller_interface::return_type expected_return,
+    bool deactivated, bool claimed_interfaces_from_hw = false)
   {
-    switch_test_controllers({controller_name}, {}, test_param.strictness);
     for (const auto & interface : claimed_command_itfs)
     {
       EXPECT_TRUE(cm_->resource_manager_->command_interface_exists(interface));
-      EXPECT_TRUE(cm_->resource_manager_->command_interface_is_available(interface));
-      EXPECT_TRUE(cm_->resource_manager_->command_interface_is_claimed(interface));
+      if ((expected_return == controller_interface::return_type::OK) != deactivated)  // xor
+      {
+        EXPECT_TRUE(cm_->resource_manager_->command_interface_exists(interface));
+        EXPECT_TRUE(cm_->resource_manager_->command_interface_is_claimed(interface));
+      }
+      else
+      {
+        if (claimed_interfaces_from_hw)
+        {
+          EXPECT_TRUE(cm_->resource_manager_->command_interface_is_available(interface));
+        }
+        else
+        {
+          EXPECT_FALSE(cm_->resource_manager_->command_interface_is_available(interface));
+        }
+        EXPECT_FALSE(cm_->resource_manager_->command_interface_is_claimed(interface));
+      }
     }
-    ASSERT_EQ(controller->internal_counter, expected_internal_counter);
+    if (expected_internal_counter != 0)
+    {
+      ASSERT_EQ(controller->internal_counter, expected_internal_counter);
+    }
+  }
+
+  template <
+    typename T, typename std::enable_if<
+                  std::is_convertible<T *, controller_interface::ControllerInterface *>::value,
+                  T>::type * = nullptr>
+  void ActivateAndCheckController(
+    std::shared_ptr<T> & controller, const std::string & controller_name,
+    const std::vector<std::string> & claimed_command_itfs, size_t expected_internal_counter = 0u,
+    const controller_interface::return_type expected_return = controller_interface::return_type::OK)
+  {
+    switch_test_controllers(
+      {controller_name}, {}, test_param.strictness, std::future_status::timeout, expected_return);
+    check_after_de_activate(
+      controller, claimed_command_itfs, expected_internal_counter, expected_return, false);
+  }
+
+  template <
+    typename T, typename std::enable_if<
+                  std::is_convertible<T *, controller_interface::ControllerInterface *>::value,
+                  T>::type * = nullptr>
+  void DeactivateAndCheckController(
+    std::shared_ptr<T> & controller, const std::string & controller_name,
+    const std::vector<std::string> & claimed_command_itfs, size_t expected_internal_counter = 0u,
+    const bool claimed_interfaces_from_hw = false,
+    const controller_interface::return_type expected_return = controller_interface::return_type::OK)
+  {
+    switch_test_controllers(
+      {}, {controller_name}, test_param.strictness, std::future_status::timeout, expected_return);
+    check_after_de_activate(
+      controller, claimed_command_itfs, expected_internal_counter, expected_return, true,
+      claimed_interfaces_from_hw);
   }
 
   void UpdateAllControllerAndCheck(
@@ -469,11 +519,11 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers)
 
   ConfigureAndCheckControllers();
 
-  SetToChainedModeAndCheckInterfaces(
+  SetToChainedModeAndMakeReferenceInterfacesAvailable(
     pid_left_wheel_controller, PID_LEFT_WHEEL, PID_LEFT_WHEEL_REFERENCE_INTERFACES);
-  SetToChainedModeAndCheckInterfaces(
+  SetToChainedModeAndMakeReferenceInterfacesAvailable(
     pid_right_wheel_controller, PID_RIGHT_WHEEL, PID_RIGHT_WHEEL_REFERENCE_INTERFACES);
-  SetToChainedModeAndCheckInterfaces(
+  SetToChainedModeAndMakeReferenceInterfacesAvailable(
     diff_drive_controller, DIFF_DRIVE_CONTROLLER, DIFF_DRIVE_REFERENCE_INTERFACES);
 
   EXPECT_THROW(
@@ -644,31 +694,73 @@ TEST_P(
 
   ConfigureAndCheckControllers();
 
-  SetToChainedModeAndCheckInterfaces(
-    pid_left_wheel_controller, PID_LEFT_WHEEL, PID_LEFT_WHEEL_REFERENCE_INTERFACES);
-  SetToChainedModeAndCheckInterfaces(
-    pid_right_wheel_controller, PID_RIGHT_WHEEL, PID_RIGHT_WHEEL_REFERENCE_INTERFACES);
-  SetToChainedModeAndCheckInterfaces(
-    diff_drive_controller, DIFF_DRIVE_CONTROLLER, DIFF_DRIVE_REFERENCE_INTERFACES);
-
   // Set ControllerManager into Debug-Mode output to have detailed output on updating controllers
   cm_->get_logger().set_level(rclcpp::Logger::Level::Debug);
 
+  // at beginning controllers are not in chained mode
+  EXPECT_FALSE(pid_left_wheel_controller->is_in_chained_mode());
+  EXPECT_FALSE(pid_right_wheel_controller->is_in_chained_mode());
+  ASSERT_FALSE(diff_drive_controller->is_in_chained_mode());
+
+  // still not in chained mode because no preceding controller is activated
   ActivateAndCheckController(
     pid_left_wheel_controller, PID_LEFT_WHEEL, PID_LEFT_WHEEL_CLAIMED_INTERFACES, 1u);
   ActivateAndCheckController(
     pid_right_wheel_controller, PID_RIGHT_WHEEL, PID_RIGHT_WHEEL_CLAIMED_INTERFACES, 1u);
+  EXPECT_FALSE(pid_left_wheel_controller->is_in_chained_mode());
+  EXPECT_FALSE(pid_right_wheel_controller->is_in_chained_mode());
+  ASSERT_FALSE(diff_drive_controller->is_in_chained_mode());
+
+  // DiffDrive (preceding) controller is activated --> PID controller in chained mode
   ActivateAndCheckController(
     diff_drive_controller, DIFF_DRIVE_CONTROLLER, DIFF_DRIVE_CLAIMED_INTERFACES, 1u);
+  EXPECT_TRUE(pid_left_wheel_controller->is_in_chained_mode());
+  EXPECT_TRUE(pid_right_wheel_controller->is_in_chained_mode());
+  ASSERT_FALSE(diff_drive_controller->is_in_chained_mode());
+
+  // PositionController is activated --> all following controller in chained mode
   ActivateAndCheckController(
     position_tracking_controller, POSITION_TRACKING_CONTROLLER,
     POSITION_CONTROLLER_CLAIMED_INTERFACES, 1u);
+  EXPECT_TRUE(pid_left_wheel_controller->is_in_chained_mode());
+  EXPECT_TRUE(pid_right_wheel_controller->is_in_chained_mode());
+  ASSERT_TRUE(diff_drive_controller->is_in_chained_mode());
 
   UpdateAllControllerAndCheck({32.0, 128.0}, 2u);
   UpdateAllControllerAndCheck({1024.0, 4096.0}, 3u);
+
+  // Test switch 'from chained mode' when controllers are deactivated
+
+  // PositionController is deactivated --> DiffDrive controller is not in chained mode anymore
+  DeactivateAndCheckController(
+    position_tracking_controller, POSITION_TRACKING_CONTROLLER,
+    POSITION_CONTROLLER_CLAIMED_INTERFACES, 4u);
+  EXPECT_TRUE(pid_left_wheel_controller->is_in_chained_mode());
+  EXPECT_TRUE(pid_right_wheel_controller->is_in_chained_mode());
+  ASSERT_FALSE(diff_drive_controller->is_in_chained_mode());
+
+  // DiffDrive (preceding) controller is activated --> PID controller in chained mode
+  DeactivateAndCheckController(
+    diff_drive_controller, DIFF_DRIVE_CONTROLLER, DIFF_DRIVE_CLAIMED_INTERFACES, 8u);
+  EXPECT_FALSE(pid_left_wheel_controller->is_in_chained_mode());
+  EXPECT_FALSE(pid_right_wheel_controller->is_in_chained_mode());
+  ASSERT_FALSE(diff_drive_controller->is_in_chained_mode());
+
+  // all controllers are deactivated --> chained mode is not changed
+  DeactivateAndCheckController(
+    pid_left_wheel_controller, PID_LEFT_WHEEL, PID_LEFT_WHEEL_CLAIMED_INTERFACES, 14u, true);
+  DeactivateAndCheckController(
+    pid_right_wheel_controller, PID_RIGHT_WHEEL, PID_RIGHT_WHEEL_CLAIMED_INTERFACES, 14u, true);
+  EXPECT_FALSE(pid_left_wheel_controller->is_in_chained_mode());
+  EXPECT_FALSE(pid_right_wheel_controller->is_in_chained_mode());
+  ASSERT_FALSE(diff_drive_controller->is_in_chained_mode());
 }
 
 // TODO(destogl): Add test case with controllers added in "random" order
+
+// TODO(destogl): Think about strictness and chaining controllers
+// new value: "START_DOWNSTREAM_CTRLS" --> start "downstream" controllers in a controllers chain
+//
 
 INSTANTIATE_TEST_SUITE_P(
   test_strict_best_effort, TestControllerChainingWithControllerManagerParameter,

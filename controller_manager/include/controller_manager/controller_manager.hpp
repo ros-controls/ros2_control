@@ -257,6 +257,9 @@ protected:
   void stop_controllers();
 
   CONTROLLER_MANAGER_PUBLIC
+  void switch_chained_mode();
+
+  CONTROLLER_MANAGER_PUBLIC
   void start_controllers();
 
   CONTROLLER_MANAGER_PUBLIC
@@ -454,6 +457,7 @@ private:
     set_hardware_component_state_service_;
 
   std::vector<std::string> start_request_, stop_request_;
+  std::vector<std::string> to_chained_mode_request_, from_chained_mode_request_;
   std::vector<std::string> start_command_interface_request_, stop_command_interface_request_;
 
   struct SwitchParams
