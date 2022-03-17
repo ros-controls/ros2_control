@@ -27,7 +27,7 @@
 using ::testing::_;
 using ::testing::Return;
 
-class TestReleaseInterfaces : public ControllerManagerFixture
+class TestReleaseInterfaces : public ControllerManagerFixture<controller_manager::ControllerManager>
 {
 };
 
