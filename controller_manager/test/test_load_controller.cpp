@@ -109,12 +109,12 @@ public:
   }
 };
 
-class TestLoadedControllerParameterzied : public TestLoadedController,
-                                          public testing::WithParamInterface<Strictness>
+class TestLoadedControllerParametrized : public TestLoadedController,
+                                         public testing::WithParamInterface<Strictness>
 {
 };
 
-TEST_P(TestLoadedControllerParameterzied, load_and_configure_one_known_controller)
+TEST_P(TestLoadedControllerParametrized, load_and_configure_one_known_controller)
 {
   EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
 
@@ -125,7 +125,7 @@ TEST_P(TestLoadedControllerParameterzied, load_and_configure_one_known_controlle
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if->get_state().id());
 }
 
-TEST_P(TestLoadedControllerParameterzied, can_start_configured_controller)
+TEST_P(TestLoadedControllerParametrized, can_start_configured_controller)
 {
   const auto test_param = GetParam();
 
@@ -134,7 +134,7 @@ TEST_P(TestLoadedControllerParameterzied, can_start_configured_controller)
   ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, controller_if->get_state().id());
 }
 
-TEST_P(TestLoadedControllerParameterzied, can_stop_active_controller)
+TEST_P(TestLoadedControllerParametrized, can_stop_active_controller)
 {
   const auto test_param = GetParam();
 
@@ -147,7 +147,7 @@ TEST_P(TestLoadedControllerParameterzied, can_stop_active_controller)
   ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if->get_state().id());
 }
 
-TEST_P(TestLoadedControllerParameterzied, starting_and_stopping_a_controller)
+TEST_P(TestLoadedControllerParametrized, starting_and_stopping_a_controller)
 {
   const auto test_param = GetParam();
 
@@ -173,7 +173,7 @@ TEST_P(TestLoadedControllerParameterzied, starting_and_stopping_a_controller)
   }
 }
 
-TEST_P(TestLoadedControllerParameterzied, can_not_configure_active_controller)
+TEST_P(TestLoadedControllerParametrized, can_not_configure_active_controller)
 {
   const auto test_param = GetParam();
 
@@ -185,7 +185,7 @@ TEST_P(TestLoadedControllerParameterzied, can_not_configure_active_controller)
   ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, controller_if->get_state().id());
 }
 
-TEST_P(TestLoadedControllerParameterzied, can_not_start_finalized_controller)
+TEST_P(TestLoadedControllerParametrized, can_not_start_finalized_controller)
 {
   const auto test_param = GetParam();
 
@@ -204,7 +204,7 @@ TEST_P(TestLoadedControllerParameterzied, can_not_start_finalized_controller)
   ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, controller_if->get_state().id());
 }
 
-TEST_P(TestLoadedControllerParameterzied, inactive_controller_cannot_be_cleaned_up)
+TEST_P(TestLoadedControllerParametrized, inactive_controller_cannot_be_cleaned_up)
 {
   const auto test_param = GetParam();
 
@@ -227,7 +227,7 @@ TEST_P(TestLoadedControllerParameterzied, inactive_controller_cannot_be_cleaned_
   EXPECT_EQ(0u, cleanup_calls);
 }
 
-TEST_P(TestLoadedControllerParameterzied, inactive_controller_cannot_be_configured)
+TEST_P(TestLoadedControllerParametrized, inactive_controller_cannot_be_configured)
 {
   const auto test_param = GetParam();
 
@@ -250,7 +250,7 @@ TEST_P(TestLoadedControllerParameterzied, inactive_controller_cannot_be_configur
 }
 
 INSTANTIATE_TEST_SUITE_P(
-  test_strict_best_effort, TestLoadedControllerParameterzied, testing::Values(strict, best_effort));
+  test_strict_best_effort, TestLoadedControllerParametrized, testing::Values(strict, best_effort));
 
 class SwitchTest
 : public TestLoadedController,
