@@ -1,0 +1,18 @@
+name: Galactic Source Build
+on:
+  pull_request:
+    branches:
+      - galactic
+  push:
+    branches:
+      - galactic
+  schedule:
+    # Run every day to detect flakiness and broken dependencies
+    - cron: '03 3 * * *'
+
+jobs:
+  source:
+    uses: ./.github/workflows/reusable-ros-tooling-source-build.yml
+    with:
+      ros_distro: galactic
+      ref: galactic
