@@ -13,7 +13,6 @@ add_library(
   controller_interface
   SHARED
   src/controller_interface.cpp
-  src/chainable_controller_interface.cpp
 )
 target_include_directories(
   controller_interface
