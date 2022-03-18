@@ -1,8 +1,5 @@
 name: Galactic Source Build
 on:
-  pull_request:
-    branches:
-      - galactic
   push:
     branches:
       - galactic
