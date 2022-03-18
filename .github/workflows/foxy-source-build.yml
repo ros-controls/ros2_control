@@ -1,8 +1,5 @@
 name: Foxy Source Build
 on:
-  pull_request:
-    branches:
-      - foxy
   push:
     branches:
       - foxy
