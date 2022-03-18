@@ -19,8 +19,8 @@
 #include <utility>
 #include <vector>
 
-#include "lifecycle_msgs/msg/state.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
+#include "lifecycle_msgs/msg/state.hpp"
 
 namespace controller_interface
 {
