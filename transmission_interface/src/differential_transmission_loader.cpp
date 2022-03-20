@@ -45,10 +45,10 @@ std::shared_ptr<Transmission> DifferentialTransmissionLoader::load(
       {jnt_offset1, jnt_offset2}));
     return transmission;
   }
-  catch (const Exception & ex)
+  catch (const std::exception & ex)
   {
     RCLCPP_ERROR(
-      rclcpp::get_logger("four_bar_linkage_transmission_loader"),
+      rclcpp::get_logger("differential_transmission_loader"),
       "Failed to construct transmission '%s'", ex.what());
     return std::shared_ptr<Transmission>();
   }

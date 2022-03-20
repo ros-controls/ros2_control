@@ -105,7 +105,6 @@ TEST(FourBarLinkageTransmissionLoaderTest, FullSpec)
   std::shared_ptr<transmission_interface::Transmission> transmission;
   const hardware_interface::TransmissionInfo & info = infos[0].transmissions[0];
   transmission = transmission_loader->load(info);
-  ASSERT_TRUE(nullptr != transmission);
 
   // Validate transmission
   transmission_interface::FourBarLinkageTransmission * four_bar_linkage_transmission =
@@ -179,7 +178,6 @@ TEST(FourBarLinkageTransmissionLoaderTest, only_mech_red_specified)
   std::shared_ptr<transmission_interface::Transmission> transmission = nullptr;
   const hardware_interface::TransmissionInfo & info = infos[0].transmissions[0];
   transmission = transmission_loader->load(info);
-  ASSERT_TRUE(nullptr != transmission);
 
   // Validate transmission
   transmission_interface::FourBarLinkageTransmission * four_bar_linkage_transmission =
@@ -200,7 +198,7 @@ TEST(FourBarLinkageTransmissionLoaderTest, only_mech_red_specified)
   EXPECT_EQ(0.0, joint_offset[1]);
 }
 
-TEST(SimpleTransmissionLoaderTest, offset_and_mech_red_not_specified)
+TEST(DifferentialTransmissionLoaderTest, offset_and_mech_red_not_specified)
 {
   // Parse transmission info
   std::string urdf_to_test = R"(
@@ -244,7 +242,6 @@ TEST(SimpleTransmissionLoaderTest, offset_and_mech_red_not_specified)
   std::shared_ptr<transmission_interface::Transmission> transmission = nullptr;
   const hardware_interface::TransmissionInfo & info = infos[0].transmissions[0];
   transmission = transmission_loader->load(info);
-  ASSERT_TRUE(nullptr != transmission);
 
   // Validate transmission
   transmission_interface::FourBarLinkageTransmission * four_bar_linkage_transmission =
@@ -317,7 +314,6 @@ TEST(FourBarLinkageTransmissionLoaderTest, mechanical_reduction_not_a_number)
   std::shared_ptr<transmission_interface::Transmission> transmission = nullptr;
   const hardware_interface::TransmissionInfo & info = infos[0].transmissions[0];
   transmission = transmission_loader->load(info);
-  ASSERT_TRUE(nullptr != transmission);
 
   // Validate transmission
   transmission_interface::FourBarLinkageTransmission * four_bar_linkage_transmission =
@@ -393,7 +389,6 @@ TEST(FourBarLinkageTransmissionLoaderTest, offset_ill_defined)
   std::shared_ptr<transmission_interface::Transmission> transmission = nullptr;
   const hardware_interface::TransmissionInfo & info = infos[0].transmissions[0];
   transmission = transmission_loader->load(info);
-  ASSERT_TRUE(nullptr != transmission);
 
   // Validate transmission
   transmission_interface::FourBarLinkageTransmission * four_bar_linkage_transmission =

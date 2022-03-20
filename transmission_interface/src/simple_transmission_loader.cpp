@@ -37,7 +37,7 @@ std::shared_ptr<Transmission> SimpleTransmissionLoader::load(
       new SimpleTransmission(mechanical_reduction, offset));
     return transmission;
   }
-  catch (const Exception & ex)
+  catch (const std::exception & ex)
   {
     RCLCPP_ERROR(
       rclcpp::get_logger("simple_transmission_loader"), "Failed to construct transmission '%s'",

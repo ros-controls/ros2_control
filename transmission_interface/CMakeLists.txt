@@ -17,16 +17,9 @@ install(
 )
 
 add_library(transmission_interface SHARED
-  include/transmission_interface/transmission_loader.hpp
-  include/transmission_interface/simple_transmission_loader.hpp
-  include/transmission_interface/four_bar_linkage_transmission_loader.hpp
-  include/transmission_interface/differential_transmission_loader.hpp
-
-
   src/simple_transmission_loader.cpp
   src/four_bar_linkage_transmission_loader.cpp
   src/differential_transmission_loader.cpp
-
 )
 
 target_include_directories(transmission_interface PUBLIC include)

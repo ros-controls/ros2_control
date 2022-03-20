@@ -105,7 +105,6 @@ TEST(DifferentialTransmissionLoaderTest, FullSpec)
   std::shared_ptr<transmission_interface::Transmission> transmission;
   const hardware_interface::TransmissionInfo & info = infos[0].transmissions[0];
   transmission = transmission_loader->load(info);
-  ASSERT_TRUE(nullptr != transmission);
 
   // Validate transmission
   transmission_interface::DifferentialTransmission * differential_transmission =
@@ -178,7 +177,6 @@ TEST(DifferentialTransmissionLoaderTest, only_mech_red_specified)
   std::shared_ptr<transmission_interface::Transmission> transmission = nullptr;
   const hardware_interface::TransmissionInfo & info = infos[0].transmissions[0];
   transmission = transmission_loader->load(info);
-  ASSERT_TRUE(nullptr != transmission);
 
   // Validate transmission
   transmission_interface::DifferentialTransmission * differential_transmission =
@@ -242,7 +240,6 @@ TEST(SimpleTransmissionLoaderTest, offset_and_mech_red_not_specified)
   std::shared_ptr<transmission_interface::Transmission> transmission = nullptr;
   const hardware_interface::TransmissionInfo & info = infos[0].transmissions[0];
   transmission = transmission_loader->load(info);
-  ASSERT_TRUE(nullptr != transmission);
 
   // Validate transmission
   transmission_interface::DifferentialTransmission * differential_transmission =
@@ -314,7 +311,6 @@ TEST(DifferentialTransmissionLoaderTest, mechanical_reduction_not_a_number)
   std::shared_ptr<transmission_interface::Transmission> transmission = nullptr;
   const hardware_interface::TransmissionInfo & info = infos[0].transmissions[0];
   transmission = transmission_loader->load(info);
-  ASSERT_TRUE(nullptr != transmission);
 
   // Validate transmission
   transmission_interface::DifferentialTransmission * differential_transmission =
@@ -389,7 +385,6 @@ TEST(DifferentialTransmissionLoaderTest, offset_ill_defined)
   std::shared_ptr<transmission_interface::Transmission> transmission = nullptr;
   const hardware_interface::TransmissionInfo & info = infos[0].transmissions[0];
   transmission = transmission_loader->load(info);
-  ASSERT_TRUE(nullptr != transmission);
 
   // Validate transmission
   transmission_interface::DifferentialTransmission * differential_transmission =
