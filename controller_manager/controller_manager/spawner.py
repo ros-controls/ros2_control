@@ -73,9 +73,7 @@ def find_node_and_namespace(node, full_node_name):
 
 
 def has_service_names(node, node_name, node_namespace, service_names):
-    client_names_and_types = node.get_client_names_and_types_by_node(node_name, node_namespace)
-    node.get_logger().info(str(client_names_and_types), throttle_duration_sec=2)
-
+    client_names_and_types = node.get_service_names_and_types_by_node(node_name, node_namespace)
     if len(client_names_and_types) == 0:
         return False
     client_names, _ = zip(*client_names_and_types)
@@ -85,14 +83,14 @@ def has_service_names(node, node_name, node_namespace, service_names):
 def wait_for_controller_manager(node, controller_manager, timeout_duration):
     # List of service names from controller_manager we wait for
     service_names = (
-        'configure_controller',
-        'list_controllers',
-        'list_controller_types',
-        'list_hardware_interfaces',
-        'load_controller',
-        'reload_controller_libraries',
-        'switch_controller',
-        'unload_controller',
+        controller_manager + '/configure_controller',
+        controller_manager + '/list_controllers',
+        controller_manager + '/list_controller_types',
+        controller_manager + '/list_hardware_interfaces',
+        controller_manager + '/load_controller',
+        controller_manager + '/reload_controller_libraries',
+        controller_manager + '/switch_controller',
+        controller_manager + '/unload_controller',
     )
 
     # Wait for controller_manager
