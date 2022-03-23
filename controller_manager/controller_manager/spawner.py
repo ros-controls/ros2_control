@@ -50,12 +50,12 @@ def first_match(iterable, predicate):
         return None
 
 
-def wait_for_value_or(function, node, timeout, default):
+def wait_for_value_or(function, node, timeout, default, description):
     while node.get_clock().now() < timeout:
         if result := function():
             return result
         node.get_logger().info(
-            'Waiting for controller_manager to initalize',
+            f'Waiting for {description}',
             throttle_duration_sec=2)
         time.sleep(0.2)
     return default
@@ -97,14 +97,14 @@ def wait_for_controller_manager(node, controller_manager, timeout_duration):
     timeout = node.get_clock().now() + Duration(seconds=timeout_duration)
     node_and_namespace = wait_for_value_or(
         lambda: find_node_and_namespace(node, controller_manager),
-        node, timeout, None)
+        node, timeout, None, f"'{controller_manager}' node to exist")
 
     # Wait for the services if the node was found
     if node_and_namespace:
         node_name, namespace = node_and_namespace
         return wait_for_value_or(
             lambda: has_service_names(node, node_name, namespace, service_names),
-            node, timeout, False)
+            node, timeout, False, "'{controller_manager}' services to be available")
 
     return False
 
