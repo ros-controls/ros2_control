@@ -52,9 +52,11 @@ def first_match(iterable, predicate):
 
 def wait_for_value_or(function, node, timeout, default):
     while node.get_clock().now() < timeout:
-        result = function()
-        if result:
+        if result := function():
             return result
+        node.get_logger().info(
+            'Waiting for controller_manager to initalize',
+            throttle_duration_sec=2)
         time.sleep(0.2)
     return default
 
