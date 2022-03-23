@@ -61,7 +61,7 @@ def wait_for_value_or(function, node, timeout, default):
 
 def combine_name_and_namespace(name_and_namespace):
     node_name, namespace = name_and_namespace
-    return (namespace + ('' if namespace.endswith('/') else '/') + node_name)
+    return namespace + ('' if namespace.endswith('/') else '/') + node_name
 
 
 def find_node_and_namespace(node, full_node_name):
