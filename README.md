@@ -31,7 +31,6 @@ ROS2 Distro | Branch | Build status | Documentation | Released packages
 1. Source build - also core ROS packages are build from source. It shows potential issues in the mid future.
 
 
-
 ## Docker images
 There are a few published docker images that come with the latest releases. More information about them can be found in the `.docker` folder. You can pull them under these tags: `ghcr.io/ros-controls/ros2_control_release` or `ghcr.io/ros-controls/ros2_control_source`.
 
