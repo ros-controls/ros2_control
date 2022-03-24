@@ -1,4 +1,4 @@
-name: ABI Compatibility Check
+name: ABI Compatibility Check - Last Focal
 on:
   pull_request:
     branches:
