@@ -3,9 +3,9 @@ name: Rolling Binary Build
 # description: 'Build & test all dependencies from released (binary) packages.'
 
 on:
-#  pull_request:
-#    branches:
-#      - master
+  pull_request:
+    branches:
+      - master
   push:
     branches:
       - master

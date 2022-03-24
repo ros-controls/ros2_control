@@ -2,9 +2,9 @@ name: Rolling Semi-Binary Build
 # description: 'Build & test that compiles the main dependencies from source.'
 
 on:
-#  pull_request:
-#    branches:
-#      - master
+  pull_request:
+    branches:
+      - master
   push:
     branches:
       - master
