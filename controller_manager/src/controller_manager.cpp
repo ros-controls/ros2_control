@@ -260,6 +260,7 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_c
     }
     return nullptr;
   }
+  RCLCPP_DEBUG(get_logger(), "Loader for controller '%s' found.", controller_name.c_str());
 
   controller_interface::ControllerInterfaceBaseSharedPtr controller;
 
@@ -604,6 +605,8 @@ controller_interface::return_type ControllerManager::switch_controller(
 
       if (is_preceding)
       {
+        RCLCPP_DEBUG(
+          get_logger(), "Found preceding controller with name '%s'.", controller.c_str());
         // check that all following controllers exits, are either: activated, will be activated, or
         // will not be deactivated
         for (size_t j = i + 1; j < chained_controllers_configuration_.size(); ++j)

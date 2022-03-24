@@ -348,7 +348,8 @@ public:
     for (const auto & interface : claimed_command_itfs)
     {
       EXPECT_TRUE(cm_->resource_manager_->command_interface_exists(interface));
-      if ((expected_return == controller_interface::return_type::OK) != deactivated)  // xor
+      // successful xor deactivated
+      if ((expected_return == controller_interface::return_type::OK) != deactivated)
       {
         EXPECT_TRUE(cm_->resource_manager_->command_interface_exists(interface));
         EXPECT_TRUE(cm_->resource_manager_->command_interface_is_claimed(interface));

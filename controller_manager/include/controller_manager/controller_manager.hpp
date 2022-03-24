@@ -86,8 +86,12 @@ inline bool load_chained_controller_configuration(
 
     if (!got_group_list)
     {
+      RCLCPP_DEBUG(
+        node_logging->get_logger(), "Parameter for parallel group '%zu' not found.", group_num);
       break;
     }
+
+    RCLCPP_DEBUG(node_logging->get_logger(), "Found parameter for parallel group '%zu'", group_num);
 
     // Make sure that the parameter has correct type
     if (param_group_list.get_type() != rclcpp::PARAMETER_STRING_ARRAY)
