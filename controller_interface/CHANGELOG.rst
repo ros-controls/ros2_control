@@ -2,6 +2,15 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Use lifecycle nodes in controllers again (`#538 <https://github.com/ros-controls/ros2_control/issues/538>`_)
+  * Add lifecycle nodes
+  * Add custom 'configure' to controller interface to get 'update_rate' parameter.
+  * Disable external interfaces of LifecycleNode.
+* Cleaning Controller Interface from obsolete code. (`#655 <https://github.com/ros-controls/ros2_control/issues/655>`_)
+* Contributors: Denis Štogl, Vatan Aksoy Tezer, Bence Magyar
+
 2.4.0 (2022-02-23)
 ------------------
 

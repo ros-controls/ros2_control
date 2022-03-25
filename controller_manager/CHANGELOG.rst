@@ -2,6 +2,19 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Make ControllerManager tests more flexible and reusable for different scenarios. Use more parameterized tests regarding strictness. (`#661 <https://github.com/ros-controls/ros2_control/issues/661>`_)
+* Use lifecycle nodes in controllers again (`#538 <https://github.com/ros-controls/ros2_control/issues/538>`_)
+  * Add lifecycle nodes
+  * Add custom 'configure' to controller interface to get 'update_rate' parameter.
+  * Disable external interfaces of LifecycleNode.
+* Small fixes in controller manager tests. (`#660 <https://github.com/ros-controls/ros2_control/issues/660>`_)
+* Enable controller manager services to control hardware lifecycle #abi-breaking (`#637 <https://github.com/ros-controls/ros2_control/issues/637>`_)
+  * Implement CM services for hardware lifecycle management.
+  * Added default behavior to activate all controller and added description of CM parameters.
+* Contributors: Denis Štogl, Vatan Aksoy Tezer, Bence Magyar
+
 2.4.0 (2022-02-23)
 ------------------
 * Fixes of issue with seg-fault when checking interfaces on unconfigured controllers. (`#580 <https://github.com/ros-controls/ros2_control/issues/580>`_)

@@ -2,6 +2,9 @@
 Changelog for package transmission_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 2.4.0 (2022-02-23)
 ------------------
 * Fix transmission loader tests (`#642 <https://github.com/ros-controls/ros2_control/issues/642>`_)
