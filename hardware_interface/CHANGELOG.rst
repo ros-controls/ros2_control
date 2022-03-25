@@ -2,8 +2,8 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.5.0 (2022-03-25)
+------------------
 * Require lifecycle-msgs in hardware_interface package (`#675 <https://github.com/ros-controls/ros2_control/issues/675>`_) (`#678 <https://github.com/ros-controls/ros2_control/issues/678>`_)
 * Using should be inside namespace and not global scope. (`#673 <https://github.com/ros-controls/ros2_control/issues/673>`_)
 * Modernize C++: Use for-each loops in Resource Manager. (`#659 <https://github.com/ros-controls/ros2_control/issues/659>`_)
