@@ -140,6 +140,8 @@ inline bool load_chained_controller_configuration(
 
 namespace controller_manager
 {
+using ControllersListIterator = std::vector<controller_manager::ControllerSpec>::const_iterator;
+
 class ControllerManager : public rclcpp::Node
 {
 public:

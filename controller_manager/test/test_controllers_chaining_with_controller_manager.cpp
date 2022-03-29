@@ -697,6 +697,7 @@ TEST_P(
 
   // Set ControllerManager into Debug-Mode output to have detailed output on updating controllers
   cm_->get_logger().set_level(rclcpp::Logger::Level::Debug);
+  rclcpp::get_logger("ControllerManager::utils").set_level(rclcpp::Logger::Level::Debug);
 
   // at beginning controllers are not in chained mode
   EXPECT_FALSE(pid_left_wheel_controller->is_in_chained_mode());
