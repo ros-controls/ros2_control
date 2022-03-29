@@ -4,7 +4,7 @@
 API Documentation
 =================
 
-API documentation is parsed by doxygen and can be found `here </api/index.html>`_
+API documentation is parsed by doxygen and can be found `here <../../api/index.html>`_
 
 =====================
 Core functionalities
