@@ -33,23 +33,20 @@
 // functionality that their name would suggest
 
 class TestControllerChainingWithControllerManager;
-class TestControllerChainingWithControllerManagerParameter;
 
 class TestableTestChainableController : public test_chainable_controller::TestChainableController
 {
   friend TestControllerChainingWithControllerManager;
-  friend TestControllerChainingWithControllerManagerParameter;
 
   FRIEND_TEST(TestControllerChainingWithControllerManager, test_chained_controllers);
   FRIEND_TEST(
-    TestControllerChainingWithControllerManagerParameter,
+    TestControllerChainingWithControllerManager,
     test_chained_controllers_auto_switch_to_chained_mode);
 };
 
 class TestableControllerManager : public controller_manager::ControllerManager
 {
   friend TestControllerChainingWithControllerManager;
-  friend TestControllerChainingWithControllerManagerParameter;
 
   FRIEND_TEST(
     TestControllerChainingWithControllerManagerAndChainedControllersParameter,
@@ -66,7 +63,7 @@ class TestableControllerManager : public controller_manager::ControllerManager
 
   FRIEND_TEST(TestControllerChainingWithControllerManager, test_chained_controllers);
   FRIEND_TEST(
-    TestControllerChainingWithControllerManagerParameter,
+    TestControllerChainingWithControllerManager,
     test_chained_controllers_auto_switch_to_chained_mode);
 
 public:
@@ -80,105 +77,6 @@ public:
   {
   }
 };
-
-class TestControllerChainingWithControllerManagerAndChainedControllersParameter
-: public ControllerManagerFixture<TestableControllerManager>
-{
-public:
-  void SetUp()
-  {
-    executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
-    cm_ = std::make_shared<TestableControllerManager>(
-      std::make_unique<hardware_interface::ResourceManager>(), executor_, TEST_CM_NAME);
-    run_updater_ = false;
-  }
-};
-
-TEST_F(
-  TestControllerChainingWithControllerManagerAndChainedControllersParameter,
-  test_cm_reading_chained_controllers_parameter)
-{
-  std::vector<std::string> parallel_group_1 = {"position_tracking_controller"};
-  std::vector<std::string> parallel_group_2 = {"diff_drive_controller"};
-  std::vector<std::string> parallel_group_3 = {
-    "pid_left_wheel_controller", "pid_right_wheel_controller"};
-
-  cm_->set_parameter(rclcpp::Parameter("chained_controllers.parallel_group_1", parallel_group_1));
-  cm_->set_parameter(rclcpp::Parameter("chained_controllers.parallel_group_2", parallel_group_2));
-  cm_->set_parameter(rclcpp::Parameter("chained_controllers.parallel_group_3", parallel_group_3));
-
-  ASSERT_TRUE(load_chained_controller_configuration(
-    cm_->get_node_parameters_interface(), cm_->get_node_logging_interface(),
-    cm_->chained_controllers_configuration_));
-
-  ASSERT_EQ(cm_->chained_controllers_configuration_.size(), 3u);
-  EXPECT_EQ(cm_->chained_controllers_configuration_[0].size(), 1u);
-  EXPECT_EQ(cm_->chained_controllers_configuration_[1].size(), 1u);
-  EXPECT_EQ(cm_->chained_controllers_configuration_[2].size(), 2u);
-
-  ASSERT_THAT(
-    cm_->chained_controllers_configuration_[0], testing::ElementsAreArray(parallel_group_1));
-  ASSERT_THAT(
-    cm_->chained_controllers_configuration_[1], testing::ElementsAreArray(parallel_group_2));
-  ASSERT_THAT(
-    cm_->chained_controllers_configuration_[2], testing::ElementsAreArray(parallel_group_3));
-}
-
-TEST_F(
-  TestControllerChainingWithControllerManagerAndChainedControllersParameter,
-  test_cm_reading_chained_controllers_parameter_failure_group0)
-{
-  std::vector<std::string> parallel_group_0 = {"great_controller"};
-  std::vector<std::string> parallel_group_1 = {"position_tracking_controller"};
-  std::string parallel_group_2 = "diff_drive_controller";
-  std::vector<std::string> parallel_group_3 = {
-    "pid_left_wheel_controller", "pid_right_wheel_controller"};
-
-  cm_->set_parameter(rclcpp::Parameter("chained_controllers.parallel_group_0", parallel_group_0));
-  cm_->set_parameter(rclcpp::Parameter("chained_controllers.parallel_group_1", parallel_group_1));
-  cm_->set_parameter(rclcpp::Parameter("chained_controllers.parallel_group_2", parallel_group_2));
-  cm_->set_parameter(rclcpp::Parameter("chained_controllers.parallel_group_3", parallel_group_3));
-
-  ASSERT_FALSE(load_chained_controller_configuration(
-    cm_->get_node_parameters_interface(), cm_->get_node_logging_interface(),
-    cm_->chained_controllers_configuration_));
-}
-
-TEST_F(
-  TestControllerChainingWithControllerManagerAndChainedControllersParameter,
-  test_cm_reading_chained_controllers_parameter_failure_wrong_type)
-{
-  std::vector<std::string> parallel_group_1 = {"position_tracking_controller"};
-  std::string parallel_group_2 = "diff_drive_controller";
-  std::vector<std::string> parallel_group_3 = {
-    "pid_left_wheel_controller", "pid_right_wheel_controller"};
-
-  cm_->set_parameter(rclcpp::Parameter("chained_controllers.parallel_group_1", parallel_group_1));
-  cm_->set_parameter(rclcpp::Parameter("chained_controllers.parallel_group_2", parallel_group_2));
-  cm_->set_parameter(rclcpp::Parameter("chained_controllers.parallel_group_3", parallel_group_3));
-
-  ASSERT_FALSE(load_chained_controller_configuration(
-    cm_->get_node_parameters_interface(), cm_->get_node_logging_interface(),
-    cm_->chained_controllers_configuration_));
-}
-
-TEST_F(
-  TestControllerChainingWithControllerManagerAndChainedControllersParameter,
-  test_cm_reading_chained_controllers_parameter_failure_duplicated_controller)
-{
-  std::vector<std::string> parallel_group_1 = {"position_tracking_controller"};
-  std::string parallel_group_2 = "diff_drive_controller";
-  std::vector<std::string> parallel_group_3 = {
-    "pid_left_wheel_controller", "pid_right_wheel_controller", "position_tracking_controller"};
-
-  cm_->set_parameter(rclcpp::Parameter("chained_controllers.parallel_group_1", parallel_group_1));
-  cm_->set_parameter(rclcpp::Parameter("chained_controllers.parallel_group_2", parallel_group_2));
-  cm_->set_parameter(rclcpp::Parameter("chained_controllers.parallel_group_3", parallel_group_3));
-
-  ASSERT_FALSE(load_chained_controller_configuration(
-    cm_->get_node_parameters_interface(), cm_->get_node_logging_interface(),
-    cm_->chained_controllers_configuration_));
-}
 
 class TestControllerChainingWithControllerManager
 : public ControllerManagerFixture<TestableControllerManager>,
@@ -626,55 +524,9 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers)
   // TODO(destogl): Activate test parameter use
 }
 
-INSTANTIATE_TEST_SUITE_P(
-  test_strict_best_effort, TestControllerChainingWithControllerManager,
-  testing::Values(strict, best_effort));
-
-class TestControllerChainingWithControllerManagerParameter
-: public TestControllerChainingWithControllerManager
-{
-public:
-  void SetUp()
-  {
-    executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
-    cm_ = std::make_shared<TestableControllerManager>(
-      std::make_unique<hardware_interface::ResourceManager>(), executor_, TEST_CM_NAME);
-    run_updater_ = false;
-
-    // set chained_controller parameter
-    std::vector<std::string> parallel_group_1 = {"position_tracking_controller"};
-    std::vector<std::string> parallel_group_2 = {"diff_drive_controller"};
-    std::vector<std::string> parallel_group_3 = {
-      "pid_left_wheel_controller", "pid_right_wheel_controller"};
-
-    cm_->set_parameter(rclcpp::Parameter("chained_controllers.parallel_group_1", parallel_group_1));
-    cm_->set_parameter(rclcpp::Parameter("chained_controllers.parallel_group_2", parallel_group_2));
-    cm_->set_parameter(rclcpp::Parameter("chained_controllers.parallel_group_3", parallel_group_3));
-
-    // set robot_description parameter
-    cm_->set_parameter(
-      rclcpp::Parameter("robot_description", ros2_control_test_assets::diffbot_urdf));
-
-    std::string robot_description = "";
-    cm_->get_parameter("robot_description", robot_description);
-    if (robot_description.empty())
-    {
-      throw std::runtime_error(
-        "Unable to initialize resource manager, no robot description found.");
-    }
-
-    cm_->init_resource_manager(robot_description);
-  }
-};
-
 TEST_P(
-  TestControllerChainingWithControllerManagerParameter,
-  test_chained_controllers_auto_switch_to_chained_mode)
+  TestControllerChainingWithControllerManager, test_chained_controllers_auto_switch_to_chained_mode)
 {
-  ASSERT_TRUE(load_chained_controller_configuration(
-    cm_->get_node_parameters_interface(), cm_->get_node_logging_interface(),
-    cm_->chained_controllers_configuration_));
-
   SetupControllers();
 
   // add all controllers - CONTROLLERS HAVE TO ADDED IN EXECUTION ORDER
@@ -765,5 +617,5 @@ TEST_P(
 //
 
 INSTANTIATE_TEST_SUITE_P(
-  test_strict_best_effort, TestControllerChainingWithControllerManagerParameter,
+  test_strict_best_effort, TestControllerChainingWithControllerManager,
   testing::Values(strict, best_effort));

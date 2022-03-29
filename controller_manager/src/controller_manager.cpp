@@ -156,10 +156,6 @@ ControllerManager::ControllerManager(
     RCLCPP_WARN(get_logger(), "'update_rate' parameter not set, using default value.");
   }
 
-  load_chained_controller_configuration(
-    get_node_parameters_interface(), get_node_logging_interface(),
-    chained_controllers_configuration_);
-
   std::string robot_description = "";
   get_parameter("robot_description", robot_description);
   if (robot_description.empty())
@@ -605,20 +601,7 @@ controller_interface::return_type ControllerManager::switch_controller(
 
   const std::vector<ControllerSpec> & controllers = rt_controllers_wrapper_.get_updated_list(guard);
 
-  // TODO(destogl): probably we should check here if controllers could be activated and stopped;
-  // otherwise we could get issues when managing chained controller?
-
-  // check if controllers should be switched 'to' or 'from' chained mode depending if controllers
-  // should be activated or stopped
-
-  // TODO(destogl): is there a possibility to use "interfaces" to determine how controllers are
-  // chained? Then we would not need to have the parameter which could create simpler and implicit
-  // chaining
-
-  // TODO(destogl): This part until the loop where iterating over controllers HAS TO BE OPTIMIZED
-  // so that uses interfaces! Otherwise this is too messy and too inflexible
-
-  // if a preceding controller is stopped, all first-level controllers should be switched 'from'
+  // if a preceding controller is deactivated, all first-level controllers should be switched 'from'
   // chained mode
   for (const auto & controller : controllers)
   {
@@ -664,7 +647,7 @@ controller_interface::return_type ControllerManager::switch_controller(
     }
   }
 
-  // check if controllers should be switched 'to' chained mode when controllers are started
+  // check if controllers should be switched 'to' chained mode when controllers are activated
   const auto check_following_controllers_for_activate =
     [this, controllers, strictness](
       const ControllersListIterator controller_it,
@@ -828,7 +811,7 @@ controller_interface::return_type ControllerManager::switch_controller(
     }
   }
 
-  // check if controllers should be stopped if used in chained mode
+  // check if controllers should be deactivated if used in chained mode
   const auto check_preceding_controllers_for_deactivate =
     [this, controllers, strictness](
       const ControllersListIterator controller_it,
