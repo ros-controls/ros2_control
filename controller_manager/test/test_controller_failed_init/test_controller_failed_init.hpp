@@ -18,8 +18,8 @@
 #include <memory>
 #include <string>
 
-#include "controller_interface/visibility_control.h"
 #include "controller_manager/controller_manager.hpp"
+#include "controller_manager/visibility_control.h"
 
 namespace test_controller_failed_init
 {
@@ -39,7 +39,8 @@ public:
   virtual ~TestControllerFailedInit() = default;
 
   CONTROLLER_INTERFACE_PUBLIC
-  controller_interface::return_type init(const std::string & controller_name) override;
+  controller_interface::return_type init(
+    const std::string & controller_name, const std::string & namespace_ = "") override;
 
   controller_interface::InterfaceConfiguration command_interface_configuration() const override
   {
