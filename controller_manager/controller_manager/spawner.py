@@ -44,10 +44,7 @@ class bcolors:
 
 
 def first_match(iterable, predicate):
-    try:
-        return next(n for n in iterable if predicate(n))
-    except StopIteration:
-        return None
+    return next(n for n in iterable if predicate(n), None)
 
 
 def wait_for_value_or(function, node, timeout, default, description):
@@ -74,7 +71,7 @@ def find_node_and_namespace(node, full_node_name):
 
 def has_service_names(node, node_name, node_namespace, service_names):
     client_names_and_types = node.get_service_names_and_types_by_node(node_name, node_namespace)
-    if len(client_names_and_types) == 0:
+    if not client_names_and_types:
         return False
     client_names, _ = zip(*client_names_and_types)
     return all(service in client_names for service in service_names)
