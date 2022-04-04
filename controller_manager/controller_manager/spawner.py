@@ -44,7 +44,7 @@ class bcolors:
 
 
 def first_match(iterable, predicate):
-    return next(n for n in iterable if predicate(n), None)
+    return next((n for n in iterable if predicate(n)), None)
 
 
 def wait_for_value_or(function, node, timeout, default, description):
