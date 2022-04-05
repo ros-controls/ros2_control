@@ -80,14 +80,14 @@ def has_service_names(node, node_name, node_namespace, service_names):
 def wait_for_controller_manager(node, controller_manager, timeout_duration):
     # List of service names from controller_manager we wait for
     service_names = (
-        controller_manager + '/configure_controller',
-        controller_manager + '/list_controllers',
-        controller_manager + '/list_controller_types',
-        controller_manager + '/list_hardware_interfaces',
-        controller_manager + '/load_controller',
-        controller_manager + '/reload_controller_libraries',
-        controller_manager + '/switch_controller',
-        controller_manager + '/unload_controller',
+        f'{controller_manager}/configure_controller',
+        f'{controller_manager}/list_controllers',
+        f'{controller_manager}/list_controller_types',
+        f'{controller_manager}/list_hardware_interfaces',
+        f'{controller_manager}/load_controller',
+        f'{controller_manager}/reload_controller_libraries',
+        f'{controller_manager}/switch_controller',
+        f'{controller_manager}/unload_controller'
     )
 
     # Wait for controller_manager
@@ -101,7 +101,7 @@ def wait_for_controller_manager(node, controller_manager, timeout_duration):
         node_name, namespace = node_and_namespace
         return wait_for_value_or(
             lambda: has_service_names(node, node_name, namespace, service_names),
-            node, timeout, False, f'\'{controller_manager}\' services to be available')
+            node, timeout, False, f"'{controller_manager}' services to be available")
 
     return False
 
