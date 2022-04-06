@@ -9,11 +9,16 @@ find_package(ament_cmake REQUIRED)
 find_package(hardware_interface REQUIRED)
 find_package(rclcpp_lifecycle REQUIRED)
 
-add_library(controller_interface SHARED src/controller_interface.cpp)
+add_library(
+  controller_interface
+  SHARED
+  src/controller_interface.cpp
+)
 target_include_directories(
   controller_interface
   PRIVATE
-  include)
+  include
+)
 ament_target_dependencies(
   controller_interface
   hardware_interface
@@ -34,16 +39,13 @@ install(TARGETS controller_interface
 
 if(BUILD_TESTING)
   find_package(ament_cmake_gmock REQUIRED)
-  find_package(ament_lint_auto REQUIRED)
 
   find_package(hardware_interface REQUIRED)
   find_package(sensor_msgs REQUIRED)
 
-  list(APPEND AMENT_LINT_AUTO_EXCLUDE
-    ament_cmake_uncrustify
-    ament_cmake_cpplint
-  )
-  ament_lint_auto_find_test_dependencies()
+  ament_add_gmock(test_controller_interface test/test_controller_interface.cpp)
+  target_link_libraries(test_controller_interface controller_interface)
+  target_include_directories(test_controller_interface PRIVATE include)
 
   ament_add_gmock(test_controller_with_options test/test_controller_with_options.cpp)
   target_link_libraries(test_controller_with_options controller_interface)

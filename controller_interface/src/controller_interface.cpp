@@ -20,6 +20,7 @@
 #include <vector>
 
 #include "hardware_interface/types/lifecycle_state_names.hpp"
+#include "lifecycle_msgs/msg/state.hpp"
 
 namespace controller_interface
 {
@@ -73,9 +74,20 @@ return_type ControllerInterface::init(const std::string & controller_name)
 
 const rclcpp_lifecycle::State & ControllerInterface::configure()
 {
-  update_rate_ = node_->get_parameter("update_rate").as_int();
+  // TODO(destogl): this should actually happen in "on_configure" but I am not sure how to get
+  // overrides correctly in combination with std::bind. The goal is to have the following calls:
+  // 1. CM: controller.get_node()->configure()
+  // 2. LifecycleNode: ControllerInterface::on_configure()
+  // 3. ControllerInterface: <controller>::on_configure()
+  // Then we don't need to do state-machine related checks.
+  //
+  // Other solution is to add check into the LifecycleNode if a transition is valid to trigger
+  if (get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
+  {
+    update_rate_ = get_node()->get_parameter("update_rate").as_int();
+  }
 
-  return node_->configure();
+  return get_node()->configure();
 }
 
 void ControllerInterface::assign_interfaces(
