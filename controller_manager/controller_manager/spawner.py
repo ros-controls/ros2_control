@@ -43,21 +43,65 @@ class bcolors:
     UNDERLINE = '\033[4m'
 
 
+def first_match(iterable, predicate):
+    return next((n for n in iterable if predicate(n)), None)
+
+
+def wait_for_value_or(function, node, timeout, default, description):
+    while node.get_clock().now() < timeout:
+        if result := function():
+            return result
+        node.get_logger().info(
+            f'Waiting for {description}',
+            throttle_duration_sec=2)
+        time.sleep(0.2)
+    return default
+
+
+def combine_name_and_namespace(name_and_namespace):
+    node_name, namespace = name_and_namespace
+    return namespace + ('' if namespace.endswith('/') else '/') + node_name
+
+
+def find_node_and_namespace(node, full_node_name):
+    node_names_and_namespaces = node.get_node_names_and_namespaces()
+    return first_match(node_names_and_namespaces,
+                       lambda n: combine_name_and_namespace(n) == full_node_name)
+
+
+def has_service_names(node, node_name, node_namespace, service_names):
+    client_names_and_types = node.get_service_names_and_types_by_node(node_name, node_namespace)
+    if not client_names_and_types:
+        return False
+    client_names, _ = zip(*client_names_and_types)
+    return all(service in client_names for service in service_names)
+
+
 def wait_for_controller_manager(node, controller_manager, timeout_duration):
-    def full_name(n):
-        return n[1] + ('' if n[1].endswith('/') else '/') + n[0]
+    # List of service names from controller_manager we wait for
+    service_names = (
+        f'{controller_manager}/configure_controller',
+        f'{controller_manager}/list_controllers',
+        f'{controller_manager}/list_controller_types',
+        f'{controller_manager}/list_hardware_interfaces',
+        f'{controller_manager}/load_controller',
+        f'{controller_manager}/reload_controller_libraries',
+        f'{controller_manager}/switch_controller',
+        f'{controller_manager}/unload_controller'
+    )
 
     # Wait for controller_manager
     timeout = node.get_clock().now() + Duration(seconds=timeout_duration)
-    while node.get_clock().now() < timeout:
-        node_names_and_namespaces = node.get_node_names_and_namespaces()
-        if any(full_name(n) == controller_manager for n in node_names_and_namespaces):
-            return True
+    node_and_namespace = wait_for_value_or(
+        lambda: find_node_and_namespace(node, controller_manager),
+        node, timeout, None, f'\'{controller_manager}\' node to exist')
 
-        node.get_logger().info(
-            f'Waiting for {controller_manager} services',
-            throttle_duration_sec=2)
-        time.sleep(0.2)
+    # Wait for the services if the node was found
+    if node_and_namespace:
+        node_name, namespace = node_and_namespace
+        return wait_for_value_or(
+            lambda: has_service_names(node, node_name, namespace, service_names),
+            node, timeout, False, f"'{controller_manager}' services to be available")
 
     return False
 
