@@ -27,13 +27,25 @@
 using ::testing::_;
 using ::testing::Return;
 
-class TestControllerManager
+constexpr auto TEST_NAMESPACE = "/test_namespace";
+
+class TestControllerManagerWithNamespace
 : public ControllerManagerFixture<controller_manager::ControllerManager>,
   public testing::WithParamInterface<Strictness>
 {
+public:
+  void SetUp()
+  {
+    executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
+    cm_ = std::make_shared<controller_manager::ControllerManager>(
+      std::make_unique<hardware_interface::ResourceManager>(
+        ros2_control_test_assets::minimal_robot_urdf, true, true),
+      executor_, TEST_CM_NAME, TEST_NAMESPACE);
+    run_updater_ = false;
+  }
 };
 
-TEST_P(TestControllerManager, controller_lifecycle)
+TEST_P(TestControllerManagerWithNamespace, cm_and_controller_in_namespace)
 {
   const auto test_param = GetParam();
   auto test_controller = std::make_shared<test_controller::TestController>();
@@ -84,15 +96,15 @@ TEST_P(TestControllerManager, controller_lifecycle)
   RCLCPP_INFO(
     rclcpp::get_logger("test_controll_manager_with_namespace"),
     "Controller Manager namespace is '%s'", cm_->get_namespace());
-  EXPECT_STREQ(cm_->get_namespace(), "/");
+  EXPECT_STREQ(cm_->get_namespace(), TEST_NAMESPACE);
   RCLCPP_INFO(
     rclcpp::get_logger("test_controll_manager_with_namespace"), "Controller 1 namespace is '%s'",
     test_controller->get_node()->get_namespace());
-  EXPECT_STREQ(test_controller->get_node()->get_namespace(), "/");
+  EXPECT_STREQ(test_controller->get_node()->get_namespace(), TEST_NAMESPACE);
   RCLCPP_INFO(
     rclcpp::get_logger("test_controll_manager_with_namespace"), "Controller 2 namespace is '%s'",
     test_controller2->get_node()->get_namespace());
-  EXPECT_STREQ(test_controller2->get_node()->get_namespace(), "/");
+  EXPECT_STREQ(test_controller2->get_node()->get_namespace(), TEST_NAMESPACE);
 
   EXPECT_EQ(
     controller_interface::return_type::OK,
@@ -113,6 +125,7 @@ TEST_P(TestControllerManager, controller_lifecycle)
   EXPECT_EQ(0u, test_controller2->internal_counter) << "Controller is not started";
 
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, test_controller->get_state().id());
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, test_controller2->get_state().id());
 
   // Start controller, will take effect at the end of the update function
   std::vector<std::string> start_controllers = {"fake_controller", TEST_CONTROLLER2_NAME};
@@ -196,62 +209,6 @@ TEST_P(TestControllerManager, controller_lifecycle)
   EXPECT_EQ(1, test_controller.use_count());
 }
 
-TEST_P(TestControllerManager, per_controller_update_rate)
-{
-  auto strictness = GetParam().strictness;
-  auto test_controller = std::make_shared<test_controller::TestController>();
-  cm_->add_controller(
-    test_controller, test_controller::TEST_CONTROLLER_NAME,
-    test_controller::TEST_CONTROLLER_CLASS_NAME);
-  EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
-  EXPECT_EQ(2, test_controller.use_count());
-
-  EXPECT_EQ(
-    controller_interface::return_type::OK,
-    cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
-  EXPECT_EQ(0u, test_controller->internal_counter)
-    << "Update should not reach an unconfigured controller";
-
-  EXPECT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, test_controller->get_state().id());
-
-  test_controller->get_node()->set_parameter({"update_rate", 4});
-  // configure controller
-  cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME);
-  EXPECT_EQ(
-    controller_interface::return_type::OK,
-    cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
-  EXPECT_EQ(0u, test_controller->internal_counter) << "Controller is not started";
-
-  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, test_controller->get_state().id());
-
-  // Start controller, will take effect at the end of the update function
-  std::vector<std::string> start_controllers = {test_controller::TEST_CONTROLLER_NAME};
-  std::vector<std::string> stop_controllers = {};
-  auto switch_future = std::async(
-    std::launch::async, &controller_manager::ControllerManager::switch_controller, cm_,
-    start_controllers, stop_controllers, strictness, true, rclcpp::Duration(0, 0));
-
-  ASSERT_EQ(std::future_status::timeout, switch_future.wait_for(std::chrono::milliseconds(100)))
-    << "switch_controller should be blocking until next update cycle";
-
-  EXPECT_EQ(
-    controller_interface::return_type::OK,
-    cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
-  EXPECT_EQ(0u, test_controller->internal_counter) << "Controller is started at the end of update";
-  {
-    ControllerManagerRunner cm_runner(this);
-    EXPECT_EQ(controller_interface::return_type::OK, switch_future.get());
-  }
-
-  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, test_controller->get_state().id());
-
-  EXPECT_EQ(
-    controller_interface::return_type::OK,
-    cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
-  EXPECT_GE(test_controller->internal_counter, 1u);
-  EXPECT_EQ(test_controller->get_update_rate(), 4u);
-}
-
 INSTANTIATE_TEST_SUITE_P(
-  test_strict_best_effort, TestControllerManager, testing::Values(strict, best_effort));
+  test_strict_best_effort, TestControllerManagerWithNamespace,
+  testing::Values(strict, best_effort));
