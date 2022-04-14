@@ -7,4 +7,20 @@
       Load configuration of a simple transmission from a URDF description.
     </description>
   </class>
+
+  <class name="transmission_interface/FourBarLinkageTransmission"
+         type="transmission_interface::FourBarLinkageTransmissionLoader"
+         base_class_type="transmission_interface::TransmissionLoader">
+    <description>
+      Load configuration of a four bar linkage transmission from a URDF description.
+    </description>
+  </class>
+
+  <class name="transmission_interface/DifferentialTransmission"
+         type="transmission_interface::DifferentialTransmissionLoader"
+         base_class_type="transmission_interface::TransmissionLoader">
+    <description>
+      Load configuration of a four bar linkage transmission from a URDF description.
+    </description>
+  </class>
 </library>
