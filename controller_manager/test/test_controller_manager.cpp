@@ -82,15 +82,15 @@ TEST_P(TestControllerManager, controller_lifecycle)
 
   // Check if namespace is set correctly
   RCLCPP_INFO(
-    rclcpp::get_logger("test_controll_manager_with_namespace"),
-    "Controller Manager namespace is '%s'", cm_->get_namespace());
+    rclcpp::get_logger("test_controller_manager"), "Controller Manager namespace is '%s'",
+    cm_->get_namespace());
   EXPECT_STREQ(cm_->get_namespace(), "/");
   RCLCPP_INFO(
-    rclcpp::get_logger("test_controll_manager_with_namespace"), "Controller 1 namespace is '%s'",
+    rclcpp::get_logger("test_controller_manager"), "Controller 1 namespace is '%s'",
     test_controller->get_node()->get_namespace());
   EXPECT_STREQ(test_controller->get_node()->get_namespace(), "/");
   RCLCPP_INFO(
-    rclcpp::get_logger("test_controll_manager_with_namespace"), "Controller 2 namespace is '%s'",
+    rclcpp::get_logger("test_controller_manager"), "Controller 2 namespace is '%s'",
     test_controller2->get_node()->get_namespace());
   EXPECT_STREQ(test_controller2->get_node()->get_namespace(), "/");
 
