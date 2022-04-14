@@ -44,7 +44,7 @@ TEST(ControllerWithOption, init_with_overrides)
   FriendControllerWithOptions controller;
   EXPECT_EQ(controller.init("controller_name"), controller_interface::return_type::OK);
   // checks that the node options have been updated
-  const auto & node_options = controller.node_->get_node_options();
+  const auto & node_options = controller.get_node()->get_node_options();
   EXPECT_TRUE(node_options.allow_undeclared_parameters());
   EXPECT_TRUE(node_options.automatically_declare_parameters_from_overrides());
   // checks that the parameters have been correctly processed
@@ -65,7 +65,7 @@ TEST(ControllerWithOption, init_without_overrides)
   FriendControllerWithOptions controller;
   EXPECT_EQ(controller.init("controller_name"), controller_interface::return_type::ERROR);
   // checks that the node options have been updated
-  const auto & node_options = controller.node_->get_node_options();
+  const auto & node_options = controller.get_node()->get_node_options();
   EXPECT_TRUE(node_options.allow_undeclared_parameters());
   EXPECT_TRUE(node_options.automatically_declare_parameters_from_overrides());
   // checks that no parameter has been declared from overrides

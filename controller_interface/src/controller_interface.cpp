@@ -119,6 +119,15 @@ std::shared_ptr<rclcpp_lifecycle::LifecycleNode> ControllerInterface::get_node()
   return node_;
 }
 
+std::shared_ptr<rclcpp_lifecycle::LifecycleNode> ControllerInterface::get_node_const() const
+{
+  if (!node_.get())
+  {
+    throw std::runtime_error("Lifecycle node hasn't been initialized yet!");
+  }
+  return node_;
+}
+
 unsigned int ControllerInterface::get_update_rate() const { return update_rate_; }
 
 }  // namespace controller_interface
