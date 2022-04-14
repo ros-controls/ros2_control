@@ -705,7 +705,9 @@ controller_interface::ControllerInterfaceSharedPtr ControllerManager::add_contro
     return nullptr;
   }
 
-  if (controller.c->init(controller.info.name) == controller_interface::return_type::ERROR)
+  if (
+    controller.c->init(controller.info.name, get_namespace()) ==
+    controller_interface::return_type::ERROR)
   {
     to.clear();
     RCLCPP_ERROR(

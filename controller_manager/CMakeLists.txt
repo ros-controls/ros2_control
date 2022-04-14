@@ -103,6 +103,14 @@ if(BUILD_TESTING)
   ament_target_dependencies(test_controller_manager ros2_control_test_assets)
 
   ament_add_gmock(
+    test_controller_manager_with_namespace.cpp
+    test/test_controller_manager_with_namespace.cpp
+  )
+  target_include_directories(test_controller_manager_with_namespace.cpp PRIVATE include)
+  target_link_libraries(test_controller_manager_with_namespace.cpp controller_manager test_controller)
+  ament_target_dependencies(test_controller_manager_with_namespace.cpp ros2_control_test_assets)
+
+  ament_add_gmock(
     test_load_controller
     test/test_load_controller.cpp
     APPEND_ENV AMENT_PREFIX_PATH=${ament_index_build_path}_$<CONFIG>

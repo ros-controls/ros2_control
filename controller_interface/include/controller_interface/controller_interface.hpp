@@ -79,7 +79,8 @@ public:
   void release_interfaces();
 
   CONTROLLER_INTERFACE_PUBLIC
-  virtual return_type init(const std::string & controller_name);
+  virtual return_type init(
+    const std::string & controller_name, const std::string & namespace_ = "");
 
   /// Custom configure method to read additional parameters for controller-nodes
   /*

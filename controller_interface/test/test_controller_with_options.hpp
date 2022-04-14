@@ -15,12 +15,11 @@
 #ifndef TEST_CONTROLLER_WITH_OPTIONS_HPP_
 #define TEST_CONTROLLER_WITH_OPTIONS_HPP_
 
-#include <controller_interface/controller_interface.hpp>
-
 #include <map>
 #include <memory>
 #include <string>
 
+#include "controller_interface/controller_interface.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 
 namespace controller_with_options
@@ -40,11 +39,12 @@ public:
     return LifecycleNodeInterface::CallbackReturn::SUCCESS;
   }
 
-  controller_interface::return_type init(const std::string & controller_name) override
+  controller_interface::return_type init(
+    const std::string & controller_name, const std::string & namespace_ = "") override
   {
     rclcpp::NodeOptions options;
     options.allow_undeclared_parameters(true).automatically_declare_parameters_from_overrides(true);
-    node_ = std::make_shared<rclcpp_lifecycle::LifecycleNode>(controller_name, options);
+    node_ = std::make_shared<rclcpp_lifecycle::LifecycleNode>(controller_name, namespace_, options);
 
     switch (on_init())
     {
