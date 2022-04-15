@@ -18,14 +18,15 @@
 #include "controller_interface/controller_interface.hpp"
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 
-using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
-
 constexpr char TEST_CONTROLLER_NAME[] = "testable_controller_interface";
 
 class TestableControllerInterface : public controller_interface::ControllerInterface
 {
 public:
-  CallbackReturn on_init() override { return CallbackReturn::SUCCESS; }
+  controller_interface::CallbackReturn on_init() override
+  {
+    return controller_interface::CallbackReturn::SUCCESS;
+  }
 
   controller_interface::InterfaceConfiguration command_interface_configuration() const override
   {
@@ -49,13 +50,19 @@ public:
 class TestableControllerInterfaceInitError : public TestableControllerInterface
 {
 public:
-  CallbackReturn on_init() override { return CallbackReturn::ERROR; }
+  controller_interface::CallbackReturn on_init() override
+  {
+    return controller_interface::CallbackReturn::ERROR;
+  }
 };
 
 class TestableControllerInterfaceInitFailure : public TestableControllerInterface
 {
 public:
-  CallbackReturn on_init() override { return CallbackReturn::FAILURE; }
+  controller_interface::CallbackReturn on_init() override
+  {
+    return controller_interface::CallbackReturn::FAILURE;
+  }
 };
 
 #endif  // TEST_CONTROLLER_INTERFACE_HPP_
