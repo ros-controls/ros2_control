@@ -47,7 +47,6 @@ public:
 
 TEST_P(TestControllerManagerWithNamespace, cm_and_controller_in_namespace)
 {
-  const auto test_param = GetParam();
   auto test_controller = std::make_shared<test_controller::TestController>();
   auto test_controller2 = std::make_shared<test_controller::TestController>();
   constexpr char TEST_CONTROLLER2_NAME[] = "test_controller2_name";
