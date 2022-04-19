@@ -82,7 +82,11 @@ public:
 
   CONTROLLER_INTERFACE_PUBLIC
   virtual return_type init(
-    const std::string & controller_name, const std::string & namespace_ = "");
+    const std::string & controller_name, const std::string & namespace_ = "",
+    const rclcpp::NodeOptions & node_options =
+      rclcpp::NodeOptions()
+        .allow_undeclared_parameters(true)
+        .automatically_declare_parameters_from_overrides(true));
 
   /// Custom configure method to read additional parameters for controller-nodes
   /*

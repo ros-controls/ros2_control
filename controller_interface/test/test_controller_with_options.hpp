@@ -40,12 +40,13 @@ public:
   }
 
   controller_interface::return_type init(
-    const std::string & controller_name, const std::string & namespace_ = "") override
+    const std::string & controller_name, const std::string & namespace_ = "",
+    const rclcpp::NodeOptions & node_options =
+      rclcpp::NodeOptions()
+        .allow_undeclared_parameters(true)
+        .automatically_declare_parameters_from_overrides(true)) override
   {
-    rclcpp::NodeOptions options;
-    options.allow_undeclared_parameters(true).automatically_declare_parameters_from_overrides(true);
-    set_node(
-      std::make_shared<rclcpp_lifecycle::LifecycleNode>(controller_name, namespace_, options));
+    ControllerInterface::init(controller_name, namespace_, node_options);
 
     switch (on_init())
     {
