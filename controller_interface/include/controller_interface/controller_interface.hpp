@@ -102,7 +102,7 @@ public:
   std::shared_ptr<rclcpp_lifecycle::LifecycleNode> get_node();
 
   CONTROLLER_INTERFACE_PUBLIC
-  std::shared_ptr<rclcpp_lifecycle::LifecycleNode> get_node_const() const;
+  std::shared_ptr<rclcpp_lifecycle::LifecycleNode> get_node() const;
 
   CONTROLLER_INTERFACE_PUBLIC
   const rclcpp_lifecycle::State & get_state() const;
