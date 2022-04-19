@@ -29,6 +29,8 @@
 
 namespace controller_interface
 {
+using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
+
 enum class return_type : std::uint8_t
 {
   OK = 0,
@@ -91,7 +93,7 @@ public:
 
   /// Extending interface with initialization method which is individual for each controller
   CONTROLLER_INTERFACE_PUBLIC
-  virtual LifecycleNodeInterface::CallbackReturn on_init() = 0;
+  virtual CallbackReturn on_init() = 0;
 
   CONTROLLER_INTERFACE_PUBLIC
   virtual return_type update(const rclcpp::Time & time, const rclcpp::Duration & period) = 0;
