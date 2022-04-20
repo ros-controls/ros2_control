@@ -2,8 +2,8 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.6.0 (2022-04-20)
+------------------
 * Error if a hardware name is duplicated (`#672 <https://github.com/ros-controls/ros2_control/issues/672>`_)
 * Port four bar linkage and differential transmission loaders from ROS1 (`#656 <https://github.com/ros-controls/ros2_control/issues/656>`_)
 * Contributors: Andy Zelenak, Márk Szitanics

@@ -2,8 +2,8 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.6.0 (2022-04-20)
+------------------
 * Add CallbackReturn into controller_interface namespace for simpler usage in controllers. (`#701 <https://github.com/ros-controls/ros2_control/issues/701>`_)
 * Enable namespaces for controllers. (`#693 <https://github.com/ros-controls/ros2_control/issues/693>`_)
 * Add tests for ControllerInterface class and clarify use of 'update_rate' parameter. (`#662 <https://github.com/ros-controls/ros2_control/issues/662>`_)
