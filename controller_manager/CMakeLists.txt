@@ -165,7 +165,11 @@ if(BUILD_TESTING)
   )
   target_include_directories(test_hardware_management_srvs PRIVATE include)
   target_link_libraries(test_hardware_management_srvs controller_manager test_controller)
-  ament_target_dependencies(test_hardware_management_srvs ros2_control_test_assets)
+  ament_target_dependencies(
+    test_hardware_management_srvs
+    controller_manager_msgs
+    ros2_control_test_assets
+  )
 endif()
 
 # Install Python modules
