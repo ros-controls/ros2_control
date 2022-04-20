@@ -62,8 +62,324 @@ public:
       loader.createUnmanagedInstance(hardware_info.hardware_class_type));
     HardwareT hardware(std::move(interface));
     container.emplace_back(std::move(hardware));
+<<<<<<< HEAD
     hardware_status_map_.emplace(
       std::make_pair(container.back().get_name(), container.back().get_status()));
+=======
+    // initialize static data about hardware component to reduce later calls
+    HardwareComponentInfo component_info;
+    component_info.name = hardware_info.name;
+    component_info.type = hardware_info.type;
+    component_info.class_type = hardware_info.hardware_class_type;
+
+    // Check for identical names
+    if (hardware_info_map_.find(hardware_info.name) != hardware_info_map_.end())
+    {
+      throw std::runtime_error(
+        "Hardware name " + hardware_info.name +
+        " is duplicated. Please provide a unique 'name' in the URDF.");
+    }
+
+    hardware_info_map_.insert(std::make_pair(component_info.name, component_info));
+  }
+
+  template <class HardwareT>
+  bool initialize_hardware(const HardwareInfo & hardware_info, HardwareT & hardware)
+  {
+    RCUTILS_LOG_INFO_NAMED(
+      "resource_manager", "Initialize hardware '%s' ", hardware_info.name.c_str());
+
+    const rclcpp_lifecycle::State new_state = hardware.initialize(hardware_info);
+
+    bool result = new_state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED;
+
+    if (result)
+    {
+      RCUTILS_LOG_INFO_NAMED(
+        "resource_manager", "Successful initialization of hardware '%s'",
+        hardware_info.name.c_str());
+    }
+    else
+    {
+      RCUTILS_LOG_INFO_NAMED(
+        "resource_manager", "Failed to initialize hardware '%s'", hardware_info.name.c_str());
+    }
+    return result;
+  }
+
+  template <class HardwareT>
+  bool configure_hardware(HardwareT & hardware)
+  {
+    bool result = trigger_and_print_hardware_state_transition(
+      std::bind(&HardwareT::configure, &hardware), "configure", hardware.get_name(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+
+    if (result)
+    {
+      // TODO(destogl): is it better to check here if previous state was unconfigured instead of
+      // checking if each state already exists? Or we should somehow know that transition has
+      // happened and only then trigger this part of the code?
+      // On the other side this part of the code should never be executed in real-time critical
+      // thread, so it could be also OK as it is...
+      for (const auto & interface : hardware_info_map_[hardware.get_name()].state_interfaces)
+      {
+        // add all state interfaces to available list
+        auto found_it = std::find(
+          available_state_interfaces_.begin(), available_state_interfaces_.end(), interface);
+
+        if (found_it == available_state_interfaces_.end())
+        {
+          available_state_interfaces_.emplace_back(interface);
+          RCUTILS_LOG_DEBUG_NAMED(
+            "resource_manager", "(hardware '%s'): '%s' state interface added into available list",
+            hardware.get_name().c_str(), interface.c_str());
+        }
+        else
+        {
+          // TODO(destogl): do here error management if interfaces are only partially added into
+          // "available" list - this should never be the case!
+          RCUTILS_LOG_WARN_NAMED(
+            "resource_manager",
+            "(hardware '%s'): '%s' state interface already in available list."
+            " This can happen due to multiple calls to 'configure'",
+            hardware.get_name().c_str(), interface.c_str());
+        }
+      }
+
+      // add command interfaces to available list
+      for (const auto & interface : hardware_info_map_[hardware.get_name()].command_interfaces)
+      {
+        // TODO(destogl): check if interface should be available on configure
+        auto found_it = std::find(
+          available_command_interfaces_.begin(), available_command_interfaces_.end(), interface);
+
+        if (found_it == available_command_interfaces_.end())
+        {
+          available_command_interfaces_.emplace_back(interface);
+          RCUTILS_LOG_DEBUG_NAMED(
+            "resource_manager", "(hardware '%s'): '%s' command interface added into available list",
+            hardware.get_name().c_str(), interface.c_str());
+        }
+        else
+        {
+          // TODO(destogl): do here error management if interfaces are only partially added into
+          // "available" list - this should never be the case!
+          RCUTILS_LOG_WARN_NAMED(
+            "resource_manager",
+            "(hardware '%s'): '%s' command interface already in available list."
+            " This can happen due to multiple calls to 'configure'",
+            hardware.get_name().c_str(), interface.c_str());
+        }
+      }
+    }
+    return result;
+  }
+
+  template <class HardwareT>
+  bool cleanup_hardware(HardwareT & hardware)
+  {
+    bool result = trigger_and_print_hardware_state_transition(
+      std::bind(&HardwareT::cleanup, &hardware), "cleanup", hardware.get_name(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+
+    if (result)
+    {
+      // remove all command interfaces from available list
+      for (const auto & interface : hardware_info_map_[hardware.get_name()].command_interfaces)
+      {
+        auto found_it = std::find(
+          available_command_interfaces_.begin(), available_command_interfaces_.end(), interface);
+
+        if (found_it != available_command_interfaces_.end())
+        {
+          available_command_interfaces_.erase(found_it);
+          RCUTILS_LOG_DEBUG_NAMED(
+            "resource_manager", "(hardware '%s'): '%s' command removed from available list",
+            hardware.get_name().c_str(), interface.c_str());
+        }
+        else
+        {
+          // TODO(destogl): do here error management if interfaces are only partially added into
+          // "available" list - this should never be the case!
+          RCUTILS_LOG_WARN_NAMED(
+            "resource_manager",
+            "(hardware '%s'): '%s' command interface not in available list."
+            " This can happen due to multiple calls to 'cleanup'",
+            hardware.get_name().c_str(), interface.c_str());
+        }
+      }
+      // remove all state interfaces from available list
+      for (const auto & interface : hardware_info_map_[hardware.get_name()].state_interfaces)
+      {
+        auto found_it = std::find(
+          available_state_interfaces_.begin(), available_state_interfaces_.end(), interface);
+
+        if (found_it != available_state_interfaces_.end())
+        {
+          available_state_interfaces_.erase(found_it);
+          RCUTILS_LOG_DEBUG_NAMED(
+            "resource_manager", "(hardware '%s'): '%s' state interface removed from available list",
+            hardware.get_name().c_str(), interface.c_str());
+        }
+        else
+        {
+          // TODO(destogl): do here error management if interfaces are only partially added into
+          // "available" list - this should never be the case!
+          RCUTILS_LOG_WARN_NAMED(
+            "resource_manager",
+            "(hardware '%s'): '%s' state interface not in available list. "
+            "This can happen due to multiple calls to 'cleanup'",
+            hardware.get_name().c_str(), interface.c_str());
+        }
+      }
+    }
+    return result;
+  }
+
+  template <class HardwareT>
+  bool shutdown_hardware(HardwareT & hardware)
+  {
+    bool result = trigger_and_print_hardware_state_transition(
+      std::bind(&HardwareT::shutdown, &hardware), "shutdown", hardware.get_name(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+
+    if (result)
+    {
+      // TODO(destogl): change this - deimport all things if there is there are interfaces there
+      // deimport_non_movement_command_interfaces(hardware);
+      // deimport_state_interfaces(hardware);
+    }
+    return result;
+  }
+
+  template <class HardwareT>
+  bool activate_hardware(HardwareT & hardware)
+  {
+    bool result = trigger_and_print_hardware_state_transition(
+      std::bind(&HardwareT::activate, &hardware), "activate", hardware.get_name(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+
+    if (result)
+    {
+      // TODO(destogl): make all command interfaces available (currently are all available)
+    }
+
+    return result;
+  }
+
+  template <class HardwareT>
+  bool deactivate_hardware(HardwareT & hardware)
+  {
+    bool result = trigger_and_print_hardware_state_transition(
+      std::bind(&HardwareT::deactivate, &hardware), "deactivate", hardware.get_name(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+
+    if (result)
+    {
+      // TODO(destogl): make all command interfaces unavailable that should be present only
+      // when active (currently are all available) also at inactive
+    }
+    return result;
+  }
+
+  template <class HardwareT>
+  bool set_component_state(HardwareT & hardware, const rclcpp_lifecycle::State & target_state)
+  {
+    using lifecycle_msgs::msg::State;
+
+    bool result = false;
+
+    switch (target_state.id())
+    {
+      case State::PRIMARY_STATE_UNCONFIGURED:
+        switch (hardware.get_state().id())
+        {
+          case State::PRIMARY_STATE_UNCONFIGURED:
+            result = true;
+            break;
+          case State::PRIMARY_STATE_INACTIVE:
+            result = cleanup_hardware(hardware);
+            break;
+          case State::PRIMARY_STATE_ACTIVE:
+            result = deactivate_hardware(hardware);
+            if (result)
+            {
+              result = cleanup_hardware(hardware);
+            }
+            break;
+          case State::PRIMARY_STATE_FINALIZED:
+            result = false;
+            RCUTILS_LOG_WARN_NAMED(
+              "resource_manager", "hardware '%s' is in finalized state and can be only destroyed.",
+              hardware.get_name().c_str());
+            break;
+        }
+        break;
+      case State::PRIMARY_STATE_INACTIVE:
+        switch (hardware.get_state().id())
+        {
+          case State::PRIMARY_STATE_UNCONFIGURED:
+            result = configure_hardware(hardware);
+            break;
+          case State::PRIMARY_STATE_INACTIVE:
+            result = true;
+            break;
+          case State::PRIMARY_STATE_ACTIVE:
+            result = deactivate_hardware(hardware);
+            break;
+          case State::PRIMARY_STATE_FINALIZED:
+            result = false;
+            RCUTILS_LOG_WARN_NAMED(
+              "resource_manager", "hardware '%s' is in finalized state and can be only destroyed.",
+              hardware.get_name().c_str());
+            break;
+        }
+        break;
+      case State::PRIMARY_STATE_ACTIVE:
+        switch (hardware.get_state().id())
+        {
+          case State::PRIMARY_STATE_UNCONFIGURED:
+            result = configure_hardware(hardware);
+            if (result)
+            {
+              result = activate_hardware(hardware);
+            }
+            break;
+          case State::PRIMARY_STATE_INACTIVE:
+            result = activate_hardware(hardware);
+            break;
+          case State::PRIMARY_STATE_ACTIVE:
+            result = true;
+            break;
+          case State::PRIMARY_STATE_FINALIZED:
+            result = false;
+            RCUTILS_LOG_WARN_NAMED(
+              "resource_manager", "hardware '%s' is in finalized state and can be only destroyed.",
+              hardware.get_name().c_str());
+            break;
+        }
+        break;
+      case State::PRIMARY_STATE_FINALIZED:
+        switch (hardware.get_state().id())
+        {
+          case State::PRIMARY_STATE_UNCONFIGURED:
+            result = shutdown_hardware(hardware);
+            break;
+          case State::PRIMARY_STATE_INACTIVE:
+            result = shutdown_hardware(hardware);
+            break;
+          case State::PRIMARY_STATE_ACTIVE:
+            result = shutdown_hardware(hardware);
+            break;
+          case State::PRIMARY_STATE_FINALIZED:
+            result = true;
+            break;
+        }
+        break;
+    }
+
+    return result;
+>>>>>>> 80c042e (Error if a hardware name is duplicated (#672))
   }
 
   template <class HardwareT>
