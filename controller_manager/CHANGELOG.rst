@@ -2,6 +2,14 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add controller_manager_msgs dependency to test_hardware_management_srvs (`#702 <https://github.com/ros-controls/ros2_control/issues/702>`_)
+* Remove unused variable from the test (`#700 <https://github.com/ros-controls/ros2_control/issues/700>`_)
+* Enable namespaces for controllers. (`#693 <https://github.com/ros-controls/ros2_control/issues/693>`_)
+* Spawner waits for services (`#683 <https://github.com/ros-controls/ros2_control/issues/683>`_)
+* Contributors: Denis Štogl, Rufus Wong, Tyler Weaver
+
 2.5.0 (2022-03-25)
 ------------------
 * Make ControllerManager tests more flexible and reusable for different scenarios. Use more parameterized tests regarding strictness. (`#661 <https://github.com/ros-controls/ros2_control/issues/661>`_)
