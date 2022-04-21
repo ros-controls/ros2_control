@@ -28,15 +28,9 @@
 using ::testing::_;
 using ::testing::Return;
 
-struct Strictness
-{
-  int strictness = STRICT;
-  controller_interface::return_type expected_return;
-  unsigned int expected_counter;
-  unsigned int expected_active_contollers;
-};
-class TestControllerManager : public ControllerManagerFixture,
-                              public testing::WithParamInterface<Strictness>
+class TestControllerManager
+: public ControllerManagerFixture<controller_manager::ControllerManager>,
+  public testing::WithParamInterface<Strictness>
 {
 };
 
@@ -49,6 +43,53 @@ TEST_P(TestControllerManager, controller_lifecycle)
     test_controller::TEST_CONTROLLER_CLASS_NAME);
   EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
   EXPECT_EQ(2, test_controller.use_count());
+
+  // setup interface to claim from controllers
+  controller_interface::InterfaceConfiguration cmd_itfs_cfg;
+  cmd_itfs_cfg.type = controller_interface::interface_configuration_type::INDIVIDUAL;
+  for (const auto & interface : ros2_control_test_assets::TEST_ACTUATOR_HARDWARE_COMMAND_INTERFACES)
+  {
+    cmd_itfs_cfg.names.push_back(interface);
+  }
+  test_controller->set_command_interface_configuration(cmd_itfs_cfg);
+
+  controller_interface::InterfaceConfiguration state_itfs_cfg;
+  state_itfs_cfg.type = controller_interface::interface_configuration_type::INDIVIDUAL;
+  for (const auto & interface : ros2_control_test_assets::TEST_ACTUATOR_HARDWARE_STATE_INTERFACES)
+  {
+    state_itfs_cfg.names.push_back(interface);
+  }
+  for (const auto & interface : ros2_control_test_assets::TEST_SENSOR_HARDWARE_STATE_INTERFACES)
+  {
+    state_itfs_cfg.names.push_back(interface);
+  }
+  test_controller->set_state_interface_configuration(state_itfs_cfg);
+
+  controller_interface::InterfaceConfiguration cmd_itfs_cfg2;
+  cmd_itfs_cfg2.type = controller_interface::interface_configuration_type::INDIVIDUAL;
+  for (const auto & interface : ros2_control_test_assets::TEST_SYSTEM_HARDWARE_COMMAND_INTERFACES)
+  {
+    cmd_itfs_cfg2.names.push_back(interface);
+  }
+  test_controller2->set_command_interface_configuration(cmd_itfs_cfg2);
+
+  controller_interface::InterfaceConfiguration state_itfs_cfg2;
+  state_itfs_cfg2.type = controller_interface::interface_configuration_type::ALL;
+  test_controller2->set_state_interface_configuration(state_itfs_cfg2);
+
+  // Check if namespace is set correctly
+  RCLCPP_INFO(
+    rclcpp::get_logger("test_controller_manager"), "Controller Manager namespace is '%s'",
+    cm_->get_namespace());
+  EXPECT_STREQ(cm_->get_namespace(), "/");
+  RCLCPP_INFO(
+    rclcpp::get_logger("test_controller_manager"), "Controller 1 namespace is '%s'",
+    test_controller->get_node()->get_namespace());
+  EXPECT_STREQ(test_controller->get_node()->get_namespace(), "/");
+  RCLCPP_INFO(
+    rclcpp::get_logger("test_controller_manager"), "Controller 2 namespace is '%s'",
+    test_controller2->get_node()->get_namespace());
+  EXPECT_STREQ(test_controller2->get_node()->get_namespace(), "/");
 
   EXPECT_EQ(
     controller_interface::return_type::OK,
@@ -386,7 +427,5 @@ TEST_P(TestControllerManager, per_controller_update_rate)
   EXPECT_EQ(test_controller->get_update_rate(), 4u);
 }
 
-Strictness strict{STRICT, controller_interface::return_type::ERROR, 0u, 1u};
-Strictness best_effort{BEST_EFFORT, controller_interface::return_type::OK, 1u, 2u};
 INSTANTIATE_TEST_SUITE_P(
   test_strict_best_effort, TestControllerManager, testing::Values(strict, best_effort));

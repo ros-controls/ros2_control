@@ -56,7 +56,7 @@ inline bool is_controller_inactive(
   return is_controller_inactive(*controller);
 }
 
-inline bool is_controller_active(controller_interface::ControllerInterface & controller)
+inline bool is_controller_active(const controller_interface::ControllerInterface & controller)
 {
   return controller.get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE;
 }
@@ -312,8 +312,8 @@ controller_interface::return_type ControllerManager::unload_controller(
   }
 
   RCLCPP_DEBUG(get_logger(), "Cleanup controller");
-  controller.c->cleanup();
-  executor_->remove_node(controller.c->get_node());
+  controller.c->get_node()->cleanup();
+  executor_->remove_node(controller.c->get_node()->get_node_base_interface());
   to.erase(found_it);
 
   // Destroys the old controllers list when the realtime thread is finished with it.
@@ -371,7 +371,7 @@ controller_interface::return_type ControllerManager::configure_controller(
   {
     RCLCPP_DEBUG(
       get_logger(), "Controller '%s' is cleaned-up before configuring", controller_name.c_str());
-    new_state = controller->cleanup();
+    new_state = controller->get_node()->cleanup();
     if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
     {
       RCLCPP_ERROR(
@@ -705,7 +705,9 @@ controller_interface::ControllerInterfaceSharedPtr ControllerManager::add_contro
     return nullptr;
   }
 
-  if (controller.c->init(controller.info.name) == controller_interface::return_type::ERROR)
+  if (
+    controller.c->init(controller.info.name, get_namespace()) ==
+    controller_interface::return_type::ERROR)
   {
     to.clear();
     RCLCPP_ERROR(
@@ -724,7 +726,7 @@ controller_interface::ControllerInterfaceSharedPtr ControllerManager::add_contro
       controller.info.name.c_str());
     controller.c->get_node()->set_parameter(use_sim_time);
   }
-  executor_->add_node(controller.c->get_node());
+  executor_->add_node(controller.c->get_node()->get_node_base_interface());
   to.emplace_back(controller);
 
   // Destroys the old controllers list when the realtime thread is finished with it.
@@ -782,7 +784,7 @@ void ControllerManager::stop_controllers()
     auto controller = found_it->c;
     if (is_controller_active(*controller))
     {
-      const auto new_state = controller->deactivate();
+      const auto new_state = controller->get_node()->deactivate();
       controller->release_interfaces();
       if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
       {
@@ -893,7 +895,7 @@ void ControllerManager::start_controllers()
     }
     controller->assign_interfaces(std::move(command_loans), std::move(state_loans));
 
-    const auto new_state = controller->activate();
+    const auto new_state = controller->get_node()->activate();
     if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
     {
       RCLCPP_ERROR(
@@ -1355,7 +1357,7 @@ controller_interface::return_type ControllerManager::update(
     // https://github.com/ros-controls/ros2_control/issues/153
     if (is_controller_active(*loaded_controller.c))
     {
-      auto controller_update_rate = loaded_controller.c->get_update_rate();
+      const auto controller_update_rate = loaded_controller.c->get_update_rate();
 
       bool controller_go =
         controller_update_rate == 0 || ((update_loop_counter_ % controller_update_rate) == 0);

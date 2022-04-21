@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format2.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="2">
   <name>controller_interface</name>
-  <version>2.4.0</version>
+  <version>2.6.0</version>
   <description>Description of controller_interface</description>
   <maintainer email="bence.magyar.robotics@gmail.com">Bence Magyar</maintainer>
   <maintainer email="karsten@osrfoundation.org">Karsten Knese</maintainer>
@@ -19,8 +19,6 @@
   <exec_depend>sensor_msgs</exec_depend>
 
   <test_depend>ament_cmake_gmock</test_depend>
-  <test_depend>ament_lint_auto</test_depend>
-  <test_depend>ament_lint_common</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

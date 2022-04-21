@@ -23,6 +23,7 @@
 #include "controller_manager/controller_manager.hpp"
 #include "controller_manager_test_common.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
+#include "test_controller/test_controller.hpp"
 
 using test_controller::TEST_CONTROLLER_CLASS_NAME;
 using ::testing::_;
@@ -31,25 +32,8 @@ const auto controller_name1 = "test_controller1";
 const auto controller_name2 = "test_controller2";
 using strvec = std::vector<std::string>;
 
-class TestLoadController : public ControllerManagerFixture
+class TestLoadController : public ControllerManagerFixture<controller_manager::ControllerManager>
 {
-protected:
-  void _switch_test_controllers(
-    const strvec & start_controllers, const strvec & stop_controllers,
-    const std::future_status expected_future_status = std::future_status::timeout,
-    const controller_interface::return_type expected_interface_status =
-      controller_interface::return_type::OK)
-  {
-    // First activation not possible because controller not configured
-    auto switch_future = std::async(
-      std::launch::async, &controller_manager::ControllerManager::switch_controller, cm_,
-      start_controllers, stop_controllers, STRICT, true, rclcpp::Duration(0, 0));
-
-    ASSERT_EQ(expected_future_status, switch_future.wait_for(std::chrono::milliseconds(100)))
-      << "switch_controller should be blocking until next update cycle";
-    ControllerManagerRunner cm_runner(this);
-    EXPECT_EQ(expected_interface_status, switch_future.get());
-  }
 };
 
 TEST_F(TestLoadController, load_unknown_controller)
@@ -72,6 +56,23 @@ TEST_F(TestLoadController, configuring_non_loaded_controller_fails)
   EXPECT_EQ(cm_->configure_controller(controller_name1), controller_interface::return_type::ERROR);
 }
 
+TEST_F(TestLoadController, can_set_and_get_non_default_update_rate)
+{
+  auto controller_if =
+    cm_->load_controller("test_controller_01", test_controller::TEST_CONTROLLER_CLASS_NAME);
+  ASSERT_NE(controller_if, nullptr);
+
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, controller_if->get_state().id());
+
+  controller_if->get_node()->set_parameter({"update_rate", 1337});
+
+  cm_->configure_controller("test_controller_01");
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if->get_state().id());
+
+  EXPECT_EQ(1337u, controller_if->get_update_rate());
+}
+
 class TestLoadedController : public TestLoadController
 {
 public:
@@ -86,25 +87,34 @@ public:
   }
 
   void start_test_controller(
+    const int strictness,
     const std::future_status expected_future_status = std::future_status::timeout,
     const controller_interface::return_type expected_interface_status =
       controller_interface::return_type::OK)
   {
-    _switch_test_controllers(
-      strvec{controller_name1}, strvec{}, expected_future_status, expected_interface_status);
+    switch_test_controllers(
+      strvec{controller_name1}, strvec{}, strictness, expected_future_status,
+      expected_interface_status);
   }
 
   void stop_test_controller(
+    const int strictness,
     const std::future_status expected_future_status = std::future_status::timeout,
     const controller_interface::return_type expected_interface_status =
       controller_interface::return_type::OK)
   {
-    _switch_test_controllers(
-      strvec{}, strvec{controller_name1}, expected_future_status, expected_interface_status);
+    switch_test_controllers(
+      strvec{}, strvec{controller_name1}, strictness, expected_future_status,
+      expected_interface_status);
   }
 };
 
-TEST_F(TestLoadedController, load_and_configure_one_known_controller)
+class TestLoadedControllerParametrized : public TestLoadedController,
+                                         public testing::WithParamInterface<Strictness>
+{
+};
+
+TEST_P(TestLoadedControllerParametrized, load_and_configure_one_known_controller)
 {
   EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
 
@@ -115,81 +125,96 @@ TEST_F(TestLoadedController, load_and_configure_one_known_controller)
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if->get_state().id());
 }
 
-TEST_F(TestLoadedController, can_start_configured_controller)
+TEST_P(TestLoadedControllerParametrized, can_start_configured_controller)
 {
+  const auto test_param = GetParam();
+
   EXPECT_EQ(cm_->configure_controller(controller_name1), controller_interface::return_type::OK);
-  start_test_controller();
+  start_test_controller(test_param.strictness);
   ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, controller_if->get_state().id());
 }
 
-TEST_F(TestLoadedController, can_stop_active_controller)
+TEST_P(TestLoadedControllerParametrized, can_stop_active_controller)
 {
+  const auto test_param = GetParam();
+
   EXPECT_EQ(cm_->configure_controller(controller_name1), controller_interface::return_type::OK);
 
-  start_test_controller();
+  start_test_controller(test_param.strictness);
 
   // Stop controller
-  stop_test_controller();
+  stop_test_controller(test_param.strictness);
   ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if->get_state().id());
 }
 
-TEST_F(TestLoadedController, starting_and_stopping_a_controller)
+TEST_P(TestLoadedControllerParametrized, starting_and_stopping_a_controller)
 {
+  const auto test_param = GetParam();
+
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, controller_if->get_state().id());
 
-  // Only testing with STRICT now for simplicity
   {  // Test starting unconfigured controller, and starting configured afterwards
-    start_test_controller(std::future_status::ready, controller_interface::return_type::ERROR);
+    start_test_controller(
+      test_param.strictness, std::future_status::ready, test_param.expected_return);
 
     ASSERT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, controller_if->get_state().id());
 
     // Activate configured controller
     cm_->configure_controller(controller_name1);
-    start_test_controller();
+    start_test_controller(test_param.strictness);
     ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, controller_if->get_state().id());
   }
 
   {  // Stop controller
-    stop_test_controller();
+    stop_test_controller(test_param.strictness);
     ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if->get_state().id());
   }
 }
 
-TEST_F(TestLoadedController, can_not_configure_active_controller)
+TEST_P(TestLoadedControllerParametrized, can_not_configure_active_controller)
 {
+  const auto test_param = GetParam();
+
   EXPECT_EQ(cm_->configure_controller(controller_name1), controller_interface::return_type::OK);
-  start_test_controller();
+  start_test_controller(test_param.strictness);
 
   // Can not configure active controller
   EXPECT_EQ(cm_->configure_controller(controller_name1), controller_interface::return_type::ERROR);
   ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, controller_if->get_state().id());
 }
 
-TEST_F(TestLoadedController, can_not_start_finalized_controller)
+TEST_P(TestLoadedControllerParametrized, can_not_start_finalized_controller)
 {
+  const auto test_param = GetParam();
+
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, controller_if->get_state().id());
 
   // Shutdown controller on purpose for testing
-  ASSERT_EQ(controller_if->shutdown().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED);
+  ASSERT_EQ(
+    controller_if->get_node()->shutdown().id(),
+    lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED);
 
   //  Start controller
-  start_test_controller(std::future_status::ready, controller_interface::return_type::ERROR);
+  start_test_controller(
+    test_param.strictness, std::future_status::ready, test_param.expected_return);
 
-  // Can not configure unconfigured controller
+  // Can not configure finalize controller
   EXPECT_EQ(cm_->configure_controller(controller_name1), controller_interface::return_type::ERROR);
   ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, controller_if->get_state().id());
 }
 
-TEST_F(TestLoadedController, inactive_controller_cannot_be_cleaned_up)
+TEST_P(TestLoadedControllerParametrized, inactive_controller_cannot_be_cleaned_up)
 {
+  const auto test_param = GetParam();
+
   EXPECT_EQ(cm_->configure_controller(controller_name1), controller_interface::return_type::OK);
 
-  start_test_controller();
+  start_test_controller(test_param.strictness);
 
-  stop_test_controller();
+  stop_test_controller(test_param.strictness);
 
   ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if->get_state().id());
 
@@ -204,13 +229,15 @@ TEST_F(TestLoadedController, inactive_controller_cannot_be_cleaned_up)
   EXPECT_EQ(0u, cleanup_calls);
 }
 
-TEST_F(TestLoadedController, inactive_controller_cannot_be_configured)
+TEST_P(TestLoadedControllerParametrized, inactive_controller_cannot_be_configured)
 {
+  const auto test_param = GetParam();
+
   EXPECT_EQ(cm_->configure_controller(controller_name1), controller_interface::return_type::OK);
 
-  start_test_controller();
+  start_test_controller(test_param.strictness);
 
-  stop_test_controller();
+  stop_test_controller(test_param.strictness);
   ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if->get_state().id());
 
   std::shared_ptr<test_controller::TestController> test_controller =
@@ -223,6 +250,9 @@ TEST_F(TestLoadedController, inactive_controller_cannot_be_configured)
   ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if->get_state().id());
   EXPECT_EQ(1u, cleanup_calls);
 }
+
+INSTANTIATE_TEST_SUITE_P(
+  test_strict_best_effort, TestLoadedControllerParametrized, testing::Values(strict, best_effort));
 
 class SwitchTest
 : public TestLoadedController,
@@ -329,7 +359,8 @@ INSTANTIATE_TEST_SUITE_P(
       "Switch with valid start controller and nonexistent controller specified, and strinctness "
       "STRICT, didn't return ERROR")));
 
-class TestTwoLoadedControllers : public TestLoadController
+class TestTwoLoadedControllers : public TestLoadController,
+                                 public testing::WithParamInterface<Strictness>
 {
 public:
   controller_interface::ControllerInterfaceSharedPtr controller_if1{nullptr};
@@ -349,16 +380,6 @@ public:
     ASSERT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, controller_if2->get_state().id());
   }
-
-  void switch_test_controllers(
-    const strvec & start_controllers, const strvec & stop_controllers,
-    const std::future_status expected_future_status = std::future_status::timeout,
-    const controller_interface::return_type expected_interface_status =
-      controller_interface::return_type::OK)
-  {
-    _switch_test_controllers(
-      start_controllers, stop_controllers, expected_future_status, expected_interface_status);
-  }
 };
 
 TEST_F(TestTwoLoadedControllers, load_and_configure_two_known_controllers)
@@ -370,16 +391,15 @@ TEST_F(TestTwoLoadedControllers, load_and_configure_two_known_controllers)
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if2->get_state().id());
 }
 
-TEST_F(TestTwoLoadedControllers, switch_multiple_controllers)
+TEST_P(TestTwoLoadedControllers, switch_multiple_controllers)
 {
-  // Only testing with STRICT now for simplicity
-  //  Test starting a stopped controller, and stopping afterwards
+  const auto test_param = GetParam();
 
   cm_->configure_controller(controller_name1);
 
   // Start controller #1
   RCLCPP_INFO(cm_->get_logger(), "Starting stopped controller #1");
-  switch_test_controllers(strvec{controller_name1}, strvec{});
+  switch_test_controllers(strvec{controller_name1}, strvec{}, test_param.strictness);
   ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, controller_if1->get_state().id());
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, controller_if2->get_state().id());
@@ -387,10 +407,15 @@ TEST_F(TestTwoLoadedControllers, switch_multiple_controllers)
   // Stop controller 1, start controller 2
   // Both fail because controller 2 because it is not configured and STRICT is used
   RCLCPP_INFO(
-    cm_->get_logger(),
-    "Stopping controller #1, starting unconfigured controller #2 fails (STRICT)");
+    cm_->get_logger(), "Stopping controller #1, starting unconfigured controller #2 fails (%s)",
+    (test_param.strictness == STRICT ? "STRICT" : "BEST EFFORT"));
+  // TODO(destogl): fix this test for BEST_EFFORT - probably related to:
+  // https://github.com/ros-controls/ros2_control/pull/582#issuecomment-1029931561
+  //   switch_test_controllers(
+  //     strvec{controller_name2}, strvec{controller_name1}, test_param.strictness,
+  //     std::future_status::ready, controller_interface::return_type::ERROR);
   switch_test_controllers(
-    strvec{controller_name2}, strvec{controller_name1}, std::future_status::ready,
+    strvec{controller_name2}, strvec{controller_name1}, STRICT, std::future_status::ready,
     controller_interface::return_type::ERROR);
   ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, controller_if1->get_state().id());
   ASSERT_EQ(
@@ -400,41 +425,28 @@ TEST_F(TestTwoLoadedControllers, switch_multiple_controllers)
 
   // Stop controller 1
   RCLCPP_INFO(cm_->get_logger(), "Stopping controller #1");
-  switch_test_controllers(strvec{}, strvec{controller_name1});
+  switch_test_controllers(strvec{}, strvec{controller_name1}, test_param.strictness);
   ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if1->get_state().id());
   ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if2->get_state().id());
 
   // Start controller 1 again
   RCLCPP_INFO(cm_->get_logger(), "Starting stopped controller #1");
-  switch_test_controllers(strvec{controller_name1}, strvec{});
+  switch_test_controllers(strvec{controller_name1}, strvec{}, test_param.strictness);
   ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, controller_if1->get_state().id());
   ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if2->get_state().id());
 
   // Stop controller 1, start controller 2
   RCLCPP_INFO(cm_->get_logger(), "Stopping controller #1, starting controller #2");
-  switch_test_controllers(strvec{controller_name2}, strvec{controller_name1});
+  switch_test_controllers(
+    strvec{controller_name2}, strvec{controller_name1}, test_param.strictness);
   ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if1->get_state().id());
   ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, controller_if2->get_state().id());
 
   // Stop controller 2
   RCLCPP_INFO(cm_->get_logger(), "Stopping controller #2");
-  switch_test_controllers(strvec{}, strvec{controller_name2});
+  switch_test_controllers(strvec{}, strvec{controller_name2}, test_param.strictness);
   ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if2->get_state().id());
 }
 
-TEST_F(TestLoadController, can_set_and_get_non_default_update_rate)
-{
-  auto controller_if =
-    cm_->load_controller("test_controller_01", test_controller::TEST_CONTROLLER_CLASS_NAME);
-  ASSERT_NE(controller_if, nullptr);
-
-  ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, controller_if->get_state().id());
-
-  controller_if->get_node()->set_parameter({"update_rate", 1337});
-
-  cm_->configure_controller("test_controller_01");
-  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if->get_state().id());
-
-  EXPECT_EQ(1337u, controller_if->get_update_rate());
-}
+INSTANTIATE_TEST_SUITE_P(
+  test_strict_best_effort, TestTwoLoadedControllers, testing::Values(strict, best_effort));

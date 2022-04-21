@@ -23,13 +23,14 @@
 
 #include "hardware_interface/loaned_command_interface.hpp"
 #include "hardware_interface/loaned_state_interface.hpp"
-#include "lifecycle_msgs/msg/state.hpp"
 
 #include "rclcpp/rclcpp.hpp"
-#include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
+#include "rclcpp_lifecycle/lifecycle_node.hpp"
 
 namespace controller_interface
 {
+using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
+
 enum class return_type : std::uint8_t
 {
   OK = 0,
@@ -80,16 +81,31 @@ public:
   void release_interfaces();
 
   CONTROLLER_INTERFACE_PUBLIC
-  virtual LifecycleNodeInterface::CallbackReturn on_init() = 0;
+  virtual return_type init(
+    const std::string & controller_name, const std::string & namespace_ = "");
 
+  /// Custom configure method to read additional parameters for controller-nodes
+  /*
+   * Override default implementation for configure of LifecycleNode to get parameters.
+   */
   CONTROLLER_INTERFACE_PUBLIC
-  virtual return_type init(const std::string & controller_name);
+  const rclcpp_lifecycle::State & configure();
+
+  /// Extending interface with initialization method which is individual for each controller
+  CONTROLLER_INTERFACE_PUBLIC
+  virtual CallbackReturn on_init() = 0;
 
   CONTROLLER_INTERFACE_PUBLIC
   virtual return_type update(const rclcpp::Time & time, const rclcpp::Duration & period) = 0;
 
   CONTROLLER_INTERFACE_PUBLIC
-  std::shared_ptr<rclcpp::Node> get_node();
+  std::shared_ptr<rclcpp_lifecycle::LifecycleNode> get_node();
+
+  CONTROLLER_INTERFACE_PUBLIC
+  const rclcpp_lifecycle::State & get_state() const;
+
+  CONTROLLER_INTERFACE_PUBLIC
+  unsigned int get_update_rate() const;
 
   /// Declare and initialize a parameter with a type.
   /**
@@ -111,42 +127,10 @@ public:
     }
   }
 
-  /**
-   * The methods below are a substitute to the LifecycleNode methods with the same name.
-   * The Life cycle is shown in ROS2 design document:
-   * https://design.ros2.org/articles/node_lifecycle.html
-   * We cannot use a LifecycleNode because it would expose change-state services to the rest
-   * of the ROS system.
-   * Only the Controller Manager should have possibility to change state of a controller.
-   *
-   * Hopefully in the future we can use a LifecycleNode where we disable modifications from the outside.
-   */
-  CONTROLLER_INTERFACE_PUBLIC
-  const rclcpp_lifecycle::State & configure();
-
-  CONTROLLER_INTERFACE_PUBLIC
-  const rclcpp_lifecycle::State & cleanup();
-
-  CONTROLLER_INTERFACE_PUBLIC
-  const rclcpp_lifecycle::State & deactivate();
-
-  CONTROLLER_INTERFACE_PUBLIC
-  const rclcpp_lifecycle::State & activate();
-
-  CONTROLLER_INTERFACE_PUBLIC
-  const rclcpp_lifecycle::State & shutdown();
-
-  CONTROLLER_INTERFACE_PUBLIC
-  const rclcpp_lifecycle::State & get_state() const;
-
-  CONTROLLER_INTERFACE_PUBLIC
-  unsigned int get_update_rate() const;
-
 protected:
   std::vector<hardware_interface::LoanedCommandInterface> command_interfaces_;
   std::vector<hardware_interface::LoanedStateInterface> state_interfaces_;
-  std::shared_ptr<rclcpp::Node> node_;
-  rclcpp_lifecycle::State lifecycle_state_;
+  std::shared_ptr<rclcpp_lifecycle::LifecycleNode> node_;
   unsigned int update_rate_ = 0;
 };
 

@@ -2,6 +2,22 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.6.0 (2022-04-20)
+------------------
+* Error if a hardware name is duplicated (`#672 <https://github.com/ros-controls/ros2_control/issues/672>`_)
+* Port four bar linkage and differential transmission loaders from ROS1 (`#656 <https://github.com/ros-controls/ros2_control/issues/656>`_)
+* Contributors: Andy Zelenak, Márk Szitanics
+
+2.5.0 (2022-03-25)
+------------------
+* Require lifecycle-msgs in hardware_interface package (`#675 <https://github.com/ros-controls/ros2_control/issues/675>`_) (`#678 <https://github.com/ros-controls/ros2_control/issues/678>`_)
+* Using should be inside namespace and not global scope. (`#673 <https://github.com/ros-controls/ros2_control/issues/673>`_)
+* Modernize C++: Use for-each loops in Resource Manager. (`#659 <https://github.com/ros-controls/ros2_control/issues/659>`_)
+* Enable controller manager services to control hardware lifecycle #abi-breaking (`#637 <https://github.com/ros-controls/ros2_control/issues/637>`_)
+  * Implement CM services for hardware lifecycle management.
+  * Added default behavior to activate all controller and added description of CM parameters.
+* Contributors: Denis Štogl
+
 2.4.0 (2022-02-23)
 ------------------
 * Fix transmission loader tests (`#642 <https://github.com/ros-controls/ros2_control/issues/642>`_)

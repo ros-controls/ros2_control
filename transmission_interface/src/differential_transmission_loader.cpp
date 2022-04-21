@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "transmission_interface/simple_transmission_loader.hpp"
+#include "transmission_interface/differential_transmission_loader.hpp"
 
 #include <memory>
 
@@ -22,26 +22,34 @@
 #include "pluginlib/class_list_macros.hpp"
 #include "rclcpp/logging.hpp"
 #include "rclcpp/rclcpp.hpp"
-#include "transmission_interface/simple_transmission.hpp"
+#include "transmission_interface/differential_transmission.hpp"
 
 namespace transmission_interface
 {
-std::shared_ptr<Transmission> SimpleTransmissionLoader::load(
+std::shared_ptr<Transmission> DifferentialTransmissionLoader::load(
   const hardware_interface::TransmissionInfo & transmission_info)
 {
   try
   {
-    const auto mechanical_reduction = transmission_info.joints.at(0).mechanical_reduction;
-    const auto offset = transmission_info.joints.at(0).offset;
-    std::shared_ptr<Transmission> transmission(
-      new SimpleTransmission(mechanical_reduction, offset));
+    const auto act_reduction1 = transmission_info.actuators.at(0).mechanical_reduction;
+    const auto act_reduction2 = transmission_info.actuators.at(1).mechanical_reduction;
+
+    const auto jnt_reduction1 = transmission_info.joints.at(0).mechanical_reduction;
+    const auto jnt_reduction2 = transmission_info.joints.at(1).mechanical_reduction;
+
+    const auto jnt_offset1 = transmission_info.joints.at(0).offset;
+    const auto jnt_offset2 = transmission_info.joints.at(1).offset;
+
+    std::shared_ptr<Transmission> transmission(new DifferentialTransmission(
+      {act_reduction1, act_reduction2}, {jnt_reduction1, jnt_reduction2},
+      {jnt_offset1, jnt_offset2}));
     return transmission;
   }
   catch (const std::exception & ex)
   {
     RCLCPP_ERROR(
-      rclcpp::get_logger("simple_transmission_loader"), "Failed to construct transmission '%s'",
-      ex.what());
+      rclcpp::get_logger("differential_transmission_loader"),
+      "Failed to construct transmission '%s'", ex.what());
     return std::shared_ptr<Transmission>();
   }
 }
@@ -49,4 +57,5 @@ std::shared_ptr<Transmission> SimpleTransmissionLoader::load(
 }  // namespace transmission_interface
 
 PLUGINLIB_EXPORT_CLASS(
-  transmission_interface::SimpleTransmissionLoader, transmission_interface::TransmissionLoader)
+  transmission_interface::DifferentialTransmissionLoader,
+  transmission_interface::TransmissionLoader)

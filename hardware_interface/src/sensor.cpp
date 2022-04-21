@@ -28,10 +28,10 @@
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 #include "rclcpp_lifecycle/state.hpp"
 
-using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
-
 namespace hardware_interface
 {
+using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
+
 Sensor::Sensor(std::unique_ptr<SensorInterface> impl) : impl_(std::move(impl)) {}
 
 const rclcpp_lifecycle::State & Sensor::initialize(const HardwareInfo & sensor_info)

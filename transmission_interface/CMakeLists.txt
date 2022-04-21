@@ -17,9 +17,9 @@ install(
 )
 
 add_library(transmission_interface SHARED
-  include/transmission_interface/transmission_loader.hpp
-  include/transmission_interface/simple_transmission_loader.hpp
   src/simple_transmission_loader.cpp
+  src/four_bar_linkage_transmission_loader.cpp
+  src/differential_transmission_loader.cpp
 )
 
 target_include_directories(transmission_interface PUBLIC include)
@@ -76,6 +76,20 @@ if(BUILD_TESTING)
   )
   target_include_directories(test_simple_transmission_loader PUBLIC include hardware_interface)
   ament_target_dependencies(test_simple_transmission_loader hardware_interface)
+
+  ament_add_gmock(
+    test_four_bar_linkage_transmission_loader
+    test/four_bar_linkage_transmission_loader_test.cpp
+  )
+  target_include_directories(test_four_bar_linkage_transmission_loader PUBLIC include hardware_interface)
+  ament_target_dependencies(test_four_bar_linkage_transmission_loader hardware_interface)
+
+  ament_add_gmock(
+    test_differential_transmission_loader
+    test/differential_transmission_loader_test.cpp
+  )
+  target_include_directories(test_differential_transmission_loader PUBLIC include hardware_interface)
+  ament_target_dependencies(test_differential_transmission_loader hardware_interface)
 endif()
 
 ament_export_include_directories(

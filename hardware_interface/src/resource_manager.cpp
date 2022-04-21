@@ -98,6 +98,15 @@ public:
     component_info.name = hardware_info.name;
     component_info.type = hardware_info.type;
     component_info.class_type = hardware_info.hardware_class_type;
+
+    // Check for identical names
+    if (hardware_info_map_.find(hardware_info.name) != hardware_info_map_.end())
+    {
+      throw std::runtime_error(
+        "Hardware name " + hardware_info.name +
+        " is duplicated. Please provide a unique 'name' in the URDF.");
+    }
+
     hardware_info_map_.insert(std::make_pair(component_info.name, component_info));
   }
 
@@ -139,7 +148,6 @@ public:
       // happened and only then trigger this part of the code?
       // On the other side this part of the code should never be executed in real-time critical
       // thread, so it could be also OK as it is...
-      // @bmagyar what do you think?
       for (const auto & interface : hardware_info_map_[hardware.get_name()].state_interfaces)
       {
         // add all state interfaces to available list

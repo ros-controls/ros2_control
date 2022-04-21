@@ -2,6 +2,23 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.6.0 (2022-04-20)
+------------------
+* Add CallbackReturn into controller_interface namespace for simpler usage in controllers. (`#701 <https://github.com/ros-controls/ros2_control/issues/701>`_)
+* Enable namespaces for controllers. (`#693 <https://github.com/ros-controls/ros2_control/issues/693>`_)
+* Add tests for ControllerInterface class and clarify use of 'update_rate' parameter. (`#662 <https://github.com/ros-controls/ros2_control/issues/662>`_)
+  #behaviorchange
+* Contributors: Denis Štogl
+
+2.5.0 (2022-03-25)
+------------------
+* Use lifecycle nodes in controllers again (`#538 <https://github.com/ros-controls/ros2_control/issues/538>`_)
+  * Add lifecycle nodes
+  * Add custom 'configure' to controller interface to get 'update_rate' parameter.
+  * Disable external interfaces of LifecycleNode.
+* Cleaning Controller Interface from obsolete code. (`#655 <https://github.com/ros-controls/ros2_control/issues/655>`_)
+* Contributors: Denis Štogl, Vatan Aksoy Tezer, Bence Magyar
+
 2.4.0 (2022-02-23)
 ------------------
 
