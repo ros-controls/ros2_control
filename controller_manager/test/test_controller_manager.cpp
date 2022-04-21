@@ -44,6 +44,7 @@ TEST_P(TestControllerManager, controller_lifecycle)
   EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
   EXPECT_EQ(2, test_controller.use_count());
 
+  // Question: should we put the namespace checking in a new test?
   // setup interface to claim from controllers
   controller_interface::InterfaceConfiguration cmd_itfs_cfg;
   cmd_itfs_cfg.type = controller_interface::interface_configuration_type::INDIVIDUAL;
@@ -65,6 +66,7 @@ TEST_P(TestControllerManager, controller_lifecycle)
   }
   test_controller->set_state_interface_configuration(state_itfs_cfg);
 
+  /*
   controller_interface::InterfaceConfiguration cmd_itfs_cfg2;
   cmd_itfs_cfg2.type = controller_interface::interface_configuration_type::INDIVIDUAL;
   for (const auto & interface : ros2_control_test_assets::TEST_SYSTEM_HARDWARE_COMMAND_INTERFACES)
@@ -76,6 +78,7 @@ TEST_P(TestControllerManager, controller_lifecycle)
   controller_interface::InterfaceConfiguration state_itfs_cfg2;
   state_itfs_cfg2.type = controller_interface::interface_configuration_type::ALL;
   test_controller2->set_state_interface_configuration(state_itfs_cfg2);
+  */
 
   // Check if namespace is set correctly
   RCLCPP_INFO(
@@ -86,10 +89,10 @@ TEST_P(TestControllerManager, controller_lifecycle)
     rclcpp::get_logger("test_controller_manager"), "Controller 1 namespace is '%s'",
     test_controller->get_node()->get_namespace());
   EXPECT_STREQ(test_controller->get_node()->get_namespace(), "/");
-  RCLCPP_INFO(
+  /*  RCLCPP_INFO(
     rclcpp::get_logger("test_controller_manager"), "Controller 2 namespace is '%s'",
     test_controller2->get_node()->get_namespace());
-  EXPECT_STREQ(test_controller2->get_node()->get_namespace(), "/");
+  EXPECT_STREQ(test_controller2->get_node()->get_namespace(), "/"); */
 
   EXPECT_EQ(
     controller_interface::return_type::OK,
@@ -255,8 +258,8 @@ TEST_P(TestControllerManager, unknown_controllers)
   if (test_controller_2->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
     ++active_controllers_count;
 
-  EXPECT_EQ(active_controllers_count, test_param.expected_active_contollers)
-    << "The number of active controllers should be: " << test_param.expected_active_contollers;
+  EXPECT_EQ(active_controllers_count, test_param.expected_active_controllers)
+    << "The number of active controllers should be: " << test_param.expected_active_controllers;
   auto last_internal_counter = test_controller->internal_counter;
 }
 
@@ -366,8 +369,8 @@ TEST_P(TestControllerManager, resource_conflict)
   if (test_controller_2->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
     ++active_controllers_count;
 
-  EXPECT_EQ(active_controllers_count, test_param.expected_active_contollers)
-    << "The number of active controllers should be: " << test_param.expected_active_contollers;
+  EXPECT_EQ(active_controllers_count, test_param.expected_active_controllers)
+    << "The number of active controllers should be: " << test_param.expected_active_controllers;
 }
 
 TEST_P(TestControllerManager, per_controller_update_rate)
@@ -427,5 +430,9 @@ TEST_P(TestControllerManager, per_controller_update_rate)
   EXPECT_EQ(test_controller->get_update_rate(), 4u);
 }
 
+Strictness strict_config{STRICT, controller_interface::return_type::ERROR, 0u, 1u};
+Strictness best_effort_config{BEST_EFFORT, controller_interface::return_type::OK, 1u, 2u};
+
 INSTANTIATE_TEST_SUITE_P(
-  test_strict_best_effort, TestControllerManager, testing::Values(strict, best_effort));
+  test_strict_best_effort, TestControllerManager,
+  testing::Values(strict_config, best_effort_config));

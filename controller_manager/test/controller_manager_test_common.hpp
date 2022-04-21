@@ -45,6 +45,7 @@ struct Strictness
   int strictness = STRICT;
   controller_interface::return_type expected_return;
   unsigned int expected_counter;
+  unsigned int expected_active_controllers = 0;
 };
 Strictness strict{STRICT, controller_interface::return_type::ERROR, 0u};
 Strictness best_effort{BEST_EFFORT, controller_interface::return_type::OK, 1u};
