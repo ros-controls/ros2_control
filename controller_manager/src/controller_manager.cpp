@@ -479,9 +479,17 @@ controller_interface::return_type ControllerManager::configure_controller(
       "Controller '%s' is chainable. Interfaces are being exported to resource manager.",
       controller_name.c_str());
     auto interfaces = controller->export_reference_interfaces();
+    if (interfaces.empty())
+    {
+      // TODO(destogl): Add test for this!
+      RCLCPP_ERROR(
+        get_logger(), "Controller '%s' is chainable, but does not export any reference interfaces.",
+        controller_name.c_str());
+      return controller_interface::return_type::ERROR;
+    }
     resource_manager_->import_controller_reference_interfaces(controller_name, interfaces);
 
-    // check and resort controllers in the vector
+    // TODO(destogl): check and resort controllers in the vector
   }
 
   return controller_interface::return_type::OK;
@@ -881,7 +889,7 @@ controller_interface::return_type ControllerManager::switch_controller(
             RCLCPP_WARN(
               get_logger(),
               "Could not deactivate controller with name '%s' because "
-              "preceding controller with name '%s' is inactive and will not be deactivated.",
+              "preceding controller with name '%s' is active and will not be deactivated.",
               controller_it->info.name.c_str(), preceding_ctrl_it->info.name.c_str());
             return controller_interface::return_type::ERROR;
           }
