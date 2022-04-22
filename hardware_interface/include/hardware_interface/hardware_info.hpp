@@ -130,6 +130,10 @@ struct HardwareInfo
    * Optional for Actuator and System Hardware.
    */
   std::vector<TransmissionInfo> transmissions;
+  /**
+   * The XML contents prior to parsing
+   */
+  std::string original_xml;
 };
 
 }  // namespace hardware_interface
