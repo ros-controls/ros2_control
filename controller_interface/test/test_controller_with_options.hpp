@@ -40,11 +40,13 @@ public:
   }
 
   controller_interface::return_type init(
-    const std::string & controller_name, const std::string & namespace_ = "") override
+    const std::string & controller_name, const std::string & namespace_ = "",
+    const rclcpp::NodeOptions & node_options =
+      rclcpp::NodeOptions()
+        .allow_undeclared_parameters(true)
+        .automatically_declare_parameters_from_overrides(true)) override
   {
-    rclcpp::NodeOptions options;
-    options.allow_undeclared_parameters(true).automatically_declare_parameters_from_overrides(true);
-    node_ = std::make_shared<rclcpp_lifecycle::LifecycleNode>(controller_name, namespace_, options);
+    ControllerInterface::init(controller_name, namespace_, node_options);
 
     switch (on_init())
     {
@@ -54,9 +56,9 @@ public:
       case LifecycleNodeInterface::CallbackReturn::FAILURE:
         return controller_interface::return_type::ERROR;
     }
-    if (node_->get_parameters("parameter_list", params))
+    if (get_node()->get_parameters("parameter_list", params))
     {
-      RCLCPP_INFO_STREAM(node_->get_logger(), "I found " << params.size() << " parameters.");
+      RCLCPP_INFO_STREAM(get_node()->get_logger(), "I found " << params.size() << " parameters.");
       return controller_interface::return_type::OK;
     }
     else

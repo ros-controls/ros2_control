@@ -82,7 +82,11 @@ public:
 
   CONTROLLER_INTERFACE_PUBLIC
   virtual return_type init(
-    const std::string & controller_name, const std::string & namespace_ = "");
+    const std::string & controller_name, const std::string & namespace_ = "",
+    const rclcpp::NodeOptions & node_options =
+      rclcpp::NodeOptions()
+        .allow_undeclared_parameters(true)
+        .automatically_declare_parameters_from_overrides(true));
 
   /// Custom configure method to read additional parameters for controller-nodes
   /*
@@ -100,6 +104,9 @@ public:
 
   CONTROLLER_INTERFACE_PUBLIC
   std::shared_ptr<rclcpp_lifecycle::LifecycleNode> get_node();
+
+  CONTROLLER_INTERFACE_PUBLIC
+  std::shared_ptr<rclcpp_lifecycle::LifecycleNode> get_node() const;
 
   CONTROLLER_INTERFACE_PUBLIC
   const rclcpp_lifecycle::State & get_state() const;
@@ -130,8 +137,10 @@ public:
 protected:
   std::vector<hardware_interface::LoanedCommandInterface> command_interfaces_;
   std::vector<hardware_interface::LoanedStateInterface> state_interfaces_;
-  std::shared_ptr<rclcpp_lifecycle::LifecycleNode> node_;
   unsigned int update_rate_ = 0;
+
+private:
+  std::shared_ptr<rclcpp_lifecycle::LifecycleNode> node_;
 };
 
 using ControllerInterfaceSharedPtr = std::shared_ptr<ControllerInterface>;
