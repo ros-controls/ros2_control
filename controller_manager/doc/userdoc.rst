@@ -97,7 +97,7 @@ Concepts
 Restarting all controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The simplest way to restart all controllers is by using `switch_controllers` services or CLI and adding all controllers to "start" and "stop" lists.
+The simplest way to restart all controllers is by using ``switch_controllers`` services or CLI and adding all controllers to ``start`` and ``stop`` lists.
 Note that not all controllers have to be restarted, e.g., broadcasters.
 
 Restarting hardware
