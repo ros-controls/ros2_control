@@ -90,3 +90,19 @@ There are two scripts to interact with controller manager from launch files:
       -h, --help            show this help message and exit
       -c CONTROLLER_MANAGER, --controller-manager CONTROLLER_MANAGER
                             Name of the controller manager ROS node
+
+Concepts
+-----------
+
+Restarting all controllers
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The simplest way to restart all controllers is by using ``switch_controllers`` services or CLI and adding all controllers to ``start`` and ``stop`` lists.
+Note that not all controllers have to be restarted, e.g., broadcasters.
+
+Restarting hardware
+^^^^^^^^^^^^^^^^^^^^^
+
+If hardware gets restarted then you should go through its lifecycle again.
+This can be simply achieved by returning ``ERROR`` from ``write`` and ``read`` methods of interface implementation.
+**NOT IMPLEMENTED YET - PLEASE STOP/RESTART ALL CONTROLLERS MANUALLY FOR NOW** The controller manager detects that and stops all the controllers that are commanding that hardware and restarts broadcasters that are listening to its states.
