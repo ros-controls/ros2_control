@@ -49,10 +49,6 @@ public:
   controller_interface::InterfaceConfiguration state_interface_configuration() const override;
 
   CONTROLLER_MANAGER_PUBLIC
-  controller_interface::return_type update(
-    const rclcpp::Time & time, const rclcpp::Duration & period) override;
-
-  CONTROLLER_MANAGER_PUBLIC
   CallbackReturn on_init() override;
 
   CONTROLLER_MANAGER_PUBLIC
@@ -66,6 +62,11 @@ public:
 
   CONTROLLER_MANAGER_PUBLIC
   std::vector<hardware_interface::CommandInterface> on_export_reference_interfaces() override;
+
+  controller_interface::return_type update_reference_from_subscribers() override;
+
+  controller_interface::return_type update_and_write_commands(
+    const rclcpp::Time & time, const rclcpp::Duration & period) override;
 
   // Testing-relevant methods
   CONTROLLER_MANAGER_PUBLIC
