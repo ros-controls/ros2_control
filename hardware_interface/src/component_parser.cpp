@@ -488,7 +488,8 @@ void auto_fill_transmission_interfaces(HardwareInfo & hardware)
  * \return HardwareInfo filled with information about the robot
  * \throws std::runtime_error if a attributes or tag are not found
  */
-HardwareInfo parse_resource_from_xml(const tinyxml2::XMLElement * ros2_control_it)
+HardwareInfo parse_resource_from_xml(
+  const tinyxml2::XMLElement * ros2_control_it, const std::string & urdf)
 {
   HardwareInfo hardware;
   hardware.name = get_attribute_value(ros2_control_it, kNameAttribute, kROS2ControlTag);
@@ -535,6 +536,8 @@ HardwareInfo parse_resource_from_xml(const tinyxml2::XMLElement * ros2_control_i
 
   auto_fill_transmission_interfaces(hardware);
 
+  hardware.original_xml = urdf;
+
   return hardware;
 }
 
@@ -574,7 +577,7 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
   std::vector<HardwareInfo> hardware_info;
   while (ros2_control_it)
   {
-    hardware_info.push_back(detail::parse_resource_from_xml(ros2_control_it));
+    hardware_info.push_back(detail::parse_resource_from_xml(ros2_control_it, urdf));
     ros2_control_it = ros2_control_it->NextSiblingElement(kROS2ControlTag);
   }
 
