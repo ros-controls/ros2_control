@@ -2,6 +2,9 @@
 Changelog for package ros2_control
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 1.4.0 (2022-02-18)
 ------------------
 * Use correct ros-controls/realtime_tools branch (`#619 <https://github.com/ros-controls/ros2_control/issues/619>`_) (`#621 <https://github.com/ros-controls/ros2_control/issues/621>`_)

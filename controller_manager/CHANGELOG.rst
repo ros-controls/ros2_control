@@ -2,6 +2,11 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Spawner waits for services (`#683 <https://github.com/ros-controls/ros2_control/issues/683>`_) (`#697 <https://github.com/ros-controls/ros2_control/issues/697>`_)
+* Contributors: Tyler Weaver
+
 1.4.0 (2022-02-18)
 ------------------
 * added a fixed control period to loop (`#647 <https://github.com/ros-controls/ros2_control/issues/647>`_) (`#650 <https://github.com/ros-controls/ros2_control/issues/650>`_)
