@@ -2,8 +2,8 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.7.0 (2022-04-29)
+------------------
 * Make URDF available to HW components on initialize (`#709 <https://github.com/ros-controls/ros2_control/issues/709>`_)
 * Contributors: Bence Magyar
 
