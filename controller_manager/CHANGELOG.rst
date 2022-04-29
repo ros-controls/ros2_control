@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.5.0 (2022-04-29)
+------------------
 * Spawner waits for services (`#683 <https://github.com/ros-controls/ros2_control/issues/683>`_) (`#697 <https://github.com/ros-controls/ros2_control/issues/697>`_)
 * Contributors: Tyler Weaver
 
