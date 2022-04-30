@@ -45,19 +45,9 @@ TEST(TestHandle, state_interface)
   // interface.set_value(5);  compiler error, no set_value function
 }
 
-TEST(TestHandle, name_getters_work)
-{
-  StateInterface handle{JOINT_NAME, FOO_INTERFACE};
-  EXPECT_EQ(handle.get_name(), std::string(JOINT_NAME) + "/" + std::string(FOO_INTERFACE));
-  EXPECT_EQ(handle.get_interface_name(), FOO_INTERFACE);
-  EXPECT_EQ(handle.get_prefix_name(), JOINT_NAME);
-}
-
 TEST(TestHandle, value_methods_throw_for_nullptr)
 {
-  CommandInterface handle{JOINT_NAME, FOO_INTERFACE};
-  EXPECT_ANY_THROW(handle.get_value());
-  EXPECT_ANY_THROW(handle.set_value(0.0));
+  EXPECT_ANY_THROW(CommandInterface(JOINT_NAME, FOO_INTERFACE, nullptr));
 }
 
 TEST(TestHandle, value_methods_work_on_non_nullptr)

@@ -52,8 +52,8 @@ class TestActuator : public ActuatorInterface
       info_.joints[0].name, info_.joints[0].state_interfaces[0].name, &position_state_));
     state_interfaces.emplace_back(hardware_interface::StateInterface(
       info_.joints[0].name, info_.joints[0].state_interfaces[1].name, &velocity_state_));
-    state_interfaces.emplace_back(
-      hardware_interface::StateInterface(info_.joints[0].name, "some_unlisted_interface", nullptr));
+    state_interfaces.emplace_back(hardware_interface::StateInterface(
+      info_.joints[0].name, "some_unlisted_interface", &unlisted_interface_state_));
 
     return state_interfaces;
   }
@@ -107,6 +107,8 @@ private:
   double velocity_state_ = 0.0;
   double velocity_command_ = 0.0;
   double max_velocity_command_ = 0.0;
+
+  double unlisted_interface_state_ = 1989.0;
 };
 
 #include "pluginlib/class_list_macros.hpp"  // NOLINT
