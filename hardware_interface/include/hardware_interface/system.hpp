@@ -91,6 +91,9 @@ public:
 
 private:
   std::unique_ptr<SystemInterface> impl_;
+
+  std::vector<Variant> commands_;
+  std::vector<Variant> states_;
 };
 
 }  // namespace hardware_interface

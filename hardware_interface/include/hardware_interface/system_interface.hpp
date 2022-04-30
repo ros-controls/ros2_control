@@ -97,6 +97,10 @@ public:
     return CallbackReturn::SUCCESS;
   };
 
+  virtual std::vector<InterfaceConfiguration> export_state_interfaces_info() = 0;
+
+  virtual std::vector<InterfaceConfiguration> export_command_interfaces_info() = 0;
+
   /// Exports all state interfaces for this hardware interface.
   /**
    * The state interfaces have to be created and transferred according
@@ -166,7 +170,7 @@ public:
    *
    * \return return_type::OK if the read was successful, return_type::ERROR otherwise.
    */
-  virtual return_type read() = 0;
+  virtual return_type read(std::vector<Variant> & states) = 0;
 
   /// Write the current command values to the actuator.
   /**
@@ -175,7 +179,7 @@ public:
    *
    * \return return_type::OK if the read was successful, return_type::ERROR otherwise.
    */
-  virtual return_type write() = 0;
+  virtual return_type write(std::vector<Variant> & commands) = 0;
 
   /// Get name of the actuator hardware.
   /**

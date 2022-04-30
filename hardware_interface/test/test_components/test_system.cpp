@@ -19,6 +19,7 @@
 #include "hardware_interface/system_interface.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 
+using hardware_interface::InterfaceConfiguration;
 using hardware_interface::CommandInterface;
 using hardware_interface::return_type;
 using hardware_interface::StateInterface;
@@ -26,6 +27,33 @@ using hardware_interface::SystemInterface;
 
 class TestSystem : public SystemInterface
 {
+  std::vector<InterfaceConfiguration> export_state_interfaces_info() override
+  {
+    std::vector<InterfaceConfiguration> state_interfaces;
+
+    for (auto i = 0u; i < info_.joints.size(); ++i)
+    {
+      if (info_.joints[i].name != "configuration")
+      {
+        state_interfaces.emplace_back(hardware_interface::InterfaceConfiguration({
+          info_.joints[i].name, info_.joints[i].state_interfaces[0]}));
+        state_interfaces.emplace_back(hardware_interface::InterfaceConfiguration({
+          info_.joints[i].name, info_.joints[i].state_interfaces[1]}));
+        state_interfaces.emplace_back(hardware_interface::InterfaceConfiguration({
+          info_.joints[i].name, info_.joints[i].state_interfaces[2]}));
+      }
+    }
+
+    if (info_.joints.size() > 2)
+    {
+      // Add configuration/max_tcp_jerk interface
+      state_interfaces.emplace_back(hardware_interface::InterfaceConfiguration({
+        info_.joints[2].name, info_.joints[2].state_interfaces[0]}));
+    }
+
+    return state_interfaces;
+  }
+
   std::vector<StateInterface> export_state_interfaces() override
   {
     std::vector<StateInterface> state_interfaces;
@@ -50,6 +78,31 @@ class TestSystem : public SystemInterface
     }
 
     return state_interfaces;
+  }
+
+  std::vector<InterfaceConfiguration> export_command_interfaces_info() override
+  {
+    std::vector<InterfaceConfiguration> command_interfaces;
+    for (auto i = 0u; i < info_.joints.size(); ++i)
+    {
+      if (info_.joints[i].name != "configuration")
+      {
+        command_interfaces.emplace_back(hardware_interface::InterfaceConfiguration({
+          info_.joints[i].name, info_.joints[i].command_interfaces[0]}));
+      }
+    }
+    // Add max_acceleration command interface
+    command_interfaces.emplace_back(hardware_interface::InterfaceConfiguration({
+      info_.joints[0].name, info_.joints[0].command_interfaces[1]}));
+
+    if (info_.joints.size() > 2)
+    {
+      // Add configuration/max_tcp_jerk interface
+      command_interfaces.emplace_back(hardware_interface::InterfaceConfiguration({
+        info_.joints[2].name, info_.joints[2].command_interfaces[0]}));
+    }
+
+    return command_interfaces;
   }
 
   std::vector<CommandInterface> export_command_interfaces() override
@@ -78,9 +131,22 @@ class TestSystem : public SystemInterface
     return command_interfaces;
   }
 
-  return_type read() override { return return_type::OK; }
+  return_type read(std::vector<hardware_interface::Variant> & states) override
+  {
+    // get some states from robots
+    states[0].set_value(false);    // there is still some implicit knowledge about order of interfaces (the same order as they info is exported)
+    states[1].set_value(1.2);
 
-  return_type write() override { return return_type::OK; }
+    return return_type::OK;
+  }
+
+  return_type write(std::vector<hardware_interface::Variant> & commands) override
+  {
+    // write some state to robot
+    fprintf("%.5f", commands[0].get_value());
+
+    return return_type::OK;
+  }
 
 private:
   std::array<double, 2> velocity_command_ = {0.0, 0.0};

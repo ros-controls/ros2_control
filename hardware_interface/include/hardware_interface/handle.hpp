@@ -16,19 +16,126 @@
 #define HARDWARE_INTERFACE__HANDLE_HPP_
 
 #include <string>
+#include <vector>
 #include <utility>
 
 #include "hardware_interface/macros.hpp"
 #include "hardware_interface/visibility_control.h"
 
+#include <hardware_interface/hardware_info.hpp>
+
 namespace hardware_interface
 {
+struct InterfaceConfiguration
+{
+  std::string joint_name;
+  InterfaceInfo interface_info;
+};
+
+/// A variant class used to store value on a given interface
+class Variant
+{
+enum value_type
+{
+  boolean = 0,
+  integer,
+  floating,
+  vector_boolean,
+  vector_integer,
+  vector_floating,
+};
+
+public:
+  Variant(bool value)
+  {
+    value_type_ = value_type::boolean;
+    bool_value_ = value;
+  }
+
+  Variant(int value)
+  {
+    value_type_ = value_type::integer;
+    int_value_ = value;
+  }
+
+  Variant(double value)
+  {
+    value_type_ = value_type::floating;
+    double_value_ = value;
+  }
+
+  Variant(const std::vector<bool> & value)
+  {
+    value_type_ = value_type::vector_boolean;
+    vector_bool_value_ = value;
+  }
+
+  Variant(const std::vector<int> & value)
+  {
+    value_type_ = value_type::vector_integer;
+    vector_int_value_ = value;
+  }
+
+  Variant(const std::vector<double> & value)
+  {
+    value_type_ = value_type::vector_floating;
+    vector_double_value_ = value;
+  }
+
+  void set_value(bool value)
+  {
+    bool_value_ = value;
+  }
+
+  void set_value(int value)
+  {
+    int_value_ = value;
+  }
+
+  void set_value(double value)
+  {
+    double_value_ = value;
+  }
+
+  template <typename DataT, typename std::enable_if<std::is_integral<DataT>, bool> = true>
+  DataT get_value()
+  {
+    return bool_value_;
+  }
+
+  template <typename DataT, typename std::enable_if<std::is_integral<DataT>, int> = true>
+  DataT get_value()
+  {
+    return int_value_;
+  }
+
+  template <typename DataT, typename std::enable_if<std::is_floating_point<DataT>, double> = true>
+  DataT get_value()
+  {
+    return double_value_;
+  }
+
+  bool is_valid()
+  {
+    // Check if nan or empty to return "false"
+  }
+
+private:
+  value_type value_type_;
+  bool bool_value_;
+  int int_value_;
+  double double_value_;
+  std::vector<bool> vector_bool_value_;
+  std::vector<int> vector_int_value_;
+  std::vector<double> vector_double_value_;
+};
+
 /// A handle used to get and set a value on a given interface.
 class ReadOnlyHandle
 {
 public:
   ReadOnlyHandle(
-    const std::string & name, const std::string & interface_name, double * value_ptr = nullptr)
+    const std::string & name, const std::string & interface_name, Variant * value_ptr = nullptr)
   : name_(name), interface_name_(interface_name), value_ptr_(value_ptr)
   {
   }
@@ -62,23 +169,24 @@ public:
 
   const std::string get_full_name() const { return name_ + "/" + interface_name_; }
 
-  double get_value() const
+  template <typedef DataT>
+  DataT get_value() const
   {
     THROW_ON_NULLPTR(value_ptr_);
-    return *value_ptr_;
+    return value_ptr_->get_value();
   }
 
 protected:
   std::string name_;
   std::string interface_name_;
-  double * value_ptr_;
+  Variant * value_ptr_;
 };
 
 class ReadWriteHandle : public ReadOnlyHandle
 {
 public:
   ReadWriteHandle(
-    const std::string & name, const std::string & interface_name, double * value_ptr = nullptr)
+    const std::string & name, const std::string & interface_name, Variant * value_ptr = nullptr)
   : ReadOnlyHandle(name, interface_name, value_ptr)
   {
   }
@@ -97,10 +205,11 @@ public:
 
   virtual ~ReadWriteHandle() = default;
 
-  void set_value(double value)
+  template <typename DataT>
+  void set_value(DataT value)
   {
     THROW_ON_NULLPTR(this->value_ptr_);
-    *this->value_ptr_ = value;
+    this->value_ptr_->set_value(value);
   }
 };
 
