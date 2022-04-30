@@ -186,11 +186,74 @@ const rclcpp_lifecycle::State & System::error()
 
 std::vector<StateInterface> System::export_state_interfaces()
 {
-  return impl_->export_state_interfaces();
+  std::vector<StateInterface> state_interfaces;
+
+  auto state_interfaces_info = impl_->export_state_interfaces_info();
+  states_.reserve(state_interfaces_info.size());
+  state_interfaces.reserve(state_interfaces_info.size());
+
+  for (auto const & itf : state_interfaces_info)
+  {
+    if (itf.interface_info.data_type.empty())  // default is double (check in parser if not already set)
+    {
+      if (itf.interface_info.initial_value.empty())
+      {
+        states_.emplace_back(hardware_interface::Variant(std::numeric_limits<double>::quiet_NaN()));
+      }
+      else
+      {
+        states_.emplace_back(hardware_interface::Variant(std::stod(itf.interface_info.initial_value)));
+      }
+    }
+    else if (itf.interface_info.data_type == "bool")
+    {
+      if (itf.interface_info.initial_value == "true" || itf.interface_info.initial_value == "True")
+      {
+        states_.emplace_back(hardware_interface::Variant(true));
+      }
+      else
+      {
+        states_.emplace_back(hardware_interface::Variant(false));
+      }
+    }
+    else if (itf.interface_info.data_type == "int")
+    {
+      if (itf.interface_info.initial_value.empty())
+      {
+        states_.emplace_back(hardware_interface::Variant(std::numeric_limits<int>::quiet_NaN()));
+      }
+      else
+      {
+        states_.emplace_back(hardware_interface::Variant(std::stoi(itf.interface_info.initial_value)));
+      }
+    }
+    else if (itf.interface_info.data_type == "double")
+    {
+      if (itf.interface_info.initial_value.empty())
+      {
+        states_.emplace_back(hardware_interface::Variant(std::numeric_limits<double>::quiet_NaN()));
+      }
+      else
+      {
+        states_.emplace_back(hardware_interface::Variant(std::stod(itf.interface_info.initial_value)));
+      }
+    }
+    else if (itf.interface_info.data_type == "vec<bool>") // somewhere we should have "size"
+    {
+      states_.emplace_back(hardware_interface::Variant(std::vector<bool>().reserve(std::stoi(itf.interface_info.size))));
+    }
+
+    // .... and so on for other types
+
+    state_interfaces.emplace_back(StateInterface(
+      itf.joint_name, itf.interface_info.name, &states_.back()));
+  }
 }
 
 std::vector<CommandInterface> System::export_command_interfaces()
 {
+  // The same change as for state interfaces
+
   return impl_->export_command_interfaces();
 }
 
@@ -219,7 +282,7 @@ return_type System::read()
     impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
     impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
   {
-    result = impl_->read();
+    result = impl_->read(state_);
     if (result == return_type::ERROR)
     {
       error();
@@ -235,7 +298,7 @@ return_type System::write()
     impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
     impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
   {
-    result = impl_->write();
+    result = impl_->write(commands_);
     if (result == return_type::ERROR)
     {
       error();
