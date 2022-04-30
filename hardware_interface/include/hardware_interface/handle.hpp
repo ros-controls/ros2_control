@@ -86,11 +86,7 @@ public:
 
   virtual ~ReadWriteHandle() = default;
 
-  void set_value(double value)
-  {
-    THROW_ON_NULLPTR(this->value_ptr_);
-    *this->value_ptr_ = value;
-  }
+  void set_value(double value) { *this->value_ptr_ = value; }
 };
 
 class StateInterface : public ReadOnlyHandle
