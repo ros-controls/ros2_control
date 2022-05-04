@@ -23,6 +23,14 @@
 
 namespace joint_limits
 {
+/**
+ * JointLimits structure stores values from from yaml definition or `<limits>` tag in URDF.
+ * The mapping from URDF attributes to members is the following:
+ *   lower --> min_position
+ *   upper --> max_position
+ *   velocity --> max_velocity
+ *   effort --> max_effort
+ */
 struct JointLimits
 {
   JointLimits()
@@ -77,12 +85,12 @@ struct JointLimits
     if (has_jerk_limits)
     {
       ss_output << "  jerk limit: "
-                << "[" << max_acceleration << "]\n";
+                << "[" << max_jerk << "]\n";
     }
     if (has_effort_limits)
     {
       ss_output << "  effort limit: "
-                << "[" << max_acceleration << "]\n";
+                << "[" << max_effort << "]\n";
     }
     if (angle_wraparound)
     {
@@ -112,6 +120,10 @@ struct JointLimits
   }
 };
 
+/**
+ * SoftJointLimits stores values from the `<safety_controller>` tag of URDF.
+ * For details about meaning of each variable check here: https://wiki.ros.org/urdf/XML/joint
+ */
 struct SoftJointLimits
 {
   SoftJointLimits()
@@ -126,6 +138,24 @@ struct SoftJointLimits
   double max_position;
   double k_position;
   double k_velocity;
+
+  std::string to_string()
+  {
+    std::stringstream ss_output;
+
+    ss_output << "  soft position limits: "
+              << "[" << min_position << ", " << max_position << "]\n";
+
+    ss_output << "  k-position: "
+              << "[" << k_position << "]\n";
+
+    ss_output << "  k-velocity: "
+              << "[" << k_velocity << "]\n";
+
+    return ss_output.str();
+  }
+
+  std::string debug_to_string() { return to_string(); }
 };
 
 }  // namespace joint_limits

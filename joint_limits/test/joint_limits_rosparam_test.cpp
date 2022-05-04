@@ -14,17 +14,16 @@
 
 /// \author Adolfo Rodriguez Tsouroukdissian
 
-#include <gtest/gtest.h>
-
-#include <joint_limits_interface/joint_limits_rosparam.hpp>
-
-#include <rclcpp/rclcpp.hpp>
-
 #include <memory>
+
+#include "gtest/gtest.h"
+
+#include "joint_limits/joint_limits_rosparam.hpp"
+#include "rclcpp/rclcpp.hpp"
 
 class JointLimitsRosParamTest : public ::testing::Test
 {
-protected:
+public:
   void SetUp()
   {
     rclcpp::NodeOptions node_options;
@@ -34,16 +33,19 @@ protected:
     node_ = rclcpp::Node::make_shared("JointLimitsRosparamTestNode", node_options);
   }
 
+  void TearDown() { node_.reset(); }
+
+protected:
   rclcpp::Node::SharedPtr node_;
 };
 
-TEST_F(JointLimitsRosParamTest, GetJointLimits)
+TEST_F(JointLimitsRosParamTest, parse_joint_limits)
 {
   // Invalid specification
   {
-    joint_limits_interface::JointLimits limits;
-    EXPECT_FALSE(getJointLimits("bad_joint", node_, limits));
-    EXPECT_FALSE(getJointLimits("unknown_joint", node_, limits));
+    joint_limits::JointLimits limits;
+    EXPECT_FALSE(get_joint_limits("bad_joint", node_, limits));
+    EXPECT_FALSE(get_joint_limits("unknown_joint", node_, limits));
 
     EXPECT_FALSE(limits.has_position_limits);
     EXPECT_FALSE(limits.has_velocity_limits);
@@ -54,8 +56,8 @@ TEST_F(JointLimitsRosParamTest, GetJointLimits)
 
   // Get full specification from parameter server
   {
-    joint_limits_interface::JointLimits limits;
-    EXPECT_TRUE(getJointLimits("foo_joint", node_, limits));
+    joint_limits::JointLimits limits;
+    EXPECT_TRUE(get_joint_limits("foo_joint", node_, limits));
 
     EXPECT_TRUE(limits.has_position_limits);
     EXPECT_EQ(0.0, limits.min_position);
@@ -78,8 +80,8 @@ TEST_F(JointLimitsRosParamTest, GetJointLimits)
 
   // Specifying flags but not values should set nothing
   {
-    joint_limits_interface::JointLimits limits;
-    EXPECT_TRUE(getJointLimits("yinfoo_joint", node_, limits));
+    joint_limits::JointLimits limits;
+    EXPECT_TRUE(get_joint_limits("yinfoo_joint", node_, limits));
 
     EXPECT_FALSE(limits.has_position_limits);
     EXPECT_FALSE(limits.has_velocity_limits);
@@ -90,8 +92,8 @@ TEST_F(JointLimitsRosParamTest, GetJointLimits)
 
   // Specifying values but not flags should set nothing
   {
-    joint_limits_interface::JointLimits limits;
-    EXPECT_TRUE(getJointLimits("yangfoo_joint", node_, limits));
+    joint_limits::JointLimits limits;
+    EXPECT_TRUE(get_joint_limits("yangfoo_joint", node_, limits));
 
     EXPECT_FALSE(limits.has_position_limits);
     EXPECT_FALSE(limits.has_velocity_limits);
@@ -102,15 +104,15 @@ TEST_F(JointLimitsRosParamTest, GetJointLimits)
 
   // Disable already set values
   {
-    joint_limits_interface::JointLimits limits;
-    EXPECT_TRUE(getJointLimits("foo_joint", node_, limits));
+    joint_limits::JointLimits limits;
+    EXPECT_TRUE(get_joint_limits("foo_joint", node_, limits));
     EXPECT_TRUE(limits.has_position_limits);
     EXPECT_TRUE(limits.has_velocity_limits);
     EXPECT_TRUE(limits.has_acceleration_limits);
     EXPECT_TRUE(limits.has_jerk_limits);
     EXPECT_TRUE(limits.has_effort_limits);
 
-    EXPECT_TRUE(getJointLimits("antifoo_joint", node_, limits));
+    EXPECT_TRUE(get_joint_limits("antifoo_joint", node_, limits));
     EXPECT_FALSE(limits.has_position_limits);
     EXPECT_FALSE(limits.has_velocity_limits);
     EXPECT_FALSE(limits.has_acceleration_limits);
@@ -121,16 +123,16 @@ TEST_F(JointLimitsRosParamTest, GetJointLimits)
 
   // Incomplete position limits specification does not get loaded
   {
-    joint_limits_interface::JointLimits limits;
-    EXPECT_TRUE(getJointLimits("baz_joint", node_, limits));
+    joint_limits::JointLimits limits;
+    EXPECT_TRUE(get_joint_limits("baz_joint", node_, limits));
 
     EXPECT_FALSE(limits.has_position_limits);
   }
 
   // Override only one field, leave all others unchanged
   {
-    joint_limits_interface::JointLimits limits, limits_ref;
-    EXPECT_TRUE(getJointLimits("bar_joint", node_, limits));
+    joint_limits::JointLimits limits, limits_ref;
+    EXPECT_TRUE(get_joint_limits("bar_joint", node_, limits));
 
     EXPECT_EQ(limits_ref.has_position_limits, limits.has_position_limits);
     EXPECT_EQ(limits_ref.min_position, limits.min_position);
@@ -153,19 +155,19 @@ TEST_F(JointLimitsRosParamTest, GetJointLimits)
   }
 }
 
-TEST_F(JointLimitsRosParamTest, GetSoftJointLimits)
+TEST_F(JointLimitsRosParamTest, parse_soft_joint_limits)
 {
   // Invalid specification
   {
-    joint_limits_interface::SoftJointLimits soft_limits;
-    EXPECT_FALSE(getSoftJointLimits("bad_joint", node_, soft_limits));
-    EXPECT_FALSE(getSoftJointLimits("unknown_joint", node_, soft_limits));
+    joint_limits::SoftJointLimits soft_limits;
+    EXPECT_FALSE(get_joint_limits("bad_joint", node_, soft_limits));
+    EXPECT_FALSE(get_joint_limits("unknown_joint", node_, soft_limits));
   }
 
   // Get full specification from parameter server
   {
-    joint_limits_interface::SoftJointLimits soft_limits;
-    EXPECT_TRUE(getSoftJointLimits("foo_joint", node_, soft_limits));
+    joint_limits::SoftJointLimits soft_limits;
+    EXPECT_TRUE(get_joint_limits("foo_joint", node_, soft_limits));
 
     EXPECT_EQ(10.0, soft_limits.k_position);
     EXPECT_EQ(20.0, soft_limits.k_velocity);
@@ -175,14 +177,14 @@ TEST_F(JointLimitsRosParamTest, GetSoftJointLimits)
 
   // Skip parsing soft limits if has_soft_limits is false
   {
-    joint_limits_interface::SoftJointLimits soft_limits, soft_limits_ref;
-    EXPECT_FALSE(getSoftJointLimits("foobar_joint", node_, soft_limits));
+    joint_limits::SoftJointLimits soft_limits, soft_limits_ref;
+    EXPECT_FALSE(get_joint_limits("foobar_joint", node_, soft_limits));
   }
 
   // Incomplete soft limits specification does not get loaded
   {
-    joint_limits_interface::SoftJointLimits soft_limits, soft_limits_ref;
-    EXPECT_FALSE(getSoftJointLimits("barbaz_joint", node_, soft_limits));
+    joint_limits::SoftJointLimits soft_limits, soft_limits_ref;
+    EXPECT_FALSE(get_joint_limits("barbaz_joint", node_, soft_limits));
     EXPECT_EQ(soft_limits.k_position, soft_limits_ref.k_position);
     EXPECT_EQ(soft_limits.k_velocity, soft_limits_ref.k_velocity);
     EXPECT_EQ(soft_limits.min_position, soft_limits_ref.min_position);

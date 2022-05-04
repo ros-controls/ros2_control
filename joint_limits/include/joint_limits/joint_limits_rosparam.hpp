@@ -112,12 +112,13 @@ inline bool declare_parameters(const std::string & joint_name, const rclcpp::Nod
  *     max_effort: 20.0
  *   bar_joint:
  *     has_position_limits: false # Continuous joint
+ *     angle_wraparound: true
  *     has_velocity_limits: true
  *     max_velocity: 4.0
  * \endcode
  *
- * This specification is similar to the one used by <a href="http://moveit.ros.org/wiki/MoveIt!">MoveIt!</a>,
- * but additionally supports jerk and effort limits.
+ * This specification is similar to the one used by <a href="http://moveit.ros.org/">MoveIt2</a>,
+ * but additionally supports effort limits.
  *
  * \param[in] joint_name Name of joint whose limits are to be fetched.
  * \param[in] node NodeHandle where the joint limits are specified.
