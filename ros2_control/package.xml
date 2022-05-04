@@ -15,7 +15,6 @@
   <exec_depend>controller_manager_msgs</exec_depend>
   <exec_depend>hardware_interface</exec_depend>
   <exec_depend>joint_limits</exec_depend>
-  <exec_depend>ros2controlcli</exec_depend>
   <exec_depend>ros2_control_test_assets</exec_depend>
   <exec_depend>ros2controlcli</exec_depend>
   <exec_depend>transmission_interface</exec_depend>
