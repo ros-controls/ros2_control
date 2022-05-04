@@ -1,7 +1,7 @@
 <package format="3">
   <name>joint_limits</name>
   <version>0.0.0</version>
-  <description>Package for with interfaces for handling of joint limits for use in controllers or in hardware. It also implements a simple, default joint limit strategy by clamping the values.</description>
+  <description>Interfaces for handling of joint limits for controllers or hardware.</description>
 
   <maintainer email="bence.magyar.robotics@gmail.com">Bence Magyar</maintainer>
   <maintainer email="denis@stogl.de">Denis Štogl</maintainer>
