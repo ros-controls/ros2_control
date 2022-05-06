@@ -216,14 +216,14 @@ std::string Actuator::get_name() const { return impl_->get_name(); }
 
 const rclcpp_lifecycle::State & Actuator::get_state() const { return impl_->get_state(); }
 
-return_type Actuator::read()
+return_type Actuator::read(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
   return_type result = return_type::ERROR;
   if (
     impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
     impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
   {
-    result = impl_->read();
+    result = impl_->read(time, period);
     if (result == return_type::ERROR)
     {
       error();
@@ -232,14 +232,14 @@ return_type Actuator::read()
   return result;
 }
 
-return_type Actuator::write()
+return_type Actuator::write(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
   return_type result = return_type::ERROR;
   if (
     impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
     impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
   {
-    result = impl_->write();
+    result = impl_->write(time, period);
     if (result == return_type::ERROR)
     {
       error();

@@ -896,31 +896,31 @@ return_type ResourceManager::set_component_state(
   return result;
 }
 
-void ResourceManager::read()
+void ResourceManager::read(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
   for (auto & component : resource_storage_->actuators_)
   {
-    component.read();
+    component.read(time, period);
   }
   for (auto & component : resource_storage_->sensors_)
   {
-    component.read();
+    component.read(time, period);
   }
   for (auto & component : resource_storage_->systems_)
   {
-    component.read();
+    component.read(time, period);
   }
 }
 
-void ResourceManager::write()
+void ResourceManager::write(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
   for (auto & component : resource_storage_->actuators_)
   {
-    component.write();
+    component.write(time, period);
   }
   for (auto & component : resource_storage_->systems_)
   {
-    component.write();
+    component.write(time, period);
   }
 }
 

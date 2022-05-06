@@ -1339,7 +1339,10 @@ std::vector<std::string> ControllerManager::get_controller_names()
   return names;
 }
 
-void ControllerManager::read() { resource_manager_->read(); }
+void ControllerManager::read(const rclcpp::Time & time, const rclcpp::Duration & period)
+{
+  resource_manager_->read(time, period);
+}
 
 controller_interface::return_type ControllerManager::update(
   const rclcpp::Time & time, const rclcpp::Duration & period)
@@ -1390,7 +1393,10 @@ controller_interface::return_type ControllerManager::update(
   return ret;
 }
 
-void ControllerManager::write() { resource_manager_->write(); }
+void ControllerManager::write(const rclcpp::Time & time, const rclcpp::Duration & period)
+{
+  resource_manager_->write(time, period);
+}
 
 std::vector<ControllerSpec> &
 ControllerManager::RTControllerListWrapper::update_and_get_used_by_rt_list()

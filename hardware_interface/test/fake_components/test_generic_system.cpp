@@ -30,6 +30,12 @@
 #include "ros2_control_test_assets/components_urdfs.hpp"
 #include "ros2_control_test_assets/descriptions.hpp"
 
+namespace
+{
+const auto TIME = rclcpp::Time(0);
+const auto PERIOD = rclcpp::Duration::from_seconds(0.01);
+}  // namespace
+
 class TestGenericSystem : public ::testing::Test
 {
 protected:
@@ -581,7 +587,7 @@ void generic_system_functional_test(const std::string & urdf, const double offse
   ASSERT_EQ(0.44, j2v_c.get_value());
 
   // write() does not change values
-  rm.write();
+  rm.write(TIME, PERIOD);
   ASSERT_EQ(3.45, j1p_s.get_value());
   ASSERT_EQ(0.0, j1v_s.get_value());
   ASSERT_EQ(2.78, j2p_s.get_value());
@@ -592,7 +598,7 @@ void generic_system_functional_test(const std::string & urdf, const double offse
   ASSERT_EQ(0.44, j2v_c.get_value());
 
   // read() mirrors commands + offset to states
-  rm.read();
+  rm.read(TIME, PERIOD);
   ASSERT_EQ(0.11 + offset, j1p_s.get_value());
   ASSERT_EQ(0.22, j1v_s.get_value());
   ASSERT_EQ(0.33 + offset, j2p_s.get_value());
@@ -694,7 +700,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_other_interfaces)
   ASSERT_EQ(0.99, vo_c.get_value());
 
   // write() does not change values
-  rm.write();
+  rm.write(TIME, PERIOD);
   ASSERT_EQ(1.55, j1p_s.get_value());
   ASSERT_EQ(0.1, j1v_s.get_value());
   ASSERT_EQ(0.65, j2p_s.get_value());
@@ -705,7 +711,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_other_interfaces)
   ASSERT_EQ(0.99, vo_c.get_value());
 
   // read() mirrors commands to states
-  rm.read();
+  rm.read(TIME, PERIOD);
   ASSERT_EQ(0.11, j1p_s.get_value());
   ASSERT_EQ(0.1, j1v_s.get_value());
   ASSERT_EQ(0.33, j2p_s.get_value());
@@ -790,7 +796,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_sensor)
   ASSERT_EQ(0.33, j2p_c.get_value());
 
   // write() does not change values
-  rm.write();
+  rm.write(TIME, PERIOD);
   ASSERT_EQ(0.0, j1p_s.get_value());
   ASSERT_EQ(0.0, j1v_s.get_value());
   ASSERT_EQ(0.0, j2p_s.get_value());
@@ -803,7 +809,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_sensor)
   ASSERT_EQ(0.33, j2p_c.get_value());
 
   // read() mirrors commands to states
-  rm.read();
+  rm.read(TIME, PERIOD);
   ASSERT_EQ(0.11, j1p_s.get_value());
   ASSERT_EQ(0.0, j1v_s.get_value());
   ASSERT_EQ(0.33, j2p_s.get_value());
@@ -904,7 +910,7 @@ void test_generic_system_with_fake_sensor_commands(std::string urdf)
   ASSERT_EQ(4.44, sty_c.get_value());
 
   // write() does not change values
-  rm.write();
+  rm.write(TIME, PERIOD);
   ASSERT_EQ(0.0, j1p_s.get_value());
   ASSERT_EQ(0.0, j1v_s.get_value());
   ASSERT_EQ(0.0, j2p_s.get_value());
@@ -921,7 +927,7 @@ void test_generic_system_with_fake_sensor_commands(std::string urdf)
   ASSERT_EQ(4.44, sty_c.get_value());
 
   // read() mirrors commands to states
-  rm.read();
+  rm.read(TIME, PERIOD);
   ASSERT_EQ(0.11, j1p_s.get_value());
   ASSERT_EQ(0.0, j1v_s.get_value());
   ASSERT_EQ(0.33, j2p_s.get_value());
@@ -1003,7 +1009,7 @@ void test_generic_system_with_mimic_joint(std::string urdf)
   ASSERT_EQ(0.05, j1v_c.get_value());
 
   // write() does not change values
-  rm.write();
+  rm.write(TIME, PERIOD);
   ASSERT_EQ(1.57, j1p_s.get_value());
   ASSERT_EQ(0.0, j1v_s.get_value());
   ASSERT_EQ(0.0, j2p_s.get_value());
@@ -1012,7 +1018,7 @@ void test_generic_system_with_mimic_joint(std::string urdf)
   ASSERT_EQ(0.05, j1v_c.get_value());
 
   // read() mirrors commands to states
-  rm.read();
+  rm.read(TIME, PERIOD);
   ASSERT_EQ(0.11, j1p_s.get_value());
   ASSERT_EQ(0.05, j1v_s.get_value());
   ASSERT_EQ(-0.22, j2p_s.get_value());
@@ -1118,7 +1124,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_functionality_with_offset_custom_i
   ASSERT_EQ(0.44, j2v_c.get_value());
 
   // write() does not change values
-  rm.write();
+  rm.write(TIME, PERIOD);
   ASSERT_EQ(3.45, j1p_s.get_value());
   ASSERT_EQ(0.0, j1v_s.get_value());
   ASSERT_EQ(2.78, j2p_s.get_value());
@@ -1129,7 +1135,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_functionality_with_offset_custom_i
   ASSERT_EQ(0.44, j2v_c.get_value());
 
   // read() mirrors commands + offset to states
-  rm.read();
+  rm.read(TIME, PERIOD);
   ASSERT_EQ(0.11, j1p_s.get_value());
   ASSERT_EQ(0.11 + offset, c_j1p_s.get_value());
   ASSERT_EQ(0.22, j1v_s.get_value());
@@ -1237,14 +1243,14 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_)
   ASSERT_EQ(0.222, gpio2_vac_c.get_value());
 
   // write() does not change values
-  rm.write();
+  rm.write(TIME, PERIOD);
   ASSERT_TRUE(std::isnan(gpio1_a_o1_s.get_value()));
   ASSERT_TRUE(std::isnan(gpio2_vac_s.get_value()));
   ASSERT_EQ(0.111, gpio1_a_o1_c.get_value());
   ASSERT_EQ(0.222, gpio2_vac_c.get_value());
 
   // read() mirrors commands + offset to states
-  rm.read();
+  rm.read(TIME, PERIOD);
   ASSERT_EQ(0.111, gpio1_a_o1_s.get_value());
   ASSERT_EQ(0.222, gpio2_vac_s.get_value());
   ASSERT_EQ(0.111, gpio1_a_o1_c.get_value());
@@ -1353,7 +1359,7 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_fake_co
   ASSERT_EQ(2.22, gpio2_vac_c.get_value());
 
   // write() does not change values
-  rm.write();
+  rm.write(TIME, PERIOD);
   EXPECT_TRUE(std::isnan(gpio1_a_o1_s.get_value()));
   EXPECT_TRUE(std::isnan(gpio1_a_i1_s.get_value()));
   EXPECT_TRUE(std::isnan(gpio1_a_o2_s.get_value()));
@@ -1364,7 +1370,7 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_fake_co
   ASSERT_EQ(2.22, gpio2_vac_c.get_value());
 
   // read() mirrors commands to states
-  rm.read();
+  rm.read(TIME, PERIOD);
   ASSERT_EQ(0.11, gpio1_a_o1_s.get_value());
   ASSERT_EQ(0.33, gpio1_a_i1_s.get_value());
   ASSERT_EQ(1.11, gpio1_a_o2_s.get_value());

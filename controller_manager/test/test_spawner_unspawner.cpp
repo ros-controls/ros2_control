@@ -36,9 +36,9 @@ class TestLoadController : public ControllerManagerFixture<controller_manager::C
     ControllerManagerFixture::SetUp();
 
     update_timer_ = cm_->create_wall_timer(std::chrono::milliseconds(10), [&]() {
-      cm_->read();
-      cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
-      cm_->write();
+      cm_->read(TIME, PERIOD);
+      cm_->update(TIME, PERIOD);
+      cm_->write(TIME, PERIOD);
     });
 
     update_executor_ =

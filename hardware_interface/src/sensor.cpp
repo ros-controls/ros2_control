@@ -193,14 +193,14 @@ std::string Sensor::get_name() const { return impl_->get_name(); }
 
 const rclcpp_lifecycle::State & Sensor::get_state() const { return impl_->get_state(); }
 
-return_type Sensor::read()
+return_type Sensor::read(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
   return_type result = return_type::ERROR;
   if (
     impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
     impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
   {
-    result = impl_->read();
+    result = impl_->read(time, period);
     if (result == return_type::ERROR)
     {
       error();
