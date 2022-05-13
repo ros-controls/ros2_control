@@ -280,9 +280,17 @@ class ExternalComponent : public hardware_interface::ActuatorInterface
 
   std::string get_name() const override { return "ExternalComponent"; }
 
-  hardware_interface::return_type read() override { return hardware_interface::return_type::OK; }
+  hardware_interface::return_type read(
+    const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
+  {
+    return hardware_interface::return_type::OK;
+  }
 
-  hardware_interface::return_type write() override { return hardware_interface::return_type::OK; }
+  hardware_interface::return_type write(
+    const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
+  {
+    return hardware_interface::return_type::OK;
+  }
 };
 
 TEST_F(TestResourceManager, post_initialization_add_components)

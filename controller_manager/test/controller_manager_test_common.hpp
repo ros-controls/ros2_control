@@ -34,11 +34,14 @@
 #include "ros2_control_test_assets/descriptions.hpp"
 #include "test_controller_failed_init/test_controller_failed_init.hpp"
 
-constexpr auto STRICT = controller_manager_msgs::srv::SwitchController::Request::STRICT;
-constexpr auto BEST_EFFORT = controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT;
-
+namespace
+{
+const auto TIME = rclcpp::Time(0);
+const auto PERIOD = rclcpp::Duration::from_seconds(0.01);
+const auto STRICT = controller_manager_msgs::srv::SwitchController::Request::STRICT;
+const auto BEST_EFFORT = controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT;
 const auto TEST_CM_NAME = "test_controller_manager";
-
+}  // namespace
 // Strictness structure for parameterized tests - shared between different tests
 struct Strictness
 {
@@ -133,9 +136,9 @@ public:
   void SetUpSrvsCMExecutor()
   {
     update_timer_ = cm_->create_wall_timer(std::chrono::milliseconds(10), [&]() {
-      cm_->read();
-      cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
-      cm_->write();
+      cm_->read(TIME, PERIOD);
+      cm_->update(TIME, PERIOD);
+      cm_->write(TIME, PERIOD);
     });
 
     executor_->add_node(cm_);

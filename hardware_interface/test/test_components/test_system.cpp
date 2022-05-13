@@ -78,9 +78,15 @@ class TestSystem : public SystemInterface
     return command_interfaces;
   }
 
-  return_type read() override { return return_type::OK; }
+  return_type read(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
+  {
+    return return_type::OK;
+  }
 
-  return_type write() override { return return_type::OK; }
+  return_type write(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
+  {
+    return return_type::OK;
+  }
 
 private:
   std::array<double, 2> velocity_command_ = {0.0, 0.0};

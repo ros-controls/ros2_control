@@ -53,12 +53,13 @@ int main(int argc, char ** argv)
       end_period += period;
       std::this_thread::sleep_for(std::chrono::nanoseconds((end_period - cm->now()).nanoseconds()));
 
-      // execute "real-time" update loop
-      cm->read();
+      // execute update loop
+      auto period = current_time - previous_time;
+      cm->read(current_time, period);
       current_time = cm->now();
-      cm->update(current_time, current_time - previous_time);
+      cm->update(current_time, period);
       previous_time = current_time;
-      cm->write();
+      cm->write(current_time, period);
     }
   });
 

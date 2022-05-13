@@ -46,7 +46,10 @@ class TestSensor : public SensorInterface
     return state_interfaces;
   }
 
-  return_type read() override { return return_type::OK; }
+  return_type read(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
+  {
+    return return_type::OK;
+  }
 
 private:
   double velocity_state_ = 0.0;

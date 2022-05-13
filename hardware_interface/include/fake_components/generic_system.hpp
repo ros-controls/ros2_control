@@ -41,9 +41,12 @@ public:
 
   std::vector<hardware_interface::CommandInterface> export_command_interfaces() override;
 
-  return_type read() override;
+  return_type read(const rclcpp::Time & time, const rclcpp::Duration & period) override;
 
-  return_type write() override { return return_type::OK; }
+  return_type write(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
+  {
+    return return_type::OK;
+  }
 
 protected:
   /// Use standard interfaces for joints because they are relevant for dynamic behavior

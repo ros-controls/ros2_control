@@ -318,7 +318,7 @@ std::vector<hardware_interface::CommandInterface> GenericSystem::export_command_
   return command_interfaces;
 }
 
-return_type GenericSystem::read()
+return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
 {
   auto mirror_command_to_state = [](auto & states_, auto commands_, size_t start_index = 0) {
     for (size_t i = start_index; i < states_.size(); ++i)

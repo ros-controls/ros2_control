@@ -104,9 +104,17 @@ public:
     return command_interfaces;
   }
 
-  hardware_interface::return_type read() override { return hardware_interface::return_type::OK; }
+  hardware_interface::return_type read(
+    const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
+  {
+    return hardware_interface::return_type::OK;
+  }
 
-  hardware_interface::return_type write() override { return hardware_interface::return_type::OK; }
+  hardware_interface::return_type write(
+    const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
+  {
+    return hardware_interface::return_type::OK;
+  }
 
   hardware_interface::return_type prepare_command_mode_switch(
     const std::vector<std::string> & start_interfaces,

@@ -24,6 +24,8 @@
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
+#include "rclcpp/duration.hpp"
+#include "rclcpp/time.hpp"
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 #include "rclcpp_lifecycle/state.hpp"
 
@@ -115,7 +117,7 @@ public:
    *
    * \return return_type::OK if the read was successful, return_type::ERROR otherwise.
    */
-  virtual return_type read() = 0;
+  virtual return_type read(const rclcpp::Time & time, const rclcpp::Duration & period) = 0;
 
   /// Get name of the actuator hardware.
   /**
