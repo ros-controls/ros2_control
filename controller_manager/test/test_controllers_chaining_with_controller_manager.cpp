@@ -216,7 +216,7 @@ public:
 
   template <
     typename T, typename std::enable_if<
-                  std::is_convertible<T *, controller_interface::ControllerInterface *>::value,
+                  std::is_convertible<T *, controller_interface::ControllerInterfaceBase *>::value,
                   T>::type * = nullptr>
   void SetToChainedModeAndMakeReferenceInterfacesAvailable(
     std::shared_ptr<T> & controller, const std::string & controller_name,
@@ -236,7 +236,7 @@ public:
 
   template <
     typename T, typename std::enable_if<
-                  std::is_convertible<T *, controller_interface::ControllerInterface *>::value,
+                  std::is_convertible<T *, controller_interface::ControllerInterfaceBase *>::value,
                   T>::type * = nullptr>
   void check_after_de_activate(
     std::shared_ptr<T> & controller, const std::vector<std::string> & claimed_command_itfs,
@@ -273,7 +273,7 @@ public:
 
   template <
     typename T, typename std::enable_if<
-                  std::is_convertible<T *, controller_interface::ControllerInterface *>::value,
+                  std::is_convertible<T *, controller_interface::ControllerInterfaceBase *>::value,
                   T>::type * = nullptr>
   void ActivateAndCheckController(
     std::shared_ptr<T> & controller, const std::string & controller_name,
@@ -288,7 +288,7 @@ public:
 
   template <
     typename T, typename std::enable_if<
-                  std::is_convertible<T *, controller_interface::ControllerInterface *>::value,
+                  std::is_convertible<T *, controller_interface::ControllerInterfaceBase *>::value,
                   T>::type * = nullptr>
   void DeactivateAndCheckController(
     std::shared_ptr<T> & controller, const std::string & controller_name,

@@ -2,7 +2,7 @@
 
   <class name="controller_manager/test_chainable_controller"
          type="test_chainable_controller::TestChainableController"
-         base_class_type="controller_interface::ControllerInterface">
+         base_class_type="controller_interface::ControllerInterfaceBase">
     <description>
       Controller used for testing
     </description>

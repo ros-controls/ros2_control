@@ -53,7 +53,7 @@ public:
   /**
    * Controller is not chainable, therefore no chained mode can be set.
    *
-   * \returns false;
+   * \returns false.
    */
   CONTROLLER_INTERFACE_PUBLIC
   bool set_chained_mode(bool chained_mode) final;
