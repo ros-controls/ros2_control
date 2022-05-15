@@ -35,7 +35,7 @@ public:
   virtual ~ControllerInterface() = default;
 
   /**
-   * Controller is not chainable.
+   * Controller is no chainable.
    *
    * \returns false.
    */

@@ -30,7 +30,7 @@ bool ControllerInterface::is_chainable() const { return false; }
 
 std::vector<hardware_interface::CommandInterface> ControllerInterface::export_reference_interfaces()
 {
-  return std::vector<hardware_interface::CommandInterface>();
+  return {};
 }
 
 bool ControllerInterface::set_chained_mode(bool /*chained_mode*/) { return false; }
