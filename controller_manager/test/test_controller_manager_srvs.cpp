@@ -48,7 +48,10 @@ TEST_F(TestControllerManagerSrvs, list_controller_types)
   ASSERT_EQ(controller_types, result->base_classes.size());
   ASSERT_THAT(result->types, ::testing::Contains(test_controller::TEST_CONTROLLER_CLASS_NAME));
   ASSERT_THAT(
-    result->base_classes, ::testing::Contains("controller_interface::ControllerInterfaceBase"));
+    result->base_classes, ::testing::Contains("controller_interface::ControllerInterface"));
+  ASSERT_THAT(
+    result->base_classes,
+    ::testing::Contains("controller_interface::ChainableControllerInterface"));
 }
 
 TEST_F(TestControllerManagerSrvs, list_controllers_srv)

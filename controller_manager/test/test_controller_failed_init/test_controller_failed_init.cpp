@@ -49,5 +49,4 @@ controller_interface::return_type TestControllerFailedInit::update(
 #include "pluginlib/class_list_macros.hpp"
 
 PLUGINLIB_EXPORT_CLASS(
-  test_controller_failed_init::TestControllerFailedInit,
-  controller_interface::ControllerInterfaceBase)
+  test_controller_failed_init::TestControllerFailedInit, controller_interface::ControllerInterface)
