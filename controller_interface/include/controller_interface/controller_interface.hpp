@@ -57,6 +57,7 @@ public:
    */
   CONTROLLER_INTERFACE_PUBLIC
   bool set_chained_mode(bool chained_mode) final;
+
   /**
    * Controller can not be in chained mode.
    *

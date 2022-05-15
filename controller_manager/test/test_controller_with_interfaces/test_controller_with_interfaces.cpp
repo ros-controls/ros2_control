@@ -56,4 +56,4 @@ TestControllerWithInterfaces::on_cleanup(const rclcpp_lifecycle::State & /*previ
 
 PLUGINLIB_EXPORT_CLASS(
   test_controller_with_interfaces::TestControllerWithInterfaces,
-  controller_interface::ControllerInterface)
+  controller_interface::ControllerInterfaceBase)

@@ -17,7 +17,7 @@
 
 #include <vector>
 
-#include "controller_interface/controller_interface.hpp"
+#include "controller_interface/controller_interface_base.hpp"
 #include "controller_interface/visibility_control.h"
 #include "hardware_interface/handle.hpp"
 
@@ -31,7 +31,7 @@ namespace controller_interface
  * example inner controller of an control cascade.
  *
  */
-class ChainableControllerInterface : public ControllerInterface
+class ChainableControllerInterface : public ControllerInterfaceBase
 {
 public:
   CONTROLLER_INTERFACE_PUBLIC
@@ -43,6 +43,11 @@ public:
   CONTROLLER_INTERFACE_PUBLIC
   return_type update(const rclcpp::Time & time, const rclcpp::Duration & period) final;
 
+  /**
+   * Controller is chainable.
+   *
+   * \returns true;
+   */
   CONTROLLER_INTERFACE_PUBLIC
   bool is_chainable() const final;
 
@@ -75,7 +80,7 @@ protected:
    *
    * \param[in] flag marking a switch to or from chained mode.
    *
-   * \returns true if controller successfully switched between "chained" and "external" mode.
+   * \returns true if controller successfully switched between "chained" and "external" mode. \default returns true so the method don't have to be overridden if controller can always switch chained mode.
    */
   virtual bool on_set_chained_mode(bool chained_mode);
 
