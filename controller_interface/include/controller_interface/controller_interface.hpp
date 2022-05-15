@@ -35,7 +35,7 @@ public:
   virtual ~ControllerInterface() = default;
 
   /**
-   * Controller is no chainable.
+   * Controller is not chainable.
    *
    * \returns false.
    */
@@ -43,7 +43,7 @@ public:
   bool is_chainable() const final;
 
   /**
-   * Controller has not reference interfaces.
+   * Controller has no reference interfaces.
    *
    * \returns empty list.
    */
