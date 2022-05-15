@@ -20,7 +20,7 @@
 #include <utility>
 #include <vector>
 
-#include "controller_interface/controller_interface.hpp"
+#include "controller_interface/controller_interface_base.hpp"
 #include "controller_manager_msgs/msg/hardware_component_state.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
@@ -30,9 +30,9 @@
 namespace
 {  // utility
 
-static constexpr const char * kControllerInterfaceBaseName = "controller_interface";
-static constexpr const char * kControllerInterfaceBase =
-  "controller_interface::ControllerInterfaceBase";
+static constexpr const char * kControllerInterfaceNamespace = "controller_interface";
+static constexpr const char * kControllerInterfaceClassName =
+  "controller_interface::ControllerInterface";
 
 // Changed services history QoS to keep all so we don't lose any client service calls
 static const rmw_qos_profile_t rmw_qos_profile_services_hist_keep_all = {
@@ -92,8 +92,8 @@ ControllerManager::ControllerManager(
 : rclcpp::Node(manager_node_name, namespace_, get_cm_node_options()),
   resource_manager_(std::make_unique<hardware_interface::ResourceManager>()),
   executor_(executor),
-  loader_(std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterfaceBase>>(
-    kControllerInterfaceBaseName, kControllerInterfaceBase))
+  loader_(std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
+    kControllerInterfaceNamespace, kControllerInterfaceClassName))
 {
   if (!get_parameter("update_rate", update_rate_))
   {
@@ -119,8 +119,8 @@ ControllerManager::ControllerManager(
 : rclcpp::Node(manager_node_name, namespace_, get_cm_node_options()),
   resource_manager_(std::move(resource_manager)),
   executor_(executor),
-  loader_(std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterfaceBase>>(
-    kControllerInterfaceBaseName, kControllerInterfaceBase))
+  loader_(std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
+    kControllerInterfaceNamespace, kControllerInterfaceClassName))
 {
   init_services();
 }
@@ -243,7 +243,9 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_c
     return nullptr;
   }
 
-  auto controller = loader_->createSharedInstance(controller_type);
+  controller_interface::ControllerInterfaceBaseSharedPtr controller;
+  controller = loader_->createSharedInstance(controller_type);
+
   ControllerSpec controller_spec;
   controller_spec.c = controller;
   controller_spec.info.name = controller_name;
@@ -981,7 +983,7 @@ void ControllerManager::list_controller_types_srv_cb(
   for (const auto & cur_type : cur_types)
   {
     response->types.push_back(cur_type);
-    response->base_classes.push_back(kControllerInterfaceBase);
+    response->base_classes.push_back(kControllerInterfaceClassName);
     RCLCPP_DEBUG(get_logger(), "%s", cur_type.c_str());
   }
 
@@ -1173,11 +1175,11 @@ void ControllerManager::reload_controller_libraries_service_cb(
   assert(loaded_controllers.empty());
 
   // Force a reload on all the PluginLoaders (internally, this recreates the plugin loaders)
-  loader_ = std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterfaceBase>>(
-    kControllerInterfaceBaseName, kControllerInterfaceBase);
+  loader_ = std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
+    kControllerInterfaceNamespace, kControllerInterfaceClassName);
   RCLCPP_INFO(
     get_logger(), "Controller manager: reloaded controller libraries for '%s'",
-    kControllerInterfaceBaseName);
+    kControllerInterfaceNamespace);
 
   response->ok = true;
 

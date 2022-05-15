@@ -20,6 +20,7 @@
 #include <tuple>
 #include <vector>
 
+#include "controller_interface/controller_interface.hpp"
 #include "controller_interface/controller_interface_base.hpp"
 
 #include "controller_manager/controller_spec.hpp"
@@ -249,7 +250,7 @@ private:
 
   std::shared_ptr<rclcpp::Executor> executor_;
 
-  std::shared_ptr<pluginlib::ClassLoader<controller_interface::ControllerInterfaceBase>> loader_;
+  std::shared_ptr<pluginlib::ClassLoader<controller_interface::ControllerInterface>> loader_;
 
   /// Best effort (non real-time safe) callback group, e.g., service callbacks.
   /**
