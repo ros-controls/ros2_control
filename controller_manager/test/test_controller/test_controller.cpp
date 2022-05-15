@@ -111,5 +111,4 @@ void TestController::set_state_interface_configuration(
 
 #include "pluginlib/class_list_macros.hpp"
 
-PLUGINLIB_EXPORT_CLASS(
-  test_controller::TestController, controller_interface::ControllerInterfaceBase)
+PLUGINLIB_EXPORT_CLASS(test_controller::TestController, controller_interface::ControllerInterface)

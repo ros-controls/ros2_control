@@ -186,4 +186,5 @@ void TestChainableController::set_reference_interface_names(
 #include "pluginlib/class_list_macros.hpp"
 
 PLUGINLIB_EXPORT_CLASS(
-  test_chainable_controller::TestChainableController, controller_interface::ControllerInterfaceBase)
+  test_chainable_controller::TestChainableController,
+  controller_interface::ChainableControllerInterface)
