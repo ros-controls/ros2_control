@@ -12,6 +12,7 @@ find_package(rclcpp_lifecycle REQUIRED)
 add_library(
   controller_interface
   SHARED
+  src/controller_interface_base.cpp
   src/controller_interface.cpp
 )
 target_include_directories(

@@ -24,107 +24,17 @@
 
 namespace controller_interface
 {
-return_type ControllerInterface::init(
-  const std::string & controller_name, const std::string & namespace_,
-  const rclcpp::NodeOptions & node_options)
+ControllerInterface::ControllerInterface() : ControllerInterfaceBase() {}
+
+bool ControllerInterface::is_chainable() const { return false; }
+
+std::vector<hardware_interface::CommandInterface> ControllerInterface::export_reference_interfaces()
 {
-  node_ = std::make_shared<rclcpp_lifecycle::LifecycleNode>(
-    controller_name, namespace_, node_options, false);  // disable LifecycleNode service interfaces
-
-  try
-  {
-    auto_declare<int>("update_rate", 0);
-  }
-  catch (const std::exception & e)
-  {
-    fprintf(stderr, "Exception thrown during init stage with message: %s \n", e.what());
-    return return_type::ERROR;
-  }
-
-  switch (on_init())
-  {
-    case LifecycleNodeInterface::CallbackReturn::SUCCESS:
-      break;
-    case LifecycleNodeInterface::CallbackReturn::ERROR:
-    case LifecycleNodeInterface::CallbackReturn::FAILURE:
-      return return_type::ERROR;
-  }
-
-  node_->register_on_configure(
-    std::bind(&ControllerInterface::on_configure, this, std::placeholders::_1));
-
-  node_->register_on_cleanup(
-    std::bind(&ControllerInterface::on_cleanup, this, std::placeholders::_1));
-
-  node_->register_on_activate(
-    std::bind(&ControllerInterface::on_activate, this, std::placeholders::_1));
-
-  node_->register_on_deactivate(
-    std::bind(&ControllerInterface::on_deactivate, this, std::placeholders::_1));
-
-  node_->register_on_shutdown(
-    std::bind(&ControllerInterface::on_shutdown, this, std::placeholders::_1));
-
-  node_->register_on_error(std::bind(&ControllerInterface::on_error, this, std::placeholders::_1));
-
-  return return_type::OK;
+  return {};
 }
 
-const rclcpp_lifecycle::State & ControllerInterface::configure()
-{
-  // TODO(destogl): this should actually happen in "on_configure" but I am not sure how to get
-  // overrides correctly in combination with std::bind. The goal is to have the following calls:
-  // 1. CM: controller.get_node()->configure()
-  // 2. LifecycleNode: ControllerInterface::on_configure()
-  // 3. ControllerInterface: <controller>::on_configure()
-  // Then we don't need to do state-machine related checks.
-  //
-  // Other solution is to add check into the LifecycleNode if a transition is valid to trigger
-  if (get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
-  {
-    update_rate_ = get_node()->get_parameter("update_rate").as_int();
-  }
+bool ControllerInterface::set_chained_mode(bool /*chained_mode*/) { return false; }
 
-  return get_node()->configure();
-}
-
-void ControllerInterface::assign_interfaces(
-  std::vector<hardware_interface::LoanedCommandInterface> && command_interfaces,
-  std::vector<hardware_interface::LoanedStateInterface> && state_interfaces)
-{
-  command_interfaces_ = std::forward<decltype(command_interfaces)>(command_interfaces);
-  state_interfaces_ = std::forward<decltype(state_interfaces)>(state_interfaces);
-}
-
-void ControllerInterface::release_interfaces()
-{
-  command_interfaces_.clear();
-  state_interfaces_.clear();
-}
-
-const rclcpp_lifecycle::State & ControllerInterface::get_state() const
-{
-  return node_->get_current_state();
-}
-
-std::shared_ptr<rclcpp_lifecycle::LifecycleNode> ControllerInterface::get_node()
-{
-  if (!node_.get())
-  {
-    throw std::runtime_error("Lifecycle node hasn't been initialized yet!");
-  }
-  return node_;
-}
-
-std::shared_ptr<rclcpp_lifecycle::LifecycleNode> ControllerInterface::get_node() const
-{
-  if (!node_.get())
-  {
-    throw std::runtime_error("Lifecycle node hasn't been initialized yet!");
-  }
-  return node_;
-}
-
-unsigned int ControllerInterface::get_update_rate() const { return update_rate_; }
+bool ControllerInterface::is_in_chained_mode() const { return false; }
 
 }  // namespace controller_interface

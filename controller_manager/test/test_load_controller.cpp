@@ -76,7 +76,7 @@ TEST_F(TestLoadController, can_set_and_get_non_default_update_rate)
 class TestLoadedController : public TestLoadController
 {
 public:
-  controller_interface::ControllerInterfaceSharedPtr controller_if{nullptr};
+  controller_interface::ControllerInterfaceBaseSharedPtr controller_if{nullptr};
 
   void SetUp() override
   {
@@ -363,8 +363,8 @@ class TestTwoLoadedControllers : public TestLoadController,
                                  public testing::WithParamInterface<Strictness>
 {
 public:
-  controller_interface::ControllerInterfaceSharedPtr controller_if1{nullptr};
-  controller_interface::ControllerInterfaceSharedPtr controller_if2{nullptr};
+  controller_interface::ControllerInterfaceBaseSharedPtr controller_if1{nullptr};
+  controller_interface::ControllerInterfaceBaseSharedPtr controller_if2{nullptr};
 
   void SetUp() override
   {

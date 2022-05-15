@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "controller_interface/controller_interface.hpp"
+#include "controller_interface/controller_interface_base.hpp"
 
 #include "controller_manager/controller_spec.hpp"
 #include "controller_manager/visibility_control.h"
@@ -73,7 +74,7 @@ public:
   void init_resource_manager(const std::string & robot_description);
 
   CONTROLLER_MANAGER_PUBLIC
-  controller_interface::ControllerInterfaceSharedPtr load_controller(
+  controller_interface::ControllerInterfaceBaseSharedPtr load_controller(
     const std::string & controller_name, const std::string & controller_type);
 
   /// load_controller loads a controller by name, the type must be defined in the parameter server.
@@ -83,7 +84,7 @@ public:
    * \see Documentation in controller_manager_msgs/LoadController.srv
    */
   CONTROLLER_MANAGER_PUBLIC
-  controller_interface::ControllerInterfaceSharedPtr load_controller(
+  controller_interface::ControllerInterfaceBaseSharedPtr load_controller(
     const std::string & controller_name);
 
   CONTROLLER_MANAGER_PUBLIC
@@ -94,9 +95,9 @@ public:
 
   template <
     typename T, typename std::enable_if<
-                  std::is_convertible<T *, controller_interface::ControllerInterface *>::value,
+                  std::is_convertible<T *, controller_interface::ControllerInterfaceBase *>::value,
                   T>::type * = nullptr>
-  controller_interface::ControllerInterfaceSharedPtr add_controller(
+  controller_interface::ControllerInterfaceBaseSharedPtr add_controller(
     std::shared_ptr<T> controller, const std::string & controller_name,
     const std::string & controller_type)
   {
@@ -158,7 +159,7 @@ protected:
   void init_services();
 
   CONTROLLER_MANAGER_PUBLIC
-  controller_interface::ControllerInterfaceSharedPtr add_controller_impl(
+  controller_interface::ControllerInterfaceBaseSharedPtr add_controller_impl(
     const ControllerSpec & controller);
 
   CONTROLLER_MANAGER_PUBLIC
