@@ -75,6 +75,7 @@ class TestActuator : public ActuatorInterface
 
   return_type read(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
   {
+    velocity_state_ = velocity_command_ / 2;
     return return_type::OK;
   }
 

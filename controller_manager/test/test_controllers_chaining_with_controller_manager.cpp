@@ -313,7 +313,7 @@ public:
     position_tracking_controller->external_commands_for_testing_[1] = reference[1];
 
     cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
-    cm_->resource_manager_->read();
+    cm_->resource_manager_->read(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
 
     // check if all controllers are updated
     ASSERT_EQ(position_tracking_controller->internal_counter, exp_internal_counter_pos_ctrl);
@@ -494,7 +494,7 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers)
   ASSERT_EQ(pid_right_wheel_controller->internal_counter, 6u);
 
   // update hardware ('read' is  sufficient for test hardware)
-  cm_->resource_manager_->read();
+  cm_->resource_manager_->read(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
   // 32 - 0
   EXP_LEFT_WHEEL_CMD = chained_ctrl_calculation(EXP_LEFT_WHEEL_REF, EXP_LEFT_WHEEL_HW_STATE);
   // 32 / 2
