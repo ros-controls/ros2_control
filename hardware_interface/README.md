@@ -1,11 +1,11 @@
 robot agnostic hardware_interface package.
 This package will eventually be moved into its own repo.
 
-## Suggestions for `hardware_interface` implementation
+## Best practice for `hardware_interface` implementation
 In the following section you can find some advices which will help you implement interface
 for your specific hardware.
 
-### Suggestions for having different update rate for each `hardware_interface` by counting loops
+### Best practice for having different update rate for each `hardware_interface` by counting loops
 Current implementation of [ros2_control main node](https://github.com/ros-controls/ros2_control/blob/master/controller_manager/src/ros2_control_node.cpp)
 has one update rate that controls the rate of the [`read()`](https://github.com/ros-controls/ros2_control/blob/fe462926416d527d1da163bc3eabd02ee1de9be9/hardware_interface/include/hardware_interface/system_interface.hpp#L169) and [`write()`](https://github.com/ros-controls/ros2_control/blob/fe462926416d527d1da163bc3eabd02ee1de9be9/hardware_interface/include/hardware_interface/system_interface.hpp#L178)
 calls in [`hardware_interface(s)`](https://github.com/ros-controls/ros2_control/blob/master/hardware_interface/include/hardware_interface/system_interface.hpp).
@@ -88,10 +88,9 @@ hardware_interface::return_type MySystemHardware::read(const rclcpp::Time & time
   ++update_loop_counter_;
   update_loop_counter_ %= main_loop_update_rate_;
 }
-
 ```
 
-### Suggestions for having different update rate for each `hardware_interface` by measuring elapsed time
+### Best practice for having different update rate for each `hardware_interface` by measuring elapsed time
 Another way to decide if hardware communication should be executed in the`read(const rclcpp::Time & time, const rclcpp::Duration & period)` and/or
 `write(const rclcpp::Time & time, const rclcpp::Duration & period)` implementations is to measure elapsed time since last pass:
 
