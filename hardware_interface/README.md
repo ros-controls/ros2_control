@@ -47,8 +47,8 @@ hardware_interface::CallbackReturn MySystemHardware::on_init(
   }
 
   //   declaration in *.hpp file --> unsigned int main_loop_update_rate_, desired_hw_update_rate_ = 100 ;
-  main_loop_update_rate_ = stoi(info_.hardware_parameters["example_param_hw_start_duration_sec"]);
-  desired_hw_update_rate_ = stoi(info_.hardware_parameters["example_param_hw_stop_duration_sec"]);
+  main_loop_update_rate_ = stoi(info_.hardware_parameters["main_loop_update_rate"]);
+  desired_hw_update_rate_ = stoi(info_.hardware_parameters["desired_hw_update_rate"]);
 
   ...
 }
