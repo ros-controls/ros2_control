@@ -140,3 +140,21 @@ TEST(TestableControllerInterfaceInitFailure, init_with_failure)
 
   rclcpp::shutdown();
 }
+
+TEST(TestableControllerInterface, default_returns_for_chainable_controllers_methods)
+{
+  char const * const argv[] = {""};
+  int argc = arrlen(argv);
+  rclcpp::init(argc, argv);
+
+  TestableControllerInterface controller;
+
+  EXPECT_FALSE(controller.is_chainable());
+  EXPECT_TRUE(controller.export_reference_interfaces().empty());
+  EXPECT_FALSE(controller.set_chained_mode(true));
+  EXPECT_FALSE(controller.is_in_chained_mode());
+  EXPECT_FALSE(controller.set_chained_mode(false));
+  EXPECT_FALSE(controller.is_in_chained_mode());
+
+  rclcpp::shutdown();
+}

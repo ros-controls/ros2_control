@@ -33,6 +33,8 @@ namespace
 static constexpr const char * kControllerInterfaceNamespace = "controller_interface";
 static constexpr const char * kControllerInterfaceClassName =
   "controller_interface::ControllerInterface";
+static constexpr const char * kChainableControllerInterfaceClassName =
+  "controller_interface::ChainableControllerInterface";
 
 // Changed services history QoS to keep all so we don't lose any client service calls
 static const rmw_qos_profile_t rmw_qos_profile_services_hist_keep_all = {
@@ -93,7 +95,10 @@ ControllerManager::ControllerManager(
   resource_manager_(std::make_unique<hardware_interface::ResourceManager>()),
   executor_(executor),
   loader_(std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
-    kControllerInterfaceNamespace, kControllerInterfaceClassName))
+    kControllerInterfaceNamespace, kControllerInterfaceClassName)),
+  chainable_loader_(
+    std::make_shared<pluginlib::ClassLoader<controller_interface::ChainableControllerInterface>>(
+      kControllerInterfaceNamespace, kChainableControllerInterfaceClassName))
 {
   if (!get_parameter("update_rate", update_rate_))
   {
@@ -120,7 +125,10 @@ ControllerManager::ControllerManager(
   resource_manager_(std::move(resource_manager)),
   executor_(executor),
   loader_(std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
-    kControllerInterfaceNamespace, kControllerInterfaceClassName))
+    kControllerInterfaceNamespace, kControllerInterfaceClassName)),
+  chainable_loader_(
+    std::make_shared<pluginlib::ClassLoader<controller_interface::ChainableControllerInterface>>(
+      kControllerInterfaceNamespace, kChainableControllerInterfaceClassName))
 {
   init_services();
 }
@@ -232,7 +240,9 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_c
 {
   RCLCPP_INFO(get_logger(), "Loading controller '%s'", controller_name.c_str());
 
-  if (!loader_->isClassAvailable(controller_type))
+  if (
+    !loader_->isClassAvailable(controller_type) &&
+    !chainable_loader_->isClassAvailable(controller_type))
   {
     RCLCPP_ERROR(get_logger(), "Loader for controller '%s' not found.", controller_name.c_str());
     RCLCPP_INFO(get_logger(), "Available classes:");
@@ -240,11 +250,23 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_c
     {
       RCLCPP_INFO(get_logger(), "  %s", available_class.c_str());
     }
+    for (const auto & available_class : chainable_loader_->getDeclaredClasses())
+    {
+      RCLCPP_INFO(get_logger(), "  %s", available_class.c_str());
+    }
     return nullptr;
   }
 
   controller_interface::ControllerInterfaceBaseSharedPtr controller;
-  controller = loader_->createSharedInstance(controller_type);
+
+  if (loader_->isClassAvailable(controller_type))
+  {
+    controller = loader_->createSharedInstance(controller_type);
+  }
+  if (chainable_loader_->isClassAvailable(controller_type))
+  {
+    controller = chainable_loader_->createSharedInstance(controller_type);
+  }
 
   ControllerSpec controller_spec;
   controller_spec.c = controller;
@@ -986,6 +1008,13 @@ void ControllerManager::list_controller_types_srv_cb(
     response->base_classes.push_back(kControllerInterfaceClassName);
     RCLCPP_DEBUG(get_logger(), "%s", cur_type.c_str());
   }
+  cur_types = chainable_loader_->getDeclaredClasses();
+  for (const auto & cur_type : cur_types)
+  {
+    response->types.push_back(cur_type);
+    response->base_classes.push_back(kChainableControllerInterfaceClassName);
+    RCLCPP_DEBUG(get_logger(), "%s", cur_type.c_str());
+  }
 
   RCLCPP_DEBUG(get_logger(), "list types service finished");
 }
@@ -1177,6 +1206,9 @@ void ControllerManager::reload_controller_libraries_service_cb(
   // Force a reload on all the PluginLoaders (internally, this recreates the plugin loaders)
   loader_ = std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
     kControllerInterfaceNamespace, kControllerInterfaceClassName);
+  chainable_loader_ =
+    std::make_shared<pluginlib::ClassLoader<controller_interface::ChainableControllerInterface>>(
+      kControllerInterfaceNamespace, kChainableControllerInterfaceClassName);
   RCLCPP_INFO(
     get_logger(), "Controller manager: reloaded controller libraries for '%s'",
     kControllerInterfaceNamespace);
