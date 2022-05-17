@@ -23,7 +23,7 @@
 
 namespace controller_interface
 {
-/// Virtual class to implement when integrating a controller that can be preceded by another
+/// Virtual class to implement when integrating a controller that can be preceded by other
 /// controllers.
 /**
  * Specialization of ControllerInterface class to force implementation of methods specific for
@@ -43,11 +43,6 @@ public:
   CONTROLLER_INTERFACE_PUBLIC
   return_type update(const rclcpp::Time & time, const rclcpp::Duration & period) final;
 
-  /**
-   * Controller is chainable.
-   *
-   * \returns true;
-   */
   CONTROLLER_INTERFACE_PUBLIC
   bool is_chainable() const final;
 
@@ -111,7 +106,7 @@ protected:
   std::vector<double> reference_interfaces_;
 
 private:
-  /// A flag marking is a chainable controller is currently preceded by another controller.
+  /// A flag marking if a chainable controller is currently preceded by another controller.
   bool in_chained_mode_ = false;
 };
 
