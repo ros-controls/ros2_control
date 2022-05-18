@@ -434,6 +434,17 @@ public:
     hardware_info_map_[hardware.get_name()].command_interfaces = add_command_interfaces(interfaces);
   }
 
+  /// Adds exported command interfaces into internal storage.
+  /**
+   * Add command interfaces to the internal storage. Command interfaces exported from hardware or
+   * chainable controllers are moved to the map with name-interface pairs, the interface names are
+   * added to the claimed map and available list's size is increased to reserve storage when
+   * interface change theirs status in real-time control loop.
+   *
+   * \param[interfaces] list of command interface to add into storage.
+   * \returns list of interface names that are added into internal storage. The output is used to
+   * avoid additional iterations to cache interface names, e.g., for initializing info structures.
+   */
   std::vector<std::string> add_command_interfaces(std::vector<CommandInterface> & interfaces)
   {
     std::vector<std::string> interface_names;
@@ -451,6 +462,12 @@ public:
     return interface_names;
   }
 
+  /// Removes command interfaces from internal storage.
+  /**
+   * Command interface are removed from the maps with theirs storage and their claimed status.
+   *
+   * \param[interface_names] list of command interface names to remove from storage.
+   */
   void remove_command_interfaces(const std::vector<std::string> & interface_names)
   {
     for (const auto & interface : interface_names)
