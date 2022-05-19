@@ -2,6 +2,16 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Adding base class for chained controllers: `ChainedControllersInterface` (`#663 <https://github.com/ros-controls/ros2_control/issues/663>`_)
+  * Extending ControllerInterface with methods for chainable controllers.
+  * Switching to chained_mode is only forbidden if controller is active.
+  * Default implementation for 'on_set_chained_mode' method.
+  * Use two internal methods instead of 'update' directly on chained controllers.
+* Add ControllerInterfaceBase class with methods for chainable controller (`#717 <https://github.com/ros-controls/ros2_control/issues/717>`_)
+* Contributors: Denis Štogl
+
 2.8.0 (2022-05-13)
 ------------------
 
