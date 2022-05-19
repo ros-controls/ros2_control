@@ -2,8 +2,8 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.9.0 (2022-05-19)
+------------------
 * Resource Manager extension to support management of reference interfaces from chained controllers. (`#664 <https://github.com/ros-controls/ros2_control/issues/664>`_)
   * Extend resource manager to manage reference interfaces from controllers.
   * Adjust interface between CM and RM for managing controllers' reference interfaces.
