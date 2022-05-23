@@ -66,7 +66,7 @@ bool get_ordered_interfaces(
   return ordered_names.size() == ordered_interfaces.size();
 }
 
-bool interface_list_contains_interface_type(
+inline bool interface_list_contains_interface_type(
   const std::vector<std::string> & interface_type_list, const std::string & interface_type)
 {
   return std::find(interface_type_list.begin(), interface_type_list.end(), interface_type) !=
