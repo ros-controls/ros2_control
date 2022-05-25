@@ -99,14 +99,6 @@ public:
     component_info.type = hardware_info.type;
     component_info.class_type = hardware_info.hardware_class_type;
 
-    // Check for identical names
-    if (hardware_info_map_.find(hardware_info.name) != hardware_info_map_.end())
-    {
-      throw std::runtime_error(
-        "Hardware name " + hardware_info.name +
-        " is duplicated. Please provide a unique 'name' in the URDF.");
-    }
-
     hardware_info_map_.insert(std::make_pair(component_info.name, component_info));
   }
 
@@ -477,24 +469,38 @@ public:
     }
   }
 
-  // TODO(destogl): Propagate "false" up, if happens in initialize_hardware
-  void initialize_actuator(const HardwareInfo & hardware_info)
+  void check_for_duplicates(const HardwareInfo & hardware_info)
   {
+    // Check for identical names
+    if (hardware_info_map_.find(hardware_info.name) != hardware_info_map_.end())
+    {
+      throw std::runtime_error(
+        "Hardware name " + hardware_info.name +
+        " is duplicated. Please provide a unique 'name' in the URDF.");
+    }
+  }
+
+  // TODO(destogl): Propagate "false" up, if happens in initialize_hardware
+  void load_and_initialize_actuator(const HardwareInfo & hardware_info)
+  {
+    check_for_duplicates(hardware_info);
     load_hardware<Actuator, ActuatorInterface>(hardware_info, actuator_loader_, actuators_);
     initialize_hardware(hardware_info, actuators_.back());
     import_state_interfaces(actuators_.back());
     import_command_interfaces(actuators_.back());
   }
 
-  void initialize_sensor(const HardwareInfo & hardware_info)
+  void load_and_initialize_sensor(const HardwareInfo & hardware_info)
   {
+    check_for_duplicates(hardware_info);
     load_hardware<Sensor, SensorInterface>(hardware_info, sensor_loader_, sensors_);
     initialize_hardware(hardware_info, sensors_.back());
     import_state_interfaces(sensors_.back());
   }
 
-  void initialize_system(const HardwareInfo & hardware_info)
+  void load_and_initialize_system(const HardwareInfo & hardware_info)
   {
+    check_for_duplicates(hardware_info);
     load_hardware<System, SystemInterface>(hardware_info, system_loader_, systems_);
     initialize_hardware(hardware_info, systems_.back());
     import_state_interfaces(systems_.back());
@@ -587,18 +593,18 @@ void ResourceManager::load_urdf(const std::string & urdf, bool validate_interfac
     {
       std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
       std::lock_guard<std::recursive_mutex> guard_claimed(claimed_command_interfaces_lock_);
-      resource_storage_->initialize_actuator(individual_hardware_info);
+      resource_storage_->load_and_initialize_actuator(individual_hardware_info);
     }
     if (individual_hardware_info.type == sensor_type)
     {
       std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
-      resource_storage_->initialize_sensor(individual_hardware_info);
+      resource_storage_->load_and_initialize_sensor(individual_hardware_info);
     }
     if (individual_hardware_info.type == system_type)
     {
       std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
       std::lock_guard<std::recursive_mutex> guard_claimed(claimed_command_interfaces_lock_);
-      resource_storage_->initialize_system(individual_hardware_info);
+      resource_storage_->load_and_initialize_system(individual_hardware_info);
     }
   }
 
