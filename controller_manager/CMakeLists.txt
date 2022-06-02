@@ -170,6 +170,17 @@ if(BUILD_TESTING)
     controller_manager_msgs
     ros2_control_test_assets
   )
+
+  ament_add_gtest(
+    test_control_loop
+    test/test_control_loop.cpp
+  )
+  target_include_directories(test_control_loop PRIVATE include)
+  target_link_libraries(test_control_loop controller_manager)
+  ament_target_dependencies(
+    test_control_loop
+    rclcpp
+  )
 endif()
 
 # Install Python modules

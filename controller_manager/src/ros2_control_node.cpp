@@ -18,10 +18,17 @@
 #include <string>
 #include <thread>
 
+#include "controller_manager/control_loop.hpp"
 #include "controller_manager/controller_manager.hpp"
 #include "rclcpp/rclcpp.hpp"
 
 using namespace std::chrono_literals;
+
+void sleep_until(rclcpp::Time time)
+{
+  std::this_thread::sleep_until(
+    std::chrono::system_clock::time_point(std::chrono::nanoseconds(time.nanoseconds())));
+}
 
 int main(int argc, char ** argv)
 {
@@ -42,28 +49,27 @@ int main(int argc, char ** argv)
     {
       RCLCPP_INFO(cm->get_logger(), "update rate is %d Hz", cm->get_update_rate());
 
-      rclcpp::Time current_time = cm->now();
-      rclcpp::Time previous_time = current_time;
-      rclcpp::Time end_period = current_time;
-
       // Use nanoseconds to avoid chrono's rounding
-      rclcpp::Duration period(std::chrono::nanoseconds(1000000000 / cm->get_update_rate()));
+      auto const period = std::chrono::nanoseconds(1'000'000'000 / cm->get_update_rate());
 
-      while (rclcpp::ok())
+      // Functions for control loop
+      auto const now = [&cm]() { return cm->now(); };
+      auto const sleep_until = [](rclcpp::Time time)
       {
-        // wait until we hit the end of the period
-        end_period += period;
-        std::this_thread::sleep_for(
-          std::chrono::nanoseconds((end_period - cm->now()).nanoseconds()));
-
-        // execute update loop
-        auto period = current_time - previous_time;
-        cm->read(current_time, period);
-        current_time = cm->now();
-        cm->update(current_time, period);
-        previous_time = current_time;
+        std::this_thread::sleep_until(
+          std::chrono::system_clock::time_point(std::chrono::nanoseconds(time.nanoseconds())));
+      };
+      auto const ok = []() { return rclcpp::ok(); };
+      auto const do_work = [&cm](rclcpp::Time current_time, rclcpp::Duration period)
+      {
+        // Write is called first as the consistent rate or writing to hardware
+        // should not be affected by the time it takes to call update and read
         cm->write(current_time, period);
-      }
+        cm->update(current_time, period);
+        cm->read(current_time, period);
+      };
+
+      ControlLoop(period, now, ok, do_work, sleep_until);
     });
 
   executor->add_node(cm);
