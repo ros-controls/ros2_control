@@ -12,46 +12,59 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "controller_manager/control_loop.hpp"
-
 #include <chrono>
 #include <numeric>
 #include <thread>
 #include <vector>
 
-#include <gtest/gtest.h>
+#include "gtest/gtest.h"
 
 #include "rclcpp/clock.hpp"
+#include "rclcpp/duration.hpp"
 #include "rclcpp/time.hpp"
+
+#include "controller_manager/control_loop.hpp"
 
 using namespace std::literals;
 
 namespace
 {
-rclcpp::Time now()
+// Fake clock is used to inject a counter based clock into these tests
+// The advantage of this over using system clock with real sleeps and now
+// calls is that the test passing does not depend on the performance of the
+// system it is running on. Also, as there are no actual sleeps in these
+// tests (only simulated ones), the test runs blazingly fast.
+class FakeClock
 {
-  thread_local auto clock = rclcpp::Clock{};
-  return clock.now();
-}
+  rclcpp::Time state_ = rclcpp::Time{0};
 
-void sleep_until(rclcpp::Time time)
-{
-  std::this_thread::sleep_until(
-    std::chrono::system_clock::time_point(std::chrono::nanoseconds(time.nanoseconds())));
-}
+public:
+  rclcpp::Time now() { return state_; }
+  void sleep_until(rclcpp::Time time)
+  {
+    if (time > state_)
+    {
+      state_ = time;
+    }
+  }
+  void sleep_for(rclcpp::Duration duration) { state_ += duration; }
+};
 
 }  // namespace
 
 TEST(TestControlLoop, ExitsWhenNotOk)
 {
+  auto fake_clock = FakeClock{};
   auto work_count = 0;
   auto do_work = [&work_count](rclcpp::Time, rclcpp::Duration) { work_count++; };
 
   // GIVEN ok function that returns false
   auto ok = []() { return false; };
+  auto now = [&fake_clock]() { return fake_clock.now(); };
+  auto sleep_until = [&fake_clock](auto time) { fake_clock.sleep_until(time); };
 
   // WHEN we run the ControlLoop
-  ControlLoop(1000ns, now, ok, do_work, sleep_until);
+  ControlLoop(10ns, now, ok, do_work, sleep_until);
 
   // THEN we expect do_work was never called, so the work_count should be 0
   EXPECT_EQ(work_count, 0);
@@ -59,6 +72,7 @@ TEST(TestControlLoop, ExitsWhenNotOk)
 
 TEST(TestControlLoop, AverageReportedDurationMatchesPeriod)
 {
+  auto fake_clock = FakeClock{};
   auto loop_iterations = 0;
   auto ok = [&loop_iterations]() {
     loop_iterations++;
@@ -70,20 +84,23 @@ TEST(TestControlLoop, AverageReportedDurationMatchesPeriod)
   auto do_work = [&durations](rclcpp::Time, rclcpp::Duration duration) {
     durations.push_back(duration);
   };
+  auto now = [&fake_clock]() { return fake_clock.now(); };
+  auto sleep_until = [&fake_clock](auto time) { fake_clock.sleep_until(time); };
 
   // WHEN we run the ControlLoop
-  ControlLoop(10'000'000ns, now, ok, do_work, sleep_until);
+  ControlLoop(10ns, now, ok, do_work, sleep_until);
 
-  // THEN we expect the average duration to be close to the period
-  // accurate to 0.1ms. The period we set was 10ms.
+  // THEN we expect the average duration to be the period
+  // Note that we exclude the first duration from the average as it is 0
   auto const average_duration = std::chrono::nanoseconds{
     std::reduce(durations.cbegin() + 1, durations.cend(), rclcpp::Duration{0, 0}).nanoseconds() /
     (durations.size() - 1)};
-  EXPECT_NEAR(average_duration.count(), 10'000'000, 100'000);
+  EXPECT_EQ(average_duration.count(), 10);
 }
 
 TEST(TestControlLoop, FirstDurationIsSmall)
 {
+  auto fake_clock = FakeClock{};
   auto loop_iterations = 0;
   auto ok = [&loop_iterations]() {
     loop_iterations++;
@@ -95,16 +112,19 @@ TEST(TestControlLoop, FirstDurationIsSmall)
   auto do_work = [&durations](rclcpp::Time, rclcpp::Duration duration) {
     durations.push_back(duration);
   };
+  auto now = [&fake_clock]() { return fake_clock.now(); };
+  auto sleep_until = [&fake_clock](auto time) { fake_clock.sleep_until(time); };
 
   // WHEN we run the ControlLoop
-  ControlLoop(10'000'000ns, now, ok, do_work, sleep_until);
+  ControlLoop(10ns, now, ok, do_work, sleep_until);
 
-  // THEN we expect the first duration to be near 0
-  EXPECT_NEAR(durations.at(0).nanoseconds(), 0, 1'000);
+  // THEN we expect the first duration to be 0
+  EXPECT_EQ(durations.at(0).nanoseconds(), 0);
 }
 
 TEST(TestControlLoop, DoWorkTimeGreaterThanPeriod)
 {
+  auto fake_clock = FakeClock{};
   auto loop_iterations = 0;
   auto ok = [&loop_iterations]() {
     loop_iterations++;
@@ -113,20 +133,23 @@ TEST(TestControlLoop, DoWorkTimeGreaterThanPeriod)
 
   // GIVEN do_work function takes longer than the period
   std::vector<rclcpp::Duration> durations;
-  auto do_work = [&durations](rclcpp::Time, rclcpp::Duration duration) {
+  auto do_work = [&durations, &fake_clock](rclcpp::Time, rclcpp::Duration duration) {
     durations.push_back(duration);
-    std::this_thread::sleep_for(20'000'000ns);
+    fake_clock.sleep_for(rclcpp::Duration{20ns});
   };
+  auto now = [&fake_clock]() { return fake_clock.now(); };
+  auto sleep_until = [&fake_clock](auto time) { fake_clock.sleep_until(time); };
 
   // WHEN we run the ControlLoop
-  ControlLoop(10'000'000ns, now, ok, do_work, sleep_until);
+  ControlLoop(10ns, now, ok, do_work, sleep_until);
 
-  // THEN we expect the second duration to be near the time the work function took
-  EXPECT_NEAR(durations.at(1).nanoseconds(), 20'000'000, 1'000'000);
+  // THEN we expect the second duration to be the time the work function took
+  EXPECT_EQ(durations.at(1).nanoseconds(), 20);
 }
 
 TEST(TestControlLoop, WorkTimeAtOrAfterLoopTime)
 {
+  auto fake_clock = FakeClock{};
   auto loop_iterations = 0;
   auto ok = [&loop_iterations]() {
     loop_iterations++;
@@ -136,21 +159,25 @@ TEST(TestControlLoop, WorkTimeAtOrAfterLoopTime)
   // GIVEN do_work function takes less time than the period
   std::vector<rclcpp::Time> loop_times;
   std::vector<rclcpp::Time> work_times;
-  auto do_work = [&loop_times, &work_times](rclcpp::Time time, rclcpp::Duration) {
+  auto do_work = [&loop_times, &work_times, &fake_clock](rclcpp::Time time, rclcpp::Duration) {
     loop_times.push_back(time);
-    work_times.push_back(now());
+    fake_clock.sleep_for(rclcpp::Duration{2ns});
+    work_times.push_back(fake_clock.now());
   };
+  auto now = [&fake_clock]() { return fake_clock.now(); };
+  auto sleep_until = [&fake_clock](auto time) { fake_clock.sleep_until(time); };
 
   // WHEN we run the ControlLoop
-  ControlLoop(10'000'000ns, now, ok, do_work, sleep_until);
+  ControlLoop(10ns, now, ok, do_work, sleep_until);
 
   // THEN we expect the work times to be after the loop times
-  EXPECT_GT(work_times.at(0), loop_times.at(0));
-  EXPECT_GT(work_times.at(1), loop_times.at(1));
+  EXPECT_GT(work_times.at(0).nanoseconds(), loop_times.at(0).nanoseconds());
+  EXPECT_GT(work_times.at(1).nanoseconds(), loop_times.at(1).nanoseconds());
 }
 
 TEST(TestControlLoop, ReportedTimesMatchPeriod)
 {
+  auto fake_clock = FakeClock{};
   auto loop_iterations = 0;
   auto ok = [&loop_iterations]() {
     loop_iterations++;
@@ -160,17 +187,20 @@ TEST(TestControlLoop, ReportedTimesMatchPeriod)
   // GIVEN do_work function takes less time than the period
   std::vector<rclcpp::Time> times;
   auto do_work = [&times](rclcpp::Time time, rclcpp::Duration) { times.push_back(time); };
+  auto now = [&fake_clock]() { return fake_clock.now(); };
+  auto sleep_until = [&fake_clock](auto time) { fake_clock.sleep_until(time); };
 
   // WHEN we run the ControlLoop
-  ControlLoop(100'000'000ns, now, ok, do_work, sleep_until);
+  ControlLoop(10ns, now, ok, do_work, sleep_until);
 
-  // THEN we expect the time between the loop times to be near the period
+  // THEN we expect the time between the loop times to be the period
   auto const duration = times.at(1) - times.at(0);
-  EXPECT_NEAR(duration.nanoseconds(), 100'000'000, 1'000'000);
+  EXPECT_EQ(duration.nanoseconds(), 10);
 }
 
 TEST(TestControlLoop, ReportedTimesMatchReportedDuration)
 {
+  auto fake_clock = FakeClock{};
   auto loop_iterations = 0;
   auto ok = [&loop_iterations]() {
     loop_iterations++;
@@ -184,11 +214,13 @@ TEST(TestControlLoop, ReportedTimesMatchReportedDuration)
     times.push_back(time);
     durations.push_back(duration);
   };
+  auto now = [&fake_clock]() { return fake_clock.now(); };
+  auto sleep_until = [&fake_clock](auto time) { fake_clock.sleep_until(time); };
 
   // WHEN we run the ControlLoop
-  ControlLoop(10'000'000ns, now, ok, do_work, sleep_until);
+  ControlLoop(10ns, now, ok, do_work, sleep_until);
 
-  // THEN we expect the time duration to be near the reported duration
+  // THEN we expect the time duration to be the reported duration
   auto const time_duration = times.at(1) - times.at(0);
-  EXPECT_NEAR(time_duration.nanoseconds(), durations.at(1).nanoseconds(), 100'000);
+  EXPECT_EQ(time_duration.nanoseconds(), durations.at(1).nanoseconds());
 }
