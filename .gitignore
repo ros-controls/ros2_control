@@ -1,0 +1,5 @@
+# ignore all files in the xxx directory
+ros2controlcli/ros2controlcli/__pycache__/
+ros2controlcli/ros2controlcli/api/__pycache__/
+ros2controlcli/ros2controlcli/command/__pycache__/
+ros2controlcli/ros2controlcli/verb/__pycache__/
