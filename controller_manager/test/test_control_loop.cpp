@@ -57,7 +57,7 @@ TEST(TestControlLoop, ExitsWhenNotOk)
   EXPECT_EQ(work_count, 0);
 }
 
-TEST(TestControlLoop, DurationIsPeriod)
+TEST(TestControlLoop, AverageReportedDurationMatchesPeriod)
 {
   auto loop_iterations = 0;
   auto ok = [&loop_iterations]() {
@@ -103,7 +103,7 @@ TEST(TestControlLoop, FirstDurationIsSmall)
   EXPECT_NEAR(durations.at(0).nanoseconds(), 0, 1'000);
 }
 
-TEST(TestControlLoop, DoWorkDelayInDuration)
+TEST(TestControlLoop, DoWorkTimeGreaterThanPeriod)
 {
   auto loop_iterations = 0;
   auto ok = [&loop_iterations]() {
@@ -125,7 +125,7 @@ TEST(TestControlLoop, DoWorkDelayInDuration)
   EXPECT_NEAR(durations.at(1).nanoseconds(), 20'000'000, 1'000'000);
 }
 
-TEST(TestControlLoop, LoopTimeBeforeWorkTime)
+TEST(TestControlLoop, WorkTimeAtOrAfterLoopTime)
 {
   auto loop_iterations = 0;
   auto ok = [&loop_iterations]() {
@@ -133,7 +133,7 @@ TEST(TestControlLoop, LoopTimeBeforeWorkTime)
     return loop_iterations < 3;
   };
 
-  // GIVEN do_work function takes longer than the period
+  // GIVEN do_work function takes less time than the period
   std::vector<rclcpp::Time> loop_times;
   std::vector<rclcpp::Time> work_times;
   auto do_work = [&loop_times, &work_times](rclcpp::Time time, rclcpp::Duration) {
@@ -149,7 +149,7 @@ TEST(TestControlLoop, LoopTimeBeforeWorkTime)
   EXPECT_GT(work_times.at(1), loop_times.at(1));
 }
 
-TEST(TestControlLoop, LoopTimeSeparatedByPeriod)
+TEST(TestControlLoop, ReportedTimesMatchPeriod)
 {
   auto loop_iterations = 0;
   auto ok = [&loop_iterations]() {
@@ -157,7 +157,7 @@ TEST(TestControlLoop, LoopTimeSeparatedByPeriod)
     return loop_iterations < 3;
   };
 
-  // GIVEN do_work function takes longer than the period
+  // GIVEN do_work function takes less time than the period
   std::vector<rclcpp::Time> times;
   auto do_work = [&times](rclcpp::Time time, rclcpp::Duration) { times.push_back(time); };
 
@@ -169,7 +169,7 @@ TEST(TestControlLoop, LoopTimeSeparatedByPeriod)
   EXPECT_NEAR(duration.nanoseconds(), 100'000'000, 1'000'000);
 }
 
-TEST(TestControlLoop, LoopTimeCloseToReportedDuration)
+TEST(TestControlLoop, ReportedTimesMatchReportedDuration)
 {
   auto loop_iterations = 0;
   auto ok = [&loop_iterations]() {
@@ -177,7 +177,7 @@ TEST(TestControlLoop, LoopTimeCloseToReportedDuration)
     return loop_iterations < 3;
   };
 
-  // GIVEN do_work function takes longer than the period
+  // GIVEN do_work function takes less time than the period
   std::vector<rclcpp::Time> times;
   std::vector<rclcpp::Duration> durations;
   auto do_work = [&times, &durations](rclcpp::Time time, rclcpp::Duration duration) {
