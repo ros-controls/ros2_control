@@ -119,7 +119,7 @@ public:
     auto check_interfaces =
       [](
         const std::vector<controller_manager_msgs::msg::HardwareInterface> & interfaces,
-        const std::vector<const char *> & interface_names,
+        const std::vector<std::string> & interface_names,
         const std::vector<bool> is_available_status, const std::vector<bool> is_claimed_status) {
         for (auto i = 0ul; i < interfaces.size(); ++i)
         {
