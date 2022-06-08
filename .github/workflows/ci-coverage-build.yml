@@ -1,23 +1,26 @@
-name: Build & Test ros2_control with source-based setup
+name: Coverage Build
 on:
-  push:
+  pull_request:
     branches:
       - master
-  schedule:
-    # Run every morning to detect flakiness and broken dependencies
-    - cron: '17 8 * * *'
 
 jobs:
-  ci_source:
-    name: Galactic source job
+  coverage:
+    name: coverage build
     runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
+    env:
+      ROS_DISTRO: rolling
     steps:
       - uses: ros-tooling/setup-ros@v0.2
+        with:
+          required-ros-distributions: ${{ env.ROS_DISTRO }}
+      - uses: actions/checkout@v3
       - uses: ros-tooling/action-ros-ci@v0.2
         with:
-          target-ros2-distro: galactic
+          target-ros2-distro: ${{ env.ROS_DISTRO }}
+          import-token: ${{ secrets.GITHUB_TOKEN }}
           # build all packages listed in the meta package
           package-name:
             controller_interface
@@ -27,9 +30,9 @@ jobs:
             ros2controlcli
             ros2_control
             ros2_control_test_assets
+            transmission_interface
           vcs-repo-file-url: |
-            https://raw.githubusercontent.com/ros2/ros2/galactic/ros2.repos
-            https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/ros2_control/ros2_control.repos
+            https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/ros2_control-not-released.${{ env.ROS_DISTRO }}.repos?token=${{ secrets.GITHUB_TOKEN }}
           colcon-defaults: |
             {
               "build": {
@@ -37,7 +40,8 @@ jobs:
               }
             }
           colcon-mixin-repository: https://raw.githubusercontent.com/colcon/colcon-mixin-repository/master/index.yaml
-      - uses: codecov/codecov-action@v1
+          skip-tests: true
+      - uses: codecov/codecov-action@v1.0.14
         with:
           file: ros_ws/lcov/total_coverage.info
           flags: unittests
