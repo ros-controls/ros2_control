@@ -74,16 +74,16 @@ TEST(TestControlLoop, AverageReportedDurationMatchesPeriod)
 {
   auto fake_clock = FakeClock{};
   auto loop_iterations = 0;
-  auto ok = [&loop_iterations]() {
+  auto ok = [&loop_iterations]()
+  {
     loop_iterations++;
     return loop_iterations < 10;
   };
 
   // GIVEN do_work function that records duration values
   std::vector<rclcpp::Duration> durations;
-  auto do_work = [&durations](rclcpp::Time, rclcpp::Duration duration) {
-    durations.push_back(duration);
-  };
+  auto do_work = [&durations](rclcpp::Time, rclcpp::Duration duration)
+  { durations.push_back(duration); };
   auto now = [&fake_clock]() { return fake_clock.now(); };
   auto sleep_until = [&fake_clock](auto time) { fake_clock.sleep_until(time); };
 
@@ -102,16 +102,16 @@ TEST(TestControlLoop, FirstDurationIsSmall)
 {
   auto fake_clock = FakeClock{};
   auto loop_iterations = 0;
-  auto ok = [&loop_iterations]() {
+  auto ok = [&loop_iterations]()
+  {
     loop_iterations++;
     return loop_iterations < 2;
   };
 
   // GIVEN do_work function that records duration values
   std::vector<rclcpp::Duration> durations;
-  auto do_work = [&durations](rclcpp::Time, rclcpp::Duration duration) {
-    durations.push_back(duration);
-  };
+  auto do_work = [&durations](rclcpp::Time, rclcpp::Duration duration)
+  { durations.push_back(duration); };
   auto now = [&fake_clock]() { return fake_clock.now(); };
   auto sleep_until = [&fake_clock](auto time) { fake_clock.sleep_until(time); };
 
@@ -126,14 +126,16 @@ TEST(TestControlLoop, DoWorkTimeGreaterThanPeriod)
 {
   auto fake_clock = FakeClock{};
   auto loop_iterations = 0;
-  auto ok = [&loop_iterations]() {
+  auto ok = [&loop_iterations]()
+  {
     loop_iterations++;
     return loop_iterations < 3;
   };
 
   // GIVEN do_work function takes longer than the period
   std::vector<rclcpp::Duration> durations;
-  auto do_work = [&durations, &fake_clock](rclcpp::Time, rclcpp::Duration duration) {
+  auto do_work = [&durations, &fake_clock](rclcpp::Time, rclcpp::Duration duration)
+  {
     durations.push_back(duration);
     fake_clock.sleep_for(rclcpp::Duration{20ns});
   };
@@ -151,7 +153,8 @@ TEST(TestControlLoop, WorkTimeAtOrAfterLoopTime)
 {
   auto fake_clock = FakeClock{};
   auto loop_iterations = 0;
-  auto ok = [&loop_iterations]() {
+  auto ok = [&loop_iterations]()
+  {
     loop_iterations++;
     return loop_iterations < 3;
   };
@@ -159,7 +162,8 @@ TEST(TestControlLoop, WorkTimeAtOrAfterLoopTime)
   // GIVEN do_work function takes less time than the period
   std::vector<rclcpp::Time> loop_times;
   std::vector<rclcpp::Time> work_times;
-  auto do_work = [&loop_times, &work_times, &fake_clock](rclcpp::Time time, rclcpp::Duration) {
+  auto do_work = [&loop_times, &work_times, &fake_clock](rclcpp::Time time, rclcpp::Duration)
+  {
     loop_times.push_back(time);
     fake_clock.sleep_for(rclcpp::Duration{2ns});
     work_times.push_back(fake_clock.now());
@@ -179,7 +183,8 @@ TEST(TestControlLoop, ReportedTimesMatchPeriod)
 {
   auto fake_clock = FakeClock{};
   auto loop_iterations = 0;
-  auto ok = [&loop_iterations]() {
+  auto ok = [&loop_iterations]()
+  {
     loop_iterations++;
     return loop_iterations < 3;
   };
@@ -202,7 +207,8 @@ TEST(TestControlLoop, ReportedTimesMatchReportedDuration)
 {
   auto fake_clock = FakeClock{};
   auto loop_iterations = 0;
-  auto ok = [&loop_iterations]() {
+  auto ok = [&loop_iterations]()
+  {
     loop_iterations++;
     return loop_iterations < 3;
   };
@@ -210,7 +216,8 @@ TEST(TestControlLoop, ReportedTimesMatchReportedDuration)
   // GIVEN do_work function takes less time than the period
   std::vector<rclcpp::Time> times;
   std::vector<rclcpp::Duration> durations;
-  auto do_work = [&times, &durations](rclcpp::Time time, rclcpp::Duration duration) {
+  auto do_work = [&times, &durations](rclcpp::Time time, rclcpp::Duration duration)
+  {
     times.push_back(time);
     durations.push_back(duration);
   };
