@@ -464,7 +464,8 @@ controller_interface::return_type ControllerManager::switch_controller(
   const auto list_controllers = [this, strictness](
                                   const std::vector<std::string> & controller_list,
                                   std::vector<std::string> & request_list,
-                                  const std::string & action) {
+                                  const std::string & action)
+  {
     // lock controllers
     std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
 
@@ -524,9 +525,9 @@ controller_interface::return_type ControllerManager::switch_controller(
     return ret;
   }
 
-  const auto list_interfaces = [this](
-                                 const ControllerSpec controller,
-                                 std::vector<std::string> & request_interface_list) {
+  const auto list_interfaces =
+    [this](const ControllerSpec controller, std::vector<std::string> & request_interface_list)
+  {
     auto command_interface_config = controller.c->command_interface_configuration();
     std::vector<std::string> command_interface_names = {};
     if (command_interface_config.type == controller_interface::interface_configuration_type::ALL)
@@ -560,7 +561,8 @@ controller_interface::return_type ControllerManager::switch_controller(
     const bool is_active = is_controller_active(*controller.c);
     const bool is_inactive = is_controller_inactive(*controller.c);
 
-    auto handle_conflict = [&](const std::string & msg) {
+    auto handle_conflict = [&](const std::string & msg)
+    {
       if (strictness == controller_manager_msgs::srv::SwitchController::Request::STRICT)
       {
         RCLCPP_ERROR(get_logger(), "%s", msg.c_str());

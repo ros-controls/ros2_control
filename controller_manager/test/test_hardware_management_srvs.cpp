@@ -120,15 +120,16 @@ public:
       [](
         const std::vector<controller_manager_msgs::msg::HardwareInterface> & interfaces,
         const std::vector<std::string> & interface_names,
-        const std::vector<bool> is_available_status, const std::vector<bool> is_claimed_status) {
-        for (auto i = 0ul; i < interfaces.size(); ++i)
-        {
-          auto it = std::find(interface_names.begin(), interface_names.end(), interfaces[i].name);
-          EXPECT_NE(it, interface_names.end());
-          EXPECT_EQ(interfaces[i].is_available, is_available_status[i]);
-          EXPECT_EQ(interfaces[i].is_claimed, is_claimed_status[i]);
-        }
-      };
+        const std::vector<bool> is_available_status, const std::vector<bool> is_claimed_status)
+    {
+      for (auto i = 0ul; i < interfaces.size(); ++i)
+      {
+        auto it = std::find(interface_names.begin(), interface_names.end(), interfaces[i].name);
+        EXPECT_NE(it, interface_names.end());
+        EXPECT_EQ(interfaces[i].is_available, is_available_status[i]);
+        EXPECT_EQ(interfaces[i].is_claimed, is_claimed_status[i]);
+      }
+    };
 
     for (const auto & component : result->component)
     {

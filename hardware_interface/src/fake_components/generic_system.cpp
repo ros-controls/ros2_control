@@ -36,8 +36,9 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
     return CallbackReturn::ERROR;
   }
 
-  auto populate_non_standard_interfaces = [this](
-                                            auto interface_list, auto & non_standard_interfaces) {
+  auto populate_non_standard_interfaces =
+    [this](auto interface_list, auto & non_standard_interfaces)
+  {
     for (const auto & interface : interface_list)
     {
       // add to list if non-standard interface
@@ -120,9 +121,8 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
       const auto mimicked_joint_it = std::find_if(
         info_.joints.begin(), info_.joints.end(),
         [&mimicked_joint =
-           joint.parameters.at("mimic")](const hardware_interface::ComponentInfo & joint_info) {
-          return joint_info.name == mimicked_joint;
-        });
+           joint.parameters.at("mimic")](const hardware_interface::ComponentInfo & joint_info)
+        { return joint_info.name == mimicked_joint; });
       if (mimicked_joint_it == info_.joints.cend())
       {
         throw std::runtime_error(
@@ -320,7 +320,8 @@ std::vector<hardware_interface::CommandInterface> GenericSystem::export_command_
 
 return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
 {
-  auto mirror_command_to_state = [](auto & states_, auto commands_, size_t start_index = 0) {
+  auto mirror_command_to_state = [](auto & states_, auto commands_, size_t start_index = 0)
+  {
     for (size_t i = start_index; i < states_.size(); ++i)
     {
       for (size_t j = 0; j < states_[i].size(); ++j)
