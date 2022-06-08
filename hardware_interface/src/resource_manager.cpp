@@ -40,28 +40,29 @@ namespace hardware_interface
 auto trigger_and_print_hardware_state_transition =
   [](
     auto transition, const std::string transition_name, const std::string & hardware_name,
-    const lifecycle_msgs::msg::State::_id_type & target_state) {
+    const lifecycle_msgs::msg::State::_id_type & target_state)
+{
+  RCUTILS_LOG_INFO_NAMED(
+    "resource_manager", "'%s' hardware '%s' ", transition_name.c_str(), hardware_name.c_str());
+
+  const rclcpp_lifecycle::State new_state = transition();
+
+  bool result = new_state.id() == target_state;
+
+  if (result)
+  {
     RCUTILS_LOG_INFO_NAMED(
-      "resource_manager", "'%s' hardware '%s' ", transition_name.c_str(), hardware_name.c_str());
-
-    const rclcpp_lifecycle::State new_state = transition();
-
-    bool result = new_state.id() == target_state;
-
-    if (result)
-    {
-      RCUTILS_LOG_INFO_NAMED(
-        "resource_manager", "Successful '%s' of hardware '%s'", transition_name.c_str(),
-        hardware_name.c_str());
-    }
-    else
-    {
-      RCUTILS_LOG_INFO_NAMED(
-        "resource_manager", "Failed to '%s' hardware '%s'", transition_name.c_str(),
-        hardware_name.c_str());
-    }
-    return result;
-  };
+      "resource_manager", "Successful '%s' of hardware '%s'", transition_name.c_str(),
+      hardware_name.c_str());
+  }
+  else
+  {
+    RCUTILS_LOG_INFO_NAMED(
+      "resource_manager", "Failed to '%s' hardware '%s'", transition_name.c_str(),
+      hardware_name.c_str());
+  }
+  return result;
+};
 
 class ResourceStorage
 {
@@ -843,7 +844,8 @@ bool ResourceManager::prepare_command_mode_switch(
   const std::vector<std::string> & start_interfaces,
   const std::vector<std::string> & stop_interfaces)
 {
-  auto interfaces_to_string = [&]() {
+  auto interfaces_to_string = [&]()
+  {
     std::stringstream ss;
     ss << "Start interfaces: " << std::endl << "[" << std::endl;
     for (const auto & start_if : start_interfaces)
@@ -953,7 +955,8 @@ return_type ResourceManager::set_component_state(
     }
   }
 
-  auto find_set_component_state = [&](auto action, auto & components) {
+  auto find_set_component_state = [&](auto action, auto & components)
+  {
     auto found_component_it = std::find_if(
       components.begin(), components.end(),
       [&](const auto & component) { return component.get_name() == component_name; });

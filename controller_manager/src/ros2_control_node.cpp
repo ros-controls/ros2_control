@@ -37,31 +37,34 @@ int main(int argc, char ** argv)
   // the executor (see issue #260).
   // When the MutliThreadedExecutor issues are fixed (ros2/rclcpp#1168), this loop should be
   // converted back to a timer.
-  std::thread cm_thread([cm]() {
-    RCLCPP_INFO(cm->get_logger(), "update rate is %d Hz", cm->get_update_rate());
-
-    rclcpp::Time current_time = cm->now();
-    rclcpp::Time previous_time = current_time;
-    rclcpp::Time end_period = current_time;
-
-    // Use nanoseconds to avoid chrono's rounding
-    rclcpp::Duration period(std::chrono::nanoseconds(1000000000 / cm->get_update_rate()));
-
-    while (rclcpp::ok())
+  std::thread cm_thread(
+    [cm]()
     {
-      // wait until we hit the end of the period
-      end_period += period;
-      std::this_thread::sleep_for(std::chrono::nanoseconds((end_period - cm->now()).nanoseconds()));
+      RCLCPP_INFO(cm->get_logger(), "update rate is %d Hz", cm->get_update_rate());
 
-      // execute update loop
-      auto period = current_time - previous_time;
-      cm->read(current_time, period);
-      current_time = cm->now();
-      cm->update(current_time, period);
-      previous_time = current_time;
-      cm->write(current_time, period);
-    }
-  });
+      rclcpp::Time current_time = cm->now();
+      rclcpp::Time previous_time = current_time;
+      rclcpp::Time end_period = current_time;
+
+      // Use nanoseconds to avoid chrono's rounding
+      rclcpp::Duration period(std::chrono::nanoseconds(1000000000 / cm->get_update_rate()));
+
+      while (rclcpp::ok())
+      {
+        // wait until we hit the end of the period
+        end_period += period;
+        std::this_thread::sleep_for(
+          std::chrono::nanoseconds((end_period - cm->now()).nanoseconds()));
+
+        // execute update loop
+        auto period = current_time - previous_time;
+        cm->read(current_time, period);
+        current_time = cm->now();
+        cm->update(current_time, period);
+        previous_time = current_time;
+        cm->write(current_time, period);
+      }
+    });
 
   executor->add_node(cm);
   executor->spin();

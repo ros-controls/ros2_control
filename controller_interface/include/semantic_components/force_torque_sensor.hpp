@@ -62,7 +62,8 @@ public:
     const std::string & interface_torque_y, const std::string & interface_torque_z)
   : SemanticComponentInterface("", 6)
   {
-    auto check_and_add_interface = [this](const std::string & interface_name, const int index) {
+    auto check_and_add_interface = [this](const std::string & interface_name, const int index)
+    {
       if (!interface_name.empty())
       {
         interface_names_.emplace_back(interface_name);
