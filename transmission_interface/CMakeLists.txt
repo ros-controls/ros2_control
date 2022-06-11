@@ -5,35 +5,33 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
-# find dependencies
+set(THIS_PACKAGE_INCLUDE_DEPENDS
+    hardware_interface
+    pluginlib
+    rclcpp
+)
+
 find_package(ament_cmake REQUIRED)
-find_package(hardware_interface REQUIRED)
-find_package(pluginlib REQUIRED)
-find_package(rclcpp REQUIRED)
+foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
+  find_package(${Dependency} REQUIRED)
+endforeach()
 
 install(
   DIRECTORY include/
   DESTINATION include
 )
 
-add_library(transmission_interface SHARED
+add_library(${PROJECT_NAME} SHARED
   src/simple_transmission_loader.cpp
   src/four_bar_linkage_transmission_loader.cpp
   src/differential_transmission_loader.cpp
 )
+target_include_directories(${PROJECT_NAME} PUBLIC include)
+ament_target_dependencies(${PROJECT_NAME} ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
-target_include_directories(transmission_interface PUBLIC include)
+pluginlib_export_plugin_description_file(${PROJECT_NAME} ros2_control_plugins.xml)
 
-ament_target_dependencies(
-  transmission_interface
-  pluginlib
-  hardware_interface
-  rclcpp
-)
-
-pluginlib_export_plugin_description_file(transmission_interface ros2_control_plugins.xml)
-
-install(TARGETS transmission_interface
+install(TARGETS ${PROJECT_NAME}
   EXPORT export_${PROJECT_NAME}
   RUNTIME DESTINATION bin
   ARCHIVE DESTINATION lib
@@ -100,7 +98,7 @@ ament_export_dependencies(
 )
 
 ament_export_libraries(
-  transmission_interface
+  ${PROJECT_NAME}
 )
 
 ament_package()
