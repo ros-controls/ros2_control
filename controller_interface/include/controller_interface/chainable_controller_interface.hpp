@@ -40,6 +40,13 @@ public:
   CONTROLLER_INTERFACE_PUBLIC
   virtual ~ChainableControllerInterface() = default;
 
+  /**
+   * This is the method called in the control loop.
+   *
+   * \param[in] time The time at the start of this control loop iteration
+   * \param[in] period The measured time taken by the last control loop iteration
+   * \returns return_type::OK if update is successfully, otherwise return_type::ERROR.
+   */
   CONTROLLER_INTERFACE_PUBLIC
   return_type update(const rclcpp::Time & time, const rclcpp::Duration & period) final;
 
