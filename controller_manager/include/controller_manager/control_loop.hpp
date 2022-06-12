@@ -16,8 +16,10 @@
 #define CONTROLLER_MANAGER__CONTROL_LOOP_HPP_
 
 #include <chrono>
+#include <type_traits>
 
 #include "rclcpp/duration.hpp"
+#include "rclcpp/time.hpp"
 
 /**
  * \brief      Run a control loop at a set period
@@ -29,12 +31,15 @@
  * \param[in]  sleep_until invocable that takes a rclcpp::Time and sleeps until
  *             that time
  */
-template <
-  typename NowInvocable, typename OkInvocable, typename WorkInvocable, typename SleepInvocable>
+template <typename Now, typename Ok, typename DoWork, typename SleepUntil>
 void ControlLoop(
-  std::chrono::nanoseconds period, NowInvocable now, OkInvocable ok, WorkInvocable do_work,
-  SleepInvocable sleep_until)
+  std::chrono::nanoseconds period, Now now, Ok ok, DoWork do_work, SleepUntil sleep_until)
 {
+  static_assert(std::is_invocable_r_v<rclcpp::Time, Now>);
+  static_assert(std::is_invocable_r_v<bool, Ok>);
+  static_assert(std::is_invocable_r_v<void, DoWork, rclcpp::Time, rclcpp::Duration>);
+  static_assert(std::is_invocable_r_v<void, SleepUntil, rclcpp::Time>);
+
   auto current_time = now();
   auto measured_period = rclcpp::Duration{0, 0};
   auto next_time = current_time;
