@@ -106,3 +106,13 @@ Restarting hardware
 If hardware gets restarted then you should go through its lifecycle again.
 This can be simply achieved by returning ``ERROR`` from ``write`` and ``read`` methods of interface implementation.
 **NOT IMPLEMENTED YET - PLEASE STOP/RESTART ALL CONTROLLERS MANUALLY FOR NOW** The controller manager detects that and stops all the controllers that are commanding that hardware and restarts broadcasters that are listening to its states.
+
+Control loop
+^^^^^^^^^^^^^^
+
+The control loop is implemented as a templated function to allow its behavior to be tested and to allow users with real time targets to more easily implement a version of ros2_control_node.cpp that uses the API calls for their target.
+Here is a diagram to help explain how the loop works and what the ``time`` and ``period`` parameters represent.
+Note that the order of calls in the default implementation is ``write`` then ``update`` then ``read``.
+This is intentional as it gives the most steady rate (the one called right after the sleep) to ``write`` in order to support hardware that is very sensitive to write being called at a stable rate.
+
+.. image:: control_loop.png
