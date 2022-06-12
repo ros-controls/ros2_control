@@ -132,13 +132,31 @@ public:
     bool start_asap = kWaitForAllResources,
     const rclcpp::Duration & timeout = rclcpp::Duration::from_nanoseconds(kInfiniteTimeout));
 
+  /**
+   * \brief      Read from state interfaces
+   *
+   * \param[in]  time    The time at the start of this control loop iteration
+   * \param[in]  period  The measured period of the last control loop iteration
+   */
   CONTROLLER_MANAGER_PUBLIC
   void read(const rclcpp::Time & time, const rclcpp::Duration & period);
 
+  /**
+   * \brief      Run update on controllers
+   *
+   * \param[in]  time    The time at the start of this control loop iteration
+   * \param[in]  period  The measured period of the last control loop iteration
+   */
   CONTROLLER_MANAGER_PUBLIC
   controller_interface::return_type update(
     const rclcpp::Time & time, const rclcpp::Duration & period);
 
+  /**
+   * \brief      Write to control interfaces
+   *
+   * \param[in]  time    The time at the start of this control loop iteration
+   * \param[in]  period  The measured period of the last control loop iteration
+   */
   CONTROLLER_MANAGER_PUBLIC
   void write(const rclcpp::Time & time, const rclcpp::Duration & period);
 

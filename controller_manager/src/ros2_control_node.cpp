@@ -38,8 +38,10 @@ int main(int argc, char ** argv)
   // the executor (see issue #260).
   // When the MutliThreadedExecutor issues are fixed (ros2/rclcpp#1168), this loop should be
   // converted back to a timer.
-  std::thread cm_thread([cm]() {
-    RCLCPP_INFO(cm->get_logger(), "update rate is %d Hz", cm->get_update_rate());
+  std::thread cm_thread(
+    [cm]()
+    {
+      RCLCPP_INFO(cm->get_logger(), "update rate is %d Hz", cm->get_update_rate());
 
       // Use nanoseconds to avoid chrono's rounding
       auto const period = std::chrono::nanoseconds(1'000'000'000 / cm->get_update_rate());
