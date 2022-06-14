@@ -49,7 +49,8 @@ def first_match(iterable, predicate):
 
 def wait_for_value_or(function, node, timeout, default, description):
     while node.get_clock().now() < timeout:
-        if result := function():
+        result = function()
+        if result:
             return result
         node.get_logger().info(
             f'Waiting for {description}',
