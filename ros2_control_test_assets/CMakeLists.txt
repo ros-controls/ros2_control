@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 project(ros2_control_test_assets)
 
-# find dependencies
 find_package(ament_cmake REQUIRED)
 
 install(
