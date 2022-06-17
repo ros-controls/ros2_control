@@ -30,6 +30,7 @@
 
 using ::testing::_;
 using ::testing::Return;
+using ::testing::UnorderedElementsAre;
 
 TEST_F(TestControllerManagerSrvs, list_controller_types)
 {
@@ -93,10 +94,10 @@ TEST_F(TestControllerManagerSrvs, list_controllers_srv)
   ASSERT_TRUE(result->controller[0].claimed_interfaces.empty());
   ASSERT_THAT(
     result->controller[0].required_command_interfaces,
-    testing::ElementsAre("joint1/position", "joint2/velocity"));
+    UnorderedElementsAre("joint1/position", "joint2/velocity"));
   ASSERT_THAT(
     result->controller[0].required_state_interfaces,
-    testing::ElementsAre("joint1/position", "joint1/velocity", "joint2/position"));
+    UnorderedElementsAre("joint1/position", "joint1/velocity", "joint2/position"));
 
   cm_->switch_controller(
     {test_controller::TEST_CONTROLLER_NAME}, {},
@@ -107,13 +108,13 @@ TEST_F(TestControllerManagerSrvs, list_controllers_srv)
   ASSERT_EQ("active", result->controller[0].state);
   ASSERT_THAT(
     result->controller[0].claimed_interfaces,
-    testing::ElementsAre("joint1/position", "joint2/velocity"));
+    UnorderedElementsAre("joint1/position", "joint2/velocity"));
   ASSERT_THAT(
     result->controller[0].required_command_interfaces,
-    testing::ElementsAre("joint1/position", "joint2/velocity"));
+    UnorderedElementsAre("joint1/position", "joint2/velocity"));
   ASSERT_THAT(
     result->controller[0].required_state_interfaces,
-    testing::ElementsAre("joint1/position", "joint1/velocity", "joint2/position"));
+    UnorderedElementsAre("joint1/position", "joint1/velocity", "joint2/position"));
 
   cm_->switch_controller(
     {}, {test_controller::TEST_CONTROLLER_NAME},
@@ -125,10 +126,10 @@ TEST_F(TestControllerManagerSrvs, list_controllers_srv)
   ASSERT_TRUE(result->controller[0].claimed_interfaces.empty());
   ASSERT_THAT(
     result->controller[0].required_command_interfaces,
-    testing::ElementsAre("joint1/position", "joint2/velocity"));
+    UnorderedElementsAre("joint1/position", "joint2/velocity"));
   ASSERT_THAT(
     result->controller[0].required_state_interfaces,
-    testing::ElementsAre("joint1/position", "joint1/velocity", "joint2/position"));
+    UnorderedElementsAre("joint1/position", "joint1/velocity", "joint2/position"));
 
   cmd_cfg = {controller_interface::interface_configuration_type::ALL};
   test_controller->set_command_interface_configuration(cmd_cfg);
@@ -143,17 +144,17 @@ TEST_F(TestControllerManagerSrvs, list_controllers_srv)
   ASSERT_EQ("active", result->controller[0].state);
   ASSERT_THAT(
     result->controller[0].claimed_interfaces,
-    testing::ElementsAre(
+    UnorderedElementsAre(
       "joint2/velocity", "joint3/velocity", "joint2/max_acceleration", "configuration/max_tcp_jerk",
       "joint1/position", "joint1/max_velocity"));
   ASSERT_THAT(
     result->controller[0].required_command_interfaces,
-    testing::ElementsAre(
+    UnorderedElementsAre(
       "configuration/max_tcp_jerk", "joint1/max_velocity", "joint1/position",
       "joint2/max_acceleration", "joint2/velocity", "joint3/velocity"));
   ASSERT_THAT(
     result->controller[0].required_state_interfaces,
-    testing::ElementsAre(
+    UnorderedElementsAre(
       "configuration/max_tcp_jerk", "joint1/position", "joint1/some_unlisted_interface",
       "joint1/velocity", "joint2/acceleration", "joint2/position", "joint2/velocity",
       "joint3/acceleration", "joint3/position", "joint3/velocity", "sensor1/velocity"));
@@ -168,12 +169,12 @@ TEST_F(TestControllerManagerSrvs, list_controllers_srv)
   ASSERT_TRUE(result->controller[0].claimed_interfaces.empty());
   ASSERT_THAT(
     result->controller[0].required_command_interfaces,
-    testing::ElementsAre(
+    UnorderedElementsAre(
       "configuration/max_tcp_jerk", "joint1/max_velocity", "joint1/position",
       "joint2/max_acceleration", "joint2/velocity", "joint3/velocity"));
   ASSERT_THAT(
     result->controller[0].required_state_interfaces,
-    testing::ElementsAre(
+    UnorderedElementsAre(
       "configuration/max_tcp_jerk", "joint1/position", "joint1/some_unlisted_interface",
       "joint1/velocity", "joint2/acceleration", "joint2/position", "joint2/velocity",
       "joint3/acceleration", "joint3/position", "joint3/velocity", "sensor1/velocity"));

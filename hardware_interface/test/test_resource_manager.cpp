@@ -452,9 +452,9 @@ TEST_F(TestResourceManager, resource_status)
 
   auto check_interfaces = [](
                             const std::vector<std::string> & registered_interfaces,
-                            const std::vector<const char *> & interface_names)
+                            const std::vector<std::string> & interface_names)
   {
-    for (const auto & interface : interface_names)
+    for (const std::string & interface : interface_names)
     {
       auto it = std::find(registered_interfaces.begin(), registered_interfaces.end(), interface);
       EXPECT_NE(it, registered_interfaces.end());
@@ -846,7 +846,7 @@ TEST_F(TestResourceManager, resource_availability_and_claiming_in_lifecycle)
   hardware_interface::ResourceManager rm(ros2_control_test_assets::minimal_robot_urdf);
 
   auto check_interfaces =
-    [](const std::vector<const char *> & interface_names, auto check_method, bool expected_result)
+    [](const std::vector<std::string> & interface_names, auto check_method, bool expected_result)
   {
     for (const auto & interface : interface_names)
     {
@@ -855,8 +855,8 @@ TEST_F(TestResourceManager, resource_availability_and_claiming_in_lifecycle)
   };
 
   auto check_interface_claiming = [&](
-                                    const std::vector<const char *> & state_interface_names,
-                                    const std::vector<const char *> & command_interface_names,
+                                    const std::vector<std::string> & state_interface_names,
+                                    const std::vector<std::string> & command_interface_names,
                                     bool expected_result)
   {
     std::vector<hardware_interface::LoanedStateInterface> states;
