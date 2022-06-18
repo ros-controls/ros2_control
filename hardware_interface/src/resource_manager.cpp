@@ -62,8 +62,17 @@ public:
       loader.createUnmanagedInstance(hardware_info.hardware_class_type));
     HardwareT hardware(std::move(interface));
     container.emplace_back(std::move(hardware));
+
     hardware_status_map_.emplace(
       std::make_pair(container.back().get_name(), container.back().get_status()));
+
+    // Check for identical names
+    if (hardware_status_map_.find(hardware_info.name) != hardware_status_map_.end())
+    {
+      throw std::runtime_error(
+        "Hardware name " + hardware_info.name +
+        " is duplicated. Please provide a unique 'name' in the URDF.");
+    }
   }
 
   template <class HardwareT>
