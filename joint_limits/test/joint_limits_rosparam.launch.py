@@ -27,32 +27,35 @@ import launch_testing.actions
 
 
 def generate_test_description():
-    joint_limits_interface_path = get_package_share_directory('joint_limits_interface')
+    joint_limits_path = get_package_share_directory("joint_limits")
 
     node_under_test = Node(
-        package='joint_limits_interface',
-        executable='joint_limits_rosparam_test',
-        output='screen',
-        parameters=[os.path.join(joint_limits_interface_path,
-                                 'test',
-                                 'joint_limits_rosparam.yaml')],
+        package="joint_limits",
+        executable="joint_limits_rosparam_test",
+        output="screen",
+        parameters=[
+            os.path.join(joint_limits_path, "test", "joint_limits_rosparam.yaml")
+        ],
     )
-    return LaunchDescription([
-        node_under_test,
-        launch_testing.util.KeepAliveProc(),
-        launch_testing.actions.ReadyToTest(),
-    ]), locals()
+    return (
+        LaunchDescription(
+            [
+                node_under_test,
+                launch_testing.util.KeepAliveProc(),
+                launch_testing.actions.ReadyToTest(),
+            ]
+        ),
+        locals(),
+    )
 
 
 class TestJointLimitInterface(unittest.TestCase):
-
     def test_termination(self, node_under_test, proc_info):
         proc_info.assertWaitForShutdown(process=node_under_test, timeout=(10))
 
 
 @launch_testing.post_shutdown_test()
 class TestJointLimitInterfaceTestAfterShutdown(unittest.TestCase):
-
     def test_exit_code(self, proc_info):
         # Check that all processes in the launch (in this case, there's just one) exit
         # with code 0

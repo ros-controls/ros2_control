@@ -22,10 +22,10 @@ if(BUILD_TESTING)
   find_package(launch_testing_ament_cmake)
   find_package(rclcpp)
 
-  add_executable(joint_limits_rosparam_test test/joint_limits_rosparam_test.cpp)
-  target_include_directories(joint_limits_rosparam_test PUBLIC include ${GTEST_INCLUDE_DIRS})
-  target_link_libraries(joint_limits_rosparam_test ${GTEST_LIBRARIES})
-  ament_target_dependencies(joint_limits_rosparam_test rclcpp ament_cmake_gtest)
+  ament_add_gtest_executable(joint_limits_rosparam_test test/joint_limits_rosparam_test.cpp)
+  target_include_directories(joint_limits_rosparam_test PRIVATE include)
+  ament_target_dependencies(joint_limits_rosparam_test rclcpp)
+
   add_launch_test(test/joint_limits_rosparam.launch.py)
   install(
     TARGETS
