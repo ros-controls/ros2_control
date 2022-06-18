@@ -1329,3 +1329,9 @@ TEST_F(TestResourceManager, managing_controllers_reference_interfaces)
   EXPECT_THROW(
     rm.make_controller_reference_interfaces_unavailable("unknown_controller"), std::out_of_range);
 }
+
+TEST_F(TestResourceManager, handle_error_on_hardware_read)
+{
+  hardware_interface::ResourceManager rm(ros2_control_test_assets::minimal_robot_urdf, false);
+  activate_components(rm);
+}

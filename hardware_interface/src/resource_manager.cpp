@@ -101,6 +101,7 @@ public:
     component_info.class_type = hardware_info.hardware_class_type;
 
     hardware_info_map_.insert(std::make_pair(component_info.name, component_info));
+    hardware_used_by_controllers_.insert(std::make_pair(component_info.name, std::vector<std::string>()));
   }
 
   template <class HardwareT>
@@ -545,6 +546,8 @@ public:
 
   std::unordered_map<std::string, HardwareComponentInfo> hardware_info_map_;
 
+  std::unordered_map<std::string, std::vector<std::string>> hardware_used_by_controllers_;
+
   std::unordered_map<std::string, std::vector<std::string>> controllers_reference_interfaces_map_;
 
   /// Storage of all available state interfaces
@@ -717,6 +720,47 @@ void ResourceManager::remove_controller_reference_interfaces(const std::string &
   std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
   std::lock_guard<std::recursive_mutex> guard_claimed(claimed_command_interfaces_lock_);
   resource_storage_->remove_command_interfaces(interface_names);
+}
+
+void ResourceManager::cache_controller_to_hardware(
+  const std::string & controller_name, const std::vector<std::string> & interfaces)
+{
+  for (const auto & interface : interfaces)
+  {
+    bool found = false;
+    for (const auto & [hw_name, hw_info] : resource_storage_->hardware_info_map_)
+    {
+      auto cmd_itf_it = std::find(hw_info.command_interfaces.begin(), hw_info.command_interfaces.end(), interface);
+      if (cmd_itf_it != hw_info.command_interfaces.end())
+      {
+        found = true;
+      }
+      auto state_itf_it = std::find(hw_info.state_interfaces.begin(), hw_info.state_interfaces.end(), interface);
+      if (state_itf_it != hw_info.state_interfaces.end())
+      {
+        found = true;
+      }
+
+      if (found)
+      {
+        // check if controller exist already in the list and if not add it
+        auto controllers = resource_storage_->hardware_used_by_controllers_[hw_name];
+        auto ctrl_it = std::find(controllers.begin(), controllers.end(), controller_name);
+        if (ctrl_it == controllers.end())
+        {
+          // add because it does not exist
+          controllers.reserve(controllers.size()+1);
+          controllers.push_back(controller_name);
+        }
+        break;
+      }
+    }
+  }
+}
+
+std::vector<std::string> ResourceManager::get_cached_controllers_to_hardware(const std::string & hardware_name)
+{
+  return resource_storage_->hardware_used_by_controllers_[hardware_name];
 }
 
 // CM API: Called in "update"-thread
@@ -1001,32 +1045,55 @@ return_type ResourceManager::set_component_state(
   return result;
 }
 
-void ResourceManager::read(const rclcpp::Time & time, const rclcpp::Duration & period)
+HardwareReadWriteStatus ResourceManager::read(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
-  for (auto & component : resource_storage_->actuators_)
+  HardwareReadWriteStatus read_status;
+  read_status.ok = true;
+  read_status.failed_hardware_names.reserve(
+    resource_storage_->actuators_.size() + resource_storage_->sensors_.size() + resource_storage_->systems_.size());
+
+  auto read_components = [&](auto & components)
   {
-    component.read(time, period);
-  }
-  for (auto & component : resource_storage_->sensors_)
-  {
-    component.read(time, period);
-  }
-  for (auto & component : resource_storage_->systems_)
-  {
-    component.read(time, period);
-  }
+    for (auto & component : components)
+    {
+      if (component.read(time, period) != return_type::OK)
+      {
+        read_status.ok = false;
+        read_status.failed_hardware_names.push_back(component.get_name());
+      }
+    }
+  };
+
+  read_components(resource_storage_->actuators_);
+  read_components(resource_storage_->sensors_);
+  read_components(resource_storage_->systems_);
+
+  return read_status;
 }
 
-void ResourceManager::write(const rclcpp::Time & time, const rclcpp::Duration & period)
+HardwareReadWriteStatus ResourceManager::write(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
-  for (auto & component : resource_storage_->actuators_)
+  HardwareReadWriteStatus write_status;
+  write_status.ok = true;
+  write_status.failed_hardware_names.reserve(
+    resource_storage_->actuators_.size() + resource_storage_->systems_.size());
+
+  auto write_components = [&](auto & components)
   {
-    component.write(time, period);
-  }
-  for (auto & component : resource_storage_->systems_)
-  {
-    component.write(time, period);
-  }
+    for (auto & component : components)
+    {
+      if(component.write(time, period) != return_type::OK)
+      {
+        write_status.ok = false;
+        write_status.failed_hardware_names.push_back(component.get_name());
+      }
+    }
+  };
+
+  write_components(resource_storage_->actuators_);
+  write_components(resource_storage_->systems_);
+
+  return write_status;
 }
 
 void ResourceManager::validate_storage(
