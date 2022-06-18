@@ -55,8 +55,6 @@
 
 namespace controller_manager
 {
-using ControllersListIterator = std::vector<controller_manager::ControllerSpec>::const_iterator;
-
 class ControllerManager : public rclcpp::Node
 {
 public:
@@ -177,6 +175,11 @@ protected:
   CONTROLLER_MANAGER_PUBLIC
   void stop_controllers();
 
+  /**
+   * Switch chained mode for all the controllers with respect to the following cases:
+   * - a preceding controller is getting activated --> switch controller to chained mode
+   * - all preceding controllers are deactivated --> switch controller from chained mode
+   */
   CONTROLLER_MANAGER_PUBLIC
   void switch_chained_mode();
 
@@ -260,6 +263,12 @@ protected:
 
 private:
   std::vector<std::string> get_controller_names();
+
+  /**
+   * Clear request lists used when switching controllers. The lists are shared between "callback" and
+   * "control loop" threads.
+   */
+  void clear_requests();
 
   std::shared_ptr<rclcpp::Executor> executor_;
 

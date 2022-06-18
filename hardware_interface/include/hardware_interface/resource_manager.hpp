@@ -245,7 +245,7 @@ public:
    * \note given that no hardware_info is available, the component has to be configured
    * externally and prior to the call to import.
    * \param[in] actuator pointer to the actuator interface.
-   * \param[in]hardware_info hardware info
+   * \param[in] hardware_info hardware info
    */
   void import_component(
     std::unique_ptr<ActuatorInterface> actuator, const HardwareInfo & hardware_info);

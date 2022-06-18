@@ -27,8 +27,9 @@
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_lifecycle/state.hpp"
 
-namespace
-{  // utility
+namespace  // utility
+{
+using ControllersListIterator = std::vector<controller_manager::ControllerSpec>::const_iterator;
 
 static constexpr const char * kControllerInterfaceNamespace = "controller_interface";
 static constexpr const char * kControllerInterfaceClassName =
@@ -75,21 +76,22 @@ bool controller_name_compare(const controller_manager::ControllerSpec & a, const
   return a.info.name == name;
 }
 
-/// Checks is a command interface belongs to a controller based on its prefix.
+/// Checks if a command interface belongs to a controller based on its prefix.
 /**
- * A command interface can be provided by an controller in which case is called "reference"
+ * A command interface can be provided by a controller in which case is called "reference"
  * interface.
- * This means that the @interface_name start with the name of a controller.
+ * This means that the @interface_name starts with the name of a controller.
  *
  * \param[in] interface_name to be found in the map.
  * \param[in] controllers list of controllers to compare their names to interface's prefix.
- * \param[out] interface_controller_name name of the controller interface belongs to.
+ * \param[out] following_controller_it iterator to the following controller that reference interface
+ * @interface_name belongs to.
  * \return true if interface has a controller name as prefix, false otherwise.
  */
 bool command_interface_is_reference_interface_of_controller(
   const std::string interface_name,
   const std::vector<controller_manager::ControllerSpec> & controllers,
-  controller_manager::ControllersListIterator & following_controller_it)
+  ControllersListIterator & following_controller_it)
 {
   auto split_pos = interface_name.find_first_of('/');
   if (split_pos == std::string::npos)  // '/' exist in the string (should be always false)
@@ -389,7 +391,7 @@ controller_interface::return_type ControllerManager::unload_controller(
   }
 
   RCLCPP_DEBUG(get_logger(), "Cleanup controller");
-  // TODO(destogl): remove reference interface is chainable; i.e., add a separate method for
+  // TODO(destogl): remove reference interface if chainable; i.e., add a separate method for
   // cleaning-up controllers?
   controller.c->get_node()->cleanup();
   executor_->remove_node(controller.c->get_node()->get_node_base_interface());
@@ -450,7 +452,7 @@ controller_interface::return_type ControllerManager::configure_controller(
   {
     RCLCPP_DEBUG(
       get_logger(), "Controller '%s' is cleaned-up before configuring", controller_name.c_str());
-    // TODO(destogl): remove reference interface is chainable; i.e., add a separate method for
+    // TODO(destogl): remove reference interface if chainable; i.e., add a separate method for
     // cleaning-up controllers?
     new_state = controller->get_node()->cleanup();
     if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
@@ -495,6 +497,14 @@ controller_interface::return_type ControllerManager::configure_controller(
   return controller_interface::return_type::OK;
 }
 
+void ControllerManager::clear_requests()
+{
+  stop_request_.clear();
+  start_request_.clear();
+  to_chained_mode_request_.clear();
+  from_chained_mode_request_.clear();
+}
+
 controller_interface::return_type ControllerManager::switch_controller(
   const std::vector<std::string> & start_controllers,
   const std::vector<std::string> & stop_controllers, int strictness, bool start_asap,
@@ -521,7 +531,8 @@ controller_interface::return_type ControllerManager::switch_controller(
     RCLCPP_FATAL(
       get_logger(),
       "The internal 'from' and 'to' chained mode requests are not empty at the "
-      "switch_controller() call. This should not happen.");
+      "switch_controller() call. This should not happen. "
+      "Stop the controller manager immediately and restart it.");
   }
   if (strictness == 0)
   {
@@ -805,16 +816,16 @@ controller_interface::return_type ControllerManager::switch_controller(
         (*ctrl_it).c_str());
       if (strictness == controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT)
       {
-        start_request_.erase(ctrl_it--);
+        // remove controller that can not be activated from the activation request and step-back
+        // iterator to correctly step to the next element in the list in the loop
+        start_request_.erase(ctrl_it);
+        --ctrl_it;
       }
       if (strictness == controller_manager_msgs::srv::SwitchController::Request::STRICT)
       {
         RCLCPP_ERROR(get_logger(), "Aborting, no controller is switched! (::STRICT switch)");
         // reset all lists
-        stop_request_.clear();
-        start_request_.clear();
-        to_chained_mode_request_.clear();
-        from_chained_mode_request_.clear();
+        clear_requests();
         return controller_interface::return_type::ERROR;
       }
     }
@@ -938,16 +949,16 @@ controller_interface::return_type ControllerManager::switch_controller(
         (*ctrl_it).c_str());
       if (strictness == controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT)
       {
-        stop_request_.erase(ctrl_it--);
+        // remove controller that can not be activated from the activation request and step-back
+        // iterator to correctly step to the next element in the list in the loop
+        stop_request_.erase(ctrl_it);
+        --ctrl_it;
       }
       if (strictness == controller_manager_msgs::srv::SwitchController::Request::STRICT)
       {
         RCLCPP_ERROR(get_logger(), "Aborting, no controller is switched! (::STRICT switch)");
         // reset all lists
-        stop_request_.clear();
-        start_request_.clear();
-        to_chained_mode_request_.clear();
-        from_chained_mode_request_.clear();
+        clear_requests();
         return controller_interface::return_type::ERROR;
       }
     }
