@@ -55,6 +55,8 @@
 
 namespace controller_manager
 {
+using ControllersListIterator = std::vector<controller_manager::ControllerSpec>::const_iterator;
+
 class ControllerManager : public rclcpp::Node
 {
 public:
@@ -273,6 +275,66 @@ private:
    * "control loop" threads.
    */
   void clear_requests();
+
+  /**
+   * If a controller is deactivated all following controllers (if any exist) should be switched
+   * 'from' the chained mode.
+   *
+   * \param[in] controllers list with controllers.
+   */
+  void propagate_deactivation_of_chained_mode(const std::vector<ControllerSpec> & controllers);
+
+  /// Check if all the following controllers will be in active state and in the chained mode
+  /// after controllers' switch.
+  /**
+   * Check recursively that all following controllers of the @controller_it
+   * - are already active,
+   * - will not be deactivated,
+   * - or will be activated.
+   * The following controllers are added to the request to switch in the chained mode or removed
+   * from the request to switch from the chained mode.
+   *
+   * For each controller the whole chain of following controllers is checked.
+   *
+   * NOTE: The automatically adding of following controller into starting list is not implemented
+   * yet.
+   *
+   * \param[in] controllers list with controllers.
+   * \param[in] strictness if value is equal "MANIPULATE_CONTROLLERS_CHAIN" then all following
+   * controllers will be automatically added to the activate request list if they are not in the
+   * deactivate request.
+   * \param[in] controller_it iterator to the controller for which the following controllers are
+   * checked.
+   *
+   * \returns return_type::OK if all following controllers pass the checks, otherwise
+   * return_type::ERROR.
+   */
+  controller_interface::return_type check_following_controllers_for_activate(
+    const std::vector<ControllerSpec> & controllers, int strictness,
+    const ControllersListIterator controller_it);
+
+  /// Check if all the preceding controllers will be in inactive state after controllers' switch.
+  /**
+   * Check that all preceding controllers of the @controller_it
+   * - are inactive,
+   * - will be deactivated,
+   * - and will not be activated.
+   *
+   * NOTE: The automatically adding of preceding controllers into stopping list is not implemented
+   * yet.
+   *
+   * \param[in] controllers list with controllers.
+   * \param[in] strictness if value is equal "MANIPULATE_CONTROLLERS_CHAIN" then all preceding
+   * controllers will be automatically added to the deactivate request list.
+   * \param[in] controller_it iterator to the controller for which the preceding controllers are
+   * checked.
+   *
+   * \returns return_type::OK if all preceding controllers pass the checks, otherwise
+   * return_type::ERROR.
+   */
+  controller_interface::return_type check_preceeding_controllers_for_deactivate(
+    const std::vector<ControllerSpec> & controllers, int strictness,
+    const ControllersListIterator controller_it);
 
   std::shared_ptr<rclcpp::Executor> executor_;
 
