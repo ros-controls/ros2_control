@@ -40,28 +40,29 @@ namespace hardware_interface
 auto trigger_and_print_hardware_state_transition =
   [](
     auto transition, const std::string transition_name, const std::string & hardware_name,
-    const lifecycle_msgs::msg::State::_id_type & target_state) {
+    const lifecycle_msgs::msg::State::_id_type & target_state)
+{
+  RCUTILS_LOG_INFO_NAMED(
+    "resource_manager", "'%s' hardware '%s' ", transition_name.c_str(), hardware_name.c_str());
+
+  const rclcpp_lifecycle::State new_state = transition();
+
+  bool result = new_state.id() == target_state;
+
+  if (result)
+  {
     RCUTILS_LOG_INFO_NAMED(
-      "resource_manager", "'%s' hardware '%s' ", transition_name.c_str(), hardware_name.c_str());
-
-    const rclcpp_lifecycle::State new_state = transition();
-
-    bool result = new_state.id() == target_state;
-
-    if (result)
-    {
-      RCUTILS_LOG_INFO_NAMED(
-        "resource_manager", "Successful '%s' of hardware '%s'", transition_name.c_str(),
-        hardware_name.c_str());
-    }
-    else
-    {
-      RCUTILS_LOG_INFO_NAMED(
-        "resource_manager", "Failed to '%s' hardware '%s'", transition_name.c_str(),
-        hardware_name.c_str());
-    }
-    return result;
-  };
+      "resource_manager", "Successful '%s' of hardware '%s'", transition_name.c_str(),
+      hardware_name.c_str());
+  }
+  else
+  {
+    RCUTILS_LOG_INFO_NAMED(
+      "resource_manager", "Failed to '%s' hardware '%s'", transition_name.c_str(),
+      hardware_name.c_str());
+  }
+  return result;
+};
 
 class ResourceStorage
 {
@@ -98,14 +99,6 @@ public:
     component_info.name = hardware_info.name;
     component_info.type = hardware_info.type;
     component_info.class_type = hardware_info.hardware_class_type;
-
-    // Check for identical names
-    if (hardware_info_map_.find(hardware_info.name) != hardware_info_map_.end())
-    {
-      throw std::runtime_error(
-        "Hardware name " + hardware_info.name +
-        " is duplicated. Please provide a unique 'name' in the URDF.");
-    }
 
     hardware_info_map_.insert(std::make_pair(component_info.name, component_info));
   }
@@ -477,24 +470,38 @@ public:
     }
   }
 
-  // TODO(destogl): Propagate "false" up, if happens in initialize_hardware
-  void initialize_actuator(const HardwareInfo & hardware_info)
+  void check_for_duplicates(const HardwareInfo & hardware_info)
   {
+    // Check for identical names
+    if (hardware_info_map_.find(hardware_info.name) != hardware_info_map_.end())
+    {
+      throw std::runtime_error(
+        "Hardware name " + hardware_info.name +
+        " is duplicated. Please provide a unique 'name' in the URDF.");
+    }
+  }
+
+  // TODO(destogl): Propagate "false" up, if happens in initialize_hardware
+  void load_and_initialize_actuator(const HardwareInfo & hardware_info)
+  {
+    check_for_duplicates(hardware_info);
     load_hardware<Actuator, ActuatorInterface>(hardware_info, actuator_loader_, actuators_);
     initialize_hardware(hardware_info, actuators_.back());
     import_state_interfaces(actuators_.back());
     import_command_interfaces(actuators_.back());
   }
 
-  void initialize_sensor(const HardwareInfo & hardware_info)
+  void load_and_initialize_sensor(const HardwareInfo & hardware_info)
   {
+    check_for_duplicates(hardware_info);
     load_hardware<Sensor, SensorInterface>(hardware_info, sensor_loader_, sensors_);
     initialize_hardware(hardware_info, sensors_.back());
     import_state_interfaces(sensors_.back());
   }
 
-  void initialize_system(const HardwareInfo & hardware_info)
+  void load_and_initialize_system(const HardwareInfo & hardware_info)
   {
+    check_for_duplicates(hardware_info);
     load_hardware<System, SystemInterface>(hardware_info, system_loader_, systems_);
     initialize_hardware(hardware_info, systems_.back());
     import_state_interfaces(systems_.back());
@@ -587,18 +594,18 @@ void ResourceManager::load_urdf(const std::string & urdf, bool validate_interfac
     {
       std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
       std::lock_guard<std::recursive_mutex> guard_claimed(claimed_command_interfaces_lock_);
-      resource_storage_->initialize_actuator(individual_hardware_info);
+      resource_storage_->load_and_initialize_actuator(individual_hardware_info);
     }
     if (individual_hardware_info.type == sensor_type)
     {
       std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
-      resource_storage_->initialize_sensor(individual_hardware_info);
+      resource_storage_->load_and_initialize_sensor(individual_hardware_info);
     }
     if (individual_hardware_info.type == system_type)
     {
       std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
       std::lock_guard<std::recursive_mutex> guard_claimed(claimed_command_interfaces_lock_);
-      resource_storage_->initialize_system(individual_hardware_info);
+      resource_storage_->load_and_initialize_system(individual_hardware_info);
     }
   }
 
@@ -843,7 +850,8 @@ bool ResourceManager::prepare_command_mode_switch(
   const std::vector<std::string> & start_interfaces,
   const std::vector<std::string> & stop_interfaces)
 {
-  auto interfaces_to_string = [&]() {
+  auto interfaces_to_string = [&]()
+  {
     std::stringstream ss;
     ss << "Start interfaces: " << std::endl << "[" << std::endl;
     for (const auto & start_if : start_interfaces)
@@ -953,7 +961,8 @@ return_type ResourceManager::set_component_state(
     }
   }
 
-  auto find_set_component_state = [&](auto action, auto & components) {
+  auto find_set_component_state = [&](auto action, auto & components)
+  {
     auto found_component_it = std::find_if(
       components.begin(), components.end(),
       [&](const auto & component) { return component.get_name() == component_name; });

@@ -80,8 +80,10 @@ public:
   /// \return Joint name.
   std::string get_name() const
   {
-    return jposh_ ? jposh_.get_name()
-                  : jvelh_ ? jvelh_.get_name() : jcmdh_ ? jcmdh_.get_name() : std::string();
+    return jposh_   ? jposh_.get_name()
+           : jvelh_ ? jvelh_.get_name()
+           : jcmdh_ ? jcmdh_.get_name()
+                    : std::string();
   }
 
   /// Sub-class implementation of limit enforcing policy.

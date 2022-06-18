@@ -2,6 +2,15 @@
 Changelog for package ros2_control_test_assets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.10.0 (2022-06-18)
+-------------------
+* Make RHEL CI happy! (`#730 <https://github.com/ros-controls/ros2_control/issues/730>`_)
+* CMakeLists cleanup (`#733 <https://github.com/ros-controls/ros2_control/issues/733>`_)
+* Contributors: Andy Zelenak, Márk Szitanics
+
+2.9.0 (2022-05-19)
+------------------
+
 2.8.0 (2022-05-13)
 ------------------
 

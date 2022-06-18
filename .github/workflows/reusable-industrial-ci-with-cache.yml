@@ -1,0 +1,106 @@
+name: Reusable industrial_ci Workflow with Cache
+# Reusable action to simplify dealing with ROS/ROS2 industrial_ci builds with cache
+# author: Denis Štogl <denis@stoglrobotics.de>
+
+on:
+  workflow_call:
+    inputs:
+      ref_for_scheduled_build:
+        description: 'Reference on which the repo should be checkout for scheduled build. Usually is this name of a branch or a tag.'
+        default: ''
+        required: false
+        type: string
+
+      upstream_workspace:
+        description: 'UPSTREAM_WORKSPACE variable for industrial_ci. Usually path to local .repos file.'
+        required: true
+        type: string
+      ros_distro:
+        description: 'ROS_DISTRO variable for industrial_ci'
+        required: true
+        type: string
+      ros_repo:
+        description: 'ROS_REPO to run for industrial_ci. Possible values: "all", "main", "testing"'
+        default: 'all'
+        required: false
+        type: string
+      os_code_name:
+        description: 'OS_CODE_NAME variable for industrial_ci'
+        default: ''
+        required: false
+        type: string
+      before_install_upstream_dependencies:
+        description: 'BEFORE_INSTALL_UPSTREAM_DEPENDENCIES variable for industrial_ci'
+        default: ''
+        required: false
+        type: string
+
+      ccache_dir:
+        description: 'Local path to store cache (from "github.workspace"). For standard industrial_ci configuration do not have to be changed'
+        default: '.ccache'
+        required: false
+        type: string
+      basedir:
+        description: 'Local path to workspace base directory to cache (from "github.workspace"). For standard industrial_ci configuration do not have to be changed'
+        default: '.work'
+        required: false
+        type: string
+
+
+jobs:
+  reusable_industrial_ci_with_cache:
+    name: ${{ matrix.ROS_REPO }} ${{ inputs.ros_distro }} ${{ inputs.os_code_name }}
+    strategy:
+      fail-fast: false
+      matrix:
+        ROS_REPO: [ main, testing ]
+    runs-on: ubuntu-latest
+    env:
+      CCACHE_DIR: ${{ github.workspace }}/${{ inputs.ccache_dir }}
+      BASEDIR: ${{ github.workspace }}/${{ inputs.basedir }}
+      CACHE_PREFIX: ${{ inputs.ros_distro }}-${{ inputs.os_code_name }}-${{ matrix.ROS_REPO }}-${{ github.job }}
+    steps:
+      - name: Checkout ${{ inputs.ref }} when build is not scheduled
+        if: ${{ (inputs.ros_repo == 'all' || inputs.ros_repo == matrix.ROS_REPO) && github.event_name != 'schedule' }}
+        uses: actions/checkout@v3
+      - name: Checkout ${{ inputs.ref }} on scheduled build
+        if: ${{ (inputs.ros_repo == 'all' || inputs.ros_repo == matrix.ROS_REPO) && github.event_name == 'schedule' }}
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ inputs.ref_for_scheduled_build }}
+      - name: cache target_ws
+        if: ${{ ! matrix.env.CCOV && (inputs.ros_repo == 'all' || inputs.ros_repo == matrix.ROS_REPO) }}
+        uses: pat-s/always-upload-cache@v2.1.5
+        with:
+          path: ${{ env.BASEDIR }}/target_ws
+          key: target_ws-${{ env.CACHE_PREFIX }}-${{ hashFiles('**/CMakeLists.txt', '**/package.xml') }}-${{ github.run_id }}
+          restore-keys: |
+            target_ws-${{ env.CACHE_PREFIX }}-${{ hashFiles('**/CMakeLists.txt', '**/package.xml') }}
+      - name: cache ccache
+        if: ${{ inputs.ros_repo == 'all' || inputs.ros_repo == matrix.ROS_REPO }}
+        uses: pat-s/always-upload-cache@v2.1.5
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-${{ env.CACHE_PREFIX }}-${{ github.sha }}-${{ github.run_id }}
+          restore-keys: |
+            ccache-${{ env.CACHE_PREFIX }}-${{ github.sha }}
+            ccache-${{ env.CACHE_PREFIX }}
+      - if: ${{ inputs.ros_repo == 'all' || inputs.ros_repo == matrix.ROS_REPO }}
+        uses: 'ros-industrial/industrial_ci@master'
+        env:
+          UPSTREAM_WORKSPACE: ${{ inputs.upstream_workspace }}
+          ROS_DISTRO: ${{ inputs.ros_distro }}
+          ROS_REPO: ${{ matrix.ROS_REPO }}
+          OS_CODE_NAME: ${{ inputs.os_code_name }}
+          BEFORE_INSTALL_UPSTREAM_DEPENDENCIES: ${{ inputs.before_install_upstream_dependencies }}
+      - name: prepare target_ws for cache
+        if: ${{ always() && ! matrix.env.CCOV && (inputs.ros_repo == 'all' || inputs.ros_repo == matrix.ROS_REPO) }}
+        run: |
+          du -sh ${{ env.BASEDIR }}/target_ws
+          sudo find ${{ env.BASEDIR }}/target_ws -wholename '*/test_results/*' -delete
+          sudo rm -rf ${{ env.BASEDIR }}/target_ws/src
+          du -sh ${{ env.BASEDIR }}/target_ws
+      - name: Is job skipped?
+        if: ${{ ! (inputs.ros_repo == 'all' || inputs.ros_repo == matrix.ROS_REPO) }}
+        run: |
+          echo "This job is skpped!"

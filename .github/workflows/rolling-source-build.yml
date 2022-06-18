@@ -1,0 +1,15 @@
+name: Rolling Source Build
+on:
+  push:
+    branches:
+      - master
+  schedule:
+    # Run every day to detect flakiness and broken dependencies
+    - cron: '03 3 * * *'
+
+jobs:
+  source:
+    uses: ./.github/workflows/reusable-ros-tooling-source-build.yml
+    with:
+      ros_distro: rolling
+      ref: master

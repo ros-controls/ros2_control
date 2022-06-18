@@ -2,6 +2,23 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.10.0 (2022-06-18)
+-------------------
+* CMakeLists cleanup (`#733 <https://github.com/ros-controls/ros2_control/issues/733>`_)
+* Update to clang format 12 (`#731 <https://github.com/ros-controls/ros2_control/issues/731>`_)
+* Make interface_list_contains_interface_type inline (`#721 <https://github.com/ros-controls/ros2_control/issues/721>`_)
+* Contributors: Andy Zelenak, Bence Magyar
+
+2.9.0 (2022-05-19)
+------------------
+* Adding base class for chained controllers: `ChainedControllersInterface` (`#663 <https://github.com/ros-controls/ros2_control/issues/663>`_)
+  * Extending ControllerInterface with methods for chainable controllers.
+  * Switching to chained_mode is only forbidden if controller is active.
+  * Default implementation for 'on_set_chained_mode' method.
+  * Use two internal methods instead of 'update' directly on chained controllers.
+* Add ControllerInterfaceBase class with methods for chainable controller (`#717 <https://github.com/ros-controls/ros2_control/issues/717>`_)
+* Contributors: Denis Štogl
+
 2.8.0 (2022-05-13)
 ------------------
 

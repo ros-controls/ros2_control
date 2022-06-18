@@ -79,13 +79,15 @@ public:
   void startCmUpdater()
   {
     run_updater_ = true;
-    updater_ = std::thread([&](void) -> void {
-      while (run_updater_)
+    updater_ = std::thread(
+      [&](void) -> void
       {
-        cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-      }
-    });
+        while (run_updater_)
+        {
+          cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
+          std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+      });
   }
 
   void stopCmUpdater()
@@ -135,11 +137,14 @@ public:
 
   void SetUpSrvsCMExecutor()
   {
-    update_timer_ = cm_->create_wall_timer(std::chrono::milliseconds(10), [&]() {
-      cm_->read(TIME, PERIOD);
-      cm_->update(TIME, PERIOD);
-      cm_->write(TIME, PERIOD);
-    });
+    update_timer_ = cm_->create_wall_timer(
+      std::chrono::milliseconds(10),
+      [&]()
+      {
+        cm_->read(TIME, PERIOD);
+        cm_->update(TIME, PERIOD);
+        cm_->write(TIME, PERIOD);
+      });
 
     executor_->add_node(cm_);
 
