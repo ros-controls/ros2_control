@@ -177,11 +177,15 @@ protected:
 
   /**
    * Switch chained mode for all the controllers with respect to the following cases:
-   * - a preceding controller is getting activated --> switch controller to chained mode
-   * - all preceding controllers are deactivated --> switch controller from chained mode
+   * - a preceding controller is getting activated --> switch controller to chained mode;
+   * - all preceding controllers are deactivated --> switch controller from chained mode.
+   *
+   * \param[in] chained_mode_switch_list list of controller to switch chained mode.
+   * \param[in] to_chained_mode flag if controller should be switched *to* or *from* chained mode.
    */
   CONTROLLER_MANAGER_PUBLIC
-  void switch_chained_mode();
+  void switch_chained_mode(
+    const std::vector<std::string> & chained_mode_switch_list, bool to_chained_mode);
 
   CONTROLLER_MANAGER_PUBLIC
   void start_controllers();

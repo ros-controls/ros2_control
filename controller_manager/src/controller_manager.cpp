@@ -1241,7 +1241,8 @@ void ControllerManager::manage_switch()
 
   stop_controllers();
 
-  switch_chained_mode();
+  switch_chained_mode(to_chained_mode_request_, true);
+  switch_chained_mode(from_chained_mode_request_, false);
 
   // start controllers once the switch is fully complete
   if (!switch_params_.start_asap)
@@ -1290,68 +1291,61 @@ void ControllerManager::stop_controllers()
   }
 }
 
-void ControllerManager::switch_chained_mode()
+void ControllerManager::switch_chained_mode(
+  const std::vector<std::string> & chained_mode_switch_list, bool to_chained_mode)
 {
   std::vector<ControllerSpec> & rt_controller_list =
     rt_controllers_wrapper_.update_and_get_used_by_rt_list();
 
-  auto to_from_chained_mode =
-    [this, rt_controller_list](
-      std::vector<std::string> chained_mode_switch_list, bool to_chained_mode)
+  for (const auto & request : chained_mode_switch_list)
   {
-    for (const auto & request : chained_mode_switch_list)
+    auto found_it = std::find_if(
+      rt_controller_list.begin(), rt_controller_list.end(),
+      std::bind(controller_name_compare, std::placeholders::_1, request));
+    if (found_it == rt_controller_list.end())
     {
-      auto found_it = std::find_if(
-        rt_controller_list.begin(), rt_controller_list.end(),
-        std::bind(controller_name_compare, std::placeholders::_1, request));
-      if (found_it == rt_controller_list.end())
+      RCLCPP_FATAL(
+        get_logger(),
+        "Got request to turn %s chained mode for controller '%s', but controller is not in the "
+        "realtime controller list. (This should never happen!)",
+        (to_chained_mode ? "ON" : "OFF"), request.c_str());
+      continue;
+    }
+    auto controller = found_it->c;
+    if (!is_controller_active(*controller))
+    {
+      if (controller->set_chained_mode(to_chained_mode))
       {
-        RCLCPP_FATAL(
-          get_logger(),
-          "Got request to turn %s chained mode for controller '%s', but controller is not in the "
-          "realtime controller list. (This should never happen!)",
-          (to_chained_mode ? "ON" : "OFF"), request.c_str());
-        continue;
-      }
-      auto controller = found_it->c;
-      if (!is_controller_active(*controller))
-      {
-        if (controller->set_chained_mode(to_chained_mode))
+        if (to_chained_mode)
         {
-          if (to_chained_mode)
-          {
-            resource_manager_->make_controller_reference_interfaces_available(request);
-          }
-          else
-          {
-            resource_manager_->make_controller_reference_interfaces_unavailable(request);
-          }
+          resource_manager_->make_controller_reference_interfaces_available(request);
         }
         else
         {
-          RCLCPP_ERROR(
-            get_logger(),
-            "Got request to turn %s chained mode for controller '%s', but controller refused to do "
-            "it! The control will probably not work as expected. Try to restart all controllers. "
-            "If "
-            "the error persist check controllers' individual configuration.",
-            (to_chained_mode ? "ON" : "OFF"), request.c_str());
+          resource_manager_->make_controller_reference_interfaces_unavailable(request);
         }
       }
       else
       {
-        RCLCPP_FATAL(
+        RCLCPP_ERROR(
           get_logger(),
-          "Got request to turn %s chained mode for controller '%s', but this can not happen if "
-          "controller is in '%s' state. (This should never happen!)",
-          (to_chained_mode ? "ON" : "OFF"), request.c_str(),
-          hardware_interface::lifecycle_state_names::ACTIVE);
+          "Got request to turn %s chained mode for controller '%s', but controller refused to do "
+          "it! The control will probably not work as expected. Try to restart all controllers. "
+          "If "
+          "the error persist check controllers' individual configuration.",
+          (to_chained_mode ? "ON" : "OFF"), request.c_str());
       }
     }
-  };
-
-  to_from_chained_mode(to_chained_mode_request_, true);
-  to_from_chained_mode(from_chained_mode_request_, false);
+    else
+    {
+      RCLCPP_FATAL(
+        get_logger(),
+        "Got request to turn %s chained mode for controller '%s', but this can not happen if "
+        "controller is in '%s' state. (This should never happen!)",
+        (to_chained_mode ? "ON" : "OFF"), request.c_str(),
+        hardware_interface::lifecycle_state_names::ACTIVE);
+    }
+  }
 }
 
 void ControllerManager::start_controllers()
