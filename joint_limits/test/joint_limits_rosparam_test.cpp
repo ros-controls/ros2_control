@@ -44,14 +44,38 @@ TEST_F(JointLimitsRosParamTest, parse_joint_limits)
   // Invalid specification
   {
     joint_limits::JointLimits limits;
+
+    // test default values
+    EXPECT_FALSE(limits.has_position_limits);
+    EXPECT_TRUE(std::isnan(limits.min_position));
+    EXPECT_TRUE(std::isnan(limits.max_position));
+    EXPECT_FALSE(limits.has_velocity_limits);
+    EXPECT_TRUE(std::isnan(limits.max_velocity));
+    EXPECT_FALSE(limits.has_acceleration_limits);
+    EXPECT_TRUE(std::isnan(limits.max_acceleration));
+    EXPECT_FALSE(limits.has_jerk_limits);
+    EXPECT_TRUE(std::isnan(limits.max_jerk));
+    EXPECT_FALSE(limits.has_effort_limits);
+    EXPECT_TRUE(std::isnan(limits.max_effort));
+    EXPECT_FALSE(limits.angle_wraparound);
+
+    // try to read limits for not-existing joints
     EXPECT_FALSE(get_joint_limits("bad_joint", node_, limits));
     EXPECT_FALSE(get_joint_limits("unknown_joint", node_, limits));
 
+    // default values should not change
     EXPECT_FALSE(limits.has_position_limits);
+    EXPECT_TRUE(std::isnan(limits.min_position));
+    EXPECT_TRUE(std::isnan(limits.max_position));
     EXPECT_FALSE(limits.has_velocity_limits);
+    EXPECT_TRUE(std::isnan(limits.max_velocity));
     EXPECT_FALSE(limits.has_acceleration_limits);
+    EXPECT_TRUE(std::isnan(limits.max_acceleration));
     EXPECT_FALSE(limits.has_jerk_limits);
+    EXPECT_TRUE(std::isnan(limits.max_jerk));
     EXPECT_FALSE(limits.has_effort_limits);
+    EXPECT_TRUE(std::isnan(limits.max_effort));
+    EXPECT_FALSE(limits.angle_wraparound);
   }
 
   // Get full specification from parameter server
@@ -75,6 +99,7 @@ TEST_F(JointLimitsRosParamTest, parse_joint_limits)
     EXPECT_TRUE(limits.has_effort_limits);
     EXPECT_EQ(20.0, limits.max_effort);
 
+    // parameters is 'true', but because there are position limits it is ignored
     EXPECT_FALSE(limits.angle_wraparound);
   }
 
@@ -127,31 +152,31 @@ TEST_F(JointLimitsRosParamTest, parse_joint_limits)
     EXPECT_TRUE(get_joint_limits("baz_joint", node_, limits));
 
     EXPECT_FALSE(limits.has_position_limits);
+    EXPECT_TRUE(std::isnan(limits.min_position));
+    EXPECT_TRUE(std::isnan(limits.max_position));
   }
 
   // Override only one field, leave all others unchanged
   {
-    joint_limits::JointLimits limits, limits_ref;
+    joint_limits::JointLimits limits;
     EXPECT_TRUE(get_joint_limits("bar_joint", node_, limits));
 
-    EXPECT_EQ(limits_ref.has_position_limits, limits.has_position_limits);
-    EXPECT_EQ(limits_ref.min_position, limits.min_position);
-    EXPECT_EQ(limits_ref.max_position, limits.max_position);
+    EXPECT_FALSE(limits.has_position_limits);
+    EXPECT_TRUE(std::isnan(limits.min_position));
+    EXPECT_TRUE(std::isnan(limits.max_position));
 
     // Max velocity is overridden
-    EXPECT_NE(limits_ref.has_velocity_limits, limits.has_velocity_limits);
-    EXPECT_NE(limits_ref.max_velocity, limits.max_velocity);
     EXPECT_TRUE(limits.has_velocity_limits);
     EXPECT_EQ(2.0, limits.max_velocity);
 
-    EXPECT_EQ(limits_ref.has_acceleration_limits, limits.has_acceleration_limits);
-    EXPECT_EQ(limits_ref.max_acceleration, limits.max_acceleration);
+    EXPECT_FALSE(limits.has_acceleration_limits);
+    EXPECT_TRUE(std::isnan(limits.max_acceleration));
 
-    EXPECT_EQ(limits_ref.has_jerk_limits, limits.has_jerk_limits);
-    EXPECT_EQ(limits_ref.has_jerk_limits, limits.max_jerk);
+    EXPECT_FALSE(limits.has_jerk_limits);
+    EXPECT_TRUE(std::isnan(limits.max_jerk));
 
-    EXPECT_EQ(limits_ref.has_effort_limits, limits.has_effort_limits);
-    EXPECT_EQ(limits_ref.max_effort, limits.max_effort);
+    EXPECT_FALSE(limits.has_effort_limits);
+    EXPECT_TRUE(std::isnan(limits.max_effort));
   }
 }
 
@@ -160,8 +185,22 @@ TEST_F(JointLimitsRosParamTest, parse_soft_joint_limits)
   // Invalid specification
   {
     joint_limits::SoftJointLimits soft_limits;
+
+    // test default values
+    EXPECT_TRUE(std::isnan(soft_limits.min_position));
+    EXPECT_TRUE(std::isnan(soft_limits.max_position));
+    EXPECT_TRUE(std::isnan(soft_limits.k_position));
+    EXPECT_TRUE(std::isnan(soft_limits.k_velocity));
+
+    // try to read limits for not-existing joints
     EXPECT_FALSE(get_joint_limits("bad_joint", node_, soft_limits));
     EXPECT_FALSE(get_joint_limits("unknown_joint", node_, soft_limits));
+
+    // default values should not change
+    EXPECT_TRUE(std::isnan(soft_limits.min_position));
+    EXPECT_TRUE(std::isnan(soft_limits.max_position));
+    EXPECT_TRUE(std::isnan(soft_limits.k_position));
+    EXPECT_TRUE(std::isnan(soft_limits.k_velocity));
   }
 
   // Get full specification from parameter server
@@ -177,18 +216,22 @@ TEST_F(JointLimitsRosParamTest, parse_soft_joint_limits)
 
   // Skip parsing soft limits if has_soft_limits is false
   {
-    joint_limits::SoftJointLimits soft_limits, soft_limits_ref;
+    joint_limits::SoftJointLimits soft_limits;
     EXPECT_FALSE(get_joint_limits("foobar_joint", node_, soft_limits));
+    EXPECT_TRUE(std::isnan(soft_limits.min_position));
+    EXPECT_TRUE(std::isnan(soft_limits.max_position));
+    EXPECT_TRUE(std::isnan(soft_limits.k_position));
+    EXPECT_TRUE(std::isnan(soft_limits.k_velocity));
   }
 
   // Incomplete soft limits specification does not get loaded
   {
-    joint_limits::SoftJointLimits soft_limits, soft_limits_ref;
+    joint_limits::SoftJointLimits soft_limits;
     EXPECT_FALSE(get_joint_limits("barbaz_joint", node_, soft_limits));
-    EXPECT_EQ(soft_limits.k_position, soft_limits_ref.k_position);
-    EXPECT_EQ(soft_limits.k_velocity, soft_limits_ref.k_velocity);
-    EXPECT_EQ(soft_limits.min_position, soft_limits_ref.min_position);
-    EXPECT_EQ(soft_limits.max_position, soft_limits_ref.max_position);
+    EXPECT_TRUE(std::isnan(soft_limits.min_position));
+    EXPECT_TRUE(std::isnan(soft_limits.max_position));
+    EXPECT_TRUE(std::isnan(soft_limits.k_position));
+    EXPECT_TRUE(std::isnan(soft_limits.k_velocity));
   }
 }
 
