@@ -105,7 +105,9 @@ CallbackReturn TestChainableController::on_configure(
   const rclcpp_lifecycle::State & /*previous_state*/)
 {
   joints_command_subscriber_ = get_node()->create_subscription<CmdType>(
-    "~/commands", rclcpp::SystemDefaultsQoS(), [this](const CmdType::SharedPtr msg) {
+    "~/commands", rclcpp::SystemDefaultsQoS(),
+    [this](const CmdType::SharedPtr msg)
+    {
       auto joint_commands = rt_command_ptr_.readFromNonRT();
 
       if (msg->data.size() != (*joint_commands)->data.size())
