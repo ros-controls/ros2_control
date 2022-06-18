@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.10.0 (2022-06-18)
+-------------------
 * Make RHEL CI happy! (`#730 <https://github.com/ros-controls/ros2_control/issues/730>`_)
 * CMakeLists cleanup (`#733 <https://github.com/ros-controls/ros2_control/issues/733>`_)
 * Update to clang format 12 (`#731 <https://github.com/ros-controls/ros2_control/issues/731>`_)

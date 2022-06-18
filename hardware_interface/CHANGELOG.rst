@@ -2,8 +2,8 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.10.0 (2022-06-18)
+-------------------
 * Make RHEL CI happy! (`#730 <https://github.com/ros-controls/ros2_control/issues/730>`_)
 * CMakeLists cleanup (`#733 <https://github.com/ros-controls/ros2_control/issues/733>`_)
 * Refactored error handling when hardware name is duplicated (`#724 <https://github.com/ros-controls/ros2_control/issues/724>`_)
