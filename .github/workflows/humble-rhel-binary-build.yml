@@ -1,0 +1,33 @@
+name: Humble RHEL Binary Build
+on:
+  workflow_dispatch:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+  push:
+    branches:
+      - master
+  schedule:
+    # Run every day to detect flakiness and broken dependencies
+    - cron: '03 1 * * *'
+
+
+jobs:
+  humble_rhel_binary:
+    name: Humble RHEL binary build
+    runs-on: ubuntu-latest
+    env:
+      ROS_DISTRO: humble
+    container: jaronl/ros:humble-alma
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          path: src/ros2_control
+      - run: |
+          rosdep update
+          rosdep install -iy --from-path src/ros2_control
+          source /opt/ros/${{ env.ROS_DISTRO }}/setup.bash
+          colcon build
+          colcon test
