@@ -1,5 +1,8 @@
 name: Galactic Source Build
 on:
+  workflow_dispatch:
+    branches:
+      - galactic
   push:
     branches:
       - galactic

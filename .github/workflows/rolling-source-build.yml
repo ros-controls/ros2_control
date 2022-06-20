@@ -1,5 +1,8 @@
 name: Rolling Source Build
 on:
+  workflow_dispatch:
+    branches:
+      - master
   push:
     branches:
       - master

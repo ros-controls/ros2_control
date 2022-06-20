@@ -1,6 +1,3 @@
-
-
-
 # ros2_control
 
 [![Licence](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
@@ -17,6 +14,7 @@ ROS2 Distro | Branch | Build status | Documentation | Released packages
 **Humble** | [`humble`](https://github.com/ros-controls/ros2_control/tree/humble) | [![Humble Binary Build](https://github.com/ros-controls/ros2_control/actions/workflows/humble-binary-build-main.yml/badge.svg?branch=master)](https://github.com/ros-controls/ros2_control/actions/workflows/humble-binary-build-main.yml?branch=master) <br /> [![Humble Semi-Binary Build](https://github.com/ros-controls/ros2_control/actions/workflows/humble-semi-binary-build-main.yml/badge.svg?branch=master)](https://github.com/ros-controls/ros2_control/actions/workflows/humble-semi-binary-build-main.yml?branch=master) | [Documentation](https://control.ros.org/master/index.html) <br /> [API Reference](https://control.ros.org/master/doc/api/index.html) | [ros2_control](https://index.ros.org/p/ros2_control/#humble)
 **Galactic** | [`galactic`](https://github.com/ros-controls/ros2_control/tree/galactic) | [![Galactic Binary Build](https://github.com/ros-controls/ros2_control/actions/workflows/galactic-binary-build-main.yml/badge.svg?branch=galactic)](https://github.com/ros-controls/ros2_control/actions/workflows/galactic-binary-build-main.yml?branch=galactic) <br /> [![Galactic Semi-Binary Build](https://github.com/ros-controls/ros2_control/actions/workflows/galactic-semi-binary-build-main.yml/badge.svg?branch=galactic)](https://github.com/ros-controls/ros2_control/actions/workflows/galactic-semi-binary-build-main.yml?branch=galactic) | [Documentation](https://control.ros.org/galactic/index.html) <br /> [API Reference](https://control.ros.org/galactic/doc/api/index.html) | [ros2_control](https://index.ros.org/p/ros2_control/#galactic)
 **Foxy** | [`foxy`](https://github.com/ros-controls/ros2_control/tree/foxy) | [![Foxy Binary Build](https://github.com/ros-controls/ros2_control/actions/workflows/foxy-binary-build-main.yml/badge.svg?branch=foxy)](https://github.com/ros-controls/ros2_control/actions/workflows/foxy-binary-build-main.yml?branch=foxy) <br /> [![Foxy Semi-Binary Build](https://github.com/ros-controls/ros2_control/actions/workflows/foxy-semi-binary-build-main.yml/badge.svg?branch=foxy)](https://github.com/ros-controls/ros2_control/actions/workflows/foxy-semi-binary-build-main.yml?branch=foxy) | [Documentation](https://control.ros.org/foxy/index.html) <br /> [API Reference](https://control.ros.org/foxy/doc/api/index.html) | [ros2_control](https://index.ros.org/p/ros2_control/#foxy)
+
 
 ### Explanation of different build types
 

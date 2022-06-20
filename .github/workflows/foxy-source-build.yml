@@ -1,5 +1,8 @@
 name: Foxy Source Build
 on:
+  workflow_dispatch:
+    branches:
+      - foxy
   push:
     branches:
       - foxy
