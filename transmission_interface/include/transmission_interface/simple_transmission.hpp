@@ -151,7 +151,7 @@ HandleType get_by_interface(
     [&interface_name](const auto handle) { return handle.get_interface_name() == interface_name; });
   if (result == handles.cend())
   {
-    return HandleType(handles.cbegin()->get_name(), interface_name, nullptr);
+    return HandleType(handles.cbegin()->get_prefix_name(), interface_name, nullptr);
   }
   return *result;
 }
@@ -162,7 +162,7 @@ bool are_names_identical(const std::vector<T> & handles)
   std::vector<std::string> names;
   std::transform(
     handles.cbegin(), handles.cend(), std::back_inserter(names),
-    [](const auto & handle) { return handle.get_name(); });
+    [](const auto & handle) { return handle.get_prefix_name(); });
   return std::equal(names.cbegin() + 1, names.cend(), names.cbegin());
 }
 

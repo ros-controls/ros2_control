@@ -56,11 +56,14 @@ public:
   /// Returns true if handle references a value.
   inline operator bool() const { return value_ptr_ != nullptr; }
 
-  const std::string & get_name() const { return name_; }
+  const std::string get_name() const { return name_ + "/" + interface_name_; }
 
   const std::string & get_interface_name() const { return interface_name_; }
 
-  const std::string get_full_name() const { return name_ + "/" + interface_name_; }
+  // Deprecated
+  const std::string get_full_name() const { return get_name(); }
+
+  const std::string & get_prefix_name() const { return name_; }
 
   double get_value() const
   {
