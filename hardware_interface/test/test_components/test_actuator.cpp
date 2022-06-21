@@ -62,7 +62,7 @@ class TestActuator : public ActuatorInterface
   {
     std::vector<CommandInterface> command_interfaces;
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      info_.joints[0].name, info_.joints[0].command_interfaces[0].name, &velocity_command_));
+      info_.joints[0].name, info_.joints[0].command_interfaces[0].name, &position_command_));
 
     if (info_.joints[0].command_interfaces.size() > 1)
     {
@@ -91,7 +91,7 @@ class TestActuator : public ActuatorInterface
 private:
   double position_state_ = 0.0;
   double velocity_state_ = 0.0;
-  double velocity_command_ = 0.0;
+  double position_command_ = 0.0;
   double max_velocity_command_ = 0.0;
 };
 
