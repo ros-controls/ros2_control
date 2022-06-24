@@ -57,11 +57,11 @@ int main(int argc, char ** argv)
           std::chrono::nanoseconds((end_period - cm->now()).nanoseconds()));
 
         // execute update loop
-        auto period = current_time - previous_time;
-        cm->read(current_time, period);
         current_time = cm->now();
-        cm->update(current_time, period);
+        auto period = current_time - previous_time;
         previous_time = current_time;
+        cm->read(current_time, period);
+        cm->update(current_time, period);
         cm->write(current_time, period);
       }
     });
