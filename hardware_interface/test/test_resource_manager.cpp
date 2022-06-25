@@ -1330,7 +1330,7 @@ TEST_F(TestResourceManager, managing_controllers_reference_interfaces)
     rm.make_controller_reference_interfaces_unavailable("unknown_controller"), std::out_of_range);
 }
 
-TEST_F(TestResourceManager, handle_error_on_hardware_read)
+TEST_F(TestResourceManager, handle_error_on_hardware_read_and_write)
 {
   // values to be set to hardware to simulate failure on read and write
   static constexpr double READ_FAIL_VALUE = 28282828.0;
@@ -1361,6 +1361,28 @@ TEST_F(TestResourceManager, handle_error_on_hardware_read)
   const auto time = rclcpp::Time(0);
   const auto duration = rclcpp::Duration::from_seconds(0.01);
 
+  // check if all interfaces are available
+  auto interfaces_available = [&](const auto actuator_interfaces, const auto system_interfaces)
+  {
+    for (const auto & interface : TEST_ACTUATOR_HARDWARE_COMMAND_INTERFACES)
+    {
+      EXPECT_EQ(rm.command_interface_is_available(interface), actuator_interfaces);
+    }
+    for (const auto & interface : TEST_ACTUATOR_HARDWARE_STATE_INTERFACES)
+    {
+      EXPECT_EQ(rm.state_interface_is_available(interface), actuator_interfaces);
+    }
+    for (const auto & interface : TEST_SYSTEM_HARDWARE_COMMAND_INTERFACES)
+    {
+      EXPECT_EQ(rm.command_interface_is_available(interface), system_interfaces);
+    }
+    for (const auto & interface : TEST_SYSTEM_HARDWARE_STATE_INTERFACES)
+    {
+      EXPECT_EQ(rm.state_interface_is_available(interface), system_interfaces);
+    }
+  };
+
+  interfaces_available(true, true);
   // with default values read and write should run without any problems
   {
     auto [ok, failed_hardware_names] = rm.read(time, duration);
@@ -1372,6 +1394,7 @@ TEST_F(TestResourceManager, handle_error_on_hardware_read)
     EXPECT_TRUE(ok);
     EXPECT_TRUE(failed_hardware_names.empty());
   }
+  interfaces_available(true, true);
 
   auto check_read_or_write_failure = [&](auto method_that_fails, auto other_method, auto fail_value)
   {
@@ -1392,6 +1415,7 @@ TEST_F(TestResourceManager, handle_error_on_hardware_read)
       EXPECT_EQ(
         status_map[TEST_SYSTEM_HARDWARE_NAME].state.id(),
         lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+      interfaces_available(false, true);
       rm.set_component_state(TEST_ACTUATOR_HARDWARE_NAME, state_active);
       status_map = rm.get_components_status();
       EXPECT_EQ(
@@ -1400,12 +1424,14 @@ TEST_F(TestResourceManager, handle_error_on_hardware_read)
       EXPECT_EQ(
         status_map[TEST_SYSTEM_HARDWARE_NAME].state.id(),
         lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+      interfaces_available(true, true);
     }
     // write is sill OK
     {
       auto [ok, failed_hardware_names] = other_method(time, duration);
       EXPECT_TRUE(ok);
       EXPECT_TRUE(failed_hardware_names.empty());
+      interfaces_available(true, true);
     }
 
     // read failure for TEST_SYSTEM_HARDWARE_NAME
@@ -1425,6 +1451,7 @@ TEST_F(TestResourceManager, handle_error_on_hardware_read)
       EXPECT_EQ(
         status_map[TEST_SYSTEM_HARDWARE_NAME].state.id(),
         lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+      interfaces_available(true, false);
       rm.set_component_state(TEST_SYSTEM_HARDWARE_NAME, state_active);
       status_map = rm.get_components_status();
       EXPECT_EQ(
@@ -1433,12 +1460,14 @@ TEST_F(TestResourceManager, handle_error_on_hardware_read)
       EXPECT_EQ(
         status_map[TEST_SYSTEM_HARDWARE_NAME].state.id(),
         lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+      interfaces_available(true, true);
     }
     // write is sill OK
     {
       auto [ok, failed_hardware_names] = other_method(time, duration);
       EXPECT_TRUE(ok);
       EXPECT_TRUE(failed_hardware_names.empty());
+      interfaces_available(true, true);
     }
 
     // read failure for both, TEST_ACTUATOR_HARDWARE_NAME and TEST_SYSTEM_HARDWARE_NAME
@@ -1458,6 +1487,7 @@ TEST_F(TestResourceManager, handle_error_on_hardware_read)
       EXPECT_EQ(
         status_map[TEST_SYSTEM_HARDWARE_NAME].state.id(),
         lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+      interfaces_available(false, false);
       rm.set_component_state(TEST_ACTUATOR_HARDWARE_NAME, state_active);
       rm.set_component_state(TEST_SYSTEM_HARDWARE_NAME, state_active);
       status_map = rm.get_components_status();
@@ -1467,12 +1497,14 @@ TEST_F(TestResourceManager, handle_error_on_hardware_read)
       EXPECT_EQ(
         status_map[TEST_SYSTEM_HARDWARE_NAME].state.id(),
         lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+      interfaces_available(true, true);
     }
     // write is sill OK
     {
       auto [ok, failed_hardware_names] = other_method(time, duration);
       EXPECT_TRUE(ok);
       EXPECT_TRUE(failed_hardware_names.empty());
+      interfaces_available(true, true);
     }
   };
 

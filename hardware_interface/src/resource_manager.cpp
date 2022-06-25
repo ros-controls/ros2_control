@@ -101,7 +101,8 @@ public:
     component_info.class_type = hardware_info.hardware_class_type;
 
     hardware_info_map_.insert(std::make_pair(component_info.name, component_info));
-    hardware_used_by_controllers_.insert(std::make_pair(component_info.name, std::vector<std::string>()));
+    hardware_used_by_controllers_.insert(
+      std::make_pair(component_info.name, std::vector<std::string>()));
   }
 
   template <class HardwareT>
@@ -196,6 +197,58 @@ public:
     return result;
   }
 
+  void remove_all_hardware_interfaces_from_available_list(const std::string & hardware_name)
+  {
+    // remove all command interfaces from available list
+    for (const auto & interface : hardware_info_map_[hardware_name].command_interfaces)
+    {
+      auto found_it = std::find(
+        available_command_interfaces_.begin(), available_command_interfaces_.end(), interface);
+
+      if (found_it != available_command_interfaces_.end())
+      {
+        available_command_interfaces_.erase(found_it);
+        RCUTILS_LOG_DEBUG_NAMED(
+          "resource_manager", "(hardware '%s'): '%s' command interface removed from available list",
+          hardware_name.c_str(), interface.c_str());
+      }
+      else
+      {
+        // TODO(destogl): do here error management if interfaces are only partially added into
+        // "available" list - this should never be the case!
+        RCUTILS_LOG_WARN_NAMED(
+          "resource_manager",
+          "(hardware '%s'): '%s' command interface not in available list."
+          " This can happen due to multiple calls to 'cleanup'",
+          hardware_name.c_str(), interface.c_str());
+      }
+    }
+    // remove all state interfaces from available list
+    for (const auto & interface : hardware_info_map_[hardware_name].state_interfaces)
+    {
+      auto found_it = std::find(
+        available_state_interfaces_.begin(), available_state_interfaces_.end(), interface);
+
+      if (found_it != available_state_interfaces_.end())
+      {
+        available_state_interfaces_.erase(found_it);
+        RCUTILS_LOG_DEBUG_NAMED(
+          "resource_manager", "(hardware '%s'): '%s' state interface removed from available list",
+          hardware_name.c_str(), interface.c_str());
+      }
+      else
+      {
+        // TODO(destogl): do here error management if interfaces are only partially added into
+        // "available" list - this should never be the case!
+        RCUTILS_LOG_WARN_NAMED(
+          "resource_manager",
+          "(hardware '%s'): '%s' state interface not in available list. "
+          "This can happen due to multiple calls to 'cleanup'",
+          hardware_name.c_str(), interface.c_str());
+      }
+    }
+  }
+
   template <class HardwareT>
   bool cleanup_hardware(HardwareT & hardware)
   {
@@ -205,55 +258,7 @@ public:
 
     if (result)
     {
-      // remove all command interfaces from available list
-      for (const auto & interface : hardware_info_map_[hardware.get_name()].command_interfaces)
-      {
-        auto found_it = std::find(
-          available_command_interfaces_.begin(), available_command_interfaces_.end(), interface);
-
-        if (found_it != available_command_interfaces_.end())
-        {
-          available_command_interfaces_.erase(found_it);
-          RCUTILS_LOG_DEBUG_NAMED(
-            "resource_manager",
-            "(hardware '%s'): '%s' command interface removed from available list",
-            hardware.get_name().c_str(), interface.c_str());
-        }
-        else
-        {
-          // TODO(destogl): do here error management if interfaces are only partially added into
-          // "available" list - this should never be the case!
-          RCUTILS_LOG_WARN_NAMED(
-            "resource_manager",
-            "(hardware '%s'): '%s' command interface not in available list."
-            " This can happen due to multiple calls to 'cleanup'",
-            hardware.get_name().c_str(), interface.c_str());
-        }
-      }
-      // remove all state interfaces from available list
-      for (const auto & interface : hardware_info_map_[hardware.get_name()].state_interfaces)
-      {
-        auto found_it = std::find(
-          available_state_interfaces_.begin(), available_state_interfaces_.end(), interface);
-
-        if (found_it != available_state_interfaces_.end())
-        {
-          available_state_interfaces_.erase(found_it);
-          RCUTILS_LOG_DEBUG_NAMED(
-            "resource_manager", "(hardware '%s'): '%s' state interface removed from available list",
-            hardware.get_name().c_str(), interface.c_str());
-        }
-        else
-        {
-          // TODO(destogl): do here error management if interfaces are only partially added into
-          // "available" list - this should never be the case!
-          RCUTILS_LOG_WARN_NAMED(
-            "resource_manager",
-            "(hardware '%s'): '%s' state interface not in available list. "
-            "This can happen due to multiple calls to 'cleanup'",
-            hardware.get_name().c_str(), interface.c_str());
-        }
-      }
+      remove_all_hardware_interfaces_from_available_list(hardware.get_name());
     }
     return result;
   }
@@ -730,12 +735,14 @@ void ResourceManager::cache_controller_to_hardware(
     bool found = false;
     for (const auto & [hw_name, hw_info] : resource_storage_->hardware_info_map_)
     {
-      auto cmd_itf_it = std::find(hw_info.command_interfaces.begin(), hw_info.command_interfaces.end(), interface);
+      auto cmd_itf_it =
+        std::find(hw_info.command_interfaces.begin(), hw_info.command_interfaces.end(), interface);
       if (cmd_itf_it != hw_info.command_interfaces.end())
       {
         found = true;
       }
-      auto state_itf_it = std::find(hw_info.state_interfaces.begin(), hw_info.state_interfaces.end(), interface);
+      auto state_itf_it =
+        std::find(hw_info.state_interfaces.begin(), hw_info.state_interfaces.end(), interface);
       if (state_itf_it != hw_info.state_interfaces.end())
       {
         found = true;
@@ -749,7 +756,7 @@ void ResourceManager::cache_controller_to_hardware(
         if (ctrl_it == controllers.end())
         {
           // add because it does not exist
-          controllers.reserve(controllers.size()+1);
+          controllers.reserve(controllers.size() + 1);
           controllers.push_back(controller_name);
         }
         break;
@@ -758,7 +765,8 @@ void ResourceManager::cache_controller_to_hardware(
   }
 }
 
-std::vector<std::string> ResourceManager::get_cached_controllers_to_hardware(const std::string & hardware_name)
+std::vector<std::string> ResourceManager::get_cached_controllers_to_hardware(
+  const std::string & hardware_name)
 {
   return resource_storage_->hardware_used_by_controllers_[hardware_name];
 }
@@ -1045,12 +1053,14 @@ return_type ResourceManager::set_component_state(
   return result;
 }
 
-HardwareReadWriteStatus ResourceManager::read(const rclcpp::Time & time, const rclcpp::Duration & period)
+HardwareReadWriteStatus ResourceManager::read(
+  const rclcpp::Time & time, const rclcpp::Duration & period)
 {
   HardwareReadWriteStatus read_status;
   read_status.ok = true;
   read_status.failed_hardware_names.reserve(
-    resource_storage_->actuators_.size() + resource_storage_->sensors_.size() + resource_storage_->systems_.size());
+    resource_storage_->actuators_.size() + resource_storage_->sensors_.size() +
+    resource_storage_->systems_.size());
 
   auto read_components = [&](auto & components)
   {
@@ -1060,6 +1070,7 @@ HardwareReadWriteStatus ResourceManager::read(const rclcpp::Time & time, const r
       {
         read_status.ok = false;
         read_status.failed_hardware_names.push_back(component.get_name());
+        resource_storage_->remove_all_hardware_interfaces_from_available_list(component.get_name());
       }
     }
   };
@@ -1071,7 +1082,8 @@ HardwareReadWriteStatus ResourceManager::read(const rclcpp::Time & time, const r
   return read_status;
 }
 
-HardwareReadWriteStatus ResourceManager::write(const rclcpp::Time & time, const rclcpp::Duration & period)
+HardwareReadWriteStatus ResourceManager::write(
+  const rclcpp::Time & time, const rclcpp::Duration & period)
 {
   HardwareReadWriteStatus write_status;
   write_status.ok = true;
@@ -1082,10 +1094,11 @@ HardwareReadWriteStatus ResourceManager::write(const rclcpp::Time & time, const 
   {
     for (auto & component : components)
     {
-      if(component.write(time, period) != return_type::OK)
+      if (component.write(time, period) != return_type::OK)
       {
         write_status.ok = false;
         write_status.failed_hardware_names.push_back(component.get_name());
+        resource_storage_->remove_all_hardware_interfaces_from_available_list(component.get_name());
       }
     }
   };
