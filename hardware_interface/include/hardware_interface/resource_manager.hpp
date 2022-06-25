@@ -37,10 +37,10 @@ class SystemInterface;
 class ResourceStorage;
 
 struct HardwareReadWriteStatus
-  {
-    bool ok;
-    std::vector<std::string> failed_hardware_names;
-  }
+{
+  bool ok;
+  std::vector<std::string> failed_hardware_names;
+};
 
 class HARDWARE_INTERFACE_PUBLIC ResourceManager
 {

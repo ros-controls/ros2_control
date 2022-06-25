@@ -80,11 +80,21 @@ class TestSystem : public SystemInterface
 
   return_type read(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
   {
+    // simulate error on read
+    if (velocity_command_[0] == 28282828)
+    {
+      return return_type::ERROR;
+    }
     return return_type::OK;
   }
 
   return_type write(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
   {
+    // simulate error on write
+    if (velocity_command_[0] == 23232323)
+    {
+      return return_type::ERROR;
+    }
     return return_type::OK;
   }
 

@@ -62,7 +62,7 @@ class TestActuator : public ActuatorInterface
   {
     std::vector<CommandInterface> command_interfaces;
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      info_.joints[0].name, info_.joints[0].command_interfaces[0].name, &position_command_));
+      info_.joints[0].name, info_.joints[0].command_interfaces[0].name, &velocity_command_));
 
     if (info_.joints[0].command_interfaces.size() > 1)
     {
@@ -75,6 +75,11 @@ class TestActuator : public ActuatorInterface
 
   return_type read(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
   {
+    // simulate error on read
+    if (velocity_command_ == 28282828.0)
+    {
+      return return_type::ERROR;
+    }
     // The next line is for the testing purposes. We need value to be changed to be sure that
     // the feedback from hardware to controllers in the chain is working as it should.
     // This makes value checks clearer and confirms there is no "state = command" line or some
@@ -85,13 +90,18 @@ class TestActuator : public ActuatorInterface
 
   return_type write(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
   {
+    // simulate error on write
+    if (velocity_command_ == 23232323.0)
+    {
+      return return_type::ERROR;
+    }
     return return_type::OK;
   }
 
 private:
   double position_state_ = 0.0;
   double velocity_state_ = 0.0;
-  double position_command_ = 0.0;
+  double velocity_command_ = 0.0;
   double max_velocity_command_ = 0.0;
 };
 
