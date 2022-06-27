@@ -2,6 +2,14 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.10.0 (2022-06-18)
+-------------------
+* Make RHEL CI happy! (`#730 <https://github.com/ros-controls/ros2_control/issues/730>`_)
+* CMakeLists cleanup (`#733 <https://github.com/ros-controls/ros2_control/issues/733>`_)
+* Refactored error handling when hardware name is duplicated (`#724 <https://github.com/ros-controls/ros2_control/issues/724>`_)
+* Update to clang format 12 (`#731 <https://github.com/ros-controls/ros2_control/issues/731>`_)
+* Contributors: Andy Zelenak, Bence Magyar, Kvk Praneeth, Márk Szitanics
+
 2.9.0 (2022-05-19)
 ------------------
 * Resource Manager extension to support management of reference interfaces from chained controllers. (`#664 <https://github.com/ros-controls/ros2_control/issues/664>`_)

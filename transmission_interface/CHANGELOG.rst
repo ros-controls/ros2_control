@@ -2,6 +2,12 @@
 Changelog for package transmission_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.10.0 (2022-06-18)
+-------------------
+* CMakeLists cleanup (`#733 <https://github.com/ros-controls/ros2_control/issues/733>`_)
+* Update to clang format 12 (`#731 <https://github.com/ros-controls/ros2_control/issues/731>`_)
+* Contributors: Andy Zelenak, Bence Magyar
+
 2.9.0 (2022-05-19)
 ------------------
 
