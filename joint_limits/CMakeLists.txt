@@ -12,6 +12,7 @@ endif()
 
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rclcpp_lifecycle REQUIRED)
 
 install(DIRECTORY include/
   DESTINATION include
@@ -21,10 +22,11 @@ if(BUILD_TESTING)
   find_package(ament_cmake_gtest REQUIRED)
   find_package(launch_testing_ament_cmake)
   find_package(rclcpp)
+  find_package(rclcpp_lifecycle)
 
   ament_add_gtest_executable(joint_limits_rosparam_test test/joint_limits_rosparam_test.cpp)
   target_include_directories(joint_limits_rosparam_test PRIVATE include)
-  ament_target_dependencies(joint_limits_rosparam_test rclcpp)
+  ament_target_dependencies(joint_limits_rosparam_test rclcpp rclcpp_lifecycle)
 
   add_launch_test(test/joint_limits_rosparam.launch.py)
   install(

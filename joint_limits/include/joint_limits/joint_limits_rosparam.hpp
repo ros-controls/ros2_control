@@ -22,6 +22,7 @@
 
 #include "joint_limits/joint_limits.hpp"
 #include "rclcpp/rclcpp.hpp"
+#include "rclcpp_lifecycle/lifecycle_node.hpp"
 
 namespace  // utilities
 {
@@ -34,303 +35,487 @@ namespace  // utilities
    */
 template <typename ParameterT>
 auto auto_declare(
-  const rclcpp::Node::SharedPtr & node, const std::string & name, const ParameterT & default_value)
+  const rclcpp::node_interfaces::NodeParametersInterface::SharedPtr & param_itf,
+  const std::string & name, const ParameterT & default_value)
 {
-  if (!node->has_parameter(name))
+  if (!param_itf->has_parameter(name))
   {
-    return node->declare_parameter<ParameterT>(name, default_value);
+    auto param_default_value = rclcpp::ParameterValue(default_value);
+    param_itf->declare_parameter(name, param_default_value);
   }
-  else
-  {
-    return node->get_parameter(name).get_value<ParameterT>();
-  }
+  return param_itf->get_parameter(name).get_value<ParameterT>();
 }
 }  // namespace
 
 namespace joint_limits
 {
-inline bool declare_parameters(const std::string & joint_name, const rclcpp::Node::SharedPtr & node)
+/**
+ * Declare JointLimits and SoftJointLimits parameters for joint with \p joint_name using node
+ * parameters interface \p param_itf.
+ *
+ * The following parameter structure is declared with base name `joint_limits.joint_name`:
+ * \code
+ *   has_position_limits: bool
+ *   min_position: double
+ *   max_position: double
+ *   has_velocity_limits: bool
+ *   max_velocity: double
+ *   has_acceleration_limits: bool
+ *   max_acceleration: double
+ *   has_jerk_limits: bool
+ *   max_jerk: double
+ *   has_effort_limits: bool
+ *   max_effort: double
+ *   angle_wraparound: bool
+ *   has_soft_limits: bool
+ *   k_position: double
+ *   k_velocity: double
+ *   soft_lower_limit: double
+ *   soft_upper_limit: double
+ * \endcode
+ *
+ * \param[in] joint_name name of the joint for which parameters will be declared.
+ * \param[in] param_itf node parameters interface object to access parameters.
+ * \param[in] logging_itf node logging interface to log if error happens.
+ *
+ * \returns True if parameters are successfully declared, false otherwise.
+ */
+inline bool declare_parameters(
+  const std::string & joint_name,
+  const rclcpp::node_interfaces::NodeParametersInterface::SharedPtr & param_itf,
+  const rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr & logging_itf)
 {
   const std::string param_base_name = "joint_limits." + joint_name;
   try
   {
-    auto_declare<bool>(node, param_base_name + ".has_position_limits", false);
+    auto_declare<bool>(param_itf, param_base_name + ".has_position_limits", false);
     auto_declare<double>(
-      node, param_base_name + ".min_position", std::numeric_limits<double>::quiet_NaN());
+      param_itf, param_base_name + ".min_position", std::numeric_limits<double>::quiet_NaN());
     auto_declare<double>(
-      node, param_base_name + ".max_position", std::numeric_limits<double>::quiet_NaN());
-    auto_declare<bool>(node, param_base_name + ".has_velocity_limits", false);
+      param_itf, param_base_name + ".max_position", std::numeric_limits<double>::quiet_NaN());
+    auto_declare<bool>(param_itf, param_base_name + ".has_velocity_limits", false);
     auto_declare<double>(
-      node, param_base_name + ".min_velocity", std::numeric_limits<double>::quiet_NaN());
+      param_itf, param_base_name + ".min_velocity", std::numeric_limits<double>::quiet_NaN());
     auto_declare<double>(
-      node, param_base_name + ".max_velocity", std::numeric_limits<double>::quiet_NaN());
-    auto_declare<bool>(node, param_base_name + ".has_acceleration_limits", false);
+      param_itf, param_base_name + ".max_velocity", std::numeric_limits<double>::quiet_NaN());
+    auto_declare<bool>(param_itf, param_base_name + ".has_acceleration_limits", false);
     auto_declare<double>(
-      node, param_base_name + ".max_acceleration", std::numeric_limits<double>::quiet_NaN());
-    auto_declare<bool>(node, param_base_name + ".has_jerk_limits", false);
+      param_itf, param_base_name + ".max_acceleration", std::numeric_limits<double>::quiet_NaN());
+    auto_declare<bool>(param_itf, param_base_name + ".has_jerk_limits", false);
     auto_declare<double>(
-      node, param_base_name + ".max_jerk", std::numeric_limits<double>::quiet_NaN());
-    auto_declare<bool>(node, param_base_name + ".has_effort_limits", false);
+      param_itf, param_base_name + ".max_jerk", std::numeric_limits<double>::quiet_NaN());
+    auto_declare<bool>(param_itf, param_base_name + ".has_effort_limits", false);
     auto_declare<double>(
-      node, param_base_name + ".max_effort", std::numeric_limits<double>::quiet_NaN());
-    auto_declare<bool>(node, param_base_name + ".angle_wraparound", false);
-    auto_declare<bool>(node, param_base_name + ".has_soft_limits", false);
+      param_itf, param_base_name + ".max_effort", std::numeric_limits<double>::quiet_NaN());
+    auto_declare<bool>(param_itf, param_base_name + ".angle_wraparound", false);
+    auto_declare<bool>(param_itf, param_base_name + ".has_soft_limits", false);
     auto_declare<double>(
-      node, param_base_name + ".k_position", std::numeric_limits<double>::quiet_NaN());
+      param_itf, param_base_name + ".k_position", std::numeric_limits<double>::quiet_NaN());
     auto_declare<double>(
-      node, param_base_name + ".k_velocity", std::numeric_limits<double>::quiet_NaN());
+      param_itf, param_base_name + ".k_velocity", std::numeric_limits<double>::quiet_NaN());
     auto_declare<double>(
-      node, param_base_name + ".soft_lower_limit", std::numeric_limits<double>::quiet_NaN());
+      param_itf, param_base_name + ".soft_lower_limit", std::numeric_limits<double>::quiet_NaN());
     auto_declare<double>(
-      node, param_base_name + ".soft_upper_limit", std::numeric_limits<double>::quiet_NaN());
+      param_itf, param_base_name + ".soft_upper_limit", std::numeric_limits<double>::quiet_NaN());
   }
   catch (const std::exception & ex)
   {
-    RCLCPP_ERROR(node->get_logger(), "%s", ex.what());
+    RCLCPP_ERROR(logging_itf->get_logger(), "%s", ex.what());
     return false;
   }
   return true;
 }
 
-/// Populate a JointLimits instance from the ROS parameter server.
 /**
- * It is assumed that the following parameter structure is followed on the provided NodeHandle. Unspecified parameters
- * are simply not added to the joint limits specification.
+ * Declare JointLimits and SoftJointLimits parameters for joint with \p joint_name for the \p node
+ * object.
+ * This is a convenience function.
+ * For parameters structure see the underlying `declare_parameters` function.
+ *
+ * \param[in] joint_name name of the joint for which parameters will be declared.
+ * \param[in] node node for parameters should be declared.
+ *
+ * \returns True if parameters are successfully declared, false otherwise.
+ */
+inline bool declare_parameters(const std::string & joint_name, const rclcpp::Node::SharedPtr & node)
+{
+  return declare_parameters(
+    joint_name, node->get_node_parameters_interface(), node->get_node_logging_interface());
+}
+
+/**
+ * Declare JointLimits and SoftJointLimits parameters for joint with joint_name for the lifecycle_node
+ * object.
+ * This is a convenience function.
+ * For parameters structure see the underlying `declare_parameters` function.
+ *
+ * \param[in] joint_name name of the joint for which parameters will be declared.
+ * \param[in] lifecycle_node lifecycle node for parameters should be declared.
+ *
+ * \returns True if parameters are successfully declared, false otherwise.
+ */
+inline bool declare_parameters(
+  const std::string & joint_name, const rclcpp_lifecycle::LifecycleNode::SharedPtr & lifecycle_node)
+{
+  return declare_parameters(
+    joint_name, lifecycle_node->get_node_parameters_interface(),
+    lifecycle_node->get_node_logging_interface());
+}
+
+/// Populate a JointLimits instance from the node parameters.
+/**
+ * It is assumed that parameter structure is the following:
  * \code
- * joint_limits:
- *   foo_joint:
- *     has_position_limits: true
- *     min_position: 0.0
- *     max_position: 1.0
- *     has_velocity_limits: true
- *     max_velocity: 2.0
- *     has_acceleration_limits: true
- *     max_acceleration: 5.0
- *     has_jerk_limits: true
- *     max_jerk: 100.0
- *     has_effort_limits: true
- *     max_effort: 20.0
- *   bar_joint:
- *     has_position_limits: false # Continuous joint
- *     angle_wraparound: true
- *     has_velocity_limits: true
- *     max_velocity: 4.0
+ *   has_position_limits: bool
+ *   min_position: double
+ *   max_position: double
+ *   has_velocity_limits: bool
+ *   max_velocity: double
+ *   has_acceleration_limits: bool
+ *   max_acceleration: double
+ *   has_jerk_limits: bool
+ *   max_jerk: double
+ *   has_effort_limits: bool
+ *   max_effort: double
+ *   angle_wraparound: bool  # will be ignored if there are position limits
  * \endcode
  *
- * This specification is similar to the one used by <a href="http://moveit.ros.org/">MoveIt2</a>,
- * but additionally supports effort limits.
+ * Unspecified parameters are not added to the joint limits specification.
+ * A specification in a yaml would look like this:
+ * \code
+ * <node_name>
+ *   ros__parameters:
+ *     joint_limits:
+ *       foo_joint:
+ *         has_position_limits: true
+ *         min_position: 0.0
+ *         max_position: 1.0
+ *         has_velocity_limits: true
+ *         max_velocity: 2.0
+ *         has_acceleration_limits: true
+ *         max_acceleration: 5.0
+ *         has_jerk_limits: true
+ *         max_jerk: 100.0
+ *         has_effort_limits: true
+ *         max_effort: 20.0
+ *       bar_joint:
+ *         has_position_limits: false   # Continuous joint
+ *         angle_wraparound: true       # available only for continuous joints
+ *         has_velocity_limits: true
+ *         max_velocity: 4.0
+ * \endcode
  *
- * \param[in] joint_name Name of joint whose limits are to be fetched.
- * \param[in] node NodeHandle where the joint limits are specified.
+ * \param[in] joint_name Name of joint whose limits are to be fetched, e.g., "foo_joint".
+ * \param[in] param_itf node parameters interface of the node where parameters are specified.
+ * \param[in] logging_itf node logging interface to provide log errors.
  * \param[out] limits Where joint limit data gets written into. Limits specified in the parameter server will overwrite
  * existing values. Values in \p limits not specified in the parameter server remain unchanged.
- * \return True if a limits specification is found (ie. the \p joint_limits/joint_name parameter exists in \p node), false otherwise.
+ *
+ * \returns True if a limits specification is found (i.e., the \p joint_limits/joint_name parameter exists in \p node), false otherwise.
  */
 inline bool get_joint_limits(
-  const std::string & joint_name, const rclcpp::Node::SharedPtr & node, JointLimits & limits)
+  const std::string & joint_name,
+  const rclcpp::node_interfaces::NodeParametersInterface::SharedPtr & param_itf,
+  const rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr & logging_itf,
+  JointLimits & limits)
 {
   const std::string param_base_name = "joint_limits." + joint_name;
   try
   {
     if (
-      !node->has_parameter(param_base_name + ".has_position_limits") &&
-      !node->has_parameter(param_base_name + ".min_position") &&
-      !node->has_parameter(param_base_name + ".max_position") &&
-      !node->has_parameter(param_base_name + ".has_velocity_limits") &&
-      !node->has_parameter(param_base_name + ".min_velocity") &&
-      !node->has_parameter(param_base_name + ".max_velocity") &&
-      !node->has_parameter(param_base_name + ".has_acceleration_limits") &&
-      !node->has_parameter(param_base_name + ".max_acceleration") &&
-      !node->has_parameter(param_base_name + ".has_jerk_limits") &&
-      !node->has_parameter(param_base_name + ".max_jerk") &&
-      !node->has_parameter(param_base_name + ".has_effort_limits") &&
-      !node->has_parameter(param_base_name + ".max_effort") &&
-      !node->has_parameter(param_base_name + ".angle_wraparound") &&
-      !node->has_parameter(param_base_name + ".has_soft_limits") &&
-      !node->has_parameter(param_base_name + ".k_position") &&
-      !node->has_parameter(param_base_name + ".k_velocity") &&
-      !node->has_parameter(param_base_name + ".soft_lower_limit") &&
-      !node->has_parameter(param_base_name + ".soft_upper_limit"))
+      !param_itf->has_parameter(param_base_name + ".has_position_limits") &&
+      !param_itf->has_parameter(param_base_name + ".min_position") &&
+      !param_itf->has_parameter(param_base_name + ".max_position") &&
+      !param_itf->has_parameter(param_base_name + ".has_velocity_limits") &&
+      !param_itf->has_parameter(param_base_name + ".min_velocity") &&
+      !param_itf->has_parameter(param_base_name + ".max_velocity") &&
+      !param_itf->has_parameter(param_base_name + ".has_acceleration_limits") &&
+      !param_itf->has_parameter(param_base_name + ".max_acceleration") &&
+      !param_itf->has_parameter(param_base_name + ".has_jerk_limits") &&
+      !param_itf->has_parameter(param_base_name + ".max_jerk") &&
+      !param_itf->has_parameter(param_base_name + ".has_effort_limits") &&
+      !param_itf->has_parameter(param_base_name + ".max_effort") &&
+      !param_itf->has_parameter(param_base_name + ".angle_wraparound") &&
+      !param_itf->has_parameter(param_base_name + ".has_soft_limits") &&
+      !param_itf->has_parameter(param_base_name + ".k_position") &&
+      !param_itf->has_parameter(param_base_name + ".k_velocity") &&
+      !param_itf->has_parameter(param_base_name + ".soft_lower_limit") &&
+      !param_itf->has_parameter(param_base_name + ".soft_upper_limit"))
     {
       RCLCPP_ERROR(
-        node->get_logger(),
+        logging_itf->get_logger(),
         "No joint limits specification found for joint '%s' in the parameter server "
-        "(node: %s param name: %s).",
-        joint_name.c_str(), node->get_name(), param_base_name.c_str());
+        "(param name: %s).",
+        joint_name.c_str(), param_base_name.c_str());
       return false;
     }
   }
   catch (const std::exception & ex)
   {
-    RCLCPP_ERROR(node->get_logger(), "%s", ex.what());
+    RCLCPP_ERROR(logging_itf->get_logger(), "%s", ex.what());
     return false;
   }
 
   // Position limits
-  bool has_position_limits = false;
-  if (node->get_parameter(param_base_name + ".has_position_limits", has_position_limits))
+  if (param_itf->has_parameter(param_base_name + ".has_position_limits"))
   {
-    if (!has_position_limits)
+    limits.has_position_limits =
+      param_itf->get_parameter(param_base_name + ".has_position_limits").as_bool();
+    if (
+      limits.has_position_limits && param_itf->has_parameter(param_base_name + ".min_position") &&
+      param_itf->has_parameter(param_base_name + ".max_position"))
+    {
+      limits.min_position = param_itf->get_parameter(param_base_name + ".min_position").as_double();
+      limits.max_position = param_itf->get_parameter(param_base_name + ".max_position").as_double();
+    }
+    else
     {
       limits.has_position_limits = false;
     }
-    double min_pos, max_pos;
-    if (
-      has_position_limits && node->get_parameter(param_base_name + ".min_position", min_pos) &&
-      node->get_parameter(param_base_name + ".max_position", max_pos))
-    {
-      limits.has_position_limits = true;
-      limits.min_position = min_pos;
-      limits.max_position = max_pos;
-    }
 
-    bool angle_wraparound;
     if (
-      !has_position_limits &&
-      node->get_parameter(param_base_name + ".angle_wraparound", angle_wraparound))
+      !limits.has_position_limits &&
+      param_itf->has_parameter(param_base_name + ".angle_wraparound"))
     {
-      limits.angle_wraparound = angle_wraparound;
+      limits.angle_wraparound =
+        param_itf->get_parameter(param_base_name + ".angle_wraparound").as_bool();
     }
   }
 
   // Velocity limits
-  bool has_velocity_limits = false;
-  if (node->get_parameter(param_base_name + ".has_velocity_limits", has_velocity_limits))
+  if (param_itf->has_parameter(param_base_name + ".has_velocity_limits"))
   {
-    if (!has_velocity_limits)
+    limits.has_velocity_limits =
+      param_itf->get_parameter(param_base_name + ".has_velocity_limits").as_bool();
+    if (limits.has_velocity_limits && param_itf->has_parameter(param_base_name + ".max_velocity"))
+    {
+      limits.max_velocity = param_itf->get_parameter(param_base_name + ".max_velocity").as_double();
+    }
+    else
     {
       limits.has_velocity_limits = false;
-    }
-    double max_vel;
-    if (has_velocity_limits && node->get_parameter(param_base_name + ".max_velocity", max_vel))
-    {
-      limits.has_velocity_limits = true;
-      limits.max_velocity = max_vel;
     }
   }
 
   // Acceleration limits
-  bool has_acceleration_limits = false;
-  if (node->get_parameter(param_base_name + ".has_acceleration_limits", has_acceleration_limits))
+  if (param_itf->has_parameter(param_base_name + ".has_acceleration_limits"))
   {
-    if (!has_acceleration_limits)
+    limits.has_acceleration_limits =
+      param_itf->get_parameter(param_base_name + ".has_acceleration_limits").as_bool();
+    if (
+      limits.has_acceleration_limits &&
+      param_itf->has_parameter(param_base_name + ".max_acceleration"))
+    {
+      limits.max_acceleration =
+        param_itf->get_parameter(param_base_name + ".max_acceleration").as_double();
+    }
+    else
     {
       limits.has_acceleration_limits = false;
-    }
-    double max_acc;
-    if (
-      has_acceleration_limits &&
-      node->get_parameter(param_base_name + ".max_acceleration", max_acc))
-    {
-      limits.has_acceleration_limits = true;
-      limits.max_acceleration = max_acc;
     }
   }
 
   // Jerk limits
-  bool has_jerk_limits = false;
-  if (node->get_parameter(param_base_name + ".has_jerk_limits", has_jerk_limits))
+  if (param_itf->has_parameter(param_base_name + ".has_jerk_limits"))
   {
-    if (!has_jerk_limits)
+    limits.has_jerk_limits =
+      param_itf->get_parameter(param_base_name + ".has_jerk_limits").as_bool();
+    if (limits.has_jerk_limits && param_itf->has_parameter(param_base_name + ".max_jerk"))
+    {
+      limits.max_jerk = param_itf->get_parameter(param_base_name + ".max_jerk").as_double();
+    }
+    else
     {
       limits.has_jerk_limits = false;
-    }
-    double max_jerk;
-    if (has_jerk_limits && node->get_parameter(param_base_name + ".max_jerk", max_jerk))
-    {
-      limits.has_jerk_limits = true;
-      limits.max_jerk = max_jerk;
     }
   }
 
   // Effort limits
-  bool has_effort_limits = false;
-  if (node->get_parameter(param_base_name + ".has_effort_limits", has_effort_limits))
+  if (param_itf->has_parameter(param_base_name + ".has_effort_limits"))
   {
-    if (!has_effort_limits)
-    {
-      limits.has_effort_limits = false;
-    }
-    double max_effort;
-    if (has_effort_limits && node->get_parameter(param_base_name + ".max_effort", max_effort))
+    limits.has_effort_limits =
+      param_itf->get_parameter(param_base_name + ".has_effort_limits").as_bool();
+    if (limits.has_effort_limits && param_itf->has_parameter(param_base_name + ".max_effort"))
     {
       limits.has_effort_limits = true;
-      limits.max_effort = max_effort;
+      limits.max_effort = param_itf->get_parameter(param_base_name + ".max_effort").as_double();
+    }
+    else
+    {
+      limits.has_effort_limits = false;
     }
   }
 
   return true;
 }
 
-/// Populate a SoftJointLimits instance from the ROS parameter server.
 /**
- * It is assumed that the following parameter structure is followed on the provided NodeHandle. Only completely specified soft
- * joint limits specifications will be considered valid.
- * \code
- * joint_limits:
- *   foo_joint:
- *     soft_lower_limit: 0.0
- *     soft_upper_limit: 1.0
- *     k_position: 10.0
- *     k_velocity: 10.0
- * \endcode
- *
- * This specification is similar to the specification of the safety_controller tag in the URDF, adapted to the parameter server.
+ * Populate a JointLimits instance from the node parameters.
+ * This is a convenience function.
+ * For parameters structure see the underlying `get_joint_limits` function.
  *
  * \param[in] joint_name Name of joint whose limits are to be fetched.
- * \param[in] node NodeHandle where the joint limits are specified.
+ * \param[in] node Node object for which parameters should be fetched.
+ * \param[out] limits Where joint limit data gets written into. Limits specified in the parameter server will overwrite
+ * existing values. Values in \p limits not specified in the parameter server remain unchanged.
+ *
+ * \returns True if a limits specification is found, false otherwise.
+ */
+inline bool get_joint_limits(
+  const std::string & joint_name, const rclcpp::Node::SharedPtr & node, JointLimits & limits)
+{
+  return get_joint_limits(
+    joint_name, node->get_node_parameters_interface(), node->get_node_logging_interface(), limits);
+}
+
+/**
+ * Populate a JointLimits instance from the node parameters.
+ * This is a convenience function.
+ * For parameters structure see the underlying `get_joint_limits` function.
+ *
+ * \param[in] joint_name Name of joint whose limits are to be fetched.
+ * \param[in] lifecycle_node Lifecycle node object for which parameters should be fetched.
+ * \param[out] limits Where joint limit data gets written into. Limits specified in the parameter server will overwrite
+ * existing values. Values in \p limits not specified in the parameter server remain unchanged.
+ *
+ * \returns True if a limits specification is found, false otherwise.
+ */
+inline bool get_joint_limits(
+  const std::string & joint_name, const rclcpp_lifecycle::LifecycleNode::SharedPtr & lifecycle_node,
+  JointLimits & limits)
+{
+  return get_joint_limits(
+    joint_name, lifecycle_node->get_node_parameters_interface(),
+    lifecycle_node->get_node_logging_interface(), limits);
+}
+
+/// Populate a SoftJointLimits instance from the ROS parameter server.
+/**
+ * It is assumed that the parameter structure is the following:
+ * \code
+ *   has_soft_limits: bool
+ *   k_position: double
+ *   k_velocity: double
+ *   soft_lower_limit: double
+ *   soft_upper_limit: double
+ * \endcode
+ *
+ * Only completely specified soft joint limits specifications will be considered valid.
+ * For example a valid yaml configuration would look like:
+ * \code
+ * <node_name>
+ *   ros__parameters:
+ *     joint_limits:
+ *       foo_joint:
+ *         soft_lower_limit: 0.0
+ *         soft_upper_limit: 1.0
+ *         k_position: 10.0
+ *         k_velocity: 10.0
+ * \endcode
+ *
+ * \param[in] joint_name Name of joint whose limits are to be fetched, e.g., "foo_joint".
+ * \param[in] param_itf node parameters interface of the node where parameters are specified.
+ * \param[in] logging_itf node logging interface to provide log errors.
  * \param[out] soft_limits Where soft joint limit data gets written into. Limits specified in the parameter server will overwrite
  * existing values.
  * \return True if a complete soft limits specification is found (ie. if all \p k_position, \p k_velocity, \p soft_lower_limit and
  * \p soft_upper_limit exist in \p joint_limits/joint_name namespace), false otherwise.
  */
 inline bool get_joint_limits(
-  const std::string & joint_name, const rclcpp::Node::SharedPtr & node,
+  const std::string & joint_name,
+  const rclcpp::node_interfaces::NodeParametersInterface::SharedPtr & param_itf,
+  const rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr & logging_itf,
   SoftJointLimits & soft_limits)
 {
   const std::string param_base_name = "joint_limits." + joint_name;
   try
   {
     if (
-      !node->has_parameter(param_base_name + ".has_soft_limits") &&
-      !node->has_parameter(param_base_name + ".k_velocity") &&
-      !node->has_parameter(param_base_name + ".k_position") &&
-      !node->has_parameter(param_base_name + ".soft_lower_limit") &&
-      !node->has_parameter(param_base_name + ".soft_upper_limit"))
+      !param_itf->has_parameter(param_base_name + ".has_soft_limits") &&
+      !param_itf->has_parameter(param_base_name + ".k_velocity") &&
+      !param_itf->has_parameter(param_base_name + ".k_position") &&
+      !param_itf->has_parameter(param_base_name + ".soft_lower_limit") &&
+      !param_itf->has_parameter(param_base_name + ".soft_upper_limit"))
     {
       RCLCPP_DEBUG(
-        node->get_logger(),
+        logging_itf->get_logger(),
         "No soft joint limits specification found for joint '%s' in the parameter server "
-        "(node: %s param name: %s).",
-        joint_name.c_str(), node->get_name(), param_base_name.c_str());
+        "(param name: %s).",
+        joint_name.c_str(), param_base_name.c_str());
       return false;
     }
   }
   catch (const std::exception & ex)
   {
-    RCLCPP_ERROR(node->get_logger(), "%s", ex.what());
+    RCLCPP_ERROR(logging_itf->get_logger(), "%s", ex.what());
     return false;
   }
 
   // Override soft limits if complete specification is found
-  bool has_soft_limits;
-  if (node->get_parameter(param_base_name + ".has_soft_limits", has_soft_limits))
+  if (param_itf->has_parameter(param_base_name + ".has_soft_limits"))
   {
     if (
-      has_soft_limits && node->has_parameter(param_base_name + ".k_position") &&
-      node->has_parameter(param_base_name + ".k_velocity") &&
-      node->has_parameter(param_base_name + ".soft_lower_limit") &&
-      node->has_parameter(param_base_name + ".soft_upper_limit"))
+      param_itf->get_parameter(param_base_name + ".has_soft_limits").as_bool() &&
+      param_itf->has_parameter(param_base_name + ".k_position") &&
+      param_itf->has_parameter(param_base_name + ".k_velocity") &&
+      param_itf->has_parameter(param_base_name + ".soft_lower_limit") &&
+      param_itf->has_parameter(param_base_name + ".soft_upper_limit"))
     {
-      node->get_parameter(param_base_name + ".k_position", soft_limits.k_position);
-      node->get_parameter(param_base_name + ".k_velocity", soft_limits.k_velocity);
-      node->get_parameter(param_base_name + ".soft_lower_limit", soft_limits.min_position);
-      node->get_parameter(param_base_name + ".soft_upper_limit", soft_limits.max_position);
+      soft_limits.k_position =
+        param_itf->get_parameter(param_base_name + ".k_position").as_double();
+      soft_limits.k_velocity =
+        param_itf->get_parameter(param_base_name + ".k_velocity").as_double();
+      soft_limits.min_position =
+        param_itf->get_parameter(param_base_name + ".soft_lower_limit").as_double();
+      soft_limits.max_position =
+        param_itf->get_parameter(param_base_name + ".soft_upper_limit").as_double();
       return true;
     }
   }
 
   return false;
+}
+
+/**
+ * Populate a JointLimits instance from the node parameters.
+ * This is a convenience function.
+ * For parameters structure see the underlying `get_joint_limits` function.
+ *
+ * \param[in] joint_name Name of joint whose limits are to be fetched.
+ * \param[in] node Node object for which parameters should be fetched.
+ * \param[out] soft_limits Where soft joint limit data gets written into. Limits specified in the parameter server will overwrite
+ * existing values.
+ *
+ * \returns True if a soft limits specification is found, false otherwise.
+ */
+inline bool get_joint_limits(
+  const std::string & joint_name, const rclcpp::Node::SharedPtr & node,
+  SoftJointLimits & soft_limits)
+{
+  return get_joint_limits(
+    joint_name, node->get_node_parameters_interface(), node->get_node_logging_interface(),
+    soft_limits);
+}
+
+/**
+ * Populate a JointLimits instance from the node parameters.
+ * This is a convenience function.
+ * For parameters structure see the underlying `get_joint_limits` function.
+ *
+ * \param[in] joint_name Name of joint whose limits are to be fetched.
+ * \param[in] lifecycle_node Lifecycle node object for which parameters should be fetched.
+ * \param[out] soft_limits Where soft joint limit data gets written into. Limits specified in the parameter server will overwrite
+ * existing values.
+ *
+ * \returns True if a soft limits specification is found, false otherwise.
+ */
+inline bool get_joint_limits(
+  const std::string & joint_name, const rclcpp_lifecycle::LifecycleNode::SharedPtr & lifecycle_node,
+  SoftJointLimits & soft_limits)
+{
+  return get_joint_limits(
+    joint_name, lifecycle_node->get_node_parameters_interface(),
+    lifecycle_node->get_node_logging_interface(), soft_limits);
 }
 
 }  // namespace joint_limits
