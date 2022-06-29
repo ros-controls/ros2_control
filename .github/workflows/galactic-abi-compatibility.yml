@@ -1,4 +1,4 @@
-name: ABI Compatibility Check
+name: Galactic - ABI Compatibility Check
 on:
   workflow_dispatch:
     branches:
