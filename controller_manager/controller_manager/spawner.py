@@ -27,6 +27,7 @@ from controller_manager import configure_controller, list_controllers, \
 import rclpy
 from rclpy.duration import Duration
 from rclpy.node import Node
+from rclpy.signals import SignalHandlerOptions
 
 # from https://stackoverflow.com/a/287944
 
@@ -117,7 +118,7 @@ def make_absolute(name):
 
 def main(args=None):
 
-    rclpy.init(args=args)
+    rclpy.init(args=args, signal_handler_options=SignalHandlerOptions.NO)
     parser = argparse.ArgumentParser()
     parser.add_argument(
         'controller_name', help='Name of the controller')
