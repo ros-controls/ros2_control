@@ -99,9 +99,7 @@ bool command_interface_is_reference_interface_of_controller(
       "Character '/', was not find in the interface name '%s'. This should never happen. "
       "Stop the controller manager immediately and restart it.",
       interface_name.c_str());
-    return false;
-    // TODO(destol): Should we here throw an error? I don't like the idea, but we should
-    // communicate this situation somehow....
+    throw std::runtime_error("Mismatched interface name. See the FATAL message above.");
   }
 
   auto interface_prefix = interface_name.substr(0, split_pos);
@@ -501,6 +499,8 @@ void ControllerManager::clear_requests()
   start_request_.clear();
   to_chained_mode_request_.clear();
   from_chained_mode_request_.clear();
+  start_command_interface_request_.clear();
+  stop_command_interface_request_.clear();
 }
 
 controller_interface::return_type ControllerManager::switch_controller(
@@ -515,22 +515,24 @@ controller_interface::return_type ControllerManager::switch_controller(
     RCLCPP_FATAL(
       get_logger(),
       "The internal stop and start request lists are not empty at the beginning of the "
-      "switch_controller() call. This should not happen.");
+      "switch_controller() call. This should never happen.");
+    throw std::runtime_error("CM's internal state is not correct. See the FATAL message above.");
   }
   if (!stop_command_interface_request_.empty() || !start_command_interface_request_.empty())
   {
     RCLCPP_FATAL(
       get_logger(),
       "The internal stop and start requests command interface lists are not empty at the "
-      "switch_controller() call. This should not happen.");
+      "switch_controller() call. This should never happen.");
+    throw std::runtime_error("CM's internal state is not correct. See the FATAL message above.");
   }
   if (!from_chained_mode_request_.empty() || !to_chained_mode_request_.empty())
   {
     RCLCPP_FATAL(
       get_logger(),
       "The internal 'from' and 'to' chained mode requests are not empty at the "
-      "switch_controller() call. This should not happen. "
-      "Stop the controller manager immediately and restart it.");
+      "switch_controller() call. This should never happen.");
+    throw std::runtime_error("CM's internal state is not correct. See the FATAL message above.");
   }
   if (strictness == 0)
   {
@@ -811,7 +813,7 @@ controller_interface::return_type ControllerManager::switch_controller(
       start_request_.erase(start_list_it);
     }
 
-    const auto list_interfaces =
+    const auto extract_interfaces_for_controller =
       [this](const ControllerSpec controller, std::vector<std::string> & request_interface_list)
     {
       auto command_interface_config = controller.c->command_interface_configuration();
@@ -833,19 +835,18 @@ controller_interface::return_type ControllerManager::switch_controller(
 
     if (in_start_list)
     {
-      list_interfaces(controller, start_command_interface_request_);
+      extract_interfaces_for_controller(controller, start_command_interface_request_);
     }
     if (in_stop_list)
     {
-      list_interfaces(controller, stop_command_interface_request_);
+      extract_interfaces_for_controller(controller, stop_command_interface_request_);
     }
   }
 
   if (start_request_.empty() && stop_request_.empty())
   {
     RCLCPP_INFO(get_logger(), "Empty start and stop list, not requesting switch");
-    start_command_interface_request_.clear();
-    stop_command_interface_request_.clear();
+    clear_requests();
     return controller_interface::return_type::OK;
   }
 
@@ -857,12 +858,7 @@ controller_interface::return_type ControllerManager::switch_controller(
       RCLCPP_ERROR(
         get_logger(),
         "Could not switch controllers since prepare command mode switch was rejected.");
-      start_request_.clear();
-      stop_request_.clear();
-      to_chained_mode_request_.clear();
-      from_chained_mode_request_.clear();
-      start_command_interface_request_.clear();
-      stop_command_interface_request_.clear();
+      clear_requests();
       return controller_interface::return_type::ERROR;
     }
   }
@@ -915,12 +911,7 @@ controller_interface::return_type ControllerManager::switch_controller(
   // clear unused list
   rt_controllers_wrapper_.get_unused_list(guard).clear();
 
-  start_request_.clear();
-  stop_request_.clear();
-  to_chained_mode_request_.clear();
-  from_chained_mode_request_.clear();
-  start_command_interface_request_.clear();
-  stop_command_interface_request_.clear();
+  clear_requests();
 
   RCLCPP_DEBUG(get_logger(), "Successfully switched controllers");
   return controller_interface::return_type::OK;
@@ -1850,7 +1841,7 @@ controller_interface::return_type ControllerManager::check_following_controllers
       continue;
     }
     // TODO(destogl): performance of this code could be optimized by adding additional lists with
-    // controllers that cache if the check has failed and has succeeded. The the following would be
+    // controllers that cache if the check has failed and has succeeded. Then the following would be
     // done only once per controller, otherwise in complex scenarios the same controller is checked
     // multiple times
 
