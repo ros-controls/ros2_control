@@ -15,6 +15,8 @@
 #include <memory>
 #include <vector>
 
+#include <iostream>
+
 #include "hardware_interface/actuator_interface.hpp"
 
 using hardware_interface::ActuatorInterface;
@@ -78,6 +80,8 @@ class TestActuator : public ActuatorInterface
     // simulate error on read
     if (velocity_command_ == 28282828.0)
     {
+      // reset value to get out from error on the next call - simplifies CM tests
+      position_command_ = 0.0;
       return return_type::ERROR;
     }
     // The next line is for the testing purposes. We need value to be changed to be sure that
@@ -93,6 +97,8 @@ class TestActuator : public ActuatorInterface
     // simulate error on write
     if (velocity_command_ == 23232323.0)
     {
+      // reset value to get out from error on the next call - simplifies CM tests
+      position_command_ = 0.0;
       return return_type::ERROR;
     }
     return return_type::OK;

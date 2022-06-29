@@ -1332,7 +1332,7 @@ TEST_F(TestResourceManager, managing_controllers_reference_interfaces)
 
 TEST_F(TestResourceManager, handle_error_on_hardware_read_and_write)
 {
-  // values to be set to hardware to simulate failure on read and write
+  // values to set to hardware to simulate failure on read and write
   static constexpr double READ_FAIL_VALUE = 28282828.0;
   static constexpr double WRITE_FAIL_VALUE = 23232323.0;
 
@@ -1518,4 +1518,49 @@ TEST_F(TestResourceManager, handle_error_on_hardware_read_and_write)
   check_read_or_write_failure(
     std::bind(&hardware_interface::ResourceManager::write, &rm, _1, _2),
     std::bind(&hardware_interface::ResourceManager::read, &rm, _1, _2), WRITE_FAIL_VALUE);
+}
+
+TEST_F(TestResourceManager, test_caching_of_controllers_to_hardware)
+{
+  hardware_interface::ResourceManager rm(ros2_control_test_assets::minimal_robot_urdf, false);
+  activate_components(rm);
+
+  static const std::string TEST_CONTROLLER_ACTUATOR_NAME = "test_controller_actuator";
+  static const std::string TEST_CONTROLLER_SYSTEM_NAME = "test_controller_system";
+  static const std::string TEST_BROADCASTER_ALL_NAME = "test_broadcaster_all";
+  static const std::string TEST_BROADCASTER_SENSOR_NAME = "test_broadcaster_sensor";
+
+  rm.cache_controller_to_hardware(
+    TEST_CONTROLLER_ACTUATOR_NAME, TEST_ACTUATOR_HARDWARE_COMMAND_INTERFACES);
+  rm.cache_controller_to_hardware(
+    TEST_BROADCASTER_ALL_NAME, TEST_ACTUATOR_HARDWARE_STATE_INTERFACES);
+
+  rm.cache_controller_to_hardware(
+    TEST_CONTROLLER_SYSTEM_NAME, TEST_SYSTEM_HARDWARE_COMMAND_INTERFACES);
+  rm.cache_controller_to_hardware(TEST_BROADCASTER_ALL_NAME, TEST_SYSTEM_HARDWARE_STATE_INTERFACES);
+
+  rm.cache_controller_to_hardware(
+    TEST_BROADCASTER_SENSOR_NAME, TEST_SENSOR_HARDWARE_STATE_INTERFACES);
+  rm.cache_controller_to_hardware(TEST_BROADCASTER_ALL_NAME, TEST_SENSOR_HARDWARE_STATE_INTERFACES);
+
+  {
+    auto controllers = rm.get_cached_controllers_to_hardware(TEST_ACTUATOR_HARDWARE_NAME);
+    ASSERT_THAT(
+      controllers, testing::ElementsAreArray(std::vector<std::string>(
+                     {TEST_CONTROLLER_ACTUATOR_NAME, TEST_BROADCASTER_ALL_NAME})));
+  }
+
+  {
+    auto controllers = rm.get_cached_controllers_to_hardware(TEST_SYSTEM_HARDWARE_NAME);
+    ASSERT_THAT(
+      controllers, testing::ElementsAreArray(std::vector<std::string>(
+                     {TEST_CONTROLLER_SYSTEM_NAME, TEST_BROADCASTER_ALL_NAME})));
+  }
+
+  {
+    auto controllers = rm.get_cached_controllers_to_hardware(TEST_SENSOR_HARDWARE_NAME);
+    ASSERT_THAT(
+      controllers, testing::ElementsAreArray(std::vector<std::string>(
+                     {TEST_BROADCASTER_SENSOR_NAME, TEST_BROADCASTER_ALL_NAME})));
+  }
 }

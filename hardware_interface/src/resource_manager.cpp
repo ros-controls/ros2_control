@@ -759,6 +759,7 @@ void ResourceManager::cache_controller_to_hardware(
           controllers.reserve(controllers.size() + 1);
           controllers.push_back(controller_name);
         }
+        resource_storage_->hardware_used_by_controllers_[hw_name] = controllers;
         break;
       }
     }
@@ -1056,6 +1057,7 @@ return_type ResourceManager::set_component_state(
 HardwareReadWriteStatus ResourceManager::read(
   const rclcpp::Time & time, const rclcpp::Duration & period)
 {
+  // TODO(destogl): make this somewhere where memory will not be initialized each time....
   HardwareReadWriteStatus read_status;
   read_status.ok = true;
   read_status.failed_hardware_names.reserve(
@@ -1085,6 +1087,7 @@ HardwareReadWriteStatus ResourceManager::read(
 HardwareReadWriteStatus ResourceManager::write(
   const rclcpp::Time & time, const rclcpp::Duration & period)
 {
+  // TODO(destogl): make this somewhere where memory will not be initialized each time....
   HardwareReadWriteStatus write_status;
   write_status.ok = true;
   write_status.failed_hardware_names.reserve(

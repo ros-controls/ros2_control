@@ -83,6 +83,8 @@ class TestSystem : public SystemInterface
     // simulate error on read
     if (velocity_command_[0] == 28282828)
     {
+      // reset value to get out from error on the next call - simplifies CM tests
+      velocity_command_[0] = 0.0;
       return return_type::ERROR;
     }
     return return_type::OK;
@@ -93,6 +95,8 @@ class TestSystem : public SystemInterface
     // simulate error on write
     if (velocity_command_[0] == 23232323)
     {
+      // reset value to get out from error on the next call - simplifies CM tests
+      velocity_command_[0] = 0.0;
       return return_type::ERROR;
     }
     return return_type::OK;
