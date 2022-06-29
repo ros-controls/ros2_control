@@ -244,7 +244,9 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_c
     !loader_->isClassAvailable(controller_type) &&
     !chainable_loader_->isClassAvailable(controller_type))
   {
-    RCLCPP_ERROR(get_logger(), "Loader for controller '%s' not found.", controller_name.c_str());
+    RCLCPP_ERROR(
+      get_logger(), "Loader for controller '%s' (type '%s') not found.", controller_name.c_str(),
+      controller_type.c_str());
     RCLCPP_INFO(get_logger(), "Available classes:");
     for (const auto & available_class : loader_->getDeclaredClasses())
     {
