@@ -243,8 +243,8 @@ TEST_F(TestControllerManagerHWManagementSrvs, list_hardware_components)
     }),
     std::vector<std::vector<std::vector<bool>>>({
       // is claimed
-      {{false, false}, {false, false}},  // actuator
-      {{}, {false}},                     // sensor
+      {{false, false}, {false, false, false}},  // actuator
+      {{}, {false}},                            // sensor
       {{false, false, false, false}, {false, false, false, false, false, false, false}},  // system
     }));
 }
@@ -269,8 +269,8 @@ TEST_F(TestControllerManagerHWManagementSrvs, selective_activate_deactivate_comp
     }),
     std::vector<std::vector<std::vector<bool>>>({
       // is claimed
-      {{false, false}, {false, false}},  // actuator
-      {{}, {false}},                     // sensor
+      {{false, false}, {false, false, false}},  // actuator
+      {{}, {false}},                            // sensor
       {{false, false, false, false}, {false, false, false, false, false, false, false}},  // system
     }));
 
@@ -290,8 +290,8 @@ TEST_F(TestControllerManagerHWManagementSrvs, selective_activate_deactivate_comp
     }),
     std::vector<std::vector<std::vector<bool>>>({
       // is claimed
-      {{false, false}, {false, false}},  // actuator
-      {{}, {false}},                     // sensor
+      {{false, false}, {false, false, false}},  // actuator
+      {{}, {false}},                            // sensor
       {{false, false, false, false}, {false, false, false, false, false, false, false}},  // system
     }));
 
@@ -311,8 +311,8 @@ TEST_F(TestControllerManagerHWManagementSrvs, selective_activate_deactivate_comp
     }),
     std::vector<std::vector<std::vector<bool>>>({
       // is claimed
-      {{false, false}, {false, false}},  // actuator
-      {{}, {false}},                     // sensor
+      {{false, false}, {false, false, false}},  // actuator
+      {{}, {false}},                            // sensor
       {{false, false, false, false}, {false, false, false, false, false, false, false}},  // system
     }));
 
@@ -332,8 +332,8 @@ TEST_F(TestControllerManagerHWManagementSrvs, selective_activate_deactivate_comp
     }),
     std::vector<std::vector<std::vector<bool>>>({
       // is claimed
-      {{false, false}, {false, false}},  // actuator
-      {{}, {false}},                     // sensor
+      {{false, false}, {false, false, false}},  // actuator
+      {{}, {false}},                            // sensor
       {{false, false, false, false}, {false, false, false, false, false, false, false}},  // system
     }));
 
@@ -353,8 +353,8 @@ TEST_F(TestControllerManagerHWManagementSrvs, selective_activate_deactivate_comp
     }),
     std::vector<std::vector<std::vector<bool>>>({
       // is claimed
-      {{false, false}, {false, false}},  // actuator
-      {{}, {false}},                     // sensor
+      {{false, false}, {false, false, false}},  // actuator
+      {{}, {false}},                            // sensor
       {{false, false, false, false}, {false, false, false, false, false, false, false}},  // system
     }));
 
@@ -375,8 +375,8 @@ TEST_F(TestControllerManagerHWManagementSrvs, selective_activate_deactivate_comp
     }),
     std::vector<std::vector<std::vector<bool>>>({
       // is claimed
-      {{false, false}, {false, false}},  // actuator
-      {{}, {false}},                     // sensor
+      {{false, false}, {false, false, false}},  // actuator
+      {{}, {false}},                            // sensor
       {{false, false, false, false}, {false, false, false, false, false, false, false}},  // system
     }));
 }
@@ -399,8 +399,8 @@ TEST_F(TestControllerManagerHWManagementSrvsWithoutParams, test_default_activati
     }),
     std::vector<std::vector<std::vector<bool>>>({
       // is claimed
-      {{false, false}, {false, false}},  // actuator
-      {{}, {false}},                     // sensor
+      {{false, false}, {false, false, false}},  // actuator
+      {{}, {false}},                            // sensor
       {{false, false, false, false}, {false, false, false, false, false, false, false}},  // system
     }));
 }
