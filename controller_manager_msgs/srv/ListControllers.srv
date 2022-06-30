@@ -3,3 +3,4 @@
 
 ---
 controller_manager_msgs/ControllerState[] controller
+controller_manager_msgs/ChainedControllerState[] controller_group
