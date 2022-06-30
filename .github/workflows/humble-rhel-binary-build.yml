@@ -3,15 +3,15 @@ on:
   workflow_dispatch:
     branches:
       - master
-  pull_request:
-    branches:
-      - master
-  push:
-    branches:
-      - master
-  schedule:
-    # Run every day to detect flakiness and broken dependencies
-    - cron: '03 1 * * *'
+#  pull_request:
+#    branches:
+#      - master
+#  push:
+#    branches:
+#      - master
+#  schedule:
+#    # Run every day to detect flakiness and broken dependencies
+#    - cron: '03 1 * * *'
 
 
 jobs:
