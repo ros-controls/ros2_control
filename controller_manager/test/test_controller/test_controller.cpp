@@ -66,7 +66,7 @@ controller_interface::return_type TestController::update(
   {
     RCLCPP_INFO(
       get_node()->get_logger(), "Setting value of command interface '%s' to %f",
-      command_interfaces_[i].get_full_name().c_str(), external_commands_for_testing_[i]);
+      command_interfaces_[i].get_name().c_str(), external_commands_for_testing_[i]);
     command_interfaces_[i].set_value(external_commands_for_testing_[i]);
   }
 
