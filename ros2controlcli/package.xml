@@ -6,8 +6,10 @@
   <description>
     The ROS 2 command line tools for ROS2 Control.
   </description>
-  <maintainer email="victor.lopez@pal-robotics.com">Victor Lopez</maintainer>
+  <maintainer email="bence.magyar.robotics@gmail.com">Bence Magyar</maintainer>
+  <maintainer email="denis@stoglrobotics.de">Denis Štogl</maintainer>
   <license>Apache License 2.0</license>
+  <author email="victor.lopez@pal-robotics.com">Victor Lopez</author>
 
   <depend>rclpy</depend>
   <depend>ros2cli</depend>
