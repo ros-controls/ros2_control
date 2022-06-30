@@ -14,12 +14,12 @@
 
 #include <algorithm>
 #include <chrono>
-#include <fstream>
 #include <memory>
 #include <string>
 #include <thread>
 
 #include "controller_manager/controller_manager.hpp"
+#include "controller_manager/realtime.hpp"
 #include "rclcpp/rclcpp.hpp"
 
 using namespace std::chrono_literals;
@@ -30,31 +30,6 @@ namespace
 // This value is used when configuring the main loop to use SCHED_FIFO scheduling
 // We use a midpoint RT priority to allow maximum flexibility to users
 int const kSchedPriority = 50;
-
-// Detect the presence of a RT kernel
-bool has_realtime_kernel()
-{
-  std::ifstream realtime_file("/sys/kernel/realtime", std::ios::in);
-  bool has_realtime = false;
-  if (realtime_file.is_open())
-  {
-    realtime_file >> has_realtime;
-  }
-  return has_realtime;
-}
-
-// Configure fifo sched for RT
-bool configure_sched_fifo(int priority)
-{
-  struct sched_param schedp;
-  memset(&schedp, 0, sizeof(schedp));
-  schedp.sched_priority = priority;
-  if (sched_setscheduler(0, SCHED_FIFO, &schedp))
-  {
-    return false;
-  }
-  return true;
-}
 
 }  // namespace
 
@@ -73,9 +48,9 @@ int main(int argc, char ** argv)
   std::thread cm_thread(
     [cm]()
     {
-      if (has_realtime_kernel())
+      if (controller_manager::has_realtime_kernel())
       {
-        if (!configure_sched_fifo(kSchedPriority))
+        if (!controller_manager::configure_sched_fifo(kSchedPriority))
         {
           RCLCPP_WARN(cm->get_logger(), "Could not enable FIFO RT scheduling policy");
         }

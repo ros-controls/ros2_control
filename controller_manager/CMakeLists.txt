@@ -23,6 +23,7 @@ endforeach()
 
 add_library(${PROJECT_NAME} SHARED
   src/controller_manager.cpp
+  src/realtime.cpp
 )
 target_include_directories(${PROJECT_NAME} PRIVATE include)
 ament_target_dependencies(${PROJECT_NAME} ${THIS_PACKAGE_INCLUDE_DEPENDS})
