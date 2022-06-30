@@ -4,7 +4,7 @@
   <description>Interface for enforcing joint limits.</description>
 
   <maintainer email="bence.magyar.robotics@gmail.com">Bence Magyar</maintainer>
-  <maintainer email="jordan.palacios@pal-robotics.com">Jordan Palacios</maintainer>
+  <maintainer email="denis@stoglrobotics.de">Denis Štogl</maintainer>
 
   <license>Apache License 2.0</license>
 
