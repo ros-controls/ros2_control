@@ -5,7 +5,7 @@
   <version>2.10.0</version>
   <description>Description of controller_interface</description>
   <maintainer email="bence.magyar.robotics@gmail.com">Bence Magyar</maintainer>
-  <maintainer email="karsten@osrfoundation.org">Karsten Knese</maintainer>
+  <maintainer email="denis@stoglrobotics.de">Denis Štogl</maintainer>
   <license>Apache License 2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>

@@ -5,6 +5,7 @@
   <version>2.10.0</version>
   <description>Messages and services for the controller manager.</description>
   <maintainer email="bence.magyar.robotics@gmail.com">Bence Magyar</maintainer>
+  <maintainer email="denis@stoglrobotics.de">Denis Štogl</maintainer>
   <license>BSD</license>
   <url>http://ros.org/wiki/controller_manager_msgs</url>
   <author email="sglaser@willowgarage.com">Stuart Glaser</author>
@@ -18,6 +19,8 @@
   <exec_depend>builtin_interfaces</exec_depend>
   <exec_depend>lifecycle_msgs</exec_depend>
   <exec_depend>rosidl_default_runtime</exec_depend>
+
+  <test_depend>ament_lint_common</test_depend>
 
   <member_of_group>rosidl_interface_packages</member_of_group>
   <export>

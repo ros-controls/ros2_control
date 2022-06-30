@@ -6,7 +6,7 @@
   <description>The package provides shared test resources for ros2_control stack
   </description>
   <maintainer email="bence.magyar.robotics@gmail.com">Bence Magyar</maintainer>
-  <maintainer email="denis@stogl.de">Denis Štogl</maintainer>
+  <maintainer email="denis@stoglrobotics.de">Denis Štogl</maintainer>
   <license>Apache License 2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
