@@ -52,6 +52,7 @@ install(DIRECTORY include/
 if(BUILD_TESTING)
   find_package(ament_cmake_gmock REQUIRED)
   find_package(ros2_control_test_assets REQUIRED)
+  find_package(realtime_tools REQUIRED)
 
   add_library(test_controller SHARED test/test_controller/test_controller.cpp)
   target_include_directories(test_controller PRIVATE include)
@@ -74,6 +75,7 @@ if(BUILD_TESTING)
   )
 
   add_library(test_chainable_controller SHARED test/test_chainable_controller/test_chainable_controller.cpp)
+  ament_target_dependencies(test_chainable_controller realtime_tools)
   target_include_directories(test_chainable_controller PRIVATE include)
   target_link_libraries(test_chainable_controller controller_manager)
   target_compile_definitions(test_chainable_controller PRIVATE "CONTROLLER_MANAGER_BUILDING_DLL")
