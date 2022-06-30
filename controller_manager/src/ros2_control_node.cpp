@@ -14,6 +14,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <fstream>
 #include <memory>
 #include <string>
 #include <thread>
@@ -22,6 +23,40 @@
 #include "rclcpp/rclcpp.hpp"
 
 using namespace std::chrono_literals;
+
+namespace
+{
+// Reference: https://man7.org/linux/man-pages/man2/sched_setparam.2.html
+// This value is used when configuring the main loop to use SCHED_FIFO scheduling
+// We use a midpoint RT priority to allow maximum flexibility to users
+int const kSchedPriority = 50;
+
+// Detect the presence of a RT kernel
+bool has_realtime_kernel()
+{
+  std::ifstream realtime_file("/sys/kernel/realtime", std::ios::in);
+  bool has_realtime = false;
+  if (realtime_file.is_open())
+  {
+    realtime_file >> has_realtime;
+  }
+  return has_realtime;
+}
+
+// Configure fifo sched for RT
+bool configure_sched_fifo(int priority)
+{
+  struct sched_param schedp;
+  memset(&schedp, 0, sizeof(schedp));
+  schedp.sched_priority = priority;
+  if (sched_setscheduler(0, SCHED_FIFO, &schedp))
+  {
+    return false;
+  }
+  return true;
+}
+
+}  // namespace
 
 int main(int argc, char ** argv)
 {
@@ -33,36 +68,43 @@ int main(int argc, char ** argv)
 
   auto cm = std::make_shared<controller_manager::ControllerManager>(executor, manager_node_name);
 
-  // TODO(anyone): Due to issues with the MutliThreadedExecutor, this control loop does not rely on
-  // the executor (see issue #260).
-  // When the MutliThreadedExecutor issues are fixed (ros2/rclcpp#1168), this loop should be
-  // converted back to a timer.
+  RCLCPP_INFO(cm->get_logger(), "update rate is %d Hz", cm->get_update_rate());
+
   std::thread cm_thread(
     [cm]()
     {
-      RCLCPP_INFO(cm->get_logger(), "update rate is %d Hz", cm->get_update_rate());
+      if (has_realtime_kernel())
+      {
+        if (!configure_sched_fifo(kSchedPriority))
+        {
+          RCLCPP_WARN(cm->get_logger(), "Could not enable FIFO RT scheduling policy");
+        }
+      }
+      else
+      {
+        RCLCPP_WARN(cm->get_logger(), "RT kernel was not detected");
+      }
 
-      rclcpp::Time current_time = cm->now();
-      rclcpp::Time previous_time = current_time;
-      rclcpp::Time end_period = current_time;
+      rclcpp::Time mut_previous_time = cm->now();
+      rclcpp::Time mut_end_period = mut_previous_time;
 
       // Use nanoseconds to avoid chrono's rounding
-      rclcpp::Duration period(std::chrono::nanoseconds(1000000000 / cm->get_update_rate()));
+      rclcpp::Duration period(std::chrono::nanoseconds(1'000'000'000 / cm->get_update_rate()));
 
       while (rclcpp::ok())
       {
         // wait until we hit the end of the period
-        end_period += period;
+        mut_end_period += period;
         std::this_thread::sleep_for(
-          std::chrono::nanoseconds((end_period - cm->now()).nanoseconds()));
+          std::chrono::nanoseconds((mut_end_period - cm->now()).nanoseconds()));
 
         // execute update loop
-        current_time = cm->now();
-        auto period = current_time - previous_time;
-        previous_time = current_time;
-        cm->read(current_time, period);
-        cm->update(current_time, period);
-        cm->write(current_time, period);
+        auto const current_time = cm->now();
+        auto const measured_period = current_time - mut_previous_time;
+        mut_previous_time = current_time;
+        cm->read(current_time, measured_period);
+        cm->update(current_time, measured_period);
+        cm->write(current_time, measured_period);
       }
     });
 
