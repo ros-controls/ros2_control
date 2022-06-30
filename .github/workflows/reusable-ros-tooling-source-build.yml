@@ -22,7 +22,7 @@ on:
 jobs:
   reusable_ros_tooling_source_build:
     name: ${{ inputs.ros_distro }} ubuntu-22.04
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
     steps:
@@ -51,5 +51,5 @@ jobs:
           colcon-mixin-repository: https://raw.githubusercontent.com/colcon/colcon-mixin-repository/master/index.yaml
       - uses: actions/upload-artifact@v1
         with:
-          name: colcon-logs-ubuntu-20.04
+          name: colcon-logs-ubuntu-22.04
           path: ros_ws/log
