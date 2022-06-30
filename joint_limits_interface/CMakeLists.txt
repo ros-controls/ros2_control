@@ -8,14 +8,7 @@ find_package(urdf REQUIRED)
 
 if(BUILD_TESTING)
   find_package(ament_cmake_gtest REQUIRED)
-  find_package(ament_lint_auto REQUIRED)
   find_package(launch_testing_ament_cmake REQUIRED)
-
-  list(APPEND AMENT_LINT_AUTO_EXCLUDE
-    ament_cmake_uncrustify
-    ament_cmake_cpplint
-  )
-  ament_lint_auto_find_test_dependencies()
 
   ament_add_gtest(joint_limits_interface_test test/joint_limits_interface_test.cpp)
   target_include_directories(joint_limits_interface_test PUBLIC include)
