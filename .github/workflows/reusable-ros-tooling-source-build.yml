@@ -13,21 +13,26 @@ on:
         description: 'Reference on which the repo should be checkout. Usually is this name of a branch or a tag.'
         required: true
         type: string
+      ros2_repo_branch:
+        description: 'Branch in the ros2/ros2 repozitory from which ".repos" should be used. Possible values: master (Rolling), humble, galactic, foxy.'
+        default: 'master'
+        required: false
+        type: string
 
 jobs:
   reusable_ros_tooling_source_build:
-    name: ${{ inputs.ros_distro }} ubuntu-20.04
-    runs-on: ubuntu-20.04
+    name: ${{ inputs.ros_distro }} ubuntu-22.04
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
     steps:
-      - uses: ros-tooling/setup-ros@v0.3
+      - uses: ros-tooling/setup-ros@0.3.4
         with:
           required-ros-distributions: ${{ inputs.ros_distro }}
       - uses: actions/checkout@v3
         with:
           ref: ${{ inputs.ref }}
-      - uses: ros-tooling/action-ros-ci@v0.2
+      - uses: ros-tooling/action-ros-ci@0.2.6
         with:
           target-ros2-distro: ${{ inputs.ros_distro }}
           # build all packages listed in the meta package
@@ -41,10 +46,10 @@ jobs:
             ros2_control_test_assets
             transmission_interface
           vcs-repo-file-url: |
-            https://raw.githubusercontent.com/ros2/ros2/${{ inputs.ros_distro }}/ros2.repos
+            https://raw.githubusercontent.com/ros2/ros2/${{ inputs.ros2_repo_branch }}/ros2.repos
             https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/ros2_control.${{ inputs.ros_distro }}.repos?token=${{ secrets.GITHUB_TOKEN }}
           colcon-mixin-repository: https://raw.githubusercontent.com/colcon/colcon-mixin-repository/master/index.yaml
       - uses: actions/upload-artifact@v1
         with:
-          name: colcon-logs-ubuntu-20.04
+          name: colcon-logs-ubuntu-22.04
           path: ros_ws/log

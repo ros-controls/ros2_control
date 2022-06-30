@@ -15,10 +15,10 @@
 #ifndef TRANSMISSION_INTERFACE__SIMPLE_TRANSMISSION_LOADER_HPP_
 #define TRANSMISSION_INTERFACE__SIMPLE_TRANSMISSION_LOADER_HPP_
 
+#include <memory>
+
 #include <transmission_interface/transmission.hpp>
 #include <transmission_interface/transmission_loader.hpp>
-
-#include <memory>
 
 namespace transmission_interface
 {

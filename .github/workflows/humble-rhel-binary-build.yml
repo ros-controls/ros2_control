@@ -1,4 +1,4 @@
-name: Rolling RHEL Binary Build
+name: Humble RHEL Binary Build
 on:
   workflow_dispatch:
     branches:
@@ -15,12 +15,12 @@ on:
 
 
 jobs:
-  rolling_rhel_binary:
-    name: Rolling RHEL binary build
+  humble_rhel_binary:
+    name: Humble RHEL binary build
     runs-on: ubuntu-latest
     env:
-      ROS_DISTRO: rolling
-    container: jaronl/ros:rolling-alma
+      ROS_DISTRO: humble
+    container: jaronl/ros:humble-alma
     steps:
       - uses: actions/checkout@v3
         with:

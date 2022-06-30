@@ -1,8 +1,11 @@
-name: Foxy Source Build
+name: Humble Source Build
 on:
+  workflow_dispatch:
+    branches:
+      - master
   push:
     branches:
-      - foxy
+      - master
   schedule:
     # Run every day to detect flakiness and broken dependencies
     - cron: '03 3 * * *'
@@ -11,5 +14,6 @@ jobs:
   source:
     uses: ./.github/workflows/reusable-ros-tooling-source-build.yml
     with:
-      ros_distro: foxy
-      ref: foxy
+      ros_distro: humble
+      ref: master
+      ros2_repo_branch: humble

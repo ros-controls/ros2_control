@@ -1,5 +1,8 @@
 name: Rolling Source Build
 on:
+  workflow_dispatch:
+    branches:
+      - master
   push:
     branches:
       - master
@@ -13,3 +16,4 @@ jobs:
     with:
       ros_distro: rolling
       ref: master
+      ros2_repo_branch: master
