@@ -1,5 +1,8 @@
 name: Coverage Build
 on:
+  workflow_dispatch:
+    branches:
+      - master
   pull_request:
     branches:
       - master
@@ -7,17 +10,17 @@ on:
 jobs:
   coverage:
     name: coverage build
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
     env:
       ROS_DISTRO: rolling
     steps:
-      - uses: ros-tooling/setup-ros@v0.2
+      - uses: ros-tooling/setup-ros@0.3.4
         with:
           required-ros-distributions: ${{ env.ROS_DISTRO }}
       - uses: actions/checkout@v3
-      - uses: ros-tooling/action-ros-ci@v0.2
+      - uses: ros-tooling/action-ros-ci@0.2.6
         with:
           target-ros2-distro: ${{ env.ROS_DISTRO }}
           import-token: ${{ secrets.GITHUB_TOKEN }}
@@ -31,6 +34,7 @@ jobs:
             ros2_control
             ros2_control_test_assets
             transmission_interface
+
           vcs-repo-file-url: |
             https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/ros2_control-not-released.${{ env.ROS_DISTRO }}.repos?token=${{ secrets.GITHUB_TOKEN }}
           colcon-defaults: |
@@ -40,13 +44,12 @@ jobs:
               }
             }
           colcon-mixin-repository: https://raw.githubusercontent.com/colcon/colcon-mixin-repository/master/index.yaml
-          skip-tests: true
-      - uses: codecov/codecov-action@v1.0.14
+      - uses: codecov/codecov-action@v3.1.0
         with:
           file: ros_ws/lcov/total_coverage.info
           flags: unittests
           name: codecov-umbrella
-      - uses: actions/upload-artifact@v1
+      - uses: actions/upload-artifact@v3.1.0
         with:
-          name: colcon-logs-${{ matrix.os }}
+          name: colcon-logs-ubuntu-22.04-coverage-rolling
           path: ros_ws/log

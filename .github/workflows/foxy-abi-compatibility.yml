@@ -1,5 +1,8 @@
-name: ABI Compatibility Check
+name: Foxy - ABI Compatibility Check
 on:
+  workflow_dispatch:
+    branches:
+      - foxy
   pull_request:
     branches:
       - foxy

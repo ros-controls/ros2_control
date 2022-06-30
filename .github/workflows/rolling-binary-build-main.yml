@@ -1,8 +1,11 @@
-name: Rolling Binary Build
+name: Rolling Binary Build - main
 # author: Denis Štogl <denis@stoglrobotics.de>
 # description: 'Build & test all dependencies from released (binary) packages.'
 
 on:
+  workflow_dispatch:
+    branches:
+      - master
   pull_request:
     branches:
       - master
@@ -18,5 +21,6 @@ jobs:
     uses: ./.github/workflows/reusable-industrial-ci-with-cache.yml
     with:
       ros_distro: rolling
+      ros_repo: main
       upstream_workspace: ros2_control-not-released.rolling.repos
       ref_for_scheduled_build: master

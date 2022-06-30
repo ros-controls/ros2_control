@@ -1,7 +1,10 @@
-name: Rolling Semi-Binary Build - Last Focal
+name: Rolling Semi-Binary Build - main
 # description: 'Build & test that compiles the main dependencies from source.'
 
 on:
+  workflow_dispatch:
+    branches:
+      - master
   pull_request:
     branches:
       - master
@@ -17,10 +20,6 @@ jobs:
     uses: ./.github/workflows/reusable-industrial-ci-with-cache.yml
     with:
       ros_distro: rolling
+      ros_repo: main
       upstream_workspace: ros2_control.rolling.repos
       ref_for_scheduled_build: master
-      ros_repo: main
-      os_code_name: focal
-      before_install_upstream_dependencies: |
-          export ROSDISTRO_INDEX_URL=https://raw.githubusercontent.com/ros/rosdistro/rolling/2022-01-28/index-v4.yaml
-          rosdep update

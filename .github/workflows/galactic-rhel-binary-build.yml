@@ -1,26 +1,26 @@
-name: Rolling RHEL Binary Build
+name: Galactic RHEL Binary Build
 on:
   workflow_dispatch:
     branches:
-      - master
+      - galactic
   pull_request:
     branches:
-      - master
+      - galactic
   push:
     branches:
-      - master
+      - galactic
   schedule:
     # Run every day to detect flakiness and broken dependencies
     - cron: '03 1 * * *'
 
 
 jobs:
-  rolling_rhel_binary:
-    name: Rolling RHEL binary build
+  galactic_rhel_binary:
+    name: Galactic RHEL binary build
     runs-on: ubuntu-latest
     env:
-      ROS_DISTRO: rolling
-    container: jaronl/ros:rolling-alma
+      ROS_DISTRO: galactic
+    container: jaronl/ros:galactic-alma
     steps:
       - uses: actions/checkout@v3
         with:

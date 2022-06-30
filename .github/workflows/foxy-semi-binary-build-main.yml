@@ -1,8 +1,10 @@
-name: Foxy Binary Build
-# author: Denis Štogl <denis@stoglrobotics.de>
-# description: 'Build & test all dependencies from released (binary) packages.'
+name: Foxy Semi-Binary Build - main
+# description: 'Build & test that compiles the main dependencies from source.'
 
 on:
+  workflow_dispatch:
+    branches:
+      - foxy
   pull_request:
     branches:
       - foxy
@@ -11,12 +13,13 @@ on:
       - foxy
   schedule:
     # Run every morning to detect flakiness and broken dependencies
-    - cron: '03 1 * * *'
+    - cron: '33 1 * * *'
 
 jobs:
-  binary:
+  semi_binary:
     uses: ./.github/workflows/reusable-industrial-ci-with-cache.yml
     with:
       ros_distro: foxy
-      upstream_workspace: ros2_control-not-released.foxy.repos
+      ros_repo: main
+      upstream_workspace: ros2_control.foxy.repos
       ref_for_scheduled_build: foxy
