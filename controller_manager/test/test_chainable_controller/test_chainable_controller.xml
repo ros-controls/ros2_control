@@ -1,0 +1,11 @@
+<library path="test_chainable_controller">
+
+  <class name="controller_manager/test_chainable_controller"
+         type="test_chainable_controller::TestChainableController"
+         base_class_type="controller_interface::ChainableControllerInterface">
+    <description>
+      Controller used for testing
+    </description>
+  </class>
+
+</library>

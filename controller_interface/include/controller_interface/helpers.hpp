@@ -48,9 +48,12 @@ bool get_ordered_interfaces(
     {
       if (!interface_type.empty())
       {
+        // check case where:
+        // (<joint> == <joint> AND <interface> == <interface>) OR <joint>/<interface> == 'full name'
         if (
-          (name == interface.get_prefix_name()) &&
-          (interface_type == interface.get_interface_name()))
+          ((name == interface.get_prefix_name()) &&
+           (interface_type == interface.get_interface_name())) ||
+          ((name + "/" + interface_type) == interface.get_name()))
         {
           ordered_interfaces.push_back(std::ref(interface));
         }
