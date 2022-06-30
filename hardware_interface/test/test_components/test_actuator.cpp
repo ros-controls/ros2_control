@@ -75,6 +75,11 @@ class TestActuator : public ActuatorInterface
 
   return_type read(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
   {
+    // The next line is for the testing purposes. We need value to be changed to be sure that
+    // the feedback from hardware to controllers in the chain is working as it should.
+    // This makes value checks clearer and confirms there is no "state = command" line or some
+    // other mixture of interfaces somewhere in the test stack.
+    velocity_state_ = velocity_command_ / 2;
     return return_type::OK;
   }
 

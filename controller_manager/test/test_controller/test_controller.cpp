@@ -61,6 +61,15 @@ controller_interface::return_type TestController::update(
   const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
 {
   ++internal_counter;
+
+  for (size_t i = 0; i < command_interfaces_.size(); ++i)
+  {
+    RCLCPP_INFO(
+      get_node()->get_logger(), "Setting value of command interface '%s' to %f",
+      command_interfaces_[i].get_full_name().c_str(), external_commands_for_testing_[i]);
+    command_interfaces_[i].set_value(external_commands_for_testing_[i]);
+  }
+
   return controller_interface::return_type::OK;
 }
 
@@ -89,6 +98,7 @@ void TestController::set_command_interface_configuration(
   const controller_interface::InterfaceConfiguration & cfg)
 {
   cmd_iface_cfg_ = cfg;
+  external_commands_for_testing_.resize(cmd_iface_cfg_.names.size(), 0.0);
 }
 
 void TestController::set_state_interface_configuration(
