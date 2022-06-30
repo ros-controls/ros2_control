@@ -17,7 +17,10 @@
   <exec_depend>builtin_interfaces</exec_depend>
   <exec_depend>rosidl_default_runtime</exec_depend>
 
+<<<<<<< HEAD
   <test_depend>ament_lint_auto</test_depend>
+=======
+>>>>>>> dabe19e (Update and fix CI setup (#752))
   <test_depend>ament_lint_common</test_depend>
 
   <member_of_group>rosidl_interface_packages</member_of_group>
