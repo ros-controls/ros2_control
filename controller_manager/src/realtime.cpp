@@ -14,10 +14,10 @@
 
 #include "controller_manager/realtime.hpp"
 
+#include <sched.h>
+
 #include <cstring>
 #include <fstream>
-
-#include <sched.h>
 
 namespace controller_manager
 {
