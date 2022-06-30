@@ -16,3 +16,4 @@ jobs:
     with:
       ros_distro: rolling
       ref: master
+      ros2_repo_branch: master

@@ -16,3 +16,4 @@ jobs:
     with:
       ros_distro: humble
       ref: master
+      ros2_repo_branch: humble
