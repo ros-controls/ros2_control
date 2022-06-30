@@ -53,14 +53,6 @@ if(BUILD_TESTING)
   find_package(ament_cmake_gmock REQUIRED)
   find_package(ros2_control_test_assets REQUIRED)
 
-  ament_index_get_prefix_path(ament_index_build_path SKIP_AMENT_PREFIX_PATH)
-  # Get the first item (it will be the build space version of the build path).
-  list(GET ament_index_build_path 0 ament_index_build_path)
-  if(WIN32)
-    # On Windows prevent CMake errors and prevent it being evaluated as a list.
-    string(REPLACE "\\" "/" ament_index_build_path "${ament_index_build_path}")
-  endif()
-
   add_library(test_controller SHARED test/test_controller/test_controller.cpp)
   target_include_directories(test_controller PRIVATE include)
   target_link_libraries(test_controller ${PROJECT_NAME})
