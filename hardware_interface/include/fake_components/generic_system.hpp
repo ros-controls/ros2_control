@@ -21,12 +21,9 @@
 
 namespace fake_components
 {
+[[deprecated]] using GenericSystem = mock_components::GenericSystem;
 
-[[deprecated]]
-using GenericSystem = mock_components::GenericSystem;
-
-[[deprecated]]
-using GenericSystem = GenericRobot;
+[[deprecated]] using GenericSystem = GenericRobot;
 
 }  // namespace fake_components
 
