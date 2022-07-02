@@ -1228,7 +1228,6 @@ void ControllerManager::list_controllers_srv_cb(
   const std::vector<ControllerSpec> & controllers = rt_controllers_wrapper_.get_updated_list(guard);
   response->controller.reserve(controllers.size());
   response->controller_group.reserve(controllers.size());
-  size_t ind = 0;
 
   std::unordered_map<std::string, std::vector<std::string>> controller_chain_interface_map;
   std::unordered_map<std::string, std::set<std::string>> controller_chain_map;
