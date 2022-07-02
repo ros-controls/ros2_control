@@ -39,7 +39,7 @@ TEST_F(ChainableControllerInterfaceTest, export_reference_interfaces)
   auto reference_interfaces = controller.export_reference_interfaces();
 
   ASSERT_EQ(reference_interfaces.size(), 1u);
-  EXPECT_EQ(reference_interfaces[0].get_name(), TEST_CONTROLLER_NAME);
+  EXPECT_EQ(reference_interfaces[0].get_prefix_name(), TEST_CONTROLLER_NAME);
   EXPECT_EQ(reference_interfaces[0].get_interface_name(), "test_itf");
 
   EXPECT_EQ(reference_interfaces[0].get_value(), INTERFACE_VALUE);

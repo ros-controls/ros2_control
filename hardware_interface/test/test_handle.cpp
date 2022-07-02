@@ -44,8 +44,9 @@ TEST(TestHandle, state_interface)
 TEST(TestHandle, name_getters_work)
 {
   StateInterface handle{JOINT_NAME, FOO_INTERFACE};
-  EXPECT_EQ(handle.get_name(), JOINT_NAME);
+  EXPECT_EQ(handle.get_name(), std::string(JOINT_NAME) + "/" + std::string(FOO_INTERFACE));
   EXPECT_EQ(handle.get_interface_name(), FOO_INTERFACE);
+  EXPECT_EQ(handle.get_prefix_name(), JOINT_NAME);
 }
 
 TEST(TestHandle, value_methods_throw_for_nullptr)

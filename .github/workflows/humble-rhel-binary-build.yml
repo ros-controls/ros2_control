@@ -13,7 +13,6 @@ on:
 #    # Run every day to detect flakiness and broken dependencies
 #    - cron: '03 1 * * *'
 
-
 jobs:
   humble_rhel_binary:
     name: Humble RHEL binary build
