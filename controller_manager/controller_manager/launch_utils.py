@@ -27,7 +27,7 @@ def generate_load_controller_launch_description(controller_name,
 
     Returns a list of LaunchDescription actions adding the 'controller_manager_name' and
     'unload_on_kill' LaunchArguments and a Node action that runs the controller_manager
-    spawner node to load and start a controller
+    spawner node to load and activate a controller
 
     Examples # noqa: D416
     --------
