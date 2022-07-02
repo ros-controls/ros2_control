@@ -26,6 +26,7 @@
 #include "controller_manager_msgs/srv/list_controllers.hpp"
 #include "controller_manager_msgs/srv/switch_controller.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
+#include "test_chainable_controller/test_chainable_controller.hpp"
 #include "test_controller/test_controller.hpp"
 
 using ::testing::_;
@@ -187,6 +188,74 @@ TEST_F(TestControllerManagerSrvs, list_controllers_srv)
     cm_->unload_controller(test_controller::TEST_CONTROLLER_NAME));
   result = call_service_and_wait(*client, request, srv_executor);
   ASSERT_EQ(0u, result->controller.size());
+}
+
+TEST_F(TestControllerManagerSrvs, list_chained_controllers_srv)
+{
+  // create server client and request
+  rclcpp::executors::SingleThreadedExecutor srv_executor;
+  rclcpp::Node::SharedPtr srv_node = std::make_shared<rclcpp::Node>("srv_client");
+  srv_executor.add_node(srv_node);
+  rclcpp::Client<controller_manager_msgs::srv::ListControllers>::SharedPtr client =
+    srv_node->create_client<controller_manager_msgs::srv::ListControllers>(
+      "test_controller_manager/list_controllers");
+  auto request = std::make_shared<controller_manager_msgs::srv::ListControllers::Request>();
+  // create chained controller
+  auto test_chained_controller =
+    std::make_shared<test_chainable_controller::TestChainableController>();
+  controller_interface::InterfaceConfiguration chained_cmd_cfg = {
+    controller_interface::interface_configuration_type::INDIVIDUAL, {"joint1/position"}};
+  controller_interface::InterfaceConfiguration chained_state_cfg = {
+    controller_interface::interface_configuration_type::INDIVIDUAL,
+    {"joint1/position", "joint1/velocity"}};
+  test_chained_controller->set_command_interface_configuration(chained_cmd_cfg);
+  test_chained_controller->set_state_interface_configuration(chained_state_cfg);
+  test_chained_controller->set_reference_interface_names({"joint1/position", "joint1/velocity"});
+  // create non-chained controller
+  auto test_controller = std::make_shared<test_controller::TestController>();
+  controller_interface::InterfaceConfiguration cmd_cfg = {
+    controller_interface::interface_configuration_type::INDIVIDUAL,
+    {std::string(test_chainable_controller::TEST_CONTROLLER_NAME) + "/joint1/position",
+     std::string(test_chainable_controller::TEST_CONTROLLER_NAME) + "/joint1/velocity",
+     "joint2/velocity"}};
+  controller_interface::InterfaceConfiguration state_cfg = {
+    controller_interface::interface_configuration_type::INDIVIDUAL,
+    {"joint1/position", "joint1/velocity"}};
+  test_controller->set_command_interface_configuration(cmd_cfg);
+  test_controller->set_state_interface_configuration(state_cfg);
+  // add controllers
+  auto abstract_chain_test_controller = cm_->add_controller(
+    test_chained_controller, test_chainable_controller::TEST_CONTROLLER_NAME,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  auto abstract_test_controller = cm_->add_controller(
+    test_controller, test_controller::TEST_CONTROLLER_NAME,
+    test_controller::TEST_CONTROLLER_CLASS_NAME);
+  // configure controllers
+  cm_->configure_controller(test_chainable_controller::TEST_CONTROLLER_NAME);
+  cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME);
+  auto result = call_service_and_wait(*client, request, srv_executor);
+  ASSERT_EQ(0u, result->controller.size());
+  ASSERT_EQ(2u, result->controller_group.size());
+  // activate controllers
+  cm_->switch_controller(
+    {test_chainable_controller::TEST_CONTROLLER_NAME}, {},
+    controller_manager_msgs::srv::SwitchController::Request::STRICT, true, rclcpp::Duration(0, 0));
+  cm_->switch_controller(
+    {test_controller::TEST_CONTROLLER_NAME}, {},
+    controller_manager_msgs::srv::SwitchController::Request::STRICT, true, rclcpp::Duration(0, 0));
+  result = call_service_and_wait(*client, request, srv_executor);
+  ASSERT_EQ(0u, result->controller.size());
+  ASSERT_EQ(1u, result->controller_group[1].chained_connections.size());
+  ASSERT_EQ(
+    test_chainable_controller::TEST_CONTROLLER_NAME,
+    result->controller_group[1].chained_connections[0].name);
+  ASSERT_EQ(2u, result->controller_group[1].chained_connections[0].reference_interfaces.size());
+  ASSERT_EQ(
+    std::string(test_chainable_controller::TEST_CONTROLLER_NAME) + "/joint1/position",
+    result->controller_group[1].chained_connections[0].reference_interfaces[0]);
+  ASSERT_EQ(
+    std::string(test_chainable_controller::TEST_CONTROLLER_NAME) + "/joint1/velocity",
+    result->controller_group[1].chained_connections[0].reference_interfaces[1]);
 }
 
 TEST_F(TestControllerManagerSrvs, reload_controller_libraries_srv)

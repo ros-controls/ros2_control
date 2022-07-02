@@ -1,2 +1,2 @@
 ControllerState controller_state
-string[] chained_controller_names
+ChainConnection[] chained_connections

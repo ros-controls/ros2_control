@@ -150,7 +150,7 @@ public:
 
     executor_spin_future_ = std::async(std::launch::async, [this]() -> void { executor_->spin(); });
     // This sleep is needed to prevent a too fast test from ending before the
-    // executor has began to spin, which causes it to hang
+    // executor has begun to spin, which causes it to hang
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
   }
 
