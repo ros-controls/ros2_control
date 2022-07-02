@@ -45,7 +45,7 @@ protected:
       R"(
   <ros2_control name="GenericSystem2dof" type="system">
     <hardware>
-      <plugin>fake_components/GenericSystem</plugin>
+      <plugin>mock_components/GenericSystem</plugin>
     </hardware>
     <joint name="joint1">
       <command_interface name="position"/>
@@ -64,7 +64,7 @@ protected:
       R"(
   <ros2_control name="GenericSystem2dof" type="system">
     <hardware>
-      <plugin>fake_components/GenericSystem</plugin>
+      <plugin>mock_components/GenericSystem</plugin>
     </hardware>
     <joint name="joint1">
       <command_interface name="position"/>
@@ -84,7 +84,7 @@ protected:
       R"(
   <ros2_control name="GenericSystem2dof" type="system">
     <hardware>
-      <plugin>fake_components/GenericSystem</plugin>
+      <plugin>mock_components/GenericSystem</plugin>
     </hardware>
     <joint name="joint1">
       <command_interface name="position"/>
@@ -107,7 +107,7 @@ protected:
       R"(
   <ros2_control name="GenericSystem2dof" type="system">
     <hardware>
-      <plugin>fake_components/GenericSystem</plugin>
+      <plugin>mock_components/GenericSystem</plugin>
     </hardware>
     <joint name="joint1">
       <command_interface name="position"/>
@@ -137,7 +137,7 @@ protected:
       R"(
   <ros2_control name="GenericSystem2dof" type="system">
     <hardware>
-      <plugin>fake_components/GenericSystem</plugin>
+      <plugin>mock_components/GenericSystem</plugin>
     </hardware>
     <joint name="joint1">
       <command_interface name="position"/>
@@ -165,7 +165,7 @@ protected:
       R"(
   <ros2_control name="GenericSystem2dof" type="system">
     <hardware>
-      <plugin>fake_components/GenericSystem</plugin>
+      <plugin>mock_components/GenericSystem</plugin>
       <param name="fake_sensor_commands">true</param>
     </hardware>
     <joint name="joint1">
@@ -194,7 +194,7 @@ protected:
       R"(
   <ros2_control name="GenericSystem2dof" type="system">
     <hardware>
-      <plugin>fake_components/GenericSystem</plugin>
+      <plugin>mock_components/GenericSystem</plugin>
       <param name="fake_sensor_commands">True</param>
     </hardware>
     <joint name="joint1">
@@ -223,7 +223,7 @@ protected:
       R"(
   <ros2_control name="GenericSystem2dof" type="system">
     <hardware>
-      <plugin>fake_components/GenericSystem</plugin>
+      <plugin>mock_components/GenericSystem</plugin>
     </hardware>
     <joint name="joint1">
       <command_interface name="position"/>
@@ -247,7 +247,7 @@ protected:
       R"(
   <ros2_control name="GenericSystem2dof" type="system">
     <hardware>
-      <plugin>fake_components/GenericSystem</plugin>
+      <plugin>mock_components/GenericSystem</plugin>
       <param name="position_state_following_offset">-3</param>
     </hardware>
     <joint name="joint1">
@@ -273,7 +273,7 @@ protected:
       R"(
   <ros2_control name="GenericSystem2dof" type="system">
     <hardware>
-      <plugin>fake_components/GenericSystem</plugin>
+      <plugin>mock_components/GenericSystem</plugin>
       <param name="position_state_following_offset">-3</param>
       <param name="custom_interface_with_following_offset">actual_position</param>
     </hardware>
@@ -298,7 +298,7 @@ protected:
       R"(
   <ros2_control name="GenericSystem2dof" type="system">
     <hardware>
-      <plugin>fake_components/GenericSystem</plugin>
+      <plugin>mock_components/GenericSystem</plugin>
       <param name="position_state_following_offset">-3</param>
       <param name="custom_interface_with_following_offset">actual_position</param>
     </hardware>
@@ -325,7 +325,7 @@ protected:
       R"(
   <ros2_control name="GenericSystem2dof" type="system">
     <hardware>
-      <plugin>fake_components/GenericSystem</plugin>
+      <plugin>mock_components/GenericSystem</plugin>
       <param name="example_param_write_for_sec">2</param>
       <param name="example_param_read_for_sec">2</param>
     </hardware>
@@ -361,7 +361,7 @@ protected:
       R"(
   <ros2_control name="GenericSystem2dof" type="system">
     <hardware>
-      <plugin>fake_components/GenericSystem</plugin>
+      <plugin>mock_components/GenericSystem</plugin>
       <param name="fake_gpio_commands">True</param>
     </hardware>
     <joint name="joint1">
