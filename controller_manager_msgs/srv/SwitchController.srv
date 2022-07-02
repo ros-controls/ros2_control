@@ -10,12 +10,6 @@
 #      controller name, a controller that failed to activate, etc. )
 #    * BEST_EFFORT means that even when something goes wrong with on controller,
 #      the service will still try to activate/stop the remaining controllers
-#    * FORCE_ACTIVATE means that if interfaces that controller to activate are used by another
-#      controller that is running, the latter controller will be deactivated. Other behavior will
-#      be as BEST_EFFORT.
-#    * MANAGE_CONTROLLERS_CHAIN means that if controller in a chain need to activated and following
-#      controller(s) is not activate it will be activated. The same for deactivation, even if
-#      preceding controller(s) are not in the deactivate request, they will be deactivated.
 #  * activate the controllers as soon as their hardware dependencies are ready, will
 #    wait for all interfaces to be ready otherwise
 #  * the timeout before aborting pending controllers. Zero for infinite
@@ -32,8 +26,6 @@ string[] stop_controllers  # DEPRECATED: Use deactivate_controllers filed instea
 int32 strictness
 int32 BEST_EFFORT=1
 int32 STRICT=2
-int32 FORCE_ACTIVATE=3
-int32 MANAGE_CONTROLLERS_CHAIN=10
 bool activate_asap
 builtin_interfaces/Duration timeout
 ---
