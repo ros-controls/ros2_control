@@ -2,6 +2,14 @@
 Changelog for package transmission_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* [Interfaces] Improved ```get_name()``` method of hardware interfaces #api-breaking (`#737 <https://github.com/ros-controls/ros2_control/issues/737>`_)
+* Update maintainers of packages (`#753 <https://github.com/ros-controls/ros2_control/issues/753>`_)
+* Remove ament autolint (`#749 <https://github.com/ros-controls/ros2_control/issues/749>`_)
+* Fixup ament cpplint on 22.04 (`#747 <https://github.com/ros-controls/ros2_control/issues/747>`_)
+* Contributors: Bence Magyar, Denis Štogl, Lucas Schulze
+
 2.10.0 (2022-06-18)
 -------------------
 * CMakeLists cleanup (`#733 <https://github.com/ros-controls/ros2_control/issues/733>`_)
