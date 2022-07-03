@@ -23,7 +23,7 @@ from ros2controlcli.api import add_controller_mgr_parsers
 import graphviz
 
 
-def make_controller_node(s, controller_name, inputs, outputs):
+def make_controller_node(s, controller_name, inputs, outputs, port_map):
     inputs = sorted(list(inputs))
     outputs = sorted(list(outputs))
     inputs_str = ''
@@ -32,38 +32,91 @@ def make_controller_node(s, controller_name, inputs, outputs):
         deliminator = '|'
         if ind == len(inputs) - 1:
             deliminator = ''
-        inputs_str += '<%s> %s %s ' % (input, '', deliminator)
+        input = input.replace('/', '_')
+        name = input
+        inputs_str += '<%s> %s %s ' % ("input_" + input, name, deliminator)
+        port_map["input_" + input] = controller_name
+
     for ind, output in enumerate(outputs):
         deliminator = '|'
         if ind == len(outputs) - 1:
             deliminator = ''
-        outputs_str += '<%s> %s %s ' % (output, '', deliminator)
+        output = output.replace('/', '_')
+        name = output
+        name = ''
+        outputs_str += '<%s> %s %s ' % ("output_" + output, name, deliminator)
+        port_map["output_" + output] = controller_name
 
-    s.node(controller_name, r'%s|{{%s}|{%s}}' % (controller_name, inputs_str, outputs_str))
-    pass
+    s.node(controller_name, '%s|{{%s}|{%s}}' % (controller_name, inputs_str, outputs_str))
+
+
+def make_command_node(s, output_interfaces, port_map):
+    outputs = sorted(list(output_interfaces))
+    outputs_str = ''
+    for ind, output in enumerate(outputs):
+        deliminator = '|'
+        if ind == len(outputs) - 1:
+            deliminator = ''
+        output = output.replace('/', '_')
+        name = output
+        outputs_str += '<%s> %s %s ' % ("input_" + output, name, deliminator)
+        port_map["input_" + output] = "command_interfaces"
+
+    s.node("command_interfaces", '%s|{{%s}}' % ("command_interfaces", outputs_str))
+
+
+def make_state_node(s, input_interfaces, port_map):
+    inputs = sorted(list(input_interfaces))
+    inputs_str = ''
+    for ind, input in enumerate(inputs):
+        deliminator = '|'
+        if ind == len(inputs) - 1:
+            deliminator = ''
+        input = input.replace('/', '_')
+        name = input
+        inputs_str += '<%s> %s %s ' % ("output_" + input, name, deliminator)
+        port_map["output_" + input] = "state_interfaces"
+
+    s.node("state_interfaces", '%s|{{%s}}' % ("state_interfaces", inputs_str))
 
 
 def show_graph(output_connections, input_connections, output_interfaces, input_interfaces):
-    # s = graphviz.Digraph('structs', filename='/tmp/controller_diagram.gv', node_attr={'shape': 'record'})
-    s = graphviz.Digraph('g', filename='/tmp/controller_diagram.gv', node_attr={'shape': 'record', 'height': '.1'})
-    # s.node('struct1', '<f0> left|<f1> middle|<f2> right')
-    # s.node('struct2', '<interface_0> one|<f1> two')
-    # s.node('struct3', r'hello\nworld |{ b |{c|<here> d|e}| f}| g | h')
+    s = graphviz.Digraph('g', filename='/tmp/controller_diagram.gv', node_attr={'shape': 'record', 'style' : 'rounded'})
+    port_map = dict()
     for controller_name in input_connections:
         make_controller_node(s, controller_name, input_connections[controller_name],
-                             output_connections[controller_name])
+                             output_connections[controller_name], port_map)
 
-    controller_name = 'admittance_controller'
-    controller_name_2 = 'joint_trajectory_controller'
+    make_state_node(s, input_interfaces, port_map)
+    make_command_node(s, output_interfaces, port_map)
 
-    s.edge(r'%s:%s' % (controller_name_2, 'admittance_controller/elbow_joint/position'),
-       r'%s:%s' % (controller_name, 'admittance_controller/elbow_joint/position') )
+    for controller_name in output_connections:
+        for connection in output_connections[controller_name]:
+            connection = connection.replace('/', '_')
+            s.edge('%s:%s' % (controller_name, "output_" + connection),
+                   '%s:%s' % (port_map['input_' + connection], 'input_' + connection))
+        for connection in input_connections[controller_name]:
+            if connection in input_interfaces:
+                connection = connection.replace('/', '_')
+                s.edge('%s:%s' % ("state_interfaces", "output_" + connection),
+                       '%s:%s' % (controller_name, 'input_' + connection))
+    # controller_name = "state_interfaces"
+    # for connection in input_interfaces:
+    #     connection = connection.replace('/', '_')
+    #     s.edge('%s:%s' % (controller_name, "output_" + connection),
+    #            '%s:%s' % (port_map['input_' + connection], 'input_' + connection))
 
-    s.edge(r'%s:%s' % (controller_name_2, 'admittance_controller/shoulder_lift/position'),
-           r'%s:%s' % (controller_name, 'admittance_controller/shoulder_lift/position') )
+    # controller_name = 'admittance_controller'
+    # controller_name_2 = 'joint_trajectory_controller'
+
+    # s.edge('%s:%s' % (controller_name_2, 'output_admittance_controller_elbow_joint_position'),
+    #        '%s:%s' % (controller_name, 'input_admittance_controller_elbow_joint_position'))
+    #
+    # s.edge('%s:%s' % (controller_name_2, 'output_admittance_controller_shoulder_lift_joint_position'),
+    #        '%s:%s' % (controller_name, 'input_admittance_controller_shoulder_lift_joint_position'))
     # s.edges([('struct1:f1', 'struct2:interface_0'), ('struct1:f2', 'struct3:here')])
     # s.attr(ratio="compress")
-    # s.attr(splines="false")
+    s.attr(splines="false")
     # s.attr(layout="neato")
     # s.attr(nodesep='3')
     s.attr(ranksep='2')
