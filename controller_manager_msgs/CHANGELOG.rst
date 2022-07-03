@@ -2,8 +2,8 @@
 Changelog for package controller_manager_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.11.0 (2022-07-03)
+-------------------
 * Remove hybrid services in controller manager. They are just overhead. (`#761 <https://github.com/ros-controls/ros2_control/issues/761>`_)
 * Update and fix CI setup (`#752 <https://github.com/ros-controls/ros2_control/issues/752>`_)
 * Update maintainers of packages (`#753 <https://github.com/ros-controls/ros2_control/issues/753>`_)

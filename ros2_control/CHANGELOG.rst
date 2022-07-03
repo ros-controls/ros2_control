@@ -2,8 +2,8 @@
 Changelog for package ros2_control
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.11.0 (2022-07-03)
+-------------------
 * Update maintainers of packages (`#753 <https://github.com/ros-controls/ros2_control/issues/753>`_)
 * Contributors: Bence Magyar
 

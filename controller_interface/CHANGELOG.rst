@@ -2,8 +2,8 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.11.0 (2022-07-03)
+-------------------
 * [Interfaces] Improved ```get_name()``` method of hardware interfaces (soft) #api-breaking (`#737 <https://github.com/ros-controls/ros2_control/issues/737>`_)
 * Update maintainers of packages (`#753 <https://github.com/ros-controls/ros2_control/issues/753>`_)
 * Full functionality of chainable controllers in controller manager (`#667 <https://github.com/ros-controls/ros2_control/issues/667>`_)
