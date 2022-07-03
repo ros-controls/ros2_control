@@ -42,9 +42,7 @@ def make_controller_node(s, controller_name, inputs, outputs, port_map):
         if ind == len(outputs) - 1:
             deliminator = ''
         output = output.replace('/', '_')
-        name = output
-        name = ''
-        outputs_str += '<%s> %s %s ' % ("output_" + output, name, deliminator)
+        outputs_str += '<%s> %s %s ' % ("output_" + output, '', deliminator)
         port_map["output_" + output] = controller_name
 
     s.node(controller_name, '%s|{{%s}|{%s}}' % (controller_name, inputs_str, outputs_str))
@@ -81,7 +79,7 @@ def make_state_node(s, input_interfaces, port_map):
 
 
 def show_graph(output_connections, input_connections, output_interfaces, input_interfaces):
-    s = graphviz.Digraph('g', filename='/tmp/controller_diagram.gv', node_attr={'shape': 'record', 'style' : 'rounded'})
+    s = graphviz.Digraph('g', filename='/tmp/controller_diagram.gv', node_attr={'shape': 'record', 'style': 'rounded'})
     port_map = dict()
     for controller_name in input_connections:
         make_controller_node(s, controller_name, input_connections[controller_name],
@@ -100,45 +98,18 @@ def show_graph(output_connections, input_connections, output_interfaces, input_i
                 connection = connection.replace('/', '_')
                 s.edge('%s:%s' % ("state_interfaces", "output_" + connection),
                        '%s:%s' % (controller_name, 'input_' + connection))
-    # controller_name = "state_interfaces"
-    # for connection in input_interfaces:
-    #     connection = connection.replace('/', '_')
-    #     s.edge('%s:%s' % (controller_name, "output_" + connection),
-    #            '%s:%s' % (port_map['input_' + connection], 'input_' + connection))
 
-    # controller_name = 'admittance_controller'
-    # controller_name_2 = 'joint_trajectory_controller'
-
-    # s.edge('%s:%s' % (controller_name_2, 'output_admittance_controller_elbow_joint_position'),
-    #        '%s:%s' % (controller_name, 'input_admittance_controller_elbow_joint_position'))
-    #
-    # s.edge('%s:%s' % (controller_name_2, 'output_admittance_controller_shoulder_lift_joint_position'),
-    #        '%s:%s' % (controller_name, 'input_admittance_controller_shoulder_lift_joint_position'))
-    # s.edges([('struct1:f1', 'struct2:interface_0'), ('struct1:f2', 'struct3:here')])
-    # s.attr(ratio="compress")
     s.attr(splines="false")
-    # s.attr(layout="neato")
-    # s.attr(nodesep='3')
     s.attr(ranksep='2')
     s.attr(rankdir="LR")
-    # s.attr(rank="same")
-    # s.attr(size='1000,2000')
     s.view()
-    input("press any key to exit")
-
-    pass
 
 
 class ViewControllerChainsVerb(VerbExtension):
-    """Output the list of loaded controllers, their type and status."""
+    """Generates a diagram of the loaded chained controllers."""
 
     def add_arguments(self, parser, cli_name):
         add_arguments(parser)
-        parser.add_argument(
-            '--verbose', '-v',
-            action='store_true',
-            help='List controller\'s claimed interfaces, required state interfaces and required command interfaces',
-        )
         add_controller_mgr_parsers(parser)
 
     def main(self, *, args):
