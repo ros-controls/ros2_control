@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef FAKE_COMPONENTS__VISIBILITY_CONTROL_H_
-#define FAKE_COMPONENTS__VISIBILITY_CONTROL_H_
+#ifndef MOCK_COMPONENTS__VISIBILITY_CONTROL_H_
+#define MOCK_COMPONENTS__VISIBILITY_CONTROL_H_
 
 // This logic was borrowed (then namespaced) from the examples on the gcc wiki:
 //     https://gcc.gnu.org/wiki/Visibility
@@ -46,4 +46,4 @@
 #define MOCK_COMPONENTS_PUBLIC_TYPE
 #endif
 
-#endif  // FAKE_COMPONENTS__VISIBILITY_CONTROL_H_
+#endif  // MOCK_COMPONENTS__VISIBILITY_CONTROL_H_
