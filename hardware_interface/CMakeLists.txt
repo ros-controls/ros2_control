@@ -40,11 +40,39 @@ ament_target_dependencies(${PROJECT_NAME} ${THIS_PACKAGE_INCLUDE_DEPENDS})
 # which is appropriate when building the dll but not consuming it.
 target_compile_definitions(${PROJECT_NAME} PRIVATE "HARDWARE_INTERFACE_BUILDING_DLL")
 
+# Mock components
+add_library(
+  mock_components
+  SHARED
+  src/mock_components/generic_system.cpp
+)
+target_include_directories(
+  mock_components
+  PUBLIC
+  include
+)
+target_link_libraries(
+  mock_components
+  ${PROJECT_NAME}
+)
+ament_target_dependencies(
+  mock_components
+  pluginlib
+  rcpputils
+)
+
+# Causes the visibility macros to use dllexport rather than dllimport,
+# which is appropriate when building the dll but not consuming it.
+target_compile_definitions(mock_components PRIVATE "HARDWARE_INTERFACE_BUILDING_DLL")
+
+pluginlib_export_plugin_description_file(
+  ${PROJECT_NAME} mock_components_plugin_description.xml)
+
 # Fake components
 add_library(
   fake_components
   SHARED
-  src/fake_components/generic_system.cpp
+  src/mock_components/generic_system.cpp
 )
 target_include_directories(
   fake_components
@@ -60,12 +88,14 @@ ament_target_dependencies(
   pluginlib
   rcpputils
 )
+
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.
 target_compile_definitions(fake_components PRIVATE "HARDWARE_INTERFACE_BUILDING_DLL")
 
 pluginlib_export_plugin_description_file(
   ${PROJECT_NAME} fake_components_plugin_description.xml)
+
 
 install(
   DIRECTORY include/
@@ -75,6 +105,7 @@ install(
 install(
   TARGETS
   fake_components
+  mock_components
   ${PROJECT_NAME}
   RUNTIME DESTINATION bin
   ARCHIVE DESTINATION lib
@@ -134,7 +165,7 @@ if(BUILD_TESTING)
   target_link_libraries(test_resource_manager ${PROJECT_NAME})
   ament_target_dependencies(test_resource_manager ros2_control_test_assets)
 
-  ament_add_gmock(test_generic_system test/fake_components/test_generic_system.cpp)
+  ament_add_gmock(test_generic_system test/mock_components/test_generic_system.cpp)
   target_include_directories(test_generic_system PRIVATE include)
   target_link_libraries(test_generic_system ${PROJECT_NAME})
   ament_target_dependencies(test_generic_system
@@ -148,6 +179,7 @@ ament_export_include_directories(
 )
 ament_export_libraries(
   fake_components
+  mock_components
   ${PROJECT_NAME}
 )
 ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
