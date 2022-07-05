@@ -4,3 +4,7 @@ string type
 string[] claimed_interfaces
 string[] required_command_interfaces
 string[] required_state_interfaces
+bool is_chainable
+bool is_chained
+string[] reference_interfaces
+ChainConnection[] chain_connections

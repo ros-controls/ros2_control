@@ -245,17 +245,15 @@ TEST_F(TestControllerManagerSrvs, list_chained_controllers_srv)
     controller_manager_msgs::srv::SwitchController::Request::STRICT, true, rclcpp::Duration(0, 0));
   result = call_service_and_wait(*client, request, srv_executor);
   ASSERT_EQ(0u, result->controller.size());
-  ASSERT_EQ(1u, result->controller_group[1].chained_connections.size());
+  ASSERT_EQ(1u, result->controller_group[1].chain_connections.size());
   ASSERT_EQ(
     test_chainable_controller::TEST_CONTROLLER_NAME,
-    result->controller_group[1].chained_connections[0].name);
-  ASSERT_EQ(2u, result->controller_group[1].chained_connections[0].reference_interfaces.size());
-  ASSERT_EQ(
-    std::string(test_chainable_controller::TEST_CONTROLLER_NAME) + "/joint1/position",
-    result->controller_group[1].chained_connections[0].reference_interfaces[0]);
-  ASSERT_EQ(
-    std::string(test_chainable_controller::TEST_CONTROLLER_NAME) + "/joint1/velocity",
-    result->controller_group[1].chained_connections[0].reference_interfaces[1]);
+    result->controller_group[1].chain_connections[0].name);
+  ASSERT_EQ(2u, result->controller_group[1].chain_connections[0].reference_interfaces.size());
+  ASSERT_EQ("joint1/position",
+    result->controller_group[1].chain_connections[0].reference_interfaces[0]);
+  ASSERT_EQ("joint1/velocity",
+    result->controller_group[1].chain_connections[0].reference_interfaces[1]);
 }
 
 TEST_F(TestControllerManagerSrvs, reload_controller_libraries_srv)
