@@ -57,29 +57,32 @@ int main(int argc, char ** argv)
       }
       else
       {
-        RCLCPP_WARN(cm->get_logger(), "RT kernel was not detected");
+        RCLCPP_INFO(cm->get_logger(), "RT kernel is recommended for better performance");
       }
 
-      rclcpp::Time mut_previous_time = cm->now();
-      rclcpp::Time mut_end_period = mut_previous_time;
+      // for calcuating sleep time
+      auto const period = std::chrono::nanoseconds(1'000'000'000 / cm->get_update_rate());
+      std::chrono::system_clock::time_point next_iteration_time =
+        std::chrono::system_clock::time_point(std::chrono::nanoseconds(cm->now().nanoseconds()));
 
-      // Use nanoseconds to avoid chrono's rounding
-      rclcpp::Duration period(std::chrono::nanoseconds(1'000'000'000 / cm->get_update_rate()));
+      // for calclating the measured period of the loop
+      rclcpp::Time previous_time = cm->now();
 
       while (rclcpp::ok())
       {
-        // wait until we hit the end of the period
-        mut_end_period += period;
-        std::this_thread::sleep_for(
-          std::chrono::nanoseconds((mut_end_period - cm->now()).nanoseconds()));
+        // calculate measured period
+        auto const current_time = cm->now();
+        auto const measured_period = current_time - previous_time;
+        previous_time = current_time;
 
         // execute update loop
-        auto const current_time = cm->now();
-        auto const measured_period = current_time - mut_previous_time;
-        mut_previous_time = current_time;
-        cm->read(current_time, measured_period);
-        cm->update(current_time, measured_period);
-        cm->write(current_time, measured_period);
+        cm->read(cm->now(), measured_period);
+        cm->update(cm->now(), measured_period);
+        cm->write(cm->now(), measured_period);
+
+        // wait until we hit the end of the period
+        next_iteration_time += period;
+        std::this_thread::sleep_until(next_iteration_time);
       }
     });
 
