@@ -85,7 +85,23 @@ struct JointLimits
 
 /**
  * SoftJointLimits stores values from the `<safety_controller>` tag of URDF.
- * For details about meaning of each variable check here: https://wiki.ros.org/urdf/XML/joint
+ * The meaning of the fields are:
+ *
+ * An element can contain the following attributes:
+ *
+ * **soft_lower_limit** (optional, defaults to 0) - An attribute specifying the lower joint boundary
+ * where the safety controller starts limiting the position of the joint. This limit needs to be
+ * larger than the lower joint limit (see above). See See safety limits for more details.
+ *
+ * **soft_upper_limit** (optional, defaults to 0) - An attribute specifying the upper joint boundary
+ * where the safety controller starts limiting the position of the joint. This limit needs to be
+ * smaller than the upper joint limit (see above). See See safety limits for more details.
+ *
+ * **k_position** (optional, defaults to 0) - An attribute specifying the relation between position
+ * and velocity limits. See See safety limits for more details.
+ *
+ * k_velocity (required) - An attribute specifying the relation between effort and velocity limits.
+ * See See safety limits for more details.
  */
 struct SoftJointLimits
 {
