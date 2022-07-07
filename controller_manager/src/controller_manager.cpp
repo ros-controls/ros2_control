@@ -1227,10 +1227,10 @@ void ControllerManager::list_controllers_srv_cb(
   std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
   const std::vector<ControllerSpec> & controllers = rt_controllers_wrapper_.get_updated_list(guard);
   response->controller.reserve(controllers.size());
-  response->controller_group.reserve(controllers.size());
 
   std::unordered_map<std::string, std::vector<std::string>> controller_chain_interface_map;
   std::unordered_map<std::string, std::set<std::string>> controller_chain_map;
+  std::vector<controller_manager_msgs::msg::ControllerState*> chained_controllers;
   for (size_t i = 0; i < controllers.size(); ++i)
   {
     controller_chain_map[controllers[i].info.name] = {};
@@ -1286,31 +1286,29 @@ void ControllerManager::list_controllers_srv_cb(
       }
     }
     // add controller state to response depending on whether its chained
-    if (controller_chain_interface_map[cs.name].empty() && !controllers[i].c->is_chainable())
-    {
-      response->controller.push_back(cs);
+    auto references = controllers[i].c->export_reference_interfaces();
+    cs.reference_interfaces.reserve(references.size());
+    for (const auto& reference: references){
+      cs.reference_interfaces.push_back(reference.get_interface_name());
     }
-    else
-    {
-      auto references = controllers[i].c->export_reference_interfaces();
-      cs.reference_interfaces.reserve(references.size());
-      for (const auto& reference: references){
-        cs.reference_interfaces.push_back(reference.get_interface_name());
-      }
-      response->controller_group.push_back(cs);
+    response->controller.push_back(cs);
+
+    if (!controller_chain_interface_map[cs.name].empty() || controllers[i].c->is_chainable()){
+      chained_controllers.push_back(&response->controller.back());
     }
   }
+
   // add chained controller names to controller group
-  for (auto & cs_chained : response->controller_group)
+  for (auto & cs : chained_controllers)
   {
-    auto chained_set = controller_chain_map[cs_chained.name];
+    auto chained_set = controller_chain_map[cs->name];
     for (const auto & chained_name : chained_set)
     {
       controller_manager_msgs::msg::ChainConnection connection;
       connection.name = chained_name;
       connection.reference_interfaces =
-        controller_chain_interface_map[cs_chained.name];
-      cs_chained.chain_connections.push_back(connection);
+        controller_chain_interface_map[cs->name];
+      cs->chain_connections.push_back(connection);
     }
   }
 

@@ -12,7 +12,6 @@ find_package(rosidl_default_generators REQUIRED)
 
 set(msg_files
   msg/ControllerState.msg
-  msg/ChainedControllerState.msg
   msg/ChainConnection.msg
   msg/HardwareComponentState.msg
   msg/HardwareInterface.msg

@@ -21,14 +21,6 @@ from ros2cli.verb import VerbExtension
 from ros2controlcli.api import add_controller_mgr_parsers
 
 
-def print_chained_connections(connections, args):
-    if args.verbose or args.chained_interfaces:
-        print(f'\t chained to interfaces:')
-        for connection in connections:
-            for reference in connection.reference_interfaces:
-                print(f'\t\t {reference:20s}')
-
-
 def print_controller_state(c, args):
     print(f'{c.name:20s}[{c.type:20s}] {c.state:10s}')
     if args.claimed_interfaces or args.verbose:
@@ -43,6 +35,15 @@ def print_controller_state(c, args):
         print('\trequired state interfaces:')
         for required_state_interface in c.required_state_interfaces:
             print(f'\t\t{required_state_interface}')
+    if args.chained_interfaces or args.verbose:
+        print(f'\tchained to interfaces:')
+        for connection in c.chain_connections:
+            for reference in connection.reference_interfaces:
+                print(f'\t\t {reference:20s}')
+    if args.reference_interfaces or args.verbose:
+        print('\texported reference interfaces:')
+        for reference_interfaces in c.reference_interfaces:
+            print(f'\t\t{reference_interfaces}')
 
 
 class ListControllersVerb(VerbExtension):
@@ -71,6 +72,11 @@ class ListControllersVerb(VerbExtension):
             help='List interfaces that the controllers are chained to',
         )
         parser.add_argument(
+            '--reference-interfaces',
+            action='store_true',
+            help='List controller\'s exported references',
+        )
+        parser.add_argument(
             '--verbose', '-v',
             action='store_true',
             help='List controller\'s claimed interfaces, required state interfaces and required command interfaces',
@@ -82,8 +88,5 @@ class ListControllersVerb(VerbExtension):
             response = list_controllers(node, args.controller_manager)
             for c in response.controller:
                 print_controller_state(c, args)
-            for c_chained in response.controller_group:
-                print_controller_state(c_chained.controller_state, args)
-                print_chained_connections(c_chained.chained_connections, args)
 
             return 0
