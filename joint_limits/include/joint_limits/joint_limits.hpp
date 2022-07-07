@@ -67,43 +67,6 @@ struct JointLimits
   {
     std::stringstream ss_output;
 
-    if (has_position_limits)
-    {
-      ss_output << "  position limits: "
-                << "[" << min_position << ", " << max_position << "]\n";
-    }
-    if (has_velocity_limits)
-    {
-      ss_output << "  velocity limit: "
-                << "[" << max_velocity << "]\n";
-    }
-    if (has_acceleration_limits)
-    {
-      ss_output << "  acceleration limit: "
-                << "[" << max_acceleration << "]\n";
-    }
-    if (has_jerk_limits)
-    {
-      ss_output << "  jerk limit: "
-                << "[" << max_jerk << "]\n";
-    }
-    if (has_effort_limits)
-    {
-      ss_output << "  effort limit: "
-                << "[" << max_effort << "]\n";
-    }
-    if (angle_wraparound)
-    {
-      ss_output << "  angle wraparound is active.";
-    }
-
-    return ss_output.str();
-  }
-
-  std::string debug_to_string()
-  {
-    std::stringstream ss_output;
-
     ss_output << "  has position limits: " << (has_position_limits ? "true" : "false") << "["
               << min_position << ", " << max_position << "]\n";
     ss_output << "  has velocity limits: " << (has_velocity_limits ? "true" : "false") << "["
@@ -154,8 +117,6 @@ struct SoftJointLimits
 
     return ss_output.str();
   }
-
-  std::string debug_to_string() { return to_string(); }
 };
 
 }  // namespace joint_limits
