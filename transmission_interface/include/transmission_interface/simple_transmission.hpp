@@ -194,7 +194,9 @@ inline void SimpleTransmission::configure(
   joint_velocity_ = get_by_interface(joint_handles, hardware_interface::HW_IF_VELOCITY);
   joint_effort_ = get_by_interface(joint_handles, hardware_interface::HW_IF_EFFORT);
 
-  if (!joint_position_ && !joint_velocity_ && !joint_effort_)
+  if (
+    std::isnan(joint_position_.get_value()) && std::isnan(joint_velocity_.get_value()) &&
+    std::isnan(joint_effort_.get_value()))
   {
     throw Exception("None of the provided joint handles are valid or from the required interfaces");
   }
@@ -234,12 +236,12 @@ inline void SimpleTransmission::joint_to_actuator()
     actuator_effort_.set_value(joint_effort_.get_value() / reduction_);
   }
 
-  if (joint_velocity_ && actuator_velocity_)
+  if (!std::isnan(joint_velocity_.get_value()) && actuator_velocity_)
   {
     actuator_velocity_.set_value(joint_velocity_.get_value() * reduction_);
   }
 
-  if (joint_position_ && actuator_position_)
+  if (!std::isnan(joint_position_.get_value()) && !std::isnan(actuator_position_))
   {
     actuator_position_.set_value((joint_position_.get_value() - jnt_offset_) * reduction_);
   }

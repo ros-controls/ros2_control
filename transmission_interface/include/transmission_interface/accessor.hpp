@@ -16,6 +16,7 @@
 #define TRANSMISSION_INTERFACE__ACCESSOR_HPP_
 
 #include <algorithm>
+#include <cmath>
 #include <set>
 #include <string>
 #include <vector>
@@ -62,8 +63,8 @@ std::vector<T> get_ordered_handles(
       unordered_handles.cbegin(), unordered_handles.cend(), std::back_inserter(result),
       [&](const auto & handle)
       {
-        return (handle.get_name() == name) && (handle.get_interface_name() == interface_type) &&
-               handle;
+        return (handle.get_prefix_name() == name) &&
+               (handle.get_interface_name() == interface_type) && std::isnan(handle.get_value());
       });
   }
   return result;
