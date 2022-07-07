@@ -1516,7 +1516,7 @@ void ControllerManager::switch_controller_service_cb(
   {
     RCLCPP_WARN(
       get_logger(),
-      "'start_controllers' field is deprecated, use 'activate_controllers field instead!");
+      "'start_controllers' field is deprecated, use 'activate_controllers' field instead!");
     activate_controllers.insert(
       activate_controllers.end(), request->start_controllers.begin(),
       request->start_controllers.end());
@@ -1525,16 +1525,23 @@ void ControllerManager::switch_controller_service_cb(
   {
     RCLCPP_WARN(
       get_logger(),
-      "'stop_controllers' field is deprecated, use 'deactivate_controllers field instead!");
+      "'stop_controllers' field is deprecated, use 'deactivate_controllers' field instead!");
     deactivate_controllers.insert(
       deactivate_controllers.end(), request->stop_controllers.begin(),
       request->stop_controllers.end());
   }
 
-  response->ok =
-    switch_controller(
-      activate_controllers, deactivate_controllers, request->strictness, request->activate_asap,
-      request->timeout) == controller_interface::return_type::OK;
+  auto activate_asap = request->activate_asap;
+  if (request->start_asap)
+  {
+    RCLCPP_WARN(
+      get_logger(), "'start_asap' field is deprecated, use 'activate_asap' field instead!");
+    activate_asap = request->start_asap;
+  }
+
+  response->ok = switch_controller(
+                   activate_controllers, deactivate_controllers, request->strictness, activate_asap,
+                   request->timeout) == controller_interface::return_type::OK;
   // END: remove when deprecated removed
 
   RCLCPP_DEBUG(get_logger(), "switching service finished");
