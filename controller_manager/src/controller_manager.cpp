@@ -1285,20 +1285,19 @@ void ControllerManager::list_controllers_srv_cb(
         controller_chain_interface_map[cs.name].push_back(interface.substr(index+1, interface.size()-1));
       }
     }
-    // add controller state to response depending on whether its chained
     auto references = controllers[i].c->export_reference_interfaces();
     cs.reference_interfaces.reserve(references.size());
     for (const auto& reference: references){
       cs.reference_interfaces.push_back(reference.get_interface_name());
     }
     response->controller.push_back(cs);
-
+    // keep track of controllers that are part of a chain
     if (!controller_chain_interface_map[cs.name].empty() || controllers[i].c->is_chainable()){
       chained_controllers.push_back(&response->controller.back());
     }
   }
 
-  // add chained controller names to controller group
+  // create chain connections for all controllers in a chain
   for (auto & cs : chained_controllers)
   {
     auto chained_set = controller_chain_map[cs->name];
