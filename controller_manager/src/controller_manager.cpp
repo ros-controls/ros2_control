@@ -639,9 +639,9 @@ controller_interface::return_type ControllerManager::switch_controller(
     {
       RCLCPP_WARN(
         get_logger(),
-        "Could not activate controller with name '%s'. (Check above warnings for more details.) "
+        "Could not activate controller with name '%s'. Check above warnings for more details. "
         "Check the state of the controllers and their required interfaces using "
-        "`ros2 control list_controllers -v` to get more information.",
+        "`ros2 control list_controllers -v` CLI to get more information.",
         (*ctrl_it).c_str());
       if (strictness == controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT)
       {
@@ -675,7 +675,7 @@ controller_interface::return_type ControllerManager::switch_controller(
     if (!is_controller_active(controller_it->c))
     {
       RCLCPP_WARN(
-        get_logger(), "Controller with name '%s' can not be deactivated since is not active.",
+        get_logger(), "Controller with name '%s' can not be deactivated since it is not active.",
         controller_it->info.name.c_str());
       ret = controller_interface::return_type::ERROR;
     }
@@ -688,9 +688,9 @@ controller_interface::return_type ControllerManager::switch_controller(
     {
       RCLCPP_WARN(
         get_logger(),
-        "Could not deactivate controller with name '%s'. (Check above warnings for more details.)"
+        "Could not deactivate controller with name '%s'. Check above warnings for more details. "
         "Check the state of the controllers and their required interfaces using "
-        "`ros2 control list_controllers -v` to get more information.",
+        "`ros2 control list_controllers -v` CLI to get more information.",
         (*ctrl_it).c_str());
       if (strictness == controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT)
       {
@@ -1404,9 +1404,46 @@ void ControllerManager::switch_controller_service_cb(
   std::lock_guard<std::mutex> guard(services_lock_);
   RCLCPP_DEBUG(get_logger(), "switching service locked");
 
+  //   response->ok = switch_controller(
+  //     request->activate_controllers, request->deactivate_controllers, request->strictness,
+  //     request->activate_asap, request->timeout) == controller_interface::return_type::OK;
+  // TODO(destogl): remove this after deprecated fields are removed from service and use the
+  // commented three lines above
+  // BEGIN: remove when deprecated removed
+  auto activate_controllers = request->activate_controllers;
+  auto deactivate_controllers = request->deactivate_controllers;
+
+  if (!request->start_controllers.empty())
+  {
+    RCLCPP_WARN(
+      get_logger(),
+      "'start_controllers' field is deprecated, use 'activate_controllers' field instead!");
+    activate_controllers.insert(
+      activate_controllers.end(), request->start_controllers.begin(),
+      request->start_controllers.end());
+  }
+  if (!request->stop_controllers.empty())
+  {
+    RCLCPP_WARN(
+      get_logger(),
+      "'stop_controllers' field is deprecated, use 'deactivate_controllers' field instead!");
+    deactivate_controllers.insert(
+      deactivate_controllers.end(), request->stop_controllers.begin(),
+      request->stop_controllers.end());
+  }
+
+  auto activate_asap = request->activate_asap;
+  if (request->start_asap)
+  {
+    RCLCPP_WARN(
+      get_logger(), "'start_asap' field is deprecated, use 'activate_asap' field instead!");
+    activate_asap = request->start_asap;
+  }
+
   response->ok = switch_controller(
-                   request->start_controllers, request->stop_controllers, request->strictness,
-                   request->start_asap, request->timeout) == controller_interface::return_type::OK;
+                   activate_controllers, deactivate_controllers, request->strictness, activate_asap,
+                   request->timeout) == controller_interface::return_type::OK;
+  // END: remove when deprecated removed
 
   RCLCPP_DEBUG(get_logger(), "switching service finished");
 }
