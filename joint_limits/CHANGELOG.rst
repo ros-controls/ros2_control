@@ -1,5 +1,5 @@
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Changelog for package ros2_control
+Changelog for package joint_limits
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Forthcoming
@@ -9,8 +9,6 @@ Forthcoming
 
 2.11.0 (2022-07-03)
 -------------------
-* Update maintainers of packages (`#753 <https://github.com/ros-controls/ros2_control/issues/753>`_)
-* Contributors: Bence Magyar
 
 2.10.0 (2022-06-18)
 -------------------
@@ -38,17 +36,12 @@ Forthcoming
 
 2.2.0 (2022-01-24)
 ------------------
-* Use correct ros-controls/realtime_tools branch (`#619 <https://github.com/ros-controls/ros2_control/issues/619>`_)
-* No need to get angles from source anymore, causes issues now (`#616 <https://github.com/ros-controls/ros2_control/issues/616>`_)
-* Contributors: Bence Magyar, Melvin Wang
 
 2.1.0 (2022-01-11)
 ------------------
 
 2.0.0 (2021-12-29)
 ------------------
-* Point control_msgs to galactic branch (`#587 <https://github.com/ros-controls/ros2_control/issues/587>`_)
-* Contributors: Denis Štogl
 
 1.2.0 (2021-11-05)
 ------------------
@@ -58,8 +51,6 @@ Forthcoming
 
 1.0.0 (2021-09-29)
 ------------------
-* Add missing packages in the metapackage (`#534 <https://github.com/ros-controls/ros2_control/issues/534>`_)
-* Contributors: Denis Štogl
 
 0.8.0 (2021-08-28)
 ------------------
@@ -99,8 +90,6 @@ Forthcoming
 
 0.1.4 (2021-02-03)
 ------------------
-* Add test assets package (`#289 <https://github.com/ros-controls/ros2_control/issues/289>`_)
-* Contributors: Denis Štogl
 
 0.1.3 (2021-01-21)
 ------------------
@@ -110,14 +99,6 @@ Forthcoming
 
 0.1.1 (2020-12-23)
 ------------------
-* Remove transmission_interface from release, add ros2cli to ros_control (`#280 <https://github.com/ros-controls/ros2_control/issues/280>`_)
-  * Remove transmission_interface from release, add ros2cli to ros_control
-  metapackage
-  * patch
-* Contributors: Bence Magyar
 
 0.1.0 (2020-12-22)
 ------------------
-* Remove controller parameter server (`#113 <https://github.com/ros-controls/ros2_control/issues/113>`_)
-* Add ros2_control metapackage
-* Contributors: Anas Abou Allaban, Bence Magyar, Karsten Knese, Matt Reynolds
