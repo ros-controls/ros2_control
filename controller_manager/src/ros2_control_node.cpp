@@ -60,12 +60,12 @@ int main(int argc, char ** argv)
         RCLCPP_INFO(cm->get_logger(), "RT kernel is recommended for better performance");
       }
 
-      // for calcuating sleep time
+      // for calculating sleep time
       auto const period = std::chrono::nanoseconds(1'000'000'000 / cm->get_update_rate());
       std::chrono::system_clock::time_point next_iteration_time =
         std::chrono::system_clock::time_point(std::chrono::nanoseconds(cm->now().nanoseconds()));
 
-      // for calclating the measured period of the loop
+      // for calculating the measured period of the loop
       rclcpp::Time previous_time = cm->now();
 
       while (rclcpp::ok())
