@@ -134,7 +134,7 @@ public:
   controller_interface::return_type switch_controller(
     const std::vector<std::string> & start_controllers,
     const std::vector<std::string> & stop_controllers, int strictness,
-    bool start_asap = kWaitForAllResources,
+    bool activate_asap = kWaitForAllResources,
     const rclcpp::Duration & timeout = rclcpp::Duration::from_nanoseconds(kInfiniteTimeout));
 
   CONTROLLER_MANAGER_PUBLIC
@@ -172,7 +172,7 @@ protected:
   void manage_switch();
 
   CONTROLLER_MANAGER_PUBLIC
-  void stop_controllers();
+  void deactivate_controllers();
 
   /**
    * Switch chained mode for all the controllers with respect to the following cases:
@@ -187,10 +187,10 @@ protected:
     const std::vector<std::string> & chained_mode_switch_list, bool to_chained_mode);
 
   CONTROLLER_MANAGER_PUBLIC
-  void start_controllers();
+  void activate_controllers();
 
   CONTROLLER_MANAGER_PUBLIC
-  void start_controllers_asap();
+  void activate_controllers_asap();
 
   CONTROLLER_MANAGER_PUBLIC
   void list_controllers_srv_cb(
@@ -428,9 +428,10 @@ private:
   rclcpp::Service<controller_manager_msgs::srv::SetHardwareComponentState>::SharedPtr
     set_hardware_component_state_service_;
 
-  std::vector<std::string> start_request_, stop_request_;
+  std::vector<std::string> activate_request_, deactivate_request_;
   std::vector<std::string> to_chained_mode_request_, from_chained_mode_request_;
-  std::vector<std::string> start_command_interface_request_, stop_command_interface_request_;
+  std::vector<std::string> activate_command_interface_request_,
+    deactivate_command_interface_request_;
 
   struct SwitchParams
   {
@@ -440,7 +441,7 @@ private:
 
     // Switch options
     int strictness = {0};
-    bool start_asap = {false};
+    bool activate_asap = {false};
     rclcpp::Duration timeout = rclcpp::Duration{0, 0};
   };
 
