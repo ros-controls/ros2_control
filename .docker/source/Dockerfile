@@ -5,7 +5,7 @@ ARG BRANCH="master"
 ENV ROS_UNDERLAY /root/ws_ros2_control/install
 WORKDIR $ROS_UNDERLAY/../src
 
-ADD https://raw.githubusercontent.com/ros-controls/ros2_control/$BRANCH/ros2_control/ros2_control.$ROS_DISTRO.repos ros2_control.repos
+ADD https://raw.githubusercontent.com/ros-controls/ros2_control/$BRANCH/ros2_control.$ROS_DISTRO.repos ros2_control.repos
 RUN vcs import < ros2_control.repos
 
 RUN apt-get update && rosdep update && \
