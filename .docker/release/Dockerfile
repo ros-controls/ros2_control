@@ -1,4 +1,4 @@
-ARG ROS_DISTRO="galactic"
+ARG ROS_DISTRO="humble"
 FROM ros:${ROS_DISTRO}
 
 # Commands are combined in single RUN statement with "apt/lists" folder removal to reduce image size
