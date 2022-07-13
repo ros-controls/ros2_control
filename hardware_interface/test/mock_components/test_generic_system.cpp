@@ -41,6 +41,7 @@ class TestGenericSystem : public ::testing::Test
 protected:
   void SetUp() override
   {
+    // REMOVE THIS MEMBER ONCE FAKE COMPONENTS ARE REMOVED
     hardware_fake_system_2dof_ =
       R"(
   <ros2_control name="GenericSystem2dof" type="system">
