@@ -73,6 +73,7 @@ add_library(
   fake_components
   SHARED
   src/mock_components/generic_system.cpp
+  src/mock_components/fake_generic_system.cpp
 )
 target_include_directories(
   fake_components

@@ -45,7 +45,7 @@ protected:
       R"(
   <ros2_control name="GenericSystem2dof" type="system">
     <hardware>
-      <plugin>mock_components/GenericSystem</plugin>
+      <plugin>fake_components/GenericSystem</plugin>
     </hardware>
     <joint name="joint1">
       <command_interface name="position"/>
