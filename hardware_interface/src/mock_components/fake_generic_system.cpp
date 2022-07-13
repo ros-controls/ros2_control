@@ -1,4 +1,4 @@
-// Copyright (c) 2021 PickNik, Inc.
+// Copyright (c) 2022 PickNik, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,16 +14,6 @@
 //
 // Author: Jafar Abdi, Denis Stogl
 
-#ifndef FAKE_COMPONENTS__GENERIC_SYSTEM_HPP_
-#define FAKE_COMPONENTS__GENERIC_SYSTEM_HPP_
-
-#include "mock_components/generic_system.hpp"
-
-namespace fake_components
-{
-using GenericSystem [[deprecated]] = mock_components::GenericSystem;
-
-using GenericSystem [[deprecated]] = mock_components::GenericRobot;
-}  // namespace fake_components
-
-#endif  // FAKE_COMPONENTS__GENERIC_SYSTEM_HPP_
+#include "fake_components/generic_system.hpp"
+#include "pluginlib/class_list_macros.hpp"
+PLUGINLIB_EXPORT_CLASS(fake_components::GenericSystem, hardware_interface::SystemInterface)
