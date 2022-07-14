@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.12.1 (2022-07-14)
+-------------------
 * Rename CM members from start/stop to activate/deactivate nomenclature. (`#756 <https://github.com/ros-controls/ros2_control/issues/756>`_)
 * Fix spelling in comment (`#769 <https://github.com/ros-controls/ros2_control/issues/769>`_)
 * Contributors: Denis Štogl, Tyler Weaver
