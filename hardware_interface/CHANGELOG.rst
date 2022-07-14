@@ -2,6 +2,11 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix fake components deprecation and add test for it (`#771 <https://github.com/ros-controls/ros2_control/issues/771>`_)
+* Contributors: Bence Magyar
+
 2.12.0 (2022-07-09)
 -------------------
 * Hardware interface specific update rate and best practices about it (`#716 <https://github.com/ros-controls/ros2_control/issues/716>`_)
