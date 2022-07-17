@@ -137,8 +137,10 @@ public:
     bool activate_asap = kWaitForAllResources,
     const rclcpp::Duration & timeout = rclcpp::Duration::from_nanoseconds(kInfiniteTimeout));
 
+  /// Read values to state interfaces.
   /**
-   * \brief      Read from state interfaces
+   * Read current values from hardware to state interfaces.
+   * **The method called in the (real-time) control loop.**
    *
    * \param[in]  time    The time at the start of this control loop iteration
    * \param[in]  period  The measured period of the last control loop iteration
@@ -146,8 +148,10 @@ public:
   CONTROLLER_MANAGER_PUBLIC
   void read(const rclcpp::Time & time, const rclcpp::Duration & period);
 
+  /// Run update on controllers
   /**
-   * \brief      Run update on controllers
+   * Call update of all controllers.      
+   * **The method called in the (real-time) control loop.**
    *
    * \param[in]  time    The time at the start of this control loop iteration
    * \param[in]  period  The measured period of the last control loop iteration
@@ -156,8 +160,10 @@ public:
   controller_interface::return_type update(
     const rclcpp::Time & time, const rclcpp::Duration & period);
 
+  /// Write values from command interfaces.
   /**
-   * \brief      Write to control interfaces
+   * Write values from command interface into hardware.
+   * **The method called in the (real-time) control loop.**
    *
    * \param[in]  time    The time at the start of this control loop iteration
    * \param[in]  period  The measured period of the last control loop iteration

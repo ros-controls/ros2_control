@@ -41,7 +41,8 @@ public:
   virtual ~ChainableControllerInterface() = default;
 
   /**
-   * This is the method called in the control loop.
+   * Control step update. Command interfaces are updated based on on reference inputs and current states.
+   * **The method called in the (real-time) control loop.**
    *
    * \param[in] time The time at the start of this control loop iteration
    * \param[in] period The measured time taken by the last control loop iteration
