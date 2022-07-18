@@ -87,18 +87,18 @@ public:
   {
     RCUTILS_LOG_INFO_NAMED(
       "resource_manager", "Loading hardware '%s' ", hardware_info.name.c_str());
-    // hardware_class_type has to match class name in plugin xml description
-    // TODO(karsten1987) extract package from hardware_class_type
+    // hardware_plugin_name has to match class name in plugin xml description
+    // TODO(karsten1987) extract package from hardware_plugin_name
     // e.g.: <package_vendor>/<system_type>
     auto interface = std::unique_ptr<HardwareInterfaceT>(
-      loader.createUnmanagedInstance(hardware_info.hardware_class_type));
+      loader.createUnmanagedInstance(hardware_info.hardware_plugin_name));
     HardwareT hardware(std::move(interface));
     container.emplace_back(std::move(hardware));
     // initialize static data about hardware component to reduce later calls
     HardwareComponentInfo component_info;
     component_info.name = hardware_info.name;
     component_info.type = hardware_info.type;
-    component_info.class_type = hardware_info.hardware_class_type;
+    component_info.plugin_name = hardware_info.hardware_plugin_name;
 
     hardware_info_map_.insert(std::make_pair(component_info.name, component_info));
   }
