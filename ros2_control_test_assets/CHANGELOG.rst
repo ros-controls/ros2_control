@@ -2,6 +2,18 @@
 Changelog for package ros2_control_test_assets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.12.1 (2022-07-14)
+-------------------
+
+2.12.0 (2022-07-09)
+-------------------
+
+2.11.0 (2022-07-03)
+-------------------
+* Update maintainers of packages (`#753 <https://github.com/ros-controls/ros2_control/issues/753>`_)
+* Remove ament autolint (`#749 <https://github.com/ros-controls/ros2_control/issues/749>`_)
+* Contributors: Bence Magyar
+
 2.10.0 (2022-06-18)
 -------------------
 * Make RHEL CI happy! (`#730 <https://github.com/ros-controls/ros2_control/issues/730>`_)

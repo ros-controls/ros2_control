@@ -2,6 +2,38 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.12.1 (2022-07-14)
+-------------------
+* Rename CM members from start/stop to activate/deactivate nomenclature. (`#756 <https://github.com/ros-controls/ros2_control/issues/756>`_)
+* Fix spelling in comment (`#769 <https://github.com/ros-controls/ros2_control/issues/769>`_)
+* Contributors: Denis Štogl, Tyler Weaver
+
+2.12.0 (2022-07-09)
+-------------------
+* Deprecate and rename `start` and `stop` nomenclature toward user to `activate` and `deactivate` #ABI-breaking (`#755 <https://github.com/ros-controls/ros2_control/issues/755>`_)
+  * Rename fields and deprecate old nomenclature.
+  * Add new defines to SwitchController.srv
+  * Deprecated start/stop nomenclature in all CLI commands.
+  * Deprecate 'start_asap' too as other fields.
+* [ros2_control_node] Automatically detect if RT kernel is used and opportunistically enable SCHED_FIFO (`#748 <https://github.com/ros-controls/ros2_control/issues/748>`_)
+* Contributors: Denis Štogl, Tyler Weaver
+
+2.11.0 (2022-07-03)
+-------------------
+* Remove hybrid services in controller manager. (`#761 <https://github.com/ros-controls/ros2_control/issues/761>`_)
+* [Interfaces] Improved ```get_name()``` method of hardware interfaces #api-breaking (`#737 <https://github.com/ros-controls/ros2_control/issues/737>`_)
+* Update maintainers of packages (`#753 <https://github.com/ros-controls/ros2_control/issues/753>`_)
+* Fix test dependency for chainable test (`#751 <https://github.com/ros-controls/ros2_control/issues/751>`_)
+* Remove ament autolint (`#749 <https://github.com/ros-controls/ros2_control/issues/749>`_)
+* Full functionality of chainable controllers in controller manager (`#667 <https://github.com/ros-controls/ros2_control/issues/667>`_)
+  * auto-switching of chained mode in controllers
+  * interface-matching approach for managing chaining controllers
+* Fixup spanwer and unspawner tests. It changes spawner a bit to handle interupts internally. (`#745 <https://github.com/ros-controls/ros2_control/issues/745>`_)
+* Add missing field to initializer lists in tests (`#746 <https://github.com/ros-controls/ros2_control/issues/746>`_)
+* Small but useful output update on controller manager. (`#741 <https://github.com/ros-controls/ros2_control/issues/741>`_)
+* Fixed period passed to hardware components always 0 (`#738 <https://github.com/ros-controls/ros2_control/issues/738>`_)
+* Contributors: Bence Magyar, Denis Štogl, Maciej Bednarczyk, Lucas Schulze
+
 2.10.0 (2022-06-18)
 -------------------
 * Make RHEL CI happy! (`#730 <https://github.com/ros-controls/ros2_control/issues/730>`_)

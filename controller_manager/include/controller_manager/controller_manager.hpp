@@ -29,14 +29,11 @@
 #include "controller_manager/controller_spec.hpp"
 #include "controller_manager/visibility_control.h"
 #include "controller_manager_msgs/srv/configure_controller.hpp"
-#include "controller_manager_msgs/srv/configure_start_controller.hpp"
 #include "controller_manager_msgs/srv/list_controller_types.hpp"
 #include "controller_manager_msgs/srv/list_controllers.hpp"
 #include "controller_manager_msgs/srv/list_hardware_components.hpp"
 #include "controller_manager_msgs/srv/list_hardware_interfaces.hpp"
-#include "controller_manager_msgs/srv/load_configure_controller.hpp"
 #include "controller_manager_msgs/srv/load_controller.hpp"
-#include "controller_manager_msgs/srv/load_start_controller.hpp"
 #include "controller_manager_msgs/srv/reload_controller_libraries.hpp"
 #include "controller_manager_msgs/srv/set_hardware_component_state.hpp"
 #include "controller_manager_msgs/srv/switch_controller.hpp"
@@ -137,7 +134,7 @@ public:
   controller_interface::return_type switch_controller(
     const std::vector<std::string> & start_controllers,
     const std::vector<std::string> & stop_controllers, int strictness,
-    bool start_asap = kWaitForAllResources,
+    bool activate_asap = kWaitForAllResources,
     const rclcpp::Duration & timeout = rclcpp::Duration::from_nanoseconds(kInfiniteTimeout));
 
   CONTROLLER_MANAGER_PUBLIC
@@ -175,7 +172,7 @@ protected:
   void manage_switch();
 
   CONTROLLER_MANAGER_PUBLIC
-  void stop_controllers();
+  void deactivate_controllers();
 
   /**
    * Switch chained mode for all the controllers with respect to the following cases:
@@ -190,10 +187,10 @@ protected:
     const std::vector<std::string> & chained_mode_switch_list, bool to_chained_mode);
 
   CONTROLLER_MANAGER_PUBLIC
-  void start_controllers();
+  void activate_controllers();
 
   CONTROLLER_MANAGER_PUBLIC
-  void start_controllers_asap();
+  void activate_controllers_asap();
 
   CONTROLLER_MANAGER_PUBLIC
   void list_controllers_srv_cb(
@@ -214,21 +211,6 @@ protected:
   void configure_controller_service_cb(
     const std::shared_ptr<controller_manager_msgs::srv::ConfigureController::Request> request,
     std::shared_ptr<controller_manager_msgs::srv::ConfigureController::Response> response);
-
-  CONTROLLER_MANAGER_PUBLIC
-  void load_and_configure_controller_service_cb(
-    const std::shared_ptr<controller_manager_msgs::srv::LoadConfigureController::Request> request,
-    std::shared_ptr<controller_manager_msgs::srv::LoadConfigureController::Response> response);
-
-  CONTROLLER_MANAGER_PUBLIC
-  void load_and_start_controller_service_cb(
-    const std::shared_ptr<controller_manager_msgs::srv::LoadStartController::Request> request,
-    std::shared_ptr<controller_manager_msgs::srv::LoadStartController::Response> response);
-
-  CONTROLLER_MANAGER_PUBLIC
-  void configure_and_start_controller_service_cb(
-    const std::shared_ptr<controller_manager_msgs::srv::ConfigureStartController::Request> request,
-    std::shared_ptr<controller_manager_msgs::srv::ConfigureStartController::Response> response);
 
   CONTROLLER_MANAGER_PUBLIC
   void reload_controller_libraries_service_cb(
@@ -433,12 +415,6 @@ private:
   rclcpp::Service<controller_manager_msgs::srv::LoadController>::SharedPtr load_controller_service_;
   rclcpp::Service<controller_manager_msgs::srv::ConfigureController>::SharedPtr
     configure_controller_service_;
-  rclcpp::Service<controller_manager_msgs::srv::LoadConfigureController>::SharedPtr
-    load_and_configure_controller_service_;
-  rclcpp::Service<controller_manager_msgs::srv::LoadStartController>::SharedPtr
-    load_and_start_controller_service_;
-  rclcpp::Service<controller_manager_msgs::srv::ConfigureStartController>::SharedPtr
-    configure_and_start_controller_service_;
   rclcpp::Service<controller_manager_msgs::srv::ReloadControllerLibraries>::SharedPtr
     reload_controller_libraries_service_;
   rclcpp::Service<controller_manager_msgs::srv::SwitchController>::SharedPtr
@@ -453,9 +429,10 @@ private:
   rclcpp::Service<controller_manager_msgs::srv::SetHardwareComponentState>::SharedPtr
     set_hardware_component_state_service_;
 
-  std::vector<std::string> start_request_, stop_request_;
+  std::vector<std::string> activate_request_, deactivate_request_;
   std::vector<std::string> to_chained_mode_request_, from_chained_mode_request_;
-  std::vector<std::string> start_command_interface_request_, stop_command_interface_request_;
+  std::vector<std::string> activate_command_interface_request_,
+    deactivate_command_interface_request_;
 
   struct SwitchParams
   {
@@ -465,7 +442,7 @@ private:
 
     // Switch options
     int strictness = {0};
-    bool start_asap = {false};
+    bool activate_asap = {false};
     rclcpp::Duration timeout = rclcpp::Duration{0, 0};
   };
 

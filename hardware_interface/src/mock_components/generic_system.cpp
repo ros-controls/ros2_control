@@ -14,7 +14,7 @@
 //
 // Author: Jafar Abdi, Denis Stogl
 
-#include "fake_components/generic_system.hpp"
+#include "mock_components/generic_system.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -27,7 +27,7 @@
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "rcutils/logging_macros.h"
 
-namespace fake_components
+namespace mock_components
 {
 CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & info)
 {
@@ -462,7 +462,7 @@ void GenericSystem::initialize_storage_vectors(
   if (print_hint)
   {
     RCUTILS_LOG_WARN_ONCE_NAMED(
-      "fake_generic_system",
+      "mock_generic_system",
       "Parsing of optional initial interface values failed or uses a deprecated format. Add "
       "initial values for every state interface in the ros2_control.xacro. For example: \n"
       "<state_interface name=\"velocity\"> \n"
@@ -494,7 +494,7 @@ bool GenericSystem::populate_interfaces(
 
   return true;
 }
-}  // namespace fake_components
+}  // namespace mock_components
 
 #include "pluginlib/class_list_macros.hpp"
-PLUGINLIB_EXPORT_CLASS(fake_components::GenericSystem, hardware_interface::SystemInterface)
+PLUGINLIB_EXPORT_CLASS(mock_components::GenericSystem, hardware_interface::SystemInterface)

@@ -77,7 +77,7 @@ The following is a step-by-step guide to create source files, basic tests, and c
 5. **Writing export definition for pluginlib**
 
    1. Create the ``<my_hardware_interface_package>.xml`` file in the package and add a definition of the library and hardware interface's class which has to be visible for the pluginlib.
-      The easiest way to do that is to check definition for fake components in the `hardware_interface fake_components <https://github.com/ros-controls/ros2_control/blob/master/hardware_interface/fake_components_plugin_description.xml>`_ section.
+      The easiest way to do that is to check definition for mock components in the `hardware_interface mock_components <https://github.com/ros-controls/ros2_control/blob/master/hardware_interface/mock_components_plugin_description.xml>`_ section.
 
    2. Usually, the plugin name is defined by the package (namespace) and the class name, e.g.,
       ``<my_hardware_interface_package>/<RobotHardwareInterfaceName>``.
@@ -88,7 +88,7 @@ The following is a step-by-step guide to create source files, basic tests, and c
 
    1. Create the folder ``test`` in your package, if it does not exist already, and add a file named ``test_load_<robot_hardware_interface_name>.cpp``.
 
-   2. You can copy the ``load_generic_system_2dof`` content defined in the `test_generic_system.cpp <https://github.com/ros-controls/ros2_control/blob/master/hardware_interface/test/fake_components/test_generic_system.cpp#L402-L407>`_ package.
+   2. You can copy the ``load_generic_system_2dof`` content defined in the `test_generic_system.cpp <https://github.com/ros-controls/ros2_control/blob/master/hardware_interface/test/mock_components/test_generic_system.cpp#L402-L407>`_ package.
 
    3. Change the name of the copied test and in the last line, where hardware interface type is specified put the name defined in ``<my_hardware_interface_package>.xml`` file, e.g., ``<my_hardware_interface_package>/<RobotHardwareInterfaceName>``.
 
@@ -113,7 +113,7 @@ The following is a step-by-step guide to create source files, basic tests, and c
    7. In the test section add the following dependencies: ``ament_cmake_gmock``, ``hardware_interface``.
 
    8. Add compile definitions for the tests using the ``ament_add_gmock`` directive.
-      For details, see how it is done for fake hardware in the `ros2_control <https://github.com/ros-controls/ros2_control/blob/master/hardware_interface/CMakeLists.txt>`_ package.
+      For details, see how it is done for mock hardware in the `ros2_control <https://github.com/ros-controls/ros2_control/blob/master/hardware_interface/CMakeLists.txt>`_ package.
 
    9. (optional) Add your hardware interface`s library into ``ament_export_libraries`` before ``ament_package()``.
 
