@@ -23,6 +23,7 @@
 #include "controller_manager/controller_manager.hpp"
 #include "controller_manager_test_common.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
+#include "test_controller/test_controller.hpp"
 
 using ::testing::_;
 using ::testing::Return;
@@ -35,9 +36,9 @@ class TestLoadController : public ControllerManagerFixture
     ControllerManagerFixture::SetUp();
 
     update_timer_ = cm_->create_wall_timer(std::chrono::milliseconds(10), [&]() {
-      cm_->read();
-      cm_->update();
-      cm_->write();
+      cm_->read(TIME, PERIOD);
+      cm_->update(TIME, PERIOD);
+      cm_->write(TIME, PERIOD);
     });
 
     update_executor_ =
