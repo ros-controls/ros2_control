@@ -78,16 +78,16 @@ def reload_controller_libraries(node, controller_manager_name, force_kill):
                           ReloadControllerLibraries, request)
 
 
-def switch_controllers(node, controller_manager_name, stop_controllers,
-                       start_controllers, strict, start_asap, timeout):
+def switch_controllers(node, controller_manager_name, deactivate_controllers,
+                       activate_controllers, strict, activate_asap, timeout):
     request = SwitchController.Request()
-    request.start_controllers = start_controllers
-    request.stop_controllers = stop_controllers
+    request.activate_controllers = activate_controllers
+    request.deactivate_controllers = deactivate_controllers
     if strict:
         request.strictness = SwitchController.Request.STRICT
     else:
         request.strictness = SwitchController.Request.BEST_EFFORT
-    request.start_asap = start_asap
+    request.activate_asap = activate_asap
     request.timeout = rclpy.duration.Duration(seconds=timeout).to_msg()
     return service_caller(node, f'{controller_manager_name}/switch_controller',
                           SwitchController, request)

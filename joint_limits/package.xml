@@ -1,0 +1,26 @@
+<package format="3">
+  <name>joint_limits</name>
+  <version>2.12.1</version>
+  <description>Interfaces for handling of joint limits for controllers or hardware.</description>
+
+  <maintainer email="bence.magyar.robotics@gmail.com">Bence Magyar</maintainer>
+  <maintainer email="denis@stogl.de">Denis Štogl</maintainer>
+
+  <license>Apache License 2.0</license>
+
+  <url type="website">https://github.com/ros-controls/ros2_control/wiki</url>
+  <url type="bugtracker">https://github.com/ros-controls/ros2_control/issues</url>
+  <url type="repository">https://github.com/ros-controls/ros2_control</url>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>rclcpp</depend>
+  <depend>rclcpp_lifecycle</depend>
+
+  <test_depend>launch_testing_ament_cmake</test_depend>
+  <test_depend>ament_cmake_gtest</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

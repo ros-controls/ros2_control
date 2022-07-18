@@ -431,15 +431,18 @@ TEST(TestComponentInterfaces, dummy_actuator)
 
   auto state_interfaces = actuator_hw.export_state_interfaces();
   ASSERT_EQ(2u, state_interfaces.size());
-  EXPECT_EQ("joint1", state_interfaces[0].get_name());
+  EXPECT_EQ("joint1/position", state_interfaces[0].get_name());
   EXPECT_EQ(hardware_interface::HW_IF_POSITION, state_interfaces[0].get_interface_name());
-  EXPECT_EQ("joint1", state_interfaces[1].get_name());
+  EXPECT_EQ("joint1", state_interfaces[0].get_prefix_name());
+  EXPECT_EQ("joint1/velocity", state_interfaces[1].get_name());
   EXPECT_EQ(hardware_interface::HW_IF_VELOCITY, state_interfaces[1].get_interface_name());
+  EXPECT_EQ("joint1", state_interfaces[1].get_prefix_name());
 
   auto command_interfaces = actuator_hw.export_command_interfaces();
   ASSERT_EQ(1u, command_interfaces.size());
-  EXPECT_EQ("joint1", command_interfaces[0].get_name());
+  EXPECT_EQ("joint1/velocity", command_interfaces[0].get_name());
   EXPECT_EQ(hardware_interface::HW_IF_VELOCITY, command_interfaces[0].get_interface_name());
+  EXPECT_EQ("joint1", command_interfaces[0].get_prefix_name());
 
   double velocity_value = 1.0;
   command_interfaces[0].set_value(velocity_value);  // velocity
@@ -518,8 +521,9 @@ TEST(TestComponentInterfaces, dummy_sensor)
 
   auto state_interfaces = sensor_hw.export_state_interfaces();
   ASSERT_EQ(1u, state_interfaces.size());
-  EXPECT_EQ("joint1", state_interfaces[0].get_name());
+  EXPECT_EQ("joint1/voltage", state_interfaces[0].get_name());
   EXPECT_EQ("voltage", state_interfaces[0].get_interface_name());
+  EXPECT_EQ("joint1", state_interfaces[0].get_prefix_name());
   EXPECT_TRUE(std::isnan(state_interfaces[0].get_value()));
 
   // Not updated because is is UNCONFIGURED
@@ -548,27 +552,36 @@ TEST(TestComponentInterfaces, dummy_system)
 
   auto state_interfaces = system_hw.export_state_interfaces();
   ASSERT_EQ(6u, state_interfaces.size());
-  EXPECT_EQ("joint1", state_interfaces[0].get_name());
+  EXPECT_EQ("joint1/position", state_interfaces[0].get_name());
   EXPECT_EQ(hardware_interface::HW_IF_POSITION, state_interfaces[0].get_interface_name());
-  EXPECT_EQ("joint1", state_interfaces[1].get_name());
+  EXPECT_EQ("joint1", state_interfaces[0].get_prefix_name());
+  EXPECT_EQ("joint1/velocity", state_interfaces[1].get_name());
   EXPECT_EQ(hardware_interface::HW_IF_VELOCITY, state_interfaces[1].get_interface_name());
-  EXPECT_EQ("joint2", state_interfaces[2].get_name());
+  EXPECT_EQ("joint1", state_interfaces[1].get_prefix_name());
+  EXPECT_EQ("joint2/position", state_interfaces[2].get_name());
   EXPECT_EQ(hardware_interface::HW_IF_POSITION, state_interfaces[2].get_interface_name());
-  EXPECT_EQ("joint2", state_interfaces[3].get_name());
+  EXPECT_EQ("joint2", state_interfaces[2].get_prefix_name());
+  EXPECT_EQ("joint2/velocity", state_interfaces[3].get_name());
   EXPECT_EQ(hardware_interface::HW_IF_VELOCITY, state_interfaces[3].get_interface_name());
-  EXPECT_EQ("joint3", state_interfaces[4].get_name());
+  EXPECT_EQ("joint2", state_interfaces[3].get_prefix_name());
+  EXPECT_EQ("joint3/position", state_interfaces[4].get_name());
   EXPECT_EQ(hardware_interface::HW_IF_POSITION, state_interfaces[4].get_interface_name());
-  EXPECT_EQ("joint3", state_interfaces[5].get_name());
+  EXPECT_EQ("joint3", state_interfaces[4].get_prefix_name());
+  EXPECT_EQ("joint3/velocity", state_interfaces[5].get_name());
   EXPECT_EQ(hardware_interface::HW_IF_VELOCITY, state_interfaces[5].get_interface_name());
+  EXPECT_EQ("joint3", state_interfaces[5].get_prefix_name());
 
   auto command_interfaces = system_hw.export_command_interfaces();
   ASSERT_EQ(3u, command_interfaces.size());
-  EXPECT_EQ("joint1", command_interfaces[0].get_name());
+  EXPECT_EQ("joint1/velocity", command_interfaces[0].get_name());
   EXPECT_EQ(hardware_interface::HW_IF_VELOCITY, command_interfaces[0].get_interface_name());
-  EXPECT_EQ("joint2", command_interfaces[1].get_name());
+  EXPECT_EQ("joint1", command_interfaces[0].get_prefix_name());
+  EXPECT_EQ("joint2/velocity", command_interfaces[1].get_name());
   EXPECT_EQ(hardware_interface::HW_IF_VELOCITY, command_interfaces[1].get_interface_name());
-  EXPECT_EQ("joint3", command_interfaces[2].get_name());
+  EXPECT_EQ("joint2", command_interfaces[1].get_prefix_name());
+  EXPECT_EQ("joint3/velocity", command_interfaces[2].get_name());
   EXPECT_EQ(hardware_interface::HW_IF_VELOCITY, command_interfaces[2].get_interface_name());
+  EXPECT_EQ("joint3", command_interfaces[2].get_prefix_name());
 
   double velocity_value = 1.0;
   command_interfaces[0].set_value(velocity_value);  // velocity

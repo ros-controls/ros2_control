@@ -67,7 +67,7 @@ ChainableControllerInterface::export_reference_interfaces()
   // check if the names of the reference interfaces begin with the controller's name
   for (const auto & interface : reference_interfaces)
   {
-    if (interface.get_name() != get_node()->get_name())
+    if (interface.get_prefix_name() != get_node()->get_name())
     {
       RCLCPP_FATAL(
         get_node()->get_logger(),
@@ -75,7 +75,7 @@ ChainableControllerInterface::export_reference_interfaces()
         "mandatory "
         " for reference interfaces. No reference interface will be exported. Please correct and "
         "recompile the controller with name '%s' and try again.",
-        interface.get_full_name().c_str(), get_node()->get_name());
+        interface.get_name().c_str(), get_node()->get_name());
       reference_interfaces.clear();
       break;
     }

@@ -1,0 +1,9 @@
+<library path="mock_components">
+
+  <class name="mock_components/GenericSystem" type="mock_components::GenericSystem" base_class_type="hardware_interface::SystemInterface">
+    <description>
+      Generic components for simple mocking of system hardware.
+    </description>
+  </class>
+
+</library>

@@ -1,8 +1,8 @@
-.. _fake_components_userdoc:
+.. _mock_components_userdoc:
 
-Fake Components
+Mock Components
 ----------------
-Fake components are trivial "simulations" of the hardware components, i.e., System, Sensor, and Actuator.
+Mock components are trivial "simulations" of the hardware components, i.e., System, Sensor, and Actuator.
 They provide ideal behavior by mirroring commands to their states.
 The corresponding hardware interface can be added instead of real hardware for offline testing of ros2_control framework.
 The main advantage is that you can test all the "piping" inside the framework without having access to the hardware.

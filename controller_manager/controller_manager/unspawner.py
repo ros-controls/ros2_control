@@ -50,7 +50,7 @@ def main(args=None):
             True,
             True,
             5.0)
-        node.get_logger().info('Stopped controller')
+        node.get_logger().info('Deactivated controller')
 
         ret = unload_controller(node, controller_manager_name, controller_name)
         if not ret.ok:

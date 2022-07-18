@@ -15,12 +15,6 @@
 
 from controller_manager import list_controllers
 
-from controller_manager_msgs.srv import (
-    ConfigureStartController,
-    LoadConfigureController,
-    LoadStartController,
-)
-
 import rclpy
 
 from ros2cli.node.direct import DirectNode
@@ -55,34 +49,6 @@ def service_caller(service_name, service_type, request):
     finally:
         node.destroy_node()
         rclpy.shutdown()
-
-
-def load_configure_controller(controller_manager_name, controller_name):
-    request = LoadConfigureController.Request()
-    request.name = controller_name
-    return service_caller(
-        f'{controller_manager_name}/load_and_configure_controller',
-        LoadConfigureController,
-        request,
-    )
-
-
-def load_start_controller(controller_manager_name, controller_name):
-    request = LoadStartController.Request()
-    request.name = controller_name
-    return service_caller(
-        f'{controller_manager_name}/load_and_start_controller', LoadStartController, request
-    )
-
-
-def configure_start_controller(controller_manager_name, controller_name):
-    request = ConfigureStartController.Request()
-    request.name = controller_name
-    return service_caller(
-        f'{controller_manager_name}/configure_and_start_controller',
-        ConfigureStartController,
-        request,
-    )
 
 
 class ControllerNameCompleter:
