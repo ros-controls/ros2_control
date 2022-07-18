@@ -1226,8 +1226,7 @@ void ControllerManager::list_controllers_srv_cb(
   // lock controllers
   std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
   const std::vector<ControllerSpec> & controllers = rt_controllers_wrapper_.get_updated_list(guard);
-  response->controller.reserve(controllers.size());
-
+  // create helper containers to create chained controller connections
   std::unordered_map<std::string, std::vector<std::string>> controller_chain_interface_map;
   std::unordered_map<std::string, std::set<std::string>> controller_chain_map;
   std::vector<controller_manager_msgs::msg::ControllerState*> chained_controllers;
@@ -1236,16 +1235,17 @@ void ControllerManager::list_controllers_srv_cb(
     controller_chain_map[controllers[i].info.name] = {};
   }
 
+  response->controller.reserve(controllers.size());
   for (size_t i = 0; i < controllers.size(); ++i)
   {
-    controller_manager_msgs::msg::ControllerState cs;
+    controller_manager_msgs::msg::ControllerState controller_state;
 
-    cs.name = controllers[i].info.name;
-    cs.type = controllers[i].info.type;
-    cs.claimed_interfaces = controllers[i].info.claimed_interfaces;
-    cs.state = controllers[i].c->get_state().label();
-    cs.is_chainable = controllers[i].c->is_chainable();
-    cs.is_chained = controllers[i].c->is_in_chained_mode();
+    controller_state.name = controllers[i].info.name;
+    controller_state.type = controllers[i].info.type;
+    controller_state.claimed_interfaces = controllers[i].info.claimed_interfaces;
+    controller_state.state = controllers[i].c->get_state().label();
+    controller_state.is_chainable = controllers[i].c->is_chainable();
+    controller_state.is_chained = controllers[i].c->is_in_chained_mode();
 
     // Get information about interfaces if controller are in 'inactive' or 'active' state
     if (is_controller_active(controllers[i].c) || is_controller_inactive(controllers[i].c))
@@ -1253,61 +1253,61 @@ void ControllerManager::list_controllers_srv_cb(
       auto command_interface_config = controllers[i].c->command_interface_configuration();
       if (command_interface_config.type == controller_interface::interface_configuration_type::ALL)
       {
-        cs.required_command_interfaces = resource_manager_->command_interface_keys();
+        controller_state.required_command_interfaces = resource_manager_->command_interface_keys();
       }
       else if (
         command_interface_config.type ==
         controller_interface::interface_configuration_type::INDIVIDUAL)
       {
-        cs.required_command_interfaces = command_interface_config.names;
+        controller_state.required_command_interfaces = command_interface_config.names;
       }
 
       auto state_interface_config = controllers[i].c->state_interface_configuration();
       if (state_interface_config.type == controller_interface::interface_configuration_type::ALL)
       {
-        cs.required_state_interfaces = resource_manager_->state_interface_keys();
+        controller_state.required_state_interfaces = resource_manager_->state_interface_keys();
       }
       else if (
         state_interface_config.type ==
         controller_interface::interface_configuration_type::INDIVIDUAL)
       {
-        cs.required_state_interfaces = state_interface_config.names;
+        controller_state.required_state_interfaces = state_interface_config.names;
       }
     }
     // check for chained interfaces
-    for (const auto & interface : cs.required_command_interfaces)
+    for (const auto & interface : controller_state.required_command_interfaces)
     {
       auto index = interface.find('/');
       auto prefix = interface.substr(0, index);
       if (controller_chain_map.find(prefix) != controller_chain_map.end())
       {
-        controller_chain_map[cs.name].insert(prefix);
-        controller_chain_interface_map[cs.name].push_back(interface.substr(index+1, interface.size()-1));
+        controller_chain_map[controller_state.name].insert(prefix);
+        controller_chain_interface_map[controller_state.name].push_back(interface.substr(index+1, interface.size()-1));
       }
     }
     auto references = controllers[i].c->export_reference_interfaces();
-    cs.reference_interfaces.reserve(references.size());
+    controller_state.reference_interfaces.reserve(references.size());
     for (const auto& reference: references){
-      cs.reference_interfaces.push_back(reference.get_interface_name());
+      controller_state.reference_interfaces.push_back(reference.get_interface_name());
     }
-    response->controller.push_back(cs);
+    response->controller.push_back(controller_state);
     // keep track of controllers that are part of a chain
-    if (!controller_chain_interface_map[cs.name].empty() || controllers[i].c->is_chainable()){
+    if (!controller_chain_interface_map[controller_state.name].empty() || controllers[i].c->is_chainable()){
       chained_controllers.push_back(&response->controller.back());
     }
   }
 
   // create chain connections for all controllers in a chain
-  for (auto & cs : chained_controllers)
+  for (auto & controller_state : chained_controllers)
   {
-    auto chained_set = controller_chain_map[cs->name];
+    auto chained_set = controller_chain_map[controller_state->name];
     for (const auto & chained_name : chained_set)
     {
       controller_manager_msgs::msg::ChainConnection connection;
       connection.name = chained_name;
       connection.reference_interfaces =
-        controller_chain_interface_map[cs->name];
-      cs->chain_connections.push_back(connection);
+        controller_chain_interface_map[controller_state->name];
+      controller_state->chain_connections.push_back(connection);
     }
   }
 

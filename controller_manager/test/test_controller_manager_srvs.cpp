@@ -33,6 +33,10 @@ using ::testing::_;
 using ::testing::Return;
 using ::testing::UnorderedElementsAre;
 
+using ListControllers = controller_manager_msgs::srv::ListControllers;
+using TestController = test_controller::TestController;
+using TestChainableController = test_chainable_controller::TestChainableController;
+
 TEST_F(TestControllerManagerSrvs, list_controller_types)
 {
   rclcpp::executors::SingleThreadedExecutor srv_executor;
@@ -61,15 +65,15 @@ TEST_F(TestControllerManagerSrvs, list_controllers_srv)
   rclcpp::executors::SingleThreadedExecutor srv_executor;
   rclcpp::Node::SharedPtr srv_node = std::make_shared<rclcpp::Node>("srv_client");
   srv_executor.add_node(srv_node);
-  rclcpp::Client<controller_manager_msgs::srv::ListControllers>::SharedPtr client =
-    srv_node->create_client<controller_manager_msgs::srv::ListControllers>(
+  rclcpp::Client<ListControllers>::SharedPtr client =
+    srv_node->create_client<ListControllers>(
       "test_controller_manager/list_controllers");
-  auto request = std::make_shared<controller_manager_msgs::srv::ListControllers::Request>();
+  auto request = std::make_shared<ListControllers::Request>();
 
   auto result = call_service_and_wait(*client, request, srv_executor);
   ASSERT_EQ(0u, result->controller.size());
 
-  auto test_controller = std::make_shared<test_controller::TestController>();
+  auto test_controller = std::make_shared<TestController>();
   controller_interface::InterfaceConfiguration cmd_cfg = {
     controller_interface::interface_configuration_type::INDIVIDUAL,
     {"joint1/position", "joint2/velocity"}};
@@ -196,13 +200,13 @@ TEST_F(TestControllerManagerSrvs, list_chained_controllers_srv)
   rclcpp::executors::SingleThreadedExecutor srv_executor;
   rclcpp::Node::SharedPtr srv_node = std::make_shared<rclcpp::Node>("srv_client");
   srv_executor.add_node(srv_node);
-  rclcpp::Client<controller_manager_msgs::srv::ListControllers>::SharedPtr client =
-    srv_node->create_client<controller_manager_msgs::srv::ListControllers>(
+  rclcpp::Client<ListControllers>::SharedPtr client =
+    srv_node->create_client<ListControllers>(
       "test_controller_manager/list_controllers");
-  auto request = std::make_shared<controller_manager_msgs::srv::ListControllers::Request>();
+  auto request = std::make_shared<ListControllers::Request>();
   // create chained controller
   auto test_chained_controller =
-    std::make_shared<test_chainable_controller::TestChainableController>();
+    std::make_shared<TestChainableController>();
   controller_interface::InterfaceConfiguration chained_cmd_cfg = {
     controller_interface::interface_configuration_type::INDIVIDUAL, {"joint1/position"}};
   controller_interface::InterfaceConfiguration chained_state_cfg = {
@@ -212,7 +216,7 @@ TEST_F(TestControllerManagerSrvs, list_chained_controllers_srv)
   test_chained_controller->set_state_interface_configuration(chained_state_cfg);
   test_chained_controller->set_reference_interface_names({"joint1/position", "joint1/velocity"});
   // create non-chained controller
-  auto test_controller = std::make_shared<test_controller::TestController>();
+  auto test_controller = std::make_shared<TestController>();
   controller_interface::InterfaceConfiguration cmd_cfg = {
     controller_interface::interface_configuration_type::INDIVIDUAL,
     {std::string(test_chainable_controller::TEST_CONTROLLER_NAME) + "/joint1/position",
@@ -321,8 +325,8 @@ TEST_F(TestControllerManagerSrvs, reload_controller_libraries_srv)
   ASSERT_TRUE(result->ok);
 
   // Add a controller, but unconfigured
-  std::shared_ptr<test_controller::TestController> test_controller =
-    std::dynamic_pointer_cast<test_controller::TestController>(cm_->load_controller(
+  std::shared_ptr<TestController> test_controller =
+    std::dynamic_pointer_cast<TestController>(cm_->load_controller(
       test_controller::TEST_CONTROLLER_NAME, test_controller::TEST_CONTROLLER_CLASS_NAME));
 
   // weak_ptr so the only controller shared_ptr instance is owned by the controller_manager and
@@ -348,7 +352,7 @@ TEST_F(TestControllerManagerSrvs, reload_controller_libraries_srv)
   test_controller.reset();
 
   // Add a controller, but inactive
-  test_controller = std::dynamic_pointer_cast<test_controller::TestController>(cm_->load_controller(
+  test_controller = std::dynamic_pointer_cast<TestController>(cm_->load_controller(
     test_controller::TEST_CONTROLLER_NAME, test_controller::TEST_CONTROLLER_CLASS_NAME));
   test_controller_weak = test_controller;
   cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME);
@@ -369,7 +373,7 @@ TEST_F(TestControllerManagerSrvs, reload_controller_libraries_srv)
     << "No more references to the controller after reloading.";
   test_controller.reset();
 
-  test_controller = std::dynamic_pointer_cast<test_controller::TestController>(cm_->load_controller(
+  test_controller = std::dynamic_pointer_cast<TestController>(cm_->load_controller(
     test_controller::TEST_CONTROLLER_NAME, test_controller::TEST_CONTROLLER_CLASS_NAME));
   test_controller_weak = test_controller;
   cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME);
@@ -442,7 +446,7 @@ TEST_F(TestControllerManagerSrvs, unload_controller_srv)
   auto result = call_service_and_wait(*client, request, srv_executor);
   ASSERT_FALSE(result->ok) << "Controller not loaded: " << request->name;
 
-  auto test_controller = std::make_shared<test_controller::TestController>();
+  auto test_controller = std::make_shared<TestController>();
   auto abstract_test_controller = cm_->add_controller(
     test_controller, test_controller::TEST_CONTROLLER_NAME,
     test_controller::TEST_CONTROLLER_CLASS_NAME);
@@ -467,7 +471,7 @@ TEST_F(TestControllerManagerSrvs, configure_controller_srv)
   auto result = call_service_and_wait(*client, request, srv_executor);
   ASSERT_FALSE(result->ok) << "Controller not loaded: " << request->name;
 
-  auto test_controller = std::make_shared<test_controller::TestController>();
+  auto test_controller = std::make_shared<TestController>();
   auto abstract_test_controller = cm_->add_controller(
     test_controller, test_controller::TEST_CONTROLLER_NAME,
     test_controller::TEST_CONTROLLER_CLASS_NAME);
@@ -548,7 +552,7 @@ TEST_F(TestControllerManagerSrvs, configure_start_controller_srv)
   auto result = call_service_and_wait(*client, request, srv_executor);
   ASSERT_FALSE(result->ok) << "Controller not loaded: " << request->name;
 
-  auto test_controller = std::make_shared<test_controller::TestController>();
+  auto test_controller = std::make_shared<TestController>();
   auto abstract_test_controller = cm_->add_controller(
     test_controller, test_controller::TEST_CONTROLLER_NAME,
     test_controller::TEST_CONTROLLER_CLASS_NAME);
