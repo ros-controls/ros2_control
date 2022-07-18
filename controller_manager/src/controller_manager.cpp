@@ -1218,7 +1218,7 @@ void ControllerManager::list_controllers_srv_cb(
   // create helper containers to create chained controller connections
   std::unordered_map<std::string, std::vector<std::string>> controller_chain_interface_map;
   std::unordered_map<std::string, std::set<std::string>> controller_chain_map;
-  std::vector<controller_manager_msgs::msg::ControllerState*> chained_controllers;
+  std::vector<controller_manager_msgs::msg::ControllerState *> chained_controllers;
   for (size_t i = 0; i < controllers.size(); ++i)
   {
     controller_chain_map[controllers[i].info.name] = {};
@@ -1277,12 +1277,16 @@ void ControllerManager::list_controllers_srv_cb(
     }
     auto references = controllers[i].c->export_reference_interfaces();
     controller_state.reference_interfaces.reserve(references.size());
-    for (const auto& reference: references){
+    for (const auto & reference : references)
+    {
       controller_state.reference_interfaces.push_back(reference.get_interface_name());
     }
     response->controller.push_back(controller_state);
     // keep track of controllers that are part of a chain
-    if (!controller_chain_interface_map[controller_state.name].empty() || controllers[i].c->is_chainable()){
+    if (
+      !controller_chain_interface_map[controller_state.name].empty() ||
+      controllers[i].c->is_chainable())
+    {
       chained_controllers.push_back(&response->controller.back());
     }
   }
@@ -1295,8 +1299,7 @@ void ControllerManager::list_controllers_srv_cb(
     {
       controller_manager_msgs::msg::ChainConnection connection;
       connection.name = chained_name;
-      connection.reference_interfaces =
-        controller_chain_interface_map[controller_state->name];
+      connection.reference_interfaces = controller_chain_interface_map[controller_state->name];
       controller_state->chain_connections.push_back(connection);
     }
   }
@@ -1763,10 +1766,12 @@ void ControllerManager::RTControllerListWrapper::wait_until_rt_not_using(
   }
 }
 
-std::pair<std::string, std::string> ControllerManager::split_command_interface(const std::string& command_interface){
+std::pair<std::string, std::string> ControllerManager::split_command_interface(
+  const std::string & command_interface)
+{
   auto index = command_interface.find('/');
   auto prefix = command_interface.substr(0, index);
-  auto interface_type = command_interface.substr(index+1, command_interface.size()-1);
+  auto interface_type = command_interface.substr(index + 1, command_interface.size() - 1);
   return {prefix, interface_type};
 }
 

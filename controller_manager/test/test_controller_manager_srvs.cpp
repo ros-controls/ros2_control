@@ -66,8 +66,7 @@ TEST_F(TestControllerManagerSrvs, list_controllers_srv)
   rclcpp::Node::SharedPtr srv_node = std::make_shared<rclcpp::Node>("srv_client");
   srv_executor.add_node(srv_node);
   rclcpp::Client<ListControllers>::SharedPtr client =
-    srv_node->create_client<ListControllers>(
-      "test_controller_manager/list_controllers");
+    srv_node->create_client<ListControllers>("test_controller_manager/list_controllers");
   auto request = std::make_shared<ListControllers::Request>();
 
   auto result = call_service_and_wait(*client, request, srv_executor);
@@ -201,12 +200,10 @@ TEST_F(TestControllerManagerSrvs, list_chained_controllers_srv)
   rclcpp::Node::SharedPtr srv_node = std::make_shared<rclcpp::Node>("srv_client");
   srv_executor.add_node(srv_node);
   rclcpp::Client<ListControllers>::SharedPtr client =
-    srv_node->create_client<ListControllers>(
-      "test_controller_manager/list_controllers");
+    srv_node->create_client<ListControllers>("test_controller_manager/list_controllers");
   auto request = std::make_shared<ListControllers::Request>();
   // create chained controller
-  auto test_chained_controller =
-    std::make_shared<TestChainableController>();
+  auto test_chained_controller = std::make_shared<TestChainableController>();
   controller_interface::InterfaceConfiguration chained_cmd_cfg = {
     controller_interface::interface_configuration_type::INDIVIDUAL, {"joint1/position"}};
   controller_interface::InterfaceConfiguration chained_state_cfg = {
@@ -229,11 +226,11 @@ TEST_F(TestControllerManagerSrvs, list_chained_controllers_srv)
   test_controller->set_state_interface_configuration(state_cfg);
   // add controllers
   cm_->add_controller(
-  test_chained_controller, test_chainable_controller::TEST_CONTROLLER_NAME,
-  test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+    test_chained_controller, test_chainable_controller::TEST_CONTROLLER_NAME,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
   cm_->add_controller(
-  test_controller, test_controller::TEST_CONTROLLER_NAME,
-  test_controller::TEST_CONTROLLER_CLASS_NAME);
+    test_controller, test_controller::TEST_CONTROLLER_NAME,
+    test_controller::TEST_CONTROLLER_CLASS_NAME);
   // get controller list before configure
   auto result = call_service_and_wait(*client, request, srv_executor);
   // check chainable controller
@@ -271,7 +268,8 @@ TEST_F(TestControllerManagerSrvs, list_chained_controllers_srv)
   ASSERT_EQ(result->controller[0].required_state_interfaces.size(), 2u);
   ASSERT_EQ(result->controller[0].is_chainable, true);
   ASSERT_EQ(result->controller[0].is_chained, false);
-  ASSERT_EQ(result->controller[0].reference_interfaces.size(), 2u);;
+  ASSERT_EQ(result->controller[0].reference_interfaces.size(), 2u);
+  ;
   ASSERT_EQ(result->controller[0].chain_connections.size(), 0u);
   // check test controller
   ASSERT_EQ(result->controller[1].state, "inactive");
@@ -302,10 +300,8 @@ TEST_F(TestControllerManagerSrvs, list_chained_controllers_srv)
     test_chainable_controller::TEST_CONTROLLER_NAME,
     result->controller[1].chain_connections[0].name);
   ASSERT_EQ(2u, result->controller[1].chain_connections[0].reference_interfaces.size());
-  ASSERT_EQ("joint1/position",
-    result->controller[1].chain_connections[0].reference_interfaces[0]);
-  ASSERT_EQ("joint1/velocity",
-    result->controller[1].chain_connections[0].reference_interfaces[1]);
+  ASSERT_EQ("joint1/position", result->controller[1].chain_connections[0].reference_interfaces[0]);
+  ASSERT_EQ("joint1/velocity", result->controller[1].chain_connections[0].reference_interfaces[1]);
 }
 
 TEST_F(TestControllerManagerSrvs, reload_controller_libraries_srv)
