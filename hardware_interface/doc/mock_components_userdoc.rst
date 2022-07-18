@@ -25,7 +25,7 @@ Features:
 Parameters
 ,,,,,,,,,,
 
-fake_sensor_commands (optional; boolean; default: false)
+mock_sensor_commands (optional; boolean; default: false)
   Creates fake command interfaces for faking sensor measurements with an external command.
   Those interfaces are usually used by a :ref:`forward controller <forward_command_controller_userdoc>` to provide access from ROS-world.
 
