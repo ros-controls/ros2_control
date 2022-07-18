@@ -1277,12 +1277,13 @@ void ControllerManager::list_controllers_srv_cb(
     // check for chained interfaces
     for (const auto & interface : controller_state.required_command_interfaces)
     {
-      auto index = interface.find('/');
-      auto prefix = interface.substr(0, index);
+      auto prefix_interface_type_pair = split_command_interface(interface);
+      auto prefix = prefix_interface_type_pair.first;
+      auto interface_type = prefix_interface_type_pair.second;
       if (controller_chain_map.find(prefix) != controller_chain_map.end())
       {
         controller_chain_map[controller_state.name].insert(prefix);
-        controller_chain_interface_map[controller_state.name].push_back(interface.substr(index+1, interface.size()-1));
+        controller_chain_interface_map[controller_state.name].push_back(interface_type);
       }
     }
     auto references = controllers[i].c->export_reference_interfaces();
@@ -1818,6 +1819,13 @@ void ControllerManager::RTControllerListWrapper::wait_until_rt_not_using(
     }
     std::this_thread::sleep_for(sleep_period);
   }
+}
+
+std::pair<std::string, std::string> ControllerManager::split_command_interface(const std::string& command_interface){
+  auto index = command_interface.find('/');
+  auto prefix = command_interface.substr(0, index);
+  auto interface_type = command_interface.substr(index+1, command_interface.size()-1);
+  return {prefix, interface_type};
 }
 
 unsigned int ControllerManager::get_update_rate() const { return update_rate_; }
