@@ -224,17 +224,40 @@ TEST_F(TestControllerManagerSrvs, list_chained_controllers_srv)
   test_controller->set_command_interface_configuration(cmd_cfg);
   test_controller->set_state_interface_configuration(state_cfg);
   // add controllers
-  auto abstract_chain_test_controller = cm_->add_controller(
-    test_chained_controller, test_chainable_controller::TEST_CONTROLLER_NAME,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  auto abstract_test_controller = cm_->add_controller(
-    test_controller, test_controller::TEST_CONTROLLER_NAME,
-    test_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+  test_chained_controller, test_chainable_controller::TEST_CONTROLLER_NAME,
+  test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+  test_controller, test_controller::TEST_CONTROLLER_NAME,
+  test_controller::TEST_CONTROLLER_CLASS_NAME);
   // configure controllers
   cm_->configure_controller(test_chainable_controller::TEST_CONTROLLER_NAME);
   cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME);
+  // get controller list after configure
   auto result = call_service_and_wait(*client, request, srv_executor);
   ASSERT_EQ(2u, result->controller.size());
+  // check chainable controller
+  ASSERT_EQ(result->controller[0].name, "test_chainable_controller_name");
+  ASSERT_EQ(result->controller[0].state, "inactive");
+  ASSERT_EQ(result->controller[0].type, "controller_manager/test_chainable_controller");
+  ASSERT_EQ(result->controller[0].claimed_interfaces.size(), 0u);
+  ASSERT_EQ(result->controller[0].required_command_interfaces.size(), 1u);
+  ASSERT_EQ(result->controller[0].required_state_interfaces.size(), 2u);
+  ASSERT_EQ(result->controller[0].is_chainable, true);
+  ASSERT_EQ(result->controller[0].is_chained, false);
+  ASSERT_EQ(result->controller[0].reference_interfaces.size(), 2u);;
+  ASSERT_EQ(result->controller[0].chain_connections.size(), 0u);
+  // check test controller
+  ASSERT_EQ(result->controller[1].name, "test_controller_name");
+  ASSERT_EQ(result->controller[1].state, "inactive");
+  ASSERT_EQ(result->controller[1].type, "controller_manager/test_controller");
+  ASSERT_EQ(result->controller[1].claimed_interfaces.size(), 0u);
+  ASSERT_EQ(result->controller[1].required_command_interfaces.size(), 3u);
+  ASSERT_EQ(result->controller[1].required_state_interfaces.size(), 2u);
+  ASSERT_EQ(result->controller[1].is_chainable, false);
+  ASSERT_EQ(result->controller[1].is_chained, false);
+  ASSERT_EQ(result->controller[1].reference_interfaces.size(), 0u);
+  ASSERT_EQ(result->controller[1].chain_connections.size(), 1u);
   // activate controllers
   cm_->switch_controller(
     {test_chainable_controller::TEST_CONTROLLER_NAME}, {},
@@ -243,8 +266,13 @@ TEST_F(TestControllerManagerSrvs, list_chained_controllers_srv)
     {test_controller::TEST_CONTROLLER_NAME}, {},
     controller_manager_msgs::srv::SwitchController::Request::STRICT, true, rclcpp::Duration(0, 0));
   result = call_service_and_wait(*client, request, srv_executor);
-  ASSERT_EQ(0u, result->controller[0].chain_connections.size());
-  ASSERT_EQ(1u, result->controller[1].chain_connections.size());
+  // check chainable controller
+  ASSERT_EQ(result->controller[0].state, "active");
+  ASSERT_EQ(result->controller[0].claimed_interfaces.size(), 1u);
+  ASSERT_EQ(result->controller[0].is_chained, true);
+  // check test controller
+  ASSERT_EQ(result->controller[1].state, "active");
+  ASSERT_EQ(result->controller[1].claimed_interfaces.size(), 3u);
   ASSERT_EQ(
     test_chainable_controller::TEST_CONTROLLER_NAME,
     result->controller[1].chain_connections[0].name);
