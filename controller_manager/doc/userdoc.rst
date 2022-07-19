@@ -8,11 +8,13 @@ It manages lifecycle of controllers, access to the hardware interfaces and offer
 Determinism
 -----------
 
-For best performance when controlling hardware you want the controller manager to have as little jitter as possible in the main control loop. The normal linux kernel is optimized for computational throughput and therefore is not well suited for hardware control. The two easiest kernel options are the [Real-time Ubuntu 22.04 LTS Beta](https://ubuntu.com/blog/real-time-ubuntu-released) or [linux-image-rt-amd64](https://packages.debian.org/bullseye/linux-image-rt-amd64) on Debian Bullseye.
+For best performance when controlling hardware you want the controller manager to have as little jitter as possible in the main control loop.
+The normal linux kernel is optimized for computational throughput and therefore is not well suited for hardware control.
+The two easiest kernel options are the `Real-time Ubuntu 22.04 LTS Beta <https://ubuntu.com/blog/real-time-ubuntu-released>`_ or `linux-image-rt-amd64 <https://packages.debian.org/bullseye/linux-image-rt-amd64>`_ on Debian Bullseye.
 
 If you have a realtime kernel installed, the main thread of Controller Manager attempts to configure ``SCHED_FIFO`` with a priority of ``50``.
-
-By default, the user does not have permission to set such a high priority. To give the user such permissions, add a group named realtime and add the user controlling your robot to this group:
+By default, the user does not have permission to set such a high priority.
+To give the user such permissions, add a group named realtime and add the user controlling your robot to this group:
 
 .. code-block:: console
 
