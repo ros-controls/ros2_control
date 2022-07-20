@@ -360,7 +360,8 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_modular_robot
 
   EXPECT_EQ(hardware_info.name, "RRBotModularPositionSensorJoint1");
   EXPECT_EQ(hardware_info.type, "sensor");
-  EXPECT_EQ(hardware_info.hardware_plugin_name, "ros2_control_demo_hardware/PositionSensorHardware");
+  EXPECT_EQ(
+    hardware_info.hardware_plugin_name, "ros2_control_demo_hardware/PositionSensorHardware");
   ASSERT_THAT(hardware_info.hardware_parameters, SizeIs(1));
   EXPECT_EQ(hardware_info.hardware_parameters.at("example_param_read_for_sec"), "2");
 
@@ -376,7 +377,8 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_modular_robot
 
   EXPECT_EQ(hardware_info.name, "RRBotModularPositionSensorJoint2");
   EXPECT_EQ(hardware_info.type, "sensor");
-  EXPECT_EQ(hardware_info.hardware_plugin_name, "ros2_control_demo_hardware/PositionSensorHardware");
+  EXPECT_EQ(
+    hardware_info.hardware_plugin_name, "ros2_control_demo_hardware/PositionSensorHardware");
   ASSERT_THAT(hardware_info.hardware_parameters, SizeIs(1));
   EXPECT_EQ(hardware_info.hardware_parameters.at("example_param_read_for_sec"), "2");
 
@@ -564,7 +566,8 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_with_size_and_d
   EXPECT_EQ(hardware_info.name, "RRBotSystemWithSizeAndDataType");
   EXPECT_EQ(hardware_info.type, "system");
   EXPECT_EQ(
-    hardware_info.hardware_plugin_name, "ros2_control_demo_hardware/RRBotSystemWithSizeAndDataType");
+    hardware_info.hardware_plugin_name,
+    "ros2_control_demo_hardware/RRBotSystemWithSizeAndDataType");
 
   ASSERT_THAT(hardware_info.joints, SizeIs(1));
 
