@@ -68,12 +68,13 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
   {
     // check if fake_sensor_commands was set instead and issue warning.
     it = info_.hardware_parameters.find("fake_sensor_commands");
-    if(it != info_.hardware_parameters.end())
+    if (it != info_.hardware_parameters.end())
     {
       use_mock_sensor_command_interfaces_ = it->second == "true" || it->second == "True";
       RCUTILS_LOG_WARN_NAMED(
         "fake_generic_system",
-        "Parameter 'fake_sensor_commands' has been deprecated from usage. Use 'mock_sensor_commands' instead.");
+        "Parameter 'fake_sensor_commands' has been deprecated from usage. Use"
+        "'mock_sensor_commands' instead.");
     }
     else
     {
