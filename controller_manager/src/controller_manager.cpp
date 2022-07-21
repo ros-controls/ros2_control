@@ -1142,9 +1142,13 @@ std::vector<std::string> ControllerManager::get_controller_names()
   return names;
 }
 
-void ControllerManager::read() { resource_manager_->read(); }
+void ControllerManager::read(const rclcpp::Time & time, const rclcpp::Duration & period)
+{
+  resource_manager_->read();
+}
 
-controller_interface::return_type ControllerManager::update()
+controller_interface::return_type ControllerManager::update(
+  const rclcpp::Time & time, const rclcpp::Duration & period)
 {
   std::vector<ControllerSpec> & rt_controller_list =
     rt_controllers_wrapper_.update_and_get_used_by_rt_list();
@@ -1156,6 +1160,7 @@ controller_interface::return_type ControllerManager::update()
     // https://github.com/ros-controls/ros2_control/issues/153
     if (is_controller_running(*loaded_controller.c))
     {
+      loaded_controller.c->set_time(period.nanoseconds());
       auto controller_ret = loaded_controller.c->update();
       if (controller_ret != controller_interface::return_type::OK)
       {
@@ -1173,7 +1178,10 @@ controller_interface::return_type ControllerManager::update()
   return ret;
 }
 
-void ControllerManager::write() { resource_manager_->write(); }
+void ControllerManager::write(const rclcpp::Time & time, const rclcpp::Duration & period)
+{
+  resource_manager_->write();
+}
 
 std::vector<ControllerSpec> &
 ControllerManager::RTControllerListWrapper::update_and_get_used_by_rt_list()

@@ -38,6 +38,7 @@ constexpr const auto kCommandInterfaceTag = "command_interface";
 constexpr const auto kStateInterfaceTag = "state_interface";
 constexpr const auto kMinTag = "min";
 constexpr const auto kMaxTag = "max";
+constexpr const auto kInitialValueTag = "initial_value";
 constexpr const auto kDataTypeAttribute = "data_type";
 constexpr const auto kSizeAttribute = "size";
 constexpr const auto kNameAttribute = "name";
@@ -257,6 +258,14 @@ hardware_interface::InterfaceInfo parse_interfaces_from_xml(
   {
     interface.max = interface_param->second;
   }
+  
+  // Optional initial_value attribute
+  interface_param = interface_params.find(kInitialValueTag);
+
+  if (interface_param != interface_params.end())
+  {
+    interface.initial_value = interface_param->second;
+  }
 
   // Default to a single double
   interface.data_type = "double";
@@ -292,6 +301,7 @@ ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it
   const auto * state_interfaces_it = component_it->FirstChildElement(kStateInterfaceTag);
   while (state_interfaces_it)
   {
+	
     component.state_interfaces.push_back(parse_interfaces_from_xml(state_interfaces_it));
     state_interfaces_it = state_interfaces_it->NextSiblingElement(kStateInterfaceTag);
   }

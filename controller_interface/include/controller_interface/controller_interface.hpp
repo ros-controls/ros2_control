@@ -148,11 +148,15 @@ public:
   CONTROLLER_INTERFACE_PUBLIC
   const rclcpp_lifecycle::State & get_current_state() const;
 
+  CONTROLLER_INTERFACE_PUBLIC
+  void set_time(int64_t nanosec) { nanosec_ = nanosec;}
+
 protected:
   std::vector<hardware_interface::LoanedCommandInterface> command_interfaces_;
   std::vector<hardware_interface::LoanedStateInterface> state_interfaces_;
   std::shared_ptr<rclcpp::Node> node_;
   rclcpp_lifecycle::State lifecycle_state_;
+  int64_t nanosec_;
 };
 
 using ControllerInterfaceSharedPtr = std::shared_ptr<ControllerInterface>;

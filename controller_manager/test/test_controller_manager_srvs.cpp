@@ -41,9 +41,9 @@ public:
     ControllerManagerFixture::SetUp();
 
     update_timer_ = cm_->create_wall_timer(std::chrono::milliseconds(10), [&]() {
-      cm_->read();
-      cm_->update();
-      cm_->write();
+      //cm_->read();
+      //cm_->update();
+      //cm_->write();
     });
 
     executor_->add_node(cm_);
@@ -69,7 +69,7 @@ public:
       while (service_executor.spin_until_future_complete(result, 50ms) !=
              rclcpp::FutureReturnCode::SUCCESS)
       {
-        cm_->update();
+       //cm_->update();
       }
     }
     else

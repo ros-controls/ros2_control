@@ -35,6 +35,9 @@
 #include "test_controller/test_controller.hpp"
 #include "test_controller_failed_init/test_controller_failed_init.hpp"
 
+const auto TIME = rclcpp::Time(0);
+const auto PERIOD = rclcpp::Duration::from_seconds(0.01);
+
 constexpr auto STRICT = controller_manager_msgs::srv::SwitchController::Request::STRICT;
 constexpr auto BEST_EFFORT = controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT;
 
@@ -63,7 +66,7 @@ public:
     updater_ = std::thread([&](void) -> void {
       while (run_updater_)
       {
-        cm_->update();
+        cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
       }
     });
