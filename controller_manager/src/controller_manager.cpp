@@ -1218,7 +1218,7 @@ void ControllerManager::list_controllers_srv_cb(
   // create helper containers to create chained controller connections
   std::unordered_map<std::string, std::vector<std::string>> controller_chain_interface_map;
   std::unordered_map<std::string, std::set<std::string>> controller_chain_map;
-  std::vector<controller_manager_msgs::msg::ControllerState *> chained_controllers;
+  std::vector<size_t> chained_controller_indices;
   for (size_t i = 0; i < controllers.size(); ++i)
   {
     controller_chain_map[controllers[i].info.name] = {};
@@ -1287,20 +1287,21 @@ void ControllerManager::list_controllers_srv_cb(
       !controller_chain_interface_map[controller_state.name].empty() ||
       controllers[i].c->is_chainable())
     {
-      chained_controllers.push_back(&response->controller.back());
+      chained_controller_indices.push_back(i);
     }
   }
 
   // create chain connections for all controllers in a chain
-  for (auto & controller_state : chained_controllers)
+  for (const auto & index : chained_controller_indices)
   {
-    auto chained_set = controller_chain_map[controller_state->name];
+    auto & controller_state = response->controller[index];
+    auto chained_set = controller_chain_map[controller_state.name];
     for (const auto & chained_name : chained_set)
     {
       controller_manager_msgs::msg::ChainConnection connection;
       connection.name = chained_name;
-      connection.reference_interfaces = controller_chain_interface_map[controller_state->name];
-      controller_state->chain_connections.push_back(connection);
+      connection.reference_interfaces = controller_chain_interface_map[controller_state.name];
+      controller_state.chain_connections.push_back(connection);
     }
   }
 
