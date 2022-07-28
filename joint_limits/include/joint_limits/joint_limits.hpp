@@ -67,15 +67,15 @@ struct JointLimits
   {
     std::stringstream ss_output;
 
-    ss_output << "  has position limits: " << (has_position_limits ? "true" : "false") << "["
+    ss_output << "  has position limits: " << (has_position_limits ? "true" : "false") << " ["
               << min_position << ", " << max_position << "]\n";
-    ss_output << "  has velocity limits: " << (has_velocity_limits ? "true" : "false") << "["
+    ss_output << "  has velocity limits: " << (has_velocity_limits ? "true" : "false") << " ["
               << max_velocity << "]\n";
     ss_output << "  has acceleration limits: " << (has_acceleration_limits ? "true" : "false")
               << " [" << max_acceleration << "]\n";
-    ss_output << "  has jerk limits: " << (has_jerk_limits ? "true" : "false") << "[" << max_jerk
+    ss_output << "  has jerk limits: " << (has_jerk_limits ? "true" : "false") << " [" << max_jerk
               << "]\n";
-    ss_output << "  has effort limits: " << (has_effort_limits ? "true" : "false") << "["
+    ss_output << "  has effort limits: " << (has_effort_limits ? "true" : "false") << " ["
               << max_effort << "]\n";
     ss_output << "  angle wraparound: " << (angle_wraparound ? "true" : "false");
 
