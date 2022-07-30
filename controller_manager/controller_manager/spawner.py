@@ -239,7 +239,7 @@ def main(args=None):
                 node.get_logger().info('Deactivated controller')
 
             elif args.stopped:
-                node.get_logger.warn('"--stopped" flag is deprecated use "--inactive" instead')
+                node.get_logger().warn('"--stopped" flag is deprecated use "--inactive" instead')
 
             ret = unload_controller(
                 node, controller_manager_name, controller_name)

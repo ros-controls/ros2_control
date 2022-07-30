@@ -36,10 +36,10 @@ def print_controller_state(c, args):
         for required_state_interface in c.required_state_interfaces:
             print(f'\t\t{required_state_interface}')
     if args.chained_interfaces or args.verbose:
-        print(f'\tchained to interfaces:')
+        print('\tchained to interfaces:')
         for connection in c.chain_connections:
             for reference in connection.reference_interfaces:
-                print(f'\t\t {reference:20s}')
+                print(f'\t\t{reference:20s}')
     if args.reference_interfaces or args.verbose:
         print('\texported reference interfaces:')
         for reference_interfaces in c.reference_interfaces:

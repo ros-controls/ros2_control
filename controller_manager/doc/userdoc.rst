@@ -10,9 +10,29 @@ Determinism
 
 For best performance when controlling hardware you want the controller manager to have as little jitter as possible in the main control loop.
 The normal linux kernel is optimized for computational throughput and therefore is not well suited for hardware control.
-The main thread of Controller Manager attempts to configure ``SCHED_FIFO`` with a priority of ``50``.
-To enable this functionality install a RT kernel and run the Controller Manager with permissions to make syscalls to set its thread priorities.
-The two easiest options for this are using the [Real-time Ubuntu 22.04 LTS Beta](https://ubuntu.com/blog/real-time-ubuntu-released) or [linux-image-rt-amd64](https://packages.debian.org/bullseye/linux-image-rt-amd64) on Debian Bullseye.
+The two easiest kernel options are the `Real-time Ubuntu 22.04 LTS Beta <https://ubuntu.com/blog/real-time-ubuntu-released>`_ or `linux-image-rt-amd64 <https://packages.debian.org/bullseye/linux-image-rt-amd64>`_ on Debian Bullseye.
+
+If you have a realtime kernel installed, the main thread of Controller Manager attempts to configure ``SCHED_FIFO`` with a priority of ``50``.
+By default, the user does not have permission to set such a high priority.
+To give the user such permissions, add a group named realtime and add the user controlling your robot to this group:
+
+.. code-block:: console
+
+    $ sudo addgroup realtime
+    $ sudo usermod -a -G realtime $(whoami)
+
+Afterwards, add the following limits to the realtime group in ``/etc/security/limits.conf``:
+
+.. code-block:: console
+
+    @realtime soft rtprio 99
+    @realtime soft priority 99
+    @realtime soft memlock 102400
+    @realtime hard rtprio 99
+    @realtime hard priority 99
+    @realtime hard memlock 102400
+
+The limits will be applied after you log out and in again.
 
 Parameters
 -----------
