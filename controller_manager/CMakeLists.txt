@@ -125,7 +125,7 @@ if(BUILD_TESTING)
     APPEND_ENV AMENT_PREFIX_PATH=${ament_index_build_path}_$<CONFIG>
   )
   target_include_directories(test_controller_manager_srvs PRIVATE include)
-  target_link_libraries(test_controller_manager_srvs ${PROJECT_NAME} test_controller)
+  target_link_libraries(test_controller_manager_srvs ${PROJECT_NAME} test_controller test_chainable_controller)
   ament_target_dependencies(
     test_controller_manager_srvs
     controller_manager_msgs

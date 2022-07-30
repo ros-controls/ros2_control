@@ -20,6 +20,7 @@
 #include <string>
 #include <tuple>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "controller_interface/chainable_controller_interface.hpp"
@@ -251,6 +252,8 @@ protected:
 
 private:
   std::vector<std::string> get_controller_names();
+  std::pair<std::string, std::string> split_command_interface(
+    const std::string & command_interface);
 
   /**
    * Clear request lists used when switching controllers. The lists are shared between "callback" and
