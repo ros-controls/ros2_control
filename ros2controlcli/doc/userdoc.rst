@@ -224,7 +224,7 @@ unload_controller
                             Consider hidden nodes as well
 
 view_controller_chains
------------------
+----------------------
 
 .. code-block:: console
 

@@ -1,4 +1,4 @@
-# Copyright 2020 PAL Robotics S.L.
+# Copyright 2022 PickNik, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -39,13 +39,13 @@ def make_controller_node(s, controller_name, state_interfaces, command_interface
         deliminator = '|'
         if ind == len(state_interface) - 1:
             deliminator = ''
-        inputs_str += '<%s> %s %s ' % ("state_end_" + state_interface, state_interface, deliminator)
+        inputs_str += '<{}> {} {} '.format("state_end_" + state_interface, state_interface, deliminator)
 
     for ind, input_controller in enumerate(input_controllers):
         deliminator = '|'
         if ind == len(input_controller) - 1:
             deliminator = ''
-        inputs_str += '<%s> %s %s ' % ("controller_end_" + input_controller, input_controller, deliminator)
+        inputs_str += '<{}> {} {} '.format("controller_end_" + input_controller, input_controller, deliminator)
         port_map["controller_end_" + input_controller] = controller_name
 
     outputs_str = ''
@@ -53,15 +53,15 @@ def make_controller_node(s, controller_name, state_interfaces, command_interface
         deliminator = '|'
         if ind == len(command_interface) - 1:
             deliminator = ''
-        outputs_str += '<%s> %s %s ' % ("command_start_" + command_interface, command_interface, deliminator)
+        outputs_str += '<{}> {} {} '.format("command_start_" + command_interface, command_interface, deliminator)
 
     for ind, output_controller in enumerate(output_controllers):
         deliminator = '|'
         if ind == len(output_controller) - 1:
             deliminator = ''
-        outputs_str += '<%s> %s %s ' % ("controller_start_" + output_controller, output_controller, deliminator)
+        outputs_str += '<{}> {} {} '.format("controller_start_" + output_controller, output_controller, deliminator)
 
-    s.node(controller_name, '%s|{{%s}|{%s}}' % (controller_name, inputs_str, outputs_str))
+    s.node(controller_name, f'{controller_name}|{{{{{inputs_str}}}|{{{outputs_str}}}}}')
 
 
 def make_command_node(s, command_interfaces):
@@ -71,9 +71,9 @@ def make_command_node(s, command_interfaces):
         deliminator = '|'
         if ind == len(command_interfaces) - 1:
             deliminator = ''
-        outputs_str += '<%s> %s %s ' % ("command_end_" + command_interface, command_interface, deliminator)
+        outputs_str += '<{}> {} {} '.format("command_end_" + command_interface, command_interface, deliminator)
 
-    s.node("command_interfaces", '%s|{{%s}}' % ("command_interfaces", outputs_str))
+    s.node("command_interfaces", '{}|{{{{{}}}}}'.format("command_interfaces", outputs_str))
 
 
 def make_state_node(s, state_interfaces):
@@ -83,9 +83,9 @@ def make_state_node(s, state_interfaces):
         deliminator = '|'
         if ind == len(state_interfaces) - 1:
             deliminator = ''
-        inputs_str += '<%s> %s %s ' % ("state_start_" + state_interface, state_interface, deliminator)
+        inputs_str += '<{}> {} {} '.format("state_start_" + state_interface, state_interface, deliminator)
 
-    s.node("state_interfaces", '%s|{{%s}}' % ("state_interfaces", inputs_str))
+    s.node("state_interfaces", '{}|{{{{{}}}}}'.format("state_interfaces", inputs_str))
 
 
 def show_graph(input_chain_connections, output_chain_connections, command_connections, state_connections,
@@ -94,10 +94,10 @@ def show_graph(input_chain_connections, output_chain_connections, command_connec
     port_map = dict()
     # get all controller names
     controller_names = set()
-    controller_names = controller_names.union(set([name for name in input_chain_connections]))
-    controller_names = controller_names.union(set([name for name in output_chain_connections]))
-    controller_names = controller_names.union(set([name for name in command_connections]))
-    controller_names = controller_names.union(set([name for name in state_connections]))
+    controller_names = controller_names.union({name for name in input_chain_connections})
+    controller_names = controller_names.union({name for name in output_chain_connections})
+    controller_names = controller_names.union({name for name in command_connections})
+    controller_names = controller_names.union({name for name in state_connections})
     # create node for each controller
     for controller_name in controller_names:
         make_controller_node(s, controller_name, state_connections[controller_name],
@@ -110,14 +110,14 @@ def show_graph(input_chain_connections, output_chain_connections, command_connec
 
     for controller_name in controller_names:
         for connection in output_chain_connections[controller_name]:
-            s.edge('%s:%s' % (controller_name, "controller_start_" + connection),
-                   '%s:%s' % (port_map['controller_end_' + connection], 'controller_end_' + connection))
+            s.edge('{}:{}'.format(controller_name, "controller_start_" + connection),
+                   '{}:{}'.format(port_map['controller_end_' + connection], 'controller_end_' + connection))
         for state_connection in state_connections[controller_name]:
-            s.edge('%s:%s' % ("state_interfaces", "state_start_" + state_connection),
-                   '%s:%s' % (controller_name, 'state_end_' + state_connection))
+            s.edge('{}:{}'.format("state_interfaces", "state_start_" + state_connection),
+                   '{}:{}'.format(controller_name, 'state_end_' + state_connection))
         for command_connection in command_connections[controller_name]:
-            s.edge('%s:%s' % (controller_name, "command_start_" + command_connection),
-                   '%s:%s' % ("command_interfaces", 'command_end_' + command_connection))
+            s.edge('{}:{}'.format(controller_name, "command_start_" + command_connection),
+                   '{}:{}'.format("command_interfaces", 'command_end_' + command_connection))
 
     # s.attr(splines="false")
     s.attr(ranksep='2')
@@ -126,8 +126,8 @@ def show_graph(input_chain_connections, output_chain_connections, command_connec
 
 
 def parse_response(list_controllers_response, list_hardware_response):
-    command_interfaces = set([x.name for x in list_hardware_response.command_interfaces])
-    state_interfaces = set([x.name for x in list_hardware_response.state_interfaces])
+    command_interfaces = {x.name for x in list_hardware_response.command_interfaces}
+    state_interfaces = {x.name for x in list_hardware_response.state_interfaces}
     command_connections = dict()
     state_connections = dict()
     input_chain_connections = {x.name: set() for x in list_controllers_response.controller}
