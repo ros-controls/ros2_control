@@ -21,11 +21,17 @@ foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
 endforeach()
 
-add_library(${PROJECT_NAME} SHARED
-  src/controller_manager.cpp
+add_library(realtime SHARED
   src/realtime.cpp
 )
+target_include_directories(realtime PRIVATE include)
+ament_target_dependencies(realtime ${THIS_PACKAGE_INCLUDE_DEPENDS})
+
+add_library(${PROJECT_NAME} SHARED
+  src/controller_manager.cpp
+)
 target_include_directories(${PROJECT_NAME} PRIVATE include)
+target_link_libraries(${PROJECT_NAME} realtime)
 ament_target_dependencies(${PROJECT_NAME} ${THIS_PACKAGE_INCLUDE_DEPENDS})
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.
@@ -36,7 +42,7 @@ target_include_directories(ros2_control_node PRIVATE include)
 target_link_libraries(ros2_control_node ${PROJECT_NAME})
 ament_target_dependencies(ros2_control_node ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
-install(TARGETS ${PROJECT_NAME}
+install(TARGETS realtime ${PROJECT_NAME}
   RUNTIME DESTINATION bin
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
