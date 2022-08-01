@@ -37,11 +37,7 @@ bool configure_sched_fifo(int priority)
   struct sched_param schedp;
   memset(&schedp, 0, sizeof(schedp));
   schedp.sched_priority = priority;
-  if (sched_setscheduler(0, SCHED_FIFO, &schedp))
-  {
-    return false;
-  }
-  return true;
+  return !sched_setscheduler(0, SCHED_FIFO, &schedp);
 }
 
 }  // namespace controller_manager
