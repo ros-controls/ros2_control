@@ -150,7 +150,7 @@ public:
 
   /// Run update on controllers
   /**
-   * Call update of all controllers.      
+   * Call update of all controllers.
    * **The method called in the (real-time) control loop.**
    *
    * \param[in]  time    The time at the start of this control loop iteration
