@@ -24,7 +24,9 @@ endforeach()
 
 include_directories(${realtime_tools_INCLUDE_DIRS})
 
-add_library(${PROJECT_NAME} SHARED src/controller_manager.cpp)
+add_library(${PROJECT_NAME} SHARED
+  src/controller_manager.cpp
+)
 target_include_directories(${PROJECT_NAME} PRIVATE include)
 ament_target_dependencies(${PROJECT_NAME} ${THIS_PACKAGE_INCLUDE_DEPENDS})
 # Causes the visibility macros to use dllexport rather than dllimport,
@@ -33,7 +35,10 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE "CONTROLLER_MANAGER_BUILDING_
 
 add_executable(ros2_control_node src/ros2_control_node.cpp)
 target_include_directories(ros2_control_node PRIVATE include)
-target_link_libraries(ros2_control_node ${PROJECT_NAME} ${realtime_tools_LIBRARIES})
+target_link_libraries(ros2_control_node
+  ${PROJECT_NAME}
+  ${realtime_tools_LIBRARIES}
+)
 ament_target_dependencies(ros2_control_node ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
 install(TARGETS ${PROJECT_NAME}
