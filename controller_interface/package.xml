@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format2.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="2">
   <name>controller_interface</name>
-  <version>0.10.1</version>
+  <version>0.11.0</version>
   <description>Description of controller_interface</description>
   <maintainer email="bence.magyar.robotics@gmail.com">Bence Magyar</maintainer>
   <maintainer email="karsten@osrfoundation.org">Karsten Knese</maintainer>

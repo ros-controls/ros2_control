@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>hardware_interface</name>
-  <version>0.10.1</version>
+  <version>0.11.0</version>
   <description>ROS2 ros_control hardware interface</description>
   <maintainer email="karsten@osrfoundation.org">Karsten Knese</maintainer>
   <maintainer email="bence.magyar.robotics@gmail.com">Bence Magyar</maintainer>
