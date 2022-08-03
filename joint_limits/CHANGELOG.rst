@@ -2,8 +2,8 @@
 Changelog for package joint_limits
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.13.0 (2022-08-03)
+-------------------
 * Make output of joint limits nicer. (`#788 <https://github.com/ros-controls/ros2_control/issues/788>`_)
 * Contributors: Denis Štogl
 
