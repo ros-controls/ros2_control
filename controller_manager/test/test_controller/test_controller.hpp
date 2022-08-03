@@ -37,15 +37,9 @@ public:
   CONTROLLER_MANAGER_PUBLIC
   virtual ~TestController() = default;
 
-  controller_interface::InterfaceConfiguration command_interface_configuration() const override
-  {
-    return cmd_iface_cfg_;
-  }
+  controller_interface::InterfaceConfiguration command_interface_configuration() const override;
 
-  controller_interface::InterfaceConfiguration state_interface_configuration() const override
-  {
-    return state_iface_cfg_;
-  }
+  controller_interface::InterfaceConfiguration state_interface_configuration() const override;
 
   CONTROLLER_MANAGER_PUBLIC
   controller_interface::return_type update(
