@@ -84,9 +84,11 @@ int main(int argc, char ** argv)
         next_iteration_time += period;
 
         // Don't do catch-up
-        if (next_iteration_time < cm->now())
+        if (auto now = std::chrono::system_clock::time_point(
+              std::chrono::nanoseconds(cm->now().nanoseconds()));
+            next_iteration_time < now)
         {
-          next_iteration_time = cm->now() + period;
+          next_iteration_time = now + period;
         }
         std::this_thread::sleep_until(next_iteration_time);
       }
