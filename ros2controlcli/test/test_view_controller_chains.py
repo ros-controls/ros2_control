@@ -56,8 +56,6 @@ class TestViewControllerChains(unittest.TestCase):
             chained_to_controller.reference_interfaces.append(f"joint{i}/position")
             chained_to_controller.reference_interfaces.append(f"joint{i}/velocity")
 
-            # chained_from_controller.claimed_interfaces.append(f"{chained_to_controller.name}/joint{i}/position")
-            # chained_from_controller.claimed_interfaces.append(f"{chained_to_controller.name}/joint{i}/velocity")
             chained_from_controller.required_state_interfaces.append(f"joint{i}/position")
             chained_from_controller.required_state_interfaces.append(f"joint{i}/velocity")
 
