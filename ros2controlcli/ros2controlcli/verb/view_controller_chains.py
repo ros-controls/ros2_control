@@ -117,7 +117,6 @@ def show_graph(input_chain_connections, output_chain_connections, command_connec
             s.edge('{}:{}'.format(controller_name, "command_start_" + command_connection),
                    '{}:{}'.format("command_interfaces", 'command_end_' + command_connection))
 
-    # s.attr(splines="false")
     s.attr(ranksep='2')
     s.attr(rankdir="LR")
     s.view()
