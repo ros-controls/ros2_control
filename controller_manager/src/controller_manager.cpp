@@ -1614,12 +1614,14 @@ controller_interface::return_type ControllerManager::update(
     if (is_controller_active(*loaded_controller.c))
     {
       const auto controller_update_rate = loaded_controller.c->get_update_rate();
+      const auto controller_is_async = loaded_controller.c->is_async();
+
 
       bool controller_go =
         controller_update_rate == 0 || ((update_loop_counter_ % controller_update_rate) == 0);
-      RCLCPP_DEBUG(
+      RCLCPP_WARN(
         get_logger(), "update_loop_counter: '%d ' controller_go: '%s ' controller_name: '%s '",
-        update_loop_counter_, controller_go ? "True" : "False",
+        update_loop_counter_, controller_is_async ? "True" : "False",
         loaded_controller.info.name.c_str());
 
       if (controller_go)

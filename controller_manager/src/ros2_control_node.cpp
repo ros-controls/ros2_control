@@ -77,7 +77,7 @@ int main(int argc, char ** argv)
 
         // execute update loop
         cm->read(cm->now(), measured_period);
-        cm->update(cm->now(), measured_period);
+        cm->update(cm->now(), measured_period); // this should call async thread's update
         cm->write(cm->now(), measured_period);
 
         // wait until we hit the end of the period
