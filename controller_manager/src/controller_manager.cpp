@@ -1634,6 +1634,8 @@ controller_interface::return_type ControllerManager::update(
                     ? rclcpp::Duration::from_seconds(1.0 / loaded_controller.c->get_update_rate())
                     : period); 
           });
+          RCLCPP_WARN(
+            get_logger(), "vector size before : '%d'", async_controller_threads.size());
         }
         else
         {
@@ -1649,13 +1651,18 @@ controller_interface::return_type ControllerManager::update(
           }
         }
       }
-      for (auto& k : async_controller_threads) {
-        if (k.joinable()) {
-          k.join();
-        }
-      }
     }
   }
+
+  for (auto& k : async_controller_threads) {
+    if (k.joinable()) {
+      k.join();
+    }
+  }
+  RCLCPP_WARN(
+          get_logger(), "vector size after: '%d'", async_controller_threads.size());
+  async_controller_threads.clear();
+
 
   // there are controllers to (de)activate
   if (switch_params_.do_switch)
