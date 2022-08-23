@@ -1620,20 +1620,38 @@ controller_interface::return_type ControllerManager::update(
       bool controller_go =
         controller_update_rate == 0 || ((update_loop_counter_ % controller_update_rate) == 0);
       RCLCPP_WARN(
-        get_logger(), "update_loop_counter: '%d ' controller_go: '%s ' controller_name: '%s '",
+        get_logger(), "update_loop_counter: '%d ' is_async: '%s ' controller_name: '%s '",
         update_loop_counter_, controller_is_async ? "True" : "False",
         loaded_controller.info.name.c_str());
 
       if (controller_go)
       {
-        auto controller_ret = loaded_controller.c->update(
-          time, (controller_update_rate != update_rate_ && controller_update_rate != 0)
-                  ? rclcpp::Duration::from_seconds(1.0 / controller_update_rate)
-                  : period);
-
-        if (controller_ret != controller_interface::return_type::OK)
+          if (controller_is_async) {
+           async_controller_threads.emplace_back([this, &loaded_controller, &time, &period](){
+            
+            loaded_controller.c->update(
+            time, (loaded_controller.c->get_update_rate() != update_rate_ && loaded_controller.c->get_update_rate() != 0)
+                    ? rclcpp::Duration::from_seconds(1.0 / loaded_controller.c->get_update_rate())
+                    : period); 
+          });
+        }
+        else
         {
-          ret = controller_ret;
+          auto controller_ret = loaded_controller.c->update(
+            time, (controller_update_rate != update_rate_ && controller_update_rate != 0)
+                    ? rclcpp::Duration::from_seconds(1.0 / controller_update_rate)
+                    : period);
+
+
+          if (controller_ret != controller_interface::return_type::OK)
+          {
+            ret = controller_ret;
+          }
+        }
+      }
+      for (auto& k : async_controller_threads) {
+        if (k.joinable()) {
+          k.join();
         }
       }
     }

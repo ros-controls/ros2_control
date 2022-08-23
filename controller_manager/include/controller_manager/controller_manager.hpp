@@ -247,6 +247,8 @@ protected:
   unsigned int update_rate_ = 100;
   std::vector<std::vector<std::string>> chained_controllers_configuration_;
 
+  std::vector<std::thread> async_controller_threads;
+
   std::unique_ptr<hardware_interface::ResourceManager> resource_manager_;
 
 private:
