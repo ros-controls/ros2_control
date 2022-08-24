@@ -2,6 +2,16 @@
 Changelog for package ros2controlcli
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.13.0 (2022-08-03)
+-------------------
+* Add chained controllers information in list controllers service #abi-braking (`#758 <https://github.com/ros-controls/ros2_control/issues/758>`_)
+  * add chained controllers in ros2controlcli
+  * remove controller_group from service
+  * added comments to ControllerState message
+  * added comments to ChainedConnection message
+* Added spawner colors to command interfaces based on availablity and claimed status (`#754 <https://github.com/ros-controls/ros2_control/issues/754>`_)
+* Contributors: Leander Stephen D'Souza, Paul Gesel
+
 2.12.1 (2022-07-14)
 -------------------
 

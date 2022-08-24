@@ -2,6 +2,19 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.13.0 (2022-08-03)
+-------------------
+* Clang tidy: delete a redundant return (`#790 <https://github.com/ros-controls/ros2_control/issues/790>`_)
+* Add chained controllers information in list controllers service #abi-braking (`#758 <https://github.com/ros-controls/ros2_control/issues/758>`_)
+  * add chained controllers in ros2controlcli
+  * remove controller_group from service
+  * added comments to ControllerState message
+  * added comments to ChainedConnection message
+* spawner.py: Fix python logging on deprecation warning (`#787 <https://github.com/ros-controls/ros2_control/issues/787>`_)
+* Add documentation for realtime permission (`#781 <https://github.com/ros-controls/ros2_control/issues/781>`_)
+* Fix bug in spawner with getter for node's logger (`#776 <https://github.com/ros-controls/ros2_control/issues/776>`_)
+* Contributors: Andy Zelenak, Felix Exner, Paul Gesel, Bijou Abraham
+
 2.12.1 (2022-07-14)
 -------------------
 * Rename CM members from start/stop to activate/deactivate nomenclature. (`#756 <https://github.com/ros-controls/ros2_control/issues/756>`_)
