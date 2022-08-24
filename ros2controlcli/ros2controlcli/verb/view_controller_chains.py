@@ -24,8 +24,6 @@ from ros2controlcli.api import add_controller_mgr_parsers
 import graphviz
 
 
-# controller_name, state_connections[controller_name], command_connections[controller_name],
-# input_chain_connections[controller_name], output_chain_connections
 
 def make_controller_node(s, controller_name, state_interfaces, command_interfaces, input_controllers,
                          output_controllers, port_map):
