@@ -56,8 +56,6 @@ class TestViewControllerChains(unittest.TestCase):
             chained_to_controller.reference_interfaces.append(f"joint{i}/position")
             chained_to_controller.reference_interfaces.append(f"joint{i}/velocity")
 
-            # chained_from_controller.claimed_interfaces.append(f"{chained_to_controller.name}/joint{i}/position")
-            # chained_from_controller.claimed_interfaces.append(f"{chained_to_controller.name}/joint{i}/velocity")
             chained_from_controller.required_state_interfaces.append(f"joint{i}/position")
             chained_from_controller.required_state_interfaces.append(f"joint{i}/velocity")
 
@@ -75,6 +73,6 @@ class TestViewControllerChains(unittest.TestCase):
         list_hardware_response.state_interfaces = state_interfaces
         list_hardware_response.command_interfaces = command_interfaces
         try:
-            parse_response(list_controllers_response, list_hardware_response)
+            parse_response(list_controllers_response, list_hardware_response, visualize=False)
         except Exception:
             self.assertTrue(0, "parse_response failed!")

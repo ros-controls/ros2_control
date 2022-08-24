@@ -89,7 +89,7 @@ def make_state_node(s, state_interfaces):
 
 
 def show_graph(input_chain_connections, output_chain_connections, command_connections, state_connections,
-               command_interfaces, state_interfaces):
+               command_interfaces, state_interfaces, visualize):
     s = graphviz.Digraph('g', filename='/tmp/controller_diagram.gv', node_attr={'shape': 'record', 'style': 'rounded'})
     port_map = dict()
     # get all controller names
@@ -119,13 +119,13 @@ def show_graph(input_chain_connections, output_chain_connections, command_connec
             s.edge('{}:{}'.format(controller_name, "command_start_" + command_connection),
                    '{}:{}'.format("command_interfaces", 'command_end_' + command_connection))
 
-    # s.attr(splines="false")
     s.attr(ranksep='2')
     s.attr(rankdir="LR")
-    s.view()
+    if visualize:
+        s.view()
 
 
-def parse_response(list_controllers_response, list_hardware_response):
+def parse_response(list_controllers_response, list_hardware_response, visualize=True):
     command_interfaces = {x.name for x in list_hardware_response.command_interfaces}
     state_interfaces = {x.name for x in list_hardware_response.state_interfaces}
     command_connections = dict()
@@ -144,7 +144,7 @@ def parse_response(list_controllers_response, list_hardware_response):
         state_connections[controller.name] = set(controller.required_state_interfaces)
 
     show_graph(input_chain_connections, output_chain_connections, command_connections, state_connections,
-               command_interfaces, state_interfaces)
+               command_interfaces, state_interfaces, visualize)
 
 
 class ViewControllerChainsVerb(VerbExtension):
