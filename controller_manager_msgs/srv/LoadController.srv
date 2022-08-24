@@ -6,5 +6,6 @@
 # constructed and initialized or not.
 
 string name
+string namespacee
 ---
 bool ok
