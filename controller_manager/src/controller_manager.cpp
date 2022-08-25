@@ -837,7 +837,7 @@ controller_interface::return_type ControllerManager::switch_controller(
     // outdated. Keeping it up to date is not easy because of stopping controllers from multiple
     // threads maybe we should not at all cache this but always search for the related controllers
     // to a hardware when error in hardware happens
-    if (in_start_list)
+    if (in_activate_list)
     {
       std::vector<std::string> interface_names = {};
 
@@ -1718,7 +1718,7 @@ void ControllerManager::read(const rclcpp::Time & time, const rclcpp::Duration &
 
     std::vector<ControllerSpec> & rt_controller_list =
       rt_controllers_wrapper_.update_and_get_used_by_rt_list();
-    stop_controllers(rt_controller_list, stop_request);
+    deactivate_controllers(rt_controller_list, stop_request);
     // TODO(destogl): do auto-start of broadcasters
   }
 }
@@ -1788,7 +1788,7 @@ void ControllerManager::write(const rclcpp::Time & time, const rclcpp::Duration 
 
     std::vector<ControllerSpec> & rt_controller_list =
       rt_controllers_wrapper_.update_and_get_used_by_rt_list();
-    stop_controllers(rt_controller_list, stop_request);
+    deactivate_controllers(rt_controller_list, stop_request);
     // TODO(destogl): do auto-start of broadcasters
   }
 }

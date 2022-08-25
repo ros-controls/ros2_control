@@ -81,7 +81,7 @@ class TestActuator : public ActuatorInterface
     if (velocity_command_ == 28282828.0)
     {
       // reset value to get out from error on the next call - simplifies CM tests
-      position_command_ = 0.0;
+      velocity_command_ = 0.0;
       return return_type::ERROR;
     }
     // The next line is for the testing purposes. We need value to be changed to be sure that
@@ -98,7 +98,7 @@ class TestActuator : public ActuatorInterface
     if (velocity_command_ == 23232323.0)
     {
       // reset value to get out from error on the next call - simplifies CM tests
-      position_command_ = 0.0;
+      velocity_command_ = 0.0;
       return return_type::ERROR;
     }
     return return_type::OK;
