@@ -74,9 +74,6 @@ public:
   controller_interface::InterfaceConfiguration state_iface_cfg_;
 
   std::vector<double> external_commands_for_testing_;
-  // enables external setting of values to command interfaces - used for simulation of hardware
-  // errors
-  double set_first_command_interface_value_to;
 };
 
 }  // namespace test_controller
