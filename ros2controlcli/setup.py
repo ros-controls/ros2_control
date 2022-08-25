@@ -36,6 +36,7 @@ ROS2 Control command  interface.""",
         ],
         'ros2controlcli.verb': [
             'list_controllers = ros2controlcli.verb.list_controllers:ListControllersVerb',
+            'view_controller_chains = ros2controlcli.verb.view_controller_chains:ViewControllerChainsVerb',
             'list_hardware_interfaces = \
                 ros2controlcli.verb.list_hardware_interfaces:ListHardwareInterfacesVerb',
             'list_controller_types = \
