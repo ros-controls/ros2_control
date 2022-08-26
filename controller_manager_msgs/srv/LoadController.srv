@@ -6,6 +6,6 @@
 # constructed and initialized or not.
 
 string name
-string namespacee
+string robot_namespace
 ---
 bool ok
