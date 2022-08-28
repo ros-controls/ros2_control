@@ -57,6 +57,7 @@ using ControllersListIterator = std::vector<controller_manager::ControllerSpec>:
 class ControllerManager : public rclcpp::Node
 {
 public:
+
   static constexpr bool kWaitForAllResources = false;
   static constexpr auto kInfiniteTimeout = 0;
 
@@ -246,8 +247,7 @@ protected:
   unsigned int update_loop_counter_ = 0;
   unsigned int update_rate_ = 100;
   std::vector<std::vector<std::string>> chained_controllers_configuration_;
-
-  std::vector<std::thread> async_controller_threads;
+  mutable std::mutex mutex_;
 
   std::unique_ptr<hardware_interface::ResourceManager> resource_manager_;
 
@@ -448,6 +448,64 @@ private:
   };
 
   SwitchParams switch_params_;
+
+  class ControllerThreadWrapper // created this class so we can keep track of the time and period.
+  {
+  public:
+    template< class... Args>
+    explicit ControllerThreadWrapper( 
+       const std::string& name,
+       const rclcpp::Time & time, 
+       const rclcpp::Duration & period, 
+       Args&&... args)
+      : async_controller_name_(name)
+      , time_(time)
+      , period_(period)
+      , m_thread_(std::forward<Args>(args)...) 
+    {
+    }
+    ControllerThreadWrapper(const ControllerThreadWrapper& t) = delete;
+    ControllerThreadWrapper(ControllerThreadWrapper&& t) = default;
+    ~ControllerThreadWrapper() {
+      if (m_thread_.joinable()) 
+      { 
+        m_thread_.join(); 
+      } 
+    }
+
+    void set_time_and_period(
+      const rclcpp::Time & time, 
+      const rclcpp::Duration & period) 
+    { 
+      time_ = time; 
+      period_ = period; 
+    }
+    const std::string& get_async_controller_name() const
+    {
+      return async_controller_name_;
+    }
+    rclcpp::Time get_time() const
+    { 
+      return time_; 
+    }
+    rclcpp::Duration get_period() const
+    { 
+      return period_; 
+    }
+    // do we really need all these getters?
+
+  private:
+    const std::string& async_controller_name_;
+    rclcpp::Time time_;
+    rclcpp::Duration period_;
+    std::thread m_thread_;
+  };
+
+  std::atomic<bool> terminated_ = false; // shouldn't be here, but it will do for now
+
+  std::unordered_map<std::string, ControllerThreadWrapper> async_controller_threads_;
+
+  
 };
 
 }  // namespace controller_manager

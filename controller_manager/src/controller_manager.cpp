@@ -345,6 +345,9 @@ controller_interface::return_type ControllerManager::unload_controller(
   std::vector<ControllerSpec> & to = rt_controllers_wrapper_.get_unused_list(guard);
   const std::vector<ControllerSpec> & from = rt_controllers_wrapper_.get_updated_list(guard);
 
+  RCLCPP_WARN(
+      get_logger(),
+      "Clearing threads");
   // Transfers the active controllers over, skipping the one to be removed and the active ones.
   to = from;
 
@@ -1607,6 +1610,12 @@ controller_interface::return_type ControllerManager::update(
   ++update_loop_counter_;
   update_loop_counter_ %= update_rate_;
 
+  for (auto& wrapped_thread : async_controller_threads_) // map should be empty in the initial update call so this is fine
+  {
+    std::lock_guard<std::mutex> lock(mutex_);
+    wrapped_thread.second.set_time_and_period(time, period);
+  }
+
   for (auto loaded_controller : rt_controller_list)
   {
     // TODO(v-lopez) we could cache this information
@@ -1625,50 +1634,68 @@ controller_interface::return_type ControllerManager::update(
         loaded_controller.info.name.c_str());
 
       if (controller_go)
-      {
-          if (controller_is_async) {
-           async_controller_threads.emplace_back([this, &loaded_controller, &time, &period](){
-            
-            loaded_controller.c->update(
-            time, (loaded_controller.c->get_update_rate() != update_rate_ && loaded_controller.c->get_update_rate() != 0)
-                    ? rclcpp::Duration::from_seconds(1.0 / loaded_controller.c->get_update_rate())
-                    : period); 
-          });
-          RCLCPP_WARN(
-            get_logger(), "vector size before : '%d'", async_controller_threads.size());
-        }
-        else
-        {
-          auto controller_ret = loaded_controller.c->update(
-            time, (controller_update_rate != update_rate_ && controller_update_rate != 0)
-                    ? rclcpp::Duration::from_seconds(1.0 / controller_update_rate)
-                    : period);
-
-
-          if (controller_ret != controller_interface::return_type::OK)
+      { 
+          if (controller_is_async) 
           {
-            ret = controller_ret;
+            if (async_controller_threads_.find(loaded_controller.info.name) == async_controller_threads_.end()) // create new thread only if we didn't do it for an existing async controller
+            { //TODO: synchronize with controller_go
+              
+              ControllerThreadWrapper async_controller_thread(loaded_controller.info.name, time, period, [this, &loaded_controller, &async_controller_thread]()
+              {
+                
+                while (!terminated_)
+                {
+                    if (mutex_.try_lock()) 
+                    { 
+                      std::lock_guard<std::mutex> lock(mutex_, std::adopt_lock); 
+                      loaded_controller.c->update(
+                      async_controller_thread.get_time(), (loaded_controller.c->get_update_rate() != update_rate_ && loaded_controller.c->get_update_rate() != 0)
+                              ? rclcpp::Duration::from_seconds(1.0 / loaded_controller.c->get_update_rate())
+                              : async_controller_thread.get_period()); // TODO: check if we have the correct values here
+                    }
+                    else
+                    {
+                      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                    }
+                }
+                
+              });  // this is so unreadable, should do it in some other way
+              
+              async_controller_threads_.emplace(loaded_controller.info.name, std::move(async_controller_thread)); // does this work as intended?
+            }
+
           }
-        }
+          else
+          {
+            auto controller_ret = loaded_controller.c->update(
+              time, (controller_update_rate != update_rate_ && controller_update_rate != 0)
+                      ? rclcpp::Duration::from_seconds(1.0 / controller_update_rate)
+                      : period);
+
+
+            if (controller_ret != controller_interface::return_type::OK)
+            {
+              ret = controller_ret;
+            }
+          }
+        
       }
+        
     }
   }
 
-  for (auto& k : async_controller_threads) {
-    if (k.joinable()) {
-      k.join();
-    }
-  }
   RCLCPP_WARN(
-          get_logger(), "vector size after: '%d'", async_controller_threads.size());
-  async_controller_threads.clear();
-
+          get_logger(), "vector size after: '%d'", async_controller_threads_.size());
 
   // there are controllers to (de)activate
   if (switch_params_.do_switch)
   {
+    //terminated_ = true;
+   // async_controller_threads_.clear();
+   // Where should we do this?
     manage_switch();
   }
+
 
   return ret;
 }
