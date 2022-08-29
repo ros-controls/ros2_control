@@ -1609,13 +1609,14 @@ controller_interface::return_type ControllerManager::update(
   auto ret = controller_interface::return_type::OK;
   ++update_loop_counter_;
   update_loop_counter_ %= update_rate_;
-
+  
+  /*
   for (auto& wrapped_thread : async_controller_threads_) // map should be empty in the initial update call so this is fine
   {
     std::lock_guard<std::mutex> lock(mutex_);
     wrapped_thread.second.set_time_and_period(time, period);
   }
-
+  */
   for (auto loaded_controller : rt_controller_list)
   {
     // TODO(v-lopez) we could cache this information
@@ -1640,18 +1641,19 @@ controller_interface::return_type ControllerManager::update(
             if (async_controller_threads_.find(loaded_controller.info.name) == async_controller_threads_.end()) // create new thread only if we didn't do it for an existing async controller
             { //TODO: synchronize with controller_go
               
-              ControllerThreadWrapper async_controller_thread(loaded_controller.info.name, time, period, [this, &loaded_controller, &async_controller_thread]()
+              async_controller_threads_.emplace(loaded_controller.info.name, ControllerThreadWrapper(time, period, [this, &loaded_controller]()
               {
-                
                 while (!terminated_)
                 {
                     if (mutex_.try_lock()) 
                     { 
-                      std::lock_guard<std::mutex> lock(mutex_, std::adopt_lock); 
+                      std::lock_guard<std::mutex> lock(mutex_, std::adopt_lock);
+                      
                       loaded_controller.c->update(
-                      async_controller_thread.get_time(), (loaded_controller.c->get_update_rate() != update_rate_ && loaded_controller.c->get_update_rate() != 0)
+                      async_controller_threads_.at(loaded_controller.info.name).get_time(), (loaded_controller.c->get_update_rate() != update_rate_ && loaded_controller.c->get_update_rate() != 0)
                               ? rclcpp::Duration::from_seconds(1.0 / loaded_controller.c->get_update_rate())
-                              : async_controller_thread.get_period()); // TODO: check if we have the correct values here
+                              : async_controller_threads_.at(loaded_controller.info.name).get_period()); // TODO: check if we have the correct values here
+                     
                     }
                     else
                     {
@@ -1659,9 +1661,7 @@ controller_interface::return_type ControllerManager::update(
                     }
                 }
                 
-              });  // this is so unreadable, should do it in some other way
-              
-              async_controller_threads_.emplace(loaded_controller.info.name, std::move(async_controller_thread)); // does this work as intended?
+              }));
             }
 
           }
@@ -1694,6 +1694,12 @@ controller_interface::return_type ControllerManager::update(
    // async_controller_threads_.clear();
    // Where should we do this?
     manage_switch();
+  }
+
+  if (false) 
+  {
+    terminated_ = true;
+    async_controller_threads_.clear();
   }
 
 

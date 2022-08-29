@@ -449,17 +449,15 @@ private:
 
   SwitchParams switch_params_;
 
-  class ControllerThreadWrapper // created this class so we can keep track of the time and period.
+  struct ControllerThreadWrapper // created this class so we can keep track of the time and period.
   {
   public:
     template< class... Args>
     explicit ControllerThreadWrapper( 
-       const std::string& name,
        const rclcpp::Time & time, 
        const rclcpp::Duration & period, 
        Args&&... args)
-      : async_controller_name_(name)
-      , time_(time)
+      : time_(time)
       , period_(period)
       , m_thread_(std::forward<Args>(args)...) 
     {
@@ -480,10 +478,6 @@ private:
       time_ = time; 
       period_ = period; 
     }
-    const std::string& get_async_controller_name() const
-    {
-      return async_controller_name_;
-    }
     rclcpp::Time get_time() const
     { 
       return time_; 
@@ -495,7 +489,6 @@ private:
     // do we really need all these getters?
 
   private:
-    const std::string& async_controller_name_;
     rclcpp::Time time_;
     rclcpp::Duration period_;
     std::thread m_thread_;
