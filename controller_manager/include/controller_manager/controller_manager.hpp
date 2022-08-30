@@ -449,17 +449,16 @@ private:
 
   SwitchParams switch_params_;
 
-  struct ControllerThreadWrapper // created this class so we can keep track of the time and period.
+  class ControllerThreadWrapper // created this class so we can keep track of the time and period.
   {
   public:
-    template< class... Args>
     explicit ControllerThreadWrapper( 
        const rclcpp::Time & time, 
-       const rclcpp::Duration & period, 
-       Args&&... args)
+       const rclcpp::Duration & period
+      )
       : time_(time)
       , period_(period)
-      , m_thread_(std::forward<Args>(args)...) 
+      , m_thread_{}
     {
     }
     ControllerThreadWrapper(const ControllerThreadWrapper& t) = delete;
@@ -470,6 +469,12 @@ private:
         m_thread_.join(); 
       } 
     }
+    
+    template< class... Args>
+    void start(Args&&... args)
+    {
+      m_thread_ = std::thread(std::forward<Args>(args)...);
+    }
 
     void set_time_and_period(
       const rclcpp::Time & time, 
@@ -478,6 +483,8 @@ private:
       time_ = time; 
       period_ = period; 
     }
+    
+    
     rclcpp::Time get_time() const
     { 
       return time_; 
@@ -486,12 +493,13 @@ private:
     { 
       return period_; 
     }
-    // do we really need all these getters?
 
-  private:
-    rclcpp::Time time_;
-    rclcpp::Duration period_;
-    std::thread m_thread_;
+    const char* k = "asdf";
+    // do we really need all these getters?
+    private:
+      rclcpp::Time time_;
+      rclcpp::Duration period_;
+      std::thread m_thread_;
   };
 
   std::atomic<bool> terminated_ = false; // shouldn't be here, but it will do for now
