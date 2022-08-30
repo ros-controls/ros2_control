@@ -159,6 +159,7 @@ def main(args=None):
     controller_type = args.controller_type
     controller_manager_timeout = args.controller_manager_timeout
 
+    
     if param_file and not os.path.isfile(param_file):
         raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), param_file)
 
@@ -191,8 +192,7 @@ def main(args=None):
             node.get_logger().info(bcolors.OKBLUE + 'Loaded ' + namespaced_controller_name + bcolors.ENDC)
 
         if param_file:
-            ret = subprocess.run(['ros2', 'param', 'load', namespaced_controller_name,
-                                  param_file])
+            ret = subprocess.run(['ros2', 'param', 'load', namespaced_controller_name, param_file])
             if ret.returncode != 0:
                 # Error message printed by ros2 param
                 return ret.returncode

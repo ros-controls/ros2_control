@@ -138,39 +138,6 @@ rclcpp::NodeOptions get_cm_node_options()
 }
 
 ControllerManager::ControllerManager(
-  std::shared_ptr<rclcpp::Executor> executor, const std::string & manager_node_name,
-  const std::string & namespace_)
-: rclcpp::Node(manager_node_name, namespace_, get_cm_node_options()),
-  resource_manager_(std::make_unique<hardware_interface::ResourceManager>()),
-  diagnostics_updater_(this),
-  executor_(executor),
-  loader_(std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
-    kControllerInterfaceNamespace, kControllerInterfaceClassName)),
-  chainable_loader_(
-    std::make_shared<pluginlib::ClassLoader<controller_interface::ChainableControllerInterface>>(
-      kControllerInterfaceNamespace, kChainableControllerInterfaceClassName))
-{
-  if (!get_parameter("update_rate", update_rate_))
-  {
-    RCLCPP_WARN(get_logger(), "'update_rate' parameter not set, using default value.");
-  }
-
-  std::string robot_description = "";
-  get_parameter("robot_description", robot_description);
-  if (robot_description.empty())
-  {
-    throw std::runtime_error("Unable to initialize resource manager, no robot description found.");
-  }
-
-  init_resource_manager(robot_description);
-
-  diagnostics_updater_.setHardwareID("ros2_control");
-  diagnostics_updater_.add(
-    "Controllers Activity", this, &ControllerManager::controller_activity_diagnostic_callback);
-  init_services();
-}
-
-ControllerManager::ControllerManager(
   std::unique_ptr<hardware_interface::ResourceManager> resource_manager,
   std::shared_ptr<rclcpp::Executor> executor, const std::string & manager_node_name,
   const std::string & namespace_)
@@ -326,7 +293,7 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_c
   const std::string & controller_name)
 {
   const std::string controller_namespaced_name = controller_namespace + '/' + controller_name;
-  const std::string param_name = controller_namespaced_name + ".type";
+  const std::string param_name = controller_name + ".type";
   std::string controller_type;
 
   // We cannot declare the parameters for the controllers that will be loaded in the future,
@@ -342,7 +309,7 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_c
   if (!get_parameter(param_name, controller_type))
   {
     RCLCPP_ERROR(
-      get_logger(), "The 'type' param was not defined for '%s'.", controller_namespaced_name.c_str());
+      get_logger(), "The 'type' param was not defined for '%s'.", controller_name.c_str());
     return nullptr;
   }
   return load_controller(controller_name, controller_namespace, controller_type);
