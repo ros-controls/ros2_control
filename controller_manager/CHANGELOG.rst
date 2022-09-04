@@ -2,6 +2,11 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add doxygen comments (`#777 <https://github.com/ros-controls/ros2_control/issues/777>`_)
+* Contributors: Bence Magyar, Denis Štogl
+
 2.13.0 (2022-08-03)
 -------------------
 * Clang tidy: delete a redundant return (`#790 <https://github.com/ros-controls/ros2_control/issues/790>`_)
