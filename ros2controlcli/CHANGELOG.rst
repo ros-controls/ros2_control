@@ -2,8 +2,8 @@
 Changelog for package ros2controlcli
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.14.0 (2022-09-04)
+-------------------
 * Visualize chained controllers with graphviz (`#763 <https://github.com/ros-controls/ros2_control/issues/763>`_)
 * Corrected the site link to a valid one. (`#801 <https://github.com/ros-controls/ros2_control/issues/801>`_)
 * Contributors: Interactics, Paul Gesel
