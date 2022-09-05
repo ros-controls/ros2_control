@@ -1330,77 +1330,80 @@ TEST_F(TestResourceManager, managing_controllers_reference_interfaces)
     rm.make_controller_reference_interfaces_unavailable("unknown_controller"), std::out_of_range);
 }
 
-TEST_F(TestResourceManager, handle_error_on_hardware_read_and_write)
+class TestResourceManagerReadWriteError : public TestResourceManager
 {
-  // values to set to hardware to simulate failure on read and write
-  static constexpr double READ_FAIL_VALUE = 28282828.0;
-  static constexpr double WRITE_FAIL_VALUE = 23232323.0;
+public:
+  void setup_resource_manager_and_do_initial_checks()
+  {
+    rm = std::make_shared<hardware_interface::ResourceManager>(
+      ros2_control_test_assets::minimal_robot_urdf, false);
+    activate_components(*rm);
 
-  rclcpp_lifecycle::State state_active(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
-    hardware_interface::lifecycle_state_names::ACTIVE);
+    auto status_map = rm->get_components_status();
+    EXPECT_EQ(
+      status_map[TEST_ACTUATOR_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+    EXPECT_EQ(
+      status_map[TEST_SYSTEM_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+    EXPECT_EQ(
+      status_map[TEST_SENSOR_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
 
-  hardware_interface::ResourceManager rm(ros2_control_test_assets::minimal_robot_urdf, false);
-  activate_components(rm);
+    claimed_itfs.push_back(
+      rm->claim_command_interface(TEST_ACTUATOR_HARDWARE_COMMAND_INTERFACES[0]));
+    claimed_itfs.push_back(rm->claim_command_interface(TEST_SYSTEM_HARDWARE_COMMAND_INTERFACES[0]));
 
-  auto status_map = rm.get_components_status();
-  EXPECT_EQ(
-    status_map[TEST_ACTUATOR_HARDWARE_NAME].state.id(),
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
-  EXPECT_EQ(
-    status_map[TEST_SYSTEM_HARDWARE_NAME].state.id(),
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
-  EXPECT_EQ(
-    status_map[TEST_SENSOR_HARDWARE_NAME].state.id(),
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
-
-  auto claimed_itf_actuator =
-    rm.claim_command_interface(TEST_ACTUATOR_HARDWARE_COMMAND_INTERFACES[0]);
-  auto claimed_itf_system = rm.claim_command_interface(TEST_SYSTEM_HARDWARE_COMMAND_INTERFACES[0]);
-
-  const auto time = rclcpp::Time(0);
-  const auto duration = rclcpp::Duration::from_seconds(0.01);
+    check_if_interface_available(true, true);
+    // with default values read and write should run without any problems
+    {
+      auto [ok, failed_hardware_names] = rm->read(time, duration);
+      EXPECT_TRUE(ok);
+      EXPECT_TRUE(failed_hardware_names.empty());
+    }
+    {
+      auto [ok, failed_hardware_names] = rm->write(time, duration);
+      EXPECT_TRUE(ok);
+      EXPECT_TRUE(failed_hardware_names.empty());
+    }
+    check_if_interface_available(true, true);
+  }
 
   // check if all interfaces are available
-  auto interfaces_available = [&](const auto actuator_interfaces, const auto system_interfaces)
+  void check_if_interface_available(const bool actuator_interfaces, const bool system_interfaces)
   {
     for (const auto & interface : TEST_ACTUATOR_HARDWARE_COMMAND_INTERFACES)
     {
-      EXPECT_EQ(rm.command_interface_is_available(interface), actuator_interfaces);
+      EXPECT_EQ(rm->command_interface_is_available(interface), actuator_interfaces);
     }
     for (const auto & interface : TEST_ACTUATOR_HARDWARE_STATE_INTERFACES)
     {
-      EXPECT_EQ(rm.state_interface_is_available(interface), actuator_interfaces);
+      EXPECT_EQ(rm->state_interface_is_available(interface), actuator_interfaces);
     }
     for (const auto & interface : TEST_SYSTEM_HARDWARE_COMMAND_INTERFACES)
     {
-      EXPECT_EQ(rm.command_interface_is_available(interface), system_interfaces);
+      EXPECT_EQ(rm->command_interface_is_available(interface), system_interfaces);
     }
     for (const auto & interface : TEST_SYSTEM_HARDWARE_STATE_INTERFACES)
     {
-      EXPECT_EQ(rm.state_interface_is_available(interface), system_interfaces);
+      EXPECT_EQ(rm->state_interface_is_available(interface), system_interfaces);
     }
   };
 
-  interfaces_available(true, true);
-  // with default values read and write should run without any problems
-  {
-    auto [ok, failed_hardware_names] = rm.read(time, duration);
-    EXPECT_TRUE(ok);
-    EXPECT_TRUE(failed_hardware_names.empty());
-  }
-  {
-    auto [ok, failed_hardware_names] = rm.write(time, duration);
-    EXPECT_TRUE(ok);
-    EXPECT_TRUE(failed_hardware_names.empty());
-  }
-  interfaces_available(true, true);
+  using FunctionT =
+    std::function<hardware_interface::HardwareReadWriteStatus(rclcpp::Time, rclcpp::Duration)>;
 
-  auto check_read_or_write_failure = [&](auto method_that_fails, auto other_method, auto fail_value)
+  void check_read_or_write_failure(
+    FunctionT method_that_fails, FunctionT other_method, const double fail_value)
   {
+    // define state to set components to
+    rclcpp_lifecycle::State state_active(
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+      hardware_interface::lifecycle_state_names::ACTIVE);
+
     // read failure for TEST_ACTUATOR_HARDWARE_NAME
-    claimed_itf_actuator.set_value(fail_value);
-    claimed_itf_system.set_value(fail_value - 10.0);
+    claimed_itfs[0].set_value(fail_value);
+    claimed_itfs[1].set_value(fail_value - 10.0);
     {
       auto [ok, failed_hardware_names] = method_that_fails(time, duration);
       EXPECT_FALSE(ok);
@@ -1408,35 +1411,35 @@ TEST_F(TestResourceManager, handle_error_on_hardware_read_and_write)
       ASSERT_THAT(
         failed_hardware_names,
         testing::ElementsAreArray(std::vector<std::string>({TEST_ACTUATOR_HARDWARE_NAME})));
-      status_map = rm.get_components_status();
+      auto status_map = rm->get_components_status();
       EXPECT_EQ(
         status_map[TEST_ACTUATOR_HARDWARE_NAME].state.id(),
         lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
       EXPECT_EQ(
         status_map[TEST_SYSTEM_HARDWARE_NAME].state.id(),
         lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
-      interfaces_available(false, true);
-      rm.set_component_state(TEST_ACTUATOR_HARDWARE_NAME, state_active);
-      status_map = rm.get_components_status();
+      check_if_interface_available(false, true);
+      rm->set_component_state(TEST_ACTUATOR_HARDWARE_NAME, state_active);
+      status_map = rm->get_components_status();
       EXPECT_EQ(
         status_map[TEST_ACTUATOR_HARDWARE_NAME].state.id(),
         lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
       EXPECT_EQ(
         status_map[TEST_SYSTEM_HARDWARE_NAME].state.id(),
         lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
-      interfaces_available(true, true);
+      check_if_interface_available(true, true);
     }
     // write is sill OK
     {
       auto [ok, failed_hardware_names] = other_method(time, duration);
       EXPECT_TRUE(ok);
       EXPECT_TRUE(failed_hardware_names.empty());
-      interfaces_available(true, true);
+      check_if_interface_available(true, true);
     }
 
     // read failure for TEST_SYSTEM_HARDWARE_NAME
-    claimed_itf_actuator.set_value(fail_value - 10.0);
-    claimed_itf_system.set_value(fail_value);
+    claimed_itfs[0].set_value(fail_value - 10.0);
+    claimed_itfs[1].set_value(fail_value);
     {
       auto [ok, failed_hardware_names] = method_that_fails(time, duration);
       EXPECT_FALSE(ok);
@@ -1444,35 +1447,35 @@ TEST_F(TestResourceManager, handle_error_on_hardware_read_and_write)
       ASSERT_THAT(
         failed_hardware_names,
         testing::ElementsAreArray(std::vector<std::string>({TEST_SYSTEM_HARDWARE_NAME})));
-      status_map = rm.get_components_status();
+      auto status_map = rm->get_components_status();
       EXPECT_EQ(
         status_map[TEST_ACTUATOR_HARDWARE_NAME].state.id(),
         lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
       EXPECT_EQ(
         status_map[TEST_SYSTEM_HARDWARE_NAME].state.id(),
         lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
-      interfaces_available(true, false);
-      rm.set_component_state(TEST_SYSTEM_HARDWARE_NAME, state_active);
-      status_map = rm.get_components_status();
+      check_if_interface_available(true, false);
+      rm->set_component_state(TEST_SYSTEM_HARDWARE_NAME, state_active);
+      status_map = rm->get_components_status();
       EXPECT_EQ(
         status_map[TEST_ACTUATOR_HARDWARE_NAME].state.id(),
         lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
       EXPECT_EQ(
         status_map[TEST_SYSTEM_HARDWARE_NAME].state.id(),
         lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
-      interfaces_available(true, true);
+      check_if_interface_available(true, true);
     }
     // write is sill OK
     {
       auto [ok, failed_hardware_names] = other_method(time, duration);
       EXPECT_TRUE(ok);
       EXPECT_TRUE(failed_hardware_names.empty());
-      interfaces_available(true, true);
+      check_if_interface_available(true, true);
     }
 
     // read failure for both, TEST_ACTUATOR_HARDWARE_NAME and TEST_SYSTEM_HARDWARE_NAME
-    claimed_itf_actuator.set_value(fail_value);
-    claimed_itf_system.set_value(fail_value);
+    claimed_itfs[0].set_value(fail_value);
+    claimed_itfs[1].set_value(fail_value);
     {
       auto [ok, failed_hardware_names] = method_that_fails(time, duration);
       EXPECT_FALSE(ok);
@@ -1480,44 +1483,66 @@ TEST_F(TestResourceManager, handle_error_on_hardware_read_and_write)
       ASSERT_THAT(
         failed_hardware_names, testing::ElementsAreArray(std::vector<std::string>(
                                  {TEST_ACTUATOR_HARDWARE_NAME, TEST_SYSTEM_HARDWARE_NAME})));
-      status_map = rm.get_components_status();
+      auto status_map = rm->get_components_status();
       EXPECT_EQ(
         status_map[TEST_ACTUATOR_HARDWARE_NAME].state.id(),
         lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
       EXPECT_EQ(
         status_map[TEST_SYSTEM_HARDWARE_NAME].state.id(),
         lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
-      interfaces_available(false, false);
-      rm.set_component_state(TEST_ACTUATOR_HARDWARE_NAME, state_active);
-      rm.set_component_state(TEST_SYSTEM_HARDWARE_NAME, state_active);
-      status_map = rm.get_components_status();
+      check_if_interface_available(false, false);
+      rm->set_component_state(TEST_ACTUATOR_HARDWARE_NAME, state_active);
+      rm->set_component_state(TEST_SYSTEM_HARDWARE_NAME, state_active);
+      status_map = rm->get_components_status();
       EXPECT_EQ(
         status_map[TEST_ACTUATOR_HARDWARE_NAME].state.id(),
         lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
       EXPECT_EQ(
         status_map[TEST_SYSTEM_HARDWARE_NAME].state.id(),
         lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
-      interfaces_available(true, true);
+      check_if_interface_available(true, true);
     }
     // write is sill OK
     {
       auto [ok, failed_hardware_names] = other_method(time, duration);
       EXPECT_TRUE(ok);
       EXPECT_TRUE(failed_hardware_names.empty());
-      interfaces_available(true, true);
+      check_if_interface_available(true, true);
     }
-  };
+  }
+
+public:
+  std::shared_ptr<hardware_interface::ResourceManager> rm;
+  std::vector<hardware_interface::LoanedCommandInterface> claimed_itfs;
+
+  const rclcpp::Time time = rclcpp::Time(0);
+  const rclcpp::Duration duration = rclcpp::Duration::from_seconds(0.01);
+
+  // values to set to hardware to simulate failure on read and write
+  static constexpr double READ_FAIL_VALUE = 28282828.0;
+  static constexpr double WRITE_FAIL_VALUE = 23232323.0;
+};
+
+TEST_F(TestResourceManagerReadWriteError, handle_error_on_hardware_read)
+{
+  setup_resource_manager_and_do_initial_checks();
 
   using namespace std::placeholders;
   // check read methods failures
   check_read_or_write_failure(
-    std::bind(&hardware_interface::ResourceManager::read, &rm, _1, _2),
-    std::bind(&hardware_interface::ResourceManager::write, &rm, _1, _2), READ_FAIL_VALUE);
+    std::bind(&hardware_interface::ResourceManager::read, rm, _1, _2),
+    std::bind(&hardware_interface::ResourceManager::write, rm, _1, _2), READ_FAIL_VALUE);
+}
 
+TEST_F(TestResourceManagerReadWriteError, handle_error_on_hardware_write)
+{
+  setup_resource_manager_and_do_initial_checks();
+
+  using namespace std::placeholders;
   // check write methods failures
   check_read_or_write_failure(
-    std::bind(&hardware_interface::ResourceManager::write, &rm, _1, _2),
-    std::bind(&hardware_interface::ResourceManager::read, &rm, _1, _2), WRITE_FAIL_VALUE);
+    std::bind(&hardware_interface::ResourceManager::write, rm, _1, _2),
+    std::bind(&hardware_interface::ResourceManager::read, rm, _1, _2), WRITE_FAIL_VALUE);
 }
 
 TEST_F(TestResourceManager, test_caching_of_controllers_to_hardware)

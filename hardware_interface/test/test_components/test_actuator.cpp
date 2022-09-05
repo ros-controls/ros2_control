@@ -15,8 +15,6 @@
 #include <memory>
 #include <vector>
 
-#include <iostream>
-
 #include "hardware_interface/actuator_interface.hpp"
 
 using hardware_interface::ActuatorInterface;

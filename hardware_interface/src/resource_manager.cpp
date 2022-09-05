@@ -218,8 +218,8 @@ public:
         // "available" list - this should never be the case!
         RCUTILS_LOG_WARN_NAMED(
           "resource_manager",
-          "(hardware '%s'): '%s' command interface not in available list."
-          " This can happen due to multiple calls to 'cleanup'",
+          "(hardware '%s'): '%s' command interface not in available list. "
+          "This should not happen (hint: multiple cleanup calls).",
           hardware_name.c_str(), interface.c_str());
       }
     }
@@ -243,7 +243,7 @@ public:
         RCUTILS_LOG_WARN_NAMED(
           "resource_manager",
           "(hardware '%s'): '%s' state interface not in available list. "
-          "This can happen due to multiple calls to 'cleanup'",
+          "This should not happen (hint: multiple cleanup calls).",
           hardware_name.c_str(), interface.c_str());
       }
     }
@@ -551,8 +551,10 @@ public:
 
   std::unordered_map<std::string, HardwareComponentInfo> hardware_info_map_;
 
+  /// Mapping between hardware and controllers that are using it (accessing data from it)
   std::unordered_map<std::string, std::vector<std::string>> hardware_used_by_controllers_;
 
+  /// Mapping between controllers and list of reference interfaces they are using
   std::unordered_map<std::string, std::vector<std::string>> controllers_reference_interfaces_map_;
 
   /// Storage of all available state interfaces
