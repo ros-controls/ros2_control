@@ -247,12 +247,13 @@ protected:
   unsigned int update_loop_counter_ = 0;
   unsigned int update_rate_ = 100;
   std::vector<std::vector<std::string>> chained_controllers_configuration_;
-  mutable std::mutex mutex_;
 
   std::unique_ptr<hardware_interface::ResourceManager> resource_manager_;
 
 private:
   std::vector<std::string> get_controller_names();
+  std::mutex mutex_;
+
 
   /**
    * Clear request lists used when switching controllers. The lists are shared between "callback" and
@@ -403,6 +404,7 @@ private:
     int updated_controllers_index_ = 0;
     /// The index of the controllers list being used in the real-time thread.
     int used_by_realtime_controllers_index_ = -1;
+    
   };
 
   RTControllerListWrapper rt_controllers_wrapper_;
@@ -452,14 +454,15 @@ private:
   class ControllerThreadWrapper // created this class so we can keep track of the time and period.
   {
   public:
-    explicit ControllerThreadWrapper( 
-       const rclcpp::Time & time, 
-       const rclcpp::Duration & period
+      ControllerThreadWrapper( 
+        controller_interface::ControllerInterfaceBase* controller,
+        std::mutex& mutex_
       )
-      : time_(time)
-      , period_(period)
+      : controller_(controller)
       , m_thread_{}
+      , mutex_ref_(mutex_)
     {
+
     }
     ControllerThreadWrapper(const ControllerThreadWrapper& t) = delete;
     ControllerThreadWrapper(ControllerThreadWrapper&& t) = default;
@@ -470,41 +473,54 @@ private:
       } 
     }
     
-    template< class... Args>
-    void start(Args&&... args)
+    void start()
     {
-      m_thread_ = std::thread(std::forward<Args>(args)...);
+      m_thread_ = std::thread(&ControllerThreadWrapper::call_controller_update, this);
     }
 
-    void set_time_and_period(
-      const rclcpp::Time & time, 
-      const rclcpp::Duration & period) 
-    { 
-      time_ = time; 
-      period_ = period; 
-    }
-    
-    
-    rclcpp::Time get_time() const
-    { 
-      return time_; 
-    }
-    rclcpp::Duration get_period() const
-    { 
-      return period_; 
+    void call_controller_update() 
+    {
+
+      rclcpp::Time previous_time = controller_->get_node()->now();
+      
+      while (!terminated_)
+      {
+
+        if (mutex_ref_.try_lock()) //&& controller_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)  doesn't work
+        { 
+          std::lock_guard<std::mutex> lock(mutex_ref_, std::adopt_lock);
+          auto const current_time = controller_->get_node()->now();
+          auto const measured_period = current_time - previous_time;
+          previous_time = current_time;
+        
+          controller_->update(
+          controller_->get_node()->now(), (controller_->get_update_rate() !=  100 /* update_rate_  */ && controller_->get_update_rate() != 0)
+                  ? rclcpp::Duration::from_seconds(1.0 / controller_->get_update_rate())
+                  : measured_period);
+                
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      }
+      
     }
 
-    const char* k = "asdf";
-    // do we really need all these getters?
+    std::shared_ptr<controller_interface::ControllerInterfaceBase> get_controller()
+    {
+      return controller_;
+    }
+
+      std::atomic<bool> terminated_ = false;
     private:
-      rclcpp::Time time_;
-      rclcpp::Duration period_;
+      std::shared_ptr<controller_interface::ControllerInterfaceBase> controller_;
       std::thread m_thread_;
+      std::mutex& mutex_ref_;
+
+
+
   };
 
-  std::atomic<bool> terminated_ = false; // shouldn't be here, but it will do for now
 
-  std::unordered_map<std::string, ControllerThreadWrapper> async_controller_threads_;
+  std::unordered_map<std::string, std::unique_ptr<ControllerThreadWrapper>> async_controller_threads_;
 
   
 };
