@@ -718,7 +718,7 @@ TEST_P(
   // --> return error (If STRICT); Preceding controller is still inactive.
 
   // There is different error and timeout behavior depending on strictness
-  const auto getExpectedBehaviorVals = [&]
+  auto const getExpectedBehaviorVals = [&]
   {
     if (
       test_param.strictness ==
@@ -741,7 +741,7 @@ TEST_P(
       std::runtime_error("test_param was not defined!");
     }
   };
-  auto expected = getExpectedBehaviorVals();
+  auto const expected = getExpectedBehaviorVals();
 
   // Attempt to activate preceding controller (diff-drive controller) with no check
   ActivateController(DIFF_DRIVE_CONTROLLER, std::get<0>(expected), std::future_status::ready);
@@ -878,7 +878,7 @@ TEST_P(
 
   // Test Case 5: Deactivating a preceding controller that is not active --> return error; all controller stay in the same state
   // There is different error and timeout behavior depending on strictness
-  const auto getExpectedBehaviorVals = [&]
+  auto const getExpectedBehaviorVals = [&]
   {
     if (
       test_param.strictness ==
@@ -897,7 +897,7 @@ TEST_P(
       std::runtime_error("test_param was not defined!");
     }
   };
-  auto expected = getExpectedBehaviorVals();
+  auto const expected = getExpectedBehaviorVals();
 
   // Verify preceding controller (diff_drive_controller) is inactive
   EXPECT_EQ(
