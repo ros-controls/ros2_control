@@ -17,7 +17,8 @@
 #include <memory>
 #include <string>
 
-#include "lifecycle_msgs/msg/transition.hpp"
+#include "lifecycle_msgs/msg/state.hpp"
+#include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 
 namespace test_controller
 {
@@ -25,6 +26,36 @@ TestController::TestController()
 : controller_interface::ControllerInterface(),
   cmd_iface_cfg_{controller_interface::interface_configuration_type::NONE}
 {
+}
+
+controller_interface::InterfaceConfiguration TestController::command_interface_configuration() const
+{
+  if (
+    lifecycle_state_.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
+    lifecycle_state_.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+  {
+    return cmd_iface_cfg_;
+  }
+  else
+  {
+    throw std::runtime_error(
+      "Can not get command interface configuration until the controller is configured.");
+  }
+}
+
+controller_interface::InterfaceConfiguration TestController::state_interface_configuration() const
+{
+  if (
+    lifecycle_state_.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
+    lifecycle_state_.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+  {
+    return state_iface_cfg_;
+  }
+  else
+  {
+    throw std::runtime_error(
+      "Can not get state interface configuration until the controller is configured.");
+  }
 }
 
 controller_interface::return_type TestController::update(

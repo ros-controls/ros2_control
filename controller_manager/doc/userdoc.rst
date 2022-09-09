@@ -5,6 +5,14 @@ Controller Manager
 Controller Manager is the main component in the ros2_control framework.
 It manages lifecycle of controllers, access to the hardware interfaces and offers services to the ROS-world.
 
+Determinism
+-----------
+
+For best performance when controlling hardware you want the controller manager to have as little jitter as possible in the main control loop.
+The normal linux kernel is optimized for computational throughput and therefore is not well suited for hardware control.
+The main thread of Controller Manager attempts to configure ``SCHED_FIFO`` with a priority of ``50``.
+To enable this functionality install a RT kernel and run the Controller Manager with permissions to make syscalls to set its thread priorities.
+The two easiest options for this are using the [Real-time Ubuntu 22.04 LTS Beta](https://ubuntu.com/blog/real-time-ubuntu-released) or [linux-image-rt-amd64](https://packages.debian.org/bullseye/linux-image-rt-amd64) on Debian Bullseye.
 
 Helper scripts
 --------------

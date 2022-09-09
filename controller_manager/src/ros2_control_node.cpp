@@ -19,9 +19,19 @@
 #include <thread>
 
 #include "controller_manager/controller_manager.hpp"
+#include "controller_manager/realtime.hpp"
 #include "rclcpp/rclcpp.hpp"
 
 using namespace std::chrono_literals;
+
+namespace
+{
+// Reference: https://man7.org/linux/man-pages/man2/sched_setparam.2.html
+// This value is used when configuring the main loop to use SCHED_FIFO scheduling
+// We use a midpoint RT priority to allow maximum flexibility to users
+int const kSchedPriority = 50;
+
+}  // namespace
 
 int main(int argc, char ** argv)
 {
@@ -33,32 +43,44 @@ int main(int argc, char ** argv)
 
   auto cm = std::make_shared<controller_manager::ControllerManager>(executor, manager_node_name);
 
-  // TODO(anyone): Due to issues with the MutliThreadedExecutor, this control loop does not rely on
-  // the executor (see issue #260).
-  // When the MutliThreadedExecutor issues are fixed (ros2/rclcpp#1168), this loop should be
-  // converted back to a timer.
+  RCLCPP_INFO(cm->get_logger(), "update rate is %d Hz", cm->get_update_rate());
+
   std::thread cm_thread([cm]() {
-    RCLCPP_INFO(cm->get_logger(), "update rate is %d Hz", cm->get_update_rate());
+    if (controller_manager::has_realtime_kernel())
+    {
+      if (!controller_manager::configure_sched_fifo(kSchedPriority))
+      {
+        RCLCPP_WARN(cm->get_logger(), "Could not enable FIFO RT scheduling policy");
+      }
+    }
+    else
+    {
+      RCLCPP_INFO(cm->get_logger(), "RT kernel is recommended for better performance");
+    }
 
-    rclcpp::Time current_time = cm->now();
-    rclcpp::Time previous_time = current_time;
-    rclcpp::Time end_period = current_time;
+    // for calculating sleep time
+    auto const period = std::chrono::nanoseconds(1'000'000'000 / cm->get_update_rate());
+    std::chrono::system_clock::time_point next_iteration_time =
+      std::chrono::system_clock::time_point(std::chrono::nanoseconds(cm->now().nanoseconds()));
 
-    // Use nanoseconds to avoid chrono's rounding
-    rclcpp::Duration period(std::chrono::nanoseconds(1000000000 / cm->get_update_rate()));
+    // for calculating the measured period of the loop
+    rclcpp::Time previous_time = cm->now();
 
     while (rclcpp::ok())
     {
-      // wait until we hit the end of the period
-      end_period += period;
-      std::this_thread::sleep_for(std::chrono::nanoseconds((end_period - cm->now()).nanoseconds()));
-
-      // execute "real-time" update loop
-      cm->read();
-      current_time = cm->now();
-      cm->update(current_time, current_time - previous_time);
+      // calculate measured period
+      auto const current_time = cm->now();
+      auto const measured_period = current_time - previous_time;
       previous_time = current_time;
+
+      // execute update loop
+      cm->read();
+      cm->update(cm->now(), measured_period);
       cm->write();
+
+      // wait until we hit the end of the period
+      next_iteration_time += period;
+      std::this_thread::sleep_until(next_iteration_time);
     }
   });
 
