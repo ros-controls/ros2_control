@@ -126,6 +126,9 @@ def main(args=None):
         '-c', '--controller-manager', help='Name of the controller manager ROS node',
         default='/controller_manager', required=False)
     parser.add_argument(
+        '--common-namespace', help='Search for a controller manager in the same namespace as this node',
+        action='store_true', required=False)
+    parser.add_argument(
         '-p', '--param-file',
         help='Controller param file to be loaded into controller node before configure',
         required=False)
@@ -159,6 +162,12 @@ def main(args=None):
         raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), param_file)
 
     node = Node('spawner_' + controller_name)
+
+    if args.common_namespace:
+        spawner_namespace = node.get_namespace()
+        if spawner_namespace != '/':
+            controller_manager_name = spawner_namespace + controller_manager_name
+
     try:
         if not wait_for_controller_manager(node, controller_manager_name,
                                            controller_manager_timeout):
