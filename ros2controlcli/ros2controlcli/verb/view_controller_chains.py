@@ -21,7 +21,8 @@ from ros2cli.verb import VerbExtension
 
 from ros2controlcli.api import add_controller_mgr_parsers
 
-import graphviz
+import pygraphviz as pgz
+# from PIL import Image
 
 
 def make_controller_node(s, controller_name, state_interfaces, command_interfaces, input_controllers,
@@ -58,7 +59,7 @@ def make_controller_node(s, controller_name, state_interfaces, command_interface
             deliminator = ''
         outputs_str += '<{}> {} {} '.format("controller_start_" + output_controller, output_controller, deliminator)
 
-    s.node(controller_name, f'{controller_name}|{{{{{inputs_str}}}|{{{outputs_str}}}}}')
+    s.add_node(controller_name, label=f'{controller_name}|{{{{{inputs_str}}}|{{{outputs_str}}}}}')
 
 
 def make_command_node(s, command_interfaces):
@@ -70,7 +71,7 @@ def make_command_node(s, command_interfaces):
             deliminator = ''
         outputs_str += '<{}> {} {} '.format("command_end_" + command_interface, command_interface, deliminator)
 
-    s.node("command_interfaces", '{}|{{{{{}}}}}'.format("command_interfaces", outputs_str))
+    s.add_node("command_interfaces", label='{}|{{{{{}}}}}'.format("command_interfaces", outputs_str))
 
 
 def make_state_node(s, state_interfaces):
@@ -82,12 +83,14 @@ def make_state_node(s, state_interfaces):
             deliminator = ''
         inputs_str += '<{}> {} {} '.format("state_start_" + state_interface, state_interface, deliminator)
 
-    s.node("state_interfaces", '{}|{{{{{}}}}}'.format("state_interfaces", inputs_str))
+    s.add_node("state_interfaces", label='{}|{{{{{}}}}}'.format("state_interfaces", inputs_str))
 
 
 def show_graph(input_chain_connections, output_chain_connections, command_connections, state_connections,
                command_interfaces, state_interfaces, visualize):
-    s = graphviz.Digraph('g', filename='/tmp/controller_diagram.gv', node_attr={'shape': 'record', 'style': 'rounded'})
+    s = pgz.AGraph(name='g', filename='/tmp/controller_diagram.gv', strict=False, directed=True, rankdir='LR')
+    s.node_attr["shape"] = "record"
+    s.node_attr["style"] = "rounded"
     port_map = dict()
     # get all controller names
     controller_names = set()
@@ -107,19 +110,22 @@ def show_graph(input_chain_connections, output_chain_connections, command_connec
 
     for controller_name in controller_names:
         for connection in output_chain_connections[controller_name]:
-            s.edge('{}:{}'.format(controller_name, "controller_start_" + connection),
+            s.add_edge('{}:{}'.format(controller_name, "controller_start_" + connection),
                    '{}:{}'.format(port_map['controller_end_' + connection], 'controller_end_' + connection))
         for state_connection in state_connections[controller_name]:
-            s.edge('{}:{}'.format("state_interfaces", "state_start_" + state_connection),
+            s.add_edge('{}:{}'.format("state_interfaces", "state_start_" + state_connection),
                    '{}:{}'.format(controller_name, 'state_end_' + state_connection))
         for command_connection in command_connections[controller_name]:
-            s.edge('{}:{}'.format(controller_name, "command_start_" + command_connection),
+            s.add_edge('{}:{}'.format(controller_name, "command_start_" + command_connection),
                    '{}:{}'.format("command_interfaces", 'command_end_' + command_connection))
 
-    s.attr(ranksep='2')
-    s.attr(rankdir="LR")
+    s.graph_attr.update(ranksep='2')
+    s.layout(prog='dot')
     if visualize:
-        s.view()
+        s.draw('g.pdf', format='pdf')
+        # s.draw('g.png')
+        # img = Image.open('g.png')
+        # img.show()
 
 
 def parse_response(list_controllers_response, list_hardware_response, visualize=True):
