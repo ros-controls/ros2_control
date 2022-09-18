@@ -373,7 +373,8 @@ def _filter_by_attr(list_in, attr_name, attr_val, match_substring=False):
 #
 ###############################################################################
 
-# def get_rosparam_controller_names(namespace='/'):
+def get_rosparam_controller_names(namespace='/'):
+    pass
 #     """
 #     Get list of ROS parameter names that potentially represent a controller
 #     configuration.

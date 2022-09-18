@@ -26,9 +26,8 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import os
-import rospkg
-import rospy
 
+from ament_index_python.packages import get_package_share_directory
 from python_qt_binding import loadUi
 from python_qt_binding.QtCore import QAbstractTableModel, QModelIndex, Qt,\
                                      QTimer, QVariant, Signal
@@ -40,7 +39,7 @@ from qt_gui.plugin import Plugin
 
 from controller_manager_msgs.msg import ControllerState
 from controller_manager_msgs.srv import *
-from controller_manager_msgs.utils\
+from controller_manager_utils.utils\
     import ControllerLister, ControllerManagerLister,\
     get_rosparam_controller_names
 
@@ -60,18 +59,19 @@ class ControllerManager(Plugin):
         # Create QWidget and extend it with all the attributes and children
         # from the UI file
         self._widget = QWidget()
-        rp = rospkg.RosPack()
-        ui_file = os.path.join(rp.get_path('rqt_controller_manager'),
-                               'resource',
-                               'controller_manager.ui')
+        ui_file = os.path.join(
+            get_package_share_directory("rqt_controller_manager"),
+            "resource",
+            "controller_manager.ui")
         loadUi(ui_file, self._widget)
         self._widget.setObjectName('ControllerManagerUi')
 
         # Pop-up that displays controller information
         self._popup_widget = QWidget()
-        ui_file = os.path.join(rp.get_path('rqt_controller_manager'),
-                               'resource',
-                               'controller_info.ui')
+        ui_file = os.path.join(
+            get_package_share_directory("rqt_controller_manager"),
+            'resource',
+            'controller_info.ui')
         loadUi(ui_file, self._popup_widget)
         self._popup_widget.setObjectName('ControllerInfoUi')
 
@@ -97,9 +97,11 @@ class ControllerManager(Plugin):
         self._unload_srv = None
         self._switch_srv = None
 
+        # Store reference to node
+        self._node = context.node
+
         # Controller state icons
-        rospack = rospkg.RosPack()
-        path = rospack.get_path('rqt_controller_manager')
+        path = get_package_share_directory("rqt_controller_manager")
         self._icons = {'running': QIcon(path + '/resource/led_green.png'),
                        'stopped': QIcon(path + '/resource/led_red.png'),
                        'uninitialized': QIcon(path + '/resource/led_off.png'),
@@ -119,16 +121,16 @@ class ControllerManager(Plugin):
 
         # Timer for controller manager updates
         self._list_cm = ControllerManagerLister()
+        # self._list_cm = list_controllers(context.node, parsed_args.controller_manager).controller
+        # self._list_cm = list_controllers(context.node, '/controller_manager').controller
         self._update_cm_list_timer = QTimer(self)
-        self._update_cm_list_timer.setInterval(1000.0 /
-                                               self._cm_update_freq)
+        self._update_cm_list_timer.setInterval(int(1000.0 / self._cm_update_freq))
         self._update_cm_list_timer.timeout.connect(self._update_cm_list)
         self._update_cm_list_timer.start()
 
         # Timer for running controller updates
         self._update_ctrl_list_timer = QTimer(self)
-        self._update_ctrl_list_timer.setInterval(1000.0 /
-                                                 self._cm_update_freq)
+        self._update_ctrl_list_timer.setInterval(int(1000.0 / self._cm_update_freq))
         self._update_ctrl_list_timer.timeout.connect(self._update_controllers)
         self._update_ctrl_list_timer.start()
 
@@ -184,17 +186,17 @@ class ControllerManager(Plugin):
             # If the controller manager dies, we detect it and disconnect from
             # it anyway
             load_srv_name = _append_ns(cm_ns, 'load_controller')
-            self._load_srv = rospy.ServiceProxy(load_srv_name,
-                                                LoadController,
-                                                persistent=True)
+            self._load_srv = self._node.create_client(LoadController,
+                                                      load_srv_name)
+                                                      # persistent=True)
             unload_srv_name = _append_ns(cm_ns, 'unload_controller')
-            self._unload_srv = rospy.ServiceProxy(unload_srv_name,
-                                                  UnloadController,
-                                                  persistent=True)
+            self._unload_srv = self._node.create_client(UnloadController,
+                                                        unload_srv_name)
+                                                        # persistent=True)
             switch_srv_name = _append_ns(cm_ns, 'switch_controller')
-            self._switch_srv = rospy.ServiceProxy(switch_srv_name,
-                                                  SwitchController,
-                                                  persistent=True)
+            self._switch_srv = self._node.create_client(SwitchController,
+                                                        switch_srv_name)
+                                                        # persistent=True)
         else:
             self._load_srv = None
             self._unload_srv = None
