@@ -38,10 +38,11 @@ from python_qt_binding.QtGui import QCursor, QFont, QIcon, QStandardItem,\
 from qt_gui.plugin import Plugin
 
 from controller_manager_msgs.msg import ControllerState
-from controller_manager_msgs.srv import *
+from controller_manager_msgs.srv import LoadController, SwitchController, UnloadController
 from controller_manager_utils.utils\
     import ControllerLister, ControllerManagerLister,\
     get_rosparam_controller_names
+from controller_manager.controller_manager_services import list_controllers
 
 from .update_combo import update_combo
 
@@ -102,10 +103,10 @@ class ControllerManager(Plugin):
 
         # Controller state icons
         path = get_package_share_directory("rqt_controller_manager")
-        self._icons = {'running': QIcon(path + '/resource/led_green.png'),
-                       'stopped': QIcon(path + '/resource/led_red.png'),
-                       'uninitialized': QIcon(path + '/resource/led_off.png'),
-                       'initialized': QIcon(path + '/resource/led_red.png')}
+        self._icons = {'active': QIcon(path + '/resource/led_green.png'),
+                       'finalized': QIcon(path + '/resource/led_red.png'),
+                       'unconfigured': QIcon(path + '/resource/led_off.png'),
+                       'inactive': QIcon(path + '/resource/led_red.png')}
 
         # Controllers display
         table_view = self._widget.table_view
@@ -188,15 +189,12 @@ class ControllerManager(Plugin):
             load_srv_name = _append_ns(cm_ns, 'load_controller')
             self._load_srv = self._node.create_client(LoadController,
                                                       load_srv_name)
-                                                      # persistent=True)
             unload_srv_name = _append_ns(cm_ns, 'unload_controller')
             self._unload_srv = self._node.create_client(UnloadController,
                                                         unload_srv_name)
-                                                        # persistent=True)
             switch_srv_name = _append_ns(cm_ns, 'switch_controller')
             self._switch_srv = self._node.create_client(SwitchController,
                                                         switch_srv_name)
-                                                        # persistent=True)
         else:
             self._load_srv = None
             self._unload_srv = None
@@ -204,38 +202,41 @@ class ControllerManager(Plugin):
 
     def _update_controllers(self):
         # Find controllers associated to the selected controller manager
-        controllers = self._list_controllers()
+        controllers = list_controllers(self._node, self._cm_ns).controller
+
+        if not controllers:
+            return
 
         # Update controller display, if necessary
         if self._controllers != controllers:
             self._controllers = controllers
             self._show_controllers()  # NOTE: Model is recomputed from scratch
 
-    def _list_controllers(self):
-        """
-        @return List of controllers associated to a controller manager
-        namespace. Contains both stopped/running controllers, as returned by
-        the C{list_controllers} service, plus uninitialized controllers with
-        configurations loaded in the parameter server.
-        @rtype [str]
-        """
-        if not self._cm_ns:
-            return []
+    # def _list_controllers(self):
+    #     """
+    #     @return List of controllers associated to a controller manager
+    #     namespace. Contains both stopped/running controllers, as returned by
+    #     the C{list_controllers} service, plus uninitialized controllers with
+    #     configurations loaded in the parameter server.
+    #     @rtype [str]
+    #     """
+    #     if not self._cm_ns:
+    #         return []
 
-        # Add loaded controllers first
-        controllers = self._controller_lister()
+    #     # Add loaded controllers first
+    #     controllers = self._controller_lister()
 
-        # Append potential controller configs found in the parameter server
-        all_ctrls_ns = _resolve_controllers_ns(self._cm_ns)
-        for name in get_rosparam_controller_names(all_ctrls_ns):
-            add_ctrl = not any(name == ctrl.name for ctrl in controllers)
-            if add_ctrl:
-                type_str = _rosparam_controller_type(all_ctrls_ns, name)
-                uninit_ctrl = ControllerState(name=name,
-                                              type=type_str,
-                                              state='uninitialized')
-                controllers.append(uninit_ctrl)
-        return controllers
+    #     # Append potential controller configs found in the parameter server
+    #     all_ctrls_ns = _resolve_controllers_ns(self._cm_ns)
+    #     for name in get_rosparam_controller_names(all_ctrls_ns):
+    #         add_ctrl = not any(name == ctrl.name for ctrl in controllers)
+    #         if add_ctrl:
+    #             type_str = _rosparam_controller_type(all_ctrls_ns, name)
+    #             uninit_ctrl = ControllerState(name=name,
+    #                                           type=type_str,
+    #                                           state='uninitialized')
+    #             controllers.append(uninit_ctrl)
+    #     return controllers
 
     def _show_controllers(self):
         table_view = self._widget.table_view
@@ -252,39 +253,39 @@ class ControllerManager(Plugin):
 
         # Show context menu
         menu = QMenu(self._widget.table_view)
-        if ctrl.state == 'running':
-            action_stop = menu.addAction(self._icons['stopped'], 'Stop')
-            action_kill = menu.addAction(self._icons['uninitialized'],
+        if ctrl.state == 'active':
+            action_stop = menu.addAction(self._icons['finalized'], 'Stop')
+            action_kill = menu.addAction(self._icons['unconfigured'],
                                          'Stop and Unload')
-        elif ctrl.state == 'stopped':
-            action_start = menu.addAction(self._icons['running'],
+        elif ctrl.state == 'finalized':
+            action_start = menu.addAction(self._icons['active'],
                                           'Start again')
-            action_unload = menu.addAction(self._icons['uninitialized'],
+            action_unload = menu.addAction(self._icons['unconfigured'],
                                            'Unload')
-        elif ctrl.state == 'initialized':
-            action_start = menu.addAction(self._icons['running'], 'Start')
-            action_unload = menu.addAction(self._icons['uninitialized'],
+        elif ctrl.state == 'inactive':
+            action_start = menu.addAction(self._icons['active'], 'Start')
+            action_unload = menu.addAction(self._icons['unconfigured'],
                                            'Unload')
-        elif ctrl.state == 'uninitialized':
-            action_load = menu.addAction(self._icons['stopped'], 'Load')
-            action_spawn = menu.addAction(self._icons['running'],
+        elif ctrl.state == 'unconfigured':
+            action_load = menu.addAction(self._icons['finalized'], 'Load')
+            action_spawn = menu.addAction(self._icons['active'],
                                           'Load and Start')
 
         action = menu.exec_(self._widget.table_view.mapToGlobal(pos))
 
         # Evaluate user action
-        if ctrl.state == 'running':
+        if ctrl.state == 'active':
             if action is action_stop:
                 self._stop_controller(ctrl.name)
             elif action is action_kill:
                 self._stop_controller(ctrl.name)
                 self._unload_controller(ctrl.name)
-        elif ctrl.state == 'stopped' or ctrl.state == 'initialized':
+        elif ctrl.state == 'finalized' or ctrl.state == 'inactive':
             if action is action_start:
                 self._start_controller(ctrl.name)
             elif action is action_unload:
                 self._unload_controller(ctrl.name)
-        elif ctrl.state == 'uninitialized':
+        elif ctrl.state == 'unconfigured':
             if action is action_load:
                 self._load_controller(ctrl.name)
             if action is action_spawn:
@@ -301,12 +302,12 @@ class ControllerManager(Plugin):
         res_model = QStandardItemModel()
         model_root = QStandardItem('Claimed Resources')
         res_model.appendRow(model_root)
-        for hw_res in ctrl.claimed_resources:
-            hw_iface_item = QStandardItem(hw_res.hardware_interface)
+        for claimed_interface in ctrl.claimed_interfaces:
+            hw_iface_item = QStandardItem(claimed_interface)
             model_root.appendRow(hw_iface_item)
-            for res in hw_res.resources:
-                res_item = QStandardItem(res)
-                hw_iface_item.appendRow(res_item)
+            # for res in claimed_interface.resources:
+            #     res_item = QStandardItem(res)
+            #     hw_iface_item.appendRow(res_item)
 
         popup.resource_tree.setModel(res_model)
         popup.resource_tree.setItemDelegate(FontDelegate(popup.resource_tree))
@@ -330,24 +331,24 @@ class ControllerManager(Plugin):
                 header.setSectionResizeMode(QHeaderView.ResizeToContents)
 
     def _load_controller(self, name):
-        self._load_srv.call(LoadControllerRequest(name=name))
+        self._load_srv.call_async(LoadController.Request(name=name))
 
     def _unload_controller(self, name):
-        self._unload_srv.call(UnloadControllerRequest(name=name))
+        self._unload_srv.call_async(UnloadController.Request(name=name))
 
     def _start_controller(self, name):
-        strict = SwitchControllerRequest.STRICT
-        req = SwitchControllerRequest(start_controllers=[name],
-                                      stop_controllers=[],
-                                      strictness=strict)
-        self._switch_srv.call(req)
+        strict = SwitchController.Request.STRICT
+        req = SwitchController.Request(activate_controllers=[name],
+                                       deactivate_controllers=[],
+                                       strictness=strict)
+        self._switch_srv.call_async(req)
 
     def _stop_controller(self, name):
-        strict = SwitchControllerRequest.STRICT
-        req = SwitchControllerRequest(start_controllers=[],
-                                      stop_controllers=[name],
-                                      strictness=strict)
-        self._switch_srv.call(req)
+        strict = SwitchController.Request.STRICT
+        req = SwitchController.Request(activate_controllers=[],
+                                       deactivate_controllers=[name],
+                                       strictness=strict)
+        self._switch_srv.call_async(req)
 
 
 class ControllerTable(QAbstractTableModel):
