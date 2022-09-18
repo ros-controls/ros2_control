@@ -88,7 +88,7 @@ def make_state_node(s, state_interfaces):
 
 def show_graph(input_chain_connections, output_chain_connections, command_connections, state_connections,
                command_interfaces, state_interfaces, visualize):
-    s = pgz.AGraph(name='g', filename='/tmp/controller_diagram.gv', strict=False, directed=True, rankdir='LR')
+    s = pgz.AGraph(name='g', strict=False, directed=True, rankdir='LR')
     s.node_attr["shape"] = "record"
     s.node_attr["style"] = "rounded"
     port_map = dict()
@@ -121,11 +121,12 @@ def show_graph(input_chain_connections, output_chain_connections, command_connec
 
     s.graph_attr.update(ranksep='2')
     s.layout(prog='dot')
+    s.draw('/tmp/controller_diagram.gv.pdf', format='pdf')
     if visualize:
-        s.draw('g.pdf', format='pdf')
         # s.draw('g.png')
         # img = Image.open('g.png')
         # img.show()
+        pass
 
 
 def parse_response(list_controllers_response, list_hardware_response, visualize=True):
