@@ -45,6 +45,7 @@ from controller_manager_utils.utils\
 from controller_manager.controller_manager_services import list_controllers
 
 from .update_combo import update_combo
+from ros2param.api import call_get_parameters
 
 
 class ControllerManager(Plugin):
@@ -206,38 +207,39 @@ class ControllerManager(Plugin):
             return
 
         # Find controllers associated to the selected controller manager
-        controllers = list_controllers(self._node, self._cm_ns).controller
+        controllers = self._list_controllers()
 
         # Update controller display, if necessary
         if self._controllers != controllers:
             self._controllers = controllers
             self._show_controllers()  # NOTE: Model is recomputed from scratch
 
-    # def _list_controllers(self):
-    #     """
-    #     @return List of controllers associated to a controller manager
-    #     namespace. Contains both stopped/running controllers, as returned by
-    #     the C{list_controllers} service, plus uninitialized controllers with
-    #     configurations loaded in the parameter server.
-    #     @rtype [str]
-    #     """
-    #     if not self._cm_ns:
-    #         return []
+    def _list_controllers(self):
+        """
+        @return List of controllers associated to a controller manager
+        namespace. Contains both stopped/running controllers, as returned by
+        the C{list_controllers} service, plus uninitialized controllers with
+        configurations loaded in the parameter server.
+        @rtype [str]
+        """
+        if not self._cm_ns:
+            return []
 
-    #     # Add loaded controllers first
-    #     controllers = self._controller_lister()
+        # Add loaded controllers first
+        controllers = self._controller_lister()
+        controllers = list_controllers(self._node, self._cm_ns).controller
 
-    #     # Append potential controller configs found in the parameter server
-    #     all_ctrls_ns = _resolve_controllers_ns(self._cm_ns)
-    #     for name in get_rosparam_controller_names(all_ctrls_ns):
-    #         add_ctrl = not any(name == ctrl.name for ctrl in controllers)
-    #         if add_ctrl:
-    #             type_str = _rosparam_controller_type(all_ctrls_ns, name)
-    #             uninit_ctrl = ControllerState(name=name,
-    #                                           type=type_str,
-    #                                           state='uninitialized')
-    #             controllers.append(uninit_ctrl)
-    #     return controllers
+        # Append potential controller configs found in the parameter server
+        # all_ctrls_ns = _resolve_controllers_ns(self._cm_ns)
+        for name in get_rosparam_controller_names(self._node, self._cm_ns):
+            add_ctrl = not any(name == ctrl.name for ctrl in controllers)
+            if add_ctrl:
+                type_str = _rosparam_controller_type(self._node, self._cm_ns, name)
+                uninit_ctrl = ControllerState(name=name,
+                                              type=type_str,
+                                              state='unconfigured')
+                controllers.append(uninit_ctrl)
+        return controllers
 
     def _show_controllers(self):
         table_view = self._widget.table_view
@@ -460,7 +462,7 @@ def _append_ns(in_ns, suffix):
     return ns
 
 
-def _rosparam_controller_type(ctrls_ns, ctrl_name):
+def _rosparam_controller_type(node, ctrls_ns, ctrl_name):
     """
     Get a controller's type from its ROS parameter server configuration
     @param ctrls_ns Namespace where controllers should be located
@@ -470,5 +472,8 @@ def _rosparam_controller_type(ctrls_ns, ctrl_name):
     @return Controller type
     @rtype str
     """
-    type_param = _append_ns(ctrls_ns, ctrl_name) + '/type'
-    return rospy.get_param(type_param)
+    response = call_get_parameters(node=node, node_name=ctrls_ns, parameter_names=[ctrl_name])
+    if not response.values:
+        return ''
+    else:
+        return response.values[0].string_value
