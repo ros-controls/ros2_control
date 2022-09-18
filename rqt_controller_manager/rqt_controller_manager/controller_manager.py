@@ -104,9 +104,9 @@ class ControllerManager(Plugin):
         # Controller state icons
         path = get_package_share_directory("rqt_controller_manager")
         self._icons = {'active': QIcon(path + '/resource/led_green.png'),
-                       'finalized': QIcon(path + '/resource/led_red.png'),
-                       'unconfigured': QIcon(path + '/resource/led_off.png'),
-                       'inactive': QIcon(path + '/resource/led_red.png')}
+                       'finalized': QIcon(path + '/resource/led_off.png'),
+                       'inactive': QIcon(path + '/resource/led_red.png'),
+                       'unconfigured': QIcon(path + '/resource/led_off.png')}
 
         # Controllers display
         table_view = self._widget.table_view
@@ -201,11 +201,12 @@ class ControllerManager(Plugin):
             self._switch_srv = None
 
     def _update_controllers(self):
+
+        if not self._cm_ns:
+            return
+
         # Find controllers associated to the selected controller manager
         controllers = list_controllers(self._node, self._cm_ns).controller
-
-        if not controllers:
-            return
 
         # Update controller display, if necessary
         if self._controllers != controllers:
@@ -254,22 +255,17 @@ class ControllerManager(Plugin):
         # Show context menu
         menu = QMenu(self._widget.table_view)
         if ctrl.state == 'active':
-            action_stop = menu.addAction(self._icons['finalized'], 'Stop')
-            action_kill = menu.addAction(self._icons['unconfigured'],
-                                         'Stop and Unload')
-        elif ctrl.state == 'finalized':
-            action_start = menu.addAction(self._icons['active'],
-                                          'Start again')
-            action_unload = menu.addAction(self._icons['unconfigured'],
-                                           'Unload')
+            action_stop = menu.addAction(self._icons['inactive'], 'Deactivate')
+            action_kill = menu.addAction(self._icons['finalized'],
+                                         'Deactivate and Unload')
         elif ctrl.state == 'inactive':
-            action_start = menu.addAction(self._icons['active'], 'Start')
+            action_start = menu.addAction(self._icons['active'], 'Activate')
             action_unload = menu.addAction(self._icons['unconfigured'],
                                            'Unload')
         elif ctrl.state == 'unconfigured':
-            action_load = menu.addAction(self._icons['finalized'], 'Load')
+            action_load = menu.addAction(self._icons['inactive'], 'Load')
             action_spawn = menu.addAction(self._icons['active'],
-                                          'Load and Start')
+                                          'Load and Activate')
 
         action = menu.exec_(self._widget.table_view.mapToGlobal(pos))
 
