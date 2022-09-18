@@ -22,7 +22,6 @@ from ros2cli.verb import VerbExtension
 from ros2controlcli.api import add_controller_mgr_parsers
 
 import pygraphviz as pgz
-# from PIL import Image
 
 
 def make_controller_node(s, controller_name, state_interfaces, command_interfaces, input_controllers,
@@ -121,12 +120,8 @@ def show_graph(input_chain_connections, output_chain_connections, command_connec
 
     s.graph_attr.update(ranksep='2')
     s.layout(prog='dot')
-    s.draw('/tmp/controller_diagram.gv.pdf', format='pdf')
     if visualize:
-        # s.draw('g.png')
-        # img = Image.open('g.png')
-        # img.show()
-        pass
+        s.draw('/tmp/controller_diagram.gv.pdf', format='pdf')
 
 
 def parse_response(list_controllers_response, list_hardware_response, visualize=True):
