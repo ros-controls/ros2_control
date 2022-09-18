@@ -4,7 +4,7 @@
   <name>rqt_controller_manager</name>
   <version>0.0.0</version>
   <description>Graphical frontend for interacting with the controller manager.</description>
-  <maintainer email="todo@todo.com">TODO</maintainer>
+  <maintainer email="kenjibrameld@gmail.com">ijnek</maintainer>
   <license>BSD</license>
 
   <url type="website">http://ros.org/wiki/rqt_controller_manager</url>
