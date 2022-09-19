@@ -2,6 +2,9 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 2.14.0 (2022-09-04)
 -------------------
 * Add doxygen comments (`#777 <https://github.com/ros-controls/ros2_control/issues/777>`_)
