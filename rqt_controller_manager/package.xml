@@ -5,7 +5,7 @@
   <version>0.0.0</version>
   <description>Graphical frontend for interacting with the controller manager.</description>
   <maintainer email="kenjibrameld@gmail.com">ijnek</maintainer>
-  <license>BSD</license>
+  <license>Apache License 2.0</license>
 
   <url type="website">http://ros.org/wiki/rqt_controller_manager</url>
   <url type="bugtracker">https://github.com/ros-controls/ros2_control/issues</url>
