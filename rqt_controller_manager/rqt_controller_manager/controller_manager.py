@@ -87,7 +87,7 @@ class ControllerManager(Plugin):
         context.add_widget(self._widget)
 
         # Initialize members
-        self._cm_name = []  # Name of the selected controller manager's node
+        self._cm_name = ''  # Name of the selected controller manager's node
         self._controllers = []  # State of each controller
         self._table_model = None
         self._controller_lister = None
@@ -191,9 +191,6 @@ class ControllerManager(Plugin):
         returned by the C{list_parameters} service..
         @rtype [str]
         """
-        if not self._cm_name:
-            return []
-
         # Add loaded controllers first
         controllers = self._controller_lister()
         controllers = list_controllers(self._node, self._cm_name).controller
