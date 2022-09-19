@@ -39,9 +39,8 @@ from qt_gui.plugin import Plugin
 
 from controller_manager_msgs.msg import ControllerState
 from controller_manager_msgs.srv import LoadController, SwitchController, UnloadController
-from controller_manager_utils.utils\
-    import ControllerLister, ControllerManagerLister,\
-    get_rosparam_controller_names
+from controller_manager_utils.utils import ControllerLister, ControllerManagerLister, \
+    get_parameter_controller_names
 from controller_manager.controller_manager_services import list_controllers
 
 from .update_combo import update_combo
@@ -123,8 +122,6 @@ class ControllerManager(Plugin):
 
         # Timer for controller manager updates
         self._list_cm = ControllerManagerLister()
-        # self._list_cm = list_controllers(context.node, parsed_args.controller_manager).controller
-        # self._list_cm = list_controllers(context.node, '/controller_manager').controller
         self._update_cm_list_timer = QTimer(self)
         self._update_cm_list_timer.setInterval(int(1000.0 / self._cm_update_freq))
         self._update_cm_list_timer.timeout.connect(self._update_cm_list)
@@ -217,9 +214,9 @@ class ControllerManager(Plugin):
     def _list_controllers(self):
         """
         @return List of controllers associated to a controller manager
-        namespace. Contains both stopped/running controllers, as returned by
+        node. Contains both stopped/running controllers, as returned by
         the C{list_controllers} service, plus uninitialized controllers with
-        configurations loaded in the parameter server.
+        returned by the C{list_parameters} service..
         @rtype [str]
         """
         if not self._cm_ns:
@@ -229,9 +226,8 @@ class ControllerManager(Plugin):
         controllers = self._controller_lister()
         controllers = list_controllers(self._node, self._cm_ns).controller
 
-        # Append potential controller configs found in the parameter server
-        # all_ctrls_ns = _resolve_controllers_ns(self._cm_ns)
-        for name in get_rosparam_controller_names(self._node, self._cm_ns):
+        # Append potential controller configs found in the node's parameters
+        for name in get_parameter_controller_names(self._node, self._cm_ns):
             add_ctrl = not any(name == ctrl.name for ctrl in controllers)
             if add_ctrl:
                 type_str = _rosparam_controller_type(self._node, self._cm_ns, name)

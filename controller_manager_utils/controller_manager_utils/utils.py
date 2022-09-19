@@ -374,43 +374,11 @@ def _filter_by_attr(list_in, attr_name, attr_val, match_substring=False):
 #
 ###############################################################################
 
-def get_rosparam_controller_names(node, namespace='/'):
-    # """
-    # Get list of ROS parameter names that potentially represent a controller
-    # configuration.
-
-    # Example usage:
-    #   - Assume the following parameters exist in the ROS parameter:
-    #     server:
-    #       - C{/foo/type}
-    #       - C{/xxx/type/xxx}
-    #       - C{/ns/bar/type}
-    #       - C{/ns/yyy/type/yyy}
-    #   - The potential controllers found by this method are:
-
-    #   >>> names    = get_rosparam_controller_names()      # returns ['foo']
-    #   >>> names_ns = get_rosparam_controller_names('/ns') # returns ['bar']
-
-    # @param namespace: Namespace where to look for controllers.
-    # @type namespace: str
-    # @return: Sorted list of ROS parameter names.
-    # @rtype: [str]
-    # """
-    # import rosparam
-    # list_out = []
-    # all_params = rosparam.list_params(namespace)
-    # for param in all_params:
-    #     # Remove namespace from parameter string
-    #     if not namespace or namespace[-1] != '/':
-    #         namespace += '/'
-    #     param_no_ns = param.split(namespace, 1)[1]
-
-    #     # Check if parameter corresponds to a controller configuration
-    #     param_split = param_no_ns.split('/')
-    #     if (len(param_split) == 2 and param_split[1] == 'type'):
-    #         list_out.append(param_split[0]) # It does!
-    # return sorted(list_out)
-
-    parameter_names = call_list_parameters(node=node, node_name=namespace)
+def get_parameter_controller_names(node, node_name):
+    """
+    Get list of ROS parameter names that potentially represent a controller
+    configuration.
+    """
+    parameter_names = call_list_parameters(node=node, node_name=node_name)
     suffix = '.type'
     return [n[: -len(suffix)] for n in parameter_names if n.endswith(suffix)]
