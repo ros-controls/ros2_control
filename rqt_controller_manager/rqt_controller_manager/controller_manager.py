@@ -36,11 +36,11 @@ from python_qt_binding.QtGui import QCursor, QFont, QIcon, QStandardItem, QStand
 from qt_gui.plugin import Plugin
 
 from controller_manager_msgs.msg import ControllerState
-from controller_manager_msgs.srv import ConfigureController, LoadController, SwitchController, \
-    UnloadController
+from controller_manager_msgs.srv import SwitchController
 from controller_manager_utils.utils import ControllerLister, ControllerManagerLister, \
     get_parameter_controller_names
-from controller_manager.controller_manager_services import list_controllers
+from controller_manager.controller_manager_services import configure_controller, \
+    list_controllers, load_controller, switch_controllers, unload_controller
 
 from .update_combo import update_combo
 from ros2param.api import call_get_parameters
@@ -91,12 +91,6 @@ class ControllerManager(Plugin):
         self._controllers = []  # State of each controller
         self._table_model = None
         self._controller_lister = None
-
-        # Controller manager service proxies
-        self._configure_srv = None
-        self._load_srv = None
-        self._unload_srv = None
-        self._switch_srv = None
 
         # Store reference to node
         self._node = context.node
@@ -169,30 +163,12 @@ class ControllerManager(Plugin):
     def _on_cm_change(self, cm_name):
         self._cm_name = cm_name
 
-        # Setup services for communicating with the selected controller manager
-        self._set_cm_services(cm_name)
-
         # Controller lister for the selected controller manager
         if cm_name:
             self._controller_lister = ControllerLister(cm_name)
             self._update_controllers()
         else:
             self._controller_lister = None
-
-    def _set_cm_services(self, cm_name):
-        if cm_name:
-            self._configure_srv = self._node.create_client(
-                ConfigureController, cm_name + '/configure_controller')
-            self._load_srv = self._node.create_client(
-                LoadController, cm_name + '/load_controller')
-            self._unload_srv = self._node.create_client(
-                UnloadController, cm_name + '/unload_controller')
-            self._switch_srv = self._node.create_client(
-                SwitchController, cm_name + '/switch_controller')
-        else:
-            self._load_srv = None
-            self._unload_srv = None
-            self._switch_srv = None
 
     def _update_controllers(self):
 
@@ -273,28 +249,28 @@ class ControllerManager(Plugin):
                 self._stop_controller(ctrl.name)
             elif action is action_kill:
                 self._stop_controller(ctrl.name)
-                self._unload_controller(ctrl.name)
+                unload_controller(self._node, self._cm_name, ctrl.name)
         elif ctrl.state == 'finalized' or ctrl.state == 'inactive':
             if action is action_activate:
                 self._activate_controller(ctrl.name)
             elif action is action_unload:
-                self._unload_controller(ctrl.name)
+                unload_controller(self._node, self._cm_name, ctrl.name)
         elif ctrl.state == 'unconfigured':
             if action is action_configure:
-                self._configure_controller(ctrl.name)
+                configure_controller(self._node, self._cm_name, ctrl.name)
             elif action is action_spawn:
-                self._load_controller(ctrl.name)
+                load_controller(self._node, self._cm_name, ctrl.name)
                 self._activate_controller(ctrl.name)
         else:
             # Assume controller isn't loaded
             if action is action_load:
-                self._load_controller(ctrl.name)
+                load_controller(self._node, self._cm_name, ctrl.name)
             elif action is action_configure:
-                self._load_controller(ctrl.name)
-                self._configure_controller(ctrl.name)
+                load_controller(self._node, self._cm_name, ctrl.name)
+                configure_controller(self._node, self._cm_name, ctrl.name)
             elif action is action_activate:
-                self._load_controller(ctrl.name)
-                self._configure_controller(ctrl.name)
+                load_controller(self._node, self._cm_name, ctrl.name)
+                configure_controller(self._node, self._cm_name, ctrl.name)
                 self._activate_controller(ctrl.name)
 
     def _on_ctrl_info(self, index):
@@ -335,28 +311,27 @@ class ControllerManager(Plugin):
             else:
                 header.setSectionResizeMode(QHeaderView.ResizeToContents)
 
-    def _configure_controller(self, name):
-        self._configure_srv.call_async(ConfigureController.Request(name=name))
-
-    def _load_controller(self, name):
-        self._load_srv.call_async(LoadController.Request(name=name))
-
-    def _unload_controller(self, name):
-        self._unload_srv.call_async(UnloadController.Request(name=name))
-
     def _activate_controller(self, name):
-        strict = SwitchController.Request.STRICT
-        req = SwitchController.Request(activate_controllers=[name],
-                                       deactivate_controllers=[],
-                                       strictness=strict)
-        self._switch_srv.call_async(req)
+        switch_controllers(
+            node=self._node,
+            controller_manager_name=self._cm_name,
+            deactivate_controllers=[],
+            activate_controllers=[name],
+            strict=SwitchController.Request.STRICT,
+            activate_asap=False,
+            timeout=0.3
+        )
 
     def _stop_controller(self, name):
-        strict = SwitchController.Request.STRICT
-        req = SwitchController.Request(activate_controllers=[],
-                                       deactivate_controllers=[name],
-                                       strictness=strict)
-        self._switch_srv.call_async(req)
+        switch_controllers(
+            node=self._node,
+            controller_manager_name=self._cm_name,
+            deactivate_controllers=[name],
+            activate_controllers=[],
+            strict=SwitchController.Request.STRICT,
+            activate_asap=False,
+            timeout=0.3
+        )
 
 
 class ControllerTable(QAbstractTableModel):
