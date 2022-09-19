@@ -38,7 +38,7 @@ from python_qt_binding.QtGui import QCursor, QFont, QIcon, QStandardItem,\
 from qt_gui.plugin import Plugin
 
 from controller_manager_msgs.msg import ControllerState
-from controller_manager_msgs.srv import LoadController, SwitchController, UnloadController
+from controller_manager_msgs.srv import ConfigureController, LoadController, SwitchController, UnloadController
 from controller_manager_utils.utils import ControllerLister, ControllerManagerLister, \
     get_parameter_controller_names
 from controller_manager.controller_manager_services import list_controllers
@@ -94,6 +94,7 @@ class ControllerManager(Plugin):
         self._controller_lister = None
 
         # Controller manager service proxies
+        self._configure_srv = None
         self._load_srv = None
         self._unload_srv = None
         self._switch_srv = None
@@ -181,6 +182,8 @@ class ControllerManager(Plugin):
 
     def _set_cm_services(self, cm_name):
         if cm_name:
+            self._configure_srv = self._node.create_client(
+                ConfigureController, cm_name + '/configure_controller')
             self._load_srv = self._node.create_client(
                 LoadController, cm_name + '/load_controller')
             self._unload_srv = self._node.create_client(
@@ -226,8 +229,7 @@ class ControllerManager(Plugin):
             if add_ctrl:
                 type_str = _get_controller_type(self._node, self._cm_name, name)
                 uninit_ctrl = ControllerState(name=name,
-                                              type=type_str,
-                                              state='unconfigured')
+                                              type=type_str)
                 controllers.append(uninit_ctrl)
         return controllers
 
@@ -251,13 +253,18 @@ class ControllerManager(Plugin):
             action_kill = menu.addAction(self._icons['finalized'],
                                          'Deactivate and Unload')
         elif ctrl.state == 'inactive':
-            action_start = menu.addAction(self._icons['active'], 'Activate')
+            action_activate = menu.addAction(self._icons['active'], 'Activate')
             action_unload = menu.addAction(self._icons['unconfigured'],
                                            'Unload')
         elif ctrl.state == 'unconfigured':
-            action_load = menu.addAction(self._icons['inactive'], 'Load')
+            action_configure = menu.addAction(self._icons['inactive'], 'Configure')
             action_spawn = menu.addAction(self._icons['active'],
-                                          'Load and Activate')
+                                          'Configure and Activate')
+        else:
+            # Controller isn't loaded
+            action_load = menu.addAction(self._icons['unconfigured'], 'Load')
+            action_configure = menu.addAction(self._icons['inactive'], 'Load and Configure')
+            action_activate = menu.addAction(self._icons['active'], 'Load, Configure and Activate')
 
         action = menu.exec_(self._widget.table_view.mapToGlobal(pos))
 
@@ -269,16 +276,27 @@ class ControllerManager(Plugin):
                 self._stop_controller(ctrl.name)
                 self._unload_controller(ctrl.name)
         elif ctrl.state == 'finalized' or ctrl.state == 'inactive':
-            if action is action_start:
-                self._start_controller(ctrl.name)
+            if action is action_activate:
+                self._activate_controller(ctrl.name)
             elif action is action_unload:
                 self._unload_controller(ctrl.name)
         elif ctrl.state == 'unconfigured':
+            if action is action_configure:
+                self._configure_controller(ctrl.name)
+            elif action is action_spawn:
+                self._load_controller(ctrl.name)
+                self._activate_controller(ctrl.name)
+        else:
+            # Assume controller isn't loaded
             if action is action_load:
                 self._load_controller(ctrl.name)
-            if action is action_spawn:
+            elif action is action_configure:
                 self._load_controller(ctrl.name)
-                self._start_controller(ctrl.name)
+                self._configure_controller(ctrl.name)
+            elif action is action_activate:
+                self._load_controller(ctrl.name)
+                self._configure_controller(ctrl.name)
+                self._activate_controller(ctrl.name)
 
     def _on_ctrl_info(self, index):
         popup = self._popup_widget
@@ -318,13 +336,16 @@ class ControllerManager(Plugin):
             else:
                 header.setSectionResizeMode(QHeaderView.ResizeToContents)
 
+    def _configure_controller(self, name):
+        self._configure_srv.call_async(ConfigureController.Request(name=name))
+
     def _load_controller(self, name):
         self._load_srv.call_async(LoadController.Request(name=name))
 
     def _unload_controller(self, name):
         self._unload_srv.call_async(UnloadController.Request(name=name))
 
-    def _start_controller(self, name):
+    def _activate_controller(self, name):
         strict = SwitchController.Request.STRICT
         req = SwitchController.Request(activate_controllers=[name],
                                        deactivate_controllers=[],
@@ -376,11 +397,17 @@ class ControllerTable(QAbstractTableModel):
             if index.column() == 0:
                 return ctrl.name
             elif index.column() == 1:
-                return ctrl.state
+                if ctrl.state:
+                    return ctrl.state
+                else:
+                    return 'not loaded'
 
         if role == Qt.DecorationRole:
             if index.column() == 0:
-                return self._icons[ctrl.state]
+                if ctrl.state in self._icons:
+                    return self._icons[ctrl.state]
+                else:
+                    return None
 
         if role == Qt.FontRole:
             if index.column() == 0:
