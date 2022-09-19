@@ -88,7 +88,7 @@ class ControllerManager(Plugin):
         context.add_widget(self._widget)
 
         # Initialize members
-        self._cm_ns = []  # Namespace of the selected controller manager
+        self._cm_name = []  # Name of the selected controller manager's node
         self._controllers = []  # State of each controller
         self._table_model = None
         self._controller_lister = None
@@ -143,16 +143,16 @@ class ControllerManager(Plugin):
         self._popup_widget.hide()
 
     def save_settings(self, plugin_settings, instance_settings):
-        instance_settings.set_value('cm_ns', self._cm_ns)
+        instance_settings.set_value('cm_name', self._cm_name)
 
     def restore_settings(self, plugin_settings, instance_settings):
         # Restore last session's controller_manager, if present
         self._update_cm_list()
-        cm_ns = instance_settings.value('cm_ns')
+        cm_name = instance_settings.value('cm_name')
         cm_combo = self._widget.cm_combo
         cm_list = [cm_combo.itemText(i) for i in range(cm_combo.count())]
         try:
-            idx = cm_list.index(cm_ns)
+            idx = cm_list.index(cm_name)
             cm_combo.setCurrentIndex(idx)
         except (ValueError):
             pass
@@ -166,33 +166,27 @@ class ControllerManager(Plugin):
     def _update_cm_list(self):
         update_combo(self._widget.cm_combo, self._list_cm())
 
-    def _on_cm_change(self, cm_ns):
-        self._cm_ns = cm_ns
+    def _on_cm_change(self, cm_name):
+        self._cm_name = cm_name
 
         # Setup services for communicating with the selected controller manager
-        self._set_cm_services(cm_ns)
+        self._set_cm_services(cm_name)
 
         # Controller lister for the selected controller manager
-        if cm_ns:
-            self._controller_lister = ControllerLister(cm_ns)
+        if cm_name:
+            self._controller_lister = ControllerLister(cm_name)
             self._update_controllers()
         else:
             self._controller_lister = None
 
-    def _set_cm_services(self, cm_ns):
-        if cm_ns:
-            # NOTE: Persistent services are used for performance reasons.
-            # If the controller manager dies, we detect it and disconnect from
-            # it anyway
-            load_srv_name = _append_ns(cm_ns, 'load_controller')
-            self._load_srv = self._node.create_client(LoadController,
-                                                      load_srv_name)
-            unload_srv_name = _append_ns(cm_ns, 'unload_controller')
-            self._unload_srv = self._node.create_client(UnloadController,
-                                                        unload_srv_name)
-            switch_srv_name = _append_ns(cm_ns, 'switch_controller')
-            self._switch_srv = self._node.create_client(SwitchController,
-                                                        switch_srv_name)
+    def _set_cm_services(self, cm_name):
+        if cm_name:
+            self._load_srv = self._node.create_client(
+                LoadController, cm_name + '/load_controller')
+            self._unload_srv = self._node.create_client(
+                UnloadController, cm_name + '/unload_controller')
+            self._switch_srv = self._node.create_client(
+                SwitchController, cm_name + '/switch_controller')
         else:
             self._load_srv = None
             self._unload_srv = None
@@ -200,7 +194,7 @@ class ControllerManager(Plugin):
 
     def _update_controllers(self):
 
-        if not self._cm_ns:
+        if not self._cm_name:
             return
 
         # Find controllers associated to the selected controller manager
@@ -219,18 +213,18 @@ class ControllerManager(Plugin):
         returned by the C{list_parameters} service..
         @rtype [str]
         """
-        if not self._cm_ns:
+        if not self._cm_name:
             return []
 
         # Add loaded controllers first
         controllers = self._controller_lister()
-        controllers = list_controllers(self._node, self._cm_ns).controller
+        controllers = list_controllers(self._node, self._cm_name).controller
 
         # Append potential controller configs found in the node's parameters
-        for name in get_parameter_controller_names(self._node, self._cm_ns):
+        for name in get_parameter_controller_names(self._node, self._cm_name):
             add_ctrl = not any(name == ctrl.name for ctrl in controllers)
             if add_ctrl:
-                type_str = _rosparam_controller_type(self._node, self._cm_ns, name)
+                type_str = _get_controller_type(self._node, self._cm_name, name)
                 uninit_ctrl = ControllerState(name=name,
                                               type=type_str,
                                               state='unconfigured')
@@ -415,60 +409,17 @@ class FontDelegate(QStyledItemDelegate):
         QStyledItemDelegate.paint(self, painter, option, index)
 
 
-def _resolve_controllers_ns(cm_ns):
+def _get_controller_type(node, node_name, ctrl_name):
     """
-    Resolve the namespace containing controller configurations from that of
-    the controller manager.
-    Controllers are assumed to live one level above the controller
-    manager, e.g.
-
-        >>> _resolve_controller_ns('/path/to/controller_manager')
-        '/path/to'
-
-    In the particular case in which the controller manager is not
-    namespaced, the controller is assumed to live in the root namespace
-
-        >>> _resolve_controller_ns('/')
-        '/'
-        >>> _resolve_controller_ns('')
-        '/'
-    @param cm_ns Controller manager namespace (can be an empty string)
-    @type cm_ns str
-    @return Controllers namespace
-    @rtype str
-    """
-    ns = cm_ns.rsplit('/', 1)[0]
-    if not ns:
-        ns += '/'
-    return ns
-
-
-def _append_ns(in_ns, suffix):
-    """
-    Append a sub-namespace (suffix) to the input namespace
-    @param in_ns Input namespace
-    @type in_ns str
-    @return Suffix namespace
-    @rtype str
-    """
-    ns = in_ns
-    if ns[-1] != '/':
-        ns += '/'
-    ns += suffix
-    return ns
-
-
-def _rosparam_controller_type(node, ctrls_ns, ctrl_name):
-    """
-    Get a controller's type from its ROS parameter server configuration
-    @param ctrls_ns Namespace where controllers should be located
-    @type ctrls_ns str
+    Get the controller's type from the controller manager node with the call_get_parameter service.
+    @param node_name Controller manager node's name
+    @type node_name str
     @param ctrl_name Controller name
     @type ctrl_name str
     @return Controller type
     @rtype str
     """
-    response = call_get_parameters(node=node, node_name=ctrls_ns, parameter_names=[ctrl_name])
+    response = call_get_parameters(node=node, node_name=node_name, parameter_names=[ctrl_name])
     if not response.values:
         return ''
     else:
