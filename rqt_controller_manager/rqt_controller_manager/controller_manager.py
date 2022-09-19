@@ -33,7 +33,7 @@ from .update_combo import update_combo
 
 
 class ControllerManager(Plugin):
-    """Graphical frontend for managing ros_control controllers."""
+    """Graphical frontend for interacting with the controller manager."""
 
     _cm_update_freq = 1  # Hz
 
