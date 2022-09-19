@@ -1,54 +1,40 @@
-#!/usr/bin/env python
-# Copyright (C) 2013, Georgia Tech
-# Copyright (C) 2015, PAL Robotics S.L.
-# Copyright (C) 2022, Kenji Brameld
+# Copyright 2013 Georgia Tech
+# Copyright 2015 PAL Robotics S.L.
+# Copyright 2022 Kenji Brameld
 #
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are met:
-# * Redistributions of source code must retain the above copyright notice,
-# this list of conditions and the following disclaimer.
-# * Redistributions in binary form must reproduce the above copyright
-# notice, this list of conditions and the following disclaimer in the
-# documentation and/or other materials provided with the distribution.
-# * Neither the name of PAL Robotics S.L. nor the names of its
-# contributors may be used to endorse or promote products derived from
-# this software without specific prior written permission.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
-# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-# POSSIBILITY OF SUCH DAMAGE.
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 import os
 
 from ament_index_python.packages import get_package_share_directory
-from python_qt_binding import loadUi
-from python_qt_binding.QtCore import QAbstractTableModel, Qt, QTimer
-from python_qt_binding.QtWidgets import QWidget, QHeaderView, QMenu, QStyledItemDelegate
-from python_qt_binding.QtGui import QCursor, QFont, QIcon, QStandardItem, QStandardItemModel
-from qt_gui.plugin import Plugin
-
-from controller_manager_msgs.msg import ControllerState
-from controller_manager_msgs.srv import SwitchController
 from controller_manager.controller_manager_services import configure_controller, \
     list_controllers, load_controller, switch_controllers, unload_controller
-
-from .update_combo import update_combo
+from controller_manager_msgs.msg import ControllerState
+from controller_manager_msgs.srv import SwitchController
+from python_qt_binding import loadUi
+from python_qt_binding.QtCore import QAbstractTableModel, Qt, QTimer
+from python_qt_binding.QtGui import QCursor, QFont, QIcon, QStandardItem, QStandardItemModel
+from python_qt_binding.QtWidgets import QHeaderView, QMenu, QStyledItemDelegate, QWidget
+from qt_gui.plugin import Plugin
 from ros2param.api import call_get_parameters, call_list_parameters
 from ros2service.api import get_service_names_and_types
 
+from .update_combo import update_combo
+
 
 class ControllerManager(Plugin):
-    """
-    Graphical frontend for managing ros_control controllers.
-    """
+    """Graphical frontend for managing ros_control controllers."""
+
     _cm_update_freq = 1  # Hz
 
     def __init__(self, context):
@@ -172,6 +158,8 @@ class ControllerManager(Plugin):
 
     def _list_controllers(self):
         """
+        List the controllers associated to a controller manager node.
+
         @return List of controllers associated to a controller manager
         node. Contains both stopped/running controllers, as returned by
         the C{list_controllers} service, plus uninitialized controllers with
@@ -321,6 +309,7 @@ class ControllerTable(QAbstractTableModel):
     The model allows display of basic read-only information like controller
     name and state.
     """
+
     def __init__(self, controller_info,  icons, parent=None):
         QAbstractTableModel.__init__(self, parent)
         self._data = controller_info
@@ -376,9 +365,12 @@ class ControllerTable(QAbstractTableModel):
 
 class FontDelegate(QStyledItemDelegate):
     """
-    Simple delegate for customizing font weight and italization when
-    displaying resources claimed by a controller
+    Simple delegate for customizing font weight and italization.
+
+    Simple delegate for customizing font weight and italization when displaying resources claimed
+    by a controller.
     """
+
     def paint(self, painter, option, index):
         if not index.parent().isValid():
             # Root level
@@ -393,6 +385,7 @@ class FontDelegate(QStyledItemDelegate):
 def _get_controller_type(node, node_name, ctrl_name):
     """
     Get the controller's type from the controller manager node with the call_get_parameter service.
+
     @param node_name Controller manager node's name
     @type node_name str
     @param ctrl_name Controller name
@@ -409,9 +402,10 @@ def _get_controller_type(node, node_name, ctrl_name):
 
 def _list_controller_managers(node):
     """
-    List controller manager nodes that are active. Does this by looking for a service that should
-    be exclusive to a controller manager node. The "list_controllers" service is used to determine
-    if a node is a controller manager.
+    List controller manager nodes that are active.
+
+    Does this by looking for a service that should be exclusive to a controller manager node.
+    The "list_controllers" service is used to determine if a node is a controller manager.
     @return List of controller manager node names
     @rtype list of str
     """
@@ -425,10 +419,7 @@ def _list_controller_managers(node):
 
 
 def _get_parameter_controller_names(node, node_name):
-    """
-    Get list of ROS parameter names that potentially represent a controller
-    configuration.
-    """
+    """Get list of ROS parameter names that potentially represent a controller configuration."""
     parameter_names = call_list_parameters(node=node, node_name=node_name)
     suffix = '.type'
     return [n[: -len(suffix)] for n in parameter_names if n.endswith(suffix)]
