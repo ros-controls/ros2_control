@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # Copyright (C) 2013, Georgia Tech
 # Copyright (C) 2015, PAL Robotics S.L.
+# Copyright (C) 2022, Kenji Brameld
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -29,16 +30,14 @@ import os
 
 from ament_index_python.packages import get_package_share_directory
 from python_qt_binding import loadUi
-from python_qt_binding.QtCore import QAbstractTableModel, QModelIndex, Qt,\
-                                     QTimer, QVariant, Signal
-from python_qt_binding.QtWidgets import QWidget, QFormLayout, QHeaderView,\
-					QMenu, QStyledItemDelegate
-from python_qt_binding.QtGui import QCursor, QFont, QIcon, QStandardItem,\
-                                    QStandardItemModel
+from python_qt_binding.QtCore import QAbstractTableModel, Qt, QTimer
+from python_qt_binding.QtWidgets import QWidget, QHeaderView, QMenu, QStyledItemDelegate
+from python_qt_binding.QtGui import QCursor, QFont, QIcon, QStandardItem, QStandardItemModel
 from qt_gui.plugin import Plugin
 
 from controller_manager_msgs.msg import ControllerState
-from controller_manager_msgs.srv import ConfigureController, LoadController, SwitchController, UnloadController
+from controller_manager_msgs.srv import ConfigureController, LoadController, SwitchController, \
+    UnloadController
 from controller_manager_utils.utils import ControllerLister, ControllerManagerLister, \
     get_parameter_controller_names
 from controller_manager.controller_manager_services import list_controllers
