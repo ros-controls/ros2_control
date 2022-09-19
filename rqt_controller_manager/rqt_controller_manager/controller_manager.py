@@ -151,12 +151,6 @@ class ControllerManager(Plugin):
         except (ValueError):
             pass
 
-    # def trigger_configuration(self):
-        # Comment in to signal that the plugin has a way to configure
-        # This will enable a setting button (gear icon) in each dock widget
-        # title bar
-        # Usually used to open a modal configuration dialog
-
     def _update_cm_list(self):
         update_combo(self._widget.cm_combo, self._list_cm())
 
@@ -221,7 +215,7 @@ class ControllerManager(Plugin):
         # Show context menu
         menu = QMenu(self._widget.table_view)
         if ctrl.state == 'active':
-            action_stop = menu.addAction(self._icons['inactive'], 'Deactivate')
+            action_deactivate = menu.addAction(self._icons['inactive'], 'Deactivate')
             action_kill = menu.addAction(self._icons['finalized'],
                                          'Deactivate and Unload')
         elif ctrl.state == 'inactive':
@@ -242,10 +236,10 @@ class ControllerManager(Plugin):
 
         # Evaluate user action
         if ctrl.state == 'active':
-            if action is action_stop:
-                self._stop_controller(ctrl.name)
+            if action is action_deactivate:
+                self._deactivate_controller(ctrl.name)
             elif action is action_kill:
-                self._stop_controller(ctrl.name)
+                self._deactivate_controller(ctrl.name)
                 unload_controller(self._node, self._cm_name, ctrl.name)
         elif ctrl.state == 'finalized' or ctrl.state == 'inactive':
             if action is action_activate:
@@ -278,14 +272,11 @@ class ControllerManager(Plugin):
         popup.ctrl_type.setText(ctrl.type)
 
         res_model = QStandardItemModel()
-        model_root = QStandardItem('Claimed Resources')
+        model_root = QStandardItem('Claimed Interfaces')
         res_model.appendRow(model_root)
         for claimed_interface in ctrl.claimed_interfaces:
             hw_iface_item = QStandardItem(claimed_interface)
             model_root.appendRow(hw_iface_item)
-            # for res in claimed_interface.resources:
-            #     res_item = QStandardItem(res)
-            #     hw_iface_item.appendRow(res_item)
 
         popup.resource_tree.setModel(res_model)
         popup.resource_tree.setItemDelegate(FontDelegate(popup.resource_tree))
@@ -319,7 +310,7 @@ class ControllerManager(Plugin):
             timeout=0.3
         )
 
-    def _stop_controller(self, name):
+    def _deactivate_controller(self, name):
         switch_controllers(
             node=self._node,
             controller_manager_name=self._cm_name,
