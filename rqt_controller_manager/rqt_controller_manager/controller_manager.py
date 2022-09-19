@@ -37,13 +37,12 @@ from qt_gui.plugin import Plugin
 
 from controller_manager_msgs.msg import ControllerState
 from controller_manager_msgs.srv import SwitchController
-from controller_manager_utils.utils import ControllerLister, ControllerManagerLister, \
-    get_parameter_controller_names
 from controller_manager.controller_manager_services import configure_controller, \
     list_controllers, load_controller, switch_controllers, unload_controller
 
 from .update_combo import update_combo
-from ros2param.api import call_get_parameters
+from ros2param.api import call_get_parameters, call_list_parameters
+from ros2service.api import get_service_names_and_types
 
 
 class ControllerManager(Plugin):
@@ -90,7 +89,6 @@ class ControllerManager(Plugin):
         self._cm_name = ''  # Name of the selected controller manager's node
         self._controllers = []  # State of each controller
         self._table_model = None
-        self._controller_lister = None
 
         # Store reference to node
         self._node = context.node
@@ -115,7 +113,6 @@ class ControllerManager(Plugin):
         header.customContextMenuRequested.connect(self._on_header_menu)
 
         # Timer for controller manager updates
-        self._list_cm = ControllerManagerLister()
         self._update_cm_list_timer = QTimer(self)
         self._update_cm_list_timer.setInterval(int(1000.0 / self._cm_update_freq))
         self._update_cm_list_timer.timeout.connect(self._update_cm_list)
@@ -152,17 +149,13 @@ class ControllerManager(Plugin):
             pass
 
     def _update_cm_list(self):
-        update_combo(self._widget.cm_combo, self._list_cm())
+        update_combo(self._widget.cm_combo, _list_controller_managers(self._node))
 
     def _on_cm_change(self, cm_name):
         self._cm_name = cm_name
 
-        # Controller lister for the selected controller manager
         if cm_name:
-            self._controller_lister = ControllerLister(cm_name)
             self._update_controllers()
-        else:
-            self._controller_lister = None
 
     def _update_controllers(self):
 
@@ -186,11 +179,10 @@ class ControllerManager(Plugin):
         @rtype [str]
         """
         # Add loaded controllers first
-        controllers = self._controller_lister()
         controllers = list_controllers(self._node, self._cm_name).controller
 
         # Append potential controller configs found in the node's parameters
-        for name in get_parameter_controller_names(self._node, self._cm_name):
+        for name in _get_parameter_controller_names(self._node, self._cm_name):
             add_ctrl = not any(name == ctrl.name for ctrl in controllers)
             if add_ctrl:
                 type_str = _get_controller_type(self._node, self._cm_name, name)
@@ -413,3 +405,30 @@ def _get_controller_type(node, node_name, ctrl_name):
         return ''
     else:
         return response.values[0].string_value
+
+
+def _list_controller_managers(node):
+    """
+    List controller manager nodes that are active. Does this by looking for a service that should
+    be exclusive to a controller manager node. The "list_controllers" service is used to determine
+    if a node is a controller manager.
+    @return List of controller manager node names
+    @rtype list of str
+    """
+    controller_manager_names = []
+    for (name, _) in get_service_names_and_types(node=node):
+        if name.endswith('list_controllers'):
+            name = name.rstrip('list_controllers')
+            name = name.rstrip('/')
+            controller_manager_names.append(name)
+    return controller_manager_names
+
+
+def _get_parameter_controller_names(node, node_name):
+    """
+    Get list of ROS parameter names that potentially represent a controller
+    configuration.
+    """
+    parameter_names = call_list_parameters(node=node, node_name=node_name)
+    suffix = '.type'
+    return [n[: -len(suffix)] for n in parameter_names if n.endswith(suffix)]
