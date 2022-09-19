@@ -2,6 +2,11 @@
 Changelog for package ros2controlcli
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* migrate from graphviz python to pygraphviz (`#812 <https://github.com/ros-controls/ros2_control/issues/812>`_)
+* Contributors: Sachin Kumar
+
 2.14.0 (2022-09-04)
 -------------------
 * Visualize chained controllers with graphviz (`#763 <https://github.com/ros-controls/ros2_control/issues/763>`_)
