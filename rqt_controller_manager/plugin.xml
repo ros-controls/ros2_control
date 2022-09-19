@@ -3,7 +3,7 @@
          type="rqt_controller_manager.controller_manager.ControllerManager"
          base_class_type="rqt_gui_py::Plugin">
     <description>
-        Visual interface for managing ros_control controllers.
+      Graphical frontend for interacting with the controller manager.
     </description>
     <qtgui>
       <group>
@@ -13,7 +13,7 @@
       </group>
       <label>Controller Manager</label>
       <icon type="file">resource/cm_icon.png</icon>
-      <statustip>Manage ros_control controllers</statustip>
+      <statustip>Interact with controller managers</statustip>
     </qtgui>
   </class>
 </library>
