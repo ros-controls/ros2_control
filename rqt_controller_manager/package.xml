@@ -18,7 +18,6 @@
   <author email="adolfo.rodriguez@pal-robotics.com">Adolfo Rodríguez Tsouroukdissian</author>
 
   <exec_depend>controller_manager_msgs</exec_depend>
-  <exec_depend>controller_manager_utils</exec_depend>
   <exec_depend>rclpy</exec_depend>
   <exec_depend>rqt_gui</exec_depend>
   <exec_depend>rqt_gui_py</exec_depend>
