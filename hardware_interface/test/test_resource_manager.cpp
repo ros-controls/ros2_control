@@ -45,7 +45,7 @@ using ros2_control_test_assets::TEST_SYSTEM_HARDWARE_NAME;
 using ros2_control_test_assets::TEST_SYSTEM_HARDWARE_STATE_INTERFACES;
 using ros2_control_test_assets::TEST_SYSTEM_HARDWARE_TYPE;
 
-class TestResourceManager : public ::testing::Test
+class ResourceManagerTest : public ::testing::Test
 {
 public:
   static void SetUpTestCase() {}
@@ -53,9 +53,34 @@ public:
   void SetUp() {}
 };
 
+// Forward declaration
+namespace hardware_interface
+{
+class ResourceStorage;
+}
+
+class TestableResourceManager : public hardware_interface::ResourceManager
+{
+public:
+  friend ResourceManagerTest;
+
+  FRIEND_TEST(ResourceManagerTest, initialization_with_urdf_manual_validation);
+  FRIEND_TEST(ResourceManagerTest, post_initialization_add_components);
+  FRIEND_TEST(ResourceManagerTest, managing_controllers_reference_interfaces);
+  FRIEND_TEST(ResourceManagerTest, resource_availability_and_claiming_in_lifecycle);
+
+  TestableResourceManager() : hardware_interface::ResourceManager() {}
+
+  TestableResourceManager(
+    const std::string & urdf, bool validate_interfaces = true, bool activate_all = false)
+  : hardware_interface::ResourceManager(urdf, validate_interfaces, activate_all)
+  {
+  }
+};
+
 void set_components_state(
-  hardware_interface::ResourceManager & rm, const std::vector<std::string> & components,
-  const uint8_t state_id, const std::string & state_name)
+  TestableResourceManager & rm, const std::vector<std::string> & components, const uint8_t state_id,
+  const std::string & state_name)
 {
   auto int_components = components;
   if (int_components.empty())
@@ -70,7 +95,7 @@ void set_components_state(
 }
 
 auto configure_components =
-  [](hardware_interface::ResourceManager & rm, const std::vector<std::string> & components = {})
+  [](TestableResourceManager & rm, const std::vector<std::string> & components = {})
 {
   set_components_state(
     rm, components, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
@@ -78,7 +103,7 @@ auto configure_components =
 };
 
 auto activate_components =
-  [](hardware_interface::ResourceManager & rm, const std::vector<std::string> & components = {})
+  [](TestableResourceManager & rm, const std::vector<std::string> & components = {})
 {
   set_components_state(
     rm, components, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
@@ -86,7 +111,7 @@ auto activate_components =
 };
 
 auto deactivate_components =
-  [](hardware_interface::ResourceManager & rm, const std::vector<std::string> & components = {})
+  [](TestableResourceManager & rm, const std::vector<std::string> & components = {})
 {
   set_components_state(
     rm, components, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
@@ -94,7 +119,7 @@ auto deactivate_components =
 };
 
 auto cleanup_components =
-  [](hardware_interface::ResourceManager & rm, const std::vector<std::string> & components = {})
+  [](TestableResourceManager & rm, const std::vector<std::string> & components = {})
 {
   set_components_state(
     rm, components, lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
@@ -102,34 +127,33 @@ auto cleanup_components =
 };
 
 auto shutdown_components =
-  [](hardware_interface::ResourceManager & rm, const std::vector<std::string> & components = {})
+  [](TestableResourceManager & rm, const std::vector<std::string> & components = {})
 {
   set_components_state(
     rm, components, lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED,
     hardware_interface::lifecycle_state_names::FINALIZED);
 };
 
-TEST_F(TestResourceManager, initialization_empty)
+TEST_F(ResourceManagerTest, initialization_empty)
 {
-  ASSERT_ANY_THROW(hardware_interface::ResourceManager rm(""));
+  ASSERT_ANY_THROW(TestableResourceManager rm(""));
 }
 
-TEST_F(TestResourceManager, initialization_with_urdf)
+TEST_F(ResourceManagerTest, initialization_with_urdf)
 {
-  ASSERT_NO_THROW(
-    hardware_interface::ResourceManager rm(ros2_control_test_assets::minimal_robot_urdf));
+  ASSERT_NO_THROW(TestableResourceManager rm(ros2_control_test_assets::minimal_robot_urdf));
 }
 
-TEST_F(TestResourceManager, post_initialization_with_urdf)
+TEST_F(ResourceManagerTest, post_initialization_with_urdf)
 {
-  hardware_interface::ResourceManager rm;
+  TestableResourceManager rm;
   ASSERT_NO_THROW(rm.load_urdf(ros2_control_test_assets::minimal_robot_urdf));
 }
 
-TEST_F(TestResourceManager, initialization_with_urdf_manual_validation)
+TEST_F(ResourceManagerTest, initialization_with_urdf_manual_validation)
 {
   // we validate the results manually
-  hardware_interface::ResourceManager rm(ros2_control_test_assets::minimal_robot_urdf, false);
+  TestableResourceManager rm(ros2_control_test_assets::minimal_robot_urdf, false);
 
   EXPECT_EQ(1u, rm.actuator_components_size());
   EXPECT_EQ(1u, rm.sensor_components_size());
@@ -150,28 +174,26 @@ TEST_F(TestResourceManager, initialization_with_urdf_manual_validation)
   EXPECT_TRUE(rm.command_interface_exists("joint3/velocity"));
 }
 
-TEST_F(TestResourceManager, initialization_with_wrong_urdf)
+TEST_F(ResourceManagerTest, initialization_with_wrong_urdf)
 {
   // missing state keys
   {
     EXPECT_THROW(
-      hardware_interface::ResourceManager rm(
-        ros2_control_test_assets::minimal_robot_missing_state_keys_urdf),
+      TestableResourceManager rm(ros2_control_test_assets::minimal_robot_missing_state_keys_urdf),
       std::exception);
   }
   // missing command keys
   {
     EXPECT_THROW(
-      hardware_interface::ResourceManager rm(
-        ros2_control_test_assets::minimal_robot_missing_command_keys_urdf),
+      TestableResourceManager rm(ros2_control_test_assets::minimal_robot_missing_command_keys_urdf),
       std::exception);
   }
 }
 
-TEST_F(TestResourceManager, initialization_with_urdf_unclaimed)
+TEST_F(ResourceManagerTest, initialization_with_urdf_unclaimed)
 {
   // we validate the results manually
-  hardware_interface::ResourceManager rm(ros2_control_test_assets::minimal_robot_urdf);
+  TestableResourceManager rm(ros2_control_test_assets::minimal_robot_urdf);
 
   auto command_interface_keys = rm.command_interface_keys();
   for (const auto & key : command_interface_keys)
@@ -187,9 +209,9 @@ TEST_F(TestResourceManager, initialization_with_urdf_unclaimed)
   }
 }
 
-TEST_F(TestResourceManager, resource_claiming)
+TEST_F(ResourceManagerTest, resource_claiming)
 {
-  hardware_interface::ResourceManager rm(ros2_control_test_assets::minimal_robot_urdf);
+  TestableResourceManager rm(ros2_control_test_assets::minimal_robot_urdf);
   // Activate components to get all interfaces available
   activate_components(rm);
 
@@ -298,10 +320,10 @@ class ExternalComponent : public hardware_interface::ActuatorInterface
   }
 };
 
-TEST_F(TestResourceManager, post_initialization_add_components)
+TEST_F(ResourceManagerTest, post_initialization_add_components)
 {
   // we validate the results manually
-  hardware_interface::ResourceManager rm(ros2_control_test_assets::minimal_robot_urdf, false);
+  TestableResourceManager rm(ros2_control_test_assets::minimal_robot_urdf, false);
   // Activate components to get all interfaces available
   activate_components(rm);
 
@@ -342,9 +364,9 @@ TEST_F(TestResourceManager, post_initialization_add_components)
   EXPECT_NO_THROW(rm.claim_command_interface("external_joint/external_command_interface"));
 }
 
-TEST_F(TestResourceManager, default_prepare_perform_switch)
+TEST_F(ResourceManagerTest, default_prepare_perform_switch)
 {
-  hardware_interface::ResourceManager rm(ros2_control_test_assets::minimal_robot_urdf);
+  TestableResourceManager rm(ros2_control_test_assets::minimal_robot_urdf);
   // Activate components to get all interfaces available
   activate_components(rm);
 
@@ -376,9 +398,9 @@ const auto command_mode_urdf = std::string(ros2_control_test_assets::urdf_head) 
                                std::string(hardware_resources_command_modes) +
                                std::string(ros2_control_test_assets::urdf_tail);
 
-TEST_F(TestResourceManager, custom_prepare_perform_switch)
+TEST_F(ResourceManagerTest, custom_prepare_perform_switch)
 {
-  hardware_interface::ResourceManager rm(command_mode_urdf);
+  TestableResourceManager rm(command_mode_urdf);
   // Scenarios defined by example criteria
   std::vector<std::string> empty_keys = {};
   std::vector<std::string> irrelevant_keys = {"elbow_joint/position", "should_joint/position"};
@@ -412,9 +434,9 @@ TEST_F(TestResourceManager, custom_prepare_perform_switch)
   EXPECT_FALSE(rm.perform_command_mode_switch(empty_keys, legal_keys_position));
 }
 
-TEST_F(TestResourceManager, resource_status)
+TEST_F(ResourceManagerTest, resource_status)
 {
-  hardware_interface::ResourceManager rm(ros2_control_test_assets::minimal_robot_urdf);
+  TestableResourceManager rm(ros2_control_test_assets::minimal_robot_urdf);
 
   auto status_map = rm.get_components_status();
 
@@ -484,9 +506,9 @@ TEST_F(TestResourceManager, resource_status)
     status_map[TEST_SYSTEM_HARDWARE_NAME].state_interfaces, TEST_SYSTEM_HARDWARE_STATE_INTERFACES);
 }
 
-TEST_F(TestResourceManager, lifecycle_all_resources)
+TEST_F(ResourceManagerTest, lifecycle_all_resources)
 {
-  hardware_interface::ResourceManager rm(ros2_control_test_assets::minimal_robot_urdf);
+  TestableResourceManager rm(ros2_control_test_assets::minimal_robot_urdf);
 
   // All resources start as UNCONFIGURED
   {
@@ -627,9 +649,9 @@ TEST_F(TestResourceManager, lifecycle_all_resources)
   }
 }
 
-TEST_F(TestResourceManager, lifecycle_individual_resources)
+TEST_F(ResourceManagerTest, lifecycle_individual_resources)
 {
-  hardware_interface::ResourceManager rm(ros2_control_test_assets::minimal_robot_urdf);
+  TestableResourceManager rm(ros2_control_test_assets::minimal_robot_urdf);
 
   // All resources start as UNCONFIGURED
   {
@@ -840,10 +862,10 @@ TEST_F(TestResourceManager, lifecycle_individual_resources)
   }
 }
 
-TEST_F(TestResourceManager, resource_availability_and_claiming_in_lifecycle)
+TEST_F(ResourceManagerTest, resource_availability_and_claiming_in_lifecycle)
 {
   using std::placeholders::_1;
-  hardware_interface::ResourceManager rm(ros2_control_test_assets::minimal_robot_urdf);
+  TestableResourceManager rm(ros2_control_test_assets::minimal_robot_urdf);
 
   auto check_interfaces =
     [](const std::vector<std::string> & interface_names, auto check_method, bool expected_result)
@@ -887,50 +909,44 @@ TEST_F(TestResourceManager, resource_availability_and_claiming_in_lifecycle)
 
     check_interfaces(
       command_interface_names,
-      std::bind(&hardware_interface::ResourceManager::command_interface_is_claimed, &rm, _1),
-      expected_result);
+      std::bind(&TestableResourceManager::command_interface_is_claimed, &rm, _1), expected_result);
   };
 
   // All resources start as UNCONFIGURED - All interfaces are imported but not available
   {
     check_interfaces(
       TEST_ACTUATOR_HARDWARE_COMMAND_INTERFACES,
-      std::bind(&hardware_interface::ResourceManager::command_interface_exists, &rm, _1), true);
+      std::bind(&TestableResourceManager::command_interface_exists, &rm, _1), true);
     check_interfaces(
       TEST_SYSTEM_HARDWARE_COMMAND_INTERFACES,
-      std::bind(&hardware_interface::ResourceManager::command_interface_exists, &rm, _1), true);
+      std::bind(&TestableResourceManager::command_interface_exists, &rm, _1), true);
 
     check_interfaces(
       TEST_ACTUATOR_HARDWARE_STATE_INTERFACES,
-      std::bind(&hardware_interface::ResourceManager::state_interface_exists, &rm, _1), true);
+      std::bind(&TestableResourceManager::state_interface_exists, &rm, _1), true);
     check_interfaces(
       TEST_SENSOR_HARDWARE_STATE_INTERFACES,
-      std::bind(&hardware_interface::ResourceManager::state_interface_exists, &rm, _1), true);
+      std::bind(&TestableResourceManager::state_interface_exists, &rm, _1), true);
     check_interfaces(
       TEST_SYSTEM_HARDWARE_STATE_INTERFACES,
-      std::bind(&hardware_interface::ResourceManager::state_interface_exists, &rm, _1), true);
+      std::bind(&TestableResourceManager::state_interface_exists, &rm, _1), true);
 
     check_interfaces(
       TEST_ACTUATOR_HARDWARE_COMMAND_INTERFACES,
-      std::bind(&hardware_interface::ResourceManager::command_interface_is_available, &rm, _1),
-      false);
+      std::bind(&TestableResourceManager::command_interface_is_available, &rm, _1), false);
     check_interfaces(
       TEST_SYSTEM_HARDWARE_COMMAND_INTERFACES,
-      std::bind(&hardware_interface::ResourceManager::command_interface_is_available, &rm, _1),
-      false);
+      std::bind(&TestableResourceManager::command_interface_is_available, &rm, _1), false);
 
     check_interfaces(
       TEST_ACTUATOR_HARDWARE_STATE_INTERFACES,
-      std::bind(&hardware_interface::ResourceManager::state_interface_is_available, &rm, _1),
-      false);
+      std::bind(&TestableResourceManager::state_interface_is_available, &rm, _1), false);
     check_interfaces(
       TEST_SENSOR_HARDWARE_STATE_INTERFACES,
-      std::bind(&hardware_interface::ResourceManager::state_interface_is_available, &rm, _1),
-      false);
+      std::bind(&TestableResourceManager::state_interface_is_available, &rm, _1), false);
     check_interfaces(
       TEST_SYSTEM_HARDWARE_STATE_INTERFACES,
-      std::bind(&hardware_interface::ResourceManager::state_interface_is_available, &rm, _1),
-      false);
+      std::bind(&TestableResourceManager::state_interface_is_available, &rm, _1), false);
   }
 
   // Nothing can be claimed
@@ -947,28 +963,23 @@ TEST_F(TestResourceManager, resource_availability_and_claiming_in_lifecycle)
   {
     check_interfaces(
       {"joint1/position"},
-      std::bind(&hardware_interface::ResourceManager::command_interface_is_available, &rm, _1),
-      true);
+      std::bind(&TestableResourceManager::command_interface_is_available, &rm, _1), true);
     check_interfaces(
       {"joint1/max_velocity"},
-      std::bind(&hardware_interface::ResourceManager::command_interface_is_available, &rm, _1),
-      true);
+      std::bind(&TestableResourceManager::command_interface_is_available, &rm, _1), true);
     check_interfaces(
       TEST_SYSTEM_HARDWARE_COMMAND_INTERFACES,
-      std::bind(&hardware_interface::ResourceManager::command_interface_is_available, &rm, _1),
-      false);
+      std::bind(&TestableResourceManager::command_interface_is_available, &rm, _1), false);
 
     check_interfaces(
       TEST_ACTUATOR_HARDWARE_STATE_INTERFACES,
-      std::bind(&hardware_interface::ResourceManager::state_interface_is_available, &rm, _1), true);
+      std::bind(&TestableResourceManager::state_interface_is_available, &rm, _1), true);
     check_interfaces(
       TEST_SENSOR_HARDWARE_STATE_INTERFACES,
-      std::bind(&hardware_interface::ResourceManager::state_interface_is_available, &rm, _1),
-      false);
+      std::bind(&TestableResourceManager::state_interface_is_available, &rm, _1), false);
     check_interfaces(
       TEST_SYSTEM_HARDWARE_STATE_INTERFACES,
-      std::bind(&hardware_interface::ResourceManager::state_interface_is_available, &rm, _1),
-      false);
+      std::bind(&TestableResourceManager::state_interface_is_available, &rm, _1), false);
   }
 
   // Can claim Actuator's interfaces
@@ -986,24 +997,20 @@ TEST_F(TestResourceManager, resource_availability_and_claiming_in_lifecycle)
   {
     check_interfaces(
       TEST_ACTUATOR_HARDWARE_COMMAND_INTERFACES,
-      std::bind(&hardware_interface::ResourceManager::command_interface_is_available, &rm, _1),
-      true);
+      std::bind(&TestableResourceManager::command_interface_is_available, &rm, _1), true);
     check_interfaces(
       TEST_SYSTEM_HARDWARE_COMMAND_INTERFACES,
-      std::bind(&hardware_interface::ResourceManager::command_interface_is_available, &rm, _1),
-      false);
+      std::bind(&TestableResourceManager::command_interface_is_available, &rm, _1), false);
 
     check_interfaces(
       TEST_ACTUATOR_HARDWARE_STATE_INTERFACES,
-      std::bind(&hardware_interface::ResourceManager::state_interface_is_available, &rm, _1), true);
+      std::bind(&TestableResourceManager::state_interface_is_available, &rm, _1), true);
     check_interfaces(
       TEST_SENSOR_HARDWARE_STATE_INTERFACES,
-      std::bind(&hardware_interface::ResourceManager::state_interface_is_available, &rm, _1),
-      false);
+      std::bind(&TestableResourceManager::state_interface_is_available, &rm, _1), false);
     check_interfaces(
       TEST_SYSTEM_HARDWARE_STATE_INTERFACES,
-      std::bind(&hardware_interface::ResourceManager::state_interface_is_available, &rm, _1),
-      false);
+      std::bind(&TestableResourceManager::state_interface_is_available, &rm, _1), false);
   }
 
   // Can claim all Actuator's state interfaces and command interfaces
@@ -1019,20 +1026,20 @@ TEST_F(TestResourceManager, resource_availability_and_claiming_in_lifecycle)
   {
     check_interfaces(
       TEST_ACTUATOR_HARDWARE_COMMAND_INTERFACES,
-      std::bind(&hardware_interface::ResourceManager::command_interface_exists, &rm, _1), true);
+      std::bind(&TestableResourceManager::command_interface_exists, &rm, _1), true);
     check_interfaces(
       TEST_SYSTEM_HARDWARE_COMMAND_INTERFACES,
-      std::bind(&hardware_interface::ResourceManager::command_interface_exists, &rm, _1), true);
+      std::bind(&TestableResourceManager::command_interface_exists, &rm, _1), true);
 
     check_interfaces(
       TEST_ACTUATOR_HARDWARE_STATE_INTERFACES,
-      std::bind(&hardware_interface::ResourceManager::state_interface_exists, &rm, _1), true);
+      std::bind(&TestableResourceManager::state_interface_exists, &rm, _1), true);
     check_interfaces(
       TEST_SENSOR_HARDWARE_STATE_INTERFACES,
-      std::bind(&hardware_interface::ResourceManager::state_interface_exists, &rm, _1), true);
+      std::bind(&TestableResourceManager::state_interface_exists, &rm, _1), true);
     check_interfaces(
       TEST_SYSTEM_HARDWARE_STATE_INTERFACES,
-      std::bind(&hardware_interface::ResourceManager::state_interface_exists, &rm, _1), true);
+      std::bind(&TestableResourceManager::state_interface_exists, &rm, _1), true);
   }
 
   // When Sensor and System are configured their state-
@@ -1041,26 +1048,23 @@ TEST_F(TestResourceManager, resource_availability_and_claiming_in_lifecycle)
   {
     check_interfaces(
       TEST_ACTUATOR_HARDWARE_COMMAND_INTERFACES,
-      std::bind(&hardware_interface::ResourceManager::command_interface_is_available, &rm, _1),
-      true);
+      std::bind(&TestableResourceManager::command_interface_is_available, &rm, _1), true);
     check_interfaces(
       {"joint2/velocity", "joint3/velocity"},
-      std::bind(&hardware_interface::ResourceManager::command_interface_is_available, &rm, _1),
-      true);
+      std::bind(&TestableResourceManager::command_interface_is_available, &rm, _1), true);
     check_interfaces(
       {"joint2/max_acceleration", "configuration/max_tcp_jerk"},
-      std::bind(&hardware_interface::ResourceManager::command_interface_is_available, &rm, _1),
-      true);
+      std::bind(&TestableResourceManager::command_interface_is_available, &rm, _1), true);
 
     check_interfaces(
       TEST_ACTUATOR_HARDWARE_STATE_INTERFACES,
-      std::bind(&hardware_interface::ResourceManager::state_interface_is_available, &rm, _1), true);
+      std::bind(&TestableResourceManager::state_interface_is_available, &rm, _1), true);
     check_interfaces(
       TEST_SENSOR_HARDWARE_STATE_INTERFACES,
-      std::bind(&hardware_interface::ResourceManager::state_interface_is_available, &rm, _1), true);
+      std::bind(&TestableResourceManager::state_interface_is_available, &rm, _1), true);
     check_interfaces(
       TEST_SYSTEM_HARDWARE_STATE_INTERFACES,
-      std::bind(&hardware_interface::ResourceManager::state_interface_is_available, &rm, _1), true);
+      std::bind(&TestableResourceManager::state_interface_is_available, &rm, _1), true);
   }
 
   // Can claim:
@@ -1082,22 +1086,20 @@ TEST_F(TestResourceManager, resource_availability_and_claiming_in_lifecycle)
   {
     check_interfaces(
       TEST_ACTUATOR_HARDWARE_COMMAND_INTERFACES,
-      std::bind(&hardware_interface::ResourceManager::command_interface_is_available, &rm, _1),
-      true);
+      std::bind(&TestableResourceManager::command_interface_is_available, &rm, _1), true);
     check_interfaces(
       TEST_SYSTEM_HARDWARE_COMMAND_INTERFACES,
-      std::bind(&hardware_interface::ResourceManager::command_interface_is_available, &rm, _1),
-      true);
+      std::bind(&TestableResourceManager::command_interface_is_available, &rm, _1), true);
 
     check_interfaces(
       TEST_ACTUATOR_HARDWARE_STATE_INTERFACES,
-      std::bind(&hardware_interface::ResourceManager::state_interface_is_available, &rm, _1), true);
+      std::bind(&TestableResourceManager::state_interface_is_available, &rm, _1), true);
     check_interfaces(
       TEST_SENSOR_HARDWARE_STATE_INTERFACES,
-      std::bind(&hardware_interface::ResourceManager::state_interface_is_available, &rm, _1), true);
+      std::bind(&TestableResourceManager::state_interface_is_available, &rm, _1), true);
     check_interfaces(
       TEST_SYSTEM_HARDWARE_STATE_INTERFACES,
-      std::bind(&hardware_interface::ResourceManager::state_interface_is_available, &rm, _1), true);
+      std::bind(&TestableResourceManager::state_interface_is_available, &rm, _1), true);
   }
 
   // Can claim everything
@@ -1117,26 +1119,23 @@ TEST_F(TestResourceManager, resource_availability_and_claiming_in_lifecycle)
   {
     check_interfaces(
       {"joint1/position"},
-      std::bind(&hardware_interface::ResourceManager::command_interface_is_available, &rm, _1),
-      true);
+      std::bind(&TestableResourceManager::command_interface_is_available, &rm, _1), true);
     check_interfaces(
       {"joint1/max_velocity"},
-      std::bind(&hardware_interface::ResourceManager::command_interface_is_available, &rm, _1),
-      true);
+      std::bind(&TestableResourceManager::command_interface_is_available, &rm, _1), true);
     check_interfaces(
       TEST_SYSTEM_HARDWARE_COMMAND_INTERFACES,
-      std::bind(&hardware_interface::ResourceManager::command_interface_is_available, &rm, _1),
-      true);
+      std::bind(&TestableResourceManager::command_interface_is_available, &rm, _1), true);
 
     check_interfaces(
       TEST_ACTUATOR_HARDWARE_STATE_INTERFACES,
-      std::bind(&hardware_interface::ResourceManager::state_interface_is_available, &rm, _1), true);
+      std::bind(&TestableResourceManager::state_interface_is_available, &rm, _1), true);
     check_interfaces(
       TEST_SENSOR_HARDWARE_STATE_INTERFACES,
-      std::bind(&hardware_interface::ResourceManager::state_interface_is_available, &rm, _1), true);
+      std::bind(&TestableResourceManager::state_interface_is_available, &rm, _1), true);
     check_interfaces(
       TEST_SYSTEM_HARDWARE_STATE_INTERFACES,
-      std::bind(&hardware_interface::ResourceManager::state_interface_is_available, &rm, _1), true);
+      std::bind(&TestableResourceManager::state_interface_is_available, &rm, _1), true);
   }
 
   // Can claim everything
@@ -1157,27 +1156,23 @@ TEST_F(TestResourceManager, resource_availability_and_claiming_in_lifecycle)
   {
     check_interfaces(
       {"joint1/position"},
-      std::bind(&hardware_interface::ResourceManager::command_interface_is_available, &rm, _1),
-      true);
+      std::bind(&TestableResourceManager::command_interface_is_available, &rm, _1), true);
     check_interfaces(
       {"joint1/max_velocity"},
-      std::bind(&hardware_interface::ResourceManager::command_interface_is_available, &rm, _1),
-      true);
+      std::bind(&TestableResourceManager::command_interface_is_available, &rm, _1), true);
     check_interfaces(
       TEST_SYSTEM_HARDWARE_COMMAND_INTERFACES,
-      std::bind(&hardware_interface::ResourceManager::command_interface_is_available, &rm, _1),
-      true);
+      std::bind(&TestableResourceManager::command_interface_is_available, &rm, _1), true);
 
     check_interfaces(
       TEST_ACTUATOR_HARDWARE_STATE_INTERFACES,
-      std::bind(&hardware_interface::ResourceManager::state_interface_is_available, &rm, _1), true);
+      std::bind(&TestableResourceManager::state_interface_is_available, &rm, _1), true);
     check_interfaces(
       TEST_SENSOR_HARDWARE_STATE_INTERFACES,
-      std::bind(&hardware_interface::ResourceManager::state_interface_is_available, &rm, _1),
-      false);
+      std::bind(&TestableResourceManager::state_interface_is_available, &rm, _1), false);
     check_interfaces(
       TEST_SYSTEM_HARDWARE_STATE_INTERFACES,
-      std::bind(&hardware_interface::ResourceManager::state_interface_is_available, &rm, _1), true);
+      std::bind(&TestableResourceManager::state_interface_is_available, &rm, _1), true);
   }
 
   // Can claim everything
@@ -1197,26 +1192,26 @@ TEST_F(TestResourceManager, resource_availability_and_claiming_in_lifecycle)
   {
     check_interfaces(
       TEST_ACTUATOR_HARDWARE_COMMAND_INTERFACES,
-      std::bind(&hardware_interface::ResourceManager::command_interface_exists, &rm, _1), true);
+      std::bind(&TestableResourceManager::command_interface_exists, &rm, _1), true);
     check_interfaces(
       TEST_SYSTEM_HARDWARE_COMMAND_INTERFACES,
-      std::bind(&hardware_interface::ResourceManager::command_interface_exists, &rm, _1), true);
+      std::bind(&TestableResourceManager::command_interface_exists, &rm, _1), true);
 
     check_interfaces(
       TEST_ACTUATOR_HARDWARE_STATE_INTERFACES,
-      std::bind(&hardware_interface::ResourceManager::state_interface_exists, &rm, _1), true);
+      std::bind(&TestableResourceManager::state_interface_exists, &rm, _1), true);
     check_interfaces(
       TEST_SENSOR_HARDWARE_STATE_INTERFACES,
-      std::bind(&hardware_interface::ResourceManager::state_interface_exists, &rm, _1), true);
+      std::bind(&TestableResourceManager::state_interface_exists, &rm, _1), true);
     check_interfaces(
       TEST_SYSTEM_HARDWARE_STATE_INTERFACES,
-      std::bind(&hardware_interface::ResourceManager::state_interface_exists, &rm, _1), true);
+      std::bind(&TestableResourceManager::state_interface_exists, &rm, _1), true);
   }
 }
 
-TEST_F(TestResourceManager, managing_controllers_reference_interfaces)
+TEST_F(ResourceManagerTest, managing_controllers_reference_interfaces)
 {
-  hardware_interface::ResourceManager rm(ros2_control_test_assets::minimal_robot_urdf);
+  TestableResourceManager rm(ros2_control_test_assets::minimal_robot_urdf);
 
   std::string CONTROLLER_NAME = "test_controller";
   std::vector<std::string> REFERENCE_INTERFACE_NAMES = {"input1", "input2", "input3"};
@@ -1330,12 +1325,12 @@ TEST_F(TestResourceManager, managing_controllers_reference_interfaces)
     rm.make_controller_reference_interfaces_unavailable("unknown_controller"), std::out_of_range);
 }
 
-class TestResourceManagerReadWriteError : public TestResourceManager
+class ResourceManagerTestReadWriteError : public ResourceManagerTest
 {
 public:
   void setup_resource_manager_and_do_initial_checks()
   {
-    rm = std::make_shared<hardware_interface::ResourceManager>(
+    rm = std::make_shared<TestableResourceManager>(
       ros2_control_test_assets::minimal_robot_urdf, false);
     activate_components(*rm);
 
@@ -1512,7 +1507,7 @@ public:
   }
 
 public:
-  std::shared_ptr<hardware_interface::ResourceManager> rm;
+  std::shared_ptr<TestableResourceManager> rm;
   std::vector<hardware_interface::LoanedCommandInterface> claimed_itfs;
 
   const rclcpp::Time time = rclcpp::Time(0);
@@ -1523,31 +1518,31 @@ public:
   static constexpr double WRITE_FAIL_VALUE = 23232323.0;
 };
 
-TEST_F(TestResourceManagerReadWriteError, handle_error_on_hardware_read)
+TEST_F(ResourceManagerTestReadWriteError, handle_error_on_hardware_read)
 {
   setup_resource_manager_and_do_initial_checks();
 
   using namespace std::placeholders;
   // check read methods failures
   check_read_or_write_failure(
-    std::bind(&hardware_interface::ResourceManager::read, rm, _1, _2),
-    std::bind(&hardware_interface::ResourceManager::write, rm, _1, _2), READ_FAIL_VALUE);
+    std::bind(&TestableResourceManager::read, rm, _1, _2),
+    std::bind(&TestableResourceManager::write, rm, _1, _2), READ_FAIL_VALUE);
 }
 
-TEST_F(TestResourceManagerReadWriteError, handle_error_on_hardware_write)
+TEST_F(ResourceManagerTestReadWriteError, handle_error_on_hardware_write)
 {
   setup_resource_manager_and_do_initial_checks();
 
   using namespace std::placeholders;
   // check write methods failures
   check_read_or_write_failure(
-    std::bind(&hardware_interface::ResourceManager::write, rm, _1, _2),
-    std::bind(&hardware_interface::ResourceManager::read, rm, _1, _2), WRITE_FAIL_VALUE);
+    std::bind(&TestableResourceManager::write, rm, _1, _2),
+    std::bind(&TestableResourceManager::read, rm, _1, _2), WRITE_FAIL_VALUE);
 }
 
-TEST_F(TestResourceManager, test_caching_of_controllers_to_hardware)
+TEST_F(ResourceManagerTest, test_caching_of_controllers_to_hardware)
 {
-  hardware_interface::ResourceManager rm(ros2_control_test_assets::minimal_robot_urdf, false);
+  TestableResourceManager rm(ros2_control_test_assets::minimal_robot_urdf, false);
   activate_components(rm);
 
   static const std::string TEST_CONTROLLER_ACTUATOR_NAME = "test_controller_actuator";
