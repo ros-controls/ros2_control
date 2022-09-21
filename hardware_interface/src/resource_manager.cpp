@@ -624,6 +624,11 @@ void ResourceManager::load_urdf(const std::string & urdf, bool validate_interfac
   {
     validate_storage(hardware_info);
   }
+
+  std::lock_guard<std::recursive_mutex> guard(resources_lock_);
+  read_write_status.failed_hardware_names.reserve(
+    resource_storage_->actuators_.size() + resource_storage_->sensors_.size() +
+    resource_storage_->systems_.size());
 }
 
 LoanedStateInterface ResourceManager::claim_state_interface(const std::string & key)
@@ -862,19 +867,31 @@ size_t ResourceManager::sensor_components_size() const
 void ResourceManager::import_component(
   std::unique_ptr<ActuatorInterface> actuator, const HardwareInfo & hardware_info)
 {
+  std::lock_guard<std::recursive_mutex> guard(resources_lock_);
   resource_storage_->initialize_actuator(std::move(actuator), hardware_info);
+  read_write_status.failed_hardware_names.reserve(
+    resource_storage_->actuators_.size() + resource_storage_->sensors_.size() +
+    resource_storage_->systems_.size());
 }
 
 void ResourceManager::import_component(
   std::unique_ptr<SensorInterface> sensor, const HardwareInfo & hardware_info)
 {
+  std::lock_guard<std::recursive_mutex> guard(resources_lock_);
   resource_storage_->initialize_sensor(std::move(sensor), hardware_info);
+  read_write_status.failed_hardware_names.reserve(
+    resource_storage_->actuators_.size() + resource_storage_->sensors_.size() +
+    resource_storage_->systems_.size());
 }
 
 void ResourceManager::import_component(
   std::unique_ptr<SystemInterface> system, const HardwareInfo & hardware_info)
 {
+  std::lock_guard<std::recursive_mutex> guard(resources_lock_);
   resource_storage_->initialize_system(std::move(system), hardware_info);
+  read_write_status.failed_hardware_names.reserve(
+    resource_storage_->actuators_.size() + resource_storage_->sensors_.size() +
+    resource_storage_->systems_.size());
 }
 
 size_t ResourceManager::system_components_size() const
@@ -1059,12 +1076,9 @@ return_type ResourceManager::set_component_state(
 HardwareReadWriteStatus ResourceManager::read(
   const rclcpp::Time & time, const rclcpp::Duration & period)
 {
-  // TODO(destogl): make this somewhere where memory will not be initialized each time....
-  HardwareReadWriteStatus read_status;
-  read_status.ok = true;
-  read_status.failed_hardware_names.reserve(
-    resource_storage_->actuators_.size() + resource_storage_->sensors_.size() +
-    resource_storage_->systems_.size());
+  std::lock_guard<std::recursive_mutex> guard(resources_lock_);
+  read_write_status.ok = true;
+  read_write_status.failed_hardware_names.clear();
 
   auto read_components = [&](auto & components)
   {
@@ -1072,8 +1086,8 @@ HardwareReadWriteStatus ResourceManager::read(
     {
       if (component.read(time, period) != return_type::OK)
       {
-        read_status.ok = false;
-        read_status.failed_hardware_names.push_back(component.get_name());
+        read_write_status.ok = false;
+        read_write_status.failed_hardware_names.push_back(component.get_name());
         resource_storage_->remove_all_hardware_interfaces_from_available_list(component.get_name());
       }
     }
@@ -1083,17 +1097,15 @@ HardwareReadWriteStatus ResourceManager::read(
   read_components(resource_storage_->sensors_);
   read_components(resource_storage_->systems_);
 
-  return read_status;
+  return read_write_status;
 }
 
 HardwareReadWriteStatus ResourceManager::write(
   const rclcpp::Time & time, const rclcpp::Duration & period)
 {
-  // TODO(destogl): make this somewhere where memory will not be initialized each time....
-  HardwareReadWriteStatus write_status;
-  write_status.ok = true;
-  write_status.failed_hardware_names.reserve(
-    resource_storage_->actuators_.size() + resource_storage_->systems_.size());
+  std::lock_guard<std::recursive_mutex> guard(resources_lock_);
+  read_write_status.ok = true;
+  read_write_status.failed_hardware_names.clear();
 
   auto write_components = [&](auto & components)
   {
@@ -1101,8 +1113,8 @@ HardwareReadWriteStatus ResourceManager::write(
     {
       if (component.write(time, period) != return_type::OK)
       {
-        write_status.ok = false;
-        write_status.failed_hardware_names.push_back(component.get_name());
+        read_write_status.ok = false;
+        read_write_status.failed_hardware_names.push_back(component.get_name());
         resource_storage_->remove_all_hardware_interfaces_from_available_list(component.get_name());
       }
     }
@@ -1111,7 +1123,7 @@ HardwareReadWriteStatus ResourceManager::write(
   write_components(resource_storage_->actuators_);
   write_components(resource_storage_->systems_);
 
-  return write_status;
+  return read_write_status;
 }
 
 void ResourceManager::validate_storage(
