@@ -108,12 +108,6 @@ public:
    */
   std::vector<std::string> available_state_interfaces() const;
 
-  /// Checks whether a state interface is registered under the given key.
-  /**
-   * \return true if interface exist, false otherwise.
-   */
-  bool state_interface_exists(const std::string & key) const;
-
   /// Checks whether a state interface is available under the given key.
   /**
    * \return true if interface is available, false otherwise.
@@ -227,13 +221,6 @@ public:
    * \return vector of strings, containing all available command interface names.
    */
   std::vector<std::string> available_command_interfaces() const;
-
-  /// Checks whether a command interface is registered under the given key.
-  /**
-   * \param[in] key string identifying the interface to check.
-   * \return true if interface exist, false otherwise.
-   */
-  bool command_interface_exists(const std::string & key) const;
 
   /// Checks whether a command interface is available under the given name.
   /**
@@ -390,6 +377,19 @@ public:
    */
   void activate_all_components();
 
+  /// Checks whether a command interface is registered under the given key.
+  /**
+   * \param[in] key string identifying the interface to check.
+   * \return true if interface exist, false otherwise.
+   */
+  bool command_interface_exists(const std::string & key) const;
+
+  /// Checks whether a state interface is registered under the given key.
+  /**
+   * \return true if interface exist, false otherwise.
+   */
+  bool state_interface_exists(const std::string & key) const;
+
 private:
   void validate_storage(const std::vector<hardware_interface::HardwareInfo> & hardware_info) const;
 
@@ -400,6 +400,7 @@ private:
   mutable std::recursive_mutex resource_interfaces_lock_;
   mutable std::recursive_mutex claimed_command_interfaces_lock_;
   mutable std::recursive_mutex resources_lock_;
+
   std::unique_ptr<ResourceStorage> resource_storage_;
 
   // Structure to store read and write status so it is not initialized in the real-time loop
