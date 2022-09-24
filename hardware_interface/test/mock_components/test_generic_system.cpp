@@ -40,9 +40,14 @@ const auto COMPARE_DELTA = 0.0001;
 class TestGenericSystem : public ::testing::Test
 {
 public:
+<<<<<<< HEAD
   void test_generic_system_with_mimic_joint(const std::string & urdf);
   void test_generic_system_with_mock_sensor_commands(const std::string & urdf);
   void test_generic_system_with_mock_gpio_commands(const std::string & urdf);
+=======
+  void test_generic_system_with_fake_sensor_commands(std::string & urdf);
+  void test_generic_system_with_mimic_joint(std::string & urdf);
+>>>>>>> 88c74ae (Cleanup Resource Manager a bit to increase clarity. (#816))
 
 protected:
   void SetUp() override
@@ -632,9 +637,41 @@ public:
   }
 };
 
+// Forward declaration
+namespace hardware_interface
+{
+class ResourceStorage;
+}
+
+class TestableResourceManager : public hardware_interface::ResourceManager
+{
+public:
+  friend TestGenericSystem;
+
+  FRIEND_TEST(TestGenericSystem, generic_fake_system_2dof_symetric_interfaces);
+  FRIEND_TEST(TestGenericSystem, generic_system_2dof_symetric_interfaces);
+  FRIEND_TEST(TestGenericSystem, generic_system_2dof_asymetric_interfaces);
+  FRIEND_TEST(TestGenericSystem, generic_system_2dof_other_interfaces);
+  FRIEND_TEST(TestGenericSystem, generic_system_2dof_sensor);
+  FRIEND_TEST(TestGenericSystem, generic_system_2dof_sensor_fake_command);
+  FRIEND_TEST(TestGenericSystem, generic_system_2dof_sensor_fake_command_True);
+  FRIEND_TEST(TestGenericSystem, hardware_system_2dof_with_mimic_joint);
+  FRIEND_TEST(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio);
+  FRIEND_TEST(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_fake_command);
+  FRIEND_TEST(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_fake_command);
+
+  TestableResourceManager() : hardware_interface::ResourceManager() {}
+
+  TestableResourceManager(
+    const std::string & urdf, bool validate_interfaces = true, bool activate_all = false)
+  : hardware_interface::ResourceManager(urdf, validate_interfaces, activate_all)
+  {
+  }
+};
+
 void set_components_state(
-  hardware_interface::ResourceManager & rm, const std::vector<std::string> & components,
-  const uint8_t state_id, const std::string & state_name)
+  TestableResourceManager & rm, const std::vector<std::string> & components, const uint8_t state_id,
+  const std::string & state_name)
 {
   for (const auto & component : components)
   {
@@ -644,7 +681,7 @@ void set_components_state(
 }
 
 auto configure_components = [](
-                              hardware_interface::ResourceManager & rm,
+                              TestableResourceManager & rm,
                               const std::vector<std::string> & components = {"GenericSystem2dof"})
 {
   set_components_state(
@@ -653,7 +690,7 @@ auto configure_components = [](
 };
 
 auto activate_components = [](
-                             hardware_interface::ResourceManager & rm,
+                             TestableResourceManager & rm,
                              const std::vector<std::string> & components = {"GenericSystem2dof"})
 {
   set_components_state(
@@ -662,7 +699,7 @@ auto activate_components = [](
 };
 
 auto deactivate_components = [](
-                               hardware_interface::ResourceManager & rm,
+                               TestableResourceManager & rm,
                                const std::vector<std::string> & components = {"GenericSystem2dof"})
 {
   set_components_state(
@@ -674,7 +711,7 @@ TEST_F(TestGenericSystem, load_generic_system_2dof)
 {
   auto urdf = ros2_control_test_assets::urdf_head + hardware_system_2dof_ +
               ros2_control_test_assets::urdf_tail;
-  ASSERT_NO_THROW(hardware_interface::ResourceManager rm(urdf));
+  ASSERT_NO_THROW(TestableResourceManager rm(urdf));
 }
 
 // REMOVE THIS TEST ONCE FAKE COMPONENTS ARE REMOVED
@@ -682,7 +719,7 @@ TEST_F(TestGenericSystem, generic_fake_system_2dof_symetric_interfaces)
 {
   auto urdf = ros2_control_test_assets::urdf_head + hardware_fake_system_2dof_ +
               ros2_control_test_assets::urdf_tail;
-  hardware_interface::ResourceManager rm(urdf);
+  TestableResourceManager rm(urdf);
   // Activate components to get all interfaces available
   activate_components(rm);
 
@@ -713,7 +750,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_symetric_interfaces)
 {
   auto urdf = ros2_control_test_assets::urdf_head + hardware_system_2dof_ +
               ros2_control_test_assets::urdf_tail;
-  hardware_interface::ResourceManager rm(urdf);
+  TestableResourceManager rm(urdf);
   // Activate components to get all interfaces available
   activate_components(rm);
 
@@ -744,7 +781,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_asymetric_interfaces)
 {
   auto urdf = ros2_control_test_assets::urdf_head + hardware_system_2dof_asymetric_ +
               ros2_control_test_assets::urdf_tail;
-  hardware_interface::ResourceManager rm(urdf);
+  TestableResourceManager rm(urdf);
   // Activate components to get all interfaces available
   activate_components(rm);
 
@@ -790,7 +827,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_asymetric_interfaces)
 
 void generic_system_functional_test(const std::string & urdf, const double offset = 0)
 {
-  hardware_interface::ResourceManager rm(urdf);
+  TestableResourceManager rm(urdf);
   // check is hardware is configured
   auto status_map = rm.get_components_status();
   EXPECT_EQ(
@@ -900,7 +937,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_other_interfaces)
 {
   auto urdf = ros2_control_test_assets::urdf_head + hardware_system_2dof_with_other_interface_ +
               ros2_control_test_assets::urdf_tail;
-  hardware_interface::ResourceManager rm(urdf);
+  TestableResourceManager rm(urdf);
   // Activate components to get all interfaces available
   activate_components(rm);
 
@@ -983,7 +1020,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_sensor)
 {
   auto urdf = ros2_control_test_assets::urdf_head + hardware_system_2dof_with_sensor_ +
               ros2_control_test_assets::urdf_tail;
-  hardware_interface::ResourceManager rm(urdf);
+  TestableResourceManager rm(urdf);
   // Activate components to get all interfaces available
   activate_components(rm);
 
@@ -1079,9 +1116,13 @@ TEST_F(TestGenericSystem, generic_system_2dof_sensor)
   ASSERT_EQ(0.33, j2p_c.get_value());
 }
 
+<<<<<<< HEAD
 void TestGenericSystem::test_generic_system_with_mock_sensor_commands(const std::string & urdf)
+=======
+void TestGenericSystem::test_generic_system_with_fake_sensor_commands(std::string & urdf)
+>>>>>>> 88c74ae (Cleanup Resource Manager a bit to increase clarity. (#816))
 {
-  hardware_interface::ResourceManager rm(urdf);
+  TestableResourceManager rm(urdf);
   // Activate components to get all interfaces available
   activate_components(rm);
 
@@ -1218,9 +1259,13 @@ TEST_F(TestGenericSystem, generic_system_2dof_sensor_mock_command_True)
   test_generic_system_with_mock_sensor_commands(urdf);
 }
 
+<<<<<<< HEAD
 void TestGenericSystem::test_generic_system_with_mimic_joint(const std::string & urdf)
+=======
+void TestGenericSystem::test_generic_system_with_mimic_joint(std::string & urdf)
+>>>>>>> 88c74ae (Cleanup Resource Manager a bit to increase clarity. (#816))
 {
-  hardware_interface::ResourceManager rm(urdf);
+  TestableResourceManager rm(urdf);
   // Activate components to get all interfaces available
   activate_components(rm);
 
@@ -1319,7 +1364,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_functionality_with_offset_custom_i
 
   const double offset = -3;
 
-  hardware_interface::ResourceManager rm(urdf);
+  TestableResourceManager rm(urdf);
 
   // check is hardware is configured
   auto status_map = rm.get_components_status();
@@ -1429,11 +1474,11 @@ TEST_F(TestGenericSystem, generic_system_2dof_functionality_with_offset_custom_i
     hardware_interface::lifecycle_state_names::INACTIVE);
 }
 
-TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_)
+TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio)
 {
   auto urdf = ros2_control_test_assets::urdf_head +
               valid_urdf_ros2_control_system_robot_with_gpio_ + ros2_control_test_assets::urdf_tail;
-  hardware_interface::ResourceManager rm(urdf);
+  TestableResourceManager rm(urdf);
 
   // check is hardware is started
   auto status_map = rm.get_components_status();
@@ -1527,8 +1572,16 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_)
   generic_system_functional_test(urdf);
 }
 
+<<<<<<< HEAD
 void TestGenericSystem::test_generic_system_with_mock_gpio_commands(const std::string & urdf)
 {
+=======
+TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_fake_command)
+{
+  auto urdf = ros2_control_test_assets::urdf_head +
+              valid_urdf_ros2_control_system_robot_with_gpio_fake_command_ +
+              ros2_control_test_assets::urdf_tail;
+>>>>>>> 88c74ae (Cleanup Resource Manager a bit to increase clarity. (#816))
   TestableResourceManager rm(urdf);
 
   // check is hardware is started
