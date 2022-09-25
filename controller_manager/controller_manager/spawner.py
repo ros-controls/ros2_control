@@ -158,7 +158,7 @@ def main(args=None):
         raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), param_file)
 
     node = Node('spawner_' + controller_name)
-    if not args.controller_manager.startswith('/'):
+    if not controller_manager_name.startswith('/'):
         spawner_namespace = node.get_namespace()
         if spawner_namespace != '/':
             controller_manager_name = f"{spawner_namespace}/{args.controller_manager}"
