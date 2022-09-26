@@ -853,6 +853,7 @@ controller_interface::return_type ControllerManager::switch_controller(
       return controller_interface::return_type::ERROR;
     }
   }
+
   // start the atomic controller switching
   switch_params_.strictness = strictness;
   switch_params_.activate_asap = activate_asap;
@@ -977,7 +978,10 @@ void ControllerManager::manage_switch()
     RCLCPP_ERROR(get_logger(), "Error while performing mode switch.");
   }
 
-  deactivate_controllers();
+  std::vector<ControllerSpec> & rt_controller_list =
+    rt_controllers_wrapper_.update_and_get_used_by_rt_list();
+
+  deactivate_controllers(rt_controller_list, deactivate_request_);
 
   switch_chained_mode(to_chained_mode_request_, true);
   switch_chained_mode(from_chained_mode_request_, false);
@@ -985,23 +989,23 @@ void ControllerManager::manage_switch()
   // activate controllers once the switch is fully complete
   if (!switch_params_.activate_asap)
   {
-    activate_controllers();
+    activate_controllers(rt_controller_list, activate_request_);
   }
   else
   {
     // activate controllers as soon as their required joints are done switching
-    activate_controllers_asap();
+    activate_controllers_asap(rt_controller_list, activate_request_);
   }
 
   // TODO(destogl): move here "do_switch = false"
 }
 
-void ControllerManager::deactivate_controllers()
+void ControllerManager::deactivate_controllers(
+  const std::vector<ControllerSpec> & rt_controller_list,
+  const std::vector<std::string> controllers_to_deactivate)
 {
-  std::vector<ControllerSpec> & rt_controller_list =
-    rt_controllers_wrapper_.update_and_get_used_by_rt_list();
-  // stop controllers
-  for (const auto & request : deactivate_request_)
+  // deactivate controllers
+  for (const auto & request : controllers_to_deactivate)
   {
     auto found_it = std::find_if(
       rt_controller_list.begin(), rt_controller_list.end(),
@@ -1010,7 +1014,7 @@ void ControllerManager::deactivate_controllers()
     {
       RCLCPP_ERROR(
         get_logger(),
-        "Got request to stop controller '%s' but it is not in the realtime controller list",
+        "Got request to deactivate controller '%s' but it is not in the realtime controller list",
         request.c_str());
       continue;
     }
@@ -1086,11 +1090,11 @@ void ControllerManager::switch_chained_mode(
   }
 }
 
-void ControllerManager::activate_controllers()
+void ControllerManager::activate_controllers(
+  const std::vector<ControllerSpec> & rt_controller_list,
+  const std::vector<std::string> controllers_to_activate)
 {
-  std::vector<ControllerSpec> & rt_controller_list =
-    rt_controllers_wrapper_.update_and_get_used_by_rt_list();
-  for (const auto & request : activate_request_)
+  for (const auto & request : controllers_to_activate)
   {
     auto found_it = std::find_if(
       rt_controller_list.begin(), rt_controller_list.end(),
@@ -1197,10 +1201,12 @@ void ControllerManager::activate_controllers()
   switch_params_.do_switch = false;
 }
 
-void ControllerManager::activate_controllers_asap()
+void ControllerManager::activate_controllers_asap(
+  const std::vector<ControllerSpec> & rt_controller_list,
+  const std::vector<std::string> controllers_to_activate)
 {
   //  https://github.com/ros-controls/ros2_control/issues/263
-  activate_controllers();
+  activate_controllers(rt_controller_list, controllers_to_activate);
 }
 
 void ControllerManager::list_controllers_srv_cb(
