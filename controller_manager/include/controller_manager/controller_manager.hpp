@@ -40,6 +40,7 @@
 #include "controller_manager_msgs/srv/switch_controller.hpp"
 #include "controller_manager_msgs/srv/unload_controller.hpp"
 
+#include "diagnostic_updater/diagnostic_updater.hpp"
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/resource_manager.hpp"
 
@@ -274,7 +275,7 @@ protected:
 
   std::unique_ptr<hardware_interface::ResourceManager> resource_manager_;
 
-private:
+private:  
   std::vector<std::string> get_controller_names();
   std::pair<std::string, std::string> split_command_interface(
     const std::string & command_interface);
@@ -345,11 +346,15 @@ private:
     const std::vector<ControllerSpec> & controllers, int strictness,
     const ControllersListIterator controller_it);
 
+  void CreateActiveDiagnostic(diagnostic_updater::DiagnosticStatusWrapper & stat);
+  diagnostic_updater::Updater diagnostics_updater_;
+
   std::shared_ptr<rclcpp::Executor> executor_;
 
   std::shared_ptr<pluginlib::ClassLoader<controller_interface::ControllerInterface>> loader_;
   std::shared_ptr<pluginlib::ClassLoader<controller_interface::ChainableControllerInterface>>
     chainable_loader_;
+
 
   /// Best effort (non real-time safe) callback group, e.g., service callbacks.
   /**
@@ -357,7 +362,7 @@ private:
    * real-time requirements, for example, service callbacks.
    */
   rclcpp::CallbackGroup::SharedPtr best_effort_callback_group_;
-
+  
   /**
    * The RTControllerListWrapper class wraps a double-buffered list of controllers
    * to avoid needing to lock the real-time thread when switching controllers in

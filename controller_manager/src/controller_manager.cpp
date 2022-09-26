@@ -147,7 +147,8 @@ ControllerManager::ControllerManager(
     kControllerInterfaceNamespace, kControllerInterfaceClassName)),
   chainable_loader_(
     std::make_shared<pluginlib::ClassLoader<controller_interface::ChainableControllerInterface>>(
-      kControllerInterfaceNamespace, kChainableControllerInterfaceClassName))
+      kControllerInterfaceNamespace, kChainableControllerInterfaceClassName)),
+  diagnostics_updater_(this)
 {
   if (!get_parameter("update_rate", update_rate_))
   {
@@ -163,6 +164,8 @@ ControllerManager::ControllerManager(
 
   init_resource_manager(robot_description);
 
+  diagnostics_updater_.setHardwareID("ros2_control");
+  diagnostics_updater_.add("Controllers Health", this, &ControllerManager::CreateActiveDiagnostic);
   init_services();
 }
 
@@ -177,8 +180,12 @@ ControllerManager::ControllerManager(
     kControllerInterfaceNamespace, kControllerInterfaceClassName)),
   chainable_loader_(
     std::make_shared<pluginlib::ClassLoader<controller_interface::ChainableControllerInterface>>(
-      kControllerInterfaceNamespace, kChainableControllerInterfaceClassName))
+      kControllerInterfaceNamespace, kChainableControllerInterfaceClassName)),
+  diagnostics_updater_(this)
 {
+  diagnostics_updater_.setHardwareID("ros2_control");
+  diagnostics_updater_.add("Controllers Health", this, &ControllerManager::CreateActiveDiagnostic);
+
   init_services();
 }
 
@@ -2027,5 +2034,26 @@ controller_interface::return_type ControllerManager::check_preceeding_controller
   }
   return controller_interface::return_type::OK;
 };
+
+void ControllerManager::CreateActiveDiagnostic(diagnostic_updater::DiagnosticStatusWrapper & /*stat*/)
+{
+  // lock controllers
+  // std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
+  // const std::vector<ControllerSpec> & controllers = rt_controllers_wrapper_.get_updated_list(guard);
+  // for (size_t i = 0; i < controllers.size(); ++i)
+  // {
+  //   stat.add("Controller name", controllers[i].info.name);
+  //   stat.add("Controller state", controllers[i].c->get_state().label());
+
+  //   // Get information about interfaces if controller are in 'inactive' or 'active' state
+  //   //if (is_controller_active(controllers[i].c) || is_controller_inactive(controllers[i].c))
+  // }
+
+  // if (system_active_) {
+  //   stat.summary(diagnostic_msgs::msg::DiagnosticStatus::OK, "Nav2 is active");
+  // } else {
+  //   stat.summary(diagnostic_msgs::msg::DiagnosticStatus::ERROR, "Nav2 is inactive");
+  // }
+}
 
 }  // namespace controller_manager
