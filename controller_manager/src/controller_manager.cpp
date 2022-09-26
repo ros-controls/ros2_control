@@ -185,7 +185,6 @@ ControllerManager::ControllerManager(
 {
   diagnostics_updater_.setHardwareID("ros2_control");
   diagnostics_updater_.add("Controllers Health", this, &ControllerManager::CreateActiveDiagnostic);
-
   init_services();
 }
 

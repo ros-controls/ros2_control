@@ -275,7 +275,7 @@ protected:
 
   std::unique_ptr<hardware_interface::ResourceManager> resource_manager_;
 
-private:  
+private:
   std::vector<std::string> get_controller_names();
   std::pair<std::string, std::string> split_command_interface(
     const std::string & command_interface);
@@ -355,14 +355,13 @@ private:
   std::shared_ptr<pluginlib::ClassLoader<controller_interface::ChainableControllerInterface>>
     chainable_loader_;
 
-
   /// Best effort (non real-time safe) callback group, e.g., service callbacks.
   /**
    * Best effort (non real-time safe) callback group for callbacks that can possibly break
    * real-time requirements, for example, service callbacks.
    */
   rclcpp::CallbackGroup::SharedPtr best_effort_callback_group_;
-  
+
   /**
    * The RTControllerListWrapper class wraps a double-buffered list of controllers
    * to avoid needing to lock the real-time thread when switching controllers in
