@@ -99,7 +99,8 @@ private:
 
   void initialize_storage_vectors(
     std::vector<std::vector<double>> & commands, std::vector<std::vector<double>> & states,
-    const std::vector<std::string> & interfaces);
+    const std::vector<std::string> & interfaces,
+    const std::vector<hardware_interface::ComponentInfo> & components);
 
   template <typename InterfaceType>
   bool populate_interfaces(
