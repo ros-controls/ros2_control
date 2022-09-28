@@ -165,7 +165,8 @@ ControllerManager::ControllerManager(
   init_resource_manager(robot_description);
 
   diagnostics_updater_.setHardwareID("ros2_control");
-  diagnostics_updater_.add("Controllers Activity", this, &ControllerManager::controller_activity_diagnostic_callback);
+  diagnostics_updater_.add(
+    "Controllers Activity", this, &ControllerManager::controller_activity_diagnostic_callback);
   init_services();
 }
 
@@ -184,7 +185,8 @@ ControllerManager::ControllerManager(
   diagnostics_updater_(this)
 {
   diagnostics_updater_.setHardwareID("ros2_control");
-  diagnostics_updater_.add("Controllers Health", this, &ControllerManager::controller_activity_diagnostic_callback);
+  diagnostics_updater_.add(
+    "Controllers Activity", this, &ControllerManager::controller_activity_diagnostic_callback);
   init_services();
 }
 
@@ -2125,7 +2127,8 @@ controller_interface::return_type ControllerManager::check_preceeding_controller
   return controller_interface::return_type::OK;
 };
 
-void ControllerManager::controller_activity_diagnostic_callback(diagnostic_updater::DiagnosticStatusWrapper & stat)
+void ControllerManager::controller_activity_diagnostic_callback(
+  diagnostic_updater::DiagnosticStatusWrapper & stat)
 {
   // lock controllers
   std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
