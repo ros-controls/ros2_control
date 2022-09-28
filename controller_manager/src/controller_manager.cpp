@@ -831,6 +831,45 @@ controller_interface::return_type ControllerManager::switch_controller(
     {
       extract_interfaces_for_controller(controller, deactivate_command_interface_request_);
     }
+
+    // cache mapping between hardware and controllers for stopping when read/write error happens
+    // TODO(destogl): This caching approach is suboptimal because the cache can fast become
+    // outdated. Keeping it up to date is not easy because of stopping controllers from multiple
+    // threads maybe we should not at all cache this but always search for the related controllers
+    // to a hardware when error in hardware happens
+    if (in_activate_list)
+    {
+      std::vector<std::string> interface_names = {};
+
+      auto command_interface_config = controller.c->command_interface_configuration();
+      if (command_interface_config.type == controller_interface::interface_configuration_type::ALL)
+      {
+        interface_names = resource_manager_->available_command_interfaces();
+      }
+      if (
+        command_interface_config.type ==
+        controller_interface::interface_configuration_type::INDIVIDUAL)
+      {
+        interface_names = command_interface_config.names;
+      }
+
+      std::vector<std::string> interfaces = {};
+      auto state_interface_config = controller.c->state_interface_configuration();
+      if (state_interface_config.type == controller_interface::interface_configuration_type::ALL)
+      {
+        interfaces = resource_manager_->available_state_interfaces();
+      }
+      if (
+        state_interface_config.type ==
+        controller_interface::interface_configuration_type::INDIVIDUAL)
+      {
+        interfaces = state_interface_config.names;
+      }
+
+      interface_names.insert(interface_names.end(), interfaces.begin(), interfaces.end());
+
+      resource_manager_->cache_controller_to_hardware(controller.info.name, interface_names);
+    }
   }
 
   if (activate_request_.empty() && deactivate_request_.empty())
@@ -1553,6 +1592,20 @@ void ControllerManager::list_hardware_components_srv_cb(
       hwi.name = interface;
       hwi.is_available = resource_manager_->command_interface_is_available(interface);
       hwi.is_claimed = resource_manager_->command_interface_is_claimed(interface);
+      // TODO(destogl): Add here mapping to controller that has claimed or
+      // can be claiming this interface
+      // Those should be two variables
+      // if (hwi.is_claimed)
+      // {
+      //   for (const auto & controller : controllers_that_use_interface(interface))
+      //   {
+      //     if (is_controller_active(controller))
+      //     {
+      //       hwi.is_claimed_by = controller;
+      //     }
+      //   }
+      // }
+      // hwi.is_used_by = controllers_that_use_interface(interface);
       component.command_interfaces.push_back(hwi);
     }
 
@@ -1651,7 +1704,23 @@ std::vector<std::string> ControllerManager::get_controller_names()
 
 void ControllerManager::read(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
-  resource_manager_->read(time, period);
+  auto [ok, failed_hardware_names] = resource_manager_->read(time, period);
+
+  if (!ok)
+  {
+    std::vector<std::string> stop_request = {};
+    // Determine controllers to stop
+    for (const auto & hardware_name : failed_hardware_names)
+    {
+      auto controllers = resource_manager_->get_cached_controllers_to_hardware(hardware_name);
+      stop_request.insert(stop_request.end(), controllers.begin(), controllers.end());
+    }
+
+    std::vector<ControllerSpec> & rt_controller_list =
+      rt_controllers_wrapper_.update_and_get_used_by_rt_list();
+    deactivate_controllers(rt_controller_list, stop_request);
+    // TODO(destogl): do auto-start of broadcasters
+  }
 }
 
 controller_interface::return_type ControllerManager::update(
@@ -1705,7 +1774,23 @@ controller_interface::return_type ControllerManager::update(
 
 void ControllerManager::write(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
-  resource_manager_->write(time, period);
+  auto [ok, failed_hardware_names] = resource_manager_->write(time, period);
+
+  if (!ok)
+  {
+    std::vector<std::string> stop_request = {};
+    // Determine controllers to stop
+    for (const auto & hardware_name : failed_hardware_names)
+    {
+      auto controllers = resource_manager_->get_cached_controllers_to_hardware(hardware_name);
+      stop_request.insert(stop_request.end(), controllers.begin(), controllers.end());
+    }
+
+    std::vector<ControllerSpec> & rt_controller_list =
+      rt_controllers_wrapper_.update_and_get_used_by_rt_list();
+    deactivate_controllers(rt_controller_list, stop_request);
+    // TODO(destogl): do auto-start of broadcasters
+  }
 }
 
 std::vector<ControllerSpec> &
