@@ -149,6 +149,7 @@ def main(args=None):
     command_line_args = rclpy.utilities.remove_ros_args(args=sys.argv)[1:]
     args = parser.parse_args(command_line_args)
     controller_name = args.controller_name
+    controller_manager_name = args.controller_manager
     param_file = args.param_file
     controller_type = args.controller_type
     controller_manager_timeout = args.controller_manager_timeout
@@ -157,10 +158,10 @@ def main(args=None):
         raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), param_file)
 
     node = Node('spawner_' + controller_name)
-    if not args.controller_manager.startswith('/'):
+    if not controller_manager_name.startswith('/'):
         spawner_namespace = node.get_namespace()
         if spawner_namespace != '/':
-            controller_manager_name = f"{spawner_namespace}/{args.controller_manager}"
+            controller_manager_name = f"{spawner_namespace}/{controller_manager_name}"
         else:
             controller_manager_name = f"/{controller_manager_name}"
 
