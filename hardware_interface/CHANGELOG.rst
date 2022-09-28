@@ -2,6 +2,12 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+3.0.0 (2022-09-19)
+------------------
+
+2.15.0 (2022-09-19)
+-------------------
+
 2.14.0 (2022-09-04)
 -------------------
 * Add doxygen comments (`#777 <https://github.com/ros-controls/ros2_control/issues/777>`_)

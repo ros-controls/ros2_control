@@ -195,6 +195,7 @@ const rclcpp_lifecycle::State & Sensor::get_state() const { return impl_->get_st
 
 return_type Sensor::read(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
+  // TODO(destogl): discuss what should be default return value, e.g., "NOT_EXECUTED"
   return_type result = return_type::ERROR;
   if (
     impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
