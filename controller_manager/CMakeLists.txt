@@ -106,6 +106,14 @@ if(BUILD_TESTING)
   ament_target_dependencies(test_controller_manager_with_namespace.cpp ros2_control_test_assets)
 
   ament_add_gmock(
+    test_controller_manager_hardware_error_handling
+    test/test_controller_manager_hardware_error_handling.cpp
+  )
+  target_include_directories(test_controller_manager_hardware_error_handling PRIVATE include)
+  target_link_libraries(test_controller_manager_hardware_error_handling ${PROJECT_NAME} test_controller)
+  ament_target_dependencies(test_controller_manager_hardware_error_handling ros2_control_test_assets)
+
+  ament_add_gmock(
     test_load_controller
     test/test_load_controller.cpp
     APPEND_ENV AMENT_PREFIX_PATH=${ament_index_build_path}_$<CONFIG>

@@ -105,7 +105,6 @@ public:
     const std::future_status expected_future_status = std::future_status::timeout,
     const controller_interface::return_type expected_return = controller_interface::return_type::OK)
   {
-    // First activation not possible because controller not configured
     auto switch_future = std::async(
       std::launch::async, &controller_manager::ControllerManager::switch_controller, cm_,
       start_controllers, stop_controllers, strictness, true, rclcpp::Duration(0, 0));
