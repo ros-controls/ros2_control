@@ -2133,7 +2133,7 @@ void ControllerManager::CreateActiveDiagnostic(diagnostic_updater::DiagnosticSta
   bool all_active = true;
   for (size_t i = 0; i < controllers.size(); ++i)
   {
-    if(!is_controller_active(controllers[i].c))
+    if (!is_controller_active(controllers[i].c))
     {
       all_active = false;
     }
@@ -2143,7 +2143,8 @@ void ControllerManager::CreateActiveDiagnostic(diagnostic_updater::DiagnosticSta
   if (all_active)
   {
     stat.summary(diagnostic_msgs::msg::DiagnosticStatus::OK, "All controllers are active");
-  } else
+  }
+  else
   {
     stat.summary(diagnostic_msgs::msg::DiagnosticStatus::ERROR, "Not all controllers are active");
   }
