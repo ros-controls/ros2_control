@@ -72,9 +72,37 @@ public:
   CONTROLLER_INTERFACE_PUBLIC
   virtual ~ControllerInterfaceBase() = default;
 
+  /// Get configuration for controller's required command interfaces.
+  /**
+   * Method used by the controller_manager to get the set of command interfaces used by the controller.
+   * Each controller can use individual method to determine interface names that in simples case
+   * have the following format: `<joint>/<interface>`.
+   * The method is called only in `inactive` or `active` state, i.e., `on_configure` has to be
+   * called first.
+   * The configuration is used to check if controller can be activated and to claim interfaces from
+   * hardware.
+   * The claimed interfaces are populated in the
+   * \ref ControllerInterfaceBase::command_interfaces_ "command_interfaces_" member.
+   *
+   * \returns configuration of command interfaces.
+   */
   CONTROLLER_INTERFACE_PUBLIC
   virtual InterfaceConfiguration command_interface_configuration() const = 0;
 
+  /// Get configuration for controller's required state interfaces.
+  /**
+   * Method used by the controller_manager to get the set of state interface used by the controller.
+   * Each controller can use individual method to determine interface names that in simples case
+   * have the following format: `<joint>/<interface>`.
+   * The method is called only in `inactive` or `active` state, i.e., `on_configure` has to be
+   * called first.
+   * The configuration is used to check if controller can be activated and to claim interfaces from
+   * hardware.
+   * The claimed interfaces are populated in the
+   * \ref ControllerInterfaceBase::state_interface_ "state_interface_" member.
+   *
+   * \returns configuration of state interfaces.
+   */
   CONTROLLER_INTERFACE_PUBLIC
   virtual InterfaceConfiguration state_interface_configuration() const = 0;
 
