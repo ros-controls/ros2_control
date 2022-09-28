@@ -72,9 +72,37 @@ public:
   CONTROLLER_INTERFACE_PUBLIC
   virtual ~ControllerInterfaceBase() = default;
 
+  /// Get configuration for controller's required command interfaces.
+  /**
+   * Method used by the controller_manager to get the set of command interfaces used by the controller.
+   * Each controller can use individual method to determine interface names that in simples case
+   * have the following format: `<joint>/<interface>`.
+   * The method is called only in `inactive` or `active` state, i.e., `on_configure` has to be
+   * called first.
+   * The configuration is used to check if controller can be activated and to claim interfaces from
+   * hardware.
+   * The claimed interfaces are populated in the
+   * \ref ControllerInterfaceBase::command_interfaces_ "command_interfaces_" member.
+   *
+   * \returns configuration of command interfaces.
+   */
   CONTROLLER_INTERFACE_PUBLIC
   virtual InterfaceConfiguration command_interface_configuration() const = 0;
 
+  /// Get configuration for controller's required state interfaces.
+  /**
+   * Method used by the controller_manager to get the set of state interface used by the controller.
+   * Each controller can use individual method to determine interface names that in simples case
+   * have the following format: `<joint>/<interface>`.
+   * The method is called only in `inactive` or `active` state, i.e., `on_configure` has to be
+   * called first.
+   * The configuration is used to check if controller can be activated and to claim interfaces from
+   * hardware.
+   * The claimed interfaces are populated in the
+   * \ref ControllerInterfaceBase::state_interface_ "state_interface_" member.
+   *
+   * \returns configuration of state interfaces.
+   */
   CONTROLLER_INTERFACE_PUBLIC
   virtual InterfaceConfiguration state_interface_configuration() const = 0;
 
@@ -89,10 +117,7 @@ public:
   CONTROLLER_INTERFACE_PUBLIC
   virtual return_type init(
     const std::string & controller_name, const std::string & namespace_ = "",
-    const rclcpp::NodeOptions & node_options =
-      rclcpp::NodeOptions()
-        .allow_undeclared_parameters(true)
-        .automatically_declare_parameters_from_overrides(true));
+    const rclcpp::NodeOptions & node_options = rclcpp::NodeOptions());
 
   /// Custom configure method to read additional parameters for controller-nodes
   /*
@@ -105,6 +130,14 @@ public:
   CONTROLLER_INTERFACE_PUBLIC
   virtual CallbackReturn on_init() = 0;
 
+  /**
+   * Control step update. Command interfaces are updated based on on reference inputs and current states.
+   * **The method called in the (real-time) control loop.**
+   *
+   * \param[in] time The time at the start of this control loop iteration
+   * \param[in] period The measured time taken by the last control loop iteration
+   * \returns return_type::OK if update is successfully, otherwise return_type::ERROR.
+   */
   CONTROLLER_INTERFACE_PUBLIC
   virtual return_type update(const rclcpp::Time & time, const rclcpp::Duration & period) = 0;
 

@@ -105,7 +105,6 @@ public:
     const std::future_status expected_future_status = std::future_status::timeout,
     const controller_interface::return_type expected_return = controller_interface::return_type::OK)
   {
-    // First activation not possible because controller not configured
     auto switch_future = std::async(
       std::launch::async, &controller_manager::ControllerManager::switch_controller, cm_,
       start_controllers, stop_controllers, strictness, true, rclcpp::Duration(0, 0));
@@ -150,7 +149,7 @@ public:
 
     executor_spin_future_ = std::async(std::launch::async, [this]() -> void { executor_->spin(); });
     // This sleep is needed to prevent a too fast test from ending before the
-    // executor has began to spin, which causes it to hang
+    // executor has begun to spin, which causes it to hang
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
   }
 

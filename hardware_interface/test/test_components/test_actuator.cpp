@@ -75,6 +75,13 @@ class TestActuator : public ActuatorInterface
 
   return_type read(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
   {
+    // simulate error on read
+    if (velocity_command_ == 28282828.0)
+    {
+      // reset value to get out from error on the next call - simplifies CM tests
+      velocity_command_ = 0.0;
+      return return_type::ERROR;
+    }
     // The next line is for the testing purposes. We need value to be changed to be sure that
     // the feedback from hardware to controllers in the chain is working as it should.
     // This makes value checks clearer and confirms there is no "state = command" line or some
@@ -85,6 +92,13 @@ class TestActuator : public ActuatorInterface
 
   return_type write(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
   {
+    // simulate error on write
+    if (velocity_command_ == 23232323.0)
+    {
+      // reset value to get out from error on the next call - simplifies CM tests
+      velocity_command_ = 0.0;
+      return return_type::ERROR;
+    }
     return return_type::OK;
   }
 

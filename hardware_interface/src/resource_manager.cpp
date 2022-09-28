@@ -101,6 +101,8 @@ public:
     component_info.class_type = hardware_info.hardware_class_type;
 
     hardware_info_map_.insert(std::make_pair(component_info.name, component_info));
+    hardware_used_by_controllers_.insert(
+      std::make_pair(component_info.name, std::vector<std::string>()));
   }
 
   template <class HardwareT>
@@ -195,6 +197,58 @@ public:
     return result;
   }
 
+  void remove_all_hardware_interfaces_from_available_list(const std::string & hardware_name)
+  {
+    // remove all command interfaces from available list
+    for (const auto & interface : hardware_info_map_[hardware_name].command_interfaces)
+    {
+      auto found_it = std::find(
+        available_command_interfaces_.begin(), available_command_interfaces_.end(), interface);
+
+      if (found_it != available_command_interfaces_.end())
+      {
+        available_command_interfaces_.erase(found_it);
+        RCUTILS_LOG_DEBUG_NAMED(
+          "resource_manager", "(hardware '%s'): '%s' command interface removed from available list",
+          hardware_name.c_str(), interface.c_str());
+      }
+      else
+      {
+        // TODO(destogl): do here error management if interfaces are only partially added into
+        // "available" list - this should never be the case!
+        RCUTILS_LOG_WARN_NAMED(
+          "resource_manager",
+          "(hardware '%s'): '%s' command interface not in available list. "
+          "This should not happen (hint: multiple cleanup calls).",
+          hardware_name.c_str(), interface.c_str());
+      }
+    }
+    // remove all state interfaces from available list
+    for (const auto & interface : hardware_info_map_[hardware_name].state_interfaces)
+    {
+      auto found_it = std::find(
+        available_state_interfaces_.begin(), available_state_interfaces_.end(), interface);
+
+      if (found_it != available_state_interfaces_.end())
+      {
+        available_state_interfaces_.erase(found_it);
+        RCUTILS_LOG_DEBUG_NAMED(
+          "resource_manager", "(hardware '%s'): '%s' state interface removed from available list",
+          hardware_name.c_str(), interface.c_str());
+      }
+      else
+      {
+        // TODO(destogl): do here error management if interfaces are only partially added into
+        // "available" list - this should never be the case!
+        RCUTILS_LOG_WARN_NAMED(
+          "resource_manager",
+          "(hardware '%s'): '%s' state interface not in available list. "
+          "This should not happen (hint: multiple cleanup calls).",
+          hardware_name.c_str(), interface.c_str());
+      }
+    }
+  }
+
   template <class HardwareT>
   bool cleanup_hardware(HardwareT & hardware)
   {
@@ -204,55 +258,7 @@ public:
 
     if (result)
     {
-      // remove all command interfaces from available list
-      for (const auto & interface : hardware_info_map_[hardware.get_name()].command_interfaces)
-      {
-        auto found_it = std::find(
-          available_command_interfaces_.begin(), available_command_interfaces_.end(), interface);
-
-        if (found_it != available_command_interfaces_.end())
-        {
-          available_command_interfaces_.erase(found_it);
-          RCUTILS_LOG_DEBUG_NAMED(
-            "resource_manager",
-            "(hardware '%s'): '%s' command interface removed from available list",
-            hardware.get_name().c_str(), interface.c_str());
-        }
-        else
-        {
-          // TODO(destogl): do here error management if interfaces are only partially added into
-          // "available" list - this should never be the case!
-          RCUTILS_LOG_WARN_NAMED(
-            "resource_manager",
-            "(hardware '%s'): '%s' command interface not in available list."
-            " This can happen due to multiple calls to 'cleanup'",
-            hardware.get_name().c_str(), interface.c_str());
-        }
-      }
-      // remove all state interfaces from available list
-      for (const auto & interface : hardware_info_map_[hardware.get_name()].state_interfaces)
-      {
-        auto found_it = std::find(
-          available_state_interfaces_.begin(), available_state_interfaces_.end(), interface);
-
-        if (found_it != available_state_interfaces_.end())
-        {
-          available_state_interfaces_.erase(found_it);
-          RCUTILS_LOG_DEBUG_NAMED(
-            "resource_manager", "(hardware '%s'): '%s' state interface removed from available list",
-            hardware.get_name().c_str(), interface.c_str());
-        }
-        else
-        {
-          // TODO(destogl): do here error management if interfaces are only partially added into
-          // "available" list - this should never be the case!
-          RCUTILS_LOG_WARN_NAMED(
-            "resource_manager",
-            "(hardware '%s'): '%s' state interface not in available list. "
-            "This can happen due to multiple calls to 'cleanup'",
-            hardware.get_name().c_str(), interface.c_str());
-        }
-      }
+      remove_all_hardware_interfaces_from_available_list(hardware.get_name());
     }
     return result;
   }
@@ -545,6 +551,10 @@ public:
 
   std::unordered_map<std::string, HardwareComponentInfo> hardware_info_map_;
 
+  /// Mapping between hardware and controllers that are using it (accessing data from it)
+  std::unordered_map<std::string, std::vector<std::string>> hardware_used_by_controllers_;
+
+  /// Mapping between controllers and list of reference interfaces they are using
   std::unordered_map<std::string, std::vector<std::string>> controllers_reference_interfaces_map_;
 
   /// Storage of all available state interfaces
@@ -581,6 +591,7 @@ ResourceManager::ResourceManager(
   }
 }
 
+// CM API: Called in "callback/slow"-thread
 void ResourceManager::load_urdf(const std::string & urdf, bool validate_interfaces)
 {
   const std::string system_type = "system";
@@ -614,8 +625,14 @@ void ResourceManager::load_urdf(const std::string & urdf, bool validate_interfac
   {
     validate_storage(hardware_info);
   }
+
+  std::lock_guard<std::recursive_mutex> guard(resources_lock_);
+  read_write_status.failed_hardware_names.reserve(
+    resource_storage_->actuators_.size() + resource_storage_->sensors_.size() +
+    resource_storage_->systems_.size());
 }
 
+// CM API: Called in "update"-thread
 LoanedStateInterface ResourceManager::claim_state_interface(const std::string & key)
 {
   if (!state_interface_is_available(key))
@@ -627,6 +644,7 @@ LoanedStateInterface ResourceManager::claim_state_interface(const std::string & 
   return LoanedStateInterface(resource_storage_->state_interface_map_.at(key));
 }
 
+// CM API: Called in "callback/slow"-thread
 std::vector<std::string> ResourceManager::state_interface_keys() const
 {
   std::vector<std::string> keys;
@@ -638,19 +656,14 @@ std::vector<std::string> ResourceManager::state_interface_keys() const
   return keys;
 }
 
+// CM API: Called in "update"-thread
 std::vector<std::string> ResourceManager::available_state_interfaces() const
 {
   std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
   return resource_storage_->available_state_interfaces_;
 }
 
-bool ResourceManager::state_interface_exists(const std::string & key) const
-{
-  std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
-  return resource_storage_->state_interface_map_.find(key) !=
-         resource_storage_->state_interface_map_.end();
-}
-
+// CM API: Called in "update"-thread (indirectly through `claim_state_interface`)
 bool ResourceManager::state_interface_is_available(const std::string & name) const
 {
   std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
@@ -660,6 +673,7 @@ bool ResourceManager::state_interface_is_available(const std::string & name) con
            name) != resource_storage_->available_state_interfaces_.end();
 }
 
+// CM API: Called in "callback/slow"-thread
 void ResourceManager::import_controller_reference_interfaces(
   const std::string & controller_name, std::vector<CommandInterface> & interfaces)
 {
@@ -669,12 +683,14 @@ void ResourceManager::import_controller_reference_interfaces(
   resource_storage_->controllers_reference_interfaces_map_[controller_name] = interface_names;
 }
 
+// CM API: Called in "callback/slow"-thread
 std::vector<std::string> ResourceManager::get_controller_reference_interface_names(
   const std::string & controller_name)
 {
   return resource_storage_->controllers_reference_interfaces_map_.at(controller_name);
 }
 
+// CM API: Called in "update"-thread
 void ResourceManager::make_controller_reference_interfaces_available(
   const std::string & controller_name)
 {
@@ -686,6 +702,7 @@ void ResourceManager::make_controller_reference_interfaces_available(
     interface_names.end());
 }
 
+// CM API: Called in "update"-thread
 void ResourceManager::make_controller_reference_interfaces_unavailable(
   const std::string & controller_name)
 {
@@ -708,6 +725,7 @@ void ResourceManager::make_controller_reference_interfaces_unavailable(
   }
 }
 
+// CM API: Called in "callback/slow"-thread
 void ResourceManager::remove_controller_reference_interfaces(const std::string & controller_name)
 {
   auto interface_names =
@@ -717,6 +735,53 @@ void ResourceManager::remove_controller_reference_interfaces(const std::string &
   std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
   std::lock_guard<std::recursive_mutex> guard_claimed(claimed_command_interfaces_lock_);
   resource_storage_->remove_command_interfaces(interface_names);
+}
+
+// CM API: Called in "callback/slow"-thread
+void ResourceManager::cache_controller_to_hardware(
+  const std::string & controller_name, const std::vector<std::string> & interfaces)
+{
+  for (const auto & interface : interfaces)
+  {
+    bool found = false;
+    for (const auto & [hw_name, hw_info] : resource_storage_->hardware_info_map_)
+    {
+      auto cmd_itf_it =
+        std::find(hw_info.command_interfaces.begin(), hw_info.command_interfaces.end(), interface);
+      if (cmd_itf_it != hw_info.command_interfaces.end())
+      {
+        found = true;
+      }
+      auto state_itf_it =
+        std::find(hw_info.state_interfaces.begin(), hw_info.state_interfaces.end(), interface);
+      if (state_itf_it != hw_info.state_interfaces.end())
+      {
+        found = true;
+      }
+
+      if (found)
+      {
+        // check if controller exist already in the list and if not add it
+        auto controllers = resource_storage_->hardware_used_by_controllers_[hw_name];
+        auto ctrl_it = std::find(controllers.begin(), controllers.end(), controller_name);
+        if (ctrl_it == controllers.end())
+        {
+          // add because it does not exist
+          controllers.reserve(controllers.size() + 1);
+          controllers.push_back(controller_name);
+        }
+        resource_storage_->hardware_used_by_controllers_[hw_name] = controllers;
+        break;
+      }
+    }
+  }
+}
+
+// CM API: Called in "update"-thread
+std::vector<std::string> ResourceManager::get_cached_controllers_to_hardware(
+  const std::string & hardware_name)
+{
+  return resource_storage_->hardware_used_by_controllers_[hardware_name];
 }
 
 // CM API: Called in "update"-thread
@@ -760,6 +825,7 @@ void ResourceManager::release_command_interface(const std::string & key)
   resource_storage_->claimed_command_interface_map_[key] = false;
 }
 
+// CM API: Called in "callback/slow"-thread
 std::vector<std::string> ResourceManager::command_interface_keys() const
 {
   std::vector<std::string> keys;
@@ -771,20 +837,14 @@ std::vector<std::string> ResourceManager::command_interface_keys() const
   return keys;
 }
 
+// CM API: Called in "update"-thread
 std::vector<std::string> ResourceManager::available_command_interfaces() const
 {
   std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
   return resource_storage_->available_command_interfaces_;
 }
 
-bool ResourceManager::command_interface_exists(const std::string & key) const
-{
-  std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
-  return resource_storage_->command_interface_map_.find(key) !=
-         resource_storage_->command_interface_map_.end();
-}
-
-// CM API
+// CM API: Called in "callback/slow"-thread
 bool ResourceManager::command_interface_is_available(const std::string & name) const
 {
   std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
@@ -794,40 +854,37 @@ bool ResourceManager::command_interface_is_available(const std::string & name) c
            name) != resource_storage_->available_command_interfaces_.end();
 }
 
-size_t ResourceManager::actuator_components_size() const
-{
-  return resource_storage_->actuators_.size();
-}
-
-size_t ResourceManager::sensor_components_size() const
-{
-  return resource_storage_->sensors_.size();
-}
-
 void ResourceManager::import_component(
   std::unique_ptr<ActuatorInterface> actuator, const HardwareInfo & hardware_info)
 {
+  std::lock_guard<std::recursive_mutex> guard(resources_lock_);
   resource_storage_->initialize_actuator(std::move(actuator), hardware_info);
+  read_write_status.failed_hardware_names.reserve(
+    resource_storage_->actuators_.size() + resource_storage_->sensors_.size() +
+    resource_storage_->systems_.size());
 }
 
 void ResourceManager::import_component(
   std::unique_ptr<SensorInterface> sensor, const HardwareInfo & hardware_info)
 {
+  std::lock_guard<std::recursive_mutex> guard(resources_lock_);
   resource_storage_->initialize_sensor(std::move(sensor), hardware_info);
+  read_write_status.failed_hardware_names.reserve(
+    resource_storage_->actuators_.size() + resource_storage_->sensors_.size() +
+    resource_storage_->systems_.size());
 }
 
 void ResourceManager::import_component(
   std::unique_ptr<SystemInterface> system, const HardwareInfo & hardware_info)
 {
+  std::lock_guard<std::recursive_mutex> guard(resources_lock_);
   resource_storage_->initialize_system(std::move(system), hardware_info);
+  read_write_status.failed_hardware_names.reserve(
+    resource_storage_->actuators_.size() + resource_storage_->sensors_.size() +
+    resource_storage_->systems_.size());
 }
 
-size_t ResourceManager::system_components_size() const
-{
-  return resource_storage_->systems_.size();
-}
-// End of "used only in tests"
-
+// CM API: Called in "callback/slow"-thread
 std::unordered_map<std::string, HardwareComponentInfo> ResourceManager::get_components_status()
 {
   for (auto & component : resource_storage_->actuators_)
@@ -846,6 +903,7 @@ std::unordered_map<std::string, HardwareComponentInfo> ResourceManager::get_comp
   return resource_storage_->hardware_info_map_;
 }
 
+// CM API: Called in "callback/slow"-thread
 bool ResourceManager::prepare_command_mode_switch(
   const std::vector<std::string> & start_interfaces,
   const std::vector<std::string> & stop_interfaces)
@@ -891,6 +949,7 @@ bool ResourceManager::prepare_command_mode_switch(
   return true;
 }
 
+// CM API: Called in "update"-thread
 bool ResourceManager::perform_command_mode_switch(
   const std::vector<std::string> & start_interfaces,
   const std::vector<std::string> & stop_interfaces)
@@ -918,6 +977,7 @@ bool ResourceManager::perform_command_mode_switch(
   return true;
 }
 
+// CM API: Called in "callback/slow"-thread
 return_type ResourceManager::set_component_state(
   const std::string & component_name, rclcpp_lifecycle::State & target_state)
 {
@@ -1001,33 +1061,93 @@ return_type ResourceManager::set_component_state(
   return result;
 }
 
-void ResourceManager::read(const rclcpp::Time & time, const rclcpp::Duration & period)
+// CM API: Called in "update"-thread
+HardwareReadWriteStatus ResourceManager::read(
+  const rclcpp::Time & time, const rclcpp::Duration & period)
 {
-  for (auto & component : resource_storage_->actuators_)
+  std::lock_guard<std::recursive_mutex> guard(resources_lock_);
+  read_write_status.ok = true;
+  read_write_status.failed_hardware_names.clear();
+
+  auto read_components = [&](auto & components)
   {
-    component.read(time, period);
-  }
-  for (auto & component : resource_storage_->sensors_)
-  {
-    component.read(time, period);
-  }
-  for (auto & component : resource_storage_->systems_)
-  {
-    component.read(time, period);
-  }
+    for (auto & component : components)
+    {
+      if (component.read(time, period) != return_type::OK)
+      {
+        read_write_status.ok = false;
+        read_write_status.failed_hardware_names.push_back(component.get_name());
+        resource_storage_->remove_all_hardware_interfaces_from_available_list(component.get_name());
+      }
+    }
+  };
+
+  read_components(resource_storage_->actuators_);
+  read_components(resource_storage_->sensors_);
+  read_components(resource_storage_->systems_);
+
+  return read_write_status;
 }
 
-void ResourceManager::write(const rclcpp::Time & time, const rclcpp::Duration & period)
+// CM API: Called in "update"-thread
+HardwareReadWriteStatus ResourceManager::write(
+  const rclcpp::Time & time, const rclcpp::Duration & period)
 {
-  for (auto & component : resource_storage_->actuators_)
+  std::lock_guard<std::recursive_mutex> guard(resources_lock_);
+  read_write_status.ok = true;
+  read_write_status.failed_hardware_names.clear();
+
+  auto write_components = [&](auto & components)
   {
-    component.write(time, period);
-  }
-  for (auto & component : resource_storage_->systems_)
-  {
-    component.write(time, period);
-  }
+    for (auto & component : components)
+    {
+      if (component.write(time, period) != return_type::OK)
+      {
+        read_write_status.ok = false;
+        read_write_status.failed_hardware_names.push_back(component.get_name());
+        resource_storage_->remove_all_hardware_interfaces_from_available_list(component.get_name());
+      }
+    }
+  };
+
+  write_components(resource_storage_->actuators_);
+  write_components(resource_storage_->systems_);
+
+  return read_write_status;
 }
+
+// BEGIN: "used only in tests and locally"
+size_t ResourceManager::actuator_components_size() const
+{
+  return resource_storage_->actuators_.size();
+}
+
+size_t ResourceManager::sensor_components_size() const
+{
+  return resource_storage_->sensors_.size();
+}
+
+size_t ResourceManager::system_components_size() const
+{
+  return resource_storage_->systems_.size();
+}
+
+bool ResourceManager::command_interface_exists(const std::string & key) const
+{
+  std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
+  return resource_storage_->command_interface_map_.find(key) !=
+         resource_storage_->command_interface_map_.end();
+}
+
+bool ResourceManager::state_interface_exists(const std::string & key) const
+{
+  std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
+  return resource_storage_->state_interface_map_.find(key) !=
+         resource_storage_->state_interface_map_.end();
+}
+// END: "used only in tests and locally"
+
+// BEGIN: private methods
 
 void ResourceManager::validate_storage(
   const std::vector<hardware_interface::HardwareInfo> & hardware_info) const
@@ -1084,7 +1204,9 @@ void ResourceManager::validate_storage(
   }
 }
 
-// Temporary method to keep old interface and reduce framework changes in PRs
+// END: private methods
+
+// Temporary method to keep old interface and reduce framework changes in the PRs
 void ResourceManager::activate_all_components()
 {
   using lifecycle_msgs::msg::State;

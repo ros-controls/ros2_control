@@ -166,6 +166,8 @@ public:
    * and reflected accordingly in the exported state interfaces.
    * That is, the data pointed by the interfaces shall be updated.
    *
+   * \param[in] time The time at the start of this control loop iteration
+   * \param[in] period The measured time taken by the last control loop iteration
    * \return return_type::OK if the read was successful, return_type::ERROR otherwise.
    */
   virtual return_type read(const rclcpp::Time & time, const rclcpp::Duration & period) = 0;
@@ -175,6 +177,8 @@ public:
    * The physical hardware shall be updated with the latest value from
    * the exported command interfaces.
    *
+   * \param[in] time The time at the start of this control loop iteration
+   * \param[in] period The measured time taken by the last control loop iteration
    * \return return_type::OK if the read was successful, return_type::ERROR otherwise.
    */
   virtual return_type write(const rclcpp::Time & time, const rclcpp::Duration & period) = 0;
