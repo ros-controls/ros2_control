@@ -379,7 +379,7 @@ private:
     const std::vector<ControllerSpec> & controllers, int strictness,
     const ControllersListIterator controller_it);
 
-  void CreateActiveDiagnostic(diagnostic_updater::DiagnosticStatusWrapper & stat);
+  void controller_activity_diagnostic_callback(diagnostic_updater::DiagnosticStatusWrapper & stat);
   diagnostic_updater::Updater diagnostics_updater_;
 
   std::shared_ptr<rclcpp::Executor> executor_;
