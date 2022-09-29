@@ -53,4 +53,4 @@ def _is_permutation(a, b):
     @return True if C{a} is a permutation of C{b}, false otherwise
     @rtype bool
     """
-    return len(a) == len(b) and sorted(a) == sorted(b)
+    return set(a) == set(b)
