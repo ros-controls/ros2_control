@@ -414,22 +414,22 @@ bool GenericSystem::get_interface(
 void GenericSystem::initialize_storage_vectors(
   std::vector<std::vector<double>> & commands, std::vector<std::vector<double>> & states,
   const std::vector<std::string> & interfaces,
-  const std::vector<hardware_interface::ComponentInfo> & components)
+  const std::vector<hardware_interface::ComponentInfo> & component_infos)
 {
   // Initialize storage for all joints, regardless of their existence
   commands.resize(interfaces.size());
   states.resize(interfaces.size());
   for (auto i = 0u; i < interfaces.size(); i++)
   {
-    commands[i].resize(components.size(), std::numeric_limits<double>::quiet_NaN());
-    states[i].resize(components.size(), std::numeric_limits<double>::quiet_NaN());
+    commands[i].resize(component_infos.size(), std::numeric_limits<double>::quiet_NaN());
+    states[i].resize(component_infos.size(), std::numeric_limits<double>::quiet_NaN());
   }
 
   // Initialize with values from URDF
   bool print_hint = false;
-  for (auto i = 0u; i < components.size(); i++)
+  for (auto i = 0u; i < component_infos.size(); i++)
   {
-    const auto & component = components[i];
+    const auto & component = component_infos[i];
     for (const auto & interface : component.state_interfaces)
     {
       auto it = std::find(interfaces.begin(), interfaces.end(), interface.name);
