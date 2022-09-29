@@ -414,6 +414,40 @@ protected:
     </gpio>
   </ros2_control>
 )";
+
+    sensor_with_initial_value_ =
+      R"(
+  <ros2_control name="GenericSystem2dof" type="system">
+    <hardware>
+      <plugin>fake_components/GenericSystem</plugin>
+    </hardware>
+    <sensor name="force_sensor">
+      <state_interface name="force.x">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="force.y">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="force.z">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+    </sensor>
+  </ros2_control>
+)";
+
+    gpio_with_initial_value_ =
+      R"(
+  <ros2_control name="GenericSystem2dof" type="system">
+    <hardware>
+      <plugin>fake_components/GenericSystem</plugin>
+    </hardware>
+    <gpio name="sample_io">
+      <state_interface name="output_1">
+        <param name="initial_value">1</param>
+      </state_interface>
+    </gpio>
+  </ros2_control>
+)";
   }
 
   std::string hardware_robot_2dof_;
@@ -431,6 +465,8 @@ protected:
   std::string hardware_system_2dof_standard_interfaces_with_custom_interface_for_offset_missing_;
   std::string valid_urdf_ros2_control_system_robot_with_gpio_;
   std::string valid_urdf_ros2_control_system_robot_with_gpio_fake_command_;
+  std::string sensor_with_initial_value_;
+  std::string gpio_with_initial_value_;
 };
 
 // Forward declaration
@@ -1469,4 +1505,51 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_fake_co
   ASSERT_EQ(0.33, gpio1_a_i1_c.get_value());
   ASSERT_EQ(1.11, gpio1_a_i2_c.get_value());
   ASSERT_EQ(2.22, gpio2_vac_c.get_value());
+}
+
+TEST_F(TestGenericSystem, sensor_with_initial_value_)
+{
+  auto urdf = ros2_control_test_assets::urdf_head + sensor_with_initial_value_ +
+              ros2_control_test_assets::urdf_tail;
+  TestableResourceManager rm(urdf);
+  // Activate components to get all interfaces available
+  activate_components(rm);
+
+  // Check interfaces
+  EXPECT_EQ(1u, rm.system_components_size());
+  ASSERT_EQ(3u, rm.state_interface_keys().size());
+  EXPECT_TRUE(rm.state_interface_exists("force_sensor/force.x"));
+  EXPECT_TRUE(rm.state_interface_exists("force_sensor/force.y"));
+  EXPECT_TRUE(rm.state_interface_exists("force_sensor/force.z"));
+
+  // Check initial values
+  hardware_interface::LoanedStateInterface force_x_s =
+    rm.claim_state_interface("force_sensor/force.x");
+  hardware_interface::LoanedStateInterface force_y_s =
+    rm.claim_state_interface("force_sensor/force.y");
+  hardware_interface::LoanedStateInterface force_z_s =
+    rm.claim_state_interface("force_sensor/force.z");
+
+  ASSERT_EQ(0.0, force_x_s.get_value());
+  ASSERT_EQ(0.0, force_y_s.get_value());
+  ASSERT_EQ(0.0, force_z_s.get_value());
+}
+
+TEST_F(TestGenericSystem, gpio_with_initial_value_)
+{
+  auto urdf = ros2_control_test_assets::urdf_head + gpio_with_initial_value_ +
+              ros2_control_test_assets::urdf_tail;
+  TestableResourceManager rm(urdf);
+  // Activate components to get all interfaces available
+  activate_components(rm);
+
+  // Check interfaces
+  EXPECT_EQ(1u, rm.system_components_size());
+  ASSERT_EQ(1u, rm.state_interface_keys().size());
+  EXPECT_TRUE(rm.state_interface_exists("sample_io/output_1"));
+
+  // Check initial values
+  hardware_interface::LoanedStateInterface state = rm.claim_state_interface("sample_io/output_1");
+
+  ASSERT_EQ(1, state.get_value());
 }
