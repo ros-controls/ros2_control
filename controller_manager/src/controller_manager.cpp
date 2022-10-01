@@ -1262,24 +1262,25 @@ void ControllerManager::list_controllers_srv_cb(
       {
         controller_state.required_state_interfaces = state_interface_config.names;
       }
-    }
-    // check for chained interfaces
-    for (const auto & interface : controller_state.required_command_interfaces)
-    {
-      auto prefix_interface_type_pair = split_command_interface(interface);
-      auto prefix = prefix_interface_type_pair.first;
-      auto interface_type = prefix_interface_type_pair.second;
-      if (controller_chain_map.find(prefix) != controller_chain_map.end())
+      // check for chained interfaces
+      for (const auto & interface : controller_state.required_command_interfaces)
       {
-        controller_chain_map[controller_state.name].insert(prefix);
-        controller_chain_interface_map[controller_state.name].push_back(interface_type);
+        auto prefix_interface_type_pair = split_command_interface(interface);
+        auto prefix = prefix_interface_type_pair.first;
+        auto interface_type = prefix_interface_type_pair.second;
+        if (controller_chain_map.find(prefix) != controller_chain_map.end())
+        {
+          controller_chain_map[controller_state.name].insert(prefix);
+          controller_chain_interface_map[controller_state.name].push_back(interface_type);
+        }
       }
-    }
-    auto references = controllers[i].c->export_reference_interfaces();
-    controller_state.reference_interfaces.reserve(references.size());
-    for (const auto & reference : references)
-    {
-      controller_state.reference_interfaces.push_back(reference.get_interface_name());
+      // check reference interfaces only if controller is inactive or active
+      auto references = controllers[i].c->export_reference_interfaces();
+      controller_state.reference_interfaces.reserve(references.size());
+      for (const auto & reference : references)
+      {
+        controller_state.reference_interfaces.push_back(reference.get_interface_name());
+      }
     }
     response->controller.push_back(controller_state);
     // keep track of controllers that are part of a chain
