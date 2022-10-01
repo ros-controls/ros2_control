@@ -54,7 +54,7 @@ jobs:
     env:
       CCACHE_DIR: ${{ github.workspace }}/${{ inputs.ccache_dir }}
       BASEDIR: ${{ github.workspace }}/${{ inputs.basedir }}
-      CACHE_PREFIX: ${{ inputs.ros_distro }}-${{ inputs.os_code_name }}-${{ inputs.ros_repo }}-${{ github.job }}
+      CACHE_PREFIX: ${{ inputs.ros_distro }}-${{ inputs.upstream_workspace }}-${{ inputs.ros_repo }}-${{ github.job }}
     steps:
       - name: Checkout ${{ inputs.ref }} when build is not scheduled
         if: ${{ github.event_name != 'schedule' }}
