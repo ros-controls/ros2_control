@@ -310,8 +310,6 @@ protected:
     </joint>
   </ros2_control>
 )";
-<<<<<<< HEAD
-=======
 
     valid_urdf_ros2_control_system_robot_with_gpio_ =
       R"(
@@ -382,7 +380,6 @@ protected:
     </gpio>
   </ros2_control>
 )";
->>>>>>> 8345f28 (Support of "initial_value" for the 'FakeSystem' (#598))
   }
 
   std::string hardware_robot_2dof_;
