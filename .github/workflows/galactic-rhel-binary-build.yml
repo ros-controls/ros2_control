@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       ROS_DISTRO: galactic
-    container: ghcr.io/ros-controls/ros:${{ env.ROS_DISTRO }}-rhel
+    container: ghcr.io/ros-controls/ros:galactic-rhel
     steps:
       - uses: actions/checkout@v3
         with:
