@@ -2,6 +2,18 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+3.1.0 (2022-10-05)
+------------------
+* Don't ask to export reference interface if controller not 'inactive' or 'active' (`#824 <https://github.com/ros-controls/ros2_control/issues/824>`_)
+* Add diagnostics for controllers activity (`#820 <https://github.com/ros-controls/ros2_control/issues/820>`_)
+* Search for controller manager in the same namespace as spawner (`#810 <https://github.com/ros-controls/ros2_control/issues/810>`_)
+* Handle HW errors on read and write in CM by stopping controllers (`#742 <https://github.com/ros-controls/ros2_control/issues/742>`_)
+  Add code for deactivating controller when hardware gets an error on read and write.
+  Fix misleading variable name in the tests.
+  Remove all interface from available list for hardware when an error happens.
+  Do some more variable renaming to the new nomenclature.
+* Contributors: Denis Štogl, Tony Najjar
+
 3.0.0 (2022-09-19)
 ------------------
 
