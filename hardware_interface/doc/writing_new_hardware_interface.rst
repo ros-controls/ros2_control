@@ -3,7 +3,7 @@
 Writing a new hardware interface
 =================================
 
-In ros2_control hardware system components are libraries, dynamically loaded by the controller manager using the `pluginlib <ros.org/wiki/pluginlib>`_ interface.
+In ros2_control hardware system components are libraries, dynamically loaded by the controller manager using the `pluginlib <https://ros.org/wiki/pluginlib>`_ interface.
 The following is a step-by-step guide to create source files, basic tests, and compile rules for a new hardware interface.
 
 1. **Preparing package**
@@ -28,7 +28,7 @@ The following is a step-by-step guide to create source files, basic tests, and c
    1. Take care that you use header guards. ROS2-style is using ``#ifndef`` and ``#define`` preprocessor directives. (For more information on this, a search engine is your friend :) ).
 
    2. Include ``"hardware_interface/$interface_type$_interface.hpp"`` and ``visibility_control.h`` if you are using one.
-      ``$interface_type$`` can be ``Actuator``, ``Sensor`` or ``System`` depending on the type of hardware you are using. for more details about each type check `Hardware Components description <https://ros-controls.github.io/control.ros.org/getting_started.html#hardware-components>`_.
+      ``$interface_type$`` can be ``Actuator``, ``Sensor`` or ``System`` depending on the type of hardware you are using. for more details about each type check `Hardware Components description <https://control.ros.org/master/doc/getting_started/getting_started.html#hardware-components>`_.
 
    3. Define a unique namespace for your hardware_interface. This is usually the package name written in ``snake_case``.
 
@@ -37,7 +37,7 @@ The following is a step-by-step guide to create source files, basic tests, and c
       class HardwareInterfaceName : public hardware_interface::$InterfaceType$Interface
 
    5. Add a constructor without parameters and the following public methods implementing ``LifecycleNodeInterface``: ``on_configure``, ``on_cleanup``, ``on_shutdown``, ``on_activate``, ``on_deactivate``, ``on_error``; and overriding ``$InterfaceType$Interface`` definition: ``on_init``, ``export_state_interfaces``, ``export_command_interfaces``, ``prepare_command_mode_switch`` (optional), ``perform_command_mode_switch`` (optional), ``read``, ``write``.
-   For further explanation of hardware-lifecycle check the `pull request <https://github.com/ros-controls/ros2_control/pull/559/files#diff-2bd171d85b028c1b15b03b27d4e6dcbb87e52f705042bf111840e7a28ab268fc>`_ and for exact definitions of methods check the ``"hardware_interface/$interface_type$_interface.hpp"`` header or `doxygen documentation <http://control.ros.org/api/namespacehardware__interface.html>`_ for *Actuator*, *Sensor* or *System*.
+   For further explanation of hardware-lifecycle check the `pull request <https://github.com/ros-controls/ros2_control/pull/559/files#diff-2bd171d85b028c1b15b03b27d4e6dcbb87e52f705042bf111840e7a28ab268fc>`_ and for exact definitions of methods check the ``"hardware_interface/$interface_type$_interface.hpp"`` header or `doxygen documentation <https://control.ros.org/master/doc/api/namespacehardware__interface.html>`_ for *Actuator*, *Sensor* or *System*.
 
 4. **Adding definitions into source file (.cpp)**
 
@@ -137,4 +137,4 @@ That's it! Enjoy writing great controllers!
 Useful External References
 ---------------------------
 
-- `Templates and scripts for generating controllers shell <https://stoglrobotics.github.io/ros_team_workspace/use-cases/ros2_control/setup_robot_hardware_interface.html>`_ **NOTE**: The script is currently only recommended to use for Foxy, not compatible with the API from Galactic and onwards.
+- `Templates and scripts for generating controllers shell <https://stoglrobotics.github.io/ros_team_workspace/master/use-cases/ros2_control/setup_robot_hardware_interface.html>`_ **NOTE**: The script is currently only recommended to use for Foxy, not compatible with the API from Galactic and onwards.
