@@ -39,7 +39,7 @@ const auto PERIOD = rclcpp::Duration::from_seconds(0.01);
 class TestGenericSystem : public ::testing::Test
 {
 public:
-  void test_generic_system_with_fake_sensor_commands(std::string & urdf);
+  void test_generic_system_with_mock_sensor_commands(std::string & urdf);
   void test_generic_system_with_mimic_joint(std::string & urdf);
 
 protected:
