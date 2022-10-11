@@ -38,6 +38,13 @@ const auto PERIOD = rclcpp::Duration::from_seconds(0.01);
 
 class TestGenericSystem : public ::testing::Test
 {
+<<<<<<< HEAD
+=======
+public:
+  void test_generic_system_with_mock_sensor_commands(std::string & urdf);
+  void test_generic_system_with_mimic_joint(std::string & urdf);
+
+>>>>>>> 1cf9bf2 ([MockComponents] Rename 'fake_sensor_commands' to 'mock_sensor_commands' (#782))
 protected:
   void SetUp() override
   {
@@ -186,7 +193,7 @@ protected:
   <ros2_control name="GenericSystem2dof" type="system">
     <hardware>
       <plugin>mock_components/GenericSystem</plugin>
-      <param name="fake_sensor_commands">true</param>
+      <param name="mock_sensor_commands">true</param>
     </hardware>
     <joint name="joint1">
       <command_interface name="position"/>
@@ -876,7 +883,11 @@ TEST_F(TestGenericSystem, generic_system_2dof_sensor)
   ASSERT_EQ(0.33, j2p_c.get_value());
 }
 
+<<<<<<< HEAD
 void test_generic_system_with_fake_sensor_commands(std::string urdf)
+=======
+void TestGenericSystem::test_generic_system_with_mock_sensor_commands(std::string & urdf)
+>>>>>>> 1cf9bf2 ([MockComponents] Rename 'fake_sensor_commands' to 'mock_sensor_commands' (#782))
 {
   hardware_interface::ResourceManager rm(urdf);
   // Activate components to get all interfaces available
@@ -1003,7 +1014,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_sensor_fake_command)
   auto urdf = ros2_control_test_assets::urdf_head + hardware_system_2dof_with_sensor_fake_command_ +
               ros2_control_test_assets::urdf_tail;
 
-  test_generic_system_with_fake_sensor_commands(urdf);
+  test_generic_system_with_mock_sensor_commands(urdf);
 }
 
 TEST_F(TestGenericSystem, generic_system_2dof_sensor_fake_command_True)
@@ -1012,7 +1023,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_sensor_fake_command_True)
               hardware_system_2dof_with_sensor_fake_command_True_ +
               ros2_control_test_assets::urdf_tail;
 
-  test_generic_system_with_fake_sensor_commands(urdf);
+  test_generic_system_with_mock_sensor_commands(urdf);
 }
 
 void test_generic_system_with_mimic_joint(std::string urdf)
