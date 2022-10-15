@@ -72,7 +72,7 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
     {
       use_mock_sensor_command_interfaces_ = it->second == "true" || it->second == "True";
       RCUTILS_LOG_WARN_NAMED(
-        "fake_generic_system",
+        "mock_generic_system",
         "Parameter 'fake_sensor_commands' has been deprecated from usage. Use"
         "'mock_sensor_commands' instead.");
     }
@@ -176,14 +176,14 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
       index_custom_interface_with_following_offset_ =
         std::distance(other_interfaces_.begin(), if_it);
       RCUTILS_LOG_INFO_NAMED(
-        "fake_generic_system", "Custom interface with following offset '%s' found at index: %zu.",
+        "mock_generic_system", "Custom interface with following offset '%s' found at index: %zu.",
         custom_interface_with_following_offset_.c_str(),
         index_custom_interface_with_following_offset_);
     }
     else
     {
       RCUTILS_LOG_WARN_NAMED(
-        "fake_generic_system",
+        "mock_generic_system",
         "Custom interface with following offset '%s' does not exist. Offset will not be applied",
         custom_interface_with_following_offset_.c_str());
     }
