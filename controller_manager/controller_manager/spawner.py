@@ -112,10 +112,6 @@ def is_controller_loaded(node, controller_manager, controller_name):
     return any(c.name == controller_name for c in controllers)
 
 
-def make_absolute(name):
-    return name if name.startswith('/') else ('/' + name)
-
-
 def main(args=None):
 
     rclpy.init(args=args, signal_handler_options=SignalHandlerOptions.NO)
@@ -124,7 +120,7 @@ def main(args=None):
         'controller_name', help='Name of the controller')
     parser.add_argument(
         '-c', '--controller-manager', help='Name of the controller manager ROS node',
-        default='/controller_manager', required=False)
+        default='controller_manager', required=False)
     parser.add_argument(
         '-p', '--param-file',
         help='Controller param file to be loaded into controller node before configure',
@@ -153,7 +149,7 @@ def main(args=None):
     command_line_args = rclpy.utilities.remove_ros_args(args=sys.argv)[1:]
     args = parser.parse_args(command_line_args)
     controller_name = args.controller_name
-    controller_manager_name = make_absolute(args.controller_manager)
+    controller_manager_name = args.controller_manager
     param_file = args.param_file
     controller_type = args.controller_type
     controller_manager_timeout = args.controller_manager_timeout
@@ -162,6 +158,13 @@ def main(args=None):
         raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), param_file)
 
     node = Node('spawner_' + controller_name)
+    if not controller_manager_name.startswith('/'):
+        spawner_namespace = node.get_namespace()
+        if spawner_namespace != '/':
+            controller_manager_name = f"{spawner_namespace}/{controller_manager_name}"
+        else:
+            controller_manager_name = f"/{controller_manager_name}"
+
     try:
         if not wait_for_controller_manager(node, controller_manager_name,
                                            controller_manager_timeout):
