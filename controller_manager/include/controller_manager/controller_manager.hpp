@@ -40,6 +40,7 @@
 #include "controller_manager_msgs/srv/switch_controller.hpp"
 #include "controller_manager_msgs/srv/unload_controller.hpp"
 
+#include "diagnostic_updater/diagnostic_updater.hpp"
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/resource_manager.hpp"
 
@@ -124,17 +125,17 @@ public:
   CONTROLLER_MANAGER_PUBLIC
   controller_interface::return_type configure_controller(const std::string & controller_name);
 
-  /// switch_controller Stops some controllers and start others.
+  /// switch_controller Deactivates some controllers and activates others.
   /**
-   * \param[in] start_controllers is a list of controllers to start
-   * \param[in] stop_controllers is a list of controllers to stop
+   * \param[in] activate_controllers is a list of controllers to activate.
+   * \param[in] deactivate_controllers is a list of controllers to deactivate.
    * \param[in] set level of strictness (BEST_EFFORT or STRICT)
    * \see Documentation in controller_manager_msgs/SwitchController.srv
    */
   CONTROLLER_MANAGER_PUBLIC
   controller_interface::return_type switch_controller(
-    const std::vector<std::string> & start_controllers,
-    const std::vector<std::string> & stop_controllers, int strictness,
+    const std::vector<std::string> & activate_controllers,
+    const std::vector<std::string> & deactivate_controllers, int strictness,
     bool activate_asap = kWaitForAllResources,
     const rclcpp::Duration & timeout = rclcpp::Duration::from_nanoseconds(kInfiniteTimeout));
 
@@ -196,8 +197,18 @@ protected:
   CONTROLLER_MANAGER_PUBLIC
   void manage_switch();
 
+  /// Deactivate chosen controllers from real-time controller list.
+  /**
+   * Deactivate controllers with names \p controllers_to_deactivate from list \p rt_controller_list.
+   * The controller list will be iterated as many times as there are controller names.
+   *
+   * \param[in] rt_controller_list controllers in the real-time list.
+   * \param[in] controllers_to_deactivate names of the controller that have to be deactivated.
+   */
   CONTROLLER_MANAGER_PUBLIC
-  void deactivate_controllers();
+  void deactivate_controllers(
+    const std::vector<ControllerSpec> & rt_controller_list,
+    const std::vector<std::string> controllers_to_deactivate);
 
   /**
    * Switch chained mode for all the controllers with respect to the following cases:
@@ -211,11 +222,34 @@ protected:
   void switch_chained_mode(
     const std::vector<std::string> & chained_mode_switch_list, bool to_chained_mode);
 
+  /// Activate chosen controllers from real-time controller list.
+  /**
+   * Activate controllers with names \p controllers_to_activate from list \p rt_controller_list.
+   * The controller list will be iterated as many times as there are controller names.
+   *
+   * \param[in] rt_controller_list controllers in the real-time list.
+   * \param[in] controllers_to_activate names of the controller that have to be activated.
+   */
   CONTROLLER_MANAGER_PUBLIC
-  void activate_controllers();
+  void activate_controllers(
+    const std::vector<ControllerSpec> & rt_controller_list,
+    const std::vector<std::string> controllers_to_activate);
 
+  /// Activate chosen controllers from real-time controller list.
+  /**
+   * Activate controllers with names \p controllers_to_activate from list \p rt_controller_list.
+   * The controller list will be iterated as many times as there are controller names.
+   *
+   * *NOTE*: There is currently not difference to `activate_controllers` method.
+   * Check https://github.com/ros-controls/ros2_control/issues/263 for more information.
+   *
+   * \param[in] rt_controller_list controllers in the real-time list.
+   * \param[in] controllers_to_activate names of the controller that have to be activated.
+   */
   CONTROLLER_MANAGER_PUBLIC
-  void activate_controllers_asap();
+  void activate_controllers_asap(
+    const std::vector<ControllerSpec> & rt_controller_list,
+    const std::vector<std::string> controllers_to_activate);
 
   CONTROLLER_MANAGER_PUBLIC
   void list_controllers_srv_cb(
@@ -305,7 +339,7 @@ private:
    *
    * For each controller the whole chain of following controllers is checked.
    *
-   * NOTE: The automatically adding of following controller into starting list is not implemented
+   * NOTE: The automatically adding of following controller into activate list is not implemented
    * yet.
    *
    * \param[in] controllers list with controllers.
@@ -329,7 +363,7 @@ private:
    * - will be deactivated,
    * - and will not be activated.
    *
-   * NOTE: The automatically adding of preceding controllers into stopping list is not implemented
+   * NOTE: The automatically adding of preceding controllers into deactivate list is not implemented
    * yet.
    *
    * \param[in] controllers list with controllers.
@@ -344,6 +378,9 @@ private:
   controller_interface::return_type check_preceeding_controllers_for_deactivate(
     const std::vector<ControllerSpec> & controllers, int strictness,
     const ControllersListIterator controller_it);
+
+  void controller_activity_diagnostic_callback(diagnostic_updater::DiagnosticStatusWrapper & stat);
+  diagnostic_updater::Updater diagnostics_updater_;
 
   std::shared_ptr<rclcpp::Executor> executor_;
 

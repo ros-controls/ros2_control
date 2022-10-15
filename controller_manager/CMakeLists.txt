@@ -9,6 +9,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
     ament_index_cpp
     controller_interface
     controller_manager_msgs
+    diagnostic_updater
     hardware_interface
     pluginlib
     rclcpp
@@ -101,6 +102,14 @@ if(BUILD_TESTING)
   target_include_directories(test_controller_manager_with_namespace.cpp PRIVATE include)
   target_link_libraries(test_controller_manager_with_namespace.cpp ${PROJECT_NAME} test_controller)
   ament_target_dependencies(test_controller_manager_with_namespace.cpp ros2_control_test_assets)
+
+  ament_add_gmock(
+    test_controller_manager_hardware_error_handling
+    test/test_controller_manager_hardware_error_handling.cpp
+  )
+  target_include_directories(test_controller_manager_hardware_error_handling PRIVATE include)
+  target_link_libraries(test_controller_manager_hardware_error_handling ${PROJECT_NAME} test_controller)
+  ament_target_dependencies(test_controller_manager_hardware_error_handling ros2_control_test_assets)
 
   ament_add_gmock(
     test_load_controller

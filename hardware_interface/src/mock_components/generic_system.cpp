@@ -57,16 +57,29 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
     }
   };
 
-  // check if to create fake command interface for sensor
-  auto it = info_.hardware_parameters.find("fake_sensor_commands");
+  // check if to create mock command interface for sensor
+  auto it = info_.hardware_parameters.find("mock_sensor_commands");
   if (it != info_.hardware_parameters.end())
   {
     // TODO(anyone): change this to parse_bool() (see ros2_control#339)
-    use_fake_sensor_command_interfaces_ = it->second == "true" || it->second == "True";
+    use_mock_sensor_command_interfaces_ = it->second == "true" || it->second == "True";
   }
   else
   {
-    use_fake_sensor_command_interfaces_ = false;
+    // check if fake_sensor_commands was set instead and issue warning.
+    it = info_.hardware_parameters.find("fake_sensor_commands");
+    if (it != info_.hardware_parameters.end())
+    {
+      use_mock_sensor_command_interfaces_ = it->second == "true" || it->second == "True";
+      RCUTILS_LOG_WARN_NAMED(
+        "fake_generic_system",
+        "Parameter 'fake_sensor_commands' has been deprecated from usage. Use"
+        "'mock_sensor_commands' instead.");
+    }
+    else
+    {
+      use_mock_sensor_command_interfaces_ = false;
+    }
   }
 
   // check if to create fake command interface for gpio
@@ -284,7 +297,7 @@ std::vector<hardware_interface::CommandInterface> GenericSystem::export_command_
   }
 
   // Fake sensor command interfaces
-  if (use_fake_sensor_command_interfaces_)
+  if (use_mock_sensor_command_interfaces_)
   {
     if (!populate_interfaces(
           info_.sensors, sensor_interfaces_, sensor_fake_commands_, command_interfaces, true))
@@ -375,7 +388,7 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
     }
   }
 
-  if (use_fake_sensor_command_interfaces_)
+  if (use_mock_sensor_command_interfaces_)
   {
     mirror_command_to_state(sensor_states_, sensor_fake_commands_);
   }

@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       ROS_DISTRO: rolling
-    container: jaronl/ros:rolling-alma
+    container: ghcr.io/ros-controls/ros:rolling-rhel
     steps:
       - uses: actions/checkout@v3
         with:
