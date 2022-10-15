@@ -2,13 +2,13 @@ name: Humble RHEL Binary Build
 on:
   workflow_dispatch:
     branches:
-      - master
+      - humble
 #  pull_request:
 #    branches:
-#      - master
+#      - humble
 #  push:
 #    branches:
-#      - master
+#      - humble
 #  schedule:
 #    # Run every day to detect flakiness and broken dependencies
 #    - cron: '03 1 * * *'
