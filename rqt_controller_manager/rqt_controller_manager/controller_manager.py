@@ -66,8 +66,7 @@ class ControllerManager(Plugin):
         # plugin at once, these lines add number to make it easy to
         # tell from pane to pane.
         if context.serial_number() > 1:
-            self._widget.setWindowTitle(self._widget.windowTitle() +
-                                        (' (%d)' % context.serial_number()))
+            self._widget.setWindowTitle(f'{self._widget.windowTitle()} {context.serial_number()}')
         # Add widget to the user interface
         context.add_widget(self._widget)
 
@@ -81,10 +80,12 @@ class ControllerManager(Plugin):
 
         # Controller state icons
         path = get_package_share_directory("rqt_controller_manager")
-        self._icons = {'active': QIcon(path + '/resource/led_green.png'),
-                       'finalized': QIcon(path + '/resource/led_off.png'),
-                       'inactive': QIcon(path + '/resource/led_red.png'),
-                       'unconfigured': QIcon(path + '/resource/led_off.png')}
+        self._icons = {
+            'active': QIcon(f'{path}/resource/led_green.png'),
+            'finalized': QIcon(f'{path}/resource/led_off.png'),
+            'inactive': QIcon(f'{path}/resource/led_red.png'),
+            'unconfigured': QIcon(f'{path}/resource/led_off.png'),
+        }
 
         # Controllers display
         table_view = self._widget.table_view
@@ -171,7 +172,7 @@ class ControllerManager(Plugin):
 
         # Append potential controller configs found in the node's parameters
         for name in _get_parameter_controller_names(self._node, self._cm_name):
-            add_ctrl = not any(name == ctrl.name for ctrl in controllers)
+            add_ctrl = all(name != ctrl.name for ctrl in controllers)
             if add_ctrl:
                 type_str = _get_controller_type(self._node, self._cm_name, name)
                 uninit_ctrl = ControllerState(name=name,
@@ -221,7 +222,7 @@ class ControllerManager(Plugin):
             elif action is action_kill:
                 self._deactivate_controller(ctrl.name)
                 unload_controller(self._node, self._cm_name, ctrl.name)
-        elif ctrl.state == 'finalized' or ctrl.state == 'inactive':
+        elif ctrl.state in ('finalized', 'inactive'):
             if action is action_activate:
                 self._activate_controller(ctrl.name)
             elif action is action_unload:
@@ -322,13 +323,12 @@ class ControllerTable(QAbstractTableModel):
         return 2
 
     def headerData(self, col, orientation, role):
-        if orientation == Qt.Horizontal and role == Qt.DisplayRole:
-            if col == 0:
-                return 'controller'
-            elif col == 1:
-                return 'state'
-        else:
+        if orientation != Qt.Horizontal or role != Qt.DisplayRole:
             return None
+        if col == 0:
+            return 'controller'
+        elif col == 1:
+            return 'state'
 
     def data(self, index, role):
         if not index.isValid():
@@ -340,27 +340,18 @@ class ControllerTable(QAbstractTableModel):
             if index.column() == 0:
                 return ctrl.name
             elif index.column() == 1:
-                if ctrl.state:
-                    return ctrl.state
-                else:
-                    return 'not loaded'
+                return ctrl.state or 'not loaded'
 
-        if role == Qt.DecorationRole:
-            if index.column() == 0:
-                if ctrl.state in self._icons:
-                    return self._icons[ctrl.state]
-                else:
-                    return None
+        if role == Qt.DecorationRole and index.column() == 0:
+            return self._icons.get(ctrl.state)
 
-        if role == Qt.FontRole:
-            if index.column() == 0:
-                bf = QFont()
-                bf.setBold(True)
-                return bf
+        if role == Qt.FontRole and index.column() == 0:
+            bf = QFont()
+            bf.setBold(True)
+            return bf
 
-        if role == Qt.TextAlignmentRole:
-            if index.column() == 1:
-                return Qt.AlignCenter
+        if role == Qt.TextAlignmentRole and index.column() == 1:
+            return Qt.AlignCenter
 
 
 class FontDelegate(QStyledItemDelegate):
@@ -394,10 +385,7 @@ def _get_controller_type(node, node_name, ctrl_name):
     @rtype str
     """
     response = call_get_parameters(node=node, node_name=node_name, parameter_names=[ctrl_name])
-    if not response.values:
-        return ''
-    else:
-        return response.values[0].string_value
+    return response.values[0].string_value if response.values else ''
 
 
 def _list_controller_managers(node):
@@ -409,13 +397,11 @@ def _list_controller_managers(node):
     @return List of controller manager node names
     @rtype list of str
     """
-    controller_manager_names = []
-    for (name, _) in get_service_names_and_types(node=node):
-        if name.endswith('list_controllers'):
-            name = name.rstrip('list_controllers')
-            name = name.rstrip('/')
-            controller_manager_names.append(name)
-    return controller_manager_names
+    return [
+        name.rstrip('list_controllers').rstrip('/')
+        for name, _ in get_service_names_and_types(node=node)
+        if name.endswith('list_controllers')
+    ]
 
 
 def _get_parameter_controller_names(node, node_name):
