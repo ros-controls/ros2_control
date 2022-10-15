@@ -3,15 +3,15 @@ on:
   workflow_dispatch:
     branches:
       - humble
-#  pull_request:
-#    branches:
-#      - humble
-#  push:
-#    branches:
-#      - humble
-#  schedule:
-#    # Run every day to detect flakiness and broken dependencies
-#    - cron: '03 1 * * *'
+  pull_request:
+    branches:
+      - humble
+  push:
+    branches:
+      - humble
+  schedule:
+    # Run every day to detect flakiness and broken dependencies
+    - cron: '03 1 * * *'
 
 jobs:
   humble_rhel_binary:
