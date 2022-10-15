@@ -38,7 +38,7 @@ class ControllerManager(Plugin):
     _cm_update_freq = 1  # Hz
 
     def __init__(self, context):
-        super(ControllerManager, self).__init__(context)
+        super().__init__(context)
         self.setObjectName('ControllerManager')
 
         # Create QWidget and extend it with all the attributes and children
