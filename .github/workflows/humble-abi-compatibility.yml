@@ -2,10 +2,10 @@ name: Humble - ABI Compatibility Check
 on:
   workflow_dispatch:
     branches:
-      - master
+      - humble
   pull_request:
     branches:
-      - master
+      - humble
 
 jobs:
   abi_check:
