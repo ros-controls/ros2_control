@@ -20,7 +20,7 @@ jobs:
     env:
       ROS_DISTRO: humble
     container: ghcr.io/ros-controls/ros:humble-rhel
-   steps:
+    steps:
       - uses: actions/checkout@v3
         with:
           path: src/ros2_control
