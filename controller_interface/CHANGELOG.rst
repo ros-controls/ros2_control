@@ -2,8 +2,8 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.16.0 (2022-10-17)
+-------------------
 * Add docs in export interface configurations for controllers. (`#804 <https://github.com/ros-controls/ros2_control/issues/804>`_) (`#842 <https://github.com/ros-controls/ros2_control/issues/842>`_)
 * Contributors: Denis Štogl
 
