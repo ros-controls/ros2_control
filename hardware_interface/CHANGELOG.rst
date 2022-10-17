@@ -2,6 +2,11 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* fix broken links (issue `#831 <https://github.com/ros-controls/ros2_control/issues/831>`_) (`#833 <https://github.com/ros-controls/ros2_control/issues/833>`_) (`#845 <https://github.com/ros-controls/ros2_control/issues/845>`_)
+* Contributors: Manuel Muth
+
 2.15.0 (2022-09-19)
 -------------------
 

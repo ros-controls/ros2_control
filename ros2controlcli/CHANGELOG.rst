@@ -2,6 +2,9 @@
 Changelog for package ros2controlcli
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 2.15.0 (2022-09-19)
 -------------------
 * pygraphviz functions updated (`#812 <https://github.com/ros-controls/ros2_control/issues/812>`_) (`#814 <https://github.com/ros-controls/ros2_control/issues/814>`_)

@@ -2,6 +2,12 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Search for controller manager in the same namespace as spawner (`#810 <https://github.com/ros-controls/ros2_control/issues/810>`_) (`#839 <https://github.com/ros-controls/ros2_control/issues/839>`_)
+* Don't ask to export reference interface if controller not 'inactive' or 'active' (`#824 <https://github.com/ros-controls/ros2_control/issues/824>`_) (`#843 <https://github.com/ros-controls/ros2_control/issues/843>`_)
+* Contributors: Denis Štogl, Tony Najjar
+
 2.15.0 (2022-09-19)
 -------------------
 
