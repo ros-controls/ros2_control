@@ -5,13 +5,13 @@ name: Humble Binary Build - main
 on:
   workflow_dispatch:
     branches:
-      - master
+      - humble
   pull_request:
     branches:
-      - master
+      - humble
   push:
     branches:
-      - master
+      - humble
   schedule:
     # Run every morning to detect flakiness and broken dependencies
     - cron: '03 1 * * *'
@@ -23,4 +23,4 @@ jobs:
       ros_distro: humble
       ros_repo: main
       upstream_workspace: ros2_control-not-released.humble.repos
-      ref_for_scheduled_build: master
+      ref_for_scheduled_build: humble
