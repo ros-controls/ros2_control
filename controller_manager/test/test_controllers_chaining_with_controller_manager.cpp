@@ -456,7 +456,7 @@ public:
   double EXP_RIGHT_WHEEL_REF = 0.0;
 
   // Expected behaviors struct used in chaining activation/deactivation tests
-  struct expectedBehaviorStruct
+  struct ExpectedBehaviorStruct
   {
     controller_interface::return_type return_type;
     std::future_status future_status;
@@ -726,7 +726,7 @@ TEST_P(
   // Test Case 1: Trying to activate a preceding controller when following controller
   // is not activated --> return error (If STRICT); Preceding controller is still inactive.
 
-  static std::unordered_map<int32_t, expectedBehaviorStruct> expected = {
+  static std::unordered_map<int32_t, ExpectedBehaviorStruct> expected = {
     {controller_manager_msgs::srv::SwitchController::Request::STRICT,
      {controller_interface::return_type::ERROR, std::future_status::ready,
       lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE}},
@@ -884,7 +884,7 @@ TEST_P(
   // all controller stay in the same state
 
   // There is different error and timeout behavior depending on strictness
-  static std::unordered_map<int32_t, expectedBehaviorStruct> expected = {
+  static std::unordered_map<int32_t, ExpectedBehaviorStruct> expected = {
     {controller_manager_msgs::srv::SwitchController::Request::STRICT,
      {controller_interface::return_type::ERROR, std::future_status::ready,
       lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE}},
