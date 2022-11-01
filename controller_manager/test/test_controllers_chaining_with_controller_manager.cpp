@@ -15,6 +15,7 @@
 #include <gtest/gtest.h>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -453,6 +454,14 @@ public:
   double EXP_RIGHT_WHEEL_HW_STATE = 0.0;
   double EXP_LEFT_WHEEL_REF = 0.0;
   double EXP_RIGHT_WHEEL_REF = 0.0;
+
+  // Expected behaviors struct used in chaining activation/deactivation tests
+  struct expectedBehaviorStruct
+  {
+    controller_interface::return_type return_type;
+    std::future_status future_status;
+    uint8_t state;
+  };
 };
 
 // The tests are implementing example of chained-control for DiffDrive robot shown here:
@@ -714,59 +723,52 @@ TEST_P(
   EXPECT_FALSE(pid_right_wheel_controller->is_in_chained_mode());
   ASSERT_FALSE(diff_drive_controller->is_in_chained_mode());
 
-  // Test Case 1: Trying to activate a preceding controller when following controller is not activated
-  // --> return error (If STRICT); Preceding controller is still inactive.
+  // Test Case 1: Trying to activate a preceding controller when following controller
+  // is not activated --> return error (If STRICT); Preceding controller is still inactive.
 
-  // There is different error and timeout behavior depending on strictness
-  auto const getExpectedBehaviorVals = [&]
-  {
-    if (
-      test_param.strictness ==
-      controller_manager_msgs::srv::SwitchController::Request::STRICT)  // STRICT
-    {
-      return std::make_tuple(
-        controller_interface::return_type::ERROR, std::future_status::ready,
-        lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
-    }
-    else if (
-      test_param.strictness ==
-      controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT)  // BEST EFFORT
-    {
-      return std::make_tuple(
-        controller_interface::return_type::OK, std::future_status::timeout,
-        lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
-    }
-    else
-    {
-      std::runtime_error("test_param was not defined!");
-    }
-  };
-  auto const expected = getExpectedBehaviorVals();
+  static std::unordered_map<int32_t, expectedBehaviorStruct> expected = {
+    {controller_manager_msgs::srv::SwitchController::Request::STRICT,
+     {controller_interface::return_type::ERROR, std::future_status::ready,
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE}},
+    {controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT,
+     {controller_interface::return_type::OK, std::future_status::timeout,
+      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE}}};
 
   // Attempt to activate preceding controller (diff-drive controller) with no check
-  ActivateController(DIFF_DRIVE_CONTROLLER, std::get<0>(expected), std::future_status::ready);
+  ActivateController(
+    DIFF_DRIVE_CONTROLLER, expected.at(test_param.strictness).return_type,
+    std::future_status::ready);
 
   // Check if the controller activated (Should not be activated)
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, diff_drive_controller->get_state().id());
 
-  // Test Case 2: Try to activate a preceding controller the same time when trying to deactivate a following controller (using switch_controller function)
-  // --> return error; preceding controller is not activated, BUT following controller IS deactivated
+  // Test Case 2: Try to activate a preceding controller the same time when trying to
+  // deactivate a following controller (using switch_controller function)
+  // --> return error; preceding controller is not activated,
+  // BUT following controller IS deactivated
 
-  // Activate and check the following controllers (pid_left_wheel_controller) (pid_right_wheel_controller)
+  // Activate and check the following controllers:
+  // (pid_left_wheel_controller) (pid_right_wheel_controller)
   ActivateAndCheckController(
     pid_left_wheel_controller, PID_LEFT_WHEEL, PID_LEFT_WHEEL_CLAIMED_INTERFACES, 1u);
   ActivateAndCheckController(
     pid_right_wheel_controller, PID_RIGHT_WHEEL, PID_RIGHT_WHEEL_CLAIMED_INTERFACES, 1u);
 
-  // Attempt to activate a preceding controller (diff-drive controller) while trying to deactivate a following controller
+  // Attempt to activate a preceding controller (diff-drive controller)
+  // while trying to deactivate a following controller
   switch_test_controllers(
-    {DIFF_DRIVE_CONTROLLER}, {PID_LEFT_WHEEL, PID_RIGHT_WHEEL}, test_param.strictness,
-    std::get<1>(expected), std::get<0>(expected));
+    {DIFF_DRIVE_CONTROLLER}, {PID_RIGHT_WHEEL}, test_param.strictness,
+    expected.at(test_param.strictness).future_status,
+    expected.at(test_param.strictness).return_type);
 
-  // Preceding controller should stay deactivated and following controller should be deactivated (if BEST_EFFORT)
-  EXPECT_EQ(std::get<2>(expected), pid_left_wheel_controller->get_state().id());
-  EXPECT_EQ(std::get<2>(expected), pid_right_wheel_controller->get_state().id());
+  // Preceding controller should stay deactivated and following controller
+  // should be deactivated (if BEST_EFFORT)
+  // If STRICT, preceding controller should stay deactivated and following controller
+  // should stay activated
+  EXPECT_EQ(expected.at(test_param.strictness).state, pid_right_wheel_controller->get_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, pid_left_wheel_controller->get_state().id());
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, diff_drive_controller->get_state().id());
 }
@@ -775,7 +777,8 @@ TEST_P(
   TestControllerChainingWithControllerManager,
   test_chained_controllers_activation_switching_error_handling)
 {
-  // Test Case 3: In terms of current implementation. Example: Need two diff drive controllers, one should be deactivated,
+  // Test Case 3: In terms of current implementation.
+  // Example: Need two diff drive controllers, one should be deactivated,
   // and the other should be activated. Following controller should stay in activated state.
   SetupControllers();
 
@@ -817,7 +820,8 @@ TEST_P(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
     diff_drive_controller_two->get_state().id());
 
-  // Deactivate the first preceding controller (diff_drive_controller) and activate the other preceding controller (diff_drive_controller_two)
+  // Deactivate the first preceding controller (diff_drive_controller) and
+  // activate the other preceding controller (diff_drive_controller_two)
   switch_test_controllers(
     {DIFF_DRIVE_CONTROLLER_TWO}, {DIFF_DRIVE_CONTROLLER}, test_param.strictness,
     std::future_status::timeout, controller_interface::return_type::OK);
@@ -876,38 +880,29 @@ TEST_P(
   ActivateAndCheckController(
     pid_right_wheel_controller, PID_RIGHT_WHEEL, PID_RIGHT_WHEEL_CLAIMED_INTERFACES, 1u);
 
-  // Test Case 5: Deactivating a preceding controller that is not active --> return error; all controller stay in the same state
+  // Test Case 5: Deactivating a preceding controller that is not active --> return error;
+  // all controller stay in the same state
+
   // There is different error and timeout behavior depending on strictness
-  auto const getExpectedBehaviorVals = [&]
-  {
-    if (
-      test_param.strictness ==
-      controller_manager_msgs::srv::SwitchController::Request::STRICT)  // STRICT
-    {
-      return std::make_tuple(controller_interface::return_type::ERROR, std::future_status::ready);
-    }
-    else if (
-      test_param.strictness ==
-      controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT)  // BEST EFFORT
-    {
-      return std::make_tuple(controller_interface::return_type::OK, std::future_status::ready);
-    }
-    else
-    {
-      std::runtime_error("test_param was not defined!");
-    }
-  };
-  auto const expected = getExpectedBehaviorVals();
+  static std::unordered_map<int32_t, expectedBehaviorStruct> expected = {
+    {controller_manager_msgs::srv::SwitchController::Request::STRICT,
+     {controller_interface::return_type::ERROR, std::future_status::ready,
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE}},
+    {controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT,
+     {controller_interface::return_type::OK, std::future_status::timeout,
+      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE}}};
 
   // Verify preceding controller (diff_drive_controller) is inactive
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, diff_drive_controller->get_state().id());
 
   // Attempt to deactivate inactive controller (diff_drive_controller)
-  DeactivateController(DIFF_DRIVE_CONTROLLER, std::get<0>(expected), std::get<1>(expected));
+  DeactivateController(
+    DIFF_DRIVE_CONTROLLER, expected.at(test_param.strictness).return_type,
+    std::future_status::ready);
 
-  // Check to see preceding controller (diff_drive_controller) is still inactive and following controllers
-  // (pid_left_wheel_controller) (pid_left_wheel_controller) are still active
+  // Check to see preceding controller (diff_drive_controller) is still inactive and
+  // following controllers (pid_left_wheel_controller) (pid_left_wheel_controller) are still active
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, pid_left_wheel_controller->get_state().id());
   EXPECT_EQ(
@@ -915,12 +910,35 @@ TEST_P(
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, diff_drive_controller->get_state().id());
 
+  // Test Case 6: following controller is deactivated but preceding controller will be activated
+  // --> return error; controllers stay in the same state
+
+  switch_test_controllers(
+    {DIFF_DRIVE_CONTROLLER}, {PID_LEFT_WHEEL, PID_RIGHT_WHEEL}, test_param.strictness,
+    expected.at(test_param.strictness).future_status,
+    expected.at(test_param.strictness).return_type);
+
+  // Preceding controller should stay deactivated and following controller
+  // should be deactivated (if BEST_EFFORT)
+  // If STRICT, preceding controller should stay deactivated and following controller
+  // should stay activated
+  EXPECT_EQ(expected.at(test_param.strictness).state, pid_right_wheel_controller->get_state().id());
+  EXPECT_EQ(expected.at(test_param.strictness).state, pid_left_wheel_controller->get_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, diff_drive_controller->get_state().id());
+
   // Test Case 7: following controller deactivation but preceding controller is active
   // --> return error; controllers stay in the same state as they were
 
-  // Activate a preceding controller
-  ActivateAndCheckController(
-    diff_drive_controller, DIFF_DRIVE_CONTROLLER, DIFF_DRIVE_CLAIMED_INTERFACES, 1u);
+  // Activate all controllers for this test
+  ActivateController(
+    PID_LEFT_WHEEL, expected.at(test_param.strictness).return_type,
+    expected.at(test_param.strictness).future_status);
+  ActivateController(
+    PID_RIGHT_WHEEL, expected.at(test_param.strictness).return_type,
+    expected.at(test_param.strictness).future_status);
+  ActivateController(
+    DIFF_DRIVE_CONTROLLER, controller_interface::return_type::OK, std::future_status::timeout);
 
   // Expect all controllers to be active
   ASSERT_EQ(
@@ -933,7 +951,20 @@ TEST_P(
   // Attempt to deactivate following controllers
   switch_test_controllers(
     {}, {PID_LEFT_WHEEL, PID_RIGHT_WHEEL}, test_param.strictness, std::future_status::ready,
-    std::get<0>(expected));
+    expected.at(test_param.strictness).return_type);
+
+  // All controllers should still be active
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, pid_left_wheel_controller->get_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, pid_right_wheel_controller->get_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, diff_drive_controller->get_state().id());
+
+  // Attempt to deactivate a following controller
+  switch_test_controllers(
+    {}, {PID_RIGHT_WHEEL}, test_param.strictness, std::future_status::ready,
+    expected.at(test_param.strictness).return_type);
 
   // All controllers should still be active
   ASSERT_EQ(
@@ -945,8 +976,7 @@ TEST_P(
 }
 
 // TODO(destogl): Add test case with controllers added in "random" order
-
-// TODO(destogl): Think about strictness and chaining controllers
+//
 // new value: "START_DOWNSTREAM_CTRLS" --> start "downstream" controllers in a controllers chain
 //
 
