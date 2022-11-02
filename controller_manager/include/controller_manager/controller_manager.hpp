@@ -384,9 +384,8 @@ private:
 
   std::shared_ptr<rclcpp::Executor> executor_;
 
-  std::shared_ptr<pluginlib::ClassLoader<controller_interface::ControllerInterface>> loader_;
-  std::shared_ptr<pluginlib::ClassLoader<controller_interface::ChainableControllerInterface>>
-    chainable_loader_;
+  pluginlib::ClassLoader<controller_interface::ControllerInterface> loader_;
+  pluginlib::ClassLoader<controller_interface::ChainableControllerInterface> chainable_loader_;
 
   /// Best effort (non real-time safe) callback group, e.g., service callbacks.
   /**
