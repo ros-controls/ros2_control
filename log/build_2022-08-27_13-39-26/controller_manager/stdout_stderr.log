@@ -1,0 +1,245 @@
+-- The C compiler identification is GNU 9.4.0
+-- The CXX compiler identification is GNU 9.4.0
+-- Check for working C compiler: /usr/bin/cc
+-- Check for working C compiler: /usr/bin/cc -- works
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Check for working CXX compiler: /usr/bin/c++
+-- Check for working CXX compiler: /usr/bin/c++ -- works
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Found ament_cmake: 1.2.1 (/opt/ros/rolling/share/ament_cmake/cmake)
+-- Found Python3: /usr/bin/python3.8 (found version "3.8.10") found components: Interpreter 
+-- Found ament_index_cpp: 1.3.0 (/opt/ros/rolling/share/ament_index_cpp/cmake)
+-- Found controller_interface: 2.12.1 (/home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_interface/share/controller_interface/cmake)
+-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+-- Found rosidl_adapter: 3.0.1 (/opt/ros/rolling/share/rosidl_adapter/cmake)
+-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+-- Found rmw_implementation_cmake: 5.1.0 (/opt/ros/rolling/share/rmw_implementation_cmake/cmake)
+-- Found rmw_cyclonedds_cpp: 1.1.2 (/opt/ros/rolling/share/rmw_cyclonedds_cpp/cmake)
+-- Using RMW implementation 'rmw_cyclonedds_cpp' as default
+-- Found controller_manager_msgs: 2.12.1 (/home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager_msgs/share/controller_manager_msgs/cmake)
+-- Found ament_cmake_gmock: 1.2.1 (/opt/ros/rolling/share/ament_cmake_gmock/cmake)
+-- Found ros2_control_test_assets: 2.12.1 (/home/vx792/ros2_ws/src/ros-controls/ros2_control/install/ros2_control_test_assets/share/ros2_control_test_assets/cmake)
+-- Found realtime_tools: 2.2.0 (/opt/ros/rolling/share/realtime_tools/cmake)
+-- Found gmock sources under '/opt/ros/rolling/src/gmock_vendor': C++ tests using 'Google Mock' will be built
+-- Found ament_cmake_gtest: 1.2.1 (/opt/ros/rolling/share/ament_cmake_gtest/cmake)
+-- Found gtest sources under '/opt/ros/rolling/src/gtest_vendor': C++ tests using 'Google Test' will be built
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/vx792/ros2_ws/src/ros-controls/ros2_control/build/controller_manager
+[35m[1mScanning dependencies of target ament_cmake_python_copy_controller_manager[0m
+[  0%] Built target ament_cmake_python_copy_controller_manager
+[35m[1mScanning dependencies of target ament_cmake_python_copy_controller_manager_setup[0m
+[  0%] Built target ament_cmake_python_copy_controller_manager_setup
+[35m[1mScanning dependencies of target gmock[0m
+[  2%] [32mBuilding CXX object gmock/CMakeFiles/gmock.dir/opt/ros/rolling/src/gtest_vendor/src/gtest-all.cc.o[0m
+[  5%] [32mBuilding CXX object gmock/CMakeFiles/gmock.dir/src/gmock-all.cc.o[0m
+[  8%] [32m[1mLinking CXX static library libgmock.a[0m
+[  8%] Built target gmock
+[35m[1mScanning dependencies of target controller_manager[0m
+[ 11%] [32mBuilding CXX object CMakeFiles/controller_manager.dir/src/controller_manager.cpp.o[0m
+In file included from [01m[K/opt/ros/rolling/include/rclcpp/client.hpp:43[m[K,
+                 from [01m[K/opt/ros/rolling/include/rclcpp/callback_group.hpp:23[m[K,
+                 from [01m[K/opt/ros/rolling/include/rclcpp/any_executable.hpp:20[m[K,
+                 from [01m[K/opt/ros/rolling/include/rclcpp/memory_strategy.hpp:25[m[K,
+                 from [01m[K/opt/ros/rolling/include/rclcpp/memory_strategies.hpp:18[m[K,
+                 from [01m[K/opt/ros/rolling/include/rclcpp/executor_options.hpp:20[m[K,
+                 from [01m[K/opt/ros/rolling/include/rclcpp/executor.hpp:37[m[K,
+                 from [01m[K/opt/ros/rolling/include/rclcpp/executors/multi_threaded_executor.hpp:25[m[K,
+                 from [01m[K/opt/ros/rolling/include/rclcpp/executors.hpp:21[m[K,
+                 from [01m[K/opt/ros/rolling/include/rclcpp/rclcpp.hpp:155[m[K,
+                 from [01m[K/home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_interface/include/controller_interface/controller_interface_base.hpp:28[m[K,
+                 from [01m[K/home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_interface/include/controller_interface/chainable_controller_interface.hpp:20[m[K,
+                 from [01m[K/home/vx792/ros2_ws/src/ros-controls/ros2_control/controller_manager/include/controller_manager/controller_manager.hpp:25[m[K,
+                 from [01m[K/home/vx792/ros2_ws/src/ros-controls/ros2_control/controller_manager/src/controller_manager.cpp:15[m[K:
+[01m[K/home/vx792/ros2_ws/src/ros-controls/ros2_control/controller_manager/src/controller_manager.cpp:[m[K In member function ‘[01m[Kcontroller_interface::return_type controller_manager::ControllerManager::update(const rclcpp::Time&, const rclcpp::Duration&)[m[K’:
+[01m[K/home/vx792/ros2_ws/src/ros-controls/ros2_control/controller_manager/src/controller_manager.cpp:1648:27:[m[K [01;35m[Kwarning: [m[Kformat ‘[01m[K%d[m[K’ expects argument of type ‘[01m[Kint[m[K’, but argument 5 has type ‘[01m[Kstd::vector<std::thread>::size_type[m[K’ {aka ‘[01m[Klong unsigned int[m[K’} [[01;35m[K-Wformat=[m[K]
+ 1648 |             get_logger(), [01;35m[K"vector size before : '%d'"[m[K, [32m[Kasync_controller_threads.size()[m[K);
+      |                           [01;35m[K^~~~~~~~~~~~~~~~~~~~~~~~~~~[m[K  [32m[K~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[m[K
+      |                                                                                     [32m[K|[m[K
+      |                                                                                     [32m[Kstd::vector<std::thread>::size_type {aka long unsigned int}[m[K
+[01m[K/home/vx792/ros2_ws/src/ros-controls/ros2_control/controller_manager/src/controller_manager.cpp:1648:51:[m[K [01;36m[Knote: [m[Kformat string is defined here
+ 1648 |             get_logger(), "vector size before : '[01;36m[K%d[m[K'", async_controller_threads.size());
+      |                                                  [01;36m[K~^[m[K
+      |                                                   [01;36m[K|[m[K
+      |                                                   [01;36m[Kint[m[K
+      |                                                  [32m[K%ld[m[K
+In file included from [01m[K/opt/ros/rolling/include/rclcpp/client.hpp:43[m[K,
+                 from [01m[K/opt/ros/rolling/include/rclcpp/callback_group.hpp:23[m[K,
+                 from [01m[K/opt/ros/rolling/include/rclcpp/any_executable.hpp:20[m[K,
+                 from [01m[K/opt/ros/rolling/include/rclcpp/memory_strategy.hpp:25[m[K,
+                 from [01m[K/opt/ros/rolling/include/rclcpp/memory_strategies.hpp:18[m[K,
+                 from [01m[K/opt/ros/rolling/include/rclcpp/executor_options.hpp:20[m[K,
+                 from [01m[K/opt/ros/rolling/include/rclcpp/executor.hpp:37[m[K,
+                 from [01m[K/opt/ros/rolling/include/rclcpp/executors/multi_threaded_executor.hpp:25[m[K,
+                 from [01m[K/opt/ros/rolling/include/rclcpp/executors.hpp:21[m[K,
+                 from [01m[K/opt/ros/rolling/include/rclcpp/rclcpp.hpp:155[m[K,
+                 from [01m[K/home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_interface/include/controller_interface/controller_interface_base.hpp:28[m[K,
+                 from [01m[K/home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_interface/include/controller_interface/chainable_controller_interface.hpp:20[m[K,
+                 from [01m[K/home/vx792/ros2_ws/src/ros-controls/ros2_control/controller_manager/include/controller_manager/controller_manager.hpp:25[m[K,
+                 from [01m[K/home/vx792/ros2_ws/src/ros-controls/ros2_control/controller_manager/src/controller_manager.cpp:15[m[K:
+[01m[K/home/vx792/ros2_ws/src/ros-controls/ros2_control/controller_manager/src/controller_manager.cpp:1673:25:[m[K [01;35m[Kwarning: [m[Kformat ‘[01m[K%d[m[K’ expects argument of type ‘[01m[Kint[m[K’, but argument 5 has type ‘[01m[Kstd::vector<std::thread>::size_type[m[K’ {aka ‘[01m[Klong unsigned int[m[K’} [[01;35m[K-Wformat=[m[K]
+ 1673 |           get_logger(), [01;35m[K"vector size after: '%d'"[m[K, [32m[Kasync_controller_threads.size()[m[K);
+      |                         [01;35m[K^~~~~~~~~~~~~~~~~~~~~~~~~[m[K  [32m[K~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[m[K
+      |                                                                                 [32m[K|[m[K
+      |                                                                                 [32m[Kstd::vector<std::thread>::size_type {aka long unsigned int}[m[K
+[01m[K/home/vx792/ros2_ws/src/ros-controls/ros2_control/controller_manager/src/controller_manager.cpp:1673:47:[m[K [01;36m[Knote: [m[Kformat string is defined here
+ 1673 |           get_logger(), "vector size after: '[01;36m[K%d[m[K'", async_controller_threads.size());
+      |                                              [01;36m[K~^[m[K
+      |                                               [01;36m[K|[m[K
+      |                                               [01;36m[Kint[m[K
+      |                                              [32m[K%ld[m[K
+[ 14%] [32mBuilding CXX object CMakeFiles/controller_manager.dir/src/realtime.cpp.o[0m
+[ 17%] [32m[1mLinking CXX shared library libcontroller_manager.so[0m
+[ 17%] Built target controller_manager
+[35m[1mScanning dependencies of target gmock_main[0m
+[ 20%] [32mBuilding CXX object gmock/CMakeFiles/gmock_main.dir/src/gmock_main.cc.o[0m
+[ 23%] [32m[1mLinking CXX static library libgmock_main.a[0m
+[ 23%] Built target gmock_main
+[35m[1mScanning dependencies of target ament_cmake_python_build_controller_manager_scripts[0m
+running install_scripts
+running egg_info
+creating controller_manager.egg-info
+writing controller_manager.egg-info/PKG-INFO
+writing dependency_links to controller_manager.egg-info/dependency_links.txt
+writing entry points to controller_manager.egg-info/entry_points.txt
+writing top-level names to controller_manager.egg-info/top_level.txt
+writing manifest file 'controller_manager.egg-info/SOURCES.txt'
+reading manifest file 'controller_manager.egg-info/SOURCES.txt'
+writing manifest file 'controller_manager.egg-info/SOURCES.txt'
+Installing spawner script to scripts
+Installing unspawner script to scripts
+[ 23%] Built target ament_cmake_python_build_controller_manager_scripts
+[35m[1mScanning dependencies of target ament_cmake_python_build_controller_manager_egg[0m
+running egg_info
+writing controller_manager.egg-info/PKG-INFO
+writing dependency_links to controller_manager.egg-info/dependency_links.txt
+writing entry points to controller_manager.egg-info/entry_points.txt
+writing top-level names to controller_manager.egg-info/top_level.txt
+reading manifest file 'controller_manager.egg-info/SOURCES.txt'
+writing manifest file 'controller_manager.egg-info/SOURCES.txt'
+[ 23%] Built target ament_cmake_python_build_controller_manager_egg
+[35m[1mScanning dependencies of target test_controller[0m
+[ 26%] [32mBuilding CXX object CMakeFiles/test_controller.dir/test/test_controller/test_controller.cpp.o[0m
+[ 29%] [32m[1mLinking CXX shared library libtest_controller.so[0m
+[ 29%] Built target test_controller
+[35m[1mScanning dependencies of target test_controller_with_interfaces[0m
+[ 32%] [32mBuilding CXX object CMakeFiles/test_controller_with_interfaces.dir/test/test_controller_with_interfaces/test_controller_with_interfaces.cpp.o[0m
+[ 35%] [32m[1mLinking CXX shared library libtest_controller_with_interfaces.so[0m
+[ 35%] Built target test_controller_with_interfaces
+[35m[1mScanning dependencies of target ros2_control_node[0m
+[ 38%] [32mBuilding CXX object CMakeFiles/ros2_control_node.dir/src/ros2_control_node.cpp.o[0m
+[ 41%] [32m[1mLinking CXX executable ros2_control_node[0m
+[ 41%] Built target ros2_control_node
+[35m[1mScanning dependencies of target test_controller_failed_init[0m
+[ 44%] [32mBuilding CXX object CMakeFiles/test_controller_failed_init.dir/test/test_controller_failed_init/test_controller_failed_init.cpp.o[0m
+[ 47%] [32m[1mLinking CXX shared library libtest_controller_failed_init.so[0m
+[ 47%] Built target test_controller_failed_init
+[35m[1mScanning dependencies of target test_hardware_management_srvs[0m
+[ 50%] [32mBuilding CXX object CMakeFiles/test_hardware_management_srvs.dir/test/test_hardware_management_srvs.cpp.o[0m
+[ 52%] [32m[1mLinking CXX executable test_hardware_management_srvs[0m
+[ 52%] Built target test_hardware_management_srvs
+[35m[1mScanning dependencies of target test_chainable_controller[0m
+[ 55%] [32mBuilding CXX object CMakeFiles/test_chainable_controller.dir/test/test_chainable_controller/test_chainable_controller.cpp.o[0m
+[ 58%] [32m[1mLinking CXX shared library libtest_chainable_controller.so[0m
+[ 58%] Built target test_chainable_controller
+[35m[1mScanning dependencies of target test_release_interfaces[0m
+[ 61%] [32mBuilding CXX object CMakeFiles/test_release_interfaces.dir/test/test_release_interfaces.cpp.o[0m
+[ 64%] [32m[1mLinking CXX executable test_release_interfaces[0m
+[ 64%] Built target test_release_interfaces
+[35m[1mScanning dependencies of target test_controller_manager[0m
+[ 67%] [32mBuilding CXX object CMakeFiles/test_controller_manager.dir/test/test_controller_manager.cpp.o[0m
+[35m[1mScanning dependencies of target test_load_controller[0m
+[ 70%] [32mBuilding CXX object CMakeFiles/test_load_controller.dir/test/test_load_controller.cpp.o[0m
+[ 73%] [32m[1mLinking CXX executable test_controller_manager[0m
+[ 73%] Built target test_controller_manager
+[35m[1mScanning dependencies of target test_controllers_chaining_with_controller_manager[0m
+[ 76%] [32mBuilding CXX object CMakeFiles/test_controllers_chaining_with_controller_manager.dir/test/test_controllers_chaining_with_controller_manager.cpp.o[0m
+[ 79%] [32m[1mLinking CXX executable test_load_controller[0m
+[ 79%] Built target test_load_controller
+[35m[1mScanning dependencies of target test_controller_manager_srvs[0m
+[ 82%] [32mBuilding CXX object CMakeFiles/test_controller_manager_srvs.dir/test/test_controller_manager_srvs.cpp.o[0m
+[ 85%] [32m[1mLinking CXX executable test_controllers_chaining_with_controller_manager[0m
+[ 85%] Built target test_controllers_chaining_with_controller_manager
+[35m[1mScanning dependencies of target test_spawner_unspawner[0m
+[ 88%] [32mBuilding CXX object CMakeFiles/test_spawner_unspawner.dir/test/test_spawner_unspawner.cpp.o[0m
+[ 91%] [32m[1mLinking CXX executable test_controller_manager_srvs[0m
+[ 91%] Built target test_controller_manager_srvs
+[ 94%] [32m[1mLinking CXX executable test_spawner_unspawner[0m
+[ 94%] Built target test_spawner_unspawner
+[35m[1mScanning dependencies of target test_controller_manager_with_namespace.cpp[0m
+[ 97%] [32mBuilding CXX object CMakeFiles/test_controller_manager_with_namespace.cpp.dir/test/test_controller_manager_with_namespace.cpp.o[0m
+[100%] [32m[1mLinking CXX executable test_controller_manager_with_namespace.cpp[0m
+[100%] Built target test_controller_manager_with_namespace.cpp
+-- Install configuration: ""
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/lib/libcontroller_manager.so
+-- Set runtime path of "/home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/lib/libcontroller_manager.so" to ""
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/lib/controller_manager/ros2_control_node
+-- Set runtime path of "/home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/lib/controller_manager/ros2_control_node" to ""
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/include
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/include/controller_manager
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/include/controller_manager/controller_spec.hpp
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/include/controller_manager/visibility_control.h
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/include/controller_manager/controller_manager.hpp
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/include/controller_manager/realtime.hpp
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/share/controller_manager/test/test_controller/test_controller.xml
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/lib/libtest_controller.so
+-- Set runtime path of "/home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/lib/libtest_controller.so" to ""
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/share/controller_manager/test/test_controller_failed_init/test_controller_failed_init.xml
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/lib/libtest_controller_failed_init.so
+-- Set runtime path of "/home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/lib/libtest_controller_failed_init.so" to ""
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/share/controller_manager/test/test_chainable_controller/test_chainable_controller.xml
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/lib/libtest_chainable_controller.so
+-- Set runtime path of "/home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/lib/libtest_chainable_controller.so" to ""
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/share/controller_manager/test/test_controller_with_interfaces/test_controller_with_interfaces.xml
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/lib/libtest_controller_with_interfaces.so
+-- Set runtime path of "/home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/lib/libtest_controller_with_interfaces.so" to ""
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/share/controller_manager/environment/pythonpath.sh
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/share/controller_manager/environment/pythonpath.dsv
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/lib/python3.8/site-packages/controller_manager-2.12.1-py3.8.egg-info
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/lib/python3.8/site-packages/controller_manager-2.12.1-py3.8.egg-info/PKG-INFO
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/lib/python3.8/site-packages/controller_manager-2.12.1-py3.8.egg-info/entry_points.txt
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/lib/python3.8/site-packages/controller_manager-2.12.1-py3.8.egg-info/dependency_links.txt
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/lib/python3.8/site-packages/controller_manager-2.12.1-py3.8.egg-info/SOURCES.txt
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/lib/python3.8/site-packages/controller_manager-2.12.1-py3.8.egg-info/top_level.txt
+-- Up-to-date: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/lib/controller_manager/
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/lib/controller_manager//spawner
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/lib/controller_manager//unspawner
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/lib/python3.8/site-packages/controller_manager
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/lib/python3.8/site-packages/controller_manager/__init__.py
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/lib/python3.8/site-packages/controller_manager/unspawner.py
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/lib/python3.8/site-packages/controller_manager/controller_manager_services.py
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/lib/python3.8/site-packages/controller_manager/spawner.py
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/lib/python3.8/site-packages/controller_manager/launch_utils.py
+Listing '/home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/lib/python3.8/site-packages/controller_manager'...
+Compiling '/home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/lib/python3.8/site-packages/controller_manager/__init__.py'...
+Compiling '/home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/lib/python3.8/site-packages/controller_manager/controller_manager_services.py'...
+Compiling '/home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/lib/python3.8/site-packages/controller_manager/launch_utils.py'...
+Compiling '/home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/lib/python3.8/site-packages/controller_manager/spawner.py'...
+Compiling '/home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/lib/python3.8/site-packages/controller_manager/unspawner.py'...
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/share/controller_manager/environment/library_path.sh
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/share/controller_manager/environment/library_path.dsv
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/share/ament_index/resource_index/package_run_dependencies/controller_manager
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/share/ament_index/resource_index/parent_prefix_path/controller_manager
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/share/controller_manager/environment/ament_prefix_path.sh
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/share/controller_manager/environment/ament_prefix_path.dsv
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/share/controller_manager/environment/path.sh
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/share/controller_manager/environment/path.dsv
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/share/controller_manager/local_setup.bash
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/share/controller_manager/local_setup.sh
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/share/controller_manager/local_setup.zsh
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/share/controller_manager/local_setup.dsv
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/share/controller_manager/package.dsv
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/share/ament_index/resource_index/packages/controller_manager
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/share/ament_index/resource_index/controller_interface__pluginlib__plugin/controller_manager
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/share/controller_manager/cmake/ament_cmake_export_libraries-extras.cmake
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/share/controller_manager/cmake/ament_cmake_export_include_directories-extras.cmake
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/share/controller_manager/cmake/ament_cmake_export_dependencies-extras.cmake
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/share/controller_manager/cmake/controller_managerConfig.cmake
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/share/controller_manager/cmake/controller_managerConfig-version.cmake
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager/share/controller_manager/package.xml

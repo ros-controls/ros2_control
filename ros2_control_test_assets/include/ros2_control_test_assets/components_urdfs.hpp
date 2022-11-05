@@ -22,7 +22,7 @@ namespace ros2_control_test_assets
 // 1. Industrial Robots with only one interface
 const auto valid_urdf_ros2_control_system_one_interface =
   R"(
-  <ros2_control name="RRBotSystemPositionOnly" type="system">
+  <ros2_control name="RRBotSystemPositionOnly" type="system" is_asynch="true">
     <hardware>
       <plugin>ros2_control_demo_hardware/RRBotSystemPositionOnlyHardware</plugin>
       <param name="example_param_write_for_sec">2</param>
@@ -49,7 +49,7 @@ const auto valid_urdf_ros2_control_system_one_interface =
 // Note, joint parameters can be any string
 const auto valid_urdf_ros2_control_system_multi_interface =
   R"(
-  <ros2_control name="RRBotSystemMultiInterface" type="system">
+  <ros2_control name="RRBotSystemMultiInterface" type="system" is_asynch="true">
     <hardware>
       <plugin>ros2_control_demo_hardware/RRBotSystemMultiInterfaceHardware</plugin>
       <param name="example_param_write_for_sec">2</param>
@@ -89,7 +89,7 @@ const auto valid_urdf_ros2_control_system_multi_interface =
 // 3. Industrial Robots with integrated sensor
 const auto valid_urdf_ros2_control_system_robot_with_sensor =
   R"(
-  <ros2_control name="RRBotSystemWithSensor" type="system">
+  <ros2_control name="RRBotSystemWithSensor" type="system" is_asynch="false">
     <hardware>
       <plugin>ros2_control_demo_hardware/RRBotSystemWithSensorHardware</plugin>
       <param name="example_param_write_for_sec">2</param>
@@ -126,7 +126,7 @@ const auto valid_urdf_ros2_control_system_robot_with_sensor =
 // 4. Industrial Robots with externally connected sensor
 const auto valid_urdf_ros2_control_system_robot_with_external_sensor =
   R"(
-  <ros2_control name="RRBotSystemPositionOnlyWithExternalSensor" type="system">
+  <ros2_control name="RRBotSystemPositionOnlyWithExternalSensor" type="system" is_asynch="false">
     <hardware>
       <plugin>ros2_control_demo_hardware/RRBotSystemPositionOnlyHardware</plugin>
       <param name="example_param_write_for_sec">2</param>
@@ -169,7 +169,7 @@ const auto valid_urdf_ros2_control_system_robot_with_external_sensor =
 // 5. Modular Robots with separate communication to each actuator
 const auto valid_urdf_ros2_control_actuator_modular_robot =
   R"(
-  <ros2_control name="RRBotModularJoint1"  type="actuator">
+  <ros2_control name="RRBotModularJoint1"  type="actuator" is_asynch="false">
     <hardware>
       <plugin>ros2_control_demo_hardware/PositionActuatorHardware</plugin>
       <param name="example_param_write_for_sec">1.23</param>
@@ -203,7 +203,7 @@ const auto valid_urdf_ros2_control_actuator_modular_robot =
 // Example for simple transmission
 const auto valid_urdf_ros2_control_actuator_modular_robot_sensors =
   R"(
-  <ros2_control name="RRBotModularJoint1" type="actuator">
+  <ros2_control name="RRBotModularJoint1" type="actuator" is_asynch="false">
     <hardware>
       <plugin>ros2_control_demo_hardware/VelocityActuatorHardware</plugin>
       <param name="example_param_write_for_sec">1.23</param>

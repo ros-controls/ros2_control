@@ -1,0 +1,7 @@
+[  0%] Built target controller_manager_msgs__cpp
+[ 12%] Built target controller_manager_msgs__rosidl_generator_c
+[ 24%] Built target controller_manager_msgs__rosidl_typesupport_introspection_cpp
+[ 24%] Built target ament_cmake_python_copy_controller_manager_msgs
+[ 36%] Built target controller_manager_msgs__rosidl_typesupport_cpp
+[ 48%] Built target controller_manager_msgs__rosidl_typesupport_fastrtps_cpp
+[ 60%] Built target controller_manager_msgs__rosidl_typesupport_introspection_c

@@ -1,0 +1,81 @@
+-- The C compiler identification is GNU 9.4.0
+-- The CXX compiler identification is GNU 9.4.0
+-- Check for working C compiler: /usr/bin/cc
+-- Check for working C compiler: /usr/bin/cc -- works
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Check for working CXX compiler: /usr/bin/c++
+-- Check for working CXX compiler: /usr/bin/c++ -- works
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Found ament_cmake: 1.2.1 (/opt/ros/rolling/share/ament_cmake/cmake)
+-- Found Python3: /usr/bin/python3.8 (found version "3.8.10") found components: Interpreter 
+-- Found rclcpp: 15.0.0 (/opt/ros/rolling/share/rclcpp/cmake)
+-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+-- Found rosidl_adapter: 3.0.1 (/opt/ros/rolling/share/rosidl_adapter/cmake)
+-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+-- Found rmw_implementation_cmake: 5.1.0 (/opt/ros/rolling/share/rmw_implementation_cmake/cmake)
+-- Found rmw_cyclonedds_cpp: 1.1.2 (/opt/ros/rolling/share/rmw_cyclonedds_cpp/cmake)
+-- Using RMW implementation 'rmw_cyclonedds_cpp' as default
+-- Found rclcpp_lifecycle: 15.0.0 (/opt/ros/rolling/share/rclcpp_lifecycle/cmake)
+-- Found ament_cmake_gtest: 1.2.1 (/opt/ros/rolling/share/ament_cmake_gtest/cmake)
+-- Found launch_testing_ament_cmake: 0.21.0 (/opt/ros/rolling/share/launch_testing_ament_cmake/cmake)
+-- Found python_cmake_module: 0.8.1 (/opt/ros/rolling/share/python_cmake_module/cmake)
+-- Found PythonInterp: /usr/bin/python3 (found suitable version "3.8.10", minimum required is "3.5") 
+-- Found PythonLibs: /usr/lib/x86_64-linux-gnu/libpython3.8.so (found suitable version "3.8.10", minimum required is "3.5") 
+-- Using PYTHON_EXECUTABLE: /usr/bin/python3
+-- Using PYTHON_INCLUDE_DIRS: /usr/include/python3.8
+-- Using PYTHON_LIBRARIES: /usr/lib/x86_64-linux-gnu/libpython3.8.so
+-- Found PythonExtra: .so  
+-- Found gtest sources under '/opt/ros/rolling/src/gtest_vendor': C++ tests using 'Google Test' will be built
+-- Looking for pthread.h
+-- Looking for pthread.h - found
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Failed
+-- Check if compiler accepts -pthread
+-- Check if compiler accepts -pthread - yes
+-- Found Threads: TRUE  
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/vx792/ros2_ws/src/ros-controls/ros2_control/build/joint_limits
+[35m[1mScanning dependencies of target gtest[0m
+[ 16%] [32mBuilding CXX object gtest/CMakeFiles/gtest.dir/src/gtest-all.cc.o[0m
+[ 33%] [32m[1mLinking CXX static library libgtest.a[0m
+[ 33%] Built target gtest
+[35m[1mScanning dependencies of target gtest_main[0m
+[ 50%] [32mBuilding CXX object gtest/CMakeFiles/gtest_main.dir/src/gtest_main.cc.o[0m
+[ 66%] [32m[1mLinking CXX static library libgtest_main.a[0m
+[ 66%] Built target gtest_main
+[35m[1mScanning dependencies of target joint_limits_rosparam_test[0m
+[ 83%] [32mBuilding CXX object CMakeFiles/joint_limits_rosparam_test.dir/test/joint_limits_rosparam_test.cpp.o[0m
+[100%] [32m[1mLinking CXX executable joint_limits_rosparam_test[0m
+[100%] Built target joint_limits_rosparam_test
+-- Install configuration: ""
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/joint_limits/include
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/joint_limits/include/joint_limits
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/joint_limits/include/joint_limits/joint_limits.hpp
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/joint_limits/include/joint_limits/joint_limits_rosparam.hpp
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/joint_limits/lib/joint_limits/joint_limits_rosparam_test
+-- Set runtime path of "/home/vx792/ros2_ws/src/ros-controls/ros2_control/install/joint_limits/lib/joint_limits/joint_limits_rosparam_test" to ""
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/joint_limits/share/joint_limits/test/joint_limits_rosparam.yaml
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/joint_limits/share/ament_index/resource_index/package_run_dependencies/joint_limits
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/joint_limits/share/ament_index/resource_index/parent_prefix_path/joint_limits
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/joint_limits/share/joint_limits/environment/ament_prefix_path.sh
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/joint_limits/share/joint_limits/environment/ament_prefix_path.dsv
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/joint_limits/share/joint_limits/environment/path.sh
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/joint_limits/share/joint_limits/environment/path.dsv
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/joint_limits/share/joint_limits/local_setup.bash
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/joint_limits/share/joint_limits/local_setup.sh
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/joint_limits/share/joint_limits/local_setup.zsh
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/joint_limits/share/joint_limits/local_setup.dsv
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/joint_limits/share/joint_limits/package.dsv
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/joint_limits/share/ament_index/resource_index/packages/joint_limits
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/joint_limits/share/joint_limits/cmake/ament_cmake_export_dependencies-extras.cmake
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/joint_limits/share/joint_limits/cmake/ament_cmake_export_include_directories-extras.cmake
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/joint_limits/share/joint_limits/cmake/joint_limitsConfig.cmake
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/joint_limits/share/joint_limits/cmake/joint_limitsConfig-version.cmake
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/joint_limits/share/joint_limits/package.xml

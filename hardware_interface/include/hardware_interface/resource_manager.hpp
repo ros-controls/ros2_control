@@ -20,12 +20,24 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <atomic>
+#include <variant>
+#include <thread>
 
 #include "hardware_interface/hardware_component_info.hpp"
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/loaned_command_interface.hpp"
 #include "hardware_interface/loaned_state_interface.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
+#include "hardware_interface/types/lifecycle_state_names.hpp"
+#include "hardware_interface/system.hpp"
+#include "hardware_interface/sensor.hpp"
+#include "hardware_interface/actuator.hpp"
+#include "lifecycle_msgs/msg/state.hpp"
+
+
+
+
 #include "rclcpp/duration.hpp"
 #include "rclcpp/time.hpp"
 
@@ -35,6 +47,7 @@ class ActuatorInterface;
 class SensorInterface;
 class SystemInterface;
 class ResourceStorage;
+
 
 class HARDWARE_INTERFACE_PUBLIC ResourceManager
 {
@@ -374,6 +387,106 @@ private:
   mutable std::recursive_mutex resource_interfaces_lock_;
   mutable std::recursive_mutex claimed_command_interfaces_lock_;
   std::unique_ptr<ResourceStorage> resource_storage_;
+
+  class ComponentThreadWrapper
+  {
+  public:
+  
+    explicit ComponentThreadWrapper(System* component, std::mutex& mutex_)
+      : component_(component)
+      , read_thread_{}
+      , write_thread_{}
+      , mutex_ref_(mutex_)
+    {
+    }
+    explicit ComponentThreadWrapper(Actuator* component, std::mutex& mutex_)
+      : component_(component)
+      , read_thread_{}
+      , write_thread_{}
+      , mutex_ref_(mutex_)
+    {
+    }
+    explicit ComponentThreadWrapper(Sensor* component, std::mutex& mutex_)
+      : component_(component)
+      , read_thread_{}
+      , write_thread_{}
+      , mutex_ref_(mutex_)
+    {
+    }
+    
+    ComponentThreadWrapper(const ComponentThreadWrapper& t) = delete;
+    ComponentThreadWrapper(ComponentThreadWrapper&& t) = default;
+    
+    ~ComponentThreadWrapper() {
+      if (read_thread_.joinable()) 
+      { 
+        read_thread_.join(); 
+      }
+      if (write_thread_.joinable())
+      {
+        write_thread_.join();
+      }
+    }
+    
+    void start_read()
+    {
+      read_thread_ = std::thread(&ComponentThreadWrapper::read, this);
+    }
+
+    void read() 
+    {      
+      std::visit([this](auto& object) { 
+        //rclcpp::Time previous_time = object->get_node()->now(); 
+        while (!terminated_)
+        {
+            if (mutex_ref_.try_lock() && object->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+            { 
+              std::lock_guard<std::mutex> lock(mutex_ref_, std::adopt_lock);
+              //auto const current_time = object->get_node()->now();
+              //auto const measured_period = current_time - previous_time;
+              //previous_time = current_time;
+              //object->read(object->get_node()->now(), measured_period);
+            }
+          std::this_thread::sleep_for(std::chrono::milliseconds(100)); //calculate this based on ros2_control_node logic
+        }
+      }, component_);
+    }
+
+    void start_write()
+    {
+      write_thread_ = std::thread(&ComponentThreadWrapper::write, this);
+    }
+
+    void write() 
+    {      
+      std::visit([this](auto& object) {  
+        //rclcpp::Time previous_time = object->get_node()->now();
+        while (!terminated_)
+        {
+          if (mutex_ref_.try_lock() && object->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+          { 
+            std::lock_guard<std::mutex> lock(mutex_ref_, std::adopt_lock);
+            //auto const current_time = object->get_node()->now();
+            //auto const measured_period = current_time - previous_time;
+            //previous_time = current_time;    
+            //object->write(object->get_node()->now(), measured_period);
+          }
+          std::this_thread::sleep_for(std::chrono::milliseconds(100)); //calculate this based on ros2_control_node logic
+        }
+      }, component_);
+    }
+    std::atomic<bool> terminated_ = false;
+  private:
+    std::variant<Actuator*, System*, Sensor*> component_;
+    std::thread read_thread_;
+    std::thread write_thread_;
+    std::mutex& mutex_ref_;
+    
+  };
+  
+  std::unordered_map<std::string, std::unique_ptr<ComponentThreadWrapper>> async_component_threads_;
+
+  
 };
 
 }  // namespace hardware_interface

@@ -81,7 +81,7 @@
       <state_interface name="position"/>
     </joint>
   </ros2_control>
-  <ros2_control name="TestSystemCommandModes" type="system">
+  <ros2_control name="TestSystemCommandModes" type="system" is_asynch="true">
     <hardware>
       <plugin>test_robot_hardware/TestSystemCommandModes</plugin>
     </hardware>

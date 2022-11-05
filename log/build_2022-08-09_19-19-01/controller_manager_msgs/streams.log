@@ -1,0 +1,121 @@
+[0.066s] Invoking command in '/home/vx792/ros2_ws/src/ros-controls/ros2_control/build/controller_manager_msgs': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/vx792/ros2_ws/src/ros-controls/install/ros2controlcli:/home/vx792/ros2_ws/src/ros-controls/install/ros2_controllers_test_nodes:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_test_nodes:/opt/ros/rolling /usr/bin/cmake /home/vx792/ros2_ws/src/ros-controls/ros2_control/controller_manager_msgs -DCMAKE_INSTALL_PREFIX=/home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager_msgs
+[0.368s] -- The C compiler identification is GNU 9.4.0
+[0.554s] -- The CXX compiler identification is GNU 9.4.0
+[0.589s] -- Check for working C compiler: /usr/bin/cc
+[0.846s] -- Check for working C compiler: /usr/bin/cc -- works
+[0.861s] -- Detecting C compiler ABI info
+[1.070s] -- Detecting C compiler ABI info - done
+[1.146s] -- Detecting C compile features
+[1.147s] -- Detecting C compile features - done
+[1.164s] -- Check for working CXX compiler: /usr/bin/c++
+[1.442s] -- Check for working CXX compiler: /usr/bin/c++ -- works
+[1.449s] -- Detecting CXX compiler ABI info
+[1.853s] -- Detecting CXX compiler ABI info - done
+[1.907s] -- Detecting CXX compile features
+[1.909s] -- Detecting CXX compile features - done
+[1.962s] -- Found ament_cmake: 1.2.1 (/opt/ros/rolling/share/ament_cmake/cmake)
+[2.574s] -- Found Python3: /usr/bin/python3.8 (found version "3.8.10") found components: Interpreter 
+[2.983s] -- Found builtin_interfaces: 1.1.0 (/opt/ros/rolling/share/builtin_interfaces/cmake)
+[3.138s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[3.188s] -- Found rosidl_adapter: 3.0.1 (/opt/ros/rolling/share/rosidl_adapter/cmake)
+[3.472s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[3.565s] -- Found lifecycle_msgs: 1.1.0 (/opt/ros/rolling/share/lifecycle_msgs/cmake)
+[3.610s] -- Found rosidl_default_generators: 1.1.1 (/opt/ros/rolling/share/rosidl_default_generators/cmake)
+[5.618s] -- Found ament_cmake_cppcheck: 0.11.4 (/opt/ros/rolling/share/ament_cmake_cppcheck/cmake)
+[5.631s] -- Found ament_cmake_cpplint: 0.11.4 (/opt/ros/rolling/share/ament_cmake_cpplint/cmake)
+[5.644s] -- Found ament_cmake_uncrustify: 0.11.4 (/opt/ros/rolling/share/ament_cmake_uncrustify/cmake)
+[5.665s] -- Found ament_cmake_ros: 0.10.0 (/opt/ros/rolling/share/ament_cmake_ros/cmake)
+[7.433s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[8.885s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[9.018s] -- Found PythonInterp: /usr/bin/python3 (found suitable version "3.8.10", minimum required is "3.5") 
+[9.039s] -- Found python_cmake_module: 0.8.1 (/opt/ros/rolling/share/python_cmake_module/cmake)
+[9.154s] -- Found PythonLibs: /usr/lib/x86_64-linux-gnu/libpython3.8.so (found suitable version "3.8.10", minimum required is "3.5") 
+[9.154s] -- Using PYTHON_EXECUTABLE: /usr/bin/python3
+[9.154s] -- Using PYTHON_INCLUDE_DIRS: /usr/include/python3.8
+[9.154s] -- Using PYTHON_LIBRARIES: /usr/lib/x86_64-linux-gnu/libpython3.8.so
+[9.270s] -- Found PythonExtra: .so  
+[9.557s] -- Found ament_cmake_flake8: 0.11.4 (/opt/ros/rolling/share/ament_cmake_flake8/cmake)
+[9.570s] -- Found ament_cmake_pep257: 0.11.4 (/opt/ros/rolling/share/ament_cmake_pep257/cmake)
+[9.612s] -- Configuring done
+[10.046s] -- Generating done
+[10.055s] -- Build files have been written to: /home/vx792/ros2_ws/src/ros-controls/ros2_control/build/controller_manager_msgs
+[10.090s] Invoked command in '/home/vx792/ros2_ws/src/ros-controls/ros2_control/build/controller_manager_msgs' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/vx792/ros2_ws/src/ros-controls/install/ros2controlcli:/home/vx792/ros2_ws/src/ros-controls/install/ros2_controllers_test_nodes:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_test_nodes:/opt/ros/rolling /usr/bin/cmake /home/vx792/ros2_ws/src/ros-controls/ros2_control/controller_manager_msgs -DCMAKE_INSTALL_PREFIX=/home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager_msgs
+[10.091s] Invoking command in '/home/vx792/ros2_ws/src/ros-controls/ros2_control/build/controller_manager_msgs': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/vx792/ros2_ws/src/ros-controls/install/ros2controlcli:/home/vx792/ros2_ws/src/ros-controls/install/ros2_controllers_test_nodes:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_test_nodes:/opt/ros/rolling /usr/bin/cmake --build /home/vx792/ros2_ws/src/ros-controls/ros2_control/build/controller_manager_msgs -- -j2 -l2
+[10.206s] [35m[1mScanning dependencies of target controller_manager_msgs__cpp[0m
+[10.238s] [  0%] [34m[1mGenerating C++ code for ROS interfaces[0m
+[20.675s] [  0%] Built target controller_manager_msgs__cpp
+[20.755s] [  1%] [34m[1mGenerating C code for ROS interfaces[0m
+[29.649s] [35m[1mScanning dependencies of target controller_manager_msgs__rosidl_generator_c[0m
+[29.774s] [  2%] [32mBuilding C object CMakeFiles/controller_manager_msgs__rosidl_generator_c.dir/rosidl_generator_c/controller_manager_msgs/msg/detail/controller_state__functions.c.o[0m
+[29.985s] [  2%] [32mBuilding C object CMakeFiles/controller_manager_msgs__rosidl_generator_c.dir/rosidl_generator_c/controller_manager_msgs/msg/detail/hardware_component_state__functions.c.o[0m
+[30.145s] [  3%] [32mBuilding C object CMakeFiles/controller_manager_msgs__rosidl_generator_c.dir/rosidl_generator_c/controller_manager_msgs/msg/detail/hardware_interface__functions.c.o[0m
+[30.373s] [  4%] [32mBuilding C object CMakeFiles/controller_manager_msgs__rosidl_generator_c.dir/rosidl_generator_c/controller_manager_msgs/srv/detail/configure_controller__functions.c.o[0m
+[30.579s] [  5%] [32mBuilding C object CMakeFiles/controller_manager_msgs__rosidl_generator_c.dir/rosidl_generator_c/controller_manager_msgs/srv/detail/list_controllers__functions.c.o[0m
+[30.785s] [  6%] [32mBuilding C object CMakeFiles/controller_manager_msgs__rosidl_generator_c.dir/rosidl_generator_c/controller_manager_msgs/srv/detail/list_controller_types__functions.c.o[0m
+[31.006s] [  6%] [32mBuilding C object CMakeFiles/controller_manager_msgs__rosidl_generator_c.dir/rosidl_generator_c/controller_manager_msgs/srv/detail/list_hardware_components__functions.c.o[0m
+[31.249s] [  7%] [32mBuilding C object CMakeFiles/controller_manager_msgs__rosidl_generator_c.dir/rosidl_generator_c/controller_manager_msgs/srv/detail/list_hardware_interfaces__functions.c.o[0m
+[31.496s] [  8%] [32mBuilding C object CMakeFiles/controller_manager_msgs__rosidl_generator_c.dir/rosidl_generator_c/controller_manager_msgs/srv/detail/load_controller__functions.c.o[0m
+[31.691s] [  9%] [32mBuilding C object CMakeFiles/controller_manager_msgs__rosidl_generator_c.dir/rosidl_generator_c/controller_manager_msgs/srv/detail/reload_controller_libraries__functions.c.o[0m
+[31.934s] [ 10%] [32mBuilding C object CMakeFiles/controller_manager_msgs__rosidl_generator_c.dir/rosidl_generator_c/controller_manager_msgs/srv/detail/set_hardware_component_state__functions.c.o[0m
+[32.089s] [ 10%] [32mBuilding C object CMakeFiles/controller_manager_msgs__rosidl_generator_c.dir/rosidl_generator_c/controller_manager_msgs/srv/detail/switch_controller__functions.c.o[0m
+[32.270s] [ 11%] [32mBuilding C object CMakeFiles/controller_manager_msgs__rosidl_generator_c.dir/rosidl_generator_c/controller_manager_msgs/srv/detail/unload_controller__functions.c.o[0m
+[32.493s] [ 12%] [32m[1mLinking C shared library libcontroller_manager_msgs__rosidl_generator_c.so[0m
+[32.690s] [ 12%] Built target controller_manager_msgs__rosidl_generator_c
+[32.746s] [35m[1mScanning dependencies of target ament_cmake_python_copy_controller_manager_msgs[0m
+[32.879s] [ 12%] Built target ament_cmake_python_copy_controller_manager_msgs
+[32.914s] [ 12%] [34m[1mGenerating C++ introspection for ROS interfaces[0m
+[40.170s] [35m[1mScanning dependencies of target controller_manager_msgs__rosidl_typesupport_introspection_cpp[0m
+[40.250s] [ 13%] [32mBuilding CXX object CMakeFiles/controller_manager_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/controller_manager_msgs/msg/detail/controller_state__type_support.cpp.o[0m
+[42.526s] [ 14%] [32mBuilding CXX object CMakeFiles/controller_manager_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/controller_manager_msgs/msg/detail/hardware_component_state__type_support.cpp.o[0m
+[44.879s] [ 15%] [32mBuilding CXX object CMakeFiles/controller_manager_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/controller_manager_msgs/msg/detail/hardware_interface__type_support.cpp.o[0m
+[46.489s] [ 16%] [32mBuilding CXX object CMakeFiles/controller_manager_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/controller_manager_msgs/srv/detail/configure_controller__type_support.cpp.o[0m
+[48.028s] [ 16%] [32mBuilding CXX object CMakeFiles/controller_manager_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/controller_manager_msgs/srv/detail/list_controllers__type_support.cpp.o[0m
+[50.263s] [ 17%] [32mBuilding CXX object CMakeFiles/controller_manager_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/controller_manager_msgs/srv/detail/list_controller_types__type_support.cpp.o[0m
+[52.594s] [ 18%] [32mBuilding CXX object CMakeFiles/controller_manager_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/controller_manager_msgs/srv/detail/list_hardware_components__type_support.cpp.o[0m
+[53.993s] [ 19%] [32mBuilding CXX object CMakeFiles/controller_manager_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/controller_manager_msgs/srv/detail/list_hardware_interfaces__type_support.cpp.o[0m
+[55.847s] [ 20%] [32mBuilding CXX object CMakeFiles/controller_manager_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/controller_manager_msgs/srv/detail/load_controller__type_support.cpp.o[0m
+[57.815s] [ 20%] [32mBuilding CXX object CMakeFiles/controller_manager_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/controller_manager_msgs/srv/detail/reload_controller_libraries__type_support.cpp.o[0m
+[59.831s] [ 21%] [32mBuilding CXX object CMakeFiles/controller_manager_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/controller_manager_msgs/srv/detail/set_hardware_component_state__type_support.cpp.o[0m
+[61.538s] [ 22%] [32mBuilding CXX object CMakeFiles/controller_manager_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/controller_manager_msgs/srv/detail/switch_controller__type_support.cpp.o[0m
+[63.638s] [ 23%] [32mBuilding CXX object CMakeFiles/controller_manager_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/controller_manager_msgs/srv/detail/unload_controller__type_support.cpp.o[0m
+[65.360s] [ 24%] [32m[1mLinking CXX shared library libcontroller_manager_msgs__rosidl_typesupport_introspection_cpp.so[0m
+[65.800s] [ 24%] Built target controller_manager_msgs__rosidl_typesupport_introspection_cpp
+[65.843s] [ 25%] [34m[1mGenerating C++ type support dispatch for ROS interfaces[0m
+[68.597s] make[2]: *** Deleting file 'rosidl_typesupport_cpp/controller_manager_msgs/msg/controller_state__type_support.cpp'
+[68.597s] Traceback (most recent call last):
+[68.597s]   File "/opt/ros/rolling/lib/rosidl_typesupport_cpp/rosidl_typesupport_cpp", line 28, in <module>
+[68.597s]     sys.exit(main())
+[68.598s]   File "/opt/ros/rolling/lib/rosidl_typesupport_cpp/rosidl_typesupport_cpp", line 24, in main
+[68.598s]     generate_cpp(args.generator_arguments_file, args.typesupports)
+[68.598s]   File "/opt/ros/rolling/lib/python3.8/site-packages/rosidl_typesupport_cpp/__init__.py", line 28, in generate_cpp
+[68.598s]     return generate_files(
+[68.598s]   File "/opt/ros/rolling/lib/python3.8/site-packages/rosidl_cmake/__init__.py", line 87, in generate_files
+[68.598s]     expand_template(
+[68.598s]   File "/opt/ros/rolling/lib/python3.8/site-packages/rosidl_cmake/__init__.py", line 149, in expand_template
+[68.598s]     interpreter.string(template_content, template_path, locals=data)
+[68.598s]   File "/usr/lib/python3/dist-packages/em.py", line 2391, in string
+[68.598s]     self.safe(scanner, True, locals)
+[68.599s]   File "/usr/lib/python3/dist-packages/em.py", line 2401, in safe
+[68.599s]     self.parse(scanner, locals)
+[68.599s]   File "/usr/lib/python3/dist-packages/em.py", line 2417, in parse
+[68.599s]     token = scanner.one()
+[68.599s]   File "/usr/lib/python3/dist-packages/em.py", line 1984, in one
+[68.599s]     token.scan(self)
+[68.599s]   File "/usr/lib/python3/dist-packages/em.py", line 1309, in scan
+[68.619s]     z = scanner.complex('(', ')', 0)
+[68.619s]   File "/usr/lib/python3/dist-packages/em.py", line 1893, in complex
+[68.620s]     newQuote = self.check(i, quote)
+[68.620s]   File "/usr/lib/python3/dist-packages/em.py", line 1766, in check
+[68.620s]     if self[i] in '\'\"':
+[68.620s] KeyboardInterrupt
+[68.677s] Exception ignored in: <function Interpreter.__del__ at 0x7fe048689a60>
+[68.677s] Traceback (most recent call last):
+[68.677s]   File "/usr/lib/python3/dist-packages/em.py", line 2094, in __del__
+[68.678s]   File "/usr/lib/python3/dist-packages/em.py", line 2157, in shutdown
+[68.678s]   File "/usr/lib/python3/dist-packages/em.py", line 2646, in finalize
+[68.678s]   File "/usr/lib/python3/dist-packages/em.py", line 2200, in push
+[68.678s] AttributeError: '_io.TextIOWrapper' object has no attribute 'push'
+[68.706s] make[2]: *** [CMakeFiles/controller_manager_msgs__rosidl_typesupport_cpp.dir/build.make:90: rosidl_typesupport_cpp/controller_manager_msgs/msg/controller_state__type_support.cpp] Interrupt
+[68.706s] make[1]: *** [CMakeFiles/Makefile2:326: CMakeFiles/controller_manager_msgs__rosidl_typesupport_cpp.dir/all] Interrupt
+[68.707s] make: *** [Makefile:141: all] Interrupt
+[68.708s] Invoked command in '/home/vx792/ros2_ws/src/ros-controls/ros2_control/build/controller_manager_msgs' returned '-2': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/vx792/ros2_ws/src/ros-controls/install/ros2controlcli:/home/vx792/ros2_ws/src/ros-controls/install/ros2_controllers_test_nodes:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_test_nodes:/opt/ros/rolling /usr/bin/cmake --build /home/vx792/ros2_ws/src/ros-controls/ros2_control/build/controller_manager_msgs -- -j2 -l2

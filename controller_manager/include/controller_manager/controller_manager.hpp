@@ -451,10 +451,10 @@ private:
 
   SwitchParams switch_params_;
 
-  class ControllerThreadWrapper // created this class so we can keep track of the time and period.
+  class ControllerThreadWrapper
   {
   public:
-      ControllerThreadWrapper( 
+    ControllerThreadWrapper( 
         controller_interface::ControllerInterfaceBase* controller,
         std::mutex& mutex_
       )
@@ -480,13 +480,12 @@ private:
 
     void call_controller_update() 
     {
-
       rclcpp::Time previous_time = controller_->get_node()->now();
-      
+    
       while (!terminated_)
       {
 
-        if (mutex_ref_.try_lock()) //&& controller_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)  doesn't work
+        if (mutex_ref_.try_lock() && controller_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
         { 
           std::lock_guard<std::mutex> lock(mutex_ref_, std::adopt_lock);
           auto const current_time = controller_->get_node()->now();
@@ -499,7 +498,7 @@ private:
                   : measured_period);
                 
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        std::this_thread::sleep_for(std::chrono::milliseconds(100)); //calculate this based on ros2_control_node logic
       }
       
     }
@@ -510,19 +509,14 @@ private:
     }
 
       std::atomic<bool> terminated_ = false;
-    private:
+  private:
       std::shared_ptr<controller_interface::ControllerInterfaceBase> controller_;
       std::thread m_thread_;
       std::mutex& mutex_ref_;
-
-
-
   };
-
-
+  
   std::unordered_map<std::string, std::unique_ptr<ControllerThreadWrapper>> async_controller_threads_;
 
-  
 };
 
 }  // namespace controller_manager

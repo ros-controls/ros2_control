@@ -42,6 +42,8 @@ struct HardwareComponentInfo
   /// Component class type.
   std::string class_type;
 
+  bool is_asynch;
+
   /// Component current state.
   rclcpp_lifecycle::State state;
 

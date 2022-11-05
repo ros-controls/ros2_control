@@ -46,6 +46,7 @@ constexpr const auto kTypeAttribute = "type";
 constexpr const auto kRoleAttribute = "role";
 constexpr const auto kReductionAttribute = "mechanical_reduction";
 constexpr const auto kOffsetAttribute = "offset";
+constexpr const auto kIsAsynchAttribute = "is_asynch";
 }  // namespace
 
 namespace hardware_interface
@@ -204,6 +205,13 @@ std::string parse_data_type_attribute(const tinyxml2::XMLElement * elem)
   }
 
   return data_type;
+}
+
+bool parse_is_asynch_attribute(const tinyxml2::XMLElement * elem)
+{
+  const tinyxml2::XMLAttribute * attr = elem->FindAttribute(kIsAsynchAttribute);
+  return attr ? strcmp(attr->Value(), "true") == 0
+              : false;
 }
 
 /// Search XML snippet from URDF for parameters.
@@ -494,6 +502,14 @@ HardwareInfo parse_resource_from_xml(
   HardwareInfo hardware;
   hardware.name = get_attribute_value(ros2_control_it, kNameAttribute, kROS2ControlTag);
   hardware.type = get_attribute_value(ros2_control_it, kTypeAttribute, kROS2ControlTag);
+  hardware.is_asynch = parse_is_asynch_attribute(ros2_control_it);
+  /*
+  try {
+    hardware.is_asynch = get_attribute_value(ros2_control_it, kIsAsynchAttribute, kROS2ControlTag) == "true";
+  } catch (std::exception& e) {
+    hardware.is_asynch = false;
+  }
+  */
 
   // Parse everything under ros2_control tag
   hardware.hardware_class_type = "";

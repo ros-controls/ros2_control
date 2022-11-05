@@ -1,0 +1,924 @@
+[0.000000] (-) TimerEvent: {}
+[0.000167] (controller_manager_msgs) JobQueued: {'identifier': 'controller_manager_msgs', 'dependencies': OrderedDict()}
+[0.000214] (joint_limits) JobQueued: {'identifier': 'joint_limits', 'dependencies': OrderedDict()}
+[0.000250] (ros2_control_test_assets) JobQueued: {'identifier': 'ros2_control_test_assets', 'dependencies': OrderedDict()}
+[0.000280] (hardware_interface) JobQueued: {'identifier': 'hardware_interface', 'dependencies': OrderedDict([('ros2_control_test_assets', '/home/vx792/ros2_ws/src/ros-controls/ros2_control/install/ros2_control_test_assets')])}
+[0.000319] (controller_interface) JobQueued: {'identifier': 'controller_interface', 'dependencies': OrderedDict([('hardware_interface', '/home/vx792/ros2_ws/src/ros-controls/ros2_control/install/hardware_interface')])}
+[0.000351] (transmission_interface) JobQueued: {'identifier': 'transmission_interface', 'dependencies': OrderedDict([('hardware_interface', '/home/vx792/ros2_ws/src/ros-controls/ros2_control/install/hardware_interface')])}
+[0.000404] (controller_manager) JobQueued: {'identifier': 'controller_manager', 'dependencies': OrderedDict([('controller_manager_msgs', '/home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager_msgs'), ('ros2_control_test_assets', '/home/vx792/ros2_ws/src/ros-controls/ros2_control/install/ros2_control_test_assets'), ('hardware_interface', '/home/vx792/ros2_ws/src/ros-controls/ros2_control/install/hardware_interface'), ('controller_interface', '/home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_interface')])}
+[0.000451] (ros2controlcli) JobQueued: {'identifier': 'ros2controlcli', 'dependencies': OrderedDict([('controller_manager_msgs', '/home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager_msgs'), ('ros2_control_test_assets', '/home/vx792/ros2_ws/src/ros-controls/ros2_control/install/ros2_control_test_assets'), ('hardware_interface', '/home/vx792/ros2_ws/src/ros-controls/ros2_control/install/hardware_interface'), ('controller_interface', '/home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_interface'), ('controller_manager', '/home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager')])}
+[0.000490] (ros2_control) JobQueued: {'identifier': 'ros2_control', 'dependencies': OrderedDict([('controller_manager_msgs', '/home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager_msgs'), ('joint_limits', '/home/vx792/ros2_ws/src/ros-controls/ros2_control/install/joint_limits'), ('ros2_control_test_assets', '/home/vx792/ros2_ws/src/ros-controls/ros2_control/install/ros2_control_test_assets'), ('hardware_interface', '/home/vx792/ros2_ws/src/ros-controls/ros2_control/install/hardware_interface'), ('controller_interface', '/home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_interface'), ('transmission_interface', '/home/vx792/ros2_ws/src/ros-controls/ros2_control/install/transmission_interface'), ('controller_manager', '/home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager'), ('ros2controlcli', '/home/vx792/ros2_ws/src/ros-controls/ros2_control/install/ros2controlcli')])}
+[0.000537] (ros2_control_test_assets) JobStarted: {'identifier': 'ros2_control_test_assets'}
+[0.045573] (controller_manager_msgs) JobStarted: {'identifier': 'controller_manager_msgs'}
+[0.075969] (ros2_control_test_assets) JobProgress: {'identifier': 'ros2_control_test_assets', 'progress': 'cmake'}
+[0.076348] (ros2_control_test_assets) Command: {'cmd': ['/usr/bin/cmake', '/home/vx792/ros2_ws/src/ros-controls/ros2_control/ros2_control_test_assets', '-DCMAKE_INSTALL_PREFIX=/home/vx792/ros2_ws/src/ros-controls/ros2_control/install/ros2_control_test_assets'], 'cwd': '/home/vx792/ros2_ws/src/ros-controls/ros2_control/build/ros2_control_test_assets', 'env': OrderedDict([('GJS_DEBUG_TOPICS', 'JS ERROR;JS LOG'), ('LESSOPEN', '| /usr/bin/lesspipe %s'), ('USER', 'vx792'), ('LC_TIME', 'hu_HU.UTF-8'), ('SSH_AGENT_PID', '2284'), ('XDG_SESSION_TYPE', 'x11'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/home/vx792/ros2_ws/src/ros-controls/install/velocity_controllers/lib:/home/vx792/ros2_ws/src/ros-controls/install/transmission_interface/lib:/home/vx792/ros2_ws/src/ros-controls/install/gazebo_ros2_control/lib:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager/lib:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_demo_hardware/lib:/home/vx792/ros2_ws/src/ros-controls/install/position_controllers/lib:/home/vx792/ros2_ws/src/ros-controls/install/joint_trajectory_controller/lib:/home/vx792/ros2_ws/src/ros-controls/install/joint_state_broadcaster/lib:/home/vx792/ros2_ws/src/ros-controls/install/imu_sensor_broadcaster/lib:/home/vx792/ros2_ws/src/ros-controls/install/gripper_controllers/lib:/home/vx792/ros2_ws/src/ros-controls/install/effort_controllers/lib:/home/vx792/ros2_ws/src/ros-controls/install/forward_command_controller/lib:/home/vx792/ros2_ws/src/ros-controls/install/force_torque_sensor_broadcaster/lib:/home/vx792/ros2_ws/src/ros-controls/install/diff_drive_controller/lib:/home/vx792/ros2_ws/src/ros-controls/install/controller_interface/lib:/home/vx792/ros2_ws/src/ros-controls/install/hardware_interface/lib:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager_msgs/lib:/opt/ros/rolling/opt/yaml_cpp_vendor/lib:/opt/ros/rolling/opt/rviz_ogre_vendor/lib:/opt/ros/rolling/lib/x86_64-linux-gnu:/opt/ros/rolling/lib'), ('HOME', '/home/vx792'), ('OLDPWD', '/home/vx792/ros2_ws/src/ros-controls'), ('DESKTOP_SESSION', 'ubuntu'), ('ROS_PYTHON_VERSION', '3'), ('GNOME_SHELL_SESSION_MODE', 'ubuntu'), ('GTK_MODULES', 'gail:atk-bridge'), ('LC_MONETARY', 'hu_HU.UTF-8'), ('MANAGERPID', '2077'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus'), ('COLORTERM', 'truecolor'), ('IM_CONFIG_PHASE', '1'), ('COLCON_PREFIX_PATH', '/home/vx792/ros2_ws/src/ros-controls/install'), ('ROS_DISTRO', 'rolling'), ('LOGNAME', 'vx792'), ('JOURNAL_STREAM', '8:41463'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('XDG_SESSION_CLASS', 'user'), ('USERNAME', 'vx792'), ('TERM', 'xterm-256color'), ('GAZEBO_MODEL_PATH', '/home/vx792/ros2_ws/src/ros-controls/install/rrbot_description/share'), ('GNOME_DESKTOP_SESSION_ID', 'this-is-deprecated'), ('ROS_LOCALHOST_ONLY', '0'), ('WINDOWPATH', '2'), ('PATH', '/opt/ros/rolling/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin'), ('SESSION_MANAGER', 'local/vx792-VirtualBox:@/tmp/.ICE-unix/2332,unix/vx792-VirtualBox:/tmp/.ICE-unix/2332'), ('INVOCATION_ID', 'd1d206f0a420411bbaf60fa11f30c510'), ('XDG_MENU_PREFIX', 'gnome-'), ('LC_ADDRESS', 'hu_HU.UTF-8'), ('GNOME_TERMINAL_SCREEN', '/org/gnome/Terminal/screen/7832a705_d82f_4867_85ce_05ed050accd9'), ('XDG_RUNTIME_DIR', '/run/user/1000'), ('DISPLAY', ':0'), ('LANG', 'en_US.UTF-8'), ('XDG_CURRENT_DESKTOP', 'ubuntu:GNOME'), ('LC_TELEPHONE', 'hu_HU.UTF-8'), ('XMODIFIERS', '@im=ibus'), ('XDG_SESSION_DESKTOP', 'ubuntu'), ('XAUTHORITY', '/run/user/1000/gdm/Xauthority'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('GNOME_TERMINAL_SERVICE', ':1.86'), ('SSH_AUTH_SOCK', '/run/user/1000/keyring/ssh'), ('AMENT_PREFIX_PATH', '/home/vx792/ros2_ws/src/ros-controls/install/gazebo_ros2_control_demos:/home/vx792/ros2_ws/src/ros-controls/install/ros2_controllers:/home/vx792/ros2_ws/src/ros-controls/install/velocity_controllers:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control:/home/vx792/ros2_ws/src/ros-controls/install/transmission_interface:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_demos:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_demo_bringup:/home/vx792/ros2_ws/src/ros-controls/install/rrbot_description:/home/vx792/ros2_ws/src/ros-controls/install/ros2controlcli:/home/vx792/ros2_ws/src/ros-controls/install/ros2_controllers_test_nodes:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_test_nodes:/home/vx792/ros2_ws/src/ros-controls/install/gazebo_ros2_control:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_test_assets:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_demo_hardware:/home/vx792/ros2_ws/src/ros-controls/install/position_controllers:/home/vx792/ros2_ws/src/ros-controls/install/joint_trajectory_controller:/home/vx792/ros2_ws/src/ros-controls/install/joint_state_broadcaster:/home/vx792/ros2_ws/src/ros-controls/install/joint_limits:/home/vx792/ros2_ws/src/ros-controls/install/imu_sensor_broadcaster:/home/vx792/ros2_ws/src/ros-controls/install/gripper_controllers:/home/vx792/ros2_ws/src/ros-controls/install/effort_controllers:/home/vx792/ros2_ws/src/ros-controls/install/forward_command_controller:/home/vx792/ros2_ws/src/ros-controls/install/force_torque_sensor_broadcaster:/home/vx792/ros2_ws/src/ros-controls/install/diff_drive_controller:/home/vx792/ros2_ws/src/ros-controls/install/controller_interface:/home/vx792/ros2_ws/src/ros-controls/install/hardware_interface:/home/vx792/ros2_ws/src/ros-controls/install/diffbot_description:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager_msgs:/opt/ros/rolling'), ('SHELL', '/bin/bash'), ('LC_NAME', 'hu_HU.UTF-8'), ('QT_ACCESSIBILITY', '1'), ('GDMSESSION', 'ubuntu'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('LC_MEASUREMENT', 'hu_HU.UTF-8'), ('GPG_AGENT_INFO', '/run/user/1000/gnupg/S.gpg-agent:0:1'), ('GJS_DEBUG_OUTPUT', 'stderr'), ('LC_IDENTIFICATION', 'hu_HU.UTF-8'), ('QT_IM_MODULE', 'ibus'), ('PWD', '/home/vx792/ros2_ws/src/ros-controls/ros2_control/build/ros2_control_test_assets'), ('XDG_CONFIG_DIRS', '/etc/xdg/xdg-ubuntu:/etc/xdg'), ('XDG_DATA_DIRS', '/usr/share/ubuntu:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop'), ('PYTHONPATH', '/home/vx792/ros2_ws/src/ros-controls/install/ros2controlcli/lib/python3.8/site-packages:/home/vx792/ros2_ws/src/ros-controls/install/ros2_controllers_test_nodes/lib/python3.8/site-packages:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_test_nodes/lib/python3.8/site-packages:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager/lib/python3.8/site-packages:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager_msgs/lib/python3.8/site-packages:/opt/ros/rolling/lib/python3.8/site-packages'), ('LC_NUMERIC', 'hu_HU.UTF-8'), ('LC_PAPER', 'hu_HU.UTF-8'), ('COLCON', '1'), ('VTE_VERSION', '6003'), ('CMAKE_PREFIX_PATH', '/home/vx792/ros2_ws/src/ros-controls/install/gazebo_ros2_control_demos:/home/vx792/ros2_ws/src/ros-controls/install/ros2_controllers:/home/vx792/ros2_ws/src/ros-controls/install/velocity_controllers:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control:/home/vx792/ros2_ws/src/ros-controls/install/transmission_interface:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_demos:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_demo_bringup:/home/vx792/ros2_ws/src/ros-controls/install/rrbot_description:/home/vx792/ros2_ws/src/ros-controls/install/gazebo_ros2_control:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_test_assets:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_demo_hardware:/home/vx792/ros2_ws/src/ros-controls/install/position_controllers:/home/vx792/ros2_ws/src/ros-controls/install/joint_trajectory_controller:/home/vx792/ros2_ws/src/ros-controls/install/joint_state_broadcaster:/home/vx792/ros2_ws/src/ros-controls/install/joint_limits:/home/vx792/ros2_ws/src/ros-controls/install/imu_sensor_broadcaster:/home/vx792/ros2_ws/src/ros-controls/install/gripper_controllers:/home/vx792/ros2_ws/src/ros-controls/install/effort_controllers:/home/vx792/ros2_ws/src/ros-controls/install/forward_command_controller:/home/vx792/ros2_ws/src/ros-controls/install/force_torque_sensor_broadcaster:/home/vx792/ros2_ws/src/ros-controls/install/diff_drive_controller:/home/vx792/ros2_ws/src/ros-controls/install/controller_interface:/home/vx792/ros2_ws/src/ros-controls/install/hardware_interface:/home/vx792/ros2_ws/src/ros-controls/install/diffbot_description:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager_msgs:/home/vx792/ros2_ws/src/ros-controls/install/ros2controlcli:/home/vx792/ros2_ws/src/ros-controls/install/ros2_controllers_test_nodes:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_test_nodes:/opt/ros/rolling')]), 'shell': False}
+[0.095337] (-) TimerEvent: {}
+[0.103207] (controller_manager_msgs) JobProgress: {'identifier': 'controller_manager_msgs', 'progress': 'cmake'}
+[0.103471] (controller_manager_msgs) Command: {'cmd': ['/usr/bin/cmake', '/home/vx792/ros2_ws/src/ros-controls/ros2_control/controller_manager_msgs', '-DCMAKE_INSTALL_PREFIX=/home/vx792/ros2_ws/src/ros-controls/ros2_control/install/controller_manager_msgs'], 'cwd': '/home/vx792/ros2_ws/src/ros-controls/ros2_control/build/controller_manager_msgs', 'env': OrderedDict([('GJS_DEBUG_TOPICS', 'JS ERROR;JS LOG'), ('LESSOPEN', '| /usr/bin/lesspipe %s'), ('USER', 'vx792'), ('LC_TIME', 'hu_HU.UTF-8'), ('SSH_AGENT_PID', '2284'), ('XDG_SESSION_TYPE', 'x11'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/home/vx792/ros2_ws/src/ros-controls/install/velocity_controllers/lib:/home/vx792/ros2_ws/src/ros-controls/install/transmission_interface/lib:/home/vx792/ros2_ws/src/ros-controls/install/gazebo_ros2_control/lib:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager/lib:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_demo_hardware/lib:/home/vx792/ros2_ws/src/ros-controls/install/position_controllers/lib:/home/vx792/ros2_ws/src/ros-controls/install/joint_trajectory_controller/lib:/home/vx792/ros2_ws/src/ros-controls/install/joint_state_broadcaster/lib:/home/vx792/ros2_ws/src/ros-controls/install/imu_sensor_broadcaster/lib:/home/vx792/ros2_ws/src/ros-controls/install/gripper_controllers/lib:/home/vx792/ros2_ws/src/ros-controls/install/effort_controllers/lib:/home/vx792/ros2_ws/src/ros-controls/install/forward_command_controller/lib:/home/vx792/ros2_ws/src/ros-controls/install/force_torque_sensor_broadcaster/lib:/home/vx792/ros2_ws/src/ros-controls/install/diff_drive_controller/lib:/home/vx792/ros2_ws/src/ros-controls/install/controller_interface/lib:/home/vx792/ros2_ws/src/ros-controls/install/hardware_interface/lib:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager_msgs/lib:/opt/ros/rolling/opt/yaml_cpp_vendor/lib:/opt/ros/rolling/opt/rviz_ogre_vendor/lib:/opt/ros/rolling/lib/x86_64-linux-gnu:/opt/ros/rolling/lib'), ('HOME', '/home/vx792'), ('OLDPWD', '/home/vx792/ros2_ws/src/ros-controls'), ('DESKTOP_SESSION', 'ubuntu'), ('ROS_PYTHON_VERSION', '3'), ('GNOME_SHELL_SESSION_MODE', 'ubuntu'), ('GTK_MODULES', 'gail:atk-bridge'), ('LC_MONETARY', 'hu_HU.UTF-8'), ('MANAGERPID', '2077'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus'), ('COLORTERM', 'truecolor'), ('IM_CONFIG_PHASE', '1'), ('COLCON_PREFIX_PATH', '/home/vx792/ros2_ws/src/ros-controls/install'), ('ROS_DISTRO', 'rolling'), ('LOGNAME', 'vx792'), ('JOURNAL_STREAM', '8:41463'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('XDG_SESSION_CLASS', 'user'), ('USERNAME', 'vx792'), ('TERM', 'xterm-256color'), ('GAZEBO_MODEL_PATH', '/home/vx792/ros2_ws/src/ros-controls/install/rrbot_description/share'), ('GNOME_DESKTOP_SESSION_ID', 'this-is-deprecated'), ('ROS_LOCALHOST_ONLY', '0'), ('WINDOWPATH', '2'), ('PATH', '/opt/ros/rolling/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin'), ('SESSION_MANAGER', 'local/vx792-VirtualBox:@/tmp/.ICE-unix/2332,unix/vx792-VirtualBox:/tmp/.ICE-unix/2332'), ('INVOCATION_ID', 'd1d206f0a420411bbaf60fa11f30c510'), ('XDG_MENU_PREFIX', 'gnome-'), ('LC_ADDRESS', 'hu_HU.UTF-8'), ('GNOME_TERMINAL_SCREEN', '/org/gnome/Terminal/screen/7832a705_d82f_4867_85ce_05ed050accd9'), ('XDG_RUNTIME_DIR', '/run/user/1000'), ('DISPLAY', ':0'), ('LANG', 'en_US.UTF-8'), ('XDG_CURRENT_DESKTOP', 'ubuntu:GNOME'), ('LC_TELEPHONE', 'hu_HU.UTF-8'), ('XMODIFIERS', '@im=ibus'), ('XDG_SESSION_DESKTOP', 'ubuntu'), ('XAUTHORITY', '/run/user/1000/gdm/Xauthority'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('GNOME_TERMINAL_SERVICE', ':1.86'), ('SSH_AUTH_SOCK', '/run/user/1000/keyring/ssh'), ('AMENT_PREFIX_PATH', '/home/vx792/ros2_ws/src/ros-controls/install/gazebo_ros2_control_demos:/home/vx792/ros2_ws/src/ros-controls/install/ros2_controllers:/home/vx792/ros2_ws/src/ros-controls/install/velocity_controllers:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control:/home/vx792/ros2_ws/src/ros-controls/install/transmission_interface:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_demos:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_demo_bringup:/home/vx792/ros2_ws/src/ros-controls/install/rrbot_description:/home/vx792/ros2_ws/src/ros-controls/install/ros2controlcli:/home/vx792/ros2_ws/src/ros-controls/install/ros2_controllers_test_nodes:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_test_nodes:/home/vx792/ros2_ws/src/ros-controls/install/gazebo_ros2_control:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_test_assets:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_demo_hardware:/home/vx792/ros2_ws/src/ros-controls/install/position_controllers:/home/vx792/ros2_ws/src/ros-controls/install/joint_trajectory_controller:/home/vx792/ros2_ws/src/ros-controls/install/joint_state_broadcaster:/home/vx792/ros2_ws/src/ros-controls/install/joint_limits:/home/vx792/ros2_ws/src/ros-controls/install/imu_sensor_broadcaster:/home/vx792/ros2_ws/src/ros-controls/install/gripper_controllers:/home/vx792/ros2_ws/src/ros-controls/install/effort_controllers:/home/vx792/ros2_ws/src/ros-controls/install/forward_command_controller:/home/vx792/ros2_ws/src/ros-controls/install/force_torque_sensor_broadcaster:/home/vx792/ros2_ws/src/ros-controls/install/diff_drive_controller:/home/vx792/ros2_ws/src/ros-controls/install/controller_interface:/home/vx792/ros2_ws/src/ros-controls/install/hardware_interface:/home/vx792/ros2_ws/src/ros-controls/install/diffbot_description:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager_msgs:/opt/ros/rolling'), ('SHELL', '/bin/bash'), ('LC_NAME', 'hu_HU.UTF-8'), ('QT_ACCESSIBILITY', '1'), ('GDMSESSION', 'ubuntu'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('LC_MEASUREMENT', 'hu_HU.UTF-8'), ('GPG_AGENT_INFO', '/run/user/1000/gnupg/S.gpg-agent:0:1'), ('GJS_DEBUG_OUTPUT', 'stderr'), ('LC_IDENTIFICATION', 'hu_HU.UTF-8'), ('QT_IM_MODULE', 'ibus'), ('PWD', '/home/vx792/ros2_ws/src/ros-controls/ros2_control/build/controller_manager_msgs'), ('XDG_CONFIG_DIRS', '/etc/xdg/xdg-ubuntu:/etc/xdg'), ('XDG_DATA_DIRS', '/usr/share/ubuntu:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop'), ('PYTHONPATH', '/home/vx792/ros2_ws/src/ros-controls/install/ros2controlcli/lib/python3.8/site-packages:/home/vx792/ros2_ws/src/ros-controls/install/ros2_controllers_test_nodes/lib/python3.8/site-packages:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_test_nodes/lib/python3.8/site-packages:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager/lib/python3.8/site-packages:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager_msgs/lib/python3.8/site-packages:/opt/ros/rolling/lib/python3.8/site-packages'), ('LC_NUMERIC', 'hu_HU.UTF-8'), ('LC_PAPER', 'hu_HU.UTF-8'), ('COLCON', '1'), ('VTE_VERSION', '6003'), ('CMAKE_PREFIX_PATH', '/home/vx792/ros2_ws/src/ros-controls/install/gazebo_ros2_control_demos:/home/vx792/ros2_ws/src/ros-controls/install/ros2_controllers:/home/vx792/ros2_ws/src/ros-controls/install/velocity_controllers:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control:/home/vx792/ros2_ws/src/ros-controls/install/transmission_interface:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_demos:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_demo_bringup:/home/vx792/ros2_ws/src/ros-controls/install/rrbot_description:/home/vx792/ros2_ws/src/ros-controls/install/gazebo_ros2_control:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_test_assets:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_demo_hardware:/home/vx792/ros2_ws/src/ros-controls/install/position_controllers:/home/vx792/ros2_ws/src/ros-controls/install/joint_trajectory_controller:/home/vx792/ros2_ws/src/ros-controls/install/joint_state_broadcaster:/home/vx792/ros2_ws/src/ros-controls/install/joint_limits:/home/vx792/ros2_ws/src/ros-controls/install/imu_sensor_broadcaster:/home/vx792/ros2_ws/src/ros-controls/install/gripper_controllers:/home/vx792/ros2_ws/src/ros-controls/install/effort_controllers:/home/vx792/ros2_ws/src/ros-controls/install/forward_command_controller:/home/vx792/ros2_ws/src/ros-controls/install/force_torque_sensor_broadcaster:/home/vx792/ros2_ws/src/ros-controls/install/diff_drive_controller:/home/vx792/ros2_ws/src/ros-controls/install/controller_interface:/home/vx792/ros2_ws/src/ros-controls/install/hardware_interface:/home/vx792/ros2_ws/src/ros-controls/install/diffbot_description:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager_msgs:/home/vx792/ros2_ws/src/ros-controls/install/ros2controlcli:/home/vx792/ros2_ws/src/ros-controls/install/ros2_controllers_test_nodes:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_test_nodes:/opt/ros/rolling')]), 'shell': False}
+[0.198641] (-) TimerEvent: {}
+[0.299098] (-) TimerEvent: {}
+[0.402175] (-) TimerEvent: {}
+[0.413435] (controller_manager_msgs) StdoutLine: {'line': b'-- The C compiler identification is GNU 9.4.0\n'}
+[0.427098] (ros2_control_test_assets) StdoutLine: {'line': b'-- The C compiler identification is GNU 9.4.0\n'}
+[0.508023] (-) TimerEvent: {}
+[0.599603] (controller_manager_msgs) StdoutLine: {'line': b'-- The CXX compiler identification is GNU 9.4.0\n'}
+[0.610322] (-) TimerEvent: {}
+[0.615419] (ros2_control_test_assets) StdoutLine: {'line': b'-- The CXX compiler identification is GNU 9.4.0\n'}
+[0.634293] (controller_manager_msgs) StdoutLine: {'line': b'-- Check for working C compiler: /usr/bin/cc\n'}
+[0.634629] (ros2_control_test_assets) StdoutLine: {'line': b'-- Check for working C compiler: /usr/bin/cc\n'}
+[0.710385] (-) TimerEvent: {}
+[0.817068] (-) TimerEvent: {}
+[0.890949] (controller_manager_msgs) StdoutLine: {'line': b'-- Check for working C compiler: /usr/bin/cc -- works\n'}
+[0.906826] (controller_manager_msgs) StdoutLine: {'line': b'-- Detecting C compiler ABI info\n'}
+[0.916574] (-) TimerEvent: {}
+[0.975341] (ros2_control_test_assets) StdoutLine: {'line': b'-- Check for working C compiler: /usr/bin/cc -- works\n'}
+[0.975561] (ros2_control_test_assets) StdoutLine: {'line': b'-- Detecting C compiler ABI info\n'}
+[1.022708] (-) TimerEvent: {}
+[1.115081] (controller_manager_msgs) StdoutLine: {'line': b'-- Detecting C compiler ABI info - done\n'}
+[1.122836] (-) TimerEvent: {}
+[1.191266] (controller_manager_msgs) StdoutLine: {'line': b'-- Detecting C compile features\n'}
+[1.192807] (controller_manager_msgs) StdoutLine: {'line': b'-- Detecting C compile features - done\n'}
+[1.209755] (controller_manager_msgs) StdoutLine: {'line': b'-- Check for working CXX compiler: /usr/bin/c++\n'}
+[1.222969] (-) TimerEvent: {}
+[1.324570] (-) TimerEvent: {}
+[1.359254] (ros2_control_test_assets) StdoutLine: {'line': b'-- Detecting C compiler ABI info - done\n'}
+[1.424752] (-) TimerEvent: {}
+[1.463734] (ros2_control_test_assets) StdoutLine: {'line': b'-- Detecting C compile features\n'}
+[1.469001] (ros2_control_test_assets) StdoutLine: {'line': b'-- Detecting C compile features - done\n'}
+[1.486555] (ros2_control_test_assets) StdoutLine: {'line': b'-- Check for working CXX compiler: /usr/bin/c++\n'}
+[1.487258] (controller_manager_msgs) StdoutLine: {'line': b'-- Check for working CXX compiler: /usr/bin/c++ -- works\n'}
+[1.494459] (controller_manager_msgs) StdoutLine: {'line': b'-- Detecting CXX compiler ABI info\n'}
+[1.527582] (-) TimerEvent: {}
+[1.634613] (-) TimerEvent: {}
+[1.741831] (-) TimerEvent: {}
+[1.806353] (ros2_control_test_assets) StdoutLine: {'line': b'-- Check for working CXX compiler: /usr/bin/c++ -- works\n'}
+[1.806584] (ros2_control_test_assets) StdoutLine: {'line': b'-- Detecting CXX compiler ABI info\n'}
+[1.847580] (-) TimerEvent: {}
+[1.898870] (controller_manager_msgs) StdoutLine: {'line': b'-- Detecting CXX compiler ABI info - done\n'}
+[1.947936] (-) TimerEvent: {}
+[1.952502] (controller_manager_msgs) StdoutLine: {'line': b'-- Detecting CXX compile features\n'}
+[1.954304] (controller_manager_msgs) StdoutLine: {'line': b'-- Detecting CXX compile features - done\n'}
+[2.007413] (controller_manager_msgs) StdoutLine: {'line': b'-- Found ament_cmake: 1.2.1 (/opt/ros/rolling/share/ament_cmake/cmake)\n'}
+[2.025578] (ros2_control_test_assets) StdoutLine: {'line': b'-- Detecting CXX compiler ABI info - done\n'}
+[2.048769] (-) TimerEvent: {}
+[2.049478] (ros2_control_test_assets) StdoutLine: {'line': b'-- Detecting CXX compile features\n'}
+[2.050739] (ros2_control_test_assets) StdoutLine: {'line': b'-- Detecting CXX compile features - done\n'}
+[2.057003] (ros2_control_test_assets) StdoutLine: {'line': b'-- Found ament_cmake: 1.2.1 (/opt/ros/rolling/share/ament_cmake/cmake)\n'}
+[2.151247] (-) TimerEvent: {}
+[2.253263] (-) TimerEvent: {}
+[2.353906] (-) TimerEvent: {}
+[2.455751] (-) TimerEvent: {}
+[2.556633] (-) TimerEvent: {}
+[2.602471] (ros2_control_test_assets) StdoutLine: {'line': b'-- Found Python3: /usr/bin/python3.8 (found version "3.8.10") found components: Interpreter \n'}
+[2.619430] (controller_manager_msgs) StdoutLine: {'line': b'-- Found Python3: /usr/bin/python3.8 (found version "3.8.10") found components: Interpreter \n'}
+[2.657759] (-) TimerEvent: {}
+[2.758455] (-) TimerEvent: {}
+[2.858823] (-) TimerEvent: {}
+[2.959164] (-) TimerEvent: {}
+[3.028208] (controller_manager_msgs) StdoutLine: {'line': b'-- Found builtin_interfaces: 1.1.0 (/opt/ros/rolling/share/builtin_interfaces/cmake)\n'}
+[3.059891] (-) TimerEvent: {}
+[3.160313] (-) TimerEvent: {}
+[3.183930] (controller_manager_msgs) StdoutLine: {'line': b'-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c\n'}
+[3.233396] (controller_manager_msgs) StdoutLine: {'line': b'-- Found rosidl_adapter: 3.0.1 (/opt/ros/rolling/share/rosidl_adapter/cmake)\n'}
+[3.260498] (-) TimerEvent: {}
+[3.290340] (ros2_control_test_assets) StdoutLine: {'line': b'-- Configuring done\n'}
+[3.298620] (ros2_control_test_assets) StdoutLine: {'line': b'-- Generating done\n'}
+[3.308182] (ros2_control_test_assets) StdoutLine: {'line': b'-- Build files have been written to: /home/vx792/ros2_ws/src/ros-controls/ros2_control/build/ros2_control_test_assets\n'}
+[3.326690] (ros2_control_test_assets) CommandEnded: {'returncode': 0}
+[3.331056] (ros2_control_test_assets) JobProgress: {'identifier': 'ros2_control_test_assets', 'progress': 'build'}
+[3.331338] (ros2_control_test_assets) Command: {'cmd': ['/usr/bin/cmake', '--build', '/home/vx792/ros2_ws/src/ros-controls/ros2_control/build/ros2_control_test_assets', '--', '-j2', '-l2'], 'cwd': '/home/vx792/ros2_ws/src/ros-controls/ros2_control/build/ros2_control_test_assets', 'env': OrderedDict([('GJS_DEBUG_TOPICS', 'JS ERROR;JS LOG'), ('LESSOPEN', '| /usr/bin/lesspipe %s'), ('USER', 'vx792'), ('LC_TIME', 'hu_HU.UTF-8'), ('SSH_AGENT_PID', '2284'), ('XDG_SESSION_TYPE', 'x11'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/home/vx792/ros2_ws/src/ros-controls/install/velocity_controllers/lib:/home/vx792/ros2_ws/src/ros-controls/install/transmission_interface/lib:/home/vx792/ros2_ws/src/ros-controls/install/gazebo_ros2_control/lib:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager/lib:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_demo_hardware/lib:/home/vx792/ros2_ws/src/ros-controls/install/position_controllers/lib:/home/vx792/ros2_ws/src/ros-controls/install/joint_trajectory_controller/lib:/home/vx792/ros2_ws/src/ros-controls/install/joint_state_broadcaster/lib:/home/vx792/ros2_ws/src/ros-controls/install/imu_sensor_broadcaster/lib:/home/vx792/ros2_ws/src/ros-controls/install/gripper_controllers/lib:/home/vx792/ros2_ws/src/ros-controls/install/effort_controllers/lib:/home/vx792/ros2_ws/src/ros-controls/install/forward_command_controller/lib:/home/vx792/ros2_ws/src/ros-controls/install/force_torque_sensor_broadcaster/lib:/home/vx792/ros2_ws/src/ros-controls/install/diff_drive_controller/lib:/home/vx792/ros2_ws/src/ros-controls/install/controller_interface/lib:/home/vx792/ros2_ws/src/ros-controls/install/hardware_interface/lib:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager_msgs/lib:/opt/ros/rolling/opt/yaml_cpp_vendor/lib:/opt/ros/rolling/opt/rviz_ogre_vendor/lib:/opt/ros/rolling/lib/x86_64-linux-gnu:/opt/ros/rolling/lib'), ('HOME', '/home/vx792'), ('OLDPWD', '/home/vx792/ros2_ws/src/ros-controls'), ('DESKTOP_SESSION', 'ubuntu'), ('ROS_PYTHON_VERSION', '3'), ('GNOME_SHELL_SESSION_MODE', 'ubuntu'), ('GTK_MODULES', 'gail:atk-bridge'), ('LC_MONETARY', 'hu_HU.UTF-8'), ('MANAGERPID', '2077'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus'), ('COLORTERM', 'truecolor'), ('IM_CONFIG_PHASE', '1'), ('COLCON_PREFIX_PATH', '/home/vx792/ros2_ws/src/ros-controls/install'), ('ROS_DISTRO', 'rolling'), ('LOGNAME', 'vx792'), ('JOURNAL_STREAM', '8:41463'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('XDG_SESSION_CLASS', 'user'), ('USERNAME', 'vx792'), ('TERM', 'xterm-256color'), ('GAZEBO_MODEL_PATH', '/home/vx792/ros2_ws/src/ros-controls/install/rrbot_description/share'), ('GNOME_DESKTOP_SESSION_ID', 'this-is-deprecated'), ('ROS_LOCALHOST_ONLY', '0'), ('WINDOWPATH', '2'), ('PATH', '/opt/ros/rolling/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin'), ('SESSION_MANAGER', 'local/vx792-VirtualBox:@/tmp/.ICE-unix/2332,unix/vx792-VirtualBox:/tmp/.ICE-unix/2332'), ('INVOCATION_ID', 'd1d206f0a420411bbaf60fa11f30c510'), ('XDG_MENU_PREFIX', 'gnome-'), ('LC_ADDRESS', 'hu_HU.UTF-8'), ('GNOME_TERMINAL_SCREEN', '/org/gnome/Terminal/screen/7832a705_d82f_4867_85ce_05ed050accd9'), ('XDG_RUNTIME_DIR', '/run/user/1000'), ('DISPLAY', ':0'), ('LANG', 'en_US.UTF-8'), ('XDG_CURRENT_DESKTOP', 'ubuntu:GNOME'), ('LC_TELEPHONE', 'hu_HU.UTF-8'), ('XMODIFIERS', '@im=ibus'), ('XDG_SESSION_DESKTOP', 'ubuntu'), ('XAUTHORITY', '/run/user/1000/gdm/Xauthority'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('GNOME_TERMINAL_SERVICE', ':1.86'), ('SSH_AUTH_SOCK', '/run/user/1000/keyring/ssh'), ('AMENT_PREFIX_PATH', '/home/vx792/ros2_ws/src/ros-controls/install/gazebo_ros2_control_demos:/home/vx792/ros2_ws/src/ros-controls/install/ros2_controllers:/home/vx792/ros2_ws/src/ros-controls/install/velocity_controllers:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control:/home/vx792/ros2_ws/src/ros-controls/install/transmission_interface:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_demos:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_demo_bringup:/home/vx792/ros2_ws/src/ros-controls/install/rrbot_description:/home/vx792/ros2_ws/src/ros-controls/install/ros2controlcli:/home/vx792/ros2_ws/src/ros-controls/install/ros2_controllers_test_nodes:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_test_nodes:/home/vx792/ros2_ws/src/ros-controls/install/gazebo_ros2_control:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_test_assets:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_demo_hardware:/home/vx792/ros2_ws/src/ros-controls/install/position_controllers:/home/vx792/ros2_ws/src/ros-controls/install/joint_trajectory_controller:/home/vx792/ros2_ws/src/ros-controls/install/joint_state_broadcaster:/home/vx792/ros2_ws/src/ros-controls/install/joint_limits:/home/vx792/ros2_ws/src/ros-controls/install/imu_sensor_broadcaster:/home/vx792/ros2_ws/src/ros-controls/install/gripper_controllers:/home/vx792/ros2_ws/src/ros-controls/install/effort_controllers:/home/vx792/ros2_ws/src/ros-controls/install/forward_command_controller:/home/vx792/ros2_ws/src/ros-controls/install/force_torque_sensor_broadcaster:/home/vx792/ros2_ws/src/ros-controls/install/diff_drive_controller:/home/vx792/ros2_ws/src/ros-controls/install/controller_interface:/home/vx792/ros2_ws/src/ros-controls/install/hardware_interface:/home/vx792/ros2_ws/src/ros-controls/install/diffbot_description:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager_msgs:/opt/ros/rolling'), ('SHELL', '/bin/bash'), ('LC_NAME', 'hu_HU.UTF-8'), ('QT_ACCESSIBILITY', '1'), ('GDMSESSION', 'ubuntu'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('LC_MEASUREMENT', 'hu_HU.UTF-8'), ('GPG_AGENT_INFO', '/run/user/1000/gnupg/S.gpg-agent:0:1'), ('GJS_DEBUG_OUTPUT', 'stderr'), ('LC_IDENTIFICATION', 'hu_HU.UTF-8'), ('QT_IM_MODULE', 'ibus'), ('PWD', '/home/vx792/ros2_ws/src/ros-controls/ros2_control/build/ros2_control_test_assets'), ('XDG_CONFIG_DIRS', '/etc/xdg/xdg-ubuntu:/etc/xdg'), ('XDG_DATA_DIRS', '/usr/share/ubuntu:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop'), ('PYTHONPATH', '/home/vx792/ros2_ws/src/ros-controls/install/ros2controlcli/lib/python3.8/site-packages:/home/vx792/ros2_ws/src/ros-controls/install/ros2_controllers_test_nodes/lib/python3.8/site-packages:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_test_nodes/lib/python3.8/site-packages:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager/lib/python3.8/site-packages:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager_msgs/lib/python3.8/site-packages:/opt/ros/rolling/lib/python3.8/site-packages'), ('LC_NUMERIC', 'hu_HU.UTF-8'), ('LC_PAPER', 'hu_HU.UTF-8'), ('COLCON', '1'), ('VTE_VERSION', '6003'), ('CMAKE_PREFIX_PATH', '/home/vx792/ros2_ws/src/ros-controls/install/gazebo_ros2_control_demos:/home/vx792/ros2_ws/src/ros-controls/install/ros2_controllers:/home/vx792/ros2_ws/src/ros-controls/install/velocity_controllers:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control:/home/vx792/ros2_ws/src/ros-controls/install/transmission_interface:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_demos:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_demo_bringup:/home/vx792/ros2_ws/src/ros-controls/install/rrbot_description:/home/vx792/ros2_ws/src/ros-controls/install/gazebo_ros2_control:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_test_assets:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_demo_hardware:/home/vx792/ros2_ws/src/ros-controls/install/position_controllers:/home/vx792/ros2_ws/src/ros-controls/install/joint_trajectory_controller:/home/vx792/ros2_ws/src/ros-controls/install/joint_state_broadcaster:/home/vx792/ros2_ws/src/ros-controls/install/joint_limits:/home/vx792/ros2_ws/src/ros-controls/install/imu_sensor_broadcaster:/home/vx792/ros2_ws/src/ros-controls/install/gripper_controllers:/home/vx792/ros2_ws/src/ros-controls/install/effort_controllers:/home/vx792/ros2_ws/src/ros-controls/install/forward_command_controller:/home/vx792/ros2_ws/src/ros-controls/install/force_torque_sensor_broadcaster:/home/vx792/ros2_ws/src/ros-controls/install/diff_drive_controller:/home/vx792/ros2_ws/src/ros-controls/install/controller_interface:/home/vx792/ros2_ws/src/ros-controls/install/hardware_interface:/home/vx792/ros2_ws/src/ros-controls/install/diffbot_description:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager_msgs:/home/vx792/ros2_ws/src/ros-controls/install/ros2controlcli:/home/vx792/ros2_ws/src/ros-controls/install/ros2_controllers_test_nodes:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_test_nodes:/opt/ros/rolling')]), 'shell': False}
+[3.362352] (-) TimerEvent: {}
+[3.463627] (-) TimerEvent: {}
+[3.480737] (ros2_control_test_assets) CommandEnded: {'returncode': 0}
+[3.517211] (controller_manager_msgs) StdoutLine: {'line': b'-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp\n'}
+[3.563978] (-) TimerEvent: {}
+[3.610168] (controller_manager_msgs) StdoutLine: {'line': b'-- Found lifecycle_msgs: 1.1.0 (/opt/ros/rolling/share/lifecycle_msgs/cmake)\n'}
+[3.623431] (ros2_control_test_assets) JobProgress: {'identifier': 'ros2_control_test_assets', 'progress': 'install'}
+[3.654922] (controller_manager_msgs) StdoutLine: {'line': b'-- Found rosidl_default_generators: 1.1.1 (/opt/ros/rolling/share/rosidl_default_generators/cmake)\n'}
+[3.661444] (ros2_control_test_assets) Command: {'cmd': ['/usr/bin/cmake', '--install', '/home/vx792/ros2_ws/src/ros-controls/ros2_control/build/ros2_control_test_assets'], 'cwd': '/home/vx792/ros2_ws/src/ros-controls/ros2_control/build/ros2_control_test_assets', 'env': OrderedDict([('GJS_DEBUG_TOPICS', 'JS ERROR;JS LOG'), ('LESSOPEN', '| /usr/bin/lesspipe %s'), ('USER', 'vx792'), ('LC_TIME', 'hu_HU.UTF-8'), ('SSH_AGENT_PID', '2284'), ('XDG_SESSION_TYPE', 'x11'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/home/vx792/ros2_ws/src/ros-controls/install/velocity_controllers/lib:/home/vx792/ros2_ws/src/ros-controls/install/transmission_interface/lib:/home/vx792/ros2_ws/src/ros-controls/install/gazebo_ros2_control/lib:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager/lib:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_demo_hardware/lib:/home/vx792/ros2_ws/src/ros-controls/install/position_controllers/lib:/home/vx792/ros2_ws/src/ros-controls/install/joint_trajectory_controller/lib:/home/vx792/ros2_ws/src/ros-controls/install/joint_state_broadcaster/lib:/home/vx792/ros2_ws/src/ros-controls/install/imu_sensor_broadcaster/lib:/home/vx792/ros2_ws/src/ros-controls/install/gripper_controllers/lib:/home/vx792/ros2_ws/src/ros-controls/install/effort_controllers/lib:/home/vx792/ros2_ws/src/ros-controls/install/forward_command_controller/lib:/home/vx792/ros2_ws/src/ros-controls/install/force_torque_sensor_broadcaster/lib:/home/vx792/ros2_ws/src/ros-controls/install/diff_drive_controller/lib:/home/vx792/ros2_ws/src/ros-controls/install/controller_interface/lib:/home/vx792/ros2_ws/src/ros-controls/install/hardware_interface/lib:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager_msgs/lib:/opt/ros/rolling/opt/yaml_cpp_vendor/lib:/opt/ros/rolling/opt/rviz_ogre_vendor/lib:/opt/ros/rolling/lib/x86_64-linux-gnu:/opt/ros/rolling/lib'), ('HOME', '/home/vx792'), ('OLDPWD', '/home/vx792/ros2_ws/src/ros-controls'), ('DESKTOP_SESSION', 'ubuntu'), ('ROS_PYTHON_VERSION', '3'), ('GNOME_SHELL_SESSION_MODE', 'ubuntu'), ('GTK_MODULES', 'gail:atk-bridge'), ('LC_MONETARY', 'hu_HU.UTF-8'), ('MANAGERPID', '2077'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus'), ('COLORTERM', 'truecolor'), ('IM_CONFIG_PHASE', '1'), ('COLCON_PREFIX_PATH', '/home/vx792/ros2_ws/src/ros-controls/install'), ('ROS_DISTRO', 'rolling'), ('LOGNAME', 'vx792'), ('JOURNAL_STREAM', '8:41463'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('XDG_SESSION_CLASS', 'user'), ('USERNAME', 'vx792'), ('TERM', 'xterm-256color'), ('GAZEBO_MODEL_PATH', '/home/vx792/ros2_ws/src/ros-controls/install/rrbot_description/share'), ('GNOME_DESKTOP_SESSION_ID', 'this-is-deprecated'), ('ROS_LOCALHOST_ONLY', '0'), ('WINDOWPATH', '2'), ('PATH', '/opt/ros/rolling/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin'), ('SESSION_MANAGER', 'local/vx792-VirtualBox:@/tmp/.ICE-unix/2332,unix/vx792-VirtualBox:/tmp/.ICE-unix/2332'), ('INVOCATION_ID', 'd1d206f0a420411bbaf60fa11f30c510'), ('XDG_MENU_PREFIX', 'gnome-'), ('LC_ADDRESS', 'hu_HU.UTF-8'), ('GNOME_TERMINAL_SCREEN', '/org/gnome/Terminal/screen/7832a705_d82f_4867_85ce_05ed050accd9'), ('XDG_RUNTIME_DIR', '/run/user/1000'), ('DISPLAY', ':0'), ('LANG', 'en_US.UTF-8'), ('XDG_CURRENT_DESKTOP', 'ubuntu:GNOME'), ('LC_TELEPHONE', 'hu_HU.UTF-8'), ('XMODIFIERS', '@im=ibus'), ('XDG_SESSION_DESKTOP', 'ubuntu'), ('XAUTHORITY', '/run/user/1000/gdm/Xauthority'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('GNOME_TERMINAL_SERVICE', ':1.86'), ('SSH_AUTH_SOCK', '/run/user/1000/keyring/ssh'), ('AMENT_PREFIX_PATH', '/home/vx792/ros2_ws/src/ros-controls/install/gazebo_ros2_control_demos:/home/vx792/ros2_ws/src/ros-controls/install/ros2_controllers:/home/vx792/ros2_ws/src/ros-controls/install/velocity_controllers:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control:/home/vx792/ros2_ws/src/ros-controls/install/transmission_interface:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_demos:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_demo_bringup:/home/vx792/ros2_ws/src/ros-controls/install/rrbot_description:/home/vx792/ros2_ws/src/ros-controls/install/ros2controlcli:/home/vx792/ros2_ws/src/ros-controls/install/ros2_controllers_test_nodes:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_test_nodes:/home/vx792/ros2_ws/src/ros-controls/install/gazebo_ros2_control:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_test_assets:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_demo_hardware:/home/vx792/ros2_ws/src/ros-controls/install/position_controllers:/home/vx792/ros2_ws/src/ros-controls/install/joint_trajectory_controller:/home/vx792/ros2_ws/src/ros-controls/install/joint_state_broadcaster:/home/vx792/ros2_ws/src/ros-controls/install/joint_limits:/home/vx792/ros2_ws/src/ros-controls/install/imu_sensor_broadcaster:/home/vx792/ros2_ws/src/ros-controls/install/gripper_controllers:/home/vx792/ros2_ws/src/ros-controls/install/effort_controllers:/home/vx792/ros2_ws/src/ros-controls/install/forward_command_controller:/home/vx792/ros2_ws/src/ros-controls/install/force_torque_sensor_broadcaster:/home/vx792/ros2_ws/src/ros-controls/install/diff_drive_controller:/home/vx792/ros2_ws/src/ros-controls/install/controller_interface:/home/vx792/ros2_ws/src/ros-controls/install/hardware_interface:/home/vx792/ros2_ws/src/ros-controls/install/diffbot_description:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager_msgs:/opt/ros/rolling'), ('SHELL', '/bin/bash'), ('LC_NAME', 'hu_HU.UTF-8'), ('QT_ACCESSIBILITY', '1'), ('GDMSESSION', 'ubuntu'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('LC_MEASUREMENT', 'hu_HU.UTF-8'), ('GPG_AGENT_INFO', '/run/user/1000/gnupg/S.gpg-agent:0:1'), ('GJS_DEBUG_OUTPUT', 'stderr'), ('LC_IDENTIFICATION', 'hu_HU.UTF-8'), ('QT_IM_MODULE', 'ibus'), ('PWD', '/home/vx792/ros2_ws/src/ros-controls/ros2_control/build/ros2_control_test_assets'), ('XDG_CONFIG_DIRS', '/etc/xdg/xdg-ubuntu:/etc/xdg'), ('XDG_DATA_DIRS', '/usr/share/ubuntu:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop'), ('PYTHONPATH', '/home/vx792/ros2_ws/src/ros-controls/install/ros2controlcli/lib/python3.8/site-packages:/home/vx792/ros2_ws/src/ros-controls/install/ros2_controllers_test_nodes/lib/python3.8/site-packages:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_test_nodes/lib/python3.8/site-packages:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager/lib/python3.8/site-packages:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager_msgs/lib/python3.8/site-packages:/opt/ros/rolling/lib/python3.8/site-packages'), ('LC_NUMERIC', 'hu_HU.UTF-8'), ('LC_PAPER', 'hu_HU.UTF-8'), ('COLCON', '1'), ('VTE_VERSION', '6003'), ('CMAKE_PREFIX_PATH', '/home/vx792/ros2_ws/src/ros-controls/install/gazebo_ros2_control_demos:/home/vx792/ros2_ws/src/ros-controls/install/ros2_controllers:/home/vx792/ros2_ws/src/ros-controls/install/velocity_controllers:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control:/home/vx792/ros2_ws/src/ros-controls/install/transmission_interface:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_demos:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_demo_bringup:/home/vx792/ros2_ws/src/ros-controls/install/rrbot_description:/home/vx792/ros2_ws/src/ros-controls/install/gazebo_ros2_control:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_test_assets:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_demo_hardware:/home/vx792/ros2_ws/src/ros-controls/install/position_controllers:/home/vx792/ros2_ws/src/ros-controls/install/joint_trajectory_controller:/home/vx792/ros2_ws/src/ros-controls/install/joint_state_broadcaster:/home/vx792/ros2_ws/src/ros-controls/install/joint_limits:/home/vx792/ros2_ws/src/ros-controls/install/imu_sensor_broadcaster:/home/vx792/ros2_ws/src/ros-controls/install/gripper_controllers:/home/vx792/ros2_ws/src/ros-controls/install/effort_controllers:/home/vx792/ros2_ws/src/ros-controls/install/forward_command_controller:/home/vx792/ros2_ws/src/ros-controls/install/force_torque_sensor_broadcaster:/home/vx792/ros2_ws/src/ros-controls/install/diff_drive_controller:/home/vx792/ros2_ws/src/ros-controls/install/controller_interface:/home/vx792/ros2_ws/src/ros-controls/install/hardware_interface:/home/vx792/ros2_ws/src/ros-controls/install/diffbot_description:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager_msgs:/home/vx792/ros2_ws/src/ros-controls/install/ros2controlcli:/home/vx792/ros2_ws/src/ros-controls/install/ros2_controllers_test_nodes:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_test_nodes:/opt/ros/rolling')]), 'shell': False}
+[3.667518] (-) TimerEvent: {}
+[3.688759] (ros2_control_test_assets) StdoutLine: {'line': b'-- Install configuration: ""\n'}
+[3.689290] (ros2_control_test_assets) StdoutLine: {'line': b'-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/ros2_control_test_assets/include\n'}
+[3.689716] (ros2_control_test_assets) StdoutLine: {'line': b'-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/ros2_control_test_assets/include/ros2_control_test_assets\n'}
+[3.691942] (ros2_control_test_assets) StdoutLine: {'line': b'-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/ros2_control_test_assets/include/ros2_control_test_assets/descriptions.hpp\n'}
+[3.696422] (ros2_control_test_assets) StdoutLine: {'line': b'-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/ros2_control_test_assets/include/ros2_control_test_assets/components_urdfs.hpp\n'}
+[3.697943] (ros2_control_test_assets) StdoutLine: {'line': b'-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/ros2_control_test_assets/share/ament_index/resource_index/package_run_dependencies/ros2_control_test_assets\n'}
+[3.698623] (ros2_control_test_assets) StdoutLine: {'line': b'-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/ros2_control_test_assets/share/ament_index/resource_index/parent_prefix_path/ros2_control_test_assets\n'}
+[3.698997] (ros2_control_test_assets) StdoutLine: {'line': b'-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/ros2_control_test_assets/share/ros2_control_test_assets/environment/ament_prefix_path.sh\n'}
+[3.699351] (ros2_control_test_assets) StdoutLine: {'line': b'-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/ros2_control_test_assets/share/ros2_control_test_assets/environment/ament_prefix_path.dsv\n'}
+[3.699734] (ros2_control_test_assets) StdoutLine: {'line': b'-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/ros2_control_test_assets/share/ros2_control_test_assets/environment/path.sh\n'}
+[3.701703] (ros2_control_test_assets) StdoutLine: {'line': b'-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/ros2_control_test_assets/share/ros2_control_test_assets/environment/path.dsv\n'}
+[3.707275] (ros2_control_test_assets) StdoutLine: {'line': b'-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/ros2_control_test_assets/share/ros2_control_test_assets/local_setup.bash\n'}
+[3.707501] (ros2_control_test_assets) StdoutLine: {'line': b'-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/ros2_control_test_assets/share/ros2_control_test_assets/local_setup.sh\n'}
+[3.707621] (ros2_control_test_assets) StdoutLine: {'line': b'-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/ros2_control_test_assets/share/ros2_control_test_assets/local_setup.zsh\n'}
+[3.707723] (ros2_control_test_assets) StdoutLine: {'line': b'-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/ros2_control_test_assets/share/ros2_control_test_assets/local_setup.dsv\n'}
+[3.707823] (ros2_control_test_assets) StdoutLine: {'line': b'-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/ros2_control_test_assets/share/ros2_control_test_assets/package.dsv\n'}
+[3.707928] (ros2_control_test_assets) StdoutLine: {'line': b'-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/ros2_control_test_assets/share/ament_index/resource_index/packages/ros2_control_test_assets\n'}
+[3.708032] (ros2_control_test_assets) StdoutLine: {'line': b'-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/ros2_control_test_assets/share/ros2_control_test_assets/cmake/ament_cmake_export_include_directories-extras.cmake\n'}
+[3.708138] (ros2_control_test_assets) StdoutLine: {'line': b'-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/ros2_control_test_assets/share/ros2_control_test_assets/cmake/ros2_control_test_assetsConfig.cmake\n'}
+[3.708238] (ros2_control_test_assets) StdoutLine: {'line': b'-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/ros2_control_test_assets/share/ros2_control_test_assets/cmake/ros2_control_test_assetsConfig-version.cmake\n'}
+[3.708347] (ros2_control_test_assets) StdoutLine: {'line': b'-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/ros2_control_test_assets/share/ros2_control_test_assets/package.xml\n'}
+[3.719788] (ros2_control_test_assets) CommandEnded: {'returncode': 0}
+[3.785941] (-) TimerEvent: {}
+[3.887448] (-) TimerEvent: {}
+[3.977323] (ros2_control_test_assets) JobEnded: {'identifier': 'ros2_control_test_assets', 'rc': 0}
+[3.984541] (hardware_interface) JobStarted: {'identifier': 'hardware_interface'}
+[3.987581] (-) TimerEvent: {}
+[4.081792] (hardware_interface) JobProgress: {'identifier': 'hardware_interface', 'progress': 'cmake'}
+[4.082114] (hardware_interface) Command: {'cmd': ['/usr/bin/cmake', '/home/vx792/ros2_ws/src/ros-controls/ros2_control/hardware_interface', '-DCMAKE_INSTALL_PREFIX=/home/vx792/ros2_ws/src/ros-controls/ros2_control/install/hardware_interface'], 'cwd': '/home/vx792/ros2_ws/src/ros-controls/ros2_control/build/hardware_interface', 'env': OrderedDict([('GJS_DEBUG_TOPICS', 'JS ERROR;JS LOG'), ('LESSOPEN', '| /usr/bin/lesspipe %s'), ('USER', 'vx792'), ('LC_TIME', 'hu_HU.UTF-8'), ('SSH_AGENT_PID', '2284'), ('XDG_SESSION_TYPE', 'x11'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/home/vx792/ros2_ws/src/ros-controls/install/velocity_controllers/lib:/home/vx792/ros2_ws/src/ros-controls/install/transmission_interface/lib:/home/vx792/ros2_ws/src/ros-controls/install/gazebo_ros2_control/lib:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager/lib:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_demo_hardware/lib:/home/vx792/ros2_ws/src/ros-controls/install/position_controllers/lib:/home/vx792/ros2_ws/src/ros-controls/install/joint_trajectory_controller/lib:/home/vx792/ros2_ws/src/ros-controls/install/joint_state_broadcaster/lib:/home/vx792/ros2_ws/src/ros-controls/install/imu_sensor_broadcaster/lib:/home/vx792/ros2_ws/src/ros-controls/install/gripper_controllers/lib:/home/vx792/ros2_ws/src/ros-controls/install/effort_controllers/lib:/home/vx792/ros2_ws/src/ros-controls/install/forward_command_controller/lib:/home/vx792/ros2_ws/src/ros-controls/install/force_torque_sensor_broadcaster/lib:/home/vx792/ros2_ws/src/ros-controls/install/diff_drive_controller/lib:/home/vx792/ros2_ws/src/ros-controls/install/controller_interface/lib:/home/vx792/ros2_ws/src/ros-controls/install/hardware_interface/lib:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager_msgs/lib:/opt/ros/rolling/opt/yaml_cpp_vendor/lib:/opt/ros/rolling/opt/rviz_ogre_vendor/lib:/opt/ros/rolling/lib/x86_64-linux-gnu:/opt/ros/rolling/lib'), ('HOME', '/home/vx792'), ('OLDPWD', '/home/vx792/ros2_ws/src/ros-controls'), ('DESKTOP_SESSION', 'ubuntu'), ('ROS_PYTHON_VERSION', '3'), ('GNOME_SHELL_SESSION_MODE', 'ubuntu'), ('GTK_MODULES', 'gail:atk-bridge'), ('LC_MONETARY', 'hu_HU.UTF-8'), ('MANAGERPID', '2077'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus'), ('COLORTERM', 'truecolor'), ('IM_CONFIG_PHASE', '1'), ('COLCON_PREFIX_PATH', '/home/vx792/ros2_ws/src/ros-controls/install'), ('ROS_DISTRO', 'rolling'), ('LOGNAME', 'vx792'), ('JOURNAL_STREAM', '8:41463'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('XDG_SESSION_CLASS', 'user'), ('USERNAME', 'vx792'), ('TERM', 'xterm-256color'), ('GAZEBO_MODEL_PATH', '/home/vx792/ros2_ws/src/ros-controls/install/rrbot_description/share'), ('GNOME_DESKTOP_SESSION_ID', 'this-is-deprecated'), ('ROS_LOCALHOST_ONLY', '0'), ('WINDOWPATH', '2'), ('PATH', '/opt/ros/rolling/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin'), ('SESSION_MANAGER', 'local/vx792-VirtualBox:@/tmp/.ICE-unix/2332,unix/vx792-VirtualBox:/tmp/.ICE-unix/2332'), ('INVOCATION_ID', 'd1d206f0a420411bbaf60fa11f30c510'), ('XDG_MENU_PREFIX', 'gnome-'), ('LC_ADDRESS', 'hu_HU.UTF-8'), ('GNOME_TERMINAL_SCREEN', '/org/gnome/Terminal/screen/7832a705_d82f_4867_85ce_05ed050accd9'), ('XDG_RUNTIME_DIR', '/run/user/1000'), ('DISPLAY', ':0'), ('LANG', 'en_US.UTF-8'), ('XDG_CURRENT_DESKTOP', 'ubuntu:GNOME'), ('LC_TELEPHONE', 'hu_HU.UTF-8'), ('XMODIFIERS', '@im=ibus'), ('XDG_SESSION_DESKTOP', 'ubuntu'), ('XAUTHORITY', '/run/user/1000/gdm/Xauthority'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('GNOME_TERMINAL_SERVICE', ':1.86'), ('SSH_AUTH_SOCK', '/run/user/1000/keyring/ssh'), ('AMENT_PREFIX_PATH', '/home/vx792/ros2_ws/src/ros-controls/ros2_control/install/ros2_control_test_assets:/home/vx792/ros2_ws/src/ros-controls/install/gazebo_ros2_control_demos:/home/vx792/ros2_ws/src/ros-controls/install/ros2_controllers:/home/vx792/ros2_ws/src/ros-controls/install/velocity_controllers:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control:/home/vx792/ros2_ws/src/ros-controls/install/transmission_interface:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_demos:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_demo_bringup:/home/vx792/ros2_ws/src/ros-controls/install/rrbot_description:/home/vx792/ros2_ws/src/ros-controls/install/ros2controlcli:/home/vx792/ros2_ws/src/ros-controls/install/ros2_controllers_test_nodes:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_test_nodes:/home/vx792/ros2_ws/src/ros-controls/install/gazebo_ros2_control:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_test_assets:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_demo_hardware:/home/vx792/ros2_ws/src/ros-controls/install/position_controllers:/home/vx792/ros2_ws/src/ros-controls/install/joint_trajectory_controller:/home/vx792/ros2_ws/src/ros-controls/install/joint_state_broadcaster:/home/vx792/ros2_ws/src/ros-controls/install/joint_limits:/home/vx792/ros2_ws/src/ros-controls/install/imu_sensor_broadcaster:/home/vx792/ros2_ws/src/ros-controls/install/gripper_controllers:/home/vx792/ros2_ws/src/ros-controls/install/effort_controllers:/home/vx792/ros2_ws/src/ros-controls/install/forward_command_controller:/home/vx792/ros2_ws/src/ros-controls/install/force_torque_sensor_broadcaster:/home/vx792/ros2_ws/src/ros-controls/install/diff_drive_controller:/home/vx792/ros2_ws/src/ros-controls/install/controller_interface:/home/vx792/ros2_ws/src/ros-controls/install/hardware_interface:/home/vx792/ros2_ws/src/ros-controls/install/diffbot_description:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager_msgs:/opt/ros/rolling'), ('SHELL', '/bin/bash'), ('LC_NAME', 'hu_HU.UTF-8'), ('QT_ACCESSIBILITY', '1'), ('GDMSESSION', 'ubuntu'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('LC_MEASUREMENT', 'hu_HU.UTF-8'), ('GPG_AGENT_INFO', '/run/user/1000/gnupg/S.gpg-agent:0:1'), ('GJS_DEBUG_OUTPUT', 'stderr'), ('LC_IDENTIFICATION', 'hu_HU.UTF-8'), ('QT_IM_MODULE', 'ibus'), ('PWD', '/home/vx792/ros2_ws/src/ros-controls/ros2_control/build/hardware_interface'), ('XDG_CONFIG_DIRS', '/etc/xdg/xdg-ubuntu:/etc/xdg'), ('XDG_DATA_DIRS', '/usr/share/ubuntu:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop'), ('PYTHONPATH', '/home/vx792/ros2_ws/src/ros-controls/install/ros2controlcli/lib/python3.8/site-packages:/home/vx792/ros2_ws/src/ros-controls/install/ros2_controllers_test_nodes/lib/python3.8/site-packages:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_test_nodes/lib/python3.8/site-packages:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager/lib/python3.8/site-packages:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager_msgs/lib/python3.8/site-packages:/opt/ros/rolling/lib/python3.8/site-packages'), ('LC_NUMERIC', 'hu_HU.UTF-8'), ('LC_PAPER', 'hu_HU.UTF-8'), ('COLCON', '1'), ('VTE_VERSION', '6003'), ('CMAKE_PREFIX_PATH', '/home/vx792/ros2_ws/src/ros-controls/ros2_control/install/ros2_control_test_assets:/home/vx792/ros2_ws/src/ros-controls/install/gazebo_ros2_control_demos:/home/vx792/ros2_ws/src/ros-controls/install/ros2_controllers:/home/vx792/ros2_ws/src/ros-controls/install/velocity_controllers:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control:/home/vx792/ros2_ws/src/ros-controls/install/transmission_interface:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_demos:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_demo_bringup:/home/vx792/ros2_ws/src/ros-controls/install/rrbot_description:/home/vx792/ros2_ws/src/ros-controls/install/gazebo_ros2_control:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_test_assets:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_demo_hardware:/home/vx792/ros2_ws/src/ros-controls/install/position_controllers:/home/vx792/ros2_ws/src/ros-controls/install/joint_trajectory_controller:/home/vx792/ros2_ws/src/ros-controls/install/joint_state_broadcaster:/home/vx792/ros2_ws/src/ros-controls/install/joint_limits:/home/vx792/ros2_ws/src/ros-controls/install/imu_sensor_broadcaster:/home/vx792/ros2_ws/src/ros-controls/install/gripper_controllers:/home/vx792/ros2_ws/src/ros-controls/install/effort_controllers:/home/vx792/ros2_ws/src/ros-controls/install/forward_command_controller:/home/vx792/ros2_ws/src/ros-controls/install/force_torque_sensor_broadcaster:/home/vx792/ros2_ws/src/ros-controls/install/diff_drive_controller:/home/vx792/ros2_ws/src/ros-controls/install/controller_interface:/home/vx792/ros2_ws/src/ros-controls/install/hardware_interface:/home/vx792/ros2_ws/src/ros-controls/install/diffbot_description:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager_msgs:/home/vx792/ros2_ws/src/ros-controls/install/ros2controlcli:/home/vx792/ros2_ws/src/ros-controls/install/ros2_controllers_test_nodes:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_test_nodes:/opt/ros/rolling')]), 'shell': False}
+[4.096616] (-) TimerEvent: {}
+[4.198610] (-) TimerEvent: {}
+[4.302511] (-) TimerEvent: {}
+[4.363204] (hardware_interface) StdoutLine: {'line': b'-- The C compiler identification is GNU 9.4.0\n'}
+[4.402676] (-) TimerEvent: {}
+[4.506425] (-) TimerEvent: {}
+[4.610390] (-) TimerEvent: {}
+[4.652139] (hardware_interface) StdoutLine: {'line': b'-- The CXX compiler identification is GNU 9.4.0\n'}
+[4.686166] (hardware_interface) StdoutLine: {'line': b'-- Check for working C compiler: /usr/bin/cc\n'}
+[4.710530] (-) TimerEvent: {}
+[4.837746] (-) TimerEvent: {}
+[4.942321] (-) TimerEvent: {}
+[4.986497] (hardware_interface) StdoutLine: {'line': b'-- Check for working C compiler: /usr/bin/cc -- works\n'}
+[4.986745] (hardware_interface) StdoutLine: {'line': b'-- Detecting C compiler ABI info\n'}
+[5.042492] (-) TimerEvent: {}
+[5.152048] (-) TimerEvent: {}
+[5.254352] (-) TimerEvent: {}
+[5.357826] (hardware_interface) StdoutLine: {'line': b'-- Detecting C compiler ABI info - done\n'}
+[5.358105] (-) TimerEvent: {}
+[5.397253] (hardware_interface) StdoutLine: {'line': b'-- Detecting C compile features\n'}
+[5.397493] (hardware_interface) StdoutLine: {'line': b'-- Detecting C compile features - done\n'}
+[5.410433] (hardware_interface) StdoutLine: {'line': b'-- Check for working CXX compiler: /usr/bin/c++\n'}
+[5.461460] (-) TimerEvent: {}
+[5.561995] (-) TimerEvent: {}
+[5.663195] (-) TimerEvent: {}
+[5.663562] (controller_manager_msgs) StdoutLine: {'line': b'-- Found ament_cmake_cppcheck: 0.11.4 (/opt/ros/rolling/share/ament_cmake_cppcheck/cmake)\n'}
+[5.667647] (hardware_interface) StdoutLine: {'line': b'-- Check for working CXX compiler: /usr/bin/c++ -- works\n'}
+[5.670806] (hardware_interface) StdoutLine: {'line': b'-- Detecting CXX compiler ABI info\n'}
+[5.676688] (controller_manager_msgs) StdoutLine: {'line': b'-- Found ament_cmake_cpplint: 0.11.4 (/opt/ros/rolling/share/ament_cmake_cpplint/cmake)\n'}
+[5.688959] (controller_manager_msgs) StdoutLine: {'line': b'-- Found ament_cmake_uncrustify: 0.11.4 (/opt/ros/rolling/share/ament_cmake_uncrustify/cmake)\n'}
+[5.710862] (controller_manager_msgs) StdoutLine: {'line': b'-- Found ament_cmake_ros: 0.10.0 (/opt/ros/rolling/share/ament_cmake_ros/cmake)\n'}
+[5.763320] (-) TimerEvent: {}
+[5.863983] (-) TimerEvent: {}
+[5.964391] (-) TimerEvent: {}
+[5.966857] (hardware_interface) StdoutLine: {'line': b'-- Detecting CXX compiler ABI info - done\n'}
+[6.011792] (hardware_interface) StdoutLine: {'line': b'-- Detecting CXX compile features\n'}
+[6.018081] (hardware_interface) StdoutLine: {'line': b'-- Detecting CXX compile features - done\n'}
+[6.028299] (hardware_interface) StdoutLine: {'line': b'-- Found ament_cmake: 1.2.1 (/opt/ros/rolling/share/ament_cmake/cmake)\n'}
+[6.065118] (-) TimerEvent: {}
+[6.168954] (-) TimerEvent: {}
+[6.269297] (-) TimerEvent: {}
+[6.373525] (-) TimerEvent: {}
+[6.475075] (-) TimerEvent: {}
+[6.575571] (-) TimerEvent: {}
+[6.676118] (-) TimerEvent: {}
+[6.721793] (hardware_interface) StdoutLine: {'line': b'-- Found Python3: /usr/bin/python3.8 (found version "3.8.10") found components: Interpreter \n'}
+[6.777026] (-) TimerEvent: {}
+[6.878154] (-) TimerEvent: {}
+[6.986392] (-) TimerEvent: {}
+[7.091005] (-) TimerEvent: {}
+[7.162202] (hardware_interface) StdoutLine: {'line': b'-- Found control_msgs: 3.0.0 (/opt/ros/rolling/share/control_msgs/cmake)\n'}
+[7.191085] (-) TimerEvent: {}
+[7.310532] (-) TimerEvent: {}
+[7.390961] (hardware_interface) StdoutLine: {'line': b'-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c\n'}
+[7.402727] (-) TimerEvent: {}
+[7.436520] (hardware_interface) StdoutLine: {'line': b'-- Found rosidl_adapter: 3.0.1 (/opt/ros/rolling/share/rosidl_adapter/cmake)\n'}
+[7.478218] (controller_manager_msgs) StdoutLine: {'line': b'-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c\n'}
+[7.502843] (-) TimerEvent: {}
+[7.604350] (-) TimerEvent: {}
+[7.629368] (hardware_interface) StdoutLine: {'line': b'-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp\n'}
+[7.706327] (-) TimerEvent: {}
+[7.807338] (-) TimerEvent: {}
+[7.907903] (-) TimerEvent: {}
+[8.009028] (-) TimerEvent: {}
+[8.110037] (-) TimerEvent: {}
+[8.213391] (-) TimerEvent: {}
+[8.322317] (-) TimerEvent: {}
+[8.422876] (-) TimerEvent: {}
+[8.526451] (-) TimerEvent: {}
+[8.630170] (-) TimerEvent: {}
+[8.731907] (-) TimerEvent: {}
+[8.832584] (-) TimerEvent: {}
+[8.928823] (controller_manager_msgs) StdoutLine: {'line': b'-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp\n'}
+[8.933497] (-) TimerEvent: {}
+[9.038470] (-) TimerEvent: {}
+[9.063028] (controller_manager_msgs) StdoutLine: {'line': b'-- Found PythonInterp: /usr/bin/python3 (found suitable version "3.8.10", minimum required is "3.5") \n'}
+[9.084395] (controller_manager_msgs) StdoutLine: {'line': b'-- Found python_cmake_module: 0.8.1 (/opt/ros/rolling/share/python_cmake_module/cmake)\n'}
+[9.140559] (-) TimerEvent: {}
+[9.198972] (controller_manager_msgs) StdoutLine: {'line': b'-- Found PythonLibs: /usr/lib/x86_64-linux-gnu/libpython3.8.so (found suitable version "3.8.10", minimum required is "3.5") \n'}
+[9.199299] (controller_manager_msgs) StdoutLine: {'line': b'-- Using PYTHON_EXECUTABLE: /usr/bin/python3\n'}
+[9.199443] (controller_manager_msgs) StdoutLine: {'line': b'-- Using PYTHON_INCLUDE_DIRS: /usr/include/python3.8\n'}
+[9.199551] (controller_manager_msgs) StdoutLine: {'line': b'-- Using PYTHON_LIBRARIES: /usr/lib/x86_64-linux-gnu/libpython3.8.so\n'}
+[9.241320] (-) TimerEvent: {}
+[9.315302] (controller_manager_msgs) StdoutLine: {'line': b'-- Found PythonExtra: .so  \n'}
+[9.341915] (-) TimerEvent: {}
+[9.442947] (-) TimerEvent: {}
+[9.543484] (-) TimerEvent: {}
+[9.602492] (controller_manager_msgs) StdoutLine: {'line': b'-- Found ament_cmake_flake8: 0.11.4 (/opt/ros/rolling/share/ament_cmake_flake8/cmake)\n'}
+[9.615444] (controller_manager_msgs) StdoutLine: {'line': b'-- Found ament_cmake_pep257: 0.11.4 (/opt/ros/rolling/share/ament_cmake_pep257/cmake)\n'}
+[9.643540] (-) TimerEvent: {}
+[9.657120] (controller_manager_msgs) StdoutLine: {'line': b'-- Configuring done\n'}
+[9.743678] (-) TimerEvent: {}
+[9.844059] (-) TimerEvent: {}
+[9.944581] (-) TimerEvent: {}
+[10.036279] (hardware_interface) StdoutLine: {'line': b'-- Found lifecycle_msgs: 1.1.0 (/opt/ros/rolling/share/lifecycle_msgs/cmake)\n'}
+[10.045280] (-) TimerEvent: {}
+[10.090968] (controller_manager_msgs) StdoutLine: {'line': b'-- Generating done\n'}
+[10.100163] (controller_manager_msgs) StdoutLine: {'line': b'-- Build files have been written to: /home/vx792/ros2_ws/src/ros-controls/ros2_control/build/controller_manager_msgs\n'}
+[10.107149] (hardware_interface) StdoutLine: {'line': b'-- Found pluginlib: 5.1.0 (/opt/ros/rolling/share/pluginlib/cmake)\n'}
+[10.120999] (controller_manager_msgs) CommandEnded: {'returncode': 0}
+[10.135857] (controller_manager_msgs) JobProgress: {'identifier': 'controller_manager_msgs', 'progress': 'build'}
+[10.135933] (controller_manager_msgs) Command: {'cmd': ['/usr/bin/cmake', '--build', '/home/vx792/ros2_ws/src/ros-controls/ros2_control/build/controller_manager_msgs', '--', '-j2', '-l2'], 'cwd': '/home/vx792/ros2_ws/src/ros-controls/ros2_control/build/controller_manager_msgs', 'env': OrderedDict([('GJS_DEBUG_TOPICS', 'JS ERROR;JS LOG'), ('LESSOPEN', '| /usr/bin/lesspipe %s'), ('USER', 'vx792'), ('LC_TIME', 'hu_HU.UTF-8'), ('SSH_AGENT_PID', '2284'), ('XDG_SESSION_TYPE', 'x11'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/home/vx792/ros2_ws/src/ros-controls/install/velocity_controllers/lib:/home/vx792/ros2_ws/src/ros-controls/install/transmission_interface/lib:/home/vx792/ros2_ws/src/ros-controls/install/gazebo_ros2_control/lib:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager/lib:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_demo_hardware/lib:/home/vx792/ros2_ws/src/ros-controls/install/position_controllers/lib:/home/vx792/ros2_ws/src/ros-controls/install/joint_trajectory_controller/lib:/home/vx792/ros2_ws/src/ros-controls/install/joint_state_broadcaster/lib:/home/vx792/ros2_ws/src/ros-controls/install/imu_sensor_broadcaster/lib:/home/vx792/ros2_ws/src/ros-controls/install/gripper_controllers/lib:/home/vx792/ros2_ws/src/ros-controls/install/effort_controllers/lib:/home/vx792/ros2_ws/src/ros-controls/install/forward_command_controller/lib:/home/vx792/ros2_ws/src/ros-controls/install/force_torque_sensor_broadcaster/lib:/home/vx792/ros2_ws/src/ros-controls/install/diff_drive_controller/lib:/home/vx792/ros2_ws/src/ros-controls/install/controller_interface/lib:/home/vx792/ros2_ws/src/ros-controls/install/hardware_interface/lib:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager_msgs/lib:/opt/ros/rolling/opt/yaml_cpp_vendor/lib:/opt/ros/rolling/opt/rviz_ogre_vendor/lib:/opt/ros/rolling/lib/x86_64-linux-gnu:/opt/ros/rolling/lib'), ('HOME', '/home/vx792'), ('OLDPWD', '/home/vx792/ros2_ws/src/ros-controls'), ('DESKTOP_SESSION', 'ubuntu'), ('ROS_PYTHON_VERSION', '3'), ('GNOME_SHELL_SESSION_MODE', 'ubuntu'), ('GTK_MODULES', 'gail:atk-bridge'), ('LC_MONETARY', 'hu_HU.UTF-8'), ('MANAGERPID', '2077'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus'), ('COLORTERM', 'truecolor'), ('IM_CONFIG_PHASE', '1'), ('COLCON_PREFIX_PATH', '/home/vx792/ros2_ws/src/ros-controls/install'), ('ROS_DISTRO', 'rolling'), ('LOGNAME', 'vx792'), ('JOURNAL_STREAM', '8:41463'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('XDG_SESSION_CLASS', 'user'), ('USERNAME', 'vx792'), ('TERM', 'xterm-256color'), ('GAZEBO_MODEL_PATH', '/home/vx792/ros2_ws/src/ros-controls/install/rrbot_description/share'), ('GNOME_DESKTOP_SESSION_ID', 'this-is-deprecated'), ('ROS_LOCALHOST_ONLY', '0'), ('WINDOWPATH', '2'), ('PATH', '/opt/ros/rolling/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin'), ('SESSION_MANAGER', 'local/vx792-VirtualBox:@/tmp/.ICE-unix/2332,unix/vx792-VirtualBox:/tmp/.ICE-unix/2332'), ('INVOCATION_ID', 'd1d206f0a420411bbaf60fa11f30c510'), ('XDG_MENU_PREFIX', 'gnome-'), ('LC_ADDRESS', 'hu_HU.UTF-8'), ('GNOME_TERMINAL_SCREEN', '/org/gnome/Terminal/screen/7832a705_d82f_4867_85ce_05ed050accd9'), ('XDG_RUNTIME_DIR', '/run/user/1000'), ('DISPLAY', ':0'), ('LANG', 'en_US.UTF-8'), ('XDG_CURRENT_DESKTOP', 'ubuntu:GNOME'), ('LC_TELEPHONE', 'hu_HU.UTF-8'), ('XMODIFIERS', '@im=ibus'), ('XDG_SESSION_DESKTOP', 'ubuntu'), ('XAUTHORITY', '/run/user/1000/gdm/Xauthority'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('GNOME_TERMINAL_SERVICE', ':1.86'), ('SSH_AUTH_SOCK', '/run/user/1000/keyring/ssh'), ('AMENT_PREFIX_PATH', '/home/vx792/ros2_ws/src/ros-controls/install/gazebo_ros2_control_demos:/home/vx792/ros2_ws/src/ros-controls/install/ros2_controllers:/home/vx792/ros2_ws/src/ros-controls/install/velocity_controllers:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control:/home/vx792/ros2_ws/src/ros-controls/install/transmission_interface:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_demos:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_demo_bringup:/home/vx792/ros2_ws/src/ros-controls/install/rrbot_description:/home/vx792/ros2_ws/src/ros-controls/install/ros2controlcli:/home/vx792/ros2_ws/src/ros-controls/install/ros2_controllers_test_nodes:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_test_nodes:/home/vx792/ros2_ws/src/ros-controls/install/gazebo_ros2_control:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_test_assets:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_demo_hardware:/home/vx792/ros2_ws/src/ros-controls/install/position_controllers:/home/vx792/ros2_ws/src/ros-controls/install/joint_trajectory_controller:/home/vx792/ros2_ws/src/ros-controls/install/joint_state_broadcaster:/home/vx792/ros2_ws/src/ros-controls/install/joint_limits:/home/vx792/ros2_ws/src/ros-controls/install/imu_sensor_broadcaster:/home/vx792/ros2_ws/src/ros-controls/install/gripper_controllers:/home/vx792/ros2_ws/src/ros-controls/install/effort_controllers:/home/vx792/ros2_ws/src/ros-controls/install/forward_command_controller:/home/vx792/ros2_ws/src/ros-controls/install/force_torque_sensor_broadcaster:/home/vx792/ros2_ws/src/ros-controls/install/diff_drive_controller:/home/vx792/ros2_ws/src/ros-controls/install/controller_interface:/home/vx792/ros2_ws/src/ros-controls/install/hardware_interface:/home/vx792/ros2_ws/src/ros-controls/install/diffbot_description:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager_msgs:/opt/ros/rolling'), ('SHELL', '/bin/bash'), ('LC_NAME', 'hu_HU.UTF-8'), ('QT_ACCESSIBILITY', '1'), ('GDMSESSION', 'ubuntu'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('LC_MEASUREMENT', 'hu_HU.UTF-8'), ('GPG_AGENT_INFO', '/run/user/1000/gnupg/S.gpg-agent:0:1'), ('GJS_DEBUG_OUTPUT', 'stderr'), ('LC_IDENTIFICATION', 'hu_HU.UTF-8'), ('QT_IM_MODULE', 'ibus'), ('PWD', '/home/vx792/ros2_ws/src/ros-controls/ros2_control/build/controller_manager_msgs'), ('XDG_CONFIG_DIRS', '/etc/xdg/xdg-ubuntu:/etc/xdg'), ('XDG_DATA_DIRS', '/usr/share/ubuntu:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop'), ('PYTHONPATH', '/home/vx792/ros2_ws/src/ros-controls/install/ros2controlcli/lib/python3.8/site-packages:/home/vx792/ros2_ws/src/ros-controls/install/ros2_controllers_test_nodes/lib/python3.8/site-packages:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_test_nodes/lib/python3.8/site-packages:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager/lib/python3.8/site-packages:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager_msgs/lib/python3.8/site-packages:/opt/ros/rolling/lib/python3.8/site-packages'), ('LC_NUMERIC', 'hu_HU.UTF-8'), ('LC_PAPER', 'hu_HU.UTF-8'), ('COLCON', '1'), ('VTE_VERSION', '6003'), ('CMAKE_PREFIX_PATH', '/home/vx792/ros2_ws/src/ros-controls/install/gazebo_ros2_control_demos:/home/vx792/ros2_ws/src/ros-controls/install/ros2_controllers:/home/vx792/ros2_ws/src/ros-controls/install/velocity_controllers:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control:/home/vx792/ros2_ws/src/ros-controls/install/transmission_interface:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_demos:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_demo_bringup:/home/vx792/ros2_ws/src/ros-controls/install/rrbot_description:/home/vx792/ros2_ws/src/ros-controls/install/gazebo_ros2_control:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_test_assets:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_demo_hardware:/home/vx792/ros2_ws/src/ros-controls/install/position_controllers:/home/vx792/ros2_ws/src/ros-controls/install/joint_trajectory_controller:/home/vx792/ros2_ws/src/ros-controls/install/joint_state_broadcaster:/home/vx792/ros2_ws/src/ros-controls/install/joint_limits:/home/vx792/ros2_ws/src/ros-controls/install/imu_sensor_broadcaster:/home/vx792/ros2_ws/src/ros-controls/install/gripper_controllers:/home/vx792/ros2_ws/src/ros-controls/install/effort_controllers:/home/vx792/ros2_ws/src/ros-controls/install/forward_command_controller:/home/vx792/ros2_ws/src/ros-controls/install/force_torque_sensor_broadcaster:/home/vx792/ros2_ws/src/ros-controls/install/diff_drive_controller:/home/vx792/ros2_ws/src/ros-controls/install/controller_interface:/home/vx792/ros2_ws/src/ros-controls/install/hardware_interface:/home/vx792/ros2_ws/src/ros-controls/install/diffbot_description:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager_msgs:/home/vx792/ros2_ws/src/ros-controls/install/ros2controlcli:/home/vx792/ros2_ws/src/ros-controls/install/ros2_controllers_test_nodes:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_test_nodes:/opt/ros/rolling')]), 'shell': False}
+[10.145582] (-) TimerEvent: {}
+[10.246664] (-) TimerEvent: {}
+[10.247165] (hardware_interface) StdoutLine: {'line': b'-- Found rclcpp_lifecycle: 15.0.0 (/opt/ros/rolling/share/rclcpp_lifecycle/cmake)\n'}
+[10.251351] (controller_manager_msgs) StdoutLine: {'line': b'\x1b[35m\x1b[1mScanning dependencies of target controller_manager_msgs__cpp\x1b[0m\n'}
+[10.283711] (controller_manager_msgs) StdoutLine: {'line': b'[  0%] \x1b[34m\x1b[1mGenerating C++ code for ROS interfaces\x1b[0m\n'}
+[10.350744] (-) TimerEvent: {}
+[10.451224] (-) TimerEvent: {}
+[10.554453] (-) TimerEvent: {}
+[10.656069] (-) TimerEvent: {}
+[10.666183] (hardware_interface) StdoutLine: {'line': b'-- Found rmw_implementation_cmake: 5.1.0 (/opt/ros/rolling/share/rmw_implementation_cmake/cmake)\n'}
+[10.696847] (hardware_interface) StdoutLine: {'line': b'-- Found rmw_cyclonedds_cpp: 1.1.2 (/opt/ros/rolling/share/rmw_cyclonedds_cpp/cmake)\n'}
+[10.759077] (-) TimerEvent: {}
+[10.844060] (hardware_interface) StdoutLine: {'line': b"-- Using RMW implementation 'rmw_cyclonedds_cpp' as default\n"}
+[10.859790] (-) TimerEvent: {}
+[10.962005] (-) TimerEvent: {}
+[11.063149] (-) TimerEvent: {}
+[11.165026] (-) TimerEvent: {}
+[11.269860] (-) TimerEvent: {}
+[11.372944] (-) TimerEvent: {}
+[11.473432] (-) TimerEvent: {}
+[11.575888] (-) TimerEvent: {}
+[11.676515] (-) TimerEvent: {}
+[11.776988] (-) TimerEvent: {}
+[11.879222] (-) TimerEvent: {}
+[11.986389] (-) TimerEvent: {}
+[12.038321] (hardware_interface) StdoutLine: {'line': b'-- Found TinyXML2: /usr/lib/x86_64-linux-gnu/libtinyxml2.so  \n'}
+[12.081328] (hardware_interface) StdoutLine: {'line': b'-- Found ament_cmake_gmock: 1.2.1 (/opt/ros/rolling/share/ament_cmake_gmock/cmake)\n'}
+[12.086709] (-) TimerEvent: {}
+[12.088833] (hardware_interface) StdoutLine: {'line': b'-- Found ros2_control_test_assets: 2.12.1 (/home/vx792/ros2_ws/src/ros-controls/ros2_control/install/ros2_control_test_assets/share/ros2_control_test_assets/cmake)\n'}
+[12.126456] (hardware_interface) StdoutLine: {'line': b"-- Found gmock sources under '/opt/ros/rolling/src/gmock_vendor': C++ tests using 'Google Mock' will be built\n"}
+[12.151084] (hardware_interface) StdoutLine: {'line': b'-- Found ament_cmake_gtest: 1.2.1 (/opt/ros/rolling/share/ament_cmake_gtest/cmake)\n'}
+[12.151316] (hardware_interface) StdoutLine: {'line': b"-- Found gtest sources under '/opt/ros/rolling/src/gtest_vendor': C++ tests using 'Google Test' will be built\n"}
+[12.190401] (-) TimerEvent: {}
+[12.290910] (-) TimerEvent: {}
+[12.398525] (-) TimerEvent: {}
+[12.504531] (-) TimerEvent: {}
+[12.504976] (hardware_interface) StdoutLine: {'line': b'-- Configuring done\n'}
+[12.610953] (-) TimerEvent: {}
+[12.711573] (-) TimerEvent: {}
+[12.814353] (-) TimerEvent: {}
+[12.914812] (-) TimerEvent: {}
+[12.991015] (hardware_interface) StdoutLine: {'line': b'-- Generating done\n'}
+[13.003207] (hardware_interface) StdoutLine: {'line': b'-- Build files have been written to: /home/vx792/ros2_ws/src/ros-controls/ros2_control/build/hardware_interface\n'}
+[13.014941] (-) TimerEvent: {}
+[13.031625] (hardware_interface) CommandEnded: {'returncode': 0}
+[13.033316] (hardware_interface) JobProgress: {'identifier': 'hardware_interface', 'progress': 'build'}
+[13.033376] (hardware_interface) Command: {'cmd': ['/usr/bin/cmake', '--build', '/home/vx792/ros2_ws/src/ros-controls/ros2_control/build/hardware_interface', '--', '-j2', '-l2'], 'cwd': '/home/vx792/ros2_ws/src/ros-controls/ros2_control/build/hardware_interface', 'env': OrderedDict([('GJS_DEBUG_TOPICS', 'JS ERROR;JS LOG'), ('LESSOPEN', '| /usr/bin/lesspipe %s'), ('USER', 'vx792'), ('LC_TIME', 'hu_HU.UTF-8'), ('SSH_AGENT_PID', '2284'), ('XDG_SESSION_TYPE', 'x11'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/home/vx792/ros2_ws/src/ros-controls/install/velocity_controllers/lib:/home/vx792/ros2_ws/src/ros-controls/install/transmission_interface/lib:/home/vx792/ros2_ws/src/ros-controls/install/gazebo_ros2_control/lib:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager/lib:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_demo_hardware/lib:/home/vx792/ros2_ws/src/ros-controls/install/position_controllers/lib:/home/vx792/ros2_ws/src/ros-controls/install/joint_trajectory_controller/lib:/home/vx792/ros2_ws/src/ros-controls/install/joint_state_broadcaster/lib:/home/vx792/ros2_ws/src/ros-controls/install/imu_sensor_broadcaster/lib:/home/vx792/ros2_ws/src/ros-controls/install/gripper_controllers/lib:/home/vx792/ros2_ws/src/ros-controls/install/effort_controllers/lib:/home/vx792/ros2_ws/src/ros-controls/install/forward_command_controller/lib:/home/vx792/ros2_ws/src/ros-controls/install/force_torque_sensor_broadcaster/lib:/home/vx792/ros2_ws/src/ros-controls/install/diff_drive_controller/lib:/home/vx792/ros2_ws/src/ros-controls/install/controller_interface/lib:/home/vx792/ros2_ws/src/ros-controls/install/hardware_interface/lib:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager_msgs/lib:/opt/ros/rolling/opt/yaml_cpp_vendor/lib:/opt/ros/rolling/opt/rviz_ogre_vendor/lib:/opt/ros/rolling/lib/x86_64-linux-gnu:/opt/ros/rolling/lib'), ('HOME', '/home/vx792'), ('OLDPWD', '/home/vx792/ros2_ws/src/ros-controls'), ('DESKTOP_SESSION', 'ubuntu'), ('ROS_PYTHON_VERSION', '3'), ('GNOME_SHELL_SESSION_MODE', 'ubuntu'), ('GTK_MODULES', 'gail:atk-bridge'), ('LC_MONETARY', 'hu_HU.UTF-8'), ('MANAGERPID', '2077'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus'), ('COLORTERM', 'truecolor'), ('IM_CONFIG_PHASE', '1'), ('COLCON_PREFIX_PATH', '/home/vx792/ros2_ws/src/ros-controls/install'), ('ROS_DISTRO', 'rolling'), ('LOGNAME', 'vx792'), ('JOURNAL_STREAM', '8:41463'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('XDG_SESSION_CLASS', 'user'), ('USERNAME', 'vx792'), ('TERM', 'xterm-256color'), ('GAZEBO_MODEL_PATH', '/home/vx792/ros2_ws/src/ros-controls/install/rrbot_description/share'), ('GNOME_DESKTOP_SESSION_ID', 'this-is-deprecated'), ('ROS_LOCALHOST_ONLY', '0'), ('WINDOWPATH', '2'), ('PATH', '/opt/ros/rolling/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin'), ('SESSION_MANAGER', 'local/vx792-VirtualBox:@/tmp/.ICE-unix/2332,unix/vx792-VirtualBox:/tmp/.ICE-unix/2332'), ('INVOCATION_ID', 'd1d206f0a420411bbaf60fa11f30c510'), ('XDG_MENU_PREFIX', 'gnome-'), ('LC_ADDRESS', 'hu_HU.UTF-8'), ('GNOME_TERMINAL_SCREEN', '/org/gnome/Terminal/screen/7832a705_d82f_4867_85ce_05ed050accd9'), ('XDG_RUNTIME_DIR', '/run/user/1000'), ('DISPLAY', ':0'), ('LANG', 'en_US.UTF-8'), ('XDG_CURRENT_DESKTOP', 'ubuntu:GNOME'), ('LC_TELEPHONE', 'hu_HU.UTF-8'), ('XMODIFIERS', '@im=ibus'), ('XDG_SESSION_DESKTOP', 'ubuntu'), ('XAUTHORITY', '/run/user/1000/gdm/Xauthority'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('GNOME_TERMINAL_SERVICE', ':1.86'), ('SSH_AUTH_SOCK', '/run/user/1000/keyring/ssh'), ('AMENT_PREFIX_PATH', '/home/vx792/ros2_ws/src/ros-controls/ros2_control/install/ros2_control_test_assets:/home/vx792/ros2_ws/src/ros-controls/install/gazebo_ros2_control_demos:/home/vx792/ros2_ws/src/ros-controls/install/ros2_controllers:/home/vx792/ros2_ws/src/ros-controls/install/velocity_controllers:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control:/home/vx792/ros2_ws/src/ros-controls/install/transmission_interface:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_demos:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_demo_bringup:/home/vx792/ros2_ws/src/ros-controls/install/rrbot_description:/home/vx792/ros2_ws/src/ros-controls/install/ros2controlcli:/home/vx792/ros2_ws/src/ros-controls/install/ros2_controllers_test_nodes:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_test_nodes:/home/vx792/ros2_ws/src/ros-controls/install/gazebo_ros2_control:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_test_assets:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_demo_hardware:/home/vx792/ros2_ws/src/ros-controls/install/position_controllers:/home/vx792/ros2_ws/src/ros-controls/install/joint_trajectory_controller:/home/vx792/ros2_ws/src/ros-controls/install/joint_state_broadcaster:/home/vx792/ros2_ws/src/ros-controls/install/joint_limits:/home/vx792/ros2_ws/src/ros-controls/install/imu_sensor_broadcaster:/home/vx792/ros2_ws/src/ros-controls/install/gripper_controllers:/home/vx792/ros2_ws/src/ros-controls/install/effort_controllers:/home/vx792/ros2_ws/src/ros-controls/install/forward_command_controller:/home/vx792/ros2_ws/src/ros-controls/install/force_torque_sensor_broadcaster:/home/vx792/ros2_ws/src/ros-controls/install/diff_drive_controller:/home/vx792/ros2_ws/src/ros-controls/install/controller_interface:/home/vx792/ros2_ws/src/ros-controls/install/hardware_interface:/home/vx792/ros2_ws/src/ros-controls/install/diffbot_description:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager_msgs:/opt/ros/rolling'), ('SHELL', '/bin/bash'), ('LC_NAME', 'hu_HU.UTF-8'), ('QT_ACCESSIBILITY', '1'), ('GDMSESSION', 'ubuntu'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('LC_MEASUREMENT', 'hu_HU.UTF-8'), ('GPG_AGENT_INFO', '/run/user/1000/gnupg/S.gpg-agent:0:1'), ('GJS_DEBUG_OUTPUT', 'stderr'), ('LC_IDENTIFICATION', 'hu_HU.UTF-8'), ('QT_IM_MODULE', 'ibus'), ('PWD', '/home/vx792/ros2_ws/src/ros-controls/ros2_control/build/hardware_interface'), ('XDG_CONFIG_DIRS', '/etc/xdg/xdg-ubuntu:/etc/xdg'), ('XDG_DATA_DIRS', '/usr/share/ubuntu:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop'), ('PYTHONPATH', '/home/vx792/ros2_ws/src/ros-controls/install/ros2controlcli/lib/python3.8/site-packages:/home/vx792/ros2_ws/src/ros-controls/install/ros2_controllers_test_nodes/lib/python3.8/site-packages:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_test_nodes/lib/python3.8/site-packages:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager/lib/python3.8/site-packages:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager_msgs/lib/python3.8/site-packages:/opt/ros/rolling/lib/python3.8/site-packages'), ('LC_NUMERIC', 'hu_HU.UTF-8'), ('LC_PAPER', 'hu_HU.UTF-8'), ('COLCON', '1'), ('VTE_VERSION', '6003'), ('CMAKE_PREFIX_PATH', '/home/vx792/ros2_ws/src/ros-controls/ros2_control/install/ros2_control_test_assets:/home/vx792/ros2_ws/src/ros-controls/install/gazebo_ros2_control_demos:/home/vx792/ros2_ws/src/ros-controls/install/ros2_controllers:/home/vx792/ros2_ws/src/ros-controls/install/velocity_controllers:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control:/home/vx792/ros2_ws/src/ros-controls/install/transmission_interface:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_demos:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_demo_bringup:/home/vx792/ros2_ws/src/ros-controls/install/rrbot_description:/home/vx792/ros2_ws/src/ros-controls/install/gazebo_ros2_control:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_test_assets:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_demo_hardware:/home/vx792/ros2_ws/src/ros-controls/install/position_controllers:/home/vx792/ros2_ws/src/ros-controls/install/joint_trajectory_controller:/home/vx792/ros2_ws/src/ros-controls/install/joint_state_broadcaster:/home/vx792/ros2_ws/src/ros-controls/install/joint_limits:/home/vx792/ros2_ws/src/ros-controls/install/imu_sensor_broadcaster:/home/vx792/ros2_ws/src/ros-controls/install/gripper_controllers:/home/vx792/ros2_ws/src/ros-controls/install/effort_controllers:/home/vx792/ros2_ws/src/ros-controls/install/forward_command_controller:/home/vx792/ros2_ws/src/ros-controls/install/force_torque_sensor_broadcaster:/home/vx792/ros2_ws/src/ros-controls/install/diff_drive_controller:/home/vx792/ros2_ws/src/ros-controls/install/controller_interface:/home/vx792/ros2_ws/src/ros-controls/install/hardware_interface:/home/vx792/ros2_ws/src/ros-controls/install/diffbot_description:/home/vx792/ros2_ws/src/ros-controls/install/controller_manager_msgs:/home/vx792/ros2_ws/src/ros-controls/install/ros2controlcli:/home/vx792/ros2_ws/src/ros-controls/install/ros2_controllers_test_nodes:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_test_nodes:/opt/ros/rolling')]), 'shell': False}
+[13.115066] (-) TimerEvent: {}
+[13.218184] (-) TimerEvent: {}
+[13.312042] (hardware_interface) StdoutLine: {'line': b'\x1b[35m\x1b[1mScanning dependencies of target hardware_interface\x1b[0m\n'}
+[13.318325] (-) TimerEvent: {}
+[13.421405] (-) TimerEvent: {}
+[13.458675] (hardware_interface) StdoutLine: {'line': b'[  2%] \x1b[32mBuilding CXX object CMakeFiles/hardware_interface.dir/src/actuator.cpp.o\x1b[0m\n'}
+[13.524397] (-) TimerEvent: {}
+[13.624917] (-) TimerEvent: {}
+[13.726972] (-) TimerEvent: {}
+[13.842833] (-) TimerEvent: {}
+[13.943295] (-) TimerEvent: {}
+[14.046102] (-) TimerEvent: {}
+[14.146625] (-) TimerEvent: {}
+[14.254450] (-) TimerEvent: {}
+[14.358209] (-) TimerEvent: {}
+[14.462415] (-) TimerEvent: {}
+[14.566071] (-) TimerEvent: {}
+[14.674355] (-) TimerEvent: {}
+[14.786027] (-) TimerEvent: {}
+[14.886498] (-) TimerEvent: {}
+[14.987264] (-) TimerEvent: {}
+[15.092620] (-) TimerEvent: {}
+[15.194176] (-) TimerEvent: {}
+[15.294932] (-) TimerEvent: {}
+[15.400399] (-) TimerEvent: {}
+[15.506492] (-) TimerEvent: {}
+[15.607079] (-) TimerEvent: {}
+[15.714823] (-) TimerEvent: {}
+[15.822994] (-) TimerEvent: {}
+[15.926093] (-) TimerEvent: {}
+[16.030329] (-) TimerEvent: {}
+[16.135105] (-) TimerEvent: {}
+[16.242519] (-) TimerEvent: {}
+[16.344380] (-) TimerEvent: {}
+[16.446212] (-) TimerEvent: {}
+[16.552268] (-) TimerEvent: {}
+[16.652765] (-) TimerEvent: {}
+[16.759583] (-) TimerEvent: {}
+[16.860106] (-) TimerEvent: {}
+[16.866334] (hardware_interface) StdoutLine: {'line': b'[  5%] \x1b[32mBuilding CXX object CMakeFiles/hardware_interface.dir/src/component_parser.cpp.o\x1b[0m\n'}
+[16.960542] (-) TimerEvent: {}
+[17.060971] (-) TimerEvent: {}
+[17.166185] (-) TimerEvent: {}
+[17.267526] (-) TimerEvent: {}
+[17.371430] (-) TimerEvent: {}
+[17.471881] (-) TimerEvent: {}
+[17.575834] (-) TimerEvent: {}
+[17.678823] (-) TimerEvent: {}
+[17.780982] (-) TimerEvent: {}
+[17.881337] (-) TimerEvent: {}
+[17.982159] (-) TimerEvent: {}
+[18.086388] (-) TimerEvent: {}
+[18.189841] (-) TimerEvent: {}
+[18.290186] (-) TimerEvent: {}
+[18.390714] (-) TimerEvent: {}
+[18.492690] (-) TimerEvent: {}
+[18.596902] (-) TimerEvent: {}
+[18.701398] (-) TimerEvent: {}
+[18.802466] (-) TimerEvent: {}
+[18.909406] (-) TimerEvent: {}
+[19.010081] (-) TimerEvent: {}
+[19.112343] (-) TimerEvent: {}
+[19.212881] (-) TimerEvent: {}
+[19.313394] (-) TimerEvent: {}
+[19.413936] (-) TimerEvent: {}
+[19.516425] (-) TimerEvent: {}
+[19.616983] (-) TimerEvent: {}
+[19.718208] (-) TimerEvent: {}
+[19.820660] (-) TimerEvent: {}
+[19.921979] (-) TimerEvent: {}
+[20.023973] (-) TimerEvent: {}
+[20.127195] (-) TimerEvent: {}
+[20.227647] (-) TimerEvent: {}
+[20.328141] (-) TimerEvent: {}
+[20.431257] (-) TimerEvent: {}
+[20.534820] (-) TimerEvent: {}
+[20.643101] (-) TimerEvent: {}
+[20.720032] (controller_manager_msgs) StdoutLine: {'line': b'[  0%] Built target controller_manager_msgs__cpp\n'}
+[20.743821] (-) TimerEvent: {}
+[20.800348] (controller_manager_msgs) StdoutLine: {'line': b'[  1%] \x1b[34m\x1b[1mGenerating C code for ROS interfaces\x1b[0m\n'}
+[20.843897] (-) TimerEvent: {}
+[20.945869] (-) TimerEvent: {}
+[21.046971] (-) TimerEvent: {}
+[21.147452] (-) TimerEvent: {}
+[21.252981] (-) TimerEvent: {}
+[21.353921] (-) TimerEvent: {}
+[21.460423] (-) TimerEvent: {}
+[21.561791] (-) TimerEvent: {}
+[21.662759] (-) TimerEvent: {}
+[21.763561] (-) TimerEvent: {}
+[21.870716] (-) TimerEvent: {}
+[21.971328] (-) TimerEvent: {}
+[22.081299] (-) TimerEvent: {}
+[22.181783] (-) TimerEvent: {}
+[22.285220] (-) TimerEvent: {}
+[22.385778] (-) TimerEvent: {}
+[22.490636] (-) TimerEvent: {}
+[22.598304] (-) TimerEvent: {}
+[22.698690] (-) TimerEvent: {}
+[22.816318] (-) TimerEvent: {}
+[22.918365] (-) TimerEvent: {}
+[23.028056] (-) TimerEvent: {}
+[23.135816] (-) TimerEvent: {}
+[23.243497] (-) TimerEvent: {}
+[23.347476] (-) TimerEvent: {}
+[23.448124] (-) TimerEvent: {}
+[23.552623] (-) TimerEvent: {}
+[23.659844] (-) TimerEvent: {}
+[23.760505] (-) TimerEvent: {}
+[23.866914] (-) TimerEvent: {}
+[23.976194] (-) TimerEvent: {}
+[24.077166] (-) TimerEvent: {}
+[24.182444] (-) TimerEvent: {}
+[24.283940] (-) TimerEvent: {}
+[24.390984] (-) TimerEvent: {}
+[24.494343] (-) TimerEvent: {}
+[24.595015] (-) TimerEvent: {}
+[24.696105] (-) TimerEvent: {}
+[24.797096] (-) TimerEvent: {}
+[24.906966] (-) TimerEvent: {}
+[25.008716] (-) TimerEvent: {}
+[25.111433] (-) TimerEvent: {}
+[25.214083] (-) TimerEvent: {}
+[25.334693] (-) TimerEvent: {}
+[25.435455] (-) TimerEvent: {}
+[25.540409] (-) TimerEvent: {}
+[25.641289] (-) TimerEvent: {}
+[25.746330] (-) TimerEvent: {}
+[25.849673] (-) TimerEvent: {}
+[25.950145] (-) TimerEvent: {}
+[26.051827] (-) TimerEvent: {}
+[26.152294] (-) TimerEvent: {}
+[26.258725] (-) TimerEvent: {}
+[26.359938] (-) TimerEvent: {}
+[26.461496] (-) TimerEvent: {}
+[26.562303] (-) TimerEvent: {}
+[26.672694] (-) TimerEvent: {}
+[26.774336] (-) TimerEvent: {}
+[26.878984] (-) TimerEvent: {}
+[26.979624] (-) TimerEvent: {}
+[27.084086] (-) TimerEvent: {}
+[27.185547] (-) TimerEvent: {}
+[27.286094] (-) TimerEvent: {}
+[27.391331] (-) TimerEvent: {}
+[27.494354] (-) TimerEvent: {}
+[27.596342] (-) TimerEvent: {}
+[27.697685] (-) TimerEvent: {}
+[27.801649] (-) TimerEvent: {}
+[27.905841] (-) TimerEvent: {}
+[28.006679] (-) TimerEvent: {}
+[28.113330] (-) TimerEvent: {}
+[28.214118] (-) TimerEvent: {}
+[28.314878] (-) TimerEvent: {}
+[28.436378] (-) TimerEvent: {}
+[28.537158] (-) TimerEvent: {}
+[28.552814] (hardware_interface) StdoutLine: {'line': b'[  8%] \x1b[32mBuilding CXX object CMakeFiles/hardware_interface.dir/src/resource_manager.cpp.o\x1b[0m\n'}
+[28.638423] (-) TimerEvent: {}
+[28.741134] (-) TimerEvent: {}
+[28.841663] (-) TimerEvent: {}
+[28.942249] (-) TimerEvent: {}
+[29.043708] (-) TimerEvent: {}
+[29.144220] (-) TimerEvent: {}
+[29.246722] (-) TimerEvent: {}
+[29.360110] (-) TimerEvent: {}
+[29.460484] (-) TimerEvent: {}
+[29.567340] (-) TimerEvent: {}
+[29.670902] (-) TimerEvent: {}
+[29.693884] (controller_manager_msgs) StdoutLine: {'line': b'\x1b[35m\x1b[1mScanning dependencies of target controller_manager_msgs__rosidl_generator_c\x1b[0m\n'}
+[29.771107] (-) TimerEvent: {}
+[29.818931] (controller_manager_msgs) StdoutLine: {'line': b'[  2%] \x1b[32mBuilding C object CMakeFiles/controller_manager_msgs__rosidl_generator_c.dir/rosidl_generator_c/controller_manager_msgs/msg/detail/controller_state__functions.c.o\x1b[0m\n'}
+[29.883518] (-) TimerEvent: {}
+[29.984199] (-) TimerEvent: {}
+[30.030881] (controller_manager_msgs) StdoutLine: {'line': b'[  2%] \x1b[32mBuilding C object CMakeFiles/controller_manager_msgs__rosidl_generator_c.dir/rosidl_generator_c/controller_manager_msgs/msg/detail/hardware_component_state__functions.c.o\x1b[0m\n'}
+[30.087846] (-) TimerEvent: {}
+[30.188391] (-) TimerEvent: {}
+[30.190607] (controller_manager_msgs) StdoutLine: {'line': b'[  3%] \x1b[32mBuilding C object CMakeFiles/controller_manager_msgs__rosidl_generator_c.dir/rosidl_generator_c/controller_manager_msgs/msg/detail/hardware_interface__functions.c.o\x1b[0m\n'}
+[30.288710] (-) TimerEvent: {}
+[30.390576] (-) TimerEvent: {}
+[30.418505] (controller_manager_msgs) StdoutLine: {'line': b'[  4%] \x1b[32mBuilding C object CMakeFiles/controller_manager_msgs__rosidl_generator_c.dir/rosidl_generator_c/controller_manager_msgs/srv/detail/configure_controller__functions.c.o\x1b[0m\n'}
+[30.493122] (-) TimerEvent: {}
+[30.594356] (-) TimerEvent: {}
+[30.624874] (controller_manager_msgs) StdoutLine: {'line': b'[  5%] \x1b[32mBuilding C object CMakeFiles/controller_manager_msgs__rosidl_generator_c.dir/rosidl_generator_c/controller_manager_msgs/srv/detail/list_controllers__functions.c.o\x1b[0m\n'}
+[30.694637] (-) TimerEvent: {}
+[30.798352] (-) TimerEvent: {}
+[30.830396] (controller_manager_msgs) StdoutLine: {'line': b'[  6%] \x1b[32mBuilding C object CMakeFiles/controller_manager_msgs__rosidl_generator_c.dir/rosidl_generator_c/controller_manager_msgs/srv/detail/list_controller_types__functions.c.o\x1b[0m\n'}
+[30.902582] (-) TimerEvent: {}
+[31.007726] (-) TimerEvent: {}
+[31.051499] (controller_manager_msgs) StdoutLine: {'line': b'[  6%] \x1b[32mBuilding C object CMakeFiles/controller_manager_msgs__rosidl_generator_c.dir/rosidl_generator_c/controller_manager_msgs/srv/detail/list_hardware_components__functions.c.o\x1b[0m\n'}
+[31.107778] (-) TimerEvent: {}
+[31.210457] (-) TimerEvent: {}
+[31.294731] (controller_manager_msgs) StdoutLine: {'line': b'[  7%] \x1b[32mBuilding C object CMakeFiles/controller_manager_msgs__rosidl_generator_c.dir/rosidl_generator_c/controller_manager_msgs/srv/detail/list_hardware_interfaces__functions.c.o\x1b[0m\n'}
+[31.310900] (-) TimerEvent: {}
+[31.414910] (-) TimerEvent: {}
+[31.517209] (-) TimerEvent: {}
+[31.541480] (controller_manager_msgs) StdoutLine: {'line': b'[  8%] \x1b[32mBuilding C object CMakeFiles/controller_manager_msgs__rosidl_generator_c.dir/rosidl_generator_c/controller_manager_msgs/srv/detail/load_controller__functions.c.o\x1b[0m\n'}
+[31.617450] (-) TimerEvent: {}
+[31.717931] (-) TimerEvent: {}
+[31.736009] (controller_manager_msgs) StdoutLine: {'line': b'[  9%] \x1b[32mBuilding C object CMakeFiles/controller_manager_msgs__rosidl_generator_c.dir/rosidl_generator_c/controller_manager_msgs/srv/detail/reload_controller_libraries__functions.c.o\x1b[0m\n'}
+[31.823302] (-) TimerEvent: {}
+[31.930721] (-) TimerEvent: {}
+[31.979143] (controller_manager_msgs) StdoutLine: {'line': b'[ 10%] \x1b[32mBuilding C object CMakeFiles/controller_manager_msgs__rosidl_generator_c.dir/rosidl_generator_c/controller_manager_msgs/srv/detail/set_hardware_component_state__functions.c.o\x1b[0m\n'}
+[32.033386] (-) TimerEvent: {}
+[32.134658] (controller_manager_msgs) StdoutLine: {'line': b'[ 10%] \x1b[32mBuilding C object CMakeFiles/controller_manager_msgs__rosidl_generator_c.dir/rosidl_generator_c/controller_manager_msgs/srv/detail/switch_controller__functions.c.o\x1b[0m\n'}
+[32.134883] (-) TimerEvent: {}
+[32.236606] (-) TimerEvent: {}
+[32.314998] (controller_manager_msgs) StdoutLine: {'line': b'[ 11%] \x1b[32mBuilding C object CMakeFiles/controller_manager_msgs__rosidl_generator_c.dir/rosidl_generator_c/controller_manager_msgs/srv/detail/unload_controller__functions.c.o\x1b[0m\n'}
+[32.339153] (-) TimerEvent: {}
+[32.454839] (-) TimerEvent: {}
+[32.538067] (controller_manager_msgs) StdoutLine: {'line': b'[ 12%] \x1b[32m\x1b[1mLinking C shared library libcontroller_manager_msgs__rosidl_generator_c.so\x1b[0m\n'}
+[32.555816] (-) TimerEvent: {}
+[32.657277] (-) TimerEvent: {}
+[32.735417] (controller_manager_msgs) StdoutLine: {'line': b'[ 12%] Built target controller_manager_msgs__rosidl_generator_c\n'}
+[32.757396] (-) TimerEvent: {}
+[32.791453] (controller_manager_msgs) StdoutLine: {'line': b'\x1b[35m\x1b[1mScanning dependencies of target ament_cmake_python_copy_controller_manager_msgs\x1b[0m\n'}
+[32.866244] (-) TimerEvent: {}
+[32.924746] (controller_manager_msgs) StdoutLine: {'line': b'[ 12%] Built target ament_cmake_python_copy_controller_manager_msgs\n'}
+[32.959511] (controller_manager_msgs) StdoutLine: {'line': b'[ 12%] \x1b[34m\x1b[1mGenerating C++ introspection for ROS interfaces\x1b[0m\n'}
+[32.966510] (-) TimerEvent: {}
+[33.067094] (-) TimerEvent: {}
+[33.167647] (-) TimerEvent: {}
+[33.269988] (-) TimerEvent: {}
+[33.371367] (-) TimerEvent: {}
+[33.472931] (-) TimerEvent: {}
+[33.573578] (-) TimerEvent: {}
+[33.674852] (-) TimerEvent: {}
+[33.775548] (-) TimerEvent: {}
+[33.882327] (-) TimerEvent: {}
+[33.983140] (-) TimerEvent: {}
+[34.086455] (-) TimerEvent: {}
+[34.189801] (-) TimerEvent: {}
+[34.299112] (-) TimerEvent: {}
+[34.400540] (-) TimerEvent: {}
+[34.502705] (-) TimerEvent: {}
+[34.605643] (-) TimerEvent: {}
+[34.708117] (-) TimerEvent: {}
+[34.809103] (-) TimerEvent: {}
+[34.910569] (-) TimerEvent: {}
+[35.011081] (-) TimerEvent: {}
+[35.113499] (-) TimerEvent: {}
+[35.214952] (-) TimerEvent: {}
+[35.315364] (-) TimerEvent: {}
+[35.418015] (-) TimerEvent: {}
+[35.519841] (-) TimerEvent: {}
+[35.621293] (-) TimerEvent: {}
+[35.722187] (-) TimerEvent: {}
+[35.823385] (-) TimerEvent: {}
+[35.925124] (-) TimerEvent: {}
+[36.026380] (-) TimerEvent: {}
+[36.128009] (-) TimerEvent: {}
+[36.231441] (-) TimerEvent: {}
+[36.332536] (-) TimerEvent: {}
+[36.436293] (-) TimerEvent: {}
+[36.536768] (-) TimerEvent: {}
+[36.638246] (-) TimerEvent: {}
+[36.740660] (-) TimerEvent: {}
+[36.844076] (-) TimerEvent: {}
+[36.946114] (-) TimerEvent: {}
+[37.048483] (-) TimerEvent: {}
+[37.150461] (-) TimerEvent: {}
+[37.252035] (-) TimerEvent: {}
+[37.354870] (-) TimerEvent: {}
+[37.457046] (-) TimerEvent: {}
+[37.559984] (-) TimerEvent: {}
+[37.661433] (-) TimerEvent: {}
+[37.761935] (-) TimerEvent: {}
+[37.864688] (-) TimerEvent: {}
+[37.966799] (-) TimerEvent: {}
+[38.067641] (-) TimerEvent: {}
+[38.168721] (-) TimerEvent: {}
+[38.269873] (-) TimerEvent: {}
+[38.370901] (-) TimerEvent: {}
+[38.474062] (-) TimerEvent: {}
+[38.577526] (-) TimerEvent: {}
+[38.678722] (-) TimerEvent: {}
+[38.781155] (-) TimerEvent: {}
+[38.890638] (-) TimerEvent: {}
+[38.992144] (-) TimerEvent: {}
+[39.095078] (-) TimerEvent: {}
+[39.197451] (-) TimerEvent: {}
+[39.299735] (-) TimerEvent: {}
+[39.400820] (-) TimerEvent: {}
+[39.502150] (-) TimerEvent: {}
+[39.604820] (-) TimerEvent: {}
+[39.705350] (-) TimerEvent: {}
+[39.807826] (-) TimerEvent: {}
+[39.916418] (-) TimerEvent: {}
+[40.017040] (-) TimerEvent: {}
+[40.119350] (-) TimerEvent: {}
+[40.215745] (controller_manager_msgs) StdoutLine: {'line': b'\x1b[35m\x1b[1mScanning dependencies of target controller_manager_msgs__rosidl_typesupport_introspection_cpp\x1b[0m\n'}
+[40.219516] (-) TimerEvent: {}
+[40.295554] (controller_manager_msgs) StdoutLine: {'line': b'[ 13%] \x1b[32mBuilding CXX object CMakeFiles/controller_manager_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/controller_manager_msgs/msg/detail/controller_state__type_support.cpp.o\x1b[0m\n'}
+[40.320405] (-) TimerEvent: {}
+[40.420735] (-) TimerEvent: {}
+[40.522377] (-) TimerEvent: {}
+[40.623783] (-) TimerEvent: {}
+[40.726200] (-) TimerEvent: {}
+[40.828721] (-) TimerEvent: {}
+[40.929125] (-) TimerEvent: {}
+[41.032552] (-) TimerEvent: {}
+[41.134987] (-) TimerEvent: {}
+[41.237748] (-) TimerEvent: {}
+[41.339817] (-) TimerEvent: {}
+[41.441688] (-) TimerEvent: {}
+[41.542318] (-) TimerEvent: {}
+[41.643733] (-) TimerEvent: {}
+[41.745718] (-) TimerEvent: {}
+[41.850317] (-) TimerEvent: {}
+[41.952531] (-) TimerEvent: {}
+[42.053024] (-) TimerEvent: {}
+[42.154305] (-) TimerEvent: {}
+[42.254959] (-) TimerEvent: {}
+[42.358418] (-) TimerEvent: {}
+[42.460263] (-) TimerEvent: {}
+[42.563099] (-) TimerEvent: {}
+[42.571791] (controller_manager_msgs) StdoutLine: {'line': b'[ 14%] \x1b[32mBuilding CXX object CMakeFiles/controller_manager_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/controller_manager_msgs/msg/detail/hardware_component_state__type_support.cpp.o\x1b[0m\n'}
+[42.663203] (-) TimerEvent: {}
+[42.763659] (-) TimerEvent: {}
+[42.867074] (-) TimerEvent: {}
+[42.970212] (-) TimerEvent: {}
+[43.072932] (-) TimerEvent: {}
+[43.173400] (-) TimerEvent: {}
+[43.276116] (-) TimerEvent: {}
+[43.377738] (-) TimerEvent: {}
+[43.478274] (-) TimerEvent: {}
+[43.581166] (-) TimerEvent: {}
+[43.681829] (-) TimerEvent: {}
+[43.784083] (-) TimerEvent: {}
+[43.884784] (-) TimerEvent: {}
+[43.986092] (-) TimerEvent: {}
+[44.089445] (-) TimerEvent: {}
+[44.192390] (-) TimerEvent: {}
+[44.293884] (-) TimerEvent: {}
+[44.396680] (-) TimerEvent: {}
+[44.499641] (-) TimerEvent: {}
+[44.601198] (-) TimerEvent: {}
+[44.702966] (-) TimerEvent: {}
+[44.805059] (-) TimerEvent: {}
+[44.905523] (-) TimerEvent: {}
+[44.924620] (controller_manager_msgs) StdoutLine: {'line': b'[ 15%] \x1b[32mBuilding CXX object CMakeFiles/controller_manager_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/controller_manager_msgs/msg/detail/hardware_interface__type_support.cpp.o\x1b[0m\n'}
+[45.005642] (-) TimerEvent: {}
+[45.110382] (-) TimerEvent: {}
+[45.211552] (-) TimerEvent: {}
+[45.327090] (-) TimerEvent: {}
+[45.430384] (-) TimerEvent: {}
+[45.534351] (-) TimerEvent: {}
+[45.639076] (-) TimerEvent: {}
+[45.742381] (-) TimerEvent: {}
+[45.854641] (-) TimerEvent: {}
+[45.966544] (-) TimerEvent: {}
+[46.068421] (-) TimerEvent: {}
+[46.169460] (-) TimerEvent: {}
+[46.270937] (-) TimerEvent: {}
+[46.371306] (-) TimerEvent: {}
+[46.479167] (-) TimerEvent: {}
+[46.534501] (controller_manager_msgs) StdoutLine: {'line': b'[ 16%] \x1b[32mBuilding CXX object CMakeFiles/controller_manager_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/controller_manager_msgs/srv/detail/configure_controller__type_support.cpp.o\x1b[0m\n'}
+[46.582344] (-) TimerEvent: {}
+[46.683191] (-) TimerEvent: {}
+[46.785165] (-) TimerEvent: {}
+[46.886647] (-) TimerEvent: {}
+[46.988129] (-) TimerEvent: {}
+[47.090258] (-) TimerEvent: {}
+[47.191082] (-) TimerEvent: {}
+[47.292449] (-) TimerEvent: {}
+[47.392949] (-) TimerEvent: {}
+[47.497456] (-) TimerEvent: {}
+[47.597884] (-) TimerEvent: {}
+[47.706345] (-) TimerEvent: {}
+[47.818329] (-) TimerEvent: {}
+[47.927650] (-) TimerEvent: {}
+[48.034699] (-) TimerEvent: {}
+[48.073307] (controller_manager_msgs) StdoutLine: {'line': b'[ 16%] \x1b[32mBuilding CXX object CMakeFiles/controller_manager_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/controller_manager_msgs/srv/detail/list_controllers__type_support.cpp.o\x1b[0m\n'}
+[48.138351] (-) TimerEvent: {}
+[48.239025] (-) TimerEvent: {}
+[48.340885] (-) TimerEvent: {}
+[48.441368] (-) TimerEvent: {}
+[48.542348] (-) TimerEvent: {}
+[48.643286] (-) TimerEvent: {}
+[48.744290] (-) TimerEvent: {}
+[48.847227] (-) TimerEvent: {}
+[48.950610] (-) TimerEvent: {}
+[49.052322] (-) TimerEvent: {}
+[49.152745] (-) TimerEvent: {}
+[49.254152] (-) TimerEvent: {}
+[49.355267] (-) TimerEvent: {}
+[49.456151] (-) TimerEvent: {}
+[49.558458] (-) TimerEvent: {}
+[49.659290] (-) TimerEvent: {}
+[49.759755] (-) TimerEvent: {}
+[49.861491] (-) TimerEvent: {}
+[49.965115] (-) TimerEvent: {}
+[50.067242] (-) TimerEvent: {}
+[50.112781] (hardware_interface) StdoutLine: {'line': b'[ 10%] \x1b[32mBuilding CXX object CMakeFiles/hardware_interface.dir/src/sensor.cpp.o\x1b[0m\n'}
+[50.167641] (-) TimerEvent: {}
+[50.268789] (-) TimerEvent: {}
+[50.308553] (controller_manager_msgs) StdoutLine: {'line': b'[ 17%] \x1b[32mBuilding CXX object CMakeFiles/controller_manager_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/controller_manager_msgs/srv/detail/list_controller_types__type_support.cpp.o\x1b[0m\n'}
+[50.369073] (-) TimerEvent: {}
+[50.470443] (-) TimerEvent: {}
+[50.571649] (-) TimerEvent: {}
+[50.673885] (-) TimerEvent: {}
+[50.776780] (-) TimerEvent: {}
+[50.878430] (-) TimerEvent: {}
+[50.980019] (-) TimerEvent: {}
+[51.080944] (-) TimerEvent: {}
+[51.182143] (-) TimerEvent: {}
+[51.283228] (-) TimerEvent: {}
+[51.385839] (-) TimerEvent: {}
+[51.489627] (-) TimerEvent: {}
+[51.594484] (-) TimerEvent: {}
+[51.694961] (-) TimerEvent: {}
+[51.801943] (-) TimerEvent: {}
+[51.902920] (-) TimerEvent: {}
+[52.004011] (-) TimerEvent: {}
+[52.106336] (-) TimerEvent: {}
+[52.214338] (-) TimerEvent: {}
+[52.314802] (-) TimerEvent: {}
+[52.415127] (-) TimerEvent: {}
+[52.518346] (-) TimerEvent: {}
+[52.618824] (-) TimerEvent: {}
+[52.639288] (controller_manager_msgs) StdoutLine: {'line': b'[ 18%] \x1b[32mBuilding CXX object CMakeFiles/controller_manager_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/controller_manager_msgs/srv/detail/list_hardware_components__type_support.cpp.o\x1b[0m\n'}
+[52.719302] (-) TimerEvent: {}
+[52.823921] (-) TimerEvent: {}
+[52.934032] (-) TimerEvent: {}
+[53.043415] (-) TimerEvent: {}
+[53.144588] (-) TimerEvent: {}
+[53.246807] (-) TimerEvent: {}
+[53.350829] (-) TimerEvent: {}
+[53.452475] (-) TimerEvent: {}
+[53.555380] (-) TimerEvent: {}
+[53.582437] (hardware_interface) StdoutLine: {'line': b'[ 13%] \x1b[32mBuilding CXX object CMakeFiles/hardware_interface.dir/src/system.cpp.o\x1b[0m\n'}
+[53.655573] (-) TimerEvent: {}
+[53.756103] (-) TimerEvent: {}
+[53.859519] (-) TimerEvent: {}
+[53.960104] (-) TimerEvent: {}
+[54.038424] (controller_manager_msgs) StdoutLine: {'line': b'[ 19%] \x1b[32mBuilding CXX object CMakeFiles/controller_manager_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/controller_manager_msgs/srv/detail/list_hardware_interfaces__type_support.cpp.o\x1b[0m\n'}
+[54.061303] (-) TimerEvent: {}
+[54.170790] (-) TimerEvent: {}
+[54.271319] (-) TimerEvent: {}
+[54.379150] (-) TimerEvent: {}
+[54.479575] (-) TimerEvent: {}
+[54.580107] (-) TimerEvent: {}
+[54.683523] (-) TimerEvent: {}
+[54.786474] (-) TimerEvent: {}
+[54.892700] (-) TimerEvent: {}
+[54.998347] (-) TimerEvent: {}
+[55.102057] (-) TimerEvent: {}
+[55.207282] (-) TimerEvent: {}
+[55.307552] (-) TimerEvent: {}
+[55.414341] (-) TimerEvent: {}
+[55.521041] (-) TimerEvent: {}
+[55.629346] (-) TimerEvent: {}
+[55.729847] (-) TimerEvent: {}
+[55.830406] (-) TimerEvent: {}
+[55.892733] (controller_manager_msgs) StdoutLine: {'line': b'[ 20%] \x1b[32mBuilding CXX object CMakeFiles/controller_manager_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/controller_manager_msgs/srv/detail/load_controller__type_support.cpp.o\x1b[0m\n'}
+[55.935346] (-) TimerEvent: {}
+[56.035877] (-) TimerEvent: {}
+[56.137375] (-) TimerEvent: {}
+[56.237716] (-) TimerEvent: {}
+[56.338225] (-) TimerEvent: {}
+[56.447976] (-) TimerEvent: {}
+[56.550317] (-) TimerEvent: {}
+[56.651939] (-) TimerEvent: {}
+[56.763096] (-) TimerEvent: {}
+[56.798906] (hardware_interface) StdoutLine: {'line': b'[ 16%] \x1b[32m\x1b[1mLinking CXX shared library libhardware_interface.so\x1b[0m\n'}
+[56.863182] (-) TimerEvent: {}
+[56.963663] (-) TimerEvent: {}
+[57.064539] (-) TimerEvent: {}
+[57.166147] (-) TimerEvent: {}
+[57.266954] (-) TimerEvent: {}
+[57.367855] (-) TimerEvent: {}
+[57.471806] (-) TimerEvent: {}
+[57.575031] (-) TimerEvent: {}
+[57.676457] (-) TimerEvent: {}
+[57.777145] (-) TimerEvent: {}
+[57.860867] (controller_manager_msgs) StdoutLine: {'line': b'[ 20%] \x1b[32mBuilding CXX object CMakeFiles/controller_manager_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/controller_manager_msgs/srv/detail/reload_controller_libraries__type_support.cpp.o\x1b[0m\n'}
+[57.877493] (-) TimerEvent: {}
+[57.977886] (-) TimerEvent: {}
+[58.078904] (-) TimerEvent: {}
+[58.179969] (-) TimerEvent: {}
+[58.280465] (-) TimerEvent: {}
+[58.338469] (hardware_interface) StdoutLine: {'line': b'[ 16%] Built target hardware_interface\n'}
+[58.393697] (-) TimerEvent: {}
+[58.430823] (hardware_interface) StdoutLine: {'line': b'\x1b[35m\x1b[1mScanning dependencies of target gmock\x1b[0m\n'}
+[58.493837] (-) TimerEvent: {}
+[58.594227] (-) TimerEvent: {}
+[58.627348] (hardware_interface) StdoutLine: {'line': b'[ 18%] \x1b[32mBuilding CXX object gmock/CMakeFiles/gmock.dir/opt/ros/rolling/src/gtest_vendor/src/gtest-all.cc.o\x1b[0m\n'}
+[58.698188] (-) TimerEvent: {}
+[58.798627] (-) TimerEvent: {}
+[58.906299] (-) TimerEvent: {}
+[59.006836] (-) TimerEvent: {}
+[59.111207] (-) TimerEvent: {}
+[59.212033] (-) TimerEvent: {}
+[59.315393] (-) TimerEvent: {}
+[59.415828] (-) TimerEvent: {}
+[59.525346] (-) TimerEvent: {}
+[59.625807] (-) TimerEvent: {}
+[59.726330] (-) TimerEvent: {}
+[59.827173] (-) TimerEvent: {}
+[59.876412] (controller_manager_msgs) StdoutLine: {'line': b'[ 21%] \x1b[32mBuilding CXX object CMakeFiles/controller_manager_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/controller_manager_msgs/srv/detail/set_hardware_component_state__type_support.cpp.o\x1b[0m\n'}
+[59.930491] (-) TimerEvent: {}
+[60.036462] (-) TimerEvent: {}
+[60.137040] (-) TimerEvent: {}
+[60.243383] (-) TimerEvent: {}
+[60.346787] (-) TimerEvent: {}
+[60.452604] (-) TimerEvent: {}
+[60.559171] (-) TimerEvent: {}
+[60.663090] (-) TimerEvent: {}
+[60.770050] (-) TimerEvent: {}
+[60.870552] (-) TimerEvent: {}
+[60.980446] (-) TimerEvent: {}
+[61.087188] (-) TimerEvent: {}
+[61.187676] (-) TimerEvent: {}
+[61.288388] (-) TimerEvent: {}
+[61.389169] (-) TimerEvent: {}
+[61.492021] (-) TimerEvent: {}
+[61.583472] (controller_manager_msgs) StdoutLine: {'line': b'[ 22%] \x1b[32mBuilding CXX object CMakeFiles/controller_manager_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/controller_manager_msgs/srv/detail/switch_controller__type_support.cpp.o\x1b[0m\n'}
+[61.593458] (-) TimerEvent: {}
+[61.694905] (-) TimerEvent: {}
+[61.795857] (-) TimerEvent: {}
+[61.896432] (-) TimerEvent: {}
+[61.996781] (-) TimerEvent: {}
+[62.097523] (-) TimerEvent: {}
+[62.199420] (-) TimerEvent: {}
+[62.299894] (-) TimerEvent: {}
+[62.400590] (-) TimerEvent: {}
+[62.501428] (-) TimerEvent: {}
+[62.601964] (-) TimerEvent: {}
+[62.704169] (-) TimerEvent: {}
+[62.805063] (-) TimerEvent: {}
+[62.905802] (-) TimerEvent: {}
+[63.006185] (-) TimerEvent: {}
+[63.115097] (-) TimerEvent: {}
+[63.216540] (-) TimerEvent: {}
+[63.316974] (-) TimerEvent: {}
+[63.417530] (-) TimerEvent: {}
+[63.517910] (-) TimerEvent: {}
+[63.620180] (-) TimerEvent: {}
+[63.675730] (controller_manager_msgs) StdoutLine: {'line': b'[ 23%] \x1b[32mBuilding CXX object CMakeFiles/controller_manager_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/controller_manager_msgs/srv/detail/unload_controller__type_support.cpp.o\x1b[0m\n'}
+[63.723264] (-) TimerEvent: {}
+[63.827502] (-) TimerEvent: {}
+[63.929052] (-) TimerEvent: {}
+[64.051390] (-) TimerEvent: {}
+[64.152337] (-) TimerEvent: {}
+[64.253838] (-) TimerEvent: {}
+[64.355484] (-) TimerEvent: {}
+[64.457934] (-) TimerEvent: {}
+[64.562489] (-) TimerEvent: {}
+[64.666101] (-) TimerEvent: {}
+[64.768239] (-) TimerEvent: {}
+[64.868833] (-) TimerEvent: {}
+[64.969253] (-) TimerEvent: {}
+[65.070650] (-) TimerEvent: {}
+[65.183504] (-) TimerEvent: {}
+[65.298620] (-) TimerEvent: {}
+[65.402450] (-) TimerEvent: {}
+[65.405508] (controller_manager_msgs) StdoutLine: {'line': b'[ 24%] \x1b[32m\x1b[1mLinking CXX shared library libcontroller_manager_msgs__rosidl_typesupport_introspection_cpp.so\x1b[0m\n'}
+[65.502719] (-) TimerEvent: {}
+[65.614774] (-) TimerEvent: {}
+[65.716547] (-) TimerEvent: {}
+[65.819312] (-) TimerEvent: {}
+[65.845014] (controller_manager_msgs) StdoutLine: {'line': b'[ 24%] Built target controller_manager_msgs__rosidl_typesupport_introspection_cpp\n'}
+[65.888100] (controller_manager_msgs) StdoutLine: {'line': b'[ 25%] \x1b[34m\x1b[1mGenerating C++ type support dispatch for ROS interfaces\x1b[0m\n'}
+[65.920103] (-) TimerEvent: {}
+[66.020701] (-) TimerEvent: {}
+[66.128801] (-) TimerEvent: {}
+[66.229316] (-) TimerEvent: {}
+[66.332622] (-) TimerEvent: {}
+[66.434866] (-) TimerEvent: {}
+[66.536126] (-) TimerEvent: {}
+[66.638506] (-) TimerEvent: {}
+[66.740462] (-) TimerEvent: {}
+[66.841266] (-) TimerEvent: {}
+[66.947028] (-) TimerEvent: {}
+[67.047974] (-) TimerEvent: {}
+[67.148475] (-) TimerEvent: {}
+[67.254315] (-) TimerEvent: {}
+[67.354658] (-) TimerEvent: {}
+[67.465554] (-) TimerEvent: {}
+[67.567255] (-) TimerEvent: {}
+[67.668363] (-) TimerEvent: {}
+[67.770083] (-) TimerEvent: {}
+[67.874359] (-) TimerEvent: {}
+[67.975607] (-) TimerEvent: {}
+[68.082627] (-) TimerEvent: {}
+[68.183718] (-) TimerEvent: {}
+[68.284358] (-) TimerEvent: {}
+[68.390582] (-) TimerEvent: {}
+[68.491149] (-) TimerEvent: {}
+[68.598312] (-) TimerEvent: {}
+[68.642601] (controller_manager_msgs) StderrLine: {'line': b"make[2]: *** Deleting file 'rosidl_typesupport_cpp/controller_manager_msgs/msg/controller_state__type_support.cpp'\n"}
+[68.642843] (controller_manager_msgs) StderrLine: {'line': b'Traceback (most recent call last):\n'}
+[68.642944] (controller_manager_msgs) StderrLine: {'line': b'  File "/opt/ros/rolling/lib/rosidl_typesupport_cpp/rosidl_typesupport_cpp", line 28, in <module>\n'}
+[68.643041] (controller_manager_msgs) StderrLine: {'line': b'    sys.exit(main())\n'}
+[68.643135] (controller_manager_msgs) StderrLine: {'line': b'  File "/opt/ros/rolling/lib/rosidl_typesupport_cpp/rosidl_typesupport_cpp", line 24, in main\n'}
+[68.643228] (controller_manager_msgs) StderrLine: {'line': b'    generate_cpp(args.generator_arguments_file, args.typesupports)\n'}
+[68.643349] (controller_manager_msgs) StderrLine: {'line': b'  File "/opt/ros/rolling/lib/python3.8/site-packages/rosidl_typesupport_cpp/__init__.py", line 28, in generate_cpp\n'}
+[68.643459] (controller_manager_msgs) StderrLine: {'line': b'    return generate_files(\n'}
+[68.643578] (controller_manager_msgs) StderrLine: {'line': b'  File "/opt/ros/rolling/lib/python3.8/site-packages/rosidl_cmake/__init__.py", line 87, in generate_files\n'}
+[68.643678] (controller_manager_msgs) StderrLine: {'line': b'    expand_template(\n'}
+[68.643770] (controller_manager_msgs) StderrLine: {'line': b'  File "/opt/ros/rolling/lib/python3.8/site-packages/rosidl_cmake/__init__.py", line 149, in expand_template\n'}
+[68.643863] (controller_manager_msgs) StderrLine: {'line': b'    interpreter.string(template_content, template_path, locals=data)\n'}
+[68.643955] (controller_manager_msgs) StderrLine: {'line': b'  File "/usr/lib/python3/dist-packages/em.py", line 2391, in string\n'}
+[68.644047] (controller_manager_msgs) StderrLine: {'line': b'    self.safe(scanner, True, locals)\n'}
+[68.644139] (controller_manager_msgs) StderrLine: {'line': b'  File "/usr/lib/python3/dist-packages/em.py", line 2401, in safe\n'}
+[68.644231] (controller_manager_msgs) StderrLine: {'line': b'    self.parse(scanner, locals)\n'}
+[68.644322] (controller_manager_msgs) StderrLine: {'line': b'  File "/usr/lib/python3/dist-packages/em.py", line 2417, in parse\n'}
+[68.644420] (controller_manager_msgs) StderrLine: {'line': b'    token = scanner.one()\n'}
+[68.644540] (controller_manager_msgs) StderrLine: {'line': b'  File "/usr/lib/python3/dist-packages/em.py", line 1984, in one\n'}
+[68.644635] (controller_manager_msgs) StderrLine: {'line': b'    token.scan(self)\n'}
+[68.644726] (controller_manager_msgs) StderrLine: {'line': b'  File "/usr/lib/python3/dist-packages/em.py", line 1309, in scan\n'}
+[68.644818] (hardware_interface) StderrLine: {'line': b'make[2]: *** [gmock/CMakeFiles/gmock.dir/build.make:63: gmock/CMakeFiles/gmock.dir/opt/ros/rolling/src/gtest_vendor/src/gtest-all.cc.o] Interrupt\n'}
+[68.664531] (hardware_interface) StderrLine: {'line': b'make[1]: *** [CMakeFiles/Makefile2:530: gmock/CMakeFiles/gmock.dir/all] Interrupt\n'}
+[68.664814] (controller_manager_msgs) StderrLine: {'line': b"    z = scanner.complex('(', ')', 0)\n"}
+[68.664960] (controller_manager_msgs) StderrLine: {'line': b'  File "/usr/lib/python3/dist-packages/em.py", line 1893, in complex\n'}
+[68.665065] (controller_manager_msgs) StderrLine: {'line': b'    newQuote = self.check(i, quote)\n'}
+[68.665159] (controller_manager_msgs) StderrLine: {'line': b'  File "/usr/lib/python3/dist-packages/em.py", line 1766, in check\n'}
+[68.665252] (controller_manager_msgs) StderrLine: {'line': b'    if self[i] in \'\\\'\\"\':\n'}
+[68.665344] (controller_manager_msgs) StderrLine: {'line': b'KeyboardInterrupt\n'}
+[68.665436] (hardware_interface) StderrLine: {'line': b'make: *** [Makefile:141: all] Interrupt\n'}
+[68.695485] (hardware_interface) CommandEnded: {'returncode': -2}
+[68.703873] (-) TimerEvent: {}
+[68.722620] (controller_manager_msgs) StderrLine: {'line': b'Exception ignored in: <function Interpreter.__del__ at 0x7fe048689a60>\n'}
+[68.722915] (controller_manager_msgs) StderrLine: {'line': b'Traceback (most recent call last):\n'}
+[68.723021] (controller_manager_msgs) StderrLine: {'line': b'  File "/usr/lib/python3/dist-packages/em.py", line 2094, in __del__\n'}
+[68.723118] (controller_manager_msgs) StderrLine: {'line': b'  File "/usr/lib/python3/dist-packages/em.py", line 2157, in shutdown\n'}
+[68.723251] (controller_manager_msgs) StderrLine: {'line': b'  File "/usr/lib/python3/dist-packages/em.py", line 2646, in finalize\n'}
+[68.723349] (controller_manager_msgs) StderrLine: {'line': b'  File "/usr/lib/python3/dist-packages/em.py", line 2200, in push\n'}
+[68.723459] (controller_manager_msgs) StderrLine: {'line': b"AttributeError: '_io.TextIOWrapper' object has no attribute 'push'\n"}
+[68.750466] (controller_manager_msgs) StderrLine: {'line': b'make[2]: *** [CMakeFiles/controller_manager_msgs__rosidl_typesupport_cpp.dir/build.make:90: rosidl_typesupport_cpp/controller_manager_msgs/msg/controller_state__type_support.cpp] Interrupt\n'}
+[68.752022] (controller_manager_msgs) StderrLine: {'line': b'make[1]: *** [CMakeFiles/Makefile2:326: CMakeFiles/controller_manager_msgs__rosidl_typesupport_cpp.dir/all] Interrupt\n'}
+[68.752158] (controller_manager_msgs) StderrLine: {'line': b'make: *** [Makefile:141: all] Interrupt\n'}
+[68.752851] (controller_manager_msgs) CommandEnded: {'returncode': -2}
+[68.804180] (-) TimerEvent: {}
+[68.904589] (-) TimerEvent: {}
+[69.005018] (-) TimerEvent: {}
+[69.107609] (-) TimerEvent: {}
+[69.131517] (hardware_interface) JobEnded: {'identifier': 'hardware_interface', 'rc': 'SIGINT'}
+[69.207724] (-) TimerEvent: {}
+[69.308326] (-) TimerEvent: {}
+[69.408765] (-) TimerEvent: {}
+[69.429684] (controller_manager_msgs) JobEnded: {'identifier': 'controller_manager_msgs', 'rc': 'SIGINT'}
+[69.440424] (joint_limits) JobSkipped: {'identifier': 'joint_limits'}
+[69.440505] (controller_interface) JobSkipped: {'identifier': 'controller_interface'}
+[69.440547] (transmission_interface) JobSkipped: {'identifier': 'transmission_interface'}
+[69.440582] (controller_manager) JobSkipped: {'identifier': 'controller_manager'}
+[69.440619] (ros2controlcli) JobSkipped: {'identifier': 'ros2controlcli'}
+[69.440653] (ros2_control) JobSkipped: {'identifier': 'ros2_control'}
+[69.440687] (-) EventReactorShutdown: {}

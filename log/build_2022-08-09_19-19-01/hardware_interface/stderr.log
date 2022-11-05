@@ -1,0 +1,3 @@
+make[2]: *** [gmock/CMakeFiles/gmock.dir/build.make:63: gmock/CMakeFiles/gmock.dir/opt/ros/rolling/src/gtest_vendor/src/gtest-all.cc.o] Interrupt
+make[1]: *** [CMakeFiles/Makefile2:530: gmock/CMakeFiles/gmock.dir/all] Interrupt
+make: *** [Makefile:141: all] Interrupt

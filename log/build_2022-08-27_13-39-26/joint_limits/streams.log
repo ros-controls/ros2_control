@@ -1,0 +1,87 @@
+[0.046s] Invoking command in '/home/vx792/ros2_ws/src/ros-controls/ros2_control/build/joint_limits': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/vx792/ros2_ws/src/ros-controls/install/ros2controlcli:/home/vx792/ros2_ws/src/ros-controls/install/ros2_controllers_test_nodes:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_test_nodes:/opt/ros/rolling /usr/bin/cmake /home/vx792/ros2_ws/src/ros-controls/ros2_control/joint_limits -DCMAKE_INSTALL_PREFIX=/home/vx792/ros2_ws/src/ros-controls/ros2_control/install/joint_limits
+[0.322s] -- The C compiler identification is GNU 9.4.0
+[0.561s] -- The CXX compiler identification is GNU 9.4.0
+[0.587s] -- Check for working C compiler: /usr/bin/cc
+[0.756s] -- Check for working C compiler: /usr/bin/cc -- works
+[0.757s] -- Detecting C compiler ABI info
+[0.954s] -- Detecting C compiler ABI info - done
+[1.007s] -- Detecting C compile features
+[1.007s] -- Detecting C compile features - done
+[1.007s] -- Check for working CXX compiler: /usr/bin/c++
+[1.203s] -- Check for working CXX compiler: /usr/bin/c++ -- works
+[1.203s] -- Detecting CXX compiler ABI info
+[1.355s] -- Detecting CXX compiler ABI info - done
+[1.378s] -- Detecting CXX compile features
+[1.379s] -- Detecting CXX compile features - done
+[1.386s] -- Found ament_cmake: 1.2.1 (/opt/ros/rolling/share/ament_cmake/cmake)
+[1.835s] -- Found Python3: /usr/bin/python3.8 (found version "3.8.10") found components: Interpreter 
+[2.163s] -- Found rclcpp: 15.0.0 (/opt/ros/rolling/share/rclcpp/cmake)
+[2.349s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[2.350s] -- Found rosidl_adapter: 3.0.1 (/opt/ros/rolling/share/rosidl_adapter/cmake)
+[2.507s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[2.739s] -- Found rmw_implementation_cmake: 5.1.0 (/opt/ros/rolling/share/rmw_implementation_cmake/cmake)
+[2.752s] -- Found rmw_cyclonedds_cpp: 1.1.2 (/opt/ros/rolling/share/rmw_cyclonedds_cpp/cmake)
+[2.822s] -- Using RMW implementation 'rmw_cyclonedds_cpp' as default
+[3.287s] -- Found rclcpp_lifecycle: 15.0.0 (/opt/ros/rolling/share/rclcpp_lifecycle/cmake)
+[3.381s] -- Found ament_cmake_gtest: 1.2.1 (/opt/ros/rolling/share/ament_cmake_gtest/cmake)
+[3.388s] -- Found launch_testing_ament_cmake: 0.21.0 (/opt/ros/rolling/share/launch_testing_ament_cmake/cmake)
+[3.393s] -- Found python_cmake_module: 0.8.1 (/opt/ros/rolling/share/python_cmake_module/cmake)
+[3.443s] -- Found PythonInterp: /usr/bin/python3 (found suitable version "3.8.10", minimum required is "3.5") 
+[3.458s] -- Found PythonLibs: /usr/lib/x86_64-linux-gnu/libpython3.8.so (found suitable version "3.8.10", minimum required is "3.5") 
+[3.467s] -- Using PYTHON_EXECUTABLE: /usr/bin/python3
+[3.467s] -- Using PYTHON_INCLUDE_DIRS: /usr/include/python3.8
+[3.467s] -- Using PYTHON_LIBRARIES: /usr/lib/x86_64-linux-gnu/libpython3.8.so
+[3.565s] -- Found PythonExtra: .so  
+[3.587s] -- Found gtest sources under '/opt/ros/rolling/src/gtest_vendor': C++ tests using 'Google Test' will be built
+[3.596s] -- Looking for pthread.h
+[3.841s] -- Looking for pthread.h - found
+[3.841s] -- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+[4.012s] -- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Failed
+[4.013s] -- Check if compiler accepts -pthread
+[4.307s] -- Check if compiler accepts -pthread - yes
+[4.307s] -- Found Threads: TRUE  
+[4.535s] -- Configuring done
+[4.572s] -- Generating done
+[4.583s] -- Build files have been written to: /home/vx792/ros2_ws/src/ros-controls/ros2_control/build/joint_limits
+[4.590s] Invoked command in '/home/vx792/ros2_ws/src/ros-controls/ros2_control/build/joint_limits' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/vx792/ros2_ws/src/ros-controls/install/ros2controlcli:/home/vx792/ros2_ws/src/ros-controls/install/ros2_controllers_test_nodes:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_test_nodes:/opt/ros/rolling /usr/bin/cmake /home/vx792/ros2_ws/src/ros-controls/ros2_control/joint_limits -DCMAKE_INSTALL_PREFIX=/home/vx792/ros2_ws/src/ros-controls/ros2_control/install/joint_limits
+[4.599s] Invoking command in '/home/vx792/ros2_ws/src/ros-controls/ros2_control/build/joint_limits': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/vx792/ros2_ws/src/ros-controls/install/ros2controlcli:/home/vx792/ros2_ws/src/ros-controls/install/ros2_controllers_test_nodes:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_test_nodes:/opt/ros/rolling /usr/bin/cmake --build /home/vx792/ros2_ws/src/ros-controls/ros2_control/build/joint_limits -- -j2 -l2
+[4.728s] [35m[1mScanning dependencies of target gtest[0m
+[4.798s] [ 16%] [32mBuilding CXX object gtest/CMakeFiles/gtest.dir/src/gtest-all.cc.o[0m
+[12.734s] [ 33%] [32m[1mLinking CXX static library libgtest.a[0m
+[12.935s] [ 33%] Built target gtest
+[12.984s] [35m[1mScanning dependencies of target gtest_main[0m
+[13.053s] [ 50%] [32mBuilding CXX object gtest/CMakeFiles/gtest_main.dir/src/gtest_main.cc.o[0m
+[14.944s] [ 66%] [32m[1mLinking CXX static library libgtest_main.a[0m
+[15.044s] [ 66%] Built target gtest_main
+[15.083s] [35m[1mScanning dependencies of target joint_limits_rosparam_test[0m
+[15.227s] [ 83%] [32mBuilding CXX object CMakeFiles/joint_limits_rosparam_test.dir/test/joint_limits_rosparam_test.cpp.o[0m
+[26.203s] [100%] [32m[1mLinking CXX executable joint_limits_rosparam_test[0m
+[26.811s] [100%] Built target joint_limits_rosparam_test
+[26.860s] Invoked command in '/home/vx792/ros2_ws/src/ros-controls/ros2_control/build/joint_limits' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/vx792/ros2_ws/src/ros-controls/install/ros2controlcli:/home/vx792/ros2_ws/src/ros-controls/install/ros2_controllers_test_nodes:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_test_nodes:/opt/ros/rolling /usr/bin/cmake --build /home/vx792/ros2_ws/src/ros-controls/ros2_control/build/joint_limits -- -j2 -l2
+[27.053s] Invoking command in '/home/vx792/ros2_ws/src/ros-controls/ros2_control/build/joint_limits': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/vx792/ros2_ws/src/ros-controls/install/ros2controlcli:/home/vx792/ros2_ws/src/ros-controls/install/ros2_controllers_test_nodes:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_test_nodes:/opt/ros/rolling /usr/bin/cmake --install /home/vx792/ros2_ws/src/ros-controls/ros2_control/build/joint_limits
+[27.093s] -- Install configuration: ""
+[27.099s] -- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/joint_limits/include
+[27.100s] -- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/joint_limits/include/joint_limits
+[27.100s] -- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/joint_limits/include/joint_limits/joint_limits.hpp
+[27.101s] -- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/joint_limits/include/joint_limits/joint_limits_rosparam.hpp
+[27.102s] -- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/joint_limits/lib/joint_limits/joint_limits_rosparam_test
+[27.106s] -- Set runtime path of "/home/vx792/ros2_ws/src/ros-controls/ros2_control/install/joint_limits/lib/joint_limits/joint_limits_rosparam_test" to ""
+[27.111s] -- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/joint_limits/share/joint_limits/test/joint_limits_rosparam.yaml
+[27.113s] -- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/joint_limits/share/ament_index/resource_index/package_run_dependencies/joint_limits
+[27.114s] -- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/joint_limits/share/ament_index/resource_index/parent_prefix_path/joint_limits
+[27.115s] -- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/joint_limits/share/joint_limits/environment/ament_prefix_path.sh
+[27.115s] -- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/joint_limits/share/joint_limits/environment/ament_prefix_path.dsv
+[27.116s] -- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/joint_limits/share/joint_limits/environment/path.sh
+[27.117s] -- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/joint_limits/share/joint_limits/environment/path.dsv
+[27.117s] -- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/joint_limits/share/joint_limits/local_setup.bash
+[27.118s] -- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/joint_limits/share/joint_limits/local_setup.sh
+[27.119s] -- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/joint_limits/share/joint_limits/local_setup.zsh
+[27.120s] -- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/joint_limits/share/joint_limits/local_setup.dsv
+[27.120s] -- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/joint_limits/share/joint_limits/package.dsv
+[27.121s] -- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/joint_limits/share/ament_index/resource_index/packages/joint_limits
+[27.122s] -- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/joint_limits/share/joint_limits/cmake/ament_cmake_export_dependencies-extras.cmake
+[27.122s] -- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/joint_limits/share/joint_limits/cmake/ament_cmake_export_include_directories-extras.cmake
+[27.123s] -- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/joint_limits/share/joint_limits/cmake/joint_limitsConfig.cmake
+[27.124s] -- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/joint_limits/share/joint_limits/cmake/joint_limitsConfig-version.cmake
+[27.125s] -- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/joint_limits/share/joint_limits/package.xml
+[27.137s] Invoked command in '/home/vx792/ros2_ws/src/ros-controls/ros2_control/build/joint_limits' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/vx792/ros2_ws/src/ros-controls/install/ros2controlcli:/home/vx792/ros2_ws/src/ros-controls/install/ros2_controllers_test_nodes:/home/vx792/ros2_ws/src/ros-controls/install/ros2_control_test_nodes:/opt/ros/rolling /usr/bin/cmake --install /home/vx792/ros2_ws/src/ros-controls/ros2_control/build/joint_limits

@@ -122,6 +122,7 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_one_interface)
 
   EXPECT_EQ(hardware_info.name, "RRBotSystemPositionOnly");
   EXPECT_EQ(hardware_info.type, "system");
+  EXPECT_EQ(hardware_info.is_asynch, true);
   EXPECT_EQ(
     hardware_info.hardware_class_type,
     "ros2_control_demo_hardware/RRBotSystemPositionOnlyHardware");
@@ -161,6 +162,7 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_multi_interface
 
   EXPECT_EQ(hardware_info.name, "RRBotSystemMultiInterface");
   EXPECT_EQ(hardware_info.type, "system");
+  EXPECT_EQ(hardware_info.is_asynch, true);
   EXPECT_EQ(
     hardware_info.hardware_class_type,
     "ros2_control_demo_hardware/RRBotSystemMultiInterfaceHardware");
@@ -198,6 +200,7 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_robot_with_sens
 
   EXPECT_EQ(hardware_info.name, "RRBotSystemWithSensor");
   EXPECT_EQ(hardware_info.type, "system");
+  EXPECT_EQ(hardware_info.is_asynch, false);
   EXPECT_EQ(
     hardware_info.hardware_class_type, "ros2_control_demo_hardware/RRBotSystemWithSensorHardware");
   ASSERT_THAT(hardware_info.hardware_parameters, SizeIs(2));
@@ -242,6 +245,7 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_robot_with_exte
 
   EXPECT_EQ(hardware_info.name, "RRBotSystemPositionOnlyWithExternalSensor");
   EXPECT_EQ(hardware_info.type, "system");
+  EXPECT_EQ(hardware_info.is_asynch, false);
   EXPECT_EQ(
     hardware_info.hardware_class_type,
     "ros2_control_demo_hardware/RRBotSystemPositionOnlyHardware");
@@ -520,6 +524,7 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_robot_with_gpio
 
   EXPECT_EQ(hardware_info.name, "RRBotSystemWithGPIO");
   EXPECT_EQ(hardware_info.type, "system");
+  EXPECT_EQ(hardware_info.is_asynch, false);
   EXPECT_EQ(
     hardware_info.hardware_class_type, "ros2_control_demo_hardware/RRBotSystemWithGPIOHardware");
 
@@ -563,6 +568,8 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_with_size_and_d
 
   EXPECT_EQ(hardware_info.name, "RRBotSystemWithSizeAndDataType");
   EXPECT_EQ(hardware_info.type, "system");
+  EXPECT_EQ(hardware_info.is_asynch, true);
+
   EXPECT_EQ(
     hardware_info.hardware_class_type, "ros2_control_demo_hardware/RRBotSystemWithSizeAndDataType");
 

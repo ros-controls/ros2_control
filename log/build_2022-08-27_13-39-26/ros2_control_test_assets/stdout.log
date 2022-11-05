@@ -1,0 +1,40 @@
+-- The C compiler identification is GNU 9.4.0
+-- The CXX compiler identification is GNU 9.4.0
+-- Check for working C compiler: /usr/bin/cc
+-- Check for working C compiler: /usr/bin/cc -- works
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Check for working CXX compiler: /usr/bin/c++
+-- Check for working CXX compiler: /usr/bin/c++ -- works
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Found ament_cmake: 1.2.1 (/opt/ros/rolling/share/ament_cmake/cmake)
+-- Found Python3: /usr/bin/python3.8 (found version "3.8.10") found components: Interpreter 
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/vx792/ros2_ws/src/ros-controls/ros2_control/build/ros2_control_test_assets
+-- Install configuration: ""
+-- Up-to-date: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/ros2_control_test_assets/include
+-- Up-to-date: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/ros2_control_test_assets/include/ros2_control_test_assets
+-- Up-to-date: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/ros2_control_test_assets/include/ros2_control_test_assets/descriptions.hpp
+-- Up-to-date: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/ros2_control_test_assets/include/ros2_control_test_assets/components_urdfs.hpp
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/ros2_control_test_assets/share/ament_index/resource_index/package_run_dependencies/ros2_control_test_assets
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/ros2_control_test_assets/share/ament_index/resource_index/parent_prefix_path/ros2_control_test_assets
+-- Up-to-date: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/ros2_control_test_assets/share/ros2_control_test_assets/environment/ament_prefix_path.sh
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/ros2_control_test_assets/share/ros2_control_test_assets/environment/ament_prefix_path.dsv
+-- Up-to-date: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/ros2_control_test_assets/share/ros2_control_test_assets/environment/path.sh
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/ros2_control_test_assets/share/ros2_control_test_assets/environment/path.dsv
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/ros2_control_test_assets/share/ros2_control_test_assets/local_setup.bash
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/ros2_control_test_assets/share/ros2_control_test_assets/local_setup.sh
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/ros2_control_test_assets/share/ros2_control_test_assets/local_setup.zsh
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/ros2_control_test_assets/share/ros2_control_test_assets/local_setup.dsv
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/ros2_control_test_assets/share/ros2_control_test_assets/package.dsv
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/ros2_control_test_assets/share/ament_index/resource_index/packages/ros2_control_test_assets
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/ros2_control_test_assets/share/ros2_control_test_assets/cmake/ament_cmake_export_include_directories-extras.cmake
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/ros2_control_test_assets/share/ros2_control_test_assets/cmake/ros2_control_test_assetsConfig.cmake
+-- Installing: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/ros2_control_test_assets/share/ros2_control_test_assets/cmake/ros2_control_test_assetsConfig-version.cmake
+-- Up-to-date: /home/vx792/ros2_ws/src/ros-controls/ros2_control/install/ros2_control_test_assets/share/ros2_control_test_assets/package.xml
