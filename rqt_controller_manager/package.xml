@@ -4,7 +4,6 @@
   <name>rqt_controller_manager</name>
   <version>0.0.0</version>
   <description>Graphical frontend for interacting with the controller manager.</description>
-  <maintainer email="kenjibrameld@gmail.com">ijnek</maintainer>
   <maintainer email="bence.magyar.robotics@gmail.com">Bence Magyar</maintainer>
   <maintainer email="denis@stoglrobotics.de">Denis Štogl</maintainer>
   <license>Apache License 2.0</license>
@@ -23,11 +22,6 @@
   <exec_depend>rclpy</exec_depend>
   <exec_depend>rqt_gui</exec_depend>
   <exec_depend>rqt_gui_py</exec_depend>
-
-  <test_depend>ament_copyright</test_depend>
-  <test_depend>ament_flake8</test_depend>
-  <test_depend>ament_pep257</test_depend>
-  <test_depend>python3-pytest</test_depend>
 
   <export>
     <build_type>ament_python</build_type>
