@@ -1010,18 +1010,6 @@ void ControllerManager::manage_switch()
 
 void ControllerManager::deactivate_controllers()
 {
-  /*
-  if (!async_controller_threads_.empty())
-  {
-    for (auto& k : async_controller_threads_)
-    {
-      if (k.second->get_controller()->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
-      {
-        k.second->terminated_ = true;
-      }
-    }
-  }
-  */
   std::vector<ControllerSpec> & rt_controller_list =
     rt_controllers_wrapper_.update_and_get_used_by_rt_list();
   // stop controllers
@@ -1043,13 +1031,6 @@ void ControllerManager::deactivate_controllers()
 
     if (is_controller_active(*controller))
     {
-      /*
-      if (controller->is_async())
-      {
-        async_controller_threads_.at(controller_name)->terminated_ = true;
-      }
-      */
-      std::lock_guard<std::mutex> guard(async_controller_mutex_);
       const auto new_state = controller->get_node()->deactivate();
       controller->release_interfaces();
       if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
@@ -1138,7 +1119,7 @@ void ControllerManager::activate_controllers()
     }
     auto controller = found_it->c;
     auto controller_name = found_it->info.name;
-
+    
     bool assignment_successful = true;
     // assign command interfaces to the controller
     auto command_interface_config = controller->command_interface_configuration();
@@ -1219,7 +1200,6 @@ void ControllerManager::activate_controllers()
     }
     controller->assign_interfaces(std::move(command_loans), std::move(state_loans));
 
-    std::lock_guard<std::mutex> guard(async_controller_mutex_);
     const auto new_state = controller->get_node()->activate();
     if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
     {
