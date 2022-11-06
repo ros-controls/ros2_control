@@ -252,7 +252,7 @@ protected:
 
 private:
   std::vector<std::string> get_controller_names();
-  std::mutex mutex_;
+  std::mutex async_controller_mutex_;
 
 
   /**
@@ -475,6 +475,7 @@ private:
     
     void start()
     {
+      terminated_ = false;
       m_thread_ = std::thread(&ControllerThreadWrapper::call_controller_update, this);
     }
 
@@ -508,7 +509,7 @@ private:
       return controller_;
     }
 
-      std::atomic<bool> terminated_ = false;
+      std::atomic<bool> terminated_ = true;
   private:
       std::shared_ptr<controller_interface::ControllerInterfaceBase> controller_;
       std::thread m_thread_;
