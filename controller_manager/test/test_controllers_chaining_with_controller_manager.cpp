@@ -15,6 +15,7 @@
 #include <gtest/gtest.h>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -42,6 +43,15 @@ class TestableTestChainableController : public test_chainable_controller::TestCh
   FRIEND_TEST(
     TestControllerChainingWithControllerManager,
     test_chained_controllers_auto_switch_to_chained_mode);
+  FRIEND_TEST(
+    TestControllerChainingWithControllerManager,
+    test_chained_controllers_activation_error_handling);
+  FRIEND_TEST(
+    TestControllerChainingWithControllerManager,
+    test_chained_controllers_activation_switching_error_handling);
+  FRIEND_TEST(
+    TestControllerChainingWithControllerManager,
+    test_chained_controllers_deactivation_error_handling);
 };
 
 class TestableControllerManager : public controller_manager::ControllerManager
@@ -65,6 +75,15 @@ class TestableControllerManager : public controller_manager::ControllerManager
   FRIEND_TEST(
     TestControllerChainingWithControllerManager,
     test_chained_controllers_auto_switch_to_chained_mode);
+  FRIEND_TEST(
+    TestControllerChainingWithControllerManager,
+    test_chained_controllers_activation_error_handling);
+  FRIEND_TEST(
+    TestControllerChainingWithControllerManager,
+    test_chained_controllers_activation_switching_error_handling);
+  FRIEND_TEST(
+    TestControllerChainingWithControllerManager,
+    test_chained_controllers_deactivation_error_handling);
 
 public:
   TestableControllerManager(
@@ -100,6 +119,7 @@ public:
     pid_left_wheel_controller = std::make_shared<TestableTestChainableController>();
     pid_right_wheel_controller = std::make_shared<TestableTestChainableController>();
     diff_drive_controller = std::make_shared<TestableTestChainableController>();
+    diff_drive_controller_two = std::make_shared<TestableTestChainableController>();
     position_tracking_controller = std::make_shared<test_controller::TestController>();
 
     // configure Left Wheel controller
@@ -131,6 +151,11 @@ public:
     diff_drive_controller->set_state_interface_configuration(diff_drive_state_ifs_cfg);
     diff_drive_controller->set_reference_interface_names({"vel_x", "vel_y", "rot_z"});
 
+    // configure Diff Drive Two controller (Has same command interfaces ad Diff Drive controller)
+    diff_drive_controller_two->set_command_interface_configuration(diff_drive_cmd_ifs_cfg);
+    diff_drive_controller_two->set_state_interface_configuration(diff_drive_state_ifs_cfg);
+    diff_drive_controller_two->set_reference_interface_names({"vel_x", "vel_y", "rot_z"});
+
     // configure Position Tracking controller
     controller_interface::InterfaceConfiguration position_tracking_cmd_ifs_cfg = {
       controller_interface::interface_configuration_type::INDIVIDUAL,
@@ -143,10 +168,11 @@ public:
 
   void CheckIfControllersAreAddedCorrectly()
   {
-    EXPECT_EQ(4u, cm_->get_loaded_controllers().size());
+    EXPECT_EQ(5u, cm_->get_loaded_controllers().size());
     EXPECT_EQ(2, pid_left_wheel_controller.use_count());
     EXPECT_EQ(2, pid_right_wheel_controller.use_count());
     EXPECT_EQ(2, diff_drive_controller.use_count());
+    EXPECT_EQ(2, diff_drive_controller_two.use_count());
     EXPECT_EQ(2, position_tracking_controller.use_count());
 
     EXPECT_EQ(
@@ -158,6 +184,9 @@ public:
     EXPECT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
       diff_drive_controller->get_state().id());
+    EXPECT_EQ(
+      lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+      diff_drive_controller_two->get_state().id());
     EXPECT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
       position_tracking_controller->get_state().id());
@@ -207,11 +236,25 @@ public:
       EXPECT_FALSE(cm_->resource_manager_->command_interface_is_claimed(interface));
     }
 
+    cm_->configure_controller(DIFF_DRIVE_CONTROLLER_TWO);
+    EXPECT_EQ(
+      diff_drive_controller_two->get_state().id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+    EXPECT_EQ(cm_->resource_manager_->command_interface_keys().size(), number_of_cmd_itfs + 8);
+    for (const auto & interface :
+         {"diff_drive_controller/vel_x", "diff_drive_controller/vel_y",
+          "diff_drive_controller/rot_z"})
+    {
+      EXPECT_TRUE(cm_->resource_manager_->command_interface_exists(interface));
+      EXPECT_FALSE(cm_->resource_manager_->command_interface_is_available(interface));
+      EXPECT_FALSE(cm_->resource_manager_->command_interface_is_claimed(interface));
+    }
+
     cm_->configure_controller(POSITION_TRACKING_CONTROLLER);
     EXPECT_EQ(
       position_tracking_controller->get_state().id(),
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
-    EXPECT_EQ(cm_->resource_manager_->command_interface_keys().size(), number_of_cmd_itfs + 5);
+    EXPECT_EQ(cm_->resource_manager_->command_interface_keys().size(), number_of_cmd_itfs + 8);
   }
 
   template <
@@ -278,12 +321,22 @@ public:
   void ActivateAndCheckController(
     std::shared_ptr<T> & controller, const std::string & controller_name,
     const std::vector<std::string> & claimed_command_itfs, size_t expected_internal_counter = 0u,
-    const controller_interface::return_type expected_return = controller_interface::return_type::OK)
+    const controller_interface::return_type expected_return = controller_interface::return_type::OK,
+    const std::future_status expected_future_status = std::future_status::timeout)
   {
     switch_test_controllers(
-      {controller_name}, {}, test_param.strictness, std::future_status::timeout, expected_return);
+      {controller_name}, {}, test_param.strictness, expected_future_status, expected_return);
     check_after_de_activate(
       controller, claimed_command_itfs, expected_internal_counter, expected_return, false);
+  }
+
+  void ActivateController(
+    const std::string & controller_name,
+    const controller_interface::return_type expected_return = controller_interface::return_type::OK,
+    const std::future_status expected_future_status = std::future_status::timeout)
+  {
+    switch_test_controllers(
+      {controller_name}, {}, test_param.strictness, expected_future_status, expected_return);
   }
 
   template <
@@ -301,6 +354,15 @@ public:
     check_after_de_activate(
       controller, claimed_command_itfs, expected_internal_counter, expected_return, true,
       claimed_interfaces_from_hw);
+  }
+
+  void DeactivateController(
+    const std::string & controller_name,
+    const controller_interface::return_type expected_return = controller_interface::return_type::OK,
+    const std::future_status expected_future_status = std::future_status::timeout)
+  {
+    switch_test_controllers(
+      {}, {controller_name}, test_param.strictness, expected_future_status, expected_return);
   }
 
   void UpdateAllControllerAndCheck(
@@ -359,6 +421,7 @@ public:
   static constexpr char PID_LEFT_WHEEL[] = "pid_left_wheel_controller";
   static constexpr char PID_RIGHT_WHEEL[] = "pid_right_wheel_controller";
   static constexpr char DIFF_DRIVE_CONTROLLER[] = "diff_drive_controller";
+  static constexpr char DIFF_DRIVE_CONTROLLER_TWO[] = "diff_drive_controller_two";
   static constexpr char POSITION_TRACKING_CONTROLLER[] = "position_tracking_controller";
 
   const std::vector<std::string> PID_LEFT_WHEEL_REFERENCE_INTERFACES = {
@@ -379,6 +442,7 @@ public:
   std::shared_ptr<TestableTestChainableController> pid_left_wheel_controller;
   std::shared_ptr<TestableTestChainableController> pid_right_wheel_controller;
   std::shared_ptr<TestableTestChainableController> diff_drive_controller;
+  std::shared_ptr<TestableTestChainableController> diff_drive_controller_two;
   std::shared_ptr<test_controller::TestController> position_tracking_controller;
 
   testing::WithParamInterface<Strictness>::ParamType test_param;
@@ -390,6 +454,14 @@ public:
   double EXP_RIGHT_WHEEL_HW_STATE = 0.0;
   double EXP_LEFT_WHEEL_REF = 0.0;
   double EXP_RIGHT_WHEEL_REF = 0.0;
+
+  // Expected behaviors struct used in chaining activation/deactivation tests
+  struct ExpectedBehaviorStruct
+  {
+    controller_interface::return_type return_type;
+    std::future_status future_status;
+    uint8_t state;
+  };
 };
 
 // The tests are implementing example of chained-control for DiffDrive robot shown here:
@@ -406,6 +478,9 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers)
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
   cm_->add_controller(
     diff_drive_controller, DIFF_DRIVE_CONTROLLER,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    diff_drive_controller_two, DIFF_DRIVE_CONTROLLER_TWO,
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
   cm_->add_controller(
     pid_left_wheel_controller, PID_LEFT_WHEEL,
@@ -537,6 +612,9 @@ TEST_P(
     diff_drive_controller, DIFF_DRIVE_CONTROLLER,
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
   cm_->add_controller(
+    diff_drive_controller_two, DIFF_DRIVE_CONTROLLER_TWO,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
     pid_left_wheel_controller, PID_LEFT_WHEEL,
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
   cm_->add_controller(
@@ -610,9 +688,295 @@ TEST_P(
   ASSERT_FALSE(diff_drive_controller->is_in_chained_mode());
 }
 
-// TODO(destogl): Add test case with controllers added in "random" order
+TEST_P(
+  TestControllerChainingWithControllerManager, test_chained_controllers_activation_error_handling)
+{
+  SetupControllers();
 
-// TODO(destogl): Think about strictness and chaining controllers
+  // add all controllers - CONTROLLERS HAVE TO ADDED IN EXECUTION ORDER
+  cm_->add_controller(
+    position_tracking_controller, POSITION_TRACKING_CONTROLLER,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    diff_drive_controller, DIFF_DRIVE_CONTROLLER,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    diff_drive_controller_two, DIFF_DRIVE_CONTROLLER_TWO,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    pid_left_wheel_controller, PID_LEFT_WHEEL,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    pid_right_wheel_controller, PID_RIGHT_WHEEL,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+
+  CheckIfControllersAreAddedCorrectly();
+
+  ConfigureAndCheckControllers();
+
+  // Set ControllerManager into Debug-Mode output to have detailed output on updating controllers
+  cm_->get_logger().set_level(rclcpp::Logger::Level::Debug);
+  rclcpp::get_logger("ControllerManager::utils").set_level(rclcpp::Logger::Level::Debug);
+
+  // at beginning controllers are not in chained mode
+  EXPECT_FALSE(pid_left_wheel_controller->is_in_chained_mode());
+  EXPECT_FALSE(pid_right_wheel_controller->is_in_chained_mode());
+  ASSERT_FALSE(diff_drive_controller->is_in_chained_mode());
+
+  // Test Case 1: Trying to activate a preceding controller when following controller
+  // is not activated --> return error (If STRICT); Preceding controller is still inactive.
+
+  static std::unordered_map<int32_t, ExpectedBehaviorStruct> expected = {
+    {controller_manager_msgs::srv::SwitchController::Request::STRICT,
+     {controller_interface::return_type::ERROR, std::future_status::ready,
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE}},
+    {controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT,
+     {controller_interface::return_type::OK, std::future_status::timeout,
+      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE}}};
+
+  // Attempt to activate preceding controller (diff-drive controller) with no check
+  ActivateController(
+    DIFF_DRIVE_CONTROLLER, expected.at(test_param.strictness).return_type,
+    std::future_status::ready);
+
+  // Check if the controller activated (Should not be activated)
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, diff_drive_controller->get_state().id());
+
+  // Test Case 2: Try to activate a preceding controller the same time when trying to
+  // deactivate a following controller (using switch_controller function)
+  // --> return error; preceding controller is not activated,
+  // BUT following controller IS deactivated
+
+  // Activate and check the following controllers:
+  // (pid_left_wheel_controller) (pid_right_wheel_controller)
+  ActivateAndCheckController(
+    pid_left_wheel_controller, PID_LEFT_WHEEL, PID_LEFT_WHEEL_CLAIMED_INTERFACES, 1u);
+  ActivateAndCheckController(
+    pid_right_wheel_controller, PID_RIGHT_WHEEL, PID_RIGHT_WHEEL_CLAIMED_INTERFACES, 1u);
+
+  // Attempt to activate a preceding controller (diff-drive controller)
+  // while trying to deactivate a following controller
+  switch_test_controllers(
+    {DIFF_DRIVE_CONTROLLER}, {PID_RIGHT_WHEEL}, test_param.strictness,
+    expected.at(test_param.strictness).future_status,
+    expected.at(test_param.strictness).return_type);
+
+  // Preceding controller should stay deactivated and following controller
+  // should be deactivated (if BEST_EFFORT)
+  // If STRICT, preceding controller should stay deactivated and following controller
+  // should stay activated
+  EXPECT_EQ(expected.at(test_param.strictness).state, pid_right_wheel_controller->get_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, pid_left_wheel_controller->get_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, diff_drive_controller->get_state().id());
+}
+
+TEST_P(
+  TestControllerChainingWithControllerManager,
+  test_chained_controllers_activation_switching_error_handling)
+{
+  // Test Case 3: In terms of current implementation.
+  // Example: Need two diff drive controllers, one should be deactivated,
+  // and the other should be activated. Following controller should stay in activated state.
+  SetupControllers();
+
+  // add all controllers - CONTROLLERS HAVE TO ADDED IN EXECUTION ORDER
+  cm_->add_controller(
+    position_tracking_controller, POSITION_TRACKING_CONTROLLER,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    diff_drive_controller, DIFF_DRIVE_CONTROLLER,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    diff_drive_controller_two, DIFF_DRIVE_CONTROLLER_TWO,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    pid_left_wheel_controller, PID_LEFT_WHEEL,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    pid_right_wheel_controller, PID_RIGHT_WHEEL,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+
+  CheckIfControllersAreAddedCorrectly();
+
+  ConfigureAndCheckControllers();
+
+  // Set ControllerManager into Debug-Mode output to have detailed output on updating controllers
+  cm_->get_logger().set_level(rclcpp::Logger::Level::Debug);
+  rclcpp::get_logger("ControllerManager::utils").set_level(rclcpp::Logger::Level::Debug);
+
+  // Activate the following controller and the preceding controllers
+  ActivateAndCheckController(
+    pid_left_wheel_controller, PID_LEFT_WHEEL, PID_LEFT_WHEEL_CLAIMED_INTERFACES, 1u);
+  ActivateAndCheckController(
+    pid_right_wheel_controller, PID_RIGHT_WHEEL, PID_RIGHT_WHEEL_CLAIMED_INTERFACES, 1u);
+  ActivateAndCheckController(
+    diff_drive_controller, DIFF_DRIVE_CONTROLLER, DIFF_DRIVE_CLAIMED_INTERFACES, 1u);
+
+  // Verify that the other preceding controller is deactivated (diff_drive_controller_two)
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    diff_drive_controller_two->get_state().id());
+
+  // Deactivate the first preceding controller (diff_drive_controller) and
+  // activate the other preceding controller (diff_drive_controller_two)
+  switch_test_controllers(
+    {DIFF_DRIVE_CONTROLLER_TWO}, {DIFF_DRIVE_CONTROLLER}, test_param.strictness,
+    std::future_status::timeout, controller_interface::return_type::OK);
+
+  // Following controllers should stay active
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, pid_left_wheel_controller->get_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, pid_right_wheel_controller->get_state().id());
+  // The original preceding controller (diff_drive_controller) should be inactive while
+  // the other preceding controller should be active (diff_drive_controller_two)
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, diff_drive_controller->get_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, diff_drive_controller_two->get_state().id());
+}
+
+TEST_P(
+  TestControllerChainingWithControllerManager, test_chained_controllers_deactivation_error_handling)
+{
+  SetupControllers();
+
+  // add all controllers - CONTROLLERS HAVE TO ADDED IN EXECUTION ORDER
+  cm_->add_controller(
+    position_tracking_controller, POSITION_TRACKING_CONTROLLER,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    diff_drive_controller, DIFF_DRIVE_CONTROLLER,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    diff_drive_controller_two, DIFF_DRIVE_CONTROLLER_TWO,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    pid_left_wheel_controller, PID_LEFT_WHEEL,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    pid_right_wheel_controller, PID_RIGHT_WHEEL,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+
+  CheckIfControllersAreAddedCorrectly();
+
+  ConfigureAndCheckControllers();
+
+  // Set ControllerManager into Debug-Mode output to have detailed output on updating controllers
+  cm_->get_logger().set_level(rclcpp::Logger::Level::Debug);
+  rclcpp::get_logger("ControllerManager::utils").set_level(rclcpp::Logger::Level::Debug);
+
+  // at beginning controllers are not in chained mode
+  EXPECT_FALSE(pid_left_wheel_controller->is_in_chained_mode());
+  EXPECT_FALSE(pid_right_wheel_controller->is_in_chained_mode());
+  ASSERT_FALSE(diff_drive_controller->is_in_chained_mode());
+
+  // Activate following controllers
+  ActivateAndCheckController(
+    pid_left_wheel_controller, PID_LEFT_WHEEL, PID_LEFT_WHEEL_CLAIMED_INTERFACES, 1u);
+  ActivateAndCheckController(
+    pid_right_wheel_controller, PID_RIGHT_WHEEL, PID_RIGHT_WHEEL_CLAIMED_INTERFACES, 1u);
+
+  // Test Case 5: Deactivating a preceding controller that is not active --> return error;
+  // all controller stay in the same state
+
+  // There is different error and timeout behavior depending on strictness
+  static std::unordered_map<int32_t, ExpectedBehaviorStruct> expected = {
+    {controller_manager_msgs::srv::SwitchController::Request::STRICT,
+     {controller_interface::return_type::ERROR, std::future_status::ready,
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE}},
+    {controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT,
+     {controller_interface::return_type::OK, std::future_status::timeout,
+      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE}}};
+
+  // Verify preceding controller (diff_drive_controller) is inactive
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, diff_drive_controller->get_state().id());
+
+  // Attempt to deactivate inactive controller (diff_drive_controller)
+  DeactivateController(
+    DIFF_DRIVE_CONTROLLER, expected.at(test_param.strictness).return_type,
+    std::future_status::ready);
+
+  // Check to see preceding controller (diff_drive_controller) is still inactive and
+  // following controllers (pid_left_wheel_controller) (pid_left_wheel_controller) are still active
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, pid_left_wheel_controller->get_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, pid_right_wheel_controller->get_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, diff_drive_controller->get_state().id());
+
+  // Test Case 6: following controller is deactivated but preceding controller will be activated
+  // --> return error; controllers stay in the same state
+
+  switch_test_controllers(
+    {DIFF_DRIVE_CONTROLLER}, {PID_LEFT_WHEEL, PID_RIGHT_WHEEL}, test_param.strictness,
+    expected.at(test_param.strictness).future_status,
+    expected.at(test_param.strictness).return_type);
+
+  // Preceding controller should stay deactivated and following controller
+  // should be deactivated (if BEST_EFFORT)
+  // If STRICT, preceding controller should stay deactivated and following controller
+  // should stay activated
+  EXPECT_EQ(expected.at(test_param.strictness).state, pid_right_wheel_controller->get_state().id());
+  EXPECT_EQ(expected.at(test_param.strictness).state, pid_left_wheel_controller->get_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, diff_drive_controller->get_state().id());
+
+  // Test Case 7: following controller deactivation but preceding controller is active
+  // --> return error; controllers stay in the same state as they were
+
+  // Activate all controllers for this test
+  ActivateController(
+    PID_LEFT_WHEEL, expected.at(test_param.strictness).return_type,
+    expected.at(test_param.strictness).future_status);
+  ActivateController(
+    PID_RIGHT_WHEEL, expected.at(test_param.strictness).return_type,
+    expected.at(test_param.strictness).future_status);
+  ActivateController(
+    DIFF_DRIVE_CONTROLLER, controller_interface::return_type::OK, std::future_status::timeout);
+
+  // Expect all controllers to be active
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, pid_left_wheel_controller->get_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, pid_right_wheel_controller->get_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, diff_drive_controller->get_state().id());
+
+  // Attempt to deactivate following controllers
+  switch_test_controllers(
+    {}, {PID_LEFT_WHEEL, PID_RIGHT_WHEEL}, test_param.strictness, std::future_status::ready,
+    expected.at(test_param.strictness).return_type);
+
+  // All controllers should still be active
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, pid_left_wheel_controller->get_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, pid_right_wheel_controller->get_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, diff_drive_controller->get_state().id());
+
+  // Attempt to deactivate a following controller
+  switch_test_controllers(
+    {}, {PID_RIGHT_WHEEL}, test_param.strictness, std::future_status::ready,
+    expected.at(test_param.strictness).return_type);
+
+  // All controllers should still be active
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, pid_left_wheel_controller->get_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, pid_right_wheel_controller->get_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, diff_drive_controller->get_state().id());
+}
+
+// TODO(destogl): Add test case with controllers added in "random" order
+//
 // new value: "START_DOWNSTREAM_CTRLS" --> start "downstream" controllers in a controllers chain
 //
 
