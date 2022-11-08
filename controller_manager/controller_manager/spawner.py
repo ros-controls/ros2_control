@@ -127,7 +127,7 @@ def main(args=None):
         required=False)
     parser.add_argument(
         '-n', '--namespace',
-        help='Namespace for the controller',default='',
+        help='Namespace for the controller', default='',
         required=False)
     parser.add_argument(
         '--load-only', help='Only load the controller and leave unconfigured.',
@@ -159,7 +159,6 @@ def main(args=None):
     controller_type = args.controller_type
     controller_manager_timeout = args.controller_manager_timeout
 
-    
     if param_file and not os.path.isfile(param_file):
         raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), param_file)
 

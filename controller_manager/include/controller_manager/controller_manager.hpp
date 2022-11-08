@@ -65,8 +65,7 @@ public:
   CONTROLLER_MANAGER_PUBLIC
   ControllerManager(
     std::unique_ptr<hardware_interface::ResourceManager> resource_manager,
-    std::shared_ptr<rclcpp::Executor> executor,
-    rclcpp::NodeOptions node_option,
+    std::shared_ptr<rclcpp::Executor> executor, rclcpp::NodeOptions node_option,
     const std::string & manager_node_name = "controller_manager",
     const std::string & manager_namespace = "");
 

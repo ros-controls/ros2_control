@@ -244,8 +244,14 @@ void ControllerManager::init_services()
       rmw_qos_profile_services_hist_keep_all, best_effort_callback_group_);
 }
 
+<<<<<<< HEAD
 controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_controller(
   const std::string & controller_name, const std::string & controller_type)
+=======
+controller_interface::ControllerInterfaceSharedPtr ControllerManager::load_controller(
+  const std::string & controller_name, const std::string & controller_namespace,
+  const std::string & controller_type)
+>>>>>>> run 'pre-commit run --all' and fix flake8 errors
 {
   RCLCPP_INFO(get_logger(), "Loading controller '%s'", controller_name.c_str());
 
@@ -956,7 +962,8 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::add_co
   {
     to.clear();
     RCLCPP_ERROR(
-      get_logger(), "Could not initialize the controller named '%s'", (controller.info.namespace_ + '/' + controller.info.name).c_str());
+      get_logger(), "Could not initialize the controller named '%s'",
+      (controller.info.namespace_ + '/' + controller.info.name).c_str());
     return nullptr;
   }
 

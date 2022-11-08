@@ -70,6 +70,7 @@ def load_controller(node, controller_manager_name, controller_name, controller_n
     return service_caller(node, f'{controller_manager_name}/load_controller',
                           LoadController, request)
 
+
 def reload_controller_libraries(node, controller_manager_name, force_kill):
     request = ReloadControllerLibraries.Request()
     request.force_kill = force_kill
