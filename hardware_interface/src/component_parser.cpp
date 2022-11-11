@@ -27,7 +27,8 @@ namespace
 constexpr const auto kRobotTag = "robot";
 constexpr const auto kROS2ControlTag = "ros2_control";
 constexpr const auto kHardwareTag = "hardware";
-constexpr const auto kClassTypeTag = "plugin";
+[[deprecated("Use kPluginTypeTag instead of kClassTypeTag.")]] constexpr const auto kClassTypeTag = "plugin";
+constexpr const auto kPluginTypeTag = "plugin";
 constexpr const auto kParamTag = "param";
 constexpr const auto kActuatorTag = "actuator";
 constexpr const auto kJointTag = "joint";
@@ -404,8 +405,8 @@ TransmissionInfo parse_transmission_from_xml(const tinyxml2::XMLElement * transm
 
   // Find name, type and class of a transmission
   transmission.name = get_attribute_value(transmission_it, kNameAttribute, transmission_it->Name());
-  const auto * type_it = transmission_it->FirstChildElement(kClassTypeTag);
-  transmission.type = get_text_for_element(type_it, kClassTypeTag);
+  const auto * type_it = transmission_it->FirstChildElement(kPluginTypeTag);
+  transmission.type = get_text_for_element(type_it, kPluginTypeTag);
 
   // Parse joints
   const auto * joint_it = transmission_it->FirstChildElement(kJointTag);
@@ -496,15 +497,15 @@ HardwareInfo parse_resource_from_xml(
   hardware.type = get_attribute_value(ros2_control_it, kTypeAttribute, kROS2ControlTag);
 
   // Parse everything under ros2_control tag
-  hardware.hardware_class_type = "";
+  hardware.hardware_plugin_name = "";
   const auto * ros2_control_child_it = ros2_control_it->FirstChildElement();
   while (ros2_control_child_it)
   {
     if (!std::string(kHardwareTag).compare(ros2_control_child_it->Name()))
-    {
-      const auto * type_it = ros2_control_child_it->FirstChildElement(kClassTypeTag);
-      hardware.hardware_class_type =
-        get_text_for_element(type_it, std::string("hardware ") + kClassTypeTag);
+    { 
+      const auto * type_it = ros2_control_child_it->FirstChildElement(kPluginTypeTag);
+      hardware.hardware_plugin_name =
+        get_text_for_element(type_it, std::string("hardware ") + kPluginTypeTag);
       const auto * params_it = ros2_control_child_it->FirstChildElement(kParamTag);
       if (params_it)
       {
