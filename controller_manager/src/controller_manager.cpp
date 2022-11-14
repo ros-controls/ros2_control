@@ -411,7 +411,8 @@ controller_interface::return_type ControllerManager::configure_controller(
 {
   RCLCPP_INFO(get_logger(), "Configuring controller '%s'", controller_name.c_str());
 
-  const auto & controllers = get_loaded_controllers();
+  std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
+  const std::vector<ControllerSpec> & controllers = rt_controllers_wrapper_.get_updated_list(guard);
 
   auto found_it = std::find_if(
     controllers.begin(), controllers.end(),
@@ -428,6 +429,7 @@ controller_interface::return_type ControllerManager::configure_controller(
   auto controller = found_it->c;
 
   auto state = controller->get_state();
+
   if (
     state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE ||
     state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED)
@@ -481,9 +483,111 @@ controller_interface::return_type ControllerManager::configure_controller(
       return controller_interface::return_type::ERROR;
     }
     resource_manager_->import_controller_reference_interfaces(controller_name, interfaces);
-
-    // TODO(destogl): check and resort controllers in the vector
   }
+
+  std::vector<ControllerSpec> & unused_controller_list =
+    rt_controllers_wrapper_.get_unused_list(guard);
+  unused_controller_list = controllers;
+
+  std::unordered_map<std::string, int> preceding_controller_count = {};
+  std::unordered_map<std::string, std::vector<std::string>> following_controllers = {};
+
+  for (const auto & controller1 : unused_controller_list)
+  {
+    if (
+      !controller1.c->is_chainable() ||
+      (!is_controller_active(controller1.c) && !is_controller_inactive(controller1.c)))
+    {
+      continue;
+    }
+    for (const auto & controller2 : unused_controller_list)
+    {
+      if (!is_controller_active(controller2.c) && !is_controller_inactive(controller2.c))
+      {
+        continue;
+      }
+      if (controller2.info.name == controller1.info.name)
+      {
+        continue;
+      }
+      for (const auto & reference1 :
+           resource_manager_->get_controller_reference_interface_names(controller1.info.name))
+      {
+        const auto controller2_commands = controller2.c->command_interface_configuration().names;
+
+        std::string commands_string = "";
+        for (auto command : controller2_commands)
+        {
+          commands_string += " " + command;
+        }
+        auto same = std::find(controller2_commands.begin(), controller2_commands.end(), reference1);
+        if (same != controller2_commands.end())
+        {
+          // controller 2 precedes controller1
+          if (following_controllers.find(controller2.info.name) != following_controllers.end())
+          {
+            following_controllers[controller2.info.name].push_back(controller1.info.name);
+          }
+          else
+          {
+            following_controllers.emplace(
+              controller2.info.name, std::initializer_list<std::string>{controller1.info.name});
+          }
+          if (
+            preceding_controller_count.find(controller1.info.name) !=
+            preceding_controller_count.end())
+          {
+            preceding_controller_count[controller1.info.name] += 1;
+          }
+          else
+          {
+            preceding_controller_count[controller1.info.name] = 1;
+          }
+          break;
+        }
+      }
+    }
+  }
+
+  // Use Kahn's algorithm for topological sorting
+  std::deque<std::string> controllers_to_add = {};
+  for (const auto & controller : unused_controller_list)
+  {
+    if (preceding_controller_count.find(controller.info.name) == preceding_controller_count.end())
+    {
+      controllers_to_add.push_back(controller.info.name);
+    }
+  }
+
+  for (auto i = unused_controller_list.begin(); i != unused_controller_list.end(); i++)
+  {
+    std::string controller_name_to_find = controllers_to_add.front();
+    controllers_to_add.pop_front();
+    auto found_it = std::find_if(
+      unused_controller_list.begin(), unused_controller_list.end(),
+      std::bind(controller_name_compare, std::placeholders::_1, controller_name_to_find));
+    iter_swap(i, found_it);
+    if (following_controllers.find(controller_name_to_find) != following_controllers.end())
+    {
+      for (const auto & controller_name : following_controllers[controller_name_to_find])
+      {
+        preceding_controller_count[controller_name] -= 1;
+        if (preceding_controller_count[controller_name] == 0)
+        {
+          controllers_to_add.push_back(controller_name);
+        }
+      }
+    }
+  }
+
+  std::string controller_names = "";
+  for (auto & cont : unused_controller_list)
+  {
+    controller_names += cont.info.name + " ";
+  }
+
+  rt_controllers_wrapper_.switch_updated_list(guard);
+  rt_controllers_wrapper_.get_unused_list(guard).clear();
 
   return controller_interface::return_type::OK;
 }

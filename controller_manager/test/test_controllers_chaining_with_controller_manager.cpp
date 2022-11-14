@@ -52,6 +52,7 @@ class TestableTestChainableController : public test_chainable_controller::TestCh
   FRIEND_TEST(
     TestControllerChainingWithControllerManager,
     test_chained_controllers_deactivation_error_handling);
+  FRIEND_TEST(TestControllerChainingWithControllerManager, test_chained_controllers_random_order);
 };
 
 class TestableControllerManager : public controller_manager::ControllerManager
@@ -84,6 +85,7 @@ class TestableControllerManager : public controller_manager::ControllerManager
   FRIEND_TEST(
     TestControllerChainingWithControllerManager,
     test_chained_controllers_deactivation_error_handling);
+  FRIEND_TEST(TestControllerChainingWithControllerManager, test_chained_controllers_random_order);
 
 public:
   TestableControllerManager(
@@ -975,10 +977,91 @@ TEST_P(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, diff_drive_controller->get_state().id());
 }
 
-// TODO(destogl): Add test case with controllers added in "random" order
-//
 // new value: "START_DOWNSTREAM_CTRLS" --> start "downstream" controllers in a controllers chain
 //
+TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers_random_order)
+{
+  SetupControllers();
+
+  // add all controllers - CONTROLLERS HAVE TO ADDED IN REVERSE EXECUTION ORDER
+  cm_->add_controller(
+    pid_left_wheel_controller, PID_LEFT_WHEEL,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    pid_right_wheel_controller, PID_RIGHT_WHEEL,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    diff_drive_controller, DIFF_DRIVE_CONTROLLER,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    diff_drive_controller_two, DIFF_DRIVE_CONTROLLER_TWO,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    position_tracking_controller, POSITION_TRACKING_CONTROLLER,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+
+  CheckIfControllersAreAddedCorrectly();
+
+  ConfigureAndCheckControllers();
+
+  SetToChainedModeAndMakeReferenceInterfacesAvailable(
+    pid_left_wheel_controller, PID_LEFT_WHEEL, PID_LEFT_WHEEL_REFERENCE_INTERFACES);
+  SetToChainedModeAndMakeReferenceInterfacesAvailable(
+    pid_right_wheel_controller, PID_RIGHT_WHEEL, PID_RIGHT_WHEEL_REFERENCE_INTERFACES);
+  SetToChainedModeAndMakeReferenceInterfacesAvailable(
+    diff_drive_controller, DIFF_DRIVE_CONTROLLER, DIFF_DRIVE_REFERENCE_INTERFACES);
+
+  EXPECT_THROW(
+    cm_->resource_manager_->make_controller_reference_interfaces_available(
+      POSITION_TRACKING_CONTROLLER),
+    std::out_of_range);
+
+  // Set ControllerManager into Debug-Mode output to have detailed output on updating controllers
+  cm_->get_logger().set_level(rclcpp::Logger::Level::Debug);
+
+  // activate controllers - CONTROLLERS HAVE TO ADDED REVERSE EXECUTION ORDER
+  // (otherwise, interface will be missing)
+  ActivateAndCheckController(
+    pid_left_wheel_controller, PID_LEFT_WHEEL, PID_LEFT_WHEEL_CLAIMED_INTERFACES, 1u);
+  ActivateAndCheckController(
+    pid_right_wheel_controller, PID_RIGHT_WHEEL, PID_RIGHT_WHEEL_CLAIMED_INTERFACES, 1u);
+  ASSERT_EQ(pid_left_wheel_controller->internal_counter, 3u);
+
+  // Diff-Drive Controller claims the reference interfaces of PID controllers
+  ActivateAndCheckController(
+    diff_drive_controller, DIFF_DRIVE_CONTROLLER, DIFF_DRIVE_CLAIMED_INTERFACES, 1u);
+  ASSERT_EQ(pid_right_wheel_controller->internal_counter, 3u);
+  ASSERT_EQ(pid_left_wheel_controller->internal_counter, 5u);
+
+  // Position-Tracking Controller uses reference interfaces of Diff-Drive Controller
+  ActivateAndCheckController(
+    position_tracking_controller, POSITION_TRACKING_CONTROLLER,
+    POSITION_CONTROLLER_CLAIMED_INTERFACES, 1u);
+  // 'rot_z' reference interface is not claimed
+  for (const auto & interface : {"diff_drive_controller/rot_z"})
+  {
+    EXPECT_TRUE(cm_->resource_manager_->command_interface_exists(interface));
+    EXPECT_TRUE(cm_->resource_manager_->command_interface_is_available(interface));
+    EXPECT_FALSE(cm_->resource_manager_->command_interface_is_claimed(interface));
+  }
+  ASSERT_EQ(diff_drive_controller->internal_counter, 3u);
+  ASSERT_EQ(pid_right_wheel_controller->internal_counter, 5u);
+  ASSERT_EQ(pid_left_wheel_controller->internal_counter, 7u);
+
+  // update controllers
+  std::vector<double> reference = {32.0, 128.0};
+
+  // update 'Position Tracking' controller
+  for (auto & value : diff_drive_controller->reference_interfaces_)
+  {
+    ASSERT_EQ(value, 0.0);  // default reference values are 0.0
+  }
+
+  // update all controllers at once and see that all have expected values --> also checks the order
+  // of controller execution
+  reference = {1024.0, 4096.0};
+  UpdateAllControllerAndCheck(reference, 2u);
+}
 
 INSTANTIATE_TEST_SUITE_P(
   test_strict_best_effort, TestControllerChainingWithControllerManager,

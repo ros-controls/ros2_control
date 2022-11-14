@@ -104,11 +104,24 @@ TEST_P(TestControllerManager, controller_lifecycle)
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, test_controller->get_state().id());
 
   // configure controller
-  cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME);
-  cm_->configure_controller(TEST_CONTROLLER2_NAME);
+  auto configure_future = std::async(
+    std::launch::async, &controller_manager::ControllerManager::configure_controller, cm_,
+    test_controller::TEST_CONTROLLER_NAME);
+  configure_future.wait_for(std::chrono::milliseconds(100));
   EXPECT_EQ(
     controller_interface::return_type::OK,
     cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
+  EXPECT_EQ(configure_future.get(), controller_interface::return_type::OK);
+
+  configure_future = std::async(
+    std::launch::async, &controller_manager::ControllerManager::configure_controller, cm_,
+    TEST_CONTROLLER2_NAME);
+  configure_future.wait_for(std::chrono::milliseconds(100));
+  EXPECT_EQ(
+    controller_interface::return_type::OK,
+    cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
+  EXPECT_EQ(configure_future.get(), controller_interface::return_type::OK);
+
   EXPECT_EQ(0u, test_controller->internal_counter) << "Controller is not started";
   EXPECT_EQ(0u, test_controller2->internal_counter) << "Controller is not started";
 
@@ -216,11 +229,16 @@ TEST_P(TestControllerManager, per_controller_update_rate)
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, test_controller->get_state().id());
 
   test_controller->get_node()->set_parameter({"update_rate", 4});
+
   // configure controller
-  cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME);
+  auto configure_future = std::async(
+    std::launch::async, &controller_manager::ControllerManager::configure_controller, cm_,
+    test_controller::TEST_CONTROLLER_NAME);
+  configure_future.wait_for(std::chrono::milliseconds(100));
   EXPECT_EQ(
     controller_interface::return_type::OK,
     cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
+  EXPECT_EQ(configure_future.get(), controller_interface::return_type::OK);
   EXPECT_EQ(0u, test_controller->internal_counter) << "Controller is not started";
 
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, test_controller->get_state().id());

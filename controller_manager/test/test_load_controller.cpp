@@ -162,8 +162,17 @@ TEST_P(TestLoadedControllerParametrized, starting_and_stopping_a_controller)
       lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, controller_if->get_state().id());
 
     // Activate configured controller
-    cm_->configure_controller(controller_name1);
+    auto configure_future = std::async(
+      std::launch::async, &controller_manager::ControllerManager::configure_controller, cm_,
+      controller_name1);
+    configure_future.wait_for(std::chrono::milliseconds(100));
+
+    EXPECT_EQ(
+      controller_interface::return_type::OK,
+      cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
+    configure_future.get();
     start_test_controller(test_param.strictness);
+
     ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, controller_if->get_state().id());
   }
 
@@ -246,7 +255,17 @@ TEST_P(TestLoadedControllerParametrized, inactive_controller_cannot_be_configure
   test_controller->cleanup_calls = &cleanup_calls;
   // Configure from inactive state
   test_controller->simulate_cleanup_failure = false;
-  EXPECT_EQ(cm_->configure_controller(controller_name1), controller_interface::return_type::OK);
+
+  auto configure_future = std::async(
+    std::launch::async, &controller_manager::ControllerManager::configure_controller, cm_,
+    controller_name1);
+  configure_future.wait_for(std::chrono::milliseconds(100));
+
+  EXPECT_EQ(
+    controller_interface::return_type::OK,
+    cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
+  EXPECT_EQ(configure_future.get(), controller_interface::return_type::OK);
+
   ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if->get_state().id());
   EXPECT_EQ(1u, cleanup_calls);
 }
@@ -421,7 +440,13 @@ TEST_P(TestTwoLoadedControllers, switch_multiple_controllers)
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, controller_if2->get_state().id());
 
-  cm_->configure_controller(controller_name2);
+  auto configure_future = std::async(
+    std::launch::async, &controller_manager::ControllerManager::configure_controller, cm_,
+    controller_name2);
+  configure_future.wait_for(std::chrono::milliseconds(1000));
+  EXPECT_EQ(
+    controller_interface::return_type::OK,
+    cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
 
   // Stop controller 1
   RCLCPP_INFO(cm_->get_logger(), "Stopping controller #1");
