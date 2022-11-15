@@ -2,8 +2,8 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.3.0 (2022-11-15)
+------------------
 * [MockHardware] Enalbe initialization non-joint components(`#822 <https://github.com/ros-controls/ros2_control/issues/822>`_)
 * Contributors: Felix Exner
 

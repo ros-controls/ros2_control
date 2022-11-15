@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.3.0 (2022-11-15)
+------------------
 * Adding activation/deactivation tests for chain controllers (`#809 <https://github.com/ros-controls/ros2_control/issues/809>`_)
 * Fix const-ness in std::chrono::time_point construction and explicitly use std::chrono::nanoseconds as std::chrono::time_point template parameter to help compilation on macOS as its std::chrono::system_clock::time_point defaults to std::chrono::milliseconds for duration type (`#848 <https://github.com/ros-controls/ros2_control/issues/848>`_)
 * [ControllerManager] Fix wrong initialization order and avoid compiler warnings (`#836 <https://github.com/ros-controls/ros2_control/issues/836>`_)
