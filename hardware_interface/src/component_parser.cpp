@@ -27,8 +27,7 @@ namespace
 constexpr const auto kRobotTag = "robot";
 constexpr const auto kROS2ControlTag = "ros2_control";
 constexpr const auto kHardwareTag = "hardware";
-[[deprecated("Use kPluginTypeTag instead of kClassTypeTag.")]] constexpr const auto kClassTypeTag = "plugin";
-constexpr const auto kPluginTypeTag = "plugin";
+constexpr const auto kPluginNameTag = "plugin";
 constexpr const auto kParamTag = "param";
 constexpr const auto kActuatorTag = "actuator";
 constexpr const auto kJointTag = "joint";
@@ -405,8 +404,8 @@ TransmissionInfo parse_transmission_from_xml(const tinyxml2::XMLElement * transm
 
   // Find name, type and class of a transmission
   transmission.name = get_attribute_value(transmission_it, kNameAttribute, transmission_it->Name());
-  const auto * type_it = transmission_it->FirstChildElement(kPluginTypeTag);
-  transmission.type = get_text_for_element(type_it, kPluginTypeTag);
+  const auto * type_it = transmission_it->FirstChildElement(kPluginNameTag);
+  transmission.type = get_text_for_element(type_it, kPluginNameTag);
 
   // Parse joints
   const auto * joint_it = transmission_it->FirstChildElement(kJointTag);
@@ -503,9 +502,9 @@ HardwareInfo parse_resource_from_xml(
   {
     if (!std::string(kHardwareTag).compare(ros2_control_child_it->Name()))
     { 
-      const auto * type_it = ros2_control_child_it->FirstChildElement(kPluginTypeTag);
+      const auto * type_it = ros2_control_child_it->FirstChildElement(kPluginNameTag);
       hardware.hardware_plugin_name =
-        get_text_for_element(type_it, std::string("hardware ") + kPluginTypeTag);
+        get_text_for_element(type_it, std::string("hardware ") + kPluginNameTag);
       const auto * params_it = ros2_control_child_it->FirstChildElement(kParamTag);
       if (params_it)
       {
