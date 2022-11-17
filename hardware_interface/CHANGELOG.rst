@@ -2,6 +2,11 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+3.3.0 (2022-11-15)
+------------------
+* [MockHardware] Enalbe initialization non-joint components(`#822 <https://github.com/ros-controls/ros2_control/issues/822>`_)
+* Contributors: Felix Exner
+
 3.2.0 (2022-10-15)
 ------------------
 * [MockComponents] Rename 'fake_sensor_commands' to 'mock_sensor_commands' (`#782 <https://github.com/ros-controls/ros2_control/issues/782>`_)
