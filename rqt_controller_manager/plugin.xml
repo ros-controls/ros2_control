@@ -1,0 +1,19 @@
+<library path="rqt_controller_manager">
+  <class name="ControllerManager"
+         type="rqt_controller_manager.controller_manager.ControllerManager"
+         base_class_type="rqt_gui_py::Plugin">
+    <description>
+      Graphical frontend for interacting with the controller manager.
+    </description>
+    <qtgui>
+      <group>
+        <label>Robot Tools</label>
+        <icon type="theme">folder</icon>
+        <statustip>Plugins related to robot tools.</statustip>
+      </group>
+      <label>Controller Manager</label>
+      <icon type="file">resource/cm_icon.png</icon>
+      <statustip>Interact with controller managers</statustip>
+    </qtgui>
+  </class>
+</library>
