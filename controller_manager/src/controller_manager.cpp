@@ -304,7 +304,7 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_c
 controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_controller(
   const std::string & controller_name)
 {
-  const std::string controller_namespaced_name = controller_namespace + '/' + controller_name;
+  const std::string controller_namespaced_name = get_namespace() + '/' + controller_name;
   const std::string param_name = controller_name + ".type";
   std::string controller_type;
 
@@ -324,7 +324,7 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_c
       get_logger(), "The 'type' param was not defined for '%s'.", controller_name.c_str());
     return nullptr;
   }
-  return load_controller(controller_name, controller_namespace, controller_type);
+  return load_controller(controller_name, controller_type);
 }
 
 controller_interface::return_type ControllerManager::unload_controller(
@@ -1379,7 +1379,7 @@ void ControllerManager::load_controller_service_cb(
   std::lock_guard<std::mutex> guard(services_lock_);
   RCLCPP_DEBUG(get_logger(), "loading service locked");
 
-  response->ok = load_controller(request->name, request->robot_namespace).get() != nullptr;
+  response->ok = load_controller(request->name).get() != nullptr;
 
   RCLCPP_DEBUG(
     get_logger(), "loading service finished for controller '%s' ", request->name.c_str());
