@@ -190,6 +190,19 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
   }
 }
 
+ControllerManager::ControllerManager(
+  std::unique_ptr<hardware_interface::ResourceManager> resource_manager,
+  std::shared_ptr<rclcpp::Executor> executor, const std::string & manager_node_name,
+  const std::string & namespace_)
+: rclcpp::Node(manager_node_name, namespace_, get_cm_node_options()),
+  resource_manager_(std::move(resource_manager)),
+  executor_(executor),
+  loader_(std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
+    kControllerInterfaceName, kControllerInterface))
+{
+  init_services();
+}
+
 void ControllerManager::init_services()
 {
   // TODO(anyone): Due to issues with the MutliThreadedExecutor, this control loop does not rely on
@@ -244,14 +257,8 @@ void ControllerManager::init_services()
       rmw_qos_profile_services_hist_keep_all, best_effort_callback_group_);
 }
 
-<<<<<<< HEAD
 controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_controller(
   const std::string & controller_name, const std::string & controller_type)
-=======
-controller_interface::ControllerInterfaceSharedPtr ControllerManager::load_controller(
-  const std::string & controller_name, const std::string & controller_namespace,
-  const std::string & controller_type)
->>>>>>> run 'pre-commit run --all' and fix flake8 errors
 {
   RCLCPP_INFO(get_logger(), "Loading controller '%s'", controller_name.c_str());
 
