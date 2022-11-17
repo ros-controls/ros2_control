@@ -561,13 +561,18 @@ public:
   std::unordered_map<std::string, bool> claimed_command_interface_map_;
 };
 
-ResourceManager::ResourceManager() : resource_storage_(std::make_unique<ResourceStorage>()) {}
+ResourceManager::ResourceManager(
+  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
+: resource_storage_(std::make_unique<ResourceStorage>()), clock_interface_(clock_interface)
+{
+}
 
 ResourceManager::~ResourceManager() = default;
 
 ResourceManager::ResourceManager(
-  const std::string & urdf, bool validate_interfaces, bool activate_all)
-: resource_storage_(std::make_unique<ResourceStorage>())
+  const std::string & urdf, bool validate_interfaces, bool activate_all,
+  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
+: resource_storage_(std::make_unique<ResourceStorage>()), clock_interface_(clock_interface)
 {
   load_urdf(urdf, validate_interfaces);
 
@@ -596,22 +601,17 @@ void ResourceManager::load_urdf(const std::string & urdf, bool validate_interfac
       std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
       std::lock_guard<std::recursive_mutex> guard_claimed(claimed_command_interfaces_lock_);
       resource_storage_->load_and_initialize_actuator(individual_hardware_info);
-            if (individual_hardware_info.is_asynch) {}
-
     }
     if (individual_hardware_info.type == sensor_type)
     {
       std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
       resource_storage_->load_and_initialize_sensor(individual_hardware_info);
-      if (individual_hardware_info.is_asynch) {}
     }
     if (individual_hardware_info.type == system_type)
     {
       std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
       std::lock_guard<std::recursive_mutex> guard_claimed(claimed_command_interfaces_lock_);
       resource_storage_->load_and_initialize_system(individual_hardware_info);
-            if (individual_hardware_info.is_asynch) {}
-
     }
   }
 
@@ -1011,21 +1011,21 @@ void ResourceManager::read(const rclcpp::Time & time, const rclcpp::Duration & p
 {
   for (auto & component : resource_storage_->actuators_)
   {
-    if (!resource_storage_->hardware_info_map_[component.get_name()].is_asynch) 
+    if (!resource_storage_->hardware_info_map_[component.get_name()].is_asynch)
     {
       component.read(time, period);
     }
   }
   for (auto & component : resource_storage_->sensors_)
-  { 
-    if (!resource_storage_->hardware_info_map_[component.get_name()].is_asynch) 
+  {
+    if (!resource_storage_->hardware_info_map_[component.get_name()].is_asynch)
     {
       component.read(time, period);
     }
   }
   for (auto & component : resource_storage_->systems_)
   {
-    if (!resource_storage_->hardware_info_map_[component.get_name()].is_asynch) 
+    if (!resource_storage_->hardware_info_map_[component.get_name()].is_asynch)
     {
       component.read(time, period);
     }
@@ -1036,14 +1036,14 @@ void ResourceManager::write(const rclcpp::Time & time, const rclcpp::Duration & 
 {
   for (auto & component : resource_storage_->actuators_)
   {
-    if (!resource_storage_->hardware_info_map_[component.get_name()].is_asynch) 
+    if (!resource_storage_->hardware_info_map_[component.get_name()].is_asynch)
     {
       component.write(time, period);
     }
   }
   for (auto & component : resource_storage_->systems_)
   {
-    if (!resource_storage_->hardware_info_map_[component.get_name()].is_asynch) 
+    if (!resource_storage_->hardware_info_map_[component.get_name()].is_asynch)
     {
       component.write(time, period);
     }
@@ -1124,6 +1124,20 @@ void ResourceManager::activate_all_components()
   {
     set_component_state(component.get_name(), active_state);
   }
+}
+
+void ResourceManager::allocate_threads()
+{
+  int i = 0;
+  for (auto & hardware_info_and_component : resource_storage_->hardware_info_map_) //_[component.get_name()].is_asynch
+  {
+    if (hardware_info_and_component.second.is_asynch) 
+    {
+      ++i;
+    }
+  }
+  std::cerr << "gdfklagfdljagadflkgjadfkl" << i << std::endl;
+  //exit(1);
 }
 
 }  // namespace hardware_interface

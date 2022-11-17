@@ -467,6 +467,7 @@ private:
     ControllerThreadWrapper(const ControllerThreadWrapper& t) = delete;
     ControllerThreadWrapper(ControllerThreadWrapper&& t) = default;
     ~ControllerThreadWrapper() {
+      terminated_ = true;
       if (m_thread_.joinable()) 
       { 
         m_thread_.join(); 

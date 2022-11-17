@@ -15,30 +15,28 @@
 #ifndef HARDWARE_INTERFACE__RESOURCE_MANAGER_HPP_
 #define HARDWARE_INTERFACE__RESOURCE_MANAGER_HPP_
 
+#include <atomic>
 #include <memory>
 #include <mutex>
 #include <string>
-#include <unordered_map>
-#include <vector>
-#include <atomic>
-#include <variant>
 #include <thread>
+#include <unordered_map>
+#include <variant>
+#include <vector>
 
+#include "hardware_interface/actuator.hpp"
 #include "hardware_interface/hardware_component_info.hpp"
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/loaned_command_interface.hpp"
 #include "hardware_interface/loaned_state_interface.hpp"
+#include "hardware_interface/sensor.hpp"
+#include "hardware_interface/system.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
-#include "hardware_interface/system.hpp"
-#include "hardware_interface/sensor.hpp"
-#include "hardware_interface/actuator.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 
-
-
-
 #include "rclcpp/duration.hpp"
+#include "rclcpp/node.hpp"
 #include "rclcpp/time.hpp"
 
 namespace hardware_interface
@@ -47,13 +45,13 @@ class ActuatorInterface;
 class SensorInterface;
 class SystemInterface;
 class ResourceStorage;
-
+class ControllerManager;
 
 class HARDWARE_INTERFACE_PUBLIC ResourceManager
 {
 public:
   /// Default constructor for the Resource Manager.
-  ResourceManager();
+  ResourceManager(rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface = nullptr);
 
   /// Constructor for the Resource Manager.
   /**
@@ -72,7 +70,8 @@ public:
    * "autostart_components" and "autoconfigure_components" instead.
    */
   explicit ResourceManager(
-    const std::string & urdf, bool validate_interfaces = true, bool activate_all = false);
+    const std::string & urdf, bool validate_interfaces = true, bool activate_all = false,
+    rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface = nullptr);
 
   ResourceManager(const ResourceManager &) = delete;
 
@@ -377,6 +376,9 @@ public:
    */
   void activate_all_components();
 
+  void allocate_threads();
+
+
 private:
   void validate_storage(const std::vector<hardware_interface::HardwareInfo> & hardware_info) const;
 
@@ -391,102 +393,119 @@ private:
   class ComponentThreadWrapper
   {
   public:
-  
-    explicit ComponentThreadWrapper(System* component, std::mutex& mutex_)
-      : component_(component)
-      , read_thread_{}
-      , write_thread_{}
-      , mutex_ref_(mutex_)
+    explicit ComponentThreadWrapper(
+      System * component, std::mutex & mutex,
+      rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
+    : component_(component),
+      read_thread_{},
+      write_thread_{},
+      mutex_ref_(mutex),
+      clock_interface_(clock_interface)
     {
     }
-    explicit ComponentThreadWrapper(Actuator* component, std::mutex& mutex_)
-      : component_(component)
-      , read_thread_{}
-      , write_thread_{}
-      , mutex_ref_(mutex_)
+    explicit ComponentThreadWrapper(
+      Actuator * component, std::mutex & mutex,
+      rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
+    : component_(component),
+      read_thread_{},
+      write_thread_{},
+      mutex_ref_(mutex),
+      clock_interface_(clock_interface)
     {
     }
-    explicit ComponentThreadWrapper(Sensor* component, std::mutex& mutex_)
-      : component_(component)
-      , read_thread_{}
-      , write_thread_{}
-      , mutex_ref_(mutex_)
+    explicit ComponentThreadWrapper(
+      Sensor * component, std::mutex & mutex,
+      rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
+    : component_(component),
+      read_thread_{},
+      write_thread_{},
+      mutex_ref_(mutex),
+      clock_interface_(clock_interface)
     {
     }
-    
-    ComponentThreadWrapper(const ComponentThreadWrapper& t) = delete;
-    ComponentThreadWrapper(ComponentThreadWrapper&& t) = default;
-    
-    ~ComponentThreadWrapper() {
-      if (read_thread_.joinable()) 
-      { 
-        read_thread_.join(); 
+
+    ComponentThreadWrapper(const ComponentThreadWrapper & t) = delete;
+    ComponentThreadWrapper(ComponentThreadWrapper && t) = default;
+
+    ~ComponentThreadWrapper()
+    {
+      if (read_thread_.joinable())
+      {
+        read_thread_.join();
       }
       if (write_thread_.joinable())
       {
         write_thread_.join();
       }
     }
-    
-    void start_read()
-    {
-      read_thread_ = std::thread(&ComponentThreadWrapper::read, this);
-    }
 
-    void read() 
-    {      
-      std::visit([this](auto& object) { 
-        //rclcpp::Time previous_time = object->get_node()->now(); 
-        while (!terminated_)
+    void start_read() { read_thread_ = std::thread(&ComponentThreadWrapper::read, this); }
+
+    void read()
+    {
+      std::visit(
+        [this](auto & object)
         {
-            if (mutex_ref_.try_lock() && object->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
-            { 
+          auto previous_time = clock_interface_->get_clock()->now();
+          while (!terminated_)
+          {
+            if (
+              mutex_ref_.try_lock() &&
+              object->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+            {
               std::lock_guard<std::mutex> lock(mutex_ref_, std::adopt_lock);
-              //auto const current_time = object->get_node()->now();
-              //auto const measured_period = current_time - previous_time;
-              //previous_time = current_time;
-              //object->read(object->get_node()->now(), measured_period);
+              auto const current_time = clock_interface_->get_clock()->now();
+              auto const measured_period = current_time - previous_time;
+              previous_time = current_time;
+              object->read(clock_interface_->get_clock()->now(), measured_period);
             }
-          std::this_thread::sleep_for(std::chrono::milliseconds(100)); //calculate this based on ros2_control_node logic
-        }
-      }, component_);
-    }
-
-    void start_write()
-    {
-      write_thread_ = std::thread(&ComponentThreadWrapper::write, this);
-    }
-
-    void write() 
-    {      
-      std::visit([this](auto& object) {  
-        //rclcpp::Time previous_time = object->get_node()->now();
-        while (!terminated_)
-        {
-          if (mutex_ref_.try_lock() && object->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
-          { 
-            std::lock_guard<std::mutex> lock(mutex_ref_, std::adopt_lock);
-            //auto const current_time = object->get_node()->now();
-            //auto const measured_period = current_time - previous_time;
-            //previous_time = current_time;    
-            //object->write(object->get_node()->now(), measured_period);
+            std::this_thread::sleep_for(
+              std::chrono::milliseconds(100));  //calculate this based on ros2_control_node logic
           }
-          std::this_thread::sleep_for(std::chrono::milliseconds(100)); //calculate this based on ros2_control_node logic
-        }
-      }, component_);
+        },
+        component_);
+    }
+
+    void start_write() { write_thread_ = std::thread(&ComponentThreadWrapper::write, this); }
+
+    void write()
+    {
+      
+      std::visit(
+        [this](auto & object)
+        {
+          auto previous_time = clock_interface_->get_clock()->now();
+          while (!terminated_)
+          {
+            if (
+              mutex_ref_.try_lock() &&
+              object->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+            {
+              std::lock_guard<std::mutex> lock(mutex_ref_, std::adopt_lock);
+              auto const current_time = clock_interface_->get_clock()->now();
+              auto const measured_period = current_time - previous_time;
+              previous_time = current_time;
+              object->write(clock_interface_->get_clock()->now(), measured_period);
+            }
+            std::this_thread::sleep_for(
+              std::chrono::milliseconds(100));  //calculate this based on ros2_control_node logic
+          
+          }
+        },
+        component_);
     }
     std::atomic<bool> terminated_ = false;
+
   private:
-    std::variant<Actuator*, System*, Sensor*> component_;
+    std::variant<Actuator *, System *, Sensor *> component_;
     std::thread read_thread_;
     std::thread write_thread_;
-    std::mutex& mutex_ref_;
-    
+    std::mutex & mutex_ref_;
+    rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface_;
   };
-  
-  std::unordered_map<std::string, std::unique_ptr<ComponentThreadWrapper>> async_component_threads_;
 
-  
+  std::unordered_map<std::string, std::unique_ptr<ComponentThreadWrapper>> async_component_threads_;
+  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface_ = nullptr;
 };
 
 }  // namespace hardware_interface

@@ -20,6 +20,7 @@
 
 #include "controller_manager/controller_manager.hpp"
 #include "controller_manager/realtime.hpp"
+#include "hardware_interface/resource_manager.hpp"
 #include "rclcpp/rclcpp.hpp"
 
 using namespace std::chrono_literals;
@@ -77,7 +78,7 @@ int main(int argc, char ** argv)
 
         // execute update loop
         cm->read(cm->now(), measured_period);
-        cm->update(cm->now(), measured_period); // this should call async thread's update
+        cm->update(cm->now(), measured_period);  // this should call async thread's update
         cm->write(cm->now(), measured_period);
 
         // wait until we hit the end of the period
