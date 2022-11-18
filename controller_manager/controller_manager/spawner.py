@@ -162,6 +162,10 @@ def main(args=None):
     if param_file and not os.path.isfile(param_file):
         raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), param_file)
 
+    prefixed_controller_name = controller_name
+    if controller_namespace:
+        prefixed_controller_name = controller_namespace + '/' + controller_name
+
     node = Node('spawner_' + controller_name)
     if not controller_manager_name.startswith('/'):
         spawner_namespace = node.get_namespace()
@@ -176,30 +180,27 @@ def main(args=None):
             node.get_logger().error('Controller manager not available')
             return 1
 
-        namespaced_controller_name = namespace_name(controller_name, controller_namespace)
-        if is_controller_loaded(node, controller_manager_name, namespaced_controller_name):
+        if is_controller_loaded(node, controller_manager_name, prefixed_controller_name):
             node.get_logger().info('Controller already loaded, skipping load_controller')
         else:
             if controller_type:
                 ret = subprocess.run(['ros2', 'param', 'set', controller_manager_name,
-                                      namespaced_controller_name + '.type', controller_type])
-            ret = load_controller(
-                node, controller_manager_name, controller_name)
+                                      prefixed_controller_name + '.type', controller_type])
+            ret = load_controller(node, controller_manager_name, controller_name)
             if not ret.ok:
                 # Error message printed by ros2 control
                 return 1
-            node.get_logger().info(bcolors.OKBLUE + 'Loaded ' + namespaced_controller_name + bcolors.ENDC)
+            node.get_logger().info(bcolors.OKBLUE + 'Loaded ' + prefixed_controller_name + bcolors.ENDC)
 
         if param_file:
-            ret = subprocess.run(['ros2', 'param', 'load', namespaced_controller_name, param_file])
+            ret = subprocess.run(['ros2', 'param', 'load', prefixed_controller_name, param_file])
             if ret.returncode != 0:
                 # Error message printed by ros2 param
                 return ret.returncode
-            node.get_logger().info('Loaded ' + param_file + ' into ' + namespaced_controller_name)
+            node.get_logger().info('Loaded ' + param_file + ' into ' + prefixed_controller_name)
 
         if not args.load_only:
-            ret = configure_controller(
-                node, controller_manager_name, controller_name)
+            ret = configure_controller(node, controller_manager_name, controller_name)
             if not ret.ok:
                 node.get_logger().info('Failed to configure controller')
                 return 1
@@ -218,7 +219,7 @@ def main(args=None):
                     return 1
 
                 node.get_logger().info(bcolors.OKGREEN + 'Configured and activated ' +
-                                       bcolors.OKCYAN + namespaced_controller_name + bcolors.ENDC)
+                                       bcolors.OKCYAN + prefixed_controller_name + bcolors.ENDC)
             elif args.stopped:
                 node.get_logger().warn('"--stopped" flag is deprecated use "--inactive" instead')
 
