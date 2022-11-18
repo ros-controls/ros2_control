@@ -63,10 +63,9 @@ def list_hardware_interfaces(node, controller_manager_name):
                           ListHardwareInterfaces, request)
 
 
-def load_controller(node, controller_manager_name, controller_name, controller_namespace):
+def load_controller(node, controller_manager_name, controller_name):
     request = LoadController.Request()
     request.name = controller_name
-    request.robot_namespace = controller_namespace
     return service_caller(node, f'{controller_manager_name}/load_controller',
                           LoadController, request)
 

@@ -184,7 +184,7 @@ def main(args=None):
                 ret = subprocess.run(['ros2', 'param', 'set', controller_manager_name,
                                       namespaced_controller_name + '.type', controller_type])
             ret = load_controller(
-                node, controller_manager_name, controller_name, controller_namespace)
+                node, controller_manager_name, controller_name)
             if not ret.ok:
                 # Error message printed by ros2 control
                 return 1
