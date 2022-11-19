@@ -5,7 +5,7 @@ package_name = 'ros2controlcli'
 
 setup(
     name=package_name,
-    version='2.12.1',
+    version='3.3.0',
     packages=find_packages(exclude=['test']),
     data_files=[
         ('share/' + package_name, ['package.xml']),
@@ -36,6 +36,7 @@ ROS2 Control command  interface.""",
         ],
         'ros2controlcli.verb': [
             'list_controllers = ros2controlcli.verb.list_controllers:ListControllersVerb',
+            'view_controller_chains = ros2controlcli.verb.view_controller_chains:ViewControllerChainsVerb',
             'list_hardware_interfaces = \
                 ros2controlcli.verb.list_hardware_interfaces:ListHardwareInterfacesVerb',
             'list_controller_types = \

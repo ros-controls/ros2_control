@@ -99,7 +99,8 @@ private:
 
   void initialize_storage_vectors(
     std::vector<std::vector<double>> & commands, std::vector<std::vector<double>> & states,
-    const std::vector<std::string> & interfaces);
+    const std::vector<std::string> & interfaces,
+    const std::vector<hardware_interface::ComponentInfo> & component_infos);
 
   template <typename InterfaceType>
   bool populate_interfaces(
@@ -108,7 +109,7 @@ private:
     std::vector<InterfaceType> & target_interfaces, bool using_state_interfaces);
 
   bool use_fake_gpio_command_interfaces_;
-  bool use_fake_sensor_command_interfaces_;
+  bool use_mock_sensor_command_interfaces_;
 
   double position_state_following_offset_;
   std::string custom_interface_with_following_offset_;

@@ -57,7 +57,7 @@ robot_description (mandatory; string)
   String with the URDF string as robot description.
   This is usually result of the parsed description files by ``xacro`` command.
 
-update_rate (mandatory; double)
+update_rate (mandatory; integer)
   The frequency of controller manager's real-time update loop.
   This loop reads states from hardware, updates controller and writes commands to hardware.
 
