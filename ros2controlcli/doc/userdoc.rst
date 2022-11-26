@@ -15,6 +15,8 @@ Currently supported commands are
     - ros2 control set_controller_state
     - ros2 control switch_controllers
     - ros2 control unload_controller
+    - ros2 control view_controller_chains
+
 
 list_controllers
 ----------------
@@ -220,3 +222,13 @@ unload_controller
                             Name of the controller manager ROS node
       --include-hidden-nodes
                             Consider hidden nodes as well
+
+view_controller_chains
+----------------------
+
+.. code-block:: console
+
+    $ ros2 control view_controller_chains -h
+    usage: ros2 view_controller_chains
+
+    Creates a graphviz image from loaded controllers.

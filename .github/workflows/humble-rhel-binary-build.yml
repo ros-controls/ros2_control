@@ -2,13 +2,13 @@ name: Humble RHEL Binary Build
 on:
   workflow_dispatch:
     branches:
-      - master
+      - humble
 #  pull_request:
 #    branches:
-#      - master
+#      - humble
 #  push:
 #    branches:
-#      - master
+#      - humble
 #  schedule:
 #    # Run every day to detect flakiness and broken dependencies
 #    - cron: '03 1 * * *'
@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       ROS_DISTRO: humble
-    container: jaronl/ros:humble-alma
+    container: ghcr.io/ros-controls/ros:humble-rhel
     steps:
       - uses: actions/checkout@v3
         with:
