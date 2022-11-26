@@ -19,8 +19,8 @@
 #include <thread>
 
 #include "controller_manager/controller_manager.hpp"
-#include "controller_manager/realtime.hpp"
 #include "rclcpp/rclcpp.hpp"
+#include "realtime_tools/thread_priority.hpp"
 
 using namespace std::chrono_literals;
 
@@ -48,9 +48,9 @@ int main(int argc, char ** argv)
   std::thread cm_thread(
     [cm]()
     {
-      if (controller_manager::has_realtime_kernel())
+      if (realtime_tools::has_realtime_kernel())
       {
-        if (!controller_manager::configure_sched_fifo(kSchedPriority))
+        if (!realtime_tools::configure_sched_fifo(kSchedPriority))
         {
           RCLCPP_WARN(cm->get_logger(), "Could not enable FIFO RT scheduling policy");
         }
