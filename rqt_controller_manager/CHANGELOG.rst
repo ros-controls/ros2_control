@@ -1,9 +1,11 @@
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Changelog for package joint_limits
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Changelog for package rqt_controller_manager
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Forthcoming
 -----------
+* rqt controller manager ros 2 port (`#813 <https://github.com/ros-controls/ros2_control/issues/813>`_) (`#855 <https://github.com/ros-controls/ros2_control/issues/855>`_)
+* Contributors: Kenji Brameld, Bence Magyar
 
 2.16.0 (2022-10-17)
 -------------------
@@ -16,16 +18,12 @@ Forthcoming
 
 2.13.0 (2022-08-03)
 -------------------
-* Make output of joint limits nicer. (`#788 <https://github.com/ros-controls/ros2_control/issues/788>`_)
-* Contributors: Denis Štogl
 
 2.12.1 (2022-07-14)
 -------------------
 
 2.12.0 (2022-07-09)
 -------------------
-* Move Joint Limits structures for use in controllers (`#462 <https://github.com/ros-controls/ros2_control/issues/462>`_)
-* Contributors: Denis Štogl, Andy Zelenak, Bence Magyar
 
 2.11.0 (2022-07-03)
 -------------------
