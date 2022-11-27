@@ -1014,6 +1014,8 @@ void ResourceManager::read(const rclcpp::Time & time, const rclcpp::Duration & p
     if (!resource_storage_->hardware_info_map_[component.get_name()].is_asynch)
     {
       component.read(time, period);
+    } else {
+      async_component_threads_.at(component.get_name())->read_flag = true;
     }
   }
   for (auto & component : resource_storage_->sensors_)
@@ -1021,6 +1023,8 @@ void ResourceManager::read(const rclcpp::Time & time, const rclcpp::Duration & p
     if (!resource_storage_->hardware_info_map_[component.get_name()].is_asynch)
     {
       component.read(time, period);
+    } else {
+      async_component_threads_.at(component.get_name())->read_flag = true;
     }
   }
   for (auto & component : resource_storage_->systems_)
@@ -1028,6 +1032,8 @@ void ResourceManager::read(const rclcpp::Time & time, const rclcpp::Duration & p
     if (!resource_storage_->hardware_info_map_[component.get_name()].is_asynch)
     {
       component.read(time, period);
+    } else {
+      async_component_threads_.at(component.get_name())->read_flag = true;
     }
   }
 }
@@ -1039,6 +1045,8 @@ void ResourceManager::write(const rclcpp::Time & time, const rclcpp::Duration & 
     if (!resource_storage_->hardware_info_map_[component.get_name()].is_asynch)
     {
       component.write(time, period);
+    } else {
+      async_component_threads_.at(component.get_name())->write_flag = true;
     }
   }
   for (auto & component : resource_storage_->systems_)
@@ -1046,6 +1054,8 @@ void ResourceManager::write(const rclcpp::Time & time, const rclcpp::Duration & 
     if (!resource_storage_->hardware_info_map_[component.get_name()].is_asynch)
     {
       component.write(time, period);
+    } else {
+      async_component_threads_.at(component.get_name())->write_flag = true;
     }
   }
 }
@@ -1128,16 +1138,51 @@ void ResourceManager::activate_all_components()
 
 void ResourceManager::allocate_threads()
 {
-  int i = 0;
+  /*
   for (auto & hardware_info_and_component : resource_storage_->hardware_info_map_) //_[component.get_name()].is_asynch
   {
     if (hardware_info_and_component.second.is_asynch) 
     {
-      ++i;
+      async_component_threads_.emplace(
+      hardware_info_and_component.second.name,
     }
   }
-  std::cerr << "gdfklagfdljagadflkgjadfkl" << i << std::endl;
-  //exit(1);
+  */
+  for (auto & component : resource_storage_->actuators_)
+  {
+    if (resource_storage_->hardware_info_map_[component.get_name()].is_asynch)
+    {
+      async_component_threads_.emplace(component.get_name(), 
+        std::make_unique<ComponentThreadWrapper>(&component, async_component_mutex_, clock_interface_));
+      std::cerr << "allocating async actuator" << std::endl;
+
+    }
+  }
+  for (auto & component : resource_storage_->sensors_)
+  {
+    if (resource_storage_->hardware_info_map_[component.get_name()].is_asynch)
+    {
+      async_component_threads_.emplace(component.get_name(), 
+        std::make_unique<ComponentThreadWrapper>(&component, async_component_mutex_, clock_interface_));
+      std::cerr << "allocating async sensors" << std::endl;
+
+    }
+  }
+  for (auto & component : resource_storage_->systems_)
+  {
+    if (resource_storage_->hardware_info_map_[component.get_name()].is_asynch)
+    {
+      async_component_threads_.emplace(component.get_name(), 
+        std::make_unique<ComponentThreadWrapper>(&component, async_component_mutex_, clock_interface_));
+      std::cerr << "allocating async system " << component.get_name() << std::endl;
+
+    }
+  }
+
+  for (auto& thread : async_component_threads_) {
+    thread.second->start();
+  }
+  std::cerr << "gdfklagfdljagadflkgjadfkl" << std::endl;
 }
 
 }  // namespace hardware_interface

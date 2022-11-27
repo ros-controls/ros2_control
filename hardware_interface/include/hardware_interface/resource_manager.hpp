@@ -397,8 +397,7 @@ private:
       System * component, std::mutex & mutex,
       rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
     : component_(component),
-      read_thread_{},
-      write_thread_{},
+      read_and_write_thread_{},
       mutex_ref_(mutex),
       clock_interface_(clock_interface)
     {
@@ -407,8 +406,7 @@ private:
       Actuator * component, std::mutex & mutex,
       rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
     : component_(component),
-      read_thread_{},
-      write_thread_{},
+      read_and_write_thread_{},
       mutex_ref_(mutex),
       clock_interface_(clock_interface)
     {
@@ -417,8 +415,7 @@ private:
       Sensor * component, std::mutex & mutex,
       rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
     : component_(component),
-      read_thread_{},
-      write_thread_{},
+      read_and_write_thread_{},
       mutex_ref_(mutex),
       clock_interface_(clock_interface)
     {
@@ -429,19 +426,16 @@ private:
 
     ~ComponentThreadWrapper()
     {
-      if (read_thread_.joinable())
+      terminated_ = true;
+      if (read_and_write_thread_.joinable())
       {
-        read_thread_.join();
-      }
-      if (write_thread_.joinable())
-      {
-        write_thread_.join();
+        read_and_write_thread_.join();
       }
     }
 
-    void start_read() { read_thread_ = std::thread(&ComponentThreadWrapper::read, this); }
+    void start() { read_and_write_thread_ = std::thread(&ComponentThreadWrapper::read_and_write, this); }
 
-    void read()
+    void read_and_write()
     {
       std::visit(
         [this](auto & object)
@@ -451,59 +445,51 @@ private:
           {
             if (
               mutex_ref_.try_lock() &&
+              read_flag && 
               object->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
             {
               std::lock_guard<std::mutex> lock(mutex_ref_, std::adopt_lock);
-              auto const current_time = clock_interface_->get_clock()->now();
-              auto const measured_period = current_time - previous_time;
+              
+              auto  current_time = clock_interface_->get_clock()->now();
+              auto  measured_period = current_time - previous_time;
               previous_time = current_time;
               object->read(clock_interface_->get_clock()->now(), measured_period);
+              read_flag = false;
             }
-            std::this_thread::sleep_for(
-              std::chrono::milliseconds(100));  //calculate this based on ros2_control_node logic
-          }
-        },
-        component_);
-    }
 
-    void start_write() { write_thread_ = std::thread(&ComponentThreadWrapper::write, this); }
-
-    void write()
-    {
-      
-      std::visit(
-        [this](auto & object)
-        {
-          auto previous_time = clock_interface_->get_clock()->now();
-          while (!terminated_)
-          {
             if (
               mutex_ref_.try_lock() &&
+              write_flag &&
               object->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
             {
               std::lock_guard<std::mutex> lock(mutex_ref_, std::adopt_lock);
-              auto const current_time = clock_interface_->get_clock()->now();
-              auto const measured_period = current_time - previous_time;
+              
+              auto  current_time = clock_interface_->get_clock()->now();
+              auto  measured_period = current_time - previous_time;
               previous_time = current_time;
               object->write(clock_interface_->get_clock()->now(), measured_period);
+              write_flag = false;
             }
+            
             std::this_thread::sleep_for(
-              std::chrono::milliseconds(100));  //calculate this based on ros2_control_node logic
-          
+              std::chrono::milliseconds(100));
           }
         },
         component_);
     }
+
     std::atomic<bool> terminated_ = false;
+    std::atomic<bool> read_flag = false;
+    std::atomic<bool>  write_flag = false;
 
   private:
     std::variant<Actuator *, System *, Sensor *> component_;
-    std::thread read_thread_;
-    std::thread write_thread_;
+    std::thread read_and_write_thread_;
     std::mutex & mutex_ref_;
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface_;
   };
 
+  std::mutex async_component_mutex_;
   std::unordered_map<std::string, std::unique_ptr<ComponentThreadWrapper>> async_component_threads_;
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface_ = nullptr;
 };
