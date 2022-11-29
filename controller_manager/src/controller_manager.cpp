@@ -138,6 +138,39 @@ rclcpp::NodeOptions get_cm_node_options()
 }
 
 ControllerManager::ControllerManager(
+  std::shared_ptr<rclcpp::Executor> executor, const std::string & manager_node_name,
+  const std::string & namespace_)
+: rclcpp::Node(manager_node_name, namespace_, get_cm_node_options()),
+  resource_manager_(std::make_unique<hardware_interface::ResourceManager>()),
+  diagnostics_updater_(this),
+  executor_(executor),
+  loader_(std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
+    kControllerInterfaceNamespace, kControllerInterfaceClassName)),
+  chainable_loader_(
+    std::make_shared<pluginlib::ClassLoader<controller_interface::ChainableControllerInterface>>(
+      kControllerInterfaceNamespace, kChainableControllerInterfaceClassName))
+{
+  if (!get_parameter("update_rate", update_rate_))
+  {
+    RCLCPP_WARN(get_logger(), "'update_rate' parameter not set, using default value.");
+  }
+
+  std::string robot_description = "";
+  get_parameter("robot_description", robot_description);
+  if (robot_description.empty())
+  {
+    throw std::runtime_error("Unable to initialize resource manager, no robot description found.");
+  }
+
+  init_resource_manager(robot_description);
+
+  diagnostics_updater_.setHardwareID("ros2_control");
+  diagnostics_updater_.add(
+    "Controllers Activity", this, &ControllerManager::controller_activity_diagnostic_callback);
+  init_services();
+}
+
+ControllerManager::ControllerManager(
   std::unique_ptr<hardware_interface::ResourceManager> resource_manager,
   std::shared_ptr<rclcpp::Executor> executor, const std::string & manager_node_name,
   const std::string & namespace_)
@@ -188,19 +221,6 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
   {
     resource_manager_->activate_all_components();
   }
-}
-
-ControllerManager::ControllerManager(
-  std::unique_ptr<hardware_interface::ResourceManager> resource_manager,
-  std::shared_ptr<rclcpp::Executor> executor, const std::string & manager_node_name,
-  const std::string & namespace_)
-: rclcpp::Node(manager_node_name, namespace_, get_cm_node_options()),
-  resource_manager_(std::move(resource_manager)),
-  executor_(executor),
-  loader_(std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
-    kControllerInterfaceName, kControllerInterface))
-{
-  init_services();
 }
 
 void ControllerManager::init_services()
