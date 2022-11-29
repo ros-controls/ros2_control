@@ -79,14 +79,10 @@ public:
   virtual ~ControllerManager() = default;
 
   CONTROLLER_MANAGER_PUBLIC
-<<<<<<< HEAD
   void init_resource_manager(const std::string & robot_description);
 
   CONTROLLER_MANAGER_PUBLIC
   controller_interface::ControllerInterfaceBaseSharedPtr load_controller(
-=======
-  controller_interface::ControllerInterfaceSharedPtr load_controller(
->>>>>>> remove useless function arguments
     const std::string & controller_name, const std::string & controller_type);
 
   /// load_controller loads a controller by name, the type must be defined in the parameter server.
@@ -96,11 +92,7 @@ public:
    * \see Documentation in controller_manager_msgs/LoadController.srv
    */
   CONTROLLER_MANAGER_PUBLIC
-<<<<<<< HEAD
   controller_interface::ControllerInterfaceBaseSharedPtr load_controller(
-=======
-  controller_interface::ControllerInterfaceSharedPtr load_controller(
->>>>>>> remove useless function arguments
     const std::string & controller_name);
 
   CONTROLLER_MANAGER_PUBLIC
