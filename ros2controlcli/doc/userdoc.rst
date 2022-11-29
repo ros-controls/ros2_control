@@ -82,7 +82,7 @@ list_hardware_interfaces
     $ ros2 control list_hardware_interfaces -h
     usage: ros2 control list_hardware_interfaces [-h] [--spin-time SPIN_TIME] [-c CONTROLLER_MANAGER] [--include-hidden-nodes]
 
-    Output the list of loaded controllers, their type and status
+    Output the list of available command and state interfaces
 
     optional arguments:
       -h, --help            show this help message and exit

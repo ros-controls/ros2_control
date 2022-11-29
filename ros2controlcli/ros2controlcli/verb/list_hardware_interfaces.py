@@ -22,7 +22,7 @@ from ros2controlcli.api import add_controller_mgr_parsers
 
 
 class ListHardwareInterfacesVerb(VerbExtension):
-    """Output the list of loaded controllers, their type and status."""
+    """Output the list of available command and state interfaces."""
 
     def add_arguments(self, parser, cli_name):
         add_arguments(parser)
