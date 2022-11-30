@@ -78,7 +78,7 @@ public:
   }
 };
 
-void set_components_state(
+std::vector<hardware_interface::return_type> set_components_state(
   TestableResourceManager & rm, const std::vector<std::string> & components, const uint8_t state_id,
   const std::string & state_name)
 {
@@ -87,17 +87,20 @@ void set_components_state(
   {
     int_components = {"TestActuatorHardware", "TestSensorHardware", "TestSystemHardware"};
   }
+  std::vector<hardware_interface::return_type> results;
   for (const auto & component : int_components)
   {
     rclcpp_lifecycle::State state(state_id, state_name);
-    rm.set_component_state(component, state);
+    const auto result = rm.set_component_state(component, state);
+    results.push_back(result);
   }
+  return results;
 }
 
 auto configure_components =
   [](TestableResourceManager & rm, const std::vector<std::string> & components = {})
 {
-  set_components_state(
+  return set_components_state(
     rm, components, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
     hardware_interface::lifecycle_state_names::INACTIVE);
 };
@@ -105,7 +108,7 @@ auto configure_components =
 auto activate_components =
   [](TestableResourceManager & rm, const std::vector<std::string> & components = {})
 {
-  set_components_state(
+  return set_components_state(
     rm, components, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
     hardware_interface::lifecycle_state_names::ACTIVE);
 };
@@ -113,7 +116,7 @@ auto activate_components =
 auto deactivate_components =
   [](TestableResourceManager & rm, const std::vector<std::string> & components = {})
 {
-  set_components_state(
+  return set_components_state(
     rm, components, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
     hardware_interface::lifecycle_state_names::INACTIVE);
 };
@@ -121,7 +124,7 @@ auto deactivate_components =
 auto cleanup_components =
   [](TestableResourceManager & rm, const std::vector<std::string> & components = {})
 {
-  set_components_state(
+  return set_components_state(
     rm, components, lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
     hardware_interface::lifecycle_state_names::UNCONFIGURED);
 };
@@ -129,7 +132,7 @@ auto cleanup_components =
 auto shutdown_components =
   [](TestableResourceManager & rm, const std::vector<std::string> & components = {})
 {
-  set_components_state(
+  return set_components_state(
     rm, components, lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED,
     hardware_interface::lifecycle_state_names::FINALIZED);
 };
@@ -533,7 +536,7 @@ TEST_F(ResourceManagerTest, lifecycle_all_resources)
       hardware_interface::lifecycle_state_names::UNCONFIGURED);
   }
 
-  configure_components(rm);
+  ASSERT_THAT(configure_components(rm), ::testing::Each(hardware_interface::return_type::OK));
   {
     auto status_map = rm.get_components_status();
     EXPECT_EQ(
@@ -556,7 +559,7 @@ TEST_F(ResourceManagerTest, lifecycle_all_resources)
       hardware_interface::lifecycle_state_names::INACTIVE);
   }
 
-  activate_components(rm);
+  ASSERT_THAT(activate_components(rm), ::testing::Each(hardware_interface::return_type::OK));
   {
     auto status_map = rm.get_components_status();
     EXPECT_EQ(
@@ -579,7 +582,7 @@ TEST_F(ResourceManagerTest, lifecycle_all_resources)
       hardware_interface::lifecycle_state_names::ACTIVE);
   }
 
-  deactivate_components(rm);
+  ASSERT_THAT(deactivate_components(rm), ::testing::Each(hardware_interface::return_type::OK));
   {
     auto status_map = rm.get_components_status();
     EXPECT_EQ(
@@ -602,7 +605,7 @@ TEST_F(ResourceManagerTest, lifecycle_all_resources)
       hardware_interface::lifecycle_state_names::INACTIVE);
   }
 
-  cleanup_components(rm);
+  ASSERT_THAT(cleanup_components(rm), ::testing::Each(hardware_interface::return_type::OK));
   {
     auto status_map = rm.get_components_status();
     EXPECT_EQ(
@@ -625,7 +628,7 @@ TEST_F(ResourceManagerTest, lifecycle_all_resources)
       hardware_interface::lifecycle_state_names::UNCONFIGURED);
   }
 
-  shutdown_components(rm);
+  ASSERT_THAT(shutdown_components(rm), ::testing::Each(hardware_interface::return_type::OK));
   {
     auto status_map = rm.get_components_status();
     EXPECT_EQ(
