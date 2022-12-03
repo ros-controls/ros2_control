@@ -1138,16 +1138,6 @@ void ResourceManager::activate_all_components()
 
 void ResourceManager::allocate_threads()
 {
-  /*
-  for (auto & hardware_info_and_component : resource_storage_->hardware_info_map_) //_[component.get_name()].is_asynch
-  {
-    if (hardware_info_and_component.second.is_asynch) 
-    {
-      async_component_threads_.emplace(
-      hardware_info_and_component.second.name,
-    }
-  }
-  */
   for (auto & component : resource_storage_->actuators_)
   {
     if (resource_storage_->hardware_info_map_[component.get_name()].is_asynch)
@@ -1182,7 +1172,6 @@ void ResourceManager::allocate_threads()
   for (auto& thread : async_component_threads_) {
     thread.second->start();
   }
-  std::cerr << "gdfklagfdljagadflkgjadfkl" << std::endl;
 }
 
 }  // namespace hardware_interface

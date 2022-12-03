@@ -444,10 +444,7 @@ private:
           while (!terminated_)
           {
             if (read_flag)
-            {
-
-              std::lock_guard<std::mutex> lock(mutex_ref_);
-              
+            {              
               auto  current_time = clock_interface_->get_clock()->now();
               auto  measured_period = current_time - previous_time;
               previous_time = current_time;
@@ -455,13 +452,8 @@ private:
               read_flag = false;
             }
 
-            std::this_thread::sleep_for(
-              std::chrono::milliseconds(20));
-
             if (write_flag)
-            {
-              std::lock_guard<std::mutex> lock(mutex_ref_);
-              
+            {              
               auto  current_time = clock_interface_->get_clock()->now();
               auto  measured_period = current_time - previous_time;
               previous_time = current_time;

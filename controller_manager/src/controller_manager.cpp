@@ -473,7 +473,7 @@ controller_interface::return_type ControllerManager::configure_controller(
     RCLCPP_WARN(get_logger(), "UR: '%d' ", controller->get_update_rate());
     async_controller_threads_.emplace(
       controller_name,
-      std::make_unique<ControllerThreadWrapper>(controller.get(), async_controller_mutex_));
+      std::make_unique<ControllerThreadWrapper>(controller.get(), async_controller_mutex_, update_rate_));
   }
 
   // CHAINABLE CONTROLLERS: get reference interfaces from chainable controllers

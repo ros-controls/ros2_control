@@ -456,11 +456,13 @@ private:
   public:
     ControllerThreadWrapper( 
         controller_interface::ControllerInterfaceBase* controller,
-        std::mutex& mutex_
+        std::mutex& mutex_,
+        int cm_update_rate
       )
       : controller_(controller)
       , m_thread_{}
       , mutex_ref_(mutex_)
+      , cm_update_rate_(cm_update_rate)
     {
 
     }
@@ -515,6 +517,7 @@ private:
       std::shared_ptr<controller_interface::ControllerInterfaceBase> controller_;
       std::thread m_thread_;
       std::mutex& mutex_ref_;
+      int cm_update_rate_;
   };
   
   std::unordered_map<std::string, std::unique_ptr<ControllerThreadWrapper>> async_controller_threads_;
