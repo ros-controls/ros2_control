@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.18.0 (2022-12-03)
+-------------------
 * Use a thread priority library from realtime_tools (`#794 <https://github.com/ros-controls/ros2_control/issues/794>`_) (`#868 <https://github.com/ros-controls/ros2_control/issues/868>`_)
 * Fix const-ness in std::chrono::time_point construction and explicitly use std::chrono::nanoseconds as std::chrono::time_point template parameter to help compilation on macOS as its std::chrono::system_clock::time_point defaults to std::chrono::milliseconds for duration type (`#848 <https://github.com/ros-controls/ros2_control/issues/848>`_) (`#866 <https://github.com/ros-controls/ros2_control/issues/866>`_)
 * Contributors: Andy Zelenak, light-tech
