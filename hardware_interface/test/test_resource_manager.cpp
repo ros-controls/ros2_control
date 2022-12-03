@@ -840,7 +840,6 @@ TEST_F(ResourceManagerTest, lifecycle_individual_resources)
       hardware_interface::lifecycle_state_names::FINALIZED);
   }
 
-  // TODO(destogl): Watch-out this fails in output, why is this not caught?!!!
   shutdown_components(rm, {TEST_SENSOR_HARDWARE_NAME});
   {
     auto status_map = rm.get_components_status();
