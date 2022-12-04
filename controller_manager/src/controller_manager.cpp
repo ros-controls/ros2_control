@@ -142,7 +142,7 @@ ControllerManager::ControllerManager(
   const std::string & namespace_)
 : rclcpp::Node(manager_node_name, namespace_, get_cm_node_options()),
   resource_manager_(
-    std::make_unique<hardware_interface::ResourceManager>(this->get_node_clock_interface())),
+    std::make_unique<hardware_interface::ResourceManager>(this->get_node_clock_interface(), update_rate_)),
   executor_(executor),
   loader_(std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
     kControllerInterfaceNamespace, kControllerInterfaceClassName)),
@@ -348,6 +348,8 @@ controller_interface::return_type ControllerManager::unload_controller(
   std::vector<ControllerSpec> & to = rt_controllers_wrapper_.get_unused_list(guard);
   const std::vector<ControllerSpec> & from = rt_controllers_wrapper_.get_updated_list(guard);
 
+  //async_controller_threads_.clear();
+
   RCLCPP_WARN(get_logger(), "Clearing threads");
   // Transfers the active controllers over, skipping the one to be removed and the active ones.
   to = from;
@@ -378,11 +380,8 @@ controller_interface::return_type ControllerManager::unload_controller(
   }
 
   RCLCPP_INFO(get_logger(), "Cleanup controller");
+  
 
-  if (controller.c->is_async())
-  {
-    async_controller_threads_.at(controller_name)->terminated_ = true;
-  }
 
   // TODO(destogl): remove reference interface if chainable; i.e., add a separate method for
   // cleaning-up controllers?
@@ -391,12 +390,15 @@ controller_interface::return_type ControllerManager::unload_controller(
   to.erase(found_it);
 
   // Destroys the old controllers list when the realtime thread is finished with it.
+
   RCLCPP_INFO(get_logger(), "Realtime switches over to new controller list");
   rt_controllers_wrapper_.switch_updated_list(guard);
   std::vector<ControllerSpec> & new_unused_list = rt_controllers_wrapper_.get_unused_list(guard);
+
   RCLCPP_INFO(get_logger(), "Destruct controller");
   new_unused_list.clear();
   RCLCPP_INFO(get_logger(), "Destruct controller finished");
+
 
   RCLCPP_INFO(get_logger(), "Successfully unloaded controller '%s'", controller_name.c_str());
 
@@ -473,7 +475,7 @@ controller_interface::return_type ControllerManager::configure_controller(
     RCLCPP_WARN(get_logger(), "UR: '%d' ", controller->get_update_rate());
     async_controller_threads_.emplace(
       controller_name,
-      std::make_unique<ControllerThreadWrapper>(controller.get(), async_controller_mutex_, update_rate_));
+      std::make_unique<ControllerThreadWrapper>(controller, update_rate_));
   }
 
   // CHAINABLE CONTROLLERS: get reference interfaces from chainable controllers
@@ -1217,7 +1219,7 @@ void ControllerManager::activate_controllers()
     }
     else
     {
-      if (controller->is_async() && async_controller_threads_.at(controller_name)->terminated_)
+      if (controller->is_async())
       {
         async_controller_threads_.at(controller_name)->start();
       }

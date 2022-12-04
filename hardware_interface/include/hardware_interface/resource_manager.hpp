@@ -51,7 +51,7 @@ class HARDWARE_INTERFACE_PUBLIC ResourceManager
 {
 public:
   /// Default constructor for the Resource Manager.
-  ResourceManager(rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface = nullptr);
+  ResourceManager(rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface = nullptr, int update_rate = 100);
 
   /// Constructor for the Resource Manager.
   /**
@@ -394,29 +394,29 @@ private:
   {
   public:
     explicit ComponentThreadWrapper(
-      System * component, std::mutex & mutex,
+      System * component, int update_rate,
       rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
     : component_(component),
       read_and_write_thread_{},
-      mutex_ref_(mutex),
+      cm_update_rate_(update_rate),
       clock_interface_(clock_interface)
     {
     }
     explicit ComponentThreadWrapper(
-      Actuator * component, std::mutex & mutex,
+      Actuator * component, int update_rate,
       rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
     : component_(component),
       read_and_write_thread_{},
-      mutex_ref_(mutex),
+      cm_update_rate_(update_rate),
       clock_interface_(clock_interface)
     {
     }
     explicit ComponentThreadWrapper(
-      Sensor * component, std::mutex & mutex,
+      Sensor * component, int update_rate,
       rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
     : component_(component),
       read_and_write_thread_{},
-      mutex_ref_(mutex),
+      cm_update_rate_(update_rate),
       clock_interface_(clock_interface)
     {
     }
@@ -443,6 +443,11 @@ private:
           auto previous_time = clock_interface_->get_clock()->now();
           while (!terminated_)
           {
+
+            auto const period = std::chrono::nanoseconds(1'000'000'000 / cm_update_rate_);
+            std::chrono::system_clock::time_point next_iteration_time =
+            std::chrono::system_clock::time_point(std::chrono::nanoseconds(clock_interface_->get_clock()->now().nanoseconds()));
+
             if (read_flag)
             {              
               auto  current_time = clock_interface_->get_clock()->now();
@@ -461,8 +466,8 @@ private:
               write_flag = false;
             }
             
-            std::this_thread::sleep_for(
-              std::chrono::milliseconds(100));
+            next_iteration_time += period;
+            std::this_thread::sleep_until(next_iteration_time);
           }
         },
         component_);
@@ -474,12 +479,12 @@ private:
 
   private:
     std::variant<Actuator *, System *, Sensor *> component_;
+    int cm_update_rate_;
     std::thread read_and_write_thread_;
-    std::mutex & mutex_ref_;
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface_;
   };
 
-  std::mutex async_component_mutex_;
+  int cm_update_rate_;
   std::unordered_map<std::string, std::unique_ptr<ComponentThreadWrapper>> async_component_threads_;
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface_ = nullptr;
 };

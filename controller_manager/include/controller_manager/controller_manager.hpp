@@ -21,6 +21,7 @@
 #include <tuple>
 #include <unordered_map>
 #include <vector>
+#include <atomic>
 
 #include "controller_interface/chainable_controller_interface.hpp"
 #include "controller_interface/controller_interface.hpp"
@@ -252,8 +253,6 @@ protected:
 
 private:
   std::vector<std::string> get_controller_names();
-  std::mutex async_controller_mutex_;
-
 
   /**
    * Clear request lists used when switching controllers. The lists are shared between "callback" and
@@ -455,13 +454,11 @@ private:
   {
   public:
     ControllerThreadWrapper( 
-        controller_interface::ControllerInterfaceBase* controller,
-        std::mutex& mutex_,
+        std::shared_ptr<controller_interface::ControllerInterfaceBase>& controller,
         int cm_update_rate
       )
       : controller_(controller)
       , m_thread_{}
-      , mutex_ref_(mutex_)
       , cm_update_rate_(cm_update_rate)
     {
 
@@ -469,42 +466,51 @@ private:
     ControllerThreadWrapper(const ControllerThreadWrapper& t) = delete;
     ControllerThreadWrapper(ControllerThreadWrapper&& t) = default;
     ~ControllerThreadWrapper() {
-      terminated_ = true;
+      terminated_.store(true, std::memory_order_release);
       if (m_thread_.joinable()) 
       { 
-        m_thread_.join(); 
+        m_thread_.join();
       } 
     }
     
     void start()
     {
-      terminated_ = false;
+      terminated_.store(false, std::memory_order_release);
       m_thread_ = std::thread(&ControllerThreadWrapper::call_controller_update, this);
     }
 
     void call_controller_update() 
     {
       rclcpp::Time previous_time = controller_->get_node()->now();
+
+
     
-      while (!terminated_)
+      while (!terminated_.load(std::memory_order_acquire))
       {
 
-        if (mutex_ref_.try_lock() && controller_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+        auto const period = std::chrono::nanoseconds(1'000'000'000 / cm_update_rate_);
+        std::chrono::system_clock::time_point next_iteration_time =
+        std::chrono::system_clock::time_point(std::chrono::nanoseconds(controller_->get_node()->now().nanoseconds()));
+        
+        if (controller_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
         { 
-          std::lock_guard<std::mutex> lock(mutex_ref_, std::adopt_lock);
+          printf("_Atomic struct A is lock free? %s\n", 
+            std::atomic_is_lock_free(&terminated_) ? "true" : "false");
+          
           auto const current_time = controller_->get_node()->now();
           auto const measured_period = current_time - previous_time;
           previous_time = current_time;
         
           controller_->update(
-          controller_->get_node()->now(), (controller_->get_update_rate() !=  100 /* update_rate_  */ && controller_->get_update_rate() != 0)
+          controller_->get_node()->now(), (controller_->get_update_rate() !=  cm_update_rate_ && controller_->get_update_rate() != 0)
                   ? rclcpp::Duration::from_seconds(1.0 / controller_->get_update_rate())
                   : measured_period);
                 
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(100)); //calculate this based on ros2_control_node logic
-      }
-      
+        
+        next_iteration_time += period;
+        std::this_thread::sleep_until(next_iteration_time);
+      }      
     }
 
     std::shared_ptr<controller_interface::ControllerInterfaceBase> get_controller()
@@ -512,12 +518,11 @@ private:
       return controller_;
     }
 
-      std::atomic<bool> terminated_ = true;
+      std::atomic<bool> terminated_;
   private:
       std::shared_ptr<controller_interface::ControllerInterfaceBase> controller_;
       std::thread m_thread_;
-      std::mutex& mutex_ref_;
-      int cm_update_rate_;
+      unsigned int cm_update_rate_;
   };
   
   std::unordered_map<std::string, std::unique_ptr<ControllerThreadWrapper>> async_controller_threads_;
