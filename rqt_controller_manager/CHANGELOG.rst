@@ -2,6 +2,9 @@
 Changelog for package rqt_controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 3.4.0 (2022-11-27)
 ------------------
 * rqt controller manager ros 2 port (`#813 <https://github.com/ros-controls/ros2_control/issues/813>`_)
