@@ -106,8 +106,8 @@ struct HardwareInfo
   std::string name;
   /// Type of the hardware: actuator, sensor or system.
   std::string type;
-  /// Class of the hardware that will be dynamically loaded.
-  std::string hardware_class_type;
+  /// Name of the pluginlib plugin of the hardware that will be loaded.
+  std::string hardware_plugin_name;
   /// (Optional) Key-value pairs for hardware parameters.
   std::unordered_map<std::string, std::string> hardware_parameters;
   /**

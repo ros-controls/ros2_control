@@ -29,19 +29,19 @@
 #include "rclcpp_lifecycle/state.hpp"
 #include "ros2_control_test_assets/descriptions.hpp"
 
-using ros2_control_test_assets::TEST_ACTUATOR_HARDWARE_CLASS_TYPE;
 using ros2_control_test_assets::TEST_ACTUATOR_HARDWARE_COMMAND_INTERFACES;
 using ros2_control_test_assets::TEST_ACTUATOR_HARDWARE_NAME;
+using ros2_control_test_assets::TEST_ACTUATOR_HARDWARE_PLUGIN_NAME;
 using ros2_control_test_assets::TEST_ACTUATOR_HARDWARE_STATE_INTERFACES;
 using ros2_control_test_assets::TEST_ACTUATOR_HARDWARE_TYPE;
-using ros2_control_test_assets::TEST_SENSOR_HARDWARE_CLASS_TYPE;
 using ros2_control_test_assets::TEST_SENSOR_HARDWARE_COMMAND_INTERFACES;
 using ros2_control_test_assets::TEST_SENSOR_HARDWARE_NAME;
+using ros2_control_test_assets::TEST_SENSOR_HARDWARE_PLUGIN_NAME;
 using ros2_control_test_assets::TEST_SENSOR_HARDWARE_STATE_INTERFACES;
 using ros2_control_test_assets::TEST_SENSOR_HARDWARE_TYPE;
-using ros2_control_test_assets::TEST_SYSTEM_HARDWARE_CLASS_TYPE;
 using ros2_control_test_assets::TEST_SYSTEM_HARDWARE_COMMAND_INTERFACES;
 using ros2_control_test_assets::TEST_SYSTEM_HARDWARE_NAME;
+using ros2_control_test_assets::TEST_SYSTEM_HARDWARE_PLUGIN_NAME;
 using ros2_control_test_assets::TEST_SYSTEM_HARDWARE_STATE_INTERFACES;
 using ros2_control_test_assets::TEST_SYSTEM_HARDWARE_TYPE;
 
@@ -448,10 +448,11 @@ TEST_F(ResourceManagerTest, resource_status)
   EXPECT_EQ(status_map[TEST_ACTUATOR_HARDWARE_NAME].type, TEST_ACTUATOR_HARDWARE_TYPE);
   EXPECT_EQ(status_map[TEST_SENSOR_HARDWARE_NAME].type, TEST_SENSOR_HARDWARE_TYPE);
   EXPECT_EQ(status_map[TEST_SYSTEM_HARDWARE_NAME].type, TEST_SYSTEM_HARDWARE_TYPE);
-  // class_type
-  EXPECT_EQ(status_map[TEST_ACTUATOR_HARDWARE_NAME].class_type, TEST_ACTUATOR_HARDWARE_CLASS_TYPE);
-  EXPECT_EQ(status_map[TEST_SENSOR_HARDWARE_NAME].class_type, TEST_SENSOR_HARDWARE_CLASS_TYPE);
-  EXPECT_EQ(status_map[TEST_SYSTEM_HARDWARE_NAME].class_type, TEST_SYSTEM_HARDWARE_CLASS_TYPE);
+  // plugin_name
+  EXPECT_EQ(
+    status_map[TEST_ACTUATOR_HARDWARE_NAME].plugin_name, TEST_ACTUATOR_HARDWARE_PLUGIN_NAME);
+  EXPECT_EQ(status_map[TEST_SENSOR_HARDWARE_NAME].plugin_name, TEST_SENSOR_HARDWARE_PLUGIN_NAME);
+  EXPECT_EQ(status_map[TEST_SYSTEM_HARDWARE_NAME].plugin_name, TEST_SYSTEM_HARDWARE_PLUGIN_NAME);
   // state
   EXPECT_EQ(
     status_map[TEST_ACTUATOR_HARDWARE_NAME].state.id(),
