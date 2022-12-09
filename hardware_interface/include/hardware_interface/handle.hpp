@@ -18,44 +18,44 @@
 #include <string>
 #include <utility>
 
+#include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/macros.hpp"
 #include "hardware_interface/visibility_control.h"
 
 namespace hardware_interface
 {
 /// A handle used to get and set a value on a given interface.
-class ReadOnlyHandle
+class StateHandle
+{
+  virtual double read_state() = 0;
+};
+
+class CommandHandle
+{
+  virtual void write_command(const double & command) = 0;
+};
+class Handle
 {
 public:
-  ReadOnlyHandle(
-    const std::string & prefix_name, const std::string & interface_name,
-    double * value_ptr = nullptr)
-  : prefix_name_(prefix_name), interface_name_(interface_name), value_ptr_(value_ptr)
+  Handle(const std::string & prefix_name, const std::string & interface_name)
+  : prefix_name_(prefix_name), interface_name_(interface_name)
   {
   }
 
-  explicit ReadOnlyHandle(const std::string & interface_name)
-  : interface_name_(interface_name), value_ptr_(nullptr)
-  {
-  }
+  explicit Handle(const std::string & interface_name) : interface_name_(interface_name) {}
 
-  explicit ReadOnlyHandle(const char * interface_name)
-  : interface_name_(interface_name), value_ptr_(nullptr)
-  {
-  }
+  explicit Handle(const char * interface_name) : interface_name_(interface_name) {}
 
-  ReadOnlyHandle(const ReadOnlyHandle & other) = default;
+  // Handle should be unique
+  Handle(const Handle & other) = delete;
 
-  ReadOnlyHandle(ReadOnlyHandle && other) = default;
+  Handle(Handle && other) = default;
 
-  ReadOnlyHandle & operator=(const ReadOnlyHandle & other) = default;
+  Handle & operator=(const Handle & other) = default;
 
-  ReadOnlyHandle & operator=(ReadOnlyHandle && other) = default;
+  Handle & operator=(Handle && other) = default;
 
-  virtual ~ReadOnlyHandle() = default;
-
-  /// Returns true if handle references a value.
-  inline operator bool() const { return value_ptr_ != nullptr; }
+  virtual ~Handle() = default;
 
   const std::string get_name() const { return prefix_name_ + "/" + interface_name_; }
 
@@ -70,62 +70,40 @@ public:
 
   const std::string & get_prefix_name() const { return prefix_name_; }
 
-  double get_value() const
-  {
-    THROW_ON_NULLPTR(value_ptr_);
-    return *value_ptr_;
-  }
+  void hw_set_state(const double & value) { value_ = value; }
+
+  double hw_get_state() const { return value_; }
 
 protected:
   std::string prefix_name_;
   std::string interface_name_;
-  double * value_ptr_;
+  double value_;
 };
 
-class ReadWriteHandle : public ReadOnlyHandle
+class StateInterface : public Handle, public StateHandle
 {
 public:
-  ReadWriteHandle(
-    const std::string & prefix_name, const std::string & interface_name,
-    double * value_ptr = nullptr)
-  : ReadOnlyHandle(prefix_name, interface_name, value_ptr)
+  StateInterface(const InterfaceDescription & interface_description)
+  : Handle(interface_description.prefix_name, interface_description.interface_info.name)
   {
   }
 
-  explicit ReadWriteHandle(const std::string & interface_name) : ReadOnlyHandle(interface_name) {}
-
-  explicit ReadWriteHandle(const char * interface_name) : ReadOnlyHandle(interface_name) {}
-
-  ReadWriteHandle(const ReadWriteHandle & other) = default;
-
-  ReadWriteHandle(ReadWriteHandle && other) = default;
-
-  ReadWriteHandle & operator=(const ReadWriteHandle & other) = default;
-
-  ReadWriteHandle & operator=(ReadWriteHandle && other) = default;
-
-  virtual ~ReadWriteHandle() = default;
-
-  void set_value(double value)
-  {
-    THROW_ON_NULLPTR(this->value_ptr_);
-    *this->value_ptr_ = value;
-  }
-};
-
-class StateInterface : public ReadOnlyHandle
-{
-public:
-  StateInterface(const StateInterface & other) = default;
+  StateInterface(const StateInterface & other) = delete;
 
   StateInterface(StateInterface && other) = default;
 
-  using ReadOnlyHandle::ReadOnlyHandle;
+  double read_state() override { return value_; }
+
+  using Handle::Handle;
 };
 
-class CommandInterface : public ReadWriteHandle
+class CommandInterface : public Handle, public CommandHandle, public StateHandle
 {
 public:
+  CommandInterface(const InterfaceDescription & interface_description)
+  : Handle(interface_description.prefix_name, interface_description.interface_info.name)
+  {
+  }
   /// CommandInterface copy constructor is actively deleted.
   /**
    * Command interfaces are having a unique ownership and thus
@@ -136,7 +114,11 @@ public:
 
   CommandInterface(CommandInterface && other) = default;
 
-  using ReadWriteHandle::ReadWriteHandle;
+  double read_state() override { return value_; }
+
+  void write_command(const double & command) override { value_ = command; }
+
+  using Handle::Handle;
 };
 
 }  // namespace hardware_interface
