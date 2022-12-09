@@ -29,11 +29,14 @@
 #include "hardware_interface/async_components.hpp"
 #include "hardware_interface/component_parser.hpp"
 #include "hardware_interface/hardware_component_info.hpp"
+#include "hardware_interface/loaned_hw_command_interface.hpp"
+#include "hardware_interface/loaned_hw_state_interface.hpp"
 #include "hardware_interface/sensor.hpp"
 #include "hardware_interface/sensor_interface.hpp"
 #include "hardware_interface/system.hpp"
 #include "hardware_interface/system_interface.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
+
 #include "lifecycle_msgs/msg/state.hpp"
 #include "pluginlib/class_loader.hpp"
 #include "rcutils/logging_macros.h"
@@ -430,6 +433,12 @@ public:
   }
 
   template <class HardwareT>
+  std::vector<std::string> get_state_interface_names(const HardwareT & hardware)
+  {
+    return hardware_info_map_[hardware.get_name()].state_interfaces;
+  }
+
+  template <class HardwareT>
   void import_state_interfaces(HardwareT & hardware)
   {
     auto interfaces = hardware.export_state_interfaces();
@@ -444,6 +453,21 @@ public:
     hardware_info_map_[hardware.get_name()].state_interfaces = interface_names;
     available_state_interfaces_.reserve(
       available_state_interfaces_.capacity() + interface_names.size());
+  }
+
+  template <class HardwareT>
+  void assign_state_interface_loans_to_hw(HardwareT & hardware)
+  {
+    std::map<std::string, LoanedHwStateInterface> hw_state_interface_loans;
+    for (const auto & state_interface_name : get_state_interface_names(hardware))
+    {
+      // TODO(Manuel): should we mark as hw claimed???
+      LoanedHwStateInterface loaned_hw_state_interface(
+        state_interface_map_.at(state_interface_name));
+      hw_state_interface_loans.emplace(
+        loaned_hw_state_interface.get_name(), std::move(loaned_hw_state_interface));
+    }
+    hardware.assign_state_interface_loans_to_hw(std::move(hw_state_interface_loans));
   }
 
   template <class HardwareT>
@@ -479,6 +503,27 @@ public:
       available_command_interfaces_.capacity() + interface_names.size());
 
     return interface_names;
+  }
+
+  template <class HardwareT>
+  std::vector<std::string> get_command_interface_names(const HardwareT & hardware)
+  {
+    return hardware_info_map_[hardware.get_name()].command_interfaces;
+  }
+
+  template <class HardwareT>
+  void assign_command_interface_loans_to_hw(HardwareT & hardware)
+  {
+    std::map<std::string, LoanedHwCommandInterface> hw_command_interface_loans;
+    for (const auto & command_interface_name : get_command_interface_names(hardware))
+    {
+      // TODO(Manuel): should we mark as hw claimed???
+      LoanedHwCommandInterface loaned_hw_command_interface(
+        command_interface_map_.at(command_interface_name));
+      hw_command_interface_loans.emplace(
+        loaned_hw_command_interface.get_name(), std::move(loaned_hw_command_interface));
+    }
+    hardware.assign_command_interface_loans_to_hw(std::move(hw_command_interface_loans));
   }
 
   /// Removes command interfaces from internal storage.

@@ -254,40 +254,42 @@ std::vector<hardware_interface::StateInterface> GenericSystem::export_state_inte
 {
   std::vector<hardware_interface::StateInterface> state_interfaces;
 
-  // Joints' state interfaces
-  for (auto i = 0u; i < info_.joints.size(); i++)
-  {
-    const auto & joint = info_.joints[i];
-    for (const auto & interface : joint.state_interfaces)
-    {
-      // Add interface: if not in the standard list then use "other" interface list
-      if (!get_interface(
-            joint.name, standard_interfaces_, interface.name, i, joint_states_, state_interfaces))
-      {
-        if (!get_interface(
-              joint.name, other_interfaces_, interface.name, i, other_states_, state_interfaces))
-        {
-          throw std::runtime_error(
-            "Interface is not found in the standard nor other list. "
-            "This should never happen!");
-        }
-      }
-    }
-  }
+  // // Joints' state interfaces
+  // for (auto i = 0u; i < info_.joints.size(); i++)
+  // {
+  //   const auto & joint = info_.joints[i];
+  //   for (const auto & interface : joint.state_interfaces)
+  //   {
+  //     // Add interface: if not in the standard list then use "other" interface list
+  //     if (!get_interface(
+  //           joint.name, standard_interfaces_, interface.name, i, joint_states_,
+  //           state_interfaces))
+  //     {
+  //       if (!get_interface(
+  //             joint.name, other_interfaces_, interface.name, i, other_states_, state_interfaces))
+  //       {
+  //         throw std::runtime_error(
+  //           "Interface is not found in the standard nor other list. "
+  //           "This should never happen!");
+  //       }
+  //     }
+  //   }
+  // }
 
-  // Sensor state interfaces
-  if (!populate_interfaces(
-        info_.sensors, sensor_interfaces_, sensor_states_, state_interfaces, true))
-  {
-    throw std::runtime_error(
-      "Interface is not found in the standard nor other list. This should never happen!");
-  };
+  // // Sensor state interfaces
+  // if (!populate_interfaces(
+  //       info_.sensors, sensor_interfaces_, sensor_states_, state_interfaces, true))
+  // {
+  //   throw std::runtime_error(
+  //     "Interface is not found in the standard nor other list. This should never happen!");
+  // };
 
-  // GPIO state interfaces
-  if (!populate_interfaces(info_.gpios, gpio_interfaces_, gpio_states_, state_interfaces, true))
-  {
-    throw std::runtime_error("Interface is not found in the gpio list. This should never happen!");
-  }
+  // // GPIO state interfaces
+  // if (!populate_interfaces(info_.gpios, gpio_interfaces_, gpio_states_, state_interfaces, true))
+  // {
+  //   throw std::runtime_error("Interface is not found in the gpio list. This should never
+  //   happen!");
+  // }
 
   return state_interfaces;
 }
@@ -296,62 +298,62 @@ std::vector<hardware_interface::CommandInterface> GenericSystem::export_command_
 {
   std::vector<hardware_interface::CommandInterface> command_interfaces;
 
-  // Joints' state interfaces
-  for (size_t i = 0; i < info_.joints.size(); ++i)
-  {
-    const auto & joint = info_.joints[i];
-    for (const auto & interface : joint.command_interfaces)
-    {
-      // Add interface: if not in the standard list than use "other" interface list
-      if (!get_interface(
-            joint.name, standard_interfaces_, interface.name, i, joint_commands_,
-            command_interfaces))
-      {
-        if (!get_interface(
-              joint.name, other_interfaces_, interface.name, i, other_commands_,
-              command_interfaces))
-        {
-          throw std::runtime_error(
-            "Interface is not found in the standard nor other list. "
-            "This should never happen!");
-        }
-      }
-    }
-  }
-  // Set position control mode per default
-  joint_control_mode_.resize(info_.joints.size(), POSITION_INTERFACE_INDEX);
+  // // Joints' state interfaces
+  // for (size_t i = 0; i < info_.joints.size(); ++i)
+  // {
+  //   const auto & joint = info_.joints[i];
+  //   for (const auto & interface : joint.command_interfaces)
+  //   {
+  //     // Add interface: if not in the standard list than use "other" interface list
+  //     if (!get_interface(
+  //           joint.name, standard_interfaces_, interface.name, i, joint_commands_,
+  //           command_interfaces))
+  //     {
+  //       if (!get_interface(
+  //             joint.name, other_interfaces_, interface.name, i, other_commands_,
+  //             command_interfaces))
+  //       {
+  //         throw std::runtime_error(
+  //           "Interface is not found in the standard nor other list. "
+  //           "This should never happen!");
+  //       }
+  //     }
+  //   }
+  // }
+  // // Set position control mode per default
+  // joint_control_mode_.resize(info_.joints.size(), POSITION_INTERFACE_INDEX);
 
-  // Mock sensor command interfaces
-  if (use_mock_sensor_command_interfaces_)
-  {
-    if (!populate_interfaces(
-          info_.sensors, sensor_interfaces_, sensor_mock_commands_, command_interfaces, true))
-    {
-      throw std::runtime_error(
-        "Interface is not found in the standard nor other list. This should never happen!");
-    }
-  }
+  // // Mock sensor command interfaces
+  // if (use_mock_sensor_command_interfaces_)
+  // {
+  //   if (!populate_interfaces(
+  //         info_.sensors, sensor_interfaces_, sensor_mock_commands_, command_interfaces, true))
+  //   {
+  //     throw std::runtime_error(
+  //       "Interface is not found in the standard nor other list. This should never happen!");
+  //   }
+  // }
 
-  // Mock gpio command interfaces (consider all state interfaces for command interfaces)
-  if (use_mock_gpio_command_interfaces_)
-  {
-    if (!populate_interfaces(
-          info_.gpios, gpio_interfaces_, gpio_mock_commands_, command_interfaces, true))
-    {
-      throw std::runtime_error(
-        "Interface is not found in the gpio list. This should never happen!");
-    }
-  }
-  // GPIO command interfaces (real command interfaces)
-  else
-  {
-    if (!populate_interfaces(
-          info_.gpios, gpio_interfaces_, gpio_commands_, command_interfaces, false))
-    {
-      throw std::runtime_error(
-        "Interface is not found in the gpio list. This should never happen!");
-    }
-  }
+  // // Mock gpio command interfaces (consider all state interfaces for command interfaces)
+  // if (use_mock_gpio_command_interfaces_)
+  // {
+  //   if (!populate_interfaces(
+  //         info_.gpios, gpio_interfaces_, gpio_mock_commands_, command_interfaces, true))
+  //   {
+  //     throw std::runtime_error(
+  //       "Interface is not found in the gpio list. This should never happen!");
+  //   }
+  // }
+  // // GPIO command interfaces (real command interfaces)
+  // else
+  // {
+  //   if (!populate_interfaces(
+  //         info_.gpios, gpio_interfaces_, gpio_commands_, command_interfaces, false))
+  //   {
+  //     throw std::runtime_error(
+  //       "Interface is not found in the gpio list. This should never happen!");
+  //   }
+  // }
 
   return command_interfaces;
 }
