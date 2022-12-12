@@ -101,6 +101,9 @@ public:
     return CallbackReturn::SUCCESS;
   };
 
+  // Could be possible to provide default implementation and parse the hardware_info here. Only if
+  // user wants to export subset or special cases he needs to override.
+
   /**
    * @brief Only export information describing the interfaces. Handle construction
    * and management internally. No need for the user to initialize and manage shared memory.
@@ -118,6 +121,9 @@ public:
    *  needed to create the interfaces exported by the hardware.
    */
   virtual std::vector<InterfaceDescription> export_command_interfaces_descriptions() = 0;
+
+  // Could be possible to provide default implementation and store the loans in the interface itself.
+  // user could then set/get states via function calls. Ordering could be made explicit.
 
   /**
    * @brief Import the LoanedHwStateInterface to the before exported StateInterface InterfaceDescription.
