@@ -70,6 +70,9 @@ public:
 
   const std::string & get_prefix_name() const { return prefix_name_; }
 
+  // only expose to hw => we could add functionality which keeps track
+  // if values have been read/are new for ctrls.
+  // Same from ctrl -> hw via State-/CommandHandle
   void hw_set_state(const double & value) { value_ = value; }
 
   double hw_get_state() const { return value_; }
