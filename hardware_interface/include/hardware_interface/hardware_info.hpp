@@ -22,15 +22,15 @@
 namespace hardware_interface
 {
 /**
-    * This structure stores information about components defined for a specific hardware
-    * in robot's URDF.
-    */
+ * This structure stores information about components defined for a specific hardware
+ * in robot's URDF.
+ */
 struct InterfaceInfo
 {
   /**
-       * Name of the command interfaces that can be set, e.g. "position", "velocity", etc.
-       * Used by joints and GPIOs.
-       */
+   * Name of the command interfaces that can be set, e.g. "position", "velocity", etc.
+   * Used by joints and GPIOs.
+   */
   std::string name;
   /// (Optional) Minimal allowed values of the interface.
   std::string min;
@@ -45,22 +45,22 @@ struct InterfaceInfo
 };
 
 /**
-    * This structure stores information about an interface for a specific hardware which should be instantiated internally.
-    */
+ * This structure stores information about an interface for a specific hardware which should be instantiated internally.
+ */
 struct InterfaceDescription
 {
   /**
-       * Name of the interface defined by the user.
-       */
+   * Name of the interface defined by the user.
+   */
   std::string prefix_name;
 
   InterfaceInfo interface_info;
 };
 
 /**
-    * This structure stores information about components defined for a specific hardware
-    * in robot's URDF.
-    */
+ * This structure stores information about components defined for a specific hardware
+ * in robot's URDF.
+ */
 struct ComponentInfo
 {
   /// Name of the component.
@@ -68,14 +68,14 @@ struct ComponentInfo
   /// Type of the component: sensor, joint, or GPIO.
   std::string type;
   /**
-       * Name of the command interfaces that can be set, e.g. "position", "velocity", etc.
-       * Used by joints and GPIOs.
-       */
+   * Name of the command interfaces that can be set, e.g. "position", "velocity", etc.
+   * Used by joints and GPIOs.
+   */
   std::vector<InterfaceInfo> command_interfaces;
   /**
-       * Name of the state interfaces that can be read, e.g. "position", "velocity", etc.
-       * Used by joints, sensors and GPIOs.
-       */
+   * Name of the state interfaces that can be read, e.g. "position", "velocity", etc.
+   * Used by joints, sensors and GPIOs.
+   */
   std::vector<InterfaceInfo> state_interfaces;
   /// (Optional) Key-value pairs of component parameters, e.g. min/max values or serial number.
   std::unordered_map<std::string, std::string> parameters;
@@ -124,28 +124,28 @@ struct HardwareInfo
   /// (Optional) Key-value pairs for hardware parameters.
   std::unordered_map<std::string, std::string> hardware_parameters;
   /**
-       * Map of joints provided by the hardware where the key is the joint name.
-       * Required for Actuator and System Hardware.
-       */
+   * Map of joints provided by the hardware where the key is the joint name.
+   * Required for Actuator and System Hardware.
+   */
   std::vector<ComponentInfo> joints;
   /**
-       * Map of sensors provided by the hardware where the key is the joint or link name.
-       * Required for Sensor and optional for System Hardware.
-       */
+   * Map of sensors provided by the hardware where the key is the joint or link name.
+   * Required for Sensor and optional for System Hardware.
+   */
   std::vector<ComponentInfo> sensors;
   /**
-       * Map of GPIO provided by the hardware where the key is a descriptive name of the GPIO.
-       * Optional for any hardware components.
-       */
+   * Map of GPIO provided by the hardware where the key is a descriptive name of the GPIO.
+   * Optional for any hardware components.
+   */
   std::vector<ComponentInfo> gpios;
   /**
-       * Map of transmissions to calculate ration between joints and physical actuators.
-       * Optional for Actuator and System Hardware.
-       */
+   * Map of transmissions to calculate ration between joints and physical actuators.
+   * Optional for Actuator and System Hardware.
+   */
   std::vector<TransmissionInfo> transmissions;
   /**
-       * The XML contents prior to parsing
-       */
+   * The XML contents prior to parsing
+   */
   std::string original_xml;
 };
 
