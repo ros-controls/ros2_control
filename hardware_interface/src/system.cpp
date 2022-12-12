@@ -14,6 +14,7 @@
 
 #include "hardware_interface/system.hpp"
 
+#include <map>
 #include <memory>
 #include <string>
 #include <utility>
@@ -186,12 +187,36 @@ const rclcpp_lifecycle::State & System::error()
 
 std::vector<StateInterface> System::export_state_interfaces()
 {
-  return impl_->export_state_interfaces();
+  const auto state_interface_description = impl_->export_state_interfaces_descriptions();
+  std::vector<StateInterface> state_interfaces;
+  for (const auto & interface_description : state_interface_description)
+  {
+    state_interfaces.emplace_back(StateInterface(interface_description));
+  }
+  return state_interfaces;
+}
+
+void System::assign_state_interface_loans_to_hw(
+  std::vector<LoanedHwStateInterface> state_intefaces_for_hw)
+{
+  impl_->import_loaned_hw_state_interfaces(state_intefaces_for_hw);
 }
 
 std::vector<CommandInterface> System::export_command_interfaces()
 {
-  return impl_->export_command_interfaces();
+  const auto command_interface_description = impl_->export_command_interfaces_descriptions();
+  std::vector<CommandInterface> command_interfaces;
+  for (const auto & interface_description : command_interface_description)
+  {
+    command_interfaces.emplace_back(CommandInterface(interface_description));
+  }
+  return command_interfaces;
+}
+
+void System::assign_command_interface_loans_to_hw(
+  std::vector<LoanedHwCommandInterface> command_intefaces_for_hw)
+{
+  impl_->import_loaned_hw_command_interfaces(command_intefaces_for_hw);
 }
 
 return_type System::prepare_command_mode_switch(

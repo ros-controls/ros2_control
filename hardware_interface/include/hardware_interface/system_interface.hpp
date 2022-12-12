@@ -21,6 +21,8 @@
 
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/hardware_info.hpp"
+#include "hardware_interface/loaned_hw_command_interface.hpp"
+#include "hardware_interface/loaned_hw_state_interface.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
@@ -99,27 +101,35 @@ public:
     return CallbackReturn::SUCCESS;
   };
 
-  /// Exports all state interfaces for this hardware interface.
   /**
-   * The state interfaces have to be created and transferred according
-   * to the hardware info passed in for the configuration.
-   *
-   * Note the ownership over the state interfaces is transferred to the caller.
-   *
-   * \return vector of state interfaces
+   * @brief Only export information describing the interfaces. Handle construction
+   * and management internally. No need for the user to initialize and manage shared memory.
+   * 
+   * @return std::vector<InterfaceConfiguration> A vector containing all the information 
+   *  needed to create the interfaces exported by the hardware.
    */
-  virtual std::vector<StateInterface> export_state_interfaces() = 0;
+  virtual std::vector<InterfaceDescription> export_state_interfaces_descriptions() = 0;
 
-  /// Exports all command interfaces for this hardware interface.
   /**
-   * The command interfaces have to be created and transferred according
-   * to the hardware info passed in for the configuration.
-   *
-   * Note the ownership over the state interfaces is transferred to the caller.
-   *
-   * \return vector of command interfaces
+   * @brief Only export information describing the interfaces. Handle construction
+   * and management internally. No need for the user to initialize and manage shared memory.
+   * 
+   * @return std::vector<InterfaceConfiguration> A vector containing all the information
+   *  needed to create the interfaces exported by the hardware.
    */
-  virtual std::vector<CommandInterface> export_command_interfaces() = 0;
+  virtual std::vector<InterfaceDescription> export_command_interfaces_descriptions() = 0;
+
+  /**
+   * @brief Import the LoanedHwStateInterface to the before exported StateInterface InterfaceDescription.
+   * 
+   */
+  virtual void import_loaned_hw_state_interfaces(std::vector<LoanedHwStateInterface>) = 0;
+
+  /**
+   * @brief Import the LoanedHwCommandInterface to the before exported CommandInterface InterfaceDescription.
+   * 
+   */
+  virtual void import_loaned_hw_command_interfaces(std::vector<LoanedHwCommandInterface>) = 0;
 
   /// Prepare for a new command interface switch.
   /**

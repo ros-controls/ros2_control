@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef HARDWARE_INTERFACE__LOANED_COMMAND_INTERFACE_HPP_
-#define HARDWARE_INTERFACE__LOANED_COMMAND_INTERFACE_HPP_
+#ifndef HARDWARE_INTERFACE__LOANED_HW_COMMAND_INTERFACE_HPP_
+#define HARDWARE_INTERFACE__LOANED_HW_COMMAND_INTERFACE_HPP_
 
 #include <functional>
 #include <string>
@@ -23,26 +23,26 @@
 
 namespace hardware_interface
 {
-class LoanedCommandInterface
+class LoanedHwCommandInterface
 {
 public:
   using Deleter = std::function<void(void)>;
 
-  explicit LoanedCommandInterface(CommandInterface & command_interface)
-  : LoanedCommandInterface(command_interface, nullptr)
+  explicit LoanedHwCommandInterface(CommandInterface & command_interface)
+  : LoanedHwCommandInterface(command_interface, nullptr)
   {
   }
 
-  LoanedCommandInterface(CommandInterface & command_interface, Deleter && deleter)
+  LoanedHwCommandInterface(CommandInterface & command_interface, Deleter && deleter)
   : command_interface_(command_interface), deleter_(std::forward<Deleter>(deleter))
   {
   }
 
-  LoanedCommandInterface(const LoanedCommandInterface & other) = delete;
+  LoanedHwCommandInterface(const LoanedHwCommandInterface & other) = delete;
 
-  LoanedCommandInterface(LoanedCommandInterface && other) = default;
+  LoanedHwCommandInterface(LoanedHwCommandInterface && other) = default;
 
-  virtual ~LoanedCommandInterface()
+  virtual ~LoanedHwCommandInterface()
   {
     if (deleter_)
     {
@@ -63,9 +63,9 @@ public:
 
   const std::string & get_prefix_name() const { return command_interface_.get_prefix_name(); }
 
-  void set_value(double val) { command_interface_.write_command(val); }
+  void set_state(double val) { command_interface_.hw_set_state(val); }
 
-  double get_value() const { return command_interface_.read_state(); }
+  double get_command() const { return command_interface_.hw_get_command(); }
 
 protected:
   CommandInterface & command_interface_;
@@ -73,4 +73,4 @@ protected:
 };
 
 }  // namespace hardware_interface
-#endif  // HARDWARE_INTERFACE__LOANED_COMMAND_INTERFACE_HPP_
+#endif  // HARDWARE_INTERFACE__LOANED_HW_COMMAND_INTERFACE_HPP_

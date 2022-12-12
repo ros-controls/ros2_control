@@ -75,7 +75,7 @@ public:
   // Same from ctrl -> hw via State-/CommandHandle
   void hw_set_state(const double & value) { value_ = value; }
 
-  double hw_get_state() const { return value_; }
+  double hw_get_command() const { return value_; }
 
 protected:
   std::string prefix_name_;

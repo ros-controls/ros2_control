@@ -26,6 +26,8 @@
 #include "hardware_interface/actuator_interface.hpp"
 #include "hardware_interface/component_parser.hpp"
 #include "hardware_interface/hardware_component_info.hpp"
+#include "hardware_interface/loaned_hw_command_interface.hpp"
+#include "hardware_interface/loaned_hw_state_interface.hpp"
 #include "hardware_interface/sensor.hpp"
 #include "hardware_interface/sensor_interface.hpp"
 #include "hardware_interface/system.hpp"
@@ -414,13 +416,19 @@ public:
   {
     auto interfaces = hardware.export_state_interfaces();
     std::vector<std::string> interface_names;
+    std::vector<LoanedHwStateInterface> state_interfaces_for_hw;
     interface_names.reserve(interfaces.size());
     for (auto & interface : interfaces)
     {
       auto key = interface.get_name();
       state_interface_map_.emplace(std::make_pair(key, std::move(interface)));
+      // if implemented like this (reference to StateInterface) the interfaces mustn't ever be (re)moved
+      state_interfaces_for_hw.emplace_back(LoanedHwStateInterface(state_interface_map_.at(key)));
       interface_names.push_back(key);
     }
+    // needs to be done for command interfaces as well
+    // sensor and actuator need to be adjusted the same way.
+    hardware.assign_command_interface_loans_to_hw(state_interfaces_for_hw);
     hardware_info_map_[hardware.get_name()].state_interfaces = interface_names;
     available_state_interfaces_.reserve(
       available_state_interfaces_.capacity() + interface_names.size());
