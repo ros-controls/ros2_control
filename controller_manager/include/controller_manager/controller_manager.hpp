@@ -494,9 +494,6 @@ private:
         
         if (controller_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
         { 
-          printf("_Atomic struct A is lock free? %s\n", 
-            std::atomic_is_lock_free(&terminated_) ? "true" : "false");
-          
           auto const current_time = controller_->get_node()->now();
           auto const measured_period = current_time - previous_time;
           previous_time = current_time;

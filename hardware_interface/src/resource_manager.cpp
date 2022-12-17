@@ -1010,13 +1010,13 @@ return_type ResourceManager::set_component_state(
 
 void ResourceManager::read(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
+  read_and_write_flag_.store(true, std::memory_order_release);
+
   for (auto & component : resource_storage_->actuators_)
   {
     if (!resource_storage_->hardware_info_map_[component.get_name()].is_asynch)
     {
       component.read(time, period);
-    } else {
-      async_component_threads_.at(component.get_name())->read_flag = true;
     }
   }
   for (auto & component : resource_storage_->sensors_)
@@ -1024,8 +1024,6 @@ void ResourceManager::read(const rclcpp::Time & time, const rclcpp::Duration & p
     if (!resource_storage_->hardware_info_map_[component.get_name()].is_asynch)
     {
       component.read(time, period);
-    } else {
-      async_component_threads_.at(component.get_name())->read_flag = true;
     }
   }
   for (auto & component : resource_storage_->systems_)
@@ -1033,8 +1031,6 @@ void ResourceManager::read(const rclcpp::Time & time, const rclcpp::Duration & p
     if (!resource_storage_->hardware_info_map_[component.get_name()].is_asynch)
     {
       component.read(time, period);
-    } else {
-      async_component_threads_.at(component.get_name())->read_flag = true;
     }
   }
 }
@@ -1046,8 +1042,6 @@ void ResourceManager::write(const rclcpp::Time & time, const rclcpp::Duration & 
     if (!resource_storage_->hardware_info_map_[component.get_name()].is_asynch)
     {
       component.write(time, period);
-    } else {
-      async_component_threads_.at(component.get_name())->write_flag = true;
     }
   }
   for (auto & component : resource_storage_->systems_)
@@ -1055,10 +1049,10 @@ void ResourceManager::write(const rclcpp::Time & time, const rclcpp::Duration & 
     if (!resource_storage_->hardware_info_map_[component.get_name()].is_asynch)
     {
       component.write(time, period);
-    } else {
-      async_component_threads_.at(component.get_name())->write_flag = true;
     }
   }
+
+  read_and_write_flag_.store(false, std::memory_order_release);
 }
 
 void ResourceManager::validate_storage(
@@ -1144,7 +1138,7 @@ void ResourceManager::allocate_threads()
     if (resource_storage_->hardware_info_map_[component.get_name()].is_asynch)
     {
       async_component_threads_.emplace(component.get_name(), 
-        std::make_unique<ComponentThreadWrapper>(&component, cm_update_rate_ ,clock_interface_));
+        std::make_unique<ComponentThreadWrapper>(&component, read_and_write_flag_, cm_update_rate_ ,clock_interface_));
       std::cerr << "allocating async actuator" << std::endl;
 
     }
@@ -1154,7 +1148,7 @@ void ResourceManager::allocate_threads()
     if (resource_storage_->hardware_info_map_[component.get_name()].is_asynch)
     {
       async_component_threads_.emplace(component.get_name(), 
-        std::make_unique<ComponentThreadWrapper>(&component, cm_update_rate_, clock_interface_));
+        std::make_unique<ComponentThreadWrapper>(&component, read_and_write_flag_, cm_update_rate_, clock_interface_));
       std::cerr << "allocating async sensors" << std::endl;
 
     }
@@ -1164,7 +1158,7 @@ void ResourceManager::allocate_threads()
     if (resource_storage_->hardware_info_map_[component.get_name()].is_asynch)
     {
       async_component_threads_.emplace(component.get_name(), 
-        std::make_unique<ComponentThreadWrapper>(&component, cm_update_rate_, clock_interface_));
+        std::make_unique<ComponentThreadWrapper>(&component, read_and_write_flag_, cm_update_rate_, clock_interface_));
       std::cerr << "allocating async system " << component.get_name() << std::endl;
 
     }
