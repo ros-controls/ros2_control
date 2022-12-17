@@ -348,8 +348,6 @@ controller_interface::return_type ControllerManager::unload_controller(
   std::vector<ControllerSpec> & to = rt_controllers_wrapper_.get_unused_list(guard);
   const std::vector<ControllerSpec> & from = rt_controllers_wrapper_.get_updated_list(guard);
 
-  //async_controller_threads_.clear();
-
   RCLCPP_WARN(get_logger(), "Clearing threads");
   // Transfers the active controllers over, skipping the one to be removed and the active ones.
   to = from;
@@ -379,6 +377,7 @@ controller_interface::return_type ControllerManager::unload_controller(
     return controller_interface::return_type::ERROR;
   }
 
+
   RCLCPP_INFO(get_logger(), "Cleanup controller");
   
 
@@ -401,6 +400,10 @@ controller_interface::return_type ControllerManager::unload_controller(
 
 
   RCLCPP_INFO(get_logger(), "Successfully unloaded controller '%s'", controller_name.c_str());
+  
+  if (controller.c->is_async()) {
+    async_controller_threads_.erase(controller_name);
+  }
 
   return controller_interface::return_type::OK;
 }
