@@ -1205,12 +1205,27 @@ HardwareReadWriteStatus ResourceManager::read(
   {
     for (auto & component : components)
     {
-      if (component.read(time, period) != return_type::OK)
+      auto ret_val = component.read(time, period);
+      if (ret_val == return_type::ERROR)
       {
         read_write_status.ok = false;
         read_write_status.failed_hardware_names.push_back(component.get_name());
         resource_storage_->remove_all_hardware_interfaces_from_available_list(component.get_name());
       }
+      else if (ret_val == return_type::DEACTIVATED)
+      {
+        using lifecycle_msgs::msg::State;
+        rclcpp_lifecycle::State state(
+          State::PRIMARY_STATE_INACTIVE, lifecycle_state_names::INACTIVE);
+        set_component_state(component.get_name(), state);
+      }
+      // If desired: automatic re-activation. We could add a flag for this...
+      // else
+      // {
+      // using lifecycle_msgs::msg::State;
+      // rclcpp_lifecycle::State state(State::PRIMARY_STATE_ACTIVE, lifecycle_state_names::ACTIVE);
+      // set_component_state(component.get_name(), state);
+      // }
     }
   };
 
@@ -1233,11 +1248,19 @@ HardwareReadWriteStatus ResourceManager::write(
   {
     for (auto & component : components)
     {
-      if (component.write(time, period) != return_type::OK)
+      auto ret_val = component.write(time, period);
+      if (ret_val == return_type::ERROR)
       {
         read_write_status.ok = false;
         read_write_status.failed_hardware_names.push_back(component.get_name());
         resource_storage_->remove_all_hardware_interfaces_from_available_list(component.get_name());
+      }
+      else if (ret_val == return_type::DEACTIVATED)
+      {
+        using lifecycle_msgs::msg::State;
+        rclcpp_lifecycle::State state(
+          State::PRIMARY_STATE_INACTIVE, lifecycle_state_names::INACTIVE);
+        set_component_state(component.get_name(), state);
       }
     }
   };
