@@ -304,13 +304,23 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_c
 
   controller_interface::ControllerInterfaceBaseSharedPtr controller;
 
-  if (loader_->isClassAvailable(controller_type))
+  try
   {
-    controller = loader_->createSharedInstance(controller_type);
+    if (loader_->isClassAvailable(controller_type))
+    {
+      controller = loader_->createSharedInstance(controller_type);
+    }
+    if (chainable_loader_->isClassAvailable(controller_type))
+    {
+      controller = chainable_loader_->createSharedInstance(controller_type);
+    }
   }
-  if (chainable_loader_->isClassAvailable(controller_type))
+  catch (const pluginlib::CreateClassException e)
   {
-    controller = chainable_loader_->createSharedInstance(controller_type);
+    RCLCPP_ERROR(
+      get_logger(), "Error happened during creation of controller '%s' with type '%s':\n%s",
+      controller_name.c_str(), controller_type.c_str(), e.what());
+    return nullptr;
   }
 
   ControllerSpec controller_spec;
