@@ -429,7 +429,7 @@ private:
 
     ~ComponentThreadWrapper()
     {
-      terminated_.store(true, std::memory_order_release);
+      terminated_.store(true, std::memory_order_seq_cst);
       if (read_and_write_thread_.joinable())
       {
         read_and_write_thread_.join();
@@ -444,7 +444,7 @@ private:
         [this](auto & object)
         {
           auto previous_time = clock_interface_->get_clock()->now();
-          while (!terminated_.load(std::memory_order_acquire))
+          while (!terminated_.load(std::memory_order_relaxed))
           {
 
             auto const period = std::chrono::nanoseconds(1'000'000'000 / cm_update_rate_);
@@ -452,14 +452,20 @@ private:
             std::chrono::system_clock::time_point(std::chrono::nanoseconds(clock_interface_->get_clock()->now().nanoseconds()));
 
             if (read_and_write_flag_.load(std::memory_order_acquire))
-            {              
+            {   
               auto  current_time = clock_interface_->get_clock()->now();
               auto  measured_period = current_time - previous_time;
               previous_time = current_time;
-              object->read(clock_interface_->get_clock()->now(), measured_period);
               object->write(clock_interface_->get_clock()->now(), measured_period);
+              object->read(clock_interface_->get_clock()->now(), measured_period);
             }
-            
+
+            /* if (read) { // kiéheztetés, ha priorizálunk
+                csak read
+            } else if (write) {
+                csak write
+            }
+            */
             next_iteration_time += period;
             std::this_thread::sleep_until(next_iteration_time);
           }
@@ -467,11 +473,9 @@ private:
         component_);
     }
 
-    std::atomic<bool> terminated_ = false;
-
   private:
+    std::atomic<bool> terminated_ = false;
     std::variant<Actuator *, System *, Sensor *> component_;
-    
     std::thread read_and_write_thread_;
     std::atomic<bool>& read_and_write_flag_;
     int cm_update_rate_;

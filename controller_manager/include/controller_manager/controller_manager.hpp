@@ -457,7 +457,8 @@ private:
         std::shared_ptr<controller_interface::ControllerInterfaceBase>& controller,
         int cm_update_rate
       )
-      : controller_(controller)
+      : terminated_(false)
+      , controller_(controller)
       , m_thread_{}
       , cm_update_rate_(cm_update_rate)
     {
@@ -466,28 +467,24 @@ private:
     ControllerThreadWrapper(const ControllerThreadWrapper& t) = delete;
     ControllerThreadWrapper(ControllerThreadWrapper&& t) = default;
     ~ControllerThreadWrapper() {
-      terminated_.store(true, std::memory_order_release);
+      terminated_.store(true, std::memory_order_seq_cst);
       if (m_thread_.joinable()) 
-      { 
+      {
         m_thread_.join();
-      } 
+      }
     }
     
     void start()
     {
-      terminated_.store(false, std::memory_order_release);
       m_thread_ = std::thread(&ControllerThreadWrapper::call_controller_update, this);
     }
 
     void call_controller_update() 
     {
       rclcpp::Time previous_time = controller_->get_node()->now();
-
-
-    
-      while (!terminated_.load(std::memory_order_acquire))
+      
+      while (!terminated_.load(std::memory_order_relaxed))
       {
-
         auto const period = std::chrono::nanoseconds(1'000'000'000 / cm_update_rate_);
         std::chrono::system_clock::time_point next_iteration_time =
         std::chrono::system_clock::time_point(std::chrono::nanoseconds(controller_->get_node()->now().nanoseconds()));
@@ -515,11 +512,11 @@ private:
       return controller_;
     }
 
-      std::atomic<bool> terminated_;
   private:
-      std::shared_ptr<controller_interface::ControllerInterfaceBase> controller_;
-      std::thread m_thread_;
-      unsigned int cm_update_rate_;
+    std::atomic<bool> terminated_;
+    std::shared_ptr<controller_interface::ControllerInterfaceBase> controller_;
+    std::thread m_thread_;
+    unsigned int cm_update_rate_;
   };
   
   std::unordered_map<std::string, std::unique_ptr<ControllerThreadWrapper>> async_controller_threads_;
