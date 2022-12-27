@@ -1010,7 +1010,7 @@ return_type ResourceManager::set_component_state(
 
 void ResourceManager::read(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
-  read_and_write_flag_.store(true, std::memory_order_release);
+  read_and_write_flag_.store(false, std::memory_order_release);
 
   for (auto & component : resource_storage_->actuators_)
   {
@@ -1037,6 +1037,8 @@ void ResourceManager::read(const rclcpp::Time & time, const rclcpp::Duration & p
 
 void ResourceManager::write(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
+  read_and_write_flag_.store(true, std::memory_order_release);
+
   for (auto & component : resource_storage_->actuators_)
   {
     if (!resource_storage_->hardware_info_map_[component.get_name()].is_asynch)
@@ -1051,8 +1053,6 @@ void ResourceManager::write(const rclcpp::Time & time, const rclcpp::Duration & 
       component.write(time, period);
     }
   }
-
-  read_and_write_flag_.store(false, std::memory_order_release);
 }
 
 void ResourceManager::validate_storage(
