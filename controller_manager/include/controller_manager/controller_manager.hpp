@@ -459,7 +459,7 @@ private:
       )
       : terminated_(false)
       , controller_(controller)
-      , m_thread_{}
+      , thread_{}
       , cm_update_rate_(cm_update_rate)
     {
 
@@ -468,15 +468,15 @@ private:
     ControllerThreadWrapper(ControllerThreadWrapper&& t) = default;
     ~ControllerThreadWrapper() {
       terminated_.store(true, std::memory_order_seq_cst);
-      if (m_thread_.joinable()) 
+      if (thread_.joinable()) 
       {
-        m_thread_.join();
+        thread_.join();
       }
     }
     
     void start()
     {
-      m_thread_ = std::thread(&ControllerThreadWrapper::call_controller_update, this);
+      thread_ = std::thread(&ControllerThreadWrapper::call_controller_update, this);
     }
 
     void call_controller_update() 
@@ -515,7 +515,7 @@ private:
   private:
     std::atomic<bool> terminated_;
     std::shared_ptr<controller_interface::ControllerInterfaceBase> controller_;
-    std::thread m_thread_;
+    std::thread thread_;
     unsigned int cm_update_rate_;
   };
   
