@@ -36,7 +36,7 @@ static constexpr const char * kChainableControllerInterfaceClassName =
   "controller_interface::ChainableControllerInterface";
 
 // Changed services history QoS to keep all so we don't lose any client service calls
-rclcpp::QoS qos = rclcpp::QoS(rclcpp::QoSInitialization(RMW_QOS_POLICY_HISTORY_KEEP_ALL, 1))
+rclcpp::QoS qos_services = rclcpp::QoS(rclcpp::QoSInitialization(RMW_QOS_POLICY_HISTORY_KEEP_ALL, 1))
                     .reliable()
                     .durability_volatile();
 
@@ -226,47 +226,47 @@ void ControllerManager::init_services()
 
   using namespace std::placeholders;
   list_controllers_service_ = create_service<controller_manager_msgs::srv::ListControllers>(
-    "~/list_controllers", std::bind(&ControllerManager::list_controllers_srv_cb, this, _1, _2), qos,
+    "~/list_controllers", std::bind(&ControllerManager::list_controllers_srv_cb, this, _1, _2), qos_services,
     best_effort_callback_group_);
   list_controller_types_service_ =
     create_service<controller_manager_msgs::srv::ListControllerTypes>(
       "~/list_controller_types",
-      std::bind(&ControllerManager::list_controller_types_srv_cb, this, _1, _2), qos,
+      std::bind(&ControllerManager::list_controller_types_srv_cb, this, _1, _2), qos_services,
       best_effort_callback_group_);
   load_controller_service_ = create_service<controller_manager_msgs::srv::LoadController>(
     "~/load_controller", std::bind(&ControllerManager::load_controller_service_cb, this, _1, _2),
-    qos, best_effort_callback_group_);
+    qos_services, best_effort_callback_group_);
   configure_controller_service_ = create_service<controller_manager_msgs::srv::ConfigureController>(
     "~/configure_controller",
-    std::bind(&ControllerManager::configure_controller_service_cb, this, _1, _2), qos,
+    std::bind(&ControllerManager::configure_controller_service_cb, this, _1, _2), qos_services,
     best_effort_callback_group_);
   reload_controller_libraries_service_ =
     create_service<controller_manager_msgs::srv::ReloadControllerLibraries>(
       "~/reload_controller_libraries",
-      std::bind(&ControllerManager::reload_controller_libraries_service_cb, this, _1, _2), qos,
-      best_effort_callback_group_);
+      std::bind(&ControllerManager::reload_controller_libraries_service_cb, this, _1, _2), 
+      qos_services, best_effort_callback_group_);
   switch_controller_service_ = create_service<controller_manager_msgs::srv::SwitchController>(
     "~/switch_controller",
-    std::bind(&ControllerManager::switch_controller_service_cb, this, _1, _2), qos,
+    std::bind(&ControllerManager::switch_controller_service_cb, this, _1, _2), qos_services,
     best_effort_callback_group_);
   unload_controller_service_ = create_service<controller_manager_msgs::srv::UnloadController>(
     "~/unload_controller",
-    std::bind(&ControllerManager::unload_controller_service_cb, this, _1, _2), qos,
+    std::bind(&ControllerManager::unload_controller_service_cb, this, _1, _2), qos_services,
     best_effort_callback_group_);
   list_hardware_components_service_ =
     create_service<controller_manager_msgs::srv::ListHardwareComponents>(
       "~/list_hardware_components",
-      std::bind(&ControllerManager::list_hardware_components_srv_cb, this, _1, _2), qos,
+      std::bind(&ControllerManager::list_hardware_components_srv_cb, this, _1, _2), qos_services,
       best_effort_callback_group_);
   list_hardware_interfaces_service_ =
     create_service<controller_manager_msgs::srv::ListHardwareInterfaces>(
       "~/list_hardware_interfaces",
-      std::bind(&ControllerManager::list_hardware_interfaces_srv_cb, this, _1, _2), qos,
+      std::bind(&ControllerManager::list_hardware_interfaces_srv_cb, this, _1, _2), qos_services,
       best_effort_callback_group_);
   set_hardware_component_state_service_ =
     create_service<controller_manager_msgs::srv::SetHardwareComponentState>(
       "~/set_hardware_component_state",
-      std::bind(&ControllerManager::set_hardware_component_state_srv_cb, this, _1, _2), qos,
+      std::bind(&ControllerManager::set_hardware_component_state_srv_cb, this, _1, _2), qos_services,
       best_effort_callback_group_);
 }
 
