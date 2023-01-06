@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.19.0 (2023-01-06)
+-------------------
 * Prevent controller manager from crashing when controller's plugin has error during loading. (`#881 <https://github.com/ros-controls/ros2_control/issues/881>`_) (`#882 <https://github.com/ros-controls/ros2_control/issues/882>`_)
 * Contributors: Denis Štogl
 
