@@ -1669,6 +1669,8 @@ controller_interface::return_type ControllerManager::update(
         {
           ret = controller_ret;
         }
+      } else if (controller_is_async) {
+        async_controller_threads_.at(loaded_controller.info.name)->signal_data_is_ready();
       }
     }
   }

@@ -458,6 +458,7 @@ private:
         int cm_update_rate
       )
       : terminated_(false)
+      , state_interface_data_ready_(false)
       , controller_(controller)
       , thread_{}
       , cm_update_rate_(cm_update_rate)
@@ -483,15 +484,16 @@ private:
     {
       rclcpp::Time previous_time = controller_->get_node()->now();
       
-      while (!terminated_.load(std::memory_order_relaxed))
+      while (!terminated_.load(std::memory_order_relaxed)) // does not synchronize with anything, because we don't care when this load happens compared to other operations
       {
         auto const period = std::chrono::nanoseconds(1'000'000'000 / cm_update_rate_);
         std::chrono::system_clock::time_point next_iteration_time =
         std::chrono::system_clock::time_point(std::chrono::nanoseconds(controller_->get_node()->now().nanoseconds()));
         
-        if (controller_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
-        { 
-          auto const current_time = controller_->get_node()->now();
+        if (controller_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE && 
+            state_interface_data_ready_.exchange(false, std::memory_order_acquire)) // necessary to see the most recent state interface values from the main thread
+        {                                                                           // the load synchronizes with the release store from the write function
+          auto const current_time = controller_->get_node()->now();                 // acquire is enough, since the store of the exchange function isn't used in other threads
           auto const measured_period = current_time - previous_time;
           previous_time = current_time;
         
@@ -499,7 +501,6 @@ private:
           controller_->get_node()->now(), (controller_->get_update_rate() !=  cm_update_rate_ && controller_->get_update_rate() != 0)
                   ? rclcpp::Duration::from_seconds(1.0 / controller_->get_update_rate())
                   : measured_period);
-                
         }
         
         next_iteration_time += period;
@@ -512,8 +513,14 @@ private:
       return controller_;
     }
 
+    void signal_data_is_ready() // "publish" state interface writes by the hardware from the read function to the async controller thread
+    {
+      state_interface_data_ready_.store(true, std::memory_order_release);
+    }
+
   private:
     std::atomic<bool> terminated_;
+    std::atomic<bool> state_interface_data_ready_;
     std::shared_ptr<controller_interface::ControllerInterfaceBase> controller_;
     std::thread thread_;
     unsigned int cm_update_rate_;

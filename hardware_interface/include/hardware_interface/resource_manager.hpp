@@ -451,8 +451,8 @@ private:
             std::chrono::system_clock::time_point next_iteration_time =
             std::chrono::system_clock::time_point(std::chrono::nanoseconds(clock_interface_->get_clock()->now().nanoseconds()));
 
-            if (read_and_write_flag_.load(std::memory_order_acquire))
-            {   
+            if (read_and_write_flag_.exchange(false, std::memory_order_acquire)) // the load synchronizes with the release store from the write function
+            {                                                                    // acquire is enough, since the store of the exchange function isn't used in other threads  
               auto  current_time = clock_interface_->get_clock()->now();
               auto  measured_period = current_time - previous_time;
               previous_time = current_time;
@@ -460,10 +460,10 @@ private:
               object->read(clock_interface_->get_clock()->now(), measured_period);
             }
 
-            /* if (read) { // kiéheztetés, ha priorizálunk
-                csak read
-            } else if (write) {
-                csak write
+            /* if (read) { // any kind of prioritization would lead to possible starvation of either reads or writes
+                read
+            }  else if (write) {
+                write
             }
             */
             next_iteration_time += period;
