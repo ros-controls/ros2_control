@@ -2,6 +2,9 @@
 Changelog for package ros2controlcli
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 2.18.0 (2022-12-03)
 -------------------
 * Fix hardware interface CLI description (`#864 <https://github.com/ros-controls/ros2_control/issues/864>`_) (`#869 <https://github.com/ros-controls/ros2_control/issues/869>`_)
