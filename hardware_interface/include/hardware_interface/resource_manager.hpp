@@ -394,31 +394,28 @@ private:
   {
   public:
     explicit ComponentThreadWrapper(
-      System * component, std::atomic<bool>& read_and_write_flag, int update_rate,
+      System * component, int update_rate,
       rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
     : component_(component),
       read_and_write_thread_{},
-      read_and_write_flag_(read_and_write_flag),
       cm_update_rate_(update_rate),
       clock_interface_(clock_interface)
     {
     }
     explicit ComponentThreadWrapper(
-      Actuator * component, std::atomic<bool>& read_and_write_flag, int update_rate,
+      Actuator * component, int update_rate,
       rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
     : component_(component),
       read_and_write_thread_{},
-      read_and_write_flag_(read_and_write_flag),
       cm_update_rate_(update_rate),
       clock_interface_(clock_interface)
     {
     }
     explicit ComponentThreadWrapper(
-      Sensor * component, std::atomic<bool>& read_and_write_flag, int update_rate,
+      Sensor * component, int update_rate,
       rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
     : component_(component),
       read_and_write_thread_{},
-      read_and_write_flag_(read_and_write_flag),
       cm_update_rate_(update_rate),
       clock_interface_(clock_interface)
     {
@@ -444,7 +441,7 @@ private:
         [this](auto & object)
         {
           auto previous_time = clock_interface_->get_clock()->now();
-          while (!terminated_.load(std::memory_order_relaxed))
+          while (!terminated_.load(std::memory_order_relaxed)) // does not synchronize with anything, because we don't care what values are visible when this load happens
           {
 
             auto const period = std::chrono::nanoseconds(1'000'000'000 / cm_update_rate_);
@@ -456,16 +453,9 @@ private:
               auto  current_time = clock_interface_->get_clock()->now();
               auto  measured_period = current_time - previous_time;
               previous_time = current_time;
-              object->write(clock_interface_->get_clock()->now(), measured_period);
+              object->write(clock_interface_->get_clock()->now(), measured_period); // any kind of prioritization would lead to possible starvation of either reads or writes
               object->read(clock_interface_->get_clock()->now(), measured_period);
             }
-
-            /* if (read) { // any kind of prioritization would lead to possible starvation of either reads or writes
-                read
-            }  else if (write) {
-                write
-            }
-            */
             next_iteration_time += period;
             std::this_thread::sleep_until(next_iteration_time);
           }
@@ -473,17 +463,20 @@ private:
         component_);
     }
 
+    void signal_data_is_ready() {
+      read_and_write_flag_.store(true, std::memory_order_release);
+    }
+
   private:
     std::atomic<bool> terminated_ = false;
     std::variant<Actuator *, System *, Sensor *> component_;
     std::thread read_and_write_thread_;
-    std::atomic<bool>& read_and_write_flag_;
+    std::atomic<bool> read_and_write_flag_ = false;
     int cm_update_rate_;
 
 
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface_;
   };
-  std::atomic<bool> read_and_write_flag_;
   int cm_update_rate_;
   std::unordered_map<std::string, std::unique_ptr<ComponentThreadWrapper>> async_component_threads_;
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface_ = nullptr;
