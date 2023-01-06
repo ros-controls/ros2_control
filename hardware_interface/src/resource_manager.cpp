@@ -262,7 +262,7 @@ public:
   {
     bool result = trigger_and_print_hardware_state_transition(
       std::bind(&HardwareT::shutdown, &hardware), "shutdown", hardware.get_name(),
-      lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+      lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED);
 
     if (result)
     {
