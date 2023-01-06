@@ -36,9 +36,10 @@ static constexpr const char * kChainableControllerInterfaceClassName =
   "controller_interface::ChainableControllerInterface";
 
 // Changed services history QoS to keep all so we don't lose any client service calls
-rclcpp::QoS qos_services = rclcpp::QoS(rclcpp::QoSInitialization(RMW_QOS_POLICY_HISTORY_KEEP_ALL, 1))
-                    .reliable()
-                    .durability_volatile();
+rclcpp::QoS qos_services =
+  rclcpp::QoS(rclcpp::QoSInitialization(RMW_QOS_POLICY_HISTORY_KEEP_ALL, 1))
+    .reliable()
+    .durability_volatile();
 
 inline bool is_controller_inactive(const controller_interface::ControllerInterfaceBase & controller)
 {
@@ -226,8 +227,8 @@ void ControllerManager::init_services()
 
   using namespace std::placeholders;
   list_controllers_service_ = create_service<controller_manager_msgs::srv::ListControllers>(
-    "~/list_controllers", std::bind(&ControllerManager::list_controllers_srv_cb, this, _1, _2), qos_services,
-    best_effort_callback_group_);
+    "~/list_controllers", std::bind(&ControllerManager::list_controllers_srv_cb, this, _1, _2),
+    qos_services, best_effort_callback_group_);
   list_controller_types_service_ =
     create_service<controller_manager_msgs::srv::ListControllerTypes>(
       "~/list_controller_types",
@@ -243,7 +244,7 @@ void ControllerManager::init_services()
   reload_controller_libraries_service_ =
     create_service<controller_manager_msgs::srv::ReloadControllerLibraries>(
       "~/reload_controller_libraries",
-      std::bind(&ControllerManager::reload_controller_libraries_service_cb, this, _1, _2), 
+      std::bind(&ControllerManager::reload_controller_libraries_service_cb, this, _1, _2),
       qos_services, best_effort_callback_group_);
   switch_controller_service_ = create_service<controller_manager_msgs::srv::SwitchController>(
     "~/switch_controller",
@@ -266,8 +267,8 @@ void ControllerManager::init_services()
   set_hardware_component_state_service_ =
     create_service<controller_manager_msgs::srv::SetHardwareComponentState>(
       "~/set_hardware_component_state",
-      std::bind(&ControllerManager::set_hardware_component_state_srv_cb, this, _1, _2), qos_services,
-      best_effort_callback_group_);
+      std::bind(&ControllerManager::set_hardware_component_state_srv_cb, this, _1, _2),
+      qos_services, best_effort_callback_group_);
 }
 
 controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_controller(
