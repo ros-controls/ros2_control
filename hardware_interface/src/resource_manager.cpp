@@ -1015,17 +1015,13 @@ void ResourceManager::read(const rclcpp::Time & time, const rclcpp::Duration & p
     if (!resource_storage_->hardware_info_map_[component.get_name()].is_asynch)
     {
       component.read(time, period);
-    } else {
-      async_component_threads_.at(component.get_name())->signal_data_is_ready();
-    }  // needed for the async component thread  to see the most recent command interface values from the global update
-  }    // TODO: if set to false by the async component's thread, then the update reading from the same state interfaces should be called with the previous values
+    }
+  }
   for (auto & component : resource_storage_->sensors_)
   {
     if (!resource_storage_->hardware_info_map_[component.get_name()].is_asynch)
     {
       component.read(time, period);
-    } else {
-      async_component_threads_.at(component.get_name())->signal_data_is_ready();
     }
   }
   for (auto & component : resource_storage_->systems_)
@@ -1033,8 +1029,6 @@ void ResourceManager::read(const rclcpp::Time & time, const rclcpp::Duration & p
     if (!resource_storage_->hardware_info_map_[component.get_name()].is_asynch)
     {
       component.read(time, period);
-    } else {
-      async_component_threads_.at(component.get_name())->signal_data_is_ready();
     }
   }
 }
@@ -1047,8 +1041,8 @@ void ResourceManager::write(const rclcpp::Time & time, const rclcpp::Duration & 
     {
       component.write(time, period);
     } else {
-      async_component_threads_.at(component.get_name())->signal_data_is_ready();
-    }                                                                                                   
+      async_component_threads_.at(component.get_name())->command_interfaces_ready();
+    }  // needed for the async component thread to see the most recent command interface values from the global update                                                                                            
   }
   for (auto & component : resource_storage_->systems_)
   {
@@ -1056,7 +1050,7 @@ void ResourceManager::write(const rclcpp::Time & time, const rclcpp::Duration & 
     {
       component.write(time, period);
     } else {
-      async_component_threads_.at(component.get_name())->signal_data_is_ready();
+      async_component_threads_.at(component.get_name())->command_interfaces_ready();
     }
   }
 }

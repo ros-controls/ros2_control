@@ -459,6 +459,7 @@ private:
       )
       : terminated_(false)
       , state_interface_data_ready_(false)
+      , command_interfaces_written_(false)
       , controller_(controller)
       , thread_{}
       , cm_update_rate_(cm_update_rate)
@@ -484,7 +485,7 @@ private:
     {
       rclcpp::Time previous_time = controller_->get_node()->now();
       
-      while (!terminated_.load(std::memory_order_relaxed)) // does not synchronize with anything, because we don't care when this load happens compared to other operations
+      while (!terminated_.load(std::memory_order_relaxed)) // does not synchronize with anything, because we don't care what values are visible when this load happens
       {
         auto const period = std::chrono::nanoseconds(1'000'000'000 / cm_update_rate_);
         std::chrono::system_clock::time_point next_iteration_time =
@@ -501,6 +502,7 @@ private:
           controller_->get_node()->now(), (controller_->get_update_rate() !=  cm_update_rate_ && controller_->get_update_rate() != 0)
                   ? rclcpp::Duration::from_seconds(1.0 / controller_->get_update_rate())
                   : measured_period);
+          command_interfaces_written_.store(true, std::memory_order_release); // publish command interface writes from the controller. Synchronizes with the exchange in the main thread (doesn't exist yet)
         }
         
         next_iteration_time += period;
@@ -513,7 +515,13 @@ private:
       return controller_;
     }
 
-    void signal_data_is_ready() // "publish" state interface writes by the hardware from the read function to the async controller thread
+    bool command_interfaces_written()
+    {
+      return command_interfaces_written_.exchange(false, std::memory_order_acquire); // returns true when the update is finished, so we don't access interfaces which are currently written to
+                                                                                       // still not enough
+    }
+
+    void state_interfaces_ready() // "publish" state interface writes by the hardware from the read function to the async controller thread
     {
       state_interface_data_ready_.store(true, std::memory_order_release);
     }
@@ -521,6 +529,7 @@ private:
   private:
     std::atomic<bool> terminated_;
     std::atomic<bool> state_interface_data_ready_;
+    std::atomic<bool> command_interfaces_written_;
     std::shared_ptr<controller_interface::ControllerInterfaceBase> controller_;
     std::thread thread_;
     unsigned int cm_update_rate_;

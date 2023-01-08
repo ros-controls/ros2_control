@@ -1670,8 +1670,8 @@ controller_interface::return_type ControllerManager::update(
           ret = controller_ret;
         }
       } else if (controller_is_async) { // publish state interface writes to the appropriate async controller thread.
-        async_controller_threads_.at(loaded_controller.info.name)->signal_data_is_ready(); 
-      } // TODO: if set to false by the async controller's thread, then the write reading from the same command interfaces should be called with the previous values
+        async_controller_threads_.at(loaded_controller.info.name)->state_interfaces_ready(); 
+      }
     }
   }
 
@@ -1686,6 +1686,7 @@ controller_interface::return_type ControllerManager::update(
 
 void ControllerManager::write(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
+  // TODO: check if async update is done, but how?
   resource_manager_->write(time, period);
 }
 

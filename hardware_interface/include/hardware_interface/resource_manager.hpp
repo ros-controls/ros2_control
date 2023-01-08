@@ -448,13 +448,14 @@ private:
             std::chrono::system_clock::time_point next_iteration_time =
             std::chrono::system_clock::time_point(std::chrono::nanoseconds(clock_interface_->get_clock()->now().nanoseconds()));
 
-            if (read_and_write_flag_.exchange(false, std::memory_order_acquire)) // the load synchronizes with the release store from the write function
-            {                                                                    // acquire is enough, since the store of the exchange function isn't used in other threads  
+            if (command_interface_data_ready_.exchange(false, std::memory_order_acquire)) // the load synchronizes with the release store from the write function
+            {                                                                             // acquire is enough, since the store of the exchange function isn't used in other threads  
               auto  current_time = clock_interface_->get_clock()->now();
               auto  measured_period = current_time - previous_time;
               previous_time = current_time;
               object->write(clock_interface_->get_clock()->now(), measured_period); // any kind of prioritization would lead to possible starvation of either reads or writes
               object->read(clock_interface_->get_clock()->now(), measured_period);
+              state_interfaces_written_.store(true, std::memory_order_release); // read function is finished, state interfaces can be read from in the update function
             }
             next_iteration_time += period;
             std::this_thread::sleep_until(next_iteration_time);
@@ -463,15 +464,20 @@ private:
         component_);
     }
 
-    void signal_data_is_ready() {
-      read_and_write_flag_.store(true, std::memory_order_release);
+    bool state_interfaces_written() {
+      return state_interfaces_written_.exchange(false, std::memory_order_acquire); // should be checked in the update function to ensure that state interface writes are visible
+    }
+
+    void command_interfaces_ready() {
+      command_interface_data_ready_.store(true, std::memory_order_release); // data can be read from the command interfaces
     }
 
   private:
     std::atomic<bool> terminated_ = false;
     std::variant<Actuator *, System *, Sensor *> component_;
     std::thread read_and_write_thread_;
-    std::atomic<bool> read_and_write_flag_ = false;
+    std::atomic<bool> command_interface_data_ready_ = false;
+    std::atomic<bool> state_interfaces_written_ = false;
     int cm_update_rate_;
 
 
