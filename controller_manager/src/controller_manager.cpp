@@ -1642,23 +1642,37 @@ controller_interface::return_type ControllerManager::update(
   ++update_loop_counter_;
   update_loop_counter_ %= update_rate_;
 
+  for (auto&& async_component : resource_manager_->async_component_threads_) 
+  {
+    if (!async_component.second->state_interfaces_written()) 
+    {
+      RCLCPP_WARN(
+        get_logger(), "Async component '%s ' is not finished yet, the whole system's stability might be affected.",
+        async_component.first.c_str());
+    }
+  }
+
+  for (auto&& async_controller : async_controller_threads_) 
+  {
+    async_controller.second->state_interfaces_ready(); // publish state interface writes to the appropriate async controller thread.
+  }
+
   for (auto loaded_controller : rt_controller_list)
   {
     // TODO(v-lopez) we could cache this information
     // https://github.com/ros-controls/ros2_control/issues/153
-    if (is_controller_active(*loaded_controller.c))
+    if (!loaded_controller.c->is_async() && is_controller_active(*loaded_controller.c))
     {
       const auto controller_update_rate = loaded_controller.c->get_update_rate();
-      const auto controller_is_async = loaded_controller.c->is_async();
 
       bool controller_go =
         controller_update_rate == 0 || ((update_loop_counter_ % controller_update_rate) == 0);
       RCLCPP_WARN(
         get_logger(), "update_loop_counter: '%d ' is_async: '%s ' controller_name: '%s '",
-        update_loop_counter_, controller_is_async ? "True" : "False",
+        update_loop_counter_, loaded_controller.c->is_async() ? "True" : "False",
         loaded_controller.info.name.c_str());
 
-      if (controller_go && !controller_is_async)
+      if (controller_go)
       {
         auto controller_ret = loaded_controller.c->update(
           time, (controller_update_rate != update_rate_ && controller_update_rate != 0)
@@ -1669,8 +1683,6 @@ controller_interface::return_type ControllerManager::update(
         {
           ret = controller_ret;
         }
-      } else if (controller_is_async) { // publish state interface writes to the appropriate async controller thread.
-        async_controller_threads_.at(loaded_controller.info.name)->state_interfaces_ready(); 
       }
     }
   }
@@ -1686,7 +1698,13 @@ controller_interface::return_type ControllerManager::update(
 
 void ControllerManager::write(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
-  // TODO: check if async update is done, but how?
+  for (auto&& async_controller : async_controller_threads_) {
+    if (!async_controller.second->command_interfaces_written()) {
+      RCLCPP_WARN(
+        get_logger(), "Async controller '%s ' is not finished yet, the whole system's stability might be affected.",
+        async_controller.first.c_str());
+    }
+  }
   resource_manager_->write(time, period);
 }
 

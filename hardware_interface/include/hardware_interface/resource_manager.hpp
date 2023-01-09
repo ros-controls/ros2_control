@@ -484,8 +484,10 @@ private:
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface_;
   };
   int cm_update_rate_;
-  std::unordered_map<std::string, std::unique_ptr<ComponentThreadWrapper>> async_component_threads_;
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface_ = nullptr;
+  public:
+    std::unordered_map<std::string, std::unique_ptr<ComponentThreadWrapper>> async_component_threads_;
+
 };
 
 }  // namespace hardware_interface
