@@ -27,7 +27,9 @@ constexpr auto FOO_INTERFACE = "FooInterface";
 TEST(TestHandle, command_interface)
 {
   double value = 1.337;
-  CommandInterface interface{JOINT_NAME, FOO_INTERFACE, &value};
+  CommandInterface interface {
+    JOINT_NAME, FOO_INTERFACE, &value
+  };
   EXPECT_DOUBLE_EQ(interface.get_value(), value);
   EXPECT_NO_THROW(interface.set_value(0.0));
   EXPECT_DOUBLE_EQ(interface.get_value(), 0.0);
@@ -36,7 +38,9 @@ TEST(TestHandle, command_interface)
 TEST(TestHandle, state_interface)
 {
   double value = 1.337;
-  StateInterface interface{JOINT_NAME, FOO_INTERFACE, &value};
+  StateInterface interface {
+    JOINT_NAME, FOO_INTERFACE, &value
+  };
   EXPECT_DOUBLE_EQ(interface.get_value(), value);
   // interface.set_value(5);  compiler error, no set_value function
 }
