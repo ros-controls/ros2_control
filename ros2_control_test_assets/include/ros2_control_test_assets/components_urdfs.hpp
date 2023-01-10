@@ -421,7 +421,7 @@ const auto invalid_urdf_ros2_control_missing_attribute =
   </ros2_control>
   )";
 
-const auto invalid_urdf_ros2_control_component_missing_class_type =
+const auto invalid_urdf_ros2_control_component_missing_plugin_name =
   R"(
   <ros2_control name="2DOF_System_Robot_Position_Only" type="system">
     <hardware>
@@ -452,7 +452,7 @@ const auto invalid_urdf_ros2_control_parameter_missing_name =
   </ros2_control>
 )";
 
-const auto invalid_urdf_ros2_control_component_class_type_empty =
+const auto invalid_urdf_ros2_control_component_plugin_name_empty =
   R"(
   <ros2_control name="2DOF_System_Robot_Position_Only" type="system">
     <hardware>
