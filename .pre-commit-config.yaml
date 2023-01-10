@@ -43,7 +43,7 @@ repos:
 
   # PyDocStyle
   - repo: https://github.com/PyCQA/pydocstyle
-    rev: 6.2.3
+    rev: 6.2.2
     hooks:
     - id: pydocstyle
       args: ["--ignore=D100,D101,D102,D103,D104,D105,D106,D107,D203,D212,D404"]
