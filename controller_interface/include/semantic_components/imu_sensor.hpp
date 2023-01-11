@@ -114,17 +114,14 @@ public:
     message.orientation.y = orientation_[1];
     message.orientation.z = orientation_[2];
     message.orientation.w = orientation_[3];
-    message.orientation_covariance.fill(.0);
 
     message.angular_velocity.x = angular_velocity_[0];
     message.angular_velocity.y = angular_velocity_[1];
     message.angular_velocity.z = angular_velocity_[2];
-    message.angular_velocity_covariance.fill(.0);
 
     message.linear_acceleration.x = linear_acceleration_[0];
     message.linear_acceleration.y = linear_acceleration_[1];
     message.linear_acceleration.z = linear_acceleration_[2];
-    message.linear_acceleration_covariance.fill(.0);
 
     return true;
   }
