@@ -23,7 +23,7 @@
    <item>
     <widget class="QLabel" name="cm_list_label">
      <property name="toolTip">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;controller manager&lt;/span&gt; namespace. It is assumed that the &lt;span style=&quot; font-weight:600;&quot;&gt;robot_description&lt;/span&gt; parameter also lives in the same namesapce.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;controller manager&lt;/span&gt; namespace. It is assumed that the &lt;span style=&quot; font-weight:600;&quot;&gt;robot_description&lt;/span&gt; parameter also lives in the same namespace.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
      <property name="text">
       <string>namespace</string>
