@@ -2,6 +2,11 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Update imu_sensor.hpp (`#893 <https://github.com/ros-controls/ros2_control/issues/893>`_) (`#896 <https://github.com/ros-controls/ros2_control/issues/896>`_)
+* Contributors: flochre
+
 2.19.0 (2023-01-06)
 -------------------
 
