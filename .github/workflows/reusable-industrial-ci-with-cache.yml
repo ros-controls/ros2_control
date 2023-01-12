@@ -73,7 +73,7 @@ jobs:
           restore-keys: |
             target_ws-${{ env.CACHE_PREFIX }}-${{ hashFiles('**/CMakeLists.txt', '**/package.xml') }}
       - name: cache ccache
-        uses: pat-s/always-upload-cache@v2.1.5
+        uses: pat-s/always-upload-cache@v3.0.11
         with:
           path: ${{ env.CCACHE_DIR }}
           key: ccache-${{ env.CACHE_PREFIX }}-${{ github.sha }}-${{ github.run_id }}
