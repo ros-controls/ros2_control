@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.20.0 (2023-01-12)
+-------------------
 * Add backward_ros to controller_manager (`#886 <https://github.com/ros-controls/ros2_control/issues/886>`_) (`#892 <https://github.com/ros-controls/ros2_control/issues/892>`_)
 * Contributors: Bence Magyar
 

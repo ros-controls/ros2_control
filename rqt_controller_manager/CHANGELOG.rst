@@ -2,8 +2,8 @@
 Changelog for package rqt_controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.20.0 (2023-01-12)
+-------------------
 * 🔧 Fixes and updated on pre-commit hooks and their action (backport `#890 <https://github.com/ros-controls/ros2_control/issues/890>`_) (`#895 <https://github.com/ros-controls/ros2_control/issues/895>`_)
 * Contributors: Denis Štogl 
 
