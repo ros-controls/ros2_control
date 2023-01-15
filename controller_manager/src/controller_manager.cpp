@@ -1630,17 +1630,6 @@ std::vector<std::string> ControllerManager::get_controller_names()
 void ControllerManager::read(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
   resource_manager_->read(time, period);
-}
-
-controller_interface::return_type ControllerManager::update(
-  const rclcpp::Time & time, const rclcpp::Duration & period)
-{
-  std::vector<ControllerSpec> & rt_controller_list =
-    rt_controllers_wrapper_.update_and_get_used_by_rt_list();
-
-  auto ret = controller_interface::return_type::OK;
-  ++update_loop_counter_;
-  update_loop_counter_ %= update_rate_;
 
   for (auto&& async_component : resource_manager_->async_component_threads_) 
   {
@@ -1654,8 +1643,20 @@ controller_interface::return_type ControllerManager::update(
 
   for (auto&& async_controller : async_controller_threads_) 
   {
-    async_controller.second->state_interfaces_ready(); // publish state interface writes to the appropriate async controller thread.
+    async_controller.second->state_interfaces_ready(); // publish state interface writes to the appropriate async controller thread. 
+                                                       // this variable can be a member of the cm and get passed by reference - no loop needed
   }
+}
+
+controller_interface::return_type ControllerManager::update(
+  const rclcpp::Time & time, const rclcpp::Duration & period)
+{
+  std::vector<ControllerSpec> & rt_controller_list =
+    rt_controllers_wrapper_.update_and_get_used_by_rt_list();
+
+  auto ret = controller_interface::return_type::OK;
+  ++update_loop_counter_;
+  update_loop_counter_ %= update_rate_;
 
   for (auto loaded_controller : rt_controller_list)
   {

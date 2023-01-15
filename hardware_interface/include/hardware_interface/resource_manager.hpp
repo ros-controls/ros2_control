@@ -449,7 +449,8 @@ private:
             std::chrono::system_clock::time_point(std::chrono::nanoseconds(clock_interface_->get_clock()->now().nanoseconds()));
 
             if (command_interface_data_ready_.exchange(false, std::memory_order_acquire)) // the load synchronizes with the release store from the write function
-            {                                                                             // acquire is enough, since the store of the exchange function isn't used in other threads  
+            {
+              state_interfaces_written_.store(false, std::memory_order_relaxed);  // not used for synchronization, just checks if the operation has started                                                                    // acquire is enough, since the store of the exchange function isn't used in other threads  
               auto  current_time = clock_interface_->get_clock()->now();
               auto  measured_period = current_time - previous_time;
               previous_time = current_time;
@@ -464,8 +465,12 @@ private:
         component_);
     }
 
+    bool in_progress() {
+      return !command_interface_data_ready_.load(std::memory_order_relaxed); // not used for synchronization, just checks if the operation has started
+    }
+
     bool state_interfaces_written() {
-      return state_interfaces_written_.exchange(false, std::memory_order_acquire); // should be checked in the update function to ensure that state interface writes are visible
+      return state_interfaces_written_.load(std::memory_order_acquire); // should be checked in the update function to ensure that state interface writes are visible
     }
 
     void command_interfaces_ready() {

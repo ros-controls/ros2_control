@@ -1041,7 +1041,7 @@ void ResourceManager::write(const rclcpp::Time & time, const rclcpp::Duration & 
     {
       component.write(time, period);
     } else {
-      async_component_threads_.at(component.get_name())->command_interfaces_ready();
+      async_component_threads_.at(component.get_name())->command_interfaces_ready(); // this variable can simply be passed by ref, no need to set it separately
     }  // needed for the async component thread to see the most recent command interface values from the global update                                                                                            
   }
   for (auto & component : resource_storage_->systems_)
