@@ -1633,7 +1633,7 @@ void ControllerManager::read(const rclcpp::Time & time, const rclcpp::Duration &
 
   for (auto&& async_component : resource_manager_->async_component_threads_) 
   {
-    if (!async_component.second->state_interfaces_written()) 
+    if (!async_component.second->state_interfaces_written() && async_component.second->in_progress()) 
     {
       RCLCPP_WARN(
         get_logger(), "Async component '%s ' is not finished yet, the whole system's stability might be affected.",
@@ -1700,7 +1700,7 @@ controller_interface::return_type ControllerManager::update(
 void ControllerManager::write(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
   for (auto&& async_controller : async_controller_threads_) {
-    if (!async_controller.second->command_interfaces_written()) {
+    if (!async_controller.second->command_interfaces_written() && async_controller.second->in_progress() ) {
       RCLCPP_WARN(
         get_logger(), "Async controller '%s ' is not finished yet, the whole system's stability might be affected.",
         async_controller.first.c_str());
