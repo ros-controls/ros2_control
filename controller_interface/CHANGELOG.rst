@@ -2,6 +2,12 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+3.6.0 (2023-01-12)
+------------------
+* Update imu_sensor.hpp (`#893 <https://github.com/ros-controls/ros2_control/issues/893>`_)
+  Covariances values should come from the IMU_Broadcaster, like the frame_id or the time
+* Contributors: flochre
+
 3.5.1 (2023-01-06)
 ------------------
 
