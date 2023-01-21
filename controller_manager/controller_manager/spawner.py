@@ -178,12 +178,6 @@ def main(args=None):
             node.get_logger().info('Controller already loaded, skipping load_controller')
         else:
             if controller_type:
-<<<<<<< HEAD
-                ret = subprocess.run(['ros2', 'param', 'set', controller_manager_name,
-                                      controller_name + '.type', controller_type])
-            ret = load_controller(
-                node, controller_manager_name, controller_name)
-=======
                 parameter = Parameter()
                 Parameter.name = prefixed_controller_name + '.type'
                 parameter.value = get_parameter_value(string_value=controller_type)
@@ -199,21 +193,12 @@ def main(args=None):
                     return 1
 
             ret = load_controller(node, controller_manager_name, controller_name)
->>>>>>> fffb02e (Do not use CLI calls but direct API for setting parameters. (#910))
             if not ret.ok:
                 # Error message printed by ros2 control
                 return 1
             node.get_logger().info(bcolors.OKBLUE + 'Loaded ' + controller_name + bcolors.ENDC)
 
         if param_file:
-<<<<<<< HEAD
-            ret = subprocess.run(['ros2', 'param', 'load', controller_name,
-                                  param_file])
-            if ret.returncode != 0:
-                # Error message printed by ros2 param
-                return ret.returncode
-            node.get_logger().info('Loaded ' + param_file + ' into ' + controller_name)
-=======
             load_parameter_file(node=node, node_name=prefixed_controller_name, parameter_file=param_file,
                                 use_wildcard=True)
             node.get_logger().info(bcolors.OKCYAN + 'Loaded parameters file "' + param_file + '" for ' + bcolors.BOLD + prefixed_controller_name + bcolors.ENDC)
@@ -223,7 +208,6 @@ def main(args=None):
             #     Error message printed by ros2 param
             #     return ret.returncode
             node.get_logger().info('Loaded ' + param_file + ' into ' + prefixed_controller_name)
->>>>>>> fffb02e (Do not use CLI calls but direct API for setting parameters. (#910))
 
         if not args.load_only:
             ret = configure_controller(
