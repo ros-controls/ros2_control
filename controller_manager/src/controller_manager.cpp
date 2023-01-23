@@ -36,16 +36,10 @@ static constexpr const char * kChainableControllerInterfaceClassName =
   "controller_interface::ChainableControllerInterface";
 
 // Changed services history QoS to keep all so we don't lose any client service calls
-static const rmw_qos_profile_t rmw_qos_profile_services_hist_keep_all = {
-  RMW_QOS_POLICY_HISTORY_KEEP_ALL,
-  1,  // message queue depth
-  RMW_QOS_POLICY_RELIABILITY_RELIABLE,
-  RMW_QOS_POLICY_DURABILITY_VOLATILE,
-  RMW_QOS_DEADLINE_DEFAULT,
-  RMW_QOS_LIFESPAN_DEFAULT,
-  RMW_QOS_POLICY_LIVELINESS_SYSTEM_DEFAULT,
-  RMW_QOS_LIVELINESS_LEASE_DURATION_DEFAULT,
-  false};
+rclcpp::QoS qos_services =
+  rclcpp::QoS(rclcpp::QoSInitialization(RMW_QOS_POLICY_HISTORY_KEEP_ALL, 1))
+    .reliable()
+    .durability_volatile();
 
 inline bool is_controller_inactive(const controller_interface::ControllerInterfaceBase & controller)
 {
@@ -184,6 +178,10 @@ ControllerManager::ControllerManager(
     std::make_shared<pluginlib::ClassLoader<controller_interface::ChainableControllerInterface>>(
       kControllerInterfaceNamespace, kChainableControllerInterfaceClassName))
 {
+  if (!get_parameter("update_rate", update_rate_))
+  {
+    RCLCPP_WARN(get_logger(), "'update_rate' parameter not set, using default value.");
+  }
   diagnostics_updater_.setHardwareID("ros2_control");
   diagnostics_updater_.add(
     "Controllers Activity", this, &ControllerManager::controller_activity_diagnostic_callback);
@@ -234,47 +232,47 @@ void ControllerManager::init_services()
   using namespace std::placeholders;
   list_controllers_service_ = create_service<controller_manager_msgs::srv::ListControllers>(
     "~/list_controllers", std::bind(&ControllerManager::list_controllers_srv_cb, this, _1, _2),
-    rmw_qos_profile_services_hist_keep_all, best_effort_callback_group_);
+    qos_services, best_effort_callback_group_);
   list_controller_types_service_ =
     create_service<controller_manager_msgs::srv::ListControllerTypes>(
       "~/list_controller_types",
-      std::bind(&ControllerManager::list_controller_types_srv_cb, this, _1, _2),
-      rmw_qos_profile_services_hist_keep_all, best_effort_callback_group_);
+      std::bind(&ControllerManager::list_controller_types_srv_cb, this, _1, _2), qos_services,
+      best_effort_callback_group_);
   load_controller_service_ = create_service<controller_manager_msgs::srv::LoadController>(
     "~/load_controller", std::bind(&ControllerManager::load_controller_service_cb, this, _1, _2),
-    rmw_qos_profile_services_hist_keep_all, best_effort_callback_group_);
+    qos_services, best_effort_callback_group_);
   configure_controller_service_ = create_service<controller_manager_msgs::srv::ConfigureController>(
     "~/configure_controller",
-    std::bind(&ControllerManager::configure_controller_service_cb, this, _1, _2),
-    rmw_qos_profile_services_hist_keep_all, best_effort_callback_group_);
+    std::bind(&ControllerManager::configure_controller_service_cb, this, _1, _2), qos_services,
+    best_effort_callback_group_);
   reload_controller_libraries_service_ =
     create_service<controller_manager_msgs::srv::ReloadControllerLibraries>(
       "~/reload_controller_libraries",
       std::bind(&ControllerManager::reload_controller_libraries_service_cb, this, _1, _2),
-      rmw_qos_profile_services_hist_keep_all, best_effort_callback_group_);
+      qos_services, best_effort_callback_group_);
   switch_controller_service_ = create_service<controller_manager_msgs::srv::SwitchController>(
     "~/switch_controller",
-    std::bind(&ControllerManager::switch_controller_service_cb, this, _1, _2),
-    rmw_qos_profile_services_hist_keep_all, best_effort_callback_group_);
+    std::bind(&ControllerManager::switch_controller_service_cb, this, _1, _2), qos_services,
+    best_effort_callback_group_);
   unload_controller_service_ = create_service<controller_manager_msgs::srv::UnloadController>(
     "~/unload_controller",
-    std::bind(&ControllerManager::unload_controller_service_cb, this, _1, _2),
-    rmw_qos_profile_services_hist_keep_all, best_effort_callback_group_);
+    std::bind(&ControllerManager::unload_controller_service_cb, this, _1, _2), qos_services,
+    best_effort_callback_group_);
   list_hardware_components_service_ =
     create_service<controller_manager_msgs::srv::ListHardwareComponents>(
       "~/list_hardware_components",
-      std::bind(&ControllerManager::list_hardware_components_srv_cb, this, _1, _2),
-      rmw_qos_profile_services_hist_keep_all, best_effort_callback_group_);
+      std::bind(&ControllerManager::list_hardware_components_srv_cb, this, _1, _2), qos_services,
+      best_effort_callback_group_);
   list_hardware_interfaces_service_ =
     create_service<controller_manager_msgs::srv::ListHardwareInterfaces>(
       "~/list_hardware_interfaces",
-      std::bind(&ControllerManager::list_hardware_interfaces_srv_cb, this, _1, _2),
-      rmw_qos_profile_services_hist_keep_all, best_effort_callback_group_);
+      std::bind(&ControllerManager::list_hardware_interfaces_srv_cb, this, _1, _2), qos_services,
+      best_effort_callback_group_);
   set_hardware_component_state_service_ =
     create_service<controller_manager_msgs::srv::SetHardwareComponentState>(
       "~/set_hardware_component_state",
       std::bind(&ControllerManager::set_hardware_component_state_srv_cb, this, _1, _2),
-      rmw_qos_profile_services_hist_keep_all, best_effort_callback_group_);
+      qos_services, best_effort_callback_group_);
 }
 
 controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_controller(
@@ -304,13 +302,23 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_c
 
   controller_interface::ControllerInterfaceBaseSharedPtr controller;
 
-  if (loader_->isClassAvailable(controller_type))
+  try
   {
-    controller = loader_->createSharedInstance(controller_type);
+    if (loader_->isClassAvailable(controller_type))
+    {
+      controller = loader_->createSharedInstance(controller_type);
+    }
+    if (chainable_loader_->isClassAvailable(controller_type))
+    {
+      controller = chainable_loader_->createSharedInstance(controller_type);
+    }
   }
-  if (chainable_loader_->isClassAvailable(controller_type))
+  catch (const pluginlib::CreateClassException e)
   {
-    controller = chainable_loader_->createSharedInstance(controller_type);
+    RCLCPP_ERROR(
+      get_logger(), "Error happened during creation of controller '%s' with type '%s':\n%s",
+      controller_name.c_str(), controller_type.c_str(), e.what());
+    return nullptr;
   }
 
   ControllerSpec controller_spec;
