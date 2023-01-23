@@ -465,6 +465,8 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_sensor_only)
 
 TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_only)
 {
+  std::setlocale(LC_NUMERIC, "de_DE.UTF-8");
+
   std::string urdf_to_test = std::string(ros2_control_test_assets::urdf_head) +
                              ros2_control_test_assets::valid_urdf_ros2_control_actuator_only +
                              ros2_control_test_assets::urdf_tail;
