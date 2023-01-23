@@ -319,6 +319,10 @@ private:
    */
   void clear_requests();
 
+  /// Topologically sort controllers in place
+  /// If controller A's command is controller B's reference then A proceeds B in the sorted vector
+  void sort_controllers(std::vector<ControllerSpec> &);
+
   /**
    * If a controller is deactivated all following controllers (if any exist) should be switched
    * 'from' the chained mode.
