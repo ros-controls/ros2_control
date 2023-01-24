@@ -33,18 +33,13 @@ class ListHardwareComponentsVerb(VerbExtension):
             hardware_components = list_hardware_components(node, args.controller_manager)
 
             for idx, component in enumerate(hardware_components.component):
-                print(f'Hardware Component {idx}')
-                print(f'\tname: {component.name}')
-                print(f'\ttype: {component.type}')
+                print(f'Hardware Component {idx}\n\tname: {component.name}\n\ttype: {component.type}')
                 if hasattr(component, 'plugin_name'):
-                    print(f'\tplugin name: {component.plugin_name}')
-                elif hasattr(component, 'class_type'):
-                    print(f'\tclass type: {component.class_type}')
+                    plugin_name = component.plugin_name
                 else:
-                    print(f'\t{bcolors.WARNING}Could not determine class/plugin type{bcolors.ENDC}')
+                    plugin_name = f'{bcolors.WARNING}plugin name missing!{bcolors.ENDC}'
 
-                print(f'\tstate: id={component.state.id} label={component.state.label}')
-                print('\tcommand interfaces')
+                print(f'\tplugin name: {plugin_name}\n\tstate: id={component.state.id} label={component.state.label}\n\tcommand interfaces')
                 for cmd_interface in component.command_interfaces:
 
                     if cmd_interface.is_available:
