@@ -2,8 +2,8 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.7.0 (2023-01-24)
+------------------
 * Make double parsing locale independent (`#921 <https://github.com/ros-controls/ros2_control/issues/921>`_)
 * Contributors: Henning Kayser
 
