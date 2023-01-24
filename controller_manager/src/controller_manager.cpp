@@ -184,16 +184,13 @@ ControllerManager::ControllerManager(
       kControllerInterfaceNamespace, kChainableControllerInterfaceClassName)),
   diagnostics_updater_(this)
 {
-<<<<<<< HEAD
   if (!get_parameter("update_rate", update_rate_))
   {
     RCLCPP_WARN(get_logger(), "'update_rate' parameter not set, using default value.");
   }
-=======
   diagnostics_updater_.setHardwareID("ros2_control");
   diagnostics_updater_.add(
     "Controllers Activity", this, &ControllerManager::controller_activity_diagnostic_callback);
->>>>>>> b1f31a1 (Add diagnostics for controllers activity (#820))
   init_services();
 }
 
