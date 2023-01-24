@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <tinyxml2.h>
+#include <charconv>
 #include <regex>
 #include <stdexcept>
 #include <string>
@@ -123,26 +124,30 @@ double get_parameter_value_or(
 {
   while (params_it)
   {
-    try
+    // Fill the map with parameters
+    const auto tag_name = params_it->Name();
+    if (strcmp(tag_name, parameter_name) == 0)
     {
-      // Fill the map with parameters
-      const auto tag_name = params_it->Name();
-      if (strcmp(tag_name, parameter_name) == 0)
+      const auto tag_text = params_it->GetText();
+      if (tag_text)
       {
-        const auto tag_text = params_it->GetText();
-        if (tag_text)
+        // Parse and return double value if there is no parsing error
+        double result_value;
+        const auto parse_result =
+          std::from_chars(tag_text, tag_text + std::strlen(tag_text), result_value);
+        if (parse_result.ec == std::errc())
         {
-          return std::stod(tag_text);
+          return result_value;
         }
+
+        // Parsing failed - exit loop and return default value
+        break;
       }
-    }
-    catch (const std::exception & e)
-    {
-      return default_value;
     }
 
     params_it = params_it->NextSiblingElement();
   }
+
   return default_value;
 }
 
