@@ -54,7 +54,7 @@ def wait_for_value_or(function, node, timeout, default, description):
             return result
         node.get_logger().info(
             f'Waiting for {description}',
-            throttle_duration_sec=2)
+            throttle_duration_sec=2, skip_first=True)
         time.sleep(0.2)
     return default
 
@@ -181,16 +181,16 @@ def main(args=None):
             return 1
 
         if is_controller_loaded(node, controller_manager_name, prefixed_controller_name):
-            node.get_logger().info('Controller already loaded, skipping load_controller')
+            node.get_logger().warn('Controller already loaded, skipping load_controller')
         else:
             if controller_type:
                 ret = subprocess.run(['ros2', 'param', 'set', controller_manager_name,
                                       prefixed_controller_name + '.type', controller_type])
             ret = load_controller(node, controller_manager_name, controller_name)
             if not ret.ok:
-                # Error message printed by ros2 control
+                node.get_logger().fatal(bcolors.FAIL + 'Failed loading controller ' + bcolors.BOLD + prefixed_controller_name + bcolors.ENDC)
                 return 1
-            node.get_logger().info(bcolors.OKBLUE + 'Loaded ' + prefixed_controller_name + bcolors.ENDC)
+            node.get_logger().info(bcolors.OKBLUE + 'Loaded ' + bcolors.BOLD + prefixed_controller_name + bcolors.ENDC)
 
         if param_file:
             ret = subprocess.run(['ros2', 'param', 'load', prefixed_controller_name, param_file])
@@ -202,7 +202,7 @@ def main(args=None):
         if not args.load_only:
             ret = configure_controller(node, controller_manager_name, controller_name)
             if not ret.ok:
-                node.get_logger().info('Failed to configure controller')
+                node.get_logger().error('Failed to configure controller')
                 return 1
 
             if not args.stopped and not args.inactive:
@@ -215,11 +215,11 @@ def main(args=None):
                     True,
                     5.0)
                 if not ret.ok:
-                    node.get_logger().info('Failed to activate controller')
+                    node.get_logger().error('Failed to activate controller')
                     return 1
 
                 node.get_logger().info(bcolors.OKGREEN + 'Configured and activated ' +
-                                       bcolors.OKCYAN + prefixed_controller_name + bcolors.ENDC)
+                                       bcolors.BOLD + prefixed_controller_name + bcolors.ENDC)
             elif args.stopped:
                 node.get_logger().warn('"--stopped" flag is deprecated use "--inactive" instead')
 
@@ -242,7 +242,7 @@ def main(args=None):
                     True,
                     5.0)
                 if not ret.ok:
-                    node.get_logger().info('Failed to deactivate controller')
+                    node.get_logger().error('Failed to deactivate controller')
                     return 1
 
                 node.get_logger().info('Deactivated controller')
@@ -253,7 +253,7 @@ def main(args=None):
             ret = unload_controller(
                 node, controller_manager_name, controller_name)
             if not ret.ok:
-                node.get_logger().info('Failed to unload controller')
+                node.get_logger().error('Failed to unload controller')
                 return 1
 
             node.get_logger().info('Unloaded controller')
