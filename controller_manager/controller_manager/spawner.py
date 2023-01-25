@@ -126,6 +126,10 @@ def main(args=None):
         help='Controller param file to be loaded into controller node before configure',
         required=False)
     parser.add_argument(
+        '-n', '--namespace',
+        help='Namespace for the controller', default='',
+        required=False)
+    parser.add_argument(
         '--load-only', help='Only load the controller and leave unconfigured.',
         action='store_true', required=False)
     parser.add_argument(
@@ -150,12 +154,17 @@ def main(args=None):
     args = parser.parse_args(command_line_args)
     controller_name = args.controller_name
     controller_manager_name = args.controller_manager
+    controller_namespace = args.namespace
     param_file = args.param_file
     controller_type = args.controller_type
     controller_manager_timeout = args.controller_manager_timeout
 
     if param_file and not os.path.isfile(param_file):
         raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), param_file)
+
+    prefixed_controller_name = controller_name
+    if controller_namespace:
+        prefixed_controller_name = controller_namespace + '/' + controller_name
 
     node = Node('spawner_' + controller_name)
     if not controller_manager_name.startswith('/'):
@@ -176,25 +185,22 @@ def main(args=None):
         else:
             if controller_type:
                 ret = subprocess.run(['ros2', 'param', 'set', controller_manager_name,
-                                      controller_name + '.type', controller_type])
-            ret = load_controller(
-                node, controller_manager_name, controller_name)
+                                      prefixed_controller_name + '.type', controller_type])
+            ret = load_controller(node, controller_manager_name, controller_name)
             if not ret.ok:
                 node.get_logger().fatal(bcolors.FAIL + 'Failed loading controller ' + bcolors.BOLD + prefixed_controller_name + bcolors.ENDC)
                 return 1
             node.get_logger().info(bcolors.OKBLUE + 'Loaded ' + bcolors.BOLD + prefixed_controller_name + bcolors.ENDC)
 
         if param_file:
-            ret = subprocess.run(['ros2', 'param', 'load', controller_name,
-                                  param_file])
+            ret = subprocess.run(['ros2', 'param', 'load', prefixed_controller_name, param_file])
             if ret.returncode != 0:
                 # Error message printed by ros2 param
                 return ret.returncode
-            node.get_logger().info('Loaded ' + param_file + ' into ' + controller_name)
+            node.get_logger().info('Loaded ' + param_file + ' into ' + prefixed_controller_name)
 
         if not args.load_only:
-            ret = configure_controller(
-                node, controller_manager_name, controller_name)
+            ret = configure_controller(node, controller_manager_name, controller_name)
             if not ret.ok:
                 node.get_logger().error('Failed to configure controller')
                 return 1
