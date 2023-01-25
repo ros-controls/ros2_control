@@ -313,7 +313,7 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_c
       controller = chainable_loader_->createSharedInstance(controller_type);
     }
   }
-  catch (const pluginlib::CreateClassException e)
+  catch (const pluginlib::CreateClassException & e)
   {
     RCLCPP_ERROR(
       get_logger(), "Error happened during creation of controller '%s' with type '%s':\n%s",

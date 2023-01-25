@@ -2,6 +2,11 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+3.7.0 (2023-01-24)
+------------------
+* Make double parsing locale independent (`#921 <https://github.com/ros-controls/ros2_control/issues/921>`_)
+* Contributors: Henning Kayser
+
 3.6.0 (2023-01-12)
 ------------------
 * 🔧 Fixes and updated on pre-commit hooks and their action (`#890 <https://github.com/ros-controls/ros2_control/issues/890>`_)

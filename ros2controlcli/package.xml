@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format2.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="2">
   <name>ros2controlcli</name>
-  <version>3.6.0</version>
+  <version>3.7.0</version>
   <description>
     The ROS 2 command line tools for ROS2 Control.
   </description>
@@ -11,6 +11,7 @@
   <license>Apache License 2.0</license>
   <author email="victor.lopez@pal-robotics.com">Victor Lopez</author>
 
+  <depend>rcl_interfaces</depend>
   <depend>rclpy</depend>
   <depend>ros2cli</depend>
   <depend>ros2node</depend>

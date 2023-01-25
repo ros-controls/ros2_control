@@ -16,7 +16,7 @@ jobs:
     env:
       ROS_DISTRO: rolling
     steps:
-      - uses: ros-tooling/setup-ros@0.3.4
+      - uses: ros-tooling/setup-ros@0.4.2
         with:
           required-ros-distributions: ${{ env.ROS_DISTRO }}
       - uses: actions/checkout@v3
@@ -49,7 +49,7 @@ jobs:
           file: ros_ws/lcov/total_coverage.info
           flags: unittests
           name: codecov-umbrella
-      - uses: actions/upload-artifact@v3.1.0
+      - uses: actions/upload-artifact@v3.1.2
         with:
           name: colcon-logs-ubuntu-22.04-coverage-rolling
           path: ros_ws/log
