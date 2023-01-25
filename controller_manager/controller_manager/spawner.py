@@ -129,6 +129,10 @@ def main(args=None):
         help='Controller param file to be loaded into controller node before configure',
         required=False)
     parser.add_argument(
+        '-n', '--namespace',
+        help='Namespace for the controller', default='',
+        required=False)
+    parser.add_argument(
         '--load-only', help='Only load the controller and leave unconfigured.',
         action='store_true', required=False)
     parser.add_argument(
@@ -153,12 +157,17 @@ def main(args=None):
     args = parser.parse_args(command_line_args)
     controller_name = args.controller_name
     controller_manager_name = args.controller_manager
+    controller_namespace = args.namespace
     param_file = args.param_file
     controller_type = args.controller_type
     controller_manager_timeout = args.controller_manager_timeout
 
     if param_file and not os.path.isfile(param_file):
         raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), param_file)
+
+    prefixed_controller_name = controller_name
+    if controller_namespace:
+        prefixed_controller_name = controller_namespace + '/' + controller_name
 
     node = Node('spawner_' + controller_name)
     if not controller_manager_name.startswith('/'):
@@ -174,7 +183,7 @@ def main(args=None):
             node.get_logger().error('Controller manager not available')
             return 1
 
-        if is_controller_loaded(node, controller_manager_name, controller_name):
+        if is_controller_loaded(node, controller_manager_name, prefixed_controller_name):
             node.get_logger().info('Controller already loaded, skipping load_controller')
         else:
             if controller_type:
@@ -196,7 +205,7 @@ def main(args=None):
             if not ret.ok:
                 # Error message printed by ros2 control
                 return 1
-            node.get_logger().info(bcolors.OKBLUE + 'Loaded ' + controller_name + bcolors.ENDC)
+            node.get_logger().info(bcolors.OKBLUE + 'Loaded ' + prefixed_controller_name + bcolors.ENDC)
 
         if param_file:
             load_parameter_file(node=node, node_name=prefixed_controller_name, parameter_file=param_file,
@@ -210,8 +219,7 @@ def main(args=None):
             node.get_logger().info('Loaded ' + param_file + ' into ' + prefixed_controller_name)
 
         if not args.load_only:
-            ret = configure_controller(
-                node, controller_manager_name, controller_name)
+            ret = configure_controller(node, controller_manager_name, controller_name)
             if not ret.ok:
                 node.get_logger().info('Failed to configure controller')
                 return 1
@@ -230,7 +238,7 @@ def main(args=None):
                     return 1
 
                 node.get_logger().info(bcolors.OKGREEN + 'Configured and activated ' +
-                                       bcolors.OKCYAN + controller_name + bcolors.ENDC)
+                                       bcolors.OKCYAN + prefixed_controller_name + bcolors.ENDC)
             elif args.stopped:
                 node.get_logger().warn('"--stopped" flag is deprecated use "--inactive" instead')
 

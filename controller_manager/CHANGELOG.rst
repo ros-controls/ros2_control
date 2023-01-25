@@ -2,6 +2,12 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.21.0 (2023-01-24)
+-------------------
+* ControllerManager: catch exception by reference (`#906 <https://github.com/ros-controls/ros2_control/issues/906>`_) (`#907 <https://github.com/ros-controls/ros2_control/issues/907>`_)
+* Fix update rate setting from gazebo_ros2_control (backport `#874 <https://github.com/ros-controls/ros2_control/issues/874>`_) (`#904 <https://github.com/ros-controls/ros2_control/issues/904>`_)
+* Contributors: Christopher Wecht, Tony Najjar, Denis Stogl
+
 2.20.0 (2023-01-12)
 -------------------
 * Add backward_ros to controller_manager (`#886 <https://github.com/ros-controls/ros2_control/issues/886>`_) (`#892 <https://github.com/ros-controls/ros2_control/issues/892>`_)
