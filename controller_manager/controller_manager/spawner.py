@@ -27,9 +27,9 @@ import rclpy
 from rcl_interfaces.msg import Parameter
 from rclpy.duration import Duration
 from rclpy.node import Node
-from rclpy.parameter import get_parameter_value
 from rclpy.signals import SignalHandlerOptions
 from ros2param.api import call_set_parameters
+from ros2param.api import get_parameter_value
 from ros2param.api import load_parameter_file
 
 # from https://stackoverflow.com/a/287944
