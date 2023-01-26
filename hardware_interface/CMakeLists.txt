@@ -5,15 +5,21 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
   add_compile_options(-Wall -Wextra)
 endif()
 
+set(THIS_PACKAGE_INCLUDE_DEPENDS
+  control_msgs
+  lifecycle_msgs
+  pluginlib
+  rclcpp_lifecycle
+  rcpputils
+  rcutils
+  TinyXML2
+  tinyxml2_vendor
+)
+
 find_package(ament_cmake REQUIRED)
-find_package(control_msgs REQUIRED)
-find_package(lifecycle_msgs REQUIRED)
-find_package(pluginlib REQUIRED)
-find_package(rclcpp_lifecycle REQUIRED)
-find_package(rcpputils REQUIRED)
-find_package(rcutils REQUIRED)
-find_package(TinyXML2 REQUIRED)
-find_package(tinyxml2_vendor REQUIRED)
+foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
+  find_package(${Dependency} REQUIRED)
+endforeach()
 
 add_library(hardware_interface SHARED
   src/actuator.cpp
@@ -27,17 +33,7 @@ target_include_directories(hardware_interface PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/hardware_interface>
 )
-target_link_libraries(hardware_interface PUBLIC
-  pluginlib::pluginlib
-  rclcpp_lifecycle::rclcpp_lifecycle
-  rcpputils::rcpputils
-  rcutils::rcutils
-  tinyxml2::tinyxml2
-)
-ament_target_dependencies(hardware_interface PUBLIC
-  control_msgs
-  lifecycle_msgs
-)
+ament_target_dependencies(hardware_interface PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.
 target_compile_definitions(hardware_interface PRIVATE "HARDWARE_INTERFACE_BUILDING_DLL")
@@ -50,12 +46,7 @@ target_include_directories(mock_components PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/hardware_interface>
 )
-target_link_libraries(mock_components PUBLIC
-  hardware_interface
-  pluginlib::pluginlib
-  rcpputils::rcpputils
-)
-
+ament_target_dependencies(mock_components PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.
 target_compile_definitions(mock_components PRIVATE "HARDWARE_INTERFACE_BUILDING_DLL")
@@ -72,12 +63,7 @@ target_include_directories(fake_components PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/hardware_interface>
 )
-target_link_libraries(fake_components PUBLIC
-  hardware_interface
-  pluginlib::pluginlib
-  rcpputils::rcpputils
-)
-
+ament_target_dependencies(fake_components PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.
 target_compile_definitions(fake_components PRIVATE "HARDWARE_INTERFACE_BUILDING_DLL")
@@ -163,14 +149,5 @@ install(
 )
 
 ament_export_targets(export_hardware_interface HAS_LIBRARY_TARGET)
-ament_export_dependencies(
-  control_msgs
-  lifecycle_msgs
-  pluginlib
-  rclcpp_lifecycle
-  rcpputils
-  rcutils
-  TinyXML2
-  tinyxml2_vendor
-)
+ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
 ament_package()

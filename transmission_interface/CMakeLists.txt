@@ -5,10 +5,16 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
+set(THIS_PACKAGE_INCLUDE_DEPENDS
+  hardware_interface
+  pluginlib
+  rclcpp
+)
+
 find_package(ament_cmake REQUIRED)
-find_package(hardware_interface REQUIRED)
-find_package(pluginlib REQUIRED)
-find_package(rclcpp REQUIRED)
+foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
+  find_package(${Dependency} REQUIRED)
+endforeach()
 
 add_library(transmission_interface SHARED
   src/simple_transmission_loader.cpp
@@ -19,11 +25,7 @@ target_include_directories(transmission_interface PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/transmission_interface>
 )
-target_link_libraries(transmission_interface PUBLIC
-  hardware_interface::hardware_interface
-  pluginlib::pluginlib
-  rclcpp::rclcpp
-)
+ament_target_dependencies(transmission_interface PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
 pluginlib_export_plugin_description_file(transmission_interface ros2_control_plugins.xml)
 
 if(BUILD_TESTING)
@@ -72,9 +74,5 @@ install(TARGETS transmission_interface
 )
 
 ament_export_targets(export_transmission_interface HAS_LIBRARY_TARGET)
-ament_export_dependencies(
-  hardware_interface
-  pluginlib
-  rclcpp
-)
+ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
 ament_package()

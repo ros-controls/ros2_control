@@ -5,9 +5,15 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
   add_compile_options(-Wall -Wextra)
 endif()
 
+set(THIS_PACKAGE_INCLUDE_DEPENDS
+  rclcpp
+  rclcpp_lifecycle
+)
+
 find_package(ament_cmake REQUIRED)
-find_package(rclcpp REQUIRED)
-find_package(rclcpp_lifecycle REQUIRED)
+foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
+  find_package(${Dependency} REQUIRED)
+endforeach()
 
 add_library(joint_limits INTERFACE)
 target_compile_features(joint_limits INTERFACE cxx_std_17)
@@ -15,10 +21,8 @@ target_include_directories(joint_limits INTERFACE
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/joint_limits>
 )
-target_link_libraries(joint_limits INTERFACE
-  rclcpp::rclcpp
-  rclcpp_lifecycle::rclcpp_lifecycle
-)
+ament_target_dependencies(joint_limits INTERFACE ${THIS_PACKAGE_INCLUDE_DEPENDS})
+
 
 if(BUILD_TESTING)
   find_package(ament_cmake_gtest REQUIRED)
@@ -50,8 +54,5 @@ install(TARGETS joint_limits
 )
 
 ament_export_targets(export_joint_limits HAS_LIBRARY_TARGET)
-ament_export_dependencies(
-  rclcpp
-  rclcpp_lifecycle
-)
+ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
 ament_package()

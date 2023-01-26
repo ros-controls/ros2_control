@@ -5,19 +5,24 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
   add_compile_options(-Wall -Wextra)
 endif()
 
+set(THIS_PACKAGE_INCLUDE_DEPENDS
+  ament_index_cpp
+  controller_interface
+  controller_manager_msgs
+  diagnostic_updater
+  hardware_interface
+  pluginlib
+  rclcpp
+  realtime_tools
+)
+
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_python REQUIRED)
 find_package(ament_cmake_core REQUIRED)
 find_package(backward_ros REQUIRED)
-
-find_package(ament_index_cpp REQUIRED)
-find_package(controller_interface REQUIRED)
-find_package(controller_manager_msgs REQUIRED)
-find_package(diagnostic_updater REQUIRED)
-find_package(hardware_interface REQUIRED)
-find_package(pluginlib REQUIRED)
-find_package(rclcpp REQUIRED)
-find_package(realtime_tools REQUIRED)
+foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
+  find_package(${Dependency} REQUIRED)
+endforeach()
 
 add_library(controller_manager SHARED
   src/controller_manager.cpp
@@ -27,23 +32,8 @@ target_include_directories(controller_manager PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/controller_manager>
 )
-target_link_libraries(controller_manager PUBLIC
-  ament_index_cpp::ament_index_cpp
-  controller_interface::controller_interface
-  hardware_interface::hardware_interface
-  pluginlib::pluginlib
-  rclcpp::rclcpp
-)
+ament_target_dependencies(controller_manager PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
-ament_target_dependencies(controller_manager PUBLIC
-  controller_manager_msgs
-# TODO: Investigate why the INTERFACE library diagnostic_updater does
-#       not work with target_link_libraries
-  diagnostic_updater
-# TODO: Use target_link_libraries for realtime_tools once it is updated
-#       to install its targets correctly
-  realtime_tools
-)
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.
 target_compile_definitions(controller_manager PRIVATE "CONTROLLER_MANAGER_BUILDING_DLL")
@@ -220,14 +210,5 @@ ament_python_install_package(controller_manager
   SCRIPTS_DESTINATION lib/controller_manager
 )
 ament_export_targets(export_controller_manager HAS_LIBRARY_TARGET)
-ament_export_dependencies(
-  ament_index_cpp
-  controller_interface
-  controller_manager_msgs
-  diagnostic_updater
-  hardware_interface
-  pluginlib
-  rclcpp
-  realtime_tools
-)
+ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
 ament_package()
