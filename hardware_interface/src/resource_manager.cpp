@@ -98,7 +98,6 @@ public:
     component_info.type = hardware_info.type;
     component_info.plugin_name = hardware_info.hardware_plugin_name;
     component_info.is_async = hardware_info.is_async;
-    if(component_info.is_async) { std::terminate(); }
 
     hardware_info_map_.insert(std::make_pair(component_info.name, component_info));
     hardware_used_by_controllers_.insert(
