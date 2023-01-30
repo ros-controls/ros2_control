@@ -26,6 +26,11 @@ class ListHardwareComponentsVerb(VerbExtension):
 
     def add_arguments(self, parser, cli_name):
         add_arguments(parser)
+        parser.add_argument(
+            '--verbose', '-v',
+            action='store_true',
+            help='List hardware components with command and state interfaces',
+        )
         add_controller_mgr_parsers(parser)
 
     def main(self, *, args):
@@ -54,19 +59,20 @@ class ListHardwareComponentsVerb(VerbExtension):
 
                     print(f'\t\t{cmd_interface.name} {available_str} {claimed_str}')
 
-                print('\tstate interfaces')
-                for state_interface in component.command_interfaces:
+                if args.verbose:
+                    print('\tstate interfaces')
+                    for state_interface in component.command_interfaces:
 
-                    if state_interface.is_available:
-                        available_str = f'{bcolors.OKBLUE}[available]{bcolors.ENDC}'
-                    else:
-                        available_str = f'{bcolors.WARNING}[unavailable]{bcolors.ENDC}'
+                        if state_interface.is_available:
+                            available_str = f'{bcolors.OKBLUE}[available]{bcolors.ENDC}'
+                        else:
+                            available_str = f'{bcolors.WARNING}[unavailable]{bcolors.ENDC}'
 
-                    if state_interface.is_claimed:
-                        claimed_str = f'{bcolors.OKBLUE}[claimed]{bcolors.ENDC}'
-                    else:
-                        claimed_str = '[unclaimed]'
+                        if state_interface.is_claimed:
+                            claimed_str = f'{bcolors.OKBLUE}[claimed]{bcolors.ENDC}'
+                        else:
+                            claimed_str = '[unclaimed]'
 
-                    print(f'\t\t{state_interface.name} {available_str} {claimed_str}')
+                        print(f'\t\t{state_interface.name} {available_str} {claimed_str}')
 
         return 0

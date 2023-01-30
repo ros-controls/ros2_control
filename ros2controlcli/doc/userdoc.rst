@@ -90,6 +90,7 @@ list_hardware_components
     --spin-time SPIN_TIME
                             Spin time in seconds to wait for discovery (only applies when not using an already running daemon)
     -s, --use-sim-time    Enable ROS simulation time
+    --verbose, -v         List hardware components with command and state interfaces
     -c CONTROLLER_MANAGER, --controller-manager CONTROLLER_MANAGER
                             Name of the controller manager ROS node
     --include-hidden-nodes
@@ -106,12 +107,6 @@ Example output:
         type: system
         plugin name: ros2_control_demo_hardware/RRBotSystemPositionOnlyHardware
         state: id=3 label=active
-        command interfaces
-            joint1/position [available] [unclaimed]
-            joint2/position [available] [unclaimed]
-        state interfaces
-            joint1/position [available] [unclaimed]
-            joint2/position [available] [unclaimed]
 
 
 list_hardware_interfaces
