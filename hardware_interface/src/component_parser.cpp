@@ -224,8 +224,7 @@ std::string parse_data_type_attribute(const tinyxml2::XMLElement * elem)
 bool parse_is_async_attribute(const tinyxml2::XMLElement * elem)
 {
   const tinyxml2::XMLAttribute * attr = elem->FindAttribute(kIsAsyncAttribute);
-  return attr ? strcmp(attr->Value(), "true") == 0
-              : false;
+  return attr ? strcmp(attr->Value(), "true") == 0 : false;
 }
 
 /// Search XML snippet from URDF for parameters.
@@ -517,7 +516,6 @@ HardwareInfo parse_resource_from_xml(
   hardware.name = get_attribute_value(ros2_control_it, kNameAttribute, kROS2ControlTag);
   hardware.type = get_attribute_value(ros2_control_it, kTypeAttribute, kROS2ControlTag);
   hardware.is_async = parse_is_async_attribute(ros2_control_it);
-
 
   // Parse everything under ros2_control tag
   hardware.hardware_plugin_name = "";
