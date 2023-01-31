@@ -35,7 +35,6 @@ return_type ControllerInterfaceBase::init(
   {
     auto_declare<int>("update_rate", 0);
     auto_declare<bool>("is_async", false);
-
   }
   catch (const std::exception & e)
   {
