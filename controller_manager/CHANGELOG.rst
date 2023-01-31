@@ -2,6 +2,13 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Optimize output of controller spawner (backport `#909 <https://github.com/ros-controls/ros2_control/issues/909>`_) (`#911 <https://github.com/ros-controls/ros2_control/issues/911>`_)
+* Namespace Loaded Controllers (`#852 <https://github.com/ros-controls/ros2_control/issues/852>`_) (`#914 <https://github.com/ros-controls/ros2_control/issues/914>`_)
+* Add diagnostics (backport `#820 <https://github.com/ros-controls/ros2_control/issues/820>`_) (`#922 <https://github.com/ros-controls/ros2_control/issues/922>`_)
+* Contributors: Bence Magyar, Denis Stogl, Tony Najjar
+
 2.21.0 (2023-01-24)
 -------------------
 * ControllerManager: catch exception by reference (`#906 <https://github.com/ros-controls/ros2_control/issues/906>`_) (`#907 <https://github.com/ros-controls/ros2_control/issues/907>`_)
