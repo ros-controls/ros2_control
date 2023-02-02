@@ -2,6 +2,28 @@
 Changelog for package ros2controlcli
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+3.7.0 (2023-01-24)
+------------------
+* Do not use CLI calls but direct API for setting parameters. (`#910 <https://github.com/ros-controls/ros2_control/issues/910>`_)
+* Contributors: Dr. Denis
+
+3.6.0 (2023-01-12)
+------------------
+
+3.5.1 (2023-01-06)
+------------------
+
+3.5.0 (2022-12-06)
+------------------
+* Fix hardware interface CLI description (`#864 <https://github.com/ros-controls/ros2_control/issues/864>`_)
+* Contributors: Christoph Fröhlich
+
+3.4.0 (2022-11-27)
+------------------
+
+3.3.0 (2022-11-15)
+------------------
+
 3.2.0 (2022-10-15)
 ------------------
 

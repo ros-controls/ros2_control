@@ -13,11 +13,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - uses: actions/setup-python@v2
+    - uses: actions/setup-python@v4.5.0
       with:
-        python-version: 3.9.7
+        python-version: '3.10'
     - name: Install system hooks
-      run: sudo apt install -qq clang-format-12 cppcheck
-    - uses: pre-commit/action@v2.0.3
+      run: sudo apt install -qq clang-format-14 cppcheck
+    - uses: pre-commit/action@v3.0.0
       with:
         extra_args: --all-files --hook-stage manual

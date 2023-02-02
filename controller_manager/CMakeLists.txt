@@ -13,18 +13,19 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
     hardware_interface
     pluginlib
     rclcpp
+    realtime_tools
 )
 
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_python REQUIRED)
 find_package(ament_cmake_core REQUIRED)
+find_package(backward_ros REQUIRED)
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
 endforeach()
 
 add_library(${PROJECT_NAME} SHARED
   src/controller_manager.cpp
-  src/realtime.cpp
 )
 target_include_directories(${PROJECT_NAME} PRIVATE include)
 ament_target_dependencies(${PROJECT_NAME} ${THIS_PACKAGE_INCLUDE_DEPENDS})
@@ -34,7 +35,9 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE "CONTROLLER_MANAGER_BUILDING_
 
 add_executable(ros2_control_node src/ros2_control_node.cpp)
 target_include_directories(ros2_control_node PRIVATE include)
-target_link_libraries(ros2_control_node ${PROJECT_NAME})
+target_link_libraries(ros2_control_node
+  ${PROJECT_NAME}
+)
 ament_target_dependencies(ros2_control_node ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
 install(TARGETS ${PROJECT_NAME}
@@ -54,7 +57,6 @@ install(DIRECTORY include/
 if(BUILD_TESTING)
   find_package(ament_cmake_gmock REQUIRED)
   find_package(ros2_control_test_assets REQUIRED)
-  find_package(realtime_tools REQUIRED)
 
   add_library(test_controller SHARED test/test_controller/test_controller.cpp)
   target_include_directories(test_controller PRIVATE include)

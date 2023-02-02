@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <tinyxml2.h>
+#include <charconv>
 #include <regex>
 #include <stdexcept>
 #include <string>
@@ -27,7 +28,7 @@ namespace
 constexpr const auto kRobotTag = "robot";
 constexpr const auto kROS2ControlTag = "ros2_control";
 constexpr const auto kHardwareTag = "hardware";
-constexpr const auto kClassTypeTag = "plugin";
+constexpr const auto kPluginNameTag = "plugin";
 constexpr const auto kParamTag = "param";
 constexpr const auto kActuatorTag = "actuator";
 constexpr const auto kJointTag = "joint";
@@ -123,26 +124,30 @@ double get_parameter_value_or(
 {
   while (params_it)
   {
-    try
+    // Fill the map with parameters
+    const auto tag_name = params_it->Name();
+    if (strcmp(tag_name, parameter_name) == 0)
     {
-      // Fill the map with parameters
-      const auto tag_name = params_it->Name();
-      if (strcmp(tag_name, parameter_name) == 0)
+      const auto tag_text = params_it->GetText();
+      if (tag_text)
       {
-        const auto tag_text = params_it->GetText();
-        if (tag_text)
+        // Parse and return double value if there is no parsing error
+        double result_value;
+        const auto parse_result =
+          std::from_chars(tag_text, tag_text + std::strlen(tag_text), result_value);
+        if (parse_result.ec == std::errc())
         {
-          return std::stod(tag_text);
+          return result_value;
         }
+
+        // Parsing failed - exit loop and return default value
+        break;
       }
-    }
-    catch (const std::exception & e)
-    {
-      return default_value;
     }
 
     params_it = params_it->NextSiblingElement();
   }
+
   return default_value;
 }
 
@@ -404,8 +409,8 @@ TransmissionInfo parse_transmission_from_xml(const tinyxml2::XMLElement * transm
 
   // Find name, type and class of a transmission
   transmission.name = get_attribute_value(transmission_it, kNameAttribute, transmission_it->Name());
-  const auto * type_it = transmission_it->FirstChildElement(kClassTypeTag);
-  transmission.type = get_text_for_element(type_it, kClassTypeTag);
+  const auto * type_it = transmission_it->FirstChildElement(kPluginNameTag);
+  transmission.type = get_text_for_element(type_it, kPluginNameTag);
 
   // Parse joints
   const auto * joint_it = transmission_it->FirstChildElement(kJointTag);
@@ -496,15 +501,15 @@ HardwareInfo parse_resource_from_xml(
   hardware.type = get_attribute_value(ros2_control_it, kTypeAttribute, kROS2ControlTag);
 
   // Parse everything under ros2_control tag
-  hardware.hardware_class_type = "";
+  hardware.hardware_plugin_name = "";
   const auto * ros2_control_child_it = ros2_control_it->FirstChildElement();
   while (ros2_control_child_it)
   {
     if (!std::string(kHardwareTag).compare(ros2_control_child_it->Name()))
     {
-      const auto * type_it = ros2_control_child_it->FirstChildElement(kClassTypeTag);
-      hardware.hardware_class_type =
-        get_text_for_element(type_it, std::string("hardware ") + kClassTypeTag);
+      const auto * type_it = ros2_control_child_it->FirstChildElement(kPluginNameTag);
+      hardware.hardware_plugin_name =
+        get_text_for_element(type_it, std::string("hardware ") + kPluginNameTag);
       const auto * params_it = ros2_control_child_it->FirstChildElement(kParamTag);
       if (params_it)
       {

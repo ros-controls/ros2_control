@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>rqt_controller_manager</name>
+  <version>3.7.0</version>
+  <description>Graphical frontend for interacting with the controller manager.</description>
+  <maintainer email="bence.magyar.robotics@gmail.com">Bence Magyar</maintainer>
+  <maintainer email="denis@stoglrobotics.de">Denis Štogl</maintainer>
+  <license>Apache License 2.0</license>
+
+  <url type="website">http://ros.org/wiki/rqt_controller_manager</url>
+  <url type="bugtracker">https://github.com/ros-controls/ros2_control/issues</url>
+  <url type="repository">https://github.com/ros-controls/ros2_control</url>
+
+  <author email="bence.magyar.robotics@gmail.com">Bence Magyar</author>
+  <author email="enrique.fernandez.perdomo@gmail.com">Enrique Fernandez</author>
+  <author email="mathias.luedtke@ipa.fraunhofer.de">Mathias Lüdtke</author>
+  <author email="kphawkins@gatech.edu">Kelsey Hawkins</author>
+  <author email="adolfo.rodriguez@pal-robotics.com">Adolfo Rodríguez Tsouroukdissian</author>
+
+  <exec_depend>controller_manager_msgs</exec_depend>
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>rqt_gui</exec_depend>
+  <exec_depend>rqt_gui_py</exec_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+    <rqt_gui plugin="${prefix}/plugin.xml"/>
+  </export>
+</package>
