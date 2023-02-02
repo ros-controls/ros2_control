@@ -47,6 +47,8 @@ constexpr const auto kTypeAttribute = "type";
 constexpr const auto kRoleAttribute = "role";
 constexpr const auto kReductionAttribute = "mechanical_reduction";
 constexpr const auto kOffsetAttribute = "offset";
+constexpr const auto kIsAsyncAttribute = "is_async";
+
 }  // namespace
 
 namespace hardware_interface
@@ -209,6 +211,20 @@ std::string parse_data_type_attribute(const tinyxml2::XMLElement * elem)
   }
 
   return data_type;
+}
+
+/// Parse is_async attribute
+/**
+ * Parses an XMLElement and returns the value of the is_async attribute.
+ * Defaults to "false" if not specified.
+ *
+ * \param[in] elem XMLElement that has the data_type attribute.
+ * \return boolean specifying the if the value read was true or false.
+ */
+bool parse_is_async_attribute(const tinyxml2::XMLElement * elem)
+{
+  const tinyxml2::XMLAttribute * attr = elem->FindAttribute(kIsAsyncAttribute);
+  return attr ? strcasecmp(attr->Value(), "true") == 0 : false;
 }
 
 /// Search XML snippet from URDF for parameters.
@@ -499,6 +515,7 @@ HardwareInfo parse_resource_from_xml(
   HardwareInfo hardware;
   hardware.name = get_attribute_value(ros2_control_it, kNameAttribute, kROS2ControlTag);
   hardware.type = get_attribute_value(ros2_control_it, kTypeAttribute, kROS2ControlTag);
+  hardware.is_async = parse_is_async_attribute(ros2_control_it);
 
   // Parse everything under ros2_control tag
   hardware.hardware_plugin_name = "";
