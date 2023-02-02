@@ -11,6 +11,7 @@
   <license>Apache License 2.0</license>
   <author email="victor.lopez@pal-robotics.com">Victor Lopez</author>
 
+  <depend>rcl_interfaces</depend>
   <depend>rclpy</depend>
   <depend>ros2cli</depend>
   <depend>ros2node</depend>
