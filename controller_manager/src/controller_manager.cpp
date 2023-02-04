@@ -1788,7 +1788,7 @@ controller_interface::return_type ControllerManager::update(
 
       bool controller_go =
         controller_update_rate == 0 || ((update_loop_counter_ % controller_update_rate) == 0);
-      RCLCPP_INFO(
+      RCLCPP_DEBUG(
         get_logger(), "update_loop_counter: '%d ' controller_go: '%s ' controller_name: '%s '",
         update_loop_counter_, controller_go ? "True" : "False",
         loaded_controller.info.name.c_str());
