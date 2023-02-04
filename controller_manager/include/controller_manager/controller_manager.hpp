@@ -514,33 +514,26 @@ private:
   class ControllerThreadWrapper
   {
   public:
-    ControllerThreadWrapper( 
-        std::shared_ptr<controller_interface::ControllerInterfaceBase>& controller,
-        int cm_update_rate
-      )
-      : terminated_(false)
-      , controller_(controller)
-      , thread_{}
-      , cm_update_rate_(cm_update_rate)
+    ControllerThreadWrapper(
+      std::shared_ptr<controller_interface::ControllerInterfaceBase> & controller,
+      int cm_update_rate)
+    : terminated_(false), controller_(controller), thread_{}, cm_update_rate_(cm_update_rate)
     {
-
     }
-    ControllerThreadWrapper(const ControllerThreadWrapper& t) = delete;
-    ControllerThreadWrapper(ControllerThreadWrapper&& t) = default;
-    ~ControllerThreadWrapper() {
+    ControllerThreadWrapper(const ControllerThreadWrapper & t) = delete;
+    ControllerThreadWrapper(ControllerThreadWrapper && t) = default;
+    ~ControllerThreadWrapper()
+    {
       terminated_.store(true, std::memory_order_seq_cst);
-      if (thread_.joinable()) 
+      if (thread_.joinable())
       {
         thread_.join();
       }
     }
 
-    void start()
-    {
-      thread_ = std::thread(&ControllerThreadWrapper::call_controller_update, this);
-    }
+    void start() { thread_ = std::thread(&ControllerThreadWrapper::call_controller_update, this); }
 
-    void call_controller_update() 
+    void call_controller_update()
     {
       rclcpp::Time previous_time = controller_->get_node()->now();
 
@@ -548,11 +541,12 @@ private:
       {
         auto const period = std::chrono::nanoseconds(1'000'000'000 / cm_update_rate_);
         std::chrono::system_clock::time_point next_iteration_time =
-        std::chrono::system_clock::time_point(std::chrono::nanoseconds(controller_->get_node()->now().nanoseconds()));
+          std::chrono::system_clock::time_point(
+            std::chrono::nanoseconds(controller_->get_node()->now().nanoseconds()));
 
-        if (controller_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE) 
+        if (controller_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
         {
-            // critical section, not implemented yet
+          // critical section, not implemented yet
         }
 
         next_iteration_time += period;
@@ -572,7 +566,8 @@ private:
     unsigned int cm_update_rate_;
   };
 
-  std::unordered_map<std::string, std::unique_ptr<ControllerThreadWrapper>> async_controller_threads_;
+  std::unordered_map<std::string, std::unique_ptr<ControllerThreadWrapper>>
+    async_controller_threads_;
 };
 
 }  // namespace controller_manager

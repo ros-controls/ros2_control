@@ -380,7 +380,6 @@ controller_interface::return_type ControllerManager::unload_controller(
 
   auto & controller = *found_it;
 
-
   if (is_controller_active(*controller.c))
   {
     to.clear();
@@ -389,9 +388,11 @@ controller_interface::return_type ControllerManager::unload_controller(
       controller_name.c_str());
     return controller_interface::return_type::ERROR;
   }
-  if (controller.c->is_async()) 
+  if (controller.c->is_async())
   {
-    RCLCPP_DEBUG(get_logger(), "Removing controller '%s' from the list of async controllers", controller_name.c_str());
+    RCLCPP_DEBUG(
+      get_logger(), "Removing controller '%s' from the list of async controllers",
+      controller_name.c_str());
     async_controller_threads_.erase(controller_name);
   }
 
@@ -479,12 +480,11 @@ controller_interface::return_type ControllerManager::configure_controller(
     return controller_interface::return_type::ERROR;
   }
 
-   // ASYNCHRONOUS CONTROLLERS: Start background thread for update
+  // ASYNCHRONOUS CONTROLLERS: Start background thread for update
   if (controller->is_async())
   {
     async_controller_threads_.emplace(
-      controller_name,
-      std::make_unique<ControllerThreadWrapper>(controller, update_rate_));
+      controller_name, std::make_unique<ControllerThreadWrapper>(controller, update_rate_));
   }
 
   // CHAINABLE CONTROLLERS: get reference interfaces from chainable controllers
