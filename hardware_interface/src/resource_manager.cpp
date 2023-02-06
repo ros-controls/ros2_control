@@ -1074,9 +1074,11 @@ HardwareReadWriteStatus ResourceManager::read(
     {
       if (component.read(time, period) != return_type::OK)
       {
-        read_write_status.ok = false;
         read_write_status.failed_hardware_names.push_back(component.get_name());
-        resource_storage_->remove_all_hardware_interfaces_from_available_list(component.get_name());
+        if (component.read(time, period) == return_type::ERROR){
+          read_write_status.ok = false;
+          resource_storage_->remove_all_hardware_interfaces_from_available_list(component.get_name());
+        }
       }
     }
   };
