@@ -197,6 +197,9 @@ protected:
   CONTROLLER_MANAGER_PUBLIC
   void manage_switch();
 
+  CONTROLLER_MANAGER_LOCAL
+  std::vector<std::string> controllers_to_skip;
+
   /// Deactivate chosen controllers from real-time controller list.
   /**
    * Deactivate controllers with names \p controllers_to_deactivate from list \p rt_controller_list.
