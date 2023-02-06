@@ -1697,8 +1697,8 @@ void ControllerManager::set_hardware_component_state_srv_cb(
       // the ternary operator is needed because label in State constructor cannot be an empty string
       request->target_state.label.empty() ? "-" : request->target_state.label);
     response->ok =
-      (resource_manager_->set_component_state(request->name, target_state) ==
-       hardware_interface::return_type::OK);
+      (resource_manager_->set_component_state(request->name, target_state) !=
+       hardware_interface::return_type::ERROR);
     hw_components_info = resource_manager_->get_components_status();
     response->state.id = hw_components_info[request->name].state.id();
     response->state.label = hw_components_info[request->name].state.label();
@@ -1729,6 +1729,7 @@ std::vector<std::string> ControllerManager::get_controller_names()
 void ControllerManager::read(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
   auto [ok, failed_hardware_names] = resource_manager_->read(time, period);
+  controllers_to_skip.clear();
 
   if (!ok)
   {
@@ -1744,6 +1745,13 @@ void ControllerManager::read(const rclcpp::Time & time, const rclcpp::Duration &
       rt_controllers_wrapper_.update_and_get_used_by_rt_list();
     deactivate_controllers(rt_controller_list, stop_request);
     // TODO(destogl): do auto-start of broadcasters
+  } else if ( failed_hardware_names.size() > 0 ){
+    // Status is ok but some hardware is not ok (SKIPPED)
+    // Determine controllers to skip
+    for (const auto & hardware_name : failed_hardware_names){
+      auto controllers = resource_manager_->get_cached_controllers_to_hardware(hardware_name);
+      controllers_to_skip.insert(controllers_to_skip.end(), controllers.begin(), controllers.end());
+    }
   }
 }
 
@@ -1772,7 +1780,14 @@ controller_interface::return_type ControllerManager::update(
         update_loop_counter_, controller_go ? "True" : "False",
         loaded_controller.info.name.c_str());
 
-      if (controller_go)
+      bool controller_skip = (std::find(controllers_to_skip.begin(), controllers_to_skip.end(), loaded_controller.info.name) != controllers_to_skip.end());
+      RCLCPP_DEBUG(
+        get_logger(), "Skip ?: controller_skip: '%s' controller_name: '%s'",
+        controller_skip ? "True" : "False",
+        loaded_controller.info.name.c_str()
+      );
+
+      if (!controller_skip && controller_go)
       {
         auto controller_ret = loaded_controller.c->update(
           time, (controller_update_rate != update_rate_ && controller_update_rate != 0)
