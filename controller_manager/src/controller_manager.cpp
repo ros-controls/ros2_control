@@ -1745,10 +1745,13 @@ void ControllerManager::read(const rclcpp::Time & time, const rclcpp::Duration &
       rt_controllers_wrapper_.update_and_get_used_by_rt_list();
     deactivate_controllers(rt_controller_list, stop_request);
     // TODO(destogl): do auto-start of broadcasters
-  } else if ( failed_hardware_names.size() > 0 ){
+  }
+  else if (failed_hardware_names.size() > 0)
+  {
     // Status is ok but some hardware is not ok (SKIPPED)
     // Determine controllers to skip
-    for (const auto & hardware_name : failed_hardware_names){
+    for (const auto & hardware_name : failed_hardware_names)
+    {
       auto controllers = resource_manager_->get_cached_controllers_to_hardware(hardware_name);
       controllers_to_skip.insert(controllers_to_skip.end(), controllers.begin(), controllers.end());
     }
@@ -1780,12 +1783,13 @@ controller_interface::return_type ControllerManager::update(
         update_loop_counter_, controller_go ? "True" : "False",
         loaded_controller.info.name.c_str());
 
-      bool controller_skip = (std::find(controllers_to_skip.begin(), controllers_to_skip.end(), loaded_controller.info.name) != controllers_to_skip.end());
+      bool controller_skip =
+        (std::find(
+           controllers_to_skip.begin(), controllers_to_skip.end(), loaded_controller.info.name) !=
+         controllers_to_skip.end());
       RCLCPP_DEBUG(
         get_logger(), "Skip ?: controller_skip: '%s' controller_name: '%s'",
-        controller_skip ? "True" : "False",
-        loaded_controller.info.name.c_str()
-      );
+        controller_skip ? "True" : "False", loaded_controller.info.name.c_str());
 
       if (!controller_skip && controller_go)
       {
