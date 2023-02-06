@@ -40,6 +40,8 @@
 #include "controller_manager_msgs/srv/switch_controller.hpp"
 #include "controller_manager_msgs/srv/unload_controller.hpp"
 
+#include "std_msgs/msg/string.hpp"
+
 #include "diagnostic_updater/diagnostic_updater.hpp"
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/resource_manager.hpp"
@@ -51,6 +53,7 @@
 #include "rclcpp/node_interfaces/node_logging_interface.hpp"
 #include "rclcpp/node_interfaces/node_parameters_interface.hpp"
 #include "rclcpp/parameter.hpp"
+#include "rclcpp/rclcpp.hpp"
 
 namespace controller_manager
 {
@@ -85,6 +88,9 @@ public:
   CONTROLLER_MANAGER_PUBLIC
   void init_resource_manager(const std::string & robot_description);
 
+  CONTROLLER_MANAGER_PUBLIC
+  void init_resource_manager_cb(const std_msgs::msg::String & msg);
+  
   CONTROLLER_MANAGER_PUBLIC
   controller_interface::ControllerInterfaceBaseSharedPtr load_controller(
     const std::string & controller_name, const std::string & controller_type);
@@ -500,6 +506,8 @@ private:
   std::vector<std::string> to_chained_mode_request_, from_chained_mode_request_;
   std::vector<std::string> activate_command_interface_request_,
     deactivate_command_interface_request_;
+
+  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr robot_description_subscription_;
 
   struct SwitchParams
   {

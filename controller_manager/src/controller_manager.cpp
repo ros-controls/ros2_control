@@ -150,17 +150,29 @@ ControllerManager::ControllerManager(
   }
 
   std::string robot_description = "";
+  // TODO(Manuel): robot_description parameter is deprecated and should be removed.
+  // robot_description should be obtained via robot_state_publisher
   get_parameter("robot_description", robot_description);
   if (robot_description.empty())
   {
-    throw std::runtime_error("Unable to initialize resource manager, no robot description found.");
+    RCLCPP_INFO(get_logger(), "Subscribing to robot_state_publisher for robot description file.");
+    robot_description_subscription_ = create_subscription<std_msgs::msg::String>(
+      "/robot_description", 10,
+      std::bind(&ControllerManager::init_resource_manager_cb, this, std::placeholders::_1));
   }
-
-  init_resource_manager(robot_description);
+  else
+  {
+    RCLCPP_WARN(
+      get_logger(),
+      "[Deprecated] Passing the robot description file directly to the control_manager node is "
+      "deprecated. Use robot_state_publisher instead.");
+    init_resource_manager(robot_description);
+  }
 
   diagnostics_updater_.setHardwareID("ros2_control");
   diagnostics_updater_.add(
     "Controllers Activity", this, &ControllerManager::controller_activity_diagnostic_callback);
+
   init_services();
 }
 
@@ -186,6 +198,26 @@ ControllerManager::ControllerManager(
   diagnostics_updater_.add(
     "Controllers Activity", this, &ControllerManager::controller_activity_diagnostic_callback);
   init_services();
+}
+
+void ControllerManager::init_resource_manager_cb(const std_msgs::msg::String & robot_description)
+{
+  RCLCPP_DEBUG(
+    get_logger(), "'init_resource_manager_cb called with %s", robot_description.data.c_str());
+  // TODO(Manuel)errors should probably be caught since we don't want controller_manager node to die if
+  // a non valid urdf is passed. However, this should be tested and fine tuned.
+  try
+  {
+    init_resource_manager(robot_description.data.c_str());
+  }
+  catch (std::runtime_error & e)
+  {
+    RCLCPP_ERROR_STREAM(
+      get_logger(),
+      "The published robot description file (urdf) seems not to be genuine. Following error was "
+      "caught:"
+        << e.what());
+  }
 }
 
 void ControllerManager::init_resource_manager(const std::string & robot_description)
