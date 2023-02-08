@@ -26,13 +26,13 @@ class SetControllerStateVerb(VerbExtension):
 
     def add_arguments(self, parser, cli_name):
         add_arguments(parser)
-        arg = parser.add_argument('controller_name', help='Name of the controller to be changed')
+        arg = parser.add_argument("controller_name", help="Name of the controller to be changed")
         arg.completer = LoadedControllerNameCompleter()
         arg = parser.add_argument(
-            'state',
+            "state",
             # choices=['unconfigured', 'inactive', 'active'], TODO(destogl): when cleanup is impl
-            choices=['inactive', 'active'],
-            help='State in which the controller should be changed to',
+            choices=["inactive", "active"],
+            help="State in which the controller should be changed to",
         )
         add_controller_mgr_parsers(parser)
 
@@ -43,7 +43,7 @@ class SetControllerStateVerb(VerbExtension):
             try:
                 matched_controller = [c for c in controllers if c.name == args.controller_name][0]
             except IndexError:
-                return f'controller {args.controller_name} does not seem to be loaded'
+                return f"controller {args.controller_name} does not seem to be loaded"
 
             # TODO(destogl): This has to be implemented in CLI and controller manager
             # if args.state == 'unconfigured':
@@ -58,52 +58,56 @@ class SetControllerStateVerb(VerbExtension):
             #          #      print(f'successfully cleaned up {args.controller_name}')
             #     return 0
 
-            if args.state == 'configure':
-                args.state = 'inactive'
+            if args.state == "configure":
+                args.state = "inactive"
                 print('Setting state "configure" is deprecated, use "inactive" instead!')
 
-            if args.state == 'stop':
-                args.state = 'inactive'
+            if args.state == "stop":
+                args.state = "inactive"
                 print('Setting state "stop" is deprecated, use "inactive" instead!')
 
-            if args.state == 'inactive':
-                if matched_controller.state == 'unconfigured':
+            if args.state == "inactive":
+                if matched_controller.state == "unconfigured":
                     response = configure_controller(
                         node, args.controller_manager, args.controller_name
                     )
                     if not response.ok:
-                        return 'Error configuring controller, check controller_manager logs'
+                        return "Error configuring controller, check controller_manager logs"
 
-                    print(f'successfully configured {args.controller_name}')
+                    print(f"successfully configured {args.controller_name}")
                     return 0
 
-                elif matched_controller.state == 'active':
+                elif matched_controller.state == "active":
                     response = switch_controllers(
                         node, args.controller_manager, [args.controller_name], [], True, True, 5.0
                     )
                     if not response.ok:
-                        return 'Error stopping controller, check controller_manager logs'
+                        return "Error stopping controller, check controller_manager logs"
 
-                    print(f'successfully deactivated {args.controller_name}')
+                    print(f"successfully deactivated {args.controller_name}")
                     return 0
 
                 else:
-                    return f'cannot put {matched_controller.name} in "inactive" state' \
-                           f'from its current state {matched_controller.state}'
+                    return (
+                        f'cannot put {matched_controller.name} in "inactive" state'
+                        f"from its current state {matched_controller.state}"
+                    )
 
-            if args.state == 'start':
-                args.state = 'active'
+            if args.state == "start":
+                args.state = "active"
                 print('Setting state "start" is deprecated, use "active" instead!')
 
-            if args.state == 'active':
-                if matched_controller.state != 'inactive':
-                    return f'cannot activate {matched_controller.name} ' \
-                           f'from its current state {matched_controller.state}'
+            if args.state == "active":
+                if matched_controller.state != "inactive":
+                    return (
+                        f"cannot activate {matched_controller.name} "
+                        f"from its current state {matched_controller.state}"
+                    )
                 response = switch_controllers(
                     node, args.controller_manager, [], [args.controller_name], True, True, 5.0
                 )
                 if not response.ok:
-                    return 'Error activating controller, check controller_manager logs'
+                    return "Error activating controller, check controller_manager logs"
 
-                print(f'successfully activated {args.controller_name}')
+                print(f"successfully activated {args.controller_name}")
                 return 0
