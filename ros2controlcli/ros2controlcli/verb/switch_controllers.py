@@ -27,53 +27,53 @@ class SwitchControllersVerb(VerbExtension):
     def add_arguments(self, parser, cli_name):
         add_arguments(parser)
         arg = parser.add_argument(
-            '--stop',
-            nargs='*',
+            "--stop",
+            nargs="*",
             default=[],
-            help='Name of the controllers to be deactivated',
+            help="Name of the controllers to be deactivated",
         )
-        arg.completer = LoadedControllerNameCompleter(['active'])
+        arg.completer = LoadedControllerNameCompleter(["active"])
         arg = parser.add_argument(
-            '--deactivate',
-            nargs='*',
+            "--deactivate",
+            nargs="*",
             default=[],
-            help='Name of the controllers to be deactivated',
+            help="Name of the controllers to be deactivated",
         )
-        arg.completer = LoadedControllerNameCompleter(['active'])
+        arg.completer = LoadedControllerNameCompleter(["active"])
         arg = parser.add_argument(
-            '--start',
-            nargs='*',
+            "--start",
+            nargs="*",
             default=[],
-            help='Name of the controllers to be activated',
+            help="Name of the controllers to be activated",
         )
-        arg.completer = LoadedControllerNameCompleter(['inactive'])
+        arg.completer = LoadedControllerNameCompleter(["inactive"])
         arg = parser.add_argument(
-            '--activate',
-            nargs='*',
+            "--activate",
+            nargs="*",
             default=[],
-            help='Name of the controllers to be activated',
+            help="Name of the controllers to be activated",
         )
-        arg.completer = LoadedControllerNameCompleter(['inactive'])
-        parser.add_argument('--strict', action='store_true', help='Strict switch')
-        parser.add_argument('--start-asap', action='store_true', help='Start asap controllers')
-        parser.add_argument('--activate-asap', action='store_true', help='Start asap controllers')
+        arg.completer = LoadedControllerNameCompleter(["inactive"])
+        parser.add_argument("--strict", action="store_true", help="Strict switch")
+        parser.add_argument("--start-asap", action="store_true", help="Start asap controllers")
+        parser.add_argument("--activate-asap", action="store_true", help="Start asap controllers")
         parser.add_argument(
-            '--switch-timeout',
+            "--switch-timeout",
             default=5.0,
             required=False,
-            help='Timeout for switching controllers',
+            help="Timeout for switching controllers",
         )
-        arg.completer = LoadedControllerNameCompleter(['inactive'])
+        arg.completer = LoadedControllerNameCompleter(["inactive"])
         add_controller_mgr_parsers(parser)
 
     def main(self, *, args):
-        if (args.stop):
+        if args.stop:
             print('"--stop" flag is deprecated, use "--deactivate" instead!')
             args.deactivate = args.stop
-        if (args.start):
+        if args.start:
             print('"--start" flag is deprecated, use "--activate" instead!')
             args.activate = args.start
-        if (args.start_asap):
+        if args.start_asap:
             print('"--start-asap" flag is deprecated, use "--activate-asap" instead!')
             args.activate_asap = args.start_asap
 
@@ -88,7 +88,7 @@ class SwitchControllersVerb(VerbExtension):
                 args.switch_timeout,
             )
             if not response.ok:
-                return 'Error switching controllers, check controller_manager logs'
+                return "Error switching controllers, check controller_manager logs"
 
-            print('Successfully switched controllers')
+            print("Successfully switched controllers")
             return 0

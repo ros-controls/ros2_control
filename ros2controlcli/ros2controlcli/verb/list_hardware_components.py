@@ -27,9 +27,10 @@ class ListHardwareComponentsVerb(VerbExtension):
     def add_arguments(self, parser, cli_name):
         add_arguments(parser)
         parser.add_argument(
-            '--verbose', '-v',
-            action='store_true',
-            help='List hardware components with command and state interfaces',
+            "--verbose",
+            "-v",
+            action="store_true",
+            help="List hardware components with command and state interfaces",
         )
         add_controller_mgr_parsers(parser)
 
@@ -38,41 +39,43 @@ class ListHardwareComponentsVerb(VerbExtension):
             hardware_components = list_hardware_components(node, args.controller_manager)
 
             for idx, component in enumerate(hardware_components.component):
-                print(f'Hardware Component {idx}\n\tname: {component.name}\n\ttype: {component.type}')
-                if hasattr(component, 'plugin_name'):
+                print(
+                    f"Hardware Component {idx}\n\tname: {component.name}\n\ttype: {component.type}"
+                )
+                if hasattr(component, "plugin_name"):
                     plugin_name = component.plugin_name
                 else:
-                    plugin_name = f'{bcolors.WARNING}plugin name missing!{bcolors.ENDC}'
+                    plugin_name = f"{bcolors.WARNING}plugin name missing!{bcolors.ENDC}"
 
-                print(f'\tplugin name: {plugin_name}\n\tstate: id={component.state.id} label={component.state.label}\n\tcommand interfaces')
+                print(
+                    f"\tplugin name: {plugin_name}\n\tstate: id={component.state.id} label={component.state.label}\n\tcommand interfaces"
+                )
                 for cmd_interface in component.command_interfaces:
-
                     if cmd_interface.is_available:
-                        available_str = f'{bcolors.OKBLUE}[available]{bcolors.ENDC}'
+                        available_str = f"{bcolors.OKBLUE}[available]{bcolors.ENDC}"
                     else:
-                        available_str = f'{bcolors.WARNING}[unavailable]{bcolors.ENDC}'
+                        available_str = f"{bcolors.WARNING}[unavailable]{bcolors.ENDC}"
 
                     if cmd_interface.is_claimed:
-                        claimed_str = f'{bcolors.OKBLUE}[claimed]{bcolors.ENDC}'
+                        claimed_str = f"{bcolors.OKBLUE}[claimed]{bcolors.ENDC}"
                     else:
-                        claimed_str = '[unclaimed]'
+                        claimed_str = "[unclaimed]"
 
-                    print(f'\t\t{cmd_interface.name} {available_str} {claimed_str}')
+                    print(f"\t\t{cmd_interface.name} {available_str} {claimed_str}")
 
                 if args.verbose:
-                    print('\tstate interfaces')
+                    print("\tstate interfaces")
                     for state_interface in component.command_interfaces:
-
                         if state_interface.is_available:
-                            available_str = f'{bcolors.OKBLUE}[available]{bcolors.ENDC}'
+                            available_str = f"{bcolors.OKBLUE}[available]{bcolors.ENDC}"
                         else:
-                            available_str = f'{bcolors.WARNING}[unavailable]{bcolors.ENDC}'
+                            available_str = f"{bcolors.WARNING}[unavailable]{bcolors.ENDC}"
 
                         if state_interface.is_claimed:
-                            claimed_str = f'{bcolors.OKBLUE}[claimed]{bcolors.ENDC}'
+                            claimed_str = f"{bcolors.OKBLUE}[claimed]{bcolors.ENDC}"
                         else:
-                            claimed_str = '[unclaimed]'
+                            claimed_str = "[unclaimed]"
 
-                        print(f'\t\t{state_interface.name} {available_str} {claimed_str}')
+                        print(f"\t\t{state_interface.name} {available_str} {claimed_str}")
 
         return 0
