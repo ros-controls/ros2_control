@@ -43,10 +43,16 @@ repos:
 
   # PyDocStyle
   - repo: https://github.com/PyCQA/pydocstyle
-    rev: 6.2.2
+    rev: 6.3.0
     hooks:
     - id: pydocstyle
       args: ["--ignore=D100,D101,D102,D103,D104,D105,D106,D107,D203,D212,D404"]
+
+  - repo: https://github.com/psf/black
+    rev: 23.1.0
+    hooks:
+      - id: black
+        args: ["--line-length=99"]
 
   - repo: https://github.com/pycqa/flake8
     rev: 6.0.0
@@ -117,7 +123,7 @@ repos:
         exclude: CHANGELOG\.rst$
 
   - repo: https://github.com/pre-commit/pygrep-hooks
-    rev: v1.9.0
+    rev: v1.10.0
     hooks:
       - id: rst-backticks
         exclude: CHANGELOG\.rst$
