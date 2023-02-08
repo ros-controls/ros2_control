@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from controller_manager_msgs.srv import ConfigureController, \
-    ListControllers, ListControllerTypes, ListHardwareInterfaces, \
+    ListControllers, ListControllerTypes, ListHardwareComponents, ListHardwareInterfaces, \
     LoadController, ReloadControllerLibraries, SwitchController, UnloadController
 
 import rclpy
@@ -55,6 +55,12 @@ def list_controller_types(node, controller_manager_name):
     return service_caller(node,
                           f'{controller_manager_name}/list_controller_types',
                           ListControllerTypes, request)
+
+
+def list_hardware_components(node, controller_manager_name):
+    request = ListHardwareComponents.Request()
+    return service_caller(node, f'{controller_manager_name}/list_hardware_components',
+                          ListHardwareComponents, request)
 
 
 def list_hardware_interfaces(node, controller_manager_name):
