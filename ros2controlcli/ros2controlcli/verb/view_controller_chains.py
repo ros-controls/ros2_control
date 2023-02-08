@@ -24,70 +24,98 @@ from ros2controlcli.api import add_controller_mgr_parsers
 import pygraphviz as pgz
 
 
-def make_controller_node(s, controller_name, state_interfaces, command_interfaces, input_controllers,
-                         output_controllers, port_map):
+def make_controller_node(
+    s,
+    controller_name,
+    state_interfaces,
+    command_interfaces,
+    input_controllers,
+    output_controllers,
+    port_map,
+):
     state_interfaces = sorted(list(state_interfaces))
     command_interfaces = sorted(list(command_interfaces))
     input_controllers = sorted(list(input_controllers))
     output_controllers = sorted(list(output_controllers))
 
-    inputs_str = ''
+    inputs_str = ""
     for ind, state_interface in enumerate(state_interfaces):
-        deliminator = '|'
+        deliminator = "|"
         if ind == len(state_interface) - 1:
-            deliminator = ''
-        inputs_str += '<{}> {} {} '.format("state_end_" + state_interface, state_interface, deliminator)
+            deliminator = ""
+        inputs_str += "<{}> {} {} ".format(
+            "state_end_" + state_interface, state_interface, deliminator
+        )
 
     for ind, input_controller in enumerate(input_controllers):
-        deliminator = '|'
+        deliminator = "|"
         if ind == len(input_controller) - 1:
-            deliminator = ''
-        inputs_str += '<{}> {} {} '.format("controller_end_" + input_controller, input_controller, deliminator)
+            deliminator = ""
+        inputs_str += "<{}> {} {} ".format(
+            "controller_end_" + input_controller, input_controller, deliminator
+        )
         port_map["controller_end_" + input_controller] = controller_name
 
-    outputs_str = ''
+    outputs_str = ""
     for ind, command_interface in enumerate(command_interfaces):
-        deliminator = '|'
+        deliminator = "|"
         if ind == len(command_interface) - 1:
-            deliminator = ''
-        outputs_str += '<{}> {} {} '.format("command_start_" + command_interface, command_interface, deliminator)
+            deliminator = ""
+        outputs_str += "<{}> {} {} ".format(
+            "command_start_" + command_interface, command_interface, deliminator
+        )
 
     for ind, output_controller in enumerate(output_controllers):
-        deliminator = '|'
+        deliminator = "|"
         if ind == len(output_controller) - 1:
-            deliminator = ''
-        outputs_str += '<{}> {} {} '.format("controller_start_" + output_controller, output_controller, deliminator)
+            deliminator = ""
+        outputs_str += "<{}> {} {} ".format(
+            "controller_start_" + output_controller, output_controller, deliminator
+        )
 
-    s.add_node(controller_name, label=f'{controller_name}|{{{{{inputs_str}}}|{{{outputs_str}}}}}')
+    s.add_node(controller_name, label=f"{controller_name}|{{{{{inputs_str}}}|{{{outputs_str}}}}}")
 
 
 def make_command_node(s, command_interfaces):
     command_interfaces = sorted(list(command_interfaces))
-    outputs_str = ''
+    outputs_str = ""
     for ind, command_interface in enumerate(command_interfaces):
-        deliminator = '|'
+        deliminator = "|"
         if ind == len(command_interfaces) - 1:
-            deliminator = ''
-        outputs_str += '<{}> {} {} '.format("command_end_" + command_interface, command_interface, deliminator)
+            deliminator = ""
+        outputs_str += "<{}> {} {} ".format(
+            "command_end_" + command_interface, command_interface, deliminator
+        )
 
-    s.add_node("command_interfaces", label='{}|{{{{{}}}}}'.format("command_interfaces", outputs_str))
+    s.add_node(
+        "command_interfaces", label="{}|{{{{{}}}}}".format("command_interfaces", outputs_str)
+    )
 
 
 def make_state_node(s, state_interfaces):
     state_interfaces = sorted(list(state_interfaces))
-    inputs_str = ''
+    inputs_str = ""
     for ind, state_interface in enumerate(state_interfaces):
-        deliminator = '|'
+        deliminator = "|"
         if ind == len(state_interfaces) - 1:
-            deliminator = ''
-        inputs_str += '<{}> {} {} '.format("state_start_" + state_interface, state_interface, deliminator)
+            deliminator = ""
+        inputs_str += "<{}> {} {} ".format(
+            "state_start_" + state_interface, state_interface, deliminator
+        )
 
-    s.add_node("state_interfaces", label='{}|{{{{{}}}}}'.format("state_interfaces", inputs_str))
+    s.add_node("state_interfaces", label="{}|{{{{{}}}}}".format("state_interfaces", inputs_str))
 
 
-def show_graph(input_chain_connections, output_chain_connections, command_connections, state_connections,
-               command_interfaces, state_interfaces, visualize):
-    s = pgz.AGraph(name='g', strict=False, directed=True, rankdir='LR')
+def show_graph(
+    input_chain_connections,
+    output_chain_connections,
+    command_connections,
+    state_connections,
+    command_interfaces,
+    state_interfaces,
+    visualize,
+):
+    s = pgz.AGraph(name="g", strict=False, directed=True, rankdir="LR")
     s.node_attr["shape"] = "record"
     s.node_attr["style"] = "rounded"
     port_map = dict()
@@ -99,29 +127,42 @@ def show_graph(input_chain_connections, output_chain_connections, command_connec
     controller_names = controller_names.union({name for name in state_connections})
     # create node for each controller
     for controller_name in controller_names:
-        make_controller_node(s, controller_name, state_connections[controller_name],
-                             command_connections[controller_name],
-                             input_chain_connections[controller_name],
-                             output_chain_connections[controller_name], port_map)
+        make_controller_node(
+            s,
+            controller_name,
+            state_connections[controller_name],
+            command_connections[controller_name],
+            input_chain_connections[controller_name],
+            output_chain_connections[controller_name],
+            port_map,
+        )
 
     make_state_node(s, state_interfaces)
     make_command_node(s, command_interfaces)
 
     for controller_name in controller_names:
         for connection in output_chain_connections[controller_name]:
-            s.add_edge('{}:{}'.format(controller_name, "controller_start_" + connection),
-                       '{}:{}'.format(port_map['controller_end_' + connection], 'controller_end_' + connection))
+            s.add_edge(
+                "{}:{}".format(controller_name, "controller_start_" + connection),
+                "{}:{}".format(
+                    port_map["controller_end_" + connection], "controller_end_" + connection
+                ),
+            )
         for state_connection in state_connections[controller_name]:
-            s.add_edge('{}:{}'.format("state_interfaces", "state_start_" + state_connection),
-                       '{}:{}'.format(controller_name, 'state_end_' + state_connection))
+            s.add_edge(
+                "{}:{}".format("state_interfaces", "state_start_" + state_connection),
+                "{}:{}".format(controller_name, "state_end_" + state_connection),
+            )
         for command_connection in command_connections[controller_name]:
-            s.add_edge('{}:{}'.format(controller_name, "command_start_" + command_connection),
-                       '{}:{}'.format("command_interfaces", 'command_end_' + command_connection))
+            s.add_edge(
+                "{}:{}".format(controller_name, "command_start_" + command_connection),
+                "{}:{}".format("command_interfaces", "command_end_" + command_connection),
+            )
 
-    s.graph_attr.update(ranksep='2')
-    s.layout(prog='dot')
+    s.graph_attr.update(ranksep="2")
+    s.layout(prog="dot")
     if visualize:
-        s.draw('/tmp/controller_diagram.gv.pdf', format='pdf')
+        s.draw("/tmp/controller_diagram.gv.pdf", format="pdf")
 
 
 def parse_response(list_controllers_response, list_hardware_response, visualize=True):
@@ -142,8 +183,15 @@ def parse_response(list_controllers_response, list_hardware_response, visualize=
         command_connections[controller.name] = set(controller.required_command_interfaces)
         state_connections[controller.name] = set(controller.required_state_interfaces)
 
-    show_graph(input_chain_connections, output_chain_connections, command_connections, state_connections,
-               command_interfaces, state_interfaces, visualize)
+    show_graph(
+        input_chain_connections,
+        output_chain_connections,
+        command_connections,
+        state_connections,
+        command_interfaces,
+        state_interfaces,
+        visualize,
+    )
 
 
 class ViewControllerChainsVerb(VerbExtension):

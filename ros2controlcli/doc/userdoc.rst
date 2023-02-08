@@ -9,6 +9,7 @@ Currently supported commands are
 
     - ros2 control list_controllers
     - ros2 control list_controller_types
+    - ros2 control list_hardware_components
     - ros2 control list_hardware_interfaces
     - ros2 control load_controller
     - ros2 control reload_controller_libraries
@@ -72,6 +73,40 @@ Example output:
     diff_drive_controller/DiffDriveController                              controller_interface::ControllerInterface
     joint_state_controller/JointStateController                            controller_interface::ControllerInterface
     joint_trajectory_controller/JointTrajectoryController                  controller_interface::ControllerInterface
+
+
+list_hardware_components
+------------------------
+
+.. code-block:: console
+
+    $ ros2 control list_hardware_components -h
+    usage: ros2 control list_hardware_components [-h] [--spin-time SPIN_TIME] [-s] [-c CONTROLLER_MANAGER] [--include-hidden-nodes]
+
+    Output the list of available hardware components
+
+    options:
+    -h, --help            show this help message and exit
+    --spin-time SPIN_TIME
+                            Spin time in seconds to wait for discovery (only applies when not using an already running daemon)
+    -s, --use-sim-time    Enable ROS simulation time
+    --verbose, -v         List hardware components with command and state interfaces
+    -c CONTROLLER_MANAGER, --controller-manager CONTROLLER_MANAGER
+                            Name of the controller manager ROS node
+    --include-hidden-nodes
+                            Consider hidden nodes as well
+
+
+Example output:
+
+.. code-block:: console
+
+    $ ros2 control list_hardware_components
+    Hardware Component 0
+        name: RRBot
+        type: system
+        plugin name: ros2_control_demo_hardware/RRBotSystemPositionOnlyHardware
+        state: id=3 label=active
 
 
 list_hardware_interfaces
