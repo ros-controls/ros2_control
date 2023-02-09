@@ -30,6 +30,7 @@ bool JointLimiterInterface<JointLimits>::init(
   const std::string & /*robot_description_topic*/)
 {
   number_of_joints_ = joint_names.size();
+  joint_names_ = joint_names;
   joint_limits_.resize(number_of_joints_);
   node_ = node;
 

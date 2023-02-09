@@ -17,6 +17,7 @@
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
+  <depend>backward_ros</depend>
   <depend>joint_limits</depend>
   <depend>rclcpp</depend>
   <depend>pluginlib</depend>

@@ -18,6 +18,7 @@
 
   <depend>rclcpp</depend>
   <depend>urdf</depend>
+  <depend>backward_ros</depend>
 
   <build_depend>hardware_interface</build_depend>
 

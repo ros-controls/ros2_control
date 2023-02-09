@@ -84,6 +84,7 @@ public:
 
 protected:
   size_t number_of_joints_;
+  std::vector<std::string> joint_names_;
   std::vector<LimitsType> joint_limits_;
   rclcpp::Node::SharedPtr node_;
 };
