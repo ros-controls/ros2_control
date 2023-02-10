@@ -14,11 +14,8 @@
   <build_depend>rclcpp_lifecycle</build_depend>
   <build_depend>sensor_msgs</build_depend>
 
-  <exec_depend>hardware_interface</exec_depend>
-  <exec_depend>rclcpp_lifecycle</exec_depend>
-  <exec_depend>sensor_msgs</exec_depend>
-
   <test_depend>ament_cmake_gmock</test_depend>
+  <test_depend>sensor_msgs</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>
