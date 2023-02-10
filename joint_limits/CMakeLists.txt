@@ -1,6 +1,7 @@
-cmake_minimum_required(VERSION 3.5)
-project(joint_limits)
+cmake_minimum_required(VERSION 3.16)
+project(joint_limits LANGUAGES CXX)
 
+<<<<<<< HEAD
 # Default to C++14
 if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 14)
@@ -34,33 +35,50 @@ ament_target_dependencies(joint_limits INTERFACE ${THIS_PACKAGE_INCLUDE_DEPENDS}
 
 install(DIRECTORY include/
   DESTINATION include
+=======
+if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
+  add_compile_options(-Wall -Wextra)
+endif()
+
+set(THIS_PACKAGE_INCLUDE_DEPENDS
+  rclcpp
+  rclcpp_lifecycle
+>>>>>>> 727297e (Fix CMake install so overriding works (#926))
 )
+
+find_package(ament_cmake REQUIRED)
+foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
+  find_package(${Dependency} REQUIRED)
+endforeach()
+
+add_library(joint_limits INTERFACE)
+target_compile_features(joint_limits INTERFACE cxx_std_17)
+target_include_directories(joint_limits INTERFACE
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include/joint_limits>
+)
+ament_target_dependencies(joint_limits INTERFACE ${THIS_PACKAGE_INCLUDE_DEPENDS})
+
 
 if(BUILD_TESTING)
   find_package(ament_cmake_gtest REQUIRED)
-  find_package(launch_testing_ament_cmake)
-  find_package(rclcpp)
-  find_package(rclcpp_lifecycle)
+  find_package(launch_testing_ament_cmake REQUIRED)
 
   ament_add_gtest_executable(joint_limits_rosparam_test test/joint_limits_rosparam_test.cpp)
-  target_include_directories(joint_limits_rosparam_test PRIVATE include)
-  ament_target_dependencies(joint_limits_rosparam_test rclcpp rclcpp_lifecycle)
+  target_link_libraries(joint_limits_rosparam_test joint_limits)
 
   ament_add_gtest(joint_limits_urdf_test test/joint_limits_urdf_test.cpp)
   target_link_libraries(joint_limits_urdf_test joint_limits)
 
   add_launch_test(test/joint_limits_rosparam.launch.py)
   install(
-    TARGETS
-    joint_limits_rosparam_test
-    DESTINATION lib/${PROJECT_NAME}
+    TARGETS joint_limits_rosparam_test
+    DESTINATION lib/joint_limits
   )
   install(
-    FILES
-    test/joint_limits_rosparam.yaml
-    DESTINATION share/${PROJECT_NAME}/test
+    FILES test/joint_limits_rosparam.yaml
+    DESTINATION share/joint_limits/test
   )
-
 endif()
 
 install(
@@ -72,6 +90,7 @@ install(TARGETS joint_limits
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
+<<<<<<< HEAD
 )
 
 ament_export_targets(export_joint_limits HAS_LIBRARY_TARGET)
@@ -82,7 +101,11 @@ ament_export_dependencies(
 
 ament_export_include_directories(
   include
+=======
+>>>>>>> 727297e (Fix CMake install so overriding works (#926))
 )
 
+ament_export_targets(export_joint_limits HAS_LIBRARY_TARGET)
+ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
 ament_package()
 ament_generate_version_header(${PROJECT_NAME})
