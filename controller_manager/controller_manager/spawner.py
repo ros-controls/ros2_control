@@ -87,6 +87,7 @@ def wait_for_controller_manager(node, controller_manager, timeout_duration):
         f'{controller_manager}/configure_controller',
         f'{controller_manager}/list_controllers',
         f'{controller_manager}/list_controller_types',
+        f'{controller_manager}/list_hardware_components',
         f'{controller_manager}/list_hardware_interfaces',
         f'{controller_manager}/load_controller',
         f'{controller_manager}/reload_controller_libraries',
