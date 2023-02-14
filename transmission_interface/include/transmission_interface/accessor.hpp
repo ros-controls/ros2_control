@@ -62,8 +62,8 @@ std::vector<T> get_ordered_handles(
       unordered_handles.cbegin(), unordered_handles.cend(), std::back_inserter(result),
       [&](const auto & handle)
       {
-        return (handle.get_prefix_name() == name) && (handle.get_interface_name() == interface_type) &&
-               handle;
+        return (handle.get_prefix_name() == name) &&
+               (handle.get_interface_name() == interface_type) && handle;
       });
   }
   return result;
