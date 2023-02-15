@@ -85,15 +85,6 @@ TEST(PreconditionsTest, AccessorValidation)
   EXPECT_EQ(-4.0, trans.get_joint_reduction()[1]);
   EXPECT_EQ(1.0, trans.get_joint_offset()[0]);
   EXPECT_EQ(-1.0, trans.get_joint_offset()[1]);
-
-  const std::string NAME = "joint";
-  double joint_value = 0.0;
-  JointHandle joint_handle(NAME, HW_IF_POSITION, &joint_value);
-  std::vector<JointHandle> joint_handles = {joint_handle};
-
-  ASSERT_EQ(transmission_interface::get_names(joint_handles), std::vector<std::string>{NAME});
-  ASSERT_EQ(transmission_interface::get_ordered_handles(joint_handles, {NAME}, HW_IF_POSITION),
-    joint_handles);
 }
 
 void testConfigureWithBadHandles(std::string interface_name)
