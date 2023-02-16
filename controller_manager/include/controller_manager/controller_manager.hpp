@@ -15,6 +15,7 @@
 #ifndef CONTROLLER_MANAGER__CONTROLLER_MANAGER_HPP_
 #define CONTROLLER_MANAGER__CONTROLLER_MANAGER_HPP_
 
+#include <chrono>
 #include <map>
 #include <memory>
 #include <string>
@@ -88,9 +89,6 @@ public:
   CONTROLLER_MANAGER_PUBLIC
   void init_resource_manager(const std::string & robot_description);
 
-  CONTROLLER_MANAGER_PUBLIC
-  void init_resource_manager_cb(const std_msgs::msg::String & msg);
-  
   CONTROLLER_MANAGER_PUBLIC
   controller_interface::ControllerInterfaceBaseSharedPtr load_controller(
     const std::string & controller_name, const std::string & controller_type);
@@ -199,6 +197,9 @@ public:
 protected:
   CONTROLLER_MANAGER_PUBLIC
   void init_services();
+
+  CONTROLLER_MANAGER_PUBLIC
+  void wait_for_robot_description();
 
   CONTROLLER_MANAGER_PUBLIC
   controller_interface::ControllerInterfaceBaseSharedPtr add_controller_impl(
@@ -311,12 +312,17 @@ protected:
     const std::shared_ptr<controller_manager_msgs::srv::SetHardwareComponentState::Request> request,
     std::shared_ptr<controller_manager_msgs::srv::SetHardwareComponentState::Response> response);
 
+  CONTROLLER_MANAGER_PUBLIC
+  void init_resource_manager_cb(const std_msgs::msg::String & msg);
+
   // Per controller update rate support
   unsigned int update_loop_counter_ = 0;
   unsigned int update_rate_ = 100;
   std::vector<std::vector<std::string>> chained_controllers_configuration_;
 
   std::unique_ptr<hardware_interface::ResourceManager> resource_manager_;
+
+  int64_t wait_for_robot_description_ = 10;
 
 private:
   std::vector<std::string> get_controller_names();

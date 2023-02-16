@@ -151,14 +151,10 @@ ControllerManager::ControllerManager(
 
   std::string robot_description = "";
   // TODO(Manuel): robot_description parameter is deprecated and should be removed.
-  // robot_description should be obtained via robot_state_publisher
   get_parameter("robot_description", robot_description);
   if (robot_description.empty())
   {
-    RCLCPP_INFO(get_logger(), "Subscribing to robot_state_publisher for robot description file.");
-    robot_description_subscription_ = create_subscription<std_msgs::msg::String>(
-      "/robot_description", 10,
-      std::bind(&ControllerManager::init_resource_manager_cb, this, std::placeholders::_1));
+    wait_for_robot_description();
   }
   else
   {
@@ -200,12 +196,67 @@ ControllerManager::ControllerManager(
   init_services();
 }
 
+void ControllerManager::wait_for_robot_description()
+{
+  // TODO(Manuel) Do we want to keep all? This way we eventually could receive an "old"
+  // robot description
+  rclcpp::QoS robot_description_qos =
+    rclcpp::QoS(rclcpp::QoSInitialization(RMW_QOS_POLICY_HISTORY_KEEP_ALL, 1)).reliable();
+
+  RCLCPP_INFO(get_logger(), "Subscribing to robot_state_publisher for robot description file.");
+  robot_description_subscription_ = create_subscription<std_msgs::msg::String>(
+    "/robot_description", robot_description_qos,
+    std::bind(&ControllerManager::init_resource_manager_cb, this, std::placeholders::_1));
+
+  if (!get_parameter("wait_for_robot_description", wait_for_robot_description_))
+  {
+    RCLCPP_WARN_STREAM(
+      get_logger(),
+      "No \"wait_for_robot_description\" parameter given, which determines how long to wait for "
+      "receiving the robot description file via robot_state_publisher topic. Using default:"
+        << wait_for_robot_description_);
+  }
+  rclcpp::WaitSet wait_set;
+  wait_set.add_subscription(robot_description_subscription_);
+  auto wait_result = wait_set.wait(std::chrono::seconds(wait_for_robot_description_));
+  if (wait_result.kind() == rclcpp::WaitResultKind::Ready)
+  {
+    std_msgs::msg::String robot_description;
+    rclcpp::MessageInfo info;
+    auto take_result = robot_description_subscription_->take(robot_description, info);
+    if (take_result)
+    {
+      init_resource_manager_cb(robot_description);
+    }
+    else
+    {
+      RCLCPP_WARN(
+        get_logger(),
+        "No robot description file received. Continue without robot description file.");
+    }
+  }
+  else if (wait_result.kind() == rclcpp::WaitResultKind::Timeout)
+  {
+    RCLCPP_WARN(
+      get_logger(),
+      "Waiting for receiving of robot description timed out. Continue without robot description "
+      "file.");
+  }
+  else if (wait_result.kind() == rclcpp::WaitResultKind::Empty)
+  {
+    RCLCPP_WARN(
+      get_logger(),
+      "Waiting for robot description failed because wait-set is empty. Continue without robot "
+      "description file.");
+  }
+}
+
 void ControllerManager::init_resource_manager_cb(const std_msgs::msg::String & robot_description)
 {
   RCLCPP_DEBUG(
     get_logger(), "'init_resource_manager_cb called with %s", robot_description.data.c_str());
-  // TODO(Manuel)errors should probably be caught since we don't want controller_manager node to die if
-  // a non valid urdf is passed. However, this should be tested and fine tuned.
+  // TODO(Manuel) errors should probably be caught since we don't want controller_manager node
+  // to die if a non valid urdf is passed. However, should maybe be fine tuned.
   try
   {
     init_resource_manager(robot_description.data.c_str());
