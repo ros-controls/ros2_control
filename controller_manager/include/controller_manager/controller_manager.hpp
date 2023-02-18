@@ -520,6 +520,7 @@ private:
     : terminated_(false), controller_(controller), thread_{}, cm_update_rate_(cm_update_rate)
     {
     }
+
     ControllerThreadWrapper(const ControllerThreadWrapper & t) = delete;
     ControllerThreadWrapper(ControllerThreadWrapper && t) = default;
     ~ControllerThreadWrapper()
