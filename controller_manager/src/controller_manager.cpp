@@ -1521,46 +1521,10 @@ void ControllerManager::switch_controller_service_cb(
   std::lock_guard<std::mutex> guard(services_lock_);
   RCLCPP_DEBUG(get_logger(), "switching service locked");
 
-  //   response->ok = switch_controller(
-  //     request->activate_controllers, request->deactivate_controllers, request->strictness,
-  //     request->activate_asap, request->timeout) == controller_interface::return_type::OK;
-  // TODO(destogl): remove this after deprecated fields are removed from service and use the
-  // commented three lines above
-  // BEGIN: remove when deprecated removed
-  auto activate_controllers = request->activate_controllers;
-  auto deactivate_controllers = request->deactivate_controllers;
-
-  if (!request->start_controllers.empty())
-  {
-    RCLCPP_WARN(
-      get_logger(),
-      "'start_controllers' field is deprecated, use 'activate_controllers' field instead!");
-    activate_controllers.insert(
-      activate_controllers.end(), request->start_controllers.begin(),
-      request->start_controllers.end());
-  }
-  if (!request->stop_controllers.empty())
-  {
-    RCLCPP_WARN(
-      get_logger(),
-      "'stop_controllers' field is deprecated, use 'deactivate_controllers' field instead!");
-    deactivate_controllers.insert(
-      deactivate_controllers.end(), request->stop_controllers.begin(),
-      request->stop_controllers.end());
-  }
-
-  auto activate_asap = request->activate_asap;
-  if (request->start_asap)
-  {
-    RCLCPP_WARN(
-      get_logger(), "'start_asap' field is deprecated, use 'activate_asap' field instead!");
-    activate_asap = request->start_asap;
-  }
-
-  response->ok = switch_controller(
-                   activate_controllers, deactivate_controllers, request->strictness, activate_asap,
-                   request->timeout) == controller_interface::return_type::OK;
-  // END: remove when deprecated removed
+  response->ok =
+    switch_controller(
+      request->activate_controllers, request->deactivate_controllers, request->strictness,
+      request->activate_asap, request->timeout) == controller_interface::return_type::OK;
 
   RCLCPP_DEBUG(get_logger(), "switching service finished");
 }

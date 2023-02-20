@@ -58,14 +58,6 @@ class SetControllerStateVerb(VerbExtension):
             #          #      print(f'successfully cleaned up {args.controller_name}')
             #     return 0
 
-            if args.state == "configure":
-                args.state = "inactive"
-                print('Setting state "configure" is deprecated, use "inactive" instead!')
-
-            if args.state == "stop":
-                args.state = "inactive"
-                print('Setting state "stop" is deprecated, use "inactive" instead!')
-
             if args.state == "inactive":
                 if matched_controller.state == "unconfigured":
                     response = configure_controller(
@@ -92,10 +84,6 @@ class SetControllerStateVerb(VerbExtension):
                         f'cannot put {matched_controller.name} in "inactive" state'
                         f"from its current state {matched_controller.state}"
                     )
-
-            if args.state == "start":
-                args.state = "active"
-                print('Setting state "start" is deprecated, use "active" instead!')
 
             if args.state == "active":
                 if matched_controller.state != "inactive":
