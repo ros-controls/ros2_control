@@ -34,6 +34,7 @@ return_type ControllerInterfaceBase::init(
   try
   {
     auto_declare<int>("update_rate", 0);
+    auto_declare<bool>("is_async", false);
   }
   catch (const std::exception & e)
   {
@@ -84,6 +85,7 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
   if (get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
   {
     update_rate_ = get_node()->get_parameter("update_rate").as_int();
+    is_async_ = get_node()->get_parameter("is_async").as_bool();
   }
 
   return get_node()->configure();

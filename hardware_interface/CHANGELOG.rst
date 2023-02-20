@@ -2,6 +2,34 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+3.8.0 (2023-02-10)
+------------------
+* Fix CMake install so overriding works (`#926 <https://github.com/ros-controls/ros2_control/issues/926>`_)
+* Async params (`#927 <https://github.com/ros-controls/ros2_control/issues/927>`_)
+* Contributors: Márk Szitanics, Tyler Weaver
+
+3.7.0 (2023-01-24)
+------------------
+* Make double parsing locale independent (`#921 <https://github.com/ros-controls/ros2_control/issues/921>`_)
+* Contributors: Henning Kayser
+
+3.6.0 (2023-01-12)
+------------------
+* 🔧 Fixes and updated on pre-commit hooks and their action (`#890 <https://github.com/ros-controls/ros2_control/issues/890>`_)
+* Contributors: Denis Štogl
+
+3.5.1 (2023-01-06)
+------------------
+
+3.5.0 (2022-12-06)
+------------------
+* ResourceManager doesn't always log an error on shutdown anymore (`#867 <https://github.com/ros-controls/ros2_control/issues/867>`_)
+* Rename class type to plugin name #api-breaking #abi-breaking (`#780 <https://github.com/ros-controls/ros2_control/issues/780>`_)
+* Contributors: Bence Magyar, Christopher Wecht
+
+3.4.0 (2022-11-27)
+------------------
+
 3.3.0 (2022-11-15)
 ------------------
 * [MockHardware] Enalbe initialization non-joint components(`#822 <https://github.com/ros-controls/ros2_control/issues/822>`_)

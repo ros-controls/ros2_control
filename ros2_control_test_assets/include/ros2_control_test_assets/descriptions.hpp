@@ -417,7 +417,7 @@ const auto minimal_robot_missing_command_keys_urdf =
 
 [[maybe_unused]] const std::string TEST_ACTUATOR_HARDWARE_NAME = "TestActuatorHardware";
 [[maybe_unused]] const std::string TEST_ACTUATOR_HARDWARE_TYPE = "actuator";
-[[maybe_unused]] const std::string TEST_ACTUATOR_HARDWARE_CLASS_TYPE = "test_actuator";
+[[maybe_unused]] const std::string TEST_ACTUATOR_HARDWARE_PLUGIN_NAME = "test_actuator";
 [[maybe_unused]] const std::vector<std::string> TEST_ACTUATOR_HARDWARE_COMMAND_INTERFACES = {
   "joint1/position", "joint1/max_velocity"};
 [[maybe_unused]] const std::vector<std::string> TEST_ACTUATOR_HARDWARE_STATE_INTERFACES = {
@@ -425,14 +425,14 @@ const auto minimal_robot_missing_command_keys_urdf =
 
 [[maybe_unused]] const std::string TEST_SENSOR_HARDWARE_NAME = "TestSensorHardware";
 [[maybe_unused]] const std::string TEST_SENSOR_HARDWARE_TYPE = "sensor";
-[[maybe_unused]] const std::string TEST_SENSOR_HARDWARE_CLASS_TYPE = "test_sensor";
+[[maybe_unused]] const std::string TEST_SENSOR_HARDWARE_PLUGIN_NAME = "test_sensor";
 [[maybe_unused]] const std::vector<std::string> TEST_SENSOR_HARDWARE_COMMAND_INTERFACES = {""};
 [[maybe_unused]] const std::vector<std::string> TEST_SENSOR_HARDWARE_STATE_INTERFACES = {
   "sensor1/velocity"};
 
 [[maybe_unused]] const std::string TEST_SYSTEM_HARDWARE_NAME = "TestSystemHardware";
 [[maybe_unused]] const std::string TEST_SYSTEM_HARDWARE_TYPE = "system";
-[[maybe_unused]] const std::string TEST_SYSTEM_HARDWARE_CLASS_TYPE = "test_system";
+[[maybe_unused]] const std::string TEST_SYSTEM_HARDWARE_PLUGIN_NAME = "test_system";
 [[maybe_unused]] const std::vector<std::string> TEST_SYSTEM_HARDWARE_COMMAND_INTERFACES = {
   "joint2/velocity", "joint2/max_acceleration", "joint3/velocity", "configuration/max_tcp_jerk"};
 [[maybe_unused]] const std::vector<std::string> TEST_SYSTEM_HARDWARE_STATE_INTERFACES = {
