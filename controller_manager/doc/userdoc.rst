@@ -119,6 +119,35 @@ There are two scripts to interact with controller manager from launch files:
       -c CONTROLLER_MANAGER, --controller-manager CONTROLLER_MANAGER
                             Name of the controller manager ROS node
 
+Using the Controller Manager in a Process
+-----------------------------------------
+
+The ``ControllerManager`` may also be instantiated in a process as a class, but proper care must be taken when doing so.
+The reason for this is because the ``ControllerManager`` class inherits from ``rclcpp::Node``.
+
+If there is more than one Node in the process, global node name remap rules can forcibly change the ``ControllerManager's`` node name as well, leading to duplicate node names.
+This occurs whether the Nodes are siblings or exist in a hierarchy.
+
+.. image:: images/global_general_remap.png
+
+The workaround for this is to specify another node name remap rule in the ``NodeOptions`` passed to the ``ControllerManager`` node (causing it to ignore the global rule), or ensure that any remap rules are targeted to specific nodes.
+
+.. image:: images/global_specific_remap.png
+
+..
+  TODO: (methylDragon) Update the proposed solution when https://github.com/ros2/ros2/issues/1377 is resolved
+
+.. code-block:: cpp
+
+    auto options = controller_manager::get_cm_node_options();
+      options.arguments({
+        "--ros-args",
+        "--remap", "_target_node_name:__node:=dst_node_name",
+        "--log-level", "info"});
+
+      auto cm = std::make_shared<controller_manager::ControllerManager>(
+        executor, "_target_node_name", "some_optional_namespace", options);
+
 Concepts
 -----------
 
