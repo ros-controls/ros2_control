@@ -230,8 +230,8 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
   {
     RCLCPP_WARN_STREAM(
       get_logger(),
-      "[Deprecated]: Automatic activation of all components will not be supported in the future "
-      "anymore. Use hardware_spawner instead.");
+      "[Deprecated]: Automatic activation of all hardware components will not be supported in the "
+      "future anymore. Use hardware_spawner instead.");
     resource_manager_->activate_all_components();
   }
 }

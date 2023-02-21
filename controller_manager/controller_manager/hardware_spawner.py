@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright 2023 PAL Robotics S.L.
+# Copyright 2023 Stogl Robotics Consulting UG (haftungsbeschränkt)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -157,7 +157,6 @@ def main(args=None):
         "hardware_component_name",
         help="The name of the hardware component which should be activated.",
     )
-
     parser.add_argument(
         "-c",
         "--controller-manager",
@@ -173,13 +172,13 @@ def main(args=None):
         type=int,
     )
 
+    # add arguments which are mutually exclusive
     activate_or_confiigure_grp.add_argument(
         "--activate",
         help="Activates the given components. Note: Components are by default configured before activated. ",
         action="store_true",
         required=False,
     )
-
     activate_or_confiigure_grp.add_argument(
         "--configure",
         help="Configures the given components.",
@@ -195,8 +194,6 @@ def main(args=None):
     activate = args.activate
     configure = args.configure
 
-    print(type(hardware_component))
-
     node = Node("hardware_spawner")
     if not controller_manager_name.startswith("/"):
         spawner_namespace = node.get_namespace()
@@ -204,6 +201,7 @@ def main(args=None):
             controller_manager_name = f"{spawner_namespace}/{controller_manager_name}"
         else:
             controller_manager_name = f"/{controller_manager_name}"
+
     try:
         if not wait_for_controller_manager(
             node, controller_manager_name, controller_manager_timeout
@@ -216,10 +214,11 @@ def main(args=None):
         elif configure:
             configure_components(node, controller_manager_name, hardware_component)
         else:
-            node.get_logger().warn("Something went wrong.")
+            node.get_logger().error(
+                'You need to either specify if the hardware component should be activated with the "--activate" flag or configured with the "--configure" flag'
+            )
             parser.print_help()
             return 0
-
     finally:
         rclpy.shutdown()
 
