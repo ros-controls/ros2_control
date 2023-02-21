@@ -157,7 +157,7 @@ load_controller
       -h, --help            show this help message and exit
       --spin-time SPIN_TIME
                             Spin time in seconds to wait for discovery (only applies when not using an already running daemon)
-      --set_state {inactive,active}
+      --set_state {configured,inactive,active}
                             Set the state of the loaded controller
       -c CONTROLLER_MANAGER, --controller-manager CONTROLLER_MANAGER
                             Name of the controller manager ROS node

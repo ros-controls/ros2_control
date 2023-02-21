@@ -74,11 +74,7 @@ class SetControllerStateVerb(VerbExtension):
                     if not response.ok:
                         return 'Error configuring controller, check controller_manager logs'
 
-<<<<<<< HEAD
-                    print(f'successfully configured {args.controller_name}')
-=======
-                    print(f"Successfully configured {args.controller_name}")
->>>>>>> a676d3c ([CLI] Fix wrong output of controller states for `load_controller` command (#947))
+                    print(f'Successfully configured {args.controller_name}')
                     return 0
 
                 elif matched_controller.state == 'active':
@@ -88,11 +84,7 @@ class SetControllerStateVerb(VerbExtension):
                     if not response.ok:
                         return 'Error stopping controller, check controller_manager logs'
 
-<<<<<<< HEAD
-                    print(f'successfully deactivated {args.controller_name}')
-=======
-                    print(f"Successfully deactivated {args.controller_name}")
->>>>>>> a676d3c ([CLI] Fix wrong output of controller states for `load_controller` command (#947))
+                    print(f'Successfully deactivated {args.controller_name}')
                     return 0
 
                 else:
@@ -113,9 +105,5 @@ class SetControllerStateVerb(VerbExtension):
                 if not response.ok:
                     return 'Error activating controller, check controller_manager logs'
 
-<<<<<<< HEAD
-                print(f'successfully activated {args.controller_name}')
-=======
-                print(f"Successfully activated {args.controller_name}")
->>>>>>> a676d3c ([CLI] Fix wrong output of controller states for `load_controller` command (#947))
+                print(f'Successfully activated {args.controller_name}')
                 return 0
