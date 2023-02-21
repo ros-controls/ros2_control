@@ -25,9 +25,8 @@ from rclpy.duration import Duration
 from rclpy.node import Node
 from rclpy.signals import SignalHandlerOptions
 
+
 # from https://stackoverflow.com/a/287944
-
-
 class bcolors:
     HEADER = "\033[95m"
     OKBLUE = "\033[94m"
