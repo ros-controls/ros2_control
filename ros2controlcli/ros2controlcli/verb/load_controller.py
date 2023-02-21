@@ -29,9 +29,15 @@ class LoadControllerVerb(VerbExtension):
         arg = parser.add_argument('controller_name', help='Name of the controller')
         arg.completer = ControllerNameCompleter()
         arg = parser.add_argument(
+<<<<<<< HEAD
             '--set-state',
             choices=['configured', 'active'],
             help='Set the state of the loaded controller',
+=======
+            "--set-state",
+            choices=["inactive", "active"],
+            help="Set the state of the loaded controller",
+>>>>>>> a676d3c ([CLI] Fix wrong output of controller states for `load_controller` command (#947))
         )
         add_controller_mgr_parsers(parser)
 
@@ -62,6 +68,13 @@ class LoadControllerVerb(VerbExtension):
                 if not response.ok:
                     return 'Error activating controller, check controller_manager logs'
 
+<<<<<<< HEAD
             print(f'Sucessfully loaded controller {args.controller_name} into '
                   f'state { "inactive" if args.set_state == "configure" else "active" }')
+=======
+            print(
+                f"Successfully loaded controller {args.controller_name} into "
+                f'state { "inactive" if args.set_state == "inactive" else "active" }'
+            )
+>>>>>>> a676d3c ([CLI] Fix wrong output of controller states for `load_controller` command (#947))
             return 0
