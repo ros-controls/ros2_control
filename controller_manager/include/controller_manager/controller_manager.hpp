@@ -40,8 +40,6 @@
 #include "controller_manager_msgs/srv/switch_controller.hpp"
 #include "controller_manager_msgs/srv/unload_controller.hpp"
 
-#include "std_msgs/msg/string.hpp"
-
 #include "diagnostic_updater/diagnostic_updater.hpp"
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/resource_manager.hpp"
@@ -54,6 +52,7 @@
 #include "rclcpp/node_interfaces/node_parameters_interface.hpp"
 #include "rclcpp/parameter.hpp"
 #include "rclcpp/rclcpp.hpp"
+#include "std_msgs/msg/string.hpp"
 
 namespace controller_manager
 {
@@ -309,7 +308,7 @@ protected:
     std::shared_ptr<controller_manager_msgs::srv::SetHardwareComponentState::Response> response);
 
   CONTROLLER_MANAGER_PUBLIC
-  void init_resource_manager_cb(const std_msgs::msg::String & msg);
+  void robot_description_callback(const std_msgs::msg::String & msg);
 
   // Per controller update rate support
   unsigned int update_loop_counter_ = 0;

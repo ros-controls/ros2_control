@@ -156,10 +156,11 @@ ControllerManager::ControllerManager(
   {
     // set QoS to transient local to get messages that have already been published
     // (if robot state publisher starts before controller manager)
-    RCLCPP_INFO(get_logger(), "Subscribing to robot_state_publisher for robot description file.");
+    RCLCPP_INFO(
+      get_logger(), "Subscribing to ~/robot_description topic for robot description file.");
     robot_description_subscription_ = create_subscription<std_msgs::msg::String>(
-      "/robot_description", rclcpp::QoS(1).transient_local(),
-      std::bind(&ControllerManager::init_resource_manager_cb, this, std::placeholders::_1));
+      namespace_ + "/robot_description", rclcpp::QoS(1).transient_local(),
+      std::bind(&ControllerManager::robot_description_callback, this, std::placeholders::_1));
   }
   else
   {
@@ -201,10 +202,11 @@ ControllerManager::ControllerManager(
   init_services();
 }
 
-void ControllerManager::init_resource_manager_cb(const std_msgs::msg::String & robot_description)
+void ControllerManager::robot_description_callback(const std_msgs::msg::String & robot_description)
 {
-  RCLCPP_ERROR(
-    get_logger(), "'init_resource_manager_cb called with %s", robot_description.data.c_str());
+  RCLCPP_INFO(get_logger(), "Received robot description file.");
+  RCLCPP_DEBUG(
+    get_logger(), "'Content of robot description file: %s", robot_description.data.c_str());
   // TODO(Manuel) errors should probably be caught since we don't want controller_manager node
   // to die if a non valid urdf is passed. However, should maybe be fine tuned.
   try
