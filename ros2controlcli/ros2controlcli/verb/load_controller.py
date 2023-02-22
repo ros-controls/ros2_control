@@ -30,7 +30,7 @@ class LoadControllerVerb(VerbExtension):
         arg.completer = ControllerNameCompleter()
         arg = parser.add_argument(
             '--set-state',
-            choices=['configured', 'active'],
+            choices=['configured', 'inactive', 'active'],
             help='Set the state of the loaded controller',
         )
         add_controller_mgr_parsers(parser)
@@ -63,5 +63,5 @@ class LoadControllerVerb(VerbExtension):
                     return 'Error activating controller, check controller_manager logs'
 
             print(f'Sucessfully loaded controller {args.controller_name} into '
-                  f'state { "inactive" if args.set_state == "configure" else "active" }')
+                  f'state { "active" if args.set_state == "active" else "inactive" }')
             return 0
