@@ -32,7 +32,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           ref: ${{ inputs.ref }}
-      - uses: ros-tooling/action-ros-ci@0.2.7
+      - uses: ros-tooling/action-ros-ci@0.3.0
         with:
           target-ros2-distro: ${{ inputs.ros_distro }}
           # build all packages listed in the meta package
