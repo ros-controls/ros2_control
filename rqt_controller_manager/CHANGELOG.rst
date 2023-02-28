@@ -2,8 +2,8 @@
 Changelog for package rqt_controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.24.0 (2023-02-28)
+-------------------
 * fix: rqt_controller_manager ros2param < 0.20.0 compatibility (`#945 <https://github.com/ros-controls/ros2_control/issues/945>`_)
 * Contributors: Marco Magri
 
