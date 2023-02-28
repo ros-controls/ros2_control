@@ -2,8 +2,8 @@
 Changelog for package controller_manager_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.9.0 (2023-02-28)
+------------------
 * Remove deprecations from CLI and controller_manager (`#948 <https://github.com/ros-controls/ros2_control/issues/948>`_)
   Co-authored-by: Bence Magyar <bence.magyar.robotics@gmail.com>
 * Contributors: Christoph Fröhlich

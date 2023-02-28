@@ -2,8 +2,8 @@
 Changelog for package ros2controlcli
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.9.0 (2023-02-28)
+------------------
 * Remove deprecations from CLI and controller_manager (`#948 <https://github.com/ros-controls/ros2_control/issues/948>`_)
 * [CLI] Fix wrong output of controller states for `load_controller` command (`#947 <https://github.com/ros-controls/ros2_control/issues/947>`_)
 * Contributors: Christoph Fröhlich
