@@ -2,6 +2,12 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* fix AttributeError: Parameter object attribute name is read-only (`#957 <https://github.com/ros-controls/ros2_control/issues/957>`_) (`#958 <https://github.com/ros-controls/ros2_control/issues/958>`_)
+* Expose node options to controller manager (`#942 <https://github.com/ros-controls/ros2_control/issues/942>`_) (`#946 <https://github.com/ros-controls/ros2_control/issues/946>`_)
+* Contributors: Bence Magyar, methylDragon,Noel Jiménez García
+
 2.23.0 (2023-02-20)
 -------------------
 * Adds list_hardware_components to CLI `#796 <https://github.com/ros-controls/ros2_control/issues/796>`_ - Adds list_hardware_components to CLI (`#891 <https://github.com/ros-controls/ros2_control/issues/891>`_) (`#937 <https://github.com/ros-controls/ros2_control/issues/937>`_)

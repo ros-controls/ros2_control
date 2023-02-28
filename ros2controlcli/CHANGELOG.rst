@@ -2,6 +2,20 @@
 Changelog for package ros2controlcli
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix wrong CLI output of controller states (backport `#947 <https://github.com/ros-controls/ros2_control/issues/947>`_) (`#951 <https://github.com/ros-controls/ros2_control/issues/951>`_)
+  * [CLI] Fix wrong output of controller states for `load_controller` command (`#947 <https://github.com/ros-controls/ros2_control/issues/947>`_)
+  (cherry picked from commit a676d3cd8c0fbb925435a237ee5df5d4811201f2)
+  # Conflicts:
+  #	ros2controlcli/ros2controlcli/verb/load_controller.py
+  #	ros2controlcli/ros2controlcli/verb/set_controller_state.py
+  * Make changes non-breaking
+  ---------
+  Co-authored-by: Christoph Fröhlich <christophfroehlich@users.noreply.github.com>
+  Co-authored-by: Dr. Denis <denis@stoglrobotics.de>
+* Contributors: mergify[bot]
+
 2.23.0 (2023-02-20)
 -------------------
 * Adds list_hardware_components to CLI `#796 <https://github.com/ros-controls/ros2_control/issues/796>`_ - Adds list_hardware_components to CLI (`#891 <https://github.com/ros-controls/ros2_control/issues/891>`_) (`#937 <https://github.com/ros-controls/ros2_control/issues/937>`_)
