@@ -30,7 +30,7 @@ class LoadControllerVerb(VerbExtension):
         arg.completer = ControllerNameCompleter()
         arg = parser.add_argument(
             "--set-state",
-            choices=["configured", "active"],
+            choices=["inactive", "active"],
             help="Set the state of the loaded controller",
         )
         add_controller_mgr_parsers(parser)
@@ -50,11 +50,6 @@ class LoadControllerVerb(VerbExtension):
             if not response.ok:
                 return "Error configuring controller"
 
-            # TODO(destogl): remove in humble+
-            if args.set_state == "start":
-                print('Setting state "start" is deprecated "activate" instead!')
-                args.set_state == "activate"
-
             if args.set_state == "active":
                 response = switch_controllers(
                     node, args.controller_manager, [], [args.controller_name], True, True, 5.0
@@ -64,6 +59,6 @@ class LoadControllerVerb(VerbExtension):
 
             print(
                 f"Successfully loaded controller {args.controller_name} into "
-                f'state { "inactive" if args.set_state == "configure" else "active" }'
+                f'state { "inactive" if args.set_state == "inactive" else "active" }'
             )
             return 0

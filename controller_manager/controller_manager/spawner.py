@@ -157,12 +157,6 @@ def main(args=None):
         required=False,
     )
     parser.add_argument(
-        "--stopped",
-        help="Load and configure the controller, however do not activate them",
-        action="store_true",
-        required=False,
-    )
-    parser.add_argument(
         "--inactive",
         help="Load and configure the controller, however do not activate them",
         action="store_true",
@@ -225,7 +219,7 @@ def main(args=None):
         else:
             if controller_type:
                 parameter = Parameter()
-                Parameter.name = prefixed_controller_name + ".type"
+                parameter.name = prefixed_controller_name + ".type"
                 parameter.value = get_parameter_value(string_value=controller_type)
 
                 response = call_set_parameters(
@@ -298,7 +292,7 @@ def main(args=None):
                 node.get_logger().error("Failed to configure controller")
                 return 1
 
-            if not args.stopped and not args.inactive:
+            if not args.inactive:
                 ret = switch_controllers(
                     node, controller_manager_name, [], [controller_name], True, True, 5.0
                 )
@@ -313,8 +307,6 @@ def main(args=None):
                     + prefixed_controller_name
                     + bcolors.ENDC
                 )
-            elif args.stopped:
-                node.get_logger().warn('"--stopped" flag is deprecated use "--inactive" instead')
 
         if not args.unload_on_kill:
             return 0
@@ -324,7 +316,7 @@ def main(args=None):
             while True:
                 time.sleep(1)
         except KeyboardInterrupt:
-            if not args.stopped and not args.inactive:
+            if not args.inactive:
                 node.get_logger().info("Interrupt captured, deactivating and unloading controller")
                 ret = switch_controllers(
                     node, controller_manager_name, [controller_name], [], True, True, 5.0
@@ -334,9 +326,6 @@ def main(args=None):
                     return 1
 
                 node.get_logger().info("Deactivated controller")
-
-            elif args.stopped:
-                node.get_logger().warn('"--stopped" flag is deprecated use "--inactive" instead')
 
             ret = unload_controller(node, controller_manager_name, controller_name)
             if not ret.ok:

@@ -26,13 +26,13 @@ jobs:
     strategy:
       fail-fast: false
     steps:
-      - uses: ros-tooling/setup-ros@0.5.0
+      - uses: ros-tooling/setup-ros@0.6.0
         with:
           required-ros-distributions: ${{ inputs.ros_distro }}
       - uses: actions/checkout@v3
         with:
           ref: ${{ inputs.ref }}
-      - uses: ros-tooling/action-ros-ci@0.2.7
+      - uses: ros-tooling/action-ros-ci@0.3.0
         with:
           target-ros2-distro: ${{ inputs.ros_distro }}
           # build all packages listed in the meta package
