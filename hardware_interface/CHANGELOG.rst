@@ -2,6 +2,15 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+3.9.0 (2023-02-28)
+------------------
+
+3.8.0 (2023-02-10)
+------------------
+* Fix CMake install so overriding works (`#926 <https://github.com/ros-controls/ros2_control/issues/926>`_)
+* Async params (`#927 <https://github.com/ros-controls/ros2_control/issues/927>`_)
+* Contributors: Márk Szitanics, Tyler Weaver
+
 3.7.0 (2023-01-24)
 ------------------
 * Make double parsing locale independent (`#921 <https://github.com/ros-controls/ros2_control/issues/921>`_)

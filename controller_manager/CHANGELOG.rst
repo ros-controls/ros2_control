@@ -2,6 +2,20 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+3.9.0 (2023-02-28)
+------------------
+* fix AttributeError: Parameter object attribute name is read-only (`#957 <https://github.com/ros-controls/ros2_control/issues/957>`_)
+* Remove deprecations from CLI and controller_manager (`#948 <https://github.com/ros-controls/ros2_control/issues/948>`_)
+* Expose node options to controller manager (`#942 <https://github.com/ros-controls/ros2_control/issues/942>`_)
+* Contributors: Christoph Fröhlich, Noel Jiménez García, methylDragon
+
+3.8.0 (2023-02-10)
+------------------
+* Fix CMake install so overriding works (`#926 <https://github.com/ros-controls/ros2_control/issues/926>`_)
+* 🖤 Add Black formatter for Python files. (`#936 <https://github.com/ros-controls/ros2_control/issues/936>`_)
+* Add list_hardware_components CLI <https://github.com/ros-controls/ros2_control/issues/796>`_ - Adds list_hardware_components to CLI (`#891 <https://github.com/ros-controls/ros2_control/issues/891>`_)
+* Contributors: Andy McEvoy, Dr. Denis, Tyler Weaver
+
 3.7.0 (2023-01-24)
 ------------------
 * Do not use CLI calls but direct API for setting parameters. (`#910 <https://github.com/ros-controls/ros2_control/issues/910>`_)
