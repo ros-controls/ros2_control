@@ -2,6 +2,9 @@
 Changelog for package ros2controlcli
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 2.24.0 (2023-02-28)
 -------------------
 * Fix wrong CLI output of controller states (backport `#947 <https://github.com/ros-controls/ros2_control/issues/947>`_) (`#951 <https://github.com/ros-controls/ros2_control/issues/951>`_)
