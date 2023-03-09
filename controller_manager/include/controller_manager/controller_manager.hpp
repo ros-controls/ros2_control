@@ -536,18 +536,25 @@ private:
       }
     }
 
-    void start() { thread_ = std::thread(&ControllerThreadWrapper::call_controller_update, this); }
+    void activate()
+    {
+      thread_ = std::thread(&ControllerThreadWrapper::call_controller_update, this);
+    }
 
     void call_controller_update()
     {
-      rclcpp::Time previous_time = controller_->get_node()->now();
+      using TimePoint = std::chrono::system_clock::time_point;
+      unsigned int used_update_rate =
+        controller_->get_update_rate() == 0
+          ? cm_update_rate_
+          : controller_
+              ->get_update_rate();  // determines if the controller's or CM's update rate is used
 
       while (!terminated_.load(std::memory_order_relaxed))
       {
-        auto const period = std::chrono::nanoseconds(1'000'000'000 / cm_update_rate_);
-        std::chrono::system_clock::time_point next_iteration_time =
-          std::chrono::system_clock::time_point(
-            std::chrono::nanoseconds(controller_->get_node()->now().nanoseconds()));
+        auto const period = std::chrono::nanoseconds(1'000'000'000 / used_update_rate);
+        TimePoint next_iteration_time =
+          TimePoint(std::chrono::nanoseconds(controller_->get_node()->now().nanoseconds()));
 
         if (controller_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
         {
@@ -557,11 +564,6 @@ private:
         next_iteration_time += period;
         std::this_thread::sleep_until(next_iteration_time);
       }
-    }
-
-    std::shared_ptr<controller_interface::ControllerInterfaceBase> get_controller()
-    {
-      return controller_;
     }
 
   private:

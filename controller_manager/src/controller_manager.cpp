@@ -1270,7 +1270,7 @@ void ControllerManager::activate_controllers(
 
     if (controller->is_async())
     {
-      async_controller_threads_.at(controller_name)->start();
+      async_controller_threads_.at(controller_name)->activate();
     }
   }
   // All controllers activated, switching done
