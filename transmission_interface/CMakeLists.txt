@@ -30,7 +30,6 @@ pluginlib_export_plugin_description_file(transmission_interface ros2_control_plu
 
 if(BUILD_TESTING)
   find_package(ament_cmake_gmock REQUIRED)
-  find_package(ament_cmake_gtest REQUIRED)
 
   ament_add_gmock(test_simple_transmission
     test/simple_transmission_test.cpp
@@ -62,7 +61,7 @@ if(BUILD_TESTING)
   )
   target_link_libraries(test_differential_transmission_loader transmission_interface)
 
-  ament_add_gtest(
+  ament_add_gmock(
     test_utils
     test/utils_test.cpp
   )
