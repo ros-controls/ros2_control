@@ -460,7 +460,12 @@ void auto_fill_transmission_interfaces(HardwareInfo & hardware)
       //  copy interface names from their definitions in the component
       std::transform(
         found_it->command_interfaces.cbegin(), found_it->command_interfaces.cend(),
-        std::back_inserter(joint.interfaces),
+        std::back_inserter(joint.command_interfaces),
+        [](const auto & interface) { return interface.name; });
+
+      std::transform(
+        found_it->state_interfaces.cbegin(), found_it->state_interfaces.cend(),
+        std::back_inserter(joint.state_interfaces),
         [](const auto & interface) { return interface.name; });
     }
 
@@ -475,8 +480,9 @@ void auto_fill_transmission_interfaces(HardwareInfo & hardware)
           std::to_string(transmission.joints.size()));
       }
 
-      transmission.actuators.push_back(
-        ActuatorInfo{"actuator1", transmission.joints[0].interfaces, "actuator1", 1.0, 0.0});
+      transmission.actuators.push_back(ActuatorInfo{
+        "actuator1", transmission.joints[0].state_interfaces,
+        transmission.joints[0].command_interfaces, "actuator1", 1.0, 0.0});
     }
   }
 }

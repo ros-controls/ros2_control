@@ -72,7 +72,8 @@ struct ComponentInfo
 struct JointInfo
 {
   std::string name;
-  std::vector<std::string> interfaces;
+  std::vector<std::string> state_interfaces;
+  std::vector<std::string> command_interfaces;
   std::string role;
   double mechanical_reduction = 1.0;
   double offset = 0.0;
@@ -82,7 +83,8 @@ struct JointInfo
 struct ActuatorInfo
 {
   std::string name;
-  std::vector<std::string> interfaces;
+  std::vector<std::string> state_interfaces;
+  std::vector<std::string> command_interfaces;
   std::string role;
   double mechanical_reduction = 1.0;
   double offset = 0.0;
