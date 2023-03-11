@@ -12,9 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+<<<<<<< HEAD
 from controller_manager_msgs.srv import ConfigureController, \
     ListControllers, ListControllerTypes, ListHardwareComponents, ListHardwareInterfaces, \
     LoadController, ReloadControllerLibraries, SwitchController, UnloadController
+=======
+from controller_manager_msgs.srv import (
+    ConfigureController,
+    ListControllers,
+    ListControllerTypes,
+    ListHardwareComponents,
+    ListHardwareInterfaces,
+    LoadController,
+    ReloadControllerLibraries,
+    SetHardwareComponentState,
+    SwitchController,
+    UnloadController,
+)
+>>>>>>> 937817c (add spawner for hardware (#941))
 
 import rclpy
 
@@ -117,8 +132,32 @@ def reload_controller_libraries(node, controller_manager_name, force_kill, servi
     )
 
 
+<<<<<<< HEAD
 def switch_controllers(node, controller_manager_name, deactivate_controllers,
                        activate_controllers, strict, activate_asap, timeout):
+=======
+def set_hardware_component_state(node, controller_manager_name, component_name, lifecyle_state):
+    request = SetHardwareComponentState.Request()
+    request.name = component_name
+    request.target_state = lifecyle_state
+    return service_caller(
+        node,
+        f"{controller_manager_name}/set_hardware_component_state",
+        SetHardwareComponentState,
+        request,
+    )
+
+
+def switch_controllers(
+    node,
+    controller_manager_name,
+    deactivate_controllers,
+    activate_controllers,
+    strict,
+    activate_asap,
+    timeout,
+):
+>>>>>>> 937817c (add spawner for hardware (#941))
     request = SwitchController.Request()
     request.activate_controllers = activate_controllers
     request.deactivate_controllers = deactivate_controllers
