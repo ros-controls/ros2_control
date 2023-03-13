@@ -31,55 +31,8 @@ ament_target_dependencies(${PROJECT_NAME} ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
 pluginlib_export_plugin_description_file(${PROJECT_NAME} ros2_control_plugins.xml)
 
-<<<<<<< HEAD
 install(TARGETS ${PROJECT_NAME}
   EXPORT export_${PROJECT_NAME}
-=======
-  ament_add_gmock(test_simple_transmission
-    test/simple_transmission_test.cpp
-  )
-  target_link_libraries(test_simple_transmission transmission_interface)
-
-  ament_add_gmock(test_differential_transmission
-    test/differential_transmission_test.cpp
-  )
-  target_link_libraries(test_differential_transmission transmission_interface)
-
-  ament_add_gmock(test_four_bar_linkage_transmission
-    test/four_bar_linkage_transmission_test.cpp
-  )
-  target_link_libraries(test_four_bar_linkage_transmission transmission_interface)
-
-  ament_add_gmock(test_simple_transmission_loader
-    test/simple_transmission_loader_test.cpp
-  )
-  target_link_libraries(test_simple_transmission_loader transmission_interface)
-
-  ament_add_gmock(test_four_bar_linkage_transmission_loader
-    test/four_bar_linkage_transmission_loader_test.cpp
-  )
-  target_link_libraries(test_four_bar_linkage_transmission_loader transmission_interface)
-
-  ament_add_gmock(test_differential_transmission_loader
-    test/differential_transmission_loader_test.cpp
-  )
-  target_link_libraries(test_differential_transmission_loader transmission_interface)
-
-  ament_add_gmock(
-    test_utils
-    test/utils_test.cpp
-  )
-  target_include_directories(test_utils PUBLIC include hardware_interface)
-  ament_target_dependencies(test_utils hardware_interface)
-endif()
-
-install(
-  DIRECTORY include/
-  DESTINATION include/transmission_interface
-)
-install(TARGETS transmission_interface
-  EXPORT export_transmission_interface
->>>>>>> 8f8f795 (Split transmission interfaces (#938))
   RUNTIME DESTINATION bin
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
@@ -129,6 +82,13 @@ if(BUILD_TESTING)
   )
   target_include_directories(test_differential_transmission_loader PUBLIC include hardware_interface)
   ament_target_dependencies(test_differential_transmission_loader hardware_interface)
+  
+  ament_add_gmock(
+    test_utils
+    test/utils_test.cpp
+  )
+  target_include_directories(test_utils PUBLIC include hardware_interface)
+  ament_target_dependencies(test_utils hardware_interface)
 endif()
 
 ament_export_include_directories(
