@@ -26,7 +26,7 @@ jobs:
     strategy:
       fail-fast: false
     steps:
-      - uses: ros-tooling/setup-ros@0.6.0
+      - uses: ros-tooling/setup-ros@0.6.1
         with:
           required-ros-distributions: ${{ inputs.ros_distro }}
       - uses: actions/checkout@v3
