@@ -495,14 +495,16 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_only)
   const auto joint = transmission.joints[0];
   EXPECT_EQ(joint.name, "joint1");
   EXPECT_EQ(joint.role, "joint1");
-  EXPECT_THAT(joint.interfaces, ElementsAre("velocity"));
+  EXPECT_THAT(joint.state_interfaces, ElementsAre("velocity"));
+  EXPECT_THAT(joint.command_interfaces, ElementsAre("velocity"));
   EXPECT_THAT(joint.mechanical_reduction, DoubleEq(325.949));
   EXPECT_THAT(joint.offset, DoubleEq(0.0));
   EXPECT_THAT(transmission.actuators, SizeIs(1));
   const auto actuator = transmission.actuators[0];
   EXPECT_EQ(actuator.name, "actuator1");
   EXPECT_EQ(actuator.role, "actuator1");
-  EXPECT_THAT(actuator.interfaces, ContainerEq(joint.interfaces));
+  EXPECT_THAT(actuator.state_interfaces, ContainerEq(joint.state_interfaces));
+  EXPECT_THAT(actuator.command_interfaces, ContainerEq(joint.command_interfaces));
   EXPECT_THAT(actuator.offset, DoubleEq(0.0));
   ASSERT_THAT(transmission.parameters, SizeIs(1));
   EXPECT_EQ(transmission.parameters.at("additional_special_parameter"), "1337");

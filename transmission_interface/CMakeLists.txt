@@ -82,6 +82,13 @@ if(BUILD_TESTING)
   )
   target_include_directories(test_differential_transmission_loader PUBLIC include hardware_interface)
   ament_target_dependencies(test_differential_transmission_loader hardware_interface)
+
+  ament_add_gmock(
+    test_utils
+    test/utils_test.cpp
+  )
+  target_include_directories(test_utils PUBLIC include hardware_interface)
+  ament_target_dependencies(test_utils hardware_interface)
 endif()
 
 ament_export_include_directories(
