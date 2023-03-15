@@ -36,6 +36,12 @@ class SensorInterface;
 class SystemInterface;
 class ResourceStorage;
 
+struct HardwareReadWriteStatus
+{
+  bool ok;
+  std::vector<std::string> failed_hardware_names;
+};
+
 class HARDWARE_INTERFACE_PUBLIC ResourceManager
 {
 public:
@@ -165,6 +171,26 @@ public:
    * \param[in] controller_name list of interface names that will be deleted from resource manager.
    */
   void remove_controller_reference_interfaces(const std::string & controller_name);
+
+  /// Cache mapping between hardware and controllers using it
+  /**
+   * Find mapping between controller and hardware based on interfaces controller with
+   * \p controller_name is using and cache those for later usage.
+   *
+   * \param[in] controller_name name of the controller which interfaces are provided.
+   * \param[in] interfaces list of interfaces controller with \p controller_name is using.
+   */
+  void cache_controller_to_hardware(
+    const std::string & controller_name, const std::vector<std::string> & interfaces);
+
+  /// Return cached controllers for a specific hardware.
+  /**
+   * Return list of cached controller names that use the hardware with name \p hardware_name.
+   *
+   * \param[in] hardware_name the name of the hardware for which cached controllers should be returned.
+   * \returns list of cached controller names that depend on hardware with name \p hardware_name.
+   */
+  std::vector<std::string> get_cached_controllers_to_hardware(const std::string & hardware_name);
 
   /// Checks whether a command interface is already claimed.
   /**
@@ -345,7 +371,7 @@ public:
    * Part of the real-time critical update loop.
    * It is realtime-safe if used hadware interfaces are implemented adequately.
    */
-  void read(const rclcpp::Time & time, const rclcpp::Duration & period);
+  HardwareReadWriteStatus read(const rclcpp::Time & time, const rclcpp::Duration & period);
 
   /// Write all loaded hardware components.
   /**
@@ -354,7 +380,7 @@ public:
    * Part of the real-time critical update loop.
    * It is realtime-safe if used hadware interfaces are implemented adequately.
    */
-  void write(const rclcpp::Time & time, const rclcpp::Duration & period);
+  HardwareReadWriteStatus write(const rclcpp::Time & time, const rclcpp::Duration & period);
 
   /// Activates all available hardware components in the system.
   /**
@@ -373,7 +399,12 @@ private:
 
   mutable std::recursive_mutex resource_interfaces_lock_;
   mutable std::recursive_mutex claimed_command_interfaces_lock_;
+  mutable std::recursive_mutex resources_lock_;
+
   std::unique_ptr<ResourceStorage> resource_storage_;
+
+  // Structure to store read and write status so it is not initialized in the real-time loop
+  HardwareReadWriteStatus read_write_status;
 };
 
 }  // namespace hardware_interface
