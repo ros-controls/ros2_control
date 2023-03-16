@@ -2,6 +2,11 @@
 Changelog for package transmission_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+3.9.1 (2023-03-09)
+------------------
+* Fix missing include (`#963 <https://github.com/ros-controls/ros2_control/issues/963>`_)
+* Contributors: Bence Magyar
+
 3.9.0 (2023-02-28)
 ------------------
 
