@@ -231,11 +231,11 @@ def main(args=None):
         if not wait_for_controller_manager(
             node, controller_manager_name, controller_manager_timeout
         ):
-            node.get_logger().error("Controller manager not available")
+            node.get_logger().error(bcolors.FAIL + "Controller manager not available" + bcolors.ENDC)
             return 1
 
         if is_controller_loaded(node, controller_manager_name, prefixed_controller_name):
-            node.get_logger().warn("Controller already loaded, skipping load_controller")
+            node.get_logger().warn(bcolors.WARNING + "Controller already loaded, skipping load_controller" + bcolors.ENDC)
         else:
             if controller_type:
                 parameter = Parameter()
@@ -317,7 +317,7 @@ def main(args=None):
         if not args.load_only:
             ret = configure_controller(node, controller_manager_name, controller_name)
             if not ret.ok:
-                node.get_logger().error("Failed to configure controller")
+                node.get_logger().error(bcolors.FAIL + "Failed to configure controller" + bcolors.ENDC)
                 return 1
 
             if not args.inactive:
@@ -325,7 +325,7 @@ def main(args=None):
                     node, controller_manager_name, [], [controller_name], True, True, 5.0
                 )
                 if not ret.ok:
-                    node.get_logger().error("Failed to activate controller")
+                    node.get_logger().error(bcolors.FAIL + "Failed to activate controller" + bcolors.ENDC)
                     return 1
 
                 node.get_logger().info(
@@ -350,14 +350,14 @@ def main(args=None):
                     node, controller_manager_name, [controller_name], [], True, True, 5.0
                 )
                 if not ret.ok:
-                    node.get_logger().error("Failed to deactivate controller")
+                    node.get_logger().error(bcolors.FAIL + "Failed to deactivate controller" + bcolors.ENDC)
                     return 1
 
                 node.get_logger().info("Deactivated controller")
 
             ret = unload_controller(node, controller_manager_name, controller_name)
             if not ret.ok:
-                node.get_logger().error("Failed to unload controller")
+                node.get_logger().error(bcolors.FAIL + "Failed to unload controller" + bcolors.ENDC)
                 return 1
 
             node.get_logger().info("Unloaded controller")
