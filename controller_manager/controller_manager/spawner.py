@@ -292,9 +292,9 @@ def main(args=None):
                     parameter_file=param_file,
                     use_wildcard=True,
                 )
-            if f_stdout:
+            if f_stdout.getvalue():
                 node.get_logger().info(bcolors.OKCYAN + f_stdout.getvalue() + bcolors.ENDC)
-            if f_stderr:
+            if f_stderr.getvalue():
                 node.get_logger().error(bcolors.FAIL + f_stderr.getvalue() + bcolors.ENDC)
             node.get_logger().info(
                 bcolors.OKCYAN
