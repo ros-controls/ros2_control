@@ -185,11 +185,11 @@ def main(args=None):
         type=int,
     )
     parser.add_argument(
-        '--log-level',
-        help='Log level for spawner node',
-        required=False, 
-        choices=['debug', 'info', 'warn', 'error', 'fatal'], 
-        default='info',
+        "--log-level",
+        help="Log level for spawner node",
+        required=False,
+        choices=["debug", "info", "warn", "error", "fatal"],
+        default="info",
     )
 
     command_line_args = rclpy.utilities.remove_ros_args(args=sys.argv)[1:]
@@ -202,13 +202,13 @@ def main(args=None):
     controller_manager_timeout = args.controller_manager_timeout
     log_level = args.log_level
 
-    loglevel_to_severity =	{
+    loglevel_to_severity = {
         "debug": rclpy.logging.LoggingSeverity.DEBUG,
         "info": rclpy.logging.LoggingSeverity.INFO,
         "warn": rclpy.logging.LoggingSeverity.WARN,
         "error": rclpy.logging.LoggingSeverity.ERROR,
-        "fatal": rclpy.logging.LoggingSeverity.FATAL
-    } 
+        "fatal": rclpy.logging.LoggingSeverity.FATAL,
+    }
 
     if param_file and not os.path.isfile(param_file):
         raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), param_file)
@@ -285,7 +285,9 @@ def main(args=None):
 
         if param_file:
             # load_parameter_file writes to stdout/stderr. Here we capture that and use node logging instead
-            with redirect_stdout(io.StringIO()) as f_stdout, redirect_stderr(io.StringIO()) as f_stderr:
+            with redirect_stdout(io.StringIO()) as f_stdout, redirect_stderr(
+                io.StringIO()
+            ) as f_stderr:
                 load_parameter_file(
                     node=node,
                     node_name=prefixed_controller_name,
