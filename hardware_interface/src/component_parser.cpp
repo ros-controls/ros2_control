@@ -13,7 +13,6 @@
 // limitations under the License.
 
 #include <tinyxml2.h>
-#include <charconv>
 #include <regex>
 #include <stdexcept>
 #include <string>
@@ -124,30 +123,26 @@ double get_parameter_value_or(
 {
   while (params_it)
   {
-    // Fill the map with parameters
-    const auto tag_name = params_it->Name();
-    if (strcmp(tag_name, parameter_name) == 0)
+    try
     {
-      const auto tag_text = params_it->GetText();
-      if (tag_text)
+      // Fill the map with parameters
+      const auto tag_name = params_it->Name();
+      if (strcmp(tag_name, parameter_name) == 0)
       {
-        // Parse and return double value if there is no parsing error
-        double result_value;
-        const auto parse_result =
-          std::from_chars(tag_text, tag_text + std::strlen(tag_text), result_value);
-        if (parse_result.ec == std::errc())
+        const auto tag_text = params_it->GetText();
+        if (tag_text)
         {
-          return result_value;
+          return std::stod(tag_text);
         }
-
-        // Parsing failed - exit loop and return default value
-        break;
       }
+    }
+    catch (const std::exception & e)
+    {
+      return default_value;
     }
 
     params_it = params_it->NextSiblingElement();
   }
-
   return default_value;
 }
 
@@ -465,7 +460,12 @@ void auto_fill_transmission_interfaces(HardwareInfo & hardware)
       //  copy interface names from their definitions in the component
       std::transform(
         found_it->command_interfaces.cbegin(), found_it->command_interfaces.cend(),
-        std::back_inserter(joint.interfaces),
+        std::back_inserter(joint.command_interfaces),
+        [](const auto & interface) { return interface.name; });
+
+      std::transform(
+        found_it->state_interfaces.cbegin(), found_it->state_interfaces.cend(),
+        std::back_inserter(joint.state_interfaces),
         [](const auto & interface) { return interface.name; });
     }
 
@@ -480,8 +480,9 @@ void auto_fill_transmission_interfaces(HardwareInfo & hardware)
           std::to_string(transmission.joints.size()));
       }
 
-      transmission.actuators.push_back(
-        ActuatorInfo{"actuator1", transmission.joints[0].interfaces, "actuator1", 1.0, 0.0});
+      transmission.actuators.push_back(ActuatorInfo{
+        "actuator1", transmission.joints[0].state_interfaces,
+        transmission.joints[0].command_interfaces, "actuator1", 1.0, 0.0});
     }
   }
 }

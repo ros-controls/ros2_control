@@ -189,7 +189,7 @@ def main(args=None):
         else:
             if controller_type:
                 parameter = Parameter()
-                Parameter.name = prefixed_controller_name + '.type'
+                parameter.name = prefixed_controller_name + '.type'
                 parameter.value = get_parameter_value(string_value=controller_type)
 
                 response = call_set_parameters(
