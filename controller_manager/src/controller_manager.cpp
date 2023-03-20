@@ -200,7 +200,7 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
   {
     RCLCPP_WARN_STREAM(
       get_logger(),
-      "[Deprecated]: Usage of parameter \"activate_components_on_start\" is deprecated. Use "
+      "[Deprecated]: Usage of parameter \"configure_components_on_start\" is deprecated. Use "
       "hardware_spawner instead.");
     rclcpp_lifecycle::State inactive_state(
       State::PRIMARY_STATE_INACTIVE, hardware_interface::lifecycle_state_names::INACTIVE);
