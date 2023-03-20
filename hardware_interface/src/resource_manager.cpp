@@ -1064,6 +1064,23 @@ void ResourceManager::validate_storage(
         }
       }
     }
+    for (const auto & gpio : hardware.gpios)
+    {
+      for (const auto & state_interface : gpio.state_interfaces)
+      {
+        if (!state_interface_exists(gpio.name + "/" + state_interface.name))
+        {
+          missing_state_keys.emplace_back(gpio.name + "/" + state_interface.name);
+        }
+      }
+      for (const auto & command_interface : gpio.command_interfaces)
+      {
+        if (!command_interface_exists(gpio.name + "/" + command_interface.name))
+        {
+          missing_command_keys.emplace_back(gpio.name + "/" + command_interface.name);
+        }
+      }
+    }
   }
 
   if (!missing_state_keys.empty() || !missing_command_keys.empty())
