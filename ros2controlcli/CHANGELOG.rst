@@ -2,6 +2,43 @@
 Changelog for package ros2controlcli
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+3.10.0 (2023-03-16)
+-------------------
+
+3.9.1 (2023-03-09)
+------------------
+
+3.9.0 (2023-02-28)
+------------------
+* Remove deprecations from CLI and controller_manager (`#948 <https://github.com/ros-controls/ros2_control/issues/948>`_)
+* [CLI] Fix wrong output of controller states for `load_controller` command (`#947 <https://github.com/ros-controls/ros2_control/issues/947>`_)
+* Contributors: Christoph Fröhlich
+
+3.8.0 (2023-02-10)
+------------------
+* 🖤 Add Black formatter for Python files. (`#936 <https://github.com/ros-controls/ros2_control/issues/936>`_)
+* Add list_hardware_components CLI  <https://github.com/ros-controls/ros2_control/issues/796>`_ - Adds list_hardware_components to CLI (`#891 <https://github.com/ros-controls/ros2_control/issues/891>`_)
+* Contributors: Andy McEvoy, Dr. Denis
+
+3.7.0 (2023-01-24)
+------------------
+* Do not use CLI calls but direct API for setting parameters. (`#910 <https://github.com/ros-controls/ros2_control/issues/910>`_)
+* Contributors: Dr. Denis
+
+3.6.0 (2023-01-12)
+------------------
+
+3.5.1 (2023-01-06)
+------------------
+
+3.5.0 (2022-12-06)
+------------------
+* Fix hardware interface CLI description (`#864 <https://github.com/ros-controls/ros2_control/issues/864>`_)
+* Contributors: Christoph Fröhlich
+
+3.4.0 (2022-11-27)
+------------------
+
 3.3.0 (2022-11-15)
 ------------------
 

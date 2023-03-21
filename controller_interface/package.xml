@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format2.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="2">
   <name>controller_interface</name>
-  <version>3.3.0</version>
+  <version>3.10.0</version>
   <description>Description of controller_interface</description>
   <maintainer email="bence.magyar.robotics@gmail.com">Bence Magyar</maintainer>
   <maintainer email="denis@stoglrobotics.de">Denis Štogl</maintainer>
@@ -14,11 +14,8 @@
   <build_depend>rclcpp_lifecycle</build_depend>
   <build_depend>sensor_msgs</build_depend>
 
-  <exec_depend>hardware_interface</exec_depend>
-  <exec_depend>rclcpp_lifecycle</exec_depend>
-  <exec_depend>sensor_msgs</exec_depend>
-
   <test_depend>ament_cmake_gmock</test_depend>
+  <test_depend>sensor_msgs</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

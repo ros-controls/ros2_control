@@ -2,6 +2,39 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+3.10.0 (2023-03-16)
+-------------------
+
+3.9.1 (2023-03-09)
+------------------
+
+3.9.0 (2023-02-28)
+------------------
+
+3.8.0 (2023-02-10)
+------------------
+* Fix CMake install so overriding works (`#926 <https://github.com/ros-controls/ros2_control/issues/926>`_)
+* Async params (`#927 <https://github.com/ros-controls/ros2_control/issues/927>`_)
+* Contributors: Márk Szitanics, Tyler Weaver
+
+3.7.0 (2023-01-24)
+------------------
+
+3.6.0 (2023-01-12)
+------------------
+* Update imu_sensor.hpp (`#893 <https://github.com/ros-controls/ros2_control/issues/893>`_)
+  Covariances values should come from the IMU_Broadcaster, like the frame_id or the time
+* Contributors: flochre
+
+3.5.1 (2023-01-06)
+------------------
+
+3.5.0 (2022-12-06)
+------------------
+
+3.4.0 (2022-11-27)
+------------------
+
 3.3.0 (2022-11-15)
 ------------------
 

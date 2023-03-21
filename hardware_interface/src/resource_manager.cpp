@@ -87,18 +87,17 @@ public:
   {
     RCUTILS_LOG_INFO_NAMED(
       "resource_manager", "Loading hardware '%s' ", hardware_info.name.c_str());
-    // hardware_class_type has to match class name in plugin xml description
-    // TODO(karsten1987) extract package from hardware_class_type
-    // e.g.: <package_vendor>/<system_type>
+    // hardware_plugin_name has to match class name in plugin xml description
     auto interface = std::unique_ptr<HardwareInterfaceT>(
-      loader.createUnmanagedInstance(hardware_info.hardware_class_type));
+      loader.createUnmanagedInstance(hardware_info.hardware_plugin_name));
     HardwareT hardware(std::move(interface));
     container.emplace_back(std::move(hardware));
     // initialize static data about hardware component to reduce later calls
     HardwareComponentInfo component_info;
     component_info.name = hardware_info.name;
     component_info.type = hardware_info.type;
-    component_info.class_type = hardware_info.hardware_class_type;
+    component_info.plugin_name = hardware_info.hardware_plugin_name;
+    component_info.is_async = hardware_info.is_async;
 
     hardware_info_map_.insert(std::make_pair(component_info.name, component_info));
     hardware_used_by_controllers_.insert(
@@ -268,7 +267,7 @@ public:
   {
     bool result = trigger_and_print_hardware_state_transition(
       std::bind(&HardwareT::shutdown, &hardware), "shutdown", hardware.get_name(),
-      lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+      lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED);
 
     if (result)
     {
@@ -1181,6 +1180,23 @@ void ResourceManager::validate_storage(
         if (!state_interface_exists(sensor.name + "/" + state_interface.name))
         {
           missing_state_keys.emplace_back(sensor.name + "/" + state_interface.name);
+        }
+      }
+    }
+    for (const auto & gpio : hardware.gpios)
+    {
+      for (const auto & state_interface : gpio.state_interfaces)
+      {
+        if (!state_interface_exists(gpio.name + "/" + state_interface.name))
+        {
+          missing_state_keys.emplace_back(gpio.name + "/" + state_interface.name);
+        }
+      }
+      for (const auto & command_interface : gpio.command_interfaces)
+      {
+        if (!command_interface_exists(gpio.name + "/" + command_interface.name))
+        {
+          missing_command_keys.emplace_back(gpio.name + "/" + command_interface.name);
         }
       }
     }

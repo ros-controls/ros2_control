@@ -39,8 +39,11 @@ struct HardwareComponentInfo
   /// Component "classification": "actuator", "sensor" or "system"
   std::string type;
 
-  /// Component class type.
-  std::string class_type;
+  /// Component pluginlib plugin name.
+  std::string plugin_name;
+
+  /// Component is async
+  bool is_async;
 
   /// Component current state.
   rclcpp_lifecycle::State state;

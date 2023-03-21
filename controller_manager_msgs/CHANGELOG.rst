@@ -2,6 +2,40 @@
 Changelog for package controller_manager_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+3.10.0 (2023-03-16)
+-------------------
+
+3.9.1 (2023-03-09)
+------------------
+
+3.9.0 (2023-02-28)
+------------------
+* Remove deprecations from CLI and controller_manager (`#948 <https://github.com/ros-controls/ros2_control/issues/948>`_)
+  Co-authored-by: Bence Magyar <bence.magyar.robotics@gmail.com>
+* Contributors: Christoph Fröhlich
+
+3.8.0 (2023-02-10)
+------------------
+* Fix CMake install so overriding works (`#926 <https://github.com/ros-controls/ros2_control/issues/926>`_)
+* Contributors: Tyler Weaver
+
+3.7.0 (2023-01-24)
+------------------
+
+3.6.0 (2023-01-12)
+------------------
+
+3.5.1 (2023-01-06)
+------------------
+
+3.5.0 (2022-12-06)
+------------------
+* Rename class type to plugin name #api-breaking #abi-breaking (`#780 <https://github.com/ros-controls/ros2_control/issues/780>`_)
+* Contributors: Bence Magyar
+
+3.4.0 (2022-11-27)
+------------------
+
 3.3.0 (2022-11-15)
 ------------------
 
