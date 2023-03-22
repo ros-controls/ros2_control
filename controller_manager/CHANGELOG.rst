@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.11.0 (2023-03-22)
+-------------------
 * [ControllerManager] Add Class for Async Controllers and Lifecycle Management (`#932 <https://github.com/ros-controls/ros2_control/issues/932>`_)
 * Consistent use of colors for warning and error msgs in spawner (`#974 <https://github.com/ros-controls/ros2_control/issues/974>`_)
 * Fix wrong warning messages (`#973 <https://github.com/ros-controls/ros2_control/issues/973>`_)
