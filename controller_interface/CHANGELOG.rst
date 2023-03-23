@@ -2,6 +2,14 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+3.11.0 (2023-03-22)
+-------------------
+* [ControllerManager] Add Class for Async Controllers and Lifecycle Management (`#932 <https://github.com/ros-controls/ros2_control/issues/932>`_)
+* Contributors: Márk Szitanics
+
+3.10.0 (2023-03-16)
+-------------------
+
 3.9.1 (2023-03-09)
 ------------------
 

@@ -130,4 +130,6 @@ std::shared_ptr<rclcpp_lifecycle::LifecycleNode> ControllerInterfaceBase::get_no
 
 unsigned int ControllerInterfaceBase::get_update_rate() const { return update_rate_; }
 
+bool ControllerInterfaceBase::is_async() const { return is_async_; }
+
 }  // namespace controller_interface

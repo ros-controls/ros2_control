@@ -19,6 +19,8 @@ import os
 import sys
 import time
 import warnings
+import io
+from contextlib import redirect_stdout, redirect_stderr
 
 from controller_manager import (
     configure_controller,
@@ -182,6 +184,13 @@ def main(args=None):
         default=10,
         type=int,
     )
+    parser.add_argument(
+        "--log-level",
+        help="Log level for spawner node",
+        required=False,
+        choices=["debug", "info", "warn", "error", "fatal"],
+        default="info",
+    )
 
     command_line_args = rclpy.utilities.remove_ros_args(args=sys.argv)[1:]
     args = parser.parse_args(command_line_args)
@@ -191,6 +200,15 @@ def main(args=None):
     param_file = args.param_file
     controller_type = args.controller_type
     controller_manager_timeout = args.controller_manager_timeout
+    log_level = args.log_level
+
+    loglevel_to_severity = {
+        "debug": rclpy.logging.LoggingSeverity.DEBUG,
+        "info": rclpy.logging.LoggingSeverity.INFO,
+        "warn": rclpy.logging.LoggingSeverity.WARN,
+        "error": rclpy.logging.LoggingSeverity.ERROR,
+        "fatal": rclpy.logging.LoggingSeverity.FATAL,
+    }
 
     if param_file and not os.path.isfile(param_file):
         raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), param_file)
@@ -200,6 +218,8 @@ def main(args=None):
         prefixed_controller_name = controller_namespace + "/" + controller_name
 
     node = Node("spawner_" + controller_name)
+    rclpy.logging.set_logger_level("spawner_" + controller_name, loglevel_to_severity[log_level])
+
     if not controller_manager_name.startswith("/"):
         spawner_namespace = node.get_namespace()
         if spawner_namespace != "/":
@@ -211,11 +231,17 @@ def main(args=None):
         if not wait_for_controller_manager(
             node, controller_manager_name, controller_manager_timeout
         ):
-            node.get_logger().error("Controller manager not available")
+            node.get_logger().error(
+                bcolors.FAIL + "Controller manager not available" + bcolors.ENDC
+            )
             return 1
 
         if is_controller_loaded(node, controller_manager_name, prefixed_controller_name):
-            node.get_logger().warn("Controller already loaded, skipping load_controller")
+            node.get_logger().warn(
+                bcolors.WARNING
+                + "Controller already loaded, skipping load_controller"
+                + bcolors.ENDC
+            )
         else:
             if controller_type:
                 parameter = Parameter()
@@ -264,12 +290,20 @@ def main(args=None):
             )
 
         if param_file:
-            load_parameter_file(
-                node=node,
-                node_name=prefixed_controller_name,
-                parameter_file=param_file,
-                use_wildcard=True,
-            )
+            # load_parameter_file writes to stdout/stderr. Here we capture that and use node logging instead
+            with redirect_stdout(io.StringIO()) as f_stdout, redirect_stderr(
+                io.StringIO()
+            ) as f_stderr:
+                load_parameter_file(
+                    node=node,
+                    node_name=prefixed_controller_name,
+                    parameter_file=param_file,
+                    use_wildcard=True,
+                )
+            if f_stdout.getvalue():
+                node.get_logger().info(bcolors.OKCYAN + f_stdout.getvalue() + bcolors.ENDC)
+            if f_stderr.getvalue():
+                node.get_logger().error(bcolors.FAIL + f_stderr.getvalue() + bcolors.ENDC)
             node.get_logger().info(
                 bcolors.OKCYAN
                 + 'Loaded parameters file "'
@@ -289,7 +323,9 @@ def main(args=None):
         if not args.load_only:
             ret = configure_controller(node, controller_manager_name, controller_name)
             if not ret.ok:
-                node.get_logger().error("Failed to configure controller")
+                node.get_logger().error(
+                    bcolors.FAIL + "Failed to configure controller" + bcolors.ENDC
+                )
                 return 1
 
             if not args.inactive:
@@ -297,7 +333,9 @@ def main(args=None):
                     node, controller_manager_name, [], [controller_name], True, True, 5.0
                 )
                 if not ret.ok:
-                    node.get_logger().error("Failed to activate controller")
+                    node.get_logger().error(
+                        bcolors.FAIL + "Failed to activate controller" + bcolors.ENDC
+                    )
                     return 1
 
                 node.get_logger().info(
@@ -322,14 +360,18 @@ def main(args=None):
                     node, controller_manager_name, [controller_name], [], True, True, 5.0
                 )
                 if not ret.ok:
-                    node.get_logger().error("Failed to deactivate controller")
+                    node.get_logger().error(
+                        bcolors.FAIL + "Failed to deactivate controller" + bcolors.ENDC
+                    )
                     return 1
 
                 node.get_logger().info("Deactivated controller")
 
             ret = unload_controller(node, controller_manager_name, controller_name)
             if not ret.ok:
-                node.get_logger().error("Failed to unload controller")
+                node.get_logger().error(
+                    bcolors.FAIL + "Failed to unload controller" + bcolors.ENDC
+                )
                 return 1
 
             node.get_logger().info("Unloaded controller")

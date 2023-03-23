@@ -200,7 +200,7 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
   {
     RCLCPP_WARN_STREAM(
       get_logger(),
-      "[Deprecated]: Usage of parameter \"activate_components_on_start\" is deprecated. Use "
+      "[Deprecated]: Usage of parameter \"configure_components_on_start\" is deprecated. Use "
       "hardware_spawner instead.");
     rclcpp_lifecycle::State inactive_state(
       State::PRIMARY_STATE_INACTIVE, hardware_interface::lifecycle_state_names::INACTIVE);
@@ -403,6 +403,13 @@ controller_interface::return_type ControllerManager::unload_controller(
       controller_name.c_str());
     return controller_interface::return_type::ERROR;
   }
+  if (controller.c->is_async())
+  {
+    RCLCPP_DEBUG(
+      get_logger(), "Removing controller '%s' from the list of async controllers",
+      controller_name.c_str());
+    async_controller_threads_.erase(controller_name);
+  }
 
   RCLCPP_DEBUG(get_logger(), "Cleanup controller");
   // TODO(destogl): remove reference interface if chainable; i.e., add a separate method for
@@ -420,6 +427,7 @@ controller_interface::return_type ControllerManager::unload_controller(
   RCLCPP_DEBUG(get_logger(), "Destruct controller finished");
 
   RCLCPP_DEBUG(get_logger(), "Successfully unloaded controller '%s'", controller_name.c_str());
+
   return controller_interface::return_type::OK;
 }
 
@@ -485,6 +493,13 @@ controller_interface::return_type ControllerManager::configure_controller(
       get_logger(), "After configuring, controller '%s' is in state '%s' , expected inactive.",
       controller_name.c_str(), new_state.label().c_str());
     return controller_interface::return_type::ERROR;
+  }
+
+  // ASYNCHRONOUS CONTROLLERS: Start background thread for update
+  if (controller->is_async())
+  {
+    async_controller_threads_.emplace(
+      controller_name, std::make_unique<ControllerThreadWrapper>(controller, update_rate_));
   }
 
   // CHAINABLE CONTROLLERS: get reference interfaces from chainable controllers
@@ -1178,6 +1193,7 @@ void ControllerManager::activate_controllers(
       continue;
     }
     auto controller = found_it->c;
+    auto controller_name = found_it->info.name;
 
     bool assignment_successful = true;
     // assign command interfaces to the controller
@@ -1265,6 +1281,11 @@ void ControllerManager::activate_controllers(
       RCLCPP_ERROR(
         get_logger(), "After activating, controller '%s' is in state '%s', expected Active",
         controller->get_node()->get_name(), new_state.label().c_str());
+    }
+
+    if (controller->is_async())
+    {
+      async_controller_threads_.at(controller_name)->activate();
     }
   }
   // All controllers activated, switching done
@@ -1740,7 +1761,7 @@ controller_interface::return_type ControllerManager::update(
   {
     // TODO(v-lopez) we could cache this information
     // https://github.com/ros-controls/ros2_control/issues/153
-    if (is_controller_active(*loaded_controller.c))
+    if (!loaded_controller.c->is_async() && is_controller_active(*loaded_controller.c))
     {
       const auto controller_update_rate = loaded_controller.c->get_update_rate();
 
