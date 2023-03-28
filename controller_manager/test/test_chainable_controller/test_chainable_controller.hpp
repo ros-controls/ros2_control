@@ -63,7 +63,8 @@ public:
   CONTROLLER_MANAGER_PUBLIC
   std::vector<hardware_interface::CommandInterface> on_export_reference_interfaces() override;
 
-  controller_interface::return_type update_reference_from_subscribers() override;
+  controller_interface::return_type update_reference_from_subscribers(
+    const rclcpp::Time & time, const rclcpp::Duration & period) override;
 
   controller_interface::return_type update_and_write_commands(
     const rclcpp::Time & time, const rclcpp::Duration & period) override;
