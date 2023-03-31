@@ -574,8 +574,8 @@ ResourceManager::ResourceManager() : resource_storage_(std::make_unique<Resource
 ResourceManager::~ResourceManager() = default;
 
 ResourceManager::ResourceManager(
-  const std::string & urdf, bool validate_interfaces, bool activate_all)
-: resource_storage_(std::make_unique<ResourceStorage>())
+  const std::string & urdf, bool validate_interfaces, bool activate_all, bool initialized)
+: resource_storage_(std::make_unique<ResourceStorage>()), initialized_(initialized)
 {
   load_urdf(urdf, validate_interfaces);
 
@@ -629,7 +629,11 @@ void ResourceManager::load_urdf(const std::string & urdf, bool validate_interfac
   read_write_status.failed_hardware_names.reserve(
     resource_storage_->actuators_.size() + resource_storage_->sensors_.size() +
     resource_storage_->systems_.size());
+
+  initialized_ = true;
 }
+
+bool ResourceManager::is_initialized() const { return initialized_; }
 
 // CM API: Called in "update"-thread
 LoanedStateInterface ResourceManager::claim_state_interface(const std::string & key)

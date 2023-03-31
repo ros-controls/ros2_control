@@ -211,6 +211,13 @@ void ControllerManager::robot_description_callback(const std_msgs::msg::String &
   // to die if a non valid urdf is passed. However, should maybe be fine tuned.
   try
   {
+    if (resource_manager_->is_initialized())
+    {
+      RCLCPP_WARN(
+        get_logger(),
+        "ResourceManager has already been initialized. Ignoring received robot description file.");
+      return;
+    }
     init_resource_manager(robot_description.data.c_str());
   }
   catch (std::runtime_error & e)

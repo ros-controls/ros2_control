@@ -65,7 +65,8 @@ public:
    * "autostart_components" and "autoconfigure_components" instead.
    */
   explicit ResourceManager(
-    const std::string & urdf, bool validate_interfaces = true, bool activate_all = false);
+    const std::string & urdf, bool validate_interfaces = true, bool activate_all = false,
+    bool initialized = false);
 
   ResourceManager(const ResourceManager &) = delete;
 
@@ -82,6 +83,14 @@ public:
    * interfaces ought to be validated. Defaults to true.
    */
   void load_urdf(const std::string & urdf, bool validate_interfaces = true);
+
+  /**
+   * @brief if the resource manager has been initialized with a valid urdf file this returns true.
+   *
+   * @return true if resource manager has been initialized with a valid urdf file
+   * @return false if resource manager has not been initialized
+   */
+  bool is_initialized() const;
 
   /// Claim a state interface given its key.
   /**
@@ -405,6 +414,8 @@ private:
 
   // Structure to store read and write status so it is not initialized in the real-time loop
   HardwareReadWriteStatus read_write_status;
+
+  bool initialized_ = false;
 };
 
 }  // namespace hardware_interface
