@@ -2,8 +2,8 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.25.0 (2023-04-02)
+-------------------
 * Check for missing hardware interfaces that use the gpio tag. (`#953 <https://github.com/ros-controls/ros2_control/issues/953>`_)
 * Split transmission interfaces (backport `#938 <https://github.com/ros-controls/ros2_control/issues/938>`_) (`#968 <https://github.com/ros-controls/ros2_control/issues/968>`_)
 * Contributors: Ryan Sandzimier, Noel Jiménez García, Bence Magyar
