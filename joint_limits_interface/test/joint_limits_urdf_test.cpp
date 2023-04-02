@@ -14,11 +14,12 @@
 
 /// \author Adolfo Rodriguez Tsouroukdissian
 
+#include <string>
+
 #include <gtest/gtest.h>
 
 #include <joint_limits_interface/joint_limits_urdf.hpp>
 
-#include <string>
 
 class JointLimitsUrdfTest : public ::testing::Test
 {

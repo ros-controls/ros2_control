@@ -16,25 +16,28 @@
 #define HARDWARE_INTERFACE__RESOURCE_MANAGER_HPP_
 
 #include <memory>
-#include <mutex>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
+#include "hardware_interface/actuator.hpp"
 #include "hardware_interface/hardware_component_info.hpp"
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/loaned_command_interface.hpp"
 #include "hardware_interface/loaned_state_interface.hpp"
+#include "hardware_interface/sensor.hpp"
+#include "hardware_interface/system.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
+#include "hardware_interface/types/lifecycle_state_names.hpp"
+#include "lifecycle_msgs/msg/state.hpp"
 #include "rclcpp/duration.hpp"
+#include "rclcpp/node.hpp"
 #include "rclcpp/time.hpp"
 
 namespace hardware_interface
 {
-class ActuatorInterface;
-class SensorInterface;
-class SystemInterface;
 class ResourceStorage;
+class ControllerManager;
 
 struct HardwareReadWriteStatus
 {
@@ -46,7 +49,9 @@ class HARDWARE_INTERFACE_PUBLIC ResourceManager
 {
 public:
   /// Default constructor for the Resource Manager.
-  ResourceManager();
+  ResourceManager(
+    rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface = nullptr,
+    int update_rate = 100);
 
   /// Constructor for the Resource Manager.
   /**
@@ -65,7 +70,8 @@ public:
    * "autostart_components" and "autoconfigure_components" instead.
    */
   explicit ResourceManager(
-    const std::string & urdf, bool validate_interfaces = true, bool activate_all = false);
+    const std::string & urdf, bool validate_interfaces = true, bool activate_all = false,
+    rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface = nullptr);
 
   ResourceManager(const ResourceManager &) = delete;
 
@@ -390,6 +396,14 @@ public:
    */
   bool state_interface_exists(const std::string & key) const;
 
+  /// Creates the background threads for all async components.
+  /**
+   * The threads get stored in the respective map based on the underlying component's type.
+   * Even though the callback is registered, and the thread is running by default, the read and write methods
+   * aren't called until the components get into active state.
+   */
+  void allocate_threads_for_async_components();
+
 private:
   void validate_storage(const std::vector<hardware_interface::HardwareInfo> & hardware_info) const;
 
@@ -405,6 +419,9 @@ private:
 
   // Structure to store read and write status so it is not initialized in the real-time loop
   HardwareReadWriteStatus read_write_status;
+
+  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface_ = nullptr;
+  int cm_update_rate_;
 };
 
 }  // namespace hardware_interface
