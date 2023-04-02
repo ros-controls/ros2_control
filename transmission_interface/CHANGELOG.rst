@@ -2,6 +2,11 @@
 Changelog for package transmission_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Split transmission interfaces (backport `#938 <https://github.com/ros-controls/ros2_control/issues/938>`_) (`#968 <https://github.com/ros-controls/ros2_control/issues/968>`_)
+* Contributors: Noel Jiménez García, Bence Magyar
+
 2.24.1 (2023-03-09)
 -------------------
 * Fix missing include (`#963 <https://github.com/ros-controls/ros2_control/issues/963>`_) (`#965 <https://github.com/ros-controls/ros2_control/issues/965>`_)
