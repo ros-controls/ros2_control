@@ -305,6 +305,29 @@ public:
 
     if (result)
     {
+      if constexpr (std::is_same_v<hardware_interface::Actuator, HardwareT>)
+      {
+        if (async_actuator_threads_.find(hardware.get_name()) != async_actuator_threads_.end())
+        {
+          async_actuator_threads_.at(hardware.get_name()).activate();
+        }
+      }
+
+      if constexpr (std::is_same_v<hardware_interface::System, HardwareT>)
+      {
+        if (async_system_threads_.find(hardware.get_name()) != async_system_threads_.end())
+        {
+          async_system_threads_.at(hardware.get_name()).activate();
+        }
+      }
+
+      if constexpr (std::is_same_v<hardware_interface::Sensor, HardwareT>)
+      {
+        if (async_sensor_threads_.find(hardware.get_name()) != async_sensor_threads_.end())
+        {
+          async_sensor_threads_.at(hardware.get_name()).activate();
+        }
+      }
       // TODO(destogl): make all command interfaces available (currently are all available)
     }
 
@@ -1303,21 +1326,6 @@ void ResourceManager::allocate_threads_for_async_components()
         std::piecewise_construct, std::forward_as_tuple(component.get_name()),
         std::forward_as_tuple(component, cm_update_rate_, clock_interface_));
     }
-  }
-
-  for (auto & thread : resource_storage_->async_actuator_threads_)
-  {
-    thread.second.start();
-  }
-
-  for (auto & thread : resource_storage_->async_system_threads_)
-  {
-    thread.second.start();
-  }
-
-  for (auto & thread : resource_storage_->async_sensor_threads_)
-  {
-    thread.second.start();
   }
 }
 

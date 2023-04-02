@@ -20,7 +20,6 @@
 
 #include <joint_limits_interface/joint_limits_urdf.hpp>
 
-
 class JointLimitsUrdfTest : public ::testing::Test
 {
 public:

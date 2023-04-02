@@ -59,7 +59,7 @@ public:
     }
   }
 
-  void start() { write_and_read_ = std::thread(&AsyncComponentThread::write_and_read, this); }
+  void activate() { write_and_read_ = std::thread(&AsyncComponentThread::write_and_read, this); }
 
   void write_and_read()
   {
