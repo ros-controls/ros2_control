@@ -76,12 +76,21 @@ class ResourceStorage
   static constexpr const char * system_interface_name = "hardware_interface::SystemInterface";
 
 public:
-  ResourceStorage()
+  // TODO(VX792): Change this when HW ifs get their own update rate,
+  // because the ResourceStorage really shouldn't know about the cm's parameters
+  ResourceStorage(
+    rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface = nullptr,
+    unsigned int update_rate = 100)
   : actuator_loader_(pkg_name, actuator_interface_name),
     sensor_loader_(pkg_name, sensor_interface_name),
-    system_loader_(pkg_name, system_interface_name)
+    system_loader_(pkg_name, system_interface_name),
+    clock_interface_(clock_interface),
+    cm_update_rate_(update_rate)
   {
   }
+
+  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface_;
+  unsigned int cm_update_rate_;
 
   template <class HardwareT, class HardwareInterfaceT>
   void load_hardware(
@@ -193,6 +202,36 @@ public:
             "(hardware '%s'): '%s' command interface already in available list."
             " This can happen due to multiple calls to 'configure'",
             hardware.get_name().c_str(), interface.c_str());
+        }
+      }
+
+      if constexpr (std::is_same_v<hardware_interface::Actuator, HardwareT>)
+      {
+        if (hardware_info_map_[hardware.get_name()].is_async)
+        {
+          async_actuator_threads_.emplace(
+            std::piecewise_construct, std::forward_as_tuple(hardware.get_name()),
+            std::forward_as_tuple(hardware, cm_update_rate_, clock_interface_));
+        }
+      }
+
+      if constexpr (std::is_same_v<hardware_interface::System, HardwareT>)
+      {
+        if (hardware_info_map_[hardware.get_name()].is_async)
+        {
+          async_system_threads_.emplace(
+            std::piecewise_construct, std::forward_as_tuple(hardware.get_name()),
+            std::forward_as_tuple(hardware, cm_update_rate_, clock_interface_));
+        }
+      }
+
+      if constexpr (std::is_same_v<hardware_interface::Sensor, HardwareT>)
+      {
+        if (hardware_info_map_[hardware.get_name()].is_async)
+        {
+          async_sensor_threads_.emplace(
+            std::piecewise_construct, std::forward_as_tuple(hardware.get_name()),
+            std::forward_as_tuple(hardware, cm_update_rate_, clock_interface_));
         }
       }
     }
@@ -694,10 +733,8 @@ public:
 };
 
 ResourceManager::ResourceManager(
-  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface, int update_rate)
-: resource_storage_(std::make_unique<ResourceStorage>()),
-  clock_interface_(clock_interface),
-  cm_update_rate_(update_rate)
+  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface, unsigned int update_rate)
+: resource_storage_(std::make_unique<ResourceStorage>(clock_interface, update_rate))
 {
 }
 
@@ -706,7 +743,7 @@ ResourceManager::~ResourceManager() = default;
 ResourceManager::ResourceManager(
   const std::string & urdf, bool validate_interfaces, bool activate_all,
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
-: resource_storage_(std::make_unique<ResourceStorage>()), clock_interface_(clock_interface)
+: resource_storage_(std::make_unique<ResourceStorage>(clock_interface))
 {
   load_urdf(urdf, validate_interfaces);
 
@@ -1297,37 +1334,6 @@ bool ResourceManager::state_interface_exists(const std::string & key) const
 }
 
 // END: "used only in tests and locally"
-
-void ResourceManager::allocate_threads_for_async_components()
-{
-  for (auto & component : resource_storage_->async_actuators_)
-  {
-    if (resource_storage_->hardware_info_map_[component.get_name()].is_async)
-    {
-      resource_storage_->async_actuator_threads_.emplace(
-        std::piecewise_construct, std::forward_as_tuple(component.get_name()),
-        std::forward_as_tuple(component, cm_update_rate_, clock_interface_));
-    }
-  }
-  for (auto & component : resource_storage_->async_sensors_)
-  {
-    if (resource_storage_->hardware_info_map_[component.get_name()].is_async)
-    {
-      resource_storage_->async_sensor_threads_.emplace(
-        std::piecewise_construct, std::forward_as_tuple(component.get_name()),
-        std::forward_as_tuple(component, cm_update_rate_, clock_interface_));
-    }
-  }
-  for (auto & component : resource_storage_->async_systems_)
-  {
-    if (resource_storage_->hardware_info_map_[component.get_name()].is_async)
-    {
-      resource_storage_->async_system_threads_.emplace(
-        std::piecewise_construct, std::forward_as_tuple(component.get_name()),
-        std::forward_as_tuple(component, cm_update_rate_, clock_interface_));
-    }
-  }
-}
 
 // BEGIN: private methods
 

@@ -51,7 +51,7 @@ public:
   /// Default constructor for the Resource Manager.
   ResourceManager(
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface = nullptr,
-    int update_rate = 100);
+    unsigned int update_rate = 100);
 
   /// Constructor for the Resource Manager.
   /**
@@ -396,14 +396,6 @@ public:
    */
   bool state_interface_exists(const std::string & key) const;
 
-  /// Creates the background threads for all async components.
-  /**
-   * The threads get stored in the respective map based on the underlying component's type.
-   * Even though the callback is registered, and the thread is running by default, the read and write methods
-   * aren't called until the components get into active state.
-   */
-  void allocate_threads_for_async_components();
-
 private:
   void validate_storage(const std::vector<hardware_interface::HardwareInfo> & hardware_info) const;
 
@@ -419,9 +411,6 @@ private:
 
   // Structure to store read and write status so it is not initialized in the real-time loop
   HardwareReadWriteStatus read_write_status;
-
-  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface_ = nullptr;
-  int cm_update_rate_;
 };
 
 }  // namespace hardware_interface

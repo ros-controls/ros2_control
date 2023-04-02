@@ -235,9 +235,6 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
       "future anymore. Use hardware_spawner instead.");
     resource_manager_->activate_all_components();
   }
-
-  // At this point all components are supposed to be stored in the resource storage's vector;
-  resource_manager_->allocate_threads_for_async_components();
 }
 
 void ControllerManager::init_services()
