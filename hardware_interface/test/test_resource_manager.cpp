@@ -212,6 +212,34 @@ TEST_F(ResourceManagerTest, initialization_with_urdf_unclaimed)
   }
 }
 
+TEST_F(ResourceManagerTest, no_load_urdf_function_called)
+{
+  TestableResourceManager rm;
+  ASSERT_FALSE(rm.load_urdf_called());
+}
+
+TEST_F(ResourceManagerTest, load_urdf_called_if_urdf_is_invalid)
+{
+  TestableResourceManager rm;
+  EXPECT_THROW(
+    rm.load_urdf(ros2_control_test_assets::minimal_robot_missing_state_keys_urdf), std::exception);
+  ASSERT_TRUE(rm.load_urdf_called());
+}
+
+TEST_F(ResourceManagerTest, load_urdf_called_if_urdf_is_valid)
+{
+  TestableResourceManager rm(ros2_control_test_assets::minimal_robot_urdf);
+  ASSERT_TRUE(rm.load_urdf_called());
+}
+
+TEST_F(ResourceManagerTest, can_load_urdf_later)
+{
+  TestableResourceManager rm;
+  ASSERT_FALSE(rm.load_urdf_called());
+  rm.load_urdf(ros2_control_test_assets::minimal_robot_urdf);
+  ASSERT_TRUE(rm.load_urdf_called());
+}
+
 TEST_F(ResourceManagerTest, resource_claiming)
 {
   TestableResourceManager rm(ros2_control_test_assets::minimal_robot_urdf);
