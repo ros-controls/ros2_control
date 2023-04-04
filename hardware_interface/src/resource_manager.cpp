@@ -574,8 +574,8 @@ ResourceManager::ResourceManager() : resource_storage_(std::make_unique<Resource
 ResourceManager::~ResourceManager() = default;
 
 ResourceManager::ResourceManager(
-  const std::string & urdf, bool validate_interfaces, bool activate_all, bool load_urdf_called)
-: resource_storage_(std::make_unique<ResourceStorage>()), load_urdf_called_(load_urdf_called)
+  const std::string & urdf, bool validate_interfaces, bool activate_all)
+: resource_storage_(std::make_unique<ResourceStorage>())
 {
   load_urdf(urdf, validate_interfaces);
 

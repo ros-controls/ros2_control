@@ -87,10 +87,10 @@ public:
   /**
    * @brief if the resource manager load_urdf(...) function has been called this returns true.
    * We want to permit to load the urdf later on but we currently don't want to permit multiple
-   * calls to load_urdf (reloading/loading different urdf)
+   * calls to load_urdf (reloading/loading different urdf).
    *
-   * @return true if resource manager's load_urdf() has been called
-   * @return false if resource manager's load_urdf() has not been called
+   * @return true if resource manager's load_urdf() has been already called.
+   * @return false if resource manager's load_urdf() has not been yet called.
    */
   bool load_urdf_called() const;
 
