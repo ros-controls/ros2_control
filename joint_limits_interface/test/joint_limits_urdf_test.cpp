@@ -20,7 +20,6 @@
 
 #include <gtest/gtest.h>
 
-
 class JointLimitsUrdfTest : public ::testing::Test
 {
 public:
