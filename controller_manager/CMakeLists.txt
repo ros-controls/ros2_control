@@ -14,6 +14,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   pluginlib
   rclcpp
   realtime_tools
+  std_msgs
 )
 
 find_package(ament_cmake REQUIRED)

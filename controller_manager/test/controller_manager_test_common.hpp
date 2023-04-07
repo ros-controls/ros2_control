@@ -29,7 +29,10 @@
 #include "controller_manager/controller_manager.hpp"
 #include "controller_manager_msgs/srv/switch_controller.hpp"
 
+#include "rclcpp/rclcpp.hpp"
 #include "rclcpp/utilities.hpp"
+
+#include "std_msgs/msg/string.hpp"
 
 #include "ros2_control_test_assets/descriptions.hpp"
 #include "test_controller_failed_init/test_controller_failed_init.hpp"
@@ -60,21 +63,54 @@ template <typename CtrlMgr>
 class ControllerManagerFixture : public ::testing::Test
 {
 public:
+  //TODO parameter hinzufügen, welche hw erwartet wird
+  explicit ControllerManagerFixture(
+    const std::string & robot_description = ros2_control_test_assets::minimal_robot_urdf,
+    const std::string ns = "/", const bool & pass_urdf_as_parameter = false)
+  : robot_description_(robot_description), ns_(ns), pass_urdf_as_parameter_(pass_urdf_as_parameter)
+  {
+    executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
+    // We want ot be able to create a ResourceManager where no urdf file has been passed to
+    if (robot_description_.empty())
+    {
+      cm_ = std::make_shared<CtrlMgr>(
+        std::make_unique<hardware_interface::ResourceManager>(), executor_, TEST_CM_NAME);
+    }
+    else
+    {
+      // can be removed later, needed if we want to have the deprecated way of passing the robot
+      // description file to the controller manager covered by tests
+      if (pass_urdf_as_parameter_)
+      {
+        cm_ = std::make_shared<CtrlMgr>(
+          std::make_unique<hardware_interface::ResourceManager>(robot_description_, true, true),
+          executor_, TEST_CM_NAME);
+      }
+      else
+      {
+        urdf_publisher_node_ = std::make_shared<rclcpp::Node>("robot_description_publisher", ns_);
+        description_pub_ = urdf_publisher_node_->create_publisher<std_msgs::msg::String>(
+          "robot_description", rclcpp::QoS(1).transient_local());
+        executor_->add_node(urdf_publisher_node_);
+        publish_robot_description_file(robot_description_);
+
+        cm_ = std::make_shared<CtrlMgr>(
+          std::make_unique<hardware_interface::ResourceManager>(), executor_, TEST_CM_NAME);
+
+        //TODO warten bis hw da ist und initialisiert
+        // von urdf wissen wir was da sein soll
+        // list hw
+      }
+    }
+  }
+
   static void SetUpTestCase() { rclcpp::init(0, nullptr); }
 
   static void TearDownTestCase() { rclcpp::shutdown(); }
 
-  void SetUp()
-  {
-    executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
-    cm_ = std::make_shared<CtrlMgr>(
-      std::make_unique<hardware_interface::ResourceManager>(
-        ros2_control_test_assets::minimal_robot_urdf, true, true),
-      executor_, TEST_CM_NAME);
-    run_updater_ = false;
-  }
+  void SetUp() override { run_updater_ = false; }
 
-  void TearDown() { stopCmUpdater(); }
+  void TearDown() override { stopCmUpdater(); }
 
   void startCmUpdater()
   {
@@ -115,11 +151,23 @@ public:
     EXPECT_EQ(expected_return, switch_future.get());
   }
 
+  void publish_robot_description_file(const std::string & robot_description_file)
+  {
+    auto msg = std::make_unique<std_msgs::msg::String>();
+    msg->data = robot_description_file;
+    description_pub_->publish(std::move(msg));
+  }
+
   std::shared_ptr<rclcpp::Executor> executor_;
   std::shared_ptr<CtrlMgr> cm_;
 
   std::thread updater_;
   bool run_updater_;
+  const std::string robot_description_;
+  const std::string ns_;
+  const bool pass_urdf_as_parameter_;
+  std::shared_ptr<rclcpp::Node> urdf_publisher_node_;
+  rclcpp::Publisher<std_msgs::msg::String>::SharedPtr description_pub_;
 };
 
 class TestControllerManagerSrvs

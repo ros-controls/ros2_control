@@ -195,6 +195,14 @@ ControllerManager::ControllerManager(
   {
     RCLCPP_WARN(get_logger(), "'update_rate' parameter not set, using default value.");
   }
+
+  // set QoS to transient local to get messages that have already been published
+  // (if robot state publisher starts before controller manager)
+  RCLCPP_INFO(get_logger(), "Subscribing to ~/robot_description topic for robot description file.");
+  robot_description_subscription_ = create_subscription<std_msgs::msg::String>(
+    namespace_ + "/robot_description", rclcpp::QoS(1).transient_local(),
+    std::bind(&ControllerManager::robot_description_callback, this, std::placeholders::_1));
+
   diagnostics_updater_.setHardwareID("ros2_control");
   diagnostics_updater_.add(
     "Controllers Activity", this, &ControllerManager::controller_activity_diagnostic_callback);
