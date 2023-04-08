@@ -1,11 +1,6 @@
 name: Rolling RHEL Binary Build
 on:
   workflow_dispatch:
-    branches:
-      - master
-  pull_request:
-    branches:
-      - master
   push:
     branches:
       - master

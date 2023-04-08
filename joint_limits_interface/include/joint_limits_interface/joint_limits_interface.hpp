@@ -17,14 +17,6 @@
 #ifndef JOINT_LIMITS_INTERFACE__JOINT_LIMITS_INTERFACE_HPP_
 #define JOINT_LIMITS_INTERFACE__JOINT_LIMITS_INTERFACE_HPP_
 
-#include <hardware_interface/joint_handle.hpp>
-#include <hardware_interface/types/hardware_interface_type_values.hpp>
-
-#include <rclcpp/duration.hpp>
-#include <rclcpp/rclcpp.hpp>
-
-#include <rcppmath/clamp.hpp>
-
 #include <algorithm>
 #include <cassert>
 #include <cmath>
@@ -34,6 +26,12 @@
 
 #include "joint_limits_interface/joint_limits.hpp"
 #include "joint_limits_interface/joint_limits_interface_exception.hpp"
+
+#include <hardware_interface/joint_handle.hpp>
+#include <hardware_interface/types/hardware_interface_type_values.hpp>
+
+#include <rclcpp/duration.hpp>
+#include <rclcpp/rclcpp.hpp>
 
 namespace joint_limits_interface
 {
@@ -199,7 +197,7 @@ public:
     }
 
     // clamp command position to our computed min/max position
-    const double cmd = rcppmath::clamp(jcmdh_.get_value(), min_pos, max_pos);
+    const double cmd = std::clamp(jcmdh_.get_value(), min_pos, max_pos);
     jcmdh_.set_value(cmd);
 
     prev_pos_ = cmd;
@@ -283,11 +281,11 @@ public:
     if (limits_.has_position_limits)
     {
       // Velocity bounds depend on the velocity limit and the proximity to the position limit
-      soft_min_vel = rcppmath::clamp(
+      soft_min_vel = std::clamp(
         -soft_limits_.k_position * (pos - soft_limits_.min_position), -limits_.max_velocity,
         limits_.max_velocity);
 
-      soft_max_vel = rcppmath::clamp(
+      soft_max_vel = std::clamp(
         -soft_limits_.k_position * (pos - soft_limits_.max_position), -limits_.max_velocity,
         limits_.max_velocity);
     }
@@ -312,7 +310,7 @@ public:
     }
 
     // Saturate position command according to bounds
-    const double pos_cmd = rcppmath::clamp(jcmdh_.get_value(), pos_low, pos_high);
+    const double pos_cmd = std::clamp(jcmdh_.get_value(), pos_low, pos_high);
     jcmdh_.set_value(pos_cmd);
 
     // Cache variables
@@ -393,7 +391,7 @@ public:
       max_eff = 0.0;
     }
 
-    double clamped = rcppmath::clamp(jcmdh_.get_value(), min_eff, max_eff);
+    double clamped = std::clamp(jcmdh_.get_value(), min_eff, max_eff);
     jcmdh_.set_value(clamped);
   }
 };
@@ -456,11 +454,11 @@ public:
     if (limits_.has_position_limits)
     {
       // Velocity bounds depend on the velocity limit and the proximity to the position limit
-      soft_min_vel = rcppmath::clamp(
+      soft_min_vel = std::clamp(
         -soft_limits_.k_position * (pos - soft_limits_.min_position), -limits_.max_velocity,
         limits_.max_velocity);
 
-      soft_max_vel = rcppmath::clamp(
+      soft_max_vel = std::clamp(
         -soft_limits_.k_position * (pos - soft_limits_.max_position), -limits_.max_velocity,
         limits_.max_velocity);
     }
@@ -472,14 +470,14 @@ public:
     }
 
     // Effort bounds depend on the velocity and effort bounds
-    const double soft_min_eff = rcppmath::clamp(
+    const double soft_min_eff = std::clamp(
       -soft_limits_.k_velocity * (vel - soft_min_vel), -limits_.max_effort, limits_.max_effort);
 
-    const double soft_max_eff = rcppmath::clamp(
+    const double soft_max_eff = std::clamp(
       -soft_limits_.k_velocity * (vel - soft_max_vel), -limits_.max_effort, limits_.max_effort);
 
     // Saturate effort command according to bounds
-    const double eff_cmd = rcppmath::clamp(jcmdh_.get_value(), soft_min_eff, soft_max_eff);
+    const double eff_cmd = std::clamp(jcmdh_.get_value(), soft_min_eff, soft_max_eff);
     jcmdh_.set_value(eff_cmd);
   }
 };
@@ -545,7 +543,7 @@ public:
     }
 
     // Saturate velocity command according to limits
-    const double vel_cmd = rcppmath::clamp(jcmdh_.get_value(), vel_low, vel_high);
+    const double vel_cmd = std::clamp(jcmdh_.get_value(), vel_low, vel_high);
     jcmdh_.set_value(vel_cmd);
 
     // Cache variables
@@ -592,10 +590,10 @@ public:
     {
       // Velocity bounds depend on the velocity limit and the proximity to the position limit.
       const double pos = jposh_.get_value();
-      min_vel = rcppmath::clamp(
+      min_vel = std::clamp(
         -soft_limits_.k_position * (pos - soft_limits_.min_position), -max_vel_limit_,
         max_vel_limit_);
-      max_vel = rcppmath::clamp(
+      max_vel = std::clamp(
         -soft_limits_.k_position * (pos - soft_limits_.max_position), -max_vel_limit_,
         max_vel_limit_);
     }
@@ -613,7 +611,7 @@ public:
       max_vel = std::min(vel + limits_.max_acceleration * delta_t, max_vel);
     }
 
-    jcmdh_.set_value(rcppmath::clamp(jcmdh_.get_value(), min_vel, max_vel));
+    jcmdh_.set_value(std::clamp(jcmdh_.get_value(), min_vel, max_vel));
   }
 
 private:

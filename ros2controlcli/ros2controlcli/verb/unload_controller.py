@@ -26,7 +26,7 @@ class UnloadControllerVerb(VerbExtension):
 
     def add_arguments(self, parser, cli_name):
         add_arguments(parser)
-        arg = parser.add_argument('controller_name', help='Name of the controller')
+        arg = parser.add_argument("controller_name", help="Name of the controller")
         arg.completer = LoadedControllerNameCompleter()
         add_controller_mgr_parsers(parser)
 
@@ -34,7 +34,7 @@ class UnloadControllerVerb(VerbExtension):
         with NodeStrategy(args) as node:
             response = unload_controller(node, args.controller_manager, args.controller_name)
             if not response.ok:
-                return 'Error unloading controllers, check controller_manager logs'
+                return "Error unloading controllers, check controller_manager logs"
 
-            print(f'Successfully unloaded controller {args.controller_name}')
+            print(f"Successfully unloaded controller {args.controller_name}")
             return 0

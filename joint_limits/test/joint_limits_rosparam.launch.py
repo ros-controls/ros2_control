@@ -33,9 +33,7 @@ def generate_test_description():
         package="joint_limits",
         executable="joint_limits_rosparam_test",
         output="screen",
-        parameters=[
-            os.path.join(joint_limits_path, "test", "joint_limits_rosparam.yaml")
-        ],
+        parameters=[os.path.join(joint_limits_path, "test", "joint_limits_rosparam.yaml")],
     )
     return (
         LaunchDescription(

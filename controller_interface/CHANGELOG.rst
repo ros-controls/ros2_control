@@ -2,6 +2,31 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+3.12.0 (2023-04-02)
+-------------------
+* [Controller Interface] Add time and period paramters to update_reference_from_subscribers() (`#846 <https://github.com/ros-controls/ros2_control/issues/846>`_) #API-break
+* Contributors: Robotgir, Denis Štogl
+
+3.11.0 (2023-03-22)
+-------------------
+* [ControllerManager] Add Class for Async Controllers and Lifecycle Management (`#932 <https://github.com/ros-controls/ros2_control/issues/932>`_)
+* Contributors: Márk Szitanics
+
+3.10.0 (2023-03-16)
+-------------------
+
+3.9.1 (2023-03-09)
+------------------
+
+3.9.0 (2023-02-28)
+------------------
+
+3.8.0 (2023-02-10)
+------------------
+* Fix CMake install so overriding works (`#926 <https://github.com/ros-controls/ros2_control/issues/926>`_)
+* Async params (`#927 <https://github.com/ros-controls/ros2_control/issues/927>`_)
+* Contributors: Márk Szitanics, Tyler Weaver
+
 3.7.0 (2023-01-24)
 ------------------
 

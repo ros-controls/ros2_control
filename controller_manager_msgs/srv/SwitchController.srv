@@ -21,12 +21,9 @@
 
 string[] activate_controllers
 string[] deactivate_controllers
-string[] start_controllers       # DEPRECATED: Use activate_controllers filed instead
-string[] stop_controllers        # DEPRECATED: Use deactivate_controllers filed instead
 int32 strictness
 int32 BEST_EFFORT=1
 int32 STRICT=2
-bool start_asap                 # DEPRECATED: Use activate_asap filed instead
 bool activate_asap
 builtin_interfaces/Duration timeout
 ---

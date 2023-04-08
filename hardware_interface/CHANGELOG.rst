@@ -2,6 +2,31 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+3.12.0 (2023-04-02)
+-------------------
+
+3.11.0 (2023-03-22)
+-------------------
+* Check for missing hardware interfaces that use the gpio tag. (`#975 <https://github.com/ros-controls/ros2_control/issues/975>`_)
+* Contributors: Ryan Sandzimier
+
+3.10.0 (2023-03-16)
+-------------------
+* Split transmission interfaces (`#938 <https://github.com/ros-controls/ros2_control/issues/938>`_)
+* Contributors: Noel Jiménez García
+
+3.9.1 (2023-03-09)
+------------------
+
+3.9.0 (2023-02-28)
+------------------
+
+3.8.0 (2023-02-10)
+------------------
+* Fix CMake install so overriding works (`#926 <https://github.com/ros-controls/ros2_control/issues/926>`_)
+* Async params (`#927 <https://github.com/ros-controls/ros2_control/issues/927>`_)
+* Contributors: Márk Szitanics, Tyler Weaver
+
 3.7.0 (2023-01-24)
 ------------------
 * Make double parsing locale independent (`#921 <https://github.com/ros-controls/ros2_control/issues/921>`_)

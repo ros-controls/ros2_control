@@ -133,8 +133,8 @@ rclcpp::NodeOptions get_cm_node_options()
 
 ControllerManager::ControllerManager(
   std::shared_ptr<rclcpp::Executor> executor, const std::string & manager_node_name,
-  const std::string & namespace_)
-: rclcpp::Node(manager_node_name, namespace_, get_cm_node_options()),
+  const std::string & namespace_, const rclcpp::NodeOptions & options)
+: rclcpp::Node(manager_node_name, namespace_, options),
   resource_manager_(std::make_unique<hardware_interface::ResourceManager>()),
   diagnostics_updater_(this),
   executor_(executor),
@@ -167,8 +167,8 @@ ControllerManager::ControllerManager(
 ControllerManager::ControllerManager(
   std::unique_ptr<hardware_interface::ResourceManager> resource_manager,
   std::shared_ptr<rclcpp::Executor> executor, const std::string & manager_node_name,
-  const std::string & namespace_)
-: rclcpp::Node(manager_node_name, namespace_, get_cm_node_options()),
+  const std::string & namespace_, const rclcpp::NodeOptions & options)
+: rclcpp::Node(manager_node_name, namespace_, options),
   resource_manager_(std::move(resource_manager)),
   diagnostics_updater_(this),
   executor_(executor),
@@ -196,27 +196,42 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
   using lifecycle_msgs::msg::State;
 
   std::vector<std::string> configure_components_on_start = std::vector<std::string>({});
-  get_parameter("configure_components_on_start", configure_components_on_start);
-  rclcpp_lifecycle::State inactive_state(
-    State::PRIMARY_STATE_INACTIVE, hardware_interface::lifecycle_state_names::INACTIVE);
-  for (const auto & component : configure_components_on_start)
+  if (get_parameter("configure_components_on_start", configure_components_on_start))
   {
-    resource_manager_->set_component_state(component, inactive_state);
+    RCLCPP_WARN_STREAM(
+      get_logger(),
+      "[Deprecated]: Usage of parameter \"configure_components_on_start\" is deprecated. Use "
+      "hardware_spawner instead.");
+    rclcpp_lifecycle::State inactive_state(
+      State::PRIMARY_STATE_INACTIVE, hardware_interface::lifecycle_state_names::INACTIVE);
+    for (const auto & component : configure_components_on_start)
+    {
+      resource_manager_->set_component_state(component, inactive_state);
+    }
   }
 
   std::vector<std::string> activate_components_on_start = std::vector<std::string>({});
-  get_parameter("activate_components_on_start", activate_components_on_start);
-  rclcpp_lifecycle::State active_state(
-    State::PRIMARY_STATE_ACTIVE, hardware_interface::lifecycle_state_names::ACTIVE);
-  for (const auto & component : activate_components_on_start)
+  if (get_parameter("activate_components_on_start", activate_components_on_start))
   {
-    resource_manager_->set_component_state(component, active_state);
+    RCLCPP_WARN_STREAM(
+      get_logger(),
+      "[Deprecated]: Usage of parameter \"activate_components_on_start\" is deprecated. Use "
+      "hardware_spawner instead.");
+    rclcpp_lifecycle::State active_state(
+      State::PRIMARY_STATE_ACTIVE, hardware_interface::lifecycle_state_names::ACTIVE);
+    for (const auto & component : activate_components_on_start)
+    {
+      resource_manager_->set_component_state(component, active_state);
+    }
   }
-
   // if both parameter are empty or non-existing preserve behavior where all components are
   // activated per default
   if (configure_components_on_start.empty() && activate_components_on_start.empty())
   {
+    RCLCPP_WARN_STREAM(
+      get_logger(),
+      "[Deprecated]: Automatic activation of all hardware components will not be supported in the "
+      "future anymore. Use hardware_spawner instead.");
     resource_manager_->activate_all_components();
   }
 }
@@ -388,6 +403,13 @@ controller_interface::return_type ControllerManager::unload_controller(
       controller_name.c_str());
     return controller_interface::return_type::ERROR;
   }
+  if (controller.c->is_async())
+  {
+    RCLCPP_DEBUG(
+      get_logger(), "Removing controller '%s' from the list of async controllers",
+      controller_name.c_str());
+    async_controller_threads_.erase(controller_name);
+  }
 
   RCLCPP_DEBUG(get_logger(), "Cleanup controller");
   // TODO(destogl): remove reference interface if chainable; i.e., add a separate method for
@@ -405,6 +427,7 @@ controller_interface::return_type ControllerManager::unload_controller(
   RCLCPP_DEBUG(get_logger(), "Destruct controller finished");
 
   RCLCPP_DEBUG(get_logger(), "Successfully unloaded controller '%s'", controller_name.c_str());
+
   return controller_interface::return_type::OK;
 }
 
@@ -470,6 +493,13 @@ controller_interface::return_type ControllerManager::configure_controller(
       get_logger(), "After configuring, controller '%s' is in state '%s' , expected inactive.",
       controller_name.c_str(), new_state.label().c_str());
     return controller_interface::return_type::ERROR;
+  }
+
+  // ASYNCHRONOUS CONTROLLERS: Start background thread for update
+  if (controller->is_async())
+  {
+    async_controller_threads_.emplace(
+      controller_name, std::make_unique<ControllerThreadWrapper>(controller, update_rate_));
   }
 
   // CHAINABLE CONTROLLERS: get reference interfaces from chainable controllers
@@ -1163,6 +1193,7 @@ void ControllerManager::activate_controllers(
       continue;
     }
     auto controller = found_it->c;
+    auto controller_name = found_it->info.name;
 
     bool assignment_successful = true;
     // assign command interfaces to the controller
@@ -1250,6 +1281,11 @@ void ControllerManager::activate_controllers(
       RCLCPP_ERROR(
         get_logger(), "After activating, controller '%s' is in state '%s', expected Active",
         controller->get_node()->get_name(), new_state.label().c_str());
+    }
+
+    if (controller->is_async())
+    {
+      async_controller_threads_.at(controller_name)->activate();
     }
   }
   // All controllers activated, switching done
@@ -1521,46 +1557,10 @@ void ControllerManager::switch_controller_service_cb(
   std::lock_guard<std::mutex> guard(services_lock_);
   RCLCPP_DEBUG(get_logger(), "switching service locked");
 
-  //   response->ok = switch_controller(
-  //     request->activate_controllers, request->deactivate_controllers, request->strictness,
-  //     request->activate_asap, request->timeout) == controller_interface::return_type::OK;
-  // TODO(destogl): remove this after deprecated fields are removed from service and use the
-  // commented three lines above
-  // BEGIN: remove when deprecated removed
-  auto activate_controllers = request->activate_controllers;
-  auto deactivate_controllers = request->deactivate_controllers;
-
-  if (!request->start_controllers.empty())
-  {
-    RCLCPP_WARN(
-      get_logger(),
-      "'start_controllers' field is deprecated, use 'activate_controllers' field instead!");
-    activate_controllers.insert(
-      activate_controllers.end(), request->start_controllers.begin(),
-      request->start_controllers.end());
-  }
-  if (!request->stop_controllers.empty())
-  {
-    RCLCPP_WARN(
-      get_logger(),
-      "'stop_controllers' field is deprecated, use 'deactivate_controllers' field instead!");
-    deactivate_controllers.insert(
-      deactivate_controllers.end(), request->stop_controllers.begin(),
-      request->stop_controllers.end());
-  }
-
-  auto activate_asap = request->activate_asap;
-  if (request->start_asap)
-  {
-    RCLCPP_WARN(
-      get_logger(), "'start_asap' field is deprecated, use 'activate_asap' field instead!");
-    activate_asap = request->start_asap;
-  }
-
-  response->ok = switch_controller(
-                   activate_controllers, deactivate_controllers, request->strictness, activate_asap,
-                   request->timeout) == controller_interface::return_type::OK;
-  // END: remove when deprecated removed
+  response->ok =
+    switch_controller(
+      request->activate_controllers, request->deactivate_controllers, request->strictness,
+      request->activate_asap, request->timeout) == controller_interface::return_type::OK;
 
   RCLCPP_DEBUG(get_logger(), "switching service finished");
 }
@@ -1772,7 +1772,7 @@ controller_interface::return_type ControllerManager::update(
   {
     // TODO(v-lopez) we could cache this information
     // https://github.com/ros-controls/ros2_control/issues/153
-    if (is_controller_active(*loaded_controller.c))
+    if (!loaded_controller.c->is_async() && is_controller_active(*loaded_controller.c))
     {
       const auto controller_update_rate = loaded_controller.c->get_update_rate();
 

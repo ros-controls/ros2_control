@@ -2,6 +2,29 @@
 Changelog for package joint_limits
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+3.12.0 (2023-04-02)
+-------------------
+* Extend joint limits structure with deceleration limits. (`#977 <https://github.com/ros-controls/ros2_control/issues/977>`_)
+* Contributors: Dr. Denis
+
+3.11.0 (2023-03-22)
+-------------------
+
+3.10.0 (2023-03-16)
+-------------------
+
+3.9.1 (2023-03-09)
+------------------
+
+3.9.0 (2023-02-28)
+------------------
+
+3.8.0 (2023-02-10)
+------------------
+* Fix CMake install so overriding works (`#926 <https://github.com/ros-controls/ros2_control/issues/926>`_)
+* 🖤 Add Black formatter for Python files. (`#936 <https://github.com/ros-controls/ros2_control/issues/936>`_)
+* Contributors: Dr. Denis, Tyler Weaver
+
 3.7.0 (2023-01-24)
 ------------------
 

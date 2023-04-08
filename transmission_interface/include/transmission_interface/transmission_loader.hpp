@@ -19,6 +19,8 @@
 
 #include "hardware_interface/hardware_info.hpp"
 
+#include "transmission_interface/transmission.hpp"
+
 namespace transmission_interface
 {
 /**

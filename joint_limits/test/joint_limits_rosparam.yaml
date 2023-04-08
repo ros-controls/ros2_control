@@ -10,6 +10,8 @@ JointLimitsRosparamTestNode:
         max_velocity: 2.0
         has_acceleration_limits: true
         max_acceleration: 5.0
+        has_deceleration_limits: true
+        max_deceleration: 7.5
         has_jerk_limits: true
         max_jerk: 100.0
         has_effort_limits: true
@@ -26,6 +28,7 @@ JointLimitsRosparamTestNode:
         has_position_limits: true
         has_velocity_limits: true
         has_acceleration_limits: true
+        has_deceleration_limits: true
         has_jerk_limits: true
         has_effort_limits: true
 
@@ -35,6 +38,7 @@ JointLimitsRosparamTestNode:
         max_position: 1.0
         max_velocity: 2.0
         max_acceleration: 5.0
+        max_deceleration: 7.5
         max_jerk: 100.0
         max_effort: 20.0
 
@@ -43,6 +47,7 @@ JointLimitsRosparamTestNode:
         has_position_limits: false
         has_velocity_limits: false
         has_acceleration_limits: false
+        has_deceleration_limits: false
         has_jerk_limits: false
         has_effort_limits: false
         angle_wraparound: true  # should be accepted, has no position limits

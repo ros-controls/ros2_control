@@ -94,7 +94,8 @@ protected:
    *
    * \returns return_type::OK if update is successfully, otherwise return_type::ERROR.
    */
-  virtual return_type update_reference_from_subscribers() = 0;
+  virtual return_type update_reference_from_subscribers(
+    const rclcpp::Time & time, const rclcpp::Duration & period) = 0;
 
   /// Execute calculations of the controller and update command interfaces.
   /**
