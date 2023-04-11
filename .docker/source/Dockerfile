@@ -1,4 +1,4 @@
-ARG ROS_DISTRO="rolling"
+ARG ROS_DISTRO="humble"
 FROM ros:$ROS_DISTRO
 ARG BRANCH="master"
 
