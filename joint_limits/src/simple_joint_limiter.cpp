@@ -33,11 +33,11 @@ SimpleJointLimiter<JointLimits>::SimpleJointLimiter()
 
 template <>
 bool SimpleJointLimiter<JointLimits>::on_enforce(
-  trajectory_msgs::msg::JointTrajectoryPoint & current_joint_states,
+  const trajectory_msgs::msg::JointTrajectoryPoint & current_joint_states,
   trajectory_msgs::msg::JointTrajectoryPoint & desired_joint_states, const rclcpp::Duration & dt)
 {
-  auto num_joints = joint_limits_.size();
-  auto dt_seconds = dt.seconds();
+  const auto num_joints = joint_limits_.size();
+  const auto dt_seconds = dt.seconds();
 
   if (current_joint_states.velocities.empty())
   {
