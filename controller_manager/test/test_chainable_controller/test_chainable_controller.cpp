@@ -61,7 +61,8 @@ TestChainableController::state_interface_configuration() const
   }
 }
 
-controller_interface::return_type TestChainableController::update_reference_from_subscribers()
+controller_interface::return_type TestChainableController::update_reference_from_subscribers(
+  const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
 {
   for (size_t i = 0; i < reference_interfaces_.size(); ++i)
   {

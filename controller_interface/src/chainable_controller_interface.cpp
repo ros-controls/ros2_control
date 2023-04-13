@@ -32,7 +32,7 @@ return_type ChainableControllerInterface::update(
 
   if (!is_in_chained_mode())
   {
-    ret = update_reference_from_subscribers();
+    ret = update_reference_from_subscribers(time, period);
     if (ret != return_type::OK)
     {
       return ret;

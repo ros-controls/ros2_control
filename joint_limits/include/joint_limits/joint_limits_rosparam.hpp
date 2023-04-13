@@ -62,6 +62,8 @@ namespace joint_limits
  *   max_velocity: double
  *   has_acceleration_limits: bool
  *   max_acceleration: double
+ *   has_deceleration_limits: bool
+ *   max_deceleration: double
  *   has_jerk_limits: bool
  *   max_jerk: double
  *   has_effort_limits: bool
@@ -101,6 +103,9 @@ inline bool declare_parameters(
     auto_declare<bool>(param_itf, param_base_name + ".has_acceleration_limits", false);
     auto_declare<double>(
       param_itf, param_base_name + ".max_acceleration", std::numeric_limits<double>::quiet_NaN());
+    auto_declare<bool>(param_itf, param_base_name + ".has_deceleration_limits", false);
+    auto_declare<double>(
+      param_itf, param_base_name + ".max_deceleration", std::numeric_limits<double>::quiet_NaN());
     auto_declare<bool>(param_itf, param_base_name + ".has_jerk_limits", false);
     auto_declare<double>(
       param_itf, param_base_name + ".max_jerk", std::numeric_limits<double>::quiet_NaN());
@@ -173,6 +178,8 @@ inline bool declare_parameters(
  *   max_velocity: double
  *   has_acceleration_limits: bool
  *   max_acceleration: double
+ *   has_deceleration_limits: bool
+ *   max_deceleration: double
  *   has_jerk_limits: bool
  *   max_jerk: double
  *   has_effort_limits: bool
@@ -194,6 +201,8 @@ inline bool declare_parameters(
  *         max_velocity: 2.0
  *         has_acceleration_limits: true
  *         max_acceleration: 5.0
+ *         has_deceleration_limits: true
+ *         max_deceleration: 7.5
  *         has_jerk_limits: true
  *         max_jerk: 100.0
  *         has_effort_limits: true
@@ -231,6 +240,8 @@ inline bool get_joint_limits(
       !param_itf->has_parameter(param_base_name + ".max_velocity") &&
       !param_itf->has_parameter(param_base_name + ".has_acceleration_limits") &&
       !param_itf->has_parameter(param_base_name + ".max_acceleration") &&
+      !param_itf->has_parameter(param_base_name + ".has_deceleration_limits") &&
+      !param_itf->has_parameter(param_base_name + ".max_deceleration") &&
       !param_itf->has_parameter(param_base_name + ".has_jerk_limits") &&
       !param_itf->has_parameter(param_base_name + ".max_jerk") &&
       !param_itf->has_parameter(param_base_name + ".has_effort_limits") &&
@@ -312,6 +323,24 @@ inline bool get_joint_limits(
     else
     {
       limits.has_acceleration_limits = false;
+    }
+  }
+
+  // Deceleration limits
+  if (param_itf->has_parameter(param_base_name + ".has_deceleration_limits"))
+  {
+    limits.has_deceleration_limits =
+      param_itf->get_parameter(param_base_name + ".has_deceleration_limits").as_bool();
+    if (
+      limits.has_deceleration_limits &&
+      param_itf->has_parameter(param_base_name + ".max_deceleration"))
+    {
+      limits.max_deceleration =
+        param_itf->get_parameter(param_base_name + ".max_deceleration").as_double();
+    }
+    else
+    {
+      limits.has_deceleration_limits = false;
     }
   }
 

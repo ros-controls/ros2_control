@@ -2,6 +2,11 @@
 Changelog for package joint_limits
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+3.12.0 (2023-04-02)
+-------------------
+* Extend joint limits structure with deceleration limits. (`#977 <https://github.com/ros-controls/ros2_control/issues/977>`_)
+* Contributors: Dr. Denis
+
 3.11.0 (2023-03-22)
 -------------------
 
