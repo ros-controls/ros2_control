@@ -1,4 +1,4 @@
-// Copyright (c) 2021, PickNik Inc.
+// Copyright (c) 2023, PickNik Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -62,7 +62,7 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
 
   bool position_limit_triggered = false;
 
-  for (auto index = 0u; index < num_joints; ++index)
+  for (size_t index = 0; index < num_joints; ++index)
   {
     desired_pos[index] = desired_joint_states.positions[index];
 
@@ -143,8 +143,7 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
 
   if (position_limit_triggered)
   {
-    std::ostringstream ostr;
-    for (auto index = 0u; index < num_joints; ++index)
+    for (size_t index = 0; index < num_joints; ++index)
     {
       // Compute accel to stop
       // Here we aren't explicitly maximally decelerating, but for joints near their limits this
@@ -171,7 +170,7 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
       pos_limit_trig_jnts.begin(), pos_limit_trig_jnts.end(), [](bool trig) { return trig; }) > 0)
   {
     std::ostringstream ostr;
-    for (auto index = 0u; index < num_joints; ++index)
+    for (size_t index = 0; index < num_joints; ++index)
     {
       if (pos_limit_trig_jnts[index]) ostr << joint_names_[index] << " ";
     }

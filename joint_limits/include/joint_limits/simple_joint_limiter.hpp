@@ -1,4 +1,4 @@
-// Copyright (c) 2021, PickNik Inc.
+// Copyright (c) 2023, PickNik Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/// \author Denis Stogl
+/// \author Dr. Denis Stogl
 
 #ifndef JOINT_LIMITS__SIMPLE_JOINT_LIMITER_HPP_
 #define JOINT_LIMITS__SIMPLE_JOINT_LIMITER_HPP_
@@ -31,7 +31,7 @@ public:
   JOINT_LIMITS_PUBLIC SimpleJointLimiter();
 
   JOINT_LIMITS_PUBLIC bool on_enforce(
-    trajectory_msgs::msg::JointTrajectoryPoint & current_joint_states,
+    const trajectory_msgs::msg::JointTrajectoryPoint & current_joint_states,
     trajectory_msgs::msg::JointTrajectoryPoint & desired_joint_states,
     const rclcpp::Duration & dt) override;
 };

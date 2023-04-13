@@ -5,7 +5,6 @@ find_package(ament_cmake REQUIRED)
 find_package(hardware_interface REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(urdf REQUIRED)
-find_package(backward_ros REQUIRED)
 
 if(BUILD_TESTING)
   find_package(ament_cmake_gtest REQUIRED)

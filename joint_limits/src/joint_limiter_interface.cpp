@@ -1,4 +1,4 @@
-// Copyright (c) 2021, Stogl Robotics Consulting UG (haftungsbeschränkt)
+// Copyright (c) 2023, Stogl Robotics Consulting UG (haftungsbeschränkt)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/// \author Denis Stogl
+/// \author Dr. Denis Stogl
 
 #include "joint_limits/joint_limiter_interface.hpp"
 
@@ -39,7 +39,7 @@ bool JointLimiterInterface<JointLimits>::init(
   // TODO(destogl): get limits from URDF
 
   // Initialize and get joint limits from parameter server
-  for (auto i = 0ul; i < number_of_joints_; ++i)
+  for (size_t i = 0; i < number_of_joints_; ++i)
   {
     if (!declare_parameters(joint_names[i], node))
     {

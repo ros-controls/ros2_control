@@ -1,4 +1,4 @@
-// Copyright (c) 2021, Stogl Robotics Consulting UG (haftungsbeschränkt)
+// Copyright (c) 2023, Stogl Robotics Consulting UG (haftungsbeschränkt)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -49,7 +49,7 @@ public:
    *
    */
   JOINT_LIMITS_PUBLIC virtual bool init(
-    const std::vector<std::string> joint_names, const rclcpp::Node::SharedPtr & node,
+    const std::vector<std::string> & joint_names, const rclcpp::Node::SharedPtr & node,
     const std::string & robot_description_topic = "/robot_description");
 
   JOINT_LIMITS_PUBLIC virtual bool configure(
@@ -67,7 +67,7 @@ public:
     return on_enforce(current_joint_states, desired_joint_states, dt);
   }
 
-  // TODO(destogl): Make those protected?
+protected:
   // Methods that each limiter implementation has to implement
   JOINT_LIMITS_PUBLIC virtual bool on_init() { return true; }
 
@@ -78,11 +78,10 @@ public:
   }
 
   JOINT_LIMITS_PUBLIC virtual bool on_enforce(
-    trajectory_msgs::msg::JointTrajectoryPoint & current_joint_states,
+    const trajectory_msgs::msg::JointTrajectoryPoint & current_joint_states,
     trajectory_msgs::msg::JointTrajectoryPoint & desired_joint_states,
     const rclcpp::Duration & dt) = 0;
 
-protected:
   size_t number_of_joints_;
   std::vector<std::string> joint_names_;
   std::vector<LimitsType> joint_limits_;
