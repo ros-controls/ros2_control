@@ -19,7 +19,7 @@
 
 namespace hardware_interface
 {
-/// Constant defining position interface
+/// Constant defining position interface name
 constexpr char HW_IF_POSITION[] = "position";
 /// Constant defining velocity interface
 constexpr char HW_IF_VELOCITY[] = "velocity";
