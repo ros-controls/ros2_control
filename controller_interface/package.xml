@@ -18,6 +18,9 @@
   <exec_depend>rclcpp_lifecycle</exec_depend>
   <exec_depend>sensor_msgs</exec_depend>
 
+  <build_export_depend>hardware_interface</build_export_depend>
+  <build_export_depend>rclcpp_lifecycle</build_export_depend>
+
   <test_depend>ament_cmake_gmock</test_depend>
 
   <export>
