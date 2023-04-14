@@ -2,6 +2,9 @@
 Changelog for package transmission_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 2.25.0 (2023-04-02)
 -------------------
 * Split transmission interfaces (backport `#938 <https://github.com/ros-controls/ros2_control/issues/938>`_) (`#968 <https://github.com/ros-controls/ros2_control/issues/968>`_)

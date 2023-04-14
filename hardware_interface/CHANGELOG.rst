@@ -2,6 +2,9 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 2.25.0 (2023-04-02)
 -------------------
 * Check for missing hardware interfaces that use the gpio tag. (`#953 <https://github.com/ros-controls/ros2_control/issues/953>`_)
