@@ -14,9 +14,14 @@
   <build_depend>rclcpp_lifecycle</build_depend>
   <build_depend>sensor_msgs</build_depend>
 
+<<<<<<< HEAD
   <exec_depend>hardware_interface</exec_depend>
   <exec_depend>rclcpp_lifecycle</exec_depend>
   <exec_depend>sensor_msgs</exec_depend>
+=======
+  <build_export_depend>hardware_interface</build_export_depend>
+  <build_export_depend>rclcpp_lifecycle</build_export_depend>
+>>>>>>> 437d37b (Add missing build_export_depends to controller_interface (#989))
 
   <test_depend>ament_cmake_gmock</test_depend>
 
