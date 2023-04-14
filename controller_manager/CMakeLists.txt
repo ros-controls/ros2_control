@@ -144,6 +144,16 @@ if(BUILD_TESTING)
   ament_target_dependencies(test_controller_manager_srvs
     controller_manager_msgs
   )
+  ament_add_gmock(test_controller_manager_urdf_passing
+  test/test_controller_manager_urdf_passing.cpp
+  )
+  target_link_libraries(test_controller_manager_urdf_passing
+    controller_manager
+    ros2_control_test_assets::ros2_control_test_assets
+  )
+  ament_target_dependencies(test_controller_manager_urdf_passing
+    controller_manager_msgs
+  )
 
   add_library(test_controller_with_interfaces SHARED
     test/test_controller_with_interfaces/test_controller_with_interfaces.cpp

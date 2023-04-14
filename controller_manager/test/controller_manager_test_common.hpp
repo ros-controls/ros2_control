@@ -22,11 +22,13 @@
 #include <memory>
 #include <string>
 #include <thread>
+#include <utility>
 #include <vector>
 
 #include "controller_interface/controller_interface.hpp"
 
 #include "controller_manager/controller_manager.hpp"
+#include "controller_manager_msgs/srv/list_hardware_interfaces.hpp"
 #include "controller_manager_msgs/srv/switch_controller.hpp"
 
 #include "rclcpp/rclcpp.hpp"
@@ -63,14 +65,14 @@ template <typename CtrlMgr>
 class ControllerManagerFixture : public ::testing::Test
 {
 public:
-  //TODO parameter hinzufügen, welche hw erwartet wird
+  // TODO(Manuel): Maybe add parameter of which hardware is to be expected
   explicit ControllerManagerFixture(
     const std::string & robot_description = ros2_control_test_assets::minimal_robot_urdf,
     const std::string ns = "/", const bool & pass_urdf_as_parameter = false)
   : robot_description_(robot_description), ns_(ns), pass_urdf_as_parameter_(pass_urdf_as_parameter)
   {
     executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
-    // We want ot be able to create a ResourceManager where no urdf file has been passed to
+    // We want to be able to create a ResourceManager where no urdf file has been passed to
     if (robot_description_.empty())
     {
       cm_ = std::make_shared<CtrlMgr>(
@@ -88,18 +90,37 @@ public:
       }
       else
       {
+        // First wie create a node and a publisher for publishing the passed robot description file
         urdf_publisher_node_ = std::make_shared<rclcpp::Node>("robot_description_publisher", ns_);
         description_pub_ = urdf_publisher_node_->create_publisher<std_msgs::msg::String>(
           "robot_description", rclcpp::QoS(1).transient_local());
         executor_->add_node(urdf_publisher_node_);
         publish_robot_description_file(robot_description_);
-
+        // Then we create controller manager which subscribes to topic and receive
+        // published robot description file. Publishing is transient_local so starting cm
+        // later should not pose problem and is closer to real world applications
         cm_ = std::make_shared<CtrlMgr>(
           std::make_unique<hardware_interface::ResourceManager>(), executor_, TEST_CM_NAME);
-
-        //TODO warten bis hw da ist und initialisiert
-        // von urdf wissen wir was da sein soll
-        // list hw
+        executor_->add_node(cm_);
+        // Now we have to wait for cm to process callback and initialize everything.
+        // We have to wait here, otherwise controllers can not be initialized since
+        // no hardware has been received.
+        service_caller_node_ = std::make_shared<rclcpp::Node>("service_caller_node", ns_);
+        executor_->add_node(service_caller_node_);
+        auto client =
+          service_caller_node_->create_client<controller_manager_msgs::srv::ListHardwareInterfaces>(
+            "get_hw_interfaces");
+        auto request =
+          std::make_shared<controller_manager_msgs::srv::ListHardwareInterfaces::Request>();
+        EXPECT_TRUE(client->wait_for_service(std::chrono::milliseconds(500)));
+        auto future = client->async_send_request(request);
+        EXPECT_EQ(
+          executor_->spin_until_future_complete(future, std::chrono::milliseconds(1000)),
+          rclcpp::FutureReturnCode::SUCCESS);
+        auto res = future.get();
+        auto command_interfaces = res->command_interfaces;
+        auto state_interfaces = res->state_interfaces;
+        // check for command-/stateinterfaces but spin_until_future_complete times out...
       }
     }
   }
@@ -168,6 +189,7 @@ public:
   const bool pass_urdf_as_parameter_;
   std::shared_ptr<rclcpp::Node> urdf_publisher_node_;
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr description_pub_;
+  std::shared_ptr<rclcpp::Node> service_caller_node_;
 };
 
 class TestControllerManagerSrvs
