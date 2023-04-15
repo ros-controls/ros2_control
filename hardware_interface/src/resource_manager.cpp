@@ -79,18 +79,14 @@ public:
   // TODO(VX792): Change this when HW ifs get their own update rate,
   // because the ResourceStorage really shouldn't know about the cm's parameters
   ResourceStorage(
-    rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface = nullptr,
-    unsigned int update_rate = 100)
+    unsigned int update_rate = 100, rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface = nullptr
+    )
   : actuator_loader_(pkg_name, actuator_interface_name),
     sensor_loader_(pkg_name, sensor_interface_name),
     system_loader_(pkg_name, system_interface_name),
-    clock_interface_(clock_interface),
-    cm_update_rate_(update_rate)
-  {
+    cm_update_rate_(update_rate),
+    clock_interface_(clock_interface)  {
   }
-
-  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface_;
-  unsigned int cm_update_rate_;
 
   template <class HardwareT, class HardwareInterfaceT>
   void load_hardware(
@@ -205,34 +201,11 @@ public:
         }
       }
 
-      if constexpr (std::is_same_v<hardware_interface::Actuator, HardwareT>)
+      if (hardware_info_map_[hardware.get_name()].is_async)
       {
-        if (hardware_info_map_[hardware.get_name()].is_async)
-        {
-          async_actuator_threads_.emplace(
-            std::piecewise_construct, std::forward_as_tuple(hardware.get_name()),
-            std::forward_as_tuple(hardware, cm_update_rate_, clock_interface_));
-        }
-      }
-
-      if constexpr (std::is_same_v<hardware_interface::System, HardwareT>)
-      {
-        if (hardware_info_map_[hardware.get_name()].is_async)
-        {
-          async_system_threads_.emplace(
-            std::piecewise_construct, std::forward_as_tuple(hardware.get_name()),
-            std::forward_as_tuple(hardware, cm_update_rate_, clock_interface_));
-        }
-      }
-
-      if constexpr (std::is_same_v<hardware_interface::Sensor, HardwareT>)
-      {
-        if (hardware_info_map_[hardware.get_name()].is_async)
-        {
-          async_sensor_threads_.emplace(
-            std::piecewise_construct, std::forward_as_tuple(hardware.get_name()),
-            std::forward_as_tuple(hardware, cm_update_rate_, clock_interface_));
-        }
+        async_component_threads_.emplace(
+          std::piecewise_construct, std::forward_as_tuple(hardware.get_name()),
+          std::forward_as_tuple(&hardware, cm_update_rate_, clock_interface_));
       }
     }
     return result;
@@ -313,20 +286,7 @@ public:
 
     if (result)
     {
-      if constexpr (std::is_same_v<hardware_interface::Actuator, HardwareT>)
-      {
-        async_actuator_threads_.erase(hardware.get_name());
-      }
-
-      if constexpr (std::is_same_v<hardware_interface::System, HardwareT>)
-      {
-        async_system_threads_.erase(hardware.get_name());
-      }
-
-      if constexpr (std::is_same_v<hardware_interface::Sensor, HardwareT>)
-      {
-        async_sensor_threads_.erase(hardware.get_name());
-      }
+      async_component_threads_.erase(hardware.get_name());
       // TODO(destogl): change this - deimport all things if there is there are interfaces there
       // deimport_non_movement_command_interfaces(hardware);
       // deimport_state_interfaces(hardware);
@@ -344,28 +304,9 @@ public:
 
     if (result)
     {
-      if constexpr (std::is_same_v<hardware_interface::Actuator, HardwareT>)
+      if (async_component_threads_.find(hardware.get_name()) != async_component_threads_.end())
       {
-        if (async_actuator_threads_.find(hardware.get_name()) != async_actuator_threads_.end())
-        {
-          async_actuator_threads_.at(hardware.get_name()).activate();
-        }
-      }
-
-      if constexpr (std::is_same_v<hardware_interface::System, HardwareT>)
-      {
-        if (async_system_threads_.find(hardware.get_name()) != async_system_threads_.end())
-        {
-          async_system_threads_.at(hardware.get_name()).activate();
-        }
-      }
-
-      if constexpr (std::is_same_v<hardware_interface::Sensor, HardwareT>)
-      {
-        if (async_sensor_threads_.find(hardware.get_name()) != async_sensor_threads_.end())
-        {
-          async_sensor_threads_.at(hardware.get_name()).activate();
-        }
+        async_component_threads_.at(hardware.get_name()).activate();
       }
       // TODO(destogl): make all command interfaces available (currently are all available)
     }
@@ -695,6 +636,7 @@ public:
   pluginlib::ClassLoader<SensorInterface> sensor_loader_;
   pluginlib::ClassLoader<SystemInterface> system_loader_;
 
+
   std::vector<Actuator> actuators_;
   std::vector<Sensor> sensors_;
   std::vector<System> systems_;
@@ -724,17 +666,18 @@ public:
   std::unordered_map<std::string, bool> claimed_command_interface_map_;
 
   /// List of async components by type
-  std::unordered_map<std::string, AsyncComponentThread<hardware_interface::Actuator>>
-    async_actuator_threads_;
-  std::unordered_map<std::string, AsyncComponentThread<hardware_interface::System>>
-    async_system_threads_;
-  std::unordered_map<std::string, AsyncComponentThread<hardware_interface::Sensor>>
-    async_sensor_threads_;
+  std::unordered_map<std::string, AsyncComponentThread>
+    async_component_threads_;
+  
+  // Update rate of the controller manager, and the clock interface of its node - used by async components.
+  unsigned int cm_update_rate_;
+  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface_;
+
 };
 
 ResourceManager::ResourceManager(
-  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface, unsigned int update_rate)
-: resource_storage_(std::make_unique<ResourceStorage>(clock_interface, update_rate))
+  unsigned int update_rate, rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
+: resource_storage_(std::make_unique<ResourceStorage>(update_rate, clock_interface))
 {
 }
 
@@ -742,8 +685,8 @@ ResourceManager::~ResourceManager() = default;
 
 ResourceManager::ResourceManager(
   const std::string & urdf, bool validate_interfaces, bool activate_all,
-  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
-: resource_storage_(std::make_unique<ResourceStorage>(clock_interface))
+   unsigned int update_rate, rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
+: resource_storage_(std::make_unique<ResourceStorage>(update_rate, clock_interface))
 {
   load_urdf(urdf, validate_interfaces);
 

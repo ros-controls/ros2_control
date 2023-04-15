@@ -17,7 +17,7 @@
 
 #include <atomic>
 #include <thread>
-#include <type_traits>
+#include <variant>
 
 #include "hardware_interface/actuator.hpp"
 #include "hardware_interface/sensor.hpp"
@@ -30,20 +30,28 @@
 namespace hardware_interface
 {
 
-template <typename HardwareT>
 class AsyncComponentThread
 {
 public:
-  static_assert(
-    std::is_same<hardware_interface::Actuator, HardwareT>::value ||
-      std::is_same<hardware_interface::System, HardwareT>::value ||
-      std::is_same<hardware_interface::Sensor, HardwareT>::value,
-    "Async component has to have a valid hardware type.");
 
   explicit AsyncComponentThread(
-    HardwareT & component, unsigned int update_rate,
+    Actuator* component, unsigned int update_rate,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
-  : async_component_(component), cm_update_rate_(update_rate), clock_interface_(clock_interface)
+  : hardware_component_(component), cm_update_rate_(update_rate), clock_interface_(clock_interface)
+  {
+  }
+
+  explicit AsyncComponentThread(
+    System* component, unsigned int update_rate,
+    rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
+  : hardware_component_(component), cm_update_rate_(update_rate), clock_interface_(clock_interface)
+  {
+  }
+
+  explicit AsyncComponentThread(
+    Sensor* component, unsigned int update_rate,
+    rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
+  : hardware_component_(component), cm_update_rate_(update_rate), clock_interface_(clock_interface)
   {
   }
 
@@ -65,37 +73,38 @@ public:
   {
     using TimePoint = std::chrono::system_clock::time_point;
 
-    auto previous_time = clock_interface_->get_clock()->now();
-    while (!terminated_.load(std::memory_order_relaxed))
-    {
-      auto const period = std::chrono::nanoseconds(1'000'000'000 / cm_update_rate_);
-      TimePoint next_iteration_time =
-        TimePoint(std::chrono::nanoseconds(clock_interface_->get_clock()->now().nanoseconds()));
-
-      if (async_component_.get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
-      {
-        auto current_time = clock_interface_->get_clock()->now();
-        auto measured_period = current_time - previous_time;
-        previous_time = current_time;
-
-        if constexpr (!std::is_same_v<hardware_interface::Sensor, HardwareT>)
+     std::visit(
+        [this](auto & component)
         {
+      auto previous_time = clock_interface_->get_clock()->now();
+      while (!terminated_.load(std::memory_order_relaxed))
+      {
+        auto const period = std::chrono::nanoseconds(1'000'000'000 / cm_update_rate_);
+        TimePoint next_iteration_time =
+          TimePoint(std::chrono::nanoseconds(clock_interface_->get_clock()->now().nanoseconds()));
+
+        if (component->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+        {
+          auto current_time = clock_interface_->get_clock()->now();
+          auto measured_period = current_time - previous_time;
+          previous_time = current_time;
+
           // write
+          // read
         }
-        // read
+        next_iteration_time += period;
+        std::this_thread::sleep_until(next_iteration_time);
       }
-      next_iteration_time += period;
-      std::this_thread::sleep_until(next_iteration_time);
-    }
+    }, hardware_component_);
   }
 
 private:
   std::atomic<bool> terminated_{false};
-  HardwareT & async_component_;
+  std::variant<Actuator *, System *, Sensor *> hardware_component_;
   std::thread write_and_read_{};
 
-  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface_;
   unsigned int cm_update_rate_;
+  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface_;
 };
 
 };  // namespace hardware_interface
