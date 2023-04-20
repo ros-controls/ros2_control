@@ -73,12 +73,14 @@ public:
   HARDWARE_INTERFACE_PUBLIC
   return_type prepare_command_mode_switch(
     const std::vector<std::string> & start_interfaces,
-    const std::vector<std::string> & stop_interfaces);
+    const std::vector<std::string> & stop_interfaces,
+    const std::vector<std::string> & command_data);
 
   HARDWARE_INTERFACE_PUBLIC
   return_type perform_command_mode_switch(
     const std::vector<std::string> & start_interfaces,
-    const std::vector<std::string> & stop_interfaces);
+    const std::vector<std::string> & stop_interfaces,
+    const std::vector<std::string> & command_data);
 
   HARDWARE_INTERFACE_PUBLIC
   std::string get_name() const;

@@ -305,7 +305,8 @@ public:
    */
   bool prepare_command_mode_switch(
     const std::vector<std::string> & start_interfaces,
-    const std::vector<std::string> & stop_interfaces);
+    const std::vector<std::string> & stop_interfaces,
+    const std::vector<std::string> & command_data);
 
   /// Notify the hardware components that realtime hardware mode switching should occur.
   /**
@@ -320,7 +321,8 @@ public:
    */
   bool perform_command_mode_switch(
     const std::vector<std::string> & start_interfaces,
-    const std::vector<std::string> & stop_interfaces);
+    const std::vector<std::string> & stop_interfaces,
+    const std::vector<std::string> & command_data);
 
   /// Sets state of hardware component.
   /**

@@ -508,6 +508,7 @@ void ControllerManager::clear_requests()
   activate_request_.clear();
   to_chained_mode_request_.clear();
   from_chained_mode_request_.clear();
+  activate_command_data_request_.clear();
   activate_command_interface_request_.clear();
   deactivate_command_interface_request_.clear();
 }
@@ -533,6 +534,14 @@ controller_interface::return_type ControllerManager::switch_controller(
     RCLCPP_FATAL(
       get_logger(),
       "The internal deactivate and activat requests command interface lists are not empty at the "
+      "switch_controller() call. This should never happen.");
+    throw std::runtime_error("CM's internal state is not correct. See the FATAL message above.");
+  }
+  if (!activate_command_data_request_.empty())
+  {
+    RCLCPP_FATAL(
+      get_logger(),
+      "The internal activate requests command data list is not empty at the "
       "switch_controller() call. This should never happen.");
     throw std::runtime_error("CM's internal state is not correct. See the FATAL message above.");
   }
@@ -777,6 +786,7 @@ controller_interface::return_type ControllerManager::switch_controller(
         deactivate_command_interface_request_.clear();
         activate_request_.clear();
         activate_command_interface_request_.clear();
+        activate_command_data_request_.clear();
         to_chained_mode_request_.clear();
         from_chained_mode_request_.clear();
         return controller_interface::return_type::ERROR;
@@ -845,9 +855,20 @@ controller_interface::return_type ControllerManager::switch_controller(
         command_interface_names.end());
     };
 
+    const auto extract_command_data_for_controller =
+      [this](const ControllerSpec controller, std::vector<std::string> & request_data_list)
+    {
+      std::vector<std::string> command_data_names = controller.c->command_data_configuration();
+
+      request_data_list.insert(
+        request_data_list.end(), command_data_names.begin(),
+        command_data_names.end());
+    };
+
     if (in_activate_list)
     {
       extract_interfaces_for_controller(controller, activate_command_interface_request_);
+      extract_command_data_for_controller(controller, activate_command_data_request_);
     }
     if (in_deactivate_list)
     {
@@ -866,7 +887,7 @@ controller_interface::return_type ControllerManager::switch_controller(
     !activate_command_interface_request_.empty() || !deactivate_command_interface_request_.empty())
   {
     if (!resource_manager_->prepare_command_mode_switch(
-          activate_command_interface_request_, deactivate_command_interface_request_))
+          activate_command_interface_request_, deactivate_command_interface_request_, activate_command_data_request_))
     {
       RCLCPP_ERROR(
         get_logger(),
@@ -994,7 +1015,7 @@ void ControllerManager::manage_switch()
 {
   // Ask hardware interfaces to change mode
   if (!resource_manager_->perform_command_mode_switch(
-        activate_command_interface_request_, deactivate_command_interface_request_))
+        activate_command_interface_request_, deactivate_command_interface_request_, activate_command_data_request_))
   {
     RCLCPP_ERROR(get_logger(), "Error while performing mode switch.");
   }

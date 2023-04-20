@@ -106,6 +106,19 @@ public:
   CONTROLLER_INTERFACE_PUBLIC
   virtual InterfaceConfiguration state_interface_configuration() const = 0;
 
+  /// Get configuration for controller's optional command_data param.
+  /**
+   * Method used by the controller_manager to get the optional command_data used by the controller.
+   * Each controller can use individual method to determine interface names that in simples case
+   * have the following format: `<joint>/<command_data>`.
+   * The method is called only in `active` state, i.e., `on_configure` has to be
+   * called first.
+   *
+   * \returns configuration of command_data.
+   */
+  CONTROLLER_INTERFACE_PUBLIC
+  virtual std::vector<std::string> command_data_configuration() const { return std::vector<std::string>(); }
+
   CONTROLLER_INTERFACE_PUBLIC
   void assign_interfaces(
     std::vector<hardware_interface::LoanedCommandInterface> && command_interfaces,

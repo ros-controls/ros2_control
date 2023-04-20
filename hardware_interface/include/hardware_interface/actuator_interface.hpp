@@ -140,6 +140,14 @@ public:
     return return_type::OK;
   }
 
+  virtual return_type prepare_command_mode_switch(
+    const std::vector<std::string> & /*start_interfaces*/,
+    const std::vector<std::string> & /*stop_interfaces*/,
+    const std::vector<std::string> & /*command_data*/)
+  {
+    return return_type::OK;
+  }
+
   // Perform switching to the new command interface.
   /**
    * Perform the mode-switching for the new command interface combination.
@@ -155,6 +163,14 @@ public:
   virtual return_type perform_command_mode_switch(
     const std::vector<std::string> & /*start_interfaces*/,
     const std::vector<std::string> & /*stop_interfaces*/)
+  {
+    return return_type::OK;
+  }
+
+  virtual return_type perform_command_mode_switch(
+    const std::vector<std::string> & /*start_interfaces*/,
+    const std::vector<std::string> & /*stop_interfaces*/,
+    const std::vector<std::string> & /*command_data*/)
   {
     return return_type::OK;
   }

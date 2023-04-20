@@ -351,8 +351,8 @@ TEST_F(TestResourceManager, default_prepare_perform_switch)
   // Activate components to get all interfaces available
   activate_components(rm);
 
-  EXPECT_TRUE(rm.prepare_command_mode_switch({""}, {""}));
-  EXPECT_TRUE(rm.perform_command_mode_switch({""}, {""}));
+  EXPECT_TRUE(rm.prepare_command_mode_switch({""}, {""}, {""}));
+  EXPECT_TRUE(rm.perform_command_mode_switch({""}, {""}, {""}));
 }
 
 const auto hardware_resources_command_modes =
@@ -389,30 +389,30 @@ TEST_F(TestResourceManager, custom_prepare_perform_switch)
   std::vector<std::string> legal_keys_position = {"joint1/position", "joint2/position"};
   std::vector<std::string> legal_keys_velocity = {"joint1/velocity", "joint2/velocity"};
   // Default behavior for empty key lists
-  EXPECT_TRUE(rm.prepare_command_mode_switch(empty_keys, empty_keys));
+  EXPECT_TRUE(rm.prepare_command_mode_switch(empty_keys, empty_keys, empty_keys));
 
   // Default behavior when given irrelevant keys
-  EXPECT_TRUE(rm.prepare_command_mode_switch(irrelevant_keys, irrelevant_keys));
-  EXPECT_TRUE(rm.prepare_command_mode_switch(irrelevant_keys, empty_keys));
-  EXPECT_TRUE(rm.prepare_command_mode_switch(empty_keys, irrelevant_keys));
+  EXPECT_TRUE(rm.prepare_command_mode_switch(irrelevant_keys, irrelevant_keys, empty_keys));
+  EXPECT_TRUE(rm.prepare_command_mode_switch(irrelevant_keys, empty_keys, empty_keys));
+  EXPECT_TRUE(rm.prepare_command_mode_switch(empty_keys, irrelevant_keys, empty_keys));
 
   // The test hardware interface has a criteria that both joints must change mode
-  EXPECT_FALSE(rm.prepare_command_mode_switch(illegal_single_key, illegal_single_key));
-  EXPECT_FALSE(rm.prepare_command_mode_switch(illegal_single_key, empty_keys));
-  EXPECT_FALSE(rm.prepare_command_mode_switch(empty_keys, illegal_single_key));
+  EXPECT_FALSE(rm.prepare_command_mode_switch(illegal_single_key, illegal_single_key, empty_keys));
+  EXPECT_FALSE(rm.prepare_command_mode_switch(illegal_single_key, empty_keys, empty_keys));
+  EXPECT_FALSE(rm.prepare_command_mode_switch(empty_keys, illegal_single_key, empty_keys));
 
   // Test legal start keys
-  EXPECT_TRUE(rm.prepare_command_mode_switch(legal_keys_position, legal_keys_position));
-  EXPECT_TRUE(rm.prepare_command_mode_switch(legal_keys_velocity, legal_keys_velocity));
-  EXPECT_TRUE(rm.prepare_command_mode_switch(legal_keys_position, empty_keys));
-  EXPECT_TRUE(rm.prepare_command_mode_switch(empty_keys, legal_keys_position));
-  EXPECT_TRUE(rm.prepare_command_mode_switch(legal_keys_velocity, empty_keys));
-  EXPECT_TRUE(rm.prepare_command_mode_switch(empty_keys, legal_keys_velocity));
+  EXPECT_TRUE(rm.prepare_command_mode_switch(legal_keys_position, legal_keys_position, empty_keys));
+  EXPECT_TRUE(rm.prepare_command_mode_switch(legal_keys_velocity, legal_keys_velocity, empty_keys));
+  EXPECT_TRUE(rm.prepare_command_mode_switch(legal_keys_position, empty_keys, empty_keys));
+  EXPECT_TRUE(rm.prepare_command_mode_switch(empty_keys, legal_keys_position, empty_keys));
+  EXPECT_TRUE(rm.prepare_command_mode_switch(legal_keys_velocity, empty_keys, empty_keys));
+  EXPECT_TRUE(rm.prepare_command_mode_switch(empty_keys, legal_keys_velocity, empty_keys));
 
   // Test rejection from perform_command_mode_switch, test hardware rejects empty start sets
-  EXPECT_TRUE(rm.perform_command_mode_switch(legal_keys_position, legal_keys_position));
-  EXPECT_FALSE(rm.perform_command_mode_switch(empty_keys, empty_keys));
-  EXPECT_FALSE(rm.perform_command_mode_switch(empty_keys, legal_keys_position));
+  EXPECT_TRUE(rm.perform_command_mode_switch(legal_keys_position, legal_keys_position, empty_keys));
+  EXPECT_FALSE(rm.perform_command_mode_switch(empty_keys, empty_keys, empty_keys));
+  EXPECT_FALSE(rm.perform_command_mode_switch(empty_keys, legal_keys_position, empty_keys));
 }
 
 TEST_F(TestResourceManager, resource_status)
