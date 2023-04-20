@@ -1475,7 +1475,7 @@ TEST_F(TestGenericSystem, sensor_with_initial_value_)
 {
   auto urdf = ros2_control_test_assets::urdf_head + sensor_with_initial_value_ +
               ros2_control_test_assets::urdf_tail;
-  TestableResourceManager rm(urdf);
+  hardware_interface::ResourceManager rm(urdf);
   // Activate components to get all interfaces available
   activate_components(rm);
 
@@ -1503,7 +1503,7 @@ TEST_F(TestGenericSystem, gpio_with_initial_value_)
 {
   auto urdf = ros2_control_test_assets::urdf_head + gpio_with_initial_value_ +
               ros2_control_test_assets::urdf_tail;
-  TestableResourceManager rm(urdf);
+  hardware_interface::ResourceManager rm(urdf);
   // Activate components to get all interfaces available
   activate_components(rm);
 
