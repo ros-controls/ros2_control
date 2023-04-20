@@ -200,16 +200,26 @@ std::vector<CommandInterface> Actuator::export_command_interfaces()
 
 return_type Actuator::prepare_command_mode_switch(
   const std::vector<std::string> & start_interfaces,
-  const std::vector<std::string> & stop_interfaces)
+  const std::vector<std::string> & stop_interfaces,
+  const std::vector<std::string> & command_data)
 {
-  return impl_->prepare_command_mode_switch(start_interfaces, stop_interfaces);
+  if (command_data.empty())
+  {
+    return impl_->prepare_command_mode_switch(start_interfaces, stop_interfaces);
+  }
+  return impl_->prepare_command_mode_switch(start_interfaces, stop_interfaces, command_data);
 }
 
 return_type Actuator::perform_command_mode_switch(
   const std::vector<std::string> & start_interfaces,
-  const std::vector<std::string> & stop_interfaces)
+  const std::vector<std::string> & stop_interfaces,
+  const std::vector<std::string> & command_data)
 {
-  return impl_->perform_command_mode_switch(start_interfaces, stop_interfaces);
+  if (command_data.empty())
+  {
+    return impl_->perform_command_mode_switch(start_interfaces, stop_interfaces);
+  }
+  return impl_->perform_command_mode_switch(start_interfaces, stop_interfaces, command_data);
 }
 
 std::string Actuator::get_name() const { return impl_->get_name(); }

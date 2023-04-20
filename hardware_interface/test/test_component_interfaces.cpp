@@ -505,9 +505,9 @@ TEST(TestComponentInterfaces, dummy_actuator)
   }
 
   EXPECT_EQ(
-    hardware_interface::return_type::OK, actuator_hw.prepare_command_mode_switch({""}, {""}));
+    hardware_interface::return_type::OK, actuator_hw.prepare_command_mode_switch({""}, {""}, {""}));
   EXPECT_EQ(
-    hardware_interface::return_type::OK, actuator_hw.perform_command_mode_switch({""}, {""}));
+    hardware_interface::return_type::OK, actuator_hw.perform_command_mode_switch({""}, {""}, {""}));
 }
 
 TEST(TestComponentInterfaces, dummy_sensor)
@@ -661,8 +661,8 @@ TEST(TestComponentInterfaces, dummy_system)
     ASSERT_EQ(hardware_interface::return_type::ERROR, system_hw.write(TIME, PERIOD));
   }
 
-  EXPECT_EQ(hardware_interface::return_type::OK, system_hw.prepare_command_mode_switch({}, {}));
-  EXPECT_EQ(hardware_interface::return_type::OK, system_hw.perform_command_mode_switch({}, {}));
+  EXPECT_EQ(hardware_interface::return_type::OK, system_hw.prepare_command_mode_switch({}, {}, {}));
+  EXPECT_EQ(hardware_interface::return_type::OK, system_hw.perform_command_mode_switch({}, {}, {}));
 }
 
 TEST(TestComponentInterfaces, dummy_command_mode_system)
@@ -680,20 +680,20 @@ TEST(TestComponentInterfaces, dummy_command_mode_system)
   // Only calls with (one_key, two_keys) should return OK
   EXPECT_EQ(
     hardware_interface::return_type::ERROR,
-    system_hw.prepare_command_mode_switch(one_key, one_key));
+    system_hw.prepare_command_mode_switch(one_key, one_key, {}));
   EXPECT_EQ(
     hardware_interface::return_type::ERROR,
-    system_hw.perform_command_mode_switch(one_key, one_key));
+    system_hw.perform_command_mode_switch(one_key, one_key, {}));
   EXPECT_EQ(
-    hardware_interface::return_type::OK, system_hw.prepare_command_mode_switch(one_key, two_keys));
+    hardware_interface::return_type::OK, system_hw.prepare_command_mode_switch(one_key, two_keys, {}));
   EXPECT_EQ(
-    hardware_interface::return_type::OK, system_hw.perform_command_mode_switch(one_key, two_keys));
-  EXPECT_EQ(
-    hardware_interface::return_type::ERROR,
-    system_hw.prepare_command_mode_switch(two_keys, one_key));
+    hardware_interface::return_type::OK, system_hw.perform_command_mode_switch(one_key, two_keys, {}));
   EXPECT_EQ(
     hardware_interface::return_type::ERROR,
-    system_hw.perform_command_mode_switch(two_keys, one_key));
+    system_hw.prepare_command_mode_switch(two_keys, one_key, {}));
+  EXPECT_EQ(
+    hardware_interface::return_type::ERROR,
+    system_hw.perform_command_mode_switch(two_keys, one_key, {}));
 }
 
 TEST(TestComponentInterfaces, dummy_actuator_read_error_behavior)
