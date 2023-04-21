@@ -43,6 +43,14 @@ public:
   bool is_chainable() const final;
 
   /**
+   * Controller has no state interfaces.
+   *
+   * \returns empty list.
+   */
+  CONTROLLER_INTERFACE_PUBLIC
+  std::vector<hardware_interface::StateInterface> export_state_interfaces() final;
+
+  /**
    * Controller has no reference interfaces.
    *
    * \returns empty list.

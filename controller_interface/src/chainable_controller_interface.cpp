@@ -44,6 +44,45 @@ return_type ChainableControllerInterface::update(
   return ret;
 }
 
+std::vector<hardware_interface::StateInterface>
+ChainableControllerInterface::export_state_interfaces()
+{
+  auto state_interfaces = on_export_state_interfaces();
+  // check if the "state_interfaces_storage_" variable is resized to number of interfaces
+  if (state_interfaces_storage_.size() != state_interfaces.size())
+  {
+    // TODO(destogl): Should here be "FATAL"? It is fatal in terms of controller but not for the
+    // framework
+    RCLCPP_FATAL(
+      get_node()->get_logger(),
+      "The internal storage for state values 'state_interfaces_storage_' variable has size '%zu', "
+      "but it is expected to have the size '%zu' equal to the number of exported reference "
+      "interfaces. No reference interface will be exported. Please correct and recompile "
+      "the controller with name '%s' and try again.",
+      state_interfaces_storage_.size(), state_interfaces.size(), get_node()->get_name());
+    state_interfaces.clear();
+  }
+
+  // check if the names of the state interfaces begin with the controller's name
+  for (const auto & interface : state_interfaces)
+  {
+    if (interface.get_prefix_name() != get_node()->get_name())
+    {
+      RCLCPP_FATAL(
+        get_node()->get_logger(),
+        "The name of the interface '%s' does not begin with the controller's name. This is "
+        "mandatory "
+        " for state interfaces. No state interface will be exported. Please correct and "
+        "recompile the controller with name '%s' and try again.",
+        interface.get_name().c_str(), get_node()->get_name());
+      state_interfaces.clear();
+      break;
+    }
+  }
+
+  return state_interfaces;
+}
+
 std::vector<hardware_interface::CommandInterface>
 ChainableControllerInterface::export_reference_interfaces()
 {

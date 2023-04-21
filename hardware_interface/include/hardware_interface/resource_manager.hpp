@@ -134,6 +134,58 @@ public:
    */
   bool state_interface_is_available(const std::string & name) const;
 
+  /// Add controllers' state interfaces to resource manager.
+  /**
+   * Interface for transferring management of state interfaces to resource manager.
+   * When chaining controllers, state interfaces are used by the preceding
+   * controllers.
+   * Therefore, they should be managed in the same way as state interface of hardware.
+   *
+   * \param[in] controller_name name of the controller which state interfaces are imported.
+   * \param[in] interfaces list of controller's state interfaces as StateInterfaces.
+   */
+  void import_controller_state_interfaces(
+    const std::string & controller_name, std::vector<StateInterface> & interfaces);
+
+  /// Get list of state interface of a controller.
+  /**
+   * Returns lists of stored state interfaces names for a controller.
+   *
+   * \param[in] controller_name for which list of state interface names is returned.
+   * \returns list of reference interface names.
+   */
+  std::vector<std::string> get_controller_state_interface_names(
+    const std::string & controller_name);
+
+  /// Add controller's state interfaces to available list.
+  /**
+   * Adds state interfacess of a controller with given name to the available list. This method should
+   * be called when a controller gets activated with chained mode turned on. That means, the
+   * controller's state interfaces can be used by another controllers in chained architectures.
+   *
+   * \param[in] controller_name name of the controller which interfaces should become available.
+   */
+  void make_controller_state_interfaces_available(const std::string & controller_name);
+
+  /// Remove controller's state interface to available list.
+  /**
+   * Removes interfaces of a controller with given name from the available list. This method should
+   * be called when a controller gets deactivated and its reference interfaces cannot be used by
+   * another controller anymore.
+   *
+   * \param[in] controller_name name of the controller which interfaces should become unavailable.
+   */
+  void make_controller_state_interfaces_unavailable(const std::string & controller_name);
+
+  /// Remove controllers state interfaces from resource manager.
+  /**
+   * Remove state interfaces from resource manager, i.e., resource storage.
+   * The interfaces will be deleted from all internal maps and lists.
+   *
+   * \param[in] controller_name list of interface names that will be deleted from resource manager.
+   */
+  void remove_controller_state_interfaces(const std::string & controller_name);
+
   /// Add controllers' reference interfaces to resource manager.
   /**
    * Interface for transferring management of reference interfaces to resource manager.

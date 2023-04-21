@@ -150,6 +150,12 @@ CallbackReturn TestChainableController::on_cleanup(
   return CallbackReturn::SUCCESS;
 }
 
+std::vector<hardware_interface::StateInterface>
+TestChainableController::on_export_state_interfaces()
+{
+  return {};
+}
+
 std::vector<hardware_interface::CommandInterface>
 TestChainableController::on_export_reference_interfaces()
 {
