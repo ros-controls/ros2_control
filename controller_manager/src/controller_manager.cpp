@@ -685,21 +685,22 @@ controller_interface::return_type ControllerManager::configure_controller(
       get_logger(),
       "Controller '%s' is chainable. Interfaces are being exported to resource manager.",
       controller_name.c_str());
-    auto state_interfaces = controller->export_state_interfaces();
+    auto estimated_interfaces = controller->export_estimated_interfaces();
     auto ref_interfaces = controller->export_reference_interfaces();
-    if (ref_interfaces.empty() && state_interfaces.empty())
+    if (ref_interfaces.empty() && estimated_interfaces.empty())
     {
       // TODO(destogl): Add test for this!
       RCLCPP_ERROR(
         get_logger(),
-        "Controller '%s' is chainable, but does not export any state or reference interfaces.",
+        "Controller '%s' is chainable, but does not export any estimated or reference interfaces.",
         controller_name.c_str());
       return controller_interface::return_type::ERROR;
     }
     if (!ref_interfaces.empty())
       resource_manager_->import_controller_reference_interfaces(controller_name, ref_interfaces);
-    if (!state_interfaces.empty())
-      resource_manager_->import_controller_state_interfaces(controller_name, state_interfaces);
+    if (!estimated_interfaces.empty())
+      resource_manager_->import_controller_estimated_interfaces(
+        controller_name, estimated_interfaces);
   }
 
   // let's update the list of following and preceding controllers

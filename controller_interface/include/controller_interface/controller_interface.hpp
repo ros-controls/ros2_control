@@ -48,7 +48,7 @@ public:
    * \returns empty list.
    */
   CONTROLLER_INTERFACE_PUBLIC
-  std::vector<hardware_interface::StateInterface> export_state_interfaces() final;
+  std::vector<hardware_interface::StateInterface> export_estimated_interfaces() final;
 
   /**
    * Controller has no reference interfaces.

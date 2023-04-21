@@ -41,8 +41,8 @@ public:
   {
     reference_interfaces_.reserve(1);
     reference_interfaces_.push_back(INTERFACE_VALUE);
-    state_interfaces_storage_.reserve(1);
-    state_interfaces_storage_.push_back(0.0);
+    estimated_interfaces_data_.reserve(1);
+    estimated_interfaces_data_.push_back(0.0);
   }
 
   controller_interface::CallbackReturn on_init() override
@@ -66,14 +66,14 @@ public:
   }
 
   // Implementation of ChainableController virtual methods
-  std::vector<hardware_interface::StateInterface> on_export_state_interfaces() override
+  std::vector<hardware_interface::StateInterface> on_export_estimated_interfaces() override
   {
-    std::vector<hardware_interface::StateInterface> state_interfaces;
+    std::vector<hardware_interface::StateInterface> estimated_interfaces;
 
-    state_interfaces.push_back(hardware_interface::StateInterface(
-      name_prefix_of_reference_interfaces_, "test_state", &state_interfaces_storage_[0]));
+    estimated_interfaces.push_back(hardware_interface::StateInterface(
+      name_prefix_of_reference_interfaces_, "test_state", &estimated_interfaces_data_[0]));
 
-    return state_interfaces;
+    return estimated_interfaces;
   }
 
   // Implementation of ChainableController virtual methods

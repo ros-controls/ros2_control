@@ -151,7 +151,7 @@ CallbackReturn TestChainableController::on_cleanup(
 }
 
 std::vector<hardware_interface::StateInterface>
-TestChainableController::on_export_state_interfaces()
+TestChainableController::on_export_estimated_interfaces()
 {
   return {};
 }
