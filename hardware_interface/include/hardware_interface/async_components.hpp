@@ -33,23 +33,22 @@ namespace hardware_interface
 class AsyncComponentThread
 {
 public:
-
   explicit AsyncComponentThread(
-    Actuator* component, unsigned int update_rate,
+    Actuator * component, unsigned int update_rate,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
   : hardware_component_(component), cm_update_rate_(update_rate), clock_interface_(clock_interface)
   {
   }
 
   explicit AsyncComponentThread(
-    System* component, unsigned int update_rate,
+    System * component, unsigned int update_rate,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
   : hardware_component_(component), cm_update_rate_(update_rate), clock_interface_(clock_interface)
   {
   }
 
   explicit AsyncComponentThread(
-    Sensor* component, unsigned int update_rate,
+    Sensor * component, unsigned int update_rate,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
   : hardware_component_(component), cm_update_rate_(update_rate), clock_interface_(clock_interface)
   {
@@ -73,29 +72,30 @@ public:
   {
     using TimePoint = std::chrono::system_clock::time_point;
 
-     std::visit(
-        [this](auto & component)
-        {
-      auto previous_time = clock_interface_->get_clock()->now();
-      while (!terminated_.load(std::memory_order_relaxed))
+    std::visit(
+      [this](auto & component)
       {
-        auto const period = std::chrono::nanoseconds(1'000'000'000 / cm_update_rate_);
-        TimePoint next_iteration_time =
-          TimePoint(std::chrono::nanoseconds(clock_interface_->get_clock()->now().nanoseconds()));
-
-        if (component->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+        auto previous_time = clock_interface_->get_clock()->now();
+        while (!terminated_.load(std::memory_order_relaxed))
         {
-          auto current_time = clock_interface_->get_clock()->now();
-          auto measured_period = current_time - previous_time;
-          previous_time = current_time;
+          auto const period = std::chrono::nanoseconds(1'000'000'000 / cm_update_rate_);
+          TimePoint next_iteration_time =
+            TimePoint(std::chrono::nanoseconds(clock_interface_->get_clock()->now().nanoseconds()));
 
-          // write
-          // read
+          if (component->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+          {
+            auto current_time = clock_interface_->get_clock()->now();
+            auto measured_period = current_time - previous_time;
+            previous_time = current_time;
+
+            // write
+            // read
+          }
+          next_iteration_time += period;
+          std::this_thread::sleep_until(next_iteration_time);
         }
-        next_iteration_time += period;
-        std::this_thread::sleep_until(next_iteration_time);
-      }
-    }, hardware_component_);
+      },
+      hardware_component_);
   }
 
 private:

@@ -79,13 +79,14 @@ public:
   // TODO(VX792): Change this when HW ifs get their own update rate,
   // because the ResourceStorage really shouldn't know about the cm's parameters
   ResourceStorage(
-    unsigned int update_rate = 100, rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface = nullptr
-    )
+    unsigned int update_rate = 100,
+    rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface = nullptr)
   : actuator_loader_(pkg_name, actuator_interface_name),
     sensor_loader_(pkg_name, sensor_interface_name),
     system_loader_(pkg_name, system_interface_name),
     cm_update_rate_(update_rate),
-    clock_interface_(clock_interface)  {
+    clock_interface_(clock_interface)
+  {
   }
 
   template <class HardwareT, class HardwareInterfaceT>
@@ -636,7 +637,6 @@ public:
   pluginlib::ClassLoader<SensorInterface> sensor_loader_;
   pluginlib::ClassLoader<SystemInterface> system_loader_;
 
-
   std::vector<Actuator> actuators_;
   std::vector<Sensor> sensors_;
   std::vector<System> systems_;
@@ -666,13 +666,11 @@ public:
   std::unordered_map<std::string, bool> claimed_command_interface_map_;
 
   /// List of async components by type
-  std::unordered_map<std::string, AsyncComponentThread>
-    async_component_threads_;
-  
+  std::unordered_map<std::string, AsyncComponentThread> async_component_threads_;
+
   // Update rate of the controller manager, and the clock interface of its node - used by async components.
   unsigned int cm_update_rate_;
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface_;
-
 };
 
 ResourceManager::ResourceManager(
@@ -684,8 +682,8 @@ ResourceManager::ResourceManager(
 ResourceManager::~ResourceManager() = default;
 
 ResourceManager::ResourceManager(
-  const std::string & urdf, bool validate_interfaces, bool activate_all,
-   unsigned int update_rate, rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
+  const std::string & urdf, bool validate_interfaces, bool activate_all, unsigned int update_rate,
+  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
 : resource_storage_(std::make_unique<ResourceStorage>(update_rate, clock_interface))
 {
   load_urdf(urdf, validate_interfaces);

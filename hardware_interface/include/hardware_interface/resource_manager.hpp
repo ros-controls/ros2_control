@@ -50,8 +50,8 @@ class HARDWARE_INTERFACE_PUBLIC ResourceManager
 public:
   /// Default constructor for the Resource Manager.
   ResourceManager(
-    unsigned int update_rate = 100, rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface = nullptr
-    );
+    unsigned int update_rate = 100,
+    rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface = nullptr);
 
   /// Constructor for the Resource Manager.
   /**
@@ -71,7 +71,8 @@ public:
    */
   explicit ResourceManager(
     const std::string & urdf, bool validate_interfaces = true, bool activate_all = false,
-    unsigned int update_rate = 100, rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface = nullptr);
+    unsigned int update_rate = 100,
+    rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface = nullptr);
 
   ResourceManager(const ResourceManager &) = delete;
 
