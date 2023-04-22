@@ -668,7 +668,8 @@ public:
   /// List of async components by type
   std::unordered_map<std::string, AsyncComponentThread> async_component_threads_;
 
-  // Update rate of the controller manager, and the clock interface of its node - used by async components.
+  // Update rate of the controller manager, and the clock interface of its node
+  // Used by async components.
   unsigned int cm_update_rate_;
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface_;
 };
