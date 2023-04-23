@@ -83,10 +83,14 @@ public:
   CONTROLLER_MANAGER_PUBLIC
   void set_reference_interface_names(const std::vector<std::string> & reference_interface_names);
 
+  CONTROLLER_MANAGER_PUBLIC
+  void set_estimated_interface_names(const std::vector<std::string> & estimated_interface_names);
+
   size_t internal_counter;
   controller_interface::InterfaceConfiguration cmd_iface_cfg_;
   controller_interface::InterfaceConfiguration state_iface_cfg_;
   std::vector<std::string> reference_interface_names_;
+  std::vector<std::string> estimated_interface_names_;
 
   realtime_tools::RealtimeBuffer<std::shared_ptr<CmdType>> rt_command_ptr_;
   rclcpp::Subscription<CmdType>::SharedPtr joints_command_subscriber_;

@@ -153,7 +153,15 @@ CallbackReturn TestChainableController::on_cleanup(
 std::vector<hardware_interface::StateInterface>
 TestChainableController::on_export_estimated_interfaces()
 {
-  return {};
+  std::vector<hardware_interface::StateInterface> estimated_interfaces;
+
+  for (size_t i = 0; i < estimated_interface_names_.size(); ++i)
+  {
+    estimated_interfaces.push_back(hardware_interface::StateInterface(
+      get_node()->get_name(), estimated_interface_names_[i], &estimated_interfaces_data_[i]));
+  }
+
+  return estimated_interfaces;
 }
 
 std::vector<hardware_interface::CommandInterface>
@@ -188,6 +196,14 @@ void TestChainableController::set_reference_interface_names(
   reference_interface_names_ = reference_interface_names;
 
   reference_interfaces_.resize(reference_interface_names.size(), 0.0);
+}
+
+void TestChainableController::set_estimated_interface_names(
+  const std::vector<std::string> & estimated_interface_names)
+{
+  estimated_interface_names_ = estimated_interface_names;
+
+  estimated_interfaces_data_.resize(estimated_interface_names_.size(), 0.0);
 }
 
 }  // namespace test_chainable_controller
