@@ -26,16 +26,11 @@ constexpr size_t ROS_LOG_THROTTLE_PERIOD = 1 * 1000;  // Milliseconds to throttl
 namespace joint_limits
 {
 template <>
-SimpleJointLimiter<JointLimits>::SimpleJointLimiter()
-: joint_limits::JointLimiterInterface<JointLimits>()
-{
-}
-
-template <>
 bool SimpleJointLimiter<JointLimits>::on_enforce(
-  const trajectory_msgs::msg::JointTrajectoryPoint & current_joint_states,
+  trajectory_msgs::msg::JointTrajectoryPoint & current_joint_states,
   trajectory_msgs::msg::JointTrajectoryPoint & desired_joint_states, const rclcpp::Duration & dt)
 {
+  // TODO(destogl): replace `num_joints` with `number_of_joints_`
   const auto num_joints = joint_limits_.size();
   const auto dt_seconds = dt.seconds();
 
@@ -176,7 +171,7 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
     }
     ostr << "\b \b";  // erase last character
     RCLCPP_WARN_STREAM_THROTTLE(
-      node_->get_logger(), *node_->get_clock(), ROS_LOG_THROTTLE_PERIOD,
+      node_logging_itf_->get_logger(), *clock_, ROS_LOG_THROTTLE_PERIOD,
       "Joint(s) [" << ostr.str().c_str() << "] would exceed position limits, limiting");
   }
 
@@ -186,7 +181,7 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
     for (auto jnt : limited_jnts_vel) ostr << jnt << " ";
     ostr << "\b \b";  // erase last character
     RCLCPP_WARN_STREAM_THROTTLE(
-      node_->get_logger(), *node_->get_clock(), ROS_LOG_THROTTLE_PERIOD,
+      node_logging_itf_->get_logger(), *clock_, ROS_LOG_THROTTLE_PERIOD,
       "Joint(s) [" << ostr.str().c_str() << "] would exceed velocity limits, limiting");
   }
 
@@ -196,7 +191,7 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
     for (auto jnt : limited_jnts_acc) ostr << jnt << " ";
     ostr << "\b \b";  // erase last character
     RCLCPP_WARN_STREAM_THROTTLE(
-      node_->get_logger(), *node_->get_clock(), ROS_LOG_THROTTLE_PERIOD,
+      node_logging_itf_->get_logger(), *clock_, ROS_LOG_THROTTLE_PERIOD,
       "Joint(s) [" << ostr.str().c_str() << "] would exceed acceleration limits, limiting");
   }
 
