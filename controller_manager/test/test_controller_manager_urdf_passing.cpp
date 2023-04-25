@@ -21,14 +21,19 @@
 #include "controller_manager/controller_manager.hpp"
 #include "controller_manager_test_common.hpp"
 
+#include "ros2_control_test_assets/descriptions.hpp"
+
 class TestControllerManagerWithTestableCM;
 
 class TestableControllerManager : public controller_manager::ControllerManager
 {
   friend TestControllerManagerWithTestableCM;
 
-  FRIEND_TEST(TestControllerManagerWithTestableCM, callback_gets_passed);
-  FRIEND_TEST(TestControllerManagerWithTestableCM, initial_failing);
+  FRIEND_TEST(TestControllerManagerWithTestableCM, initial_no_load_urdf_called);
+  FRIEND_TEST(TestControllerManagerWithTestableCM, load_urdf_called_after_callback);
+  FRIEND_TEST(TestControllerManagerWithTestableCM, load_urdf_called_after_invalid_urdf_passed);
+  FRIEND_TEST(TestControllerManagerWithTestableCM, load_urdf_called_after_callback);
+  FRIEND_TEST(TestControllerManagerWithTestableCM, load_urdf_called_after_callback);
 
 public:
   TestableControllerManager(
@@ -46,16 +51,36 @@ class TestControllerManagerWithTestableCM
 : public ControllerManagerFixture<TestableControllerManager>,
   public testing::WithParamInterface<Strictness>
 {
+public:
+  // create cm with no urdf
+  TestControllerManagerWithTestableCM()
+  : ControllerManagerFixture<TestableControllerManager>("", false)
+  {
+  }
 };
 
-// only exemplary to test if working not a useful test yet
-TEST_P(TestControllerManagerWithTestableCM, callback_gets_passed)
+TEST_P(TestControllerManagerWithTestableCM, initial_no_load_urdf_called)
 {
   ASSERT_FALSE(cm_->resource_manager_->load_urdf_called());
 }
 
-TEST_P(TestControllerManagerWithTestableCM, initial_failing)
+TEST_P(TestControllerManagerWithTestableCM, load_urdf_called_after_callback)
 {
+  ASSERT_FALSE(cm_->resource_manager_->load_urdf_called());
+  // mimic callback
+  auto msg = std_msgs::msg::String();
+  msg.data = ros2_control_test_assets::minimal_robot_urdf;
+  cm_->robot_description_callback(msg);
+  ASSERT_TRUE(cm_->resource_manager_->load_urdf_called());
+}
+
+TEST_P(TestControllerManagerWithTestableCM, load_urdf_called_after_invalid_urdf_passed)
+{
+  ASSERT_FALSE(cm_->resource_manager_->load_urdf_called());
+  // mimic callback
+  auto msg = std_msgs::msg::String();
+  msg.data = ros2_control_test_assets::minimal_robot_missing_command_keys_urdf;
+  cm_->robot_description_callback(msg);
   ASSERT_TRUE(cm_->resource_manager_->load_urdf_called());
 }
 

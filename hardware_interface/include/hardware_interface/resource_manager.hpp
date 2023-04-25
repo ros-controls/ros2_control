@@ -65,8 +65,7 @@ public:
    * "autostart_components" and "autoconfigure_components" instead.
    */
   explicit ResourceManager(
-    const std::string & urdf, bool validate_interfaces = true, bool activate_all = false,
-    bool urdf_loaded = false);
+    const std::string & urdf, bool validate_interfaces = true, bool activate_all = false);
 
   ResourceManager(const ResourceManager &) = delete;
 

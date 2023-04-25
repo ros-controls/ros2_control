@@ -85,6 +85,12 @@ public:
   virtual ~ControllerManager() = default;
 
   CONTROLLER_MANAGER_PUBLIC
+  void subscribe_to_robot_description_topic();
+
+  CONTROLLER_MANAGER_PUBLIC
+  void robot_description_callback(const std_msgs::msg::String & msg);
+
+  CONTROLLER_MANAGER_PUBLIC
   void init_resource_manager(const std::string & robot_description);
 
   CONTROLLER_MANAGER_PUBLIC
@@ -306,9 +312,6 @@ protected:
   void set_hardware_component_state_srv_cb(
     const std::shared_ptr<controller_manager_msgs::srv::SetHardwareComponentState::Request> request,
     std::shared_ptr<controller_manager_msgs::srv::SetHardwareComponentState::Response> response);
-
-  CONTROLLER_MANAGER_PUBLIC
-  void robot_description_callback(const std_msgs::msg::String & msg);
 
   // Per controller update rate support
   unsigned int update_loop_counter_ = 0;
