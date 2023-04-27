@@ -35,6 +35,7 @@ using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface
 constexpr char TEST_CONTROLLER_NAME[] = "test_chainable_controller_name";
 // corresponds to the name listed within the pluginlib xml
 constexpr char TEST_CONTROLLER_CLASS_NAME[] = "controller_manager/test_chainable_controller";
+constexpr double CONTROLLER_DT = 0.001;
 class TestChainableController : public controller_interface::ChainableControllerInterface
 {
 public:
