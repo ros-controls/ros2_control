@@ -2,6 +2,9 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 2.25.2 (2023-04-20)
 -------------------
 * Also initialize non-joint components (backport `#822 <https://github.com/ros-controls/ros2_control/issues/822>`_) (`#991 <https://github.com/ros-controls/ros2_control/issues/991>`_)
