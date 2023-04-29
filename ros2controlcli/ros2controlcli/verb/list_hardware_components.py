@@ -60,19 +60,13 @@ class ListHardwareComponentsVerb(VerbExtension):
                     print(f'\t\t{cmd_interface.name} {available_str} {claimed_str}')
 
                 if args.verbose:
-                    print('\tstate interfaces')
-                    for state_interface in component.command_interfaces:
-
+                    print("\tstate interfaces")
+                    for state_interface in component.state_interfaces:
                         if state_interface.is_available:
                             available_str = f'{bcolors.OKBLUE}[available]{bcolors.ENDC}'
                         else:
                             available_str = f'{bcolors.WARNING}[unavailable]{bcolors.ENDC}'
 
-                        if state_interface.is_claimed:
-                            claimed_str = f'{bcolors.OKBLUE}[claimed]{bcolors.ENDC}'
-                        else:
-                            claimed_str = '[unclaimed]'
-
-                        print(f'\t\t{state_interface.name} {available_str} {claimed_str}')
+                        print(f"\t\t{state_interface.name} {available_str}")
 
         return 0
