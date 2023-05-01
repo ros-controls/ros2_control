@@ -52,6 +52,13 @@ TestChainableController::state_interface_configuration() const
     get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
     get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
   {
+    auto state_iface_cfg = state_iface_cfg_;
+    if (imu_sensor_)
+    {
+      auto imu_interfaces = imu_sensor_->get_state_interface_names();
+      state_iface_cfg.names.insert(
+        state_iface_cfg.names.end(), imu_interfaces.begin(), imu_interfaces.end());
+    }
     return state_iface_cfg_;
   }
   else
@@ -218,6 +225,10 @@ void TestChainableController::set_estimated_interface_names(
   estimated_interfaces_data_.resize(estimated_interface_names_.size(), 0.0);
 }
 
+void TestChainableController::set_imu_sensor_name(const std::string & name)
+{
+  if (!name.empty()) imu_sensor_ = std::make_unique<semantic_components::IMUSensor>(name);
+}
 }  // namespace test_chainable_controller
 
 #include "pluginlib/class_list_macros.hpp"

@@ -23,6 +23,7 @@
 #include "controller_manager/visibility_control.h"
 #include "rclcpp/subscription.hpp"
 #include "realtime_tools/realtime_buffer.h"
+#include "semantic_components/imu_sensor.hpp"
 #include "std_msgs/msg/float64_multi_array.hpp"
 
 namespace test_chainable_controller
@@ -87,11 +88,15 @@ public:
   CONTROLLER_MANAGER_PUBLIC
   void set_estimated_interface_names(const std::vector<std::string> & estimated_interface_names);
 
+  CONTROLLER_MANAGER_PUBLIC
+  void set_imu_sensor_name(const std::string &name);
+
   size_t internal_counter;
   controller_interface::InterfaceConfiguration cmd_iface_cfg_;
   controller_interface::InterfaceConfiguration state_iface_cfg_;
   std::vector<std::string> reference_interface_names_;
   std::vector<std::string> estimated_interface_names_;
+  std::unique_ptr<semantic_components::IMUSensor> imu_sensor_;
 
   realtime_tools::RealtimeBuffer<std::shared_ptr<CmdType>> rt_command_ptr_;
   rclcpp::Subscription<CmdType>::SharedPtr joints_command_subscriber_;
