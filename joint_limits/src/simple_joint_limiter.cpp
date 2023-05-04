@@ -30,34 +30,32 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
   trajectory_msgs::msg::JointTrajectoryPoint & current_joint_states,
   trajectory_msgs::msg::JointTrajectoryPoint & desired_joint_states, const rclcpp::Duration & dt)
 {
-  // TODO(destogl): replace `num_joints` with `number_of_joints_`
-  const auto num_joints = joint_limits_.size();
   const auto dt_seconds = dt.seconds();
 
   if (current_joint_states.velocities.empty())
   {
     // First update() after activating does not have velocity available, assume 0
-    current_joint_states.velocities.resize(num_joints, 0.0);
+    current_joint_states.velocities.resize(number_of_joints_, 0.0);
   }
 
   // check for required inputs
   if (
-    (desired_joint_states.positions.size() < num_joints) ||
-    (desired_joint_states.velocities.size() < num_joints) ||
-    (current_joint_states.positions.size() < num_joints))
+    (desired_joint_states.positions.size() < number_of_joints_) ||
+    (desired_joint_states.velocities.size() < number_of_joints_) ||
+    (current_joint_states.positions.size() < number_of_joints_))
   {
     return false;
   }
 
-  std::vector<double> desired_accel(num_joints);
-  std::vector<double> desired_vel(num_joints);
-  std::vector<double> desired_pos(num_joints);
-  std::vector<bool> pos_limit_trig_jnts(num_joints, false);
-  std::vector<std::string> limited_jnts_vel, limited_jnts_acc;
+  std::vector<double> desired_accel(number_of_joints_);
+  std::vector<double> desired_vel(number_of_joints_);
+  std::vector<double> desired_pos(number_of_joints_);
+  std::vector<bool> pos_limit_trig_jnts(number_of_joints_, false);
+  std::vector<std::string> limited_jnts_vel, limited_jnts_acc, limited_jnts_dec;
 
   bool position_limit_triggered = false;
 
-  for (size_t index = 0; index < num_joints; ++index)
+  for (size_t index = 0; index < number_of_joints_; ++index)
   {
     desired_pos[index] = desired_joint_states.positions[index];
 
@@ -89,21 +87,40 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
     desired_accel[index] =
       (desired_vel[index] - current_joint_states.velocities[index]) / dt_seconds;
 
-    // limit acceleration
-    if (joint_limits_[index].has_acceleration_limits)
+    auto apply_acc_or_dec_limit =
+      [&](const double max_acc_or_dec, std::vector<std::string> & limited_jnts)
     {
-      if (std::abs(desired_accel[index]) > joint_limits_[index].max_acceleration)
+      if (std::abs(desired_accel[index]) > max_acc_or_dec)
       {
-        desired_accel[index] =
-          std::copysign(joint_limits_[index].max_acceleration, desired_accel[index]);
+        desired_accel[index] = std::copysign(max_acc_or_dec, desired_accel[index]);
         desired_vel[index] =
           current_joint_states.velocities[index] + desired_accel[index] * dt_seconds;
         // recalc desired position after acceleration limiting
         desired_pos[index] = current_joint_states.positions[index] +
                              current_joint_states.velocities[index] * dt_seconds +
                              0.5 * desired_accel[index] * dt_seconds * dt_seconds;
-        limited_jnts_acc.emplace_back(joint_names_[index]);
+        limited_jnts.emplace_back(joint_names_[index]);
       }
+    };
+
+    // check if decelerating - if velocity is changing toward 0
+    bool deceleration_limit_applied = false;
+    if (
+      desired_accel[index] < 0 && current_joint_states.velocities[index] > 0 ||
+      desired_accel[index] > 0 && current_joint_states.velocities[index] < 0)
+    {
+      // limit deceleration
+      if (joint_limits_[index].has_deceleration_limits)
+      {
+        apply_acc_or_dec_limit(joint_limits_[index].max_deceleration, limited_jnts_dec);
+        deceleration_limit_applied = true;
+      }
+    }
+
+    // limit acceleration (fallback to acceleration if no deceleration limits)
+    if (joint_limits_[index].has_acceleration_limits && !deceleration_limit_applied)
+    {
+      apply_acc_or_dec_limit(joint_limits_[index].max_acceleration, limited_jnts_acc);
     }
 
     // Check that stopping distance is within joint limits
@@ -115,11 +132,18 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
       // Here we assume we will not trigger velocity limits while maximally decelerating.
       // This is a valid assumption if we are not currently at a velocity limit since we are just
       // coming to a rest.
-      double stopping_accel = joint_limits_[index].has_acceleration_limits
-                                ? joint_limits_[index].max_acceleration
-                                : std::abs(desired_vel[index] / dt_seconds);
+      double stopping_deccel = std::abs(desired_vel[index] / dt_seconds);
+      if (joint_limits_[index].has_deceleration_limits)
+      {
+        stopping_deccel = joint_limits_[index].max_deceleration;
+      }
+      else if (joint_limits_[index].has_acceleration_limits)
+      {
+        stopping_deccel = joint_limits_[index].max_acceleration;
+      }
+
       double stopping_distance =
-        std::abs((-desired_vel[index] * desired_vel[index]) / (2 * stopping_accel));
+        std::abs((-desired_vel[index] * desired_vel[index]) / (2 * stopping_deccel));
       // Check that joint limits are beyond stopping_distance and desired_velocity is towards
       // that limit
       if (
@@ -138,7 +162,7 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
 
   if (position_limit_triggered)
   {
-    for (size_t index = 0; index < num_joints; ++index)
+    for (size_t index = 0; index < number_of_joints_; ++index)
     {
       // Compute accel to stop
       // Here we aren't explicitly maximally decelerating, but for joints near their limits this
@@ -165,7 +189,7 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
       pos_limit_trig_jnts.begin(), pos_limit_trig_jnts.end(), [](bool trig) { return trig; }) > 0)
   {
     std::ostringstream ostr;
-    for (size_t index = 0; index < num_joints; ++index)
+    for (size_t index = 0; index < number_of_joints_; ++index)
     {
       if (pos_limit_trig_jnts[index]) ostr << joint_names_[index] << " ";
     }
@@ -195,8 +219,19 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
       "Joint(s) [" << ostr.str().c_str() << "] would exceed acceleration limits, limiting");
   }
 
+  if (limited_jnts_dec.size() > 0)
+  {
+    std::ostringstream ostr;
+    for (auto jnt : limited_jnts_dec) ostr << jnt << " ";
+    ostr << "\b \b";  // erase last character
+    RCLCPP_WARN_STREAM_THROTTLE(
+      node_logging_itf_->get_logger(), *clock_, ROS_LOG_THROTTLE_PERIOD,
+      "Joint(s) [" << ostr.str().c_str() << "] would exceed deceleration limits, limiting");
+  }
+
   desired_joint_states.positions = desired_pos;
   desired_joint_states.velocities = desired_vel;
+  desired_joint_states.accelerations = desired_accel;
   return true;
 }
 
