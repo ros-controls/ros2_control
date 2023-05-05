@@ -91,11 +91,17 @@ public:
     const std::string & name, const std::string & type, const std::string & plugin_name,
     const uint8_t state_id, const std::string & state_label)
   {
-    EXPECT_EQ(component.name, name);
-    EXPECT_EQ(component.type, type);
-    EXPECT_EQ(component.plugin_name, plugin_name);
-    EXPECT_EQ(component.state.id, state_id);
-    EXPECT_EQ(component.state.label, state_label);
+    EXPECT_EQ(component.name, name) << "Component has unexpected name.";
+    EXPECT_EQ(component.type, type)
+      << "Component " << name << " from plugin " << plugin_name << " has wrong type.";
+    EXPECT_EQ(component.plugin_name, plugin_name)
+      << "Component " << name << " (" << type << ") has unexpected plugin_name.";
+    EXPECT_EQ(component.state.id, state_id)
+      << "Component " << name << " (" << type << ") from plugin " << plugin_name
+      << " has wrong state_id.";
+    EXPECT_EQ(component.state.label, state_label)
+      << "Component " << name << " (" << type << ") from plugin " << plugin_name
+      << " has wrong state_label.";
   }
 
   void list_hardware_components_and_check(
@@ -124,8 +130,9 @@ public:
       {
         auto it = std::find(interface_names.begin(), interface_names.end(), interfaces[i].name);
         EXPECT_NE(it, interface_names.end());
-        EXPECT_EQ(interfaces[i].is_available, is_available_status[i]);
-        EXPECT_EQ(interfaces[i].is_claimed, is_claimed_status[i]);
+        EXPECT_EQ(interfaces[i].is_available, is_available_status[i])
+          << "At " << interfaces[i].name;
+        EXPECT_EQ(interfaces[i].is_claimed, is_claimed_status[i]) << "At " << interfaces[i].name;
       }
     };
 
