@@ -880,7 +880,7 @@ controller_interface::return_type ControllerManager::switch_controller(
     };
 
     const auto extract_command_data_for_controller =
-      [this](const ControllerSpec controller, std::vector<std::string> & request_data_list)
+      [](const ControllerSpec controller, std::vector<std::string> & request_data_list)
     {
       std::vector<std::string> command_data_names = controller.c->command_data_configuration();
 
