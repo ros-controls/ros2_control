@@ -40,7 +40,6 @@
 #include "controller_manager_msgs/srv/switch_controller.hpp"
 #include "controller_manager_msgs/srv/unload_controller.hpp"
 
-#include "diagnostic_updater/diagnostic_updater.hpp"
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/resource_manager.hpp"
 
@@ -349,9 +348,6 @@ private:
   controller_interface::return_type check_preceeding_controllers_for_deactivate(
     const std::vector<ControllerSpec> & controllers, int strictness,
     const ControllersListIterator controller_it);
-
-  void controller_activity_diagnostic_callback(diagnostic_updater::DiagnosticStatusWrapper & stat);
-  diagnostic_updater::Updater diagnostics_updater_;
 
   std::shared_ptr<rclcpp::Executor> executor_;
 

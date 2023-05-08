@@ -15,7 +15,6 @@
   <depend>backward_ros</depend>
   <depend>controller_interface</depend>
   <depend>controller_manager_msgs</depend>
-  <depend>diagnostic_updater</depend>
   <depend>hardware_interface</depend>
   <depend>launch</depend>
   <depend>launch_ros</depend>

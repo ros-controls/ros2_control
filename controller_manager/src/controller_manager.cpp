@@ -147,8 +147,7 @@ ControllerManager::ControllerManager(
     kControllerInterfaceNamespace, kControllerInterfaceClassName)),
   chainable_loader_(
     std::make_shared<pluginlib::ClassLoader<controller_interface::ChainableControllerInterface>>(
-      kControllerInterfaceNamespace, kChainableControllerInterfaceClassName)),
-  diagnostics_updater_(this)
+      kControllerInterfaceNamespace, kChainableControllerInterfaceClassName))
 {
   if (!get_parameter("update_rate", update_rate_))
   {
@@ -164,9 +163,6 @@ ControllerManager::ControllerManager(
 
   init_resource_manager(robot_description);
 
-  diagnostics_updater_.setHardwareID("ros2_control");
-  diagnostics_updater_.add(
-    "Controllers Activity", this, &ControllerManager::controller_activity_diagnostic_callback);
   init_services();
 }
 
@@ -181,16 +177,12 @@ ControllerManager::ControllerManager(
     kControllerInterfaceNamespace, kControllerInterfaceClassName)),
   chainable_loader_(
     std::make_shared<pluginlib::ClassLoader<controller_interface::ChainableControllerInterface>>(
-      kControllerInterfaceNamespace, kChainableControllerInterfaceClassName)),
-  diagnostics_updater_(this)
+      kControllerInterfaceNamespace, kChainableControllerInterfaceClassName))
 {
   if (!get_parameter("update_rate", update_rate_))
   {
     RCLCPP_WARN(get_logger(), "'update_rate' parameter not set, using default value.");
   }
-  diagnostics_updater_.setHardwareID("ros2_control");
-  diagnostics_updater_.add(
-    "Controllers Activity", this, &ControllerManager::controller_activity_diagnostic_callback);
   init_services();
 }
 
@@ -2050,31 +2042,5 @@ controller_interface::return_type ControllerManager::check_preceeding_controller
   }
   return controller_interface::return_type::OK;
 };
-
-void ControllerManager::controller_activity_diagnostic_callback(
-  diagnostic_updater::DiagnosticStatusWrapper & stat)
-{
-  // lock controllers
-  std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
-  const std::vector<ControllerSpec> & controllers = rt_controllers_wrapper_.get_updated_list(guard);
-  bool all_active = true;
-  for (size_t i = 0; i < controllers.size(); ++i)
-  {
-    if (!is_controller_active(controllers[i].c))
-    {
-      all_active = false;
-    }
-    stat.add(controllers[i].info.name, controllers[i].c->get_state().label());
-  }
-
-  if (all_active)
-  {
-    stat.summary(diagnostic_msgs::msg::DiagnosticStatus::OK, "All controllers are active");
-  }
-  else
-  {
-    stat.summary(diagnostic_msgs::msg::DiagnosticStatus::ERROR, "Not all controllers are active");
-  }
-}
 
 }  // namespace controller_manager
