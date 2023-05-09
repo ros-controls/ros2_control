@@ -184,13 +184,6 @@ def main(args=None):
         default=10,
         type=int,
     )
-    parser.add_argument(
-        "--log-level",
-        help="Log level for spawner node",
-        required=False,
-        choices=["debug", "info", "warn", "error", "fatal"],
-        default="info",
-    )
 
     command_line_args = rclpy.utilities.remove_ros_args(args=sys.argv)[1:]
     args = parser.parse_args(command_line_args)
@@ -200,15 +193,6 @@ def main(args=None):
     param_file = args.param_file
     controller_type = args.controller_type
     controller_manager_timeout = args.controller_manager_timeout
-    log_level = args.log_level
-
-    loglevel_to_severity = {
-        "debug": rclpy.logging.LoggingSeverity.DEBUG,
-        "info": rclpy.logging.LoggingSeverity.INFO,
-        "warn": rclpy.logging.LoggingSeverity.WARN,
-        "error": rclpy.logging.LoggingSeverity.ERROR,
-        "fatal": rclpy.logging.LoggingSeverity.FATAL,
-    }
 
     if param_file and not os.path.isfile(param_file):
         raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), param_file)
@@ -218,7 +202,6 @@ def main(args=None):
         prefixed_controller_name = controller_namespace + "/" + controller_name
 
     node = Node("spawner_" + controller_name)
-    rclpy.logging.set_logger_level("spawner_" + controller_name, loglevel_to_severity[log_level])
 
     if not controller_manager_name.startswith("/"):
         spawner_namespace = node.get_namespace()
