@@ -75,7 +75,7 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
   auto it = info_.hardware_parameters.find("mock_sensor_commands");
   if (it != info_.hardware_parameters.end())
   {
-    use_mock_sensor_command_interfaces_ = parse_bool(it->second);
+    use_mock_sensor_command_interfaces_ = hardware_interface::parse_bool(it->second);
   }
   else
   {
@@ -83,7 +83,7 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
     it = info_.hardware_parameters.find("fake_sensor_commands");
     if (it != info_.hardware_parameters.end())
     {
-      use_mock_sensor_command_interfaces_ = parse_bool(it->second);
+      use_mock_sensor_command_interfaces_ = hardware_interface::parse_bool(it->second);
       RCUTILS_LOG_WARN_NAMED(
         "fake_generic_system",
         "Parameter 'fake_sensor_commands' has been deprecated from usage. Use"
@@ -99,7 +99,7 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
   it = info_.hardware_parameters.find("fake_gpio_commands");
   if (it != info_.hardware_parameters.end())
   {
-    use_fake_gpio_command_interfaces = parse_bool(it->second);
+    use_fake_gpio_command_interfaces = hardware_interface::parse_bool(it->second);
   }
   else
   {
