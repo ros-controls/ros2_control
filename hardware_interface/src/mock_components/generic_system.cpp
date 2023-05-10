@@ -24,6 +24,7 @@
 #include <string>
 #include <vector>
 
+#include "hardware_interface/component_parser.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "rcutils/logging_macros.h"
 
@@ -61,20 +62,40 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
   auto it = info_.hardware_parameters.find("fake_sensor_commands");
   if (it != info_.hardware_parameters.end())
   {
+<<<<<<< HEAD
     // TODO(anyone): change this to parse_bool() (see ros2_control#339)
     use_fake_sensor_command_interfaces_ = it->second == "true" || it->second == "True";
   }
   else
   {
     use_fake_sensor_command_interfaces_ = false;
+=======
+    use_mock_sensor_command_interfaces_ = hardware_interface::parse_bool(it->second);
+  }
+  else
+  {
+    // check if fake_sensor_commands was set instead and issue warning.
+    it = info_.hardware_parameters.find("fake_sensor_commands");
+    if (it != info_.hardware_parameters.end())
+    {
+      use_mock_sensor_command_interfaces_ = hardware_interface::parse_bool(it->second);
+      RCUTILS_LOG_WARN_NAMED(
+        "fake_generic_system",
+        "Parameter 'fake_sensor_commands' has been deprecated from usage. Use"
+        "'mock_sensor_commands' instead.");
+    }
+    else
+    {
+      use_mock_sensor_command_interfaces_ = false;
+    }
+>>>>>>> c9709f3 (Implement parse_bool and refactor a few (#1014))
   }
 
   // check if to create fake command interface for gpio
   it = info_.hardware_parameters.find("fake_gpio_commands");
   if (it != info_.hardware_parameters.end())
   {
-    // TODO(anyone): change this to parse_bool() (see ros2_control#339)
-    use_fake_gpio_command_interfaces_ = it->second == "true" || it->second == "True";
+    use_fake_gpio_command_interfaces_ = hardware_interface::parse_bool(it->second);
   }
   else
   {

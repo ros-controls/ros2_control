@@ -206,6 +206,23 @@ std::string parse_data_type_attribute(const tinyxml2::XMLElement * elem)
   return data_type;
 }
 
+<<<<<<< HEAD
+=======
+/// Parse is_async attribute
+/**
+ * Parses an XMLElement and returns the value of the is_async attribute.
+ * Defaults to "false" if not specified.
+ *
+ * \param[in] elem XMLElement that has the data_type attribute.
+ * \return boolean specifying the if the value read was true or false.
+ */
+bool parse_is_async_attribute(const tinyxml2::XMLElement * elem)
+{
+  const tinyxml2::XMLAttribute * attr = elem->FindAttribute(kIsAsyncAttribute);
+  return attr ? parse_bool(attr->Value()) : false;
+}
+
+>>>>>>> c9709f3 (Implement parse_bool and refactor a few (#1014))
 /// Search XML snippet from URDF for parameters.
 /**
  * \param[in] params_it pointer to the iterator where parameters info should be found
@@ -588,6 +605,11 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
   }
 
   return hardware_info;
+}
+
+bool parse_bool(const std::string & bool_string)
+{
+  return bool_string == "true" || bool_string == "True";
 }
 
 }  // namespace hardware_interface
