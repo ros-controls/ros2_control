@@ -224,7 +224,7 @@ std::string parse_data_type_attribute(const tinyxml2::XMLElement * elem)
 bool parse_is_async_attribute(const tinyxml2::XMLElement * elem)
 {
   const tinyxml2::XMLAttribute * attr = elem->FindAttribute(kIsAsyncAttribute);
-  return parse_bool(attr->Value());
+  return attr ? parse_bool(attr->Value()) : false;
 }
 
 /// Search XML snippet from URDF for parameters.
