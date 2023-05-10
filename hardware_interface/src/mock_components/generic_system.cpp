@@ -25,7 +25,7 @@
 #include <string>
 #include <vector>
 
-#include "hardware_interface/component_parser.h"
+#include "hardware_interface/component_parser.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "rcutils/logging_macros.h"
 
@@ -99,7 +99,7 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
   it = info_.hardware_parameters.find("fake_gpio_commands");
   if (it != info_.hardware_parameters.end())
   {
-    use_fake_gpio_command_interfaces = hardware_interface::parse_bool(it->second);
+    use_fake_gpio_command_interfaces_ = hardware_interface::parse_bool(it->second);
   }
   else
   {
