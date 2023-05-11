@@ -1676,11 +1676,20 @@ void ControllerManager::list_controllers_srv_cb(
       {
         auto references =
           resource_manager_->get_controller_reference_interface_names(controllers[i].info.name);
+        auto estimated_interfaces =
+          resource_manager_->get_controller_estimated_interface_names(controllers[i].info.name);
         controller_state.reference_interfaces.reserve(references.size());
+        controller_state.estimated_interfaces.reserve(estimated_interfaces.size());
         for (const auto & reference : references)
         {
           const std::string prefix_name = controllers[i].c->get_node()->get_name();
           const std::string interface_name = reference.substr(prefix_name.size() + 1);
+          controller_state.reference_interfaces.push_back(interface_name);
+        }
+        for (const auto & estimate : estimated_interfaces)
+        {
+          const std::string prefix_name = controllers[i].c->get_node()->get_name();
+          const std::string interface_name = estimate.substr(prefix_name.size() + 1);
           controller_state.reference_interfaces.push_back(interface_name);
         }
       }
