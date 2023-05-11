@@ -2262,23 +2262,48 @@ void ControllerManager::propagate_deactivation_of_chained_mode(
         break;
       }
 
-      for (const auto & cmd_itf_name : controller.c->command_interface_configuration().names)
+      const auto ctrl_cmd_itf_names = controller.c->command_interface_configuration().names;
+      const auto ctrl_state_itf_names = controller.c->state_interface_configuration().names;
+      auto ctrl_itf_names = ctrl_cmd_itf_names;
+      ctrl_itf_names.insert(
+        ctrl_itf_names.end(), ctrl_state_itf_names.begin(), ctrl_state_itf_names.end());
+      for (const auto & ctrl_itf_name : ctrl_itf_names)
       {
         // controller that 'cmd_tf_name' belongs to
         ControllersListIterator following_ctrl_it;
-        if (is_interface_a_chained_interface(cmd_itf_name, controllers, following_ctrl_it))
+        if (is_interface_a_chained_interface(ctrl_itf_name, controllers, following_ctrl_it))
         {
-          // currently iterated "controller" is preceding controller --> add following controller
-          // with matching interface name to "from" chained mode list (if not already in it)
-          if (
-            std::find(
-              from_chained_mode_request_.begin(), from_chained_mode_request_.end(),
-              following_ctrl_it->info.name) == from_chained_mode_request_.end())
+          // If the preceding controller's estimated interfaces are in use by other controllers, then maintain the chained mode
+          if (is_controller_estimated_interfaces_inuse_by_other_controllers(
+                following_ctrl_it->info.name, controllers, deactivate_request_))
           {
-            from_chained_mode_request_.push_back(following_ctrl_it->info.name);
-            RCLCPP_DEBUG(
-              get_logger(), "Adding controller '%s' in 'from chained mode' request.",
-              following_ctrl_it->info.name.c_str());
+            auto found_it = std::find(
+              to_use_references_from_subscribers_.begin(),
+              to_use_references_from_subscribers_.end(), following_ctrl_it->info.name);
+            if (found_it == to_use_references_from_subscribers_.end())
+            {
+              // In this case we check if the interface is state only and then add to use references_from_subscribers list
+              to_use_references_from_subscribers_.push_back(following_ctrl_it->info.name);
+              RCLCPP_DEBUG(
+                get_logger(), "Adding controller '%s' in 'use references from subscriber' request.",
+                following_ctrl_it->info.name.c_str());
+            }
+          }
+          else
+          {
+            // currently iterated "controller" is preceding controller --> add following controller
+            // with matching interface name to "from" chained mode list (if not already in it)
+            if (
+              std::find(
+                from_chained_mode_request_.begin(), from_chained_mode_request_.end(),
+                following_ctrl_it->info.name) == from_chained_mode_request_.end())
+            {
+              from_chained_mode_request_.push_back(following_ctrl_it->info.name);
+              to_use_references_from_subscribers_.push_back(following_ctrl_it->info.name);
+              RCLCPP_DEBUG(
+                get_logger(), "Adding controller '%s' in 'from chained mode' request.",
+                following_ctrl_it->info.name.c_str());
+            }
           }
         }
       }
