@@ -1072,6 +1072,12 @@ controller_interface::return_type ControllerManager::switch_controller(
       from_chained_mode_request_.begin(), from_chained_mode_request_.end(), controller.info.name);
     bool in_from_chained_mode_list = from_chained_mode_list_it != from_chained_mode_request_.end();
 
+    auto to_use_ref_from_sub_it = std::find(
+      to_use_references_from_subscribers_.begin(), to_use_references_from_subscribers_.end(),
+      controller.info.name);
+    bool in_to_use_ref_from_sub_list =
+      to_use_ref_from_sub_it != to_use_references_from_subscribers_.end();
+
     auto deactivate_list_it =
       std::find(deactivate_request_.begin(), deactivate_request_.end(), controller.info.name);
     bool in_deactivate_list = deactivate_list_it != deactivate_request_.end();
@@ -1080,7 +1086,7 @@ controller_interface::return_type ControllerManager::switch_controller(
     const bool is_inactive = is_controller_inactive(*controller.c);
 
     // restart controllers that need to switch their 'chained mode' - add to (de)activate lists
-    if (in_to_chained_mode_list || in_from_chained_mode_list)
+    if (in_to_chained_mode_list || in_from_chained_mode_list || in_to_use_ref_from_sub_list)
     {
       if (is_active && !in_deactivate_list)
       {
