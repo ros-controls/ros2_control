@@ -1168,6 +1168,9 @@ TEST_P(
     odom_publisher_controller, ODOM_PUBLISHER_CONTROLLER,
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
   cm_->add_controller(
+    sensor_fusion_controller, SENSOR_FUSION_CONTROLLER,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
     robot_localization_controller, ROBOT_LOCALIZATION_CONTROLLER,
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
 
@@ -1236,6 +1239,9 @@ TEST_P(
     odom_publisher_controller, ODOM_PUBLISHER_CONTROLLER,
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
   cm_->add_controller(
+    sensor_fusion_controller, SENSOR_FUSION_CONTROLLER,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
     robot_localization_controller, ROBOT_LOCALIZATION_CONTROLLER,
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
 
@@ -1251,6 +1257,7 @@ TEST_P(
   EXPECT_FALSE(pid_left_wheel_controller->is_in_chained_mode());
   EXPECT_FALSE(pid_right_wheel_controller->is_in_chained_mode());
   ASSERT_FALSE(diff_drive_controller->is_in_chained_mode());
+  ASSERT_FALSE(sensor_fusion_controller->is_in_chained_mode());
 
   // Activate following controllers
   ActivateAndCheckController(
@@ -1273,10 +1280,27 @@ TEST_P(
   // Verify preceding controller (diff_drive_controller) is inactive
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, diff_drive_controller->get_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, sensor_fusion_controller->get_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    odom_publisher_controller->get_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    robot_localization_controller->get_state().id());
 
   // Attempt to deactivate inactive controller (diff_drive_controller)
   DeactivateController(
     DIFF_DRIVE_CONTROLLER, expected.at(test_param.strictness).return_type,
+    std::future_status::ready);
+  DeactivateController(
+    SENSOR_FUSION_CONTROLLER, expected.at(test_param.strictness).return_type,
+    std::future_status::ready);
+  DeactivateController(
+    ODOM_PUBLISHER_CONTROLLER, expected.at(test_param.strictness).return_type,
+    std::future_status::ready);
+  DeactivateController(
+    ROBOT_LOCALIZATION_CONTROLLER, expected.at(test_param.strictness).return_type,
     std::future_status::ready);
 
   // Check to see preceding controller (diff_drive_controller) is still inactive and
@@ -1287,6 +1311,14 @@ TEST_P(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, pid_right_wheel_controller->get_state().id());
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, diff_drive_controller->get_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    odom_publisher_controller->get_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, sensor_fusion_controller->get_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    robot_localization_controller->get_state().id());
 
   // Test Case 6: following controller is deactivated but preceding controller will be activated
   // --> return error; controllers stay in the same state
