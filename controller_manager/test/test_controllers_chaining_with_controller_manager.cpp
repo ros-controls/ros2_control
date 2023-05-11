@@ -126,6 +126,7 @@ public:
     diff_drive_controller_two = std::make_shared<TestableTestChainableController>();
     position_tracking_controller = std::make_shared<test_controller::TestController>();
     odom_publisher_controller = std::make_shared<test_controller::TestController>();
+    sensor_fusion_controller = std::make_shared<TestableTestChainableController>();
     robot_localization_controller = std::make_shared<test_controller::TestController>();
 
     // configure Left Wheel controller
@@ -173,25 +174,36 @@ public:
     position_tracking_controller->set_command_interface_configuration(
       position_tracking_cmd_ifs_cfg);
 
-    // configure Robot Localization controller
-    controller_interface::InterfaceConfiguration odom_and_loc_state_ifs_cfg = {
+    // configure Odometry Publisher controller
+    controller_interface::InterfaceConfiguration odom_and_fusion_ifs_cfg = {
       controller_interface::interface_configuration_type::INDIVIDUAL,
       {std::string(DIFF_DRIVE_CONTROLLER) + "/odom_x",
        std::string(DIFF_DRIVE_CONTROLLER) + "/odom_y"}};
-    robot_localization_controller->set_state_interface_configuration(odom_and_loc_state_ifs_cfg);
+    odom_publisher_controller->set_state_interface_configuration(odom_and_fusion_ifs_cfg);
 
-    // configure Odometry Publisher controller
-    odom_publisher_controller->set_state_interface_configuration(odom_and_loc_state_ifs_cfg);
+    // configure sensor fusion controller
+    sensor_fusion_controller->set_imu_sensor_name("base_imu");
+    sensor_fusion_controller->set_state_interface_configuration(odom_and_fusion_ifs_cfg);
+    sensor_fusion_controller->set_estimated_interface_names({"odom_x", "odom_y", "yaw"});
+
+    // configure Robot Localization controller
+    controller_interface::InterfaceConfiguration odom_ifs_cfg = {
+      controller_interface::interface_configuration_type::INDIVIDUAL,
+      {std::string(SENSOR_FUSION_CONTROLLER) + "/odom_x",
+       std::string(SENSOR_FUSION_CONTROLLER) + "/odom_y",
+       std::string(SENSOR_FUSION_CONTROLLER) + "/yaw"}};
+    robot_localization_controller->set_state_interface_configuration(odom_ifs_cfg);
   }
 
   void CheckIfControllersAreAddedCorrectly()
   {
-    EXPECT_EQ(7u, cm_->get_loaded_controllers().size());
+    EXPECT_EQ(8u, cm_->get_loaded_controllers().size());
     EXPECT_EQ(2, pid_left_wheel_controller.use_count());
     EXPECT_EQ(2, pid_right_wheel_controller.use_count());
     EXPECT_EQ(2, diff_drive_controller.use_count());
     EXPECT_EQ(2, diff_drive_controller_two.use_count());
     EXPECT_EQ(2, position_tracking_controller.use_count());
+    EXPECT_EQ(2, sensor_fusion_controller.use_count());
     EXPECT_EQ(2, robot_localization_controller.use_count());
     EXPECT_EQ(2, odom_publisher_controller.use_count());
 
@@ -210,6 +222,9 @@ public:
     EXPECT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
       position_tracking_controller->get_state().id());
+    EXPECT_EQ(
+      lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+      sensor_fusion_controller->get_state().id());
     EXPECT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
       robot_localization_controller->get_state().id());
@@ -302,19 +317,26 @@ public:
     EXPECT_EQ(cm_->resource_manager_->command_interface_keys().size(), number_of_cmd_itfs + 8);
     EXPECT_EQ(cm_->resource_manager_->state_interface_keys().size(), number_of_state_itfs + 4);
 
+    cm_->configure_controller(SENSOR_FUSION_CONTROLLER);
+    EXPECT_EQ(
+      position_tracking_controller->get_state().id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+    EXPECT_EQ(cm_->resource_manager_->command_interface_keys().size(), number_of_cmd_itfs + 8);
+    EXPECT_EQ(cm_->resource_manager_->state_interface_keys().size(), number_of_state_itfs + 7);
+
     cm_->configure_controller(ROBOT_LOCALIZATION_CONTROLLER);
     EXPECT_EQ(
       position_tracking_controller->get_state().id(),
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
     EXPECT_EQ(cm_->resource_manager_->command_interface_keys().size(), number_of_cmd_itfs + 8);
-    EXPECT_EQ(cm_->resource_manager_->state_interface_keys().size(), number_of_state_itfs + 4);
+    EXPECT_EQ(cm_->resource_manager_->state_interface_keys().size(), number_of_state_itfs + 7);
 
     cm_->configure_controller(ODOM_PUBLISHER_CONTROLLER);
     EXPECT_EQ(
       position_tracking_controller->get_state().id(),
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
     EXPECT_EQ(cm_->resource_manager_->command_interface_keys().size(), number_of_cmd_itfs + 8);
-    EXPECT_EQ(cm_->resource_manager_->state_interface_keys().size(), number_of_state_itfs + 4);
+    EXPECT_EQ(cm_->resource_manager_->state_interface_keys().size(), number_of_state_itfs + 7);
   }
 
   template <
@@ -457,10 +479,11 @@ public:
     // check if all controllers are updated
     ASSERT_EQ(odom_publisher_controller->internal_counter, exp_internal_counter_pos_ctrl);
     ASSERT_EQ(robot_localization_controller->internal_counter, exp_internal_counter_pos_ctrl + 2);
-    ASSERT_EQ(position_tracking_controller->internal_counter, exp_internal_counter_pos_ctrl + 4);
-    ASSERT_EQ(diff_drive_controller->internal_counter, exp_internal_counter_pos_ctrl + 6);
-    ASSERT_EQ(pid_left_wheel_controller->internal_counter, exp_internal_counter_pos_ctrl + 10);
-    ASSERT_EQ(pid_right_wheel_controller->internal_counter, exp_internal_counter_pos_ctrl + 8);
+    ASSERT_EQ(sensor_fusion_controller->internal_counter, exp_internal_counter_pos_ctrl + 4);
+    ASSERT_EQ(position_tracking_controller->internal_counter, exp_internal_counter_pos_ctrl + 6);
+    ASSERT_EQ(diff_drive_controller->internal_counter, exp_internal_counter_pos_ctrl + 8);
+    ASSERT_EQ(pid_left_wheel_controller->internal_counter, exp_internal_counter_pos_ctrl + 12);
+    ASSERT_EQ(pid_right_wheel_controller->internal_counter, exp_internal_counter_pos_ctrl + 10);
 
     // check if values are set properly in controllers
     ASSERT_EQ(
@@ -478,7 +501,8 @@ public:
 
     EXP_ESTIMATED_ODOM_X = chained_estimate_calculation(reference[0], EXP_LEFT_WHEEL_HW_STATE);
     EXP_ESTIMATED_ODOM_Y = chained_estimate_calculation(reference[1], EXP_RIGHT_WHEEL_HW_STATE);
-    ASSERT_EQ(robot_localization_controller->get_state_interface_data().size(), 2u);
+    ASSERT_EQ(sensor_fusion_controller->estimated_interfaces_data_.size(), 3u);
+    ASSERT_EQ(robot_localization_controller->get_state_interface_data().size(), 3u);
     ASSERT_EQ(robot_localization_controller->get_state_interface_data()[0], EXP_ESTIMATED_ODOM_X);
     ASSERT_EQ(robot_localization_controller->get_state_interface_data()[1], EXP_ESTIMATED_ODOM_Y);
     ASSERT_EQ(odom_publisher_controller->get_state_interface_data().size(), 2u);
@@ -521,6 +545,7 @@ public:
   static constexpr char DIFF_DRIVE_CONTROLLER[] = "diff_drive_controller";
   static constexpr char DIFF_DRIVE_CONTROLLER_TWO[] = "diff_drive_controller_two";
   static constexpr char POSITION_TRACKING_CONTROLLER[] = "position_tracking_controller";
+  static constexpr char SENSOR_FUSION_CONTROLLER[] = "sensor_fusion_controller";
   static constexpr char ROBOT_LOCALIZATION_CONTROLLER[] = "robot_localization_controller";
   static constexpr char ODOM_PUBLISHER_CONTROLLER[] = "odometry_publisher_controller";
 
@@ -532,6 +557,9 @@ public:
     "diff_drive_controller/vel_x", "diff_drive_controller/vel_y", "diff_drive_controller/rot_z"};
   const std::vector<std::string> DIFF_DRIVE_ESTIMATED_INTERFACES = {
     "diff_drive_controller/odom_x", "diff_drive_controller/odom_y"};
+  const std::vector<std::string> SENSOR_FUSION_ESIMTATED_INTERFACES = {
+    "sensor_fusion_controller/odom_x", "sensor_fusion_controller/odom_y",
+    "sensor_fusion_controller/yaw"};
 
   const std::vector<std::string> PID_LEFT_WHEEL_CLAIMED_INTERFACES = {"wheel_left/velocity"};
   const std::vector<std::string> PID_RIGHT_WHEEL_CLAIMED_INTERFACES = {"wheel_right/velocity"};
@@ -545,6 +573,7 @@ public:
   std::shared_ptr<TestableTestChainableController> pid_right_wheel_controller;
   std::shared_ptr<TestableTestChainableController> diff_drive_controller;
   std::shared_ptr<TestableTestChainableController> diff_drive_controller_two;
+  std::shared_ptr<TestableTestChainableController> sensor_fusion_controller;
   std::shared_ptr<test_controller::TestController> robot_localization_controller;
   std::shared_ptr<test_controller::TestController> odom_publisher_controller;
   std::shared_ptr<test_controller::TestController> position_tracking_controller;
