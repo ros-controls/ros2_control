@@ -839,6 +839,9 @@ TEST_P(
     odom_publisher_controller, ODOM_PUBLISHER_CONTROLLER,
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
   cm_->add_controller(
+    sensor_fusion_controller, SENSOR_FUSION_CONTROLLER,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
     robot_localization_controller, ROBOT_LOCALIZATION_CONTROLLER,
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
 
@@ -863,6 +866,7 @@ TEST_P(
   EXPECT_FALSE(pid_left_wheel_controller->is_in_chained_mode());
   EXPECT_FALSE(pid_right_wheel_controller->is_in_chained_mode());
   ASSERT_FALSE(diff_drive_controller->is_in_chained_mode());
+  ASSERT_FALSE(sensor_fusion_controller->is_in_chained_mode());
 
   // DiffDrive (preceding) controller is activated --> PID controller in chained mode
   ActivateAndCheckController(
@@ -870,6 +874,7 @@ TEST_P(
   EXPECT_TRUE(pid_left_wheel_controller->is_in_chained_mode());
   EXPECT_TRUE(pid_right_wheel_controller->is_in_chained_mode());
   ASSERT_FALSE(diff_drive_controller->is_in_chained_mode());
+  ASSERT_FALSE(sensor_fusion_controller->is_in_chained_mode());
 
   // PositionController is activated --> all following controller in chained mode
   ActivateAndCheckController(
@@ -878,45 +883,149 @@ TEST_P(
   EXPECT_TRUE(pid_left_wheel_controller->is_in_chained_mode());
   EXPECT_TRUE(pid_right_wheel_controller->is_in_chained_mode());
   ASSERT_TRUE(diff_drive_controller->is_in_chained_mode());
+  ASSERT_FALSE(sensor_fusion_controller->is_in_chained_mode());
+  for (const auto & interface : {"diff_drive_controller/vel_x", "diff_drive_controller/vel_y"})
+  {
+    EXPECT_TRUE(cm_->resource_manager_->command_interface_exists(interface));
+    EXPECT_TRUE(cm_->resource_manager_->command_interface_is_available(interface));
+    EXPECT_TRUE(cm_->resource_manager_->command_interface_is_claimed(interface));
+  }
+  for (const auto & interface : {"diff_drive_controller/odom_x", "diff_drive_controller/odom_y"})
+  {
+    EXPECT_TRUE(cm_->resource_manager_->state_interface_exists(interface));
+    EXPECT_TRUE(cm_->resource_manager_->state_interface_is_available(interface));
+  }
 
-  // Robot localization Controller uses estimated interfaces of Diff-Drive Controller
-  ActivateAndCheckController(robot_localization_controller, ROBOT_LOCALIZATION_CONTROLLER, {}, 0u);
-  // Odometry Publisher Controller uses estimated interfaces of Diff-Drive Controller
-  ActivateAndCheckController(odom_publisher_controller, ODOM_PUBLISHER_CONTROLLER, {}, 0u);
+  // Sensor fusion Controller uses estimated interfaces of Diff-Drive Controller and IMU
+  ActivateAndCheckController(sensor_fusion_controller, SENSOR_FUSION_CONTROLLER, {}, 1u);
   EXPECT_TRUE(pid_left_wheel_controller->is_in_chained_mode());
   EXPECT_TRUE(pid_right_wheel_controller->is_in_chained_mode());
   ASSERT_TRUE(diff_drive_controller->is_in_chained_mode());
-  ASSERT_EQ(robot_localization_controller->internal_counter, 0u);
-  ASSERT_EQ(odom_publisher_controller->internal_counter, 0u);
+  ASSERT_FALSE(sensor_fusion_controller->is_in_chained_mode());
+
+  // Robot localization Controller uses estimated interfaces of sensor fusion Controller
+  ActivateAndCheckController(robot_localization_controller, ROBOT_LOCALIZATION_CONTROLLER, {}, 1u);
+
+  // Odometry Publisher Controller uses estimated interfaces of Diff-Drive Controller
+  ActivateAndCheckController(odom_publisher_controller, ODOM_PUBLISHER_CONTROLLER, {}, 1u);
+  EXPECT_TRUE(pid_left_wheel_controller->is_in_chained_mode());
+  EXPECT_TRUE(pid_right_wheel_controller->is_in_chained_mode());
+  ASSERT_TRUE(diff_drive_controller->is_in_chained_mode());
+  ASSERT_TRUE(sensor_fusion_controller->is_in_chained_mode());
+  ASSERT_EQ(robot_localization_controller->internal_counter, 3u);
+  ASSERT_EQ(odom_publisher_controller->internal_counter, 1u);
 
   UpdateAllControllerAndCheck({32.0, 128.0}, 2u);
   UpdateAllControllerAndCheck({1024.0, 4096.0}, 3u);
 
   // Test switch 'from chained mode' when controllers are deactivated
 
-  // PositionController is deactivated --> DiffDrive controller is not in chained mode anymore
+  // PositionController is deactivated --> DiffDrive controller still continues in chained mode
+  // As the DiffDriveController is in chained mode, right now we tend to also deactivate
+  // the other controllers that rely on the DiffDriveController expected interfaces
   DeactivateAndCheckController(
     position_tracking_controller, POSITION_TRACKING_CONTROLLER,
-    POSITION_CONTROLLER_CLAIMED_INTERFACES, 4u, true);
+    POSITION_CONTROLLER_CLAIMED_INTERFACES, 10u, true);
+  EXPECT_TRUE(pid_left_wheel_controller->is_in_chained_mode());
+  EXPECT_TRUE(pid_right_wheel_controller->is_in_chained_mode());
+  ASSERT_TRUE(diff_drive_controller->is_in_chained_mode());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, diff_drive_controller->get_state().id());
+  // SensorFusionController continues to stay in the chained mode as it is still using the estimated interfaces
+  ASSERT_TRUE(sensor_fusion_controller->is_in_chained_mode());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, sensor_fusion_controller->get_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, odom_publisher_controller->get_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    robot_localization_controller->get_state().id());
+
+  // Deactivate the robot localization controller and see that the sensor fusion controller is still active but not in the chained mode
+  DeactivateAndCheckController(
+    robot_localization_controller, ROBOT_LOCALIZATION_CONTROLLER, {}, 8u, true);
+  EXPECT_TRUE(pid_left_wheel_controller->is_in_chained_mode());
+  EXPECT_TRUE(pid_right_wheel_controller->is_in_chained_mode());
+  ASSERT_TRUE(diff_drive_controller->is_in_chained_mode());
+  ASSERT_FALSE(sensor_fusion_controller->is_in_chained_mode());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, diff_drive_controller->get_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, sensor_fusion_controller->get_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, odom_publisher_controller->get_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    robot_localization_controller->get_state().id());
+
+  // Deactivate the odometry publisher controller
+  DeactivateAndCheckController(odom_publisher_controller, ODOM_PUBLISHER_CONTROLLER, {}, 8u, true);
+  EXPECT_TRUE(pid_left_wheel_controller->is_in_chained_mode());
+  EXPECT_TRUE(pid_right_wheel_controller->is_in_chained_mode());
+  ASSERT_TRUE(diff_drive_controller->is_in_chained_mode());
+  ASSERT_FALSE(sensor_fusion_controller->is_in_chained_mode());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, diff_drive_controller->get_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, sensor_fusion_controller->get_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    odom_publisher_controller->get_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    robot_localization_controller->get_state().id());
+
+  // Deactivate the sensor_fusion controller and see that the diff_drive_controller is still active but not in the chained mode
+  DeactivateAndCheckController(sensor_fusion_controller, SENSOR_FUSION_CONTROLLER, {}, 14u, true);
   EXPECT_TRUE(pid_left_wheel_controller->is_in_chained_mode());
   EXPECT_TRUE(pid_right_wheel_controller->is_in_chained_mode());
   ASSERT_FALSE(diff_drive_controller->is_in_chained_mode());
+  ASSERT_FALSE(sensor_fusion_controller->is_in_chained_mode());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, diff_drive_controller->get_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, sensor_fusion_controller->get_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    odom_publisher_controller->get_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    robot_localization_controller->get_state().id());
 
-  // DiffDrive (preceding) controller is activated --> PID controller in chained mode
-  DeactivateAndCheckController(
-    diff_drive_controller, DIFF_DRIVE_CONTROLLER, DIFF_DRIVE_CLAIMED_INTERFACES, 8u, true);
+  // Deactivate the diff_drive_controller as all it's following controllers that uses it's interfaces are deactivated
+    DeactivateAndCheckController(
+    diff_drive_controller, DIFF_DRIVE_CONTROLLER, DIFF_DRIVE_CLAIMED_INTERFACES, 20u, true);
   EXPECT_FALSE(pid_left_wheel_controller->is_in_chained_mode());
   EXPECT_FALSE(pid_right_wheel_controller->is_in_chained_mode());
   ASSERT_FALSE(diff_drive_controller->is_in_chained_mode());
+  ASSERT_FALSE(sensor_fusion_controller->is_in_chained_mode());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, diff_drive_controller->get_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, sensor_fusion_controller->get_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    odom_publisher_controller->get_state().id());
 
   // all controllers are deactivated --> chained mode is not changed
   DeactivateAndCheckController(
-    pid_left_wheel_controller, PID_LEFT_WHEEL, PID_LEFT_WHEEL_CLAIMED_INTERFACES, 14u, true);
+    pid_left_wheel_controller, PID_LEFT_WHEEL, PID_LEFT_WHEEL_CLAIMED_INTERFACES, 26u, true);
   DeactivateAndCheckController(
-    pid_right_wheel_controller, PID_RIGHT_WHEEL, PID_RIGHT_WHEEL_CLAIMED_INTERFACES, 14u, true);
+    pid_right_wheel_controller, PID_RIGHT_WHEEL, PID_RIGHT_WHEEL_CLAIMED_INTERFACES, 26u, true);
   EXPECT_FALSE(pid_left_wheel_controller->is_in_chained_mode());
   EXPECT_FALSE(pid_right_wheel_controller->is_in_chained_mode());
   ASSERT_FALSE(diff_drive_controller->is_in_chained_mode());
+  ASSERT_FALSE(sensor_fusion_controller->is_in_chained_mode());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, diff_drive_controller->get_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, sensor_fusion_controller->get_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    odom_publisher_controller->get_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    robot_localization_controller->get_state().id());
 }
 
 TEST_P(
@@ -1249,12 +1358,12 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers_add
 
   ConfigureAndCheckControllers();
 
-  SetToChainedModeAndMakeReferenceInterfacesAvailable(
-    pid_left_wheel_controller, PID_LEFT_WHEEL, PID_LEFT_WHEEL_REFERENCE_INTERFACES);
-  SetToChainedModeAndMakeReferenceInterfacesAvailable(
-    pid_right_wheel_controller, PID_RIGHT_WHEEL, PID_RIGHT_WHEEL_REFERENCE_INTERFACES);
-  SetToChainedModeAndMakeReferenceInterfacesAvailable(
-    diff_drive_controller, DIFF_DRIVE_CONTROLLER, DIFF_DRIVE_REFERENCE_INTERFACES);
+  SetToChainedModeAndMakeInterfacesAvailable(
+    pid_left_wheel_controller, PID_LEFT_WHEEL, {}, PID_LEFT_WHEEL_REFERENCE_INTERFACES);
+  SetToChainedModeAndMakeInterfacesAvailable(
+    pid_right_wheel_controller, PID_RIGHT_WHEEL, {}, PID_RIGHT_WHEEL_REFERENCE_INTERFACES);
+  SetToChainedModeAndMakeInterfacesAvailable(
+    diff_drive_controller, DIFF_DRIVE_CONTROLLER, {}, DIFF_DRIVE_REFERENCE_INTERFACES);
 
   EXPECT_THROW(
     cm_->resource_manager_->make_controller_reference_interfaces_available(

@@ -36,7 +36,10 @@ TEST_F(ChainableControllerInterfaceTest, export_estimated_interfaces)
   TestableChainableControllerInterface controller;
 
   // initialize, create node
-  ASSERT_EQ(controller.init(TEST_CONTROLLER_NAME), controller_interface::return_type::OK);
+  const auto node_options = controller.define_custom_node_options();
+  ASSERT_EQ(
+    controller.init(TEST_CONTROLLER_NAME, "", 50.0, "", node_options),
+    controller_interface::return_type::OK);
   ASSERT_NO_THROW(controller.get_node());
 
   auto estimated_interfaces = controller.export_estimated_interfaces();

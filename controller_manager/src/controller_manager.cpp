@@ -709,7 +709,7 @@ controller_interface::return_type ControllerManager::configure_controller(
   for (const auto & cmd_itf : cmd_itfs)
   {
     controller_manager::ControllersListIterator ctrl_it;
-    if (command_interface_is_reference_interface_of_controller(cmd_itf, controllers, ctrl_it))
+    if (is_interface_a_chained_interface(cmd_itf, controllers, ctrl_it))
     {
       add_element_to_list(
         controller_chain_spec_[controller_name].following_controllers, ctrl_it->info.name);
@@ -721,7 +721,7 @@ controller_interface::return_type ControllerManager::configure_controller(
   for (const auto & state_itf : state_itfs)
   {
     controller_manager::ControllersListIterator ctrl_it;
-    if (command_interface_is_reference_interface_of_controller(state_itf, controllers, ctrl_it))
+    if (is_interface_a_chained_interface(state_itf, controllers, ctrl_it))
     {
       add_element_to_list(
         controller_chain_spec_[controller_name].preceding_controllers, ctrl_it->info.name);
