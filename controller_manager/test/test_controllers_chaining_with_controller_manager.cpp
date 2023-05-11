@@ -1053,6 +1053,9 @@ TEST_P(
     odom_publisher_controller, ODOM_PUBLISHER_CONTROLLER,
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
   cm_->add_controller(
+    sensor_fusion_controller, SENSOR_FUSION_CONTROLLER,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
     robot_localization_controller, ROBOT_LOCALIZATION_CONTROLLER,
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
 
@@ -1068,6 +1071,7 @@ TEST_P(
   EXPECT_FALSE(pid_left_wheel_controller->is_in_chained_mode());
   EXPECT_FALSE(pid_right_wheel_controller->is_in_chained_mode());
   ASSERT_FALSE(diff_drive_controller->is_in_chained_mode());
+  ASSERT_FALSE(sensor_fusion_controller->is_in_chained_mode());
 
   // Test Case 1: Trying to activate a preceding controller when following controller
   // is not activated --> return error (If STRICT); Preceding controller is still inactive.
@@ -1088,6 +1092,17 @@ TEST_P(
   // Check if the controller activated (Should not be activated)
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, diff_drive_controller->get_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, sensor_fusion_controller->get_state().id());
+
+  ActivateController(
+    SENSOR_FUSION_CONTROLLER, expected.at(test_param.strictness).return_type,
+    std::future_status::ready);
+  // Check if the controller activated (Should not be activated)
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, diff_drive_controller->get_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, sensor_fusion_controller->get_state().id());
 
   // Test Case 2: Try to activate a preceding controller the same time when trying to
   // deactivate a following controller (using switch_controller function)
@@ -1101,11 +1116,11 @@ TEST_P(
   ActivateAndCheckController(
     pid_right_wheel_controller, PID_RIGHT_WHEEL, PID_RIGHT_WHEEL_CLAIMED_INTERFACES, 1u);
 
-  // Attempt to activate a preceding controller (diff-drive controller)
+  // Attempt to activate a preceding controller (diff-drive controller + remaining)
   // while trying to deactivate a following controller
   switch_test_controllers(
-    {DIFF_DRIVE_CONTROLLER}, {PID_RIGHT_WHEEL}, test_param.strictness,
-    expected.at(test_param.strictness).future_status,
+    {DIFF_DRIVE_CONTROLLER, ODOM_PUBLISHER_CONTROLLER, SENSOR_FUSION_CONTROLLER}, {PID_RIGHT_WHEEL},
+    test_param.strictness, expected.at(test_param.strictness).future_status,
     expected.at(test_param.strictness).return_type);
 
   // Preceding controller should stay deactivated and following controller
@@ -1117,6 +1132,11 @@ TEST_P(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, pid_left_wheel_controller->get_state().id());
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, diff_drive_controller->get_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, sensor_fusion_controller->get_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    odom_publisher_controller->get_state().id());
 }
 
 TEST_P(
