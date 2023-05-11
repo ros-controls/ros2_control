@@ -832,6 +832,7 @@ void ControllerManager::clear_requests()
   // state without the controller being in active state
   for (const auto & controller_name : to_chained_mode_request_)
   {
+    resource_manager_->make_controller_estimated_interfaces_unavailable(controller_name);
     resource_manager_->make_controller_reference_interfaces_unavailable(controller_name);
   }
   to_chained_mode_request_.clear();
@@ -1399,6 +1400,8 @@ void ControllerManager::deactivate_controllers(
       // if it is a chainable controller, make the reference interfaces unavailable on deactivation
       if (controller->is_chainable())
       {
+        controller->toggle_references_from_subscribers(true);
+        resource_manager_->make_controller_estimated_interfaces_unavailable(controller_name);
         resource_manager_->make_controller_reference_interfaces_unavailable(controller_name);
       }
       if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
@@ -1575,6 +1578,10 @@ void ControllerManager::activate_controllers(
     // if it is a chainable controller, make the reference interfaces available on activation
     if (controller->is_chainable())
     {
+      // enable references from the controller interfaces
+      controller->toggle_references_from_subscribers(false);
+      // make all the exported interfaces of the controller available
+      resource_manager_->make_controller_estimated_interfaces_available(controller_name);
       resource_manager_->make_controller_reference_interfaces_available(controller_name);
     }
 
@@ -2370,6 +2377,9 @@ controller_interface::return_type ControllerManager::check_following_controllers
         to_chained_mode_request_.push_back(following_ctrl_it->info.name);
         // if it is a chainable controller, make the reference interfaces available on preactivation
         // (This is needed when you activate a couple of chainable controller altogether)
+        // make all the exported interfaces of the controller available
+        resource_manager_->make_controller_estimated_interfaces_available(
+          following_ctrl_it->info.name);
         resource_manager_->make_controller_reference_interfaces_available(
           following_ctrl_it->info.name);
         RCLCPP_DEBUG(
