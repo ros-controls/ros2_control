@@ -2295,11 +2295,16 @@ controller_interface::return_type ControllerManager::check_following_controllers
     get_logger(), "Checking following controllers of preceding controller with name '%s'.",
     controller_it->info.name.c_str());
 
-  for (const auto & cmd_itf_name : controller_it->c->command_interface_configuration().names)
+  auto controller_interfaces = controller_it->c->command_interface_configuration().names;
+  auto controller_state_interfaces = controller_it->c->state_interface_configuration().names;
+  controller_interfaces.insert(
+    controller_interfaces.end(), controller_state_interfaces.begin(),
+    controller_state_interfaces.end());
+  for (const auto & ctrl_itf_name : controller_interfaces)
   {
     ControllersListIterator following_ctrl_it;
     // Check if interface if reference interface and following controller exist.
-    if (!is_interface_a_chained_interface(cmd_itf_name, controllers, following_ctrl_it))
+    if (!is_interface_a_chained_interface(ctrl_itf_name, controllers, following_ctrl_it))
     {
       continue;
     }
@@ -2319,9 +2324,9 @@ controller_interface::return_type ControllerManager::check_following_controllers
     {
       RCLCPP_WARN(
         get_logger(),
-        "No reference interface '%s' exist, since the following controller with name '%s' "
-        "is not chainable.",
-        cmd_itf_name.c_str(), following_ctrl_it->info.name.c_str());
+        "No estimated/reference interface '%s' exist, since the following controller with name "
+        "'%s' is not chainable.",
+        ctrl_itf_name.c_str(), following_ctrl_it->info.name.c_str());
       return controller_interface::return_type::ERROR;
     }
 
