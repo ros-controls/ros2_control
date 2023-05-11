@@ -836,6 +836,7 @@ void ControllerManager::clear_requests()
   }
   to_chained_mode_request_.clear();
   from_chained_mode_request_.clear();
+  to_use_references_from_subscribers_.clear();
   activate_command_interface_request_.clear();
   deactivate_command_interface_request_.clear();
 }
@@ -2610,5 +2611,42 @@ rclcpp::NodeOptions ControllerManager::determine_controller_node_options(
   controller_node_options = controller_node_options.arguments(node_options_arguments);
   return controller_node_options;
 }
+
+void ControllerManager::set_controllers_reference_interfaces_availability(
+  const std::vector<std::string> & controllers, bool available)
+{
+  std::vector<ControllerSpec> & rt_controller_list =
+    rt_controllers_wrapper_.update_and_get_used_by_rt_list();
+
+  for (const auto & request : controllers)
+  {
+    auto found_it = std::find_if(
+      rt_controller_list.begin(), rt_controller_list.end(),
+      std::bind(controller_name_compare, std::placeholders::_1, request));
+    if (found_it == rt_controller_list.end())
+    {
+      RCLCPP_FATAL(
+        get_logger(),
+        "Got request to turn %s reference interfaces of controller '%s', but controller is not in "
+        "the realtime controller list. (This should never happen!)",
+        (available ? "ON" : "OFF"), request.c_str());
+      continue;
+    }
+    auto controller = found_it->c;
+    if (!is_controller_active(*controller))
+    {
+      if (available)
+      {
+        controller->toggle_references_from_subscribers(false);
+        resource_manager_->make_controller_reference_interfaces_available(request);
+      }
+      else
+      {
+        controller->toggle_references_from_subscribers(true);
+        resource_manager_->make_controller_reference_interfaces_unavailable(request);
+      }
+    }
+  }
+};
 
 }  // namespace controller_manager
