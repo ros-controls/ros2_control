@@ -132,6 +132,55 @@ bool is_interface_a_chained_interface(
   return true;
 }
 
+bool is_interface_exported_from_controller(
+  const std::string & interface_name, const std::string & controller_name)
+{
+  auto split_pos = interface_name.find_first_of('/');
+  if (split_pos == std::string::npos)  // '/' exist in the string (should be always false)
+  {
+    RCLCPP_FATAL(
+      rclcpp::get_logger("ControllerManager::utils"),
+      "Character '/', was not find in the interface name '%s'. This should never happen. "
+      "Stop the controller manager immediately and restart it.",
+      interface_name.c_str());
+    throw std::runtime_error("Mismatched interface name. See the FATAL message above.");
+  }
+
+  auto interface_prefix = interface_name.substr(0, split_pos);
+  if (controller_name.compare(interface_prefix) == 0)
+    return true;
+  else
+    return false;
+}
+
+bool is_controller_estimated_interfaces_inuse_by_other_controllers(
+  const std::string & controller_name,
+  const std::vector<controller_manager::ControllerSpec> & controllers,
+  std::vector<std::string> blacklist)
+{
+  for (const auto & controller : controllers)
+  {
+    auto blacklist_it = std::find(blacklist.begin(), blacklist.end(), controller.info.name);
+    if (blacklist_it != blacklist.end() || controller_name.compare(controller.info.name) == 0)
+    {
+      continue;
+    }
+    if (!is_controller_active(controller.c))
+    {
+      continue;
+    }
+    auto controller_state_interfaces = controller.c->state_interface_configuration().names;
+    for (const auto & ctrl_itf_name : controller_state_interfaces)
+    {
+      if (is_interface_exported_from_controller(ctrl_itf_name, controller_name))
+      {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 template <typename T>
 void add_element_to_list(std::vector<T> & list, const T & element)
 {
@@ -168,7 +217,6 @@ void controller_chain_spec_cleanup(
   }
   ctrl_chain_spec.erase(controller);
 }
-
 }  // namespace
 
 namespace controller_manager
