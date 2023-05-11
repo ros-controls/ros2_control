@@ -100,14 +100,14 @@ TEST_F(TestComponentParser, component_interface_type_empty_throws_error)
   ASSERT_THROW(parse_control_resources_from_urdf(broken_urdf_string), std::runtime_error);
 }
 
-TEST_F(TestComponentParser, parameter_empty_throws_error)
+TEST_F(TestComponentParser, parameter_empty_throws_no_error)
 {
   const std::string broken_urdf_string =
     std::string(ros2_control_test_assets::urdf_head) +
     ros2_control_test_assets::invalid_urdf_ros2_control_parameter_empty +
     ros2_control_test_assets::urdf_tail;
 
-  ASSERT_THROW(parse_control_resources_from_urdf(broken_urdf_string), std::runtime_error);
+  ASSERT_NO_THROW(parse_control_resources_from_urdf(broken_urdf_string));
 }
 
 TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_one_interface)
