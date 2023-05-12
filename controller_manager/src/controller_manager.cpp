@@ -2071,6 +2071,7 @@ void ControllerManager::manage_switch()
 
   switch_chained_mode(to_chained_mode_request_, true);
   switch_chained_mode(from_chained_mode_request_, false);
+  set_controllers_reference_interfaces_availability(to_use_references_from_subscribers_, false);
 
   // activate controllers once the switch is fully complete
   if (!switch_params_.activate_asap)
