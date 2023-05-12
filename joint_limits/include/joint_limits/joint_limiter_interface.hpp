@@ -97,6 +97,9 @@ public:
       result = on_init();
     }
 
+    // avoid linters output
+    (void)robot_description_topic;
+
     return result;
   }
 

@@ -47,6 +47,8 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
     return false;
   }
 
+  // TODO(destogl): please check if we get too much malloc from this initialization,
+  // if so then we should use members instead local variables and initialize them in other method
   std::vector<double> desired_accel(number_of_joints_);
   std::vector<double> desired_vel(number_of_joints_);
   std::vector<double> desired_pos(number_of_joints_);
@@ -106,8 +108,8 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
     // check if decelerating - if velocity is changing toward 0
     bool deceleration_limit_applied = false;
     if (
-      desired_accel[index] < 0 && current_joint_states.velocities[index] > 0 ||
-      desired_accel[index] > 0 && current_joint_states.velocities[index] < 0)
+      (desired_accel[index] < 0 && current_joint_states.velocities[index] > 0) ||
+      (desired_accel[index] > 0 && current_joint_states.velocities[index] < 0))
     {
       // limit deceleration
       if (joint_limits_[index].has_deceleration_limits)
