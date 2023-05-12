@@ -1190,17 +1190,29 @@ TEST_P(
     pid_right_wheel_controller, PID_RIGHT_WHEEL, PID_RIGHT_WHEEL_CLAIMED_INTERFACES, 1u);
   ActivateAndCheckController(
     diff_drive_controller, DIFF_DRIVE_CONTROLLER, DIFF_DRIVE_CLAIMED_INTERFACES, 1u);
+  ActivateAndCheckController(sensor_fusion_controller, SENSOR_FUSION_CONTROLLER, {}, 1u);
+  ActivateAndCheckController(robot_localization_controller, ROBOT_LOCALIZATION_CONTROLLER, {}, 1u);
+  ActivateAndCheckController(odom_publisher_controller, ODOM_PUBLISHER_CONTROLLER, {}, 1u);
 
-  // Verify that the other preceding controller is deactivated (diff_drive_controller_two)
+  // Verify that the other preceding controller is deactivated (diff_drive_controller_two) and other depending controllers are active
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
     diff_drive_controller_two->get_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, sensor_fusion_controller->get_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    robot_localization_controller->get_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, odom_publisher_controller->get_state().id());
 
   // Deactivate the first preceding controller (diff_drive_controller) and
   // activate the other preceding controller (diff_drive_controller_two)
   switch_test_controllers(
-    {DIFF_DRIVE_CONTROLLER_TWO}, {DIFF_DRIVE_CONTROLLER}, test_param.strictness,
-    std::future_status::timeout, controller_interface::return_type::OK);
+    {DIFF_DRIVE_CONTROLLER_TWO},
+    {DIFF_DRIVE_CONTROLLER, SENSOR_FUSION_CONTROLLER, ROBOT_LOCALIZATION_CONTROLLER,
+     ODOM_PUBLISHER_CONTROLLER},
+    test_param.strictness, std::future_status::timeout, controller_interface::return_type::OK);
 
   // Following controllers should stay active
   EXPECT_EQ(
@@ -1213,6 +1225,14 @@ TEST_P(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, diff_drive_controller->get_state().id());
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, diff_drive_controller_two->get_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, sensor_fusion_controller->get_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    robot_localization_controller->get_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    odom_publisher_controller->get_state().id());
 }
 
 TEST_P(
