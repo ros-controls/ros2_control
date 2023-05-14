@@ -1,3 +1,5 @@
+:github_url: https://github.com/ros-controls/ros2_control/blob/|github_branch|/hardware_interface/doc/writing_new_hardware_interface.rst
+
 .. _writing_new_hardware_interface:
 
 Writing a new hardware interface
