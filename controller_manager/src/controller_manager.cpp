@@ -2319,7 +2319,9 @@ void ControllerManager::propagate_deactivation_of_chained_mode(
               from_chained_mode_request_.push_back(following_ctrl_it->info.name);
               to_use_references_from_subscribers_.push_back(following_ctrl_it->info.name);
               RCLCPP_DEBUG(
-                get_logger(), "Adding controller '%s' in 'from chained mode' request.",
+                get_logger(),
+                "Adding controller '%s' in 'from chained mode' and 'use references from "
+                "subscriber' request.",
                 following_ctrl_it->info.name.c_str());
             }
           }
@@ -2448,6 +2450,18 @@ controller_interface::return_type ControllerManager::check_following_controllers
           get_logger(),
           "Removing controller '%s' in 'from chained mode' request because it "
           "should stay in chained mode.",
+          following_ctrl_it->info.name.c_str());
+      }
+      auto ref_from_sub_it = std::find(
+        to_use_references_from_subscribers_.begin(), to_use_references_from_subscribers_.end(),
+        following_ctrl_it->info.name);
+      if (found_it != to_use_references_from_subscribers_.end())
+      {
+        to_use_references_from_subscribers_.erase(ref_from_sub_it);
+        RCLCPP_DEBUG(
+          get_logger(),
+          "Removing controller '%s' in 'use references from subscriber' request because it "
+          "should stay in chained mode and accept references from the active controller.",
           following_ctrl_it->info.name.c_str());
       }
     }
