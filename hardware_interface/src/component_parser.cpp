@@ -224,7 +224,7 @@ std::string parse_data_type_attribute(const tinyxml2::XMLElement * elem)
 bool parse_is_async_attribute(const tinyxml2::XMLElement * elem)
 {
   const tinyxml2::XMLAttribute * attr = elem->FindAttribute(kIsAsyncAttribute);
-  return attr ? strcasecmp(attr->Value(), "true") == 0 : false;
+  return attr ? parse_bool(attr->Value()) : false;
 }
 
 /// Search XML snippet from URDF for parameters.
@@ -610,6 +610,11 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
   }
 
   return hardware_info;
+}
+
+bool parse_bool(const std::string & bool_string)
+{
+  return bool_string == "true" || bool_string == "True";
 }
 
 }  // namespace hardware_interface
