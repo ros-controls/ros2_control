@@ -1063,6 +1063,14 @@ controller_interface::return_type ControllerManager::switch_controller(
     }
   }
 
+  // Check after the check if the activate and deactivate list is empty or not
+  if (activate_request_.empty() && deactivate_request_.empty())
+  {
+    RCLCPP_INFO(get_logger(), "Empty activate and deactivate list, not requesting switch");
+    clear_requests();
+    return controller_interface::return_type::OK;
+  }
+
   for (const auto & controller : controllers)
   {
     auto to_chained_mode_list_it = std::find(
