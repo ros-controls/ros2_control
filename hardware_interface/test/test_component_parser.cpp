@@ -628,7 +628,8 @@ TEST_F(TestComponentParser, successfully_parse_parameter_empty)
   EXPECT_EQ(hardware_info.name, "2DOF_System_Robot_Position_Only");
   EXPECT_EQ(hardware_info.type, "system");
   EXPECT_EQ(
-    hardware_info.hardware_plugin_name, "ros2_control_demo_hardware/2DOF_System_Hardware_Position_Only");
+    hardware_info.hardware_plugin_name,
+    "ros2_control_demo_hardware/2DOF_System_Hardware_Position_Only");
 
   ASSERT_THAT(hardware_info.joints, SizeIs(1));
 
