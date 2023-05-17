@@ -1575,8 +1575,8 @@ TEST_F(TestGenericSystem, gpio_with_initial_value_)
 
 TEST_F(TestGenericSystem, disabled_commands_flag_is_active)
 {
-  auto urdf = ros2_control_test_assets::urdf_head + disabled_commands_ +
-              ros2_control_test_assets::urdf_tail;
+  auto urdf =
+    ros2_control_test_assets::urdf_head + disabled_commands_ + ros2_control_test_assets::urdf_tail;
   TestableResourceManager rm(urdf);
   // Activate components to get all interfaces available
   activate_components(rm);
