@@ -77,6 +77,9 @@ public:
   HARDWARE_INTERFACE_PUBLIC
   return_type read(const rclcpp::Time & time, const rclcpp::Duration & period);
 
+  HARDWARE_INTERFACE_PUBLIC
+  return_type write(const rclcpp::Time &, const rclcpp::Duration &) { return return_type::OK; }
+
 private:
   std::unique_ptr<SensorInterface> impl_;
 };
