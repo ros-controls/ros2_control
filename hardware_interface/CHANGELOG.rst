@@ -2,8 +2,8 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.13.0 (2023-05-18)
+-------------------
 * Add class for thread management of async hw interfaces (`#981 <https://github.com/ros-controls/ros2_control/issues/981>`_)
 * Fix github links on control.ros.org (`#1019 <https://github.com/ros-controls/ros2_control/issues/1019>`_)
 * Update precommit libraries(`#1020 <https://github.com/ros-controls/ros2_control/issues/1020>`_)
