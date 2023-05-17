@@ -25,6 +25,7 @@
 #include <string>
 #include <vector>
 
+#include "hardware_interface/component_parser.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "rcutils/logging_macros.h"
 
@@ -74,8 +75,7 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
   auto it = info_.hardware_parameters.find("mock_sensor_commands");
   if (it != info_.hardware_parameters.end())
   {
-    // TODO(anyone): change this to parse_bool() (see ros2_control#339)
-    use_mock_sensor_command_interfaces_ = it->second == "true" || it->second == "True";
+    use_mock_sensor_command_interfaces_ = hardware_interface::parse_bool(it->second);
   }
   else
   {
@@ -83,7 +83,7 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
     it = info_.hardware_parameters.find("fake_sensor_commands");
     if (it != info_.hardware_parameters.end())
     {
-      use_mock_sensor_command_interfaces_ = it->second == "true" || it->second == "True";
+      use_mock_sensor_command_interfaces_ = hardware_interface::parse_bool(it->second);
       RCUTILS_LOG_WARN_NAMED(
         "fake_generic_system",
         "Parameter 'fake_sensor_commands' has been deprecated from usage. Use"
@@ -99,8 +99,7 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
   it = info_.hardware_parameters.find("fake_gpio_commands");
   if (it != info_.hardware_parameters.end())
   {
-    // TODO(anyone): change this to parse_bool() (see ros2_control#339)
-    use_fake_gpio_command_interfaces_ = it->second == "true" || it->second == "True";
+    use_fake_gpio_command_interfaces_ = hardware_interface::parse_bool(it->second);
   }
   else
   {
@@ -121,7 +120,7 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
       custom_interface_with_following_offset_ = it->second;
     }
   }
-  // its extremlly unprobably that std::distance results int this value - therefore default
+  // it's extremely improbable that std::distance results int this value - therefore default
   index_custom_interface_with_following_offset_ = std::numeric_limits<size_t>::max();
 
   // Initialize storage for standard interfaces
