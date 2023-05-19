@@ -13,6 +13,11 @@
 // limitations under the License.
 
 #include <tinyxml2.h>
+<<<<<<< HEAD
+=======
+#include <charconv>
+#include <iostream>
+>>>>>>> 7c07430 ([URDF Parser] Allow empty urdf tag, e.g., parameter (#1017))
 #include <regex>
 #include <stdexcept>
 #include <string>
@@ -65,7 +70,8 @@ std::string get_text_for_element(
   const auto get_text_output = element_it->GetText();
   if (!get_text_output)
   {
-    throw std::runtime_error("text not specified in the " + tag_name + " tag");
+    std::cerr << "text not specified in the " << tag_name << " tag" << std::endl;
+    return "";
   }
   return get_text_output;
 }
