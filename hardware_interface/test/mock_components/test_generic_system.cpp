@@ -38,6 +38,14 @@ const auto PERIOD = rclcpp::Duration::from_seconds(0.01);
 
 class TestGenericSystem : public ::testing::Test
 {
+<<<<<<< HEAD
+=======
+public:
+  void test_generic_system_with_mimic_joint(std::string & urdf);
+  void test_generic_system_with_mock_sensor_commands(std::string & urdf);
+  void test_generic_system_with_mock_gpio_commands(std::string & urdf);
+
+>>>>>>> 7174a1d (Use consequently 'mock' instead of 'fake'. (#1026))
 protected:
   void SetUp() override
   {
@@ -181,7 +189,7 @@ protected:
   </ros2_control>
 )";
 
-    hardware_system_2dof_with_sensor_fake_command_ =
+    hardware_system_2dof_with_sensor_mock_command_ =
       R"(
   <ros2_control name="GenericSystem2dof" type="system">
     <hardware>
@@ -210,7 +218,7 @@ protected:
   </ros2_control>
 )";
 
-    hardware_system_2dof_with_sensor_fake_command_True_ =
+    hardware_system_2dof_with_sensor_mock_command_True_ =
       R"(
   <ros2_control name="GenericSystem2dof" type="system">
     <hardware>
@@ -377,7 +385,41 @@ protected:
   </ros2_control>
 )";
 
-    valid_urdf_ros2_control_system_robot_with_gpio_fake_command_ =
+    valid_urdf_ros2_control_system_robot_with_gpio_mock_command_ =
+      R"(
+  <ros2_control name="GenericSystem2dof" type="system">
+    <hardware>
+      <plugin>mock_components/GenericSystem</plugin>
+      <param name="mock_gpio_commands">true</param>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <param name="initial_position">3.45</param>
+    </joint>
+    <joint name="joint2">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <param name="initial_position">2.78</param>
+    </joint>
+    <gpio name="flange_analog_IOs">
+      <command_interface name="analog_output1" data_type="double"/>
+      <state_interface name="analog_output1"/>
+      <state_interface name="analog_input1"/>
+      <state_interface name="analog_input2"/>
+    </gpio>
+    <gpio name="flange_vacuum">
+      <command_interface name="vacuum"/>
+      <state_interface name="vacuum" data_type="double"/>
+    </gpio>
+  </ros2_control>
+)";
+
+    valid_urdf_ros2_control_system_robot_with_gpio_mock_command_True_ =
       R"(
   <ros2_control name="GenericSystem2dof" type="system">
     <hardware>
@@ -453,18 +495,54 @@ protected:
   std::string hardware_system_2dof_standard_interfaces_;
   std::string hardware_system_2dof_with_other_interface_;
   std::string hardware_system_2dof_with_sensor_;
-  std::string hardware_system_2dof_with_sensor_fake_command_;
-  std::string hardware_system_2dof_with_sensor_fake_command_True_;
+  std::string hardware_system_2dof_with_sensor_mock_command_;
+  std::string hardware_system_2dof_with_sensor_mock_command_True_;
   std::string hardware_system_2dof_with_mimic_joint_;
   std::string hardware_system_2dof_standard_interfaces_with_offset_;
   std::string hardware_system_2dof_standard_interfaces_with_custom_interface_for_offset_;
   std::string hardware_system_2dof_standard_interfaces_with_custom_interface_for_offset_missing_;
   std::string valid_urdf_ros2_control_system_robot_with_gpio_;
-  std::string valid_urdf_ros2_control_system_robot_with_gpio_fake_command_;
+  std::string valid_urdf_ros2_control_system_robot_with_gpio_mock_command_;
+  std::string valid_urdf_ros2_control_system_robot_with_gpio_mock_command_True_;
   std::string sensor_with_initial_value_;
   std::string gpio_with_initial_value_;
 };
 
+<<<<<<< HEAD
+=======
+// Forward declaration
+namespace hardware_interface
+{
+class ResourceStorage;
+}
+
+class TestableResourceManager : public hardware_interface::ResourceManager
+{
+public:
+  friend TestGenericSystem;
+
+  FRIEND_TEST(TestGenericSystem, generic_fake_system_2dof_symetric_interfaces);
+  FRIEND_TEST(TestGenericSystem, generic_system_2dof_symetric_interfaces);
+  FRIEND_TEST(TestGenericSystem, generic_system_2dof_asymetric_interfaces);
+  FRIEND_TEST(TestGenericSystem, generic_system_2dof_other_interfaces);
+  FRIEND_TEST(TestGenericSystem, generic_system_2dof_sensor);
+  FRIEND_TEST(TestGenericSystem, generic_system_2dof_sensor_mock_command);
+  FRIEND_TEST(TestGenericSystem, generic_system_2dof_sensor_mock_command_True);
+  FRIEND_TEST(TestGenericSystem, hardware_system_2dof_with_mimic_joint);
+  FRIEND_TEST(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio);
+  FRIEND_TEST(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_mock_command);
+  FRIEND_TEST(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_mock_command_True);
+
+  TestableResourceManager() : hardware_interface::ResourceManager() {}
+
+  TestableResourceManager(
+    const std::string & urdf, bool validate_interfaces = true, bool activate_all = false)
+  : hardware_interface::ResourceManager(urdf, validate_interfaces, activate_all)
+  {
+  }
+};
+
+>>>>>>> 7174a1d (Use consequently 'mock' instead of 'fake'. (#1026))
 void set_components_state(
   hardware_interface::ResourceManager & rm, const std::vector<std::string> & components,
   const uint8_t state_id, const std::string & state_name)
@@ -1034,18 +1112,18 @@ void test_generic_system_with_fake_sensor_commands(std::string urdf)
   ASSERT_EQ(4.44, sty_c.get_value());
 }
 
-TEST_F(TestGenericSystem, generic_system_2dof_sensor_fake_command)
+TEST_F(TestGenericSystem, generic_system_2dof_sensor_mock_command)
 {
-  auto urdf = ros2_control_test_assets::urdf_head + hardware_system_2dof_with_sensor_fake_command_ +
+  auto urdf = ros2_control_test_assets::urdf_head + hardware_system_2dof_with_sensor_mock_command_ +
               ros2_control_test_assets::urdf_tail;
 
   test_generic_system_with_fake_sensor_commands(urdf);
 }
 
-TEST_F(TestGenericSystem, generic_system_2dof_sensor_fake_command_True)
+TEST_F(TestGenericSystem, generic_system_2dof_sensor_mock_command_True)
 {
   auto urdf = ros2_control_test_assets::urdf_head +
-              hardware_system_2dof_with_sensor_fake_command_True_ +
+              hardware_system_2dof_with_sensor_mock_command_True_ +
               ros2_control_test_assets::urdf_tail;
 
   test_generic_system_with_fake_sensor_commands(urdf);
@@ -1360,12 +1438,18 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_)
   generic_system_functional_test(urdf);
 }
 
+<<<<<<< HEAD
 TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_fake_command_)
 {
   auto urdf = ros2_control_test_assets::urdf_head +
               valid_urdf_ros2_control_system_robot_with_gpio_fake_command_ +
               ros2_control_test_assets::urdf_tail;
   hardware_interface::ResourceManager rm(urdf);
+=======
+void TestGenericSystem::test_generic_system_with_mock_gpio_commands(std::string & urdf)
+{
+  TestableResourceManager rm(urdf);
+>>>>>>> 7174a1d (Use consequently 'mock' instead of 'fake'. (#1026))
 
   // check is hardware is started
   auto status_map = rm.get_components_status();
@@ -1471,7 +1555,25 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_fake_co
   ASSERT_EQ(2.22, gpio2_vac_c.get_value());
 }
 
-TEST_F(TestGenericSystem, sensor_with_initial_value_)
+TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_mock_command)
+{
+  auto urdf = ros2_control_test_assets::urdf_head +
+              valid_urdf_ros2_control_system_robot_with_gpio_mock_command_ +
+              ros2_control_test_assets::urdf_tail;
+
+  test_generic_system_with_mock_gpio_commands(urdf);
+}
+
+TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_mock_command_True)
+{
+  auto urdf = ros2_control_test_assets::urdf_head +
+              valid_urdf_ros2_control_system_robot_with_gpio_mock_command_True_ +
+              ros2_control_test_assets::urdf_tail;
+
+  test_generic_system_with_mock_gpio_commands(urdf);
+}
+
+TEST_F(TestGenericSystem, sensor_with_initial_value)
 {
   auto urdf = ros2_control_test_assets::urdf_head + sensor_with_initial_value_ +
               ros2_control_test_assets::urdf_tail;
@@ -1499,7 +1601,7 @@ TEST_F(TestGenericSystem, sensor_with_initial_value_)
   ASSERT_EQ(0.0, force_z_s.get_value());
 }
 
-TEST_F(TestGenericSystem, gpio_with_initial_value_)
+TEST_F(TestGenericSystem, gpio_with_initial_value)
 {
   auto urdf = ros2_control_test_assets::urdf_head + gpio_with_initial_value_ +
               ros2_control_test_assets::urdf_tail;
