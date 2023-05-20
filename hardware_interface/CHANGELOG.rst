@@ -2,6 +2,11 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* docs: Fix link to hardware_components (`#1009 <https://github.com/ros-controls/ros2_control/issues/1009>`_) (`#1011 <https://github.com/ros-controls/ros2_control/issues/1011>`_)
+* Contributors: Christoph Fröhlich
+
 2.25.3 (2023-04-29)
 -------------------
 

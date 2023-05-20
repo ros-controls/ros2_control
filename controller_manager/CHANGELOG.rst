@@ -2,6 +2,12 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Revert "Add diagnostics (`#1015 <https://github.com/ros-controls/ros2_control/issues/1015>`_) #abi-breaking
+* Fix GitHub link on control.ros.org (`#1022 <https://github.com/ros-controls/ros2_control/issues/1022>`_) (`#1024 <https://github.com/ros-controls/ros2_control/issues/1024>`_)
+* Contributors: Joseph Schornak, Christoph Fröhlich
+
 2.25.3 (2023-04-29)
 -------------------
 
