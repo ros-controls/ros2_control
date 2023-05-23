@@ -159,8 +159,8 @@ public:
 
   /// Add controller's estimated interfaces to available list.
   /**
-   * Adds state interfacess of a controller with given name to the available list. This method should
-   * be called when a controller gets activated with chained mode turned on. That means, the
+   * Adds state interfacess of a controller with given name to the available list. This method
+   * should be called when a controller gets activated with chained mode turned on. That means, the
    * controller's estimated interfaces can be used by another controllers in chained architectures.
    *
    * \param[in] controller_name name of the controller which interfaces should become available.

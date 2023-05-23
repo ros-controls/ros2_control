@@ -390,7 +390,7 @@ private:
     const std::vector<ControllerSpec> & controllers, int strictness,
     const ControllersListIterator controller_it);
 
-  ///Sets if the parsed vector of controller's reference interfacs are available to use or not
+  /// Sets if the parsed vector of controller's reference interfacs are available to use or not
   /**
    * Sets the availability status of the reference interfaces of the given list of controllers
    * @param[in] controllers list

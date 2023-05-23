@@ -84,9 +84,9 @@ bool controller_name_compare(const controller_manager::ControllerSpec & a, const
 
 /// Checks if an interface belongs to a controller based on its prefix.
 /**
- * A State/Command interface can be provided by a controller in which case is called "estimated/reference"
- * interface.
- * This means that the @interface_name starts with the name of a controller.
+ * A State/Command interface can be provided by a controller in which case is called
+ * "estimated/reference" interface. This means that the @interface_name starts with the name of a
+ * controller.
  *
  * \param[in] interface_name to be found in the map.
  * \param[in] controllers list of controllers to compare their names to interface's prefix.
@@ -2291,7 +2291,8 @@ void ControllerManager::propagate_deactivation_of_chained_mode(
         ControllersListIterator following_ctrl_it;
         if (is_interface_a_chained_interface(ctrl_itf_name, controllers, following_ctrl_it))
         {
-          // If the preceding controller's estimated interfaces are in use by other controllers, then maintain the chained mode
+          // If the preceding controller's estimated interfaces are in use by other controllers,
+          // then maintain the chained mode
           if (is_controller_estimated_interfaces_inuse_by_other_controllers(
                 following_ctrl_it->info.name, controllers, deactivate_request_))
           {
@@ -2300,7 +2301,8 @@ void ControllerManager::propagate_deactivation_of_chained_mode(
               to_use_references_from_subscribers_.end(), following_ctrl_it->info.name);
             if (found_it == to_use_references_from_subscribers_.end())
             {
-              // In this case we check if the interface is state only and then add to use references_from_subscribers list
+              // In this case we check if the interface is state only and then add to use
+              // references_from_subscribers list
               to_use_references_from_subscribers_.push_back(following_ctrl_it->info.name);
               RCLCPP_DEBUG(
                 get_logger(), "Adding controller '%s' in 'use references from subscriber' request.",
@@ -2558,7 +2560,8 @@ controller_interface::return_type ControllerManager::check_preceeding_controller
         //  strictness ==
         //  controller_manager_msgs::srv::SwitchController::Request::MANIPULATE_CONTROLLERS_CHAIN)
         // {
-        // // insert to the begin of activate request list to be activated before preceding controller
+        // // insert to the begin of activate request list to be activated before preceding
+        // controller
         //   activate_request_.insert(activate_request_.begin(), preceding_ctrl_name);
         // }
       }

@@ -108,7 +108,8 @@ controller_interface::return_type TestChainableController::update_and_write_comm
   {
     estimated_interfaces_data_[i] = command_interfaces_[i].get_value() * CONTROLLER_DT;
   }
-  // If there is no command interface and if there is a state interface then just forward the same value as in the state interface
+  // If there is no command interface and if there is a state interface then just forward the same
+  // value as in the state interface
   for (size_t i = 0; i < estimated_interface_names_.size() && i < state_interfaces_.size() &&
                      command_interfaces_.empty();
        ++i)

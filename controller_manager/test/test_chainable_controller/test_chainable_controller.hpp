@@ -89,7 +89,7 @@ public:
   void set_estimated_interface_names(const std::vector<std::string> & estimated_interface_names);
 
   CONTROLLER_MANAGER_PUBLIC
-  void set_imu_sensor_name(const std::string &name);
+  void set_imu_sensor_name(const std::string & name);
 
   size_t internal_counter;
   controller_interface::InterfaceConfiguration cmd_iface_cfg_;

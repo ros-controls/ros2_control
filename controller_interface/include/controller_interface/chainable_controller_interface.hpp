@@ -68,11 +68,11 @@ public:
   bool is_in_chained_mode() const final;
 
   CONTROLLER_INTERFACE_PUBLIC
-  virtual bool toggle_references_from_subscribers(bool enable) final;
+  bool toggle_references_from_subscribers(bool enable) final;
 
 protected:
-  /// Virtual method that each chainable controller should implement to export its read-only chainable
-  /// interfaces.
+  /// Virtual method that each chainable controller should implement to export its read-only
+  /// chainable interfaces.
   /**
    * Each chainable controller implements this methods where all its state(read only) interfaces are
    * exported. The method has the same meaning as `export_estimated_interfaces` method from
@@ -82,8 +82,8 @@ protected:
    */
   virtual std::vector<hardware_interface::StateInterface> on_export_estimated_interfaces() = 0;
 
-  /// Virtual method that each chainable controller should implement to export its read/write chainable
-  /// interfaces.
+  /// Virtual method that each chainable controller should implement to export its read/write
+  /// chainable interfaces.
   /**
    * Each chainable controller implements this methods where all input (command) interfaces are
    * exported. The method has the same meaning as `export_command_interface` method from
@@ -141,7 +141,8 @@ private:
   /// A flag marking if a chainable controller is currently preceded by another controller.
   bool in_chained_mode_ = false;
 
-  /// A flag marking whether to use references from subscribers or from the interfaces as input commands
+  /// A flag marking whether to use references from subscribers or from the interfaces as input
+  /// commands
   bool use_references_from_subscribers_ = false;
 };
 
