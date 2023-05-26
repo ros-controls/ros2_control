@@ -12,6 +12,7 @@ on:
         - foxy
         - galactic
         - humble
+        - iron
         - rolling
       branch:
         description: 'Chose branch for distro'
@@ -22,6 +23,7 @@ on:
         - foxy
         - galactic
         - humble
+        - iron
         - master
 
 jobs:
