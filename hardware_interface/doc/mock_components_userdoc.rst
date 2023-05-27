@@ -1,4 +1,4 @@
-:github_url: https://github.com/ros-controls/ros2_control/blob/|github_branch|/hardware_interface/doc/mock_components_userdoc.rst
+:github_url: https://github.com/ros-controls/ros2_control/blob/{REPOS_FILE_BRANCH}/hardware_interface/doc/mock_components_userdoc.rst
 
 .. _mock_components_userdoc:
 

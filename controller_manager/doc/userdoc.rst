@@ -1,4 +1,4 @@
-:github_url: https://github.com/ros-controls/ros2_control/blob/|github_branch|/controller_manager/doc/userdoc.rst
+:github_url: https://github.com/ros-controls/ros2_control/blob/{REPOS_FILE_BRANCH}/controller_manager/doc/userdoc.rst
 
 .. _controller_manager_userdoc:
 
