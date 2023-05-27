@@ -1,3 +1,8 @@
+<<<<<<< HEAD
+=======
+:github_url: https://github.com/ros-controls/ros2_control/blob/{REPOS_FILE_BRANCH}/doc/index.rst
+
+>>>>>>> 590de4e (Docs: Use branch name substitution for all links (#1031))
 .. _ros2_control_framework:
 
 #################

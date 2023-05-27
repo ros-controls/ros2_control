@@ -1,3 +1,8 @@
+<<<<<<< HEAD
+=======
+:github_url: https://github.com/ros-controls/ros2_control/blob/{REPOS_FILE_BRANCH}/hardware_interface/doc/hardware_components_userdoc.rst
+
+>>>>>>> 590de4e (Docs: Use branch name substitution for all links (#1031))
 .. _hardware_components_userdoc:
 
 Hardware Components
