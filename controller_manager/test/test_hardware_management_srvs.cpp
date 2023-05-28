@@ -91,25 +91,17 @@ public:
     const std::string & name, const std::string & type, const std::string & class_type,
     const uint8_t state_id, const std::string & state_label)
   {
-<<<<<<< HEAD
-    EXPECT_EQ(component.name, name);
-    EXPECT_EQ(component.type, type);
-    EXPECT_EQ(component.class_type, class_type);
-    EXPECT_EQ(component.state.id, state_id);
-    EXPECT_EQ(component.state.label, state_label);
-=======
     EXPECT_EQ(component.name, name) << "Component has unexpected name.";
     EXPECT_EQ(component.type, type)
       << "Component " << name << " from plugin " << plugin_name << " has wrong type.";
-    EXPECT_EQ(component.plugin_name, plugin_name)
-      << "Component " << name << " (" << type << ") has unexpected plugin_name.";
+    EXPECT_EQ(component.class_type, class_type)
+      << "Component " << name << " (" << type << ") has unexpected class_type.";
     EXPECT_EQ(component.state.id, state_id)
       << "Component " << name << " (" << type << ") from plugin " << plugin_name
       << " has wrong state_id.";
     EXPECT_EQ(component.state.label, state_label)
       << "Component " << name << " (" << type << ") from plugin " << plugin_name
       << " has wrong state_label.";
->>>>>>> 775dd6a (Add text to assertions references (#1023))
   }
 
   void list_hardware_components_and_check(
