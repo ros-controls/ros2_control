@@ -23,19 +23,19 @@ namespace controller_interface
 {
 /// Reorder interfaces with references according to joint names or full interface names.
 /**
-  * Method to reorder and check if all expected interfaces are provided for the joint.
-  * Fill `ordered_interfaces` with references from `unordered_interfaces` in the same order as in
-  * `ordered_names`.
-  *
-  * \param[in] unordered_interfaces vector with loaned unordered state or command interfaces.
-  * \param[in] ordered_names vector with ordered names to order \p unordered_interfaces.
-  *  The valued inputs are list of joint names or interface full names.
-  *  If joint names are used for ordering, \p interface_type specifies valid interface.
-  *  If full interface names are used for ordering, \p interface_type should be empty string ("").
-  * \param[in] interface_type used for ordering interfaces with respect to joint names.
-  * \param[out] ordered_interfaces vector with ordered interfaces.
-  * \return true if all interfaces or joints in \p ordered_names are found, otherwise false.
-  */
+ * Method to reorder and check if all expected interfaces are provided for the joint.
+ * Fill `ordered_interfaces` with references from `unordered_interfaces` in the same order as in
+ * `ordered_names`.
+ *
+ * \param[in] unordered_interfaces vector with loaned unordered state or command interfaces.
+ * \param[in] ordered_names vector with ordered names to order \p unordered_interfaces.
+ *  The valued inputs are list of joint names or interface full names.
+ *  If joint names are used for ordering, \p interface_type specifies valid interface.
+ *  If full interface names are used for ordering, \p interface_type should be empty string ("").
+ * \param[in] interface_type used for ordering interfaces with respect to joint names.
+ * \param[out] ordered_interfaces vector with ordered interfaces.
+ * \return true if all interfaces or joints in \p ordered_names are found, otherwise false.
+ */
 template <typename T>
 bool get_ordered_interfaces(
   std::vector<T> & unordered_interfaces, const std::vector<std::string> & ordered_names,

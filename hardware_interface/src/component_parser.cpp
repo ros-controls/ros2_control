@@ -281,11 +281,11 @@ hardware_interface::InterfaceInfo parse_interfaces_from_xml(
 
 /// Search XML snippet from URDF for information about a control component.
 /**
-  * \param[in] component_it pointer to the iterator where component
-  * info should be found
-  * \return ComponentInfo filled with information about component
-  * \throws std::runtime_error if a component attribute or tag is not found
-  */
+ * \param[in] component_it pointer to the iterator where component
+ * info should be found
+ * \return ComponentInfo filled with information about component
+ * \throws std::runtime_error if a component attribute or tag is not found
+ */
 ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it)
 {
   ComponentInfo component;
@@ -394,10 +394,10 @@ ActuatorInfo parse_transmission_actuator_from_xml(const tinyxml2::XMLElement * e
 
 /// Search XML snippet from URDF for information about a transmission.
 /**
-  * \param[in] transmission_it pointer to the iterator where transmission info should be found
-  * \return TransmissionInfo filled with information about transmission
-  * \throws std::runtime_error if an attribute or tag is not found
-  */
+ * \param[in] transmission_it pointer to the iterator where transmission info should be found
+ * \return TransmissionInfo filled with information about transmission
+ * \throws std::runtime_error if an attribute or tag is not found
+ */
 TransmissionInfo parse_transmission_from_xml(const tinyxml2::XMLElement * transmission_it)
 {
   TransmissionInfo transmission;

@@ -41,7 +41,8 @@ public:
   virtual ~ChainableControllerInterface() = default;
 
   /**
-   * Control step update. Command interfaces are updated based on on reference inputs and current states.
+   * Control step update. Command interfaces are updated based on on reference inputs and current
+   * states.
    * **The method called in the (real-time) control loop.**
    *
    * \param[in] time The time at the start of this control loop iteration
@@ -83,7 +84,9 @@ protected:
    *
    * \param[in] flag marking a switch to or from chained mode.
    *
-   * \returns true if controller successfully switched between "chained" and "external" mode. \default returns true so the method don't have to be overridden if controller can always switch chained mode.
+   * \returns true if controller successfully switched between "chained" and "external" mode.
+   * \default returns true so the method don't have to be overridden if controller can always switch
+   * chained mode.
    */
   virtual bool on_set_chained_mode(bool chained_mode);
 

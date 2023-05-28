@@ -74,15 +74,13 @@ public:
 
   /// Get configuration for controller's required command interfaces.
   /**
-   * Method used by the controller_manager to get the set of command interfaces used by the controller.
-   * Each controller can use individual method to determine interface names that in simples case
-   * have the following format: `<joint>/<interface>`.
-   * The method is called only in `inactive` or `active` state, i.e., `on_configure` has to be
-   * called first.
-   * The configuration is used to check if controller can be activated and to claim interfaces from
-   * hardware.
-   * The claimed interfaces are populated in the
-   * \ref ControllerInterfaceBase::command_interfaces_ "command_interfaces_" member.
+   * Method used by the controller_manager to get the set of command interfaces used by the
+   * controller. Each controller can use individual method to determine interface names that in
+   * simples case have the following format: `<joint>/<interface>`. The method is called only in
+   * `inactive` or `active` state, i.e., `on_configure` has to be called first. The configuration is
+   * used to check if controller can be activated and to claim interfaces from hardware. The claimed
+   * interfaces are populated in the \ref ControllerInterfaceBase::command_interfaces_
+   * "command_interfaces_" member.
    *
    * \returns configuration of command interfaces.
    */
@@ -134,7 +132,8 @@ public:
   virtual CallbackReturn on_init() = 0;
 
   /**
-   * Control step update. Command interfaces are updated based on on reference inputs and current states.
+   * Control step update. Command interfaces are updated based on on reference inputs and current
+   * states.
    * **The method called in the (real-time) control loop.**
    *
    * \param[in] time The time at the start of this control loop iteration

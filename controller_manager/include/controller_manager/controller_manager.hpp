@@ -284,8 +284,8 @@ private:
     const std::string & command_interface);
 
   /**
-   * Clear request lists used when switching controllers. The lists are shared between "callback" and
-   * "control loop" threads.
+   * Clear request lists used when switching controllers. The lists are shared between "callback"
+   * and "control loop" threads.
    */
   void clear_requests();
 
@@ -391,7 +391,8 @@ private:
      * lists match and returns a reference to it
      * This referenced list can be modified safely until switch_updated_controller_list()
      * is called, at this point the RT thread may start using it at any time
-     * \param[in] guard Guard needed to make sure the caller is the only one accessing the unused by rt list
+     * \param[in] guard Guard needed to make sure the caller is the only one accessing the unused by
+     * rt list
      */
     std::vector<ControllerSpec> & get_unused_list(
       const std::lock_guard<std::recursive_mutex> & guard);
@@ -399,7 +400,8 @@ private:
     /// get_updated_list Returns a const reference to the most updated list.
     /**
      * \warning May or may not being used by the realtime thread, read-only reference for safety
-     * \param[in] guard Guard needed to make sure the caller is the only one accessing the unused by rt list
+     * \param[in] guard Guard needed to make sure the caller is the only one accessing the unused by
+     * rt list
      */
     const std::vector<ControllerSpec> & get_updated_list(
       const std::lock_guard<std::recursive_mutex> & guard) const;
@@ -407,7 +409,8 @@ private:
     /**
      * switch_updated_list Switches the "updated" and "outdated" lists, and waits
      *  until the RT thread is using the new "updated" list.
-     * \param[in] guard Guard needed to make sure the caller is the only one accessing the unused by rt list
+     * \param[in] guard Guard needed to make sure the caller is the only one accessing the unused by
+     * rt list
      */
     void switch_updated_list(const std::lock_guard<std::recursive_mutex> & guard);
 
