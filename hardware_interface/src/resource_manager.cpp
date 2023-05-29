@@ -1194,8 +1194,9 @@ return_type ResourceManager::set_component_state(
 
 void ResourceManager::shutdown_async_components()
 {
-  resource_storage_->async_component_threads_.erase(resource_storage_->async_component_threads_.begin(),
-                                                    resource_storage_->async_component_threads_.end());
+  resource_storage_->async_component_threads_.erase(
+    resource_storage_->async_component_threads_.begin(),
+    resource_storage_->async_component_threads_.end());
 }
 
 // CM API: Called in "update"-thread

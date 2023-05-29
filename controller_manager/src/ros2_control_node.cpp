@@ -87,7 +87,6 @@ int main(int argc, char ** argv)
       }
 
       cm->shutdown_async_controllers_and_components();
-
     });
 
   executor->add_node(cm);

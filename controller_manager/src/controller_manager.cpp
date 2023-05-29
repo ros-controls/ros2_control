@@ -500,7 +500,8 @@ controller_interface::return_type ControllerManager::configure_controller(
   if (controller->is_async())
   {
     async_controller_threads_.emplace(
-      controller_name, std::make_unique<controller_interface::AsyncControllerThread>(controller, update_rate_));
+      controller_name,
+      std::make_unique<controller_interface::AsyncControllerThread>(controller, update_rate_));
   }
 
   // CHAINABLE CONTROLLERS: get reference interfaces from chainable controllers
@@ -1894,9 +1895,10 @@ std::pair<std::string, std::string> ControllerManager::split_command_interface(
 
 unsigned int ControllerManager::get_update_rate() const { return update_rate_; }
 
-void ControllerManager::shutdown_async_controllers_and_components() 
+void ControllerManager::shutdown_async_controllers_and_components()
 {
-  async_controller_threads_.erase(async_controller_threads_.begin(), async_controller_threads_.end());
+  async_controller_threads_.erase(
+    async_controller_threads_.begin(), async_controller_threads_.end());
   resource_manager_->shutdown_async_components();
 }
 

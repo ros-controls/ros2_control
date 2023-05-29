@@ -17,8 +17,8 @@
 
 #include <atomic>
 #include <thread>
-#include <variant>
 #include <type_traits>
+#include <variant>
 
 #include "hardware_interface/actuator.hpp"
 #include "hardware_interface/sensor.hpp"
@@ -41,14 +41,17 @@ public:
   {
   }
 
+  // Fills the internal variant with the desired component.
   template <typename T>
-  void register_component(T* component) {
+  void register_component(T * component)
+  {
     hardware_component_ = component;
   }
 
   AsyncComponentThread(const AsyncComponentThread & t) = delete;
-  AsyncComponentThread(AsyncComponentThread && t) = default;
+  AsyncComponentThread(AsyncComponentThread && t) = delete;
 
+  // Destructor, called when the component is erased from its map.
   ~AsyncComponentThread()
   {
     terminated_.store(true, std::memory_order_seq_cst);
@@ -57,9 +60,19 @@ public:
       write_and_read_.join();
     }
   }
-
+  /// Creates the component's thread.
+  /**
+   * Called when the component is activated.
+   *
+   */
   void activate() { write_and_read_ = std::thread(&AsyncComponentThread::write_and_read, this); }
 
+  /// Periodically execute the component's write and read methods.
+  /**
+   * Callback of the async component's thread.
+   * **Not synchronized with the controller manager's update currently**
+   *
+   */
   void write_and_read()
   {
     using TimePoint = std::chrono::system_clock::time_point;

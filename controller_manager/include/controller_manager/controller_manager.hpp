@@ -23,11 +23,10 @@
 #include <utility>
 #include <vector>
 
+#include "controller_interface/async_controller.hpp"
 #include "controller_interface/chainable_controller_interface.hpp"
 #include "controller_interface/controller_interface.hpp"
 #include "controller_interface/controller_interface_base.hpp"
-#include "controller_interface/async_controller.hpp"
-
 
 #include "controller_manager/controller_spec.hpp"
 #include "controller_manager/visibility_control.h"
@@ -192,11 +191,14 @@ public:
   CONTROLLER_MANAGER_PUBLIC
   unsigned int get_update_rate() const;
 
+  /// Deletes all async controllers and components.
+  /**
+   * Needed to join the threads immediately after the control loop is ended
+   * to avoid unnecessary iterations. Otherwise
+   * the threads will be joined only when the controller manager gets destroyed.
+   */
   CONTROLLER_MANAGER_PUBLIC
   void shutdown_async_controllers_and_components();
-
-  CONTROLLER_MANAGER_PUBLIC
-  void shutdown_async_compontents();
 
 protected:
   CONTROLLER_MANAGER_PUBLIC
