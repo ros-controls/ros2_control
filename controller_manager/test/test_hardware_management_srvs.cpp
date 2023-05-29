@@ -93,14 +93,14 @@ public:
   {
     EXPECT_EQ(component.name, name) << "Component has unexpected name.";
     EXPECT_EQ(component.type, type)
-      << "Component " << name << " from plugin " << plugin_name << " has wrong type.";
+      << "Component " << name << " from plugin " << class_type << " has wrong type.";
     EXPECT_EQ(component.class_type, class_type)
       << "Component " << name << " (" << type << ") has unexpected class_type.";
     EXPECT_EQ(component.state.id, state_id)
-      << "Component " << name << " (" << type << ") from plugin " << plugin_name
+      << "Component " << name << " (" << type << ") from plugin " << class_type
       << " has wrong state_id.";
     EXPECT_EQ(component.state.label, state_label)
-      << "Component " << name << " (" << type << ") from plugin " << plugin_name
+      << "Component " << name << " (" << type << ") from plugin " << class_type
       << " has wrong state_label.";
   }
 
