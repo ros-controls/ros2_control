@@ -18,6 +18,7 @@
 #include <atomic>
 #include <thread>
 #include <variant>
+#include <type_traits>
 
 #include "hardware_interface/actuator.hpp"
 #include "hardware_interface/sensor.hpp"
@@ -34,24 +35,15 @@ class AsyncComponentThread
 {
 public:
   explicit AsyncComponentThread(
-    Actuator * component, unsigned int update_rate,
+    unsigned int update_rate,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
-  : hardware_component_(component), cm_update_rate_(update_rate), clock_interface_(clock_interface)
+  : cm_update_rate_(update_rate), clock_interface_(clock_interface)
   {
   }
 
-  explicit AsyncComponentThread(
-    System * component, unsigned int update_rate,
-    rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
-  : hardware_component_(component), cm_update_rate_(update_rate), clock_interface_(clock_interface)
-  {
-  }
-
-  explicit AsyncComponentThread(
-    Sensor * component, unsigned int update_rate,
-    rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
-  : hardware_component_(component), cm_update_rate_(update_rate), clock_interface_(clock_interface)
-  {
+  template <typename T>
+  void register_component(T* component) {
+    hardware_component_ = component;
   }
 
   AsyncComponentThread(const AsyncComponentThread & t) = delete;
@@ -88,8 +80,8 @@ public:
             auto measured_period = current_time - previous_time;
             previous_time = current_time;
 
-            // write
-            // read
+            component->write(clock_interface_->get_clock()->now(), measured_period);
+            component->read(clock_interface_->get_clock()->now(), measured_period);
           }
           next_iteration_time += period;
           std::this_thread::sleep_until(next_iteration_time);

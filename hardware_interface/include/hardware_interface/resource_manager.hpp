@@ -365,6 +365,9 @@ public:
    * Part of the real-time critical update loop.
    * It is realtime-safe if used hadware interfaces are implemented adequately.
    */
+
+  void shutdown_async_components();
+
   HardwareReadWriteStatus read(const rclcpp::Time & time, const rclcpp::Duration & period);
 
   /// Write all loaded hardware components.

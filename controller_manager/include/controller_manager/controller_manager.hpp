@@ -26,6 +26,8 @@
 #include "controller_interface/chainable_controller_interface.hpp"
 #include "controller_interface/controller_interface.hpp"
 #include "controller_interface/controller_interface_base.hpp"
+#include "controller_interface/async_controller.hpp"
+
 
 #include "controller_manager/controller_spec.hpp"
 #include "controller_manager/visibility_control.h"
@@ -189,6 +191,12 @@ public:
   // Per controller update rate support
   CONTROLLER_MANAGER_PUBLIC
   unsigned int get_update_rate() const;
+
+  CONTROLLER_MANAGER_PUBLIC
+  void shutdown_async_controllers_and_components();
+
+  CONTROLLER_MANAGER_PUBLIC
+  void shutdown_async_compontents();
 
 protected:
   CONTROLLER_MANAGER_PUBLIC
@@ -515,65 +523,7 @@ private:
 
   SwitchParams switch_params_;
 
-  class ControllerThreadWrapper
-  {
-  public:
-    ControllerThreadWrapper(
-      std::shared_ptr<controller_interface::ControllerInterfaceBase> & controller,
-      int cm_update_rate)
-    : terminated_(false), controller_(controller), thread_{}, cm_update_rate_(cm_update_rate)
-    {
-    }
-
-    ControllerThreadWrapper(const ControllerThreadWrapper & t) = delete;
-    ControllerThreadWrapper(ControllerThreadWrapper && t) = default;
-    ~ControllerThreadWrapper()
-    {
-      terminated_.store(true, std::memory_order_seq_cst);
-      if (thread_.joinable())
-      {
-        thread_.join();
-      }
-    }
-
-    void activate()
-    {
-      thread_ = std::thread(&ControllerThreadWrapper::call_controller_update, this);
-    }
-
-    void call_controller_update()
-    {
-      using TimePoint = std::chrono::system_clock::time_point;
-      unsigned int used_update_rate =
-        controller_->get_update_rate() == 0
-          ? cm_update_rate_
-          : controller_
-              ->get_update_rate();  // determines if the controller's or CM's update rate is used
-
-      while (!terminated_.load(std::memory_order_relaxed))
-      {
-        auto const period = std::chrono::nanoseconds(1'000'000'000 / used_update_rate);
-        TimePoint next_iteration_time =
-          TimePoint(std::chrono::nanoseconds(controller_->get_node()->now().nanoseconds()));
-
-        if (controller_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
-        {
-          // critical section, not implemented yet
-        }
-
-        next_iteration_time += period;
-        std::this_thread::sleep_until(next_iteration_time);
-      }
-    }
-
-  private:
-    std::atomic<bool> terminated_;
-    std::shared_ptr<controller_interface::ControllerInterfaceBase> controller_;
-    std::thread thread_;
-    unsigned int cm_update_rate_;
-  };
-
-  std::unordered_map<std::string, std::unique_ptr<ControllerThreadWrapper>>
+  std::unordered_map<std::string, std::unique_ptr<controller_interface::AsyncControllerThread>>
     async_controller_threads_;
 };
 
