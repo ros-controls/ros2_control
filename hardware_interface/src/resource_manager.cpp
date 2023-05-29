@@ -1381,11 +1381,6 @@ void ResourceManager::activate_all_components()
   {
     set_component_state(component.get_name(), active_state);
   }
-
-  for (auto & component : resource_storage_->async_systems_)
-  {
-    set_component_state(component.get_name(), active_state);
-  }
 }
 
 }  // namespace hardware_interface
