@@ -28,11 +28,11 @@ namespace  // utilities
 {
 /// Declare and initialize a parameter with a type.
 /**
-   *
-   * Wrapper function for templated node's declare_parameter() which checks if
-   * parameter is already declared.
-   * For use in all components that inherit from ControllerInterface
-   */
+ *
+ * Wrapper function for templated node's declare_parameter() which checks if
+ * parameter is already declared.
+ * For use in all components that inherit from ControllerInterface
+ */
 template <typename ParameterT>
 auto auto_declare(
   const rclcpp::node_interfaces::NodeParametersInterface::SharedPtr & param_itf,
@@ -144,10 +144,9 @@ inline bool declare_parameters(const std::string & joint_name, const rclcpp::Nod
 }
 
 /**
- * Declare JointLimits and SoftJointLimits parameters for joint with joint_name for the lifecycle_node
- * object.
- * This is a convenience function.
- * For parameters structure see the underlying `declare_parameters` function.
+ * Declare JointLimits and SoftJointLimits parameters for joint with joint_name for the
+ * lifecycle_node object. This is a convenience function. For parameters structure see the
+ * underlying `declare_parameters` function.
  *
  * \param[in] joint_name name of the joint for which parameters will be declared.
  * \param[in] lifecycle_node lifecycle node for parameters should be declared.
@@ -208,10 +207,12 @@ inline bool declare_parameters(
  * \param[in] joint_name Name of joint whose limits are to be fetched, e.g., "foo_joint".
  * \param[in] param_itf node parameters interface of the node where parameters are specified.
  * \param[in] logging_itf node logging interface to provide log errors.
- * \param[out] limits Where joint limit data gets written into. Limits specified in the parameter server will overwrite
- * existing values. Values in \p limits not specified in the parameter server remain unchanged.
+ * \param[out] limits Where joint limit data gets written into. Limits specified in the parameter
+ * server will overwrite existing values. Values in \p limits not specified in the parameter server
+ * remain unchanged.
  *
- * \returns True if a limits specification is found (i.e., the \p joint_limits/joint_name parameter exists in \p node), false otherwise.
+ * \returns True if a limits specification is found (i.e., the \p joint_limits/joint_name parameter
+ * exists in \p node), false otherwise.
  */
 inline bool get_joint_limits(
   const std::string & joint_name,
@@ -356,8 +357,9 @@ inline bool get_joint_limits(
  *
  * \param[in] joint_name Name of joint whose limits are to be fetched.
  * \param[in] node Node object for which parameters should be fetched.
- * \param[out] limits Where joint limit data gets written into. Limits specified in the parameter server will overwrite
- * existing values. Values in \p limits not specified in the parameter server remain unchanged.
+ * \param[out] limits Where joint limit data gets written into. Limits specified in the parameter
+ * server will overwrite existing values. Values in \p limits not specified in the parameter server
+ * remain unchanged.
  *
  * \returns True if a limits specification is found, false otherwise.
  */
@@ -375,8 +377,9 @@ inline bool get_joint_limits(
  *
  * \param[in] joint_name Name of joint whose limits are to be fetched.
  * \param[in] lifecycle_node Lifecycle node object for which parameters should be fetched.
- * \param[out] limits Where joint limit data gets written into. Limits specified in the parameter server will overwrite
- * existing values. Values in \p limits not specified in the parameter server remain unchanged.
+ * \param[out] limits Where joint limit data gets written into. Limits specified in the parameter
+ * server will overwrite existing values. Values in \p limits not specified in the parameter server
+ * remain unchanged.
  *
  * \returns True if a limits specification is found, false otherwise.
  */
@@ -416,10 +419,10 @@ inline bool get_joint_limits(
  * \param[in] joint_name Name of joint whose limits are to be fetched, e.g., "foo_joint".
  * \param[in] param_itf node parameters interface of the node where parameters are specified.
  * \param[in] logging_itf node logging interface to provide log errors.
- * \param[out] soft_limits Where soft joint limit data gets written into. Limits specified in the parameter server will overwrite
- * existing values.
- * \return True if a complete soft limits specification is found (ie. if all \p k_position, \p k_velocity, \p soft_lower_limit and
- * \p soft_upper_limit exist in \p joint_limits/joint_name namespace), false otherwise.
+ * \param[out] soft_limits Where soft joint limit data gets written into. Limits specified in the
+ * parameter server will overwrite existing values. \return True if a complete soft limits
+ * specification is found (ie. if all \p k_position, \p k_velocity, \p soft_lower_limit and \p
+ * soft_upper_limit exist in \p joint_limits/joint_name namespace), false otherwise.
  */
 inline bool get_joint_limits(
   const std::string & joint_name,
@@ -483,8 +486,8 @@ inline bool get_joint_limits(
  *
  * \param[in] joint_name Name of joint whose limits are to be fetched.
  * \param[in] node Node object for which parameters should be fetched.
- * \param[out] soft_limits Where soft joint limit data gets written into. Limits specified in the parameter server will overwrite
- * existing values.
+ * \param[out] soft_limits Where soft joint limit data gets written into. Limits specified in the
+ * parameter server will overwrite existing values.
  *
  * \returns True if a soft limits specification is found, false otherwise.
  */
@@ -504,8 +507,8 @@ inline bool get_joint_limits(
  *
  * \param[in] joint_name Name of joint whose limits are to be fetched.
  * \param[in] lifecycle_node Lifecycle node object for which parameters should be fetched.
- * \param[out] soft_limits Where soft joint limit data gets written into. Limits specified in the parameter server will overwrite
- * existing values.
+ * \param[out] soft_limits Where soft joint limit data gets written into. Limits specified in the
+ * parameter server will overwrite existing values.
  *
  * \returns True if a soft limits specification is found, false otherwise.
  */

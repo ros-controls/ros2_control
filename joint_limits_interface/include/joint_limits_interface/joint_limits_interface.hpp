@@ -146,8 +146,8 @@ protected:
   joint_limits_interface::SoftJointLimits soft_limits_;
 };
 
-/** A handle used to enforce position and velocity limits of a position-controlled joint that does not have
-    soft limits. */
+/** A handle used to enforce position and velocity limits of a position-controlled joint that does
+   not have soft limits. */
 class PositionJointSaturationHandle : public JointLimitHandle
 {
 public:
@@ -172,8 +172,8 @@ public:
 
   /// Enforce position and velocity limits for a joint that is not subject to soft limits.
   /**
- * \param[in] period Control period.
- */
+   * \param[in] period Control period.
+   */
   void enforce_limits(const rclcpp::Duration & period)
   {
     if (std::isnan(prev_pos_))
@@ -211,9 +211,9 @@ private:
 
 /// A handle used to enforce position and velocity limits of a position-controlled joint.
 /**
- * This class implements a very simple position and velocity limits enforcing policy, and tries to impose the least
- * amount of requisites on the underlying hardware platform.
- * This lowers considerably the entry barrier to use it, but also implies some limitations.
+ * This class implements a very simple position and velocity limits enforcing policy, and tries to
+ * impose the least amount of requisites on the underlying hardware platform. This lowers
+ * considerably the entry barrier to use it, but also implies some limitations.
  *
  * <b>Requisites</b>
  * - Position (for non-continuous joints) and velocity limits specification.
@@ -221,21 +221,22 @@ private:
  *
  * <b>Open loop nature</b>
  *
- * Joint position and velocity limits are enforced in an open-loop fashion, that is, the command is checked for
- * validity without relying on the actual position/velocity values.
+ * Joint position and velocity limits are enforced in an open-loop fashion, that is, the command is
+ * checked for validity without relying on the actual position/velocity values.
  *
- * - Actual position values are \e not used because in some platforms there might be a substantial lag
- *   between sending a command and executing it (propagate command to hardware, reach control objective,
- *   read from hardware).
+ * - Actual position values are \e not used because in some platforms there might be a substantial
+ * lag between sending a command and executing it (propagate command to hardware, reach control
+ * objective, read from hardware).
  *
- * - Actual velocity values are \e not used because of the above reason, and because some platforms might not expose
- *   trustworthy velocity measurements, or none at all.
+ * - Actual velocity values are \e not used because of the above reason, and because some platforms
+ * might not expose trustworthy velocity measurements, or none at all.
  *
- * The downside of the open loop behavior is that velocity limits will not be enforced when recovering from large
- * position tracking errors. Only the command is guaranteed to comply with the limits specification.
+ * The downside of the open loop behavior is that velocity limits will not be enforced when
+ * recovering from large position tracking errors. Only the command is guaranteed to comply with the
+ * limits specification.
  *
- * \note: This handle type is \e stateful, ie. it stores the previous position command to estimate the command
- * velocity.
+ * \note: This handle type is \e stateful, ie. it stores the previous position command to estimate
+ * the command velocity.
  */
 
 // TODO(anyone): Leverage %Reflexxes Type II library for acceleration limits handling?
@@ -555,8 +556,8 @@ public:
 
 /**
  * A handle used to enforce position, velocity, and acceleration limits of a
-  * velocity-controlled joint.
-  */
+ * velocity-controlled joint.
+ */
 class VelocityJointSoftLimitsHandle : public JointSoftLimitsHandle
 {
 public:

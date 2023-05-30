@@ -40,7 +40,7 @@ class TestActuator : public ActuatorInterface
      * if (info_.joints[0].command_interfaces.size() != 1) {return CallbackReturn::ERROR;}
      * // can only give feedback state for position and velocity
      * if (info_.joints[0].state_interfaces.size() != 2) {return CallbackReturn::ERROR;}
-    */
+     */
 
     return CallbackReturn::SUCCESS;
   }
