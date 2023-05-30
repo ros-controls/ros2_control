@@ -188,8 +188,9 @@ public:
   /**
    * Return list of cached controller names that use the hardware with name \p hardware_name.
    *
-   * \param[in] hardware_name the name of the hardware for which cached controllers should be returned.
-   * \returns list of cached controller names that depend on hardware with name \p hardware_name.
+   * \param[in] hardware_name the name of the hardware for which cached controllers should be
+   * returned. \returns list of cached controller names that depend on hardware with name \p
+   * hardware_name.
    */
   std::vector<std::string> get_cached_controllers_to_hardware(const std::string & hardware_name);
 

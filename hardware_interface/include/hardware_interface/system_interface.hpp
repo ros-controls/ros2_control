@@ -36,8 +36,9 @@ namespace hardware_interface
  * The common examples for these types of hardware are multi-joint systems with or without sensors
  * such as industrial or humanoid robots.
  *
- * Methods return values have type rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
- * with the following meaning:
+ * Methods return values have type
+ * rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn with the following
+ * meaning:
  *
  * \returns CallbackReturn::SUCCESS method execution was successful.
  * \returns CallbackReturn::FAILURE method execution has failed and and can be called again.
@@ -47,7 +48,8 @@ namespace hardware_interface
  * The hardware ends after each method in a state with the following meaning:
  *
  * UNCONFIGURED (on_init, on_cleanup):
- *   Hardware is initialized but communication is not started and therefore no interface is available.
+ *   Hardware is initialized but communication is not started and therefore no interface is
+ * available.
  *
  * INACTIVE (on_configure, on_deactivate):
  *   Communication with the hardware is started and it is configured.
@@ -127,12 +129,12 @@ public:
    *
    * \note This is a non-realtime evaluation of whether a set of command interface claims are
    * possible, and call to start preparing data structures for the upcoming switch that will occur.
-   * \note All starting and stopping interface keys are passed to all components, so the function should
-   * return return_type::OK by default when given interface keys not relevant for this component.
-   * \param[in] start_interfaces vector of string identifiers for the command interfaces starting.
-   * \param[in] stop_interfaces vector of string identifiers for the command interfacs stopping.
-   * \return return_type::OK if the new command interface combination can be prepared,
-   * or if the interface key is not relevant to this system. Returns return_type::ERROR otherwise.
+   * \note All starting and stopping interface keys are passed to all components, so the function
+   * should return return_type::OK by default when given interface keys not relevant for this
+   * component. \param[in] start_interfaces vector of string identifiers for the command interfaces
+   * starting. \param[in] stop_interfaces vector of string identifiers for the command interfacs
+   * stopping. \return return_type::OK if the new command interface combination can be prepared, or
+   * if the interface key is not relevant to this system. Returns return_type::ERROR otherwise.
    */
   virtual return_type prepare_command_mode_switch(
     const std::vector<std::string> & /*start_interfaces*/,
@@ -146,11 +148,11 @@ public:
    * Perform the mode-switching for the new command interface combination.
    *
    * \note This is part of the realtime update loop, and should be fast.
-   * \note All starting and stopping interface keys are passed to all components, so the function should
-   * return return_type::OK by default when given interface keys not relevant for this component.
-   * \param[in] start_interfaces vector of string identifiers for the command interfaces starting.
-   * \param[in] stop_interfaces vector of string identifiers for the command interfacs stopping.
-   * \return return_type::OK if the new command interface combination can be switched to,
+   * \note All starting and stopping interface keys are passed to all components, so the function
+   * should return return_type::OK by default when given interface keys not relevant for this
+   * component. \param[in] start_interfaces vector of string identifiers for the command interfaces
+   * starting. \param[in] stop_interfaces vector of string identifiers for the command interfacs
+   * stopping. \return return_type::OK if the new command interface combination can be switched to,
    * or if the interface key is not relevant to this system. Returns return_type::ERROR otherwise.
    */
   virtual return_type perform_command_mode_switch(
