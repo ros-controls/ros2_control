@@ -1,3 +1,5 @@
+:github_url: https://github.com/ros-controls/ros2_control/blob/{REPOS_FILE_BRANCH}/ros2controlcli/doc/userdoc.rst
+
 .. _ros2controlcli_userdoc:
 
 Command Line Interface

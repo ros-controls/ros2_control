@@ -1,3 +1,5 @@
+:github_url: https://github.com/ros-controls/ros2_control/blob/{REPOS_FILE_BRANCH}/hardware_interface/doc/hardware_components_userdoc.rst
+
 .. _hardware_components_userdoc:
 
 Hardware Components
