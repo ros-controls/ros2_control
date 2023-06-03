@@ -10,6 +10,7 @@ on:
         type: choice
         options:
         - humble
+        - iron
         - rolling
       branch:
         description: 'Chose branch for distro'
@@ -18,6 +19,7 @@ on:
         type: choice
         options:
         - humble
+        - iron
         - master
 
 jobs:
