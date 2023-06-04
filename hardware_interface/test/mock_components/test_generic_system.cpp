@@ -483,6 +483,24 @@ protected:
     </gpio>
   </ros2_control>
 )";
+
+    disabled_commands_ =
+      R"(
+  <ros2_control name="GenericSystem2dof" type="system">
+    <hardware>
+      <plugin>fake_components/GenericSystem</plugin>
+      <param name="disable_commands">True</param>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <state_interface name="position">
+        <param name="initial_value">3.45</param>
+      </state_interface>
+      <state_interface name="velocity"/>
+    </joint>
+  </ros2_control>
+)";
   }
 
   std::string hardware_robot_2dof_;
@@ -503,6 +521,7 @@ protected:
   std::string valid_urdf_ros2_control_system_robot_with_gpio_mock_command_True_;
   std::string sensor_with_initial_value_;
   std::string gpio_with_initial_value_;
+  std::string disabled_commands_;
 };
 
 // Forward declaration
@@ -1603,4 +1622,52 @@ TEST_F(TestGenericSystem, gpio_with_initial_value)
   hardware_interface::LoanedStateInterface state = rm.claim_state_interface("sample_io/output_1");
 
   ASSERT_EQ(1, state.get_value());
+}
+
+TEST_F(TestGenericSystem, disabled_commands_flag_is_active)
+{
+  auto urdf =
+    ros2_control_test_assets::urdf_head + disabled_commands_ + ros2_control_test_assets::urdf_tail;
+  TestableResourceManager rm(urdf);
+  // Activate components to get all interfaces available
+  activate_components(rm);
+
+  // Check interfaces
+  EXPECT_EQ(1u, rm.system_components_size());
+  ASSERT_EQ(2u, rm.state_interface_keys().size());
+  EXPECT_TRUE(rm.state_interface_exists("joint1/position"));
+  EXPECT_TRUE(rm.state_interface_exists("joint1/velocity"));
+
+  ASSERT_EQ(2u, rm.command_interface_keys().size());
+  EXPECT_TRUE(rm.command_interface_exists("joint1/position"));
+  EXPECT_TRUE(rm.command_interface_exists("joint1/velocity"));
+
+  // Check initial values
+  hardware_interface::LoanedStateInterface j1p_s = rm.claim_state_interface("joint1/position");
+  hardware_interface::LoanedStateInterface j1v_s = rm.claim_state_interface("joint1/velocity");
+  hardware_interface::LoanedCommandInterface j1p_c = rm.claim_command_interface("joint1/position");
+
+  ASSERT_EQ(3.45, j1p_s.get_value());
+  ASSERT_EQ(0.0, j1v_s.get_value());
+  ASSERT_TRUE(std::isnan(j1p_c.get_value()));
+
+  // set some new values in commands
+  j1p_c.set_value(0.11);
+
+  // State values should not be changed
+  ASSERT_EQ(3.45, j1p_s.get_value());
+  ASSERT_EQ(0.0, j1v_s.get_value());
+  ASSERT_EQ(0.11, j1p_c.get_value());
+
+  // write() does not change values
+  rm.write(TIME, PERIOD);
+  ASSERT_EQ(3.45, j1p_s.get_value());
+  ASSERT_EQ(0.0, j1v_s.get_value());
+  ASSERT_EQ(0.11, j1p_c.get_value());
+
+  // read() also does not change values
+  rm.read(TIME, PERIOD);
+  ASSERT_EQ(3.45, j1p_s.get_value());
+  ASSERT_EQ(0.0, j1v_s.get_value());
+  ASSERT_EQ(0.11, j1p_c.get_value());
 }
