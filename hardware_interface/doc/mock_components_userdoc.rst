@@ -28,7 +28,7 @@ Parameters
 ,,,,,,,,,,
 
 disable_commands (optional; boolean; default: false)
-  Disables mirroring commands to states. 
+  Disables mirroring commands to states.
   This option is helpful to simulate an erroneous connection to the hardware when nothing breaks, but suddenly there is no feedback from a hardware interface.
   Or it can help you to test your setup when the hardware is running without feedback, i.e., in open loop configuration.
 
