@@ -404,6 +404,9 @@ private:
 
   // Structure to store read and write status so it is not initialized in the real-time loop
   HardwareReadWriteStatus read_write_status;
+
+  std::vector<HardwareInfo> hardware_infos_;
+  bool validate_interfaces_;
 };
 
 }  // namespace hardware_interface

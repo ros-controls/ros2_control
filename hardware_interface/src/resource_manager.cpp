@@ -97,9 +97,9 @@ public:
     RCUTILS_LOG_INFO_NAMED(
       "resource_manager", "Loading hardware '%s' ", hardware_info.name.c_str());
     // hardware_plugin_name has to match class name in plugin xml description
-    auto interface = std::unique_ptr<HardwareInterfaceT>(
+    auto component = std::unique_ptr<HardwareInterfaceT>(
       loader.createUnmanagedInstance(hardware_info.hardware_plugin_name));
-    HardwareT hardware(std::move(interface));
+    HardwareT hardware(std::move(component));
     container.emplace_back(std::move(hardware));
     // initialize static data about hardware component to reduce later calls
     HardwareComponentInfo component_info;
@@ -703,12 +703,48 @@ ResourceManager::ResourceManager(
 // CM API: Called in "callback/slow"-thread
 void ResourceManager::load_urdf(const std::string & urdf, bool validate_interfaces)
 {
+  hardware_infos_ = hardware_interface::parse_control_resources_from_urdf(urdf);
+  validate_interfaces_ = validate_interfaces;
+
   const std::string system_type = "system";
   const std::string sensor_type = "sensor";
   const std::string actuator_type = "actuator";
 
-  const auto hardware_info = hardware_interface::parse_control_resources_from_urdf(urdf);
-  for (const auto & individual_hardware_info : hardware_info)
+  for (const auto & individual_hardware_info : hardware_infos_)
+  {
+    if (individual_hardware_info.type == actuator_type)
+    {
+      std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
+      std::lock_guard<std::recursive_mutex> guard_claimed(claimed_command_interfaces_lock_);
+      resource_storage_->load_and_initialize_actuator(individual_hardware_info);
+    }
+    if (individual_hardware_info.type == sensor_type)
+    {
+      std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
+      resource_storage_->load_and_initialize_sensor(individual_hardware_info);
+    }
+    if (individual_hardware_info.type == system_type)
+    {
+      std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
+      std::lock_guard<std::recursive_mutex> guard_claimed(claimed_command_interfaces_lock_);
+      resource_storage_->load_and_initialize_system(individual_hardware_info);
+    }
+  }
+
+  // throw on missing state and command interfaces, not specified keys are being ignored
+  if (validate_interfaces)
+  {
+    validate_storage(hardware_info);
+  }
+}
+
+void ResourceManager::load_hardware()
+{
+  const std::string system_type = "system";
+  const std::string sensor_type = "sensor";
+  const std::string actuator_type = "actuator";
+
+  for (const auto & individual_hardware_info : hardware_infos_)
   {
     if (individual_hardware_info.type == actuator_type)
     {
