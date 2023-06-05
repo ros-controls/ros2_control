@@ -209,21 +209,45 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
       {
         if (components_to_activate.find(component) == components_to_activate.end())
         {
-          RCLCPP_WARN(
-            get_logger(), "Hardware component '%s' is unknown, therefore not set in '%s' state.",
-            component.c_str(), state.label().c_str());
+          if (state.id() == State::PRIMARY_STATE_UNKNOWN)
+          {
+            RCLCPP_WARN(
+              get_logger(),
+              "Hardware component '%s' is unknown, but defined to not be initial loaded. "
+              "Please check the parameters of Controller Manager.",
+              component.c_str());
+          }
+          else
+          {
+            RCLCPP_WARN(
+              get_logger(), "Hardware component '%s' is unknown, therefore not set in '%s' state.",
+              component.c_str(), state.label().c_str());
+          }
         }
         else
         {
-          RCLCPP_INFO(
-            get_logger(), "Setting component '%s' to '%s' state.", component.c_str(),
-            state.label().c_str());
-          resource_manager_->set_component_state(component, state);
+          // if state is not set then component should not be loaded
+          if (state.id() == State::PRIMARY_STATE_UNKNOWN)
+          {
+            RCLCPP_INFO(
+              get_logger(), "Known component '%s' will not be loaded.", component.c_str());
+          }
+          else
+          {
+            RCLCPP_INFO(
+              get_logger(), "Setting component '%s' to '%s' state.", component.c_str(),
+              state.label().c_str());
+            resource_manager_->set_component_state(component, state);
+          }
           components_to_activate.erase(component);
         }
       }
     }
   };
+
+  // not loaded
+  set_components_to_state(
+    "hardware_components_initial_state.not_loaded", rclcpp_lifecycle::State());
 
   // unconfigured (loaded only)
   set_components_to_state(
