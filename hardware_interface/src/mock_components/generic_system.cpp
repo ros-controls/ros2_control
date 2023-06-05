@@ -59,16 +59,13 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
   };
 
   // check if to create fake command interface for sensor
-  auto it = info_.hardware_parameters.find("fake_sensor_commands");
+  auto it = info_.hardware_parameters.find("mock_sensor_commands");
   if (it != info_.hardware_parameters.end())
   {
-    use_fake_sensor_command_interfaces_ = hardware_interface::parse_bool(it->second);
+    use_mock_sensor_command_interfaces_ = hardware_interface::parse_bool(it->second);
   }
   else
   {
-<<<<<<< HEAD
-    use_fake_sensor_command_interfaces_ = false;
-=======
     // check if fake_sensor_commands was set instead and issue warning.
     it = info_.hardware_parameters.find("fake_sensor_commands");
     if (it != info_.hardware_parameters.end())
@@ -83,7 +80,6 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
     {
       use_mock_sensor_command_interfaces_ = false;
     }
->>>>>>> 7174a1d (Use consequently 'mock' instead of 'fake'. (#1026))
   }
 
   // check if to create mock command interface for gpio
@@ -313,13 +309,8 @@ std::vector<hardware_interface::CommandInterface> GenericSystem::export_command_
     }
   }
 
-<<<<<<< HEAD
-  // Fake sensor command interfaces
-  if (use_fake_sensor_command_interfaces_)
-=======
   // Mock sensor command interfaces
   if (use_mock_sensor_command_interfaces_)
->>>>>>> 7174a1d (Use consequently 'mock' instead of 'fake'. (#1026))
   {
     if (!populate_interfaces(
           info_.sensors, sensor_interfaces_, sensor_mock_commands_, command_interfaces, true))
