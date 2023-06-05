@@ -38,14 +38,11 @@ const auto PERIOD = rclcpp::Duration::from_seconds(0.01);
 
 class TestGenericSystem : public ::testing::Test
 {
-<<<<<<< HEAD
-=======
 public:
   void test_generic_system_with_mimic_joint(std::string & urdf);
   void test_generic_system_with_mock_sensor_commands(std::string & urdf);
   void test_generic_system_with_mock_gpio_commands(std::string & urdf);
 
->>>>>>> 7174a1d (Use consequently 'mock' instead of 'fake'. (#1026))
 protected:
   void SetUp() override
   {
@@ -508,8 +505,6 @@ protected:
   std::string gpio_with_initial_value_;
 };
 
-<<<<<<< HEAD
-=======
 // Forward declaration
 namespace hardware_interface
 {
@@ -542,7 +537,6 @@ public:
   }
 };
 
->>>>>>> 7174a1d (Use consequently 'mock' instead of 'fake'. (#1026))
 void set_components_state(
   hardware_interface::ResourceManager & rm, const std::vector<std::string> & components,
   const uint8_t state_id, const std::string & state_name)
@@ -1438,18 +1432,9 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_)
   generic_system_functional_test(urdf);
 }
 
-<<<<<<< HEAD
-TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_fake_command_)
-{
-  auto urdf = ros2_control_test_assets::urdf_head +
-              valid_urdf_ros2_control_system_robot_with_gpio_fake_command_ +
-              ros2_control_test_assets::urdf_tail;
-  hardware_interface::ResourceManager rm(urdf);
-=======
 void TestGenericSystem::test_generic_system_with_mock_gpio_commands(std::string & urdf)
 {
   TestableResourceManager rm(urdf);
->>>>>>> 7174a1d (Use consequently 'mock' instead of 'fake'. (#1026))
 
   // check is hardware is started
   auto status_map = rm.get_components_status();
