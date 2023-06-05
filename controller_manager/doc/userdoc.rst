@@ -49,16 +49,11 @@ hardware_components_initial_state
 .. code-block:: yaml
 
     hardware_components_initial_state:
-      not_loaded:
-        - "gripper1"
       unconfigured:
         - "arm1"
         - "arm2"
       inactive:
         - "base3"
-
-hardware_components_initial_state.not_loaded (optional; list<string>; default: empty)
-  Defines which hardware components (pluings) should not be loaded activated when controller manager is started.
 
 hardware_components_initial_state.unconfigured (optional; list<string>; default: empty)
   Defines which hardware components will be only loaded immediately when controller manager is started.
