@@ -108,13 +108,8 @@ private:
     std::vector<std::string> & interfaces, std::vector<std::vector<double>> & storage,
     std::vector<InterfaceType> & target_interfaces, bool using_state_interfaces);
 
-<<<<<<< HEAD
-  bool use_fake_gpio_command_interfaces_;
-  bool use_fake_sensor_command_interfaces_;
-=======
   bool use_mock_gpio_command_interfaces_;
   bool use_mock_sensor_command_interfaces_;
->>>>>>> 7174a1d (Use consequently 'mock' instead of 'fake'. (#1026))
 
   double position_state_following_offset_;
   std::string custom_interface_with_following_offset_;
