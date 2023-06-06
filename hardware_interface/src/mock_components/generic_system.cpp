@@ -58,7 +58,7 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
     }
   };
 
-  // check if to create fake command interface for sensor
+  // check if to create mock command interface for sensor
   auto it = info_.hardware_parameters.find("mock_sensor_commands");
   if (it != info_.hardware_parameters.end())
   {
@@ -401,7 +401,7 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
     }
   }
 
-  if (use_fake_sensor_command_interfaces_)
+  if (use_mock_sensor_command_interfaces_)
   {
     mirror_command_to_state(sensor_states_, sensor_mock_commands_);
   }
