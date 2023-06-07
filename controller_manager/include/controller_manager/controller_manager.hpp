@@ -85,9 +85,6 @@ public:
   virtual ~ControllerManager() = default;
 
   CONTROLLER_MANAGER_PUBLIC
-  void subscribe_to_robot_description_topic();
-
-  CONTROLLER_MANAGER_PUBLIC
   void robot_description_callback(const std_msgs::msg::String & msg);
 
   CONTROLLER_MANAGER_PUBLIC
@@ -324,6 +321,7 @@ private:
   std::vector<std::string> get_controller_names();
   std::pair<std::string, std::string> split_command_interface(
     const std::string & command_interface);
+  void subscribe_to_robot_description_topic();
 
   /**
    * Clear request lists used when switching controllers. The lists are shared between "callback"

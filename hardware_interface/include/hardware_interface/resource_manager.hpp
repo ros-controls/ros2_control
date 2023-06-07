@@ -98,7 +98,7 @@ public:
    * @return true if resource manager's load_urdf() has been already called.
    * @return false if resource manager's load_urdf() has not been yet called.
    */
-  bool load_urdf_called() const;
+  bool is_urdf_already_loaded() const;
 
   /// Claim a state interface given its key.
   /**
@@ -424,7 +424,7 @@ private:
   // Structure to store read and write status so it is not initialized in the real-time loop
   HardwareReadWriteStatus read_write_status;
 
-  bool load_urdf_called_ = false;
+  bool is_urdf_loaded__ = false;
 };
 
 }  // namespace hardware_interface

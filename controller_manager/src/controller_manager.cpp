@@ -151,7 +151,7 @@ ControllerManager::ControllerManager(
   }
 
   std::string robot_description = "";
-  // TODO(Manuel): robot_description parameter is deprecated and should be removed.
+  // TODO(destogl): remove support at the end of 2023
   get_parameter("robot_description", robot_description);
   if (robot_description.empty())
   {
@@ -161,8 +161,8 @@ ControllerManager::ControllerManager(
   {
     RCLCPP_WARN(
       get_logger(),
-      "[Deprecated] Passing the robot description file directly to the control_manager node is "
-      "deprecated. Use robot_state_publisher instead.");
+      "[Deprecated] Passing the robot description parameter directly to the control_manager node "
+      "is deprecated. Use '~/robot_description' topic from 'robot_state_publisher' instead.");
     init_resource_manager(robot_description);
   }
 
@@ -203,7 +203,7 @@ void ControllerManager::subscribe_to_robot_description_topic()
 {
   // set QoS to transient local to get messages that have already been published
   // (if robot state publisher starts before controller manager)
-  RCLCPP_INFO_STREAM(
+  RCLCPP_INFO(
     get_logger(), "Subscribing to '~/robot_description' topic for robot description file.");
   robot_description_subscription_ = create_subscription<std_msgs::msg::String>(
     "~/robot_description", rclcpp::QoS(1).transient_local(),
@@ -219,7 +219,7 @@ void ControllerManager::robot_description_callback(const std_msgs::msg::String &
   // to die if a non valid urdf is passed. However, should maybe be fine tuned.
   try
   {
-    if (resource_manager_->load_urdf_called())
+    if (resource_manager_->is_urdf_already_loaded())
     {
       RCLCPP_WARN(
         get_logger(),
@@ -249,7 +249,7 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
   std::vector<std::string> configure_components_on_start = std::vector<std::string>({});
   if (get_parameter("configure_components_on_start", configure_components_on_start))
   {
-    RCLCPP_WARN_STREAM(
+    RCLCPP_WARN(
       get_logger(),
       "[Deprecated]: Usage of parameter \"configure_components_on_start\" is deprecated. Use "
       "hardware_spawner instead.");

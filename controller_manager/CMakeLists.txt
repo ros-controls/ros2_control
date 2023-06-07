@@ -145,7 +145,7 @@ if(BUILD_TESTING)
     controller_manager_msgs
   )
   ament_add_gmock(test_controller_manager_urdf_passing
-  test/test_controller_manager_urdf_passing.cpp
+    test/test_controller_manager_urdf_passing.cpp
   )
   target_link_libraries(test_controller_manager_urdf_passing
     controller_manager

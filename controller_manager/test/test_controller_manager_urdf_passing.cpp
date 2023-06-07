@@ -61,27 +61,27 @@ public:
 
 TEST_P(TestControllerManagerWithTestableCM, initial_no_load_urdf_called)
 {
-  ASSERT_FALSE(cm_->resource_manager_->load_urdf_called());
+  ASSERT_FALSE(cm_->resource_manager_->is_urdf_already_loaded());
 }
 
 TEST_P(TestControllerManagerWithTestableCM, load_urdf_called_after_callback)
 {
-  ASSERT_FALSE(cm_->resource_manager_->load_urdf_called());
+  ASSERT_FALSE(cm_->resource_manager_->is_urdf_already_loaded());
   // mimic callback
   auto msg = std_msgs::msg::String();
   msg.data = ros2_control_test_assets::minimal_robot_urdf;
   cm_->robot_description_callback(msg);
-  ASSERT_TRUE(cm_->resource_manager_->load_urdf_called());
+  ASSERT_TRUE(cm_->resource_manager_->is_urdf_already_loaded());
 }
 
 TEST_P(TestControllerManagerWithTestableCM, load_urdf_called_after_invalid_urdf_passed)
 {
-  ASSERT_FALSE(cm_->resource_manager_->load_urdf_called());
+  ASSERT_FALSE(cm_->resource_manager_->is_urdf_already_loaded());
   // mimic callback
   auto msg = std_msgs::msg::String();
   msg.data = ros2_control_test_assets::minimal_robot_missing_command_keys_urdf;
   cm_->robot_description_callback(msg);
-  ASSERT_TRUE(cm_->resource_manager_->load_urdf_called());
+  ASSERT_TRUE(cm_->resource_manager_->is_urdf_already_loaded());
 }
 
 INSTANTIATE_TEST_SUITE_P(
