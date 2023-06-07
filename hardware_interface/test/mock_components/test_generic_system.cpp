@@ -39,9 +39,9 @@ const auto PERIOD = rclcpp::Duration::from_seconds(0.01);
 class TestGenericSystem : public ::testing::Test
 {
 public:
-  void test_generic_system_with_mimic_joint(std::string & urdf);
-  void test_generic_system_with_mock_sensor_commands(std::string & urdf);
-  void test_generic_system_with_mock_gpio_commands(std::string & urdf);
+  void test_generic_system_with_mimic_joint(const std::string & urdf);
+  void test_generic_system_with_mock_sensor_commands(const std::string & urdf);
+  void test_generic_system_with_mock_gpio_commands(const std::string & urdf);
 
 protected:
   void SetUp() override
@@ -191,7 +191,7 @@ protected:
   <ros2_control name="GenericSystem2dof" type="system">
     <hardware>
       <plugin>mock_components/GenericSystem</plugin>
-      <param name="fake_sensor_commands">true</param>
+      <param name="mock_sensor_commands">true</param>
     </hardware>
     <joint name="joint1">
       <command_interface name="position"/>
@@ -984,7 +984,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_sensor)
   ASSERT_EQ(0.33, j2p_c.get_value());
 }
 
-void test_generic_system_with_fake_sensor_commands(std::string urdf)
+void TestGenericSystem::test_generic_system_with_mock_sensor_commands(const std::string & urdf)
 {
   hardware_interface::ResourceManager rm(urdf);
   // Activate components to get all interfaces available
@@ -1111,7 +1111,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_sensor_mock_command)
   auto urdf = ros2_control_test_assets::urdf_head + hardware_system_2dof_with_sensor_mock_command_ +
               ros2_control_test_assets::urdf_tail;
 
-  test_generic_system_with_fake_sensor_commands(urdf);
+  test_generic_system_with_mock_sensor_commands(urdf);
 }
 
 TEST_F(TestGenericSystem, generic_system_2dof_sensor_mock_command_True)
@@ -1120,10 +1120,10 @@ TEST_F(TestGenericSystem, generic_system_2dof_sensor_mock_command_True)
               hardware_system_2dof_with_sensor_mock_command_True_ +
               ros2_control_test_assets::urdf_tail;
 
-  test_generic_system_with_fake_sensor_commands(urdf);
+  test_generic_system_with_mock_sensor_commands(urdf);
 }
 
-void test_generic_system_with_mimic_joint(std::string urdf)
+void TestGenericSystem::test_generic_system_with_mimic_joint(const std::string& urdf)
 {
   hardware_interface::ResourceManager rm(urdf);
   // Activate components to get all interfaces available
@@ -1432,7 +1432,7 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_)
   generic_system_functional_test(urdf);
 }
 
-void TestGenericSystem::test_generic_system_with_mock_gpio_commands(std::string & urdf)
+void TestGenericSystem::test_generic_system_with_mock_gpio_commands(const std::string & urdf)
 {
   TestableResourceManager rm(urdf);
 
