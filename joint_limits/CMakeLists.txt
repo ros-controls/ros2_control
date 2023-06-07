@@ -58,6 +58,7 @@ pluginlib_export_plugin_description_file(joint_limits joint_limiters.xml)
 if(BUILD_TESTING)
   find_package(ament_cmake_gtest REQUIRED)
   find_package(ament_cmake_gmock REQUIRED)
+  find_package(generate_parameter_library REQUIRED)
   find_package(launch_testing_ament_cmake REQUIRED)
   find_package(pluginlib REQUIRED)
   find_package(rclcpp REQUIRED)
@@ -71,11 +72,13 @@ if(BUILD_TESTING)
     DESTINATION lib/joint_limits
   )
   install(
-    FILES test/joint_limits_rosparam.yaml
+    FILES test/joint_limits_rosparam.yaml test/simple_joint_limiter_param.yaml
     DESTINATION share/joint_limits/test
   )
 
-  ament_add_gmock(test_simple_joint_limiter test/test_simple_joint_limiter.cpp)
+  add_rostest_with_parameters_gmock(test_simple_joint_limiter test/test_simple_joint_limiter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/test/simple_joint_limiter_param.yaml
+  )
   target_include_directories(test_simple_joint_limiter PRIVATE include)
   target_link_libraries(test_simple_joint_limiter joint_limiter_interface)
   ament_target_dependencies(
@@ -83,6 +86,7 @@ if(BUILD_TESTING)
     pluginlib
     rclcpp
   )
+
 endif()
 
 install(
