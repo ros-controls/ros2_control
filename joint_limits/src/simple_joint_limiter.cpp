@@ -170,7 +170,13 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
       // Here we aren't explicitly maximally decelerating, but for joints near their limits this
       // should still result in max decel being used
       desired_accel[index] = -current_joint_states.velocities[index] / dt_seconds;
-      if (joint_limits_[index].has_acceleration_limits)
+      if (joint_limits_[index].has_deceleration_limits)
+      {
+        desired_accel[index] = std::copysign(
+          std::min(std::abs(desired_accel[index]), joint_limits_[index].max_deceleration),
+          desired_accel[index]);
+      }
+      else if (joint_limits_[index].has_acceleration_limits)
       {
         desired_accel[index] = std::copysign(
           std::min(std::abs(desired_accel[index]), joint_limits_[index].max_acceleration),
