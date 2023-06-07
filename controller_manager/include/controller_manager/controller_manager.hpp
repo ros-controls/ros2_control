@@ -50,6 +50,8 @@
 #include "rclcpp/node_interfaces/node_logging_interface.hpp"
 #include "rclcpp/node_interfaces/node_parameters_interface.hpp"
 #include "rclcpp/parameter.hpp"
+#include "rclcpp/rclcpp.hpp"
+#include "std_msgs/msg/string.hpp"
 
 namespace controller_manager
 {
@@ -80,6 +82,9 @@ public:
 
   CONTROLLER_MANAGER_PUBLIC
   virtual ~ControllerManager() = default;
+
+  CONTROLLER_MANAGER_PUBLIC
+  void robot_description_callback(const std_msgs::msg::String & msg);
 
   CONTROLLER_MANAGER_PUBLIC
   void init_resource_manager(const std::string & robot_description);
@@ -282,6 +287,7 @@ private:
   std::vector<std::string> get_controller_names();
   std::pair<std::string, std::string> split_command_interface(
     const std::string & command_interface);
+  void subscribe_to_robot_description_topic();
 
   /**
    * Clear request lists used when switching controllers. The lists are shared between "callback"
@@ -466,6 +472,8 @@ private:
   std::vector<std::string> to_chained_mode_request_, from_chained_mode_request_;
   std::vector<std::string> activate_command_interface_request_,
     deactivate_command_interface_request_;
+
+  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr robot_description_subscription_;
 
   struct SwitchParams
   {

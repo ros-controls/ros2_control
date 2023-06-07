@@ -6,6 +6,7 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 set(THIS_PACKAGE_INCLUDE_DEPENDS
+<<<<<<< HEAD
     ament_index_cpp
     controller_interface
     controller_manager_msgs
@@ -13,6 +14,17 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
     pluginlib
     rclcpp
     realtime_tools
+=======
+  ament_index_cpp
+  controller_interface
+  controller_manager_msgs
+  diagnostic_updater
+  hardware_interface
+  pluginlib
+  rclcpp
+  realtime_tools
+  std_msgs
+>>>>>>> d299208 ([CM] Use `robot_description` topic instead of parameter and don't crash on empty URDF 🦿 (#940))
 )
 
 find_package(ament_cmake REQUIRED)
@@ -132,6 +144,16 @@ if(BUILD_TESTING)
     test_controller_manager_srvs
     controller_manager_msgs
     ros2_control_test_assets
+  )
+  ament_add_gmock(test_controller_manager_urdf_passing
+    test/test_controller_manager_urdf_passing.cpp
+  )
+  target_link_libraries(test_controller_manager_urdf_passing
+    controller_manager
+    ros2_control_test_assets::ros2_control_test_assets
+  )
+  ament_target_dependencies(test_controller_manager_urdf_passing
+    controller_manager_msgs
   )
 
   add_library(test_controller_with_interfaces SHARED test/test_controller_with_interfaces/test_controller_with_interfaces.cpp)

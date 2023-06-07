@@ -25,6 +25,7 @@
   <depend>ros2_control_test_assets</depend>
   <depend>ros2param</depend>
   <depend>ros2run</depend>
+  <depend>std_msgs</depend>
 
   <test_depend>ament_cmake_gmock</test_depend>
 
