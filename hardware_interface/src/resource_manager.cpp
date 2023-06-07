@@ -706,40 +706,8 @@ void ResourceManager::load_urdf(const std::string & urdf, bool validate_interfac
   hardware_infos_ = hardware_interface::parse_control_resources_from_urdf(urdf);
   validate_interfaces_ = validate_interfaces;
 
-  const std::string system_type = "system";
-  const std::string sensor_type = "sensor";
-  const std::string actuator_type = "actuator";
+  is_urdf_loaded__ = true;
 
-  for (const auto & individual_hardware_info : hardware_infos_)
-  {
-    if (individual_hardware_info.type == actuator_type)
-    {
-      std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
-      std::lock_guard<std::recursive_mutex> guard_claimed(claimed_command_interfaces_lock_);
-      resource_storage_->load_and_initialize_actuator(individual_hardware_info);
-    }
-    if (individual_hardware_info.type == sensor_type)
-    {
-      std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
-      resource_storage_->load_and_initialize_sensor(individual_hardware_info);
-    }
-    if (individual_hardware_info.type == system_type)
-    {
-      std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
-      std::lock_guard<std::recursive_mutex> guard_claimed(claimed_command_interfaces_lock_);
-      resource_storage_->load_and_initialize_system(individual_hardware_info);
-    }
-  }
-
-  // throw on missing state and command interfaces, not specified keys are being ignored
-  if (validate_interfaces)
-  {
-    validate_storage(hardware_info);
-  }
-}
-
-void ResourceManager::load_hardware()
-{
   const std::string system_type = "system";
   const std::string sensor_type = "sensor";
   const std::string actuator_type = "actuator";
@@ -776,6 +744,8 @@ void ResourceManager::load_hardware()
     resource_storage_->actuators_.size() + resource_storage_->sensors_.size() +
     resource_storage_->systems_.size());
 }
+
+bool ResourceManager::is_urdf_already_loaded() const { return is_urdf_loaded__; }
 
 // CM API: Called in "update"-thread
 LoanedStateInterface ResourceManager::claim_state_interface(const std::string & key)
