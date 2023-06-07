@@ -1123,7 +1123,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_sensor_mock_command_True)
   test_generic_system_with_mock_sensor_commands(urdf);
 }
 
-void TestGenericSystem::test_generic_system_with_mimic_joint(const std::string& urdf)
+void TestGenericSystem::test_generic_system_with_mimic_joint(const std::string & urdf)
 {
   hardware_interface::ResourceManager rm(urdf);
   // Activate components to get all interfaces available
