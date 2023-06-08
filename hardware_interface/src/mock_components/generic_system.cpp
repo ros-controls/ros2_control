@@ -106,6 +106,18 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
     }
   }
 
+  // check if there is parameter that disables commands
+  // this way we simulate disconnected driver
+  it = info_.hardware_parameters.find("disable_commands");
+  if (it != info.hardware_parameters.end())
+  {
+    command_propagation_disabled_ = hardware_interface::parse_bool(it->second);
+  }
+  else
+  {
+    command_propagation_disabled_ = false;
+  }
+
   // process parameters about state following
   position_state_following_offset_ = 0.0;
   custom_interface_with_following_offset_ = "";
@@ -346,6 +358,13 @@ std::vector<hardware_interface::CommandInterface> GenericSystem::export_command_
 
 return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
 {
+  if (command_propagation_disabled_)
+  {
+    RCUTILS_LOG_WARN_NAMED(
+      "mock_generic_system", "Command propagation is disabled - no values will be returned!");
+    return return_type::OK;
+  }
+
   auto mirror_command_to_state = [](auto & states_, auto commands_, size_t start_index = 0)
   {
     for (size_t i = start_index; i < states_.size(); ++i)
