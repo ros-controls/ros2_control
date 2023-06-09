@@ -1,4 +1,4 @@
-validate_limitation:
+simple_joint_limiter:
   ros__parameters:
     joint_limits:
       # Get full specification from parameter server

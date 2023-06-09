@@ -16,44 +16,76 @@
 
 #include "test_simple_joint_limiter.hpp"
 
-TEST_F(SimpleJointLimiterTest, load_limiter)
+TEST_F(SimpleJointLimiterTest, when_loading_limiter_plugin_expect_loaded)
 {
+  // Test SimpleJointLimiter loading
   ASSERT_NO_THROW(
     joint_limiter_ = std::unique_ptr<JointLimiter>(
       joint_limiter_loader_.createUnmanagedInstance(joint_limiter_type_)));
   ASSERT_NE(joint_limiter_, nullptr);
 }
 
-TEST_F(SimpleJointLimiterTest, validate_limitation)
+/* FIXME: currently init does not check if limit parameters exist for the requested joint
+TEST_F(SimpleJointLimiterTest, when_joint_not_found_expect_init_fail)
 {
-  joint_limiter_ = std::unique_ptr<JointLimiter>(
-    joint_limiter_loader_.createUnmanagedInstance(joint_limiter_type_));
+  SetupNode("simple_joint_limiter");
+  Load();
 
   if (joint_limiter_)
   {
-    rclcpp::Duration period(1.0, 0.0);  // 1 second
-
     // initialize the limiter
-    std::vector<std::string> joint_names = {"foo_joint"};
-    auto num_joints = joint_names.size();
-    ASSERT_TRUE(joint_limiter_->init(joint_names, node_));
+    std::vector<std::string> joint_names = {"bar_joint"};
+    ASSERT_FALSE(joint_limiter_->init(joint_names, node_));
+  }
+}
+*/
 
-    last_commanded_state_.positions.resize(num_joints);
-    last_commanded_state_.velocities.resize(num_joints, 0.0);
-    last_commanded_state_.accelerations.resize(num_joints, 0.0);
+/*FIXME: currently dt is not tested and leads to nan which lets all other tests pass
+TEST_F(SimpleJointLimiterTest, when_invalid_dt_expect_enforce_fail)
+{
+  SetupNode("simple_joint_limiter");
+  Load();
 
+  if (joint_limiter_)
+  {
+    Init();
+    Configure();
+    rclcpp::Duration period(0, 0);  // 0 second
+    ASSERT_FALSE(joint_limiter_->enforce(current_joint_states_, desired_joint_states_, period));
+  }
+}
+*/
+
+TEST_F(SimpleJointLimiterTest, when_wrong_input_expect_enforce_fail)
+{
+  SetupNode("simple_joint_limiter");
+  Load();
+
+  if (joint_limiter_)
+  {
+    Init();
     // no size check occurs (yet) so expect true
     ASSERT_TRUE(joint_limiter_->configure(last_commanded_state_));
-    desired_joint_states_ = last_commanded_state_;
-    current_joint_states_ = last_commanded_state_;
 
-    // pos, vel, acc, dec = 1.0, 2.0, 5.0, 7.5
-
+    rclcpp::Duration period(1, 0);  // 1 second
     desired_joint_states_.velocities.clear();
     // trigger size check with one wrong size
     ASSERT_FALSE(joint_limiter_->enforce(current_joint_states_, desired_joint_states_, period));
-    // fix size
-    desired_joint_states_.velocities.resize(num_joints, 0.0);
+  }
+}
+
+TEST_F(SimpleJointLimiterTest, when_within_limits_expect_no_limits_applied)
+{
+  SetupNode("simple_joint_limiter");
+  Load();
+
+  if (joint_limiter_)
+  {
+    Init();
+    Configure();
+
+    rclcpp::Duration period(1.0, 0.0);  // 1 second
+    // pos, vel, acc, dec = 1.0, 2.0, 5.0, 7.5
 
     // within limits
     desired_joint_states_.positions[0] = 1.0;
@@ -67,6 +99,20 @@ TEST_F(SimpleJointLimiterTest, validate_limitation)
       desired_joint_states_.velocities[0],  // vel unchanged
       desired_joint_states_.velocities[0]   // acc = vel / 1.0
     );
+  }
+}
+
+TEST_F(SimpleJointLimiterTest, when_velocity_exceeded_expect_vel_and_acc_enforced)
+{
+  SetupNode("simple_joint_limiter");
+  Load();
+
+  if (joint_limiter_)
+  {
+    Init();
+    Configure();
+
+    rclcpp::Duration period(1.0, 0.0);  // 1 second
 
     // desired velocity exceeds
     desired_joint_states_.velocities[0] = 3.0;
@@ -91,6 +137,20 @@ TEST_F(SimpleJointLimiterTest, validate_limitation)
       -2.0,                                // vel limited to -max_vel
       -2.0 / 1.0                           // acc set to vel change/DT
     );
+  }
+}
+
+TEST_F(SimpleJointLimiterTest, when_position_exceeded_expect_pos_enforced)
+{
+  SetupNode("simple_joint_limiter");
+  Load();
+
+  if (joint_limiter_)
+  {
+    Init();
+    Configure();
+
+    rclcpp::Duration period(1.0, 0.0);  // 1 second
 
     // desired pos exceeds
     desired_joint_states_.positions[0] = 20.0;
@@ -104,15 +164,27 @@ TEST_F(SimpleJointLimiterTest, validate_limitation)
       desired_joint_states_.velocities[0],    // vel unchanged
       desired_joint_states_.accelerations[0]  // acc unchanged
     );
+  }
+}
+
+TEST_F(SimpleJointLimiterTest, when_position_close_to_pos_limit_expect_deceleration_enforced)
+{
+  SetupNode("simple_joint_limiter");
+  Load();
+
+  if (joint_limiter_)
+  {
+    Init();
+    Configure();
+
+    // using 0.05 because 1.0 sec invalidates the "small dt integration"
+    rclcpp::Duration period(0, 50000000);  // 0.05 second
 
     // close to pos limit should reduce velocity and stop
     current_joint_states_.positions[0] = 4.851;
     current_joint_states_.velocities[0] = 1.5;
     desired_joint_states_.positions[0] = 4.926;
     desired_joint_states_.velocities[0] = 1.5;
-
-    // changing to 0.05 because 1.0 sec invalidates the "small dt integration"
-    period = rclcpp::Duration::from_seconds(0.05);
 
     // this setup requires 0.15 distance to stop, and 0.2 seconds (so 4 cycles at 0.05)
     for (auto i = 0u; i < 4; ++i)
@@ -132,10 +204,24 @@ TEST_F(SimpleJointLimiterTest, validate_limitation)
             COMMON_THRESHOLD);  // is not decelerating at max all the time, hence err in last cycle
       ASSERT_LE(desired_joint_states_.accelerations[0], 0.0);  // should decelerate
 
-      INTEGRATE(current_joint_states_, desired_joint_states_, period.seconds());
+      Integrate(period.seconds());
 
       ASSERT_LE(current_joint_states_.positions[0], 5.0);  // below joint limit
     }
+  }
+}
+
+TEST_F(SimpleJointLimiterTest, when_acceleration_exceeded_expect_acc_enforced)
+{
+  SetupNode("simple_joint_limiter");
+  Load();
+
+  if (joint_limiter_)
+  {
+    Init();
+    Configure();
+
+    rclcpp::Duration period(0, 50000000);
 
     // desired acceleration exceeds
     current_joint_states_.positions[0] = 0.0;
@@ -150,6 +236,20 @@ TEST_F(SimpleJointLimiterTest, validate_limitation)
       0.25,                                // vel limited max acc * dt
       5.0                                  // acc max acc
     );
+  }
+}
+
+TEST_F(SimpleJointLimiterTest, when_deceleration_exceeded_expect_acc_enforced)
+{
+  SetupNode("simple_joint_limiter");
+  Load();
+
+  if (joint_limiter_)
+  {
+    Init();
+    Configure();
+
+    rclcpp::Duration period(0, 50000000);
 
     // desired deceleration exceeds
     current_joint_states_.positions[0] = 0.0;

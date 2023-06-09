@@ -34,10 +34,6 @@ const double COMMON_THRESHOLD = 0.0011;
   EXPECT_NEAR(tested_traj_point.velocities[idx], expected_vel, COMMON_THRESHOLD);                  \
   EXPECT_NEAR(tested_traj_point.accelerations[idx], expected_acc, COMMON_THRESHOLD);
 
-#define INTEGRATE(cur, des, dt)                                                      \
-  cur.positions[0] += des.velocities[0] * dt + 0.5 * des.accelerations[0] * dt * dt; \
-  cur.velocities[0] += des.accelerations[0] * dt;
-
 using JointLimiter = joint_limits::JointLimiterInterface<joint_limits::JointLimits>;
 
 class SimpleJointLimiterTest : public ::testing::Test
@@ -45,21 +41,56 @@ class SimpleJointLimiterTest : public ::testing::Test
 public:
   void SetUp() override
   {
-    auto testname = ::testing::UnitTest::GetInstance()->current_test_info()->name();
-    node_ = std::make_shared<rclcpp::Node>(testname);
+    node_name_ = ::testing::UnitTest::GetInstance()->current_test_info()->name();
+  }
+
+  void SetupNode(const std::string node_name = "")
+  {
+    if (!node_name.empty()) node_name_ = node_name;
+    node_ = std::make_shared<rclcpp::Node>(node_name_);
+  }
+
+  void Load()
+  {
+    joint_limiter_ = std::unique_ptr<JointLimiter>(
+      joint_limiter_loader_.createUnmanagedInstance(joint_limiter_type_));
+  }
+
+  void Init()
+  {
+    joint_names_ = {"foo_joint"};
+    joint_limiter_->init(joint_names_, node_);
+    num_joints_ = joint_names_.size();
+    last_commanded_state_.positions.resize(num_joints_, 0.0);
+    last_commanded_state_.velocities.resize(num_joints_, 0.0);
+    last_commanded_state_.accelerations.resize(num_joints_, 0.0);
+    desired_joint_states_ = last_commanded_state_;
+    current_joint_states_ = last_commanded_state_;
+  }
+
+  void Configure() { joint_limiter_->configure(last_commanded_state_); }
+
+  void Integrate(double dt)
+  {
+    current_joint_states_.positions[0] += desired_joint_states_.velocities[0] * dt +
+                                          0.5 * desired_joint_states_.accelerations[0] * dt * dt;
+    current_joint_states_.velocities[0] += desired_joint_states_.accelerations[0] * dt;
   }
 
   SimpleJointLimiterTest()
-  : joint_limiter_loader_(
+  : joint_limiter_type_("joint_limits/SimpleJointLimiter"),
+    joint_limiter_loader_(
       "joint_limits", "joint_limits::JointLimiterInterface<joint_limits::JointLimits>")
   {
-    joint_limiter_type_ = "joint_limits/SimpleJointLimiter";
   }
 
   void TearDown() override { node_.reset(); }
 
 protected:
+  std::string node_name_;
   rclcpp::Node::SharedPtr node_;
+  std::vector<std::string> joint_names_;
+  size_t num_joints_;
   std::unique_ptr<JointLimiter> joint_limiter_;
   std::string joint_limiter_type_;
   pluginlib::ClassLoader<JointLimiter> joint_limiter_loader_;
