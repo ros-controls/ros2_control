@@ -148,6 +148,9 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
 
       double stopping_distance =
         std::abs((-desired_vel[index] * desired_vel[index]) / (2 * stopping_deccel));
+      // compute stopping duration at stopping_deccel
+      double stopping_duration = std::abs((desired_vel[index]) / (stopping_deccel));
+
       // Check that joint limits are beyond stopping_distance and desired_velocity is towards
       // that limit
       if (
@@ -160,6 +163,24 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
       {
         pos_limit_trig_jnts[index] = true;
         position_limit_triggered = true;
+      }
+      else
+      {
+        // compute the travel_distance at new desired velocity, in best case duration stopping_duration
+        double motion_after_stopping_duration = desired_vel[index] * stopping_duration;
+        // re-check what happens if we don't slow down
+        if (
+          (desired_vel[index] < 0 &&
+           (current_joint_states.positions[index] - joint_limits_[index].min_position <
+            motion_after_stopping_duration)) ||
+          (desired_vel[index] > 0 &&
+           (joint_limits_[index].max_position - current_joint_states.positions[index] <
+            motion_after_stopping_duration)))
+        {
+          pos_limit_trig_jnts[index] = true;
+          position_limit_triggered = true;
+        }
+        // else no need to slow down. in worse case we won't hit the limit at current velocity
       }
     }
   }

@@ -195,16 +195,14 @@ TEST_F(SimpleJointLimiterTest, when_position_close_to_pos_limit_expect_decelerat
         previous_vel_request);  // vel adapted to reach end-stop should be decreasing
       // NOTE: after the first cycle, vel is reduced and does not trigger stopping position limit
       // hence no max deceleration anymore...
-      ASSERT_LE(
+      ASSERT_LT(
         desired_joint_states_.positions[0],
-        5.0 +
-          10.0 *
-            COMMON_THRESHOLD);  // is not decelerating at max all the time, hence err in last cycle
+        5.0 + COMMON_THRESHOLD);  // should decelerate at each cycle and stay below limits
       ASSERT_LE(desired_joint_states_.accelerations[0], 0.0);  // should decelerate
 
       Integrate(period.seconds());
 
-      ASSERT_LE(current_joint_states_.positions[0], 5.0);  // below joint limit
+      ASSERT_LT(current_joint_states_.positions[0], 5.0);  // below joint limit
     }
   }
 }
