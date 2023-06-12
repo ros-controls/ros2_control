@@ -31,7 +31,7 @@ struct RandomDoubleGenerator
 public:
   RandomDoubleGenerator(double min_val, double max_val) : min_val_(min_val), max_val_(max_val)
   {
-    srand(time(nullptr));
+    srand(static_cast<unsigned int>(time(nullptr)));
   }
   double operator()()
   {
