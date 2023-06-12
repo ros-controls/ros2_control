@@ -22,3 +22,15 @@ simple_joint_limiter:
         k_velocity: 20.0
         soft_lower_limit: 0.1
         soft_upper_limit: 0.9
+
+simple_joint_limiter_nodeclimit:
+  ros__parameters:
+    joint_limits:
+      foo_joint:
+        has_position_limits: true
+        min_position: -5.0
+        max_position: 5.0
+        has_velocity_limits: true
+        max_velocity: 2.0
+        has_acceleration_limits: true
+        max_acceleration: 5.0

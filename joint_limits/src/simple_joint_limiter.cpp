@@ -31,6 +31,8 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
   trajectory_msgs::msg::JointTrajectoryPoint & desired_joint_states, const rclcpp::Duration & dt)
 {
   const auto dt_seconds = dt.seconds();
+  // negative or null is not allowed
+  if (dt_seconds <= 0.0) return false;
 
   if (current_joint_states.velocities.empty())
   {

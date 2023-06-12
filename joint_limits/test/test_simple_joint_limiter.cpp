@@ -40,7 +40,6 @@ TEST_F(SimpleJointLimiterTest, when_joint_not_found_expect_init_fail)
 }
 */
 
-/*FIXME: currently dt is not tested and leads to nan which lets all other tests pass
 TEST_F(SimpleJointLimiterTest, when_invalid_dt_expect_enforce_fail)
 {
   SetupNode("simple_joint_limiter");
@@ -54,7 +53,6 @@ TEST_F(SimpleJointLimiterTest, when_invalid_dt_expect_enforce_fail)
     ASSERT_FALSE(joint_limiter_->enforce(current_joint_states_, desired_joint_states_, period));
   }
 }
-*/
 
 TEST_F(SimpleJointLimiterTest, when_wrong_input_expect_enforce_fail)
 {
@@ -239,7 +237,7 @@ TEST_F(SimpleJointLimiterTest, when_acceleration_exceeded_expect_acc_enforced)
   }
 }
 
-TEST_F(SimpleJointLimiterTest, when_deceleration_exceeded_expect_acc_enforced)
+TEST_F(SimpleJointLimiterTest, when_deceleration_exceeded_expect_dec_enforced)
 {
   SetupNode("simple_joint_limiter");
   Load();
@@ -261,8 +259,36 @@ TEST_F(SimpleJointLimiterTest, when_deceleration_exceeded_expect_acc_enforced)
     CHECK_STATE_SINGLE_JOINT(
       desired_joint_states_, 0,
       desired_joint_states_.positions[0],  // pos unchanged
-      0.625,                               // vel limited by max dec * dt
-      -7.5                                 // acc max dec
+      0.625,                               // vel limited by vel-max dec * dt
+      -7.5                                 // acc limited by -max dec
+    );
+  }
+}
+
+TEST_F(SimpleJointLimiterTest, when_deceleration_exceeded_with_no_maxdec_expect_acc_enforced)
+{
+  SetupNode("simple_joint_limiter_nodeclimit");
+  Load();
+
+  if (joint_limiter_)
+  {
+    Init();
+    Configure();
+
+    rclcpp::Duration period(0, 50000000);
+
+    // desired deceleration exceeds
+    current_joint_states_.positions[0] = 0.0;
+    current_joint_states_.velocities[0] = 1.0;
+    desired_joint_states_.velocities[0] = 0.5;  // leads to acc > -max acc
+    ASSERT_TRUE(joint_limiter_->enforce(current_joint_states_, desired_joint_states_, period));
+
+    // check if vel and acc limits applied
+    CHECK_STATE_SINGLE_JOINT(
+      desired_joint_states_, 0,
+      desired_joint_states_.positions[0],  // pos unchanged
+      0.75,                                // vel limited by vel-max acc * dt
+      -5.0                                 // acc limited to -max acc
     );
   }
 }
