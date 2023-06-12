@@ -16,25 +16,28 @@
 #define HARDWARE_INTERFACE__RESOURCE_MANAGER_HPP_
 
 #include <memory>
-#include <mutex>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
+#include "hardware_interface/actuator.hpp"
 #include "hardware_interface/hardware_component_info.hpp"
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/loaned_command_interface.hpp"
 #include "hardware_interface/loaned_state_interface.hpp"
+#include "hardware_interface/sensor.hpp"
+#include "hardware_interface/system.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
+#include "hardware_interface/types/lifecycle_state_names.hpp"
+#include "lifecycle_msgs/msg/state.hpp"
 #include "rclcpp/duration.hpp"
+#include "rclcpp/node.hpp"
 #include "rclcpp/time.hpp"
 
 namespace hardware_interface
 {
-class ActuatorInterface;
-class SensorInterface;
-class SystemInterface;
 class ResourceStorage;
+class ControllerManager;
 
 struct HardwareReadWriteStatus
 {
@@ -46,7 +49,9 @@ class HARDWARE_INTERFACE_PUBLIC ResourceManager
 {
 public:
   /// Default constructor for the Resource Manager.
-  ResourceManager();
+  ResourceManager(
+    unsigned int update_rate = 100,
+    rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface = nullptr);
 
   /// Constructor for the Resource Manager.
   /**
@@ -65,7 +70,9 @@ public:
    * "autostart_components" and "autoconfigure_components" instead.
    */
   explicit ResourceManager(
-    const std::string & urdf, bool validate_interfaces = true, bool activate_all = false);
+    const std::string & urdf, bool validate_interfaces = true, bool activate_all = false,
+    unsigned int update_rate = 100,
+    rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface = nullptr);
 
   ResourceManager(const ResourceManager &) = delete;
 
@@ -82,6 +89,16 @@ public:
    * interfaces ought to be validated. Defaults to true.
    */
   void load_urdf(const std::string & urdf, bool validate_interfaces = true);
+
+  /**
+   * @brief if the resource manager load_urdf(...) function has been called this returns true.
+   * We want to permit to load the urdf later on but we currently don't want to permit multiple
+   * calls to load_urdf (reloading/loading different urdf).
+   *
+   * @return true if resource manager's load_urdf() has been already called.
+   * @return false if resource manager's load_urdf() has not been yet called.
+   */
+  bool is_urdf_already_loaded() const;
 
   /// Claim a state interface given its key.
   /**
@@ -181,8 +198,9 @@ public:
   /**
    * Return list of cached controller names that use the hardware with name \p hardware_name.
    *
-   * \param[in] hardware_name the name of the hardware for which cached controllers should be returned.
-   * \returns list of cached controller names that depend on hardware with name \p hardware_name.
+   * \param[in] hardware_name the name of the hardware for which cached controllers should be
+   * returned. \returns list of cached controller names that depend on hardware with name \p
+   * hardware_name.
    */
   std::vector<std::string> get_cached_controllers_to_hardware(const std::string & hardware_name);
 
@@ -405,6 +423,8 @@ private:
 
   // Structure to store read and write status so it is not initialized in the real-time loop
   HardwareReadWriteStatus read_write_status;
+
+  bool is_urdf_loaded__ = false;
 };
 
 }  // namespace hardware_interface

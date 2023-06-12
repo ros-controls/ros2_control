@@ -2,6 +2,19 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+3.13.0 (2023-05-18)
+-------------------
+* Add class for thread management of async hw interfaces (`#981 <https://github.com/ros-controls/ros2_control/issues/981>`_)
+* Fix GitHub link on control.ros.org (`#1022 <https://github.com/ros-controls/ros2_control/issues/1022>`_)
+* Remove log-level argument from spawner script (`#1013 <https://github.com/ros-controls/ros2_control/issues/1013>`_)
+* Contributors: Christoph Fröhlich, Márk Szitanics, Bijou Abraham
+
+3.12.2 (2023-04-29)
+-------------------
+
+3.12.1 (2023-04-14)
+-------------------
+
 3.12.0 (2023-04-02)
 -------------------
 * [Controller Interface] Add time and period paramters to update_reference_from_subscribers() (`#846 <https://github.com/ros-controls/ros2_control/issues/846>`_) #API-break
