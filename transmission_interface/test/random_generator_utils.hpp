@@ -33,7 +33,11 @@ public:
   RandomDoubleGenerator(double min_val, double max_val, unsigned int seed = 1234)
   : min_val_(min_val), max_val_(max_val)
   {
+<<<<<<< HEAD
     srand(seed);
+=======
+    srand(static_cast<unsigned int>(time(nullptr)));
+>>>>>>> 1b83a5b (Add -Wconversion flag to protect future developments (#1053))
   }
   double operator()()
   {
