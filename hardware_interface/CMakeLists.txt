@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.5)
 project(hardware_interface)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra)
+  add_compile_options(-Wall -Wextra -Wconversion)
 endif()
 
 set(THIS_PACKAGE_INCLUDE_DEPENDS
