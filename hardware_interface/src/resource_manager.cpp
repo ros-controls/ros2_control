@@ -17,13 +17,16 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <stdexcept>
 #include <string>
+#include <tuple>
 #include <unordered_map>
 #include <utility>
 #include <vector>
 
 #include "hardware_interface/actuator.hpp"
 #include "hardware_interface/actuator_interface.hpp"
+#include "hardware_interface/async_components.hpp"
 #include "hardware_interface/component_parser.hpp"
 #include "hardware_interface/hardware_component_info.hpp"
 #include "hardware_interface/sensor.hpp"
@@ -73,10 +76,16 @@ class ResourceStorage
   static constexpr const char * system_interface_name = "hardware_interface::SystemInterface";
 
 public:
-  ResourceStorage()
+  // TODO(VX792): Change this when HW ifs get their own update rate,
+  // because the ResourceStorage really shouldn't know about the cm's parameters
+  ResourceStorage(
+    unsigned int update_rate = 100,
+    rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface = nullptr)
   : actuator_loader_(pkg_name, actuator_interface_name),
     sensor_loader_(pkg_name, sensor_interface_name),
-    system_loader_(pkg_name, system_interface_name)
+    system_loader_(pkg_name, system_interface_name),
+    cm_update_rate_(update_rate),
+    clock_interface_(clock_interface)
   {
   }
 
@@ -192,6 +201,13 @@ public:
             hardware.get_name().c_str(), interface.c_str());
         }
       }
+
+      if (hardware_info_map_[hardware.get_name()].is_async)
+      {
+        async_component_threads_.emplace(
+          std::piecewise_construct, std::forward_as_tuple(hardware.get_name()),
+          std::forward_as_tuple(&hardware, cm_update_rate_, clock_interface_));
+      }
     }
     return result;
   }
@@ -271,6 +287,7 @@ public:
 
     if (result)
     {
+      async_component_threads_.erase(hardware.get_name());
       // TODO(destogl): change this - deimport all things if there is there are interfaces there
       // deimport_non_movement_command_interfaces(hardware);
       // deimport_state_interfaces(hardware);
@@ -288,6 +305,10 @@ public:
 
     if (result)
     {
+      if (async_component_threads_.find(hardware.get_name()) != async_component_threads_.end())
+      {
+        async_component_threads_.at(hardware.get_name()).activate();
+      }
       // TODO(destogl): make all command interfaces available (currently are all available)
     }
 
@@ -489,54 +510,126 @@ public:
   // TODO(destogl): Propagate "false" up, if happens in initialize_hardware
   void load_and_initialize_actuator(const HardwareInfo & hardware_info)
   {
-    check_for_duplicates(hardware_info);
-    load_hardware<Actuator, ActuatorInterface>(hardware_info, actuator_loader_, actuators_);
-    initialize_hardware(hardware_info, actuators_.back());
-    import_state_interfaces(actuators_.back());
-    import_command_interfaces(actuators_.back());
+    auto load_and_init_actuators = [&](auto & container)
+    {
+      check_for_duplicates(hardware_info);
+      load_hardware<Actuator, ActuatorInterface>(hardware_info, actuator_loader_, container);
+      initialize_hardware(hardware_info, container.back());
+      import_state_interfaces(container.back());
+      import_command_interfaces(container.back());
+    };
+
+    if (hardware_info.is_async)
+    {
+      load_and_init_actuators(async_actuators_);
+    }
+    else
+    {
+      load_and_init_actuators(actuators_);
+    }
   }
 
   void load_and_initialize_sensor(const HardwareInfo & hardware_info)
   {
-    check_for_duplicates(hardware_info);
-    load_hardware<Sensor, SensorInterface>(hardware_info, sensor_loader_, sensors_);
-    initialize_hardware(hardware_info, sensors_.back());
-    import_state_interfaces(sensors_.back());
+    auto load_and_init_sensors = [&](auto & container)
+    {
+      check_for_duplicates(hardware_info);
+      load_hardware<Sensor, SensorInterface>(hardware_info, sensor_loader_, container);
+      initialize_hardware(hardware_info, container.back());
+      import_state_interfaces(container.back());
+    };
+
+    if (hardware_info.is_async)
+    {
+      load_and_init_sensors(async_sensors_);
+    }
+    else
+    {
+      load_and_init_sensors(sensors_);
+    }
   }
 
   void load_and_initialize_system(const HardwareInfo & hardware_info)
   {
-    check_for_duplicates(hardware_info);
-    load_hardware<System, SystemInterface>(hardware_info, system_loader_, systems_);
-    initialize_hardware(hardware_info, systems_.back());
-    import_state_interfaces(systems_.back());
-    import_command_interfaces(systems_.back());
+    auto load_and_init_systems = [&](auto & container)
+    {
+      check_for_duplicates(hardware_info);
+      load_hardware<System, SystemInterface>(hardware_info, system_loader_, container);
+      initialize_hardware(hardware_info, container.back());
+      import_state_interfaces(container.back());
+      import_command_interfaces(container.back());
+    };
+
+    if (hardware_info.is_async)
+    {
+      load_and_init_systems(async_systems_);
+    }
+    else
+    {
+      load_and_init_systems(systems_);
+    }
   }
 
   void initialize_actuator(
     std::unique_ptr<ActuatorInterface> actuator, const HardwareInfo & hardware_info)
   {
-    this->actuators_.emplace_back(Actuator(std::move(actuator)));
-    initialize_hardware(hardware_info, actuators_.back());
-    import_state_interfaces(actuators_.back());
-    import_command_interfaces(actuators_.back());
+    auto init_actuators = [&](auto & container)
+    {
+      container.emplace_back(Actuator(std::move(actuator)));
+      initialize_hardware(hardware_info, container.back());
+      import_state_interfaces(container.back());
+      import_command_interfaces(container.back());
+    };
+
+    if (hardware_info.is_async)
+    {
+      init_actuators(async_actuators_);
+    }
+    else
+    {
+      init_actuators(actuators_);
+    }
   }
 
   void initialize_sensor(
     std::unique_ptr<SensorInterface> sensor, const HardwareInfo & hardware_info)
   {
-    this->sensors_.emplace_back(Sensor(std::move(sensor)));
-    initialize_hardware(hardware_info, sensors_.back());
-    import_state_interfaces(sensors_.back());
+    auto init_sensors = [&](auto & container)
+    {
+      container.emplace_back(Sensor(std::move(sensor)));
+      initialize_hardware(hardware_info, container.back());
+      import_state_interfaces(container.back());
+    };
+
+    if (hardware_info.is_async)
+    {
+      init_sensors(async_sensors_);
+    }
+    else
+    {
+      init_sensors(sensors_);
+    }
   }
 
   void initialize_system(
     std::unique_ptr<SystemInterface> system, const HardwareInfo & hardware_info)
   {
-    this->systems_.emplace_back(System(std::move(system)));
-    initialize_hardware(hardware_info, systems_.back());
-    import_state_interfaces(systems_.back());
-    import_command_interfaces(systems_.back());
+    auto init_systems = [&](auto & container)
+    {
+      container.emplace_back(System(std::move(system)));
+      initialize_hardware(hardware_info, container.back());
+      import_state_interfaces(container.back());
+      import_command_interfaces(container.back());
+    };
+
+    if (hardware_info.is_async)
+    {
+      init_systems(async_systems_);
+    }
+    else
+    {
+      init_systems(systems_);
+    }
   }
 
   // hardware plugins
@@ -547,6 +640,10 @@ public:
   std::vector<Actuator> actuators_;
   std::vector<Sensor> sensors_;
   std::vector<System> systems_;
+
+  std::vector<Actuator> async_actuators_;
+  std::vector<Sensor> async_sensors_;
+  std::vector<System> async_systems_;
 
   std::unordered_map<std::string, HardwareComponentInfo> hardware_info_map_;
 
@@ -567,15 +664,28 @@ public:
 
   /// List of all claimed command interfaces
   std::unordered_map<std::string, bool> claimed_command_interface_map_;
+
+  /// List of async components by type
+  std::unordered_map<std::string, AsyncComponentThread> async_component_threads_;
+
+  // Update rate of the controller manager, and the clock interface of its node
+  // Used by async components.
+  unsigned int cm_update_rate_;
+  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface_;
 };
 
-ResourceManager::ResourceManager() : resource_storage_(std::make_unique<ResourceStorage>()) {}
+ResourceManager::ResourceManager(
+  unsigned int update_rate, rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
+: resource_storage_(std::make_unique<ResourceStorage>(update_rate, clock_interface))
+{
+}
 
 ResourceManager::~ResourceManager() = default;
 
 ResourceManager::ResourceManager(
-  const std::string & urdf, bool validate_interfaces, bool activate_all)
-: resource_storage_(std::make_unique<ResourceStorage>())
+  const std::string & urdf, bool validate_interfaces, bool activate_all, unsigned int update_rate,
+  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
+: resource_storage_(std::make_unique<ResourceStorage>(update_rate, clock_interface))
 {
   load_urdf(urdf, validate_interfaces);
 
@@ -593,6 +703,7 @@ ResourceManager::ResourceManager(
 // CM API: Called in "callback/slow"-thread
 void ResourceManager::load_urdf(const std::string & urdf, bool validate_interfaces)
 {
+  is_urdf_loaded__ = true;
   const std::string system_type = "system";
   const std::string sensor_type = "sensor";
   const std::string actuator_type = "actuator";
@@ -630,6 +741,8 @@ void ResourceManager::load_urdf(const std::string & urdf, bool validate_interfac
     resource_storage_->actuators_.size() + resource_storage_->sensors_.size() +
     resource_storage_->systems_.size());
 }
+
+bool ResourceManager::is_urdf_already_loaded() const { return is_urdf_loaded__; }
 
 // CM API: Called in "update"-thread
 LoanedStateInterface ResourceManager::claim_state_interface(const std::string & key)
@@ -886,18 +999,20 @@ void ResourceManager::import_component(
 // CM API: Called in "callback/slow"-thread
 std::unordered_map<std::string, HardwareComponentInfo> ResourceManager::get_components_status()
 {
-  for (auto & component : resource_storage_->actuators_)
+  auto loop_and_get_state = [&](auto & container)
   {
-    resource_storage_->hardware_info_map_[component.get_name()].state = component.get_state();
-  }
-  for (auto & component : resource_storage_->sensors_)
-  {
-    resource_storage_->hardware_info_map_[component.get_name()].state = component.get_state();
-  }
-  for (auto & component : resource_storage_->systems_)
-  {
-    resource_storage_->hardware_info_map_[component.get_name()].state = component.get_state();
-  }
+    for (auto & component : container)
+    {
+      resource_storage_->hardware_info_map_[component.get_name()].state = component.get_state();
+    }
+  };
+
+  loop_and_get_state(resource_storage_->actuators_);
+  loop_and_get_state(resource_storage_->async_actuators_);
+  loop_and_get_state(resource_storage_->sensors_);
+  loop_and_get_state(resource_storage_->async_sensors_);
+  loop_and_get_state(resource_storage_->systems_);
+  loop_and_get_state(resource_storage_->async_systems_);
 
   return resource_storage_->hardware_info_map_;
 }
@@ -1056,6 +1171,24 @@ return_type ResourceManager::set_component_state(
       std::bind(&ResourceStorage::set_component_state<System>, resource_storage_.get(), _1, _2),
       resource_storage_->systems_);
   }
+  if (!found)
+  {
+    found = find_set_component_state(
+      std::bind(&ResourceStorage::set_component_state<Actuator>, resource_storage_.get(), _1, _2),
+      resource_storage_->async_actuators_);
+  }
+  if (!found)
+  {
+    found = find_set_component_state(
+      std::bind(&ResourceStorage::set_component_state<System>, resource_storage_.get(), _1, _2),
+      resource_storage_->async_systems_);
+  }
+  if (!found)
+  {
+    found = find_set_component_state(
+      std::bind(&ResourceStorage::set_component_state<Sensor>, resource_storage_.get(), _1, _2),
+      resource_storage_->async_sensors_);
+  }
 
   return result;
 }
@@ -1144,6 +1277,7 @@ bool ResourceManager::state_interface_exists(const std::string & key) const
   return resource_storage_->state_interface_map_.find(key) !=
          resource_storage_->state_interface_map_.end();
 }
+
 // END: "used only in tests and locally"
 
 // BEGIN: private methods

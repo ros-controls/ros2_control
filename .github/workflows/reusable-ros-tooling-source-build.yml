@@ -14,7 +14,7 @@ on:
         required: true
         type: string
       ros2_repo_branch:
-        description: 'Branch in the ros2/ros2 repozitory from which ".repos" should be used. Possible values: master (Rolling), humble, galactic, foxy.'
+        description: 'Branch in the ros2/ros2 repository from which ".repos" should be used. Possible values: master (Rolling), humble.'
         default: 'master'
         required: false
         type: string
@@ -26,13 +26,13 @@ jobs:
     strategy:
       fail-fast: false
     steps:
-      - uses: ros-tooling/setup-ros@0.6.1
+      - uses: ros-tooling/setup-ros@0.6.2
         with:
           required-ros-distributions: ${{ inputs.ros_distro }}
       - uses: actions/checkout@v3
         with:
           ref: ${{ inputs.ref }}
-      - uses: ros-tooling/action-ros-ci@0.3.0
+      - uses: ros-tooling/action-ros-ci@0.3.2
         with:
           target-ros2-distro: ${{ inputs.ros_distro }}
           # build all packages listed in the meta package

@@ -51,6 +51,8 @@
 #include "rclcpp/node_interfaces/node_logging_interface.hpp"
 #include "rclcpp/node_interfaces/node_parameters_interface.hpp"
 #include "rclcpp/parameter.hpp"
+#include "rclcpp/rclcpp.hpp"
+#include "std_msgs/msg/string.hpp"
 
 namespace controller_manager
 {
@@ -81,6 +83,9 @@ public:
 
   CONTROLLER_MANAGER_PUBLIC
   virtual ~ControllerManager() = default;
+
+  CONTROLLER_MANAGER_PUBLIC
+  void robot_description_callback(const std_msgs::msg::String & msg);
 
   CONTROLLER_MANAGER_PUBLIC
   void init_resource_manager(const std::string & robot_description);
@@ -316,10 +321,11 @@ private:
   std::vector<std::string> get_controller_names();
   std::pair<std::string, std::string> split_command_interface(
     const std::string & command_interface);
+  void subscribe_to_robot_description_topic();
 
   /**
-   * Clear request lists used when switching controllers. The lists are shared between "callback" and
-   * "control loop" threads.
+   * Clear request lists used when switching controllers. The lists are shared between "callback"
+   * and "control loop" threads.
    */
   void clear_requests();
 
@@ -428,7 +434,8 @@ private:
      * lists match and returns a reference to it
      * This referenced list can be modified safely until switch_updated_controller_list()
      * is called, at this point the RT thread may start using it at any time
-     * \param[in] guard Guard needed to make sure the caller is the only one accessing the unused by rt list
+     * \param[in] guard Guard needed to make sure the caller is the only one accessing the unused by
+     * rt list
      */
     std::vector<ControllerSpec> & get_unused_list(
       const std::lock_guard<std::recursive_mutex> & guard);
@@ -436,7 +443,8 @@ private:
     /// get_updated_list Returns a const reference to the most updated list.
     /**
      * \warning May or may not being used by the realtime thread, read-only reference for safety
-     * \param[in] guard Guard needed to make sure the caller is the only one accessing the unused by rt list
+     * \param[in] guard Guard needed to make sure the caller is the only one accessing the unused by
+     * rt list
      */
     const std::vector<ControllerSpec> & get_updated_list(
       const std::lock_guard<std::recursive_mutex> & guard) const;
@@ -444,7 +452,8 @@ private:
     /**
      * switch_updated_list Switches the "updated" and "outdated" lists, and waits
      *  until the RT thread is using the new "updated" list.
-     * \param[in] guard Guard needed to make sure the caller is the only one accessing the unused by rt list
+     * \param[in] guard Guard needed to make sure the caller is the only one accessing the unused by
+     * rt list
      */
     void switch_updated_list(const std::lock_guard<std::recursive_mutex> & guard);
 
@@ -500,6 +509,8 @@ private:
   std::vector<std::string> to_chained_mode_request_, from_chained_mode_request_;
   std::vector<std::string> activate_command_interface_request_,
     deactivate_command_interface_request_;
+
+  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr robot_description_subscription_;
 
   struct SwitchParams
   {

@@ -30,9 +30,8 @@ namespace transmission_interface
 /// Implementation of a differential transmission.
 /**
  *
- * This transmission relates <b>two actuators</b> and <b>two joints</b> through a differential mechanism, as illustrated
- * below.
- * \image html differential_transmission.png
+ * This transmission relates <b>two actuators</b> and <b>two joints</b> through a differential
+ * mechanism, as illustrated below. \image html differential_transmission.png
  *
  * <CENTER>
  * <table>
@@ -76,28 +75,33 @@ namespace transmission_interface
  * </td>
  * <td>
  * \f{eqnarray*}{
- * x_{a_1} & = & n_{a_1} \left[ n_{j_1} (x_{j_1} - x_{off_1}) + n_{j_2} (x_{j_2} - x_{off_2}) \right] \\[2.5em]
- * x_{a_2} & = & n_{a_2} \left[ n_{j_1} (x_{j_1} - x_{off_1}) - n_{j_2} (x_{j_2} - x_{off_2}) \right]
- * \f}
+ * x_{a_1} & = & n_{a_1} \left[ n_{j_1} (x_{j_1} - x_{off_1}) + n_{j_2} (x_{j_2} - x_{off_2})
+ * \right] \\[2.5em] x_{a_2} & = & n_{a_2} \left[ n_{j_1} (x_{j_1} - x_{off_1}) - n_{j_2} (x_{j_2} -
+ * x_{off_2}) \right] \f}
  * </td></tr></table>
  * </CENTER>
  *
  * where:
- * - \f$ x \f$, \f$ \dot{x} \f$ and \f$ \tau \f$ are position, velocity and effort variables, respectively.
- * - Subindices \f$ _a \f$ and \f$ _j \f$ are used to represent actuator-space and joint-space variables, respectively.
- * - \f$ x_{off}\f$ represents the offset between motor and joint zeros, expressed in joint position coordinates
- *   (cf. SimpleTransmission class documentation for a more detailed description of this variable).
- * - \f$ n \f$ represents a transmission ratio. Reducers/amplifiers are allowed on both the actuator and joint sides
- *   (depicted as timing belts in the figure).
- *  A transmission ratio can take any real value \e except zero. In particular:
- *     - If its absolute value is greater than one, it's a velocity reducer / effort amplifier, while if its absolute
- *       value lies in \f$ (0, 1) \f$ it's a velocity amplifier / effort reducer.
- *     - Negative values represent a direction flip, ie. input and output move in opposite directions.
- *     - <b>Important:</b> Use transmission ratio signs to match this class' convention of positive actuator/joint
- *       directions with a given mechanical design, as they will in general not match.
+ * - \f$ x \f$, \f$ \dot{x} \f$ and \f$ \tau \f$ are position, velocity and effort variables,
+ * respectively.
+ * - Subindices \f$ _a \f$ and \f$ _j \f$ are used to represent actuator-space and joint-space
+ * variables, respectively.
+ * - \f$ x_{off}\f$ represents the offset between motor and joint zeros, expressed in joint position
+ * coordinates (cf. SimpleTransmission class documentation for a more detailed description of this
+ * variable).
+ * - \f$ n \f$ represents a transmission ratio. Reducers/amplifiers are allowed on both the actuator
+ * and joint sides (depicted as timing belts in the figure). A transmission ratio can take any real
+ * value \e except zero. In particular:
+ *     - If its absolute value is greater than one, it's a velocity reducer / effort amplifier,
+ * while if its absolute value lies in \f$ (0, 1) \f$ it's a velocity amplifier / effort reducer.
+ *     - Negative values represent a direction flip, ie. input and output move in opposite
+ * directions.
+ *     - <b>Important:</b> Use transmission ratio signs to match this class' convention of positive
+ * actuator/joint directions with a given mechanical design, as they will in general not match.
  *
- * \note This implementation currently assumes a specific layout for location of the actuators and joint axes which is
- * common in robotic mechanisms. Please file an enhancement ticket if your use case does not adhere to this layout.
+ * \note This implementation currently assumes a specific layout for location of the actuators and
+ * joint axes which is common in robotic mechanisms. Please file an enhancement ticket if your use
+ * case does not adhere to this layout.
  *
  * \ingroup transmission_types
  */
@@ -126,14 +130,16 @@ public:
   /// Transform variables from actuator to joint space.
   /**
    * \pre Actuator and joint vectors must have size 2 and point to valid data.
-   *  To call this method it is not required that all other data vectors contain valid data, and can even remain empty.
+   *  To call this method it is not required that all other data vectors contain valid data, and can
+   * even remain empty.
    */
   void actuator_to_joint() override;
 
   /// Transform variables from joint to actuator space.
   /**
    * \pre Actuator and joint vectors must have size 2 and point to valid data.
-   *  To call this method it is not required that all other data vectors contain valid data, and can even remain empty.
+   *  To call this method it is not required that all other data vectors contain valid data, and can
+   * even remain empty.
    */
   void joint_to_actuator() override;
 
