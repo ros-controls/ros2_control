@@ -384,14 +384,8 @@ private:
   mutable std::recursive_mutex resource_interfaces_lock_;
   mutable std::recursive_mutex claimed_command_interfaces_lock_;
   std::unique_ptr<ResourceStorage> resource_storage_;
-<<<<<<< HEAD
-=======
-
-  // Structure to store read and write status so it is not initialized in the real-time loop
-  HardwareReadWriteStatus read_write_status;
 
   bool is_urdf_loaded__ = false;
->>>>>>> d299208 ([CM] Use `robot_description` topic instead of parameter and don't crash on empty URDF 🦿 (#940))
 };
 
 }  // namespace hardware_interface

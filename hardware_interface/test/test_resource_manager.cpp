@@ -190,16 +190,13 @@ TEST_F(TestResourceManager, initialization_with_urdf_unclaimed)
   }
 }
 
-<<<<<<< HEAD
-TEST_F(TestResourceManager, resource_claiming)
-=======
-TEST_F(ResourceManagerTest, no_load_urdf_function_called)
+TEST_F(TestResourceManager, no_load_urdf_function_called)
 {
   TestableResourceManager rm;
   ASSERT_FALSE(rm.is_urdf_already_loaded());
 }
 
-TEST_F(ResourceManagerTest, load_urdf_called_if_urdf_is_invalid)
+TEST_F(TestResourceManager, load_urdf_called_if_urdf_is_invalid)
 {
   TestableResourceManager rm;
   EXPECT_THROW(
@@ -207,7 +204,7 @@ TEST_F(ResourceManagerTest, load_urdf_called_if_urdf_is_invalid)
   ASSERT_TRUE(rm.is_urdf_already_loaded());
 }
 
-TEST_F(ResourceManagerTest, load_urdf_called_if_urdf_is_valid)
+TEST_F(TestResourceManager, load_urdf_called_if_urdf_is_valid)
 {
   TestableResourceManager rm(ros2_control_test_assets::minimal_robot_urdf);
   ASSERT_TRUE(rm.is_urdf_already_loaded());
@@ -221,8 +218,7 @@ TEST_F(ResourceManagerTest, can_load_urdf_later)
   ASSERT_TRUE(rm.is_urdf_already_loaded());
 }
 
-TEST_F(ResourceManagerTest, resource_claiming)
->>>>>>> d299208 ([CM] Use `robot_description` topic instead of parameter and don't crash on empty URDF 🦿 (#940))
+TEST_F(TestResourceManager, resource_claiming)
 {
   hardware_interface::ResourceManager rm(ros2_control_test_assets::minimal_robot_urdf);
   // Activate components to get all interfaces available

@@ -6,7 +6,6 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 set(THIS_PACKAGE_INCLUDE_DEPENDS
-<<<<<<< HEAD
     ament_index_cpp
     controller_interface
     controller_manager_msgs
@@ -14,17 +13,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
     pluginlib
     rclcpp
     realtime_tools
-=======
-  ament_index_cpp
-  controller_interface
-  controller_manager_msgs
-  diagnostic_updater
-  hardware_interface
-  pluginlib
-  rclcpp
-  realtime_tools
-  std_msgs
->>>>>>> d299208 ([CM] Use `robot_description` topic instead of parameter and don't crash on empty URDF 🦿 (#940))
+    std_msgs
 )
 
 find_package(ament_cmake REQUIRED)

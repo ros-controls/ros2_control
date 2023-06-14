@@ -155,7 +155,6 @@ ControllerManager::ControllerManager(
   }
 
   std::string robot_description = "";
-  // TODO(destogl): remove support at the end of 2023
   get_parameter("robot_description", robot_description);
   if (robot_description.empty())
   {
@@ -190,15 +189,11 @@ ControllerManager::ControllerManager(
   {
     RCLCPP_WARN(get_logger(), "'update_rate' parameter not set, using default value.");
   }
-<<<<<<< HEAD
-=======
 
-  subscribe_to_robot_description_topic();
-
-  diagnostics_updater_.setHardwareID("ros2_control");
-  diagnostics_updater_.add(
-    "Controllers Activity", this, &ControllerManager::controller_activity_diagnostic_callback);
->>>>>>> d299208 ([CM] Use `robot_description` topic instead of parameter and don't crash on empty URDF 🦿 (#940))
+  if (!resource_manager->is_urdf_already_loaded())
+  {
+    subscribe_to_robot_description_topic();
+  }
   init_services();
 }
 
@@ -255,20 +250,7 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
     State::PRIMARY_STATE_INACTIVE, hardware_interface::lifecycle_state_names::INACTIVE);
   for (const auto & component : configure_components_on_start)
   {
-<<<<<<< HEAD
     resource_manager_->set_component_state(component, inactive_state);
-=======
-    RCLCPP_WARN(
-      get_logger(),
-      "[Deprecated]: Usage of parameter \"configure_components_on_start\" is deprecated. Use "
-      "hardware_spawner instead.");
-    rclcpp_lifecycle::State inactive_state(
-      State::PRIMARY_STATE_INACTIVE, hardware_interface::lifecycle_state_names::INACTIVE);
-    for (const auto & component : configure_components_on_start)
-    {
-      resource_manager_->set_component_state(component, inactive_state);
-    }
->>>>>>> d299208 ([CM] Use `robot_description` topic instead of parameter and don't crash on empty URDF 🦿 (#940))
   }
 
   std::vector<std::string> activate_components_on_start = std::vector<std::string>({});

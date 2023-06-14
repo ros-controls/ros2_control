@@ -701,12 +701,9 @@ void ResourceManager::load_urdf(const std::string & urdf, bool validate_interfac
   }
 }
 
-<<<<<<< HEAD
-=======
 bool ResourceManager::is_urdf_already_loaded() const { return is_urdf_loaded__; }
 
 // CM API: Called in "update"-thread
->>>>>>> d299208 ([CM] Use `robot_description` topic instead of parameter and don't crash on empty URDF 🦿 (#940))
 LoanedStateInterface ResourceManager::claim_state_interface(const std::string & key)
 {
   if (!state_interface_is_available(key))
