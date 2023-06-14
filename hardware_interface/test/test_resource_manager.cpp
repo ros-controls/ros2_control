@@ -178,7 +178,7 @@ TEST_F(ResourceManagerTest, initialization_with_urdf_manual_validation)
   EXPECT_TRUE(rm.command_interface_exists("joint3/velocity"));
 }
 
-TEST_F(ResourceManagerTest, initialization_with_wrong_urdf)
+TEST_F(ResourceManagerTest, when_missing_state_keys_expect_hw_initialization_fails)
 {
   // missing state keys
   {
@@ -187,6 +187,10 @@ TEST_F(ResourceManagerTest, initialization_with_wrong_urdf)
         ros2_control_test_assets::minimal_robot_missing_state_keys_urdf),
       std::exception);
   }
+}
+
+TEST_F(ResourceManagerTest, when_missing_command_keys_expect_hw_initialization_fails)
+{
   // missing command keys
   {
     EXPECT_THROW(

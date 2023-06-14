@@ -19,6 +19,8 @@
 #include "hardware_interface/system_interface.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 
+#include "rcutils/logging_macros.h"
+
 using hardware_interface::CommandInterface;
 using hardware_interface::return_type;
 using hardware_interface::StateInterface;
@@ -54,6 +56,7 @@ class TestSystem : public SystemInterface
 
   std::vector<CommandInterface> export_command_interfaces() override
   {
+    RCUTILS_LOG_INFO_NAMED("test_system", "Exporting configuration interfaces.");
     std::vector<CommandInterface> command_interfaces;
     for (auto i = 0u; i < info_.joints.size(); ++i)
     {
