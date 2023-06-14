@@ -514,9 +514,11 @@ public:
     {
       check_for_duplicates(hardware_info);
       load_hardware<Actuator, ActuatorInterface>(hardware_info, actuator_loader_, container);
-      initialize_hardware(hardware_info, container.back());
-      import_state_interfaces(container.back());
-      import_command_interfaces(container.back());
+      if (initialize_hardware(hardware_info, container.back()))
+      {
+        import_state_interfaces(container.back());
+        import_command_interfaces(container.back());
+      }
     };
 
     if (hardware_info.is_async)
@@ -535,8 +537,10 @@ public:
     {
       check_for_duplicates(hardware_info);
       load_hardware<Sensor, SensorInterface>(hardware_info, sensor_loader_, container);
-      initialize_hardware(hardware_info, container.back());
-      import_state_interfaces(container.back());
+      if (initialize_hardware(hardware_info, container.back()))
+      {
+        import_state_interfaces(container.back());
+      }
     };
 
     if (hardware_info.is_async)
@@ -555,9 +559,11 @@ public:
     {
       check_for_duplicates(hardware_info);
       load_hardware<System, SystemInterface>(hardware_info, system_loader_, container);
-      initialize_hardware(hardware_info, container.back());
-      import_state_interfaces(container.back());
-      import_command_interfaces(container.back());
+      if (initialize_hardware(hardware_info, container.back()))
+      {
+        import_state_interfaces(container.back());
+        import_command_interfaces(container.back());
+      }
     };
 
     if (hardware_info.is_async)
@@ -576,9 +582,11 @@ public:
     auto init_actuators = [&](auto & container)
     {
       container.emplace_back(Actuator(std::move(actuator)));
-      initialize_hardware(hardware_info, container.back());
-      import_state_interfaces(container.back());
-      import_command_interfaces(container.back());
+      if (initialize_hardware(hardware_info, container.back()))
+      {
+        import_state_interfaces(container.back());
+        import_command_interfaces(container.back());
+      }
     };
 
     if (hardware_info.is_async)
@@ -597,8 +605,10 @@ public:
     auto init_sensors = [&](auto & container)
     {
       container.emplace_back(Sensor(std::move(sensor)));
-      initialize_hardware(hardware_info, container.back());
-      import_state_interfaces(container.back());
+      if (initialize_hardware(hardware_info, container.back()))
+      {
+        import_state_interfaces(container.back());
+      }
     };
 
     if (hardware_info.is_async)
@@ -617,9 +627,11 @@ public:
     auto init_systems = [&](auto & container)
     {
       container.emplace_back(System(std::move(system)));
-      initialize_hardware(hardware_info, container.back());
-      import_state_interfaces(container.back());
-      import_command_interfaces(container.back());
+      if (initialize_hardware(hardware_info, container.back()))
+      {
+        import_state_interfaces(container.back());
+        import_command_interfaces(container.back());
+      }
     };
 
     if (hardware_info.is_async)
