@@ -2,8 +2,8 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.27.0 (2023-06-14)
+-------------------
 * [MockHardware] Enable disabling of command to simulate HW failures. (backport `#1027 <https://github.com/ros-controls/ros2_control/issues/1027>`_) (`#1050 <https://github.com/ros-controls/ros2_control/issues/1050>`_)
 * Empty urdf tag humble (backport of `#1017 <https://github.com/ros-controls/ros2_control/issues/1017>`_) (`#1036 <https://github.com/ros-controls/ros2_control/issues/1036>`_)
 * [Humble] enable ReflowComments to also use ColumnLimit on comments (`#1038 <https://github.com/ros-controls/ros2_control/issues/1038>`_)

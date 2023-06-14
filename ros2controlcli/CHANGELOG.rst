@@ -2,8 +2,8 @@
 Changelog for package ros2controlcli
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.27.0 (2023-06-14)
+-------------------
 * Docs: Use branch name substitution for all links (backport `#1031 <https://github.com/ros-controls/ros2_control/issues/1031>`_) (`#1042 <https://github.com/ros-controls/ros2_control/issues/1042>`_)
 * Contributors: Christoph Fröhlich
 

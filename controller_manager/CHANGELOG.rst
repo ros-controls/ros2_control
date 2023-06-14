@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.27.0 (2023-06-14)
+-------------------
 * Docs: Use branch name substitution for all links (backport `#1031 <https://github.com/ros-controls/ros2_control/issues/1031>`_) (`#1042 <https://github.com/ros-controls/ros2_control/issues/1042>`_)
 * [Humble] enable ReflowComments to also use ColumnLimit on comments (`#1038 <https://github.com/ros-controls/ros2_control/issues/1038>`_)
 * controller_manager_srvs tests: Add text to assertions (backport `#1023 <https://github.com/ros-controls/ros2_control/issues/1023>`_) (`#1029 <https://github.com/ros-controls/ros2_control/issues/1029>`_)
