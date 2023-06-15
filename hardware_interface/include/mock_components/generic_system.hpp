@@ -91,12 +91,12 @@ protected:
 
   std::vector<std::string> sensor_interfaces_;
   /// The size of this vector is (sensor_interfaces_.size() x nr_joints)
-  std::vector<std::vector<double>> sensor_fake_commands_;
+  std::vector<std::vector<double>> sensor_mock_commands_;
   std::vector<std::vector<double>> sensor_states_;
 
   std::vector<std::string> gpio_interfaces_;
   /// The size of this vector is (gpio_interfaces_.size() x nr_joints)
-  std::vector<std::vector<double>> gpio_fake_commands_;
+  std::vector<std::vector<double>> gpio_mock_commands_;
   std::vector<std::vector<double>> gpio_commands_;
   std::vector<std::vector<double>> gpio_states_;
 
@@ -118,7 +118,7 @@ private:
     std::vector<std::string> & interfaces, std::vector<std::vector<double>> & storage,
     std::vector<InterfaceType> & target_interfaces, bool using_state_interfaces);
 
-  bool use_fake_gpio_command_interfaces_;
+  bool use_mock_gpio_command_interfaces_;
   bool use_mock_sensor_command_interfaces_;
 
   double position_state_following_offset_;
@@ -127,6 +127,8 @@ private:
 
   bool calculate_dynamics_;
   std::vector<size_t> joint_control_mode_;
+
+  bool command_propagation_disabled_;
 };
 
 typedef GenericSystem GenericRobot;
