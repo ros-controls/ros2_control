@@ -132,7 +132,6 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
   }
 
   // check if there is parameter that enables dynamic calculation
-  // this way we simulate disconnected driver
   it = info_.hardware_parameters.find("calculate_dynamics");
   if (it != info.hardware_parameters.end())
   {
