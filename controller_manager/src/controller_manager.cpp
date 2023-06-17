@@ -257,6 +257,10 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
     {
       for (const auto & component : components_to_set)
       {
+        if (component.empty())
+        {
+          continue;
+        }
         if (components_to_activate.find(component) == components_to_activate.end())
         {
           RCLCPP_WARN(
