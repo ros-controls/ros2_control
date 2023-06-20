@@ -47,9 +47,11 @@ class ListHardwareComponentsVerb(VerbExtension):
                 else:
                     plugin_name = f"{bcolors.WARNING}plugin name missing!{bcolors.ENDC}"
 
-                print(f"\tplugin name: {plugin_name}\n"
-                      f"\tstate: id={component.state.id} label={component.state.label}\n"
-                      f"\tcommand interfaces")
+                print(
+                    f"\tplugin name: {plugin_name}\n"
+                    f"\tstate: id={component.state.id} label={component.state.label}\n"
+                    f"\tcommand interfaces"
+                )
                 for cmd_interface in component.command_interfaces:
                     if cmd_interface.is_available:
                         available_str = f"{bcolors.OKBLUE}[available]{bcolors.ENDC}"
