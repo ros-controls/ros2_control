@@ -14,12 +14,12 @@
 
 #include <gmock/gmock.h>
 
-#include "hardware_interface/actuator_interface.hpp"
 #include "hardware_interface/actuator.hpp"
-#include "hardware_interface/sensor_interface.hpp"
+#include "hardware_interface/actuator_interface.hpp"
 #include "hardware_interface/sensor.hpp"
-#include "hardware_interface/system_interface.hpp"
+#include "hardware_interface/sensor_interface.hpp"
 #include "hardware_interface/system.hpp"
+#include "hardware_interface/system_interface.hpp"
 
 class TestInstantiationHardwares : public ::testing::Test
 {
@@ -27,19 +27,8 @@ protected:
   static void SetUpTestCase() {}
 };
 
-TEST_F(TestInstantiationHardwares,build_actuator)
-{
-  hardware_interface::Actuator anActuator;
-}
+TEST_F(TestInstantiationHardwares, build_actuator) { hardware_interface::Actuator anActuator; }
 
-TEST_F(TestInstantiationHardwares,build_sensor)
-{
-  hardware_interface::Sensor aSensor;
-}
+TEST_F(TestInstantiationHardwares, build_sensor) { hardware_interface::Sensor aSensor; }
 
-TEST_F(TestInstantiationHardwares,build_system)
-{
-  hardware_interface::System aSystem;
-}
-
- 
+TEST_F(TestInstantiationHardwares, build_system) { hardware_interface::System aSystem; }

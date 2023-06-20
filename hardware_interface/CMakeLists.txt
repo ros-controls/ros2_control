@@ -83,7 +83,7 @@ if(BUILD_TESTING)
   ament_add_gmock(test_inst_hardwares test/test_inst_hardwares.cpp)
   target_link_libraries(test_inst_hardwares hardware_interface)
   ament_target_dependencies(test_inst_hardwares rcpputils)
-  
+
   ament_add_gmock(test_joint_handle test/test_handle.cpp)
   target_link_libraries(test_joint_handle hardware_interface)
   ament_target_dependencies(test_joint_handle rcpputils)
