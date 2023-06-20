@@ -21,23 +21,23 @@
 #include "hardware_interface/system_interface.hpp"
 #include "hardware_interface/system.hpp"
 
-class TestInstanciationHardwares : public ::testing::Test
+class TestInstantiationHardwares : public ::testing::Test
 {
 protected:
   static void SetUpTestCase() {}
 };
 
-TEST_F(TestInstanciationHardwares,build_actuator)
+TEST_F(TestInstantiationHardwares,build_actuator)
 {
   hardware_interface::Actuator anActuator;
 }
 
-TEST_F(TestInstanciationHardwares,build_sensor)
+TEST_F(TestInstantiationHardwares,build_sensor)
 {
   hardware_interface::Sensor aSensor;
 }
 
-TEST_F(TestInstanciationHardwares,build_system)
+TEST_F(TestInstantiationHardwares,build_system)
 {
   hardware_interface::System aSystem;
 }
