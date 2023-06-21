@@ -97,9 +97,9 @@ public:
     RCUTILS_LOG_INFO_NAMED(
       "resource_manager", "Loading hardware '%s' ", hardware_info.name.c_str());
     // hardware_plugin_name has to match class name in plugin xml description
-    auto interface = std::unique_ptr<HardwareInterfaceT>(
+    auto component = std::unique_ptr<HardwareInterfaceT>(
       loader.createUnmanagedInstance(hardware_info.hardware_plugin_name));
-    HardwareT hardware(std::move(interface));
+    HardwareT hardware(std::move(component));
     container.emplace_back(std::move(hardware));
     // initialize static data about hardware component to reduce later calls
     HardwareComponentInfo component_info;
@@ -703,13 +703,16 @@ ResourceManager::ResourceManager(
 // CM API: Called in "callback/slow"-thread
 void ResourceManager::load_urdf(const std::string & urdf, bool validate_interfaces)
 {
+  hardware_infos_ = hardware_interface::parse_control_resources_from_urdf(urdf);
+  validate_interfaces_ = validate_interfaces;
+
   is_urdf_loaded__ = true;
+
   const std::string system_type = "system";
   const std::string sensor_type = "sensor";
   const std::string actuator_type = "actuator";
 
-  const auto hardware_info = hardware_interface::parse_control_resources_from_urdf(urdf);
-  for (const auto & individual_hardware_info : hardware_info)
+  for (const auto & individual_hardware_info : hardware_infos_)
   {
     if (individual_hardware_info.type == actuator_type)
     {
@@ -1355,26 +1358,5 @@ void ResourceManager::validate_storage(
 }
 
 // END: private methods
-
-// Temporary method to keep old interface and reduce framework changes in the PRs
-void ResourceManager::activate_all_components()
-{
-  using lifecycle_msgs::msg::State;
-  rclcpp_lifecycle::State active_state(
-    State::PRIMARY_STATE_ACTIVE, hardware_interface::lifecycle_state_names::ACTIVE);
-
-  for (auto & component : resource_storage_->actuators_)
-  {
-    set_component_state(component.get_name(), active_state);
-  }
-  for (auto & component : resource_storage_->sensors_)
-  {
-    set_component_state(component.get_name(), active_state);
-  }
-  for (auto & component : resource_storage_->systems_)
-  {
-    set_component_state(component.get_name(), active_state);
-  }
-}
 
 }  // namespace hardware_interface
