@@ -203,16 +203,17 @@ void ControllerManager::subscribe_to_robot_description_topic()
 {
   // set QoS to transient local to get messages that have already been published
   // (if robot state publisher starts before controller manager)
-  RCLCPP_INFO(
-    get_logger(), "Subscribing to '~/robot_description' topic for robot description file.");
   robot_description_subscription_ = create_subscription<std_msgs::msg::String>(
     "~/robot_description", rclcpp::QoS(1).transient_local(),
     std::bind(&ControllerManager::robot_description_callback, this, std::placeholders::_1));
+  RCLCPP_INFO(
+    get_logger(), "Subscribing to '%s' topic for robot description.",
+    robot_description_subscription_->get_topic_name());
 }
 
 void ControllerManager::robot_description_callback(const std_msgs::msg::String & robot_description)
 {
-  RCLCPP_INFO(get_logger(), "Received robot description file.");
+  RCLCPP_INFO(get_logger(), "Received robot description from topic.");
   RCLCPP_DEBUG(
     get_logger(), "'Content of robot description file: %s", robot_description.data.c_str());
   // TODO(Manuel): errors should probably be caught since we don't want controller_manager node
