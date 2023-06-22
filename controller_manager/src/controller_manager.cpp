@@ -331,7 +331,7 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
       resource_manager_->set_component_state(component, active_state);
     }
   }
-  // END: Keep old functionality on humble backwards compatibility (Remove at the end of 2023)
+  // END: Keep old functionality on humble for backwards compatibility (Remove at the end of 2023)
   else
   {
     // activate all other components
