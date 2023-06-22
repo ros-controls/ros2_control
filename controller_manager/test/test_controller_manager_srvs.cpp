@@ -289,19 +289,19 @@ TEST_F(TestControllerManagerSrvs, list_chained_controllers_srv)
     controller_manager_msgs::srv::SwitchController::Request::STRICT, true, rclcpp::Duration(0, 0));
   // get controller list after activate
   result = call_service_and_wait(*client, request, srv_executor);
-  // check chainable controller
-  ASSERT_EQ(result->controller[0].state, "active");
-  ASSERT_EQ(result->controller[0].claimed_interfaces.size(), 1u);
-  ASSERT_EQ(result->controller[0].is_chained, true);
   // check test controller
+  ASSERT_EQ(result->controller[0].state, "active");
+  ASSERT_EQ(result->controller[0].claimed_interfaces.size(), 3u);
+  // check chainable controller
   ASSERT_EQ(result->controller[1].state, "active");
-  ASSERT_EQ(result->controller[1].claimed_interfaces.size(), 3u);
+  ASSERT_EQ(result->controller[1].claimed_interfaces.size(), 1u);
+  ASSERT_EQ(result->controller[1].is_chained, true);
   ASSERT_EQ(
     test_chainable_controller::TEST_CONTROLLER_NAME,
-    result->controller[1].chain_connections[0].name);
-  ASSERT_EQ(2u, result->controller[1].chain_connections[0].reference_interfaces.size());
-  ASSERT_EQ("joint1/position", result->controller[1].chain_connections[0].reference_interfaces[0]);
-  ASSERT_EQ("joint1/velocity", result->controller[1].chain_connections[0].reference_interfaces[1]);
+    result->controller[0].chain_connections[0].name);
+  ASSERT_EQ(2u, result->controller[0].chain_connections[0].reference_interfaces.size());
+  ASSERT_EQ("joint1/position", result->controller[0].chain_connections[0].reference_interfaces[0]);
+  ASSERT_EQ("joint1/velocity", result->controller[0].chain_connections[0].reference_interfaces[1]);
 }
 
 TEST_F(TestControllerManagerSrvs, reload_controller_libraries_srv)
