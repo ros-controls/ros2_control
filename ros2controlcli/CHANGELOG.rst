@@ -2,8 +2,8 @@
 Changelog for package ros2controlcli
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.15.0 (2023-06-23)
+-------------------
 * Improve list hardware components output and code for better readability. (`#1060 <https://github.com/ros-controls/ros2_control/issues/1060>`_)
 * Contributors: Dr. Denis
 
