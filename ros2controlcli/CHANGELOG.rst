@@ -2,6 +2,11 @@
 Changelog for package ros2controlcli
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Improve list hardware components output and code for better readability. (backport `#1060 <https://github.com/ros-controls/ros2_control/issues/1060>`_) (`#1061 <https://github.com/ros-controls/ros2_control/issues/1061>`_)
+* Contributors: Dr. Denis
+
 2.27.0 (2023-06-14)
 -------------------
 * Docs: Use branch name substitution for all links (backport `#1031 <https://github.com/ros-controls/ros2_control/issues/1031>`_) (`#1042 <https://github.com/ros-controls/ros2_control/issues/1042>`_)
