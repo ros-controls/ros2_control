@@ -2,6 +2,12 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Enable setting of initial state in HW compoments (`#1046 <https://github.com/ros-controls/ros2_control/issues/1046>`_)
+* [CM] Improve output when using robot description topic and give output about correct topic even remapped. (`#1059 <https://github.com/ros-controls/ros2_control/issues/1059>`_)
+* Contributors: Dr. Denis
+
 3.14.0 (2023-06-14)
 -------------------
 * Add -Wconversion flag to protect future developments (`#1053 <https://github.com/ros-controls/ros2_control/issues/1053>`_)
