@@ -191,21 +191,87 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
   // TODO(destogl): manage this when there is an error - CM should not die because URDF is wrong...
   resource_manager_->load_urdf(robot_description);
 
+  // Get all components and if they are not defined in parameters activate them automatically
+  auto components_to_activate = resource_manager_->get_components_status();
+
   using lifecycle_msgs::msg::State;
 
+  auto set_components_to_state =
+    [&](const std::string & parameter_name, rclcpp_lifecycle::State state)
+  {
+    std::vector<std::string> components_to_set = std::vector<std::string>({});
+    if (get_parameter(parameter_name, components_to_set))
+    {
+      for (const auto & component : components_to_set)
+      {
+        if (component.empty())
+        {
+          continue;
+        }
+        if (components_to_activate.find(component) == components_to_activate.end())
+        {
+          RCLCPP_WARN(
+            get_logger(), "Hardware component '%s' is unknown, therefore not set in '%s' state.",
+            component.c_str(), state.label().c_str());
+        }
+        else
+        {
+          RCLCPP_INFO(
+            get_logger(), "Setting component '%s' to '%s' state.", component.c_str(),
+            state.label().c_str());
+          resource_manager_->set_component_state(component, state);
+          components_to_activate.erase(component);
+        }
+      }
+    }
+  };
+
+  // unconfigured (loaded only)
+  set_components_to_state(
+    "hardware_components_initial_state.unconfigured",
+    rclcpp_lifecycle::State(
+      State::PRIMARY_STATE_UNCONFIGURED, hardware_interface::lifecycle_state_names::UNCONFIGURED));
+
+  // inactive (configured)
+  // BEGIN: Keep old functionality on for backwards compatibility (Remove at the end of 2023)
   std::vector<std::string> configure_components_on_start = std::vector<std::string>({});
   get_parameter("configure_components_on_start", configure_components_on_start);
+<<<<<<< HEAD
   rclcpp_lifecycle::State inactive_state(
     State::PRIMARY_STATE_INACTIVE, hardware_interface::lifecycle_state_names::INACTIVE);
   for (const auto & component : configure_components_on_start)
   {
     resource_manager_->set_component_state(component, inactive_state);
+=======
+  if (!configure_components_on_start.empty())
+  {
+    RCLCPP_WARN(
+      get_logger(),
+      "Parameter 'configure_components_on_start' is deprecated. "
+      "Use 'hardware_interface_state_after_start.inactive' instead, to set component's initial "
+      "state to 'inactive'. Don't use this parameters in combination with the new "
+      "'hardware_interface_state_after_start' parameter structure.");
+    set_components_to_state(
+      "configure_components_on_start",
+      rclcpp_lifecycle::State(
+        State::PRIMARY_STATE_INACTIVE, hardware_interface::lifecycle_state_names::INACTIVE));
+  }
+  // END: Keep old functionality on humble backwards compatibility (Remove at the end of 2023)
+  else
+  {
+    set_components_to_state(
+      "hardware_components_initial_state.inactive",
+      rclcpp_lifecycle::State(
+        State::PRIMARY_STATE_INACTIVE, hardware_interface::lifecycle_state_names::INACTIVE));
+>>>>>>> cf4448d (Enable setting of initial state in HW compoments (#1046))
   }
 
+  // BEGIN: Keep old functionality on for backwards compatibility (Remove at the end of 2023)
   std::vector<std::string> activate_components_on_start = std::vector<std::string>({});
   get_parameter("activate_components_on_start", activate_components_on_start);
   rclcpp_lifecycle::State active_state(
     State::PRIMARY_STATE_ACTIVE, hardware_interface::lifecycle_state_names::ACTIVE);
+<<<<<<< HEAD
   for (const auto & component : activate_components_on_start)
   {
     resource_manager_->set_component_state(component, active_state);
@@ -216,6 +282,32 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
   if (configure_components_on_start.empty() && activate_components_on_start.empty())
   {
     resource_manager_->activate_all_components();
+=======
+  if (!activate_components_on_start.empty())
+  {
+    RCLCPP_WARN(
+      get_logger(),
+      "Parameter 'activate_components_on_start' is deprecated. "
+      "Components are activated per default. Don't use this parameters in combination with the new "
+      "'hardware_interface_state_after_start' parameter structure.");
+    rclcpp_lifecycle::State active_state(
+      State::PRIMARY_STATE_ACTIVE, hardware_interface::lifecycle_state_names::ACTIVE);
+    for (const auto & component : activate_components_on_start)
+    {
+      resource_manager_->set_component_state(component, active_state);
+    }
+  }
+  // END: Keep old functionality on humble for backwards compatibility (Remove at the end of 2023)
+  else
+  {
+    // activate all other components
+    for (const auto & [component, state] : components_to_activate)
+    {
+      rclcpp_lifecycle::State active_state(
+        State::PRIMARY_STATE_ACTIVE, hardware_interface::lifecycle_state_names::ACTIVE);
+      resource_manager_->set_component_state(component, active_state);
+    }
+>>>>>>> cf4448d (Enable setting of initial state in HW compoments (#1046))
   }
 }
 

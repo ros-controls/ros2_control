@@ -1101,6 +1101,7 @@ void ResourceManager::validate_storage(
   }
 }
 
+<<<<<<< HEAD
 // Temporary method to keep old interface and reduce framework changes in PRs
 void ResourceManager::activate_all_components()
 {
@@ -1121,5 +1122,8 @@ void ResourceManager::activate_all_components()
     set_component_state(component.get_name(), active_state);
   }
 }
+=======
+// END: private methods
+>>>>>>> cf4448d (Enable setting of initial state in HW compoments (#1046))
 
 }  // namespace hardware_interface
