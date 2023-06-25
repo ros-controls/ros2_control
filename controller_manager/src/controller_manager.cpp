@@ -1105,59 +1105,10 @@ controller_interface::return_type ControllerManager::switch_controller(
   }
 
   // Reordering the controllers
-  /// @note The following conditions needs to be handled while ordering the controller list
-  /// 1. The controllers that do not use any state or command interfaces are updated first
-  /// 2. The controllers that use only the state system interfaces only are updated next
-  /// 3. The controllers that use any of an another controller's reference interface are updated
-  /// before the preceding controller
-  /// 4. The controllers that use the controller's estimated interfaces are updated after the
-  /// preceding controller
-  /// 5. The controllers that only use the system's command interfaces are updated last
-  /// 6. All inactive controllers go at the end of the list
-  auto sorting_lambda = [](ControllerSpec ctrl_a, ControllerSpec ctrl_b)
-  {
-    // If the controllers are not active, then go to the end of the list
-    if (!is_controller_active(ctrl_a.c) || !is_controller_active(ctrl_b.c)) return false;
-
-    const std::vector<std::string> cmd_itfs = ctrl_a.c->command_interface_configuration().names;
-    const std::vector<std::string> state_itfs = ctrl_a.c->state_interface_configuration().names;
-    if (cmd_itfs.empty() && !ctrl_a.c->is_chainable())
-    {
-      // The case of the controllers that don't have any command interfaces. For instance,
-      // joint_state_broadcaster
-      return true;
-    }
-    else
-    {
-      if (ctrl_b.c->is_chainable())
-      {
-        // If the ctrl_a's command interface is the one exported by the ctrl_b then ctrl_a should be
-        // infront of ctrl_b
-        auto it = std::find_if(
-          cmd_itfs.begin(), cmd_itfs.end(),
-          [ctrl_b](auto itf) { return (itf.find(ctrl_b.info.name) != std::string::npos); });
-        if (it != cmd_itfs.end())
-        {
-          return true;
-        }
-        else
-        {
-          // If the ctrl_a's state interface is the one exported by the ctrl_b then ctrl_b should be
-          // infront of ctrl_a
-          auto state_it = std::find_if(
-            cmd_itfs.begin(), cmd_itfs.end(),
-            [ctrl_b](auto itf) { return (itf.find(ctrl_b.info.name) != std::string::npos); });
-          if (it != cmd_itfs.end())
-          {
-            return false;
-          }
-        }
-      }
-      // The rest of the cases, basically end up at the end of the list
-      return false;
-    }
-  };
-  std::sort(to.begin(), to.end(), sorting_lambda);
+  std::sort(
+    to.begin(), to.end(),
+    std::bind(
+      &ControllerManager::controller_sorting, this, std::placeholders::_1, std::placeholders::_2));
 
   // switch lists
   rt_controllers_wrapper_.switch_updated_list(guard);
@@ -2321,6 +2272,51 @@ controller_interface::return_type ControllerManager::check_preceeding_controller
     }
   }
   return controller_interface::return_type::OK;
+}
+
+bool ControllerManager::controller_sorting(
+  const ControllerSpec & ctrl_a, const ControllerSpec & ctrl_b)
+{
+  // If the controllers are not active, then go to the end of the list
+  if (!is_controller_active(ctrl_a.c) || !is_controller_active(ctrl_b.c)) return false;
+
+  const std::vector<std::string> cmd_itfs = ctrl_a.c->command_interface_configuration().names;
+  const std::vector<std::string> state_itfs = ctrl_a.c->state_interface_configuration().names;
+  if (cmd_itfs.empty() && !ctrl_a.c->is_chainable())
+  {
+    // The case of the controllers that don't have any command interfaces. For instance,
+    // joint_state_broadcaster
+    return true;
+  }
+  else
+  {
+    if (ctrl_b.c->is_chainable())
+    {
+      // If the ctrl_a's command interface is the one exported by the ctrl_b then ctrl_a should be
+      // infront of ctrl_b
+      auto it = std::find_if(
+        cmd_itfs.begin(), cmd_itfs.end(),
+        [ctrl_b](auto itf) { return (itf.find(ctrl_b.info.name) != std::string::npos); });
+      if (it != cmd_itfs.end())
+      {
+        return true;
+      }
+      else
+      {
+        // If the ctrl_a's state interface is the one exported by the ctrl_b then ctrl_b should be
+        // infront of ctrl_a
+        auto state_it = std::find_if(
+          cmd_itfs.begin(), cmd_itfs.end(),
+          [ctrl_b](auto itf) { return (itf.find(ctrl_b.info.name) != std::string::npos); });
+        if (it != cmd_itfs.end())
+        {
+          return false;
+        }
+      }
+    }
+    // The rest of the cases, basically end up at the end of the list
+    return false;
+  }
 };
 
 void ControllerManager::controller_activity_diagnostic_callback(

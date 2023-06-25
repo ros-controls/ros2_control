@@ -389,6 +389,26 @@ private:
     const std::vector<ControllerSpec> & controllers, int strictness,
     const ControllersListIterator controller_it);
 
+  /// A functor to be used in the std::sort method inorder to sort the controllers to be able to
+  /// execute then in a proper order
+  /**
+   * @brief controller_sorting - A functor that compares the controllers ctrl_a and ctrl_b and then
+   * return which comes first in the sequence
+   *
+   *  @note The following conditions needs to be handled while ordering the controller list
+   *  1. The controllers that do not use any state or command interfaces are updated first
+   *  2. The controllers that use only the state system interfaces only are updated next
+   *  3. The controllers that use any of an another controller's reference interface are updated
+   * before the preceding controller
+   *  4. The controllers that use the controller's estimated interfaces are updated after the
+   * preceding controller
+   *  5. The controllers that only use the system's command interfaces are updated last
+   *  6. All inactive controllers go at the end of the list
+   *
+   * @return true, if ctrl_a needs to execute first, else false
+   */
+  bool controller_sorting(const ControllerSpec & ctrl_a, const ControllerSpec & ctrl_b);
+
   void controller_activity_diagnostic_callback(diagnostic_updater::DiagnosticStatusWrapper & stat);
   diagnostic_updater::Updater diagnostics_updater_;
 
