@@ -389,11 +389,11 @@ private:
     const std::vector<ControllerSpec> & controllers, int strictness,
     const ControllersListIterator controller_it);
 
-  /// A functor to be used in the std::sort method inorder to sort the controllers to be able to
-  /// execute then in a proper order
+  /// A functor to be used in the std::sort method to sort the controllers to be able to
+  /// execute them in a proper order
   /**
    * @brief controller_sorting - A functor that compares the controllers ctrl_a and ctrl_b and then
-   * return which comes first in the sequence
+   * returns which comes first in the sequence
    *
    *  @note The following conditions needs to be handled while ordering the controller list
    *  1. The controllers that do not use any state or command interfaces are updated first
