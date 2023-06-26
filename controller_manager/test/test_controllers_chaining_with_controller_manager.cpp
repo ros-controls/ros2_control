@@ -1106,11 +1106,6 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers_add
   UpdateAllControllerAndCheck(reference, 3u);
 }
 
-// TODO(destogl): Add test case with controllers added in "random" order
-//
-// new value: "START_DOWNSTREAM_CTRLS" --> start "downstream" controllers in a controllers chain
-//
-
 INSTANTIATE_TEST_SUITE_P(
   test_strict_best_effort, TestControllerChainingWithControllerManager,
   testing::Values(strict, best_effort));
