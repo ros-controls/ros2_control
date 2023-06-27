@@ -35,6 +35,8 @@ class SystemInterface;
 class System final
 {
 public:
+  System() = default;
+
   HARDWARE_INTERFACE_PUBLIC
   explicit System(std::unique_ptr<SystemInterface> impl);
 
