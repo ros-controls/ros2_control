@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/// \authors Nathan Brooks, Denis Stogl
+/// \authors Nathan Brooks, Dr. Denis Stogl
 
 #include "joint_limits/simple_joint_limiter.hpp"
 
