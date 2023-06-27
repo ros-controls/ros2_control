@@ -118,6 +118,49 @@ bool command_interface_is_reference_interface_of_controller(
   return true;
 }
 
+std::vector<std::string> get_following_controller_names(
+  const std::string controller_name,
+  const std::vector<controller_manager::ControllerSpec> & controllers)
+{
+  std::vector<std::string> following_controllers;
+  auto controller_it = std::find_if(
+    controllers.begin(), controllers.end(),
+    std::bind(controller_name_compare, std::placeholders::_1, controller_name));
+  if (controller_it == controllers.end())
+  {
+    RCLCPP_DEBUG(
+      rclcpp::get_logger("ControllerManager::utils"),
+      "Required controller : '%s' is not found in the controller list ", controller_name.c_str());
+
+    return following_controllers;
+  }
+  const auto cmd_itfs = controller_it->c->command_interface_configuration().names;
+  for (const auto & itf : cmd_itfs)
+  {
+    controller_manager::ControllersListIterator ctrl_it;
+    if (command_interface_is_reference_interface_of_controller(itf, controllers, ctrl_it))
+    {
+      RCLCPP_DEBUG(
+        rclcpp::get_logger("ControllerManager::utils"),
+        "The interface is a reference interface of controller : %s", ctrl_it->info.name.c_str());
+      following_controllers.push_back(ctrl_it->info.name);
+      const std::vector<std::string> ctrl_names =
+        get_following_controller_names(ctrl_it->info.name, controllers);
+      for (const std::string & controller : ctrl_names)
+      {
+        if (
+          std::find(following_controllers.begin(), following_controllers.end(), controller) ==
+          following_controllers.end())
+        {
+          // Only add to the list if it doesn't exist
+          following_controllers.push_back(controller);
+        }
+      }
+    }
+  }
+  return following_controllers;
+}
+
 }  // namespace
 
 namespace controller_manager
