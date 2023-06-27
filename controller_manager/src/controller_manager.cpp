@@ -118,6 +118,16 @@ bool command_interface_is_reference_interface_of_controller(
   return true;
 }
 
+/**
+ * A method to retrieve the names of all it's following controllers given a controller name
+ * For instance, for the following case
+ * A -> B -> C -> D
+ * When called with B, returns C and D
+ * @param controller_name - Name of the controller for checking the tree
+ * \param[in] controllers list of controllers to compare their names to interface's prefix.
+ * @return list of controllers that are following the given controller in a chain. If none, return
+ * empty.
+ */
 std::vector<std::string> get_following_controller_names(
   const std::string controller_name,
   const std::vector<controller_manager::ControllerSpec> & controllers)
@@ -161,6 +171,16 @@ std::vector<std::string> get_following_controller_names(
   return following_controllers;
 }
 
+/**
+ * A method to retrieve the names of all it's preceding controllers given a controller name
+ * For instance, for the following case
+ * A -> B -> C -> D
+ * When called with C, returns A and B
+ * @param controller_name - Name of the controller for checking the tree
+ * \param[in] controllers list of controllers to compare their names to interface's prefix.
+ * @return list of controllers that are preceding the given controller in a chain. If none, return
+ * empty.
+ */
 std::vector<std::string> get_preceding_controller_names(
   const std::string controller_name,
   const std::vector<controller_manager::ControllerSpec> & controllers)
