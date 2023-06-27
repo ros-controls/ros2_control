@@ -1151,7 +1151,8 @@ controller_interface::return_type ControllerManager::switch_controller(
   std::sort(
     to.begin(), to.end(),
     std::bind(
-      &ControllerManager::controller_sorting, this, std::placeholders::_1, std::placeholders::_2));
+      &ControllerManager::controller_sorting, this, std::placeholders::_1, std::placeholders::_2,
+      to));
 
   // switch lists
   rt_controllers_wrapper_.switch_updated_list(guard);
@@ -2318,10 +2319,15 @@ controller_interface::return_type ControllerManager::check_preceeding_controller
 }
 
 bool ControllerManager::controller_sorting(
-  const ControllerSpec & ctrl_a, const ControllerSpec & ctrl_b)
+  const ControllerSpec & ctrl_a, const ControllerSpec & ctrl_b,
+  const std::vector<controller_manager::ControllerSpec> & controllers)
 {
-  // If the controllers are not active, then go to the end of the list
-  if (!is_controller_active(ctrl_a.c) || !is_controller_active(ctrl_b.c)) return false;
+  // If the controllers are not active, then should be at the end of the list
+  if (!is_controller_active(ctrl_a.c) || !is_controller_active(ctrl_b.c))
+  {
+    if (is_controller_active(ctrl_a.c)) return true;
+    return false;
+  }
 
   const std::vector<std::string> cmd_itfs = ctrl_a.c->command_interface_configuration().names;
   const std::vector<std::string> state_itfs = ctrl_a.c->state_interface_configuration().names;
@@ -2333,30 +2339,24 @@ bool ControllerManager::controller_sorting(
   }
   else
   {
-    if (ctrl_b.c->is_chainable())
+    auto following_ctrls = get_following_controller_names(ctrl_a.info.name, controllers);
+    // If the ctrl_b is any of the following controllers of ctrl_a, then place ctrl_a before ctrl_b
+    if (
+      std::find(following_ctrls.begin(), following_ctrls.end(), ctrl_b.info.name) !=
+      following_ctrls.end())
+      return true;
+
+    // If the ctrl_a's state interface is the one exported by the ctrl_b then ctrl_b should be
+    // infront of ctrl_a
+    /// @todo deal with the state interface chaining in the sorting algorithm
+    auto state_it = std::find_if(
+      state_itfs.begin(), state_itfs.end(),
+      [ctrl_b](auto itf) { return (itf.find(ctrl_b.info.name) != std::string::npos); });
+    if (state_it != state_itfs.end())
     {
-      // If the ctrl_a's command interface is the one exported by the ctrl_b then ctrl_a should be
-      // infront of ctrl_b
-      auto it = std::find_if(
-        cmd_itfs.begin(), cmd_itfs.end(),
-        [ctrl_b](auto itf) { return (itf.find(ctrl_b.info.name) != std::string::npos); });
-      if (it != cmd_itfs.end())
-      {
-        return true;
-      }
-      else
-      {
-        // If the ctrl_a's state interface is the one exported by the ctrl_b then ctrl_b should be
-        // infront of ctrl_a
-        auto state_it = std::find_if(
-          cmd_itfs.begin(), cmd_itfs.end(),
-          [ctrl_b](auto itf) { return (itf.find(ctrl_b.info.name) != std::string::npos); });
-        if (it != cmd_itfs.end())
-        {
-          return false;
-        }
-      }
+      return false;
     }
+
     // The rest of the cases, basically end up at the end of the list
     return false;
   }

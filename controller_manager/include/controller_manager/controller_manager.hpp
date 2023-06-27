@@ -405,9 +405,13 @@ private:
    *  5. The controllers that only use the system's command interfaces are updated last
    *  6. All inactive controllers go at the end of the list
    *
+   * \param[in] controllers list of controllers to compare their names to interface's prefix.
+   *
    * @return true, if ctrl_a needs to execute first, else false
    */
-  bool controller_sorting(const ControllerSpec & ctrl_a, const ControllerSpec & ctrl_b);
+  bool controller_sorting(
+    const ControllerSpec & ctrl_a, const ControllerSpec & ctrl_b,
+    const std::vector<controller_manager::ControllerSpec> & controllers);
 
   void controller_activity_diagnostic_callback(diagnostic_updater::DiagnosticStatusWrapper & stat);
   diagnostic_updater::Updater diagnostics_updater_;
