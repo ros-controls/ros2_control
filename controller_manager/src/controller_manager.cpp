@@ -2389,6 +2389,36 @@ bool ControllerManager::controller_sorting(
       std::find(following_ctrls.begin(), following_ctrls.end(), ctrl_b.info.name) !=
       following_ctrls.end())
       return true;
+    else
+    {
+      auto ctrl_a_preceding_ctrls = get_preceding_controller_names(ctrl_a.info.name, controllers);
+      // This is to check that the ctrl_b is in the preceding controllers list of ctrl_a - This
+      // check is useful when there is a chained controller branching, but they belong to same
+      // branch
+      if (
+        std::find(ctrl_a_preceding_ctrls.begin(), ctrl_a_preceding_ctrls.end(), ctrl_b.info.name) !=
+        ctrl_a_preceding_ctrls.end())
+      {
+        return false;
+      }
+
+      // This is to handle the cases where, the parsed ctrl_a and ctrl_b are not directly related
+      // but might have a common parent - happens in branched chained controller
+      auto ctrl_b_preceding_ctrls = get_preceding_controller_names(ctrl_b.info.name, controllers);
+      std::sort(ctrl_a_preceding_ctrls.begin(), ctrl_a_preceding_ctrls.end());
+      std::sort(ctrl_b_preceding_ctrls.begin(), ctrl_b_preceding_ctrls.end());
+      std::list<std::string> intersection;
+      std::set_intersection(
+        ctrl_a_preceding_ctrls.begin(), ctrl_a_preceding_ctrls.end(),
+        ctrl_b_preceding_ctrls.begin(), ctrl_b_preceding_ctrls.end(),
+        std::back_inserter(intersection));
+      if (!intersection.empty())
+      {
+        // If there is an intersection, then there is a common parent controller for both ctrl_a and
+        // ctrl_b
+        return true;
+      }
+    }
 
     // If the ctrl_a's state interface is the one exported by the ctrl_b then ctrl_b should be
     // infront of ctrl_a
