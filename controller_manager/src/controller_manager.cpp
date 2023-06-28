@@ -1218,6 +1218,12 @@ controller_interface::return_type ControllerManager::switch_controller(
       &ControllerManager::controller_sorting, this, std::placeholders::_1, std::placeholders::_2,
       to));
 
+  RCLCPP_DEBUG(get_logger(), "Reordered controllers list is:");
+  for (const auto & ctrl : to)
+  {
+    RCLCPP_DEBUG(this->get_logger(), "\t%s", ctrl.info.name.c_str());
+  }
+
   // switch lists
   rt_controllers_wrapper_.switch_updated_list(guard);
   // clear unused list
