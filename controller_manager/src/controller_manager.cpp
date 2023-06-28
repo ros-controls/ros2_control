@@ -207,10 +207,6 @@ std::vector<std::string> get_preceding_controller_names(
     auto cmd_itfs = ctrl.c->command_interface_configuration().names;
     for (const auto & itf : cmd_itfs)
     {
-      RCLCPP_DEBUG(
-        rclcpp::get_logger("ControllerManager::utils"),
-        "Checking command interface : %s, for the controller : %s", itf.c_str(),
-        controller_name.c_str());
       if (itf.find(controller_name) != std::string::npos)
       {
         preceding_controllers.push_back(ctrl.info.name);
