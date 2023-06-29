@@ -1387,8 +1387,11 @@ void ControllerManager::activate_controllers(
     if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
     {
       RCLCPP_ERROR(
-        get_logger(), "After activating, controller '%s' is in state '%s', expected Active",
-        controller->get_node()->get_name(), new_state.label().c_str());
+        get_logger(),
+        "After activation, controller '%s' is in state '%s' (%d), expected '%s' (%d).",
+        controller->get_node()->get_name(), new_state.label().c_str(), new_state.id(),
+        hardware_interface::lifecycle_state_names::ACTIVE,
+        lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
     }
 
     if (controller->is_async())
