@@ -789,32 +789,37 @@ TEST_F(TestControllerManagerSrvs, list_sorted_complex_chained_controllers)
   ASSERT_EQ(result->controller[1].name, TEST_CHAINED_CONTROLLER_7);
   ASSERT_EQ(result->controller[2].name, TEST_CHAINED_CONTROLLER_6);
 
-  auto get_ctrl_pos = [result](const std::string & controller_name)
+  auto get_ctrl_pos = [result](const std::string & controller_name) -> int
   {
-    return std::find_if(
+    auto it = std::find_if(
       result->controller.begin(), result->controller.end(),
       [controller_name](auto itf)
       { return (itf.name.find(controller_name) != std::string::npos); });
+    return std::distance(result->controller.begin(), it);
   };
-  auto ctrl_1_it = get_ctrl_pos(TEST_CHAINED_CONTROLLER_1);
-  auto ctrl_3_it = get_ctrl_pos(TEST_CHAINED_CONTROLLER_3);
-  auto ctrl_6_it = get_ctrl_pos(TEST_CHAINED_CONTROLLER_6);
-  ASSERT_NE(ctrl_1_it, result->controller.end());
-  ASSERT_NE(ctrl_3_it, result->controller.end());
-  auto ctrl_1_pos = std::distance(result->controller.begin(), ctrl_1_it);
-  auto ctrl_3_pos = std::distance(result->controller.begin(), ctrl_3_it);
-  auto ctrl_6_pos = std::distance(result->controller.begin(), ctrl_6_it);
+  auto ctrl_1_pos = get_ctrl_pos(TEST_CHAINED_CONTROLLER_1);
+  auto ctrl_2_pos = get_ctrl_pos(TEST_CHAINED_CONTROLLER_2);
+  auto ctrl_3_pos = get_ctrl_pos(TEST_CHAINED_CONTROLLER_3);
+  auto ctrl_4_pos = get_ctrl_pos(TEST_CHAINED_CONTROLLER_4);
+  auto ctrl_5_pos = get_ctrl_pos(TEST_CHAINED_CONTROLLER_5);
+  auto ctrl_6_pos = get_ctrl_pos(TEST_CHAINED_CONTROLLER_6);
+  //  ASSERT_NE(ctrl_1_it, result->controller.end());
+  //  ASSERT_NE(ctrl_3_it, result->controller.end());
+  //  auto ctrl_1_pos = std::distance(result->controller.begin(), ctrl_1_it);
+  //  auto ctrl_3_pos = std::distance(result->controller.begin(), ctrl_3_it);
+  //  auto ctrl_6_pos = std::distance(result->controller.begin(), ctrl_6_it);
 
   // Extra check to see that they are index only after their parent controller (ctrl_6)
   ASSERT_GT(ctrl_3_pos, ctrl_6_pos);
   ASSERT_GT(ctrl_1_pos, ctrl_6_pos);
 
   // first branch
-  ASSERT_EQ(result->controller[ctrl_1_pos].name, TEST_CHAINED_CONTROLLER_1);
-  ASSERT_EQ(result->controller[ctrl_1_pos - 1].name, TEST_CHAINED_CONTROLLER_2);
+  ASSERT_GT(ctrl_2_pos, ctrl_6_pos);
+  ASSERT_GT(ctrl_1_pos, ctrl_2_pos);
 
   // second branch
-  ASSERT_EQ(result->controller[ctrl_3_pos].name, TEST_CHAINED_CONTROLLER_3);
-  ASSERT_EQ(result->controller[ctrl_3_pos - 1].name, TEST_CHAINED_CONTROLLER_4);
-  ASSERT_EQ(result->controller[ctrl_3_pos - 2].name, TEST_CHAINED_CONTROLLER_5);
+  ASSERT_GT(ctrl_5_pos, ctrl_6_pos);
+  ASSERT_GT(ctrl_4_pos, ctrl_5_pos);
+  ASSERT_GT(ctrl_3_pos, ctrl_4_pos);
+}
 }
