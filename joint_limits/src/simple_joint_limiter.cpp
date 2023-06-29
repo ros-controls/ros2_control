@@ -166,7 +166,8 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
       }
       else
       {
-        // compute the travel_distance at new desired velocity, in best case duration stopping_duration
+        // compute the travel_distance at new desired velocity, in best case duration
+        // stopping_duration
         double motion_after_stopping_duration = desired_vel[index] * stopping_duration;
         // re-check what happens if we don't slow down
         if (
