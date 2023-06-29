@@ -822,4 +822,192 @@ TEST_F(TestControllerManagerSrvs, list_sorted_complex_chained_controllers)
   ASSERT_GT(ctrl_4_pos, ctrl_5_pos);
   ASSERT_GT(ctrl_3_pos, ctrl_4_pos);
 }
+
+TEST_F(TestControllerManagerSrvs, list_sorted_independent_chained_controllers)
+{
+  /// The simulated controller chaining is:
+  /// test_controller_name_1 -> chain_ctrl_3 -> chain_ctrl_2 -> chain_ctrl_1
+  /// &&
+  /// test_controller_name_2 -> chain_ctrl_6 -> chain_ctrl_5 -> chain_ctrl_4
+
+  // create server client and request
+  rclcpp::executors::SingleThreadedExecutor srv_executor;
+  rclcpp::Node::SharedPtr srv_node = std::make_shared<rclcpp::Node>("srv_client");
+  srv_executor.add_node(srv_node);
+  rclcpp::Client<ListControllers>::SharedPtr client =
+    srv_node->create_client<ListControllers>("test_controller_manager/list_controllers");
+  auto request = std::make_shared<ListControllers::Request>();
+
+  // create set of chained controllers
+  static constexpr char TEST_CHAINED_CONTROLLER_1[] = "test_chainable_controller_name_1";
+  static constexpr char TEST_CHAINED_CONTROLLER_2[] = "test_chainable_controller_name_2";
+  static constexpr char TEST_CHAINED_CONTROLLER_3[] = "test_chainable_controller_name_3";
+  static constexpr char TEST_CHAINED_CONTROLLER_4[] = "test_chainable_controller_name_4";
+  static constexpr char TEST_CHAINED_CONTROLLER_5[] = "test_chainable_controller_name_5";
+  static constexpr char TEST_CHAINED_CONTROLLER_6[] = "test_chainable_controller_name_6";
+  static constexpr char TEST_CONTROLLER_1[] = "test_controller_name_1";
+  static constexpr char TEST_CONTROLLER_2[] = "test_controller_name_2";
+
+  // First chain
+  auto test_chained_controller_1 = std::make_shared<TestChainableController>();
+  controller_interface::InterfaceConfiguration chained_cmd_cfg = {
+    controller_interface::interface_configuration_type::INDIVIDUAL, {"joint1/position"}};
+  controller_interface::InterfaceConfiguration chained_state_cfg = {
+    controller_interface::interface_configuration_type::INDIVIDUAL,
+    {"joint1/position", "joint1/velocity"}};
+  test_chained_controller_1->set_command_interface_configuration(chained_cmd_cfg);
+  test_chained_controller_1->set_state_interface_configuration(chained_state_cfg);
+  test_chained_controller_1->set_reference_interface_names({"joint1/position", "joint1/velocity"});
+
+  auto test_chained_controller_2 = std::make_shared<TestChainableController>();
+  chained_cmd_cfg = {
+    controller_interface::interface_configuration_type::INDIVIDUAL,
+    {std::string(TEST_CHAINED_CONTROLLER_1) + "/joint1/position"}};
+  test_chained_controller_2->set_command_interface_configuration(chained_cmd_cfg);
+  test_chained_controller_2->set_state_interface_configuration(chained_state_cfg);
+  test_chained_controller_2->set_reference_interface_names({"joint1/position", "joint1/velocity"});
+
+  auto test_chained_controller_3 = std::make_shared<TestChainableController>();
+  chained_cmd_cfg = {
+    controller_interface::interface_configuration_type::INDIVIDUAL,
+    {std::string(TEST_CHAINED_CONTROLLER_2) + "/joint1/position"}};
+  test_chained_controller_3->set_command_interface_configuration(chained_cmd_cfg);
+  test_chained_controller_3->set_state_interface_configuration(chained_state_cfg);
+  test_chained_controller_3->set_reference_interface_names({"joint1/position", "joint1/velocity"});
+
+  auto test_controller_1 = std::make_shared<TestController>();
+  controller_interface::InterfaceConfiguration cmd_cfg = {
+    controller_interface::interface_configuration_type::INDIVIDUAL,
+    {std::string(TEST_CHAINED_CONTROLLER_3) + "/joint1/position",
+     std::string(TEST_CHAINED_CONTROLLER_3) + "/joint1/velocity"}};
+  controller_interface::InterfaceConfiguration state_cfg = {
+    controller_interface::interface_configuration_type::INDIVIDUAL,
+    {"joint1/position", "joint1/velocity"}};
+  test_controller_1->set_command_interface_configuration(cmd_cfg);
+  test_controller_1->set_state_interface_configuration(state_cfg);
+
+  // Second chain
+  auto test_chained_controller_4 = std::make_shared<TestChainableController>();
+  chained_cmd_cfg = {
+    controller_interface::interface_configuration_type::INDIVIDUAL, {"joint2/velocity"}};
+  test_chained_controller_4->set_command_interface_configuration(chained_cmd_cfg);
+  test_chained_controller_4->set_state_interface_configuration(chained_state_cfg);
+  test_chained_controller_4->set_reference_interface_names({"joint2/velocity"});
+
+  auto test_chained_controller_5 = std::make_shared<TestChainableController>();
+  chained_cmd_cfg = {
+    controller_interface::interface_configuration_type::INDIVIDUAL,
+    {std::string(TEST_CHAINED_CONTROLLER_4) + "/joint2/velocity"}};
+  test_chained_controller_5->set_command_interface_configuration(chained_cmd_cfg);
+  test_chained_controller_5->set_state_interface_configuration(chained_state_cfg);
+  test_chained_controller_5->set_reference_interface_names({"joint2/velocity"});
+
+  auto test_chained_controller_6 = std::make_shared<TestChainableController>();
+  chained_cmd_cfg = {
+    controller_interface::interface_configuration_type::INDIVIDUAL,
+    {std::string(TEST_CHAINED_CONTROLLER_5) + "/joint2/velocity"}};
+  test_chained_controller_6->set_command_interface_configuration(chained_cmd_cfg);
+  test_chained_controller_6->set_state_interface_configuration(chained_state_cfg);
+  test_chained_controller_6->set_reference_interface_names({"joint2/velocity"});
+
+  auto test_controller_2 = std::make_shared<TestController>();
+  cmd_cfg = {
+    controller_interface::interface_configuration_type::INDIVIDUAL,
+    {std::string(TEST_CHAINED_CONTROLLER_6) + "/joint2/velocity"}};
+  state_cfg = {controller_interface::interface_configuration_type::INDIVIDUAL, {"joint2/velocity"}};
+  test_controller_2->set_command_interface_configuration(cmd_cfg);
+  test_controller_2->set_state_interface_configuration(state_cfg);
+
+  // add controllers
+  /// @todo add controllers in random order
+  /// For now, adding the ordered case to see that current sorting doesn't change order
+  cm_->add_controller(
+    test_chained_controller_2, TEST_CHAINED_CONTROLLER_2,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    test_chained_controller_1, TEST_CHAINED_CONTROLLER_1,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    test_chained_controller_6, TEST_CHAINED_CONTROLLER_6,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    test_controller_1, TEST_CONTROLLER_1, test_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    test_chained_controller_5, TEST_CHAINED_CONTROLLER_5,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    test_chained_controller_3, TEST_CHAINED_CONTROLLER_3,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    test_chained_controller_4, TEST_CHAINED_CONTROLLER_4,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    test_controller_2, TEST_CONTROLLER_2, test_controller::TEST_CONTROLLER_CLASS_NAME);
+
+  // get controller list before configure
+  auto result = call_service_and_wait(*client, request, srv_executor);
+  // check chainable controller
+  ASSERT_EQ(8u, result->controller.size());
+  //  EXPECT_EQ(result->controller[0].name, TEST_CONTROLLER_1);
+  //  EXPECT_EQ(result->controller[1].name, TEST_CHAINED_CONTROLLER_3);
+  //  EXPECT_EQ(result->controller[2].name, TEST_CHAINED_CONTROLLER_2);
+  //  EXPECT_EQ(result->controller[3].name, TEST_CHAINED_CONTROLLER_1);
+
+  //  EXPECT_EQ(result->controller[4].name, TEST_CONTROLLER_2);
+  //  EXPECT_EQ(result->controller[5].name, TEST_CHAINED_CONTROLLER_6);
+  //  EXPECT_EQ(result->controller[6].name, TEST_CHAINED_CONTROLLER_5);
+  //  EXPECT_EQ(result->controller[7].name, TEST_CHAINED_CONTROLLER_4);
+
+  // configure controllers
+  auto ctrls_order = {TEST_CHAINED_CONTROLLER_1, TEST_CHAINED_CONTROLLER_2,
+                      TEST_CHAINED_CONTROLLER_3, TEST_CONTROLLER_1,
+                      TEST_CHAINED_CONTROLLER_4, TEST_CHAINED_CONTROLLER_5,
+                      TEST_CHAINED_CONTROLLER_6, TEST_CONTROLLER_2};
+  for (const auto & controller : ctrls_order) cm_->configure_controller(controller);
+
+  // get controller list after configure
+  result = call_service_and_wait(*client, request, srv_executor);
+  ASSERT_EQ(8u, result->controller.size());
+
+  for (const auto & controller : ctrls_order)
+    cm_->switch_controller(
+      {controller}, {}, controller_manager_msgs::srv::SwitchController::Request::STRICT, true,
+      rclcpp::Duration(0, 0));
+
+  // activate controllers
+  //  cm_->switch_controller(
+  //    {TEST_CHAINED_CONTROLLER_1}, {},
+  //    controller_manager_msgs::srv::SwitchController::Request::STRICT, true, rclcpp::Duration(0,
+  //    0));
+  //  cm_->switch_controller(
+  //    {TEST_CHAINED_CONTROLLER_4}, {},
+  //    controller_manager_msgs::srv::SwitchController::Request::STRICT, true, rclcpp::Duration(0,
+  //    0));
+  //  cm_->switch_controller(
+  //    {TEST_CHAINED_CONTROLLER_3, TEST_CHAINED_CONTROLLER_5, TEST_CHAINED_CONTROLLER_2,
+  //     TEST_CHAINED_CONTROLLER_6},
+  //    {}, controller_manager_msgs::srv::SwitchController::Request::STRICT, true,
+  //    rclcpp::Duration(0, 0));
+  //  cm_->switch_controller(
+  //    {TEST_CONTROLLER_1, TEST_CONTROLLER_2}, {},
+  //    controller_manager_msgs::srv::SwitchController::Request::STRICT, true, rclcpp::Duration(0,
+  //    0));
+  // get controller list after activate
+  result = call_service_and_wait(*client, request, srv_executor);
+
+  ASSERT_EQ(8u, result->controller.size());
+  // reordered controllers
+  for (auto & ctrl : result->controller)
+  {
+    RCLCPP_ERROR(srv_node->get_logger(), "\t%s", ctrl.name.c_str());
+  }
+  EXPECT_EQ(result->controller[0].name, TEST_CONTROLLER_1);
+  EXPECT_EQ(result->controller[1].name, TEST_CHAINED_CONTROLLER_3);
+  EXPECT_EQ(result->controller[2].name, TEST_CHAINED_CONTROLLER_2);
+  EXPECT_EQ(result->controller[3].name, TEST_CHAINED_CONTROLLER_1);
+
+  EXPECT_EQ(result->controller[4].name, TEST_CONTROLLER_2);
+  EXPECT_EQ(result->controller[5].name, TEST_CHAINED_CONTROLLER_6);
+  EXPECT_EQ(result->controller[6].name, TEST_CHAINED_CONTROLLER_5);
+  EXPECT_EQ(result->controller[7].name, TEST_CHAINED_CONTROLLER_4);
 }
