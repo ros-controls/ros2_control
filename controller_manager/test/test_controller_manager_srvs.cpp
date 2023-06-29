@@ -803,11 +803,6 @@ TEST_F(TestControllerManagerSrvs, list_sorted_complex_chained_controllers)
   auto ctrl_4_pos = get_ctrl_pos(TEST_CHAINED_CONTROLLER_4);
   auto ctrl_5_pos = get_ctrl_pos(TEST_CHAINED_CONTROLLER_5);
   auto ctrl_6_pos = get_ctrl_pos(TEST_CHAINED_CONTROLLER_6);
-  //  ASSERT_NE(ctrl_1_it, result->controller.end());
-  //  ASSERT_NE(ctrl_3_it, result->controller.end());
-  //  auto ctrl_1_pos = std::distance(result->controller.begin(), ctrl_1_it);
-  //  auto ctrl_3_pos = std::distance(result->controller.begin(), ctrl_3_it);
-  //  auto ctrl_6_pos = std::distance(result->controller.begin(), ctrl_6_it);
 
   // Extra check to see that they are index only after their parent controller (ctrl_6)
   ASSERT_GT(ctrl_3_pos, ctrl_6_pos);
@@ -925,10 +920,10 @@ TEST_F(TestControllerManagerSrvs, list_sorted_independent_chained_controllers)
     test_chained_controller_2, TEST_CHAINED_CONTROLLER_2,
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
   cm_->add_controller(
-    test_chained_controller_1, TEST_CHAINED_CONTROLLER_1,
+    test_chained_controller_6, TEST_CHAINED_CONTROLLER_6,
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
   cm_->add_controller(
-    test_chained_controller_6, TEST_CHAINED_CONTROLLER_6,
+    test_chained_controller_1, TEST_CHAINED_CONTROLLER_1,
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
   cm_->add_controller(
     test_controller_1, TEST_CONTROLLER_1, test_controller::TEST_CONTROLLER_CLASS_NAME);
@@ -948,50 +943,43 @@ TEST_F(TestControllerManagerSrvs, list_sorted_independent_chained_controllers)
   auto result = call_service_and_wait(*client, request, srv_executor);
   // check chainable controller
   ASSERT_EQ(8u, result->controller.size());
-  //  EXPECT_EQ(result->controller[0].name, TEST_CONTROLLER_1);
-  //  EXPECT_EQ(result->controller[1].name, TEST_CHAINED_CONTROLLER_3);
-  //  EXPECT_EQ(result->controller[2].name, TEST_CHAINED_CONTROLLER_2);
-  //  EXPECT_EQ(result->controller[3].name, TEST_CHAINED_CONTROLLER_1);
+  EXPECT_EQ(result->controller[0].name, TEST_CHAINED_CONTROLLER_2);
+  EXPECT_EQ(result->controller[1].name, TEST_CHAINED_CONTROLLER_6);
+  EXPECT_EQ(result->controller[2].name, TEST_CHAINED_CONTROLLER_1);
+  EXPECT_EQ(result->controller[3].name, TEST_CONTROLLER_1);
 
-  //  EXPECT_EQ(result->controller[4].name, TEST_CONTROLLER_2);
-  //  EXPECT_EQ(result->controller[5].name, TEST_CHAINED_CONTROLLER_6);
-  //  EXPECT_EQ(result->controller[6].name, TEST_CHAINED_CONTROLLER_5);
-  //  EXPECT_EQ(result->controller[7].name, TEST_CHAINED_CONTROLLER_4);
+  EXPECT_EQ(result->controller[4].name, TEST_CHAINED_CONTROLLER_5);
+  EXPECT_EQ(result->controller[5].name, TEST_CHAINED_CONTROLLER_3);
+  EXPECT_EQ(result->controller[6].name, TEST_CHAINED_CONTROLLER_4);
+  EXPECT_EQ(result->controller[7].name, TEST_CONTROLLER_2);
 
   // configure controllers
-  auto ctrls_order = {TEST_CHAINED_CONTROLLER_1, TEST_CHAINED_CONTROLLER_2,
-                      TEST_CHAINED_CONTROLLER_3, TEST_CONTROLLER_1,
-                      TEST_CHAINED_CONTROLLER_4, TEST_CHAINED_CONTROLLER_5,
-                      TEST_CHAINED_CONTROLLER_6, TEST_CONTROLLER_2};
+  auto ctrls_order = {
+    TEST_CHAINED_CONTROLLER_3, TEST_CHAINED_CONTROLLER_5, TEST_CHAINED_CONTROLLER_1,
+    TEST_CONTROLLER_1,         TEST_CHAINED_CONTROLLER_4, TEST_CONTROLLER_2,
+    TEST_CHAINED_CONTROLLER_2, TEST_CHAINED_CONTROLLER_6,
+  };
   for (const auto & controller : ctrls_order) cm_->configure_controller(controller);
 
   // get controller list after configure
   result = call_service_and_wait(*client, request, srv_executor);
   ASSERT_EQ(8u, result->controller.size());
 
-  for (const auto & controller : ctrls_order)
-    cm_->switch_controller(
-      {controller}, {}, controller_manager_msgs::srv::SwitchController::Request::STRICT, true,
-      rclcpp::Duration(0, 0));
-
   // activate controllers
-  //  cm_->switch_controller(
-  //    {TEST_CHAINED_CONTROLLER_1}, {},
-  //    controller_manager_msgs::srv::SwitchController::Request::STRICT, true, rclcpp::Duration(0,
-  //    0));
-  //  cm_->switch_controller(
-  //    {TEST_CHAINED_CONTROLLER_4}, {},
-  //    controller_manager_msgs::srv::SwitchController::Request::STRICT, true, rclcpp::Duration(0,
-  //    0));
-  //  cm_->switch_controller(
-  //    {TEST_CHAINED_CONTROLLER_3, TEST_CHAINED_CONTROLLER_5, TEST_CHAINED_CONTROLLER_2,
-  //     TEST_CHAINED_CONTROLLER_6},
-  //    {}, controller_manager_msgs::srv::SwitchController::Request::STRICT, true,
-  //    rclcpp::Duration(0, 0));
-  //  cm_->switch_controller(
-  //    {TEST_CONTROLLER_1, TEST_CONTROLLER_2}, {},
-  //    controller_manager_msgs::srv::SwitchController::Request::STRICT, true, rclcpp::Duration(0,
-  //    0));
+  cm_->switch_controller(
+    {TEST_CHAINED_CONTROLLER_1}, {},
+    controller_manager_msgs::srv::SwitchController::Request::STRICT, true, rclcpp::Duration(0, 0));
+  cm_->switch_controller(
+    {TEST_CHAINED_CONTROLLER_4}, {},
+    controller_manager_msgs::srv::SwitchController::Request::STRICT, true, rclcpp::Duration(0, 0));
+  cm_->switch_controller(
+    {TEST_CHAINED_CONTROLLER_3, TEST_CHAINED_CONTROLLER_5, TEST_CHAINED_CONTROLLER_2,
+     TEST_CHAINED_CONTROLLER_6},
+    {}, controller_manager_msgs::srv::SwitchController::Request::STRICT, true,
+    rclcpp::Duration(0, 0));
+  cm_->switch_controller(
+    {TEST_CONTROLLER_1, TEST_CONTROLLER_2}, {},
+    controller_manager_msgs::srv::SwitchController::Request::STRICT, true, rclcpp::Duration(0, 0));
   // get controller list after activate
   result = call_service_and_wait(*client, request, srv_executor);
 
