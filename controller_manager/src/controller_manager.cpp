@@ -2412,6 +2412,7 @@ bool ControllerManager::controller_sorting(
   else
   {
     auto following_ctrls = get_following_controller_names(ctrl_a.info.name, controllers);
+    if (following_ctrls.empty()) return false;
     // If the ctrl_b is any of the following controllers of ctrl_a, then place ctrl_a before ctrl_b
     if (
       std::find(following_ctrls.begin(), following_ctrls.end(), ctrl_b.info.name) !=
@@ -2446,6 +2447,26 @@ bool ControllerManager::controller_sorting(
         // ctrl_b
         return true;
       }
+
+      // If there is no common parent, then they belong to 2 different sets
+      auto following_ctrls_b = get_following_controller_names(ctrl_b.info.name, controllers);
+      if (following_ctrls_b.empty()) return false;
+      int ctrl_a_chain_first_controller = 0;
+      int ctrl_b_chain_first_controller = 0;
+      auto find_first_element = [&](int & ctrl_pos, const auto & controllers_list)
+      {
+        auto it = std::find_if(
+          controllers.begin(), controllers.end(),
+          std::bind(controller_name_compare, std::placeholders::_1, controllers_list.back()));
+        if (it == controllers.end())
+        {
+          int dist = std::distance(controllers.begin(), it);
+          ctrl_pos = std::min(ctrl_pos, dist);
+        }
+      };
+      find_first_element(ctrl_a_chain_first_controller, following_ctrls);
+      find_first_element(ctrl_b_chain_first_controller, following_ctrls_b);
+      if (ctrl_a_chain_first_controller < ctrl_b_chain_first_controller) return true;
     }
 
     // If the ctrl_a's state interface is the one exported by the ctrl_b then ctrl_b should be
