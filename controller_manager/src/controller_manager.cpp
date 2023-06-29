@@ -2450,22 +2450,20 @@ bool ControllerManager::controller_sorting(
 
       // If there is no common parent, then they belong to 2 different sets
       auto following_ctrls_b = get_following_controller_names(ctrl_b.info.name, controllers);
-      if (following_ctrls_b.empty()) return false;
-      int ctrl_a_chain_first_controller = 0;
-      int ctrl_b_chain_first_controller = 0;
-      auto find_first_element = [&](int & ctrl_pos, const auto & controllers_list)
+      if (following_ctrls_b.empty()) return true;
+      auto find_first_element = [&](const auto & controllers_list)
       {
         auto it = std::find_if(
           controllers.begin(), controllers.end(),
           std::bind(controller_name_compare, std::placeholders::_1, controllers_list.back()));
-        if (it == controllers.end())
+        if (it != controllers.end())
         {
           int dist = std::distance(controllers.begin(), it);
-          ctrl_pos = std::min(ctrl_pos, dist);
+          return dist;
         }
       };
-      find_first_element(ctrl_a_chain_first_controller, following_ctrls);
-      find_first_element(ctrl_b_chain_first_controller, following_ctrls_b);
+      const int ctrl_a_chain_first_controller = find_first_element(following_ctrls);
+      const int ctrl_b_chain_first_controller = find_first_element(following_ctrls_b);
       if (ctrl_a_chain_first_controller < ctrl_b_chain_first_controller) return true;
     }
 
