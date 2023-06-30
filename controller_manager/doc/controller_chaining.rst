@@ -1,14 +1,14 @@
 Controller Chaining / Cascade Control
 ======================================
 
-This document proposes a minimal-viable-implementation of serial controllers chaining as described in [Chaining Controllers design document](controller_chaining.md).
+This document proposes a minimal-viable-implementation of serial controller chaining as described in [Chaining Controllers design document](https://github.com/ros-controls/roadmap/blob/master/design_drafts/controller_chaining.md).
 Cascade control is a specific type of controller chaining.
 
 
 ## Scope of the Document and Background Knowledge
 
-The proposal focuses only on serial chaining of controller and tries to reuse existing mechanisms for it.
-It focuses on [inputs and outputs of a controller](controller_chaining.md#input--outputs-of-a-controller) and their management in controller manager.
+This approach focuses only on serial chaining of controllers and tries to reuse existing mechanisms for it.
+It focuses on [inputs and outputs of a controller](https://github.com/ros-controls/roadmap/blob/master/design_drafts/controller_chaining.md#input--outputs-of-a-controller) and their management in the controller manager.
 The concept of [controller groups](controller_chaining.md#controller-group) will be introduced only for clarity reasons, and its only meaning is that controllers in that group can be updated in arbitrary order.
 This doesn't mean that the controller groups as described [in the controller chaining document](controller_chaining.md#controller-group) will not be introduced and used in the future.
 Nevertheless, the author is convinced that this would add only unnecessary complexity at this stage, although in the long term they *could* provide clearer structure and interfaces.
@@ -20,12 +20,12 @@ To describe the intent of this document, let focus on simple yet sufficient exam
 ![Example2](images/chaining_example2.png)
 
 In this example, we want to chain 'position_tracking' controller with 'diff_drive_controller' and two PID controllers.
-Let's now imagine a use case that we don't only want to run all those controllers as a group, but also flexibly add preceding steps.
+Let's now imagine a use-case where we don't only want to run all those controllers as a group, but also flexibly add preceding steps.
 This means the following:
-  1. When a robot is stared, we want to check if motor velocity control is working properly and therefore only PID controllers are activated.
-     This means we can control the input of PID controller also externally using topics.
-     But these controllers also provide virtual interfaces, so we can chain them.
-  2. Then "diff_drive_controller" is activated and attach itself to the virtual input interfaces of PID controllers.
+  1. When a robot is started, we want to check if motor velocity control is working properly and therefore only PID controllers are activated.
+     At this stage we can control the input of PID controller also externally using topics.
+     However, these controllers also provide virtual interfaces, so we can chain them.
+  2. Then "diff_drive_controller" is activated and attaches itself to the virtual input interfaces of PID controllers.
      PID controllers also get informed that they are working in chained mode and therefore disable their external interface through subscriber.
      Now we check if kinematics of differential robot is running properly.
   3. After that, "position_tracking" can be activated and attached to "diff_drive_controller" that disables its external interfaces.
@@ -34,7 +34,7 @@ This means the following:
 
 ## Implementation
 
-### A new Controller Base-Class: Chainable Controller
+### A Controller Base-Class: ChainableController
 
 A `ChainableController` extends `ControllerInterface` class with `virtual InterfaceConfiguration input_interface_configuration() const = 0` method.
 This method should implement for each controller that **can be preceded** by another controller exporting all the input interfaces.
