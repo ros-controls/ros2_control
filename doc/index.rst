@@ -6,7 +6,7 @@
 ros2_control
 #################
 
-This is the documentaition of the ros2_control framework core.
+This is the documentation of the ros2_control framework core.
 
 `GitHub Repository <https://github.com/ros-controls/ros2_control>`_
 
