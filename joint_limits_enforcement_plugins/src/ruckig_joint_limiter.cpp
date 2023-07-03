@@ -180,7 +180,7 @@ bool RuckigJointLimiter<joint_limits::JointLimits>::on_enforce(
       ruckig_output_->new_acceleration.at(joint));
   }
 
-  return result == ruckig::Result::Finished;
+  return (result == ruckig::Result::Working || result == ruckig::Result::Finished);
 }
 
 }  // namespace ruckig_joint_limiter
