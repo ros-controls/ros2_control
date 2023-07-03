@@ -54,7 +54,7 @@ bool RuckigJointLimiter<joint_limits::JointLimits>::on_init(/*const rclcpp::Dura
   {
     if (joint_limits_[joint].has_jerk_limits)
     {
-      ruckig_input_->max_jerk.at(joint) = joint_limits_[joint].max_acceleration;
+      ruckig_input_->max_jerk.at(joint) = joint_limits_[joint].max_jerk;
     }
     else
     {
