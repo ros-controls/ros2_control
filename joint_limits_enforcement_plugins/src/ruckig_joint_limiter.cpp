@@ -68,6 +68,12 @@ bool RuckigJointLimiter<joint_limits::JointLimits>::on_init(/*const rclcpp::Dura
     {
       ruckig_input_->max_acceleration.at(joint) = DEFAULT_MAX_ACCELERATION;
     }
+    if (joint_limits_[joint].has_deceleration_limits)
+    {
+      RCUTILS_LOG_WARN_NAMED(
+        "ruckig_joint_limiter",
+        "Deceleration limits not supported in community version of Ruckig.");
+    }
     if (joint_limits_[joint].has_velocity_limits)
     {
       ruckig_input_->max_velocity.at(joint) = joint_limits_[joint].max_velocity;
