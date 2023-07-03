@@ -39,12 +39,23 @@ pluginlib_export_plugin_description_file(joint_limits joint_limits_enforcement_p
 
 if(BUILD_TESTING)
   find_package(ament_cmake_gmock REQUIRED)
+  find_package(ament_cmake_gmock REQUIRED)
+  find_package(generate_parameter_library REQUIRED)
   find_package(joint_limits REQUIRED)
   find_package(pluginlib REQUIRED)
   find_package(rclcpp REQUIRED)
 
-  ament_add_gmock(test_ruckig_joint_limiter test/test_ruckig_joint_limiter.cpp)
+
+  install(
+    FILES test/ruckig_joint_limiter_param.yaml
+    DESTINATION share/joint_limits_enforcement_plugins/test
+  )
+
+  add_rostest_with_parameters_gmock(test_ruckig_joint_limiter test/test_ruckig_joint_limiter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/test/ruckig_joint_limiter_param.yaml
+  )
   target_include_directories(test_ruckig_joint_limiter PRIVATE include)
+  target_link_libraries(test_ruckig_joint_limiter ruckig_joint_limiter)
   ament_target_dependencies(
     test_ruckig_joint_limiter
     joint_limits
