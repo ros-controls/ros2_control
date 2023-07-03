@@ -163,7 +163,6 @@ bool RuckigJointLimiter<joint_limits::JointLimits>::on_enforce(
   desired_joint_states.velocities = ruckig_output_->new_velocity;
   desired_joint_states.accelerations = ruckig_output_->new_acceleration;
 
-  // Feed output from the previous timestep back as input
   for (auto joint = 0ul; joint < number_of_joints_; ++joint)
   {
     RCUTILS_LOG_DEBUG_NAMED(
