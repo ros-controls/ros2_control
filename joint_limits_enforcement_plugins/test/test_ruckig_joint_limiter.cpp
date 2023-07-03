@@ -245,35 +245,6 @@ TEST_F(RuckigJointLimiterTest, when_deceleration_exceeded_expect_dec_enforced)
     );
   }
 }
-/* ruckig does not use max_dec anyway
-TEST_F(RuckigJointLimiterTest, when_deceleration_exceeded_with_no_maxdec_expect_acc_enforced)
-{
-  SetupNode("ruckig_joint_limiter_nodeclimit");
-  Load();
-
-  if (joint_limiter_)
-  {
-    Init();
-    Configure();
-
-    rclcpp::Duration period(0, 50000000);
-
-    // desired deceleration exceeds
-    current_joint_states_.positions[0] = 0.0;
-    current_joint_states_.velocities[0] = 1.0;
-    desired_joint_states_.velocities[0] = 0.5;  // leads to acc > -max acc
-    ASSERT_TRUE(joint_limiter_->enforce(current_joint_states_, desired_joint_states_, period));
-
-    // check if vel and acc limits applied
-    CHECK_STATE_SINGLE_JOINT(
-      desired_joint_states_, 0,
-      desired_joint_states_.positions[0],  // pos unchanged
-      0.75,                                // vel limited by vel-max acc * dt
-      -5.0                                 // acc limited to -max acc
-    );
-  }
-}
-*/
 
 int main(int argc, char ** argv)
 {
