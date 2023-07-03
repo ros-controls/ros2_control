@@ -156,6 +156,38 @@ bool RuckigJointLimiter<joint_limits::JointLimits>::on_enforce(
     ruckig_input_->target_acceleration = std::vector<double>(number_of_joints_, 0.0);
   }
 
+  // Ruckig fails if provided values are out of limit,
+  // therefore we first limit things by scaling to the maximum ruckig velocity
+  double max_vel_ratio = 1.0;
+  for (auto joint = 0ul; joint < number_of_joints_; ++joint)
+  {
+    if (std::fabs(ruckig_input_->target_velocity.at(joint)) > ruckig_input_->max_velocity.at(joint))
+    {
+      const double ratio =
+        std::fabs(ruckig_input_->target_velocity.at(joint) / ruckig_input_->max_velocity.at(joint));
+      if (ratio > max_vel_ratio)
+      {
+        max_vel_ratio = ratio;
+      }
+    }
+  }
+  for (auto joint = 0ul; joint < number_of_joints_; ++joint)
+  {
+    // Set the target velocities to follow the ruckig joint limits
+    if (max_vel_ratio != 1.0)
+    {
+      ruckig_input_->target_velocity.at(joint) =
+        ruckig_input_->target_velocity.at(joint) / max_vel_ratio;
+      RCUTILS_LOG_WARN_ONCE_NAMED(
+        "ruckig_joint_limiter", "Limiting target velocity by a factor : %lf.", max_vel_ratio);
+    }
+
+    // Set the target accelerations to follow the ruckig joint limits
+    ruckig_input_->target_acceleration.at(joint) = std::clamp(
+      ruckig_input_->target_acceleration.at(joint),
+      -1.0 * ruckig_input_->max_acceleration.at(joint), ruckig_input_->max_acceleration.at(joint));
+  }
+  // apply ruckig
   ruckig::Result result = ruckig_->update(*ruckig_input_, *ruckig_output_);
   RCUTILS_LOG_DEBUG_NAMED("ruckig_joint_limiter", "Rucking result %d", result);
 
