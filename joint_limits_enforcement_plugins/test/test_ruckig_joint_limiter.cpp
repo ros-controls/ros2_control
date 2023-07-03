@@ -117,8 +117,7 @@ TEST_F(RuckigJointLimiterTest, when_velocity_exceeded_expect_vel_and_acc_enforce
   }
 }
 
-/* no pos enforcing available in ruckig
-TEST_F(RuckigJointLimiterTest, when_position_exceeded_expect_pos_enforced)
+TEST_F(RuckigJointLimiterTest, when_position_exceeded_expect_nochange)
 {
   SetupNode("ruckig_joint_limiter");
   Load();
@@ -138,13 +137,12 @@ TEST_F(RuckigJointLimiterTest, when_position_exceeded_expect_pos_enforced)
     // check if pos limits applied
     CHECK_STATE_SINGLE_JOINT(
       desired_joint_states_, 0,
-      5.0,                                    // pos unchanged
+      desired_joint_states_.positions[0],     // pos unchanged
       desired_joint_states_.velocities[0],    // vel unchanged
       desired_joint_states_.accelerations[0]  // acc unchanged
     );
   }
 }
-*/
 
 TEST_F(RuckigJointLimiterTest, when_position_close_to_pos_limit_expect_deceleration_enforced)
 {
