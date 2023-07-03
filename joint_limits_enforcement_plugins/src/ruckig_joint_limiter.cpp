@@ -126,7 +126,18 @@ bool RuckigJointLimiter<joint_limits::JointLimits>::on_enforce(
   ruckig_input_->current_acceleration = ruckig_output_->new_acceleration;
 
   // Target state is the next waypoint
-  ruckig_input_->target_position = desired_joint_states.positions;
+  if (desired_joint_states.positions.size() == number_of_joints_)
+  {
+    ruckig_input_->target_position = desired_joint_states.positions;
+  }
+  else
+  {
+    RCUTILS_LOG_WARN_NAMED(
+      "ruckig_joint_limiter",
+      "Size of desired positions (%zu) does not match number of joint (%zu).",
+      desired_joint_states.positions.size(), number_of_joints_);
+    return false;
+  }
   // TODO(destogl): in current use-case we use only velocity
   if (desired_joint_states.velocities.size() == number_of_joints_)
   {
