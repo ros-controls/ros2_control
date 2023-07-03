@@ -553,6 +553,18 @@ controller_interface::return_type ControllerManager::configure_controller(
       controller_name, std::make_unique<ControllerThreadWrapper>(controller, update_rate_));
   }
 
+  const auto controller_update_rate = controller->get_update_rate();
+  const auto cm_update_rate = get_update_rate();
+  if (controller_update_rate > cm_update_rate)
+  {
+    RCLCPP_WARN(
+      get_logger(),
+      "The controller : %s update rate : %d Hz should be less than or equal to controller "
+      "manager's update rate : %d Hz!. The controller will be updated at controller_manager's "
+      "update rate.",
+      controller_name.c_str(), controller_update_rate, cm_update_rate);
+  }
+
   // CHAINABLE CONTROLLERS: get reference interfaces from chainable controllers
   if (controller->is_chainable())
   {
