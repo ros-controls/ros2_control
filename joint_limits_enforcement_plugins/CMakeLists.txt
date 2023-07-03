@@ -27,6 +27,9 @@ target_include_directories(ruckig_joint_limiter PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/joint_limits_enforcement_plugins>
 )
+target_link_libraries(ruckig_joint_limiter PRIVATE
+  ruckig::ruckig
+)
 ament_target_dependencies(ruckig_joint_limiter PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.
