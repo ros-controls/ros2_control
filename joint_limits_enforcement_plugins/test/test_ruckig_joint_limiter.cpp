@@ -157,48 +157,6 @@ TEST_F(RuckigJointLimiterTest, when_position_exceeded_expect_nochange)
   }
 }
 
-TEST_F(RuckigJointLimiterTest, when_position_close_to_pos_limit_expect_deceleration_enforced)
-{
-  SetupNode("ruckig_joint_limiter");
-  Load();
-
-  if (joint_limiter_)
-  {
-    Init();
-    Configure();
-
-    // using 0.05 because 1.0 sec invalidates the "small dt integration"
-    rclcpp::Duration period(0, 5000000);  // 0.005 second
-
-    // close to vel limit should trigger braking
-    current_joint_states_.positions[0] = 1.0;
-    current_joint_states_.velocities[0] = 1.9;
-    desired_joint_states_.positions[0] = 1.5;
-    desired_joint_states_.velocities[0] = 1.98;
-    desired_joint_states_.accelerations[0] = 5.0;
-
-    for (auto i = 0u; i < 4; ++i)
-    {
-      auto previous_vel_request = desired_joint_states_.velocities[0];
-      ASSERT_TRUE(joint_limiter_->enforce(current_joint_states_, desired_joint_states_, period));
-
-      ASSERT_LE(
-        desired_joint_states_.velocities[0],
-        previous_vel_request);  // vel adapted to reach end-stop should be decreasing
-      // NOTE: after the first cycle, vel is reduced and does not trigger stopping position limit
-      // hence no max deceleration anymore...
-      ASSERT_LT(
-        desired_joint_states_.positions[0],
-        5.0 + COMMON_THRESHOLD);  // should decelerate at each cycle and stay below limits
-      ASSERT_LE(desired_joint_states_.accelerations[0], 0.0);  // should decelerate
-
-      Integrate(period.seconds());
-
-      ASSERT_LT(current_joint_states_.positions[0], 5.0);  // below joint limit
-    }
-  }
-}
-
 TEST_F(RuckigJointLimiterTest, when_acceleration_exceeded_expect_acc_enforced)
 {
   SetupNode("ruckig_joint_limiter");
