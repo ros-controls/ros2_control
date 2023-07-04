@@ -191,7 +191,8 @@ bool RuckigJointLimiter<joint_limits::JointLimits>::on_enforce(
     // Set the target accelerations to follow the ruckig joint limits
     ruckig_input_->target_acceleration.at(joint) = std::clamp(
       ruckig_input_->target_acceleration.at(joint),
-      -1.0 * ruckig_input_->max_acceleration.at(joint), ruckig_input_->max_acceleration.at(joint));
+      -0.999 * ruckig_input_->max_acceleration.at(joint),
+      0.999 * ruckig_input_->max_acceleration.at(joint));
   }
   // apply ruckig
   ruckig::Result result = ruckig_->update(*ruckig_input_, *ruckig_output_);
