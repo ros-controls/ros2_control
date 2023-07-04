@@ -196,7 +196,13 @@ bool RuckigJointLimiter<joint_limits::JointLimits>::on_enforce(
   }
   // apply ruckig
   ruckig::Result result = ruckig_->update(*ruckig_input_, *ruckig_output_);
-  RCUTILS_LOG_DEBUG_NAMED("ruckig_joint_limiter", "Rucking result %d", result);
+  if (result == ruckig::Result::Working || result == ruckig::Result::Finished)
+    RCUTILS_LOG_DEBUG_NAMED("ruckig_joint_limiter", "Rucking result %d", result);
+  else
+  {
+    RCUTILS_LOG_WARN_ONCE_NAMED("ruckig_joint_limiter", "Rucking result %d", result);
+    return false;
+  }
 
   desired_joint_states.positions = ruckig_output_->new_position;
   desired_joint_states.velocities = ruckig_output_->new_velocity;
@@ -219,7 +225,7 @@ bool RuckigJointLimiter<joint_limits::JointLimits>::on_enforce(
       ruckig_output_->new_acceleration.at(joint));
   }
 
-  return (result == ruckig::Result::Working || result == ruckig::Result::Finished);
+  return true;
 }
 
 }  // namespace ruckig_joint_limiter
