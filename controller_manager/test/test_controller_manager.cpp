@@ -362,4 +362,5 @@ TEST_P(TestControllerManagerWithUpdateRates, per_controller_equal_and_higher_upd
 }
 
 INSTANTIATE_TEST_SUITE_P(
-  per_controller_equal_and_higher_update_rate, TestControllerManagerWithUpdateRates, testing::Values(100, 232, 400));
+  per_controller_equal_and_higher_update_rate, TestControllerManagerWithUpdateRates,
+  testing::Values(100, 232, 400));
