@@ -72,7 +72,7 @@ TEST_F(RuckigJointLimiterTest, when_within_limits_expect_no_limits_applied)
   }
 }
 
-TEST_F(RuckigJointLimiterTest, when_velocity_exceeded_expect_vel_and_acc_enforced)
+TEST_F(RuckigJointLimiterTest, when_pos_vel_leads_to_acc_exceeded_expect_vel_and_acc_enforced)
 {
   SetupNode("ruckig_joint_limiter");
   Load();
@@ -84,7 +84,7 @@ TEST_F(RuckigJointLimiterTest, when_velocity_exceeded_expect_vel_and_acc_enforce
 
     rclcpp::Duration period(0, 5000000);  // 0.005 second AS HARDCODED in the lib
 
-    // desired velocity exceeds
+    // desired vel makes acceleration exceed
     desired_joint_states_.positions[0] = 1.0;
     desired_joint_states_.velocities[0] = 1.0;
     ASSERT_TRUE(joint_limiter_->enforce(current_joint_states_, desired_joint_states_, period));
@@ -98,11 +98,24 @@ TEST_F(RuckigJointLimiterTest, when_velocity_exceeded_expect_vel_and_acc_enforce
         2.0,                    // vel limited to max_acc * dt / 2.0
       100.0 * period.seconds()  // acc set to max_jerk * dt
     );
+  }
+}
 
-    // check opposite velocity direction (sign copy)
+TEST_F(RuckigJointLimiterTest, when_neg_vel_leads_to_acc_exceeded_expect_vel_and_acc_enforced)
+{
+  SetupNode("ruckig_joint_limiter");
+  Load();
+
+  if (joint_limiter_)
+  {
+    Init();
+    Configure();
+
+    rclcpp::Duration period(0, 5000000);  // 0.005 second AS HARDCODED in the lib
+
+    // desired vel makes acceleration exceed
     desired_joint_states_.positions[0] = -1.0;
     desired_joint_states_.velocities[0] = -1.0;
-    desired_joint_states_.accelerations[0] = -1.0;
     ASSERT_TRUE(joint_limiter_->enforce(current_joint_states_, desired_joint_states_, period));
 
     // check if vel and acc limits applied
