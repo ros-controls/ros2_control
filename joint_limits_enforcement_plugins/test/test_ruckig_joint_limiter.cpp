@@ -170,9 +170,8 @@ TEST_F(RuckigJointLimiterTest, when_acceleration_exceeded_expect_acc_enforced)
     rclcpp::Duration period(0, 5000000);  // 0.005 second
 
     // desired acceleration exceeds
-    current_joint_states_.positions[0] = 0.0;
-    current_joint_states_.velocities[0] = 0.0;
-    desired_joint_states_.velocities[0] = 0.5;  // leads to acc > max acc
+    desired_joint_states_.velocities[0] = 0.002; // if no velocity set, acc is computed negative !
+    desired_joint_states_.accelerations[0] = 0.6;  // leads to jerk > max_jerk
     ASSERT_TRUE(joint_limiter_->enforce(current_joint_states_, desired_joint_states_, period));
 
     // check if vel and acc limits applied
@@ -200,9 +199,8 @@ TEST_F(RuckigJointLimiterTest, when_deceleration_exceeded_expect_dec_enforced)
     rclcpp::Duration period(0, 5000000);  // 0.005 second
 
     // desired deceleration exceeds
-    current_joint_states_.positions[0] = 0.0;
-    current_joint_states_.velocities[0] = 1.0;
-    desired_joint_states_.velocities[0] = 0.5;  // leads to acc > -max dec
+    desired_joint_states_.velocities[0] = -0.002; // if no velocity set, acc is computed positve !
+    desired_joint_states_.accelerations[0] = -0.6;  // leads to jerk > max_jerk
     ASSERT_TRUE(joint_limiter_->enforce(current_joint_states_, desired_joint_states_, period));
 
     // check if vel and acc limits applied
