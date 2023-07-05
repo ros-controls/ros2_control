@@ -470,15 +470,6 @@ controller_interface::return_type ControllerManager::configure_controller(
     return controller_interface::return_type::ERROR;
   }
 
-<<<<<<< HEAD
-=======
-  // ASYNCHRONOUS CONTROLLERS: Start background thread for update
-  if (controller->is_async())
-  {
-    async_controller_threads_.emplace(
-      controller_name, std::make_unique<ControllerThreadWrapper>(controller, update_rate_));
-  }
-
   const auto controller_update_rate = controller->get_update_rate();
   const auto cm_update_rate = get_update_rate();
   if (controller_update_rate > cm_update_rate)
@@ -491,7 +482,6 @@ controller_interface::return_type ControllerManager::configure_controller(
       controller_name.c_str(), controller_update_rate, cm_update_rate);
   }
 
->>>>>>> d39ddcd (Fix equal and higher controller update rate (#1070))
   // CHAINABLE CONTROLLERS: get reference interfaces from chainable controllers
   if (controller->is_chainable())
   {
