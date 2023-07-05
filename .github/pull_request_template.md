@@ -1,13 +1,3 @@
-
----
-name: Pull request
-about: Create a pull request
-title: ''
-labels: ''
-assignees: ''
-
----
-
 Contributions via pull requests are much appreciated. Before sending us a pull request, please ensure that:
 
 1. Limited scope. Your PR should do one thing or one set of things. Avoid adding “random fixes” to PRs. Put those on separate PRs.

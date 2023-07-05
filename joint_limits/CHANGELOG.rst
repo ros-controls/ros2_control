@@ -2,6 +2,24 @@
 Changelog for package joint_limits
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+3.15.0 (2023-06-23)
+-------------------
+
+3.14.0 (2023-06-14)
+-------------------
+* Add -Wconversion flag to protect future developments (`#1053 <https://github.com/ros-controls/ros2_control/issues/1053>`_)
+* enable ReflowComments to also use ColumnLimit on comments (`#1037 <https://github.com/ros-controls/ros2_control/issues/1037>`_)
+* Contributors: Sai Kishor Kothakota, gwalck
+
+3.13.0 (2023-05-18)
+-------------------
+
+3.12.2 (2023-04-29)
+-------------------
+
+3.12.1 (2023-04-14)
+-------------------
+
 3.12.0 (2023-04-02)
 -------------------
 * Extend joint limits structure with deceleration limits. (`#977 <https://github.com/ros-controls/ros2_control/issues/977>`_)

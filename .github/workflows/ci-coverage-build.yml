@@ -16,11 +16,11 @@ jobs:
     env:
       ROS_DISTRO: rolling
     steps:
-      - uses: ros-tooling/setup-ros@0.6.1
+      - uses: ros-tooling/setup-ros@0.6.2
         with:
           required-ros-distributions: ${{ env.ROS_DISTRO }}
       - uses: actions/checkout@v3
-      - uses: ros-tooling/action-ros-ci@0.3.0
+      - uses: ros-tooling/action-ros-ci@0.3.2
         with:
           target-ros2-distro: ${{ env.ROS_DISTRO }}
           import-token: ${{ secrets.GITHUB_TOKEN }}
@@ -44,7 +44,7 @@ jobs:
               }
             }
           colcon-mixin-repository: https://raw.githubusercontent.com/colcon/colcon-mixin-repository/master/index.yaml
-      - uses: codecov/codecov-action@v3.1.1
+      - uses: codecov/codecov-action@v3.1.4
         with:
           file: ros_ws/lcov/total_coverage.info
           flags: unittests

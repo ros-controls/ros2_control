@@ -40,7 +40,7 @@ class ListHardwareComponentsVerb(VerbExtension):
 
             for idx, component in enumerate(hardware_components.component):
                 print(
-                    f"Hardware Component {idx}\n\tname: {component.name}\n\ttype: {component.type}"
+                    f"Hardware Component {idx+1}\n\tname: {component.name}\n\ttype: {component.type}"
                 )
                 if hasattr(component, "plugin_name"):
                     plugin_name = component.plugin_name
@@ -48,7 +48,9 @@ class ListHardwareComponentsVerb(VerbExtension):
                     plugin_name = f"{bcolors.WARNING}plugin name missing!{bcolors.ENDC}"
 
                 print(
-                    f"\tplugin name: {plugin_name}\n\tstate: id={component.state.id} label={component.state.label}\n\tcommand interfaces"
+                    f"\tplugin name: {plugin_name}\n"
+                    f"\tstate: id={component.state.id} label={component.state.label}\n"
+                    f"\tcommand interfaces"
                 )
                 for cmd_interface in component.command_interfaces:
                     if cmd_interface.is_available:
@@ -65,17 +67,12 @@ class ListHardwareComponentsVerb(VerbExtension):
 
                 if args.verbose:
                     print("\tstate interfaces")
-                    for state_interface in component.command_interfaces:
+                    for state_interface in component.state_interfaces:
                         if state_interface.is_available:
                             available_str = f"{bcolors.OKBLUE}[available]{bcolors.ENDC}"
                         else:
                             available_str = f"{bcolors.WARNING}[unavailable]{bcolors.ENDC}"
 
-                        if state_interface.is_claimed:
-                            claimed_str = f"{bcolors.OKBLUE}[claimed]{bcolors.ENDC}"
-                        else:
-                            claimed_str = "[unclaimed]"
-
-                        print(f"\t\t{state_interface.name} {available_str} {claimed_str}")
+                        print(f"\t\t{state_interface.name} {available_str}")
 
         return 0

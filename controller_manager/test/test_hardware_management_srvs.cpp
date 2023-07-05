@@ -35,6 +35,7 @@ using hardware_interface::lifecycle_state_names::ACTIVE;
 using hardware_interface::lifecycle_state_names::FINALIZED;
 using hardware_interface::lifecycle_state_names::INACTIVE;
 using hardware_interface::lifecycle_state_names::UNCONFIGURED;
+using hardware_interface::lifecycle_state_names::UNKNOWN;
 
 using ros2_control_test_assets::TEST_ACTUATOR_HARDWARE_COMMAND_INTERFACES;
 using ros2_control_test_assets::TEST_ACTUATOR_HARDWARE_NAME;
@@ -69,9 +70,11 @@ public:
     cm_->set_parameter(
       rclcpp::Parameter("robot_description", ros2_control_test_assets::minimal_robot_urdf));
     cm_->set_parameter(rclcpp::Parameter(
-      "activate_components_on_start", std::vector<std::string>({TEST_ACTUATOR_HARDWARE_NAME})));
+      "hardware_components_initial_state.unconfigured",
+      std::vector<std::string>({TEST_SYSTEM_HARDWARE_NAME})));
     cm_->set_parameter(rclcpp::Parameter(
-      "configure_components_on_start", std::vector<std::string>({TEST_SENSOR_HARDWARE_NAME})));
+      "hardware_components_initial_state.inactive",
+      std::vector<std::string>({TEST_SENSOR_HARDWARE_NAME})));
 
     std::string robot_description = "";
     cm_->get_parameter("robot_description", robot_description);
@@ -91,11 +94,17 @@ public:
     const std::string & name, const std::string & type, const std::string & plugin_name,
     const uint8_t state_id, const std::string & state_label)
   {
-    EXPECT_EQ(component.name, name);
-    EXPECT_EQ(component.type, type);
-    EXPECT_EQ(component.plugin_name, plugin_name);
-    EXPECT_EQ(component.state.id, state_id);
-    EXPECT_EQ(component.state.label, state_label);
+    EXPECT_EQ(component.name, name) << "Component has unexpected name.";
+    EXPECT_EQ(component.type, type)
+      << "Component " << name << " from plugin " << plugin_name << " has wrong type.";
+    EXPECT_EQ(component.plugin_name, plugin_name)
+      << "Component " << name << " (" << type << ") has unexpected plugin_name.";
+    EXPECT_EQ(component.state.id, state_id)
+      << "Component " << name << " (" << type << ") from plugin " << plugin_name
+      << " has wrong state_id.";
+    EXPECT_EQ(component.state.label, state_label)
+      << "Component " << name << " (" << type << ") from plugin " << plugin_name
+      << " has wrong state_label.";
   }
 
   void list_hardware_components_and_check(
@@ -124,8 +133,9 @@ public:
       {
         auto it = std::find(interface_names.begin(), interface_names.end(), interfaces[i].name);
         EXPECT_NE(it, interface_names.end());
-        EXPECT_EQ(interfaces[i].is_available, is_available_status[i]);
-        EXPECT_EQ(interfaces[i].is_claimed, is_claimed_status[i]);
+        EXPECT_EQ(interfaces[i].is_available, is_available_status[i])
+          << "At " << interfaces[i].name;
+        EXPECT_EQ(interfaces[i].is_claimed, is_claimed_status[i]) << "At " << interfaces[i].name;
       }
     };
 
@@ -189,36 +199,6 @@ public:
 
     auto result = call_service_and_wait(*mha_client, request, srv_executor);
     return result->ok;
-  }
-};
-
-class TestControllerManagerHWManagementSrvsWithoutParams
-: public TestControllerManagerHWManagementSrvs
-{
-public:
-  void SetUp() override
-  {
-    executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
-    cm_ = std::make_shared<controller_manager::ControllerManager>(
-      std::make_unique<hardware_interface::ResourceManager>(), executor_, TEST_CM_NAME);
-    run_updater_ = false;
-
-    // TODO(destogl): separate this to init_tests method where parameter can be set for each test
-    // separately
-    cm_->set_parameter(
-      rclcpp::Parameter("robot_description", ros2_control_test_assets::minimal_robot_urdf));
-
-    std::string robot_description = "";
-    cm_->get_parameter("robot_description", robot_description);
-    if (robot_description.empty())
-    {
-      throw std::runtime_error(
-        "Unable to initialize resource manager, no robot description found.");
-    }
-
-    cm_->init_resource_manager(robot_description);
-
-    SetUpSrvsCMExecutor();
   }
 };
 
@@ -379,6 +359,36 @@ TEST_F(TestControllerManagerHWManagementSrvs, selective_activate_deactivate_comp
     }));
 }
 
+class TestControllerManagerHWManagementSrvsWithoutParams
+: public TestControllerManagerHWManagementSrvs
+{
+public:
+  void SetUp() override
+  {
+    executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
+    cm_ = std::make_shared<controller_manager::ControllerManager>(
+      std::make_unique<hardware_interface::ResourceManager>(), executor_, TEST_CM_NAME);
+    run_updater_ = false;
+
+    // TODO(destogl): separate this to init_tests method where parameter can be set for each test
+    // separately
+    cm_->set_parameter(
+      rclcpp::Parameter("robot_description", ros2_control_test_assets::minimal_robot_urdf));
+
+    std::string robot_description = "";
+    cm_->get_parameter("robot_description", robot_description);
+    if (robot_description.empty())
+    {
+      throw std::runtime_error(
+        "Unable to initialize resource manager, no robot description found.");
+    }
+
+    cm_->init_resource_manager(robot_description);
+
+    SetUpSrvsCMExecutor();
+  }
+};
+
 TEST_F(TestControllerManagerHWManagementSrvsWithoutParams, test_default_activation_of_all_hardware)
 {
   // "configure_components_on_start" and "activate_components_on_start" are not set (empty)
@@ -402,3 +412,62 @@ TEST_F(TestControllerManagerHWManagementSrvsWithoutParams, test_default_activati
       {{false, false, false, false}, {false, false, false, false, false, false, false}},  // system
     }));
 }
+
+// BEGIN: Remove at the end of 2023
+class TestControllerManagerHWManagementSrvsOldParameters
+: public TestControllerManagerHWManagementSrvs
+{
+public:
+  void SetUp() override
+  {
+    executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
+    cm_ = std::make_shared<controller_manager::ControllerManager>(
+      std::make_unique<hardware_interface::ResourceManager>(), executor_, TEST_CM_NAME);
+    run_updater_ = false;
+
+    cm_->set_parameter(
+      rclcpp::Parameter("robot_description", ros2_control_test_assets::minimal_robot_urdf));
+    cm_->set_parameter(rclcpp::Parameter(
+      "activate_components_on_start", std::vector<std::string>({TEST_ACTUATOR_HARDWARE_NAME})));
+    cm_->set_parameter(rclcpp::Parameter(
+      "configure_components_on_start", std::vector<std::string>({TEST_SENSOR_HARDWARE_NAME})));
+
+    std::string robot_description = "";
+    cm_->get_parameter("robot_description", robot_description);
+    if (robot_description.empty())
+    {
+      throw std::runtime_error(
+        "Unable to initialize resource manager, no robot description found.");
+    }
+
+    cm_->init_resource_manager(robot_description);
+
+    SetUpSrvsCMExecutor();
+  }
+};
+
+TEST_F(TestControllerManagerHWManagementSrvsOldParameters, list_hardware_components)
+{
+  // Default status after start:
+  // checks if "configure_components_on_start" and "activate_components_on_start" are correctly read
+
+  list_hardware_components_and_check(
+    // actuator, sensor, system
+    std::vector<uint8_t>(
+      {LFC_STATE::PRIMARY_STATE_ACTIVE, LFC_STATE::PRIMARY_STATE_INACTIVE,
+       LFC_STATE::PRIMARY_STATE_UNCONFIGURED}),
+    std::vector<std::string>({ACTIVE, INACTIVE, UNCONFIGURED}),
+    std::vector<std::vector<std::vector<bool>>>({
+      // is available
+      {{true, true}, {true, true, true}},  // actuator
+      {{}, {true}},                        // sensor
+      {{false, false, false, false}, {false, false, false, false, false, false, false}},  // system
+    }),
+    std::vector<std::vector<std::vector<bool>>>({
+      // is claimed
+      {{false, false}, {false, false, false}},  // actuator
+      {{}, {false}},                            // sensor
+      {{false, false, false, false}, {false, false, false, false, false, false, false}},  // system
+    }));
+}
+// END: Remove at the end of 2023

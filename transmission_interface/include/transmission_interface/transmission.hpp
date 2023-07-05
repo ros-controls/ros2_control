@@ -26,21 +26,23 @@ namespace transmission_interface
 {
 /// Abstract base class for representing mechanical transmissions.
 /**
- * Mechanical transmissions transform effort/flow variables such that their product (power) remains constant.
- * Effort variables for linear and rotational domains are \e force and \e torque; while the flow variables are
- * respectively linear velocity and angular velocity.
+ * Mechanical transmissions transform effort/flow variables such that their product (power) remains
+ * constant. Effort variables for linear and rotational domains are \e force and \e torque; while
+ * the flow variables are respectively linear velocity and angular velocity.
  *
- * In robotics it is customary to place transmissions between actuators and joints. This interface adheres to this
- * naming to identify the input and output spaces of the transformation.
- * The provided interfaces allow bidirectional mappings between actuator and joint spaces for effort, velocity and
- * position. Position is not a power variable, but the mappings can be implemented using the velocity map plus an
- * integration constant representing the offset between actuator and joint zeros.
+ * In robotics it is customary to place transmissions between actuators and joints. This interface
+ * adheres to this naming to identify the input and output spaces of the transformation. The
+ * provided interfaces allow bidirectional mappings between actuator and joint spaces for effort,
+ * velocity and position. Position is not a power variable, but the mappings can be implemented
+ * using the velocity map plus an integration constant representing the offset between actuator and
+ * joint zeros.
  *
  * \par Credit
- * This interface was inspired by similar existing implementations by PAL Robotics, S.L. and Willow Garage Inc.
+ * This interface was inspired by similar existing implementations by PAL Robotics, S.L. and Willow
+ * Garage Inc.
  *
- * \note Implementations of this interface must take care of realtime-safety if the code is to be run in realtime
- * contexts, as is often the case in robot control.
+ * \note Implementations of this interface must take care of realtime-safety if the code is to be
+ * run in realtime contexts, as is often the case in robot control.
  */
 class Transmission
 {
@@ -55,20 +57,20 @@ public:
   /**
    * \param[in] act_data Actuator-space variables.
    * \param[out] jnt_data Joint-space variables.
-   * \pre All non-empty vectors must contain valid data and their size should be consistent with the number of
-   * transmission actuators and joints.
-   * Data vectors not used in this map can remain empty.
+   * \pre All non-empty vectors must contain valid data and their size should be consistent with the
+   * number of transmission actuators and joints. Data vectors not used in this map can remain
+   * empty.
    */
   virtual void actuator_to_joint() = 0;
 
   /// Transform \e effort variables from joint to actuator space.
   /**
-  * \param[in] jnt_data Joint-space variables.
-  * \param[out] act_data Actuator-space variables.
-  * \pre All non-empty vectors must contain valid data and their size should be consistent with the number of
-  * transmission actuators and joints.
-  * Data vectors not used in this map can remain empty.
-  */
+   * \param[in] jnt_data Joint-space variables.
+   * \param[out] act_data Actuator-space variables.
+   * \pre All non-empty vectors must contain valid data and their size should be consistent with the
+   * number of transmission actuators and joints. Data vectors not used in this map can remain
+   * empty.
+   */
   virtual void joint_to_actuator() = 0;
 
   /** \return Number of actuators managed by transmission,

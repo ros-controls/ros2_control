@@ -1,10 +1,12 @@
+:github_url: https://github.com/ros-controls/ros2_control/blob/{REPOS_FILE_BRANCH}/hardware_interface/doc/hardware_components_userdoc.rst
+
 .. _hardware_components_userdoc:
 
 Hardware Components
 -------------------
 Hardware components represent abstraction of physical hardware in ros2_control framework.
 There are three types of hardware Actuator, Sensor and System.
-For details on each type check `Hardware Components description <https://ros-controls.github.io/control.ros.org/getting_started.html#hardware-components>`_.
+For details on each type check :ref:`overview_hardware_components` description.
 
 Guidelines and Best Practices
 *****************************
