@@ -54,7 +54,7 @@ TEST_F(SimpleJointLimiterTest, when_invalid_dt_expect_enforce_fail)
   }
 }
 
-TEST_F(SimpleJointLimiterTest, when_wrong_input_expect_enforce_fail)
+TEST_F(SimpleJointLimiterTest, when_neigher_poscmd_nor_velcmd_expect_enforce_fail)
 {
   SetupNode("simple_joint_limiter");
   Load();
@@ -66,9 +66,45 @@ TEST_F(SimpleJointLimiterTest, when_wrong_input_expect_enforce_fail)
     ASSERT_TRUE(joint_limiter_->configure(last_commanded_state_));
 
     rclcpp::Duration period(1, 0);  // 1 second
+    // test no desired interface
+    desired_joint_states_.positions.clear();
     desired_joint_states_.velocities.clear();
-    // trigger size check with one wrong size
+    // currently not handled desired_joint_states_.accelerations.clear();
     ASSERT_FALSE(joint_limiter_->enforce(current_joint_states_, desired_joint_states_, period));
+  }
+}
+
+TEST_F(SimpleJointLimiterTest, when_no_posstate_expect_enforce_fail)
+{
+  SetupNode("simple_joint_limiter");
+  Load();
+
+  if (joint_limiter_)
+  {
+    Init();
+    joint_limiter_->configure(last_commanded_state_);
+
+    rclcpp::Duration period(1, 0);  // 1 second
+    // test no position interface
+    current_joint_states_.positions.clear();
+    ASSERT_FALSE(joint_limiter_->enforce(current_joint_states_, desired_joint_states_, period));
+  }
+}
+
+TEST_F(SimpleJointLimiterTest, when_no_velstate_expect_enforce_succeed)
+{
+  SetupNode("simple_joint_limiter");
+  Load();
+
+  if (joint_limiter_)
+  {
+    Init();
+    joint_limiter_->configure(last_commanded_state_);
+
+    rclcpp::Duration period(1, 0);  // 1 second
+    // test no vel interface
+    current_joint_states_.velocities.clear();
+    ASSERT_TRUE(joint_limiter_->enforce(current_joint_states_, desired_joint_states_, period));
   }
 }
 
@@ -87,20 +123,20 @@ TEST_F(SimpleJointLimiterTest, when_within_limits_expect_no_limits_applied)
 
     // within limits
     desired_joint_states_.positions[0] = 1.0;
-    desired_joint_states_.velocities[0] = 1.0;
+    desired_joint_states_.velocities[0] = 1.0; // valid pos derivatite as well
     ASSERT_TRUE(joint_limiter_->enforce(current_joint_states_, desired_joint_states_, period));
 
     // check if no limits applied
     CHECK_STATE_SINGLE_JOINT(
       desired_joint_states_, 0,
-      desired_joint_states_.positions[0],   // pos unchanged
-      desired_joint_states_.velocities[0],  // vel unchanged
-      desired_joint_states_.velocities[0]   // acc = vel / 1.0
+      1.0,   // pos unchanged
+      1.0,  // vel unchanged
+      1.0   // acc = vel / 1.0
     );
   }
 }
 
-TEST_F(SimpleJointLimiterTest, when_velocity_exceeded_expect_vel_and_acc_enforced)
+TEST_F(SimpleJointLimiterTest, when_posvel_leads_to_vel_exceeded_expect_limits_enforced)
 {
   SetupNode("simple_joint_limiter");
   Load();
@@ -112,33 +148,123 @@ TEST_F(SimpleJointLimiterTest, when_velocity_exceeded_expect_vel_and_acc_enforce
 
     rclcpp::Duration period(1.0, 0.0);  // 1 second
 
-    // desired velocity exceeds
+    // pos/vel cmd ifs
+    current_joint_states_.positions[0] = -2.0;
+    desired_joint_states_.positions[0] = 1.0;
+    // desired velocity exceeds although correctly computed from pos derivative
     desired_joint_states_.velocities[0] = 3.0;
     ASSERT_TRUE(joint_limiter_->enforce(current_joint_states_, desired_joint_states_, period));
 
-    // check if vel and acc limits applied
+    // check if limits applied
     CHECK_STATE_SINGLE_JOINT(
       desired_joint_states_, 0,
-      desired_joint_states_.positions[0],  // pos unchanged
+      0.0,                                 // pos = pos + max_vel * dt 
       2.0,                                 // vel limited to max_vel
       2.0 / 1.0                            // acc set to vel change/DT
     );
 
     // check opposite velocity direction (sign copy)
+    current_joint_states_.positions[0] = 2.0;
+    desired_joint_states_.positions[0] = -1.0;
+    // desired velocity exceeds although correctly computed from pos derivative
     desired_joint_states_.velocities[0] = -3.0;
     ASSERT_TRUE(joint_limiter_->enforce(current_joint_states_, desired_joint_states_, period));
 
     // check if vel and acc limits applied
     CHECK_STATE_SINGLE_JOINT(
       desired_joint_states_, 0,
-      desired_joint_states_.positions[0],  // pos unchanged
+      0.0,                                 // pos = pos - max_vel * dt 
       -2.0,                                // vel limited to -max_vel
       -2.0 / 1.0                           // acc set to vel change/DT
     );
   }
 }
 
-TEST_F(SimpleJointLimiterTest, when_position_exceeded_expect_pos_enforced)
+TEST_F(SimpleJointLimiterTest, when_posonly_leads_to_vel_exceeded_expect_pos_acc_enforced)
+{
+  SetupNode("simple_joint_limiter");
+  Load();
+
+  if (joint_limiter_)
+  {
+    Init();
+    Configure();
+
+    rclcpp::Duration period(1.0, 0.0);  // 1 second
+
+    // set current velocity close to limits to not be blocked by max acc to reach max
+    current_joint_states_.velocities[0] = 1.9;
+    // desired pos leads to vel exceeded (4.0 / sec instead of 2.0)
+    desired_joint_states_.positions[0] = 4.0;
+    // no vel cmd (will lead to internal computation of velocity)
+    desired_joint_states_.velocities.clear();
+    ASSERT_TRUE(joint_limiter_->enforce(current_joint_states_, desired_joint_states_, period));
+
+    // check if pos and acc limits applied
+    ASSERT_EQ(desired_joint_states_.positions[0], 2.0);  // pos limited to max_vel * DT
+    // no vel cmd ifs
+    ASSERT_EQ(desired_joint_states_.accelerations[0], (2.0-1.9) / 1.0); // acc set to vel change/DT
+
+    // check opposite position and direction
+    current_joint_states_.positions[0] = 0.0;
+    current_joint_states_.velocities[0] = -1.9;
+    desired_joint_states_.positions[0] = -4.0;
+    ASSERT_TRUE(joint_limiter_->enforce(current_joint_states_, desired_joint_states_, period));
+
+    // check if pos and acc limits applied
+    ASSERT_EQ(desired_joint_states_.positions[0], -2.0);  // pos limited to -max_vel * DT
+    // no vel cmd ifs
+    ASSERT_EQ(desired_joint_states_.accelerations[0], (-2.0+1.9) / 1.0); // acc set to vel change/DT
+  }
+}
+
+
+TEST_F(SimpleJointLimiterTest, when_velonly_leads_to_vel_exceeded_expect_vel_acc_enforced)
+{
+  SetupNode("simple_joint_limiter");
+  Load();
+
+  if (joint_limiter_)
+  {
+    Init();
+    Configure();
+
+    rclcpp::Duration period(1.0, 0.0);  // 1 second
+
+
+    // vel cmd ifs
+    current_joint_states_.positions[0] = -2.0;
+    // set current velocity close to limits to not be blocked by max acc to reach max
+    current_joint_states_.velocities[0] = 1.9;
+    // no pos cmd
+    desired_joint_states_.positions.clear();
+    // desired velocity exceeds
+    desired_joint_states_.velocities[0] = 3.0;
+
+    ASSERT_TRUE(joint_limiter_->enforce(current_joint_states_, desired_joint_states_, period));
+
+    // check if vel and acc limits applied
+    ASSERT_EQ(desired_joint_states_.velocities[0], 2.0);  // vel limited to max_vel
+    // no vel cmd ifs
+    ASSERT_EQ(desired_joint_states_.accelerations[0], (2.0-1.9) / 1.0); // acc set to vel change/DT
+
+    // check opposite velocity direction
+    current_joint_states_.positions[0] = 2.0;
+    // set current velocity close to limits to not be blocked by max acc to reach max
+    current_joint_states_.velocities[0] = -1.9;
+    // desired velocity exceeds 
+    desired_joint_states_.velocities[0] = -3.0;
+
+    ASSERT_TRUE(joint_limiter_->enforce(current_joint_states_, desired_joint_states_, period));
+
+    // check if vel and acc limits applied
+    ASSERT_EQ(desired_joint_states_.velocities[0], -2.0);  // vel limited to -max_vel
+    // no vel cmd ifs
+    ASSERT_EQ(desired_joint_states_.accelerations[0], (-2.0+1.9) / 1.0); // acc set to vel change/DT
+  }
+}
+
+TEST_F(SimpleJointLimiterTest, when_posonly_exceeded_expect_pos_enforced)
 {
   SetupNode("simple_joint_limiter");
   Load();
@@ -151,17 +277,17 @@ TEST_F(SimpleJointLimiterTest, when_position_exceeded_expect_pos_enforced)
     rclcpp::Duration period(1.0, 0.0);  // 1 second
 
     // desired pos exceeds
+    current_joint_states_.positions[0] = 5.0;
     desired_joint_states_.positions[0] = 20.0;
-    desired_joint_states_.velocities[0] = 0.0;
+    // no velocity interface
+    desired_joint_states_.velocities.clear();
     ASSERT_TRUE(joint_limiter_->enforce(current_joint_states_, desired_joint_states_, period));
 
     // check if pos limits applied
-    CHECK_STATE_SINGLE_JOINT(
-      desired_joint_states_, 0,
-      5.0,                                    // pos unchanged
-      desired_joint_states_.velocities[0],    // vel unchanged
-      desired_joint_states_.accelerations[0]  // acc unchanged
-    );
+    ASSERT_EQ(desired_joint_states_.positions[0], 5.0);  // pos limited clamped (was already at limit)
+    // no vel cmd ifs
+    ASSERT_EQ(desired_joint_states_.accelerations[0], 0.0); // acc set to vel change/DT
+
   }
 }
 
@@ -207,7 +333,7 @@ TEST_F(SimpleJointLimiterTest, when_position_close_to_pos_limit_expect_decelerat
   }
 }
 
-TEST_F(SimpleJointLimiterTest, when_acceleration_exceeded_expect_acc_enforced)
+TEST_F(SimpleJointLimiterTest, when_posvel_leads_to_acc_exceeded_expect_limits_enforced)
 {
   SetupNode("simple_joint_limiter");
   Load();
@@ -220,20 +346,75 @@ TEST_F(SimpleJointLimiterTest, when_acceleration_exceeded_expect_acc_enforced)
     rclcpp::Duration period(0, 50000000);
 
     // desired acceleration exceeds
-    current_joint_states_.positions[0] = 0.0;
-    current_joint_states_.velocities[0] = 0.0;
+    current_joint_states_.positions[0] = 0.1;
+    current_joint_states_.velocities[0] = 0.1;
+    desired_joint_states_.positions[0] = 0.125; // valid pos cmd for the desired velocity
     desired_joint_states_.velocities[0] = 0.5;  // leads to acc > max acc
     ASSERT_TRUE(joint_limiter_->enforce(current_joint_states_, desired_joint_states_, period));
 
-    // check if vel and acc limits applied
+    // check if limits applied
     CHECK_STATE_SINGLE_JOINT(
       desired_joint_states_, 0,
-      desired_joint_states_.positions[0],  // pos unchanged
-      0.25,                                // vel limited max acc * dt
+      0.11125,                             // pos = double integration from max acc with current state
+      0.35,                                // vel limited to vel + max acc * dt
       5.0                                  // acc max acc
     );
   }
 }
+
+
+TEST_F(SimpleJointLimiterTest, when_posonly_leads_to_acc_exceeded_expect_limits_enforced)
+{
+  SetupNode("simple_joint_limiter");
+  Load();
+
+  if (joint_limiter_)
+  {
+    Init();
+    Configure();
+
+    rclcpp::Duration period(0, 50000000);
+
+    // desired acceleration exceeds
+    current_joint_states_.positions[0] = 0.1;
+    current_joint_states_.velocities[0] = 0.1;
+    desired_joint_states_.positions[0] = 0.125; // pos cmd leads to vel 0.5 that leads to acc > max acc
+    desired_joint_states_.velocities.clear();
+    ASSERT_TRUE(joint_limiter_->enforce(current_joint_states_, desired_joint_states_, period));
+
+    // check if pos and acc limits applied
+    ASSERT_NEAR(desired_joint_states_.positions[0], 0.111250, COMMON_THRESHOLD);  // pos = double integration from max acc with current state
+    // no vel cmd ifs
+    ASSERT_EQ(desired_joint_states_.accelerations[0], 5.0); // acc max acc
+  }
+}
+
+TEST_F(SimpleJointLimiterTest, when_velonly_leads_to_acc_exceeded_expect_limits_enforced)
+{
+  SetupNode("simple_joint_limiter");
+  Load();
+
+  if (joint_limiter_)
+  {
+    Init();
+    Configure();
+
+    rclcpp::Duration period(0, 50000000);
+
+    // desired acceleration exceeds
+    current_joint_states_.positions[0] = 0.1;
+    current_joint_states_.velocities[0] = 0.1;
+    desired_joint_states_.positions.clear(); //  = 0.125;
+    desired_joint_states_.velocities[0] = 0.5;  // leads to acc > max acc
+    ASSERT_TRUE(joint_limiter_->enforce(current_joint_states_, desired_joint_states_, period));
+
+    // check if pos and acc limits applied
+    // no pos cmd ifs
+    ASSERT_EQ(desired_joint_states_.velocities[0], 0.35);  // vel limited to vel + max acc * dt
+    ASSERT_EQ(desired_joint_states_.accelerations[0], 5.0); // acc max acc
+  }
+}
+
 
 TEST_F(SimpleJointLimiterTest, when_deceleration_exceeded_expect_dec_enforced)
 {
@@ -248,16 +429,18 @@ TEST_F(SimpleJointLimiterTest, when_deceleration_exceeded_expect_dec_enforced)
     rclcpp::Duration period(0, 50000000);
 
     // desired deceleration exceeds
-    current_joint_states_.positions[0] = 0.0;
-    current_joint_states_.velocities[0] = 1.0;
-    desired_joint_states_.velocities[0] = 0.5;  // leads to acc > -max dec
+    current_joint_states_.positions[0] = 0.3;
+    current_joint_states_.velocities[0] = 0.5;
+    desired_joint_states_.positions[0] = 0.305; // valid pos cmd for the desired velocity
+    desired_joint_states_.velocities[0] = 0.1;  // leads to acc < -max dec
+
     ASSERT_TRUE(joint_limiter_->enforce(current_joint_states_, desired_joint_states_, period));
 
     // check if vel and acc limits applied
     CHECK_STATE_SINGLE_JOINT(
       desired_joint_states_, 0,
-      desired_joint_states_.positions[0],  // pos unchanged
-      0.625,                               // vel limited by vel-max dec * dt
+      0.315625,                            // pos = double integration from max dec with current state
+      0.125,                               // vel limited by vel - max dec * dt
       -7.5                                 // acc limited by -max dec
     );
   }
@@ -276,15 +459,16 @@ TEST_F(SimpleJointLimiterTest, when_deceleration_exceeded_with_no_maxdec_expect_
     rclcpp::Duration period(0, 50000000);
 
     // desired deceleration exceeds
-    current_joint_states_.positions[0] = 0.0;
+    current_joint_states_.positions[0] = 1.0;
     current_joint_states_.velocities[0] = 1.0;
+    desired_joint_states_.positions[0] = 1.025; // valid pos cmd for the desired decreased velocity
     desired_joint_states_.velocities[0] = 0.5;  // leads to acc > -max acc
     ASSERT_TRUE(joint_limiter_->enforce(current_joint_states_, desired_joint_states_, period));
 
     // check if vel and acc limits applied
     CHECK_STATE_SINGLE_JOINT(
       desired_joint_states_, 0,
-      desired_joint_states_.positions[0],  // pos unchanged
+      1.04375,                             // pos = double integration from max acc with current state
       0.75,                                // vel limited by vel-max acc * dt
       -5.0                                 // acc limited to -max acc
     );
