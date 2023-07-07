@@ -30,6 +30,156 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
   trajectory_msgs::msg::JointTrajectoryPoint & current_joint_states,
   trajectory_msgs::msg::JointTrajectoryPoint & desired_joint_states, const rclcpp::Duration & dt)
 {
+
+
+ /*
+  if has_pos_cmd only
+    *if has_pos_limit
+    *  clamp pos_cmd
+    
+    *compute expected_vel with pos_cmd and pos_state
+    *if has_vel_limit
+    *  if expected_vel over limit
+    *    clamp expected_vel
+    *    integrate pos_cmd to be compatible with limited expected_vel
+    
+    *if has_acc_limit
+    *  if has_vel_state
+    *    compute expected_acc with expected expected_vel and vel_state
+    *  or
+    *    we cannot compute the acc, we cannot derive acc from zero velocity this would be wrong
+    *    break
+*
+    *  if expected_acc over limit
+    *    clamp expected_acc
+    *    integrate expected_vel to be compatible with limited expected_acc as well
+    *    integrate pos_cmd to be compatible with newly limited expected_vel and limited expected_acc as well
+
+    *if has_pos_limit
+  *    using only expected_vel and expected_acc check if expected_pos might be reached at max braking // check for future steps
+    *    recompute pos_cmd in such case
+
+    WE HAVE pos_cmd
+
+  if has_vel_cmd only
+    *if has_vel_limit
+    *  clamp vel_cmd
+      
+    *if has_acc_limit
+    *  if has_vel_state
+      *  compute expected_acc with limited vel_cmd and vel_state
+    *  or
+  *      we cannot compute the acc, we cannot derive acc from zero velocity this would be wrong
+  *      break
+    *  if expected_acc over limit
+    *    clamp expected_acc
+    *    integrate vel_cmd to be compatible with limited expected_acc as well
+          
+    *if has_pos_limit
+    *  compute expected_pos by integrating vel_cmd // check for next step
+    *  if expected_pos over limit
+    *    consider braking and compute ideal vel_cmd that would permit to slow down in time at full deceleration
+    *    in any case limit pos to max and recompute vel_cmd that would lead to pos_max (not ideal as velocity would not be zero)
+    
+    *  using only vel_cmd and expected_acc if available check if expected_pos might be reached at max braking // check for future steps
+    *    recompute vel_cmd in such case
+
+    WE HAVE vel_cmd
+
+  if has_pos_cmd AND has_vel_cmd
+    *if has_pos_limit
+    *  clamp pos_cmd
+    
+    *compute expected_vel with pos_cmd with pos_state to be able to limit pos_cmd increment later
+
+    *if has_vel_limit
+      *if expected_vel over limit
+      *  clamp expected_vel and use that one for pos_cmd integration
+      *  integrate pos_cmd to be compatible with limited expected_vel
+    *  if vel_cmd over limit
+    *    clamp vel_cmd independently from expected_vel
+    
+    *if has_acc_limit
+      *if has_vel_state
+        *compute expected_acc with expected_vel and vel_state
+        *compute expected_acc2 with limited vel_cmd and vel_state
+    *  or
+    *    we cannot compute the acc, we cannot derive acc from zero velocity this would be wrong
+    *    break
+
+  *    if expected_acc over limit
+    *    clamp expected_acc
+    *    integrate expected_vel to be compatible with limited expected_acc as well
+    *    integrate pos_cmd to be compatible with newly limited expected_vel and limited expected_acc as well
+
+    *  if expected_acc2 over limit
+    *    clamp expected_acc2
+    *    integrate vel_cmd to be compatible with limited expected_acc2 as well
+    
+    *if has_pos_limit
+    *  using only vel_cmd and expected_acc2, check if expected_pos might be reached at max braking
+    *    recompute pos_cmd and vel_cmd in such case
+
+    WE HAVE pos_cmd 
+    WE HAVE vel_cmd independently limited so that pos_cmd != pos_state + vel_cmd * dt (unless braking)
+    
+
+
+Now a factorized version
+
+  if has_pos_limit
+    if has_pos_cmd
+      clamp pos_cmd
+      compute expected_vel with pos_cmd and pos_state
+    else
+      //nothing to do yet
+        
+  if has_vel_limit
+    clamp vel_cmd
+
+    if has_pos_cmd
+      if expected_vel over limit
+        clamp expected_vel
+        integrate pos_cmd to be compatible with limited expected_vel
+    
+  if has_acc_limit
+    if has_vel_state
+      if has_vel_cmd
+        compute expected_acc2 with limited vel_cmd and vel_state
+      if has_pos_cmd
+        compute expected_acc with expected_vel and vel_state
+    else
+      or
+      we cannot compute the acc, we cannot derive acc from zero velocity this would be wrong
+      break
+
+    if has_pos_cmd
+      if expected_acc over limit
+        clamp expected_acc
+        integrate expected_vel to be compatible with limited expected_acc as well
+        integrate pos_cmd to be compatible with newly limited expected_vel and limited expected_acc as well
+
+    if has_vel_cmd
+      if expected_acc2 over limit
+        clamp expected_acc2
+        integrate vel_cmd to be compatible with limited expected_acc2 as well
+
+  if has_pos_limit
+    if has_vel_cmd
+      compute expected_pos by integrating vel_cmd // check for next step
+      if expected_pos over limit
+        consider braking and compute ideal vel_cmd that would permit to slow down in time at full deceleration
+        in any case limit pos to max and recompute vel_cmd that would lead to pos_max (not ideal as velocity would not be zero)
+  
+    des_vel = vel_cmd or expected_vel 
+    check if expected_pos might be reached at max braking // check for future steps
+      recompute vel_cmd or pos_cmd or both
+    
+
+*/
+
+
+
   const auto dt_seconds = dt.seconds();
   // negative or null is not allowed
   if (dt_seconds <= 0.0) return false;
