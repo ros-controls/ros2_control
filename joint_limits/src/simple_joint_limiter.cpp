@@ -127,20 +127,23 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
 
 Now a factorized version
 
+  if has_pos_cmd
+    compute expected_vel with pos_cmd and pos_state
+
   if has_pos_limit
     if has_pos_cmd
       clamp pos_cmd
-      compute expected_vel with pos_cmd and pos_state
+      
     else
       //nothing to do yet
         
   if has_vel_limit
-    clamp vel_cmd
-
-    if has_pos_cmd
-      if expected_vel over limit
-        clamp expected_vel
-        integrate pos_cmd to be compatible with limited expected_vel
+    if has_pos_cmd // priority of pos_cmd
+      vel_cmd = expected_vel
+            
+    if vel_cmd over limit
+      clamp vel_cmd
+        if clamped pos_cmd = integrate vel_cmd
     
   if has_acc_limit
     if has_vel_state
