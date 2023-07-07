@@ -30,72 +30,71 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
   trajectory_msgs::msg::JointTrajectoryPoint & current_joint_states,
   trajectory_msgs::msg::JointTrajectoryPoint & desired_joint_states, const rclcpp::Duration & dt)
 {
+  /*
+  Now a factorized version
 
-/*
-Now a factorized version
-
-  if has_pos_cmd
-    compute expected_vel with pos_cmd and pos_state
-
-  if has_pos_limit
     if has_pos_cmd
-      clamp pos_cmd
-      
-    else
-      //nothing to do yet
-        
-  if has_vel_limit
-    if has_pos_cmd // priority of pos_cmd
-      vel_cmd = expected_vel
-            
-    if vel_cmd over limit
-      clamp vel_cmd
-        if clamped pos_cmd = integrate vel_cmd
-    
-  if has_acc_limit
-    if has_vel_state
-      if has_vel_cmd
-        compute expected_acc2 with limited vel_cmd and vel_state
+      compute expected_vel with pos_cmd and pos_state
+
+    if has_pos_limit
       if has_pos_cmd
-        compute expected_acc with expected_vel and vel_state
-    else
-      or
-      we cannot compute the acc, we cannot derive acc from zero velocity this would be wrong
-      break
+        clamp pos_cmd
 
-    if has_pos_cmd
-      if expected_acc over limit
-        clamp expected_acc
-        integrate expected_vel to be compatible with limited expected_acc as well
-        integrate pos_cmd to be compatible with newly limited expected_vel and limited expected_acc as well
+      else
+        //nothing to do yet
 
-    if has_vel_cmd
-      if expected_acc2 over limit
-        clamp expected_acc2
-        integrate vel_cmd to be compatible with limited expected_acc2 as well
+    if has_vel_limit
+      if has_pos_cmd // priority of pos_cmd
+        vel_cmd = expected_vel
 
-  if has_pos_limit
-    if has_vel_cmd
-      compute expected_pos by integrating vel_cmd // check for next step
-      if expected_pos over limit
-        consider braking and compute ideal vel_cmd that would permit to slow down in time at full deceleration
-        in any case limit pos to max and recompute vel_cmd that would lead to pos_max (not ideal as velocity would not be zero)
-  
-    des_vel = vel_cmd or expected_vel 
-    check if expected_pos might be reached at max braking // check for future steps
-      recompute vel_cmd or pos_cmd or both
-    
+      if vel_cmd over limit
+        clamp vel_cmd
+          if clamped pos_cmd = integrate vel_cmd
 
-*/
+    if has_acc_limit
+      if has_vel_state
+        if has_vel_cmd
+          compute expected_acc2 with limited vel_cmd and vel_state
+        if has_pos_cmd
+          compute expected_acc with expected_vel and vel_state
+      else
+        or
+        we cannot compute the acc, we cannot derive acc from zero velocity this would be wrong
+        break
+
+      if has_pos_cmd
+        if expected_acc over limit
+          clamp expected_acc
+          integrate expected_vel to be compatible with limited expected_acc as well
+          integrate pos_cmd to be compatible with newly limited expected_vel and limited
+  expected_acc as well
+
+      if has_vel_cmd
+        if expected_acc2 over limit
+          clamp expected_acc2
+          integrate vel_cmd to be compatible with limited expected_acc2 as well
+
+    if has_pos_limit
+      if has_vel_cmd
+        compute expected_pos by integrating vel_cmd // check for next step
+        if expected_pos over limit
+          consider braking and compute ideal vel_cmd that would permit to slow down in time at full
+  deceleration in any case limit pos to max and recompute vel_cmd that would lead to pos_max (not
+  ideal as velocity would not be zero)
+
+      des_vel = vel_cmd or expected_vel
+      check if expected_pos might be reached at max braking // check for future steps
+        recompute vel_cmd or pos_cmd or both
 
 
+  */
 
   const auto dt_seconds = dt.seconds();
   // negative or null is not allowed
   if (dt_seconds <= 0.0) return false;
 
   // TODO(gwalck) compute if the max are not implicitly violated with the given dt
-  // eg for max vel 2.0 and max acc 5.0, with dt >0.4 
+  // eg for max vel 2.0 and max acc 5.0, with dt >0.4
   // velocity max is implicitly already violated due to max_acc * dt > 2.0
 
   // check for required inputs combination
@@ -117,7 +116,6 @@ Now a factorized version
     current_joint_states.velocities.resize(number_of_joints_, 0.0);
   }
 
-
   // TODO(destogl): please check if we get too much malloc from this initialization,
   // if so then we should use members instead local variables and initialize them in other method
   std::vector<double> desired_acc(number_of_joints_);
@@ -129,7 +127,7 @@ Now a factorized version
   // limits triggered
   std::vector<bool> pos_limit_trig_jnts(number_of_joints_, false);
   // vel_limit_trig_jnts(number_of_joints_, false);
-  //std::vector<size_t> limited_jnts_vel_idx;
+  // std::vector<size_t> limited_jnts_vel_idx;
   std::vector<std::string> limited_jnts_vel, limited_jnts_acc, limited_jnts_dec;
 
   bool braking_near_position_limit_triggered = false;
@@ -140,12 +138,12 @@ Now a factorized version
     if (index == 0)
       RCLCPP_INFO(node_logging_itf_->get_logger(), "vel input %f", desired_vel[0]);
     }*/
-    
+
     if (has_pos_cmd)
     {
       desired_pos[index] = desired_joint_states.positions[index];
     }
-    
+
     // limit position
     if (joint_limits_[index].has_position_limits)
     {
@@ -164,21 +162,23 @@ Now a factorized version
           if (index == 0)
             RCLCPP_INFO(node_logging_itf_->get_logger(), "desired_pos clamped %f", desired_pos[0]);
         }
-        
       }
     }
 
     // prepare velocity
     if (has_pos_cmd)
     {
-      // priority to pos_cmd derivative over cmd_vel because we always have a pos_state so recomputing vel_cmd is fine
-      // compute expected_vel with already clamped pos_cmd and pos_state
-      // TODO(gwalck) handle the case of continuous joints with angle_wraparound to compute vel correctly
+      // priority to pos_cmd derivative over cmd_vel because we always have a pos_state so
+      // recomputing vel_cmd is fine compute expected_vel with already clamped pos_cmd and pos_state
+      // TODO(gwalck) handle the case of continuous joints with angle_wraparound to compute vel
+      // correctly
       desired_vel[index] =
         (desired_pos[index] - current_joint_states.positions[index]) / dt_seconds;
       if (index == 0)
-          RCLCPP_INFO(node_logging_itf_->get_logger(), "desired_vel input from pos derivative %f", desired_vel[0]);
-    }  
+        RCLCPP_INFO(
+          node_logging_itf_->get_logger(), "desired_vel input from pos derivative %f",
+          desired_vel[0]);
+    }
     else
     {
       if (has_vel_cmd)
@@ -187,13 +187,12 @@ Now a factorized version
         if (index == 0)
           RCLCPP_INFO(node_logging_itf_->get_logger(), "desired_vel input %f", desired_vel[0]);
       }
-      
-    }  
-  
+    }
+
     // limit velocity
     if (joint_limits_[index].has_velocity_limits)
     {
-      //clamp input vel_cmd
+      // clamp input vel_cmd
       if (std::abs(desired_vel[index]) > joint_limits_[index].max_velocity)
       {
         desired_vel[index] = std::copysign(joint_limits_[index].max_velocity, desired_vel[index]);
@@ -202,26 +201,30 @@ Now a factorized version
         // recompute pos_cmd if needed
         if (has_pos_cmd)
         {
-          desired_pos[index] = current_joint_states.positions[index] +
-                               desired_vel[index] * dt_seconds;
+          desired_pos[index] =
+            current_joint_states.positions[index] + desired_vel[index] * dt_seconds;
           pos_limit_trig_jnts[index] = true;
           if (index == 0)
-            RCLCPP_INFO(node_logging_itf_->get_logger(), "desired_pos limited by expected vel limited %f", desired_pos[0]);
+            RCLCPP_INFO(
+              node_logging_itf_->get_logger(), "desired_pos limited by expected vel limited %f",
+              desired_pos[0]);
         }
         if (index == 0)
-        RCLCPP_INFO(node_logging_itf_->get_logger(), "desired_vel clamped %f", desired_vel[0]);
+          RCLCPP_INFO(node_logging_itf_->get_logger(), "desired_vel clamped %f", desired_vel[0]);
       }
     }
 
     // limit acceleration
-    if (joint_limits_[index].has_acceleration_limits || joint_limits_[index].has_deceleration_limits)
+    if (
+      joint_limits_[index].has_acceleration_limits || joint_limits_[index].has_deceleration_limits)
     {
-      //if(has_vel_state)
-      if(1) // for now use a zero velocity if not provided 
+      // if(has_vel_state)
+      if (1)  // for now use a zero velocity if not provided
       {
-        // limiting acc or dec function  
-        auto apply_acc_or_dec_limit =
-           [&](const double max_acc_or_dec, std::vector<double> &acc, std::vector<std::string> & limited_jnts) -> bool
+        // limiting acc or dec function
+        auto apply_acc_or_dec_limit = [&](
+                                        const double max_acc_or_dec, std::vector<double> & acc,
+                                        std::vector<std::string> & limited_jnts) -> bool
         {
           if (std::abs(acc[index]) > max_acc_or_dec)
           {
@@ -249,7 +252,8 @@ Now a factorized version
           // limit deceleration
           if (joint_limits_[index].has_deceleration_limits)
           {
-            limit_applied = apply_acc_or_dec_limit(joint_limits_[index].max_deceleration, desired_acc, limited_jnts_dec);
+            limit_applied = apply_acc_or_dec_limit(
+              joint_limits_[index].max_deceleration, desired_acc, limited_jnts_dec);
             deceleration_limit_applied = true;
           }
         }
@@ -257,26 +261,29 @@ Now a factorized version
         // limit acceleration (fallback to acceleration if no deceleration limits)
         if (joint_limits_[index].has_acceleration_limits && !deceleration_limit_applied)
         {
-          limit_applied = apply_acc_or_dec_limit(joint_limits_[index].max_acceleration, desired_acc, limited_jnts_acc);
+          limit_applied = apply_acc_or_dec_limit(
+            joint_limits_[index].max_acceleration, desired_acc, limited_jnts_acc);
         }
 
         if (limit_applied)
         {
           // vel_cmd from integration of desired_acc, needed even if no vel output
-          desired_vel[index] = 
+          desired_vel[index] =
             current_joint_states.velocities[index] + desired_acc[index] * dt_seconds;
           if (has_pos_cmd)
           {
             // pos_cmd from from double integration of desired_acc
             desired_pos[index] = current_joint_states.positions[index] +
-                                current_joint_states.velocities[index] * dt_seconds +
-                                0.5 * desired_acc[index] * dt_seconds * dt_seconds;
+                                 current_joint_states.velocities[index] * dt_seconds +
+                                 0.5 * desired_acc[index] * dt_seconds * dt_seconds;
           }
           if (index == 0)
-            RCLCPP_INFO(node_logging_itf_->get_logger(), "desired_pos limited by expected acc limited %f", desired_pos[0]);
+            RCLCPP_INFO(
+              node_logging_itf_->get_logger(), "desired_pos limited by expected acc limited %f",
+              desired_pos[0]);
         }
       }
-      //else we cannot compute acc and so not limiting it
+      // else we cannot compute acc and so not limiting it
     }
 
     // plan ahead for position limits
@@ -286,28 +293,34 @@ Now a factorized version
       {
         // Check  immediate next step when using vel_cmd only, other cases already handled
         // integrate pos
-        expected_pos[index] = current_joint_states.positions[index]
-                              + desired_vel[index] * dt_seconds;
+        expected_pos[index] =
+          current_joint_states.positions[index] + desired_vel[index] * dt_seconds;
         // if expected_pos over limit
         auto pos = std::max(
           std::min(joint_limits_[index].max_position, expected_pos[index]),
           joint_limits_[index].min_position);
         if (pos != expected_pos[index])
         {
-          // TODO(gwalck) compute vel_cmd that would permit to slow down in time at full deceleration
-          // in any case limit pos to max 
+          // TODO(gwalck) compute vel_cmd that would permit to slow down in time at full
+          // deceleration in any case limit pos to max
           expected_pos[index] = pos;
-          // and recompute vel_cmd that would lead to pos_max (not ideal as velocity would not be zero)
-          desired_vel[index] = (expected_pos[index] - current_joint_states.positions[index]) / dt_seconds;
+          // and recompute vel_cmd that would lead to pos_max (not ideal as velocity would not be
+          // zero)
+          desired_vel[index] =
+            (expected_pos[index] - current_joint_states.positions[index]) / dt_seconds;
           pos_limit_trig_jnts[index] = true;
           if (index == 0)
-            RCLCPP_INFO(node_logging_itf_->get_logger(), "desired_vel would trigger a pos limit violation at %f, limiting to %f", expected_pos[0], desired_vel[0]);
+            RCLCPP_INFO(
+              node_logging_itf_->get_logger(),
+              "desired_vel would trigger a pos limit violation at %f, limiting to %f",
+              expected_pos[0], desired_vel[0]);
         }
       }
 
       // Check that stopping distance is within joint limits
-      // Slow down all joints at maximum decel if any don't have stopping distance within joint limits
-  
+      // Slow down all joints at maximum decel if any don't have stopping distance within joint
+      // limits
+
       // delta_x = (v2*v2 - v1*v1) / (2*a)
       // stopping_distance = (- v1*v1) / (2*max_acceleration)
       // Here we assume we will not trigger velocity limits while maximally decelerating.
@@ -332,10 +345,10 @@ Now a factorized version
       // that limit
       if (
         (desired_vel[index] < 0 &&
-        (current_joint_states.positions[index] - joint_limits_[index].min_position <
+         (current_joint_states.positions[index] - joint_limits_[index].min_position <
           stopping_distance)) ||
         (desired_vel[index] > 0 &&
-        (joint_limits_[index].max_position - current_joint_states.positions[index] <
+         (joint_limits_[index].max_position - current_joint_states.positions[index] <
           stopping_distance)))
       {
         pos_limit_trig_jnts[index] = true;
@@ -349,10 +362,10 @@ Now a factorized version
         // re-check what happens if we don't slow down
         if (
           (desired_vel[index] < 0 &&
-          (current_joint_states.positions[index] - joint_limits_[index].min_position <
+           (current_joint_states.positions[index] - joint_limits_[index].min_position <
             motion_after_stopping_duration)) ||
           (desired_vel[index] > 0 &&
-          (joint_limits_[index].max_position - current_joint_states.positions[index] <
+           (joint_limits_[index].max_position - current_joint_states.positions[index] <
             motion_after_stopping_duration)))
         {
           pos_limit_trig_jnts[index] = true;
@@ -398,14 +411,14 @@ Now a factorized version
                              current_joint_states.velocities[index] * dt_seconds +
                              0.5 * desired_acc[index] * dt_seconds * dt_seconds;
 
-      if (pos_limit_trig_jnts[index])
-        ostr << joint_names_[index] << " ";
+      if (pos_limit_trig_jnts[index]) ostr << joint_names_[index] << " ";
     }
     ostr << "\b \b";  // erase last character
     RCLCPP_WARN_STREAM_THROTTLE(
       node_logging_itf_->get_logger(), *clock_, ROS_LOG_THROTTLE_PERIOD,
-      "Joint(s) [" << ostr.str().c_str() << "] would exceed position limits"
-      " if continuing at current state, limiting all joints");
+      "Joint(s) [" << ostr.str().c_str()
+                   << "] would exceed position limits"
+                      " if continuing at current state, limiting all joints");
   }
 
   // display limitations
@@ -455,13 +468,10 @@ Now a factorized version
       node_logging_itf_->get_logger(), *clock_, ROS_LOG_THROTTLE_PERIOD,
       "Joint(s) [" << ostr.str().c_str() << "] would exceed deceleration limits, limiting");
   }
-  
-  if (has_pos_cmd)
-    desired_joint_states.positions = desired_pos;
-  if (has_vel_cmd)
-    desired_joint_states.velocities = desired_vel;
-  if (has_acc_cmd)
-    desired_joint_states.accelerations = desired_acc;
+
+  if (has_pos_cmd) desired_joint_states.positions = desired_pos;
+  if (has_vel_cmd) desired_joint_states.velocities = desired_vel;
+  if (has_acc_cmd) desired_joint_states.accelerations = desired_acc;
   return true;
 }
 
