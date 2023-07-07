@@ -96,6 +96,7 @@ TEST_F(TestLoadController, spawner_test_type_in_param)
 {
   cm_->set_parameter(rclcpp::Parameter("ctrl_1.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
 
+  ControllerManagerRunner cm_runner(this);
   EXPECT_EQ(call_spawner("ctrl_1 -c test_controller_manager"), 0);
 
   ASSERT_EQ(cm_->get_loaded_controllers().size(), 1ul);
