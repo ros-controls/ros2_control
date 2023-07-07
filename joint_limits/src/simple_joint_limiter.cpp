@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/// \authors Nathan Brooks, Dr. Denis Stogl
+/// \authors Nathan Brooks, Dr. Denis Stogl, Guillaume Walck
 
 #include "joint_limits/simple_joint_limiter.hpp"
 
@@ -94,7 +94,7 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
   if (dt_seconds <= 0.0) return false;
 
   // TODO(gwalck) compute if the max are not implicitly violated with the given dt
-  // eg for max vel 2.0 and max acc 5.0, with dt >0.4
+  // e.g. for max vel 2.0 and max acc 5.0, with dt >0.4
   // velocity max is implicitly already violated due to max_acc * dt > 2.0
 
   // check for required inputs combination
@@ -126,19 +126,12 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
 
   // limits triggered
   std::vector<bool> pos_limit_trig_jnts(number_of_joints_, false);
-  // vel_limit_trig_jnts(number_of_joints_, false);
-  // std::vector<size_t> limited_jnts_vel_idx;
   std::vector<std::string> limited_jnts_vel, limited_jnts_acc, limited_jnts_dec;
 
   bool braking_near_position_limit_triggered = false;
 
   for (size_t index = 0; index < number_of_joints_; ++index)
   {
-    /*
-    if (index == 0)
-      RCLCPP_INFO(node_logging_itf_->get_logger(), "vel input %f", desired_vel[0]);
-    }*/
-
     if (has_pos_cmd)
     {
       desired_pos[index] = desired_joint_states.positions[index];
@@ -149,8 +142,6 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
     {
       if (has_pos_cmd)
       {
-        if (index == 0)
-          RCLCPP_INFO(node_logging_itf_->get_logger(), "desired_pos input %f", desired_pos[0]);
         // clamp input pos_cmd
         auto pos = std::max(
           std::min(joint_limits_[index].max_position, desired_pos[index]),
@@ -159,8 +150,6 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
         {
           desired_pos[index] = pos;
           pos_limit_trig_jnts[index] = true;
-          if (index == 0)
-            RCLCPP_INFO(node_logging_itf_->get_logger(), "desired_pos clamped %f", desired_pos[0]);
         }
       }
     }
@@ -174,18 +163,12 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
       // correctly
       desired_vel[index] =
         (desired_pos[index] - current_joint_states.positions[index]) / dt_seconds;
-      if (index == 0)
-        RCLCPP_INFO(
-          node_logging_itf_->get_logger(), "desired_vel input from pos derivative %f",
-          desired_vel[0]);
     }
     else
     {
       if (has_vel_cmd)
       {
         desired_vel[index] = desired_joint_states.velocities[index];
-        if (index == 0)
-          RCLCPP_INFO(node_logging_itf_->get_logger(), "desired_vel input %f", desired_vel[0]);
       }
     }
 
@@ -204,13 +187,7 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
           desired_pos[index] =
             current_joint_states.positions[index] + desired_vel[index] * dt_seconds;
           pos_limit_trig_jnts[index] = true;
-          if (index == 0)
-            RCLCPP_INFO(
-              node_logging_itf_->get_logger(), "desired_pos limited by expected vel limited %f",
-              desired_pos[0]);
         }
-        if (index == 0)
-          RCLCPP_INFO(node_logging_itf_->get_logger(), "desired_vel clamped %f", desired_vel[0]);
       }
     }
 
@@ -277,13 +254,9 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
                                  current_joint_states.velocities[index] * dt_seconds +
                                  0.5 * desired_acc[index] * dt_seconds * dt_seconds;
           }
-          if (index == 0)
-            RCLCPP_INFO(
-              node_logging_itf_->get_logger(), "desired_pos limited by expected acc limited %f",
-              desired_pos[0]);
         }
       }
-      // else we cannot compute acc and so not limiting it
+      // else we cannot compute acc, so not limiting it
     }
 
     // plan ahead for position limits
@@ -309,11 +282,6 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
           desired_vel[index] =
             (expected_pos[index] - current_joint_states.positions[index]) / dt_seconds;
           pos_limit_trig_jnts[index] = true;
-          if (index == 0)
-            RCLCPP_INFO(
-              node_logging_itf_->get_logger(),
-              "desired_vel would trigger a pos limit violation at %f, limiting to %f",
-              expected_pos[0], desired_vel[0]);
         }
       }
 
