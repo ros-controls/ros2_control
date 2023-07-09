@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.16.0 (2023-07-09)
+-------------------
 * added controller manager runner to have update cycles (`#1075 <https://github.com/ros-controls/ros2_control/issues/1075>`_)
 * [CM] Make error message after trying to active controller more informative. (`#1066 <https://github.com/ros-controls/ros2_control/issues/1066>`_)
 * Fix equal and higher controller update rate (`#1070 <https://github.com/ros-controls/ros2_control/issues/1070>`_)
