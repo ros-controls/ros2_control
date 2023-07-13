@@ -24,6 +24,8 @@ namespace test_constants
 /// on read/write.
 constexpr double READ_FAIL_VALUE = 28282828.0;
 constexpr double WRITE_FAIL_VALUE = 23232323.0;
+constexpr double READ_DEACTIVATE_VALUE = 29292929.0;
+constexpr double WRITE_DEACTIVATE_VALUE = 24242424.0;
 }  // namespace test_constants
 }  // namespace hardware_interface
 #endif  // HARDWARE_INTERFACE__TYPES__TEST_HARDWARE_INTERFACE_CONSTANTS_HPP_

@@ -83,6 +83,11 @@ class TestActuator : public ActuatorInterface
       velocity_command_ = 0.0;
       return return_type::ERROR;
     }
+    // simulate deactivate on read
+    if (velocity_command_ == hardware_interface::test_constants::READ_DEACTIVATE_VALUE)
+    {
+      return return_type::DEACTIVATED;
+    }
     // The next line is for the testing purposes. We need value to be changed to be sure that
     // the feedback from hardware to controllers in the chain is working as it should.
     // This makes value checks clearer and confirms there is no "state = command" line or some
@@ -99,6 +104,11 @@ class TestActuator : public ActuatorInterface
       // reset value to get out from error on the next call - simplifies CM tests
       velocity_command_ = 0.0;
       return return_type::ERROR;
+    }
+    // simulate deactivate on write
+    if (velocity_command_ == hardware_interface::test_constants::WRITE_DEACTIVATE_VALUE)
+    {
+      return return_type::DEACTIVATED;
     }
     return return_type::OK;
   }

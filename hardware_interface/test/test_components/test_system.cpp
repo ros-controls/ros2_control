@@ -88,6 +88,11 @@ class TestSystem : public SystemInterface
       velocity_command_[0] = 0.0;
       return return_type::ERROR;
     }
+    // simulate deactivate on read
+    if (velocity_command_[0] == hardware_interface::test_constants::READ_DEACTIVATE_VALUE)
+    {
+      return return_type::DEACTIVATED;
+    }
     return return_type::OK;
   }
 
@@ -99,6 +104,11 @@ class TestSystem : public SystemInterface
       // reset value to get out from error on the next call - simplifies CM tests
       velocity_command_[0] = 0.0;
       return return_type::ERROR;
+    }
+    // simulate deactivate on write
+    if (velocity_command_[0] == hardware_interface::test_constants::WRITE_DEACTIVATE_VALUE)
+    {
+      return return_type::DEACTIVATED;
     }
     return return_type::OK;
   }
