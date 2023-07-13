@@ -18,6 +18,7 @@
 
 #include "hardware_interface/system_interface.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
+#include "hardware_interface/types/test_hardware_interface_constants.hpp"
 
 using hardware_interface::CommandInterface;
 using hardware_interface::return_type;
@@ -81,7 +82,7 @@ class TestSystem : public SystemInterface
   return_type read(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
   {
     // simulate error on read
-    if (velocity_command_[0] == 28282828)
+    if (velocity_command_[0] == hardware_interface::test_constants::READ_FAIL_VALUE)
     {
       // reset value to get out from error on the next call - simplifies CM tests
       velocity_command_[0] = 0.0;
@@ -93,7 +94,7 @@ class TestSystem : public SystemInterface
   return_type write(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
   {
     // simulate error on write
-    if (velocity_command_[0] == 23232323)
+    if (velocity_command_[0] == hardware_interface::test_constants::WRITE_FAIL_VALUE)
     {
       // reset value to get out from error on the next call - simplifies CM tests
       velocity_command_[0] = 0.0;

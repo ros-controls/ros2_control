@@ -16,6 +16,7 @@
 #include <vector>
 
 #include "hardware_interface/actuator_interface.hpp"
+#include "hardware_interface/types/test_hardware_interface_constants.hpp"
 
 using hardware_interface::ActuatorInterface;
 using hardware_interface::CommandInterface;
@@ -76,7 +77,7 @@ class TestActuator : public ActuatorInterface
   return_type read(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
   {
     // simulate error on read
-    if (velocity_command_ == 28282828.0)
+    if (velocity_command_ == hardware_interface::test_constants::READ_FAIL_VALUE)
     {
       // reset value to get out from error on the next call - simplifies CM tests
       velocity_command_ = 0.0;
@@ -93,7 +94,7 @@ class TestActuator : public ActuatorInterface
   return_type write(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
   {
     // simulate error on write
-    if (velocity_command_ == 23232323.0)
+    if (velocity_command_ == hardware_interface::test_constants::WRITE_FAIL_VALUE)
     {
       // reset value to get out from error on the next call - simplifies CM tests
       velocity_command_ = 0.0;
