@@ -587,6 +587,13 @@ public:
         import_state_interfaces(container.back());
         import_command_interfaces(container.back());
       }
+      else
+      {
+        RCUTILS_LOG_WARN_NAMED(
+          "resource_manager",
+          "Actuator hardware component '%s' from plugin '%s' failed to initialize.",
+          hardware_info.name.c_str(), hardware_info.hardware_plugin_name.c_str());
+      }
     };
 
     if (hardware_info.is_async)
@@ -608,6 +615,12 @@ public:
       if (initialize_hardware(hardware_info, container.back()))
       {
         import_state_interfaces(container.back());
+      }
+      {
+        RCUTILS_LOG_WARN_NAMED(
+          "resource_manager",
+          "Sensor hardware component '%s' from plugin '%s' failed to initialize.",
+          hardware_info.name.c_str(), hardware_info.hardware_plugin_name.c_str());
       }
     };
 
@@ -631,6 +644,12 @@ public:
       {
         import_state_interfaces(container.back());
         import_command_interfaces(container.back());
+      }
+      {
+        RCUTILS_LOG_WARN_NAMED(
+          "resource_manager",
+          "System hardware component '%s' from plugin '%s' failed to initialize.",
+          hardware_info.name.c_str(), hardware_info.hardware_plugin_name.c_str());
       }
     };
 
