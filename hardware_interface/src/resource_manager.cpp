@@ -484,54 +484,223 @@ public:
   // TODO(destogl): Propagate "false" up, if happens in initialize_hardware
   void load_and_initialize_actuator(const HardwareInfo & hardware_info)
   {
+<<<<<<< HEAD
     check_for_duplicates(hardware_info);
     load_hardware<Actuator, ActuatorInterface>(hardware_info, actuator_loader_, actuators_);
     initialize_hardware(hardware_info, actuators_.back());
     import_state_interfaces(actuators_.back());
     import_command_interfaces(actuators_.back());
+=======
+    auto load_and_init_actuators = [&](auto & container)
+    {
+      check_for_duplicates(hardware_info);
+      load_hardware<Actuator, ActuatorInterface>(hardware_info, actuator_loader_, container);
+      if (initialize_hardware(hardware_info, container.back()))
+      {
+        import_state_interfaces(container.back());
+        import_command_interfaces(container.back());
+      }
+      else
+      {
+        RCUTILS_LOG_WARN_NAMED(
+          "resource_manager",
+          "Actuator hardware component '%s' from plugin '%s' failed to initialize.",
+          hardware_info.name.c_str(), hardware_info.hardware_plugin_name.c_str());
+      }
+    };
+
+    if (hardware_info.is_async)
+    {
+      load_and_init_actuators(async_actuators_);
+    }
+    else
+    {
+      load_and_init_actuators(actuators_);
+    }
+>>>>>>> 6cd8191 (Add checks if hardware is initialized. (#1054))
   }
 
   void load_and_initialize_sensor(const HardwareInfo & hardware_info)
   {
+<<<<<<< HEAD
     check_for_duplicates(hardware_info);
     load_hardware<Sensor, SensorInterface>(hardware_info, sensor_loader_, sensors_);
     initialize_hardware(hardware_info, sensors_.back());
     import_state_interfaces(sensors_.back());
+=======
+    auto load_and_init_sensors = [&](auto & container)
+    {
+      check_for_duplicates(hardware_info);
+      load_hardware<Sensor, SensorInterface>(hardware_info, sensor_loader_, container);
+      if (initialize_hardware(hardware_info, container.back()))
+      {
+        import_state_interfaces(container.back());
+      }
+      else
+      {
+        RCUTILS_LOG_WARN_NAMED(
+          "resource_manager",
+          "Sensor hardware component '%s' from plugin '%s' failed to initialize.",
+          hardware_info.name.c_str(), hardware_info.hardware_plugin_name.c_str());
+      }
+    };
+
+    if (hardware_info.is_async)
+    {
+      load_and_init_sensors(async_sensors_);
+    }
+    else
+    {
+      load_and_init_sensors(sensors_);
+    }
+>>>>>>> 6cd8191 (Add checks if hardware is initialized. (#1054))
   }
 
   void load_and_initialize_system(const HardwareInfo & hardware_info)
   {
+<<<<<<< HEAD
     check_for_duplicates(hardware_info);
     load_hardware<System, SystemInterface>(hardware_info, system_loader_, systems_);
     initialize_hardware(hardware_info, systems_.back());
     import_state_interfaces(systems_.back());
     import_command_interfaces(systems_.back());
+=======
+    auto load_and_init_systems = [&](auto & container)
+    {
+      check_for_duplicates(hardware_info);
+      load_hardware<System, SystemInterface>(hardware_info, system_loader_, container);
+      if (initialize_hardware(hardware_info, container.back()))
+      {
+        import_state_interfaces(container.back());
+        import_command_interfaces(container.back());
+      }
+      else
+      {
+        RCUTILS_LOG_WARN_NAMED(
+          "resource_manager",
+          "System hardware component '%s' from plugin '%s' failed to initialize.",
+          hardware_info.name.c_str(), hardware_info.hardware_plugin_name.c_str());
+      }
+    };
+
+    if (hardware_info.is_async)
+    {
+      load_and_init_systems(async_systems_);
+    }
+    else
+    {
+      load_and_init_systems(systems_);
+    }
+>>>>>>> 6cd8191 (Add checks if hardware is initialized. (#1054))
   }
 
   void initialize_actuator(
     std::unique_ptr<ActuatorInterface> actuator, const HardwareInfo & hardware_info)
   {
+<<<<<<< HEAD
     this->actuators_.emplace_back(Actuator(std::move(actuator)));
     initialize_hardware(hardware_info, actuators_.back());
     import_state_interfaces(actuators_.back());
     import_command_interfaces(actuators_.back());
+=======
+    auto init_actuators = [&](auto & container)
+    {
+      container.emplace_back(Actuator(std::move(actuator)));
+      if (initialize_hardware(hardware_info, container.back()))
+      {
+        import_state_interfaces(container.back());
+        import_command_interfaces(container.back());
+      }
+      else
+      {
+        RCUTILS_LOG_WARN_NAMED(
+          "resource_manager",
+          "Actuator hardware component '%s' from plugin '%s' failed to initialize.",
+          hardware_info.name.c_str(), hardware_info.hardware_plugin_name.c_str());
+      }
+    };
+
+    if (hardware_info.is_async)
+    {
+      init_actuators(async_actuators_);
+    }
+    else
+    {
+      init_actuators(actuators_);
+    }
+>>>>>>> 6cd8191 (Add checks if hardware is initialized. (#1054))
   }
 
   void initialize_sensor(
     std::unique_ptr<SensorInterface> sensor, const HardwareInfo & hardware_info)
   {
+<<<<<<< HEAD
     this->sensors_.emplace_back(Sensor(std::move(sensor)));
     initialize_hardware(hardware_info, sensors_.back());
     import_state_interfaces(sensors_.back());
+=======
+    auto init_sensors = [&](auto & container)
+    {
+      container.emplace_back(Sensor(std::move(sensor)));
+      if (initialize_hardware(hardware_info, container.back()))
+      {
+        import_state_interfaces(container.back());
+      }
+      else
+      {
+        RCUTILS_LOG_WARN_NAMED(
+          "resource_manager",
+          "Sensor hardware component '%s' from plugin '%s' failed to initialize.",
+          hardware_info.name.c_str(), hardware_info.hardware_plugin_name.c_str());
+      }
+    };
+
+    if (hardware_info.is_async)
+    {
+      init_sensors(async_sensors_);
+    }
+    else
+    {
+      init_sensors(sensors_);
+    }
+>>>>>>> 6cd8191 (Add checks if hardware is initialized. (#1054))
   }
 
   void initialize_system(
     std::unique_ptr<SystemInterface> system, const HardwareInfo & hardware_info)
   {
+<<<<<<< HEAD
     this->systems_.emplace_back(System(std::move(system)));
     initialize_hardware(hardware_info, systems_.back());
     import_state_interfaces(systems_.back());
     import_command_interfaces(systems_.back());
+=======
+    auto init_systems = [&](auto & container)
+    {
+      container.emplace_back(System(std::move(system)));
+      if (initialize_hardware(hardware_info, container.back()))
+      {
+        import_state_interfaces(container.back());
+        import_command_interfaces(container.back());
+      }
+      else
+      {
+        RCUTILS_LOG_WARN_NAMED(
+          "resource_manager",
+          "System hardware component '%s' from plugin '%s' failed to initialize.",
+          hardware_info.name.c_str(), hardware_info.hardware_plugin_name.c_str());
+      }
+    };
+
+    if (hardware_info.is_async)
+    {
+      init_systems(async_systems_);
+    }
+    else
+    {
+      init_systems(systems_);
+    }
+>>>>>>> 6cd8191 (Add checks if hardware is initialized. (#1054))
   }
 
   // hardware plugins
