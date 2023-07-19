@@ -361,6 +361,73 @@ TEST_P(TestControllerManagerWithUpdateRates, per_controller_equal_and_higher_upd
   last_internal_counter = test_controller->internal_counter;
 }
 
+class TestControllerUpdateRates
+: public ControllerManagerFixture<controller_manager::ControllerManager>
+{
+};
+
+TEST_F(TestControllerUpdateRates, check_the_controller_update_rate)
+{
+  auto test_controller = std::make_shared<test_controller::TestController>();
+  cm_->add_controller(
+    test_controller, test_controller::TEST_CONTROLLER_NAME,
+    test_controller::TEST_CONTROLLER_CLASS_NAME);
+  EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
+  EXPECT_EQ(2, test_controller.use_count());
+
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, test_controller->get_state().id());
+
+  test_controller->get_node()->set_parameter({"update_rate", 40});
+  // configure controller
+  cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME);
+  EXPECT_EQ(
+    controller_interface::return_type::OK,
+    cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
+  EXPECT_EQ(0u, test_controller->internal_counter) << "Controller is not started";
+
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, test_controller->get_state().id());
+
+  // Start controller, will take effect at the end of the update function
+  const auto strictness = controller_manager_msgs::srv::SwitchController::Request::STRICT;
+  std::vector<std::string> start_controllers = {test_controller::TEST_CONTROLLER_NAME};
+  std::vector<std::string> stop_controllers = {};
+  auto switch_future = std::async(
+    std::launch::async, &controller_manager::ControllerManager::switch_controller, cm_,
+    start_controllers, stop_controllers, strictness, true, rclcpp::Duration(0, 0));
+
+  ASSERT_EQ(std::future_status::timeout, switch_future.wait_for(std::chrono::milliseconds(100)))
+    << "switch_controller should be blocking until next update cycle";
+
+  EXPECT_EQ(
+    controller_interface::return_type::OK,
+    cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
+  EXPECT_EQ(0u, test_controller->internal_counter) << "Controller is started at the end of update";
+  {
+    ControllerManagerRunner cm_runner(this);
+    EXPECT_EQ(controller_interface::return_type::OK, switch_future.get());
+  }
+
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, test_controller->get_state().id());
+
+  EXPECT_EQ(test_controller->get_update_rate(), 40u);
+  const auto cm_update_rate = cm_->get_update_rate();
+  const auto controller_update_rate = test_controller->get_update_rate();
+
+  for (size_t update_counter = 0; update_counter <= 10 * cm_update_rate; ++update_counter)
+  {
+    EXPECT_EQ(
+      controller_interface::return_type::OK,
+      cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
+
+    if (update_counter % cm_update_rate == 0)
+    {
+      const auto no_of_secs_passed = update_counter / cm_update_rate;
+      EXPECT_EQ(test_controller->internal_counter, controller_update_rate * no_of_secs_passed);
+    }
+  }
+}
+
 INSTANTIATE_TEST_SUITE_P(
   per_controller_equal_and_higher_update_rate, TestControllerManagerWithUpdateRates,
   testing::Values(100, 232, 400));
