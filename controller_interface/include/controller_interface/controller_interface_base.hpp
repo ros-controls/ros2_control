@@ -114,8 +114,8 @@ public:
 
   CONTROLLER_INTERFACE_PUBLIC
   virtual return_type init(
-    const std::string & controller_name, const std::string & namespace_ = "",
-    const rclcpp::NodeOptions & node_options = rclcpp::NodeOptions());
+    const std::string & controller_name, const std::string & urdf,
+    const std::string & namespace_ = "", const rclcpp::NodeOptions & node_options = rclcpp::NodeOptions());
 
   /// Custom configure method to read additional parameters for controller-nodes
   /*
@@ -223,6 +223,7 @@ protected:
   std::vector<hardware_interface::LoanedStateInterface> state_interfaces_;
   unsigned int update_rate_ = 0;
   bool is_async_ = false;
+  std::string urdf_ = "";
 
 private:
   std::shared_ptr<rclcpp_lifecycle::LifecycleNode> node_;

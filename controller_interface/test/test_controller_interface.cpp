@@ -38,7 +38,7 @@ TEST(TestableControllerInterface, init)
   ASSERT_THROW(controller.get_node(), std::runtime_error);
 
   // initialize, create node
-  ASSERT_EQ(controller.init(TEST_CONTROLLER_NAME), controller_interface::return_type::OK);
+  ASSERT_EQ(controller.init(TEST_CONTROLLER_NAME, ""), controller_interface::return_type::OK);
   ASSERT_NO_THROW(controller.get_node());
 
   // update_rate is set to default 0
@@ -60,7 +60,7 @@ TEST(TestableControllerInterface, setting_update_rate_in_configure)
 
   TestableControllerInterface controller;
   // initialize, create node
-  ASSERT_EQ(controller.init(TEST_CONTROLLER_NAME), controller_interface::return_type::OK);
+  ASSERT_EQ(controller.init(TEST_CONTROLLER_NAME, ""), controller_interface::return_type::OK);
 
   // initialize executor to be able to get parameter update
   auto executor =
@@ -122,7 +122,7 @@ TEST(TestableControllerInterfaceInitError, init_with_error)
   TestableControllerInterfaceInitError controller;
 
   // initialize, create node
-  ASSERT_EQ(controller.init(TEST_CONTROLLER_NAME), controller_interface::return_type::ERROR);
+  ASSERT_EQ(controller.init(TEST_CONTROLLER_NAME, ""), controller_interface::return_type::ERROR);
 
   rclcpp::shutdown();
 }
@@ -136,7 +136,7 @@ TEST(TestableControllerInterfaceInitFailure, init_with_failure)
   TestableControllerInterfaceInitFailure controller;
 
   // initialize, create node
-  ASSERT_EQ(controller.init(TEST_CONTROLLER_NAME), controller_interface::return_type::ERROR);
+  ASSERT_EQ(controller.init(TEST_CONTROLLER_NAME, ""), controller_interface::return_type::ERROR);
 
   rclcpp::shutdown();
 }
