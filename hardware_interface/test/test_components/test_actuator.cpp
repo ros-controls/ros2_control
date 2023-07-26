@@ -86,7 +86,7 @@ class TestActuator : public ActuatorInterface
     // simulate deactivate on read
     if (velocity_command_ == hardware_interface::test_constants::READ_DEACTIVATE_VALUE)
     {
-      return return_type::DEACTIVATED;
+      return return_type::DEACTIVATE;
     }
     // The next line is for the testing purposes. We need value to be changed to be sure that
     // the feedback from hardware to controllers in the chain is working as it should.
@@ -108,7 +108,7 @@ class TestActuator : public ActuatorInterface
     // simulate deactivate on write
     if (velocity_command_ == hardware_interface::test_constants::WRITE_DEACTIVATE_VALUE)
     {
-      return return_type::DEACTIVATED;
+      return return_type::DEACTIVATE;
     }
     return return_type::OK;
   }

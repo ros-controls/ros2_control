@@ -23,7 +23,7 @@ enum class return_type : std::uint8_t
 {
   OK = 0,
   ERROR = 1,
-  DEACTIVATED = 2,
+  DEACTIVATE = 2,
 };
 
 }  // namespace hardware_interface

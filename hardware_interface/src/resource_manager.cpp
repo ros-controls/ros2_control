@@ -1212,7 +1212,7 @@ HardwareReadWriteStatus ResourceManager::read(
         read_write_status.failed_hardware_names.push_back(component.get_name());
         resource_storage_->remove_all_hardware_interfaces_from_available_list(component.get_name());
       }
-      else if (ret_val == return_type::DEACTIVATED)
+      else if (ret_val == return_type::DEACTIVATE)
       {
         using lifecycle_msgs::msg::State;
         rclcpp_lifecycle::State state(
@@ -1255,7 +1255,7 @@ HardwareReadWriteStatus ResourceManager::write(
         read_write_status.failed_hardware_names.push_back(component.get_name());
         resource_storage_->remove_all_hardware_interfaces_from_available_list(component.get_name());
       }
-      else if (ret_val == return_type::DEACTIVATED)
+      else if (ret_val == return_type::DEACTIVATE)
       {
         using lifecycle_msgs::msg::State;
         rclcpp_lifecycle::State state(
