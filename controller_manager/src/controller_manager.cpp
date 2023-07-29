@@ -85,7 +85,7 @@ bool controller_name_compare(const controller_manager::ControllerSpec & a, const
 /// Checks if an interface belongs to a controller based on its prefix.
 /**
  * A State/Command interface can be provided by a controller in which case is called
- * "estimated/reference" interface. This means that the @interface_name starts with the name of a
+ * "state/reference" interface. This means that the @interface_name starts with the name of a
  * controller.
  *
  * \param[in] interface_name to be found in the map.
@@ -153,7 +153,7 @@ bool is_interface_exported_from_controller(
     return false;
 }
 
-bool is_controller_estimated_interfaces_inuse_by_other_controllers(
+bool is_controller_exported_state_interfaces_inuse_by_other_controllers(
   const std::string & controller_name,
   const std::vector<controller_manager::ControllerSpec> & controllers,
   std::vector<std::string> blacklist)
@@ -169,8 +169,8 @@ bool is_controller_estimated_interfaces_inuse_by_other_controllers(
     {
       continue;
     }
-    auto controller_state_interfaces = controller.c->state_interface_configuration().names;
-    for (const auto & ctrl_itf_name : controller_state_interfaces)
+    auto controller_exported_state_interfaces = controller.c->state_interface_configuration().names;
+    for (const auto & ctrl_itf_name : controller_exported_state_interfaces)
     {
       if (is_interface_exported_from_controller(ctrl_itf_name, controller_name))
       {
@@ -733,20 +733,20 @@ controller_interface::return_type ControllerManager::configure_controller(
       get_logger(),
       "Controller '%s' is chainable. Interfaces are being exported to resource manager.",
       controller_name.c_str());
-    auto estimated_interfaces = controller->export_estimated_interfaces();
+    auto state_interfaces = controller->export_state_interfaces();
     auto ref_interfaces = controller->export_reference_interfaces();
-    if (ref_interfaces.empty() && estimated_interfaces.empty())
+    if (ref_interfaces.empty() && state_interfaces.empty())
     {
       // TODO(destogl): Add test for this!
       RCLCPP_ERROR(
         get_logger(),
-        "Controller '%s' is chainable, but does not export any estimated or reference interfaces.",
+        "Controller '%s' is chainable, but does not export any state or reference interfaces.",
         controller_name.c_str());
       return controller_interface::return_type::ERROR;
     }
     resource_manager_->import_controller_reference_interfaces(controller_name, ref_interfaces);
-    resource_manager_->import_controller_estimated_interfaces(
-      controller_name, estimated_interfaces);
+    resource_manager_->import_controller_exported_state_interfaces(
+      controller_name, state_interfaces);
   }
 
   // let's update the list of following and preceding controllers
@@ -832,7 +832,7 @@ void ControllerManager::clear_requests()
   // state without the controller being in active state
   for (const auto & controller_name : to_chained_mode_request_)
   {
-    resource_manager_->make_controller_estimated_interfaces_unavailable(controller_name);
+    resource_manager_->make_controller_exported_state_interfaces_unavailable(controller_name);
     resource_manager_->make_controller_reference_interfaces_unavailable(controller_name);
   }
   to_chained_mode_request_.clear();
@@ -1409,7 +1409,7 @@ void ControllerManager::deactivate_controllers(
       if (controller->is_chainable())
       {
         controller->toggle_references_from_subscribers(true);
-        resource_manager_->make_controller_estimated_interfaces_unavailable(controller_name);
+        resource_manager_->make_controller_exported_state_interfaces_unavailable(controller_name);
         resource_manager_->make_controller_reference_interfaces_unavailable(controller_name);
       }
       if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
@@ -1589,7 +1589,7 @@ void ControllerManager::activate_controllers(
       // enable references from the controller interfaces
       controller->toggle_references_from_subscribers(false);
       // make all the exported interfaces of the controller available
-      resource_manager_->make_controller_estimated_interfaces_available(controller_name);
+      resource_manager_->make_controller_exported_state_interfaces_available(controller_name);
       resource_manager_->make_controller_reference_interfaces_available(controller_name);
     }
 
@@ -1684,21 +1684,22 @@ void ControllerManager::list_controllers_srv_cb(
       {
         auto references =
           resource_manager_->get_controller_reference_interface_names(controllers[i].info.name);
-        auto estimated_interfaces =
-          resource_manager_->get_controller_estimated_interface_names(controllers[i].info.name);
+        auto exported_state_interfaces =
+          resource_manager_->get_controller_exported_state_interface_names(
+            controllers[i].info.name);
         controller_state.reference_interfaces.reserve(references.size());
-        controller_state.estimated_interfaces.reserve(estimated_interfaces.size());
+        controller_state.exported_state_interfaces.reserve(exported_state_interfaces.size());
         for (const auto & reference : references)
         {
           const std::string prefix_name = controllers[i].c->get_node()->get_name();
           const std::string interface_name = reference.substr(prefix_name.size() + 1);
           controller_state.reference_interfaces.push_back(interface_name);
         }
-        for (const auto & estimate : estimated_interfaces)
+        for (const auto & estimate : exported_state_interfaces)
         {
           const std::string prefix_name = controllers[i].c->get_node()->get_name();
           const std::string interface_name = estimate.substr(prefix_name.size() + 1);
-          controller_state.reference_interfaces.push_back(interface_name);
+          controller_state.exported_state_interfaces.push_back(interface_name);
         }
       }
     }
@@ -2291,9 +2292,9 @@ void ControllerManager::propagate_deactivation_of_chained_mode(
         ControllersListIterator following_ctrl_it;
         if (is_interface_a_chained_interface(ctrl_itf_name, controllers, following_ctrl_it))
         {
-          // If the preceding controller's estimated interfaces are in use by other controllers,
+          // If the preceding controller's state interfaces are in use by other controllers,
           // then maintain the chained mode
-          if (is_controller_estimated_interfaces_inuse_by_other_controllers(
+          if (is_controller_exported_state_interfaces_inuse_by_other_controllers(
                 following_ctrl_it->info.name, controllers, deactivate_request_))
           {
             auto found_it = std::find(
@@ -2371,7 +2372,7 @@ controller_interface::return_type ControllerManager::check_following_controllers
     {
       RCLCPP_WARN(
         get_logger(),
-        "No estimated/reference interface '%s' exist, since the following controller with name "
+        "No state/reference interface '%s' exist, since the following controller with name "
         "'%s' is not chainable.",
         ctrl_itf_name.c_str(), following_ctrl_it->info.name.c_str());
       return controller_interface::return_type::ERROR;
@@ -2430,7 +2431,7 @@ controller_interface::return_type ControllerManager::check_following_controllers
         // if it is a chainable controller, make the reference interfaces available on preactivation
         // (This is needed when you activate a couple of chainable controller altogether)
         // make all the exported interfaces of the controller available
-        resource_manager_->make_controller_estimated_interfaces_available(
+        resource_manager_->make_controller_exported_state_interfaces_available(
           following_ctrl_it->info.name);
         resource_manager_->make_controller_reference_interfaces_available(
           following_ctrl_it->info.name);
@@ -2497,9 +2498,9 @@ controller_interface::return_type ControllerManager::check_preceeding_controller
 
   const auto ctrl_ref_itfs =
     resource_manager_->get_controller_reference_interface_names(controller_it->info.name);
-  const auto ctrl_estim_itfs =
-    resource_manager_->get_controller_estimated_interface_names(controller_it->info.name);
-  for (const auto & controller_interfaces : {ctrl_ref_itfs, ctrl_estim_itfs})
+  const auto ctrl_exp_state_itfs =
+    resource_manager_->get_controller_exported_state_interface_names(controller_it->info.name);
+  for (const auto & controller_interfaces : {ctrl_ref_itfs, ctrl_exp_state_itfs})
   {
     for (const auto & ref_itf_name : controller_interfaces)
     {

@@ -45,41 +45,41 @@ return_type ChainableControllerInterface::update(
 }
 
 std::vector<hardware_interface::StateInterface>
-ChainableControllerInterface::export_estimated_interfaces()
+ChainableControllerInterface::export_state_interfaces()
 {
-  auto estimated_interfaces = on_export_estimated_interfaces();
-  // check if the "estimated_interfaces_data_" variable is resized to number of interfaces
-  if (estimated_interfaces_data_.size() != estimated_interfaces.size())
+  auto state_interfaces = on_export_state_interfaces();
+  // check if the "state_interfaces_data_" variable is resized to number of interfaces
+  if (exported_state_interfaces_data_.size() != state_interfaces.size())
   {
     // TODO(destogl): Should here be "FATAL"? It is fatal in terms of controller but not for the
     // framework
     RCLCPP_FATAL(
       get_node()->get_logger(),
-      "The internal storage for estimated values 'estimated_interfaces_data_' variable has size "
-      "'%zu', but it is expected to have the size '%zu' equal to the number of exported reference "
-      "interfaces. No reference interface will be exported. Please correct and recompile "
+      "The internal storage for exported state values 'state_interfaces_data_' variable has size "
+      "'%zu', but it is expected to have the size '%zu' equal to the number of exported state "
+      "interfaces. No state interface will be exported. Please correct and recompile "
       "the controller with name '%s' and try again.",
-      estimated_interfaces_data_.size(), estimated_interfaces.size(), get_node()->get_name());
-    estimated_interfaces.clear();
+      exported_state_interfaces_data_.size(), state_interfaces.size(), get_node()->get_name());
+    state_interfaces.clear();
   }
 
   // check if the names of the controller state interfaces begin with the controller's name
-  for (const auto & interface : estimated_interfaces)
+  for (const auto & interface : state_interfaces)
   {
     if (interface.get_prefix_name() != get_node()->get_name())
     {
       RCLCPP_FATAL(
         get_node()->get_logger(),
         "The name of the interface '%s' does not begin with the controller's name. This is "
-        "mandatory for estimated interfaces. No estimated interface will be exported. Please "
+        "mandatory for state interfaces. No state interface will be exported. Please "
         "correct and recompile the controller with name '%s' and try again.",
         interface.get_name().c_str(), get_node()->get_name());
-      estimated_interfaces.clear();
+      state_interfaces.clear();
       break;
     }
   }
 
-  return estimated_interfaces;
+  return state_interfaces;
 }
 
 std::vector<hardware_interface::CommandInterface>

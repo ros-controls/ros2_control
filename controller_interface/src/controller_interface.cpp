@@ -28,7 +28,7 @@ ControllerInterface::ControllerInterface() : ControllerInterfaceBase() {}
 
 bool ControllerInterface::is_chainable() const { return false; }
 
-std::vector<hardware_interface::StateInterface> ControllerInterface::export_estimated_interfaces()
+std::vector<hardware_interface::StateInterface> ControllerInterface::export_state_interfaces()
 {
   return {};
 }

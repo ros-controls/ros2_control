@@ -134,9 +134,9 @@ public:
    */
   bool state_interface_is_available(const std::string & name) const;
 
-  /// Add controllers' estimated interfaces to resource manager.
+  /// Add controllers' exported state interfaces to resource manager.
   /**
-   * Interface for transferring management of estimated interfaces to resource manager.
+   * Interface for transferring management of exported state interfaces to resource manager.
    * When chaining controllers, state interfaces are used by the preceding
    * controllers.
    * Therefore, they should be managed in the same way as state interface of hardware.
@@ -144,30 +144,31 @@ public:
    * \param[in] controller_name name of the controller which state interfaces are imported.
    * \param[in] interfaces list of controller's state interfaces as StateInterfaces.
    */
-  void import_controller_estimated_interfaces(
+  void import_controller_exported_state_interfaces(
     const std::string & controller_name, std::vector<StateInterface> & interfaces);
 
-  /// Get list of estimated interface of a controller.
+  /// Get list of exported tate interface of a controller.
   /**
-   * Returns lists of stored state interfaces names for a controller.
+   * Returns lists of stored exported state interfaces names for a controller.
    *
    * \param[in] controller_name for which list of state interface names is returned.
    * \returns list of reference interface names.
    */
-  std::vector<std::string> get_controller_estimated_interface_names(
+  std::vector<std::string> get_controller_exported_state_interface_names(
     const std::string & controller_name);
 
-  /// Add controller's estimated interfaces to available list.
+  /// Add controller's exported state interfaces to available list.
   /**
    * Adds state interfacess of a controller with given name to the available list. This method
    * should be called when a controller gets activated with chained mode turned on. That means, the
-   * controller's estimated interfaces can be used by another controllers in chained architectures.
+   * controller's exported state interfaces can be used by another controllers in chained
+   * architectures.
    *
    * \param[in] controller_name name of the controller which interfaces should become available.
    */
-  void make_controller_estimated_interfaces_available(const std::string & controller_name);
+  void make_controller_exported_state_interfaces_available(const std::string & controller_name);
 
-  /// Remove controller's estimated interface to available list.
+  /// Remove controller's exported state interface to available list.
   /**
    * Removes interfaces of a controller with given name from the available list. This method should
    * be called when a controller gets deactivated and its reference interfaces cannot be used by
@@ -175,16 +176,16 @@ public:
    *
    * \param[in] controller_name name of the controller which interfaces should become unavailable.
    */
-  void make_controller_estimated_interfaces_unavailable(const std::string & controller_name);
+  void make_controller_exported_state_interfaces_unavailable(const std::string & controller_name);
 
-  /// Remove controllers estimated interfaces from resource manager.
+  /// Remove controllers exported state interfaces from resource manager.
   /**
-   * Remove state interfaces from resource manager, i.e., resource storage.
+   * Remove exported state interfaces from resource manager, i.e., resource storage.
    * The interfaces will be deleted from all internal maps and lists.
    *
    * \param[in] controller_name list of interface names that will be deleted from resource manager.
    */
-  void remove_controller_estimated_interfaces(const std::string & controller_name);
+  void remove_controller_exported_state_interfaces(const std::string & controller_name);
 
   /// Add controllers' reference interfaces to resource manager.
   /**

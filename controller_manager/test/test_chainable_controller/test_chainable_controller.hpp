@@ -63,7 +63,7 @@ public:
   CallbackReturn on_cleanup(const rclcpp_lifecycle::State & previous_state) override;
 
   CONTROLLER_MANAGER_PUBLIC
-  std::vector<hardware_interface::StateInterface> on_export_estimated_interfaces() override;
+  std::vector<hardware_interface::StateInterface> on_export_state_interfaces() override;
 
   CONTROLLER_MANAGER_PUBLIC
   std::vector<hardware_interface::CommandInterface> on_export_reference_interfaces() override;
@@ -86,7 +86,7 @@ public:
   void set_reference_interface_names(const std::vector<std::string> & reference_interface_names);
 
   CONTROLLER_MANAGER_PUBLIC
-  void set_estimated_interface_names(const std::vector<std::string> & estimated_interface_names);
+  void set_exported_state_interface_names(const std::vector<std::string> & state_interface_names);
 
   CONTROLLER_MANAGER_PUBLIC
   void set_imu_sensor_name(const std::string & name);
@@ -95,7 +95,7 @@ public:
   controller_interface::InterfaceConfiguration cmd_iface_cfg_;
   controller_interface::InterfaceConfiguration state_iface_cfg_;
   std::vector<std::string> reference_interface_names_;
-  std::vector<std::string> estimated_interface_names_;
+  std::vector<std::string> exported_state_interface_names_;
   std::unique_ptr<semantic_components::IMUSensor> imu_sensor_;
 
   realtime_tools::RealtimeBuffer<std::shared_ptr<CmdType>> rt_command_ptr_;

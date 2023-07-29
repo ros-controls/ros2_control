@@ -103,18 +103,19 @@ controller_interface::return_type TestChainableController::update_and_write_comm
   {
     command_interfaces_[i].set_value(reference_interfaces_[i] - state_interfaces_[i].get_value());
   }
-  // If there is a command interface then integrate and set it to the estimated interface data
-  for (size_t i = 0; i < estimated_interface_names_.size() && i < command_interfaces_.size(); ++i)
+  // If there is a command interface then integrate and set it to the exported state interface data
+  for (size_t i = 0; i < exported_state_interface_names_.size() && i < command_interfaces_.size();
+       ++i)
   {
-    estimated_interfaces_data_[i] = command_interfaces_[i].get_value() * CONTROLLER_DT;
+    exported_state_interfaces_data_[i] = command_interfaces_[i].get_value() * CONTROLLER_DT;
   }
   // If there is no command interface and if there is a state interface then just forward the same
   // value as in the state interface
-  for (size_t i = 0; i < estimated_interface_names_.size() && i < state_interfaces_.size() &&
+  for (size_t i = 0; i < exported_state_interface_names_.size() && i < state_interfaces_.size() &&
                      command_interfaces_.empty();
        ++i)
   {
-    estimated_interfaces_data_[i] = state_interfaces_[i].get_value();
+    exported_state_interfaces_data_[i] = state_interfaces_[i].get_value();
   }
 
   return controller_interface::return_type::OK;
@@ -171,17 +172,18 @@ CallbackReturn TestChainableController::on_cleanup(
 }
 
 std::vector<hardware_interface::StateInterface>
-TestChainableController::on_export_estimated_interfaces()
+TestChainableController::on_export_state_interfaces()
 {
-  std::vector<hardware_interface::StateInterface> estimated_interfaces;
+  std::vector<hardware_interface::StateInterface> state_interfaces;
 
-  for (size_t i = 0; i < estimated_interface_names_.size(); ++i)
+  for (size_t i = 0; i < exported_state_interface_names_.size(); ++i)
   {
-    estimated_interfaces.push_back(hardware_interface::StateInterface(
-      get_node()->get_name(), estimated_interface_names_[i], &estimated_interfaces_data_[i]));
+    state_interfaces.push_back(hardware_interface::StateInterface(
+      get_node()->get_name(), exported_state_interface_names_[i],
+      &exported_state_interfaces_data_[i]));
   }
 
-  return estimated_interfaces;
+  return state_interfaces;
 }
 
 std::vector<hardware_interface::CommandInterface>
@@ -218,12 +220,12 @@ void TestChainableController::set_reference_interface_names(
   reference_interfaces_.resize(reference_interface_names.size(), 0.0);
 }
 
-void TestChainableController::set_estimated_interface_names(
-  const std::vector<std::string> & estimated_interface_names)
+void TestChainableController::set_exported_state_interface_names(
+  const std::vector<std::string> & state_interface_names)
 {
-  estimated_interface_names_ = estimated_interface_names;
+  exported_state_interface_names_ = state_interface_names;
 
-  estimated_interfaces_data_.resize(estimated_interface_names_.size(), 0.0);
+  exported_state_interfaces_data_.resize(exported_state_interface_names_.size(), 0.0);
 }
 
 void TestChainableController::set_imu_sensor_name(const std::string & name)
