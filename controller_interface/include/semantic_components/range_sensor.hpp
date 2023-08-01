@@ -39,10 +39,7 @@ public:
    *
    * \return value of the range in meters
    */
-  float get_range()
-  {
-    return state_interfaces_[0].get().get_value();
-  }
+  float get_range() { return state_interfaces_[0].get().get_value(); }
 
   /// Return Range message with range in meters
   /**
