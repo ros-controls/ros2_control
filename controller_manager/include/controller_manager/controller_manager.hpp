@@ -392,8 +392,7 @@ private:
   /// A method to be used in the std::sort method to sort the controllers to be able to
   /// execute them in a proper order
   /**
-   * @brief controller_sorting - A functor that compares the controllers ctrl_a and ctrl_b and then
-   * returns which comes first in the sequence
+   * Compares the controllers ctrl_a and ctrl_b and then returns which comes first in the sequence
    *
    *  @note The following conditions needs to be handled while ordering the controller list
    *  1. The controllers that do not use any state or command interfaces are updated first
@@ -402,7 +401,7 @@ private:
    * before the preceding controller
    *  4. The controllers that use the controller's estimated interfaces are updated after the
    * preceding controller
-   *  5. The controllers that only use the system's command interfaces are updated last
+   *  5. The controllers that only use the hardware command interfaces are updated last
    *  6. All inactive controllers go at the end of the list
    *
    * \param[in] controllers list of controllers to compare their names to interface's prefix.

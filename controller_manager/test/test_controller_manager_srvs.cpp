@@ -486,6 +486,10 @@ TEST_F(TestControllerManagerSrvs, list_sorted_chained_controllers)
   /// The simulated controller chaining is:
   /// test_controller_name -> chain_ctrl_5 -> chain_ctrl_4 -> chain_ctrl_3 -> chain_ctrl_2 ->
   /// chain_ctrl_1
+  ///
+  /// NOTE: A -> B signifies that the controller A is utilizing the reference interfaces exported
+  /// from the controller B (or) the controller B is utilizing the expected interfaces exported from
+  /// the controller A
 
   // create server client and request
   rclcpp::executors::SingleThreadedExecutor srv_executor;
@@ -628,6 +632,10 @@ TEST_F(TestControllerManagerSrvs, list_sorted_complex_chained_controllers)
   /// test_controller_name -> chain_ctrl_7 -> chain_ctrl_6 -> chain_ctrl_2 -> chain_ctrl_1
   /// &
   /// chain_ctrl_6 -> chain_ctrl_5 -> chain_ctrl_4 -> chain_ctrl_3
+  ///
+  /// NOTE: A -> B signifies that the controller A is utilizing the reference interfaces exported
+  /// from the controller B (or) the controller B is utilizing the expected interfaces exported from
+  /// the controller A
 
   // create server client and request
   rclcpp::executors::SingleThreadedExecutor srv_executor;
@@ -826,6 +834,10 @@ TEST_F(TestControllerManagerSrvs, list_sorted_independent_chained_controllers)
   /// test_controller_name_2 -> chain_ctrl_6 -> chain_ctrl_5 -> chain_ctrl_4
   /// &&
   /// test_controller_name_7 -> test_controller_name_8
+  ///
+  /// NOTE: A -> B signifies that the controller A is utilizing the reference interfaces exported
+  /// from the controller B (or) the controller B is utilizing the expected interfaces exported from
+  /// the controller A
 
   // create server client and request
   rclcpp::executors::SingleThreadedExecutor srv_executor;

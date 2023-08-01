@@ -123,6 +123,10 @@ bool command_interface_is_reference_interface_of_controller(
  * For instance, for the following case
  * A -> B -> C -> D
  * When called with B, returns C and D
+ * NOTE: A -> B signifies that the controller A is utilizing the reference interfaces exported from
+ * the controller B (or) the controller B is utilizing the expected interfaces exported from the
+ * controller A
+ *
  * @param controller_name - Name of the controller for checking the tree
  * \param[in] controllers list of controllers to compare their names to interface's prefix.
  * @return list of controllers that are following the given controller in a chain. If none, return
@@ -179,6 +183,10 @@ std::vector<std::string> get_following_controller_names(
  * For instance, for the following case
  * A -> B -> C -> D
  * When called with C, returns A and B
+ * NOTE: A -> B signifies that the controller A is utilizing the reference interfaces exported from
+ * the controller B (or) the controller B is utilizing the expected interfaces exported from the
+ * controller A
+ *
  * @param controller_name - Name of the controller for checking the tree
  * \param[in] controllers list of controllers to compare their names to interface's prefix.
  * @return list of controllers that are preceding the given controller in a chain. If none, return
@@ -2403,7 +2411,7 @@ bool ControllerManager::controller_sorting(
 
   const std::vector<std::string> cmd_itfs = ctrl_a.c->command_interface_configuration().names;
   const std::vector<std::string> state_itfs = ctrl_a.c->state_interface_configuration().names;
-  if (cmd_itfs.empty() && !ctrl_a.c->is_chainable())
+  if (cmd_itfs.empty() || !ctrl_a.c->is_chainable())
   {
     // The case of the controllers that don't have any command interfaces. For instance,
     // joint_state_broadcaster
@@ -2469,7 +2477,7 @@ bool ControllerManager::controller_sorting(
 
     // If the ctrl_a's state interface is the one exported by the ctrl_b then ctrl_b should be
     // infront of ctrl_a
-    //TODO(saikishor): deal with the state interface chaining in the sorting algorithm
+    // TODO(saikishor): deal with the state interface chaining in the sorting algorithm
     auto state_it = std::find_if(
       state_itfs.begin(), state_itfs.end(),
       [ctrl_b](auto itf) { return (itf.find(ctrl_b.info.name) != std::string::npos); });
