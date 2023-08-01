@@ -389,7 +389,7 @@ private:
     const std::vector<ControllerSpec> & controllers, int strictness,
     const ControllersListIterator controller_it);
 
-  /// A functor to be used in the std::sort method to sort the controllers to be able to
+  /// A method to be used in the std::sort method to sort the controllers to be able to
   /// execute them in a proper order
   /**
    * @brief controller_sorting - A functor that compares the controllers ctrl_a and ctrl_b and then
