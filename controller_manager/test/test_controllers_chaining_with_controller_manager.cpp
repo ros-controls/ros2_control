@@ -157,13 +157,13 @@ public:
     diff_drive_controller->set_command_interface_configuration(diff_drive_cmd_ifs_cfg);
     diff_drive_controller->set_state_interface_configuration(diff_drive_state_ifs_cfg);
     diff_drive_controller->set_reference_interface_names({"vel_x", "vel_y", "rot_z"});
-    diff_drive_controller->set_exported_state_interface_names({"odom_x", "odom_y"});
+    diff_drive_controller->set_internal_state_interface_names({"odom_x", "odom_y"});
 
     // configure Diff Drive Two controller (Has same command interfaces as Diff Drive controller)
     diff_drive_controller_two->set_command_interface_configuration(diff_drive_cmd_ifs_cfg);
     diff_drive_controller_two->set_state_interface_configuration(diff_drive_state_ifs_cfg);
     diff_drive_controller_two->set_reference_interface_names({"vel_x", "vel_y", "rot_z"});
-    diff_drive_controller_two->set_exported_state_interface_names({"odom_x", "odom_y"});
+    diff_drive_controller_two->set_internal_state_interface_names({"odom_x", "odom_y"});
 
     // configure Position Tracking controller
     controller_interface::InterfaceConfiguration position_tracking_cmd_ifs_cfg = {
@@ -184,7 +184,7 @@ public:
     // configure sensor fusion controller
     sensor_fusion_controller->set_imu_sensor_name("base_imu");
     sensor_fusion_controller->set_state_interface_configuration(odom_and_fusion_ifs_cfg);
-    sensor_fusion_controller->set_exported_state_interface_names({"odom_x", "odom_y", "yaw"});
+    sensor_fusion_controller->set_internal_state_interface_names({"odom_x", "odom_y", "yaw"});
 
     // configure Robot Localization controller
     controller_interface::InterfaceConfiguration odom_ifs_cfg = {
@@ -345,10 +345,10 @@ public:
                   T>::type * = nullptr>
   void SetToChainedModeAndMakeInterfacesAvailable(
     std::shared_ptr<T> & controller, const std::string & controller_name,
-    const std::vector<std::string> & exported_state_interfaces,
+    const std::vector<std::string> & internal_state_interfaces,
     const std::vector<std::string> & reference_interfaces)
   {
-    if (!exported_state_interfaces.empty() || !reference_interfaces.empty())
+    if (!internal_state_interfaces.empty() || !reference_interfaces.empty())
     {
       controller->set_chained_mode(true);
       EXPECT_TRUE(controller->is_in_chained_mode());
@@ -363,12 +363,12 @@ public:
           EXPECT_FALSE(cm_->resource_manager_->command_interface_is_claimed(interface));
         }
       }
-      if (!exported_state_interfaces.empty())
+      if (!internal_state_interfaces.empty())
       {
-        // make state interface state_interfaces available
-        cm_->resource_manager_->make_controller_exported_state_interfaces_available(
+        // make internal_state interface state_interfaces available
+        cm_->resource_manager_->make_controller_internal_state_interfaces_available(
           controller_name);
-        for (const auto & interface : exported_state_interfaces)
+        for (const auto & interface : internal_state_interfaces)
         {
           EXPECT_TRUE(cm_->resource_manager_->state_interface_exists(interface));
           EXPECT_TRUE(cm_->resource_manager_->state_interface_is_available(interface));
@@ -503,7 +503,7 @@ public:
 
     EXP_STATE_ODOM_X = chained_estimate_calculation(reference[0], EXP_LEFT_WHEEL_HW_STATE);
     EXP_STATE_ODOM_Y = chained_estimate_calculation(reference[1], EXP_RIGHT_WHEEL_HW_STATE);
-    ASSERT_EQ(sensor_fusion_controller->exported_state_interfaces_data_.size(), 3u);
+    ASSERT_EQ(sensor_fusion_controller->internal_state_interfaces_data_.size(), 3u);
     ASSERT_EQ(robot_localization_controller->get_state_interface_data().size(), 3u);
     ASSERT_EQ(robot_localization_controller->get_state_interface_data()[0], EXP_STATE_ODOM_X);
     ASSERT_EQ(robot_localization_controller->get_state_interface_data()[1], EXP_STATE_ODOM_Y);
@@ -557,7 +557,7 @@ public:
     "pid_right_wheel_controller/velocity"};
   const std::vector<std::string> DIFF_DRIVE_REFERENCE_INTERFACES = {
     "diff_drive_controller/vel_x", "diff_drive_controller/vel_y", "diff_drive_controller/rot_z"};
-  const std::vector<std::string> DIFF_DRIVE_STATE_INTERFACES = {
+  const std::vector<std::string> DIFF_DRIVE_INTERNAL_STATE_INTERFACES = {
     "diff_drive_controller/odom_x", "diff_drive_controller/odom_y"};
   const std::vector<std::string> SENSOR_FUSION_ESIMTATED_INTERFACES = {
     "sensor_fusion_controller/odom_x", "sensor_fusion_controller/odom_y",
@@ -644,7 +644,7 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers)
   SetToChainedModeAndMakeInterfacesAvailable(
     pid_right_wheel_controller, PID_RIGHT_WHEEL, {}, PID_RIGHT_WHEEL_REFERENCE_INTERFACES);
   SetToChainedModeAndMakeInterfacesAvailable(
-    diff_drive_controller, DIFF_DRIVE_CONTROLLER, DIFF_DRIVE_STATE_INTERFACES,
+    diff_drive_controller, DIFF_DRIVE_CONTROLLER, DIFF_DRIVE_INTERNAL_STATE_INTERFACES,
     DIFF_DRIVE_REFERENCE_INTERFACES);
   SetToChainedModeAndMakeInterfacesAvailable(
     sensor_fusion_controller, SENSOR_FUSION_CONTROLLER, SENSOR_FUSION_ESIMTATED_INTERFACES, {});
@@ -693,7 +693,7 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers)
   ASSERT_EQ(pid_right_wheel_controller->internal_counter, 5u);
   ASSERT_EQ(pid_left_wheel_controller->internal_counter, 7u);
 
-  // Sensor Controller uses exported state interfaces of Diff-Drive Controller and IMU
+  // Sensor Controller uses internal state interfaces of Diff-Drive Controller and IMU
   ActivateAndCheckController(sensor_fusion_controller, SENSOR_FUSION_CONTROLLER, {}, 1u);
   ASSERT_EQ(sensor_fusion_controller->internal_counter, 1u);
   ASSERT_EQ(position_tracking_controller->internal_counter, 3u);
@@ -701,7 +701,7 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers)
   ASSERT_EQ(pid_right_wheel_controller->internal_counter, 7u);
   ASSERT_EQ(pid_left_wheel_controller->internal_counter, 9u);
 
-  // Robot localization Controller uses exported state interfaces of Diff-Drive Controller
+  // Robot localization Controller uses internal state interfaces of Diff-Drive Controller
   ActivateAndCheckController(robot_localization_controller, ROBOT_LOCALIZATION_CONTROLLER, {}, 1u);
   ASSERT_EQ(robot_localization_controller->internal_counter, 1u);
   ASSERT_EQ(sensor_fusion_controller->internal_counter, 3u);
@@ -710,7 +710,7 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers)
   ASSERT_EQ(pid_right_wheel_controller->internal_counter, 9u);
   ASSERT_EQ(pid_left_wheel_controller->internal_counter, 11u);
 
-  // Odometry Publisher Controller uses exported state interfaces of Diff-Drive Controller
+  // Odometry Publisher Controller uses internal state interfaces of Diff-Drive Controller
   ActivateAndCheckController(odom_publisher_controller, ODOM_PUBLISHER_CONTROLLER, {}, 1u);
   // 'rot_z' reference interface is not claimed
   for (const auto & interface : {"diff_drive_controller/rot_z"})
@@ -898,17 +898,17 @@ TEST_P(
     EXPECT_TRUE(cm_->resource_manager_->state_interface_is_available(interface));
   }
 
-  // Sensor fusion Controller uses exported state interfaces of Diff-Drive Controller and IMU
+  // Sensor fusion Controller uses internal state interfaces of Diff-Drive Controller and IMU
   ActivateAndCheckController(sensor_fusion_controller, SENSOR_FUSION_CONTROLLER, {}, 1u);
   EXPECT_TRUE(pid_left_wheel_controller->is_in_chained_mode());
   EXPECT_TRUE(pid_right_wheel_controller->is_in_chained_mode());
   ASSERT_TRUE(diff_drive_controller->is_in_chained_mode());
   ASSERT_FALSE(sensor_fusion_controller->is_in_chained_mode());
 
-  // Robot localization Controller uses exported state interfaces of sensor fusion Controller
+  // Robot localization Controller uses internal state interfaces of sensor fusion Controller
   ActivateAndCheckController(robot_localization_controller, ROBOT_LOCALIZATION_CONTROLLER, {}, 1u);
 
-  // Odometry Publisher Controller uses exported state interfaces of Diff-Drive Controller
+  // Odometry Publisher Controller uses internal state interfaces of Diff-Drive Controller
   ActivateAndCheckController(odom_publisher_controller, ODOM_PUBLISHER_CONTROLLER, {}, 1u);
   EXPECT_TRUE(pid_left_wheel_controller->is_in_chained_mode());
   EXPECT_TRUE(pid_right_wheel_controller->is_in_chained_mode());
@@ -924,7 +924,7 @@ TEST_P(
 
   // PositionController is deactivated --> DiffDrive controller still continues in chained mode
   // As the DiffDriveController is in chained mode, right now we tend to also deactivate
-  // the other controllers that rely on the DiffDriveController exported interfaces
+  // the other controllers that rely on the DiffDriveController internal state interfaces
   DeactivateAndCheckController(
     position_tracking_controller, POSITION_TRACKING_CONTROLLER,
     POSITION_CONTROLLER_CLAIMED_INTERFACES, 10u, true);
@@ -933,8 +933,8 @@ TEST_P(
   ASSERT_TRUE(diff_drive_controller->is_in_chained_mode());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, diff_drive_controller->get_state().id());
-  // SensorFusionController continues to stay in the chained mode as it is still using the state
-  // interfaces
+  // SensorFusionController continues to stay in the chained mode as it is still using the internal
+  // state interfaces
   ASSERT_TRUE(sensor_fusion_controller->is_in_chained_mode());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, sensor_fusion_controller->get_state().id());
@@ -1505,9 +1505,9 @@ TEST_P(
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE}}};
 
   // Test switch 'from chained mode' when controllers are deactivated and possible combination of
-  // disabling controllers that use reference/state interfaces of the other controller. This is
-  // important to check that deactivation is not trigger irrespective of the type
-  // (reference/state) interface that is shared among the other controllers
+  // disabling controllers that use reference/internal state interfaces of the other controller.
+  // This is important to check that deactivation is not trigger irrespective of the type
+  // (reference/internal state) interface that is shared among the other controllers
 
   // PositionController is deactivated --> DiffDrive controller still continues in chained mode
   // As the DiffDriveController is in chained mode, right now we tend to also deactivate
@@ -1521,8 +1521,8 @@ TEST_P(
   ASSERT_TRUE(sensor_fusion_controller->is_in_chained_mode());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, diff_drive_controller->get_state().id());
-  // SensorFusionController continues to stay in the chained mode as it is still using the state
-  // interfaces
+  // SensorFusionController continues to stay in the chained mode as it is still using the internal
+  // state interfaces
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, sensor_fusion_controller->get_state().id());
   EXPECT_EQ(

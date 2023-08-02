@@ -748,7 +748,7 @@ public:
 
   /// Mapping between controllers and list of interfaces they are using
   std::unordered_map<std::string, std::vector<std::string>>
-    controllers_exported_state_interfaces_map_;
+    controllers_internal_state_interfaces_map_;
   std::unordered_map<std::string, std::vector<std::string>> controllers_reference_interfaces_map_;
 
   /// Storage of all available state interfaces
@@ -886,27 +886,27 @@ bool ResourceManager::state_interface_is_available(const std::string & name) con
 }
 
 // CM API: Called in "callback/slow"-thread
-void ResourceManager::import_controller_exported_state_interfaces(
+void ResourceManager::import_controller_internal_state_interfaces(
   const std::string & controller_name, std::vector<StateInterface> & interfaces)
 {
   std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
   auto interface_names = resource_storage_->add_state_interfaces(interfaces);
-  resource_storage_->controllers_exported_state_interfaces_map_[controller_name] = interface_names;
+  resource_storage_->controllers_internal_state_interfaces_map_[controller_name] = interface_names;
 }
 
 // CM API: Called in "callback/slow"-thread
-std::vector<std::string> ResourceManager::get_controller_exported_state_interface_names(
+std::vector<std::string> ResourceManager::get_controller_internal_state_interface_names(
   const std::string & controller_name)
 {
-  return resource_storage_->controllers_exported_state_interfaces_map_.at(controller_name);
+  return resource_storage_->controllers_internal_state_interfaces_map_.at(controller_name);
 }
 
 // CM API: Called in "update"-thread
-void ResourceManager::make_controller_exported_state_interfaces_available(
+void ResourceManager::make_controller_internal_state_interfaces_available(
   const std::string & controller_name)
 {
   auto interface_names =
-    resource_storage_->controllers_exported_state_interfaces_map_.at(controller_name);
+    resource_storage_->controllers_internal_state_interfaces_map_.at(controller_name);
   std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
   resource_storage_->available_state_interfaces_.insert(
     resource_storage_->available_state_interfaces_.end(), interface_names.begin(),
@@ -914,11 +914,11 @@ void ResourceManager::make_controller_exported_state_interfaces_available(
 }
 
 // CM API: Called in "update"-thread
-void ResourceManager::make_controller_exported_state_interfaces_unavailable(
+void ResourceManager::make_controller_internal_state_interfaces_unavailable(
   const std::string & controller_name)
 {
   auto interface_names =
-    resource_storage_->controllers_exported_state_interfaces_map_.at(controller_name);
+    resource_storage_->controllers_internal_state_interfaces_map_.at(controller_name);
 
   std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
   for (const auto & interface : interface_names)
@@ -936,12 +936,12 @@ void ResourceManager::make_controller_exported_state_interfaces_unavailable(
 }
 
 // CM API: Called in "callback/slow"-thread
-void ResourceManager::remove_controller_exported_state_interfaces(
+void ResourceManager::remove_controller_internal_state_interfaces(
   const std::string & controller_name)
 {
   auto interface_names =
-    resource_storage_->controllers_exported_state_interfaces_map_.at(controller_name);
-  resource_storage_->controllers_exported_state_interfaces_map_.erase(controller_name);
+    resource_storage_->controllers_internal_state_interfaces_map_.at(controller_name);
+  resource_storage_->controllers_internal_state_interfaces_map_.erase(controller_name);
 
   std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
   resource_storage_->remove_state_interfaces(interface_names);

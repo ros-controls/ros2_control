@@ -29,8 +29,8 @@ constexpr double INTERFACE_VALUE = 1989.0;
 constexpr double INTERFACE_VALUE_SUBSCRIBER_ERROR = 12345.0;
 constexpr double INTERFACE_VALUE_UPDATE_ERROR = 67890.0;
 constexpr double INTERFACE_VALUE_INITIAL_REF = 1984.0;
-constexpr double EXPORTED_STATE_INTERFACE_VALUE = 21833.0;
-constexpr double EXPORTED_STATE_INTERFACE_VALUE_IN_CHAINMODE = 82802.0;
+constexpr double INTERNAL_STATE_INTERFACE_VALUE = 21833.0;
+constexpr double INTERNAL_STATE_INTERFACE_VALUE_IN_CHAINMODE = 82802.0;
 
 class TestableChainableControllerInterface
 : public controller_interface::ChainableControllerInterface
@@ -43,8 +43,8 @@ public:
   {
     reference_interfaces_.reserve(1);
     reference_interfaces_.push_back(INTERFACE_VALUE);
-    exported_state_interfaces_data_.reserve(1);
-    exported_state_interfaces_data_.push_back(EXPORTED_STATE_INTERFACE_VALUE);
+    internal_state_interfaces_data_.reserve(1);
+    internal_state_interfaces_data_.push_back(INTERNAL_STATE_INTERFACE_VALUE);
   }
 
   controller_interface::CallbackReturn on_init() override
@@ -68,14 +68,14 @@ public:
   }
 
   // Implementation of ChainableController virtual methods
-  std::vector<hardware_interface::StateInterface> on_export_state_interfaces() override
+  std::vector<hardware_interface::StateInterface> on_export_internal_state_interfaces() override
   {
-    std::vector<hardware_interface::StateInterface> state_interfaces;
+    std::vector<hardware_interface::StateInterface> internal_state_interfaces;
 
-    state_interfaces.push_back(hardware_interface::StateInterface(
-      name_prefix_of_interfaces_, "test_state", &exported_state_interfaces_data_[0]));
+    internal_state_interfaces.push_back(hardware_interface::StateInterface(
+      name_prefix_of_interfaces_, "test_state", &internal_state_interfaces_data_[0]));
 
-    return state_interfaces;
+    return internal_state_interfaces;
   }
 
   // Implementation of ChainableController virtual methods
@@ -93,7 +93,7 @@ public:
   {
     if (reference_interfaces_[0] == 0.0)
     {
-      exported_state_interfaces_data_[0] = EXPORTED_STATE_INTERFACE_VALUE_IN_CHAINMODE;
+      internal_state_interfaces_data_[0] = INTERNAL_STATE_INTERFACE_VALUE_IN_CHAINMODE;
       return true;
     }
     else
@@ -123,7 +123,7 @@ public:
     }
 
     reference_interfaces_[0] -= 1;
-    exported_state_interfaces_data_[0] += 1;
+    internal_state_interfaces_data_[0] += 1;
 
     return controller_interface::return_type::OK;
   }
