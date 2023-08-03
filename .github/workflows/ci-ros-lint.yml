@@ -5,14 +5,16 @@ on:
 jobs:
   ament_lint:
     name: ament_${{ matrix.linter }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
           linter: [cppcheck, copyright, lint_cmake]
+    env:
+      AMENT_CPPCHECK_ALLOW_SLOW_VERSIONS: true
     steps:
     - uses: actions/checkout@v3
-    - uses: ros-tooling/setup-ros@0.6.2
+    - uses: ros-tooling/setup-ros@0.7.0
     - uses: ros-tooling/action-ros-lint@v0.1
       with:
         distribution: rolling
@@ -29,14 +31,14 @@ jobs:
 
   ament_lint_100:
     name: ament_${{ matrix.linter }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
           linter: [cpplint]
     steps:
     - uses: actions/checkout@v3
-    - uses: ros-tooling/setup-ros@0.6.2
+    - uses: ros-tooling/setup-ros@0.7.0
     - uses: ros-tooling/action-ros-lint@v0.1
       with:
         distribution: rolling
