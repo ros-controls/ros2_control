@@ -623,6 +623,9 @@ controller_interface::return_type ControllerManager::configure_controller(
   }
   else if (controller_update_rate != 0 && cm_update_rate % controller_update_rate != 0)
   {
+    // NOTE: The following computation is done to compute the approx controller update that can be
+    // achieved w.r.t to the CM's update rate. This is done this way to take into account the
+    // unsigned integer division.
     const auto act_ctrl_update_rate = cm_update_rate / (cm_update_rate / controller_update_rate);
     RCLCPP_WARN(
       get_logger(),
