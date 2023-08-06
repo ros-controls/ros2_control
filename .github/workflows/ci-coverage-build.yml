@@ -16,11 +16,11 @@ jobs:
     env:
       ROS_DISTRO: rolling
     steps:
-      - uses: ros-tooling/setup-ros@0.6.2
+      - uses: ros-tooling/setup-ros@0.7.0
         with:
           required-ros-distributions: ${{ env.ROS_DISTRO }}
       - uses: actions/checkout@v3
-      - uses: ros-tooling/action-ros-ci@0.3.2
+      - uses: ros-tooling/action-ros-ci@0.3.3
         with:
           target-ros2-distro: ${{ env.ROS_DISTRO }}
           import-token: ${{ secrets.GITHUB_TOKEN }}
