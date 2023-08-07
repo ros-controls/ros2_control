@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.17.0 (2023-08-07)
+-------------------
 * [CM] Fixes the issue with individual controller's update rate (`#1082 <https://github.com/ros-controls/ros2_control/issues/1082>`_)
 * Fix deprecation warning (`#1093 <https://github.com/ros-controls/ros2_control/issues/1093>`_)
 * Contributors: Christoph Fröhlich, Sai Kishor Kothakota
