@@ -428,12 +428,14 @@ TEST_P(TestControllerUpdateRates, check_the_controller_update_rate)
     static_cast<unsigned int>(std::round(cm_update_rate / static_cast<double>(controller_factor)));
 
   const auto initial_counter = test_controller->internal_counter;
+  rclcpp::Time time;
   for (size_t update_counter = 1; update_counter <= 10 * cm_update_rate; ++update_counter)
   {
     EXPECT_EQ(
       controller_interface::return_type::OK,
-      cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
+      cm_->update(time, rclcpp::Duration::from_seconds(0.01)));
 
+    time += rclcpp::Duration::from_seconds(0.01);
     if (update_counter % cm_update_rate == 0)
     {
       const auto no_of_secs_passed = update_counter / cm_update_rate;

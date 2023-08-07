@@ -565,6 +565,7 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_c
   controller_spec.c = controller;
   controller_spec.info.name = controller_name;
   controller_spec.info.type = controller_type;
+  controller_spec.next_update_cycle_time = rclcpp::Time(0);
 
   return add_controller_impl(controller_spec);
 }
@@ -2024,7 +2025,7 @@ controller_interface::return_type ControllerManager::update(
   ++update_loop_counter_;
   update_loop_counter_ %= update_rate_;
 
-  for (auto loaded_controller : rt_controller_list)
+  for (auto & loaded_controller : rt_controller_list)
   {
     // TODO(v-lopez) we could cache this information
     // https://github.com/ros-controls/ros2_control/issues/153
@@ -2036,7 +2037,9 @@ controller_interface::return_type ControllerManager::update(
           ? 1u
           : update_rate_ / controller_update_rate;
 
-      bool controller_go = ((update_loop_counter_ % controller_update_factor) == 0);
+      bool controller_go = (time.seconds() > loaded_controller.next_update_cycle_time.seconds());
+
+      const auto controller_period = rclcpp::Duration::from_seconds(1.0 / controller_update_rate);
       RCLCPP_DEBUG(
         get_logger(), "update_loop_counter: '%d ' controller_go: '%s ' controller_name: '%s '",
         update_loop_counter_, controller_go ? "True" : "False",
@@ -2045,9 +2048,9 @@ controller_interface::return_type ControllerManager::update(
       if (controller_go)
       {
         auto controller_ret = loaded_controller.c->update(
-          time, (controller_update_factor != 1u)
-                  ? rclcpp::Duration::from_seconds(1.0 / controller_update_rate)
-                  : period);
+          time, (controller_update_factor != 1u) ? controller_period : period);
+
+        loaded_controller.next_update_cycle_time = time + controller_period;
 
         if (controller_ret != controller_interface::return_type::OK)
         {
