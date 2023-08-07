@@ -2037,20 +2037,25 @@ controller_interface::return_type ControllerManager::update(
           ? 1u
           : update_rate_ / controller_update_rate;
 
-      bool controller_go = (time.seconds() > loaded_controller.next_update_cycle_time.seconds());
+      bool controller_go = (time == rclcpp::Time(0)) ||
+                           (time.seconds() >= loaded_controller.next_update_cycle_time.seconds());
 
-      const auto controller_period = rclcpp::Duration::from_seconds(1.0 / controller_update_rate);
+      const auto controller_period =
+        (controller_update_rate != 0) && (controller_update_rate < update_rate_)
+          ? rclcpp::Duration::from_seconds((1.0 / controller_update_rate))
+          : period;
       RCLCPP_DEBUG(
         get_logger(), "update_loop_counter: '%d ' controller_go: '%s ' controller_name: '%s '",
         update_loop_counter_, controller_go ? "True" : "False",
         loaded_controller.info.name.c_str());
-
       if (controller_go)
       {
         auto controller_ret = loaded_controller.c->update(
           time, (controller_update_factor != 1u) ? controller_period : period);
 
-        loaded_controller.next_update_cycle_time = time + controller_period;
+        if (loaded_controller.next_update_cycle_time == rclcpp::Time(0))
+          loaded_controller.next_update_cycle_time = time;
+        loaded_controller.next_update_cycle_time += controller_period;
 
         if (controller_ret != controller_interface::return_type::OK)
         {
