@@ -269,3 +269,13 @@ view_controller_chains
     usage: ros2 view_controller_chains
 
     Creates a graphviz image from loaded controllers.
+
+    options:
+      -h, --help            show this help message and exit
+      --spin-time SPIN_TIME
+                            Spin time in seconds to wait for discovery (only applies when not using an already running daemon)
+      -s, --use-sim-time    Enable ROS simulation time
+      -c CONTROLLER_MANAGER, --controller-manager CONTROLLER_MANAGER
+                            Name of the controller manager ROS node
+      --include-hidden-nodes
+                            Consider hidden nodes as well
