@@ -268,7 +268,7 @@ view_controller_chains
     $ ros2 control view_controller_chains -h
     usage: ros2 view_controller_chains
 
-    Creates a graphviz image from loaded controllers.
+    Generates a diagram of the loaded chained controllers into /tmp/controller_diagram.gv.pdf
 
     options:
       -h, --help            show this help message and exit
