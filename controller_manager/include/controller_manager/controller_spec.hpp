@@ -37,7 +37,7 @@ struct ControllerSpec
 {
   hardware_interface::ControllerInfo info;
   controller_interface::ControllerInterfaceBaseSharedPtr c;
-  rclcpp::Time next_update_cycle_time;
+  std::shared_ptr<rclcpp::Time> next_update_cycle_time;
 };
 
 }  // namespace controller_manager
