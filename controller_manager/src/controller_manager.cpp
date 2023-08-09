@@ -1949,7 +1949,9 @@ void ControllerManager::list_hardware_interfaces_srv_cb(
   {
     controller_manager_msgs::msg::HardwareInterface hwi;
     hwi.name = command_interface_name;
-    hwi.is_available = resource_manager_->command_interface_is_available(command_interface_name);
+    hwi.is_available =
+      resource_manager_->interface_is_reference_interface_of_controller(command_interface_name) ||
+      resource_manager_->command_interface_is_available(command_interface_name);
     hwi.is_claimed = resource_manager_->command_interface_is_claimed(command_interface_name);
     response->command_interfaces.push_back(hwi);
   }
