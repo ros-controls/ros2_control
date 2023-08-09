@@ -182,6 +182,16 @@ public:
    */
   void remove_controller_reference_interfaces(const std::string & controller_name);
 
+  /// Checks if a command interface belongs to a controller or not
+  /**
+   * Checks if the parsed interface is found within the list of interfaces per controller in
+   * `controllers_reference_interfaces_map_`
+   *
+   * @param[in] interface_name name of the interface to verify in the map
+   * @return true if interface belongs to a controller, false if not
+   */
+  bool interface_is_reference_interface_of_controller(const std::string & interface_name) const;
+
   /// Cache mapping between hardware and controllers using it
   /**
    * Find mapping between controller and hardware based on interfaces controller with
