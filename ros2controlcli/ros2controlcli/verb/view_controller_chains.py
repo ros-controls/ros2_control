@@ -147,7 +147,7 @@ def parse_response(list_controllers_response, list_hardware_response, visualize=
 
 
 class ViewControllerChainsVerb(VerbExtension):
-    """Generates a diagram of the loaded chained controllers."""
+    """Generates a diagram of the loaded chained controllers into /tmp/controller_diagram.gv.pdf."""
 
     def add_arguments(self, parser, cli_name):
         add_arguments(parser)

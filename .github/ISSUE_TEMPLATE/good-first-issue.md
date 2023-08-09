@@ -28,7 +28,7 @@ Nothing. This issue is meant to welcome you to Open Source :) We are happy to wa
 
 - [ ] 🙋 **Claim this issue**: Comment below. If someone else has claimed it, ask if they've opened a pull request already and if they're stuck -- maybe you can help them solve a problem or move it along!
 
-- [ ] 🗄️ **Create a local workspace** for making your changes and testing [following these instructions](https://docs.ros.org/en/galactic/Tutorials/Workspace/Creating-A-Workspace.html), for Step3 use "Download Source Code" section with [these instructions](https://ros-controls.github.io/control.ros.org/getting_started.html#compiling).
+- [ ] 🗄️ **Create a local workspace** for making your changes and testing [following these instructions](https://docs.ros.org/en/humble/Tutorials/Workspace/Creating-A-Workspace.html), for Step 3 use "Download Source Code" section with [these instructions](https://control.ros.org/humble/doc/getting_started/getting_started.html#building-from-source).
 
 - [ ] 🍴 **Fork the repository** using the handy button at the top of the repository page and **clone** it into `~/ws_ros2_control/src/ros-controls/ros2_control`, [here is a guide that you can follow](https://guides.github.com/activities/forking/) (You will have to remove or empty the existing `ros2_control` folder before cloning your own fork)
 
@@ -53,8 +53,8 @@ Nothing. This issue is meant to welcome you to Open Source :) We are happy to wa
 
 Don’t hesitate to ask questions or to get help if you feel like you are getting stuck. For example leave a comment below!
 Furthermore, you find helpful resources here:
-* [ROS2 Control Contribution Guide](https://ros-controls.github.io/control.ros.org/contributing.html)
-* [ROS2 Tutorials](https://docs.ros.org/en/galactic/Tutorials.html)
+* [ros2_control Contribution Guide](https://control.ros.org/humble/doc/contributing/contributing.html)
+* [ROS2 Tutorials](https://docs.ros.org/en/humble/Tutorials.html)
 * [ROS Answers](https://answers.ros.org/questions/)
 
 **Good luck with your first issue!**
