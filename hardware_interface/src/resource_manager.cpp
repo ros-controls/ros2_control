@@ -498,7 +498,7 @@ public:
         RCUTILS_LOG_WARN_NAMED(
           "resource_manager",
           "Actuator hardware component '%s' from plugin '%s' failed to initialize.",
-          hardware_info.name.c_str(), hardware_info.hardware_plugin_name.c_str());
+          hardware_info.name.c_str(), hardware_info.hardware_class_type.c_str());
       }
     };
 
@@ -520,7 +520,7 @@ public:
         RCUTILS_LOG_WARN_NAMED(
           "resource_manager",
           "Sensor hardware component '%s' from plugin '%s' failed to initialize.",
-          hardware_info.name.c_str(), hardware_info.hardware_plugin_name.c_str());
+          hardware_info.name.c_str(), hardware_info.hardware_class_type.c_str());
       }
     };
 
@@ -543,7 +543,7 @@ public:
         RCUTILS_LOG_WARN_NAMED(
           "resource_manager",
           "System hardware component '%s' from plugin '%s' failed to initialize.",
-          hardware_info.name.c_str(), hardware_info.hardware_plugin_name.c_str());
+          hardware_info.name.c_str(), hardware_info.hardware_class_type.c_str());
       }
     };
 
@@ -566,7 +566,7 @@ public:
         RCUTILS_LOG_WARN_NAMED(
           "resource_manager",
           "Actuator hardware component '%s' from plugin '%s' failed to initialize.",
-          hardware_info.name.c_str(), hardware_info.hardware_plugin_name.c_str());
+          hardware_info.name.c_str(), hardware_info.hardware_class_type.c_str());
       }
     };
 
@@ -588,7 +588,7 @@ public:
         RCUTILS_LOG_WARN_NAMED(
           "resource_manager",
           "Sensor hardware component '%s' from plugin '%s' failed to initialize.",
-          hardware_info.name.c_str(), hardware_info.hardware_plugin_name.c_str());
+          hardware_info.name.c_str(), hardware_info.hardware_class_type.c_str());
       }
     };
 
@@ -611,7 +611,7 @@ public:
         RCUTILS_LOG_WARN_NAMED(
           "resource_manager",
           "System hardware component '%s' from plugin '%s' failed to initialize.",
-          hardware_info.name.c_str(), hardware_info.hardware_plugin_name.c_str());
+          hardware_info.name.c_str(), hardware_info.hardware_class_type.c_str());
       }
     };
 
