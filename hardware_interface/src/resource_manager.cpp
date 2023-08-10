@@ -899,17 +899,6 @@ void ResourceManager::remove_controller_reference_interfaces(const std::string &
   resource_storage_->remove_command_interfaces(interface_names);
 }
 
-bool ResourceManager::interface_is_reference_interface_of_controller(
-  const std::string & interface_name) const
-{
-  for (const auto & it : resource_storage_->controllers_reference_interfaces_map_)
-  {
-    if (std::find(it.second.begin(), it.second.end(), interface_name) != it.second.end())
-      return true;
-  }
-  return false;
-}
-
 // CM API: Called in "callback/slow"-thread
 void ResourceManager::cache_controller_to_hardware(
   const std::string & controller_name, const std::vector<std::string> & interfaces)
