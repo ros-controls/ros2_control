@@ -24,6 +24,7 @@
 #include "controller_manager/controller_manager.hpp"
 #include "controller_manager_msgs/srv/list_controller_types.hpp"
 #include "controller_manager_msgs/srv/list_controllers.hpp"
+#include "controller_manager_msgs/srv/list_hardware_interfaces.hpp"
 #include "controller_manager_msgs/srv/switch_controller.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 #include "test_chainable_controller/test_chainable_controller.hpp"
@@ -34,6 +35,7 @@ using ::testing::Return;
 using ::testing::UnorderedElementsAre;
 
 using ListControllers = controller_manager_msgs::srv::ListControllers;
+using ListHardwareInterfaces = controller_manager_msgs::srv::ListHardwareInterfaces;
 using TestController = test_controller::TestController;
 using TestChainableController = test_chainable_controller::TestChainableController;
 
@@ -1546,3 +1548,150 @@ TEST_F(TestControllerManagerSrvs, list_sorted_large_chained_controller_tree)
   }
   RCLCPP_INFO(srv_node->get_logger(), "Check successful!");
 }
+
+TEST_F(TestControllerManagerSrvs, list_hardware_interfaces_srv)
+{
+  // create server client and request
+  rclcpp::executors::SingleThreadedExecutor srv_executor;
+  rclcpp::Node::SharedPtr srv_node = std::make_shared<rclcpp::Node>("srv_client");
+  srv_executor.add_node(srv_node);
+  rclcpp::Client<ListHardwareInterfaces>::SharedPtr client =
+    srv_node->create_client<ListHardwareInterfaces>(
+      "test_controller_manager/list_hardware_interfaces");
+  auto request = std::make_shared<ListHardwareInterfaces::Request>();
+
+  // create chained controller
+  auto test_chained_controller = std::make_shared<TestChainableController>();
+  controller_interface::InterfaceConfiguration chained_cmd_cfg = {
+    controller_interface::interface_configuration_type::INDIVIDUAL, {"joint1/position"}};
+  controller_interface::InterfaceConfiguration chained_state_cfg = {
+    controller_interface::interface_configuration_type::INDIVIDUAL,
+    {"joint1/position", "joint1/velocity"}};
+  test_chained_controller->set_command_interface_configuration(chained_cmd_cfg);
+  test_chained_controller->set_state_interface_configuration(chained_state_cfg);
+  test_chained_controller->set_reference_interface_names({"joint1/position", "joint1/velocity"});
+  // create non-chained controller
+  auto test_controller = std::make_shared<TestController>();
+  controller_interface::InterfaceConfiguration cmd_cfg = {
+    controller_interface::interface_configuration_type::INDIVIDUAL,
+    {std::string(test_chainable_controller::TEST_CONTROLLER_NAME) + "/joint1/position",
+     std::string(test_chainable_controller::TEST_CONTROLLER_NAME) + "/joint1/velocity",
+     "joint2/velocity"}};
+  controller_interface::InterfaceConfiguration state_cfg = {
+    controller_interface::interface_configuration_type::INDIVIDUAL,
+    {"joint1/position", "joint1/velocity"}};
+  test_controller->set_command_interface_configuration(cmd_cfg);
+  test_controller->set_state_interface_configuration(state_cfg);
+
+  // add controllers
+  cm_->add_controller(
+    test_chained_controller, test_chainable_controller::TEST_CONTROLLER_NAME,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    test_controller, test_controller::TEST_CONTROLLER_NAME,
+    test_controller::TEST_CONTROLLER_CLASS_NAME);
+  // get hardware interface list before configure and loading
+  auto initial_result = call_service_and_wait(*client, request, srv_executor);
+  // As there is no controller, so all the interfaces should be avaialble and unclaimed
+  for (const auto & cmd_itrf : initial_result->command_interfaces)
+  {
+    ASSERT_TRUE(cmd_itrf.is_available);
+    ASSERT_FALSE(cmd_itrf.is_claimed);
+  }
+
+  // configure controllers
+  cm_->configure_controller(test_chainable_controller::TEST_CONTROLLER_NAME);
+  cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME);
+
+  // The interfaces should be same available and unclaimed until we activate the controllers
+  auto result = call_service_and_wait(*client, request, srv_executor);
+
+  ASSERT_EQ(2u, result->command_interfaces.size() - initial_result->command_interfaces.size());
+  // There will be no increase in state interfaces
+  ASSERT_EQ(0u, result->state_interfaces.size() - initial_result->state_interfaces.size());
+  // As there is no controller, so all the interfaces should be avaialble and unclaimed
+  for (const auto & cmd_itrf : result->command_interfaces)
+  {
+    ASSERT_TRUE(cmd_itrf.is_available);
+    ASSERT_FALSE(cmd_itrf.is_claimed);
+  }
+  auto find_interface_in_list = [](const std::string & interface, auto & hw_interface_info)
+  {
+    return std::find_if(
+             hw_interface_info.begin(), hw_interface_info.end(),
+             [&](auto info) { return info.name == interface; }) != hw_interface_info.end();
+  };
+  ASSERT_TRUE(find_interface_in_list(
+    std::string(test_chainable_controller::TEST_CONTROLLER_NAME) + "/joint1/position",
+    result->command_interfaces));
+  ASSERT_TRUE(find_interface_in_list(
+    std::string(test_chainable_controller::TEST_CONTROLLER_NAME) + "/joint1/velocity",
+    result->command_interfaces));
+
+  // activate controllers
+  cm_->switch_controller(
+    {test_chainable_controller::TEST_CONTROLLER_NAME}, {},
+    controller_manager_msgs::srv::SwitchController::Request::STRICT, true, rclcpp::Duration(0, 0));
+
+  // On activating this chainable controller, we should see that there are 2 more command interfaces
+  // as this chainable controllers exports 2 reference interfaces
+  result = call_service_and_wait(*client, request, srv_executor);
+
+  // There will be no increase upon activation
+  ASSERT_EQ(2u, result->command_interfaces.size() - initial_result->command_interfaces.size());
+  ASSERT_EQ(0u, result->state_interfaces.size() - initial_result->state_interfaces.size());
+
+  for (const auto & cmd_itrf : result->command_interfaces)
+  {
+    ASSERT_TRUE(cmd_itrf.is_available);
+    // This interface is claimed by the chainable controller
+    if (cmd_itrf.name == "joint1/position")
+    {
+      EXPECT_TRUE(cmd_itrf.is_claimed);
+    }
+    else if (
+      cmd_itrf.name ==
+        std::string(test_chainable_controller::TEST_CONTROLLER_NAME) + "/joint1/position" ||
+      cmd_itrf.name ==
+        std::string(test_chainable_controller::TEST_CONTROLLER_NAME) + "/joint1/velocity")
+    {
+      // As these interfaces are exposed by the chainable controller and not yet claimed by other
+      // controllers
+      ASSERT_FALSE(cmd_itrf.is_claimed);
+    }
+    else
+    {
+      // Case for rest of the controllers
+      ASSERT_FALSE(cmd_itrf.is_claimed);
+    }
+  }
+
+  cm_->switch_controller(
+    {test_controller::TEST_CONTROLLER_NAME}, {},
+    controller_manager_msgs::srv::SwitchController::Request::STRICT, true, rclcpp::Duration(0, 0));
+
+  // Now as another controller using the interfaces of chainable controller is activated, those
+  // interfaces should reflect as claimed
+  result = call_service_and_wait(*client, request, srv_executor);
+
+  for (const auto & cmd_itrf : result->command_interfaces)
+  {
+    ASSERT_TRUE(cmd_itrf.is_available);
+    // This interface is claimed by the chainable controller
+    if (
+      cmd_itrf.name == "joint1/position" || cmd_itrf.name == "joint2/velocity" ||
+      cmd_itrf.name ==
+        std::string(test_chainable_controller::TEST_CONTROLLER_NAME) + "/joint1/position" ||
+      cmd_itrf.name ==
+        std::string(test_chainable_controller::TEST_CONTROLLER_NAME) + "/joint1/velocity")
+    {
+      ASSERT_TRUE(cmd_itrf.is_claimed);
+    }
+    else
+    {
+      // Case for rest of the controllers
+      ASSERT_FALSE(cmd_itrf.is_claimed);
+    }
+  }
+}
+
