@@ -106,7 +106,7 @@ TEST_P(TestControllerManagerWithNamespacedControllers, controller_in_absolute_na
   EXPECT_STREQ(test_controller2->get_node()->get_namespace(), "/device2");
 }
 
-TEST_P(TestControllerManagerWithNamespacedControllers, controller_in_same_namespace)
+TEST_P(TestControllerManagerWithNamespacedControllers, when_controller_is_defined_with_just_a_name_expect_it_relative_to_cm_namespace)
 {
   auto test_controller = std::make_shared<test_controller::TestController>();
   auto test_controller2 = std::make_shared<test_controller::TestController>();
