@@ -120,38 +120,6 @@ TEST_P(TestControllerManagerWithNamespacedControllers, when_controller_is_define
   EXPECT_EQ(2u, cm_->get_loaded_controllers().size());
   EXPECT_EQ(2, test_controller.use_count());
 
-  // setup interface to claim from controllers
-  controller_interface::InterfaceConfiguration cmd_itfs_cfg;
-  cmd_itfs_cfg.type = controller_interface::interface_configuration_type::INDIVIDUAL;
-  for (const auto & interface : ros2_control_test_assets::TEST_ACTUATOR_HARDWARE_COMMAND_INTERFACES)
-  {
-    cmd_itfs_cfg.names.push_back(interface);
-  }
-  test_controller->set_command_interface_configuration(cmd_itfs_cfg);
-
-  controller_interface::InterfaceConfiguration state_itfs_cfg;
-  state_itfs_cfg.type = controller_interface::interface_configuration_type::INDIVIDUAL;
-  for (const auto & interface : ros2_control_test_assets::TEST_ACTUATOR_HARDWARE_STATE_INTERFACES)
-  {
-    state_itfs_cfg.names.push_back(interface);
-  }
-  for (const auto & interface : ros2_control_test_assets::TEST_SENSOR_HARDWARE_STATE_INTERFACES)
-  {
-    state_itfs_cfg.names.push_back(interface);
-  }
-  test_controller->set_state_interface_configuration(state_itfs_cfg);
-
-  controller_interface::InterfaceConfiguration cmd_itfs_cfg2;
-  cmd_itfs_cfg2.type = controller_interface::interface_configuration_type::INDIVIDUAL;
-  for (const auto & interface : ros2_control_test_assets::TEST_SYSTEM_HARDWARE_COMMAND_INTERFACES)
-  {
-    cmd_itfs_cfg2.names.push_back(interface);
-  }
-  test_controller2->set_command_interface_configuration(cmd_itfs_cfg2);
-
-  controller_interface::InterfaceConfiguration state_itfs_cfg2;
-  state_itfs_cfg2.type = controller_interface::interface_configuration_type::ALL;
-  test_controller2->set_state_interface_configuration(state_itfs_cfg2);
 
   // Check if namespace is set correctly
   RCLCPP_INFO(
