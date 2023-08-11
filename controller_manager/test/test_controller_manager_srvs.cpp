@@ -1702,4 +1702,3 @@ TEST_F(TestControllerManagerSrvs, list_hardware_interfaces_srv)
     }
   }
 }
-
