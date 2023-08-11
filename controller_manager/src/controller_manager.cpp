@@ -102,7 +102,7 @@ void determine_controller_namespace(
   {
     node_name = passed_in_name.substr(split_pos + 1);
   }
-  auto first_occ = passed_in_name.find_first_of('/');
+  const auto first_occ = passed_in_name.find_first_of('/');
   if (first_occ == std::string::npos)
   {
     node_namespace = manager_namespace;
