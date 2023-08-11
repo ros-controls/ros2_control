@@ -89,7 +89,7 @@ bool controller_name_compare(const controller_manager::ControllerSpec & a, const
  * \param[out] node_name
  * \param[out] node_parameter_name
  */
-void calculate_controller_naming(
+void determine_controller_namespace(
   const std::string passed_in_name, const std::string manager_namespace,
   std::string & node_namespace, std::string & node_name, std::string & node_parameter_name)
 {
