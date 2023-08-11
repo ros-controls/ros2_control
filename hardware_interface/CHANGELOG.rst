@@ -2,6 +2,14 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+3.17.0 (2023-08-07)
+-------------------
+* Add checks if hardware is initialized. (`#1054 <https://github.com/ros-controls/ros2_control/issues/1054>`_)
+* Contributors: Dr. Denis
+
+3.16.0 (2023-07-09)
+-------------------
+
 3.15.0 (2023-06-23)
 -------------------
 * Enable setting of initial state in HW compoments (`#1046 <https://github.com/ros-controls/ros2_control/issues/1046>`_)

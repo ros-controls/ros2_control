@@ -21,7 +21,7 @@ Please try to include as much information as you can. Details like these are inc
 
 
 ## Contributing via Pull Requests
-The following guidance should be up-to-date, but the documentation as found [here](https://ros-controls.github.io/control.ros.org/contributing.html#pull-requests) should prove as the final say.
+The following guidance should be up-to-date, but the documentation as found [here](https://control.ros.org/master/doc/contributing/contributing.html#pull-requests) should prove as the final say.
 
 Contributions via pull requests are much appreciated.
 Before sending us a pull request, please ensure that:

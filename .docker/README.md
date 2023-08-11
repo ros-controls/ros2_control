@@ -3,7 +3,7 @@
 Meant to provide basic docker containers for CI or development purposes. To use them, make sure you have [Docker](https://docs.docker.com/get-docker/) installed. You then can pull the latest source or build image or build any version and run the image by following tag specific commands as described below:
 
 ## Source folder and tag
-Downloads and builds ros2_controls into a workspace for development use exactly as is found [here](https://ros-controls.github.io/control.ros.org/getting_started.html#compiling). This is primarily used for development and CI of ros2_control and related packages.
+Downloads and builds ros2_controls into a workspace for development use exactly as is found [here](https://control.ros.org/master/doc/getting_started/getting_started.html#building-from-source). This is primarily used for development and CI of ros2_control and related packages.
 
 You can pull a prebuilt image with this docker tag: `ghcr.io/ros-controls/ros2_control_source`.
 
@@ -30,7 +30,7 @@ docker run -it --mount type=volume,source=name-of-volume,destination=/root/ws_ro
 Note: this is probably the preferred solution as changes persist across rebuilds of container and doesn't require you to pull all repositories that you want to edit as they'll already be in the container.
 
 ## Release folder and tag
-Installs ros2_control in the base ros2 docker container as mentioned [here](https://ros-controls.github.io/control.ros.org/getting_started.html#getting-started). This is mainly intended for development of external packages that rely on ros2_control.
+Installs ros2_control in the base ros2 docker container as mentioned [here](https://control.ros.org/master/doc/getting_started/getting_started.html#building-from-source). This is mainly intended for development of external packages that rely on ros2_control.
 
 You can pull a prebuilt image using the following tag: `ghcr.io/ros2-controls/ros2_control_release`.
 

@@ -412,9 +412,9 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
     RCLCPP_WARN(
       get_logger(),
       "Parameter 'configure_components_on_start' is deprecated. "
-      "Use 'hardware_interface_state_after_start.inactive' instead, to set component's initial "
+      "Use 'hardware_components_initial_state.inactive' instead, to set component's initial "
       "state to 'inactive'. Don't use this parameters in combination with the new "
-      "'hardware_interface_state_after_start' parameter structure.");
+      "'hardware_components_initial_state' parameter structure.");
     set_components_to_state(
       "configure_components_on_start",
       rclcpp_lifecycle::State(
@@ -440,7 +440,7 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
       get_logger(),
       "Parameter 'activate_components_on_start' is deprecated. "
       "Components are activated per default. Don't use this parameters in combination with the new "
-      "'hardware_interface_state_after_start' parameter structure.");
+      "'hardware_components_initial_state' parameter structure.");
     rclcpp_lifecycle::State active_state(
       State::PRIMARY_STATE_ACTIVE, hardware_interface::lifecycle_state_names::ACTIVE);
     for (const auto & component : activate_components_on_start)
@@ -737,6 +737,19 @@ controller_interface::return_type ControllerManager::configure_controller(
       "manager's update rate : %d Hz!. The controller will be updated at controller_manager's "
       "update rate.",
       controller_name.c_str(), controller_update_rate, cm_update_rate);
+  }
+  else if (controller_update_rate != 0 && cm_update_rate % controller_update_rate != 0)
+  {
+    // NOTE: The following computation is done to compute the approx controller update that can be
+    // achieved w.r.t to the CM's update rate. This is done this way to take into account the
+    // unsigned integer division.
+    const auto act_ctrl_update_rate = cm_update_rate / (cm_update_rate / controller_update_rate);
+    RCLCPP_WARN(
+      get_logger(),
+      "The controller : %s update rate : %d Hz is not a perfect divisor of the controller "
+      "manager's update rate : %d Hz!. The controller will be updated with nearest divisor's "
+      "update rate which is : %d Hz.",
+      controller_name.c_str(), controller_update_rate, cm_update_rate, act_ctrl_update_rate);
   }
 
   // CHAINABLE CONTROLLERS: get reference interfaces from chainable controllers
@@ -2018,10 +2031,12 @@ controller_interface::return_type ControllerManager::update(
     if (!loaded_controller.c->is_async() && is_controller_active(*loaded_controller.c))
     {
       const auto controller_update_rate = loaded_controller.c->get_update_rate();
+      const auto controller_update_factor =
+        (controller_update_rate == 0) || (controller_update_rate >= update_rate_)
+          ? 1u
+          : update_rate_ / controller_update_rate;
 
-      bool controller_go = controller_update_rate == 0 ||
-                           ((update_loop_counter_ % controller_update_rate) == 0) ||
-                           (controller_update_rate >= update_rate_);
+      bool controller_go = ((update_loop_counter_ % controller_update_factor) == 0);
       RCLCPP_DEBUG(
         get_logger(), "update_loop_counter: '%d ' controller_go: '%s ' controller_name: '%s '",
         update_loop_counter_, controller_go ? "True" : "False",
@@ -2030,7 +2045,7 @@ controller_interface::return_type ControllerManager::update(
       if (controller_go)
       {
         auto controller_ret = loaded_controller.c->update(
-          time, (controller_update_rate != update_rate_ && controller_update_rate != 0)
+          time, (controller_update_factor != 1u)
                   ? rclcpp::Duration::from_seconds(1.0 / controller_update_rate)
                   : period);
 
