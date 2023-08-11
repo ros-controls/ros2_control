@@ -168,7 +168,7 @@ TEST_P(TestControllerManagerWithNamespacedControllers, when_controller_is_define
   EXPECT_STREQ(test_controller2->get_node()->get_namespace(), "/test_namespace");
 }
 
-TEST_P(TestControllerManagerWithNamespacedControllers, controller_in_relative_namespace)
+TEST_P(TestControllerManagerWithNamespacedControllers, when_controller_has_relative_namespace_in_name_expect_it_under_cm_namspace_and_its_namespace)
 {
   auto test_controller = std::make_shared<test_controller::TestController>();
   auto test_controller2 = std::make_shared<test_controller::TestController>();
