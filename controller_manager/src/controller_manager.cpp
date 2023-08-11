@@ -93,7 +93,7 @@ void determine_controller_namespace(
   const std::string passed_in_name, const std::string manager_namespace,
   std::string & node_namespace, std::string & node_name, std::string & node_parameter_name)
 {
-  auto split_pos = passed_in_name.find_last_of('/');
+  const auto split_pos = passed_in_name.find_last_of('/');
   if (split_pos == std::string::npos)
   {
     node_name = passed_in_name;
