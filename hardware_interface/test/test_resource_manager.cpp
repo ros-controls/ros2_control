@@ -56,7 +56,7 @@ public:
 // Forward declaration
 namespace hardware_interface
 {
-  class ResourceStorage;
+class ResourceStorage;
 }
 
 class TestableResourceManager : public hardware_interface::ResourceManager
