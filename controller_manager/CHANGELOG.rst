@@ -2,6 +2,11 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* [CM] Fixes the issue with individual controller's update rate (`#1082 <https://github.com/ros-controls/ros2_control/issues/1082>`_) (`#1097 <https://github.com/ros-controls/ros2_control/issues/1097>`_)
+* Contributors: Sai Kishor Kothakota
+
 2.29.0 (2023-07-09)
 -------------------
 * [CM] Make error message after trying to active controller more informative. (`#1066 <https://github.com/ros-controls/ros2_control/issues/1066>`_) (`#1072 <https://github.com/ros-controls/ros2_control/issues/1072>`_)

@@ -2,6 +2,11 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add checks if hardware is initialized. (backport `#1054 <https://github.com/ros-controls/ros2_control/issues/1054>`_) (`#1081 <https://github.com/ros-controls/ros2_control/issues/1081>`_)
+* Contributors: Denis Stogl
+
 2.29.0 (2023-07-09)
 -------------------
 
