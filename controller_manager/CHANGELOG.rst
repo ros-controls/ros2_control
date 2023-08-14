@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.30.0 (2023-08-14)
+-------------------
 * [CM] Fixes the issue with individual controller's update rate (`#1082 <https://github.com/ros-controls/ros2_control/issues/1082>`_) (`#1097 <https://github.com/ros-controls/ros2_control/issues/1097>`_)
 * Contributors: Sai Kishor Kothakota
 
