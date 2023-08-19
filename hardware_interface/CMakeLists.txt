@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 project(hardware_interface LANGUAGES CXX)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
-  add_compile_options(-Wall -Wextra)
+  add_compile_options(-Wall -Wextra -Wconversion)
 endif()
 
 set(THIS_PACKAGE_INCLUDE_DEPENDS
@@ -79,6 +79,10 @@ if(BUILD_TESTING)
   ament_add_gmock(test_macros test/test_macros.cpp)
   target_include_directories(test_macros PRIVATE include)
   ament_target_dependencies(test_macros rcpputils)
+
+  ament_add_gmock(test_inst_hardwares test/test_inst_hardwares.cpp)
+  target_link_libraries(test_inst_hardwares hardware_interface)
+  ament_target_dependencies(test_inst_hardwares rcpputils)
 
   ament_add_gmock(test_joint_handle test/test_handle.cpp)
   target_link_libraries(test_joint_handle hardware_interface)

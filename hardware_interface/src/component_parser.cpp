@@ -304,11 +304,11 @@ hardware_interface::InterfaceInfo parse_interfaces_from_xml(
 
 /// Search XML snippet from URDF for information about a control component.
 /**
-  * \param[in] component_it pointer to the iterator where component
-  * info should be found
-  * \return ComponentInfo filled with information about component
-  * \throws std::runtime_error if a component attribute or tag is not found
-  */
+ * \param[in] component_it pointer to the iterator where component
+ * info should be found
+ * \return ComponentInfo filled with information about component
+ * \throws std::runtime_error if a component attribute or tag is not found
+ */
 ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it)
 {
   ComponentInfo component;
@@ -367,7 +367,8 @@ ComponentInfo parse_complex_component_from_xml(const tinyxml2::XMLElement * comp
     component.command_interfaces.push_back(parse_interfaces_from_xml(command_interfaces_it));
     component.command_interfaces.back().data_type =
       parse_data_type_attribute(command_interfaces_it);
-    component.command_interfaces.back().size = parse_size_attribute(command_interfaces_it);
+    component.command_interfaces.back().size =
+      static_cast<int>(parse_size_attribute(command_interfaces_it));
     command_interfaces_it = command_interfaces_it->NextSiblingElement(kCommandInterfaceTag);
   }
 
@@ -377,7 +378,8 @@ ComponentInfo parse_complex_component_from_xml(const tinyxml2::XMLElement * comp
   {
     component.state_interfaces.push_back(parse_interfaces_from_xml(state_interfaces_it));
     component.state_interfaces.back().data_type = parse_data_type_attribute(state_interfaces_it);
-    component.state_interfaces.back().size = parse_size_attribute(state_interfaces_it);
+    component.state_interfaces.back().size =
+      static_cast<int>(parse_size_attribute(state_interfaces_it));
     state_interfaces_it = state_interfaces_it->NextSiblingElement(kStateInterfaceTag);
   }
 
@@ -417,10 +419,10 @@ ActuatorInfo parse_transmission_actuator_from_xml(const tinyxml2::XMLElement * e
 
 /// Search XML snippet from URDF for information about a transmission.
 /**
-  * \param[in] transmission_it pointer to the iterator where transmission info should be found
-  * \return TransmissionInfo filled with information about transmission
-  * \throws std::runtime_error if an attribute or tag is not found
-  */
+ * \param[in] transmission_it pointer to the iterator where transmission info should be found
+ * \return TransmissionInfo filled with information about transmission
+ * \throws std::runtime_error if an attribute or tag is not found
+ */
 TransmissionInfo parse_transmission_from_xml(const tinyxml2::XMLElement * transmission_it)
 {
   TransmissionInfo transmission;

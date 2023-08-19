@@ -2,6 +2,27 @@
 Changelog for package ros2controlcli
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+3.18.0 (2023-08-17)
+-------------------
+
+3.17.0 (2023-08-07)
+-------------------
+* Add info where the pdf is saved to view_controller_chains (`#1094 <https://github.com/ros-controls/ros2_control/issues/1094>`_)
+* Contributors: Christoph Fröhlich
+
+3.16.0 (2023-07-09)
+-------------------
+
+3.15.0 (2023-06-23)
+-------------------
+* Improve list hardware components output and code for better readability. (`#1060 <https://github.com/ros-controls/ros2_control/issues/1060>`_)
+* Contributors: Dr. Denis
+
+3.14.0 (2023-06-14)
+-------------------
+* Docs: Use branch name substitution for all links (`#1031 <https://github.com/ros-controls/ros2_control/issues/1031>`_)
+* Contributors: Christoph Fröhlich
+
 3.13.0 (2023-05-18)
 -------------------
 * Fix github links on control.ros.org (`#1019 <https://github.com/ros-controls/ros2_control/issues/1019>`_)
