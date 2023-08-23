@@ -1933,9 +1933,6 @@ void ControllerManager::list_hardware_interfaces_srv_cb(
 {
   RCLCPP_DEBUG(get_logger(), "list hardware interfaces service called");
   std::lock_guard<std::mutex> guard(services_lock_);
-  std::lock_guard<std::recursive_mutex> ctrls_guard(rt_controllers_wrapper_.controllers_lock_);
-  const std::vector<ControllerSpec> & controllers =
-    rt_controllers_wrapper_.get_updated_list(ctrls_guard);
   RCLCPP_DEBUG(get_logger(), "list hardware interfaces service locked");
 
   auto state_interface_names = resource_manager_->state_interface_keys();
@@ -1952,14 +1949,7 @@ void ControllerManager::list_hardware_interfaces_srv_cb(
   {
     controller_manager_msgs::msg::HardwareInterface hwi;
     hwi.name = command_interface_name;
-    ControllersListIterator following_ctrl_it;
-    if (command_interface_is_reference_interface_of_controller(
-          command_interface_name, controllers, following_ctrl_it))
-    {
-      hwi.is_available = is_controller_active(following_ctrl_it->c);
-    }
-    else
-      hwi.is_available = resource_manager_->command_interface_is_available(command_interface_name);
+    hwi.is_available = resource_manager_->command_interface_is_available(command_interface_name);
     hwi.is_claimed = resource_manager_->command_interface_is_claimed(command_interface_name);
     response->command_interfaces.push_back(hwi);
   }
