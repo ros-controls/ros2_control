@@ -1673,6 +1673,9 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers_add
     pid_left_wheel_controller, PID_LEFT_WHEEL,
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
   cm_->add_controller(
+    robot_localization_controller, ROBOT_LOCALIZATION_CONTROLLER,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
     pid_right_wheel_controller, PID_RIGHT_WHEEL,
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
   cm_->add_controller(
@@ -1684,6 +1687,12 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers_add
   cm_->add_controller(
     diff_drive_controller_two, DIFF_DRIVE_CONTROLLER_TWO,
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    sensor_fusion_controller, SENSOR_FUSION_CONTROLLER,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    odom_publisher_controller, ODOM_PUBLISHER_CONTROLLER,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
 
   CheckIfControllersAreAddedCorrectly();
 
@@ -1694,7 +1703,8 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers_add
   SetToChainedModeAndMakeInterfacesAvailable(
     pid_right_wheel_controller, PID_RIGHT_WHEEL, {}, PID_RIGHT_WHEEL_REFERENCE_INTERFACES);
   SetToChainedModeAndMakeInterfacesAvailable(
-    diff_drive_controller, DIFF_DRIVE_CONTROLLER, {}, DIFF_DRIVE_REFERENCE_INTERFACES);
+    diff_drive_controller, DIFF_DRIVE_CONTROLLER, DIFF_DRIVE_INTERNAL_STATE_INTERFACES,
+    DIFF_DRIVE_REFERENCE_INTERFACES);
 
   EXPECT_THROW(
     cm_->resource_manager_->make_controller_reference_interfaces_available(
@@ -1722,6 +1732,9 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers_add
   ActivateAndCheckController(
     position_tracking_controller, POSITION_TRACKING_CONTROLLER,
     POSITION_CONTROLLER_CLAIMED_INTERFACES, 1u);
+  ActivateAndCheckController(sensor_fusion_controller, SENSOR_FUSION_CONTROLLER, {}, 1u);
+  ActivateAndCheckController(robot_localization_controller, ROBOT_LOCALIZATION_CONTROLLER, {}, 1u);
+  ActivateAndCheckController(odom_publisher_controller, ODOM_PUBLISHER_CONTROLLER, {}, 1u);
   // 'rot_z' reference interface is not claimed
   for (const auto & interface : {"diff_drive_controller/rot_z"})
   {
@@ -1729,12 +1742,16 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers_add
     EXPECT_TRUE(cm_->resource_manager_->command_interface_is_available(interface));
     EXPECT_FALSE(cm_->resource_manager_->command_interface_is_claimed(interface));
   }
-  ASSERT_EQ(diff_drive_controller->internal_counter, 3u);
-  ASSERT_EQ(pid_right_wheel_controller->internal_counter, 5u);
-  ASSERT_EQ(pid_left_wheel_controller->internal_counter, 7u);
+  ASSERT_EQ(diff_drive_controller->internal_counter, 9u);
+  ASSERT_EQ(pid_right_wheel_controller->internal_counter, 11u);
+  ASSERT_EQ(pid_left_wheel_controller->internal_counter, 13u);
 
   // update controllers
   std::vector<double> reference = {32.0, 128.0};
+
+  sensor_fusion_controller->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
+  robot_localization_controller->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
+  odom_publisher_controller->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
 
   // update 'Position Tracking' controller
   for (auto & value : diff_drive_controller->reference_interfaces_)
@@ -1744,14 +1761,14 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers_add
   position_tracking_controller->external_commands_for_testing_[0] = reference[0];
   position_tracking_controller->external_commands_for_testing_[1] = reference[1];
   position_tracking_controller->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
-  ASSERT_EQ(position_tracking_controller->internal_counter, 2u);
+  ASSERT_EQ(position_tracking_controller->internal_counter, 8u);
 
   ASSERT_EQ(diff_drive_controller->reference_interfaces_[0], reference[0]);  // position_controller
   ASSERT_EQ(diff_drive_controller->reference_interfaces_[1], reference[1]);  // is pass-through
 
   // update 'Diff Drive' Controller
   diff_drive_controller->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
-  ASSERT_EQ(diff_drive_controller->internal_counter, 4u);
+  ASSERT_EQ(diff_drive_controller->internal_counter, 10u);
   // default reference values are 0.0 - they should be changed now
   EXP_LEFT_WHEEL_REF = chained_ctrl_calculation(reference[0], EXP_LEFT_WHEEL_HW_STATE);    // 32-0
   EXP_RIGHT_WHEEL_REF = chained_ctrl_calculation(reference[1], EXP_RIGHT_WHEEL_HW_STATE);  // 128-0
@@ -1760,9 +1777,9 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers_add
 
   // update PID controllers that are writing to hardware
   pid_left_wheel_controller->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
-  ASSERT_EQ(pid_left_wheel_controller->internal_counter, 8u);
+  ASSERT_EQ(pid_left_wheel_controller->internal_counter, 14u);
   pid_right_wheel_controller->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
-  ASSERT_EQ(pid_right_wheel_controller->internal_counter, 6u);
+  ASSERT_EQ(pid_right_wheel_controller->internal_counter, 12u);
 
   // update hardware ('read' is  sufficient for test hardware)
   cm_->resource_manager_->read(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
