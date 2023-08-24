@@ -1551,6 +1551,7 @@ public:
     claimed_itfs[0].set_value(deactivate_value);
     claimed_itfs[1].set_value(deactivate_value - 10.0);
     {
+      // deactivate on error
       auto [ok, failed_hardware_names] = method_that_deactivates(time, duration);
       EXPECT_TRUE(ok);
       EXPECT_TRUE(failed_hardware_names.empty());
@@ -1563,6 +1564,7 @@ public:
         lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
       check_if_interface_available(true, true);
 
+      // reactivate
       rm->set_component_state(TEST_ACTUATOR_HARDWARE_NAME, state_active);
       status_map = rm->get_components_status();
       EXPECT_EQ(
@@ -1585,6 +1587,7 @@ public:
     claimed_itfs[0].set_value(deactivate_value - 10.0);
     claimed_itfs[1].set_value(deactivate_value);
     {
+      // deactivate on flag
       auto [ok, failed_hardware_names] = method_that_deactivates(time, duration);
       EXPECT_TRUE(ok);
       EXPECT_TRUE(failed_hardware_names.empty());
@@ -1596,6 +1599,7 @@ public:
         status_map[TEST_SYSTEM_HARDWARE_NAME].state.id(),
         lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
       check_if_interface_available(true, true);
+      // re-activate
       rm->set_component_state(TEST_SYSTEM_HARDWARE_NAME, state_active);
       status_map = rm->get_components_status();
       EXPECT_EQ(
@@ -1618,6 +1622,7 @@ public:
     claimed_itfs[0].set_value(deactivate_value);
     claimed_itfs[1].set_value(deactivate_value);
     {
+      // deactivate on flag
       auto [ok, failed_hardware_names] = method_that_deactivates(time, duration);
       EXPECT_TRUE(ok);
       EXPECT_TRUE(failed_hardware_names.empty());
@@ -1629,6 +1634,7 @@ public:
         status_map[TEST_SYSTEM_HARDWARE_NAME].state.id(),
         lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
       check_if_interface_available(true, true);
+      // re-activate
       rm->set_component_state(TEST_ACTUATOR_HARDWARE_NAME, state_active);
       rm->set_component_state(TEST_SYSTEM_HARDWARE_NAME, state_active);
       status_map = rm->get_components_status();
