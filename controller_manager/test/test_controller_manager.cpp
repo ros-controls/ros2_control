@@ -425,7 +425,7 @@ TEST_P(TestControllerUpdateRates, check_the_controller_update_rate)
   const auto controller_update_rate = test_controller->get_update_rate();
 
   const auto initial_counter = test_controller->internal_counter;
-  rclcpp::Time time;
+  rclcpp::Time time = rclcpp::Time(0);
   for (size_t update_counter = 0; update_counter <= 10 * cm_update_rate; ++update_counter)
   {
     EXPECT_EQ(

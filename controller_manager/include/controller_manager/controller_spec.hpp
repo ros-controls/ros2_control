@@ -20,6 +20,7 @@
 #define CONTROLLER_MANAGER__CONTROLLER_SPEC_HPP_
 
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 #include "controller_interface/controller_interface.hpp"
