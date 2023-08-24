@@ -63,48 +63,14 @@ After configuring a chainable controller, controller manager calls ``input_inter
 This is the same process as done by ``ResourceManager`` and hardware interfaces.
 Controller manager maintains "claimed" status of interface in a vector (the same as done in ``ResourceManager``).
 
+
 Activation and Deactivation Chained Controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Controller Manager has an additional parameter that describes how controllers are chained.
-In the first version, the parameter-structure would have some semantic meaning embedded into it, as follows:
-
-
-.. code-block:: yaml
-
-  controller_manager:
-    ros__parameters:
-      chained_controllers:
-
-        - parallel_group_1:
-          - controller1_1
-          - controller1_2
-
-        - parallel_group_2:
-          - controller2_1
-
-        - parallel_group_3:
-          - controller3_1
-          - controller3_2
-          - controller3_3
-
-        ...
-
-        - parallel_group_N:
-          - controllerN_1
-          - ...
-          - controllerN_M
-
-
-
-This structure is motivated by ``filter_chain`` structure from `ros/filters repository <https://github.com/ros/filters/tree/ros2>`__, see `this file for implementation <https://github.com/ros/filters/blob/ros2/include/filters/filter_chain.hpp>`__.
-
-This structure is stored internally by controller manager into an ordered map (``std::map<std::string, std::vector<std::string>>``) with group name as key.
-When a controller should be deactivated, the controller manager deactivates all the controllers in the preceding groups first.
-All other controllers from the group stay active, as well as all controllers in the following groups.
-NOTE: In the future this could be done more intelligently, i.e., deactivate only controllers in the preceding groups that actually precede the controller that should be deactivated.
-
-On the other hand, the controller should be manually activated in the reverse order, i.e., from the those closer to the hardware toward those preceding them.
+Chained controllers must be activated and deactivated together or in the proper order.
+This means you must first activate all following controllers to have the preceding one activated.
+For the deactivation there is the inverse rule - all preceding controllers have to be deactivated before the following controller is deactivated.
+One can also think of it as an actual chain, you can not add a chain link or break the chain in the middle.
 
 
 Debugging outputs
