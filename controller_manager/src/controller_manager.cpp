@@ -739,6 +739,16 @@ controller_interface::return_type ControllerManager::configure_controller(
       "update rate.",
       controller_name.c_str(), controller_update_rate, cm_update_rate);
   }
+  else if (controller_update_rate != 0 && cm_update_rate % controller_update_rate != 0)
+  {
+    RCLCPP_WARN(
+      get_logger(),
+      "The controller : %s update cycles won't be triggered at a constant period : %f sec, as the "
+      "controller's update rate : %d Hz is not a perfect divisor of the controller manager's "
+      "update rate : %d Hz!.",
+      controller_name.c_str(), 1.0 / controller_update_rate, controller_update_rate,
+      cm_update_rate);
+  }
 
   // CHAINABLE CONTROLLERS: get reference interfaces from chainable controllers
   if (controller->is_chainable())
