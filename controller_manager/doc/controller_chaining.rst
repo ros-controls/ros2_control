@@ -67,10 +67,10 @@ Controller manager maintains "claimed" status of interface in a vector (the same
 Activation and Deactivation Chained Controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The chained controller must be activated and deactivated together or in the proper order.
+Chained controllers must be activated and deactivated together or in the proper order.
 This means you must first activate all following controllers to have the preceding one activated.
 For the deactivation there is the inverse rule - all preceding controllers have to be deactivated before the following controller is deactivated.
-If you imagine a chain of controllers, you can not add a chain link or break the chain in the middle.
+One can also think of it as an actual chain, you can not add a chain link or break the chain in the middle.
 
 
 Debugging outputs
