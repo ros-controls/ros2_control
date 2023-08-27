@@ -148,9 +148,6 @@ std::vector<std::string> get_following_controller_names(
 
     return following_controllers;
   }
-  // If the controller is not configured, return empty
-  if (!(is_controller_active(controller_it->c) || is_controller_inactive(controller_it->c)))
-    return following_controllers;
   const auto cmd_itfs = controller_it->c->command_interface_configuration().names;
   for (const auto & itf : cmd_itfs)
   {
@@ -209,9 +206,6 @@ std::vector<std::string> get_preceding_controller_names(
   }
   for (const auto & ctrl : controllers)
   {
-    // If the controller is not configured, return empty
-    if (!(is_controller_active(ctrl.c) || is_controller_inactive(ctrl.c)))
-      return preceding_controllers;
     auto cmd_itfs = ctrl.c->command_interface_configuration().names;
     for (const auto & itf : cmd_itfs)
     {
@@ -773,6 +767,33 @@ controller_interface::return_type ControllerManager::configure_controller(
     // TODO(destogl): check and resort controllers in the vector
   }
 
+  // Now let's reorder the controllers
+  // lock controllers
+  std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
+  std::vector<ControllerSpec> & to = rt_controllers_wrapper_.get_unused_list(guard);
+  const std::vector<ControllerSpec> & from = rt_controllers_wrapper_.get_updated_list(guard);
+
+  // Copy all controllers from the 'from' list to the 'to' list
+  to = from;
+
+  // Reordering the controllers
+  std::sort(
+    to.begin(), to.end(),
+    std::bind(
+      &ControllerManager::controller_sorting, this, std::placeholders::_1, std::placeholders::_2,
+      to));
+
+  RCLCPP_DEBUG(get_logger(), "Reordered controllers list is:");
+  for (const auto & ctrl : to)
+  {
+    RCLCPP_DEBUG(this->get_logger(), "\t%s", ctrl.info.name.c_str());
+  }
+
+  // switch lists
+  rt_controllers_wrapper_.switch_updated_list(guard);
+  // clear unused list
+  rt_controllers_wrapper_.get_unused_list(guard).clear();
+
   return controller_interface::return_type::OK;
 }
 
@@ -1232,19 +1253,6 @@ controller_interface::return_type ControllerManager::switch_controller(
     {
       controller.info.claimed_interfaces.clear();
     }
-  }
-
-  // Reordering the controllers
-  std::sort(
-    to.begin(), to.end(),
-    std::bind(
-      &ControllerManager::controller_sorting, this, std::placeholders::_1, std::placeholders::_2,
-      to));
-
-  RCLCPP_DEBUG(get_logger(), "Reordered controllers list is:");
-  for (const auto & ctrl : to)
-  {
-    RCLCPP_DEBUG(this->get_logger(), "\t%s", ctrl.info.name.c_str());
   }
 
   // switch lists
@@ -2423,13 +2431,6 @@ bool ControllerManager::controller_sorting(
   const ControllerSpec & ctrl_a, const ControllerSpec & ctrl_b,
   const std::vector<controller_manager::ControllerSpec> & controllers)
 {
-  // If the controllers are not active, then should be at the end of the list
-  if (!is_controller_active(ctrl_a.c) || !is_controller_active(ctrl_b.c))
-  {
-    if (is_controller_active(ctrl_a.c)) return true;
-    return false;
-  }
-
   const std::vector<std::string> cmd_itfs = ctrl_a.c->command_interface_configuration().names;
   const std::vector<std::string> state_itfs = ctrl_a.c->state_interface_configuration().names;
   if (cmd_itfs.empty() || !ctrl_a.c->is_chainable())
