@@ -763,8 +763,6 @@ controller_interface::return_type ControllerManager::configure_controller(
       return controller_interface::return_type::ERROR;
     }
     resource_manager_->import_controller_reference_interfaces(controller_name, interfaces);
-
-    // TODO(destogl): check and resort controllers in the vector
   }
 
   // Now let's reorder the controllers
