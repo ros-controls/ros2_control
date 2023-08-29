@@ -1673,8 +1673,7 @@ TEST_F(ResourceManagerTestReadWriteError, handle_error_on_hardware_read)
   // check read methods failures
   check_read_or_write_failure(
     std::bind(&TestableResourceManager::read, rm, _1, _2),
-    std::bind(&TestableResourceManager::write, rm, _1, _2),
-    hardware_interface::test_constants::READ_FAIL_VALUE);
+    std::bind(&TestableResourceManager::write, rm, _1, _2), test_constants::READ_FAIL_VALUE);
 }
 
 TEST_F(ResourceManagerTestReadWriteError, handle_error_on_hardware_write)
@@ -1685,8 +1684,7 @@ TEST_F(ResourceManagerTestReadWriteError, handle_error_on_hardware_write)
   // check write methods failures
   check_read_or_write_failure(
     std::bind(&TestableResourceManager::write, rm, _1, _2),
-    std::bind(&TestableResourceManager::read, rm, _1, _2),
-    hardware_interface::test_constants::WRITE_FAIL_VALUE);
+    std::bind(&TestableResourceManager::read, rm, _1, _2), test_constants::WRITE_FAIL_VALUE);
 }
 
 TEST_F(ResourceManagerTestReadWriteError, handle_deactivate_on_hardware_write)
@@ -1697,8 +1695,7 @@ TEST_F(ResourceManagerTestReadWriteError, handle_deactivate_on_hardware_write)
   // check write methods failures
   check_read_or_write_deactivate(
     std::bind(&TestableResourceManager::write, rm, _1, _2),
-    std::bind(&TestableResourceManager::read, rm, _1, _2),
-    hardware_interface::test_constants::WRITE_DEACTIVATE_VALUE);
+    std::bind(&TestableResourceManager::read, rm, _1, _2), test_constants::WRITE_DEACTIVATE_VALUE);
 }
 
 TEST_F(ResourceManagerTest, test_caching_of_controllers_to_hardware)

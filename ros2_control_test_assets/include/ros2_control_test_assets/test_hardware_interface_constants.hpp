@@ -16,8 +16,6 @@
 
 #ifndef ROS2_CONTROL_TEST_ASSETS__TEST_HARDWARE_INTERFACE_CONSTANTS_HPP_
 #define ROS2_CONTROL_TEST_ASSETS__TEST_HARDWARE_INTERFACE_CONSTANTS_HPP_
-namespace hardware_interface
-{
 namespace test_constants
 {
 /// Constants defining special values used inside tests to trigger things like deactivate or errors
@@ -27,5 +25,4 @@ constexpr double WRITE_FAIL_VALUE = 23232323.0;
 constexpr double READ_DEACTIVATE_VALUE = 29292929.0;
 constexpr double WRITE_DEACTIVATE_VALUE = 24242424.0;
 }  // namespace test_constants
-}  // namespace hardware_interface
 #endif  // ROS2_CONTROL_TEST_ASSETS__TEST_HARDWARE_INTERFACE_CONSTANTS_HPP_

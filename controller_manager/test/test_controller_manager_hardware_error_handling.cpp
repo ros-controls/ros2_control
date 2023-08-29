@@ -255,8 +255,7 @@ TEST_P(TestControllerManagerWithTestableCM, stop_controllers_on_hardware_read_er
 
   // Simulate error in read() on TEST_ACTUATOR_HARDWARE_NAME by setting first command interface to
   // READ_FAIL_VALUE
-  test_controller_actuator->set_first_command_interface_value_to =
-    hardware_interface::test_constants::READ_FAIL_VALUE;
+  test_controller_actuator->set_first_command_interface_value_to = test_constants::READ_FAIL_VALUE;
   {
     auto new_counter = test_controller_actuator->internal_counter + 1;
     EXPECT_EQ(controller_interface::return_type::OK, cm_->update(TIME, PERIOD));
@@ -325,10 +324,8 @@ TEST_P(TestControllerManagerWithTestableCM, stop_controllers_on_hardware_read_er
 
   // Simulate error in read() on TEST_ACTUATOR_HARDWARE_NAME and TEST_SYSTEM_HARDWARE_NAME
   // by setting first command interface to READ_FAIL_VALUE
-  test_controller_actuator->set_first_command_interface_value_to =
-    hardware_interface::test_constants::READ_FAIL_VALUE;
-  test_controller_system->set_first_command_interface_value_to =
-    hardware_interface::test_constants::READ_FAIL_VALUE;
+  test_controller_actuator->set_first_command_interface_value_to = test_constants::READ_FAIL_VALUE;
+  test_controller_system->set_first_command_interface_value_to = test_constants::READ_FAIL_VALUE;
   {
     auto previous_counter_lower = test_controller_actuator->internal_counter + 1;
     auto previous_counter_higher = test_controller_system->internal_counter + 1;
@@ -450,8 +447,7 @@ TEST_P(TestControllerManagerWithTestableCM, stop_controllers_on_hardware_write_e
 
   // Simulate error in write() on TEST_ACTUATOR_HARDWARE_NAME by setting first command interface to
   // WRITE_FAIL_VALUE
-  test_controller_actuator->set_first_command_interface_value_to =
-    hardware_interface::test_constants::WRITE_FAIL_VALUE;
+  test_controller_actuator->set_first_command_interface_value_to = test_constants::WRITE_FAIL_VALUE;
   {
     auto new_counter = test_controller_actuator->internal_counter + 1;
     EXPECT_EQ(controller_interface::return_type::OK, cm_->update(TIME, PERIOD));
@@ -520,10 +516,8 @@ TEST_P(TestControllerManagerWithTestableCM, stop_controllers_on_hardware_write_e
 
   // Simulate error in write() on TEST_ACTUATOR_HARDWARE_NAME and TEST_SYSTEM_HARDWARE_NAME
   // by setting first command interface to WRITE_FAIL_VALUE
-  test_controller_actuator->set_first_command_interface_value_to =
-    hardware_interface::test_constants::WRITE_FAIL_VALUE;
-  test_controller_system->set_first_command_interface_value_to =
-    hardware_interface::test_constants::WRITE_FAIL_VALUE;
+  test_controller_actuator->set_first_command_interface_value_to = test_constants::WRITE_FAIL_VALUE;
+  test_controller_system->set_first_command_interface_value_to = test_constants::WRITE_FAIL_VALUE;
   {
     auto previous_counter_lower = test_controller_actuator->internal_counter + 1;
     auto previous_counter_higher = test_controller_system->internal_counter + 1;
