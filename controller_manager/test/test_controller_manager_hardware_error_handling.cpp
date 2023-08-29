@@ -21,8 +21,8 @@
 #include "controller_manager/controller_manager.hpp"
 #include "controller_manager_test_common.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
-#include "hardware_interface/types/test_hardware_interface_constants.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
+#include "ros2_control_test_assets/test_hardware_interface_constants.hpp"
 #include "test_controller/test_controller.hpp"
 
 using ::testing::_;

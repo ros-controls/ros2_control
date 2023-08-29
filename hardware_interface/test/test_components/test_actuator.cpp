@@ -16,7 +16,7 @@
 #include <vector>
 
 #include "hardware_interface/actuator_interface.hpp"
-#include "hardware_interface/types/test_hardware_interface_constants.hpp"
+#include "ros2_control_test_assets/test_hardware_interface_constants.hpp"
 
 using hardware_interface::ActuatorInterface;
 using hardware_interface::CommandInterface;

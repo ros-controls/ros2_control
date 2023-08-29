@@ -25,10 +25,10 @@
 #include "hardware_interface/actuator_interface.hpp"
 #include "hardware_interface/resource_manager.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
-#include "hardware_interface/types/test_hardware_interface_constants.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 #include "rclcpp_lifecycle/state.hpp"
 #include "ros2_control_test_assets/descriptions.hpp"
+#include "ros2_control_test_assets/test_hardware_interface_constants.hpp"
 
 using ros2_control_test_assets::TEST_ACTUATOR_HARDWARE_COMMAND_INTERFACES;
 using ros2_control_test_assets::TEST_ACTUATOR_HARDWARE_NAME;

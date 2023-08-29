@@ -18,7 +18,7 @@
 
 #include "hardware_interface/system_interface.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
-#include "hardware_interface/types/test_hardware_interface_constants.hpp"
+#include "ros2_control_test_assets/test_hardware_interface_constants.hpp"
 
 using hardware_interface::CommandInterface;
 using hardware_interface::return_type;
