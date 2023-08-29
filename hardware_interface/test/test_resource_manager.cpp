@@ -1687,6 +1687,17 @@ TEST_F(ResourceManagerTestReadWriteError, handle_error_on_hardware_write)
     std::bind(&TestableResourceManager::read, rm, _1, _2), test_constants::WRITE_FAIL_VALUE);
 }
 
+TEST_F(ResourceManagerTestReadWriteError, handle_deactivate_on_hardware_read)
+{
+  setup_resource_manager_and_do_initial_checks();
+
+  using namespace std::placeholders;
+  // check read methods failures
+  check_read_or_write_deactivate(
+    std::bind(&TestableResourceManager::read, rm, _1, _2),
+    std::bind(&TestableResourceManager::write, rm, _1, _2), test_constants::READ_DEACTIVATE_VALUE);
+}
+
 TEST_F(ResourceManagerTestReadWriteError, handle_deactivate_on_hardware_write)
 {
   setup_resource_manager_and_do_initial_checks();
