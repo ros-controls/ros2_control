@@ -2,6 +2,17 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+3.18.0 (2023-08-17)
+-------------------
+* Controller sorting and proper execution in a chain (Fixes `#853 <https://github.com/ros-controls/ros2_control/issues/853>`_) (`#1063 <https://github.com/ros-controls/ros2_control/issues/1063>`_)
+* Contributors: Sai Kishor Kothakota, Christoph Fröhlich, Dr Denis, Bence Magyar
+
+3.17.0 (2023-08-07)
+-------------------
+* [CM] Fixes the issue with individual controller's update rate (`#1082 <https://github.com/ros-controls/ros2_control/issues/1082>`_)
+* Fix deprecation warning (`#1093 <https://github.com/ros-controls/ros2_control/issues/1093>`_)
+* Contributors: Christoph Fröhlich, Sai Kishor Kothakota
+
 3.16.0 (2023-07-09)
 -------------------
 * added controller manager runner to have update cycles (`#1075 <https://github.com/ros-controls/ros2_control/issues/1075>`_)
