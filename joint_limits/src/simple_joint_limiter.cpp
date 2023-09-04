@@ -84,8 +84,7 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
       {
         // clamp input pos_cmd
         auto pos = std::clamp(
-          desired_pos[index],
-          joint_limits_[index].min_position, joint_limits_[index].max_position);
+          desired_pos[index], joint_limits_[index].min_position, joint_limits_[index].max_position);
         if (pos != desired_pos[index])
         {
           desired_pos[index] = pos;
@@ -209,8 +208,9 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
         expected_pos[index] =
           current_joint_states.positions[index] + desired_vel[index] * dt_seconds;
         // if expected_pos over limit
-        auto pos = std::clamp(expected_pos[index],
-          joint_limits_[index].min_position, joint_limits_[index].max_position);
+        auto pos = std::clamp(
+          expected_pos[index], joint_limits_[index].min_position,
+          joint_limits_[index].max_position);
         if (pos != expected_pos[index])
         {
           // TODO(gwalck) compute vel_cmd that would permit to slow down in time at full
@@ -316,7 +316,6 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
         desired_pos[index] = current_joint_states.positions[index] +
                              current_joint_states.velocities[index] * dt_seconds +
                              0.5 * desired_acc[index] * dt_seconds * dt_seconds;
-
     }
     std::ostringstream ostr;
     for (auto jnt : limited_jnts_pos) ostr << jnt << " ";
