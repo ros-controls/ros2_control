@@ -69,8 +69,6 @@ public:
     // Initialize and get joint limits from parameter server
     for (size_t i = 0; i < number_of_joints_; ++i)
     {
-      // FIXME?(destogl): this seems to be a bit unclear because we use the same namespace for
-      // limiters interface and rosparam helper functions - should we use here another namespace?
       if (!declare_parameters(joint_names[i], node_param_itf_, node_logging_itf_))
       {
         RCLCPP_ERROR(
@@ -146,7 +144,6 @@ public:
   }
 
 protected:
-  // Methods that each limiter implementation has to implement
   JOINT_LIMITS_PUBLIC virtual bool on_init() { return true; }
 
   JOINT_LIMITS_PUBLIC virtual bool on_configure(
