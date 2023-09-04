@@ -42,7 +42,7 @@ public:
    * Initialization of JointLimiter for defined joints with their names.
    * Robot description topic provides a topic name where URDF of the robot can be found.
    * This is needed to use joint limits from URDF (not implemented yet!).
-   * Override this method only if Initialization and reading joint limits should be adapted.
+   * Override this method only if initialization and reading joint limits should be adapted.
    * Otherwise, initialize your custom limiter in `on_limit` method.
    *
    * \param[in] joint_names names of joints where limits should be applied.

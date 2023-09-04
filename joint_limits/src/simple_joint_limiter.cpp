@@ -84,9 +84,9 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
       if (has_pos_cmd)
       {
         // clamp input pos_cmd
-        auto pos = std::max(
-          std::min(joint_limits_[index].max_position, desired_pos[index]),
-          joint_limits_[index].min_position);
+        auto pos = std::clamp(
+          desired_pos[index],
+          joint_limits_[index].min_position, joint_limits_[index].max_position);
         if (pos != desired_pos[index])
         {
           desired_pos[index] = pos;
@@ -117,7 +117,7 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
     if (joint_limits_[index].has_velocity_limits)
     {
       // clamp input vel_cmd
-      if (std::abs(desired_vel[index]) > joint_limits_[index].max_velocity)
+      if (std::fabs(desired_vel[index]) > joint_limits_[index].max_velocity)
       {
         desired_vel[index] = std::copysign(joint_limits_[index].max_velocity, desired_vel[index]);
         limited_jnts_vel.emplace_back(joint_names_[index]);
@@ -144,7 +144,7 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
                                         const double max_acc_or_dec, std::vector<double> & acc,
                                         std::vector<std::string> & limited_jnts) -> bool
         {
-          if (std::abs(acc[index]) > max_acc_or_dec)
+          if (std::fabs(acc[index]) > max_acc_or_dec)
           {
             acc[index] = std::copysign(max_acc_or_dec, acc[index]);
             limited_jnts.emplace_back(joint_names_[index]);
@@ -210,9 +210,8 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
         expected_pos[index] =
           current_joint_states.positions[index] + desired_vel[index] * dt_seconds;
         // if expected_pos over limit
-        auto pos = std::max(
-          std::min(joint_limits_[index].max_position, expected_pos[index]),
-          joint_limits_[index].min_position);
+        auto pos = std::clamp(expected_pos[index],
+          joint_limits_[index].min_position, joint_limits_[index].max_position);
         if (pos != expected_pos[index])
         {
           // TODO(gwalck) compute vel_cmd that would permit to slow down in time at full
@@ -235,7 +234,7 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
       // Here we assume we will not trigger velocity limits while maximally decelerating.
       // This is a valid assumption if we are not currently at a velocity limit since we are just
       // coming to a rest.
-      double stopping_deccel = std::abs(desired_vel[index] / dt_seconds);
+      double stopping_deccel = std::fabs(desired_vel[index] / dt_seconds);
       if (joint_limits_[index].has_deceleration_limits)
       {
         stopping_deccel = joint_limits_[index].max_deceleration;
@@ -246,9 +245,9 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
       }
 
       double stopping_distance =
-        std::abs((-desired_vel[index] * desired_vel[index]) / (2 * stopping_deccel));
+        std::fabs((-desired_vel[index] * desired_vel[index]) / (2 * stopping_deccel));
       // compute stopping duration at stopping_deccel
-      double stopping_duration = std::abs((desired_vel[index]) / (stopping_deccel));
+      double stopping_duration = std::fabs((desired_vel[index]) / (stopping_deccel));
 
       // Check that joint limits are beyond stopping_distance and desired_velocity is towards
       // that limit
@@ -299,13 +298,13 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
       if (joint_limits_[index].has_deceleration_limits)
       {
         desired_acc[index] = std::copysign(
-          std::min(std::abs(desired_acc[index]), joint_limits_[index].max_deceleration),
+          std::min(std::fabs(desired_acc[index]), joint_limits_[index].max_deceleration),
           desired_acc[index]);
       }
       else if (joint_limits_[index].has_acceleration_limits)
       {
         desired_acc[index] = std::copysign(
-          std::min(std::abs(desired_acc[index]), joint_limits_[index].max_acceleration),
+          std::min(std::fabs(desired_acc[index]), joint_limits_[index].max_acceleration),
           desired_acc[index]);
       }
 
