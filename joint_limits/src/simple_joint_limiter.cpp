@@ -66,8 +66,7 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
   std::vector<double> expected_pos(number_of_joints_);
 
   // limits triggered
-  std::vector<bool> pos_limit_trig_jnts(number_of_joints_, false);
-  std::vector<std::string> limited_jnts_vel, limited_jnts_acc, limited_jnts_dec;
+  std::vector<std::string> limited_jnts_pos, limited_jnts_vel, limited_jnts_acc, limited_jnts_dec;
 
   bool braking_near_position_limit_triggered = false;
 
@@ -90,7 +89,7 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
         if (pos != desired_pos[index])
         {
           desired_pos[index] = pos;
-          pos_limit_trig_jnts[index] = true;
+          limited_jnts_pos.emplace_back(joint_names_[index]);
         }
       }
     }
@@ -127,7 +126,7 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
         {
           desired_pos[index] =
             current_joint_states.positions[index] + desired_vel[index] * dt_seconds;
-          pos_limit_trig_jnts[index] = true;
+          limited_jnts_pos.emplace_back(joint_names_[index]);
         }
       }
     }
@@ -221,7 +220,7 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
           // zero)
           desired_vel[index] =
             (expected_pos[index] - current_joint_states.positions[index]) / dt_seconds;
-          pos_limit_trig_jnts[index] = true;
+          limited_jnts_pos.emplace_back(joint_names_[index]);
         }
       }
 
@@ -259,7 +258,7 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
          (joint_limits_[index].max_position - current_joint_states.positions[index] <
           stopping_distance)))
       {
-        pos_limit_trig_jnts[index] = true;
+        limited_jnts_pos.emplace_back(joint_names_[index]);
         braking_near_position_limit_triggered = true;
       }
       else
@@ -276,7 +275,7 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
            (joint_limits_[index].max_position - current_joint_states.positions[index] <
             motion_after_stopping_duration)))
         {
-          pos_limit_trig_jnts[index] = true;
+          limited_jnts_pos.emplace_back(joint_names_[index]);
           braking_near_position_limit_triggered = true;
         }
         // else no need to slow down. in worse case we won't hit the limit at current velocity
@@ -288,7 +287,6 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
   if (braking_near_position_limit_triggered)
   {
     // this limit applies to all joints even if a single one is triggered
-    std::ostringstream ostr;
     for (size_t index = 0; index < number_of_joints_; ++index)
     {
       // Compute accel to stop
@@ -319,8 +317,9 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
                              current_joint_states.velocities[index] * dt_seconds +
                              0.5 * desired_acc[index] * dt_seconds * dt_seconds;
 
-      if (pos_limit_trig_jnts[index]) ostr << joint_names_[index] << " ";
     }
+    std::ostringstream ostr;
+    for (auto jnt : limited_jnts_pos) ostr << jnt << " ";
     ostr << "\b \b";  // erase last character
     RCLCPP_WARN_STREAM_THROTTLE(
       node_logging_itf_->get_logger(), *clock_, ROS_LOG_THROTTLE_PERIOD,
@@ -332,15 +331,10 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
   // display limitations
 
   // if position limiting
-  if (
-    std::count_if(
-      pos_limit_trig_jnts.begin(), pos_limit_trig_jnts.end(), [](bool trig) { return trig; }) > 0)
+  if (limited_jnts_pos.size() > 0)
   {
     std::ostringstream ostr;
-    for (size_t index = 0; index < number_of_joints_; ++index)
-    {
-      if (pos_limit_trig_jnts[index]) ostr << joint_names_[index] << " ";
-    }
+    for (auto jnt : limited_jnts_pos) ostr << jnt << " ";
     ostr << "\b \b";  // erase last character
     RCLCPP_WARN_STREAM_THROTTLE(
       node_logging_itf_->get_logger(), *clock_, ROS_LOG_THROTTLE_PERIOD,
