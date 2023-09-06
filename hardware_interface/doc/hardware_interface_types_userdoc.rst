@@ -5,16 +5,25 @@
 ``ros2_control`` hardware interface types
 ---------------------------------------------------------
 
-The ``ros2_control`` framework provides a set of hardware interface types that can be used to implement a hardware component for a specific robot or device. The following sections describe the different hardware interface types and their usage.
+The ``ros2_control`` framework provides a set of hardware interface types that can be used to implement
+a hardware component for a specific robot or device.
+The following sections describe the different hardware interface types and their usage.
 
 Joints
 *****************************
 ``<joint>``-tag groups the interfaces associated with the joints of physical robots and actuators.
 They have command and state interfaces to set the goal values for hardware and read its current state.
 
+State interfaces of joints can be published as a ROS topic by means of the :ref:`joint_state_broadcaster <joint_state_broadcaster_userdoc>`
+
 Sensors
 *****************************
 ``<sensor>``-tag groups multiple state interfaces describing, e.g., internal states of hardware.
+
+Depending on the type of sensor, there exist a couple of specific semantic components with broadcasters shipped with ros2_controllers, e.g.
+
+- :ref:`Imu Sensor Broadcaster <imu_sensor_broadcaster_userdoc>`
+- :ref:`Force Torque Sensor Broadcaster <force_torque_sensor_broadcaster_userdoc>`
 
 GPIOs
 *****************************
@@ -25,7 +34,10 @@ The tag must have at least one ``<command>``- or ``<state>``-tag as a child.
 The keyword "gpio" is chosen for its generality.
 Although strictly used for digital signals, it describes any electrical analog, digital signal, or physical value.
 
-The ``<gpio>`` tag can be used as a child of all three types of hardware interfaces, i.e., system, sensor, or actuator.
+The ``<gpio>`` tag can be used as a child of all three types of hardware components, i.e., system, sensor, or actuator.
+
+Because ports implemented as ``<gpio>``-tag are typically very application-specific, there exists no generic publisher
+within the ros2_control framework. A custom gpio-controller has to be implemented for each application. As an example, see :ref:`the GPIO controller example <ros2_control_demos_example_10_userdoc>` as part of the demo repository.
 
 Examples
 *****************************
