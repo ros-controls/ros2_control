@@ -209,7 +209,8 @@ std::vector<std::string> get_preceding_controller_names(
     auto cmd_itfs = ctrl.c->command_interface_configuration().names;
     for (const auto & itf : cmd_itfs)
     {
-      if (itf.find(controller_name) != std::string::npos)
+      auto split_pos = itf.find_first_of('/');
+      if ((split_pos != std::string::npos) && (itf.substr(0, split_pos) == controller_name))
       {
         preceding_controllers.push_back(ctrl.info.name);
         auto ctrl_names = get_preceding_controller_names(ctrl.info.name, controllers);
