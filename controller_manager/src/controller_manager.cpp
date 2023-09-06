@@ -2501,7 +2501,11 @@ bool ControllerManager::controller_sorting(
     // TODO(saikishor): deal with the state interface chaining in the sorting algorithm
     auto state_it = std::find_if(
       state_itfs.begin(), state_itfs.end(),
-      [ctrl_b](auto itf) { return (itf.find(ctrl_b.info.name) != std::string::npos); });
+      [ctrl_b](auto itf)
+      {
+        auto index = itf.find_first_of('/');
+        return ((index != std::string::npos) && (itf.substr(0, index) == ctrl_b.info.name));
+      });
     if (state_it != state_itfs.end())
     {
       return false;
