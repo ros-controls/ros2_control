@@ -2,6 +2,9 @@
 Changelog for package ros2controlcli
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 2.30.0 (2023-08-14)
 -------------------
 * Add info where the pdf is saved to view_controller_chains (`#1094 <https://github.com/ros-controls/ros2_control/issues/1094>`_) (`#1096 <https://github.com/ros-controls/ros2_control/issues/1096>`_)
