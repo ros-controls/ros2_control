@@ -29,7 +29,7 @@ jobs:
       - uses: ros-tooling/setup-ros@0.7.0
         with:
           required-ros-distributions: ${{ inputs.ros_distro }}
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref }}
       - uses: ros-tooling/action-ros-ci@0.3.3
