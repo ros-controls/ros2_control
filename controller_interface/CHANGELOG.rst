@@ -2,8 +2,8 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.31.0 (2023-09-11)
+-------------------
 * add a broadcaster for range sensor (`#1091 <https://github.com/ros-controls/ros2_control/issues/1091>`_) (`#1100 <https://github.com/ros-controls/ros2_control/issues/1100>`_)
 * Contributors: flochre
 
