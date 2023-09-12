@@ -76,6 +76,10 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
     {
       desired_pos[index] = desired_joint_states.positions[index];
     }
+    if (has_vel_cmd)
+    {
+      desired_vel[index] = desired_joint_states.velocities[index];
+    }
 
     // limit position
     if (joint_limits_[index].has_position_limits)
@@ -90,24 +94,12 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
           desired_pos[index] = pos;
           limited_jnts_pos.emplace_back(joint_names_[index]);
         }
-      }
-    }
-
-    // prepare velocity
-    if (has_pos_cmd)
-    {
-      // priority to pos_cmd derivative over cmd_vel because we always have a pos_state so
-      // recomputing vel_cmd is fine compute expected_vel with already clamped pos_cmd and pos_state
-      // TODO(gwalck) handle the case of continuous joints with angle_wraparound to compute vel
-      // correctly
-      desired_vel[index] =
-        (desired_pos[index] - current_joint_states.positions[index]) / dt_seconds;
-    }
-    else
-    {
-      if (has_vel_cmd)
-      {
-        desired_vel[index] = desired_joint_states.velocities[index];
+        // priority to pos_cmd derivative over cmd_vel because we always have a pos_state so
+        // recomputing vel_cmd is fine compute expected_vel with already clamped pos_cmd and pos_state
+        // TODO(gwalck) handle the case of continuous joints with angle_wraparound to compute vel
+        // correctly
+        desired_vel[index] =
+          (desired_pos[index] - current_joint_states.positions[index]) / dt_seconds;
       }
     }
 
