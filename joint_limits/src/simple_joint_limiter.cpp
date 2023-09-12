@@ -97,7 +97,7 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
         // priority to pos_cmd derivative over cmd_vel because we always have a pos_state so
         // recomputing vel_cmd is fine compute expected_vel with already clamped pos_cmd and
         // pos_state
-        // TODO(gwalck) handle the case of continuous joints with angle_wraparound to compute vel
+        // TODO(destogl) handle the case of continuous joints with angle_wraparound to compute vel
         // correctly
         desired_vel[index] =
           (desired_pos[index] - current_joint_states.positions[index]) / dt_seconds;
