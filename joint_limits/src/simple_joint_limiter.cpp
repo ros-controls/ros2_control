@@ -59,9 +59,9 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
 
   // TODO(destogl): please check if we get too much malloc from this initialization,
   // if so then we should use members instead local variables and initialize them in other method
-  std::vector<double> desired_acc(number_of_joints_);
-  std::vector<double> desired_vel(number_of_joints_);
   std::vector<double> desired_pos(number_of_joints_);
+  std::vector<double> desired_vel(number_of_joints_);
+  std::vector<double> desired_acc(number_of_joints_);
   std::vector<double> expected_vel(number_of_joints_);
   std::vector<double> expected_pos(number_of_joints_);
 
@@ -79,6 +79,10 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
     if (has_vel_cmd)
     {
       desired_vel[index] = desired_joint_states.velocities[index];
+    }
+    if (has_acc_cmd)
+    {
+      desired_acc[index] = desired_joint_states.accelerations[index];
     }
 
     // limit position
@@ -120,6 +124,10 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
             current_joint_states.positions[index] + desired_vel[index] * dt_seconds;
           limited_jnts_pos.emplace_back(joint_names_[index]);
         }
+
+        // compute desired_acc when velocity is limited
+        desired_acc[index] =
+        (desired_vel[index] - current_joint_states.velocities[index]) / dt_seconds;
       }
     }
 
