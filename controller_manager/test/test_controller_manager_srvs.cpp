@@ -269,7 +269,9 @@ TEST_F(TestControllerManagerSrvs, list_chained_controllers_srv)
   ASSERT_EQ(result->controller[0].is_chainable, true);
   ASSERT_EQ(result->controller[0].is_chained, false);
   ASSERT_EQ(result->controller[0].reference_interfaces.size(), 2u);
-  ;
+  ASSERT_EQ("joint1/position", result->controller[0].reference_interfaces[0]);
+  ASSERT_EQ("joint1/velocity", result->controller[0].reference_interfaces[1]);
+
   ASSERT_EQ(result->controller[0].chain_connections.size(), 0u);
   // check test controller
   ASSERT_EQ(result->controller[1].state, "inactive");
@@ -298,10 +300,18 @@ TEST_F(TestControllerManagerSrvs, list_chained_controllers_srv)
   ASSERT_EQ(result->controller[1].claimed_interfaces.size(), 3u);
   ASSERT_EQ(
     test_chainable_controller::TEST_CONTROLLER_NAME,
+<<<<<<< HEAD
     result->controller[1].chain_connections[0].name);
   ASSERT_EQ(2u, result->controller[1].chain_connections[0].reference_interfaces.size());
   ASSERT_EQ("joint1/position", result->controller[1].chain_connections[0].reference_interfaces[0]);
   ASSERT_EQ("joint1/velocity", result->controller[1].chain_connections[0].reference_interfaces[1]);
+=======
+    result->controller[0].chain_connections[0].name);
+  ASSERT_EQ(2u, result->controller[0].chain_connections[0].reference_interfaces.size());
+  ASSERT_EQ("test_chainable_controller_name", result->controller[0].chain_connections[0].name);
+  ASSERT_EQ("joint1/position", result->controller[0].chain_connections[0].reference_interfaces[0]);
+  ASSERT_EQ("joint1/velocity", result->controller[0].chain_connections[0].reference_interfaces[1]);
+>>>>>>> af10525 (Fix multiple calls to export reference interfaces (#1108))
 }
 
 TEST_F(TestControllerManagerSrvs, reload_controller_libraries_srv)
