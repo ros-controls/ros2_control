@@ -1,9 +1,11 @@
 name: Coverage Build
 on:
   workflow_dispatch:
-    push:
-      branches:
-        - master
+    branches:
+      - master
+  push:
+    branches:
+      - master
   pull_request:
     branches:
       - master
