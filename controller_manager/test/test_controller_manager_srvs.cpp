@@ -269,7 +269,9 @@ TEST_F(TestControllerManagerSrvs, list_chained_controllers_srv)
   ASSERT_EQ(result->controller[0].is_chainable, true);
   ASSERT_EQ(result->controller[0].is_chained, false);
   ASSERT_EQ(result->controller[0].reference_interfaces.size(), 2u);
-  ;
+  ASSERT_EQ("joint1/position", result->controller[0].reference_interfaces[0]);
+  ASSERT_EQ("joint1/velocity", result->controller[0].reference_interfaces[1]);
+
   ASSERT_EQ(result->controller[0].chain_connections.size(), 0u);
   // check test controller
   ASSERT_EQ(result->controller[1].state, "inactive");
