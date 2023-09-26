@@ -14,20 +14,21 @@ Guidelines and Best Practices
 .. toctree::
    :titlesonly:
 
-   Writing a Hardware Interface <writing_new_hardware_interface.rst>
+   Hardware Interface Types <hardware_interface_types_userdoc.rst>
+   Writing a Hardware Component <writing_new_hardware_component.rst>
 
 
 Handling of errors that happen during read() and write() calls
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If ``hardware_interface::return_type::ERROR`` is returned from ``read()`` or ``write()`` methods of a hardware interface, ``on_error(previous_state)`` method will be called to handle any error that happened.
+If ``hardware_interface::return_type::ERROR`` is returned from ``read()`` or ``write()`` methods of a hardware_interface class, ``on_error(previous_state)`` method will be called to handle any error that happened.
 
 Error handling follows the `node lifecycle <https://design.ros2.org/articles/node_lifecycle.html>`_.
 If successful ``CallbackReturn::SUCCESS`` is returned and hardware is again in ``UNCONFIGURED``  state, if any ``ERROR`` or ``FAILURE`` happens the hardware ends in ``FINALIZED`` state and can not be recovered.
 The only option is to reload the complete plugin, but there is currently no service for this in the Controller Manager.
 
-Migration from Foxy to Galactic
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Migration from Foxy to newer versions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Between Foxy and Galactic we made substantial changes to the interface of hardware components to enable management of their lifecycle.
 The following list shows a set of quick changes to port existing hardware components to Galactic:
@@ -36,20 +37,29 @@ The following list shows a set of quick changes to port existing hardware compon
 
 2. If using BaseInterface as base class then you should remove it. Specifically, change:
 
-hardware_interface::BaseInterface<hardware_interface::[Actuator|Sensor|System]Interface> to hardware_interface::[Actuator|Sensor|System]Interface
+  .. code-block:: c++
+
+    hardware_interface::BaseInterface<hardware_interface::[Actuator|Sensor|System]Interface>
+
+  to
+
+  .. code-block:: c++
+
+    hardware_interface::[Actuator|Sensor|System]Interface
 
 3. Remove include of headers ``base_interface.hpp`` and ``hardware_interface_status_values.hpp``
 
 4. Add include of header ``rclcpp_lifecycle/state.hpp`` although this may not be strictly necessary
 
-5. replace first three lines in ``on_init`` to:
+5. replace first three lines in ``on_init`` to
 
-.. code-block:: c++
+  .. code-block:: c++
 
-   if (hardware_interface::[Actuator|Sensor|System]Interface::on_init(info) != CallbackReturn::SUCCESS)
-   {
-     return CallbackReturn::ERROR;
-   }
+    if (hardware_interface::[Actuator|Sensor|System]Interface::on_init(info) != CallbackReturn::SUCCESS)
+    {
+      return CallbackReturn::ERROR;
+    }
+
 
 6. Change last return of ``on_init`` to ``return CallbackReturn::SUCCESS;``
 
