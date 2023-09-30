@@ -1,9 +1,9 @@
-:github_url: https://github.com/ros-controls/ros2_control/blob/{REPOS_FILE_BRANCH}/hardware_interface/doc/writing_new_hardware_interface.rst
+:github_url: https://github.com/ros-controls/ros2_control/blob/{REPOS_FILE_BRANCH}/hardware_interface/doc/writing_new_hardware_component.rst
 
-.. _writing_new_hardware_interface:
+.. _writing_new_hardware_component:
 
-Writing a new hardware interface
-=================================
+Writing a Hardware Component
+============================
 
 In ros2_control hardware system components are libraries, dynamically loaded by the controller manager using the `pluginlib <https://ros.org/wiki/pluginlib>`_ interface.
 The following is a step-by-step guide to create source files, basic tests, and compile rules for a new hardware interface.
