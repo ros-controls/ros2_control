@@ -2054,10 +2054,12 @@ controller_interface::return_type ControllerManager::update(
       if (controller_go)
       {
         auto controller_ret =
-          loaded_controller.c->update(time, run_controller_at_cm_rate ? period : controller_period);
+          loaded_controller.c->update(time, controller_period);
 
         if (*loaded_controller.next_update_cycle_time == rclcpp::Time(0))
+        {
           *loaded_controller.next_update_cycle_time = time;
+        }
         *loaded_controller.next_update_cycle_time += controller_period;
 
         if (controller_ret != controller_interface::return_type::OK)
