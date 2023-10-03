@@ -388,11 +388,6 @@ return_type GenericSystem::prepare_command_mode_switch(
 {
   hardware_interface::return_type ret_val = hardware_interface::return_type::OK;
 
-  if (!calculate_dynamics_)
-  {
-    return ret_val;
-  }
-
   const size_t FOUND_ONCE_FLAG = 1000000;
 
   std::vector<size_t> joint_found_in_x_requests_;
@@ -419,10 +414,26 @@ return_type GenericSystem::prepare_command_mode_switch(
       }
       if (key == info_.joints[joint_index].name + "/" + hardware_interface::HW_IF_VELOCITY)
       {
+        if (!calculate_dynamics_)
+        {
+          RCUTILS_LOG_WARN_NAMED(
+            "mock_generic_system",
+            "Requested velocity mode for joint '%s' without dynamics calculation enabled - this "
+            "might lead to wrong feedback and unexpected behavior.",
+            info_.joints[joint_index].name.c_str());
+        }
         joint_found_in_x_requests_[joint_index] += 1;
       }
       if (key == info_.joints[joint_index].name + "/" + hardware_interface::HW_IF_ACCELERATION)
       {
+        if (!calculate_dynamics_)
+        {
+          RCUTILS_LOG_WARN_NAMED(
+            "mock_generic_system",
+            "Requested acceleration mode for joint '%s' without dynamics calculation enabled - "
+            "this might lead to wrong feedback and unexpected behavior.",
+            info_.joints[joint_index].name.c_str());
+        }
         joint_found_in_x_requests_[joint_index] += 1;
       }
     }
