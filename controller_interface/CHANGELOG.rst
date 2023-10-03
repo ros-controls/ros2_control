@@ -2,6 +2,11 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Enable services for setting the log-level in controller per default (`#1102 <https://github.com/ros-controls/ros2_control/issues/1102>`_)
+* Contributors: Dr. Denis
+
 3.18.0 (2023-08-17)
 -------------------
 * add a broadcaster for range sensor (`#1091 <https://github.com/ros-controls/ros2_control/issues/1091>`_)
