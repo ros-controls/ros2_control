@@ -2,6 +2,11 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix next controller update cycle time clock (`#1127 <https://github.com/ros-controls/ros2_control/issues/1127>`_)
+* Contributors: Sai Kishor Kothakota
+
 3.19.0 (2023-10-03)
 -------------------
 * Proper controller update rate (`#1105 <https://github.com/ros-controls/ros2_control/issues/1105>`_)
