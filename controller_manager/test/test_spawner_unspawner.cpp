@@ -39,15 +39,9 @@ class TestLoadController : public ControllerManagerFixture<controller_manager::C
       std::chrono::milliseconds(10),
       [&]()
       {
-        cm_->read(
-          rclcpp::Time(0, 0, cm_->get_node_clock_interface()->get_clock()->get_clock_type()),
-          PERIOD);
-        cm_->update(
-          rclcpp::Time(0, 0, cm_->get_node_clock_interface()->get_clock()->get_clock_type()),
-          PERIOD);
-        cm_->write(
-          rclcpp::Time(0, 0, cm_->get_node_clock_interface()->get_clock()->get_clock_type()),
-          PERIOD);
+        cm_->read(time_, PERIOD);
+        cm_->update(time_, PERIOD);
+        cm_->write(time_, PERIOD);
       });
 
     update_executor_ =
