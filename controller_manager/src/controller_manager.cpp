@@ -565,7 +565,8 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_c
   controller_spec.c = controller;
   controller_spec.info.name = controller_name;
   controller_spec.info.type = controller_type;
-  controller_spec.next_update_cycle_time = std::make_shared<rclcpp::Time>(0);
+  controller_spec.next_update_cycle_time = std::make_shared<rclcpp::Time>(
+    0, 0, this->get_node_clock_interface()->get_clock()->get_clock_type());
 
   return add_controller_impl(controller_spec);
 }
@@ -1457,7 +1458,8 @@ void ControllerManager::activate_controllers(
     auto controller = found_it->c;
     auto controller_name = found_it->info.name;
     // reset the next update cycle time for newly activated controllers
-    *found_it->next_update_cycle_time = rclcpp::Time(0);
+    *found_it->next_update_cycle_time =
+      rclcpp::Time(0, 0, this->get_node_clock_interface()->get_clock()->get_clock_type());
 
     bool assignment_successful = true;
     // assign command interfaces to the controller
@@ -2043,8 +2045,10 @@ controller_interface::return_type ControllerManager::update(
         run_controller_at_cm_rate ? period
                                   : rclcpp::Duration::from_seconds((1.0 / controller_update_rate));
 
-      bool controller_go = (time == rclcpp::Time(0)) ||
-                           (time.seconds() >= loaded_controller.next_update_cycle_time->seconds());
+      bool controller_go =
+        (time ==
+         rclcpp::Time(0, 0, this->get_node_clock_interface()->get_clock()->get_clock_type())) ||
+        (time.seconds() >= loaded_controller.next_update_cycle_time->seconds());
 
       RCLCPP_DEBUG(
         get_logger(), "update_loop_counter: '%d ' controller_go: '%s ' controller_name: '%s '",
@@ -2055,7 +2059,9 @@ controller_interface::return_type ControllerManager::update(
       {
         auto controller_ret = loaded_controller.c->update(time, controller_period);
 
-        if (*loaded_controller.next_update_cycle_time == rclcpp::Time(0))
+        if (
+          *loaded_controller.next_update_cycle_time ==
+          rclcpp::Time(0, 0, this->get_node_clock_interface()->get_clock()->get_clock_type()))
         {
           *loaded_controller.next_update_cycle_time = time;
         }
