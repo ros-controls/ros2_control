@@ -41,7 +41,6 @@
 
 namespace
 {
-const auto TIME = rclcpp::Time(0);
 const auto PERIOD = rclcpp::Duration::from_seconds(0.01);
 const auto STRICT = controller_manager_msgs::srv::SwitchController::Request::STRICT;
 const auto BEST_EFFORT = controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT;
@@ -119,7 +118,9 @@ public:
       {
         while (run_updater_)
         {
-          cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
+          cm_->update(
+            rclcpp::Time(0, 0, cm_->get_node_clock_interface()->get_clock()->get_clock_type()),
+            rclcpp::Duration::from_seconds(0.01));
           std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
       });
@@ -177,9 +178,15 @@ public:
       std::chrono::milliseconds(10),
       [&]()
       {
-        cm_->read(TIME, PERIOD);
-        cm_->update(TIME, PERIOD);
-        cm_->write(TIME, PERIOD);
+        cm_->read(
+          rclcpp::Time(0, 0, cm_->get_node_clock_interface()->get_clock()->get_clock_type()),
+          PERIOD);
+        cm_->update(
+          rclcpp::Time(0, 0, cm_->get_node_clock_interface()->get_clock()->get_clock_type()),
+          PERIOD);
+        cm_->write(
+          rclcpp::Time(0, 0, cm_->get_node_clock_interface()->get_clock()->get_clock_type()),
+          PERIOD);
       });
 
     executor_->add_node(cm_);
@@ -206,7 +213,9 @@ public:
       while (service_executor.spin_until_future_complete(result, std::chrono::milliseconds(50)) !=
              rclcpp::FutureReturnCode::SUCCESS)
       {
-        cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
+        cm_->update(
+          rclcpp::Time(0, 0, cm_->get_node_clock_interface()->get_clock()->get_clock_type()),
+          rclcpp::Duration::from_seconds(0.01));
       }
     }
     else

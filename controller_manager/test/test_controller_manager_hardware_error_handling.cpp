@@ -138,7 +138,11 @@ public:
     cm_->configure_controller(TEST_BROADCASTER_ALL_NAME);
     cm_->configure_controller(TEST_BROADCASTER_SENSOR_NAME);
 
-    EXPECT_EQ(controller_interface::return_type::OK, cm_->update(TIME, PERIOD));
+    EXPECT_EQ(
+      controller_interface::return_type::OK,
+      cm_->update(
+        rclcpp::Time(0, 0, cm_->get_node_clock_interface()->get_clock()->get_clock_type()),
+        PERIOD));
     EXPECT_EQ(0u, test_controller_actuator->internal_counter) << "Controller is not started";
     EXPECT_EQ(0u, test_controller_system->internal_counter) << "Controller is not started";
     EXPECT_EQ(0u, test_broadcaster_all->internal_counter) << "Controller is not started";
@@ -226,7 +230,11 @@ TEST_P(TestControllerManagerWithTestableCM, stop_controllers_on_hardware_read_er
     hardware_interface::lifecycle_state_names::ACTIVE);
 
   {
-    EXPECT_EQ(controller_interface::return_type::OK, cm_->update(TIME, PERIOD));
+    EXPECT_EQ(
+      controller_interface::return_type::OK,
+      cm_->update(
+        rclcpp::Time(0, 0, cm_->get_node_clock_interface()->get_clock()->get_clock_type()),
+        PERIOD));
     EXPECT_GE(test_controller_actuator->internal_counter, 1u)
       << "Controller is started at the end of update";
     EXPECT_GE(test_controller_system->internal_counter, 1u)
@@ -249,7 +257,11 @@ TEST_P(TestControllerManagerWithTestableCM, stop_controllers_on_hardware_read_er
   // Execute first time without any errors
   {
     auto new_counter = test_controller_actuator->internal_counter + 1;
-    EXPECT_EQ(controller_interface::return_type::OK, cm_->update(TIME, PERIOD));
+    EXPECT_EQ(
+      controller_interface::return_type::OK,
+      cm_->update(
+        rclcpp::Time(0, 0, cm_->get_node_clock_interface()->get_clock()->get_clock_type()),
+        PERIOD));
     EXPECT_EQ(test_controller_actuator->internal_counter, new_counter) << "Execute without errors";
     EXPECT_EQ(test_controller_system->internal_counter, new_counter) << "Execute without errors";
     EXPECT_EQ(test_broadcaster_all->internal_counter, new_counter) << "Execute without errors";
@@ -261,7 +273,11 @@ TEST_P(TestControllerManagerWithTestableCM, stop_controllers_on_hardware_read_er
   test_controller_actuator->set_first_command_interface_value_to = READ_FAIL_VALUE;
   {
     auto new_counter = test_controller_actuator->internal_counter + 1;
-    EXPECT_EQ(controller_interface::return_type::OK, cm_->update(TIME, PERIOD));
+    EXPECT_EQ(
+      controller_interface::return_type::OK,
+      cm_->update(
+        rclcpp::Time(0, 0, cm_->get_node_clock_interface()->get_clock()->get_clock_type()),
+        PERIOD));
     EXPECT_EQ(test_controller_actuator->internal_counter, new_counter)
       << "Execute without errors to write value";
     EXPECT_EQ(test_controller_system->internal_counter, new_counter)
@@ -278,7 +294,8 @@ TEST_P(TestControllerManagerWithTestableCM, stop_controllers_on_hardware_read_er
 
     // here happens error in hardware and
     // "actuator controller" and "broadcaster all" are deactivated
-    EXPECT_NO_THROW(cm_->read(TIME, PERIOD));
+    EXPECT_NO_THROW(cm_->read(
+      rclcpp::Time(0, 0, cm_->get_node_clock_interface()->get_clock()->get_clock_type()), PERIOD));
     EXPECT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
       test_controller_actuator->get_state().id());
@@ -289,7 +306,11 @@ TEST_P(TestControllerManagerWithTestableCM, stop_controllers_on_hardware_read_er
     EXPECT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, test_broadcaster_sensor->get_state().id());
 
-    EXPECT_EQ(controller_interface::return_type::OK, cm_->update(TIME, PERIOD));
+    EXPECT_EQ(
+      controller_interface::return_type::OK,
+      cm_->update(
+        rclcpp::Time(0, 0, cm_->get_node_clock_interface()->get_clock()->get_clock_type()),
+        PERIOD));
     EXPECT_EQ(test_controller_actuator->internal_counter, previous_counter)
       << "Execute has read error and it is not updated";
     EXPECT_EQ(test_controller_system->internal_counter, new_counter)
@@ -333,7 +354,11 @@ TEST_P(TestControllerManagerWithTestableCM, stop_controllers_on_hardware_read_er
     auto previous_counter_lower = test_controller_actuator->internal_counter + 1;
     auto previous_counter_higher = test_controller_system->internal_counter + 1;
 
-    EXPECT_EQ(controller_interface::return_type::OK, cm_->update(TIME, PERIOD));
+    EXPECT_EQ(
+      controller_interface::return_type::OK,
+      cm_->update(
+        rclcpp::Time(0, 0, cm_->get_node_clock_interface()->get_clock()->get_clock_type()),
+        PERIOD));
 
     EXPECT_EQ(test_controller_actuator->internal_counter, previous_counter_lower)
       << "Execute without errors to write value";
@@ -350,7 +375,8 @@ TEST_P(TestControllerManagerWithTestableCM, stop_controllers_on_hardware_read_er
     auto previous_counter_higher = test_controller_system->internal_counter;
     auto new_counter = test_broadcaster_sensor->internal_counter + 1;
 
-    EXPECT_NO_THROW(cm_->read(TIME, PERIOD));
+    EXPECT_NO_THROW(cm_->read(
+      rclcpp::Time(0, 0, cm_->get_node_clock_interface()->get_clock()->get_clock_type()), PERIOD));
     EXPECT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
       test_controller_actuator->get_state().id());
@@ -361,7 +387,11 @@ TEST_P(TestControllerManagerWithTestableCM, stop_controllers_on_hardware_read_er
     EXPECT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, test_broadcaster_sensor->get_state().id());
 
-    EXPECT_EQ(controller_interface::return_type::OK, cm_->update(TIME, PERIOD));
+    EXPECT_EQ(
+      controller_interface::return_type::OK,
+      cm_->update(
+        rclcpp::Time(0, 0, cm_->get_node_clock_interface()->get_clock()->get_clock_type()),
+        PERIOD));
     EXPECT_EQ(test_controller_actuator->internal_counter, previous_counter_lower)
       << "Execute has read error and it is not updated";
     EXPECT_EQ(test_controller_system->internal_counter, previous_counter_higher)
@@ -418,7 +448,11 @@ TEST_P(TestControllerManagerWithTestableCM, stop_controllers_on_hardware_write_e
     hardware_interface::lifecycle_state_names::ACTIVE);
 
   {
-    EXPECT_EQ(controller_interface::return_type::OK, cm_->update(TIME, PERIOD));
+    EXPECT_EQ(
+      controller_interface::return_type::OK,
+      cm_->update(
+        rclcpp::Time(0, 0, cm_->get_node_clock_interface()->get_clock()->get_clock_type()),
+        PERIOD));
     EXPECT_GE(test_controller_actuator->internal_counter, 1u)
       << "Controller is started at the end of update";
     EXPECT_GE(test_controller_system->internal_counter, 1u)
@@ -441,7 +475,11 @@ TEST_P(TestControllerManagerWithTestableCM, stop_controllers_on_hardware_write_e
   // Execute first time without any errors
   {
     auto new_counter = test_controller_actuator->internal_counter + 1;
-    EXPECT_EQ(controller_interface::return_type::OK, cm_->update(TIME, PERIOD));
+    EXPECT_EQ(
+      controller_interface::return_type::OK,
+      cm_->update(
+        rclcpp::Time(0, 0, cm_->get_node_clock_interface()->get_clock()->get_clock_type()),
+        PERIOD));
     EXPECT_EQ(test_controller_actuator->internal_counter, new_counter) << "Execute without errors";
     EXPECT_EQ(test_controller_system->internal_counter, new_counter) << "Execute without errors";
     EXPECT_EQ(test_broadcaster_all->internal_counter, new_counter) << "Execute without errors";
@@ -453,7 +491,11 @@ TEST_P(TestControllerManagerWithTestableCM, stop_controllers_on_hardware_write_e
   test_controller_actuator->set_first_command_interface_value_to = WRITE_FAIL_VALUE;
   {
     auto new_counter = test_controller_actuator->internal_counter + 1;
-    EXPECT_EQ(controller_interface::return_type::OK, cm_->update(TIME, PERIOD));
+    EXPECT_EQ(
+      controller_interface::return_type::OK,
+      cm_->update(
+        rclcpp::Time(0, 0, cm_->get_node_clock_interface()->get_clock()->get_clock_type()),
+        PERIOD));
     EXPECT_EQ(test_controller_actuator->internal_counter, new_counter)
       << "Execute without errors to write value";
     EXPECT_EQ(test_controller_system->internal_counter, new_counter)
@@ -470,7 +512,8 @@ TEST_P(TestControllerManagerWithTestableCM, stop_controllers_on_hardware_write_e
 
     // here happens error in hardware and
     // "actuator controller" and "broadcaster all" are deactivated
-    EXPECT_NO_THROW(cm_->write(TIME, PERIOD));
+    EXPECT_NO_THROW(cm_->write(
+      rclcpp::Time(0, 0, cm_->get_node_clock_interface()->get_clock()->get_clock_type()), PERIOD));
     EXPECT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
       test_controller_actuator->get_state().id());
@@ -481,7 +524,11 @@ TEST_P(TestControllerManagerWithTestableCM, stop_controllers_on_hardware_write_e
     EXPECT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, test_broadcaster_sensor->get_state().id());
 
-    EXPECT_EQ(controller_interface::return_type::OK, cm_->update(TIME, PERIOD));
+    EXPECT_EQ(
+      controller_interface::return_type::OK,
+      cm_->update(
+        rclcpp::Time(0, 0, cm_->get_node_clock_interface()->get_clock()->get_clock_type()),
+        PERIOD));
     EXPECT_EQ(test_controller_actuator->internal_counter, previous_counter)
       << "Execute without errors to write value";
     EXPECT_EQ(test_controller_system->internal_counter, new_counter)
@@ -525,7 +572,11 @@ TEST_P(TestControllerManagerWithTestableCM, stop_controllers_on_hardware_write_e
     auto previous_counter_lower = test_controller_actuator->internal_counter + 1;
     auto previous_counter_higher = test_controller_system->internal_counter + 1;
 
-    EXPECT_EQ(controller_interface::return_type::OK, cm_->update(TIME, PERIOD));
+    EXPECT_EQ(
+      controller_interface::return_type::OK,
+      cm_->update(
+        rclcpp::Time(0, 0, cm_->get_node_clock_interface()->get_clock()->get_clock_type()),
+        PERIOD));
 
     EXPECT_EQ(test_controller_actuator->internal_counter, previous_counter_lower)
       << "Execute without errors to write value";
@@ -544,7 +595,8 @@ TEST_P(TestControllerManagerWithTestableCM, stop_controllers_on_hardware_write_e
 
     // here happens error in hardware and
     // "actuator controller" and "broadcaster all" are deactivated
-    EXPECT_NO_THROW(cm_->write(TIME, PERIOD));
+    EXPECT_NO_THROW(cm_->write(
+      rclcpp::Time(0, 0, cm_->get_node_clock_interface()->get_clock()->get_clock_type()), PERIOD));
     EXPECT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
       test_controller_actuator->get_state().id());
@@ -555,7 +607,11 @@ TEST_P(TestControllerManagerWithTestableCM, stop_controllers_on_hardware_write_e
     EXPECT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, test_broadcaster_sensor->get_state().id());
 
-    EXPECT_EQ(controller_interface::return_type::OK, cm_->update(TIME, PERIOD));
+    EXPECT_EQ(
+      controller_interface::return_type::OK,
+      cm_->update(
+        rclcpp::Time(0, 0, cm_->get_node_clock_interface()->get_clock()->get_clock_type()),
+        PERIOD));
     EXPECT_EQ(test_controller_actuator->internal_counter, previous_counter_lower)
       << "Execute has write error and it is not updated";
     EXPECT_EQ(test_controller_system->internal_counter, previous_counter_higher)
