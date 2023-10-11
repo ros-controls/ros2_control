@@ -2,6 +2,11 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Export of the get_cm_node_options() from robostack (`#1129 <https://github.com/ros-controls/ros2_control/issues/1129>`_) (`#1130 <https://github.com/ros-controls/ros2_control/issues/1130>`_)
+* Contributors: mergify[bot]
+
 2.32.0 (2023-10-03)
 -------------------
 * Fix multiple calls to export reference interfaces (backport `#1108 <https://github.com/ros-controls/ros2_control/issues/1108>`_) (`#1114 <https://github.com/ros-controls/ros2_control/issues/1114>`_)

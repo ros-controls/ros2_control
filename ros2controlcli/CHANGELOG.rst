@@ -2,6 +2,11 @@
 Changelog for package ros2controlcli
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix doc of load_controller (`#1135 <https://github.com/ros-controls/ros2_control/issues/1135>`_)
+* Contributors: Christoph Fröhlich
+
 2.32.0 (2023-10-03)
 -------------------
 
