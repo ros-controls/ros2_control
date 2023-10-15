@@ -1362,11 +1362,17 @@ void ControllerManager::list_controllers_srv_cb(
         }
       }
       // check reference interfaces only if controller is inactive or active
-      auto references = controllers[i].c->export_reference_interfaces();
-      controller_state.reference_interfaces.reserve(references.size());
-      for (const auto & reference : references)
+      if (controllers[i].c->is_chainable())
       {
-        controller_state.reference_interfaces.push_back(reference.get_interface_name());
+        auto references =
+          resource_manager_->get_controller_reference_interface_names(controllers[i].info.name);
+        controller_state.reference_interfaces.reserve(references.size());
+        for (const auto & reference : references)
+        {
+          const std::string prefix_name = controllers[i].c->get_node()->get_name();
+          const std::string interface_name = reference.substr(prefix_name.size() + 1);
+          controller_state.reference_interfaces.push_back(interface_name);
+        }
       }
     }
     response->controller.push_back(controller_state);

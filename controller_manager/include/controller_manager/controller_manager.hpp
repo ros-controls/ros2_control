@@ -55,7 +55,7 @@ namespace controller_manager
 {
 using ControllersListIterator = std::vector<controller_manager::ControllerSpec>::const_iterator;
 
-rclcpp::NodeOptions get_cm_node_options();
+CONTROLLER_MANAGER_PUBLIC rclcpp::NodeOptions get_cm_node_options();
 
 class ControllerManager : public rclcpp::Node
 {

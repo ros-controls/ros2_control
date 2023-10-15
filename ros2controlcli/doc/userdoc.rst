@@ -148,18 +148,21 @@ load_controller
 .. code-block:: console
 
     $ ros2 control load_controller -h
-    usage: ros2 control load_controller [-h] [--spin-time SPIN_TIME] [--set_state {configure,activate}] [-c CONTROLLER_MANAGER] [--include-hidden-nodes] controller_name
+    usage: ros2 control load_controller [-h] [--spin-time SPIN_TIME] [-s] [--set-state {configured,inactive,active}] [-c CONTROLLER_MANAGER]
+                                        [--include-hidden-nodes]
+                                        controller_name
 
     Load a controller in a controller manager
 
     positional arguments:
       controller_name       Name of the controller
 
-    optional arguments:
+    options:
       -h, --help            show this help message and exit
       --spin-time SPIN_TIME
                             Spin time in seconds to wait for discovery (only applies when not using an already running daemon)
-      --set_state {configured,inactive,active}
+      -s, --use-sim-time    Enable ROS simulation time
+      --set-state {configured,inactive,active}
                             Set the state of the loaded controller
       -c CONTROLLER_MANAGER, --controller-manager CONTROLLER_MANAGER
                             Name of the controller manager ROS node
