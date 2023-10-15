@@ -118,6 +118,17 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
     command_propagation_disabled_ = false;
   }
 
+  // check if there is parameter that enables dynamic calculation
+  it = info_.hardware_parameters.find("calculate_dynamics");
+  if (it != info.hardware_parameters.end())
+  {
+    calculate_dynamics_ = hardware_interface::parse_bool(it->second);
+  }
+  else
+  {
+    calculate_dynamics_ = false;
+  }
+
   // process parameters about state following
   position_state_following_offset_ = 0.0;
   custom_interface_with_following_offset_ = "";
@@ -299,7 +310,7 @@ std::vector<hardware_interface::CommandInterface> GenericSystem::export_command_
   std::vector<hardware_interface::CommandInterface> command_interfaces;
 
   // Joints' state interfaces
-  for (auto i = 0u; i < info_.joints.size(); i++)
+  for (size_t i = 0; i < info_.joints.size(); ++i)
   {
     const auto & joint = info_.joints[i];
     for (const auto & interface : joint.command_interfaces)
@@ -320,6 +331,8 @@ std::vector<hardware_interface::CommandInterface> GenericSystem::export_command_
       }
     }
   }
+  // Set position control mode per default
+  joint_control_mode_.resize(info_.joints.size(), POSITION_INTERFACE_INDEX);
 
   // Mock sensor command interfaces
   if (use_mock_sensor_command_interfaces_)
@@ -356,7 +369,135 @@ std::vector<hardware_interface::CommandInterface> GenericSystem::export_command_
   return command_interfaces;
 }
 
-return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
+return_type GenericSystem::prepare_command_mode_switch(
+  const std::vector<std::string> & start_interfaces,
+  const std::vector<std::string> & /*stop_interfaces*/)
+{
+  hardware_interface::return_type ret_val = hardware_interface::return_type::OK;
+
+  const size_t FOUND_ONCE_FLAG = 1000000;
+
+  std::vector<size_t> joint_found_in_x_requests_;
+  joint_found_in_x_requests_.resize(info_.joints.size(), 0);
+
+  for (const auto & key : start_interfaces)
+  {
+    // check if interface is joint
+    auto joint_it_found = std::find_if(
+      info_.joints.begin(), info_.joints.end(),
+      [key](const auto & joint) { return (key.find(joint.name) != std::string::npos); });
+
+    if (joint_it_found != info_.joints.end())
+    {
+      const size_t joint_index = std::distance(info_.joints.begin(), joint_it_found);
+      if (joint_found_in_x_requests_[joint_index] == 0)
+      {
+        joint_found_in_x_requests_[joint_index] = FOUND_ONCE_FLAG;
+      }
+
+      if (key == info_.joints[joint_index].name + "/" + hardware_interface::HW_IF_POSITION)
+      {
+        joint_found_in_x_requests_[joint_index] += 1;
+      }
+      if (key == info_.joints[joint_index].name + "/" + hardware_interface::HW_IF_VELOCITY)
+      {
+        if (!calculate_dynamics_)
+        {
+          RCUTILS_LOG_WARN_NAMED(
+            "mock_generic_system",
+            "Requested velocity mode for joint '%s' without dynamics calculation enabled - this "
+            "might lead to wrong feedback and unexpected behavior.",
+            info_.joints[joint_index].name.c_str());
+        }
+        joint_found_in_x_requests_[joint_index] += 1;
+      }
+      if (key == info_.joints[joint_index].name + "/" + hardware_interface::HW_IF_ACCELERATION)
+      {
+        if (!calculate_dynamics_)
+        {
+          RCUTILS_LOG_WARN_NAMED(
+            "mock_generic_system",
+            "Requested acceleration mode for joint '%s' without dynamics calculation enabled - "
+            "this might lead to wrong feedback and unexpected behavior.",
+            info_.joints[joint_index].name.c_str());
+        }
+        joint_found_in_x_requests_[joint_index] += 1;
+      }
+    }
+    else
+    {
+      RCUTILS_LOG_DEBUG_NAMED(
+        "mock_generic_system", "Got interface '%s' that is not joint - nothing to do!",
+        key.c_str());
+    }
+  }
+
+  for (size_t i = 0; i < info_.joints.size(); ++i)
+  {
+    // There has to always be at least one control mode from the above three set
+    if (joint_found_in_x_requests_[i] == FOUND_ONCE_FLAG)
+    {
+      RCUTILS_LOG_ERROR_NAMED(
+        "mock_generic_system", "Joint '%s' has to have '%s', '%s', or '%s' interface!",
+        info_.joints[i].name.c_str(), hardware_interface::HW_IF_POSITION,
+        hardware_interface::HW_IF_VELOCITY, hardware_interface::HW_IF_ACCELERATION);
+      ret_val = hardware_interface::return_type::ERROR;
+    }
+
+    // Currently we don't support multiple interface request
+    if (joint_found_in_x_requests_[i] > (FOUND_ONCE_FLAG + 1))
+    {
+      RCUTILS_LOG_ERROR_NAMED(
+        "mock_generic_system",
+        "Got multiple (%zu) starting interfaces for joint '%s' - this is not "
+        "supported!",
+        joint_found_in_x_requests_[i] - FOUND_ONCE_FLAG, info_.joints[i].name.c_str());
+      ret_val = hardware_interface::return_type::ERROR;
+    }
+  }
+
+  return ret_val;
+}
+
+return_type GenericSystem::perform_command_mode_switch(
+  const std::vector<std::string> & start_interfaces,
+  const std::vector<std::string> & /*stop_interfaces*/)
+{
+  if (!calculate_dynamics_)
+  {
+    return hardware_interface::return_type::OK;
+  }
+
+  for (const auto & key : start_interfaces)
+  {
+    // check if interface is joint
+    auto joint_it_found = std::find_if(
+      info_.joints.begin(), info_.joints.end(),
+      [key](const auto & joint) { return (key.find(joint.name) != std::string::npos); });
+
+    if (joint_it_found != info_.joints.end())
+    {
+      const size_t joint_index = std::distance(info_.joints.begin(), joint_it_found);
+
+      if (key == info_.joints[joint_index].name + "/" + hardware_interface::HW_IF_POSITION)
+      {
+        joint_control_mode_[joint_index] = POSITION_INTERFACE_INDEX;
+      }
+      if (key == info_.joints[joint_index].name + "/" + hardware_interface::HW_IF_VELOCITY)
+      {
+        joint_control_mode_[joint_index] = VELOCITY_INTERFACE_INDEX;
+      }
+      if (key == info_.joints[joint_index].name + "/" + hardware_interface::HW_IF_ACCELERATION)
+      {
+        joint_control_mode_[joint_index] = ACCELERATION_INTERFACE_INDEX;
+      }
+    }
+  }
+
+  return hardware_interface::return_type::OK;
+}
+
+return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Duration & period)
 {
   if (command_propagation_disabled_)
   {
@@ -379,19 +520,97 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
     }
   };
 
-  // apply offset to positions only
   for (size_t j = 0; j < joint_states_[POSITION_INTERFACE_INDEX].size(); ++j)
   {
-    if (!std::isnan(joint_commands_[POSITION_INTERFACE_INDEX][j]))
+    if (calculate_dynamics_)
     {
-      joint_states_[POSITION_INTERFACE_INDEX][j] =
-        joint_commands_[POSITION_INTERFACE_INDEX][j] +
-        (custom_interface_with_following_offset_.empty() ? position_state_following_offset_ : 0.0);
+      switch (joint_control_mode_[j])
+      {
+        case ACCELERATION_INTERFACE_INDEX:
+        {
+          // currently we do backward integration
+          joint_states_[POSITION_INTERFACE_INDEX][j] +=  // apply offset to positions only
+            joint_states_[VELOCITY_INTERFACE_INDEX][j] * period.seconds() +
+            (custom_interface_with_following_offset_.empty() ? position_state_following_offset_
+                                                             : 0.0);
+
+          joint_states_[VELOCITY_INTERFACE_INDEX][j] +=
+            joint_states_[ACCELERATION_INTERFACE_INDEX][j] * period.seconds();
+
+          if (!std::isnan(joint_commands_[ACCELERATION_INTERFACE_INDEX][j]))
+          {
+            joint_states_[ACCELERATION_INTERFACE_INDEX][j] =
+              joint_commands_[ACCELERATION_INTERFACE_INDEX][j];
+          }
+          break;
+        }
+        case VELOCITY_INTERFACE_INDEX:
+        {
+          // currently we do backward integration
+          joint_states_[POSITION_INTERFACE_INDEX][j] +=  // apply offset to positions only
+            joint_states_[VELOCITY_INTERFACE_INDEX][j] * period.seconds() +
+            (custom_interface_with_following_offset_.empty() ? position_state_following_offset_
+                                                             : 0.0);
+
+          if (!std::isnan(joint_commands_[VELOCITY_INTERFACE_INDEX][j]))
+          {
+            const double old_velocity = joint_states_[VELOCITY_INTERFACE_INDEX][j];
+
+            joint_states_[VELOCITY_INTERFACE_INDEX][j] =
+              joint_commands_[VELOCITY_INTERFACE_INDEX][j];
+
+            joint_states_[ACCELERATION_INTERFACE_INDEX][j] =
+              (joint_states_[VELOCITY_INTERFACE_INDEX][j] - old_velocity) / period.seconds();
+          }
+          break;
+        }
+        case POSITION_INTERFACE_INDEX:
+        {
+          if (!std::isnan(joint_commands_[POSITION_INTERFACE_INDEX][j]))
+          {
+            const double old_position = joint_states_[POSITION_INTERFACE_INDEX][j];
+            const double old_velocity = joint_states_[VELOCITY_INTERFACE_INDEX][j];
+
+            joint_states_[POSITION_INTERFACE_INDEX][j] =  // apply offset to positions only
+              joint_commands_[POSITION_INTERFACE_INDEX][j] +
+              (custom_interface_with_following_offset_.empty() ? position_state_following_offset_
+                                                               : 0.0);
+
+            joint_states_[VELOCITY_INTERFACE_INDEX][j] =
+              (joint_states_[POSITION_INTERFACE_INDEX][j] - old_position) / period.seconds();
+
+            joint_states_[ACCELERATION_INTERFACE_INDEX][j] =
+              (joint_states_[VELOCITY_INTERFACE_INDEX][j] - old_velocity) / period.seconds();
+          }
+          break;
+        }
+      }
+    }
+    else
+    {
+      for (size_t j = 0; j < joint_states_[POSITION_INTERFACE_INDEX].size(); ++j)
+      {
+        if (!std::isnan(joint_commands_[POSITION_INTERFACE_INDEX][j]))
+        {
+          joint_states_[POSITION_INTERFACE_INDEX][j] =  // apply offset to positions only
+            joint_commands_[POSITION_INTERFACE_INDEX][j] +
+            (custom_interface_with_following_offset_.empty() ? position_state_following_offset_
+                                                             : 0.0);
+        }
+      }
     }
   }
 
-  // do loopback on all other interfaces - starts from 1 because 0 index is position interface
-  mirror_command_to_state(joint_states_, joint_commands_, 1);
+  // do loopback on all other interfaces - starts from 1 or 3 because 0, 1, 3 are position,
+  // velocity, and acceleration interface
+  if (calculate_dynamics_)
+  {
+    mirror_command_to_state(joint_states_, joint_commands_, 3);
+  }
+  else
+  {
+    mirror_command_to_state(joint_states_, joint_commands_, 1);
+  }
 
   for (const auto & mimic_joint : mimic_joints_)
   {

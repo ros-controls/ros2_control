@@ -2,6 +2,26 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.33.0 (2023-10-11)
+-------------------
+* Export of the get_cm_node_options() from robostack (`#1129 <https://github.com/ros-controls/ros2_control/issues/1129>`_) (`#1130 <https://github.com/ros-controls/ros2_control/issues/1130>`_)
+* Contributors: mergify[bot]
+
+2.32.0 (2023-10-03)
+-------------------
+* Fix multiple calls to export reference interfaces (backport `#1108 <https://github.com/ros-controls/ros2_control/issues/1108>`_) (`#1114 <https://github.com/ros-controls/ros2_control/issues/1114>`_)
+* Contributors: Sai Kishor Kothakota, Dr Denis
+
+2.31.0 (2023-09-11)
+-------------------
+* [Docs] Fix information about activation and deactivation of chainable controllers (`#1104 <https://github.com/ros-controls/ros2_control/issues/1104>`_) (`#1106 <https://github.com/ros-controls/ros2_control/issues/1106>`_)
+* Contributors: mergify[bot]
+
+2.30.0 (2023-08-14)
+-------------------
+* [CM] Fixes the issue with individual controller's update rate (`#1082 <https://github.com/ros-controls/ros2_control/issues/1082>`_) (`#1097 <https://github.com/ros-controls/ros2_control/issues/1097>`_)
+* Contributors: Sai Kishor Kothakota
+
 2.29.0 (2023-07-09)
 -------------------
 * [CM] Make error message after trying to active controller more informative. (`#1066 <https://github.com/ros-controls/ros2_control/issues/1066>`_) (`#1072 <https://github.com/ros-controls/ros2_control/issues/1072>`_)
