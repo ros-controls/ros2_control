@@ -58,14 +58,6 @@ class SetControllerStateVerb(VerbExtension):
             #          #      print(f'successfully cleaned up {args.controller_name}')
             #     return 0
 
-            if args.state == "configure":
-                args.state = "inactive"
-                print('Setting state "configure" is deprecated, use "inactive" instead!')
-
-            if args.state == "stop":
-                args.state = "inactive"
-                print('Setting state "stop" is deprecated, use "inactive" instead!')
-
             if args.state == "inactive":
                 if matched_controller.state == "unconfigured":
                     response = configure_controller(
@@ -74,7 +66,7 @@ class SetControllerStateVerb(VerbExtension):
                     if not response.ok:
                         return "Error configuring controller, check controller_manager logs"
 
-                    print(f"successfully configured {args.controller_name}")
+                    print(f"Successfully configured {args.controller_name}")
                     return 0
 
                 elif matched_controller.state == "active":
@@ -84,7 +76,7 @@ class SetControllerStateVerb(VerbExtension):
                     if not response.ok:
                         return "Error stopping controller, check controller_manager logs"
 
-                    print(f"successfully deactivated {args.controller_name}")
+                    print(f"Successfully deactivated {args.controller_name}")
                     return 0
 
                 else:
@@ -92,10 +84,6 @@ class SetControllerStateVerb(VerbExtension):
                         f'cannot put {matched_controller.name} in "inactive" state'
                         f"from its current state {matched_controller.state}"
                     )
-
-            if args.state == "start":
-                args.state = "active"
-                print('Setting state "start" is deprecated, use "active" instead!')
 
             if args.state == "active":
                 if matched_controller.state != "inactive":
@@ -109,5 +97,5 @@ class SetControllerStateVerb(VerbExtension):
                 if not response.ok:
                     return "Error activating controller, check controller_manager logs"
 
-                print(f"successfully activated {args.controller_name}")
+                print(f"Successfully activated {args.controller_name}")
                 return 0

@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 project(controller_manager LANGUAGES CXX)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
-  add_compile_options(-Wall -Wextra)
+  add_compile_options(-Wall -Wextra -Wconversion)
 endif()
 
 set(THIS_PACKAGE_INCLUDE_DEPENDS
@@ -14,6 +14,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   pluginlib
   rclcpp
   realtime_tools
+  std_msgs
 )
 
 find_package(ament_cmake REQUIRED)
@@ -141,6 +142,16 @@ if(BUILD_TESTING)
     ros2_control_test_assets::ros2_control_test_assets
   )
   ament_target_dependencies(test_controller_manager_srvs
+    controller_manager_msgs
+  )
+  ament_add_gmock(test_controller_manager_urdf_passing
+    test/test_controller_manager_urdf_passing.cpp
+  )
+  target_link_libraries(test_controller_manager_urdf_passing
+    controller_manager
+    ros2_control_test_assets::ros2_control_test_assets
+  )
+  ament_target_dependencies(test_controller_manager_urdf_passing
     controller_manager_msgs
   )
 

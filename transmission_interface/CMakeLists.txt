@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 project(transmission_interface LANGUAGES CXX)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
-  add_compile_options(-Wall -Wextra -Wpedantic)
+  add_compile_options(-Wall -Wextra -Wpedantic -Wconversion)
 endif()
 
 set(THIS_PACKAGE_INCLUDE_DEPENDS
@@ -60,6 +60,13 @@ if(BUILD_TESTING)
     test/differential_transmission_loader_test.cpp
   )
   target_link_libraries(test_differential_transmission_loader transmission_interface)
+
+  ament_add_gmock(
+    test_utils
+    test/utils_test.cpp
+  )
+  target_include_directories(test_utils PUBLIC include hardware_interface)
+  ament_target_dependencies(test_utils hardware_interface)
 endif()
 
 install(

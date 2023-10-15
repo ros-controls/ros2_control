@@ -1,3 +1,5 @@
+:github_url: https://github.com/ros-controls/ros2_control/blob/{REPOS_FILE_BRANCH}/ros2controlcli/doc/userdoc.rst
+
 .. _ros2controlcli_userdoc:
 
 Command Line Interface
@@ -146,7 +148,7 @@ load_controller
 .. code-block:: console
 
     $ ros2 control load_controller -h
-    usage: ros2 control load_controller [-h] [--spin-time SPIN_TIME] [--set_state {configure,activate}] [-c CONTROLLER_MANAGER] [--include-hidden-nodes] controller_name
+    usage: ros2 control load_controller [-h] [--spin-time SPIN_TIME] [--set-state {inactive,active}] [-c CONTROLLER_MANAGER] [--include-hidden-nodes] controller_name
 
     Load a controller in a controller manager
 
@@ -157,7 +159,7 @@ load_controller
       -h, --help            show this help message and exit
       --spin-time SPIN_TIME
                             Spin time in seconds to wait for discovery (only applies when not using an already running daemon)
-      --set_state {configured,active}
+      --set-state {inactive,active}
                             Set the state of the loaded controller
       -c CONTROLLER_MANAGER, --controller-manager CONTROLLER_MANAGER
                             Name of the controller manager ROS node
@@ -266,4 +268,14 @@ view_controller_chains
     $ ros2 control view_controller_chains -h
     usage: ros2 view_controller_chains
 
-    Creates a graphviz image from loaded controllers.
+    Generates a diagram of the loaded chained controllers into /tmp/controller_diagram.gv.pdf
+
+    options:
+      -h, --help            show this help message and exit
+      --spin-time SPIN_TIME
+                            Spin time in seconds to wait for discovery (only applies when not using an already running daemon)
+      -s, --use-sim-time    Enable ROS simulation time
+      -c CONTROLLER_MANAGER, --controller-manager CONTROLLER_MANAGER
+                            Name of the controller manager ROS node
+      --include-hidden-nodes
+                            Consider hidden nodes as well

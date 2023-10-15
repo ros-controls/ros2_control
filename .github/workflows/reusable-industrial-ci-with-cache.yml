@@ -58,10 +58,10 @@ jobs:
     steps:
       - name: Checkout ${{ inputs.ref }} when build is not scheduled
         if: ${{ github.event_name != 'schedule' }}
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Checkout ${{ inputs.ref }} on scheduled build
         if: ${{ github.event_name == 'schedule' }}
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref_for_scheduled_build }}
       - name: cache target_ws

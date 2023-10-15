@@ -27,26 +27,12 @@ class SwitchControllersVerb(VerbExtension):
     def add_arguments(self, parser, cli_name):
         add_arguments(parser)
         arg = parser.add_argument(
-            "--stop",
-            nargs="*",
-            default=[],
-            help="Name of the controllers to be deactivated",
-        )
-        arg.completer = LoadedControllerNameCompleter(["active"])
-        arg = parser.add_argument(
             "--deactivate",
             nargs="*",
             default=[],
             help="Name of the controllers to be deactivated",
         )
         arg.completer = LoadedControllerNameCompleter(["active"])
-        arg = parser.add_argument(
-            "--start",
-            nargs="*",
-            default=[],
-            help="Name of the controllers to be activated",
-        )
-        arg.completer = LoadedControllerNameCompleter(["inactive"])
         arg = parser.add_argument(
             "--activate",
             nargs="*",
@@ -55,7 +41,6 @@ class SwitchControllersVerb(VerbExtension):
         )
         arg.completer = LoadedControllerNameCompleter(["inactive"])
         parser.add_argument("--strict", action="store_true", help="Strict switch")
-        parser.add_argument("--start-asap", action="store_true", help="Start asap controllers")
         parser.add_argument("--activate-asap", action="store_true", help="Start asap controllers")
         parser.add_argument(
             "--switch-timeout",
@@ -67,16 +52,6 @@ class SwitchControllersVerb(VerbExtension):
         add_controller_mgr_parsers(parser)
 
     def main(self, *, args):
-        if args.stop:
-            print('"--stop" flag is deprecated, use "--deactivate" instead!')
-            args.deactivate = args.stop
-        if args.start:
-            print('"--start" flag is deprecated, use "--activate" instead!')
-            args.activate = args.start
-        if args.start_asap:
-            print('"--start-asap" flag is deprecated, use "--activate-asap" instead!')
-            args.activate_asap = args.start_asap
-
         with NodeStrategy(args) as node:
             response = switch_controllers(
                 node,
@@ -84,7 +59,7 @@ class SwitchControllersVerb(VerbExtension):
                 args.deactivate,
                 args.activate,
                 args.strict,
-                args.start_asap,
+                args.activate_asap,
                 args.switch_timeout,
             )
             if not response.ok:

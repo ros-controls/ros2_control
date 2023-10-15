@@ -28,11 +28,11 @@ namespace  // utilities
 {
 /// Declare and initialize a parameter with a type.
 /**
-   *
-   * Wrapper function for templated node's declare_parameter() which checks if
-   * parameter is already declared.
-   * For use in all components that inherit from ControllerInterface
-   */
+ *
+ * Wrapper function for templated node's declare_parameter() which checks if
+ * parameter is already declared.
+ * For use in all components that inherit from ControllerInterface
+ */
 template <typename ParameterT>
 auto auto_declare(
   const rclcpp::node_interfaces::NodeParametersInterface::SharedPtr & param_itf,
@@ -62,6 +62,8 @@ namespace joint_limits
  *   max_velocity: double
  *   has_acceleration_limits: bool
  *   max_acceleration: double
+ *   has_deceleration_limits: bool
+ *   max_deceleration: double
  *   has_jerk_limits: bool
  *   max_jerk: double
  *   has_effort_limits: bool
@@ -101,6 +103,9 @@ inline bool declare_parameters(
     auto_declare<bool>(param_itf, param_base_name + ".has_acceleration_limits", false);
     auto_declare<double>(
       param_itf, param_base_name + ".max_acceleration", std::numeric_limits<double>::quiet_NaN());
+    auto_declare<bool>(param_itf, param_base_name + ".has_deceleration_limits", false);
+    auto_declare<double>(
+      param_itf, param_base_name + ".max_deceleration", std::numeric_limits<double>::quiet_NaN());
     auto_declare<bool>(param_itf, param_base_name + ".has_jerk_limits", false);
     auto_declare<double>(
       param_itf, param_base_name + ".max_jerk", std::numeric_limits<double>::quiet_NaN());
@@ -144,10 +149,9 @@ inline bool declare_parameters(const std::string & joint_name, const rclcpp::Nod
 }
 
 /**
- * Declare JointLimits and SoftJointLimits parameters for joint with joint_name for the lifecycle_node
- * object.
- * This is a convenience function.
- * For parameters structure see the underlying `declare_parameters` function.
+ * Declare JointLimits and SoftJointLimits parameters for joint with joint_name for the
+ * lifecycle_node object. This is a convenience function. For parameters structure see the
+ * underlying `declare_parameters` function.
  *
  * \param[in] joint_name name of the joint for which parameters will be declared.
  * \param[in] lifecycle_node lifecycle node for parameters should be declared.
@@ -173,6 +177,8 @@ inline bool declare_parameters(
  *   max_velocity: double
  *   has_acceleration_limits: bool
  *   max_acceleration: double
+ *   has_deceleration_limits: bool
+ *   max_deceleration: double
  *   has_jerk_limits: bool
  *   max_jerk: double
  *   has_effort_limits: bool
@@ -194,6 +200,8 @@ inline bool declare_parameters(
  *         max_velocity: 2.0
  *         has_acceleration_limits: true
  *         max_acceleration: 5.0
+ *         has_deceleration_limits: true
+ *         max_deceleration: 7.5
  *         has_jerk_limits: true
  *         max_jerk: 100.0
  *         has_effort_limits: true
@@ -208,10 +216,12 @@ inline bool declare_parameters(
  * \param[in] joint_name Name of joint whose limits are to be fetched, e.g., "foo_joint".
  * \param[in] param_itf node parameters interface of the node where parameters are specified.
  * \param[in] logging_itf node logging interface to provide log errors.
- * \param[out] limits Where joint limit data gets written into. Limits specified in the parameter server will overwrite
- * existing values. Values in \p limits not specified in the parameter server remain unchanged.
+ * \param[out] limits Where joint limit data gets written into. Limits specified in the parameter
+ * server will overwrite existing values. Values in \p limits not specified in the parameter server
+ * remain unchanged.
  *
- * \returns True if a limits specification is found (i.e., the \p joint_limits/joint_name parameter exists in \p node), false otherwise.
+ * \returns True if a limits specification is found (i.e., the \p joint_limits/joint_name parameter
+ * exists in \p node), false otherwise.
  */
 inline bool get_joint_limits(
   const std::string & joint_name,
@@ -231,6 +241,8 @@ inline bool get_joint_limits(
       !param_itf->has_parameter(param_base_name + ".max_velocity") &&
       !param_itf->has_parameter(param_base_name + ".has_acceleration_limits") &&
       !param_itf->has_parameter(param_base_name + ".max_acceleration") &&
+      !param_itf->has_parameter(param_base_name + ".has_deceleration_limits") &&
+      !param_itf->has_parameter(param_base_name + ".max_deceleration") &&
       !param_itf->has_parameter(param_base_name + ".has_jerk_limits") &&
       !param_itf->has_parameter(param_base_name + ".max_jerk") &&
       !param_itf->has_parameter(param_base_name + ".has_effort_limits") &&
@@ -315,6 +327,24 @@ inline bool get_joint_limits(
     }
   }
 
+  // Deceleration limits
+  if (param_itf->has_parameter(param_base_name + ".has_deceleration_limits"))
+  {
+    limits.has_deceleration_limits =
+      param_itf->get_parameter(param_base_name + ".has_deceleration_limits").as_bool();
+    if (
+      limits.has_deceleration_limits &&
+      param_itf->has_parameter(param_base_name + ".max_deceleration"))
+    {
+      limits.max_deceleration =
+        param_itf->get_parameter(param_base_name + ".max_deceleration").as_double();
+    }
+    else
+    {
+      limits.has_deceleration_limits = false;
+    }
+  }
+
   // Jerk limits
   if (param_itf->has_parameter(param_base_name + ".has_jerk_limits"))
   {
@@ -356,8 +386,9 @@ inline bool get_joint_limits(
  *
  * \param[in] joint_name Name of joint whose limits are to be fetched.
  * \param[in] node Node object for which parameters should be fetched.
- * \param[out] limits Where joint limit data gets written into. Limits specified in the parameter server will overwrite
- * existing values. Values in \p limits not specified in the parameter server remain unchanged.
+ * \param[out] limits Where joint limit data gets written into. Limits specified in the parameter
+ * server will overwrite existing values. Values in \p limits not specified in the parameter server
+ * remain unchanged.
  *
  * \returns True if a limits specification is found, false otherwise.
  */
@@ -375,8 +406,9 @@ inline bool get_joint_limits(
  *
  * \param[in] joint_name Name of joint whose limits are to be fetched.
  * \param[in] lifecycle_node Lifecycle node object for which parameters should be fetched.
- * \param[out] limits Where joint limit data gets written into. Limits specified in the parameter server will overwrite
- * existing values. Values in \p limits not specified in the parameter server remain unchanged.
+ * \param[out] limits Where joint limit data gets written into. Limits specified in the parameter
+ * server will overwrite existing values. Values in \p limits not specified in the parameter server
+ * remain unchanged.
  *
  * \returns True if a limits specification is found, false otherwise.
  */
@@ -416,10 +448,10 @@ inline bool get_joint_limits(
  * \param[in] joint_name Name of joint whose limits are to be fetched, e.g., "foo_joint".
  * \param[in] param_itf node parameters interface of the node where parameters are specified.
  * \param[in] logging_itf node logging interface to provide log errors.
- * \param[out] soft_limits Where soft joint limit data gets written into. Limits specified in the parameter server will overwrite
- * existing values.
- * \return True if a complete soft limits specification is found (ie. if all \p k_position, \p k_velocity, \p soft_lower_limit and
- * \p soft_upper_limit exist in \p joint_limits/joint_name namespace), false otherwise.
+ * \param[out] soft_limits Where soft joint limit data gets written into. Limits specified in the
+ * parameter server will overwrite existing values. \return True if a complete soft limits
+ * specification is found (ie. if all \p k_position, \p k_velocity, \p soft_lower_limit and \p
+ * soft_upper_limit exist in \p joint_limits/joint_name namespace), false otherwise.
  */
 inline bool get_joint_limits(
   const std::string & joint_name,
@@ -483,8 +515,8 @@ inline bool get_joint_limits(
  *
  * \param[in] joint_name Name of joint whose limits are to be fetched.
  * \param[in] node Node object for which parameters should be fetched.
- * \param[out] soft_limits Where soft joint limit data gets written into. Limits specified in the parameter server will overwrite
- * existing values.
+ * \param[out] soft_limits Where soft joint limit data gets written into. Limits specified in the
+ * parameter server will overwrite existing values.
  *
  * \returns True if a soft limits specification is found, false otherwise.
  */
@@ -504,8 +536,8 @@ inline bool get_joint_limits(
  *
  * \param[in] joint_name Name of joint whose limits are to be fetched.
  * \param[in] lifecycle_node Lifecycle node object for which parameters should be fetched.
- * \param[out] soft_limits Where soft joint limit data gets written into. Limits specified in the parameter server will overwrite
- * existing values.
+ * \param[out] soft_limits Where soft joint limit data gets written into. Limits specified in the
+ * parameter server will overwrite existing values.
  *
  * \returns True if a soft limits specification is found, false otherwise.
  */

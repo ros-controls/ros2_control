@@ -1,7 +1,9 @@
-.. _writing_new_hardware_interface:
+:github_url: https://github.com/ros-controls/ros2_control/blob/{REPOS_FILE_BRANCH}/hardware_interface/doc/writing_new_hardware_component.rst
 
-Writing a new hardware interface
-=================================
+.. _writing_new_hardware_component:
+
+Writing a Hardware Component
+============================
 
 In ros2_control hardware system components are libraries, dynamically loaded by the controller manager using the `pluginlib <https://ros.org/wiki/pluginlib>`_ interface.
 The following is a step-by-step guide to create source files, basic tests, and compile rules for a new hardware interface.
@@ -28,7 +30,7 @@ The following is a step-by-step guide to create source files, basic tests, and c
    1. Take care that you use header guards. ROS2-style is using ``#ifndef`` and ``#define`` preprocessor directives. (For more information on this, a search engine is your friend :) ).
 
    2. Include ``"hardware_interface/$interface_type$_interface.hpp"`` and ``visibility_control.h`` if you are using one.
-      ``$interface_type$`` can be ``Actuator``, ``Sensor`` or ``System`` depending on the type of hardware you are using. for more details about each type check `Hardware Components description <https://control.ros.org/master/doc/getting_started/getting_started.html#hardware-components>`_.
+      ``$interface_type$`` can be ``Actuator``, ``Sensor`` or ``System`` depending on the type of hardware you are using. for more details about each type check :ref:`Hardware Components description <overview_hardware_components>`.
 
    3. Define a unique namespace for your hardware_interface. This is usually the package name written in ``snake_case``.
 
@@ -37,7 +39,7 @@ The following is a step-by-step guide to create source files, basic tests, and c
       class HardwareInterfaceName : public hardware_interface::$InterfaceType$Interface
 
    5. Add a constructor without parameters and the following public methods implementing ``LifecycleNodeInterface``: ``on_configure``, ``on_cleanup``, ``on_shutdown``, ``on_activate``, ``on_deactivate``, ``on_error``; and overriding ``$InterfaceType$Interface`` definition: ``on_init``, ``export_state_interfaces``, ``export_command_interfaces``, ``prepare_command_mode_switch`` (optional), ``perform_command_mode_switch`` (optional), ``read``, ``write``.
-   For further explanation of hardware-lifecycle check the `pull request <https://github.com/ros-controls/ros2_control/pull/559/files#diff-2bd171d85b028c1b15b03b27d4e6dcbb87e52f705042bf111840e7a28ab268fc>`_ and for exact definitions of methods check the ``"hardware_interface/$interface_type$_interface.hpp"`` header or `doxygen documentation <https://control.ros.org/master/doc/api/namespacehardware__interface.html>`_ for *Actuator*, *Sensor* or *System*.
+   For further explanation of hardware-lifecycle check the `pull request <https://github.com/ros-controls/ros2_control/pull/559/files#diff-2bd171d85b028c1b15b03b27d4e6dcbb87e52f705042bf111840e7a28ab268fc>`_ and for exact definitions of methods check the ``"hardware_interface/$interface_type$_interface.hpp"`` header or `doxygen documentation <https://control.ros.org/{REPOS_FILE_BRANCH}/doc/api/namespacehardware__interface.html>`_ for *Actuator*, *Sensor* or *System*.
 
 4. **Adding definitions into source file (.cpp)**
 
@@ -77,7 +79,7 @@ The following is a step-by-step guide to create source files, basic tests, and c
 5. **Writing export definition for pluginlib**
 
    1. Create the ``<my_hardware_interface_package>.xml`` file in the package and add a definition of the library and hardware interface's class which has to be visible for the pluginlib.
-      The easiest way to do that is to check definition for mock components in the `hardware_interface mock_components <https://github.com/ros-controls/ros2_control/blob/master/hardware_interface/mock_components_plugin_description.xml>`_ section.
+      The easiest way to do that is to check definition for mock components in the :ref:`hardware_interface mock_components <mock_components_userdoc>` section.
 
    2. Usually, the plugin name is defined by the package (namespace) and the class name, e.g.,
       ``<my_hardware_interface_package>/<RobotHardwareInterfaceName>``.
@@ -88,7 +90,7 @@ The following is a step-by-step guide to create source files, basic tests, and c
 
    1. Create the folder ``test`` in your package, if it does not exist already, and add a file named ``test_load_<robot_hardware_interface_name>.cpp``.
 
-   2. You can copy the ``load_generic_system_2dof`` content defined in the `test_generic_system.cpp <https://github.com/ros-controls/ros2_control/blob/master/hardware_interface/test/mock_components/test_generic_system.cpp#L402-L407>`_ package.
+   2. You can copy the ``load_generic_system_2dof`` content defined in the `test_generic_system.cpp <https://github.com/ros-controls/ros2_control/blob/{REPOS_FILE_BRANCH}/hardware_interface/test/mock_components/test_generic_system.cpp#L402-L407>`_ package.
 
    3. Change the name of the copied test and in the last line, where hardware interface type is specified put the name defined in ``<my_hardware_interface_package>.xml`` file, e.g., ``<my_hardware_interface_package>/<RobotHardwareInterfaceName>``.
 
@@ -113,7 +115,7 @@ The following is a step-by-step guide to create source files, basic tests, and c
    7. In the test section add the following dependencies: ``ament_cmake_gmock``, ``hardware_interface``.
 
    8. Add compile definitions for the tests using the ``ament_add_gmock`` directive.
-      For details, see how it is done for mock hardware in the `ros2_control <https://github.com/ros-controls/ros2_control/blob/master/hardware_interface/CMakeLists.txt>`_ package.
+      For details, see how it is done for mock hardware in the `ros2_control <https://github.com/ros-controls/ros2_control/blob/{REPOS_FILE_BRANCH}/hardware_interface/CMakeLists.txt>`_ package.
 
    9. (optional) Add your hardware interface`s library into ``ament_export_libraries`` before ``ament_package()``.
 
@@ -137,4 +139,6 @@ That's it! Enjoy writing great controllers!
 Useful External References
 ---------------------------
 
-- `Templates and scripts for generating controllers shell <https://stoglrobotics.github.io/ros_team_workspace/master/use-cases/ros2_control/setup_robot_hardware_interface.html>`_ **NOTE**: The script is currently only recommended to use for Foxy, not compatible with the API from Galactic and onwards.
+- `Templates and scripts for generating controllers shell <https://stoglrobotics.github.io/ros_team_workspace/master/use-cases/ros2_control/setup_robot_hardware_interface.html>`_
+
+  .. NOTE:: The script is currently only recommended to use for Foxy, not compatible with the API from Galactic and onwards.

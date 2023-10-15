@@ -35,8 +35,9 @@ namespace hardware_interface
 /**
  * The typical examples are Force-Torque Sensor (FTS), Interial Measurement Unit (IMU).
  *
- * Methods return values have type rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
- * with the following meaning:
+ * Methods return values have type
+ * rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn with the following
+ * meaning:
  *
  * \returns CallbackReturn::SUCCESS method execution was successful.
  * \returns CallbackReturn::FAILURE method execution has failed and and can be called again.
@@ -46,7 +47,8 @@ namespace hardware_interface
  * The hardware ends after each method in a state with the following meaning:
  *
  * UNCONFIGURED (on_init, on_cleanup):
- *   Hardware is initialized but communication is not started and therefore no interface is available.
+ *   Hardware is initialized but communication is not started and therefore no interface is
+ * available.
  *
  * INACTIVE (on_configure, on_deactivate):
  *   Communication with the hardware is started and it is configured.
