@@ -1214,10 +1214,7 @@ HardwareReadWriteStatus ResourceManager::read(
       }
       else if (ret_val == return_type::DEACTIVATE)
       {
-        using lifecycle_msgs::msg::State;
-        rclcpp_lifecycle::State state(
-          State::PRIMARY_STATE_INACTIVE, lifecycle_state_names::INACTIVE);
-        set_component_state(component.get_name(), state);
+        resource_storage_->deactivate_hardware(component);
       }
       // If desired: automatic re-activation. We could add a flag for this...
       // else
@@ -1257,10 +1254,7 @@ HardwareReadWriteStatus ResourceManager::write(
       }
       else if (ret_val == return_type::DEACTIVATE)
       {
-        using lifecycle_msgs::msg::State;
-        rclcpp_lifecycle::State state(
-          State::PRIMARY_STATE_INACTIVE, lifecycle_state_names::INACTIVE);
-        set_component_state(component.get_name(), state);
+        resource_storage_->deactivate_hardware(component);
       }
     }
   };
