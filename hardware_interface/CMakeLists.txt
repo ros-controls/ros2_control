@@ -143,7 +143,9 @@ if(BUILD_TESTING)
     test/test_components/test_system.cpp)
   target_link_libraries(test_components ${PROJECT_NAME})
   ament_target_dependencies(test_components
-    pluginlib)
+    pluginlib
+    ros2_control_test_assets
+  )
   install(TARGETS test_components
     DESTINATION lib
   )
