@@ -99,6 +99,8 @@ void TestController::set_state_interface_configuration(
   state_iface_cfg_ = cfg;
 }
 
+const std::string & TestController::getRobotDescription() const { return urdf_; }
+
 }  // namespace test_controller
 
 #include "pluginlib/class_list_macros.hpp"
