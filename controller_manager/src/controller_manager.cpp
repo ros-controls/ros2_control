@@ -1291,7 +1291,8 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::add_co
   }
 
   if (
-    controller.c->init(controller.info.name, robot_description_, get_namespace()) ==
+    controller.c->init(
+      controller.info.name, robot_description_, get_update_rate(), get_namespace()) ==
     controller_interface::return_type::ERROR)
   {
     to.clear();

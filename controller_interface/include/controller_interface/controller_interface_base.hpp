@@ -114,7 +114,7 @@ public:
 
   CONTROLLER_INTERFACE_PUBLIC
   virtual return_type init(
-    const std::string & controller_name, const std::string & urdf,
+    const std::string & controller_name, const std::string & urdf, unsigned int cm_update_rate,
     const std::string & namespace_ = "",
     const rclcpp::NodeOptions & node_options = rclcpp::NodeOptions().enable_logger_service(true));
 
@@ -152,6 +152,9 @@ public:
 
   CONTROLLER_INTERFACE_PUBLIC
   unsigned int get_update_rate() const;
+
+  CONTROLLER_INTERFACE_PUBLIC
+  unsigned int get_cm_update_rate() const;
 
   CONTROLLER_INTERFACE_PUBLIC
   bool is_async() const;
@@ -226,6 +229,7 @@ protected:
   std::vector<hardware_interface::LoanedCommandInterface> command_interfaces_;
   std::vector<hardware_interface::LoanedStateInterface> state_interfaces_;
   unsigned int update_rate_ = 0;
+  unsigned int cm_update_rate_ = 0;
   bool is_async_ = false;
   std::string urdf_ = "";
 
