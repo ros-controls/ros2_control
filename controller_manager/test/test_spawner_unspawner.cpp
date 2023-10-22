@@ -39,9 +39,9 @@ class TestLoadController : public ControllerManagerFixture<controller_manager::C
       std::chrono::milliseconds(10),
       [&]()
       {
-        cm_->read(TIME, PERIOD);
-        cm_->update(TIME, PERIOD);
-        cm_->write(TIME, PERIOD);
+        cm_->read(time_, PERIOD);
+        cm_->update(time_, PERIOD);
+        cm_->write(time_, PERIOD);
       });
 
     update_executor_ =
