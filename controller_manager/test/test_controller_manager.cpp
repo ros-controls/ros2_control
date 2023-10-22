@@ -376,6 +376,7 @@ TEST_P(TestControllerManagerWithUpdateRates, per_controller_equal_and_higher_upd
   // similarly incremented
   EXPECT_EQ(test_controller->internal_counter, pre_internal_counter + (2 * cm_->get_update_rate()));
   EXPECT_EQ(test_controller->get_update_rate(), ctrl_update_rate);
+  EXPECT_EQ(test_controller->get_cm_update_rate(), cm_->get_update_rate());
 
   auto deactivate_future = std::async(
     std::launch::async, &controller_manager::ControllerManager::switch_controller, cm_,
