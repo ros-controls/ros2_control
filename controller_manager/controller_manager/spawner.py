@@ -184,6 +184,13 @@ def main(args=None):
         default=10,
         type=int,
     )
+    parser.add_argument(
+        "--activate-as-group",
+        help="Activates all the parsed controllers list together instead of one by one."
+        " Useful for activating all chainable controllers altogether",
+        action="store_true",
+        required=False,
+    )
 
     command_line_args = rclpy.utilities.remove_ros_args(args=sys.argv)[1:]
     args = parser.parse_args(command_line_args)
@@ -318,7 +325,7 @@ def main(args=None):
                     )
                     return 1
 
-                if not args.inactive:
+                if not args.inactive and not args.activate_as_group:
                     ret = switch_controllers(
                         node, controller_manager_name, [], [controller_name], True, True, 5.0
                     )
@@ -335,6 +342,22 @@ def main(args=None):
                         + prefixed_controller_name
                         + bcolors.ENDC
                     )
+
+        if not args.inactive and args.activate_as_group:
+            ret = switch_controllers(
+                node, controller_manager_name, [], controller_names, True, True, 5.0
+            )
+            if not ret.ok:
+                node.get_logger().error(
+                    bcolors.FAIL + "Failed to activate the parsed controllers list" + bcolors.ENDC
+                )
+                return 1
+
+            node.get_logger().info(
+                bcolors.OKGREEN
+                + "Configured and activated all the parsed controllers list!"
+                + bcolors.ENDC
+            )
 
         if not args.unload_on_kill:
             return 0
