@@ -114,8 +114,9 @@ public:
 
   CONTROLLER_INTERFACE_PUBLIC
   virtual return_type init(
-    const std::string & controller_name, const std::string & urdf, 
-    const std::string & namespace_ = "", const rclcpp::NodeOptions & node_options = rclcpp::NodeOptions().enable_logger_service(true));
+    const std::string & controller_name, const std::string & urdf,
+    const std::string & namespace_ = "",
+    const rclcpp::NodeOptions & node_options = rclcpp::NodeOptions().enable_logger_service(true));
 
   /// Custom configure method to read additional parameters for controller-nodes
   /*
