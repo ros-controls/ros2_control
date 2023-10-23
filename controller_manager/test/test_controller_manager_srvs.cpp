@@ -474,8 +474,8 @@ TEST_F(TestControllerManagerSrvs, robot_description_on_load_and_unload_controlle
   // check the robot description
   ASSERT_EQ(ros2_control_test_assets::minimal_robot_urdf, test_controller->getRobotDescription());
 
-  // Now change the robot description and then load a new controller and see if the new controller
-  // gets the new description and the old controller still maintains the configuration
+  // Now change the robot description and then see that the controller maintains the old URDF until
+  // it is unloaded and loaded again
   auto msg = std_msgs::msg::String();
   msg.data = ros2_control_test_assets::minimal_robot_missing_state_keys_urdf;
   cm_->robot_description_callback(msg);

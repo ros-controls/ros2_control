@@ -30,6 +30,7 @@ using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface
 // indicating the node name under which the controller node
 // is being loaded.
 constexpr char TEST_CONTROLLER_NAME[] = "test_controller_name";
+constexpr char TEST_CONTROLLER2_NAME[] = "test_controller2_name";
 // corresponds to the name listed within the pluginlib xml
 constexpr char TEST_CONTROLLER_CLASS_NAME[] = "controller_manager/test_controller";
 class TestController : public controller_interface::ControllerInterface

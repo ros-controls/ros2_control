@@ -42,7 +42,6 @@ TEST_F(TestControllerManagerRobotDescription, controller_robot_description_updat
 {
   auto test_controller = std::make_shared<test_controller::TestController>();
   auto test_controller2 = std::make_shared<test_controller::TestController>();
-  constexpr char TEST_CONTROLLER2_NAME[] = "test_controller2_name";
   cm_->add_controller(
     test_controller, test_controller::TEST_CONTROLLER_NAME,
     test_controller::TEST_CONTROLLER_CLASS_NAME);
@@ -54,7 +53,8 @@ TEST_F(TestControllerManagerRobotDescription, controller_robot_description_updat
   msg.data = ros2_control_test_assets::minimal_robot_missing_state_keys_urdf;
   cm_->robot_description_callback(msg);
   cm_->add_controller(
-    test_controller2, TEST_CONTROLLER2_NAME, test_controller::TEST_CONTROLLER_CLASS_NAME);
+    test_controller2, test_controller::TEST_CONTROLLER2_NAME,
+    test_controller::TEST_CONTROLLER_CLASS_NAME);
   ASSERT_EQ(ros2_control_test_assets::minimal_robot_urdf, test_controller->getRobotDescription());
   ASSERT_EQ(
     ros2_control_test_assets::minimal_robot_missing_state_keys_urdf,
