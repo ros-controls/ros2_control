@@ -472,14 +472,14 @@ TEST_F(TestControllerManagerSrvs, robot_description_on_load_and_unload_controlle
   EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
 
   // check the robot description
-  ASSERT_EQ(ros2_control_test_assets::minimal_robot_urdf, test_controller->getRobotDescription());
+  ASSERT_EQ(ros2_control_test_assets::minimal_robot_urdf, test_controller->get_robot_description());
 
   // Now change the robot description and then see that the controller maintains the old URDF until
   // it is unloaded and loaded again
   auto msg = std_msgs::msg::String();
   msg.data = ros2_control_test_assets::minimal_robot_missing_state_keys_urdf;
   cm_->robot_description_callback(msg);
-  ASSERT_EQ(ros2_control_test_assets::minimal_robot_urdf, test_controller->getRobotDescription());
+  ASSERT_EQ(ros2_control_test_assets::minimal_robot_urdf, test_controller->get_robot_description());
 
   // now unload and load the controller and see if the controller gets the new robot description
   auto unload_request = std::make_shared<controller_manager_msgs::srv::UnloadController::Request>();
@@ -494,7 +494,7 @@ TEST_F(TestControllerManagerSrvs, robot_description_on_load_and_unload_controlle
   EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
   ASSERT_EQ(
     ros2_control_test_assets::minimal_robot_missing_state_keys_urdf,
-    test_controller->getRobotDescription());
+    test_controller->get_robot_description());
 }
 
 TEST_F(TestControllerManagerSrvs, configure_controller_srv)

@@ -156,6 +156,9 @@ public:
   CONTROLLER_INTERFACE_PUBLIC
   bool is_async() const;
 
+  CONTROLLER_INTERFACE_PUBLIC
+  const std::string & get_robot_description() const;
+
   /// Declare and initialize a parameter with a type.
   /**
    *

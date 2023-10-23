@@ -133,4 +133,6 @@ unsigned int ControllerInterfaceBase::get_update_rate() const { return update_ra
 
 bool ControllerInterfaceBase::is_async() const { return is_async_; }
 
+const std::string & ControllerInterfaceBase::get_robot_description() const { return urdf_; }
+
 }  // namespace controller_interface
