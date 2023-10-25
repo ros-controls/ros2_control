@@ -30,10 +30,10 @@ class AsyncControllerThread
 public:
   /// Constructor for the AsyncControllerThread object.
   /**
-    *
-    * \param[in] controller shared pointer to a controller.
-    * \param[in] cm_update_rate the controller manager's update rate.
-    */
+   *
+   * \param[in] controller shared pointer to a controller.
+   * \param[in] cm_update_rate the controller manager's update rate.
+   */
   AsyncControllerThread(
     std::shared_ptr<controller_interface::ControllerInterfaceBase> & controller, int cm_update_rate)
   : terminated_(false), controller_(controller), thread_{}, cm_update_rate_(cm_update_rate)
@@ -55,9 +55,9 @@ public:
 
   /// Creates the controller's thread.
   /**
-    * Called when the controller is activated.
-    *
-    */
+   * Called when the controller is activated.
+   *
+   */
   void activate()
   {
     thread_ = std::thread(&AsyncControllerThread::controller_update_callback, this);
