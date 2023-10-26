@@ -53,7 +53,9 @@ int main(int argc, char ** argv)
         RCLCPP_WARN(
           cm->get_logger(),
           "Could not enable FIFO RT scheduling policy. Consider setting up your user to do FIFO RT "
-          "scheduling. See [https://control.ros.org/master/doc/ros2_control/controller_manager/doc/userdoc.html] for details.");
+          "scheduling. See "
+          "[https://control.ros.org/master/doc/ros2_control/controller_manager/doc/userdoc.html] "
+          "for details.");
       }
 
       // for calculating sleep time
