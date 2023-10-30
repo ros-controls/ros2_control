@@ -184,6 +184,18 @@ def main(args=None):
             node.get_logger().error('Controller manager not available')
             return 1
 
+        # Load parameters before loading the controller
+        if param_file:
+            load_parameter_file(node=node, node_name=prefixed_controller_name, parameter_file=param_file,
+                                use_wildcard=True)
+            node.get_logger().info(bcolors.OKCYAN + 'Loaded parameters file "' + param_file + '" for ' + bcolors.BOLD + prefixed_controller_name + bcolors.ENDC)
+            # TODO(destogl): use return value when upstream return value is merged
+            # ret =
+            # if ret.returncode != 0:
+            #     Error message printed by ros2 param
+            #     return ret.returncode
+            node.get_logger().info('Loaded ' + param_file + ' into ' + prefixed_controller_name)
+
         if is_controller_loaded(node, controller_manager_name, prefixed_controller_name):
             node.get_logger().warn('Controller already loaded, skipping load_controller')
         else:
@@ -207,17 +219,6 @@ def main(args=None):
                 node.get_logger().fatal(bcolors.FAIL + 'Failed loading controller ' + bcolors.BOLD + prefixed_controller_name + bcolors.ENDC)
                 return 1
             node.get_logger().info(bcolors.OKBLUE + 'Loaded ' + bcolors.BOLD + prefixed_controller_name + bcolors.ENDC)
-
-        if param_file:
-            load_parameter_file(node=node, node_name=prefixed_controller_name, parameter_file=param_file,
-                                use_wildcard=True)
-            node.get_logger().info(bcolors.OKCYAN + 'Loaded parameters file "' + param_file + '" for ' + bcolors.BOLD + prefixed_controller_name + bcolors.ENDC)
-            # TODO(destogl): use return value when upstream return value is merged
-            # ret =
-            # if ret.returncode != 0:
-            #     Error message printed by ros2 param
-            #     return ret.returncode
-            node.get_logger().info('Loaded ' + param_file + ' into ' + prefixed_controller_name)
 
         if not args.load_only:
             ret = configure_controller(node, controller_manager_name, controller_name)
