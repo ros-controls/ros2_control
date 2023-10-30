@@ -219,6 +219,38 @@ def main(args=None):
             )
             return 1
 
+        # Load parameters before loading the controller
+        if param_file:
+            # load_parameter_file writes to stdout/stderr. Here we capture that and use node logging instead
+            with redirect_stdout(io.StringIO()) as f_stdout, redirect_stderr(
+                io.StringIO()
+            ) as f_stderr:
+                load_parameter_file(
+                    node=node,
+                    node_name=prefixed_controller_name,
+                    parameter_file=param_file,
+                    use_wildcard=True,
+                )
+            if f_stdout.getvalue():
+                node.get_logger().info(bcolors.OKCYAN + f_stdout.getvalue() + bcolors.ENDC)
+            if f_stderr.getvalue():
+                node.get_logger().error(bcolors.FAIL + f_stderr.getvalue() + bcolors.ENDC)
+            node.get_logger().info(
+                bcolors.OKCYAN
+                + 'Loaded parameters file "'
+                + param_file
+                + '" for '
+                + bcolors.BOLD
+                + prefixed_controller_name
+                + bcolors.ENDC
+            )
+            # TODO(destogl): use return value when upstream return value is merged
+            # ret =
+            # if ret.returncode != 0:
+            #     Error message printed by ros2 param
+            #     return ret.returncode
+            node.get_logger().info("Loaded " + param_file + " into " + prefixed_controller_name)
+
         if is_controller_loaded(node, controller_manager_name, prefixed_controller_name):
             node.get_logger().warn(
                 bcolors.WARNING
@@ -271,37 +303,6 @@ def main(args=None):
             node.get_logger().info(
                 bcolors.OKBLUE + "Loaded " + bcolors.BOLD + prefixed_controller_name + bcolors.ENDC
             )
-
-        if param_file:
-            # load_parameter_file writes to stdout/stderr. Here we capture that and use node logging instead
-            with redirect_stdout(io.StringIO()) as f_stdout, redirect_stderr(
-                io.StringIO()
-            ) as f_stderr:
-                load_parameter_file(
-                    node=node,
-                    node_name=prefixed_controller_name,
-                    parameter_file=param_file,
-                    use_wildcard=True,
-                )
-            if f_stdout.getvalue():
-                node.get_logger().info(bcolors.OKCYAN + f_stdout.getvalue() + bcolors.ENDC)
-            if f_stderr.getvalue():
-                node.get_logger().error(bcolors.FAIL + f_stderr.getvalue() + bcolors.ENDC)
-            node.get_logger().info(
-                bcolors.OKCYAN
-                + 'Loaded parameters file "'
-                + param_file
-                + '" for '
-                + bcolors.BOLD
-                + prefixed_controller_name
-                + bcolors.ENDC
-            )
-            # TODO(destogl): use return value when upstream return value is merged
-            # ret =
-            # if ret.returncode != 0:
-            #     Error message printed by ros2 param
-            #     return ret.returncode
-            node.get_logger().info("Loaded " + param_file + " into " + prefixed_controller_name)
 
         if not args.load_only:
             ret = configure_controller(node, controller_manager_name, controller_name)
