@@ -14,6 +14,8 @@ fixes:
 comment:
   layout: "diff, flags, files"
   behavior: default
+ignore:
+  - "**/test"
 flags:
   unittests:
     paths:
@@ -21,5 +23,4 @@ flags:
       - controller_manager
       - hardware_interface
       - joint_limits_interface
-      - test_robot_hardware
       - transmission_interface

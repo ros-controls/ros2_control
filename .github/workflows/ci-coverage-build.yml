@@ -1,8 +1,6 @@
 name: Coverage Build
 on:
   workflow_dispatch:
-    branches:
-      - master
   push:
     branches:
       - master
@@ -31,11 +29,8 @@ jobs:
           package-name:
             controller_interface
             controller_manager
-            controller_manager_msgs
             hardware_interface
-            ros2controlcli
-            ros2_control
-            ros2_control_test_assets
+            joint_limits_interface
             transmission_interface
 
           vcs-repo-file-url: |
