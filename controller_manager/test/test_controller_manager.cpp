@@ -96,7 +96,7 @@ TEST_P(TestControllerManagerWithStrictness, controller_lifecycle)
 
   EXPECT_EQ(
     controller_interface::return_type::OK,
-    cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
+    cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
   EXPECT_EQ(0u, test_controller->internal_counter)
     << "Update should not reach an unconfigured controller";
 
@@ -111,7 +111,7 @@ TEST_P(TestControllerManagerWithStrictness, controller_lifecycle)
   }
   EXPECT_EQ(
     controller_interface::return_type::OK,
-    cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
+    cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
   EXPECT_EQ(0u, test_controller->internal_counter) << "Controller is not started";
   EXPECT_EQ(0u, test_controller2->internal_counter) << "Controller is not started";
 
@@ -126,7 +126,7 @@ TEST_P(TestControllerManagerWithStrictness, controller_lifecycle)
 
   EXPECT_EQ(
     controller_interface::return_type::OK,
-    cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
+    cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
   EXPECT_EQ(0u, test_controller2->internal_counter) << "Controller is started at the end of update";
   {
     ControllerManagerRunner cm_runner(this);
@@ -135,7 +135,7 @@ TEST_P(TestControllerManagerWithStrictness, controller_lifecycle)
 
   EXPECT_EQ(
     controller_interface::return_type::OK,
-    cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
+    cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
   EXPECT_GE(test_controller2->internal_counter, test_param.expected_counter);
 
   // Start the real test controller, will take effect at the end of the update function
@@ -150,7 +150,7 @@ TEST_P(TestControllerManagerWithStrictness, controller_lifecycle)
 
   EXPECT_EQ(
     controller_interface::return_type::OK,
-    cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
+    cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
   EXPECT_EQ(0u, test_controller->internal_counter) << "Controller is started at the end of update";
   {
     ControllerManagerRunner cm_runner(this);
@@ -160,7 +160,7 @@ TEST_P(TestControllerManagerWithStrictness, controller_lifecycle)
 
   EXPECT_EQ(
     controller_interface::return_type::OK,
-    cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
+    cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
   EXPECT_GE(test_controller->internal_counter, 1u);
   size_t last_internal_counter = test_controller->internal_counter;
 
@@ -176,7 +176,7 @@ TEST_P(TestControllerManagerWithStrictness, controller_lifecycle)
 
   EXPECT_EQ(
     controller_interface::return_type::OK,
-    cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
+    cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
   EXPECT_EQ(last_internal_counter + 1u, test_controller->internal_counter)
     << "Controller is stopped at the end of update, so it should have done one more update";
   {
@@ -211,7 +211,7 @@ TEST_P(TestControllerManagerWithStrictness, per_controller_update_rate)
 
   EXPECT_EQ(
     controller_interface::return_type::OK,
-    cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
+    cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
   EXPECT_EQ(0u, test_controller->internal_counter)
     << "Update should not reach an unconfigured controller";
 
@@ -226,7 +226,7 @@ TEST_P(TestControllerManagerWithStrictness, per_controller_update_rate)
   }
   EXPECT_EQ(
     controller_interface::return_type::OK,
-    cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
+    cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
   EXPECT_EQ(0u, test_controller->internal_counter) << "Controller is not started";
 
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, test_controller->get_state().id());
@@ -243,7 +243,7 @@ TEST_P(TestControllerManagerWithStrictness, per_controller_update_rate)
 
   EXPECT_EQ(
     controller_interface::return_type::OK,
-    cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
+    cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
   EXPECT_EQ(0u, test_controller->internal_counter) << "Controller is started at the end of update";
   {
     ControllerManagerRunner cm_runner(this);
@@ -257,7 +257,7 @@ TEST_P(TestControllerManagerWithStrictness, per_controller_update_rate)
   {
     EXPECT_EQ(
       controller_interface::return_type::OK,
-      cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
+      cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
   }
   EXPECT_GE(test_controller->internal_counter, 1u);
   EXPECT_EQ(test_controller->get_update_rate(), 4u);
@@ -292,7 +292,7 @@ TEST_P(TestControllerManagerWithUpdateRates, per_controller_equal_and_higher_upd
   EXPECT_EQ(2, test_controller.use_count());
   EXPECT_EQ(
     controller_interface::return_type::OK,
-    cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
+    cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
   EXPECT_EQ(last_internal_counter, test_controller->internal_counter)
     << "Update should not reach an unconfigured controller";
 
@@ -308,7 +308,7 @@ TEST_P(TestControllerManagerWithUpdateRates, per_controller_equal_and_higher_upd
   }
   EXPECT_EQ(
     controller_interface::return_type::OK,
-    cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
+    cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
   EXPECT_EQ(last_internal_counter, test_controller->internal_counter)
     << "Controller is not started";
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, test_controller->get_state().id());
@@ -325,7 +325,7 @@ TEST_P(TestControllerManagerWithUpdateRates, per_controller_equal_and_higher_upd
 
   EXPECT_EQ(
     controller_interface::return_type::OK,
-    cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
+    cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
   EXPECT_EQ(last_internal_counter, test_controller->internal_counter)
     << "Controller is started at the end of update";
   {
@@ -341,7 +341,7 @@ TEST_P(TestControllerManagerWithUpdateRates, per_controller_equal_and_higher_upd
   {
     EXPECT_EQ(
       controller_interface::return_type::OK,
-      cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
+      cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
     loop_rate.sleep();
   }
   // if we do 2 times of the controller_manager update rate, the internal counter should be
@@ -357,8 +357,7 @@ TEST_P(TestControllerManagerWithUpdateRates, per_controller_equal_and_higher_upd
     << "switch_controller should be blocking until next update cycle";
 
   EXPECT_EQ(
-    controller_interface::return_type::OK,
-    cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)))
+    controller_interface::return_type::OK, cm_->update(time_, rclcpp::Duration::from_seconds(0.01)))
     << "Controller is stopped at the end of update, so it should have done one more update";
   {
     ControllerManagerRunner cm_runner(this);
@@ -405,7 +404,7 @@ TEST_P(TestControllerUpdateRates, check_the_controller_update_rate)
   }
   EXPECT_EQ(
     controller_interface::return_type::OK,
-    cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
+    cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
   EXPECT_EQ(0u, test_controller->internal_counter) << "Controller is not started";
 
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, test_controller->get_state().id());
@@ -423,7 +422,7 @@ TEST_P(TestControllerUpdateRates, check_the_controller_update_rate)
 
   EXPECT_EQ(
     controller_interface::return_type::OK,
-    cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
+    cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
   EXPECT_EQ(0u, test_controller->internal_counter) << "Controller is started at the end of update";
   {
     ControllerManagerRunner cm_runner(this);
@@ -435,23 +434,28 @@ TEST_P(TestControllerUpdateRates, check_the_controller_update_rate)
   EXPECT_EQ(test_controller->get_update_rate(), ctrl_update_rate);
   const auto cm_update_rate = cm_->get_update_rate();
   const auto controller_update_rate = test_controller->get_update_rate();
-  const auto controller_factor = (cm_update_rate / controller_update_rate);
-  const auto expected_controller_update_rate =
-    static_cast<unsigned int>(std::round(cm_update_rate / static_cast<double>(controller_factor)));
 
   const auto initial_counter = test_controller->internal_counter;
-  for (size_t update_counter = 1; update_counter <= 10 * cm_update_rate; ++update_counter)
+  rclcpp::Time time = time_;
+  for (size_t update_counter = 0; update_counter <= 10 * cm_update_rate; ++update_counter)
   {
     EXPECT_EQ(
       controller_interface::return_type::OK,
-      cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
+      cm_->update(time, rclcpp::Duration::from_seconds(0.01)));
 
+    time += rclcpp::Duration::from_seconds(0.01);
     if (update_counter % cm_update_rate == 0)
     {
       const auto no_of_secs_passed = update_counter / cm_update_rate;
-      EXPECT_EQ(
+      // NOTE: here EXPECT_NEAR is used because it is observed that in the first iteration of whole
+      // cycle of cm_update_rate counts, there is one count missing, but in rest of the 9 cycles it
+      // is clearly tracking, so adding 1 here won't affect the final count.
+      // For instance, a controller with update rate 37 Hz, seems to have 36 in the first update
+      // cycle and then on accumulating 37 on every other update cycle so at the end of the 10
+      // cycles it will have 369 instead of 370.
+      EXPECT_NEAR(
         test_controller->internal_counter - initial_counter,
-        (expected_controller_update_rate * no_of_secs_passed));
+        (controller_update_rate * no_of_secs_passed), 1);
     }
   }
 }

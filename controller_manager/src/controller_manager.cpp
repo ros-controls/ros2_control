@@ -560,6 +560,8 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_c
   controller_spec.c = controller;
   controller_spec.info.name = controller_name;
   controller_spec.info.type = controller_type;
+  controller_spec.next_update_cycle_time = std::make_shared<rclcpp::Time>(
+    0, 0, this->get_node_clock_interface()->get_clock()->get_clock_type());
 
   return add_controller_impl(controller_spec);
 }
@@ -735,16 +737,13 @@ controller_interface::return_type ControllerManager::configure_controller(
   }
   else if (controller_update_rate != 0 && cm_update_rate % controller_update_rate != 0)
   {
-    // NOTE: The following computation is done to compute the approx controller update that can be
-    // achieved w.r.t to the CM's update rate. This is done this way to take into account the
-    // unsigned integer division.
-    const auto act_ctrl_update_rate = cm_update_rate / (cm_update_rate / controller_update_rate);
     RCLCPP_WARN(
       get_logger(),
-      "The controller : %s update rate : %d Hz is not a perfect divisor of the controller "
-      "manager's update rate : %d Hz!. The controller will be updated with nearest divisor's "
-      "update rate which is : %d Hz.",
-      controller_name.c_str(), controller_update_rate, cm_update_rate, act_ctrl_update_rate);
+      "The controller : %s update cycles won't be triggered at a constant period : %f sec, as the "
+      "controller's update rate : %d Hz is not a perfect divisor of the controller manager's "
+      "update rate : %d Hz!.",
+      controller_name.c_str(), 1.0 / controller_update_rate, controller_update_rate,
+      cm_update_rate);
   }
 
   // CHAINABLE CONTROLLERS: get reference interfaces from chainable controllers
@@ -1465,6 +1464,9 @@ void ControllerManager::activate_controllers(
     }
     auto controller = found_it->c;
     auto controller_name = found_it->info.name;
+    // reset the next update cycle time for newly activated controllers
+    *found_it->next_update_cycle_time =
+      rclcpp::Time(0, 0, this->get_node_clock_interface()->get_clock()->get_clock_type());
 
     bool assignment_successful = true;
     // assign command interfaces to the controller
@@ -2037,19 +2039,24 @@ controller_interface::return_type ControllerManager::update(
   ++update_loop_counter_;
   update_loop_counter_ %= update_rate_;
 
-  for (auto loaded_controller : rt_controller_list)
+  for (const auto & loaded_controller : rt_controller_list)
   {
     // TODO(v-lopez) we could cache this information
     // https://github.com/ros-controls/ros2_control/issues/153
     if (!loaded_controller.c->is_async() && is_controller_active(*loaded_controller.c))
     {
       const auto controller_update_rate = loaded_controller.c->get_update_rate();
-      const auto controller_update_factor =
-        (controller_update_rate == 0) || (controller_update_rate >= update_rate_)
-          ? 1u
-          : update_rate_ / controller_update_rate;
+      const bool run_controller_at_cm_rate =
+        (controller_update_rate == 0) || (controller_update_rate >= update_rate_);
+      const auto controller_period =
+        run_controller_at_cm_rate ? period
+                                  : rclcpp::Duration::from_seconds((1.0 / controller_update_rate));
 
-      bool controller_go = ((update_loop_counter_ % controller_update_factor) == 0);
+      bool controller_go =
+        (time ==
+         rclcpp::Time(0, 0, this->get_node_clock_interface()->get_clock()->get_clock_type())) ||
+        (time.seconds() >= loaded_controller.next_update_cycle_time->seconds());
+
       RCLCPP_DEBUG(
         get_logger(), "update_loop_counter: '%d ' controller_go: '%s ' controller_name: '%s '",
         update_loop_counter_, controller_go ? "True" : "False",
@@ -2057,10 +2064,15 @@ controller_interface::return_type ControllerManager::update(
 
       if (controller_go)
       {
-        auto controller_ret = loaded_controller.c->update(
-          time, (controller_update_factor != 1u)
-                  ? rclcpp::Duration::from_seconds(1.0 / controller_update_rate)
-                  : period);
+        auto controller_ret = loaded_controller.c->update(time, controller_period);
+
+        if (
+          *loaded_controller.next_update_cycle_time ==
+          rclcpp::Time(0, 0, this->get_node_clock_interface()->get_clock()->get_clock_type()))
+        {
+          *loaded_controller.next_update_cycle_time = time;
+        }
+        *loaded_controller.next_update_cycle_time += controller_period;
 
         if (controller_ret != controller_interface::return_type::OK)
         {

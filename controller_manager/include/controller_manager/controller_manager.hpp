@@ -58,7 +58,7 @@ namespace controller_manager
 {
 using ControllersListIterator = std::vector<controller_manager::ControllerSpec>::const_iterator;
 
-rclcpp::NodeOptions get_cm_node_options();
+CONTROLLER_MANAGER_PUBLIC rclcpp::NodeOptions get_cm_node_options();
 
 class ControllerManager : public rclcpp::Node
 {
@@ -122,6 +122,7 @@ public:
     controller_spec.c = controller;
     controller_spec.info.name = controller_name;
     controller_spec.info.type = controller_type;
+    controller_spec.next_update_cycle_time = std::make_shared<rclcpp::Time>(0);
     return add_controller_impl(controller_spec);
   }
 
