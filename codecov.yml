@@ -22,5 +22,4 @@ flags:
       - controller_interface
       - controller_manager
       - hardware_interface
-      - joint_limits_interface
       - transmission_interface
