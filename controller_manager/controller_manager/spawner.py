@@ -19,6 +19,8 @@ import os
 import sys
 import time
 import warnings
+import io
+from contextlib import redirect_stdout, redirect_stderr
 
 from controller_manager import configure_controller, list_controllers, \
     load_controller, switch_controllers, unload_controller
