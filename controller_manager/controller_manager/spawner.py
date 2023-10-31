@@ -120,12 +120,7 @@ def main(args=None):
 
     rclpy.init(args=args, signal_handler_options=SignalHandlerOptions.NO)
     parser = argparse.ArgumentParser()
-<<<<<<< HEAD
-=======
     parser.add_argument("controller_names", help="List of controllers", nargs="+")
->>>>>>> 4e78813 (Update spawner to accept controllers list and start them in sequence (#1139))
-    parser.add_argument(
-        'controller_name', help='Name of the controller')
     parser.add_argument(
         '-c', '--controller-manager', help='Name of the controller manager ROS node',
         default='controller_manager', required=False)
@@ -147,7 +142,6 @@ def main(args=None):
         '--inactive', help='Load and configure the controller, however do not activate them',
         action='store_true', required=False)
     parser.add_argument(
-<<<<<<< HEAD
         '-t', '--controller-type',
         help='If not provided it should exist in the controller manager namespace',
         default=None, required=False)
@@ -158,13 +152,6 @@ def main(args=None):
     parser.add_argument(
         '--controller-manager-timeout',
         help='Time to wait for the controller manager', required=False, default=10, type=int)
-=======
-        "--controller-manager-timeout",
-        help="Time to wait for the controller manager",
-        required=False,
-        default=10,
-        type=int,
-    )
     parser.add_argument(
         "--activate-as-group",
         help="Activates all the parsed controllers list together instead of one by one."
@@ -172,7 +159,6 @@ def main(args=None):
         action="store_true",
         required=False,
     )
->>>>>>> 4e78813 (Update spawner to accept controllers list and start them in sequence (#1139))
 
     command_line_args = rclpy.utilities.remove_ros_args(args=sys.argv)[1:]
     args = parser.parse_args(command_line_args)
