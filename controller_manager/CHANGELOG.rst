@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.20.0 (2023-10-31)
+-------------------
 * Update spawner to accept controllers list and start them in sequence (`#1139 <https://github.com/ros-controls/ros2_control/issues/1139>`_)
 * [ResourceManager] deactivate hardware from read/write return value (`#884 <https://github.com/ros-controls/ros2_control/issues/884>`_)
 * Export of the get_cm_node_options() from robostack (`#1129 <https://github.com/ros-controls/ros2_control/issues/1129>`_)
