@@ -2,6 +2,25 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+3.20.0 (2023-10-31)
+-------------------
+* Update spawner to accept controllers list and start them in sequence (`#1139 <https://github.com/ros-controls/ros2_control/issues/1139>`_)
+* [ResourceManager] deactivate hardware from read/write return value (`#884 <https://github.com/ros-controls/ros2_control/issues/884>`_)
+* Export of the get_cm_node_options() from robostack (`#1129 <https://github.com/ros-controls/ros2_control/issues/1129>`_)
+* Contributors: Felix Exner (fexner), Olivier Stasse, Sai Kishor Kothakota
+
+3.19.1 (2023-10-04)
+-------------------
+* Fix next controller update cycle time clock (`#1127 <https://github.com/ros-controls/ros2_control/issues/1127>`_)
+* Contributors: Sai Kishor Kothakota
+
+3.19.0 (2023-10-03)
+-------------------
+* Proper controller update rate (`#1105 <https://github.com/ros-controls/ros2_control/issues/1105>`_)
+* Fix multiple calls to export reference interfaces (`#1108 <https://github.com/ros-controls/ros2_control/issues/1108>`_)
+* [Docs] Fix information about activation and deactivation of chainable controllers (`#1104 <https://github.com/ros-controls/ros2_control/issues/1104>`_)
+* Contributors: Dr. Denis, Sai Kishor Kothakota
+
 3.18.0 (2023-08-17)
 -------------------
 * Controller sorting and proper execution in a chain (Fixes `#853 <https://github.com/ros-controls/ros2_control/issues/853>`_) (`#1063 <https://github.com/ros-controls/ros2_control/issues/1063>`_)

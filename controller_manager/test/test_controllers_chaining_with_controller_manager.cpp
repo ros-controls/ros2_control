@@ -378,7 +378,7 @@ public:
     position_tracking_controller->external_commands_for_testing_[0] = reference[0];
     position_tracking_controller->external_commands_for_testing_[1] = reference[1];
 
-    cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
+    cm_->update(time_, rclcpp::Duration::from_seconds(0.01));
     cm_->resource_manager_->read(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
 
     // check if all controllers are updated

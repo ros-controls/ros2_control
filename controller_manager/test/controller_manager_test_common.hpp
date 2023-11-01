@@ -41,7 +41,6 @@
 
 namespace
 {
-const auto TIME = rclcpp::Time(0);
 const auto PERIOD = rclcpp::Duration::from_seconds(0.01);
 const auto STRICT = controller_manager_msgs::srv::SwitchController::Request::STRICT;
 const auto BEST_EFFORT = controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT;
@@ -101,6 +100,7 @@ public:
         cm_->robot_description_callback(msg);
       }
     }
+    time_ = rclcpp::Time(0, 0, cm_->get_node_clock_interface()->get_clock()->get_clock_type());
   }
 
   static void SetUpTestCase() { rclcpp::init(0, nullptr); }
@@ -119,7 +119,7 @@ public:
       {
         while (run_updater_)
         {
-          cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
+          cm_->update(time_, rclcpp::Duration::from_seconds(0.01));
           std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
       });
@@ -157,6 +157,7 @@ public:
   bool run_updater_;
   const std::string robot_description_;
   const bool pass_urdf_as_parameter_;
+  rclcpp::Time time_;
 };
 
 class TestControllerManagerSrvs
@@ -177,9 +178,9 @@ public:
       std::chrono::milliseconds(10),
       [&]()
       {
-        cm_->read(TIME, PERIOD);
-        cm_->update(TIME, PERIOD);
-        cm_->write(TIME, PERIOD);
+        cm_->read(time_, PERIOD);
+        cm_->update(time_, PERIOD);
+        cm_->write(time_, PERIOD);
       });
 
     executor_->add_node(cm_);
@@ -206,7 +207,7 @@ public:
       while (service_executor.spin_until_future_complete(result, std::chrono::milliseconds(50)) !=
              rclcpp::FutureReturnCode::SUCCESS)
       {
-        cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01));
+        cm_->update(time_, rclcpp::Duration::from_seconds(0.01));
       }
     }
     else

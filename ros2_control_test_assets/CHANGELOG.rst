@@ -2,6 +2,17 @@
 Changelog for package ros2_control_test_assets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+3.20.0 (2023-10-31)
+-------------------
+* [ResourceManager] deactivate hardware from read/write return value (`#884 <https://github.com/ros-controls/ros2_control/issues/884>`_)
+* Contributors: Felix Exner (fexner)
+
+3.19.1 (2023-10-04)
+-------------------
+
+3.19.0 (2023-10-03)
+-------------------
+
 3.18.0 (2023-08-17)
 -------------------
 

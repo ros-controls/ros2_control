@@ -3,6 +3,9 @@ on:
   workflow_dispatch:
     branches:
       - master
+  push:
+    branches:
+      - master
   pull_request:
     branches:
       - master
@@ -19,8 +22,8 @@ jobs:
       - uses: ros-tooling/setup-ros@0.7.0
         with:
           required-ros-distributions: ${{ env.ROS_DISTRO }}
-      - uses: actions/checkout@v3
-      - uses: ros-tooling/action-ros-ci@0.3.3
+      - uses: actions/checkout@v4
+      - uses: ros-tooling/action-ros-ci@0.3.4
         with:
           target-ros2-distro: ${{ env.ROS_DISTRO }}
           import-token: ${{ secrets.GITHUB_TOKEN }}
@@ -49,7 +52,7 @@ jobs:
           file: ros_ws/lcov/total_coverage.info
           flags: unittests
           name: codecov-umbrella
-      - uses: actions/upload-artifact@v3.1.2
+      - uses: actions/upload-artifact@v3.1.3
         with:
           name: colcon-logs-ubuntu-22.04-coverage-rolling
           path: ros_ws/log
