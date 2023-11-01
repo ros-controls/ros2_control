@@ -23,9 +23,9 @@
 #include "joint_limits/joint_limits.hpp"
 #include "joint_limits/joint_limits_rosparam.hpp"
 #include "joint_limits/visibility_control.h"
-#include "realtime_tools/realtime_buffer.h"
 #include "rclcpp/node.hpp"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
+#include "realtime_tools/realtime_buffer.h"
 #include "trajectory_msgs/msg/joint_trajectory_point.hpp"
 
 namespace joint_limits
@@ -92,7 +92,8 @@ public:
     }
     updated_limits_.writeFromNonRT(joint_limits_);
 
-    auto on_parameter_event_callback = [this](const std::vector<rclcpp::Parameter> & parameters) {
+    auto on_parameter_event_callback = [this](const std::vector<rclcpp::Parameter> & parameters)
+    {
       rcl_interfaces::msg::SetParametersResult result;
       result.successful = true;
 
@@ -114,8 +115,8 @@ public:
       return result;
     };
 
-    parameter_callback_ = node_param_itf_->add_on_set_parameters_callback(on_parameter_event_callback);
-
+    parameter_callback_ =
+      node_param_itf_->add_on_set_parameters_callback(on_parameter_event_callback);
 
     if (result)
     {

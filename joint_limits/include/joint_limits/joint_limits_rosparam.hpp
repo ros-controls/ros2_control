@@ -244,8 +244,7 @@ inline bool get_joint_limits(
       !param_itf->has_parameter(param_base_name + ".max_jerk") &&
       !param_itf->has_parameter(param_base_name + ".has_effort_limits") &&
       !param_itf->has_parameter(param_base_name + ".max_effort") &&
-      !param_itf->has_parameter(param_base_name + ".angle_wraparound")
-    )
+      !param_itf->has_parameter(param_base_name + ".angle_wraparound"))
     {
       RCLCPP_ERROR(
         logging_itf->get_logger(),
@@ -428,15 +427,20 @@ inline bool get_joint_limits(
  * \param[out] updated_limits structure with updated JointLimits. It is recommended that the
  * currently used limits are stored into this structure before calling this method.
  */
-inline bool check_for_limits_update(const std::string & joint_name, const std::vector<rclcpp::Parameter> & parameters, const rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr & logging_itf, JointLimits & updated_limits)
+inline bool check_for_limits_update(
+  const std::string & joint_name, const std::vector<rclcpp::Parameter> & parameters,
+  const rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr & logging_itf,
+  JointLimits & updated_limits)
 {
   const std::string param_base_name = "joint_limits." + joint_name;
   bool changed = false;
 
   // update first numerical values to make later checks for "has" limits members
-  for (auto & parameter : parameters) {
+  for (auto & parameter : parameters)
+  {
     const std::string param_name = parameter.get_name();
-    try {
+    try
+    {
       if (param_name == param_base_name + ".min_position")
       {
         changed = updated_limits.min_position != parameter.get_value<double>();
@@ -472,20 +476,29 @@ inline bool check_for_limits_update(const std::string & joint_name, const std::v
         changed = updated_limits.max_effort != parameter.get_value<double>();
         updated_limits.max_effort = parameter.get_value<double>();
       }
-    } catch (const rclcpp::exceptions::InvalidParameterTypeException & e) {
+    }
+    catch (const rclcpp::exceptions::InvalidParameterTypeException & e)
+    {
       RCLCPP_WARN(logging_itf->get_logger(), "Please use the right type: %s", e.what());
     }
   }
 
-  for (auto & parameter : parameters) {
+  for (auto & parameter : parameters)
+  {
     const std::string param_name = parameter.get_name();
-    try {
+    try
+    {
       if (param_name == param_base_name + ".has_position_limits")
       {
         updated_limits.has_position_limits = parameter.get_value<bool>();
-        if (updated_limits.has_position_limits && (std::isnan(updated_limits.min_position) || std::isnan(updated_limits.max_position)))
+        if (
+          updated_limits.has_position_limits &&
+          (std::isnan(updated_limits.min_position) || std::isnan(updated_limits.max_position)))
         {
-          RCLCPP_WARN(logging_itf->get_logger(), "PARAMETER NOT UPDATED: 'has_position_limits' flag can not be set if 'min_position' and 'max_position' are not set or not have valid double values.");
+          RCLCPP_WARN(
+            logging_itf->get_logger(),
+            "PARAMETER NOT UPDATED: 'has_position_limits' flag can not be set if 'min_position' "
+            "and 'max_position' are not set or not have valid double values.");
           updated_limits.has_position_limits = false;
         }
         else
@@ -498,7 +511,10 @@ inline bool check_for_limits_update(const std::string & joint_name, const std::v
         updated_limits.has_velocity_limits = parameter.get_value<bool>();
         if (updated_limits.has_velocity_limits && std::isnan(updated_limits.max_velocity))
         {
-          RCLCPP_WARN(logging_itf->get_logger(), "PARAMETER NOT UPDATED: 'has_velocity_limits' flag can not be set if 'min_velocity' and 'max_velocity' are not set or not have valid double values.");
+          RCLCPP_WARN(
+            logging_itf->get_logger(),
+            "PARAMETER NOT UPDATED: 'has_velocity_limits' flag can not be set if 'min_velocity' "
+            "and 'max_velocity' are not set or not have valid double values.");
           updated_limits.has_velocity_limits = false;
         }
         else
@@ -511,7 +527,10 @@ inline bool check_for_limits_update(const std::string & joint_name, const std::v
         updated_limits.has_acceleration_limits = parameter.get_value<bool>();
         if (updated_limits.has_acceleration_limits && std::isnan(updated_limits.max_acceleration))
         {
-          RCLCPP_WARN(logging_itf->get_logger(), "PARAMETER NOT UPDATED: 'has_acceleration_limits' flag can not be set if 'max_acceleration' is not set or not have valid double values.");
+          RCLCPP_WARN(
+            logging_itf->get_logger(),
+            "PARAMETER NOT UPDATED: 'has_acceleration_limits' flag can not be set if "
+            "'max_acceleration' is not set or not have valid double values.");
           updated_limits.has_acceleration_limits = false;
         }
         else
@@ -524,7 +543,10 @@ inline bool check_for_limits_update(const std::string & joint_name, const std::v
         updated_limits.has_deceleration_limits = parameter.get_value<bool>();
         if (updated_limits.has_deceleration_limits && std::isnan(updated_limits.max_deceleration))
         {
-          RCLCPP_WARN(logging_itf->get_logger(), "PARAMETER NOT UPDATED: 'has_deceleration_limits' flag can not be set if 'max_deceleration' is not set or not have valid double values.");
+          RCLCPP_WARN(
+            logging_itf->get_logger(),
+            "PARAMETER NOT UPDATED: 'has_deceleration_limits' flag can not be set if "
+            "'max_deceleration' is not set or not have valid double values.");
           updated_limits.has_deceleration_limits = false;
         }
         else
@@ -537,7 +559,10 @@ inline bool check_for_limits_update(const std::string & joint_name, const std::v
         updated_limits.has_jerk_limits = parameter.get_value<bool>();
         if (updated_limits.has_jerk_limits && std::isnan(updated_limits.max_jerk))
         {
-          RCLCPP_WARN(logging_itf->get_logger(), "PARAMETER NOT UPDATED: 'has_jerk_limits' flag can not be set if 'max_jerk' is not set or not have valid double values.");
+          RCLCPP_WARN(
+            logging_itf->get_logger(),
+            "PARAMETER NOT UPDATED: 'has_jerk_limits' flag can not be set if 'max_jerk' is not set "
+            "or not have valid double values.");
           updated_limits.has_jerk_limits = false;
         }
         else
@@ -550,7 +575,10 @@ inline bool check_for_limits_update(const std::string & joint_name, const std::v
         updated_limits.has_effort_limits = parameter.get_value<bool>();
         if (updated_limits.has_effort_limits && std::isnan(updated_limits.max_effort))
         {
-          RCLCPP_WARN(logging_itf->get_logger(), "PARAMETER NOT UPDATED: 'has_effort_limits' flag can not be set if 'max_effort' is not set or not have valid double values.");
+          RCLCPP_WARN(
+            logging_itf->get_logger(),
+            "PARAMETER NOT UPDATED: 'has_effort_limits' flag can not be set if 'max_effort' is not "
+            "set or not have valid double values.");
           updated_limits.has_effort_limits = false;
         }
         else
@@ -563,7 +591,10 @@ inline bool check_for_limits_update(const std::string & joint_name, const std::v
         updated_limits.angle_wraparound = parameter.get_value<bool>();
         if (updated_limits.angle_wraparound && updated_limits.has_position_limits)
         {
-          RCLCPP_WARN(logging_itf->get_logger(), "PARAMETER NOT UPDATED: 'angle_wraparound' flag can not be set if 'has_position_limits' flag is set.");
+          RCLCPP_WARN(
+            logging_itf->get_logger(),
+            "PARAMETER NOT UPDATED: 'angle_wraparound' flag can not be set if "
+            "'has_position_limits' flag is set.");
           updated_limits.angle_wraparound = false;
         }
         else
@@ -571,14 +602,17 @@ inline bool check_for_limits_update(const std::string & joint_name, const std::v
           changed = true;
         }
       }
-    } catch (const rclcpp::exceptions::InvalidParameterTypeException & e) {
-      RCLCPP_WARN(logging_itf->get_logger(), "PARAMETER NOT UPDATED: Please use the right type: %s", e.what());
+    }
+    catch (const rclcpp::exceptions::InvalidParameterTypeException & e)
+    {
+      RCLCPP_WARN(
+        logging_itf->get_logger(), "PARAMETER NOT UPDATED: Please use the right type: %s",
+        e.what());
     }
   }
 
   return changed;
 }
-
 
 /// Populate a SoftJointLimits instance from the ROS parameter server.
 /**
@@ -713,8 +747,8 @@ inline bool get_joint_limits(
  * Check if any of updated parameters are related to SoftJointLimits.
  *
  * This method is intended to be used in the parameters update callback.
- * It is recommended that it's result is temporarily stored and synchronized with the SoftJointLimits
- * structure in the main loop.
+ * It is recommended that it's result is temporarily stored and synchronized with the
+ * SoftJointLimits structure in the main loop.
  *
  * \param[in] joint_name Name of the joint whose limits should be checked.
  * \param[in] parameters List of the parameters that should be checked if they belong to this
@@ -723,30 +757,41 @@ inline bool get_joint_limits(
  * \param[out] updated_limits structure with updated SoftJointLimits. It is recommended that the
  * currently used limits are stored into this structure before calling this method.
  */
-inline bool check_for_limits_update(const std::string & joint_name, const std::vector<rclcpp::Parameter> & parameters, const rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr & logging_itf, SoftJointLimits & updated_limits)
+inline bool check_for_limits_update(
+  const std::string & joint_name, const std::vector<rclcpp::Parameter> & parameters,
+  const rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr & logging_itf,
+  SoftJointLimits & updated_limits)
 {
   const std::string param_base_name = "joint_limits." + joint_name;
   bool changed = false;
 
-  for (auto & parameter : parameters) {
+  for (auto & parameter : parameters)
+  {
     const std::string param_name = parameter.get_name();
-    try {
+    try
+    {
       if (param_name == param_base_name + ".has_soft_limits")
       {
         if (!parameter.get_value<bool>())
         {
-          RCLCPP_WARN(logging_itf->get_logger(), "Parameter 'has_soft_limits' is not set, therefore the limits will not be updated!");
+          RCLCPP_WARN(
+            logging_itf->get_logger(),
+            "Parameter 'has_soft_limits' is not set, therefore the limits will not be updated!");
           return false;
         }
       }
-    } catch (const rclcpp::exceptions::InvalidParameterTypeException & e) {
+    }
+    catch (const rclcpp::exceptions::InvalidParameterTypeException & e)
+    {
       RCLCPP_INFO(logging_itf->get_logger(), "Please use the right type: %s", e.what());
     }
   }
 
-  for (auto & parameter : parameters) {
+  for (auto & parameter : parameters)
+  {
     const std::string param_name = parameter.get_name();
-    try {
+    try
+    {
       if (param_name == param_base_name + ".k_position")
       {
         changed = updated_limits.k_position != parameter.get_value<double>();
@@ -767,7 +812,9 @@ inline bool check_for_limits_update(const std::string & joint_name, const std::v
         changed = updated_limits.max_position != parameter.get_value<double>();
         updated_limits.max_position = parameter.get_value<double>();
       }
-    } catch (const rclcpp::exceptions::InvalidParameterTypeException & e) {
+    }
+    catch (const rclcpp::exceptions::InvalidParameterTypeException & e)
+    {
       RCLCPP_INFO(logging_itf->get_logger(), "Please use the right type: %s", e.what());
     }
   }

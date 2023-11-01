@@ -127,7 +127,7 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
 
         // compute desired_acc when velocity is limited
         desired_acc[index] =
-        (desired_vel[index] - current_joint_states.velocities[index]) / dt_seconds;
+          (desired_vel[index] - current_joint_states.velocities[index]) / dt_seconds;
       }
     }
 
