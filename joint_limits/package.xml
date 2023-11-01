@@ -16,6 +16,7 @@
 
   <depend>backward_ros</depend>
   <depend>pluginlib</depend>
+  <depend>realtime_tools</depend>
   <depend>rclcpp</depend>
   <depend>rclcpp_lifecycle</depend>
   <depend>trajectory_msgs</depend>

@@ -23,6 +23,7 @@
 #include "joint_limits/joint_limits.hpp"
 #include "joint_limits/joint_limits_rosparam.hpp"
 #include "joint_limits/visibility_control.h"
+#include "realtime_tools/realtime_buffer.h"
 #include "rclcpp/node.hpp"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
 #include "trajectory_msgs/msg/joint_trajectory_point.hpp"
@@ -89,14 +90,39 @@ public:
         node_logging_itf_->get_logger(), "Limits for joint %zu (%s) are:\n%s", i,
         joint_names[i].c_str(), joint_limits_[i].to_string().c_str());
     }
+    updated_limits_.writeFromNonRT(joint_limits_);
+
+    auto on_parameter_event_callback = [this](const std::vector<rclcpp::Parameter> & parameters) {
+      rcl_interfaces::msg::SetParametersResult result;
+      result.successful = true;
+
+      std::vector<LimitsType> updated_joint_limits = joint_limits_;
+      bool changed = false;
+
+      for (size_t i = 0; i < number_of_joints_; ++i)
+      {
+        changed |= joint_limits::check_for_limits_update(
+          joint_names_[i], parameters, node_logging_itf_, updated_joint_limits[i]);
+      }
+
+      if (changed)
+      {
+        updated_limits_.writeFromNonRT(updated_joint_limits);
+        RCLCPP_INFO(node_logging_itf_->get_logger(), "Limits are dynamically updated!");
+      }
+
+      return result;
+    };
+
+    parameter_callback_ = node_param_itf_->add_on_set_parameters_callback(on_parameter_event_callback);
+
 
     if (result)
     {
       result = on_init();
     }
 
-    // avoid linters output
-    (void)robot_description_topic;
+    (void)robot_description_topic;  // avoid linters output
 
     return result;
   }
@@ -140,6 +166,7 @@ public:
     trajectory_msgs::msg::JointTrajectoryPoint & desired_joint_states, const rclcpp::Duration & dt)
   {
     // TODO(destogl): add checks if sizes of vectors and number of limits correspond.
+    joint_limits_ = *(updated_limits_.readFromRT());
     return on_enforce(current_joint_states, desired_joint_states, dt);
   }
 
@@ -171,6 +198,10 @@ protected:
   rclcpp::Node::SharedPtr node_;
   rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_param_itf_;
   rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging_itf_;
+
+private:
+  rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr parameter_callback_;
+  realtime_tools::RealtimeBuffer<std::vector<LimitsType>> updated_limits_;
 };
 
 }  // namespace joint_limits
