@@ -54,7 +54,7 @@ protected:
       R"(
   <ros2_control name="HardwareFakeSystem2dof" type="system">
     <hardware>
-      <plugin>fake_components/GenericSystem</plugin>
+      <plugin>mock_components/GenericSystem</plugin>
     </hardware>
     <joint name="joint1">
       <command_interface name="position"/>
@@ -485,7 +485,7 @@ protected:
       R"(
   <ros2_control name="SensorWithInitialValue" type="system">
     <hardware>
-      <plugin>fake_components/GenericSystem</plugin>
+      <plugin>mock_components/GenericSystem</plugin>
     </hardware>
     <sensor name="force_sensor">
       <state_interface name="force.x">
@@ -505,7 +505,7 @@ protected:
       R"(
   <ros2_control name="GPIOWithInitialValue" type="system">
     <hardware>
-      <plugin>fake_components/GenericSystem</plugin>
+      <plugin>mock_components/GenericSystem</plugin>
     </hardware>
     <gpio name="sample_io">
       <state_interface name="output_1">
@@ -552,7 +552,7 @@ protected:
       R"(
   <ros2_control name="DisabledCommands" type="system">
     <hardware>
-      <plugin>fake_components/GenericSystem</plugin>
+      <plugin>mock_components/GenericSystem</plugin>
       <param name="disable_commands">True</param>
     </hardware>
     <joint name="joint1">
