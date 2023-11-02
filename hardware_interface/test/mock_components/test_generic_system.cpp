@@ -235,7 +235,7 @@ protected:
   <ros2_control name="HardwareSystem2dofWithSensorMockCommandTrue" type="system">
     <hardware>
       <plugin>mock_components/GenericSystem</plugin>
-      <param name="fake_sensor_commands">True</param>
+      <param name="mock_sensor_commands">True</param>
     </hardware>
     <joint name="joint1">
       <command_interface name="position"/>
@@ -450,7 +450,7 @@ protected:
   <ros2_control name="ValidURDFros2controlSystemRobotWithGPIOMockCommandTrue" type="system">
     <hardware>
       <plugin>mock_components/GenericSystem</plugin>
-      <param name="fake_gpio_commands">True</param>
+      <param name="mock_gpio_commands">True</param>
     </hardware>
     <joint name="joint1">
       <command_interface name="position"/>
