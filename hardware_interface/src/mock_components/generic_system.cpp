@@ -702,7 +702,6 @@ void GenericSystem::initialize_storage_vectors(
   }
 
   // Initialize with values from URDF
-  bool print_hint = false;
   for (auto i = 0u; i < component_infos.size(); i++)
   {
     const auto & component = component_infos[i];
@@ -720,32 +719,8 @@ void GenericSystem::initialize_storage_vectors(
         {
           states[index][i] = parse_double(interface.initial_value);
         }
-        else
-        {
-          // Initialize the value in old way with warning message
-          auto it2 = component.parameters.find("initial_" + interface.name);
-          if (it2 != component.parameters.end())
-          {
-            states[index][i] = parse_double(it2->second);
-            print_hint = true;
-          }
-          else
-          {
-            print_hint = true;
-          }
-        }
       }
     }
-  }
-  if (print_hint)
-  {
-    RCUTILS_LOG_WARN_ONCE_NAMED(
-      "mock_generic_system",
-      "Parsing of optional initial interface values failed or uses a deprecated format. Add "
-      "initial values for every state interface in the ros2_control.xacro. For example: \n"
-      "<state_interface name=\"velocity\"> \n"
-      "  <param name=\"initial_value\">0.0</param> \n"
-      "</state_interface>");
   }
 }
 
