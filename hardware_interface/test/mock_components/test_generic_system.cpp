@@ -49,28 +49,6 @@ public:
 protected:
   void SetUp() override
   {
-    // REMOVE THIS MEMBER ONCE FAKE COMPONENTS ARE REMOVED
-    hardware_fake_system_2dof_ =
-      R"(
-  <ros2_control name="HardwareFakeSystem2dof" type="system">
-    <hardware>
-      <plugin>mock_components/GenericSystem</plugin>
-    </hardware>
-    <joint name="joint1">
-      <command_interface name="position"/>
-      <state_interface name="position">
-        <param name="initial_value">1.57</param>
-      </state_interface>
-    </joint>
-    <joint name="joint2">
-      <command_interface name="position"/>
-      <state_interface name="position">
-        <param name="initial_value">0.7854</param>
-      </state_interface>
-    </joint>
-  </ros2_control>
-)";
-
     hardware_system_2dof_ =
       R"(
   <ros2_control name="HardwareSystem2dof" type="system">
@@ -567,9 +545,7 @@ protected:
 )";
   }
 
-  std::string hardware_robot_2dof_;
   std::string hardware_system_2dof_;
-  std::string hardware_fake_system_2dof_;
   std::string hardware_system_2dof_asymetric_;
   std::string hardware_system_2dof_standard_interfaces_;
   std::string hardware_system_2dof_with_other_interface_;
@@ -600,7 +576,6 @@ class TestableResourceManager : public hardware_interface::ResourceManager
 public:
   friend TestGenericSystem;
 
-  FRIEND_TEST(TestGenericSystem, generic_fake_system_2dof_symetric_interfaces);
   FRIEND_TEST(TestGenericSystem, generic_system_2dof_symetric_interfaces);
   FRIEND_TEST(TestGenericSystem, generic_system_2dof_asymetric_interfaces);
   FRIEND_TEST(TestGenericSystem, generic_system_2dof_other_interfaces);
@@ -664,37 +639,6 @@ TEST_F(TestGenericSystem, load_generic_system_2dof)
   auto urdf = ros2_control_test_assets::urdf_head + hardware_system_2dof_ +
               ros2_control_test_assets::urdf_tail;
   ASSERT_NO_THROW(TestableResourceManager rm(urdf));
-}
-
-// REMOVE THIS TEST ONCE FAKE COMPONENTS ARE REMOVED
-TEST_F(TestGenericSystem, generic_fake_system_2dof_symetric_interfaces)
-{
-  auto urdf = ros2_control_test_assets::urdf_head + hardware_fake_system_2dof_ +
-              ros2_control_test_assets::urdf_tail;
-  TestableResourceManager rm(urdf);
-  // Activate components to get all interfaces available
-  activate_components(rm, {"HardwareFakeSystem2dof"});
-
-  // Check interfaces
-  EXPECT_EQ(1u, rm.system_components_size());
-  ASSERT_EQ(2u, rm.state_interface_keys().size());
-  EXPECT_TRUE(rm.state_interface_exists("joint1/position"));
-  EXPECT_TRUE(rm.state_interface_exists("joint2/position"));
-
-  ASSERT_EQ(2u, rm.command_interface_keys().size());
-  EXPECT_TRUE(rm.command_interface_exists("joint1/position"));
-  EXPECT_TRUE(rm.command_interface_exists("joint2/position"));
-
-  // Check initial values
-  hardware_interface::LoanedStateInterface j1p_s = rm.claim_state_interface("joint1/position");
-  hardware_interface::LoanedStateInterface j2p_s = rm.claim_state_interface("joint2/position");
-  hardware_interface::LoanedCommandInterface j1p_c = rm.claim_command_interface("joint1/position");
-  hardware_interface::LoanedCommandInterface j2p_c = rm.claim_command_interface("joint2/position");
-
-  ASSERT_EQ(1.57, j1p_s.get_value());
-  ASSERT_EQ(0.7854, j2p_s.get_value());
-  ASSERT_TRUE(std::isnan(j1p_c.get_value()));
-  ASSERT_TRUE(std::isnan(j2p_c.get_value()));
 }
 
 // Test inspired by hardware_interface/test_resource_manager.cpp
