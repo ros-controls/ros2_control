@@ -41,8 +41,10 @@ class TestGenericSystem : public ::testing::Test
 {
 public:
   void test_generic_system_with_mimic_joint(std::string & urdf, const std::string & component_name);
-  void test_generic_system_with_mock_sensor_commands(std::string & urdf, const std::string & component_name);
-  void test_generic_system_with_mock_gpio_commands(std::string & urdf, const std::string & component_name);
+  void test_generic_system_with_mock_sensor_commands(
+    std::string & urdf, const std::string & component_name);
+  void test_generic_system_with_mock_gpio_commands(
+    std::string & urdf, const std::string & component_name);
 
 protected:
   void SetUp() override
@@ -775,7 +777,9 @@ TEST_F(TestGenericSystem, generic_system_2dof_asymetric_interfaces)
   ASSERT_TRUE(std::isnan(j2a_c.get_value()));
 }
 
-void generic_system_functional_test(const std::string & urdf, const std::string component_name = "GenericSystem2dof", const double offset = 0)
+void generic_system_functional_test(
+  const std::string & urdf, const std::string component_name = "GenericSystem2dof",
+  const double offset = 0)
 {
   TestableResourceManager rm(urdf);
   // check is hardware is configured
@@ -786,13 +790,11 @@ void generic_system_functional_test(const std::string & urdf, const std::string 
   configure_components(rm, {component_name});
   status_map = rm.get_components_status();
   EXPECT_EQ(
-    status_map[component_name].state.label(),
-    hardware_interface::lifecycle_state_names::INACTIVE);
+    status_map[component_name].state.label(), hardware_interface::lifecycle_state_names::INACTIVE);
   activate_components(rm, {component_name});
   status_map = rm.get_components_status();
   EXPECT_EQ(
-    status_map[component_name].state.label(),
-    hardware_interface::lifecycle_state_names::ACTIVE);
+    status_map[component_name].state.label(), hardware_interface::lifecycle_state_names::ACTIVE);
 
   // Check initial values
   hardware_interface::LoanedStateInterface j1p_s = rm.claim_state_interface("joint1/position");
@@ -871,8 +873,7 @@ void generic_system_functional_test(const std::string & urdf, const std::string 
   deactivate_components(rm, {component_name});
   status_map = rm.get_components_status();
   EXPECT_EQ(
-    status_map[component_name].state.label(),
-    hardware_interface::lifecycle_state_names::INACTIVE);
+    status_map[component_name].state.label(), hardware_interface::lifecycle_state_names::INACTIVE);
 }
 
 TEST_F(TestGenericSystem, generic_system_2dof_functionality)
@@ -1066,7 +1067,8 @@ TEST_F(TestGenericSystem, generic_system_2dof_sensor)
   ASSERT_EQ(0.33, j2p_c.get_value());
 }
 
-void TestGenericSystem::test_generic_system_with_mock_sensor_commands(std::string & urdf, const std::string & component_name)
+void TestGenericSystem::test_generic_system_with_mock_sensor_commands(
+  std::string & urdf, const std::string & component_name)
 {
   TestableResourceManager rm(urdf);
   // Activate components to get all interfaces available
@@ -1202,10 +1204,12 @@ TEST_F(TestGenericSystem, generic_system_2dof_sensor_mock_command_True)
               hardware_system_2dof_with_sensor_mock_command_True_ +
               ros2_control_test_assets::urdf_tail;
 
-  test_generic_system_with_mock_sensor_commands(urdf, "HardwareSystem2dofWithSensorMockCommandTrue");
+  test_generic_system_with_mock_sensor_commands(
+    urdf, "HardwareSystem2dofWithSensorMockCommandTrue");
 }
 
-void TestGenericSystem::test_generic_system_with_mimic_joint(std::string & urdf, const std::string & component_name)
+void TestGenericSystem::test_generic_system_with_mimic_joint(
+  std::string & urdf, const std::string & component_name)
 {
   TestableResourceManager rm(urdf);
   // Activate components to get all interfaces available
@@ -1295,7 +1299,8 @@ TEST_F(TestGenericSystem, generic_system_2dof_functionality_with_offset_custom_i
               ros2_control_test_assets::urdf_tail;
 
   // custom interface is missing so offset will not be applied
-  generic_system_functional_test(urdf, "HardwareSystem2dofStandardInterfacesWithCustomInterfaceForOffsetMissing", 0.0);
+  generic_system_functional_test(
+    urdf, "HardwareSystem2dofStandardInterfacesWithCustomInterfaceForOffsetMissing", 0.0);
 }
 
 TEST_F(TestGenericSystem, generic_system_2dof_functionality_with_offset_custom_interface)
@@ -1308,7 +1313,8 @@ TEST_F(TestGenericSystem, generic_system_2dof_functionality_with_offset_custom_i
 
   TestableResourceManager rm(urdf);
 
-  const std::string hardware_name = "HardwareSystem2dofStandardInterfacesWithCustomInterfaceForOffset";
+  const std::string hardware_name =
+    "HardwareSystem2dofStandardInterfacesWithCustomInterfaceForOffset";
 
   // check is hardware is configured
   auto status_map = rm.get_components_status();
@@ -1319,13 +1325,11 @@ TEST_F(TestGenericSystem, generic_system_2dof_functionality_with_offset_custom_i
   configure_components(rm, {hardware_name});
   status_map = rm.get_components_status();
   EXPECT_EQ(
-    status_map[hardware_name].state.label(),
-    hardware_interface::lifecycle_state_names::INACTIVE);
+    status_map[hardware_name].state.label(), hardware_interface::lifecycle_state_names::INACTIVE);
   activate_components(rm, {hardware_name});
   status_map = rm.get_components_status();
   EXPECT_EQ(
-    status_map[hardware_name].state.label(),
-    hardware_interface::lifecycle_state_names::ACTIVE);
+    status_map[hardware_name].state.label(), hardware_interface::lifecycle_state_names::ACTIVE);
 
   // Check initial values
   hardware_interface::LoanedStateInterface j1p_s = rm.claim_state_interface("joint1/position");
@@ -1414,8 +1418,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_functionality_with_offset_custom_i
   deactivate_components(rm, {hardware_name});
   status_map = rm.get_components_status();
   EXPECT_EQ(
-    status_map[hardware_name].state.label(),
-    hardware_interface::lifecycle_state_names::INACTIVE);
+    status_map[hardware_name].state.label(), hardware_interface::lifecycle_state_names::INACTIVE);
 }
 
 TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio)
@@ -1434,13 +1437,11 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio)
   configure_components(rm, {hardware_name});
   status_map = rm.get_components_status();
   EXPECT_EQ(
-    status_map[hardware_name].state.label(),
-    hardware_interface::lifecycle_state_names::INACTIVE);
+    status_map[hardware_name].state.label(), hardware_interface::lifecycle_state_names::INACTIVE);
   activate_components(rm, {hardware_name});
   status_map = rm.get_components_status();
   EXPECT_EQ(
-    status_map[hardware_name].state.label(),
-    hardware_interface::lifecycle_state_names::ACTIVE);
+    status_map[hardware_name].state.label(), hardware_interface::lifecycle_state_names::ACTIVE);
 
   ASSERT_EQ(8u, rm.state_interface_keys().size());
   ASSERT_EQ(6u, rm.command_interface_keys().size());
@@ -1518,7 +1519,8 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio)
   generic_system_functional_test(urdf, hardware_name);
 }
 
-void TestGenericSystem::test_generic_system_with_mock_gpio_commands(std::string & urdf, const std::string & component_name)
+void TestGenericSystem::test_generic_system_with_mock_gpio_commands(
+  std::string & urdf, const std::string & component_name)
 {
   TestableResourceManager rm(urdf);
 
@@ -1530,13 +1532,11 @@ void TestGenericSystem::test_generic_system_with_mock_gpio_commands(std::string 
   configure_components(rm, {component_name});
   status_map = rm.get_components_status();
   EXPECT_EQ(
-    status_map[component_name].state.label(),
-    hardware_interface::lifecycle_state_names::INACTIVE);
+    status_map[component_name].state.label(), hardware_interface::lifecycle_state_names::INACTIVE);
   activate_components(rm, {component_name});
   status_map = rm.get_components_status();
   EXPECT_EQ(
-    status_map[component_name].state.label(),
-    hardware_interface::lifecycle_state_names::ACTIVE);
+    status_map[component_name].state.label(), hardware_interface::lifecycle_state_names::ACTIVE);
 
   // Check interfaces
   EXPECT_EQ(1u, rm.system_components_size());
@@ -1632,7 +1632,8 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_mock_co
               valid_urdf_ros2_control_system_robot_with_gpio_mock_command_ +
               ros2_control_test_assets::urdf_tail;
 
-  test_generic_system_with_mock_gpio_commands(urdf, "ValidURDFros2controlSystemRobotWithGPIOMockCommand");
+  test_generic_system_with_mock_gpio_commands(
+    urdf, "ValidURDFros2controlSystemRobotWithGPIOMockCommand");
 }
 
 TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_mock_command_True)
@@ -1641,7 +1642,8 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_mock_co
               valid_urdf_ros2_control_system_robot_with_gpio_mock_command_True_ +
               ros2_control_test_assets::urdf_tail;
 
-  test_generic_system_with_mock_gpio_commands(urdf, "ValidURDFros2controlSystemRobotWithGPIOMockCommandTrue");
+  test_generic_system_with_mock_gpio_commands(
+    urdf, "ValidURDFros2controlSystemRobotWithGPIOMockCommandTrue");
 }
 
 TEST_F(TestGenericSystem, sensor_with_initial_value)
