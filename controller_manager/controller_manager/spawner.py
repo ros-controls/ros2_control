@@ -292,7 +292,7 @@ def main(args=None):
                     )
                     return 1
 
-                if not args.inactive and not args.activate_as_group:
+                if not args.stopped and not args.inactive and not args.activate_as_group:
                     ret = switch_controllers(
                         node, controller_manager_name, [], [controller_name], True, True, 5.0
                     )
