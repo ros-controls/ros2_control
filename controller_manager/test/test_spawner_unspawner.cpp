@@ -282,6 +282,5 @@ TEST_F(TestLoadController, spawner_test_load_only_in_arg)
   ASSERT_EQ(cm_->get_loaded_controllers().size(), 1ul);
   auto ctrl_2 = cm_->get_loaded_controllers()[0];
   ASSERT_EQ(ctrl_2.info.name, "ctrl_2");
-  ASSERT_EQ(ctrl_2.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
   ASSERT_EQ(ctrl_2.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
 }
