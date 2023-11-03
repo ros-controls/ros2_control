@@ -29,12 +29,14 @@ jobs:
           package-name:
             controller_interface
             controller_manager
-            controller_manager_msgs
             hardware_interface
+<<<<<<< HEAD
             ros2controlcli
             ros2_control
             ros2_control_test_assets
             hardware_interface_testing
+=======
+>>>>>>> 5e6b676 ([CI] codecov updates (#1147))
             transmission_interface
 
           vcs-repo-file-url: |
