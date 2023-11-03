@@ -310,7 +310,7 @@ def main(args=None):
                         + bcolors.ENDC
                     )
 
-        if not args.inactive and args.activate_as_group:
+        if not args.stopped and not args.inactive and args.activate_as_group:
             ret = switch_controllers(
                 node, controller_manager_name, [], controller_names, True, True, 5.0
             )
@@ -325,6 +325,8 @@ def main(args=None):
                 + "Configured and activated all the parsed controllers list!"
                 + bcolors.ENDC
             )
+        if args.stopped:
+            node.get_logger().warn('"--stopped" flag is deprecated use "--inactive" instead')
 
         if not args.unload_on_kill:
             return 0
@@ -334,7 +336,7 @@ def main(args=None):
             while True:
                 time.sleep(1)
         except KeyboardInterrupt:
-            if not args.inactive:
+            if not args.stopped and not args.inactive:
                 node.get_logger().info("Interrupt captured, deactivating and unloading controller")
                 # TODO(saikishor) we might have an issue in future, if any of these controllers is in chained mode
                 ret = switch_controllers(
