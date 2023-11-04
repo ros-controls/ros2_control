@@ -104,8 +104,11 @@ TEST_P(TestControllerManagerWithStrictness, controller_lifecycle)
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, test_controller->get_state().id());
 
   // configure controller
-  cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME);
-  cm_->configure_controller(TEST_CONTROLLER2_NAME);
+  {
+    ControllerManagerRunner cm_runner(this);
+    cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME);
+    cm_->configure_controller(TEST_CONTROLLER2_NAME);
+  }
   EXPECT_EQ(
     controller_interface::return_type::OK,
     cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
@@ -217,7 +220,10 @@ TEST_P(TestControllerManagerWithStrictness, per_controller_update_rate)
 
   test_controller->get_node()->set_parameter({"update_rate", 4});
   // configure controller
-  cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME);
+  {
+    ControllerManagerRunner cm_runner(this);
+    cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME);
+  }
   EXPECT_EQ(
     controller_interface::return_type::OK,
     cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
@@ -296,7 +302,10 @@ TEST_P(TestControllerManagerWithUpdateRates, per_controller_equal_and_higher_upd
   rclcpp::Parameter update_rate_parameter("update_rate", static_cast<int>(ctrl_update_rate));
   test_controller->get_node()->set_parameter(update_rate_parameter);
   // configure controller
-  cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME);
+  {
+    ControllerManagerRunner cm_runner(this);
+    cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME);
+  }
   EXPECT_EQ(
     controller_interface::return_type::OK,
     cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
@@ -390,7 +399,10 @@ TEST_P(TestControllerUpdateRates, check_the_controller_update_rate)
 
   test_controller->get_node()->set_parameter({"update_rate", static_cast<int>(ctrl_update_rate)});
   // configure controller
-  cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME);
+  {
+    ControllerManagerRunner cm_runner(this);
+    cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME);
+  }
   EXPECT_EQ(
     controller_interface::return_type::OK,
     cm_->update(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)));
