@@ -125,6 +125,93 @@ TEST_F(TestLoadController, spawner_test_type_in_param)
   ASSERT_EQ(ctrl_1.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
 }
 
+TEST_F(TestLoadController, multi_ctrls_test_type_in_param)
+{
+  cm_->set_parameter(rclcpp::Parameter("ctrl_1.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
+  cm_->set_parameter(rclcpp::Parameter("ctrl_2.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
+  cm_->set_parameter(rclcpp::Parameter("ctrl_3.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
+
+  ControllerManagerRunner cm_runner(this);
+  EXPECT_EQ(call_spawner("ctrl_1 ctrl_2 -c test_controller_manager"), 0);
+
+  auto validate_loaded_controllers = [&]()
+  {
+    auto loaded_controllers = cm_->get_loaded_controllers();
+    for (size_t i = 0; i < loaded_controllers.size(); i++)
+    {
+      auto ctrl = loaded_controllers[i];
+      const std::string controller_name = "ctrl_" + std::to_string(i + 1);
+
+      RCLCPP_ERROR(rclcpp::get_logger("test_controller_manager"), "%s", controller_name.c_str());
+      auto it = std::find_if(
+        loaded_controllers.begin(), loaded_controllers.end(),
+        [&](const auto & controller) { return controller.info.name == controller_name; });
+      ASSERT_TRUE(it != loaded_controllers.end());
+      ASSERT_EQ(ctrl.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
+      ASSERT_EQ(ctrl.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+    }
+  };
+
+  ASSERT_EQ(cm_->get_loaded_controllers().size(), 2ul);
+  {
+    validate_loaded_controllers();
+  }
+
+  // Try to spawn again multiple but one of them is already active, it should fail because already
+  // active
+  EXPECT_NE(call_spawner("ctrl_1 ctrl_3 -c test_controller_manager"), 0)
+    << "Cannot configure from active";
+
+  std::vector<std::string> start_controllers = {};
+  std::vector<std::string> stop_controllers = {"ctrl_1"};
+  cm_->switch_controller(
+    start_controllers, stop_controllers,
+    controller_manager_msgs::srv::SwitchController::Request::STRICT, true, rclcpp::Duration(0, 0));
+
+  // We should be able to reconfigure and activate a configured controller
+  EXPECT_EQ(call_spawner("ctrl_1 ctrl_3 -c test_controller_manager"), 0);
+
+  ASSERT_EQ(cm_->get_loaded_controllers().size(), 3ul);
+  {
+    validate_loaded_controllers();
+  }
+
+  stop_controllers = {"ctrl_1", "ctrl_2"};
+  cm_->switch_controller(
+    start_controllers, stop_controllers,
+    controller_manager_msgs::srv::SwitchController::Request::STRICT, true, rclcpp::Duration(0, 0));
+  for (auto ctrl : stop_controllers)
+  {
+    cm_->unload_controller(ctrl);
+    cm_->load_controller(ctrl);
+  }
+
+  // We should be able to reconfigure and activate am unconfigured loaded controller
+  EXPECT_EQ(call_spawner("ctrl_1 ctrl_2 -c test_controller_manager"), 0);
+  ASSERT_EQ(cm_->get_loaded_controllers().size(), 3ul);
+  {
+    validate_loaded_controllers();
+  }
+
+  // Unload and reload
+  EXPECT_EQ(call_unspawner("ctrl_1 ctrl_3 -c test_controller_manager"), 0);
+  ASSERT_EQ(cm_->get_loaded_controllers().size(), 1ul) << "Controller should have been unloaded";
+  EXPECT_EQ(call_spawner("ctrl_1 ctrl_3 -c test_controller_manager"), 0);
+  ASSERT_EQ(cm_->get_loaded_controllers().size(), 3ul) << "Controller should have been loaded";
+  {
+    validate_loaded_controllers();
+  }
+
+  // Now unload everything and load them as a group in a single operation
+  EXPECT_EQ(call_unspawner("ctrl_1 ctrl_2 ctrl_3 -c test_controller_manager"), 0);
+  ASSERT_EQ(cm_->get_loaded_controllers().size(), 0ul) << "Controller should have been unloaded";
+  EXPECT_EQ(call_spawner("ctrl_1 ctrl_2 ctrl_3 -c test_controller_manager --activate-as-group"), 0);
+  ASSERT_EQ(cm_->get_loaded_controllers().size(), 3ul) << "Controller should have been loaded";
+  {
+    validate_loaded_controllers();
+  }
+}
+
 TEST_F(TestLoadController, spawner_test_type_in_arg)
 {
   // Provide controller type via -t argument
