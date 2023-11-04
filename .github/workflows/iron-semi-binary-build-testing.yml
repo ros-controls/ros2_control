@@ -4,13 +4,13 @@ name: Iron Semi-Binary Build - testing
 on:
   workflow_dispatch:
     branches:
-      - master
+      - iron
   pull_request:
     branches:
-      - master
+      - iron
   push:
     branches:
-      - master
+      - iron
   schedule:
     # Run every morning to detect flakiness and broken dependencies
     - cron: '33 1 * * *'
@@ -22,4 +22,4 @@ jobs:
       ros_distro: iron
       ros_repo: testing
       upstream_workspace: ros2_control.iron.repos
-      ref_for_scheduled_build: master
+      ref_for_scheduled_build: iron
