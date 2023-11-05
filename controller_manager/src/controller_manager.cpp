@@ -68,6 +68,64 @@ bool controller_name_compare(const controller_manager::ControllerSpec & a, const
   return a.info.name == name;
 }
 
+// Pass in full_name and the namespace of the manager node, receive
+/**
+ * \brief Creates controller naming
+ *
+ * A command, that based on the full name of the controller (e.g. from load_controller service call)
+ * calculates the namespace, name and parameter name of the controller.
+ *
+ * If the passed in name does not start with a '/' it is assumed to
+ * be relative to the manager namespace.
+ *
+ * If the passed in name starts with a '/' it is assumed to be
+ * relative to the root namespace. In this case the parameter
+ * is the full name with the initial '/' removed and all other
+ * '/' replaced with '.'.
+ *
+ * \param[in] passed_in_name
+ * \param[in] manager_namespace
+ * \param[out] node_namespace
+ * \param[out] node_name
+ * \param[out] node_parameter_name
+ */
+void determine_controller_namespace(
+  const std::string passed_in_name, const std::string manager_namespace,
+  std::string & node_namespace, std::string & node_name, std::string & node_parameter_name)
+{
+  const auto split_pos = passed_in_name.find_last_of('/');
+  if (split_pos == std::string::npos)
+  {
+    node_name = passed_in_name;
+  }
+  else
+  {
+    node_name = passed_in_name.substr(split_pos + 1);
+  }
+  const auto first_occ = passed_in_name.find_first_of('/');
+  if (first_occ == std::string::npos)
+  {
+    node_namespace = manager_namespace;
+    node_parameter_name = passed_in_name + ".type";
+  }
+  else if (first_occ != 0)
+  {
+    node_namespace = manager_namespace + '/' + passed_in_name.substr(0, split_pos);
+    node_parameter_name = std::regex_replace(passed_in_name, std::regex("/"), ".") + ".type";
+  }
+  else
+  {
+    node_namespace = passed_in_name.substr(0, split_pos);
+    node_parameter_name =
+      std::regex_replace(passed_in_name.substr(1), std::regex("/"), ".") + ".type";
+  }
+
+  RCLCPP_INFO(
+    rclcpp::get_logger("split_namespace_and_name"),
+    "node_namespace: %s, node_name: %s, node_param %s", node_namespace.c_str(), node_name.c_str(),
+    node_parameter_name.c_str());
+}
+
 /// Checks if a command interface belongs to a controller based on its prefix.
 /**
  * A command interface can be provided by a controller in which case is called "reference"
@@ -569,7 +627,10 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_c
 controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_controller(
   const std::string & controller_name)
 {
-  const std::string param_name = controller_name + ".type";
+  std::string controller_name_temp, controller_namespace, param_name;
+  calculate_controller_naming(
+    controller_name, get_namespace(), controller_namespace, controller_name_temp, param_name);
+
   std::string controller_type;
 
   // We cannot declare the parameters for the controllers that will be loaded in the future,
@@ -1288,9 +1349,12 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::add_co
       controller.info.name.c_str());
     return nullptr;
   }
-
+  std::string controller_namespace_, controller_name_, controller_param_name_;
+  calculate_controller_naming(
+    controller.info.name, get_namespace(), controller_namespace_, controller_name_,
+    controller_param_name_);
   if (
-    controller.c->init(controller.info.name, get_namespace()) ==
+    controller.c->init(controller_name_, controller_namespace_) ==
     controller_interface::return_type::ERROR)
   {
     to.clear();

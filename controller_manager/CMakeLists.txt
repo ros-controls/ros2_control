@@ -101,6 +101,15 @@ if(BUILD_TESTING)
     ros2_control_test_assets::ros2_control_test_assets
   )
 
+  ament_add_gmock(test_controller_manager_with_namespaced_controllers
+    test/test_controller_manager_with_namespaced_controllers.cpp
+  )
+  target_link_libraries(test_controller_manager_with_namespaced_controllers
+    controller_manager
+    test_controller
+    ros2_control_test_assets::ros2_control_test_assets
+  )
+
   ament_add_gmock(test_controller_manager_hardware_error_handling
     test/test_controller_manager_hardware_error_handling.cpp
   )
