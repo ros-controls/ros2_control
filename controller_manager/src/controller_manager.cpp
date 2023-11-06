@@ -262,10 +262,10 @@ ControllerManager::ControllerManager(
     RCLCPP_WARN(get_logger(), "'update_rate' parameter not set, using default value.");
   }
 
-  std::string robot_description = "";
+  robot_description_ = "";
   // TODO(destogl): remove support at the end of 2023
-  get_parameter("robot_description", robot_description);
-  if (robot_description.empty())
+  get_parameter("robot_description", robot_description_);
+  if (robot_description_.empty())
   {
     subscribe_to_robot_description_topic();
   }
@@ -275,7 +275,7 @@ ControllerManager::ControllerManager(
       get_logger(),
       "[Deprecated] Passing the robot description parameter directly to the control_manager node "
       "is deprecated. Use '~/robot_description' topic from 'robot_state_publisher' instead.");
-    init_resource_manager(robot_description);
+    init_resource_manager(robot_description_);
   }
 
   diagnostics_updater_.setHardwareID("ros2_control");
@@ -332,6 +332,7 @@ void ControllerManager::robot_description_callback(const std_msgs::msg::String &
   // to die if a non valid urdf is passed. However, should maybe be fine tuned.
   try
   {
+    robot_description_ = robot_description.data;
     if (resource_manager_->is_urdf_already_loaded())
     {
       RCLCPP_WARN(
@@ -340,7 +341,7 @@ void ControllerManager::robot_description_callback(const std_msgs::msg::String &
         "description file.");
       return;
     }
-    init_resource_manager(robot_description.data.c_str());
+    init_resource_manager(robot_description_);
   }
   catch (std::runtime_error & e)
   {
@@ -1290,7 +1291,7 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::add_co
   }
 
   if (
-    controller.c->init(controller.info.name, get_namespace()) ==
+    controller.c->init(controller.info.name, robot_description_, get_namespace()) ==
     controller_interface::return_type::ERROR)
   {
     to.clear();

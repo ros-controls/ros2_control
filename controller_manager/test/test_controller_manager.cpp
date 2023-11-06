@@ -33,6 +33,34 @@ class TestControllerManagerWithStrictness
 {
 };
 
+class TestControllerManagerRobotDescription
+: public ControllerManagerFixture<controller_manager::ControllerManager>
+{
+};
+
+TEST_F(TestControllerManagerRobotDescription, controller_robot_description_update)
+{
+  auto test_controller = std::make_shared<test_controller::TestController>();
+  auto test_controller2 = std::make_shared<test_controller::TestController>();
+  cm_->add_controller(
+    test_controller, test_controller::TEST_CONTROLLER_NAME,
+    test_controller::TEST_CONTROLLER_CLASS_NAME);
+  ASSERT_EQ(ros2_control_test_assets::minimal_robot_urdf, test_controller->get_robot_description());
+
+  // Now change the robot description and then load a new controller and see if the new controller
+  // gets the new description and the old controller still maintains the configuration
+  auto msg = std_msgs::msg::String();
+  msg.data = ros2_control_test_assets::minimal_robot_missing_state_keys_urdf;
+  cm_->robot_description_callback(msg);
+  cm_->add_controller(
+    test_controller2, test_controller::TEST_CONTROLLER2_NAME,
+    test_controller::TEST_CONTROLLER_CLASS_NAME);
+  ASSERT_EQ(ros2_control_test_assets::minimal_robot_urdf, test_controller->get_robot_description());
+  ASSERT_EQ(
+    ros2_control_test_assets::minimal_robot_missing_state_keys_urdf,
+    test_controller2->get_robot_description());
+}
+
 TEST_P(TestControllerManagerWithStrictness, controller_lifecycle)
 {
   const auto test_param = GetParam();
