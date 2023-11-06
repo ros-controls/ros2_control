@@ -1945,75 +1945,40 @@ TEST_F(TestGenericSystem, disabled_commands_flag_is_active)
 
 TEST_F(TestGenericSystem, prepare_command_mode_switch_works_with_all_example_tags)
 {
-  auto check_prepare_command_mode_switch_works = [](const std::string & urdf)
+  auto check_prepare_command_mode_switch = [&](const std::string & urdf)
   {
-    TestableResourceManager rm(urdf);
+    TestableResourceManager rm(
+      ros2_control_test_assets::urdf_head + urdf + ros2_control_test_assets::urdf_tail);
     auto start_interfaces = rm.command_interface_keys();
     std::vector<std::string> stop_interfaces;
     return rm.prepare_command_mode_switch(start_interfaces, stop_interfaces);
   };
 
-  ASSERT_TRUE(check_prepare_command_mode_switch_works(
-    ros2_control_test_assets::urdf_head + hardware_system_2dof_ +
-    ros2_control_test_assets::urdf_tail));
-  ASSERT_TRUE(check_prepare_command_mode_switch_works(
-    ros2_control_test_assets::urdf_head + hardware_system_2dof_asymetric_ +
-    ros2_control_test_assets::urdf_tail));
-  ASSERT_TRUE(check_prepare_command_mode_switch_works(
-    ros2_control_test_assets::urdf_head + hardware_system_2dof_standard_interfaces_ +
-    ros2_control_test_assets::urdf_tail));
-  ASSERT_TRUE(check_prepare_command_mode_switch_works(
-    ros2_control_test_assets::urdf_head + hardware_system_2dof_with_other_interface_ +
-    ros2_control_test_assets::urdf_tail));
-  ASSERT_TRUE(check_prepare_command_mode_switch_works(
-    ros2_control_test_assets::urdf_head + hardware_system_2dof_with_sensor_ +
-    ros2_control_test_assets::urdf_tail));
-  ASSERT_TRUE(check_prepare_command_mode_switch_works(
-    ros2_control_test_assets::urdf_head + hardware_system_2dof_with_sensor_mock_command_ +
-    ros2_control_test_assets::urdf_tail));
-  ASSERT_TRUE(check_prepare_command_mode_switch_works(
-    ros2_control_test_assets::urdf_head + hardware_system_2dof_with_sensor_mock_command_True_ +
-    ros2_control_test_assets::urdf_tail));
-  ASSERT_TRUE(check_prepare_command_mode_switch_works(
-    ros2_control_test_assets::urdf_head + hardware_system_2dof_with_mimic_joint_ +
-    ros2_control_test_assets::urdf_tail));
-  ASSERT_TRUE(check_prepare_command_mode_switch_works(
-    ros2_control_test_assets::urdf_head + hardware_system_2dof_standard_interfaces_with_offset_ +
-    ros2_control_test_assets::urdf_tail));
-  ASSERT_TRUE(check_prepare_command_mode_switch_works(
-    ros2_control_test_assets::urdf_head +
-    hardware_system_2dof_standard_interfaces_with_custom_interface_for_offset_ +
-    ros2_control_test_assets::urdf_tail));
-  ASSERT_TRUE(check_prepare_command_mode_switch_works(
-    ros2_control_test_assets::urdf_head +
-    hardware_system_2dof_standard_interfaces_with_custom_interface_for_offset_missing_ +
-    ros2_control_test_assets::urdf_tail));
-  ASSERT_TRUE(check_prepare_command_mode_switch_works(
-    ros2_control_test_assets::urdf_head + valid_urdf_ros2_control_system_robot_with_gpio_ +
-    ros2_control_test_assets::urdf_tail));
-  ASSERT_TRUE(check_prepare_command_mode_switch_works(
-    ros2_control_test_assets::urdf_head +
-    valid_urdf_ros2_control_system_robot_with_gpio_mock_command_ +
-    ros2_control_test_assets::urdf_tail));
-  ASSERT_TRUE(check_prepare_command_mode_switch_works(
-    ros2_control_test_assets::urdf_head +
-    valid_urdf_ros2_control_system_robot_with_gpio_mock_command_True_ +
-    ros2_control_test_assets::urdf_tail));
-  ASSERT_TRUE(check_prepare_command_mode_switch_works(
-    ros2_control_test_assets::urdf_head + sensor_with_initial_value_ +
-    ros2_control_test_assets::urdf_tail));
-  ASSERT_TRUE(check_prepare_command_mode_switch_works(
-    ros2_control_test_assets::urdf_head + gpio_with_initial_value_ +
-    ros2_control_test_assets::urdf_tail));
-  ASSERT_FALSE(check_prepare_command_mode_switch_works(
-    ros2_control_test_assets::urdf_head +
-    hardware_system_2dof_standard_interfaces_with_different_control_modes_ +
-    ros2_control_test_assets::urdf_tail));
-  ASSERT_TRUE(check_prepare_command_mode_switch_works(
-    ros2_control_test_assets::urdf_head +
-    valid_hardware_system_2dof_standard_interfaces_with_different_control_modes_ +
-    ros2_control_test_assets::urdf_tail));
-  ASSERT_TRUE(check_prepare_command_mode_switch_works(
-    ros2_control_test_assets::urdf_head + disabled_commands_ +
-    ros2_control_test_assets::urdf_tail));
+  ASSERT_TRUE(check_prepare_command_mode_switch(hardware_system_2dof_));
+  ASSERT_TRUE(check_prepare_command_mode_switch(hardware_system_2dof_asymetric_));
+  ASSERT_TRUE(check_prepare_command_mode_switch(hardware_system_2dof_standard_interfaces_));
+  ASSERT_TRUE(check_prepare_command_mode_switch(hardware_system_2dof_with_other_interface_));
+  ASSERT_TRUE(check_prepare_command_mode_switch(hardware_system_2dof_with_sensor_));
+  ASSERT_TRUE(check_prepare_command_mode_switch(hardware_system_2dof_with_sensor_mock_command_));
+  ASSERT_TRUE(
+    check_prepare_command_mode_switch(hardware_system_2dof_with_sensor_mock_command_True_));
+  ASSERT_TRUE(check_prepare_command_mode_switch(hardware_system_2dof_with_mimic_joint_));
+  ASSERT_TRUE(
+    check_prepare_command_mode_switch(hardware_system_2dof_standard_interfaces_with_offset_));
+  ASSERT_TRUE(check_prepare_command_mode_switch(
+    hardware_system_2dof_standard_interfaces_with_custom_interface_for_offset_));
+  ASSERT_TRUE(check_prepare_command_mode_switch(
+    hardware_system_2dof_standard_interfaces_with_custom_interface_for_offset_missing_));
+  ASSERT_TRUE(check_prepare_command_mode_switch(valid_urdf_ros2_control_system_robot_with_gpio_));
+  ASSERT_TRUE(check_prepare_command_mode_switch(
+    valid_urdf_ros2_control_system_robot_with_gpio_mock_command_));
+  ASSERT_TRUE(check_prepare_command_mode_switch(
+    valid_urdf_ros2_control_system_robot_with_gpio_mock_command_True_));
+  ASSERT_TRUE(check_prepare_command_mode_switch(sensor_with_initial_value_));
+  ASSERT_TRUE(check_prepare_command_mode_switch(gpio_with_initial_value_));
+  ASSERT_FALSE(check_prepare_command_mode_switch(
+    hardware_system_2dof_standard_interfaces_with_different_control_modes_));
+  ASSERT_TRUE(check_prepare_command_mode_switch(
+    valid_hardware_system_2dof_standard_interfaces_with_different_control_modes_));
+  ASSERT_TRUE(check_prepare_command_mode_switch(disabled_commands_));
 }
