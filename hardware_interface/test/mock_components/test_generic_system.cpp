@@ -518,6 +518,46 @@ protected:
   </ros2_control>
 )";
 
+    valid_hardware_system_2dof_standard_interfaces_with_different_control_modes_ =
+      R"(
+  <ros2_control name="HardwareSystem2dofStandardInterfacesWithDifferentControlModes" type="system">
+    <hardware>
+      <plugin>mock_components/GenericSystem</plugin>
+      <param name="calculate_dynamics">true</param>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position"/>
+      <state_interface name="position">
+        <param name="initial_value">3.45</param>
+      </state_interface>
+      <state_interface name="velocity"/>
+      <state_interface name="acceleration"/>
+    </joint>
+    <joint name="joint2">
+      <command_interface name="velocity"/>
+      <state_interface name="position">
+        <param name="initial_value">2.78</param>
+      </state_interface>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="acceleration"/>
+    </joint>
+    <joint name="joint3">
+      <command_interface name="acceleration"/>
+      <state_interface name="position">
+        <param name="initial_value">2.78</param>
+      </state_interface>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="acceleration"/>
+    </joint>
+    <gpio name="flange_vacuum">
+      <command_interface name="vacuum"/>
+      <state_interface name="vacuum" data_type="double"/>
+    </gpio>
+  </ros2_control>
+)";
+
     disabled_commands_ =
       R"(
   <ros2_control name="GenericSystem2dof" type="system">
@@ -556,6 +596,7 @@ protected:
   std::string sensor_with_initial_value_;
   std::string gpio_with_initial_value_;
   std::string hardware_system_2dof_standard_interfaces_with_different_control_modes_;
+  std::string valid_hardware_system_2dof_standard_interfaces_with_different_control_modes_;
   std::string disabled_commands_;
 };
 
@@ -1900,4 +1941,44 @@ TEST_F(TestGenericSystem, disabled_commands_flag_is_active)
   ASSERT_EQ(3.45, j1p_s.get_value());
   ASSERT_EQ(0.0, j1v_s.get_value());
   ASSERT_EQ(0.11, j1p_c.get_value());
+}
+
+TEST_F(TestGenericSystem, prepare_command_mode_switch_works_with_all_example_tags)
+{
+  auto check_prepare_command_mode_switch = [&](const std::string & urdf)
+  {
+    TestableResourceManager rm(
+      ros2_control_test_assets::urdf_head + urdf + ros2_control_test_assets::urdf_tail);
+    auto start_interfaces = rm.command_interface_keys();
+    std::vector<std::string> stop_interfaces;
+    return rm.prepare_command_mode_switch(start_interfaces, stop_interfaces);
+  };
+
+  ASSERT_TRUE(check_prepare_command_mode_switch(hardware_system_2dof_));
+  ASSERT_TRUE(check_prepare_command_mode_switch(hardware_system_2dof_asymetric_));
+  ASSERT_TRUE(check_prepare_command_mode_switch(hardware_system_2dof_standard_interfaces_));
+  ASSERT_TRUE(check_prepare_command_mode_switch(hardware_system_2dof_with_other_interface_));
+  ASSERT_TRUE(check_prepare_command_mode_switch(hardware_system_2dof_with_sensor_));
+  ASSERT_TRUE(check_prepare_command_mode_switch(hardware_system_2dof_with_sensor_mock_command_));
+  ASSERT_TRUE(
+    check_prepare_command_mode_switch(hardware_system_2dof_with_sensor_mock_command_True_));
+  ASSERT_TRUE(check_prepare_command_mode_switch(hardware_system_2dof_with_mimic_joint_));
+  ASSERT_TRUE(
+    check_prepare_command_mode_switch(hardware_system_2dof_standard_interfaces_with_offset_));
+  ASSERT_TRUE(check_prepare_command_mode_switch(
+    hardware_system_2dof_standard_interfaces_with_custom_interface_for_offset_));
+  ASSERT_TRUE(check_prepare_command_mode_switch(
+    hardware_system_2dof_standard_interfaces_with_custom_interface_for_offset_missing_));
+  ASSERT_TRUE(check_prepare_command_mode_switch(valid_urdf_ros2_control_system_robot_with_gpio_));
+  ASSERT_TRUE(check_prepare_command_mode_switch(
+    valid_urdf_ros2_control_system_robot_with_gpio_mock_command_));
+  ASSERT_TRUE(check_prepare_command_mode_switch(
+    valid_urdf_ros2_control_system_robot_with_gpio_mock_command_True_));
+  ASSERT_TRUE(check_prepare_command_mode_switch(sensor_with_initial_value_));
+  ASSERT_TRUE(check_prepare_command_mode_switch(gpio_with_initial_value_));
+  ASSERT_FALSE(check_prepare_command_mode_switch(
+    hardware_system_2dof_standard_interfaces_with_different_control_modes_));
+  ASSERT_TRUE(check_prepare_command_mode_switch(
+    valid_hardware_system_2dof_standard_interfaces_with_different_control_modes_));
+  ASSERT_TRUE(check_prepare_command_mode_switch(disabled_commands_));
 }
