@@ -767,8 +767,7 @@ void ResourceManager::load_urdf(const std::string & urdf, bool validate_interfac
   {
     if (individual_hardware_info.type == actuator_type)
     {
-      std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
-      std::lock_guard<std::recursive_mutex> guard_claimed(claimed_command_interfaces_lock_);
+      std::scoped_lock guard(resource_interfaces_lock_, claimed_command_interfaces_lock_);
       resource_storage_->load_and_initialize_actuator(individual_hardware_info);
     }
     if (individual_hardware_info.type == sensor_type)
@@ -778,8 +777,7 @@ void ResourceManager::load_urdf(const std::string & urdf, bool validate_interfac
     }
     if (individual_hardware_info.type == system_type)
     {
-      std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
-      std::lock_guard<std::recursive_mutex> guard_claimed(claimed_command_interfaces_lock_);
+      std::scoped_lock guard(resource_interfaces_lock_, claimed_command_interfaces_lock_);
       resource_storage_->load_and_initialize_system(individual_hardware_info);
     }
   }
@@ -843,8 +841,7 @@ bool ResourceManager::state_interface_is_available(const std::string & name) con
 void ResourceManager::import_controller_reference_interfaces(
   const std::string & controller_name, std::vector<CommandInterface> & interfaces)
 {
-  std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
-  std::lock_guard<std::recursive_mutex> guard_claimed(claimed_command_interfaces_lock_);
+  std::scoped_lock guard(resource_interfaces_lock_, claimed_command_interfaces_lock_);
   auto interface_names = resource_storage_->add_command_interfaces(interfaces);
   resource_storage_->controllers_reference_interfaces_map_[controller_name] = interface_names;
 }
@@ -898,8 +895,7 @@ void ResourceManager::remove_controller_reference_interfaces(const std::string &
     resource_storage_->controllers_reference_interfaces_map_.at(controller_name);
   resource_storage_->controllers_reference_interfaces_map_.erase(controller_name);
 
-  std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
-  std::lock_guard<std::recursive_mutex> guard_claimed(claimed_command_interfaces_lock_);
+  std::scoped_lock guard(resource_interfaces_lock_, claimed_command_interfaces_lock_);
   resource_storage_->remove_command_interfaces(interface_names);
 }
 
