@@ -154,9 +154,6 @@ public:
   unsigned int get_update_rate() const;
 
   CONTROLLER_INTERFACE_PUBLIC
-  unsigned int get_cm_update_rate() const;
-
-  CONTROLLER_INTERFACE_PUBLIC
   bool is_async() const;
 
   CONTROLLER_INTERFACE_PUBLIC
@@ -229,7 +226,6 @@ protected:
   std::vector<hardware_interface::LoanedCommandInterface> command_interfaces_;
   std::vector<hardware_interface::LoanedStateInterface> state_interfaces_;
   unsigned int update_rate_ = 0;
-  unsigned int cm_update_rate_ = 0;
   bool is_async_ = false;
   std::string urdf_ = "";
 
