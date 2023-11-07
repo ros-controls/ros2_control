@@ -44,9 +44,9 @@ TEST(TestableControllerInterface, init)
   // update_rate is set to default 0
   ASSERT_EQ(controller.get_update_rate(), 0u);
 
-  // Even after configure is 0
+  // Even after configure is 10
   controller.configure();
-  ASSERT_EQ(controller.get_update_rate(), 0u);
+  ASSERT_EQ(controller.get_update_rate(), 10u);
 
   rclcpp::shutdown();
 }
