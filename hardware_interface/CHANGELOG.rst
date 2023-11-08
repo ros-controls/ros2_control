@@ -2,6 +2,9 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.34.0 (2023-11-08)
+-------------------
+
 2.33.0 (2023-10-11)
 -------------------
 * [MockHardware] Added dynamic simulation functionality. (`#1028 <https://github.com/ros-controls/ros2_control/issues/1028>`_) (`#1125 <https://github.com/ros-controls/ros2_control/issues/1125>`_)
