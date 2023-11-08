@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.34.0 (2023-11-08)
+-------------------
 * [Humble] Controller sorting (`#1157 <https://github.com/ros-controls/ros2_control/issues/1157>`_)
 * Update spawner to accept controllers list and start them in sequence (backport `#1139 <https://github.com/ros-controls/ros2_control/issues/1139>`_) (`#1149 <https://github.com/ros-controls/ros2_control/issues/1149>`_)
 * Create doc file for chained controllers (backport `#985 <https://github.com/ros-controls/ros2_control/issues/985>`_) (`#1131 <https://github.com/ros-controls/ros2_control/issues/1131>`_)
