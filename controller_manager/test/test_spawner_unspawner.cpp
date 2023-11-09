@@ -29,7 +29,10 @@ using ::testing::_;
 using ::testing::Return;
 
 using namespace std::chrono_literals;
-class TestLoadController : public ControllerManagerFixture<controller_manager::ControllerManager>
+class TestLoadController
+: public ControllerManagerFixture<controller_manager::ControllerManager>,
+  public ::testing::WithParamInterface<
+    std::vector<std::variant<std::string, int, unsigned long, char, uint8_t>>>
 {
   void SetUp() override
   {
@@ -243,22 +246,6 @@ TEST_F(TestLoadController, multi_ctrls_test_type_in_param)
   }
 }
 
-TEST_F(TestLoadController, spawner_test_type_in_arg)
-{
-  // Provide controller type via -t argument
-  EXPECT_EQ(
-    call_spawner(
-      "ctrl_2 -c test_controller_manager -t " +
-      std::string(test_controller::TEST_CONTROLLER_CLASS_NAME)),
-    0);
-
-  ASSERT_EQ(cm_->get_loaded_controllers().size(), 1ul);
-  auto ctrl_2 = cm_->get_loaded_controllers()[0];
-  ASSERT_EQ(ctrl_2.info.name, "ctrl_2");
-  ASSERT_EQ(ctrl_2.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
-  ASSERT_EQ(ctrl_2.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
-}
-
 TEST_F(TestLoadController, unload_on_kill)
 {
   // Launch spawner with unload on kill
@@ -273,4 +260,34 @@ TEST_F(TestLoadController, unload_on_kill)
     << "timeout should have killed spawner and returned non 0 code";
 
   ASSERT_EQ(cm_->get_loaded_controllers().size(), 0ul);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+  SpawnerTestParameterizedAllParameters, TestLoadController,
+  ::testing::Values(std::vector<std::variant<std::string, int, unsigned long, char, uint8_t>>{
+    "ctrl_2 -c test_controller_manager -t " +
+      std::string(test_controller::TEST_CONTROLLER_CLASS_NAME),
+    0, 1ul, "ctrl_2", test_controller::TEST_CONTROLLER_CLASS_NAME,
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE}));
+
+TEST_P(TestLoadController, SpawnerTestAllParameters)
+{
+  auto vector_of_params = GetParam();
+
+  std::string call_spawner_argument = std::get<std::string>(vector_of_params[0]);
+  int call_spawner_return_value = std::get<int>(vector_of_params[1]);
+  unsigned long number_of_loaded_controllers = std::get<unsigned long>(vector_of_params[2]);
+  std::string controller_name = std::get<std::string>(vector_of_params[3]);
+  std::string controller_class_name = std::get<std::string>(vector_of_params[4]);
+  static uint8_t lifecycle_state = std::get<uint8_t>(vector_of_params[5]);
+
+  EXPECT_EQ(
+
+    call_spawner(call_spawner_argument), call_spawner_return_value);
+
+  ASSERT_EQ(cm_->get_loaded_controllers().size(), number_of_loaded_controllers);
+  auto ctrl_2 = cm_->get_loaded_controllers()[0];
+  ASSERT_EQ(ctrl_2.info.name, controller_name);
+  ASSERT_EQ(ctrl_2.info.type, controller_class_name);
+  ASSERT_EQ(ctrl_2.c->get_state().id(), lifecycle_state);
 }
