@@ -32,8 +32,8 @@ TestControllerFailedInit::on_init()
 }
 
 controller_interface::return_type TestControllerFailedInit::init(
-  const std::string & /* controller_name */, const std::string & /*namespace_*/,
-  const rclcpp::NodeOptions & /*node_options*/)
+  const std::string & /* controller_name */, const std::string & /* urdf */,
+  const std::string & /*namespace_*/, const rclcpp::NodeOptions & /*node_options*/)
 {
   return controller_interface::return_type::ERROR;
 }

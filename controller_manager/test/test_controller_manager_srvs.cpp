@@ -261,27 +261,28 @@ TEST_F(TestControllerManagerSrvs, list_chained_controllers_srv)
   // get controller list after configure
   result = call_service_and_wait(*client, request, srv_executor);
   ASSERT_EQ(2u, result->controller.size());
+  // At this stage, the controllers are already reordered
   // check chainable controller
   ASSERT_EQ(result->controller[0].state, "inactive");
   ASSERT_EQ(result->controller[0].claimed_interfaces.size(), 0u);
-  ASSERT_EQ(result->controller[0].required_command_interfaces.size(), 1u);
+  ASSERT_EQ(result->controller[0].required_command_interfaces.size(), 3u);
   ASSERT_EQ(result->controller[0].required_state_interfaces.size(), 2u);
-  ASSERT_EQ(result->controller[0].is_chainable, true);
+  ASSERT_EQ(result->controller[0].is_chainable, false);
   ASSERT_EQ(result->controller[0].is_chained, false);
-  ASSERT_EQ(result->controller[0].reference_interfaces.size(), 2u);
-  ASSERT_EQ("joint1/position", result->controller[0].reference_interfaces[0]);
-  ASSERT_EQ("joint1/velocity", result->controller[0].reference_interfaces[1]);
+  ASSERT_EQ(result->controller[0].reference_interfaces.size(), 0u);
+  ASSERT_EQ(result->controller[0].chain_connections.size(), 1u);
 
-  ASSERT_EQ(result->controller[0].chain_connections.size(), 0u);
   // check test controller
   ASSERT_EQ(result->controller[1].state, "inactive");
   ASSERT_EQ(result->controller[1].claimed_interfaces.size(), 0u);
-  ASSERT_EQ(result->controller[1].required_command_interfaces.size(), 3u);
+  ASSERT_EQ(result->controller[1].required_command_interfaces.size(), 1u);
   ASSERT_EQ(result->controller[1].required_state_interfaces.size(), 2u);
-  ASSERT_EQ(result->controller[1].is_chainable, false);
+  ASSERT_EQ(result->controller[1].is_chainable, true);
   ASSERT_EQ(result->controller[1].is_chained, false);
-  ASSERT_EQ(result->controller[1].reference_interfaces.size(), 0u);
-  ASSERT_EQ(result->controller[1].chain_connections.size(), 1u);
+  ASSERT_EQ(result->controller[1].reference_interfaces.size(), 2u);
+  ASSERT_EQ(result->controller[1].chain_connections.size(), 0u);
+  ASSERT_EQ("joint1/position", result->controller[1].reference_interfaces[0]);
+  ASSERT_EQ("joint1/velocity", result->controller[1].reference_interfaces[1]);
   // activate controllers
   cm_->switch_controller(
     {test_chainable_controller::TEST_CONTROLLER_NAME}, {},
@@ -456,6 +457,47 @@ TEST_F(TestControllerManagerSrvs, unload_controller_srv)
   EXPECT_EQ(0u, cm_->get_loaded_controllers().size());
 }
 
+TEST_F(TestControllerManagerSrvs, robot_description_on_load_and_unload_controller)
+{
+  rclcpp::executors::SingleThreadedExecutor srv_executor;
+  rclcpp::Node::SharedPtr srv_node = std::make_shared<rclcpp::Node>("srv_client");
+  srv_executor.add_node(srv_node);
+  rclcpp::Client<controller_manager_msgs::srv::UnloadController>::SharedPtr unload_client =
+    srv_node->create_client<controller_manager_msgs::srv::UnloadController>(
+      "test_controller_manager/unload_controller");
+
+  auto test_controller = std::make_shared<TestController>();
+  auto abstract_test_controller = cm_->add_controller(
+    test_controller, test_controller::TEST_CONTROLLER_NAME,
+    test_controller::TEST_CONTROLLER_CLASS_NAME);
+  EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
+
+  // check the robot description
+  ASSERT_EQ(ros2_control_test_assets::minimal_robot_urdf, test_controller->get_robot_description());
+
+  // Now change the robot description and then see that the controller maintains the old URDF until
+  // it is unloaded and loaded again
+  auto msg = std_msgs::msg::String();
+  msg.data = ros2_control_test_assets::minimal_robot_missing_state_keys_urdf;
+  cm_->robot_description_callback(msg);
+  ASSERT_EQ(ros2_control_test_assets::minimal_robot_urdf, test_controller->get_robot_description());
+
+  // now unload and load the controller and see if the controller gets the new robot description
+  auto unload_request = std::make_shared<controller_manager_msgs::srv::UnloadController::Request>();
+  unload_request->name = test_controller::TEST_CONTROLLER_NAME;
+  auto result = call_service_and_wait(*unload_client, unload_request, srv_executor, true);
+  EXPECT_EQ(0u, cm_->get_loaded_controllers().size());
+
+  // now load it and check if it got the new robot description
+  cm_->add_controller(
+    test_controller, test_controller::TEST_CONTROLLER_NAME,
+    test_controller::TEST_CONTROLLER_CLASS_NAME);
+  EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
+  ASSERT_EQ(
+    ros2_control_test_assets::minimal_robot_missing_state_keys_urdf,
+    test_controller->get_robot_description());
+}
+
 TEST_F(TestControllerManagerSrvs, configure_controller_srv)
 {
   rclcpp::executors::SingleThreadedExecutor srv_executor;
@@ -603,22 +645,6 @@ TEST_F(TestControllerManagerSrvs, list_sorted_chained_controllers)
   result = call_service_and_wait(*client, request, srv_executor);
   ASSERT_EQ(6u, result->controller.size());
 
-  // activate controllers
-  cm_->switch_controller(
-    {TEST_CHAINED_CONTROLLER_1}, {},
-    controller_manager_msgs::srv::SwitchController::Request::STRICT, true, rclcpp::Duration(0, 0));
-  cm_->switch_controller(
-    {TEST_CHAINED_CONTROLLER_3, TEST_CHAINED_CONTROLLER_5, TEST_CHAINED_CONTROLLER_2,
-     TEST_CHAINED_CONTROLLER_4},
-    {}, controller_manager_msgs::srv::SwitchController::Request::STRICT, true,
-    rclcpp::Duration(0, 0));
-  cm_->switch_controller(
-    {test_controller::TEST_CONTROLLER_NAME}, {},
-    controller_manager_msgs::srv::SwitchController::Request::STRICT, true, rclcpp::Duration(0, 0));
-  // get controller list after activate
-  result = call_service_and_wait(*client, request, srv_executor);
-
-  ASSERT_EQ(6u, result->controller.size());
   // reordered controllers
   ASSERT_EQ(result->controller[0].name, "test_controller_name");
   ASSERT_EQ(result->controller[1].name, TEST_CHAINED_CONTROLLER_5);
@@ -776,25 +802,6 @@ TEST_F(TestControllerManagerSrvs, list_sorted_complex_chained_controllers)
   result = call_service_and_wait(*client, request, srv_executor);
   ASSERT_EQ(8u, result->controller.size());
 
-  // activate controllers
-  cm_->switch_controller(
-    {TEST_CHAINED_CONTROLLER_1}, {},
-    controller_manager_msgs::srv::SwitchController::Request::STRICT, true, rclcpp::Duration(0, 0));
-  cm_->switch_controller(
-    {TEST_CHAINED_CONTROLLER_3}, {},
-    controller_manager_msgs::srv::SwitchController::Request::STRICT, true, rclcpp::Duration(0, 0));
-  cm_->switch_controller(
-    {TEST_CHAINED_CONTROLLER_6, TEST_CHAINED_CONTROLLER_5, TEST_CHAINED_CONTROLLER_2,
-     TEST_CHAINED_CONTROLLER_4, TEST_CHAINED_CONTROLLER_7},
-    {}, controller_manager_msgs::srv::SwitchController::Request::STRICT, true,
-    rclcpp::Duration(0, 0));
-  cm_->switch_controller(
-    {test_controller::TEST_CONTROLLER_NAME}, {},
-    controller_manager_msgs::srv::SwitchController::Request::STRICT, true, rclcpp::Duration(0, 0));
-  // get controller list after activate
-  result = call_service_and_wait(*client, request, srv_executor);
-
-  ASSERT_EQ(8u, result->controller.size());
   // reordered controllers
   ASSERT_EQ(result->controller[0].name, "test_controller_name");
   ASSERT_EQ(result->controller[1].name, TEST_CHAINED_CONTROLLER_7);
@@ -1007,29 +1014,6 @@ TEST_F(TestControllerManagerSrvs, list_sorted_independent_chained_controllers)
 
   // get controller list after configure
   result = call_service_and_wait(*client, request, srv_executor);
-  ASSERT_EQ(10u, result->controller.size());
-
-  // activate controllers
-  cm_->switch_controller(
-    {TEST_CHAINED_CONTROLLER_1}, {},
-    controller_manager_msgs::srv::SwitchController::Request::STRICT, true, rclcpp::Duration(0, 0));
-  cm_->switch_controller(
-    {TEST_CHAINED_CONTROLLER_4}, {},
-    controller_manager_msgs::srv::SwitchController::Request::STRICT, true, rclcpp::Duration(0, 0));
-  cm_->switch_controller(
-    {TEST_CHAINED_CONTROLLER_7}, {},
-    controller_manager_msgs::srv::SwitchController::Request::STRICT, true, rclcpp::Duration(0, 0));
-  cm_->switch_controller(
-    {TEST_CHAINED_CONTROLLER_3, TEST_CHAINED_CONTROLLER_5, TEST_CHAINED_CONTROLLER_2,
-     TEST_CHAINED_CONTROLLER_6, TEST_CHAINED_CONTROLLER_8},
-    {}, controller_manager_msgs::srv::SwitchController::Request::STRICT, true,
-    rclcpp::Duration(0, 0));
-  cm_->switch_controller(
-    {TEST_CONTROLLER_1, TEST_CONTROLLER_2}, {},
-    controller_manager_msgs::srv::SwitchController::Request::STRICT, true, rclcpp::Duration(0, 0));
-  // get controller list after activate
-  result = call_service_and_wait(*client, request, srv_executor);
-
   ASSERT_EQ(10u, result->controller.size());
 
   auto get_ctrl_pos = [result](const std::string & controller_name) -> int
