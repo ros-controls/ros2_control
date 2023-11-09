@@ -27,7 +27,12 @@ Features:
 Parameters
 ,,,,,,,,,,
 
-fake_sensor_commands (optional; boolean; default: false)
+disable_commands (optional; boolean; default: false)
+  Disables mirroring commands to states.
+  This option is helpful to simulate an erroneous connection to the hardware when nothing breaks, but suddenly there is no feedback from a hardware interface.
+  Or it can help you to test your setup when the hardware is running without feedback, i.e., in open loop configuration.
+
+mock_sensor_commands (optional; boolean; default: false)
   Creates fake command interfaces for faking sensor measurements with an external command.
   Those interfaces are usually used by a :ref:`forward controller <forward_command_controller_userdoc>` to provide access from ROS-world.
 
