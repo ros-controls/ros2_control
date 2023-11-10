@@ -2,6 +2,35 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.34.0 (2023-11-08)
+-------------------
+
+2.33.0 (2023-10-11)
+-------------------
+* [MockHardware] Added dynamic simulation functionality. (`#1028 <https://github.com/ros-controls/ros2_control/issues/1028>`_) (`#1125 <https://github.com/ros-controls/ros2_control/issues/1125>`_)
+* Contributors: mergify[bot]
+
+2.32.0 (2023-10-03)
+-------------------
+* Add GPIO tag description to docs (`#1109 <https://github.com/ros-controls/ros2_control/issues/1109>`_) (`#1120 <https://github.com/ros-controls/ros2_control/issues/1120>`_)
+* Contributors: Christoph Froehlich
+
+2.31.0 (2023-09-11)
+-------------------
+
+2.30.0 (2023-08-14)
+-------------------
+* Add checks if hardware is initialized. (backport `#1054 <https://github.com/ros-controls/ros2_control/issues/1054>`_) (`#1081 <https://github.com/ros-controls/ros2_control/issues/1081>`_)
+* Contributors: Denis Stogl
+
+2.29.0 (2023-07-09)
+-------------------
+
+2.28.0 (2023-06-23)
+-------------------
+* Ensure instantiation of hardware classes work for python bindings (`#1058 <https://github.com/ros-controls/ros2_control/issues/1058>`_) (`#1062 <https://github.com/ros-controls/ros2_control/issues/1062>`_)
+* Contributors: Olivier Stasse
+
 2.27.0 (2023-06-14)
 -------------------
 * [MockHardware] Enable disabling of command to simulate HW failures. (backport `#1027 <https://github.com/ros-controls/ros2_control/issues/1027>`_) (`#1050 <https://github.com/ros-controls/ros2_control/issues/1050>`_)

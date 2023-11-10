@@ -22,14 +22,19 @@
 #include <memory>
 #include <string>
 #include <thread>
+#include <utility>
 #include <vector>
 
 #include "controller_interface/controller_interface.hpp"
 
 #include "controller_manager/controller_manager.hpp"
+#include "controller_manager_msgs/srv/list_hardware_interfaces.hpp"
 #include "controller_manager_msgs/srv/switch_controller.hpp"
 
+#include "rclcpp/rclcpp.hpp"
 #include "rclcpp/utilities.hpp"
+
+#include "std_msgs/msg/string.hpp"
 
 #include "ros2_control_test_assets/descriptions.hpp"
 #include "test_controller_failed_init/test_controller_failed_init.hpp"
@@ -60,21 +65,51 @@ template <typename CtrlMgr>
 class ControllerManagerFixture : public ::testing::Test
 {
 public:
+  explicit ControllerManagerFixture(
+    const std::string & robot_description = ros2_control_test_assets::minimal_robot_urdf,
+    const bool & pass_urdf_as_parameter = false)
+  : robot_description_(robot_description), pass_urdf_as_parameter_(pass_urdf_as_parameter)
+  {
+    executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
+    // We want to be able to create a ResourceManager where no urdf file has been passed to
+    if (robot_description_.empty())
+    {
+      cm_ = std::make_shared<CtrlMgr>(
+        std::make_unique<hardware_interface::ResourceManager>(), executor_, TEST_CM_NAME);
+    }
+    else
+    {
+      // can be removed later, needed if we want to have the deprecated way of passing the robot
+      // description file to the controller manager covered by tests
+      if (pass_urdf_as_parameter_)
+      {
+        cm_ = std::make_shared<CtrlMgr>(
+          std::make_unique<hardware_interface::ResourceManager>(robot_description_, true, true),
+          executor_, TEST_CM_NAME);
+      }
+      else
+      {
+        // TODO(Manuel) : passing via topic not working in test setup, tested cm does
+        // not receive msg. Have to check this...
+
+        // this is just a workaround to skip passing
+        cm_ = std::make_shared<CtrlMgr>(
+          std::make_unique<hardware_interface::ResourceManager>(), executor_, TEST_CM_NAME);
+        // mimic topic call
+        auto msg = std_msgs::msg::String();
+        msg.data = robot_description_;
+        cm_->robot_description_callback(msg);
+      }
+    }
+  }
+
   static void SetUpTestCase() { rclcpp::init(0, nullptr); }
 
   static void TearDownTestCase() { rclcpp::shutdown(); }
 
-  void SetUp()
-  {
-    executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
-    cm_ = std::make_shared<CtrlMgr>(
-      std::make_unique<hardware_interface::ResourceManager>(
-        ros2_control_test_assets::minimal_robot_urdf, true, true),
-      executor_, TEST_CM_NAME);
-    run_updater_ = false;
-  }
+  void SetUp() override { run_updater_ = false; }
 
-  void TearDown() { stopCmUpdater(); }
+  void TearDown() override { stopCmUpdater(); }
 
   void startCmUpdater()
   {
@@ -121,6 +156,8 @@ public:
 
   std::thread updater_;
   bool run_updater_;
+  const std::string robot_description_;
+  const bool pass_urdf_as_parameter_;
 };
 
 class TestControllerManagerSrvs

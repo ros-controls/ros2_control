@@ -45,12 +45,37 @@ using ros2_control_test_assets::TEST_SYSTEM_HARDWARE_NAME;
 using ros2_control_test_assets::TEST_SYSTEM_HARDWARE_STATE_INTERFACES;
 using ros2_control_test_assets::TEST_SYSTEM_HARDWARE_TYPE;
 
-class TestResourceManager : public ::testing::Test
+class ResourceManagerTest : public ::testing::Test
 {
 public:
   static void SetUpTestCase() {}
 
   void SetUp() {}
+};
+
+// Forward declaration
+namespace hardware_interface
+{
+class ResourceStorage;
+}
+
+class TestableResourceManager : public hardware_interface::ResourceManager
+{
+public:
+  friend ResourceManagerTest;
+
+  FRIEND_TEST(ResourceManagerTest, initialization_with_urdf_manual_validation);
+  FRIEND_TEST(ResourceManagerTest, post_initialization_add_components);
+  FRIEND_TEST(ResourceManagerTest, managing_controllers_reference_interfaces);
+  FRIEND_TEST(ResourceManagerTest, resource_availability_and_claiming_in_lifecycle);
+
+  TestableResourceManager() : hardware_interface::ResourceManager() {}
+
+  TestableResourceManager(
+    const std::string & urdf, bool validate_interfaces = true, bool activate_all = false)
+  : hardware_interface::ResourceManager(urdf, validate_interfaces, activate_all)
+  {
+  }
 };
 
 std::vector<hardware_interface::return_type> set_components_state(
@@ -112,24 +137,24 @@ auto shutdown_components =
     hardware_interface::lifecycle_state_names::FINALIZED);
 };
 
-TEST_F(TestResourceManager, initialization_empty)
+TEST_F(ResourceManagerTest, initialization_empty)
 {
   ASSERT_ANY_THROW(hardware_interface::ResourceManager rm(""));
 }
 
-TEST_F(TestResourceManager, initialization_with_urdf)
+TEST_F(ResourceManagerTest, initialization_with_urdf)
 {
   ASSERT_NO_THROW(
     hardware_interface::ResourceManager rm(ros2_control_test_assets::minimal_robot_urdf));
 }
 
-TEST_F(TestResourceManager, post_initialization_with_urdf)
+TEST_F(ResourceManagerTest, post_initialization_with_urdf)
 {
   hardware_interface::ResourceManager rm;
   ASSERT_NO_THROW(rm.load_urdf(ros2_control_test_assets::minimal_robot_urdf));
 }
 
-TEST_F(TestResourceManager, initialization_with_urdf_manual_validation)
+TEST_F(ResourceManagerTest, initialization_with_urdf_manual_validation)
 {
   // we validate the results manually
   hardware_interface::ResourceManager rm(ros2_control_test_assets::minimal_robot_urdf, false);
@@ -153,7 +178,7 @@ TEST_F(TestResourceManager, initialization_with_urdf_manual_validation)
   EXPECT_TRUE(rm.command_interface_exists("joint3/velocity"));
 }
 
-TEST_F(TestResourceManager, initialization_with_wrong_urdf)
+TEST_F(ResourceManagerTest, when_missing_state_keys_expect_hw_initialization_fails)
 {
   // missing state keys
   {
@@ -162,6 +187,10 @@ TEST_F(TestResourceManager, initialization_with_wrong_urdf)
         ros2_control_test_assets::minimal_robot_missing_state_keys_urdf),
       std::exception);
   }
+}
+
+TEST_F(ResourceManagerTest, when_missing_command_keys_expect_hw_initialization_fails)
+{
   // missing command keys
   {
     EXPECT_THROW(
@@ -171,7 +200,7 @@ TEST_F(TestResourceManager, initialization_with_wrong_urdf)
   }
 }
 
-TEST_F(TestResourceManager, initialization_with_urdf_unclaimed)
+TEST_F(ResourceManagerTest, initialization_with_urdf_unclaimed)
 {
   // we validate the results manually
   hardware_interface::ResourceManager rm(ros2_control_test_assets::minimal_robot_urdf);
@@ -190,7 +219,35 @@ TEST_F(TestResourceManager, initialization_with_urdf_unclaimed)
   }
 }
 
-TEST_F(TestResourceManager, resource_claiming)
+TEST_F(ResourceManagerTest, no_load_urdf_function_called)
+{
+  TestableResourceManager rm;
+  ASSERT_FALSE(rm.is_urdf_already_loaded());
+}
+
+TEST_F(ResourceManagerTest, load_urdf_called_if_urdf_is_invalid)
+{
+  TestableResourceManager rm;
+  EXPECT_THROW(
+    rm.load_urdf(ros2_control_test_assets::minimal_robot_missing_state_keys_urdf), std::exception);
+  ASSERT_TRUE(rm.is_urdf_already_loaded());
+}
+
+TEST_F(ResourceManagerTest, load_urdf_called_if_urdf_is_valid)
+{
+  TestableResourceManager rm(ros2_control_test_assets::minimal_robot_urdf);
+  ASSERT_TRUE(rm.is_urdf_already_loaded());
+}
+
+TEST_F(ResourceManagerTest, can_load_urdf_later)
+{
+  TestableResourceManager rm;
+  ASSERT_FALSE(rm.is_urdf_already_loaded());
+  rm.load_urdf(ros2_control_test_assets::minimal_robot_urdf);
+  ASSERT_TRUE(rm.is_urdf_already_loaded());
+}
+
+TEST_F(ResourceManagerTest, resource_claiming)
 {
   hardware_interface::ResourceManager rm(ros2_control_test_assets::minimal_robot_urdf);
   // Activate components to get all interfaces available
@@ -301,7 +358,7 @@ class ExternalComponent : public hardware_interface::ActuatorInterface
   }
 };
 
-TEST_F(TestResourceManager, post_initialization_add_components)
+TEST_F(ResourceManagerTest, post_initialization_add_components)
 {
   // we validate the results manually
   hardware_interface::ResourceManager rm(ros2_control_test_assets::minimal_robot_urdf, false);
@@ -345,7 +402,7 @@ TEST_F(TestResourceManager, post_initialization_add_components)
   EXPECT_NO_THROW(rm.claim_command_interface("external_joint/external_command_interface"));
 }
 
-TEST_F(TestResourceManager, default_prepare_perform_switch)
+TEST_F(ResourceManagerTest, default_prepare_perform_switch)
 {
   hardware_interface::ResourceManager rm(ros2_control_test_assets::minimal_robot_urdf);
   // Activate components to get all interfaces available
@@ -379,7 +436,7 @@ const auto command_mode_urdf = std::string(ros2_control_test_assets::urdf_head) 
                                std::string(hardware_resources_command_modes) +
                                std::string(ros2_control_test_assets::urdf_tail);
 
-TEST_F(TestResourceManager, custom_prepare_perform_switch)
+TEST_F(ResourceManagerTest, custom_prepare_perform_switch)
 {
   hardware_interface::ResourceManager rm(command_mode_urdf);
   // Scenarios defined by example criteria
@@ -415,7 +472,7 @@ TEST_F(TestResourceManager, custom_prepare_perform_switch)
   EXPECT_FALSE(rm.perform_command_mode_switch(empty_keys, legal_keys_position));
 }
 
-TEST_F(TestResourceManager, resource_status)
+TEST_F(ResourceManagerTest, resource_status)
 {
   hardware_interface::ResourceManager rm(ros2_control_test_assets::minimal_robot_urdf);
 
@@ -487,7 +544,7 @@ TEST_F(TestResourceManager, resource_status)
     status_map[TEST_SYSTEM_HARDWARE_NAME].state_interfaces, TEST_SYSTEM_HARDWARE_STATE_INTERFACES);
 }
 
-TEST_F(TestResourceManager, lifecycle_all_resources)
+TEST_F(ResourceManagerTest, lifecycle_all_resources)
 {
   hardware_interface::ResourceManager rm(ros2_control_test_assets::minimal_robot_urdf);
 
@@ -630,7 +687,7 @@ TEST_F(TestResourceManager, lifecycle_all_resources)
   }
 }
 
-TEST_F(TestResourceManager, lifecycle_individual_resources)
+TEST_F(ResourceManagerTest, lifecycle_individual_resources)
 {
   hardware_interface::ResourceManager rm(ros2_control_test_assets::minimal_robot_urdf);
 
@@ -842,7 +899,7 @@ TEST_F(TestResourceManager, lifecycle_individual_resources)
   }
 }
 
-TEST_F(TestResourceManager, resource_availability_and_claiming_in_lifecycle)
+TEST_F(ResourceManagerTest, resource_availability_and_claiming_in_lifecycle)
 {
   using std::placeholders::_1;
   hardware_interface::ResourceManager rm(ros2_control_test_assets::minimal_robot_urdf);
@@ -1216,7 +1273,7 @@ TEST_F(TestResourceManager, resource_availability_and_claiming_in_lifecycle)
   }
 }
 
-TEST_F(TestResourceManager, managing_controllers_reference_interfaces)
+TEST_F(ResourceManagerTest, managing_controllers_reference_interfaces)
 {
   hardware_interface::ResourceManager rm(ros2_control_test_assets::minimal_robot_urdf);
 
