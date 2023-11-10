@@ -31,8 +31,7 @@ using ::testing::Return;
 using namespace std::chrono_literals;
 class TestLoadController
 : public ControllerManagerFixture<controller_manager::ControllerManager>,
-  public ::testing::WithParamInterface<
-    std::vector<std::variant<std::string, int, unsigned long, char, uint8_t>>>
+  public ::testing::WithParamInterface<std::vector<std::variant<std::string, int, char, uint8_t>>>
 {
   void SetUp() override
   {
@@ -264,10 +263,10 @@ TEST_F(TestLoadController, unload_on_kill)
 
 INSTANTIATE_TEST_SUITE_P(
   SpawnerTestParameterizedAllParameters, TestLoadController,
-  ::testing::Values(std::vector<std::variant<std::string, int, unsigned long, char, uint8_t>>{
+  ::testing::Values(std::vector<std::variant<std::string, int, char, uint8_t>>{
     "ctrl_2 -c test_controller_manager -t " +
       std::string(test_controller::TEST_CONTROLLER_CLASS_NAME),
-    0, 1ul, "ctrl_2", test_controller::TEST_CONTROLLER_CLASS_NAME,
+    0, 1, "ctrl_2", test_controller::TEST_CONTROLLER_CLASS_NAME,
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE}));
 
 TEST_P(TestLoadController, SpawnerTestAllParameters)
@@ -276,7 +275,7 @@ TEST_P(TestLoadController, SpawnerTestAllParameters)
 
   std::string call_spawner_argument = std::get<std::string>(vector_of_params[0]);
   int call_spawner_return_value = std::get<int>(vector_of_params[1]);
-  unsigned long number_of_loaded_controllers = std::get<unsigned long>(vector_of_params[2]);
+  int number_of_loaded_controllers = std::get<int>(vector_of_params[2]);
   std::string controller_name = std::get<std::string>(vector_of_params[3]);
   std::string controller_class_name = std::get<std::string>(vector_of_params[4]);
   static uint8_t lifecycle_state = std::get<uint8_t>(vector_of_params[5]);
