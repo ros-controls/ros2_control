@@ -22,17 +22,17 @@
 namespace transmission_interface
 {
 /** A handle used to get and set a value on a given actuator interface. */
-class ActuatorHandle : public hardware_interface::ReadWriteHandle
+class ActuatorHandle : public hardware_interface::ReadWriteHandle<double>
 {
 public:
-  using hardware_interface::ReadWriteHandle::ReadWriteHandle;
+  using hardware_interface::ReadWriteHandle<double>::ReadWriteHandle;
 };
 
 /** A handle used to get and set a value on a given joint interface. */
-class JointHandle : public hardware_interface::ReadWriteHandle
+class JointHandle : public hardware_interface::ReadWriteHandle<double>
 {
 public:
-  using hardware_interface::ReadWriteHandle::ReadWriteHandle;
+  using hardware_interface::ReadWriteHandle<double>::ReadWriteHandle;
 };
 
 }  // namespace transmission_interface

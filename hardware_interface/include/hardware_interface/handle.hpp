@@ -17,6 +17,8 @@
 
 #include <string>
 #include <utility>
+#include <atomic>
+#include <limits>
 
 #include "hardware_interface/macros.hpp"
 #include "hardware_interface/visibility_control.h"
@@ -24,28 +26,31 @@
 namespace hardware_interface
 {
 /// A handle used to get and set a value on a given interface.
+
+
+template <typename T>
 class ReadOnlyHandle
 {
+  static_assert(std::is_floating_point<T>::value || std::is_same<T, std::atomic<double>>::value, "Invalid template argument for class ReadOnlyHandle. Only floating point, and atomic double types are supported for now.");
 public:
   ReadOnlyHandle(
     const std::string & prefix_name, const std::string & interface_name,
-    double * value_ptr = nullptr)
+    T* value_ptr = nullptr)
   : prefix_name_(prefix_name), interface_name_(interface_name), value_ptr_(value_ptr)
   {
   }
 
   explicit ReadOnlyHandle(const std::string & interface_name)
-  : interface_name_(interface_name), value_ptr_(nullptr)
+  : interface_name_(interface_name), value_ptr_((T*)nullptr)
   {
   }
 
   explicit ReadOnlyHandle(const char * interface_name)
-  : interface_name_(interface_name), value_ptr_(nullptr)
+  : interface_name_(interface_name), value_ptr_((T*)nullptr)
   {
   }
 
-  ReadOnlyHandle(const ReadOnlyHandle & other) = default;
-
+  ReadOnlyHandle(const ReadOnlyHandle & other)  = default;
   ReadOnlyHandle(ReadOnlyHandle && other) = default;
 
   ReadOnlyHandle & operator=(const ReadOnlyHandle & other) = default;
@@ -70,60 +75,82 @@ public:
 
   const std::string & get_prefix_name() const { return prefix_name_; }
 
-  double get_value() const
-  {
+  template <typename U = T>
+  typename std::enable_if_t<std::is_floating_point<U>::value, U> get_value() const
+  {    
     THROW_ON_NULLPTR(value_ptr_);
     return *value_ptr_;
+  }
+
+  template<typename U = T>
+  typename std::enable_if_t<std::is_same<U, std::atomic<double>>::value, double> get_value() const
+  {
+    THROW_ON_NULLPTR(value_ptr_);
+    return value_ptr_->load(std::memory_order_relaxed);
   }
 
 protected:
   std::string prefix_name_;
   std::string interface_name_;
-  double * value_ptr_;
+
+  T* value_ptr_;
+
 };
 
-class ReadWriteHandle : public ReadOnlyHandle
+template <typename T>
+class ReadWriteHandle : public ReadOnlyHandle<T>
 {
+  static_assert(std::is_floating_point<T>::value || std::is_same<T, std::atomic<double>>::value, "Invalid template argument for class ReadWriteHandle. Only floating point, and atomic double types are supported for now.");
 public:
   ReadWriteHandle(
     const std::string & prefix_name, const std::string & interface_name,
-    double * value_ptr = nullptr)
-  : ReadOnlyHandle(prefix_name, interface_name, value_ptr)
+    T * value_ptr = nullptr)
+  : ReadOnlyHandle<T>(prefix_name, interface_name, value_ptr)
   {
   }
 
-  explicit ReadWriteHandle(const std::string & interface_name) : ReadOnlyHandle(interface_name) {}
+  explicit ReadWriteHandle(const std::string & interface_name) : ReadOnlyHandle<T>(interface_name) {}
 
-  explicit ReadWriteHandle(const char * interface_name) : ReadOnlyHandle(interface_name) {}
+  explicit ReadWriteHandle(const char * interface_name) : ReadOnlyHandle<T>(interface_name) {}
 
-  ReadWriteHandle(const ReadWriteHandle & other) = default;
+  ReadWriteHandle(const ReadWriteHandle & other) : ReadOnlyHandle<T>(other) {}
 
-  ReadWriteHandle(ReadWriteHandle && other) = default;
+  ReadWriteHandle(ReadWriteHandle && other) : ReadOnlyHandle<T>(other) {}
 
-  ReadWriteHandle & operator=(const ReadWriteHandle & other) = default;
+  ReadWriteHandle & operator=(const ReadWriteHandle & other)  = default;
 
   ReadWriteHandle & operator=(ReadWriteHandle && other) = default;
 
   virtual ~ReadWriteHandle() = default;
 
-  void set_value(double value)
+  template <typename U = T>
+  std::enable_if_t<std::is_floating_point<U>::value, void> set_value(T value)
   {
-    THROW_ON_NULLPTR(this->value_ptr_);
-    *this->value_ptr_ = value;
+      //THROW_ON_NULLPTR(std::get<1>(ReadOnlyHandle<T>::value_ptr_));
+      //std::get<1>(ReadOnlyHandle<T>::value_ptr_)->store(value, std::memory_order_relaxed);
+      THROW_ON_NULLPTR(ReadOnlyHandle<T>::value_ptr_);
+      *(ReadOnlyHandle<T>::value_ptr_) = value;
+  }
+
+  template <typename U = T>
+  std::enable_if_t<std::is_same<U, std::atomic<double>>::value, void> set_value(T value)
+  {
+      THROW_ON_NULLPTR(ReadOnlyHandle<T>::value_ptr_);
+      ReadOnlyHandle<T>::value_ptr_->store(value, std::memory_order_relaxed);
   }
 };
 
-class StateInterface : public ReadOnlyHandle
+class StateInterface : public ReadOnlyHandle<double>
 {
 public:
   StateInterface(const StateInterface & other) = default;
 
   StateInterface(StateInterface && other) = default;
 
-  using ReadOnlyHandle::ReadOnlyHandle;
+  using ReadOnlyHandle<double>::ReadOnlyHandle;
 };
 
-class CommandInterface : public ReadWriteHandle
+class CommandInterface : public ReadWriteHandle<double>
 {
 public:
   /// CommandInterface copy constructor is actively deleted.
@@ -136,8 +163,35 @@ public:
 
   CommandInterface(CommandInterface && other) = default;
 
-  using ReadWriteHandle::ReadWriteHandle;
+  using ReadWriteHandle<double>::ReadWriteHandle;
 };
+
+class AsyncStateInterface : public ReadOnlyHandle<std::atomic<double>>
+{
+public:
+  AsyncStateInterface(const AsyncStateInterface & other) = default;
+
+  AsyncStateInterface(AsyncStateInterface && other) = default;
+
+  using ReadOnlyHandle<std::atomic<double>>::ReadOnlyHandle;
+};
+
+class AsyncCommandInterface : public ReadWriteHandle<std::atomic<double>>
+{
+public:
+  /// CommandInterface copy constructor is actively deleted.
+  /**
+   * Command interfaces are having a unique ownership and thus
+   * can't be copied in order to avoid simultaneous writes to
+   * the same resource.
+   */
+  AsyncCommandInterface(const AsyncCommandInterface & other) = delete;
+
+  AsyncCommandInterface(AsyncCommandInterface && other) = default;
+
+  using ReadWriteHandle<std::atomic<double>>::ReadWriteHandle;
+};
+
 
 }  // namespace hardware_interface
 
