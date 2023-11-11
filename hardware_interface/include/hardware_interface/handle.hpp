@@ -126,8 +126,6 @@ public:
   template <typename U = T>
   std::enable_if_t<std::is_floating_point<U>::value, void> set_value(T value)
   {
-      //THROW_ON_NULLPTR(std::get<1>(ReadOnlyHandle<T>::value_ptr_));
-      //std::get<1>(ReadOnlyHandle<T>::value_ptr_)->store(value, std::memory_order_relaxed);
       THROW_ON_NULLPTR(ReadOnlyHandle<T>::value_ptr_);
       *(ReadOnlyHandle<T>::value_ptr_) = value;
   }
