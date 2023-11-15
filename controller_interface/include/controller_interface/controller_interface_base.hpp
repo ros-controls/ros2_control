@@ -115,8 +115,7 @@ public:
   CONTROLLER_INTERFACE_PUBLIC
   virtual return_type init(
     const std::string & controller_name, const std::string & urdf, unsigned int cm_update_rate,
-    const std::string & node_namespace = "",
-    const rclcpp::NodeOptions & node_options = rclcpp::NodeOptions().enable_logger_service(true));
+    const std::string & node_namespace = "");
 
   /// Custom configure method to read additional parameters for controller-nodes
   /*
@@ -158,6 +157,12 @@ public:
 
   CONTROLLER_INTERFACE_PUBLIC
   const std::string & get_robot_description() const;
+
+  CONTROLLER_INTERFACE_PUBLIC
+  virtual rclcpp::NodeOptions get_node_options() const
+  {
+    return rclcpp::NodeOptions().enable_logger_service(true);
+  }
 
   /// Declare and initialize a parameter with a type.
   /**
