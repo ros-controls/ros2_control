@@ -41,13 +41,9 @@ public:
 
   controller_interface::return_type init(
     const std::string & controller_name, const std::string & urdf, unsigned int cm_update_rate,
-    const std::string & node_namespace = "",
-    const rclcpp::NodeOptions & node_options =
-      rclcpp::NodeOptions()
-        .allow_undeclared_parameters(true)
-        .automatically_declare_parameters_from_overrides(true)) override
+    const std::string & node_namespace = "") override
   {
-    ControllerInterface::init(controller_name, urdf, cm_update_rate, node_namespace, node_options);
+    ControllerInterface::init(controller_name, urdf, cm_update_rate, node_namespace);
 
     switch (on_init())
     {
@@ -66,6 +62,13 @@ public:
     {
       return controller_interface::return_type::ERROR;
     }
+  }
+
+  rclcpp::NodeOptions get_node_options() const override
+  {
+    return rclcpp::NodeOptions()
+      .allow_undeclared_parameters(true)
+      .automatically_declare_parameters_from_overrides(true);
   }
 
   controller_interface::InterfaceConfiguration command_interface_configuration() const override
