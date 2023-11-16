@@ -187,6 +187,7 @@ protected:
    * \param[in] current_joint_states current joint states a robot is in.
    * \param[out] desired_joint_states joint state that should be adjusted to obey the limits.
    * \param[in] dt time delta to calculate missing integrals and derivation in joint limits.
+   * \returns true if limits are enforced, otherwise false.
    */
   JOINT_LIMITS_PUBLIC virtual bool on_enforce(
     trajectory_msgs::msg::JointTrajectoryPoint & current_joint_states,

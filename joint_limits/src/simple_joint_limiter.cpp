@@ -22,6 +22,7 @@
 #include "rcutils/logging_macros.h"
 
 constexpr size_t ROS_LOG_THROTTLE_PERIOD = 1 * 1000;  // Milliseconds to throttle logs inside loops
+constexpr double VALUE_CONSIDERED_ZERO = 1e-10;
 
 namespace joint_limits
 {
@@ -30,6 +31,8 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
   trajectory_msgs::msg::JointTrajectoryPoint & current_joint_states,
   trajectory_msgs::msg::JointTrajectoryPoint & desired_joint_states, const rclcpp::Duration & dt)
 {
+  bool limits_enforced = false;
+
   const auto dt_seconds = dt.seconds();
   // negative or null is not allowed
   if (dt_seconds <= 0.0) return false;
@@ -85,10 +88,10 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
       desired_acc[index] = desired_joint_states.accelerations[index];
     }
 
-    // limit position
-    if (joint_limits_[index].has_position_limits)
+    if (has_pos_cmd)
     {
-      if (has_pos_cmd)
+      // limit position
+      if (joint_limits_[index].has_position_limits)
       {
         // clamp input pos_cmd
         auto pos = std::clamp(
@@ -97,14 +100,20 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
         {
           desired_pos[index] = pos;
           limited_jnts_pos.emplace_back(joint_names_[index]);
+          limits_enforced = true;
         }
-        // priority to pos_cmd derivative over cmd_vel because we always have a pos_state so
-        // recomputing vel_cmd is fine compute expected_vel with already clamped pos_cmd and
-        // pos_state
-        // TODO(destogl) handle the case of continuous joints with angle_wraparound to compute vel
-        // correctly
-        desired_vel[index] =
-          (desired_pos[index] - current_joint_states.positions[index]) / dt_seconds;
+      }
+      // priority to pos_cmd derivative over cmd_vel when not defined. If done always then we might
+      // get jumps in the velocity based on the system's dynamics. Position limit clamping is done
+      // below once again.
+      // TODO(destogl) handle the case of continuous joints with angle_wraparound to compute vel
+      // correctly
+      const double position_difference = desired_pos[index] - current_joint_states.positions[index];
+      if (
+        std::fabs(position_difference) > VALUE_CONSIDERED_ZERO &&
+        std::fabs(desired_vel[index]) <= VALUE_CONSIDERED_ZERO)
+      {
+        desired_vel[index] = position_difference / dt_seconds;
       }
     }
 
@@ -116,13 +125,13 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
       {
         desired_vel[index] = std::copysign(joint_limits_[index].max_velocity, desired_vel[index]);
         limited_jnts_vel.emplace_back(joint_names_[index]);
+        limits_enforced = true;
 
         // recompute pos_cmd if needed
         if (has_pos_cmd)
         {
           desired_pos[index] =
             current_joint_states.positions[index] + desired_vel[index] * dt_seconds;
-          limited_jnts_pos.emplace_back(joint_names_[index]);
         }
 
         // compute desired_acc when velocity is limited
@@ -147,6 +156,7 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
           {
             acc[index] = std::copysign(max_acc_or_dec, acc[index]);
             limited_jnts.emplace_back(joint_names_[index]);
+            limits_enforced = true;
             return true;
           }
           else
@@ -222,6 +232,7 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
           desired_vel[index] =
             (expected_pos[index] - current_joint_states.positions[index]) / dt_seconds;
           limited_jnts_pos.emplace_back(joint_names_[index]);
+          limits_enforced = true;
         }
       }
 
@@ -261,6 +272,7 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
       {
         limited_jnts_pos.emplace_back(joint_names_[index]);
         braking_near_position_limit_triggered = true;
+        limits_enforced = true;
       }
       else
       {
@@ -278,6 +290,7 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
         {
           limited_jnts_pos.emplace_back(joint_names_[index]);
           braking_near_position_limit_triggered = true;
+          limits_enforced = true;
         }
         // else no need to slow down. in worse case we won't hit the limit at current velocity
       }
@@ -374,7 +387,8 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
   if (has_pos_cmd) desired_joint_states.positions = desired_pos;
   if (has_vel_cmd) desired_joint_states.velocities = desired_vel;
   if (has_acc_cmd) desired_joint_states.accelerations = desired_acc;
-  return true;
+
+  return limits_enforced;
 }
 
 }  // namespace joint_limits
