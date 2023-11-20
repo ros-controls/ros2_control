@@ -158,6 +158,12 @@ public:
   CONTROLLER_INTERFACE_PUBLIC
   const std::string & get_robot_description() const;
 
+  /**
+   * Method used by the `init` method to instantiate the Lifecycle node of the controller upon
+   * loading the controller
+   *
+   * @returns NodeOptions required for the configuration of the controller lifecycle node
+   */
   CONTROLLER_INTERFACE_PUBLIC
   virtual rclcpp::NodeOptions get_node_options() const
   {
