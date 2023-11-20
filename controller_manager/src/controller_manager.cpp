@@ -741,7 +741,7 @@ controller_interface::return_type ControllerManager::configure_controller(
       "update rate.",
       controller_name.c_str(), controller_update_rate, cm_update_rate);
   }
-  else if (controller_update_rate != 0 && cm_update_rate % controller_update_rate != 0)
+  else if (cm_update_rate % controller_update_rate != 0)
   {
     RCLCPP_WARN(
       get_logger(),
@@ -1296,7 +1296,8 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::add_co
   }
 
   if (
-    controller.c->init(controller.info.name, robot_description_, get_namespace()) ==
+    controller.c->init(
+      controller.info.name, robot_description_, get_update_rate(), get_namespace()) ==
     controller_interface::return_type::ERROR)
   {
     to.clear();
@@ -2045,8 +2046,7 @@ controller_interface::return_type ControllerManager::update(
     if (!loaded_controller.c->is_async() && is_controller_active(*loaded_controller.c))
     {
       const auto controller_update_rate = loaded_controller.c->get_update_rate();
-      const bool run_controller_at_cm_rate =
-        (controller_update_rate == 0) || (controller_update_rate >= update_rate_);
+      const bool run_controller_at_cm_rate = (controller_update_rate >= update_rate_);
       const auto controller_period =
         run_controller_at_cm_rate ? period
                                   : rclcpp::Duration::from_seconds((1.0 / controller_update_rate));
