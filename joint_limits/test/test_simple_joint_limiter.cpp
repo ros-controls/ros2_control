@@ -74,7 +74,7 @@ TEST_F(SimpleJointLimiterTest, when_neigher_poscmd_nor_velcmd_expect_enforce_fai
   }
 }
 
-TEST_F(SimpleJointLimiterTest, when_no_posstate_expect_enforce_fail)
+TEST_F(SimpleJointLimiterTest, when_no_posstate_expect_enforce_false)
 {
   SetupNode("simple_joint_limiter");
   Load();
@@ -88,10 +88,14 @@ TEST_F(SimpleJointLimiterTest, when_no_posstate_expect_enforce_fail)
     // test no position interface
     current_joint_states_.positions.clear();
     ASSERT_FALSE(joint_limiter_->enforce(current_joint_states_, desired_joint_states_, period));
+
+    // also fail if out fo limits
+    desired_joint_states_.positions[0] = 20.0;
+    ASSERT_FALSE(joint_limiter_->enforce(current_joint_states_, desired_joint_states_, period));
   }
 }
 
-TEST_F(SimpleJointLimiterTest, when_no_velstate_expect_enforce_succeed)
+TEST_F(SimpleJointLimiterTest, when_no_velstate_expect_limiting)
 {
   SetupNode("simple_joint_limiter");
   Load();
@@ -104,6 +108,9 @@ TEST_F(SimpleJointLimiterTest, when_no_velstate_expect_enforce_succeed)
     rclcpp::Duration period(1, 0);  // 1 second
     // test no vel interface
     current_joint_states_.velocities.clear();
+    ASSERT_FALSE(joint_limiter_->enforce(current_joint_states_, desired_joint_states_, period));
+    // also fail if out fo limits
+    desired_joint_states_.positions[0] = 20.0;
     ASSERT_TRUE(joint_limiter_->enforce(current_joint_states_, desired_joint_states_, period));
   }
 }
@@ -124,7 +131,7 @@ TEST_F(SimpleJointLimiterTest, when_within_limits_expect_no_limits_applied)
     // within limits
     desired_joint_states_.positions[0] = 1.0;
     desired_joint_states_.velocities[0] = 1.0;  // valid pos derivatite as well
-    ASSERT_TRUE(joint_limiter_->enforce(current_joint_states_, desired_joint_states_, period));
+    ASSERT_FALSE(joint_limiter_->enforce(current_joint_states_, desired_joint_states_, period));
 
     // check if no limits applied
     CHECK_STATE_SINGLE_JOINT(
@@ -313,10 +320,12 @@ TEST_F(SimpleJointLimiterTest, when_position_close_to_pos_limit_expect_decelerat
     desired_joint_states_.velocities[0] = 1.5;
 
     // this setup requires 0.15 distance to stop, and 0.2 seconds (so 4 cycles at 0.05)
+    std::vector expected_ret = {true, true, true, false};
     for (auto i = 0u; i < 4; ++i)
     {
       auto previous_vel_request = desired_joint_states_.velocities[0];
-      ASSERT_TRUE(joint_limiter_->enforce(current_joint_states_, desired_joint_states_, period));
+      // expect limits applied until the end stop
+      ASSERT_EQ(joint_limiter_->enforce(current_joint_states_, desired_joint_states_, period), expected_ret[i]);
 
       ASSERT_LE(
         desired_joint_states_.velocities[0],
