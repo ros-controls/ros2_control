@@ -148,6 +148,9 @@ std::vector<std::string> get_following_controller_names(
 
     return following_controllers;
   }
+  // If the controller is not configured, return empty
+  if (!(is_controller_active(controller_it->c) || is_controller_inactive(controller_it->c)))
+    return following_controllers;
   const auto cmd_itfs = controller_it->c->command_interface_configuration().names;
   for (const auto & itf : cmd_itfs)
   {
@@ -206,6 +209,8 @@ std::vector<std::string> get_preceding_controller_names(
   }
   for (const auto & ctrl : controllers)
   {
+    // If the controller is not configured, then continue
+    if (!(is_controller_active(ctrl.c) || is_controller_inactive(ctrl.c))) continue;
     auto cmd_itfs = ctrl.c->command_interface_configuration().names;
     for (const auto & itf : cmd_itfs)
     {
@@ -736,7 +741,7 @@ controller_interface::return_type ControllerManager::configure_controller(
       "update rate.",
       controller_name.c_str(), controller_update_rate, cm_update_rate);
   }
-  else if (controller_update_rate != 0 && cm_update_rate % controller_update_rate != 0)
+  else if (cm_update_rate % controller_update_rate != 0)
   {
     RCLCPP_WARN(
       get_logger(),
@@ -1291,7 +1296,8 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::add_co
   }
 
   if (
-    controller.c->init(controller.info.name, robot_description_, get_namespace()) ==
+    controller.c->init(
+      controller.info.name, robot_description_, get_update_rate(), get_namespace()) ==
     controller_interface::return_type::ERROR)
   {
     to.clear();
@@ -2040,8 +2046,7 @@ controller_interface::return_type ControllerManager::update(
     if (!loaded_controller.c->is_async() && is_controller_active(*loaded_controller.c))
     {
       const auto controller_update_rate = loaded_controller.c->get_update_rate();
-      const bool run_controller_at_cm_rate =
-        (controller_update_rate == 0) || (controller_update_rate >= update_rate_);
+      const bool run_controller_at_cm_rate = (controller_update_rate >= update_rate_);
       const auto controller_period =
         run_controller_at_cm_rate ? period
                                   : rclcpp::Duration::from_seconds((1.0 / controller_update_rate));
@@ -2438,6 +2443,14 @@ bool ControllerManager::controller_sorting(
   const ControllerSpec & ctrl_a, const ControllerSpec & ctrl_b,
   const std::vector<controller_manager::ControllerSpec> & controllers)
 {
+  // If the neither of the controllers are configured, then return false
+  if (!((is_controller_active(ctrl_a.c) || is_controller_inactive(ctrl_a.c)) &&
+        (is_controller_active(ctrl_b.c) || is_controller_inactive(ctrl_b.c))))
+  {
+    if (is_controller_active(ctrl_a.c) || is_controller_inactive(ctrl_a.c)) return true;
+    return false;
+  }
+
   const std::vector<std::string> cmd_itfs = ctrl_a.c->command_interface_configuration().names;
   const std::vector<std::string> state_itfs = ctrl_a.c->state_interface_configuration().names;
   if (cmd_itfs.empty() || !ctrl_a.c->is_chainable())

@@ -25,8 +25,8 @@
 namespace controller_interface
 {
 return_type ControllerInterfaceBase::init(
-  const std::string & controller_name, const std::string & urdf, const std::string & namespace_,
-  const rclcpp::NodeOptions & node_options)
+  const std::string & controller_name, const std::string & urdf, unsigned int cm_update_rate,
+  const std::string & namespace_, const rclcpp::NodeOptions & node_options)
 {
   node_ = std::make_shared<rclcpp_lifecycle::LifecycleNode>(
     controller_name, namespace_, node_options, false);  // disable LifecycleNode service interfaces
@@ -34,7 +34,7 @@ return_type ControllerInterfaceBase::init(
 
   try
   {
-    auto_declare<int>("update_rate", 0);
+    auto_declare<int>("update_rate", cm_update_rate);
     auto_declare<bool>("is_async", false);
   }
   catch (const std::exception & e)
