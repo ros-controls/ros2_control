@@ -25,15 +25,16 @@
 namespace controller_interface
 {
 return_type ControllerInterfaceBase::init(
-  const std::string & controller_name, const std::string & namespace_,
-  const rclcpp::NodeOptions & node_options)
+  const std::string & controller_name, const std::string & urdf, unsigned int cm_update_rate,
+  const std::string & namespace_, const rclcpp::NodeOptions & node_options)
 {
   node_ = std::make_shared<rclcpp_lifecycle::LifecycleNode>(
     controller_name, namespace_, node_options, false);  // disable LifecycleNode service interfaces
+  urdf_ = urdf;
 
   try
   {
-    auto_declare<int>("update_rate", 0);
+    auto_declare<int>("update_rate", cm_update_rate);
     auto_declare<bool>("is_async", false);
   }
   catch (const std::exception & e)
@@ -131,5 +132,7 @@ std::shared_ptr<rclcpp_lifecycle::LifecycleNode> ControllerInterfaceBase::get_no
 unsigned int ControllerInterfaceBase::get_update_rate() const { return update_rate_; }
 
 bool ControllerInterfaceBase::is_async() const { return is_async_; }
+
+const std::string & ControllerInterfaceBase::get_robot_description() const { return urdf_; }
 
 }  // namespace controller_interface

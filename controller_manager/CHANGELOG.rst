@@ -2,6 +2,19 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.0.0 (2023-11-21)
+------------------
+* Pass controller manager update rate on the init of the controller interface  (`#1141 <https://github.com/ros-controls/ros2_control/issues/1141>`_)
+* Fix the controller sorting bug when the interfaces are not configured (fixes `#1164 <https://github.com/ros-controls/ros2_control/issues/1164>`_) (`#1165 <https://github.com/ros-controls/ros2_control/issues/1165>`_)
+* Pass URDF to controllers on init (`#1088 <https://github.com/ros-controls/ros2_control/issues/1088>`_)
+* Remove deprecation warning (`#1101 <https://github.com/ros-controls/ros2_control/issues/1101>`_)
+* Contributors: Bence Magyar, Christoph Fröhlich, Sai Kishor Kothakota
+
+3.21.0 (2023-11-06)
+-------------------
+* Sort controllers while configuring instead of while activating (`#1107 <https://github.com/ros-controls/ros2_control/issues/1107>`_)
+* Contributors: Sai Kishor Kothakota
+
 3.20.0 (2023-10-31)
 -------------------
 * Update spawner to accept controllers list and start them in sequence (`#1139 <https://github.com/ros-controls/ros2_control/issues/1139>`_)

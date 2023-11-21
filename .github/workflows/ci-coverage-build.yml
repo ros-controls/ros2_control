@@ -1,8 +1,6 @@
 name: Coverage Build
 on:
   workflow_dispatch:
-    branches:
-      - master
   push:
     branches:
       - master
@@ -23,7 +21,7 @@ jobs:
         with:
           required-ros-distributions: ${{ env.ROS_DISTRO }}
       - uses: actions/checkout@v4
-      - uses: ros-tooling/action-ros-ci@0.3.4
+      - uses: ros-tooling/action-ros-ci@0.3.5
         with:
           target-ros2-distro: ${{ env.ROS_DISTRO }}
           import-token: ${{ secrets.GITHUB_TOKEN }}
@@ -31,11 +29,7 @@ jobs:
           package-name:
             controller_interface
             controller_manager
-            controller_manager_msgs
             hardware_interface
-            ros2controlcli
-            ros2_control
-            ros2_control_test_assets
             transmission_interface
 
           vcs-repo-file-url: |

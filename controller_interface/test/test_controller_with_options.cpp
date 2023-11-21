@@ -42,7 +42,7 @@ TEST(ControllerWithOption, init_with_overrides)
   rclcpp::init(argc, argv);
   // creates the controller
   FriendControllerWithOptions controller;
-  EXPECT_EQ(controller.init("controller_name"), controller_interface::return_type::OK);
+  EXPECT_EQ(controller.init("controller_name", "", 50.0), controller_interface::return_type::OK);
   // checks that the node options have been updated
   const auto & node_options = controller.get_node()->get_node_options();
   EXPECT_TRUE(node_options.allow_undeclared_parameters());
@@ -63,7 +63,7 @@ TEST(ControllerWithOption, init_without_overrides)
   rclcpp::init(argc, argv);
   // creates the controller
   FriendControllerWithOptions controller;
-  EXPECT_EQ(controller.init("controller_name"), controller_interface::return_type::ERROR);
+  EXPECT_EQ(controller.init("controller_name", "", 50.0), controller_interface::return_type::ERROR);
   // checks that the node options have been updated
   const auto & node_options = controller.get_node()->get_node_options();
   EXPECT_TRUE(node_options.allow_undeclared_parameters());

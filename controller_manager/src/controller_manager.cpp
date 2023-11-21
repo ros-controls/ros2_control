@@ -209,13 +209,13 @@ std::vector<std::string> get_preceding_controller_names(
   }
   for (const auto & ctrl : controllers)
   {
-    // If the controller is not configured, return empty
-    if (!(is_controller_active(ctrl.c) || is_controller_inactive(ctrl.c)))
-      return preceding_controllers;
+    // If the controller is not configured, then continue
+    if (!(is_controller_active(ctrl.c) || is_controller_inactive(ctrl.c))) continue;
     auto cmd_itfs = ctrl.c->command_interface_configuration().names;
     for (const auto & itf : cmd_itfs)
     {
-      if (itf.find(controller_name) != std::string::npos)
+      auto split_pos = itf.find_first_of('/');
+      if ((split_pos != std::string::npos) && (itf.substr(0, split_pos) == controller_name))
       {
         preceding_controllers.push_back(ctrl.info.name);
         auto ctrl_names = get_preceding_controller_names(ctrl.info.name, controllers);
@@ -267,10 +267,10 @@ ControllerManager::ControllerManager(
     RCLCPP_WARN(get_logger(), "'update_rate' parameter not set, using default value.");
   }
 
-  std::string robot_description = "";
+  robot_description_ = "";
   // TODO(destogl): remove support at the end of 2023
-  get_parameter("robot_description", robot_description);
-  if (robot_description.empty())
+  get_parameter("robot_description", robot_description_);
+  if (robot_description_.empty())
   {
     subscribe_to_robot_description_topic();
   }
@@ -280,7 +280,7 @@ ControllerManager::ControllerManager(
       get_logger(),
       "[Deprecated] Passing the robot description parameter directly to the control_manager node "
       "is deprecated. Use '~/robot_description' topic from 'robot_state_publisher' instead.");
-    init_resource_manager(robot_description);
+    init_resource_manager(robot_description_);
   }
 
   diagnostics_updater_.setHardwareID("ros2_control");
@@ -337,6 +337,7 @@ void ControllerManager::robot_description_callback(const std_msgs::msg::String &
   // to die if a non valid urdf is passed. However, should maybe be fine tuned.
   try
   {
+    robot_description_ = robot_description.data;
     if (resource_manager_->is_urdf_already_loaded())
     {
       RCLCPP_WARN(
@@ -345,7 +346,7 @@ void ControllerManager::robot_description_callback(const std_msgs::msg::String &
         "description file.");
       return;
     }
-    init_resource_manager(robot_description.data.c_str());
+    init_resource_manager(robot_description_);
   }
   catch (std::runtime_error & e)
   {
@@ -740,7 +741,7 @@ controller_interface::return_type ControllerManager::configure_controller(
       "update rate.",
       controller_name.c_str(), controller_update_rate, cm_update_rate);
   }
-  else if (controller_update_rate != 0 && cm_update_rate % controller_update_rate != 0)
+  else if (cm_update_rate % controller_update_rate != 0)
   {
     RCLCPP_WARN(
       get_logger(),
@@ -768,9 +769,34 @@ controller_interface::return_type ControllerManager::configure_controller(
       return controller_interface::return_type::ERROR;
     }
     resource_manager_->import_controller_reference_interfaces(controller_name, interfaces);
-
-    // TODO(destogl): check and resort controllers in the vector
   }
+
+  // Now let's reorder the controllers
+  // lock controllers
+  std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
+  std::vector<ControllerSpec> & to = rt_controllers_wrapper_.get_unused_list(guard);
+  const std::vector<ControllerSpec> & from = rt_controllers_wrapper_.get_updated_list(guard);
+
+  // Copy all controllers from the 'from' list to the 'to' list
+  to = from;
+
+  // Reordering the controllers
+  std::sort(
+    to.begin(), to.end(),
+    std::bind(
+      &ControllerManager::controller_sorting, this, std::placeholders::_1, std::placeholders::_2,
+      to));
+
+  RCLCPP_DEBUG(get_logger(), "Reordered controllers list is:");
+  for (const auto & ctrl : to)
+  {
+    RCLCPP_DEBUG(this->get_logger(), "\t%s", ctrl.info.name.c_str());
+  }
+
+  // switch lists
+  rt_controllers_wrapper_.switch_updated_list(guard);
+  // clear unused list
+  rt_controllers_wrapper_.get_unused_list(guard).clear();
 
   return controller_interface::return_type::OK;
 }
@@ -1233,19 +1259,6 @@ controller_interface::return_type ControllerManager::switch_controller(
     }
   }
 
-  // Reordering the controllers
-  std::sort(
-    to.begin(), to.end(),
-    std::bind(
-      &ControllerManager::controller_sorting, this, std::placeholders::_1, std::placeholders::_2,
-      to));
-
-  RCLCPP_DEBUG(get_logger(), "Reordered controllers list is:");
-  for (const auto & ctrl : to)
-  {
-    RCLCPP_DEBUG(this->get_logger(), "\t%s", ctrl.info.name.c_str());
-  }
-
   // switch lists
   rt_controllers_wrapper_.switch_updated_list(guard);
   // clear unused list
@@ -1283,7 +1296,8 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::add_co
   }
 
   if (
-    controller.c->init(controller.info.name, get_namespace()) ==
+    controller.c->init(
+      controller.info.name, robot_description_, get_update_rate(), get_namespace()) ==
     controller_interface::return_type::ERROR)
   {
     to.clear();
@@ -1873,13 +1887,6 @@ void ControllerManager::list_hardware_components_srv_cb(
     auto component = controller_manager_msgs::msg::HardwareComponentState();
     component.name = component_name;
     component.type = component_info.type;
-    component.class_type =
-      component_info.plugin_name;  // TODO(bence): deprecated currently. Remove soon
-    RCLCPP_WARN(
-      get_logger(),
-      "The 'class_type' field in 'controller_manager_msgs/msg/HardwareComponentState.msg' is "
-      "deprecated and will be removed soon. Please switch over client code to use 'plugin_name' "
-      "instead.");
     component.plugin_name = component_info.plugin_name;
     component.state.id = component_info.state.id();
     component.state.label = component_info.state.label();
@@ -2039,8 +2046,7 @@ controller_interface::return_type ControllerManager::update(
     if (!loaded_controller.c->is_async() && is_controller_active(*loaded_controller.c))
     {
       const auto controller_update_rate = loaded_controller.c->get_update_rate();
-      const bool run_controller_at_cm_rate =
-        (controller_update_rate == 0) || (controller_update_rate >= update_rate_);
+      const bool run_controller_at_cm_rate = (controller_update_rate >= update_rate_);
       const auto controller_period =
         run_controller_at_cm_rate ? period
                                   : rclcpp::Duration::from_seconds((1.0 / controller_update_rate));
@@ -2435,10 +2441,11 @@ bool ControllerManager::controller_sorting(
   const ControllerSpec & ctrl_a, const ControllerSpec & ctrl_b,
   const std::vector<controller_manager::ControllerSpec> & controllers)
 {
-  // If the controllers are not active, then should be at the end of the list
-  if (!is_controller_active(ctrl_a.c) || !is_controller_active(ctrl_b.c))
+  // If the neither of the controllers are configured, then return false
+  if (!((is_controller_active(ctrl_a.c) || is_controller_inactive(ctrl_a.c)) &&
+        (is_controller_active(ctrl_b.c) || is_controller_inactive(ctrl_b.c))))
   {
-    if (is_controller_active(ctrl_a.c)) return true;
+    if (is_controller_active(ctrl_a.c) || is_controller_inactive(ctrl_a.c)) return true;
     return false;
   }
 
@@ -2513,7 +2520,11 @@ bool ControllerManager::controller_sorting(
     // TODO(saikishor): deal with the state interface chaining in the sorting algorithm
     auto state_it = std::find_if(
       state_itfs.begin(), state_itfs.end(),
-      [ctrl_b](auto itf) { return (itf.find(ctrl_b.info.name) != std::string::npos); });
+      [ctrl_b](auto itf)
+      {
+        auto index = itf.find_first_of('/');
+        return ((index != std::string::npos) && (itf.substr(0, index) == ctrl_b.info.name));
+      });
     if (state_it != state_itfs.end())
     {
       return false;

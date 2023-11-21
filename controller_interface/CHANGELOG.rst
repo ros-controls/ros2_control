@@ -2,6 +2,15 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.0.0 (2023-11-21)
+------------------
+* Pass controller manager update rate on the init of the controller interface  (`#1141 <https://github.com/ros-controls/ros2_control/issues/1141>`_)
+* Pass URDF to controllers on init (`#1088 <https://github.com/ros-controls/ros2_control/issues/1088>`_)
+* Contributors: Bence Magyar, Sai Kishor Kothakota
+
+3.21.0 (2023-11-06)
+-------------------
+
 3.20.0 (2023-10-31)
 -------------------
 

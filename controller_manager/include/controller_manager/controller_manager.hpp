@@ -534,6 +534,7 @@ private:
   std::vector<std::string> activate_command_interface_request_,
     deactivate_command_interface_request_;
 
+  std::string robot_description_;
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr robot_description_subscription_;
 
   struct SwitchParams
