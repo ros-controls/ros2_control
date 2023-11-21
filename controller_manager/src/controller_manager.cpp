@@ -2501,7 +2501,7 @@ bool ControllerManager::controller_sorting(
       // If there is no common parent, then they belong to 2 different sets
       auto following_ctrls_b = get_following_controller_names(ctrl_b.info.name, controllers);
       if (following_ctrls_b.empty()) return true;
-      auto find_first_element = [&](const auto & controllers_list) -> long int
+      auto find_first_element = [&](const auto & controllers_list) -> size_t
       {
         auto it = std::find_if(
           controllers.begin(), controllers.end(),
