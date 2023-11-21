@@ -2063,7 +2063,9 @@ controller_interface::return_type ControllerManager::update(
 
       if (controller_go)
       {
-        auto controller_ret = loaded_controller.c->update(time, controller_period);
+        const auto controller_actual_period =
+          (time - *loaded_controller.next_update_cycle_time) + controller_period;
+        auto controller_ret = loaded_controller.c->update(time, controller_actual_period);
 
         if (
           *loaded_controller.next_update_cycle_time ==
