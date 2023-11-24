@@ -777,7 +777,7 @@ controller_interface::return_type ControllerManager::configure_controller(
   to = from;
 
   // Reordering the controllers
-  std::sort(
+  std::stable_sort(
     to.begin(), to.end(),
     std::bind(
       &ControllerManager::controller_sorting, this, std::placeholders::_1, std::placeholders::_2,
