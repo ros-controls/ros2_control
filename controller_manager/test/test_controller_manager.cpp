@@ -493,9 +493,11 @@ TEST_P(TestControllerUpdateRates, check_the_controller_update_rate)
       // For instance, a controller with update rate 37 Hz, seems to have 36 in the first update
       // cycle and then on accumulating 37 on every other update cycle so at the end of the 10
       // cycles it will have 369 instead of 370.
-      EXPECT_NEAR(
+      EXPECT_THAT(
         test_controller->internal_counter - initial_counter,
-        (static_cast<double>(controller_update_rate) * no_of_secs_passed), 1.0);
+        testing::AnyOf(
+          testing::Eq(controller_update_rate * no_of_secs_passed),
+          testing::Eq((controller_update_rate * no_of_secs_passed) - 1)));
     }
   }
 }
