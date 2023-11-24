@@ -1293,7 +1293,7 @@ TEST_F(TestControllerManagerSrvs, list_large_number_of_controllers_with_chains)
   ASSERT_EQ(
     11u + num_of_random_broadcasters + num_of_random_controllers, result->controller.size());
 
-  auto get_ctrl_pos = [result](const std::string & controller_name) -> int
+  auto get_ctrl_pos = [result](const std::string & controller_name) -> int64_t
   {
     auto it = std::find_if(
       result->controller.begin(), result->controller.end(),
@@ -1362,6 +1362,8 @@ TEST_F(TestControllerManagerSrvs, list_sorted_large_chained_controller_tree)
   std::vector<std::string> controllers_list;
   std::vector<std::string> fwd_joint_position_interfaces_list;
   std::vector<std::string> fwd_joint_velocity_interfaces_list;
+  std::vector<std::string> fwd_joint_position_ref_interfaces_list;
+  std::vector<std::string> fwd_joint_velocity_ref_interfaces_list;
   std::unordered_map<std::string, std::shared_ptr<TestChainableController>> random_controllers_list;
   std::unordered_map<std::string, std::shared_ptr<TestController>> random_broadcaster_list;
   for (size_t i = 0; i < joints_count; i++)
@@ -1395,6 +1397,10 @@ TEST_F(TestControllerManagerSrvs, list_sorted_large_chained_controller_tree)
        {fwd_joint_position_interfaces_list.back(), fwd_joint_velocity_interfaces_list.back()}});
     random_controllers_list[fwd_controller_name]->set_reference_interface_names(
       chained_state_cfg.names);
+    fwd_joint_position_ref_interfaces_list.push_back(
+      std::string(fwd_controller_name) + "/" + fwd_joint_position_interfaces_list.back());
+    fwd_joint_velocity_ref_interfaces_list.push_back(
+      std::string(fwd_controller_name) + "/" + fwd_joint_velocity_interfaces_list.back());
     controllers_list.push_back(fwd_controller_name);
 
     // Add a broadcaster for every joint assuming it as a sensor (just for the tests)
@@ -1416,7 +1422,7 @@ TEST_F(TestControllerManagerSrvs, list_sorted_large_chained_controller_tree)
     std::make_shared<TestChainableController>();
   random_controllers_list[POSITION_REFERENCE_CONTROLLER]->set_command_interface_configuration(
     {controller_interface::interface_configuration_type::INDIVIDUAL,
-     fwd_joint_position_interfaces_list});
+     fwd_joint_position_ref_interfaces_list});
   random_controllers_list[POSITION_REFERENCE_CONTROLLER]->set_reference_interface_names(
     {"joint/position"});
   controllers_list.push_back(POSITION_REFERENCE_CONTROLLER);
@@ -1426,7 +1432,7 @@ TEST_F(TestControllerManagerSrvs, list_sorted_large_chained_controller_tree)
     std::make_shared<TestChainableController>();
   random_controllers_list[VELOCITY_REFERENCE_CONTROLLER]->set_command_interface_configuration(
     {controller_interface::interface_configuration_type::INDIVIDUAL,
-     fwd_joint_velocity_interfaces_list});
+     fwd_joint_velocity_ref_interfaces_list});
   random_controllers_list[VELOCITY_REFERENCE_CONTROLLER]->set_reference_interface_names(
     {"joint/velocity"});
   controllers_list.push_back(VELOCITY_REFERENCE_CONTROLLER);
@@ -1484,7 +1490,7 @@ TEST_F(TestControllerManagerSrvs, list_sorted_large_chained_controller_tree)
   result = call_service_and_wait(*client, request, srv_executor);
   ASSERT_EQ((joints_count * 3) + 3u, result->controller.size());
 
-  auto get_ctrl_pos = [result](const std::string & controller_name) -> int
+  auto get_ctrl_pos = [result](const std::string & controller_name) -> int64_t
   {
     auto it = std::find_if(
       result->controller.begin(), result->controller.end(),
