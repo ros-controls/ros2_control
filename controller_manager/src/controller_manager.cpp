@@ -457,8 +457,6 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
       "Parameter 'activate_components_on_start' is deprecated. "
       "Components are activated per default. Don't use this parameters in combination with the new "
       "'hardware_components_initial_state' parameter structure.");
-    rclcpp_lifecycle::State active_state(
-      State::PRIMARY_STATE_ACTIVE, hardware_interface::lifecycle_state_names::ACTIVE);
     for (const auto & component : activate_components_on_start)
     {
       resource_manager_->set_component_state(component, active_state);
@@ -470,8 +468,6 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
     // activate all other components
     for (const auto & [component, state] : components_to_activate)
     {
-      rclcpp_lifecycle::State active_state(
-        State::PRIMARY_STATE_ACTIVE, hardware_interface::lifecycle_state_names::ACTIVE);
       if (
         resource_manager_->set_component_state(component, active_state) ==
         hardware_interface::return_type::ERROR)
@@ -1008,7 +1004,7 @@ controller_interface::return_type ControllerManager::switch_controller(
     auto controller_it = std::find_if(
       controllers.begin(), controllers.end(),
       std::bind(controller_name_compare, std::placeholders::_1, *ctrl_it));
-    controller_interface::return_type ret = controller_interface::return_type::OK;
+    controller_interface::return_type status = controller_interface::return_type::OK;
 
     // if controller is not inactive then do not do any following-controllers checks
     if (!is_controller_inactive(controller_it->c))
@@ -1018,14 +1014,14 @@ controller_interface::return_type ControllerManager::switch_controller(
         "Controller with name '%s' is not inactive so its following "
         "controllers do not have to be checked, because it cannot be activated.",
         controller_it->info.name.c_str());
-      ret = controller_interface::return_type::ERROR;
+      status = controller_interface::return_type::ERROR;
     }
     else
     {
-      ret = check_following_controllers_for_activate(controllers, strictness, controller_it);
+      status = check_following_controllers_for_activate(controllers, strictness, controller_it);
     }
 
-    if (ret != controller_interface::return_type::OK)
+    if (status != controller_interface::return_type::OK)
     {
       RCLCPP_WARN(
         get_logger(),
@@ -1059,7 +1055,7 @@ controller_interface::return_type ControllerManager::switch_controller(
     auto controller_it = std::find_if(
       controllers.begin(), controllers.end(),
       std::bind(controller_name_compare, std::placeholders::_1, *ctrl_it));
-    controller_interface::return_type ret = controller_interface::return_type::OK;
+    controller_interface::return_type status = controller_interface::return_type::OK;
 
     // if controller is not active then skip preceding-controllers checks
     if (!is_controller_active(controller_it->c))
@@ -1067,14 +1063,14 @@ controller_interface::return_type ControllerManager::switch_controller(
       RCLCPP_WARN(
         get_logger(), "Controller with name '%s' can not be deactivated since it is not active.",
         controller_it->info.name.c_str());
-      ret = controller_interface::return_type::ERROR;
+      status = controller_interface::return_type::ERROR;
     }
     else
     {
-      ret = check_preceeding_controllers_for_deactivate(controllers, strictness, controller_it);
+      status = check_preceeding_controllers_for_deactivate(controllers, strictness, controller_it);
     }
 
-    if (ret != controller_interface::return_type::OK)
+    if (status != controller_interface::return_type::OK)
     {
       RCLCPP_WARN(
         get_logger(),
@@ -1155,11 +1151,11 @@ controller_interface::return_type ControllerManager::switch_controller(
     // check for double stop
     if (!is_active && in_deactivate_list)
     {
-      auto ret = handle_conflict(
+      auto conflict_status = handle_conflict(
         "Could not deactivate controller '" + controller.info.name + "' since it is not active");
-      if (ret != controller_interface::return_type::OK)
+      if (conflict_status != controller_interface::return_type::OK)
       {
-        return ret;
+        return conflict_status;
       }
       in_deactivate_list = false;
       deactivate_request_.erase(deactivate_list_it);
@@ -1168,11 +1164,11 @@ controller_interface::return_type ControllerManager::switch_controller(
     // check for doubled activation
     if (is_active && !in_deactivate_list && in_activate_list)
     {
-      auto ret = handle_conflict(
+      auto conflict_status = handle_conflict(
         "Could not activate controller '" + controller.info.name + "' since it is already active");
-      if (ret != controller_interface::return_type::OK)
+      if (conflict_status != controller_interface::return_type::OK)
       {
-        return ret;
+        return conflict_status;
       }
       in_activate_list = false;
       activate_request_.erase(activate_list_it);
@@ -1181,21 +1177,21 @@ controller_interface::return_type ControllerManager::switch_controller(
     // check for illegal activation of an unconfigured/finalized controller
     if (!is_inactive && !in_deactivate_list && in_activate_list)
     {
-      auto ret = handle_conflict(
+      auto conflict_status = handle_conflict(
         "Could not activate controller '" + controller.info.name +
         "' since it is not in inactive state");
-      if (ret != controller_interface::return_type::OK)
+      if (conflict_status != controller_interface::return_type::OK)
       {
-        return ret;
+        return conflict_status;
       }
       in_activate_list = false;
       activate_request_.erase(activate_list_it);
     }
 
     const auto extract_interfaces_for_controller =
-      [this](const ControllerSpec controller, std::vector<std::string> & request_interface_list)
+      [this](const ControllerSpec ctrl, std::vector<std::string> & request_interface_list)
     {
-      auto command_interface_config = controller.c->command_interface_configuration();
+      auto command_interface_config = ctrl.c->command_interface_configuration();
       std::vector<std::string> command_interface_names = {};
       if (command_interface_config.type == controller_interface::interface_configuration_type::ALL)
       {
@@ -1847,8 +1843,8 @@ void ControllerManager::reload_controller_libraries_service_cb(
   loaded_controllers = get_controller_names();
   {
     // lock controllers
-    std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
-    for (const auto & controller : rt_controllers_wrapper_.get_updated_list(guard))
+    std::lock_guard<std::recursive_mutex> ctrl_guard(rt_controllers_wrapper_.controllers_lock_);
+    for (const auto & controller : rt_controllers_wrapper_.get_updated_list(ctrl_guard))
     {
       if (is_controller_active(*controller.c))
       {
