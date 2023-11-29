@@ -2444,15 +2444,7 @@ bool ControllerManager::controller_sorting(
         (is_controller_active(ctrl_b.c) || is_controller_inactive(ctrl_b.c))))
   {
     if (is_controller_active(ctrl_a.c) || is_controller_inactive(ctrl_a.c)) return true;
-    // When both the controllers are inactive, do not change their initial order
-    auto ctrl_a_it = std::find_if(
-      controllers.begin(), controllers.end(),
-      std::bind(controller_name_compare, std::placeholders::_1, ctrl_a.info.name));
-    auto ctrl_b_it = std::find_if(
-      controllers.begin(), controllers.end(),
-      std::bind(controller_name_compare, std::placeholders::_1, ctrl_b.info.name));
-    return std::distance(controllers.begin(), ctrl_a_it) <
-           std::distance(controllers.begin(), ctrl_b_it);
+    return false;
   }
 
   const std::vector<std::string> cmd_itfs = ctrl_a.c->command_interface_configuration().names;
@@ -2463,17 +2455,9 @@ bool ControllerManager::controller_sorting(
     // joint_state_broadcaster
     // If the controller b is also under the same condition, then maintain their initial order
     if (ctrl_b.c->command_interface_configuration().names.empty() || !ctrl_b.c->is_chainable())
-    {
-      auto ctrl_a_it = std::find_if(
-        controllers.begin(), controllers.end(),
-        std::bind(controller_name_compare, std::placeholders::_1, ctrl_a.info.name));
-      auto ctrl_b_it = std::find_if(
-        controllers.begin(), controllers.end(),
-        std::bind(controller_name_compare, std::placeholders::_1, ctrl_b.info.name));
-      return std::distance(controllers.begin(), ctrl_a_it) <
-             std::distance(controllers.begin(), ctrl_b_it);
-    }
-    return true;
+      return false;
+    else
+      return true;
   }
   else if (ctrl_b.c->command_interface_configuration().names.empty() || !ctrl_b.c->is_chainable())
   {
