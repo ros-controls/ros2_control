@@ -2,6 +2,13 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add few warning compiler options to error (`#1181 <https://github.com/ros-controls/ros2_control/issues/1181>`_)
+* [ControllerManager] Fix all warnings from the latets features. (`#1174 <https://github.com/ros-controls/ros2_control/issues/1174>`_)
+* Compute the actual update period for each controller (`#1140 <https://github.com/ros-controls/ros2_control/issues/1140>`_)
+* Contributors: Dr. Denis, Sai Kishor Kothakota
+
 4.0.0 (2023-11-21)
 ------------------
 * Pass controller manager update rate on the init of the controller interface  (`#1141 <https://github.com/ros-controls/ros2_control/issues/1141>`_)
