@@ -2558,7 +2558,7 @@ void ControllerManager::controller_activity_diagnostic_callback(
   }
   else
   {
-    stat.summary(diagnostic_msgs::msg::DiagnosticStatus::ERROR, "Not all controllers are active");
+    stat.summary(diagnostic_msgs::msg::DiagnosticStatus::WARN, "Not all controllers are active");
   }
 }
 
