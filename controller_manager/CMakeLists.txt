@@ -13,6 +13,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
     pluginlib
     rclcpp
     realtime_tools
+    std_msgs
 )
 
 find_package(ament_cmake REQUIRED)
@@ -130,6 +131,17 @@ if(BUILD_TESTING)
   target_link_libraries(test_controller_manager_srvs ${PROJECT_NAME} test_controller test_chainable_controller)
   ament_target_dependencies(
     test_controller_manager_srvs
+    controller_manager_msgs
+    ros2_control_test_assets
+  )
+  ament_add_gmock(test_controller_manager_urdf_passing
+    test/test_controller_manager_urdf_passing.cpp
+  )
+  target_include_directories(test_controller_manager_urdf_passing PRIVATE include)
+  target_link_libraries(test_controller_manager_urdf_passing
+    controller_manager
+  )
+  ament_target_dependencies(test_controller_manager_urdf_passing
     controller_manager_msgs
     ros2_control_test_assets
   )
