@@ -777,7 +777,7 @@ controller_interface::return_type ControllerManager::configure_controller(
   to = from;
 
   // Reordering the controllers
-  std::sort(
+  std::stable_sort(
     to.begin(), to.end(),
     std::bind(
       &ControllerManager::controller_sorting, this, std::placeholders::_1, std::placeholders::_2,
@@ -2453,7 +2453,16 @@ bool ControllerManager::controller_sorting(
   {
     // The case of the controllers that don't have any command interfaces. For instance,
     // joint_state_broadcaster
-    return true;
+    // If the controller b is also under the same condition, then maintain their initial order
+    if (ctrl_b.c->command_interface_configuration().names.empty() || !ctrl_b.c->is_chainable())
+      return false;
+    else
+      return true;
+  }
+  else if (ctrl_b.c->command_interface_configuration().names.empty() || !ctrl_b.c->is_chainable())
+  {
+    // If only the controller b is a broadcaster or non chainable type , then swap the controllers
+    return false;
   }
   else
   {
