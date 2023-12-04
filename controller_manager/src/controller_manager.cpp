@@ -260,6 +260,23 @@ void remove_element_from_list(std::vector<T> & list, const T & element)
   }
 }
 
+void controller_chain_spec_cleanup(
+  std::unordered_map<std::string, controller_manager::ControllerChainSpec> & ctrl_chain_spec,
+  const std::string & controller)
+{
+  const auto following_controllers = ctrl_chain_spec[controller].following_controllers;
+  const auto preceding_controllers = ctrl_chain_spec[controller].preceding_controllers;
+  for (const auto & flwg_ctrl : following_controllers)
+  {
+    remove_element_from_list(ctrl_chain_spec[flwg_ctrl].preceding_controllers, controller);
+  }
+  for (const auto & preced_ctrl : preceding_controllers)
+  {
+    remove_element_from_list(ctrl_chain_spec[preced_ctrl].following_controllers, controller);
+  }
+  ctrl_chain_spec.erase(controller);
+}
+
 }  // namespace
 
 namespace controller_manager
@@ -682,6 +699,7 @@ controller_interface::return_type ControllerManager::unload_controller(
   }
 
   RCLCPP_DEBUG(get_logger(), "Cleanup controller");
+  controller_chain_spec_cleanup(controller_chain_spec_, controller_name);
   // TODO(destogl): remove reference interface if chainable; i.e., add a separate method for
   // cleaning-up controllers?
   if (is_controller_inactive(*controller.c))
@@ -759,6 +777,7 @@ controller_interface::return_type ControllerManager::configure_controller(
       get_logger(), "Controller '%s' is cleaned-up before configuring", controller_name.c_str());
     // TODO(destogl): remove reference interface if chainable; i.e., add a separate method for
     // cleaning-up controllers?
+    controller_chain_spec_cleanup(controller_chain_spec_, controller_name);
     new_state = controller->get_node()->cleanup();
     if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
     {
