@@ -816,6 +816,18 @@ controller_interface::return_type ControllerManager::configure_controller(
     resource_manager_->import_controller_reference_interfaces(controller_name, interfaces);
   }
 
+  // let's update the list of following and preceding controllers
+  const auto cmd_itfs = controller->command_interface_configuration().names;
+  for (const auto & cmd_itf : cmd_itfs)
+  {
+    controller_manager::ControllersListIterator ctrl_it;
+    if (command_interface_is_reference_interface_of_controller(cmd_itf, controllers, ctrl_it))
+    {
+      add_element_to_list(
+        controller_chain_spec_[controller_name].following_controllers, ctrl_it->info.name);
+    }
+  }
+
   // Now let's reorder the controllers
   // lock controllers
   std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);

@@ -515,6 +515,7 @@ private:
   };
 
   RTControllerListWrapper rt_controllers_wrapper_;
+  std::unordered_map<std::string, ControllerChainSpec> controller_chain_spec_;
   /// mutex copied from ROS1 Control, protects service callbacks
   /// not needed if we're guaranteed that the callbacks don't come from multiple threads
   std::mutex services_lock_;
