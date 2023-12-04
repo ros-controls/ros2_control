@@ -162,7 +162,10 @@ TEST_P(TestLoadedControllerParametrized, starting_and_stopping_a_controller)
       lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, controller_if->get_state().id());
 
     // Activate configured controller
-    cm_->configure_controller(controller_name1);
+    {
+      ControllerManagerRunner cm_runner(this);
+      cm_->configure_controller(controller_name1);
+    }
     start_test_controller(test_param.strictness);
     ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, controller_if->get_state().id());
   }
@@ -246,7 +249,10 @@ TEST_P(TestLoadedControllerParametrized, inactive_controller_cannot_be_configure
   test_controller->cleanup_calls = &cleanup_calls;
   // Configure from inactive state
   test_controller->simulate_cleanup_failure = false;
-  EXPECT_EQ(cm_->configure_controller(controller_name1), controller_interface::return_type::OK);
+  {
+    ControllerManagerRunner cm_runner(this);
+    EXPECT_EQ(cm_->configure_controller(controller_name1), controller_interface::return_type::OK);
+  }
   ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if->get_state().id());
   EXPECT_EQ(1u, cleanup_calls);
 }
@@ -421,7 +427,10 @@ TEST_P(TestTwoLoadedControllers, switch_multiple_controllers)
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, controller_if2->get_state().id());
 
-  cm_->configure_controller(controller_name2);
+  {
+    ControllerManagerRunner cm_runner(this);
+    cm_->configure_controller(controller_name2);
+  }
 
   // Stop controller 1
   RCLCPP_INFO(cm_->get_logger(), "Stopping controller #1");
