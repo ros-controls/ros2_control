@@ -197,8 +197,9 @@ public:
   /**
    * Return list of cached controller names that use the hardware with name \p hardware_name.
    *
-   * \param[in] hardware_name the name of the hardware for which cached controllers should be returned.
-   * \returns list of cached controller names that depend on hardware with name \p hardware_name.
+   * \param[in] hardware_name the name of the hardware for which cached controllers should be
+   * returned. \returns list of cached controller names that depend on hardware with name \p
+   * hardware_name.
    */
   std::vector<std::string> get_cached_controllers_to_hardware(const std::string & hardware_name);
 
@@ -414,7 +415,7 @@ private:
 
   // Structure to store read and write status so it is not initialized in the real-time loop
   HardwareReadWriteStatus read_write_status;
-  
+
   bool is_urdf_loaded__ = false;
 };
 
