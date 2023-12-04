@@ -39,10 +39,12 @@ struct ControllerSpec
   hardware_interface::ControllerInfo info;
   controller_interface::ControllerInterfaceBaseSharedPtr c;
   std::shared_ptr<rclcpp::Time> next_update_cycle_time;
-
-  std::vector<std::reference_wrapper<const ControllerSpec>> following_controllers;
-  std::vector<std::reference_wrapper<const ControllerSpec>> preceding_controllers;
 };
 
+struct ControllerChainSpec
+{
+  std::vector<std::string> following_controllers;
+  std::vector<std::string> preceding_controllers;
+};
 }  // namespace controller_manager
 #endif  // CONTROLLER_MANAGER__CONTROLLER_SPEC_HPP_
