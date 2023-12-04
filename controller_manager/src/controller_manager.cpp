@@ -2443,7 +2443,10 @@ bool ControllerManager::controller_sorting(
   if (!((is_controller_active(ctrl_a.c) || is_controller_inactive(ctrl_a.c)) &&
         (is_controller_active(ctrl_b.c) || is_controller_inactive(ctrl_b.c))))
   {
-    if (is_controller_active(ctrl_a.c) || is_controller_inactive(ctrl_a.c)) return true;
+    if (is_controller_active(ctrl_a.c) || is_controller_inactive(ctrl_a.c))
+    {
+      return true;
+    }
     return false;
   }
 
@@ -2455,9 +2458,13 @@ bool ControllerManager::controller_sorting(
     // joint_state_broadcaster
     // If the controller b is also under the same condition, then maintain their initial order
     if (ctrl_b.c->command_interface_configuration().names.empty() || !ctrl_b.c->is_chainable())
+    {
       return false;
+    }
     else
+    {
       return true;
+    }
   }
   else if (ctrl_b.c->command_interface_configuration().names.empty() || !ctrl_b.c->is_chainable())
   {
@@ -2472,7 +2479,9 @@ bool ControllerManager::controller_sorting(
     if (
       std::find(following_ctrls.begin(), following_ctrls.end(), ctrl_b.info.name) !=
       following_ctrls.end())
+    {
       return true;
+    }
     else
     {
       auto ctrl_a_preceding_ctrls = get_preceding_controller_names(ctrl_a.info.name, controllers);
