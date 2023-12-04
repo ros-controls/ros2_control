@@ -818,6 +818,7 @@ controller_interface::return_type ControllerManager::configure_controller(
 
   // let's update the list of following and preceding controllers
   const auto cmd_itfs = controller->command_interface_configuration().names;
+  const auto state_itfs = controller->state_interface_configuration().names;
   for (const auto & cmd_itf : cmd_itfs)
   {
     controller_manager::ControllersListIterator ctrl_it;
@@ -827,6 +828,18 @@ controller_interface::return_type ControllerManager::configure_controller(
         controller_chain_spec_[controller_name].following_controllers, ctrl_it->info.name);
       add_element_to_list(
         controller_chain_spec_[ctrl_it->info.name].preceding_controllers, controller_name);
+    }
+  }
+  // This is needed when we start exporting the state interfaces from the controllers
+  for (const auto & state_itf : state_itfs)
+  {
+    controller_manager::ControllersListIterator ctrl_it;
+    if (command_interface_is_reference_interface_of_controller(state_itf, controllers, ctrl_it))
+    {
+      add_element_to_list(
+        controller_chain_spec_[controller_name].preceding_controllers, ctrl_it->info.name);
+      add_element_to_list(
+        controller_chain_spec_[ctrl_it->info.name].following_controllers, controller_name);
     }
   }
 
