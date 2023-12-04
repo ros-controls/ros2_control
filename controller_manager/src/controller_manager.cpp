@@ -250,6 +250,16 @@ void add_element_to_list(std::vector<T> & list, const T & element)
   }
 }
 
+template <typename T>
+void remove_element_from_list(std::vector<T> & list, const T & element)
+{
+  auto itr = std::find(list.begin(), list.end(), element);
+  if (itr != list.end())
+  {
+    list.erase(itr);
+  }
+}
+
 }  // namespace
 
 namespace controller_manager
