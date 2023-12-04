@@ -240,6 +240,16 @@ std::vector<std::string> get_preceding_controller_names(
   return preceding_controllers;
 }
 
+template <typename T>
+void add_element_to_list(std::vector<T> & list, const T & element)
+{
+  if (std::find(list.begin(), list.end(), element) == list.end())
+  {
+    // Only add to the list if it doesn't exist
+    list.push_back(element);
+  }
+}
+
 }  // namespace
 
 namespace controller_manager
