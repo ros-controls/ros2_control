@@ -825,6 +825,8 @@ controller_interface::return_type ControllerManager::configure_controller(
     {
       add_element_to_list(
         controller_chain_spec_[controller_name].following_controllers, ctrl_it->info.name);
+      add_element_to_list(
+        controller_chain_spec_[ctrl_it->info.name].preceding_controllers, controller_name);
     }
   }
 
