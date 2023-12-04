@@ -77,7 +77,7 @@ Debugging outputs
 ----------------------------
 
 - The reference interfaces are ``unavailable`` and ``unclaimed``, when the controller exporting them is in inactive state
-- The reference interfaces are ``available`` and  ``unclaimed``, when the controller exporting them is in an active state but is not in chained mode with any other controller (The controllers get their references from the subscribers)
+- The reference interfaces are ``available`` and  ``unclaimed``, when the controller exporting them is in an active state but is not in chained mode with any other controller (The controllers gets its references from the subscriber)
 - The reference interfaces are ``available`` and  ``claimed``, when the controller exporting them is in active state and also in chained mode with other controllers (The controller gets its references from the controllers it is chained with)
 
 
