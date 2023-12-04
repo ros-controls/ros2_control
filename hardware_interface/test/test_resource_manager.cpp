@@ -1389,7 +1389,7 @@ TEST_F(ResourceManagerTest, managing_controllers_reference_interfaces)
     rm.make_controller_reference_interfaces_unavailable("unknown_controller"), std::out_of_range);
 }
 
-class TestResourceManagerReadWriteError : public TestResourceManager
+class TestResourceManagerReadWriteError : public ResourceManagerTest
 {
 public:
   void setup_resource_manager_and_do_initial_checks()
@@ -1604,7 +1604,7 @@ TEST_F(TestResourceManagerReadWriteError, handle_error_on_hardware_write)
     std::bind(&hardware_interface::ResourceManager::read, rm, _1, _2), WRITE_FAIL_VALUE);
 }
 
-TEST_F(TestResourceManager, test_caching_of_controllers_to_hardware)
+TEST_F(ResourceManagerTest, test_caching_of_controllers_to_hardware)
 {
   hardware_interface::ResourceManager rm(ros2_control_test_assets::minimal_robot_urdf, false);
   activate_components(rm);
