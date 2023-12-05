@@ -2,6 +2,12 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Report inactive controllers as a diagnostics ok instead of an error (`#1184 <https://github.com/ros-controls/ros2_control/issues/1184>`_) (`#1190 <https://github.com/ros-controls/ros2_control/issues/1190>`_)
+* Fix controller sorting issue while loading large number of controllers (`#1180 <https://github.com/ros-controls/ros2_control/issues/1180>`_) (`#1187 <https://github.com/ros-controls/ros2_control/issues/1187>`_)
+* Contributors: Lennart Nachtigall, Sai Kishor Kothakota
+
 3.21.1 (2023-11-14)
 -------------------
 * Fix the controller sorting bug when the interfaces are not configured (fixes `#1164 <https://github.com/ros-controls/ros2_control/issues/1164>`_) (`#1165 <https://github.com/ros-controls/ros2_control/issues/1165>`_) (`#1167 <https://github.com/ros-controls/ros2_control/issues/1167>`_)
