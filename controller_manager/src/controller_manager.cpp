@@ -880,6 +880,18 @@ controller_interface::return_type ControllerManager::configure_controller(
 
   // Copy all controllers from the 'from' list to the 'to' list
   to = from;
+  auto find_controller_spec_by_name = [](
+                                        const std::vector<ControllerSpec> & specs_list,
+                                        const std::string & controller_name) -> ControllerSpec
+  {
+    auto it = std::find(
+      specs_list.begin(), specs_list.end(),
+      std::bind(controller_name_compare, std::placeholders::_1, controller_name));
+    if (it != specs_list.end())
+      return *it;
+    else
+      return ControllerSpec();
+  };
 
   // Reordering the controllers
   std::stable_sort(
