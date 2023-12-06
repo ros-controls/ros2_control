@@ -351,6 +351,7 @@ TEST_P(TestControllerManagerWithUpdateRates, per_controller_equal_and_higher_upd
   ASSERT_EQ(std::future_status::timeout, switch_future.wait_for(std::chrono::milliseconds(100)))
     << "switch_controller should be blocking until next update cycle";
 
+  time_ += rclcpp::Duration::from_seconds(0.01);
   EXPECT_EQ(
     controller_interface::return_type::OK,
     cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
@@ -365,11 +366,17 @@ TEST_P(TestControllerManagerWithUpdateRates, per_controller_equal_and_higher_upd
 
   const auto pre_internal_counter = test_controller->internal_counter;
   rclcpp::Rate loop_rate(cm_->get_update_rate());
+  const auto cm_update_rate = cm_->get_update_rate();
   for (size_t i = 0; i < 2 * cm_->get_update_rate(); i++)
   {
+    time_ += rclcpp::Duration::from_seconds(0.01);
     EXPECT_EQ(
       controller_interface::return_type::OK,
       cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
+    // In case of a non perfect divisor, the update period should respect the rule
+    // [controller_update_rate, 2*controller_update_rate)
+    ASSERT_GE(test_controller->update_period_, 1.0 / cm_update_rate);
+    ASSERT_LT(test_controller->update_period_, 2.0 / cm_update_rate);
     loop_rate.sleep();
   }
   // if we do 2 times of the controller_manager update rate, the internal counter should be
@@ -448,6 +455,7 @@ TEST_P(TestControllerUpdateRates, check_the_controller_update_rate)
   ASSERT_EQ(std::future_status::timeout, switch_future.wait_for(std::chrono::milliseconds(100)))
     << "switch_controller should be blocking until next update cycle";
 
+  time_ += rclcpp::Duration::from_seconds(0.01);
   EXPECT_EQ(
     controller_interface::return_type::OK,
     cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
@@ -470,20 +478,26 @@ TEST_P(TestControllerUpdateRates, check_the_controller_update_rate)
     EXPECT_EQ(
       controller_interface::return_type::OK,
       cm_->update(time, rclcpp::Duration::from_seconds(0.01)));
+    // In case of a non perfect divisor, the update period should respect the rule
+    // [controller_update_rate, 2*controller_update_rate)
+    ASSERT_GE(test_controller->update_period_, 1.0 / controller_update_rate);
+    ASSERT_LT(test_controller->update_period_, 2.0 / controller_update_rate);
 
     time += rclcpp::Duration::from_seconds(0.01);
     if (update_counter % cm_update_rate == 0)
     {
-      const auto no_of_secs_passed = update_counter / cm_update_rate;
+      const double no_of_secs_passed = static_cast<double>(update_counter) / cm_update_rate;
       // NOTE: here EXPECT_NEAR is used because it is observed that in the first iteration of whole
       // cycle of cm_update_rate counts, there is one count missing, but in rest of the 9 cycles it
       // is clearly tracking, so adding 1 here won't affect the final count.
       // For instance, a controller with update rate 37 Hz, seems to have 36 in the first update
       // cycle and then on accumulating 37 on every other update cycle so at the end of the 10
       // cycles it will have 369 instead of 370.
-      EXPECT_NEAR(
+      EXPECT_THAT(
         test_controller->internal_counter - initial_counter,
-        (controller_update_rate * no_of_secs_passed), 1);
+        testing::AnyOf(
+          testing::Eq(controller_update_rate * no_of_secs_passed),
+          testing::Eq((controller_update_rate * no_of_secs_passed) - 1)));
     }
   }
 }

@@ -2,6 +2,21 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.1.0 (2023-11-30)
+------------------
+* Add few warning compiler options to error (`#1181 <https://github.com/ros-controls/ros2_control/issues/1181>`_)
+* [ControllerManager] Fix all warnings from the latets features. (`#1174 <https://github.com/ros-controls/ros2_control/issues/1174>`_)
+* Compute the actual update period for each controller (`#1140 <https://github.com/ros-controls/ros2_control/issues/1140>`_)
+* Contributors: Dr. Denis, Sai Kishor Kothakota
+
+4.0.0 (2023-11-21)
+------------------
+* Pass controller manager update rate on the init of the controller interface  (`#1141 <https://github.com/ros-controls/ros2_control/issues/1141>`_)
+* Fix the controller sorting bug when the interfaces are not configured (fixes `#1164 <https://github.com/ros-controls/ros2_control/issues/1164>`_) (`#1165 <https://github.com/ros-controls/ros2_control/issues/1165>`_)
+* Pass URDF to controllers on init (`#1088 <https://github.com/ros-controls/ros2_control/issues/1088>`_)
+* Remove deprecation warning (`#1101 <https://github.com/ros-controls/ros2_control/issues/1101>`_)
+* Contributors: Bence Magyar, Christoph Fröhlich, Sai Kishor Kothakota
+
 3.21.0 (2023-11-06)
 -------------------
 * Sort controllers while configuring instead of while activating (`#1107 <https://github.com/ros-controls/ros2_control/issues/1107>`_)
