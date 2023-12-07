@@ -17,6 +17,7 @@
 
 #include <string>
 
+#include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/macros.hpp"
 
 namespace hardware_interface
@@ -114,6 +115,13 @@ public:
 class StateInterface : public ReadOnlyHandle
 {
 public:
+  explicit StateInterface(
+    const InterfaceDescription & interface_description, double * value_ptr = nullptr)
+  : ReadOnlyHandle(
+      interface_description.prefix_name, interface_description.interface_info.name, value_ptr)
+  {
+  }
+
   StateInterface(const StateInterface & other) = default;
 
   StateInterface(StateInterface && other) = default;
@@ -124,6 +132,12 @@ public:
 class CommandInterface : public ReadWriteHandle
 {
 public:
+  explicit CommandInterface(
+    const InterfaceDescription & interface_description, double * value_ptr = nullptr)
+  : ReadWriteHandle(
+      interface_description.prefix_name, interface_description.interface_info.name, value_ptr)
+  {
+  }
   /// CommandInterface copy constructor is actively deleted.
   /**
    * Command interfaces are having a unique ownership and thus
