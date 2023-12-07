@@ -122,6 +122,27 @@ struct TransmissionInfo
   std::unordered_map<std::string, std::string> parameters;
 };
 
+/**
+ * This structure stores information about an interface for a specific hardware which should be
+ * instantiated internally.
+ */
+struct InterfaceDescription
+{
+  InterfaceDescription(const std::string & prefix_name_in, const InterfaceInfo & interface_info_in)
+  : prefix_name(prefix_name_in), interface_info(interface_info_in)
+  {
+  }
+
+  /**
+   * Name of the interface defined by the user.
+   */
+  std::string prefix_name;
+
+  InterfaceInfo interface_info;
+
+  std::string get_name() const { return prefix_name + interface_info.name; }
+};
+
 /// This structure stores information about hardware defined in a robot's URDF.
 struct HardwareInfo
 {

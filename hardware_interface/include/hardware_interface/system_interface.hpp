@@ -22,6 +22,7 @@
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
+#include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 #include "rclcpp/duration.hpp"
@@ -98,8 +99,100 @@ public:
   virtual CallbackReturn on_init(const HardwareInfo & hardware_info)
   {
     info_ = hardware_info;
+    add_state_interface_descriptions();
+    joint_pos_states_.resize(
+      state_interfaces_pos_descr_.size(), std::numeric_limits<double>::quiet_NaN());
+    joint_vel_states_.resize(
+      state_interfaces_vel_descr_.size(), std::numeric_limits<double>::quiet_NaN());
+    joint_acc_states_.resize(
+      state_interfaces_acc_descr_.size(), std::numeric_limits<double>::quiet_NaN());
+    joint_eff_states_.resize(
+      state_interfaces_eff_descr_.size(), std::numeric_limits<double>::quiet_NaN());
+
+    add_command_interface_descriptions();
+    joint_pos_commands_.resize(
+      command_interfaces_pos_descr_.size(), std::numeric_limits<double>::quiet_NaN());
+    joint_vel_commands_.resize(
+      command_interfaces_vel_descr_.size(), std::numeric_limits<double>::quiet_NaN());
+    joint_acc_commands_.resize(
+      command_interfaces_acc_descr_.size(), std::numeric_limits<double>::quiet_NaN());
+    joint_eff_commands_.resize(
+      command_interfaces_eff_descr_.size(), std::numeric_limits<double>::quiet_NaN());
+
     return CallbackReturn::SUCCESS;
   };
+
+  virtual void add_state_interface_descriptions()
+  {
+    for (const auto & joint : info_.joints)
+    {
+      for (const auto & state_interface : joint.state_interfaces)
+      {
+        if (state_interface.name == hardware_interface::HW_IF_POSITION)
+        {
+          state_interfaces_pos_descr_.emplace_back(
+            InterfaceDescription(joint.name, state_interface));
+        }
+        else if (state_interface.name == hardware_interface::HW_IF_VELOCITY)
+        {
+          state_interfaces_vel_descr_.emplace_back(
+            InterfaceDescription(joint.name, state_interface));
+        }
+        else if (state_interface.name == hardware_interface::HW_IF_ACCELERATION)
+        {
+          state_interfaces_acc_descr_.emplace_back(
+            InterfaceDescription(joint.name, state_interface));
+        }
+        else if (state_interface.name == hardware_interface::HW_IF_EFFORT)
+        {
+          state_interfaces_eff_descr_.emplace_back(
+            InterfaceDescription(joint.name, state_interface));
+        }
+        else
+        {
+          throw std::runtime_error(
+            "Creation of InterfaceDescription failed.The provided joint type of the state "
+            "interface is unknow.");
+        }
+      }
+    }
+  }
+
+  virtual void add_command_interface_descriptions()
+  {
+    for (const auto & joint : info_.joints)
+    {
+      for (const auto & command_interface : joint.command_interfaces)
+      {
+        if (command_interface.name == hardware_interface::HW_IF_POSITION)
+        {
+          command_interfaces_pos_descr_.emplace_back(
+            InterfaceDescription(joint.name, command_interface));
+        }
+        else if (command_interface.name == hardware_interface::HW_IF_VELOCITY)
+        {
+          command_interfaces_vel_descr_.emplace_back(
+            InterfaceDescription(joint.name, command_interface));
+        }
+        else if (command_interface.name == hardware_interface::HW_IF_ACCELERATION)
+        {
+          command_interfaces_acc_descr_.emplace_back(
+            InterfaceDescription(joint.name, command_interface));
+        }
+        else if (command_interface.name == hardware_interface::HW_IF_EFFORT)
+        {
+          command_interfaces_eff_descr_.emplace_back(
+            InterfaceDescription(joint.name, command_interface));
+        }
+        else
+        {
+          throw std::runtime_error(
+            "Creation of InterfaceDescription failed.The provided joint type of the command "
+            "interface is unknow.");
+        }
+      }
+    }
+  }
 
   /// Exports all state interfaces for this hardware interface.
   /**
@@ -110,7 +203,33 @@ public:
    *
    * \return vector of state interfaces
    */
-  virtual std::vector<StateInterface> export_state_interfaces() = 0;
+  virtual std::vector<StateInterface> export_state_interfaces()
+  {
+    std::vector<hardware_interface::StateInterface> state_interfaces;
+
+    for (size_t i = 0; i < state_interfaces_pos_descr_.size(); ++i)
+    {
+      state_interfaces.emplace_back(
+        StateInterface(state_interfaces_pos_descr_[i], &joint_pos_states_[i]));
+    }
+    for (size_t i = 0; i < state_interfaces_vel_descr_.size(); ++i)
+    {
+      state_interfaces.emplace_back(
+        StateInterface(state_interfaces_vel_descr_[i], &joint_vel_states_[i]));
+    }
+    for (size_t i = 0; i < state_interfaces_acc_descr_.size(); ++i)
+    {
+      state_interfaces.emplace_back(
+        StateInterface(state_interfaces_acc_descr_[i], &joint_acc_states_[i]));
+    }
+    for (size_t i = 0; i < state_interfaces_eff_descr_.size(); ++i)
+    {
+      state_interfaces.emplace_back(
+        StateInterface(state_interfaces_eff_descr_[i], &joint_eff_states_[i]));
+    }
+
+    return state_interfaces;
+  }
 
   /// Exports all command interfaces for this hardware interface.
   /**
@@ -121,7 +240,33 @@ public:
    *
    * \return vector of command interfaces
    */
-  virtual std::vector<CommandInterface> export_command_interfaces() = 0;
+  virtual std::vector<CommandInterface> export_command_interfaces()
+  {
+    std::vector<hardware_interface::CommandInterface> command_interfaces;
+
+    for (size_t i = 0; i < command_interfaces_pos_descr_.size(); ++i)
+    {
+      command_interfaces.emplace_back(
+        CommandInterface(command_interfaces_pos_descr_[i], &joint_pos_commands_[i]));
+    }
+    for (size_t i = 0; i < command_interfaces_vel_descr_.size(); ++i)
+    {
+      command_interfaces.emplace_back(
+        CommandInterface(command_interfaces_vel_descr_[i], &joint_vel_commands_[i]));
+    }
+    for (size_t i = 0; i < command_interfaces_acc_descr_.size(); ++i)
+    {
+      command_interfaces.emplace_back(
+        CommandInterface(command_interfaces_acc_descr_[i], &joint_acc_commands_[i]));
+    }
+    for (size_t i = 0; i < command_interfaces_eff_descr_.size(); ++i)
+    {
+      command_interfaces.emplace_back(
+        CommandInterface(command_interfaces_eff_descr_[i], &joint_eff_commands_[i]));
+    }
+
+    return command_interfaces;
+  }
 
   /// Prepare for a new command interface switch.
   /**
@@ -205,6 +350,23 @@ public:
 
 protected:
   HardwareInfo info_;
+  std::vector<InterfaceDescription> state_interfaces_pos_descr_;
+  std::vector<InterfaceDescription> state_interfaces_vel_descr_;
+  std::vector<InterfaceDescription> state_interfaces_acc_descr_;
+  std::vector<InterfaceDescription> state_interfaces_eff_descr_;
+  std::vector<InterfaceDescription> command_interfaces_pos_descr_;
+  std::vector<InterfaceDescription> command_interfaces_vel_descr_;
+  std::vector<InterfaceDescription> command_interfaces_acc_descr_;
+  std::vector<InterfaceDescription> command_interfaces_eff_descr_;
+
+  std::vector<double> joint_pos_states_;
+  std::vector<double> joint_vel_states_;
+  std::vector<double> joint_acc_states_;
+  std::vector<double> joint_eff_states_;
+  std::vector<double> joint_pos_commands_;
+  std::vector<double> joint_vel_commands_;
+  std::vector<double> joint_acc_commands_;
+  std::vector<double> joint_eff_commands_;
   rclcpp_lifecycle::State lifecycle_state_;
 };
 
