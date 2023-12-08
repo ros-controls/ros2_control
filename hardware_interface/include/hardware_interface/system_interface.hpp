@@ -15,6 +15,7 @@
 #ifndef HARDWARE_INTERFACE__SYSTEM_INTERFACE_HPP_
 #define HARDWARE_INTERFACE__SYSTEM_INTERFACE_HPP_
 
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
@@ -100,25 +101,7 @@ public:
   {
     info_ = hardware_info;
     add_state_interface_descriptions();
-    joint_pos_states_.resize(
-      state_interfaces_pos_descr_.size(), std::numeric_limits<double>::quiet_NaN());
-    joint_vel_states_.resize(
-      state_interfaces_vel_descr_.size(), std::numeric_limits<double>::quiet_NaN());
-    joint_acc_states_.resize(
-      state_interfaces_acc_descr_.size(), std::numeric_limits<double>::quiet_NaN());
-    joint_eff_states_.resize(
-      state_interfaces_eff_descr_.size(), std::numeric_limits<double>::quiet_NaN());
-
     add_command_interface_descriptions();
-    joint_pos_commands_.resize(
-      command_interfaces_pos_descr_.size(), std::numeric_limits<double>::quiet_NaN());
-    joint_vel_commands_.resize(
-      command_interfaces_vel_descr_.size(), std::numeric_limits<double>::quiet_NaN());
-    joint_acc_commands_.resize(
-      command_interfaces_acc_descr_.size(), std::numeric_limits<double>::quiet_NaN());
-    joint_eff_commands_.resize(
-      command_interfaces_eff_descr_.size(), std::numeric_limits<double>::quiet_NaN());
-
     return CallbackReturn::SUCCESS;
   };
 
@@ -128,32 +111,23 @@ public:
     {
       for (const auto & state_interface : joint.state_interfaces)
       {
-        if (state_interface.name == hardware_interface::HW_IF_POSITION)
-        {
-          state_interfaces_pos_descr_.emplace_back(
-            InterfaceDescription(joint.name, state_interface));
-        }
-        else if (state_interface.name == hardware_interface::HW_IF_VELOCITY)
-        {
-          state_interfaces_vel_descr_.emplace_back(
-            InterfaceDescription(joint.name, state_interface));
-        }
-        else if (state_interface.name == hardware_interface::HW_IF_ACCELERATION)
-        {
-          state_interfaces_acc_descr_.emplace_back(
-            InterfaceDescription(joint.name, state_interface));
-        }
-        else if (state_interface.name == hardware_interface::HW_IF_EFFORT)
-        {
-          state_interfaces_eff_descr_.emplace_back(
-            InterfaceDescription(joint.name, state_interface));
-        }
-        else
-        {
-          throw std::runtime_error(
-            "Creation of InterfaceDescription failed.The provided joint type of the state "
-            "interface is unknow.");
-        }
+        joint_states_descr_.emplace_back(InterfaceDescription(joint.name, state_interface));
+      }
+    }
+
+    for (const auto & sensor : info_.sensors)
+    {
+      for (const auto & state_interface : sensor.state_interfaces)
+      {
+        sensor_states_descr_.emplace_back(InterfaceDescription(sensor.name, state_interface));
+      }
+    }
+
+    for (const auto & gpio : info_.gpios)
+    {
+      for (const auto & state_interface : gpio.state_interfaces)
+      {
+        gpio_states_descr_.emplace_back(InterfaceDescription(gpio.name, state_interface));
       }
     }
   }
@@ -164,32 +138,14 @@ public:
     {
       for (const auto & command_interface : joint.command_interfaces)
       {
-        if (command_interface.name == hardware_interface::HW_IF_POSITION)
-        {
-          command_interfaces_pos_descr_.emplace_back(
-            InterfaceDescription(joint.name, command_interface));
-        }
-        else if (command_interface.name == hardware_interface::HW_IF_VELOCITY)
-        {
-          command_interfaces_vel_descr_.emplace_back(
-            InterfaceDescription(joint.name, command_interface));
-        }
-        else if (command_interface.name == hardware_interface::HW_IF_ACCELERATION)
-        {
-          command_interfaces_acc_descr_.emplace_back(
-            InterfaceDescription(joint.name, command_interface));
-        }
-        else if (command_interface.name == hardware_interface::HW_IF_EFFORT)
-        {
-          command_interfaces_eff_descr_.emplace_back(
-            InterfaceDescription(joint.name, command_interface));
-        }
-        else
-        {
-          throw std::runtime_error(
-            "Creation of InterfaceDescription failed.The provided joint type of the command "
-            "interface is unknow.");
-        }
+        joint_commands_descr_.emplace_back(InterfaceDescription(joint.name, command_interface));
+      }
+    }
+    for (const auto & gpio : info_.gpios)
+    {
+      for (const auto & command_interface : gpio.command_interfaces)
+      {
+        gpio_commands_descr_.emplace_back(InterfaceDescription(gpio.name, command_interface));
       }
     }
   }
@@ -206,26 +162,12 @@ public:
   virtual std::vector<StateInterface> export_state_interfaces()
   {
     std::vector<hardware_interface::StateInterface> state_interfaces;
+    state_interfaces.reserve(joint_states_descr_.size());
 
-    for (size_t i = 0; i < state_interfaces_pos_descr_.size(); ++i)
+    for (const auto & descr : joint_states_descr_)
     {
-      state_interfaces.emplace_back(
-        StateInterface(state_interfaces_pos_descr_[i], &joint_pos_states_[i]));
-    }
-    for (size_t i = 0; i < state_interfaces_vel_descr_.size(); ++i)
-    {
-      state_interfaces.emplace_back(
-        StateInterface(state_interfaces_vel_descr_[i], &joint_vel_states_[i]));
-    }
-    for (size_t i = 0; i < state_interfaces_acc_descr_.size(); ++i)
-    {
-      state_interfaces.emplace_back(
-        StateInterface(state_interfaces_acc_descr_[i], &joint_acc_states_[i]));
-    }
-    for (size_t i = 0; i < state_interfaces_eff_descr_.size(); ++i)
-    {
-      state_interfaces.emplace_back(
-        StateInterface(state_interfaces_eff_descr_[i], &joint_eff_states_[i]));
+      joint_states_[descr.get_name()] = std::numeric_limits<double>::quiet_NaN();
+      state_interfaces.emplace_back(StateInterface(descr, &joint_states_[descr.get_name()]));
     }
 
     return state_interfaces;
@@ -243,26 +185,12 @@ public:
   virtual std::vector<CommandInterface> export_command_interfaces()
   {
     std::vector<hardware_interface::CommandInterface> command_interfaces;
+    command_interfaces.reserve(joint_commands_descr_.size());
 
-    for (size_t i = 0; i < command_interfaces_pos_descr_.size(); ++i)
+    for (const auto & descr : joint_commands_descr_)
     {
-      command_interfaces.emplace_back(
-        CommandInterface(command_interfaces_pos_descr_[i], &joint_pos_commands_[i]));
-    }
-    for (size_t i = 0; i < command_interfaces_vel_descr_.size(); ++i)
-    {
-      command_interfaces.emplace_back(
-        CommandInterface(command_interfaces_vel_descr_[i], &joint_vel_commands_[i]));
-    }
-    for (size_t i = 0; i < command_interfaces_acc_descr_.size(); ++i)
-    {
-      command_interfaces.emplace_back(
-        CommandInterface(command_interfaces_acc_descr_[i], &joint_acc_commands_[i]));
-    }
-    for (size_t i = 0; i < command_interfaces_eff_descr_.size(); ++i)
-    {
-      command_interfaces.emplace_back(
-        CommandInterface(command_interfaces_eff_descr_[i], &joint_eff_commands_[i]));
+      joint_commands_[descr.get_name()] = std::numeric_limits<double>::quiet_NaN();
+      command_interfaces.emplace_back(CommandInterface(descr, &joint_commands_[descr.get_name()]));
     }
 
     return command_interfaces;
@@ -348,25 +276,75 @@ public:
    */
   void set_state(const rclcpp_lifecycle::State & new_state) { lifecycle_state_ = new_state; }
 
+  double joint_state_get_value(const InterfaceDescription & interface_descr) const
+  {
+    return joint_states_.at(interface_descr.get_name());
+  }
+
+  void joint_state_set_value(const InterfaceDescription & interface_descr, const double & value)
+  {
+    joint_states_[interface_descr.get_name()] = value;
+  }
+
+  double joint_command_get_value(const InterfaceDescription & interface_descr) const
+  {
+    return joint_commands_.at(interface_descr.get_name());
+  }
+
+  void joint_command_set_value(const InterfaceDescription & interface_descr, const double & value)
+  {
+    joint_commands_[interface_descr.get_name()] = value;
+  }
+
+  double sensor_state_get_value(const InterfaceDescription & interface_descr) const
+  {
+    return sensor_states_.at(interface_descr.get_name());
+  }
+
+  void sensor_state_set_value(const InterfaceDescription & interface_descr, const double & value)
+  {
+    sensor_states_[interface_descr.get_name()] = value;
+  }
+
+  double gpio_state_get_value(const InterfaceDescription & interface_descr) const
+  {
+    return gpio_states_.at(interface_descr.get_name());
+  }
+
+  void gpio_state_set_value(const InterfaceDescription & interface_descr, const double & value)
+  {
+    gpio_states_[interface_descr.get_name()] = value;
+  }
+
+  double gpio_command_get_value(const InterfaceDescription & interface_descr) const
+  {
+    return gpio_commands_.at(interface_descr.get_name());
+  }
+
+  void gpio_commands_set_value(const InterfaceDescription & interface_descr, const double & value)
+  {
+    gpio_commands_[interface_descr.get_name()] = value;
+  }
+
 protected:
   HardwareInfo info_;
-  std::vector<InterfaceDescription> state_interfaces_pos_descr_;
-  std::vector<InterfaceDescription> state_interfaces_vel_descr_;
-  std::vector<InterfaceDescription> state_interfaces_acc_descr_;
-  std::vector<InterfaceDescription> state_interfaces_eff_descr_;
-  std::vector<InterfaceDescription> command_interfaces_pos_descr_;
-  std::vector<InterfaceDescription> command_interfaces_vel_descr_;
-  std::vector<InterfaceDescription> command_interfaces_acc_descr_;
-  std::vector<InterfaceDescription> command_interfaces_eff_descr_;
+  std::vector<InterfaceDescription> joint_states_descr_;
+  std::vector<InterfaceDescription> joint_commands_descr_;
 
-  std::vector<double> joint_pos_states_;
-  std::vector<double> joint_vel_states_;
-  std::vector<double> joint_acc_states_;
-  std::vector<double> joint_eff_states_;
-  std::vector<double> joint_pos_commands_;
-  std::vector<double> joint_vel_commands_;
-  std::vector<double> joint_acc_commands_;
-  std::vector<double> joint_eff_commands_;
+  std::vector<InterfaceDescription> sensor_states_descr_;
+
+  std::vector<InterfaceDescription> gpio_states_descr_;
+  std::vector<InterfaceDescription> gpio_commands_descr_;
+
+private:
+  std::map<std::string, double> joint_states_;
+  std::map<std::string, double> joint_commands_;
+
+  std::map<std::string, double> sensor_states_;
+
+  std::map<std::string, double> gpio_states_;
+  std::map<std::string, double> gpio_commands_;
+
   rclcpp_lifecycle::State lifecycle_state_;
 };
 
