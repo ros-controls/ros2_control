@@ -27,14 +27,14 @@
 namespace joint_limits
 {
 template <typename LimitsType>
-class SimpleJointLimiter : public JointLimiterInterface<LimitsType>
+class JointSaturationLimiter : public JointLimiterInterface<LimitsType>
 {
 public:
   /** \brief Constructor */
-  JOINT_LIMITS_PUBLIC SimpleJointLimiter();
+  JOINT_LIMITS_PUBLIC JointSaturationLimiter();
 
   /** \brief Destructor */
-  JOINT_LIMITS_PUBLIC ~SimpleJointLimiter();
+  JOINT_LIMITS_PUBLIC ~JointSaturationLimiter();
 
   JOINT_LIMITS_PUBLIC bool on_enforce(
     trajectory_msgs::msg::JointTrajectoryPoint & current_joint_states,
@@ -46,13 +46,13 @@ private:
 };
 
 template <typename LimitsType>
-SimpleJointLimiter<LimitsType>::SimpleJointLimiter() : JointLimiterInterface<LimitsType>()
+JointSaturationLimiter<LimitsType>::JointSaturationLimiter() : JointLimiterInterface<LimitsType>()
 {
   clock_ = std::make_shared<rclcpp::Clock>(rclcpp::Clock(RCL_ROS_TIME));
 }
 
 template <typename LimitsType>
-SimpleJointLimiter<LimitsType>::~SimpleJointLimiter()
+JointSaturationLimiter<LimitsType>::~JointSaturationLimiter()
 {
 }
 

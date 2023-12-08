@@ -36,7 +36,7 @@ const double COMMON_THRESHOLD = 0.0011;
 
 using JointLimiter = joint_limits::JointLimiterInterface<joint_limits::JointLimits>;
 
-class SimpleJointLimiterTest : public ::testing::Test
+class JointSaturationLimiterTest : public ::testing::Test
 {
 public:
   void SetUp() override
@@ -77,8 +77,8 @@ public:
     current_joint_states_.velocities[0] += desired_joint_states_.accelerations[0] * dt;
   }
 
-  SimpleJointLimiterTest()
-  : joint_limiter_type_("joint_limits/SimpleJointLimiter"),
+  JointSaturationLimiterTest()
+  : joint_limiter_type_("joint_limits/JointSaturationLimiter"),
     joint_limiter_loader_(
       "joint_limits", "joint_limits::JointLimiterInterface<joint_limits::JointLimits>")
   {

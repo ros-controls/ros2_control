@@ -27,7 +27,7 @@ constexpr double VALUE_CONSIDERED_ZERO = 1e-10;
 namespace joint_limits
 {
 template <>
-bool SimpleJointLimiter<JointLimits>::on_enforce(
+bool JointSaturationLimiter<JointLimits>::on_enforce(
   trajectory_msgs::msg::JointTrajectoryPoint & current_joint_states,
   trajectory_msgs::msg::JointTrajectoryPoint & desired_joint_states, const rclcpp::Duration & dt)
 {
@@ -396,5 +396,5 @@ bool SimpleJointLimiter<JointLimits>::on_enforce(
 #include "pluginlib/class_list_macros.hpp"
 
 PLUGINLIB_EXPORT_CLASS(
-  joint_limits::SimpleJointLimiter<joint_limits::JointLimits>,
+  joint_limits::JointSaturationLimiter<joint_limits::JointLimits>,
   joint_limits::JointLimiterInterface<joint_limits::JointLimits>)
