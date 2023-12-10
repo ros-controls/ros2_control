@@ -40,14 +40,9 @@ const auto COMPARE_DELTA = 0.0001;
 class TestGenericSystem : public ::testing::Test
 {
 public:
-<<<<<<< HEAD
   void test_generic_system_with_mimic_joint(const std::string & urdf);
   void test_generic_system_with_mock_sensor_commands(const std::string & urdf);
   void test_generic_system_with_mock_gpio_commands(const std::string & urdf);
-=======
-  void test_generic_system_with_fake_sensor_commands(std::string & urdf);
-  void test_generic_system_with_mimic_joint(std::string & urdf);
->>>>>>> 88c74ae (Cleanup Resource Manager a bit to increase clarity. (#816))
 
 protected:
   void SetUp() override
@@ -616,7 +611,6 @@ class TestableResourceManager : public hardware_interface::ResourceManager
 public:
   friend TestGenericSystem;
 
-  FRIEND_TEST(TestGenericSystem, generic_fake_system_2dof_symetric_interfaces);
   FRIEND_TEST(TestGenericSystem, generic_system_2dof_symetric_interfaces);
   FRIEND_TEST(TestGenericSystem, generic_system_2dof_asymetric_interfaces);
   FRIEND_TEST(TestGenericSystem, generic_system_2dof_other_interfaces);
@@ -627,38 +621,6 @@ public:
   FRIEND_TEST(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio);
   FRIEND_TEST(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_mock_command);
   FRIEND_TEST(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_mock_command_True);
-
-  TestableResourceManager() : hardware_interface::ResourceManager() {}
-
-  TestableResourceManager(
-    const std::string & urdf, bool validate_interfaces = true, bool activate_all = false)
-  : hardware_interface::ResourceManager(urdf, validate_interfaces, activate_all)
-  {
-  }
-};
-
-// Forward declaration
-namespace hardware_interface
-{
-class ResourceStorage;
-}
-
-class TestableResourceManager : public hardware_interface::ResourceManager
-{
-public:
-  friend TestGenericSystem;
-
-  FRIEND_TEST(TestGenericSystem, generic_fake_system_2dof_symetric_interfaces);
-  FRIEND_TEST(TestGenericSystem, generic_system_2dof_symetric_interfaces);
-  FRIEND_TEST(TestGenericSystem, generic_system_2dof_asymetric_interfaces);
-  FRIEND_TEST(TestGenericSystem, generic_system_2dof_other_interfaces);
-  FRIEND_TEST(TestGenericSystem, generic_system_2dof_sensor);
-  FRIEND_TEST(TestGenericSystem, generic_system_2dof_sensor_fake_command);
-  FRIEND_TEST(TestGenericSystem, generic_system_2dof_sensor_fake_command_True);
-  FRIEND_TEST(TestGenericSystem, hardware_system_2dof_with_mimic_joint);
-  FRIEND_TEST(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio);
-  FRIEND_TEST(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_fake_command);
-  FRIEND_TEST(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_fake_command);
 
   TestableResourceManager() : hardware_interface::ResourceManager() {}
 
@@ -1116,11 +1078,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_sensor)
   ASSERT_EQ(0.33, j2p_c.get_value());
 }
 
-<<<<<<< HEAD
 void TestGenericSystem::test_generic_system_with_mock_sensor_commands(const std::string & urdf)
-=======
-void TestGenericSystem::test_generic_system_with_fake_sensor_commands(std::string & urdf)
->>>>>>> 88c74ae (Cleanup Resource Manager a bit to increase clarity. (#816))
 {
   TestableResourceManager rm(urdf);
   // Activate components to get all interfaces available
@@ -1259,11 +1217,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_sensor_mock_command_True)
   test_generic_system_with_mock_sensor_commands(urdf);
 }
 
-<<<<<<< HEAD
 void TestGenericSystem::test_generic_system_with_mimic_joint(const std::string & urdf)
-=======
-void TestGenericSystem::test_generic_system_with_mimic_joint(std::string & urdf)
->>>>>>> 88c74ae (Cleanup Resource Manager a bit to increase clarity. (#816))
 {
   TestableResourceManager rm(urdf);
   // Activate components to get all interfaces available
@@ -1572,16 +1526,8 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio)
   generic_system_functional_test(urdf);
 }
 
-<<<<<<< HEAD
 void TestGenericSystem::test_generic_system_with_mock_gpio_commands(const std::string & urdf)
 {
-=======
-TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_fake_command)
-{
-  auto urdf = ros2_control_test_assets::urdf_head +
-              valid_urdf_ros2_control_system_robot_with_gpio_fake_command_ +
-              ros2_control_test_assets::urdf_tail;
->>>>>>> 88c74ae (Cleanup Resource Manager a bit to increase clarity. (#816))
   TestableResourceManager rm(urdf);
 
   // check is hardware is started
@@ -1710,7 +1656,7 @@ TEST_F(TestGenericSystem, sensor_with_initial_value)
 {
   auto urdf = ros2_control_test_assets::urdf_head + sensor_with_initial_value_ +
               ros2_control_test_assets::urdf_tail;
-  hardware_interface::ResourceManager rm(urdf);
+  TestableResourceManager rm(urdf);
   // Activate components to get all interfaces available
   activate_components(rm);
 
@@ -1738,7 +1684,7 @@ TEST_F(TestGenericSystem, gpio_with_initial_value)
 {
   auto urdf = ros2_control_test_assets::urdf_head + gpio_with_initial_value_ +
               ros2_control_test_assets::urdf_tail;
-  hardware_interface::ResourceManager rm(urdf);
+  TestableResourceManager rm(urdf);
   // Activate components to get all interfaces available
   activate_components(rm);
 
