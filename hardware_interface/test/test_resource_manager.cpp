@@ -78,15 +78,9 @@ public:
   }
 };
 
-<<<<<<< HEAD
 std::vector<hardware_interface::return_type> set_components_state(
   hardware_interface::ResourceManager & rm, const std::vector<std::string> & components,
   const uint8_t state_id, const std::string & state_name)
-=======
-void set_components_state(
-  TestableResourceManager & rm, const std::vector<std::string> & components, const uint8_t state_id,
-  const std::string & state_name)
->>>>>>> 88c74ae (Cleanup Resource Manager a bit to increase clarity. (#816))
 {
   auto int_components = components;
   if (int_components.empty())
@@ -183,11 +177,8 @@ TEST_F(ResourceManagerTest, initialization_with_urdf_manual_validation)
   EXPECT_TRUE(rm.command_interface_exists("joint3/velocity"));
 }
 
-<<<<<<< HEAD
-TEST_F(ResourceManagerTest, when_missing_state_keys_expect_hw_initialization_fails)
-=======
+
 TEST_F(ResourceManagerTest, initialization_with_wrong_urdf)
->>>>>>> 88c74ae (Cleanup Resource Manager a bit to increase clarity. (#816))
 {
   // missing state keys
   {
@@ -195,10 +186,6 @@ TEST_F(ResourceManagerTest, initialization_with_wrong_urdf)
       TestableResourceManager rm(ros2_control_test_assets::minimal_robot_missing_state_keys_urdf),
       std::exception);
   }
-}
-
-TEST_F(ResourceManagerTest, when_missing_command_keys_expect_hw_initialization_fails)
-{
   // missing command keys
   {
     EXPECT_THROW(
@@ -226,7 +213,6 @@ TEST_F(ResourceManagerTest, initialization_with_urdf_unclaimed)
   }
 }
 
-<<<<<<< HEAD
 TEST_F(ResourceManagerTest, no_load_urdf_function_called)
 {
   TestableResourceManager rm;
@@ -255,8 +241,6 @@ TEST_F(ResourceManagerTest, can_load_urdf_later)
   ASSERT_TRUE(rm.is_urdf_already_loaded());
 }
 
-=======
->>>>>>> 88c74ae (Cleanup Resource Manager a bit to increase clarity. (#816))
 TEST_F(ResourceManagerTest, resource_claiming)
 {
   TestableResourceManager rm(ros2_control_test_assets::minimal_robot_urdf);
@@ -1371,15 +1355,15 @@ TEST_F(ResourceManagerTest, managing_controllers_reference_interfaces)
   EXPECT_THROW(
     rm.make_controller_reference_interfaces_unavailable("unknown_controller"), std::out_of_range);
 }
-<<<<<<< HEAD
-=======
 
 class ResourceManagerTestReadWriteError : public ResourceManagerTest
+
 {
 public:
   void setup_resource_manager_and_do_initial_checks()
   {
     rm = std::make_shared<TestableResourceManager>(
+
       ros2_control_test_assets::minimal_robot_urdf, false);
     activate_components(*rm);
 
@@ -1633,4 +1617,3 @@ TEST_F(ResourceManagerTest, test_caching_of_controllers_to_hardware)
                      {TEST_BROADCASTER_SENSOR_NAME, TEST_BROADCASTER_ALL_NAME})));
   }
 }
->>>>>>> 88c74ae (Cleanup Resource Manager a bit to increase clarity. (#816))
