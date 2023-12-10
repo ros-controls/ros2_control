@@ -177,7 +177,6 @@ TEST_F(ResourceManagerTest, initialization_with_urdf_manual_validation)
   EXPECT_TRUE(rm.command_interface_exists("joint3/velocity"));
 }
 
-
 TEST_F(ResourceManagerTest, initialization_with_wrong_urdf)
 {
   // missing state keys
