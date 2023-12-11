@@ -2457,14 +2457,9 @@ bool ControllerManager::controller_sorting(
     // The case of the controllers that don't have any command interfaces. For instance,
     // joint_state_broadcaster
     // If the controller b is also under the same condition, then maintain their initial order
-    if (ctrl_b.c->command_interface_configuration().names.empty() || !ctrl_b.c->is_chainable())
-    {
-      return false;
-    }
-    else
-    {
-      return true;
-    }
+    const auto command_interfaces_exist = 
+        !ctrl_b.c->command_interface_configuration().names.empty();
+    return ctrl_b.c->is_chainable() && command_interfaces_exist;
   }
   else if (ctrl_b.c->command_interface_configuration().names.empty() || !ctrl_b.c->is_chainable())
   {
