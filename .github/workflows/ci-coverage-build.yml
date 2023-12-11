@@ -16,7 +16,7 @@ jobs:
     env:
       ROS_DISTRO: rolling
     steps:
-      - uses: ros-tooling/setup-ros@0.3.4
+      - uses: ros-tooling/setup-ros@v0.7
         with:
           required-ros-distributions: ${{ env.ROS_DISTRO }}
       - uses: actions/checkout@v4
