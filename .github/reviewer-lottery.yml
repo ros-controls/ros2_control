@@ -13,9 +13,9 @@ groups:
   - name: reviewers
     reviewers: 5
     usernames:
-      - rosterloh
-      - progtologist
+      - aprotyas
       - arne48
+<<<<<<< HEAD
       - DasRoteSkelett
       - Serafadam
       - harderthan
@@ -33,4 +33,21 @@ groups:
       - duringhof
       - bijoua29
       - lm2292
+=======
+      - bijoua29
+      - christophfroehlich
+      - DasRoteSkelett
+      - duringhof
+      - erickisos
+      - fmauch
+      - jaron-l
+      - livanov93
+>>>>>>> 345e70f (Update list of reviewers (#1195))
       - mcbed
+      - moriarty
+      - olivier-stasse
+      - peterdavidfagan
+      - progtologist
+      - saikishor
+      - VanshGehlot
+      - VX792
