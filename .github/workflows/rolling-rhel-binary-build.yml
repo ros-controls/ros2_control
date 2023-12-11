@@ -22,7 +22,7 @@ jobs:
       ROS_DISTRO: rolling
     container: ghcr.io/ros-controls/ros:rolling-rhel
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           path: src/ros2_control
       - run: |

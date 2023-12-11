@@ -11,7 +11,7 @@ jobs:
       matrix:
           linter: [cppcheck, copyright, lint_cmake]
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - uses: ros-tooling/setup-ros@v0.2
     - uses: ros-tooling/action-ros-lint@v0.1
       with:
@@ -35,7 +35,7 @@ jobs:
       matrix:
           linter: [cpplint]
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - uses: ros-tooling/setup-ros@v0.2
     - uses: ros-tooling/action-ros-lint@v0.1
       with:
