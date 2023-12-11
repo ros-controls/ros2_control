@@ -32,5 +32,53 @@ namespace hardware_interface
 HARDWARE_INTERFACE_PUBLIC
 std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & urdf);
 
+/**
+ * \param[in] hw_info the hardware description
+ * \return vector filled with information about robot's SommandInterfaces for the joints
+ * which are exported
+ */
+HARDWARE_INTERFACE_PUBLIC
+std::vector<InterfaceDescription> parse_joint_state_interface_descriptions_from_hardware_info(
+  const HardwareInfo & hw_info);
+
+/**
+ * \param[in] hw_info the hardware description
+ * \return vector filled with information about robot's SommandInterfaces for the sensors
+ * which are exported
+ */
+HARDWARE_INTERFACE_PUBLIC
+std::vector<InterfaceDescription> parse_sensor_state_interface_descriptions_from_hardware_info(
+  const HardwareInfo & hw_info);
+
+/**
+ * \param[in] hw_info the hardware description
+ * \return vector filled with information about robot's SommandInterfaces for the gpios
+ * which are exported
+ */
+HARDWARE_INTERFACE_PUBLIC
+std::vector<InterfaceDescription> parse_gpio_state_interface_descriptions_from_hardware_info(
+  const HardwareInfo & hw_info);
+
+/**
+ * \param[in] hw_info the hardware description
+ * \return vector filled with information about robot's CommandInterfaces for the joints
+ * which are exported
+ */
+HARDWARE_INTERFACE_PUBLIC
+std::vector<InterfaceDescription> parse_joint_command_interface_descriptions_from_hardware_info(
+  const HardwareInfo & hw_info);
+
+/**
+ * \param[in] hw_info the hardware description
+ * \return vector filled with information about robot's CommandInterfaces for the gpios
+ * which are exported
+ */
+HARDWARE_INTERFACE_PUBLIC
+std::vector<InterfaceDescription> parse_gpio_command_interface_descriptions_from_hardware_info(
+  const HardwareInfo & hw_info);
+
+HARDWARE_INTERFACE_PUBLIC
+bool parse_bool(const std::string & bool_string);
+
 }  // namespace hardware_interface
 #endif  // HARDWARE_INTERFACE__COMPONENT_PARSER_HPP_
