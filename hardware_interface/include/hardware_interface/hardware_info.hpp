@@ -140,7 +140,7 @@ struct InterfaceDescription
 
   InterfaceInfo interface_info;
 
-  std::string get_name() const { return prefix_name + interface_info.name; }
+  std::string get_name() const { return prefix_name + "/" + interface_info.name; }
   std::string get_type() const { return interface_info.name; }
 };
 
