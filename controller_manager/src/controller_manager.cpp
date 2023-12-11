@@ -281,10 +281,6 @@ ControllerManager::ControllerManager(
   }
   else
   {
-    RCLCPP_WARN(
-      get_logger(),
-      "[Deprecated] Passing the robot description parameter directly to the control_manager node "
-      "is deprecated. Use '~/robot_description' topic from 'robot_state_publisher' instead.");
     init_resource_manager(robot_description_);
   }
 
@@ -410,56 +406,15 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
       State::PRIMARY_STATE_UNCONFIGURED, hardware_interface::lifecycle_state_names::UNCONFIGURED));
 
   // inactive (configured)
-  // BEGIN: Keep old functionality on for backwards compatibility (Remove at the end of 2023)
-  std::vector<std::string> configure_components_on_start = std::vector<std::string>({});
-  get_parameter("configure_components_on_start", configure_components_on_start);
-  if (!configure_components_on_start.empty())
-  {
-    RCLCPP_WARN(
-      get_logger(),
-      "Parameter 'configure_components_on_start' is deprecated. "
-      "Use 'hardware_components_initial_state.inactive' instead, to set component's initial "
-      "state to 'inactive'. Don't use this parameters in combination with the new "
-      "'hardware_components_initial_state' parameter structure.");
-    set_components_to_state(
-      "configure_components_on_start",
-      rclcpp_lifecycle::State(
-        State::PRIMARY_STATE_INACTIVE, hardware_interface::lifecycle_state_names::INACTIVE));
-  }
-  // END: Keep old functionality on humble backwards compatibility (Remove at the end of 2023)
-  else
-  {
-    set_components_to_state(
-      "hardware_components_initial_state.inactive",
-      rclcpp_lifecycle::State(
-        State::PRIMARY_STATE_INACTIVE, hardware_interface::lifecycle_state_names::INACTIVE));
-  }
+  set_components_to_state(
+    "hardware_components_initial_state.inactive",
+    rclcpp_lifecycle::State(
+      State::PRIMARY_STATE_INACTIVE, hardware_interface::lifecycle_state_names::INACTIVE));
 
-  // BEGIN: Keep old functionality on for backwards compatibility (Remove at the end of 2023)
-  std::vector<std::string> activate_components_on_start = std::vector<std::string>({});
-  get_parameter("activate_components_on_start", activate_components_on_start);
-  rclcpp_lifecycle::State active_state(
-    State::PRIMARY_STATE_ACTIVE, hardware_interface::lifecycle_state_names::ACTIVE);
-  if (!activate_components_on_start.empty())
+  // activate all other components
+  for (const auto & [component, state] : components_to_activate)
   {
-    RCLCPP_WARN(
-      get_logger(),
-      "Parameter 'activate_components_on_start' is deprecated. "
-      "Components are activated per default. Don't use this parameters in combination with the new "
-      "'hardware_components_initial_state' parameter structure.");
-    for (const auto & component : activate_components_on_start)
-    {
-      resource_manager_->set_component_state(component, active_state);
-    }
-  }
-  // END: Keep old functionality on humble for backwards compatibility (Remove at the end of 2023)
-  else
-  {
-    // activate all other components
-    for (const auto & [component, state] : components_to_activate)
-    {
-      resource_manager_->set_component_state(component, active_state);
-    }
+    resource_manager_->set_component_state(component, active_state);
   }
 }
 
