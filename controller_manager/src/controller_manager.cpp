@@ -273,7 +273,6 @@ ControllerManager::ControllerManager(
   }
 
   robot_description_ = "";
-  // TODO(destogl): remove support at the end of 2023
   get_parameter("robot_description", robot_description_);
   if (robot_description_.empty())
   {
