@@ -971,11 +971,6 @@ void ResourceManager::import_component(
     resource_storage_->systems_.size());
 }
 
-size_t ResourceManager::system_components_size() const
-{
-  return resource_storage_->systems_.size();
-}
-
 // CM API: Called in "callback/slow"-thread
 std::unordered_map<std::string, HardwareComponentInfo> ResourceManager::get_components_status()
 {
