@@ -1,4 +1,4 @@
-simple_joint_limiter:
+joint_saturation_limiter:
   ros__parameters:
     joint_limits:
       # Get full specification from parameter server
@@ -23,7 +23,7 @@ simple_joint_limiter:
         soft_lower_limit: 0.1
         soft_upper_limit: 0.9
 
-simple_joint_limiter_nodeclimit:
+joint_saturation_limiter_nodeclimit:
   ros__parameters:
     joint_limits:
       foo_joint:

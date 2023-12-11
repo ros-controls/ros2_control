@@ -14,8 +14,8 @@
 
 /// \author Dr. Denis Stogl
 
-#ifndef JOINT_LIMITS__SIMPLE_JOINT_LIMITER_HPP_
-#define JOINT_LIMITS__SIMPLE_JOINT_LIMITER_HPP_
+#ifndef JOINT_LIMITS__JOINT_SATURATION_LIMITER_HPP_
+#define JOINT_LIMITS__JOINT_SATURATION_LIMITER_HPP_
 
 #include <memory>
 #include <string>
@@ -58,4 +58,4 @@ JointSaturationLimiter<LimitsType>::~JointSaturationLimiter()
 
 }  // namespace joint_limits
 
-#endif  // JOINT_LIMITS__SIMPLE_JOINT_LIMITER_HPP_
+#endif  // JOINT_LIMITS__JOINT_SATURATION_LIMITER_HPP_

@@ -1,5 +1,5 @@
 <class_libraries>
-  <library path="simple_joint_limiter">
+  <library path="joint_saturation_limiter">
     <class name="joint_limits/JointSaturationLimiter"
           type="joint_limits::JointSaturationLimiter&lt;joint_limits::JointLimits&gt;"
           base_class_type="joint_limits::JointLimiterInterface&lt;joint_limits::JointLimits&gt;">

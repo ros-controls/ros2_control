@@ -41,18 +41,18 @@ ament_target_dependencies(joint_limiter_interface PUBLIC ${THIS_PACKAGE_INCLUDE_
 target_compile_definitions(joint_limiter_interface PRIVATE "JOINT_LIMITS_BUILDING_DLL")
 
 
-add_library(simple_joint_limiter SHARED
-  src/simple_joint_limiter.cpp
+add_library(joint_saturation_limiter SHARED
+  src/joint_saturation_limiter.cpp
 )
-target_compile_features(simple_joint_limiter PUBLIC cxx_std_17)
-target_include_directories(simple_joint_limiter PUBLIC
+target_compile_features(joint_saturation_limiter PUBLIC cxx_std_17)
+target_include_directories(joint_saturation_limiter PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/joint_limits>
 )
-ament_target_dependencies(simple_joint_limiter PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
+ament_target_dependencies(joint_saturation_limiter PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.
-target_compile_definitions(simple_joint_limiter PRIVATE "JOINT_LIMITS_BUILDING_DLL")
+target_compile_definitions(joint_saturation_limiter PRIVATE "JOINT_LIMITS_BUILDING_DLL")
 
 pluginlib_export_plugin_description_file(joint_limits joint_limiters.xml)
 
@@ -73,17 +73,17 @@ if(BUILD_TESTING)
     DESTINATION lib/joint_limits
   )
   install(
-    FILES test/joint_limits_rosparam.yaml test/simple_joint_limiter_param.yaml
+    FILES test/joint_limits_rosparam.yaml test/joint_saturation_limiter_param.yaml
     DESTINATION share/joint_limits/test
   )
 
-  add_rostest_with_parameters_gmock(test_simple_joint_limiter test/test_simple_joint_limiter.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/test/simple_joint_limiter_param.yaml
+  add_rostest_with_parameters_gmock(test_joint_saturation_limiter test/test_joint_saturation_limiter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/test/joint_saturation_limiter_param.yaml
   )
-  target_include_directories(test_simple_joint_limiter PRIVATE include)
-  target_link_libraries(test_simple_joint_limiter joint_limiter_interface)
+  target_include_directories(test_joint_saturation_limiter PRIVATE include)
+  target_link_libraries(test_joint_saturation_limiter joint_limiter_interface)
   ament_target_dependencies(
-    test_simple_joint_limiter
+    test_joint_saturation_limiter
     pluginlib
     rclcpp
   )
@@ -97,7 +97,7 @@ install(
 install(TARGETS
     joint_limits
     joint_limiter_interface
-    simple_joint_limiter
+    joint_saturation_limiter
   EXPORT export_joint_limits
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib

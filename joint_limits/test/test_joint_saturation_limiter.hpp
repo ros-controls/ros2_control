@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef TEST_SIMPLE_JOINT_LIMITER_HPP_
-#define TEST_SIMPLE_JOINT_LIMITER_HPP_
+#ifndef TEST_JOINT_SATURATION_LIMITER_HPP_
+#define TEST_JOINT_SATURATION_LIMITER_HPP_
 
 #include <gmock/gmock.h>
 
@@ -100,4 +100,4 @@ protected:
   trajectory_msgs::msg::JointTrajectoryPoint current_joint_states_;
 };
 
-#endif  // TEST_SIMPLE_JOINT_LIMITER_HPP_
+#endif  // TEST_JOINT_SATURATION_LIMITER_HPP_

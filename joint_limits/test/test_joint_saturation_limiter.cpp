@@ -14,7 +14,7 @@
 
 /// \author Dr. Denis Stogl, Guillaume Walck
 
-#include "test_simple_joint_limiter.hpp"
+#include "test_joint_saturation_limiter.hpp"
 
 TEST_F(JointSaturationLimiterTest, when_loading_limiter_plugin_expect_loaded)
 {
@@ -28,7 +28,7 @@ TEST_F(JointSaturationLimiterTest, when_loading_limiter_plugin_expect_loaded)
 /* FIXME: currently init does not check if limit parameters exist for the requested joint
 TEST_F(JointSaturationLimiterTest, when_joint_not_found_expect_init_fail)
 {
-  SetupNode("simple_joint_limiter");
+  SetupNode("joint_saturation_limiter");
   Load();
 
   if (joint_limiter_)
@@ -42,7 +42,7 @@ TEST_F(JointSaturationLimiterTest, when_joint_not_found_expect_init_fail)
 
 TEST_F(JointSaturationLimiterTest, when_invalid_dt_expect_enforce_fail)
 {
-  SetupNode("simple_joint_limiter");
+  SetupNode("joint_saturation_limiter");
   Load();
 
   if (joint_limiter_)
@@ -56,7 +56,7 @@ TEST_F(JointSaturationLimiterTest, when_invalid_dt_expect_enforce_fail)
 
 TEST_F(JointSaturationLimiterTest, when_neigher_poscmd_nor_velcmd_expect_enforce_fail)
 {
-  SetupNode("simple_joint_limiter");
+  SetupNode("joint_saturation_limiter");
   Load();
 
   if (joint_limiter_)
@@ -76,7 +76,7 @@ TEST_F(JointSaturationLimiterTest, when_neigher_poscmd_nor_velcmd_expect_enforce
 
 TEST_F(JointSaturationLimiterTest, when_no_posstate_expect_enforce_false)
 {
-  SetupNode("simple_joint_limiter");
+  SetupNode("joint_saturation_limiter");
   Load();
 
   if (joint_limiter_)
@@ -97,7 +97,7 @@ TEST_F(JointSaturationLimiterTest, when_no_posstate_expect_enforce_false)
 
 TEST_F(JointSaturationLimiterTest, when_no_velstate_expect_limiting)
 {
-  SetupNode("simple_joint_limiter");
+  SetupNode("joint_saturation_limiter");
   Load();
 
   if (joint_limiter_)
@@ -117,7 +117,7 @@ TEST_F(JointSaturationLimiterTest, when_no_velstate_expect_limiting)
 
 TEST_F(JointSaturationLimiterTest, when_within_limits_expect_no_limits_applied)
 {
-  SetupNode("simple_joint_limiter");
+  SetupNode("joint_saturation_limiter");
   Load();
 
   if (joint_limiter_)
@@ -145,7 +145,7 @@ TEST_F(JointSaturationLimiterTest, when_within_limits_expect_no_limits_applied)
 
 TEST_F(JointSaturationLimiterTest, when_posvel_leads_to_vel_exceeded_expect_limits_enforced)
 {
-  SetupNode("simple_joint_limiter");
+  SetupNode("joint_saturation_limiter");
   Load();
 
   if (joint_limiter_)
@@ -189,7 +189,7 @@ TEST_F(JointSaturationLimiterTest, when_posvel_leads_to_vel_exceeded_expect_limi
 
 TEST_F(JointSaturationLimiterTest, when_posonly_leads_to_vel_exceeded_expect_pos_acc_enforced)
 {
-  SetupNode("simple_joint_limiter");
+  SetupNode("joint_saturation_limiter");
   Load();
 
   if (joint_limiter_)
@@ -229,7 +229,7 @@ TEST_F(JointSaturationLimiterTest, when_posonly_leads_to_vel_exceeded_expect_pos
 
 TEST_F(JointSaturationLimiterTest, when_velonly_leads_to_vel_exceeded_expect_vel_acc_enforced)
 {
-  SetupNode("simple_joint_limiter");
+  SetupNode("joint_saturation_limiter");
   Load();
 
   if (joint_limiter_)
@@ -275,7 +275,7 @@ TEST_F(JointSaturationLimiterTest, when_velonly_leads_to_vel_exceeded_expect_vel
 
 TEST_F(JointSaturationLimiterTest, when_posonly_exceeded_expect_pos_enforced)
 {
-  SetupNode("simple_joint_limiter");
+  SetupNode("joint_saturation_limiter");
   Load();
 
   if (joint_limiter_)
@@ -302,7 +302,7 @@ TEST_F(JointSaturationLimiterTest, when_posonly_exceeded_expect_pos_enforced)
 
 TEST_F(JointSaturationLimiterTest, when_position_close_to_pos_limit_expect_deceleration_enforced)
 {
-  SetupNode("simple_joint_limiter");
+  SetupNode("joint_saturation_limiter");
   Load();
 
   if (joint_limiter_)
@@ -348,7 +348,7 @@ TEST_F(JointSaturationLimiterTest, when_position_close_to_pos_limit_expect_decel
 
 TEST_F(JointSaturationLimiterTest, when_posvel_leads_to_acc_exceeded_expect_limits_enforced)
 {
-  SetupNode("simple_joint_limiter");
+  SetupNode("joint_saturation_limiter");
   Load();
 
   if (joint_limiter_)
@@ -377,7 +377,7 @@ TEST_F(JointSaturationLimiterTest, when_posvel_leads_to_acc_exceeded_expect_limi
 
 TEST_F(JointSaturationLimiterTest, when_posonly_leads_to_acc_exceeded_expect_limits_enforced)
 {
-  SetupNode("simple_joint_limiter");
+  SetupNode("joint_saturation_limiter");
   Load();
 
   if (joint_limiter_)
@@ -406,7 +406,7 @@ TEST_F(JointSaturationLimiterTest, when_posonly_leads_to_acc_exceeded_expect_lim
 
 TEST_F(JointSaturationLimiterTest, when_velonly_leads_to_acc_exceeded_expect_limits_enforced)
 {
-  SetupNode("simple_joint_limiter");
+  SetupNode("joint_saturation_limiter");
   Load();
 
   if (joint_limiter_)
@@ -432,7 +432,7 @@ TEST_F(JointSaturationLimiterTest, when_velonly_leads_to_acc_exceeded_expect_lim
 
 TEST_F(JointSaturationLimiterTest, when_deceleration_exceeded_expect_dec_enforced)
 {
-  SetupNode("simple_joint_limiter");
+  SetupNode("joint_saturation_limiter");
   Load();
 
   if (joint_limiter_)
@@ -462,7 +462,7 @@ TEST_F(JointSaturationLimiterTest, when_deceleration_exceeded_expect_dec_enforce
 
 TEST_F(JointSaturationLimiterTest, when_deceleration_exceeded_with_no_maxdec_expect_acc_enforced)
 {
-  SetupNode("simple_joint_limiter_nodeclimit");
+  SetupNode("joint_saturation_limiter_nodeclimit");
   Load();
 
   if (joint_limiter_)
