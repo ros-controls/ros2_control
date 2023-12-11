@@ -138,10 +138,19 @@ struct InterfaceDescription
    */
   std::string prefix_name;
 
+  /**
+   * What type of component is exported: joint, sensor or gpio
+   */
+  std::string component_type;
+
+  /**
+   * Information about the Interface type (position, velocity,...) as well as limits and so on.
+   */
   InterfaceInfo interface_info;
 
   std::string get_name() const { return prefix_name + "/" + interface_info.name; }
-  std::string get_type() const { return interface_info.name; }
+
+  std::string get_interface_type() const { return interface_info.name; }
 };
 
 /// This structure stores information about hardware defined in a robot's URDF.
