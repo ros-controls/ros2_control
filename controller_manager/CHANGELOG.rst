@@ -2,6 +2,22 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.35.1 (2023-11-27)
+-------------------
+
+2.35.0 (2023-11-14)
+-------------------
+* Fix the controller sorting bug when the interfaces are not configured (fixes `#1164 <https://github.com/ros-controls/ros2_control/issues/1164>`_) (`#1165 <https://github.com/ros-controls/ros2_control/issues/1165>`_) (`#1166 <https://github.com/ros-controls/ros2_control/issues/1166>`_)
+* [CM] Use `robot_description` topic instead of parameter and don't crash on empty URDF 🦿 (backport `#940 <https://github.com/ros-controls/ros2_control/issues/940>`_) (`#1052 <https://github.com/ros-controls/ros2_control/issues/1052>`_)
+* Contributors: Sai Kishor Kothakota, Denis Stogl
+
+2.34.0 (2023-11-08)
+-------------------
+* [Humble] Controller sorting (`#1157 <https://github.com/ros-controls/ros2_control/issues/1157>`_)
+* Update spawner to accept controllers list and start them in sequence (backport `#1139 <https://github.com/ros-controls/ros2_control/issues/1139>`_) (`#1149 <https://github.com/ros-controls/ros2_control/issues/1149>`_)
+* Create doc file for chained controllers (backport `#985 <https://github.com/ros-controls/ros2_control/issues/985>`_) (`#1131 <https://github.com/ros-controls/ros2_control/issues/1131>`_)
+* Contributors: Sai Kishor Kothakota, mergify[bot]
+
 2.33.0 (2023-10-11)
 -------------------
 * Export of the get_cm_node_options() from robostack (`#1129 <https://github.com/ros-controls/ros2_control/issues/1129>`_) (`#1130 <https://github.com/ros-controls/ros2_control/issues/1130>`_)

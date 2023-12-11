@@ -2,6 +2,19 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.35.1 (2023-11-27)
+-------------------
+* [MockHardware] Fix the issues where hardware with multiple interfaces can not be started because of a logical bug added when adding dynamics calculation functionality. (`#1151 <https://github.com/ros-controls/ros2_control/issues/1151>`_) (`#1178 <https://github.com/ros-controls/ros2_control/issues/1178>`_)
+* Contributors: Dr Denis
+
+2.35.0 (2023-11-14)
+-------------------
+* [CM] Use `robot_description` topic instead of parameter and don't crash on empty URDF 🦿 (backport `#940 <https://github.com/ros-controls/ros2_control/issues/940>`_) (`#1052 <https://github.com/ros-controls/ros2_control/issues/1052>`_)
+* Contributors: mergify[bot]
+
+2.34.0 (2023-11-08)
+-------------------
+
 2.33.0 (2023-10-11)
 -------------------
 * [MockHardware] Added dynamic simulation functionality. (`#1028 <https://github.com/ros-controls/ros2_control/issues/1028>`_) (`#1125 <https://github.com/ros-controls/ros2_control/issues/1125>`_)

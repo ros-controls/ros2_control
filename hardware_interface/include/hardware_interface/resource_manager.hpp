@@ -83,6 +83,16 @@ public:
    */
   void load_urdf(const std::string & urdf, bool validate_interfaces = true);
 
+  /**
+   * @brief if the resource manager load_urdf(...) function has been called this returns true.
+   * We want to permit to load the urdf later on but we currently don't want to permit multiple
+   * calls to load_urdf (reloading/loading different urdf).
+   *
+   * @return true if resource manager's load_urdf() has been already called.
+   * @return false if resource manager's load_urdf() has not been yet called.
+   */
+  bool is_urdf_already_loaded() const;
+
   /// Claim a state interface given its key.
   /**
    * The resource is claimed as long as being in scope.
@@ -107,12 +117,6 @@ public:
    * \return Vector of strings, containing all available state interface names.
    */
   std::vector<std::string> available_state_interfaces() const;
-
-  /// Checks whether a state interface is registered under the given key.
-  /**
-   * \return true if interface exist, false otherwise.
-   */
-  bool state_interface_exists(const std::string & key) const;
 
   /// Checks whether a state interface is available under the given key.
   /**
@@ -187,8 +191,9 @@ public:
   /**
    * Return list of cached controller names that use the hardware with name \p hardware_name.
    *
-   * \param[in] hardware_name the name of the hardware for which cached controllers should be returned.
-   * \returns list of cached controller names that depend on hardware with name \p hardware_name.
+   * \param[in] hardware_name the name of the hardware for which cached controllers should be
+   * returned. \returns list of cached controller names that depend on hardware with name \p
+   * hardware_name.
    */
   std::vector<std::string> get_cached_controllers_to_hardware(const std::string & hardware_name);
 
@@ -227,13 +232,6 @@ public:
    * \return vector of strings, containing all available command interface names.
    */
   std::vector<std::string> available_command_interfaces() const;
-
-  /// Checks whether a command interface is registered under the given key.
-  /**
-   * \param[in] key string identifying the interface to check.
-   * \return true if interface exist, false otherwise.
-   */
-  bool command_interface_exists(const std::string & key) const;
 
   /// Checks whether a command interface is available under the given name.
   /**
@@ -390,6 +388,19 @@ public:
    */
   void activate_all_components();
 
+  /// Checks whether a command interface is registered under the given key.
+  /**
+   * \param[in] key string identifying the interface to check.
+   * \return true if interface exist, false otherwise.
+   */
+  bool command_interface_exists(const std::string & key) const;
+
+  /// Checks whether a state interface is registered under the given key.
+  /**
+   * \return true if interface exist, false otherwise.
+   */
+  bool state_interface_exists(const std::string & key) const;
+
 private:
   void validate_storage(const std::vector<hardware_interface::HardwareInfo> & hardware_info) const;
 
@@ -405,6 +416,8 @@ private:
 
   // Structure to store read and write status so it is not initialized in the real-time loop
   HardwareReadWriteStatus read_write_status;
+
+  bool is_urdf_loaded__ = false;
 };
 
 }  // namespace hardware_interface

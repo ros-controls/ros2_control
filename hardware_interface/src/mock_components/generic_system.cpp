@@ -375,6 +375,11 @@ return_type GenericSystem::prepare_command_mode_switch(
 {
   hardware_interface::return_type ret_val = hardware_interface::return_type::OK;
 
+  if (!calculate_dynamics_)
+  {
+    return ret_val;
+  }
+
   const size_t FOUND_ONCE_FLAG = 1000000;
 
   std::vector<size_t> joint_found_in_x_requests_;
