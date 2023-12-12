@@ -2,6 +2,14 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* [CM] Linting if/else statements (`#1193 <https://github.com/ros-controls/ros2_control/issues/1193>`_)
+* Reformat with braces added (`#1209 <https://github.com/ros-controls/ros2_control/issues/1209>`_)
+* Report inactive controllers as a diagnostics ok instead of an error (`#1184 <https://github.com/ros-controls/ros2_control/issues/1184>`_)
+* Fix controller sorting issue while loading large number of controllers (`#1180 <https://github.com/ros-controls/ros2_control/issues/1180>`_)
+* Contributors: Bence Magyar, Dr. Denis, Lennart Nachtigall, Sai Kishor Kothakota
+
 4.1.0 (2023-11-30)
 ------------------
 * Add few warning compiler options to error (`#1181 <https://github.com/ros-controls/ros2_control/issues/1181>`_)
