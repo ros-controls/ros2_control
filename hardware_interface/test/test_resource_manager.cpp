@@ -457,10 +457,28 @@ TEST_F(ResourceManagerTest, expect_prepare_perform_switch_to_work_only_when_hw_i
   EXPECT_EQ(1u, rm.actuator_components_size());
   EXPECT_EQ(1u, rm.system_components_size());
 
+  // Set both HW to ACTIVE to claim interfaces. There should stay persistent because we are not
+  // cleaning them for now, so this is a good way to keep the access and "f* the system"
   set_components_state(
     rm, {"TestSystemCommandModes"}, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, "active");
+  set_components_state(
+    rm, {"TestActuatorHardware"}, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, "active");
+  // State to get feedback how many times "prepare_for_switch" is called
+  auto claimed_system_acceleration_state = rm.claim_state_interface("joint1/acceleration");
+  auto claimed_actuator_position_state = rm.claim_state_interface("joint3/position");
 
+  // System  : ACTIVE
+  // Actuator: UNCONFIGURED
   {
+    set_components_state(
+      rm, {"TestSystemCommandModes"}, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, "active");
+    set_components_state(
+      rm, {"TestActuatorHardware"}, lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+      "unconfigured");
+
+    double ACTUATOR_CALL_COUNTER_START_VALUE = 0.0;
+    double SYSTEM_CALL_COUNTER_START_VALUE = 0.0;
+
     auto status_map = rm.get_components_status();
     EXPECT_EQ(
       status_map["TestSystemCommandModes"].state.id(),
@@ -468,30 +486,49 @@ TEST_F(ResourceManagerTest, expect_prepare_perform_switch_to_work_only_when_hw_i
     EXPECT_EQ(
       status_map["TestActuatorHardware"].state.id(),
       lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+
+    // Default behavior for empty key lists, e.g., when a Broadcaster is activated
+    EXPECT_TRUE(rm.prepare_command_mode_switch(empty_keys, empty_keys));
+
+    // When non existing keys are provided
+    EXPECT_FALSE(rm.prepare_command_mode_switch(non_existing_keys, non_existing_keys));
+    EXPECT_FALSE(rm.prepare_command_mode_switch(non_existing_keys, empty_keys));
+    EXPECT_FALSE(rm.prepare_command_mode_switch(empty_keys, non_existing_keys));
+
+    // When TestActuatorHardware is UNCONFIGURED expect failure (not available)
+    EXPECT_FALSE(rm.prepare_command_mode_switch(legal_keys_actuator, legal_keys_actuator));
+    EXPECT_EQ(claimed_actuator_position_state.get_value(), ACTUATOR_CALL_COUNTER_START_VALUE + 0.0);
+    EXPECT_EQ(claimed_system_acceleration_state.get_value(), SYSTEM_CALL_COUNTER_START_VALUE + 0.0);
+    EXPECT_FALSE(rm.prepare_command_mode_switch(legal_keys_actuator, empty_keys));
+    EXPECT_EQ(claimed_actuator_position_state.get_value(), ACTUATOR_CALL_COUNTER_START_VALUE + 0.0);
+    EXPECT_EQ(claimed_system_acceleration_state.get_value(), SYSTEM_CALL_COUNTER_START_VALUE + 0.0);
+    EXPECT_FALSE(rm.prepare_command_mode_switch(empty_keys, legal_keys_actuator));
+    EXPECT_EQ(claimed_actuator_position_state.get_value(), ACTUATOR_CALL_COUNTER_START_VALUE + 0.0);
+    EXPECT_EQ(claimed_system_acceleration_state.get_value(), SYSTEM_CALL_COUNTER_START_VALUE + 0.0);
+
+    // When TestSystemCommandModes is ACTIVE expect OK
+    EXPECT_TRUE(rm.prepare_command_mode_switch(legal_keys_system, legal_keys_system));
+    EXPECT_EQ(claimed_actuator_position_state.get_value(), ACTUATOR_CALL_COUNTER_START_VALUE + 0.0);
+    EXPECT_EQ(claimed_system_acceleration_state.get_value(), SYSTEM_CALL_COUNTER_START_VALUE + 1.0);
+    EXPECT_TRUE(rm.prepare_command_mode_switch(legal_keys_system, empty_keys));
+    EXPECT_EQ(claimed_actuator_position_state.get_value(), ACTUATOR_CALL_COUNTER_START_VALUE + 0.0);
+    EXPECT_EQ(claimed_system_acceleration_state.get_value(), SYSTEM_CALL_COUNTER_START_VALUE + 2.0);
+    EXPECT_TRUE(rm.prepare_command_mode_switch(empty_keys, legal_keys_system));
+    EXPECT_EQ(claimed_actuator_position_state.get_value(), ACTUATOR_CALL_COUNTER_START_VALUE + 0.0);
+    EXPECT_EQ(claimed_system_acceleration_state.get_value(), SYSTEM_CALL_COUNTER_START_VALUE + 3.0);
   }
 
-  // Default behavior for empty key lists, e.g., when a Broadcaster is activated
-  EXPECT_TRUE(rm.prepare_command_mode_switch(empty_keys, empty_keys));
-
-  // When non existing keys are provided
-  EXPECT_FALSE(rm.prepare_command_mode_switch(non_existing_keys, non_existing_keys));
-  EXPECT_FALSE(rm.prepare_command_mode_switch(non_existing_keys, empty_keys));
-  EXPECT_FALSE(rm.prepare_command_mode_switch(empty_keys, non_existing_keys));
-
-  // When TestActuatorHardware is UNCONFIGURED expect failure
-  EXPECT_FALSE(rm.prepare_command_mode_switch(legal_keys_actuator, legal_keys_actuator));
-  EXPECT_FALSE(rm.prepare_command_mode_switch(legal_keys_actuator, empty_keys));
-  EXPECT_FALSE(rm.prepare_command_mode_switch(empty_keys, legal_keys_actuator));
-
-  // When TestSystemCommandModes is ACTIVE expect OK
-  EXPECT_TRUE(rm.prepare_command_mode_switch(legal_keys_system, legal_keys_system));
-  EXPECT_TRUE(rm.prepare_command_mode_switch(legal_keys_system, empty_keys));
-  EXPECT_TRUE(rm.prepare_command_mode_switch(empty_keys, legal_keys_system));
-
-  set_components_state(
-    rm, {"TestActuatorHardware"}, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, "inactive");
-
+  // System  : ACTIVE
+  // Actuator: INACTIVE
   {
+    set_components_state(
+      rm, {"TestSystemCommandModes"}, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, "active");
+    set_components_state(
+      rm, {"TestActuatorHardware"}, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, "inactive");
+
+    double ACTUATOR_CALL_COUNTER_START_VALUE = 0.0;
+    double SYSTEM_CALL_COUNTER_START_VALUE = 3.0;
+
     auto status_map = rm.get_components_status();
     EXPECT_EQ(
       status_map["TestSystemCommandModes"].state.id(),
@@ -499,62 +536,154 @@ TEST_F(ResourceManagerTest, expect_prepare_perform_switch_to_work_only_when_hw_i
     EXPECT_EQ(
       status_map["TestActuatorHardware"].state.id(),
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+
+    // Default behavior for empty key lists, e.g., when a Broadcaster is activated
+    EXPECT_TRUE(rm.prepare_command_mode_switch(empty_keys, empty_keys));
+
+    // When non existing keys are provided
+    EXPECT_FALSE(rm.prepare_command_mode_switch(non_existing_keys, non_existing_keys));
+    EXPECT_FALSE(rm.prepare_command_mode_switch(non_existing_keys, empty_keys));
+    EXPECT_FALSE(rm.prepare_command_mode_switch(empty_keys, non_existing_keys));
+
+    // When TestActuatorHardware is INACTIVE expect OK
+    EXPECT_TRUE(rm.prepare_command_mode_switch(legal_keys_actuator, legal_keys_actuator));
+    // called first time because it was UNCONFIGURED
+    EXPECT_EQ(claimed_actuator_position_state.get_value(), ACTUATOR_CALL_COUNTER_START_VALUE + 1.0);
+    EXPECT_EQ(claimed_system_acceleration_state.get_value(), SYSTEM_CALL_COUNTER_START_VALUE + 1.0);
+    EXPECT_TRUE(rm.prepare_command_mode_switch(legal_keys_actuator, empty_keys));
+    EXPECT_EQ(claimed_actuator_position_state.get_value(), ACTUATOR_CALL_COUNTER_START_VALUE + 2.0);
+    EXPECT_EQ(claimed_system_acceleration_state.get_value(), SYSTEM_CALL_COUNTER_START_VALUE + 2.0);
+    EXPECT_TRUE(rm.prepare_command_mode_switch(empty_keys, legal_keys_actuator));
+    EXPECT_EQ(claimed_actuator_position_state.get_value(), ACTUATOR_CALL_COUNTER_START_VALUE + 3.0);
+    EXPECT_EQ(claimed_system_acceleration_state.get_value(), SYSTEM_CALL_COUNTER_START_VALUE + 3.0);
+
+    // When TestSystemCommandModes is ACTIVE expect OK
+    EXPECT_TRUE(rm.prepare_command_mode_switch(legal_keys_system, legal_keys_system));
+    EXPECT_EQ(claimed_actuator_position_state.get_value(), ACTUATOR_CALL_COUNTER_START_VALUE + 4.0);
+    EXPECT_EQ(claimed_system_acceleration_state.get_value(), SYSTEM_CALL_COUNTER_START_VALUE + 4.0);
+    EXPECT_TRUE(rm.prepare_command_mode_switch(legal_keys_system, empty_keys));
+    EXPECT_EQ(claimed_actuator_position_state.get_value(), ACTUATOR_CALL_COUNTER_START_VALUE + 5.0);
+    EXPECT_EQ(claimed_system_acceleration_state.get_value(), SYSTEM_CALL_COUNTER_START_VALUE + 5.0);
+    EXPECT_TRUE(rm.prepare_command_mode_switch(empty_keys, legal_keys_system));
+    EXPECT_EQ(claimed_actuator_position_state.get_value(), ACTUATOR_CALL_COUNTER_START_VALUE + 6.0);
+    EXPECT_EQ(claimed_system_acceleration_state.get_value(), SYSTEM_CALL_COUNTER_START_VALUE + 6.0);
   }
 
-  // Default behavior for empty key lists, e.g., when a Broadcaster is activated
-  EXPECT_TRUE(rm.prepare_command_mode_switch(empty_keys, empty_keys));
-
-  // When non existing keys are provided
-  EXPECT_FALSE(rm.prepare_command_mode_switch(non_existing_keys, non_existing_keys));
-  EXPECT_FALSE(rm.prepare_command_mode_switch(non_existing_keys, empty_keys));
-  EXPECT_FALSE(rm.prepare_command_mode_switch(empty_keys, non_existing_keys));
-
-  // When TestActuatorHardware is INACTIVE expect failure
-  EXPECT_TRUE(rm.prepare_command_mode_switch(legal_keys_actuator, legal_keys_actuator));
-  EXPECT_TRUE(rm.prepare_command_mode_switch(legal_keys_actuator, empty_keys));
-  EXPECT_TRUE(rm.prepare_command_mode_switch(empty_keys, legal_keys_actuator));
-
-  // When TestSystemCommandModes is FINALIZED expect OK
-  EXPECT_TRUE(rm.prepare_command_mode_switch(legal_keys_system, legal_keys_system));
-  EXPECT_TRUE(rm.prepare_command_mode_switch(legal_keys_system, empty_keys));
-  EXPECT_TRUE(rm.prepare_command_mode_switch(empty_keys, legal_keys_system));
-
-  set_components_state(
-    rm, {"TestSystemCommandModes"}, lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
-    "finalized");
-
+  // System  : INACTIVE
+  // Actuator: ACTIVE
   {
+    set_components_state(
+      rm, {"TestSystemCommandModes"}, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+      "inactive");
+    set_components_state(
+      rm, {"TestActuatorHardware"}, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, "active");
+
+    double ACTUATOR_CALL_COUNTER_START_VALUE = 6.0;
+    double SYSTEM_CALL_COUNTER_START_VALUE = 9.0;
+
+    auto status_map = rm.get_components_status();
+    EXPECT_EQ(
+      status_map["TestSystemCommandModes"].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+    EXPECT_EQ(
+      status_map["TestActuatorHardware"].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+
+    // Default behavior for empty key lists, e.g., when a Broadcaster is activated
+    EXPECT_TRUE(rm.prepare_command_mode_switch(empty_keys, empty_keys));
+
+    // When non existing keys are provided
+    EXPECT_FALSE(rm.prepare_command_mode_switch(non_existing_keys, non_existing_keys));
+    EXPECT_FALSE(rm.prepare_command_mode_switch(non_existing_keys, empty_keys));
+    EXPECT_FALSE(rm.prepare_command_mode_switch(empty_keys, non_existing_keys));
+
+    // When TestActuatorHardware is ACTIVE expect OK
+    EXPECT_TRUE(rm.prepare_command_mode_switch(legal_keys_actuator, legal_keys_actuator));
+    EXPECT_EQ(claimed_actuator_position_state.get_value(), ACTUATOR_CALL_COUNTER_START_VALUE + 1.0);
+    EXPECT_EQ(claimed_system_acceleration_state.get_value(), SYSTEM_CALL_COUNTER_START_VALUE + 1.0);
+    EXPECT_TRUE(rm.prepare_command_mode_switch(legal_keys_actuator, empty_keys));
+    EXPECT_EQ(claimed_actuator_position_state.get_value(), ACTUATOR_CALL_COUNTER_START_VALUE + 2.0);
+    EXPECT_EQ(claimed_system_acceleration_state.get_value(), SYSTEM_CALL_COUNTER_START_VALUE + 2.0);
+    EXPECT_TRUE(rm.prepare_command_mode_switch(empty_keys, legal_keys_actuator));
+    EXPECT_EQ(claimed_actuator_position_state.get_value(), ACTUATOR_CALL_COUNTER_START_VALUE + 3.0);
+    EXPECT_EQ(claimed_system_acceleration_state.get_value(), SYSTEM_CALL_COUNTER_START_VALUE + 3.0);
+
+    // When TestSystemCommandModes is INACTIVE expect OK
+    EXPECT_TRUE(rm.prepare_command_mode_switch(legal_keys_system, legal_keys_system));
+    EXPECT_EQ(claimed_actuator_position_state.get_value(), ACTUATOR_CALL_COUNTER_START_VALUE + 4.0);
+    EXPECT_EQ(claimed_system_acceleration_state.get_value(), SYSTEM_CALL_COUNTER_START_VALUE + 4.0);
+    EXPECT_TRUE(rm.prepare_command_mode_switch(legal_keys_system, empty_keys));
+    EXPECT_EQ(claimed_actuator_position_state.get_value(), ACTUATOR_CALL_COUNTER_START_VALUE + 5.0);
+    EXPECT_EQ(claimed_system_acceleration_state.get_value(), SYSTEM_CALL_COUNTER_START_VALUE + 5.0);
+    EXPECT_TRUE(rm.prepare_command_mode_switch(empty_keys, legal_keys_system));
+    EXPECT_EQ(claimed_actuator_position_state.get_value(), ACTUATOR_CALL_COUNTER_START_VALUE + 6.0);
+    EXPECT_EQ(claimed_system_acceleration_state.get_value(), SYSTEM_CALL_COUNTER_START_VALUE + 6.0);
+  }
+
+  // System  : UNCONFIGURED
+  // Actuator: ACTIVE
+  {
+    set_components_state(
+      rm, {"TestSystemCommandModes"}, lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+      "unconfigured");
+    set_components_state(
+      rm, {"TestActuatorHardware"}, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, "active");
+
+    double SYSTEM_CALL_COUNTER_START_VALUE = 15.0;
+    double ACTUATOR_CALL_COUNTER_START_VALUE = 12.0;
+
     auto status_map = rm.get_components_status();
     EXPECT_EQ(
       status_map["TestSystemCommandModes"].state.id(),
       lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
     EXPECT_EQ(
       status_map["TestActuatorHardware"].state.id(),
-      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+
+    // Default behavior for empty key lists, e.g., when a Broadcaster is activated
+    EXPECT_TRUE(rm.prepare_command_mode_switch(empty_keys, empty_keys));
+
+    // When non existing keys are provided
+    EXPECT_FALSE(rm.prepare_command_mode_switch(non_existing_keys, non_existing_keys));
+    EXPECT_FALSE(rm.prepare_command_mode_switch(non_existing_keys, empty_keys));
+    EXPECT_FALSE(rm.prepare_command_mode_switch(empty_keys, non_existing_keys));
+
+    // When TestActuatorHardware is ACTIVE expect OK
+    EXPECT_TRUE(rm.prepare_command_mode_switch(legal_keys_actuator, legal_keys_actuator));
+    EXPECT_EQ(claimed_actuator_position_state.get_value(), ACTUATOR_CALL_COUNTER_START_VALUE + 1.0);
+    EXPECT_EQ(claimed_system_acceleration_state.get_value(), SYSTEM_CALL_COUNTER_START_VALUE + 0.0);
+    EXPECT_TRUE(rm.prepare_command_mode_switch(legal_keys_actuator, empty_keys));
+    EXPECT_EQ(claimed_actuator_position_state.get_value(), ACTUATOR_CALL_COUNTER_START_VALUE + 2.0);
+    EXPECT_EQ(claimed_system_acceleration_state.get_value(), SYSTEM_CALL_COUNTER_START_VALUE + 0.0);
+    EXPECT_TRUE(rm.prepare_command_mode_switch(empty_keys, legal_keys_actuator));
+    EXPECT_EQ(claimed_actuator_position_state.get_value(), ACTUATOR_CALL_COUNTER_START_VALUE + 3.0);
+    EXPECT_EQ(claimed_system_acceleration_state.get_value(), SYSTEM_CALL_COUNTER_START_VALUE + 0.0);
+
+    // When TestSystemCommandModes is UNCONFIGURED expect failure (not available)
+    EXPECT_FALSE(rm.prepare_command_mode_switch(legal_keys_system, legal_keys_system));
+    EXPECT_EQ(claimed_actuator_position_state.get_value(), ACTUATOR_CALL_COUNTER_START_VALUE + 3.0);
+    EXPECT_EQ(claimed_system_acceleration_state.get_value(), SYSTEM_CALL_COUNTER_START_VALUE + 0.0);
+    EXPECT_FALSE(rm.prepare_command_mode_switch(legal_keys_system, empty_keys));
+    EXPECT_EQ(claimed_actuator_position_state.get_value(), ACTUATOR_CALL_COUNTER_START_VALUE + 3.0);
+    EXPECT_EQ(claimed_system_acceleration_state.get_value(), SYSTEM_CALL_COUNTER_START_VALUE + 0.0);
+    EXPECT_FALSE(rm.prepare_command_mode_switch(empty_keys, legal_keys_system));
+    EXPECT_EQ(claimed_actuator_position_state.get_value(), ACTUATOR_CALL_COUNTER_START_VALUE + 3.0);
+    EXPECT_EQ(claimed_system_acceleration_state.get_value(), SYSTEM_CALL_COUNTER_START_VALUE + 0.0);
   }
 
-  // Default behavior for empty key lists, e.g., when a Broadcaster is activated
-  EXPECT_TRUE(rm.prepare_command_mode_switch(empty_keys, empty_keys));
-
-  // When non existing keys are provided
-  EXPECT_FALSE(rm.prepare_command_mode_switch(non_existing_keys, non_existing_keys));
-  EXPECT_FALSE(rm.prepare_command_mode_switch(non_existing_keys, empty_keys));
-  EXPECT_FALSE(rm.prepare_command_mode_switch(empty_keys, non_existing_keys));
-
-  // When TestActuatorHardware is INACTIVE expect failure
-  EXPECT_TRUE(rm.prepare_command_mode_switch(legal_keys_actuator, legal_keys_actuator));
-  EXPECT_TRUE(rm.prepare_command_mode_switch(legal_keys_actuator, empty_keys));
-  EXPECT_TRUE(rm.prepare_command_mode_switch(empty_keys, legal_keys_actuator));
-
-  // When TestSystemCommandModes is UNCONFIGURED expect OK
-  EXPECT_FALSE(rm.prepare_command_mode_switch(legal_keys_system, legal_keys_system));
-  EXPECT_FALSE(rm.prepare_command_mode_switch(legal_keys_system, empty_keys));
-  EXPECT_FALSE(rm.prepare_command_mode_switch(empty_keys, legal_keys_system));
-
-  set_components_state(
-    rm, {"TestActuatorHardware"}, lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, "finalized");
-
+  // System  : UNCONFIGURED
+  // Actuator: FINALIZED
   {
+    set_components_state(
+      rm, {"TestSystemCommandModes"}, lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+      "unconfigured");
+    set_components_state(
+      rm, {"TestActuatorHardware"}, lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED,
+      "finalized");
+
+    double ACTUATOR_CALL_COUNTER_START_VALUE = 15.0;
+    double SYSTEM_CALL_COUNTER_START_VALUE = 15.0;
+
     auto status_map = rm.get_components_status();
     EXPECT_EQ(
       status_map["TestSystemCommandModes"].state.id(),
@@ -562,25 +691,37 @@ TEST_F(ResourceManagerTest, expect_prepare_perform_switch_to_work_only_when_hw_i
     EXPECT_EQ(
       status_map["TestActuatorHardware"].state.id(),
       lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED);
+
+    // Default behavior for empty key lists, e.g., when a Broadcaster is activated
+    EXPECT_TRUE(rm.prepare_command_mode_switch(empty_keys, empty_keys));
+
+    // When non existing keys are provided
+    EXPECT_FALSE(rm.prepare_command_mode_switch(non_existing_keys, non_existing_keys));
+    EXPECT_FALSE(rm.prepare_command_mode_switch(non_existing_keys, empty_keys));
+    EXPECT_FALSE(rm.prepare_command_mode_switch(empty_keys, non_existing_keys));
+
+    // When TestActuatorHardware is FINALIZED expect failure
+    EXPECT_FALSE(rm.prepare_command_mode_switch(legal_keys_actuator, legal_keys_actuator));
+    EXPECT_EQ(claimed_actuator_position_state.get_value(), ACTUATOR_CALL_COUNTER_START_VALUE + 0.0);
+    EXPECT_EQ(claimed_system_acceleration_state.get_value(), SYSTEM_CALL_COUNTER_START_VALUE + 0.0);
+    EXPECT_FALSE(rm.prepare_command_mode_switch(legal_keys_actuator, empty_keys));
+    EXPECT_EQ(claimed_actuator_position_state.get_value(), ACTUATOR_CALL_COUNTER_START_VALUE + 0.0);
+    EXPECT_EQ(claimed_system_acceleration_state.get_value(), SYSTEM_CALL_COUNTER_START_VALUE + 0.0);
+    EXPECT_FALSE(rm.prepare_command_mode_switch(empty_keys, legal_keys_actuator));
+    EXPECT_EQ(claimed_actuator_position_state.get_value(), ACTUATOR_CALL_COUNTER_START_VALUE + 0.0);
+    EXPECT_EQ(claimed_system_acceleration_state.get_value(), SYSTEM_CALL_COUNTER_START_VALUE + 0.0);
+
+    // When TestSystemCommandModes is UNCONFIGURED expect failure
+    EXPECT_FALSE(rm.prepare_command_mode_switch(legal_keys_system, legal_keys_system));
+    EXPECT_EQ(claimed_actuator_position_state.get_value(), ACTUATOR_CALL_COUNTER_START_VALUE + 0.0);
+    EXPECT_EQ(claimed_system_acceleration_state.get_value(), SYSTEM_CALL_COUNTER_START_VALUE + 0.0);
+    EXPECT_FALSE(rm.prepare_command_mode_switch(legal_keys_system, empty_keys));
+    EXPECT_EQ(claimed_actuator_position_state.get_value(), ACTUATOR_CALL_COUNTER_START_VALUE + 0.0);
+    EXPECT_EQ(claimed_system_acceleration_state.get_value(), SYSTEM_CALL_COUNTER_START_VALUE + 0.0);
+    EXPECT_FALSE(rm.prepare_command_mode_switch(empty_keys, legal_keys_system));
+    EXPECT_EQ(claimed_actuator_position_state.get_value(), ACTUATOR_CALL_COUNTER_START_VALUE + 0.0);
+    EXPECT_EQ(claimed_system_acceleration_state.get_value(), SYSTEM_CALL_COUNTER_START_VALUE + 0.0);
   }
-
-  // Default behavior for empty key lists, e.g., when a Broadcaster is activated
-  EXPECT_TRUE(rm.prepare_command_mode_switch(empty_keys, empty_keys));
-
-  // When non existing keys are provided
-  EXPECT_FALSE(rm.prepare_command_mode_switch(non_existing_keys, non_existing_keys));
-  EXPECT_FALSE(rm.prepare_command_mode_switch(non_existing_keys, empty_keys));
-  EXPECT_FALSE(rm.prepare_command_mode_switch(empty_keys, non_existing_keys));
-
-  // When TestActuatorHardware is FINALIZED expect failure
-  EXPECT_FALSE(rm.prepare_command_mode_switch(legal_keys_actuator, legal_keys_actuator));
-  EXPECT_FALSE(rm.prepare_command_mode_switch(legal_keys_actuator, empty_keys));
-  EXPECT_FALSE(rm.prepare_command_mode_switch(empty_keys, legal_keys_actuator));
-
-  // When TestSystemCommandModes is UNCONFIGURED expect OK
-  EXPECT_FALSE(rm.prepare_command_mode_switch(legal_keys_system, legal_keys_system));
-  EXPECT_FALSE(rm.prepare_command_mode_switch(legal_keys_system, empty_keys));
-  EXPECT_FALSE(rm.prepare_command_mode_switch(empty_keys, legal_keys_system));
 }
 
 TEST_F(ResourceManagerTest, custom_prepare_perform_switch)

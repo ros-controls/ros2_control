@@ -1147,25 +1147,39 @@ bool ResourceManager::prepare_command_mode_switch(
     return false;
   }
 
+  using lifecycle_msgs::msg::State;
+
   // Check now if component allows the given interface combination
   for (auto & component : resource_storage_->actuators_)
   {
-    if (return_type::OK != component.prepare_command_mode_switch(start_interfaces, stop_interfaces))
+    if (
+      component.get_state().id() == State::PRIMARY_STATE_INACTIVE ||
+      component.get_state().id() == State::PRIMARY_STATE_ACTIVE)
     {
-      RCUTILS_LOG_ERROR_NAMED(
-        "resource_manager", "Component '%s' did not accept command interfaces combination: \n%s",
-        component.get_name().c_str(), interfaces_to_string().c_str());
-      return false;
+      if (
+        return_type::OK != component.prepare_command_mode_switch(start_interfaces, stop_interfaces))
+      {
+        RCUTILS_LOG_ERROR_NAMED(
+          "resource_manager", "Component '%s' did not accept command interfaces combination: \n%s",
+          component.get_name().c_str(), interfaces_to_string().c_str());
+        return false;
+      }
     }
   }
   for (auto & component : resource_storage_->systems_)
   {
-    if (return_type::OK != component.prepare_command_mode_switch(start_interfaces, stop_interfaces))
+    if (
+      component.get_state().id() == State::PRIMARY_STATE_INACTIVE ||
+      component.get_state().id() == State::PRIMARY_STATE_ACTIVE)
     {
-      RCUTILS_LOG_ERROR_NAMED(
-        "resource_manager", "Component '%s' did not accept command interfaces combination: \n%s",
-        component.get_name().c_str(), interfaces_to_string().c_str());
-      return false;
+      if (
+        return_type::OK != component.prepare_command_mode_switch(start_interfaces, stop_interfaces))
+      {
+        RCUTILS_LOG_ERROR_NAMED(
+          "resource_manager", "Component '%s' did not accept command interfaces combination: \n%s",
+          component.get_name().c_str(), interfaces_to_string().c_str());
+        return false;
+      }
     }
   }
   return true;

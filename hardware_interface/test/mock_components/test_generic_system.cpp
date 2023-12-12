@@ -51,7 +51,7 @@ protected:
   {
     hardware_system_2dof_ =
       R"(
-  <ros2_control name="HardwareSystem2dof" type="system">
+  <ros2_control name="MockHardwareSystem" type="system">
     <hardware>
       <plugin>mock_components/GenericSystem</plugin>
     </hardware>
@@ -72,7 +72,7 @@ protected:
 
     hardware_system_2dof_asymetric_ =
       R"(
-  <ros2_control name="HardwareSystem2dofAsymetric" type="system">
+  <ros2_control name="MockHardwareSystem" type="system">
     <hardware>
       <plugin>mock_components/GenericSystem</plugin>
     </hardware>
@@ -93,7 +93,7 @@ protected:
 
     hardware_system_2dof_standard_interfaces_ =
       R"(
-  <ros2_control name="HardwareSystem2dofStandardInterfaces" type="system">
+  <ros2_control name="MockHardwareSystem" type="system">
     <hardware>
       <plugin>mock_components/GenericSystem</plugin>
     </hardware>
@@ -118,7 +118,7 @@ protected:
 
     hardware_system_2dof_with_other_interface_ =
       R"(
-  <ros2_control name="HardwareSystem2dofWithOtherInterface" type="system">
+  <ros2_control name="MockHardwareSystem" type="system">
     <hardware>
       <plugin>mock_components/GenericSystem</plugin>
     </hardware>
@@ -153,7 +153,7 @@ protected:
 
     hardware_system_2dof_with_sensor_ =
       R"(
-  <ros2_control name="HardwareSystem2dofWithSensor" type="system">
+  <ros2_control name="MockHardwareSystem" type="system">
     <hardware>
       <plugin>mock_components/GenericSystem</plugin>
     </hardware>
@@ -181,7 +181,7 @@ protected:
 
     hardware_system_2dof_with_sensor_mock_command_ =
       R"(
-  <ros2_control name="HardwareSystem2dofWithSensorMockCommand" type="system">
+  <ros2_control name="MockHardwareSystem" type="system">
     <hardware>
       <plugin>mock_components/GenericSystem</plugin>
       <param name="mock_sensor_commands">true</param>
@@ -210,7 +210,7 @@ protected:
 
     hardware_system_2dof_with_sensor_mock_command_True_ =
       R"(
-  <ros2_control name="HardwareSystem2dofWithSensorMockCommandTrue" type="system">
+  <ros2_control name="MockHardwareSystem" type="system">
     <hardware>
       <plugin>mock_components/GenericSystem</plugin>
       <param name="mock_sensor_commands">True</param>
@@ -239,7 +239,7 @@ protected:
 
     hardware_system_2dof_with_mimic_joint_ =
       R"(
-  <ros2_control name="HardwareSystem2dofWithMimicJoint" type="system">
+  <ros2_control name="MockHardwareSystem" type="system">
     <hardware>
       <plugin>mock_components/GenericSystem</plugin>
     </hardware>
@@ -264,7 +264,7 @@ protected:
 
     hardware_system_2dof_standard_interfaces_with_offset_ =
       R"(
-  <ros2_control name="HardwareSystem2dofStandardInterfacesWithOffset" type="system">
+  <ros2_control name="MockHardwareSystem" type="system">
     <hardware>
       <plugin>mock_components/GenericSystem</plugin>
       <param name="position_state_following_offset">-3</param>
@@ -290,7 +290,7 @@ protected:
 
     hardware_system_2dof_standard_interfaces_with_custom_interface_for_offset_missing_ =
       R"(
-  <ros2_control name="HardwareSystem2dofStandardInterfacesWithCustomInterfaceForOffsetMissing" type="system">
+  <ros2_control name="MockHardwareSystem" type="system">
     <hardware>
       <plugin>mock_components/GenericSystem</plugin>
       <param name="position_state_following_offset">-3</param>
@@ -321,7 +321,7 @@ protected:
 
     hardware_system_2dof_standard_interfaces_with_custom_interface_for_offset_ =
       R"(
-  <ros2_control name="HardwareSystem2dofStandardInterfacesWithCustomInterfaceForOffset" type="system">
+  <ros2_control name="MockHardwareSystem" type="system">
     <hardware>
       <plugin>mock_components/GenericSystem</plugin>
       <param name="position_state_following_offset">-3</param>
@@ -352,7 +352,7 @@ protected:
 
     valid_urdf_ros2_control_system_robot_with_gpio_ =
       R"(
-  <ros2_control name="ValidURDFros2controlSystemRobotWithGPIO" type="system">
+  <ros2_control name="MockHardwareSystem" type="system">
     <hardware>
       <plugin>mock_components/GenericSystem</plugin>
       <param name="example_param_write_for_sec">2</param>
@@ -389,7 +389,7 @@ protected:
 
     valid_urdf_ros2_control_system_robot_with_gpio_mock_command_ =
       R"(
-  <ros2_control name="ValidURDFros2controlSystemRobotWithGPIOMockCommand" type="system">
+  <ros2_control name="MockHardwareSystem" type="system">
     <hardware>
       <plugin>mock_components/GenericSystem</plugin>
       <param name="mock_gpio_commands">true</param>
@@ -425,7 +425,7 @@ protected:
 
     valid_urdf_ros2_control_system_robot_with_gpio_mock_command_True_ =
       R"(
-  <ros2_control name="ValidURDFros2controlSystemRobotWithGPIOMockCommandTrue" type="system">
+  <ros2_control name="MockHardwareSystem" type="system">
     <hardware>
       <plugin>mock_components/GenericSystem</plugin>
       <param name="mock_gpio_commands">True</param>
@@ -461,7 +461,7 @@ protected:
 
     sensor_with_initial_value_ =
       R"(
-  <ros2_control name="SensorWithInitialValue" type="system">
+  <ros2_control name="MockHardwareSystem" type="system">
     <hardware>
       <plugin>mock_components/GenericSystem</plugin>
     </hardware>
@@ -481,7 +481,7 @@ protected:
 
     gpio_with_initial_value_ =
       R"(
-  <ros2_control name="GPIOWithInitialValue" type="system">
+  <ros2_control name="MockHardwareSystem" type="system">
     <hardware>
       <plugin>mock_components/GenericSystem</plugin>
     </hardware>
@@ -495,7 +495,7 @@ protected:
 
     hardware_system_2dof_standard_interfaces_with_different_control_modes_ =
       R"(
-  <ros2_control name="HardwareSystem2dofStandardInterfacesWithDifferentControlModes" type="system">
+  <ros2_control name="MockHardwareSystem" type="system">
     <hardware>
       <plugin>mock_components/GenericSystem</plugin>
       <param name="calculate_dynamics">true</param>
@@ -528,7 +528,7 @@ protected:
 
     valid_hardware_system_2dof_standard_interfaces_with_different_control_modes_ =
       R"(
-  <ros2_control name="HardwareSystem2dofStandardInterfacesWithDifferentControlModes" type="system">
+  <ros2_control name="MockHardwareSystem" type="system">
     <hardware>
       <plugin>mock_components/GenericSystem</plugin>
       <param name="calculate_dynamics">true</param>
@@ -568,7 +568,7 @@ protected:
 
     disabled_commands_ =
       R"(
-  <ros2_control name="DisabledCommands" type="system">
+  <ros2_control name="MockHardwareSystem" type="system">
     <hardware>
       <plugin>mock_components/GenericSystem</plugin>
       <param name="disable_commands">True</param>
@@ -689,7 +689,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_symetric_interfaces)
               ros2_control_test_assets::urdf_tail;
   TestableResourceManager rm(urdf);
   // Activate components to get all interfaces available
-  activate_components(rm, {"HardwareSystem2dof"});
+  activate_components(rm, {"MockHardwareSystem"});
 
   // Check interfaces
   EXPECT_EQ(1u, rm.system_components_size());
@@ -720,7 +720,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_asymetric_interfaces)
               ros2_control_test_assets::urdf_tail;
   TestableResourceManager rm(urdf);
   // Activate components to get all interfaces available
-  activate_components(rm, {"HardwareSystem2dofAsymetric"});
+  activate_components(rm, {"MockHardwareSystem"});
 
   // Check interfaces
   EXPECT_EQ(1u, rm.system_components_size());
@@ -866,7 +866,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_functionality)
   auto urdf = ros2_control_test_assets::urdf_head + hardware_system_2dof_standard_interfaces_ +
               ros2_control_test_assets::urdf_tail;
 
-  generic_system_functional_test(urdf, {"HardwareSystem2dofStandardInterfaces"});
+  generic_system_functional_test(urdf, {"MockHardwareSystem"});
 }
 
 TEST_F(TestGenericSystem, generic_system_2dof_other_interfaces)
@@ -875,7 +875,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_other_interfaces)
               ros2_control_test_assets::urdf_tail;
   TestableResourceManager rm(urdf);
   // Activate components to get all interfaces available
-  activate_components(rm, {"HardwareSystem2dofWithOtherInterface"});
+  activate_components(rm, {"MockHardwareSystem"});
 
   // Check interfaces
   EXPECT_EQ(1u, rm.system_components_size());
@@ -958,7 +958,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_sensor)
               ros2_control_test_assets::urdf_tail;
   TestableResourceManager rm(urdf);
   // Activate components to get all interfaces available
-  activate_components(rm, {"HardwareSystem2dofWithSensor"});
+  activate_components(rm, {"MockHardwareSystem"});
 
   // Check interfaces
   EXPECT_EQ(1u, rm.system_components_size());
@@ -1180,7 +1180,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_sensor_mock_command)
   auto urdf = ros2_control_test_assets::urdf_head + hardware_system_2dof_with_sensor_mock_command_ +
               ros2_control_test_assets::urdf_tail;
 
-  test_generic_system_with_mock_sensor_commands(urdf, "HardwareSystem2dofWithSensorMockCommand");
+  test_generic_system_with_mock_sensor_commands(urdf, "MockHardwareSystem");
 }
 
 TEST_F(TestGenericSystem, generic_system_2dof_sensor_mock_command_True)
@@ -1189,8 +1189,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_sensor_mock_command_True)
               hardware_system_2dof_with_sensor_mock_command_True_ +
               ros2_control_test_assets::urdf_tail;
 
-  test_generic_system_with_mock_sensor_commands(
-    urdf, "HardwareSystem2dofWithSensorMockCommandTrue");
+  test_generic_system_with_mock_sensor_commands(urdf, "MockHardwareSystem");
 }
 
 void TestGenericSystem::test_generic_system_with_mimic_joint(
@@ -1265,7 +1264,7 @@ TEST_F(TestGenericSystem, hardware_system_2dof_with_mimic_joint)
   auto urdf = ros2_control_test_assets::urdf_head + hardware_system_2dof_with_mimic_joint_ +
               ros2_control_test_assets::urdf_tail;
 
-  test_generic_system_with_mimic_joint(urdf, "HardwareSystem2dofWithMimicJoint");
+  test_generic_system_with_mimic_joint(urdf, "MockHardwareSystem");
 }
 
 TEST_F(TestGenericSystem, generic_system_2dof_functionality_with_offset)
@@ -1274,7 +1273,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_functionality_with_offset)
               hardware_system_2dof_standard_interfaces_with_offset_ +
               ros2_control_test_assets::urdf_tail;
 
-  generic_system_functional_test(urdf, "HardwareSystem2dofStandardInterfacesWithOffset", -3);
+  generic_system_functional_test(urdf, "MockHardwareSystem", -3);
 }
 
 TEST_F(TestGenericSystem, generic_system_2dof_functionality_with_offset_custom_interface_missing)
@@ -1284,8 +1283,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_functionality_with_offset_custom_i
               ros2_control_test_assets::urdf_tail;
 
   // custom interface is missing so offset will not be applied
-  generic_system_functional_test(
-    urdf, "HardwareSystem2dofStandardInterfacesWithCustomInterfaceForOffsetMissing", 0.0);
+  generic_system_functional_test(urdf, "MockHardwareSystem", 0.0);
 }
 
 TEST_F(TestGenericSystem, generic_system_2dof_functionality_with_offset_custom_interface)
@@ -1298,8 +1296,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_functionality_with_offset_custom_i
 
   TestableResourceManager rm(urdf);
 
-  const std::string hardware_name =
-    "HardwareSystem2dofStandardInterfacesWithCustomInterfaceForOffset";
+  const std::string hardware_name = "MockHardwareSystem";
 
   // check is hardware is configured
   auto status_map = rm.get_components_status();
@@ -1412,7 +1409,7 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio)
               valid_urdf_ros2_control_system_robot_with_gpio_ + ros2_control_test_assets::urdf_tail;
   TestableResourceManager rm(urdf);
 
-  const std::string hardware_name = "ValidURDFros2controlSystemRobotWithGPIO";
+  const std::string hardware_name = "MockHardwareSystem";
 
   // check is hardware is started
   auto status_map = rm.get_components_status();
@@ -1617,8 +1614,7 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_mock_co
               valid_urdf_ros2_control_system_robot_with_gpio_mock_command_ +
               ros2_control_test_assets::urdf_tail;
 
-  test_generic_system_with_mock_gpio_commands(
-    urdf, "ValidURDFros2controlSystemRobotWithGPIOMockCommand");
+  test_generic_system_with_mock_gpio_commands(urdf, "MockHardwareSystem");
 }
 
 TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_mock_command_True)
@@ -1627,8 +1623,7 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_mock_co
               valid_urdf_ros2_control_system_robot_with_gpio_mock_command_True_ +
               ros2_control_test_assets::urdf_tail;
 
-  test_generic_system_with_mock_gpio_commands(
-    urdf, "ValidURDFros2controlSystemRobotWithGPIOMockCommandTrue");
+  test_generic_system_with_mock_gpio_commands(urdf, "MockHardwareSystem");
 }
 
 TEST_F(TestGenericSystem, sensor_with_initial_value)
@@ -1637,7 +1632,7 @@ TEST_F(TestGenericSystem, sensor_with_initial_value)
               ros2_control_test_assets::urdf_tail;
   TestableResourceManager rm(urdf);
   // Activate components to get all interfaces available
-  activate_components(rm, {"SensorWithInitialValue"});
+  activate_components(rm, {"MockHardwareSystem"});
 
   // Check interfaces
   EXPECT_EQ(1u, rm.system_components_size());
@@ -1665,7 +1660,7 @@ TEST_F(TestGenericSystem, gpio_with_initial_value)
               ros2_control_test_assets::urdf_tail;
   TestableResourceManager rm(urdf);
   // Activate components to get all interfaces available
-  activate_components(rm, {"GPIOWithInitialValue"});
+  activate_components(rm, {"MockHardwareSystem"});
 
   // Check interfaces
   EXPECT_EQ(1u, rm.system_components_size());
@@ -1686,7 +1681,7 @@ TEST_F(TestGenericSystem, simple_dynamics_pos_vel_acc_control_modes_interfaces)
 
   TestableResourceManager rm(urdf);
   // Activate components to get all interfaces available
-  activate_components(rm, {"HardwareSystem2dofStandardInterfacesWithDifferentControlModes"});
+  activate_components(rm, {"MockHardwareSystem"});
 
   // Check interfaces
   EXPECT_EQ(1u, rm.system_components_size());
@@ -1880,7 +1875,7 @@ TEST_F(TestGenericSystem, disabled_commands_flag_is_active)
     ros2_control_test_assets::urdf_head + disabled_commands_ + ros2_control_test_assets::urdf_tail;
   TestableResourceManager rm(urdf);
   // Activate components to get all interfaces available
-  activate_components(rm, {"DisabledCommands"});
+  activate_components(rm, {"MockHardwareSystem"});
 
   // Check interfaces
   EXPECT_EQ(1u, rm.system_components_size());
@@ -1927,6 +1922,8 @@ TEST_F(TestGenericSystem, prepare_command_mode_switch_works_with_all_example_tag
   {
     TestableResourceManager rm(
       ros2_control_test_assets::urdf_head + urdf + ros2_control_test_assets::urdf_tail);
+    rclcpp_lifecycle::State state(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, "active");
+    rm.set_component_state("MockHardwareSystem", state);
     auto start_interfaces = rm.command_interface_keys();
     std::vector<std::string> stop_interfaces;
     return rm.prepare_command_mode_switch(start_interfaces, stop_interfaces);
