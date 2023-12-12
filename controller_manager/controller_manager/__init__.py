@@ -26,7 +26,6 @@ from .controller_manager_services import (
 )
 
 __all__ = [
-<<<<<<< HEAD
     'configure_controller',
     'list_controller_types',
     'list_controllers',
@@ -34,18 +33,7 @@ __all__ = [
     'list_hardware_interfaces',
     'load_controller',
     'reload_controller_libraries',
+    'set_hardware_component_state',
     'switch_controllers',
     'unload_controller',
-=======
-    "configure_controller",
-    "list_controller_types",
-    "list_controllers",
-    "list_hardware_components",
-    "list_hardware_interfaces",
-    "load_controller",
-    "reload_controller_libraries",
-    "set_hardware_component_state",
-    "switch_controllers",
-    "unload_controller",
->>>>>>> 937817c (add spawner for hardware (#941))
 ]
