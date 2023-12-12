@@ -247,21 +247,23 @@ TEST_F(ResourceManagerTest, resource_claiming)
   // Activate components to get all interfaces available
   activate_components(rm);
 
-  const auto key = "joint1/position";
-  EXPECT_TRUE(rm.command_interface_is_available(key));
-  EXPECT_FALSE(rm.command_interface_is_claimed(key));
-
   {
-    auto position_command_interface = rm.claim_command_interface(key);
+    const auto key = "joint1/position";
     EXPECT_TRUE(rm.command_interface_is_available(key));
-    EXPECT_TRUE(rm.command_interface_is_claimed(key));
+    EXPECT_FALSE(rm.command_interface_is_claimed(key));
+
     {
-      EXPECT_ANY_THROW(rm.claim_command_interface(key));
+      auto position_command_interface = rm.claim_command_interface(key);
       EXPECT_TRUE(rm.command_interface_is_available(key));
+      EXPECT_TRUE(rm.command_interface_is_claimed(key));
+      {
+        EXPECT_ANY_THROW(rm.claim_command_interface(key));
+        EXPECT_TRUE(rm.command_interface_is_available(key));
+      }
     }
+    EXPECT_TRUE(rm.command_interface_is_available(key));
+    EXPECT_FALSE(rm.command_interface_is_claimed(key));
   }
-  EXPECT_TRUE(rm.command_interface_is_available(key));
-  EXPECT_FALSE(rm.command_interface_is_claimed(key));
 
   // command interfaces can only be claimed once
   for (const auto & key :

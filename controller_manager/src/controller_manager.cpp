@@ -150,7 +150,9 @@ std::vector<std::string> get_following_controller_names(
   }
   // If the controller is not configured, return empty
   if (!(is_controller_active(controller_it->c) || is_controller_inactive(controller_it->c)))
+  {
     return following_controllers;
+  }
   const auto cmd_itfs = controller_it->c->command_interface_configuration().names;
   for (const auto & itf : cmd_itfs)
   {
@@ -210,7 +212,10 @@ std::vector<std::string> get_preceding_controller_names(
   for (const auto & ctrl : controllers)
   {
     // If the controller is not configured, then continue
-    if (!(is_controller_active(ctrl.c) || is_controller_inactive(ctrl.c))) continue;
+    if (!(is_controller_active(ctrl.c) || is_controller_inactive(ctrl.c)))
+    {
+      continue;
+    }
     auto cmd_itfs = ctrl.c->command_interface_configuration().names;
     for (const auto & itf : cmd_itfs)
     {
@@ -442,8 +447,6 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
       "Parameter 'activate_components_on_start' is deprecated. "
       "Components are activated per default. Don't use this parameters in combination with the new "
       "'hardware_components_initial_state' parameter structure.");
-    rclcpp_lifecycle::State active_state(
-      State::PRIMARY_STATE_ACTIVE, hardware_interface::lifecycle_state_names::ACTIVE);
     for (const auto & component : activate_components_on_start)
     {
       resource_manager_->set_component_state(component, active_state);
@@ -455,8 +458,6 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
     // activate all other components
     for (const auto & [component, state] : components_to_activate)
     {
-      rclcpp_lifecycle::State active_state(
-        State::PRIMARY_STATE_ACTIVE, hardware_interface::lifecycle_state_names::ACTIVE);
       resource_manager_->set_component_state(component, active_state);
     }
   }
@@ -741,7 +742,7 @@ controller_interface::return_type ControllerManager::configure_controller(
       "update rate.",
       controller_name.c_str(), controller_update_rate, cm_update_rate);
   }
-  else if (controller_update_rate != 0 && cm_update_rate % controller_update_rate != 0)
+  else if (cm_update_rate % controller_update_rate != 0)
   {
     RCLCPP_WARN(
       get_logger(),
@@ -781,7 +782,7 @@ controller_interface::return_type ControllerManager::configure_controller(
   to = from;
 
   // Reordering the controllers
-  std::sort(
+  std::stable_sort(
     to.begin(), to.end(),
     std::bind(
       &ControllerManager::controller_sorting, this, std::placeholders::_1, std::placeholders::_2,
@@ -940,7 +941,7 @@ controller_interface::return_type ControllerManager::switch_controller(
     auto controller_it = std::find_if(
       controllers.begin(), controllers.end(),
       std::bind(controller_name_compare, std::placeholders::_1, *ctrl_it));
-    controller_interface::return_type ret = controller_interface::return_type::OK;
+    controller_interface::return_type status = controller_interface::return_type::OK;
 
     // if controller is not inactive then do not do any following-controllers checks
     if (!is_controller_inactive(controller_it->c))
@@ -950,14 +951,14 @@ controller_interface::return_type ControllerManager::switch_controller(
         "Controller with name '%s' is not inactive so its following"
         "controllers do not have to be checked, because it cannot be activated.",
         controller_it->info.name.c_str());
-      ret = controller_interface::return_type::ERROR;
+      status = controller_interface::return_type::ERROR;
     }
     else
     {
-      ret = check_following_controllers_for_activate(controllers, strictness, controller_it);
+      status = check_following_controllers_for_activate(controllers, strictness, controller_it);
     }
 
-    if (ret != controller_interface::return_type::OK)
+    if (status != controller_interface::return_type::OK)
     {
       RCLCPP_WARN(
         get_logger(),
@@ -991,7 +992,7 @@ controller_interface::return_type ControllerManager::switch_controller(
     auto controller_it = std::find_if(
       controllers.begin(), controllers.end(),
       std::bind(controller_name_compare, std::placeholders::_1, *ctrl_it));
-    controller_interface::return_type ret = controller_interface::return_type::OK;
+    controller_interface::return_type status = controller_interface::return_type::OK;
 
     // if controller is not active then skip preceding-controllers checks
     if (!is_controller_active(controller_it->c))
@@ -999,14 +1000,14 @@ controller_interface::return_type ControllerManager::switch_controller(
       RCLCPP_WARN(
         get_logger(), "Controller with name '%s' can not be deactivated since it is not active.",
         controller_it->info.name.c_str());
-      ret = controller_interface::return_type::ERROR;
+      status = controller_interface::return_type::ERROR;
     }
     else
     {
-      ret = check_preceeding_controllers_for_deactivate(controllers, strictness, controller_it);
+      status = check_preceeding_controllers_for_deactivate(controllers, strictness, controller_it);
     }
 
-    if (ret != controller_interface::return_type::OK)
+    if (status != controller_interface::return_type::OK)
     {
       RCLCPP_WARN(
         get_logger(),
@@ -1087,11 +1088,11 @@ controller_interface::return_type ControllerManager::switch_controller(
     // check for double stop
     if (!is_active && in_deactivate_list)
     {
-      auto ret = handle_conflict(
+      auto conflict_status = handle_conflict(
         "Could not deactivate controller '" + controller.info.name + "' since it is not active");
-      if (ret != controller_interface::return_type::OK)
+      if (conflict_status != controller_interface::return_type::OK)
       {
-        return ret;
+        return conflict_status;
       }
       in_deactivate_list = false;
       deactivate_request_.erase(deactivate_list_it);
@@ -1100,11 +1101,11 @@ controller_interface::return_type ControllerManager::switch_controller(
     // check for doubled activation
     if (is_active && !in_deactivate_list && in_activate_list)
     {
-      auto ret = handle_conflict(
+      auto conflict_status = handle_conflict(
         "Could not activate controller '" + controller.info.name + "' since it is already active");
-      if (ret != controller_interface::return_type::OK)
+      if (conflict_status != controller_interface::return_type::OK)
       {
-        return ret;
+        return conflict_status;
       }
       in_activate_list = false;
       activate_request_.erase(activate_list_it);
@@ -1113,21 +1114,21 @@ controller_interface::return_type ControllerManager::switch_controller(
     // check for illegal activation of an unconfigured/finalized controller
     if (!is_inactive && !in_deactivate_list && in_activate_list)
     {
-      auto ret = handle_conflict(
+      auto conflict_status = handle_conflict(
         "Could not activate controller '" + controller.info.name +
         "' since it is not in inactive state");
-      if (ret != controller_interface::return_type::OK)
+      if (conflict_status != controller_interface::return_type::OK)
       {
-        return ret;
+        return conflict_status;
       }
       in_activate_list = false;
       activate_request_.erase(activate_list_it);
     }
 
     const auto extract_interfaces_for_controller =
-      [this](const ControllerSpec controller, std::vector<std::string> & request_interface_list)
+      [this](const ControllerSpec ctrl, std::vector<std::string> & request_interface_list)
     {
-      auto command_interface_config = controller.c->command_interface_configuration();
+      auto command_interface_config = ctrl.c->command_interface_configuration();
       std::vector<std::string> command_interface_names = {};
       if (command_interface_config.type == controller_interface::interface_configuration_type::ALL)
       {
@@ -1296,7 +1297,8 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::add_co
   }
 
   if (
-    controller.c->init(controller.info.name, robot_description_, get_namespace()) ==
+    controller.c->init(
+      controller.info.name, robot_description_, get_update_rate(), get_namespace()) ==
     controller_interface::return_type::ERROR)
   {
     to.clear();
@@ -1766,8 +1768,8 @@ void ControllerManager::reload_controller_libraries_service_cb(
   loaded_controllers = get_controller_names();
   {
     // lock controllers
-    std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
-    for (const auto & controller : rt_controllers_wrapper_.get_updated_list(guard))
+    std::lock_guard<std::recursive_mutex> ctrl_guard(rt_controllers_wrapper_.controllers_lock_);
+    for (const auto & controller : rt_controllers_wrapper_.get_updated_list(ctrl_guard))
     {
       if (is_controller_active(*controller.c))
       {
@@ -2045,8 +2047,7 @@ controller_interface::return_type ControllerManager::update(
     if (!loaded_controller.c->is_async() && is_controller_active(*loaded_controller.c))
     {
       const auto controller_update_rate = loaded_controller.c->get_update_rate();
-      const bool run_controller_at_cm_rate =
-        (controller_update_rate == 0) || (controller_update_rate >= update_rate_);
+      const bool run_controller_at_cm_rate = (controller_update_rate >= update_rate_);
       const auto controller_period =
         run_controller_at_cm_rate ? period
                                   : rclcpp::Duration::from_seconds((1.0 / controller_update_rate));
@@ -2063,7 +2064,9 @@ controller_interface::return_type ControllerManager::update(
 
       if (controller_go)
       {
-        auto controller_ret = loaded_controller.c->update(time, controller_period);
+        const auto controller_actual_period =
+          (time - *loaded_controller.next_update_cycle_time) + controller_period;
+        auto controller_ret = loaded_controller.c->update(time, controller_actual_period);
 
         if (
           *loaded_controller.next_update_cycle_time ==
@@ -2445,7 +2448,10 @@ bool ControllerManager::controller_sorting(
   if (!((is_controller_active(ctrl_a.c) || is_controller_inactive(ctrl_a.c)) &&
         (is_controller_active(ctrl_b.c) || is_controller_inactive(ctrl_b.c))))
   {
-    if (is_controller_active(ctrl_a.c) || is_controller_inactive(ctrl_a.c)) return true;
+    if (is_controller_active(ctrl_a.c) || is_controller_inactive(ctrl_a.c))
+    {
+      return true;
+    }
     return false;
   }
 
@@ -2455,17 +2461,30 @@ bool ControllerManager::controller_sorting(
   {
     // The case of the controllers that don't have any command interfaces. For instance,
     // joint_state_broadcaster
-    return true;
+    // If the controller b is also under the same condition, then maintain their initial order
+    const auto command_interfaces_exist =
+      !ctrl_b.c->command_interface_configuration().names.empty();
+    return ctrl_b.c->is_chainable() && command_interfaces_exist;
+  }
+  else if (ctrl_b.c->command_interface_configuration().names.empty() || !ctrl_b.c->is_chainable())
+  {
+    // If only the controller b is a broadcaster or non chainable type , then swap the controllers
+    return false;
   }
   else
   {
     auto following_ctrls = get_following_controller_names(ctrl_a.info.name, controllers);
-    if (following_ctrls.empty()) return false;
+    if (following_ctrls.empty())
+    {
+      return false;
+    }
     // If the ctrl_b is any of the following controllers of ctrl_a, then place ctrl_a before ctrl_b
     if (
       std::find(following_ctrls.begin(), following_ctrls.end(), ctrl_b.info.name) !=
       following_ctrls.end())
+    {
       return true;
+    }
     else
     {
       auto ctrl_a_preceding_ctrls = get_preceding_controller_names(ctrl_a.info.name, controllers);
@@ -2498,21 +2517,27 @@ bool ControllerManager::controller_sorting(
 
       // If there is no common parent, then they belong to 2 different sets
       auto following_ctrls_b = get_following_controller_names(ctrl_b.info.name, controllers);
-      if (following_ctrls_b.empty()) return true;
-      auto find_first_element = [&](const auto & controllers_list)
+      if (following_ctrls_b.empty())
+      {
+        return true;
+      }
+      auto find_first_element = [&](const auto & controllers_list) -> size_t
       {
         auto it = std::find_if(
           controllers.begin(), controllers.end(),
           std::bind(controller_name_compare, std::placeholders::_1, controllers_list.back()));
         if (it != controllers.end())
         {
-          int dist = std::distance(controllers.begin(), it);
-          return dist;
+          return std::distance(controllers.begin(), it);
         }
+        return 0;
       };
-      const int ctrl_a_chain_first_controller = find_first_element(following_ctrls);
-      const int ctrl_b_chain_first_controller = find_first_element(following_ctrls_b);
-      if (ctrl_a_chain_first_controller < ctrl_b_chain_first_controller) return true;
+      const auto ctrl_a_chain_first_controller = find_first_element(following_ctrls);
+      const auto ctrl_b_chain_first_controller = find_first_element(following_ctrls_b);
+      if (ctrl_a_chain_first_controller < ctrl_b_chain_first_controller)
+      {
+        return true;
+      }
     }
 
     // If the ctrl_a's state interface is the one exported by the ctrl_b then ctrl_b should be
@@ -2557,7 +2582,7 @@ void ControllerManager::controller_activity_diagnostic_callback(
   }
   else
   {
-    stat.summary(diagnostic_msgs::msg::DiagnosticStatus::ERROR, "Not all controllers are active");
+    stat.summary(diagnostic_msgs::msg::DiagnosticStatus::OK, "Not all controllers are active");
   }
 }
 
