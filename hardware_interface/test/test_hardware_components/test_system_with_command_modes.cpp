@@ -120,6 +120,8 @@ public:
     const std::vector<std::string> & start_interfaces,
     const std::vector<std::string> & stop_interfaces) override
   {
+    acceleration_state_[0] += 1.0;
+
     // Starting interfaces
     start_modes_.clear();
     stop_modes_.clear();
