@@ -405,8 +405,9 @@ TEST_F(ResourceManagerTest, default_prepare_perform_switch)
   // Activate components to get all interfaces available
   activate_components(rm);
 
-  EXPECT_TRUE(rm.prepare_command_mode_switch({""}, {""}));
-  EXPECT_TRUE(rm.perform_command_mode_switch({""}, {""}));
+  // Default behavior for empty key lists, e.g., when a Broadcaster is activated
+  EXPECT_TRUE(rm.prepare_command_mode_switch({}, {}));
+  EXPECT_TRUE(rm.perform_command_mode_switch({}, {}));
 }
 
 const auto hardware_resources_command_modes =
@@ -428,22 +429,174 @@ const auto hardware_resources_command_modes =
       <state_interface name="velocity"/>
     </joint>
   </ros2_control>
+  <ros2_control name="TestActuatorHardware" type="actuator">
+    <hardware>
+      <plugin>test_actuator</plugin>
+    </hardware>
+    <joint name="joint3">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <command_interface name="max_velocity" />
+    </joint>
+  </ros2_control>
 )";
 const auto command_mode_urdf = std::string(ros2_control_test_assets::urdf_head) +
                                std::string(hardware_resources_command_modes) +
                                std::string(ros2_control_test_assets::urdf_tail);
 
+TEST_F(ResourceManagerTest, expect_prepare_perform_switch_to_work_only_when_hw_inactive_or_active)
+{
+  // Scenarios defined by example criteria
+  std::vector<std::string> empty_keys = {};
+  std::vector<std::string> non_existing_keys = {"elbow_joint/position", "should_joint/position"};
+  std::vector<std::string> legal_keys_actuator = {"joint3/position"};
+  std::vector<std::string> legal_keys_system = {"joint1/position", "joint2/position"};
+
+  TestableResourceManager rm(command_mode_urdf);
+  EXPECT_EQ(1u, rm.actuator_components_size());
+  EXPECT_EQ(1u, rm.system_components_size());
+
+  set_components_state(
+    rm, {"TestSystemCommandModes"}, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, "active");
+
+  {
+    auto status_map = rm.get_components_status();
+    EXPECT_EQ(
+      status_map["TestSystemCommandModes"].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+    EXPECT_EQ(
+      status_map["TestActuatorHardware"].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  }
+
+  // Default behavior for empty key lists, e.g., when a Broadcaster is activated
+  EXPECT_TRUE(rm.prepare_command_mode_switch(empty_keys, empty_keys));
+
+  // When non existing keys are provided
+  EXPECT_FALSE(rm.prepare_command_mode_switch(non_existing_keys, non_existing_keys));
+  EXPECT_FALSE(rm.prepare_command_mode_switch(non_existing_keys, empty_keys));
+  EXPECT_FALSE(rm.prepare_command_mode_switch(empty_keys, non_existing_keys));
+
+  // When TestActuatorHardware is UNCONFIGURED expect failure
+  EXPECT_FALSE(rm.prepare_command_mode_switch(legal_keys_actuator, legal_keys_actuator));
+  EXPECT_FALSE(rm.prepare_command_mode_switch(legal_keys_actuator, empty_keys));
+  EXPECT_FALSE(rm.prepare_command_mode_switch(empty_keys, legal_keys_actuator));
+
+  // When TestSystemCommandModes is ACTIVE expect OK
+  EXPECT_TRUE(rm.prepare_command_mode_switch(legal_keys_system, legal_keys_system));
+  EXPECT_TRUE(rm.prepare_command_mode_switch(legal_keys_system, empty_keys));
+  EXPECT_TRUE(rm.prepare_command_mode_switch(empty_keys, legal_keys_system));
+
+  set_components_state(
+    rm, {"TestActuatorHardware"}, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, "inactive");
+
+  {
+    auto status_map = rm.get_components_status();
+    EXPECT_EQ(
+      status_map["TestSystemCommandModes"].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+    EXPECT_EQ(
+      status_map["TestActuatorHardware"].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+  }
+
+  // Default behavior for empty key lists, e.g., when a Broadcaster is activated
+  EXPECT_TRUE(rm.prepare_command_mode_switch(empty_keys, empty_keys));
+
+  // When non existing keys are provided
+  EXPECT_FALSE(rm.prepare_command_mode_switch(non_existing_keys, non_existing_keys));
+  EXPECT_FALSE(rm.prepare_command_mode_switch(non_existing_keys, empty_keys));
+  EXPECT_FALSE(rm.prepare_command_mode_switch(empty_keys, non_existing_keys));
+
+  // When TestActuatorHardware is INACTIVE expect failure
+  EXPECT_TRUE(rm.prepare_command_mode_switch(legal_keys_actuator, legal_keys_actuator));
+  EXPECT_TRUE(rm.prepare_command_mode_switch(legal_keys_actuator, empty_keys));
+  EXPECT_TRUE(rm.prepare_command_mode_switch(empty_keys, legal_keys_actuator));
+
+  // When TestSystemCommandModes is FINALIZED expect OK
+  EXPECT_TRUE(rm.prepare_command_mode_switch(legal_keys_system, legal_keys_system));
+  EXPECT_TRUE(rm.prepare_command_mode_switch(legal_keys_system, empty_keys));
+  EXPECT_TRUE(rm.prepare_command_mode_switch(empty_keys, legal_keys_system));
+
+  set_components_state(
+    rm, {"TestSystemCommandModes"}, lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    "finalized");
+
+  {
+    auto status_map = rm.get_components_status();
+    EXPECT_EQ(
+      status_map["TestSystemCommandModes"].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+    EXPECT_EQ(
+      status_map["TestActuatorHardware"].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+  }
+
+  // Default behavior for empty key lists, e.g., when a Broadcaster is activated
+  EXPECT_TRUE(rm.prepare_command_mode_switch(empty_keys, empty_keys));
+
+  // When non existing keys are provided
+  EXPECT_FALSE(rm.prepare_command_mode_switch(non_existing_keys, non_existing_keys));
+  EXPECT_FALSE(rm.prepare_command_mode_switch(non_existing_keys, empty_keys));
+  EXPECT_FALSE(rm.prepare_command_mode_switch(empty_keys, non_existing_keys));
+
+  // When TestActuatorHardware is INACTIVE expect failure
+  EXPECT_TRUE(rm.prepare_command_mode_switch(legal_keys_actuator, legal_keys_actuator));
+  EXPECT_TRUE(rm.prepare_command_mode_switch(legal_keys_actuator, empty_keys));
+  EXPECT_TRUE(rm.prepare_command_mode_switch(empty_keys, legal_keys_actuator));
+
+  // When TestSystemCommandModes is UNCONFIGURED expect OK
+  EXPECT_FALSE(rm.prepare_command_mode_switch(legal_keys_system, legal_keys_system));
+  EXPECT_FALSE(rm.prepare_command_mode_switch(legal_keys_system, empty_keys));
+  EXPECT_FALSE(rm.prepare_command_mode_switch(empty_keys, legal_keys_system));
+
+  set_components_state(
+    rm, {"TestActuatorHardware"}, lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, "finalized");
+
+  {
+    auto status_map = rm.get_components_status();
+    EXPECT_EQ(
+      status_map["TestSystemCommandModes"].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+    EXPECT_EQ(
+      status_map["TestActuatorHardware"].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED);
+  }
+
+  // Default behavior for empty key lists, e.g., when a Broadcaster is activated
+  EXPECT_TRUE(rm.prepare_command_mode_switch(empty_keys, empty_keys));
+
+  // When non existing keys are provided
+  EXPECT_FALSE(rm.prepare_command_mode_switch(non_existing_keys, non_existing_keys));
+  EXPECT_FALSE(rm.prepare_command_mode_switch(non_existing_keys, empty_keys));
+  EXPECT_FALSE(rm.prepare_command_mode_switch(empty_keys, non_existing_keys));
+
+  // When TestActuatorHardware is FINALIZED expect failure
+  EXPECT_FALSE(rm.prepare_command_mode_switch(legal_keys_actuator, legal_keys_actuator));
+  EXPECT_FALSE(rm.prepare_command_mode_switch(legal_keys_actuator, empty_keys));
+  EXPECT_FALSE(rm.prepare_command_mode_switch(empty_keys, legal_keys_actuator));
+
+  // When TestSystemCommandModes is UNCONFIGURED expect OK
+  EXPECT_FALSE(rm.prepare_command_mode_switch(legal_keys_system, legal_keys_system));
+  EXPECT_FALSE(rm.prepare_command_mode_switch(legal_keys_system, empty_keys));
+  EXPECT_FALSE(rm.prepare_command_mode_switch(empty_keys, legal_keys_system));
+}
+
 TEST_F(ResourceManagerTest, custom_prepare_perform_switch)
 {
   TestableResourceManager rm(command_mode_urdf);
+  set_components_state(
+    rm, {"TestActuatorHardware"}, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, "inactive");
+  set_components_state(
+    rm, {"TestSystemCommandModes"}, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, "active");
+
   // Scenarios defined by example criteria
   std::vector<std::string> empty_keys = {};
-  std::vector<std::string> irrelevant_keys = {"elbow_joint/position", "should_joint/position"};
+  std::vector<std::string> irrelevant_keys = {"joint3/position", "joint3/max_velocity"};
   std::vector<std::string> illegal_single_key = {"joint1/position"};
   std::vector<std::string> legal_keys_position = {"joint1/position", "joint2/position"};
   std::vector<std::string> legal_keys_velocity = {"joint1/velocity", "joint2/velocity"};
-  // Default behavior for empty key lists
-  EXPECT_TRUE(rm.prepare_command_mode_switch(empty_keys, empty_keys));
 
   // Default behavior when given irrelevant keys
   EXPECT_TRUE(rm.prepare_command_mode_switch(irrelevant_keys, irrelevant_keys));
