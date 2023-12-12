@@ -272,16 +272,7 @@ ControllerManager::ControllerManager(
     RCLCPP_WARN(get_logger(), "'update_rate' parameter not set, using default value.");
   }
 
-  robot_description_ = "";
-  get_parameter("robot_description", robot_description_);
-  if (robot_description_.empty())
-  {
-    subscribe_to_robot_description_topic();
-  }
-  else
-  {
-    init_resource_manager(robot_description_);
-  }
+  subscribe_to_robot_description_topic();
 
   diagnostics_updater_.setHardwareID("ros2_control");
   diagnostics_updater_.add(
