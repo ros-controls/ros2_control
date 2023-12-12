@@ -287,6 +287,7 @@ public:
 
     if (result)
     {
+      remove_all_hardware_interfaces_from_available_list(hardware.get_name());
       async_component_threads_.erase(hardware.get_name());
       // TODO(destogl): change this - deimport all things if there is there are interfaces there
       // deimport_non_movement_command_interfaces(hardware);
@@ -1072,6 +1073,12 @@ bool ResourceManager::prepare_command_mode_switch(
   const std::vector<std::string> & start_interfaces,
   const std::vector<std::string> & stop_interfaces)
 {
+  // When only broadcaster is activated then this lists are empty
+  if (start_interfaces.empty() && stop_interfaces.empty())
+  {
+    return true;
+  }
+
   auto interfaces_to_string = [&]()
   {
     std::stringstream ss;
@@ -1090,12 +1097,63 @@ bool ResourceManager::prepare_command_mode_switch(
     return ss.str();
   };
 
+  // Check if interface exists
+  std::stringstream ss_not_existing;
+  ss_not_existing << "Not existing: " << std::endl << "[" << std::endl;
+  auto check_exist = [&](const std::vector<std::string> & list_to_check)
+  {
+    bool all_exist = true;
+    for (const auto & interface : list_to_check)
+    {
+      if (!command_interface_exists(interface))
+      {
+        all_exist = false;
+        ss_not_existing << " " << interface << std::endl;
+      }
+    }
+    return all_exist;
+  };
+  if (!check_exist(start_interfaces) || !check_exist(stop_interfaces))
+  {
+    ss_not_existing << "]" << std::endl;
+    RCUTILS_LOG_ERROR_NAMED(
+      "resource_manager", "Not acceptable command interfaces combination: \n%s%s",
+      interfaces_to_string().c_str(), ss_not_existing.str().c_str());
+    return false;
+  }
+
+  // Check if interfaces are available
+  std::stringstream ss_not_available;
+  ss_not_available << "Not available: " << std::endl << "[" << std::endl;
+  auto check_available = [&](const std::vector<std::string> & list_to_check)
+  {
+    bool all_available = true;
+    for (const auto & interface : list_to_check)
+    {
+      if (!command_interface_is_available(interface))
+      {
+        all_available = false;
+        ss_not_available << " " << interface << std::endl;
+      }
+    }
+    return all_available;
+  };
+  if (!check_available(start_interfaces) || !check_available(stop_interfaces))
+  {
+    ss_not_available << "]" << std::endl;
+    RCUTILS_LOG_ERROR_NAMED(
+      "resource_manager", "Not acceptable command interfaces combination: \n%s%s",
+      interfaces_to_string().c_str(), ss_not_available.str().c_str());
+    return false;
+  }
+
+  // Check now if component allows the given interface combination
   for (auto & component : resource_storage_->actuators_)
   {
     if (return_type::OK != component.prepare_command_mode_switch(start_interfaces, stop_interfaces))
     {
       RCUTILS_LOG_ERROR_NAMED(
-        "resource_manager", "Component '%s' did not accept new command resource combination: \n %s",
+        "resource_manager", "Component '%s' did not accept command interfaces combination: \n%s",
         component.get_name().c_str(), interfaces_to_string().c_str());
       return false;
     }
@@ -1105,7 +1163,7 @@ bool ResourceManager::prepare_command_mode_switch(
     if (return_type::OK != component.prepare_command_mode_switch(start_interfaces, stop_interfaces))
     {
       RCUTILS_LOG_ERROR_NAMED(
-        "resource_manager", "Component '%s' did not accept new command resource combination: \n %s",
+        "resource_manager", "Component '%s' did not accept command interfaces combination: \n%s",
         component.get_name().c_str(), interfaces_to_string().c_str());
       return false;
     }
