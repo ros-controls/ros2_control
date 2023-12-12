@@ -1336,37 +1336,6 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::add_co
   return to.back().c;
 }
 
-void ControllerManager::manage_switch()
-{
-  // Ask hardware interfaces to change mode
-  if (!resource_manager_->perform_command_mode_switch(
-        activate_command_interface_request_, deactivate_command_interface_request_))
-  {
-    RCLCPP_ERROR(get_logger(), "Error while performing mode switch.");
-  }
-
-  std::vector<ControllerSpec> & rt_controller_list =
-    rt_controllers_wrapper_.update_and_get_used_by_rt_list();
-
-  deactivate_controllers(rt_controller_list, deactivate_request_);
-
-  switch_chained_mode(to_chained_mode_request_, true);
-  switch_chained_mode(from_chained_mode_request_, false);
-
-  // activate controllers once the switch is fully complete
-  if (!switch_params_.activate_asap)
-  {
-    activate_controllers(rt_controller_list, activate_request_);
-  }
-  else
-  {
-    // activate controllers as soon as their required joints are done switching
-    activate_controllers_asap(rt_controller_list, activate_request_);
-  }
-
-  // TODO(destogl): move here "do_switch = false"
-}
-
 void ControllerManager::deactivate_controllers(
   const std::vector<ControllerSpec> & rt_controller_list,
   const std::vector<std::string> controllers_to_deactivate)
@@ -1579,8 +1548,6 @@ void ControllerManager::activate_controllers(
       async_controller_threads_.at(controller_name)->activate();
     }
   }
-  // All controllers activated, switching done
-  switch_params_.do_switch = false;
 }
 
 void ControllerManager::activate_controllers_asap(
@@ -2035,6 +2002,38 @@ void ControllerManager::read(const rclcpp::Time & time, const rclcpp::Duration &
     deactivate_controllers(rt_controller_list, stop_request);
     // TODO(destogl): do auto-start of broadcasters
   }
+}
+
+void ControllerManager::manage_switch()
+{
+  // Ask hardware interfaces to change mode
+  if (!resource_manager_->perform_command_mode_switch(
+    activate_command_interface_request_, deactivate_command_interface_request_))
+  {
+    RCLCPP_ERROR(get_logger(), "Error while performing mode switch.");
+  }
+
+  std::vector<ControllerSpec> & rt_controller_list =
+  rt_controllers_wrapper_.update_and_get_used_by_rt_list();
+
+  deactivate_controllers(rt_controller_list, deactivate_request_);
+
+  switch_chained_mode(to_chained_mode_request_, true);
+  switch_chained_mode(from_chained_mode_request_, false);
+
+  // activate controllers once the switch is fully complete
+  if (!switch_params_.activate_asap)
+  {
+    activate_controllers(rt_controller_list, activate_request_);
+  }
+  else
+  {
+    // activate controllers as soon as their required joints are done switching
+    activate_controllers_asap(rt_controller_list, activate_request_);
+  }
+
+  // All controllers switched --> switching done
+  switch_params_.do_switch = false;
 }
 
 controller_interface::return_type ControllerManager::update(
