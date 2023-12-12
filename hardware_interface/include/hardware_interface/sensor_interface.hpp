@@ -15,10 +15,13 @@
 #ifndef HARDWARE_INTERFACE__SENSOR_INTERFACE_HPP_
 #define HARDWARE_INTERFACE__SENSOR_INTERFACE_HPP_
 
+#include <limits>
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
 
+#include "hardware_interface/component_parser.hpp"
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
@@ -97,11 +100,27 @@ public:
   virtual CallbackReturn on_init(const HardwareInfo & hardware_info)
   {
     info_ = hardware_info;
+    import_state_interface_descriptions(info_);
     return CallbackReturn::SUCCESS;
   };
 
+  /**
+   * Import the InterfaceDescription for the StateInterfaces from the HardwareInfo.
+   * Separate them into the possible types: Sensor and store them.
+   */
+  virtual void import_state_interface_descriptions(const HardwareInfo & hardware_info)
+  {
+    sensor_states_descriptions_ =
+      parse_sensor_state_interface_descriptions_from_hardware_info(hardware_info);
+  }
+
   /// Exports all state interfaces for this hardware interface.
   /**
+   * Default implementation for exporting the StateInterfaces. The StateInterfaces are created
+   * according to the InterfaceDescription. The memory accessed by the controllers and hardware is
+   * assigned here and resides in the system_interface.
+   *
+   * If overwritten:
    * The state interfaces have to be created and transferred according
    * to the hardware info passed in for the configuration.
    *
@@ -109,7 +128,19 @@ public:
    *
    * \return vector of state interfaces
    */
-  virtual std::vector<StateInterface> export_state_interfaces() = 0;
+  virtual std::vector<StateInterface> export_state_interfaces()
+  {
+    std::vector<hardware_interface::StateInterface> state_interfaces;
+    state_interfaces.reserve(sensor_states_descriptions_.size());
+
+    for (const auto & descr : sensor_states_descriptions_)
+    {
+      sensor_states_[descr.get_name()] = std::numeric_limits<double>::quiet_NaN();
+      state_interfaces.emplace_back(StateInterface(descr, &sensor_states_[descr.get_name()]));
+    }
+
+    return state_interfaces;
+  }
 
   /// Read the current state values from the actuator.
   /**
@@ -141,8 +172,24 @@ public:
    */
   void set_state(const rclcpp_lifecycle::State & new_state) { lifecycle_state_ = new_state; }
 
+  double sensor_state_get_value(const InterfaceDescription & interface_descr) const
+  {
+    return sensor_states_.at(interface_descr.get_name());
+  }
+
+  void sensor_state_set_value(const InterfaceDescription & interface_descr, const double & value)
+  {
+    sensor_states_[interface_descr.get_name()] = value;
+  }
+
 protected:
   HardwareInfo info_;
+
+  std::vector<InterfaceDescription> sensor_states_descriptions_;
+
+private:
+  std::map<std::string, double> sensor_states_;
+
   rclcpp_lifecycle::State lifecycle_state_;
 };
 

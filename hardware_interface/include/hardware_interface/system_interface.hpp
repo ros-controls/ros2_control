@@ -102,29 +102,44 @@ public:
   virtual CallbackReturn on_init(const HardwareInfo & hardware_info)
   {
     info_ = hardware_info;
-    add_state_interface_descriptions();
-    add_command_interface_descriptions();
+    import_state_interface_descriptions(info_);
+    import_command_interface_descriptions(info_);
     return CallbackReturn::SUCCESS;
   };
 
-  virtual void add_state_interface_descriptions()
+  /**
+   * Import the InterfaceDescription for the StateInterfaces from the HardwareInfo.
+   * Separate them into the possible types: Joint, GPIO, Sensor and store them.
+   */
+  void import_state_interface_descriptions(const HardwareInfo & hardware_info)
   {
-    joint_states_descriptions_ = parse_joint_state_interface_descriptions_from_hardware_info(info_);
-    gpio_states_descriptions_ = parse_gpio_state_interface_descriptions_from_hardware_info(info_);
+    joint_states_descriptions_ =
+      parse_joint_state_interface_descriptions_from_hardware_info(hardware_info);
+    gpio_states_descriptions_ =
+      parse_gpio_state_interface_descriptions_from_hardware_info(hardware_info);
     sensor_states_descriptions_ =
-      parse_sensor_state_interface_descriptions_from_hardware_info(info_);
+      parse_sensor_state_interface_descriptions_from_hardware_info(hardware_info);
   }
 
-  virtual void add_command_interface_descriptions()
+  /**
+   * Import the InterfaceDescription for the CommandInterfaces from the HardwareInfo.
+   * Separate them into the possible types: Joint and GPIO and store them.
+   */
+  void import_command_interface_descriptions(const HardwareInfo & hardware_info)
   {
     joint_commands_descriptions_ =
-      parse_joint_command_interface_descriptions_from_hardware_info(info_);
+      parse_joint_command_interface_descriptions_from_hardware_info(hardware_info);
     gpio_commands_descriptions_ =
-      parse_gpio_command_interface_descriptions_from_hardware_info(info_);
+      parse_gpio_command_interface_descriptions_from_hardware_info(hardware_info);
   }
 
   /// Exports all state interfaces for this hardware interface.
   /**
+   * Default implementation for exporting the StateInterfaces. The StateInterfaces are created
+   * according to the InterfaceDescription. The memory accessed by the controllers and hardware is
+   * assigned here and resides in the system_interface.
+   *
+   * If overwritten:
    * The state interfaces have to be created and transferred according
    * to the hardware info passed in for the configuration.
    *
@@ -135,7 +150,9 @@ public:
   virtual std::vector<StateInterface> export_state_interfaces()
   {
     std::vector<hardware_interface::StateInterface> state_interfaces;
-    state_interfaces.reserve(joint_states_descriptions_.size());
+    state_interfaces.reserve(
+      joint_states_descriptions_.size() + sensor_states_descriptions_.size() +
+      gpio_states_descriptions_.size());
 
     for (const auto & descr : joint_states_descriptions_)
     {
@@ -143,11 +160,27 @@ public:
       state_interfaces.emplace_back(StateInterface(descr, &joint_states_[descr.get_name()]));
     }
 
+    for (const auto & descr : sensor_states_descriptions_)
+    {
+      sensor_states_[descr.get_name()] = std::numeric_limits<double>::quiet_NaN();
+      state_interfaces.emplace_back(StateInterface(descr, &sensor_states_[descr.get_name()]));
+    }
+
+    for (const auto & descr : gpio_states_descriptions_)
+    {
+      gpio_states_[descr.get_name()] = std::numeric_limits<double>::quiet_NaN();
+      state_interfaces.emplace_back(StateInterface(descr, &gpio_states_[descr.get_name()]));
+    }
+
     return state_interfaces;
   }
 
   /// Exports all command interfaces for this hardware interface.
   /**
+   * Default implementation for exporting the CommandInterfaces. The CommandInterfaces are created
+   * according to the InterfaceDescription. The memory accessed by the controllers and hardware is
+   * assigned here and resides in the system_interface.
+   *
    * The command interfaces have to be created and transferred according
    * to the hardware info passed in for the configuration.
    *
@@ -158,12 +191,19 @@ public:
   virtual std::vector<CommandInterface> export_command_interfaces()
   {
     std::vector<hardware_interface::CommandInterface> command_interfaces;
-    command_interfaces.reserve(joint_commands_descriptions_.size());
+    command_interfaces.reserve(
+      joint_commands_descriptions_.size() + gpio_commands_descriptions_.size());
 
     for (const auto & descr : joint_commands_descriptions_)
     {
       joint_commands_[descr.get_name()] = std::numeric_limits<double>::quiet_NaN();
       command_interfaces.emplace_back(CommandInterface(descr, &joint_commands_[descr.get_name()]));
+    }
+
+    for (const auto & descr : gpio_commands_descriptions_)
+    {
+      gpio_commands_[descr.get_name()] = std::numeric_limits<double>::quiet_NaN();
+      command_interfaces.emplace_back(CommandInterface(descr, &gpio_commands_[descr.get_name()]));
     }
 
     return command_interfaces;

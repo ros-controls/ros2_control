@@ -15,10 +15,13 @@
 #ifndef HARDWARE_INTERFACE__ACTUATOR_INTERFACE_HPP_
 #define HARDWARE_INTERFACE__ACTUATOR_INTERFACE_HPP_
 
+#include <limits>
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
 
+#include "hardware_interface/component_parser.hpp"
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
@@ -97,11 +100,38 @@ public:
   virtual CallbackReturn on_init(const HardwareInfo & hardware_info)
   {
     info_ = hardware_info;
+    import_state_interface_descriptions(info_);
+    import_command_interface_descriptions(info_);
     return CallbackReturn::SUCCESS;
   };
 
+  /**
+   * Import the InterfaceDescription for the StateInterfaces from the HardwareInfo.
+   * Separate them into the possible types: Joint and store them.
+   */
+  virtual void import_state_interface_descriptions(const HardwareInfo & hardware_info)
+  {
+    joint_states_descriptions_ =
+      parse_joint_state_interface_descriptions_from_hardware_info(hardware_info);
+  }
+
+  /**
+   * Import the InterfaceDescription for the CommandInterfaces from the HardwareInfo.
+   * Separate them into the possible types: Joint and store them.
+   */
+  virtual void import_command_interface_descriptions(const HardwareInfo & hardware_info)
+  {
+    joint_commands_descriptions_ =
+      parse_joint_command_interface_descriptions_from_hardware_info(hardware_info);
+  }
+
   /// Exports all state interfaces for this hardware interface.
   /**
+   * Default implementation for exporting the StateInterfaces. The StateInterfaces are created
+   * according to the InterfaceDescription. The memory accessed by the controllers and hardware is
+   * assigned here and resides in the system_interface.
+   *
+   * If overwritten:
    * The state interfaces have to be created and transferred according
    * to the hardware info passed in for the configuration.
    *
@@ -109,10 +139,26 @@ public:
    *
    * \return vector of state interfaces
    */
-  virtual std::vector<StateInterface> export_state_interfaces() = 0;
+  virtual std::vector<StateInterface> export_state_interfaces()
+  {
+    std::vector<hardware_interface::StateInterface> state_interfaces;
+    state_interfaces.reserve(joint_states_descriptions_.size());
+
+    for (const auto & descr : joint_states_descriptions_)
+    {
+      joint_states_[descr.get_name()] = std::numeric_limits<double>::quiet_NaN();
+      state_interfaces.emplace_back(StateInterface(descr, &joint_states_[descr.get_name()]));
+    }
+
+    return state_interfaces;
+  }
 
   /// Exports all command interfaces for this hardware interface.
   /**
+   * Default implementation for exporting the CommandInterfaces. The CommandInterfaces are created
+   * according to the InterfaceDescription. The memory accessed by the controllers and hardware is
+   * assigned here and resides in the system_interface.
+   *
    * The command interfaces have to be created and transferred according
    * to the hardware info passed in for the configuration.
    *
@@ -120,7 +166,19 @@ public:
    *
    * \return vector of command interfaces
    */
-  virtual std::vector<CommandInterface> export_command_interfaces() = 0;
+  virtual std::vector<CommandInterface> export_command_interfaces()
+  {
+    std::vector<hardware_interface::CommandInterface> command_interfaces;
+    command_interfaces.reserve(joint_commands_descriptions_.size());
+
+    for (const auto & descr : joint_commands_descriptions_)
+    {
+      joint_commands_[descr.get_name()] = std::numeric_limits<double>::quiet_NaN();
+      command_interfaces.emplace_back(CommandInterface(descr, &joint_commands_[descr.get_name()]));
+    }
+
+    return command_interfaces;
+  }
 
   /// Prepare for a new command interface switch.
   /**
@@ -202,8 +260,35 @@ public:
    */
   void set_state(const rclcpp_lifecycle::State & new_state) { lifecycle_state_ = new_state; }
 
+  double joint_state_get_value(const InterfaceDescription & interface_descr) const
+  {
+    return joint_states_.at(interface_descr.get_name());
+  }
+
+  void joint_state_set_value(const InterfaceDescription & interface_descr, const double & value)
+  {
+    joint_states_[interface_descr.get_name()] = value;
+  }
+
+  double joint_command_get_value(const InterfaceDescription & interface_descr) const
+  {
+    return joint_commands_.at(interface_descr.get_name());
+  }
+
+  void joint_command_set_value(const InterfaceDescription & interface_descr, const double & value)
+  {
+    joint_commands_[interface_descr.get_name()] = value;
+  }
+
 protected:
   HardwareInfo info_;
+  std::vector<InterfaceDescription> joint_states_descriptions_;
+  std::vector<InterfaceDescription> joint_commands_descriptions_;
+
+private:
+  std::map<std::string, double> joint_states_;
+  std::map<std::string, double> joint_commands_;
+
   rclcpp_lifecycle::State lifecycle_state_;
 };
 
