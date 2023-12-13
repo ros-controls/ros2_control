@@ -2,6 +2,9 @@
 Changelog for package joint_limits
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.2.0 (2023-12-12)
+------------------
+
 4.1.0 (2023-11-30)
 ------------------
 * Add few warning compiler options to error (`#1181 <https://github.com/ros-controls/ros2_control/issues/1181>`_)
