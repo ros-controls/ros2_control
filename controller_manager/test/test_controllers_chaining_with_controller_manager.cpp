@@ -211,7 +211,7 @@ public:
     for (const auto & interface : {"pid_left_wheel_controller/velocity"})
     {
       EXPECT_TRUE(cm_->resource_manager_->command_interface_exists(interface));
-      EXPECT_FALSE(cm_->resource_manager_->command_interface_is_available(interface));
+      EXPECT_TRUE(cm_->resource_manager_->command_interface_is_available(interface));
       EXPECT_FALSE(cm_->resource_manager_->command_interface_is_claimed(interface));
     }
 
@@ -223,7 +223,7 @@ public:
     for (const auto & interface : {"pid_right_wheel_controller/velocity"})
     {
       EXPECT_TRUE(cm_->resource_manager_->command_interface_exists(interface));
-      EXPECT_FALSE(cm_->resource_manager_->command_interface_is_available(interface));
+      EXPECT_TRUE(cm_->resource_manager_->command_interface_is_available(interface));
       EXPECT_FALSE(cm_->resource_manager_->command_interface_is_claimed(interface));
     }
 
@@ -236,7 +236,7 @@ public:
           "diff_drive_controller/rot_z"})
     {
       EXPECT_TRUE(cm_->resource_manager_->command_interface_exists(interface));
-      EXPECT_FALSE(cm_->resource_manager_->command_interface_is_available(interface));
+      EXPECT_TRUE(cm_->resource_manager_->command_interface_is_available(interface));
       EXPECT_FALSE(cm_->resource_manager_->command_interface_is_claimed(interface));
     }
 
@@ -250,7 +250,7 @@ public:
           "diff_drive_controller/rot_z"})
     {
       EXPECT_TRUE(cm_->resource_manager_->command_interface_exists(interface));
-      EXPECT_FALSE(cm_->resource_manager_->command_interface_is_available(interface));
+      EXPECT_TRUE(cm_->resource_manager_->command_interface_is_available(interface));
       EXPECT_FALSE(cm_->resource_manager_->command_interface_is_claimed(interface));
     }
 
@@ -290,6 +290,7 @@ public:
     size_t expected_internal_counter, const controller_interface::return_type expected_return,
     bool deactivated, bool claimed_interfaces_from_hw = false)
   {
+    (void)claimed_interfaces_from_hw;
     for (const auto & interface : claimed_command_itfs)
     {
       EXPECT_TRUE(cm_->resource_manager_->command_interface_exists(interface));
@@ -297,18 +298,12 @@ public:
       if ((expected_return == controller_interface::return_type::OK) != deactivated)
       {
         EXPECT_TRUE(cm_->resource_manager_->command_interface_exists(interface));
+        EXPECT_TRUE(cm_->resource_manager_->command_interface_is_available(interface));
         EXPECT_TRUE(cm_->resource_manager_->command_interface_is_claimed(interface));
       }
       else
       {
-        if (claimed_interfaces_from_hw)
-        {
-          EXPECT_TRUE(cm_->resource_manager_->command_interface_is_available(interface));
-        }
-        else
-        {
-          EXPECT_FALSE(cm_->resource_manager_->command_interface_is_available(interface));
-        }
+        EXPECT_TRUE(cm_->resource_manager_->command_interface_is_available(interface));
         EXPECT_FALSE(cm_->resource_manager_->command_interface_is_claimed(interface));
       }
     }
