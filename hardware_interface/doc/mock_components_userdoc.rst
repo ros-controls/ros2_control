@@ -14,7 +14,7 @@ The main intention is to reduce debugging time on the physical hardware and boos
 
 Generic System
 ^^^^^^^^^^^^^^
-The component implements ``hardware_interface::SystemInterface>`` supporting command and state interfaces.
+The component implements ``hardware_interface::SystemInterface`` supporting command and state interfaces.
 For more information about hardware components check :ref:`detailed documentation <overview_hardware_components>`.
 
 Features:
