@@ -41,6 +41,10 @@ public:
     trajectory_msgs::msg::JointTrajectoryPoint & desired_joint_states,
     const rclcpp::Duration & dt) override;
 
+  JOINT_LIMITS_PUBLIC bool on_enforce_effort(
+    trajectory_msgs::msg::JointTrajectoryPoint & current_joint_states,
+    trajectory_msgs::msg::JointTrajectoryPoint & desired_joint_states, const rclcpp::Duration & dt);
+
 private:
   rclcpp::Clock::SharedPtr clock_;
 };

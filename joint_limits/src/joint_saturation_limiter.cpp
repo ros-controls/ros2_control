@@ -45,7 +45,6 @@ bool JointSaturationLimiter<JointLimits>::on_enforce(
   bool has_pos_cmd = (desired_joint_states.positions.size() == number_of_joints_);
   bool has_vel_cmd = (desired_joint_states.velocities.size() == number_of_joints_);
   bool has_acc_cmd = (desired_joint_states.accelerations.size() == number_of_joints_);
-  bool has_effort_cmd = (desired_joint_states.effort.size() == number_of_joints_);
   bool has_pos_state = (current_joint_states.positions.size() == number_of_joints_);
   bool has_vel_state = (current_joint_states.velocities.size() == number_of_joints_);
 
@@ -66,13 +65,11 @@ bool JointSaturationLimiter<JointLimits>::on_enforce(
   std::vector<double> desired_pos(number_of_joints_);
   std::vector<double> desired_vel(number_of_joints_);
   std::vector<double> desired_acc(number_of_joints_);
-  std::vector<double> desired_effort(number_of_joints_);
   std::vector<double> expected_vel(number_of_joints_);
   std::vector<double> expected_pos(number_of_joints_);
 
   // limits triggered
   std::vector<std::string> limited_jnts_pos, limited_jnts_vel, limited_jnts_acc, limited_jnts_dec;
-  std::vector<std::string> limited_joints_effort;
 
   bool braking_near_position_limit_triggered = false;
 
@@ -89,10 +86,6 @@ bool JointSaturationLimiter<JointLimits>::on_enforce(
     if (has_acc_cmd)
     {
       desired_acc[index] = desired_joint_states.accelerations[index];
-    }
-    if (has_effort_cmd)
-    {
-      desired_effort[index] = desired_joint_states.effort[index];
     }
 
     if (has_pos_cmd)
@@ -302,20 +295,6 @@ bool JointSaturationLimiter<JointLimits>::on_enforce(
         // else no need to slow down. in worse case we won't hit the limit at current velocity
       }
     }
-
-    if (joint_limits_[index].has_effort_limits)
-    {
-      double max_effort = joint_limits_[index].max_effort;
-      if (std::fabs(desired_effort[index]) > max_effort)
-      {
-        desired_effort[index] = std::copysign(max_effort, desired_effort[index]);
-        limited_joints_effort.emplace_back(joint_names_[index]);
-        limits_enforced = true;
-        return true;
-      }
-      else
-        return false;
-    }
   }
 
   // update variables according to triggers
@@ -412,7 +391,58 @@ bool JointSaturationLimiter<JointLimits>::on_enforce(
   return limits_enforced;
 }
 
+template <>
+bool JointSaturationLimiter<JointLimits>::on_enforce_effort(
+  trajectory_msgs::msg::JointTrajectoryPoint & current_joint_states,
+  trajectory_msgs::msg::JointTrajectoryPoint & desired_joint_states, const rclcpp::Duration & dt)
+{
+  std::vector<double> desired_effort(number_of_joints_);
+  std::vector<std::string> limited_joints_effort;
+
+  bool has_effort_cmd = (desired_joint_states.effort.size() == number_of_joints_);
+  if (!has_effort_cmd)
+  {
+    return false;
+  }
+
+  bool limits_enforced = false;
+  for (size_t index = 0; index < number_of_joints_; ++index)
+  {
+    desired_effort[index] = desired_joint_states.effort[index];
+    if (joint_limits_[index].has_effort_limits)
+    {
+      double max_effort = joint_limits_[index].max_effort;
+      if (std::fabs(desired_effort[index]) > max_effort)
+      {
+        desired_effort[index] = std::copysign(max_effort, desired_effort[index]);
+        limited_joints_effort.emplace_back(joint_names_[index]);
+        limits_enforced = true;
+        return true;
+      }
+      else
+      {
+        return false;
+      }
+    }
+  }
+
+  if (limited_joints_effort.size() > 0)
+  {
+    std::ostringstream ostr;
+    for (auto jnt : limited_joints_effort) ostr << jnt << " ";
+    ostr << "\b \b";  // erase last character
+    RCLCPP_WARN_STREAM_THROTTLE(
+      node_logging_itf_->get_logger(), *clock_, ROS_LOG_THROTTLE_PERIOD,
+      "Joint(s) [" << ostr.str().c_str() << "] would exceed effort limits, limiting");
+  }
+  // set desired values
+  desired_joint_states.effort = desired_effort;
+
+  return limits_enforced;
+}
+
 }  // namespace joint_limits
+   // namespace joint_limits
 
 #include "pluginlib/class_list_macros.hpp"
 
