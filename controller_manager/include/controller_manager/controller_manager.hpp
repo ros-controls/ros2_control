@@ -413,6 +413,12 @@ private:
     const ControllerSpec & ctrl_a, const ControllerSpec & ctrl_b,
     const std::vector<controller_manager::ControllerSpec> & controllers);
 
+  void perform_controller_sorting();
+
+  void insert_controller(
+    const std::string & ctrl_name, std::vector<std::string>::iterator controller_iterator,
+    bool append_to_controller);
+
   void controller_activity_diagnostic_callback(diagnostic_updater::DiagnosticStatusWrapper & stat);
 
   /**
@@ -516,6 +522,7 @@ private:
 
   RTControllerListWrapper rt_controllers_wrapper_;
   std::unordered_map<std::string, ControllerChainSpec> controller_chain_spec_;
+  std::vector<std::string> ordered_controllers_names_;
   /// mutex copied from ROS1 Control, protects service callbacks
   /// not needed if we're guaranteed that the callbacks don't come from multiple threads
   std::mutex services_lock_;

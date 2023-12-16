@@ -2714,6 +2714,67 @@ void ControllerManager::controller_activity_diagnostic_callback(
   }
 }
 
+void controller_manager::ControllerManager::perform_controller_sorting()
+{
+  for (const auto & [controller_name, chain_spec] : controller_chain_spec_)
+  {
+    auto it = std::find(
+      ordered_controllers_names_.begin(), ordered_controllers_names_.end(), controller_name);
+    if (it == ordered_controllers_names_.end())
+    {
+      ordered_controllers_names_.push_back(controller_name);
+      RCLCPP_INFO(get_logger(), "Adding controller : %s", controller_name.c_str());
+      it = std::find(
+        ordered_controllers_names_.begin(), ordered_controllers_names_.end(), controller_name);
+    }
+
+    RCLCPP_INFO(get_logger(), "\tFollowing controllers : ");
+    for (const std::string & flwg_ctrl : chain_spec.following_controllers)
+    {
+      RCLCPP_INFO(get_logger(), "\t\t%s", flwg_ctrl.c_str());
+      insert_controller(flwg_ctrl, it, true);
+    }
+
+    RCLCPP_INFO(get_logger(), "\tPreceding controllers : ");
+    for (const std::string & preced_ctrl : chain_spec.preceding_controllers)
+    {
+      RCLCPP_INFO(get_logger(), "\t\t%s", preced_ctrl.c_str());
+      insert_controller(preced_ctrl, it, false);
+    }
+  }
+}
+
+void ControllerManager::insert_controller(
+  const std::string & ctrl_name, std::vector<std::string>::iterator controller_iterator,
+  bool append_to_controller)
+{
+  auto new_ctrl_it =
+    std::find(ordered_controllers_names_.begin(), ordered_controllers_names_.end(), ctrl_name);
+  if (new_ctrl_it == ordered_controllers_names_.end())
+  {
+    if (append_to_controller)
+    {
+      ordered_controllers_names_.insert(controller_iterator + 1, ctrl_name);
+    }
+    else
+    {
+      ordered_controllers_names_.insert(controller_iterator, ctrl_name);
+    }
+    new_ctrl_it =
+      std::find(ordered_controllers_names_.begin(), ordered_controllers_names_.end(), ctrl_name);
+  }
+  if (append_to_controller)
+  {
+    for (const std::string & flwg_ctrl : controller_chain_spec_[ctrl_name].following_controllers)
+      insert_controller(flwg_ctrl, new_ctrl_it, true);
+  }
+  else
+  {
+    for (const std::string & preced_ctrl : controller_chain_spec_[ctrl_name].preceding_controllers)
+      insert_controller(preced_ctrl, new_ctrl_it, false);
+  }
+}
+
 rclcpp::NodeOptions ControllerManager::determine_controller_node_options(
   const ControllerSpec & controller) const
 {
