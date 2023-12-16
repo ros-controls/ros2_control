@@ -882,27 +882,27 @@ controller_interface::return_type ControllerManager::configure_controller(
   to = from;
   std::vector<ControllerSpec> sorted_list;
 
-  auto is_controller_in_list =
-    [](const std::vector<ControllerSpec> & specs_list, const std::string & controller_name) -> bool
-  {
-    return std::find(
-             specs_list.begin(), specs_list.end(),
-             std::bind(controller_name_compare, std::placeholders::_1, controller_name)) !=
-           specs_list.end();
-  };
+  //  auto is_controller_in_list =
+  //    [](const std::vector<ControllerSpec> & specs_list, const std::string & ctrl_name) -> bool
+  //  {
+  //    return std::find(
+  //             specs_list.begin(), specs_list.end(),
+  //             std::bind(controller_name_compare, std::placeholders::_1, ctrl_name)) !=
+  //           specs_list.end();
+  //  };
 
-  auto find_controller_spec_by_name = [](
-                                        const std::vector<ControllerSpec> & specs_list,
-                                        const std::string & controller_name) -> ControllerSpec
-  {
-    auto it = std::find(
-      specs_list.begin(), specs_list.end(),
-      std::bind(controller_name_compare, std::placeholders::_1, controller_name));
-    if (it != specs_list.end())
-      return *it;
-    else
-      return ControllerSpec();
-  };
+  //  auto find_controller_spec_by_name = [](
+  //                                        const std::vector<ControllerSpec> & specs_list,
+  //                                        const std::string & ctrl_name) -> ControllerSpec
+  //  {
+  //    auto it = std::find(
+  //      specs_list.begin(), specs_list.end(),
+  //      std::bind(controller_name_compare, std::placeholders::_1, ctrl_name));
+  //    if (it != specs_list.end())
+  //      return *it;
+  //    else
+  //      return ControllerSpec();
+  //  };
 
   // Reordering the controllers
   std::stable_sort(
