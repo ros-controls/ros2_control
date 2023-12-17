@@ -643,11 +643,6 @@ controller_interface::return_type ControllerManager::unload_controller(
   RCLCPP_DEBUG(get_logger(), "Cleanup controller");
   // TODO(destogl): remove reference interface if chainable; i.e., add a separate method for
   // cleaning-up controllers?
-  // Controller will not be removed so make its reference interface available
-  if (controller.c->is_chainable())
-  {
-    resource_manager_->make_controller_reference_interfaces_unavailable(controller_name);
-  }
   controller.c->get_node()->cleanup();
   executor_->remove_node(controller.c->get_node()->get_node_base_interface());
   to.erase(found_it);
@@ -803,12 +798,6 @@ controller_interface::return_type ControllerManager::configure_controller(
   rt_controllers_wrapper_.switch_updated_list(guard);
   // clear unused list
   rt_controllers_wrapper_.get_unused_list(guard).clear();
-
-  // Controller will not be in INACTIVE state so make its reference interface available
-  if (controller->is_chainable())
-  {
-    resource_manager_->make_controller_reference_interfaces_available(controller_name);
-  }
 
   return controller_interface::return_type::OK;
 }
