@@ -1148,18 +1148,13 @@ controller_interface::return_type ControllerManager::switch_controller(
     return controller_interface::return_type::OK;
   }
 
-  if (
-    !activate_command_interface_request_.empty() || !deactivate_command_interface_request_.empty())
+  if (!resource_manager_->prepare_command_mode_switch(
+        activate_command_interface_request_, deactivate_command_interface_request_))
   {
-    if (!resource_manager_->prepare_command_mode_switch(
-          activate_command_interface_request_, deactivate_command_interface_request_))
-    {
-      RCLCPP_ERROR(
-        get_logger(),
-        "Could not switch controllers since prepare command mode switch was rejected.");
-      clear_requests();
-      return controller_interface::return_type::ERROR;
-    }
+    RCLCPP_ERROR(
+      get_logger(), "Could not switch controllers since prepare command mode switch was rejected.");
+    clear_requests();
+    return controller_interface::return_type::ERROR;
   }
 
   // start the atomic controller switching
@@ -1951,13 +1946,13 @@ void ControllerManager::manage_switch()
 {
   // Ask hardware interfaces to change mode
   if (!resource_manager_->perform_command_mode_switch(
-    activate_command_interface_request_, deactivate_command_interface_request_))
+        activate_command_interface_request_, deactivate_command_interface_request_))
   {
     RCLCPP_ERROR(get_logger(), "Error while performing mode switch.");
   }
 
   std::vector<ControllerSpec> & rt_controller_list =
-  rt_controllers_wrapper_.update_and_get_used_by_rt_list();
+    rt_controllers_wrapper_.update_and_get_used_by_rt_list();
 
   deactivate_controllers(rt_controller_list, deactivate_request_);
 
