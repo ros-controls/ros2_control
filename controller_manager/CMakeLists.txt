@@ -127,10 +127,21 @@ if(BUILD_TESTING)
     test/test_controller_manager_srvs.cpp
     APPEND_ENV AMENT_PREFIX_PATH=${ament_index_build_path}_$<CONFIG>
   )
+<<<<<<< HEAD
   target_include_directories(test_controller_manager_srvs PRIVATE include)
   target_link_libraries(test_controller_manager_srvs ${PROJECT_NAME} test_controller test_chainable_controller)
   ament_target_dependencies(
     test_controller_manager_srvs
+=======
+  target_link_libraries(test_controller_manager_srvs
+    controller_manager
+    test_controller
+    test_chainable_controller
+    ros2_control_test_assets::ros2_control_test_assets
+  )
+  set_tests_properties(test_controller_manager_srvs PROPERTIES TIMEOUT 120)
+  ament_target_dependencies(test_controller_manager_srvs
+>>>>>>> 82c82ae ([CM] Increase tests timeout (#1224))
     controller_manager_msgs
     ros2_control_test_assets
   )
