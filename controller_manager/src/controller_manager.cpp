@@ -848,7 +848,6 @@ controller_interface::return_type ControllerManager::configure_controller(
   // let's update the list of following and preceding controllers
   const auto cmd_itfs = controller->command_interface_configuration().names;
   const auto state_itfs = controller->state_interface_configuration().names;
-  controller_chain_spec_[controller_name] = ControllerChainSpec();
   for (const auto & cmd_itf : cmd_itfs)
   {
     controller_manager::ControllersListIterator ctrl_it;
