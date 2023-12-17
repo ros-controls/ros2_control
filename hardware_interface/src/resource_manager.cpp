@@ -1147,42 +1147,35 @@ bool ResourceManager::prepare_command_mode_switch(
     return false;
   }
 
-  using lifecycle_msgs::msg::State;
+  auto call_method_on_components =
+    [&start_interfaces, &stop_interfaces, &interfaces_to_string](auto & components)
+  {
+    bool ret = true;
+    for (auto & component : components)
+    {
+      if (
+        component.get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
+        component.get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+      {
+        if (
+          return_type::OK !=
+          component.prepare_command_mode_switch(start_interfaces, stop_interfaces))
+        {
+          RCUTILS_LOG_ERROR_NAMED(
+            "resource_manager",
+            "Component '%s' did not accept command interfaces combination: \n%s",
+            component.get_name().c_str(), interfaces_to_string().c_str());
+          ret = false;
+        }
+      }
+    }
+    return ret;
+  };
 
-  // Check now if component allows the given interface combination
-  for (auto & component : resource_storage_->actuators_)
-  {
-    if (
-      component.get_state().id() == State::PRIMARY_STATE_INACTIVE ||
-      component.get_state().id() == State::PRIMARY_STATE_ACTIVE)
-    {
-      if (
-        return_type::OK != component.prepare_command_mode_switch(start_interfaces, stop_interfaces))
-      {
-        RCUTILS_LOG_ERROR_NAMED(
-          "resource_manager", "Component '%s' did not accept command interfaces combination: \n%s",
-          component.get_name().c_str(), interfaces_to_string().c_str());
-        return false;
-      }
-    }
-  }
-  for (auto & component : resource_storage_->systems_)
-  {
-    if (
-      component.get_state().id() == State::PRIMARY_STATE_INACTIVE ||
-      component.get_state().id() == State::PRIMARY_STATE_ACTIVE)
-    {
-      if (
-        return_type::OK != component.prepare_command_mode_switch(start_interfaces, stop_interfaces))
-      {
-        RCUTILS_LOG_ERROR_NAMED(
-          "resource_manager", "Component '%s' did not accept command interfaces combination: \n%s",
-          component.get_name().c_str(), interfaces_to_string().c_str());
-        return false;
-      }
-    }
-  }
-  return true;
+  const bool actuators_result = call_method_on_components(resource_storage_->actuators_);
+  const bool systems_result = call_method_on_components(resource_storage_->systems_);
+
+  return actuators_result && systems_result;
 }
 
 // CM API: Called in "update"-thread
@@ -1190,27 +1183,39 @@ bool ResourceManager::perform_command_mode_switch(
   const std::vector<std::string> & start_interfaces,
   const std::vector<std::string> & stop_interfaces)
 {
-  for (auto & component : resource_storage_->actuators_)
+  // When only broadcaster is activated then this lists are empty
+  if (start_interfaces.empty() && stop_interfaces.empty())
   {
-    if (return_type::OK != component.perform_command_mode_switch(start_interfaces, stop_interfaces))
-    {
-      RCUTILS_LOG_ERROR_NAMED(
-        "resource_manager", "Component '%s' could not perform switch",
-        component.get_name().c_str());
-      return false;
-    }
+    return true;
   }
-  for (auto & component : resource_storage_->systems_)
+
+  auto call_method_on_components = [&start_interfaces, &stop_interfaces](auto & components)
   {
-    if (return_type::OK != component.perform_command_mode_switch(start_interfaces, stop_interfaces))
+    bool ret = true;
+    for (auto & component : components)
     {
-      RCUTILS_LOG_ERROR_NAMED(
-        "resource_manager", "Component '%s' could not perform switch",
-        component.get_name().c_str());
-      return false;
+      if (
+        component.get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
+        component.get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+      {
+        if (
+          return_type::OK !=
+          component.perform_command_mode_switch(start_interfaces, stop_interfaces))
+        {
+          RCUTILS_LOG_ERROR_NAMED(
+            "resource_manager", "Component '%s' could not perform switch",
+            component.get_name().c_str());
+          ret = false;
+        }
+      }
     }
-  }
-  return true;
+    return ret;
+  };
+
+  const bool actuators_result = call_method_on_components(resource_storage_->actuators_);
+  const bool systems_result = call_method_on_components(resource_storage_->systems_);
+
+  return actuators_result && systems_result;
 }
 
 // CM API: Called in "callback/slow"-thread

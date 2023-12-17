@@ -168,6 +168,7 @@ public:
     const std::vector<std::string> & start_interfaces,
     const std::vector<std::string> & /*stop_interfaces*/) override
   {
+    acceleration_state_[0] += 100.0;
     // Test of failure in perform command mode switch
     // Fail if given an empty list.
     // This should never occur in a real system as the same start_interfaces list is sent to both
