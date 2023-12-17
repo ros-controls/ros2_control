@@ -670,14 +670,14 @@ TEST_P(
   // PositionController is deactivated --> DiffDrive controller is not in chained mode anymore
   DeactivateAndCheckController(
     position_tracking_controller, POSITION_TRACKING_CONTROLLER,
-    POSITION_CONTROLLER_CLAIMED_INTERFACES, 4u);
+    POSITION_CONTROLLER_CLAIMED_INTERFACES, 4u, true);
   EXPECT_TRUE(pid_left_wheel_controller->is_in_chained_mode());
   EXPECT_TRUE(pid_right_wheel_controller->is_in_chained_mode());
   ASSERT_FALSE(diff_drive_controller->is_in_chained_mode());
 
   // DiffDrive (preceding) controller is activated --> PID controller in chained mode
   DeactivateAndCheckController(
-    diff_drive_controller, DIFF_DRIVE_CONTROLLER, DIFF_DRIVE_CLAIMED_INTERFACES, 8u);
+    diff_drive_controller, DIFF_DRIVE_CONTROLLER, DIFF_DRIVE_CLAIMED_INTERFACES, 8u, true);
   EXPECT_FALSE(pid_left_wheel_controller->is_in_chained_mode());
   EXPECT_FALSE(pid_right_wheel_controller->is_in_chained_mode());
   ASSERT_FALSE(diff_drive_controller->is_in_chained_mode());
