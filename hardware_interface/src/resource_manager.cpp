@@ -1108,7 +1108,7 @@ bool ResourceManager::prepare_command_mode_switch(
       if (!command_interface_exists(interface))
       {
         all_exist = false;
-        ss_not_existing << "  " << interface << std::endl;
+        ss_not_existing << " " << interface << std::endl;
       }
     }
     return all_exist;
@@ -1133,7 +1133,7 @@ bool ResourceManager::prepare_command_mode_switch(
       if (!command_interface_is_available(interface))
       {
         all_available = false;
-        ss_not_available << "  " << interface << std::endl;
+        ss_not_available << " " << interface << std::endl;
       }
     }
     return all_available;
