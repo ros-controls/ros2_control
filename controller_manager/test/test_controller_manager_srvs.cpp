@@ -1625,9 +1625,13 @@ TEST_F(TestControllerManagerSrvs, list_hardware_interfaces_srv)
         std::string(test_chainable_controller::TEST_CONTROLLER_NAME) + "/joint1/position" ||
       cmd_itrf.name ==
         std::string(test_chainable_controller::TEST_CONTROLLER_NAME) + "/joint1/velocity")
+    {
       ASSERT_FALSE(cmd_itrf.is_available);
+    }
     else
+    {
       ASSERT_TRUE(cmd_itrf.is_available);
+    }
     ASSERT_FALSE(cmd_itrf.is_claimed);
   }
   auto find_interface_in_list = [](const std::string & interface, auto & hw_interface_info)
