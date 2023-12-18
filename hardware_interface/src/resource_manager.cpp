@@ -1494,7 +1494,12 @@ void ResourceManager::validate_storage(
       err_msg += "' " + missing_key + " '" + "\t";
     }
 
-    throw std::runtime_error(err_msg);
+    RCUTILS_LOG_WARN_NAMED(
+      "resource_manager",
+      "Discrepancy between robot description file (urdf) and actually exported HW interfaces."
+      "If this is not intentional - fix it! If it is, Controller Manager will work correctly!"
+      "Details: %s",
+      err_msg.c_str());
   }
 }
 

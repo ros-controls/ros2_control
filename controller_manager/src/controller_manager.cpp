@@ -277,6 +277,7 @@ ControllerManager::ControllerManager(
   diagnostics_updater_.setHardwareID("ros2_control");
   diagnostics_updater_.add(
     "Controllers Activity", this, &ControllerManager::controller_activity_diagnostic_callback);
+
   init_services();
 }
 
@@ -324,29 +325,16 @@ void ControllerManager::robot_description_callback(const std_msgs::msg::String &
   RCLCPP_INFO(get_logger(), "Received robot description from topic.");
   RCLCPP_DEBUG(
     get_logger(), "'Content of robot description file: %s", robot_description.data.c_str());
-  // TODO(Manuel): errors should probably be caught since we don't want controller_manager node
-  // to die if a non valid urdf is passed. However, should maybe be fine tuned.
-  try
+  robot_description_ = robot_description.data;
+  if (resource_manager_->is_urdf_already_loaded())
   {
-    robot_description_ = robot_description.data;
-    if (resource_manager_->is_urdf_already_loaded())
-    {
-      RCLCPP_WARN(
-        get_logger(),
-        "ResourceManager has already loaded an urdf file. Ignoring attempt to reload a robot "
-        "description file.");
-      return;
-    }
-    init_resource_manager(robot_description_);
-  }
-  catch (std::runtime_error & e)
-  {
-    RCLCPP_ERROR_STREAM(
+    RCLCPP_WARN(
       get_logger(),
-      "The published robot description file (urdf) seems not to be genuine. The following error "
-      "was caught:"
-        << e.what());
+      "ResourceManager has already loaded an urdf file. Ignoring attempt to reload a robot "
+      "description file.");
+    return;
   }
+  init_resource_manager(robot_description_);
 }
 
 void ControllerManager::init_resource_manager(const std::string & robot_description)
@@ -803,14 +791,15 @@ controller_interface::return_type ControllerManager::switch_controller(
     strictness = controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT;
   }
 
-  RCLCPP_DEBUG(get_logger(), "Switching controllers:");
+  RCLCPP_DEBUG(get_logger(), "Activating controllers:");
   for (const auto & controller : activate_controllers)
   {
-    RCLCPP_DEBUG(get_logger(), "- Activating controller '%s'", controller.c_str());
+    RCLCPP_DEBUG(get_logger(), " - %s", controller.c_str());
   }
+  RCLCPP_DEBUG(get_logger(), "Deactivating controllers:");
   for (const auto & controller : deactivate_controllers)
   {
-    RCLCPP_DEBUG(get_logger(), "- Deactivating controller '%s'", controller.c_str());
+    RCLCPP_DEBUG(get_logger(), " - %s", controller.c_str());
   }
 
   const auto list_controllers = [this, strictness](
@@ -1146,6 +1135,17 @@ controller_interface::return_type ControllerManager::switch_controller(
     RCLCPP_INFO(get_logger(), "Empty activate and deactivate list, not requesting switch");
     clear_requests();
     return controller_interface::return_type::OK;
+  }
+
+  RCLCPP_DEBUG(get_logger(), "Request for command interfaces from activating controllers:");
+  for (const auto & interface : activate_command_interface_request_)
+  {
+    RCLCPP_DEBUG(get_logger(), " - %s", interface.c_str());
+  }
+  RCLCPP_DEBUG(get_logger(), "Request for command interfaces from deactivating controllers:");
+  for (const auto & interface : deactivate_command_interface_request_)
+  {
+    RCLCPP_DEBUG(get_logger(), " - %s", interface.c_str());
   }
 
   if (!resource_manager_->prepare_command_mode_switch(
