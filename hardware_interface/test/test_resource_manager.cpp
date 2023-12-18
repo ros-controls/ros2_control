@@ -129,15 +129,15 @@ TEST_F(ResourceManagerTest, initialization_with_wrong_urdf)
 {
   // missing state keys
   {
-    EXPECT_THROW(
-      TestableResourceManager rm(ros2_control_test_assets::minimal_robot_missing_state_keys_urdf),
-      std::exception);
+    auto rm = TestableResourceManager();
+    EXPECT_FALSE(rm.load_urdf(ros2_control_test_assets::minimal_robot_missing_state_keys_urdf));
+    ASSERT_TRUE(rm.is_urdf_already_loaded());
   }
   // missing command keys
   {
-    EXPECT_THROW(
-      TestableResourceManager rm(ros2_control_test_assets::minimal_robot_missing_command_keys_urdf),
-      std::exception);
+    auto rm = TestableResourceManager();
+    EXPECT_FALSE(rm.load_urdf(ros2_control_test_assets::minimal_robot_missing_command_keys_urdf));
+    ASSERT_TRUE(rm.is_urdf_already_loaded());
   }
 }
 
@@ -164,14 +164,6 @@ TEST_F(ResourceManagerTest, no_load_urdf_function_called)
 {
   TestableResourceManager rm;
   ASSERT_FALSE(rm.is_urdf_already_loaded());
-}
-
-TEST_F(ResourceManagerTest, load_urdf_called_if_urdf_is_invalid)
-{
-  TestableResourceManager rm;
-  EXPECT_THROW(
-    rm.load_urdf(ros2_control_test_assets::minimal_robot_missing_state_keys_urdf), std::exception);
-  ASSERT_TRUE(rm.is_urdf_already_loaded());
 }
 
 TEST_F(ResourceManagerTest, load_urdf_called_if_urdf_is_valid)

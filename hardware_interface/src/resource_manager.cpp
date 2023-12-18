@@ -60,7 +60,7 @@ auto trigger_and_print_hardware_state_transition =
   }
   else
   {
-    RCUTILS_LOG_INFO_NAMED(
+    RCUTILS_LOG_WARN_NAMED(
       "resource_manager", "Failed to '%s' hardware '%s'", transition_name.c_str(),
       hardware_name.c_str());
   }
@@ -433,6 +433,7 @@ public:
   template <class HardwareT>
   void import_state_interfaces(HardwareT & hardware)
   {
+    // TODO(destogl): add here exception catch block - this can otherwise crash the whole system
     auto interfaces = hardware.export_state_interfaces();
     std::vector<std::string> interface_names;
     interface_names.reserve(interfaces.size());
@@ -450,6 +451,7 @@ public:
   template <class HardwareT>
   void import_command_interfaces(HardwareT & hardware)
   {
+    // TODO(destogl): add here exception catch block - this can otherwise crash the whole system
     auto interfaces = hardware.export_command_interfaces();
     hardware_info_map_[hardware.get_name()].command_interfaces = add_command_interfaces(interfaces);
   }
@@ -551,7 +553,7 @@ public:
       }
       else
       {
-        RCUTILS_LOG_WARN_NAMED(
+        RCUTILS_LOG_ERROR_NAMED(
           "resource_manager",
           "Sensor hardware component '%s' from plugin '%s' failed to initialize.",
           hardware_info.name.c_str(), hardware_info.hardware_plugin_name.c_str());
@@ -756,8 +758,10 @@ ResourceManager::ResourceManager(
 }
 
 // CM API: Called in "callback/slow"-thread
-void ResourceManager::load_urdf(const std::string & urdf, bool validate_interfaces)
+bool ResourceManager::load_urdf(const std::string & urdf, bool validate_interfaces)
 {
+  bool result = true;
+
   is_urdf_loaded__ = true;
   const std::string system_type = "system";
   const std::string sensor_type = "sensor";
@@ -786,13 +790,15 @@ void ResourceManager::load_urdf(const std::string & urdf, bool validate_interfac
   // throw on missing state and command interfaces, not specified keys are being ignored
   if (validate_interfaces)
   {
-    validate_storage(hardware_info);
+    result = validate_storage(hardware_info);
   }
 
   std::lock_guard<std::recursive_mutex> guard(resources_lock_);
   read_write_status.failed_hardware_names.reserve(
     resource_storage_->actuators_.size() + resource_storage_->sensors_.size() +
     resource_storage_->systems_.size());
+
+  return result;
 }
 
 bool ResourceManager::is_urdf_already_loaded() const { return is_urdf_loaded__; }
@@ -1426,7 +1432,7 @@ bool ResourceManager::state_interface_exists(const std::string & key) const
 
 // BEGIN: private methods
 
-void ResourceManager::validate_storage(
+bool ResourceManager::validate_storage(
   const std::vector<hardware_interface::HardwareInfo> & hardware_info) const
 {
   std::vector<std::string> missing_state_keys = {};
@@ -1482,25 +1488,29 @@ void ResourceManager::validate_storage(
 
   if (!missing_state_keys.empty() || !missing_command_keys.empty())
   {
-    std::string err_msg = "Wrong state or command interface configuration.\n";
-    err_msg += "missing state interfaces:\n";
+    std::string message = "Wrong state or command interface configuration.\n";
+    message += "missing state interfaces:\n";
     for (const auto & missing_key : missing_state_keys)
     {
-      err_msg += "' " + missing_key + " '" + "\t";
+      message += "' " + missing_key + " '" + "\t";
     }
-    err_msg += "\nmissing command interfaces:\n";
+    message += "\nmissing command interfaces:\n";
     for (const auto & missing_key : missing_command_keys)
     {
-      err_msg += "' " + missing_key + " '" + "\t";
+      message += "' " + missing_key + " '" + "\t";
     }
 
     RCUTILS_LOG_WARN_NAMED(
       "resource_manager",
       "Discrepancy between robot description file (urdf) and actually exported HW interfaces."
-      "If this is not intentional - fix it! If it is, Controller Manager will work correctly!"
+      "If this is not intentional - fix it! "
       "Details: %s",
-      err_msg.c_str());
+      message.c_str());
+
+    return false;
   }
+
+  return true;
 }
 
 // END: private methods

@@ -86,8 +86,9 @@ public:
    * \param[in] urdf string containing the URDF.
    * \param[in] validate_interfaces boolean argument indicating whether the exported
    * interfaces ought to be validated. Defaults to true.
+   * \returns false if URDF validation has failed.
    */
-  void load_urdf(const std::string & urdf, bool validate_interfaces = true);
+  bool load_urdf(const std::string & urdf, bool validate_interfaces = true);
 
   /**
    * @brief if the resource manager load_urdf(...) function has been called this returns true.
@@ -404,7 +405,7 @@ public:
   bool state_interface_exists(const std::string & key) const;
 
 private:
-  void validate_storage(const std::vector<hardware_interface::HardwareInfo> & hardware_info) const;
+  bool validate_storage(const std::vector<hardware_interface::HardwareInfo> & hardware_info) const;
 
   void release_command_interface(const std::string & key);
 
