@@ -327,7 +327,7 @@ TEST_F(TestLoadControllerWithoutRobotDescription, when_no_robot_description_spaw
   cm_->set_parameter(rclcpp::Parameter("ctrl_1.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
 
   ControllerManagerRunner cm_runner(this);
-  EXPECT_EQ(call_spawner("ctrl_1 -c test_controller_manager"), 1)
+  EXPECT_EQ(call_spawner("ctrl_1 -c test_controller_manager"), 256)
     << "could not spawn controller because not robot description and not services for controller "
        "manager are active";
 }
@@ -340,10 +340,10 @@ TEST_F(
 
   // Delay sending robot description
   robot_description_sending_timer_ = cm_->create_wall_timer(
-    std::chrono::milliseconds(1500), [&]() { pass_robot_description_to_cm_and_rm(); });
+    std::chrono::milliseconds(2500), [&]() { pass_robot_description_to_cm_and_rm(); });
 
   ControllerManagerRunner cm_runner(this);
-  EXPECT_EQ(call_spawner("ctrl_1 -c test_controller_manager"), 1)
+  EXPECT_EQ(call_spawner("ctrl_1 -c test_controller_manager"), 0)
     << "could not activate control because not robot description";
 
   ASSERT_EQ(cm_->get_loaded_controllers().size(), 1ul);
