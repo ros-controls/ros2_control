@@ -207,13 +207,11 @@ TEST_F(ResourceManagerTest, no_load_and_initialize_components_function_called)
   ASSERT_FALSE(rm.is_urdf_already_loaded());
 }
 
-TEST_F(ResourceManagerTest, load_and_initialize_components_called_if_urdf_is_valid)
+TEST_F(ResourceManagerTest, load_and_initialize_components_called_if_urdf_is_invalid)
 {
   TestableResourceManager rm;
-  ASSERT_FALSE(
-    rm.load_and_initialize_components(
-      ros2_control_test_assets::minimal_robot_missing_state_keys_urdf),
-    std::exception);
+  ASSERT_FALSE(rm.load_and_initialize_components(
+    ros2_control_test_assets::minimal_robot_missing_state_keys_urdf));
   ASSERT_FALSE(rm.is_urdf_already_loaded());
 }
 

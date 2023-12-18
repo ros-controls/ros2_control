@@ -88,6 +88,7 @@ public:
    * interfaces ought to be validated. Defaults to true.
    * \param[in] load_and_initialize_components boolean argument indicating whether to load and
    * initialize the components present in the parsed URDF. Defaults to true.
+   * \returns false if URDF validation has failed.
    */
   bool load_and_initialize_components(
     const std::string & urdf, bool validate_interfaces = true,
@@ -408,7 +409,7 @@ public:
   bool state_interface_exists(const std::string & key) const;
 
 private:
-  void validate_storage(const std::vector<hardware_interface::HardwareInfo> & hardware_info) const;
+  bool validate_storage(const std::vector<hardware_interface::HardwareInfo> & hardware_info) const;
 
   void release_command_interface(const std::string & key);
 

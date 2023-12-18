@@ -322,7 +322,7 @@ private:
   std::vector<std::string> get_controller_names();
   std::pair<std::string, std::string> split_command_interface(
     const std::string & command_interface);
-  void subscribe_to_robot_description_topic();
+  void init_controller_manager();
 
   /**
    * Clear request lists used when switching controllers. The lists are shared between "callback"
@@ -546,6 +546,7 @@ private:
 
   std::string robot_description_;
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr robot_description_subscription_;
+  rclcpp::TimerBase::SharedPtr robot_description_notification_timer_;
 
   struct SwitchParams
   {
