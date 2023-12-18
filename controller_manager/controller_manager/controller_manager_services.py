@@ -23,7 +23,6 @@ from controller_manager_msgs.srv import (
     SetHardwareComponentState,
     SwitchController,
     UnloadController,
-    CleanupController,
 )
 
 import rclpy
@@ -175,12 +174,4 @@ def unload_controller(node, controller_manager_name, controller_name, service_ti
         UnloadController,
         request,
         service_timeout,
-    )
-
-
-def cleanup_controller(node, controller_manager_name, controller_name):
-    request = CleanupController.Request()
-    request.name = controller_name
-    return service_caller(
-        node, f"{controller_manager_name}/cleanup_controller", CleanupController, request
     )

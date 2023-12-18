@@ -23,7 +23,6 @@ set(srv_files
   srv/SetHardwareComponentState.srv
   srv/SwitchController.srv
   srv/UnloadController.srv
-  srv/CleanupController.srv
 )
 
 rosidl_generate_interfaces(${PROJECT_NAME}
