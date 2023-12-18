@@ -150,6 +150,7 @@ if(BUILD_TESTING)
   )
   target_link_libraries(test_controller_manager_urdf_passing
     controller_manager
+    test_controller
     ros2_control_test_assets::ros2_control_test_assets
   )
   ament_target_dependencies(test_controller_manager_urdf_passing

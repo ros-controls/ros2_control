@@ -267,31 +267,7 @@ ControllerManager::ControllerManager(
     std::make_shared<pluginlib::ClassLoader<controller_interface::ChainableControllerInterface>>(
       kControllerInterfaceNamespace, kChainableControllerInterfaceClassName))
 {
-  if (!get_parameter("update_rate", update_rate_))
-  {
-    RCLCPP_WARN(get_logger(), "'update_rate' parameter not set, using default value.");
-  }
-
-  robot_description_ = "";
-  // TODO(destogl): remove support at the end of 2023
-  get_parameter("robot_description", robot_description_);
-  if (robot_description_.empty())
-  {
-    subscribe_to_robot_description_topic();
-  }
-  else
-  {
-    RCLCPP_WARN(
-      get_logger(),
-      "[Deprecated] Passing the robot description parameter directly to the control_manager node "
-      "is deprecated. Use '~/robot_description' topic from 'robot_state_publisher' instead.");
-    init_resource_manager(robot_description_);
-    init_services();
-  }
-
-  diagnostics_updater_.setHardwareID("ros2_control");
-  diagnostics_updater_.add(
-    "Controllers Activity", this, &ControllerManager::controller_activity_diagnostic_callback);
+  init_controller_manager();
 }
 
 ControllerManager::ControllerManager(
@@ -308,24 +284,17 @@ ControllerManager::ControllerManager(
     std::make_shared<pluginlib::ClassLoader<controller_interface::ChainableControllerInterface>>(
       kControllerInterfaceNamespace, kChainableControllerInterfaceClassName))
 {
+  init_controller_manager();
+}
+
+void ControllerManager::init_controller_manager()
+{
+  // Get parameters needed for RT "update" loop to work
   if (!get_parameter("update_rate", update_rate_))
   {
     RCLCPP_WARN(get_logger(), "'update_rate' parameter not set, using default value.");
   }
 
-  if (resource_manager_->is_urdf_already_loaded())
-  {
-    init_services();
-  }
-  subscribe_to_robot_description_topic();
-
-  diagnostics_updater_.setHardwareID("ros2_control");
-  diagnostics_updater_.add(
-    "Controllers Activity", this, &ControllerManager::controller_activity_diagnostic_callback);
-}
-
-void ControllerManager::subscribe_to_robot_description_topic()
-{
   // set QoS to transient local to get messages that have already been published
   // (if robot state publisher starts before controller manager)
   robot_description_subscription_ = create_subscription<std_msgs::msg::String>(
@@ -334,6 +303,19 @@ void ControllerManager::subscribe_to_robot_description_topic()
   RCLCPP_INFO(
     get_logger(), "Subscribing to '%s' topic for robot description.",
     robot_description_subscription_->get_topic_name());
+
+  // Setup diagnostics
+  diagnostics_updater_.setHardwareID("ros2_control");
+  diagnostics_updater_.add(
+    "Controllers Activity", this, &ControllerManager::controller_activity_diagnostic_callback);
+
+  robot_description_notification_timer_ = create_wall_timer(
+    std::chrono::seconds(1),
+    [&]()
+    {
+      RCLCPP_WARN(
+        get_logger(), "Waiting for data on '~/robot_description' topic to finish initialization");
+    });
 }
 
 void ControllerManager::robot_description_callback(const std_msgs::msg::String & robot_description)
@@ -355,8 +337,14 @@ void ControllerManager::robot_description_callback(const std_msgs::msg::String &
 
 void ControllerManager::init_resource_manager(const std::string & robot_description)
 {
-  // TODO(destogl): manage this when there is an error - CM should not die because URDF is wrong...
-  resource_manager_->load_urdf(robot_description);
+  if (!resource_manager_->load_urdf(robot_description))
+  {
+    RCLCPP_WARN(
+      get_logger(),
+      "URDF validation went wrong check the previous output. This might only mean that interfaces "
+      "defined in URDF and exported by the hardware do not match. Therefore continue initializing "
+      "controller manager...");
+  }
 
   // Get all components and if they are not defined in parameters activate them automatically
   auto components_to_activate = resource_manager_->get_components_status();
@@ -451,6 +439,10 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
       resource_manager_->set_component_state(component, active_state);
     }
   }
+
+  // Init CM services first after the URDF is loaded an components are set
+  init_services();
+  robot_description_notification_timer_->cancel();
 }
 
 void ControllerManager::init_services()
@@ -824,6 +816,15 @@ controller_interface::return_type ControllerManager::switch_controller(
   const std::vector<std::string> & deactivate_controllers, int strictness, bool activate_asap,
   const rclcpp::Duration & timeout)
 {
+  if (!resource_manager_->is_urdf_already_loaded())
+  {
+    RCLCPP_ERROR(
+      get_logger(),
+      "Resource Manager is not initialized yet! Please provide robot description on "
+      "'~/robot_description' topic before trying to switch controllers.");
+    return controller_interface::return_type::ERROR;
+  }
+
   switch_params_ = SwitchParams();
 
   if (!deactivate_request_.empty() || !activate_request_.empty())
