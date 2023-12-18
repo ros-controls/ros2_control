@@ -578,6 +578,32 @@ const auto valid_urdf_ros2_control_voltage_sensor_only =
   </ros2_control>
 )";
 
+const auto valid_urdf_ros2_control_dummy_actuator_only =
+  R"(
+  <ros2_control name="ActuatorModularJoint1" type="actuator">
+    <hardware>
+      <plugin>ros2_control_demo_hardware/VelocityActuatorHardware</plugin>
+      <param name="example_param_write_for_sec">1.13</param>
+      <param name="example_param_read_for_sec">3</param>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="velocity">
+        <param name="min">-1</param>
+        <param name="max">1</param>
+      </command_interface>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+    <transmission name="transmission1">
+      <plugin>transmission_interface/RotationToLinerTansmission</plugin>
+      <joint name="joint1" role="joint1">
+        <mechanical_reduction>325.949</mechanical_reduction>
+      </joint>
+      <param name="additional_special_parameter">1337</param>
+    </transmission>
+  </ros2_control>
+)";
+
 const auto valid_urdf_ros2_control_parameter_empty =
   R"(
   <ros2_control name="2DOF_System_Robot_Position_Only" type="system">
