@@ -561,6 +561,20 @@ const auto valid_urdf_ros2_control_system_robot_with_all_interfaces =
       <command_interface name="jerk"/>
       <state_interface name="position"/>
     </joint>
+   </ros2_control>
+)";
+
+// Voltage Sensor only
+const auto valid_urdf_ros2_control_voltage_sensor_only =
+  R"(
+  <ros2_control name="CameraWithIMU" type="sensor">
+    <hardware>
+      <plugin>ros2_control_demo_hardware/CameraWithIMUSensor</plugin>
+      <param name="example_param_read_for_sec">2</param>
+    </hardware>
+    <sensor name="joint1">
+      <state_interface name="voltage" initial_value="0.0"/>
+    </sensor>
   </ros2_control>
 )";
 
