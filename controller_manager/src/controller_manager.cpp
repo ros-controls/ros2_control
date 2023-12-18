@@ -150,7 +150,9 @@ std::vector<std::string> get_following_controller_names(
   }
   // If the controller is not configured, return empty
   if (!(is_controller_active(controller_it->c) || is_controller_inactive(controller_it->c)))
+  {
     return following_controllers;
+  }
   const auto cmd_itfs = controller_it->c->command_interface_configuration().names;
   for (const auto & itf : cmd_itfs)
   {
@@ -210,7 +212,10 @@ std::vector<std::string> get_preceding_controller_names(
   for (const auto & ctrl : controllers)
   {
     // If the controller is not configured, then continue
-    if (!(is_controller_active(ctrl.c) || is_controller_inactive(ctrl.c))) continue;
+    if (!(is_controller_active(ctrl.c) || is_controller_inactive(ctrl.c)))
+    {
+      continue;
+    }
     auto cmd_itfs = ctrl.c->command_interface_configuration().names;
     for (const auto & itf : cmd_itfs)
     {
@@ -1381,6 +1386,11 @@ void ControllerManager::deactivate_controllers(
     {
       const auto new_state = controller->get_node()->deactivate();
       controller->release_interfaces();
+      // if it is a chainable controller, make the reference interfaces unavailable on deactivation
+      if (controller->is_chainable())
+      {
+        resource_manager_->make_controller_reference_interfaces_unavailable(request);
+      }
       if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
       {
         RCLCPP_ERROR(
@@ -1414,18 +1424,10 @@ void ControllerManager::switch_chained_mode(
     auto controller = found_it->c;
     if (!is_controller_active(*controller))
     {
-      if (controller->set_chained_mode(to_chained_mode))
-      {
-        if (to_chained_mode)
-        {
-          resource_manager_->make_controller_reference_interfaces_available(request);
-        }
-        else
-        {
-          resource_manager_->make_controller_reference_interfaces_unavailable(request);
-        }
-      }
-      else
+      // if it is a chainable controller, make the reference interfaces available on preactivation
+      // (This is needed when you activate a couple of chainable controller altogether)
+      resource_manager_->make_controller_reference_interfaces_available(request);
+      if (!controller->set_chained_mode(to_chained_mode))
       {
         RCLCPP_ERROR(
           get_logger(),
@@ -1560,6 +1562,12 @@ void ControllerManager::activate_controllers(
         controller->get_node()->get_name(), new_state.label().c_str(), new_state.id(),
         hardware_interface::lifecycle_state_names::ACTIVE,
         lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+    }
+
+    // if it is a chainable controller, make the reference interfaces available on activation
+    if (controller->is_chainable())
+    {
+      resource_manager_->make_controller_reference_interfaces_available(request);
     }
 
     if (controller->is_async())
@@ -2443,7 +2451,10 @@ bool ControllerManager::controller_sorting(
   if (!((is_controller_active(ctrl_a.c) || is_controller_inactive(ctrl_a.c)) &&
         (is_controller_active(ctrl_b.c) || is_controller_inactive(ctrl_b.c))))
   {
-    if (is_controller_active(ctrl_a.c) || is_controller_inactive(ctrl_a.c)) return true;
+    if (is_controller_active(ctrl_a.c) || is_controller_inactive(ctrl_a.c))
+    {
+      return true;
+    }
     return false;
   }
 
@@ -2454,10 +2465,9 @@ bool ControllerManager::controller_sorting(
     // The case of the controllers that don't have any command interfaces. For instance,
     // joint_state_broadcaster
     // If the controller b is also under the same condition, then maintain their initial order
-    if (ctrl_b.c->command_interface_configuration().names.empty() || !ctrl_b.c->is_chainable())
-      return false;
-    else
-      return true;
+    const auto command_interfaces_exist =
+      !ctrl_b.c->command_interface_configuration().names.empty();
+    return ctrl_b.c->is_chainable() && command_interfaces_exist;
   }
   else if (ctrl_b.c->command_interface_configuration().names.empty() || !ctrl_b.c->is_chainable())
   {
@@ -2467,12 +2477,17 @@ bool ControllerManager::controller_sorting(
   else
   {
     auto following_ctrls = get_following_controller_names(ctrl_a.info.name, controllers);
-    if (following_ctrls.empty()) return false;
+    if (following_ctrls.empty())
+    {
+      return false;
+    }
     // If the ctrl_b is any of the following controllers of ctrl_a, then place ctrl_a before ctrl_b
     if (
       std::find(following_ctrls.begin(), following_ctrls.end(), ctrl_b.info.name) !=
       following_ctrls.end())
+    {
       return true;
+    }
     else
     {
       auto ctrl_a_preceding_ctrls = get_preceding_controller_names(ctrl_a.info.name, controllers);
@@ -2505,7 +2520,10 @@ bool ControllerManager::controller_sorting(
 
       // If there is no common parent, then they belong to 2 different sets
       auto following_ctrls_b = get_following_controller_names(ctrl_b.info.name, controllers);
-      if (following_ctrls_b.empty()) return true;
+      if (following_ctrls_b.empty())
+      {
+        return true;
+      }
       auto find_first_element = [&](const auto & controllers_list) -> size_t
       {
         auto it = std::find_if(
