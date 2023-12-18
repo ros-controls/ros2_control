@@ -800,3 +800,113 @@ TEST_F(TestComponentParser, urdf_incomplete_throws_error)
     std::string(ros2_control_test_assets::urdf_tail);
   ASSERT_THROW(parse_control_resources_from_urdf(urdf_to_test), std::runtime_error);
 }
+
+TEST_F(TestComponentParser, parse_joint_state_interface_descriptions_from_hardware_info)
+{
+  const std::string urdf_to_test =
+    std::string(ros2_control_test_assets::urdf_head) +
+    ros2_control_test_assets::valid_urdf_ros2_control_system_multi_joints_transmission +
+    ros2_control_test_assets::urdf_tail;
+  const auto control_hardware = parse_control_resources_from_urdf(urdf_to_test);
+
+  const auto joint_state_descriptions =
+    parse_joint_state_interface_descriptions_from_hardware_info(control_hardware[0]);
+  EXPECT_EQ(joint_state_descriptions[0].prefix_name, "joint1");
+  EXPECT_EQ(joint_state_descriptions[0].get_interface_type(), "position");
+  EXPECT_EQ(joint_state_descriptions[0].get_name(), "joint1/position");
+
+  EXPECT_EQ(joint_state_descriptions[1].prefix_name, "joint2");
+  EXPECT_EQ(joint_state_descriptions[1].get_interface_type(), "position");
+  EXPECT_EQ(joint_state_descriptions[1].get_name(), "joint2/position");
+}
+
+TEST_F(TestComponentParser, parse_joint_command_interface_descriptions_from_hardware_info)
+{
+  const std::string urdf_to_test =
+    std::string(ros2_control_test_assets::urdf_head) +
+    ros2_control_test_assets::valid_urdf_ros2_control_system_multi_joints_transmission +
+    ros2_control_test_assets::urdf_tail;
+  const auto control_hardware = parse_control_resources_from_urdf(urdf_to_test);
+
+  const auto joint_command_descriptions =
+    parse_joint_command_interface_descriptions_from_hardware_info(control_hardware[0]);
+  EXPECT_EQ(joint_command_descriptions[0].prefix_name, "joint1");
+  EXPECT_EQ(joint_command_descriptions[0].get_interface_type(), "position");
+  EXPECT_EQ(joint_command_descriptions[0].get_name(), "joint1/position");
+  EXPECT_EQ(joint_command_descriptions[0].interface_info.min, "-1");
+  EXPECT_EQ(joint_command_descriptions[0].interface_info.max, "1");
+
+  EXPECT_EQ(joint_command_descriptions[1].prefix_name, "joint2");
+  EXPECT_EQ(joint_command_descriptions[1].get_interface_type(), "position");
+  EXPECT_EQ(joint_command_descriptions[1].get_name(), "joint2/position");
+  EXPECT_EQ(joint_command_descriptions[1].interface_info.min, "-1");
+  EXPECT_EQ(joint_command_descriptions[1].interface_info.max, "1");
+}
+
+TEST_F(TestComponentParser, parse_sensor_state_interface_descriptions_from_hardware_info)
+{
+  const std::string urdf_to_test = std::string(ros2_control_test_assets::urdf_head) +
+                                   ros2_control_test_assets::valid_urdf_ros2_control_sensor_only +
+                                   ros2_control_test_assets::urdf_tail;
+  const auto control_hardware = parse_control_resources_from_urdf(urdf_to_test);
+
+  const auto sensor_state_descriptions =
+    parse_sensor_state_interface_descriptions_from_hardware_info(control_hardware[0]);
+  EXPECT_EQ(sensor_state_descriptions[0].prefix_name, "sensor1");
+  EXPECT_EQ(sensor_state_descriptions[0].get_interface_type(), "roll");
+  EXPECT_EQ(sensor_state_descriptions[0].get_name(), "sensor1/roll");
+  EXPECT_EQ(sensor_state_descriptions[1].prefix_name, "sensor1");
+  EXPECT_EQ(sensor_state_descriptions[1].get_interface_type(), "pitch");
+  EXPECT_EQ(sensor_state_descriptions[1].get_name(), "sensor1/pitch");
+  EXPECT_EQ(sensor_state_descriptions[2].prefix_name, "sensor1");
+  EXPECT_EQ(sensor_state_descriptions[2].get_interface_type(), "yaw");
+  EXPECT_EQ(sensor_state_descriptions[2].get_name(), "sensor1/yaw");
+
+  EXPECT_EQ(sensor_state_descriptions[3].prefix_name, "sensor2");
+  EXPECT_EQ(sensor_state_descriptions[3].get_interface_type(), "image");
+  EXPECT_EQ(sensor_state_descriptions[3].get_name(), "sensor2/image");
+}
+
+TEST_F(TestComponentParser, parse_gpio_state_interface_descriptions_from_hardware_info)
+{
+  const std::string urdf_to_test =
+    std::string(ros2_control_test_assets::urdf_head) +
+    ros2_control_test_assets::valid_urdf_ros2_control_system_robot_with_gpio +
+    ros2_control_test_assets::urdf_tail;
+  const auto control_hardware = parse_control_resources_from_urdf(urdf_to_test);
+
+  const auto gpio_state_descriptions =
+    parse_gpio_state_interface_descriptions_from_hardware_info(control_hardware[0]);
+  EXPECT_EQ(gpio_state_descriptions[0].prefix_name, "flange_analog_IOs");
+  EXPECT_EQ(gpio_state_descriptions[0].get_interface_type(), "analog_output1");
+  EXPECT_EQ(gpio_state_descriptions[0].get_name(), "flange_analog_IOs/analog_output1");
+  EXPECT_EQ(gpio_state_descriptions[1].prefix_name, "flange_analog_IOs");
+  EXPECT_EQ(gpio_state_descriptions[1].get_interface_type(), "analog_input1");
+  EXPECT_EQ(gpio_state_descriptions[1].get_name(), "flange_analog_IOs/analog_input1");
+  EXPECT_EQ(gpio_state_descriptions[2].prefix_name, "flange_analog_IOs");
+  EXPECT_EQ(gpio_state_descriptions[2].get_interface_type(), "analog_input2");
+  EXPECT_EQ(gpio_state_descriptions[2].get_name(), "flange_analog_IOs/analog_input2");
+
+  EXPECT_EQ(gpio_state_descriptions[3].prefix_name, "flange_vacuum");
+  EXPECT_EQ(gpio_state_descriptions[3].get_interface_type(), "vacuum");
+  EXPECT_EQ(gpio_state_descriptions[3].get_name(), "flange_vacuum/vacuum");
+}
+
+TEST_F(TestComponentParser, parse_gpio_command_interface_descriptions_from_hardware_info)
+{
+  const std::string urdf_to_test =
+    std::string(ros2_control_test_assets::urdf_head) +
+    ros2_control_test_assets::valid_urdf_ros2_control_system_robot_with_gpio +
+    ros2_control_test_assets::urdf_tail;
+  const auto control_hardware = parse_control_resources_from_urdf(urdf_to_test);
+
+  const auto gpio_state_descriptions =
+    parse_gpio_command_interface_descriptions_from_hardware_info(control_hardware[0]);
+  EXPECT_EQ(gpio_state_descriptions[0].prefix_name, "flange_analog_IOs");
+  EXPECT_EQ(gpio_state_descriptions[0].get_interface_type(), "analog_output1");
+  EXPECT_EQ(gpio_state_descriptions[0].get_name(), "flange_analog_IOs/analog_output1");
+
+  EXPECT_EQ(gpio_state_descriptions[1].prefix_name, "flange_vacuum");
+  EXPECT_EQ(gpio_state_descriptions[1].get_interface_type(), "vacuum");
+  EXPECT_EQ(gpio_state_descriptions[1].get_name(), "flange_vacuum/vacuum");
+}

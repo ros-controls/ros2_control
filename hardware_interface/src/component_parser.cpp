@@ -722,11 +722,6 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
   return hardware_info;
 }
 
-bool parse_bool(const std::string & bool_string)
-{
-  return bool_string == "true" || bool_string == "True";
-}
-
 std::vector<InterfaceDescription> parse_joint_state_interface_descriptions_from_hardware_info(
   const HardwareInfo & hw_info)
 {
