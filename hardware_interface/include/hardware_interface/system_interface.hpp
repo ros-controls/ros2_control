@@ -19,6 +19,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "hardware_interface/component_parser.hpp"
@@ -113,12 +114,24 @@ public:
    */
   void import_state_interface_descriptions(const HardwareInfo & hardware_info)
   {
-    joint_states_descriptions_ =
+    auto joint_state_interface_descriptions =
       parse_joint_state_interface_descriptions_from_hardware_info(hardware_info);
-    gpio_states_descriptions_ =
-      parse_gpio_state_interface_descriptions_from_hardware_info(hardware_info);
-    sensor_states_descriptions_ =
+    for (const auto & description : joint_state_interface_descriptions)
+    {
+      joint_state_interfaces_.insert(std::make_pair(description.get_name(), description));
+    }
+    auto sensor_state_interface_descriptions =
       parse_sensor_state_interface_descriptions_from_hardware_info(hardware_info);
+    for (const auto & description : sensor_state_interface_descriptions)
+    {
+      sensor_state_interfaces_.insert(std::make_pair(description.get_name(), description));
+    }
+    auto gpio_state_interface_descriptions =
+      parse_gpio_state_interface_descriptions_from_hardware_info(hardware_info);
+    for (const auto & description : gpio_state_interface_descriptions)
+    {
+      gpio_state_interfaces_.insert(std::make_pair(description.get_name(), description));
+    }
   }
 
   /**
@@ -127,10 +140,18 @@ public:
    */
   void import_command_interface_descriptions(const HardwareInfo & hardware_info)
   {
-    joint_commands_descriptions_ =
+    auto joint_command_interface_descriptions =
       parse_joint_command_interface_descriptions_from_hardware_info(hardware_info);
-    gpio_commands_descriptions_ =
+    for (const auto & description : joint_command_interface_descriptions)
+    {
+      joint_command_interfaces_.insert(std::make_pair(description.get_name(), description));
+    }
+    auto gpio_command_interface_descriptions =
       parse_gpio_command_interface_descriptions_from_hardware_info(hardware_info);
+    for (const auto & description : gpio_command_interface_descriptions)
+    {
+      gpio_command_interfaces_.insert(std::make_pair(description.get_name(), description));
+    }
   }
 
   /// Exports all state interfaces for this hardware interface.
@@ -151,22 +172,22 @@ public:
   {
     std::vector<hardware_interface::StateInterface> state_interfaces;
     state_interfaces.reserve(
-      joint_states_descriptions_.size() + sensor_states_descriptions_.size() +
-      gpio_states_descriptions_.size());
+      joint_state_interfaces_.size() + sensor_state_interfaces_.size() +
+      gpio_state_interfaces_.size());
 
-    for (const auto & descr : joint_states_descriptions_)
+    for (const auto & [name, descr] : joint_state_interfaces_)
     {
       joint_states_[descr.get_name()] = std::numeric_limits<double>::quiet_NaN();
       state_interfaces.emplace_back(StateInterface(descr, &joint_states_[descr.get_name()]));
     }
 
-    for (const auto & descr : sensor_states_descriptions_)
+    for (const auto & [name, descr] : sensor_state_interfaces_)
     {
       sensor_states_[descr.get_name()] = std::numeric_limits<double>::quiet_NaN();
       state_interfaces.emplace_back(StateInterface(descr, &sensor_states_[descr.get_name()]));
     }
 
-    for (const auto & descr : gpio_states_descriptions_)
+    for (const auto & [name, descr] : gpio_state_interfaces_)
     {
       gpio_states_[descr.get_name()] = std::numeric_limits<double>::quiet_NaN();
       state_interfaces.emplace_back(StateInterface(descr, &gpio_states_[descr.get_name()]));
@@ -191,16 +212,15 @@ public:
   virtual std::vector<CommandInterface> export_command_interfaces()
   {
     std::vector<hardware_interface::CommandInterface> command_interfaces;
-    command_interfaces.reserve(
-      joint_commands_descriptions_.size() + gpio_commands_descriptions_.size());
+    command_interfaces.reserve(joint_command_interfaces_.size() + gpio_command_interfaces_.size());
 
-    for (const auto & descr : joint_commands_descriptions_)
+    for (const auto & [name, descr] : joint_command_interfaces_)
     {
       joint_commands_[descr.get_name()] = std::numeric_limits<double>::quiet_NaN();
       command_interfaces.emplace_back(CommandInterface(descr, &joint_commands_[descr.get_name()]));
     }
 
-    for (const auto & descr : gpio_commands_descriptions_)
+    for (const auto & [name, descr] : gpio_command_interfaces_)
     {
       gpio_commands_[descr.get_name()] = std::numeric_limits<double>::quiet_NaN();
       command_interfaces.emplace_back(CommandInterface(descr, &gpio_commands_[descr.get_name()]));
@@ -339,15 +359,65 @@ public:
     gpio_commands_[interface_descr.get_name()] = value;
   }
 
+  double joint_state_get_value(const std::string & interface_descr) const
+  {
+    return joint_states_.at(interface_descr);
+  }
+
+  void joint_state_set_value(const std::string & interface_descr, const double & value)
+  {
+    joint_states_[interface_descr] = value;
+  }
+
+  double joint_command_get_value(const std::string & interface_descr) const
+  {
+    return joint_commands_.at(interface_descr);
+  }
+
+  void joint_command_set_value(const std::string & interface_descr, const double & value)
+  {
+    joint_commands_[interface_descr] = value;
+  }
+
+  double sensor_state_get_value(const std::string & interface_descr) const
+  {
+    return sensor_states_.at(interface_descr);
+  }
+
+  void sensor_state_set_value(const std::string & interface_descr, const double & value)
+  {
+    sensor_states_[interface_descr] = value;
+  }
+
+  double gpio_state_get_value(const std::string & interface_descr) const
+  {
+    return gpio_states_.at(interface_descr);
+  }
+
+  void gpio_state_set_value(const std::string & interface_descr, const double & value)
+  {
+    gpio_states_[interface_descr] = value;
+  }
+
+  double gpio_command_get_value(const std::string & interface_descr) const
+  {
+    return gpio_commands_.at(interface_descr);
+  }
+
+  void gpio_commands_set_value(const std::string & interface_descr, const double & value)
+  {
+    gpio_commands_[interface_descr] = value;
+  }
+
 protected:
   HardwareInfo info_;
-  std::vector<InterfaceDescription> joint_states_descriptions_;
-  std::vector<InterfaceDescription> joint_commands_descriptions_;
+  std::map<std::string, InterfaceDescription> joint_state_interfaces_;
+  std::map<std::string, InterfaceDescription> joint_command_interfaces_;
 
-  std::vector<InterfaceDescription> sensor_states_descriptions_;
+  std::map<std::string, InterfaceDescription> sensor_state_interfaces_;
 
-  std::vector<InterfaceDescription> gpio_states_descriptions_;
-  std::vector<InterfaceDescription> gpio_commands_descriptions_;
+  std::map<std::string, InterfaceDescription> gpio_state_interfaces_;
+  std::map<std::string, InterfaceDescription> gpio_command_interfaces_;
 
 private:
   std::map<std::string, double> joint_states_;

@@ -19,6 +19,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "hardware_interface/component_parser.hpp"
@@ -111,8 +112,12 @@ public:
    */
   virtual void import_state_interface_descriptions(const HardwareInfo & hardware_info)
   {
-    joint_states_descriptions_ =
+    auto joint_state_interface_descriptions =
       parse_joint_state_interface_descriptions_from_hardware_info(hardware_info);
+    for (const auto & description : joint_state_interface_descriptions)
+    {
+      joint_state_interfaces_.insert(std::make_pair(description.get_name(), description));
+    }
   }
 
   /**
@@ -121,8 +126,12 @@ public:
    */
   virtual void import_command_interface_descriptions(const HardwareInfo & hardware_info)
   {
-    joint_commands_descriptions_ =
+    auto joint_command_interface_descriptions =
       parse_joint_command_interface_descriptions_from_hardware_info(hardware_info);
+    for (const auto & description : joint_command_interface_descriptions)
+    {
+      joint_command_interfaces_.insert(std::make_pair(description.get_name(), description));
+    }
   }
 
   /// Exports all state interfaces for this hardware interface.
@@ -142,9 +151,9 @@ public:
   virtual std::vector<StateInterface> export_state_interfaces()
   {
     std::vector<hardware_interface::StateInterface> state_interfaces;
-    state_interfaces.reserve(joint_states_descriptions_.size());
+    state_interfaces.reserve(joint_state_interfaces_.size());
 
-    for (const auto & descr : joint_states_descriptions_)
+    for (const auto & [name, descr] : joint_state_interfaces_)
     {
       joint_states_[descr.get_name()] = std::numeric_limits<double>::quiet_NaN();
       state_interfaces.emplace_back(StateInterface(descr, &joint_states_[descr.get_name()]));
@@ -169,9 +178,9 @@ public:
   virtual std::vector<CommandInterface> export_command_interfaces()
   {
     std::vector<hardware_interface::CommandInterface> command_interfaces;
-    command_interfaces.reserve(joint_commands_descriptions_.size());
+    command_interfaces.reserve(joint_command_interfaces_.size());
 
-    for (const auto & descr : joint_commands_descriptions_)
+    for (const auto & [name, descr] : joint_command_interfaces_)
     {
       joint_commands_[descr.get_name()] = std::numeric_limits<double>::quiet_NaN();
       command_interfaces.emplace_back(CommandInterface(descr, &joint_commands_[descr.get_name()]));
@@ -280,10 +289,30 @@ public:
     joint_commands_[interface_descr.get_name()] = value;
   }
 
+  double joint_state_get_value(const std::string & interface_descr) const
+  {
+    return joint_states_.at(interface_descr);
+  }
+
+  void joint_state_set_value(const std::string & interface_descr, const double & value)
+  {
+    joint_states_[interface_descr] = value;
+  }
+
+  double joint_command_get_value(const std::string & interface_descr) const
+  {
+    return joint_commands_.at(interface_descr);
+  }
+
+  void joint_command_set_value(const std::string & interface_descr, const double & value)
+  {
+    joint_commands_[interface_descr] = value;
+  }
+
 protected:
   HardwareInfo info_;
-  std::vector<InterfaceDescription> joint_states_descriptions_;
-  std::vector<InterfaceDescription> joint_commands_descriptions_;
+  std::map<std::string, InterfaceDescription> joint_state_interfaces_;
+  std::map<std::string, InterfaceDescription> joint_command_interfaces_;
 
 private:
   std::map<std::string, double> joint_states_;

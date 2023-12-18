@@ -1027,7 +1027,7 @@ class DummySensorDefault : public hardware_interface::SensorInterface
 
   CallbackReturn on_configure(const rclcpp_lifecycle::State & /*previous_state*/) override
   {
-    for (const auto & descr : state_interface_descriptions_)
+    for (const auto & [name, descr] : sensor_state_interfaces_)
     {
       sensor_state_set_value(descr, 0.0);
     }
@@ -1167,4 +1167,194 @@ TEST(TestComponentInterfaces, dummy_sensor_default_read_error_behavior)
   state = sensor_hw.configure();
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::FINALIZED, state.label());
+}
+
+namespace test_components
+{
+
+class DummyActuatorDefault : public hardware_interface::ActuatorInterface
+{
+  CallbackReturn on_init(const hardware_interface::HardwareInfo & info) override
+  {
+    // We hardcode the info
+    if (
+      hardware_interface::ActuatorInterface::on_init(info) !=
+      hardware_interface::CallbackReturn::SUCCESS)
+    {
+      return hardware_interface::CallbackReturn::ERROR;
+    }
+    return CallbackReturn::SUCCESS;
+  }
+
+  CallbackReturn on_configure(const rclcpp_lifecycle::State & /*previous_state*/) override
+  {
+    joint_state_set_value("joint1/position", 0.0);
+    joint_state_set_value("joint1/velocity", 0.0);
+
+    if (recoverable_error_happened_)
+    {
+      joint_command_set_value("joint1/velocity", 0.0);
+    }
+
+    read_calls_ = 0;
+    write_calls_ = 0;
+
+    return CallbackReturn::SUCCESS;
+  }
+
+  std::string get_name() const override { return "DummyActuatorDefault"; }
+
+  hardware_interface::return_type read(
+    const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
+  {
+    ++read_calls_;
+    if (read_calls_ == TRIGGER_READ_WRITE_ERROR_CALLS)
+    {
+      return hardware_interface::return_type::ERROR;
+    }
+
+    // no-op, state is getting propagated within write.
+    return hardware_interface::return_type::OK;
+  }
+
+  hardware_interface::return_type write(
+    const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
+  {
+    ++write_calls_;
+    if (write_calls_ == TRIGGER_READ_WRITE_ERROR_CALLS)
+    {
+      return hardware_interface::return_type::ERROR;
+    }
+    auto position_state = joint_state_get_value("joint1/position");
+    joint_state_set_value(
+      "joint1/position", position_state + joint_command_get_value("joint1/velocity"));
+    joint_state_set_value("joint1/velocity", joint_command_get_value("joint1/velocity"));
+
+    return hardware_interface::return_type::OK;
+  }
+
+  CallbackReturn on_shutdown(const rclcpp_lifecycle::State & /*previous_state*/) override
+  {
+    joint_state_set_value("joint1/velocity", 0.0);
+    return CallbackReturn::SUCCESS;
+  }
+
+  CallbackReturn on_error(const rclcpp_lifecycle::State & /*previous_state*/) override
+  {
+    if (!recoverable_error_happened_)
+    {
+      recoverable_error_happened_ = true;
+      return CallbackReturn::SUCCESS;
+    }
+    else
+    {
+      return CallbackReturn::ERROR;
+    }
+    return CallbackReturn::FAILURE;
+  }
+
+private:
+  // Helper variables to initiate error on read
+  unsigned int read_calls_ = 0;
+  unsigned int write_calls_ = 0;
+  bool recoverable_error_happened_ = false;
+};
+
+}  // namespace test_components
+
+TEST(TestComponentInterfaces, dummy_actuator_default)
+{
+  hardware_interface::Actuator actuator_hw(
+    std::make_unique<test_components::DummyActuatorDefault>());
+  const std::string urdf_to_test =
+    std::string(ros2_control_test_assets::urdf_head) +
+    ros2_control_test_assets::valid_urdf_ros2_control_dummy_actuator_only +
+    ros2_control_test_assets::urdf_tail;
+  const std::vector<hardware_interface::HardwareInfo> control_resources =
+    hardware_interface::parse_control_resources_from_urdf(urdf_to_test);
+  const hardware_interface::HardwareInfo dummy_actuator = control_resources[0];
+  auto state = actuator_hw.initialize(dummy_actuator);
+
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
+
+  auto state_interfaces = actuator_hw.export_state_interfaces();
+  ASSERT_EQ(2u, state_interfaces.size());
+  EXPECT_EQ("joint1/position", state_interfaces[0].get_name());
+  EXPECT_EQ(hardware_interface::HW_IF_POSITION, state_interfaces[0].get_interface_name());
+  EXPECT_EQ("joint1", state_interfaces[0].get_prefix_name());
+  EXPECT_EQ("joint1/velocity", state_interfaces[1].get_name());
+  EXPECT_EQ(hardware_interface::HW_IF_VELOCITY, state_interfaces[1].get_interface_name());
+  EXPECT_EQ("joint1", state_interfaces[1].get_prefix_name());
+
+  auto command_interfaces = actuator_hw.export_command_interfaces();
+  ASSERT_EQ(1u, command_interfaces.size());
+  EXPECT_EQ("joint1/velocity", command_interfaces[0].get_name());
+  EXPECT_EQ(hardware_interface::HW_IF_VELOCITY, command_interfaces[0].get_interface_name());
+  EXPECT_EQ("joint1", command_interfaces[0].get_prefix_name());
+
+  double velocity_value = 1.0;
+  command_interfaces[0].set_value(velocity_value);  // velocity
+  ASSERT_EQ(hardware_interface::return_type::ERROR, actuator_hw.write(TIME, PERIOD));
+
+  // Noting should change because it is UNCONFIGURED
+  for (auto step = 0u; step < 10; ++step)
+  {
+    ASSERT_EQ(hardware_interface::return_type::ERROR, actuator_hw.read(TIME, PERIOD));
+
+    ASSERT_TRUE(std::isnan(state_interfaces[0].get_value()));  // position value
+    ASSERT_TRUE(std::isnan(state_interfaces[1].get_value()));  // velocity
+
+    ASSERT_EQ(hardware_interface::return_type::ERROR, actuator_hw.write(TIME, PERIOD));
+  }
+
+  state = actuator_hw.configure();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::INACTIVE, state.label());
+
+  // Read and Write are working because it is INACTIVE
+  for (auto step = 0u; step < 10; ++step)
+  {
+    ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.read(TIME, PERIOD));
+
+    EXPECT_EQ(step * velocity_value, state_interfaces[0].get_value());      // position value
+    EXPECT_EQ(step ? velocity_value : 0, state_interfaces[1].get_value());  // velocity
+
+    ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.write(TIME, PERIOD));
+  }
+
+  state = actuator_hw.activate();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::ACTIVE, state.label());
+
+  // Read and Write are working because it is ACTIVE
+  for (auto step = 0u; step < 10; ++step)
+  {
+    ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.read(TIME, PERIOD));
+
+    EXPECT_EQ((10 + step) * velocity_value, state_interfaces[0].get_value());  // position value
+    EXPECT_EQ(velocity_value, state_interfaces[1].get_value());                // velocity
+
+    ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.write(TIME, PERIOD));
+  }
+
+  state = actuator_hw.shutdown();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::FINALIZED, state.label());
+
+  // Noting should change because it is FINALIZED
+  for (auto step = 0u; step < 10; ++step)
+  {
+    ASSERT_EQ(hardware_interface::return_type::ERROR, actuator_hw.read(TIME, PERIOD));
+
+    EXPECT_EQ(20 * velocity_value, state_interfaces[0].get_value());  // position value
+    EXPECT_EQ(0, state_interfaces[1].get_value());                    // velocity
+
+    ASSERT_EQ(hardware_interface::return_type::ERROR, actuator_hw.write(TIME, PERIOD));
+  }
+
+  EXPECT_EQ(
+    hardware_interface::return_type::OK, actuator_hw.prepare_command_mode_switch({""}, {""}));
+  EXPECT_EQ(
+    hardware_interface::return_type::OK, actuator_hw.perform_command_mode_switch({""}, {""}));
 }
