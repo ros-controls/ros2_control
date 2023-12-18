@@ -19,6 +19,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "hardware_interface/component_parser.hpp"
@@ -101,6 +102,13 @@ public:
   {
     info_ = hardware_info;
     import_state_interface_descriptions(info_);
+    state_interface_names_.reserve(state_interface_descriptions_.size());
+    for (auto & descr : state_interface_descriptions_)
+    {
+      state_interface_names_.push_back(descr.get_name());
+      state_interface_names_to_descriptions_.insert(
+        std::make_pair(state_interface_names_.back(), descr));
+    }
     return CallbackReturn::SUCCESS;
   };
 
@@ -110,7 +118,7 @@ public:
    */
   virtual void import_state_interface_descriptions(const HardwareInfo & hardware_info)
   {
-    sensor_states_descriptions_ =
+    state_interface_descriptions_ =
       parse_sensor_state_interface_descriptions_from_hardware_info(hardware_info);
   }
 
@@ -131,9 +139,9 @@ public:
   virtual std::vector<StateInterface> export_state_interfaces()
   {
     std::vector<hardware_interface::StateInterface> state_interfaces;
-    state_interfaces.reserve(sensor_states_descriptions_.size());
+    state_interfaces.reserve(state_interface_descriptions_.size());
 
-    for (const auto & descr : sensor_states_descriptions_)
+    for (const auto & descr : state_interface_descriptions_)
     {
       sensor_states_[descr.get_name()] = std::numeric_limits<double>::quiet_NaN();
       state_interfaces.emplace_back(StateInterface(descr, &sensor_states_[descr.get_name()]));
@@ -182,13 +190,30 @@ public:
     sensor_states_[interface_descr.get_name()] = value;
   }
 
+  double sensor_state_get_value(const std::string & interface_name) const
+  {
+    return sensor_states_.at(interface_name);
+  }
+
+  void sensor_state_set_value(const std::string & interface_name, const double & value)
+  {
+    sensor_states_[interface_name] = value;
+  }
+
+  const InterfaceDescription & get_interface_description(const std::string & interface_name)
+  {
+    return state_interface_names_to_descriptions_.at(interface_name);
+  }
+
 protected:
   HardwareInfo info_;
 
-  std::vector<InterfaceDescription> sensor_states_descriptions_;
+  std::vector<std::string> state_interface_names_;
+  std::vector<InterfaceDescription> state_interface_descriptions_;
 
 private:
   std::map<std::string, double> sensor_states_;
+  std::map<std::string, InterfaceDescription> state_interface_names_to_descriptions_;
 
   rclcpp_lifecycle::State lifecycle_state_;
 };
