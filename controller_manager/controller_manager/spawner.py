@@ -28,7 +28,6 @@ from controller_manager import (
     load_controller,
     switch_controllers,
     unload_controller,
-    cleanup_controller,
 )
 
 import rclpy
@@ -102,7 +101,6 @@ def wait_for_controller_manager(node, controller_manager, timeout_duration):
         f"{controller_manager}/reload_controller_libraries",
         f"{controller_manager}/switch_controller",
         f"{controller_manager}/unload_controller",
-        f"{controller_manager}/cleanup_controller",
     )
 
     # Wait for controller_manager

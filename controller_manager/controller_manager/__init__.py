@@ -23,7 +23,6 @@ from .controller_manager_services import (
     set_hardware_component_state,
     switch_controllers,
     unload_controller,
-    cleanup_controller,
 )
 
 __all__ = [
@@ -37,5 +36,4 @@ __all__ = [
     "set_hardware_component_state",
     "switch_controllers",
     "unload_controller",
-    "cleanup_controller",
 ]

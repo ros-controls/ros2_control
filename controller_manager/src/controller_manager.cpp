@@ -495,10 +495,6 @@ void ControllerManager::init_services()
     "~/unload_controller",
     std::bind(&ControllerManager::unload_controller_service_cb, this, _1, _2), qos_services,
     best_effort_callback_group_);
-  cleanup_controller_service_ = create_service<controller_manager_msgs::srv::CleanupController>(
-    "~/cleanup_controller",
-    std::bind(&ControllerManager::cleanup_controller_service_cb, this, _1, _2), qos_services,
-    best_effort_callback_group_);
   list_hardware_components_service_ =
     create_service<controller_manager_msgs::srv::ListHardwareComponents>(
       "~/list_hardware_components",
@@ -655,61 +651,6 @@ controller_interface::return_type ControllerManager::unload_controller(
   RCLCPP_DEBUG(get_logger(), "Destruct controller finished");
 
   RCLCPP_DEBUG(get_logger(), "Successfully unloaded controller '%s'", controller_name.c_str());
-
-  return controller_interface::return_type::OK;
-}
-
-controller_interface::return_type ControllerManager::cleanup_controller(
-  const std::string & controller_name)
-{
-  std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
-  std::vector<ControllerSpec> & to = rt_controllers_wrapper_.get_unused_list(guard);
-  const std::vector<ControllerSpec> & from = rt_controllers_wrapper_.get_updated_list(guard);
-
-  // Transfers the active controllers over, skipping the one to be removed and the active ones.
-  to = from;
-
-  auto found_it = std::find_if(
-    to.begin(), to.end(),
-    std::bind(controller_name_compare, std::placeholders::_1, controller_name));
-  if (found_it == to.end())
-  {
-    // Fails if we could not remove the controllers
-    to.clear();
-    RCLCPP_ERROR(
-      get_logger(),
-      "Could not clear controller with name '%s' because no controller with this name exists",
-      controller_name.c_str());
-    return controller_interface::return_type::ERROR;
-  }
-
-  auto & controller = *found_it;
-
-  if (is_controller_active(*controller.c))
-  {
-    to.clear();
-    RCLCPP_ERROR(
-      get_logger(), "Could not clear controller with name '%s' because it is still active",
-      controller_name.c_str());
-    return controller_interface::return_type::ERROR;
-  }
-
-  RCLCPP_DEBUG(get_logger(), "Cleanup controller");
-  // TODO(destogl): remove reference interface if chainable; i.e., add a separate method for
-  // cleaning-up controllers?
-  controller.c->get_node()->cleanup();
-  executor_->remove_node(controller.c->get_node()->get_node_base_interface());
-  to.erase(found_it);
-
-  // Destroys the old controllers list when the realtime thread is finished with it.
-  RCLCPP_DEBUG(get_logger(), "Realtime switches over to new controller list");
-  rt_controllers_wrapper_.switch_updated_list(guard);
-  std::vector<ControllerSpec> & new_unused_list = rt_controllers_wrapper_.get_unused_list(guard);
-  RCLCPP_DEBUG(get_logger(), "Destruct controller");
-  new_unused_list.clear();
-  RCLCPP_DEBUG(get_logger(), "Destruct controller finished");
-
-  RCLCPP_DEBUG(get_logger(), "Successfully cleaned controller '%s'", controller_name.c_str());
 
   return controller_interface::return_type::OK;
 }
@@ -1923,22 +1864,6 @@ void ControllerManager::unload_controller_service_cb(
 
   RCLCPP_DEBUG(
     get_logger(), "unloading service finished for controller '%s' ", request->name.c_str());
-}
-
-void ControllerManager::cleanup_controller_service_cb(
-  const std::shared_ptr<controller_manager_msgs::srv::CleanupController::Request> request,
-  std::shared_ptr<controller_manager_msgs::srv::CleanupController::Response> response)
-{
-  // lock services
-  RCLCPP_DEBUG(
-    get_logger(), "cleanup service called for controller '%s' ", request->name.c_str());
-  std::lock_guard<std::mutex> guard(services_lock_);
-  RCLCPP_DEBUG(get_logger(), "cleanup service locked");
-
-  response->ok = cleanup_controller(request->name) == controller_interface::return_type::OK;
-
-  RCLCPP_DEBUG(
-    get_logger(), "cleanup service finished for controller '%s' ", request->name.c_str());
 }
 
 void ControllerManager::list_hardware_components_srv_cb(
