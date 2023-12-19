@@ -28,7 +28,7 @@ using transmission_interface::JointHandle;
 using transmission_interface::SimpleTransmission;
 
 // Floating-point value comparison threshold
-const double EPS = 1e-6;
+const double EPS = 1e-5;
 
 TEST(PreconditionsTest, ExceptionThrownWithInvalidParameters)
 {

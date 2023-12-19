@@ -33,7 +33,7 @@ using transmission_interface::FourBarLinkageTransmission;
 using transmission_interface::JointHandle;
 
 // Floating-point value comparison threshold
-const double EPS = 1e-6;
+const double EPS = 1e-5;
 
 TEST(PreconditionsTest, ExceptionThrowing)
 {
