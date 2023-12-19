@@ -18,19 +18,24 @@
 #include <limits>
 #include <string>
 #include <utility>
+#include <variant>
 
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/macros.hpp"
-#include "hardware_interface/types/handle_datatype_definitions.hpp"
 #include "hardware_interface/visibility_control.h"
 
 namespace hardware_interface
 {
+
+typedef std::variant<double> HANDLE_DATATYPE;
+
 /// A handle used to get and set a value on a given interface.
 class Handle
 {
 public:
-  [[deprecated("Use InterfaceDescription for initializing the Command-/StateIntefaces.")]] Handle(
+  [[deprecated("Use InterfaceDescription for initializing the Command-/StateIntefaces.")]]
+
+  Handle(
     const std::string & prefix_name, const std::string & interface_name,
     double * value_ptr = nullptr)
   : prefix_name_(prefix_name), interface_name_(interface_name), value_ptr_(value_ptr)
@@ -39,23 +44,24 @@ public:
 
   explicit Handle(const InterfaceDescription & interface_description)
   : prefix_name_(interface_description.prefix_name),
-    interface_name_(interface_description.interface_info.name),
-    value_(std::numeric_limits<double>::quiet_NaN()),
-    value_ptr_(&value_)
+    interface_name_(interface_description.interface_info.name)
   {
+    // As soon as multiple datatypes are used in HANDLE_DATATYPE
+    // we need to initialize according the type passed in interface description
+    value_ = std::numeric_limits<double>::quiet_NaN();
+    value_ptr_ = std::get_if<double>(&value_);
   }
 
-  [[deprecated(
-    "Use InterfaceDescription for initializing the Command-/StateIntefaces.")]] explicit Handle(const std::
-                                                                                                  string &
-                                                                                                    interface_name)
+  [[deprecated("Use InterfaceDescription for initializing the Command-/StateIntefaces.")]]
+
+  explicit Handle(const std::string & interface_name)
   : interface_name_(interface_name), value_ptr_(nullptr)
   {
   }
 
-  [[deprecated(
-    "Use InterfaceDescription for initializing the Command-/StateIntefaces.")]] explicit Handle(const char *
-                                                                                                  interface_name)
+  [[deprecated("Use InterfaceDescription for initializing the Command-/StateIntefaces.")]]
+
+  explicit Handle(const char * interface_name)
   : interface_name_(interface_name), value_ptr_(nullptr)
   {
   }
@@ -101,7 +107,8 @@ public:
 protected:
   std::string prefix_name_;
   std::string interface_name_;
-  double value_;
+  HANDLE_DATATYPE value_;
+  // TODO(Manuel) redeclare as HANDLE_DATATYPE * value_ptr_ if old functionality is removed
   double * value_ptr_;
 };
 
