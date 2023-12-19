@@ -1037,7 +1037,7 @@ class DummySensorDefault : public hardware_interface::SensorInterface
   {
     for (const auto & [name, descr] : sensor_state_interfaces_)
     {
-      sensor_state_set_value(descr, 0.0);
+      set_state(name, 0.0);
     }
     read_calls_ = 0;
     return CallbackReturn::SUCCESS;
@@ -1055,7 +1055,7 @@ class DummySensorDefault : public hardware_interface::SensorInterface
     }
 
     // no-op, static value
-    sensor_state_set_value("joint1/voltage", voltage_level_hw_value_);
+    set_state("joint1/voltage", voltage_level_hw_value_);
     return hardware_interface::return_type::OK;
   }
 
@@ -1196,12 +1196,12 @@ class DummyActuatorDefault : public hardware_interface::ActuatorInterface
 
   CallbackReturn on_configure(const rclcpp_lifecycle::State & /*previous_state*/) override
   {
-    joint_state_set_value("joint1/position", 0.0);
-    joint_state_set_value("joint1/velocity", 0.0);
+    set_state("joint1/position", 0.0);
+    set_state("joint1/velocity", 0.0);
 
     if (recoverable_error_happened_)
     {
-      joint_command_set_value("joint1/velocity", 0.0);
+      set_command("joint1/velocity", 0.0);
     }
 
     read_calls_ = 0;
@@ -1233,17 +1233,16 @@ class DummyActuatorDefault : public hardware_interface::ActuatorInterface
     {
       return hardware_interface::return_type::ERROR;
     }
-    auto position_state = joint_state_get_value("joint1/position");
-    joint_state_set_value(
-      "joint1/position", position_state + joint_command_get_value("joint1/velocity"));
-    joint_state_set_value("joint1/velocity", joint_command_get_value("joint1/velocity"));
+    auto position_state = get_state("joint1/position");
+    set_state("joint1/position", position_state + get_command("joint1/velocity"));
+    set_state("joint1/velocity", get_command("joint1/velocity"));
 
     return hardware_interface::return_type::OK;
   }
 
   CallbackReturn on_shutdown(const rclcpp_lifecycle::State & /*previous_state*/) override
   {
-    joint_state_set_value("joint1/velocity", 0.0);
+    set_state("joint1/velocity", 0.0);
     return CallbackReturn::SUCCESS;
   }
 
