@@ -83,12 +83,12 @@ TEST(PreconditionsTest, AccessorValidation)
 
   EXPECT_EQ(2u, trans.num_actuators());
   EXPECT_EQ(2u, trans.num_joints());
-  EXPECT_EQ(2.0, trans.get_actuator_reduction()[0]);
-  EXPECT_EQ(-2.0, trans.get_actuator_reduction()[1]);
-  EXPECT_EQ(4.0, trans.get_joint_reduction()[0]);
-  EXPECT_EQ(-4.0, trans.get_joint_reduction()[1]);
-  EXPECT_EQ(1.0, trans.get_joint_offset()[0]);
-  EXPECT_EQ(-1.0, trans.get_joint_offset()[1]);
+  EXPECT_THAT(2.0, DoubleNear(trans.get_actuator_reduction()[0], EPS));
+  EXPECT_THAT(-2.0, DoubleNear(trans.get_actuator_reduction()[1], EPS));
+  EXPECT_THAT(4.0, DoubleNear(trans.get_joint_reduction()[0], EPS));
+  EXPECT_THAT(-4.0, DoubleNear(trans.get_joint_reduction()[1], EPS));
+  EXPECT_THAT(1.0, DoubleNear(trans.get_joint_offset()[0], EPS));
+  EXPECT_THAT(-1.0, DoubleNear(trans.get_joint_offset()[1], EPS));
 }
 
 void testConfigureWithBadHandles(std::string interface_name)
