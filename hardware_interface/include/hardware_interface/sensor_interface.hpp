@@ -133,15 +133,28 @@ public:
    *
    * \return vector of state interfaces
    */
-  virtual std::vector<StateInterface> export_state_interfaces()
+  [[deprecated(
+    "Replaced by vector<StateInterface&> on_export_state_interfaces() method. Exporting is handled "
+    "by the Framework.")]] virtual std::vector<StateInterface>
+  export_state_interfaces()
   {
-    std::vector<hardware_interface::StateInterface> state_interfaces;
+    // return empty vector by default. For backward compatibility we check if all vectors is empty
+    // and if so call on_export_state_interfaces()
+    std::vector<StateInterface> state_interfaces;
+    return state_interfaces;
+  }
+
+  std::vector<std::shared_ptr<StateInterface>> on_export_state_interfaces()
+  {
+    std::vector<std::shared_ptr<StateInterface>> state_interfaces;
     state_interfaces.reserve(sensor_state_interfaces_.size());
 
     for (const auto & [name, descr] : sensor_state_interfaces_)
     {
-      sensor_states_[descr.get_name()] = std::numeric_limits<double>::quiet_NaN();
-      state_interfaces.emplace_back(StateInterface(descr, &sensor_states_[descr.get_name()]));
+      // TODO(Manuel) maybe check for duplicates otherwise only the first appearance of "name" is
+      // inserted
+      sensor_states_.insert(std::make_pair(name, std::make_shared<StateInterface>(descr)));
+      state_interfaces.push_back(sensor_states_.at(name));
     }
 
     return state_interfaces;
@@ -177,24 +190,14 @@ public:
    */
   void set_state(const rclcpp_lifecycle::State & new_state) { lifecycle_state_ = new_state; }
 
-  double sensor_state_get_value(const InterfaceDescription & interface_descr) const
+  void set_state(const std::string & interface_name, const double & value)
   {
-    return sensor_states_.at(interface_descr.get_name());
+    sensor_states_.at(interface_name)->set_value(value);
   }
 
-  void sensor_state_set_value(const InterfaceDescription & interface_descr, const double & value)
+  double get_state(const std::string & interface_name) const
   {
-    sensor_states_[interface_descr.get_name()] = value;
-  }
-
-  double sensor_state_get_value(const std::string & interface_name) const
-  {
-    return sensor_states_.at(interface_name);
-  }
-
-  void sensor_state_set_value(const std::string & interface_name, const double & value)
-  {
-    sensor_states_[interface_name] = value;
+    return sensor_states_.at(interface_name)->get_value();
   }
 
 protected:
@@ -203,7 +206,7 @@ protected:
   std::map<std::string, InterfaceDescription> sensor_state_interfaces_;
 
 private:
-  std::map<std::string, double> sensor_states_;
+  std::map<std::string, std::shared_ptr<StateInterface>> sensor_states_;
 
   rclcpp_lifecycle::State lifecycle_state_;
 };
