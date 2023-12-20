@@ -48,16 +48,14 @@ int main(int argc, char ** argv)
   std::thread cm_thread(
     [cm]()
     {
-      if (realtime_tools::has_realtime_kernel())
+      if (!realtime_tools::configure_sched_fifo(kSchedPriority))
       {
-        if (!realtime_tools::configure_sched_fifo(kSchedPriority))
-        {
-          RCLCPP_WARN(cm->get_logger(), "Could not enable FIFO RT scheduling policy");
-        }
-      }
-      else
-      {
-        RCLCPP_INFO(cm->get_logger(), "RT kernel is recommended for better performance");
+        RCLCPP_WARN(
+          cm->get_logger(),
+          "Could not enable FIFO RT scheduling policy. Consider setting up your user to do FIFO RT "
+          "scheduling. See "
+          "[https://control.ros.org/master/doc/ros2_control/controller_manager/doc/userdoc.html] "
+          "for details.");
       }
 
       // for calculating sleep time
