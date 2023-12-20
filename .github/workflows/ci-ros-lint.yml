@@ -5,7 +5,7 @@ on:
 jobs:
   ament_lint:
     name: ament_${{ matrix.linter }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
@@ -17,7 +17,7 @@ jobs:
     - uses: ros-tooling/setup-ros@0.7.1
     - uses: ros-tooling/action-ros-lint@v0.1
       with:
-        distribution: rolling
+        distribution: iron
         linter: ${{ matrix.linter }}
         package-name:
           controller_interface
@@ -31,7 +31,7 @@ jobs:
 
   ament_lint_100:
     name: ament_${{ matrix.linter }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
@@ -41,7 +41,7 @@ jobs:
     - uses: ros-tooling/setup-ros@0.7.1
     - uses: ros-tooling/action-ros-lint@v0.1
       with:
-        distribution: rolling
+        distribution: iron
         linter: cpplint
         arguments: "--linelength=100 --filter=-whitespace/newline"
         package-name:
