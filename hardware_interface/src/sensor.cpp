@@ -189,6 +189,11 @@ std::vector<StateInterface> Sensor::export_state_interfaces()
   return impl_->export_state_interfaces();
 }
 
+std::vector<std::shared_ptr<StateInterface>> Sensor::on_export_state_interfaces()
+{
+  return impl_->on_export_state_interfaces();
+}
+
 std::string Sensor::get_name() const { return impl_->get_name(); }
 
 const rclcpp_lifecycle::State & Sensor::get_state() const { return impl_->get_state(); }
