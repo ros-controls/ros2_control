@@ -33,7 +33,7 @@ typedef std::variant<double> HANDLE_DATATYPE;
 class Handle
 {
 public:
-  [[deprecated("Use InterfaceDescription for initializing the Command-/StateIntefaces.")]]
+  [[deprecated("Use InterfaceDescription for initializing the Interface")]]
 
   Handle(
     const std::string & prefix_name, const std::string & interface_name,
@@ -52,14 +52,14 @@ public:
     value_ptr_ = std::get_if<double>(&value_);
   }
 
-  [[deprecated("Use InterfaceDescription for initializing the Command-/StateIntefaces.")]]
+  [[deprecated("Use InterfaceDescription for initializing the Interface")]]
 
   explicit Handle(const std::string & interface_name)
   : interface_name_(interface_name), value_ptr_(nullptr)
   {
   }
 
-  [[deprecated("Use InterfaceDescription for initializing the Command-/StateIntefaces.")]]
+  [[deprecated("Use InterfaceDescription for initializing the Interface")]]
 
   explicit Handle(const char * interface_name)
   : interface_name_(interface_name), value_ptr_(nullptr)
@@ -93,23 +93,30 @@ public:
   const std::string & get_prefix_name() const { return prefix_name_; }
 
   double get_value() const
-  {
+  {  // BEGIN (Handle export change): for backward compatibility
+     // TODO(Manuel) return value_ if old functionality is removed
     THROW_ON_NULLPTR(value_ptr_);
     return *value_ptr_;
+    // END
   }
 
   void set_value(double value)
   {
+    // BEGIN (Handle export change): for backward compatibility
+    // TODO(Manuel) set value_ directly if old functionality is removed
     THROW_ON_NULLPTR(this->value_ptr_);
     *this->value_ptr_ = value;
+    // END
   }
 
 protected:
   std::string prefix_name_;
   std::string interface_name_;
   HANDLE_DATATYPE value_;
+  // BEGIN (Handle export change): for backward compatibility
   // TODO(Manuel) redeclare as HANDLE_DATATYPE * value_ptr_ if old functionality is removed
   double * value_ptr_;
+  // END
 };
 
 class StateInterface : public Handle

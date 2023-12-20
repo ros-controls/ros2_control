@@ -443,8 +443,8 @@ public:
     }
   }
 
-  // TODO(Manuel) BEGIN: for backward compatibility, can be removed if export_state_interfaces()
-  // method is removed
+  // BEGIN (Handle export change): for backward compatibility, can be removed if
+  // export_state_interfaces() method is removed
   void insert_state_interface(const StateInterface & state_interface)
   {
     const auto [it, success] = state_interface_map_.emplace(std::make_pair(
@@ -457,7 +457,7 @@ public:
       throw std::runtime_error(msg);
     }
   }
-  // TODO(Manuel) END: for backward compatibility
+  // END: for backward compatibility
 
   template <class HardwareT>
   void import_state_interfaces(HardwareT & hardware)
@@ -468,7 +468,7 @@ public:
     // a) there is nothing to export -> on_export_state_interfaces() does return nothing as well
     // b) default implementation for export_state_interfaces() is used -> new functionality ->
     // Framework exports and creates everything
-    if (interfaces.size() == 0)
+    if (interfaces.empty())
     {
       std::vector<std::shared_ptr<StateInterface>> interface_ptrs =
         hardware.on_export_state_interfaces();
@@ -479,8 +479,8 @@ public:
         interface_names.push_back(interface->get_name());
       }
     }
-    // TODO(Manuel) BEGIN: for backward compatibility, can be removed if export_state_interfaces()
-    // method is removed
+    // BEGIN (Handle export change): for backward compatibility, can be removed if
+    // export_state_interfaces() method is removed
     else
     {
       interface_names.reserve(interfaces.size());
@@ -490,7 +490,7 @@ public:
         interface_names.push_back(interface.get_name());
       }
     }
-    // TODO(Manuel) END: for backward compatibility
+    // END: for backward compatibility
 
     hardware_info_map_[hardware.get_name()].state_interfaces = interface_names;
     available_state_interfaces_.reserve(
@@ -510,8 +510,8 @@ public:
     }
   }
 
-  // TODO(Manuel) BEGIN: for backward compatibility, can be removed if export_command_interfaces()
-  // method is removed
+  // BEGIN (Handle export change): for backward compatibility, can be removed if
+  // export_command_interfaces() method is removed
   void insert_command_interface(CommandInterface && command_interface)
   {
     std::string key = command_interface.get_name();
@@ -525,7 +525,7 @@ public:
       throw std::runtime_error(msg);
     }
   }
-  // TODO(Manuel) END: for backward compatibility
+  // END: for backward compatibility
 
   template <class HardwareT>
   void import_command_interfaces(HardwareT & hardware)
@@ -535,21 +535,21 @@ public:
     // a) there is nothing to export -> on_export_command_interfaces() does return nothing as well
     // b) default implementation for export_command_interfaces() is used -> new functionality ->
     // Framework exports and creates everything
-    if (interfaces.size() == 0)
+    if (interfaces.empty())
     {
       std::vector<std::shared_ptr<CommandInterface>> interface_ptrs =
         hardware.on_export_command_interfaces();
       hardware_info_map_[hardware.get_name()].command_interfaces =
         add_command_interfaces(interface_ptrs);
     }
-    // TODO(Manuel) BEGIN: for backward compatibility, can be removed if export_command_interfaces()
-    // method is removed
+    // BEGIN (Handle export change): for backward compatibility, can be removed if
+    // export_command_interfaces() method is removed
     else
     {
       hardware_info_map_[hardware.get_name()].command_interfaces =
         add_command_interfaces(interfaces);
     }
-    // TODO(Manuel) END: for backward compatibility
+    // END: for backward compatibility
   }
 
   /// Adds exported command interfaces into internal storage.
@@ -563,8 +563,8 @@ public:
    * \returns list of interface names that are added into internal storage. The output is used to
    * avoid additional iterations to cache interface names, e.g., for initializing info structures.
    */
-  // TODO(Manuel) BEGIN: for backward compatibility, can be removed if export_command_interfaces()
-  // method is removed
+  // BEGIN (Handle export change): for backward compatibility, can be removed if
+  // export_command_interfaces() method is removed
   std::vector<std::string> add_command_interfaces(std::vector<CommandInterface> & interfaces)
   {
     std::vector<std::string> interface_names;
@@ -581,7 +581,7 @@ public:
 
     return interface_names;
   }
-  // TODO(Manuel) END: for backward compatibility
+  // END: for backward compatibility
 
   std::vector<std::string> add_command_interfaces(
     std::vector<std::shared_ptr<CommandInterface>> & interfaces)
