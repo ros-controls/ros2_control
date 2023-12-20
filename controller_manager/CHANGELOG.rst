@@ -2,6 +2,11 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.36.0 (2023-12-12)
+-------------------
+* Fix controller sorting issue while loading large number of controllers (`#1180 <https://github.com/ros-controls/ros2_control/issues/1180>`_) (`#1186 <https://github.com/ros-controls/ros2_control/issues/1186>`_)
+* Contributors: mergify[bot]
+
 2.35.1 (2023-11-27)
 -------------------
 

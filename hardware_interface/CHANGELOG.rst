@@ -2,6 +2,12 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.36.0 (2023-12-12)
+-------------------
+* Cleanup Resource Manager a bit to increase clarity. (backport `#816 <https://github.com/ros-controls/ros2_control/issues/816>`_) (`#1191 <https://github.com/ros-controls/ros2_control/issues/1191>`_)
+* Handle hardware errors in Resource Manager (`#805 <https://github.com/ros-controls/ros2_control/issues/805>`_) (`#837 <https://github.com/ros-controls/ros2_control/issues/837>`_) #ABI-breaking
+* Contributors: mergify[bot]
+
 2.35.1 (2023-11-27)
 -------------------
 * [MockHardware] Fix the issues where hardware with multiple interfaces can not be started because of a logical bug added when adding dynamics calculation functionality. (`#1151 <https://github.com/ros-controls/ros2_control/issues/1151>`_) (`#1178 <https://github.com/ros-controls/ros2_control/issues/1178>`_)

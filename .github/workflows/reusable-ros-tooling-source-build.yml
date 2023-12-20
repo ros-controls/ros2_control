@@ -32,7 +32,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref }}
-      - uses: ros-tooling/action-ros-ci@0.2.6
+      - uses: ros-tooling/action-ros-ci@0.3.5
         with:
           target-ros2-distro: ${{ inputs.ros_distro }}
           # build all packages listed in the meta package
@@ -49,7 +49,7 @@ jobs:
             https://raw.githubusercontent.com/ros2/ros2/${{ inputs.ros2_repo_branch }}/ros2.repos
             https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/ros2_control.${{ inputs.ros_distro }}.repos?token=${{ secrets.GITHUB_TOKEN }}
           colcon-mixin-repository: https://raw.githubusercontent.com/colcon/colcon-mixin-repository/master/index.yaml
-      - uses: actions/upload-artifact@v1
+      - uses: actions/upload-artifact@v4
         with:
           name: colcon-logs-ubuntu-22.04
           path: ros_ws/log
