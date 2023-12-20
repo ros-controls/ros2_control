@@ -191,9 +191,19 @@ std::vector<StateInterface> System::export_state_interfaces()
   return impl_->export_state_interfaces();
 }
 
+std::vector<std::shared_ptr<StateInterface>> System::on_export_state_interfaces()
+{
+  return impl_->on_export_state_interfaces();
+}
+
 std::vector<CommandInterface> System::export_command_interfaces()
 {
   return impl_->export_command_interfaces();
+}
+
+std::vector<std::shared_ptr<CommandInterface>> System::on_export_command_interfaces()
+{
+  return impl_->on_export_command_interfaces();
 }
 
 return_type System::prepare_command_mode_switch(

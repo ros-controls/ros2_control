@@ -191,6 +191,11 @@ std::vector<StateInterface> Sensor::export_state_interfaces()
   return impl_->export_state_interfaces();
 }
 
+std::vector<std::shared_ptr<StateInterface>> Sensor::on_export_state_interfaces()
+{
+  return impl_->on_export_state_interfaces();
+}
+
 std::string Sensor::get_name() const { return impl_->get_name(); }
 
 std::string Sensor::get_group_name() const { return impl_->get_group_name(); }

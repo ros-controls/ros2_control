@@ -69,8 +69,14 @@ public:
   HARDWARE_INTERFACE_PUBLIC
   const rclcpp_lifecycle::State & error();
 
+  [[deprecated(
+    "Replaced by vector<std::shared_ptr<StateInterface>> on_export_state_interfaces() method. "
+    "Exporting is handled by the Framework.")]] HARDWARE_INTERFACE_PUBLIC
+    std::vector<StateInterface>
+    export_state_interfaces();
+
   HARDWARE_INTERFACE_PUBLIC
-  std::vector<StateInterface> export_state_interfaces();
+  std::vector<std::shared_ptr<StateInterface>> on_export_state_interfaces();
 
   HARDWARE_INTERFACE_PUBLIC
   std::string get_name() const;

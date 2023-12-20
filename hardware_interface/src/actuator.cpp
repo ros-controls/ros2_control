@@ -193,10 +193,20 @@ std::vector<StateInterface> Actuator::export_state_interfaces()
   return impl_->export_state_interfaces();
 }
 
+std::vector<std::shared_ptr<StateInterface>> Actuator::on_export_state_interfaces()
+{
+  return impl_->on_export_state_interfaces();
+}
+
 std::vector<CommandInterface> Actuator::export_command_interfaces()
 {
   // TODO(karsten1987): Might be worth to do some brief sanity check here
   return impl_->export_command_interfaces();
+}
+
+std::vector<std::shared_ptr<CommandInterface>> Actuator::on_export_command_interfaces()
+{
+  return impl_->on_export_command_interfaces();
 }
 
 return_type Actuator::prepare_command_mode_switch(

@@ -171,7 +171,8 @@ public:
    * \return vector of state interfaces
    */
   [[deprecated(
-    "Replaced by vector<StateInterface&> on_export_state_interfaces() method. Exporting is "
+    "Replaced by vector<std::shared_ptr<StateInterface>> on_export_state_interfaces() method. "
+    "Exporting is "
     "handled "
     "by the Framework.")]] virtual std::vector<StateInterface>
   export_state_interfaces()
@@ -208,7 +209,8 @@ public:
    * \return vector of command interfaces
    */
   [[deprecated(
-    "Replaced by vector<CommandInterface&> on_export_command_interfaces() method. Exporting is "
+    "Replaced by vector<std::shared_ptr<CommandInterface>> on_export_command_interfaces() method. "
+    "Exporting is "
     "handled "
     "by the Framework.")]] virtual std::vector<CommandInterface>
   export_command_interfaces()

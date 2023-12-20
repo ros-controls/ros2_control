@@ -156,7 +156,8 @@ public:
    * \return vector of state interfaces
    */
   [[deprecated(
-    "Replaced by vector<StateInterface&> on_export_state_interfaces() method. Exporting is handled "
+    "Replaced by vector<std::shared_ptr<StateInterface>> on_export_state_interfaces() method. "
+    "Exporting is handled "
     "by the Framework.")]] virtual std::vector<StateInterface>
   export_state_interfaces()
   {
