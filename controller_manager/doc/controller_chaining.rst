@@ -76,7 +76,9 @@ One can also think of it as an actual chain, you can not add a chain link or bre
 Debugging outputs
 ----------------------------
 
-Flag ``unavailable`` on reference interface does not provide much information about anything at the moment. So don't get confused by it. The reason we have it are internal implementation reasons irelevant for the usage.
+- The reference interfaces are ``unavailable`` and ``unclaimed``, when the controller exporting them is in inactive state
+- The reference interfaces are ``available`` and  ``unclaimed``, when the controller exporting them is in an active state but is not in chained mode with any other controller (The controllers gets its references from the subscriber)
+- The reference interfaces are ``available`` and  ``claimed``, when the controller exporting them is in active state and also in chained mode with other controllers (The controller gets its references from the controllers it is chained with)
 
 
 Closing remarks

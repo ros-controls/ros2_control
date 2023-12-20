@@ -55,6 +55,6 @@ Don’t hesitate to ask questions or to get help if you feel like you are gettin
 Furthermore, you find helpful resources here:
 * [ROS2 Control Contribution Guide](https://control.ros.org/master/doc/contributing/contributing.html)
 * [ROS2 Tutorials](https://docs.ros.org/en/rolling/Tutorials.html)
-* [ROS Answers](https://answers.ros.org/questions/)
+* [Robotics Stack Exchange](https://robotics.stackexchange.com)
 
 **Good luck with your first issue!**

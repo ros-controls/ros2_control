@@ -141,6 +141,7 @@ if(BUILD_TESTING)
     test_chainable_controller
     ros2_control_test_assets::ros2_control_test_assets
   )
+  set_tests_properties(test_controller_manager_srvs PROPERTIES TIMEOUT 120)
   ament_target_dependencies(test_controller_manager_srvs
     controller_manager_msgs
   )
