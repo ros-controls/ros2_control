@@ -93,8 +93,9 @@ public:
   const std::string & get_prefix_name() const { return prefix_name_; }
 
   double get_value() const
-  {  // BEGIN (Handle export change): for backward compatibility
-     // TODO(Manuel) return value_ if old functionality is removed
+  {
+    // BEGIN (Handle export change): for backward compatibility
+    // TODO(Manuel) return value_ if old functionality is removed
     THROW_ON_NULLPTR(value_ptr_);
     return *value_ptr_;
     // END

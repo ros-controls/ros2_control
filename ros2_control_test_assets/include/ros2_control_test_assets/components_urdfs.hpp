@@ -440,6 +440,41 @@ const auto valid_urdf_ros2_control_dummy_actuator_only =
   </ros2_control>
 )";
 
+const auto valid_urdf_ros2_control_dummy_system_robot =
+  R"(
+  <ros2_control name="RRBotSystemWithGPIO" type="system">
+    <hardware>
+      <plugin>ros2_control_demo_hardware/RRBotSystemWithGPIOHardware</plugin>
+      <param name="example_param_write_for_sec">2</param>
+      <param name="example_param_read_for_sec">2</param>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="velocity">
+        <param name="min">-1</param>
+        <param name="max">1</param>
+      </command_interface>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+    <joint name="joint2">
+      <command_interface name="velocity">
+        <param name="min">-1</param>
+        <param name="max">1</param>
+      </command_interface>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+    <joint name="joint3">
+      <command_interface name="velocity">
+        <param name="min">-1</param>
+        <param name="max">1</param>
+      </command_interface>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+  </ros2_control>
+)";
+
 const auto valid_urdf_ros2_control_parameter_empty =
   R"(
   <ros2_control name="2DOF_System_Robot_Position_Only" type="system">

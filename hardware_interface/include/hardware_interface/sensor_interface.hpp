@@ -141,8 +141,7 @@ public:
   {
     // return empty vector by default. For backward compatibility we check if all vectors is empty
     // and if so call on_export_state_interfaces()
-    std::vector<StateInterface> state_interfaces;
-    return state_interfaces;
+    return {};
   }
 
   std::vector<std::shared_ptr<StateInterface>> on_export_state_interfaces()
