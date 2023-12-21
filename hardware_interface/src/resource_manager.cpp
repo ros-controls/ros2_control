@@ -37,6 +37,7 @@
 #include "lifecycle_msgs/msg/state.hpp"
 #include "pluginlib/class_loader.hpp"
 #include "rcutils/logging_macros.h"
+#include "std_msgs/msg/header.h"
 
 namespace hardware_interface
 {
@@ -730,8 +731,11 @@ public:
 
 ResourceManager::ResourceManager(
   unsigned int update_rate, rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
-: resource_storage_(std::make_unique<ResourceStorage>(update_rate, clock_interface))
+: interface_values_publisher_name_("resource_manager_publisher_node"),
+  interface_values_topic_name_("~/interface_values"),
+  resource_storage_(std::make_unique<ResourceStorage>(update_rate, clock_interface))
 {
+  create_interface_value_publisher();
 }
 
 ResourceManager::~ResourceManager() = default;
@@ -739,8 +743,11 @@ ResourceManager::~ResourceManager() = default;
 ResourceManager::ResourceManager(
   const std::string & urdf, bool validate_interfaces, bool activate_all, unsigned int update_rate,
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
-: resource_storage_(std::make_unique<ResourceStorage>(update_rate, clock_interface))
+: interface_values_publisher_name_("resource_manager_publisher_node"),
+  interface_values_topic_name_("~/interface_values"),
+  resource_storage_(std::make_unique<ResourceStorage>(update_rate, clock_interface))
 {
+  create_interface_value_publisher();
   load_urdf(urdf, validate_interfaces);
 
   if (activate_all)
@@ -752,6 +759,21 @@ ResourceManager::ResourceManager(
       set_component_state(hw_info.first, state);
     }
   }
+}
+
+void ResourceManager::create_interface_value_publisher()
+{
+  rclcpp::NodeOptions options;
+  interface_value_publisher_node_ =
+    rclcpp::Node::make_shared(interface_values_publisher_name_, options);
+  interface_values_publisher_ =
+    interface_value_publisher_node_->create_publisher<control_msgs::msg::DynamicInterfaceValues>(
+      interface_values_topic_name_, 10);
+}
+
+rclcpp::Node::SharedPtr ResourceManager::get_publisher_node() const
+{
+  return interface_value_publisher_node_;
 }
 
 // CM API: Called in "callback/slow"-thread
@@ -1283,6 +1305,70 @@ HardwareReadWriteStatus ResourceManager::read(
   return read_write_status;
 }
 
+std::vector<control_msgs::msg::SingleInterfaceValue>
+ResourceManager::get_all_state_interface_values() const
+{
+  std::vector<control_msgs::msg::SingleInterfaceValue> state_interface_values;
+  for (const auto & state_interface_name : resource_storage_->available_state_interfaces_)
+  {
+    try
+    {
+      const auto state_interface_value =
+        resource_storage_->state_interface_map_.at(state_interface_name).get_value();
+      control_msgs::msg::SingleInterfaceValue interface_value;
+      interface_value.header.stamp = resource_storage_->clock_interface_->get_clock()->now();
+      interface_value.interface_name = state_interface_name;
+      interface_value.value = state_interface_value;
+      state_interface_values.push_back(interface_value);
+    }
+    catch (const std::out_of_range & e)
+    {
+      // TODO(Manuel) what to do? should probably never happen but if, is this the right place to
+      // fail?
+    }
+  }
+  return state_interface_values;
+}
+
+void ResourceManager::publish_all_state_interface_values() const
+{
+  const auto & interfaces_names_and_values = get_all_state_interface_values();
+}
+
+std::vector<control_msgs::msg::SingleInterfaceValue>
+ResourceManager::get_all_command_interface_values() const
+{
+  std::vector<control_msgs::msg::SingleInterfaceValue> command_interface_values;
+  for (const auto & command_interface_name : resource_storage_->available_command_interfaces_)
+  {
+    try
+    {
+      const auto command_interface_value =
+        resource_storage_->command_interface_map_.at(command_interface_name).get_value();
+      control_msgs::msg::SingleInterfaceValue interface_value;
+      interface_value.header.stamp = resource_storage_->clock_interface_->get_clock()->now();
+      interface_value.interface_name = command_interface_name;
+      interface_value.value = command_interface_value;
+      command_interface_values.push_back(interface_value);
+    }
+    catch (const std::out_of_range & e)
+    {
+      // TODO(Manuel) what to do? should probably never happen but if, is this the right place to
+      // fail?
+    }
+  }
+  return command_interface_values;
+}
+
+void ResourceManager::publish_all_command_interface_values() const
+{
+  control_msgs::msg::DynamicInterfaceValues interface_values;
+  interface_values.state_interface_values = get_all_state_interface_values();
+  interface_values.command_interface_values = get_all_command_interface_values();
+
+  interface_values_publisher_->publish(interface_values);
+}
+
 // CM API: Called in "update"-thread
 HardwareReadWriteStatus ResourceManager::write(
   const rclcpp::Time & time, const rclcpp::Duration & period)
@@ -1290,6 +1376,8 @@ HardwareReadWriteStatus ResourceManager::write(
   std::lock_guard<std::recursive_mutex> guard(resources_lock_);
   read_write_status.ok = true;
   read_write_status.failed_hardware_names.clear();
+
+  publish_all_command_interface_values();
 
   auto write_components = [&](auto & components)
   {
