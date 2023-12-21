@@ -849,7 +849,9 @@ controller_interface::return_type ControllerManager::configure_controller(
   const auto cmd_itfs = controller->command_interface_configuration().names;
   const auto state_itfs = controller->state_interface_configuration().names;
   if (cmd_itfs.empty() && state_itfs.empty())
+  {
     controller_chain_spec_[controller_name] = ControllerChainSpec();
+  }
   for (const auto & cmd_itf : cmd_itfs)
   {
     controller_manager::ControllersListIterator ctrl_it;
@@ -2770,12 +2772,16 @@ void ControllerManager::insert_controller(
   if (append_to_controller)
   {
     for (const std::string & flwg_ctrl : controller_chain_spec_[ctrl_name].following_controllers)
+    {
       insert_controller(flwg_ctrl, new_ctrl_it, true);
+    }
   }
   else
   {
     for (const std::string & preced_ctrl : controller_chain_spec_[ctrl_name].preceding_controllers)
+    {
       insert_controller(preced_ctrl, new_ctrl_it, false);
+    }
   }
 }
 
