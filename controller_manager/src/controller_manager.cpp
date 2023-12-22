@@ -1386,6 +1386,11 @@ void ControllerManager::deactivate_controllers(
     {
       const auto new_state = controller->get_node()->deactivate();
       controller->release_interfaces();
+      // if it is a chainable controller, make the reference interfaces unavailable on deactivation
+      if (controller->is_chainable())
+      {
+        resource_manager_->make_controller_reference_interfaces_unavailable(request);
+      }
       if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
       {
         RCLCPP_ERROR(
@@ -1419,18 +1424,10 @@ void ControllerManager::switch_chained_mode(
     auto controller = found_it->c;
     if (!is_controller_active(*controller))
     {
-      if (controller->set_chained_mode(to_chained_mode))
-      {
-        if (to_chained_mode)
-        {
-          resource_manager_->make_controller_reference_interfaces_available(request);
-        }
-        else
-        {
-          resource_manager_->make_controller_reference_interfaces_unavailable(request);
-        }
-      }
-      else
+      // if it is a chainable controller, make the reference interfaces available on preactivation
+      // (This is needed when you activate a couple of chainable controller altogether)
+      resource_manager_->make_controller_reference_interfaces_available(request);
+      if (!controller->set_chained_mode(to_chained_mode))
       {
         RCLCPP_ERROR(
           get_logger(),
@@ -1565,6 +1562,12 @@ void ControllerManager::activate_controllers(
         controller->get_node()->get_name(), new_state.label().c_str(), new_state.id(),
         hardware_interface::lifecycle_state_names::ACTIVE,
         lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+    }
+
+    // if it is a chainable controller, make the reference interfaces available on activation
+    if (controller->is_chainable())
+    {
+      resource_manager_->make_controller_reference_interfaces_available(request);
     }
 
     if (controller->is_async())
