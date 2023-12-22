@@ -731,9 +731,7 @@ public:
 
 ResourceManager::ResourceManager(
   unsigned int update_rate, rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
-: interface_values_publisher_name_("resource_manager_publisher_node"),
-  interface_values_topic_name_("~/interface_values"),
-  resource_storage_(std::make_unique<ResourceStorage>(update_rate, clock_interface))
+: resource_storage_(std::make_unique<ResourceStorage>(update_rate, clock_interface))
 {
   create_interface_value_publisher();
 }
@@ -743,9 +741,7 @@ ResourceManager::~ResourceManager() = default;
 ResourceManager::ResourceManager(
   const std::string & urdf, bool validate_interfaces, bool activate_all, unsigned int update_rate,
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
-: interface_values_publisher_name_("resource_manager_publisher_node"),
-  interface_values_topic_name_("~/interface_values"),
-  resource_storage_(std::make_unique<ResourceStorage>(update_rate, clock_interface))
+: resource_storage_(std::make_unique<ResourceStorage>(update_rate, clock_interface))
 {
   create_interface_value_publisher();
   load_urdf(urdf, validate_interfaces);
@@ -765,10 +761,13 @@ void ResourceManager::create_interface_value_publisher()
 {
   rclcpp::NodeOptions options;
   interface_value_publisher_node_ =
-    rclcpp::Node::make_shared(interface_values_publisher_name_, options);
+    rclcpp::Node::make_shared("resource_manager_publisher_node", options);
   interface_values_publisher_ =
     interface_value_publisher_node_->create_publisher<control_msgs::msg::DynamicInterfaceValues>(
-      interface_values_topic_name_, 10);
+      "~/interface_values", 10);
+  rt_interface_values_publisher_ =
+    std::make_unique<realtime_tools::RealtimePublisher<control_msgs::msg::DynamicInterfaceValues>>(
+      interface_values_publisher_);
 }
 
 rclcpp::Node::SharedPtr ResourceManager::get_publisher_node() const
@@ -1305,68 +1304,56 @@ HardwareReadWriteStatus ResourceManager::read(
   return read_write_status;
 }
 
-std::vector<control_msgs::msg::SingleInterfaceValue>
-ResourceManager::get_all_state_interface_values() const
+void ResourceManager::publish_all_interface_values() const
 {
-  std::vector<control_msgs::msg::SingleInterfaceValue> state_interface_values;
+  control_msgs::msg::DynamicInterfaceValues interface_values;
+  interface_values.header.stamp = resource_storage_->clock_interface_->get_clock()->now();
+
+  control_msgs::msg::InterfaceValue state_interface_values;
   for (const auto & state_interface_name : resource_storage_->available_state_interfaces_)
   {
     try
     {
       const auto state_interface_value =
         resource_storage_->state_interface_map_.at(state_interface_name).get_value();
-      control_msgs::msg::SingleInterfaceValue interface_value;
-      interface_value.header.stamp = resource_storage_->clock_interface_->get_clock()->now();
-      interface_value.interface_name = state_interface_name;
-      interface_value.value = state_interface_value;
-      state_interface_values.push_back(interface_value);
+      state_interface_values.interface_names.push_back(state_interface_name);
+      state_interface_values.values.push_back(state_interface_value);
     }
     catch (const std::out_of_range & e)
     {
-      // TODO(Manuel) what to do? should probably never happen but if, is this the right place to
-      // fail?
+      RCUTILS_LOG_WARN_NAMED(
+        "resource_manager",
+        "State interface '%s' is in available list, but could not get the interface "
+        "state_interface_map_ (std::out_of_range exception thrown).",
+        state_interface_name.c_str());
     }
   }
-  return state_interface_values;
-}
 
-void ResourceManager::publish_all_state_interface_values() const
-{
-  const auto & interfaces_names_and_values = get_all_state_interface_values();
-}
-
-std::vector<control_msgs::msg::SingleInterfaceValue>
-ResourceManager::get_all_command_interface_values() const
-{
-  std::vector<control_msgs::msg::SingleInterfaceValue> command_interface_values;
+  control_msgs::msg::InterfaceValue command_interface_values;
   for (const auto & command_interface_name : resource_storage_->available_command_interfaces_)
   {
     try
     {
       const auto command_interface_value =
         resource_storage_->command_interface_map_.at(command_interface_name).get_value();
-      control_msgs::msg::SingleInterfaceValue interface_value;
-      interface_value.header.stamp = resource_storage_->clock_interface_->get_clock()->now();
-      interface_value.interface_name = command_interface_name;
-      interface_value.value = command_interface_value;
-      command_interface_values.push_back(interface_value);
+      command_interface_values.interface_names.push_back(command_interface_name);
+      command_interface_values.values.push_back(command_interface_value);
     }
     catch (const std::out_of_range & e)
     {
-      // TODO(Manuel) what to do? should probably never happen but if, is this the right place to
-      // fail?
+      RCUTILS_LOG_WARN_NAMED(
+        "resource_manager",
+        "command interface '%s' is in available list, but could not get the interface "
+        "command_interface_map_ (std::out_of_range exception thrown).",
+        command_interface_name.c_str());
     }
   }
-  return command_interface_values;
-}
+  interface_values.states = state_interface_values;
+  interface_values.commands = command_interface_values;
 
-void ResourceManager::publish_all_command_interface_values() const
-{
-  control_msgs::msg::DynamicInterfaceValues interface_values;
-  interface_values.state_interface_values = get_all_state_interface_values();
-  interface_values.command_interface_values = get_all_command_interface_values();
-
-  interface_values_publisher_->publish(interface_values);
+  rt_interface_values_publisher_->lock();
+  rt_interface_values_publisher_->msg_ = interface_values;
+  rt_interface_values_publisher_->unlockAndPublish();
 }
 
 // CM API: Called in "update"-thread
@@ -1377,7 +1364,7 @@ HardwareReadWriteStatus ResourceManager::write(
   read_write_status.ok = true;
   read_write_status.failed_hardware_names.clear();
 
-  publish_all_command_interface_values();
+  publish_all_interface_values();
 
   auto write_components = [&](auto & components)
   {

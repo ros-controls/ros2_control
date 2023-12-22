@@ -12,6 +12,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   rclcpp_lifecycle
   rcpputils
   rcutils
+  realtime_tools
   TinyXML2
   tinyxml2_vendor
 )

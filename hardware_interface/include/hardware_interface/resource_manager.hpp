@@ -21,7 +21,7 @@
 #include <vector>
 
 #include "control_msgs/msg/dynamic_interface_values.hpp"
-#include "control_msgs/msg/single_interface_value.hpp"
+#include "control_msgs/msg/interface_value.hpp"
 #include "hardware_interface/actuator.hpp"
 #include "hardware_interface/hardware_component_info.hpp"
 #include "hardware_interface/hardware_info.hpp"
@@ -33,9 +33,9 @@
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 #include "rclcpp/duration.hpp"
-#include "rclcpp/executor.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp/time.hpp"
+#include "realtime_tools/realtime_publisher.h"
 
 namespace hardware_interface
 {
@@ -384,13 +384,7 @@ public:
    */
   HardwareReadWriteStatus read(const rclcpp::Time & time, const rclcpp::Duration & period);
 
-  std::vector<control_msgs::msg::SingleInterfaceValue> get_all_state_interface_values() const;
-
-  void publish_all_state_interface_values() const;
-
-  std::vector<control_msgs::msg::SingleInterfaceValue> get_all_command_interface_values() const;
-
-  void publish_all_command_interface_values() const;
+  void publish_all_interface_values() const;
   /// Write all loaded hardware components.
   /**
    * Writes to all active hardware components.
@@ -424,11 +418,11 @@ private:
   mutable std::recursive_mutex claimed_command_interfaces_lock_;
   mutable std::recursive_mutex resources_lock_;
 
-  std::string interface_values_publisher_name_;
-  std::string interface_values_topic_name_;
   rclcpp::Node::SharedPtr interface_value_publisher_node_;
   rclcpp::Publisher<control_msgs::msg::DynamicInterfaceValues>::SharedPtr
     interface_values_publisher_;
+  std::unique_ptr<realtime_tools::RealtimePublisher<control_msgs::msg::DynamicInterfaceValues>>
+    rt_interface_values_publisher_;
 
   std::unique_ptr<ResourceStorage> resource_storage_;
 
