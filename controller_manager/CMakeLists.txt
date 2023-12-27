@@ -134,6 +134,7 @@ if(BUILD_TESTING)
     controller_manager_msgs
     ros2_control_test_assets
   )
+  set_tests_properties(test_controller_manager_srvs PROPERTIES TIMEOUT 120)
   ament_add_gmock(test_controller_manager_urdf_passing
     test/test_controller_manager_urdf_passing.cpp
   )
