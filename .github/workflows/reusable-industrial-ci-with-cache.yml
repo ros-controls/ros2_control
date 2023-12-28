@@ -58,22 +58,22 @@ jobs:
     steps:
       - name: Checkout ${{ inputs.ref }} when build is not scheduled
         if: ${{ github.event_name != 'schedule' }}
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Checkout ${{ inputs.ref }} on scheduled build
         if: ${{ github.event_name == 'schedule' }}
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref_for_scheduled_build }}
       - name: cache target_ws
         if: ${{ ! matrix.env.CCOV }}
-        uses: pat-s/always-upload-cache@v2.1.5
+        uses: pat-s/always-upload-cache@v3.0.11
         with:
           path: ${{ env.BASEDIR }}/target_ws
           key: target_ws-${{ env.CACHE_PREFIX }}-${{ hashFiles('**/CMakeLists.txt', '**/package.xml') }}-${{ github.run_id }}
           restore-keys: |
             target_ws-${{ env.CACHE_PREFIX }}-${{ hashFiles('**/CMakeLists.txt', '**/package.xml') }}
       - name: cache ccache
-        uses: pat-s/always-upload-cache@v2.1.5
+        uses: pat-s/always-upload-cache@v3.0.11
         with:
           path: ${{ env.CCACHE_DIR }}
           key: ccache-${{ env.CACHE_PREFIX }}-${{ github.sha }}-${{ github.run_id }}

@@ -2,6 +2,34 @@
 Changelog for package ros2controlcli
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.36.0 (2023-12-12)
+-------------------
+
+2.35.1 (2023-11-27)
+-------------------
+
+2.35.0 (2023-11-14)
+-------------------
+
+2.34.0 (2023-11-08)
+-------------------
+
+2.33.0 (2023-10-11)
+-------------------
+* Fix doc of load_controller (`#1135 <https://github.com/ros-controls/ros2_control/issues/1135>`_)
+* Contributors: Christoph Fröhlich
+
+2.32.0 (2023-10-03)
+-------------------
+
+2.31.0 (2023-09-11)
+-------------------
+
+2.30.0 (2023-08-14)
+-------------------
+* Add info where the pdf is saved to view_controller_chains (`#1094 <https://github.com/ros-controls/ros2_control/issues/1094>`_) (`#1096 <https://github.com/ros-controls/ros2_control/issues/1096>`_)
+* Contributors: Christoph Fröhlich
+
 2.29.0 (2023-07-09)
 -------------------
 
