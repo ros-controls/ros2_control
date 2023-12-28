@@ -297,7 +297,9 @@ std::vector<hardware_interface::StateInterface> GenericSystem::export_state_inte
 std::vector<hardware_interface::CommandInterface> GenericSystem::export_command_interfaces()
 {
   std::vector<hardware_interface::CommandInterface> command_interfaces;
-
+#ifdef RECORD_INTERFACES
+  channel->addDataSink(mcap_sink);
+#endif
   // Joints' state interfaces
   for (auto i = 0u; i < info_.joints.size(); i++)
   {
@@ -317,7 +319,30 @@ std::vector<hardware_interface::CommandInterface> GenericSystem::export_command_
             "Interface is not found in the standard nor other list. "
             "This should never happen!");
         }
+#ifdef RECORD_INTERFACES
+        else
+        {
+          auto it = std::find(other_interfaces_.begin(), other_interfaces_.end(), interface.name);
+          if (it != other_interfaces_.end())
+          {
+            auto j = std::distance(other_interfaces_.begin(), it);
+            channel->registerValue(joint.name + "/" + interface.name, &other_commands_[j][i]);
+          }
+        }
+#endif
       }
+#ifdef RECORD_INTERFACES
+      else
+      {
+        auto it =
+          std::find(standard_interfaces_.begin(), standard_interfaces_.end(), interface.name);
+        if (it != standard_interfaces_.end())
+        {
+          auto j = std::distance(standard_interfaces_.begin(), it);
+          channel->registerValue(joint.name + "/" + interface.name, &joint_commands_[j][i]);
+        }
+      }
+#endif
     }
   }
 

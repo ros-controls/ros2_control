@@ -4,9 +4,11 @@ project(hardware_interface)
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra)
 endif()
+option(RECORD_INTERFACES "record command interfaces with data_tamer" OFF)
 
 set(THIS_PACKAGE_INCLUDE_DEPENDS
     control_msgs
+    data_tamer
     lifecycle_msgs
     pluginlib
     rclcpp_lifecycle
@@ -46,6 +48,10 @@ add_library(
   SHARED
   src/mock_components/generic_system.cpp
 )
+if(RECORD_INTERFACES)
+  target_compile_definitions(mock_components PRIVATE RECORD_INTERFACES)
+endif()
+
 target_include_directories(
   mock_components
   PUBLIC
@@ -75,6 +81,9 @@ add_library(
   src/mock_components/generic_system.cpp
   src/mock_components/fake_generic_system.cpp
 )
+if(RECORD_INTERFACES)
+  target_compile_definitions(fake_components PRIVATE RECORD_INTERFACES)
+endif()
 target_include_directories(
   fake_components
   PUBLIC

@@ -26,6 +26,14 @@
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 
+#ifdef RECORD_INTERFACES
+#include "data_tamer/data_tamer.hpp"
+#include "data_tamer/sinks/mcap_sink.hpp"
+
+static auto mcap_sink = std::make_shared<DataTamer::MCAPSink>("/tmp/ros2_control_node.mcap");
+static auto channel = DataTamer::LogChannel::create("command_interfaces");
+#endif
+
 using hardware_interface::return_type;
 
 namespace mock_components
@@ -45,6 +53,9 @@ public:
 
   return_type write(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
   {
+#ifdef RECORD_INTERFACES
+    channel->takeSnapshot();
+#endif
     return return_type::OK;
   }
 
