@@ -24,7 +24,7 @@ namespace hardware_interface
 {
 
 /** \brief Helper function to convert a std::string to double in a locale-independent way.
- \throws std::runtime_exception if not a valid number
+ \throws std::invalid_argument if not a valid number
  * from
  https://github.com/ros-planning/srdfdom/blob/ad17b8d25812f752c397a6011cec64aeff090c46/src/model.cpp#L53
 */
