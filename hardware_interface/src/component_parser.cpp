@@ -23,6 +23,7 @@
 
 #include "hardware_interface/component_parser.hpp"
 #include "hardware_interface/hardware_info.hpp"
+#include "hardware_interface/lexical_casts.hpp"
 
 namespace
 {
@@ -614,11 +615,6 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
   }
 
   return hardware_info;
-}
-
-bool parse_bool(const std::string & bool_string)
-{
-  return bool_string == "true" || bool_string == "True";
 }
 
 }  // namespace hardware_interface

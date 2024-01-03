@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef HARDWARE_INTERFACE__DOUBLE_PARSING_HPP_
-#define HARDWARE_INTERFACE__DOUBLE_PARSING_HPP_
+#ifndef HARDWARE_INTERFACE__LEXICAL_CASTS_HPP_
+#define HARDWARE_INTERFACE__LEXICAL_CASTS_HPP_
 
 #include <locale>
 #include <sstream>
@@ -42,6 +42,11 @@ double stod(const std::string & s)
   return result;
 }
 
+bool parse_bool(const std::string & bool_string)
+{
+  return bool_string == "true" || bool_string == "True";
+}
+
 }  // namespace hardware_interface
 
-#endif  // HARDWARE_INTERFACE__DOUBLE_PARSING_HPP_
+#endif  // HARDWARE_INTERFACE__LEXICAL_CASTS_HPP_
