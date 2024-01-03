@@ -1113,7 +1113,7 @@ bool ResourceManager::prepare_command_mode_switch(
     }
     return all_exist;
   };
-  if (!check_exist(start_interfaces) || !check_exist(stop_interfaces))
+  if (!(check_exist(start_interfaces) && check_exist(stop_interfaces)))
   {
     ss_not_existing << "]" << std::endl;
     RCUTILS_LOG_ERROR_NAMED(
@@ -1138,7 +1138,7 @@ bool ResourceManager::prepare_command_mode_switch(
     }
     return all_available;
   };
-  if (!check_available(start_interfaces) || !check_available(stop_interfaces))
+  if (!(check_available(start_interfaces) && check_available(stop_interfaces)))
   {
     ss_not_available << "]" << std::endl;
     RCUTILS_LOG_ERROR_NAMED(
