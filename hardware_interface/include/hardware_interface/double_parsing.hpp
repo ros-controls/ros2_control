@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef HARDWARE_INTERFACE__HELPERS_HPP_
-#define HARDWARE_INTERFACE__HELPERS_HPP_
+#ifndef HARDWARE_INTERFACE__DOUBLE_PARSING_HPP_
+#define HARDWARE_INTERFACE__DOUBLE_PARSING_HPP_
 
 #include <locale>
 #include <sstream>
@@ -44,4 +44,4 @@ double toDouble(const std::string & s)
 
 }  // namespace hardware_interface
 
-#endif  // HARDWARE_INTERFACE__HELPERS_HPP_
+#endif  // HARDWARE_INTERFACE__DOUBLE_PARSING_HPP_
