@@ -28,7 +28,7 @@ namespace hardware_interface
  * from
  https://github.com/ros-planning/srdfdom/blob/ad17b8d25812f752c397a6011cec64aeff090c46/src/model.cpp#L53
 */
-double toDouble(const std::string & s)
+double stod(const std::string & s)
 {
   // convert from string using no locale
   std::istringstream stream(s);
