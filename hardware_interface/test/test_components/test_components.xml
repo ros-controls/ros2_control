@@ -17,4 +17,22 @@
       Test System
     </description>
   </class>
+
+  <class name="test_unitilizable_actuator" type="TestUnitilizableActuator" base_class_type="hardware_interface::ActuatorInterface">
+    <description>
+      Test Unitilizable Actuator
+    </description>
+  </class>
+
+  <class name="test_unitilizable_sensor" type="TestUnitilizableSensor" base_class_type="hardware_interface::SensorInterface">
+    <description>
+      Test Unitilizable Sensor
+    </description>
+  </class>
+
+  <class name="test_unitilizable_system" type="TestUnitilizableSystem" base_class_type="hardware_interface::SystemInterface">
+    <description>
+      Test Unitilizable System
+    </description>
+  </class>
 </library>
