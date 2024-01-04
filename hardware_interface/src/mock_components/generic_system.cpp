@@ -721,7 +721,7 @@ void GenericSystem::initialize_storage_vectors(
           auto it2 = component.parameters.find("initial_" + interface.name);
           if (it2 != component.parameters.end())
           {
-            states[index][i] = parse_double(it2->second);
+            states[index][i] = hardware_interface::stod(it2->second);
             print_hint = true;
           }
           else
