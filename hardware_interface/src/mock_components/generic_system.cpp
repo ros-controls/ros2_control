@@ -26,22 +26,12 @@
 #include <vector>
 
 #include "hardware_interface/component_parser.hpp"
+#include "hardware_interface/lexical_casts.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "rcutils/logging_macros.h"
 
 namespace mock_components
 {
-double parse_double(const std::string & text)
-{
-  double result_value;
-  const auto parse_result = std::from_chars(text.data(), text.data() + text.size(), result_value);
-  if (parse_result.ec == std::errc())
-  {
-    return result_value;
-  }
-
-  return 0.0;
-}
 
 CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & info)
 {
@@ -149,7 +139,7 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
   it = info_.hardware_parameters.find("position_state_following_offset");
   if (it != info_.hardware_parameters.end())
   {
-    position_state_following_offset_ = parse_double(it->second);
+    position_state_following_offset_ = hardware_interface::stod(it->second);
     it = info_.hardware_parameters.find("custom_interface_with_following_offset");
     if (it != info_.hardware_parameters.end())
     {
@@ -195,7 +185,7 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
       auto param_it = joint.parameters.find("multiplier");
       if (param_it != joint.parameters.end())
       {
-        mimic_joint.multiplier = parse_double(joint.parameters.at("multiplier"));
+        mimic_joint.multiplier = hardware_interface::stod(joint.parameters.at("multiplier"));
       }
       mimic_joints_.push_back(mimic_joint);
     }
@@ -723,7 +713,7 @@ void GenericSystem::initialize_storage_vectors(
         // Check the initial_value param is used
         if (!interface.initial_value.empty())
         {
-          states[index][i] = parse_double(interface.initial_value);
+          states[index][i] = hardware_interface::stod(interface.initial_value);
         }
         else
         {
