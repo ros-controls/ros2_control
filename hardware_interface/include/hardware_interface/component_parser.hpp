@@ -33,8 +33,5 @@ namespace hardware_interface
 HARDWARE_INTERFACE_PUBLIC
 std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & urdf);
 
-HARDWARE_INTERFACE_PUBLIC
-bool parse_bool(const std::string & bool_string);
-
 }  // namespace hardware_interface
 #endif  // HARDWARE_INTERFACE__COMPONENT_PARSER_HPP_
