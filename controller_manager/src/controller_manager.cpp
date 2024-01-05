@@ -310,6 +310,10 @@ ControllerManager::ControllerManager(
   {
     subscribe_to_robot_description_topic();
   }
+  else
+  {
+    init_services();
+  }
 }
 
 void ControllerManager::subscribe_to_robot_description_topic()
