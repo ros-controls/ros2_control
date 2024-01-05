@@ -41,13 +41,13 @@ public:
 
   controller_interface::return_type init(
     const std::string & controller_name, const std::string & urdf, unsigned int cm_update_rate,
-    const std::string & node_namespace_ = "",
+    const std::string & node_namespace = "",
     const rclcpp::NodeOptions & node_options =
       rclcpp::NodeOptions()
         .allow_undeclared_parameters(true)
         .automatically_declare_parameters_from_overrides(true)) override
   {
-    ControllerInterface::init(controller_name, urdf, cm_update_rate, node_namespace_, node_options);
+    ControllerInterface::init(controller_name, urdf, cm_update_rate, node_namespace, node_options);
 
     switch (on_init())
     {

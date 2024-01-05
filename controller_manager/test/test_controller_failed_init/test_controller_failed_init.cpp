@@ -33,7 +33,7 @@ TestControllerFailedInit::on_init()
 
 controller_interface::return_type TestControllerFailedInit::init(
   const std::string & /* controller_name */, const std::string & /* urdf */,
-  unsigned int /*cm_update_rate*/, const std::string & /*node_namespace_*/,
+  unsigned int /*cm_update_rate*/, const std::string & /*node_namespace*/,
   const rclcpp::NodeOptions & /*node_options*/)
 {
   return controller_interface::return_type::ERROR;
