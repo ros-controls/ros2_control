@@ -313,6 +313,10 @@ ControllerManager::ControllerManager(
     RCLCPP_WARN(get_logger(), "'update_rate' parameter not set, using default value.");
   }
 
+  if (resource_manager_->is_urdf_already_loaded())
+  {
+    init_services();
+  }
   subscribe_to_robot_description_topic();
 
   diagnostics_updater_.setHardwareID("ros2_control");
