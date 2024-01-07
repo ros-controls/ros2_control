@@ -55,5 +55,15 @@ private:
   double velocity_state_ = 0.0;
 };
 
+class TestUnitilizableSensor : public TestSensor
+{
+  CallbackReturn on_init(const hardware_interface::HardwareInfo & info) override
+  {
+    SensorInterface::on_init(info);
+    return CallbackReturn::ERROR;
+  }
+};
+
 #include "pluginlib/class_list_macros.hpp"  // NOLINT
 PLUGINLIB_EXPORT_CLASS(TestSensor, hardware_interface::SensorInterface)
+PLUGINLIB_EXPORT_CLASS(TestUnitilizableSensor, hardware_interface::SensorInterface)
