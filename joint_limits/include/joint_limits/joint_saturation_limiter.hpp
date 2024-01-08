@@ -19,6 +19,8 @@
 
 #include <memory>
 #include <string>
+#include <utility>
+#include <vector>
 
 #include "joint_limits/joint_limiter_interface.hpp"
 #include "joint_limits/joint_limits.hpp"
@@ -41,9 +43,15 @@ public:
     trajectory_msgs::msg::JointTrajectoryPoint & desired_joint_states,
     const rclcpp::Duration & dt) override;
 
-  JOINT_LIMITS_PUBLIC bool on_enforce_effort(
-    trajectory_msgs::msg::JointTrajectoryPoint & current_joint_states,
-    trajectory_msgs::msg::JointTrajectoryPoint & desired_joint_states, const rclcpp::Duration & dt);
+  /**
+   * generic function for enforcing of effort.
+   *
+   * \return std::pair<bool, std::vector<double>>, where bool shows if the limits have been enforced
+   * and the std::vector<double> contains the values
+   *
+   */
+  JOINT_LIMITS_PUBLIC std::pair<bool, std::vector<double>> on_enforce(
+    std::vector<double> desired, const rclcpp::Duration & dt);
 
 private:
   rclcpp::Clock::SharedPtr clock_;

@@ -392,23 +392,22 @@ bool JointSaturationLimiter<JointLimits>::on_enforce(
 }
 
 template <>
-bool JointSaturationLimiter<JointLimits>::on_enforce_effort(
-  trajectory_msgs::msg::JointTrajectoryPoint & current_joint_states,
-  trajectory_msgs::msg::JointTrajectoryPoint & desired_joint_states, const rclcpp::Duration & dt)
+std::pair<bool, std::vector<double>> JointSaturationLimiter<JointLimits>::on_enforce(
+  std::vector<double> desired, const rclcpp::Duration & dt)
 {
   std::vector<double> desired_effort(number_of_joints_);
   std::vector<std::string> limited_joints_effort;
+  bool limits_enforced = false;
 
-  bool has_effort_cmd = (desired_joint_states.effort.size() == number_of_joints_);
-  if (!has_effort_cmd)
+  bool has_cmd = (desired.size() == number_of_joints_);
+  if (!has_cmd)
   {
-    return false;
+    return std::make_pair(limits_enforced, desired_effort);
   }
 
-  bool limits_enforced = false;
   for (size_t index = 0; index < number_of_joints_; ++index)
   {
-    desired_effort[index] = desired_joint_states.effort[index];
+    desired_effort[index] = desired[index];
     if (joint_limits_[index].has_effort_limits)
     {
       double max_effort = joint_limits_[index].max_effort;
@@ -417,11 +416,6 @@ bool JointSaturationLimiter<JointLimits>::on_enforce_effort(
         desired_effort[index] = std::copysign(max_effort, desired_effort[index]);
         limited_joints_effort.emplace_back(joint_names_[index]);
         limits_enforced = true;
-        return true;
-      }
-      else
-      {
-        return false;
       }
     }
   }
@@ -435,10 +429,8 @@ bool JointSaturationLimiter<JointLimits>::on_enforce_effort(
       node_logging_itf_->get_logger(), *clock_, ROS_LOG_THROTTLE_PERIOD,
       "Joint(s) [" << ostr.str().c_str() << "] would exceed effort limits, limiting");
   }
-  // set desired values
-  desired_joint_states.effort = desired_effort;
 
-  return limits_enforced;
+  return std::make_pair(limits_enforced, desired_effort);
 }
 
 }  // namespace joint_limits
