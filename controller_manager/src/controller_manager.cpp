@@ -281,12 +281,12 @@ ControllerManager::ControllerManager(
       "[Deprecated] Passing the robot description parameter directly to the control_manager node "
       "is deprecated. Use '~/robot_description' topic from 'robot_state_publisher' instead.");
     init_resource_manager(robot_description);
+    init_services();
   }
 
   diagnostics_updater_.setHardwareID("ros2_control");
   diagnostics_updater_.add(
     "Controllers Activity", this, &ControllerManager::controller_activity_diagnostic_callback);
-  init_services();
 }
 
 ControllerManager::ControllerManager(
@@ -308,12 +308,15 @@ ControllerManager::ControllerManager(
     RCLCPP_WARN(get_logger(), "'update_rate' parameter not set, using default value.");
   }
 
+  if (resource_manager_->is_urdf_already_loaded())
+  {
+    init_services();
+  }
   subscribe_to_robot_description_topic();
 
   diagnostics_updater_.setHardwareID("ros2_control");
   diagnostics_updater_.add(
     "Controllers Activity", this, &ControllerManager::controller_activity_diagnostic_callback);
-  init_services();
 }
 
 void ControllerManager::subscribe_to_robot_description_topic()
@@ -346,6 +349,7 @@ void ControllerManager::robot_description_callback(const std_msgs::msg::String &
       return;
     }
     init_resource_manager(robot_description.data.c_str());
+    init_services();
   }
   catch (std::runtime_error & e)
   {
