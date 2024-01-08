@@ -346,7 +346,7 @@ public:
    * \note this is intended for mode-switching when a hardware interface needs to change
    * control mode depending on which command interface is claimed.
    * \note this is for realtime switching of the command interface.
-   * \note is is assumed that `prepare_command_mode_switch` is called just before this methods
+   * \note it is assumed that `prepare_command_mode_switch` is called just before this method
    * with the same input arguments.
    * \param[in] start_interfaces vector of string identifiers for the command interfaces starting.
    * \param[in] stop_interfaces vector of string identifiers for the command interfacs stopping.
