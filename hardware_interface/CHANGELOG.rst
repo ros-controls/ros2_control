@@ -2,6 +2,13 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* [ResourceManager] adds test for uninitialized hardware (`#1243 <https://github.com/ros-controls/ros2_control/issues/1243>`_) (`#1274 <https://github.com/ros-controls/ros2_control/issues/1274>`_)
+* Use portable version for string-to-double conversion (backport `#1257 <https://github.com/ros-controls/ros2_control/issues/1257>`_) (`#1268 <https://github.com/ros-controls/ros2_control/issues/1268>`_)
+* Fix typo in docs (`#1219 <https://github.com/ros-controls/ros2_control/issues/1219>`_) (`#1221 <https://github.com/ros-controls/ros2_control/issues/1221>`_)
+* Contributors: Christoph Fröhlich, mergify[bot]
+
 2.36.0 (2023-12-12)
 -------------------
 * Cleanup Resource Manager a bit to increase clarity. (backport `#816 <https://github.com/ros-controls/ros2_control/issues/816>`_) (`#1191 <https://github.com/ros-controls/ros2_control/issues/1191>`_)
