@@ -168,8 +168,12 @@ class ControllerManager(Plugin):
         @rtype [str]
         """
         # Add loaded controllers first
-        controllers = list_controllers(self._node, self._cm_name).controller
+        try:
+            controllers = list_controllers(
+                self._node, self._cm_name, 2.0 / self._cm_update_freq
+            ).controller
 
+<<<<<<< HEAD
         # Append potential controller configs found in the node's parameters
         for name in _get_parameter_controller_names(self._node, self._cm_name):
             add_ctrl = all(name != ctrl.name for ctrl in controllers)
@@ -179,6 +183,19 @@ class ControllerManager(Plugin):
                                               type=type_str)
                 controllers.append(uninit_ctrl)
         return controllers
+=======
+            # Append potential controller configs found in the node's parameters
+            for name in _get_parameter_controller_names(self._node, self._cm_name):
+                add_ctrl = all(name != ctrl.name for ctrl in controllers)
+                if add_ctrl:
+                    type_str = _get_controller_type(self._node, self._cm_name, name)
+                    uninit_ctrl = ControllerState(name=name, type=type_str)
+                    controllers.append(uninit_ctrl)
+            return controllers
+        except RuntimeError as e:
+            print(e)
+            return []
+>>>>>>> 2d82de8 (Fix rqt controller manager crash on ros2_control restart (#1273))
 
     def _show_controllers(self):
         table_view = self._widget.table_view
