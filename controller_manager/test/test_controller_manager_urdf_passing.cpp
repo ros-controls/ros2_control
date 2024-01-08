@@ -40,9 +40,9 @@ public:
     std::unique_ptr<hardware_interface::ResourceManager> resource_manager,
     std::shared_ptr<rclcpp::Executor> executor,
     const std::string & manager_node_name = "controller_manager",
-    const std::string & namespace_ = "")
+    const std::string & node_namespace = "")
   : controller_manager::ControllerManager(
-      std::move(resource_manager), executor, manager_node_name, namespace_)
+      std::move(resource_manager), executor, manager_node_name, node_namespace)
   {
   }
 };
