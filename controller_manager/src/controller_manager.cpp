@@ -280,12 +280,8 @@ ControllerManager::ControllerManager(
       get_logger(),
       "[Deprecated] Passing the robot description parameter directly to the control_manager node "
       "is deprecated. Use '~/robot_description' topic from 'robot_state_publisher' instead.");
-<<<<<<< HEAD
     init_resource_manager(robot_description);
-=======
-    init_resource_manager(robot_description_);
     init_services();
->>>>>>> bdad009 (Initialize the controller manager services after initializing resource manager (#1271))
   }
 
   diagnostics_updater_.setHardwareID("ros2_control");
@@ -352,12 +348,8 @@ void ControllerManager::robot_description_callback(const std_msgs::msg::String &
         "description file.");
       return;
     }
-<<<<<<< HEAD
     init_resource_manager(robot_description.data.c_str());
-=======
-    init_resource_manager(robot_description_);
     init_services();
->>>>>>> bdad009 (Initialize the controller manager services after initializing resource manager (#1271))
   }
   catch (std::runtime_error & e)
   {
