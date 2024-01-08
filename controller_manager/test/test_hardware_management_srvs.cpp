@@ -84,7 +84,9 @@ public:
         "Unable to initialize resource manager, no robot description found.");
     }
 
-    cm_->init_resource_manager(robot_description);
+    auto msg = std_msgs::msg::String();
+    msg.data = robot_description_;
+    cm_->robot_description_callback(msg);
 
     SetUpSrvsCMExecutor();
   }
@@ -383,7 +385,9 @@ public:
         "Unable to initialize resource manager, no robot description found.");
     }
 
-    cm_->init_resource_manager(robot_description);
+    auto msg = std_msgs::msg::String();
+    msg.data = robot_description_;
+    cm_->robot_description_callback(msg);
 
     SetUpSrvsCMExecutor();
   }
@@ -440,7 +444,9 @@ public:
         "Unable to initialize resource manager, no robot description found.");
     }
 
-    cm_->init_resource_manager(robot_description);
+    auto msg = std_msgs::msg::String();
+    msg.data = robot_description_;
+    cm_->robot_description_callback(msg);
 
     SetUpSrvsCMExecutor();
   }
