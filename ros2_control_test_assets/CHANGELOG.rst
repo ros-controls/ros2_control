@@ -2,8 +2,8 @@
 Changelog for package ros2_control_test_assets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.36.1 (2024-01-08)
+-------------------
 * [ResourceManager] adds test for uninitialized hardware (`#1243 <https://github.com/ros-controls/ros2_control/issues/1243>`_) (`#1274 <https://github.com/ros-controls/ros2_control/issues/1274>`_)
 * Contributors: mergify[bot]
 

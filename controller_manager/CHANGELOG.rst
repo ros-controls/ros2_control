@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.36.1 (2024-01-08)
+-------------------
 * [docs] Remove joint_state_controller (`#1263 <https://github.com/ros-controls/ros2_control/issues/1263>`_) (`#1264 <https://github.com/ros-controls/ros2_control/issues/1264>`_)
 * [CI] Increase timeout for controller_managers_srv test (backport `#1224 <https://github.com/ros-controls/ros2_control/issues/1224>`_) (`#1225 <https://github.com/ros-controls/ros2_control/issues/1225>`_)
 * Contributors: mergify[bot]
