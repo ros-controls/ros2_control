@@ -258,7 +258,7 @@ ControllerManager::ControllerManager(
   const std::string & namespace_, const rclcpp::NodeOptions & options)
 : rclcpp::Node(manager_node_name, namespace_, options),
   resource_manager_(std::make_unique<hardware_interface::ResourceManager>(
-    update_rate_, this->get_node_clock_interface())),
+    update_rate_, this->get_node_clock_interface(), get_fully_qualified_name())),
   diagnostics_updater_(this),
   executor_(executor),
   loader_(std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(

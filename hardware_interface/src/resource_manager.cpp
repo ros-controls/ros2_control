@@ -730,20 +730,22 @@ public:
 };
 
 ResourceManager::ResourceManager(
-  unsigned int update_rate, rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
+  unsigned int update_rate, rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface,
+  const std::string & fully_qualified_ctrl_mng_node_name)
 : resource_storage_(std::make_unique<ResourceStorage>(update_rate, clock_interface))
 {
-  create_interface_value_publisher();
+  create_interface_value_publisher(fully_qualified_ctrl_mng_node_name);
 }
 
 ResourceManager::~ResourceManager() = default;
 
 ResourceManager::ResourceManager(
   const std::string & urdf, bool validate_interfaces, bool activate_all, unsigned int update_rate,
-  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
+  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface,
+  const std::string & fully_qualified_ctrl_mng_node_name)
 : resource_storage_(std::make_unique<ResourceStorage>(update_rate, clock_interface))
 {
-  create_interface_value_publisher();
+  create_interface_value_publisher(fully_qualified_ctrl_mng_node_name);
   load_urdf(urdf, validate_interfaces);
 
   if (activate_all)
@@ -757,11 +759,12 @@ ResourceManager::ResourceManager(
   }
 }
 
-void ResourceManager::create_interface_value_publisher()
+void ResourceManager::create_interface_value_publisher(
+  const std::string & fully_qualified_ctrl_mng_node_name)
 {
   rclcpp::NodeOptions options;
-  interface_value_publisher_node_ =
-    rclcpp::Node::make_shared("resource_manager_publisher_node", options);
+  interface_value_publisher_node_ = rclcpp::Node::make_shared(
+    "resource_manager_publisher_node", fully_qualified_ctrl_mng_node_name, options);
   interface_values_publisher_ =
     interface_value_publisher_node_->create_publisher<control_msgs::msg::DynamicInterfaceValues>(
       "~/interface_values", 10);
@@ -1312,19 +1315,18 @@ void ResourceManager::publish_all_interface_values() const
   control_msgs::msg::InterfaceValue state_interface_values;
   for (const auto & state_interface_name : resource_storage_->available_state_interfaces_)
   {
-    try
+    if (const auto iter = resource_storage_->state_interface_map_.find(state_interface_name);
+        iter != resource_storage_->state_interface_map_.end())
     {
-      const auto state_interface_value =
-        resource_storage_->state_interface_map_.at(state_interface_name).get_value();
       state_interface_values.interface_names.push_back(state_interface_name);
-      state_interface_values.values.push_back(state_interface_value);
+      state_interface_values.values.push_back(iter->second.get_value());
     }
-    catch (const std::out_of_range & e)
+    else
     {
       RCUTILS_LOG_WARN_NAMED(
         "resource_manager",
-        "State interface '%s' is in available list, but could not get the interface "
-        "state_interface_map_ (std::out_of_range exception thrown).",
+        "State interface '%s' is in available in state_interface_map_, but could not get the "
+        "interface",
         state_interface_name.c_str());
     }
   }
@@ -1332,19 +1334,18 @@ void ResourceManager::publish_all_interface_values() const
   control_msgs::msg::InterfaceValue command_interface_values;
   for (const auto & command_interface_name : resource_storage_->available_command_interfaces_)
   {
-    try
+    if (const auto iter = resource_storage_->command_interface_map_.find(command_interface_name);
+        iter != resource_storage_->command_interface_map_.end())
     {
-      const auto command_interface_value =
-        resource_storage_->command_interface_map_.at(command_interface_name).get_value();
       command_interface_values.interface_names.push_back(command_interface_name);
-      command_interface_values.values.push_back(command_interface_value);
+      command_interface_values.values.push_back(iter->second.get_value());
     }
-    catch (const std::out_of_range & e)
+    else
     {
       RCUTILS_LOG_WARN_NAMED(
         "resource_manager",
-        "command interface '%s' is in available list, but could not get the interface "
-        "command_interface_map_ (std::out_of_range exception thrown).",
+        "command interface '%s' is available in command_interface_map_, but could not get the "
+        "interface",
         command_interface_name.c_str());
     }
   }
