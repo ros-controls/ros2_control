@@ -68,6 +68,7 @@ public:
   FRIEND_TEST(ResourceManagerTest, post_initialization_add_components);
   FRIEND_TEST(ResourceManagerTest, managing_controllers_reference_interfaces);
   FRIEND_TEST(ResourceManagerTest, resource_availability_and_claiming_in_lifecycle);
+  FRIEND_TEST(ResourceManagerTest, test_unitilizable_hardware_no_validation);
 
   TestableResourceManager() : hardware_interface::ResourceManager() {}
 
@@ -151,6 +152,45 @@ TEST_F(ResourceManagerTest, post_initialization_with_urdf)
 {
   TestableResourceManager rm;
   ASSERT_NO_THROW(rm.load_urdf(ros2_control_test_assets::minimal_robot_urdf));
+}
+
+TEST_F(ResourceManagerTest, test_unitilizable_hardware_validation)
+{
+  // If the the hardware can not be initialized and load_urdf tried to validate the interfaces a
+  // runtime exception is thrown
+  TestableResourceManager rm;
+  ASSERT_THROW(
+    rm.load_urdf(ros2_control_test_assets::minimal_unitilizable_robot_urdf, true),
+    std::runtime_error);
+}
+
+TEST_F(ResourceManagerTest, test_unitilizable_hardware_no_validation)
+{
+  // If the the hardware can not be initialized and load_urdf didn't try to validate the interfaces,
+  // the interface should not show up
+  TestableResourceManager rm;
+  EXPECT_NO_THROW(rm.load_urdf(ros2_control_test_assets::minimal_unitilizable_robot_urdf, false));
+
+  // test actuator
+  EXPECT_FALSE(rm.state_interface_exists("joint1/position"));
+  EXPECT_FALSE(rm.state_interface_exists("joint1/velocity"));
+  EXPECT_FALSE(rm.command_interface_exists("joint1/position"));
+  EXPECT_FALSE(rm.command_interface_exists("joint1/max_velocity"));
+
+  // test sensor
+  EXPECT_FALSE(rm.state_interface_exists("sensor1/velocity"));
+
+  // test system
+  EXPECT_FALSE(rm.state_interface_exists("joint2/position"));
+  EXPECT_FALSE(rm.state_interface_exists("joint2/velocity"));
+  EXPECT_FALSE(rm.state_interface_exists("joint2/acceleration"));
+  EXPECT_FALSE(rm.command_interface_exists("joint2/velocity"));
+  EXPECT_FALSE(rm.command_interface_exists("joint2/max_acceleration"));
+  EXPECT_FALSE(rm.state_interface_exists("joint3/position"));
+  EXPECT_FALSE(rm.state_interface_exists("joint3/velocity"));
+  EXPECT_FALSE(rm.state_interface_exists("joint3/acceleration"));
+  EXPECT_FALSE(rm.command_interface_exists("joint3/velocity"));
+  EXPECT_FALSE(rm.command_interface_exists("joint3/max_acceleration"));
 }
 
 TEST_F(ResourceManagerTest, initialization_with_urdf_manual_validation)
