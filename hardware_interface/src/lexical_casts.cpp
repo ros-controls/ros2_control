@@ -16,8 +16,10 @@
 
 namespace hardware_interface
 {
+
+#if __cplusplus > 201402L
 double stod(const std::string & s)
-{
+{ 
   // convert from string using no locale
   std::istringstream stream(s);
   stream.imbue(std::locale::classic());
@@ -29,7 +31,19 @@ double stod(const std::string & s)
   }
   return result;
 }
+#else
+double stod(const std::string & text)
+{
+  double result_value;
+  const auto parse_result = std::from_chars(text.data(), text.data() + text.size(), result_value);
+  if (parse_result.ec == std::errc())
+  {
+    return result_value;
+  }
 
+  return 0.0;
+}
+#endif
 bool parse_bool(const std::string & bool_string)
 {
   return bool_string == "true" || bool_string == "True";
