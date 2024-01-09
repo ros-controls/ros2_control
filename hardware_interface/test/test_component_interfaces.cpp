@@ -496,12 +496,12 @@ TEST(TestComponentInterfaces, dummy_actuator)
   // Noting should change because it is FINALIZED
   for (auto step = 0u; step < 10; ++step)
   {
-    ASSERT_EQ(hardware_interface::return_type::ERROR, actuator_hw.read(TIME, PERIOD));
+    ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.read(TIME, PERIOD));
 
     EXPECT_EQ(20 * velocity_value, state_interfaces[0].get_value());  // position value
     EXPECT_EQ(0, state_interfaces[1].get_value());                    // velocity
 
-    ASSERT_EQ(hardware_interface::return_type::ERROR, actuator_hw.write(TIME, PERIOD));
+    ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.write(TIME, PERIOD));
   }
 
   EXPECT_EQ(
@@ -649,7 +649,7 @@ TEST(TestComponentInterfaces, dummy_system)
   // Noting should change because it is FINALIZED
   for (auto step = 0u; step < 10; ++step)
   {
-    ASSERT_EQ(hardware_interface::return_type::ERROR, system_hw.read(TIME, PERIOD));
+    ASSERT_EQ(hardware_interface::return_type::OK, system_hw.read(TIME, PERIOD));
 
     EXPECT_EQ(20 * velocity_value, state_interfaces[0].get_value());  // position value
     EXPECT_EQ(0.0, state_interfaces[1].get_value());                  // velocity
@@ -658,7 +658,7 @@ TEST(TestComponentInterfaces, dummy_system)
     EXPECT_EQ(20 * velocity_value, state_interfaces[4].get_value());  // position value
     EXPECT_EQ(0.0, state_interfaces[5].get_value());                  // velocity
 
-    ASSERT_EQ(hardware_interface::return_type::ERROR, system_hw.write(TIME, PERIOD));
+    ASSERT_EQ(hardware_interface::return_type::OK, system_hw.write(TIME, PERIOD));
   }
 
   EXPECT_EQ(hardware_interface::return_type::OK, system_hw.prepare_command_mode_switch({}, {}));
@@ -841,6 +841,12 @@ TEST(TestComponentInterfaces, dummy_sensor_read_error_behavior)
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
 
+  // Noting should change because it is UNCONFIGURED
+  for (auto step = 0u; step < 10; ++step)
+  {
+    ASSERT_EQ(hardware_interface::return_type::OK, sensor_hw.read(TIME, PERIOD));
+  }
+
   // activate again and expect reset values
   state = sensor_hw.configure();
   EXPECT_EQ(state_interfaces[0].get_value(), 0.0);
@@ -859,6 +865,12 @@ TEST(TestComponentInterfaces, dummy_sensor_read_error_behavior)
   state = sensor_hw.get_state();
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::FINALIZED, state.label());
+
+  // Noting should change because it is FINALIZED
+  for (auto step = 0u; step < 10; ++step)
+  {
+    ASSERT_EQ(hardware_interface::return_type::OK, sensor_hw.read(TIME, PERIOD));
+  }
 
   // can not change state anymore
   state = sensor_hw.configure();
