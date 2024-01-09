@@ -1147,7 +1147,7 @@ bool ResourceManager::prepare_command_mode_switch(
     return false;
   }
 
-  auto call_method_on_components =
+  auto call_prepare_mode_switch =
     [&start_interfaces, &stop_interfaces, &interfaces_to_string](auto & components)
   {
     bool ret = true;
@@ -1172,8 +1172,8 @@ bool ResourceManager::prepare_command_mode_switch(
     return ret;
   };
 
-  const bool actuators_result = call_method_on_components(resource_storage_->actuators_);
-  const bool systems_result = call_method_on_components(resource_storage_->systems_);
+  const bool actuators_result = call_prepare_mode_switch(resource_storage_->actuators_);
+  const bool systems_result = call_prepare_mode_switch(resource_storage_->systems_);
 
   return actuators_result && systems_result;
 }
@@ -1189,7 +1189,7 @@ bool ResourceManager::perform_command_mode_switch(
     return true;
   }
 
-  auto call_method_on_components = [&start_interfaces, &stop_interfaces](auto & components)
+  auto call_perform_mode_switch = [&start_interfaces, &stop_interfaces](auto & components)
   {
     bool ret = true;
     for (auto & component : components)
@@ -1212,8 +1212,8 @@ bool ResourceManager::perform_command_mode_switch(
     return ret;
   };
 
-  const bool actuators_result = call_method_on_components(resource_storage_->actuators_);
-  const bool systems_result = call_method_on_components(resource_storage_->systems_);
+  const bool actuators_result = call_perform_mode_switch(resource_storage_->actuators_);
+  const bool systems_result = call_perform_mode_switch(resource_storage_->systems_);
 
   return actuators_result && systems_result;
 }
