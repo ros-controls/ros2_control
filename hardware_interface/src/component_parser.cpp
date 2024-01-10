@@ -24,6 +24,8 @@
 #include "hardware_interface/component_parser.hpp"
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/lexical_casts.hpp"
+#include "hardware_interface/types/hardware_interface_type_values.hpp"
+#include "urdf/model.h"
 
 namespace
 {
@@ -609,6 +611,60 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
   {
     hardware_info.push_back(detail::parse_resource_from_xml(ros2_control_it, urdf));
     ros2_control_it = ros2_control_it->NextSiblingElement(kROS2ControlTag);
+  }
+
+  // Retrieve the limits from the URDF joints as well as the ros2_control command interface tags
+  auto update_interface_limits = [](const urdf::JointConstSharedPtr & urdf_joint, auto & interfaces)
+  {
+    for (auto & itr : interfaces)
+    {
+      if (itr.name == hardware_interface::HW_IF_POSITION)
+      {
+        itr.limits.min = urdf_joint->limits->lower;
+        itr.limits.max = urdf_joint->limits->upper;
+      }
+      else if (itr.name == hardware_interface::HW_IF_VELOCITY)
+      {
+        itr.limits.min = -1.0 * urdf_joint->limits->velocity;
+        itr.limits.max = urdf_joint->limits->velocity;
+      }
+      else if (itr.name == hardware_interface::HW_IF_EFFORT)
+      {
+        itr.limits.min = -1.0 * urdf_joint->limits->effort;
+        itr.limits.max = urdf_joint->limits->effort;
+      }
+      else  // Acceleration and other custom types interfaces can use the standard min and max tags
+      {
+        if (!itr.min.empty())
+        {
+          itr.limits.min = hardware_interface::stod(itr.min);
+        }
+        if (!itr.max.empty())
+        {
+          itr.limits.max = hardware_interface::stod(itr.max);
+        }
+      }
+    }
+  };
+
+  // Parse robot_description to URDF Model
+  urdf::Model model;
+  if (!model.initString(urdf))
+  {
+    throw std::runtime_error("Failed to parse URDF file");
+  }
+  for (auto & hw_info : hardware_info)
+  {
+    for (auto & joint_info : hw_info.joints)
+    {
+      auto urdf_joint = model.getJoint(joint_info.name);
+      if (!urdf_joint)
+      {
+        throw std::runtime_error("Joint " + joint_info.name + " not found in URDF");
+      }
+      update_interface_limits(urdf_joint, joint_info.command_interfaces);
+      update_interface_limits(urdf_joint, joint_info.state_interfaces);
+    }
   }
 
   return hardware_info;
