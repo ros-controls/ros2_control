@@ -15,12 +15,19 @@
 #ifndef HARDWARE_INTERFACE__HARDWARE_INFO_HPP_
 #define HARDWARE_INTERFACE__HARDWARE_INFO_HPP_
 
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
 namespace hardware_interface
 {
+struct Limits
+{
+  std::optional<double> min = std::nullopt;
+  std::optional<double> max = std::nullopt;
+};
+
 /**
  * This structure stores information about components defined for a specific hardware
  * in robot's URDF.
@@ -42,6 +49,9 @@ struct InterfaceInfo
   std::string data_type;
   /// (Optional) If the handle is an array, the size of the array. Used by GPIOs.
   int size;
+  /// (Optional) Stores the information of the limits of the interfaces such as "position",
+  /// "velocity" etc from the URDF
+  Limits limits;
 };
 
 /**
