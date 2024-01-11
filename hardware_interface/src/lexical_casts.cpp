@@ -16,7 +16,6 @@
 
 namespace hardware_interface
 {
-
 double stod(const std::string & s)
 #if __cplusplus > 201703L
 {
