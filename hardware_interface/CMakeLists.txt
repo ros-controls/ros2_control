@@ -82,6 +82,10 @@ if(BUILD_TESTING)
   target_link_libraries(test_component_interfaces_custom_export hardware_interface)
   ament_target_dependencies(test_component_interfaces_custom_export ros2_control_test_assets)
 
+  ament_add_gmock(test_error_warning_codes test/test_error_warning_codes.cpp)
+  target_link_libraries(test_error_warning_codes hardware_interface)
+  ament_target_dependencies(test_error_warning_codes ros2_control_test_assets)
+
   ament_add_gmock(test_component_parser test/test_component_parser.cpp)
   target_link_libraries(test_component_parser hardware_interface)
   ament_target_dependencies(test_component_parser ros2_control_test_assets)

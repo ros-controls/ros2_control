@@ -15,6 +15,7 @@
 #ifndef HARDWARE_INTERFACE__HANDLE_HPP_
 #define HARDWARE_INTERFACE__HANDLE_HPP_
 
+#include <array>
 #include <limits>
 #include <memory>
 #include <string>
@@ -23,8 +24,9 @@
 
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/macros.hpp"
+#include "hardware_interface/types/hardware_interface_error_signals.hpp"
+#include "hardware_interface/types/hardware_interface_warning_signals.hpp"
 #include "hardware_interface/visibility_control.h"
-
 namespace hardware_interface
 {
 

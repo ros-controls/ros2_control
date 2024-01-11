@@ -25,7 +25,9 @@
 #include "hardware_interface/component_parser.hpp"
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/hardware_info.hpp"
+#include "hardware_interface/types/hardware_interface_error_signals.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
+#include "hardware_interface/types/hardware_interface_warning_signals.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 #include "rclcpp/duration.hpp"
@@ -102,6 +104,7 @@ public:
   {
     info_ = hardware_info;
     import_state_interface_descriptions(info_);
+    create_report_interfaces();
     return CallbackReturn::SUCCESS;
   };
 
@@ -117,6 +120,45 @@ public:
     {
       sensor_state_interfaces_.insert(std::make_pair(description.get_name(), description));
     }
+  }
+
+  /**
+   * Creates all interfaces used for reporting warning and error messages.
+   * The available report interfaces are: ERROR_SIGNAL, ERROR_SIGNAL_MESSAGE,
+   * WARNING_SIGNAL and WARNING_SIGNAL_MESSAGE. Where the <report_type>_MESSAGE hold the message for
+   * the corresponding report signal.
+   * The interfaces are named like <hardware_name>/<report_interface_type>. E.g. if hardware is
+   * called sensor_1 -> interface for WARNING_SIGNAL is called: sensor_1/WARNING_SIGNAL
+   */
+  void create_report_interfaces()
+  {
+    // ERROR
+    // create error signal interface
+    InterfaceInfo error_interface_info;
+    error_interface_info.name = hardware_interface::ERROR_SIGNAL_INTERFACE_NAME;
+    error_interface_info.data_type = "std::array<uint8_t>";
+    InterfaceDescription error_interface_descr(info_.name, error_interface_info);
+    error_signal_ = std::make_shared<StateInterface>(error_interface_descr);
+    // create error signal report message interface
+    InterfaceInfo error_msg_interface_info;
+    error_msg_interface_info.name = hardware_interface::ERROR_SIGNAL_MESSAGE_INTERFACE_NAME;
+    error_msg_interface_info.data_type = "std::array<std::string>";
+    InterfaceDescription error_msg_interface_descr(info_.name, error_msg_interface_info);
+    error_signal_message_ = std::make_shared<StateInterface>(error_msg_interface_descr);
+
+    // WARNING
+    //  create warning signal interface
+    InterfaceInfo warning_interface_info;
+    warning_interface_info.name = hardware_interface::WARNING_SIGNAL_INTERFACE_NAME;
+    warning_interface_info.data_type = "std::array<uint8_t>";
+    InterfaceDescription warning_interface_descr(info_.name, warning_interface_info);
+    warning_signal_ = std::make_shared<StateInterface>(warning_interface_descr);
+    // create warning signal report message interface
+    InterfaceInfo warning_msg_interface_info;
+    warning_msg_interface_info.name = hardware_interface::WARNING_SIGNAL_MESSAGE_INTERFACE_NAME;
+    warning_msg_interface_info.data_type = "std::array<std::string>";
+    InterfaceDescription warning_msg_interface_descr(info_.name, warning_msg_interface_info);
+    warning_signal_message_ = std::make_shared<StateInterface>(warning_msg_interface_descr);
   }
 
   /// Exports all state interfaces for this hardware interface.
@@ -194,6 +236,12 @@ public:
       state_interfaces.push_back(state_interface);
     }
 
+    // export warning signal interfaces
+    state_interfaces.push_back(error_signal_);
+    state_interfaces.push_back(error_signal_message_);
+    state_interfaces.push_back(warning_signal_);
+    state_interfaces.push_back(warning_signal_message_);
+
     return state_interfaces;
   }
 
@@ -237,11 +285,39 @@ public:
     return sensor_states_.at(interface_name)->get_value();
   }
 
+  void set_error_code(const double & error_code) { error_signal_->set_value(error_code); }
+
+  double get_error_code() const { return error_signal_->get_value(); }
+
+  void set_error_message(const double & error_message)
+  {
+    error_signal_message_->set_value(error_message);
+  }
+
+  double get_error_message() const { return error_signal_message_->get_value(); }
+
+  void set_warning_code(const double & warning_codes) { warning_signal_->set_value(warning_codes); }
+
+  double get_warning_code() const { return warning_signal_->get_value(); }
+
+  void set_warning_message(const double & error_message)
+  {
+    warning_signal_message_->set_value(error_message);
+  }
+
+  double get_warning_message() const { return warning_signal_message_->get_value(); }
+
 protected:
   HardwareInfo info_;
 
   std::unordered_map<std::string, InterfaceDescription> sensor_state_interfaces_;
   std::unordered_map<std::string, InterfaceDescription> unlisted_state_interfaces_;
+
+private:
+  std::shared_ptr<StateInterface> error_signal_;
+  std::shared_ptr<StateInterface> error_signal_message_;
+  std::shared_ptr<StateInterface> warning_signal_;
+  std::shared_ptr<StateInterface> warning_signal_message_;
 
   rclcpp_lifecycle::State lifecycle_state_;
 
