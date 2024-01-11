@@ -32,7 +32,6 @@ double stod(const std::string & s)
   return result;
 }
 #else
-double stod(const std::string & text)
 {
   double result_value;
   const auto parse_result = std::from_chars(text.data(), text.data() + text.size(), result_value);
