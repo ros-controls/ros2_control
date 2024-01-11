@@ -17,8 +17,8 @@
 namespace hardware_interface
 {
 
-#if __cplusplus > 201402L
 double stod(const std::string & s)
+#if __cplusplus > 201703L
 {
   // convert from string using no locale
   std::istringstream stream(s);
