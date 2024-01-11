@@ -41,8 +41,8 @@ double stod(const std::string & s)
   }
 
   return 0.0;
-}
 #endif
+}
 bool parse_bool(const std::string & bool_string)
 {
   return bool_string == "true" || bool_string == "True";
