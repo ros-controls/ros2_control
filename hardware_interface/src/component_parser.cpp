@@ -618,32 +618,43 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
   {
     for (auto & itr : interfaces)
     {
+      Limits limits;
       if (itr.name == hardware_interface::HW_IF_POSITION)
       {
-        itr.limits.min = urdf_joint->limits->lower;
-        itr.limits.max = urdf_joint->limits->upper;
+        limits.min = urdf_joint->limits->lower;
+        limits.max = urdf_joint->limits->upper;
       }
       else if (itr.name == hardware_interface::HW_IF_VELOCITY)
       {
-        itr.limits.min = -1.0 * urdf_joint->limits->velocity;
-        itr.limits.max = urdf_joint->limits->velocity;
+        limits.min = -1.0 * urdf_joint->limits->velocity;
+        limits.max = urdf_joint->limits->velocity;
       }
       else if (itr.name == hardware_interface::HW_IF_EFFORT)
       {
-        itr.limits.min = -1.0 * urdf_joint->limits->effort;
-        itr.limits.max = urdf_joint->limits->effort;
+        limits.min = -1.0 * urdf_joint->limits->effort;
+        limits.max = urdf_joint->limits->effort;
       }
       else  // Acceleration and other custom types interfaces can use the standard min and max tags
       {
-        if (!itr.min.empty())
+        try
         {
-          itr.limits.min = hardware_interface::stod(itr.min);
+          if (!itr.min.empty())
+          {
+            limits.min = hardware_interface::stod(itr.min);
+          }
+          if (!itr.max.empty())
+          {
+            limits.max = hardware_interface::stod(itr.max);
+          }
         }
-        if (!itr.max.empty())
+        catch (const std::invalid_argument & err)
         {
-          itr.limits.max = hardware_interface::stod(itr.max);
+          std::cerr << "Error parsing the limits for the interface : " << itr.name
+                    << "from the tags [" << kMinTag << " and " << kMaxTag << "] within "
+                    << kROS2ControlTag << " tag inside the URDF" << std::endl;
         }
       }
+      itr.limits = limits;
     }
   };
 

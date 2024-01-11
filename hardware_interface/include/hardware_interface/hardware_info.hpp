@@ -15,6 +15,7 @@
 #ifndef HARDWARE_INTERFACE__HARDWARE_INFO_HPP_
 #define HARDWARE_INTERFACE__HARDWARE_INFO_HPP_
 
+#include <limits>
 #include <optional>
 #include <string>
 #include <unordered_map>
@@ -24,8 +25,8 @@ namespace hardware_interface
 {
 struct Limits
 {
-  std::optional<double> min = std::nullopt;
-  std::optional<double> max = std::nullopt;
+  double min = std::numeric_limits<double>::quiet_NaN();
+  double max = std::numeric_limits<double>::quiet_NaN();
 };
 
 /**
@@ -51,7 +52,7 @@ struct InterfaceInfo
   int size;
   /// (Optional) Stores the information of the limits of the interfaces such as "position",
   /// "velocity" etc from the URDF
-  Limits limits;
+  std::optional<Limits> limits = std::nullopt;
 };
 
 /**
