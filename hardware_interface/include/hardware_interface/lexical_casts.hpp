@@ -16,6 +16,7 @@
 #define HARDWARE_INTERFACE__LEXICAL_CASTS_HPP_
 
 #include <locale>
+#include <optional>
 #include <sstream>
 #include <stdexcept>
 #include <string>
