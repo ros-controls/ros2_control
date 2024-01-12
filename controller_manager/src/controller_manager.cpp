@@ -404,13 +404,6 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
   // BEGIN: Keep old functionality on for backwards compatibility (Remove at the end of 2023)
   std::vector<std::string> configure_components_on_start = std::vector<std::string>({});
   get_parameter("configure_components_on_start", configure_components_on_start);
-<<<<<<< HEAD
-  rclcpp_lifecycle::State inactive_state(
-    State::PRIMARY_STATE_INACTIVE, hardware_interface::lifecycle_state_names::INACTIVE);
-  for (const auto & component : configure_components_on_start)
-  {
-    resource_manager_->set_component_state(component, inactive_state);
-=======
   if (!configure_components_on_start.empty())
   {
     RCLCPP_WARN(
@@ -431,7 +424,6 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
       "hardware_components_initial_state.inactive",
       rclcpp_lifecycle::State(
         State::PRIMARY_STATE_INACTIVE, hardware_interface::lifecycle_state_names::INACTIVE));
->>>>>>> cf4448d (Enable setting of initial state in HW compoments (#1046))
   }
 
   // BEGIN: Keep old functionality on for backwards compatibility (Remove at the end of 2023)
@@ -439,18 +431,10 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
   get_parameter("activate_components_on_start", activate_components_on_start);
   rclcpp_lifecycle::State active_state(
     State::PRIMARY_STATE_ACTIVE, hardware_interface::lifecycle_state_names::ACTIVE);
-<<<<<<< HEAD
-  for (const auto & component : activate_components_on_start)
-  {
-    resource_manager_->set_component_state(component, active_state);
   }
 
   // if both parameter are empty or non-existing preserve behavior where all components are
   // activated per default
-  if (configure_components_on_start.empty() && activate_components_on_start.empty())
-  {
-    resource_manager_->activate_all_components();
-=======
   if (!activate_components_on_start.empty())
   {
     RCLCPP_WARN(
@@ -475,7 +459,6 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
         State::PRIMARY_STATE_ACTIVE, hardware_interface::lifecycle_state_names::ACTIVE);
       resource_manager_->set_component_state(component, active_state);
     }
->>>>>>> cf4448d (Enable setting of initial state in HW compoments (#1046))
   }
 }
 

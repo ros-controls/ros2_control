@@ -365,15 +365,6 @@ public:
    */
   void write(const rclcpp::Time & time, const rclcpp::Duration & period);
 
-<<<<<<< HEAD
-  /// Activates all available hardware components in the system.
-  /**
-   * All available hardware components int the ros2_control framework are activated.
-   * This is used to preserve default behavior from previous versions where all hardware components
-   * are activated per default.
-   */
-  void activate_all_components();
-=======
   /// Checks whether a command interface is registered under the given key.
   /**
    * \param[in] key string identifying the interface to check.
@@ -386,7 +377,6 @@ public:
    * \return true if interface exist, false otherwise.
    */
   bool state_interface_exists(const std::string & key) const;
->>>>>>> cf4448d (Enable setting of initial state in HW compoments (#1046))
 
 private:
   void validate_storage(const std::vector<hardware_interface::HardwareInfo> & hardware_info) const;

@@ -1189,10 +1189,6 @@ void ResourceManager::validate_storage(
   }
 }
 
-<<<<<<< HEAD
-// Temporary method to keep old interface and reduce framework changes in PRs
-void ResourceManager::activate_all_components()
-{
   using lifecycle_msgs::msg::State;
   rclcpp_lifecycle::State active_state(
     State::PRIMARY_STATE_ACTIVE, hardware_interface::lifecycle_state_names::ACTIVE);
@@ -1207,11 +1203,6 @@ void ResourceManager::activate_all_components()
   }
   for (auto & component : resource_storage_->systems_)
   {
-    set_component_state(component.get_name(), active_state);
-  }
-}
-=======
 // END: private methods
->>>>>>> cf4448d (Enable setting of initial state in HW compoments (#1046))
 
 }  // namespace hardware_interface
