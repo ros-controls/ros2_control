@@ -32,12 +32,12 @@ def generate_load_controller_launch_description(controller_name,
     Examples # noqa: D416
     --------
       # Assuming the controller type and controller parameters are known to the controller_manager
-      generate_load_controller_launch_description('joint_state_controller')
+      generate_load_controller_launch_description('joint_state_broadcaster')
 
       # Passing controller type and controller parameter file to load
       generate_load_controller_launch_description(
-        'joint_state_controller',
-        controller_type='joint_state_controller/JointStateController',
+        'joint_state_broadcaster',
+        controller_type='joint_state_broadcaster/JointStateBroadcaster',
         controller_params_file=os.path.join(get_package_share_directory('my_pkg'),
                                             'config', 'controller_params.yaml')
         )

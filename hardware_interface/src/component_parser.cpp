@@ -23,6 +23,7 @@
 
 #include "hardware_interface/component_parser.hpp"
 #include "hardware_interface/hardware_info.hpp"
+#include "hardware_interface/lexical_casts.hpp"
 
 namespace
 {
@@ -135,7 +136,7 @@ double get_parameter_value_or(
         const auto tag_text = params_it->GetText();
         if (tag_text)
         {
-          return std::stod(tag_text);
+          return hardware_interface::stod(tag_text);
         }
       }
     }
@@ -591,11 +592,6 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
   }
 
   return hardware_info;
-}
-
-bool parse_bool(const std::string & bool_string)
-{
-  return bool_string == "true" || bool_string == "True";
 }
 
 }  // namespace hardware_interface

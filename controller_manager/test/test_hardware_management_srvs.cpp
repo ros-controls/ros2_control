@@ -84,7 +84,9 @@ public:
         "Unable to initialize resource manager, no robot description found.");
     }
 
-    cm_->init_resource_manager(robot_description);
+    auto msg = std_msgs::msg::String();
+    msg.data = robot_description;
+    cm_->robot_description_callback(msg);
 
     SetUpSrvsCMExecutor();
   }
@@ -199,6 +201,38 @@ public:
 
     auto result = call_service_and_wait(*mha_client, request, srv_executor);
     return result->ok;
+  }
+};
+
+class TestControllerManagerHWManagementSrvsWithoutParams
+: public TestControllerManagerHWManagementSrvs
+{
+public:
+  void SetUp() override
+  {
+    executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
+    cm_ = std::make_shared<controller_manager::ControllerManager>(
+      std::make_unique<hardware_interface::ResourceManager>(), executor_, TEST_CM_NAME);
+    run_updater_ = false;
+
+    // TODO(destogl): separate this to init_tests method where parameter can be set for each test
+    // separately
+    cm_->set_parameter(
+      rclcpp::Parameter("robot_description", ros2_control_test_assets::minimal_robot_urdf));
+
+    std::string robot_description = "";
+    cm_->get_parameter("robot_description", robot_description);
+    if (robot_description.empty())
+    {
+      throw std::runtime_error(
+        "Unable to initialize resource manager, no robot description found.");
+    }
+
+    auto msg = std_msgs::msg::String();
+    msg.data = robot_description;
+    cm_->robot_description_callback(msg);
+
+    SetUpSrvsCMExecutor();
   }
 };
 
@@ -413,7 +447,7 @@ TEST_F(TestControllerManagerHWManagementSrvsWithoutParams, test_default_activati
     }));
 }
 
-// BEGIN: Remove at the end of 2023
+// BEGIN: Deprecated parameters
 class TestControllerManagerHWManagementSrvsOldParameters
 : public TestControllerManagerHWManagementSrvs
 {
@@ -470,4 +504,4 @@ TEST_F(TestControllerManagerHWManagementSrvsOldParameters, list_hardware_compone
       {{false, false, false, false}, {false, false, false, false, false, false, false}},  // system
     }));
 }
-// END: Remove at the end of 2023
+// END: Deprecated parameters

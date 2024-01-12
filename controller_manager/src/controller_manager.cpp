@@ -284,9 +284,8 @@ ControllerManager::ControllerManager(
       "[Deprecated] Passing the robot description parameter directly to the control_manager node "
       "is deprecated. Use '~/robot_description' topic from 'robot_state_publisher' instead.");
     init_resource_manager(robot_description);
+    init_services();
   }
-
-  init_services();
 }
 
 ControllerManager::ControllerManager(
@@ -311,7 +310,10 @@ ControllerManager::ControllerManager(
   {
     subscribe_to_robot_description_topic();
   }
-  init_services();
+  else
+  {
+    init_services();
+  }
 }
 
 void ControllerManager::subscribe_to_robot_description_topic()
@@ -343,6 +345,7 @@ void ControllerManager::robot_description_callback(const std_msgs::msg::String &
       return;
     }
     init_resource_manager(robot_description.data.c_str());
+    init_services();
   }
   catch (std::runtime_error & e)
   {
@@ -401,14 +404,14 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
       State::PRIMARY_STATE_UNCONFIGURED, hardware_interface::lifecycle_state_names::UNCONFIGURED));
 
   // inactive (configured)
-  // BEGIN: Keep old functionality on for backwards compatibility (Remove at the end of 2023)
+  // BEGIN: Keep old functionality on for backwards compatibility
   std::vector<std::string> configure_components_on_start = std::vector<std::string>({});
   get_parameter("configure_components_on_start", configure_components_on_start);
   if (!configure_components_on_start.empty())
   {
     RCLCPP_WARN(
       get_logger(),
-      "Parameter 'configure_components_on_start' is deprecated. "
+      "[Deprecated]: Parameter 'configure_components_on_start' is deprecated. "
       "Use 'hardware_interface_state_after_start.inactive' instead, to set component's initial "
       "state to 'inactive'. Don't use this parameters in combination with the new "
       "'hardware_interface_state_after_start' parameter structure.");
@@ -426,18 +429,16 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
         State::PRIMARY_STATE_INACTIVE, hardware_interface::lifecycle_state_names::INACTIVE));
   }
 
-  // BEGIN: Keep old functionality on for backwards compatibility (Remove at the end of 2023)
+  // BEGIN: Keep old functionality on for backwards compatibility
   std::vector<std::string> activate_components_on_start = std::vector<std::string>({});
   get_parameter("activate_components_on_start", activate_components_on_start);
-  rclcpp_lifecycle::State active_state(
-    State::PRIMARY_STATE_ACTIVE, hardware_interface::lifecycle_state_names::ACTIVE);
   if (!activate_components_on_start.empty())
   {
     RCLCPP_WARN(
       get_logger(),
-      "Parameter 'activate_components_on_start' is deprecated. "
+      "[Deprecated]: Parameter 'activate_components_on_start' is deprecated. "
       "Components are activated per default. Don't use this parameters in combination with the new "
-      "'hardware_interface_state_after_start' parameter structure.");
+      "'hardware_components_initial_state' parameter structure.");
     rclcpp_lifecycle::State active_state(
       State::PRIMARY_STATE_ACTIVE, hardware_interface::lifecycle_state_names::ACTIVE);
     for (const auto & component : activate_components_on_start)
@@ -763,7 +764,7 @@ controller_interface::return_type ControllerManager::configure_controller(
   to = from;
 
   // Reordering the controllers
-  std::sort(
+  std::stable_sort(
     to.begin(), to.end(),
     std::bind(
       &ControllerManager::controller_sorting, this, std::placeholders::_1, std::placeholders::_2,
@@ -2363,7 +2364,16 @@ bool ControllerManager::controller_sorting(
   {
     // The case of the controllers that don't have any command interfaces. For instance,
     // joint_state_broadcaster
-    return true;
+    // If the controller b is also under the same condition, then maintain their initial order
+    if (ctrl_b.c->command_interface_configuration().names.empty() || !ctrl_b.c->is_chainable())
+      return false;
+    else
+      return true;
+  }
+  else if (ctrl_b.c->command_interface_configuration().names.empty() || !ctrl_b.c->is_chainable())
+  {
+    // If only the controller b is a broadcaster or non chainable type , then swap the controllers
+    return false;
   }
   else
   {

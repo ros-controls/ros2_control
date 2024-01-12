@@ -2,6 +2,20 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.36.1 (2024-01-08)
+-------------------
+* [docs] Remove joint_state_controller (`#1263 <https://github.com/ros-controls/ros2_control/issues/1263>`_) (`#1264 <https://github.com/ros-controls/ros2_control/issues/1264>`_)
+* [CI] Increase timeout for controller_managers_srv test (backport `#1224 <https://github.com/ros-controls/ros2_control/issues/1224>`_) (`#1225 <https://github.com/ros-controls/ros2_control/issues/1225>`_)
+* Contributors: mergify[bot]
+
+2.36.0 (2023-12-12)
+-------------------
+* Fix controller sorting issue while loading large number of controllers (`#1180 <https://github.com/ros-controls/ros2_control/issues/1180>`_) (`#1186 <https://github.com/ros-controls/ros2_control/issues/1186>`_)
+* Contributors: mergify[bot]
+
+2.35.1 (2023-11-27)
+-------------------
+
 2.35.0 (2023-11-14)
 -------------------
 * Fix the controller sorting bug when the interfaces are not configured (fixes `#1164 <https://github.com/ros-controls/ros2_control/issues/1164>`_) (`#1165 <https://github.com/ros-controls/ros2_control/issues/1165>`_) (`#1166 <https://github.com/ros-controls/ros2_control/issues/1166>`_)

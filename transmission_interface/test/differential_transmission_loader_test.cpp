@@ -26,7 +26,11 @@
 #include "transmission_interface/differential_transmission_loader.hpp"
 #include "transmission_interface/transmission_loader.hpp"
 
+using testing::DoubleNear;
 using testing::SizeIs;
+
+// Floating-point value comparison threshold
+const double EPS = 1e-5;
 
 class TransmissionPluginLoader
 {
@@ -113,16 +117,16 @@ TEST(DifferentialTransmissionLoaderTest, FullSpec)
 
   const std::vector<double> & actuator_reduction =
     differential_transmission->get_actuator_reduction();
-  EXPECT_EQ(50.0, actuator_reduction[0]);
-  EXPECT_EQ(-50.0, actuator_reduction[1]);
+  EXPECT_THAT(50.0, DoubleNear(actuator_reduction[0], EPS));
+  EXPECT_THAT(-50.0, DoubleNear(actuator_reduction[1], EPS));
 
   const std::vector<double> & joint_reduction = differential_transmission->get_joint_reduction();
-  EXPECT_EQ(2.0, joint_reduction[0]);
-  EXPECT_EQ(-2.0, joint_reduction[1]);
+  EXPECT_THAT(2.0, DoubleNear(joint_reduction[0], EPS));
+  EXPECT_THAT(-2.0, DoubleNear(joint_reduction[1], EPS));
 
   const std::vector<double> & joint_offset = differential_transmission->get_joint_offset();
-  EXPECT_EQ(0.5, joint_offset[0]);
-  EXPECT_EQ(-0.5, joint_offset[1]);
+  EXPECT_THAT(0.5, DoubleNear(joint_offset[0], EPS));
+  EXPECT_THAT(-0.5, DoubleNear(joint_offset[1], EPS));
 }
 
 TEST(DifferentialTransmissionLoaderTest, only_mech_red_specified)
@@ -184,16 +188,16 @@ TEST(DifferentialTransmissionLoaderTest, only_mech_red_specified)
 
   const std::vector<double> & actuator_reduction =
     differential_transmission->get_actuator_reduction();
-  EXPECT_EQ(50.0, actuator_reduction[0]);
-  EXPECT_EQ(-50.0, actuator_reduction[1]);
+  EXPECT_THAT(50.0, DoubleNear(actuator_reduction[0], EPS));
+  EXPECT_THAT(-50.0, DoubleNear(actuator_reduction[1], EPS));
 
   const std::vector<double> & joint_reduction = differential_transmission->get_joint_reduction();
-  EXPECT_EQ(1.0, joint_reduction[0]);
-  EXPECT_EQ(1.0, joint_reduction[1]);
+  EXPECT_THAT(1.0, DoubleNear(joint_reduction[0], EPS));
+  EXPECT_THAT(1.0, DoubleNear(joint_reduction[1], EPS));
 
   const std::vector<double> & joint_offset = differential_transmission->get_joint_offset();
-  EXPECT_EQ(0.0, joint_offset[0]);
-  EXPECT_EQ(0.0, joint_offset[1]);
+  EXPECT_THAT(0.0, DoubleNear(joint_offset[0], EPS));
+  EXPECT_THAT(0.0, DoubleNear(joint_offset[1], EPS));
 }
 
 TEST(SimpleTransmissionLoaderTest, offset_and_mech_red_not_specified)
@@ -247,16 +251,16 @@ TEST(SimpleTransmissionLoaderTest, offset_and_mech_red_not_specified)
 
   const std::vector<double> & actuator_reduction =
     differential_transmission->get_actuator_reduction();
-  EXPECT_EQ(1.0, actuator_reduction[0]);
-  EXPECT_EQ(1.0, actuator_reduction[1]);
+  EXPECT_THAT(1.0, DoubleNear(actuator_reduction[0], EPS));
+  EXPECT_THAT(1.0, DoubleNear(actuator_reduction[1], EPS));
 
   const std::vector<double> & joint_reduction = differential_transmission->get_joint_reduction();
-  EXPECT_EQ(1.0, joint_reduction[0]);
-  EXPECT_EQ(1.0, joint_reduction[1]);
+  EXPECT_THAT(1.0, DoubleNear(joint_reduction[0], EPS));
+  EXPECT_THAT(1.0, DoubleNear(joint_reduction[1], EPS));
 
   const std::vector<double> & joint_offset = differential_transmission->get_joint_offset();
-  EXPECT_EQ(0.0, joint_offset[0]);
-  EXPECT_EQ(0.0, joint_offset[1]);
+  EXPECT_THAT(0.0, DoubleNear(joint_offset[0], EPS));
+  EXPECT_THAT(0.0, DoubleNear(joint_offset[1], EPS));
 }
 
 TEST(DifferentialTransmissionLoaderTest, mechanical_reduction_not_a_number)
@@ -319,16 +323,16 @@ TEST(DifferentialTransmissionLoaderTest, mechanical_reduction_not_a_number)
   // default kicks in for ill-defined values
   const std::vector<double> & actuator_reduction =
     differential_transmission->get_actuator_reduction();
-  EXPECT_EQ(1.0, actuator_reduction[0]);
-  EXPECT_EQ(1.0, actuator_reduction[1]);
+  EXPECT_THAT(1.0, DoubleNear(actuator_reduction[0], EPS));
+  EXPECT_THAT(1.0, DoubleNear(actuator_reduction[1], EPS));
 
   const std::vector<double> & joint_reduction = differential_transmission->get_joint_reduction();
-  EXPECT_EQ(1.0, joint_reduction[0]);
-  EXPECT_EQ(1.0, joint_reduction[1]);
+  EXPECT_THAT(1.0, DoubleNear(joint_reduction[0], EPS));
+  EXPECT_THAT(1.0, DoubleNear(joint_reduction[1], EPS));
 
   const std::vector<double> & joint_offset = differential_transmission->get_joint_offset();
-  EXPECT_EQ(0.0, joint_offset[0]);
-  EXPECT_EQ(0.0, joint_offset[1]);
+  EXPECT_THAT(0.0, DoubleNear(joint_offset[0], EPS));
+  EXPECT_THAT(0.0, DoubleNear(joint_offset[1], EPS));
 }
 
 TEST(DifferentialTransmissionLoaderTest, offset_ill_defined)
@@ -393,17 +397,17 @@ TEST(DifferentialTransmissionLoaderTest, offset_ill_defined)
   // default kicks in for ill-defined values
   const std::vector<double> & actuator_reduction =
     differential_transmission->get_actuator_reduction();
-  EXPECT_EQ(50.0, actuator_reduction[0]);
-  EXPECT_EQ(-50.0, actuator_reduction[1]);
+  EXPECT_THAT(50.0, DoubleNear(actuator_reduction[0], EPS));
+  EXPECT_THAT(-50.0, DoubleNear(actuator_reduction[1], EPS));
 
   const std::vector<double> & joint_reduction = differential_transmission->get_joint_reduction();
-  EXPECT_EQ(2.0, joint_reduction[0]);
-  EXPECT_EQ(-2.0, joint_reduction[1]);
+  EXPECT_THAT(2.0, DoubleNear(joint_reduction[0], EPS));
+  EXPECT_THAT(-2.0, DoubleNear(joint_reduction[1], EPS));
 
   // default kicks in for ill-defined values
   const std::vector<double> & joint_offset = differential_transmission->get_joint_offset();
-  EXPECT_EQ(0.0, joint_offset[0]);
-  EXPECT_EQ(0.0, joint_offset[1]);
+  EXPECT_THAT(0.0, DoubleNear(joint_offset[0], EPS));
+  EXPECT_THAT(0.0, DoubleNear(joint_offset[1], EPS));
 }
 
 TEST(DifferentialTransmissionLoaderTest, mech_red_invalid_value)

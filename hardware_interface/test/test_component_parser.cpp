@@ -500,6 +500,30 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_only)
   EXPECT_EQ(transmission.parameters.at("additional_special_parameter"), "1337");
 }
 
+TEST_F(TestComponentParser, successfully_parse_locale_independent_double)
+{
+  // Set to locale with comma-separated decimals
+  std::setlocale(LC_NUMERIC, "de_DE.UTF-8");
+
+  std::string urdf_to_test = std::string(ros2_control_test_assets::urdf_head) +
+                             ros2_control_test_assets::valid_urdf_ros2_control_actuator_only +
+                             ros2_control_test_assets::urdf_tail;
+
+  const auto control_hardware = parse_control_resources_from_urdf(urdf_to_test);
+  ASSERT_THAT(control_hardware, SizeIs(1));
+  const auto hardware_info = control_hardware.at(0);
+
+  EXPECT_EQ(hardware_info.hardware_parameters.at("example_param_write_for_sec"), "1.13");
+
+  ASSERT_THAT(hardware_info.transmissions, SizeIs(1));
+  const auto transmission = hardware_info.transmissions[0];
+  EXPECT_THAT(transmission.joints, SizeIs(1));
+  const auto joint = transmission.joints[0];
+
+  // Test that we still parse doubles using dot notation
+  EXPECT_THAT(joint.mechanical_reduction, DoubleEq(325.949));
+}
+
 TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_robot_with_gpio)
 {
   std::string urdf_to_test =

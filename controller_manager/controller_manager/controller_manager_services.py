@@ -12,9 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from controller_manager_msgs.srv import ConfigureController, \
-    ListControllers, ListControllerTypes, ListHardwareComponents, ListHardwareInterfaces, \
-    LoadController, ReloadControllerLibraries, SwitchController, UnloadController
+from controller_manager_msgs.srv import (
+    ConfigureController,
+    ListControllers,
+    ListControllerTypes,
+    ListHardwareComponents,
+    ListHardwareInterfaces,
+    LoadController,
+    ReloadControllerLibraries,
+    SetHardwareComponentState,
+    SwitchController,
+    UnloadController,
+)
 
 import rclpy
 
@@ -37,55 +46,107 @@ def service_caller(node, service_name, service_type, request, service_timeout=10
         raise RuntimeError(f'Exception while calling service: {future.exception()}')
 
 
-def configure_controller(node, controller_manager_name, controller_name):
+def configure_controller(node, controller_manager_name, controller_name, service_timeout=10.0):
     request = ConfigureController.Request()
     request.name = controller_name
-    return service_caller(node, f'{controller_manager_name}/configure_controller',
-                          ConfigureController, request)
+    return service_caller(
+        node,
+        f"{controller_manager_name}/configure_controller",
+        ConfigureController,
+        request,
+        service_timeout,
+    )
 
 
-def list_controllers(node, controller_manager_name):
+def list_controllers(node, controller_manager_name, service_timeout=10.0):
     request = ListControllers.Request()
-    return service_caller(node, f'{controller_manager_name}/list_controllers',
-                          ListControllers, request)
+    return service_caller(
+        node,
+        f"{controller_manager_name}/list_controllers",
+        ListControllers,
+        request,
+        service_timeout,
+    )
 
 
-def list_controller_types(node, controller_manager_name):
+def list_controller_types(node, controller_manager_name, service_timeout=10.0):
     request = ListControllerTypes.Request()
-    return service_caller(node,
-                          f'{controller_manager_name}/list_controller_types',
-                          ListControllerTypes, request)
+    return service_caller(
+        node,
+        f"{controller_manager_name}/list_controller_types",
+        ListControllerTypes,
+        request,
+        service_timeout,
+    )
 
 
-def list_hardware_components(node, controller_manager_name):
+def list_hardware_components(node, controller_manager_name, service_timeout=10.0):
     request = ListHardwareComponents.Request()
-    return service_caller(node, f'{controller_manager_name}/list_hardware_components',
-                          ListHardwareComponents, request)
+    return service_caller(
+        node,
+        f"{controller_manager_name}/list_hardware_components",
+        ListHardwareComponents,
+        request,
+        service_timeout,
+    )
 
 
-def list_hardware_interfaces(node, controller_manager_name):
+def list_hardware_interfaces(node, controller_manager_name, service_timeout=10.0):
     request = ListHardwareInterfaces.Request()
-    return service_caller(node, f'{controller_manager_name}/list_hardware_interfaces',
-                          ListHardwareInterfaces, request)
+    return service_caller(
+        node,
+        f"{controller_manager_name}/list_hardware_interfaces",
+        ListHardwareInterfaces,
+        request,
+        service_timeout,
+    )
 
 
-def load_controller(node, controller_manager_name, controller_name):
+def load_controller(node, controller_manager_name, controller_name, service_timeout=10.0):
     request = LoadController.Request()
     request.name = controller_name
-    return service_caller(node, f'{controller_manager_name}/load_controller',
-                          LoadController, request)
+    return service_caller(
+        node,
+        f"{controller_manager_name}/load_controller",
+        LoadController,
+        request,
+        service_timeout,
+    )
 
 
-def reload_controller_libraries(node, controller_manager_name, force_kill):
+def reload_controller_libraries(node, controller_manager_name, force_kill, service_timeout=10.0):
     request = ReloadControllerLibraries.Request()
     request.force_kill = force_kill
-    return service_caller(node,
-                          f'{controller_manager_name}/reload_controller_libraries',
-                          ReloadControllerLibraries, request)
+    return service_caller(
+        node,
+        f"{controller_manager_name}/reload_controller_libraries",
+        ReloadControllerLibraries,
+        request,
+        service_timeout,
+    )
 
 
-def switch_controllers(node, controller_manager_name, deactivate_controllers,
-                       activate_controllers, strict, activate_asap, timeout):
+def set_hardware_component_state(node, controller_manager_name, component_name, lifecyle_state):
+    request = SetHardwareComponentState.Request()
+    request.name = component_name
+    request.target_state = lifecyle_state
+    return service_caller(
+        node,
+        f"{controller_manager_name}/set_hardware_component_state",
+        SetHardwareComponentState,
+        request,
+    )
+
+
+def switch_controllers(
+    node,
+    controller_manager_name,
+    deactivate_controllers,
+    activate_controllers,
+    strict,
+    activate_asap,
+    timeout,
+):
     request = SwitchController.Request()
     request.activate_controllers = activate_controllers
     request.deactivate_controllers = deactivate_controllers
@@ -99,8 +160,13 @@ def switch_controllers(node, controller_manager_name, deactivate_controllers,
                           SwitchController, request)
 
 
-def unload_controller(node, controller_manager_name, controller_name):
+def unload_controller(node, controller_manager_name, controller_name, service_timeout=10.0):
     request = UnloadController.Request()
     request.name = controller_name
-    return service_caller(node, f'{controller_manager_name}/unload_controller',
-                          UnloadController, request)
+    return service_caller(
+        node,
+        f"{controller_manager_name}/unload_controller",
+        UnloadController,
+        request,
+        service_timeout,
+    )

@@ -83,11 +83,25 @@ class TestSystem : public SystemInterface
 
   return_type read(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
   {
+    // simulate error on read
+    if (velocity_command_[0] == 28282828)
+    {
+      // reset value to get out from error on the next call - simplifies CM tests
+      velocity_command_[0] = 0.0;
+      return return_type::ERROR;
+    }
     return return_type::OK;
   }
 
   return_type write(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
   {
+    // simulate error on write
+    if (velocity_command_[0] == 23232323)
+    {
+      // reset value to get out from error on the next call - simplifies CM tests
+      velocity_command_[0] = 0.0;
+      return return_type::ERROR;
+    }
     return return_type::OK;
   }
 
@@ -101,5 +115,15 @@ private:
   double configuration_command_ = 0.0;
 };
 
+class TestUnitilizableSystem : public TestSystem
+{
+  CallbackReturn on_init(const hardware_interface::HardwareInfo & info) override
+  {
+    SystemInterface::on_init(info);
+    return CallbackReturn::ERROR;
+  }
+};
+
 #include "pluginlib/class_list_macros.hpp"  // NOLINT
 PLUGINLIB_EXPORT_CLASS(TestSystem, hardware_interface::SystemInterface)
+PLUGINLIB_EXPORT_CLASS(TestUnitilizableSystem, hardware_interface::SystemInterface)
