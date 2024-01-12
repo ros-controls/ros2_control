@@ -20,6 +20,7 @@ from .controller_manager_services import (
     list_hardware_interfaces,
     load_controller,
     reload_controller_libraries,
+    set_hardware_component_state,
     switch_controllers,
     unload_controller
 )
@@ -32,6 +33,7 @@ __all__ = [
     'list_hardware_interfaces',
     'load_controller',
     'reload_controller_libraries',
+    'set_hardware_component_state',
     'switch_controllers',
     'unload_controller',
 ]
