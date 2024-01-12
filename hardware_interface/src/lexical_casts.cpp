@@ -16,20 +16,42 @@
 
 namespace hardware_interface
 {
-double stod(const std::string & s)
+namespace impl
 {
+std::optional<double> stod(const std::string & s)
+{
+#if __cplusplus < 202002L
   // convert from string using no locale
+  // Impl with std::istringstream
   std::istringstream stream(s);
   stream.imbue(std::locale::classic());
   double result;
   stream >> result;
   if (stream.fail() || !stream.eof())
   {
-    throw std::invalid_argument("Failed converting string to real number");
+    return std::nullopt;
   }
   return result;
+#else
+  // Impl with std::from_chars
+  double result_value;
+  const auto parse_result = std::from_chars(s.data(), s.data() + s.size(), result_value);
+  if (parse_result.ec == std::errc())
+  {
+    return result_value;
+  }
+  return std::nullopt;
+#endif
 }
-
+}  // namespace impl
+double stod(const std::string & s)
+{
+  if (const auto result = impl::stod(s))
+  {
+    return *result;
+  }
+  throw std::invalid_argument("Failed converting string to real number");
+}
 bool parse_bool(const std::string & bool_string)
 {
   return bool_string == "true" || bool_string == "True";
