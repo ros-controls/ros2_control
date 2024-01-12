@@ -1441,7 +1441,6 @@ void ControllerManager::activate_controllers(
       continue;
     }
     auto controller = found_it->c;
-    auto controller_name = found_it->info.name;
     // reset the next update cycle time for newly activated controllers
     *found_it->next_update_cycle_time =
       rclcpp::Time(0, 0, this->get_node_clock_interface()->get_clock()->get_clock_type());
@@ -2010,13 +2009,13 @@ void ControllerManager::manage_switch()
 {
   // Ask hardware interfaces to change mode
   if (!resource_manager_->perform_command_mode_switch(
-    activate_command_interface_request_, deactivate_command_interface_request_))
+        activate_command_interface_request_, deactivate_command_interface_request_))
   {
     RCLCPP_ERROR(get_logger(), "Error while performing mode switch.");
   }
 
   std::vector<ControllerSpec> & rt_controller_list =
-  rt_controllers_wrapper_.update_and_get_used_by_rt_list();
+    rt_controllers_wrapper_.update_and_get_used_by_rt_list();
 
   deactivate_controllers(rt_controller_list, deactivate_request_);
 
