@@ -431,10 +431,6 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
   get_parameter("activate_components_on_start", activate_components_on_start);
   rclcpp_lifecycle::State active_state(
     State::PRIMARY_STATE_ACTIVE, hardware_interface::lifecycle_state_names::ACTIVE);
-  }
-
-  // if both parameter are empty or non-existing preserve behavior where all components are
-  // activated per default
   if (!activate_components_on_start.empty())
   {
     RCLCPP_WARN(

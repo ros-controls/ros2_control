@@ -1189,9 +1189,6 @@ void ResourceManager::validate_storage(
   }
 }
 
-  using lifecycle_msgs::msg::State;
-  rclcpp_lifecycle::State active_state(
-    State::PRIMARY_STATE_ACTIVE, hardware_interface::lifecycle_state_names::ACTIVE);
 
   for (auto & component : resource_storage_->actuators_)
   {
@@ -1200,9 +1197,6 @@ void ResourceManager::validate_storage(
   for (auto & component : resource_storage_->sensors_)
   {
     set_component_state(component.get_name(), active_state);
-  }
-  for (auto & component : resource_storage_->systems_)
-  {
 // END: private methods
 
 }  // namespace hardware_interface
