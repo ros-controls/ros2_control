@@ -29,7 +29,7 @@ std::optional<double> stod(const std::string & s)
   stream >> result;
   if (stream.fail() || !stream.eof())
   {
-    throw std::invalid_argument("Failed converting string to real number");
+    return std::nullopt;
   }
   return result;
 #else
@@ -40,9 +40,7 @@ std::optional<double> stod(const std::string & s)
   {
     return result_value;
   }
-
   return std::nullopt;
-  ;
 #endif
 }
 }  // namespace impl
