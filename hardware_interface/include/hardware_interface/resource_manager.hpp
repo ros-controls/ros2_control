@@ -392,19 +392,6 @@ public:
    */
   bool state_interface_exists(const std::string & key) const;
 
-  /// Checks whether a command interface is registered under the given key.
-  /**
-   * \param[in] key string identifying the interface to check.
-   * \return true if interface exist, false otherwise.
-   */
-  bool command_interface_exists(const std::string & key) const;
-
-  /// Checks whether a state interface is registered under the given key.
-  /**
-   * \return true if interface exist, false otherwise.
-   */
-  bool state_interface_exists(const std::string & key) const;
-
 private:
   void validate_storage(const std::vector<hardware_interface::HardwareInfo> & hardware_info) const;
 
