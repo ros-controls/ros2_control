@@ -14,7 +14,7 @@
 
 // Authors: Karsten Knese, Denis Stogl
 
-#include <gmock/gmock.h>
+#include "test_resource_manager.hpp"
 
 #include <algorithm>
 #include <memory>
@@ -23,7 +23,6 @@
 #include <vector>
 
 #include "hardware_interface/actuator_interface.hpp"
-#include "hardware_interface/resource_manager.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 #include "rclcpp_lifecycle/state.hpp"
@@ -45,6 +44,7 @@ using ros2_control_test_assets::TEST_SYSTEM_HARDWARE_NAME;
 using ros2_control_test_assets::TEST_SYSTEM_HARDWARE_STATE_INTERFACES;
 using ros2_control_test_assets::TEST_SYSTEM_HARDWARE_TYPE;
 
+<<<<<<< HEAD
 class ResourceManagerTest : public ::testing::Test
 {
 public:
@@ -98,6 +98,8 @@ std::vector<hardware_interface::return_type> set_components_state(
   return results;
 }
 
+=======
+>>>>>>> 8c34ab6 (Add additional checks for non existing and not available interfaces. (#1218))
 auto configure_components =
   [](TestableResourceManager & rm, const std::vector<std::string> & components = {})
 {
@@ -441,68 +443,9 @@ TEST_F(ResourceManagerTest, default_prepare_perform_switch)
   // Activate components to get all interfaces available
   activate_components(rm);
 
-  EXPECT_TRUE(rm.prepare_command_mode_switch({""}, {""}));
-  EXPECT_TRUE(rm.perform_command_mode_switch({""}, {""}));
-}
-
-const auto hardware_resources_command_modes =
-  R"(
-  <ros2_control name="TestSystemCommandModes" type="system">
-    <hardware>
-      <plugin>test_hardware_components/TestSystemCommandModes</plugin>
-    </hardware>
-    <joint name="joint1">
-      <command_interface name="position"/>
-      <command_interface name="velocity"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-    </joint>
-    <joint name="joint2">
-      <command_interface name="position"/>
-      <command_interface name="velocity"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-    </joint>
-  </ros2_control>
-)";
-const auto command_mode_urdf = std::string(ros2_control_test_assets::urdf_head) +
-                               std::string(hardware_resources_command_modes) +
-                               std::string(ros2_control_test_assets::urdf_tail);
-
-TEST_F(ResourceManagerTest, custom_prepare_perform_switch)
-{
-  TestableResourceManager rm(command_mode_urdf);
-  // Scenarios defined by example criteria
-  std::vector<std::string> empty_keys = {};
-  std::vector<std::string> irrelevant_keys = {"elbow_joint/position", "should_joint/position"};
-  std::vector<std::string> illegal_single_key = {"joint1/position"};
-  std::vector<std::string> legal_keys_position = {"joint1/position", "joint2/position"};
-  std::vector<std::string> legal_keys_velocity = {"joint1/velocity", "joint2/velocity"};
-  // Default behavior for empty key lists
-  EXPECT_TRUE(rm.prepare_command_mode_switch(empty_keys, empty_keys));
-
-  // Default behavior when given irrelevant keys
-  EXPECT_TRUE(rm.prepare_command_mode_switch(irrelevant_keys, irrelevant_keys));
-  EXPECT_TRUE(rm.prepare_command_mode_switch(irrelevant_keys, empty_keys));
-  EXPECT_TRUE(rm.prepare_command_mode_switch(empty_keys, irrelevant_keys));
-
-  // The test hardware interface has a criteria that both joints must change mode
-  EXPECT_FALSE(rm.prepare_command_mode_switch(illegal_single_key, illegal_single_key));
-  EXPECT_FALSE(rm.prepare_command_mode_switch(illegal_single_key, empty_keys));
-  EXPECT_FALSE(rm.prepare_command_mode_switch(empty_keys, illegal_single_key));
-
-  // Test legal start keys
-  EXPECT_TRUE(rm.prepare_command_mode_switch(legal_keys_position, legal_keys_position));
-  EXPECT_TRUE(rm.prepare_command_mode_switch(legal_keys_velocity, legal_keys_velocity));
-  EXPECT_TRUE(rm.prepare_command_mode_switch(legal_keys_position, empty_keys));
-  EXPECT_TRUE(rm.prepare_command_mode_switch(empty_keys, legal_keys_position));
-  EXPECT_TRUE(rm.prepare_command_mode_switch(legal_keys_velocity, empty_keys));
-  EXPECT_TRUE(rm.prepare_command_mode_switch(empty_keys, legal_keys_velocity));
-
-  // Test rejection from perform_command_mode_switch, test hardware rejects empty start sets
-  EXPECT_TRUE(rm.perform_command_mode_switch(legal_keys_position, legal_keys_position));
-  EXPECT_FALSE(rm.perform_command_mode_switch(empty_keys, empty_keys));
-  EXPECT_FALSE(rm.perform_command_mode_switch(empty_keys, legal_keys_position));
+  // Default behavior for empty key lists, e.g., when a Broadcaster is activated
+  EXPECT_TRUE(rm.prepare_command_mode_switch({}, {}));
+  EXPECT_TRUE(rm.perform_command_mode_switch({}, {}));
 }
 
 TEST_F(ResourceManagerTest, resource_status)
