@@ -284,9 +284,8 @@ ControllerManager::ControllerManager(
       "[Deprecated] Passing the robot description parameter directly to the control_manager node "
       "is deprecated. Use '~/robot_description' topic from 'robot_state_publisher' instead.");
     init_resource_manager(robot_description);
+    init_services();
   }
-
-  init_services();
 }
 
 ControllerManager::ControllerManager(
@@ -311,7 +310,10 @@ ControllerManager::ControllerManager(
   {
     subscribe_to_robot_description_topic();
   }
-  init_services();
+  else
+  {
+    init_services();
+  }
 }
 
 void ControllerManager::subscribe_to_robot_description_topic()
@@ -343,6 +345,7 @@ void ControllerManager::robot_description_callback(const std_msgs::msg::String &
       return;
     }
     init_resource_manager(robot_description.data.c_str());
+    init_services();
   }
   catch (std::runtime_error & e)
   {
