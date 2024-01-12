@@ -15,91 +15,149 @@
 #ifndef HARDWARE_INTERFACE__LIMITS_HANDLE_HPP
 #define HARDWARE_INTERFACE__LIMITS_HANDLE_HPP
 
+#include <cmath>
+#include <map>
 #include <optional>
 #include "hardware_interface/handle.hpp"
+#include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "joint_limits/joint_limits.hpp"
 #include "rclcpp/duration.hpp"
 
 namespace hardware_interface
 {
+const std::string get_component_interface_name(
+  const std::string & prefix_name, const std::string & interface_name)
+{
+  return prefix_name + "/" + interface_name;
+}
+
 class SaturationHandle
 {
 public:
-  SaturationHandle() {}
-
-  void enforce_limits(const rclcpp::Duration & period)
+  SaturationHandle(
+    const std::string & prefix_name, const std::string & interface_name,
+    std::map<std::string, StateInterface> & state_interface_map,
+    std::map<std::string, CommandInterface> & command_interface_map)
+  : prefix_name_(prefix_name),
+    interface_name_(interface_name),
+    prev_cmd_(std::numeric_limits<double>::quiet_NaN())
   {
-    enforce_position_limits(period);
-    enforce_velocity_limits(period);
+  }
+
+  virtual void enforce_limits(const rclcpp::Duration & period) = 0;
+
+protected:
+  std::string prefix_name_;
+  std::string interface_name_;
+  double prev_cmd_;
+
+  std::unordered_map<std::string, std::reference_wrapper<const StateInterface>> actual_;
+  std::unordered_map<std::string, std::reference_wrapper<CommandInterface>> reference_;
+};
+
+class PositionSaturationHandle : public SaturationHandle
+{
+public:
+  PositionSaturationHandle(
+    const std::string & prefix_name, const joint_limits::JointLimits & limits,
+    std::map<std::string, StateInterface> & state_interface_map,
+    std::map<std::string, CommandInterface> & command_interface_map)
+  : SaturationHandle(prefix_name, HW_IF_POSITION, state_interface_map, command_interface_map),
+    limits_(limits)
+  {
+    prev_cmd_ = 0.0;
+    reference_[HW_IF_POSITION] =
+      std::ref(command_interface_map[get_component_interface_name(prefix_name, HW_IF_POSITION)]);
+    // TODO(saikishor): Check and handle the case when the position state interface might not exist
+    actual_[HW_IF_POSITION] =
+      std::cref(state_interface_map[get_component_interface_name(prefix_name, HW_IF_POSITION)]);
+  }
+
+  virtual void enforce_limits(const rclcpp::Duration & period) override
+  {
+    // Initially, the previous command might be NaN, set it to the current position value
+    auto & ref_pos_itf = reference_[HW_IF_POSITION].get();
+    if (!std::isfinite(prev_cmd_))
+    {
+      auto & act_pos_itf = actual_[HW_IF_POSITION].get();
+      if (!actual_.empty())
+      {
+        prev_cmd_ = act_pos_itf.get_value();
+      }
+      else
+      {
+        prev_cmd_ = ref_pos_itf.get_value();
+      }
+    }
+
+    // Check if the joint has joint limits, if not set the limits to maximum
+    double min_pos_limit, max_pos_limit;
+    if (limits_.has_position_limits)
+    {
+      min_pos_limit = limits_.min_position;
+      max_pos_limit = limits_.max_position;
+    }
+    else
+    {
+      min_pos_limit = std::numeric_limits<double>::min();
+      max_pos_limit = std::numeric_limits<double>::max();
+    }
+
+    // Evalute and clamp the position command to the maximum reachable value by hardware
+    double min_pos, max_pos;
+    if (limits_.has_velocity_limits)
+    {
+      const double delta_pos = limits_.max_velocity * period.seconds();
+      min_pos = std::max(prev_cmd_ - delta_pos, min_pos_limit);
+      max_pos = std::min(prev_cmd_ + delta_pos, max_pos_limit);
+    }
+    else
+    {
+      min_pos = min_pos_limit;
+      max_pos = max_pos_limit;
+    }
+
+    // Saturate position command according to limits
+    const double cmd = std::clamp(ref_pos_itf.get_value(), min_pos, max_pos);
+    ref_pos_itf.set_value(cmd);
+    prev_cmd_ = cmd;
   }
 
 private:
-  void enforce_position_limits(const rclcpp::Duration & period)
+  joint_limits::JointLimits limits_;
+};
+
+class VelocitySaturationHandle : public SaturationHandle
+{
+public:
+  VelocitySaturationHandle(
+    const std::string & prefix_name, const joint_limits::JointLimits & limits,
+    std::map<std::string, StateInterface> & state_interface_map,
+    std::map<std::string, CommandInterface> & command_interface_map)
+  : SaturationHandle(prefix_name, HW_IF_VELOCITY, state_interface_map, command_interface_map),
+    limits_(limits)
   {
-    if (reference_position_.has_value())
-    {
-      // Initially, the previous command will be nan, set it to the current position value
-      if (!std::isfinite(prev_pos_cmd_))
-      {
-        if (actual_position_.has_value())
-        {
-          prev_pos_cmd_ = actual_position_.value().get_value();
-        }
-        else
-        {
-          prev_pos_cmd_ = reference_position_->get_value();
-        }
-      }
-
-      // Check if the joint has joint limits, if not set the limits to maximum
-      double min_pos_limit, max_pos_limit;
-      if (limits_.has_position_limits)
-      {
-        min_pos_limit = limits_.min_position;
-        max_pos_limit = limits_.max_position;
-      }
-      else
-      {
-        min_pos_limit = std::numeric_limits<double>::min();
-        max_pos_limit = std::numeric_limits<double>::max();
-      }
-
-      // Evalute and clamp the position command to the maximum reachable value by hardware
-      double min_pos, max_pos;
-      if (limits_.has_velocity_limits)
-      {
-        const double delta_pos = limits_.max_velocity * period.seconds();
-        min_pos = std::max(prev_pos_cmd_ - delta_pos, min_pos_limit);
-        max_pos = std::min(prev_pos_cmd_ + delta_pos, max_pos_limit);
-      }
-      else
-      {
-        min_pos = min_pos_limit;
-        max_pos = max_pos_limit;
-      }
-
-      // Saturate position command according to limits
-      const double cmd = std::clamp(reference_position_.value().get_value(), min_pos, max_pos);
-      reference_position_->set_value(cmd);
-      prev_pos_cmd_ = cmd;
-    }
+    prev_cmd_ = 0.0;
+    reference_[HW_IF_VELOCITY] =
+      std::ref(command_interface_map[get_component_interface_name(prefix_name, HW_IF_VELOCITY)]);
   }
 
-  void enforce_velocity_limits(const rclcpp::Duration & period)
+  virtual void enforce_limits(const rclcpp::Duration & period) override
   {
-    if (limits_.has_velocity_limits && reference_velocity_.has_value())
+    if (limits_.has_velocity_limits)
     {
       // Velocity bounds
       double vel_low;
       double vel_high;
 
-      if (!std::isfinite(reference_velocity_->get_value()))
+      auto & ref_vel_itf = reference_[HW_IF_VELOCITY].get();
+      if (!std::isfinite(ref_vel_itf.get_value()))
       {
-        reference_velocity_->set_value(0.0);
+        ref_vel_itf.set_value(0.0);
       }
-      if (!std::isfinite(prev_vel_cmd_))
+      if (!std::isfinite(prev_cmd_))
       {
-        prev_vel_cmd_ = 0.0;
+        prev_cmd_ = 0.0;
       }
 
       if (limits_.has_acceleration_limits)
@@ -107,9 +165,8 @@ private:
         assert(period.seconds() > 0.0);
         const double dt = period.seconds();
 
-        vel_low =
-          std::max(prev_vel_cmd_ - fabs(limits_.max_deceleration) * dt, -limits_.max_velocity);
-        vel_high = std::min(prev_vel_cmd_ + limits_.max_acceleration * dt, limits_.max_velocity);
+        vel_low = std::max(prev_cmd_ - fabs(limits_.max_deceleration) * dt, -limits_.max_velocity);
+        vel_high = std::min(prev_cmd_ + limits_.max_acceleration * dt, limits_.max_velocity);
       }
       else
       {
@@ -118,22 +175,50 @@ private:
       }
 
       // Saturate velocity command according to limits
-      const double vel_cmd = std::clamp(reference_velocity_.value().get_value(), vel_low, vel_high);
-      reference_velocity_->set_value(vel_cmd);
-      prev_vel_cmd_ = vel_cmd;
+      const double vel_cmd = std::clamp(ref_vel_itf.get_value(), vel_low, vel_high);
+      ref_vel_itf.set_value(vel_cmd);
+      prev_cmd_ = vel_cmd;
     }
   }
 
-  void enforce_effort_limits(const rclcpp::Duration & period)
+private:
+  joint_limits::JointLimits limits_;
+};
+
+class EffortSaturationHandle : public SaturationHandle
+{
+public:
+  EffortSaturationHandle(
+    const std::string & prefix_name, const joint_limits::JointLimits & limits,
+    std::map<std::string, StateInterface> & state_interface_map,
+    std::map<std::string, CommandInterface> & command_interface_map)
+  : SaturationHandle(prefix_name, HW_IF_EFFORT, state_interface_map, command_interface_map),
+    limits_(limits)
   {
-    if (limits_.has_effort_limits && reference_effort_.has_value())
+    prev_cmd_ = 0.0;
+    reference_[HW_IF_EFFORT] =
+      std::ref(command_interface_map[get_component_interface_name(prefix_name, HW_IF_EFFORT)]);
+    // TODO(saikishor): Check and handle the case when the position (or) velocity (or) both state
+    // interface might not exist
+    actual_[HW_IF_POSITION] =
+      std::cref(state_interface_map[get_component_interface_name(prefix_name, HW_IF_POSITION)]);
+    actual_[HW_IF_VELOCITY] =
+      std::cref(state_interface_map[get_component_interface_name(prefix_name, HW_IF_VELOCITY)]);
+  }
+
+  virtual void enforce_limits(const rclcpp::Duration & period) override
+  {
+    auto & ref_eff_itf = reference_[HW_IF_EFFORT].get();
+    auto & act_pos_itf = actual_[HW_IF_POSITION].get();
+    auto & act_vel_itf = actual_[HW_IF_VELOCITY].get();
+    if (limits_.has_effort_limits)
     {
       double min_eff = -limits_.max_effort;
       double max_eff = limits_.max_effort;
 
-      if (limits_.has_position_limits && actual_position_.has_value())
+      if (limits_.has_position_limits)
       {
-        const double pos = actual_position_->get_value();
+        const double pos = act_pos_itf.get_value();
         if (pos < limits_.min_position)
         {
           min_eff = 0;
@@ -144,9 +229,9 @@ private:
         }
       }
 
-      if (limits_.has_velocity_limits && actual_velocity_.has_value())
+      if (limits_.has_velocity_limits)
       {
-        const double vel = actual_velocity_->get_value();
+        const double vel = act_vel_itf.get_value();
         if (vel < -limits_.max_velocity)
         {
           min_eff = 0;
@@ -157,26 +242,57 @@ private:
         }
       }
       // Saturate effort command according to limits
-      const double eff_cmd = std::clamp(reference_effort_.value().get_value(), min_eff, max_eff);
-      reference_effort_->set_value(eff_cmd);
+      const double eff_cmd = std::clamp(ref_eff_itf.get_value(), min_eff, max_eff);
+      ref_eff_itf.set_value(eff_cmd);
     }
   }
 
+private:
   joint_limits::JointLimits limits_;
-  double prev_pos_cmd_ = {std::numeric_limits<double>::quiet_NaN()};
-  double prev_vel_cmd_ = {std::numeric_limits<double>::quiet_NaN()};
-
-  std::optional<StateInterface> actual_position_ = std::nullopt;
-  std::optional<StateInterface> actual_velocity_ = std::nullopt;
-  std::optional<StateInterface> actual_effort_ = std::nullopt;
-  std::optional<StateInterface> actual_acceleration_ = std::nullopt;
-
-  std::optional<CommandInterface> reference_position_ = std::nullopt;
-  std::optional<CommandInterface> reference_velocity_ = std::nullopt;
-  std::optional<CommandInterface> reference_effort_ = std::nullopt;
-  std::optional<CommandInterface> reference_acceleration_ = std::nullopt;
 };
 
+class JointSaturationInterface
+{
+  JointSaturationInterface(
+    const std::string & joint_name, const joint_limits::JointLimits & limits,
+    std::map<std::string, StateInterface> & state_interface_map,
+    std::map<std::string, CommandInterface> & command_interface_map)
+  {
+    auto interface_exist =
+      [&](
+        const std::string & joint_name, const std::string & interface_name, const auto & interfaces)
+    {
+      auto it = interfaces.find(get_component_interface_name(joint_name, interface_name));
+      return it != interfaces.end();
+    };
+    if (interface_exist(joint_name, HW_IF_POSITION, command_interface_map))
+    {
+      impl_.push_back(std::make_shared<PositionSaturationHandle>(
+        joint_name, limits, state_interface_map, command_interface_map));
+    }
+    if (interface_exist(joint_name, HW_IF_VELOCITY, command_interface_map))
+    {
+      impl_.push_back(std::make_shared<VelocitySaturationHandle>(
+        joint_name, limits, state_interface_map, command_interface_map));
+    }
+    if (interface_exist(joint_name, HW_IF_EFFORT, command_interface_map))
+    {
+      impl_.push_back(std::make_shared<EffortSaturationHandle>(
+        joint_name, limits, state_interface_map, command_interface_map));
+    }
+  }
+
+  void enforce_limits(const rclcpp::Duration & period)
+  {
+    for (auto & impl : impl_)
+    {
+      impl->enforce_limits(period);
+    }
+  }
+
+private:
+  std::vector<std::shared_ptr<SaturationHandle>> impl_;
+};
 }  // namespace hardware_interface
 
 #endif  // HARDWARE_INTERFACE__LIMITS_HANDLE_HPP
