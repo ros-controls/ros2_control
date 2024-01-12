@@ -1188,9 +1188,6 @@ void ResourceManager::validate_storage(
     throw std::runtime_error(err_msg);
   }
 }
-
-    set_component_state(component.get_name(), active_state);
-  }
 // END: private methods
 
 }  // namespace hardware_interface
