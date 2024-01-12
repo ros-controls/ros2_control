@@ -1189,14 +1189,8 @@ void ResourceManager::validate_storage(
   }
 }
 
-
-  for (auto & component : resource_storage_->actuators_)
-  {
     set_component_state(component.get_name(), active_state);
   }
-  for (auto & component : resource_storage_->sensors_)
-  {
-    set_component_state(component.get_name(), active_state);
 // END: private methods
 
 }  // namespace hardware_interface
