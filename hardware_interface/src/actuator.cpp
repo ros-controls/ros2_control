@@ -218,7 +218,12 @@ const rclcpp_lifecycle::State & Actuator::get_state() const { return impl_->get_
 
 return_type Actuator::read(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
-  // TODO(destogl): discuss what should be default return value, e.g., "NOT_EXECUTED"
+  if (
+    impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED ||
+    impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED)
+  {
+    return return_type::OK;
+  }
   return_type result = return_type::ERROR;
   if (
     impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
@@ -235,7 +240,12 @@ return_type Actuator::read(const rclcpp::Time & time, const rclcpp::Duration & p
 
 return_type Actuator::write(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
-  // TODO(destogl): discuss what should be default return value, e.g., "NOT_EXECUTED"
+  if (
+    impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED ||
+    impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED)
+  {
+    return return_type::OK;
+  }
   return_type result = return_type::ERROR;
   if (
     impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||

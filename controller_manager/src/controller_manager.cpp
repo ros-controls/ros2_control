@@ -255,8 +255,8 @@ rclcpp::NodeOptions get_cm_node_options()
 
 ControllerManager::ControllerManager(
   std::shared_ptr<rclcpp::Executor> executor, const std::string & manager_node_name,
-  const std::string & namespace_, const rclcpp::NodeOptions & options)
-: rclcpp::Node(manager_node_name, namespace_, options),
+  const std::string & node_namespace, const rclcpp::NodeOptions & options)
+: rclcpp::Node(manager_node_name, node_namespace, options),
   resource_manager_(std::make_unique<hardware_interface::ResourceManager>(
     update_rate_, this->get_node_clock_interface())),
   diagnostics_updater_(this),
@@ -286,19 +286,19 @@ ControllerManager::ControllerManager(
       "[Deprecated] Passing the robot description parameter directly to the control_manager node "
       "is deprecated. Use '~/robot_description' topic from 'robot_state_publisher' instead.");
     init_resource_manager(robot_description_);
+    init_services();
   }
 
   diagnostics_updater_.setHardwareID("ros2_control");
   diagnostics_updater_.add(
     "Controllers Activity", this, &ControllerManager::controller_activity_diagnostic_callback);
-  init_services();
 }
 
 ControllerManager::ControllerManager(
   std::unique_ptr<hardware_interface::ResourceManager> resource_manager,
   std::shared_ptr<rclcpp::Executor> executor, const std::string & manager_node_name,
-  const std::string & namespace_, const rclcpp::NodeOptions & options)
-: rclcpp::Node(manager_node_name, namespace_, options),
+  const std::string & node_namespace, const rclcpp::NodeOptions & options)
+: rclcpp::Node(manager_node_name, node_namespace, options),
   resource_manager_(std::move(resource_manager)),
   diagnostics_updater_(this),
   executor_(executor),
@@ -313,12 +313,15 @@ ControllerManager::ControllerManager(
     RCLCPP_WARN(get_logger(), "'update_rate' parameter not set, using default value.");
   }
 
+  if (resource_manager_->is_urdf_already_loaded())
+  {
+    init_services();
+  }
   subscribe_to_robot_description_topic();
 
   diagnostics_updater_.setHardwareID("ros2_control");
   diagnostics_updater_.add(
     "Controllers Activity", this, &ControllerManager::controller_activity_diagnostic_callback);
-  init_services();
 }
 
 void ControllerManager::subscribe_to_robot_description_topic()
@@ -352,6 +355,7 @@ void ControllerManager::robot_description_callback(const std_msgs::msg::String &
       return;
     }
     init_resource_manager(robot_description_);
+    init_services();
   }
   catch (std::runtime_error & e)
   {
@@ -948,7 +952,7 @@ controller_interface::return_type ControllerManager::switch_controller(
     {
       RCLCPP_WARN(
         get_logger(),
-        "Controller with name '%s' is not inactive so its following"
+        "Controller with name '%s' is not inactive so its following "
         "controllers do not have to be checked, because it cannot be activated.",
         controller_it->info.name.c_str());
       status = controller_interface::return_type::ERROR;

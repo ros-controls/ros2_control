@@ -27,6 +27,7 @@ add_library(hardware_interface SHARED
   src/resource_manager.cpp
   src/sensor.cpp
   src/system.cpp
+  src/lexical_casts.cpp
 )
 target_compile_features(hardware_interface PUBLIC cxx_std_17)
 target_include_directories(hardware_interface PUBLIC
@@ -112,6 +113,10 @@ if(BUILD_TESTING)
   ament_add_gmock(test_resource_manager test/test_resource_manager.cpp)
   target_link_libraries(test_resource_manager hardware_interface)
   ament_target_dependencies(test_resource_manager ros2_control_test_assets)
+
+  ament_add_gmock(test_resource_manager_prepare_perform_switch test/test_resource_manager_prepare_perform_switch.cpp)
+  target_link_libraries(test_resource_manager_prepare_perform_switch hardware_interface)
+  ament_target_dependencies(test_resource_manager_prepare_perform_switch ros2_control_test_assets)
 
   ament_add_gmock(test_generic_system test/mock_components/test_generic_system.cpp)
   target_include_directories(test_generic_system PRIVATE include)

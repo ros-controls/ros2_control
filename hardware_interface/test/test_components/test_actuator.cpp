@@ -74,6 +74,22 @@ class TestActuator : public ActuatorInterface
     return command_interfaces;
   }
 
+  hardware_interface::return_type prepare_command_mode_switch(
+    const std::vector<std::string> & /*start_interfaces*/,
+    const std::vector<std::string> & /*stop_interfaces*/) override
+  {
+    position_state_ += 1.0;
+    return hardware_interface::return_type::OK;
+  }
+
+  hardware_interface::return_type perform_command_mode_switch(
+    const std::vector<std::string> & /*start_interfaces*/,
+    const std::vector<std::string> & /*stop_interfaces*/) override
+  {
+    position_state_ += 100.0;
+    return hardware_interface::return_type::OK;
+  }
+
   return_type read(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
   {
     // simulate error on read
@@ -120,5 +136,15 @@ private:
   double max_velocity_command_ = 0.0;
 };
 
+class TestUnitilizableActuator : public TestActuator
+{
+  CallbackReturn on_init(const hardware_interface::HardwareInfo & info) override
+  {
+    ActuatorInterface::on_init(info);
+    return CallbackReturn::ERROR;
+  }
+};
+
 #include "pluginlib/class_list_macros.hpp"  // NOLINT
 PLUGINLIB_EXPORT_CLASS(TestActuator, hardware_interface::ActuatorInterface)
+PLUGINLIB_EXPORT_CLASS(TestUnitilizableActuator, hardware_interface::ActuatorInterface)

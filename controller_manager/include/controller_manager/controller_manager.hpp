@@ -71,14 +71,14 @@ public:
     std::unique_ptr<hardware_interface::ResourceManager> resource_manager,
     std::shared_ptr<rclcpp::Executor> executor,
     const std::string & manager_node_name = "controller_manager",
-    const std::string & namespace_ = "",
+    const std::string & node_namespace = "",
     const rclcpp::NodeOptions & options = get_cm_node_options());
 
   CONTROLLER_MANAGER_PUBLIC
   ControllerManager(
     std::shared_ptr<rclcpp::Executor> executor,
     const std::string & manager_node_name = "controller_manager",
-    const std::string & namespace_ = "",
+    const std::string & node_namespace = "",
     const rclcpp::NodeOptions & options = get_cm_node_options());
 
   CONTROLLER_MANAGER_PUBLIC

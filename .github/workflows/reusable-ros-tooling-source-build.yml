@@ -36,6 +36,7 @@ jobs:
         with:
           target-ros2-distro: ${{ inputs.ros_distro }}
           # build all packages listed in the meta package
+          ref: ${{ inputs.ref }} # otherwise the default branch is used for scheduled workflows
           package-name:
             controller_interface
             controller_manager

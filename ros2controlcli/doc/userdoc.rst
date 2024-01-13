@@ -73,7 +73,7 @@ Example output:
 
     $ ros2 control list_controller_types
     diff_drive_controller/DiffDriveController                              controller_interface::ControllerInterface
-    joint_state_controller/JointStateController                            controller_interface::ControllerInterface
+    joint_state_broadcaster/JointStateBroadcaster                          controller_interface::ControllerInterface
     joint_trajectory_controller/JointTrajectoryController                  controller_interface::ControllerInterface
 
 
