@@ -1317,10 +1317,16 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::add_co
     return nullptr;
   }
 
+  rclcpp::NodeOptions controller_node_options = rclcpp::NodeOptions().enable_logger_service(true);
+  if (controller.info.params_file.has_value())
+  {
+    controller_node_options = controller_node_options.arguments(
+      {"--ros-args", "--params-file", controller.info.params_file.value()});
+  }
   if (
     controller.c->init(
-      controller.info.name, robot_description_, get_update_rate(), get_namespace()) ==
-    controller_interface::return_type::ERROR)
+      controller.info.name, robot_description_, get_update_rate(), get_namespace(),
+      controller_node_options) == controller_interface::return_type::ERROR)
   {
     to.clear();
     RCLCPP_ERROR(
