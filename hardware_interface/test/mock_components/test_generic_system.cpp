@@ -50,7 +50,7 @@ protected:
     // REMOVE THIS MEMBER ONCE FAKE COMPONENTS ARE REMOVED
     hardware_fake_system_2dof_ =
       R"(
-  <ros2_control name="GenericSystem2dof" type="system">
+  <ros2_control name="MockHardwareSystem" type="system">
     <hardware>
       <plugin>fake_components/GenericSystem</plugin>
     </hardware>
@@ -645,7 +645,7 @@ void set_components_state(
 
 auto configure_components = [](
                               TestableResourceManager & rm,
-                              const std::vector<std::string> & components = {"GenericSystem2dof"})
+                              const std::vector<std::string> & components = {"MockHardwareSystem"})
 {
   set_components_state(
     rm, components, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
@@ -654,7 +654,7 @@ auto configure_components = [](
 
 auto activate_components = [](
                              TestableResourceManager & rm,
-                             const std::vector<std::string> & components = {"GenericSystem2dof"})
+                             const std::vector<std::string> & components = {"MockHardwareSystem"})
 {
   set_components_state(
     rm, components, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
@@ -663,7 +663,7 @@ auto activate_components = [](
 
 auto deactivate_components = [](
                                TestableResourceManager & rm,
-                               const std::vector<std::string> & components = {"GenericSystem2dof"})
+                               const std::vector<std::string> & components = {"MockHardwareSystem"})
 {
   set_components_state(
     rm, components, lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
@@ -794,17 +794,17 @@ void generic_system_functional_test(const std::string & urdf, const double offse
   // check is hardware is configured
   auto status_map = rm.get_components_status();
   EXPECT_EQ(
-    status_map["GenericSystem2dof"].state.label(),
+    status_map["MockHardwareSystem"].state.label(),
     hardware_interface::lifecycle_state_names::UNCONFIGURED);
   configure_components(rm);
   status_map = rm.get_components_status();
   EXPECT_EQ(
-    status_map["GenericSystem2dof"].state.label(),
+    status_map["MockHardwareSystem"].state.label(),
     hardware_interface::lifecycle_state_names::INACTIVE);
   activate_components(rm);
   status_map = rm.get_components_status();
   EXPECT_EQ(
-    status_map["GenericSystem2dof"].state.label(),
+    status_map["MockHardwareSystem"].state.label(),
     hardware_interface::lifecycle_state_names::ACTIVE);
 
   // Check initial values
@@ -884,7 +884,7 @@ void generic_system_functional_test(const std::string & urdf, const double offse
   deactivate_components(rm);
   status_map = rm.get_components_status();
   EXPECT_EQ(
-    status_map["GenericSystem2dof"].state.label(),
+    status_map["MockHardwareSystem"].state.label(),
     hardware_interface::lifecycle_state_names::INACTIVE);
 }
 
@@ -1324,18 +1324,18 @@ TEST_F(TestGenericSystem, generic_system_2dof_functionality_with_offset_custom_i
   // check is hardware is configured
   auto status_map = rm.get_components_status();
   EXPECT_EQ(
-    status_map["GenericSystem2dof"].state.label(),
+    status_map["MockHardwareSystem"].state.label(),
     hardware_interface::lifecycle_state_names::UNCONFIGURED);
 
   configure_components(rm);
   status_map = rm.get_components_status();
   EXPECT_EQ(
-    status_map["GenericSystem2dof"].state.label(),
+    status_map["MockHardwareSystem"].state.label(),
     hardware_interface::lifecycle_state_names::INACTIVE);
   activate_components(rm);
   status_map = rm.get_components_status();
   EXPECT_EQ(
-    status_map["GenericSystem2dof"].state.label(),
+    status_map["MockHardwareSystem"].state.label(),
     hardware_interface::lifecycle_state_names::ACTIVE);
 
   // Check initial values
@@ -1425,7 +1425,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_functionality_with_offset_custom_i
   deactivate_components(rm);
   status_map = rm.get_components_status();
   EXPECT_EQ(
-    status_map["GenericSystem2dof"].state.label(),
+    status_map["MockHardwareSystem"].state.label(),
     hardware_interface::lifecycle_state_names::INACTIVE);
 }
 
@@ -1438,17 +1438,17 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio)
   // check is hardware is started
   auto status_map = rm.get_components_status();
   EXPECT_EQ(
-    status_map["GenericSystem2dof"].state.label(),
+    status_map["MockHardwareSystem"].state.label(),
     hardware_interface::lifecycle_state_names::UNCONFIGURED);
   configure_components(rm);
   status_map = rm.get_components_status();
   EXPECT_EQ(
-    status_map["GenericSystem2dof"].state.label(),
+    status_map["MockHardwareSystem"].state.label(),
     hardware_interface::lifecycle_state_names::INACTIVE);
   activate_components(rm);
   status_map = rm.get_components_status();
   EXPECT_EQ(
-    status_map["GenericSystem2dof"].state.label(),
+    status_map["MockHardwareSystem"].state.label(),
     hardware_interface::lifecycle_state_names::ACTIVE);
 
   ASSERT_EQ(8u, rm.state_interface_keys().size());
@@ -1534,17 +1534,17 @@ void TestGenericSystem::test_generic_system_with_mock_gpio_commands(std::string 
   // check is hardware is started
   auto status_map = rm.get_components_status();
   EXPECT_EQ(
-    status_map["GenericSystem2dof"].state.label(),
+    status_map["MockHardwareSystem"].state.label(),
     hardware_interface::lifecycle_state_names::UNCONFIGURED);
   configure_components(rm);
   status_map = rm.get_components_status();
   EXPECT_EQ(
-    status_map["GenericSystem2dof"].state.label(),
+    status_map["MockHardwareSystem"].state.label(),
     hardware_interface::lifecycle_state_names::INACTIVE);
   activate_components(rm);
   status_map = rm.get_components_status();
   EXPECT_EQ(
-    status_map["GenericSystem2dof"].state.label(),
+    status_map["MockHardwareSystem"].state.label(),
     hardware_interface::lifecycle_state_names::ACTIVE);
 
   // Check interfaces
