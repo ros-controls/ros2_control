@@ -272,11 +272,6 @@ public:
 
     if (result)
     {
-<<<<<<< HEAD
-=======
-      remove_all_hardware_interfaces_from_available_list(hardware.get_name());
-      async_component_threads_.erase(hardware.get_name());
->>>>>>> 8c34ab6 (Add additional checks for non existing and not available interfaces. (#1218))
       // TODO(destogl): change this - deimport all things if there is there are interfaces there
       // deimport_non_movement_command_interfaces(hardware);
       // deimport_state_interfaces(hardware);
