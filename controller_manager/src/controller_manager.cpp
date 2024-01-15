@@ -575,7 +575,7 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_c
     0, 0, this->get_node_clock_interface()->get_clock()->get_clock_type());
 
   // We have to fetch the params_file at the time of loading the controller, because this way we can
-  // load them at the creating of the LifeCycleNode and this helps in using the features such as
+  // load them at the creation of the LifeCycleNode and this helps in using the features such as
   // read_only params, dynamic maps lists etc
   // Now check if the params_file parameter exist
   const std::string param_name = controller_name + ".params_file";
