@@ -44,62 +44,6 @@ using ros2_control_test_assets::TEST_SYSTEM_HARDWARE_NAME;
 using ros2_control_test_assets::TEST_SYSTEM_HARDWARE_STATE_INTERFACES;
 using ros2_control_test_assets::TEST_SYSTEM_HARDWARE_TYPE;
 
-<<<<<<< HEAD
-class ResourceManagerTest : public ::testing::Test
-{
-public:
-  static void SetUpTestCase() {}
-
-  void SetUp() {}
-};
-
-// Forward declaration
-namespace hardware_interface
-{
-class ResourceStorage;
-}
-
-class TestableResourceManager : public hardware_interface::ResourceManager
-{
-public:
-  friend ResourceManagerTest;
-
-  FRIEND_TEST(ResourceManagerTest, initialization_with_urdf_manual_validation);
-  FRIEND_TEST(ResourceManagerTest, post_initialization_add_components);
-  FRIEND_TEST(ResourceManagerTest, managing_controllers_reference_interfaces);
-  FRIEND_TEST(ResourceManagerTest, resource_availability_and_claiming_in_lifecycle);
-  FRIEND_TEST(ResourceManagerTest, test_unitilizable_hardware_no_validation);
-
-  TestableResourceManager() : hardware_interface::ResourceManager() {}
-
-  TestableResourceManager(
-    const std::string & urdf, bool validate_interfaces = true, bool activate_all = false)
-  : hardware_interface::ResourceManager(urdf, validate_interfaces, activate_all)
-  {
-  }
-};
-
-std::vector<hardware_interface::return_type> set_components_state(
-  hardware_interface::ResourceManager & rm, const std::vector<std::string> & components,
-  const uint8_t state_id, const std::string & state_name)
-{
-  auto int_components = components;
-  if (int_components.empty())
-  {
-    int_components = {"TestActuatorHardware", "TestSensorHardware", "TestSystemHardware"};
-  }
-  std::vector<hardware_interface::return_type> results;
-  for (const auto & component : int_components)
-  {
-    rclcpp_lifecycle::State state(state_id, state_name);
-    const auto result = rm.set_component_state(component, state);
-    results.push_back(result);
-  }
-  return results;
-}
-
-=======
->>>>>>> 8c34ab6 (Add additional checks for non existing and not available interfaces. (#1218))
 auto configure_components =
   [](TestableResourceManager & rm, const std::vector<std::string> & components = {})
 {
