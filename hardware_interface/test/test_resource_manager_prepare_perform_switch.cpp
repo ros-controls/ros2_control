@@ -20,6 +20,7 @@
 #include <vector>
 
 #include "hardware_interface/loaned_state_interface.hpp"
+#include "lifecycle_msgs/msg/state.hpp"
 #include "ros2_control_test_assets/descriptions.hpp"
 
 const auto hardware_resources_command_modes =

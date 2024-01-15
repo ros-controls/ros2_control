@@ -1205,7 +1205,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_sensor_mock_command)
   auto urdf = ros2_control_test_assets::urdf_head + hardware_system_2dof_with_sensor_mock_command_ +
               ros2_control_test_assets::urdf_tail;
 
-  test_generic_system_with_mock_sensor_commands(urdf, "GenericSystem2dof");
+  test_generic_system_with_mock_sensor_commands(urdf);
 }
 
 TEST_F(TestGenericSystem, generic_system_2dof_sensor_mock_command_True)
@@ -1214,7 +1214,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_sensor_mock_command_True)
               hardware_system_2dof_with_sensor_mock_command_True_ +
               ros2_control_test_assets::urdf_tail;
 
-  test_generic_system_with_mock_sensor_commands(urdf, "GenericSystem2dof");
+  test_generic_system_with_mock_sensor_commands(urdf);
 }
 
 void TestGenericSystem::test_generic_system_with_mimic_joint(const std::string & urdf)
@@ -1288,7 +1288,7 @@ TEST_F(TestGenericSystem, hardware_system_2dof_with_mimic_joint)
   auto urdf = ros2_control_test_assets::urdf_head + hardware_system_2dof_with_mimic_joint_ +
               ros2_control_test_assets::urdf_tail;
 
-  test_generic_system_with_mimic_joint(urdf, "GenericSystem2dof");
+  test_generic_system_with_mimic_joint(urdf);
 }
 
 TEST_F(TestGenericSystem, generic_system_2dof_functionality_with_offset)
@@ -1644,7 +1644,7 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_mock_co
               valid_urdf_ros2_control_system_robot_with_gpio_mock_command_ +
               ros2_control_test_assets::urdf_tail;
 
-  test_generic_system_with_mock_gpio_commands(urdf, "GenericSystem2dof");
+  test_generic_system_with_mock_gpio_commands(urdf);
 }
 
 TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_mock_command_True)
@@ -1653,7 +1653,7 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_mock_co
               valid_urdf_ros2_control_system_robot_with_gpio_mock_command_True_ +
               ros2_control_test_assets::urdf_tail;
 
-  test_generic_system_with_mock_gpio_commands(urdf, "GenericSystem2dof");
+  test_generic_system_with_mock_gpio_commands(urdf);
 }
 
 TEST_F(TestGenericSystem, sensor_with_initial_value)
