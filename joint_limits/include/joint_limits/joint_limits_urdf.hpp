@@ -51,12 +51,12 @@ inline bool getJointLimits(urdf::JointConstSharedPtr urdf_joint, JointLimits & l
   }
 
   limits.has_velocity_limits = true;
-  limits.max_velocity = fabs(urdf_joint->limits->velocity);
+  limits.max_velocity = std::abs(urdf_joint->limits->velocity);
 
   limits.has_acceleration_limits = false;
 
   limits.has_effort_limits = true;
-  limits.max_effort = fabs(urdf_joint->limits->effort);
+  limits.max_effort = std::abs(urdf_joint->limits->effort);
 
   return true;
 }
