@@ -16,6 +16,7 @@
   <depend>rclcpp_lifecycle</depend>
   <depend>rcpputils</depend>
   <depend>tinyxml2_vendor</depend>
+  <depend>joint_limits</depend>
   <depend>urdf</depend>
 
   <build_depend>rcutils</build_depend>
