@@ -640,7 +640,7 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
     {
       try
       {
-        if (!(itf.min.empty() && itf.max.empty()))
+        if (itf.min.empty() && itf.max.empty())
         {
           // If the limits don't exist then return false as they are not retrieved
           return false;
@@ -658,7 +658,7 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
       catch (const std::invalid_argument & err)
       {
         std::cerr << "Error parsing the limits for the interface : " << itf.name
-                  << "from the tags [" << kMinTag << " : '" << itf.min << "' and " << kMaxTag
+                  << " from the tags [" << kMinTag << " : '" << itf.min << "' and " << kMaxTag
                   << " : '" << itf.max << "'] within " << kROS2ControlTag
                   << " tag inside the URDF. Skipping it" << std::endl;
         return false;
@@ -738,7 +738,7 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
         if (!itr.min.empty())
         {
           std::cerr << "Error parsing the limits for the interface : " << itr.name
-                    << "from the tag : " << kMinTag << " within " << kROS2ControlTag
+                    << " from the tag : " << kMinTag << " within " << kROS2ControlTag
                     << " tag inside the URDF. Jerk only accepts max limits." << std::endl;
         }
         double min_jerk(std::numeric_limits<double>::quiet_NaN()),
@@ -757,7 +757,7 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
         if (!itr.min.empty() || !itr.max.empty())
         {
           std::cerr << "Unable to parse the limits for the interface : " << itr.name
-                    << "from the tags [" << kMinTag << " and " << kMaxTag << "] within "
+                    << " from the tags [" << kMinTag << " and " << kMaxTag << "] within "
                     << kROS2ControlTag
                     << " tag inside the URDF. Supported interfaces for joint limits are : "
                        "position, velocity, effort, acceleration and jerk."
