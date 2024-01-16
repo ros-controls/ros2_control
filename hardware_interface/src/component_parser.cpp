@@ -857,7 +857,9 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
       auto urdf_joint = model.getJoint(joint.name);
       if (!urdf_joint)
       {
-        throw std::runtime_error("Joint " + joint.name + " not found in URDF");
+        std::cerr << "Joint : '" + joint.name + "' not found in URDF. Skipping limits parsing!"
+                  << std::endl;
+        continue;
       }
       joint_limits::JointLimits limits;
       const bool has_hard_limts = getJointLimits(urdf_joint, limits);
