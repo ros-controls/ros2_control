@@ -1,17 +1,13 @@
 name: Iron RHEL Binary Build
 on:
   workflow_dispatch:
+  push:
     branches:
-      - iron
-#  pull_request:
-#    branches:
-#      - iron
-#  push:
-#    branches:
-#      - iron
-#  schedule:
-#    # Run every day to detect flakiness and broken dependencies
-#    - cron: '03 1 * * *'
+      - master
+  schedule:
+    # Run every day to detect flakiness and broken dependencies
+    - cron: '03 1 * * *'
+
 
 jobs:
   iron_rhel_binary:
