@@ -164,7 +164,11 @@ class TestControllerManagerSrvs
 : public ControllerManagerFixture<controller_manager::ControllerManager>
 {
 public:
-  TestControllerManagerSrvs() {}
+  TestControllerManagerSrvs()
+  : ControllerManagerFixture<controller_manager::ControllerManager>(
+      ros2_control_test_assets::minimal_robot_urdf, true)
+  {
+  }
 
   void SetUp() override
   {
