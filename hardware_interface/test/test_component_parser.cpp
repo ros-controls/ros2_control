@@ -137,6 +137,21 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_one_interface)
   EXPECT_EQ(hardware_info.joints[1].command_interfaces[0].max, "1");
   ASSERT_THAT(hardware_info.joints[1].state_interfaces, SizeIs(1));
   EXPECT_EQ(hardware_info.joints[1].state_interfaces[0].name, HW_IF_POSITION);
+
+  // Verify limits parsed from the URDF
+  ASSERT_THAT(hardware_info.limits, SizeIs(2));
+  for (const auto & joint : {"joint1", "joint2"})
+  {
+    EXPECT_TRUE(hardware_info.limits.at(joint).has_position_limits);
+    // position limits will be limited than original range, as their range is limited in the
+    // ros2_control tags
+    EXPECT_THAT(hardware_info.limits.at(joint).max_position, DoubleNear(1.0, 1e-5));
+    EXPECT_THAT(hardware_info.limits.at(joint).min_position, DoubleNear(-1.0, 1e-5));
+    EXPECT_TRUE(hardware_info.limits.at(joint).has_velocity_limits);
+    EXPECT_TRUE(hardware_info.limits.at(joint).has_effort_limits);
+    EXPECT_THAT(hardware_info.limits.at(joint).max_velocity, DoubleNear(0.2, 1e-5));
+    EXPECT_THAT(hardware_info.limits.at(joint).max_effort, DoubleNear(0.1, 1e-5));
+  }
 }
 
 TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_multi_interface)
@@ -174,6 +189,22 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_multi_interface
   ASSERT_THAT(hardware_info.joints[1].command_interfaces, SizeIs(1));
   ASSERT_THAT(hardware_info.joints[1].state_interfaces, SizeIs(3));
   EXPECT_EQ(hardware_info.joints[1].state_interfaces[2].name, HW_IF_EFFORT);
+
+  // Verify limits parsed from the URDF
+  ASSERT_THAT(hardware_info.limits, SizeIs(2));
+  for (const auto & joint : {"joint1", "joint2"})
+  {
+    EXPECT_TRUE(hardware_info.limits.at(joint).has_position_limits);
+    // position limits will be limited than original range, as their range is limited in the
+    // ros2_control tags
+    EXPECT_THAT(hardware_info.limits.at(joint).max_position, DoubleNear(1.0, 1e-5));
+    EXPECT_THAT(hardware_info.limits.at(joint).min_position, DoubleNear(-1.0, 1e-5));
+    EXPECT_TRUE(hardware_info.limits.at(joint).has_velocity_limits);
+    EXPECT_TRUE(hardware_info.limits.at(joint).has_effort_limits);
+    // effort and velocity limits won't change as they are above the main URDF hard limits
+    EXPECT_THAT(hardware_info.limits.at(joint).max_velocity, DoubleNear(0.2, 1e-5));
+    EXPECT_THAT(hardware_info.limits.at(joint).max_effort, DoubleNear(0.1, 1e-5));
+  }
 }
 
 TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_robot_with_sensor)
@@ -218,6 +249,21 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_robot_with_sens
   EXPECT_EQ(hardware_info.sensors[0].parameters.at("frame_id"), "kuka_tcp");
   EXPECT_EQ(hardware_info.sensors[0].parameters.at("lower_limits"), "-100");
   EXPECT_EQ(hardware_info.sensors[0].parameters.at("upper_limits"), "100");
+
+  // Verify limits parsed from the URDF
+  ASSERT_THAT(hardware_info.limits, SizeIs(2));
+  for (const auto & joint : {"joint1", "joint2"})
+  {
+    EXPECT_TRUE(hardware_info.limits.at(joint).has_position_limits);
+    // position limits will be limited than original range, as their range is limited in the
+    // ros2_control tags
+    EXPECT_THAT(hardware_info.limits.at(joint).max_position, DoubleNear(1.0, 1e-5));
+    EXPECT_THAT(hardware_info.limits.at(joint).min_position, DoubleNear(-1.0, 1e-5));
+    EXPECT_TRUE(hardware_info.limits.at(joint).has_velocity_limits);
+    EXPECT_TRUE(hardware_info.limits.at(joint).has_effort_limits);
+    EXPECT_THAT(hardware_info.limits.at(joint).max_velocity, DoubleNear(0.2, 1e-5));
+    EXPECT_THAT(hardware_info.limits.at(joint).max_effort, DoubleNear(0.1, 1e-5));
+  }
 }
 
 TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_robot_with_external_sensor)
@@ -248,6 +294,21 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_robot_with_exte
 
   ASSERT_THAT(hardware_info.sensors, SizeIs(0));
 
+  // Verify limits parsed from the URDF
+  ASSERT_THAT(hardware_info.limits, SizeIs(2));
+  for (const auto & joint : {"joint1", "joint2"})
+  {
+    EXPECT_TRUE(hardware_info.limits.at(joint).has_position_limits);
+    // position limits will be limited than original range, as their range is limited in the
+    // ros2_control tags
+    EXPECT_THAT(hardware_info.limits.at(joint).max_position, DoubleNear(1.0, 1e-5));
+    EXPECT_THAT(hardware_info.limits.at(joint).min_position, DoubleNear(-1.0, 1e-5));
+    EXPECT_TRUE(hardware_info.limits.at(joint).has_velocity_limits);
+    EXPECT_TRUE(hardware_info.limits.at(joint).has_effort_limits);
+    EXPECT_THAT(hardware_info.limits.at(joint).max_velocity, DoubleNear(0.2, 1e-5));
+    EXPECT_THAT(hardware_info.limits.at(joint).max_effort, DoubleNear(0.1, 1e-5));
+  }
+
   hardware_info = control_hardware.at(1);
 
   EXPECT_EQ(hardware_info.name, "RRBotForceTorqueSensor2D");
@@ -259,6 +320,7 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_robot_with_exte
   EXPECT_EQ(hardware_info.sensors[0].name, "tcp_fts_sensor");
   EXPECT_EQ(hardware_info.sensors[0].type, "sensor");
   EXPECT_EQ(hardware_info.sensors[0].parameters.at("frame_id"), "kuka_tcp");
+  ASSERT_THAT(hardware_info.limits, SizeIs(0));
 }
 
 TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_modular_robot)
@@ -281,6 +343,20 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_modular_robot
   ASSERT_THAT(hardware_info.joints, SizeIs(1));
   EXPECT_EQ(hardware_info.joints[0].name, "joint1");
   EXPECT_EQ(hardware_info.joints[0].type, "joint");
+  // Verify limits parsed from the URDF
+  ASSERT_THAT(hardware_info.limits, SizeIs(1));
+  for (const auto & joint : {"joint1"})
+  {
+    EXPECT_TRUE(hardware_info.limits.at(joint).has_position_limits);
+    // position limits will be limited than original range, as their range is limited in the
+    // ros2_control tags
+    EXPECT_THAT(hardware_info.limits.at(joint).max_position, DoubleNear(1.0, 1e-5));
+    EXPECT_THAT(hardware_info.limits.at(joint).min_position, DoubleNear(-1.0, 1e-5));
+    EXPECT_TRUE(hardware_info.limits.at(joint).has_velocity_limits);
+    EXPECT_TRUE(hardware_info.limits.at(joint).has_effort_limits);
+    EXPECT_THAT(hardware_info.limits.at(joint).max_velocity, DoubleNear(0.2, 1e-5));
+    EXPECT_THAT(hardware_info.limits.at(joint).max_effort, DoubleNear(0.1, 1e-5));
+  }
 
   hardware_info = control_hardware.at(1);
 
@@ -294,6 +370,20 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_modular_robot
   ASSERT_THAT(hardware_info.joints, SizeIs(1));
   EXPECT_EQ(hardware_info.joints[0].name, "joint2");
   EXPECT_EQ(hardware_info.joints[0].type, "joint");
+  // Verify limits parsed from the URDF
+  ASSERT_THAT(hardware_info.limits, SizeIs(1));
+  for (const auto & joint : {"joint2"})
+  {
+    EXPECT_TRUE(hardware_info.limits.at(joint).has_position_limits);
+    // position limits will be limited than original range, as their range is limited in the
+    // ros2_control tags
+    EXPECT_THAT(hardware_info.limits.at(joint).max_position, DoubleNear(1.0, 1e-5));
+    EXPECT_THAT(hardware_info.limits.at(joint).min_position, DoubleNear(-1.0, 1e-5));
+    EXPECT_TRUE(hardware_info.limits.at(joint).has_velocity_limits);
+    EXPECT_TRUE(hardware_info.limits.at(joint).has_effort_limits);
+    EXPECT_THAT(hardware_info.limits.at(joint).max_velocity, DoubleNear(0.2, 1e-5));
+    EXPECT_THAT(hardware_info.limits.at(joint).max_effort, DoubleNear(0.1, 1e-5));
+  }
 }
 
 TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_modular_robot_with_sensors)
@@ -328,6 +418,19 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_modular_robot
     hardware_info.transmissions[0].joints[0].mechanical_reduction, DoubleNear(1024.0 / M_PI, 0.01));
   ASSERT_THAT(hardware_info.transmissions[0].actuators, SizeIs(1));
   EXPECT_THAT(hardware_info.transmissions[0].actuators[0].name, "actuator1");
+  // Verify limits parsed from the URDF
+  ASSERT_THAT(hardware_info.limits, SizeIs(1));
+  for (const auto & joint : {"joint1"})
+  {
+    EXPECT_TRUE(hardware_info.limits.at(joint).has_position_limits);
+    EXPECT_THAT(hardware_info.limits.at(joint).max_position, DoubleNear(M_PI, 1e-5));
+    EXPECT_THAT(hardware_info.limits.at(joint).min_position, DoubleNear(-M_PI, 1e-5));
+    EXPECT_TRUE(hardware_info.limits.at(joint).has_velocity_limits);
+    EXPECT_TRUE(hardware_info.limits.at(joint).has_effort_limits);
+    // effort and velocity limits won't change as they are above the main URDF hard limits
+    EXPECT_THAT(hardware_info.limits.at(joint).max_velocity, DoubleNear(0.2, 1e-5));
+    EXPECT_THAT(hardware_info.limits.at(joint).max_effort, DoubleNear(0.1, 1e-5));
+  }
 
   hardware_info = control_hardware.at(1);
 
@@ -345,6 +448,19 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_modular_robot
   EXPECT_EQ(hardware_info.joints[0].command_interfaces[0].name, HW_IF_VELOCITY);
   EXPECT_EQ(hardware_info.joints[0].command_interfaces[0].min, "-1");
   EXPECT_EQ(hardware_info.joints[0].command_interfaces[0].max, "1");
+  // Verify limits parsed from the URDF
+  ASSERT_THAT(hardware_info.limits, SizeIs(1));
+  for (const auto & joint : {"joint2"})
+  {
+    EXPECT_TRUE(hardware_info.limits.at(joint).has_position_limits);
+    EXPECT_THAT(hardware_info.limits.at(joint).max_position, DoubleNear(M_PI, 1e-5));
+    EXPECT_THAT(hardware_info.limits.at(joint).min_position, DoubleNear(-M_PI, 1e-5));
+    EXPECT_TRUE(hardware_info.limits.at(joint).has_velocity_limits);
+    EXPECT_TRUE(hardware_info.limits.at(joint).has_effort_limits);
+    // effort and velocity limits won't change as they are above the main URDF hard limits
+    EXPECT_THAT(hardware_info.limits.at(joint).max_velocity, DoubleNear(0.2, 1e-5));
+    EXPECT_THAT(hardware_info.limits.at(joint).max_effort, DoubleNear(0.1, 1e-5));
+  }
 
   hardware_info = control_hardware.at(2);
 
@@ -362,6 +478,19 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_modular_robot
   ASSERT_THAT(hardware_info.joints[0].command_interfaces, IsEmpty());
   ASSERT_THAT(hardware_info.joints[0].state_interfaces, SizeIs(1));
   EXPECT_EQ(hardware_info.joints[0].state_interfaces[0].name, HW_IF_POSITION);
+  // Verify limits parsed from the URDF
+  ASSERT_THAT(hardware_info.limits, SizeIs(1));
+  for (const auto & joint : {"joint1"})
+  {
+    EXPECT_TRUE(hardware_info.limits.at(joint).has_position_limits);
+    EXPECT_THAT(hardware_info.limits.at(joint).max_position, DoubleNear(M_PI, 1e-5));
+    EXPECT_THAT(hardware_info.limits.at(joint).min_position, DoubleNear(-M_PI, 1e-5));
+    EXPECT_TRUE(hardware_info.limits.at(joint).has_velocity_limits);
+    EXPECT_TRUE(hardware_info.limits.at(joint).has_effort_limits);
+    // effort and velocity limits won't change as they are above the main URDF hard limits
+    EXPECT_THAT(hardware_info.limits.at(joint).max_velocity, DoubleNear(0.2, 1e-5));
+    EXPECT_THAT(hardware_info.limits.at(joint).max_effort, DoubleNear(0.1, 1e-5));
+  }
 
   hardware_info = control_hardware.at(3);
 
@@ -379,6 +508,19 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_modular_robot
   ASSERT_THAT(hardware_info.joints[0].command_interfaces, IsEmpty());
   ASSERT_THAT(hardware_info.joints[0].state_interfaces, SizeIs(1));
   EXPECT_EQ(hardware_info.joints[0].state_interfaces[0].name, HW_IF_POSITION);
+  // Verify limits parsed from the URDF
+  ASSERT_THAT(hardware_info.limits, SizeIs(1));
+  for (const auto & joint : {"joint2"})
+  {
+    EXPECT_TRUE(hardware_info.limits.at(joint).has_position_limits);
+    EXPECT_THAT(hardware_info.limits.at(joint).max_position, DoubleNear(M_PI, 1e-5));
+    EXPECT_THAT(hardware_info.limits.at(joint).min_position, DoubleNear(-M_PI, 1e-5));
+    EXPECT_TRUE(hardware_info.limits.at(joint).has_velocity_limits);
+    EXPECT_TRUE(hardware_info.limits.at(joint).has_effort_limits);
+    // effort and velocity limits won't change as they are above the main URDF hard limits
+    EXPECT_THAT(hardware_info.limits.at(joint).max_velocity, DoubleNear(0.2, 1e-5));
+    EXPECT_THAT(hardware_info.limits.at(joint).max_effort, DoubleNear(0.1, 1e-5));
+  }
 }
 
 TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_multi_joints_transmission)
