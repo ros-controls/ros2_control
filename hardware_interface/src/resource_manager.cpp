@@ -795,7 +795,12 @@ void ResourceManager::load_urdf(const std::string & urdf, bool validate_interfac
     resource_storage_->systems_.size());
 }
 
-bool ResourceManager::is_urdf_already_loaded() const { return is_urdf_loaded__; }
+bool ResourceManager::is_urdf_already_loaded() const
+{
+  return (
+    !resource_storage_->actuators_.empty() || !resource_storage_->sensors_.empty() ||
+    !resource_storage_->systems_.empty());
+}
 
 // CM API: Called in "update"-thread
 LoanedStateInterface ResourceManager::claim_state_interface(const std::string & key)
