@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - master
+  pull_request:
+    branches:
+      - master
   schedule:
     # Run every day to detect flakiness and broken dependencies
     - cron: '03 1 * * *'
