@@ -21,6 +21,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "joint_limits/joint_limits.hpp"
+
 namespace hardware_interface
 {
 struct Limits
@@ -150,6 +152,8 @@ struct HardwareInfo
    * The XML contents prior to parsing
    */
   std::string original_xml;
+
+  std::unordered_map<std::string, joint_limits::JointLimits> limits;
 };
 
 }  // namespace hardware_interface
