@@ -874,7 +874,6 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
       {
         // Take the most restricted one
         update_interface_limits(joint.command_interfaces, limits);
-        update_interface_limits(joint.state_interfaces, limits);
         hw_info.limits[joint.name] = limits;
       }
     }
