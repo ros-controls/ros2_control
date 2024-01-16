@@ -418,8 +418,6 @@ private:
 
   // Structure to store read and write status so it is not initialized in the real-time loop
   HardwareReadWriteStatus read_write_status;
-
-  bool is_urdf_loaded__ = false;
 };
 
 }  // namespace hardware_interface
