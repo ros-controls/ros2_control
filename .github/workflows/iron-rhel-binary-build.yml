@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - master
+      - iron
   schedule:
     # Run every day to detect flakiness and broken dependencies
     - cron: '03 1 * * *'
