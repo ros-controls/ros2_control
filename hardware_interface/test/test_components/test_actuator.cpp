@@ -73,6 +73,22 @@ class TestActuator : public ActuatorInterface
     return command_interfaces;
   }
 
+  hardware_interface::return_type prepare_command_mode_switch(
+    const std::vector<std::string> & /*start_interfaces*/,
+    const std::vector<std::string> & /*stop_interfaces*/) override
+  {
+    position_state_ += 1.0;
+    return hardware_interface::return_type::OK;
+  }
+
+  hardware_interface::return_type perform_command_mode_switch(
+    const std::vector<std::string> & /*start_interfaces*/,
+    const std::vector<std::string> & /*stop_interfaces*/) override
+  {
+    position_state_ += 100.0;
+    return hardware_interface::return_type::OK;
+  }
+
   return_type read(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
   {
     // simulate error on read

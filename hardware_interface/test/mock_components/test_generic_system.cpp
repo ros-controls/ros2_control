@@ -520,7 +520,7 @@ protected:
 
     valid_hardware_system_2dof_standard_interfaces_with_different_control_modes_ =
       R"(
-  <ros2_control name="HardwareSystem2dofStandardInterfacesWithDifferentControlModes" type="system">
+  <ros2_control name="GenericSystem2dof" type="system">
     <hardware>
       <plugin>mock_components/GenericSystem</plugin>
       <param name="calculate_dynamics">true</param>
@@ -1320,6 +1320,8 @@ TEST_F(TestGenericSystem, generic_system_2dof_functionality_with_offset_custom_i
 
   TestableResourceManager rm(urdf);
 
+  const std::string hardware_name = "GenericSystem2dof";
+
   // check is hardware is configured
   auto status_map = rm.get_components_status();
   EXPECT_EQ(
@@ -1433,6 +1435,8 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio)
   auto urdf = ros2_control_test_assets::urdf_head +
               valid_urdf_ros2_control_system_robot_with_gpio_ + ros2_control_test_assets::urdf_tail;
   TestableResourceManager rm(urdf);
+
+  const std::string hardware_name = "GenericSystem2dof";
 
   // check is hardware is started
   auto status_map = rm.get_components_status();
@@ -1948,6 +1952,8 @@ TEST_F(TestGenericSystem, prepare_command_mode_switch_works_with_all_example_tag
   {
     TestableResourceManager rm(
       ros2_control_test_assets::urdf_head + urdf + ros2_control_test_assets::urdf_tail);
+    rclcpp_lifecycle::State state(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, "active");
+    rm.set_component_state("GenericSystem2dof", state);
     auto start_interfaces = rm.command_interface_keys();
     std::vector<std::string> stop_interfaces;
     return rm.prepare_command_mode_switch(start_interfaces, stop_interfaces);

@@ -87,6 +87,12 @@ class TestControllerChainingWithControllerManager
   public testing::WithParamInterface<Strictness>
 {
 public:
+  TestControllerChainingWithControllerManager()
+  : ControllerManagerFixture<TestableControllerManager>(
+      ros2_control_test_assets::minimal_robot_urdf, true)
+  {
+  }
+
   void SetUp()
   {
     executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
@@ -245,7 +251,7 @@ public:
   void check_after_de_activate(
     std::shared_ptr<T> & controller, const std::vector<std::string> & claimed_command_itfs,
     size_t expected_internal_counter, const controller_interface::return_type expected_return,
-    bool deactivated, bool claimed_interfaces_from_hw = false)
+    bool deactivated)
   {
     for (const auto & interface : claimed_command_itfs)
     {
@@ -258,14 +264,7 @@ public:
       }
       else
       {
-        if (claimed_interfaces_from_hw)
-        {
-          EXPECT_TRUE(cm_->resource_manager_->command_interface_is_available(interface));
-        }
-        else
-        {
-          EXPECT_FALSE(cm_->resource_manager_->command_interface_is_available(interface));
-        }
+        EXPECT_TRUE(cm_->resource_manager_->command_interface_is_available(interface));
         EXPECT_FALSE(cm_->resource_manager_->command_interface_is_claimed(interface));
       }
     }
@@ -297,14 +296,12 @@ public:
   void DeactivateAndCheckController(
     std::shared_ptr<T> & controller, const std::string & controller_name,
     const std::vector<std::string> & claimed_command_itfs, size_t expected_internal_counter = 0u,
-    const bool claimed_interfaces_from_hw = false,
     const controller_interface::return_type expected_return = controller_interface::return_type::OK)
   {
     switch_test_controllers(
       {}, {controller_name}, test_param.strictness, std::future_status::timeout, expected_return);
     check_after_de_activate(
-      controller, claimed_command_itfs, expected_internal_counter, expected_return, true,
-      claimed_interfaces_from_hw);
+      controller, claimed_command_itfs, expected_internal_counter, expected_return, true);
   }
 
   void UpdateAllControllerAndCheck(
@@ -606,9 +603,9 @@ TEST_P(
 
   // all controllers are deactivated --> chained mode is not changed
   DeactivateAndCheckController(
-    pid_left_wheel_controller, PID_LEFT_WHEEL, PID_LEFT_WHEEL_CLAIMED_INTERFACES, 14u, true);
+    pid_left_wheel_controller, PID_LEFT_WHEEL, PID_LEFT_WHEEL_CLAIMED_INTERFACES, 14u);
   DeactivateAndCheckController(
-    pid_right_wheel_controller, PID_RIGHT_WHEEL, PID_RIGHT_WHEEL_CLAIMED_INTERFACES, 14u, true);
+    pid_right_wheel_controller, PID_RIGHT_WHEEL, PID_RIGHT_WHEEL_CLAIMED_INTERFACES, 14u);
   EXPECT_FALSE(pid_left_wheel_controller->is_in_chained_mode());
   EXPECT_FALSE(pid_right_wheel_controller->is_in_chained_mode());
   ASSERT_FALSE(diff_drive_controller->is_in_chained_mode());
