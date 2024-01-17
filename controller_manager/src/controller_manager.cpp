@@ -1451,6 +1451,12 @@ void ControllerManager::activate_controllers()
         hardware_interface::lifecycle_state_names::ACTIVE,
         lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
     }
+
+    // if it is a chainable controller, make the reference interfaces available on activation
+    if (controller->is_chainable())
+    {
+      resource_manager_->make_controller_reference_interfaces_available(controller_name);
+    }
   }
   // All controllers activated, switching done
   switch_params_.do_switch = false;
