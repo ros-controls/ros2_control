@@ -1257,17 +1257,17 @@ void ControllerManager::deactivate_controllers()
   std::vector<ControllerSpec> & rt_controller_list =
     rt_controllers_wrapper_.update_and_get_used_by_rt_list();
   // stop controllers
-  for (const auto & request : deactivate_request_)
+  for (const auto & controller_name : deactivate_request_)
   {
     auto found_it = std::find_if(
       rt_controller_list.begin(), rt_controller_list.end(),
-      std::bind(controller_name_compare, std::placeholders::_1, request));
+      std::bind(controller_name_compare, std::placeholders::_1, controller_name));
     if (found_it == rt_controller_list.end())
     {
       RCLCPP_ERROR(
         get_logger(),
         "Got request to stop controller '%s' but it is not in the realtime controller list",
-        request.c_str());
+        controller_name.c_str());
       continue;
     }
     auto controller = found_it->c;
@@ -1279,7 +1279,7 @@ void ControllerManager::deactivate_controllers()
       {
         RCLCPP_ERROR(
           get_logger(), "After deactivating, controller '%s' is in state '%s', expected Inactive",
-          request.c_str(), new_state.label().c_str());
+          controller_name.c_str(), new_state.label().c_str());
       }
     }
   }
@@ -1291,18 +1291,18 @@ void ControllerManager::switch_chained_mode(
   std::vector<ControllerSpec> & rt_controller_list =
     rt_controllers_wrapper_.update_and_get_used_by_rt_list();
 
-  for (const auto & request : chained_mode_switch_list)
+  for (const auto & controller_name : chained_mode_switch_list)
   {
     auto found_it = std::find_if(
       rt_controller_list.begin(), rt_controller_list.end(),
-      std::bind(controller_name_compare, std::placeholders::_1, request));
+      std::bind(controller_name_compare, std::placeholders::_1, controller_name));
     if (found_it == rt_controller_list.end())
     {
       RCLCPP_FATAL(
         get_logger(),
         "Got request to turn %s chained mode for controller '%s', but controller is not in the "
         "realtime controller list. (This should never happen!)",
-        (to_chained_mode ? "ON" : "OFF"), request.c_str());
+        (to_chained_mode ? "ON" : "OFF"), controller_name.c_str());
       continue;
     }
     auto controller = found_it->c;
@@ -1312,11 +1312,11 @@ void ControllerManager::switch_chained_mode(
       {
         if (to_chained_mode)
         {
-          resource_manager_->make_controller_reference_interfaces_available(request);
+          resource_manager_->make_controller_reference_interfaces_available(controller_name);
         }
         else
         {
-          resource_manager_->make_controller_reference_interfaces_unavailable(request);
+          resource_manager_->make_controller_reference_interfaces_unavailable(controller_name);
         }
       }
       else
@@ -1327,7 +1327,7 @@ void ControllerManager::switch_chained_mode(
           "it! The control will probably not work as expected. Try to restart all controllers. "
           "If "
           "the error persist check controllers' individual configuration.",
-          (to_chained_mode ? "ON" : "OFF"), request.c_str());
+          (to_chained_mode ? "ON" : "OFF"), controller_name.c_str());
       }
     }
     else
@@ -1336,7 +1336,7 @@ void ControllerManager::switch_chained_mode(
         get_logger(),
         "Got request to turn %s chained mode for controller '%s', but this can not happen if "
         "controller is in '%s' state. (This should never happen!)",
-        (to_chained_mode ? "ON" : "OFF"), request.c_str(),
+        (to_chained_mode ? "ON" : "OFF"), controller_name.c_str(),
         hardware_interface::lifecycle_state_names::ACTIVE);
     }
   }
@@ -1346,17 +1346,17 @@ void ControllerManager::activate_controllers()
 {
   std::vector<ControllerSpec> & rt_controller_list =
     rt_controllers_wrapper_.update_and_get_used_by_rt_list();
-  for (const auto & request : activate_request_)
+  for (const auto & controller_name : activate_request_)
   {
     auto found_it = std::find_if(
       rt_controller_list.begin(), rt_controller_list.end(),
-      std::bind(controller_name_compare, std::placeholders::_1, request));
+      std::bind(controller_name_compare, std::placeholders::_1, controller_name));
     if (found_it == rt_controller_list.end())
     {
       RCLCPP_ERROR(
         get_logger(),
         "Got request to activate controller '%s' but it is not in the realtime controller list",
-        request.c_str());
+        controller_name.c_str());
       continue;
     }
     auto controller = found_it->c;
@@ -1385,7 +1385,7 @@ void ControllerManager::activate_controllers()
         RCLCPP_ERROR(
           get_logger(),
           "Resource conflict for controller '%s'. Command interface '%s' is already claimed.",
-          request.c_str(), command_interface.c_str());
+          controller_name.c_str(), command_interface.c_str());
         assignment_successful = false;
         break;
       }
@@ -1395,7 +1395,8 @@ void ControllerManager::activate_controllers()
       }
       catch (const std::exception & e)
       {
-        RCLCPP_ERROR(get_logger(), "Can't activate controller '%s': %s", request.c_str(), e.what());
+        RCLCPP_ERROR(
+          get_logger(), "Can't activate controller '%s': %s", controller_name.c_str(), e.what());
         assignment_successful = false;
         break;
       }
@@ -1429,7 +1430,8 @@ void ControllerManager::activate_controllers()
       }
       catch (const std::exception & e)
       {
-        RCLCPP_ERROR(get_logger(), "Can't activate controller '%s': %s", request.c_str(), e.what());
+        RCLCPP_ERROR(
+          get_logger(), "Can't activate controller '%s': %s", controller_name.c_str(), e.what());
         assignment_successful = false;
         break;
       }
