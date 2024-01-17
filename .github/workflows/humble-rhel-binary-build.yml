@@ -1,12 +1,10 @@
 name: Humble RHEL Binary Build
 on:
   workflow_dispatch:
+  push:
     branches:
       - humble
   pull_request:
-    branches:
-      - humble
-  push:
     branches:
       - humble
   schedule:
