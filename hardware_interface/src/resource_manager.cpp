@@ -676,7 +676,8 @@ ResourceManager::ResourceManager(
 }
 
 // CM API: Called in "callback/slow"-thread
-void ResourceManager::load_urdf(const std::string & urdf, bool validate_interfaces)
+void ResourceManager::load_urdf(
+  const std::string & urdf, bool validate_interfaces, bool load_and_initialize_components)
 {
   is_urdf_loaded__ = true;
   const std::string system_type = "system";
@@ -684,10 +685,11 @@ void ResourceManager::load_urdf(const std::string & urdf, bool validate_interfac
   const std::string actuator_type = "actuator";
 
   const auto hardware_info = hardware_interface::parse_control_resources_from_urdf(urdf);
-  for (const auto & individual_hardware_info : hardware_info)
+  if (load_and_initialize_components)
   {
-    if (individual_hardware_info.type == actuator_type)
+    for (const auto & individual_hardware_info : hardware_info)
     {
+<<<<<<< HEAD
       std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
       std::lock_guard<std::recursive_mutex> guard_claimed(claimed_command_interfaces_lock_);
       resource_storage_->load_and_initialize_actuator(individual_hardware_info);
@@ -702,6 +704,23 @@ void ResourceManager::load_urdf(const std::string & urdf, bool validate_interfac
       std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
       std::lock_guard<std::recursive_mutex> guard_claimed(claimed_command_interfaces_lock_);
       resource_storage_->load_and_initialize_system(individual_hardware_info);
+=======
+      if (individual_hardware_info.type == actuator_type)
+      {
+        std::scoped_lock guard(resource_interfaces_lock_, claimed_command_interfaces_lock_);
+        resource_storage_->load_and_initialize_actuator(individual_hardware_info);
+      }
+      if (individual_hardware_info.type == sensor_type)
+      {
+        std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
+        resource_storage_->load_and_initialize_sensor(individual_hardware_info);
+      }
+      if (individual_hardware_info.type == system_type)
+      {
+        std::scoped_lock guard(resource_interfaces_lock_, claimed_command_interfaces_lock_);
+        resource_storage_->load_and_initialize_system(individual_hardware_info);
+      }
+>>>>>>> 510ba73 ([RM] Fix crash for missing urdf in resource manager (#1301))
     }
   }
 
