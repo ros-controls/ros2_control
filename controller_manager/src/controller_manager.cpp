@@ -2390,13 +2390,16 @@ bool ControllerManager::controller_sorting(
           std::bind(controller_name_compare, std::placeholders::_1, controllers_list.back()));
         if (it != controllers.end())
         {
-          int dist = std::distance(controllers.begin(), it);
-          return dist;
+          return std::distance(controllers.begin(), it);
         }
+        return 0;
       };
-      const int ctrl_a_chain_first_controller = find_first_element(following_ctrls);
-      const int ctrl_b_chain_first_controller = find_first_element(following_ctrls_b);
-      if (ctrl_a_chain_first_controller < ctrl_b_chain_first_controller) return true;
+      const auto ctrl_a_chain_first_controller = find_first_element(following_ctrls);
+      const auto ctrl_b_chain_first_controller = find_first_element(following_ctrls_b);
+      if (ctrl_a_chain_first_controller < ctrl_b_chain_first_controller)
+      {
+        return true;
+      }
     }
 
     // If the ctrl_a's state interface is the one exported by the ctrl_b then ctrl_b should be
