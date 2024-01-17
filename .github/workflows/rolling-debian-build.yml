@@ -23,7 +23,9 @@ jobs:
       - uses: actions/checkout@v4
         with:
           path: src/ros2_control
-      - run: |
+      - name: Build and test
+        shell: bash
+        run: |
           source /opt/ros2_ws/install/setup.bash
           vcs import src < https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/ros2_control.${{ env.ROS_DISTRO }}.repos?token=${{ secrets.GITHUB_TOKEN }}
           colcon build --packages-skip rqt_controller_manager
