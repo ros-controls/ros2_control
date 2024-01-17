@@ -32,12 +32,7 @@ TestControllerFailedInit::on_init()
 }
 
 controller_interface::return_type TestControllerFailedInit::init(
-<<<<<<< HEAD
   const std::string & /* controller_name */, const std::string & /*namespace_*/,
-=======
-  const std::string & /* controller_name */, const std::string & /* urdf */,
-  unsigned int /*cm_update_rate*/, const std::string & /*namespace_*/,
->>>>>>> 7d79464 ([ControllerManager] Fix all warnings from the latets features. (#1174))
   const rclcpp::NodeOptions & /*node_options*/)
 {
   return controller_interface::return_type::ERROR;
