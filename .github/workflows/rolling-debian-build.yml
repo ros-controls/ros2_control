@@ -1,4 +1,4 @@
-name: Rolling debian Binary Build
+name: Rolling debian Build
 on:
   workflow_dispatch:
   push:
@@ -13,7 +13,7 @@ on:
 
 
 jobs:
-  rolling_debian_binary:
+  rolling_debian:
     name: Rolling debian build
     runs-on: ubuntu-latest
     env:
