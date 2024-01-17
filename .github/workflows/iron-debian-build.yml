@@ -1,0 +1,33 @@
+name: Iron debian Build
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - iron
+  pull_request:
+    branches:
+      - iron
+  schedule:
+    # Run every day to detect flakiness and broken dependencies
+    - cron: '03 1 * * *'
+
+
+jobs:
+  iron_debian:
+    name: Iron debian build
+    runs-on: ubuntu-latest
+    env:
+      ROS_DISTRO: iron
+    container: ghcr.io/christophfroehlich/ros:iron-debian
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: src/ros2_control
+      - name: Build and test
+        shell: bash
+        run: |
+          source /opt/ros2_ws/install/setup.bash
+          vcs import --input https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/ros2_control.${{ env.ROS_DISTRO }}.repos?token=${{ secrets.GITHUB_TOKEN }} src
+          colcon build --packages-skip rqt_controller_manager
+          colcon test --packages-skip rqt_controller_manager ros2controlcli
+          colcon test-result
