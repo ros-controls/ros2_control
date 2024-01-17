@@ -598,7 +598,9 @@ TEST_F(TestControllerManagerSrvs, list_sorted_chained_controllers)
        {TEST_CHAINED_CONTROLLER_4, TEST_CHAINED_CONTROLLER_3, TEST_CHAINED_CONTROLLER_5,
         TEST_CHAINED_CONTROLLER_2, TEST_CHAINED_CONTROLLER_1,
         test_controller::TEST_CONTROLLER_NAME})
+  {
     cm_->configure_controller(controller);
+  }
 
   // get controller list after configure
   result = call_service_and_wait(*client, request, srv_executor);
@@ -755,7 +757,9 @@ TEST_F(TestControllerManagerSrvs, list_sorted_complex_chained_controllers)
        {TEST_CHAINED_CONTROLLER_4, TEST_CHAINED_CONTROLLER_3, TEST_CHAINED_CONTROLLER_5,
         TEST_CHAINED_CONTROLLER_7, TEST_CHAINED_CONTROLLER_2, TEST_CHAINED_CONTROLLER_1,
         TEST_CHAINED_CONTROLLER_6, test_controller::TEST_CONTROLLER_NAME})
+  {
     cm_->configure_controller(controller);
+  }
 
   // get controller list after configure
   result = call_service_and_wait(*client, request, srv_executor);
@@ -969,7 +973,10 @@ TEST_F(TestControllerManagerSrvs, list_sorted_independent_chained_controllers)
                       TEST_CHAINED_CONTROLLER_4, TEST_CONTROLLER_2,
                       TEST_CHAINED_CONTROLLER_2, TEST_CHAINED_CONTROLLER_6,
                       TEST_CHAINED_CONTROLLER_7, TEST_CHAINED_CONTROLLER_8};
-  for (const auto & controller : ctrls_order) cm_->configure_controller(controller);
+  for (const auto & controller : ctrls_order)
+  {
+    cm_->configure_controller(controller);
+  }
 
   // get controller list after configure
   result = call_service_and_wait(*client, request, srv_executor);
