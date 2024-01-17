@@ -284,12 +284,20 @@ TEST_F(TestControllerManagerSrvs, list_chained_controllers_srv)
   ASSERT_EQ("joint1/position", result->controller[1].reference_interfaces[0]);
   ASSERT_EQ("joint1/velocity", result->controller[1].reference_interfaces[1]);
   // activate controllers
-  cm_->switch_controller(
+  auto res = cm_->switch_controller(
     {test_chainable_controller::TEST_CONTROLLER_NAME}, {},
     controller_manager_msgs::srv::SwitchController::Request::STRICT, true, rclcpp::Duration(0, 0));
-  cm_->switch_controller(
+  ASSERT_EQ(res, controller_interface::return_type::OK);
+  // we should here wait for the first controller to be activated, i.e., for its reference
+  // interface to become available (mail loop runs on 100 Hz) - so we check the status at least once
+  while (result->controller[1].state != "active")
+  {
+    result = call_service_and_wait(*client, request, srv_executor);
+  }
+  res = cm_->switch_controller(
     {test_controller::TEST_CONTROLLER_NAME}, {},
     controller_manager_msgs::srv::SwitchController::Request::STRICT, true, rclcpp::Duration(0, 0));
+  ASSERT_EQ(res, controller_interface::return_type::OK);
   // get controller list after activate
   result = call_service_and_wait(*client, request, srv_executor);
   // check test controller

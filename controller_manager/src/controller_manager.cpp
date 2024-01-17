@@ -1573,6 +1573,12 @@ void ControllerManager::activate_controllers(
         lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
     }
 
+    // if it is a chainable controller, make the reference interfaces available on activation
+    if (controller->is_chainable())
+    {
+      resource_manager_->make_controller_reference_interfaces_available(controller_name);
+    }
+
     if (controller->is_async())
     {
       async_controller_threads_.at(controller_name)->activate();
