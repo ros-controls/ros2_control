@@ -606,7 +606,9 @@ TEST_F(TestControllerManagerSrvs, list_sorted_chained_controllers)
        {TEST_CHAINED_CONTROLLER_4, TEST_CHAINED_CONTROLLER_3, TEST_CHAINED_CONTROLLER_5,
         TEST_CHAINED_CONTROLLER_2, TEST_CHAINED_CONTROLLER_1,
         test_controller::TEST_CONTROLLER_NAME})
+  {
     cm_->configure_controller(controller);
+  }
 
   // get controller list after configure
   result = call_service_and_wait(*client, request, srv_executor);
@@ -763,7 +765,9 @@ TEST_F(TestControllerManagerSrvs, list_sorted_complex_chained_controllers)
        {TEST_CHAINED_CONTROLLER_4, TEST_CHAINED_CONTROLLER_3, TEST_CHAINED_CONTROLLER_5,
         TEST_CHAINED_CONTROLLER_7, TEST_CHAINED_CONTROLLER_2, TEST_CHAINED_CONTROLLER_1,
         TEST_CHAINED_CONTROLLER_6, test_controller::TEST_CONTROLLER_NAME})
+  {
     cm_->configure_controller(controller);
+  }
 
   // get controller list after configure
   result = call_service_and_wait(*client, request, srv_executor);
@@ -774,7 +778,7 @@ TEST_F(TestControllerManagerSrvs, list_sorted_complex_chained_controllers)
   ASSERT_EQ(result->controller[1].name, TEST_CHAINED_CONTROLLER_7);
   ASSERT_EQ(result->controller[2].name, TEST_CHAINED_CONTROLLER_6);
 
-  auto get_ctrl_pos = [result](const std::string & controller_name) -> int
+  auto get_ctrl_pos = [result](const std::string & controller_name) -> int64_t
   {
     auto it = std::find_if(
       result->controller.begin(), result->controller.end(),
@@ -977,13 +981,16 @@ TEST_F(TestControllerManagerSrvs, list_sorted_independent_chained_controllers)
                       TEST_CHAINED_CONTROLLER_4, TEST_CONTROLLER_2,
                       TEST_CHAINED_CONTROLLER_2, TEST_CHAINED_CONTROLLER_6,
                       TEST_CHAINED_CONTROLLER_7, TEST_CHAINED_CONTROLLER_8};
-  for (const auto & controller : ctrls_order) cm_->configure_controller(controller);
+  for (const auto & controller : ctrls_order)
+  {
+    cm_->configure_controller(controller);
+  }
 
   // get controller list after configure
   result = call_service_and_wait(*client, request, srv_executor);
   ASSERT_EQ(10u, result->controller.size());
 
-  auto get_ctrl_pos = [result](const std::string & controller_name) -> int
+  auto get_ctrl_pos = [result](const std::string & controller_name) -> int64_t
   {
     auto it = std::find_if(
       result->controller.begin(), result->controller.end(),
