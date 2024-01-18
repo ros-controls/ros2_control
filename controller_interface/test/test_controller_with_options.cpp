@@ -15,8 +15,8 @@
 #include "test_controller_with_options.hpp"
 
 #include <gtest/gtest.h>
-#include <ament_index_cpp/get_package_prefix.hpp>
 #include <string>
+#include "ament_index_cpp/get_package_prefix.hpp"
 #include "rclcpp/rclcpp.hpp"
 
 class FriendControllerWithOptions : public controller_with_options::ControllerWithOptions
