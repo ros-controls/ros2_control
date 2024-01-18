@@ -1,0 +1,55 @@
+name: ROS Lint
+on:
+  pull_request:
+
+jobs:
+  ament_lint:
+    name: ament_${{ matrix.linter }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+          linter: [cppcheck, copyright, lint_cmake]
+    env:
+      AMENT_CPPCHECK_ALLOW_SLOW_VERSIONS: true
+    steps:
+    - uses: actions/checkout@v4
+    - uses: ros-tooling/setup-ros@0.7.1
+    - uses: ros-tooling/action-ros-lint@v0.1
+      with:
+        distribution: rolling
+        linter: ${{ matrix.linter }}
+        package-name:
+          controller_interface
+          controller_manager
+          controller_manager_msgs
+          hardware_interface
+          ros2controlcli
+          ros2_control
+          ros2_control_test_assets
+          transmission_interface
+
+  ament_lint_100:
+    name: ament_${{ matrix.linter }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+          linter: [cpplint]
+    steps:
+    - uses: actions/checkout@v4
+    - uses: ros-tooling/setup-ros@0.7.1
+    - uses: ros-tooling/action-ros-lint@v0.1
+      with:
+        distribution: rolling
+        linter: cpplint
+        arguments: "--linelength=100 --filter=-whitespace/newline"
+        package-name:
+          controller_interface
+          controller_manager
+          controller_manager_msgs
+          hardware_interface
+          ros2controlcli
+          ros2_control
+          ros2_control_test_assets
+          transmission_interface

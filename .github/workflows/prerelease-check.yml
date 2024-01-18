@@ -1,0 +1,37 @@
+name: Pre-Release Check
+
+on:
+  workflow_dispatch:
+    inputs:
+      ros_distro:
+        description: 'Chose ROS distribution'
+        required: true
+        default: 'rolling'
+        type: choice
+        options:
+        - humble
+        - iron
+        - rolling
+      branch:
+        description: 'Chose branch for distro'
+        required: true
+        default: 'master'
+        type: choice
+        options:
+        - humble
+        - iron
+        - master
+
+jobs:
+  pre_release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch }}
+      - name: industrial_ci
+        uses: ros-industrial/industrial_ci@master
+        env:
+          ROS_DISTRO: ${{ github.event.inputs.ros_distro }}
+          PRERELEASE: true
+          BASEDIR: ${{ github.workspace }}/.work
