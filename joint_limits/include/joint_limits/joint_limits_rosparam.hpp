@@ -19,6 +19,7 @@
 
 #include <limits>
 #include <string>
+#include <vector>
 
 #include "joint_limits/joint_limits.hpp"
 #include "rclcpp/rclcpp.hpp"
@@ -491,19 +492,30 @@ inline bool check_for_limits_update(
       if (param_name == param_base_name + ".has_position_limits")
       {
         updated_limits.has_position_limits = parameter.get_value<bool>();
-        if (
-          updated_limits.has_position_limits &&
-          (std::isnan(updated_limits.min_position) || std::isnan(updated_limits.max_position)))
+        if (updated_limits.has_position_limits)
         {
-          RCLCPP_WARN(
-            logging_itf->get_logger(),
-            "PARAMETER NOT UPDATED: 'has_position_limits' flag can not be set if 'min_position' "
-            "and 'max_position' are not set or not have valid double values.");
-          updated_limits.has_position_limits = false;
-        }
-        else
-        {
-          changed = true;
+          if (std::isnan(updated_limits.min_position) || std::isnan(updated_limits.max_position))
+          {
+            RCLCPP_WARN(
+              logging_itf->get_logger(),
+              "PARAMETER NOT UPDATED: Position limits can not be used, i.e., "
+              "'has_position_limits' flag can not be set, if 'min_position' "
+              "and 'max_position' are not set or not have valid double values.");
+            updated_limits.has_position_limits = false;
+          }
+          else if (updated_limits.min_position >= updated_limits.max_position)
+          {
+            RCLCPP_WARN(
+              logging_itf->get_logger(),
+              "PARAMETER NOT UPDATED: Position limits can not be used, i.e., "
+              "'has_position_limits' flag can not be set, if not "
+              "'min_position' < 'max_position'");
+            updated_limits.has_position_limits = false;
+          }
+          else
+          {
+            changed = true;
+          }
         }
       }
       else if (param_name == param_base_name + ".has_velocity_limits")

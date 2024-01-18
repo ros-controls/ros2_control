@@ -25,7 +25,7 @@ TEST_F(JointSaturationLimiterTest, when_loading_limiter_plugin_expect_loaded)
   ASSERT_NE(joint_limiter_, nullptr);
 }
 
-/* FIXME: currently init does not check if limit parameters exist for the requested joint
+// NOTE: We accept also if there is no limit defined for a joint.
 TEST_F(JointSaturationLimiterTest, when_joint_not_found_expect_init_fail)
 {
   SetupNode("joint_saturation_limiter");
@@ -35,10 +35,9 @@ TEST_F(JointSaturationLimiterTest, when_joint_not_found_expect_init_fail)
   {
     // initialize the limiter
     std::vector<std::string> joint_names = {"bar_joint"};
-    ASSERT_FALSE(joint_limiter_->init(joint_names, node_));
+    ASSERT_TRUE(joint_limiter_->init(joint_names, node_));
   }
 }
-*/
 
 TEST_F(JointSaturationLimiterTest, when_invalid_dt_expect_enforce_fail)
 {
@@ -486,6 +485,48 @@ TEST_F(JointSaturationLimiterTest, when_deceleration_exceeded_with_no_maxdec_exp
       0.75,     // vel limited by vel-max acc * dt
       -5.0      // acc limited to -max acc
     );
+  }
+}
+
+TEST_F(JointSaturationLimiterTest, when_there_are_effort_limits_expect_them_to_be_applyed)
+{
+  SetupNode("joint_saturation_limiter");
+  Load();
+
+  if (joint_limiter_)
+  {
+    Init();
+    Configure();
+
+    // value not over limit
+    desired_joint_states_.effort[0] = 15.0;
+    ASSERT_FALSE(joint_limiter_->enforce(desired_joint_states_.effort));
+
+    // value over limit
+    desired_joint_states_.effort[0] = 21.0;
+    ASSERT_TRUE(joint_limiter_->enforce(desired_joint_states_.effort));
+    ASSERT_EQ(desired_joint_states_.effort[0], 20.0);
+  }
+}
+
+TEST_F(JointSaturationLimiterTest, when_there_are_no_effort_limits_expect_them_not_applyed)
+{
+  SetupNode("joint_saturation_limiter");
+  Load();
+
+  if (joint_limiter_)
+  {
+    Init("foo_joint_no_effort");
+    Configure();
+
+    // value not over limit
+    desired_joint_states_.effort[0] = 15.0;
+    ASSERT_FALSE(joint_limiter_->enforce(desired_joint_states_.effort));
+
+    // value over limit
+    desired_joint_states_.effort[0] = 21.0;
+    ASSERT_FALSE(joint_limiter_->enforce(desired_joint_states_.effort));
+    ASSERT_EQ(desired_joint_states_.effort[0], 21.0);
   }
 }
 

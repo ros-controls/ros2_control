@@ -35,26 +35,29 @@ bool JointSaturationLimiter<JointLimits>::on_enforce(
 
   const auto dt_seconds = dt.seconds();
   // negative or null is not allowed
-  if (dt_seconds <= 0.0) return false;
+  if (dt_seconds <= 0.0)
+  {
+    return false;
+  }
 
   // TODO(gwalck) compute if the max are not implicitly violated with the given dt
   // e.g. for max vel 2.0 and max acc 5.0, with dt >0.4
   // velocity max is implicitly already violated due to max_acc * dt > 2.0
 
   // check for required inputs combination
-  bool has_pos_cmd = (desired_joint_states.positions.size() == number_of_joints_);
-  bool has_vel_cmd = (desired_joint_states.velocities.size() == number_of_joints_);
-  bool has_acc_cmd = (desired_joint_states.accelerations.size() == number_of_joints_);
-  bool has_pos_state = (current_joint_states.positions.size() == number_of_joints_);
-  bool has_vel_state = (current_joint_states.velocities.size() == number_of_joints_);
+  bool has_desired_position = (desired_joint_states.positions.size() == number_of_joints_);
+  bool has_desired_velocity = (desired_joint_states.velocities.size() == number_of_joints_);
+  bool has_desired_acceleration = (desired_joint_states.accelerations.size() == number_of_joints_);
+  bool has_current_position = (current_joint_states.positions.size() == number_of_joints_);
+  bool has_current_velocity = (current_joint_states.velocities.size() == number_of_joints_);
 
   // pos state and vel or pos cmd is required, vel state is optional
-  if (!(has_pos_state && (has_pos_cmd || has_vel_cmd)))
+  if (!(has_current_position && (has_desired_position || has_desired_velocity)))
   {
     return false;
   }
 
-  if (!has_vel_state)
+  if (!has_current_velocity)
   {
     // First update() after activating does not have velocity available, assume 0
     current_joint_states.velocities.resize(number_of_joints_, 0.0);
@@ -75,20 +78,20 @@ bool JointSaturationLimiter<JointLimits>::on_enforce(
 
   for (size_t index = 0; index < number_of_joints_; ++index)
   {
-    if (has_pos_cmd)
+    if (has_desired_position)
     {
       desired_pos[index] = desired_joint_states.positions[index];
     }
-    if (has_vel_cmd)
+    if (has_desired_velocity)
     {
       desired_vel[index] = desired_joint_states.velocities[index];
     }
-    if (has_acc_cmd)
+    if (has_desired_acceleration)
     {
       desired_acc[index] = desired_joint_states.accelerations[index];
     }
 
-    if (has_pos_cmd)
+    if (has_desired_position)
     {
       // limit position
       if (joint_limits_[index].has_position_limits)
@@ -106,8 +109,6 @@ bool JointSaturationLimiter<JointLimits>::on_enforce(
       // priority to pos_cmd derivative over cmd_vel when not defined. If done always then we might
       // get jumps in the velocity based on the system's dynamics. Position limit clamping is done
       // below once again.
-      // TODO(destogl) handle the case of continuous joints with angle_wraparound to compute vel
-      // correctly
       const double position_difference = desired_pos[index] - current_joint_states.positions[index];
       if (
         std::fabs(position_difference) > VALUE_CONSIDERED_ZERO &&
@@ -128,7 +129,7 @@ bool JointSaturationLimiter<JointLimits>::on_enforce(
         limits_enforced = true;
 
         // recompute pos_cmd if needed
-        if (has_pos_cmd)
+        if (has_desired_position)
         {
           desired_pos[index] =
             current_joint_states.positions[index] + desired_vel[index] * dt_seconds;
@@ -144,7 +145,7 @@ bool JointSaturationLimiter<JointLimits>::on_enforce(
     if (
       joint_limits_[index].has_acceleration_limits || joint_limits_[index].has_deceleration_limits)
     {
-      // if(has_vel_state)
+      // if(has_current_velocity)
       if (1)  // for now use a zero velocity if not provided
       {
         // limiting acc or dec function
@@ -160,7 +161,9 @@ bool JointSaturationLimiter<JointLimits>::on_enforce(
             return true;
           }
           else
+          {
             return false;
+          }
         };
 
         // limit acc for pos_cmd and/or vel_cmd
@@ -197,7 +200,7 @@ bool JointSaturationLimiter<JointLimits>::on_enforce(
           // vel_cmd from integration of desired_acc, needed even if no vel output
           desired_vel[index] =
             current_joint_states.velocities[index] + desired_acc[index] * dt_seconds;
-          if (has_pos_cmd)
+          if (has_desired_position)
           {
             // pos_cmd from from double integration of desired_acc
             desired_pos[index] = current_joint_states.positions[index] +
@@ -212,7 +215,7 @@ bool JointSaturationLimiter<JointLimits>::on_enforce(
     // plan ahead for position limits
     if (joint_limits_[index].has_position_limits)
     {
-      if (has_vel_cmd && !has_pos_cmd)
+      if (has_desired_velocity && !has_desired_position)
       {
         // Check  immediate next step when using vel_cmd only, other cases already handled
         // integrate pos
@@ -321,18 +324,23 @@ bool JointSaturationLimiter<JointLimits>::on_enforce(
       }
 
       // Recompute velocity and position
-      if (has_vel_cmd)
+      if (has_desired_velocity)
       {
         desired_vel[index] =
           current_joint_states.velocities[index] + desired_acc[index] * dt_seconds;
       }
-      if (has_pos_cmd)
+      if (has_desired_position)
+      {
         desired_pos[index] = current_joint_states.positions[index] +
                              current_joint_states.velocities[index] * dt_seconds +
                              0.5 * desired_acc[index] * dt_seconds * dt_seconds;
+      }
     }
     std::ostringstream ostr;
-    for (auto jnt : limited_jnts_pos) ostr << jnt << " ";
+    for (auto jnt : limited_jnts_pos)
+    {
+      ostr << jnt << " ";
+    }
     ostr << "\b \b";  // erase last character
     RCLCPP_WARN_STREAM_THROTTLE(
       node_logging_itf_->get_logger(), *clock_, ROS_LOG_THROTTLE_PERIOD,
@@ -347,7 +355,10 @@ bool JointSaturationLimiter<JointLimits>::on_enforce(
   if (limited_jnts_pos.size() > 0)
   {
     std::ostringstream ostr;
-    for (auto jnt : limited_jnts_pos) ostr << jnt << " ";
+    for (auto jnt : limited_jnts_pos)
+    {
+      ostr << jnt << " ";
+    }
     ostr << "\b \b";  // erase last character
     RCLCPP_WARN_STREAM_THROTTLE(
       node_logging_itf_->get_logger(), *clock_, ROS_LOG_THROTTLE_PERIOD,
@@ -357,7 +368,10 @@ bool JointSaturationLimiter<JointLimits>::on_enforce(
   if (limited_jnts_vel.size() > 0)
   {
     std::ostringstream ostr;
-    for (auto jnt : limited_jnts_vel) ostr << jnt << " ";
+    for (auto jnt : limited_jnts_vel)
+    {
+      ostr << jnt << " ";
+    }
     ostr << "\b \b";  // erase last character
     RCLCPP_WARN_STREAM_THROTTLE(
       node_logging_itf_->get_logger(), *clock_, ROS_LOG_THROTTLE_PERIOD,
@@ -367,7 +381,10 @@ bool JointSaturationLimiter<JointLimits>::on_enforce(
   if (limited_jnts_acc.size() > 0)
   {
     std::ostringstream ostr;
-    for (auto jnt : limited_jnts_acc) ostr << jnt << " ";
+    for (auto jnt : limited_jnts_acc)
+    {
+      ostr << jnt << " ";
+    }
     ostr << "\b \b";  // erase last character
     RCLCPP_WARN_STREAM_THROTTLE(
       node_logging_itf_->get_logger(), *clock_, ROS_LOG_THROTTLE_PERIOD,
@@ -377,43 +394,52 @@ bool JointSaturationLimiter<JointLimits>::on_enforce(
   if (limited_jnts_dec.size() > 0)
   {
     std::ostringstream ostr;
-    for (auto jnt : limited_jnts_dec) ostr << jnt << " ";
+    for (auto jnt : limited_jnts_dec)
+    {
+      ostr << jnt << " ";
+    }
     ostr << "\b \b";  // erase last character
     RCLCPP_WARN_STREAM_THROTTLE(
       node_logging_itf_->get_logger(), *clock_, ROS_LOG_THROTTLE_PERIOD,
       "Joint(s) [" << ostr.str().c_str() << "] would exceed deceleration limits, limiting");
   }
 
-  if (has_pos_cmd) desired_joint_states.positions = desired_pos;
-  if (has_vel_cmd) desired_joint_states.velocities = desired_vel;
-  if (has_acc_cmd) desired_joint_states.accelerations = desired_acc;
+  if (has_desired_position)
+  {
+    desired_joint_states.positions = desired_pos;
+  }
+  if (has_desired_velocity)
+  {
+    desired_joint_states.velocities = desired_vel;
+  }
+  if (has_desired_acceleration)
+  {
+    desired_joint_states.accelerations = desired_acc;
+  }
 
   return limits_enforced;
 }
 
 template <>
-std::pair<bool, std::vector<double>> JointSaturationLimiter<JointLimits>::on_enforce(
-  std::vector<double> desired, const rclcpp::Duration & dt)
+bool JointSaturationLimiter<JointLimits>::on_enforce(std::vector<double> & desired_joint_states)
 {
-  std::vector<double> desired_effort(number_of_joints_);
   std::vector<std::string> limited_joints_effort;
   bool limits_enforced = false;
 
-  bool has_cmd = (desired.size() == number_of_joints_);
+  bool has_cmd = (desired_joint_states.size() == number_of_joints_);
   if (!has_cmd)
   {
-    return std::make_pair(limits_enforced, desired_effort);
+    return false;
   }
 
   for (size_t index = 0; index < number_of_joints_; ++index)
   {
-    desired_effort[index] = desired[index];
     if (joint_limits_[index].has_effort_limits)
     {
       double max_effort = joint_limits_[index].max_effort;
-      if (std::fabs(desired_effort[index]) > max_effort)
+      if (std::fabs(desired_joint_states[index]) > max_effort)
       {
-        desired_effort[index] = std::copysign(max_effort, desired_effort[index]);
+        desired_joint_states[index] = std::copysign(max_effort, desired_joint_states[index]);
         limited_joints_effort.emplace_back(joint_names_[index]);
         limits_enforced = true;
       }
@@ -423,18 +449,20 @@ std::pair<bool, std::vector<double>> JointSaturationLimiter<JointLimits>::on_enf
   if (limited_joints_effort.size() > 0)
   {
     std::ostringstream ostr;
-    for (auto jnt : limited_joints_effort) ostr << jnt << " ";
+    for (auto jnt : limited_joints_effort)
+    {
+      ostr << jnt << " ";
+    }
     ostr << "\b \b";  // erase last character
     RCLCPP_WARN_STREAM_THROTTLE(
       node_logging_itf_->get_logger(), *clock_, ROS_LOG_THROTTLE_PERIOD,
       "Joint(s) [" << ostr.str().c_str() << "] would exceed effort limits, limiting");
   }
 
-  return std::make_pair(limits_enforced, desired_effort);
+  return limits_enforced;
 }
 
 }  // namespace joint_limits
-   // namespace joint_limits
 
 #include "pluginlib/class_list_macros.hpp"
 

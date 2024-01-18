@@ -24,10 +24,18 @@
 
 #include "joint_limits/joint_limiter_interface.hpp"
 #include "joint_limits/joint_limits.hpp"
-#include "rclcpp/rclcpp.hpp"
+#include "rclcpp/clock.hpp"
+#include "rclcpp/duration.hpp"
 
 namespace joint_limits
 {
+/**
+ * Joint Saturation Limiter limits joints' position, velocity and acceleration by clamping values
+ * to its minimal and maximal allowed values. Since the position, velocity and accelerations are
+ * variables in physical relation, it might be that some values are limited lower then specified
+ * limit. For example, if a joint is close to its position limit, velocity and acceleration will be
+ * reduced accordingly.
+ */
 template <typename LimitsType>
 class JointSaturationLimiter : public JointLimiterInterface<LimitsType>
 {
@@ -38,20 +46,44 @@ public:
   /** \brief Destructor */
   JOINT_LIMITS_PUBLIC ~JointSaturationLimiter();
 
+  JOINT_LIMITS_PUBLIC bool on_init() override { return true; }
+
+  JOINT_LIMITS_PUBLIC bool on_configure(
+    const trajectory_msgs::msg::JointTrajectoryPoint & /*current_joint_states*/) override
+  {
+    return true;
+  }
+
+  /** \brief Enforce joint limits to desired position, velocity and acceleration using clamping.
+   * Class implements this method accepting following data types:
+   * - trajectory_msgs::msg::JointTrajectoryPoint: limiting position, velocity and acceleration;
+   *
+   * Implementation of saturation approach for joints with position, velocity or acceleration limits
+   * and values. First, position limits are checked to adjust desired velocity accordingly, then
+   * velocity and finally acceleration.
+   * The method support partial existence of limits, e.g., missing position limits for continuous
+   * joins.
+   *
+   * \param[in] current_joint_states current joint states a robot is in.
+   * \param[in,out] desired_joint_states joint state that should be adjusted to obey the limits.
+   * \param[in] dt time delta to calculate missing integrals and derivation in joint limits.
+   * \returns true if limits are enforced, otherwise false.
+   */
   JOINT_LIMITS_PUBLIC bool on_enforce(
     trajectory_msgs::msg::JointTrajectoryPoint & current_joint_states,
     trajectory_msgs::msg::JointTrajectoryPoint & desired_joint_states,
     const rclcpp::Duration & dt) override;
 
-  /**
-   * generic function for enforcing of effort.
+  /** \brief Enforce joint limits to desired arbitrary physical quantity.
+   * Additional, commonly used method for enforcing limits by clamping desired input value.
+   * The limit is defined in effort limits of the `joint::limits/JointLimit` structure.
    *
-   * \return std::pair<bool, std::vector<double>>, where bool shows if the limits have been enforced
-   * and the std::vector<double> contains the values
+   * If `has_effort_limits` is set to false, the limits will be not enforced to a joint.
    *
+   * \param[in,out] desired_joint_states physical quantity that should be adjusted to obey the
+   * limits. \returns true if limits are enforced, otherwise false.
    */
-  JOINT_LIMITS_PUBLIC std::pair<bool, std::vector<double>> on_enforce(
-    std::vector<double> desired, const rclcpp::Duration & dt);
+  JOINT_LIMITS_PUBLIC bool on_enforce(std::vector<double> & desired_joint_states) override;
 
 private:
   rclcpp::Clock::SharedPtr clock_;

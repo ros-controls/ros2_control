@@ -30,6 +30,8 @@
 
 namespace joint_limits
 {
+using JointLimitsStateDataType = trajectory_msgs::msg::JointTrajectoryPoint;
+
 template <typename LimitsType>
 class JointLimiterInterface
 {
@@ -155,49 +157,86 @@ public:
       lifecycle_node->get_node_logging_interface(), robot_description_topic);
   }
 
-  JOINT_LIMITS_PUBLIC virtual bool configure(
-    const trajectory_msgs::msg::JointTrajectoryPoint & current_joint_states)
+  JOINT_LIMITS_PUBLIC virtual bool configure(const JointLimitsStateDataType & current_joint_states)
   {
-    // TODO(destogl): add checks for position
     return on_configure(current_joint_states);
   }
 
+  /** \brief Enforce joint limits to desired joint state for multiple physical quantities.
+   *
+   * Generic enforce method that calls implementation-specific `on_enforce` method.
+   *
+   * \param[in] current_joint_states current joint states a robot is in.
+   * \param[in,out] desired_joint_states joint state that should be adjusted to obey the limits.
+   * \param[in] dt time delta to calculate missing integrals and derivation in joint limits.
+   * \returns true if limits are enforced, otherwise false.
+   */
   JOINT_LIMITS_PUBLIC virtual bool enforce(
-    trajectory_msgs::msg::JointTrajectoryPoint & current_joint_states,
-    trajectory_msgs::msg::JointTrajectoryPoint & desired_joint_states, const rclcpp::Duration & dt)
+    JointLimitsStateDataType & current_joint_states,
+    JointLimitsStateDataType & desired_joint_states, const rclcpp::Duration & dt)
   {
-    // TODO(destogl): add checks if sizes of vectors and number of limits correspond.
     joint_limits_ = *(updated_limits_.readFromRT());
     return on_enforce(current_joint_states, desired_joint_states, dt);
   }
 
-protected:
-  JOINT_LIMITS_PUBLIC virtual bool on_init() { return true; }
-
-  JOINT_LIMITS_PUBLIC virtual bool on_configure(
-    const trajectory_msgs::msg::JointTrajectoryPoint & /*current_joint_states*/)
+  /** \brief Enforce joint limits to desired joint state for single physical quantity.
+   *
+   * Generic enforce method that calls implementation-specific `on_enforce` method.
+   *
+   * \param[in,out] desired_joint_states joint state that should be adjusted to obey the limits.
+   * \returns true if limits are enforced, otherwise false.
+   */
+  JOINT_LIMITS_PUBLIC virtual bool enforce(std::vector<double> & desired_joint_states)
   {
-    return true;
+    joint_limits_ = *(updated_limits_.readFromRT());
+    return on_enforce(desired_joint_states);
   }
 
-  /** \brief Enforce joint limits to desired joint state.
+protected:
+  /** \brief Method is realized by an implementation.
    *
-   * Filter-specific implementation of the joint limits enforce algorithm.
+   * Implementation-specific initialization of limiter's internal states and libraries.
+   * \returns true if initialization was successful, otherwise false.
+   */
+  JOINT_LIMITS_PUBLIC virtual bool on_init() = 0;
+
+  /** \brief Method is realized by an implementation.
+   *
+   * Implementation-specific configuration of limiter's internal states and libraries.
+   * \returns true if initialization was successful, otherwise false.
+   */
+  JOINT_LIMITS_PUBLIC virtual bool on_configure(
+    const JointLimitsStateDataType & current_joint_states) = 0;
+
+  /** \brief Method is realized by an implementation.
+   *
+   * Filter-specific implementation of the joint limits enforce algorithm for multiple dependent
+   * physical quantities.
    *
    * \param[in] current_joint_states current joint states a robot is in.
-   * \param[out] desired_joint_states joint state that should be adjusted to obey the limits.
+   * \param[in,out] desired_joint_states joint state that should be adjusted to obey the limits.
    * \param[in] dt time delta to calculate missing integrals and derivation in joint limits.
    * \returns true if limits are enforced, otherwise false.
    */
   JOINT_LIMITS_PUBLIC virtual bool on_enforce(
-    trajectory_msgs::msg::JointTrajectoryPoint & current_joint_states,
-    trajectory_msgs::msg::JointTrajectoryPoint & desired_joint_states,
-    const rclcpp::Duration & dt) = 0;
+    JointLimitsStateDataType & current_joint_states,
+    JointLimitsStateDataType & desired_joint_states, const rclcpp::Duration & dt) = 0;
+
+  /** \brief Method is realized by an implementation.
+   *
+   * Filter-specific implementation of the joint limits enforce algorithm for single physical
+   * quantity.
+   * This method might use "effort" limits since they are often used as wild-card.
+   * Check the documentation of the exact implementation for more details.
+   *
+   * \param[in,out] desired_joint_states joint state that should be adjusted to obey the limits.
+   * \returns true if limits are enforced, otherwise false.
+   */
+  JOINT_LIMITS_PUBLIC virtual bool on_enforce(std::vector<double> & desired_joint_states) = 0;
 
   size_t number_of_joints_;
   std::vector<std::string> joint_names_;
   std::vector<LimitsType> joint_limits_;
-  rclcpp::Node::SharedPtr node_;
   rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_param_itf_;
   rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging_itf_;
 

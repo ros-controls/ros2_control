@@ -46,7 +46,10 @@ public:
 
   void SetupNode(const std::string node_name = "")
   {
-    if (!node_name.empty()) node_name_ = node_name;
+    if (!node_name.empty())
+    {
+      node_name_ = node_name;
+    }
     node_ = std::make_shared<rclcpp::Node>(node_name_);
   }
 
@@ -56,14 +59,15 @@ public:
       joint_limiter_loader_.createUnmanagedInstance(joint_limiter_type_));
   }
 
-  void Init()
+  void Init(const std::string & joint_name = "foo_joint")
   {
-    joint_names_ = {"foo_joint"};
+    joint_names_ = {joint_name};
     joint_limiter_->init(joint_names_, node_);
     num_joints_ = joint_names_.size();
     last_commanded_state_.positions.resize(num_joints_, 0.0);
     last_commanded_state_.velocities.resize(num_joints_, 0.0);
     last_commanded_state_.accelerations.resize(num_joints_, 0.0);
+    last_commanded_state_.effort.resize(num_joints_, 0.0);
     desired_joint_states_ = last_commanded_state_;
     current_joint_states_ = last_commanded_state_;
   }
