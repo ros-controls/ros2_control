@@ -159,13 +159,18 @@ public:
   const std::string & get_robot_description() const;
 
   /**
-   * Method used by the `init` method to instantiate the Lifecycle node of the controller upon
-   * loading the controller
+   * Method used by the controller_manager as a base NodeOptions to instantiate the Lifecycle node
+   * of the controller upon loading the controller.
+   *
+   * \note The controller_manager will add modify these NodeOptions in case, a params file is passed
+   * by the spawner to load the controller parameters or when controllers are loaded in simulation
+   * (see ros2_control#1311, ros2_controllers#698 , ros2_controllers#795,ros2_controllers#966 for
+   * more details)
    *
    * @returns NodeOptions required for the configuration of the controller lifecycle node
    */
   CONTROLLER_INTERFACE_PUBLIC
-  virtual rclcpp::NodeOptions get_node_options() const
+  virtual rclcpp::NodeOptions define_custom_node_options() const
   {
     return rclcpp::NodeOptions().enable_logger_service(true);
   }

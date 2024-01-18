@@ -30,7 +30,7 @@ return_type ControllerInterfaceBase::init(
 {
   urdf_ = urdf;
   node_ = std::make_shared<rclcpp_lifecycle::LifecycleNode>(
-    controller_name, node_namespace, get_node_options(),
+    controller_name, node_namespace, define_custom_node_options(),
     false);  // disable LifecycleNode service interfaces
 
   try

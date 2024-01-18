@@ -64,7 +64,7 @@ public:
     }
   }
 
-  rclcpp::NodeOptions get_node_options() const override
+  rclcpp::NodeOptions define_custom_node_options() const override
   {
     return rclcpp::NodeOptions()
       .allow_undeclared_parameters(true)
