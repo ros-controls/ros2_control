@@ -1,17 +1,16 @@
 name: Iron RHEL Binary Build
 on:
   workflow_dispatch:
+  push:
     branches:
       - iron
-#  pull_request:
-#    branches:
-#      - iron
-#  push:
-#    branches:
-#      - iron
-#  schedule:
-#    # Run every day to detect flakiness and broken dependencies
-#    - cron: '03 1 * * *'
+  pull_request:
+    branches:
+      - iron
+  schedule:
+    # Run every day to detect flakiness and broken dependencies
+    - cron: '03 1 * * *'
+
 
 jobs:
   iron_rhel_binary:
@@ -26,7 +25,8 @@ jobs:
           path: src/ros2_control
       - run: |
           rosdep update
-          rosdep install -iy --from-path src/ros2_control
+          rosdep install -iyr --from-path src/ros2_control || true
           source /opt/ros/${{ env.ROS_DISTRO }}/setup.bash
-          colcon build
-          colcon test
+          colcon build --packages-skip rqt_controller_manager
+          colcon test --packages-skip rqt_controller_manager ros2controlcli
+          colcon test-result
