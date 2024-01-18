@@ -25,7 +25,7 @@ jobs:
           path: src/ros2_control
       - run: |
           rosdep update
-          rosdep install -iyr --from-path src/ros2_control
+          rosdep install -iyr --from-path src/ros2_control || true
           source /opt/ros/${{ env.ROS_DISTRO }}/setup.bash
           colcon build --packages-skip rqt_controller_manager
           colcon test --packages-skip rqt_controller_manager ros2controlcli
