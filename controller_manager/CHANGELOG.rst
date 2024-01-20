@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.22.0 (2024-01-20)
+-------------------
 * Add additional checks for non existing and not available interfaces. (backport `#1218 <https://github.com/ros-controls/ros2_control/issues/1218>`_) (`#1292 <https://github.com/ros-controls/ros2_control/issues/1292>`_)
 * [ControllerManager] Fix all warnings from the latets features. (backport `#1174 <https://github.com/ros-controls/ros2_control/issues/1174>`_) (`#1308 <https://github.com/ros-controls/ros2_control/issues/1308>`_)
 * Reformat with braces added (backport `#1209 <https://github.com/ros-controls/ros2_control/issues/1209>`_) (`#1307 <https://github.com/ros-controls/ros2_control/issues/1307>`_)

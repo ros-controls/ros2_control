@@ -2,8 +2,8 @@
 Changelog for package rqt_controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.22.0 (2024-01-20)
+-------------------
 * Fix rqt controller manager crash on ros2_control restart (`#1273 <https://github.com/ros-controls/ros2_control/issues/1273>`_) (`#1276 <https://github.com/ros-controls/ros2_control/issues/1276>`_)
 * Contributors: mergify[bot]
 
