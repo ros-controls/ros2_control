@@ -1,9 +1,6 @@
 name: Humble debian Build
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - humble
   pull_request:
     branches:
       - humble
