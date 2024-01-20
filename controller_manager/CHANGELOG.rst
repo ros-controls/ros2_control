@@ -2,6 +2,18 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add additional checks for non existing and not available interfaces. (backport `#1218 <https://github.com/ros-controls/ros2_control/issues/1218>`_) (`#1292 <https://github.com/ros-controls/ros2_control/issues/1292>`_)
+* [ControllerManager] Fix all warnings from the latets features. (backport `#1174 <https://github.com/ros-controls/ros2_control/issues/1174>`_) (`#1308 <https://github.com/ros-controls/ros2_control/issues/1308>`_)
+* Reformat with braces added (backport `#1209 <https://github.com/ros-controls/ros2_control/issues/1209>`_) (`#1307 <https://github.com/ros-controls/ros2_control/issues/1307>`_)
+* Initialize the controller manager services after initializing resource manager (backport `#1271 <https://github.com/ros-controls/ros2_control/issues/1271>`_) (`#1278 <https://github.com/ros-controls/ros2_control/issues/1278>`_)
+* Fix rqt controller manager crash on ros2_control restart (`#1273 <https://github.com/ros-controls/ros2_control/issues/1273>`_) (`#1276 <https://github.com/ros-controls/ros2_control/issues/1276>`_)
+* [docs] Remove joint_state_controller (`#1263 <https://github.com/ros-controls/ros2_control/issues/1263>`_) (`#1265 <https://github.com/ros-controls/ros2_control/issues/1265>`_)
+* controller_manager: Add space to string literal concatenation (`#1245 <https://github.com/ros-controls/ros2_control/issues/1245>`_) (`#1249 <https://github.com/ros-controls/ros2_control/issues/1249>`_)
+* [CM] Increase tests timeout (`#1224 <https://github.com/ros-controls/ros2_control/issues/1224>`_) (`#1226 <https://github.com/ros-controls/ros2_control/issues/1226>`_)
+* Contributors: mergify[bot]
+
 3.21.2 (2023-12-05)
 -------------------
 * Report inactive controllers as a diagnostics ok instead of an error (`#1184 <https://github.com/ros-controls/ros2_control/issues/1184>`_) (`#1190 <https://github.com/ros-controls/ros2_control/issues/1190>`_)

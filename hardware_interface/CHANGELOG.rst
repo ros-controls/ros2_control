@@ -2,6 +2,18 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* [RM] Fix crash for missing urdf in resource manager (`#1301 <https://github.com/ros-controls/ros2_control/issues/1301>`_) (`#1313 <https://github.com/ros-controls/ros2_control/issues/1313>`_)
+* Add additional checks for non existing and not available interfaces. (backport `#1218 <https://github.com/ros-controls/ros2_control/issues/1218>`_) (`#1292 <https://github.com/ros-controls/ros2_control/issues/1292>`_)
+* Adding backward compatibility for string-to-double conversion (`#1284 <https://github.com/ros-controls/ros2_control/issues/1284>`_) (`#1289 <https://github.com/ros-controls/ros2_control/issues/1289>`_)
+* Fix return of ERROR and calls of cleanup when system is unconfigured of finalized (`#1279 <https://github.com/ros-controls/ros2_control/issues/1279>`_) (`#1287 <https://github.com/ros-controls/ros2_control/issues/1287>`_)
+* fix the multiple definitions of lexical casts methods (`#1281 <https://github.com/ros-controls/ros2_control/issues/1281>`_) (`#1283 <https://github.com/ros-controls/ros2_control/issues/1283>`_)
+* Use portable version for string-to-double conversion (backport `#1257 <https://github.com/ros-controls/ros2_control/issues/1257>`_) (`#1269 <https://github.com/ros-controls/ros2_control/issues/1269>`_)
+* [ResourceManager] adds test for uninitialized hardware (`#1243 <https://github.com/ros-controls/ros2_control/issues/1243>`_) (`#1270 <https://github.com/ros-controls/ros2_control/issues/1270>`_)
+* Fix typo in docs (`#1219 <https://github.com/ros-controls/ros2_control/issues/1219>`_) (`#1222 <https://github.com/ros-controls/ros2_control/issues/1222>`_)
+* Contributors: mergify[bot]
+
 3.21.2 (2023-12-05)
 -------------------
 

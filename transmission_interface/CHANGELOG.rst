@@ -2,6 +2,11 @@
 Changelog for package transmission_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Improve transmission tests (`#1238 <https://github.com/ros-controls/ros2_control/issues/1238>`_) (`#1242 <https://github.com/ros-controls/ros2_control/issues/1242>`_)
+* Contributors: mergify[bot]
+
 3.21.2 (2023-12-05)
 -------------------
 
