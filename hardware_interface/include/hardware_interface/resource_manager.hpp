@@ -80,8 +80,12 @@ public:
    * \param[in] urdf string containing the URDF.
    * \param[in] validate_interfaces boolean argument indicating whether the exported
    * interfaces ought to be validated. Defaults to true.
+   * \param[in] load_and_initialize_components boolean argument indicating whether to load and
+   * initialize the components present in the parsed URDF. Defaults to true.
    */
-  void load_urdf(const std::string & urdf, bool validate_interfaces = true);
+  void load_urdf(
+    const std::string & urdf, bool validate_interfaces = true,
+    bool load_and_initialize_components = true);
 
   /**
    * @brief if the resource manager load_urdf(...) function has been called this returns true.
