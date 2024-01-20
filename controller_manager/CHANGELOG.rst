@@ -2,6 +2,16 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add additional checks for non existing and not available interfaces. (backport `#1218 <https://github.com/ros-controls/ros2_control/issues/1218>`_) (`#1291 <https://github.com/ros-controls/ros2_control/issues/1291>`_)
+* [ControllerManager] Fix all warnings from the latets features. (backport `#1174 <https://github.com/ros-controls/ros2_control/issues/1174>`_) (`#1309 <https://github.com/ros-controls/ros2_control/issues/1309>`_)
+* Reformat with braces added (backport `#1209 <https://github.com/ros-controls/ros2_control/issues/1209>`_) (`#1306 <https://github.com/ros-controls/ros2_control/issues/1306>`_)
+* Add spawner for hardware (backport `#941 <https://github.com/ros-controls/ros2_control/issues/941>`_) (`#1216 <https://github.com/ros-controls/ros2_control/issues/1216>`_)
+* Initialize the controller manager services after initializing resource manager (`#1272 <https://github.com/ros-controls/ros2_control/issues/1272>`_)
+* Fix rqt controller manager crash on ros2_control restart (`#1273 <https://github.com/ros-controls/ros2_control/issues/1273>`_) (`#1280 <https://github.com/ros-controls/ros2_control/issues/1280>`_)
+* Contributors: David Yackzan, Sai Kishor Kothakota, mergify[bot]
+
 2.36.1 (2024-01-08)
 -------------------
 * [docs] Remove joint_state_controller (`#1263 <https://github.com/ros-controls/ros2_control/issues/1263>`_) (`#1264 <https://github.com/ros-controls/ros2_control/issues/1264>`_)
