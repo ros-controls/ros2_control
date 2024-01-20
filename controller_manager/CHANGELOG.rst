@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.3.0 (2024-01-20)
+------------------
 * [CM] Better readability and maintainability: rename variables, move code to more logical places 🔧 (`#1227 <https://github.com/ros-controls/ros2_control/issues/1227>`_)
 * Initialize the controller manager services after initializing resource manager (`#1271 <https://github.com/ros-controls/ros2_control/issues/1271>`_)
 * Issue 695: Changing 'namespace\_' variables to 'node_namespace' to make it more explicit (`#1239 <https://github.com/ros-controls/ros2_control/issues/1239>`_)
