@@ -1332,6 +1332,19 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::add_co
     node_options_arguments.push_back("--params-file");
     node_options_arguments.push_back(controller.info.parameters_file.value());
   }
+
+  // ensure controller's `use_sim_time` parameter matches controller_manager's
+  const rclcpp::Parameter use_sim_time = this->get_parameter("use_sim_time");
+  if (use_sim_time.as_bool())
+  {
+    if (!check_for_element(node_options_arguments, ros_args_arg))
+    {
+      node_options_arguments.push_back(ros_args_arg);
+    }
+    node_options_arguments.push_back("-p");
+    node_options_arguments.push_back("use_sim_time:=true");
+  }
+
   controller_node_options = controller_node_options.arguments(node_options_arguments);
   if (
     controller.c->init(
@@ -1344,17 +1357,6 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::add_co
     return nullptr;
   }
 
-  // ensure controller's `use_sim_time` parameter matches controller_manager's
-  const rclcpp::Parameter use_sim_time = this->get_parameter("use_sim_time");
-  if (use_sim_time.as_bool())
-  {
-    RCLCPP_INFO(
-      get_logger(),
-      "Setting use_sim_time=True for %s to match controller manager "
-      "(see ros2_control#325 for details)",
-      controller.info.name.c_str());
-    controller.c->get_node()->set_parameter(use_sim_time);
-  }
   executor_->add_node(controller.c->get_node()->get_node_base_interface());
   to.emplace_back(controller);
 
