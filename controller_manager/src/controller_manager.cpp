@@ -1317,12 +1317,22 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::add_co
     return nullptr;
   }
 
+  auto check_for_element = [](const auto & list, const auto & element)
+  { return std::find(list.begin(), list.end(), element) != list.end(); };
+
   rclcpp::NodeOptions controller_node_options = rclcpp::NodeOptions().enable_logger_service(true);
+  std::vector<std::string> node_options_arguments = controller_node_options.arguments();
+  const std::string ros_args_arg = "--ros-args";
   if (controller.info.parameters_file.has_value())
   {
-    controller_node_options = controller_node_options.arguments(
-      {"--ros-args", "--params-file", controller.info.parameters_file.value()});
+    if (!check_for_element(node_options_arguments, ros_args_arg))
+    {
+      node_options_arguments.push_back(ros_args_arg);
+    }
+    node_options_arguments.push_back("--params-file");
+    node_options_arguments.push_back(controller.info.parameters_file.value());
   }
+  controller_node_options = controller_node_options.arguments(node_options_arguments);
   if (
     controller.c->init(
       controller.info.name, robot_description_, get_update_rate(), get_namespace(),
