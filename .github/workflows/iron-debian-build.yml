@@ -1,9 +1,6 @@
-name: Iron debian Build
+name: Debian Iron Build
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - iron
   pull_request:
     branches:
       - iron

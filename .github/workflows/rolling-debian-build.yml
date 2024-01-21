@@ -1,9 +1,6 @@
-name: Rolling debian Build
+name: Debian Rolling Build
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - master
   pull_request:
     branches:
       - master
