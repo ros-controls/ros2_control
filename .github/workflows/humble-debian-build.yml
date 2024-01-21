@@ -21,7 +21,7 @@ jobs:
         shell: bash
         run: |
           source /opt/ros2_ws/install/setup.bash
-          vcs import --input https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/ros2_control.${{ env.ROS_DISTRO }}.repos?token=${{ secrets.GITHUB_TOKEN }} src
+          vcs import src < src/ros2_control/ros2_control.${{ env.ROS_DISTRO }}.repos
           colcon build --packages-skip rqt_controller_manager
           colcon test --packages-skip rqt_controller_manager control_msgs controller_manager_msgs
           colcon test-result --verbose
