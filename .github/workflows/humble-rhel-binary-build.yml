@@ -1,9 +1,6 @@
-name: Humble RHEL Binary Build
+name: RHEL Humble Binary Build
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - humble
   pull_request:
     branches:
       - humble

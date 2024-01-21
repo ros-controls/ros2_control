@@ -1,9 +1,6 @@
-name: Iron RHEL Binary Build
+name: RHEL Iron Binary Build
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - iron
   pull_request:
     branches:
       - iron
