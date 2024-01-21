@@ -574,21 +574,21 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_c
   controller_spec.next_update_cycle_time = std::make_shared<rclcpp::Time>(
     0, 0, this->get_node_clock_interface()->get_clock()->get_clock_type());
 
-  // We have to fetch the params_file at the time of loading the controller, because this way we can
-  // load them at the creation of the LifeCycleNode and this helps in using the features such as
+  // We have to fetch the parameters_file at the time of loading the controller, because this way we
+  // can load them at the creation of the LifeCycleNode and this helps in using the features such as
   // read_only params, dynamic maps lists etc
-  // Now check if the params_file parameter exist
+  // Now check if the parameters_file parameter exist
   const std::string param_name = controller_name + ".params_file";
-  std::string params_file;
+  std::string parameters_file;
 
   // Check if parameter has been declared
   if (!has_parameter(param_name))
   {
     declare_parameter(param_name, rclcpp::ParameterType::PARAMETER_STRING);
   }
-  if (get_parameter(param_name, params_file) && !params_file.empty())
+  if (get_parameter(param_name, parameters_file) && !parameters_file.empty())
   {
-    controller_spec.info.params_file = params_file;
+    controller_spec.info.parameters_file = parameters_file;
   }
 
   return add_controller_impl(controller_spec);
@@ -1318,10 +1318,10 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::add_co
   }
 
   rclcpp::NodeOptions controller_node_options = rclcpp::NodeOptions().enable_logger_service(true);
-  if (controller.info.params_file.has_value())
+  if (controller.info.parameters_file.has_value())
   {
     controller_node_options = controller_node_options.arguments(
-      {"--ros-args", "--params-file", controller.info.params_file.value()});
+      {"--ros-args", "--params-file", controller.info.parameters_file.value()});
   }
   if (
     controller.c->init(
