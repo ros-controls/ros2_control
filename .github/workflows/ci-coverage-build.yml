@@ -30,6 +30,7 @@ jobs:
             controller_interface
             controller_manager
             hardware_interface
+            joint_limits
             transmission_interface
 
           vcs-repo-file-url: |
