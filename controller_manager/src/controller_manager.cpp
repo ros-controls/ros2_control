@@ -1317,35 +1317,7 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::add_co
     return nullptr;
   }
 
-  auto check_for_element = [](const auto & list, const auto & element)
-  { return std::find(list.begin(), list.end(), element) != list.end(); };
-
-  rclcpp::NodeOptions controller_node_options = rclcpp::NodeOptions().enable_logger_service(true);
-  std::vector<std::string> node_options_arguments = controller_node_options.arguments();
-  const std::string ros_args_arg = "--ros-args";
-  if (controller.info.parameters_file.has_value())
-  {
-    if (!check_for_element(node_options_arguments, ros_args_arg))
-    {
-      node_options_arguments.push_back(ros_args_arg);
-    }
-    node_options_arguments.push_back("--params-file");
-    node_options_arguments.push_back(controller.info.parameters_file.value());
-  }
-
-  // ensure controller's `use_sim_time` parameter matches controller_manager's
-  const rclcpp::Parameter use_sim_time = this->get_parameter("use_sim_time");
-  if (use_sim_time.as_bool())
-  {
-    if (!check_for_element(node_options_arguments, ros_args_arg))
-    {
-      node_options_arguments.push_back(ros_args_arg);
-    }
-    node_options_arguments.push_back("-p");
-    node_options_arguments.push_back("use_sim_time:=true");
-  }
-
-  controller_node_options = controller_node_options.arguments(node_options_arguments);
+  const rclcpp::NodeOptions controller_node_options = determine_controller_node_options(controller);
   if (
     controller.c->init(
       controller.info.name, robot_description_, get_update_rate(), get_namespace(),
@@ -2626,6 +2598,41 @@ void ControllerManager::controller_activity_diagnostic_callback(
   {
     stat.summary(diagnostic_msgs::msg::DiagnosticStatus::OK, "Not all controllers are active");
   }
+}
+
+rclcpp::NodeOptions ControllerManager::determine_controller_node_options(
+  const ControllerSpec & controller) const
+{
+  auto check_for_element = [](const auto & list, const auto & element)
+  { return std::find(list.begin(), list.end(), element) != list.end(); };
+
+  rclcpp::NodeOptions controller_node_options = rclcpp::NodeOptions().enable_logger_service(true);
+  std::vector<std::string> node_options_arguments = controller_node_options.arguments();
+  const std::string ros_args_arg = "--ros-args";
+  if (controller.info.parameters_file.has_value())
+  {
+    if (!check_for_element(node_options_arguments, ros_args_arg))
+    {
+      node_options_arguments.push_back(ros_args_arg);
+    }
+    node_options_arguments.push_back("--params-file");
+    node_options_arguments.push_back(controller.info.parameters_file.value());
+  }
+
+  // ensure controller's `use_sim_time` parameter matches controller_manager's
+  const rclcpp::Parameter use_sim_time = this->get_parameter("use_sim_time");
+  if (use_sim_time.as_bool())
+  {
+    if (!check_for_element(node_options_arguments, ros_args_arg))
+    {
+      node_options_arguments.push_back(ros_args_arg);
+    }
+    node_options_arguments.push_back("-p");
+    node_options_arguments.push_back("use_sim_time:=true");
+  }
+
+  controller_node_options = controller_node_options.arguments(node_options_arguments);
+  return controller_node_options;
 }
 
 }  // namespace controller_manager
