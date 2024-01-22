@@ -1,11 +1,12 @@
 name: Coverage Build
 on:
   workflow_dispatch:
+  push:
     branches:
-      - master
+      - humble
   pull_request:
     branches:
-      - master
+      - humble
 
 jobs:
   coverage:
