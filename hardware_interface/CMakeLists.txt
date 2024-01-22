@@ -79,21 +79,6 @@ if(BUILD_TESTING)
   target_link_libraries(test_component_parser hardware_interface)
   ament_target_dependencies(test_component_parser ros2_control_test_assets)
 
-  add_library(test_components SHARED
-    test/test_components/test_actuator.cpp
-    test/test_components/test_sensor.cpp
-    test/test_components/test_system.cpp)
-  target_link_libraries(test_components hardware_interface)
-  ament_target_dependencies(test_components
-    pluginlib
-    ros2_control_test_assets
-  )
-  install(TARGETS test_components
-    DESTINATION lib
-  )
-  pluginlib_export_plugin_description_file(
-    hardware_interface test/test_components/test_components.xml)
-
   add_library(test_hardware_components SHARED
   test/test_hardware_components/test_single_joint_actuator.cpp
   test/test_hardware_components/test_force_torque_sensor.cpp
@@ -109,14 +94,6 @@ if(BUILD_TESTING)
   pluginlib_export_plugin_description_file(
     hardware_interface test/test_hardware_components/test_hardware_components.xml
   )
-
-  ament_add_gmock(test_resource_manager test/test_resource_manager.cpp)
-  target_link_libraries(test_resource_manager hardware_interface)
-  ament_target_dependencies(test_resource_manager ros2_control_test_assets)
-
-  ament_add_gmock(test_resource_manager_prepare_perform_switch test/test_resource_manager_prepare_perform_switch.cpp)
-  target_link_libraries(test_resource_manager_prepare_perform_switch hardware_interface)
-  ament_target_dependencies(test_resource_manager_prepare_perform_switch ros2_control_test_assets)
 
   ament_add_gmock(test_generic_system test/mock_components/test_generic_system.cpp)
   target_include_directories(test_generic_system PRIVATE include)
