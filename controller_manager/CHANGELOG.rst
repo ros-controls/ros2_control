@@ -2,6 +2,19 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.3.0 (2024-01-20)
+------------------
+* [CM] Better readability and maintainability: rename variables, move code to more logical places 🔧 (`#1227 <https://github.com/ros-controls/ros2_control/issues/1227>`_)
+* Initialize the controller manager services after initializing resource manager (`#1271 <https://github.com/ros-controls/ros2_control/issues/1271>`_)
+* Issue 695: Changing 'namespace\_' variables to 'node_namespace' to make it more explicit (`#1239 <https://github.com/ros-controls/ros2_control/issues/1239>`_)
+* Fix rqt controller manager crash on ros2_control restart (`#1273 <https://github.com/ros-controls/ros2_control/issues/1273>`_)
+* [docs] Remove joint_state_controller (`#1263 <https://github.com/ros-controls/ros2_control/issues/1263>`_)
+* controller_manager: Add space to string literal concatenation (`#1245 <https://github.com/ros-controls/ros2_control/issues/1245>`_)
+* Try using SCHED_FIFO on any kernel (`#1142 <https://github.com/ros-controls/ros2_control/issues/1142>`_)
+* [CM] Set chained controller interfaces 'available' for activated controllers (`#1098 <https://github.com/ros-controls/ros2_control/issues/1098>`_)
+* [CM] Increase tests timeout (`#1224 <https://github.com/ros-controls/ros2_control/issues/1224>`_)
+* Contributors: Christoph Fröhlich, Dr. Denis, Felix Exner (fexner), Sai Kishor Kothakota, Yasushi SHOJI, bailaC
+
 4.2.0 (2023-12-12)
 ------------------
 * [CM] Linting if/else statements (`#1193 <https://github.com/ros-controls/ros2_control/issues/1193>`_)
