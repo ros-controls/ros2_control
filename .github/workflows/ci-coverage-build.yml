@@ -3,10 +3,10 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - master
+      - iron
   pull_request:
     branches:
-      - master
+      - iron
 
 jobs:
   coverage:
