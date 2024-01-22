@@ -46,5 +46,5 @@ pull_request_rules:
         comment:
           message: |
             @{{author}}, all pull requests must be targeted towards the `master` development branch.
-            Once merged into `master`, it is possible to backport to @{{base}}, but it must be in `master`
+            Once merged into `master`, it is possible to backport to `{{base}}`, but it must be in `master`
             to have these changes reflected into new distributions.
