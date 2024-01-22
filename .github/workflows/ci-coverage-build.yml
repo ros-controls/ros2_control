@@ -1,11 +1,12 @@
 name: Coverage Build
 on:
   workflow_dispatch:
+  push:
     branches:
-      - master
+      - humble
   pull_request:
     branches:
-      - master
+      - humble
 
 jobs:
   coverage:
@@ -14,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
     env:
-      ROS_DISTRO: rolling
+      ROS_DISTRO: humble
     steps:
       - uses: ros-tooling/setup-ros@v0.7
         with:
@@ -51,5 +52,5 @@ jobs:
           name: codecov-umbrella
       - uses: actions/upload-artifact@v4
         with:
-          name: colcon-logs-ubuntu-22.04-coverage-rolling
+          name: colcon-logs-ubuntu-22.04-coverage-humble
           path: ros_ws/log
