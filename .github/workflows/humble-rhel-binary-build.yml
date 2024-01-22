@@ -25,4 +25,4 @@ jobs:
           source /opt/ros/${{ env.ROS_DISTRO }}/setup.bash
           colcon build --packages-skip rqt_controller_manager
           colcon test --packages-skip rqt_controller_manager ros2controlcli
-          colcon test-result
+          colcon test-result --verbose
