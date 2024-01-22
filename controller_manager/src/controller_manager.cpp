@@ -41,6 +41,18 @@ rclcpp::QoS qos_services =
     .reliable()
     .durability_volatile();
 
+inline bool is_controller_unconfigured(
+  const controller_interface::ControllerInterfaceBase & controller)
+{
+  return controller.get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED;
+}
+
+inline bool is_controller_unconfigured(
+  const controller_interface::ControllerInterfaceBaseSharedPtr & controller)
+{
+  return is_controller_unconfigured(*controller);
+}
+
 inline bool is_controller_inactive(const controller_interface::ControllerInterfaceBase & controller)
 {
   return controller.get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE;
@@ -606,16 +618,92 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_c
   return load_controller(controller_name, controller_type);
 }
 
+controller_interface::return_type ControllerManager::cleanup_controller(
+  const std::string & controller_name)
+{
+  RCLCPP_INFO(get_logger(), "Cleanup controller '%s'", controller_name.c_str());
+
+  const auto & controllers = get_loaded_controllers();
+
+  auto found_it = std::find_if(
+    controllers.begin(), controllers.end(),
+    std::bind(controller_name_compare, std::placeholders::_1, controller_name));
+
+  if (found_it == controllers.end())
+  {
+    RCLCPP_ERROR(
+      get_logger(),
+      "Could not cleanup controller with name '%s' because no controller with this name exists",
+      controller_name.c_str());
+    return controller_interface::return_type::ERROR;
+  }
+  auto controller = found_it->c;
+
+  if (is_controller_unconfigured(controller))
+  {
+    // all good nothing to do!
+    return controller_interface::return_type::OK;
+  }
+
+  auto state = controller->get_state();
+  if (
+    state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE ||
+    state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED)
+  {
+    RCLCPP_ERROR(
+      get_logger(), "Controller '%s' can not be cleaned-up from '%s' state.",
+      controller_name.c_str(), state.label().c_str());
+    return controller_interface::return_type::ERROR;
+  }
+
+  // ASYNCHRONOUS CONTROLLERS: Stop background thread for update
+  if (controller->is_async())
+  {
+    RCLCPP_DEBUG(
+      get_logger(), "Removing controller '%s' from the list of async controllers",
+      controller_name.c_str());
+    async_controller_threads_.erase(controller_name);
+  }
+
+  // CHAINABLE CONTROLLERS: remove reference interfaces of chainable controllers
+  if (controller->is_chainable())
+  {
+    RCLCPP_DEBUG(
+      get_logger(),
+      "Controller '%s' is chainable. Interfaces are being removed from resource manager.",
+      controller_name.c_str());
+    resource_manager_->remove_controller_reference_interfaces(controller_name);
+  }
+
+  RCLCPP_DEBUG(get_logger(), "Cleanup controller");
+  auto new_state = controller->get_node()->cleanup();
+  if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
+  {
+    RCLCPP_ERROR(
+      get_logger(), "After cleanup-up, controller '%s' is in state '%s', expected 'unconfigured'.",
+      controller_name.c_str(), new_state.label().c_str());
+    return controller_interface::return_type::ERROR;
+  }
+
+  RCLCPP_DEBUG(get_logger(), "Successfully cleaned-up controller '%s'", controller_name.c_str());
+
+  return controller_interface::return_type::OK;
+}
+
 controller_interface::return_type ControllerManager::unload_controller(
   const std::string & controller_name)
 {
+  // first find and clean controller if it is inactive
+  if (cleanup_controller(controller_name) != controller_interface::return_type::OK)
+  {
+    return controller_interface::return_type::ERROR;
+  }
+
   std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
   std::vector<ControllerSpec> & to = rt_controllers_wrapper_.get_unused_list(guard);
   const std::vector<ControllerSpec> & from = rt_controllers_wrapper_.get_updated_list(guard);
 
-  // Transfers the active controllers over, skipping the one to be removed and the active ones.
   to = from;
-
   auto found_it = std::find_if(
     to.begin(), to.end(),
     std::bind(controller_name_compare, std::placeholders::_1, controller_name));
@@ -632,26 +720,7 @@ controller_interface::return_type ControllerManager::unload_controller(
 
   auto & controller = *found_it;
 
-  if (is_controller_active(*controller.c))
-  {
-    to.clear();
-    RCLCPP_ERROR(
-      get_logger(), "Could not unload controller with name '%s' because it is still active",
-      controller_name.c_str());
-    return controller_interface::return_type::ERROR;
-  }
-  if (controller.c->is_async())
-  {
-    RCLCPP_DEBUG(
-      get_logger(), "Removing controller '%s' from the list of async controllers",
-      controller_name.c_str());
-    async_controller_threads_.erase(controller_name);
-  }
-
-  RCLCPP_DEBUG(get_logger(), "Cleanup controller");
-  // TODO(destogl): remove reference interface if chainable; i.e., add a separate method for
-  // cleaning-up controllers?
-  controller.c->get_node()->cleanup();
+  RCLCPP_DEBUG(get_logger(), "Unload controller");
   executor_->remove_node(controller.c->get_node()->get_node_base_interface());
   to.erase(found_it);
 
@@ -664,61 +733,6 @@ controller_interface::return_type ControllerManager::unload_controller(
   RCLCPP_DEBUG(get_logger(), "Destruct controller finished");
 
   RCLCPP_DEBUG(get_logger(), "Successfully unloaded controller '%s'", controller_name.c_str());
-
-  return controller_interface::return_type::OK;
-}
-
-controller_interface::return_type ControllerManager::cleanup_controller(
-  const std::string & controller_name)
-{
-  std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
-  std::vector<ControllerSpec> & to = rt_controllers_wrapper_.get_unused_list(guard);
-  const std::vector<ControllerSpec> & from = rt_controllers_wrapper_.get_updated_list(guard);
-
-  // Transfers the active controllers over, skipping the one to be removed and the active ones.
-  to = from;
-
-  auto found_it = std::find_if(
-    to.begin(), to.end(),
-    std::bind(controller_name_compare, std::placeholders::_1, controller_name));
-  if (found_it == to.end())
-  {
-    // Fails if we could not remove the controllers
-    to.clear();
-    RCLCPP_ERROR(
-      get_logger(),
-      "Could not clear controller with name '%s' because no controller with this name exists",
-      controller_name.c_str());
-    return controller_interface::return_type::ERROR;
-  }
-
-  auto & controller = *found_it;
-
-  if (is_controller_active(*controller.c))
-  {
-    to.clear();
-    RCLCPP_ERROR(
-      get_logger(), "Could not clear controller with name '%s' because it is still active",
-      controller_name.c_str());
-    return controller_interface::return_type::ERROR;
-  }
-
-  RCLCPP_DEBUG(get_logger(), "Cleanup controller");
-  // TODO(destogl): remove reference interface if chainable; i.e., add a separate method for
-  // cleaning-up controllers?
-  controller.c->get_node()->cleanup();
-  executor_->remove_node(controller.c->get_node()->get_node_base_interface());
-  to.erase(found_it);
-
-  // Destroys the old controllers list when the realtime thread is finished with it.
-  RCLCPP_DEBUG(get_logger(), "Realtime switches over to new controller list");
-  rt_controllers_wrapper_.switch_updated_list(guard);
-  std::vector<ControllerSpec> & new_unused_list = rt_controllers_wrapper_.get_unused_list(guard);
-  RCLCPP_DEBUG(get_logger(), "Destruct controller");
-  new_unused_list.clear();
-  RCLCPP_DEBUG(get_logger(), "Destruct controller finished");
-
-  RCLCPP_DEBUG(get_logger(), "Successfully cleaned controller '%s'", controller_name.c_str());
 
   return controller_interface::return_type::OK;
 }
@@ -782,7 +796,7 @@ controller_interface::return_type ControllerManager::configure_controller(
   if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
   {
     RCLCPP_ERROR(
-      get_logger(), "After configuring, controller '%s' is in state '%s' , expected inactive.",
+      get_logger(), "After configuring, controller '%s' is in state '%s', expected 'inactive'.",
       controller_name.c_str(), new_state.label().c_str());
     return controller_interface::return_type::ERROR;
   }
@@ -1910,8 +1924,7 @@ void ControllerManager::cleanup_controller_service_cb(
   std::shared_ptr<controller_manager_msgs::srv::CleanupController::Response> response)
 {
   // lock services
-  RCLCPP_DEBUG(
-    get_logger(), "cleanup service called for controller '%s' ", request->name.c_str());
+  RCLCPP_DEBUG(get_logger(), "cleanup service called for controller '%s' ", request->name.c_str());
   std::lock_guard<std::mutex> guard(services_lock_);
   RCLCPP_DEBUG(get_logger(), "cleanup service locked");
 
