@@ -61,8 +61,7 @@ public:
    * \param[in] validate_interfaces boolean argument indicating whether the exported
    * interfaces ought to be validated. Defaults to true.
    * \param[in] activate_all boolean argument indicating if all resources should be immediately
-   * activated. Currently used only in tests. In typical applications use parameters
-   * "autostart_components" and "autoconfigure_components" instead.
+   * activated. Currently used only in tests.
    */
   explicit ResourceManager(
     const std::string & urdf, bool validate_interfaces = true, bool activate_all = false);
@@ -375,7 +374,7 @@ public:
    * Reads from all active hardware components.
    *
    * Part of the real-time critical update loop.
-   * It is realtime-safe if used hadware interfaces are implemented adequately.
+   * It is realtime-safe if used hardware interfaces are implemented adequately.
    */
   HardwareReadWriteStatus read(const rclcpp::Time & time, const rclcpp::Duration & period);
 
@@ -384,17 +383,9 @@ public:
    * Writes to all active hardware components.
    *
    * Part of the real-time critical update loop.
-   * It is realtime-safe if used hadware interfaces are implemented adequately.
+   * It is realtime-safe if used hardware interfaces are implemented adequately.
    */
   HardwareReadWriteStatus write(const rclcpp::Time & time, const rclcpp::Duration & period);
-
-  /// Activates all available hardware components in the system.
-  /**
-   * All available hardware components int the ros2_control framework are activated.
-   * This is used to preserve default behavior from previous versions where all hardware components
-   * are activated per default.
-   */
-  void activate_all_components();
 
   /// Checks whether a command interface is registered under the given key.
   /**
