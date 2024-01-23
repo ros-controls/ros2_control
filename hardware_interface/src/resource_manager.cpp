@@ -29,6 +29,7 @@
 #include "hardware_interface/async_components.hpp"
 #include "hardware_interface/component_parser.hpp"
 #include "hardware_interface/hardware_component_info.hpp"
+#include "hardware_interface/limits_handle.hpp"
 #include "hardware_interface/sensor.hpp"
 #include "hardware_interface/sensor_interface.hpp"
 #include "hardware_interface/system.hpp"
@@ -454,6 +455,17 @@ public:
     hardware_info_map_[hardware.get_name()].command_interfaces = add_command_interfaces(interfaces);
   }
 
+  void import_joint_limiters(const HardwareInfo & hardware_info)
+  {
+    std::vector<JointSaturationInterface> limit_handles;
+    for (const auto & [key, value] : hardware_info.limits)
+    {
+      limit_handles.push_back(
+        JointSaturationInterface(key, value, state_interface_map_, command_interface_map_));
+    }
+    joint_limiter_[hardware_info.name] = limit_handles;
+  }
+
   /// Adds exported command interfaces into internal storage.
   /**
    * Add command interfaces to the internal storage. Command interfaces exported from hardware or
@@ -519,6 +531,7 @@ public:
       {
         import_state_interfaces(container.back());
         import_command_interfaces(container.back());
+        import_joint_limiters(hardware_info);
       }
       else
       {
@@ -578,6 +591,7 @@ public:
       {
         import_state_interfaces(container.back());
         import_command_interfaces(container.back());
+        import_joint_limiters(hardware_info);
       }
       else
       {
@@ -712,6 +726,9 @@ public:
   std::map<std::string, StateInterface> state_interface_map_;
   /// Storage of all available command interfaces
   std::map<std::string, CommandInterface> command_interface_map_;
+
+  /// Saturation handle linked to the joints within the hardware
+  std::unordered_map<std::string, std::vector<JointSaturationInterface>> joint_limiter_;
 
   /// Vectors with interfaces available to controllers (depending on hardware component state)
   std::vector<std::string> available_state_interfaces_;
