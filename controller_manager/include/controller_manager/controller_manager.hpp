@@ -414,6 +414,16 @@ private:
     const std::vector<controller_manager::ControllerSpec> & controllers);
 
   void controller_activity_diagnostic_callback(diagnostic_updater::DiagnosticStatusWrapper & stat);
+
+  /**
+   * @brief determine_controller_node_options - A method that retrieves the controller defined node
+   * options and adapts them, based on if there is a params file to be loaded or the use_sim_time
+   * needs to be set
+   * @param controller - controller info
+   * @return The node options that will be set to the controller LifeCycleNode
+   */
+  rclcpp::NodeOptions determine_controller_node_options(const ControllerSpec & controller) const;
+
   diagnostic_updater::Updater diagnostics_updater_;
 
   std::shared_ptr<rclcpp::Executor> executor_;
