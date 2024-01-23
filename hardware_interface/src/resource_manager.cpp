@@ -1403,6 +1403,14 @@ HardwareReadWriteStatus ResourceManager::write(
     }
   };
 
+  // Enforce limits on the commands
+  for (auto & hw_limiter : resource_storage_->hw_command_limiter_)
+  {
+    for (auto & joint_limiters : hw_limiter.second)
+    {
+      joint_limiters.enforce_limits(period);
+    }
+  }
   write_components(resource_storage_->actuators_);
   write_components(resource_storage_->systems_);
 
