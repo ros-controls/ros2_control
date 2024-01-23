@@ -1,0 +1,27 @@
+name: Debian Humble Build
+on:
+  workflow_dispatch:
+  schedule:
+    # Run every day to detect flakiness and broken dependencies
+    - cron: '03 1 * * *'
+
+
+jobs:
+  humble_debian:
+    name: Humble debian build
+    runs-on: ubuntu-latest
+    env:
+      ROS_DISTRO: humble
+    container: ghcr.io/christophfroehlich/ros:humble-debian
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: src/ros2_control
+      - name: Build and test
+        shell: bash
+        run: |
+          source /opt/ros2_ws/install/setup.bash
+          vcs import src < src/ros2_control/ros2_control.${{ env.ROS_DISTRO }}.repos
+          colcon build --packages-skip rqt_controller_manager
+          colcon test --packages-skip rqt_controller_manager control_msgs controller_manager_msgs
+          colcon test-result --verbose
