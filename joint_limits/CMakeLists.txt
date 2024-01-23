@@ -6,9 +6,17 @@ if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 14)
 endif()
 
+<<<<<<< HEAD
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra)
 endif()
+=======
+set(THIS_PACKAGE_INCLUDE_DEPENDS
+  rclcpp
+  rclcpp_lifecycle
+  urdf
+)
+>>>>>>> f3ffb56 (Add header to import limits from standard URDF definition (#1298))
 
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
@@ -27,6 +35,9 @@ if(BUILD_TESTING)
   ament_add_gtest_executable(joint_limits_rosparam_test test/joint_limits_rosparam_test.cpp)
   target_include_directories(joint_limits_rosparam_test PRIVATE include)
   ament_target_dependencies(joint_limits_rosparam_test rclcpp rclcpp_lifecycle)
+
+  ament_add_gtest(joint_limits_urdf_test test/joint_limits_urdf_test.cpp)
+  target_link_libraries(joint_limits_urdf_test joint_limits)
 
   add_launch_test(test/joint_limits_rosparam.launch.py)
   install(
