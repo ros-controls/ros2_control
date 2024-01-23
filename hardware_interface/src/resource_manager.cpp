@@ -463,7 +463,7 @@ public:
       limit_handles.push_back(
         JointSaturationInterface(key, value, state_interface_map_, command_interface_map_));
     }
-    joint_limiter_[hardware_info.name] = limit_handles;
+    hw_command_limiter_[hardware_info.name] = limit_handles;
   }
 
   /// Adds exported command interfaces into internal storage.
@@ -728,7 +728,7 @@ public:
   std::map<std::string, CommandInterface> command_interface_map_;
 
   /// Saturation handle linked to the joints within the hardware
-  std::unordered_map<std::string, std::vector<JointSaturationInterface>> joint_limiter_;
+  std::unordered_map<std::string, std::vector<JointSaturationInterface>> hw_command_limiter_;
 
   /// Vectors with interfaces available to controllers (depending on hardware component state)
   std::vector<std::string> available_state_interfaces_;
