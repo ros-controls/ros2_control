@@ -187,26 +187,61 @@ const rclcpp_lifecycle::State & Actuator::error()
   return impl_->get_state();
 }
 
-std::vector<StateInterface> Actuator::export_state_interfaces()
+std::vector<std::shared_ptr<StateInterface>> Actuator::export_state_interfaces()
 {
   // TODO(karsten1987): Might be worth to do some brief sanity check here
-  return impl_->export_state_interfaces();
+  // BEGIN (Handle export change): for backward compatibility, can be removed if
+  // export_command_interfaces() method is removed
+  std::vector<StateInterface> interfaces = impl_->export_state_interfaces();
+  // END: for backward compatibility
+
+  // If no StateInterfaces has been exported, this could mean:
+  // a) there is nothing to export -> on_export_state_interfaces() does return nothing as well
+  // b) default implementation for export_state_interfaces() is used -> new functionality ->
+  // Framework exports and creates everything
+  if (interfaces.empty())
+  {
+    return impl_->on_export_state_interfaces();
+  }
+
+  // BEGIN (Handle export change): for backward compatibility, can be removed if
+  // export_command_interfaces() method is removed
+  std::vector<std::shared_ptr<StateInterface>> interface_ptrs;
+  interface_ptrs.reserve(interfaces.size());
+  for (auto const & interface : interfaces)
+  {
+    interface_ptrs.emplace_back(std::make_shared<StateInterface>(interface));
+  }
+  return interface_ptrs;
+  // END: for backward compatibility
 }
 
-std::vector<std::shared_ptr<StateInterface>> Actuator::on_export_state_interfaces()
-{
-  return impl_->on_export_state_interfaces();
-}
-
-std::vector<CommandInterface> Actuator::export_command_interfaces()
+std::vector<std::shared_ptr<CommandInterface>> Actuator::export_command_interfaces()
 {
   // TODO(karsten1987): Might be worth to do some brief sanity check here
-  return impl_->export_command_interfaces();
-}
+  // BEGIN (Handle export change): for backward compatibility, can be removed if
+  // export_command_interfaces() method is removed
+  std::vector<CommandInterface> interfaces = impl_->export_command_interfaces();
+  // END: for backward compatibility
 
-std::vector<std::shared_ptr<CommandInterface>> Actuator::on_export_command_interfaces()
-{
-  return impl_->on_export_command_interfaces();
+  // If no CommandInterface has been exported, this could mean:
+  // a) there is nothing to export -> on_export_command_interfaces() does return nothing as well
+  // b) default implementation for export_command_interfaces() is used -> new functionality ->
+  // Framework exports and creates everything
+  if (interfaces.empty())
+  {
+    return impl_->on_export_command_interfaces();
+  }
+  // BEGIN (Handle export change): for backward compatibility, can be removed if
+  // export_command_interfaces() method is removed
+  std::vector<std::shared_ptr<CommandInterface>> interface_ptrs;
+  interface_ptrs.reserve(interfaces.size());
+  for (auto & interface : interfaces)
+  {
+    interface_ptrs.emplace_back(std::make_shared<CommandInterface>(std::move(interface)));
+  }
+  return interface_ptrs;
+  // END: for backward compatibility
 }
 
 return_type Actuator::prepare_command_mode_switch(

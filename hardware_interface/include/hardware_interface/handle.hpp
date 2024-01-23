@@ -16,6 +16,7 @@
 #define HARDWARE_INTERFACE__HANDLE_HPP_
 
 #include <limits>
+#include <memory>
 #include <string>
 #include <utility>
 #include <variant>
@@ -43,7 +44,7 @@ public:
   }
 
   explicit Handle(const InterfaceDescription & interface_description)
-  : prefix_name_(interface_description.prefix_name),
+  : prefix_name_(interface_description.prefix_name_),
     interface_name_(interface_description.interface_info.name)
   {
     // As soon as multiple datatypes are used in HANDLE_DATATYPE
@@ -135,6 +136,8 @@ public:
   using Handle::Handle;
 };
 
+using StateInterfaceSharedPtr = std::shared_ptr<StateInterface>;
+
 class CommandInterface : public Handle
 {
 public:
@@ -154,6 +157,8 @@ public:
 
   using Handle::Handle;
 };
+
+using CommandInterfaceSharedPtr = std::shared_ptr<CommandInterface>;
 
 }  // namespace hardware_interface
 

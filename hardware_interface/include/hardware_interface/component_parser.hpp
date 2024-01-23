@@ -77,8 +77,5 @@ HARDWARE_INTERFACE_PUBLIC
 std::vector<InterfaceDescription> parse_gpio_command_interface_descriptions_from_hardware_info(
   const HardwareInfo & hw_info);
 
-HARDWARE_INTERFACE_PUBLIC
-bool parse_bool(const std::string & bool_string);
-
 }  // namespace hardware_interface
 #endif  // HARDWARE_INTERFACE__COMPONENT_PARSER_HPP_
