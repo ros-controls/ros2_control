@@ -253,6 +253,7 @@ private:
 
 class JointSaturationInterface
 {
+public:
   JointSaturationInterface(
     const std::string & joint_name, const joint_limits::JointLimits & limits,
     std::map<std::string, StateInterface> & state_interface_map,
