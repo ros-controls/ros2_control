@@ -1,21 +1,21 @@
-name: RHEL Rolling Binary Build
+name: RHEL Iron Binary Build
 on:
   workflow_dispatch:
   pull_request:
     branches:
-      - master
+      - iron
   schedule:
     # Run every day to detect flakiness and broken dependencies
     - cron: '03 1 * * *'
 
 
 jobs:
-  rolling_rhel_binary:
-    name: Rolling RHEL binary build
+  iron_rhel_binary:
+    name: Iron RHEL binary build
     runs-on: ubuntu-latest
     env:
-      ROS_DISTRO: rolling
-    container: ghcr.io/ros-controls/ros:rolling-rhel
+      ROS_DISTRO: iron
+    container: ghcr.io/ros-controls/ros:iron-rhel
     steps:
       - uses: actions/checkout@v4
         with:
