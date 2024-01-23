@@ -430,67 +430,26 @@ public:
     return result;
   }
 
-  void insert_state_interface(std::shared_ptr<StateInterface> state_interface)
-  {
-    const auto [it, success] =
-      state_interface_map_.insert(std::make_pair(state_interface->get_name(), state_interface));
-    if (!success)
-    {
-      std::string msg(
-        "ResourceStorage: Tried to insert StateInterface with already existing key. Insert[" +
-        state_interface->get_name() + "]");
-      throw std::runtime_error(msg);
-    }
-  }
-
-  // BEGIN (Handle export change): for backward compatibility, can be removed if
-  // export_state_interfaces() method is removed
-  void insert_state_interface(const StateInterface & state_interface)
-  {
-    const auto [it, success] = state_interface_map_.emplace(std::make_pair(
-      state_interface.get_name(), std::make_shared<StateInterface>(state_interface)));
-    if (!success)
-    {
-      std::string msg(
-        "ResourceStorage: Tried to insert StateInterface with already existing key. Insert[" +
-        state_interface.get_name() + "]");
-      throw std::runtime_error(msg);
-    }
-  }
-  // END: for backward compatibility
-
   template <class HardwareT>
   void import_state_interfaces(HardwareT & hardware)
   {
     std::vector<std::string> interface_names;
-    std::vector<StateInterface> interfaces = hardware.export_state_interfaces();
-    // If no StateInterfaces has been exported, this could mean:
-    // a) there is nothing to export -> on_export_state_interfaces() does return nothing as well
-    // b) default implementation for export_state_interfaces() is used -> new functionality ->
-    // Framework exports and creates everything
-    if (interfaces.empty())
+    std::vector<std::shared_ptr<StateInterface>> interfaces = hardware.export_state_interfaces();
+
+    interface_names.reserve(interfaces.size());
+    for (auto const & interface : interfaces)
     {
-      std::vector<std::shared_ptr<StateInterface>> interface_ptrs =
-        hardware.on_export_state_interfaces();
-      interface_names.reserve(interface_ptrs.size());
-      for (auto const & interface : interface_ptrs)
+      const auto [it, success] =
+        state_interface_map_.insert(std::make_pair(interface->get_name(), interface));
+      if (!success)
       {
-        insert_state_interface(interface);
-        interface_names.push_back(interface->get_name());
+        std::string msg(
+          "ResourceStorage: Tried to insert StateInterface with already existing key. Insert[" +
+          interface->get_name() + "]");
+        throw std::runtime_error(msg);
       }
+      interface_names.push_back(interface->get_name());
     }
-    // BEGIN (Handle export change): for backward compatibility, can be removed if
-    // export_state_interfaces() method is removed
-    else
-    {
-      interface_names.reserve(interfaces.size());
-      for (auto const & interface : interfaces)
-      {
-        insert_state_interface(interface);
-        interface_names.push_back(interface.get_name());
-      }
-    }
-    // END: for backward compatibility
 
     hardware_info_map_[hardware.get_name()].state_interfaces = interface_names;
     available_state_interfaces_.reserve(
@@ -530,26 +489,10 @@ public:
   template <class HardwareT>
   void import_command_interfaces(HardwareT & hardware)
   {
-    auto interfaces = hardware.export_command_interfaces();
-    // If no CommandInterface has been exported, this could mean:
-    // a) there is nothing to export -> on_export_command_interfaces() does return nothing as well
-    // b) default implementation for export_command_interfaces() is used -> new functionality ->
-    // Framework exports and creates everything
-    if (interfaces.empty())
-    {
-      std::vector<std::shared_ptr<CommandInterface>> interface_ptrs =
-        hardware.on_export_command_interfaces();
-      hardware_info_map_[hardware.get_name()].command_interfaces =
-        add_command_interfaces(interface_ptrs);
-    }
-    // BEGIN (Handle export change): for backward compatibility, can be removed if
-    // export_command_interfaces() method is removed
-    else
-    {
-      hardware_info_map_[hardware.get_name()].command_interfaces =
-        add_command_interfaces(interfaces);
-    }
-    // END: for backward compatibility
+    std::vector<std::shared_ptr<CommandInterface>> interfaces =
+      hardware.export_command_interfaces();
+
+    hardware_info_map_[hardware.get_name()].command_interfaces = add_command_interfaces(interfaces);
   }
 
   /// Adds exported command interfaces into internal storage.
@@ -563,8 +506,6 @@ public:
    * \returns list of interface names that are added into internal storage. The output is used to
    * avoid additional iterations to cache interface names, e.g., for initializing info structures.
    */
-  // BEGIN (Handle export change): for backward compatibility, can be removed if
-  // export_command_interfaces() method is removed
   std::vector<std::string> add_command_interfaces(std::vector<CommandInterface> & interfaces)
   {
     std::vector<std::string> interface_names;
@@ -581,7 +522,6 @@ public:
 
     return interface_names;
   }
-  // END: for backward compatibility
 
   std::vector<std::string> add_command_interfaces(
     std::vector<std::shared_ptr<CommandInterface>> & interfaces)

@@ -19,6 +19,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -136,20 +137,18 @@ public:
 
   /// Exports all state interfaces for this hardware interface.
   /**
-   * Default implementation for exporting the StateInterfaces. The StateInterfaces are created
-   * according to the InterfaceDescription. The memory accessed by the controllers and hardware is
-   * assigned here and resides in the system_interface.
-   *
-   * If overwritten:
-   * The state interfaces have to be created and transferred according
-   * to the hardware info passed in for the configuration.
+   * Old way of exporting the StateInterfaces. If a empty vector is returned then
+   * the on_export_state_interfaces() method is called. If a vector with StateInterfaces is returned
+   * then the exporting of the StateInterfaces is only done with this function and the ownership is
+   * transferred to the resource manager. The set_command(...), get_command(...), ..., can then not
+   * be used.
    *
    * Note the ownership over the state interfaces is transferred to the caller.
    *
    * \return vector of state interfaces
    */
   [[deprecated(
-    "Replaced by vector<std::shared_ptr<StateInterface>> on_export_state_interfaces() method. "
+    "Replaced by vector<StateInterfaceSharedPtr> on_export_state_interfaces() method. "
     "Exporting is "
     "handled "
     "by the Framework.")]] virtual std::vector<StateInterface>
@@ -160,33 +159,41 @@ public:
     return {};
   }
 
-  std::vector<std::shared_ptr<StateInterface>> on_export_state_interfaces()
+  /**
+   * Default implementation for exporting the StateInterfaces. The StateInterfaces are created
+   * according to the InterfaceDescription. The memory accessed by the controllers and hardware is
+   * assigned here and resides in the actuator_interface.
+   *
+   * \return vector of shared pointers to the created and stored StateInterfaces
+   */
+  virtual std::vector<StateInterfaceSharedPtr> on_export_state_interfaces()
   {
-    std::vector<std::shared_ptr<StateInterface>> state_interfaces;
+    std::vector<StateInterfaceSharedPtr> state_interfaces;
     state_interfaces.reserve(joint_state_interfaces_.size());
 
     for (const auto & [name, descr] : joint_state_interfaces_)
     {
-      actuator_states_.insert(std::make_pair(name, std::make_shared<StateInterface>(descr)));
-      state_interfaces.push_back(actuator_states_.at(name));
+      auto state_interface = std::make_shared<StateInterface>(descr);
+      actuator_states_.insert(std::make_pair(name, state_interface));
+      state_interfaces.push_back(state_interface);
     }
     return state_interfaces;
   }
+
   /// Exports all command interfaces for this hardware interface.
   /**
-   * Default implementation for exporting the CommandInterfaces. The CommandInterfaces are created
-   * according to the InterfaceDescription. The memory accessed by the controllers and hardware is
-   * assigned here and resides in the system_interface.
-   *
-   * The command interfaces have to be created and transferred according
-   * to the hardware info passed in for the configuration.
+   * Old way of exporting the CommandInterfaces. If a empty vector is returned then
+   * the on_export_command_interfaces() method is called. If a vector with CommandInterfaces is
+   * returned then the exporting of the CommandInterfaces is only done with this function and the
+   * ownership is transferred to the resource manager. The set_command(...), get_command(...), ...,
+   * can then not be used.
    *
    * Note the ownership over the state interfaces is transferred to the caller.
    *
-   * \return vector of command interfaces
+   * \return vector of state interfaces
    */
   [[deprecated(
-    "Replaced by vector<std::shared_ptr<CommandInterface>> on_export_command_interfaces() method. "
+    "Replaced by vector<CommandInterfaceSharedPtr> on_export_command_interfaces() method. "
     "Exporting is "
     "handled "
     "by the Framework.")]] virtual std::vector<CommandInterface>
@@ -197,15 +204,23 @@ public:
     return {};
   }
 
-  std::vector<std::shared_ptr<CommandInterface>> on_export_command_interfaces()
+  /**
+   * Default implementation for exporting the CommandInterfaces. The CommandInterfaces are created
+   * according to the InterfaceDescription. The memory accessed by the controllers and hardware is
+   * assigned here and resides in the actuator_interface.
+   *
+   * \return vector of shared pointers to the created and stored CommandInterfaces
+   */
+  virtual std::vector<CommandInterfaceSharedPtr> on_export_command_interfaces()
   {
-    std::vector<std::shared_ptr<CommandInterface>> command_interfaces;
+    std::vector<CommandInterfaceSharedPtr> command_interfaces;
     command_interfaces.reserve(joint_command_interfaces_.size());
 
     for (const auto & [name, descr] : joint_command_interfaces_)
     {
-      actuator_commands_.insert(std::make_pair(name, std::make_shared<CommandInterface>(descr)));
-      command_interfaces.push_back(actuator_commands_.at(name));
+      auto command_interface = std::make_shared<CommandInterface>(descr);
+      actuator_commands_.insert(std::make_pair(name, command_interface));
+      command_interfaces.push_back(command_interface);
     }
 
     return command_interfaces;
@@ -315,9 +330,8 @@ protected:
   std::map<std::string, InterfaceDescription> joint_state_interfaces_;
   std::map<std::string, InterfaceDescription> joint_command_interfaces_;
 
-private:
-  std::map<std::string, std::shared_ptr<StateInterface>> actuator_states_;
-  std::map<std::string, std::shared_ptr<CommandInterface>> actuator_commands_;
+  std::unordered_map<std::string, StateInterfaceSharedPtr> actuator_states_;
+  std::unordered_map<std::string, CommandInterfaceSharedPtr> actuator_commands_;
 
   rclcpp_lifecycle::State lifecycle_state_;
 };

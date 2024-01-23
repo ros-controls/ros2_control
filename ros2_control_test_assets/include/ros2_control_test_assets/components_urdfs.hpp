@@ -403,9 +403,9 @@ const auto valid_urdf_ros2_control_system_robot_with_size_and_data_type =
 // Voltage Sensor only
 const auto valid_urdf_ros2_control_voltage_sensor_only =
   R"(
-  <ros2_control name="CameraWithIMU" type="sensor">
+  <ros2_control name="SingleJointVoltage" type="sensor">
     <hardware>
-      <plugin>ros2_control_demo_hardware/CameraWithIMUSensor</plugin>
+      <plugin>ros2_control_demo_hardware/SingleJointVoltageSensor</plugin>
       <param name="example_param_read_for_sec">2</param>
     </hardware>
     <sensor name="joint1">

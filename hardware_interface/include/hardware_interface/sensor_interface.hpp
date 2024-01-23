@@ -19,6 +19,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -121,20 +122,18 @@ public:
 
   /// Exports all state interfaces for this hardware interface.
   /**
-   * Default implementation for exporting the StateInterfaces. The StateInterfaces are created
-   * according to the InterfaceDescription. The memory accessed by the controllers and hardware is
-   * assigned here and resides in the system_interface.
-   *
-   * If overwritten:
-   * The state interfaces have to be created and transferred according
-   * to the hardware info passed in for the configuration.
+   * Old way of exporting the StateInterfaces. If a empty vector is returned then
+   * the on_export_state_interfaces() method is called. If a vector with StateInterfaces is returned
+   * then the exporting of the StateInterfaces is only done with this function and the ownership is
+   * transferred to the resource manager. The set_command(...), get_command(...), ..., can then not
+   * be used.
    *
    * Note the ownership over the state interfaces is transferred to the caller.
    *
    * \return vector of state interfaces
    */
   [[deprecated(
-    "Replaced by vector<std::shared_ptr<StateInterface>> on_export_state_interfaces() method. "
+    "Replaced by vector<StateInterfaceSharedPtr> on_export_state_interfaces() method. "
     "Exporting is handled "
     "by the Framework.")]] virtual std::vector<StateInterface>
   export_state_interfaces()
@@ -144,17 +143,25 @@ public:
     return {};
   }
 
-  std::vector<std::shared_ptr<StateInterface>> on_export_state_interfaces()
+  /**
+   * Default implementation for exporting the StateInterfaces. The StateInterfaces are created
+   * according to the InterfaceDescription. The memory accessed by the controllers and hardware is
+   * assigned here and resides in the sensor_interface.
+   *
+   * \return vector of shared pointers to the created and stored StateInterfaces
+   */
+  virtual std::vector<StateInterfaceSharedPtr> on_export_state_interfaces()
   {
-    std::vector<std::shared_ptr<StateInterface>> state_interfaces;
+    std::vector<StateInterfaceSharedPtr> state_interfaces;
     state_interfaces.reserve(sensor_state_interfaces_.size());
 
     for (const auto & [name, descr] : sensor_state_interfaces_)
     {
       // TODO(Manuel) maybe check for duplicates otherwise only the first appearance of "name" is
       // inserted
-      sensor_states_.insert(std::make_pair(name, std::make_shared<StateInterface>(descr)));
-      state_interfaces.push_back(sensor_states_.at(name));
+      auto state_interface = std::make_shared<StateInterface>(descr);
+      sensor_states_.insert(std::make_pair(name, state_interface));
+      state_interfaces.push_back(state_interface);
     }
 
     return state_interfaces;
@@ -205,8 +212,7 @@ protected:
 
   std::map<std::string, InterfaceDescription> sensor_state_interfaces_;
 
-private:
-  std::map<std::string, std::shared_ptr<StateInterface>> sensor_states_;
+  std::unordered_map<std::string, StateInterfaceSharedPtr> sensor_states_;
 
   rclcpp_lifecycle::State lifecycle_state_;
 };

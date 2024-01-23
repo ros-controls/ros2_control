@@ -64,23 +64,11 @@ public:
   HARDWARE_INTERFACE_PUBLIC
   const rclcpp_lifecycle::State & error();
 
-  [[deprecated(
-    "Replaced by vector<std::shared_ptr<StateInterface>> on_export_state_interfaces() method. "
-    "Exporting is handled by the Framework.")]] HARDWARE_INTERFACE_PUBLIC
-    std::vector<StateInterface>
-    export_state_interfaces();
+  HARDWARE_INTERFACE_PUBLIC
+  std::vector<StateInterfaceSharedPtr> export_state_interfaces();
 
   HARDWARE_INTERFACE_PUBLIC
-  std::vector<std::shared_ptr<StateInterface>> on_export_state_interfaces();
-
-  [[deprecated(
-    "Replaced by vector<std::shared_ptr<CommandInterface>> on_export_state_interfaces() method. "
-    "Exporting is handled by the Framework.")]] HARDWARE_INTERFACE_PUBLIC
-    std::vector<CommandInterface>
-    export_command_interfaces();
-
-  HARDWARE_INTERFACE_PUBLIC
-  std::vector<std::shared_ptr<CommandInterface>> on_export_command_interfaces();
+  std::vector<CommandInterfaceSharedPtr> export_command_interfaces();
 
   HARDWARE_INTERFACE_PUBLIC
   return_type prepare_command_mode_switch(
