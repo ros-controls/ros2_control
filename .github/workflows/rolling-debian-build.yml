@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       ROS_DISTRO: rolling
-    container: ghcr.io/christophfroehlich/ros:rolling-debian
+    container: ghcr.io/ros-controls/ros:rolling-debian
     steps:
       - uses: actions/checkout@v4
         with:
