@@ -179,13 +179,13 @@ public:
     // create error signal interface
     InterfaceInfo error_interface_info;
     error_interface_info.name = hardware_interface::ERROR_SIGNAL_INTERFACE_NAME;
-    error_interface_info.data_type = "std::array<uint8_t>";
+    error_interface_info.data_type = "array<uint8_t>[32]";
     InterfaceDescription error_interface_descr(info_.name, error_interface_info);
     error_signal_ = std::make_shared<StateInterface>(error_interface_descr);
     // create error signal report message interface
     InterfaceInfo error_msg_interface_info;
     error_msg_interface_info.name = hardware_interface::ERROR_SIGNAL_MESSAGE_INTERFACE_NAME;
-    error_msg_interface_info.data_type = "std::array<std::string>";
+    error_msg_interface_info.data_type = "array<string>[32]";
     InterfaceDescription error_msg_interface_descr(info_.name, error_msg_interface_info);
     error_signal_message_ = std::make_shared<StateInterface>(error_msg_interface_descr);
 
@@ -193,13 +193,13 @@ public:
     //  create warning signal interface
     InterfaceInfo warning_interface_info;
     warning_interface_info.name = hardware_interface::WARNING_SIGNAL_INTERFACE_NAME;
-    warning_interface_info.data_type = "std::array<uint8_t>";
+    warning_interface_info.data_type = "array<int8_t>[32]";
     InterfaceDescription warning_interface_descr(info_.name, warning_interface_info);
     warning_signal_ = std::make_shared<StateInterface>(warning_interface_descr);
     // create warning signal report message interface
     InterfaceInfo warning_msg_interface_info;
     warning_msg_interface_info.name = hardware_interface::WARNING_SIGNAL_MESSAGE_INTERFACE_NAME;
-    warning_msg_interface_info.data_type = "std::array<std::string>";
+    warning_msg_interface_info.data_type = "array<string>[32]";
     InterfaceDescription warning_msg_interface_descr(info_.name, warning_msg_interface_info);
     warning_signal_message_ = std::make_shared<StateInterface>(warning_msg_interface_descr);
   }
