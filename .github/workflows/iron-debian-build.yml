@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       ROS_DISTRO: iron
-    container: ghcr.io/christophfroehlich/ros:iron-debian
+    container: ghcr.io/ros-controls/ros:iron-debian
     steps:
       - uses: actions/checkout@v4
         with:
