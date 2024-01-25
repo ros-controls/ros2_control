@@ -758,7 +758,7 @@ ResourceManager::ResourceManager(
 }
 
 // CM API: Called in "callback/slow"-thread
-void ResourceManager::load_urdf(
+bool ResourceManager::load_urdf(
   const std::string & urdf, bool validate_interfaces, bool load_and_initialize_components)
 {
   bool result = true;
