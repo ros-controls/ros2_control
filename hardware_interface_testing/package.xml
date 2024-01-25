@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>hardware_interface_testing</name>
+  <version>0.0.0</version>
+  <description>ros2_control hardware interface testing</description>
+  <maintainer email="bence.magyar.robotics@gmail.com">Bence Magyar</maintainer>
+  <maintainer email="denis@stoglrobotics.de">Denis Štogl</maintainer>
+  <maintainer email="christoph.froehlich@ait.ac.at">Christoph Froehlich</maintainer>
+  <license>Apache License 2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>control_msgs</depend>
+  <depend>hardware_interface</depend>
+  <depend>lifecycle_msgs</depend>
+  <depend>pluginlib</depend>
+  <depend>rclcpp_lifecycle</depend>
+  <depend>ros2_control_test_assets</depend>
+
+  <test_depend>ament_cmake_gmock</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
