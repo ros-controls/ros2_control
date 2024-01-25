@@ -1,4 +1,4 @@
-// Copyright 2020 PAL Robotics S.L.
+// Copyright 2023 ros2_control Development Team
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,33 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef HARDWARE_INTERFACE__CONTROLLER_INFO_HPP_
-#define HARDWARE_INTERFACE__CONTROLLER_INFO_HPP_
+#ifndef HARDWARE_INTERFACE__LEXICAL_CASTS_HPP_
+#define HARDWARE_INTERFACE__LEXICAL_CASTS_HPP_
 
+#include <locale>
 #include <optional>
+#include <sstream>
+#include <stdexcept>
 #include <string>
-#include <vector>
 
 namespace hardware_interface
 {
-/// Controller Information
-/**
- * This struct contains information about a given controller.
- */
-struct ControllerInfo
-{
-  /// Controller name.
-  std::string name;
 
-  /// Controller type.
-  std::string type;
+/** \brief Helper function to convert a std::string to double in a locale-independent way.
+ \throws std::invalid_argument if not a valid number
+ * from
+ https://github.com/ros-planning/srdfdom/blob/ad17b8d25812f752c397a6011cec64aeff090c46/src/model.cpp#L53
+*/
+double stod(const std::string & s);
 
-  /// Controller param file
-  std::optional<std::string> parameters_file;
-
-  /// List of claimed interfaces by the controller.
-  std::vector<std::string> claimed_interfaces;
-};
+bool parse_bool(const std::string & bool_string);
 
 }  // namespace hardware_interface
-#endif  // HARDWARE_INTERFACE__CONTROLLER_INFO_HPP_
+
+#endif  // HARDWARE_INTERFACE__LEXICAL_CASTS_HPP_

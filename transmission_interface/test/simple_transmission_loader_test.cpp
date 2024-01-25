@@ -26,7 +26,11 @@
 #include "transmission_interface/simple_transmission_loader.hpp"
 #include "transmission_interface/transmission_loader.hpp"
 
+using testing::DoubleNear;
 using testing::SizeIs;
+
+// Floating-point value comparison threshold
+const double EPS = 1e-5;
 
 class TransmissionPluginLoader
 {
@@ -229,8 +233,8 @@ TEST(SimpleTransmissionLoaderTest, FullSpec)
   transmission_interface::SimpleTransmission * simple_transmission =
     dynamic_cast<transmission_interface::SimpleTransmission *>(transmission.get());
   ASSERT_TRUE(nullptr != simple_transmission);
-  EXPECT_EQ(325.949, simple_transmission->get_actuator_reduction());
-  EXPECT_EQ(0.0, simple_transmission->get_joint_offset());
+  EXPECT_THAT(325.949, DoubleNear(simple_transmission->get_actuator_reduction(), EPS));
+  EXPECT_THAT(0.0, DoubleNear(simple_transmission->get_joint_offset(), EPS));
 }
 
 TEST(SimpleTransmissionLoaderTest, only_mech_red_specified)
@@ -275,8 +279,8 @@ TEST(SimpleTransmissionLoaderTest, only_mech_red_specified)
   transmission_interface::SimpleTransmission * simple_transmission =
     dynamic_cast<transmission_interface::SimpleTransmission *>(transmission.get());
   ASSERT_TRUE(nullptr != simple_transmission);
-  EXPECT_EQ(50.0, simple_transmission->get_actuator_reduction());
-  EXPECT_EQ(0.0, simple_transmission->get_joint_offset());
+  EXPECT_THAT(50.0, DoubleNear(simple_transmission->get_actuator_reduction(), EPS));
+  EXPECT_THAT(0.0, DoubleNear(simple_transmission->get_joint_offset(), EPS));
 }
 
 TEST(SimpleTransmissionLoaderTest, offset_and_mech_red_not_specified)
@@ -317,8 +321,8 @@ TEST(SimpleTransmissionLoaderTest, offset_and_mech_red_not_specified)
   transmission_interface::SimpleTransmission * simple_transmission =
     dynamic_cast<transmission_interface::SimpleTransmission *>(transmission.get());
   ASSERT_TRUE(nullptr != simple_transmission);
-  EXPECT_EQ(1.0, simple_transmission->get_actuator_reduction());
-  EXPECT_EQ(0.0, simple_transmission->get_joint_offset());
+  EXPECT_THAT(1.0, DoubleNear(simple_transmission->get_actuator_reduction(), EPS));
+  EXPECT_THAT(0.0, DoubleNear(simple_transmission->get_joint_offset(), EPS));
 }
 
 TEST(SimpleTransmissionLoaderTest, mechanical_reduction_not_a_number)
@@ -360,7 +364,7 @@ TEST(SimpleTransmissionLoaderTest, mechanical_reduction_not_a_number)
     dynamic_cast<transmission_interface::SimpleTransmission *>(transmission.get());
   ASSERT_TRUE(nullptr != simple_transmission);
   // default kicks in for ill-defined values
-  EXPECT_EQ(1.0, simple_transmission->get_actuator_reduction());
+  EXPECT_THAT(1.0, DoubleNear(simple_transmission->get_actuator_reduction(), EPS));
 }
 
 TEST(SimpleTransmissionLoaderTest, offset_ill_defined)
@@ -403,8 +407,8 @@ TEST(SimpleTransmissionLoaderTest, offset_ill_defined)
     dynamic_cast<transmission_interface::SimpleTransmission *>(transmission.get());
   ASSERT_TRUE(nullptr != simple_transmission);
   // default kicks in for ill-defined values
-  EXPECT_EQ(0.0, simple_transmission->get_joint_offset());
-  EXPECT_EQ(50.0, simple_transmission->get_actuator_reduction());
+  EXPECT_THAT(0.0, DoubleNear(simple_transmission->get_joint_offset(), EPS));
+  EXPECT_THAT(50.0, DoubleNear(simple_transmission->get_actuator_reduction(), EPS));
 }
 
 TEST(SimpleTransmissionLoaderTest, mech_red_invalid_value)

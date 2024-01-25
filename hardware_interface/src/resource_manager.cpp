@@ -758,7 +758,8 @@ ResourceManager::ResourceManager(
 }
 
 // CM API: Called in "callback/slow"-thread
-bool ResourceManager::load_urdf(const std::string & urdf, bool validate_interfaces)
+void ResourceManager::load_urdf(
+  const std::string & urdf, bool validate_interfaces, bool load_and_initialize_components)
 {
   bool result = true;
 
@@ -768,22 +769,25 @@ bool ResourceManager::load_urdf(const std::string & urdf, bool validate_interfac
   const std::string actuator_type = "actuator";
 
   const auto hardware_info = hardware_interface::parse_control_resources_from_urdf(urdf);
-  for (const auto & individual_hardware_info : hardware_info)
+  if (load_and_initialize_components)
   {
-    if (individual_hardware_info.type == actuator_type)
+    for (const auto & individual_hardware_info : hardware_info)
     {
-      std::scoped_lock guard(resource_interfaces_lock_, claimed_command_interfaces_lock_);
-      resource_storage_->load_and_initialize_actuator(individual_hardware_info);
-    }
-    if (individual_hardware_info.type == sensor_type)
-    {
-      std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
-      resource_storage_->load_and_initialize_sensor(individual_hardware_info);
-    }
-    if (individual_hardware_info.type == system_type)
-    {
-      std::scoped_lock guard(resource_interfaces_lock_, claimed_command_interfaces_lock_);
-      resource_storage_->load_and_initialize_system(individual_hardware_info);
+      if (individual_hardware_info.type == actuator_type)
+      {
+        std::scoped_lock guard(resource_interfaces_lock_, claimed_command_interfaces_lock_);
+        resource_storage_->load_and_initialize_actuator(individual_hardware_info);
+      }
+      if (individual_hardware_info.type == sensor_type)
+      {
+        std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
+        resource_storage_->load_and_initialize_sensor(individual_hardware_info);
+      }
+      if (individual_hardware_info.type == system_type)
+      {
+        std::scoped_lock guard(resource_interfaces_lock_, claimed_command_interfaces_lock_);
+        resource_storage_->load_and_initialize_system(individual_hardware_info);
+      }
     }
   }
 
@@ -1119,7 +1123,7 @@ bool ResourceManager::prepare_command_mode_switch(
     }
     return all_exist;
   };
-  if (!check_exist(start_interfaces) || !check_exist(stop_interfaces))
+  if (!(check_exist(start_interfaces) && check_exist(stop_interfaces)))
   {
     ss_not_existing << "]" << std::endl;
     RCUTILS_LOG_ERROR_NAMED(
@@ -1144,7 +1148,7 @@ bool ResourceManager::prepare_command_mode_switch(
     }
     return all_available;
   };
-  if (!check_available(start_interfaces) || !check_available(stop_interfaces))
+  if (!(check_available(start_interfaces) && check_available(stop_interfaces)))
   {
     ss_not_available << "]" << std::endl;
     RCUTILS_LOG_ERROR_NAMED(
@@ -1153,7 +1157,7 @@ bool ResourceManager::prepare_command_mode_switch(
     return false;
   }
 
-  auto call_method_on_components =
+  auto call_prepare_mode_switch =
     [&start_interfaces, &stop_interfaces, &interfaces_to_string](auto & components)
   {
     bool ret = true;
@@ -1178,8 +1182,8 @@ bool ResourceManager::prepare_command_mode_switch(
     return ret;
   };
 
-  const bool actuators_result = call_method_on_components(resource_storage_->actuators_);
-  const bool systems_result = call_method_on_components(resource_storage_->systems_);
+  const bool actuators_result = call_prepare_mode_switch(resource_storage_->actuators_);
+  const bool systems_result = call_prepare_mode_switch(resource_storage_->systems_);
 
   return actuators_result && systems_result;
 }
@@ -1195,7 +1199,7 @@ bool ResourceManager::perform_command_mode_switch(
     return true;
   }
 
-  auto call_method_on_components = [&start_interfaces, &stop_interfaces](auto & components)
+  auto call_perform_mode_switch = [&start_interfaces, &stop_interfaces](auto & components)
   {
     bool ret = true;
     for (auto & component : components)
@@ -1218,8 +1222,8 @@ bool ResourceManager::perform_command_mode_switch(
     return ret;
   };
 
-  const bool actuators_result = call_method_on_components(resource_storage_->actuators_);
-  const bool systems_result = call_method_on_components(resource_storage_->systems_);
+  const bool actuators_result = call_perform_mode_switch(resource_storage_->actuators_);
+  const bool systems_result = call_perform_mode_switch(resource_storage_->systems_);
 
   return actuators_result && systems_result;
 }

@@ -1,4 +1,4 @@
-name: RHEL Rolling Binary Build
+name: Debian Rolling Build
 on:
   workflow_dispatch:
   pull_request:
@@ -10,23 +10,21 @@ on:
 
 
 jobs:
-  rolling_rhel_binary:
-    name: Rolling RHEL binary build
+  rolling_debian:
+    name: Rolling debian build
     runs-on: ubuntu-latest
     env:
       ROS_DISTRO: rolling
-    container: ghcr.io/ros-controls/ros:rolling-rhel
+    container: ghcr.io/ros-controls/ros:rolling-debian
     steps:
       - uses: actions/checkout@v4
         with:
           path: src/ros2_control
-      - name: Install dependencies
-        run: |
-          rosdep update
-          rosdep install -iyr --from-path src/ros2_control || true
       - name: Build and test
+        shell: bash
         run: |
-          source /opt/ros/${{ env.ROS_DISTRO }}/setup.bash
+          source /opt/ros2_ws/install/setup.bash
+          vcs import src < src/ros2_control/ros2_control.${{ env.ROS_DISTRO }}.repos
           colcon build --packages-skip rqt_controller_manager
-          colcon test --packages-skip rqt_controller_manager ros2controlcli
+          colcon test --packages-skip rqt_controller_manager
           colcon test-result --verbose
