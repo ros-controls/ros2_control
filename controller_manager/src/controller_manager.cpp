@@ -574,6 +574,23 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_c
   controller_spec.next_update_cycle_time = std::make_shared<rclcpp::Time>(
     0, 0, this->get_node_clock_interface()->get_clock()->get_clock_type());
 
+  // We have to fetch the parameters_file at the time of loading the controller, because this way we
+  // can load them at the creation of the LifeCycleNode and this helps in using the features such as
+  // read_only params, dynamic maps lists etc
+  // Now check if the parameters_file parameter exist
+  const std::string param_name = controller_name + ".params_file";
+  std::string parameters_file;
+
+  // Check if parameter has been declared
+  if (!has_parameter(param_name))
+  {
+    declare_parameter(param_name, rclcpp::ParameterType::PARAMETER_STRING);
+  }
+  if (get_parameter(param_name, parameters_file) && !parameters_file.empty())
+  {
+    controller_spec.info.parameters_file = parameters_file;
+  }
+
   return add_controller_impl(controller_spec);
 }
 
@@ -1300,10 +1317,11 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::add_co
     return nullptr;
   }
 
+  const rclcpp::NodeOptions controller_node_options = determine_controller_node_options(controller);
   if (
     controller.c->init(
-      controller.info.name, robot_description_, get_update_rate(), get_namespace()) ==
-    controller_interface::return_type::ERROR)
+      controller.info.name, robot_description_, get_update_rate(), get_namespace(),
+      controller_node_options) == controller_interface::return_type::ERROR)
   {
     to.clear();
     RCLCPP_ERROR(
@@ -1311,17 +1329,6 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::add_co
     return nullptr;
   }
 
-  // ensure controller's `use_sim_time` parameter matches controller_manager's
-  const rclcpp::Parameter use_sim_time = this->get_parameter("use_sim_time");
-  if (use_sim_time.as_bool())
-  {
-    RCLCPP_INFO(
-      get_logger(),
-      "Setting use_sim_time=True for %s to match controller manager "
-      "(see ros2_control#325 for details)",
-      controller.info.name.c_str());
-    controller.c->get_node()->set_parameter(use_sim_time);
-  }
   executor_->add_node(controller.c->get_node()->get_node_base_interface());
   to.emplace_back(controller);
 
@@ -2591,6 +2598,41 @@ void ControllerManager::controller_activity_diagnostic_callback(
   {
     stat.summary(diagnostic_msgs::msg::DiagnosticStatus::OK, "Not all controllers are active");
   }
+}
+
+rclcpp::NodeOptions ControllerManager::determine_controller_node_options(
+  const ControllerSpec & controller) const
+{
+  auto check_for_element = [](const auto & list, const auto & element)
+  { return std::find(list.begin(), list.end(), element) != list.end(); };
+
+  rclcpp::NodeOptions controller_node_options = rclcpp::NodeOptions().enable_logger_service(true);
+  std::vector<std::string> node_options_arguments = controller_node_options.arguments();
+  const std::string ros_args_arg = "--ros-args";
+  if (controller.info.parameters_file.has_value())
+  {
+    if (!check_for_element(node_options_arguments, ros_args_arg))
+    {
+      node_options_arguments.push_back(ros_args_arg);
+    }
+    node_options_arguments.push_back("--params-file");
+    node_options_arguments.push_back(controller.info.parameters_file.value());
+  }
+
+  // ensure controller's `use_sim_time` parameter matches controller_manager's
+  const rclcpp::Parameter use_sim_time = this->get_parameter("use_sim_time");
+  if (use_sim_time.as_bool())
+  {
+    if (!check_for_element(node_options_arguments, ros_args_arg))
+    {
+      node_options_arguments.push_back(ros_args_arg);
+    }
+    node_options_arguments.push_back("-p");
+    node_options_arguments.push_back("use_sim_time:=true");
+  }
+
+  controller_node_options = controller_node_options.arguments(node_options_arguments);
+  return controller_node_options;
 }
 
 }  // namespace controller_manager

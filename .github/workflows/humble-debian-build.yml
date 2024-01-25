@@ -1,4 +1,4 @@
-name: RHEL Humble Binary Build
+name: Debian Humble Build
 on:
   workflow_dispatch:
   pull_request:
@@ -8,24 +8,23 @@ on:
     # Run every day to detect flakiness and broken dependencies
     - cron: '03 1 * * *'
 
+
 jobs:
-  humble_rhel_binary:
-    name: Humble RHEL binary build
+  humble_debian:
+    name: Humble debian build
     runs-on: ubuntu-latest
     env:
       ROS_DISTRO: humble
-    container: ghcr.io/ros-controls/ros:humble-rhel
+    container: ghcr.io/ros-controls/ros:humble-debian
     steps:
       - uses: actions/checkout@v4
         with:
           path: src/ros2_control
-      - name: Install dependencies
-        run: |
-          rosdep update
-          rosdep install -iyr --from-path src/ros2_control || true
       - name: Build and test
+        shell: bash
         run: |
-          source /opt/ros/${{ env.ROS_DISTRO }}/setup.bash
+          source /opt/ros2_ws/install/setup.bash
+          vcs import src < src/ros2_control/ros2_control.${{ env.ROS_DISTRO }}.repos
           colcon build --packages-skip rqt_controller_manager
-          colcon test --packages-skip rqt_controller_manager ros2controlcli
+          colcon test --packages-skip rqt_controller_manager control_msgs controller_manager_msgs
           colcon test-result --verbose

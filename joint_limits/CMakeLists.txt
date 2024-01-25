@@ -11,6 +11,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   rclcpp
   rclcpp_lifecycle
   trajectory_msgs
+  urdf
 )
 
 find_package(ament_cmake REQUIRED)
@@ -66,6 +67,9 @@ if(BUILD_TESTING)
 
   ament_add_gtest_executable(joint_limits_rosparam_test test/joint_limits_rosparam_test.cpp)
   target_link_libraries(joint_limits_rosparam_test joint_limits)
+
+  ament_add_gtest(joint_limits_urdf_test test/joint_limits_urdf_test.cpp)
+  target_link_libraries(joint_limits_urdf_test joint_limits)
 
   add_launch_test(test/joint_limits_rosparam.launch.py)
   install(

@@ -19,8 +19,6 @@ import os
 import sys
 import time
 import warnings
-import io
-from contextlib import redirect_stdout, redirect_stderr
 
 from controller_manager import (
     configure_controller,
@@ -37,7 +35,6 @@ from rclpy.node import Node
 from rclpy.parameter import get_parameter_value
 from rclpy.signals import SignalHandlerOptions
 from ros2param.api import call_set_parameters
-from ros2param.api import load_parameter_file
 
 # from https://stackoverflow.com/a/287944
 
@@ -266,6 +263,38 @@ def main(args=None):
                         )
                         return 1
 
+                if param_file:
+                    parameter = Parameter()
+                    parameter.name = prefixed_controller_name + ".params_file"
+                    parameter.value = get_parameter_value(string_value=param_file)
+
+                    response = call_set_parameters(
+                        node=node, node_name=controller_manager_name, parameters=[parameter]
+                    )
+                    assert len(response.results) == 1
+                    result = response.results[0]
+                    if result.successful:
+                        node.get_logger().info(
+                            bcolors.OKCYAN
+                            + 'Set controller params file to "'
+                            + param_file
+                            + '" for '
+                            + bcolors.BOLD
+                            + prefixed_controller_name
+                            + bcolors.ENDC
+                        )
+                    else:
+                        node.get_logger().fatal(
+                            bcolors.FAIL
+                            + 'Could not set controller params file to "'
+                            + param_file
+                            + '" for '
+                            + bcolors.BOLD
+                            + prefixed_controller_name
+                            + bcolors.ENDC
+                        )
+                        return 1
+
                 ret = load_controller(node, controller_manager_name, controller_name)
                 if not ret.ok:
                     node.get_logger().fatal(
@@ -282,39 +311,6 @@ def main(args=None):
                     + bcolors.BOLD
                     + prefixed_controller_name
                     + bcolors.ENDC
-                )
-
-            if param_file:
-                # load_parameter_file writes to stdout/stderr. Here we capture that and use node logging instead
-                with redirect_stdout(io.StringIO()) as f_stdout, redirect_stderr(
-                    io.StringIO()
-                ) as f_stderr:
-                    load_parameter_file(
-                        node=node,
-                        node_name=prefixed_controller_name,
-                        parameter_file=param_file,
-                        use_wildcard=True,
-                    )
-                if f_stdout.getvalue():
-                    node.get_logger().info(bcolors.OKCYAN + f_stdout.getvalue() + bcolors.ENDC)
-                if f_stderr.getvalue():
-                    node.get_logger().error(bcolors.FAIL + f_stderr.getvalue() + bcolors.ENDC)
-                node.get_logger().info(
-                    bcolors.OKCYAN
-                    + 'Loaded parameters file "'
-                    + param_file
-                    + '" for '
-                    + bcolors.BOLD
-                    + prefixed_controller_name
-                    + bcolors.ENDC
-                )
-                # TODO(destogl): use return value when upstream return value is merged
-                # ret =
-                # if ret.returncode != 0:
-                #     Error message printed by ros2 param
-                #     return ret.returncode
-                node.get_logger().info(
-                    "Loaded " + param_file + " into " + prefixed_controller_name
                 )
 
             if not args.load_only:
