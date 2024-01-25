@@ -28,7 +28,6 @@ from controller_manager import (
     load_controller,
     switch_controllers,
     unload_controller,
-    cleanup_controller,
 )
 
 import rclpy
