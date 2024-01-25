@@ -14,8 +14,8 @@
 
 /// \author Adolfo Rodriguez Tsouroukdissian
 
-#ifndef JOINT_LIMITS_URDF_HPP
-#define JOINT_LIMITS_URDF_HPP
+#ifndef JOINT_LIMITS__JOINT_LIMITS_URDF_HPP_
+#define JOINT_LIMITS__JOINT_LIMITS_URDF_HPP_
 
 #include "joint_limits/joint_limits.hpp"
 #include "urdf_model/joint.h"
@@ -82,4 +82,4 @@ inline bool getSoftJointLimits(urdf::JointConstSharedPtr urdf_joint, SoftJointLi
   return true;
 }
 }  // namespace joint_limits
-#endif  // JOINT_LIMITS_URDF_HPP
+#endif  // JOINT_LIMITS__JOINT_LIMITS_URDF_HPP_
