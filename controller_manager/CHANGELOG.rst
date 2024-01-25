@@ -2,6 +2,11 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* [CM] Fix controller parameter loading issue in different cases (`#1293 <https://github.com/ros-controls/ros2_control/issues/1293>`_) (`#1331 <https://github.com/ros-controls/ros2_control/issues/1331>`_)
+* Contributors: Sai Kishor Kothakota
+
 3.22.0 (2024-01-20)
 -------------------
 * Add additional checks for non existing and not available interfaces. (backport `#1218 <https://github.com/ros-controls/ros2_control/issues/1218>`_) (`#1292 <https://github.com/ros-controls/ros2_control/issues/1292>`_)

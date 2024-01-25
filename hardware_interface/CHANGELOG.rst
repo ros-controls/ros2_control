@@ -2,6 +2,11 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* [CM] Fix controller parameter loading issue in different cases (`#1293 <https://github.com/ros-controls/ros2_control/issues/1293>`_) (`#1331 <https://github.com/ros-controls/ros2_control/issues/1331>`_)
+* Contributors: Sai Kishor Kothakota
+
 3.22.0 (2024-01-20)
 -------------------
 * [RM] Fix crash for missing urdf in resource manager (`#1301 <https://github.com/ros-controls/ros2_control/issues/1301>`_) (`#1313 <https://github.com/ros-controls/ros2_control/issues/1313>`_)
