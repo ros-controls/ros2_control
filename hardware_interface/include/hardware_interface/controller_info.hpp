@@ -15,6 +15,7 @@
 #ifndef HARDWARE_INTERFACE__CONTROLLER_INFO_HPP_
 #define HARDWARE_INTERFACE__CONTROLLER_INFO_HPP_
 
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -31,6 +32,9 @@ struct ControllerInfo
 
   /// Controller type.
   std::string type;
+
+  /// Controller param file
+  std::optional<std::string> parameters_file;
 
   /// List of claimed interfaces by the controller.
   std::vector<std::string> claimed_interfaces;
