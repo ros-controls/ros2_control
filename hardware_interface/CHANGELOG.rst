@@ -2,8 +2,8 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.22.1 (2024-01-25)
+-------------------
 * [CM] Fix controller parameter loading issue in different cases (`#1293 <https://github.com/ros-controls/ros2_control/issues/1293>`_) (`#1331 <https://github.com/ros-controls/ros2_control/issues/1331>`_)
 * Contributors: Sai Kishor Kothakota
 
