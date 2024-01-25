@@ -17,7 +17,6 @@
 #include "gtest/gtest.h"
 
 using std::string;
-using namespace joint_limits;
 
 class JointLimitsUrdfTest : public ::testing::Test
 {
@@ -53,14 +52,14 @@ TEST_F(JointLimitsUrdfTest, GetJointLimits)
 {
   // Unset URDF joint
   {
-    JointLimits limits;
+    joint_limits::JointLimits limits;
     urdf::JointSharedPtr urdf_joint_bad;
     EXPECT_FALSE(getJointLimits(urdf_joint_bad, limits));
   }
 
   // Unset URDF limits
   {
-    JointLimits limits;
+    joint_limits::JointLimits limits;
     urdf::JointSharedPtr urdf_joint_bad(new urdf::Joint);
     EXPECT_FALSE(getJointLimits(urdf_joint_bad, limits));
   }
@@ -69,7 +68,7 @@ TEST_F(JointLimitsUrdfTest, GetJointLimits)
   {
     urdf_joint->type = urdf::Joint::CONTINUOUS;
 
-    JointLimits limits;
+    joint_limits::JointLimits limits;
     EXPECT_TRUE(getJointLimits(urdf_joint, limits));
 
     // Position
@@ -92,7 +91,7 @@ TEST_F(JointLimitsUrdfTest, GetJointLimits)
   {
     urdf_joint->type = urdf::Joint::REVOLUTE;
 
-    JointLimits limits;
+    joint_limits::JointLimits limits;
     EXPECT_TRUE(getJointLimits(urdf_joint, limits));
 
     // Position
@@ -117,7 +116,7 @@ TEST_F(JointLimitsUrdfTest, GetJointLimits)
   {
     urdf_joint->type = urdf::Joint::PRISMATIC;
 
-    JointLimits limits;
+    joint_limits::JointLimits limits;
     EXPECT_TRUE(getJointLimits(urdf_joint, limits));
 
     // Position
@@ -141,25 +140,23 @@ TEST_F(JointLimitsUrdfTest, GetJointLimits)
 
 TEST_F(JointLimitsUrdfTest, GetSoftJointLimits)
 {
-  using namespace joint_limits;
-
   // Unset URDF joint
   {
-    SoftJointLimits soft_limits;
+    joint_limits::SoftJointLimits soft_limits;
     urdf::JointSharedPtr urdf_joint_bad;
     EXPECT_FALSE(getSoftJointLimits(urdf_joint_bad, soft_limits));
   }
 
   // Unset URDF limits
   {
-    SoftJointLimits soft_limits;
+    joint_limits::SoftJointLimits soft_limits;
     urdf::JointSharedPtr urdf_joint_bad(new urdf::Joint);
     EXPECT_FALSE(getSoftJointLimits(urdf_joint_bad, soft_limits));
   }
 
   // Valid URDF joint
   {
-    SoftJointLimits soft_limits;
+    joint_limits::SoftJointLimits soft_limits;
     EXPECT_TRUE(getSoftJointLimits(urdf_joint, soft_limits));
 
     // Soft limits
