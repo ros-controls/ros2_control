@@ -132,15 +132,15 @@ struct TransmissionInfo
  */
 struct InterfaceDescription
 {
-  InterfaceDescription(const std::string & prefix_name, const InterfaceInfo & interface_info_in)
-  : prefix_name_(prefix_name), interface_info(interface_info_in)
+  InterfaceDescription(const std::string & prefix_name_in, const InterfaceInfo & interface_info_in)
+  : prefix_name(prefix_name_in), interface_info(interface_info_in)
   {
   }
 
   /**
    * Name of the interface defined by the user.
    */
-  std::string prefix_name_;
+  std::string prefix_name;
 
   /**
    * What type of component is exported: joint, sensor or gpio
@@ -152,7 +152,7 @@ struct InterfaceDescription
    */
   InterfaceInfo interface_info;
 
-  std::string get_name() const { return prefix_name_ + "/" + interface_info.name; }
+  std::string get_name() const { return prefix_name + "/" + interface_info.name; }
 
   std::string get_interface_type() const { return interface_info.name; }
 };

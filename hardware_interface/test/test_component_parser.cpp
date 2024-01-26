@@ -1415,11 +1415,11 @@ TEST_F(TestComponentParser, parse_joint_state_interface_descriptions_from_hardwa
 
   const auto joint_state_descriptions =
     parse_joint_state_interface_descriptions_from_hardware_info(control_hardware[0]);
-  EXPECT_EQ(joint_state_descriptions[0].prefix_name_, "joint1");
+  EXPECT_EQ(joint_state_descriptions[0].prefix_name, "joint1");
   EXPECT_EQ(joint_state_descriptions[0].get_interface_type(), "position");
   EXPECT_EQ(joint_state_descriptions[0].get_name(), "joint1/position");
 
-  EXPECT_EQ(joint_state_descriptions[1].prefix_name_, "joint2");
+  EXPECT_EQ(joint_state_descriptions[1].prefix_name, "joint2");
   EXPECT_EQ(joint_state_descriptions[1].get_interface_type(), "position");
   EXPECT_EQ(joint_state_descriptions[1].get_name(), "joint2/position");
 }
@@ -1434,13 +1434,13 @@ TEST_F(TestComponentParser, parse_joint_command_interface_descriptions_from_hard
 
   const auto joint_command_descriptions =
     parse_joint_command_interface_descriptions_from_hardware_info(control_hardware[0]);
-  EXPECT_EQ(joint_command_descriptions[0].prefix_name_, "joint1");
+  EXPECT_EQ(joint_command_descriptions[0].prefix_name, "joint1");
   EXPECT_EQ(joint_command_descriptions[0].get_interface_type(), "position");
   EXPECT_EQ(joint_command_descriptions[0].get_name(), "joint1/position");
   EXPECT_EQ(joint_command_descriptions[0].interface_info.min, "-1");
   EXPECT_EQ(joint_command_descriptions[0].interface_info.max, "1");
 
-  EXPECT_EQ(joint_command_descriptions[1].prefix_name_, "joint2");
+  EXPECT_EQ(joint_command_descriptions[1].prefix_name, "joint2");
   EXPECT_EQ(joint_command_descriptions[1].get_interface_type(), "position");
   EXPECT_EQ(joint_command_descriptions[1].get_name(), "joint2/position");
   EXPECT_EQ(joint_command_descriptions[1].interface_info.min, "-1");
@@ -1456,17 +1456,17 @@ TEST_F(TestComponentParser, parse_sensor_state_interface_descriptions_from_hardw
 
   const auto sensor_state_descriptions =
     parse_sensor_state_interface_descriptions_from_hardware_info(control_hardware[0]);
-  EXPECT_EQ(sensor_state_descriptions[0].prefix_name_, "sensor1");
+  EXPECT_EQ(sensor_state_descriptions[0].prefix_name, "sensor1");
   EXPECT_EQ(sensor_state_descriptions[0].get_interface_type(), "roll");
   EXPECT_EQ(sensor_state_descriptions[0].get_name(), "sensor1/roll");
-  EXPECT_EQ(sensor_state_descriptions[1].prefix_name_, "sensor1");
+  EXPECT_EQ(sensor_state_descriptions[1].prefix_name, "sensor1");
   EXPECT_EQ(sensor_state_descriptions[1].get_interface_type(), "pitch");
   EXPECT_EQ(sensor_state_descriptions[1].get_name(), "sensor1/pitch");
-  EXPECT_EQ(sensor_state_descriptions[2].prefix_name_, "sensor1");
+  EXPECT_EQ(sensor_state_descriptions[2].prefix_name, "sensor1");
   EXPECT_EQ(sensor_state_descriptions[2].get_interface_type(), "yaw");
   EXPECT_EQ(sensor_state_descriptions[2].get_name(), "sensor1/yaw");
 
-  EXPECT_EQ(sensor_state_descriptions[3].prefix_name_, "sensor2");
+  EXPECT_EQ(sensor_state_descriptions[3].prefix_name, "sensor2");
   EXPECT_EQ(sensor_state_descriptions[3].get_interface_type(), "image");
   EXPECT_EQ(sensor_state_descriptions[3].get_name(), "sensor2/image");
 }
@@ -1481,17 +1481,17 @@ TEST_F(TestComponentParser, parse_gpio_state_interface_descriptions_from_hardwar
 
   const auto gpio_state_descriptions =
     parse_gpio_state_interface_descriptions_from_hardware_info(control_hardware[0]);
-  EXPECT_EQ(gpio_state_descriptions[0].prefix_name_, "flange_analog_IOs");
+  EXPECT_EQ(gpio_state_descriptions[0].prefix_name, "flange_analog_IOs");
   EXPECT_EQ(gpio_state_descriptions[0].get_interface_type(), "analog_output1");
   EXPECT_EQ(gpio_state_descriptions[0].get_name(), "flange_analog_IOs/analog_output1");
-  EXPECT_EQ(gpio_state_descriptions[1].prefix_name_, "flange_analog_IOs");
+  EXPECT_EQ(gpio_state_descriptions[1].prefix_name, "flange_analog_IOs");
   EXPECT_EQ(gpio_state_descriptions[1].get_interface_type(), "analog_input1");
   EXPECT_EQ(gpio_state_descriptions[1].get_name(), "flange_analog_IOs/analog_input1");
-  EXPECT_EQ(gpio_state_descriptions[2].prefix_name_, "flange_analog_IOs");
+  EXPECT_EQ(gpio_state_descriptions[2].prefix_name, "flange_analog_IOs");
   EXPECT_EQ(gpio_state_descriptions[2].get_interface_type(), "analog_input2");
   EXPECT_EQ(gpio_state_descriptions[2].get_name(), "flange_analog_IOs/analog_input2");
 
-  EXPECT_EQ(gpio_state_descriptions[3].prefix_name_, "flange_vacuum");
+  EXPECT_EQ(gpio_state_descriptions[3].prefix_name, "flange_vacuum");
   EXPECT_EQ(gpio_state_descriptions[3].get_interface_type(), "vacuum");
   EXPECT_EQ(gpio_state_descriptions[3].get_name(), "flange_vacuum/vacuum");
 }
@@ -1506,11 +1506,11 @@ TEST_F(TestComponentParser, parse_gpio_command_interface_descriptions_from_hardw
 
   const auto gpio_state_descriptions =
     parse_gpio_command_interface_descriptions_from_hardware_info(control_hardware[0]);
-  EXPECT_EQ(gpio_state_descriptions[0].prefix_name_, "flange_analog_IOs");
+  EXPECT_EQ(gpio_state_descriptions[0].prefix_name, "flange_analog_IOs");
   EXPECT_EQ(gpio_state_descriptions[0].get_interface_type(), "analog_output1");
   EXPECT_EQ(gpio_state_descriptions[0].get_name(), "flange_analog_IOs/analog_output1");
 
-  EXPECT_EQ(gpio_state_descriptions[1].prefix_name_, "flange_vacuum");
+  EXPECT_EQ(gpio_state_descriptions[1].prefix_name, "flange_vacuum");
   EXPECT_EQ(gpio_state_descriptions[1].get_interface_type(), "vacuum");
   EXPECT_EQ(gpio_state_descriptions[1].get_name(), "flange_vacuum/vacuum");
 }

@@ -56,7 +56,8 @@ class DummyActuatorDefault : public hardware_interface::ActuatorInterface
 {
   std::string get_name() const override { return "DummyActuatorDefault"; }
 
-  std::vector<hardware_interface::StateInterfaceSharedPtr> on_export_state_interfaces() override
+  std::vector<std::shared_ptr<hardware_interface::StateInterface>> on_export_state_interfaces()
+    override
   {
     auto interfaces = hardware_interface::ActuatorInterface::on_export_state_interfaces();
     auto unlisted_state_interface = std::make_shared<hardware_interface::StateInterface>(
@@ -68,7 +69,8 @@ class DummyActuatorDefault : public hardware_interface::ActuatorInterface
     return interfaces;
   }
 
-  std::vector<hardware_interface::CommandInterfaceSharedPtr> on_export_command_interfaces() override
+  std::vector<std::shared_ptr<hardware_interface::CommandInterface>> on_export_command_interfaces()
+    override
   {
     auto interfaces = hardware_interface::ActuatorInterface::on_export_command_interfaces();
     auto unlisted_state_interface = std::make_shared<hardware_interface::CommandInterface>(
@@ -97,7 +99,8 @@ class DummySensorDefault : public hardware_interface::SensorInterface
 {
   std::string get_name() const override { return "DummySensorDefault"; }
 
-  std::vector<hardware_interface::StateInterfaceSharedPtr> on_export_state_interfaces() override
+  std::vector<std::shared_ptr<hardware_interface::StateInterface>> on_export_state_interfaces()
+    override
   {
     auto interfaces = hardware_interface::SensorInterface::on_export_state_interfaces();
     auto unlisted_state_interface = std::make_shared<hardware_interface::StateInterface>(
@@ -120,7 +123,8 @@ class DummySystemDefault : public hardware_interface::SystemInterface
 {
   std::string get_name() const override { return "DummySystemDefault"; }
 
-  std::vector<hardware_interface::StateInterfaceSharedPtr> on_export_state_interfaces() override
+  std::vector<std::shared_ptr<hardware_interface::StateInterface>> on_export_state_interfaces()
+    override
   {
     auto interfaces = hardware_interface::SystemInterface::on_export_state_interfaces();
     auto unlisted_state_interface = std::make_shared<hardware_interface::StateInterface>(
@@ -132,7 +136,8 @@ class DummySystemDefault : public hardware_interface::SystemInterface
     return interfaces;
   }
 
-  std::vector<hardware_interface::CommandInterfaceSharedPtr> on_export_command_interfaces() override
+  std::vector<std::shared_ptr<hardware_interface::CommandInterface>> on_export_command_interfaces()
+    override
   {
     auto interfaces = hardware_interface::SystemInterface::on_export_command_interfaces();
     auto unlisted_state_interface = std::make_shared<hardware_interface::CommandInterface>(
