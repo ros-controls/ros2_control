@@ -168,7 +168,7 @@ public:
    * \return vector of state interfaces
    */
   [[deprecated(
-    "Replaced by vector<StateInterfaceSharedPtr> on_export_state_interfaces() method. "
+    "Replaced by vector<std::shared_ptr<StateInterface>> on_export_state_interfaces() method. "
     "Exporting is handled "
     "by the Framework.")]] virtual std::vector<StateInterface>
   export_state_interfaces()
@@ -185,9 +185,9 @@ public:
    *
    * \return vector of shared pointers to the created and stored StateInterfaces
    */
-  virtual std::vector<StateInterfaceSharedPtr> on_export_state_interfaces()
+  virtual std::vector<std::shared_ptr<StateInterface>> on_export_state_interfaces()
   {
-    std::vector<StateInterfaceSharedPtr> state_interfaces;
+    std::vector<std::shared_ptr<StateInterface>> state_interfaces;
     state_interfaces.reserve(
       joint_state_interfaces_.size() + sensor_state_interfaces_.size() +
       gpio_state_interfaces_.size());
@@ -226,7 +226,7 @@ public:
    * \return vector of state interfaces
    */
   [[deprecated(
-    "Replaced by vector<CommandInterfaceSharedPtr> on_export_command_interfaces() method. "
+    "Replaced by vector<std::shared_ptr<CommandInterface>> on_export_command_interfaces() method. "
     "Exporting is "
     "handled "
     "by the Framework.")]] virtual std::vector<CommandInterface>
@@ -244,9 +244,9 @@ public:
    *
    * \return vector of shared pointers to the created and stored CommandInterfaces
    */
-  virtual std::vector<CommandInterfaceSharedPtr> on_export_command_interfaces()
+  virtual std::vector<std::shared_ptr<CommandInterface>> on_export_command_interfaces()
   {
-    std::vector<CommandInterfaceSharedPtr> command_interfaces;
+    std::vector<std::shared_ptr<CommandInterface>> command_interfaces;
     command_interfaces.reserve(joint_command_interfaces_.size() + gpio_command_interfaces_.size());
 
     for (const auto & [name, descr] : joint_command_interfaces_)
@@ -375,8 +375,8 @@ protected:
   std::map<std::string, InterfaceDescription> gpio_state_interfaces_;
   std::map<std::string, InterfaceDescription> gpio_command_interfaces_;
 
-  std::unordered_map<std::string, StateInterfaceSharedPtr> system_states_;
-  std::unordered_map<std::string, CommandInterfaceSharedPtr> system_commands_;
+  std::unordered_map<std::string, std::shared_ptr<StateInterface>> system_states_;
+  std::unordered_map<std::string, std::shared_ptr<CommandInterface>> system_commands_;
 
   rclcpp_lifecycle::State lifecycle_state_;
 };

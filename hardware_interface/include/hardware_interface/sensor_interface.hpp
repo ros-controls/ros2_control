@@ -133,7 +133,7 @@ public:
    * \return vector of state interfaces
    */
   [[deprecated(
-    "Replaced by vector<StateInterfaceSharedPtr> on_export_state_interfaces() method. "
+    "Replaced by vector<std::shared_ptr<StateInterface>> on_export_state_interfaces() method. "
     "Exporting is handled "
     "by the Framework.")]] virtual std::vector<StateInterface>
   export_state_interfaces()
@@ -150,9 +150,9 @@ public:
    *
    * \return vector of shared pointers to the created and stored StateInterfaces
    */
-  virtual std::vector<StateInterfaceSharedPtr> on_export_state_interfaces()
+  virtual std::vector<std::shared_ptr<StateInterface>> on_export_state_interfaces()
   {
-    std::vector<StateInterfaceSharedPtr> state_interfaces;
+    std::vector<std::shared_ptr<StateInterface>> state_interfaces;
     state_interfaces.reserve(sensor_state_interfaces_.size());
 
     for (const auto & [name, descr] : sensor_state_interfaces_)
@@ -212,7 +212,7 @@ protected:
 
   std::map<std::string, InterfaceDescription> sensor_state_interfaces_;
 
-  std::unordered_map<std::string, StateInterfaceSharedPtr> sensor_states_;
+  std::unordered_map<std::string, std::shared_ptr<StateInterface>> sensor_states_;
 
   rclcpp_lifecycle::State lifecycle_state_;
 };

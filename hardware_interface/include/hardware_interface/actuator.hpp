@@ -65,10 +65,10 @@ public:
   const rclcpp_lifecycle::State & error();
 
   HARDWARE_INTERFACE_PUBLIC
-  std::vector<StateInterfaceSharedPtr> export_state_interfaces();
+  std::vector<std::shared_ptr<StateInterface>> export_state_interfaces();
 
   HARDWARE_INTERFACE_PUBLIC
-  std::vector<CommandInterfaceSharedPtr> export_command_interfaces();
+  std::vector<std::shared_ptr<CommandInterface>> export_command_interfaces();
 
   HARDWARE_INTERFACE_PUBLIC
   return_type prepare_command_mode_switch(
