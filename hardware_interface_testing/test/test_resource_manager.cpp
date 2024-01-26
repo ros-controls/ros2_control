@@ -232,73 +232,73 @@ TEST_F(ResourceManagerTest, resource_claiming)
   // Activate components to get all interfaces available
   activate_components(rm);
 
-  const auto key = "joint1/position";
-  EXPECT_TRUE(rm.command_interface_is_available(key));
-  EXPECT_FALSE(rm.command_interface_is_claimed(key));
+  const auto command_interface = "joint1/position";
+  EXPECT_TRUE(rm.command_interface_is_available(command_interface));
+  EXPECT_FALSE(rm.command_interface_is_claimed(command_interface));
 
   {
-    auto position_command_interface = rm.claim_command_interface(key);
-    EXPECT_TRUE(rm.command_interface_is_available(key));
-    EXPECT_TRUE(rm.command_interface_is_claimed(key));
+    auto position_command_interface = rm.claim_command_interface(command_interface);
+    EXPECT_TRUE(rm.command_interface_is_available(command_interface));
+    EXPECT_TRUE(rm.command_interface_is_claimed(command_interface));
     {
-      EXPECT_ANY_THROW(rm.claim_command_interface(key));
-      EXPECT_TRUE(rm.command_interface_is_available(key));
+      EXPECT_ANY_THROW(rm.claim_command_interface(command_interface));
+      EXPECT_TRUE(rm.command_interface_is_available(command_interface));
     }
   }
-  EXPECT_TRUE(rm.command_interface_is_available(key));
-  EXPECT_FALSE(rm.command_interface_is_claimed(key));
+  EXPECT_TRUE(rm.command_interface_is_available(command_interface));
+  EXPECT_FALSE(rm.command_interface_is_claimed(command_interface));
 
   // command interfaces can only be claimed once
-  for (const auto & key :
+  for (const auto & interface_key :
        {"joint1/position", "joint1/position", "joint1/position", "joint2/velocity",
         "joint3/velocity"})
   {
     {
-      auto interface = rm.claim_command_interface(key);
-      EXPECT_TRUE(rm.command_interface_is_available(key));
-      EXPECT_TRUE(rm.command_interface_is_claimed(key));
+      auto interface = rm.claim_command_interface(interface_key);
+      EXPECT_TRUE(rm.command_interface_is_available(interface_key));
+      EXPECT_TRUE(rm.command_interface_is_claimed(interface_key));
       {
-        EXPECT_ANY_THROW(rm.claim_command_interface(key));
-        EXPECT_TRUE(rm.command_interface_is_available(key));
+        EXPECT_ANY_THROW(rm.claim_command_interface(interface_key));
+        EXPECT_TRUE(rm.command_interface_is_available(interface_key));
       }
     }
-    EXPECT_TRUE(rm.command_interface_is_available(key));
-    EXPECT_FALSE(rm.command_interface_is_claimed(key));
+    EXPECT_TRUE(rm.command_interface_is_available(interface_key));
+    EXPECT_FALSE(rm.command_interface_is_claimed(interface_key));
   }
 
   // TODO(destogl): This claim test is not true.... can not be...
   // state interfaces can be claimed multiple times
-  for (const auto & key :
+  for (const auto & interface_key :
        {"joint1/position", "joint1/velocity", "sensor1/velocity", "joint2/position",
         "joint3/position"})
   {
     {
-      EXPECT_TRUE(rm.state_interface_is_available(key));
-      auto interface = rm.claim_state_interface(key);
+      EXPECT_TRUE(rm.state_interface_is_available(interface_key));
+      auto interface = rm.claim_state_interface(interface_key);
       {
-        EXPECT_TRUE(rm.state_interface_is_available(key));
-        EXPECT_NO_THROW(rm.claim_state_interface(key));
+        EXPECT_TRUE(rm.state_interface_is_available(interface_key));
+        EXPECT_NO_THROW(rm.claim_state_interface(interface_key));
       }
     }
   }
 
   std::vector<hardware_interface::LoanedCommandInterface> interfaces;
   const auto interface_names = {"joint1/position", "joint2/velocity", "joint3/velocity"};
-  for (const auto & key : interface_names)
+  for (const auto & interface : interface_names)
   {
-    EXPECT_TRUE(rm.command_interface_is_available(key));
-    interfaces.emplace_back(rm.claim_command_interface(key));
+    EXPECT_TRUE(rm.command_interface_is_available(interface));
+    interfaces.emplace_back(rm.claim_command_interface(interface));
   }
-  for (const auto & key : interface_names)
+  for (const auto & interface : interface_names)
   {
-    EXPECT_TRUE(rm.command_interface_is_available(key));
-    EXPECT_TRUE(rm.command_interface_is_claimed(key));
+    EXPECT_TRUE(rm.command_interface_is_available(interface));
+    EXPECT_TRUE(rm.command_interface_is_claimed(interface));
   }
   interfaces.clear();
-  for (const auto & key : interface_names)
+  for (const auto & interface : interface_names)
   {
-    EXPECT_TRUE(rm.command_interface_is_available(key));
-    EXPECT_FALSE(rm.command_interface_is_claimed(key));
+    EXPECT_TRUE(rm.command_interface_is_available(interface));
+    EXPECT_FALSE(rm.command_interface_is_claimed(interface));
   }
 }
 

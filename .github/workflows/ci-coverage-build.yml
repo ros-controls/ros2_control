@@ -34,6 +34,7 @@ jobs:
             ros2controlcli
             ros2_control
             ros2_control_test_assets
+            hardware_interface_testing
             transmission_interface
 
           vcs-repo-file-url: |
