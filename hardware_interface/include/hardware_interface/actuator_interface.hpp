@@ -114,7 +114,7 @@ public:
   virtual void import_state_interface_descriptions(const HardwareInfo & hardware_info)
   {
     auto joint_state_interface_descriptions =
-      parse_joint_state_interface_descriptions_from_hardware_info(hardware_info);
+      parse_state_interface_descriptions_from_hardware_info(hardware_info.joints);
     for (const auto & description : joint_state_interface_descriptions)
     {
       joint_state_interfaces_.insert(std::make_pair(description.get_name(), description));
@@ -128,7 +128,7 @@ public:
   virtual void import_command_interface_descriptions(const HardwareInfo & hardware_info)
   {
     auto joint_command_interface_descriptions =
-      parse_joint_command_interface_descriptions_from_hardware_info(hardware_info);
+      parse_command_interface_descriptions_from_hardware_info(hardware_info.joints);
     for (const auto & description : joint_command_interface_descriptions)
     {
       joint_command_interfaces_.insert(std::make_pair(description.get_name(), description));

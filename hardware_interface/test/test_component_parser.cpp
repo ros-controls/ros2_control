@@ -810,7 +810,7 @@ TEST_F(TestComponentParser, parse_joint_state_interface_descriptions_from_hardwa
   const auto control_hardware = parse_control_resources_from_urdf(urdf_to_test);
 
   const auto joint_state_descriptions =
-    parse_joint_state_interface_descriptions_from_hardware_info(control_hardware[0]);
+    parse_state_interface_descriptions_from_hardware_info(control_hardware[0].joints);
   EXPECT_EQ(joint_state_descriptions[0].prefix_name, "joint1");
   EXPECT_EQ(joint_state_descriptions[0].get_interface_type(), "position");
   EXPECT_EQ(joint_state_descriptions[0].get_name(), "joint1/position");
@@ -829,7 +829,7 @@ TEST_F(TestComponentParser, parse_joint_command_interface_descriptions_from_hard
   const auto control_hardware = parse_control_resources_from_urdf(urdf_to_test);
 
   const auto joint_command_descriptions =
-    parse_joint_command_interface_descriptions_from_hardware_info(control_hardware[0]);
+    parse_command_interface_descriptions_from_hardware_info(control_hardware[0].joints);
   EXPECT_EQ(joint_command_descriptions[0].prefix_name, "joint1");
   EXPECT_EQ(joint_command_descriptions[0].get_interface_type(), "position");
   EXPECT_EQ(joint_command_descriptions[0].get_name(), "joint1/position");
@@ -851,7 +851,7 @@ TEST_F(TestComponentParser, parse_sensor_state_interface_descriptions_from_hardw
   const auto control_hardware = parse_control_resources_from_urdf(urdf_to_test);
 
   const auto sensor_state_descriptions =
-    parse_sensor_state_interface_descriptions_from_hardware_info(control_hardware[0]);
+    parse_state_interface_descriptions_from_hardware_info(control_hardware[0].sensors);
   EXPECT_EQ(sensor_state_descriptions[0].prefix_name, "sensor1");
   EXPECT_EQ(sensor_state_descriptions[0].get_interface_type(), "roll");
   EXPECT_EQ(sensor_state_descriptions[0].get_name(), "sensor1/roll");
@@ -876,7 +876,7 @@ TEST_F(TestComponentParser, parse_gpio_state_interface_descriptions_from_hardwar
   const auto control_hardware = parse_control_resources_from_urdf(urdf_to_test);
 
   const auto gpio_state_descriptions =
-    parse_gpio_state_interface_descriptions_from_hardware_info(control_hardware[0]);
+    parse_state_interface_descriptions_from_hardware_info(control_hardware[0].gpios);
   EXPECT_EQ(gpio_state_descriptions[0].prefix_name, "flange_analog_IOs");
   EXPECT_EQ(gpio_state_descriptions[0].get_interface_type(), "analog_output1");
   EXPECT_EQ(gpio_state_descriptions[0].get_name(), "flange_analog_IOs/analog_output1");
@@ -901,7 +901,7 @@ TEST_F(TestComponentParser, parse_gpio_command_interface_descriptions_from_hardw
   const auto control_hardware = parse_control_resources_from_urdf(urdf_to_test);
 
   const auto gpio_state_descriptions =
-    parse_gpio_command_interface_descriptions_from_hardware_info(control_hardware[0]);
+    parse_command_interface_descriptions_from_hardware_info(control_hardware[0].gpios);
   EXPECT_EQ(gpio_state_descriptions[0].prefix_name, "flange_analog_IOs");
   EXPECT_EQ(gpio_state_descriptions[0].get_interface_type(), "analog_output1");
   EXPECT_EQ(gpio_state_descriptions[0].get_name(), "flange_analog_IOs/analog_output1");
