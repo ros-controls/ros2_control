@@ -905,74 +905,38 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
   return hardware_info;
 }
 
-std::vector<InterfaceDescription> parse_joint_state_interface_descriptions_from_hardware_info(
-  const HardwareInfo & hw_info)
+std::vector<InterfaceDescription> parse_state_interface_descriptions_from_hardware_info(
+  const std::vector<ComponentInfo> & component_info)
 {
-  std::vector<InterfaceDescription> joint_state_interface_descriptions;
-  joint_state_interface_descriptions.reserve(hw_info.joints.size());
+  std::vector<InterfaceDescription> component_state_interface_descriptions;
+  component_state_interface_descriptions.reserve(component_info.size());
 
-  for (const auto & joint : hw_info.joints)
+  for (const auto & component : component_info)
   {
-    for (const auto & state_interface : joint.state_interfaces)
+    for (const auto & state_interface : component.state_interfaces)
     {
-      joint_state_interface_descriptions.emplace_back(
-        InterfaceDescription(joint.name, state_interface));
+      component_state_interface_descriptions.emplace_back(
+        InterfaceDescription(component.name, state_interface));
     }
   }
-  return joint_state_interface_descriptions;
+  return component_state_interface_descriptions;
 }
 
-std::vector<InterfaceDescription> parse_sensor_state_interface_descriptions_from_hardware_info(
-  const HardwareInfo & hw_info)
+std::vector<InterfaceDescription> parse_command_interface_descriptions_from_hardware_info(
+  const std::vector<ComponentInfo> & component_info)
 {
-  std::vector<InterfaceDescription> sensor_state_interface_descriptions;
-  sensor_state_interface_descriptions.reserve(hw_info.sensors.size());
+  std::vector<InterfaceDescription> component_command_interface_descriptions;
+  component_command_interface_descriptions.reserve(component_info.size());
 
-  for (const auto & sensor : hw_info.sensors)
+  for (const auto & component : component_info)
   {
-    for (const auto & state_interface : sensor.state_interfaces)
+    for (const auto & command_interface : component.command_interfaces)
     {
-      sensor_state_interface_descriptions.emplace_back(
-        InterfaceDescription(sensor.name, state_interface));
+      component_command_interface_descriptions.emplace_back(
+        InterfaceDescription(component.name, command_interface));
     }
   }
-  return sensor_state_interface_descriptions;
-}
-
-std::vector<InterfaceDescription> parse_gpio_state_interface_descriptions_from_hardware_info(
-  const HardwareInfo & hw_info)
-{
-  std::vector<InterfaceDescription> gpio_state_interface_descriptions;
-  gpio_state_interface_descriptions.reserve(hw_info.gpios.size());
-
-  for (const auto & gpio : hw_info.gpios)
-  {
-    for (const auto & state_interface : gpio.state_interfaces)
-    {
-      gpio_state_interface_descriptions.emplace_back(
-        InterfaceDescription(gpio.name, state_interface));
-    }
-  }
-  return gpio_state_interface_descriptions;
-}
-
-std::vector<InterfaceDescription> parse_joint_command_interface_descriptions_from_hardware_info(
-  const HardwareInfo & hw_info)
-{
-  std::vector<InterfaceDescription>
-    gpio_state_intejoint_command_interface_descriptionsrface_descriptions;
-  gpio_state_intejoint_command_interface_descriptionsrface_descriptions.reserve(
-    hw_info.joints.size());
-
-  for (const auto & joint : hw_info.joints)
-  {
-    for (const auto & command_interface : joint.command_interfaces)
-    {
-      gpio_state_intejoint_command_interface_descriptionsrface_descriptions.emplace_back(
-        InterfaceDescription(joint.name, command_interface));
-    }
-  }
-  return gpio_state_intejoint_command_interface_descriptionsrface_descriptions;
+  return component_command_interface_descriptions;
 }
 
 std::vector<InterfaceDescription> parse_gpio_command_interface_descriptions_from_hardware_info(
