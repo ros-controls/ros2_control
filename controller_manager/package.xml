@@ -28,11 +28,8 @@
   <depend>std_msgs</depend>
 
   <test_depend>ament_cmake_gmock</test_depend>
-<<<<<<< HEAD
-=======
   <test_depend>hardware_interface_testing</test_depend>
   <test_depend>ros2_control_test_assets</test_depend>
->>>>>>> 0bdcd41 (Move `test_components` to own package (#1325))
 
   <export>
     <build_type>ament_cmake</build_type>
