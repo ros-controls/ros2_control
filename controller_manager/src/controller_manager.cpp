@@ -337,7 +337,7 @@ void ControllerManager::robot_description_callback(const std_msgs::msg::String &
 
 void ControllerManager::init_resource_manager(const std::string & robot_description)
 {
-  if (!resource_manager_->load_urdf(robot_description))
+  if (!resource_manager_->load_and_initialize_components(robot_description))
   {
     RCLCPP_WARN(
       get_logger(),
