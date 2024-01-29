@@ -98,25 +98,25 @@ TEST_F(ResourceManagerTest, initialization_with_urdf)
 TEST_F(ResourceManagerTest, post_initialization_with_urdf)
 {
   TestableResourceManager rm;
-  ASSERT_NO_THROW(rm.load_urdf(ros2_control_test_assets::minimal_robot_urdf));
+  ASSERT_NO_THROW(rm.load_and_initialize_components(ros2_control_test_assets::minimal_robot_urdf));
 }
 
 TEST_F(ResourceManagerTest, test_unitilizable_hardware_validation)
 {
-  // If the the hardware can not be initialized and load_urdf tried to validate the interfaces a
-  // runtime exception is thrown
+  // If the the hardware can not be initialized and load_and_initialize_components tried to validate
+  // the interfaces a runtime exception is thrown
   TestableResourceManager rm;
-  ASSERT_THROW(
-    rm.load_urdf(ros2_control_test_assets::minimal_unitilizable_robot_urdf, true),
-    std::runtime_error);
+  EXPECT_FALSE(rm.load_and_initialize_components(
+    ros2_control_test_assets::minimal_unitilizable_robot_urdf, true));
 }
 
 TEST_F(ResourceManagerTest, test_unitilizable_hardware_no_validation)
 {
-  // If the the hardware can not be initialized and load_urdf didn't try to validate the interfaces,
-  // the interface should not show up
+  // If the the hardware can not be initialized and load_and_initialize_components didn't try to
+  // validate the interfaces, the interface should not show up
   TestableResourceManager rm;
-  EXPECT_NO_THROW(rm.load_urdf(ros2_control_test_assets::minimal_unitilizable_robot_urdf, false));
+  EXPECT_TRUE(rm.load_and_initialize_components(
+    ros2_control_test_assets::minimal_unitilizable_robot_urdf, false));
 
   // test actuator
   EXPECT_FALSE(rm.state_interface_exists("joint1/position"));
@@ -168,15 +168,17 @@ TEST_F(ResourceManagerTest, initialization_with_wrong_urdf)
 {
   // missing state keys
   {
-    EXPECT_THROW(
-      TestableResourceManager rm(ros2_control_test_assets::minimal_robot_missing_state_keys_urdf),
-      std::exception);
+    auto rm = TestableResourceManager();
+    EXPECT_FALSE(rm.load_and_initialize_components(
+      ros2_control_test_assets::minimal_robot_missing_state_keys_urdf));
+    ASSERT_TRUE(rm.is_urdf_already_loaded());
   }
   // missing command keys
   {
-    EXPECT_THROW(
-      TestableResourceManager rm(ros2_control_test_assets::minimal_robot_missing_command_keys_urdf),
-      std::exception);
+    auto rm = TestableResourceManager();
+    EXPECT_FALSE(rm.load_and_initialize_components(
+      ros2_control_test_assets::minimal_robot_missing_command_keys_urdf));
+    ASSERT_TRUE(rm.is_urdf_already_loaded());
   }
 }
 
@@ -199,31 +201,33 @@ TEST_F(ResourceManagerTest, initialization_with_urdf_unclaimed)
   }
 }
 
-TEST_F(ResourceManagerTest, no_load_urdf_function_called)
+TEST_F(ResourceManagerTest, no_load_and_initialize_components_function_called)
 {
   TestableResourceManager rm;
   ASSERT_FALSE(rm.is_urdf_already_loaded());
 }
 
-TEST_F(ResourceManagerTest, load_urdf_called_if_urdf_is_invalid)
+TEST_F(ResourceManagerTest, load_and_initialize_components_called_if_urdf_is_valid)
 {
   TestableResourceManager rm;
-  EXPECT_THROW(
-    rm.load_urdf(ros2_control_test_assets::minimal_robot_missing_state_keys_urdf), std::exception);
-  ASSERT_TRUE(rm.is_urdf_already_loaded());
+  ASSERT_FALSE(
+    rm.load_and_initialize_components(
+      ros2_control_test_assets::minimal_robot_missing_state_keys_urdf),
+    std::exception);
+  ASSERT_FALSE(rm.is_urdf_already_loaded());
 }
 
-TEST_F(ResourceManagerTest, load_urdf_called_if_urdf_is_valid)
+TEST_F(ResourceManagerTest, load_and_initialize_components_called_if_urdf_is_valid)
 {
   TestableResourceManager rm(ros2_control_test_assets::minimal_robot_urdf);
   ASSERT_TRUE(rm.is_urdf_already_loaded());
 }
 
-TEST_F(ResourceManagerTest, can_load_urdf_later)
+TEST_F(ResourceManagerTest, can_load_and_initialize_components_later)
 {
   TestableResourceManager rm;
   ASSERT_FALSE(rm.is_urdf_already_loaded());
-  rm.load_urdf(ros2_control_test_assets::minimal_robot_urdf);
+  rm.load_and_initialize_components(ros2_control_test_assets::minimal_robot_urdf);
   ASSERT_TRUE(rm.is_urdf_already_loaded());
 }
 

@@ -29,11 +29,13 @@ class TestableControllerManager : public controller_manager::ControllerManager
 {
   friend TestControllerManagerWithTestableCM;
 
-  FRIEND_TEST(TestControllerManagerWithTestableCM, initial_no_load_urdf_called);
-  FRIEND_TEST(TestControllerManagerWithTestableCM, load_urdf_called_after_callback);
-  FRIEND_TEST(TestControllerManagerWithTestableCM, load_urdf_called_after_invalid_urdf_passed);
-  FRIEND_TEST(TestControllerManagerWithTestableCM, load_urdf_called_after_callback);
-  FRIEND_TEST(TestControllerManagerWithTestableCM, load_urdf_called_after_callback);
+  FRIEND_TEST(
+    TestControllerManagerWithTestableCM, initial_no_load_and_initialize_components_called);
+  FRIEND_TEST(
+    TestControllerManagerWithTestableCM, load_and_initialize_components_called_after_callback);
+  FRIEND_TEST(
+    TestControllerManagerWithTestableCM,
+    load_and_initialize_components_called_after_invalid_urdf_passed);
 
 public:
   TestableControllerManager(
@@ -59,12 +61,12 @@ public:
   }
 };
 
-TEST_P(TestControllerManagerWithTestableCM, initial_no_load_urdf_called)
+TEST_P(TestControllerManagerWithTestableCM, initial_no_load_and_initialize_components_called)
 {
   ASSERT_FALSE(cm_->resource_manager_->is_urdf_already_loaded());
 }
 
-TEST_P(TestControllerManagerWithTestableCM, load_urdf_called_after_callback)
+TEST_P(TestControllerManagerWithTestableCM, load_and_initialize_components_called_after_callback)
 {
   ASSERT_FALSE(cm_->resource_manager_->is_urdf_already_loaded());
   // mimic callback
@@ -74,7 +76,9 @@ TEST_P(TestControllerManagerWithTestableCM, load_urdf_called_after_callback)
   ASSERT_TRUE(cm_->resource_manager_->is_urdf_already_loaded());
 }
 
-TEST_P(TestControllerManagerWithTestableCM, load_urdf_called_after_invalid_urdf_passed)
+TEST_P(
+  TestControllerManagerWithTestableCM,
+  load_and_initialize_components_called_after_invalid_urdf_passed)
 {
   ASSERT_FALSE(cm_->resource_manager_->is_urdf_already_loaded());
   // mimic callback

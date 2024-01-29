@@ -742,7 +742,7 @@ ResourceManager::ResourceManager(
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
 : resource_storage_(std::make_unique<ResourceStorage>(update_rate, clock_interface))
 {
-  load_urdf(urdf, validate_interfaces);
+  load_and_initialize_components(urdf, validate_interfaces);
 
   if (activate_all)
   {
@@ -756,15 +756,18 @@ ResourceManager::ResourceManager(
 }
 
 // CM API: Called in "callback/slow"-thread
-void ResourceManager::load_urdf(
+bool ResourceManager::load_and_initialize_components(
   const std::string & urdf, bool validate_interfaces, bool load_and_initialize_components)
 {
-  is_urdf_loaded__ = true;
+  bool result = true;
+
   const std::string system_type = "system";
   const std::string sensor_type = "sensor";
   const std::string actuator_type = "actuator";
 
   const auto hardware_info = hardware_interface::parse_control_resources_from_urdf(urdf);
+  is_urdf_loaded_ = true;
+
   if (load_and_initialize_components)
   {
     for (const auto & individual_hardware_info : hardware_info)
@@ -799,7 +802,7 @@ void ResourceManager::load_urdf(
     resource_storage_->systems_.size());
 }
 
-bool ResourceManager::is_urdf_already_loaded() const { return is_urdf_loaded__; }
+bool ResourceManager::is_urdf_already_loaded() const { return is_urdf_loaded_; }
 
 // CM API: Called in "update"-thread
 LoanedStateInterface ResourceManager::claim_state_interface(const std::string & key)
