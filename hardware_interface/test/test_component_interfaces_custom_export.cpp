@@ -36,6 +36,7 @@
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 #include "ros2_control_test_assets/components_urdfs.hpp"
 #include "ros2_control_test_assets/descriptions.hpp"
+#include "test_components.hpp"
 
 // Values to send over command interface to trigger error in write and read methods
 
@@ -56,10 +57,10 @@ class DummyActuatorDefault : public hardware_interface::ActuatorInterface
 {
   std::string get_name() const override { return "DummyActuatorDefault"; }
 
-  std::vector<std::shared_ptr<hardware_interface::StateInterface>> on_export_state_interfaces()
+  std::vector<std::shared_ptr<hardware_interface::StateInterface>> export_state_interfaces_2()
     override
   {
-    auto interfaces = hardware_interface::ActuatorInterface::on_export_state_interfaces();
+    std::vector<std::shared_ptr<hardware_interface::StateInterface>> interfaces;
     auto unlisted_state_interface = std::make_shared<hardware_interface::StateInterface>(
       info_.joints[0].name, "some_unlisted_interface", nullptr);
     actuator_states_.insert(
@@ -69,10 +70,10 @@ class DummyActuatorDefault : public hardware_interface::ActuatorInterface
     return interfaces;
   }
 
-  std::vector<std::shared_ptr<hardware_interface::CommandInterface>> on_export_command_interfaces()
+  std::vector<std::shared_ptr<hardware_interface::CommandInterface>> export_command_interfaces_2()
     override
   {
-    auto interfaces = hardware_interface::ActuatorInterface::on_export_command_interfaces();
+    std::vector<std::shared_ptr<hardware_interface::CommandInterface>> interfaces;
     auto unlisted_state_interface = std::make_shared<hardware_interface::CommandInterface>(
       info_.joints[0].name, "some_unlisted_interface", nullptr);
     actuator_commands_.insert(
@@ -99,10 +100,10 @@ class DummySensorDefault : public hardware_interface::SensorInterface
 {
   std::string get_name() const override { return "DummySensorDefault"; }
 
-  std::vector<std::shared_ptr<hardware_interface::StateInterface>> on_export_state_interfaces()
+  std::vector<std::shared_ptr<hardware_interface::StateInterface>> export_state_interfaces_2()
     override
   {
-    auto interfaces = hardware_interface::SensorInterface::on_export_state_interfaces();
+    std::vector<std::shared_ptr<hardware_interface::StateInterface>> interfaces;
     auto unlisted_state_interface = std::make_shared<hardware_interface::StateInterface>(
       info_.sensors[0].name, "some_unlisted_interface", nullptr);
     sensor_states_.insert(
@@ -123,10 +124,10 @@ class DummySystemDefault : public hardware_interface::SystemInterface
 {
   std::string get_name() const override { return "DummySystemDefault"; }
 
-  std::vector<std::shared_ptr<hardware_interface::StateInterface>> on_export_state_interfaces()
+  std::vector<std::shared_ptr<hardware_interface::StateInterface>> export_state_interfaces_2()
     override
   {
-    auto interfaces = hardware_interface::SystemInterface::on_export_state_interfaces();
+    std::vector<std::shared_ptr<hardware_interface::StateInterface>> interfaces;
     auto unlisted_state_interface = std::make_shared<hardware_interface::StateInterface>(
       info_.joints[0].name, "some_unlisted_interface", nullptr);
     system_states_.insert(
@@ -136,10 +137,10 @@ class DummySystemDefault : public hardware_interface::SystemInterface
     return interfaces;
   }
 
-  std::vector<std::shared_ptr<hardware_interface::CommandInterface>> on_export_command_interfaces()
+  std::vector<std::shared_ptr<hardware_interface::CommandInterface>> export_command_interfaces_2()
     override
   {
-    auto interfaces = hardware_interface::SystemInterface::on_export_command_interfaces();
+    std::vector<std::shared_ptr<hardware_interface::CommandInterface>> interfaces;
     auto unlisted_state_interface = std::make_shared<hardware_interface::CommandInterface>(
       info_.joints[0].name, "some_unlisted_interface", nullptr);
     system_commands_.insert(
@@ -182,24 +183,50 @@ TEST(TestComponentInterfaces, dummy_actuator_default_custom_export)
 
   auto state_interfaces = actuator_hw.export_state_interfaces();
   ASSERT_EQ(3u, state_interfaces.size());
-  EXPECT_EQ("joint1/position", state_interfaces[0]->get_name());
-  EXPECT_EQ(hardware_interface::HW_IF_POSITION, state_interfaces[0]->get_interface_name());
-  EXPECT_EQ("joint1", state_interfaces[0]->get_prefix_name());
-  EXPECT_EQ("joint1/velocity", state_interfaces[1]->get_name());
-  EXPECT_EQ(hardware_interface::HW_IF_VELOCITY, state_interfaces[1]->get_interface_name());
-  EXPECT_EQ("joint1", state_interfaces[1]->get_prefix_name());
-  EXPECT_EQ("joint1/some_unlisted_interface", state_interfaces[2]->get_name());
-  EXPECT_EQ("some_unlisted_interface", state_interfaces[2]->get_interface_name());
-  EXPECT_EQ("joint1", state_interfaces[2]->get_prefix_name());
+  {
+    auto [contains, position] =
+      test_components::vector_contains(state_interfaces, "joint1/position");
+    EXPECT_TRUE(contains);
+    EXPECT_EQ("joint1/position", state_interfaces[position]->get_name());
+    EXPECT_EQ(hardware_interface::HW_IF_POSITION, state_interfaces[position]->get_interface_name());
+    EXPECT_EQ("joint1", state_interfaces[position]->get_prefix_name());
+  }
+  {
+    auto [contains, position] =
+      test_components::vector_contains(state_interfaces, "joint1/velocity");
+    EXPECT_TRUE(contains);
+    EXPECT_EQ("joint1/velocity", state_interfaces[position]->get_name());
+    EXPECT_EQ(hardware_interface::HW_IF_VELOCITY, state_interfaces[position]->get_interface_name());
+    EXPECT_EQ("joint1", state_interfaces[position]->get_prefix_name());
+  }
+  {
+    auto [contains, position] =
+      test_components::vector_contains(state_interfaces, "joint1/some_unlisted_interface");
+    EXPECT_TRUE(contains);
+    EXPECT_EQ("joint1/some_unlisted_interface", state_interfaces[position]->get_name());
+    EXPECT_EQ("some_unlisted_interface", state_interfaces[position]->get_interface_name());
+    EXPECT_EQ("joint1", state_interfaces[position]->get_prefix_name());
+  }
 
   auto command_interfaces = actuator_hw.export_command_interfaces();
   ASSERT_EQ(2u, command_interfaces.size());
-  EXPECT_EQ("joint1/velocity", command_interfaces[0]->get_name());
-  EXPECT_EQ(hardware_interface::HW_IF_VELOCITY, command_interfaces[0]->get_interface_name());
-  EXPECT_EQ("joint1", command_interfaces[0]->get_prefix_name());
-  EXPECT_EQ("joint1/some_unlisted_interface", command_interfaces[1]->get_name());
-  EXPECT_EQ("some_unlisted_interface", command_interfaces[1]->get_interface_name());
-  EXPECT_EQ("joint1", command_interfaces[1]->get_prefix_name());
+  {
+    auto [contains, position] =
+      test_components::vector_contains(command_interfaces, "joint1/velocity");
+    EXPECT_TRUE(contains);
+    EXPECT_EQ("joint1/velocity", command_interfaces[position]->get_name());
+    EXPECT_EQ(
+      hardware_interface::HW_IF_VELOCITY, command_interfaces[position]->get_interface_name());
+    EXPECT_EQ("joint1", command_interfaces[position]->get_prefix_name());
+  }
+  {
+    auto [contains, position] =
+      test_components::vector_contains(command_interfaces, "joint1/some_unlisted_interface");
+    EXPECT_TRUE(contains);
+    EXPECT_EQ("joint1/some_unlisted_interface", command_interfaces[position]->get_name());
+    EXPECT_EQ("some_unlisted_interface", command_interfaces[position]->get_interface_name());
+    EXPECT_EQ("joint1", command_interfaces[position]->get_prefix_name());
+  }
 }
 
 TEST(TestComponentInterfaces, dummy_sensor_default_custom_export)
@@ -219,13 +246,23 @@ TEST(TestComponentInterfaces, dummy_sensor_default_custom_export)
 
   auto state_interfaces = sensor_hw.export_state_interfaces();
   ASSERT_EQ(2u, state_interfaces.size());
-  EXPECT_EQ("joint1/voltage", state_interfaces[0]->get_name());
-  EXPECT_EQ("voltage", state_interfaces[0]->get_interface_name());
-  EXPECT_EQ("joint1", state_interfaces[0]->get_prefix_name());
-  EXPECT_TRUE(std::isnan(state_interfaces[0]->get_value()));
-  EXPECT_EQ("joint1/some_unlisted_interface", state_interfaces[1]->get_name());
-  EXPECT_EQ("some_unlisted_interface", state_interfaces[1]->get_interface_name());
-  EXPECT_EQ("joint1", state_interfaces[1]->get_prefix_name());
+  {
+    auto [contains, position] =
+      test_components::vector_contains(state_interfaces, "joint1/voltage");
+    EXPECT_TRUE(contains);
+    EXPECT_EQ("joint1/voltage", state_interfaces[position]->get_name());
+    EXPECT_EQ("voltage", state_interfaces[position]->get_interface_name());
+    EXPECT_EQ("joint1", state_interfaces[position]->get_prefix_name());
+    EXPECT_TRUE(std::isnan(state_interfaces[position]->get_value()));
+  }
+  {
+    auto [contains, position] =
+      test_components::vector_contains(state_interfaces, "joint1/some_unlisted_interface");
+    EXPECT_TRUE(contains);
+    EXPECT_EQ("joint1/some_unlisted_interface", state_interfaces[position]->get_name());
+    EXPECT_EQ("some_unlisted_interface", state_interfaces[position]->get_interface_name());
+    EXPECT_EQ("joint1", state_interfaces[position]->get_prefix_name());
+  }
 }
 
 TEST(TestComponentInterfaces, dummy_system_default_custom_export)
@@ -245,40 +282,98 @@ TEST(TestComponentInterfaces, dummy_system_default_custom_export)
 
   auto state_interfaces = system_hw.export_state_interfaces();
   ASSERT_EQ(7u, state_interfaces.size());
-  EXPECT_EQ("joint1/position", state_interfaces[0]->get_name());
-  EXPECT_EQ(hardware_interface::HW_IF_POSITION, state_interfaces[0]->get_interface_name());
-  EXPECT_EQ("joint1", state_interfaces[0]->get_prefix_name());
-  EXPECT_EQ("joint1/velocity", state_interfaces[1]->get_name());
-  EXPECT_EQ(hardware_interface::HW_IF_VELOCITY, state_interfaces[1]->get_interface_name());
-  EXPECT_EQ("joint1", state_interfaces[1]->get_prefix_name());
-  EXPECT_EQ("joint2/position", state_interfaces[2]->get_name());
-  EXPECT_EQ(hardware_interface::HW_IF_POSITION, state_interfaces[2]->get_interface_name());
-  EXPECT_EQ("joint2", state_interfaces[2]->get_prefix_name());
-  EXPECT_EQ("joint2/velocity", state_interfaces[3]->get_name());
-  EXPECT_EQ(hardware_interface::HW_IF_VELOCITY, state_interfaces[3]->get_interface_name());
-  EXPECT_EQ("joint2", state_interfaces[3]->get_prefix_name());
-  EXPECT_EQ("joint3/position", state_interfaces[4]->get_name());
-  EXPECT_EQ(hardware_interface::HW_IF_POSITION, state_interfaces[4]->get_interface_name());
-  EXPECT_EQ("joint3", state_interfaces[4]->get_prefix_name());
-  EXPECT_EQ("joint3/velocity", state_interfaces[5]->get_name());
-  EXPECT_EQ(hardware_interface::HW_IF_VELOCITY, state_interfaces[5]->get_interface_name());
-  EXPECT_EQ("joint3", state_interfaces[5]->get_prefix_name());
-  EXPECT_EQ("joint1/some_unlisted_interface", state_interfaces[6]->get_name());
-  EXPECT_EQ("some_unlisted_interface", state_interfaces[6]->get_interface_name());
-  EXPECT_EQ("joint1", state_interfaces[6]->get_prefix_name());
+  {
+    auto [contains, position] =
+      test_components::vector_contains(state_interfaces, "joint1/position");
+    EXPECT_TRUE(contains);
+    EXPECT_EQ("joint1/position", state_interfaces[position]->get_name());
+    EXPECT_EQ(hardware_interface::HW_IF_POSITION, state_interfaces[position]->get_interface_name());
+    EXPECT_EQ("joint1", state_interfaces[position]->get_prefix_name());
+  }
+  {
+    auto [contains, position] =
+      test_components::vector_contains(state_interfaces, "joint1/velocity");
+    EXPECT_TRUE(contains);
+    EXPECT_EQ("joint1/velocity", state_interfaces[position]->get_name());
+    EXPECT_EQ(hardware_interface::HW_IF_VELOCITY, state_interfaces[position]->get_interface_name());
+    EXPECT_EQ("joint1", state_interfaces[position]->get_prefix_name());
+  }
+  {
+    auto [contains, position] =
+      test_components::vector_contains(state_interfaces, "joint2/position");
+    EXPECT_TRUE(contains);
+    EXPECT_EQ("joint2/position", state_interfaces[position]->get_name());
+    EXPECT_EQ(hardware_interface::HW_IF_POSITION, state_interfaces[position]->get_interface_name());
+    EXPECT_EQ("joint2", state_interfaces[position]->get_prefix_name());
+  }
+  {
+    auto [contains, position] =
+      test_components::vector_contains(state_interfaces, "joint2/velocity");
+    EXPECT_TRUE(contains);
+    EXPECT_EQ("joint2/velocity", state_interfaces[position]->get_name());
+    EXPECT_EQ(hardware_interface::HW_IF_VELOCITY, state_interfaces[position]->get_interface_name());
+    EXPECT_EQ("joint2", state_interfaces[position]->get_prefix_name());
+  }
+  {
+    auto [contains, position] =
+      test_components::vector_contains(state_interfaces, "joint3/position");
+    EXPECT_TRUE(contains);
+    EXPECT_EQ("joint3/position", state_interfaces[position]->get_name());
+    EXPECT_EQ(hardware_interface::HW_IF_POSITION, state_interfaces[position]->get_interface_name());
+    EXPECT_EQ("joint3", state_interfaces[position]->get_prefix_name());
+  }
+  {
+    auto [contains, position] =
+      test_components::vector_contains(state_interfaces, "joint3/velocity");
+    EXPECT_TRUE(contains);
+    EXPECT_EQ("joint3/velocity", state_interfaces[position]->get_name());
+    EXPECT_EQ(hardware_interface::HW_IF_VELOCITY, state_interfaces[position]->get_interface_name());
+    EXPECT_EQ("joint3", state_interfaces[position]->get_prefix_name());
+  }
+  {
+    auto [contains, position] =
+      test_components::vector_contains(state_interfaces, "joint1/some_unlisted_interface");
+    EXPECT_TRUE(contains);
+    EXPECT_EQ("joint1/some_unlisted_interface", state_interfaces[position]->get_name());
+    EXPECT_EQ("some_unlisted_interface", state_interfaces[position]->get_interface_name());
+    EXPECT_EQ("joint1", state_interfaces[position]->get_prefix_name());
+  }
 
   auto command_interfaces = system_hw.export_command_interfaces();
   ASSERT_EQ(4u, command_interfaces.size());
-  EXPECT_EQ("joint1/velocity", command_interfaces[0]->get_name());
-  EXPECT_EQ(hardware_interface::HW_IF_VELOCITY, command_interfaces[0]->get_interface_name());
-  EXPECT_EQ("joint1", command_interfaces[0]->get_prefix_name());
-  EXPECT_EQ("joint2/velocity", command_interfaces[1]->get_name());
-  EXPECT_EQ(hardware_interface::HW_IF_VELOCITY, command_interfaces[1]->get_interface_name());
-  EXPECT_EQ("joint2", command_interfaces[1]->get_prefix_name());
-  EXPECT_EQ("joint3/velocity", command_interfaces[2]->get_name());
-  EXPECT_EQ(hardware_interface::HW_IF_VELOCITY, command_interfaces[2]->get_interface_name());
-  EXPECT_EQ("joint3", command_interfaces[2]->get_prefix_name());
-  EXPECT_EQ("joint1/some_unlisted_interface", command_interfaces[3]->get_name());
-  EXPECT_EQ("some_unlisted_interface", command_interfaces[3]->get_interface_name());
-  EXPECT_EQ("joint1", command_interfaces[3]->get_prefix_name());
+  {
+    auto [contains, position] =
+      test_components::vector_contains(command_interfaces, "joint1/velocity");
+    EXPECT_TRUE(contains);
+    EXPECT_EQ("joint1/velocity", command_interfaces[position]->get_name());
+    EXPECT_EQ(
+      hardware_interface::HW_IF_VELOCITY, command_interfaces[position]->get_interface_name());
+    EXPECT_EQ("joint1", command_interfaces[position]->get_prefix_name());
+  }
+  {
+    auto [contains, position] =
+      test_components::vector_contains(command_interfaces, "joint2/velocity");
+    EXPECT_TRUE(contains);
+    EXPECT_EQ("joint2/velocity", command_interfaces[position]->get_name());
+    EXPECT_EQ(
+      hardware_interface::HW_IF_VELOCITY, command_interfaces[position]->get_interface_name());
+    EXPECT_EQ("joint2", command_interfaces[position]->get_prefix_name());
+  }
+  {
+    auto [contains, position] =
+      test_components::vector_contains(command_interfaces, "joint3/velocity");
+    EXPECT_TRUE(contains);
+    EXPECT_EQ("joint3/velocity", command_interfaces[position]->get_name());
+    EXPECT_EQ(
+      hardware_interface::HW_IF_VELOCITY, command_interfaces[position]->get_interface_name());
+    EXPECT_EQ("joint3", command_interfaces[position]->get_prefix_name());
+  }
+  {
+    auto [contains, position] =
+      test_components::vector_contains(command_interfaces, "joint1/some_unlisted_interface");
+    EXPECT_TRUE(contains);
+    EXPECT_EQ("joint1/some_unlisted_interface", command_interfaces[position]->get_name());
+    EXPECT_EQ("some_unlisted_interface", command_interfaces[position]->get_interface_name());
+    EXPECT_EQ("joint1", command_interfaces[position]->get_prefix_name());
+  }
 }

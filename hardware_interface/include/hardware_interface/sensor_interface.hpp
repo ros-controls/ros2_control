@@ -144,6 +144,20 @@ public:
   }
 
   /**
+   * Override this method to export custom StateInterfaces which are not defined in the URDF file.
+   *
+   *  Note method name is going to be changed to export_state_interfaces() as soon as the deprecated
+   * version is removed.
+   *
+   * \return vector of shared pointers to the created and stored StateInterfaces
+   */
+  virtual std::vector<std::shared_ptr<StateInterface>> export_state_interfaces_2()
+  {
+    // return empty vector by default.
+    return {};
+  }
+
+  /**
    * Default implementation for exporting the StateInterfaces. The StateInterfaces are created
    * according to the InterfaceDescription. The memory accessed by the controllers and hardware is
    * assigned here and resides in the sensor_interface.
@@ -152,7 +166,7 @@ public:
    */
   virtual std::vector<std::shared_ptr<StateInterface>> on_export_state_interfaces()
   {
-    std::vector<std::shared_ptr<StateInterface>> state_interfaces;
+    std::vector<std::shared_ptr<StateInterface>> state_interfaces = export_state_interfaces_2();
     state_interfaces.reserve(sensor_state_interfaces_.size());
 
     for (const auto & [name, descr] : sensor_state_interfaces_)
