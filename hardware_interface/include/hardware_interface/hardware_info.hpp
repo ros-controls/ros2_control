@@ -40,9 +40,9 @@ struct InterfaceInfo
   std::string max;
   /// (Optional) Initial value of the interface.
   std::string initial_value;
-  /// (Optional) The datatype of the interface, e.g. "bool", "int". Used by GPIOs.
+  /// (Optional) The datatype of the interface, e.g. "bool", "int".
   std::string data_type;
-  /// (Optional) If the handle is an array, the size of the array. Used by GPIOs.
+  /// (Optional) If the handle is an array, the size of the array.
   int size;
   /// (Optional) enable or disable the limits for the command interfaces
   bool enable_limits;
@@ -141,11 +141,6 @@ struct InterfaceDescription
    * Name of the interface defined by the user.
    */
   std::string prefix_name;
-
-  /**
-   * What type of component is exported: joint, sensor or gpio
-   */
-  std::string component_type;
 
   /**
    * Information about the Interface type (position, velocity,...) as well as limits and so on.

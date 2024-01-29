@@ -182,6 +182,20 @@ public:
   }
 
   /**
+   * Override this method to export custom StateInterfaces which are not defined in the URDF file.
+   *
+   *  Note method name is going to be changed to export_state_interfaces() as soon as the deprecated
+   * version is removed.
+   *
+   * \return vector of shared pointers to the created and stored StateInterfaces
+   */
+  virtual std::vector<std::shared_ptr<StateInterface>> export_state_interfaces_2()
+  {
+    // return empty vector by default.
+    return {};
+  }
+
+  /**
    * Default implementation for exporting the StateInterfaces. The StateInterfaces are created
    * according to the InterfaceDescription. The memory accessed by the controllers and hardware is
    * assigned here and resides in the actuator_interface.
@@ -190,7 +204,7 @@ public:
    */
   virtual std::vector<std::shared_ptr<StateInterface>> on_export_state_interfaces()
   {
-    std::vector<std::shared_ptr<StateInterface>> state_interfaces;
+    std::vector<std::shared_ptr<StateInterface>> state_interfaces = export_state_interfaces_2();
     state_interfaces.reserve(joint_state_interfaces_.size());
 
     for (const auto & [name, descr] : joint_state_interfaces_)
@@ -227,6 +241,20 @@ public:
   }
 
   /**
+   * Override this method to export custom CommandInterfaces which are not defined in the URDF file.
+   *
+   *  Note method name is going to be changed to export_command_interfaces() as soon as the
+   * deprecated version is removed.
+   *
+   * \return vector of shared pointers to the created and stored StateInterfaces
+   */
+  virtual std::vector<std::shared_ptr<CommandInterface>> export_command_interfaces_2()
+  {
+    // return empty vector by default.
+    return {};
+  }
+
+  /**
    * Default implementation for exporting the CommandInterfaces. The CommandInterfaces are created
    * according to the InterfaceDescription. The memory accessed by the controllers and hardware is
    * assigned here and resides in the actuator_interface.
@@ -235,7 +263,8 @@ public:
    */
   virtual std::vector<std::shared_ptr<CommandInterface>> on_export_command_interfaces()
   {
-    std::vector<std::shared_ptr<CommandInterface>> command_interfaces;
+    std::vector<std::shared_ptr<CommandInterface>> command_interfaces =
+      export_command_interfaces_2();
     command_interfaces.reserve(joint_command_interfaces_.size());
 
     for (const auto & [name, descr] : joint_command_interfaces_)
