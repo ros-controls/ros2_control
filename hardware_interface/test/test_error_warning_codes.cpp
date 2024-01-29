@@ -725,3 +725,530 @@ TEST(TestComponentInterfaces, dummy_system_default)
     EXPECT_EQ("joint3", command_interfaces[position]->get_prefix_name());
   }
 }
+
+TEST(TestComponentInterfaces, dummy_actuator_default_read_error_behavior)
+{
+  hardware_interface::Actuator actuator_hw(
+    std::make_unique<test_components::DummyActuatorDefault>());
+
+  const std::string urdf_to_test =
+    std::string(ros2_control_test_assets::urdf_head) +
+    ros2_control_test_assets::valid_urdf_ros2_control_dummy_actuator_only +
+    ros2_control_test_assets::urdf_tail;
+  const std::vector<hardware_interface::HardwareInfo> control_resources =
+    hardware_interface::parse_control_resources_from_urdf(urdf_to_test);
+  const hardware_interface::HardwareInfo dummy_actuator = control_resources[0];
+  auto state = actuator_hw.initialize(dummy_actuator);
+
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
+
+  const auto state_interface_offset = 2;
+  auto state_interfaces = actuator_hw.export_state_interfaces();
+  auto command_interfaces = actuator_hw.export_command_interfaces();
+  state = actuator_hw.configure();
+  state = actuator_hw.activate();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::ACTIVE, state.label());
+
+  ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.read(TIME, PERIOD));
+  ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.write(TIME, PERIOD));
+
+  // Initiate error on write (this is first time therefore recoverable)
+  auto emergency_stop =
+    test_components::vector_contains(
+      state_interfaces,
+      "ActuatorModularJoint1/" + std::string(hardware_interface::EMERGENCY_STOP_SIGNAL))
+      .second;
+  auto error_signal =
+    test_components::vector_contains(
+      state_interfaces,
+      "ActuatorModularJoint1/" + std::string(hardware_interface::ERROR_SIGNAL_INTERFACE_NAME))
+      .second;
+  auto error_signal_msg =
+    test_components::vector_contains(
+      state_interfaces, "ActuatorModularJoint1/" +
+                          std::string(hardware_interface::ERROR_SIGNAL_MESSAGE_INTERFACE_NAME))
+      .second;
+  auto warning_signal =
+    test_components::vector_contains(
+      state_interfaces,
+      "ActuatorModularJoint1/" + std::string(hardware_interface::WARNING_SIGNAL_INTERFACE_NAME))
+      .second;
+  auto warning_signal_msg =
+    test_components::vector_contains(
+      state_interfaces, "ActuatorModularJoint1/" +
+                          std::string(hardware_interface::WARNING_SIGNAL_MESSAGE_INTERFACE_NAME))
+      .second;
+  for (auto i = 2ul; i < TRIGGER_READ_WRITE_ERROR_CALLS; ++i)
+  {
+    ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.read(TIME, PERIOD));
+    ASSERT_EQ(state_interfaces[emergency_stop]->get_value(), 0.0);
+    ASSERT_EQ(state_interfaces[error_signal]->get_value(), 0.0);
+    ASSERT_EQ(state_interfaces[error_signal_msg]->get_value(), 0.0);
+    ASSERT_EQ(state_interfaces[warning_signal]->get_value(), 0.0);
+    ASSERT_EQ(state_interfaces[warning_signal_msg]->get_value(), 0.0);
+  }
+  ASSERT_EQ(hardware_interface::return_type::ERROR, actuator_hw.read(TIME, PERIOD));
+  ASSERT_EQ(state_interfaces[emergency_stop]->get_value(), 1.0);
+  ASSERT_EQ(state_interfaces[error_signal]->get_value(), 1.0);
+  ASSERT_EQ(state_interfaces[error_signal_msg]->get_value(), 1.0);
+  ASSERT_EQ(state_interfaces[warning_signal]->get_value(), 1.0);
+  ASSERT_EQ(state_interfaces[warning_signal_msg]->get_value(), 1.0);
+
+  state = actuator_hw.get_state();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
+
+  // activate again and expect reset values
+  auto si_joint1_pos = test_components::vector_contains(state_interfaces, "joint1/position").second;
+  auto ci_joint1_vel =
+    test_components::vector_contains(command_interfaces, "joint1/velocity").second;
+  state = actuator_hw.configure();
+  EXPECT_EQ(state_interfaces[si_joint1_pos]->get_value(), 0.0);
+  EXPECT_EQ(command_interfaces[ci_joint1_vel]->get_value(), 0.0);
+
+  state = actuator_hw.activate();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::ACTIVE, state.label());
+
+  ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.read(TIME, PERIOD));
+  ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.write(TIME, PERIOD));
+
+  // Initiate error on write (this is the second time therefore unrecoverable)
+  for (auto i = 2ul; i < TRIGGER_READ_WRITE_ERROR_CALLS; ++i)
+  {
+    ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.read(TIME, PERIOD));
+    ASSERT_EQ(state_interfaces[emergency_stop]->get_value(), 0.0);
+    ASSERT_EQ(state_interfaces[error_signal]->get_value(), 0.0);
+    ASSERT_EQ(state_interfaces[error_signal_msg]->get_value(), 0.0);
+    ASSERT_EQ(state_interfaces[warning_signal]->get_value(), 0.0);
+    ASSERT_EQ(state_interfaces[warning_signal_msg]->get_value(), 0.0);
+  }
+  ASSERT_EQ(hardware_interface::return_type::ERROR, actuator_hw.read(TIME, PERIOD));
+  ASSERT_EQ(state_interfaces[emergency_stop]->get_value(), 1.0);
+  ASSERT_EQ(state_interfaces[error_signal]->get_value(), 1.0);
+  ASSERT_EQ(state_interfaces[error_signal_msg]->get_value(), 1.0);
+  ASSERT_EQ(state_interfaces[warning_signal]->get_value(), 1.0);
+  ASSERT_EQ(state_interfaces[warning_signal_msg]->get_value(), 1.0);
+
+  state = actuator_hw.get_state();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::FINALIZED, state.label());
+
+  // can not change state anymore
+  state = actuator_hw.configure();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::FINALIZED, state.label());
+}
+
+TEST(TestComponentInterfaces, dummy_actuator_default_write_error_behavior)
+{
+  hardware_interface::Actuator actuator_hw(
+    std::make_unique<test_components::DummyActuatorDefault>());
+
+  const std::string urdf_to_test =
+    std::string(ros2_control_test_assets::urdf_head) +
+    ros2_control_test_assets::valid_urdf_ros2_control_dummy_actuator_only +
+    ros2_control_test_assets::urdf_tail;
+  const std::vector<hardware_interface::HardwareInfo> control_resources =
+    hardware_interface::parse_control_resources_from_urdf(urdf_to_test);
+  const hardware_interface::HardwareInfo dummy_actuator = control_resources[0];
+  auto state = actuator_hw.initialize(dummy_actuator);
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
+
+  const auto state_interface_offset = 2;
+  auto state_interfaces = actuator_hw.export_state_interfaces();
+  auto command_interfaces = actuator_hw.export_command_interfaces();
+  state = actuator_hw.configure();
+  state = actuator_hw.activate();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::ACTIVE, state.label());
+
+  ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.read(TIME, PERIOD));
+  ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.write(TIME, PERIOD));
+
+  // Initiate error on write (this is first time therefore recoverable)
+  for (auto i = 2ul; i < TRIGGER_READ_WRITE_ERROR_CALLS; ++i)
+  {
+    ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.write(TIME, PERIOD));
+  }
+  ASSERT_EQ(hardware_interface::return_type::ERROR, actuator_hw.write(TIME, PERIOD));
+
+  state = actuator_hw.get_state();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
+
+  // activate again and expect reset values
+  state = actuator_hw.configure();
+  EXPECT_EQ(state_interfaces[0]->get_value(), 0.0);
+  EXPECT_EQ(command_interfaces[0]->get_value(), 0.0);
+
+  state = actuator_hw.activate();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::ACTIVE, state.label());
+
+  ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.read(TIME, PERIOD));
+  ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.write(TIME, PERIOD));
+
+  // Initiate error on write (this is the second time therefore unrecoverable)
+  auto emergency_stop =
+    test_components::vector_contains(
+      state_interfaces,
+      "ActuatorModularJoint1/" + std::string(hardware_interface::EMERGENCY_STOP_SIGNAL))
+      .second;
+  auto error_signal =
+    test_components::vector_contains(
+      state_interfaces,
+      "ActuatorModularJoint1/" + std::string(hardware_interface::ERROR_SIGNAL_INTERFACE_NAME))
+      .second;
+  auto error_signal_msg =
+    test_components::vector_contains(
+      state_interfaces, "ActuatorModularJoint1/" +
+                          std::string(hardware_interface::ERROR_SIGNAL_MESSAGE_INTERFACE_NAME))
+      .second;
+  auto warning_signal =
+    test_components::vector_contains(
+      state_interfaces,
+      "ActuatorModularJoint1/" + std::string(hardware_interface::WARNING_SIGNAL_INTERFACE_NAME))
+      .second;
+  auto warning_signal_msg =
+    test_components::vector_contains(
+      state_interfaces, "ActuatorModularJoint1/" +
+                          std::string(hardware_interface::WARNING_SIGNAL_MESSAGE_INTERFACE_NAME))
+      .second;
+  for (auto i = 2ul; i < TRIGGER_READ_WRITE_ERROR_CALLS; ++i)
+  {
+    ASSERT_EQ(hardware_interface::return_type::OK, actuator_hw.write(TIME, PERIOD));
+    ASSERT_EQ(state_interfaces[emergency_stop]->get_value(), 0.0);
+    ASSERT_EQ(state_interfaces[error_signal]->get_value(), 0.0);
+    ASSERT_EQ(state_interfaces[error_signal_msg]->get_value(), 0.0);
+    ASSERT_EQ(state_interfaces[warning_signal]->get_value(), 0.0);
+    ASSERT_EQ(state_interfaces[warning_signal_msg]->get_value(), 0.0);
+  }
+  ASSERT_EQ(hardware_interface::return_type::ERROR, actuator_hw.write(TIME, PERIOD));
+  ASSERT_EQ(state_interfaces[emergency_stop]->get_value(), 1.0);
+  ASSERT_EQ(state_interfaces[error_signal]->get_value(), 1.0);
+  ASSERT_EQ(state_interfaces[error_signal_msg]->get_value(), 1.0);
+  ASSERT_EQ(state_interfaces[warning_signal]->get_value(), 1.0);
+  ASSERT_EQ(state_interfaces[warning_signal_msg]->get_value(), 1.0);
+
+  state = actuator_hw.get_state();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::FINALIZED, state.label());
+
+  // can not change state anymore
+  state = actuator_hw.configure();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::FINALIZED, state.label());
+}
+
+TEST(TestComponentInterfaces, dummy_sensor_default_read_error_behavior)
+{
+  hardware_interface::Sensor sensor_hw(std::make_unique<test_components::DummySensorDefault>());
+
+  const std::string urdf_to_test =
+    std::string(ros2_control_test_assets::urdf_head) +
+    ros2_control_test_assets::valid_urdf_ros2_control_voltage_sensor_only +
+    ros2_control_test_assets::urdf_tail;
+  const std::vector<hardware_interface::HardwareInfo> control_resources =
+    hardware_interface::parse_control_resources_from_urdf(urdf_to_test);
+  const hardware_interface::HardwareInfo voltage_sensor_res = control_resources[0];
+  auto state = sensor_hw.initialize(voltage_sensor_res);
+
+  const auto state_interface_offset = 1;
+  auto state_interfaces = sensor_hw.export_state_interfaces();
+  // Updated because is is INACTIVE
+  state = sensor_hw.configure();
+  state = sensor_hw.activate();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::ACTIVE, state.label());
+
+  ASSERT_EQ(hardware_interface::return_type::OK, sensor_hw.read(TIME, PERIOD));
+
+  // Initiate recoverable error - call read 99 times OK and on 100-time will return error
+  auto error_signal =
+    test_components::vector_contains(
+      state_interfaces,
+      "SingleJointVoltage/" + std::string(hardware_interface::ERROR_SIGNAL_INTERFACE_NAME))
+      .second;
+  auto error_signal_msg =
+    test_components::vector_contains(
+      state_interfaces,
+      "SingleJointVoltage/" + std::string(hardware_interface::ERROR_SIGNAL_MESSAGE_INTERFACE_NAME))
+      .second;
+  auto warning_signal =
+    test_components::vector_contains(
+      state_interfaces,
+      "SingleJointVoltage/" + std::string(hardware_interface::WARNING_SIGNAL_INTERFACE_NAME))
+      .second;
+  auto warning_signal_msg =
+    test_components::vector_contains(
+      state_interfaces, "SingleJointVoltage/" +
+                          std::string(hardware_interface::WARNING_SIGNAL_MESSAGE_INTERFACE_NAME))
+      .second;
+  for (auto i = 2ul; i < TRIGGER_READ_WRITE_ERROR_CALLS; ++i)
+  {
+    ASSERT_EQ(hardware_interface::return_type::OK, sensor_hw.read(TIME, PERIOD));
+    ASSERT_EQ(state_interfaces[error_signal]->get_value(), 0.0);
+    ASSERT_EQ(state_interfaces[error_signal_msg]->get_value(), 0.0);
+    ASSERT_EQ(state_interfaces[warning_signal]->get_value(), 0.0);
+    ASSERT_EQ(state_interfaces[warning_signal_msg]->get_value(), 0.0);
+  }
+  ASSERT_EQ(hardware_interface::return_type::ERROR, sensor_hw.read(TIME, PERIOD));
+  ASSERT_EQ(state_interfaces[error_signal]->get_value(), 1.0);
+  ASSERT_EQ(state_interfaces[error_signal_msg]->get_value(), 1.0);
+  ASSERT_EQ(state_interfaces[warning_signal]->get_value(), 1.0);
+  ASSERT_EQ(state_interfaces[warning_signal_msg]->get_value(), 1.0);
+
+  state = sensor_hw.get_state();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
+
+  // activate again and expect reset values
+  state = sensor_hw.configure();
+  EXPECT_EQ(state_interfaces[0]->get_value(), 0.0);
+
+  state = sensor_hw.activate();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::ACTIVE, state.label());
+
+  // Initiate unrecoverable error - call read 99 times OK and on 100-time will return error
+  for (auto i = 1ul; i < TRIGGER_READ_WRITE_ERROR_CALLS; ++i)
+  {
+    ASSERT_EQ(hardware_interface::return_type::OK, sensor_hw.read(TIME, PERIOD));
+  }
+  ASSERT_EQ(hardware_interface::return_type::ERROR, sensor_hw.read(TIME, PERIOD));
+
+  state = sensor_hw.get_state();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::FINALIZED, state.label());
+
+  // can not change state anymore
+  state = sensor_hw.configure();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::FINALIZED, state.label());
+}
+
+TEST(TestComponentInterfaces, dummy_system_default_read_error_behavior)
+{
+  hardware_interface::System system_hw(std::make_unique<test_components::DummySystemDefault>());
+
+  const std::string urdf_to_test =
+    std::string(ros2_control_test_assets::urdf_head) +
+    ros2_control_test_assets::valid_urdf_ros2_control_dummy_system_robot +
+    ros2_control_test_assets::urdf_tail;
+  const std::vector<hardware_interface::HardwareInfo> control_resources =
+    hardware_interface::parse_control_resources_from_urdf(urdf_to_test);
+  const hardware_interface::HardwareInfo dummy_system = control_resources[0];
+  auto state = system_hw.initialize(dummy_system);
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
+
+  const auto state_interface_offset = 6;
+  auto state_interfaces = system_hw.export_state_interfaces();
+  auto command_interfaces = system_hw.export_command_interfaces();
+  state = system_hw.configure();
+  state = system_hw.activate();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::ACTIVE, state.label());
+
+  ASSERT_EQ(hardware_interface::return_type::OK, system_hw.read(TIME, PERIOD));
+  ASSERT_EQ(hardware_interface::return_type::OK, system_hw.write(TIME, PERIOD));
+
+  // Initiate error on write (this is first time therefore recoverable)
+  auto emergency_stop =
+    test_components::vector_contains(
+      state_interfaces,
+      "RRBotSystemWithGPIO/" + std::string(hardware_interface::EMERGENCY_STOP_SIGNAL))
+      .second;
+  auto error_signal =
+    test_components::vector_contains(
+      state_interfaces,
+      "RRBotSystemWithGPIO/" + std::string(hardware_interface::ERROR_SIGNAL_INTERFACE_NAME))
+      .second;
+  auto error_signal_msg =
+    test_components::vector_contains(
+      state_interfaces,
+      "RRBotSystemWithGPIO/" + std::string(hardware_interface::ERROR_SIGNAL_MESSAGE_INTERFACE_NAME))
+      .second;
+  auto warning_signal =
+    test_components::vector_contains(
+      state_interfaces,
+      "RRBotSystemWithGPIO/" + std::string(hardware_interface::WARNING_SIGNAL_INTERFACE_NAME))
+      .second;
+  auto warning_signal_msg =
+    test_components::vector_contains(
+      state_interfaces, "RRBotSystemWithGPIO/" +
+                          std::string(hardware_interface::WARNING_SIGNAL_MESSAGE_INTERFACE_NAME))
+      .second;
+  for (auto i = 2ul; i < TRIGGER_READ_WRITE_ERROR_CALLS; ++i)
+  {
+    ASSERT_EQ(hardware_interface::return_type::OK, system_hw.read(TIME, PERIOD));
+    ASSERT_EQ(state_interfaces[emergency_stop]->get_value(), 0.0);
+    ASSERT_EQ(state_interfaces[error_signal]->get_value(), 0.0);
+    ASSERT_EQ(state_interfaces[error_signal_msg]->get_value(), 0.0);
+    ASSERT_EQ(state_interfaces[warning_signal]->get_value(), 0.0);
+    ASSERT_EQ(state_interfaces[warning_signal_msg]->get_value(), 0.0);
+  }
+  ASSERT_EQ(hardware_interface::return_type::ERROR, system_hw.read(TIME, PERIOD));
+  ASSERT_EQ(state_interfaces[emergency_stop]->get_value(), 1.0);
+  ASSERT_EQ(state_interfaces[error_signal]->get_value(), 1.0);
+  ASSERT_EQ(state_interfaces[error_signal_msg]->get_value(), 1.0);
+  ASSERT_EQ(state_interfaces[warning_signal]->get_value(), 1.0);
+  ASSERT_EQ(state_interfaces[warning_signal_msg]->get_value(), 1.0);
+
+  state = system_hw.get_state();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
+
+  // activate again and expect reset values
+  state = system_hw.configure();
+  for (auto index = 0ul; index < 6; ++index)
+  {
+    EXPECT_EQ(state_interfaces[index]->get_value(), 0.0);
+  }
+  for (auto index = 0ul; index < 3; ++index)
+  {
+    EXPECT_EQ(command_interfaces[index]->get_value(), 0.0);
+  }
+  state = system_hw.activate();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::ACTIVE, state.label());
+
+  ASSERT_EQ(hardware_interface::return_type::OK, system_hw.read(TIME, PERIOD));
+  ASSERT_EQ(hardware_interface::return_type::OK, system_hw.write(TIME, PERIOD));
+
+  // Initiate error on write (this is the second time therefore unrecoverable)
+  for (auto i = 2ul; i < TRIGGER_READ_WRITE_ERROR_CALLS; ++i)
+  {
+    ASSERT_EQ(hardware_interface::return_type::OK, system_hw.read(TIME, PERIOD));
+    ASSERT_EQ(state_interfaces[emergency_stop]->get_value(), 0.0);
+    ASSERT_EQ(state_interfaces[error_signal]->get_value(), 0.0);
+    ASSERT_EQ(state_interfaces[error_signal_msg]->get_value(), 0.0);
+    ASSERT_EQ(state_interfaces[warning_signal]->get_value(), 0.0);
+    ASSERT_EQ(state_interfaces[warning_signal_msg]->get_value(), 0.0);
+  }
+  ASSERT_EQ(hardware_interface::return_type::ERROR, system_hw.read(TIME, PERIOD));
+  ASSERT_EQ(state_interfaces[emergency_stop]->get_value(), 1.0);
+  ASSERT_EQ(state_interfaces[error_signal]->get_value(), 1.0);
+  ASSERT_EQ(state_interfaces[error_signal_msg]->get_value(), 1.0);
+  ASSERT_EQ(state_interfaces[warning_signal]->get_value(), 1.0);
+  ASSERT_EQ(state_interfaces[warning_signal_msg]->get_value(), 1.0);
+
+  state = system_hw.get_state();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::FINALIZED, state.label());
+
+  // can not change state anymore
+  state = system_hw.configure();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::FINALIZED, state.label());
+}
+
+TEST(TestComponentInterfaces, dummy_system_default_write_error_behavior)
+{
+  hardware_interface::System system_hw(std::make_unique<test_components::DummySystemDefault>());
+
+  const std::string urdf_to_test =
+    std::string(ros2_control_test_assets::urdf_head) +
+    ros2_control_test_assets::valid_urdf_ros2_control_dummy_system_robot +
+    ros2_control_test_assets::urdf_tail;
+  const std::vector<hardware_interface::HardwareInfo> control_resources =
+    hardware_interface::parse_control_resources_from_urdf(urdf_to_test);
+  const hardware_interface::HardwareInfo dummy_system = control_resources[0];
+  auto state = system_hw.initialize(dummy_system);
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
+
+  const auto state_interface_offset = 6;
+  auto state_interfaces = system_hw.export_state_interfaces();
+  auto command_interfaces = system_hw.export_command_interfaces();
+  state = system_hw.configure();
+  state = system_hw.activate();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::ACTIVE, state.label());
+
+  ASSERT_EQ(hardware_interface::return_type::OK, system_hw.read(TIME, PERIOD));
+  ASSERT_EQ(hardware_interface::return_type::OK, system_hw.write(TIME, PERIOD));
+
+  // Initiate error on write (this is first time therefore recoverable)
+  auto emergency_stop =
+    test_components::vector_contains(
+      state_interfaces,
+      "RRBotSystemWithGPIO/" + std::string(hardware_interface::EMERGENCY_STOP_SIGNAL))
+      .second;
+  auto error_signal =
+    test_components::vector_contains(
+      state_interfaces,
+      "RRBotSystemWithGPIO/" + std::string(hardware_interface::ERROR_SIGNAL_INTERFACE_NAME))
+      .second;
+  auto error_signal_msg =
+    test_components::vector_contains(
+      state_interfaces,
+      "RRBotSystemWithGPIO/" + std::string(hardware_interface::ERROR_SIGNAL_MESSAGE_INTERFACE_NAME))
+      .second;
+  auto warning_signal =
+    test_components::vector_contains(
+      state_interfaces,
+      "RRBotSystemWithGPIO/" + std::string(hardware_interface::WARNING_SIGNAL_INTERFACE_NAME))
+      .second;
+  auto warning_signal_msg =
+    test_components::vector_contains(
+      state_interfaces, "RRBotSystemWithGPIO/" +
+                          std::string(hardware_interface::WARNING_SIGNAL_MESSAGE_INTERFACE_NAME))
+      .second;
+  for (auto i = 2ul; i < TRIGGER_READ_WRITE_ERROR_CALLS; ++i)
+  {
+    ASSERT_EQ(hardware_interface::return_type::OK, system_hw.write(TIME, PERIOD));
+    ASSERT_EQ(state_interfaces[emergency_stop]->get_value(), 0.0);
+    ASSERT_EQ(state_interfaces[error_signal]->get_value(), 0.0);
+    ASSERT_EQ(state_interfaces[error_signal_msg]->get_value(), 0.0);
+    ASSERT_EQ(state_interfaces[warning_signal]->get_value(), 0.0);
+    ASSERT_EQ(state_interfaces[warning_signal_msg]->get_value(), 0.0);
+  }
+  ASSERT_EQ(hardware_interface::return_type::ERROR, system_hw.write(TIME, PERIOD));
+  ASSERT_EQ(state_interfaces[emergency_stop]->get_value(), 1.0);
+  ASSERT_EQ(state_interfaces[error_signal]->get_value(), 1.0);
+  ASSERT_EQ(state_interfaces[error_signal_msg]->get_value(), 1.0);
+  ASSERT_EQ(state_interfaces[warning_signal]->get_value(), 1.0);
+  ASSERT_EQ(state_interfaces[warning_signal_msg]->get_value(), 1.0);
+
+  state = system_hw.get_state();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
+
+  // activate again and expect reset values
+  state = system_hw.configure();
+  for (auto index = 0ul; index < 6; ++index)
+  {
+    EXPECT_EQ(state_interfaces[index]->get_value(), 0.0);
+  }
+  for (auto index = 0ul; index < 3; ++index)
+  {
+    EXPECT_EQ(command_interfaces[index]->get_value(), 0.0);
+  }
+  state = system_hw.activate();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::ACTIVE, state.label());
+
+  ASSERT_EQ(hardware_interface::return_type::OK, system_hw.read(TIME, PERIOD));
+  ASSERT_EQ(hardware_interface::return_type::OK, system_hw.write(TIME, PERIOD));
+
+  // Initiate error on write (this is the second time therefore unrecoverable)
+  for (auto i = 2ul; i < TRIGGER_READ_WRITE_ERROR_CALLS; ++i)
+  {
+    ASSERT_EQ(hardware_interface::return_type::OK, system_hw.write(TIME, PERIOD));
+  }
+  ASSERT_EQ(hardware_interface::return_type::ERROR, system_hw.write(TIME, PERIOD));
+
+  state = system_hw.get_state();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::FINALIZED, state.label());
+
+  // can not change state anymore
+  state = system_hw.configure();
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, state.id());
+  EXPECT_EQ(hardware_interface::lifecycle_state_names::FINALIZED, state.label());
+}
