@@ -16,7 +16,6 @@
 #define HARDWARE_INTERFACE__SENSOR_INTERFACE_HPP_
 
 #include <limits>
-#include <map>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -224,7 +223,7 @@ public:
 protected:
   HardwareInfo info_;
 
-  std::map<std::string, InterfaceDescription> sensor_state_interfaces_;
+  std::unordered_map<std::string, InterfaceDescription> sensor_state_interfaces_;
 
   std::unordered_map<std::string, std::shared_ptr<StateInterface>> sensor_states_;
 

@@ -16,7 +16,6 @@
 #define HARDWARE_INTERFACE__SYSTEM_INTERFACE_HPP_
 
 #include <limits>
-#include <map>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -396,13 +395,13 @@ public:
 
 protected:
   HardwareInfo info_;
-  std::map<std::string, InterfaceDescription> joint_state_interfaces_;
-  std::map<std::string, InterfaceDescription> joint_command_interfaces_;
+  std::unordered_map<std::string, InterfaceDescription> joint_state_interfaces_;
+  std::unordered_map<std::string, InterfaceDescription> joint_command_interfaces_;
 
-  std::map<std::string, InterfaceDescription> sensor_state_interfaces_;
+  std::unordered_map<std::string, InterfaceDescription> sensor_state_interfaces_;
 
-  std::map<std::string, InterfaceDescription> gpio_state_interfaces_;
-  std::map<std::string, InterfaceDescription> gpio_command_interfaces_;
+  std::unordered_map<std::string, InterfaceDescription> gpio_state_interfaces_;
+  std::unordered_map<std::string, InterfaceDescription> gpio_command_interfaces_;
 
   std::unordered_map<std::string, std::shared_ptr<StateInterface>> system_states_;
   std::unordered_map<std::string, std::shared_ptr<CommandInterface>> system_commands_;
