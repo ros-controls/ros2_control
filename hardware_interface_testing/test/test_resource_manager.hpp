@@ -44,7 +44,7 @@ class TestableResourceManager : public hardware_interface::ResourceManager
 public:
   friend ResourceManagerTest;
 
-  FRIEND_TEST(ResourceManagerTest, initialization_with_urdf_manual_validation);
+  FRIEND_TEST(ResourceManagerTest, initialization_with_urdf_and_manual_validation);
   FRIEND_TEST(ResourceManagerTest, post_initialization_add_components);
   FRIEND_TEST(ResourceManagerTest, managing_controllers_reference_interfaces);
   FRIEND_TEST(ResourceManagerTest, resource_availability_and_claiming_in_lifecycle);
