@@ -40,6 +40,8 @@ if(BUILD_TESTING)
   )
 
   ament_add_gmock(test_controller_with_options test/test_controller_with_options.cpp)
+  install(FILES test/test_controller_node_options.yaml
+      DESTINATION test)
   target_link_libraries(test_controller_with_options
     controller_interface
   )
