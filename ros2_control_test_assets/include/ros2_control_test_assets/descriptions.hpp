@@ -935,6 +935,7 @@ const auto gripper_hardware_resources_mimic_deprecated =
     <joint name="left_finger_joint">
       <param name="mimic">right_finger_joint</param>
       <param name="multiplier">1</param>
+      <param name="offset">1</param>
       <command_interface name="position"/>
       <state_interface name="position"/>
       <state_interface name="velocity"/>
