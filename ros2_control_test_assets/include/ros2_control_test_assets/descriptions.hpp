@@ -176,6 +176,55 @@ const auto hardware_resources =
   </ros2_control>
 )";
 
+const auto async_hardware_resources =
+  R"(
+  <ros2_control name="TestActuatorHardware" type="actuator" is_async="true">
+    <hardware>
+      <plugin>test_actuator</plugin>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <command_interface name="max_velocity" />
+    </joint>
+  </ros2_control>
+  <ros2_control name="TestSensorHardware" type="sensor" is_async="true">
+    <hardware>
+      <plugin>test_sensor</plugin>
+      <param name="example_param_write_for_sec">2</param>
+      <param name="example_param_read_for_sec">2</param>
+    </hardware>
+    <sensor name="sensor1">
+      <state_interface name="velocity"/>
+    </sensor>
+  </ros2_control>
+  <ros2_control name="TestSystemHardware" type="system" is_async="true">
+    <hardware>
+      <plugin>test_system</plugin>
+      <param name="example_param_write_for_sec">2</param>
+      <param name="example_param_read_for_sec">2</param>
+    </hardware>
+    <joint name="joint2">
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="acceleration"/>
+      <command_interface name="max_acceleration" />
+    </joint>
+    <joint name="joint3">
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="acceleration"/>
+    </joint>
+    <joint name="configuration">
+      <command_interface name="max_tcp_jerk"/>
+      <state_interface name="max_tcp_jerk"/>
+    </joint>
+  </ros2_control>
+)";
+
 const auto unitilizable_hardware_resources =
   R"(
   <ros2_control name="TestUnitilizableActuatorHardware" type="actuator">
@@ -253,25 +302,25 @@ const auto hardware_resources_not_existing_actuator_plugin =
       <plugin>test_system</plugin>
       <param name="example_param_write_for_sec">2</param>
       <param name="example_param_read_for_sec">2</param>
-      </hardware>
-      <joint name="joint2">
+    </hardware>
+    <joint name="joint2">
       <command_interface name="velocity"/>
       <state_interface name="position"/>
       <state_interface name="velocity"/>
       <state_interface name="acceleration"/>
       <command_interface name="max_acceleration" />
-      </joint>
-      <joint name="joint3">
+    </joint>
+    <joint name="joint3">
       <command_interface name="velocity"/>
       <state_interface name="position"/>
       <state_interface name="velocity"/>
       <state_interface name="acceleration"/>
-      </joint>
+    </joint>
       <joint name="configuration">
       <command_interface name="max_tcp_jerk"/>
       <state_interface name="max_tcp_jerk"/>
-      </joint>
-      </ros2_control>
+    </joint>
+  </ros2_control>
 )";
 
 const auto hardware_resources_not_existing_sensor_plugin =
@@ -302,25 +351,25 @@ const auto hardware_resources_not_existing_sensor_plugin =
       <plugin>test_system</plugin>
       <param name="example_param_write_for_sec">2</param>
       <param name="example_param_read_for_sec">2</param>
-      </hardware>
-      <joint name="joint2">
+    </hardware>
+    <joint name="joint2">
       <command_interface name="velocity"/>
       <state_interface name="position"/>
       <state_interface name="velocity"/>
       <state_interface name="acceleration"/>
       <command_interface name="max_acceleration" />
-      </joint>
-      <joint name="joint3">
+    </joint>
+    <joint name="joint3">
       <command_interface name="velocity"/>
       <state_interface name="position"/>
       <state_interface name="velocity"/>
       <state_interface name="acceleration"/>
-      </joint>
-      <joint name="configuration">
+    </joint>
+    <joint name="configuration">
       <command_interface name="max_tcp_jerk"/>
       <state_interface name="max_tcp_jerk"/>
-      </joint>
-      </ros2_control>
+    </joint>
+  </ros2_control>
 )";
 const auto hardware_resources_not_existing_system_plugin =
   R"(
@@ -365,6 +414,55 @@ const auto hardware_resources_not_existing_system_plugin =
       <state_interface name="acceleration"/>
     </joint>
       <joint name="configuration">
+      <command_interface name="max_tcp_jerk"/>
+      <state_interface name="max_tcp_jerk"/>
+    </joint>
+  </ros2_control>
+)";
+
+const auto hardware_resources_duplicated_component =
+  R"(
+  <ros2_control name="TestActuatorHardware" type="actuator">
+    <hardware>
+      <plugin>test_actuator</plugin>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <command_interface name="max_velocity" />
+    </joint>
+  </ros2_control>
+  <ros2_control name="TestActuatorHardware" type="sensor">
+    <hardware>
+      <plugin>test_sensor</plugin>
+      <param name="example_param_write_for_sec">2</param>
+      <param name="example_param_read_for_sec">2</param>
+    </hardware>
+    <sensor name="sensor1">
+      <state_interface name="velocity"/>
+    </sensor>
+  </ros2_control>
+  <ros2_control name="TestSystemHardware" type="system">
+    <hardware>
+      <plugin>test_system</plugin>
+      <param name="example_param_write_for_sec">2</param>
+      <param name="example_param_read_for_sec">2</param>
+    </hardware>
+    <joint name="joint2">
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="acceleration"/>
+      <command_interface name="max_acceleration" />
+    </joint>
+    <joint name="joint3">
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="acceleration"/>
+    </joint>
+    <joint name="configuration">
       <command_interface name="max_tcp_jerk"/>
       <state_interface name="max_tcp_jerk"/>
     </joint>
@@ -731,6 +829,8 @@ const auto diffbot_urdf =
 
 const auto minimal_robot_urdf =
   std::string(urdf_head) + std::string(hardware_resources) + std::string(urdf_tail);
+const auto minimal_async_robot_urdf =
+  std::string(urdf_head) + std::string(async_hardware_resources) + std::string(urdf_tail);
 const auto minimal_unitilizable_robot_urdf =
   std::string(urdf_head) + std::string(unitilizable_hardware_resources) + std::string(urdf_tail);
 
@@ -742,6 +842,10 @@ const auto minimal_robot_not_existing_sensors_plugin =
   std::string(urdf_tail);
 const auto minimal_robot_not_existing_system_plugin =
   std::string(urdf_head) + std::string(hardware_resources_not_existing_system_plugin) +
+  std::string(urdf_tail);
+
+const auto minimal_robot_duplicated_component =
+  std::string(urdf_head) + std::string(hardware_resources_duplicated_component) +
   std::string(urdf_tail);
 
 const auto minimal_robot_actuator_initialization_error =

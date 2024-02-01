@@ -228,6 +228,12 @@ TEST_F(
     ros2_control_test_assets::minimal_robot_not_existing_system_plugin);
 }
 
+TEST_F(ResourceManagerTest, expect_load_and_initialize_to_fail_when_there_are_dupplicate_of_hw_comp)
+{
+  test_load_and_initialized_components_failure(
+    ros2_control_test_assets::minimal_robot_duplicated_component);
+}
+
 TEST_F(
   ResourceManagerTest, expect_load_and_initialize_to_fail_when_a_hw_component_initialization_fails)
 {
@@ -247,6 +253,12 @@ TEST_F(
 TEST_F(ResourceManagerTest, load_and_initialize_components_called_if_urdf_is_valid)
 {
   TestableResourceManager rm(ros2_control_test_assets::minimal_robot_urdf);
+  ASSERT_TRUE(rm.are_components_initialized());
+}
+
+TEST_F(ResourceManagerTest, load_and_initialize_components_called_if_async_urdf_is_valid)
+{
+  TestableResourceManager rm(ros2_control_test_assets::minimal_async_robot_urdf);
   ASSERT_TRUE(rm.are_components_initialized());
 }
 
