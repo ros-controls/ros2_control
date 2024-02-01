@@ -498,16 +498,16 @@ const auto diffbot_urdf =
       </geometry>
     </collision>
   </link>
-  <joint name="wheel_0_joint" type="continuous">
+  <joint name="wheel_left" type="continuous">
     <parent link="base_link"/>
     <child link="wheel_0_link"/>
     <origin rpy="-1.5707963267948966 0 0" xyz="0.3 0 0"/>
     <axis xyz="0 0 1"/>
   </joint>
   <!-- Transmission is important to link the joints and the controller -->
-  <transmission name="wheel_0_joint_trans" type="SimpleTransmission">
-    <actuator name="wheel_0_joint_motor"/>
-    <joint name="wheel_0_joint"/>
+  <transmission name="wheel_left_trans" type="SimpleTransmission">
+    <actuator name="wheel_left_motor"/>
+    <joint name="wheel_left"/>
     <mechanicalReduction>1</mechanicalReduction>
     <motorTorqueConstant>1</motorTorqueConstant>
   </transmission>
@@ -533,16 +533,16 @@ const auto diffbot_urdf =
       </geometry>
     </collision>
   </link>
-  <joint name="wheel_1_joint" type="continuous">
+  <joint name="wheel_right" type="continuous">
     <parent link="base_link"/>
     <child link="wheel_1_link"/>
     <origin rpy="-1.5707963267948966 0 0" xyz="-0.2 0 0"/>
     <axis xyz="0 0 1"/>
   </joint>
   <!-- Transmission is important to link the joints and the controller -->
-  <transmission name="wheel_1_joint_trans" type="SimpleTransmission">
-    <actuator name="wheel_1_joint_motor"/>
-    <joint name="wheel_1_joint"/>
+  <transmission name="wheel_right_trans" type="SimpleTransmission">
+    <actuator name="wheel_right_motor"/>
+    <joint name="wheel_right"/>
     <mechanicalReduction>1</mechanicalReduction>
     <motorTorqueConstant>1</motorTorqueConstant>
   </transmission>
@@ -560,7 +560,7 @@ const auto diffbot_urdf =
     <hardware>
       <plugin>test_actuator</plugin>
     </hardware>
-    <joint name="wheel_0_joint">
+    <joint name="wheel_left">
       <state_interface name="position"/>
       <command_interface name="velocity"/>
       <state_interface name="velocity"/>
@@ -570,7 +570,7 @@ const auto diffbot_urdf =
     <hardware>
       <plugin>test_actuator</plugin>
     </hardware>
-    <joint name="wheel_1_joint">
+    <joint name="wheel_right">
       <state_interface name="position"/>
       <command_interface name="velocity"/>
       <state_interface name="velocity"/>
