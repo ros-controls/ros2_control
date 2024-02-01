@@ -598,13 +598,13 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
     mirror_command_to_state(sensor_states_, sensor_mock_commands_);
   }
 
-  // do loopback on all gpio interfaces
   if (use_mock_gpio_command_interfaces_)
   {
     mirror_command_to_state(gpio_states_, gpio_mock_commands_);
   }
   else
   {
+    // do loopback on all gpio interfaces
     mirror_command_to_state(gpio_states_, gpio_commands_);
   }
 
