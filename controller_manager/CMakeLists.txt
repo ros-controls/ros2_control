@@ -189,7 +189,6 @@ if(BUILD_TESTING)
     test_controller
     ros2_control_test_assets::ros2_control_test_assets
   )
-  set_tests_properties(test_spawner_unspawner PROPERTIES TIMEOUT 120)
 
   ament_add_gmock(test_hardware_management_srvs
     test/test_hardware_management_srvs.cpp
