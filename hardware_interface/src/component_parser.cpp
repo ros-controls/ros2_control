@@ -104,29 +104,6 @@ std::string get_attribute_value(
 
 /// Gets value of the attribute on an XMLelement.
 /**
- * If parameter is not found, returns specified default value
- *
- * \param[in] element_it XMLElement iterator to search for the attribute
- * \param[in] attribute_name attribute name to search for and return value
- * \param[in] default_value When the attribute is not found, this value is returned instead
- * \return attribute value
- * \throws std::runtime_error if attribute is not found
- */
-std::string get_attribute_value_or(
-  const tinyxml2::XMLElement * element_it, const char * attribute_name,
-  const std::string default_value)
-{
-  const tinyxml2::XMLAttribute * attr;
-  attr = element_it->FindAttribute(attribute_name);
-  if (!attr)
-  {
-    return default_value;
-  }
-  return element_it->Attribute(attribute_name);
-}
-
-/// Gets value of the attribute on an XMLelement.
-/**
  * If attribute is not found throws an error.
  *
  * \param[in] element_it XMLElement iterator to search for the attribute
@@ -345,13 +322,14 @@ ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it
   {
     try
     {
-      component.is_mimic =
-        parse_bool(get_attribute_value(component_it, kMimicAttribute, kJointTag));
+      component.is_mimic = parse_bool(get_attribute_value(component_it, kMimicAttribute, kJointTag))
+                             ? MimicAttribute::TRUE
+                             : MimicAttribute::FALSE;
     }
     catch (const std::runtime_error & e)
     {
       // mimic attribute not set
-      component.is_mimic = {};
+      component.is_mimic = MimicAttribute::NOT_SET;
     }
   }
 
@@ -387,7 +365,7 @@ ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it
  *  and the interface may be an array of a fixed size of the data type.
  *
  * \param[in] component_it pointer to the iterator where component
- * info should befound
+ * info should be found
  * \throws std::runtime_error if a required component attribute or tag is not found.
  */
 ComponentInfo parse_complex_component_from_xml(const tinyxml2::XMLElement * component_it)
@@ -703,12 +681,12 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
         {
           throw std::runtime_error("Joint " + joint.name + " not found in URDF");
         }
-        if (!urdf_joint->mimic && joint.is_mimic.value_or(false))
+        if (!urdf_joint->mimic && joint.is_mimic == MimicAttribute::TRUE)
         {
           throw std::runtime_error(
             "Joint '" + std::string(joint.name) + "' has no mimic information in the URDF.");
         }
-        if (urdf_joint->mimic && joint.is_mimic.value_or(true))
+        if (urdf_joint->mimic && joint.is_mimic != MimicAttribute::FALSE)
         {
           if (joint.command_interfaces.size() > 0)
           {

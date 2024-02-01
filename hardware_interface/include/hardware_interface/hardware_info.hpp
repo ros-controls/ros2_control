@@ -15,7 +15,6 @@
 #ifndef HARDWARE_INTERFACE__HARDWARE_INFO_HPP_
 #define HARDWARE_INTERFACE__HARDWARE_INFO_HPP_
 
-#include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -54,6 +53,14 @@ struct MimicJoint
   double offset = 0.0;
 };
 
+/// @brief This enum is used to store the mimic attribute of a joint
+enum class MimicAttribute
+{
+  NOT_SET,
+  TRUE,
+  FALSE
+};
+
 /**
  * This structure stores information about components defined for a specific hardware
  * in robot's URDF.
@@ -65,8 +72,9 @@ struct ComponentInfo
   /// Type of the component: sensor, joint, or GPIO.
   std::string type;
 
-  ///  If the component has a mimic joint tag, for opt-out
-  std::optional<bool> is_mimic{};
+  ///  Hold the value of the mimic attribute if given, NOT_SET otherwise
+  MimicAttribute is_mimic = MimicAttribute::NOT_SET;
+
   /**
    * Name of the command interfaces that can be set, e.g. "position", "velocity", etc.
    * Used by joints and GPIOs.
