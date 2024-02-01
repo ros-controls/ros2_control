@@ -128,18 +128,18 @@ public:
 
     // configure Left Wheel controller
     controller_interface::InterfaceConfiguration pid_left_cmd_ifs_cfg = {
-      controller_interface::interface_configuration_type::INDIVIDUAL, {"wheel_left/velocity"}};
+      controller_interface::interface_configuration_type::INDIVIDUAL, {"wheel_0_joint/velocity"}};
     controller_interface::InterfaceConfiguration pid_left_state_ifs_cfg = {
-      controller_interface::interface_configuration_type::INDIVIDUAL, {"wheel_left/velocity"}};
+      controller_interface::interface_configuration_type::INDIVIDUAL, {"wheel_0_joint/velocity"}};
     pid_left_wheel_controller->set_command_interface_configuration(pid_left_cmd_ifs_cfg);
     pid_left_wheel_controller->set_state_interface_configuration(pid_left_state_ifs_cfg);
     pid_left_wheel_controller->set_reference_interface_names({"velocity"});
 
     // configure Left Wheel controller
     controller_interface::InterfaceConfiguration pid_right_cmd_ifs_cfg = {
-      controller_interface::interface_configuration_type::INDIVIDUAL, {"wheel_right/velocity"}};
+      controller_interface::interface_configuration_type::INDIVIDUAL, {"wheel_1_joint/velocity"}};
     controller_interface::InterfaceConfiguration pid_right_state_ifs_cfg = {
-      controller_interface::interface_configuration_type::INDIVIDUAL, {"wheel_right/velocity"}};
+      controller_interface::interface_configuration_type::INDIVIDUAL, {"wheel_1_joint/velocity"}};
     pid_right_wheel_controller->set_command_interface_configuration(pid_right_cmd_ifs_cfg);
     pid_right_wheel_controller->set_state_interface_configuration(pid_right_state_ifs_cfg);
     pid_right_wheel_controller->set_reference_interface_names({"velocity"});
@@ -150,7 +150,7 @@ public:
       {std::string(PID_LEFT_WHEEL) + "/velocity", std::string(PID_RIGHT_WHEEL) + "/velocity"}};
     controller_interface::InterfaceConfiguration diff_drive_state_ifs_cfg = {
       controller_interface::interface_configuration_type::INDIVIDUAL,
-      {"wheel_left/velocity", "wheel_right/velocity"}};
+      {"wheel_0_joint/velocity", "wheel_1_joint/velocity"}};
     diff_drive_controller->set_command_interface_configuration(diff_drive_cmd_ifs_cfg);
     diff_drive_controller->set_state_interface_configuration(diff_drive_state_ifs_cfg);
     diff_drive_controller->set_reference_interface_names({"vel_x", "vel_y", "rot_z"});
@@ -435,8 +435,8 @@ public:
   const std::vector<std::string> DIFF_DRIVE_REFERENCE_INTERFACES = {
     "diff_drive_controller/vel_x", "diff_drive_controller/vel_y", "diff_drive_controller/rot_z"};
 
-  const std::vector<std::string> PID_LEFT_WHEEL_CLAIMED_INTERFACES = {"wheel_left/velocity"};
-  const std::vector<std::string> PID_RIGHT_WHEEL_CLAIMED_INTERFACES = {"wheel_right/velocity"};
+  const std::vector<std::string> PID_LEFT_WHEEL_CLAIMED_INTERFACES = {"wheel_0_joint/velocity"};
+  const std::vector<std::string> PID_RIGHT_WHEEL_CLAIMED_INTERFACES = {"wheel_1_joint/velocity"};
   const std::vector<std::string> DIFF_DRIVE_CLAIMED_INTERFACES = {
     "pid_left_wheel_controller/velocity", "pid_right_wheel_controller/velocity"};
   const std::vector<std::string> POSITION_CONTROLLER_CLAIMED_INTERFACES = {

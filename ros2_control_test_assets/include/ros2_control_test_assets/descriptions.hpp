@@ -564,7 +564,7 @@ const auto diffbot_urdf =
     <hardware>
       <plugin>test_actuator</plugin>
     </hardware>
-    <joint name="wheel_left">
+    <joint name="wheel_0_joint">
       <state_interface name="position"/>
       <command_interface name="velocity"/>
       <state_interface name="velocity"/>
@@ -574,7 +574,7 @@ const auto diffbot_urdf =
     <hardware>
       <plugin>test_actuator</plugin>
     </hardware>
-    <joint name="wheel_right">
+    <joint name="wheel_1_joint">
       <state_interface name="position"/>
       <command_interface name="velocity"/>
       <state_interface name="velocity"/>
