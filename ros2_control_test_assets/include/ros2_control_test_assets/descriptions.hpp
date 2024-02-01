@@ -645,7 +645,7 @@ const auto gripper_urdf_head =
     <limit effort="1000.0" lower="0" upper="0.38" velocity="10"/>
   </joint>
   <joint name="left_finger_joint" type="prismatic">
-    <mimic joint="right_finger_joint" multiplier="1" offset="0"/>
+    <mimic joint="right_finger_joint" multiplier="2" offset="1"/>
     <axis xyz="0 1 0"/>
     <origin xyz="0.0 0.48 1" rpy="0.0 0.0 3.1415926535"/>
     <parent link="base"/>
@@ -934,7 +934,7 @@ const auto gripper_hardware_resources_mimic_deprecated =
     </joint>
     <joint name="left_finger_joint">
       <param name="mimic">right_finger_joint</param>
-      <param name="multiplier">1</param>
+      <param name="multiplier">2</param>
       <param name="offset">1</param>
       <command_interface name="position"/>
       <state_interface name="position"/>

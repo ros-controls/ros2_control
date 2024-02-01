@@ -685,8 +685,8 @@ TEST_F(TestComponentParser, mimic_true_valid_config)
   ASSERT_NO_THROW(hw_info = parse_control_resources_from_urdf(urdf_to_test));
   ASSERT_THAT(hw_info, SizeIs(1));
   ASSERT_THAT(hw_info[0].mimic_joints, SizeIs(1));
-  EXPECT_DOUBLE_EQ(hw_info[0].mimic_joints[0].multiplier, 1.0);
-  EXPECT_DOUBLE_EQ(hw_info[0].mimic_joints[0].offset, 0.0);
+  EXPECT_DOUBLE_EQ(hw_info[0].mimic_joints[0].multiplier, 2.0);
+  EXPECT_DOUBLE_EQ(hw_info[0].mimic_joints[0].offset, 1.0);
   EXPECT_EQ(hw_info[0].mimic_joints[0].mimicked_joint_index, 0);
   EXPECT_EQ(hw_info[0].mimic_joints[0].joint_index, 1);
 }
@@ -702,8 +702,8 @@ TEST_F(TestComponentParser, mimic_deprecated_valid_config)
   ASSERT_NO_THROW(hw_info = parse_control_resources_from_urdf(urdf_to_test));
   ASSERT_THAT(hw_info, SizeIs(1));
   ASSERT_THAT(hw_info[0].mimic_joints, SizeIs(1));
-  EXPECT_DOUBLE_EQ(hw_info[0].mimic_joints[0].multiplier, 1.0);
-  EXPECT_DOUBLE_EQ(hw_info[0].mimic_joints[0].offset, 0.0);
+  EXPECT_DOUBLE_EQ(hw_info[0].mimic_joints[0].multiplier, 2.0);
+  EXPECT_DOUBLE_EQ(hw_info[0].mimic_joints[0].offset, 1.0);
   EXPECT_EQ(hw_info[0].mimic_joints[0].mimicked_joint_index, 0);
   EXPECT_EQ(hw_info[0].mimic_joints[0].joint_index, 1);
 }
