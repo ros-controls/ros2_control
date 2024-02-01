@@ -106,17 +106,21 @@ TEST_F(ResourceManagerTest, test_unitilizable_hardware_validation)
   // If the the hardware can not be initialized and load_and_initialize_components tried to validate
   // the interfaces a runtime exception is thrown
   TestableResourceManager rm;
-  EXPECT_FALSE(rm.load_and_initialize_components(
-    ros2_control_test_assets::minimal_unitilizable_robot_urdf, true));
+  EXPECT_FALSE(
+    rm.load_and_initialize_components(ros2_control_test_assets::minimal_unitilizable_robot_urdf));
 }
 
-TEST_F(ResourceManagerTest, test_unitilizable_hardware_no_validation)
+void test_load_and_initialized_components_failure(const std::string & urdf)
 {
-  // If the the hardware can not be initialized and load_and_initialize_components didn't try to
-  // validate the interfaces, the interface should not show up
   TestableResourceManager rm;
-  EXPECT_TRUE(rm.load_and_initialize_components(
-    ros2_control_test_assets::minimal_unitilizable_robot_urdf, false));
+  ASSERT_FALSE(rm.load_and_initialize_components(urdf));
+
+  ASSERT_FALSE(rm.are_components_initialized());
+
+  // resource manage should also not have any components
+  EXPECT_EQ(rm.actuator_components_size(), 0);
+  EXPECT_EQ(rm.sensor_components_size(), 0);
+  EXPECT_EQ(rm.system_components_size(), 0);
 
   // test actuator
   EXPECT_FALSE(rm.state_interface_exists("joint1/position"));
@@ -140,7 +144,15 @@ TEST_F(ResourceManagerTest, test_unitilizable_hardware_no_validation)
   EXPECT_FALSE(rm.command_interface_exists("joint3/max_acceleration"));
 }
 
-TEST_F(ResourceManagerTest, initialization_with_urdf_manual_validation)
+TEST_F(ResourceManagerTest, test_unitilizable_hardware_no_validation)
+{
+  // If the the hardware can not be initialized and load_and_initialize_components didn't try to
+  // validate the interfaces, the interface should not show up
+  test_load_and_initialized_components_failure(
+    ros2_control_test_assets::minimal_unitilizable_robot_urdf);
+}
+
+TEST_F(ResourceManagerTest, initialization_with_urdf_and_manual_validation)
 {
   // we validate the results manually
   TestableResourceManager rm(ros2_control_test_assets::minimal_robot_urdf, false);
@@ -164,22 +176,15 @@ TEST_F(ResourceManagerTest, initialization_with_urdf_manual_validation)
   EXPECT_TRUE(rm.command_interface_exists("joint3/velocity"));
 }
 
-TEST_F(ResourceManagerTest, initialization_with_wrong_urdf)
+TEST_F(ResourceManagerTest, expect_validation_failure_if_not_all_interfaces_are_exported)
 {
   // missing state keys
-  {
-    auto rm = TestableResourceManager();
-    EXPECT_FALSE(rm.load_and_initialize_components(
-      ros2_control_test_assets::minimal_robot_missing_state_keys_urdf));
-    ASSERT_TRUE(rm.is_urdf_already_loaded());
-  }
+  test_load_and_initialized_components_failure(
+    ros2_control_test_assets::minimal_robot_missing_state_keys_urdf);
+
   // missing command keys
-  {
-    auto rm = TestableResourceManager();
-    EXPECT_FALSE(rm.load_and_initialize_components(
-      ros2_control_test_assets::minimal_robot_missing_command_keys_urdf));
-    ASSERT_TRUE(rm.is_urdf_already_loaded());
-  }
+  test_load_and_initialized_components_failure(
+    ros2_control_test_assets::minimal_robot_missing_command_keys_urdf);
 }
 
 TEST_F(ResourceManagerTest, initialization_with_urdf_unclaimed)
@@ -204,29 +209,53 @@ TEST_F(ResourceManagerTest, initialization_with_urdf_unclaimed)
 TEST_F(ResourceManagerTest, no_load_and_initialize_components_function_called)
 {
   TestableResourceManager rm;
-  ASSERT_FALSE(rm.is_urdf_already_loaded());
+  ASSERT_FALSE(rm.are_components_initialized());
 }
 
-TEST_F(ResourceManagerTest, load_and_initialize_components_called_if_urdf_is_invalid)
+TEST_F(
+  ResourceManagerTest, expect_load_and_initialize_to_fail_when_a_hw_component_plugin_does_not_exist)
 {
-  TestableResourceManager rm;
-  ASSERT_FALSE(rm.load_and_initialize_components(
-    ros2_control_test_assets::minimal_robot_missing_state_keys_urdf));
-  ASSERT_FALSE(rm.is_urdf_already_loaded());
+  // Actuator
+  test_load_and_initialized_components_failure(
+    ros2_control_test_assets::minimal_robot_not_existing_actuator_plugin);
+
+  // Sensor
+  test_load_and_initialized_components_failure(
+    ros2_control_test_assets::minimal_robot_not_existing_sensors_plugin);
+
+  // System
+  test_load_and_initialized_components_failure(
+    ros2_control_test_assets::minimal_robot_not_existing_system_plugin);
+}
+
+TEST_F(
+  ResourceManagerTest, expect_load_and_initialize_to_fail_when_a_hw_component_initialization_fails)
+{
+  // Actuator
+  test_load_and_initialized_components_failure(
+    ros2_control_test_assets::minimal_robot_actuator_initialization_error);
+
+  // Sensor
+  test_load_and_initialized_components_failure(
+    ros2_control_test_assets::minimal_robot_sensor_initialization_error);
+
+  // System
+  test_load_and_initialized_components_failure(
+    ros2_control_test_assets::minimal_robot_system_initialization_error);
 }
 
 TEST_F(ResourceManagerTest, load_and_initialize_components_called_if_urdf_is_valid)
 {
   TestableResourceManager rm(ros2_control_test_assets::minimal_robot_urdf);
-  ASSERT_TRUE(rm.is_urdf_already_loaded());
+  ASSERT_TRUE(rm.are_components_initialized());
 }
 
 TEST_F(ResourceManagerTest, can_load_and_initialize_components_later)
 {
   TestableResourceManager rm;
-  ASSERT_FALSE(rm.is_urdf_already_loaded());
+  ASSERT_FALSE(rm.are_components_initialized());
   rm.load_and_initialize_components(ros2_control_test_assets::minimal_robot_urdf);
-  ASSERT_TRUE(rm.is_urdf_already_loaded());
+  ASSERT_TRUE(rm.are_components_initialized());
 }
 
 TEST_F(ResourceManagerTest, resource_claiming)
@@ -345,7 +374,7 @@ class ExternalComponent : public hardware_interface::ActuatorInterface
 TEST_F(ResourceManagerTest, post_initialization_add_components)
 {
   // we validate the results manually
-  TestableResourceManager rm(ros2_control_test_assets::minimal_robot_urdf, false);
+  TestableResourceManager rm(ros2_control_test_assets::minimal_robot_urdf);
   // Activate components to get all interfaces available
   activate_components(rm);
 

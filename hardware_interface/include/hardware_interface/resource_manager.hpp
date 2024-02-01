@@ -69,8 +69,7 @@ public:
    * activated. Currently used only in tests.
    */
   explicit ResourceManager(
-    const std::string & urdf, bool validate_interfaces = true, bool activate_all = false,
-    unsigned int update_rate = 100,
+    const std::string & urdf, bool activate_all = false, unsigned int update_rate = 100,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface = nullptr);
 
   ResourceManager(const ResourceManager &) = delete;
@@ -90,9 +89,7 @@ public:
    * initialize the components present in the parsed URDF. Defaults to true.
    * \returns false if URDF validation has failed.
    */
-  bool load_and_initialize_components(
-    const std::string & urdf, bool validate_interfaces = true,
-    bool load_and_initialize_components = true);
+  bool load_and_initialize_components(const std::string & urdf);
 
   /**
    * @brief if the resource manager load_and_initialize_components(...) function has been called
@@ -102,7 +99,7 @@ public:
    * @return true if resource manager's load_and_initialize_components() has been already called.
    * @return false if resource manager's load_and_initialize_components() has not been yet called.
    */
-  bool is_urdf_already_loaded() const;
+  bool are_components_initialized() const;
 
   /// Claim a state interface given its key.
   /**
@@ -424,7 +421,7 @@ private:
   // Structure to store read and write status so it is not initialized in the real-time loop
   HardwareReadWriteStatus read_write_status;
 
-  bool is_urdf_loaded_ = false;
+  bool components_are_loaded_and_initialized_ = false;
 };
 
 }  // namespace hardware_interface

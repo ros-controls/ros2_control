@@ -90,17 +90,29 @@ public:
   }
 
   template <class HardwareT, class HardwareInterfaceT>
-  void load_hardware(
+  bool load_hardware(
     const HardwareInfo & hardware_info, pluginlib::ClassLoader<HardwareInterfaceT> & loader,
     std::vector<HardwareT> & container)
   {
     RCUTILS_LOG_INFO_NAMED(
       "resource_manager", "Loading hardware '%s' ", hardware_info.name.c_str());
     // hardware_plugin_name has to match class name in plugin xml description
-    auto interface = std::unique_ptr<HardwareInterfaceT>(
-      loader.createUnmanagedInstance(hardware_info.hardware_plugin_name));
-    HardwareT hardware(std::move(interface));
-    container.emplace_back(std::move(hardware));
+    try
+    {
+      auto interface = std::unique_ptr<HardwareInterfaceT>(
+        loader.createUnmanagedInstance(hardware_info.hardware_plugin_name));
+      HardwareT hardware(std::move(interface));
+      container.emplace_back(std::move(hardware));
+    }
+    catch (const std::exception & ex)
+    {
+      RCUTILS_LOG_ERROR_NAMED(
+        "resource_manager",
+        "The following exception was raised when creating instance of '%s' "
+        "from plugin '%s' component! %s",
+        hardware_info.name.c_str(), hardware_info.hardware_plugin_name.c_str(), ex.what());
+      return false;
+    }
     // initialize static data about hardware component to reduce later calls
     HardwareComponentInfo component_info;
     component_info.name = hardware_info.name;
@@ -111,6 +123,8 @@ public:
     hardware_info_map_.insert(std::make_pair(component_info.name, component_info));
     hardware_used_by_controllers_.insert(
       std::make_pair(component_info.name, std::vector<std::string>()));
+
+    return true;
   }
 
   template <class HardwareT>
@@ -499,24 +513,15 @@ public:
     }
   }
 
-  void check_for_duplicates(const HardwareInfo & hardware_info)
-  {
-    // Check for identical names
-    if (hardware_info_map_.find(hardware_info.name) != hardware_info_map_.end())
-    {
-      throw std::runtime_error(
-        "Hardware name " + hardware_info.name +
-        " is duplicated. Please provide a unique 'name' in the URDF.");
-    }
-  }
-
   // TODO(destogl): Propagate "false" up, if happens in initialize_hardware
-  void load_and_initialize_actuator(const HardwareInfo & hardware_info)
+  bool load_and_initialize_actuator(const HardwareInfo & hardware_info)
   {
     auto load_and_init_actuators = [&](auto & container)
     {
-      check_for_duplicates(hardware_info);
-      load_hardware<Actuator, ActuatorInterface>(hardware_info, actuator_loader_, container);
+      if (!load_hardware<Actuator, ActuatorInterface>(hardware_info, actuator_loader_, container))
+      {
+        return false;
+      }
       if (initialize_hardware(hardware_info, container.back()))
       {
         import_state_interfaces(container.back());
@@ -524,29 +529,33 @@ public:
       }
       else
       {
-        RCUTILS_LOG_WARN_NAMED(
+        RCUTILS_LOG_ERROR_NAMED(
           "resource_manager",
           "Actuator hardware component '%s' from plugin '%s' failed to initialize.",
           hardware_info.name.c_str(), hardware_info.hardware_plugin_name.c_str());
+        return false;
       }
+      return true;
     };
 
     if (hardware_info.is_async)
     {
-      load_and_init_actuators(async_actuators_);
+      return load_and_init_actuators(async_actuators_);
     }
     else
     {
-      load_and_init_actuators(actuators_);
+      return load_and_init_actuators(actuators_);
     }
   }
 
-  void load_and_initialize_sensor(const HardwareInfo & hardware_info)
+  bool load_and_initialize_sensor(const HardwareInfo & hardware_info)
   {
     auto load_and_init_sensors = [&](auto & container)
     {
-      check_for_duplicates(hardware_info);
-      load_hardware<Sensor, SensorInterface>(hardware_info, sensor_loader_, container);
+      if (!load_hardware<Sensor, SensorInterface>(hardware_info, sensor_loader_, container))
+      {
+        return false;
+      }
       if (initialize_hardware(hardware_info, container.back()))
       {
         import_state_interfaces(container.back());
@@ -557,25 +566,29 @@ public:
           "resource_manager",
           "Sensor hardware component '%s' from plugin '%s' failed to initialize.",
           hardware_info.name.c_str(), hardware_info.hardware_plugin_name.c_str());
+        return false;
       }
+      return true;
     };
 
     if (hardware_info.is_async)
     {
-      load_and_init_sensors(async_sensors_);
+      return load_and_init_sensors(async_sensors_);
     }
     else
     {
-      load_and_init_sensors(sensors_);
+      return load_and_init_sensors(sensors_);
     }
   }
 
-  void load_and_initialize_system(const HardwareInfo & hardware_info)
+  bool load_and_initialize_system(const HardwareInfo & hardware_info)
   {
     auto load_and_init_systems = [&](auto & container)
     {
-      check_for_duplicates(hardware_info);
-      load_hardware<System, SystemInterface>(hardware_info, system_loader_, container);
+      if (!load_hardware<System, SystemInterface>(hardware_info, system_loader_, container))
+      {
+        return false;
+      }
       if (initialize_hardware(hardware_info, container.back()))
       {
         import_state_interfaces(container.back());
@@ -583,20 +596,22 @@ public:
       }
       else
       {
-        RCUTILS_LOG_WARN_NAMED(
+        RCUTILS_LOG_ERROR_NAMED(
           "resource_manager",
           "System hardware component '%s' from plugin '%s' failed to initialize.",
           hardware_info.name.c_str(), hardware_info.hardware_plugin_name.c_str());
+        return false;
       }
+      return true;
     };
 
     if (hardware_info.is_async)
     {
-      load_and_init_systems(async_systems_);
+      return load_and_init_systems(async_systems_);
     }
     else
     {
-      load_and_init_systems(systems_);
+      return load_and_init_systems(systems_);
     }
   }
 
@@ -689,6 +704,26 @@ public:
     }
   }
 
+  void clear()
+  {
+    actuators_.clear();
+    sensors_.clear();
+    systems_.clear();
+
+    async_actuators_.clear();
+    async_sensors_.clear();
+    async_systems_.clear();
+
+    hardware_info_map_.clear();
+    state_interface_map_.clear();
+    command_interface_map_.clear();
+
+    available_state_interfaces_.clear();
+    available_command_interfaces_.clear();
+
+    claimed_command_interface_map_.clear();
+  }
+
   // hardware plugins
   pluginlib::ClassLoader<ActuatorInterface> actuator_loader_;
   pluginlib::ClassLoader<SensorInterface> sensor_loader_;
@@ -740,11 +775,11 @@ ResourceManager::ResourceManager(
 ResourceManager::~ResourceManager() = default;
 
 ResourceManager::ResourceManager(
-  const std::string & urdf, bool validate_interfaces, bool activate_all, unsigned int update_rate,
+  const std::string & urdf, bool activate_all, unsigned int update_rate,
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
 : resource_storage_(std::make_unique<ResourceStorage>(update_rate, clock_interface))
 {
-  load_and_initialize_components(urdf, validate_interfaces);
+  load_and_initialize_components(urdf);
 
   if (activate_all)
   {
@@ -758,55 +793,83 @@ ResourceManager::ResourceManager(
 }
 
 // CM API: Called in "callback/slow"-thread
-bool ResourceManager::load_and_initialize_components(
-  const std::string & urdf, bool validate_interfaces, bool load_and_initialize_components)
+bool ResourceManager::load_and_initialize_components(const std::string & urdf)
 {
-  bool result = true;
+  components_are_loaded_and_initialized_ = true;
+
+  const auto hardware_info = hardware_interface::parse_control_resources_from_urdf(urdf);
 
   const std::string system_type = "system";
   const std::string sensor_type = "sensor";
   const std::string actuator_type = "actuator";
 
-  const auto hardware_info = hardware_interface::parse_control_resources_from_urdf(urdf);
-  is_urdf_loaded_ = true;
-
-  if (load_and_initialize_components)
+  for (const auto & individual_hardware_info : hardware_info)
   {
-    for (const auto & individual_hardware_info : hardware_info)
+    // Check for identical names
+    if (
+      resource_storage_->hardware_info_map_.find(individual_hardware_info.name) !=
+      resource_storage_->hardware_info_map_.end())
     {
-      if (individual_hardware_info.type == actuator_type)
+      RCUTILS_LOG_ERROR_NAMED(
+        "resource_manager",
+        "Hardware name %s is duplicated. Please provide a unique 'name' "
+        "in the URDF.",
+        individual_hardware_info.name.c_str());
+      components_are_loaded_and_initialized_ = false;
+      break;
+    }
+
+    if (individual_hardware_info.type == actuator_type)
+    {
+      std::scoped_lock guard(resource_interfaces_lock_, claimed_command_interfaces_lock_);
+      if (!resource_storage_->load_and_initialize_actuator(individual_hardware_info))
       {
-        std::scoped_lock guard(resource_interfaces_lock_, claimed_command_interfaces_lock_);
-        resource_storage_->load_and_initialize_actuator(individual_hardware_info);
+        components_are_loaded_and_initialized_ = false;
+        break;
       }
-      if (individual_hardware_info.type == sensor_type)
+    }
+    if (individual_hardware_info.type == sensor_type)
+    {
+      std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
+      if (!resource_storage_->load_and_initialize_sensor(individual_hardware_info))
       {
-        std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
-        resource_storage_->load_and_initialize_sensor(individual_hardware_info);
+        components_are_loaded_and_initialized_ = false;
+        break;
       }
-      if (individual_hardware_info.type == system_type)
+    }
+    if (individual_hardware_info.type == system_type)
+    {
+      std::scoped_lock guard(resource_interfaces_lock_, claimed_command_interfaces_lock_);
+      if (!resource_storage_->load_and_initialize_system(individual_hardware_info))
       {
-        std::scoped_lock guard(resource_interfaces_lock_, claimed_command_interfaces_lock_);
-        resource_storage_->load_and_initialize_system(individual_hardware_info);
+        components_are_loaded_and_initialized_ = false;
+        break;
       }
     }
   }
 
-  // throw on missing state and command interfaces, not specified keys are being ignored
-  if (validate_interfaces)
+  if (components_are_loaded_and_initialized_ && validate_storage(hardware_info))
   {
-    result = validate_storage(hardware_info);
+    std::lock_guard<std::recursive_mutex> guard(resources_lock_);
+    read_write_status.failed_hardware_names.reserve(
+      resource_storage_->actuators_.size() + resource_storage_->sensors_.size() +
+      resource_storage_->systems_.size());
+  }
+  else
+  {
+    std::scoped_lock guard(resource_interfaces_lock_, claimed_command_interfaces_lock_);
+    resource_storage_->clear();
+    // cleanup everything
+    components_are_loaded_and_initialized_ = false;
   }
 
-  std::lock_guard<std::recursive_mutex> guard(resources_lock_);
-  read_write_status.failed_hardware_names.reserve(
-    resource_storage_->actuators_.size() + resource_storage_->sensors_.size() +
-    resource_storage_->systems_.size());
-
-  return result;
+  return components_are_loaded_and_initialized_;
 }
 
-bool ResourceManager::is_urdf_already_loaded() const { return is_urdf_loaded_; }
+bool ResourceManager::are_components_initialized() const
+{
+  return components_are_loaded_and_initialized_;
+}
 
 // CM API: Called in "update"-thread
 LoanedStateInterface ResourceManager::claim_state_interface(const std::string & key)
@@ -1497,12 +1560,12 @@ bool ResourceManager::validate_storage(
     message += "missing state interfaces:\n";
     for (const auto & missing_key : missing_state_keys)
     {
-      message += "' " + missing_key + " '" + "\t";
+      message += " " + missing_key + "\t";
     }
     message += "\nmissing command interfaces:\n";
     for (const auto & missing_key : missing_command_keys)
     {
-      message += "' " + missing_key + " '" + "\t";
+      message += " " + missing_key + "\t";
     }
 
     RCUTILS_LOG_ERROR_NAMED(

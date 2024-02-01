@@ -286,7 +286,13 @@ ControllerManager::ControllerManager(
       "[Deprecated] Passing the robot description parameter directly to the control_manager node "
       "is deprecated. Use '~/robot_description' topic from 'robot_state_publisher' instead.");
     init_resource_manager(robot_description_);
-    init_services();
+    if (resource_manager_->are_components_initialized())
+    {
+      RCLCPP_FATAL(
+        get_logger(),
+        "You have to restart the framework when using robot description from parameter!");
+      init_services();
+    }
   }
 
   diagnostics_updater_.setHardwareID("ros2_control");
@@ -313,7 +319,7 @@ ControllerManager::ControllerManager(
     RCLCPP_WARN(get_logger(), "'update_rate' parameter not set, using default value.");
   }
 
-  if (resource_manager_->is_urdf_already_loaded())
+  if (resource_manager_->are_components_initialized())
   {
     init_services();
   }
@@ -342,7 +348,7 @@ void ControllerManager::robot_description_callback(const std_msgs::msg::String &
   RCLCPP_DEBUG(
     get_logger(), "'Content of robot description file: %s", robot_description.data.c_str());
   robot_description_ = robot_description.data;
-  if (resource_manager_->is_urdf_already_loaded())
+  if (resource_manager_->are_components_initialized())
   {
     RCLCPP_WARN(
       get_logger(),
@@ -351,7 +357,10 @@ void ControllerManager::robot_description_callback(const std_msgs::msg::String &
     return;
   }
   init_resource_manager(robot_description_);
-  init_services();
+  if (resource_manager_->are_components_initialized())
+  {
+    init_services();
+  }
 }
 
 void ControllerManager::init_resource_manager(const std::string & robot_description)
@@ -360,9 +369,9 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
   {
     RCLCPP_WARN(
       get_logger(),
-      "URDF validation went wrong check the previous output. This might only mean that interfaces "
-      "defined in URDF and exported by the hardware do not match. Therefore continue initializing "
-      "controller manager...");
+      "Could not load and initialize hardware. Please check previous output for more details. "
+      "After you have corrected your URDF, try to publish robot description again.");
+    return;
   }
 
   // Get all components and if they are not defined in parameters activate them automatically
