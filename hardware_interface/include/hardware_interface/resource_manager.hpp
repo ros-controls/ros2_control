@@ -88,18 +88,19 @@ public:
    * interfaces ought to be validated. Defaults to true.
    * \param[in] load_and_initialize_components boolean argument indicating whether to load and
    * initialize the components present in the parsed URDF. Defaults to true.
+   * \returns false if URDF validation has failed.
    */
-  void load_urdf(
+  bool load_and_initialize_components(
     const std::string & urdf, bool validate_interfaces = true,
     bool load_and_initialize_components = true);
 
   /**
-   * @brief if the resource manager load_urdf(...) function has been called this returns true.
-   * We want to permit to load the urdf later on but we currently don't want to permit multiple
-   * calls to load_urdf (reloading/loading different urdf).
+   * @brief if the resource manager load_and_initialize_components(...) function has been called
+   * this returns true. We want to permit to load the urdf later on but we currently don't want to
+   * permit multiple calls to load_and_initialize_components (reloading/loading different urdf).
    *
-   * @return true if resource manager's load_urdf() has been already called.
-   * @return false if resource manager's load_urdf() has not been yet called.
+   * @return true if resource manager's load_and_initialize_components() has been already called.
+   * @return false if resource manager's load_and_initialize_components() has not been yet called.
    */
   bool is_urdf_already_loaded() const;
 
@@ -408,7 +409,7 @@ public:
   bool state_interface_exists(const std::string & key) const;
 
 private:
-  void validate_storage(const std::vector<hardware_interface::HardwareInfo> & hardware_info) const;
+  bool validate_storage(const std::vector<hardware_interface::HardwareInfo> & hardware_info) const;
 
   void release_command_interface(const std::string & key);
 
@@ -423,7 +424,7 @@ private:
   // Structure to store read and write status so it is not initialized in the real-time loop
   HardwareReadWriteStatus read_write_status;
 
-  bool is_urdf_loaded__ = false;
+  bool is_urdf_loaded_ = false;
 };
 
 }  // namespace hardware_interface

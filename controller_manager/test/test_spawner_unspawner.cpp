@@ -31,6 +31,7 @@ using ::testing::Return;
 using namespace std::chrono_literals;
 class TestLoadController : public ControllerManagerFixture<controller_manager::ControllerManager>
 {
+public:
   void SetUp() override
   {
     ControllerManagerFixture::SetUp();
@@ -273,4 +274,83 @@ TEST_F(TestLoadController, unload_on_kill)
     << "timeout should have killed spawner and returned non 0 code";
 
   ASSERT_EQ(cm_->get_loaded_controllers().size(), 0ul);
+}
+
+class TestLoadControllerWithoutRobotDescription
+: public ControllerManagerFixture<controller_manager::ControllerManager>
+{
+public:
+  TestLoadControllerWithoutRobotDescription()
+  : ControllerManagerFixture<controller_manager::ControllerManager>("")
+  {
+  }
+
+  void SetUp() override
+  {
+    ControllerManagerFixture::SetUp();
+
+    update_timer_ = cm_->create_wall_timer(
+      std::chrono::milliseconds(10),
+      [&]()
+      {
+        cm_->read(time_, PERIOD);
+        cm_->update(time_, PERIOD);
+        cm_->write(time_, PERIOD);
+      });
+
+    update_executor_ =
+      std::make_shared<rclcpp::executors::MultiThreadedExecutor>(rclcpp::ExecutorOptions(), 2);
+
+    update_executor_->add_node(cm_);
+    update_executor_spin_future_ =
+      std::async(std::launch::async, [this]() -> void { update_executor_->spin(); });
+
+    // This sleep is needed to prevent a too fast test from ending before the
+    // executor has began to spin, which causes it to hang
+    std::this_thread::sleep_for(50ms);
+  }
+
+  void TearDown() override { update_executor_->cancel(); }
+
+  rclcpp::TimerBase::SharedPtr robot_description_sending_timer_;
+
+protected:
+  rclcpp::TimerBase::SharedPtr update_timer_;
+
+  // Using a MultiThreadedExecutor so we can call update on a separate thread from service callbacks
+  std::shared_ptr<rclcpp::Executor> update_executor_;
+  std::future<void> update_executor_spin_future_;
+};
+
+TEST_F(TestLoadControllerWithoutRobotDescription, when_no_robot_description_spawner_times_out)
+{
+  cm_->set_parameter(rclcpp::Parameter("ctrl_1.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
+
+  ControllerManagerRunner cm_runner(this);
+  EXPECT_EQ(call_spawner("ctrl_1 -c test_controller_manager"), 256)
+    << "could not spawn controller because not robot description and not services for controller "
+       "manager are active";
+}
+
+TEST_F(
+  TestLoadControllerWithoutRobotDescription,
+  controller_starting_with_later_load_of_robot_description)
+{
+  cm_->set_parameter(rclcpp::Parameter("ctrl_1.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
+
+  // Delay sending robot description
+  robot_description_sending_timer_ = cm_->create_wall_timer(
+    std::chrono::milliseconds(2500), [&]() { pass_robot_description_to_cm_and_rm(); });
+
+  ControllerManagerRunner cm_runner(this);
+  EXPECT_EQ(call_spawner("ctrl_1 -c test_controller_manager"), 0)
+    << "could not activate control because not robot description";
+
+  ASSERT_EQ(cm_->get_loaded_controllers().size(), 1ul);
+  {
+    auto ctrl_1 = cm_->get_loaded_controllers()[0];
+    ASSERT_EQ(ctrl_1.info.name, "ctrl_1");
+    ASSERT_EQ(ctrl_1.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
+    ASSERT_EQ(ctrl_1.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+  }
 }

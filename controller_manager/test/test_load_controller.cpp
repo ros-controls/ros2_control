@@ -28,8 +28,8 @@
 using test_controller::TEST_CONTROLLER_CLASS_NAME;
 using ::testing::_;
 using ::testing::Return;
-const auto controller_name1 = "test_controller1";
-const auto controller_name2 = "test_controller2";
+const auto CONTROLLER_NAME_1 = "test_controller1";
+const auto CONTROLLER_NAME_2 = "test_controller2";
 using strvec = std::vector<std::string>;
 
 class TestLoadController : public ControllerManagerFixture<controller_manager::ControllerManager>
@@ -53,7 +53,7 @@ TEST_F(TestLoadController, load_controller_failed_init)
 TEST_F(TestLoadController, configuring_non_loaded_controller_fails)
 {
   // try configure non-loaded controller
-  EXPECT_EQ(cm_->configure_controller(controller_name1), controller_interface::return_type::ERROR);
+  EXPECT_EQ(cm_->configure_controller(CONTROLLER_NAME_1), controller_interface::return_type::ERROR);
 }
 
 TEST_F(TestLoadController, can_set_and_get_non_default_update_rate)
@@ -82,7 +82,7 @@ public:
   {
     TestLoadController::SetUp();
 
-    controller_if = cm_->load_controller(controller_name1, TEST_CONTROLLER_CLASS_NAME);
+    controller_if = cm_->load_controller(CONTROLLER_NAME_1, TEST_CONTROLLER_CLASS_NAME);
     ASSERT_NE(controller_if, nullptr);
   }
 
@@ -93,7 +93,7 @@ public:
       controller_interface::return_type::OK)
   {
     switch_test_controllers(
-      strvec{controller_name1}, strvec{}, strictness, expected_future_status,
+      strvec{CONTROLLER_NAME_1}, strvec{}, strictness, expected_future_status,
       expected_interface_status);
   }
 
@@ -104,7 +104,7 @@ public:
       controller_interface::return_type::OK)
   {
     switch_test_controllers(
-      strvec{}, strvec{controller_name1}, strictness, expected_future_status,
+      strvec{}, strvec{CONTROLLER_NAME_1}, strictness, expected_future_status,
       expected_interface_status);
   }
 };
@@ -121,7 +121,7 @@ TEST_P(TestLoadedControllerParametrized, load_and_configure_one_known_controller
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, controller_if->get_state().id());
 
-  cm_->configure_controller(controller_name1);
+  cm_->configure_controller(CONTROLLER_NAME_1);
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if->get_state().id());
 }
 
@@ -129,7 +129,7 @@ TEST_P(TestLoadedControllerParametrized, can_start_configured_controller)
 {
   const auto test_param = GetParam();
 
-  EXPECT_EQ(cm_->configure_controller(controller_name1), controller_interface::return_type::OK);
+  EXPECT_EQ(cm_->configure_controller(CONTROLLER_NAME_1), controller_interface::return_type::OK);
   start_test_controller(test_param.strictness);
   ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, controller_if->get_state().id());
 }
@@ -138,7 +138,7 @@ TEST_P(TestLoadedControllerParametrized, can_stop_active_controller)
 {
   const auto test_param = GetParam();
 
-  EXPECT_EQ(cm_->configure_controller(controller_name1), controller_interface::return_type::OK);
+  EXPECT_EQ(cm_->configure_controller(CONTROLLER_NAME_1), controller_interface::return_type::OK);
 
   start_test_controller(test_param.strictness);
 
@@ -164,7 +164,7 @@ TEST_P(TestLoadedControllerParametrized, starting_and_stopping_a_controller)
     // Activate configured controller
     {
       ControllerManagerRunner cm_runner(this);
-      cm_->configure_controller(controller_name1);
+      cm_->configure_controller(CONTROLLER_NAME_1);
     }
     start_test_controller(test_param.strictness);
     ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, controller_if->get_state().id());
@@ -180,11 +180,11 @@ TEST_P(TestLoadedControllerParametrized, can_not_configure_active_controller)
 {
   const auto test_param = GetParam();
 
-  EXPECT_EQ(cm_->configure_controller(controller_name1), controller_interface::return_type::OK);
+  EXPECT_EQ(cm_->configure_controller(CONTROLLER_NAME_1), controller_interface::return_type::OK);
   start_test_controller(test_param.strictness);
 
   // Can not configure active controller
-  EXPECT_EQ(cm_->configure_controller(controller_name1), controller_interface::return_type::ERROR);
+  EXPECT_EQ(cm_->configure_controller(CONTROLLER_NAME_1), controller_interface::return_type::ERROR);
   ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, controller_if->get_state().id());
 }
 
@@ -205,7 +205,7 @@ TEST_P(TestLoadedControllerParametrized, can_not_start_finalized_controller)
     test_param.strictness, std::future_status::ready, test_param.expected_return);
 
   // Can not configure finalize controller
-  EXPECT_EQ(cm_->configure_controller(controller_name1), controller_interface::return_type::ERROR);
+  EXPECT_EQ(cm_->configure_controller(CONTROLLER_NAME_1), controller_interface::return_type::ERROR);
   ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, controller_if->get_state().id());
 }
 
@@ -213,7 +213,7 @@ TEST_P(TestLoadedControllerParametrized, inactive_controller_cannot_be_cleaned_u
 {
   const auto test_param = GetParam();
 
-  EXPECT_EQ(cm_->configure_controller(controller_name1), controller_interface::return_type::OK);
+  EXPECT_EQ(cm_->configure_controller(CONTROLLER_NAME_1), controller_interface::return_type::OK);
 
   start_test_controller(test_param.strictness);
 
@@ -227,7 +227,7 @@ TEST_P(TestLoadedControllerParametrized, inactive_controller_cannot_be_cleaned_u
   test_controller->cleanup_calls = &cleanup_calls;
   // Configure from inactive state: controller can no be cleaned-up
   test_controller->simulate_cleanup_failure = true;
-  EXPECT_EQ(cm_->configure_controller(controller_name1), controller_interface::return_type::ERROR);
+  EXPECT_EQ(cm_->configure_controller(CONTROLLER_NAME_1), controller_interface::return_type::ERROR);
   ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if->get_state().id());
   EXPECT_EQ(0u, cleanup_calls);
 }
@@ -236,7 +236,7 @@ TEST_P(TestLoadedControllerParametrized, inactive_controller_cannot_be_configure
 {
   const auto test_param = GetParam();
 
-  EXPECT_EQ(cm_->configure_controller(controller_name1), controller_interface::return_type::OK);
+  EXPECT_EQ(cm_->configure_controller(CONTROLLER_NAME_1), controller_interface::return_type::OK);
 
   start_test_controller(test_param.strictness);
 
@@ -251,7 +251,7 @@ TEST_P(TestLoadedControllerParametrized, inactive_controller_cannot_be_configure
   test_controller->simulate_cleanup_failure = false;
   {
     ControllerManagerRunner cm_runner(this);
-    EXPECT_EQ(cm_->configure_controller(controller_name1), controller_interface::return_type::OK);
+    EXPECT_EQ(cm_->configure_controller(CONTROLLER_NAME_1), controller_interface::return_type::OK);
   }
   ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if->get_state().id());
   EXPECT_EQ(1u, cleanup_calls);
@@ -270,8 +270,8 @@ class SwitchTest
 const auto UNSPECIFIED = 0;
 const auto EMPTY_STR_VEC = strvec{};
 const auto NONEXISTENT_CONTROLLER = strvec{"nonexistent_controller"};
-const auto VALID_CONTROLLER = strvec{controller_name1};
-const auto VALID_PLUS_NONEXISTENT_CONTROLLERS = strvec{controller_name1, "nonexistent_controller"};
+const auto VALID_CONTROLLER = strvec{CONTROLLER_NAME_1};
+const auto VALID_PLUS_NONEXISTENT_CONTROLLERS = strvec{CONTROLLER_NAME_1, "nonexistent_controller"};
 
 TEST_P(SwitchTest, EmptyListOrNonExistentTest)
 {
@@ -375,10 +375,10 @@ public:
   void SetUp() override
   {
     TestLoadController::SetUp();
-    controller_if1 = cm_->load_controller(controller_name1, TEST_CONTROLLER_CLASS_NAME);
+    controller_if1 = cm_->load_controller(CONTROLLER_NAME_1, TEST_CONTROLLER_CLASS_NAME);
     ASSERT_NE(controller_if1, nullptr);
     EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
-    controller_if2 = cm_->load_controller(controller_name2, TEST_CONTROLLER_CLASS_NAME);
+    controller_if2 = cm_->load_controller(CONTROLLER_NAME_2, TEST_CONTROLLER_CLASS_NAME);
     ASSERT_NE(controller_if2, nullptr);
     EXPECT_EQ(2u, cm_->get_loaded_controllers().size());
     ASSERT_EQ(
@@ -390,10 +390,10 @@ public:
 
 TEST_F(TestTwoLoadedControllers, load_and_configure_two_known_controllers)
 {
-  cm_->configure_controller(controller_name1);
+  cm_->configure_controller(CONTROLLER_NAME_1);
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if1->get_state().id());
 
-  cm_->configure_controller(controller_name2);
+  cm_->configure_controller(CONTROLLER_NAME_2);
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if2->get_state().id());
 }
 
@@ -401,11 +401,11 @@ TEST_P(TestTwoLoadedControllers, switch_multiple_controllers)
 {
   const auto test_param = GetParam();
 
-  cm_->configure_controller(controller_name1);
+  cm_->configure_controller(CONTROLLER_NAME_1);
 
   // Start controller #1
   RCLCPP_INFO(cm_->get_logger(), "Starting stopped controller #1");
-  switch_test_controllers(strvec{controller_name1}, strvec{}, test_param.strictness);
+  switch_test_controllers(strvec{CONTROLLER_NAME_1}, strvec{}, test_param.strictness);
   ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, controller_if1->get_state().id());
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, controller_if2->get_state().id());
@@ -418,10 +418,10 @@ TEST_P(TestTwoLoadedControllers, switch_multiple_controllers)
   // TODO(destogl): fix this test for BEST_EFFORT - probably related to:
   // https://github.com/ros-controls/ros2_control/pull/582#issuecomment-1029931561
   //   switch_test_controllers(
-  //     strvec{controller_name2}, strvec{controller_name1}, test_param.strictness,
+  //     strvec{CONTROLLER_NAME_2}, strvec{CONTROLLER_NAME_1}, test_param.strictness,
   //     std::future_status::ready, controller_interface::return_type::ERROR);
   switch_test_controllers(
-    strvec{controller_name2}, strvec{controller_name1}, STRICT, std::future_status::ready,
+    strvec{CONTROLLER_NAME_2}, strvec{CONTROLLER_NAME_1}, STRICT, std::future_status::ready,
     controller_interface::return_type::ERROR);
   ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, controller_if1->get_state().id());
   ASSERT_EQ(
@@ -429,31 +429,31 @@ TEST_P(TestTwoLoadedControllers, switch_multiple_controllers)
 
   {
     ControllerManagerRunner cm_runner(this);
-    cm_->configure_controller(controller_name2);
+    cm_->configure_controller(CONTROLLER_NAME_2);
   }
 
   // Stop controller 1
   RCLCPP_INFO(cm_->get_logger(), "Stopping controller #1");
-  switch_test_controllers(strvec{}, strvec{controller_name1}, test_param.strictness);
+  switch_test_controllers(strvec{}, strvec{CONTROLLER_NAME_1}, test_param.strictness);
   ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if1->get_state().id());
   ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if2->get_state().id());
 
   // Start controller 1 again
   RCLCPP_INFO(cm_->get_logger(), "Starting stopped controller #1");
-  switch_test_controllers(strvec{controller_name1}, strvec{}, test_param.strictness);
+  switch_test_controllers(strvec{CONTROLLER_NAME_1}, strvec{}, test_param.strictness);
   ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, controller_if1->get_state().id());
   ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if2->get_state().id());
 
   // Stop controller 1, start controller 2
   RCLCPP_INFO(cm_->get_logger(), "Stopping controller #1, starting controller #2");
   switch_test_controllers(
-    strvec{controller_name2}, strvec{controller_name1}, test_param.strictness);
+    strvec{CONTROLLER_NAME_2}, strvec{CONTROLLER_NAME_1}, test_param.strictness);
   ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if1->get_state().id());
   ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, controller_if2->get_state().id());
 
   // Stop controller 2
   RCLCPP_INFO(cm_->get_logger(), "Stopping controller #2");
-  switch_test_controllers(strvec{}, strvec{controller_name2}, test_param.strictness);
+  switch_test_controllers(strvec{}, strvec{CONTROLLER_NAME_2}, test_param.strictness);
   ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if2->get_state().id());
 }
 

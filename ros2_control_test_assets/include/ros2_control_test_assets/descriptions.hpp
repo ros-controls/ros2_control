@@ -258,6 +258,7 @@ const auto hardware_resources_missing_state_keys =
       <command_interface name="velocity"/>
       <state_interface name="position"/>
       <state_interface name="does_not_exist"/>
+      <command_interface name="max_acceleration" />
     </joint>
     <joint name="joint3">
       <command_interface name="velocity"/>

@@ -267,31 +267,7 @@ ControllerManager::ControllerManager(
     std::make_shared<pluginlib::ClassLoader<controller_interface::ChainableControllerInterface>>(
       kControllerInterfaceNamespace, kChainableControllerInterfaceClassName))
 {
-  if (!get_parameter("update_rate", update_rate_))
-  {
-    RCLCPP_WARN(get_logger(), "'update_rate' parameter not set, using default value.");
-  }
-
-  robot_description_ = "";
-  // TODO(destogl): remove support at the end of 2023
-  get_parameter("robot_description", robot_description_);
-  if (robot_description_.empty())
-  {
-    subscribe_to_robot_description_topic();
-  }
-  else
-  {
-    RCLCPP_WARN(
-      get_logger(),
-      "[Deprecated] Passing the robot description parameter directly to the control_manager node "
-      "is deprecated. Use '~/robot_description' topic from 'robot_state_publisher' instead.");
-    init_resource_manager(robot_description_);
-    init_services();
-  }
-
-  diagnostics_updater_.setHardwareID("ros2_control");
-  diagnostics_updater_.add(
-    "Controllers Activity", this, &ControllerManager::controller_activity_diagnostic_callback);
+  init_controller_manager();
 }
 
 ControllerManager::ControllerManager(
@@ -308,24 +284,25 @@ ControllerManager::ControllerManager(
     std::make_shared<pluginlib::ClassLoader<controller_interface::ChainableControllerInterface>>(
       kControllerInterfaceNamespace, kChainableControllerInterfaceClassName))
 {
+  init_controller_manager();
+}
+
+void ControllerManager::init_controller_manager()
+{
+  // Get parameters needed for RT "update" loop to work
   if (!get_parameter("update_rate", update_rate_))
   {
     RCLCPP_WARN(get_logger(), "'update_rate' parameter not set, using default value.");
   }
 
-  if (resource_manager_->is_urdf_already_loaded())
-  {
-    init_services();
-  }
-  subscribe_to_robot_description_topic();
+  robot_description_notification_timer_ = create_wall_timer(
+    std::chrono::seconds(1),
+    [&]()
+    {
+      RCLCPP_WARN(
+        get_logger(), "Waiting for data on '~/robot_description' topic to finish initialization");
+    });
 
-  diagnostics_updater_.setHardwareID("ros2_control");
-  diagnostics_updater_.add(
-    "Controllers Activity", this, &ControllerManager::controller_activity_diagnostic_callback);
-}
-
-void ControllerManager::subscribe_to_robot_description_topic()
-{
   // set QoS to transient local to get messages that have already been published
   // (if robot state publisher starts before controller manager)
   robot_description_subscription_ = create_subscription<std_msgs::msg::String>(
@@ -334,6 +311,11 @@ void ControllerManager::subscribe_to_robot_description_topic()
   RCLCPP_INFO(
     get_logger(), "Subscribing to '%s' topic for robot description.",
     robot_description_subscription_->get_topic_name());
+
+  // Setup diagnostics
+  diagnostics_updater_.setHardwareID("ros2_control");
+  diagnostics_updater_.add(
+    "Controllers Activity", this, &ControllerManager::controller_activity_diagnostic_callback);
 }
 
 void ControllerManager::robot_description_callback(const std_msgs::msg::String & robot_description)
@@ -341,36 +323,28 @@ void ControllerManager::robot_description_callback(const std_msgs::msg::String &
   RCLCPP_INFO(get_logger(), "Received robot description from topic.");
   RCLCPP_DEBUG(
     get_logger(), "'Content of robot description file: %s", robot_description.data.c_str());
-  // TODO(Manuel): errors should probably be caught since we don't want controller_manager node
-  // to die if a non valid urdf is passed. However, should maybe be fine tuned.
-  try
+  robot_description_ = robot_description.data;
+  if (resource_manager_->is_urdf_already_loaded())
   {
-    robot_description_ = robot_description.data;
-    if (resource_manager_->is_urdf_already_loaded())
-    {
-      RCLCPP_WARN(
-        get_logger(),
-        "ResourceManager has already loaded an urdf file. Ignoring attempt to reload a robot "
-        "description file.");
-      return;
-    }
-    init_resource_manager(robot_description_);
-    init_services();
-  }
-  catch (std::runtime_error & e)
-  {
-    RCLCPP_ERROR_STREAM(
+    RCLCPP_WARN(
       get_logger(),
-      "The published robot description file (urdf) seems not to be genuine. The following error "
-      "was caught:"
-        << e.what());
+      "ResourceManager has already loaded an urdf file. Ignoring attempt to reload a robot "
+      "description file.");
+    return;
   }
+  init_resource_manager(robot_description_);
 }
 
 void ControllerManager::init_resource_manager(const std::string & robot_description)
 {
-  // TODO(destogl): manage this when there is an error - CM should not die because URDF is wrong...
-  resource_manager_->load_urdf(robot_description);
+  if (!resource_manager_->load_and_initialize_components(robot_description))
+  {
+    RCLCPP_WARN(
+      get_logger(),
+      "URDF validation went wrong check the previous output. This might only mean that interfaces "
+      "defined in URDF and exported by the hardware do not match. Therefore continue initializing "
+      "controller manager...");
+  }
 
   // Get all components and if they are not defined in parameters activate them automatically
   auto components_to_activate = resource_manager_->get_components_status();
@@ -414,57 +388,22 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
       State::PRIMARY_STATE_UNCONFIGURED, hardware_interface::lifecycle_state_names::UNCONFIGURED));
 
   // inactive (configured)
-  // BEGIN: Keep old functionality on for backwards compatibility (Remove at the end of 2023)
-  std::vector<std::string> configure_components_on_start = std::vector<std::string>({});
-  get_parameter("configure_components_on_start", configure_components_on_start);
-  if (!configure_components_on_start.empty())
-  {
-    RCLCPP_WARN(
-      get_logger(),
-      "Parameter 'configure_components_on_start' is deprecated. "
-      "Use 'hardware_components_initial_state.inactive' instead, to set component's initial "
-      "state to 'inactive'. Don't use this parameters in combination with the new "
-      "'hardware_components_initial_state' parameter structure.");
-    set_components_to_state(
-      "configure_components_on_start",
-      rclcpp_lifecycle::State(
-        State::PRIMARY_STATE_INACTIVE, hardware_interface::lifecycle_state_names::INACTIVE));
-  }
-  // END: Keep old functionality on humble backwards compatibility (Remove at the end of 2023)
-  else
-  {
-    set_components_to_state(
-      "hardware_components_initial_state.inactive",
-      rclcpp_lifecycle::State(
-        State::PRIMARY_STATE_INACTIVE, hardware_interface::lifecycle_state_names::INACTIVE));
-  }
+  set_components_to_state(
+    "hardware_components_initial_state.inactive",
+    rclcpp_lifecycle::State(
+      State::PRIMARY_STATE_INACTIVE, hardware_interface::lifecycle_state_names::INACTIVE));
 
-  // BEGIN: Keep old functionality on for backwards compatibility (Remove at the end of 2023)
-  std::vector<std::string> activate_components_on_start = std::vector<std::string>({});
-  get_parameter("activate_components_on_start", activate_components_on_start);
+  // activate all other components
   rclcpp_lifecycle::State active_state(
     State::PRIMARY_STATE_ACTIVE, hardware_interface::lifecycle_state_names::ACTIVE);
-  if (!activate_components_on_start.empty())
+  for (const auto & [component, state] : components_to_activate)
   {
-    RCLCPP_WARN(
-      get_logger(),
-      "Parameter 'activate_components_on_start' is deprecated. "
-      "Components are activated per default. Don't use this parameters in combination with the new "
-      "'hardware_components_initial_state' parameter structure.");
-    for (const auto & component : activate_components_on_start)
-    {
-      resource_manager_->set_component_state(component, active_state);
-    }
+    resource_manager_->set_component_state(component, active_state);
   }
-  // END: Keep old functionality on humble for backwards compatibility (Remove at the end of 2023)
-  else
-  {
-    // activate all other components
-    for (const auto & [component, state] : components_to_activate)
-    {
-      resource_manager_->set_component_state(component, active_state);
-    }
-  }
+
+  // Init CM services first after the URDF is loaded an components are set
+  init_services();
+  robot_description_notification_timer_->cancel();
 }
 
 void ControllerManager::init_services()
@@ -838,6 +777,15 @@ controller_interface::return_type ControllerManager::switch_controller(
   const std::vector<std::string> & deactivate_controllers, int strictness, bool activate_asap,
   const rclcpp::Duration & timeout)
 {
+  if (!resource_manager_->is_urdf_already_loaded())
+  {
+    RCLCPP_ERROR(
+      get_logger(),
+      "Resource Manager is not initialized yet! Please provide robot description on "
+      "'~/robot_description' topic before trying to switch controllers.");
+    return controller_interface::return_type::ERROR;
+  }
+
   switch_params_ = SwitchParams();
 
   if (!deactivate_request_.empty() || !activate_request_.empty())
@@ -877,14 +825,15 @@ controller_interface::return_type ControllerManager::switch_controller(
     strictness = controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT;
   }
 
-  RCLCPP_DEBUG(get_logger(), "Switching controllers:");
+  RCLCPP_DEBUG(get_logger(), "Activating controllers:");
   for (const auto & controller : activate_controllers)
   {
-    RCLCPP_DEBUG(get_logger(), "- Activating controller '%s'", controller.c_str());
+    RCLCPP_DEBUG(get_logger(), " - %s", controller.c_str());
   }
+  RCLCPP_DEBUG(get_logger(), "Deactivating controllers:");
   for (const auto & controller : deactivate_controllers)
   {
-    RCLCPP_DEBUG(get_logger(), "- Deactivating controller '%s'", controller.c_str());
+    RCLCPP_DEBUG(get_logger(), " - %s", controller.c_str());
   }
 
   const auto list_controllers = [this, strictness](
@@ -1222,18 +1171,24 @@ controller_interface::return_type ControllerManager::switch_controller(
     return controller_interface::return_type::OK;
   }
 
-  if (
-    !activate_command_interface_request_.empty() || !deactivate_command_interface_request_.empty())
+  RCLCPP_DEBUG(get_logger(), "Request for command interfaces from activating controllers:");
+  for (const auto & interface : activate_command_interface_request_)
   {
-    if (!resource_manager_->prepare_command_mode_switch(
-          activate_command_interface_request_, deactivate_command_interface_request_))
-    {
-      RCLCPP_ERROR(
-        get_logger(),
-        "Could not switch controllers since prepare command mode switch was rejected.");
-      clear_requests();
-      return controller_interface::return_type::ERROR;
-    }
+    RCLCPP_DEBUG(get_logger(), " - %s", interface.c_str());
+  }
+  RCLCPP_DEBUG(get_logger(), "Request for command interfaces from deactivating controllers:");
+  for (const auto & interface : deactivate_command_interface_request_)
+  {
+    RCLCPP_DEBUG(get_logger(), " - %s", interface.c_str());
+  }
+
+  if (!resource_manager_->prepare_command_mode_switch(
+        activate_command_interface_request_, deactivate_command_interface_request_))
+  {
+    RCLCPP_ERROR(
+      get_logger(), "Could not switch controllers since prepare command mode switch was rejected.");
+    clear_requests();
+    return controller_interface::return_type::ERROR;
   }
 
   // start the atomic controller switching
