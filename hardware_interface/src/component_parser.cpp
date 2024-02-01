@@ -655,7 +655,7 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
         if (mimicked_joint_it == hw_info.joints.cend())
         {
           throw std::runtime_error(
-            std::string("Mimicked joint '") + joint.parameters.at("mimic") + "' not found");
+            "Mimicked joint '" + joint.parameters.at("mimic") + "' not found");
         }
         hardware_interface::MimicJoint mimic_joint;
         mimic_joint.joint_index = i;
@@ -684,15 +684,15 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
         if (!urdf_joint->mimic && joint.is_mimic == MimicAttribute::TRUE)
         {
           throw std::runtime_error(
-            "Joint '" + std::string(joint.name) + "' has no mimic information in the URDF.");
+            "Joint '" + joint.name + "' has no mimic information in the URDF.");
         }
         if (urdf_joint->mimic && joint.is_mimic != MimicAttribute::FALSE)
         {
           if (joint.command_interfaces.size() > 0)
           {
             throw std::runtime_error(
-              "Joint '" + std::string(joint.name) +
-              "' has mimic attribute not set to false: Mimic joints cannot have command "
+              "Joint '" + joint.name +
+              "' has mimic attribute not set to false: Activated mimic joints cannot have command "
               "interfaces.");
           }
           auto find_joint = [&hw_info](const std::string & name)
