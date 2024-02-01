@@ -352,8 +352,8 @@ ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it
   if (component.is_mimic && command_interfaces_it)
   {
     throw std::runtime_error(
-      "Component " + std::string(component.name) +
-      " has mimic attribute set to true: Mimic joints cannot have command interfaces.");
+      "Component '" + std::string(component.name) +
+      "' has mimic attribute set to true: Mimic joints cannot have command interfaces.");
   }
   while (command_interfaces_it)
   {
@@ -662,6 +662,7 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
       const auto & joint = hw_info.joints.at(i);
 
       // Search for mimic joints defined in ros2_control tag (deprecated)
+      // TODO(christophfroehlich) delete deprecated config with ROS-J
       if (joint.parameters.find("mimic") != joint.parameters.cend())
       {
         std::cerr << "Warning: Mimic joints defined in ros2_control tag are deprecated. "
@@ -712,7 +713,7 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
                 [&name](const auto & j) { return j.name == name; });
               if (it == hw_info.joints.end())
               {
-                throw std::runtime_error("Joint `" + name + "` not found in hw_info.joints");
+                throw std::runtime_error("Joint '" + name + "' not found in hw_info.joints");
               }
               return std::distance(hw_info.joints.begin(), it);
             };
@@ -726,7 +727,7 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
           }
           else
           {
-            throw std::runtime_error("Joint `" + joint.name + "` has no mimic information in URDF");
+            throw std::runtime_error("Joint '" + joint.name + "' has no mimic information in URDF");
           }
         }
       }
