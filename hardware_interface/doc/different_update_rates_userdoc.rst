@@ -19,6 +19,8 @@ and `write(...) <https://github.com/ros-controls/ros2_control/blob/fe462926416d5
 calls in `hardware_interface(s) <https://github.com/ros-controls/ros2_control/blob/{REPOS_FILE_BRANCH}/hardware_interface/include/hardware_interface/system_interface.hpp>`_.
 To achieve different update rates for your hardware component you can use the following steps:
 
+.. _step-1:
+
 1. Add parameters of main control loop update rate and desired update rate for your hardware component
 
   .. code:: xml
@@ -40,6 +42,8 @@ To achieve different update rates for your hardware component you can use the fo
       </xacro:macro>
 
     </robot>
+
+.. _step-2:
 
 2. In you ``on_init()`` specific implementation fetch the desired parameters
 
@@ -131,7 +135,7 @@ implementations is to measure elapsed time since last pass:
 
       hardware_interface::return_type MySystemHardware::read(const rclcpp::Time & time, const rclcpp::Duration & period)
       {
-          if (first_read_pass_ || (time - last_read_time_ ) > period)
+          if (first_read_pass_ || (time - last_read_time_ ) > desired_hw_update_period_)
           {
             first_read_pass_ = false;
             //   declaration in *.hpp file --> rclcpp::Time last_read_time_ ;
@@ -144,7 +148,7 @@ implementations is to measure elapsed time since last pass:
 
       hardware_interface::return_type MySystemHardware::write(const rclcpp::Time & time, const rclcpp::Duration & period)
       {
-          if (first_write_pass_ || (time - last_write_time_ ) > period)
+          if (first_write_pass_ || (time - last_write_time_ ) > desired_hw_update_period_)
           {
             first_write_pass_ = false;
             //   declaration in *.hpp file --> rclcpp::Time last_write_time_ ;
@@ -154,3 +158,12 @@ implementations is to measure elapsed time since last pass:
           }
           ...
       }
+
+.. note::
+
+  The approach to get the desired update period value from the URDF and assign it to the variable
+  ``desired_hw_update_period_`` is the same as in the previous section (|step-1|_ and |step-2|_) but
+  with a different parameter name.
+
+.. |step-1| replace:: step 1
+.. |step-2| replace:: step 2
