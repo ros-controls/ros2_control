@@ -281,6 +281,10 @@ ControllerManager::ControllerManager(
   }
   else
   {
+    RCLCPP_WARN(
+      get_logger(),
+      "[Deprecated] Passing the robot description parameter directly to the control_manager node "
+      "is deprecated. Use '~/robot_description' topic from 'robot_state_publisher' instead.");
     init_resource_manager(robot_description_);
     init_services();
   }
