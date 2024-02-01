@@ -314,15 +314,14 @@ protected:
   std::unordered_map<std::string, InterfaceDescription> unlisted_state_interfaces_;
 
 private:
+  std::unordered_map<std::string, std::shared_ptr<StateInterface>> sensor_states_;
+
   std::shared_ptr<StateInterface> error_signal_;
   std::shared_ptr<StateInterface> error_signal_message_;
   std::shared_ptr<StateInterface> warning_signal_;
   std::shared_ptr<StateInterface> warning_signal_message_;
 
   rclcpp_lifecycle::State lifecycle_state_;
-
-private:
-  std::unordered_map<std::string, std::shared_ptr<StateInterface>> sensor_states_;
 };
 
 }  // namespace hardware_interface

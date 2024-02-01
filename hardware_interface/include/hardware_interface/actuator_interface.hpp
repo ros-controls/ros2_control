@@ -482,6 +482,9 @@ protected:
   std::unordered_map<std::string, InterfaceDescription> unlisted_command_interfaces_;
 
 private:
+  std::unordered_map<std::string, std::shared_ptr<StateInterface>> actuator_states_;
+  std::unordered_map<std::string, std::shared_ptr<CommandInterface>> actuator_commands_;
+
   std::shared_ptr<StateInterface> emergency_stop_;
   std::shared_ptr<StateInterface> error_signal_;
   std::shared_ptr<StateInterface> error_signal_message_;
@@ -489,10 +492,6 @@ private:
   std::shared_ptr<StateInterface> warning_signal_message_;
 
   rclcpp_lifecycle::State lifecycle_state_;
-
-private:
-  std::unordered_map<std::string, std::shared_ptr<StateInterface>> actuator_states_;
-  std::unordered_map<std::string, std::shared_ptr<CommandInterface>> actuator_commands_;
 };
 
 }  // namespace hardware_interface
