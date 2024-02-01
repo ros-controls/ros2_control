@@ -113,6 +113,34 @@ const auto urdf_head =
       </geometry>
     </collision>
   </link>
+  <joint name="joint3" type="revolute">
+    <origin rpy="1.57079632679 0 0" xyz="0 0 0.9"/>
+    <parent link="link2"/>
+    <child link="link3"/>
+    <limit effort="0.1" lower="-3.14159265359" upper="3.14159265359" velocity="0.2"/>
+  </joint>
+  <link name="link3">
+    <inertial>
+      <mass value="0.01"/>
+      <origin xyz="0 0 0"/>
+      <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <cylinder length="1" radius="0.1"/>
+      </geometry>
+      <material name="DarkGrey">
+        <color rgba="0.4 0.4 0.4 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <cylinder length="1" radius="0.1"/>
+      </geometry>
+    </collision>
+  </link>
   <joint name="tool_joint" type="fixed">
     <origin rpy="0 0 0" xyz="0 0 1"/>
     <parent link="link2"/>
@@ -169,10 +197,10 @@ const auto hardware_resources =
       <state_interface name="velocity"/>
       <state_interface name="acceleration"/>
     </joint>
-    <joint name="configuration">
+    <gpio name="configuration">
       <command_interface name="max_tcp_jerk"/>
       <state_interface name="max_tcp_jerk"/>
-    </joint>
+    </gpio>
   </ros2_control>
 )";
 
@@ -858,10 +886,10 @@ const auto minimal_robot_missing_command_keys_urdf =
 [[maybe_unused]] const std::string TEST_SYSTEM_HARDWARE_TYPE = "system";
 [[maybe_unused]] const std::string TEST_SYSTEM_HARDWARE_PLUGIN_NAME = "test_system";
 [[maybe_unused]] const std::vector<std::string> TEST_SYSTEM_HARDWARE_COMMAND_INTERFACES = {
-  "joint2/velocity", "joint2/max_acceleration", "joint3/velocity", "configuration/max_tcp_jerk"};
+  "joint2/velocity", "joint2/max_acceleration", "joint3/velocity"};
 [[maybe_unused]] const std::vector<std::string> TEST_SYSTEM_HARDWARE_STATE_INTERFACES = {
-  "joint2/position", "joint2/velocity",     "joint2/acceleration",       "joint3/position",
-  "joint3/velocity", "joint3/acceleration", "configuration/max_tcp_jerk"};
+  "joint2/position", "joint2/velocity", "joint2/acceleration",
+  "joint3/position", "joint3/velocity", "joint3/acceleration"};
 
 }  // namespace ros2_control_test_assets
 

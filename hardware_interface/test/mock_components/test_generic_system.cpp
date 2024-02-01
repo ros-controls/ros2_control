@@ -142,12 +142,12 @@ protected:
         <param name="initial_value">0.2</param>
       </state_interface>
     </joint>
-    <joint name="voltage_output">
+    <gpio name="voltage_output">
       <command_interface name="voltage"/>
       <state_interface name="voltage">
         <param name="initial_value">0.5</param>
       </state_interface>
-    </joint>
+    </gpio>
   </ros2_control>
 )";
 
