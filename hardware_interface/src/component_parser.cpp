@@ -318,7 +318,7 @@ ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it
   component.type = component_it->Name();
   component.name = get_attribute_value(component_it, kNameAttribute, component.type);
 
-  if (!component.type.compare(kJointTag))
+  if (std::string(kJointTag) == component.type)
   {
     try
     {
@@ -548,7 +548,7 @@ HardwareInfo parse_resource_from_xml(
   const auto * ros2_control_child_it = ros2_control_it->FirstChildElement();
   while (ros2_control_child_it)
   {
-    if (!std::string(kHardwareTag).compare(ros2_control_child_it->Name()))
+    if (std::string(kHardwareTag) == ros2_control_child_it->Name())
     {
       const auto * type_it = ros2_control_child_it->FirstChildElement(kPluginNameTag);
       hardware.hardware_plugin_name =
@@ -559,19 +559,19 @@ HardwareInfo parse_resource_from_xml(
         hardware.hardware_parameters = parse_parameters_from_xml(params_it);
       }
     }
-    else if (!std::string(kJointTag).compare(ros2_control_child_it->Name()))
+    else if (std::string(kJointTag) == ros2_control_child_it->Name())
     {
       hardware.joints.push_back(parse_component_from_xml(ros2_control_child_it));
     }
-    else if (!std::string(kSensorTag).compare(ros2_control_child_it->Name()))
+    else if (std::string(kSensorTag) == ros2_control_child_it->Name())
     {
       hardware.sensors.push_back(parse_component_from_xml(ros2_control_child_it));
     }
-    else if (!std::string(kGPIOTag).compare(ros2_control_child_it->Name()))
+    else if (std::string(kGPIOTag) == ros2_control_child_it->Name())
     {
       hardware.gpios.push_back(parse_complex_component_from_xml(ros2_control_child_it));
     }
-    else if (!std::string(kTransmissionTag).compare(ros2_control_child_it->Name()))
+    else if (std::string(kTransmissionTag) == ros2_control_child_it->Name())
     {
       hardware.transmissions.push_back(parse_transmission_from_xml(ros2_control_child_it));
     }
@@ -611,7 +611,7 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
   // Find robot tag
   const tinyxml2::XMLElement * robot_it = doc.RootElement();
 
-  if (std::string(kRobotTag).compare(robot_it->Name()))
+  if (std::string(kRobotTag) != robot_it->Name())
   {
     throw std::runtime_error("the robot tag is not root element in URDF");
   }
