@@ -21,6 +21,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "urdf/model.h"
+
 #include "hardware_interface/component_parser.hpp"
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/lexical_casts.hpp"
@@ -42,6 +44,7 @@ constexpr const auto kStateInterfaceTag = "state_interface";
 constexpr const auto kMinTag = "min";
 constexpr const auto kMaxTag = "max";
 constexpr const auto kInitialValueTag = "initial_value";
+constexpr const auto kMimicAttribute = "mimic";
 constexpr const auto kDataTypeAttribute = "data_type";
 constexpr const auto kSizeAttribute = "size";
 constexpr const auto kNameAttribute = "name";
@@ -95,6 +98,29 @@ std::string get_attribute_value(
   {
     throw std::runtime_error(
       "no attribute " + std::string(attribute_name) + " in " + tag_name + " tag");
+  }
+  return element_it->Attribute(attribute_name);
+}
+
+/// Gets value of the attribute on an XMLelement.
+/**
+ * If parameter is not found, returns specified default value
+ *
+ * \param[in] element_it XMLElement iterator to search for the attribute
+ * \param[in] attribute_name attribute name to search for and return value
+ * \param[in] default_value When the attribute is not found, this value is returned instead
+ * \return attribute value
+ * \throws std::runtime_error if attribute is not found
+ */
+std::string get_attribute_value_or(
+  const tinyxml2::XMLElement * element_it, const char * attribute_name,
+  const std::string default_value)
+{
+  const tinyxml2::XMLAttribute * attr;
+  attr = element_it->FindAttribute(attribute_name);
+  if (!attr)
+  {
+    return default_value;
   }
   return element_it->Attribute(attribute_name);
 }
@@ -305,7 +331,7 @@ hardware_interface::InterfaceInfo parse_interfaces_from_xml(
  * \param[in] component_it pointer to the iterator where component
  * info should be found
  * \return ComponentInfo filled with information about component
- * \throws std::runtime_error if a component attribute or tag is not found
+ * \throws std::runtime_error if a component attribute or tag is not found or false configuration
  */
 ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it)
 {
@@ -315,8 +341,20 @@ ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it
   component.type = component_it->Name();
   component.name = get_attribute_value(component_it, kNameAttribute, component.type);
 
+  if (!component.type.compare(kJointTag))
+  {
+    std::string mimic_str = get_attribute_value_or(component_it, kMimicAttribute, "false");
+    component.is_mimic = mimic_str.compare("true") == 0;
+  }
+
   // Parse all command interfaces
   const auto * command_interfaces_it = component_it->FirstChildElement(kCommandInterfaceTag);
+  if (component.is_mimic && command_interfaces_it)
+  {
+    throw std::runtime_error(
+      "Component " + std::string(component.name) +
+      " has mimic attribute set to true: Mimic joints cannot have command interfaces.");
+  }
   while (command_interfaces_it)
   {
     component.command_interfaces.push_back(parse_interfaces_from_xml(command_interfaces_it));
@@ -609,6 +647,52 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
   {
     hardware_info.push_back(detail::parse_resource_from_xml(ros2_control_it, urdf));
     ros2_control_it = ros2_control_it->NextSiblingElement(kROS2ControlTag);
+  }
+
+  // parse full URDF for mimic options
+  urdf::Model model;
+  if (!model.initString(urdf))
+  {
+    throw std::runtime_error("Failed to parse URDF file");
+  }
+  for (auto & hw_info : hardware_info)
+  {
+    for (auto joint : hw_info.joints)
+    {
+      auto urdf_joint = model.getJoint(joint.name);
+      if (!urdf_joint)
+      {
+        throw std::runtime_error("Joint " + joint.name + " not found in URDF");
+      }
+      if (joint.is_mimic)
+      {
+        if (urdf_joint->mimic)
+        {
+          auto find_joint = [&hw_info](const std::string & name)
+          {
+            auto it = std::find_if(
+              hw_info.joints.begin(), hw_info.joints.end(),
+              [&name](const auto & j) { return j.name == name; });
+            if (it == hw_info.joints.end())
+            {
+              throw std::runtime_error("Joint `" + name + "` not found in hw_info.joints");
+            }
+            return std::distance(hw_info.joints.begin(), it);
+          };
+
+          MimicJoint mimic_joint;
+          mimic_joint.joint_index = find_joint(joint.name);
+          mimic_joint.mimicked_joint_index = find_joint(urdf_joint->mimic->joint_name);
+          mimic_joint.multiplier = urdf_joint->mimic->multiplier;
+          mimic_joint.offset = urdf_joint->mimic->offset;
+          hw_info.mimic_joints.push_back(mimic_joint);
+        }
+        else
+        {
+          throw std::runtime_error("Joint `" + joint.name + "` has no mimic information in URDF");
+        }
+      }
+    }
   }
 
   return hardware_info;

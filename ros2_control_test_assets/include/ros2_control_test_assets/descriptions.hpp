@@ -453,6 +453,379 @@ const auto diffbot_urdf =
 </robot>
 )";
 
+const auto gripper_urdf_head =
+  R"(<?xml version="1.0" ?>
+<robot name="gripper">
+  <link name="world"/>
+  <link name="base">
+    <visual>
+      <geometry>
+        <box size="0.5 1 1"/>
+      </geometry>
+      <origin xyz="0 0 0.5"/>
+      <material name="violet">
+        <color rgba="0.4 0.18 0.57 1.0" />
+      </material>
+    </visual>
+    <inertial>
+      <mass value="50"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+  </link>
+  <link name="finger_right">
+    <visual>
+      <geometry>
+        <box size="0.4 0.1 1"/>
+      </geometry>
+      <origin xyz="0 0.05 0.5"/>
+      <material name="grey">
+        <color rgba="0.2 0.2 0.2 1"/>
+      </material>
+    </visual>
+    <inertial>
+      <mass value="5"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+  </link>
+  <link name="finger_left">
+    <visual>
+      <geometry>
+        <box size="0.4 0.1 1"/>
+      </geometry>
+      <origin xyz="0 0.05 0.5"/>
+      <material name="grey">
+        <color rgba="0.2 0.2 0.2 1"/>
+      </material>
+    </visual>
+    <inertial>
+      <mass value="5"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+  </link>
+  <joint name="world_to_base" type="fixed">
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+    <parent link="world"/>
+    <child link="base"/>
+  </joint>
+  <joint name="right_finger_joint" type="prismatic">
+    <axis xyz="0 1 0"/>
+    <origin xyz="0.0 -0.48 1" rpy="0.0 0.0 0.0"/>
+    <parent link="base"/>
+    <child link="finger_right"/>
+    <limit effort="1000.0" lower="0" upper="0.38" velocity="10"/>
+  </joint>
+  <joint name="left_finger_joint" type="prismatic">
+    <mimic joint="right_finger_joint" multiplier="1" offset="0"/>
+    <axis xyz="0 1 0"/>
+    <origin xyz="0.0 0.48 1" rpy="0.0 0.0 3.1415926535"/>
+    <parent link="base"/>
+    <child link="finger_left"/>
+    <limit effort="1000.0" lower="0" upper="0.38" velocity="10"/>
+  </joint>
+)";
+
+const auto gripper_urdf_head_no_mimic =
+  R"(<?xml version="1.0" ?>
+<robot name="gripper">
+  <link name="world"/>
+  <link name="base">
+    <visual>
+      <geometry>
+        <box size="0.5 1 1"/>
+      </geometry>
+      <origin xyz="0 0 0.5"/>
+      <material name="violet">
+        <color rgba="0.4 0.18 0.57 1.0" />
+      </material>
+    </visual>
+    <inertial>
+      <mass value="50"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+  </link>
+  <link name="finger_right">
+    <visual>
+      <geometry>
+        <box size="0.4 0.1 1"/>
+      </geometry>
+      <origin xyz="0 0.05 0.5"/>
+      <material name="grey">
+        <color rgba="0.2 0.2 0.2 1"/>
+      </material>
+    </visual>
+    <inertial>
+      <mass value="5"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+  </link>
+  <link name="finger_left">
+    <visual>
+      <geometry>
+        <box size="0.4 0.1 1"/>
+      </geometry>
+      <origin xyz="0 0.05 0.5"/>
+      <material name="grey">
+        <color rgba="0.2 0.2 0.2 1"/>
+      </material>
+    </visual>
+    <inertial>
+      <mass value="5"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+  </link>
+  <joint name="world_to_base" type="fixed">
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+    <parent link="world"/>
+    <child link="base"/>
+  </joint>
+  <joint name="right_finger_joint" type="prismatic">
+    <axis xyz="0 1 0"/>
+    <origin xyz="0.0 -0.48 1" rpy="0.0 0.0 0.0"/>
+    <parent link="base"/>
+    <child link="finger_right"/>
+    <limit effort="1000.0" lower="0" upper="0.38" velocity="10"/>
+  </joint>
+  <joint name="left_finger_joint" type="prismatic">
+    <axis xyz="0 1 0"/>
+    <origin xyz="0.0 0.48 1" rpy="0.0 0.0 3.1415926535"/>
+    <parent link="base"/>
+    <child link="finger_left"/>
+    <limit effort="1000.0" lower="0" upper="0.38" velocity="10"/>
+  </joint>
+)";
+
+const auto gripper_urdf_head_unknown_joint =
+  R"(<?xml version="1.0" ?>
+<robot name="gripper">
+  <link name="world"/>
+  <link name="base">
+    <visual>
+      <geometry>
+        <box size="0.5 1 1"/>
+      </geometry>
+      <origin xyz="0 0 0.5"/>
+      <material name="violet">
+        <color rgba="0.4 0.18 0.57 1.0" />
+      </material>
+    </visual>
+    <inertial>
+      <mass value="50"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+  </link>
+  <link name="finger_right">
+    <visual>
+      <geometry>
+        <box size="0.4 0.1 1"/>
+      </geometry>
+      <origin xyz="0 0.05 0.5"/>
+      <material name="grey">
+        <color rgba="0.2 0.2 0.2 1"/>
+      </material>
+    </visual>
+    <inertial>
+      <mass value="5"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+  </link>
+  <link name="finger_left">
+    <visual>
+      <geometry>
+        <box size="0.4 0.1 1"/>
+      </geometry>
+      <origin xyz="0 0.05 0.5"/>
+      <material name="grey">
+        <color rgba="0.2 0.2 0.2 1"/>
+      </material>
+    </visual>
+    <inertial>
+      <mass value="5"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+  </link>
+  <joint name="world_to_base" type="fixed">
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+    <parent link="world"/>
+    <child link="base"/>
+  </joint>
+  <joint name="right_finger_joint" type="prismatic">
+    <axis xyz="0 1 0"/>
+    <origin xyz="0.0 -0.48 1" rpy="0.0 0.0 0.0"/>
+    <parent link="base"/>
+    <child link="finger_right"/>
+    <limit effort="1000.0" lower="0" upper="0.38" velocity="10"/>
+  </joint>
+  <joint name="left_finger_joint" type="prismatic">
+    <mimic joint="middle_finger_joint" multiplier="1" offset="0"/>
+    <axis xyz="0 1 0"/>
+    <origin xyz="0.0 0.48 1" rpy="0.0 0.0 3.1415926535"/>
+    <parent link="base"/>
+    <child link="finger_left"/>
+    <limit effort="1000.0" lower="0" upper="0.38" velocity="10"/>
+  </joint>
+)";
+
+const auto gripper_urdf_head_incomplete =
+  R"(<?xml version="1.0" ?>
+<robot name="gripper">
+  <link name="world"/>
+  <link name="base">
+    <visual>
+      <geometry>
+        <box size="0.5 1 1"/>
+      </geometry>
+      <origin xyz="0 0 0.5"/>
+      <material name="violet">
+        <color rgba="0.4 0.18 0.57 1.0" />
+      </material>
+    </visual>
+    <inertial>
+      <mass value="50"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+  </link>
+  <link name="finger_right">
+    <visual>
+      <geometry>
+        <box size="0.4 0.1 1"/>
+      </geometry>
+      <origin xyz="0 0.05 0.5"/>
+      <material name="grey">
+        <color rgba="0.2 0.2 0.2 1"/>
+      </material>
+    </visual>
+    <inertial>
+      <mass value="5"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+  </link>
+  <joint name="world_to_base" type="fixed">
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+    <parent link="world"/>
+    <child link="base"/>
+  </joint>
+  <joint name="right_finger_joint" type="prismatic">
+    <axis xyz="0 1 0"/>
+    <origin xyz="0.0 -0.48 1" rpy="0.0 0.0 0.0"/>
+    <parent link="base"/>
+    <child link="finger_right"/>
+    <limit effort="1000.0" lower="0" upper="0.38" velocity="10"/>
+  </joint>
+)";
+
+const auto gripper_urdf_head_two_base_links =
+  R"(<?xml version="1.0" ?>
+<robot name="gripper">
+  <link name="world"/>
+  <link name="base">
+    <visual>
+      <geometry>
+        <box size="0.5 1 1"/>
+      </geometry>
+      <origin xyz="0 0 0.5"/>
+      <material name="violet">
+        <color rgba="0.4 0.18 0.57 1.0" />
+      </material>
+    </visual>
+    <inertial>
+      <mass value="50"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+  </link>
+  <link name="finger_right">
+    <visual>
+      <geometry>
+        <box size="0.4 0.1 1"/>
+      </geometry>
+      <origin xyz="0 0.05 0.5"/>
+      <material name="grey">
+        <color rgba="0.2 0.2 0.2 1"/>
+      </material>
+    </visual>
+    <inertial>
+      <mass value="5"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+  </link>
+  <link name="finger_left">
+    <visual>
+      <geometry>
+        <box size="0.4 0.1 1"/>
+      </geometry>
+      <origin xyz="0 0.05 0.5"/>
+      <material name="grey">
+        <color rgba="0.2 0.2 0.2 1"/>
+      </material>
+    </visual>
+    <inertial>
+      <mass value="5"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+  </link>
+  <joint name="world_to_base" type="fixed">
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+    <parent link="world"/>
+    <child link="base"/>
+  </joint>
+  <joint name="right_finger_joint" type="prismatic">
+    <axis xyz="0 1 0"/>
+    <origin xyz="0.0 -0.48 1" rpy="0.0 0.0 0.0"/>
+    <parent link="base"/>
+    <child link="finger_right"/>
+    <limit effort="1000.0" lower="0" upper="0.38" velocity="10"/>
+  </joint>
+)";
+
+const auto gripper_hardware_resources_mimic_true_no_command_if =
+  R"(
+  <ros2_control name="TestGripper" type="system">
+    <joint name="right_finger_joint">
+      <command_interface name="effort"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="effort"/>
+    </joint>
+    <joint name="left_finger_joint" mimic="true">
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+  </ros2_control>
+  )";
+
+const auto gripper_hardware_resources_mimic_true_command_if =
+  R"(
+  <ros2_control name="TestGripper" type="system">
+    <joint name="right_finger_joint">
+      <command_interface name="effort"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="effort"/>
+    </joint>
+    <joint name="left_finger_joint" mimic="true">
+      <command_interface name="effort"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+  </ros2_control>
+  )";
+
+const auto gripper_hardware_resources_mimic_false_command_if =
+  R"(
+  <ros2_control name="TestGripper" type="system">
+    <joint name="right_finger_joint">
+      <command_interface name="effort"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="effort"/>
+    </joint>
+    <joint name="left_finger_joint" mimic="false">
+      <command_interface name="effort"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+  </ros2_control>
+  )";
+
 const auto minimal_robot_urdf =
   std::string(urdf_head) + std::string(hardware_resources) + std::string(urdf_tail);
 const auto minimal_unitilizable_robot_urdf =
