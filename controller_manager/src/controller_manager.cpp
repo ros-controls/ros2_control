@@ -341,30 +341,16 @@ void ControllerManager::robot_description_callback(const std_msgs::msg::String &
   RCLCPP_INFO(get_logger(), "Received robot description from topic.");
   RCLCPP_DEBUG(
     get_logger(), "'Content of robot description file: %s", robot_description.data.c_str());
-  // TODO(Manuel): errors should probably be caught since we don't want controller_manager node
-  // to die if a non valid urdf is passed. However, should maybe be fine tuned.
-  try
+  if (resource_manager_->is_urdf_already_loaded())
   {
-    robot_description_ = robot_description.data;
-    if (resource_manager_->is_urdf_already_loaded())
-    {
-      RCLCPP_WARN(
-        get_logger(),
-        "ResourceManager has already loaded an urdf file. Ignoring attempt to reload a robot "
-        "description file.");
-      return;
-    }
-    init_resource_manager(robot_description_);
-    init_services();
-  }
-  catch (std::runtime_error & e)
-  {
-    RCLCPP_ERROR_STREAM(
+    RCLCPP_WARN(
       get_logger(),
-      "The published robot description file (urdf) seems not to be genuine. The following error "
-      "was caught:"
-        << e.what());
+      "ResourceManager has already loaded an urdf file. Ignoring attempt to reload a robot "
+      "description file.");
+    return;
   }
+  robot_description_ = robot_description.data;
+  init_resource_manager(robot_description_);
 }
 
 void ControllerManager::init_resource_manager(const std::string & robot_description)
