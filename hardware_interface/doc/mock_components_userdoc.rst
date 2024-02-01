@@ -53,3 +53,19 @@ mimic (optional; string)
 
 multiplier (optional; double; default: 1; used if mimic joint is defined)
   Multiplier of values for mimicking joint defined in ``mimic`` parameter. Example: ``<param name="multiplier">-2</param>``.
+
+Per-interface Parameters
+,,,,,,,,,,,,,,,,,,,,,,,,
+
+initial_value (optional; double)
+  Initial value of certain state interface directly after startup. Example:
+
+  .. code-block:: xml
+
+     <state_interface name="position">
+       <param name="initial_value">3.45</param>
+     </state_interface>
+
+  Note: This parameter is shared with the gazebo and gazebo classic plugins for
+  joint interfaces. For Mock components it is also possible to set initial
+  values for gpio or sensor state interfaces.
