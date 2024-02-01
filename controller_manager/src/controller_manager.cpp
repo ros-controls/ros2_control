@@ -1228,7 +1228,7 @@ controller_interface::return_type ControllerManager::switch_controller(
   {
     RCLCPP_DEBUG(get_logger(), " - %s", interface.c_str());
   }
-  RCLCPP_DEBUG(get_logger(), "Request for command interfaces from deactivating controllers:");
+  RCLCPP_DEBUG(get_logger(), "Release of command interfaces from deactivating controllers:");
   for (const auto & interface : deactivate_command_interface_request_)
   {
     RCLCPP_DEBUG(get_logger(), " - %s", interface.c_str());
