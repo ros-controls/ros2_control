@@ -1234,8 +1234,8 @@ controller_interface::return_type ControllerManager::switch_controller(
     RCLCPP_DEBUG(get_logger(), " - %s", interface.c_str());
   }
 
-  if (!resource_manager_->prepare_command_mode_switch(
-        activate_command_interface_request_, deactivate_command_interface_request_))
+  if (
+    !activate_command_interface_request_.empty() || !deactivate_command_interface_request_.empty())
   {
     if (!resource_manager_->prepare_command_mode_switch(
           activate_command_interface_request_, deactivate_command_interface_request_))
