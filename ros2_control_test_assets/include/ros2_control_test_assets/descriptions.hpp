@@ -906,6 +906,22 @@ const auto gripper_urdf_head_two_base_links =
   </joint>
 )";
 
+const auto gripper_hardware_resources_no_command_if =
+  R"(
+  <ros2_control name="TestGripper" type="system">
+    <joint name="right_finger_joint">
+      <command_interface name="effort"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="effort"/>
+    </joint>
+    <joint name="left_finger_joint">
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+  </ros2_control>
+  )";
+
 const auto gripper_hardware_resources_mimic_true_no_command_if =
   R"(
   <ros2_control name="TestGripper" type="system">

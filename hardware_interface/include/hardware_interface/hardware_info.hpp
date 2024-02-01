@@ -15,6 +15,7 @@
 #ifndef HARDWARE_INTERFACE__HARDWARE_INFO_HPP_
 #define HARDWARE_INTERFACE__HARDWARE_INFO_HPP_
 
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -64,8 +65,8 @@ struct ComponentInfo
   /// Type of the component: sensor, joint, or GPIO.
   std::string type;
 
-  ///  If the component is a mimic joint
-  bool is_mimic;
+  ///  If the component has a mimic joint tag, for opt-out
+  std::optional<bool> is_mimic{};
   /**
    * Name of the command interfaces that can be set, e.g. "position", "velocity", etc.
    * Used by joints and GPIOs.

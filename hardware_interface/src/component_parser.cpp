@@ -343,18 +343,20 @@ ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it
 
   if (!component.type.compare(kJointTag))
   {
-    std::string mimic_str = get_attribute_value_or(component_it, kMimicAttribute, "false");
-    component.is_mimic = mimic_str.compare("true") == 0;
+    try
+    {
+      component.is_mimic =
+        parse_bool(get_attribute_value(component_it, kMimicAttribute, kJointTag));
+    }
+    catch (const std::runtime_error & e)
+    {
+      // mimic attribute not set
+      component.is_mimic = {};
+    }
   }
 
   // Parse all command interfaces
   const auto * command_interfaces_it = component_it->FirstChildElement(kCommandInterfaceTag);
-  if (component.is_mimic && command_interfaces_it)
-  {
-    throw std::runtime_error(
-      "Component '" + std::string(component.name) +
-      "' has mimic attribute set to true: Mimic joints cannot have command interfaces.");
-  }
   while (command_interfaces_it)
   {
     component.command_interfaces.push_back(parse_interfaces_from_xml(command_interfaces_it));
@@ -693,7 +695,6 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
           mimic_joint.offset = hardware_interface::stod(joint.parameters.at("offset"));
         }
         hw_info.mimic_joints.push_back(mimic_joint);
-        hw_info.joints.at(i).is_mimic = true;
       }
       else
       {
@@ -702,33 +703,39 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
         {
           throw std::runtime_error("Joint " + joint.name + " not found in URDF");
         }
-        if (joint.is_mimic)
+        if (!urdf_joint->mimic && joint.is_mimic.value_or(false))
         {
-          if (urdf_joint->mimic)
+          throw std::runtime_error(
+            "Joint '" + std::string(joint.name) + "' has no mimic information in the URDF.");
+        }
+        if (urdf_joint->mimic && joint.is_mimic.value_or(true))
+        {
+          if (joint.command_interfaces.size() > 0)
           {
-            auto find_joint = [&hw_info](const std::string & name)
+            throw std::runtime_error(
+              "Joint '" + std::string(joint.name) +
+              "' has mimic attribute not set to false: Mimic joints cannot have command "
+              "interfaces.");
+          }
+          auto find_joint = [&hw_info](const std::string & name)
+          {
+            auto it = std::find_if(
+              hw_info.joints.begin(), hw_info.joints.end(),
+              [&name](const auto & j) { return j.name == name; });
+            if (it == hw_info.joints.end())
             {
-              auto it = std::find_if(
-                hw_info.joints.begin(), hw_info.joints.end(),
-                [&name](const auto & j) { return j.name == name; });
-              if (it == hw_info.joints.end())
-              {
-                throw std::runtime_error("Joint '" + name + "' not found in hw_info.joints");
-              }
-              return std::distance(hw_info.joints.begin(), it);
-            };
+              throw std::runtime_error(
+                "Mimic joint '" + name + "' not found in <ros2_control> tag");
+            }
+            return std::distance(hw_info.joints.begin(), it);
+          };
 
-            MimicJoint mimic_joint;
-            mimic_joint.joint_index = i;
-            mimic_joint.mimicked_joint_index = find_joint(urdf_joint->mimic->joint_name);
-            mimic_joint.multiplier = urdf_joint->mimic->multiplier;
-            mimic_joint.offset = urdf_joint->mimic->offset;
-            hw_info.mimic_joints.push_back(mimic_joint);
-          }
-          else
-          {
-            throw std::runtime_error("Joint '" + joint.name + "' has no mimic information in URDF");
-          }
+          MimicJoint mimic_joint;
+          mimic_joint.joint_index = i;
+          mimic_joint.mimicked_joint_index = find_joint(urdf_joint->mimic->joint_name);
+          mimic_joint.multiplier = urdf_joint->mimic->multiplier;
+          mimic_joint.offset = urdf_joint->mimic->offset;
+          hw_info.mimic_joints.push_back(mimic_joint);
         }
       }
     }

@@ -675,7 +675,7 @@ TEST_F(TestComponentParser, transmission_given_too_many_joints_throws_error)
   ASSERT_THROW(parse_control_resources_from_urdf(urdf_to_test), std::runtime_error);
 }
 
-TEST_F(TestComponentParser, mimic_true_valid_config)
+TEST_F(TestComponentParser, gripper_mimic_true_valid_config)
 {
   const auto urdf_to_test =
     std::string(ros2_control_test_assets::gripper_urdf_head) +
@@ -691,8 +691,24 @@ TEST_F(TestComponentParser, mimic_true_valid_config)
   EXPECT_EQ(hw_info[0].mimic_joints[0].joint_index, 1);
 }
 
+TEST_F(TestComponentParser, gripper_no_mimic_valid_config)
+{
+  const auto urdf_to_test =
+    std::string(ros2_control_test_assets::gripper_urdf_head) +
+    std::string(ros2_control_test_assets::gripper_hardware_resources_no_command_if) +
+    std::string(ros2_control_test_assets::urdf_tail);
+  std::vector<hardware_interface::HardwareInfo> hw_info;
+  ASSERT_NO_THROW(hw_info = parse_control_resources_from_urdf(urdf_to_test));
+  ASSERT_THAT(hw_info, SizeIs(1));
+  ASSERT_THAT(hw_info[0].mimic_joints, SizeIs(1));
+  EXPECT_DOUBLE_EQ(hw_info[0].mimic_joints[0].multiplier, 2.0);
+  EXPECT_DOUBLE_EQ(hw_info[0].mimic_joints[0].offset, 1.0);
+  EXPECT_EQ(hw_info[0].mimic_joints[0].mimicked_joint_index, 0);
+  EXPECT_EQ(hw_info[0].mimic_joints[0].joint_index, 1);
+}
+
 // TODO(christophfroehlich) delete deprecated config test
-TEST_F(TestComponentParser, mimic_deprecated_valid_config)
+TEST_F(TestComponentParser, gripper_mimic_deprecated_valid_config)
 {
   const auto urdf_to_test =
     std::string(ros2_control_test_assets::gripper_urdf_head) +
@@ -708,7 +724,7 @@ TEST_F(TestComponentParser, mimic_deprecated_valid_config)
   EXPECT_EQ(hw_info[0].mimic_joints[0].joint_index, 1);
 }
 
-TEST_F(TestComponentParser, mimic_deprecated_unknown_joint_throws_error)
+TEST_F(TestComponentParser, gripper_mimic_deprecated_unknown_joint_throws_error)
 {
   const auto urdf_to_test =
     std::string(ros2_control_test_assets::gripper_urdf_head) +
@@ -720,7 +736,7 @@ TEST_F(TestComponentParser, mimic_deprecated_unknown_joint_throws_error)
 }
 // end delete deprecated config test
 
-TEST_F(TestComponentParser, mimic_with_unknown_joint_throws_error)
+TEST_F(TestComponentParser, gripper_mimic_with_unknown_joint_throws_error)
 {
   const auto urdf_to_test =
     std::string(ros2_control_test_assets::gripper_urdf_head_unknown_joint) +
@@ -729,7 +745,7 @@ TEST_F(TestComponentParser, mimic_with_unknown_joint_throws_error)
   ASSERT_THROW(parse_control_resources_from_urdf(urdf_to_test), std::runtime_error);
 }
 
-TEST_F(TestComponentParser, mimic_true_without_mimic_info_throws_error)
+TEST_F(TestComponentParser, gripper_mimic_true_without_mimic_info_throws_error)
 {
   const auto urdf_to_test =
     std::string(ros2_control_test_assets::gripper_urdf_head_no_mimic) +
@@ -738,7 +754,7 @@ TEST_F(TestComponentParser, mimic_true_without_mimic_info_throws_error)
   ASSERT_THROW(parse_control_resources_from_urdf(urdf_to_test), std::runtime_error);
 }
 
-TEST_F(TestComponentParser, mimic_true_invalid_config_throws_error)
+TEST_F(TestComponentParser, gripper_mimic_true_invalid_config_throws_error)
 {
   const auto urdf_to_test =
     std::string(ros2_control_test_assets::gripper_urdf_head) +
@@ -747,7 +763,7 @@ TEST_F(TestComponentParser, mimic_true_invalid_config_throws_error)
   ASSERT_THROW(parse_control_resources_from_urdf(urdf_to_test), std::runtime_error);
 }
 
-TEST_F(TestComponentParser, mimic_false_valid_config)
+TEST_F(TestComponentParser, gripper_mimic_false_valid_config)
 {
   const auto urdf_to_test =
     std::string(ros2_control_test_assets::gripper_urdf_head) +
