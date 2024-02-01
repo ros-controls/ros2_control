@@ -113,10 +113,9 @@ public:
   void release_interfaces();
 
   CONTROLLER_INTERFACE_PUBLIC
-  virtual return_type init(
+  return_type init(
     const std::string & controller_name, const std::string & urdf, unsigned int cm_update_rate,
-    const std::string & node_namespace = "",
-    const rclcpp::NodeOptions & node_options = rclcpp::NodeOptions().enable_logger_service(true));
+    const std::string & node_namespace, const rclcpp::NodeOptions & node_options);
 
   /// Custom configure method to read additional parameters for controller-nodes
   /*
@@ -158,6 +157,23 @@ public:
 
   CONTROLLER_INTERFACE_PUBLIC
   const std::string & get_robot_description() const;
+
+  /**
+   * Method used by the controller_manager for base NodeOptions to instantiate the Lifecycle node
+   * of the controller upon loading the controller.
+   *
+   * \note The controller_manager will modify these NodeOptions in case a params file is passed
+   * by the spawner to load the controller parameters or when controllers are loaded in simulation
+   * (see ros2_control#1311, ros2_controllers#698 , ros2_controllers#795,ros2_controllers#966 for
+   * more details)
+   *
+   * @returns NodeOptions required for the configuration of the controller lifecycle node
+   */
+  CONTROLLER_INTERFACE_PUBLIC
+  virtual rclcpp::NodeOptions define_custom_node_options() const
+  {
+    return rclcpp::NodeOptions().enable_logger_service(true);
+  }
 
   /// Declare and initialize a parameter with a type.
   /**

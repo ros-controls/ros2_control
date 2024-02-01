@@ -2,6 +2,12 @@
 Changelog for package joint_limits
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.4.0 (2024-01-31)
+------------------
+* [Format] Correct formatting of JointLimits URDF file. (`#1339 <https://github.com/ros-controls/ros2_control/issues/1339>`_)
+* Add header to import limits from standard URDF definition (`#1298 <https://github.com/ros-controls/ros2_control/issues/1298>`_)
+* Contributors: Dr. Denis, Sai Kishor Kothakota
+
 4.3.0 (2024-01-20)
 ------------------
 

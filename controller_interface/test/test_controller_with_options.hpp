@@ -36,36 +36,19 @@ public:
   ControllerWithOptions() = default;
   LifecycleNodeInterface::CallbackReturn on_init() override
   {
-    return LifecycleNodeInterface::CallbackReturn::SUCCESS;
-  }
-
-  controller_interface::return_type init(
-    const std::string & controller_name, const std::string & urdf, unsigned int cm_update_rate,
-    const std::string & node_namespace = "",
-    const rclcpp::NodeOptions & node_options =
-      rclcpp::NodeOptions()
-        .allow_undeclared_parameters(true)
-        .automatically_declare_parameters_from_overrides(true)) override
-  {
-    ControllerInterface::init(controller_name, urdf, cm_update_rate, node_namespace, node_options);
-
-    switch (on_init())
-    {
-      case LifecycleNodeInterface::CallbackReturn::SUCCESS:
-        break;
-      case LifecycleNodeInterface::CallbackReturn::ERROR:
-      case LifecycleNodeInterface::CallbackReturn::FAILURE:
-        return controller_interface::return_type::ERROR;
-    }
     if (get_node()->get_parameters("parameter_list", params))
     {
       RCLCPP_INFO_STREAM(get_node()->get_logger(), "I found " << params.size() << " parameters.");
-      return controller_interface::return_type::OK;
+      return LifecycleNodeInterface::CallbackReturn::SUCCESS;
     }
-    else
-    {
-      return controller_interface::return_type::ERROR;
-    }
+    return LifecycleNodeInterface::CallbackReturn::FAILURE;
+  }
+
+  rclcpp::NodeOptions define_custom_node_options() const override
+  {
+    return rclcpp::NodeOptions()
+      .allow_undeclared_parameters(true)
+      .automatically_declare_parameters_from_overrides(true);
   }
 
   controller_interface::InterfaceConfiguration command_interface_configuration() const override

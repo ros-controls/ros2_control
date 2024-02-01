@@ -85,7 +85,9 @@ They can be combined together within the different hardware component types (sys
       </gpio>
       <gpio name="flange_analog_IOs">
         <command_interface name="analog_output1"/>
-        <state_interface name="analog_output1"/>    <!-- Needed to know current state of the output -->
+        <state_interface name="analog_output1">    <!-- Needed to know current state of the output -->
+          <param name="initial_value">3.1</param>  <!-- Optional initial value for mock_hardware -->
+        </state_interface>
         <state_interface name="analog_input1"/>
         <state_interface name="analog_input2"/>
       </gpio>
