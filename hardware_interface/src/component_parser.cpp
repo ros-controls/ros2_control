@@ -939,21 +939,4 @@ std::vector<InterfaceDescription> parse_command_interface_descriptions_from_hard
   return component_command_interface_descriptions;
 }
 
-std::vector<InterfaceDescription> parse_gpio_command_interface_descriptions_from_hardware_info(
-  const HardwareInfo & hw_info)
-{
-  std::vector<InterfaceDescription> gpio_command_interface_descriptions;
-  gpio_command_interface_descriptions.reserve(hw_info.gpios.size());
-
-  for (const auto & gpio : hw_info.gpios)
-  {
-    for (const auto & command_interface : gpio.command_interfaces)
-    {
-      gpio_command_interface_descriptions.emplace_back(
-        InterfaceDescription(gpio.name, command_interface));
-    }
-  }
-  return gpio_command_interface_descriptions;
-}
-
 }  // namespace hardware_interface

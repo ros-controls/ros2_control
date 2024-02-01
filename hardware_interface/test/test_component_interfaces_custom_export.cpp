@@ -57,27 +57,23 @@ class DummyActuatorDefault : public hardware_interface::ActuatorInterface
 {
   std::string get_name() const override { return "DummyActuatorDefault"; }
 
-  std::vector<std::shared_ptr<hardware_interface::StateInterface>> export_state_interfaces_2()
-    override
+  std::vector<hardware_interface::InterfaceDescription> export_state_interfaces_2() override
   {
-    std::vector<std::shared_ptr<hardware_interface::StateInterface>> interfaces;
-    auto unlisted_state_interface = std::make_shared<hardware_interface::StateInterface>(
-      info_.joints[0].name, "some_unlisted_interface", nullptr);
-    actuator_states_.insert(
-      std::make_pair(unlisted_state_interface->get_name(), unlisted_state_interface));
+    std::vector<hardware_interface::InterfaceDescription> interfaces;
+    hardware_interface::InterfaceInfo info;
+    info.name = "some_unlisted_interface";
+    hardware_interface::InterfaceDescription unlisted_state_interface(info_.joints[0].name, info);
     interfaces.push_back(unlisted_state_interface);
 
     return interfaces;
   }
 
-  std::vector<std::shared_ptr<hardware_interface::CommandInterface>> export_command_interfaces_2()
-    override
+  std::vector<hardware_interface::InterfaceDescription> export_command_interfaces_2() override
   {
-    std::vector<std::shared_ptr<hardware_interface::CommandInterface>> interfaces;
-    auto unlisted_state_interface = std::make_shared<hardware_interface::CommandInterface>(
-      info_.joints[0].name, "some_unlisted_interface", nullptr);
-    actuator_commands_.insert(
-      std::make_pair(unlisted_state_interface->get_name(), unlisted_state_interface));
+    std::vector<hardware_interface::InterfaceDescription> interfaces;
+    hardware_interface::InterfaceInfo info;
+    info.name = "some_unlisted_interface";
+    hardware_interface::InterfaceDescription unlisted_state_interface(info_.joints[0].name, info);
     interfaces.push_back(unlisted_state_interface);
 
     return interfaces;
@@ -100,14 +96,12 @@ class DummySensorDefault : public hardware_interface::SensorInterface
 {
   std::string get_name() const override { return "DummySensorDefault"; }
 
-  std::vector<std::shared_ptr<hardware_interface::StateInterface>> export_state_interfaces_2()
-    override
+  std::vector<hardware_interface::InterfaceDescription> export_state_interfaces_2() override
   {
-    std::vector<std::shared_ptr<hardware_interface::StateInterface>> interfaces;
-    auto unlisted_state_interface = std::make_shared<hardware_interface::StateInterface>(
-      info_.sensors[0].name, "some_unlisted_interface", nullptr);
-    sensor_states_.insert(
-      std::make_pair(unlisted_state_interface->get_name(), unlisted_state_interface));
+    std::vector<hardware_interface::InterfaceDescription> interfaces;
+    hardware_interface::InterfaceInfo info;
+    info.name = "some_unlisted_interface";
+    hardware_interface::InterfaceDescription unlisted_state_interface(info_.sensors[0].name, info);
     interfaces.push_back(unlisted_state_interface);
 
     return interfaces;
@@ -124,27 +118,23 @@ class DummySystemDefault : public hardware_interface::SystemInterface
 {
   std::string get_name() const override { return "DummySystemDefault"; }
 
-  std::vector<std::shared_ptr<hardware_interface::StateInterface>> export_state_interfaces_2()
-    override
+  std::vector<hardware_interface::InterfaceDescription> export_state_interfaces_2() override
   {
-    std::vector<std::shared_ptr<hardware_interface::StateInterface>> interfaces;
-    auto unlisted_state_interface = std::make_shared<hardware_interface::StateInterface>(
-      info_.joints[0].name, "some_unlisted_interface", nullptr);
-    system_states_.insert(
-      std::make_pair(unlisted_state_interface->get_name(), unlisted_state_interface));
+    std::vector<hardware_interface::InterfaceDescription> interfaces;
+    hardware_interface::InterfaceInfo info;
+    info.name = "some_unlisted_interface";
+    hardware_interface::InterfaceDescription unlisted_state_interface(info_.joints[0].name, info);
     interfaces.push_back(unlisted_state_interface);
 
     return interfaces;
   }
 
-  std::vector<std::shared_ptr<hardware_interface::CommandInterface>> export_command_interfaces_2()
-    override
+  std::vector<hardware_interface::InterfaceDescription> export_command_interfaces_2() override
   {
-    std::vector<std::shared_ptr<hardware_interface::CommandInterface>> interfaces;
-    auto unlisted_state_interface = std::make_shared<hardware_interface::CommandInterface>(
-      info_.joints[0].name, "some_unlisted_interface", nullptr);
-    system_commands_.insert(
-      std::make_pair(unlisted_state_interface->get_name(), unlisted_state_interface));
+    std::vector<hardware_interface::InterfaceDescription> interfaces;
+    hardware_interface::InterfaceInfo info;
+    info.name = "some_unlisted_interface";
+    hardware_interface::InterfaceDescription unlisted_state_interface(info_.joints[0].name, info);
     interfaces.push_back(unlisted_state_interface);
 
     return interfaces;
