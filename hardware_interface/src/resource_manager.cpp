@@ -1570,7 +1570,7 @@ bool ResourceManager::validate_storage(
 
     RCUTILS_LOG_ERROR_NAMED(
       "resource_manager",
-      "Discrepancy between robot description file (urdf) and actually exported HW interfaces."
+      "Discrepancy between robot description file (urdf) and actually exported HW interfaces.\n"
       "Details: %s",
       message.c_str());
 
