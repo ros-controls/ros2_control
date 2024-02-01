@@ -331,7 +331,7 @@ hardware_interface::InterfaceInfo parse_interfaces_from_xml(
  * \param[in] component_it pointer to the iterator where component
  * info should be found
  * \return ComponentInfo filled with information about component
- * \throws std::runtime_error if a component attribute or tag is not found or false configuration
+ * \throws std::runtime_error if a component attribute or tag is not found
  */
 ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it)
 {
