@@ -839,7 +839,7 @@ const auto gripper_urdf_head_incomplete =
   </joint>
 )";
 
-const auto gripper_urdf_head_two_base_links =
+const auto gripper_urdf_head_invalid_two_root_links =
   R"(<?xml version="1.0" ?>
 <robot name="gripper">
   <link name="world"/>

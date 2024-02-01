@@ -775,15 +775,22 @@ TEST_F(TestComponentParser, gripper_mimic_false_valid_config)
   ASSERT_THAT(hw_info[0].mimic_joints, SizeIs(0));
 }
 
-TEST_F(TestComponentParser, urdf_two_base_links_throws_error)
+/**
+ * @brief Test that the parser throws an error if the URDF contains a link with no parent.
+ */
+TEST_F(TestComponentParser, urdf_two_root_links_throws_error)
 {
   const auto urdf_to_test =
-    std::string(ros2_control_test_assets::gripper_urdf_head_two_base_links) +
+    std::string(ros2_control_test_assets::gripper_urdf_head_invalid_two_root_links) +
     std::string(ros2_control_test_assets::gripper_hardware_resources_mimic_true_no_command_if) +
     std::string(ros2_control_test_assets::urdf_tail);
   ASSERT_THROW(parse_control_resources_from_urdf(urdf_to_test), std::runtime_error);
 }
 
+/**
+ * @brief Test that the parser throws an error if a joint defined in the ros2_control tag is missing
+ * in the URDF
+ */
 TEST_F(TestComponentParser, urdf_incomplete_throws_error)
 {
   const auto urdf_to_test =
