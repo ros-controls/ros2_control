@@ -1,9 +1,12 @@
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Changelog for package joint_limits
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Changelog for package hardware_interface_testing
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Forthcoming
 -----------
+* Move `test_components` to own package (backport `#1325 <https://github.com/ros-controls/ros2_control/issues/1325>`_) (`#1341 <https://github.com/ros-controls/ros2_control/issues/1341>`_)
+* Contributors: Christoph Fröhlich, Bence Magyar
+
 
 3.22.1 (2024-01-25)
 -------------------
@@ -43,9 +46,6 @@ Forthcoming
 
 3.14.0 (2023-06-14)
 -------------------
-* Add -Wconversion flag to protect future developments (`#1053 <https://github.com/ros-controls/ros2_control/issues/1053>`_)
-* enable ReflowComments to also use ColumnLimit on comments (`#1037 <https://github.com/ros-controls/ros2_control/issues/1037>`_)
-* Contributors: Sai Kishor Kothakota, gwalck
 
 3.13.0 (2023-05-18)
 -------------------
@@ -58,8 +58,6 @@ Forthcoming
 
 3.12.0 (2023-04-02)
 -------------------
-* Extend joint limits structure with deceleration limits. (`#977 <https://github.com/ros-controls/ros2_control/issues/977>`_)
-* Contributors: Dr. Denis
 
 3.11.0 (2023-03-22)
 -------------------
@@ -75,9 +73,6 @@ Forthcoming
 
 3.8.0 (2023-02-10)
 ------------------
-* Fix CMake install so overriding works (`#926 <https://github.com/ros-controls/ros2_control/issues/926>`_)
-* 🖤 Add Black formatter for Python files. (`#936 <https://github.com/ros-controls/ros2_control/issues/936>`_)
-* Contributors: Dr. Denis, Tyler Weaver
 
 3.7.0 (2023-01-24)
 ------------------
@@ -106,24 +101,17 @@ Forthcoming
 3.0.0 (2022-09-19)
 ------------------
 
-2.15.0 (2022-09-19)
--------------------
-
 2.14.0 (2022-09-04)
 -------------------
 
 2.13.0 (2022-08-03)
 -------------------
-* Make output of joint limits nicer. (`#788 <https://github.com/ros-controls/ros2_control/issues/788>`_)
-* Contributors: Denis Štogl
 
 2.12.1 (2022-07-14)
 -------------------
 
 2.12.0 (2022-07-09)
 -------------------
-* Move Joint Limits structures for use in controllers (`#462 <https://github.com/ros-controls/ros2_control/issues/462>`_)
-* Contributors: Denis Štogl, Andy Zelenak, Bence Magyar
 
 2.11.0 (2022-07-03)
 -------------------
