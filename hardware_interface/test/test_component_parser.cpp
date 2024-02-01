@@ -564,6 +564,7 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_robot_with_gpio
   EXPECT_THAT(hardware_info.gpios[1].state_interfaces, SizeIs(1));
   EXPECT_THAT(hardware_info.gpios[1].command_interfaces, SizeIs(1));
   EXPECT_EQ(hardware_info.gpios[1].state_interfaces[0].name, "vacuum");
+  EXPECT_EQ(hardware_info.gpios[1].state_interfaces[0].initial_value, "1.0");
   EXPECT_EQ(hardware_info.gpios[1].command_interfaces[0].name, "vacuum");
 
   EXPECT_THAT(hardware_info.transmissions, IsEmpty());
