@@ -160,13 +160,14 @@ public:
 
   /**
    * Override this method to export custom StateInterfaces which are not defined in the URDF file.
+   * Those interfaces will be added to the unlisted_state_interfaces_ map.
    *
    *  Note method name is going to be changed to export_state_interfaces() as soon as the deprecated
    * version is removed.
    *
-   * \return vector of shared pointers to the created and stored StateInterfaces
+   * \return vector of descriptions to the unlisted StateInterfaces
    */
-  virtual std::vector<std::shared_ptr<StateInterface>> export_state_interfaces_2()
+  virtual std::vector<hardware_interface::InterfaceDescription> export_state_interfaces_2()
   {
     // return empty vector by default.
     return {};
@@ -181,8 +182,24 @@ public:
    */
   virtual std::vector<std::shared_ptr<StateInterface>> on_export_state_interfaces()
   {
-    std::vector<std::shared_ptr<StateInterface>> state_interfaces = export_state_interfaces_2();
-    state_interfaces.reserve(joint_state_interfaces_.size());
+    // import the unlisted interfaces
+    std::vector<hardware_interface::InterfaceDescription> unlisted_interface_descriptions =
+      export_state_interfaces_2();
+
+    std::vector<std::shared_ptr<StateInterface>> state_interfaces;
+    state_interfaces.reserve(
+      unlisted_interface_descriptions.size() + joint_state_interfaces_.size());
+
+    // add InterfaceDescriptions and create the StateInterfaces from the descriptions and add to
+    // maps.
+    for (const auto & description : unlisted_interface_descriptions)
+    {
+      auto name = description.get_name();
+      unlisted_state_interfaces_.insert(std::make_pair(name, description));
+      auto state_interface = std::make_shared<StateInterface>(description);
+      actuator_states_.insert(std::make_pair(name, state_interface));
+      state_interfaces.push_back(state_interface);
+    }
 
     for (const auto & [name, descr] : joint_state_interfaces_)
     {
@@ -219,13 +236,14 @@ public:
 
   /**
    * Override this method to export custom CommandInterfaces which are not defined in the URDF file.
+   * Those interfaces will be added to the unlisted_command_interfaces_ map.
    *
    *  Note method name is going to be changed to export_command_interfaces() as soon as the
    * deprecated version is removed.
    *
-   * \return vector of shared pointers to the created and stored StateInterfaces
+   * \return vector of descriptions to the unlisted CommandInterfaces
    */
-  virtual std::vector<std::shared_ptr<CommandInterface>> export_command_interfaces_2()
+  virtual std::vector<hardware_interface::InterfaceDescription> export_command_interfaces_2()
   {
     // return empty vector by default.
     return {};
@@ -240,9 +258,24 @@ public:
    */
   virtual std::vector<std::shared_ptr<CommandInterface>> on_export_command_interfaces()
   {
-    std::vector<std::shared_ptr<CommandInterface>> command_interfaces =
+    // import the unlisted interfaces
+    std::vector<hardware_interface::InterfaceDescription> unlisted_interface_descriptions =
       export_command_interfaces_2();
-    command_interfaces.reserve(joint_command_interfaces_.size());
+
+    std::vector<std::shared_ptr<CommandInterface>> command_interfaces;
+    command_interfaces.reserve(
+      unlisted_interface_descriptions.size() + joint_command_interfaces_.size());
+
+    // add InterfaceDescriptions and create the CommandInterfaces from the descriptions and add to
+    // maps.
+    for (const auto & description : unlisted_interface_descriptions)
+    {
+      auto name = description.get_name();
+      unlisted_command_interfaces_.insert(std::make_pair(name, description));
+      auto command_interface = std::make_shared<CommandInterface>(description);
+      actuator_commands_.insert(std::make_pair(name, command_interface));
+      command_interfaces.push_back(command_interface);
+    }
 
     for (const auto & [name, descr] : joint_command_interfaces_)
     {
@@ -358,10 +391,14 @@ protected:
   std::unordered_map<std::string, InterfaceDescription> joint_state_interfaces_;
   std::unordered_map<std::string, InterfaceDescription> joint_command_interfaces_;
 
-  std::unordered_map<std::string, std::shared_ptr<StateInterface>> actuator_states_;
-  std::unordered_map<std::string, std::shared_ptr<CommandInterface>> actuator_commands_;
+  std::unordered_map<std::string, InterfaceDescription> unlisted_state_interfaces_;
+  std::unordered_map<std::string, InterfaceDescription> unlisted_command_interfaces_;
 
   rclcpp_lifecycle::State lifecycle_state_;
+
+private:
+  std::unordered_map<std::string, std::shared_ptr<StateInterface>> actuator_states_;
+  std::unordered_map<std::string, std::shared_ptr<CommandInterface>> actuator_commands_;
 };
 
 }  // namespace hardware_interface
