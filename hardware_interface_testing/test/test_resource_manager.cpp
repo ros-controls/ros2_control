@@ -101,22 +101,22 @@ TEST_F(ResourceManagerTest, post_initialization_with_urdf)
   ASSERT_NO_THROW(rm.load_urdf(ros2_control_test_assets::minimal_robot_urdf));
 }
 
-TEST_F(ResourceManagerTest, test_unitilizable_hardware_validation)
+TEST_F(ResourceManagerTest, test_unitializable_hardware_validation)
 {
   // If the the hardware can not be initialized and load_urdf tried to validate the interfaces a
   // runtime exception is thrown
   TestableResourceManager rm;
   ASSERT_THROW(
-    rm.load_urdf(ros2_control_test_assets::minimal_unitilizable_robot_urdf, true),
+    rm.load_urdf(ros2_control_test_assets::minimal_unitializable_robot_urdf, true),
     std::runtime_error);
 }
 
-TEST_F(ResourceManagerTest, test_unitilizable_hardware_no_validation)
+TEST_F(ResourceManagerTest, test_unitializable_hardware_no_validation)
 {
   // If the the hardware can not be initialized and load_urdf didn't try to validate the interfaces,
   // the interface should not show up
   TestableResourceManager rm;
-  EXPECT_NO_THROW(rm.load_urdf(ros2_control_test_assets::minimal_unitilizable_robot_urdf, false));
+  EXPECT_NO_THROW(rm.load_urdf(ros2_control_test_assets::minimal_unitializable_robot_urdf, false));
 
   // test actuator
   EXPECT_FALSE(rm.state_interface_exists("joint1/position"));

@@ -117,7 +117,7 @@ private:
   double configuration_command_ = 0.0;
 };
 
-class TestUnitilizableSystem : public TestSystem
+class TestUnitializableSystem : public TestSystem
 {
   CallbackReturn on_init(const hardware_interface::HardwareInfo & info) override
   {
@@ -128,4 +128,4 @@ class TestUnitilizableSystem : public TestSystem
 
 #include "pluginlib/class_list_macros.hpp"  // NOLINT
 PLUGINLIB_EXPORT_CLASS(TestSystem, hardware_interface::SystemInterface)
-PLUGINLIB_EXPORT_CLASS(TestUnitilizableSystem, hardware_interface::SystemInterface)
+PLUGINLIB_EXPORT_CLASS(TestUnitializableSystem, hardware_interface::SystemInterface)

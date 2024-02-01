@@ -136,7 +136,7 @@ private:
   double max_velocity_command_ = 0.0;
 };
 
-class TestUnitilizableActuator : public TestActuator
+class TestUnitializableActuator : public TestActuator
 {
   CallbackReturn on_init(const hardware_interface::HardwareInfo & info) override
   {
@@ -147,4 +147,4 @@ class TestUnitilizableActuator : public TestActuator
 
 #include "pluginlib/class_list_macros.hpp"  // NOLINT
 PLUGINLIB_EXPORT_CLASS(TestActuator, hardware_interface::ActuatorInterface)
-PLUGINLIB_EXPORT_CLASS(TestUnitilizableActuator, hardware_interface::ActuatorInterface)
+PLUGINLIB_EXPORT_CLASS(TestUnitializableActuator, hardware_interface::ActuatorInterface)
