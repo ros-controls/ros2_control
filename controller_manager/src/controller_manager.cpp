@@ -836,14 +836,15 @@ controller_interface::return_type ControllerManager::switch_controller(
     strictness = controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT;
   }
 
-  RCLCPP_DEBUG(get_logger(), "Switching controllers:");
+  RCLCPP_DEBUG(get_logger(), "Activating controllers:");
   for (const auto & controller : activate_controllers)
   {
-    RCLCPP_DEBUG(get_logger(), "- Activating controller '%s'", controller.c_str());
+    RCLCPP_DEBUG(get_logger(), " - %s", controller.c_str());
   }
+  RCLCPP_DEBUG(get_logger(), "Deactivating controllers:");
   for (const auto & controller : deactivate_controllers)
   {
-    RCLCPP_DEBUG(get_logger(), "- Deactivating controller '%s'", controller.c_str());
+    RCLCPP_DEBUG(get_logger(), " - %s", controller.c_str());
   }
 
   const auto list_controllers = [this, strictness](
@@ -1179,6 +1180,17 @@ controller_interface::return_type ControllerManager::switch_controller(
     RCLCPP_INFO(get_logger(), "Empty activate and deactivate list, not requesting switch");
     clear_requests();
     return controller_interface::return_type::OK;
+  }
+
+  RCLCPP_DEBUG(get_logger(), "Request for command interfaces from activating controllers:");
+  for (const auto & interface : activate_command_interface_request_)
+  {
+    RCLCPP_DEBUG(get_logger(), " - %s", interface.c_str());
+  }
+  RCLCPP_DEBUG(get_logger(), "Release of command interfaces from deactivating controllers:");
+  for (const auto & interface : deactivate_command_interface_request_)
+  {
+    RCLCPP_DEBUG(get_logger(), " - %s", interface.c_str());
   }
 
   if (
