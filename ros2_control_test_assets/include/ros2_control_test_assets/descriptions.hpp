@@ -988,10 +988,10 @@ const auto minimal_robot_missing_command_keys_urdf =
 [[maybe_unused]] const std::string TEST_SYSTEM_HARDWARE_TYPE = "system";
 [[maybe_unused]] const std::string TEST_SYSTEM_HARDWARE_PLUGIN_NAME = "test_system";
 [[maybe_unused]] const std::vector<std::string> TEST_SYSTEM_HARDWARE_COMMAND_INTERFACES = {
-  "joint2/velocity", "joint2/max_acceleration", "joint3/velocity"};
+  "joint2/velocity", "joint2/max_acceleration", "joint3/velocity", "configuration/max_tcp_jerk"};
 [[maybe_unused]] const std::vector<std::string> TEST_SYSTEM_HARDWARE_STATE_INTERFACES = {
-  "joint2/position", "joint2/velocity", "joint2/acceleration",
-  "joint3/position", "joint3/velocity", "joint3/acceleration"};
+  "joint2/position", "joint2/velocity",     "joint2/acceleration",       "joint3/position",
+  "joint3/velocity", "joint3/acceleration", "configuration/max_tcp_jerk"};
 
 }  // namespace ros2_control_test_assets
 
