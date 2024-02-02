@@ -422,6 +422,8 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
   // activate all other components
   for (const auto & [component, state] : components_to_activate)
   {
+    rclcpp_lifecycle::State active_state(
+      State::PRIMARY_STATE_ACTIVE, hardware_interface::lifecycle_state_names::ACTIVE);
     resource_manager_->set_component_state(component, active_state);
   }
 }
