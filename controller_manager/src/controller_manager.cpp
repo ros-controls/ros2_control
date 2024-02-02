@@ -674,7 +674,7 @@ controller_interface::return_type ControllerManager::unload_controller(
     if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
     {
       RCLCPP_WARN(
-        get_logger(), "Unable to clean-up the controller '%s' before unloading!",
+        get_logger(), "Failed to clean-up the controller '%s' before unloading!",
         controller_name.c_str());
     }
   }
