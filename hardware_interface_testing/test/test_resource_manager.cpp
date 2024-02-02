@@ -117,7 +117,7 @@ void test_load_and_initialized_components_failure(const std::string & urdf)
 
   ASSERT_FALSE(rm.are_components_initialized());
 
-  // resource manage should also not have any components
+  // resource manager should also not have any components
   EXPECT_EQ(rm.actuator_components_size(), 0);
   EXPECT_EQ(rm.sensor_components_size(), 0);
   EXPECT_EQ(rm.system_components_size(), 0);
@@ -146,6 +146,7 @@ void test_load_and_initialized_components_failure(const std::string & urdf)
 
 TEST_F(ResourceManagerTest, test_unitilizable_hardware_no_validation)
 {
+  SCOPED_TRACE("test_unitilizable_hardware_no_validation");
   // If the the hardware can not be initialized and load_and_initialize_components didn't try to
   // validate the interfaces, the interface should not show up
   test_load_and_initialized_components_failure(
@@ -178,10 +179,12 @@ TEST_F(ResourceManagerTest, initialization_with_urdf_and_manual_validation)
 
 TEST_F(ResourceManagerTest, expect_validation_failure_if_not_all_interfaces_are_exported)
 {
+  SCOPED_TRACE("missing state keys");
   // missing state keys
   test_load_and_initialized_components_failure(
     ros2_control_test_assets::minimal_robot_missing_state_keys_urdf);
 
+  SCOPED_TRACE("missing command keys");
   // missing command keys
   test_load_and_initialized_components_failure(
     ros2_control_test_assets::minimal_robot_missing_command_keys_urdf);
@@ -215,14 +218,17 @@ TEST_F(ResourceManagerTest, no_load_and_initialize_components_function_called)
 TEST_F(
   ResourceManagerTest, expect_load_and_initialize_to_fail_when_a_hw_component_plugin_does_not_exist)
 {
+  SCOPED_TRACE("Actuator plugin does not exist");
   // Actuator
   test_load_and_initialized_components_failure(
     ros2_control_test_assets::minimal_robot_not_existing_actuator_plugin);
 
+  SCOPED_TRACE("Sensor plugin does not exist");
   // Sensor
   test_load_and_initialized_components_failure(
     ros2_control_test_assets::minimal_robot_not_existing_sensors_plugin);
 
+  SCOPED_TRACE("System plugin does not exist");
   // System
   test_load_and_initialized_components_failure(
     ros2_control_test_assets::minimal_robot_not_existing_system_plugin);
@@ -230,6 +236,7 @@ TEST_F(
 
 TEST_F(ResourceManagerTest, expect_load_and_initialize_to_fail_when_there_are_dupplicate_of_hw_comp)
 {
+  SCOPED_TRACE("Duplicated components");
   test_load_and_initialized_components_failure(
     ros2_control_test_assets::minimal_robot_duplicated_component);
 }
@@ -237,14 +244,17 @@ TEST_F(ResourceManagerTest, expect_load_and_initialize_to_fail_when_there_are_du
 TEST_F(
   ResourceManagerTest, expect_load_and_initialize_to_fail_when_a_hw_component_initialization_fails)
 {
+  SCOPED_TRACE("Actuator initialization fails");
   // Actuator
   test_load_and_initialized_components_failure(
     ros2_control_test_assets::minimal_robot_actuator_initialization_error);
 
+  SCOPED_TRACE("Sensor initialization fails");
   // Sensor
   test_load_and_initialized_components_failure(
     ros2_control_test_assets::minimal_robot_sensor_initialization_error);
 
+  SCOPED_TRACE("System initialization fails");
   // System
   test_load_and_initialized_components_failure(
     ros2_control_test_assets::minimal_robot_system_initialization_error);
