@@ -1,4 +1,4 @@
-// Copyright 2020 PAL Robotics S.L.
+// Copyright 2024 PAL Robotics S.L.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,18 +14,17 @@
 
 /// \author Adolfo Rodriguez Tsouroukdissian
 
-#ifndef JOINT_LIMITS_INTERFACE__JOINT_LIMITS_URDF_HPP_
-#define JOINT_LIMITS_INTERFACE__JOINT_LIMITS_URDF_HPP_
+#ifndef JOINT_LIMITS__JOINT_LIMITS_URDF_HPP_
+#define JOINT_LIMITS__JOINT_LIMITS_URDF_HPP_
 
-#include <urdf/urdfdom_compatibility.h>
-#include <urdf_model/joint.h>
-#include <joint_limits_interface/joint_limits.hpp>
-#include <rclcpp/rclcpp.hpp>
+#include "joint_limits/joint_limits.hpp"
+#include "urdf_model/joint.h"
 
-namespace joint_limits_interface
+namespace joint_limits
 {
+
 /**
- * Populate a JointLimits instance from URDF joint data.
+ * \brief Populate a JointLimits instance from URDF joint data.
  * \param[in] urdf_joint URDF joint.
  * \param[out] limits Where URDF joint limit data gets written into. Limits in \e urdf_joint will
  * overwrite existing values. Values in \e limits not present in \e urdf_joint remain unchanged.
@@ -52,18 +51,18 @@ inline bool getJointLimits(urdf::JointConstSharedPtr urdf_joint, JointLimits & l
   }
 
   limits.has_velocity_limits = true;
-  limits.max_velocity = urdf_joint->limits->velocity;
+  limits.max_velocity = std::abs(urdf_joint->limits->velocity);
 
   limits.has_acceleration_limits = false;
 
   limits.has_effort_limits = true;
-  limits.max_effort = urdf_joint->limits->effort;
+  limits.max_effort = std::abs(urdf_joint->limits->effort);
 
   return true;
 }
 
 /**
- * Populate a SoftJointLimits instance from URDF joint data.
+ * \brief Populate a SoftJointLimits instance from URDF joint data.
  * \param[in] urdf_joint URDF joint.
  * \param[out] soft_limits Where URDF soft joint limit data gets written into.
  * \return True if \e urdf_joint has a valid soft limits specification, false otherwise.
@@ -82,7 +81,5 @@ inline bool getSoftJointLimits(urdf::JointConstSharedPtr urdf_joint, SoftJointLi
 
   return true;
 }
-
-}  // namespace joint_limits_interface
-
-#endif  // JOINT_LIMITS_INTERFACE__JOINT_LIMITS_URDF_HPP_
+}  // namespace joint_limits
+#endif  // JOINT_LIMITS__JOINT_LIMITS_URDF_HPP_

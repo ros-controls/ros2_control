@@ -1,6 +1,6 @@
 <package format="3">
   <name>joint_limits</name>
-  <version>4.3.0</version>
+  <version>4.4.0</version>
   <description>Interfaces for handling of joint limits for controllers or hardware.</description>
 
   <maintainer email="bence.magyar.robotics@gmail.com">Bence Magyar</maintainer>
@@ -16,6 +16,7 @@
 
   <depend>rclcpp</depend>
   <depend>rclcpp_lifecycle</depend>
+  <depend>urdf</depend>
 
   <test_depend>launch_testing_ament_cmake</test_depend>
   <test_depend>ament_cmake_gtest</test_depend>
