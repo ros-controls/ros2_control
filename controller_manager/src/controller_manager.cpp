@@ -827,6 +827,10 @@ void ControllerManager::clear_requests()
 {
   deactivate_request_.clear();
   activate_request_.clear();
+  for (const auto & controller_name : to_chained_mode_request_)
+  {
+    resource_manager_->make_controller_reference_interfaces_unavailable(controller_name);
+  }
   to_chained_mode_request_.clear();
   from_chained_mode_request_.clear();
   activate_command_interface_request_.clear();
@@ -2355,6 +2359,8 @@ controller_interface::return_type ControllerManager::check_following_controllers
       if (found_it == to_chained_mode_request_.end())
       {
         to_chained_mode_request_.push_back(following_ctrl_it->info.name);
+        resource_manager_->make_controller_reference_interfaces_available(
+          following_ctrl_it->info.name);
         RCLCPP_DEBUG(
           get_logger(), "Adding controller '%s' in 'to chained mode' request.",
           following_ctrl_it->info.name.c_str());
