@@ -848,7 +848,7 @@ controller_interface::return_type ControllerManager::configure_controller(
   // let's update the list of following and preceding controllers
   const auto cmd_itfs = controller->command_interface_configuration().names;
   const auto state_itfs = controller->state_interface_configuration().names;
-  if (cmd_itfs.empty() && state_itfs.empty())
+  if (controller_chain_spec_.find(controller_name) == controller_chain_spec_.end())
   {
     controller_chain_spec_[controller_name] = ControllerChainSpec();
   }
