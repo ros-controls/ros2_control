@@ -20,6 +20,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           path: src/ros2_control
+          # default behavior is correct on master branch
+          # ref: ${{ github.event_name == 'schedule' && 'master' || '' }}
       - name: Build and test
         shell: bash
         run: |

@@ -8,7 +8,6 @@ on:
     # Run every day to detect flakiness and broken dependencies
     - cron: '03 1 * * *'
 
-
 jobs:
   rolling_rhel_binary:
     name: Rolling RHEL binary build
@@ -20,6 +19,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           path: src/ros2_control
+          # default behavior is correct on master branch
+          # ref: ${{ github.event_name == 'schedule' && 'master' || '' }}
       - name: Install dependencies
         run: |
           rosdep update
