@@ -2728,25 +2728,26 @@ void controller_manager::ControllerManager::perform_controller_sorting()
       ordered_controllers_names_.begin(), ordered_controllers_names_.end(), controller_name);
     if (it == ordered_controllers_names_.end())
     {
-      ordered_controllers_names_.push_back(controller_name);
-      RCLCPP_INFO(get_logger(), "Adding controller : %s", controller_name.c_str());
+      insert_controller(controller_name, ordered_controllers_names_.end(), false);
+      //      ordered_controllers_names_.push_back(controller_name);
+      //      RCLCPP_DEBUG(get_logger(), "Adding controller : %s", controller_name.c_str());
       it = std::find(
         ordered_controllers_names_.begin(), ordered_controllers_names_.end(), controller_name);
     }
 
-    RCLCPP_INFO(get_logger(), "\tFollowing controllers : ");
-    for (const std::string & flwg_ctrl : chain_spec.following_controllers)
-    {
-      RCLCPP_INFO(get_logger(), "\t\t%s", flwg_ctrl.c_str());
-      insert_controller(flwg_ctrl, it, true);
-    }
+    //    RCLCPP_DEBUG(get_logger(), "\tFollowing controllers : ");
+    //    for (const std::string & flwg_ctrl : chain_spec.following_controllers)
+    //    {
+    //      RCLCPP_DEBUG(get_logger(), "\t\t%s", flwg_ctrl.c_str());
+    //      insert_controller(flwg_ctrl, it, true);
+    //    }
 
-    RCLCPP_INFO(get_logger(), "\tPreceding controllers : ");
-    for (const std::string & preced_ctrl : chain_spec.preceding_controllers)
-    {
-      RCLCPP_INFO(get_logger(), "\t\t%s", preced_ctrl.c_str());
-      insert_controller(preced_ctrl, it, false);
-    }
+    //    RCLCPP_DEBUG(get_logger(), "\tPreceding controllers : ");
+    //    for (const std::string & preced_ctrl : chain_spec.preceding_controllers)
+    //    {
+    //      RCLCPP_DEBUG(get_logger(), "\t\t%s", preced_ctrl.c_str());
+    //      insert_controller(preced_ctrl, it, false);
+    //    }
   }
 }
 
