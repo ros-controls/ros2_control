@@ -417,7 +417,7 @@ private:
 
   void insert_controller(
     const std::string & ctrl_name, std::vector<std::string>::iterator controller_iterator,
-    bool append_to_controller);
+    bool append_to_controller, bool propagate = true);
 
   void controller_activity_diagnostic_callback(diagnostic_updater::DiagnosticStatusWrapper & stat);
 
