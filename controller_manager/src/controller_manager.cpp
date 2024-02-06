@@ -908,20 +908,47 @@ controller_interface::return_type ControllerManager::configure_controller(
   //      return ControllerSpec();
   //  };
 
+  //  RCLCPP_INFO(get_logger(), "Full controllers list is:");
+  //  for (const auto & ctrl : to)
+  //  {
+  //    RCLCPP_INFO(this->get_logger(), "\t%s", ctrl.info.name.c_str());
+  //  }
   ordered_controllers_names_.clear();
   perform_controller_sorting();
-  // Reordering the controllers
-  std::stable_sort(
-    to.begin(), to.end(),
-    std::bind(
-      &ControllerManager::controller_sorting, this, std::placeholders::_1, std::placeholders::_2,
-      to));
+  std::vector<ControllerSpec> new_list;
+  for (const auto & ctrl : ordered_controllers_names_)
+  {
+    auto controller_it = std::find_if(
+      to.begin(), to.end(), std::bind(controller_name_compare, std::placeholders::_1, ctrl));
+    if (controller_it != to.end()) new_list.push_back(*controller_it);
+  }
 
-  RCLCPP_DEBUG(get_logger(), "Reordered controllers list is:");
   for (const auto & ctrl : to)
   {
-    RCLCPP_DEBUG(this->get_logger(), "\t%s", ctrl.info.name.c_str());
+    auto controller_it = std::find_if(
+      new_list.begin(), new_list.end(),
+      std::bind(controller_name_compare, std::placeholders::_1, ctrl.info.name));
+    if (controller_it == new_list.end()) new_list.push_back(ctrl);
   }
+
+  // Reordering the controllers
+  //  std::stable_sort(
+  //    to.begin(), to.end(),
+  //    std::bind(
+  //      &ControllerManager::controller_sorting, this, std::placeholders::_1,
+  //      std::placeholders::_2, to));
+  RCLCPP_INFO(get_logger(), "New Reordered controllers list is:");
+  for (const auto & ctrl : ordered_controllers_names_)
+  {
+    RCLCPP_INFO(this->get_logger(), "\t%s", ctrl.c_str());
+  }
+  to = new_list;
+
+  //  RCLCPP_INFO(get_logger(), "Reordered controllers list is:");
+  //  for (const auto & ctrl : to)
+  //  {
+  //    RCLCPP_INFO(this->get_logger(), "\t%s", ctrl.info.name.c_str());
+  //  }
 
   // switch lists
   rt_controllers_wrapper_.switch_updated_list(guard);
@@ -1448,6 +1475,10 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::add_co
       get_logger(), "Could not initialize the controller named '%s'", controller.info.name.c_str());
     return nullptr;
   }
+
+  // initialize the data for the controller chain spec once it is loaded. It is needed, so when we
+  // sort the controllers later, they will be added at the end
+  //  controller_chain_spec_[controller.info.name] = ControllerChainSpec();
 
   executor_->add_node(controller.c->get_node()->get_node_base_interface());
   to.emplace_back(controller);
