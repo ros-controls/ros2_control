@@ -4,8 +4,11 @@ name: Foxy Binary Build - main
 
 on:
   workflow_dispatch:
+<<<<<<< HEAD:.github/workflows/foxy-binary-build-main.yml
     branches:
       - foxy
+=======
+>>>>>>> b8c5418 (remove workflow dispatch branch (#1362)):.github/workflows/iron-binary-build-main.yml
   pull_request:
     branches:
       - foxy

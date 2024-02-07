@@ -1,9 +1,9 @@
-name: Rolling Source Build
+name: Iron Source Build
 on:
   workflow_dispatch:
   push:
     branches:
-      - master
+      - iron
   schedule:
     # Run every day to detect flakiness and broken dependencies
     - cron: '03 3 * * *'
@@ -12,6 +12,6 @@ jobs:
   source:
     uses: ./.github/workflows/reusable-ros-tooling-source-build.yml
     with:
-      ros_distro: rolling
-      ref: master
-      ros2_repo_branch: master
+      ros_distro: iron
+      ref: iron
+      ros2_repo_branch: iron

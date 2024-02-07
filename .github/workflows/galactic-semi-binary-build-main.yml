@@ -3,8 +3,14 @@ name: Galactic Semi-Binary Build - main
 
 on:
   workflow_dispatch:
+<<<<<<< HEAD:.github/workflows/galactic-semi-binary-build-main.yml
     branches:
       - galactic
+=======
+  pull_request:
+    branches:
+      - iron
+>>>>>>> b8c5418 (remove workflow dispatch branch (#1362)):.github/workflows/iron-semi-binary-build-testing.yml
   push:
     branches:
       - galactic

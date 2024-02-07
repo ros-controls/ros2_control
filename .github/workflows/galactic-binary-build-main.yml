@@ -4,8 +4,11 @@ name: Galactic Binary Build - main
 
 on:
   workflow_dispatch:
+<<<<<<< HEAD:.github/workflows/galactic-binary-build-main.yml
     branches:
       - galactic
+=======
+>>>>>>> b8c5418 (remove workflow dispatch branch (#1362)):.github/workflows/iron-binary-build-testing.yml
   pull_request:
     branches:
       - galactic
