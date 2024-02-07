@@ -2786,41 +2786,6 @@ void ControllerManager::insert_controller(
   const std::string & ctrl_name, std::vector<std::string>::iterator controller_iterator,
   bool append_to_controller)
 {
-  //  auto get_inserting_index = [this](
-  //                               const auto init_iterator, const ControllerChainSpec & spec,
-  //                               const std::vector<std::string> & list)
-  //  {
-  //    auto iterator = list.end();
-  //    for (const auto & ctrl : spec.following_controllers)
-  //    {
-  //      auto it = std::find(list.begin(), list.end(), ctrl);
-  //      if (it != list.end())
-  //      {
-  //        if (std::distance(list.begin(), it) < std::distance(list.begin(), iterator))
-  //        {
-  //          iterator = it;
-  //        }
-  //      }
-  //    }
-  //    for (const auto & ctrl : spec.preceding_controllers)
-  //    {
-  //      auto it = std::find(list.begin(), list.end(), ctrl);
-  //      if (it != list.end())
-  //      {
-  //        if (std::distance(list.begin(), it) < std::distance(list.begin(), iterator))
-  //        {
-  //          RCLCPP_INFO(
-  //            get_logger(), "THIS CASE CAN NEVER HAPPEN, INSETING CONTROLLER IN WRONG POSITION :
-  //            %s", ctrl.c_str());
-  //        }
-  //        if (std::distance(list.begin(), it) > std::distance(list.begin(), iterator))
-  //        {
-  //          iterator = it;
-  //        }
-  //      }
-  //    }
-  //    return iterator;
-  //  };
   auto new_ctrl_it =
     std::find(ordered_controllers_names_.begin(), ordered_controllers_names_.end(), ctrl_name);
   if (new_ctrl_it == ordered_controllers_names_.end())
