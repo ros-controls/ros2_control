@@ -2784,7 +2784,7 @@ void controller_manager::ControllerManager::perform_controller_sorting()
 
 void ControllerManager::insert_controller(
   const std::string & ctrl_name, std::vector<std::string>::iterator controller_iterator,
-  bool append_to_controller, bool propagate)
+  bool append_to_controller)
 {
   //  auto get_inserting_index = [this](
   //                               const auto init_iterator, const ControllerChainSpec & spec,
@@ -2849,14 +2849,6 @@ void ControllerManager::insert_controller(
       if (it != ordered_controllers_names_.end())
       {
         if (
-          std::distance(ordered_controllers_names_.begin(), it) <
-          std::distance(ordered_controllers_names_.begin(), iterator))
-        {
-          RCLCPP_INFO(
-            get_logger(), "THIS CASE CAN NEVER HAPPEN, INSETING CONTROLLER IN WRONG POSITION : %s",
-            ctrl.c_str());
-        }
-        if (
           std::distance(ordered_controllers_names_.begin(), it) >
           std::distance(ordered_controllers_names_.begin(), iterator))
         {
@@ -2876,27 +2868,27 @@ void ControllerManager::insert_controller(
     new_ctrl_it =
       std::find(ordered_controllers_names_.begin(), ordered_controllers_names_.end(), ctrl_name);
 
-    if (propagate)
+    RCLCPP_INFO_EXPRESSION(
+      get_logger(), !controller_chain_spec_[ctrl_name].following_controllers.empty(),
+      "\t[%s]Following controllers : %ld", ctrl_name.c_str(),
+      controller_chain_spec_[ctrl_name].following_controllers.size());
+    for (const std::string & flwg_ctrl : controller_chain_spec_[ctrl_name].following_controllers)
     {
-      RCLCPP_INFO_EXPRESSION(
-        get_logger(), !controller_chain_spec_[ctrl_name].following_controllers.empty(),
-        "\t[%s]Following controllers : %ld", ctrl_name.c_str(),
-        controller_chain_spec_[ctrl_name].following_controllers.size());
-      for (const std::string & flwg_ctrl : controller_chain_spec_[ctrl_name].following_controllers)
-      {
-        RCLCPP_INFO(get_logger(), "\t\t[%s] : %s", ctrl_name.c_str(), flwg_ctrl.c_str());
-        insert_controller(flwg_ctrl, new_ctrl_it, true, false);
-      }
-      RCLCPP_INFO_EXPRESSION(
-        get_logger(), !controller_chain_spec_[ctrl_name].preceding_controllers.empty(),
-        "\t[%s]Preceding controllers : %ld", ctrl_name.c_str(),
-        controller_chain_spec_[ctrl_name].preceding_controllers.size());
-      for (const std::string & preced_ctrl :
-           controller_chain_spec_[ctrl_name].preceding_controllers)
-      {
-        RCLCPP_INFO(get_logger(), "\t\t[%s]: %s", ctrl_name.c_str(), preced_ctrl.c_str());
-        insert_controller(preced_ctrl, new_ctrl_it, false, false);
-      }
+      new_ctrl_it =
+        std::find(ordered_controllers_names_.begin(), ordered_controllers_names_.end(), ctrl_name);
+      RCLCPP_INFO(get_logger(), "\t\t[%s] : %s", ctrl_name.c_str(), flwg_ctrl.c_str());
+      insert_controller(flwg_ctrl, new_ctrl_it, true);
+    }
+    RCLCPP_INFO_EXPRESSION(
+      get_logger(), !controller_chain_spec_[ctrl_name].preceding_controllers.empty(),
+      "\t[%s]Preceding controllers : %ld", ctrl_name.c_str(),
+      controller_chain_spec_[ctrl_name].preceding_controllers.size());
+    for (const std::string & preced_ctrl : controller_chain_spec_[ctrl_name].preceding_controllers)
+    {
+      new_ctrl_it =
+        std::find(ordered_controllers_names_.begin(), ordered_controllers_names_.end(), ctrl_name);
+      RCLCPP_INFO(get_logger(), "\t\t[%s]: %s", ctrl_name.c_str(), preced_ctrl.c_str());
+      insert_controller(preced_ctrl, new_ctrl_it, false);
     }
   }
 }
