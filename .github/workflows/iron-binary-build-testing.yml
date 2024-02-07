@@ -4,8 +4,6 @@ name: Iron Binary Build - testing
 
 on:
   workflow_dispatch:
-    branches:
-      - iron
   pull_request:
     branches:
       - iron
