@@ -2,6 +2,18 @@ name: ROS Lint
 on:
   pull_request:
 
+env:
+  package-name:
+    controller_interface
+    controller_manager
+    controller_manager_msgs
+    hardware_interface
+    hardware_interface_testing
+    ros2controlcli
+    ros2_control
+    ros2_control_test_assets
+    transmission_interface
+
 jobs:
   ament_lint:
     name: ament_${{ matrix.linter }}
@@ -19,17 +31,7 @@ jobs:
       with:
         distribution: rolling
         linter: ${{ matrix.linter }}
-        package-name:
-          controller_interface
-          controller_manager
-          controller_manager_msgs
-          hardware_interface
-          hardware_interface_testing
-          ros2controlcli
-          ros2_control
-          ros2_control_test_assets
-          transmission_interface
-
+        package-name: ${{ env.package-name }}
   ament_lint_100:
     name: ament_${{ matrix.linter }}
     runs-on: ubuntu-latest
@@ -45,13 +47,4 @@ jobs:
         distribution: rolling
         linter: cpplint
         arguments: "--linelength=100 --filter=-whitespace/newline"
-        package-name:
-          controller_interface
-          controller_manager
-          controller_manager_msgs
-          hardware_interface
-          hardware_interface_testing
-          ros2controlcli
-          ros2_control
-          ros2_control_test_assets
-          transmission_interface
+        package-name: ${{ env.package-name }}
