@@ -415,7 +415,8 @@ private:
 
   void perform_controller_sorting();
 
-  void insert_controller(const std::string & ctrl_name, std::vector<std::string>::iterator controller_iterator,
+  void insert_controller(
+    const std::string & ctrl_name, std::vector<std::string>::iterator controller_iterator,
     bool append_to_controller);
 
   void controller_activity_diagnostic_callback(diagnostic_updater::DiagnosticStatusWrapper & stat);

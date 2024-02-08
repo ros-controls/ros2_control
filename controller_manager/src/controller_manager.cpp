@@ -777,7 +777,6 @@ controller_interface::return_type ControllerManager::configure_controller(
       get_logger(), "Controller '%s' is cleaned-up before configuring", controller_name.c_str());
     // TODO(destogl): remove reference interface if chainable; i.e., add a separate method for
     // cleaning-up controllers?
-    controller_chain_spec_cleanup(controller_chain_spec_, controller_name);
     new_state = controller->get_node()->cleanup();
     if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
     {
@@ -848,10 +847,6 @@ controller_interface::return_type ControllerManager::configure_controller(
   // let's update the list of following and preceding controllers
   const auto cmd_itfs = controller->command_interface_configuration().names;
   const auto state_itfs = controller->state_interface_configuration().names;
-  if (controller_chain_spec_.find(controller_name) == controller_chain_spec_.end())
-  {
-    controller_chain_spec_[controller_name] = ControllerChainSpec();
-  }
   for (const auto & cmd_itf : cmd_itfs)
   {
     controller_manager::ControllersListIterator ctrl_it;
@@ -886,33 +881,6 @@ controller_interface::return_type ControllerManager::configure_controller(
   to = from;
   std::vector<ControllerSpec> sorted_list;
 
-  //  auto is_controller_in_list =
-  //    [](const std::vector<ControllerSpec> & specs_list, const std::string & ctrl_name) -> bool
-  //  {
-  //    return std::find(
-  //             specs_list.begin(), specs_list.end(),
-  //             std::bind(controller_name_compare, std::placeholders::_1, ctrl_name)) !=
-  //           specs_list.end();
-  //  };
-
-  //  auto find_controller_spec_by_name = [](
-  //                                        const std::vector<ControllerSpec> & specs_list,
-  //                                        const std::string & ctrl_name) -> ControllerSpec
-  //  {
-  //    auto it = std::find(
-  //      specs_list.begin(), specs_list.end(),
-  //      std::bind(controller_name_compare, std::placeholders::_1, ctrl_name));
-  //    if (it != specs_list.end())
-  //      return *it;
-  //    else
-  //      return ControllerSpec();
-  //  };
-
-  //  RCLCPP_INFO(get_logger(), "Full controllers list is:");
-  //  for (const auto & ctrl : to)
-  //  {
-  //    RCLCPP_INFO(this->get_logger(), "\t%s", ctrl.info.name.c_str());
-  //  }
   ordered_controllers_names_.clear();
   perform_controller_sorting();
   std::vector<ControllerSpec> new_list;
@@ -923,32 +891,12 @@ controller_interface::return_type ControllerManager::configure_controller(
     if (controller_it != to.end()) new_list.push_back(*controller_it);
   }
 
-  for (const auto & ctrl : to)
-  {
-    auto controller_it = std::find_if(
-      new_list.begin(), new_list.end(),
-      std::bind(controller_name_compare, std::placeholders::_1, ctrl.info.name));
-    if (controller_it == new_list.end()) new_list.push_back(ctrl);
-  }
-
-  // Reordering the controllers
-  //  std::stable_sort(
-  //    to.begin(), to.end(),
-  //    std::bind(
-  //      &ControllerManager::controller_sorting, this, std::placeholders::_1,
-  //      std::placeholders::_2, to));
   RCLCPP_INFO(get_logger(), "New Reordered controllers list is:");
   for (const auto & ctrl : ordered_controllers_names_)
   {
     RCLCPP_INFO(this->get_logger(), "\t%s", ctrl.c_str());
   }
   to = new_list;
-
-  //  RCLCPP_INFO(get_logger(), "Reordered controllers list is:");
-  //  for (const auto & ctrl : to)
-  //  {
-  //    RCLCPP_INFO(this->get_logger(), "\t%s", ctrl.info.name.c_str());
-  //  }
 
   // switch lists
   rt_controllers_wrapper_.switch_updated_list(guard);
@@ -1477,8 +1425,8 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::add_co
   }
 
   // initialize the data for the controller chain spec once it is loaded. It is needed, so when we
-  // sort the controllers later, they will be added at the end
-  //  controller_chain_spec_[controller.info.name] = ControllerChainSpec();
+  // sort the controllers later, they will be added to the list
+  controller_chain_spec_[controller.info.name] = ControllerChainSpec();
 
   executor_->add_node(controller.c->get_node()->get_node_base_interface());
   to.emplace_back(controller);
@@ -2760,25 +2708,9 @@ void controller_manager::ControllerManager::perform_controller_sorting()
     if (it == ordered_controllers_names_.end())
     {
       insert_controller(controller_name, ordered_controllers_names_.end(), false);
-      //      ordered_controllers_names_.push_back(controller_name);
-      //      RCLCPP_DEBUG(get_logger(), "Adding controller : %s", controller_name.c_str());
       it = std::find(
         ordered_controllers_names_.begin(), ordered_controllers_names_.end(), controller_name);
     }
-
-    //    RCLCPP_DEBUG(get_logger(), "\tFollowing controllers : ");
-    //    for (const std::string & flwg_ctrl : chain_spec.following_controllers)
-    //    {
-    //      RCLCPP_DEBUG(get_logger(), "\t\t%s", flwg_ctrl.c_str());
-    //      insert_controller(flwg_ctrl, it, true);
-    //    }
-
-    //    RCLCPP_DEBUG(get_logger(), "\tPreceding controllers : ");
-    //    for (const std::string & preced_ctrl : chain_spec.preceding_controllers)
-    //    {
-    //      RCLCPP_DEBUG(get_logger(), "\t\t%s", preced_ctrl.c_str());
-    //      insert_controller(preced_ctrl, it, false);
-    //    }
   }
 }
 
