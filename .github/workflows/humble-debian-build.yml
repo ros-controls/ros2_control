@@ -15,16 +15,24 @@ jobs:
     runs-on: ubuntu-latest
     env:
       ROS_DISTRO: humble
+      skip-packages-build: rqt_controller_manager
+      skip-packages-test: rqt_controller_manager controller_manager_msgs
     container: ghcr.io/ros-controls/ros:humble-debian
     steps:
       - uses: actions/checkout@v4
         with:
           path: src/ros2_control
-      - name: Build and test
+          ref: ${{ github.event_name == 'schedule' && 'humble' || '' }}
+      - name: Build workspace
         shell: bash
         run: |
           source /opt/ros2_ws/install/setup.bash
           vcs import src < src/ros2_control/ros2_control.${{ env.ROS_DISTRO }}.repos
-          colcon build --packages-skip rqt_controller_manager
-          colcon test --packages-skip rqt_controller_manager control_msgs controller_manager_msgs
+          colcon build --packages-up-to $(colcon list --paths src/ros2_control/* --names-only) --packages-skip ${{ env.skip-packages-build }}
+      - name: Test workspace
+        shell: bash
+        continue-on-error: true
+        run: |
+          source /opt/ros2_ws/install/setup.bash
+          colcon test --packages-select $(colcon list --paths src/ros2_control/* --names-only) --packages-skip ${{ env.skip-packages-test }}
           colcon test-result --verbose

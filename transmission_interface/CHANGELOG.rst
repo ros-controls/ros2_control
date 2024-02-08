@@ -2,6 +2,9 @@
 Changelog for package transmission_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.4.0 (2024-01-31)
+------------------
+
 4.3.0 (2024-01-20)
 ------------------
 * Improve transmission tests (`#1238 <https://github.com/ros-controls/ros2_control/issues/1238>`_)

@@ -8,25 +8,36 @@ on:
     # Run every day to detect flakiness and broken dependencies
     - cron: '03 1 * * *'
 
-
 jobs:
   iron_rhel_binary:
     name: Iron RHEL binary build
     runs-on: ubuntu-latest
     env:
       ROS_DISTRO: iron
+      skip-packages: rqt_controller_manager
     container: ghcr.io/ros-controls/ros:iron-rhel
     steps:
       - uses: actions/checkout@v4
         with:
           path: src/ros2_control
+          ref: ${{ github.event_name == 'schedule' && 'iron' || '' }}
       - name: Install dependencies
         run: |
+          source /opt/ros/${{ env.ROS_DISTRO }}/setup.bash
+          source /opt/ros2_ws/install/local_setup.bash
           rosdep update
           rosdep install -iyr --from-path src/ros2_control || true
-      - name: Build and test
+      - name: Build workspace
+        # source also underlay workspace with generate_parameter_library on rhel9
         run: |
           source /opt/ros/${{ env.ROS_DISTRO }}/setup.bash
-          colcon build --packages-skip rqt_controller_manager
-          colcon test --packages-skip rqt_controller_manager ros2controlcli
+          source /opt/ros2_ws/install/local_setup.bash
+          colcon build --packages-up-to $(colcon list --paths src/ros2_control/* --names-only) --packages-skip  ${{ env.skip-packages }}
+      - name: Test workspace
+        shell: bash
+        continue-on-error: true
+        run: |
+          source /opt/ros/${{ env.ROS_DISTRO }}/setup.bash
+          source /opt/ros2_ws/install/local_setup.bash
+          colcon test --packages-select $(colcon list --paths src/ros2_control/* --names-only) --packages-skip  ${{ env.skip-packages }}
           colcon test-result --verbose

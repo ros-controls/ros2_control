@@ -3,8 +3,6 @@ name: Humble Semi-Binary Build - main
 
 on:
   workflow_dispatch:
-    branches:
-      - humble
   pull_request:
     branches:
       - humble
