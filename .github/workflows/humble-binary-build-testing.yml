@@ -4,8 +4,6 @@ name: Humble Binary Build - testing
 
 on:
   workflow_dispatch:
-    branches:
-      - humble
   pull_request:
     branches:
       - humble
