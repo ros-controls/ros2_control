@@ -121,6 +121,12 @@ bool JointSaturationLimiter<JointLimits>::on_enforce(
     // limit velocity
     if (joint_limits_[index].has_velocity_limits)
     {
+      // if desired velocity is not defined calculate it from positions
+      if (std::fabs(desired_vel[index]) <= VALUE_CONSIDERED_ZERO || std::isnan(desired_vel[index]))
+      {
+        desired_vel[index] =
+          (desired_pos[index] - current_joint_states.positions[index]) / dt_seconds;
+      }
       // clamp input vel_cmd
       if (std::fabs(desired_vel[index]) > joint_limits_[index].max_velocity)
       {
@@ -135,7 +141,6 @@ bool JointSaturationLimiter<JointLimits>::on_enforce(
             current_joint_states.positions[index] + desired_vel[index] * dt_seconds;
         }
 
-        // compute desired_acc when velocity is limited
         desired_acc[index] =
           (desired_vel[index] - current_joint_states.velocities[index]) / dt_seconds;
       }
@@ -166,11 +171,13 @@ bool JointSaturationLimiter<JointLimits>::on_enforce(
           }
         };
 
-        // limit acc for pos_cmd and/or vel_cmd
-
-        // compute desired_acc with desired_vel and vel_state
-        desired_acc[index] =
-          (desired_vel[index] - current_joint_states.velocities[index]) / dt_seconds;
+        // if desired acceleration if not provided compute it from desired_vel and vel_state
+        if (
+          std::fabs(desired_acc[index]) <= VALUE_CONSIDERED_ZERO || std::isnan(desired_acc[index]))
+        {
+          desired_acc[index] =
+            (desired_vel[index] - current_joint_states.velocities[index]) / dt_seconds;
+        }
 
         // check if decelerating - if velocity is changing toward 0
         bool deceleration_limit_applied = false;
