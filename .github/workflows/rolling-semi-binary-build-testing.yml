@@ -3,8 +3,6 @@ name: Rolling Semi-Binary Build - testing
 
 on:
   workflow_dispatch:
-    branches:
-      - master
   pull_request:
     branches:
       - master
