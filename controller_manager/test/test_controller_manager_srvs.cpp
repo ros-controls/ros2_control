@@ -456,6 +456,8 @@ TEST_F(TestControllerManagerSrvs, unload_controller_srv)
 
   result = call_service_and_wait(*client, request, srv_executor, true);
   ASSERT_TRUE(result->ok);
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, test_controller->get_state().id());
   EXPECT_EQ(0u, cm_->get_loaded_controllers().size());
 }
 
@@ -488,6 +490,8 @@ TEST_F(TestControllerManagerSrvs, robot_description_on_load_and_unload_controlle
   auto unload_request = std::make_shared<controller_manager_msgs::srv::UnloadController::Request>();
   unload_request->name = test_controller::TEST_CONTROLLER_NAME;
   auto result = call_service_and_wait(*unload_client, unload_request, srv_executor, true);
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, test_controller->get_state().id());
   EXPECT_EQ(0u, cm_->get_loaded_controllers().size());
 
   // now load it and check if it got the new robot description
@@ -508,6 +512,9 @@ TEST_F(TestControllerManagerSrvs, configure_controller_srv)
   rclcpp::Client<controller_manager_msgs::srv::ConfigureController>::SharedPtr client =
     srv_node->create_client<controller_manager_msgs::srv::ConfigureController>(
       "test_controller_manager/configure_controller");
+  rclcpp::Client<controller_manager_msgs::srv::UnloadController>::SharedPtr unload_client =
+    srv_node->create_client<controller_manager_msgs::srv::UnloadController>(
+      "test_controller_manager/unload_controller");
 
   auto request = std::make_shared<controller_manager_msgs::srv::ConfigureController::Request>();
   request->name = test_controller::TEST_CONTROLLER_NAME;
@@ -526,6 +533,15 @@ TEST_F(TestControllerManagerSrvs, configure_controller_srv)
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
     cm_->get_loaded_controllers()[0].c->get_state().id());
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, test_controller->get_state().id());
+
+  // now unload the controller and check the state
+  auto unload_request = std::make_shared<controller_manager_msgs::srv::UnloadController::Request>();
+  unload_request->name = test_controller::TEST_CONTROLLER_NAME;
+  ASSERT_TRUE(call_service_and_wait(*unload_client, unload_request, srv_executor, true)->ok);
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, test_controller->get_state().id());
+  EXPECT_EQ(0u, cm_->get_loaded_controllers().size());
 }
 
 TEST_F(TestControllerManagerSrvs, list_sorted_chained_controllers)
