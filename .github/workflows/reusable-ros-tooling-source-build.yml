@@ -14,7 +14,7 @@ on:
         required: true
         type: string
       ros2_repo_branch:
-        description: 'Branch in the ros2/ros2 repository from which ".repos" should be used. Possible values: master (Rolling), humble.'
+        description: 'Branch in the ros2/ros2 repository from which ".repos" should be used.'
         default: 'master'
         required: false
         type: string
@@ -23,6 +23,9 @@ jobs:
   reusable_ros_tooling_source_build:
     name: ${{ inputs.ros_distro }} ubuntu-22.04
     runs-on: ubuntu-22.04
+    env:
+      # this will be src/{repo-owner}/{repo-name}
+      path: src/${{ github.repository }}
     strategy:
       fail-fast: false
     steps:
@@ -32,23 +35,21 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref }}
+          path: ${{ env.path }}
+      - name: Get list of packages
+        # we need both paths, there is no wildcard/glob for packages defined in the root folder and subfolders at the same time
+        run: |
+          echo "REPO_NAME=$(echo ${{ github.repository }} | cut -d '/' -f 2)" >> $GITHUB_ENV
+          echo "package_list=$(colcon list --paths ${{ env.path }} --names-only) $(colcon list --paths ${{ env.path }}/* --names-only)" >> $GITHUB_ENV
+          echo "repo ${{ env.REPO_NAME}} has packages: ${{ env.package_list }}"
       - uses: ros-tooling/action-ros-ci@0.3.6
         with:
           target-ros2-distro: ${{ inputs.ros_distro }}
-          # build all packages listed in the meta package
-          ref: ${{ inputs.ref }} # otherwise the default branch is used for scheduled workflows
-          package-name:
-            controller_interface
-            controller_manager
-            controller_manager_msgs
-            hardware_interface
-            ros2controlcli
-            ros2_control
-            ros2_control_test_assets
-            transmission_interface
+          ref: ${{ inputs.ref }}
+          package-name: ${{ env.package_list }}
           vcs-repo-file-url: |
             https://raw.githubusercontent.com/ros2/ros2/${{ inputs.ros2_repo_branch }}/ros2.repos
-            https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/ros2_control.${{ inputs.ros_distro }}.repos?token=${{ secrets.GITHUB_TOKEN }}
+            ${{ env.path }}/${{ env.REPO_NAME}}.${{ inputs.ros_distro }}.repos
           colcon-mixin-repository: https://raw.githubusercontent.com/colcon/colcon-mixin-repository/master/index.yaml
       - uses: actions/upload-artifact@v4.3.0
         with:
