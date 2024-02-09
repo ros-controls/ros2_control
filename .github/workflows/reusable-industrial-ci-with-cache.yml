@@ -55,19 +55,14 @@ jobs:
       CCACHE_DIR: ${{ github.workspace }}/${{ inputs.ccache_dir }}
       BASEDIR: ${{ github.workspace }}/${{ inputs.basedir }}
       CACHE_PREFIX: ${{ inputs.ros_distro }}-${{ inputs.upstream_workspace }}-${{ inputs.ros_repo }}-${{ github.job }}
-      # this will be src/{repo-owner}/{repo-name}
-      path: src/${{ github.repository }}
     steps:
       - name: Checkout ${{ inputs.ref }} when build is not scheduled
         if: ${{ github.event_name != 'schedule' }}
         uses: actions/checkout@v4
-        with:
-          path: ${{ env.path }}
       - name: Checkout ${{ inputs.ref }} on scheduled build
         if: ${{ github.event_name == 'schedule' }}
         uses: actions/checkout@v4
         with:
-          path: ${{ env.path }}
           ref: ${{ inputs.ref_for_scheduled_build }}
       - name: cache target_ws
         if: ${{ ! matrix.env.CCOV }}
