@@ -1,0 +1,75 @@
+name: Reusable Debian Source Build
+# Reusable action to simplify dealing with debian source builds
+# author: Christoph Froehlich <christoph.froehlich@ait.ac.at>
+
+on:
+  workflow_call:
+    inputs:
+      ros_distro:
+        description: 'ROS2 distribution name'
+        required: true
+        type: string
+      ref_for_scheduled_build:
+        description: 'Reference on which the repo should be checkout for scheduled build. Usually is this name of a branch or a tag.'
+        default: ''
+        required: false
+        type: string
+      upstream_workspace:
+        description: 'Path to local .repos file.'
+        default: ''
+        required: false
+        type: string
+      skip_packages:
+        description: 'Packages to skip from build and test'
+        default: ''
+        required: false
+        type: string
+      skip_packages_test:
+        description: 'Packages to skip from test additionally to skip_packages'
+        default: ''
+        required: false
+        type: string
+
+
+jobs:
+  debian_source:
+    name: ${{ inputs.ros_distro }} debian build
+    runs-on: ubuntu-latest
+    env:
+      # this will be src/{repo-owner}/{repo-name}
+      path: src/${{ github.repository }}
+    container: ghcr.io/ros-controls/ros:${{ inputs.ros_distro }}-debian
+    steps:
+      - name: Checkout default ref when build is not scheduled
+        if: ${{ github.event_name != 'schedule' }}
+        uses: actions/checkout@v4
+        with:
+          path: ${{ env.path }}
+      - name: Checkout ${{ inputs.ref_for_scheduled_build }} on scheduled build
+        if: ${{ github.event_name == 'schedule' }}
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref_for_scheduled_build }}
+          path: ${{ env.path }}
+      - name: Import upstream workspace
+        shell: bash
+        run: |
+          if [[ -n "${{ inputs.upstream_workspace }}" ]]; then
+            vcs import src < ${{ env.path }}/${{ inputs.upstream_workspace }}
+          fi
+      - name: Get list of packages
+        # we need both paths, there is no wildcard/glob for packages defined in the root folder and subfolders at the same time
+        run: |
+          echo "package_list=$(colcon list --paths ${{ env.path }} --names-only) $(colcon list --paths ${{ env.path }}/* --names-only)" >> $GITHUB_ENV
+      - name: Build workspace
+        shell: bash
+        run: |
+          source /opt/ros2_ws/install/setup.bash
+          colcon build --packages-up-to ${{ env.package_list }} --packages-skip ${{ inputs.skip_packages }}
+      - name: Test workspace
+        shell: bash
+        continue-on-error: true
+        run: |
+          source /opt/ros2_ws/install/setup.bash
+          colcon test --packages-select ${{ env.package_list }} --packages-skip ${{ inputs.skip_packages }} ${{ inputs.skip_packages_test }}
+          colcon test-result --verbose
