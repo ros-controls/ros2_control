@@ -40,7 +40,7 @@ jobs:
         # we need both paths, there is no wildcard/glob for packages defined in the root folder and subfolders at the same time
         run: |
           echo "REPO_NAME=$(echo ${{ github.repository }} | cut -d '/' -f 2)" >> $GITHUB_ENV
-          echo "package_list=$(colcon list --paths ${{ env.path }} --names-only) $(colcon list --paths ${{ env.path }}/* --names-only)" >> $GITHUB_ENV
+          echo "package_list=$(colcon list --paths ${{ env.path }} --names-only | tr '\n' ' ') $(colcon list --paths ${{ env.path }}/* --names-only | tr '\n' ' ')" >> $GITHUB_ENV
           echo "repo ${{ env.REPO_NAME}} has packages: ${{ env.package_list }}"
       - uses: ros-tooling/action-ros-ci@0.3.6
         with:
