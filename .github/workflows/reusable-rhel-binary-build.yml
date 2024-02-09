@@ -63,7 +63,7 @@ jobs:
       - name: Get list of packages
         # we need both paths, there is no wildcard/glob for packages defined in the root folder and subfolders at the same time
         run: |
-          echo "package_list=$(colcon list --paths ${{ env.path }} --names-only) $(colcon list --paths ${{ env.path }}/* --names-only)" >> $GITHUB_ENV
+          echo "package_list=$(colcon list --paths ${{ env.path }} --names-only | tr '\n' ' ') $(colcon list --paths ${{ env.path }}/* --names-only | tr '\n' ' ')" >> $GITHUB_ENV
       - name: Build workspace
         shell: bash
         # source also underlay workspace with generate_parameter_library on rhel9
