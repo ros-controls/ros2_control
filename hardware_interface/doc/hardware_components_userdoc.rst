@@ -16,6 +16,7 @@ Guidelines and Best Practices
 
    Hardware Interface Types <hardware_interface_types_userdoc.rst>
    Writing a Hardware Component <writing_new_hardware_component.rst>
+   Different Update Rates <different_update_rates_userdoc.rst>
 
 
 Handling of errors that happen during read() and write() calls
