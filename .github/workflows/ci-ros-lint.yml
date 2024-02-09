@@ -9,6 +9,7 @@ env:
     controller_manager_msgs
     hardware_interface
     hardware_interface_testing
+    joint_limits
     ros2controlcli
     ros2_control
     ros2_control_test_assets
