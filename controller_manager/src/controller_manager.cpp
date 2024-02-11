@@ -779,12 +779,12 @@ controller_interface::return_type ControllerManager::configure_controller(
     if (controller_it != to.end()) new_list.push_back(*controller_it);
   }
 
-  RCLCPP_DEBUG(get_logger(), "Reordered controllers list is:");
-  for (const auto & ctrl : ordered_controllers_names_)
-  {
-    RCLCPP_DEBUG(this->get_logger(), "\t%s", ctrl.c_str());
-  }
   to = new_list;
+  RCLCPP_DEBUG(get_logger(), "Reordered controllers list is:");
+  for (const auto & ctrl : to)
+  {
+    RCLCPP_DEBUG(this->get_logger(), "\t%s", ctrl.info.name.c_str());
+  }
 
   // switch lists
   rt_controllers_wrapper_.switch_updated_list(guard);
