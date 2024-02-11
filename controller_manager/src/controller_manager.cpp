@@ -2475,7 +2475,7 @@ void ControllerManager::update_list_with_controller_chain(
     std::find(ordered_controllers_names_.begin(), ordered_controllers_names_.end(), ctrl_name);
   if (new_ctrl_it == ordered_controllers_names_.end())
   {
-    RCLCPP_INFO(get_logger(), "Adding controller : %s", ctrl_name.c_str());
+    RCLCPP_DEBUG(get_logger(), "Adding controller chain : %s", ctrl_name.c_str());
 
     auto iterator = controller_iterator;
     for (const auto & ctrl : controller_chain_spec_[ctrl_name].following_controllers)
@@ -2515,29 +2515,27 @@ void ControllerManager::update_list_with_controller_chain(
     {
       ordered_controllers_names_.insert(iterator, ctrl_name);
     }
-    new_ctrl_it =
-      std::find(ordered_controllers_names_.begin(), ordered_controllers_names_.end(), ctrl_name);
 
-    RCLCPP_INFO_EXPRESSION(
+    RCLCPP_DEBUG_EXPRESSION(
       get_logger(), !controller_chain_spec_[ctrl_name].following_controllers.empty(),
-      "\t[%s]Following controllers : %ld", ctrl_name.c_str(),
+      "\t[%s] Following controllers : %ld", ctrl_name.c_str(),
       controller_chain_spec_[ctrl_name].following_controllers.size());
     for (const std::string & flwg_ctrl : controller_chain_spec_[ctrl_name].following_controllers)
     {
       new_ctrl_it =
         std::find(ordered_controllers_names_.begin(), ordered_controllers_names_.end(), ctrl_name);
-      RCLCPP_INFO(get_logger(), "\t\t[%s] : %s", ctrl_name.c_str(), flwg_ctrl.c_str());
+      RCLCPP_DEBUG(get_logger(), "\t\t[%s] : %s", ctrl_name.c_str(), flwg_ctrl.c_str());
       update_list_with_controller_chain(flwg_ctrl, new_ctrl_it, true);
     }
-    RCLCPP_INFO_EXPRESSION(
+    RCLCPP_DEBUG_EXPRESSION(
       get_logger(), !controller_chain_spec_[ctrl_name].preceding_controllers.empty(),
-      "\t[%s]Preceding controllers : %ld", ctrl_name.c_str(),
+      "\t[%s] Preceding controllers : %ld", ctrl_name.c_str(),
       controller_chain_spec_[ctrl_name].preceding_controllers.size());
     for (const std::string & preced_ctrl : controller_chain_spec_[ctrl_name].preceding_controllers)
     {
       new_ctrl_it =
         std::find(ordered_controllers_names_.begin(), ordered_controllers_names_.end(), ctrl_name);
-      RCLCPP_INFO(get_logger(), "\t\t[%s]: %s", ctrl_name.c_str(), preced_ctrl.c_str());
+      RCLCPP_DEBUG(get_logger(), "\t\t[%s]: %s", ctrl_name.c_str(), preced_ctrl.c_str());
       update_list_with_controller_chain(preced_ctrl, new_ctrl_it, false);
     }
   }
