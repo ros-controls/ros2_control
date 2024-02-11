@@ -16,7 +16,7 @@ on:
 
 jobs:
   binary:
-    uses: ./.github/workflows/reusable-industrial-ci-with-cache.yml
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-industrial-ci-with-cache.yml@master
     strategy:
       matrix:
         ROS_DISTRO: [rolling]

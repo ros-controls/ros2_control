@@ -10,7 +10,7 @@ on:
 
 jobs:
   rhel_semi_binary_build:
-    uses: ./.github/workflows/reusable-rhel-binary-build.yml
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-rhel-binary-build.yml@master
     strategy:
       matrix:
         ROS_DISTRO: [humble]

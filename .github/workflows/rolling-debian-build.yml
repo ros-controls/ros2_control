@@ -11,7 +11,7 @@ on:
 
 jobs:
   debian_source_build:
-    uses: ./.github/workflows/reusable-debian-build.yml
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-debian-build.yml@master
     strategy:
       matrix:
         ROS_DISTRO: [rolling]
