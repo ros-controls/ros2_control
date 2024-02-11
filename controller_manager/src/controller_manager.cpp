@@ -776,7 +776,10 @@ controller_interface::return_type ControllerManager::configure_controller(
   {
     auto controller_it = std::find_if(
       to.begin(), to.end(), std::bind(controller_name_compare, std::placeholders::_1, ctrl));
-    if (controller_it != to.end()) new_list.push_back(*controller_it);
+    if (controller_it != to.end())
+    {
+      new_list.push_back(*controller_it);
+    }
   }
 
   to = new_list;
