@@ -390,7 +390,6 @@ private:
     const std::vector<ControllerSpec> & controllers, int strictness,
     const ControllersListIterator controller_it);
 
-  void perform_controller_sorting();
   /**
    * @brief Inserts a controller into an ordered list based on dependencies to compute the
    * controller chain.

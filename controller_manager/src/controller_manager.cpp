@@ -759,8 +759,18 @@ controller_interface::return_type ControllerManager::configure_controller(
   to = from;
   std::vector<ControllerSpec> sorted_list;
 
+  // clear the list before reordering it again
   ordered_controllers_names_.clear();
-  perform_controller_sorting();
+  for (const auto & [ctrl_name, chain_spec] : controller_chain_spec_)
+  {
+    auto it =
+      std::find(ordered_controllers_names_.begin(), ordered_controllers_names_.end(), ctrl_name);
+    if (it == ordered_controllers_names_.end())
+    {
+      update_list_with_controller_chain(ctrl_name, ordered_controllers_names_.end(), false);
+    }
+  }
+
   std::vector<ControllerSpec> new_list;
   for (const auto & ctrl : ordered_controllers_names_)
   {
@@ -769,10 +779,10 @@ controller_interface::return_type ControllerManager::configure_controller(
     if (controller_it != to.end()) new_list.push_back(*controller_it);
   }
 
-  RCLCPP_INFO(get_logger(), "New Reordered controllers list is:");
+  RCLCPP_DEBUG(get_logger(), "Reordered controllers list is:");
   for (const auto & ctrl : ordered_controllers_names_)
   {
-    RCLCPP_INFO(this->get_logger(), "\t%s", ctrl.c_str());
+    RCLCPP_DEBUG(this->get_logger(), "\t%s", ctrl.c_str());
   }
   to = new_list;
 
@@ -2457,20 +2467,6 @@ void ControllerManager::controller_activity_diagnostic_callback(
   }
 }
 
-void controller_manager::ControllerManager::perform_controller_sorting()
-{
-  for (const auto & [controller_name, chain_spec] : controller_chain_spec_)
-  {
-    auto it = std::find(
-      ordered_controllers_names_.begin(), ordered_controllers_names_.end(), controller_name);
-    if (it == ordered_controllers_names_.end())
-    {
-      update_list_with_controller_chain(controller_name, ordered_controllers_names_.end(), false);
-      it = std::find(
-        ordered_controllers_names_.begin(), ordered_controllers_names_.end(), controller_name);
-    }
-  }
-}
 void ControllerManager::update_list_with_controller_chain(
   const std::string & ctrl_name, std::vector<std::string>::iterator controller_iterator,
   bool append_to_controller)
