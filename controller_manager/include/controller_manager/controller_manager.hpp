@@ -391,8 +391,26 @@ private:
     const ControllersListIterator controller_it);
 
   void perform_controller_sorting();
-
-  void insert_controller(
+  /**
+   * @brief Inserts a controller into an ordered list based on dependencies to compute the
+   * controller chain.
+   *
+   * This method computes the controller chain by inserting the provided controller name into an
+   * ordered list of controllers based on dependencies. It ensures that controllers are inserted in
+   * the correct order so that dependencies are satisfied.
+   *
+   * @param ctrl_name The name of the controller to be inserted into the chain.
+   * @param controller_iterator An iterator pointing to the position in the ordered list where the
+   * controller should be inserted.
+   * @param append_to_controller Flag indicating whether the controller should be appended or
+   * prepended to the parsed iterator.
+   * @note The specification of controller dependencies is in the ControllerChainSpec,
+   * containing information about following and preceding controllers. This struct should include
+   * the neighboring controllers with their relationships to the provided controller.
+   * `following_controllers` specify controllers that come after the provided controller.
+   * `preceding_controllers` specify controllers that come before the provided controller.
+   */
+  void update_list_with_controller_chain(
     const std::string & ctrl_name, std::vector<std::string>::iterator controller_iterator,
     bool append_to_controller);
 
