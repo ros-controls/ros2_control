@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.39.0 (2024-02-12)
+-------------------
 * [Spawners] Remove walrus operator (`#1366 <https://github.com/ros-controls/ros2_control/issues/1366>`_)
 * [CM] Use explicit constants in controller tests. (`#1356 <https://github.com/ros-controls/ros2_control/issues/1356>`_) (`#1359 <https://github.com/ros-controls/ros2_control/issues/1359>`_)
 * Move `test_components` to own package (backport `#1325 <https://github.com/ros-controls/ros2_control/issues/1325>`_) (`#1340 <https://github.com/ros-controls/ros2_control/issues/1340>`_)
