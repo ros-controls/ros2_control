@@ -50,7 +50,7 @@ jobs:
             https://raw.githubusercontent.com/ros2/ros2/${{ inputs.ros2_repo_branch }}/ros2.repos
             https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/ros2_control.${{ inputs.ros_distro }}.repos?token=${{ secrets.GITHUB_TOKEN }}
           colcon-mixin-repository: https://raw.githubusercontent.com/colcon/colcon-mixin-repository/master/index.yaml
-      - uses: actions/upload-artifact@v4.3.0
+      - uses: actions/upload-artifact@v4.3.1
         with:
           name: colcon-logs-ubuntu-22.04
           path: ros_ws/log
