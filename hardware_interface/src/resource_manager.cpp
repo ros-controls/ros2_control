@@ -1154,7 +1154,7 @@ bool ResourceManager::prepare_command_mode_switch(
   auto call_prepare_mode_switch =
     [&start_interfaces, &stop_interfaces, &interfaces_to_string](auto & components)
   {
-    bool ret = true;
+    bool ret = false;
     for (auto & component : components)
     {
       if (
@@ -1165,11 +1165,14 @@ bool ResourceManager::prepare_command_mode_switch(
           return_type::OK !=
           component.prepare_command_mode_switch(start_interfaces, stop_interfaces))
         {
+          ret = true;
+        }
+        else
+        {
           RCUTILS_LOG_ERROR_NAMED(
             "resource_manager",
             "Component '%s' did not accept command interfaces combination: \n%s",
             component.get_name().c_str(), interfaces_to_string().c_str());
-          ret = false;
         }
       }
     }
@@ -1179,7 +1182,7 @@ bool ResourceManager::prepare_command_mode_switch(
   const bool actuators_result = call_prepare_mode_switch(resource_storage_->actuators_);
   const bool systems_result = call_prepare_mode_switch(resource_storage_->systems_);
 
-  return actuators_result && systems_result;
+  return actuators_result || systems_result;
 }
 
 // CM API: Called in "update"-thread
