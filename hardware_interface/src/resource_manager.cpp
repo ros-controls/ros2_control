@@ -1198,7 +1198,7 @@ bool ResourceManager::perform_command_mode_switch(
 
   auto call_perform_mode_switch = [&start_interfaces, &stop_interfaces](auto & components)
   {
-    bool ret = true;
+    bool ret = false;
     for (auto & component : components)
     {
       if (
@@ -1206,13 +1206,16 @@ bool ResourceManager::perform_command_mode_switch(
         component.get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
       {
         if (
-          return_type::OK !=
+          return_type::OK ==
           component.perform_command_mode_switch(start_interfaces, stop_interfaces))
+        {
+          ret = true;
+        }
+        else
         {
           RCUTILS_LOG_ERROR_NAMED(
             "resource_manager", "Component '%s' could not perform switch",
             component.get_name().c_str());
-          ret = false;
         }
       }
     }
@@ -1222,7 +1225,7 @@ bool ResourceManager::perform_command_mode_switch(
   const bool actuators_result = call_perform_mode_switch(resource_storage_->actuators_);
   const bool systems_result = call_perform_mode_switch(resource_storage_->systems_);
 
-  return actuators_result && systems_result;
+  return actuators_result || systems_result;
 }
 
 // CM API: Called in "callback/slow"-thread
