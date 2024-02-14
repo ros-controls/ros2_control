@@ -2,6 +2,11 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* readd activate_all_components method to not break API (`#1392 <https://github.com/ros-controls/ros2_control/issues/1392>`_)
+* Contributors: Sai Kishor Kothakota
+
 2.39.0 (2024-02-12)
 -------------------
 * Move `test_components` to own package (backport `#1325 <https://github.com/ros-controls/ros2_control/issues/1325>`_) (`#1340 <https://github.com/ros-controls/ros2_control/issues/1340>`_)

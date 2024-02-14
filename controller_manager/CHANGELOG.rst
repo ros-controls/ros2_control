@@ -2,6 +2,9 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 2.39.0 (2024-02-12)
 -------------------
 * [Spawners] Remove walrus operator (`#1366 <https://github.com/ros-controls/ros2_control/issues/1366>`_)
