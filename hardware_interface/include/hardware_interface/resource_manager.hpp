@@ -387,6 +387,18 @@ public:
    */
   HardwareReadWriteStatus write(const rclcpp::Time & time, const rclcpp::Duration & period);
 
+  /// Activates all available hardware components in the system.
+  /**
+   * All available hardware components int the ros2_control framework are activated.
+   * This is used to preserve default behavior from previous versions where all hardware components
+   * are activated per default.
+   */
+  [[deprecated(
+    "The method 'activate_all_components' is deprecated. "
+    "Use the new 'hardware_components_initial_state' parameter structure to setup the "
+    "components")]] void
+  activate_all_components();
+
   /// Checks whether a command interface is registered under the given key.
   /**
    * \param[in] key string identifying the interface to check.

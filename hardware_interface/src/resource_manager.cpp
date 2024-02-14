@@ -1387,6 +1387,28 @@ void ResourceManager::validate_storage(
     throw std::runtime_error(err_msg);
   }
 }
+
+// Temporary method to keep old interface and reduce framework changes in the PRs
+void ResourceManager::activate_all_components()
+{
+  using lifecycle_msgs::msg::State;
+  rclcpp_lifecycle::State active_state(
+    State::PRIMARY_STATE_ACTIVE, hardware_interface::lifecycle_state_names::ACTIVE);
+
+  for (auto & component : resource_storage_->actuators_)
+  {
+    set_component_state(component.get_name(), active_state);
+  }
+  for (auto & component : resource_storage_->sensors_)
+  {
+    set_component_state(component.get_name(), active_state);
+  }
+  for (auto & component : resource_storage_->systems_)
+  {
+    set_component_state(component.get_name(), active_state);
+  }
+}
+
 // END: private methods
 
 }  // namespace hardware_interface
