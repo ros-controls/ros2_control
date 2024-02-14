@@ -1162,7 +1162,7 @@ bool ResourceManager::prepare_command_mode_switch(
         component.get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
       {
         if (
-          return_type::OK !=
+          return_type::OK ==
           component.prepare_command_mode_switch(start_interfaces, stop_interfaces))
         {
           ret = true;
