@@ -12,3 +12,4 @@ jobs:
     - uses: uesteibar/reviewer-lottery@v3
       with:
         repo-token: ${{ secrets.GITHUB_TOKEN }}
+        config: ros-controls/ros2_control_ci/.github/reviewer-lottery.yml
