@@ -1,4 +1,4 @@
-name: RHEL Iron Binary Build
+name: RHEL Iron Semi-Binary Build
 on:
   workflow_dispatch:
   pull_request:
@@ -9,35 +9,14 @@ on:
     - cron: '03 1 * * *'
 
 jobs:
-  iron_rhel_binary:
-    name: Iron RHEL binary build
-    runs-on: ubuntu-latest
-    env:
-      ROS_DISTRO: iron
-      skip-packages: rqt_controller_manager
-    container: ghcr.io/ros-controls/ros:iron-rhel
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          path: src/ros2_control
-          ref: ${{ github.event_name == 'schedule' && 'iron' || '' }}
-      - name: Install dependencies
-        run: |
-          source /opt/ros/${{ env.ROS_DISTRO }}/setup.bash
-          source /opt/ros2_ws/install/local_setup.bash
-          rosdep update
-          rosdep install -iyr --from-path src/ros2_control || true
-      - name: Build workspace
-        # source also underlay workspace with generate_parameter_library on rhel9
-        run: |
-          source /opt/ros/${{ env.ROS_DISTRO }}/setup.bash
-          source /opt/ros2_ws/install/local_setup.bash
-          colcon build --packages-up-to $(colcon list --paths src/ros2_control/* --names-only) --packages-skip  ${{ env.skip-packages }}
-      - name: Test workspace
-        shell: bash
-        continue-on-error: true
-        run: |
-          source /opt/ros/${{ env.ROS_DISTRO }}/setup.bash
-          source /opt/ros2_ws/install/local_setup.bash
-          colcon test --packages-select $(colcon list --paths src/ros2_control/* --names-only) --packages-skip  ${{ env.skip-packages }}
-          colcon test-result --verbose
+  rhel_semi_binary_build:
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-rhel-binary-build.yml@master
+    strategy:
+      fail-fast: false
+      matrix:
+        ROS_DISTRO: [iron]
+    with:
+      ros_distro: ${{ matrix.ROS_DISTRO }}
+      upstream_workspace: ros2_control.${{ matrix.ROS_DISTRO }}.repos
+      ref_for_scheduled_build: iron
+      skip_packages: rqt_controller_manager
