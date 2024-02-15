@@ -13,6 +13,7 @@ jobs:
   debian_source_build:
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-debian-build.yml@master
     strategy:
+      fail-fast: false
       matrix:
         ROS_DISTRO: [rolling]
     with:
