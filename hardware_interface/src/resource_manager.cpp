@@ -1174,7 +1174,7 @@ bool ResourceManager::prepare_command_mode_switch(
             "resource_manager",
             "Component '%s' did not accept command interfaces combination: \n%s",
             component.get_name().c_str(), interfaces_to_string().c_str());
-            ret = false;
+          ret = false;
         }
       }
     }
