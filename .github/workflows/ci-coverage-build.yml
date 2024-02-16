@@ -47,7 +47,7 @@ jobs:
           file: ros_ws/lcov/total_coverage.info
           flags: unittests
           name: codecov-umbrella
-      - uses: actions/upload-artifact@v4.3.0
+      - uses: actions/upload-artifact@v4.3.1
         with:
           name: colcon-logs-ubuntu-22.04-coverage-iron
           path: ros_ws/log
