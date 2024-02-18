@@ -840,7 +840,7 @@ void ControllerManager::clear_requests()
 {
   deactivate_request_.clear();
   activate_request_.clear();
-  // Set these interfaces are unavailable when clearing requests to avoid leaving them in available
+  // Set these interfaces as unavailable when clearing requests to avoid leaving them in available
   // state without the controller being in active state
   for (const auto & controller_name : to_chained_mode_request_)
   {
