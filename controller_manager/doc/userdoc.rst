@@ -70,10 +70,6 @@ hardware_components_initial_state.unconfigured (optional; list<string>; default:
 hardware_components_initial_state.inactive (optional; list<string>; default: empty)
   Defines which hardware components will be configured immediately when controller manager is started.
 
-robot_description (mandatory; string)
-  String with the URDF string as robot description.
-  This is usually result of the parsed description files by ``xacro`` command.
-
 update_rate (mandatory; integer)
   The frequency of controller manager's real-time update loop.
   This loop reads states from hardware, updates controller and writes commands to hardware.
@@ -82,6 +78,13 @@ update_rate (mandatory; integer)
 <controller_name>.type
   Name of a plugin exported using ``pluginlib`` for a controller.
   This is a class from which controller's instance with name "``controller_name``" is created.
+
+Subscribers
+-----------
+
+robot_description (std_msgs/msg/String)
+  String with the URDF string as robot description.
+  This is usually published by the ``robot_state_publisher`` node.
 
 
 Helper scripts
