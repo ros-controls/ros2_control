@@ -284,7 +284,7 @@ ControllerManager::ControllerManager(
     RCLCPP_WARN(
       get_logger(),
       "[Deprecated] Passing the robot description parameter directly to the control_manager node "
-      "is deprecated. Use '~/robot_description' topic from 'robot_state_publisher' instead.");
+      "is deprecated. Use the 'robot_description' topic from 'robot_state_publisher' instead.");
     init_resource_manager(robot_description_);
     init_services();
   }
@@ -329,7 +329,7 @@ void ControllerManager::subscribe_to_robot_description_topic()
   // set QoS to transient local to get messages that have already been published
   // (if robot state publisher starts before controller manager)
   robot_description_subscription_ = create_subscription<std_msgs::msg::String>(
-    "~/robot_description", rclcpp::QoS(1).transient_local(),
+    "robot_description", rclcpp::QoS(1).transient_local(),
     std::bind(&ControllerManager::robot_description_callback, this, std::placeholders::_1));
   RCLCPP_INFO(
     get_logger(), "Subscribing to '%s' topic for robot description.",
