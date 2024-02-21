@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from controller_manager import list_controllers
+from controller_manager.spawner import bcolors
 
 from ros2cli.node.direct import add_arguments
 from ros2cli.node.strategy import NodeStrategy
