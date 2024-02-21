@@ -23,7 +23,14 @@ from ros2controlcli.api import add_controller_mgr_parsers
 
 
 def print_controller_state(c, args):
-    state_color = bcolors.OKGREEN if c.state == "active" else bcolors.FAIL
+    state_color = ""
+    if c.state == "active":
+        state_color = bcolors.OKGREEN
+    elif c.state == "inactive":
+        state_color = bcolors.OKCYAN
+    elif c.state == "unconfigured":
+        state_color = bcolors.WARNING
+
     print(f"{c.name:20s}[{c.type:20s}] {state_color}{c.state:10s}{bcolors.ENDC}")
     if args.claimed_interfaces or args.verbose:
         print("\tclaimed interfaces:")
