@@ -86,6 +86,51 @@ robot_description (std_msgs/msg/String)
   The URDF string as robot description.
   This is usually published by the ``robot_state_publisher`` node.
 
+Handling Multiple Controller Managers
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+When dealing with multiple controller managers, you can manage different robot descriptions either
+using remappings or putting both, the ``robot_state_publisher`` and the ``controller_manager`` into
+the same namespace.
+
+Using namespaces a snippet of a launchfile could look like the following:
+
+.. code-block:: python
+
+   control_node = Node(
+       package="controller_manager",
+       executable="ros2_control_node",
+       parameters=[robot_controllers],
+       output="both",
+       namespace="rrbot",
+   )
+   robot_state_pub_node = Node(
+       package="robot_state_publisher",
+       executable="robot_state_publisher",
+       output="both",
+       parameters=[robot_description],
+       namespace="rrbot",
+   )
+
+
+Using remappings:
+
+.. code-block:: python
+
+   control_node = Node(
+       package="controller_manager",
+
+       parameters=[robot_controllers],
+       output="both",
+       remappings=[('robot_description', '/rrbot/robot_description')]
+   )
+   robot_state_pub_node = Node(
+       package="robot_state_publisher",
+       executable="robot_state_publisher",
+       output="both",
+       parameters=[robot_description],
+       namespace="rrbot",
+   )
 
 Helper scripts
 --------------
