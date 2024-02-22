@@ -83,7 +83,7 @@ Subscribers
 -----------
 
 robot_description (std_msgs/msg/String)
-  String with the URDF string as robot description.
+  The URDF string as robot description.
   This is usually published by the ``robot_state_publisher`` node.
 
 
