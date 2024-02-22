@@ -119,7 +119,7 @@ Using remappings:
 
    control_node = Node(
        package="controller_manager",
-
+       executable="ros2_control_node",
        parameters=[robot_controllers],
        output="both",
        remappings=[('robot_description', '/rrbot/robot_description')]
