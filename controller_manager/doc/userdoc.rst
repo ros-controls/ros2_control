@@ -89,11 +89,9 @@ robot_description (std_msgs/msg/String)
 Handling Multiple Controller Managers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-When dealing with multiple controller managers, you can manage different robot descriptions either
-using remappings or putting both, the ``robot_state_publisher`` and the ``controller_manager`` into
-the same namespace.
+When dealing with multiple controller managers, you have two options for managing different robot descriptions:
 
-Using namespaces a snippet of a launchfile could look like the following:
+1. **Using Namespaces:** You can place both the ``robot_state_publisher`` and the ``controller_manager`` nodes into the same namespace. 
 
 .. code-block:: python
 
@@ -112,8 +110,7 @@ Using namespaces a snippet of a launchfile could look like the following:
        namespace="rrbot",
    )
 
-
-Using remappings:
+2. **Using Remappings:** You can use remappings to handle different robot descriptions. This involves relaying topics using the ``remappings`` tag, allowing you to specify custom topics for each controller manager.
 
 .. code-block:: python
 
