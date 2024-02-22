@@ -67,8 +67,6 @@ public:
       std::make_unique<hardware_interface::ResourceManager>(), executor_, TEST_CM_NAME);
     run_updater_ = false;
 
-    cm_->set_parameter(
-      rclcpp::Parameter("robot_description", ros2_control_test_assets::minimal_robot_urdf));
     cm_->set_parameter(rclcpp::Parameter(
       "hardware_components_initial_state.unconfigured",
       std::vector<std::string>({TEST_SYSTEM_HARDWARE_NAME})));
@@ -76,16 +74,8 @@ public:
       "hardware_components_initial_state.inactive",
       std::vector<std::string>({TEST_SENSOR_HARDWARE_NAME})));
 
-    std::string robot_description = "";
-    cm_->get_parameter("robot_description", robot_description);
-    if (robot_description.empty())
-    {
-      throw std::runtime_error(
-        "Unable to initialize resource manager, no robot description found.");
-    }
-
     auto msg = std_msgs::msg::String();
-    msg.data = robot_description_;
+    msg.data = ros2_control_test_assets::minimal_robot_urdf;
     cm_->robot_description_callback(msg);
 
     SetUpSrvsCMExecutor();
@@ -372,21 +362,8 @@ public:
       std::make_unique<hardware_interface::ResourceManager>(), executor_, TEST_CM_NAME);
     run_updater_ = false;
 
-    // TODO(destogl): separate this to init_tests method where parameter can be set for each test
-    // separately
-    cm_->set_parameter(
-      rclcpp::Parameter("robot_description", ros2_control_test_assets::minimal_robot_urdf));
-
-    std::string robot_description = "";
-    cm_->get_parameter("robot_description", robot_description);
-    if (robot_description.empty())
-    {
-      throw std::runtime_error(
-        "Unable to initialize resource manager, no robot description found.");
-    }
-
     auto msg = std_msgs::msg::String();
-    msg.data = robot_description_;
+    msg.data = ros2_control_test_assets::minimal_robot_urdf;
     cm_->robot_description_callback(msg);
 
     SetUpSrvsCMExecutor();

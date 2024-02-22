@@ -65,40 +65,16 @@ class ControllerManagerFixture : public ::testing::Test
 {
 public:
   explicit ControllerManagerFixture(
-    const std::string & robot_description = ros2_control_test_assets::minimal_robot_urdf,
-    const bool & pass_urdf_as_parameter = false)
-  : robot_description_(robot_description), pass_urdf_as_parameter_(pass_urdf_as_parameter)
+    const std::string & robot_description = ros2_control_test_assets::minimal_robot_urdf)
+  : robot_description_(robot_description)
   {
     executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
-    // We want to be able to create a ResourceManager where no urdf file has been passed to
-    if (robot_description_.empty())
+    cm_ = std::make_shared<CtrlMgr>(
+      std::make_unique<hardware_interface::ResourceManager>(), executor_, TEST_CM_NAME);
+    // We want to be able to not pass robot description immediately
+    if (!robot_description_.empty())
     {
-      cm_ = std::make_shared<CtrlMgr>(
-        std::make_unique<hardware_interface::ResourceManager>(), executor_, TEST_CM_NAME);
-    }
-    else
-    {
-      // can be removed later, needed if we want to have the deprecated way of passing the robot
-      // description file to the controller manager covered by tests
-      if (pass_urdf_as_parameter_)
-      {
-        cm_ = std::make_shared<CtrlMgr>(
-          std::make_unique<hardware_interface::ResourceManager>(robot_description_, true, true),
-          executor_, TEST_CM_NAME);
-      }
-      else
-      {
-        // TODO(Manuel) : passing via topic not working in test setup, tested cm does
-        // not receive msg. Have to check this...
-
-        // this is just a workaround to skip passing
-        cm_ = std::make_shared<CtrlMgr>(
-          std::make_unique<hardware_interface::ResourceManager>(), executor_, TEST_CM_NAME);
-        // mimic topic call
-        auto msg = std_msgs::msg::String();
-        msg.data = robot_description_;
-        cm_->robot_description_callback(msg);
-      }
+      pass_robot_description_to_cm_and_rm(robot_description_);
     }
     time_ = rclcpp::Time(0, 0, cm_->get_node_clock_interface()->get_clock()->get_clock_type());
   }
@@ -134,6 +110,17 @@ public:
     }
   }
 
+  void pass_robot_description_to_cm_and_rm(
+    const std::string & robot_description = ros2_control_test_assets::minimal_robot_urdf)
+  {
+    // TODO(Manuel) : passing via topic not working in test setup, tested cm does
+    // not receive msg. Have to check this...
+    // this is just a workaround to skip passing - mimic topic call
+    auto msg = std_msgs::msg::String();
+    msg.data = robot_description;
+    cm_->robot_description_callback(msg);
+  }
+
   void switch_test_controllers(
     const std::vector<std::string> & start_controllers,
     const std::vector<std::string> & stop_controllers, const int strictness,
@@ -156,7 +143,6 @@ public:
   std::thread updater_;
   bool run_updater_;
   const std::string robot_description_;
-  const bool pass_urdf_as_parameter_;
   rclcpp::Time time_;
 };
 
