@@ -91,7 +91,7 @@ Handling Multiple Controller Managers
 
 When dealing with multiple controller managers, you have two options for managing different robot descriptions:
 
-1. **Using Namespaces:** You can place both the ``robot_state_publisher`` and the ``controller_manager`` nodes into the same namespace. 
+1. **Using Namespaces:** You can place both the ``robot_state_publisher`` and the ``controller_manager`` nodes into the same namespace.
 
 .. code-block:: python
 
