@@ -830,6 +830,12 @@ void ControllerManager::clear_requests()
 {
   deactivate_request_.clear();
   activate_request_.clear();
+  // Set these interfaces as unavailable when clearing requests to avoid leaving them in available
+  // state without the controller being in active state
+  for (const auto & controller_name : to_chained_mode_request_)
+  {
+    resource_manager_->make_controller_reference_interfaces_unavailable(controller_name);
+  }
   to_chained_mode_request_.clear();
   from_chained_mode_request_.clear();
   activate_command_interface_request_.clear();
@@ -1432,6 +1438,7 @@ void ControllerManager::switch_chained_mode(
     auto controller = found_it->c;
     if (!is_controller_active(*controller))
     {
+<<<<<<< HEAD
       if (controller->set_chained_mode(to_chained_mode))
       {
         if (to_chained_mode)
@@ -1444,6 +1451,9 @@ void ControllerManager::switch_chained_mode(
         }
       }
       else
+=======
+      if (!controller->set_chained_mode(to_chained_mode))
+>>>>>>> 1cc73c2 (Fix multiple chainable controller activation bug (#1401))
       {
         RCLCPP_ERROR(
           get_logger(),
@@ -2354,6 +2364,10 @@ controller_interface::return_type ControllerManager::check_following_controllers
       if (found_it == to_chained_mode_request_.end())
       {
         to_chained_mode_request_.push_back(following_ctrl_it->info.name);
+        // if it is a chainable controller, make the reference interfaces available on preactivation
+        // (This is needed when you activate a couple of chainable controller altogether)
+        resource_manager_->make_controller_reference_interfaces_available(
+          following_ctrl_it->info.name);
         RCLCPP_DEBUG(
           get_logger(), "Adding controller '%s' in 'to chained mode' request.",
           following_ctrl_it->info.name.c_str());
