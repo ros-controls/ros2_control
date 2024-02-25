@@ -1,0 +1,17 @@
+name: Coverage Build - Rolling
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  coverage_rolling:
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-build-coverage.yml@master
+    secrets: inherit
+    with:
+      ros_distro: rolling
+      os_name: ubuntu-22.04
