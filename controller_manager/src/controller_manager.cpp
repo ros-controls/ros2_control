@@ -1375,7 +1375,6 @@ void ControllerManager::switch_chained_mode(
     auto controller = found_it->c;
     if (!is_controller_active(*controller))
     {
-<<<<<<< HEAD
       if (controller->set_chained_mode(to_chained_mode))
       {
         if (to_chained_mode)
@@ -1388,9 +1387,7 @@ void ControllerManager::switch_chained_mode(
         }
       }
       else
-=======
       if (!controller->set_chained_mode(to_chained_mode))
->>>>>>> 1cc73c2 (Fix multiple chainable controller activation bug (#1401))
       {
         RCLCPP_ERROR(
           get_logger(),
