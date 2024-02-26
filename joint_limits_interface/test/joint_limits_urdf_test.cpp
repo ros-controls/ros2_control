@@ -15,10 +15,9 @@
 /// \author Adolfo Rodriguez Tsouroukdissian
 
 #include <gtest/gtest.h>
+#include <string>
 
 #include <joint_limits_interface/joint_limits_urdf.hpp>
-
-#include <string>
 
 class JointLimitsUrdfTest : public ::testing::Test
 {
