@@ -27,7 +27,7 @@ class ReloadControllerLibrariesVerb(VerbExtension):
     def add_arguments(self, parser, cli_name):
         add_arguments(parser)
         parser.add_argument(
-            '--force-kill', action='store_true', help='Force stop of loaded controllers'
+            "--force-kill", action="store_true", help="Force stop of loaded controllers"
         )
         add_controller_mgr_parsers(parser)
 
@@ -37,7 +37,7 @@ class ReloadControllerLibrariesVerb(VerbExtension):
                 node, args.controller_manager, force_kill=args.force_kill
             )
             if not response.ok:
-                return 'Error reloading libraries, check controller_manager logs'
+                return "Error reloading libraries, check controller_manager logs"
 
-            print('Reload successful')
+            print("Reload successful")
             return 0

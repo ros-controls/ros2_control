@@ -37,21 +37,27 @@ class ListHardwareInterfacesVerb(VerbExtension):
             state_interfaces = sorted(
                 hardware_interfaces.state_interfaces, key=lambda hwi: hwi.name
             )
-            print('command interfaces')
+            print("command interfaces")
             for command_interface in command_interfaces:
                 if command_interface.is_available:
                     if command_interface.is_claimed:
-                        print(f'\t{bcolors.OKBLUE}{command_interface.name} '
-                              f'[available] [claimed]{bcolors.ENDC}')
+                        print(
+                            f"\t{bcolors.OKBLUE}{command_interface.name} "
+                            f"[available] [claimed]{bcolors.ENDC}"
+                        )
                     else:
-                        print(f'\t{bcolors.OKCYAN}{command_interface.name} '
-                              f'[available] [unclaimed]{bcolors.ENDC}')
+                        print(
+                            f"\t{bcolors.OKCYAN}{command_interface.name} "
+                            f"[available] [unclaimed]{bcolors.ENDC}"
+                        )
                 else:
-                    print(f'\t{bcolors.WARNING}{command_interface.name} '
-                          f'[unavailable] [unclaimed]{bcolors.ENDC}')
+                    print(
+                        f"\t{bcolors.WARNING}{command_interface.name} "
+                        f"[unavailable] [unclaimed]{bcolors.ENDC}"
+                    )
 
-            print('state interfaces')
+            print("state interfaces")
             for state_interface in state_interfaces:
-                print(f'\t{state_interface.name}')
+                print(f"\t{state_interface.name}")
 
             return 0

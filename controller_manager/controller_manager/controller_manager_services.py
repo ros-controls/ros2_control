@@ -33,17 +33,18 @@ def service_caller(node, service_name, service_type, request, service_timeout=10
 
     if not cli.service_is_ready():
         node.get_logger().debug(
-            f'waiting {service_timeout} seconds for service {service_name} to become available...')
+            f"waiting {service_timeout} seconds for service {service_name} to become available..."
+        )
         if not cli.wait_for_service(service_timeout):
-            raise RuntimeError(f'Could not contact service {service_name}')
+            raise RuntimeError(f"Could not contact service {service_name}")
 
-    node.get_logger().debug(f'requester: making request: {request}\n')
+    node.get_logger().debug(f"requester: making request: {request}\n")
     future = cli.call_async(request)
     rclpy.spin_until_future_complete(node, future)
     if future.result() is not None:
         return future.result()
     else:
-        raise RuntimeError(f'Exception while calling service: {future.exception()}')
+        raise RuntimeError(f"Exception while calling service: {future.exception()}")
 
 
 def configure_controller(node, controller_manager_name, controller_name, service_timeout=10.0):
@@ -156,8 +157,9 @@ def switch_controllers(
         request.strictness = SwitchController.Request.BEST_EFFORT
     request.activate_asap = activate_asap
     request.timeout = rclpy.duration.Duration(seconds=timeout).to_msg()
-    return service_caller(node, f'{controller_manager_name}/switch_controller',
-                          SwitchController, request)
+    return service_caller(
+        node, f"{controller_manager_name}/switch_controller", SwitchController, request
+    )
 
 
 def unload_controller(node, controller_manager_name, controller_name, service_timeout=10.0):
