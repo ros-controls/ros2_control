@@ -341,7 +341,7 @@ void ControllerManager::robot_description_callback(const std_msgs::msg::String &
   RCLCPP_INFO(get_logger(), "Received robot description from topic.");
   RCLCPP_DEBUG(
     get_logger(), "'Content of robot description file: %s", robot_description.data.c_str());
-  // TODO(Manuel): errors should probably be caught since we don't want controller_manager node
+  // TODO(mamueluth): errors should probably be caught since we don't want controller_manager node
   // to die if a non valid urdf is passed. However, should maybe be fine tuned.
   try
   {
@@ -840,6 +840,12 @@ void ControllerManager::clear_requests()
 {
   deactivate_request_.clear();
   activate_request_.clear();
+  // Set these interfaces as unavailable when clearing requests to avoid leaving them in available
+  // state without the controller being in active state
+  for (const auto & controller_name : to_chained_mode_request_)
+  {
+    resource_manager_->make_controller_reference_interfaces_unavailable(controller_name);
+  }
   to_chained_mode_request_.clear();
   from_chained_mode_request_.clear();
   activate_command_interface_request_.clear();
@@ -1429,9 +1435,6 @@ void ControllerManager::switch_chained_mode(
     auto controller = found_it->c;
     if (!is_controller_active(*controller))
     {
-      // if it is a chainable controller, make the reference interfaces available on preactivation
-      // (This is needed when you activate a couple of chainable controller altogether)
-      resource_manager_->make_controller_reference_interfaces_available(controller_name);
       if (!controller->set_chained_mode(to_chained_mode))
       {
         RCLCPP_ERROR(
@@ -2368,6 +2371,10 @@ controller_interface::return_type ControllerManager::check_following_controllers
       if (found_it == to_chained_mode_request_.end())
       {
         to_chained_mode_request_.push_back(following_ctrl_it->info.name);
+        // if it is a chainable controller, make the reference interfaces available on preactivation
+        // (This is needed when you activate a couple of chainable controller altogether)
+        resource_manager_->make_controller_reference_interfaces_available(
+          following_ctrl_it->info.name);
         RCLCPP_DEBUG(
           get_logger(), "Adding controller '%s' in 'to chained mode' request.",
           following_ctrl_it->info.name.c_str());
