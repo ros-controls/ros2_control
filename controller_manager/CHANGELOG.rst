@@ -2,6 +2,14 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.5.0 (2024-02-12)
+------------------
+* check for state of the controller node before cleanup (`#1363 <https://github.com/ros-controls/ros2_control/issues/1363>`_)
+* [CM] Use explicit constants in controller tests. (`#1356 <https://github.com/ros-controls/ros2_control/issues/1356>`_)
+* [CM] Optimized debug output about interfaces when switching controllers. (`#1355 <https://github.com/ros-controls/ros2_control/issues/1355>`_)
+* A method to get node options to setup the controller node #api-breaking (`#1169 <https://github.com/ros-controls/ros2_control/issues/1169>`_)
+* Contributors: Dr. Denis, Sai Kishor Kothakota
+
 4.4.0 (2024-01-31)
 ------------------
 * Move `test_components` to own package (`#1325 <https://github.com/ros-controls/ros2_control/issues/1325>`_)

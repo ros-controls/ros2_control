@@ -2,6 +2,13 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.5.0 (2024-02-12)
+------------------
+* Add missing export macros in lexical_casts.hpp (`#1382 <https://github.com/ros-controls/ros2_control/issues/1382>`_)
+* Move hardware interface README content to sphinx documentation (`#1342 <https://github.com/ros-controls/ros2_control/issues/1342>`_)
+* [Doc] Add documentation about initial_value regarding mock_hw (`#1352 <https://github.com/ros-controls/ros2_control/issues/1352>`_)
+* Contributors: Felix Exner (fexner), Mateus Menezes, Silvio Traversaro
+
 4.4.0 (2024-01-31)
 ------------------
 * Move `test_components` to own package (`#1325 <https://github.com/ros-controls/ros2_control/issues/1325>`_)
