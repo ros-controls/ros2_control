@@ -70,10 +70,6 @@ hardware_components_initial_state.unconfigured (optional; list<string>; default:
 hardware_components_initial_state.inactive (optional; list<string>; default: empty)
   Defines which hardware components will be configured immediately when controller manager is started.
 
-robot_description (mandatory; string)
-  String with the URDF string as robot description.
-  This is usually result of the parsed description files by ``xacro`` command.
-
 update_rate (mandatory; integer)
   The frequency of controller manager's real-time update loop.
   This loop reads states from hardware, updates controller and writes commands to hardware.
@@ -83,6 +79,55 @@ update_rate (mandatory; integer)
   Name of a plugin exported using ``pluginlib`` for a controller.
   This is a class from which controller's instance with name "``controller_name``" is created.
 
+Subscribers
+-----------
+
+robot_description (std_msgs/msg/String)
+  The URDF string as robot description.
+  This is usually published by the ``robot_state_publisher`` node.
+
+Handling Multiple Controller Managers
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+When dealing with multiple controller managers, you have two options for managing different robot descriptions:
+
+1. **Using Namespaces:** You can place both the ``robot_state_publisher`` and the ``controller_manager`` nodes into the same namespace.
+
+.. code-block:: python
+
+   control_node = Node(
+       package="controller_manager",
+       executable="ros2_control_node",
+       parameters=[robot_controllers],
+       output="both",
+       namespace="rrbot",
+   )
+   robot_state_pub_node = Node(
+       package="robot_state_publisher",
+       executable="robot_state_publisher",
+       output="both",
+       parameters=[robot_description],
+       namespace="rrbot",
+   )
+
+2. **Using Remappings:** You can use remappings to handle different robot descriptions. This involves relaying topics using the ``remappings`` tag, allowing you to specify custom topics for each controller manager.
+
+.. code-block:: python
+
+   control_node = Node(
+       package="controller_manager",
+       executable="ros2_control_node",
+       parameters=[robot_controllers],
+       output="both",
+       remappings=[('robot_description', '/rrbot/robot_description')]
+   )
+   robot_state_pub_node = Node(
+       package="robot_state_publisher",
+       executable="robot_state_publisher",
+       output="both",
+       parameters=[robot_description],
+       namespace="rrbot",
+   )
 
 Helper scripts
 --------------
