@@ -83,7 +83,6 @@ public:
    * in which the URDF might not be present at first initialization.
    *
    * \param[in] urdf string containing the URDF.
-   * \param[in] validate_interfaces boolean argument indicating whether the exported
    * \returns false if URDF validation has failed.
    */
   bool load_and_initialize_components(const std::string & urdf);
