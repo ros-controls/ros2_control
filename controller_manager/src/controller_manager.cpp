@@ -288,7 +288,7 @@ ControllerManager::ControllerManager(
     init_resource_manager(robot_description_);
     if (resource_manager_->are_components_initialized())
     {
-      RCLCPP_FATAL(
+      RCLCPP_WARN(
         get_logger(),
         "You have to restart the framework when using robot description from parameter!");
       init_services();

@@ -60,7 +60,7 @@ auto trigger_and_print_hardware_state_transition =
   }
   else
   {
-    RCUTILS_LOG_WARN_NAMED(
+    RCUTILS_LOG_ERROR_NAMED(
       "resource_manager", "Failed to '%s' hardware '%s'", transition_name.c_str(),
       hardware_name.c_str());
   }

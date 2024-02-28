@@ -84,9 +84,6 @@ public:
    *
    * \param[in] urdf string containing the URDF.
    * \param[in] validate_interfaces boolean argument indicating whether the exported
-   * interfaces ought to be validated. Defaults to true.
-   * \param[in] load_and_initialize_components boolean argument indicating whether to load and
-   * initialize the components present in the parsed URDF. Defaults to true.
    * \returns false if URDF validation has failed.
    */
   bool load_and_initialize_components(const std::string & urdf);
@@ -96,8 +93,8 @@ public:
    * this returns true. We want to permit to load the urdf later on but we currently don't want to
    * permit multiple calls to load_and_initialize_components (reloading/loading different urdf).
    *
-   * @return true if resource manager's load_and_initialize_components() has been already called.
-   * @return false if resource manager's load_and_initialize_components() has not been yet called.
+   * @return true if the resource manager has successfully loaded and initialized the components
+   * @return false if the resource manager doesn't have any components loaded and initialized.
    */
   bool are_components_initialized() const;
 
