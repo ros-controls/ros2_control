@@ -1,8 +1,6 @@
 name: Humble Source Build
 on:
   workflow_dispatch:
-    branches:
-      - humble
   push:
     branches:
       - humble
@@ -12,7 +10,7 @@ on:
 
 jobs:
   source:
-    uses: ./.github/workflows/reusable-ros-tooling-source-build.yml
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-ros-tooling-source-build.yml@master
     with:
       ros_distro: humble
       ref: humble

@@ -284,7 +284,7 @@ ControllerManager::ControllerManager(
     RCLCPP_WARN(
       get_logger(),
       "[Deprecated] Passing the robot description parameter directly to the control_manager node "
-      "is deprecated. Use '~/robot_description' topic from 'robot_state_publisher' instead.");
+      "is deprecated. Use the 'robot_description' topic from 'robot_state_publisher' instead.");
     init_resource_manager(robot_description_);
     init_services();
   }
@@ -329,7 +329,7 @@ void ControllerManager::subscribe_to_robot_description_topic()
   // set QoS to transient local to get messages that have already been published
   // (if robot state publisher starts before controller manager)
   robot_description_subscription_ = create_subscription<std_msgs::msg::String>(
-    "~/robot_description", rclcpp::QoS(1).transient_local(),
+    "robot_description", rclcpp::QoS(1).transient_local(),
     std::bind(&ControllerManager::robot_description_callback, this, std::placeholders::_1));
   RCLCPP_INFO(
     get_logger(), "Subscribing to '%s' topic for robot description.",
@@ -341,7 +341,7 @@ void ControllerManager::robot_description_callback(const std_msgs::msg::String &
   RCLCPP_INFO(get_logger(), "Received robot description from topic.");
   RCLCPP_DEBUG(
     get_logger(), "'Content of robot description file: %s", robot_description.data.c_str());
-  // TODO(Manuel): errors should probably be caught since we don't want controller_manager node
+  // TODO(mamueluth): errors should probably be caught since we don't want controller_manager node
   // to die if a non valid urdf is passed. However, should maybe be fine tuned.
   try
   {
@@ -625,7 +625,20 @@ controller_interface::return_type ControllerManager::unload_controller(
   RCLCPP_DEBUG(get_logger(), "Cleanup controller");
   // TODO(destogl): remove reference interface if chainable; i.e., add a separate method for
   // cleaning-up controllers?
-  controller.c->get_node()->cleanup();
+  if (is_controller_inactive(*controller.c))
+  {
+    RCLCPP_DEBUG(
+      get_logger(), "Controller '%s' is cleaned-up before unloading!", controller_name.c_str());
+    // TODO(destogl): remove reference interface if chainable; i.e., add a separate method for
+    // cleaning-up controllers?
+    const auto new_state = controller.c->get_node()->cleanup();
+    if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
+    {
+      RCLCPP_WARN(
+        get_logger(), "Failed to clean-up the controller '%s' before unloading!",
+        controller_name.c_str());
+    }
+  }
   executor_->remove_node(controller.c->get_node()->get_node_base_interface());
   to.erase(found_it);
 
@@ -788,6 +801,12 @@ void ControllerManager::clear_requests()
 {
   deactivate_request_.clear();
   activate_request_.clear();
+  // Set these interfaces as unavailable when clearing requests to avoid leaving them in available
+  // state without the controller being in active state
+  for (const auto & controller_name : to_chained_mode_request_)
+  {
+    resource_manager_->make_controller_reference_interfaces_unavailable(controller_name);
+  }
   to_chained_mode_request_.clear();
   from_chained_mode_request_.clear();
   activate_command_interface_request_.clear();
@@ -1377,9 +1396,6 @@ void ControllerManager::switch_chained_mode(
     auto controller = found_it->c;
     if (!is_controller_active(*controller))
     {
-      // if it is a chainable controller, make the reference interfaces available on preactivation
-      // (This is needed when you activate a couple of chainable controller altogether)
-      resource_manager_->make_controller_reference_interfaces_available(controller_name);
       if (!controller->set_chained_mode(to_chained_mode))
       {
         RCLCPP_ERROR(
@@ -2316,6 +2332,10 @@ controller_interface::return_type ControllerManager::check_following_controllers
       if (found_it == to_chained_mode_request_.end())
       {
         to_chained_mode_request_.push_back(following_ctrl_it->info.name);
+        // if it is a chainable controller, make the reference interfaces available on preactivation
+        // (This is needed when you activate a couple of chainable controller altogether)
+        resource_manager_->make_controller_reference_interfaces_available(
+          following_ctrl_it->info.name);
         RCLCPP_DEBUG(
           get_logger(), "Adding controller '%s' in 'to chained mode' request.",
           following_ctrl_it->info.name.c_str());
