@@ -23,9 +23,6 @@ from ros2controlcli.api import add_controller_mgr_parsers
 
 
 def print_controller_state(c, args):
-<<<<<<< HEAD
-    print(f'{c.name:20s}[{c.type:20s}] {c.state:10s}')
-=======
     state_color = ""
     if c.state == "active":
         state_color = bcolors.OKGREEN
@@ -35,7 +32,6 @@ def print_controller_state(c, args):
         state_color = bcolors.WARNING
 
     print(f"{c.name:20s}[{c.type:20s}] {state_color}{c.state:10s}{bcolors.ENDC}")
->>>>>>> 0711cd6 (Added spawner colours to `list_controllers` depending upon active or inactive (#1409))
     if args.claimed_interfaces or args.verbose:
         print('\tclaimed interfaces:')
         for claimed_interface in c.claimed_interfaces:
