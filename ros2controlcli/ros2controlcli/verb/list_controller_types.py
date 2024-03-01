@@ -33,6 +33,6 @@ class ListControllerTypesVerb(VerbExtension):
             response = list_controller_types(node, args.controller_manager)
             types_and_classes = zip(response.types, response.base_classes)
             for c in types_and_classes:
-                print(f'{c[0]:70s} {c[1]}')
+                print(f"{c[0]:70s} {c[1]}")
 
             return 0

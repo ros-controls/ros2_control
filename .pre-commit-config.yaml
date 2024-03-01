@@ -16,7 +16,7 @@
 repos:
   # Standard hooks
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
+    rev: v4.5.0
     hooks:
       - id: check-added-large-files
       - id: check-ast
@@ -36,33 +36,35 @@ repos:
 
   # Python hooks
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.3.1
+    rev: v3.15.1
     hooks:
     -   id: pyupgrade
         args: [--py36-plus]
 
   # PyDocStyle
   - repo: https://github.com/PyCQA/pydocstyle
-    rev: 6.2.2
+    rev: 6.3.0
     hooks:
     - id: pydocstyle
       args: ["--ignore=D100,D101,D102,D103,D104,D105,D106,D107,D203,D212,D404"]
 
+  - repo: https://github.com/psf/black
+    rev: 24.2.0
+    hooks:
+      - id: black
+        args: ["--line-length=99"]
+
   - repo: https://github.com/pycqa/flake8
-    rev: 6.0.0
+    rev: 7.0.0
     hooks:
     - id: flake8
       args: ["--extend-ignore=E501"]
 
   # CPP hooks
-  - repo: local
+  - repo: https://github.com/pre-commit/mirrors-clang-format
+    rev: v17.0.6
     hooks:
       - id: clang-format
-        name: clang-format
-        description: Format files with ClangFormat.
-        entry: clang-format-14
-        language: system
-        files: \.(c|cc|cxx|cpp|frag|glsl|h|hpp|hxx|ih|ispc|ipp|java|js|m|proto|vert)$
         args: ['-fallback-style=none', '-i']
 
   - repo: local
@@ -70,18 +72,15 @@ repos:
       - id: ament_cppcheck
         name: ament_cppcheck
         description: Static code analysis of C/C++ files.
-        stages: [commit]
-        entry: ament_cppcheck
+        entry: env AMENT_CPPCHECK_ALLOW_SLOW_VERSIONS=1 ament_cppcheck
         language: system
         files: \.(h\+\+|h|hh|hxx|hpp|cuh|c|cc|cpp|cu|c\+\+|cxx|tpp|txx)$
 
-  # Maybe use https://github.com/cpplint/cpplint instead
   - repo: local
     hooks:
       - id: ament_cpplint
         name: ament_cpplint
         description: Static code analysis of C/C++ files.
-        stages: [commit]
         entry: ament_cpplint
         language: system
         files: \.(h\+\+|h|hh|hxx|hpp|cuh|c|cc|cpp|cu|c\+\+|cxx|tpp|txx)$
@@ -93,7 +92,6 @@ repos:
       - id: ament_lint_cmake
         name: ament_lint_cmake
         description: Check format of CMakeLists.txt files.
-        stages: [commit]
         entry: ament_lint_cmake
         language: system
         files: CMakeLists\.txt$
@@ -104,7 +102,6 @@ repos:
       - id: ament_copyright
         name: ament_copyright
         description: Check if copyright notice is available in all files.
-        stages: [commit]
         entry: ament_copyright
         language: system
 
@@ -117,7 +114,7 @@ repos:
         exclude: CHANGELOG\.rst$
 
   - repo: https://github.com/pre-commit/pygrep-hooks
-    rev: v1.9.0
+    rev: v1.10.0
     hooks:
       - id: rst-backticks
         exclude: CHANGELOG\.rst$
@@ -127,8 +124,18 @@ repos:
   # Spellcheck in comments and docs
   # skipping of *.svg files is not working...
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.2.2
+    rev: v2.2.6
     hooks:
       - id: codespell
-        args: ['--write-changes']
-        exclude: CHANGELOG\.rst|\.(svg|pyc)$
+        args: ['--write-changes', '--uri-ignore-words-list=ist', '-L manuel']
+        exclude: CHANGELOG\.rst|\.(svg|pyc|drawio)$
+
+  - repo: https://github.com/python-jsonschema/check-jsonschema
+    rev: 0.28.0
+    hooks:
+      - id: check-github-workflows
+        args: ["--verbose"]
+      - id: check-github-actions
+        args: ["--verbose"]
+      - id: check-dependabot
+        args: ["--verbose"]
