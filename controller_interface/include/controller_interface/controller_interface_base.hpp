@@ -172,6 +172,7 @@ public:
   CONTROLLER_INTERFACE_PUBLIC
   virtual rclcpp::NodeOptions define_custom_node_options() const
   {
+// \note The versions conditioning is added here to support the source-compatibility with Humble
 #if RCLCPP_VERSION_MAJOR >= 21
     return rclcpp::NodeOptions().enable_logger_service(true);
 #else
