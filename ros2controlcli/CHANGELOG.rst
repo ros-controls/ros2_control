@@ -2,6 +2,12 @@
 Changelog for package ros2controlcli
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* [CI] Code coverage + pre-commit (backport `#1413 <https://github.com/ros-controls/ros2_control/issues/1413>`_) (`#1414 <https://github.com/ros-controls/ros2_control/issues/1414>`_)
+* Added spawner colours to `list_controllers` depending upon active or inactive (backport `#1409 <https://github.com/ros-controls/ros2_control/issues/1409>`_) (`#1424 <https://github.com/ros-controls/ros2_control/issues/1424>`_)
+* Contributors: mergify[bot]
+
 2.39.1 (2024-02-14)
 -------------------
 
