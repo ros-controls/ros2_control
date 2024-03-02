@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.40.0 (2024-03-02)
+-------------------
 * Fix multiple chainable controller activation bug (backport `#1401 <https://github.com/ros-controls/ros2_control/issues/1401>`_) (`#1411 <https://github.com/ros-controls/ros2_control/issues/1411>`_)
 * [CI] Code coverage + pre-commit (backport `#1413 <https://github.com/ros-controls/ros2_control/issues/1413>`_) (`#1414 <https://github.com/ros-controls/ros2_control/issues/1414>`_)
 * Contributors: mergify[bot]
