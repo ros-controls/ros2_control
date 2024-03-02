@@ -2,8 +2,8 @@
 Changelog for package ros2controlcli
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.6.0 (2024-03-02)
+------------------
 * Added spawner colours to `list_controllers` depending upon active or inactive (`#1409 <https://github.com/ros-controls/ros2_control/issues/1409>`_)
 * Contributors: Soham Patil
 
