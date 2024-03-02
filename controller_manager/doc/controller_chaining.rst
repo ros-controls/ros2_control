@@ -76,7 +76,7 @@ One can also think of it as an actual chain, you can not add a chain link or bre
 Debugging outputs
 ----------------------------
 
-Flag ``unavailable`` if the reference interface does not provide much information about anything at the moment. So don't get confused by it. The reason we have it are internal implementation reasons irelevant for the usage.
+Flag ``unavailable`` if the reference interface does not provide much information about anything at the moment. So don't get confused by it. The reason we have it are internal implementation reasons irrelevant for the usage.
 
 
 Closing remarks

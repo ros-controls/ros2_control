@@ -89,7 +89,7 @@ public:
       }
       else
       {
-        // TODO(Manuel) : passing via topic not working in test setup, tested cm does
+        // TODO(mamueluth) : passing via topic not working in test setup, tested cm does
         // not receive msg. Have to check this...
 
         // this is just a workaround to skip passing

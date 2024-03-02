@@ -17,8 +17,13 @@
 import os
 
 from ament_index_python.packages import get_package_share_directory
-from controller_manager.controller_manager_services import configure_controller, \
-    list_controllers, load_controller, switch_controllers, unload_controller
+from controller_manager.controller_manager_services import (
+    configure_controller,
+    list_controllers,
+    load_controller,
+    switch_controllers,
+    unload_controller,
+)
 from controller_manager_msgs.msg import ControllerState
 from controller_manager_msgs.srv import SwitchController
 from python_qt_binding import loadUi
@@ -39,7 +44,7 @@ class ControllerManager(Plugin):
 
     def __init__(self, context):
         super().__init__(context)
-        self.setObjectName('ControllerManager')
+        self.setObjectName("ControllerManager")
 
         # Create QWidget and extend it with all the attributes and children
         # from the UI file
@@ -47,18 +52,18 @@ class ControllerManager(Plugin):
         ui_file = os.path.join(
             get_package_share_directory("rqt_controller_manager"),
             "resource",
-            "controller_manager.ui")
+            "controller_manager.ui",
+        )
         loadUi(ui_file, self._widget)
-        self._widget.setObjectName('ControllerManagerUi')
+        self._widget.setObjectName("ControllerManagerUi")
 
         # Pop-up that displays controller information
         self._popup_widget = QWidget()
         ui_file = os.path.join(
-            get_package_share_directory("rqt_controller_manager"),
-            'resource',
-            'controller_info.ui')
+            get_package_share_directory("rqt_controller_manager"), "resource", "controller_info.ui"
+        )
         loadUi(ui_file, self._popup_widget)
-        self._popup_widget.setObjectName('ControllerInfoUi')
+        self._popup_widget.setObjectName("ControllerInfoUi")
 
         # Show _widget.windowTitle on left-top of each plugin (when
         # it's set in _widget). This is useful when you open multiple
@@ -66,12 +71,12 @@ class ControllerManager(Plugin):
         # plugin at once, these lines add number to make it easy to
         # tell from pane to pane.
         if context.serial_number() > 1:
-            self._widget.setWindowTitle(f'{self._widget.windowTitle()} {context.serial_number()}')
+            self._widget.setWindowTitle(f"{self._widget.windowTitle()} {context.serial_number()}")
         # Add widget to the user interface
         context.add_widget(self._widget)
 
         # Initialize members
-        self._cm_name = ''  # Name of the selected controller manager's node
+        self._cm_name = ""  # Name of the selected controller manager's node
         self._controllers = []  # State of each controller
         self._table_model = None
 
@@ -81,10 +86,10 @@ class ControllerManager(Plugin):
         # Controller state icons
         path = get_package_share_directory("rqt_controller_manager")
         self._icons = {
-            'active': QIcon(f'{path}/resource/led_green.png'),
-            'finalized': QIcon(f'{path}/resource/led_off.png'),
-            'inactive': QIcon(f'{path}/resource/led_red.png'),
-            'unconfigured': QIcon(f'{path}/resource/led_off.png'),
+            "active": QIcon(f"{path}/resource/led_green.png"),
+            "finalized": QIcon(f"{path}/resource/led_off.png"),
+            "inactive": QIcon(f"{path}/resource/led_red.png"),
+            "unconfigured": QIcon(f"{path}/resource/led_off.png"),
         }
 
         # Controllers display
@@ -121,18 +126,18 @@ class ControllerManager(Plugin):
         self._popup_widget.hide()
 
     def save_settings(self, plugin_settings, instance_settings):
-        instance_settings.set_value('cm_name', self._cm_name)
+        instance_settings.set_value("cm_name", self._cm_name)
 
     def restore_settings(self, plugin_settings, instance_settings):
         # Restore last session's controller_manager, if present
         self._update_cm_list()
-        cm_name = instance_settings.value('cm_name')
+        cm_name = instance_settings.value("cm_name")
         cm_combo = self._widget.cm_combo
         cm_list = [cm_combo.itemText(i) for i in range(cm_combo.count())]
         try:
             idx = cm_list.index(cm_name)
             cm_combo.setCurrentIndex(idx)
-        except (ValueError):
+        except ValueError:
             pass
 
     def _update_cm_list(self):
@@ -200,39 +205,36 @@ class ControllerManager(Plugin):
 
         # Show context menu
         menu = QMenu(self._widget.table_view)
-        if ctrl.state == 'active':
-            action_deactivate = menu.addAction(self._icons['inactive'], 'Deactivate')
-            action_kill = menu.addAction(self._icons['finalized'],
-                                         'Deactivate and Unload')
-        elif ctrl.state == 'inactive':
-            action_activate = menu.addAction(self._icons['active'], 'Activate')
-            action_unload = menu.addAction(self._icons['unconfigured'],
-                                           'Unload')
-        elif ctrl.state == 'unconfigured':
-            action_configure = menu.addAction(self._icons['inactive'], 'Configure')
-            action_spawn = menu.addAction(self._icons['active'],
-                                          'Configure and Activate')
+        if ctrl.state == "active":
+            action_deactivate = menu.addAction(self._icons["inactive"], "Deactivate")
+            action_kill = menu.addAction(self._icons["finalized"], "Deactivate and Unload")
+        elif ctrl.state == "inactive":
+            action_activate = menu.addAction(self._icons["active"], "Activate")
+            action_unload = menu.addAction(self._icons["unconfigured"], "Unload")
+        elif ctrl.state == "unconfigured":
+            action_configure = menu.addAction(self._icons["inactive"], "Configure")
+            action_spawn = menu.addAction(self._icons["active"], "Configure and Activate")
         else:
             # Controller isn't loaded
-            action_load = menu.addAction(self._icons['unconfigured'], 'Load')
-            action_configure = menu.addAction(self._icons['inactive'], 'Load and Configure')
-            action_activate = menu.addAction(self._icons['active'], 'Load, Configure and Activate')
+            action_load = menu.addAction(self._icons["unconfigured"], "Load")
+            action_configure = menu.addAction(self._icons["inactive"], "Load and Configure")
+            action_activate = menu.addAction(self._icons["active"], "Load, Configure and Activate")
 
         action = menu.exec_(self._widget.table_view.mapToGlobal(pos))
 
         # Evaluate user action
-        if ctrl.state == 'active':
+        if ctrl.state == "active":
             if action is action_deactivate:
                 self._deactivate_controller(ctrl.name)
             elif action is action_kill:
                 self._deactivate_controller(ctrl.name)
                 unload_controller(self._node, self._cm_name, ctrl.name)
-        elif ctrl.state in ('finalized', 'inactive'):
+        elif ctrl.state in ("finalized", "inactive"):
             if action is action_activate:
                 self._activate_controller(ctrl.name)
             elif action is action_unload:
                 unload_controller(self._node, self._cm_name, ctrl.name)
-        elif ctrl.state == 'unconfigured':
+        elif ctrl.state == "unconfigured":
             if action is action_configure:
                 configure_controller(self._node, self._cm_name, ctrl.name)
             elif action is action_spawn:
@@ -258,7 +260,7 @@ class ControllerManager(Plugin):
         popup.ctrl_type.setText(ctrl.type)
 
         res_model = QStandardItemModel()
-        model_root = QStandardItem('Claimed Interfaces')
+        model_root = QStandardItem("Claimed Interfaces")
         res_model.appendRow(model_root)
         for claimed_interface in ctrl.claimed_interfaces:
             hw_iface_item = QStandardItem(claimed_interface)
@@ -275,7 +277,7 @@ class ControllerManager(Plugin):
 
         # Show context menu
         menu = QMenu(self._widget.table_view)
-        action_toggle_auto_resize = menu.addAction('Toggle Auto-Resize')
+        action_toggle_auto_resize = menu.addAction("Toggle Auto-Resize")
         action = menu.exec_(header.mapToGlobal(pos))
 
         # Evaluate user action
@@ -293,7 +295,7 @@ class ControllerManager(Plugin):
             activate_controllers=[name],
             strict=SwitchController.Request.STRICT,
             activate_asap=False,
-            timeout=0.3
+            timeout=0.3,
         )
 
     def _deactivate_controller(self, name):
@@ -304,7 +306,7 @@ class ControllerManager(Plugin):
             activate_controllers=[],
             strict=SwitchController.Request.STRICT,
             activate_asap=False,
-            timeout=0.3
+            timeout=0.3,
         )
 
 
@@ -316,7 +318,7 @@ class ControllerTable(QAbstractTableModel):
     name and state.
     """
 
-    def __init__(self, controller_info,  icons, parent=None):
+    def __init__(self, controller_info, icons, parent=None):
         QAbstractTableModel.__init__(self, parent)
         self._data = controller_info
         self._icons = icons
@@ -331,9 +333,9 @@ class ControllerTable(QAbstractTableModel):
         if orientation != Qt.Horizontal or role != Qt.DisplayRole:
             return None
         if col == 0:
-            return 'controller'
+            return "controller"
         elif col == 1:
-            return 'state'
+            return "state"
 
     def data(self, index, role):
         if not index.isValid():
@@ -345,7 +347,7 @@ class ControllerTable(QAbstractTableModel):
             if index.column() == 0:
                 return ctrl.name
             elif index.column() == 1:
-                return ctrl.state or 'not loaded'
+                return ctrl.state or "not loaded"
 
         if role == Qt.DecorationRole and index.column() == 0:
             return self._icons.get(ctrl.state)
@@ -390,7 +392,7 @@ def _get_controller_type(node, node_name, ctrl_name):
     @rtype str
     """
     response = call_get_parameters(node=node, node_name=node_name, parameter_names=[ctrl_name])
-    return response.values[0].string_value if response.values else ''
+    return response.values[0].string_value if response.values else ""
 
 
 def _list_controller_managers(node):
@@ -403,14 +405,14 @@ def _list_controller_managers(node):
     @rtype list of str
     """
     return [
-        name.rstrip('list_controllers').rstrip('/')
+        name.rstrip("list_controllers").rstrip("/")
         for name, _ in get_service_names_and_types(node=node)
-        if name.endswith('list_controllers')
+        if name.endswith("list_controllers")
     ]
 
 
 def _get_parameter_controller_names(node, node_name):
     """Get list of ROS parameter names that potentially represent a controller configuration."""
     parameter_names = call_list_parameters(node=node, node_name=node_name)
-    suffix = '.type'
+    suffix = ".type"
     return [n[: -len(suffix)] for n in parameter_names if n.endswith(suffix)]

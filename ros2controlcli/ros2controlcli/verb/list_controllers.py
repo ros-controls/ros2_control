@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from controller_manager import list_controllers
+from controller_manager.spawner import bcolors
 
 from ros2cli.node.direct import add_arguments
 from ros2cli.node.strategy import NodeStrategy
@@ -22,28 +23,36 @@ from ros2controlcli.api import add_controller_mgr_parsers
 
 
 def print_controller_state(c, args):
-    print(f'{c.name:20s}[{c.type:20s}] {c.state:10s}')
+    state_color = ""
+    if c.state == "active":
+        state_color = bcolors.OKGREEN
+    elif c.state == "inactive":
+        state_color = bcolors.OKCYAN
+    elif c.state == "unconfigured":
+        state_color = bcolors.WARNING
+
+    print(f"{c.name:20s}[{c.type:20s}] {state_color}{c.state:10s}{bcolors.ENDC}")
     if args.claimed_interfaces or args.verbose:
-        print('\tclaimed interfaces:')
+        print("\tclaimed interfaces:")
         for claimed_interface in c.claimed_interfaces:
-            print(f'\t\t{claimed_interface}')
+            print(f"\t\t{claimed_interface}")
     if args.required_command_interfaces or args.verbose:
-        print('\trequired command interfaces:')
+        print("\trequired command interfaces:")
         for required_command_interface in c.required_command_interfaces:
-            print(f'\t\t{required_command_interface}')
+            print(f"\t\t{required_command_interface}")
     if args.required_state_interfaces or args.verbose:
-        print('\trequired state interfaces:')
+        print("\trequired state interfaces:")
         for required_state_interface in c.required_state_interfaces:
-            print(f'\t\t{required_state_interface}')
+            print(f"\t\t{required_state_interface}")
     if args.chained_interfaces or args.verbose:
-        print('\tchained to interfaces:')
+        print("\tchained to interfaces:")
         for connection in c.chain_connections:
             for reference in connection.reference_interfaces:
-                print(f'\t\t{reference:20s}')
+                print(f"\t\t{reference:20s}")
     if args.reference_interfaces or args.verbose:
-        print('\texported reference interfaces:')
+        print("\texported reference interfaces:")
         for reference_interfaces in c.reference_interfaces:
-            print(f'\t\t{reference_interfaces}')
+            print(f"\t\t{reference_interfaces}")
 
 
 class ListControllersVerb(VerbExtension):
@@ -52,34 +61,35 @@ class ListControllersVerb(VerbExtension):
     def add_arguments(self, parser, cli_name):
         add_arguments(parser)
         parser.add_argument(
-            '--claimed-interfaces',
-            action='store_true',
-            help='List controller\'s claimed interfaces',
+            "--claimed-interfaces",
+            action="store_true",
+            help="List controller's claimed interfaces",
         )
         parser.add_argument(
-            '--required-state-interfaces',
-            action='store_true',
-            help='List controller\'s required state interfaces',
+            "--required-state-interfaces",
+            action="store_true",
+            help="List controller's required state interfaces",
         )
         parser.add_argument(
-            '--required-command-interfaces',
-            action='store_true',
-            help='List controller\'s required command interfaces',
+            "--required-command-interfaces",
+            action="store_true",
+            help="List controller's required command interfaces",
         )
         parser.add_argument(
-            '--chained-interfaces',
-            action='store_true',
-            help='List interfaces that the controllers are chained to',
+            "--chained-interfaces",
+            action="store_true",
+            help="List interfaces that the controllers are chained to",
         )
         parser.add_argument(
-            '--reference-interfaces',
-            action='store_true',
-            help='List controller\'s exported references',
+            "--reference-interfaces",
+            action="store_true",
+            help="List controller's exported references",
         )
         parser.add_argument(
-            '--verbose', '-v',
-            action='store_true',
-            help='List controller\'s claimed interfaces, required state interfaces and required command interfaces',
+            "--verbose",
+            "-v",
+            action="store_true",
+            help="List controller's claimed interfaces, required state interfaces and required command interfaces",
         )
         add_controller_mgr_parsers(parser)
 
