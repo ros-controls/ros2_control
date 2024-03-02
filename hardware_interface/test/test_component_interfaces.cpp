@@ -341,12 +341,12 @@ class DummySystem : public hardware_interface::SystemInterface
 
 private:
   std::array<double, 3> position_state_ = {
-    std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
-    std::numeric_limits<double>::quiet_NaN()};
+    {std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
+     std::numeric_limits<double>::quiet_NaN()}};
   std::array<double, 3> velocity_state_ = {
-    std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
-    std::numeric_limits<double>::quiet_NaN()};
-  std::array<double, 3> velocity_command_ = {0.0, 0.0, 0.0};
+    {std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
+     std::numeric_limits<double>::quiet_NaN()}};
+  std::array<double, 3> velocity_command_ = {{0.0, 0.0, 0.0}};
 
   // Helper variables to initiate error on read
   unsigned int read_calls_ = 0;

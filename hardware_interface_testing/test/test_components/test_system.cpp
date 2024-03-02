@@ -114,10 +114,10 @@ class TestSystem : public SystemInterface
   }
 
 private:
-  std::array<double, 2> velocity_command_ = {0.0, 0.0};
-  std::array<double, 2> position_state_ = {0.0, 0.0};
-  std::array<double, 2> velocity_state_ = {0.0, 0.0};
-  std::array<double, 2> acceleration_state_ = {0.0, 0.0};
+  std::array<double, 2> velocity_command_ = {{0.0, 0.0}};
+  std::array<double, 2> position_state_ = {{0.0, 0.0}};
+  std::array<double, 2> velocity_state_ = {{0.0, 0.0}};
+  std::array<double, 2> acceleration_state_ = {{0.0, 0.0}};
   double max_acceleration_command_ = 0.0;
   double configuration_state_ = 0.0;
   double configuration_command_ = 0.0;
