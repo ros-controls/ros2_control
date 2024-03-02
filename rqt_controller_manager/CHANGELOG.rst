@@ -2,8 +2,8 @@
 Changelog for package rqt_controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.24.0 (2024-03-02)
+-------------------
 * [CI] Code coverage + pre-commit (backport `#1413 <https://github.com/ros-controls/ros2_control/issues/1413>`_) (`#1415 <https://github.com/ros-controls/ros2_control/issues/1415>`_)
 * Contributors: mergify[bot]
 
