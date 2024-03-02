@@ -2,6 +2,13 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix multiple chainable controller activation bug (backport `#1401 <https://github.com/ros-controls/ros2_control/issues/1401>`_) (`#1412 <https://github.com/ros-controls/ros2_control/issues/1412>`_)
+* [CI] Code coverage + pre-commit (backport `#1413 <https://github.com/ros-controls/ros2_control/issues/1413>`_) (`#1415 <https://github.com/ros-controls/ros2_control/issues/1415>`_)
+* [CM] Use explicit constants in controller tests. (`#1356 <https://github.com/ros-controls/ros2_control/issues/1356>`_) (`#1360 <https://github.com/ros-controls/ros2_control/issues/1360>`_)
+* Contributors: mergify[bot]
+
 3.23.0 (2024-02-01)
 -------------------
 * Move `test_components` to own package (backport `#1325 <https://github.com/ros-controls/ros2_control/issues/1325>`_) (`#1341 <https://github.com/ros-controls/ros2_control/issues/1341>`_)

@@ -2,6 +2,12 @@
 Changelog for package joint_limits
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* [CI] Code coverage + pre-commit (backport `#1413 <https://github.com/ros-controls/ros2_control/issues/1413>`_) (`#1415 <https://github.com/ros-controls/ros2_control/issues/1415>`_)
+* Add header to import limits from standard URDF definition (`#1298 <https://github.com/ros-controls/ros2_control/issues/1298>`_) (`#1418 <https://github.com/ros-controls/ros2_control/issues/1418>`_)
+* Contributors: mergify[bot]
+
 3.23.0 (2024-02-01)
 -------------------
 
