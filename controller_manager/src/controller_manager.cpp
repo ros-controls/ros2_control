@@ -1386,8 +1386,7 @@ void ControllerManager::switch_chained_mode(
           resource_manager_->make_controller_reference_interfaces_unavailable(controller_name);
         }
       }
-      else
-      if (!controller->set_chained_mode(to_chained_mode))
+      else if (!controller->set_chained_mode(to_chained_mode))
       {
         RCLCPP_ERROR(
           get_logger(),
