@@ -1,7 +1,7 @@
 # ros2_control
 
 [![Licence](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![codecov](https://codecov.io/gh/ros-controls/ros2_control/branch/iron/graph/badge.svg?token=idvm1zJXOf)](https://codecov.io/gh/ros-controls/ros2_control)
+[![codecov](https://codecov.io/gh/ros-controls/ros2_control/branch/iron/graph/badge.svg?token=idvm1zJXOf)](https://codecov.io/gh/ros-controls/ros2_control/tree/iron)
 
 This package is a part of the ros2_control framework.
 For more, please check the [documentation](https://control.ros.org/).
