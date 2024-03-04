@@ -59,14 +59,13 @@ public:
    * hardware components listed within as well as populate their respective
    * state and command interfaces.
    *
-   * If the interfaces ought to be validated, the constructor throws an exception
-   * in case the URDF lists interfaces which are not available.
-   *
    * \param[in] urdf string containing the URDF.
-   * \param[in] validate_interfaces boolean argument indicating whether the exported
-   * interfaces ought to be validated. Defaults to true.
    * \param[in] activate_all boolean argument indicating if all resources should be immediately
    * activated. Currently used only in tests.
+   * \param[in] update_rate Update rate of the controller manager to calculate calling frequency
+   * of async components.
+   * \param[in] clock_interface reference to the clock interface of the CM node for getting time
+   * used for triggering async components.
    */
   explicit ResourceManager(
     const std::string & urdf, bool activate_all = false, unsigned int update_rate = 100,
@@ -78,7 +77,7 @@ public:
 
   /// Load resources from on a given URDF.
   /**
-   * The resource manager can be post initialized with a given URDF.
+   * The resource manager can be post-initialized with a given URDF.
    * This is mainly used in conjunction with the default constructor
    * in which the URDF might not be present at first initialization.
    *
@@ -89,7 +88,7 @@ public:
 
   /**
    * @brief if the resource manager load_and_initialize_components(...) function has been called
-   * this returns true. We want to permit to load the urdf later on but we currently don't want to
+   * this returns true. We want to permit to loading the urdf later on, but we currently don't want to
    * permit multiple calls to load_and_initialize_components (reloading/loading different urdf).
    *
    * @return true if the resource manager has successfully loaded and initialized the components
