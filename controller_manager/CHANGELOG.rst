@@ -2,6 +2,16 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.6.0 (2024-03-02)
+------------------
+* Add -Werror=missing-braces to compile options (`#1423 <https://github.com/ros-controls/ros2_control/issues/1423>`_)
+* added conditioning to have rolling tags compilable in older versions (`#1422 <https://github.com/ros-controls/ros2_control/issues/1422>`_)
+* [CM] Remove deprecated parameters for initial component states. (`#1357 <https://github.com/ros-controls/ros2_control/issues/1357>`_)
+* [BREAKING CHANGE] Use `robot_description` topic instead of `~/robot_description` and update docs regarding this (`#1410 <https://github.com/ros-controls/ros2_control/issues/1410>`_)
+* [CI] Code coverage + pre-commit (`#1413 <https://github.com/ros-controls/ros2_control/issues/1413>`_)
+* Fix multiple chainable controller activation bug (`#1401 <https://github.com/ros-controls/ros2_control/issues/1401>`_)
+* Contributors: Christoph Fröhlich, Dr. Denis, Felix Exner (fexner), Sai Kishor Kothakota
+
 4.5.0 (2024-02-12)
 ------------------
 * check for state of the controller node before cleanup (`#1363 <https://github.com/ros-controls/ros2_control/issues/1363>`_)
