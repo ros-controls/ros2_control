@@ -37,17 +37,19 @@ class TestCleanupController : public ControllerManagerFixture<controller_manager
 
 TEST_F(TestCleanupController, cleanup_unknown_controller)
 {
-  ASSERT_EQ(cm_->cleanup_controller("unknown_controller_name"), controller_interface::return_type::ERROR);
+  ASSERT_EQ(
+    cm_->cleanup_controller("unknown_controller_name"), controller_interface::return_type::ERROR);
 }
 
 TEST_F(TestCleanupController, cleanup_controller_failed_init)
 {
-  auto controller_if =
-    cm_->load_controller(
-      "test_controller_failed_init",
-      test_controller_failed_init::TEST_CONTROLLER_FAILED_INIT_CLASS_NAME);
+  auto controller_if = cm_->load_controller(
+    "test_controller_failed_init",
+    test_controller_failed_init::TEST_CONTROLLER_FAILED_INIT_CLASS_NAME);
 
-  ASSERT_EQ(cm_->cleanup_controller("test_controller_failed_init"), controller_interface::return_type::ERROR);
+  ASSERT_EQ(
+    cm_->cleanup_controller("test_controller_failed_init"),
+    controller_interface::return_type::ERROR);
 }
 
 TEST_F(TestCleanupController, cleanup_non_loaded_controller_fails)
@@ -65,7 +67,8 @@ TEST_F(TestCleanupController, cleanup_unconfigured_controller)
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, controller_if->get_state().id());
   ASSERT_EQ(cm_->cleanup_controller(CONTROLLER_NAME_1), controller_interface::return_type::OK);
-  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, controller_if->get_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, controller_if->get_state().id());
 }
 
 TEST_F(TestCleanupController, cleanup_inactive_controller)
@@ -80,7 +83,8 @@ TEST_F(TestCleanupController, cleanup_inactive_controller)
 
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if->get_state().id());
   ASSERT_EQ(cm_->cleanup_controller(CONTROLLER_NAME_1), controller_interface::return_type::OK);
-  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, controller_if->get_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, controller_if->get_state().id());
 }
 
 TEST_F(TestCleanupController, cleanup_active_controller)
@@ -97,6 +101,8 @@ TEST_F(TestCleanupController, cleanup_active_controller)
 
   switch_test_controllers(strvec{CONTROLLER_NAME_1}, strvec{}, STRICT);
 
-  ASSERT_EQ(cm_->cleanup_controller(CONTROLLER_NAME_1), controller_interface::return_type::OK);
-  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, controller_if->get_state().id());
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, controller_if->get_state().id());
+
+  ASSERT_EQ(cm_->cleanup_controller(CONTROLLER_NAME_1), controller_interface::return_type::ERROR);
+  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, controller_if->get_state().id());
 }
