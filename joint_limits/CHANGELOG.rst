@@ -2,6 +2,14 @@
 Changelog for package joint_limits
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.6.0 (2024-03-02)
+------------------
+* Add -Werror=missing-braces to compile options (`#1423 <https://github.com/ros-controls/ros2_control/issues/1423>`_)
+* Contributors: Sai Kishor Kothakota
+
+4.5.0 (2024-02-12)
+------------------
+
 4.4.0 (2024-01-31)
 ------------------
 * [Format] Correct formatting of JointLimits URDF file. (`#1339 <https://github.com/ros-controls/ros2_control/issues/1339>`_)

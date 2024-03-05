@@ -1,4 +1,4 @@
-name: Debian Iron Build
+name: Debian Iron Source Build
 on:
   workflow_dispatch:
   pull_request:
@@ -10,21 +10,15 @@ on:
 
 
 jobs:
-  iron_debian:
-    name: Iron debian build
-    runs-on: ubuntu-latest
-    env:
-      ROS_DISTRO: iron
-    container: ghcr.io/ros-controls/ros:iron-debian
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          path: src/ros2_control
-      - name: Build and test
-        shell: bash
-        run: |
-          source /opt/ros2_ws/install/setup.bash
-          vcs import src < src/ros2_control/ros2_control.${{ env.ROS_DISTRO }}.repos
-          colcon build --packages-skip rqt_controller_manager
-          colcon test --packages-skip rqt_controller_manager control_msgs controller_manager_msgs
-          colcon test-result --verbose
+  debian_source_build:
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-debian-build.yml@master
+    strategy:
+      fail-fast: false
+      matrix:
+        ROS_DISTRO: [iron]
+    with:
+      ros_distro: ${{ matrix.ROS_DISTRO }}
+      upstream_workspace: ros2_control.${{ matrix.ROS_DISTRO }}.repos
+      ref_for_scheduled_build: master
+      skip_packages: rqt_controller_manager
+      skip_packages_test: controller_manager_msgs
