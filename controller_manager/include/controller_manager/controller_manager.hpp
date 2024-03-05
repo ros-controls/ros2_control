@@ -29,6 +29,7 @@
 
 #include "controller_manager/controller_spec.hpp"
 #include "controller_manager/visibility_control.h"
+#include "controller_manager_msgs/srv/cleanup_controller.hpp"
 #include "controller_manager_msgs/srv/configure_controller.hpp"
 #include "controller_manager_msgs/srv/list_controller_types.hpp"
 #include "controller_manager_msgs/srv/list_controllers.hpp"
@@ -106,6 +107,9 @@ public:
 
   CONTROLLER_MANAGER_PUBLIC
   controller_interface::return_type unload_controller(const std::string & controller_name);
+
+  CONTROLLER_MANAGER_PUBLIC
+  controller_interface::return_type cleanup_controller(const std::string & controller_name);
 
   CONTROLLER_MANAGER_PUBLIC
   std::vector<ControllerSpec> get_loaded_controllers() const;
@@ -295,6 +299,11 @@ protected:
   void unload_controller_service_cb(
     const std::shared_ptr<controller_manager_msgs::srv::UnloadController::Request> request,
     std::shared_ptr<controller_manager_msgs::srv::UnloadController::Response> response);
+
+  CONTROLLER_MANAGER_PUBLIC
+  void cleanup_controller_service_cb(
+    const std::shared_ptr<controller_manager_msgs::srv::CleanupController::Request> request,
+    std::shared_ptr<controller_manager_msgs::srv::CleanupController::Response> response);
 
   CONTROLLER_MANAGER_PUBLIC
   void list_controller_types_srv_cb(
@@ -531,6 +540,8 @@ private:
     switch_controller_service_;
   rclcpp::Service<controller_manager_msgs::srv::UnloadController>::SharedPtr
     unload_controller_service_;
+  rclcpp::Service<controller_manager_msgs::srv::CleanupController>::SharedPtr
+    cleanup_controller_service_;
 
   rclcpp::Service<controller_manager_msgs::srv::ListHardwareComponents>::SharedPtr
     list_hardware_components_service_;
