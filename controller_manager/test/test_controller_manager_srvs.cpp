@@ -865,7 +865,7 @@ TEST_F(TestControllerManagerSrvs, list_sorted_independent_chained_controllers)
   /// &&
   /// test_controller_name_2 -> chain_ctrl_6 -> chain_ctrl_5 -> chain_ctrl_4
   /// &&
-  /// test_controller_name_7 -> test_controller_name_8
+  /// test_controller_name_8 -> test_controller_name_7
   ///
   /// NOTE: A -> B signifies that the controller A is utilizing the reference interfaces exported
   /// from the controller B (or) the controller B is utilizing the expected interfaces exported from

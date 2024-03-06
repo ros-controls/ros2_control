@@ -132,126 +132,41 @@ bool command_interface_is_reference_interface_of_controller(
   return true;
 }
 
-/**
- * A method to retrieve the names of all it's following controllers given a controller name
- * For instance, for the following case
- * A -> B -> C -> D
- * When called with B, returns C and D
- * NOTE: A -> B signifies that the controller A is utilizing the reference interfaces exported from
- * the controller B (or) the controller B is utilizing the expected interfaces exported from the
- * controller A
- *
- * @param controller_name - Name of the controller for checking the tree
- * \param[in] controllers list of controllers to compare their names to interface's prefix.
- * @return list of controllers that are following the given controller in a chain. If none, return
- * empty.
- */
-std::vector<std::string> get_following_controller_names(
-  const std::string controller_name,
-  const std::vector<controller_manager::ControllerSpec> & controllers)
+template <typename T>
+void add_element_to_list(std::vector<T> & list, const T & element)
 {
-  std::vector<std::string> following_controllers;
-  auto controller_it = std::find_if(
-    controllers.begin(), controllers.end(),
-    std::bind(controller_name_compare, std::placeholders::_1, controller_name));
-  if (controller_it == controllers.end())
+  if (std::find(list.begin(), list.end(), element) == list.end())
   {
-    RCLCPP_DEBUG(
-      rclcpp::get_logger("ControllerManager::utils"),
-      "Required controller : '%s' is not found in the controller list ", controller_name.c_str());
-
-    return following_controllers;
+    // Only add to the list if it doesn't exist
+    list.push_back(element);
   }
-  // If the controller is not configured, return empty
-  if (!(is_controller_active(controller_it->c) || is_controller_inactive(controller_it->c)))
-  {
-    return following_controllers;
-  }
-  const auto cmd_itfs = controller_it->c->command_interface_configuration().names;
-  for (const auto & itf : cmd_itfs)
-  {
-    controller_manager::ControllersListIterator ctrl_it;
-    if (command_interface_is_reference_interface_of_controller(itf, controllers, ctrl_it))
-    {
-      RCLCPP_DEBUG(
-        rclcpp::get_logger("ControllerManager::utils"),
-        "The interface is a reference interface of controller : %s", ctrl_it->info.name.c_str());
-      following_controllers.push_back(ctrl_it->info.name);
-      const std::vector<std::string> ctrl_names =
-        get_following_controller_names(ctrl_it->info.name, controllers);
-      for (const std::string & controller : ctrl_names)
-      {
-        if (
-          std::find(following_controllers.begin(), following_controllers.end(), controller) ==
-          following_controllers.end())
-        {
-          // Only add to the list if it doesn't exist
-          following_controllers.push_back(controller);
-        }
-      }
-    }
-  }
-  return following_controllers;
 }
 
-/**
- * A method to retrieve the names of all it's preceding controllers given a controller name
- * For instance, for the following case
- * A -> B -> C -> D
- * When called with C, returns A and B
- * NOTE: A -> B signifies that the controller A is utilizing the reference interfaces exported from
- * the controller B (or) the controller B is utilizing the expected interfaces exported from the
- * controller A
- *
- * @param controller_name - Name of the controller for checking the tree
- * \param[in] controllers list of controllers to compare their names to interface's prefix.
- * @return list of controllers that are preceding the given controller in a chain. If none, return
- * empty.
- */
-std::vector<std::string> get_preceding_controller_names(
-  const std::string controller_name,
-  const std::vector<controller_manager::ControllerSpec> & controllers)
+template <typename T>
+void remove_element_from_list(std::vector<T> & list, const T & element)
 {
-  std::vector<std::string> preceding_controllers;
-  auto controller_it = std::find_if(
-    controllers.begin(), controllers.end(),
-    std::bind(controller_name_compare, std::placeholders::_1, controller_name));
-  if (controller_it == controllers.end())
+  auto itr = std::find(list.begin(), list.end(), element);
+  if (itr != list.end())
   {
-    RCLCPP_DEBUG(
-      rclcpp::get_logger("ControllerManager::utils"),
-      "Required controller : '%s' is not found in the controller list ", controller_name.c_str());
-    return preceding_controllers;
+    list.erase(itr);
   }
-  for (const auto & ctrl : controllers)
+}
+
+void controller_chain_spec_cleanup(
+  std::unordered_map<std::string, controller_manager::ControllerChainSpec> & ctrl_chain_spec,
+  const std::string & controller)
+{
+  const auto following_controllers = ctrl_chain_spec[controller].following_controllers;
+  const auto preceding_controllers = ctrl_chain_spec[controller].preceding_controllers;
+  for (const auto & flwg_ctrl : following_controllers)
   {
-    // If the controller is not configured, then continue
-    if (!(is_controller_active(ctrl.c) || is_controller_inactive(ctrl.c)))
-    {
-      continue;
-    }
-    auto cmd_itfs = ctrl.c->command_interface_configuration().names;
-    for (const auto & itf : cmd_itfs)
-    {
-      auto split_pos = itf.find_first_of('/');
-      if ((split_pos != std::string::npos) && (itf.substr(0, split_pos) == controller_name))
-      {
-        preceding_controllers.push_back(ctrl.info.name);
-        auto ctrl_names = get_preceding_controller_names(ctrl.info.name, controllers);
-        for (const std::string & controller : ctrl_names)
-        {
-          if (
-            std::find(preceding_controllers.begin(), preceding_controllers.end(), controller) ==
-            preceding_controllers.end())
-          {
-            // Only add to the list if it doesn't exist
-            preceding_controllers.push_back(controller);
-          }
-        }
-      }
-    }
+    remove_element_from_list(ctrl_chain_spec[flwg_ctrl].preceding_controllers, controller);
   }
-  return preceding_controllers;
+  for (const auto & preced_ctrl : preceding_controllers)
+  {
+    remove_element_from_list(ctrl_chain_spec[preced_ctrl].following_controllers, controller);
+  }
+  ctrl_chain_spec.erase(controller);
 }
 
 }  // namespace
@@ -637,6 +552,7 @@ controller_interface::return_type ControllerManager::unload_controller(
   }
 
   RCLCPP_DEBUG(get_logger(), "Cleanup controller");
+  controller_chain_spec_cleanup(controller_chain_spec_, controller_name);
   // TODO(destogl): remove reference interface if chainable; i.e., add a separate method for
   // cleaning-up controllers?
   if (is_controller_inactive(*controller.c))
@@ -781,6 +697,33 @@ controller_interface::return_type ControllerManager::configure_controller(
     resource_manager_->import_controller_reference_interfaces(controller_name, interfaces);
   }
 
+  // let's update the list of following and preceding controllers
+  const auto cmd_itfs = controller->command_interface_configuration().names;
+  const auto state_itfs = controller->state_interface_configuration().names;
+  for (const auto & cmd_itf : cmd_itfs)
+  {
+    controller_manager::ControllersListIterator ctrl_it;
+    if (command_interface_is_reference_interface_of_controller(cmd_itf, controllers, ctrl_it))
+    {
+      add_element_to_list(
+        controller_chain_spec_[controller_name].following_controllers, ctrl_it->info.name);
+      add_element_to_list(
+        controller_chain_spec_[ctrl_it->info.name].preceding_controllers, controller_name);
+    }
+  }
+  // This is needed when we start exporting the state interfaces from the controllers
+  for (const auto & state_itf : state_itfs)
+  {
+    controller_manager::ControllersListIterator ctrl_it;
+    if (command_interface_is_reference_interface_of_controller(state_itf, controllers, ctrl_it))
+    {
+      add_element_to_list(
+        controller_chain_spec_[controller_name].preceding_controllers, ctrl_it->info.name);
+      add_element_to_list(
+        controller_chain_spec_[ctrl_it->info.name].following_controllers, controller_name);
+    }
+  }
+
   // Now let's reorder the controllers
   // lock controllers
   std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
@@ -789,14 +732,32 @@ controller_interface::return_type ControllerManager::configure_controller(
 
   // Copy all controllers from the 'from' list to the 'to' list
   to = from;
+  std::vector<ControllerSpec> sorted_list;
 
-  // Reordering the controllers
-  std::stable_sort(
-    to.begin(), to.end(),
-    std::bind(
-      &ControllerManager::controller_sorting, this, std::placeholders::_1, std::placeholders::_2,
-      to));
+  // clear the list before reordering it again
+  ordered_controllers_names_.clear();
+  for (const auto & [ctrl_name, chain_spec] : controller_chain_spec_)
+  {
+    auto it =
+      std::find(ordered_controllers_names_.begin(), ordered_controllers_names_.end(), ctrl_name);
+    if (it == ordered_controllers_names_.end())
+    {
+      update_list_with_controller_chain(ctrl_name, ordered_controllers_names_.end(), false);
+    }
+  }
 
+  std::vector<ControllerSpec> new_list;
+  for (const auto & ctrl : ordered_controllers_names_)
+  {
+    auto controller_it = std::find_if(
+      to.begin(), to.end(), std::bind(controller_name_compare, std::placeholders::_1, ctrl));
+    if (controller_it != to.end())
+    {
+      new_list.push_back(*controller_it);
+    }
+  }
+
+  to = new_list;
   RCLCPP_DEBUG(get_logger(), "Reordered controllers list is:");
   for (const auto & ctrl : to)
   {
@@ -1334,6 +1295,10 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::add_co
       get_logger(), "Could not initialize the controller named '%s'", controller.info.name.c_str());
     return nullptr;
   }
+
+  // initialize the data for the controller chain spec once it is loaded. It is needed, so when we
+  // sort the controllers later, they will be added to the list
+  controller_chain_spec_[controller.info.name] = ControllerChainSpec();
 
   executor_->add_node(controller.c->get_node()->get_node_base_interface());
   to.emplace_back(controller);
@@ -2461,126 +2426,6 @@ controller_interface::return_type ControllerManager::check_preceeding_controller
   return controller_interface::return_type::OK;
 }
 
-bool ControllerManager::controller_sorting(
-  const ControllerSpec & ctrl_a, const ControllerSpec & ctrl_b,
-  const std::vector<controller_manager::ControllerSpec> & controllers)
-{
-  // If the neither of the controllers are configured, then return false
-  if (!((is_controller_active(ctrl_a.c) || is_controller_inactive(ctrl_a.c)) &&
-        (is_controller_active(ctrl_b.c) || is_controller_inactive(ctrl_b.c))))
-  {
-    if (is_controller_active(ctrl_a.c) || is_controller_inactive(ctrl_a.c))
-    {
-      return true;
-    }
-    return false;
-  }
-
-  const std::vector<std::string> cmd_itfs = ctrl_a.c->command_interface_configuration().names;
-  const std::vector<std::string> state_itfs = ctrl_a.c->state_interface_configuration().names;
-  if (cmd_itfs.empty() || !ctrl_a.c->is_chainable())
-  {
-    // The case of the controllers that don't have any command interfaces. For instance,
-    // joint_state_broadcaster
-    // If the controller b is also under the same condition, then maintain their initial order
-    const auto command_interfaces_exist =
-      !ctrl_b.c->command_interface_configuration().names.empty();
-    return ctrl_b.c->is_chainable() && command_interfaces_exist;
-  }
-  else if (ctrl_b.c->command_interface_configuration().names.empty() || !ctrl_b.c->is_chainable())
-  {
-    // If only the controller b is a broadcaster or non chainable type , then swap the controllers
-    return false;
-  }
-  else
-  {
-    auto following_ctrls = get_following_controller_names(ctrl_a.info.name, controllers);
-    if (following_ctrls.empty())
-    {
-      return false;
-    }
-    // If the ctrl_b is any of the following controllers of ctrl_a, then place ctrl_a before ctrl_b
-    if (
-      std::find(following_ctrls.begin(), following_ctrls.end(), ctrl_b.info.name) !=
-      following_ctrls.end())
-    {
-      return true;
-    }
-    else
-    {
-      auto ctrl_a_preceding_ctrls = get_preceding_controller_names(ctrl_a.info.name, controllers);
-      // This is to check that the ctrl_b is in the preceding controllers list of ctrl_a - This
-      // check is useful when there is a chained controller branching, but they belong to same
-      // branch
-      if (
-        std::find(ctrl_a_preceding_ctrls.begin(), ctrl_a_preceding_ctrls.end(), ctrl_b.info.name) !=
-        ctrl_a_preceding_ctrls.end())
-      {
-        return false;
-      }
-
-      // This is to handle the cases where, the parsed ctrl_a and ctrl_b are not directly related
-      // but might have a common parent - happens in branched chained controller
-      auto ctrl_b_preceding_ctrls = get_preceding_controller_names(ctrl_b.info.name, controllers);
-      std::sort(ctrl_a_preceding_ctrls.begin(), ctrl_a_preceding_ctrls.end());
-      std::sort(ctrl_b_preceding_ctrls.begin(), ctrl_b_preceding_ctrls.end());
-      std::list<std::string> intersection;
-      std::set_intersection(
-        ctrl_a_preceding_ctrls.begin(), ctrl_a_preceding_ctrls.end(),
-        ctrl_b_preceding_ctrls.begin(), ctrl_b_preceding_ctrls.end(),
-        std::back_inserter(intersection));
-      if (!intersection.empty())
-      {
-        // If there is an intersection, then there is a common parent controller for both ctrl_a and
-        // ctrl_b
-        return true;
-      }
-
-      // If there is no common parent, then they belong to 2 different sets
-      auto following_ctrls_b = get_following_controller_names(ctrl_b.info.name, controllers);
-      if (following_ctrls_b.empty())
-      {
-        return true;
-      }
-      auto find_first_element = [&](const auto & controllers_list) -> size_t
-      {
-        auto it = std::find_if(
-          controllers.begin(), controllers.end(),
-          std::bind(controller_name_compare, std::placeholders::_1, controllers_list.back()));
-        if (it != controllers.end())
-        {
-          return std::distance(controllers.begin(), it);
-        }
-        return 0;
-      };
-      const auto ctrl_a_chain_first_controller = find_first_element(following_ctrls);
-      const auto ctrl_b_chain_first_controller = find_first_element(following_ctrls_b);
-      if (ctrl_a_chain_first_controller < ctrl_b_chain_first_controller)
-      {
-        return true;
-      }
-    }
-
-    // If the ctrl_a's state interface is the one exported by the ctrl_b then ctrl_b should be
-    // infront of ctrl_a
-    // TODO(saikishor): deal with the state interface chaining in the sorting algorithm
-    auto state_it = std::find_if(
-      state_itfs.begin(), state_itfs.end(),
-      [ctrl_b](auto itf)
-      {
-        auto index = itf.find_first_of('/');
-        return ((index != std::string::npos) && (itf.substr(0, index) == ctrl_b.info.name));
-      });
-    if (state_it != state_itfs.end())
-    {
-      return false;
-    }
-
-    // The rest of the cases, basically end up at the end of the list
-    return false;
-  }
-};
-
 void ControllerManager::controller_activity_diagnostic_callback(
   diagnostic_updater::DiagnosticStatusWrapper & stat)
 {
@@ -2604,6 +2449,80 @@ void ControllerManager::controller_activity_diagnostic_callback(
   else
   {
     stat.summary(diagnostic_msgs::msg::DiagnosticStatus::OK, "Not all controllers are active");
+  }
+}
+
+void ControllerManager::update_list_with_controller_chain(
+  const std::string & ctrl_name, std::vector<std::string>::iterator controller_iterator,
+  bool append_to_controller)
+{
+  auto new_ctrl_it =
+    std::find(ordered_controllers_names_.begin(), ordered_controllers_names_.end(), ctrl_name);
+  if (new_ctrl_it == ordered_controllers_names_.end())
+  {
+    RCLCPP_DEBUG(get_logger(), "Adding controller chain : %s", ctrl_name.c_str());
+
+    auto iterator = controller_iterator;
+    for (const auto & ctrl : controller_chain_spec_[ctrl_name].following_controllers)
+    {
+      auto it =
+        std::find(ordered_controllers_names_.begin(), ordered_controllers_names_.end(), ctrl);
+      if (it != ordered_controllers_names_.end())
+      {
+        if (
+          std::distance(ordered_controllers_names_.begin(), it) <
+          std::distance(ordered_controllers_names_.begin(), iterator))
+        {
+          iterator = it;
+        }
+      }
+    }
+    for (const auto & ctrl : controller_chain_spec_[ctrl_name].preceding_controllers)
+    {
+      auto it =
+        std::find(ordered_controllers_names_.begin(), ordered_controllers_names_.end(), ctrl);
+      if (it != ordered_controllers_names_.end())
+      {
+        if (
+          std::distance(ordered_controllers_names_.begin(), it) >
+          std::distance(ordered_controllers_names_.begin(), iterator))
+        {
+          iterator = it;
+        }
+      }
+    }
+
+    if (append_to_controller)
+    {
+      ordered_controllers_names_.insert(iterator + 1, ctrl_name);
+    }
+    else
+    {
+      ordered_controllers_names_.insert(iterator, ctrl_name);
+    }
+
+    RCLCPP_DEBUG_EXPRESSION(
+      get_logger(), !controller_chain_spec_[ctrl_name].following_controllers.empty(),
+      "\t[%s] Following controllers : %ld", ctrl_name.c_str(),
+      controller_chain_spec_[ctrl_name].following_controllers.size());
+    for (const std::string & flwg_ctrl : controller_chain_spec_[ctrl_name].following_controllers)
+    {
+      new_ctrl_it =
+        std::find(ordered_controllers_names_.begin(), ordered_controllers_names_.end(), ctrl_name);
+      RCLCPP_DEBUG(get_logger(), "\t\t[%s] : %s", ctrl_name.c_str(), flwg_ctrl.c_str());
+      update_list_with_controller_chain(flwg_ctrl, new_ctrl_it, true);
+    }
+    RCLCPP_DEBUG_EXPRESSION(
+      get_logger(), !controller_chain_spec_[ctrl_name].preceding_controllers.empty(),
+      "\t[%s] Preceding controllers : %ld", ctrl_name.c_str(),
+      controller_chain_spec_[ctrl_name].preceding_controllers.size());
+    for (const std::string & preced_ctrl : controller_chain_spec_[ctrl_name].preceding_controllers)
+    {
+      new_ctrl_it =
+        std::find(ordered_controllers_names_.begin(), ordered_controllers_names_.end(), ctrl_name);
+      RCLCPP_DEBUG(get_logger(), "\t\t[%s]: %s", ctrl_name.c_str(), preced_ctrl.c_str());
+      update_list_with_controller_chain(preced_ctrl, new_ctrl_it, false);
+    }
   }
 }
 
