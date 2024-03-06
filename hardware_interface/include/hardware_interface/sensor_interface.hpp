@@ -15,13 +15,19 @@
 #ifndef HARDWARE_INTERFACE__SENSOR_INTERFACE_HPP_
 #define HARDWARE_INTERFACE__SENSOR_INTERFACE_HPP_
 
+#include <limits>
 #include <memory>
 #include <string>
+#include <unordered_map>
+#include <utility>
 #include <vector>
 
+#include "hardware_interface/component_parser.hpp"
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/hardware_info.hpp"
+#include "hardware_interface/types/hardware_interface_error_signals.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
+#include "hardware_interface/types/hardware_interface_warning_signals.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 #include "rclcpp/duration.hpp"
@@ -97,19 +103,147 @@ public:
   virtual CallbackReturn on_init(const HardwareInfo & hardware_info)
   {
     info_ = hardware_info;
+    import_state_interface_descriptions(info_);
+    create_report_interfaces();
     return CallbackReturn::SUCCESS;
   };
 
+  /**
+   * Import the InterfaceDescription for the StateInterfaces from the HardwareInfo.
+   * Separate them into the possible types: Sensor and store them.
+   */
+  virtual void import_state_interface_descriptions(const HardwareInfo & hardware_info)
+  {
+    auto sensor_state_interface_descriptions =
+      parse_state_interface_descriptions_from_hardware_info(hardware_info.sensors);
+    for (const auto & description : sensor_state_interface_descriptions)
+    {
+      sensor_state_interfaces_.insert(std::make_pair(description.get_name(), description));
+    }
+  }
+
+  /**
+   * Creates all interfaces used for reporting warning and error messages.
+   * The available report interfaces are: ERROR_SIGNAL, ERROR_SIGNAL_MESSAGE,
+   * WARNING_SIGNAL and WARNING_SIGNAL_MESSAGE. Where the <report_type>_MESSAGE hold the message for
+   * the corresponding report signal.
+   * The interfaces are named like <hardware_name>/<report_interface_type>. E.g. if hardware is
+   * called sensor_1 -> interface for WARNING_SIGNAL is called: sensor_1/WARNING_SIGNAL
+   */
+  void create_report_interfaces()
+  {
+    // ERROR
+    // create error signal interface
+    InterfaceInfo error_interface_info;
+    error_interface_info.name = hardware_interface::ERROR_SIGNAL_INTERFACE_NAME;
+    error_interface_info.data_type = "array<uint8_t>[32]";
+    InterfaceDescription error_interface_descr(info_.name, error_interface_info);
+    error_signal_ = std::make_shared<StateInterface>(error_interface_descr);
+    // create error signal report message interface
+    InterfaceInfo error_msg_interface_info;
+    error_msg_interface_info.name = hardware_interface::ERROR_SIGNAL_MESSAGE_INTERFACE_NAME;
+    error_msg_interface_info.data_type = "array<string>[32]";
+    InterfaceDescription error_msg_interface_descr(info_.name, error_msg_interface_info);
+    error_signal_message_ = std::make_shared<StateInterface>(error_msg_interface_descr);
+
+    // WARNING
+    //  create warning signal interface
+    InterfaceInfo warning_interface_info;
+    warning_interface_info.name = hardware_interface::WARNING_SIGNAL_INTERFACE_NAME;
+    warning_interface_info.data_type = "array<int8_t>[32]";
+    InterfaceDescription warning_interface_descr(info_.name, warning_interface_info);
+    warning_signal_ = std::make_shared<StateInterface>(warning_interface_descr);
+    // create warning signal report message interface
+    InterfaceInfo warning_msg_interface_info;
+    warning_msg_interface_info.name = hardware_interface::WARNING_SIGNAL_MESSAGE_INTERFACE_NAME;
+    warning_msg_interface_info.data_type = "array<string>[32]";
+    InterfaceDescription warning_msg_interface_descr(info_.name, warning_msg_interface_info);
+    warning_signal_message_ = std::make_shared<StateInterface>(warning_msg_interface_descr);
+  }
+
   /// Exports all state interfaces for this hardware interface.
   /**
-   * The state interfaces have to be created and transferred according
-   * to the hardware info passed in for the configuration.
+   * Old way of exporting the StateInterfaces. If a empty vector is returned then
+   * the on_export_state_interfaces() method is called. If a vector with StateInterfaces is returned
+   * then the exporting of the StateInterfaces is only done with this function and the ownership is
+   * transferred to the resource manager. The set_command(...), get_command(...), ..., can then not
+   * be used.
    *
    * Note the ownership over the state interfaces is transferred to the caller.
    *
    * \return vector of state interfaces
    */
-  virtual std::vector<StateInterface> export_state_interfaces() = 0;
+  [[deprecated(
+    "Replaced by vector<std::shared_ptr<StateInterface>> on_export_state_interfaces() method. "
+    "Exporting is handled "
+    "by the Framework.")]] virtual std::vector<StateInterface>
+  export_state_interfaces()
+  {
+    // return empty vector by default. For backward compatibility we check if all vectors is empty
+    // and if so call on_export_state_interfaces()
+    return {};
+  }
+
+  /**
+   * Override this method to export custom StateInterfaces which are not defined in the URDF file.
+   * Those interfaces will be added to the unlisted_state_interfaces_ map.
+   *
+   *  Note method name is going to be changed to export_state_interfaces() as soon as the deprecated
+   * version is removed.
+   *
+   * \return vector of descriptions to the unlisted StateInterfaces
+   */
+  virtual std::vector<hardware_interface::InterfaceDescription> export_state_interfaces_2()
+  {
+    // return empty vector by default.
+    return {};
+  }
+
+  /**
+   * Default implementation for exporting the StateInterfaces. The StateInterfaces are created
+   * according to the InterfaceDescription. The memory accessed by the controllers and hardware is
+   * assigned here and resides in the sensor_interface.
+   *
+   * \return vector of shared pointers to the created and stored StateInterfaces
+   */
+  virtual std::vector<std::shared_ptr<StateInterface>> on_export_state_interfaces()
+  {
+    // import the unlisted interfaces
+    std::vector<hardware_interface::InterfaceDescription> unlisted_interface_descriptions =
+      export_state_interfaces_2();
+
+    std::vector<std::shared_ptr<StateInterface>> state_interfaces;
+    state_interfaces.reserve(
+      unlisted_interface_descriptions.size() + sensor_state_interfaces_.size());
+
+    // add InterfaceDescriptions and create the StateInterfaces from the descriptions and add to
+    // maps.
+    for (const auto & description : unlisted_interface_descriptions)
+    {
+      auto name = description.get_name();
+      unlisted_state_interfaces_.insert(std::make_pair(name, description));
+      auto state_interface = std::make_shared<StateInterface>(description);
+      sensor_states_.insert(std::make_pair(name, state_interface));
+      state_interfaces.push_back(state_interface);
+    }
+
+    for (const auto & [name, descr] : sensor_state_interfaces_)
+    {
+      // TODO(Manuel) maybe check for duplicates otherwise only the first appearance of "name" is
+      // inserted
+      auto state_interface = std::make_shared<StateInterface>(descr);
+      sensor_states_.insert(std::make_pair(name, state_interface));
+      state_interfaces.push_back(state_interface);
+    }
+
+    // export warning signal interfaces
+    state_interfaces.push_back(error_signal_);
+    state_interfaces.push_back(error_signal_message_);
+    state_interfaces.push_back(warning_signal_);
+    state_interfaces.push_back(warning_signal_message_);
+
+    return state_interfaces;
+  }
 
   /// Read the current state values from the actuator.
   /**
@@ -141,8 +275,52 @@ public:
    */
   void set_state(const rclcpp_lifecycle::State & new_state) { lifecycle_state_ = new_state; }
 
+  void set_state(const std::string & interface_name, const double & value)
+  {
+    sensor_states_.at(interface_name)->set_value(value);
+  }
+
+  double get_state(const std::string & interface_name) const
+  {
+    return sensor_states_.at(interface_name)->get_value();
+  }
+
+  void set_error_code(const double & error_code) { error_signal_->set_value(error_code); }
+
+  double get_error_code() const { return error_signal_->get_value(); }
+
+  void set_error_message(const double & error_message)
+  {
+    error_signal_message_->set_value(error_message);
+  }
+
+  double get_error_message() const { return error_signal_message_->get_value(); }
+
+  void set_warning_code(const double & warning_codes) { warning_signal_->set_value(warning_codes); }
+
+  double get_warning_code() const { return warning_signal_->get_value(); }
+
+  void set_warning_message(const double & error_message)
+  {
+    warning_signal_message_->set_value(error_message);
+  }
+
+  double get_warning_message() const { return warning_signal_message_->get_value(); }
+
 protected:
   HardwareInfo info_;
+
+  std::unordered_map<std::string, InterfaceDescription> sensor_state_interfaces_;
+  std::unordered_map<std::string, InterfaceDescription> unlisted_state_interfaces_;
+
+private:
+  std::unordered_map<std::string, std::shared_ptr<StateInterface>> sensor_states_;
+
+  std::shared_ptr<StateInterface> error_signal_;
+  std::shared_ptr<StateInterface> error_signal_message_;
+  std::shared_ptr<StateInterface> warning_signal_;
+  std::shared_ptr<StateInterface> warning_signal_message_;
+
   rclcpp_lifecycle::State lifecycle_state_;
 };
 

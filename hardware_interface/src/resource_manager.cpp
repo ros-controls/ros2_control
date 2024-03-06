@@ -433,24 +433,65 @@ public:
   template <class HardwareT>
   void import_state_interfaces(HardwareT & hardware)
   {
-    auto interfaces = hardware.export_state_interfaces();
     std::vector<std::string> interface_names;
+    std::vector<std::shared_ptr<StateInterface>> interfaces = hardware.export_state_interfaces();
+
     interface_names.reserve(interfaces.size());
-    for (auto & interface : interfaces)
+    for (auto const & interface : interfaces)
     {
-      auto key = interface.get_name();
-      state_interface_map_.emplace(std::make_pair(key, std::move(interface)));
-      interface_names.push_back(key);
+      const auto [it, success] =
+        state_interface_map_.insert(std::make_pair(interface->get_name(), interface));
+      if (!success)
+      {
+        std::string msg(
+          "ResourceStorage: Tried to insert StateInterface with already existing key. Insert[" +
+          interface->get_name() + "]");
+        throw std::runtime_error(msg);
+      }
+      interface_names.push_back(interface->get_name());
     }
+
     hardware_info_map_[hardware.get_name()].state_interfaces = interface_names;
     available_state_interfaces_.reserve(
       available_state_interfaces_.capacity() + interface_names.size());
   }
 
+  void insert_command_interface(std::shared_ptr<CommandInterface> command_interface)
+  {
+    const auto [it, success] = command_interface_map_.insert(
+      std::make_pair(command_interface->get_name(), command_interface));
+    if (!success)
+    {
+      std::string msg(
+        "ResourceStorage: Tried to insert CommandInterface with already existing key. Insert[" +
+        command_interface->get_name() + "]");
+      throw std::runtime_error(msg);
+    }
+  }
+
+  // BEGIN (Handle export change): for backward compatibility, can be removed if
+  // export_command_interfaces() method is removed
+  void insert_command_interface(CommandInterface && command_interface)
+  {
+    std::string key = command_interface.get_name();
+    const auto [it, success] = command_interface_map_.emplace(
+      std::make_pair(key, std::make_shared<CommandInterface>(std::move(command_interface))));
+    if (!success)
+    {
+      std::string msg(
+        "ResourceStorage: Tried to insert CommandInterface with already existing key. Insert[" +
+        key + "]");
+      throw std::runtime_error(msg);
+    }
+  }
+  // END: for backward compatibility
+
   template <class HardwareT>
   void import_command_interfaces(HardwareT & hardware)
   {
-    auto interfaces = hardware.export_command_interfaces();
+    std::vector<std::shared_ptr<CommandInterface>> interfaces =
+      hardware.export_command_interfaces();
+
     hardware_info_map_[hardware.get_name()].command_interfaces = add_command_interfaces(interfaces);
   }
 
@@ -472,7 +513,25 @@ public:
     for (auto & interface : interfaces)
     {
       auto key = interface.get_name();
-      command_interface_map_.emplace(std::make_pair(key, std::move(interface)));
+      insert_command_interface(std::move(interface));
+      claimed_command_interface_map_.emplace(std::make_pair(key, false));
+      interface_names.push_back(key);
+    }
+    available_command_interfaces_.reserve(
+      available_command_interfaces_.capacity() + interface_names.size());
+
+    return interface_names;
+  }
+
+  std::vector<std::string> add_command_interfaces(
+    std::vector<std::shared_ptr<CommandInterface>> & interfaces)
+  {
+    std::vector<std::string> interface_names;
+    interface_names.reserve(interfaces.size());
+    for (auto & interface : interfaces)
+    {
+      auto key = interface->get_name();
+      insert_command_interface(interface);
       claimed_command_interface_map_.emplace(std::make_pair(key, false));
       interface_names.push_back(key);
     }
@@ -709,9 +768,9 @@ public:
   std::unordered_map<std::string, std::vector<std::string>> controllers_reference_interfaces_map_;
 
   /// Storage of all available state interfaces
-  std::map<std::string, StateInterface> state_interface_map_;
+  std::map<std::string, std::shared_ptr<StateInterface>> state_interface_map_;
   /// Storage of all available command interfaces
-  std::map<std::string, CommandInterface> command_interface_map_;
+  std::map<std::string, std::shared_ptr<CommandInterface>> command_interface_map_;
 
   /// Vectors with interfaces available to controllers (depending on hardware component state)
   std::vector<std::string> available_state_interfaces_;
@@ -810,7 +869,7 @@ LoanedStateInterface ResourceManager::claim_state_interface(const std::string & 
   }
 
   std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
-  return LoanedStateInterface(resource_storage_->state_interface_map_.at(key));
+  return LoanedStateInterface(*(resource_storage_->state_interface_map_.at(key)));
 }
 
 // CM API: Called in "callback/slow"-thread
@@ -981,7 +1040,7 @@ LoanedCommandInterface ResourceManager::claim_command_interface(const std::strin
   resource_storage_->claimed_command_interface_map_[key] = true;
   std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
   return LoanedCommandInterface(
-    resource_storage_->command_interface_map_.at(key),
+    *(resource_storage_->command_interface_map_.at(key)),
     std::bind(&ResourceManager::release_command_interface, this, key));
 }
 
