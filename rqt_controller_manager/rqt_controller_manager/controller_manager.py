@@ -60,7 +60,8 @@ class ControllerManager(Plugin):
         # Pop-up that displays controller information
         self._popup_widget = QWidget()
         ui_file = os.path.join(
-            get_package_share_directory("rqt_controller_manager"), "resource", "controller_info.ui"
+            get_package_share_directory(
+                "rqt_controller_manager"), "resource", "controller_info.ui"
         )
         loadUi(ui_file, self._popup_widget)
         self._popup_widget.setObjectName("ControllerInfoUi")
@@ -71,7 +72,8 @@ class ControllerManager(Plugin):
         # plugin at once, these lines add number to make it easy to
         # tell from pane to pane.
         if context.serial_number() > 1:
-            self._widget.setWindowTitle(f"{self._widget.windowTitle()} {context.serial_number()}")
+            self._widget.setWindowTitle(
+                f"{self._widget.windowTitle()} {context.serial_number()}")
         # Add widget to the user interface
         context.add_widget(self._widget)
 
@@ -106,13 +108,15 @@ class ControllerManager(Plugin):
 
         # Timer for controller manager updates
         self._update_cm_list_timer = QTimer(self)
-        self._update_cm_list_timer.setInterval(int(1000.0 / self._cm_update_freq))
+        self._update_cm_list_timer.setInterval(
+            int(1000.0 / self._cm_update_freq))
         self._update_cm_list_timer.timeout.connect(self._update_cm_list)
         self._update_cm_list_timer.start()
 
         # Timer for running controller updates
         self._update_ctrl_list_timer = QTimer(self)
-        self._update_ctrl_list_timer.setInterval(int(1000.0 / self._cm_update_freq))
+        self._update_ctrl_list_timer.setInterval(
+            int(1000.0 / self._cm_update_freq))
         self._update_ctrl_list_timer.timeout.connect(self._update_controllers)
         self._update_ctrl_list_timer.start()
 
@@ -141,7 +145,8 @@ class ControllerManager(Plugin):
             pass
 
     def _update_cm_list(self):
-        update_combo(self._widget.cm_combo, _list_controller_managers(self._node))
+        update_combo(self._widget.cm_combo,
+                     _list_controller_managers(self._node))
 
     def _on_cm_change(self, cm_name):
         self._cm_name = cm_name
@@ -181,7 +186,8 @@ class ControllerManager(Plugin):
             for name in _get_parameter_controller_names(self._node, self._cm_name):
                 add_ctrl = all(name != ctrl.name for ctrl in controllers)
                 if add_ctrl:
-                    type_str = _get_controller_type(self._node, self._cm_name, name)
+                    type_str = _get_controller_type(
+                        self._node, self._cm_name, name)
                     uninit_ctrl = ControllerState(name=name, type=type_str)
                     controllers.append(uninit_ctrl)
             return controllers
@@ -205,19 +211,26 @@ class ControllerManager(Plugin):
         # Show context menu
         menu = QMenu(self._widget.table_view)
         if ctrl.state == "active":
-            action_deactivate = menu.addAction(self._icons["inactive"], "Deactivate")
-            action_kill = menu.addAction(self._icons["finalized"], "Deactivate and Unload")
+            action_deactivate = menu.addAction(
+                self._icons["inactive"], "Deactivate")
+            action_kill = menu.addAction(
+                self._icons["finalized"], "Deactivate and Unload")
         elif ctrl.state == "inactive":
             action_activate = menu.addAction(self._icons["active"], "Activate")
-            action_unload = menu.addAction(self._icons["unconfigured"], "Unload")
+            action_unload = menu.addAction(
+                self._icons["unconfigured"], "Unload")
         elif ctrl.state == "unconfigured":
-            action_configure = menu.addAction(self._icons["inactive"], "Configure")
-            action_spawn = menu.addAction(self._icons["active"], "Configure and Activate")
+            action_configure = menu.addAction(
+                self._icons["inactive"], "Configure")
+            action_spawn = menu.addAction(
+                self._icons["active"], "Configure and Activate")
         else:
             # Controller isn't loaded
             action_load = menu.addAction(self._icons["unconfigured"], "Load")
-            action_configure = menu.addAction(self._icons["inactive"], "Load and Configure")
-            action_activate = menu.addAction(self._icons["active"], "Load, Configure and Activate")
+            action_configure = menu.addAction(
+                self._icons["inactive"], "Load and Configure")
+            action_activate = menu.addAction(
+                self._icons["active"], "Load, Configure and Activate")
 
         action = menu.exec_(self._widget.table_view.mapToGlobal(pos))
 
@@ -390,7 +403,8 @@ def _get_controller_type(node, node_name, ctrl_name):
     @return Controller type
     @rtype str
     """
-    response = call_get_parameters(node=node, node_name=node_name, parameter_names=[ctrl_name])
+    response = call_get_parameters(
+        node=node, node_name=node_name, parameter_names=[ctrl_name])
     return response.values[0].string_value if response.values else ""
 
 
@@ -414,8 +428,9 @@ def _get_parameter_controller_names(node, node_name):
     """Get list of ROS parameter names that potentially represent a controller configuration."""
     parameter_names = call_list_parameters(node=node, node_name=node_name)
     suffix = ".type"
+    # @note: The versions conditioning is added here to support the source-compatibility with Humble
     try:
-      return [n[: -len(suffix)] for n in parameter_names.result().result.names if n.endswith(suffix)]
+        return [n[: -len(suffix)] for n in parameter_names.result().result.names if n.endswith(suffix)]
     finally:
-      # for humble
-      return [n[: -len(suffix)] for n in parameter_names if n.endswith(suffix)]
+        # for humble, ros2param < 0.20.0
+        return [n[: -len(suffix)] for n in parameter_names if n.endswith(suffix)]
