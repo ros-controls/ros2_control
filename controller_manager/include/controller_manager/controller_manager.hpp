@@ -390,28 +390,28 @@ private:
     const std::vector<ControllerSpec> & controllers, int strictness,
     const ControllersListIterator controller_it);
 
-  /// A method to be used in the std::sort method to sort the controllers to be able to
-  /// execute them in a proper order
   /**
-   * Compares the controllers ctrl_a and ctrl_b and then returns which comes first in the sequence
+   * @brief Inserts a controller into an ordered list based on dependencies to compute the
+   * controller chain.
    *
-   *  @note The following conditions needs to be handled while ordering the controller list
-   *  1. The controllers that do not use any state or command interfaces are updated first
-   *  2. The controllers that use only the state system interfaces only are updated next
-   *  3. The controllers that use any of an another controller's reference interface are updated
-   * before the preceding controller
-   *  4. The controllers that use the controller's estimated interfaces are updated after the
-   * preceding controller
-   *  5. The controllers that only use the hardware command interfaces are updated last
-   *  6. All inactive controllers go at the end of the list
+   * This method computes the controller chain by inserting the provided controller name into an
+   * ordered list of controllers based on dependencies. It ensures that controllers are inserted in
+   * the correct order so that dependencies are satisfied.
    *
-   * \param[in] controllers list of controllers to compare their names to interface's prefix.
-   *
-   * @return true, if ctrl_a needs to execute first, else false
+   * @param ctrl_name The name of the controller to be inserted into the chain.
+   * @param controller_iterator An iterator pointing to the position in the ordered list where the
+   * controller should be inserted.
+   * @param append_to_controller Flag indicating whether the controller should be appended or
+   * prepended to the parsed iterator.
+   * @note The specification of controller dependencies is in the ControllerChainSpec,
+   * containing information about following and preceding controllers. This struct should include
+   * the neighboring controllers with their relationships to the provided controller.
+   * `following_controllers` specify controllers that come after the provided controller.
+   * `preceding_controllers` specify controllers that come before the provided controller.
    */
-  bool controller_sorting(
-    const ControllerSpec & ctrl_a, const ControllerSpec & ctrl_b,
-    const std::vector<controller_manager::ControllerSpec> & controllers);
+  void update_list_with_controller_chain(
+    const std::string & ctrl_name, std::vector<std::string>::iterator controller_iterator,
+    bool append_to_controller);
 
   void controller_activity_diagnostic_callback(diagnostic_updater::DiagnosticStatusWrapper & stat);
 
@@ -515,6 +515,8 @@ private:
   };
 
   RTControllerListWrapper rt_controllers_wrapper_;
+  std::unordered_map<std::string, ControllerChainSpec> controller_chain_spec_;
+  std::vector<std::string> ordered_controllers_names_;
   /// mutex copied from ROS1 Control, protects service callbacks
   /// not needed if we're guaranteed that the callbacks don't come from multiple threads
   std::mutex services_lock_;
