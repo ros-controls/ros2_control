@@ -88,8 +88,8 @@ public:
 
   /**
    * @brief if the resource manager load_and_initialize_components(...) function has been called
-   * this returns true. We want to permit to loading the urdf later on, but we currently don't want to
-   * permit multiple calls to load_and_initialize_components (reloading/loading different urdf).
+   * this returns true. We want to permit to loading the urdf later on, but we currently don't want
+   * to permit multiple calls to load_and_initialize_components (reloading/loading different urdf).
    *
    * @return true if the resource manager has successfully loaded and initialized the components
    * @return false if the resource manager doesn't have any components loaded and initialized.
