@@ -128,14 +128,11 @@ struct SoftJointLimits
   {
     std::stringstream ss_output;
 
-    ss_output << "  soft position limits: "
-              << "[" << min_position << ", " << max_position << "]\n";
+    ss_output << "  soft position limits: " << "[" << min_position << ", " << max_position << "]\n";
 
-    ss_output << "  k-position: "
-              << "[" << k_position << "]\n";
+    ss_output << "  k-position: " << "[" << k_position << "]\n";
 
-    ss_output << "  k-velocity: "
-              << "[" << k_velocity << "]\n";
+    ss_output << "  k-velocity: " << "[" << k_velocity << "]\n";
 
     return ss_output.str();
   }
