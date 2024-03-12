@@ -25,6 +25,7 @@ find_package(backward_ros REQUIRED)
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
 endforeach()
+add_compile_definitions(RCLCPP_VERSION_MAJOR=${rclcpp_VERSION_MAJOR})
 
 add_library(controller_manager SHARED
   src/controller_manager.cpp
