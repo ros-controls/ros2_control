@@ -148,9 +148,13 @@ bool is_interface_exported_from_controller(
 
   auto interface_prefix = interface_name.substr(0, split_pos);
   if (controller_name.compare(interface_prefix) == 0)
+  {
     return true;
+  }
   else
+  {
     return false;
+  }
 }
 
 bool is_controller_internal_state_interfaces_inuse_by_other_controllers(
@@ -1573,6 +1577,8 @@ void ControllerManager::activate_controllers(
     }
     controller->assign_interfaces(std::move(command_loans), std::move(state_loans));
 
+    // enable references from the controller interfaces
+    controller->toggle_references_from_subscribers(false);
     const auto new_state = controller->get_node()->activate();
     if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
     {
@@ -1587,8 +1593,6 @@ void ControllerManager::activate_controllers(
     // if it is a chainable controller, make the reference interfaces available on activation
     if (controller->is_chainable())
     {
-      // enable references from the controller interfaces
-      controller->toggle_references_from_subscribers(false);
       // make all the exported interfaces of the controller available
       resource_manager_->make_controller_internal_state_interfaces_available(controller_name);
       resource_manager_->make_controller_reference_interfaces_available(controller_name);

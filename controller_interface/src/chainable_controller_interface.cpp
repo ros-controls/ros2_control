@@ -162,9 +162,10 @@ bool ChainableControllerInterface::toggle_references_from_subscribers(bool enabl
   {
     RCLCPP_ERROR(
       get_node()->get_logger(),
-      "Can not toggle the controller's references between subscribers and interfaces because it is "
-      "no in '%s' state. Current state is '%s'.",
-      hardware_interface::lifecycle_state_names::UNCONFIGURED, get_state().label().c_str());
+      "Can not toggle the controller's references between subscribers and interfaces in '%s' "
+      "state. "
+      " Current state is '%s'.",
+      hardware_interface::lifecycle_state_names::ACTIVE, get_state().label().c_str());
   }
   return result;
 }

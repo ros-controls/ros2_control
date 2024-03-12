@@ -51,8 +51,7 @@ class TestIMUSensor : public SensorInterface
     {
       if (
         std::find_if(
-          state_interfaces.begin(), state_interfaces.end(),
-          [&imu_key](const auto & interface_info)
+          state_interfaces.begin(), state_interfaces.end(), [&imu_key](const auto & interface_info)
           { return interface_info.name == imu_key; }) == state_interfaces.end())
       {
         return CallbackReturn::ERROR;

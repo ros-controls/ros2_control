@@ -399,11 +399,13 @@ public:
       {
         if (claimed_interfaces_from_hw)
         {
-          EXPECT_TRUE(cm_->resource_manager_->command_interface_is_available(interface));
+          EXPECT_TRUE(cm_->resource_manager_->command_interface_is_available(interface))
+            << "The interface : " << interface << " should be available but it is not available";
         }
         else
         {
-          EXPECT_FALSE(cm_->resource_manager_->command_interface_is_available(interface));
+          EXPECT_FALSE(cm_->resource_manager_->command_interface_is_available(interface))
+            << "The interface : " << interface << " shouldn't be available but it is available";
         }
         EXPECT_FALSE(cm_->resource_manager_->command_interface_is_claimed(interface));
       }
@@ -1514,7 +1516,7 @@ TEST_P(
   // the other controllers that rely on the DiffDriveController expected interfaces
   DeactivateAndCheckController(
     position_tracking_controller, POSITION_TRACKING_CONTROLLER,
-    POSITION_CONTROLLER_CLAIMED_INTERFACES, 2u);
+    POSITION_CONTROLLER_CLAIMED_INTERFACES, 2u, true);
   EXPECT_TRUE(pid_left_wheel_controller->is_in_chained_mode());
   EXPECT_TRUE(pid_right_wheel_controller->is_in_chained_mode());
   EXPECT_TRUE(diff_drive_controller->is_in_chained_mode());
@@ -1630,7 +1632,7 @@ TEST_P(
   // Deactivate the diff_drive_controller as all it's following controllers that uses it's
   // interfaces are deactivated
   DeactivateAndCheckController(
-    diff_drive_controller, DIFF_DRIVE_CONTROLLER, DIFF_DRIVE_CLAIMED_INTERFACES, 0u);
+    diff_drive_controller, DIFF_DRIVE_CONTROLLER, DIFF_DRIVE_CLAIMED_INTERFACES, 0u, true);
   EXPECT_FALSE(pid_left_wheel_controller->is_in_chained_mode());
   EXPECT_FALSE(pid_right_wheel_controller->is_in_chained_mode());
   EXPECT_FALSE(diff_drive_controller->is_in_chained_mode());

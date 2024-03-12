@@ -230,7 +230,10 @@ void TestChainableController::set_internal_state_interface_names(
 
 void TestChainableController::set_imu_sensor_name(const std::string & name)
 {
-  if (!name.empty()) imu_sensor_ = std::make_unique<semantic_components::IMUSensor>(name);
+  if (!name.empty())
+  {
+    imu_sensor_ = std::make_unique<semantic_components::IMUSensor>(name);
+  }
 }
 }  // namespace test_chainable_controller
 
