@@ -233,8 +233,7 @@ TEST_F(TestLoadController, unload_on_kill)
   // Launch spawner with unload on kill
   // timeout command will kill it after the specified time with signal SIGINT
   std::stringstream ss;
-  ss << "timeout --signal=INT 5 "
-     << "ros2 run controller_manager spawner "
+  ss << "timeout --signal=INT 5 " << "ros2 run controller_manager spawner "
      << "ctrl_3 -c test_controller_manager -t "
      << std::string(test_controller::TEST_CONTROLLER_CLASS_NAME) << " --unload-on-kill";
 
