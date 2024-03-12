@@ -15,6 +15,7 @@ find_package(ament_cmake REQUIRED)
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
 endforeach()
+add_compile_definitions(RCLCPP_VERSION_MAJOR=${rclcpp_lifecycle_VERSION_MAJOR})
 
 add_library(controller_interface SHARED
   src/controller_interface_base.cpp
