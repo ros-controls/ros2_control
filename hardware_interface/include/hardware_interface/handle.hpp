@@ -15,47 +15,55 @@
 #ifndef HARDWARE_INTERFACE__HANDLE_HPP_
 #define HARDWARE_INTERFACE__HANDLE_HPP_
 
+#include <limits>
 #include <string>
 #include <utility>
 
+#include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/macros.hpp"
 #include "hardware_interface/visibility_control.h"
 
 namespace hardware_interface
 {
 /// A handle used to get and set a value on a given interface.
-class ReadOnlyHandle
+class Handle
 {
 public:
-  ReadOnlyHandle(
-    const std::string & prefix_name, const std::string & interface_name,
-    double * value_ptr = nullptr)
-  : prefix_name_(prefix_name), interface_name_(interface_name), value_ptr_(value_ptr)
+  Handle(const std::string & prefix_name, const std::string & interface_name)
+  : prefix_name_(prefix_name),
+    interface_name_(interface_name),
+    has_new_value_(false),
+    is_valid_(false),
+    value_(std::numeric_limits<double>::quiet_NaN())
   {
   }
 
-  explicit ReadOnlyHandle(const std::string & interface_name)
-  : interface_name_(interface_name), value_ptr_(nullptr)
+  explicit Handle(const std::string & interface_name)
+  : interface_name_(interface_name),
+    has_new_value_(false),
+    is_valid_(false),
+    value_(std::numeric_limits<double>::quiet_NaN())
   {
   }
 
-  explicit ReadOnlyHandle(const char * interface_name)
-  : interface_name_(interface_name), value_ptr_(nullptr)
+  explicit Handle(const char * interface_name)
+  : interface_name_(interface_name),
+    has_new_value_(false),
+    is_valid_(false),
+    value_(std::numeric_limits<double>::quiet_NaN())
   {
   }
 
-  ReadOnlyHandle(const ReadOnlyHandle & other) = default;
+  // Handle should be unique
+  Handle(const Handle & other) = delete;
 
-  ReadOnlyHandle(ReadOnlyHandle && other) = default;
+  Handle(Handle && other) = default;
 
-  ReadOnlyHandle & operator=(const ReadOnlyHandle & other) = default;
+  Handle & operator=(const Handle & other) = default;
 
-  ReadOnlyHandle & operator=(ReadOnlyHandle && other) = default;
+  Handle & operator=(Handle && other) = default;
 
-  virtual ~ReadOnlyHandle() = default;
-
-  /// Returns true if handle references a value.
-  inline operator bool() const { return value_ptr_ != nullptr; }
+  virtual ~Handle() = default;
 
   const std::string get_name() const { return prefix_name_ + "/" + interface_name_; }
 
@@ -70,62 +78,87 @@ public:
 
   const std::string & get_prefix_name() const { return prefix_name_; }
 
-  double get_value() const
+  /**
+   * @brief Set the new value of the handle and mark the Handle as "has_new_value_ = true".
+   * This indicates that new data has been set since last read access.
+   *
+   * @param value current stored value in the handle.
+   */
+  virtual void set_value(const double & value)
   {
-    THROW_ON_NULLPTR(value_ptr_);
-    return *value_ptr_;
+    value_ = value;
+    has_new_value_ = true;
+  }
+
+  /**
+   * @brief Get the value of the handle an mark the handle as "has_new_value_ = false"
+   * since the value has been read and not be changed since last read access.
+   *
+   * @return HandleValue is the current stored value of the handle.
+   */
+  virtual double get_value()
+  {
+    has_new_value_ = false;
+    return value_;
+  }
+
+  /**
+   * @brief Indicates if new value has been stored in the handle since the last
+   * read access.
+   *
+   * @return true => new value has been stored since last read access to the handle.
+   * @return false => no new value has been stored since last read access to the handle.
+   */
+  virtual bool has_new_value() const { return has_new_value_; }
+
+  /**
+   * @brief Indicates if the value stored inside the handle is valid
+   *
+   * @return true => stored value is valid and can be used.
+   * @return false => false stored value is not valid and should not be used.
+   */
+  virtual bool value_is_valid() const
+  {
+    if (value_ == std::numeric_limits<double>::quiet_NaN())
+    {
+      return false;
+    }
+    return true;
   }
 
 protected:
   std::string prefix_name_;
   std::string interface_name_;
-  double * value_ptr_;
+  // marks if value is new or has already been read
+  bool has_new_value_;
+  // stores if the stored value is valid
+  bool is_valid_;
+  // the current stored value of the handle
+  double value_;
 };
 
-class ReadWriteHandle : public ReadOnlyHandle
+class StateInterface : public Handle
 {
 public:
-  ReadWriteHandle(
-    const std::string & prefix_name, const std::string & interface_name,
-    double * value_ptr = nullptr)
-  : ReadOnlyHandle(prefix_name, interface_name, value_ptr)
+  explicit StateInterface(const InterfaceDescription & interface_description)
+  : Handle(interface_description.prefix_name, interface_description.interface_info.name)
   {
   }
 
-  explicit ReadWriteHandle(const std::string & interface_name) : ReadOnlyHandle(interface_name) {}
-
-  explicit ReadWriteHandle(const char * interface_name) : ReadOnlyHandle(interface_name) {}
-
-  ReadWriteHandle(const ReadWriteHandle & other) = default;
-
-  ReadWriteHandle(ReadWriteHandle && other) = default;
-
-  ReadWriteHandle & operator=(const ReadWriteHandle & other) = default;
-
-  ReadWriteHandle & operator=(ReadWriteHandle && other) = default;
-
-  virtual ~ReadWriteHandle() = default;
-
-  void set_value(double value)
-  {
-    THROW_ON_NULLPTR(this->value_ptr_);
-    *this->value_ptr_ = value;
-  }
-};
-
-class StateInterface : public ReadOnlyHandle
-{
-public:
-  StateInterface(const StateInterface & other) = default;
+  StateInterface(const StateInterface & other) = delete;
 
   StateInterface(StateInterface && other) = default;
 
-  using ReadOnlyHandle::ReadOnlyHandle;
+  using Handle::Handle;
 };
 
-class CommandInterface : public ReadWriteHandle
+class CommandInterface : public Handle
 {
 public:
+  explicit CommandInterface(const InterfaceDescription & interface_description)
+  : Handle(interface_description.prefix_name, interface_description.interface_info.name)
+  {
+  }
   /// CommandInterface copy constructor is actively deleted.
   /**
    * Command interfaces are having a unique ownership and thus
@@ -136,7 +169,7 @@ public:
 
   CommandInterface(CommandInterface && other) = default;
 
-  using ReadWriteHandle::ReadWriteHandle;
+  using Handle::Handle;
 };
 
 }  // namespace hardware_interface

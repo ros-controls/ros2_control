@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef HARDWARE_INTERFACE__LOANED_STATE_INTERFACE_HPP_
-#define HARDWARE_INTERFACE__LOANED_STATE_INTERFACE_HPP_
+#ifndef HARDWARE_INTERFACE__LOANED_HW_STATE_INTERFACE_HPP_
+#define HARDWARE_INTERFACE__LOANED_HW_STATE_INTERFACE_HPP_
 
 #include <functional>
 #include <string>
@@ -24,26 +24,26 @@
 
 namespace hardware_interface
 {
-class LoanedStateInterface
+class LoanedHwStateInterface
 {
 public:
   using Deleter = std::function<void(void)>;
 
-  explicit LoanedStateInterface(StateInterface & state_interface)
-  : LoanedStateInterface(state_interface, nullptr)
+  explicit LoanedHwStateInterface(StateInterface & state_interface)
+  : LoanedHwStateInterface(state_interface, nullptr)
   {
   }
 
-  LoanedStateInterface(StateInterface & state_interface, Deleter && deleter)
+  LoanedHwStateInterface(StateInterface & state_interface, Deleter && deleter)
   : state_interface_(state_interface), deleter_(std::forward<Deleter>(deleter))
   {
   }
 
-  LoanedStateInterface(const LoanedStateInterface & other) = delete;
+  LoanedHwStateInterface(const LoanedHwStateInterface & other) = delete;
 
-  LoanedStateInterface(LoanedStateInterface && other) = default;
+  LoanedHwStateInterface(LoanedHwStateInterface && other) = default;
 
-  virtual ~LoanedStateInterface()
+  virtual ~LoanedHwStateInterface()
   {
     if (deleter_)
     {
@@ -68,6 +68,8 @@ public:
 
   bool has_new_value() const { return state_interface_.has_new_value(); }
 
+  void set_value(const double & value) const { return state_interface_.set_value(value); }
+
   bool value_is_valid() const { return state_interface_.value_is_valid(); }
 
 protected:
@@ -76,4 +78,4 @@ protected:
 };
 
 }  // namespace hardware_interface
-#endif  // HARDWARE_INTERFACE__LOANED_STATE_INTERFACE_HPP_
+#endif  // HARDWARE_INTERFACE__LOANED_HW_STATE_INTERFACE_HPP_
