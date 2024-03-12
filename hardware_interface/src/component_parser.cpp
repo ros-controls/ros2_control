@@ -297,6 +297,13 @@ hardware_interface::InterfaceInfo parse_interfaces_from_xml(
   interface.data_type = "double";
   interface.size = 1;
 
+  // Parse parameters
+  const auto * params_it = interfaces_it->FirstChildElement(kParamTag);
+  if (params_it)
+  {
+    interface.parameters = parse_parameters_from_xml(params_it);
+  }
+
   return interface;
 }
 
@@ -583,11 +590,15 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
   tinyxml2::XMLDocument doc;
   if (!doc.Parse(urdf.c_str()) && doc.Error())
   {
-    throw std::runtime_error("invalid URDF passed in to robot parser");
+    throw std::runtime_error(
+      "invalid URDF passed in to robot parser. Could not parse it because of following error:" +
+      std::string(doc.ErrorStr()));
   }
   if (doc.Error())
   {
-    throw std::runtime_error("invalid URDF passed in to robot parser");
+    throw std::runtime_error(
+      "invalid URDF passed in to robot parser. Following error occurred:" +
+      std::string(doc.ErrorStr()));
   }
 
   // Find robot tag

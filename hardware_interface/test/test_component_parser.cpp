@@ -220,6 +220,108 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_robot_with_sens
   EXPECT_EQ(hardware_info.sensors[0].parameters.at("upper_limits"), "100");
 }
 
+TEST_F(
+  TestComponentParser,
+  successfully_parse_valid_urdf_system_multi_interface_custom_interface_parameters)
+{
+  std::string urdf_to_test =
+    std::string(ros2_control_test_assets::urdf_head) +
+    ros2_control_test_assets::
+      valid_urdf_ros2_control_system_multi_interface_and_custom_interface_parameters +
+    ros2_control_test_assets::urdf_tail;
+  const auto control_hardware = parse_control_resources_from_urdf(urdf_to_test);
+  ASSERT_THAT(control_hardware, SizeIs(1));
+  const auto hardware_info = control_hardware.front();
+
+  EXPECT_EQ(hardware_info.name, "RRBotSystemMultiInterface");
+  EXPECT_EQ(hardware_info.type, "system");
+  EXPECT_EQ(
+    hardware_info.hardware_plugin_name,
+    "ros2_control_demo_hardware/RRBotSystemMultiInterfaceHardware");
+  ASSERT_THAT(hardware_info.hardware_parameters, SizeIs(2));
+  EXPECT_EQ(hardware_info.hardware_parameters.at("example_param_write_for_sec"), "2");
+  EXPECT_EQ(hardware_info.hardware_parameters.at("example_param_read_for_sec"), "2");
+
+  ASSERT_THAT(hardware_info.joints, SizeIs(2));
+
+  EXPECT_EQ(hardware_info.joints[0].name, "joint1");
+  EXPECT_EQ(hardware_info.joints[0].type, "joint");
+  EXPECT_EQ(hardware_info.joints[0].parameters.size(), 3);
+  EXPECT_EQ(hardware_info.joints[0].parameters.at("modbus_server_ip"), "1.1.1.1");
+  EXPECT_EQ(hardware_info.joints[0].parameters.at("modbus_server_port"), "1234");
+  EXPECT_EQ(hardware_info.joints[0].parameters.at("use_persistent_connection"), "true");
+  ASSERT_THAT(hardware_info.joints[0].command_interfaces, SizeIs(3));
+  ASSERT_THAT(hardware_info.joints[0].state_interfaces, SizeIs(3));
+  // CommandInterfaces of joints
+  EXPECT_EQ(hardware_info.joints[0].command_interfaces[0].name, HW_IF_POSITION);
+  EXPECT_EQ(hardware_info.joints[0].command_interfaces[0].initial_value, "1.2");
+  EXPECT_EQ(hardware_info.joints[0].command_interfaces[0].min, "-1");
+  EXPECT_EQ(hardware_info.joints[0].command_interfaces[0].max, "1");
+  EXPECT_EQ(hardware_info.joints[0].command_interfaces[0].parameters.size(), 5);
+  EXPECT_EQ(hardware_info.joints[0].command_interfaces[0].parameters.at("register"), "1");
+  EXPECT_EQ(hardware_info.joints[0].command_interfaces[0].parameters.at("register_size"), "2");
+
+  EXPECT_EQ(hardware_info.joints[0].command_interfaces[1].name, HW_IF_VELOCITY);
+  EXPECT_EQ(hardware_info.joints[0].command_interfaces[1].initial_value, "3.4");
+  EXPECT_EQ(hardware_info.joints[0].command_interfaces[1].min, "-1.5");
+  EXPECT_EQ(hardware_info.joints[0].command_interfaces[1].max, "1.5");
+  EXPECT_EQ(hardware_info.joints[0].command_interfaces[1].parameters.size(), 5);
+  EXPECT_EQ(hardware_info.joints[0].command_interfaces[1].parameters.at("register"), "2");
+  EXPECT_EQ(hardware_info.joints[0].command_interfaces[1].parameters.at("register_size"), "4");
+
+  EXPECT_EQ(hardware_info.joints[0].command_interfaces[2].name, HW_IF_EFFORT);
+  EXPECT_EQ(hardware_info.joints[0].command_interfaces[2].min, "-0.5");
+  EXPECT_EQ(hardware_info.joints[0].command_interfaces[2].max, "0.5");
+  EXPECT_EQ(hardware_info.joints[0].command_interfaces[2].data_type, "double");
+  EXPECT_EQ(hardware_info.joints[0].command_interfaces[2].initial_value, "");
+  EXPECT_EQ(hardware_info.joints[0].command_interfaces[2].size, 1);
+  EXPECT_EQ(hardware_info.joints[0].command_interfaces[2].parameters.size(), 2);
+
+  // StateInterfaces of joints
+  EXPECT_EQ(hardware_info.joints[0].state_interfaces[0].name, HW_IF_POSITION);
+  EXPECT_EQ(hardware_info.joints[0].state_interfaces[0].parameters.size(), 2);
+  EXPECT_EQ(hardware_info.joints[0].state_interfaces[0].parameters.at("register"), "3");
+  EXPECT_EQ(hardware_info.joints[0].state_interfaces[0].parameters.at("register_size"), "2");
+
+  EXPECT_EQ(hardware_info.joints[0].state_interfaces[1].name, HW_IF_VELOCITY);
+  EXPECT_EQ(hardware_info.joints[0].state_interfaces[1].parameters.size(), 2);
+  EXPECT_EQ(hardware_info.joints[0].state_interfaces[1].parameters.at("register"), "4");
+  EXPECT_EQ(hardware_info.joints[0].state_interfaces[1].parameters.at("register_size"), "4");
+
+  EXPECT_EQ(hardware_info.joints[0].state_interfaces[2].name, HW_IF_EFFORT);
+  EXPECT_EQ(hardware_info.joints[0].state_interfaces[2].parameters.size(), 0);
+
+  // Second Joint
+  EXPECT_EQ(hardware_info.joints[1].name, "joint2");
+  EXPECT_EQ(hardware_info.joints[1].type, "joint");
+  EXPECT_EQ(hardware_info.joints[1].parameters.size(), 2);
+  EXPECT_EQ(hardware_info.joints[1].parameters.at("modbus_server_ip"), "192.168.178.123");
+  EXPECT_EQ(hardware_info.joints[1].parameters.at("modbus_server_port"), "4321");
+  ASSERT_THAT(hardware_info.joints[1].command_interfaces, SizeIs(1));
+  ASSERT_THAT(hardware_info.joints[1].state_interfaces, SizeIs(3));
+  // CommandInterfaces
+  EXPECT_EQ(hardware_info.joints[1].command_interfaces[0].name, HW_IF_POSITION);
+  EXPECT_EQ(hardware_info.joints[1].command_interfaces[0].initial_value, "");
+  EXPECT_EQ(hardware_info.joints[1].command_interfaces[0].min, "-1");
+  EXPECT_EQ(hardware_info.joints[1].command_interfaces[0].max, "1");
+  EXPECT_EQ(hardware_info.joints[1].command_interfaces[0].parameters.size(), 4);
+  EXPECT_EQ(hardware_info.joints[1].command_interfaces[0].parameters.at("register"), "20");
+  EXPECT_EQ(hardware_info.joints[1].command_interfaces[0].parameters.at("data_type"), "int32_t");
+  // StateInterfaces of joints
+  EXPECT_EQ(hardware_info.joints[1].state_interfaces[0].name, HW_IF_POSITION);
+  EXPECT_EQ(hardware_info.joints[1].state_interfaces[0].parameters.size(), 2);
+  EXPECT_EQ(hardware_info.joints[1].state_interfaces[0].parameters.at("register"), "21");
+  EXPECT_EQ(hardware_info.joints[1].state_interfaces[0].parameters.at("data_type"), "int32_t");
+
+  EXPECT_EQ(hardware_info.joints[1].state_interfaces[1].name, HW_IF_VELOCITY);
+  EXPECT_EQ(hardware_info.joints[1].state_interfaces[1].parameters.size(), 0);
+
+  EXPECT_EQ(hardware_info.joints[1].state_interfaces[2].name, HW_IF_EFFORT);
+  EXPECT_EQ(hardware_info.joints[1].state_interfaces[2].parameters.size(), 2);
+  EXPECT_EQ(hardware_info.joints[1].state_interfaces[2].parameters.at("register"), "21");
+  EXPECT_EQ(hardware_info.joints[1].state_interfaces[2].parameters.at("data_type"), "int32_t");
+}
+
 TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_robot_with_external_sensor)
 {
   std::string urdf_to_test =

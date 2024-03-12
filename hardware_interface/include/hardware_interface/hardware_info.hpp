@@ -42,6 +42,10 @@ struct InterfaceInfo
   std::string data_type;
   /// (Optional) If the handle is an array, the size of the array. Used by GPIOs.
   int size;
+  /// (Optional) Key-value pairs of command/stateInterface parameters. This is
+  /// useful for drivers that operate on protocols like modbus, where each
+  /// interface needs own address(register), datatype, ...
+  std::unordered_map<std::string, std::string> parameters;
 };
 
 /**
