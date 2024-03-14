@@ -781,8 +781,7 @@ TEST_F(TestControllerManagerSrvs, list_sorted_complex_chained_controllers)
   auto get_ctrl_pos = [result](const std::string & controller_name) -> int64_t
   {
     auto it = std::find_if(
-      result->controller.begin(), result->controller.end(),
-      [controller_name](auto itf)
+      result->controller.begin(), result->controller.end(), [controller_name](auto itf)
       { return (itf.name.find(controller_name) != std::string::npos); });
     return std::distance(result->controller.begin(), it);
   };
@@ -993,8 +992,7 @@ TEST_F(TestControllerManagerSrvs, list_sorted_independent_chained_controllers)
   auto get_ctrl_pos = [result](const std::string & controller_name) -> int64_t
   {
     auto it = std::find_if(
-      result->controller.begin(), result->controller.end(),
-      [controller_name](auto itf)
+      result->controller.begin(), result->controller.end(), [controller_name](auto itf)
       { return (itf.name.find(controller_name) != std::string::npos); });
     return std::distance(result->controller.begin(), it);
   };
@@ -1270,8 +1268,7 @@ TEST_F(TestControllerManagerSrvs, list_large_number_of_controllers_with_chains)
   auto get_ctrl_pos = [result](const std::string & controller_name) -> int64_t
   {
     auto it = std::find_if(
-      result->controller.begin(), result->controller.end(),
-      [controller_name](auto itf)
+      result->controller.begin(), result->controller.end(), [controller_name](auto itf)
       { return (itf.name.find(controller_name) != std::string::npos); });
     return std::distance(result->controller.begin(), it);
   };
@@ -1495,8 +1492,7 @@ TEST_F(TestControllerManagerSrvs, list_sorted_large_chained_controller_tree)
   auto get_ctrl_pos = [result](const std::string & controller_name) -> int64_t
   {
     auto it = std::find_if(
-      result->controller.begin(), result->controller.end(),
-      [controller_name](auto itf)
+      result->controller.begin(), result->controller.end(), [controller_name](auto itf)
       { return (itf.name.find(controller_name) != std::string::npos); });
     return std::distance(result->controller.begin(), it);
   };
