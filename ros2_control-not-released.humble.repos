@@ -1,1 +1,5 @@
 repositories:
+  data_tamer:
+    type: git
+    url: https://github.com/PickNikRobotics/data_tamer
+    version: main
