@@ -771,17 +771,19 @@ void ResourceManager::load_urdf(
     {
       if (individual_hardware_info.type == actuator_type)
       {
-        std::scoped_lock guard(resource_interfaces_lock_, claimed_command_interfaces_lock_);
+        std::scoped_lock guard(
+          resources_lock_, resource_interfaces_lock_, claimed_command_interfaces_lock_);
         resource_storage_->load_and_initialize_actuator(individual_hardware_info);
       }
       if (individual_hardware_info.type == sensor_type)
       {
-        std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
+        std::scoped_lock resources_guard(resources_lock_, resource_interfaces_lock_);
         resource_storage_->load_and_initialize_sensor(individual_hardware_info);
       }
       if (individual_hardware_info.type == system_type)
       {
-        std::scoped_lock guard(resource_interfaces_lock_, claimed_command_interfaces_lock_);
+        std::scoped_lock guard(
+          resources_lock_, resource_interfaces_lock_, claimed_command_interfaces_lock_);
         resource_storage_->load_and_initialize_system(individual_hardware_info);
       }
     }
