@@ -19,6 +19,7 @@
   <author email="kphawkins@gatech.edu">Kelsey Hawkins</author>
   <author email="mathias.luedtke@ipa.fraunhofer.de">Mathias Lüdtke</author>
 
+  <exec_depend>controller_manager</exec_depend>
   <exec_depend>controller_manager_msgs</exec_depend>
   <exec_depend>rclpy</exec_depend>
   <exec_depend>rqt_gui</exec_depend>
