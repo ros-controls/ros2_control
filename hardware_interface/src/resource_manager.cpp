@@ -777,7 +777,7 @@ void ResourceManager::load_urdf(
       }
       if (individual_hardware_info.type == sensor_type)
       {
-        std::scoped_lock guard(resource_interfaces_lock_);
+        std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
         resource_storage_->load_and_initialize_sensor(individual_hardware_info);
       }
       if (individual_hardware_info.type == system_type)
