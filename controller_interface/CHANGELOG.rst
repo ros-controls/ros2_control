@@ -2,8 +2,8 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.7.0 (2024-03-22)
+------------------
 * add missing compiler definitions of RCLCPP_VERSION_MAJOR (`#1440 <https://github.com/ros-controls/ros2_control/issues/1440>`_)
 * Contributors: Sai Kishor Kothakota
 

@@ -2,8 +2,8 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.7.0 (2024-03-22)
+------------------
 * Codeformat from new pre-commit config (`#1433 <https://github.com/ros-controls/ros2_control/issues/1433>`_)
 * Contributors: Christoph Fröhlich
 
