@@ -1361,6 +1361,8 @@ HardwareReadWriteStatus ResourceManager::read(
     for (auto & component : components)
     {
       auto ret_val = component.read(time, period);
+      const auto component_group = component.get_group_name();
+      ret_val = resource_storage_->update_hardware_component_group_state(component_group, ret_val);
       if (ret_val == return_type::ERROR)
       {
         read_write_status.ok = false;
@@ -1401,6 +1403,8 @@ HardwareReadWriteStatus ResourceManager::write(
     for (auto & component : components)
     {
       auto ret_val = component.write(time, period);
+      const auto component_group = component.get_group_name();
+      ret_val = resource_storage_->update_hardware_component_group_state(component_group, ret_val);
       if (ret_val == return_type::ERROR)
       {
         read_write_status.ok = false;
