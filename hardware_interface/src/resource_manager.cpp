@@ -133,6 +133,7 @@ public:
         HardwareComponentInfo component_info;
         component_info.name = hardware_info.name;
         component_info.type = hardware_info.type;
+        component_info.group = hardware_info.group;
         component_info.plugin_name = hardware_info.hardware_plugin_name;
         component_info.is_async = hardware_info.is_async;
 
