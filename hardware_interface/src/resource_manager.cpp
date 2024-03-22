@@ -300,6 +300,10 @@ public:
         async_component_threads_.at(hardware.get_name()).register_component(&hardware);
       }
     }
+    if(!hardware.get_group_name().empty())
+    {
+      hw_group_state_[hardware.get_group_name()] = return_type::OK;
+    }
     return result;
   }
 
@@ -382,6 +386,10 @@ public:
     {
       remove_all_hardware_interfaces_from_available_list(hardware.get_name());
     }
+    if(!hardware.get_group_name().empty())
+    {
+      hw_group_state_[hardware.get_group_name()] = return_type::OK;
+    }
     return result;
   }
 
@@ -416,6 +424,10 @@ public:
       // deimport_non_movement_command_interfaces(hardware);
       // deimport_state_interfaces(hardware);
       // use remove_command_interfaces(hardware);
+      if(!hardware.get_group_name().empty())
+      {
+        hw_group_state_[hardware.get_group_name()] = return_type::OK;
+      }
     }
     return result;
   }
