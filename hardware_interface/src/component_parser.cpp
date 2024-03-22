@@ -582,7 +582,7 @@ HardwareInfo parse_resource_from_xml(
       const auto * group_it = ros2_control_child_it->FirstChildElement(kGroupTag);
       if (group_it)
       {
-        hardware.group = get_text_for_element(type_it, std::string("hardware.") + kGroupTag);
+        hardware.group = get_text_for_element(group_it, std::string("hardware.") + kGroupTag);
       }
       const auto * params_it = ros2_control_child_it->FirstChildElement(kParamTag);
       if (params_it)
