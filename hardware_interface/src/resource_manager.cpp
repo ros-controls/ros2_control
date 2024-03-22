@@ -1599,6 +1599,8 @@ HardwareReadWriteStatus ResourceManager::read(
       try
       {
         ret_val = component.read(time, period);
+        const auto component_group = component.get_group_name();
+        ret_val = resource_storage_->update_hardware_component_group_state(component_group, ret_val);
       }
       catch (const std::exception & e)
       {
@@ -1657,6 +1659,8 @@ HardwareReadWriteStatus ResourceManager::write(
       try
       {
         ret_val = component.write(time, period);
+        const auto component_group = component.get_group_name();
+        ret_val = resource_storage_->update_hardware_component_group_state(component_group, ret_val);
       }
       catch (const std::exception & e)
       {
