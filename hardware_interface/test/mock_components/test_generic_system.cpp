@@ -96,6 +96,7 @@ protected:
   <ros2_control name="MockHardwareSystem" type="system">
     <hardware>
       <plugin>mock_components/GenericSystem</plugin>
+      <group>Hardware Group</group>
     </hardware>
     <joint name="joint1">
       <command_interface name="position"/>
@@ -121,6 +122,7 @@ protected:
   <ros2_control name="MockHardwareSystem" type="system">
     <hardware>
       <plugin>mock_components/GenericSystem</plugin>
+      <group>Hardware Group</group>
     </hardware>
     <joint name="joint1">
       <command_interface name="position"/>
@@ -289,6 +291,7 @@ protected:
   <ros2_control name="MockHardwareSystem" type="system">
     <hardware>
       <plugin>mock_components/GenericSystem</plugin>
+      <group>Hardware Group</group>
       <param name="position_state_following_offset">-3</param>
       <param name="custom_interface_with_following_offset">actual_position</param>
     </hardware>
@@ -351,6 +354,7 @@ protected:
   <ros2_control name="MockHardwareSystem" type="system">
     <hardware>
       <plugin>mock_components/GenericSystem</plugin>
+      <group>Hardware Group</group>
       <param name="example_param_write_for_sec">2</param>
       <param name="example_param_read_for_sec">2</param>
     </hardware>
@@ -814,7 +818,7 @@ void generic_system_functional_test(
   ASSERT_EQ(0.44, j2v_c.get_value());
 
   // write() does not change values
-  rm.write(TIME, PERIOD);
+  ASSERT_TRUE(rm.write(TIME, PERIOD).ok);
   ASSERT_EQ(3.45, j1p_s.get_value());
   ASSERT_EQ(0.0, j1v_s.get_value());
   ASSERT_EQ(2.78, j2p_s.get_value());
@@ -825,7 +829,7 @@ void generic_system_functional_test(
   ASSERT_EQ(0.44, j2v_c.get_value());
 
   // read() mirrors commands + offset to states
-  rm.read(TIME, PERIOD);
+  ASSERT_TRUE(rm.read(TIME, PERIOD).ok);
   ASSERT_EQ(0.11 + offset, j1p_s.get_value());
   ASSERT_EQ(0.22, j1v_s.get_value());
   ASSERT_EQ(0.33 + offset, j2p_s.get_value());
