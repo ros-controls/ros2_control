@@ -110,7 +110,7 @@ public:
     component_info.is_async = hardware_info.is_async;
 
     hardware_info_map_.insert(std::make_pair(component_info.name, component_info));
-    hw_group_state_.insert(std::make_pair(component_info.group, return_type:OK));
+    hw_group_state_.insert(std::make_pair(component_info.group, return_type::OK));
     hardware_used_by_controllers_.insert(
       std::make_pair(component_info.name, std::vector<std::string>()));
   }
@@ -211,6 +211,10 @@ public:
           std::forward_as_tuple(&hardware, cm_update_rate_, clock_interface_));
       }
     }
+    if(!hardware.get_group_name().empty())
+    {
+      hw_group_state_[hardware.get_group_name()] = return_type::OK;
+    }
     return result;
   }
 
@@ -277,6 +281,10 @@ public:
     {
       remove_all_hardware_interfaces_from_available_list(hardware.get_name());
     }
+    if(!hardware.get_group_name().empty())
+    {
+      hw_group_state_[hardware.get_group_name()] = return_type::OK;
+    }
     return result;
   }
 
@@ -295,6 +303,10 @@ public:
       // deimport_non_movement_command_interfaces(hardware);
       // deimport_state_interfaces(hardware);
       // use remove_command_interfaces(hardware);
+      if(!hardware.get_group_name().empty())
+      {
+        hw_group_state_[hardware.get_group_name()] = return_type::OK;
+      }
     }
     return result;
   }
