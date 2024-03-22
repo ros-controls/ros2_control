@@ -138,6 +138,7 @@ public:
         component_info.is_async = hardware_info.is_async;
 
         hardware_info_map_.insert(std::make_pair(component_info.name, component_info));
+        hw_group_state_.insert(std::make_pair(component_info.group, return_type:OK));
         hardware_used_by_controllers_.insert(
           std::make_pair(component_info.name, std::vector<std::string>()));
         is_loaded = true;
@@ -885,6 +886,27 @@ public:
     }
   }
 
+  /**
+   * Returns the return type of the hardware component group state, if the return type is other 
+   * than OK, then updates the return type of the group to the respective one
+  */
+  return_type update_hardware_component_group_state(const std::string &group_name, 
+    const return_type &value)
+  {
+    // This is for the components that has no configured group
+    if(group_name.empty())
+    {
+      return value;
+    }
+    // If it is anything other than OK, change the return type of the hardware group state
+    // to the respective return type
+    if(value > hw_group_state_.at(group_name))
+    {
+      hw_group_state_.at(group_name) = value;
+    }
+    return hw_group_state_.at(group_name);
+  }
+
   // hardware plugins
   pluginlib::ClassLoader<ActuatorInterface> actuator_loader_;
   pluginlib::ClassLoader<SensorInterface> sensor_loader_;
@@ -899,6 +921,7 @@ public:
   std::vector<System> async_systems_;
 
   std::unordered_map<std::string, HardwareComponentInfo> hardware_info_map_;
+  std::unordered_map<std::string, hardware_interface::return_type> hw_group_state_;
 
   /// Mapping between hardware and controllers that are using it (accessing data from it)
   std::unordered_map<std::string, std::vector<std::string>> hardware_used_by_controllers_;
