@@ -84,6 +84,9 @@ public:
   std::string get_name() const;
 
   HARDWARE_INTERFACE_PUBLIC
+  std::string get_group_name() const;
+
+  HARDWARE_INTERFACE_PUBLIC
   const rclcpp_lifecycle::State & get_state() const;
 
   HARDWARE_INTERFACE_PUBLIC

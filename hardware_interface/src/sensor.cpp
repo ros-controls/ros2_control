@@ -191,6 +191,8 @@ std::vector<StateInterface> Sensor::export_state_interfaces()
 
 std::string Sensor::get_name() const { return impl_->get_name(); }
 
+std::string Sensor::get_group_name() const { return impl_->get_group_name(); }
+
 const rclcpp_lifecycle::State & Sensor::get_state() const { return impl_->get_state(); }
 
 return_type Sensor::read(const rclcpp::Time & time, const rclcpp::Duration & period)
