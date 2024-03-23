@@ -40,7 +40,7 @@ def service_caller(node, service_name, service_type, request, service_timeout=10
 
     node.get_logger().debug(f"requester: making request: {request}\n")
     future = cli.call_async(request)
-    rclpy.spin_until_future_complete(node, future)
+    rclpy.spin_until_future_complete(node, future, timeout_sec=2.0)
     if future.result() is not None:
         return future.result()
     else:
