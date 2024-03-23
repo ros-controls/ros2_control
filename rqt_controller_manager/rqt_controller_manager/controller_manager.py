@@ -93,16 +93,18 @@ class ControllerManager(Plugin):
         }
 
         # Controllers display
-        table_view = self._widget.table_view
-        table_view.setContextMenuPolicy(Qt.CustomContextMenu)
-        table_view.customContextMenuRequested.connect(self._on_ctrl_menu)
+        ctrl_table_view = self._widget.ctrl_table_view
+        ctrl_table_view.setContextMenuPolicy(Qt.CustomContextMenu)
+        ctrl_table_view.customContextMenuRequested.connect(self._on_ctrl_menu)
+        ctrl_table_view.doubleClicked.connect(self._on_ctrl_info)
 
-        table_view.doubleClicked.connect(self._on_ctrl_info)
-
-        header = table_view.horizontalHeader()
+        header = ctrl_table_view.horizontalHeader()
         header.setSectionResizeMode(QHeaderView.ResizeToContents)
         header.setContextMenuPolicy(Qt.CustomContextMenu)
         header.customContextMenuRequested.connect(self._on_header_menu)
+
+        # Hardware components display
+        hw_table_view = self._widget.hw_table_view
 
         # Timer for controller manager updates
         self._update_cm_list_timer = QTimer(self)
@@ -190,20 +192,20 @@ class ControllerManager(Plugin):
             return []
 
     def _show_controllers(self):
-        table_view = self._widget.table_view
+        ctrl_table_view = self._widget.ctrl_table_view
         self._table_model = ControllerTable(self._controllers, self._icons)
-        table_view.setModel(self._table_model)
+        ctrl_table_view.setModel(self._table_model)
 
     def _on_ctrl_menu(self, pos):
         # Get data of selected controller
-        row = self._widget.table_view.rowAt(pos.y())
+        row = self._widget.ctrl_table_view.rowAt(pos.y())
         if row < 0:
             return  # Cursor is not under a valid item
 
         ctrl = self._controllers[row]
 
         # Show context menu
-        menu = QMenu(self._widget.table_view)
+        menu = QMenu(self._widget.ctrl_table_view)
         if ctrl.state == "active":
             action_deactivate = menu.addAction(self._icons["inactive"], "Deactivate")
             action_kill = menu.addAction(self._icons["finalized"], "Deactivate and Unload")
@@ -219,7 +221,7 @@ class ControllerManager(Plugin):
             action_configure = menu.addAction(self._icons["inactive"], "Load and Configure")
             action_activate = menu.addAction(self._icons["active"], "Load, Configure and Activate")
 
-        action = menu.exec_(self._widget.table_view.mapToGlobal(pos))
+        action = menu.exec_(self._widget.ctrl_table_view.mapToGlobal(pos))
 
         # Evaluate user action
         if ctrl.state == "active":
@@ -272,10 +274,10 @@ class ControllerManager(Plugin):
         popup.show()
 
     def _on_header_menu(self, pos):
-        header = self._widget.table_view.horizontalHeader()
+        header = self._widget.ctrl_table_view.horizontalHeader()
 
         # Show context menu
-        menu = QMenu(self._widget.table_view)
+        menu = QMenu(self._widget.ctrl_table_view)
         action_toggle_auto_resize = menu.addAction("Toggle Auto-Resize")
         action = menu.exec_(header.mapToGlobal(pos))
 
