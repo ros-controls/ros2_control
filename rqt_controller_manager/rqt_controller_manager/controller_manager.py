@@ -352,10 +352,10 @@ class ControllerManager(Plugin):
         menu = QMenu(self._widget.hw_table_view)
         if hw_component.state.label == "active":
             action_deactivate = menu.addAction(self._icons["inactive"], "Deactivate")
-            action_kill = menu.addAction(self._icons["finalized"], "Deactivate and Unload")
+            action_shutdown = menu.addAction(self._icons["finalized"], "Shutdown")
         elif hw_component.state.label == "inactive":
             action_activate = menu.addAction(self._icons["active"], "Activate")
-            action_unload = menu.addAction(self._icons["unconfigured"], "Unload")
+            action_shutdown = menu.addAction(self._icons["unconfigured"], "Shutdown")
         elif hw_component.state.label == "unconfigured":
             action_configure = menu.addAction(self._icons["inactive"], "Configure")
             action_spawn = menu.addAction(self._icons["active"], "Configure and Activate")
@@ -365,20 +365,19 @@ class ControllerManager(Plugin):
         # Evaluate user action
         if hw_component.state.label == "active":
             if action is action_deactivate:
-                self._deactivate_hw_component(hw_component.name)
-            elif action is action_kill:
-                self._deactivate_hw_component(hw_component.name)
-                print("action_unload not implemented yet")
+                self._set_inactive_hw_component(hw_component.name)
+            elif action is action_shutdown:
+                self._set_unconfigured_hw_component(hw_component.name)
         elif hw_component.state.label in ("finalized", "inactive"):
             if action is action_activate:
-                self._activate_hw_component(hw_component.name)
-            elif action is action_unload:
-                print("action_unload not implemented yet")
+                self._set_active_hw_component(hw_component.name)
+            elif action is action_shutdown:
+                self._set_unconfigured_hw_component(hw_component.name)
         elif hw_component.state.label == "unconfigured":
             if action is action_configure:
-                print("action_configure not implemented yet")
+                self._set_inactive_hw_component(hw_component.name)
             elif action is action_spawn:
-                print("action_spawn not implemented yet")
+                self._set_active_hw_component(hw_component.name)
 
     def _on_hw_info(self, index):
         popup = self._popup_widget
@@ -443,7 +442,7 @@ class ControllerManager(Plugin):
             timeout=0.3,
         )
 
-    def _activate_hw_component(self, name):
+    def _set_active_hw_component(self, name):
         active_state = State()
         active_state.id = State.PRIMARY_STATE_ACTIVE
         active_state.label = "active"
@@ -454,7 +453,7 @@ class ControllerManager(Plugin):
             lifecyle_state=active_state,
         )
 
-    def _deactivate_hw_component(self, name):
+    def _set_inactive_hw_component(self, name):
         inactive_state = State()
         inactive_state.id = State.PRIMARY_STATE_INACTIVE
         inactive_state.label = "inactive"
@@ -463,6 +462,17 @@ class ControllerManager(Plugin):
             controller_manager_name=self._cm_name,
             component_name=name,
             lifecyle_state=inactive_state,
+        )
+
+    def _set_unconfigured_hw_component(self, name):
+        unconfigure_state = State()
+        unconfigure_state.id = State.PRIMARY_STATE_UNCONFIGURED
+        unconfigure_state.label = "unconfigured"
+        set_hardware_component_state(
+            node=self._node,
+            controller_manager_name=self._cm_name,
+            component_name=name,
+            lifecyle_state=unconfigure_state,
         )
 
 
