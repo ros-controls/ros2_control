@@ -226,7 +226,7 @@ set_hardware_component_state
       hardware_component_name
                             Name of the hardware_component to be changed
       {unconfigured,inactive,active}
-                            State in which the controller should be changed to
+                            State in which the hardware component should be changed to
 
     options:
       -h, --help            show this help message and exit
