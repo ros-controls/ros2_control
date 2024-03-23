@@ -64,7 +64,7 @@ class ControllerManager(Plugin):
         # Pop-up that displays controller information
         self._popup_widget = QWidget()
         ui_file = os.path.join(
-            get_package_share_directory("rqt_controller_manager"), "resource", "controller_info.ui"
+            get_package_share_directory("rqt_controller_manager"), "resource", "popup_info.ui"
         )
         loadUi(ui_file, self._popup_widget)
         self._popup_widget.setObjectName("ControllerInfoUi")
@@ -271,6 +271,7 @@ class ControllerManager(Plugin):
 
     def _on_ctrl_info(self, index):
         popup = self._popup_widget
+        popup.setWindowTitle("Controller Information")
 
         ctrl = self._controllers[index.row()]
         popup.ctrl_name.setText(ctrl.name)
@@ -381,6 +382,7 @@ class ControllerManager(Plugin):
 
     def _on_hw_info(self, index):
         popup = self._popup_widget
+        popup.setWindowTitle("Hardware Component Info")
 
         hw_component = self._hw_components[index.row()]
         popup.ctrl_name.setText(hw_component.name)
@@ -421,59 +423,74 @@ class ControllerManager(Plugin):
                 hw_header.setSectionResizeMode(QHeaderView.ResizeToContents)
 
     def _activate_controller(self, name):
-        switch_controllers(
-            node=self._node,
-            controller_manager_name=self._cm_name,
-            deactivate_controllers=[],
-            activate_controllers=[name],
-            strict=SwitchController.Request.STRICT,
-            activate_asap=False,
-            timeout=0.3,
-        )
+        try:
+            switch_controllers(
+                node=self._node,
+                controller_manager_name=self._cm_name,
+                deactivate_controllers=[],
+                activate_controllers=[name],
+                strict=SwitchController.Request.STRICT,
+                activate_asap=False,
+                timeout=0.3,
+            )
+        except Exception as e:
+            print(e)
 
     def _deactivate_controller(self, name):
-        switch_controllers(
-            node=self._node,
-            controller_manager_name=self._cm_name,
-            deactivate_controllers=[name],
-            activate_controllers=[],
-            strict=SwitchController.Request.STRICT,
-            activate_asap=False,
-            timeout=0.3,
-        )
+        try:
+            switch_controllers(
+                node=self._node,
+                controller_manager_name=self._cm_name,
+                deactivate_controllers=[name],
+                activate_controllers=[],
+                strict=SwitchController.Request.STRICT,
+                activate_asap=False,
+                timeout=0.3,
+            )
+        except Exception as e:
+            print(e)
 
     def _set_active_hw_component(self, name):
         active_state = State()
         active_state.id = State.PRIMARY_STATE_ACTIVE
         active_state.label = "active"
-        set_hardware_component_state(
-            node=self._node,
-            controller_manager_name=self._cm_name,
-            component_name=name,
-            lifecyle_state=active_state,
-        )
+        try:
+            set_hardware_component_state(
+                node=self._node,
+                controller_manager_name=self._cm_name,
+                component_name=name,
+                lifecyle_state=active_state,
+            )
+        except Exception as e:
+            print(e)
 
     def _set_inactive_hw_component(self, name):
         inactive_state = State()
         inactive_state.id = State.PRIMARY_STATE_INACTIVE
         inactive_state.label = "inactive"
-        set_hardware_component_state(
-            node=self._node,
-            controller_manager_name=self._cm_name,
-            component_name=name,
-            lifecyle_state=inactive_state,
-        )
+        try:
+            set_hardware_component_state(
+                node=self._node,
+                controller_manager_name=self._cm_name,
+                component_name=name,
+                lifecyle_state=inactive_state,
+            )
+        except Exception as e:
+            print(e)
 
     def _set_unconfigured_hw_component(self, name):
         unconfigure_state = State()
         unconfigure_state.id = State.PRIMARY_STATE_UNCONFIGURED
         unconfigure_state.label = "unconfigured"
-        set_hardware_component_state(
-            node=self._node,
-            controller_manager_name=self._cm_name,
-            component_name=name,
-            lifecyle_state=unconfigure_state,
-        )
+        try:
+            set_hardware_component_state(
+                node=self._node,
+                controller_manager_name=self._cm_name,
+                component_name=name,
+                lifecyle_state=unconfigure_state,
+            )
+        except Exception as e:
+            print(e)
 
 
 class ControllerTable(QAbstractTableModel):
