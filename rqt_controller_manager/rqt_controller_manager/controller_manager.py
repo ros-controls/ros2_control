@@ -108,6 +108,7 @@ class ControllerManager(Plugin):
 
         # Hardware components display
         hw_table_view = self._widget.hw_table_view
+        hw_table_view.doubleClicked.connect(self._on_hw_info)
 
         hw_header = hw_table_view.horizontalHeader()
         hw_header.setSectionResizeMode(QHeaderView.ResizeToContents)
@@ -393,22 +394,28 @@ class ControllerManager(Plugin):
     def _on_hw_info(self, index):
         popup = self._popup_widget
 
-        # ctrl = self._controllers[index.row()]
-        # popup.ctrl_name.setText(ctrl.name)
-        # popup.ctrl_type.setText(ctrl.type)
+        hw_component = self._hw_components[index.row()]
+        popup.ctrl_name.setText(hw_component.name)
+        popup.ctrl_type.setText(hw_component.type)
 
-        # res_model = QStandardItemModel()
-        # model_root = QStandardItem("Claimed Interfaces")
-        # res_model.appendRow(model_root)
-        # for claimed_interface in ctrl.claimed_interfaces:
-        #     hw_iface_item = QStandardItem(claimed_interface)
-        #     model_root.appendRow(hw_iface_item)
+        res_model = QStandardItemModel()
+        model_root = QStandardItem("Command Interfaces")
+        res_model.appendRow(model_root)
+        for command_interface in hw_component.command_interfaces:
+            hw_iface_item = QStandardItem(command_interface.name)
+            model_root.appendRow(hw_iface_item)
 
-        # popup.resource_tree.setModel(res_model)
-        # popup.resource_tree.setItemDelegate(FontDelegate(popup.resource_tree))
-        # popup.resource_tree.expandAll()
-        # popup.move(QCursor.pos())
-        # popup.show()
+        model_root = QStandardItem("State Interfaces")
+        res_model.appendRow(model_root)
+        for state_interface in hw_component.state_interfaces:
+            hw_iface_item = QStandardItem(state_interface.name)
+            model_root.appendRow(hw_iface_item)
+
+        popup.resource_tree.setModel(res_model)
+        popup.resource_tree.setItemDelegate(FontDelegate(popup.resource_tree))
+        popup.resource_tree.expandAll()
+        popup.move(QCursor.pos())
+        popup.show()
 
     def _on_hw_header_menu(self, pos):
         hw_header = self._widget.hw_table_view.horizontalHeader()
