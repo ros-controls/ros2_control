@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from controller_manager import list_hardware_components, set_hardware_component_state
+from controller_manager import set_hardware_component_state
 
 from ros2cli.node.direct import add_arguments
 from ros2cli.node.strategy import NodeStrategy
@@ -40,21 +40,8 @@ class SetHardwareComponentStateVerb(VerbExtension):
 
     def main(self, *, args):
         with NodeStrategy(args) as node:
-            hardware_components = list_hardware_components(node, args.controller_manager).component
-
-            try:
-                matched_hardware_components = [
-                    c for c in hardware_components if c.name == args.hardware_component_name
-                ][0]
-            except IndexError:
-                return f"component {args.hardware_component_name} does not seem to be loaded"
 
             if args.state == "unconfigured":
-                if matched_hardware_components.state.label != "inactive":
-                    return (
-                        f"cannot cleanup {matched_hardware_components.name} "
-                        f"from its current state {matched_hardware_components.state}"
-                    )
 
                 unconfigured_state = State()
                 unconfigured_state.id = State.PRIMARY_STATE_UNCONFIGURED
@@ -66,52 +53,18 @@ class SetHardwareComponentStateVerb(VerbExtension):
                 if not response.ok:
                     return "Error cleaning up hardware component, check controller_manager logs"
 
-                print(f"Successfully set {args.hardware_component_name} to state {response.state}")
-                return 0
-
             if args.state == "inactive":
                 inactive_state = State()
                 inactive_state.id = State.PRIMARY_STATE_INACTIVE
                 inactive_state.label = "inactive"
 
-                if matched_hardware_components.state.label == "unconfigured":
-                    response = set_hardware_component_state(
-                        node, args.controller_manager, args.hardware_component_name, inactive_state
-                    )
-                    if not response.ok:
-                        return (
-                            "Error configuring hardware component, check controller_manager logs"
-                        )
-
-                    print(
-                        f"Successfully set {args.hardware_component_name} to state {response.state}"
-                    )
-                    return 0
-
-                elif matched_hardware_components.state.label == "active":
-                    response = set_hardware_component_state(
-                        node, args.controller_manager, args.hardware_component_name, inactive_state
-                    )
-                    if not response.ok:
-                        return "Error stopping hardware component, check controller_manager logs"
-
-                    print(
-                        f"Successfully set {args.hardware_component_name} to state {response.state}"
-                    )
-                    return 0
-
-                else:
-                    return (
-                        f'cannot put {matched_hardware_components.name} in "inactive" state '
-                        f"from its current state {matched_hardware_components.state}"
-                    )
+                response = set_hardware_component_state(
+                    node, args.controller_manager, args.hardware_component_name, inactive_state
+                )
+                if not response.ok:
+                    return "Error stopping hardware component, check controller_manager logs"
 
             if args.state == "active":
-                if matched_hardware_components.state.label != "inactive":
-                    return (
-                        f"cannot activate {matched_hardware_components.name} "
-                        f"from its current state {matched_hardware_components.state}"
-                    )
 
                 active_state = State()
                 active_state.id = State.PRIMARY_STATE_ACTIVE
@@ -123,5 +76,5 @@ class SetHardwareComponentStateVerb(VerbExtension):
                 if not response.ok:
                     return "Error activating hardware component, check controller_manager logs"
 
-                print(f"Successfully set {args.hardware_component_name} to state {response.state}")
-                return 0
+            print(f"Successfully set {args.hardware_component_name} to state {response.state}")
+            return 0
