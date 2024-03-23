@@ -130,8 +130,13 @@ class ControllerManager(Plugin):
         self._update_ctrl_list_timer = QTimer(self)
         self._update_ctrl_list_timer.setInterval(int(1000.0 / self._cm_update_freq))
         self._update_ctrl_list_timer.timeout.connect(self._update_controllers)
-        self._update_ctrl_list_timer.timeout.connect(self._update_hw_components)
         self._update_ctrl_list_timer.start()
+
+        # Timer for running hw components updates
+        self._update_hw_components_list_timer = QTimer(self)
+        self._update_hw_components_list_timer.setInterval(int(1000.0 / self._cm_update_freq))
+        self._update_hw_components_list_timer.timeout.connect(self._update_hw_components)
+        self._update_hw_components_list_timer.start()
 
         # Signal connections
         w = self._widget
