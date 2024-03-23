@@ -21,12 +21,15 @@ from controller_manager.controller_manager_services import (
     configure_controller,
     list_controllers,
     list_hardware_components,
+    set_hardware_component_state,
     load_controller,
     switch_controllers,
     unload_controller,
 )
+
 from controller_manager_msgs.msg import ControllerState
 from controller_manager_msgs.srv import SwitchController
+from lifecycle_msgs.msg import State
 from python_qt_binding import loadUi
 from python_qt_binding.QtCore import QAbstractTableModel, Qt, QTimer
 from python_qt_binding.QtGui import QCursor, QFont, QIcon, QStandardItem, QStandardItemModel
@@ -108,6 +111,8 @@ class ControllerManager(Plugin):
 
         # Hardware components display
         hw_table_view = self._widget.hw_table_view
+        hw_table_view.setContextMenuPolicy(Qt.CustomContextMenu)
+        hw_table_view.customContextMenuRequested.connect(self._on_hw_menu)
         hw_table_view.doubleClicked.connect(self._on_hw_info)
 
         hw_header = hw_table_view.horizontalHeader()
@@ -125,6 +130,7 @@ class ControllerManager(Plugin):
         self._update_ctrl_list_timer = QTimer(self)
         self._update_ctrl_list_timer.setInterval(int(1000.0 / self._cm_update_freq))
         self._update_ctrl_list_timer.timeout.connect(self._update_controllers)
+        self._update_ctrl_list_timer.timeout.connect(self._update_hw_components)
         self._update_ctrl_list_timer.start()
 
         # Signal connections
@@ -337,59 +343,42 @@ class ControllerManager(Plugin):
     def _on_hw_menu(self, pos):
         # Get data of selected controller
         row = self._widget.hw_table_view.rowAt(pos.y())
-        # if row < 0:
-        #     return  # Cursor is not under a valid item
+        if row < 0:
+            return  # Cursor is not under a valid item
 
-        # ctrl = self._controllers[row]
+        hw_component = self._hw_components[row]
 
-        # # Show context menu
-        # menu = QMenu(self._widget.ctrl_table_view)
-        # if ctrl.state == "active":
-        #     action_deactivate = menu.addAction(self._icons["inactive"], "Deactivate")
-        #     action_kill = menu.addAction(self._icons["finalized"], "Deactivate and Unload")
-        # elif ctrl.state == "inactive":
-        #     action_activate = menu.addAction(self._icons["active"], "Activate")
-        #     action_unload = menu.addAction(self._icons["unconfigured"], "Unload")
-        # elif ctrl.state == "unconfigured":
-        #     action_configure = menu.addAction(self._icons["inactive"], "Configure")
-        #     action_spawn = menu.addAction(self._icons["active"], "Configure and Activate")
-        # else:
-        #     # Controller isn't loaded
-        #     action_load = menu.addAction(self._icons["unconfigured"], "Load")
-        #     action_configure = menu.addAction(self._icons["inactive"], "Load and Configure")
-        #     action_activate = menu.addAction(self._icons["active"], "Load, Configure and Activate")
+        # Show context menu
+        menu = QMenu(self._widget.hw_table_view)
+        if hw_component.state.label == "active":
+            action_deactivate = menu.addAction(self._icons["inactive"], "Deactivate")
+            action_kill = menu.addAction(self._icons["finalized"], "Deactivate and Unload")
+        elif hw_component.state.label == "inactive":
+            action_activate = menu.addAction(self._icons["active"], "Activate")
+            action_unload = menu.addAction(self._icons["unconfigured"], "Unload")
+        elif hw_component.state.label == "unconfigured":
+            action_configure = menu.addAction(self._icons["inactive"], "Configure")
+            action_spawn = menu.addAction(self._icons["active"], "Configure and Activate")
 
-        # action = menu.exec_(self._widget.ctrl_table_view.mapToGlobal(pos))
+        action = menu.exec_(self._widget.hw_table_view.mapToGlobal(pos))
 
-        # # Evaluate user action
-        # if ctrl.state == "active":
-        #     if action is action_deactivate:
-        #         self._deactivate_controller(ctrl.name)
-        #     elif action is action_kill:
-        #         self._deactivate_controller(ctrl.name)
-        #         unload_controller(self._node, self._cm_name, ctrl.name)
-        # elif ctrl.state in ("finalized", "inactive"):
-        #     if action is action_activate:
-        #         self._activate_controller(ctrl.name)
-        #     elif action is action_unload:
-        #         unload_controller(self._node, self._cm_name, ctrl.name)
-        # elif ctrl.state == "unconfigured":
-        #     if action is action_configure:
-        #         configure_controller(self._node, self._cm_name, ctrl.name)
-        #     elif action is action_spawn:
-        #         load_controller(self._node, self._cm_name, ctrl.name)
-        #         self._activate_controller(ctrl.name)
-        # else:
-        #     # Assume controller isn't loaded
-        #     if action is action_load:
-        #         load_controller(self._node, self._cm_name, ctrl.name)
-        #     elif action is action_configure:
-        #         load_controller(self._node, self._cm_name, ctrl.name)
-        #         configure_controller(self._node, self._cm_name, ctrl.name)
-        #     elif action is action_activate:
-        #         load_controller(self._node, self._cm_name, ctrl.name)
-        #         configure_controller(self._node, self._cm_name, ctrl.name)
-        #         self._activate_controller(ctrl.name)
+        # Evaluate user action
+        if hw_component.state.label == "active":
+            if action is action_deactivate:
+                self._deactivate_hw_component(hw_component.name)
+            elif action is action_kill:
+                self._deactivate_hw_component(hw_component.name)
+                print("action_unload not implemented yet")
+        elif hw_component.state.label in ("finalized", "inactive"):
+            if action is action_activate:
+                self._activate_hw_component(hw_component.name)
+            elif action is action_unload:
+                print("action_unload not implemented yet")
+        elif hw_component.state.label == "unconfigured":
+            if action is action_configure:
+                print("action_configure not implemented yet")
+            elif action is action_spawn:
+                print("action_spawn not implemented yet")
 
     def _on_hw_info(self, index):
         popup = self._popup_widget
@@ -452,6 +441,28 @@ class ControllerManager(Plugin):
             strict=SwitchController.Request.STRICT,
             activate_asap=False,
             timeout=0.3,
+        )
+
+    def _activate_hw_component(self, name):
+        active_state = State()
+        active_state.id = State.PRIMARY_STATE_ACTIVE
+        active_state.label = "active"
+        set_hardware_component_state(
+            node=self._node,
+            controller_manager_name=self._cm_name,
+            component_name=name,
+            lifecyle_state=active_state,
+        )
+
+    def _deactivate_hw_component(self, name):
+        inactive_state = State()
+        inactive_state.id = State.PRIMARY_STATE_INACTIVE
+        inactive_state.label = "inactive"
+        set_hardware_component_state(
+            node=self._node,
+            controller_manager_name=self._cm_name,
+            component_name=name,
+            lifecyle_state=inactive_state,
         )
 
 
