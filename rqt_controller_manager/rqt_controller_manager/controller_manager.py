@@ -419,6 +419,6 @@ def _get_parameter_controller_names(node, node_name):
         return [
             n[: -len(suffix)] for n in parameter_names.result().result.names if n.endswith(suffix)
         ]
-    finally:
+    except:
         # for humble, ros2param < 0.20.0
         return [n[: -len(suffix)] for n in parameter_names if n.endswith(suffix)]
