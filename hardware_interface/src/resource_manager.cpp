@@ -211,7 +211,7 @@ public:
           std::forward_as_tuple(&hardware, cm_update_rate_, clock_interface_));
       }
     }
-    if(!hardware.get_group_name().empty())
+    if (!hardware.get_group_name().empty())
     {
       hw_group_state_[hardware.get_group_name()] = return_type::OK;
     }
@@ -281,7 +281,7 @@ public:
     {
       remove_all_hardware_interfaces_from_available_list(hardware.get_name());
     }
-    if(!hardware.get_group_name().empty())
+    if (!hardware.get_group_name().empty())
     {
       hw_group_state_[hardware.get_group_name()] = return_type::OK;
     }
@@ -303,7 +303,7 @@ public:
       // deimport_non_movement_command_interfaces(hardware);
       // deimport_state_interfaces(hardware);
       // use remove_command_interfaces(hardware);
-      if(!hardware.get_group_name().empty())
+      if (!hardware.get_group_name().empty())
       {
         hw_group_state_[hardware.get_group_name()] = return_type::OK;
       }
@@ -702,20 +702,20 @@ public:
   }
 
   /**
-   * Returns the return type of the hardware component group state, if the return type is other 
+   * Returns the return type of the hardware component group state, if the return type is other
    * than OK, then updates the return type of the group to the respective one
-  */
-  return_type update_hardware_component_group_state(const std::string &group_name, 
-    const return_type &value)
+   */
+  return_type update_hardware_component_group_state(
+    const std::string & group_name, const return_type & value)
   {
     // This is for the components that has no configured group
-    if(group_name.empty())
+    if (group_name.empty())
     {
       return value;
     }
     // If it is anything other than OK, change the return type of the hardware group state
     // to the respective return type
-    if(value > hw_group_state_.at(group_name))
+    if (value > hw_group_state_.at(group_name))
     {
       hw_group_state_.at(group_name) = value;
     }
