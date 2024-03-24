@@ -928,19 +928,17 @@ void generic_system_functional_test(
 }
 
 void generic_system_error_group_test(
-  const std::string & urdf, const std::string component_prefix,
-  bool validate_same_group)
+  const std::string & urdf, const std::string component_prefix, bool validate_same_group)
 {
   TestableResourceManager rm(urdf);
   const std::string component1 = component_prefix + "1";
   const std::string component2 = component_prefix + "2";
   // check is hardware is configured
   auto status_map = rm.get_components_status();
-  for(auto component: {component1, component2})
+  for (auto component : {component1, component2})
   {
     EXPECT_EQ(
-      status_map[component].state.label(),
-      hardware_interface::lifecycle_state_names::UNCONFIGURED);
+      status_map[component].state.label(), hardware_interface::lifecycle_state_names::UNCONFIGURED);
     configure_components(rm, {component});
     status_map = rm.get_components_status();
     EXPECT_EQ(
@@ -1031,9 +1029,9 @@ void generic_system_error_group_test(
   // read() should now bring error in the first component
   auto read_result = rm.read(TIME, PERIOD);
   ASSERT_FALSE(read_result.ok);
-  if(validate_same_group)
+  if (validate_same_group)
   {
-    // If they belong to the same group, show the error in all hardware components of smae group
+    // If they belong to the same group, show the error in all hardware components of same group
     EXPECT_THAT(read_result.failed_hardware_names, ::testing::ElementsAre(component1, component2));
   }
   else
@@ -1048,7 +1046,7 @@ void generic_system_error_group_test(
   ASSERT_FALSE(rm.command_interface_is_available("joint1/position"));
   ASSERT_FALSE(rm.command_interface_is_available("joint1/velocity"));
 
-  if(validate_same_group)
+  if (validate_same_group)
   {
     ASSERT_FALSE(rm.state_interface_is_available("joint2/position"));
     ASSERT_FALSE(rm.state_interface_is_available("joint2/velocity"));
@@ -1060,10 +1058,10 @@ void generic_system_error_group_test(
     ASSERT_TRUE(rm.state_interface_is_available("joint2/position"));
     ASSERT_TRUE(rm.state_interface_is_available("joint2/velocity"));
     ASSERT_TRUE(rm.command_interface_is_available("joint2/position"));
-    ASSERT_TRUE(rm.command_interface_is_available("joint2/velocity"));  
+    ASSERT_TRUE(rm.command_interface_is_available("joint2/velocity"));
   }
 
-   // Error should be recoverable only after reactivating the hardware component
+  // Error should be recoverable only after reactivating the hardware component
   j1p_c.set_value(0.0);
   j1v_c.set_value(0.0);
   ASSERT_FALSE(rm.read(TIME, PERIOD).ok);
@@ -1091,7 +1089,8 @@ TEST_F(TestGenericSystem, generic_system_2dof_functionality)
 
 TEST_F(TestGenericSystem, generic_system_2dof_error_propagation_different_group)
 {
-  auto urdf = ros2_control_test_assets::urdf_head + hardware_system_2dof_standard_interfaces_with_two_diff_hw_groups_ +
+  auto urdf = ros2_control_test_assets::urdf_head +
+              hardware_system_2dof_standard_interfaces_with_two_diff_hw_groups_ +
               ros2_control_test_assets::urdf_tail;
 
   generic_system_error_group_test(urdf, {"MockHardwareSystem"}, false);
@@ -1099,7 +1098,8 @@ TEST_F(TestGenericSystem, generic_system_2dof_error_propagation_different_group)
 
 TEST_F(TestGenericSystem, generic_system_2dof_error_propagation_same_group)
 {
-  auto urdf = ros2_control_test_assets::urdf_head + hardware_system_2dof_standard_interfaces_with_same_hardware_group_ +
+  auto urdf = ros2_control_test_assets::urdf_head +
+              hardware_system_2dof_standard_interfaces_with_same_hardware_group_ +
               ros2_control_test_assets::urdf_tail;
 
   generic_system_error_group_test(urdf, {"MockHardwareSystem"}, true);

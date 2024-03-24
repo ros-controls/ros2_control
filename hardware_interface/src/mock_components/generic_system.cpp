@@ -459,7 +459,8 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
     return return_type::OK;
   }
 
-  auto mirror_command_to_state = [](auto & states_, auto commands_, size_t start_index = 0) -> return_type
+  auto mirror_command_to_state =
+    [](auto & states_, auto commands_, size_t start_index = 0) -> return_type
   {
     for (size_t i = start_index; i < states_.size(); ++i)
     {
@@ -561,7 +562,9 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
 
   // do loopback on all other interfaces - starts from 1 or 3 because 0, 1, 3 are position,
   // velocity, and acceleration interface
-  if(mirror_command_to_state(joint_states_, joint_commands_, calculate_dynamics_ ? 3 : 1) != return_type::OK)
+  if (
+    mirror_command_to_state(joint_states_, joint_commands_, calculate_dynamics_ ? 3 : 1) !=
+    return_type::OK)
   {
     return return_type::ERROR;
   }
