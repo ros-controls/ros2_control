@@ -1063,6 +1063,16 @@ void generic_system_error_group_test(
     ASSERT_TRUE(rm.command_interface_is_available("joint2/velocity"));  
   }
 
+   // Error should be recoverable only after reactivating the hardware component
+  j1p_c.set_value(0.0);
+  j1v_c.set_value(0.0);
+  ASSERT_FALSE(rm.read(TIME, PERIOD).ok);
+
+  // Now it should be recoverable
+  deactivate_components(rm, {component1});
+  activate_components(rm, {component1});
+  ASSERT_TRUE(rm.read(TIME, PERIOD).ok);
+
   deactivate_components(rm, {component1, component2});
   status_map = rm.get_components_status();
   EXPECT_EQ(
