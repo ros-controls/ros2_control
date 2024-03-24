@@ -170,6 +170,45 @@ void controller_chain_spec_cleanup(
   }
   ctrl_chain_spec.erase(controller);
 }
+
+// Gets the list of active controllers that use the command interface of the given controller
+std::vector<std::string> get_active_controllers_using_command_interfaces_of_controller(
+  const std::string & controller_name,
+  const std::vector<controller_manager::ControllerSpec> & controllers)
+{
+  auto it = std::find_if(
+    controllers.begin(), controllers.end(),
+    std::bind(controller_name_compare, std::placeholders::_1, controller_name));
+  if (it == controllers.end())
+  {
+    RCLCPP_ERROR(
+      rclcpp::get_logger("ControllerManager::utils"),
+      "Controller '%s' not found in the list of controllers.", controller_name.c_str());
+    return {};
+  }
+  std::vector<std::string> controllers_using_command_interfaces;
+  const auto cmd_itfs = it->c->command_interface_configuration().names;
+  for (const auto & cmd_itf : cmd_itfs)
+  {
+    for (const auto & controller : controllers)
+    {
+      const auto ctrl_cmd_itfs = controller.c->command_interface_configuration().names;
+      // check if the controller is active and has the command interface and make sure that it
+      // doesn't exist in the list already
+      if (
+        is_controller_active(controller.c) &&
+        std::find(ctrl_cmd_itfs.begin(), ctrl_cmd_itfs.end(), cmd_itf) != ctrl_cmd_itfs.end() &&
+        std::find(
+          controllers_using_command_interfaces.begin(), controllers_using_command_interfaces.end(),
+          controller.info.name) == controllers_using_command_interfaces.end())
+      {
+        controllers_using_command_interfaces.push_back(controller.info.name);
+      }
+    }
+  }
+  return controllers_using_command_interfaces;
+}
+
 }  // namespace
 
 namespace controller_manager
@@ -1080,6 +1119,38 @@ controller_interface::return_type ControllerManager::switch_controller(
     else
     {
       status = check_following_controllers_for_activate(controllers, strictness, controller_it);
+    }
+
+    const auto & fallback_list = controller_it->info.fallback_controllers_names;
+    if (!fallback_list.empty())
+    {
+      for (const auto & fb_ctrl : fallback_list)
+      {
+        auto fb_ctrl_it = std::find_if(
+          controllers.begin(), controllers.end(),
+          std::bind(controller_name_compare, std::placeholders::_1, fb_ctrl));
+        if (fb_ctrl_it == controllers.end())
+        {
+          RCLCPP_WARN(
+            get_logger(),
+            "Unable to find the fallback controller : %s of the controller : %s "
+            "within the controller list",
+            fb_ctrl.c_str(), controller_it->info.name.c_str());
+          status = controller_interface::return_type::ERROR;
+        }
+        else
+        {
+          if (!is_controller_inactive(fb_ctrl_it->c))
+          {
+            RCLCPP_WARN(
+              get_logger(),
+              "Controller with name '%s' cannot be activated, as it's fallback controller : %s"
+              " need to be configured and in inactive state!",
+              controller_it->info.name.c_str(), fb_ctrl.c_str());
+            status = controller_interface::return_type::ERROR;
+          }
+        }
+      }
     }
 
     if (status != controller_interface::return_type::OK)
@@ -2353,6 +2424,35 @@ controller_interface::return_type ControllerManager::update(
         if (controller_ret != controller_interface::return_type::OK)
         {
           failed_controllers_list.push_back(loaded_controller.info.name);
+          if (!loaded_controller.info.fallback_controllers_names.empty())
+          {
+            RCLCPP_ERROR(
+              get_logger(), "Error updating controller '%s', switching to fallback controllers",
+              loaded_controller.info.name.c_str());
+
+            std::vector<std::string> active_controllers_using_interfaces;
+            for (const auto & fallback_controller :
+                 loaded_controller.info.fallback_controllers_names)
+            {
+              auto controllers_list = get_active_controllers_using_command_interfaces_of_controller(
+                fallback_controller, rt_controller_list);
+              for (const auto & controller : controllers_list)
+              {
+                if (
+                  std::find(
+                    active_controllers_using_interfaces.begin(),
+                    active_controllers_using_interfaces.end(),
+                    loaded_controller.info.name) == active_controllers_using_interfaces.end())
+                {
+                  active_controllers_using_interfaces.push_back(loaded_controller.info.name);
+                }
+              }
+            }
+
+            deactivate_controllers(rt_controller_list, {loaded_controller.info.name});
+            activate_controllers(
+              rt_controller_list, loaded_controller.info.fallback_controllers_names);
+          }
           ret = controller_ret;
         }
       }
