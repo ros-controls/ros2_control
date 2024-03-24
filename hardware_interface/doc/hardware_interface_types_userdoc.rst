@@ -41,6 +41,12 @@ The ``<gpio>`` tag can be used as a child of all three types of hardware compone
 Because ports implemented as ``<gpio>``-tag are typically very application-specific, there exists no generic publisher
 within the ros2_control framework. A custom gpio-controller has to be implemented for each application. As an example, see :ref:`the GPIO controller example <ros2_control_demos_example_10_userdoc>` as part of the demo repository.
 
+Hardware Groups
+*****************************
+Hardware Component Groups serve as a critical organizational mechanism within complex systems, facilitating error handling and fault tolerance. By grouping related hardware components together, such as actuators within a manipulator, users can establish a unified framework for error detection and response.
+
+Hardware Component Groups play a vital role in propagating errors across interconnected hardware components. For instance, in a manipulator system, grouping actuators together allows for error propagation. If one actuator fails within the group, the error can propagate to the other actuators, signaling a potential issue across the system. By default, the actuator errors are isolated to their own hardware component, allowing the rest to continue operation unaffected. In the provided ROS2 control configuration, the ``<group>`` tag within each ``<ros2_control>`` block signifies the grouping of hardware components, enabling error propagation mechanisms within the system.
+
 Examples
 *****************************
 The following examples show how to use the different hardware interface types in a ``ros2_control`` URDF.
