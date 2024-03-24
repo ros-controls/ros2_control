@@ -158,3 +158,66 @@ They can be combined together within the different hardware component types (sys
         <state_interface name="calibration_matrix_nr"/>
       </gpio>
     </ros2_control>
+
+4. Robot with multiple hardware components belonging to same group : ``Group1``
+
+   - RRBot System 1 and 2
+   - Digital: Total 4 inputs and 2 outputs
+   - Analog: Total 2 inputs and 1 output
+   - Vacuum valve at the flange (on/off)
+   - Group: Group1
+
+  .. code:: xml
+
+    <ros2_control name="RRBotSystem1" type="system">
+      <hardware>
+        <plugin>ros2_control_demo_hardware/RRBotSystemPositionOnlyHardware</plugin>
+        <group>Group1</group>
+        <param name="example_param_hw_start_duration_sec">2.0</param>
+        <param name="example_param_hw_stop_duration_sec">3.0</param>
+        <param name="example_param_hw_slowdown">2.0</param>
+      </hardware>
+      <joint name="joint1">
+        <command_interface name="position">
+          <param name="min">-1</param>
+          <param name="max">1</param>
+        </command_interface>
+        <state_interface name="position"/>
+      </joint>
+      <gpio name="flange_analog_IOs">
+        <command_interface name="analog_output1"/>
+        <state_interface name="analog_output1">    <!-- Needed to know current state of the output -->
+          <param name="initial_value">3.1</param>  <!-- Optional initial value for mock_hardware -->
+        </state_interface>
+        <state_interface name="analog_input1"/>
+        <state_interface name="analog_input2"/>
+      </gpio>
+      <gpio name="flange_vacuum">
+        <command_interface name="vacuum"/>
+        <state_interface name="vacuum"/>    <!-- Needed to know current state of the output -->
+      </gpio>
+    </ros2_control>
+    <ros2_control name="RRBotSystem2" type="system">
+      <hardware>
+        <plugin>ros2_control_demo_hardware/RRBotSystemPositionOnlyHardware</plugin>
+        <group>Group1</group>
+        <param name="example_param_hw_start_duration_sec">2.0</param>
+        <param name="example_param_hw_stop_duration_sec">3.0</param>
+        <param name="example_param_hw_slowdown">2.0</param>
+      </hardware>
+      <joint name="joint2">
+        <command_interface name="position">
+          <param name="min">-1</param>
+          <param name="max">1</param>
+        </command_interface>
+        <state_interface name="position"/>
+      </joint>
+      <gpio name="flange_digital_IOs">
+        <command_interface name="digital_output1"/>
+        <state_interface name="digital_output1"/>    <!-- Needed to know current state of the output -->
+        <command_interface name="digital_output2"/>
+        <state_interface name="digital_output2"/>
+        <state_interface name="digital_input1"/>
+        <state_interface name="digital_input2"/>
+      </gpio>
+    </ros2_control>
