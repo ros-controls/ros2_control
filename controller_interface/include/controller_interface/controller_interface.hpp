@@ -43,7 +43,7 @@ public:
   bool is_chainable() const final;
 
   /**
-   * Controller has no state interfaces.
+   * A non-chainable controller doesn't export any state interfaces.
    *
    * \returns empty list.
    */
@@ -75,7 +75,7 @@ public:
   bool is_in_chained_mode() const final;
 
   /**
-   * Controller is no chainable, so cannot use references from subscribers
+   * A non-chainable controller cannot use references from subscribers
    *
    * @return false
    */
