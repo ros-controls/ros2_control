@@ -358,10 +358,10 @@ class ControllerManager(Plugin):
         menu = QMenu(self._widget.hw_table_view)
         if hw_component.state.label == "active":
             action_deactivate = menu.addAction(self._icons["inactive"], "Deactivate")
-            action_shutdown = menu.addAction(self._icons["finalized"], "Shutdown")
+            action_cleanup = menu.addAction(self._icons["finalized"], "Deactivate and Cleanup")
         elif hw_component.state.label == "inactive":
             action_activate = menu.addAction(self._icons["active"], "Activate")
-            action_shutdown = menu.addAction(self._icons["unconfigured"], "Shutdown")
+            action_cleanup = menu.addAction(self._icons["unconfigured"], "Cleanup")
         elif hw_component.state.label == "unconfigured":
             action_configure = menu.addAction(self._icons["inactive"], "Configure")
             action_spawn = menu.addAction(self._icons["active"], "Configure and Activate")
@@ -372,12 +372,12 @@ class ControllerManager(Plugin):
         if hw_component.state.label == "active":
             if action is action_deactivate:
                 self._set_inactive_hw_component(hw_component.name)
-            elif action is action_shutdown:
+            elif action is action_cleanup:
                 self._set_unconfigured_hw_component(hw_component.name)
-        elif hw_component.state.label in ("finalized", "inactive"):
+        elif hw_component.state.label == "inactive":
             if action is action_activate:
                 self._set_active_hw_component(hw_component.name)
-            elif action is action_shutdown:
+            elif action is action_cleanup:
                 self._set_unconfigured_hw_component(hw_component.name)
         elif hw_component.state.label == "unconfigured":
             if action is action_configure:
