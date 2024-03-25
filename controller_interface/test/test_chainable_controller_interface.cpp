@@ -44,7 +44,7 @@ TEST_F(ChainableControllerInterfaceTest, export_internal_state_interfaces)
 
   auto internal_state_interfaces = controller.export_internal_state_interfaces();
 
-  ASSERT_EQ(internal_state_interfaces.size(), 1u);
+  ASSERT_THAT(internal_state_interfaces, SizeIs(1));
   EXPECT_EQ(internal_state_interfaces[0].get_prefix_name(), TEST_CONTROLLER_NAME);
   EXPECT_EQ(internal_state_interfaces[0].get_interface_name(), "test_state");
 
@@ -89,7 +89,7 @@ TEST_F(ChainableControllerInterfaceTest, interfaces_storage_not_correct_size)
   // expect empty return because storage is not resized
   controller.internal_state_interfaces_data_.clear();
   auto internal_state_interfaces = controller.export_internal_state_interfaces();
-  ASSERT_TRUE(internal_state_interfaces.empty());
+  ASSERT_THAT(internal_state_interfaces, IsEmpty());
 }
 
 TEST_F(ChainableControllerInterfaceTest, interfaces_prefix_is_not_node_name)
