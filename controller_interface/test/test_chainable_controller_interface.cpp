@@ -16,6 +16,9 @@
 
 #include <gmock/gmock.h>
 
+using ::testing::IsEmpty;
+using ::testing::SizeIs;
+
 TEST_F(ChainableControllerInterfaceTest, default_returns)
 {
   TestableChainableControllerInterface controller;
