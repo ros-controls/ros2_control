@@ -78,7 +78,8 @@ class TestSystem : public SystemInterface
     // simulate error on read
     if (velocity_command_[0] == test_constants::READ_FAIL_VALUE)
     {
-      // reset value to get out from error on the next call - simplifies CM tests
+      // reset value to get out from error on the next call - simplifies CM
+      // tests
       velocity_command_[0] = 0.0;
       return return_type::ERROR;
     }
@@ -95,7 +96,8 @@ class TestSystem : public SystemInterface
     // simulate error on write
     if (velocity_command_[0] == test_constants::WRITE_FAIL_VALUE)
     {
-      // reset value to get out from error on the next call - simplifies CM tests
+      // reset value to get out from error on the next call - simplifies CM
+      // tests
       velocity_command_[0] = 0.0;
       return return_type::ERROR;
     }
@@ -117,7 +119,7 @@ private:
   double configuration_command_ = 0.0;
 };
 
-class TestUnitializableSystem : public TestSystem
+class TestUninitializableSystem : public TestSystem
 {
   CallbackReturn on_init(const hardware_interface::HardwareInfo & info) override
   {
@@ -128,4 +130,4 @@ class TestUnitializableSystem : public TestSystem
 
 #include "pluginlib/class_list_macros.hpp"  // NOLINT
 PLUGINLIB_EXPORT_CLASS(TestSystem, hardware_interface::SystemInterface)
-PLUGINLIB_EXPORT_CLASS(TestUnitializableSystem, hardware_interface::SystemInterface)
+PLUGINLIB_EXPORT_CLASS(TestUninitializableSystem, hardware_interface::SystemInterface)

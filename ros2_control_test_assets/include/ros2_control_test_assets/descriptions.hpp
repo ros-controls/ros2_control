@@ -306,11 +306,11 @@ const auto hardware_resources =
   </ros2_control>
 )";
 
-const auto unitializable_hardware_resources =
+const auto uninitializable_hardware_resources =
   R"(
-  <ros2_control name="TestUnitializableActuatorHardware" type="actuator">
+  <ros2_control name="TestUninitializableActuatorHardware" type="actuator">
     <hardware>
-      <plugin>test_unitializable_actuator</plugin>
+      <plugin>test_uninitializable_actuator</plugin>
     </hardware>
     <joint name="joint1">
       <command_interface name="position"/>
@@ -319,9 +319,9 @@ const auto unitializable_hardware_resources =
       <command_interface name="max_velocity" />
     </joint>
   </ros2_control>
-  <ros2_control name="TestUnitializableSensorHardware" type="sensor">
+  <ros2_control name="TestUninitializableSensorHardware" type="sensor">
     <hardware>
-      <plugin>test_unitializable_sensor</plugin>
+      <plugin>test_uninitializable_sensor</plugin>
       <param name="example_param_write_for_sec">2</param>
       <param name="example_param_read_for_sec">2</param>
     </hardware>
@@ -329,9 +329,9 @@ const auto unitializable_hardware_resources =
       <state_interface name="velocity"/>
     </sensor>
   </ros2_control>
-  <ros2_control name="TestUnitializableSystemHardware" type="system">
+  <ros2_control name="TestUninitializableSystemHardware" type="system">
     <hardware>
-      <plugin>test_unitializable_system</plugin>
+      <plugin>test_uninitializable_system</plugin>
       <param name="example_param_write_for_sec">2</param>
       <param name="example_param_read_for_sec">2</param>
     </hardware>
@@ -1011,8 +1011,8 @@ const auto gripper_hardware_resources_mimic_false_command_if =
 
 const auto minimal_robot_urdf =
   std::string(urdf_head) + std::string(hardware_resources) + std::string(urdf_tail);
-const auto minimal_unitializable_robot_urdf =
-  std::string(urdf_head) + std::string(unitializable_hardware_resources) + std::string(urdf_tail);
+const auto minimal_uninitializable_robot_urdf =
+  std::string(urdf_head) + std::string(uninitializable_hardware_resources) + std::string(urdf_tail);
 
 const auto minimal_robot_missing_state_keys_urdf =
   std::string(urdf_head) + std::string(hardware_resources_missing_state_keys) +
