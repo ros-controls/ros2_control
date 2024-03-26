@@ -26,6 +26,7 @@
 #include "hardware_interface/loaned_state_interface.hpp"
 
 #include "rclcpp/rclcpp.hpp"
+#include "rclcpp/version.h"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
 
 namespace controller_interface
