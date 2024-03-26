@@ -54,3 +54,4 @@ ament_export_include_directories(
 )
 
 ament_package()
+ament_generate_version_header(${PROJECT_NAME})

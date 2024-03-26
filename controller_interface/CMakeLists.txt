@@ -110,3 +110,4 @@ ament_export_libraries(
   ${PROJECT_NAME}
 )
 ament_package()
+ament_generate_version_header(${PROJECT_NAME})
