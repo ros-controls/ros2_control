@@ -67,7 +67,7 @@ TEST_F(ChainableControllerInterfaceTest, export_reference_interfaces)
 
   auto reference_interfaces = controller.export_reference_interfaces();
 
-  ASSERT_EQ(reference_interfaces.size(), 1u);
+  ASSERT_THAT(reference_interfaces, SizeIs(1));
   EXPECT_EQ(reference_interfaces[0].get_prefix_name(), TEST_CONTROLLER_NAME);
   EXPECT_EQ(reference_interfaces[0].get_interface_name(), "test_itf");
 
@@ -88,7 +88,7 @@ TEST_F(ChainableControllerInterfaceTest, interfaces_storage_not_correct_size)
   // expect empty return because storage is not resized
   controller.reference_interfaces_.clear();
   auto reference_interfaces = controller.export_reference_interfaces();
-  ASSERT_TRUE(reference_interfaces.empty());
+  ASSERT_THAT(reference_interfaces, IsEmpty());
   // expect empty return because storage is not resized
   controller.internal_state_interfaces_data_.clear();
   auto internal_state_interfaces = controller.export_internal_state_interfaces();
@@ -110,10 +110,10 @@ TEST_F(ChainableControllerInterfaceTest, interfaces_prefix_is_not_node_name)
 
   // expect empty return because interface prefix is not equal to the node name
   auto reference_interfaces = controller.export_reference_interfaces();
-  ASSERT_TRUE(reference_interfaces.empty());
+  ASSERT_THAT(reference_interfaces, IsEmpty());
   // expect empty return because interface prefix is not equal to the node name
   auto internal_state_interfaces = controller.export_internal_state_interfaces();
-  ASSERT_TRUE(internal_state_interfaces.empty());
+  ASSERT_THAT(internal_state_interfaces, IsEmpty());
 }
 
 TEST_F(ChainableControllerInterfaceTest, setting_chained_mode)
@@ -128,9 +128,9 @@ TEST_F(ChainableControllerInterfaceTest, setting_chained_mode)
   ASSERT_NO_THROW(controller.get_node());
 
   auto reference_interfaces = controller.export_reference_interfaces();
-  ASSERT_EQ(reference_interfaces.size(), 1u);
+  ASSERT_THAT(reference_interfaces, SizeIs(1));
   auto internal_state_interfaces = controller.export_internal_state_interfaces();
-  ASSERT_EQ(internal_state_interfaces.size(), 1u);
+  ASSERT_THAT(internal_state_interfaces, SizeIs(1));
 
   EXPECT_FALSE(controller.is_in_chained_mode());
 
