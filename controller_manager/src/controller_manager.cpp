@@ -25,6 +25,7 @@
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 #include "rclcpp/rclcpp.hpp"
+#include "rclcpp/version.h"
 #include "rclcpp_lifecycle/state.hpp"
 
 namespace  // utility

@@ -15,6 +15,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <memory>
+#include <random>
 #include <string>
 #include <vector>
 
@@ -1503,7 +1504,9 @@ TEST_F(TestControllerManagerSrvs, list_sorted_large_chained_controller_tree)
   }
 
   // Now shuffle the list to be able to configure controller later randomly
-  std::random_shuffle(controllers_list.begin(), controllers_list.end());
+  std::random_device rnd;
+  std::mt19937 mers(rnd());
+  std::shuffle(controllers_list.begin(), controllers_list.end(), mers);
 
   {
     ControllerManagerRunner cm_runner(this);

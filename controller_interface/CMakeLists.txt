@@ -15,7 +15,6 @@ find_package(ament_cmake REQUIRED)
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
 endforeach()
-add_compile_definitions(RCLCPP_VERSION_MAJOR=${rclcpp_lifecycle_VERSION_MAJOR})
 
 add_library(controller_interface SHARED
   src/controller_interface_base.cpp
@@ -90,3 +89,4 @@ install(TARGETS controller_interface
 ament_export_targets(export_controller_interface HAS_LIBRARY_TARGET)
 ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
 ament_package()
+ament_generate_version_header(${PROJECT_NAME})
