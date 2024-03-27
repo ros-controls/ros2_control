@@ -27,6 +27,22 @@ using hardware_interface::SystemInterface;
 
 class TestSystem : public SystemInterface
 {
+  CallbackReturn on_init(const hardware_interface::HardwareInfo & info) override
+  {
+    if (SystemInterface::on_init(info) != CallbackReturn::SUCCESS)
+    {
+      return CallbackReturn::ERROR;
+    }
+
+    // Simulating initialization error
+    if (info_.joints[0].state_interfaces[1].name == "does_not_exist")
+    {
+      return CallbackReturn::ERROR;
+    }
+
+    return CallbackReturn::SUCCESS;
+  }
+
   std::vector<StateInterface> export_state_interfaces() override
   {
     std::vector<StateInterface> state_interfaces;

@@ -216,7 +216,13 @@ ControllerManager::ControllerManager(
       "[Deprecated] Passing the robot description parameter directly to the control_manager node "
       "is deprecated. Use the 'robot_description' topic from 'robot_state_publisher' instead.");
     init_resource_manager(robot_description_);
-    init_services();
+    if (resource_manager_->are_components_initialized())
+    {
+      RCLCPP_WARN(
+        get_logger(),
+        "You have to restart the framework when using robot description from parameter!");
+      init_services();
+    }
   }
 
   diagnostics_updater_.setHardwareID("ros2_control");
@@ -243,7 +249,7 @@ ControllerManager::ControllerManager(
     RCLCPP_WARN(get_logger(), "'update_rate' parameter not set, using default value.");
   }
 
-  if (resource_manager_->is_urdf_already_loaded())
+  if (resource_manager_->are_components_initialized())
   {
     init_services();
   }
@@ -271,36 +277,32 @@ void ControllerManager::robot_description_callback(const std_msgs::msg::String &
   RCLCPP_INFO(get_logger(), "Received robot description from topic.");
   RCLCPP_DEBUG(
     get_logger(), "'Content of robot description file: %s", robot_description.data.c_str());
-  // TODO(mamueluth): errors should probably be caught since we don't want controller_manager node
-  // to die if a non valid urdf is passed. However, should maybe be fine tuned.
-  try
+  robot_description_ = robot_description.data;
+  if (resource_manager_->are_components_initialized())
   {
-    robot_description_ = robot_description.data;
-    if (resource_manager_->is_urdf_already_loaded())
-    {
-      RCLCPP_WARN(
-        get_logger(),
-        "ResourceManager has already loaded an urdf file. Ignoring attempt to reload a robot "
-        "description file.");
-      return;
-    }
-    init_resource_manager(robot_description_);
-    init_services();
-  }
-  catch (std::runtime_error & e)
-  {
-    RCLCPP_ERROR_STREAM(
+    RCLCPP_WARN(
       get_logger(),
-      "The published robot description file (urdf) seems not to be genuine. The following error "
-      "was caught:"
-        << e.what());
+      "ResourceManager has already loaded an urdf file. Ignoring attempt to reload a robot "
+      "description file.");
+    return;
+  }
+  init_resource_manager(robot_description_);
+  if (resource_manager_->are_components_initialized())
+  {
+    init_services();
   }
 }
 
 void ControllerManager::init_resource_manager(const std::string & robot_description)
 {
-  // TODO(destogl): manage this when there is an error - CM should not die because URDF is wrong...
-  resource_manager_->load_urdf(robot_description);
+  if (!resource_manager_->load_and_initialize_components(robot_description))
+  {
+    RCLCPP_WARN(
+      get_logger(),
+      "Could not load and initialize hardware. Please check previous output for more details. "
+      "After you have corrected your URDF, try to publish robot description again.");
+    return;
+  }
 
   // Get all components and if they are not defined in parameters activate them automatically
   auto components_to_activate = resource_manager_->get_components_status();

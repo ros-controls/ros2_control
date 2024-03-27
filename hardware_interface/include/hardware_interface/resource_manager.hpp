@@ -59,18 +59,16 @@ public:
    * hardware components listed within as well as populate their respective
    * state and command interfaces.
    *
-   * If the interfaces ought to be validated, the constructor throws an exception
-   * in case the URDF lists interfaces which are not available.
-   *
    * \param[in] urdf string containing the URDF.
-   * \param[in] validate_interfaces boolean argument indicating whether the exported
-   * interfaces ought to be validated. Defaults to true.
    * \param[in] activate_all boolean argument indicating if all resources should be immediately
    * activated. Currently used only in tests.
+   * \param[in] update_rate Update rate of the controller manager to calculate calling frequency
+   * of async components.
+   * \param[in] clock_interface reference to the clock interface of the CM node for getting time
+   * used for triggering async components.
    */
   explicit ResourceManager(
-    const std::string & urdf, bool validate_interfaces = true, bool activate_all = false,
-    unsigned int update_rate = 100,
+    const std::string & urdf, bool activate_all = false, unsigned int update_rate = 100,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface = nullptr);
 
   ResourceManager(const ResourceManager &) = delete;
@@ -79,29 +77,24 @@ public:
 
   /// Load resources from on a given URDF.
   /**
-   * The resource manager can be post initialized with a given URDF.
+   * The resource manager can be post-initialized with a given URDF.
    * This is mainly used in conjunction with the default constructor
    * in which the URDF might not be present at first initialization.
    *
    * \param[in] urdf string containing the URDF.
-   * \param[in] validate_interfaces boolean argument indicating whether the exported
-   * interfaces ought to be validated. Defaults to true.
-   * \param[in] load_and_initialize_components boolean argument indicating whether to load and
-   * initialize the components present in the parsed URDF. Defaults to true.
+   * \returns false if URDF validation has failed.
    */
-  void load_urdf(
-    const std::string & urdf, bool validate_interfaces = true,
-    bool load_and_initialize_components = true);
+  bool load_and_initialize_components(const std::string & urdf);
 
   /**
-   * @brief if the resource manager load_urdf(...) function has been called this returns true.
-   * We want to permit to load the urdf later on but we currently don't want to permit multiple
-   * calls to load_urdf (reloading/loading different urdf).
+   * @brief if the resource manager load_and_initialize_components(...) function has been called
+   * this returns true. We want to permit to loading the urdf later on, but we currently don't want
+   * to permit multiple calls to load_and_initialize_components (reloading/loading different urdf).
    *
-   * @return true if resource manager's load_urdf() has been already called.
-   * @return false if resource manager's load_urdf() has not been yet called.
+   * @return true if the resource manager has successfully loaded and initialized the components
+   * @return false if the resource manager doesn't have any components loaded and initialized.
    */
-  bool is_urdf_already_loaded() const;
+  bool are_components_initialized() const;
 
   /// Claim a state interface given its key.
   /**
@@ -408,7 +401,7 @@ public:
   bool state_interface_exists(const std::string & key) const;
 
 private:
-  void validate_storage(const std::vector<hardware_interface::HardwareInfo> & hardware_info) const;
+  bool validate_storage(const std::vector<hardware_interface::HardwareInfo> & hardware_info) const;
 
   void release_command_interface(const std::string & key);
 
@@ -423,7 +416,7 @@ private:
   // Structure to store read and write status so it is not initialized in the real-time loop
   HardwareReadWriteStatus read_write_status;
 
-  bool is_urdf_loaded__ = false;
+  bool components_are_loaded_and_initialized_ = false;
 };
 
 }  // namespace hardware_interface

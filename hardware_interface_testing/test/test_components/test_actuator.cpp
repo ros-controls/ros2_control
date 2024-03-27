@@ -32,6 +32,11 @@ class TestActuator : public ActuatorInterface
       return CallbackReturn::ERROR;
     }
 
+    if (info_.joints[0].state_interfaces[1].name == "does_not_exist")
+    {
+      return CallbackReturn::ERROR;
+    }
+
     /*
      * a hardware can optional prove for incorrect info here.
      *
