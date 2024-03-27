@@ -33,14 +33,3 @@ Concepts
    Controller Chaining / Cascade Control <../controller_manager/doc/controller_chaining.rst>
    Hardware Components <../hardware_interface/doc/hardware_components_userdoc.rst>
    Mock Components <../hardware_interface/doc/mock_components_userdoc.rst>
-
-
-================
-Migration Guides
-================
-
-.. toctree::
-   :titlesonly:
-
-   Foxy to Galactic <migration/Foxy.rst>
-   Iron to Jazzy <migration/Iron.rst>
