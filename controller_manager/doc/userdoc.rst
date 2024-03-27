@@ -87,13 +87,6 @@ update_rate (mandatory; integer)
   Name of a plugin exported using ``pluginlib`` for a controller.
   This is a class from which controller's instance with name "``controller_name``" is created.
 
-Subscribers
------------
-
-robot_description (std_msgs/msg/String)
-  The URDF string as robot description.
-  This is usually published by the ``robot_state_publisher`` node.
-
 Handling Multiple Controller Managers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
