@@ -466,8 +466,6 @@ TEST_F(TestControllerManagerSrvs, unload_controller_srv)
   EXPECT_EQ(0u, cm_->get_loaded_controllers().size());
 }
 
-<<<<<<< HEAD
-=======
 TEST_F(TestControllerManagerSrvs, robot_description_on_load_and_unload_controller)
 {
   rclcpp::executors::SingleThreadedExecutor srv_executor;
@@ -511,7 +509,6 @@ TEST_F(TestControllerManagerSrvs, robot_description_on_load_and_unload_controlle
     test_controller->get_robot_description());
 }
 
->>>>>>> 6f57faf (check for state of the controller node before cleanup (#1363))
 TEST_F(TestControllerManagerSrvs, configure_controller_srv)
 {
   rclcpp::executors::SingleThreadedExecutor srv_executor;
