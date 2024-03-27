@@ -214,6 +214,8 @@ return_type Actuator::perform_command_mode_switch(
 
 std::string Actuator::get_name() const { return impl_->get_name(); }
 
+std::string Actuator::get_group_name() const { return impl_->get_group_name(); }
+
 const rclcpp_lifecycle::State & Actuator::get_state() const { return impl_->get_state(); }
 
 return_type Actuator::read(const rclcpp::Time & time, const rclcpp::Duration & period)
