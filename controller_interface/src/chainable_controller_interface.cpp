@@ -30,7 +30,7 @@ return_type ChainableControllerInterface::update(
 {
   return_type ret = return_type::ERROR;
 
-  if (!is_in_chained_mode())
+  if (use_references_from_subscribers_)
   {
     ret = update_reference_from_subscribers(time, period);
     if (ret != return_type::OK)
@@ -42,6 +42,45 @@ return_type ChainableControllerInterface::update(
   ret = update_and_write_commands(time, period);
 
   return ret;
+}
+
+std::vector<hardware_interface::StateInterface>
+ChainableControllerInterface::export_internal_state_interfaces()
+{
+  auto internal_state_interfaces = on_export_internal_state_interfaces();
+  // check if the "internal_state_interfaces_data_" variable is resized to number of interfaces
+  if (internal_state_interfaces_data_.size() != internal_state_interfaces.size())
+  {
+    // TODO(destogl): Should here be "FATAL"? It is fatal in terms of controller but not for the
+    // framework
+    RCLCPP_FATAL(
+      get_node()->get_logger(),
+      "The internal storage for internal state values 'internal_state_interfaces_data_' variable "
+      "has size '%zu', but it is expected to have the size '%zu' equal to the number of internal "
+      "state interfaces. No state interface will be exported. Please correct and recompile "
+      "the controller with name '%s' and try again.",
+      internal_state_interfaces_data_.size(), internal_state_interfaces.size(),
+      get_node()->get_name());
+    internal_state_interfaces.clear();
+  }
+
+  // check if the names of the controller state interfaces begin with the controller's name
+  for (const auto & interface : internal_state_interfaces)
+  {
+    if (interface.get_prefix_name() != get_node()->get_name())
+    {
+      RCLCPP_FATAL(
+        get_node()->get_logger(),
+        "The name of the interface '%s' does not begin with the controller's name. This is "
+        "mandatory for internal state interfaces. No internal state interface will be exported. "
+        "Please correct and recompile the controller with name '%s' and try again.",
+        interface.get_name().c_str(), get_node()->get_name());
+      internal_state_interfaces.clear();
+      break;
+    }
+  }
+
+  return internal_state_interfaces;
 }
 
 std::vector<hardware_interface::CommandInterface>
@@ -110,6 +149,26 @@ bool ChainableControllerInterface::set_chained_mode(bool chained_mode)
 }
 
 bool ChainableControllerInterface::is_in_chained_mode() const { return in_chained_mode_; }
+
+bool ChainableControllerInterface::toggle_references_from_subscribers(bool enable)
+{
+  bool result = false;
+  if (get_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+  {
+    use_references_from_subscribers_ = enable;
+    result = true;
+  }
+  else
+  {
+    RCLCPP_ERROR(
+      get_node()->get_logger(),
+      "Can not toggle the controller's references between subscribers and interfaces in '%s' "
+      "state. "
+      " Current state is '%s'.",
+      hardware_interface::lifecycle_state_names::ACTIVE, get_state().label().c_str());
+  }
+  return result;
+}
 
 bool ChainableControllerInterface::on_set_chained_mode(bool /*chained_mode*/) { return true; }
 

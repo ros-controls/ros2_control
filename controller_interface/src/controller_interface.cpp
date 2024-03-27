@@ -28,6 +28,12 @@ ControllerInterface::ControllerInterface() : ControllerInterfaceBase() {}
 
 bool ControllerInterface::is_chainable() const { return false; }
 
+std::vector<hardware_interface::StateInterface>
+ControllerInterface::export_internal_state_interfaces()
+{
+  return {};
+}
+
 std::vector<hardware_interface::CommandInterface> ControllerInterface::export_reference_interfaces()
 {
   return {};
@@ -36,5 +42,7 @@ std::vector<hardware_interface::CommandInterface> ControllerInterface::export_re
 bool ControllerInterface::set_chained_mode(bool /*chained_mode*/) { return false; }
 
 bool ControllerInterface::is_in_chained_mode() const { return false; }
+
+bool ControllerInterface::toggle_references_from_subscribers(bool /*enable*/) { return false; }
 
 }  // namespace controller_interface

@@ -980,34 +980,37 @@ TEST_F(TestControllerManagerSrvs, list_sorted_independent_chained_controllers)
   // add controllers
   /// @todo add controllers in random order
   /// For now, adding the ordered case to see that current sorting doesn't change order
-  cm_->add_controller(
-    test_chained_controller_2, TEST_CHAINED_CONTROLLER_2,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_chained_controller_6, TEST_CHAINED_CONTROLLER_6,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_chained_controller_1, TEST_CHAINED_CONTROLLER_1,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_chained_controller_7, TEST_CHAINED_CONTROLLER_7,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_controller_1, TEST_CONTROLLER_1, test_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_chained_controller_5, TEST_CHAINED_CONTROLLER_5,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_chained_controller_3, TEST_CHAINED_CONTROLLER_3,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_chained_controller_4, TEST_CHAINED_CONTROLLER_4,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_controller_2, TEST_CONTROLLER_2, test_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_chained_controller_8, TEST_CHAINED_CONTROLLER_8,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  {
+    ControllerManagerRunner cm_runner(this);
+    cm_->add_controller(
+      test_chained_controller_2, TEST_CHAINED_CONTROLLER_2,
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_chained_controller_6, TEST_CHAINED_CONTROLLER_6,
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_chained_controller_1, TEST_CHAINED_CONTROLLER_1,
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_chained_controller_7, TEST_CHAINED_CONTROLLER_7,
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_controller_1, TEST_CONTROLLER_1, test_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_chained_controller_5, TEST_CHAINED_CONTROLLER_5,
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_chained_controller_3, TEST_CHAINED_CONTROLLER_3,
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_chained_controller_4, TEST_CHAINED_CONTROLLER_4,
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_controller_2, TEST_CONTROLLER_2, test_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_chained_controller_8, TEST_CHAINED_CONTROLLER_8,
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  }
 
   // get controller list before configure
   auto result = call_service_and_wait(*client, request, srv_executor);
@@ -1233,40 +1236,40 @@ TEST_F(TestControllerManagerSrvs, list_large_number_of_controllers_with_chains)
   // add controllers
   /// @todo add controllers in random order
   /// For now, adding the ordered case to see that current sorting doesn't change order
-  cm_->add_controller(
-    test_chained_controller_2, TEST_CHAINED_CONTROLLER_2,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_chained_controller_6, TEST_CHAINED_CONTROLLER_6,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_chained_controller_1, TEST_CHAINED_CONTROLLER_1,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_chained_controller_7, TEST_CHAINED_CONTROLLER_7,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_controller_1, TEST_CONTROLLER_1, test_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_chained_controller_5, TEST_CHAINED_CONTROLLER_5,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_chained_controller_3, TEST_CHAINED_CONTROLLER_3,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_chained_controller_4, TEST_CHAINED_CONTROLLER_4,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_controller_2, TEST_CONTROLLER_2, test_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_chained_controller_8, TEST_CHAINED_CONTROLLER_8,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_chained_controller_9, TEST_CHAINED_CONTROLLER_9,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-
   {
     ControllerManagerRunner cm_runner(this);
+    cm_->add_controller(
+      test_chained_controller_2, TEST_CHAINED_CONTROLLER_2,
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_chained_controller_6, TEST_CHAINED_CONTROLLER_6,
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_chained_controller_1, TEST_CHAINED_CONTROLLER_1,
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_chained_controller_7, TEST_CHAINED_CONTROLLER_7,
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_controller_1, TEST_CONTROLLER_1, test_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_chained_controller_5, TEST_CHAINED_CONTROLLER_5,
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_chained_controller_3, TEST_CHAINED_CONTROLLER_3,
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_chained_controller_4, TEST_CHAINED_CONTROLLER_4,
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_controller_2, TEST_CONTROLLER_2, test_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_chained_controller_8, TEST_CHAINED_CONTROLLER_8,
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_chained_controller_9, TEST_CHAINED_CONTROLLER_9,
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+
     for (auto random_ctrl : random_controllers_list)
     {
       cm_->add_controller(

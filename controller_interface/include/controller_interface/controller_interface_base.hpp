@@ -225,10 +225,19 @@ public:
   virtual std::vector<hardware_interface::CommandInterface> export_reference_interfaces() = 0;
 
   /**
+   * Export interfaces for a chainable controller that can be used as state interface by other
+   * controllers.
+   *
+   * \returns list of state interfaces for preceding controllers.
+   */
+  CONTROLLER_INTERFACE_PUBLIC
+  virtual std::vector<hardware_interface::StateInterface> export_internal_state_interfaces() = 0;
+
+  /**
    * Set chained mode of a chainable controller. This method triggers internal processes to switch
    * a chainable controller to "chained" mode and vice-versa. Setting controller to "chained" mode
-   * usually involves disabling of subscribers and other external interfaces to avoid potential
-   * concurrency in input commands.
+   * usually involves the usage of the controller's reference/internal state interfaces by the other
+   * controllers
    *
    * \returns true if mode is switched successfully and false if not.
    */
@@ -245,6 +254,17 @@ public:
    */
   CONTROLLER_INTERFACE_PUBLIC
   virtual bool is_in_chained_mode() const = 0;
+
+  /// A method to enable the usage of references from subscribers
+  /**
+   * Enable or disable the retrieval of references for a chainable controller. This methods helps
+   * to toggle between the usage of reference from the subscribers or the external interfaces to
+   * avoid potential concurrency in input commands
+   *
+   * @return true if the toggle is successful and false if not
+   */
+  CONTROLLER_INTERFACE_PUBLIC
+  virtual bool toggle_references_from_subscribers(bool enable) = 0;
 
 protected:
   std::vector<hardware_interface::LoanedCommandInterface> command_interfaces_;

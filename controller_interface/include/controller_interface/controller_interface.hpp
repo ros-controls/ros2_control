@@ -43,6 +43,14 @@ public:
   bool is_chainable() const final;
 
   /**
+   * A non-chainable controller doesn't export any state interfaces.
+   *
+   * \returns empty list.
+   */
+  CONTROLLER_INTERFACE_PUBLIC
+  std::vector<hardware_interface::StateInterface> export_internal_state_interfaces() final;
+
+  /**
    * Controller has no reference interfaces.
    *
    * \returns empty list.
@@ -65,6 +73,14 @@ public:
    */
   CONTROLLER_INTERFACE_PUBLIC
   bool is_in_chained_mode() const final;
+
+  /**
+   * A non-chainable controller cannot use references from subscribers
+   *
+   * @return false
+   */
+  CONTROLLER_INTERFACE_PUBLIC
+  bool toggle_references_from_subscribers(bool enable) final;
 };
 
 using ControllerInterfaceSharedPtr = std::shared_ptr<ControllerInterface>;

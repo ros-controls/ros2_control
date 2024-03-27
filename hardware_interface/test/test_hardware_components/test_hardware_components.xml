@@ -12,6 +12,12 @@
     </description>
   </class>
 
+  <class name="test_hardware_components/TestIMUSensor" type="test_hardware_components::TestIMUSensor" base_class_type="hardware_interface::SensorInterface">
+    <description>
+      Test sensor component emulating an IMU sensor
+    </description>
+  </class>
+
   <class name="test_hardware_components/TestTwoJointSystem" type="test_hardware_components::TestTwoJointSystem" base_class_type="hardware_interface::SystemInterface">
     <description>
       Test system component for a two degree of freedom position joint robot
