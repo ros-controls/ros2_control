@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-from controller_manager import list_controllers
+from controller_manager import list_controllers, list_hardware_components
 
 import rclpy
 
@@ -73,6 +73,20 @@ class LoadedControllerNameCompleter:
         with DirectNode(parsed_args) as node:
             controllers = list_controllers(node, parsed_args.controller_manager).controller
             return [c.name for c in controllers if c.state in self.valid_states]
+
+
+class LoadedHardwareComponentNameCompleter:
+    """Callable returning a list of loaded hardware components."""
+
+    def __init__(self, valid_states=["active", "inactive", "configured", "unconfigured"]):
+        self.valid_states = valid_states
+
+    def __call__(self, prefix, parsed_args, **kwargs):
+        with DirectNode(parsed_args) as node:
+            hardware_components = list_hardware_components(
+                node, parsed_args.controller_manager
+            ).component
+            return [c.name for c in hardware_components if c.state.label in self.valid_states]
 
 
 def add_controller_mgr_parsers(parser):
