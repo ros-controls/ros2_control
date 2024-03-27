@@ -2,6 +2,12 @@
 Changelog for package rqt_controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.8.0 (2024-03-27)
+------------------
+* Fix rqt_controller_manager for non-humble (`#1454 <https://github.com/ros-controls/ros2_control/issues/1454>`_)
+* Add cm as dependency to rqt_cm (`#1447 <https://github.com/ros-controls/ros2_control/issues/1447>`_)
+* Contributors: Christoph Fröhlich
+
 4.7.0 (2024-03-22)
 ------------------
 * Codeformat from new pre-commit config (`#1433 <https://github.com/ros-controls/ros2_control/issues/1433>`_)
