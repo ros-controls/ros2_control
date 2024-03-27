@@ -515,7 +515,6 @@ protected:
       <state_interface name="position">
         <param name="initial_value">2.78</param>
       </state_interface>
-      <state_interface name="position"/>
       <state_interface name="velocity"/>
       <state_interface name="acceleration"/>
     </joint>
@@ -546,7 +545,6 @@ protected:
       <state_interface name="position">
         <param name="initial_value">2.78</param>
       </state_interface>
-      <state_interface name="position"/>
       <state_interface name="velocity"/>
       <state_interface name="acceleration"/>
     </joint>
@@ -555,7 +553,6 @@ protected:
       <state_interface name="position">
         <param name="initial_value">2.78</param>
       </state_interface>
-      <state_interface name="position"/>
       <state_interface name="velocity"/>
       <state_interface name="acceleration"/>
     </joint>
