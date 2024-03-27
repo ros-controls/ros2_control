@@ -72,14 +72,6 @@ protected:
     hardware_interface::HW_IF_POSITION, hardware_interface::HW_IF_VELOCITY,
     hardware_interface::HW_IF_ACCELERATION, hardware_interface::HW_IF_EFFORT};
 
-  struct MimicJoint
-  {
-    std::size_t joint_index;
-    std::size_t mimicked_joint_index;
-    double multiplier = 1.0;
-  };
-  std::vector<MimicJoint> mimic_joints_;
-
   /// The size of this vector is (standard_interfaces_.size() x nr_joints)
   std::vector<std::vector<double>> joint_commands_;
   std::vector<std::vector<double>> joint_states_;

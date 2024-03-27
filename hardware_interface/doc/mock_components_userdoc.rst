@@ -19,9 +19,10 @@ For more information about hardware components check :ref:`detailed documentatio
 
 Features:
 
-  - support for mimic joints
+  - support for mimic joints, which is parsed from the URDF (see the `URDF wiki <http://wiki.ros.org/urdf/XML/joint>`__)
   - mirroring commands to states with and without offset
   - fake command interfaces for setting sensor data from an external node (combined with a :ref:`forward controller <forward_command_controller_userdoc>`)
+  - fake gpio interfaces for setting sensor data from an external node (combined with a :ref:`forward controller <forward_command_controller_userdoc>`)
 
 
 Parameters
@@ -36,23 +37,15 @@ mock_sensor_commands (optional; boolean; default: false)
   Creates fake command interfaces for faking sensor measurements with an external command.
   Those interfaces are usually used by a :ref:`forward controller <forward_command_controller_userdoc>` to provide access from ROS-world.
 
+mock_gpio_commands (optional; boolean; default: false)
+  Creates fake command interfaces for faking GPIO states with an external command.
+  Those interfaces are usually used by a :ref:`forward controller <forward_command_controller_userdoc>` to provide access from ROS-world.
+
 position_state_following_offset (optional; double; default: 0.0)
   Following offset added to the commanded values when mirrored to states.
 
-
 custom_interface_with_following_offset (optional; string; default: "")
   Mapping of offsetted commands to a custom interface.
-
-
-Per-joint Parameters
-,,,,,,,,,,,,,,,,,,,,
-
-mimic (optional; string)
-  Defined name of the joint to mimic. This is often used concept with parallel grippers. Example: ``<param name="mimic">joint1</param>``.
-
-
-multiplier (optional; double; default: 1; used if mimic joint is defined)
-  Multiplier of values for mimicking joint defined in ``mimic`` parameter. Example: ``<param name="multiplier">-2</param>``.
 
 Per-interface Parameters
 ,,,,,,,,,,,,,,,,,,,,,,,,

@@ -372,7 +372,9 @@ const auto valid_urdf_ros2_control_system_robot_with_gpio =
     </gpio>
     <gpio name="flange_vacuum">
       <command_interface name="vacuum"/>
-      <state_interface name="vacuum"/> <!-- Needed to know current state of the input -->
+      <state_interface name="vacuum"> <!-- Needed to know current state of the input -->
+        <param name="initial_value">1.0</param>
+      </state_interface>
     </gpio>
   </ros2_control>
 )";

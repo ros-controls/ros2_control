@@ -31,6 +31,7 @@ pluginlib_export_plugin_description_file(transmission_interface ros2_control_plu
 
 if(BUILD_TESTING)
   find_package(ament_cmake_gmock REQUIRED)
+  find_package(ros2_control_test_assets REQUIRED)
 
   ament_add_gmock(test_simple_transmission
     test/simple_transmission_test.cpp
@@ -51,16 +52,19 @@ if(BUILD_TESTING)
     test/simple_transmission_loader_test.cpp
   )
   target_link_libraries(test_simple_transmission_loader transmission_interface)
+  ament_target_dependencies(test_simple_transmission_loader ros2_control_test_assets)
 
   ament_add_gmock(test_four_bar_linkage_transmission_loader
     test/four_bar_linkage_transmission_loader_test.cpp
   )
   target_link_libraries(test_four_bar_linkage_transmission_loader transmission_interface)
+  ament_target_dependencies(test_four_bar_linkage_transmission_loader ros2_control_test_assets)
 
   ament_add_gmock(test_differential_transmission_loader
     test/differential_transmission_loader_test.cpp
   )
   target_link_libraries(test_differential_transmission_loader transmission_interface)
+  ament_target_dependencies(test_differential_transmission_loader ros2_control_test_assets)
 
   ament_add_gmock(
     test_utils
