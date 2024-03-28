@@ -14,6 +14,8 @@ Joints
 ``<joint>``-tag groups the interfaces associated with the joints of physical robots and actuators.
 They have command and state interfaces to set the goal values for hardware and read its current state.
 
+All joints defined in the ``<ros2_control>``-tag have to be present in the URDF received :ref:`by the controller manager <doc/ros2_control/controller_manager/doc/userdoc:subscribers>`.
+
 State interfaces of joints can be published as a ROS topic by means of the :ref:`joint_state_broadcaster <joint_state_broadcaster_userdoc>`
 
 Sensors
