@@ -2,6 +2,21 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.8.0 (2024-03-27)
+------------------
+* generate version.h file per package using the ament_generate_version_header  (`#1449 <https://github.com/ros-controls/ros2_control/issues/1449>`_)
+* Use ament_cmake generated rclcpp version header (`#1448 <https://github.com/ros-controls/ros2_control/issues/1448>`_)
+* Replace random_shuffle with shuffle. (`#1446 <https://github.com/ros-controls/ros2_control/issues/1446>`_)
+* Contributors: Chris Lalancette, Sai Kishor Kothakota
+
+4.7.0 (2024-03-22)
+------------------
+* add missing compiler definitions of RCLCPP_VERSION_MAJOR (`#1440 <https://github.com/ros-controls/ros2_control/issues/1440>`_)
+* Codeformat from new pre-commit config (`#1433 <https://github.com/ros-controls/ros2_control/issues/1433>`_)
+* add conditioning to get_parameter_value method import (`#1428 <https://github.com/ros-controls/ros2_control/issues/1428>`_)
+* Change the controller sorting with an approach similar to directed acyclic graphs (`#1384 <https://github.com/ros-controls/ros2_control/issues/1384>`_)
+* Contributors: Christoph Fröhlich, Sai Kishor Kothakota
+
 4.6.0 (2024-03-02)
 ------------------
 * Add -Werror=missing-braces to compile options (`#1423 <https://github.com/ros-controls/ros2_control/issues/1423>`_)

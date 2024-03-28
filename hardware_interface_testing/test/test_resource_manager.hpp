@@ -48,7 +48,7 @@ public:
   FRIEND_TEST(ResourceManagerTest, post_initialization_add_components);
   FRIEND_TEST(ResourceManagerTest, managing_controllers_reference_interfaces);
   FRIEND_TEST(ResourceManagerTest, resource_availability_and_claiming_in_lifecycle);
-  FRIEND_TEST(ResourceManagerTest, test_unitilizable_hardware_no_validation);
+  FRIEND_TEST(ResourceManagerTest, test_uninitializable_hardware_no_validation);
 
   TestableResourceManager() : hardware_interface::ResourceManager() {}
 

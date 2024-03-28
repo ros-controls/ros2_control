@@ -44,6 +44,23 @@ struct InterfaceInfo
   int size;
 };
 
+/// @brief This structure stores information about a joint that is mimicking another joint
+struct MimicJoint
+{
+  std::size_t joint_index;
+  std::size_t mimicked_joint_index;
+  double multiplier = 1.0;
+  double offset = 0.0;
+};
+
+/// @brief This enum is used to store the mimic attribute of a joint
+enum class MimicAttribute
+{
+  NOT_SET,
+  TRUE,
+  FALSE
+};
+
 /**
  * This structure stores information about components defined for a specific hardware
  * in robot's URDF.
@@ -54,6 +71,9 @@ struct ComponentInfo
   std::string name;
   /// Type of the component: sensor, joint, or GPIO.
   std::string type;
+
+  ///  Hold the value of the mimic attribute if given, NOT_SET otherwise
+  MimicAttribute is_mimic = MimicAttribute::NOT_SET;
 
   /**
    * Name of the command interfaces that can be set, e.g. "position", "velocity", etc.
@@ -116,22 +136,26 @@ struct HardwareInfo
   /// (Optional) Key-value pairs for hardware parameters.
   std::unordered_map<std::string, std::string> hardware_parameters;
   /**
-   * Map of joints provided by the hardware where the key is the joint name.
+   * Vector of joints provided by the hardware.
    * Required for Actuator and System Hardware.
    */
   std::vector<ComponentInfo> joints;
   /**
-   * Map of sensors provided by the hardware where the key is the joint or link name.
+   * Vector of mimic joints.
+   */
+  std::vector<MimicJoint> mimic_joints;
+  /**
+   * Vector of sensors provided by the hardware.
    * Required for Sensor and optional for System Hardware.
    */
   std::vector<ComponentInfo> sensors;
   /**
-   * Map of GPIO provided by the hardware where the key is a descriptive name of the GPIO.
+   * Vector of GPIOs provided by the hardware.
    * Optional for any hardware components.
    */
   std::vector<ComponentInfo> gpios;
   /**
-   * Map of transmissions to calculate ration between joints and physical actuators.
+   * Vector of transmissions to calculate ratio between joints and physical actuators.
    * Optional for Actuator and System Hardware.
    */
   std::vector<TransmissionInfo> transmissions;
