@@ -142,12 +142,12 @@ protected:
         <param name="initial_value">0.2</param>
       </state_interface>
     </joint>
-    <joint name="voltage_output">
+    <gpio name="voltage_output">
       <command_interface name="voltage"/>
       <state_interface name="voltage">
         <param name="initial_value">0.5</param>
       </state_interface>
-    </joint>
+    </gpio>
   </ros2_control>
 )";
 
@@ -251,11 +251,7 @@ protected:
       </state_interface>
       <state_interface name="velocity"/>
     </joint>
-    <joint name="joint2">
-      <param name="mimic">joint1</param>
-      <param name="multiplier">-2</param>
-      <command_interface name="position"/>
-      <command_interface name="velocity"/>
+    <joint name="joint2" mimic="true">
       <state_interface name="position"/>
       <state_interface name="velocity"/>
     </joint>
@@ -1207,11 +1203,9 @@ void TestGenericSystem::test_generic_system_with_mimic_joint(
   EXPECT_TRUE(rm.state_interface_exists("joint2/position"));
   EXPECT_TRUE(rm.state_interface_exists("joint2/velocity"));
 
-  ASSERT_EQ(4u, rm.command_interface_keys().size());
+  ASSERT_EQ(2u, rm.command_interface_keys().size());
   EXPECT_TRUE(rm.command_interface_exists("joint1/position"));
   EXPECT_TRUE(rm.command_interface_exists("joint1/velocity"));
-  EXPECT_TRUE(rm.command_interface_exists("joint2/position"));
-  EXPECT_TRUE(rm.command_interface_exists("joint2/velocity"));
 
   // Check initial values
   hardware_interface::LoanedStateInterface j1p_s = rm.claim_state_interface("joint1/position");
@@ -1261,7 +1255,7 @@ void TestGenericSystem::test_generic_system_with_mimic_joint(
 
 TEST_F(TestGenericSystem, hardware_system_2dof_with_mimic_joint)
 {
-  auto urdf = ros2_control_test_assets::urdf_head + hardware_system_2dof_with_mimic_joint_ +
+  auto urdf = ros2_control_test_assets::urdf_head_mimic + hardware_system_2dof_with_mimic_joint_ +
               ros2_control_test_assets::urdf_tail;
 
   test_generic_system_with_mimic_joint(urdf, "MockHardwareSystem");
@@ -1918,10 +1912,11 @@ TEST_F(TestGenericSystem, disabled_commands_flag_is_active)
 
 TEST_F(TestGenericSystem, prepare_command_mode_switch_works_with_all_example_tags)
 {
-  auto check_prepare_command_mode_switch = [&](const std::string & urdf)
+  auto check_prepare_command_mode_switch =
+    [&](
+      const std::string & urdf, const std::string & urdf_head = ros2_control_test_assets::urdf_head)
   {
-    TestableResourceManager rm(
-      ros2_control_test_assets::urdf_head + urdf + ros2_control_test_assets::urdf_tail);
+    TestableResourceManager rm(urdf_head + urdf + ros2_control_test_assets::urdf_tail);
     rclcpp_lifecycle::State state(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, "active");
     rm.set_component_state("MockHardwareSystem", state);
     auto start_interfaces = rm.command_interface_keys();
@@ -1937,7 +1932,8 @@ TEST_F(TestGenericSystem, prepare_command_mode_switch_works_with_all_example_tag
   ASSERT_TRUE(check_prepare_command_mode_switch(hardware_system_2dof_with_sensor_mock_command_));
   ASSERT_TRUE(
     check_prepare_command_mode_switch(hardware_system_2dof_with_sensor_mock_command_True_));
-  ASSERT_TRUE(check_prepare_command_mode_switch(hardware_system_2dof_with_mimic_joint_));
+  ASSERT_TRUE(check_prepare_command_mode_switch(
+    hardware_system_2dof_with_mimic_joint_, ros2_control_test_assets::urdf_head_mimic));
   ASSERT_TRUE(
     check_prepare_command_mode_switch(hardware_system_2dof_standard_interfaces_with_offset_));
   ASSERT_TRUE(check_prepare_command_mode_switch(

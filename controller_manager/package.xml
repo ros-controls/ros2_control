@@ -2,13 +2,14 @@
 <?xml-model href="http://download.ros.org/schema/package_format2.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="2">
   <name>controller_manager</name>
-  <version>4.7.0</version>
+  <version>4.8.0</version>
   <description>Description of controller_manager</description>
   <maintainer email="bence.magyar.robotics@gmail.com">Bence Magyar</maintainer>
   <maintainer email="denis@stoglrobotics.de">Denis Štogl</maintainer>
   <license>Apache License 2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>ament_cmake_gen_version_h</buildtool_depend>
   <buildtool_depend>ament_cmake_python</buildtool_depend>
 
   <depend>ament_index_cpp</depend>
