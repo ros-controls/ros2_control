@@ -83,7 +83,7 @@ TEST_P(
   ASSERT_FALSE(cm_->resource_manager_->are_components_initialized());
   // wrong urdf
   auto msg = std_msgs::msg::String();
-  msg.data = ros2_control_test_assets::minimal_unitilizable_robot_urdf;
+  msg.data = ros2_control_test_assets::minimal_uninitializable_robot_urdf;
   cm_->robot_description_callback(msg);
   ASSERT_FALSE(cm_->resource_manager_->are_components_initialized());
   // correct urdf
