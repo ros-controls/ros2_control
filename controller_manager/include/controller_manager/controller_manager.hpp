@@ -203,6 +203,13 @@ public:
     return resource_manager_->are_components_initialized();
   }
 
+  /// Update rate of the main control loop in the controller manager.
+  /**
+   * Update rate of the main control loop in the controller manager.
+   * The method is used for per-controller update rate support.
+   *
+   * \returns update rate of the controller manager.
+   */
   CONTROLLER_MANAGER_PUBLIC
   unsigned int get_update_rate() const;
 

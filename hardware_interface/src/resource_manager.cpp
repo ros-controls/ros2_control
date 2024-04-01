@@ -79,12 +79,10 @@ public:
   // TODO(VX792): Change this when HW ifs get their own update rate,
   // because the ResourceStorage really shouldn't know about the cm's parameters
   ResourceStorage(
-    unsigned int update_rate = 100,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface = nullptr)
   : actuator_loader_(pkg_name, actuator_interface_name),
     sensor_loader_(pkg_name, sensor_interface_name),
     system_loader_(pkg_name, system_interface_name),
-    cm_update_rate_(update_rate),
     clock_interface_(clock_interface)
   {
   }
@@ -762,24 +760,23 @@ public:
 
   // Update rate of the controller manager, and the clock interface of its node
   // Used by async components.
-  unsigned int cm_update_rate_;
+  unsigned int cm_update_rate_ = 100;
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface_;
 };
 
 ResourceManager::ResourceManager(
-  unsigned int update_rate, rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
-: resource_storage_(std::make_unique<ResourceStorage>(update_rate, clock_interface))
+  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
+: resource_storage_(std::make_unique<ResourceStorage>(clock_interface))
 {
 }
 
 ResourceManager::~ResourceManager() = default;
 
 ResourceManager::ResourceManager(
-  const std::string & urdf, bool activate_all, unsigned int update_rate,
-  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
-: resource_storage_(std::make_unique<ResourceStorage>(update_rate, clock_interface))
+  const std::string & urdf, bool activate_all, const unsigned int update_rate, rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
+: resource_storage_(std::make_unique<ResourceStorage>(clock_interface))
 {
-  load_and_initialize_components(urdf);
+  load_and_initialize_components(urdf, update_rate);
 
   if (activate_all)
   {
@@ -793,9 +790,11 @@ ResourceManager::ResourceManager(
 }
 
 // CM API: Called in "callback/slow"-thread
-bool ResourceManager::load_and_initialize_components(const std::string & urdf)
+bool ResourceManager::load_and_initialize_components(const std::string & urdf, const unsigned int update_rate)
 {
   components_are_loaded_and_initialized_ = true;
+
+  resource_storage_->cm_update_rate_ = update_rate;
 
   const auto hardware_info = hardware_interface::parse_control_resources_from_urdf(urdf);
 

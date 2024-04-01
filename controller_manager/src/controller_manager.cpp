@@ -188,7 +188,7 @@ ControllerManager::ControllerManager(
   const std::string & node_namespace, const rclcpp::NodeOptions & options)
 : rclcpp::Node(manager_node_name, node_namespace, options),
   resource_manager_(std::make_unique<hardware_interface::ResourceManager>(
-    update_rate_, this->get_node_clock_interface())),
+    this->get_node_clock_interface())),
   diagnostics_updater_(this),
   executor_(executor),
   loader_(std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
@@ -295,7 +295,7 @@ void ControllerManager::robot_description_callback(const std_msgs::msg::String &
 
 void ControllerManager::init_resource_manager(const std::string & robot_description)
 {
-  if (!resource_manager_->load_and_initialize_components(robot_description))
+  if (!resource_manager_->load_and_initialize_components(robot_description, update_rate_))
   {
     RCLCPP_WARN(
       get_logger(),
