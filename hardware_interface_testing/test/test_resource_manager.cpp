@@ -151,7 +151,7 @@ TEST_F(ResourceManagerTest, test_unitilizable_hardware_no_validation)
   // If the the hardware can not be initialized and load_and_initialize_components didn't try to
   // validate the interfaces, the interface should not show up
   test_load_and_initialized_components_failure(
-    ros2_control_test_assets::minimal_unitilizable_robot_urdf);
+    ros2_control_test_assets::minimal_uninitializable_robot_urdf);
 }
 
 TEST_F(ResourceManagerTest, initialization_with_urdf_and_manual_validation)

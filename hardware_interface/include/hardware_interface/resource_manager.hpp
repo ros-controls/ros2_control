@@ -400,6 +400,13 @@ public:
    */
   bool state_interface_exists(const std::string & key) const;
 
+protected:
+  bool components_are_loaded_and_initialized_ = false;
+
+  mutable std::recursive_mutex resource_interfaces_lock_;
+  mutable std::recursive_mutex claimed_command_interfaces_lock_;
+  mutable std::recursive_mutex resources_lock_;
+
 private:
   bool validate_storage(const std::vector<hardware_interface::HardwareInfo> & hardware_info) const;
 
@@ -407,16 +414,10 @@ private:
 
   std::unordered_map<std::string, bool> claimed_command_interface_map_;
 
-  mutable std::recursive_mutex resource_interfaces_lock_;
-  mutable std::recursive_mutex claimed_command_interfaces_lock_;
-  mutable std::recursive_mutex resources_lock_;
-
   std::unique_ptr<ResourceStorage> resource_storage_;
 
   // Structure to store read and write status so it is not initialized in the real-time loop
   HardwareReadWriteStatus read_write_status;
-
-  bool components_are_loaded_and_initialized_ = false;
 };
 
 }  // namespace hardware_interface
