@@ -28,7 +28,6 @@
 #include "hardware_interface/lexical_casts.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "joint_limits/joint_limits_urdf.hpp"
-#include "urdf/model.h"
 
 namespace
 {

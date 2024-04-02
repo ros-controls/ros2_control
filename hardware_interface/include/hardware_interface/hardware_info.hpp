@@ -165,7 +165,9 @@ struct HardwareInfo
    * The XML contents prior to parsing
    */
   std::string original_xml;
-
+  /**
+   * The URDF parsed limits of the hardware components joint command interfaces
+   */
   std::unordered_map<std::string, joint_limits::JointLimits> limits;
 };
 
