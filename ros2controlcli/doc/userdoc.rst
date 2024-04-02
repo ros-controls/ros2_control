@@ -16,6 +16,7 @@ Currently supported commands are
     - ros2 control load_controller
     - ros2 control reload_controller_libraries
     - ros2 control set_controller_state
+    - ros2 control set_hardware_component_state
     - ros2 control switch_controllers
     - ros2 control unload_controller
     - ros2 control view_controller_chains
@@ -208,6 +209,33 @@ set_controller_state
       -h, --help            show this help message and exit
       --spin-time SPIN_TIME
                             Spin time in seconds to wait for discovery (only applies when not using an already running daemon)
+      -c CONTROLLER_MANAGER, --controller-manager CONTROLLER_MANAGER
+                            Name of the controller manager ROS node
+      --include-hidden-nodes
+                            Consider hidden nodes as well
+
+set_hardware_component_state
+----------------------------
+
+.. code-block:: console
+
+    $ ros2 control set_hardware_component_state -h
+    usage: ros2 control set_hardware_component_state [-h] [--spin-time SPIN_TIME] [-s] [-c CONTROLLER_MANAGER] [--include-hidden-nodes]
+                                                    hardware_component_name {unconfigured,inactive,active}
+
+    Adjust the state of the hardware component
+
+    positional arguments:
+      hardware_component_name
+                            Name of the hardware_component to be changed
+      {unconfigured,inactive,active}
+                            State in which the hardware component should be changed to
+
+    options:
+      -h, --help            show this help message and exit
+      --spin-time SPIN_TIME
+                            Spin time in seconds to wait for discovery (only applies when not using an already running daemon)
+      -s, --use-sim-time    Enable ROS simulation time
       -c CONTROLLER_MANAGER, --controller-manager CONTROLLER_MANAGER
                             Name of the controller manager ROS node
       --include-hidden-nodes

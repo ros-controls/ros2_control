@@ -89,7 +89,7 @@ class SetControllerStateVerb(VerbExtension):
 
                 else:
                     return (
-                        f'cannot put {matched_controller.name} in "inactive" state'
+                        f"cannot put {matched_controller.name} in 'inactive' state "
                         f"from its current state {matched_controller.state}"
                     )
 
