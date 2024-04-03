@@ -216,7 +216,7 @@ ControllerManager::ControllerManager(
       "[Deprecated] Passing the robot description parameter directly to the control_manager node "
       "is deprecated. Use the 'robot_description' topic from 'robot_state_publisher' instead.");
     init_resource_manager(robot_description_);
-    if (resource_manager_->are_components_initialized())
+    if (is_resource_manager_initialized())
     {
       RCLCPP_WARN(
         get_logger(),
@@ -249,7 +249,7 @@ ControllerManager::ControllerManager(
     RCLCPP_WARN(get_logger(), "'update_rate' parameter not set, using default value.");
   }
 
-  if (resource_manager_->are_components_initialized())
+  if (is_resource_manager_initialized())
   {
     init_services();
   }
@@ -278,7 +278,7 @@ void ControllerManager::robot_description_callback(const std_msgs::msg::String &
   RCLCPP_DEBUG(
     get_logger(), "'Content of robot description file: %s", robot_description.data.c_str());
   robot_description_ = robot_description.data;
-  if (resource_manager_->are_components_initialized())
+  if (is_resource_manager_initialized())
   {
     RCLCPP_WARN(
       get_logger(),
@@ -287,7 +287,7 @@ void ControllerManager::robot_description_callback(const std_msgs::msg::String &
     return;
   }
   init_resource_manager(robot_description_);
-  if (resource_manager_->are_components_initialized())
+  if (is_resource_manager_initialized())
   {
     init_services();
   }

@@ -200,7 +200,7 @@ public:
   CONTROLLER_MANAGER_PUBLIC
   bool is_resource_manager_initialized() const
   {
-    return resource_manager_->are_components_initialized();
+    return resource_manager_ && resource_manager_->are_components_initialized();
   }
 
   /// Update rate of the main control loop in the controller manager.
