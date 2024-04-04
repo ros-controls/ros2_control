@@ -400,6 +400,45 @@ const auto valid_urdf_ros2_control_system_robot_with_size_and_data_type =
   </ros2_control>
 )";
 
+// 12. Industrial Robots with integrated GPIO with few disabled limits in joints
+const auto valid_urdf_ros2_control_system_robot_with_gpio_and_disabled_interface_limits =
+  R"(
+  <ros2_control name="RRBotSystemWithGPIO" type="system">
+    <hardware>
+      <plugin>ros2_control_demo_hardware/RRBotSystemWithGPIOHardware</plugin>
+      <param name="example_param_write_for_sec">2</param>
+      <param name="example_param_read_for_sec">2</param>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position">
+        <limits enable="false"/>
+        <param name="min">-1</param>
+        <param name="max">1</param>
+      </command_interface>
+      <command_interface name="velocity">
+        <param name="min">-0.05</param>
+        <param name="max">0.1</param>
+      </command_interface>
+      <state_interface name="position"/>
+    </joint>
+    <joint name="joint2">
+      <limits enable="false"/>
+      <command_interface name="position">
+        <param name="min">-1</param>
+        <param name="max">1</param>
+      </command_interface>
+      <command_interface name="velocity"/>
+      <command_interface name="effort"/>
+      <state_interface name="position"/>
+    </joint>
+    <gpio name="flange_IOS">
+      <command_interface name="digital_output" size="2" data_type="bool"/>
+      <state_interface name="analog_input" size="3"/>
+      <state_interface name="image" data_type="cv::Mat"/>
+    </gpio>
+  </ros2_control>
+)";
+
 const auto valid_urdf_ros2_control_parameter_empty =
   R"(
   <ros2_control name="2DOF_System_Robot_Position_Only" type="system">
