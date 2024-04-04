@@ -93,8 +93,12 @@ public:
             auto measured_period = current_time - previous_time;
             previous_time = current_time;
 
-            component->write(clock_interface_->get_clock()->now(), measured_period);
+            if (!first_iteration)
+            {
+              component->write(clock_interface_->get_clock()->now(), measured_period);
+            }
             component->read(clock_interface_->get_clock()->now(), measured_period);
+            first_iteration = false;
           }
           next_iteration_time += period;
           std::this_thread::sleep_until(next_iteration_time);
@@ -109,6 +113,7 @@ private:
   std::thread write_and_read_{};
 
   unsigned int cm_update_rate_;
+  bool first_iteration = true;
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface_;
 };
 
