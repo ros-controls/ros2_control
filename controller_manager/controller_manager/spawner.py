@@ -19,8 +19,6 @@ import os
 import sys
 import time
 import warnings
-import io
-from contextlib import redirect_stdout, redirect_stderr
 
 from controller_manager import (
     configure_controller,
@@ -34,10 +32,15 @@ import rclpy
 from rcl_interfaces.msg import Parameter
 from rclpy.duration import Duration
 from rclpy.node import Node
-from rclpy.parameter import get_parameter_value
+
+# @note: The versions conditioning is added here to support the source-compatibility with Humble
+# The `get_parameter_value` function is moved to `rclpy.parameter` module from `ros2param.api` module from version 3.6.0
+try:
+    from rclpy.parameter import get_parameter_value
+except ImportError:
+    from ros2param.api import get_parameter_value
 from rclpy.signals import SignalHandlerOptions
 from ros2param.api import call_set_parameters
-from ros2param.api import load_parameter_file
 
 # from https://stackoverflow.com/a/287944
 
@@ -135,7 +138,7 @@ def is_controller_loaded(node, controller_manager, controller_name):
 def main(args=None):
     rclpy.init(args=args, signal_handler_options=SignalHandlerOptions.NO)
     parser = argparse.ArgumentParser()
-    parser.add_argument("controller_name", help="Name of the controller")
+    parser.add_argument("controller_names", help="List of controllers", nargs="+")
     parser.add_argument(
         "-c",
         "--controller-manager",
@@ -184,10 +187,17 @@ def main(args=None):
         default=10,
         type=int,
     )
+    parser.add_argument(
+        "--activate-as-group",
+        help="Activates all the parsed controllers list together instead of one by one."
+        " Useful for activating all chainable controllers altogether",
+        action="store_true",
+        required=False,
+    )
 
     command_line_args = rclpy.utilities.remove_ros_args(args=sys.argv)[1:]
     args = parser.parse_args(command_line_args)
-    controller_name = args.controller_name
+    controller_names = args.controller_names
     controller_manager_name = args.controller_manager
     controller_namespace = args.namespace
     param_file = args.param_file
@@ -197,11 +207,7 @@ def main(args=None):
     if param_file and not os.path.isfile(param_file):
         raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), param_file)
 
-    prefixed_controller_name = controller_name
-    if controller_namespace:
-        prefixed_controller_name = controller_namespace + "/" + controller_name
-
-    node = Node("spawner_" + controller_name)
+    node = Node("spawner_" + controller_names[0])
 
     if not controller_manager_name.startswith("/"):
         spawner_namespace = node.get_namespace()
@@ -219,115 +225,141 @@ def main(args=None):
             )
             return 1
 
-        if is_controller_loaded(node, controller_manager_name, prefixed_controller_name):
-            node.get_logger().warn(
-                bcolors.WARNING
-                + "Controller already loaded, skipping load_controller"
-                + bcolors.ENDC
-            )
-        else:
-            if controller_type:
-                parameter = Parameter()
-                parameter.name = prefixed_controller_name + ".type"
-                parameter.value = get_parameter_value(string_value=controller_type)
+        for controller_name in controller_names:
+            prefixed_controller_name = controller_name
+            if controller_namespace:
+                prefixed_controller_name = controller_namespace + "/" + controller_name
 
-                response = call_set_parameters(
-                    node=node, node_name=controller_manager_name, parameters=[parameter]
+            if is_controller_loaded(node, controller_manager_name, prefixed_controller_name):
+                node.get_logger().warn(
+                    bcolors.WARNING
+                    + "Controller already loaded, skipping load_controller"
+                    + bcolors.ENDC
                 )
-                assert len(response.results) == 1
-                result = response.results[0]
-                if result.successful:
-                    node.get_logger().info(
-                        bcolors.OKCYAN
-                        + 'Set controller type to "'
-                        + controller_type
-                        + '" for '
-                        + bcolors.BOLD
-                        + prefixed_controller_name
-                        + bcolors.ENDC
+            else:
+                if controller_type:
+                    parameter = Parameter()
+                    parameter.name = prefixed_controller_name + ".type"
+                    parameter.value = get_parameter_value(string_value=controller_type)
+
+                    response = call_set_parameters(
+                        node=node, node_name=controller_manager_name, parameters=[parameter]
                     )
-                else:
+                    assert len(response.results) == 1
+                    result = response.results[0]
+                    if result.successful:
+                        node.get_logger().info(
+                            bcolors.OKCYAN
+                            + 'Set controller type to "'
+                            + controller_type
+                            + '" for '
+                            + bcolors.BOLD
+                            + prefixed_controller_name
+                            + bcolors.ENDC
+                        )
+                    else:
+                        node.get_logger().fatal(
+                            bcolors.FAIL
+                            + 'Could not set controller type to "'
+                            + controller_type
+                            + '" for '
+                            + bcolors.BOLD
+                            + prefixed_controller_name
+                            + bcolors.ENDC
+                        )
+                        return 1
+
+                if param_file:
+                    parameter = Parameter()
+                    parameter.name = prefixed_controller_name + ".params_file"
+                    parameter.value = get_parameter_value(string_value=param_file)
+
+                    response = call_set_parameters(
+                        node=node, node_name=controller_manager_name, parameters=[parameter]
+                    )
+                    assert len(response.results) == 1
+                    result = response.results[0]
+                    if result.successful:
+                        node.get_logger().info(
+                            bcolors.OKCYAN
+                            + 'Set controller params file to "'
+                            + param_file
+                            + '" for '
+                            + bcolors.BOLD
+                            + prefixed_controller_name
+                            + bcolors.ENDC
+                        )
+                    else:
+                        node.get_logger().fatal(
+                            bcolors.FAIL
+                            + 'Could not set controller params file to "'
+                            + param_file
+                            + '" for '
+                            + bcolors.BOLD
+                            + prefixed_controller_name
+                            + bcolors.ENDC
+                        )
+                        return 1
+
+                ret = load_controller(node, controller_manager_name, controller_name)
+                if not ret.ok:
                     node.get_logger().fatal(
                         bcolors.FAIL
-                        + 'Could not set controller type to "'
-                        + controller_type
-                        + '" for '
+                        + "Failed loading controller "
                         + bcolors.BOLD
                         + prefixed_controller_name
                         + bcolors.ENDC
                     )
                     return 1
-
-            ret = load_controller(node, controller_manager_name, controller_name)
-            if not ret.ok:
-                node.get_logger().fatal(
-                    bcolors.FAIL
-                    + "Failed loading controller "
+                node.get_logger().info(
+                    bcolors.OKBLUE
+                    + "Loaded "
                     + bcolors.BOLD
                     + prefixed_controller_name
                     + bcolors.ENDC
                 )
-                return 1
-            node.get_logger().info(
-                bcolors.OKBLUE + "Loaded " + bcolors.BOLD + prefixed_controller_name + bcolors.ENDC
-            )
 
-        if param_file:
-            # load_parameter_file writes to stdout/stderr. Here we capture that and use node logging instead
-            with redirect_stdout(io.StringIO()) as f_stdout, redirect_stderr(
-                io.StringIO()
-            ) as f_stderr:
-                load_parameter_file(
-                    node=node,
-                    node_name=prefixed_controller_name,
-                    parameter_file=param_file,
-                    use_wildcard=True,
-                )
-            if f_stdout.getvalue():
-                node.get_logger().info(bcolors.OKCYAN + f_stdout.getvalue() + bcolors.ENDC)
-            if f_stderr.getvalue():
-                node.get_logger().error(bcolors.FAIL + f_stderr.getvalue() + bcolors.ENDC)
-            node.get_logger().info(
-                bcolors.OKCYAN
-                + 'Loaded parameters file "'
-                + param_file
-                + '" for '
-                + bcolors.BOLD
-                + prefixed_controller_name
-                + bcolors.ENDC
-            )
-            # TODO(destogl): use return value when upstream return value is merged
-            # ret =
-            # if ret.returncode != 0:
-            #     Error message printed by ros2 param
-            #     return ret.returncode
-            node.get_logger().info("Loaded " + param_file + " into " + prefixed_controller_name)
-
-        if not args.load_only:
-            ret = configure_controller(node, controller_manager_name, controller_name)
-            if not ret.ok:
-                node.get_logger().error(
-                    bcolors.FAIL + "Failed to configure controller" + bcolors.ENDC
-                )
-                return 1
-
-            if not args.inactive:
-                ret = switch_controllers(
-                    node, controller_manager_name, [], [controller_name], True, True, 5.0
-                )
+            if not args.load_only:
+                ret = configure_controller(node, controller_manager_name, controller_name)
                 if not ret.ok:
                     node.get_logger().error(
-                        bcolors.FAIL + "Failed to activate controller" + bcolors.ENDC
+                        bcolors.FAIL + "Failed to configure controller" + bcolors.ENDC
                     )
                     return 1
 
-                node.get_logger().info(
-                    bcolors.OKGREEN
-                    + "Configured and activated "
-                    + bcolors.BOLD
-                    + prefixed_controller_name
-                    + bcolors.ENDC
+                if not args.inactive and not args.activate_as_group:
+                    ret = switch_controllers(
+                        node, controller_manager_name, [], [controller_name], True, True, 5.0
+                    )
+                    if not ret.ok:
+                        node.get_logger().error(
+                            bcolors.FAIL + "Failed to activate controller" + bcolors.ENDC
+                        )
+                        return 1
+
+                    node.get_logger().info(
+                        bcolors.OKGREEN
+                        + "Configured and activated "
+                        + bcolors.BOLD
+                        + prefixed_controller_name
+                        + bcolors.ENDC
+                    )
+
+        if not args.inactive and args.activate_as_group:
+            ret = switch_controllers(
+                node, controller_manager_name, [], controller_names, True, True, 5.0
+            )
+            if not ret.ok:
+                node.get_logger().error(
+                    bcolors.FAIL + "Failed to activate the parsed controllers list" + bcolors.ENDC
                 )
+                return 1
+
+            node.get_logger().info(
+                bcolors.OKGREEN
+                + "Configured and activated all the parsed controllers list!"
+                + bcolors.ENDC
+            )
 
         if not args.unload_on_kill:
             return 0
@@ -339,8 +371,9 @@ def main(args=None):
         except KeyboardInterrupt:
             if not args.inactive:
                 node.get_logger().info("Interrupt captured, deactivating and unloading controller")
+                # TODO(saikishor) we might have an issue in future, if any of these controllers is in chained mode
                 ret = switch_controllers(
-                    node, controller_manager_name, [controller_name], [], True, True, 5.0
+                    node, controller_manager_name, controller_names, [], True, True, 5.0
                 )
                 if not ret.ok:
                     node.get_logger().error(

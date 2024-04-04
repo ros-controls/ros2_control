@@ -289,6 +289,7 @@ public:
 
     if (result)
     {
+      remove_all_hardware_interfaces_from_available_list(hardware.get_name());
       async_component_threads_.erase(hardware.get_name());
       // TODO(destogl): change this - deimport all things if there is there are interfaces there
       // deimport_non_movement_command_interfaces(hardware);
@@ -757,7 +758,8 @@ ResourceManager::ResourceManager(
 }
 
 // CM API: Called in "callback/slow"-thread
-void ResourceManager::load_urdf(const std::string & urdf, bool validate_interfaces)
+void ResourceManager::load_urdf(
+  const std::string & urdf, bool validate_interfaces, bool load_and_initialize_components)
 {
   is_urdf_loaded__ = true;
   const std::string system_type = "system";
@@ -765,24 +767,25 @@ void ResourceManager::load_urdf(const std::string & urdf, bool validate_interfac
   const std::string actuator_type = "actuator";
 
   const auto hardware_info = hardware_interface::parse_control_resources_from_urdf(urdf);
-  for (const auto & individual_hardware_info : hardware_info)
+  if (load_and_initialize_components)
   {
-    if (individual_hardware_info.type == actuator_type)
+    for (const auto & individual_hardware_info : hardware_info)
     {
-      std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
-      std::lock_guard<std::recursive_mutex> guard_claimed(claimed_command_interfaces_lock_);
-      resource_storage_->load_and_initialize_actuator(individual_hardware_info);
-    }
-    if (individual_hardware_info.type == sensor_type)
-    {
-      std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
-      resource_storage_->load_and_initialize_sensor(individual_hardware_info);
-    }
-    if (individual_hardware_info.type == system_type)
-    {
-      std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
-      std::lock_guard<std::recursive_mutex> guard_claimed(claimed_command_interfaces_lock_);
-      resource_storage_->load_and_initialize_system(individual_hardware_info);
+      if (individual_hardware_info.type == actuator_type)
+      {
+        std::scoped_lock guard(resource_interfaces_lock_, claimed_command_interfaces_lock_);
+        resource_storage_->load_and_initialize_actuator(individual_hardware_info);
+      }
+      if (individual_hardware_info.type == sensor_type)
+      {
+        std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
+        resource_storage_->load_and_initialize_sensor(individual_hardware_info);
+      }
+      if (individual_hardware_info.type == system_type)
+      {
+        std::scoped_lock guard(resource_interfaces_lock_, claimed_command_interfaces_lock_);
+        resource_storage_->load_and_initialize_system(individual_hardware_info);
+      }
     }
   }
 
@@ -845,8 +848,7 @@ bool ResourceManager::state_interface_is_available(const std::string & name) con
 void ResourceManager::import_controller_reference_interfaces(
   const std::string & controller_name, std::vector<CommandInterface> & interfaces)
 {
-  std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
-  std::lock_guard<std::recursive_mutex> guard_claimed(claimed_command_interfaces_lock_);
+  std::scoped_lock guard(resource_interfaces_lock_, claimed_command_interfaces_lock_);
   auto interface_names = resource_storage_->add_command_interfaces(interfaces);
   resource_storage_->controllers_reference_interfaces_map_[controller_name] = interface_names;
 }
@@ -900,8 +902,7 @@ void ResourceManager::remove_controller_reference_interfaces(const std::string &
     resource_storage_->controllers_reference_interfaces_map_.at(controller_name);
   resource_storage_->controllers_reference_interfaces_map_.erase(controller_name);
 
-  std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
-  std::lock_guard<std::recursive_mutex> guard_claimed(claimed_command_interfaces_lock_);
+  std::scoped_lock guard(resource_interfaces_lock_, claimed_command_interfaces_lock_);
   resource_storage_->remove_command_interfaces(interface_names);
 }
 
@@ -1078,6 +1079,12 @@ bool ResourceManager::prepare_command_mode_switch(
   const std::vector<std::string> & start_interfaces,
   const std::vector<std::string> & stop_interfaces)
 {
+  // When only broadcaster is activated then this lists are empty
+  if (start_interfaces.empty() && stop_interfaces.empty())
+  {
+    return true;
+  }
+
   auto interfaces_to_string = [&]()
   {
     std::stringstream ss;
@@ -1096,27 +1103,85 @@ bool ResourceManager::prepare_command_mode_switch(
     return ss.str();
   };
 
-  for (auto & component : resource_storage_->actuators_)
+  // Check if interface exists
+  std::stringstream ss_not_existing;
+  ss_not_existing << "Not existing: " << std::endl << "[" << std::endl;
+  auto check_exist = [&](const std::vector<std::string> & list_to_check)
   {
-    if (return_type::OK != component.prepare_command_mode_switch(start_interfaces, stop_interfaces))
+    bool all_exist = true;
+    for (const auto & interface : list_to_check)
     {
-      RCUTILS_LOG_ERROR_NAMED(
-        "resource_manager", "Component '%s' did not accept new command resource combination: \n %s",
-        component.get_name().c_str(), interfaces_to_string().c_str());
-      return false;
+      if (!command_interface_exists(interface))
+      {
+        all_exist = false;
+        ss_not_existing << " " << interface << std::endl;
+      }
     }
-  }
-  for (auto & component : resource_storage_->systems_)
+    return all_exist;
+  };
+  if (!(check_exist(start_interfaces) && check_exist(stop_interfaces)))
   {
-    if (return_type::OK != component.prepare_command_mode_switch(start_interfaces, stop_interfaces))
-    {
-      RCUTILS_LOG_ERROR_NAMED(
-        "resource_manager", "Component '%s' did not accept new command resource combination: \n %s",
-        component.get_name().c_str(), interfaces_to_string().c_str());
-      return false;
-    }
+    ss_not_existing << "]" << std::endl;
+    RCUTILS_LOG_ERROR_NAMED(
+      "resource_manager", "Not acceptable command interfaces combination: \n%s%s",
+      interfaces_to_string().c_str(), ss_not_existing.str().c_str());
+    return false;
   }
-  return true;
+
+  // Check if interfaces are available
+  std::stringstream ss_not_available;
+  ss_not_available << "Not available: " << std::endl << "[" << std::endl;
+  auto check_available = [&](const std::vector<std::string> & list_to_check)
+  {
+    bool all_available = true;
+    for (const auto & interface : list_to_check)
+    {
+      if (!command_interface_is_available(interface))
+      {
+        all_available = false;
+        ss_not_available << " " << interface << std::endl;
+      }
+    }
+    return all_available;
+  };
+  if (!(check_available(start_interfaces) && check_available(stop_interfaces)))
+  {
+    ss_not_available << "]" << std::endl;
+    RCUTILS_LOG_ERROR_NAMED(
+      "resource_manager", "Not acceptable command interfaces combination: \n%s%s",
+      interfaces_to_string().c_str(), ss_not_available.str().c_str());
+    return false;
+  }
+
+  auto call_prepare_mode_switch =
+    [&start_interfaces, &stop_interfaces, &interfaces_to_string](auto & components)
+  {
+    bool ret = true;
+    for (auto & component : components)
+    {
+      if (
+        component.get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
+        component.get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+      {
+        if (
+          return_type::OK !=
+          component.prepare_command_mode_switch(start_interfaces, stop_interfaces))
+        {
+          RCUTILS_LOG_ERROR_NAMED(
+            "resource_manager",
+            "Component '%s' did not accept command interfaces combination: \n%s",
+            component.get_name().c_str(), interfaces_to_string().c_str());
+          ret = false;
+        }
+      }
+    }
+    return ret;
+  };
+
+  const bool actuators_result = call_prepare_mode_switch(resource_storage_->actuators_);
+  const bool systems_result = call_prepare_mode_switch(resource_storage_->systems_);
+
+  return actuators_result && systems_result;
 }
 
 // CM API: Called in "update"-thread
@@ -1124,27 +1189,39 @@ bool ResourceManager::perform_command_mode_switch(
   const std::vector<std::string> & start_interfaces,
   const std::vector<std::string> & stop_interfaces)
 {
-  for (auto & component : resource_storage_->actuators_)
+  // When only broadcaster is activated then this lists are empty
+  if (start_interfaces.empty() && stop_interfaces.empty())
   {
-    if (return_type::OK != component.perform_command_mode_switch(start_interfaces, stop_interfaces))
-    {
-      RCUTILS_LOG_ERROR_NAMED(
-        "resource_manager", "Component '%s' could not perform switch",
-        component.get_name().c_str());
-      return false;
-    }
+    return true;
   }
-  for (auto & component : resource_storage_->systems_)
+
+  auto call_perform_mode_switch = [&start_interfaces, &stop_interfaces](auto & components)
   {
-    if (return_type::OK != component.perform_command_mode_switch(start_interfaces, stop_interfaces))
+    bool ret = true;
+    for (auto & component : components)
     {
-      RCUTILS_LOG_ERROR_NAMED(
-        "resource_manager", "Component '%s' could not perform switch",
-        component.get_name().c_str());
-      return false;
+      if (
+        component.get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
+        component.get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+      {
+        if (
+          return_type::OK !=
+          component.perform_command_mode_switch(start_interfaces, stop_interfaces))
+        {
+          RCUTILS_LOG_ERROR_NAMED(
+            "resource_manager", "Component '%s' could not perform switch",
+            component.get_name().c_str());
+          ret = false;
+        }
+      }
     }
-  }
-  return true;
+    return ret;
+  };
+
+  const bool actuators_result = call_perform_mode_switch(resource_storage_->actuators_);
+  const bool systems_result = call_perform_mode_switch(resource_storage_->systems_);
+
+  return actuators_result && systems_result;
 }
 
 // CM API: Called in "callback/slow"-thread

@@ -2,6 +2,47 @@
 Changelog for package transmission_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.8.0 (2024-03-27)
+------------------
+* generate version.h file per package using the ament_generate_version_header  (`#1449 <https://github.com/ros-controls/ros2_control/issues/1449>`_)
+* Contributors: Sai Kishor Kothakota
+
+4.7.0 (2024-03-22)
+------------------
+
+4.6.0 (2024-03-02)
+------------------
+* Add -Werror=missing-braces to compile options (`#1423 <https://github.com/ros-controls/ros2_control/issues/1423>`_)
+* Contributors: Sai Kishor Kothakota
+
+4.5.0 (2024-02-12)
+------------------
+
+4.4.0 (2024-01-31)
+------------------
+
+4.3.0 (2024-01-20)
+------------------
+* Improve transmission tests (`#1238 <https://github.com/ros-controls/ros2_control/issues/1238>`_)
+* Contributors: Maximilian Schik
+
+4.2.0 (2023-12-12)
+------------------
+
+4.1.0 (2023-11-30)
+------------------
+* Add few warning compiler options to error (`#1181 <https://github.com/ros-controls/ros2_control/issues/1181>`_)
+* Contributors: Sai Kishor Kothakota
+
+4.0.0 (2023-11-21)
+------------------
+
+3.21.0 (2023-11-06)
+-------------------
+
+3.20.0 (2023-10-31)
+-------------------
+
 3.19.1 (2023-10-04)
 -------------------
 

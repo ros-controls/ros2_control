@@ -2,7 +2,8 @@ cmake_minimum_required(VERSION 3.16)
 project(controller_interface LANGUAGES CXX)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
-  add_compile_options(-Wall -Wextra -Wconversion)
+  add_compile_options(-Wall -Wextra -Werror=conversion -Werror=unused-but-set-variable -Werror=return-type -Werror=shadow
+          -Werror=missing-braces)
 endif()
 
 set(THIS_PACKAGE_INCLUDE_DEPENDS
@@ -40,6 +41,8 @@ if(BUILD_TESTING)
   )
 
   ament_add_gmock(test_controller_with_options test/test_controller_with_options.cpp)
+  install(FILES test/test_controller_node_options.yaml
+      DESTINATION test)
   target_link_libraries(test_controller_with_options
     controller_interface
   )
@@ -86,3 +89,4 @@ install(TARGETS controller_interface
 ament_export_targets(export_controller_interface HAS_LIBRARY_TARGET)
 ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
 ament_package()
+ament_generate_version_header(${PROJECT_NAME})

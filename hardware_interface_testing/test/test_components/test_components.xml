@@ -1,0 +1,38 @@
+<library path="test_components">
+
+  <class name="test_actuator" type="TestActuator" base_class_type="hardware_interface::ActuatorInterface">
+    <description>
+      Test Actuator
+    </description>
+  </class>
+
+  <class name="test_sensor" type="TestSensor" base_class_type="hardware_interface::SensorInterface">
+    <description>
+      Test Sensor
+    </description>
+  </class>
+
+  <class name="test_system" type="TestSystem" base_class_type="hardware_interface::SystemInterface">
+    <description>
+      Test System
+    </description>
+  </class>
+
+  <class name="test_uninitializable_actuator" type="TestUninitializableActuator" base_class_type="hardware_interface::ActuatorInterface">
+    <description>
+      Test Uninitializable Actuator
+    </description>
+  </class>
+
+  <class name="test_uninitializable_sensor" type="TestUninitializableSensor" base_class_type="hardware_interface::SensorInterface">
+    <description>
+      Test Uninitializable Sensor
+    </description>
+  </class>
+
+  <class name="test_uninitializable_system" type="TestUninitializableSystem" base_class_type="hardware_interface::SystemInterface">
+    <description>
+      Test Uninitializable System
+    </description>
+  </class>
+</library>

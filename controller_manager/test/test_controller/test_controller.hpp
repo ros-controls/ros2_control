@@ -30,6 +30,7 @@ using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface
 // indicating the node name under which the controller node
 // is being loaded.
 constexpr char TEST_CONTROLLER_NAME[] = "test_controller_name";
+constexpr char TEST_CONTROLLER2_NAME[] = "test_controller2_name";
 // corresponds to the name listed within the pluginlib xml
 constexpr char TEST_CONTROLLER_CLASS_NAME[] = "controller_manager/test_controller";
 class TestController : public controller_interface::ControllerInterface
@@ -65,6 +66,8 @@ public:
   CONTROLLER_MANAGER_PUBLIC
   void set_state_interface_configuration(const controller_interface::InterfaceConfiguration & cfg);
 
+  const std::string & getRobotDescription() const;
+
   unsigned int internal_counter = 0;
   bool simulate_cleanup_failure = false;
   // Variable where we store when cleanup was called, pointer because the controller
@@ -77,6 +80,7 @@ public:
   // enables external setting of values to command interfaces - used for simulation of hardware
   // errors
   double set_first_command_interface_value_to;
+  double update_period_ = 0;
 };
 
 }  // namespace test_controller

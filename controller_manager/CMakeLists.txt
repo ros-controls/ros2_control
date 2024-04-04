@@ -2,7 +2,8 @@ cmake_minimum_required(VERSION 3.16)
 project(controller_manager LANGUAGES CXX)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
-  add_compile_options(-Wall -Wextra -Wconversion)
+  add_compile_options(-Wall -Wextra -Werror=conversion -Werror=unused-but-set-variable -Werror=return-type -Werror=shadow
+          -Werror=missing-braces)
 endif()
 
 set(THIS_PACKAGE_INCLUDE_DEPENDS
@@ -141,6 +142,7 @@ if(BUILD_TESTING)
     test_chainable_controller
     ros2_control_test_assets::ros2_control_test_assets
   )
+  set_tests_properties(test_controller_manager_srvs PROPERTIES TIMEOUT 120)
   ament_target_dependencies(test_controller_manager_srvs
     controller_manager_msgs
   )
@@ -223,3 +225,4 @@ ament_python_install_package(controller_manager
 ament_export_targets(export_controller_manager HAS_LIBRARY_TARGET)
 ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
 ament_package()
+ament_generate_version_header(${PROJECT_NAME})

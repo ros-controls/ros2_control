@@ -56,9 +56,9 @@ public:
 protected:
   const size_t size_ = 10;
   const std::string sensor_name_ = "test_IMU";
-  std::array<double, 4> orientation_values_ = {1.1, 2.2, 3.3, 4.4};
-  std::array<double, 3> angular_velocity_values_ = {4.4, 5.5, 6.6};
-  std::array<double, 3> linear_acceleration_values_ = {4.4, 5.5, 6.6};
+  std::array<double, 4> orientation_values_ = {{1.1, 2.2, 3.3, 4.4}};
+  std::array<double, 3> angular_velocity_values_ = {{4.4, 5.5, 6.6}};
+  std::array<double, 3> linear_acceleration_values_ = {{4.4, 5.5, 6.6}};
   std::unique_ptr<TestableIMUSensor> imu_sensor_;
 
   std::vector<std::string> full_interface_names_;

@@ -22,11 +22,16 @@
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "pluginlib/class_loader.hpp"
+#include "ros2_control_test_assets/descriptions.hpp"
 #include "transmission_interface/four_bar_linkage_transmission.hpp"
 #include "transmission_interface/four_bar_linkage_transmission_loader.hpp"
 #include "transmission_interface/transmission_loader.hpp"
 
+using testing::DoubleNear;
 using testing::SizeIs;
+
+// Floating-point value comparison threshold
+const double EPS = 1e-5;
 
 class TransmissionPluginLoader
 {
@@ -53,9 +58,7 @@ private:
 TEST(FourBarLinkageTransmissionLoaderTest, FullSpec)
 {
   // Parse transmission info
-  std::string urdf_to_test = R"(
-    <?xml version="1.0"?>
-    <robot name="robot" xmlns="http://www.ros.org">
+  std::string urdf_to_test = std::string(ros2_control_test_assets::urdf_head) + R"(
       <ros2_control name="FullSpec" type="system">
         <joint name="joint1">
           <command_interface name="velocity">
@@ -113,25 +116,23 @@ TEST(FourBarLinkageTransmissionLoaderTest, FullSpec)
 
   const std::vector<double> & actuator_reduction =
     four_bar_linkage_transmission->get_actuator_reduction();
-  EXPECT_EQ(50.0, actuator_reduction[0]);
-  EXPECT_EQ(-50.0, actuator_reduction[1]);
+  EXPECT_THAT(50.0, DoubleNear(actuator_reduction[0], EPS));
+  EXPECT_THAT(-50.0, DoubleNear(actuator_reduction[1], EPS));
 
   const std::vector<double> & joint_reduction =
     four_bar_linkage_transmission->get_joint_reduction();
-  EXPECT_EQ(2.0, joint_reduction[0]);
-  EXPECT_EQ(-2.0, joint_reduction[1]);
+  EXPECT_THAT(2.0, DoubleNear(joint_reduction[0], EPS));
+  EXPECT_THAT(-2.0, DoubleNear(joint_reduction[1], EPS));
 
   const std::vector<double> & joint_offset = four_bar_linkage_transmission->get_joint_offset();
-  EXPECT_EQ(0.5, joint_offset[0]);
-  EXPECT_EQ(-0.5, joint_offset[1]);
+  EXPECT_THAT(0.5, DoubleNear(joint_offset[0], EPS));
+  EXPECT_THAT(-0.5, DoubleNear(joint_offset[1], EPS));
 }
 
 TEST(FourBarLinkageTransmissionLoaderTest, only_mech_red_specified)
 {
   // Parse transmission info
-  std::string urdf_to_test = R"(
-    <?xml version="1.0"?>
-    <robot name="robot" xmlns="http://www.ros.org">
+  std::string urdf_to_test = std::string(ros2_control_test_assets::urdf_head) + R"(
       <ros2_control name="FullSpec" type="system">
         <joint name="joint1">
           <command_interface name="velocity">
@@ -185,25 +186,23 @@ TEST(FourBarLinkageTransmissionLoaderTest, only_mech_red_specified)
 
   const std::vector<double> & actuator_reduction =
     four_bar_linkage_transmission->get_actuator_reduction();
-  EXPECT_EQ(50.0, actuator_reduction[0]);
-  EXPECT_EQ(-50.0, actuator_reduction[1]);
+  EXPECT_THAT(50.0, DoubleNear(actuator_reduction[0], EPS));
+  EXPECT_THAT(-50.0, DoubleNear(actuator_reduction[1], EPS));
 
   const std::vector<double> & joint_reduction =
     four_bar_linkage_transmission->get_joint_reduction();
-  EXPECT_EQ(1.0, joint_reduction[0]);
-  EXPECT_EQ(1.0, joint_reduction[1]);
+  EXPECT_THAT(1.0, DoubleNear(joint_reduction[0], EPS));
+  EXPECT_THAT(1.0, DoubleNear(joint_reduction[1], EPS));
 
   const std::vector<double> & joint_offset = four_bar_linkage_transmission->get_joint_offset();
-  EXPECT_EQ(0.0, joint_offset[0]);
-  EXPECT_EQ(0.0, joint_offset[1]);
+  EXPECT_THAT(0.0, DoubleNear(joint_offset[0], EPS));
+  EXPECT_THAT(0.0, DoubleNear(joint_offset[1], EPS));
 }
 
 TEST(DifferentialTransmissionLoaderTest, offset_and_mech_red_not_specified)
 {
   // Parse transmission info
-  std::string urdf_to_test = R"(
-    <?xml version="1.0"?>
-    <robot name="robot" xmlns="http://www.ros.org">
+  std::string urdf_to_test = std::string(ros2_control_test_assets::urdf_head) + R"(
       <ros2_control name="FullSpec" type="system">
         <joint name="joint1">
           <command_interface name="velocity">
@@ -249,25 +248,23 @@ TEST(DifferentialTransmissionLoaderTest, offset_and_mech_red_not_specified)
 
   const std::vector<double> & actuator_reduction =
     four_bar_linkage_transmission->get_actuator_reduction();
-  EXPECT_EQ(1.0, actuator_reduction[0]);
-  EXPECT_EQ(1.0, actuator_reduction[1]);
+  EXPECT_THAT(1.0, DoubleNear(actuator_reduction[0], EPS));
+  EXPECT_THAT(1.0, DoubleNear(actuator_reduction[1], EPS));
 
   const std::vector<double> & joint_reduction =
     four_bar_linkage_transmission->get_joint_reduction();
-  EXPECT_EQ(1.0, joint_reduction[0]);
-  EXPECT_EQ(1.0, joint_reduction[1]);
+  EXPECT_THAT(1.0, DoubleNear(joint_reduction[0], EPS));
+  EXPECT_THAT(1.0, DoubleNear(joint_reduction[1], EPS));
 
   const std::vector<double> & joint_offset = four_bar_linkage_transmission->get_joint_offset();
-  EXPECT_EQ(0.0, joint_offset[0]);
-  EXPECT_EQ(0.0, joint_offset[1]);
+  EXPECT_THAT(0.0, DoubleNear(joint_offset[0], EPS));
+  EXPECT_THAT(0.0, DoubleNear(joint_offset[1], EPS));
 }
 
 TEST(FourBarLinkageTransmissionLoaderTest, mechanical_reduction_not_a_number)
 {
   // Parse transmission info
-  std::string urdf_to_test = R"(
-    <?xml version="1.0"?>
-    <robot name="robot" xmlns="http://www.ros.org">
+  std::string urdf_to_test = std::string(ros2_control_test_assets::urdf_head) + R"(
       <ros2_control name="FullSpec" type="system">
         <joint name="joint1">
           <command_interface name="velocity">
@@ -322,25 +319,23 @@ TEST(FourBarLinkageTransmissionLoaderTest, mechanical_reduction_not_a_number)
   // default kicks in for ill-defined values
   const std::vector<double> & actuator_reduction =
     four_bar_linkage_transmission->get_actuator_reduction();
-  EXPECT_EQ(1.0, actuator_reduction[0]);
-  EXPECT_EQ(1.0, actuator_reduction[1]);
+  EXPECT_THAT(1.0, DoubleNear(actuator_reduction[0], EPS));
+  EXPECT_THAT(1.0, DoubleNear(actuator_reduction[1], EPS));
 
   const std::vector<double> & joint_reduction =
     four_bar_linkage_transmission->get_joint_reduction();
-  EXPECT_EQ(1.0, joint_reduction[0]);
-  EXPECT_EQ(1.0, joint_reduction[1]);
+  EXPECT_THAT(1.0, DoubleNear(joint_reduction[0], EPS));
+  EXPECT_THAT(1.0, DoubleNear(joint_reduction[1], EPS));
 
   const std::vector<double> & joint_offset = four_bar_linkage_transmission->get_joint_offset();
-  EXPECT_EQ(0.0, joint_offset[0]);
-  EXPECT_EQ(0.0, joint_offset[1]);
+  EXPECT_THAT(0.0, DoubleNear(joint_offset[0], EPS));
+  EXPECT_THAT(0.0, DoubleNear(joint_offset[1], EPS));
 }
 
 TEST(FourBarLinkageTransmissionLoaderTest, offset_ill_defined)
 {
   // Parse transmission info
-  std::string urdf_to_test = R"(
-    <?xml version="1.0"?>
-    <robot name="robot" xmlns="http://www.ros.org">
+  std::string urdf_to_test = std::string(ros2_control_test_assets::urdf_head) + R"(
       <ros2_control name="FullSpec" type="system">
         <joint name="joint1">
           <command_interface name="velocity">
@@ -397,26 +392,24 @@ TEST(FourBarLinkageTransmissionLoaderTest, offset_ill_defined)
   // default kicks in for ill-defined values
   const std::vector<double> & actuator_reduction =
     four_bar_linkage_transmission->get_actuator_reduction();
-  EXPECT_EQ(50.0, actuator_reduction[0]);
-  EXPECT_EQ(-50.0, actuator_reduction[1]);
+  EXPECT_THAT(50.0, DoubleNear(actuator_reduction[0], EPS));
+  EXPECT_THAT(-50.0, DoubleNear(actuator_reduction[1], EPS));
 
   const std::vector<double> & joint_reduction =
     four_bar_linkage_transmission->get_joint_reduction();
-  EXPECT_EQ(2.0, joint_reduction[0]);
-  EXPECT_EQ(-2.0, joint_reduction[1]);
+  EXPECT_THAT(2.0, DoubleNear(joint_reduction[0], EPS));
+  EXPECT_THAT(-2.0, DoubleNear(joint_reduction[1], EPS));
 
   // default kicks in for ill-defined values
   const std::vector<double> & joint_offset = four_bar_linkage_transmission->get_joint_offset();
-  EXPECT_EQ(0.0, joint_offset[0]);
-  EXPECT_EQ(0.0, joint_offset[1]);
+  EXPECT_THAT(0.0, DoubleNear(joint_offset[0], EPS));
+  EXPECT_THAT(0.0, DoubleNear(joint_offset[1], EPS));
 }
 
 TEST(FourBarLinkageTransmissionLoaderTest, mech_red_invalid_value)
 {
   // Parse transmission info
-  std::string urdf_to_test = R"(
-    <?xml version="1.0"?>
-    <robot name="robot" xmlns="http://www.ros.org">
+  std::string urdf_to_test = std::string(ros2_control_test_assets::urdf_head) + R"(
       <ros2_control name="FullSpec" type="system">
         <joint name="joint1">
           <command_interface name="velocity">

@@ -86,8 +86,12 @@ public:
    * \param[in] urdf string containing the URDF.
    * \param[in] validate_interfaces boolean argument indicating whether the exported
    * interfaces ought to be validated. Defaults to true.
+   * \param[in] load_and_initialize_components boolean argument indicating whether to load and
+   * initialize the components present in the parsed URDF. Defaults to true.
    */
-  void load_urdf(const std::string & urdf, bool validate_interfaces = true);
+  void load_urdf(
+    const std::string & urdf, bool validate_interfaces = true,
+    bool load_and_initialize_components = true);
 
   /**
    * @brief if the resource manager load_urdf(...) function has been called this returns true.
@@ -331,7 +335,9 @@ public:
    * by default
    * \param[in] start_interfaces vector of string identifiers for the command interfaces starting.
    * \param[in] stop_interfaces vector of string identifiers for the command interfaces stopping.
-   * \return true if switch can be prepared, false if a component rejects switch request.
+   * \return true if switch can be prepared; false if a component rejects switch request, and if
+   * at least one of the input interfaces are not existing or not available (i.e., component is not
+   * in ACTIVE or INACTIVE state).
    */
   bool prepare_command_mode_switch(
     const std::vector<std::string> & start_interfaces,
@@ -344,6 +350,8 @@ public:
    * \note this is intended for mode-switching when a hardware interface needs to change
    * control mode depending on which command interface is claimed.
    * \note this is for realtime switching of the command interface.
+   * \note it is assumed that `prepare_command_mode_switch` is called just before this method
+   * with the same input arguments.
    * \param[in] start_interfaces vector of string identifiers for the command interfaces starting.
    * \param[in] stop_interfaces vector of string identifiers for the command interfacs stopping.
    * \return true if switch is performed, false if a component rejects switching.

@@ -1,32 +1,22 @@
-name: Iron RHEL Binary Build
+name: RHEL Iron Semi-Binary Build
 on:
   workflow_dispatch:
+  pull_request:
     branches:
       - iron
-#  pull_request:
-#    branches:
-#      - iron
-#  push:
-#    branches:
-#      - iron
-#  schedule:
-#    # Run every day to detect flakiness and broken dependencies
-#    - cron: '03 1 * * *'
+  schedule:
+    # Run every day to detect flakiness and broken dependencies
+    - cron: '03 1 * * *'
 
 jobs:
-  iron_rhel_binary:
-    name: Iron RHEL binary build
-    runs-on: ubuntu-latest
-    env:
-      ROS_DISTRO: iron
-    container: ghcr.io/ros-controls/ros:iron-rhel
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          path: src/ros2_control
-      - run: |
-          rosdep update
-          rosdep install -iy --from-path src/ros2_control
-          source /opt/ros/${{ env.ROS_DISTRO }}/setup.bash
-          colcon build
-          colcon test
+  rhel_semi_binary_build:
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-rhel-binary-build.yml@master
+    strategy:
+      fail-fast: false
+      matrix:
+        ROS_DISTRO: [iron]
+    with:
+      ros_distro: ${{ matrix.ROS_DISTRO }}
+      upstream_workspace: ros2_control.${{ matrix.ROS_DISTRO }}.repos
+      ref_for_scheduled_build: iron
+      skip_packages: rqt_controller_manager

@@ -25,15 +25,17 @@
 namespace controller_interface
 {
 return_type ControllerInterfaceBase::init(
-  const std::string & controller_name, const std::string & namespace_,
-  const rclcpp::NodeOptions & node_options)
+  const std::string & controller_name, const std::string & urdf, unsigned int cm_update_rate,
+  const std::string & node_namespace, const rclcpp::NodeOptions & node_options)
 {
+  urdf_ = urdf;
   node_ = std::make_shared<rclcpp_lifecycle::LifecycleNode>(
-    controller_name, namespace_, node_options, false);  // disable LifecycleNode service interfaces
+    controller_name, node_namespace, node_options,
+    false);  // disable LifecycleNode service interfaces
 
   try
   {
-    auto_declare<int>("update_rate", 0);
+    auto_declare<int>("update_rate", cm_update_rate);
     auto_declare<bool>("is_async", false);
   }
   catch (const std::exception & e)
@@ -84,7 +86,7 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
   // Other solution is to add check into the LifecycleNode if a transition is valid to trigger
   if (get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
   {
-    update_rate_ = get_node()->get_parameter("update_rate").as_int();
+    update_rate_ = static_cast<unsigned int>(get_node()->get_parameter("update_rate").as_int());
     is_async_ = get_node()->get_parameter("is_async").as_bool();
   }
 
@@ -131,5 +133,7 @@ std::shared_ptr<rclcpp_lifecycle::LifecycleNode> ControllerInterfaceBase::get_no
 unsigned int ControllerInterfaceBase::get_update_rate() const { return update_rate_; }
 
 bool ControllerInterfaceBase::is_async() const { return is_async_; }
+
+const std::string & ControllerInterfaceBase::get_robot_description() const { return urdf_; }
 
 }  // namespace controller_interface

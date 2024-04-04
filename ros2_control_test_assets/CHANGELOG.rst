@@ -2,6 +2,43 @@
 Changelog for package ros2_control_test_assets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.8.0 (2024-03-27)
+------------------
+
+4.7.0 (2024-03-22)
+------------------
+
+4.6.0 (2024-03-02)
+------------------
+
+4.5.0 (2024-02-12)
+------------------
+
+4.4.0 (2024-01-31)
+------------------
+
+4.3.0 (2024-01-20)
+------------------
+* [ResourceManager] adds test for uninitialized hardware (`#1243 <https://github.com/ros-controls/ros2_control/issues/1243>`_)
+* Contributors: Maximilian Schik
+
+4.2.0 (2023-12-12)
+------------------
+
+4.1.0 (2023-11-30)
+------------------
+
+4.0.0 (2023-11-21)
+------------------
+
+3.21.0 (2023-11-06)
+-------------------
+
+3.20.0 (2023-10-31)
+-------------------
+* [ResourceManager] deactivate hardware from read/write return value (`#884 <https://github.com/ros-controls/ros2_control/issues/884>`_)
+* Contributors: Felix Exner (fexner)
+
 3.19.1 (2023-10-04)
 -------------------
 

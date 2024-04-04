@@ -564,6 +564,7 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_robot_with_gpio
   EXPECT_THAT(hardware_info.gpios[1].state_interfaces, SizeIs(1));
   EXPECT_THAT(hardware_info.gpios[1].command_interfaces, SizeIs(1));
   EXPECT_EQ(hardware_info.gpios[1].state_interfaces[0].name, "vacuum");
+  EXPECT_EQ(hardware_info.gpios[1].state_interfaces[0].initial_value, "1.0");
   EXPECT_EQ(hardware_info.gpios[1].command_interfaces[0].name, "vacuum");
 
   EXPECT_THAT(hardware_info.transmissions, IsEmpty());
@@ -672,5 +673,130 @@ TEST_F(TestComponentParser, transmission_given_too_many_joints_throws_error)
     std::string(ros2_control_test_assets::urdf_head) +
     ros2_control_test_assets::invalid_urdf2_transmission_given_too_many_joints +
     ros2_control_test_assets::urdf_tail;
+  ASSERT_THROW(parse_control_resources_from_urdf(urdf_to_test), std::runtime_error);
+}
+
+TEST_F(TestComponentParser, gripper_mimic_true_valid_config)
+{
+  const auto urdf_to_test =
+    std::string(ros2_control_test_assets::gripper_urdf_head) +
+    std::string(ros2_control_test_assets::gripper_hardware_resources_mimic_true_no_command_if) +
+    std::string(ros2_control_test_assets::urdf_tail);
+  std::vector<hardware_interface::HardwareInfo> hw_info;
+  ASSERT_NO_THROW(hw_info = parse_control_resources_from_urdf(urdf_to_test));
+  ASSERT_THAT(hw_info, SizeIs(1));
+  ASSERT_THAT(hw_info[0].mimic_joints, SizeIs(1));
+  EXPECT_DOUBLE_EQ(hw_info[0].mimic_joints[0].multiplier, 2.0);
+  EXPECT_DOUBLE_EQ(hw_info[0].mimic_joints[0].offset, 1.0);
+  EXPECT_EQ(hw_info[0].mimic_joints[0].mimicked_joint_index, 0);
+  EXPECT_EQ(hw_info[0].mimic_joints[0].joint_index, 1);
+}
+
+TEST_F(TestComponentParser, gripper_no_mimic_valid_config)
+{
+  const auto urdf_to_test =
+    std::string(ros2_control_test_assets::gripper_urdf_head) +
+    std::string(ros2_control_test_assets::gripper_hardware_resources_no_command_if) +
+    std::string(ros2_control_test_assets::urdf_tail);
+  std::vector<hardware_interface::HardwareInfo> hw_info;
+  ASSERT_NO_THROW(hw_info = parse_control_resources_from_urdf(urdf_to_test));
+  ASSERT_THAT(hw_info, SizeIs(1));
+  ASSERT_THAT(hw_info[0].mimic_joints, SizeIs(1));
+  EXPECT_DOUBLE_EQ(hw_info[0].mimic_joints[0].multiplier, 2.0);
+  EXPECT_DOUBLE_EQ(hw_info[0].mimic_joints[0].offset, 1.0);
+  EXPECT_EQ(hw_info[0].mimic_joints[0].mimicked_joint_index, 0);
+  EXPECT_EQ(hw_info[0].mimic_joints[0].joint_index, 1);
+}
+
+// TODO(christophfroehlich) delete deprecated config test
+TEST_F(TestComponentParser, gripper_mimic_deprecated_valid_config)
+{
+  const auto urdf_to_test =
+    std::string(ros2_control_test_assets::gripper_urdf_head) +
+    std::string(ros2_control_test_assets::gripper_hardware_resources_mimic_deprecated) +
+    std::string(ros2_control_test_assets::urdf_tail);
+  std::vector<hardware_interface::HardwareInfo> hw_info;
+  ASSERT_NO_THROW(hw_info = parse_control_resources_from_urdf(urdf_to_test));
+  ASSERT_THAT(hw_info, SizeIs(1));
+  ASSERT_THAT(hw_info[0].mimic_joints, SizeIs(1));
+  EXPECT_DOUBLE_EQ(hw_info[0].mimic_joints[0].multiplier, 2.0);
+  EXPECT_DOUBLE_EQ(hw_info[0].mimic_joints[0].offset, 1.0);
+  EXPECT_EQ(hw_info[0].mimic_joints[0].mimicked_joint_index, 0);
+  EXPECT_EQ(hw_info[0].mimic_joints[0].joint_index, 1);
+}
+
+TEST_F(TestComponentParser, gripper_mimic_deprecated_unknown_joint_throws_error)
+{
+  const auto urdf_to_test =
+    std::string(ros2_control_test_assets::gripper_urdf_head) +
+    std::string(
+      ros2_control_test_assets::gripper_hardware_resources_mimic_deprecated_unknown_joint) +
+    std::string(ros2_control_test_assets::urdf_tail);
+  std::vector<hardware_interface::HardwareInfo> hw_info;
+  ASSERT_THROW(parse_control_resources_from_urdf(urdf_to_test), std::runtime_error);
+}
+// end delete deprecated config test
+
+TEST_F(TestComponentParser, gripper_mimic_with_unknown_joint_throws_error)
+{
+  const auto urdf_to_test =
+    std::string(ros2_control_test_assets::gripper_urdf_head_unknown_joint) +
+    std::string(ros2_control_test_assets::gripper_hardware_resources_mimic_true_no_command_if) +
+    std::string(ros2_control_test_assets::urdf_tail);
+  ASSERT_THROW(parse_control_resources_from_urdf(urdf_to_test), std::runtime_error);
+}
+
+TEST_F(TestComponentParser, gripper_mimic_true_without_mimic_info_throws_error)
+{
+  const auto urdf_to_test =
+    std::string(ros2_control_test_assets::gripper_urdf_head_no_mimic) +
+    std::string(ros2_control_test_assets::gripper_hardware_resources_mimic_true_no_command_if) +
+    std::string(ros2_control_test_assets::urdf_tail);
+  ASSERT_THROW(parse_control_resources_from_urdf(urdf_to_test), std::runtime_error);
+}
+
+TEST_F(TestComponentParser, gripper_mimic_true_invalid_config_throws_error)
+{
+  const auto urdf_to_test =
+    std::string(ros2_control_test_assets::gripper_urdf_head) +
+    std::string(ros2_control_test_assets::gripper_hardware_resources_mimic_true_command_if) +
+    std::string(ros2_control_test_assets::urdf_tail);
+  ASSERT_THROW(parse_control_resources_from_urdf(urdf_to_test), std::runtime_error);
+}
+
+TEST_F(TestComponentParser, gripper_mimic_false_valid_config)
+{
+  const auto urdf_to_test =
+    std::string(ros2_control_test_assets::gripper_urdf_head) +
+    std::string(ros2_control_test_assets::gripper_hardware_resources_mimic_false_command_if) +
+    std::string(ros2_control_test_assets::urdf_tail);
+  std::vector<hardware_interface::HardwareInfo> hw_info;
+  ASSERT_NO_THROW(hw_info = parse_control_resources_from_urdf(urdf_to_test));
+  ASSERT_THAT(hw_info, SizeIs(1));
+  ASSERT_THAT(hw_info[0].mimic_joints, SizeIs(0));
+}
+
+/**
+ * @brief Test that the parser throws an error if the URDF contains a link with no parent.
+ */
+TEST_F(TestComponentParser, urdf_two_root_links_throws_error)
+{
+  const auto urdf_to_test =
+    std::string(ros2_control_test_assets::gripper_urdf_head_invalid_two_root_links) +
+    std::string(ros2_control_test_assets::gripper_hardware_resources_mimic_true_no_command_if) +
+    std::string(ros2_control_test_assets::urdf_tail);
+  ASSERT_THROW(parse_control_resources_from_urdf(urdf_to_test), std::runtime_error);
+}
+
+/**
+ * @brief Test that the parser throws an error if a joint defined in the ros2_control tag is missing
+ * in the URDF
+ */
+TEST_F(TestComponentParser, urdf_incomplete_throws_error)
+{
+  const auto urdf_to_test =
+    std::string(ros2_control_test_assets::gripper_urdf_head_incomplete) +
+    std::string(ros2_control_test_assets::gripper_hardware_resources_mimic_true_no_command_if) +
+    std::string(ros2_control_test_assets::urdf_tail);
   ASSERT_THROW(parse_control_resources_from_urdf(urdf_to_test), std::runtime_error);
 }

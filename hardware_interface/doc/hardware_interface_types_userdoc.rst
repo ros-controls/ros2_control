@@ -14,6 +14,8 @@ Joints
 ``<joint>``-tag groups the interfaces associated with the joints of physical robots and actuators.
 They have command and state interfaces to set the goal values for hardware and read its current state.
 
+All joints defined in the ``<ros2_control>``-tag have to be present in the URDF received :ref:`by the controller manager <doc/ros2_control/controller_manager/doc/userdoc:subscribers>`.
+
 State interfaces of joints can be published as a ROS topic by means of the :ref:`joint_state_broadcaster <joint_state_broadcaster_userdoc>`
 
 Sensors
@@ -85,7 +87,9 @@ They can be combined together within the different hardware component types (sys
       </gpio>
       <gpio name="flange_analog_IOs">
         <command_interface name="analog_output1"/>
-        <state_interface name="analog_output1"/>    <!-- Needed to know current state of the output -->
+        <state_interface name="analog_output1">    <!-- Needed to know current state of the output -->
+          <param name="initial_value">3.1</param>  <!-- Optional initial value for mock_hardware -->
+        </state_interface>
         <state_interface name="analog_input1"/>
         <state_interface name="analog_input2"/>
       </gpio>

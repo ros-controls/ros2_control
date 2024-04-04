@@ -1,19 +1,17 @@
 name: Iron Source Build
 on:
   workflow_dispatch:
-    branches:
-      - master
   push:
     branches:
-      - master
+      - iron
   schedule:
     # Run every day to detect flakiness and broken dependencies
     - cron: '03 3 * * *'
 
 jobs:
   source:
-    uses: ./.github/workflows/reusable-ros-tooling-source-build.yml
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-ros-tooling-source-build.yml@master
     with:
       ros_distro: iron
-      ref: master
+      ref: iron
       ros2_repo_branch: iron

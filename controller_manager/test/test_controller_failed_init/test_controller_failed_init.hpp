@@ -38,18 +38,17 @@ public:
   CONTROLLER_MANAGER_PUBLIC
   virtual ~TestControllerFailedInit() = default;
 
-  CONTROLLER_INTERFACE_PUBLIC
-  controller_interface::return_type init(
-    const std::string & controller_name, const std::string & namespace_ = "",
-    const rclcpp::NodeOptions & node_options =
-      rclcpp::NodeOptions()
-        .allow_undeclared_parameters(true)
-        .automatically_declare_parameters_from_overrides(true)) override;
-
   controller_interface::InterfaceConfiguration command_interface_configuration() const override
   {
     return controller_interface::InterfaceConfiguration{
       controller_interface::interface_configuration_type::NONE};
+  }
+
+  rclcpp::NodeOptions define_custom_node_options() const override
+  {
+    return rclcpp::NodeOptions()
+      .allow_undeclared_parameters(true)
+      .automatically_declare_parameters_from_overrides(true);
   }
 
   controller_interface::InterfaceConfiguration state_interface_configuration() const override

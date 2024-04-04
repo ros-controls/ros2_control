@@ -8,10 +8,43 @@ pull_request_rules:
         branches:
           - humble
 
+  - name: Backport to iron at reviewers discretion
+    conditions:
+      - base=master
+      - "label=backport-iron"
+    actions:
+      backport:
+        branches:
+          - iron
+
   - name: Ask to resolve conflict
     conditions:
       - conflict
-      - author!=mergify
+      - author!=mergify[bot]
+      - author!=dependabot[bot]
     actions:
         comment:
           message: This pull request is in conflict. Could you fix it @{{author}}?
+
+  - name: Ask to resolve conflict for backports
+    conditions:
+      - conflict
+      - author=mergify[bot]
+    actions:
+        comment:
+          message: This pull request is in conflict. Could you fix it @bmagyar @destogl @christophfroehlich?
+
+  - name: development targets master branch
+    conditions:
+      - base!=master
+      - author!=bmagyar
+      - author!=destogl
+      - author!=christophfroehlich
+      - author!=mergify[bot]
+      - author!=dependabot[bot]
+    actions:
+        comment:
+          message: |
+            @{{author}}, all pull requests must be targeted towards the `master` development branch.
+            Once merged into `master`, it is possible to backport to `{{base}}`, but it must be in `master`
+            to have these changes reflected into new distributions.

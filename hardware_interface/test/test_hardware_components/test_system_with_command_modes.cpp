@@ -120,6 +120,8 @@ public:
     const std::vector<std::string> & start_interfaces,
     const std::vector<std::string> & stop_interfaces) override
   {
+    acceleration_state_[0] += 1.0;
+
     // Starting interfaces
     start_modes_.clear();
     stop_modes_.clear();
@@ -166,6 +168,7 @@ public:
     const std::vector<std::string> & start_interfaces,
     const std::vector<std::string> & /*stop_interfaces*/) override
   {
+    acceleration_state_[0] += 100.0;
     // Test of failure in perform command mode switch
     // Fail if given an empty list.
     // This should never occur in a real system as the same start_interfaces list is sent to both
@@ -181,11 +184,11 @@ private:
   std::vector<std::string> start_modes_ = {"position", "position"};
   std::vector<bool> stop_modes_ = {false, false};
 
-  std::array<double, 2> position_command_ = {0.0, 0.0};
-  std::array<double, 2> velocity_command_ = {0.0, 0.0};
-  std::array<double, 2> position_state_ = {0.0, 0.0};
-  std::array<double, 2> velocity_state_ = {0.0, 0.0};
-  std::array<double, 2> acceleration_state_ = {0.0, 0.0};
+  std::array<double, 2> position_command_ = {{0.0, 0.0}};
+  std::array<double, 2> velocity_command_ = {{0.0, 0.0}};
+  std::array<double, 2> position_state_ = {{0.0, 0.0}};
+  std::array<double, 2> velocity_state_ = {{0.0, 0.0}};
+  std::array<double, 2> acceleration_state_ = {{0.0, 0.0}};
 };
 
 }  // namespace test_hardware_components
