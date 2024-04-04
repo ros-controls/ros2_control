@@ -18,7 +18,6 @@
 #include <functional>
 #include <string>
 #include <utility>
-#include <variant>
 
 #include "hardware_interface/handle.hpp"
 
@@ -35,17 +34,7 @@ public:
   }
 
   LoanedCommandInterface(CommandInterface & command_interface, Deleter && deleter)
-  : command_interface_(&command_interface), deleter_(std::forward<Deleter>(deleter)), using_async_command_interface_(false)
-  {
-  }
-
-  explicit LoanedCommandInterface(AsyncCommandInterface & command_interface)
-  : LoanedCommandInterface(command_interface, nullptr)
-  {
-  }
-
-  LoanedCommandInterface(AsyncCommandInterface & command_interface, Deleter && deleter)
-  : command_interface_(&command_interface), deleter_(std::forward<Deleter>(deleter)), using_async_command_interface_(true)
+  : command_interface_(command_interface), deleter_(std::forward<Deleter>(deleter))
   {
   }
 
@@ -61,27 +50,26 @@ public:
     }
   }
 
-  const std::string get_name() const { return using_async_command_interface_ ? std::get<1>(command_interface_)->get_name() : std::get<0>(command_interface_)->get_name(); }
+  const std::string get_name() const { return command_interface_.get_name(); }
 
-  const std::string & get_interface_name() const { return using_async_command_interface_ ? std::get<1>(command_interface_)->get_interface_name() : std::get<0>(command_interface_)->get_interface_name(); }
+  const std::string & get_interface_name() const { return command_interface_.get_interface_name(); }
 
   [[deprecated(
     "Replaced by get_name method, which is semantically more correct")]] const std::string
   get_full_name() const
   {
-    return using_async_command_interface_ ? std::get<1>(command_interface_)->get_name() : std::get<0>(command_interface_)->get_name();
+    return command_interface_.get_name();
   }
 
-  const std::string & get_prefix_name() const { return using_async_command_interface_ ? std::get<1>(command_interface_)->get_prefix_name() : std::get<0>(command_interface_)->get_prefix_name(); }
+  const std::string & get_prefix_name() const { return command_interface_.get_prefix_name(); }
 
-  void set_value(double val) { using_async_command_interface_ ? std::get<1>(command_interface_)->set_value(val) : std::get<0>(command_interface_)->set_value(val); }
+  void set_value(double val) { command_interface_.set_value(val); }
 
-  double get_value() const { return using_async_command_interface_ ? std::get<1>(command_interface_)->get_value() : std::get<0>(command_interface_)->get_value(); }
+  double get_value() const { return command_interface_.get_value(); }
 
 protected:
-    std::variant<CommandInterface*, AsyncCommandInterface*> command_interface_;
+  CommandInterface & command_interface_;
   Deleter deleter_;
-  const bool using_async_command_interface_;
 };
 
 }  // namespace hardware_interface

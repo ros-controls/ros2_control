@@ -18,7 +18,6 @@
 #include <functional>
 #include <string>
 #include <utility>
-#include <variant>
 
 #include "hardware_interface/handle.hpp"
 
@@ -35,17 +34,7 @@ public:
   }
 
   LoanedStateInterface(StateInterface & state_interface, Deleter && deleter)
-  : state_interface_(&state_interface), deleter_(std::forward<Deleter>(deleter)), using_async_state_interface_(false)
-  {
-  }
-
-  explicit LoanedStateInterface(AsyncStateInterface & state_interface)
-  : LoanedStateInterface(state_interface, nullptr)
-  {
-  }
-
-  LoanedStateInterface(AsyncStateInterface & state_interface, Deleter && deleter)
-  : state_interface_(&state_interface), deleter_(std::forward<Deleter>(deleter)), using_async_state_interface_(true)
+  : state_interface_(state_interface), deleter_(std::forward<Deleter>(deleter))
   {
   }
 
@@ -61,26 +50,24 @@ public:
     }
   }
 
-  const std::string get_name() const { return using_async_state_interface_ ? std::get<1>(state_interface_)->get_name() : std::get<0>(state_interface_)->get_name(); }
+  const std::string get_name() const { return state_interface_.get_name(); }
 
-  const std::string & get_interface_name() const { return using_async_state_interface_ ? std::get<1>(state_interface_)->get_interface_name() : std::get<0>(state_interface_)->get_interface_name(); }
+  const std::string & get_interface_name() const { return state_interface_.get_interface_name(); }
 
   [[deprecated(
     "Replaced by get_name method, which is semantically more correct")]] const std::string
   get_full_name() const
   {
-    return using_async_state_interface_ ? std::get<1>(state_interface_)->get_name() : std::get<0>(state_interface_)->get_name();
+    return state_interface_.get_name();
   }
 
-  const std::string & get_prefix_name() const { return using_async_state_interface_ ? std::get<1>(state_interface_)->get_prefix_name() : std::get<0>(state_interface_)->get_prefix_name(); }
+  const std::string & get_prefix_name() const { return state_interface_.get_prefix_name(); }
 
-  double get_value() const { return using_async_state_interface_ ? std::get<1>(state_interface_)->get_value() : std::get<0>(state_interface_)->get_value(); }
+  double get_value() const { return state_interface_.get_value(); }
 
 protected:
-  std::variant<StateInterface*, AsyncStateInterface*> state_interface_;
+  StateInterface & state_interface_;
   Deleter deleter_;
-  const bool using_async_state_interface_ = false;
-
 };
 
 }  // namespace hardware_interface
