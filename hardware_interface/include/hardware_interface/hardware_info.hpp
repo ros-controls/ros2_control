@@ -44,6 +44,8 @@ struct InterfaceInfo
   std::string data_type;
   /// (Optional) If the handle is an array, the size of the array. Used by GPIOs.
   int size;
+  /// (Optional) enable or disable the limits for the command interfaces
+  bool enable_limits;
 };
 
 /// @brief This structure stores information about a joint that is mimicking another joint

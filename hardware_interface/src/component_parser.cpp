@@ -45,6 +45,8 @@ constexpr const auto kCommandInterfaceTag = "command_interface";
 constexpr const auto kStateInterfaceTag = "state_interface";
 constexpr const auto kMinTag = "min";
 constexpr const auto kMaxTag = "max";
+constexpr const auto kLimitsTag = "limits";
+constexpr const auto kEnableTag = "enable";
 constexpr const auto kInitialValueTag = "initial_value";
 constexpr const auto kMimicAttribute = "mimic";
 constexpr const auto kDataTypeAttribute = "data_type";
@@ -291,6 +293,15 @@ hardware_interface::InterfaceInfo parse_interfaces_from_xml(
     interface.max = interface_param->second;
   }
 
+  // Option enable or disable the interface limits, by default they are enabled
+  interface.enable_limits = true;
+  const auto * limits_it = interfaces_it->FirstChildElement(kLimitsTag);
+  if (limits_it)
+  {
+    interface.enable_limits =
+      parse_bool(get_attribute_value(limits_it, kEnableTag, limits_it->Name()));
+  }
+
   // Optional initial_value attribute
   interface_param = interface_params.find(kInitialValueTag);
   if (interface_param != interface_params.end())
@@ -335,11 +346,21 @@ ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it
     }
   }
 
+  // Option enable or disable the interface limits, by default they are enabled
+  bool enable_limits = true;
+  const auto * limits_it = component_it->FirstChildElement(kLimitsTag);
+  if (limits_it)
+  {
+    enable_limits = parse_bool(get_attribute_value(limits_it, kEnableTag, limits_it->Name()));
+  }
+
   // Parse all command interfaces
   const auto * command_interfaces_it = component_it->FirstChildElement(kCommandInterfaceTag);
   while (command_interfaces_it)
   {
-    component.command_interfaces.push_back(parse_interfaces_from_xml(command_interfaces_it));
+    InterfaceInfo cmd_info = parse_interfaces_from_xml(command_interfaces_it);
+    cmd_info.enable_limits &= enable_limits;
+    component.command_interfaces.push_back(cmd_info);
     command_interfaces_it = command_interfaces_it->NextSiblingElement(kCommandInterfaceTag);
   }
 
@@ -347,7 +368,9 @@ ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it
   const auto * state_interfaces_it = component_it->FirstChildElement(kStateInterfaceTag);
   while (state_interfaces_it)
   {
-    component.state_interfaces.push_back(parse_interfaces_from_xml(state_interfaces_it));
+    InterfaceInfo state_info = parse_interfaces_from_xml(state_interfaces_it);
+    state_info.enable_limits &= enable_limits;
+    component.state_interfaces.push_back(state_info);
     state_interfaces_it = state_interfaces_it->NextSiblingElement(kStateInterfaceTag);
   }
 
@@ -667,6 +690,7 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
     {
       if (itr.name == hardware_interface::HW_IF_POSITION)
       {
+        limits.has_position_limits &= itr.enable_limits;
         if (limits.has_position_limits)
         {
           double min_pos(limits.min_position), max_pos(limits.max_position);
@@ -684,6 +708,7 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
       }
       else if (itr.name == hardware_interface::HW_IF_VELOCITY)
       {
+        limits.has_velocity_limits &= itr.enable_limits;
         if (limits.has_velocity_limits)
         {  // Apply the most restrictive one in the case
           double min_vel(-limits.max_velocity), max_vel(limits.max_velocity);
@@ -696,6 +721,7 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
       }
       else if (itr.name == hardware_interface::HW_IF_EFFORT)
       {
+        limits.has_effort_limits &= itr.enable_limits;
         if (limits.has_effort_limits)
         {  // Apply the most restrictive one in the case
           double min_eff(-limits.max_effort), max_eff(limits.max_effort);
@@ -729,7 +755,7 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
               limits.max_deceleration = -limits.max_acceleration;
             }
           }
-          limits.has_acceleration_limits = true;
+          limits.has_acceleration_limits = true && itr.enable_limits;
         }
       }
       else if (itr.name == "jerk")
@@ -747,7 +773,7 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
           if (std::isfinite(max_jerk))
           {
             limits.max_jerk = std::abs(max_jerk);
-            limits.has_jerk_limits = true;
+            limits.has_jerk_limits = true && itr.enable_limits;
           }
         }
       }
