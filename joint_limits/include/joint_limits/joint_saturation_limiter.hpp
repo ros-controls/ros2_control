@@ -33,8 +33,8 @@ namespace joint_limits
  * limit. For example, if a joint is close to its position limit, velocity and acceleration will be
  * reduced accordingly.
  */
-template <typename LimitsType>
-class JointSaturationLimiter : public JointLimiterInterface<LimitsType>
+template <typename LimitsType, typename JointLimitsStateDataType>
+class JointSaturationLimiter : public JointLimiterInterface<LimitsType, JointLimitsStateDataType>
 {
 public:
   /** \brief Constructor */
@@ -86,14 +86,15 @@ private:
   rclcpp::Clock::SharedPtr clock_;
 };
 
-template <typename LimitsType>
-JointSaturationLimiter<LimitsType>::JointSaturationLimiter() : JointLimiterInterface<LimitsType>()
+template <typename LimitsType, typename JointLimitsStateDataType>
+JointSaturationLimiter<LimitsType, JointLimitsStateDataType>::JointSaturationLimiter()
+: JointLimiterInterface<LimitsType, JointLimitsStateDataType>()
 {
   clock_ = std::make_shared<rclcpp::Clock>(rclcpp::Clock(RCL_ROS_TIME));
 }
 
-template <typename LimitsType>
-JointSaturationLimiter<LimitsType>::~JointSaturationLimiter()
+template <typename LimitsType, typename JointLimitsStateDataType>
+JointSaturationLimiter<LimitsType, JointLimitsStateDataType>::~JointSaturationLimiter()
 {
 }
 
