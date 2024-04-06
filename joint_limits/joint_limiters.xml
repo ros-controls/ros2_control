@@ -1,8 +1,8 @@
 <class_libraries>
   <library path="joint_saturation_limiter">
     <class name="joint_limits/JointSaturationLimiter"
-          type="joint_limits::JointSaturationLimiter&lt;joint_limits::JointLimits&gt;"
-          base_class_type="joint_limits::JointLimiterInterface&lt;joint_limits::JointLimits&gt;">
+          type="JointSaturationLimiterTrajectoryPoint"
+          base_class_type="joint_limits::JointLimiterInterface&lt;joint_limits::JointLimits, trajectory_msgs::msg::JointTrajectoryPoint&gt;">
       <description>
         Simple joint limiter using clamping approach. Warning: clamping can cause discontinuities.
       </description>
