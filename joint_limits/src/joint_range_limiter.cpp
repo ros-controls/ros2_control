@@ -62,7 +62,9 @@ std::pair<double, double> compute_position_limits(
 std::pair<double, double> compute_velocity_limits(
   joint_limits::JointLimits limits, double act_pos, double prev_command_vel, double dt)
 {
-  std::pair<double, double> vel_limits({-limits.max_velocity, limits.max_velocity});
+  const double max_vel =
+    limits.has_velocity_limits ? limits.max_velocity : std::numeric_limits<double>::infinity();
+  std::pair<double, double> vel_limits({-max_vel, max_vel});
   if (limits.has_position_limits)
   {
     const double max_vel_with_pos_limits = (limits.max_position - act_pos) / dt;
@@ -82,7 +84,9 @@ std::pair<double, double> compute_velocity_limits(
 std::pair<double, double> compute_effort_limits(
   joint_limits::JointLimits limits, double act_pos, double act_vel, double /*dt*/)
 {
-  std::pair<double, double> eff_limits({-limits.max_effort, limits.max_effort});
+  const double max_effort =
+    limits.has_effort_limits ? limits.max_effort : std::numeric_limits<double>::infinity();
+  std::pair<double, double> eff_limits({-max_effort, max_effort});
   if (limits.has_position_limits)
   {
     if ((act_pos <= limits.min_position) && (act_vel <= 0.0))
@@ -186,7 +190,7 @@ bool JointRangeLimiter<JointLimits, JointControlInterfacesData>::on_enforce(
   if (desired.has_acceleration())
   {
     desired.acceleration = std::clamp(
-      desired.acceleration.value(), joint_limits.max_deceleration, joint_limits.max_acceleration);
+      desired.acceleration.value(), -joint_limits.max_deceleration, joint_limits.max_acceleration);
   }
 
   if (desired.has_jerk())
