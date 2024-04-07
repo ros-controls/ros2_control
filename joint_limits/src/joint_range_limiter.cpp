@@ -60,14 +60,21 @@ std::pair<double, double> compute_position_limits(
 }
 
 std::pair<double, double> compute_velocity_limits(
-  joint_limits::JointLimits limits, double prev_command, double dt)
+  joint_limits::JointLimits limits, double act_pos, double prev_command_vel, double dt)
 {
   std::pair<double, double> vel_limits({-limits.max_velocity, limits.max_velocity});
+  if (limits.has_position_limits)
+  {
+    const double max_vel_with_pos_limits = (limits.max_position - act_pos) / dt;
+    const double min_vel_with_pos_limits = (limits.min_position - act_pos) / dt;
+    vel_limits.first = std::max(min_vel_with_pos_limits, vel_limits.first);
+    vel_limits.second = std::min(max_vel_with_pos_limits, vel_limits.second);
+  }
   if (limits.has_acceleration_limits)
   {
     const double delta_vel = limits.max_acceleration * dt;
-    vel_limits.first = std::max(prev_command - delta_vel, vel_limits.first);
-    vel_limits.second = std::min(prev_command + delta_vel, vel_limits.second);
+    vel_limits.first = std::max(prev_command_vel - delta_vel, vel_limits.first);
+    vel_limits.second = std::min(prev_command_vel + delta_vel, vel_limits.second);
   }
   return vel_limits;
 }
@@ -164,8 +171,8 @@ bool JointRangeLimiter<JointLimits, JointControlInterfacesData>::on_enforce(
 
   if (desired.has_velocity())
   {
-    const auto limits =
-      compute_velocity_limits(joint_limits, prev_command_.velocity.value(), dt_seconds);
+    const auto limits = compute_velocity_limits(
+      joint_limits, actual.position.value(), prev_command_.velocity.value(), dt_seconds);
     desired.velocity = std::clamp(desired.velocity.value(), limits.first, limits.second);
   }
 
