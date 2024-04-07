@@ -68,55 +68,58 @@ public:
     // TODO(destogl): get limits from URDF
 
     // Initialize and get joint limits from parameter server
-    for (size_t i = 0; i < number_of_joints_; ++i)
+    if (node_param_itf_)
     {
-      if (!declare_parameters(joint_names[i], node_param_itf_, node_logging_itf_))
-      {
-        RCLCPP_ERROR(
-          node_logging_itf_->get_logger(),
-          "JointLimiter: Joint '%s': parameter declaration has failed", joint_names[i].c_str());
-        result = false;
-        break;
-      }
-      if (!get_joint_limits(joint_names[i], node_param_itf_, node_logging_itf_, joint_limits_[i]))
-      {
-        RCLCPP_ERROR(
-          node_logging_itf_->get_logger(),
-          "JointLimiter: Joint '%s': getting parameters has failed", joint_names[i].c_str());
-        result = false;
-        break;
-      }
-      RCLCPP_INFO(
-        node_logging_itf_->get_logger(), "Limits for joint %zu (%s) are:\n%s", i,
-        joint_names[i].c_str(), joint_limits_[i].to_string().c_str());
-    }
-    updated_limits_.writeFromNonRT(joint_limits_);
-
-    auto on_parameter_event_callback = [this](const std::vector<rclcpp::Parameter> & parameters)
-    {
-      rcl_interfaces::msg::SetParametersResult set_parameters_result;
-      set_parameters_result.successful = true;
-
-      std::vector<LimitsType> updated_joint_limits = joint_limits_;
-      bool changed = false;
-
       for (size_t i = 0; i < number_of_joints_; ++i)
       {
-        changed |= joint_limits::check_for_limits_update(
-          joint_names_[i], parameters, node_logging_itf_, updated_joint_limits[i]);
+        if (!declare_parameters(joint_names[i], node_param_itf_, node_logging_itf_))
+        {
+          RCLCPP_ERROR(
+            node_logging_itf_->get_logger(),
+            "JointLimiter: Joint '%s': parameter declaration has failed", joint_names[i].c_str());
+          result = false;
+          break;
+        }
+        if (!get_joint_limits(joint_names[i], node_param_itf_, node_logging_itf_, joint_limits_[i]))
+        {
+          RCLCPP_ERROR(
+            node_logging_itf_->get_logger(),
+            "JointLimiter: Joint '%s': getting parameters has failed", joint_names[i].c_str());
+          result = false;
+          break;
+        }
+        RCLCPP_INFO(
+          node_logging_itf_->get_logger(), "Limits for joint %zu (%s) are:\n%s", i,
+          joint_names[i].c_str(), joint_limits_[i].to_string().c_str());
       }
+      updated_limits_.writeFromNonRT(joint_limits_);
 
-      if (changed)
+      auto on_parameter_event_callback = [this](const std::vector<rclcpp::Parameter> & parameters)
       {
-        updated_limits_.writeFromNonRT(updated_joint_limits);
-        RCLCPP_INFO(node_logging_itf_->get_logger(), "Limits are dynamically updated!");
-      }
+        rcl_interfaces::msg::SetParametersResult set_parameters_result;
+        set_parameters_result.successful = true;
 
-      return set_parameters_result;
-    };
+        std::vector<LimitsType> updated_joint_limits = joint_limits_;
+        bool changed = false;
 
-    parameter_callback_ =
-      node_param_itf_->add_on_set_parameters_callback(on_parameter_event_callback);
+        for (size_t i = 0; i < number_of_joints_; ++i)
+        {
+          changed |= joint_limits::check_for_limits_update(
+            joint_names_[i], parameters, node_logging_itf_, updated_joint_limits[i]);
+        }
+
+        if (changed)
+        {
+          updated_limits_.writeFromNonRT(updated_joint_limits);
+          RCLCPP_INFO(node_logging_itf_->get_logger(), "Limits are dynamically updated!");
+        }
+
+        return set_parameters_result;
+      };
+
+      parameter_callback_ =
+        node_param_itf_->add_on_set_parameters_callback(on_parameter_event_callback);
+    }
 
     if (result)
     {
