@@ -146,7 +146,14 @@ public:
     node_logging_itf_ = logging_itf;
     updated_limits_.writeFromNonRT(joint_limits_);
 
-    return on_init();
+    if ((number_of_joints_ != joint_limits_.size()) && has_logging_interface())
+    {
+      RCLCPP_ERROR(
+        node_logging_itf_->get_logger(),
+        "JointLimiter: Number of joint names and limits do not match: %zu != %zu",
+        number_of_joints_, joint_limits_.size());
+    }
+    return (number_of_joints_ == joint_limits_.size()) && on_init();
   }
 
   /**
