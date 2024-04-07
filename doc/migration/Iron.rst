@@ -1,50 +1,106 @@
 Iron to Jazzy
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-component parser
-*****************
-Changes from `(PR #1256) <https://github.com/ros-controls/ros2_control/pull/1256>`__
+General
+*******
+* A ``version.h`` file will be generated per package using the ament_generate_version_header  (`#1449 <https://github.com/ros-controls/ros2_control/issues/1449>`_)
 
-* All ``joints`` defined in the ``<ros2_control>``-tag have to be present in the URDF received :ref:`by the controller manager <doc/ros2_control/controller_manager/doc/userdoc:subscribers>`, otherwise a ``std::runtime_error`` is thrown. This is to ensure that the URDF and the ``<ros2_control>``-tag are consistent. E.g., for configuration ports use ``gpio`` tags instead.
-* The syntax for mimic joints is changed to the `official URDF specification <https://wiki.ros.org/urdf/XML/joint>`__. The parameters within the ``ros2_control`` tag are not supported any more. Instead of
+controller_interface
+********************
+For details see the controller_manager section.
 
-  .. code-block:: xml
+* Pass URDF to controllers on init (`#1088 <https://github.com/ros-controls/ros2_control/issues/1088>`_).
+* Pass controller manager update rate on the init of the controller interface  (`#1141 <https://github.com/ros-controls/ros2_control/issues/1141>`_)
+* A method to get node options to setup the controller node #api-breaking (`#1169 <https://github.com/ros-controls/ros2_control/issues/1169>`_)
 
-    <ros2_control name="GazeboSystem" type="system">
-      <joint name="right_finger_joint">
-        <command_interface name="position"/>
-        <state_interface name="position">
-          <param name="initial_value">0.15</param>
-        </state_interface>
-        <state_interface name="velocity"/>
-        <state_interface name="effort"/>
+controller_manager
+******************
+* Rename ``class_type`` to ``plugin_name`` (`#780 <https://github.com/ros-controls/ros2_control/pull/780>`_)
+* URDF is now passed to controllers on init (`#1088 <https://github.com/ros-controls/ros2_control/issues/1088>`_)
+  This should help avoiding extra legwork in controllers to get access to the ``/robot_description``.
+* Pass controller manager update rate on the init of the controller interface (`#1141 <https://github.com/ros-controls/ros2_control/issues/1141>`_)
+* Report inactive controllers as a diagnostics ok instead of an error (`#1184 <https://github.com/ros-controls/ros2_control/issues/1184>`_)
+* Set chained controller interfaces 'available' for activated controllers (`#1098 <https://github.com/ros-controls/ros2_control/issues/1098>`_)
+
+  *  Configured chainable controller: Listed exported interfaces are unavailable and unclaimed
+  *  Active chainable controller (not in chained mode): Listed exported interfaces are available but unclaimed
+  *  Active chainable controller (in chained mode): Listed exported interfaces are available and claimed
+* Try using SCHED_FIFO on any kernel (`#1142 <https://github.com/ros-controls/ros2_control/issues/1142>`_)
+* A method to get node options to setup the controller node was added (`#1169 <https://github.com/ros-controls/ros2_control/issues/1169>`_): ``get_node_options`` can be overridden by controllers, this would make it easy for other controllers to be able to setup their own custom node options
+* CM now subscribes to ``robot_description`` topic instead of ``~/robot_description`` (`#1410 <https://github.com/ros-controls/ros2_control/issues/1410>`_). As a consequence, when using multiple controller managers, you have to remap the topic within the launch file, an example for a python launch file:
+
+  .. code-block:: python
+
+    remappings=[
+                ('/robot_description', '/custom_1/robot_description'),
+            ]
+
+* Change the controller sorting with an approach similar to directed acyclic graphs (`#1384 <https://github.com/ros-controls/ros2_control/issues/1384>`_)
+* Changes from `(PR #1256) <https://github.com/ros-controls/ros2_control/pull/1256>`__
+
+  * All ``joints`` defined in the ``<ros2_control>``-tag have to be present in the URDF received :ref:`by the controller manager <doc/ros2_control/controller_manager/doc/userdoc:subscribers>`, otherwise the following error is shown:
+
+      The published robot description file (URDF) seems not to be genuine. The following error was caught: <unknown_joint> not found in URDF.
+
+    This is to ensure that the URDF and the ``<ros2_control>``-tag are consistent. E.g., for configuration ports use ``gpio`` interface types instead.
+
+  * The syntax for mimic joints is changed to the `official URDF specification <https://wiki.ros.org/urdf/XML/joint>`__. The parameters within the ``ros2_control`` tag are not supported any more. Instead of
+
+    .. code-block:: xml
+
+      <ros2_control name="GazeboSystem" type="system">
+        <joint name="right_finger_joint">
+          <command_interface name="position"/>
+          <state_interface name="position">
+            <param name="initial_value">0.15</param>
+          </state_interface>
+          <state_interface name="velocity"/>
+          <state_interface name="effort"/>
+        </joint>
+        <joint name="left_finger_joint">
+          <param name="mimic">right_finger_joint</param>
+          <param name="multiplier">1</param>
+          <command_interface name="position"/>
+          <state_interface name="position"/>
+          <state_interface name="velocity"/>
+          <state_interface name="effort"/>
+        </joint>
+      </ros2_control>
+
+    define your mimic joints directly in the joint definitions:
+
+    .. code-block:: xml
+
+      <joint name="right_finger_joint" type="prismatic">
+        <axis xyz="0 1 0"/>
+        <origin xyz="0.0 -0.48 1" rpy="0.0 0.0 0.0"/>
+        <parent link="base"/>
+        <child link="finger_right"/>
+        <limit effort="1000.0" lower="0" upper="0.38" velocity="10"/>
       </joint>
-      <joint name="left_finger_joint">
-        <param name="mimic">right_finger_joint</param>
-        <param name="multiplier">1</param>
-        <command_interface name="position"/>
-        <state_interface name="position"/>
-        <state_interface name="velocity"/>
-        <state_interface name="effort"/>
+      <joint name="left_finger_joint" type="prismatic">
+        <mimic joint="right_finger_joint" multiplier="1" offset="0"/>
+        <axis xyz="0 1 0"/>
+        <origin xyz="0.0 0.48 1" rpy="0.0 0.0 3.1415926535"/>
+        <parent link="base"/>
+        <child link="finger_left"/>
+        <limit effort="1000.0" lower="0" upper="0.38" velocity="10"/>
       </joint>
-    </ros2_control>
 
-  define your mimic joints directly in the joint definitions:
+hardware_interface
+******************
+* A portable version for string-to-double conversion was added: ``hardware_interface::stod`` (`#1257 <https://github.com/ros-controls/ros2_control/issues/1257>`_)
+* ``test_components`` was moved to its own package (`#1325 <https://github.com/ros-controls/ros2_control/issues/1325>`_)
 
-  .. code-block:: xml
+joint_limits
+************
+* Add header to import limits from standard URDF definition (`#1298 <https://github.com/ros-controls/ros2_control/issues/1298>`_)
 
-    <joint name="right_finger_joint" type="prismatic">
-      <axis xyz="0 1 0"/>
-      <origin xyz="0.0 -0.48 1" rpy="0.0 0.0 0.0"/>
-      <parent link="base"/>
-      <child link="finger_right"/>
-      <limit effort="1000.0" lower="0" upper="0.38" velocity="10"/>
-    </joint>
-    <joint name="left_finger_joint" type="prismatic">
-      <mimic joint="right_finger_joint" multiplier="1" offset="0"/>
-      <axis xyz="0 1 0"/>
-      <origin xyz="0.0 0.48 1" rpy="0.0 0.0 3.1415926535"/>
-      <parent link="base"/>
-      <child link="finger_left"/>
-      <limit effort="1000.0" lower="0" upper="0.38" velocity="10"/>
-    </joint>
+ros2controlcli
+**************
+* Spawner colours were added to ``list_controllers`` depending upon active or inactive (`#1409 <https://github.com/ros-controls/ros2_control/issues/1409>`_)
+* The ``set_hardware_component_state`` verb was added (`#1248 <https://github.com/ros-controls/ros2_control/pull/1248>`_). Use the following command to set the state of a hardware component
+
+  .. code-block:: bash
+
+    ros2 control set_hardware_component_state <hardware_component_name> <state>
