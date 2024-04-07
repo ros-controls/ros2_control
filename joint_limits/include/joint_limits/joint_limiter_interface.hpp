@@ -68,7 +68,7 @@ public:
     // TODO(destogl): get limits from URDF
 
     // Initialize and get joint limits from parameter server
-    if (node_param_itf_)
+    if (has_parameter_interface())
     {
       for (size_t i = 0; i < number_of_joints_; ++i)
       {
@@ -234,6 +234,22 @@ protected:
    * \returns true if limits are enforced, otherwise false.
    */
   JOINT_LIMITS_PUBLIC virtual bool on_enforce(std::vector<double> & desired_joint_states) = 0;
+
+  /** \brief Checks if the logging interface is set.
+   * \returns true if the logging interface is available, otherwise false.
+   */
+  bool has_logging_interface() const
+  {
+    return node_logging_itf_ != nullptr;
+  }
+
+  /** \brief Checks if the parameter interface is set.
+   * \returns true if the parameter interface is available, otherwise false.
+   */
+  bool has_parameter_interface() const
+  {
+    return node_param_itf_ != nullptr;
+  }
 
   size_t number_of_joints_;
   std::vector<std::string> joint_names_;
