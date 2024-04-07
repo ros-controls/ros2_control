@@ -132,6 +132,24 @@ public:
   }
 
   /**
+   * Wrapper init method that accepts the joint names and their limits directly
+   */
+  JOINT_LIMITS_PUBLIC virtual bool init(
+    const std::vector<std::string> & joint_names, const std::vector<LimitsType> & joint_limits,
+    const rclcpp::node_interfaces::NodeParametersInterface::SharedPtr & param_itf,
+    const rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr & logging_itf)
+  {
+    number_of_joints_ = joint_names.size();
+    joint_names_ = joint_names;
+    joint_limits_ = joint_limits;
+    node_param_itf_ = param_itf;
+    node_logging_itf_ = logging_itf;
+    updated_limits_.writeFromNonRT(joint_limits_);
+
+    return on_init();
+  }
+
+  /**
    * Wrapper init method that accepts pointer to the Node.
    * For details see other init method.
    */
@@ -238,18 +256,12 @@ protected:
   /** \brief Checks if the logging interface is set.
    * \returns true if the logging interface is available, otherwise false.
    */
-  bool has_logging_interface() const
-  {
-    return node_logging_itf_ != nullptr;
-  }
+  bool has_logging_interface() const { return node_logging_itf_ != nullptr; }
 
   /** \brief Checks if the parameter interface is set.
    * \returns true if the parameter interface is available, otherwise false.
    */
-  bool has_parameter_interface() const
-  {
-    return node_param_itf_ != nullptr;
-  }
+  bool has_parameter_interface() const { return node_param_itf_ != nullptr; }
 
   size_t number_of_joints_;
   std::vector<std::string> joint_names_;
