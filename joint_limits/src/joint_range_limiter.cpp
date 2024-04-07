@@ -72,6 +72,35 @@ std::pair<double, double> compute_velocity_limits(
   return vel_limits;
 }
 
+std::pair<double, double> compute_effort_limits(
+  joint_limits::JointLimits limits, double act_pos, double act_vel, double /*dt*/)
+{
+  std::pair<double, double> eff_limits({-limits.max_effort, limits.max_effort});
+  if (limits.has_position_limits)
+  {
+    if ((act_pos <= limits.min_position) && (act_vel <= 0.0))
+    {
+      eff_limits.first = 0.0;
+    }
+    else if ((act_pos >= limits.max_position) && (act_vel >= 0.0))
+    {
+      eff_limits.second = 0.0;
+    }
+  }
+  if (limits.has_velocity_limits)
+  {
+    if (act_vel < -limits.max_velocity)
+    {
+      eff_limits.first = 0.0;
+    }
+    else if (act_vel > limits.max_velocity)
+    {
+      eff_limits.second = 0.0;
+    }
+  }
+  return eff_limits;
+}
+
 constexpr size_t ROS_LOG_THROTTLE_PERIOD = 1 * 1000;  // Milliseconds to throttle logs inside loops
 constexpr double VALUE_CONSIDERED_ZERO = 1e-10;
 
@@ -142,8 +171,9 @@ bool JointRangeLimiter<JointLimits, JointControlInterfacesData>::on_enforce(
 
   if (desired.has_effort())
   {
-    desired.effort =
-      std::clamp(desired.effort.value(), -joint_limits.max_effort, joint_limits.max_effort);
+    const auto limits = compute_effort_limits(
+      joint_limits, actual.position.value(), actual.velocity.value(), dt_seconds);
+    desired.effort = std::clamp(desired.effort.value(), limits.first, limits.second);
   }
 
   if (desired.has_acceleration())
