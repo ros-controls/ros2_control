@@ -46,7 +46,7 @@ public:
   JOINT_LIMITS_PUBLIC bool on_init() override { return true; }
 
   JOINT_LIMITS_PUBLIC bool on_configure(
-    const trajectory_msgs::msg::JointTrajectoryPoint & /*current_joint_states*/) override
+    const JointLimitsStateDataType & /*current_joint_states*/) override
   {
     return true;
   }
@@ -67,9 +67,8 @@ public:
    * \returns true if limits are enforced, otherwise false.
    */
   JOINT_LIMITS_PUBLIC bool on_enforce(
-    trajectory_msgs::msg::JointTrajectoryPoint & current_joint_states,
-    trajectory_msgs::msg::JointTrajectoryPoint & desired_joint_states,
-    const rclcpp::Duration & dt) override;
+    JointLimitsStateDataType & current_joint_states,
+    JointLimitsStateDataType & desired_joint_states, const rclcpp::Duration & dt) override;
 
   /** \brief Enforce joint limits to desired arbitrary physical quantity.
    * Additional, commonly used method for enforcing limits by clamping desired input value.
