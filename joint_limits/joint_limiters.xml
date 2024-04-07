@@ -8,4 +8,13 @@
       </description>
     </class>
   </library>
+  <library path="joint_range_limiter">
+    <class name="joint_limits/JointRangeLimiter"
+          type="JointInterfacesRangeLimiter"
+          base_class_type="joint_limits::JointLimiterInterface&lt;joint_limits::JointLimits, joint_limits::JointControlInterfacesData&gt;">
+      <description>
+        Simple joint range limiter using clamping approach with the parsed limits.
+      </description>
+    </class>
+  </library>
 </class_libraries>
