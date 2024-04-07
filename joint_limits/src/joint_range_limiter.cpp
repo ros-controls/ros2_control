@@ -189,8 +189,39 @@ bool JointRangeLimiter<JointLimits, JointControlInterfacesData>::on_enforce(
 
   if (desired.has_acceleration())
   {
-    desired.acceleration = std::clamp(
-      desired.acceleration.value(), -joint_limits.max_deceleration, joint_limits.max_acceleration);
+    // limiting acc or dec function
+    auto apply_acc_or_dec_limit = [&](const double max_acc_or_dec, double & acc) -> bool
+    {
+      if (std::fabs(acc) > max_acc_or_dec)
+      {
+        acc = std::copysign(max_acc_or_dec, acc);
+        return true;
+      }
+      else
+      {
+        return false;
+      }
+    };
+
+    // check if decelerating - if velocity is changing toward 0
+    double desired_acc = desired.acceleration.value();
+    if (
+      joint_limits.has_deceleration_limits &&
+      ((desired.acceleration.value() < 0 && actual.velocity.value() > 0) ||
+       (desired.acceleration.value() > 0 && actual.velocity.value() < 0)))
+    {
+      // limit deceleration
+      apply_acc_or_dec_limit(joint_limits.max_deceleration, desired_acc);
+    }
+    else
+    {
+      // limit acceleration (fallback to acceleration if no deceleration limits)
+      if (joint_limits.has_acceleration_limits)
+      {
+        apply_acc_or_dec_limit(joint_limits.max_acceleration, desired_acc);
+      }
+    }
+    desired.acceleration = desired_acc;
   }
 
   if (desired.has_jerk())
