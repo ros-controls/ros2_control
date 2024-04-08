@@ -3,7 +3,13 @@ Iron to Jazzy
 
 General
 *******
-* A ``version.h`` file will be generated per package using the ament_generate_version_header  (`#1449 <https://github.com/ros-controls/ros2_control/issues/1449>`_)
+* A ``version.h`` file will be generated per package using the ament_generate_version_header  (`#1449 <https://github.com/ros-controls/ros2_control/issues/1449>`_). For example, you can include the version of the package in the logs.
+
+  .. code-block:: cpp
+
+    #include <controller_manager/version.h>
+    ...
+    RCLCPP_INFO(get_logger(), "controller_manager version: %s", CONTROLLER_MANAGER_VERSION_STR);
 
 controller_interface
 ********************
