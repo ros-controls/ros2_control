@@ -667,7 +667,20 @@ controller_interface::return_type ControllerManager::unload_controller(
   RCLCPP_DEBUG(get_logger(), "Cleanup controller");
   // TODO(destogl): remove reference interface if chainable; i.e., add a separate method for
   // cleaning-up controllers?
-  controller.c->get_node()->cleanup();
+  if (is_controller_inactive(*controller.c))
+  {
+    RCLCPP_DEBUG(
+      get_logger(), "Controller '%s' is cleaned-up before unloading!", controller_name.c_str());
+    // TODO(destogl): remove reference interface if chainable; i.e., add a separate method for
+    // cleaning-up controllers?
+    const auto new_state = controller.c->get_node()->cleanup();
+    if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
+    {
+      RCLCPP_WARN(
+        get_logger(), "Failed to clean-up the controller '%s' before unloading!",
+        controller_name.c_str());
+    }
+  }
   executor_->remove_node(controller.c->get_node()->get_node_base_interface());
   to.erase(found_it);
 
