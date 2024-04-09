@@ -15,6 +15,7 @@
 #ifndef CONTROLLER_INTERFACE__CONTROLLER_INTERFACE_BASE_HPP_
 #define CONTROLLER_INTERFACE__CONTROLLER_INTERFACE_BASE_HPP_
 
+#include <condition_variable>
 #include <memory>
 #include <string>
 #include <vector>
@@ -71,7 +72,15 @@ public:
   ControllerInterfaceBase() = default;
 
   CONTROLLER_INTERFACE_PUBLIC
-  virtual ~ControllerInterfaceBase() = default;
+  virtual ~ControllerInterfaceBase()
+  {
+    async_update_stop_ = true;
+    if (thread_.joinable())
+    {
+      async_update_condition_.notify_one();
+      thread_.join();
+    }
+  }
 
   /// Get configuration for controller's required command interfaces.
   /**
@@ -140,6 +149,9 @@ public:
    */
   CONTROLLER_INTERFACE_PUBLIC
   virtual return_type update(const rclcpp::Time & time, const rclcpp::Duration & period) = 0;
+
+  CONTROLLER_INTERFACE_PUBLIC
+  return_type trigger_update(const rclcpp::Time & time, const rclcpp::Duration & period);
 
   CONTROLLER_INTERFACE_PUBLIC
   std::shared_ptr<rclcpp_lifecycle::LifecycleNode> get_node();
@@ -255,6 +267,13 @@ protected:
 
 private:
   std::shared_ptr<rclcpp_lifecycle::LifecycleNode> node_;
+
+  // Async related variables
+  std::thread thread_;
+  std::atomic<bool> async_update_stop_{false};
+  std::atomic<return_type> async_update_return_{return_type::OK};
+  std::condition_variable async_update_condition_;
+  std::mutex async_mtx_;
 };
 
 using ControllerInterfaceBaseSharedPtr = std::shared_ptr<ControllerInterfaceBase>;

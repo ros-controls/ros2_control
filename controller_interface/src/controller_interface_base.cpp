@@ -112,6 +112,46 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::get_state() const
   return node_->get_current_state();
 }
 
+return_type ControllerInterfaceBase::trigger_update(
+  const rclcpp::Time & time, const rclcpp::Duration & period)
+{
+  if (is_async())
+  {
+    /// Start a new thread and call the update function using the conditional variable and this
+    /// conditional variable will be notified when the update function is done and it will wait for
+    /// the next update which will be when the trigger_update function is called again, and at the
+    /// same time it should maintain the update rate. This way we can have async callback
+    // check if the thread_ has a callback running
+    if (!thread_.joinable())
+    {
+      auto update_fn = [this, time, period]() -> void
+      {
+        std::unique_lock<std::mutex> lock(async_mtx_);
+        while (get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE &&
+               !async_update_stop_)
+        {
+          async_update_condition_.wait(lock);
+          lock.unlock();
+          async_update_return_ = update(time, period);
+          async_update_condition_.notify_one();
+        }
+      };
+      thread_ = std::thread(update_fn);
+    }
+    else
+    {
+      std::lock_guard lk(async_mtx_);
+      async_update_condition_.notify_one();
+    }
+    return async_update_return_;
+  }
+  else
+  {
+    return update(time, period);
+  }
+  return return_type::OK;
+}
+
 std::shared_ptr<rclcpp_lifecycle::LifecycleNode> ControllerInterfaceBase::get_node()
 {
   if (!node_.get())
