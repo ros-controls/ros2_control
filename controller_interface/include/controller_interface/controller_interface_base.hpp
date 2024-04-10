@@ -258,6 +258,17 @@ public:
   CONTROLLER_INTERFACE_PUBLIC
   virtual bool is_in_chained_mode() const = 0;
 
+  /// A method to wait until the controller update method is done.
+  CONTROLLER_INTERFACE_PUBLIC
+  void wait_for_update_to_finish()
+  {
+    if (is_async())
+    {
+      std::unique_lock<std::mutex> lock(async_mtx_);
+      async_update_condition_.wait(lock, [this] { return !async_update_ready_; });
+    }
+  }
+
 protected:
   std::vector<hardware_interface::LoanedCommandInterface> command_interfaces_;
   std::vector<hardware_interface::LoanedStateInterface> state_interfaces_;
