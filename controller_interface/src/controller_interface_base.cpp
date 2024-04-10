@@ -130,7 +130,7 @@ return_type ControllerInterfaceBase::trigger_update(
         while (get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE &&
                !async_update_stop_)
         {
-          async_update_condition_.wait(lock, []{ return async_update_ready_;});
+          async_update_condition_.wait(lock, [] { return async_update_ready_; });
           async_update_return_ = update(time, period);
           async_update_ready_ = false;
           lock.unlock();
@@ -140,7 +140,7 @@ return_type ControllerInterfaceBase::trigger_update(
     }
     else
     {
-      if(!async_update_ready_)
+      if (!async_update_ready_)
       {
         std::lock_guard lk(async_mtx_);
         async_update_ready_ = true;
