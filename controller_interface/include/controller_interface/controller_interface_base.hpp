@@ -271,7 +271,7 @@ private:
   // Async related variables
   std::thread thread_;
   std::atomic<bool> async_update_stop_{false};
-  std::atomic<bool> async_update_ready_{false};
+  bool async_update_ready_{false};
   std::atomic<return_type> async_update_return_{return_type::OK};
   std::condition_variable async_update_condition_;
   std::mutex async_mtx_;
