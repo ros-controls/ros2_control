@@ -143,8 +143,8 @@ return_type ControllerInterfaceBase::trigger_update(
       if(!async_update_ready_)
       {
         std::lock_guard lk(async_mtx_);
-        async_update_condition_.notify_one();
         async_update_ready_ = true;
+        async_update_condition_.notify_one();
       }
     }
     return async_update_return_;
