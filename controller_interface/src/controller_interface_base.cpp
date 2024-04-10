@@ -133,7 +133,6 @@ return_type ControllerInterfaceBase::trigger_update(
           async_update_condition_.wait(lock);
           lock.unlock();
           async_update_return_ = update(time, period);
-          async_update_condition_.notify_one();
         }
       };
       thread_ = std::thread(update_fn);
