@@ -279,7 +279,7 @@ protected:
 private:
   std::shared_ptr<rclcpp_lifecycle::LifecycleNode> node_;
   rclcpp::Time current_update_time_;
-  rclcpp::Duration current_update_period_;
+  rclcpp::Duration current_update_period_{0, 0};
 
   // Async related variables
   std::thread thread_;
