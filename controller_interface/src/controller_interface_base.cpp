@@ -130,6 +130,9 @@ return_type ControllerInterfaceBase::trigger_update(
         current_update_time_ = time;
         current_update_period_ = period;
         std::unique_lock<std::mutex> lock(async_mtx_);
+        // \note might be an concurrency issue with the get_state() call here. This mightn't be
+        // critical here as the state of the controller is not expected to change during the update
+        // cycle
         while (get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE &&
                !async_update_stop_)
         {
