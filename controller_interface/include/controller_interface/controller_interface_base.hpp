@@ -297,6 +297,8 @@ protected:
 
 private:
   std::shared_ptr<rclcpp_lifecycle::LifecycleNode> node_;
+  rclcpp::Time current_update_time_;
+  rclcpp::Duration current_update_period_;
 
   // Async related variables
   std::thread thread_;
