@@ -117,11 +117,12 @@ return_type ControllerInterfaceBase::trigger_update(
 {
   if (is_async())
   {
-    /// Start a new thread and call the update function using the conditional variable and this
-    /// conditional variable will be notified when the update function is done and it will wait for
-    /// the next update which will be when the trigger_update function is called again, and at the
-    /// same time it should maintain the update rate. This way we can have async callback
-    // check if the thread_ has a callback running
+    // * If the thread is not joinable, create a new thread and call the update function and wait
+    // for it to be triggered again and repeat the same process.
+    // * If the thread is joinable, check if the current update cycle is finished. If so, then
+    // trigger a new update cycle.
+    // * The controller managr is responsible for triggering the update cycle and maintaining the
+    // controller's update rate and should be acting as a scheduler.
     if (!thread_.joinable())
     {
       auto update_fn = [this]() -> void
