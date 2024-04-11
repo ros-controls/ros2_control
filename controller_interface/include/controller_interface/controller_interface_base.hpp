@@ -277,6 +277,8 @@ protected:
   std::string urdf_ = "";
 
 private:
+  void initialize_async_update_thread();
+
   std::shared_ptr<rclcpp_lifecycle::LifecycleNode> node_;
   rclcpp::Time current_update_time_;
   rclcpp::Duration current_update_period_{0, 0};
