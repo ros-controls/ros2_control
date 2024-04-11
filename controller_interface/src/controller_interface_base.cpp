@@ -127,8 +127,8 @@ return_type ControllerInterfaceBase::trigger_update(
     {
       auto update_fn = [this]() -> void
       {
-        current_update_time_ = time;
-        current_update_period_ = period;
+        async_update_stop_ = false;
+        async_update_ready_ = false;
         std::unique_lock<std::mutex> lock(async_mtx_);
         // \note might be an concurrency issue with the get_state() call here. This mightn't be
         // critical here as the state of the controller is not expected to change during the update
@@ -145,16 +145,13 @@ return_type ControllerInterfaceBase::trigger_update(
       };
       thread_ = std::thread(update_fn);
     }
-    else
+    std::unique_lock<std::mutex> lock(async_mtx_, std::try_to_lock);
+    if (!async_update_ready_ && lock.owns_lock())
     {
-      std::unique_lock<std::mutex> lock(async_mtx_, std::try_to_lock);
-      if (!async_update_ready_ && lock.owns_lock())
-      {
-        async_update_ready_ = true;
-        current_update_time_ = time;
-        current_update_period_ = period;
-        async_update_condition_.notify_one();
-      }
+      async_update_ready_ = true;
+      current_update_time_ = time;
+      current_update_period_ = period;
+      async_update_condition_.notify_one();
     }
     return async_update_return_;
   }
