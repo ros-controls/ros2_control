@@ -141,13 +141,12 @@ return_type ControllerInterfaceBase::trigger_update(
     }
     else
     {
-      std::unique_lock<std::mutex> lock(async_mtx_);
-      if (!async_update_ready_ && lock.try_lock())
+      std::unique_lock<std::mutex> lock(async_mtx_, std::try_to_lock);
+      if (!async_update_ready_ && lock.owns_lock())
       {
         async_update_ready_ = true;
         async_update_condition_.notify_one();
       }
-      lock.unlock();
     }
     return async_update_return_;
   }
