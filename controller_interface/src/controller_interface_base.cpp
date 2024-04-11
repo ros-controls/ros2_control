@@ -124,14 +124,16 @@ return_type ControllerInterfaceBase::trigger_update(
     // check if the thread_ has a callback running
     if (!thread_.joinable())
     {
-      auto update_fn = [this, time, period]() -> void
+      auto update_fn = [this]() -> void
       {
+        current_update_time_ = time;
+        current_update_period_ = period;
         std::unique_lock<std::mutex> lock(async_mtx_);
         while (get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE &&
                !async_update_stop_)
         {
           async_update_condition_.wait(lock, [this] { return async_update_ready_; });
-          async_update_return_ = update(time, period);
+          async_update_return_ = update(current_update_time_, current_update_period_);
           async_update_ready_ = false;
           lock.unlock();
           async_update_condition_.notify_one();
@@ -145,6 +147,8 @@ return_type ControllerInterfaceBase::trigger_update(
       if (!async_update_ready_ && lock.owns_lock())
       {
         async_update_ready_ = true;
+        current_update_time_ = time;
+        current_update_period_ = period;
         async_update_condition_.notify_one();
       }
     }
@@ -152,7 +156,9 @@ return_type ControllerInterfaceBase::trigger_update(
   }
   else
   {
-    return update(time, period);
+    current_update_time_ = time;
+    current_update_period_ = period;
+    return update(current_update_time_, current_update_period_);
   }
   return return_type::OK;
 }
