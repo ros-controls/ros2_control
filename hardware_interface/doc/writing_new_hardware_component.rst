@@ -52,26 +52,52 @@ The following is a step-by-step guide to create source files, basic tests, and c
    4. Write the ``on_configure`` method where you usually setup the communication to the hardware and set everything up so that the hardware can be activated.
 
    5. Implement ``on_cleanup`` method, which does the opposite of ``on_configure``.
-
-   6. Implement ``export_state_interfaces`` and ``export_command_interfaces`` methods where interfaces that hardware offers are defined.
+   6. ``Command-/StateInterfaces`` are now created and exported automatically by the framework via the ``on_export_command_interfaces()`` or ``on_export_state_interfaces()`` method based on the interfaces defined in the .ros2_control.xacro which gets parsed and creates ``InterfaceDescriptions`` accordingly (check the hardware_info.hpp).
+      To access the automatically created ``Command-/StateInterfaces`` we provide to ``std::unordered_map<std::string, InterfaceDescription>``. Where the string is the fully qualified name of the interface and the ``InterfaceDescription`` the configuration of the interface. The ``std::unordered_map<>`` are divided into ``type_state_interfaces_`` and ``type_command_interfaces_`` where type can be: ``joint``, ``sensor``, ``gpio`` and ``unlisted``. E.g. the ``CommandInterfaces`` for all joints can be found in the  ``joint_command_interfaces_`` map. The ``unlisted`` includes all interfaces not listed in the .ros2_control.xacro but created by overriding the ``export_command_interfaces_2()`` or ``export_state_interfaces_2()`` function and creating some custom ``Command-/StateInterfaces``.
       For the ``Sensor``-type hardware interface there is no ``export_command_interfaces`` method.
       As a reminder, the full interface names have structure ``<joint_name>/<interface_type>``.
+   7. (optional) If you want some unlisted ``Command-/StateInterfaces`` not included in the .ros2_control.xacro you can follow those steps:
 
-   7. (optional) For *Actuator* and *System* types of hardware interface implement ``prepare_command_mode_switch`` and ``perform_command_mode_switch`` if your hardware accepts multiple control modes.
+      1. Override the ``virtual std::vector<hardware_interface::InterfaceDescription> export_command_interfaces_2()`` or ``virtual std::vector<hardware_interface::InterfaceDescription> export_state_interfaces_2()``
+      2. 5. Create the InterfaceDescription for each of the Interfaces you want to create in the override ``export_command_interfaces_2()`` or ``export_state_interfaces_2()`` function, add it to a vector and return the vector:
 
-   8. Implement the ``on_activate`` method where hardware "power" is enabled.
+      .. code-block:: c++
 
-   9. Implement the ``on_deactivate`` method, which does the opposite of ``on_activate``.
+         std::vector<hardware_interface::InterfaceDescription> my_unlisted_interfaces;
 
-   10. Implement ``on_shutdown`` method where hardware is shutdown gracefully.
+         InterfaceInfo unlisted_interface;
+         unlisted_interface.name = "some_unlisted_interface";
+         unlisted_interface.min = "-5.0";
+         unlisted_interface.data_type = "5.0";
+         unlisted_interface.data_type = "1.0";
+         unlisted_interface.data_type = "double";
+         my_unlisted_interfaces.push_back(InterfaceDescription(info_.name, unlisted_interface));
 
-   11. Implement ``on_error`` method where different errors from all states are handled.
+         return my_unlisted_interfaces;
 
-   12. Implement the ``read`` method getting the states from the hardware and storing them to internal variables defined in ``export_state_interfaces``.
+      3. The unlisted interface will then be stored in either the ``unlisted_command_interfaces_`` or ``unlisted_state_interfaces_`` map depending in which function they are created.
+      4. 1. You can access it like any other interface with the ``get_state(name)``, ``set_state(name, value)``, ``get_command(name)`` or ``set_command(name, value)``. E.g. ``get_state("some_unlisted_interface")``.
+   8. (optional)In case the default implementation (``on_export_command_interfaces()`` or ``on_export_state_interfaces()`` ) for exporting the ``Command-/StateInterfaces`` is not enough you can override them. You should however consider the following things:
 
-   13. Implement ``write`` method that commands the hardware based on the values stored in internal variables defined in ``export_command_interfaces``.
+     * If you want to have unlisted interfaces available you need to call the ``export_command_interfaces_2()`` or ``export_state_interfaces_2()`` and add them to the ``unlisted_command_interfaces_`` or ``unlisted_state_interfaces_``.
+     * Don't forget to store the created ``Command-/StateInterfaces`` internally as you only return shared_ptrs and the resource manager will not provide access to the created ``Command-/StateInterfaces`` for the hardware. So you must take care of storing them yourself.
+     * Names must be unique!
 
-   14. IMPORTANT: At the end of your file after the namespace is closed, add the ``PLUGINLIB_EXPORT_CLASS`` macro.
+   1.  (optional) For *Actuator* and *System* types of hardware interface implement ``prepare_command_mode_switch`` and ``perform_command_mode_switch`` if your hardware accepts multiple control modes.
+
+   2.  Implement the ``on_activate`` method where hardware "power" is enabled.
+
+   3.  Implement the ``on_deactivate`` method, which does the opposite of ``on_activate``.
+
+   4.  Implement ``on_shutdown`` method where hardware is shutdown gracefully.
+
+   5.  Implement ``on_error`` method where different errors from all states are handled.
+
+   6.  Implement the ``read`` method getting the states from the hardware and storing them to internal variables defined in ``export_state_interfaces``.
+
+   7.  Implement ``write`` method that commands the hardware based on the values stored in internal variables defined in ``export_command_interfaces``.
+
+   8.  IMPORTANT: At the end of your file after the namespace is closed, add the ``PLUGINLIB_EXPORT_CLASS`` macro.
 
       For this you will need to include the ``"pluginlib/class_list_macros.hpp"`` header.
       As first parameters you should provide exact hardware interface class, e.g., ``<my_hardware_interface_package>::<RobotHardwareInterfaceName>``, and as second the base class, i.e., ``hardware_interface::(Actuator|Sensor|System)Interface``.
@@ -125,12 +151,12 @@ The following is a step-by-step guide to create source files, basic tests, and c
 
    2. Add at least the following package into ``<test_depend>`` tag: ``ament_add_gmock`` and ``hardware_interface``.
 
-9. **Compiling and testing the hardware component**
+9.  **Compiling and testing the hardware component**
 
-   1. Now everything is ready to compile the hardware component using the ``colcon build <my_hardware_interface_package>`` command.
+   3. Now everything is ready to compile the hardware component using the ``colcon build <my_hardware_interface_package>`` command.
       Remember to go into the root of your workspace before executing this command.
 
-   2. If compilation was successful, source the ``setup.bash`` file from the install folder and execute ``colcon test <my_hardware_interface_package>`` to check if the new controller can be found through ``pluginlib`` library and be loaded by the controller manager.
+   4. If compilation was successful, source the ``setup.bash`` file from the install folder and execute ``colcon test <my_hardware_interface_package>`` to check if the new controller can be found through ``pluginlib`` library and be loaded by the controller manager.
 
 
 That's it! Enjoy writing great controllers!
