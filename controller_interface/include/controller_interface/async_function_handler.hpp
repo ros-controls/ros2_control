@@ -35,15 +35,7 @@ class AsyncFunctionHandler
 public:
   AsyncFunctionHandler() = default;
 
-  ~AsyncFunctionHandler()
-  {
-    async_update_stop_ = true;
-    if (thread_.joinable())
-    {
-      async_update_condition_.notify_one();
-      thread_.join();
-    }
-  }
+  ~AsyncFunctionHandler() { preempt_async_update(); }
 
   template <typename T>
   void init(
@@ -82,6 +74,24 @@ public:
   bool is_initialized() const
   {
     return thread_.joinable() && get_state_function_ != nullptr && async_function_ != nullptr;
+  }
+
+  bool is_async() const { return thread_.joinable(); }
+
+  bool is_running() const
+  {
+    return thread_.joinable() && !async_update_stop_ &&
+           get_state_function_().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE;
+  }
+
+  void preempt_async_update()
+  {
+    if (is_running())
+    {
+      async_update_stop_ = true;
+      async_update_condition_.notify_one();
+      thread_.join();
+    }
   }
 
 private:
