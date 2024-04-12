@@ -45,6 +45,7 @@ public:
     }
   }
 
+  template <typename T>
   void init(
     std::function<const rclcpp_lifecycle::State &()> get_state_function,
     std::function<T(rclcpp::Time, rclcpp::Duration)> async_function)
@@ -57,6 +58,7 @@ public:
     async_function_ = async_function;
   }
 
+  template <typename T>
   T trigger_async_update(const rclcpp::Time & time, const rclcpp::Duration & period)
   {
     initialize_async_update_thread(get_state_function_, async_function_);
@@ -83,6 +85,7 @@ public:
   }
 
 private:
+  template <typename T>
   void initialize_async_update_thread(
     std::function<const rclcpp_lifecycle::State &()> get_state_function,
     std::function<T(rclcpp::Time, rclcpp::Duration)> async_function)
