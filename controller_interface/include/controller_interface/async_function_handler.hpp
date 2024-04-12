@@ -113,7 +113,13 @@ private:
         while (get_state_function().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE &&
                !async_update_stop_)
         {
-          async_update_condition_.wait(lock, [this] { return async_update_ready_; });
+          async_update_condition_.wait(
+            lock, [this] { return async_update_ready_ || async_update_stop_; });
+          if (async_update_stop_)
+          {
+            lock.unlock();
+            break;
+          }
           async_update_return_ = async_function(current_update_time_, current_update_period_);
           async_update_ready_ = false;
           lock.unlock();
