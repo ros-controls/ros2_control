@@ -73,7 +73,7 @@ public:
     return async_update_return_;
   }
 
-  void wait_for_update_to_finish()
+  void wait_for_update_to_finish() const
   {
     std::unique_lock<std::mutex> lock(async_mtx_);
     async_update_condition_.wait(lock, [this] { return !async_update_ready_; });
