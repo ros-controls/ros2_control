@@ -40,7 +40,7 @@ public:
   template <typename T>
   void init(
     std::function<const rclcpp_lifecycle::State &()> get_state_function,
-    std::function<T(rclcpp::Time, rclcpp::Duration)> async_function)
+    std::function<T(const rclcpp::Time &, const rclcpp::Duration &)> async_function)
   {
     if (thread_.joinable())
     {
@@ -144,7 +144,7 @@ private:
   rclcpp::Duration current_update_period_{0, 0};
 
   std::function<const rclcpp_lifecycle::State &()> get_state_function_;
-  std::function<T(rclcpp::Time, rclcpp::Duration)> async_function_;
+  std::function<T(const rclcpp::Time &, const rclcpp::Duration &)> async_function_;
 
   // Async related variables
   std::thread thread_;
