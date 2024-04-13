@@ -63,10 +63,13 @@ public:
     return async_update_return_;
   }
 
-  void wait_for_update_to_finish() const
+  void wait_for_update_to_finish()
   {
-    std::unique_lock<std::mutex> lock(async_mtx_);
-    async_update_condition_.wait(lock, [this] { return !async_update_ready_; });
+    if (is_running())
+    {
+      std::unique_lock<std::mutex> lock(async_mtx_);
+      async_update_condition_.wait(lock, [this] { return !async_update_ready_; });
+    }
   }
 
   bool is_initialized() const
