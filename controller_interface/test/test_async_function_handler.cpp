@@ -74,8 +74,15 @@ TEST_F(AsyncFunctionHandlerTest, check_initialization)
   ASSERT_TRUE(async_class.get_handler().is_async());
   ASSERT_TRUE(async_class.get_handler().is_running());
   async_class.get_handler().wait_for_update_to_finish();
-  async_class.get_handler().preempt_async_update();
   ASSERT_EQ(async_class.get_counter(), 1);
+  // std::this_thread::sleep_for(std::chrono::microseconds(1));
+  ASSERT_EQ(controller_interface::return_type::OK, async_class.trigger());
+  ASSERT_TRUE(async_class.get_handler().is_initialized());
+  ASSERT_TRUE(async_class.get_handler().is_async());
+  ASSERT_TRUE(async_class.get_handler().is_running());
+  async_class.get_handler().wait_for_update_to_finish();
+  async_class.get_handler().preempt_async_update();
+  ASSERT_EQ(async_class.get_counter(), 2);
   ASSERT_FALSE(async_class.get_handler().is_async());
   ASSERT_FALSE(async_class.get_handler().is_running());
   async_class.get_handler().wait_for_update_to_finish();
