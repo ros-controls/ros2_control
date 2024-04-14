@@ -63,6 +63,32 @@ TEST_F(AsyncFunctionHandlerTest, check_initialization)
   ASSERT_FALSE(async_class.get_handler().is_async());
   ASSERT_FALSE(async_class.get_handler().is_running());
 
+  // It should not be possible to initialize setting wrong functions
+  EXPECT_THROW(async_class.get_handler().init(nullptr, nullptr), std::runtime_error);
+
+  async_class.initialize();
+  ASSERT_TRUE(async_class.get_handler().is_initialized());
+  ASSERT_FALSE(async_class.get_handler().is_async());
+  ASSERT_FALSE(async_class.get_handler().is_running());
+
+  // Once initialized, it should not be possible to initialize again
+  ASSERT_EQ(controller_interface::return_type::OK, async_class.trigger());
+  ASSERT_TRUE(async_class.get_handler().is_initialized());
+  ASSERT_TRUE(async_class.get_handler().is_async());
+  ASSERT_TRUE(async_class.get_handler().is_running());
+  EXPECT_THROW(async_class.initialize(), std::runtime_error);
+  // The preempt_async_update is already called with the destructor
+  // async_class.get_handler().preempt_async_update();
+}
+
+TEST_F(AsyncFunctionHandlerTest, check_triggering)
+{
+  controller_interface::TestAsyncFunctionHandler async_class;
+
+  ASSERT_FALSE(async_class.get_handler().is_initialized());
+  ASSERT_FALSE(async_class.get_handler().is_async());
+  ASSERT_FALSE(async_class.get_handler().is_running());
+
   async_class.initialize();
   ASSERT_TRUE(async_class.get_handler().is_initialized());
   ASSERT_FALSE(async_class.get_handler().is_async());
@@ -75,6 +101,8 @@ TEST_F(AsyncFunctionHandlerTest, check_initialization)
   ASSERT_TRUE(async_class.get_handler().is_running());
   async_class.get_handler().wait_for_update_to_finish();
   ASSERT_EQ(async_class.get_counter(), 1);
+
+  // Trigger one more cycle
   // std::this_thread::sleep_for(std::chrono::microseconds(1));
   ASSERT_EQ(controller_interface::return_type::OK, async_class.trigger());
   ASSERT_TRUE(async_class.get_handler().is_initialized());
@@ -83,6 +111,8 @@ TEST_F(AsyncFunctionHandlerTest, check_initialization)
   async_class.get_handler().wait_for_update_to_finish();
   async_class.get_handler().preempt_async_update();
   ASSERT_EQ(async_class.get_counter(), 2);
+
+  // now the async update should be preempted
   ASSERT_FALSE(async_class.get_handler().is_async());
   ASSERT_FALSE(async_class.get_handler().is_running());
   async_class.get_handler().wait_for_update_to_finish();
