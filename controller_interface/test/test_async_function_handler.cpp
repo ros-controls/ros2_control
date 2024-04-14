@@ -60,22 +60,22 @@ TEST_F(AsyncFunctionHandlerTest, check_initialization)
   controller_interface::TestAsyncFunctionHandler async_class;
 
   ASSERT_FALSE(async_class.get_handler().is_initialized());
-  ASSERT_FALSE(async_class.get_handler().is_async());
   ASSERT_FALSE(async_class.get_handler().is_running());
+  ASSERT_FALSE(async_class.get_handler().is_preempted());
 
   // It should not be possible to initialize setting wrong functions
   EXPECT_THROW(async_class.get_handler().init(nullptr, nullptr), std::runtime_error);
 
   async_class.initialize();
   ASSERT_TRUE(async_class.get_handler().is_initialized());
-  ASSERT_FALSE(async_class.get_handler().is_async());
   ASSERT_FALSE(async_class.get_handler().is_running());
+  ASSERT_FALSE(async_class.get_handler().is_preempted());
 
   // Once initialized, it should not be possible to initialize again
   ASSERT_EQ(controller_interface::return_type::OK, async_class.trigger());
   ASSERT_TRUE(async_class.get_handler().is_initialized());
-  ASSERT_TRUE(async_class.get_handler().is_async());
   ASSERT_TRUE(async_class.get_handler().is_running());
+  ASSERT_FALSE(async_class.get_handler().is_preempted());
   EXPECT_THROW(async_class.initialize(), std::runtime_error);
   // The preempt_async_update is already called with the destructor
   // async_class.get_handler().preempt_async_update();
@@ -86,21 +86,21 @@ TEST_F(AsyncFunctionHandlerTest, check_triggering)
   controller_interface::TestAsyncFunctionHandler async_class;
 
   ASSERT_FALSE(async_class.get_handler().is_initialized());
-  ASSERT_FALSE(async_class.get_handler().is_async());
   ASSERT_FALSE(async_class.get_handler().is_running());
+  ASSERT_FALSE(async_class.get_handler().is_preempted());
   // It shouldn't be possible to trigger without initialization
   EXPECT_THROW(async_class.trigger(), std::runtime_error);
 
   async_class.initialize();
   ASSERT_TRUE(async_class.get_handler().is_initialized());
-  ASSERT_FALSE(async_class.get_handler().is_async());
   ASSERT_FALSE(async_class.get_handler().is_running());
+  ASSERT_FALSE(async_class.get_handler().is_preempted());
 
   EXPECT_EQ(async_class.get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
   ASSERT_EQ(controller_interface::return_type::OK, async_class.trigger());
   ASSERT_TRUE(async_class.get_handler().is_initialized());
-  ASSERT_TRUE(async_class.get_handler().is_async());
   ASSERT_TRUE(async_class.get_handler().is_running());
+  ASSERT_FALSE(async_class.get_handler().is_preempted());
   async_class.get_handler().wait_for_update_to_finish();
   ASSERT_EQ(async_class.get_counter(), 1);
 
@@ -108,15 +108,15 @@ TEST_F(AsyncFunctionHandlerTest, check_triggering)
   // std::this_thread::sleep_for(std::chrono::microseconds(1));
   ASSERT_EQ(controller_interface::return_type::OK, async_class.trigger());
   ASSERT_TRUE(async_class.get_handler().is_initialized());
-  ASSERT_TRUE(async_class.get_handler().is_async());
   ASSERT_TRUE(async_class.get_handler().is_running());
+  ASSERT_FALSE(async_class.get_handler().is_preempted());
   async_class.get_handler().wait_for_update_to_finish();
   async_class.get_handler().preempt_async_update();
   ASSERT_EQ(async_class.get_counter(), 2);
 
   // now the async update should be preempted
-  ASSERT_FALSE(async_class.get_handler().is_async());
   ASSERT_FALSE(async_class.get_handler().is_running());
+  ASSERT_TRUE(async_class.get_handler().is_preempted());
   async_class.get_handler().wait_for_update_to_finish();
 }
 
@@ -126,16 +126,16 @@ TEST_F(AsyncFunctionHandlerTest, trigger_for_several_cycles)
 
   async_class.initialize();
   ASSERT_TRUE(async_class.get_handler().is_initialized());
-  ASSERT_FALSE(async_class.get_handler().is_async());
   ASSERT_FALSE(async_class.get_handler().is_running());
+  ASSERT_FALSE(async_class.get_handler().is_preempted());
 
   EXPECT_EQ(async_class.get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
   for (int i = 1; i < 1e4; i++)
   {
     ASSERT_EQ(controller_interface::return_type::OK, async_class.trigger());
     ASSERT_TRUE(async_class.get_handler().is_initialized());
-    ASSERT_TRUE(async_class.get_handler().is_async());
     ASSERT_TRUE(async_class.get_handler().is_running());
+    ASSERT_FALSE(async_class.get_handler().is_preempted());
     async_class.get_handler().wait_for_update_to_finish();
     ASSERT_EQ(async_class.get_counter(), i);
     std::this_thread::sleep_for(std::chrono::microseconds(1));
@@ -143,8 +143,8 @@ TEST_F(AsyncFunctionHandlerTest, trigger_for_several_cycles)
   async_class.get_handler().preempt_async_update();
 
   // now the async update should be preempted
-  ASSERT_FALSE(async_class.get_handler().is_async());
   ASSERT_FALSE(async_class.get_handler().is_running());
+  ASSERT_TRUE(async_class.get_handler().is_preempted());
 }
 
 TEST_F(AsyncFunctionHandlerTest, test_with_deactivate_and_activate_cycles)
@@ -155,8 +155,8 @@ TEST_F(AsyncFunctionHandlerTest, test_with_deactivate_and_activate_cycles)
   async_class.initialize();
   async_class.deactivate();
   ASSERT_TRUE(async_class.get_handler().is_initialized());
-  ASSERT_FALSE(async_class.get_handler().is_async());
   ASSERT_FALSE(async_class.get_handler().is_running());
+  ASSERT_TRUE(async_class.get_handler().is_preempted());
 
   // The thread will start and end immediately when invoked in inactive state
   for (size_t i = 0; i < 3; i++)
@@ -165,8 +165,8 @@ TEST_F(AsyncFunctionHandlerTest, test_with_deactivate_and_activate_cycles)
     ASSERT_EQ(controller_interface::return_type::OK, async_class.trigger());
     async_class.get_handler().join_async_update_thread();
     ASSERT_TRUE(async_class.get_handler().is_initialized());
-    ASSERT_FALSE(async_class.get_handler().is_async());
     ASSERT_FALSE(async_class.get_handler().is_running());
+    ASSERT_TRUE(async_class.get_handler().is_preempted());
   }
 
   // Now activate it and launch again
@@ -176,8 +176,8 @@ TEST_F(AsyncFunctionHandlerTest, test_with_deactivate_and_activate_cycles)
   {
     ASSERT_EQ(controller_interface::return_type::OK, async_class.trigger());
     ASSERT_TRUE(async_class.get_handler().is_initialized());
-    ASSERT_TRUE(async_class.get_handler().is_async());
     ASSERT_TRUE(async_class.get_handler().is_running());
+    ASSERT_FALSE(async_class.get_handler().is_preempted());
     async_class.get_handler().wait_for_update_to_finish();
     ASSERT_EQ(async_class.get_counter(), i);
     std::this_thread::sleep_for(std::chrono::microseconds(1));
@@ -190,8 +190,8 @@ TEST_F(AsyncFunctionHandlerTest, test_with_deactivate_and_activate_cycles)
   EXPECT_EQ(async_class.get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
   async_class.get_handler().join_async_update_thread();
   ASSERT_TRUE(async_class.get_handler().is_initialized());
-  ASSERT_FALSE(async_class.get_handler().is_async());
   ASSERT_FALSE(async_class.get_handler().is_running());
+  ASSERT_TRUE(async_class.get_handler().is_preempted());
 
   // Now let's test the case of activating it and then deactivating it when the thread is waiting
   // for a trigger to start new update cycle execution
@@ -203,10 +203,11 @@ TEST_F(AsyncFunctionHandlerTest, test_with_deactivate_and_activate_cycles)
   async_class.deactivate();
   EXPECT_EQ(async_class.get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
   // Now they continue to wait until a new cycle is triggered or the preempt is called
-  ASSERT_TRUE(async_class.get_handler().is_async());
+  ASSERT_TRUE(async_class.get_handler().is_running());
+  ASSERT_TRUE(async_class.get_handler().is_preempted());
 
   // now the async update should be preempted
   async_class.get_handler().preempt_async_update();
-  ASSERT_FALSE(async_class.get_handler().is_async());
   ASSERT_FALSE(async_class.get_handler().is_running());
+  ASSERT_TRUE(async_class.get_handler().is_preempted());
 }
