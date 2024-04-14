@@ -62,6 +62,7 @@ public:
       async_update_ready_ = true;
       current_update_time_ = time;
       current_update_period_ = period;
+      lock.unlock();
       async_update_condition_.notify_one();
     }
     return async_update_return_;
