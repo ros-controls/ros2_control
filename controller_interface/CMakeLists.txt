@@ -73,6 +73,11 @@ if(BUILD_TESTING)
   ament_target_dependencies(test_imu_sensor
     sensor_msgs
   )
+
+  ament_add_gmock(test_async_function_handler test/test_async_function_handler.cpp)
+  target_link_libraries(test_async_function_handler
+    controller_interface
+  )
 endif()
 
 install(
