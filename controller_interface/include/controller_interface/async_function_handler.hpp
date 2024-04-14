@@ -127,31 +127,32 @@ private:
     }
     if (!thread_.joinable())
     {
-      auto update_fn = [this, get_state_function, async_function]() -> void
-      {
-        async_update_stop_ = false;
-        async_update_ready_ = false;
-        std::unique_lock<std::mutex> lock(async_mtx_);
-        // \note There might be an concurrency issue with the get_state() call here. This mightn't
-        // be critical here as the state of the controller is not expected to change during the
-        // update cycle
-        while (get_state_function().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE &&
-               !async_update_stop_)
+      async_update_stop_ = false;
+      async_update_ready_ = false;
+      async_update_return_ = T();
+      thread_ = std::thread(
+        [this]() -> void
         {
-          async_update_condition_.wait(
-            lock, [this] { return async_update_ready_ || async_update_stop_; });
-          if (async_update_stop_)
+          // \note There might be an concurrency issue with the get|ate() call here. This mightn't
+          // be critical here as the state of the controller is not expected to change during the
+          // update cycle
+          while (get_state_function_().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE &&
+                 !async_update_stop_)
           {
+            std::unique_lock<std::mutex> lock(async_mtx_);
+            async_update_condition_.wait(
+              lock, [this] { return async_update_ready_ || async_update_stop_; });
+            if (async_update_stop_)
+            {
+              lock.unlock();
+              break;
+            }
+            async_update_return_ = async_function_(current_update_time_, current_update_period_);
+            async_update_ready_ = false;
             lock.unlock();
-            break;
+            async_update_condition_.notify_one();
           }
-          async_update_return_ = async_function(current_update_time_, current_update_period_);
-          async_update_ready_ = false;
-          lock.unlock();
-          async_update_condition_.notify_one();
-        }
-      };
-      thread_ = std::thread(update_fn);
+        });
     }
   }
 
