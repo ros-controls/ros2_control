@@ -40,6 +40,18 @@ public:
 
   int get_counter() const { return counter_; }
 
+  void activate()
+  {
+    state_ =
+      rclcpp_lifecycle::State(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, state_.label());
+  }
+
+  void deactivate()
+  {
+    state_ =
+      rclcpp_lifecycle::State(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, state_.label());
+  }
+
 private:
   rclcpp_lifecycle::State state_;
   rclcpp::Time last_callback_time_;
