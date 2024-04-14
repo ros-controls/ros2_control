@@ -41,6 +41,10 @@ public:
     std::function<const rclcpp_lifecycle::State &()> get_state_function,
     std::function<T(const rclcpp::Time &, const rclcpp::Duration &)> async_function)
   {
+    if (get_state_function == nullptr || async_function == nullptr)
+    {
+      throw std::runtime_error("AsyncFunctionHandler parsed functions are not valid!");
+    }
     if (thread_.joinable())
     {
       throw std::runtime_error("AsyncFunctionHandler already initialized!");
