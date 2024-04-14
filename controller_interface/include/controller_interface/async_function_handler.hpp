@@ -102,7 +102,7 @@ public:
 
   void preempt_async_update()
   {
-    if (is_running())
+    if (thread_.joinable())
     {
       async_update_stop_ = true;
       async_update_condition_.notify_one();
