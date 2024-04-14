@@ -18,6 +18,8 @@
 #include <atomic>
 #include <condition_variable>
 #include <memory>
+#include <mutex>
+#include <stdexcept>
 #include <string>
 #include <thread>
 #include <vector>
