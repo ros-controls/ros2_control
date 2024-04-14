@@ -79,7 +79,8 @@ public:
 
   bool is_initialized() const
   {
-    return thread_.joinable() && get_state_function_ != nullptr && async_function_ != nullptr;
+    return get_state_function_ != nullptr && async_function_ != nullptr;
+  }
   }
 
   bool is_async() const { return thread_.joinable(); }
