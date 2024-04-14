@@ -119,3 +119,30 @@ TEST_F(AsyncFunctionHandlerTest, check_triggering)
   ASSERT_FALSE(async_class.get_handler().is_running());
   async_class.get_handler().wait_for_update_to_finish();
 }
+
+TEST_F(AsyncFunctionHandlerTest, trigger_for_several_cycles)
+{
+  controller_interface::TestAsyncFunctionHandler async_class;
+
+  async_class.initialize();
+  ASSERT_TRUE(async_class.get_handler().is_initialized());
+  ASSERT_FALSE(async_class.get_handler().is_async());
+  ASSERT_FALSE(async_class.get_handler().is_running());
+
+  EXPECT_EQ(async_class.get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+  for (int i = 1; i < 1e4; i++)
+  {
+    ASSERT_EQ(controller_interface::return_type::OK, async_class.trigger());
+    ASSERT_TRUE(async_class.get_handler().is_initialized());
+    ASSERT_TRUE(async_class.get_handler().is_async());
+    ASSERT_TRUE(async_class.get_handler().is_running());
+    async_class.get_handler().wait_for_update_to_finish();
+    ASSERT_EQ(async_class.get_counter(), i);
+    std::this_thread::sleep_for(std::chrono::microseconds(1));
+  }
+  async_class.get_handler().preempt_async_update();
+
+  // now the async update should be preempted
+  ASSERT_FALSE(async_class.get_handler().is_async());
+  ASSERT_FALSE(async_class.get_handler().is_running());
+}
