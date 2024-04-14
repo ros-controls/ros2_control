@@ -88,6 +88,8 @@ TEST_F(AsyncFunctionHandlerTest, check_triggering)
   ASSERT_FALSE(async_class.get_handler().is_initialized());
   ASSERT_FALSE(async_class.get_handler().is_async());
   ASSERT_FALSE(async_class.get_handler().is_running());
+  // It shouldn't be possible to trigger without initialization
+  EXPECT_THROW(async_class.trigger(), std::runtime_error);
 
   async_class.initialize();
   ASSERT_TRUE(async_class.get_handler().is_initialized());
