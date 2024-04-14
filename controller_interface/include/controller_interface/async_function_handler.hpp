@@ -81,6 +81,13 @@ public:
   {
     return get_state_function_ != nullptr && async_function_ != nullptr;
   }
+
+  void join_async_update_thread()
+  {
+    if (thread_.joinable())
+    {
+      thread_.join();
+    }
   }
 
   bool is_async() const { return thread_.joinable(); }
