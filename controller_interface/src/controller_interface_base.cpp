@@ -158,4 +158,11 @@ bool ControllerInterfaceBase::is_async() const { return is_async_; }
 
 const std::string & ControllerInterfaceBase::get_robot_description() const { return urdf_; }
 
+void ControllerInterfaceBase::stop_async_update_cycle()
+{
+  if (is_async() && async_handler_ && async_handler_->is_running())
+  {
+    async_handler_->stop_async_update();
+  }
+}
 }  // namespace controller_interface

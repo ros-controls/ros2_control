@@ -261,6 +261,21 @@ public:
   CONTROLLER_INTERFACE_PUBLIC
   virtual bool is_in_chained_mode() const = 0;
 
+  /// Method to stop any running async update cycle after finishing the current cycle.
+  /**
+   * Method to stop any running async update cycle after finishing the current cycle. This is needed
+   * to be called before deactivating the controller by the controller_manager, so that the
+   * interfaces still exist when the controller finishes its cycle and then it's exits.
+   *
+   * **The method is not real-time safe and shouldn't be called in the control loop.**
+   *
+   * If the controller is running in async mode, the method will stop after the current update cycle
+   * execution.
+   * If the controller is not running in async mode, the method will do nothing.
+   */
+  CONTROLLER_INTERFACE_PUBLIC
+  void stop_async_update_cycle();
+
 protected:
   std::vector<hardware_interface::LoanedCommandInterface> command_interfaces_;
   std::vector<hardware_interface::LoanedStateInterface> state_interfaces_;
