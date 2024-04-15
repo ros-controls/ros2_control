@@ -114,7 +114,7 @@ public:
    */
   bool is_initialized() const
   {
-    return get_state_function_ != nullptr && async_function_ != nullptr;
+    return get_state_function_ && async_function_;
   }
 
   /// Join the async update thread
