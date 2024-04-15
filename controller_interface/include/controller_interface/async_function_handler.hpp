@@ -90,9 +90,9 @@ public:
   {
     initialize_async_update_thread();
     std::unique_lock<std::mutex> lock(async_mtx_, std::try_to_lock);
-    if (!async_update_ready_ && lock.owns_lock())
+    if (!trigger_in_progress_ && lock.owns_lock())
     {
-      async_update_ready_ = true;
+      trigger_in_progress_ = true;
       current_update_time_ = time;
       current_update_period_ = period;
       lock.unlock();
@@ -110,7 +110,7 @@ public:
     if (is_running())
     {
       std::unique_lock<std::mutex> lock(async_mtx_);
-      async_update_condition_.wait(lock, [this] { return !async_update_ready_; });
+      async_update_condition_.wait(lock, [this] { return !trigger_in_progress_; });
     }
   }
 
@@ -181,7 +181,7 @@ private:
     if (!thread_.joinable())
     {
       async_update_stop_ = false;
-      async_update_ready_ = false;
+      trigger_in_progress_ = false;
       async_update_return_ = T();
       thread_ = std::thread(
         [this]() -> void
@@ -194,13 +194,13 @@ private:
           {
             std::unique_lock<std::mutex> lock(async_mtx_);
             async_update_condition_.wait(
-              lock, [this] { return async_update_ready_ || async_update_stop_; });
+              lock, [this] { return trigger_in_progress_ || async_update_stop_; });
             if (async_update_stop_)
             {
               break;
             }
             async_update_return_ = async_function_(current_update_time_, current_update_period_);
-            async_update_ready_ = false;
+            trigger_in_progress_ = false;
             lock.unlock();
             async_update_condition_.notify_one();
           }
@@ -217,7 +217,7 @@ private:
   // Async related variables
   std::thread thread_;
   std::atomic_bool async_update_stop_{false};
-  std::atomic_bool async_update_ready_{false};
+  std::atomic_bool trigger_in_progress_{false};
   std::atomic<T> async_update_return_;
   std::condition_variable async_update_condition_;
   std::mutex async_mtx_;
