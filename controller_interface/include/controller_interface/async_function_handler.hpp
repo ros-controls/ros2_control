@@ -165,15 +165,11 @@ public:
 private:
   /// Initialize the async update thread
   /**
-   * @param get_state_function Function that returns the current lifecycle state
-   * @param async_function Function that will be called asynchronously
    * If the async update thread is not running, it will start the async update thread.
    * If the async update thread is already configuredand running, does nothing and return
    * immediately.
    */
-  void initialize_async_update_thread(
-    std::function<const rclcpp_lifecycle::State &()> get_state_function,
-    std::function<T(const rclcpp::Time &, const rclcpp::Duration &)> async_function)
+  void initialize_async_update_thread()
   {
     if (get_state_function_ == nullptr || async_function_ == nullptr)
     {
