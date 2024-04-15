@@ -49,7 +49,8 @@ public:
    * @param get_state_function Function that returns the current lifecycle state
    * @param async_function Function that will be called asynchronously
    * If the AsyncFunctionHandler is already initialized and is running, it will throw a runtime
-   * error. If the parsed functions are not valid, it will throw a runtime error.
+   * error.
+   * If the parsed functions are not valid, it will throw a runtime error.
    */
   void init(
     std::function<const rclcpp_lifecycle::State &()> get_state_function,
@@ -80,9 +81,11 @@ public:
    * @return The return value of the async function
    * If the AsyncFunctionHandler is not initialized properly, it will throw a runtime error.
    * If the async update method is waiting for the trigger, it will notify the async thread to start
-   * the update cycle. Check if the current update cycle is finished. If so, then trigger a new
-   * update cycle. If the async update method is still running, it will return the last return value
-   * of the async function. \note In the case of controllers, The controller manager is responsible
+   * the update cycle.
+   * If the async update method is still running, it will return the last return value of the async
+   * function.
+   *
+   * \note In the case of controllers, The controller manager is responsible
    * for triggering and maintaining the controller's update rate, as it should be only acting as a
    * scheduler. Same applies to the resource manager when handling the hardware components.
    */
@@ -123,6 +126,7 @@ public:
   /// Join the async update thread
   /**
    * If the async method is running, it will join the async thread.
+   * If the async method is not running, it will return immediately.
    */
   void join_async_update_thread()
   {
@@ -150,7 +154,7 @@ public:
        get_state_function_().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE));
   }
 
-  /// Preempt the async update
+  /// Stops the async update thread
   /**
    * If the async method is running, it will notify the async thread to stop and then joins the
    * async thread.
@@ -169,7 +173,7 @@ private:
   /// Initialize the async update thread
   /**
    * If the async update thread is not running, it will start the async update thread.
-   * If the async update thread is already configuredand running, does nothing and return
+   * If the async update thread is already configured and running, does nothing and return
    * immediately.
    */
   void initialize_async_update_thread()
