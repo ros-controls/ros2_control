@@ -42,7 +42,7 @@ class AsyncFunctionHandler
 public:
   AsyncFunctionHandler() = default;
 
-  ~AsyncFunctionHandler() { preempt_async_update(); }
+  ~AsyncFunctionHandler() { stop_async_update(); }
 
   /// Initialize the AsyncFunctionHandler with the get_state_function and async_function
   /**
@@ -82,7 +82,7 @@ public:
    */
   T trigger_async_update(const rclcpp::Time & time, const rclcpp::Duration & period)
   {
-    initialize_async_update_thread(get_state_function_, async_function_);
+    initialize_async_update_thread();
     std::unique_lock<std::mutex> lock(async_mtx_, std::try_to_lock);
     if (!async_update_ready_ && lock.owns_lock())
     {
@@ -112,10 +112,7 @@ public:
   /**
    * @return True if the AsyncFunctionHandler is initialized, false otherwise
    */
-  bool is_initialized() const
-  {
-    return get_state_function_ && async_function_;
-  }
+  bool is_initialized() const { return get_state_function_ && async_function_; }
 
   /// Join the async update thread
   /**
@@ -152,7 +149,7 @@ public:
    * If the async method is running, it will notify the async thread to stop and then joins the
    * async thread.
    */
-  void preempt_async_update()
+  void stop_async_update()
   {
     if (is_running())
     {
