@@ -174,9 +174,9 @@ private:
    */
   void initialize_async_update_thread()
   {
-    if (get_state_function_ == nullptr || async_function_ == nullptr)
+    if (!is_initialized())
     {
-      throw std::runtime_error("AsyncFunctionHandler not initialized properly!");
+      throw std::runtime_error("AsyncFunctionHandler: need to be initialized first!");
     }
     if (!thread_.joinable())
     {
