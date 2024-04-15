@@ -2298,7 +2298,7 @@ controller_interface::return_type ControllerManager::update(
         // Catch exceptions thrown by the controller update function
         try
         {
-          controller_ret = loaded_controller.c->update(time, controller_actual_period);
+          controller_ret = loaded_controller.c->trigger_update(time, controller_actual_period);
         }
         catch (const std::exception & e)
         {
