@@ -104,11 +104,11 @@ public:
     return async_update_return_;
   }
 
-  /// Waits until the async update finishes the current cycle
+  /// Waits until the current async update method cycle to finish
   /**
    * If the async method is running, it will wait for the current async method call to finish.
    */
-  void wait_for_update_to_finish()
+  void wait_for_trigger_cycle_to_finish()
   {
     if (is_running())
     {
