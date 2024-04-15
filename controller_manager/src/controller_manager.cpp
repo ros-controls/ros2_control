@@ -1490,6 +1490,8 @@ void ControllerManager::deactivate_controllers(
     {
       try
       {
+        // This is needed by the async controllers to finish their current cycle
+        controller->stop_async_update_cycle();
         const auto new_state = controller->get_node()->deactivate();
         controller->release_interfaces();
 
