@@ -15,11 +15,11 @@
 #ifndef CONTROLLER_INTERFACE__CONTROLLER_INTERFACE_BASE_HPP_
 #define CONTROLLER_INTERFACE__CONTROLLER_INTERFACE_BASE_HPP_
 
-#include <condition_variable>
 #include <memory>
 #include <string>
 #include <vector>
 
+#include "controller_interface/async_function_handler.hpp"
 #include "controller_interface/visibility_control.h"
 
 #include "hardware_interface/handle.hpp"
@@ -72,15 +72,7 @@ public:
   ControllerInterfaceBase() = default;
 
   CONTROLLER_INTERFACE_PUBLIC
-  virtual ~ControllerInterfaceBase()
-  {
-    async_update_stop_ = true;
-    if (thread_.joinable())
-    {
-      async_update_condition_.notify_one();
-      thread_.join();
-    }
-  }
+  virtual ~ControllerInterfaceBase() = default;
 
   /// Get configuration for controller's required command interfaces.
   /**
@@ -258,17 +250,6 @@ public:
   CONTROLLER_INTERFACE_PUBLIC
   virtual bool is_in_chained_mode() const = 0;
 
-  /// A method to wait until the controller update method is done.
-  CONTROLLER_INTERFACE_PUBLIC
-  void wait_for_update_to_finish()
-  {
-    if (is_async())
-    {
-      std::unique_lock<std::mutex> lock(async_mtx_);
-      async_update_condition_.wait(lock, [this] { return !async_update_ready_; });
-    }
-  }
-
 protected:
   std::vector<hardware_interface::LoanedCommandInterface> command_interfaces_;
   std::vector<hardware_interface::LoanedStateInterface> state_interfaces_;
@@ -277,19 +258,8 @@ protected:
   std::string urdf_ = "";
 
 private:
-  void initialize_async_update_thread();
-
   std::shared_ptr<rclcpp_lifecycle::LifecycleNode> node_;
-  rclcpp::Time current_update_time_;
-  rclcpp::Duration current_update_period_{0, 0};
-
-  // Async related variables
-  std::thread thread_;
-  std::atomic_bool async_update_stop_{false};
-  bool async_update_ready_{false};
-  std::atomic<return_type> async_update_return_{return_type::OK};
-  std::condition_variable async_update_condition_;
-  std::mutex async_mtx_;
+  std::unique_ptr<ros2_control::AsyncFunctionHandler<return_type>> async_handler_;
 };
 
 using ControllerInterfaceBaseSharedPtr = std::shared_ptr<ControllerInterfaceBase>;
