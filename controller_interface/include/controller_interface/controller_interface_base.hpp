@@ -142,6 +142,17 @@ public:
   CONTROLLER_INTERFACE_PUBLIC
   virtual return_type update(const rclcpp::Time & time, const rclcpp::Duration & period) = 0;
 
+  /**
+   * Trigger update method. This method is used by the controller_manager to trigger the update
+   * method of the controller.
+   * The method is used to trigger the update method of the controller synchronously or
+   * asynchronously, based on the controller configuration.
+   * **The method called in the (real-time) control loop.**
+   *
+   * \param[in] time The time at the start of this control loop iteration
+   * \param[in] period The measured time taken by the last control loop iteration
+   * \returns return_type::OK if update is successfully, otherwise return_type::ERROR.
+   */
   CONTROLLER_INTERFACE_PUBLIC
   return_type trigger_update(const rclcpp::Time & time, const rclcpp::Duration & period);
 
