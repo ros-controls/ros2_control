@@ -24,33 +24,22 @@ class TestAsyncFunctionHandler
 {
 public:
   TestAsyncFunctionHandler();
-  ~TestAsyncFunctionHandler();
 
   void initialize();
 
   ros2_control::AsyncFunctionHandler<return_type> & get_handler() { return handler_; }
 
-  return_type trigger()
-  {
-    return handler_.trigger_async_update(last_callback_time_, last_callback_period_);
-  }
+  return_type trigger();
+
   return_type update(const rclcpp::Time & time, const rclcpp::Duration & period);
 
   const rclcpp_lifecycle::State & get_state() const;
 
-  int get_counter() const { return counter_; }
+  int get_counter() const;
 
-  void activate()
-  {
-    state_ =
-      rclcpp_lifecycle::State(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, state_.label());
-  }
+  void activate();
 
-  void deactivate()
-  {
-    state_ =
-      rclcpp_lifecycle::State(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, state_.label());
-  }
+  void deactivate();
 
 private:
   rclcpp_lifecycle::State state_;

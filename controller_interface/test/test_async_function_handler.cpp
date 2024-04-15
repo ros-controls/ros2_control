@@ -24,14 +24,17 @@ TestAsyncFunctionHandler::TestAsyncFunctionHandler()
 {
 }
 
-TestAsyncFunctionHandler::~TestAsyncFunctionHandler() {}
-
 void TestAsyncFunctionHandler::initialize()
 {
   handler_.init(
     std::bind(&TestAsyncFunctionHandler::get_state, this),
     std::bind(
       &TestAsyncFunctionHandler::update, this, std::placeholders::_1, std::placeholders::_2));
+}
+
+return_type TestAsyncFunctionHandler::trigger()
+{
+  return handler_.trigger_async_update(last_callback_time_, last_callback_period_);
 }
 
 return_type TestAsyncFunctionHandler::update(
@@ -46,6 +49,18 @@ return_type TestAsyncFunctionHandler::update(
 }
 const rclcpp_lifecycle::State & TestAsyncFunctionHandler::get_state() const { return state_; }
 
+int TestAsyncFunctionHandler::get_counter() const { return counter_; }
+void TestAsyncFunctionHandler::activate()
+{
+  state_ =
+    rclcpp_lifecycle::State(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, state_.label());
+}
+
+void TestAsyncFunctionHandler::deactivate()
+{
+  state_ =
+    rclcpp_lifecycle::State(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, state_.label());
+}
 }  // namespace controller_interface
 class AsyncFunctionHandlerTest : public ::testing::Test
 {
