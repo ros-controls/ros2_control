@@ -237,11 +237,17 @@ protected:
 
   /** \brief Checks if the logging interface is set.
    * \returns true if the logging interface is available, otherwise false.
+   *
+   * \note this way of interfacing would be useful for instances where the logging interface is not
+   * available, for example in the ResourceManager or ResourceStorage classes.
    */
   bool has_logging_interface() const { return node_logging_itf_ != nullptr; }
 
   /** \brief Checks if the parameter interface is set.
    * \returns true if the parameter interface is available, otherwise false.
+   *
+   * * \note this way of interfacing would be useful for instances where the logging interface is
+   * not available, for example in the ResourceManager or ResourceStorage classes.
    */
   bool has_parameter_interface() const { return node_param_itf_ != nullptr; }
 
