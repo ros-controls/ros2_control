@@ -218,6 +218,8 @@ def main(args=None):
             )
             parser.print_help()
             return 0
+    except KeyboardInterrupt:
+        pass
     finally:
         rclpy.shutdown()
 
