@@ -426,55 +426,13 @@ bool JointSaturationLimiter<JointLimits, trajectory_msgs::msg::JointTrajectoryPo
   return limits_enforced;
 }
 
-template <>
-bool JointSaturationLimiter<JointLimits, trajectory_msgs::msg::JointTrajectoryPoint>::on_enforce(
-  std::vector<double> & desired_joint_states)
-{
-  std::vector<std::string> limited_joints_effort;
-  bool limits_enforced = false;
-
-  bool has_cmd = (desired_joint_states.size() == number_of_joints_);
-  if (!has_cmd)
-  {
-    return false;
-  }
-
-  for (size_t index = 0; index < number_of_joints_; ++index)
-  {
-    if (joint_limits_[index].has_effort_limits)
-    {
-      double max_effort = joint_limits_[index].max_effort;
-      if (std::fabs(desired_joint_states[index]) > max_effort)
-      {
-        desired_joint_states[index] = std::copysign(max_effort, desired_joint_states[index]);
-        limited_joints_effort.emplace_back(joint_names_[index]);
-        limits_enforced = true;
-      }
-    }
-  }
-
-  if (limited_joints_effort.size() > 0)
-  {
-    std::ostringstream ostr;
-    for (auto jnt : limited_joints_effort)
-    {
-      ostr << jnt << " ";
-    }
-    ostr << "\b \b";  // erase last character
-    RCLCPP_WARN_STREAM_THROTTLE(
-      node_logging_itf_->get_logger(), *clock_, ROS_LOG_THROTTLE_PERIOD,
-      "Joint(s) [" << ostr.str().c_str() << "] would exceed effort limits, limiting");
-  }
-
-  return limits_enforced;
-}
-
 }  // namespace joint_limits
 
 #include "pluginlib/class_list_macros.hpp"
 
 // typedefs are needed here to avoid issues with macro expansion. ref:
 // https://stackoverflow.com/a/8942986
+typedef std::map<int, int> int_map;
 typedef joint_limits::JointSaturationLimiter<
   joint_limits::JointLimits, trajectory_msgs::msg::JointTrajectoryPoint>
   JointSaturationLimiterTrajectoryPoint;

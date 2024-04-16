@@ -75,17 +75,6 @@ public:
     JointLimitsStateDataType & actual, JointLimitsStateDataType & desired,
     const rclcpp::Duration & dt) override;
 
-  /** \brief Enforce joint limits to desired arbitrary physical quantity.
-   * Additional, commonly used method for enforcing limits by clamping desired input value.
-   * The limit is defined in effort limits of the `joint::limits/JointLimit` structure.
-   *
-   * If `has_effort_limits` is set to false, the limits will be not enforced to a joint.
-   *
-   * \param[in,out] desired_joint_states physical quantity that should be adjusted to obey the
-   * limits. \returns true if limits are enforced, otherwise false.
-   */
-  JOINT_LIMITS_PUBLIC bool on_enforce(std::vector<double> & /*desired_joint_states*/) override;
-
 private:
   rclcpp::Clock::SharedPtr clock_;
   JointLimitsStateDataType prev_command_;
