@@ -1,0 +1,20 @@
+type: 'rosdoc2 config'
+version: 1
+
+---
+
+settings:
+    # Not generating any documentation of code
+    generate_package_index: false
+    always_run_doxygen: false
+    enable_breathe: false
+    enable_exhale: false
+    always_run_sphinx_apidoc: false
+
+builders:
+   # Configure Sphinx with the location of the docs:
+    - sphinx: {
+        name: 'ros2_control',
+        sphinx_sourcedir: 'doc',
+        output_dir: ''
+      }

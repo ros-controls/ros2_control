@@ -26,6 +26,7 @@ repos:
       - id: check-symlinks
       - id: check-xml
       - id: check-yaml
+        exclude: .*/rosdoc2\.yaml$
       - id: debug-statements
       - id: end-of-file-fixer
       - id: mixed-line-ending
