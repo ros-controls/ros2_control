@@ -131,13 +131,6 @@ def main(args=None):
         action="store_true",
     )
     parser.add_argument(
-        "--controller-manager-timeout",
-        help="Time to wait for the controller manager",
-        required=False,
-        default=10,
-        type=int,
-    )
-    parser.add_argument(
         "--activate-as-group",
         help="Activates all the parsed controllers list together instead of one by one."
         " Useful for activating all chainable controllers altogether",
@@ -152,7 +145,6 @@ def main(args=None):
     controller_namespace = args.namespace
     param_file = args.param_file
     controller_type = args.controller_type
-    controller_manager_timeout = args.controller_manager_timeout
 
     if param_file and not os.path.isfile(param_file):
         raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), param_file)
