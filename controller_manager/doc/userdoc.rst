@@ -184,7 +184,7 @@ There are two scripts to interact with controller manager from launch files:
 
 
 ``hardware_spawner``
-^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: console
 
