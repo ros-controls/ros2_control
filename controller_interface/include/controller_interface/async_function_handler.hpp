@@ -22,6 +22,7 @@
 #include <stdexcept>
 #include <string>
 #include <thread>
+#include <utility>
 #include <vector>
 
 #include "lifecycle_msgs/msg/state.hpp"
@@ -89,10 +90,12 @@ public:
    * for triggering and maintaining the controller's update rate, as it should be only acting as a
    * scheduler. Same applies to the resource manager when handling the hardware components.
    */
-  T trigger_async_update(const rclcpp::Time & time, const rclcpp::Duration & period)
+  std::pair<bool, T> trigger_async_update(
+    const rclcpp::Time & time, const rclcpp::Duration & period)
   {
     initialize_async_update_thread();
     std::unique_lock<std::mutex> lock(async_mtx_, std::try_to_lock);
+    bool trigger_status = false;
     if (!trigger_in_progress_ && lock.owns_lock())
     {
       trigger_in_progress_ = true;
@@ -100,8 +103,10 @@ public:
       current_update_period_ = period;
       lock.unlock();
       async_update_condition_.notify_one();
+      trigger_status = true;
     }
-    return async_update_return_;
+    const T return_value = async_update_return_;
+    return std::make_pair(trigger_status, return_value);
   }
 
   /// Waits until the current async update method cycle to finish

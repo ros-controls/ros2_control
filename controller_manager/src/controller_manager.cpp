@@ -2263,7 +2263,7 @@ controller_interface::return_type ControllerManager::update(
   {
     // TODO(v-lopez) we could cache this information
     // https://github.com/ros-controls/ros2_control/issues/153
-    if (!loaded_controller.c->is_async() && is_controller_active(*loaded_controller.c))
+    if (is_controller_active(*loaded_controller.c))
     {
       const auto controller_update_rate = loaded_controller.c->get_update_rate();
       const bool run_controller_at_cm_rate = (controller_update_rate >= update_rate_);
@@ -2318,11 +2318,20 @@ controller_interface::return_type ControllerManager::update(
         }
 
         *loaded_controller.next_update_cycle_time += controller_period;
+        if (!controller_ret.first)
+        {
+          RCLCPP_WARN(
+            get_logger(),
+            "The controller '%s' missed an update cycle at time : '%f', will trigger next update "
+            "cycle at around : '%f'",
+            loaded_controller.info.name.c_str(), time.seconds(),
+            loaded_controller.next_update_cycle_time->seconds());
+        }
 
-        if (controller_ret != controller_interface::return_type::OK)
+        if (controller_ret.second != controller_interface::return_type::OK)
         {
           failed_controllers_list.push_back(loaded_controller.info.name);
-          ret = controller_ret;
+          ret = controller_ret.second;
         }
       }
     }
