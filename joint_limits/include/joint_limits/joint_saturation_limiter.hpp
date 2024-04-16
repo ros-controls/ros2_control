@@ -46,8 +46,9 @@ public:
   JOINT_LIMITS_PUBLIC bool on_init() override { return true; }
 
   JOINT_LIMITS_PUBLIC bool on_configure(
-    const JointLimitsStateDataType & /*current_joint_states*/) override
+    const JointLimitsStateDataType & current_joint_states) override
   {
+    prev_command_ = current_joint_states;
     return true;
   }
 
@@ -72,6 +73,7 @@ public:
 
 private:
   rclcpp::Clock::SharedPtr clock_;
+  JointLimitsStateDataType prev_command_;
 };
 
 template <typename LimitsType, typename JointLimitsStateDataType>
