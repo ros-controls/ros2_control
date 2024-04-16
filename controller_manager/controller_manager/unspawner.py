@@ -57,6 +57,8 @@ def main(args=None):
             node.get_logger().info("Unloaded controller")
 
         return 0
+    except KeyboardInterrupt:
+        pass
     finally:
         rclpy.shutdown()
 
