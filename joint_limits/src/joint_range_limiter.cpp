@@ -231,5 +231,5 @@ typedef joint_limits::JointSaturationLimiter<
   JointInterfacesSaturationLimiter;
 typedef joint_limits::JointLimiterInterface<
   joint_limits::JointLimits, joint_limits::JointControlInterfacesData>
-  JointInterfacesSaturationLLimiterBase;
-PLUGINLIB_EXPORT_CLASS(JointInterfacesSaturationLimiter, JointInterfacesSaturationLLimiterBase)
+  JointInterfacesLimiterInterfaceBase;
+PLUGINLIB_EXPORT_CLASS(JointInterfacesSaturationLimiter, JointInterfacesLimiterInterfaceBase)

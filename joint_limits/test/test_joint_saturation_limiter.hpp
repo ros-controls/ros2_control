@@ -82,7 +82,7 @@ public:
   }
 
   JointSaturationLimiterTest()
-  : joint_limiter_type_("joint_limits/JointSaturationLimiter"),
+  : joint_limiter_type_("joint_limits/JointTrajectoryPointSaturationLimiter"),
     joint_limiter_loader_(
       "joint_limits",
       "joint_limits::JointLimiterInterface<joint_limits::JointLimits, "

@@ -435,9 +435,9 @@ bool JointSaturationLimiter<JointLimits, trajectory_msgs::msg::JointTrajectoryPo
 typedef std::map<int, int> int_map;
 typedef joint_limits::JointSaturationLimiter<
   joint_limits::JointLimits, trajectory_msgs::msg::JointTrajectoryPoint>
-  JointSaturationLimiterTrajectoryPoint;
+  JointTrajectoryPointSaturationLimiter;
 typedef joint_limits::JointLimiterInterface<
   joint_limits::JointLimits, trajectory_msgs::msg::JointTrajectoryPoint>
-  JointLimiterInterfaceBaseTrajectoryPoint;
+  JointTrajectoryPointLimiterInterfaceBase;
 PLUGINLIB_EXPORT_CLASS(
-  JointSaturationLimiterTrajectoryPoint, JointLimiterInterfaceBaseTrajectoryPoint)
+  JointTrajectoryPointSaturationLimiter, JointTrajectoryPointLimiterInterfaceBase)
