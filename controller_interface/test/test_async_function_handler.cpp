@@ -34,7 +34,7 @@ void TestAsyncFunctionHandler::initialize()
 
 return_type TestAsyncFunctionHandler::trigger()
 {
-  return handler_.trigger_async_update(last_callback_time_, last_callback_period_);
+  return handler_.trigger_async_update(last_callback_time_, last_callback_period_).second;
 }
 
 return_type TestAsyncFunctionHandler::update(

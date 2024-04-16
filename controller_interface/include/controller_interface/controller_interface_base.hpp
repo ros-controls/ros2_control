@@ -17,6 +17,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "controller_interface/async_function_handler.hpp"
@@ -154,7 +155,8 @@ public:
    * \returns return_type::OK if update is successfully, otherwise return_type::ERROR.
    */
   CONTROLLER_INTERFACE_PUBLIC
-  return_type trigger_update(const rclcpp::Time & time, const rclcpp::Duration & period);
+  std::pair<bool, return_type> trigger_update(
+    const rclcpp::Time & time, const rclcpp::Duration & period);
 
   CONTROLLER_INTERFACE_PUBLIC
   std::shared_ptr<rclcpp_lifecycle::LifecycleNode> get_node();

@@ -16,7 +16,6 @@
 
 #include <memory>
 #include <string>
-#include <utility>
 #include <vector>
 
 #include "hardware_interface/types/lifecycle_state_names.hpp"
@@ -120,7 +119,7 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::get_state() const
   return node_->get_current_state();
 }
 
-return_type ControllerInterfaceBase::trigger_update(
+std::pair<bool, return_type> ControllerInterfaceBase::trigger_update(
   const rclcpp::Time & time, const rclcpp::Duration & period)
 {
   if (is_async())
@@ -129,9 +128,8 @@ return_type ControllerInterfaceBase::trigger_update(
   }
   else
   {
-    return update(time, period);
+    return std::make_pair(true, update(time, period));
   }
-  return return_type::OK;
 }
 
 std::shared_ptr<rclcpp_lifecycle::LifecycleNode> ControllerInterfaceBase::get_node()
