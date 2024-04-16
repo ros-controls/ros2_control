@@ -69,7 +69,9 @@ public:
     }
     if (thread_.joinable())
     {
-      throw std::runtime_error("AsyncFunctionHandler already initialized!");
+      throw std::runtime_error(
+        "AsyncFunctionHandler: Cannot reinitialize while the thread is "
+        "running. Please stop the async update first!");
     }
     get_state_function_ = get_state_function;
     async_function_ = async_function;
