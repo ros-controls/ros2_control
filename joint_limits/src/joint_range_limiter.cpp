@@ -14,7 +14,7 @@
 
 /// \author Sai Kishor Kothakota
 
-#include "joint_limits/joint_range_limiter.hpp"
+#include "joint_limits/joint_saturation_limiter.hpp"
 
 #include <algorithm>
 #include "joint_limits/joint_limiter_struct.hpp"
@@ -119,21 +119,22 @@ namespace joint_limits
 {
 
 template <>
-bool JointRangeLimiter<JointLimits, JointControlInterfacesData>::on_init()
+bool JointSaturationLimiter<JointLimits, JointControlInterfacesData>::on_init()
 {
   const bool result = (number_of_joints_ != 1);
   if (!result && has_logging_interface())
   {
     RCLCPP_ERROR(
       node_logging_itf_->get_logger(),
-      "JointLimiter: The JointRangeLimiter expects the number of joints to be 1, but given : %zu",
+      "JointLimiter: The JointSaturationLimiter expects the number of joints to be 1, but given : "
+      "%zu",
       number_of_joints_);
   }
   return result;
 }
 
 template <>
-bool JointRangeLimiter<JointLimits, JointControlInterfacesData>::on_enforce(
+bool JointSaturationLimiter<JointLimits, JointControlInterfacesData>::on_enforce(
   JointControlInterfacesData & actual, JointControlInterfacesData & desired,
   const rclcpp::Duration & dt)
 {
@@ -225,10 +226,10 @@ bool JointRangeLimiter<JointLimits, JointControlInterfacesData>::on_enforce(
 
 // typedefs are needed here to avoid issues with macro expansion. ref:
 // https://stackoverflow.com/a/8942986
-typedef joint_limits::JointRangeLimiter<
+typedef joint_limits::JointSaturationLimiter<
   joint_limits::JointLimits, joint_limits::JointControlInterfacesData>
-  JointInterfacesRangeLimiter;
+  JointInterfacesSaturationLimiter;
 typedef joint_limits::JointLimiterInterface<
   joint_limits::JointLimits, joint_limits::JointControlInterfacesData>
-  JointInterfacesRangeLimiterBase;
-PLUGINLIB_EXPORT_CLASS(JointInterfacesRangeLimiter, JointInterfacesRangeLimiterBase)
+  JointInterfacesSaturationLLimiterBase;
+PLUGINLIB_EXPORT_CLASS(JointInterfacesSaturationLimiter, JointInterfacesSaturationLLimiterBase)
