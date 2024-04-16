@@ -205,19 +205,6 @@ public:
     return on_enforce(current_joint_states, desired_joint_states, dt);
   }
 
-  /** \brief Enforce joint limits to desired joint state for single physical quantity.
-   *
-   * Generic enforce method that calls implementation-specific `on_enforce` method.
-   *
-   * \param[in,out] desired_joint_states joint state that should be adjusted to obey the limits.
-   * \returns true if limits are enforced, otherwise false.
-   */
-  JOINT_LIMITS_PUBLIC virtual bool enforce(std::vector<double> & desired_joint_states)
-  {
-    joint_limits_ = *(updated_limits_.readFromRT());
-    return on_enforce(desired_joint_states);
-  }
-
 protected:
   /** \brief Method is realized by an implementation.
    *
@@ -247,18 +234,6 @@ protected:
   JOINT_LIMITS_PUBLIC virtual bool on_enforce(
     JointLimitsStateDataType & current_joint_states,
     JointLimitsStateDataType & desired_joint_states, const rclcpp::Duration & dt) = 0;
-
-  /** \brief Method is realized by an implementation.
-   *
-   * Filter-specific implementation of the joint limits enforce algorithm for single physical
-   * quantity.
-   * This method might use "effort" limits since they are often used as wild-card.
-   * Check the documentation of the exact implementation for more details.
-   *
-   * \param[in,out] desired_joint_states joint state that should be adjusted to obey the limits.
-   * \returns true if limits are enforced, otherwise false.
-   */
-  JOINT_LIMITS_PUBLIC virtual bool on_enforce(std::vector<double> & desired_joint_states) = 0;
 
   /** \brief Checks if the logging interface is set.
    * \returns true if the logging interface is available, otherwise false.

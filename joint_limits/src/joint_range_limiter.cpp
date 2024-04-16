@@ -133,19 +133,6 @@ bool JointRangeLimiter<JointLimits, JointControlInterfacesData>::on_init()
 }
 
 template <>
-bool JointRangeLimiter<JointLimits, JointControlInterfacesData>::on_enforce(std::vector<double> &)
-{
-  if (has_logging_interface())
-  {
-    RCLCPP_WARN(
-      node_logging_itf_->get_logger(),
-      "JointRangeLimiter::on_enforce"
-      "(std::vector<double> & desired_joint_states) is not needed for this limiter.");
-  }
-  return false;
-}
-
-template <>
 bool JointRangeLimiter<JointLimits, JointControlInterfacesData>::on_enforce(
   JointControlInterfacesData & actual, JointControlInterfacesData & desired,
   const rclcpp::Duration & dt)
