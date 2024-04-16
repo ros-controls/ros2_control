@@ -27,3 +27,4 @@ jobs:
       ros_repo: ${{ matrix.ROS_REPO }}
       upstream_workspace: ros2_control-not-released.${{ matrix.ROS_DISTRO }}.repos
       ref_for_scheduled_build: master
+      os_code_name: jammy
