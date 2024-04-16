@@ -31,12 +31,12 @@ import rclpy
 def service_caller(node, service_name, service_type, request, service_timeout=10.0):
     cli = node.create_client(service_type, service_name)
 
-    if not cli.service_is_ready():
+    while not cli.service_is_ready():
         node.get_logger().debug(
             f"waiting {service_timeout} seconds for service {service_name} to become available..."
         )
         if not cli.wait_for_service(service_timeout):
-            raise RuntimeError(f"Could not contact service {service_name}")
+            node.get_logger().warn(f"Could not contact service {service_name}")
 
     node.get_logger().debug(f"requester: making request: {request}\n")
     future = cli.call_async(request)

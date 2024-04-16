@@ -15,13 +15,11 @@
 
 import argparse
 import sys
-import time
 
 from controller_manager import set_hardware_component_state
 
 from lifecycle_msgs.msg import State
 import rclpy
-from rclpy.duration import Duration
 from rclpy.node import Node
 from rclpy.signals import SignalHandlerOptions
 
@@ -43,17 +41,6 @@ def first_match(iterable, predicate):
     return next((n for n in iterable if predicate(n)), None)
 
 
-def wait_for_value_or(function, node, timeout, default, description):
-    while node.get_clock().now() < timeout:
-        if result := function():
-            return result
-        node.get_logger().info(
-            f"Waiting for {description}", throttle_duration_sec=2, skip_first=True
-        )
-        time.sleep(0.2)
-    return default
-
-
 def combine_name_and_namespace(name_and_namespace):
     node_name, namespace = name_and_namespace
     return namespace + ("" if namespace.endswith("/") else "/") + node_name
@@ -73,37 +60,6 @@ def has_service_names(node, node_name, node_namespace, service_names):
         return False
     client_names, _ = zip(*client_names_and_types)
     return all(service in client_names for service in service_names)
-
-
-def wait_for_controller_manager(node, controller_manager, timeout_duration):
-    # List of service names from controller_manager we wait for
-    service_names = (
-        f"{controller_manager}/list_hardware_components",
-        f"{controller_manager}/set_hardware_component_state",
-    )
-
-    # Wait for controller_manager
-    timeout = node.get_clock().now() + Duration(seconds=timeout_duration)
-    node_and_namespace = wait_for_value_or(
-        lambda: find_node_and_namespace(node, controller_manager),
-        node,
-        timeout,
-        None,
-        f"'{controller_manager}' node to exist",
-    )
-
-    # Wait for the services if the node was found
-    if node_and_namespace:
-        node_name, namespace = node_and_namespace
-        return wait_for_value_or(
-            lambda: has_service_names(node, node_name, namespace, service_names),
-            node,
-            timeout,
-            False,
-            f"'{controller_manager}' services to be available",
-        )
-
-    return False
 
 
 def handle_set_component_state_service_call(
@@ -202,12 +158,6 @@ def main(args=None):
             controller_manager_name = f"/{controller_manager_name}"
 
     try:
-        if not wait_for_controller_manager(
-            node, controller_manager_name, controller_manager_timeout
-        ):
-            node.get_logger().error("Controller manager not available")
-            return 1
-
         if activate:
             activate_components(node, controller_manager_name, hardware_component)
         elif configure:
