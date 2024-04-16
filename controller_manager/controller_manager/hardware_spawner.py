@@ -119,14 +119,6 @@ def main(args=None):
         default="controller_manager",
         required=False,
     )
-    parser.add_argument(
-        "--controller-manager-timeout",
-        help="Time to wait for the controller manager",
-        required=False,
-        default=10,
-        type=int,
-    )
-
     # add arguments which are mutually exclusive
     activate_or_confiigure_grp.add_argument(
         "--activate",
@@ -144,7 +136,6 @@ def main(args=None):
     command_line_args = rclpy.utilities.remove_ros_args(args=sys.argv)[1:]
     args = parser.parse_args(command_line_args)
     controller_manager_name = args.controller_manager
-    controller_manager_timeout = args.controller_manager_timeout
     hardware_component = [args.hardware_component_name]
     activate = args.activate
     configure = args.configure

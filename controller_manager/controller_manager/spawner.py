@@ -147,13 +147,6 @@ def main(args=None):
         action="store_true",
     )
     parser.add_argument(
-        "--controller-manager-timeout",
-        help="Time to wait for the controller manager",
-        required=False,
-        default=10,
-        type=int,
-    )
-    parser.add_argument(
         "--activate-as-group",
         help="Activates all the parsed controllers list together instead of one by one."
         " Useful for activating all chainable controllers altogether",
@@ -175,7 +168,6 @@ def main(args=None):
     controller_manager_name = args.controller_manager
     controller_namespace = args.namespace
     param_file = args.param_file
-    controller_manager_timeout = args.controller_manager_timeout
 
     if args.controller_type:
         warnings.filterwarnings("always")
