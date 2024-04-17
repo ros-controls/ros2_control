@@ -503,6 +503,7 @@ const auto diffbot_urdf =
     <child link="wheel_0_link"/>
     <origin rpy="-1.5707963267948966 0 0" xyz="0.3 0 0"/>
     <axis xyz="0 0 1"/>
+    <limit effort="100" velocity="1.0"/>
   </joint>
   <!-- Transmission is important to link the joints and the controller -->
   <transmission name="wheel_left_trans" type="SimpleTransmission">
@@ -538,6 +539,7 @@ const auto diffbot_urdf =
     <child link="wheel_1_link"/>
     <origin rpy="-1.5707963267948966 0 0" xyz="-0.2 0 0"/>
     <axis xyz="0 0 1"/>
+    <limit effort="100" velocity="1.0"/>
   </joint>
   <!-- Transmission is important to link the joints and the controller -->
   <transmission name="wheel_right_trans" type="SimpleTransmission">
