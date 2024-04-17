@@ -95,6 +95,15 @@ if(BUILD_TESTING)
     rclcpp
   )
 
+  ament_add_gtest(test_joint_range_limiter test/test_joint_range_limiter.cpp)
+  target_include_directories(test_joint_range_limiter PRIVATE include)
+  target_link_libraries(test_joint_range_limiter joint_limiter_interface)
+  ament_target_dependencies(
+    test_joint_saturation_limiter
+    pluginlib
+    rclcpp
+  )
+
 endif()
 
 install(
