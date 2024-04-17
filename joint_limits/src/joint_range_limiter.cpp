@@ -121,7 +121,7 @@ namespace joint_limits
 template <>
 bool JointSaturationLimiter<JointLimits, JointControlInterfacesData>::on_init()
 {
-  const bool result = (number_of_joints_ != 1);
+  const bool result = (number_of_joints_ == 1);
   if (!result && has_logging_interface())
   {
     RCLCPP_ERROR(
