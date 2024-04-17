@@ -21,6 +21,8 @@
 #include "rclcpp/duration.hpp"
 #include "rcutils/logging_macros.h"
 
+bool is_limited(double value, double min, double max) { return value < min || value > max; }
+
 std::pair<double, double> compute_position_limits(
   joint_limits::JointLimits limits, double prev_command_pos, double dt)
 {
@@ -158,6 +160,7 @@ bool JointSaturationLimiter<JointLimits, JointControlInterfacesData>::on_enforce
   {
     const auto limits =
       compute_position_limits(joint_limits, prev_command_.position.value(), dt_seconds);
+    limits_enforced = is_limited(desired.position.value(), limits.first, limits.second);
     desired.position = std::clamp(desired.position.value(), limits.first, limits.second);
   }
 
@@ -165,6 +168,8 @@ bool JointSaturationLimiter<JointLimits, JointControlInterfacesData>::on_enforce
   {
     const auto limits = compute_velocity_limits(
       joint_limits, actual.position.value(), prev_command_.velocity.value(), dt_seconds);
+    limits_enforced =
+      limits_enforced || is_limited(desired.velocity.value(), limits.first, limits.second);
     desired.velocity = std::clamp(desired.velocity.value(), limits.first, limits.second);
   }
 
@@ -172,6 +177,8 @@ bool JointSaturationLimiter<JointLimits, JointControlInterfacesData>::on_enforce
   {
     const auto limits = compute_effort_limits(
       joint_limits, actual.position.value(), actual.velocity.value(), dt_seconds);
+    limits_enforced =
+      limits_enforced || is_limited(desired.effort.value(), limits.first, limits.second);
     desired.effort = std::clamp(desired.effort.value(), limits.first, limits.second);
   }
 
@@ -199,14 +206,16 @@ bool JointSaturationLimiter<JointLimits, JointControlInterfacesData>::on_enforce
        (desired.acceleration.value() > 0 && actual.velocity.value() < 0)))
     {
       // limit deceleration
-      apply_acc_or_dec_limit(joint_limits.max_deceleration, desired_acc);
+      limits_enforced =
+        limits_enforced || apply_acc_or_dec_limit(joint_limits.max_deceleration, desired_acc);
     }
     else
     {
       // limit acceleration (fallback to acceleration if no deceleration limits)
       if (joint_limits.has_acceleration_limits)
       {
-        apply_acc_or_dec_limit(joint_limits.max_acceleration, desired_acc);
+        limits_enforced =
+          limits_enforced || apply_acc_or_dec_limit(joint_limits.max_acceleration, desired_acc);
       }
     }
     desired.acceleration = desired_acc;
@@ -214,8 +223,13 @@ bool JointSaturationLimiter<JointLimits, JointControlInterfacesData>::on_enforce
 
   if (desired.has_jerk())
   {
+    limits_enforced =
+      limits_enforced ||
+      is_limited(desired.jerk.value(), -joint_limits.max_jerk, joint_limits.max_jerk);
     desired.jerk = std::clamp(desired.jerk.value(), -joint_limits.max_jerk, joint_limits.max_jerk);
   }
+
+  prev_command_ = desired;
 
   return limits_enforced;
 }
