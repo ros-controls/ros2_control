@@ -132,6 +132,7 @@ bool JointSaturationLimiter<JointLimits, JointControlInterfacesData>::on_init()
       "%zu",
       number_of_joints_);
   }
+  prev_command_ = JointControlInterfacesData();
   return result;
 }
 
