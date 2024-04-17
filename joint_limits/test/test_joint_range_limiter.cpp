@@ -46,7 +46,7 @@ TEST_F(JointSaturationLimiterTest, when_invalid_dt_expect_enforce_fail)
   ASSERT_FALSE(joint_limiter_->enforce(actual_state_, desired_state_, period));
 }
 
-TEST_F(JointSaturationLimiterTest, when_neigher_poscmd_nor_velcmd_expect_enforce_fail)
+TEST_F(JointSaturationLimiterTest, check_desired_position_only_cases)
 {
   SetupNode("joint_saturation_limiter");
   ASSERT_TRUE(Load());
@@ -62,7 +62,6 @@ TEST_F(JointSaturationLimiterTest, when_neigher_poscmd_nor_velcmd_expect_enforce
   // Reset the desired and actual states
   desired_state_ = {};
   actual_state_ = {};
-  last_commanded_state_ = {};
 
   rclcpp::Duration period(1, 0);  // 1 second
   desired_state_.position = 4.0;
@@ -94,6 +93,49 @@ TEST_F(JointSaturationLimiterTest, when_neigher_poscmd_nor_velcmd_expect_enforce
   desired_state_.position = 0.0;
   ASSERT_FALSE(joint_limiter_->enforce(actual_state_, desired_state_, period));
   EXPECT_NEAR(desired_state_.position.value(), 0.0, COMMON_THRESHOLD);
+  ASSERT_FALSE(desired_state_.has_velocity());
+  ASSERT_FALSE(desired_state_.has_acceleration());
+  ASSERT_FALSE(desired_state_.has_effort());
+  ASSERT_FALSE(desired_state_.has_jerk());
+
+  // Now add the velocity limits
+  limits.max_velocity = 1.0;
+  limits.has_velocity_limits = true;
+  ASSERT_TRUE(Init(limits));
+  // Reset the desired and actual states
+  desired_state_ = {};
+  actual_state_ = {};
+  desired_state_.position = 0.0;
+  ASSERT_FALSE(joint_limiter_->enforce(actual_state_, desired_state_, period));
+  EXPECT_NEAR(desired_state_.position.value(), 0.0, COMMON_THRESHOLD);
+  ASSERT_TRUE(desired_state_.has_position());
+  ASSERT_FALSE(desired_state_.has_velocity());
+  ASSERT_FALSE(desired_state_.has_acceleration());
+  ASSERT_FALSE(desired_state_.has_effort());
+  ASSERT_FALSE(desired_state_.has_jerk());
+
+  // Let's set the desired position greater than reachable with max velocity limit
+  desired_state_.position = 2.0;
+  // As per max velocity limit, it can only reach 1.0 in 1 second
+  ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
+  EXPECT_NEAR(desired_state_.position.value(), 1.0, COMMON_THRESHOLD);
+
+  // As per max velocity limit, it can only reach 0.0 in 1 second
+  desired_state_.position = -3.0;
+  ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
+  EXPECT_NEAR(desired_state_.position.value(), 0.0, COMMON_THRESHOLD);
+
+  // Now let's check the case where the actual position is at 2.0 and the desired position is -M_PI
+  // with max velocity limit of 1.0
+  ASSERT_TRUE(Init(limits));
+  // Reset the desired and actual states
+  desired_state_ = {};
+  actual_state_ = {};
+  actual_state_.position = 2.0;
+  desired_state_.position = -M_PI;
+  ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
+  EXPECT_NEAR(desired_state_.position.value(), 1.0, COMMON_THRESHOLD);
+  ASSERT_TRUE(desired_state_.has_position());
   ASSERT_FALSE(desired_state_.has_velocity());
   ASSERT_FALSE(desired_state_.has_acceleration());
   ASSERT_FALSE(desired_state_.has_effort());
