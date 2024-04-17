@@ -27,7 +27,7 @@
 #include "rclcpp/duration.hpp"
 #include "rclcpp/node.hpp"
 
-const double COMMON_THRESHOLD = 0.0011;
+const double COMMON_THRESHOLD = 1.0e-6;
 
 using JointLimiter = joint_limits::JointLimiterInterface<
   joint_limits::JointLimits, joint_limits::JointControlInterfacesData>;
@@ -49,16 +49,16 @@ public:
     node_ = std::make_shared<rclcpp::Node>(node_name_);
   }
 
-  void Load()
+  bool Load()
   {
     joint_limiter_ = std::unique_ptr<JointLimiter>(
       joint_limiter_loader_.createUnmanagedInstance(joint_limiter_type_));
+    return joint_limiter_ != nullptr;
   }
 
-  void Init(const std::string & joint_name = "foo_joint")
+  bool Init(const std::string & joint_name = "foo_joint")
   {
     joint_names_ = {joint_name};
-    joint_limiter_->init(joint_names_, node_);
     num_joints_ = joint_names_.size();
     last_commanded_state_.joint_name = joint_name;
     last_commanded_state_.position = 0.0;
@@ -67,19 +67,25 @@ public:
     last_commanded_state_.effort = 0.0;
     desired_state_ = last_commanded_state_;
     actual_state_ = last_commanded_state_;
+    return joint_limiter_->init(joint_names_, node_);
   }
 
-  void Init(const joint_limits::JointControlInterfacesData & init_state)
+  bool Init(const joint_limits::JointLimits & limits, const std::string & joint_name = "foo_joint")
   {
-    last_commanded_state_ = init_state;
-    joint_names_ = {last_commanded_state_.joint_name};
-    joint_limiter_->init(joint_names_, node_);
+    joint_names_ = {joint_name};
     num_joints_ = joint_names_.size();
+    last_commanded_state_.joint_name = joint_name;
+    last_commanded_state_.position = 0.0;
+    last_commanded_state_.velocity = 0.0;
+    last_commanded_state_.acceleration = 0.0;
+    last_commanded_state_.effort = 0.0;
     desired_state_ = last_commanded_state_;
     actual_state_ = last_commanded_state_;
+    return joint_limiter_->init(
+      joint_names_, {limits}, nullptr, node_->get_node_logging_interface());
   }
 
-  void Configure() { joint_limiter_->configure(last_commanded_state_); }
+  bool Configure() { return joint_limiter_->configure(last_commanded_state_); }
 
   void Integrate(double dt)
   {

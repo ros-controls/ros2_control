@@ -29,49 +29,75 @@ TEST_F(JointSaturationLimiterTest, when_loading_limiter_plugin_expect_loaded)
 TEST_F(JointSaturationLimiterTest, when_joint_not_found_expect_init_fail)
 {
   SetupNode("joint_saturation_limiter");
-  Load();
-
-  if (joint_limiter_)
-  {
-    // initialize the limiter
-    std::vector<std::string> joint_names = {"bar_joint"};
-    ASSERT_TRUE(joint_limiter_->init(joint_names, node_));
-  }
+  ASSERT_TRUE(Load());
+  // initialize the limiter
+  std::vector<std::string> joint_names = {"bar_joint"};
+  ASSERT_TRUE(joint_limiter_->init(joint_names, node_));
 }
 
 TEST_F(JointSaturationLimiterTest, when_invalid_dt_expect_enforce_fail)
 {
   SetupNode("joint_saturation_limiter");
-  Load();
+  ASSERT_TRUE(Load());
 
-  if (joint_limiter_)
-  {
-    Init();
-    Configure();
-    rclcpp::Duration period(0, 0);  // 0 second
-    ASSERT_FALSE(joint_limiter_->enforce(actual_state_, desired_state_, period));
-  }
+  ASSERT_TRUE(Init());
+  ASSERT_TRUE(Configure());
+  rclcpp::Duration period(0, 0);  // 0 second
+  ASSERT_FALSE(joint_limiter_->enforce(actual_state_, desired_state_, period));
 }
 
-// TEST_F(JointSaturationLimiterTest, when_neigher_poscmd_nor_velcmd_expect_enforce_fail)
-// {
-//   SetupNode("joint_saturation_limiter");
-//   Load();
+TEST_F(JointSaturationLimiterTest, when_neigher_poscmd_nor_velcmd_expect_enforce_fail)
+{
+  SetupNode("joint_saturation_limiter");
+  ASSERT_TRUE(Load());
 
-//   if (joint_limiter_)
-//   {
-//     Init();
-//     // no size check occurs (yet) so expect true
-//     ASSERT_TRUE(joint_limiter_->configure(last_commanded_state_));
+  joint_limits::JointLimits limits;
+  limits.has_position_limits = true;
+  limits.min_position = -M_PI;
+  limits.max_position = M_PI;
+  ASSERT_TRUE(Init(limits));
+  // no size check occurs (yet) so expect true
+  ASSERT_TRUE(joint_limiter_->configure(last_commanded_state_));
 
-//     rclcpp::Duration period(1, 0);  // 1 second
-//     // test no desired interface
-//     desired_joint_states_.positions.clear();
-//     desired_joint_states_.velocities.clear();
-//     // currently not handled desired_joint_states_.accelerations.clear();
-//     ASSERT_FALSE(joint_limiter_->enforce(current_joint_states_, desired_joint_states_, period));
-//   }
-// }
+  // Reset the desired and actual states
+  desired_state_ = {};
+  actual_state_ = {};
+  last_commanded_state_ = {};
+
+  rclcpp::Duration period(1, 0);  // 1 second
+  desired_state_.position = 4.0;
+  ASSERT_TRUE(desired_state_.has_position());
+  ASSERT_FALSE(desired_state_.has_velocity());
+  ASSERT_FALSE(desired_state_.has_acceleration());
+  ASSERT_FALSE(desired_state_.has_effort());
+  ASSERT_FALSE(desired_state_.has_jerk());
+
+  // For hard limits, if there is no actual state but the desired state is outside the limit, then
+  // saturate it to the limits
+  ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
+  EXPECT_NEAR(desired_state_.position.value(), limits.max_position, COMMON_THRESHOLD);
+  ASSERT_FALSE(desired_state_.has_velocity());
+  ASSERT_FALSE(desired_state_.has_acceleration());
+  ASSERT_FALSE(desired_state_.has_effort());
+  ASSERT_FALSE(desired_state_.has_jerk());
+
+  desired_state_.position = -5.0;
+  ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
+  EXPECT_NEAR(desired_state_.position.value(), limits.min_position, COMMON_THRESHOLD);
+  ASSERT_FALSE(desired_state_.has_velocity());
+  ASSERT_FALSE(desired_state_.has_acceleration());
+  ASSERT_FALSE(desired_state_.has_effort());
+  ASSERT_FALSE(desired_state_.has_jerk());
+
+  // If the desired state is within the limits, then no saturation is needed
+  desired_state_.position = 0.0;
+  ASSERT_FALSE(joint_limiter_->enforce(actual_state_, desired_state_, period));
+  EXPECT_NEAR(desired_state_.position.value(), 0.0, COMMON_THRESHOLD);
+  ASSERT_FALSE(desired_state_.has_velocity());
+  ASSERT_FALSE(desired_state_.has_acceleration());
+  ASSERT_FALSE(desired_state_.has_effort());
+  ASSERT_FALSE(desired_state_.has_jerk());
+}
 
 // TEST_F(JointSaturationLimiterTest, when_no_posstate_expect_enforce_false)
 // {
