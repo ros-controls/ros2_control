@@ -503,8 +503,8 @@ TEST_F(JointSaturationLimiterTest, when_invalid_dt_expect_enforce_fail)
 //     // desired deceleration exceeds
 //     current_joint_states_.positions[0] = 1.0;
 //     current_joint_states_.velocities[0] = 1.0;
-//     desired_joint_states_.positions[0] = 1.025;  // valid pos cmd for the desired decreased velocity
-//     desired_joint_states_.velocities[0] = 0.5;   // leads to acc > -max acc
+//     desired_joint_states_.positions[0] = 1.025;  // valid pos cmd for the desired decreased
+//     velocity desired_joint_states_.velocities[0] = 0.5;   // leads to acc > -max acc
 //     ASSERT_TRUE(joint_limiter_->enforce(current_joint_states_, desired_joint_states_, period));
 
 //     // check if vel and acc limits applied
