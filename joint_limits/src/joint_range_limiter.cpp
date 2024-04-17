@@ -151,9 +151,57 @@ bool JointSaturationLimiter<JointLimits, JointControlInterfacesData>::on_enforce
 
   const auto joint_limits = joint_limits_[0];
   const std::string joint_name = joint_names_[0];
+  // The following conditional filling is needed for cases of having certain information missing
   if (!prev_command_.has_data())
   {
-    prev_command_ = actual;
+    if (actual.has_position())
+    {
+      prev_command_.position = actual.position;
+    }
+    else if (desired.has_position())
+    {
+      prev_command_.position = desired.position;
+    }
+    if (actual.has_velocity())
+    {
+      prev_command_.velocity = actual.velocity;
+    }
+    else if (desired.has_velocity())
+    {
+      prev_command_.velocity = desired.velocity;
+    }
+    if (actual.has_effort())
+    {
+      prev_command_.effort = actual.effort;
+    }
+    else if (desired.has_effort())
+    {
+      prev_command_.effort = desired.effort;
+    }
+    if (actual.has_acceleration())
+    {
+      prev_command_.acceleration = actual.acceleration;
+    }
+    else if (desired.has_acceleration())
+    {
+      prev_command_.acceleration = desired.acceleration;
+    }
+    if (actual.has_jerk())
+    {
+      prev_command_.jerk = actual.jerk;
+    }
+    else if (desired.has_jerk())
+    {
+      prev_command_.jerk = desired.jerk;
+    }
+    if (actual.has_data())
+    {
+      prev_command_.joint_name = actual.joint_name;
+    }
+    else if (desired.has_data())
+    {
+      prev_command_.joint_name = desired.joint_name;
+    }
   }
 
   if (desired.has_position())
