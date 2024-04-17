@@ -851,16 +851,24 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_and_disabled_in
   EXPECT_EQ(hardware_info.gpios[0].state_interfaces[1].size, 1);
 
   EXPECT_FALSE(hardware_info.limits.at("joint1").has_position_limits);
-  EXPECT_THAT(hardware_info.limits.at("joint1").max_position, DoubleNear(std::numeric_limits<double>::max(), 1e-5));
-  EXPECT_THAT(hardware_info.limits.at("joint1").min_position, DoubleNear(std::numeric_limits<double>::min(), 1e-5));
+  EXPECT_THAT(
+    hardware_info.limits.at("joint1").max_position,
+    DoubleNear(std::numeric_limits<double>::max(), 1e-5));
+  EXPECT_THAT(
+    hardware_info.limits.at("joint1").min_position,
+    DoubleNear(std::numeric_limits<double>::min(), 1e-5));
   EXPECT_TRUE(hardware_info.limits.at("joint1").has_velocity_limits);
   EXPECT_TRUE(hardware_info.limits.at("joint1").has_effort_limits);
   EXPECT_THAT(hardware_info.limits.at("joint1").max_velocity, DoubleNear(0.05, 1e-5));
   EXPECT_THAT(hardware_info.limits.at("joint1").max_effort, DoubleNear(0.1, 1e-5));
 
   EXPECT_FALSE(hardware_info.limits.at("joint2").has_position_limits);
-  EXPECT_THAT(hardware_info.limits.at("joint2").max_position, DoubleNear(std::numeric_limits<double>::max(), 1e-5));
-  EXPECT_THAT(hardware_info.limits.at("joint2").min_position, DoubleNear(std::numeric_limits<double>::min(), 1e-5));
+  EXPECT_THAT(
+    hardware_info.limits.at("joint2").max_position,
+    DoubleNear(std::numeric_limits<double>::max(), 1e-5));
+  EXPECT_THAT(
+    hardware_info.limits.at("joint2").min_position,
+    DoubleNear(std::numeric_limits<double>::min(), 1e-5));
   EXPECT_FALSE(hardware_info.limits.at("joint2").has_velocity_limits);
   EXPECT_FALSE(hardware_info.limits.at("joint2").has_effort_limits);
   EXPECT_FALSE(hardware_info.limits.at("joint2").has_acceleration_limits);
