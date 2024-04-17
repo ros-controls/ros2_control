@@ -72,6 +72,7 @@ TEST_F(JointSaturationLimiterTest, when_neigher_poscmd_nor_velcmd_expect_enforce
   ASSERT_FALSE(desired_state_.has_effort());
   ASSERT_FALSE(desired_state_.has_jerk());
 
+  // The previous command does nothing in this case as there is no velocity limits
   // For hard limits, if there is no actual state but the desired state is outside the limit, then
   // saturate it to the limits
   ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
