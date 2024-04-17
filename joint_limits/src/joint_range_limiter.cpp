@@ -126,7 +126,7 @@ bool JointSaturationLimiter<JointLimits, JointControlInterfacesData>::on_init()
   {
     RCLCPP_ERROR(
       node_logging_itf_->get_logger(),
-      "JointLimiter: The JointSaturationLimiter expects the number of joints to be 1, but given : "
+      "JointInterfacesSaturationLimiter: Expects the number of joints to be 1, but given : "
       "%zu",
       number_of_joints_);
   }

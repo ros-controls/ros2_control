@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef TEST_JOINT_SATURATION_LIMITER_HPP_
-#define TEST_JOINT_SATURATION_LIMITER_HPP_
+#ifndef TEST_JOINT_RANGE_LIMITER_HPP_
+#define TEST_JOINT_RANGE_LIMITER_HPP_
 
 #include <gtest/gtest.h>
 
@@ -21,11 +21,11 @@
 #include <string>
 #include <vector>
 #include "joint_limits/joint_limiter_interface.hpp"
+#include "joint_limits/joint_limiter_struct.hpp"
 #include "joint_limits/joint_limits.hpp"
 #include "pluginlib/class_loader.hpp"
 #include "rclcpp/duration.hpp"
 #include "rclcpp/node.hpp"
-#include "joint_limits/joint_limiter_struct.hpp"
 
 const double COMMON_THRESHOLD = 0.0011;
 
@@ -62,13 +62,13 @@ public:
     num_joints_ = joint_names_.size();
     last_commanded_state_.joint_name = joint_name;
     last_commanded_state_.position = 0.0;
-    last_commanded_state_.velocity= 0.0;
-    last_commanded_state_.acceleration= 0.0;
-    last_commanded_state_.effort= 0.0;
+    last_commanded_state_.velocity = 0.0;
+    last_commanded_state_.acceleration = 0.0;
+    last_commanded_state_.effort = 0.0;
     desired_state_ = last_commanded_state_;
     actual_state_ = last_commanded_state_;
   }
-  
+
   void Init(const joint_limits::JointControlInterfacesData & init_state)
   {
     last_commanded_state_ = init_state;
@@ -84,8 +84,9 @@ public:
   void Integrate(double dt)
   {
     actual_state_.position = actual_state_.position.value() + desired_state_.velocity.value() * dt +
-                                          0.5 * desired_state_.acceleration.value() * dt * dt;
-    actual_state_.velocity = actual_state_.velocity.value() + desired_state_.acceleration.value() * dt;
+                             0.5 * desired_state_.acceleration.value() * dt * dt;
+    actual_state_.velocity =
+      actual_state_.velocity.value() + desired_state_.acceleration.value() * dt;
   }
 
   JointSaturationLimiterTest()
@@ -113,4 +114,4 @@ protected:
   joint_limits::JointControlInterfacesData actual_state_;
 };
 
-#endif  // TEST_JOINT_SATURATION_LIMITER_HPP_
+#endif  // TEST_JOINT_RANGE_LIMITER_HPP_
