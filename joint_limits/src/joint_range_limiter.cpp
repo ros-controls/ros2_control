@@ -29,7 +29,10 @@ std::pair<double, double> compute_position_limits(
   std::pair<double, double> pos_limits({limits.min_position, limits.max_position});
   if (limits.has_velocity_limits)
   {
-    const double delta_pos = limits.max_velocity * dt;
+    const double delta_vel =
+      limits.has_acceleration_limits ? limits.max_acceleration * dt : limits.max_velocity;
+    const double max_vel = std::min(limits.max_velocity, delta_vel);
+    const double delta_pos = max_vel * dt;
     pos_limits.first = std::max(prev_command_pos - delta_pos, pos_limits.first);
     pos_limits.second = std::min(prev_command_pos + delta_pos, pos_limits.second);
   }
