@@ -62,23 +62,24 @@ std::pair<double, double> compute_position_limits(
 }
 
 std::pair<double, double> compute_velocity_limits(
-  joint_limits::JointLimits limits, double act_pos, double prev_command_vel, double dt)
+  joint_limits::JointLimits limits, const std::optional<double> & act_pos,
+  const std::optional<double> & prev_command_vel, double dt)
 {
   const double max_vel =
     limits.has_velocity_limits ? limits.max_velocity : std::numeric_limits<double>::infinity();
   std::pair<double, double> vel_limits({-max_vel, max_vel});
-  if (limits.has_position_limits)
+  if (limits.has_position_limits && act_pos.has_value())
   {
-    const double max_vel_with_pos_limits = (limits.max_position - act_pos) / dt;
-    const double min_vel_with_pos_limits = (limits.min_position - act_pos) / dt;
+    const double max_vel_with_pos_limits = (limits.max_position - act_pos.value()) / dt;
+    const double min_vel_with_pos_limits = (limits.min_position - act_pos.value()) / dt;
     vel_limits.first = std::max(min_vel_with_pos_limits, vel_limits.first);
     vel_limits.second = std::min(max_vel_with_pos_limits, vel_limits.second);
   }
-  if (limits.has_acceleration_limits)
+  if (limits.has_acceleration_limits && prev_command_vel.has_value())
   {
     const double delta_vel = limits.max_acceleration * dt;
-    vel_limits.first = std::max(prev_command_vel - delta_vel, vel_limits.first);
-    vel_limits.second = std::min(prev_command_vel + delta_vel, vel_limits.second);
+    vel_limits.first = std::max(prev_command_vel.value() - delta_vel, vel_limits.first);
+    vel_limits.second = std::min(prev_command_vel.value() + delta_vel, vel_limits.second);
   }
   return vel_limits;
 }
@@ -215,8 +216,8 @@ bool JointSaturationLimiter<JointLimits, JointControlInterfacesData>::on_enforce
 
   if (desired.has_velocity())
   {
-    const auto limits = compute_velocity_limits(
-      joint_limits, actual.position.value(), prev_command_.velocity.value(), dt_seconds);
+    const auto limits =
+      compute_velocity_limits(joint_limits, actual.position, prev_command_.velocity, dt_seconds);
     limits_enforced =
       limits_enforced || is_limited(desired.velocity.value(), limits.first, limits.second);
     desired.velocity = std::clamp(desired.velocity.value(), limits.first, limits.second);
