@@ -79,7 +79,7 @@ TEST_F(AsyncFunctionHandlerTest, check_initialization)
   ASSERT_FALSE(async_class.get_handler().is_stopped());
 
   // It should not be possible to initialize setting wrong functions
-  EXPECT_THROW(async_class.get_handler().init(nullptr, nullptr), std::runtime_error);
+  ASSERT_THROW(async_class.get_handler().init(nullptr, nullptr), std::runtime_error);
 
   async_class.initialize();
   ASSERT_TRUE(async_class.get_handler().is_initialized());
@@ -91,7 +91,7 @@ TEST_F(AsyncFunctionHandlerTest, check_initialization)
   ASSERT_TRUE(async_class.get_handler().is_initialized());
   ASSERT_TRUE(async_class.get_handler().is_running());
   ASSERT_FALSE(async_class.get_handler().is_stopped());
-  EXPECT_THROW(async_class.initialize(), std::runtime_error);
+  ASSERT_THROW(async_class.initialize(), std::runtime_error);
   // The preempt_async_update is already called with the destructor
   // async_class.get_handler().preempt_async_update();
 }
@@ -104,7 +104,7 @@ TEST_F(AsyncFunctionHandlerTest, check_triggering)
   ASSERT_FALSE(async_class.get_handler().is_running());
   ASSERT_FALSE(async_class.get_handler().is_stopped());
   // It shouldn't be possible to trigger without initialization
-  EXPECT_THROW(async_class.trigger(), std::runtime_error);
+  ASSERT_THROW(async_class.trigger(), std::runtime_error);
 
   async_class.initialize();
   ASSERT_TRUE(async_class.get_handler().is_initialized());
