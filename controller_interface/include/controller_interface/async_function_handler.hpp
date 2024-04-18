@@ -149,11 +149,11 @@ public:
    */
   bool is_running() const { return thread_.joinable(); }
 
-  /// Check if the async update is preempted
+  /// Check if the async update is triggered to stop the cycle
   /**
-   * @return True if the async update is preempted, false otherwise
+   * @return True if the async update is stopped, false otherwise
    */
-  bool is_preempted() const
+  bool is_stopped() const
   {
     return (
       async_update_stop_ ||
