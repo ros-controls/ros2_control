@@ -424,6 +424,95 @@ TEST_F(JointSaturationLimiterTest, check_desired_effort_only_cases)
   test_limit_enforcing(-5.0, -0.2, 30.0, 30.0, false);
 }
 
+TEST_F(JointSaturationLimiterTest, check_desired_acceleration_only_cases)
+{
+  SetupNode("joint_saturation_limiter");
+  ASSERT_TRUE(Load());
+
+  joint_limits::JointLimits limits;
+  limits.has_acceleration_limits = true;
+  limits.max_acceleration = 0.5;
+  ASSERT_TRUE(Init(limits));
+  ASSERT_TRUE(joint_limiter_->configure(last_commanded_state_));
+
+  rclcpp::Duration period(1, 0);  // 1 second
+  auto test_limit_enforcing = [&](
+                                const std::optional<double> & actual_velocity, double desired_accel,
+                                double expected_accel, bool is_clamped)
+  {
+    // Reset the desired and actual states
+    desired_state_ = {};
+    actual_state_ = {};
+    const double act_vel = actual_velocity.has_value() ? actual_velocity.value()
+                                                       : std::numeric_limits<double>::quiet_NaN();
+    SCOPED_TRACE(
+      "Testing for actual velocity: " + std::to_string(act_vel) + ", desired acceleration: " +
+      std::to_string(desired_accel) + ", expected acceleration: " + std::to_string(expected_accel) +
+      ", is clamped: " + std::to_string(is_clamped) +
+      " for the joint limits : " + limits.to_string());
+    if (actual_velocity.has_value())
+    {
+      actual_state_.velocity = actual_velocity.value();
+    }
+    desired_state_.acceleration = desired_accel;
+    ASSERT_EQ(is_clamped, joint_limiter_->enforce(actual_state_, desired_state_, period));
+    EXPECT_FALSE(desired_state_.has_position());
+    EXPECT_FALSE(desired_state_.has_velocity());
+    EXPECT_FALSE(desired_state_.has_effort());
+    EXPECT_TRUE(desired_state_.has_acceleration());
+    EXPECT_NEAR(desired_state_.acceleration.value(), expected_accel, COMMON_THRESHOLD);
+    EXPECT_FALSE(desired_state_.has_jerk());
+  };
+
+  // Tests without applying deceleration limits
+  for (auto act_vel :
+       {std::optional<double>(std::nullopt), std::optional<double>(0.4),
+        std::optional<double>(-0.2)})
+  {
+    test_limit_enforcing(act_vel, 0.0, 0.0, false);
+    test_limit_enforcing(act_vel, 0.5, 0.5, false);
+    test_limit_enforcing(act_vel, 0.6, 0.5, true);
+    test_limit_enforcing(act_vel, 1.5, 0.5, true);
+    test_limit_enforcing(act_vel, -0.5, -0.5, false);
+    test_limit_enforcing(act_vel, -0.6, -0.5, true);
+    test_limit_enforcing(act_vel, -1.5, -0.5, true);
+  }
+
+  // Now let's test with applying deceleration limits
+  limits.has_deceleration_limits = true;
+  limits.max_deceleration = 0.25;
+  // When launching init, the prev_command_ within the limiter will be reset
+  ASSERT_TRUE(Init(limits));
+
+  // If you don't have the actual velocity, the deceleration limits are not applied
+  test_limit_enforcing(std::nullopt, 0.0, 0.0, false);
+  test_limit_enforcing(std::nullopt, 0.5, 0.5, false);
+  test_limit_enforcing(std::nullopt, 0.6, 0.5, true);
+  test_limit_enforcing(std::nullopt, 1.5, 0.5, true);
+  test_limit_enforcing(std::nullopt, -0.5, -0.5, false);
+  test_limit_enforcing(std::nullopt, -0.6, -0.5, true);
+  test_limit_enforcing(std::nullopt, -1.5, -0.5, true);
+  test_limit_enforcing(std::nullopt, 0.0, 0.0, false);
+
+  // Testing both positive and negative velocities and accelerations together without a proper
+  // deceleration
+  test_limit_enforcing(0.4, 0.2, 0.2, false);
+  test_limit_enforcing(0.4, 0.8, 0.5, true);
+  test_limit_enforcing(-0.4, -0.2, -0.2, false);
+  test_limit_enforcing(-0.4, -0.6, -0.5, true);
+
+  // The deceleration limits are basically applied when the acceleration is positive and the
+  // velocity is negative and when the acceleration is negative and the velocity is positive
+  test_limit_enforcing(0.4, -0.1, -0.1, false);
+  test_limit_enforcing(0.4, -0.25, -0.25, false);
+  test_limit_enforcing(0.4, -0.6, -0.25, true);
+  test_limit_enforcing(0.4, -4.0, -0.25, true);
+  test_limit_enforcing(-0.4, 0.1, 0.1, false);
+  test_limit_enforcing(-0.4, 0.25, 0.25, false);
+  test_limit_enforcing(-0.4, 0.6, 0.25, true);
+  test_limit_enforcing(-0.4, 3.0, 0.25, true);
+}
+
 int main(int argc, char ** argv)
 {
   ::testing::InitGoogleTest(&argc, argv);
