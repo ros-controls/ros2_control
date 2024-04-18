@@ -513,6 +513,47 @@ TEST_F(JointSaturationLimiterTest, check_desired_acceleration_only_cases)
   test_limit_enforcing(-0.4, 3.0, 0.25, true);
 }
 
+TEST_F(JointSaturationLimiterTest, check_desired_jerk_only_cases)
+{
+  SetupNode("joint_saturation_limiter");
+  ASSERT_TRUE(Load());
+
+  joint_limits::JointLimits limits;
+  limits.has_jerk_limits = true;
+  limits.max_jerk = 0.5;
+  ASSERT_TRUE(Init(limits));
+  ASSERT_TRUE(joint_limiter_->configure(last_commanded_state_));
+
+  rclcpp::Duration period(1, 0);  // 1 second
+  auto test_limit_enforcing = [&](double desired_jerk, double expected_jerk, bool is_clamped)
+  {
+    // Reset the desired and actual states
+    desired_state_ = {};
+    actual_state_ = {};
+    SCOPED_TRACE(
+      "Testing for desired jerk : " + std::to_string(desired_jerk) + ", expected jerk: " +
+      std::to_string(expected_jerk) + ", is clamped: " + std::to_string(is_clamped) +
+      " for the joint limits : " + limits.to_string());
+    desired_state_.jerk = desired_jerk;
+    ASSERT_EQ(is_clamped, joint_limiter_->enforce(actual_state_, desired_state_, period));
+    EXPECT_FALSE(desired_state_.has_position());
+    EXPECT_FALSE(desired_state_.has_velocity());
+    EXPECT_FALSE(desired_state_.has_effort());
+    EXPECT_FALSE(desired_state_.has_acceleration());
+    EXPECT_TRUE(desired_state_.has_jerk());
+    EXPECT_NEAR(desired_state_.jerk.value(), expected_jerk, COMMON_THRESHOLD);
+  };
+
+  // Check with jerk limits
+  test_limit_enforcing(0.0, 0.0, false);
+  test_limit_enforcing(0.5, 0.5, false);
+  test_limit_enforcing(0.6, 0.5, true);
+  test_limit_enforcing(1.5, 0.5, true);
+  test_limit_enforcing(-0.5, -0.5, false);
+  test_limit_enforcing(-0.6, -0.5, true);
+  test_limit_enforcing(-1.5, -0.5, true);
+}
+
 int main(int argc, char ** argv)
 {
   ::testing::InitGoogleTest(&argc, argv);
