@@ -232,7 +232,7 @@ bool JointSaturationLimiter<JointLimits, JointControlInterfacesData>::on_enforce
     const auto limits = compute_velocity_limits(
       joint_name, joint_limits, actual.position, prev_command_.velocity, dt_seconds);
     limits_enforced =
-      limits_enforced || is_limited(desired.velocity.value(), limits.first, limits.second);
+      is_limited(desired.velocity.value(), limits.first, limits.second) || limits_enforced;
     desired.velocity = std::clamp(desired.velocity.value(), limits.first, limits.second);
   }
 
@@ -241,7 +241,7 @@ bool JointSaturationLimiter<JointLimits, JointControlInterfacesData>::on_enforce
     const auto limits =
       compute_effort_limits(joint_limits, actual.position, actual.velocity, dt_seconds);
     limits_enforced =
-      limits_enforced || is_limited(desired.effort.value(), limits.first, limits.second);
+      is_limited(desired.effort.value(), limits.first, limits.second) || limits_enforced;
     desired.effort = std::clamp(desired.effort.value(), limits.first, limits.second);
   }
 
@@ -280,7 +280,7 @@ bool JointSaturationLimiter<JointLimits, JointControlInterfacesData>::on_enforce
       if (joint_limits.has_acceleration_limits)
       {
         limits_enforced =
-          limits_enforced || apply_acc_or_dec_limit(joint_limits.max_acceleration, desired_acc);
+          apply_acc_or_dec_limit(joint_limits.max_acceleration, desired_acc) || limits_enforced;
       }
     }
     desired.acceleration = desired_acc;
@@ -289,8 +289,8 @@ bool JointSaturationLimiter<JointLimits, JointControlInterfacesData>::on_enforce
   if (desired.has_jerk())
   {
     limits_enforced =
-      limits_enforced ||
-      is_limited(desired.jerk.value(), -joint_limits.max_jerk, joint_limits.max_jerk);
+      is_limited(desired.jerk.value(), -joint_limits.max_jerk, joint_limits.max_jerk) ||
+      limits_enforced;
     desired.jerk = std::clamp(desired.jerk.value(), -joint_limits.max_jerk, joint_limits.max_jerk);
   }
 
