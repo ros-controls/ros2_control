@@ -81,7 +81,8 @@ public:
   /**
    * @param time Current time
    * @param period Current period
-   * @return The return value of the async function
+   * @return A pair with the first element being a boolean indicating if the async update method was
+   * triggered and the second element being the last return value of the async function.
    * If the AsyncFunctionHandler is not initialized properly, it will throw a runtime error.
    * If the async update method is waiting for the trigger, it will notify the async thread to start
    * the update cycle.
