@@ -249,7 +249,9 @@ TEST_F(JointSaturationLimiterTest, check_desired_velocity_only_cases)
   test_limit_enforcing(-5.0, -3.0, 0.0, true);
   test_limit_enforcing(-5.0, -1.0, 0.0, true);
   // When the position is out of the limits, then the velocity is saturated to zero
-  // test_limit_enforcing(-6.0, -1.0, 0.0, true);
+  test_limit_enforcing(-6.0, -1.0, 0.0, true);
+  test_limit_enforcing(-6.0, -2.0, 0.0, true);
+  test_limit_enforcing(-6.0, 1.0, 0.0, true);
 
   // Now remove the position limits and only test with acceleration limits
   limits.has_position_limits = false;
@@ -257,7 +259,7 @@ TEST_F(JointSaturationLimiterTest, check_desired_velocity_only_cases)
   limits.max_acceleration = 0.5;
   // When launching init, the prev_command_ within the limiter will be reset
   ASSERT_TRUE(Init(limits));
-  // Now the velocity limits are not saturated by the acceleration limits so in succeeding call it
+  // Now the velocity limits are now saturated by the acceleration limits so in succeeding call it
   // will reach the desired if it is within the max velocity limits. Here, the order of the tests is
   // important.
   for (auto act_pos :
@@ -281,6 +283,30 @@ TEST_F(JointSaturationLimiterTest, check_desired_velocity_only_cases)
     test_limit_enforcing(act_pos, 0.0, 0.5, true);
     test_limit_enforcing(act_pos, 0.0, 0.0, false);
   }
+
+  // Now re-enable the position limits and test with acceleration limits
+  limits.has_position_limits = true;
+  limits.has_acceleration_limits = true;
+  limits.max_acceleration = 0.5;
+  // When launching init, the prev_command_ within the limiter will be reset
+  ASSERT_TRUE(Init(limits));
+  // Now the velocity limits are now saturated by the acceleration limits so in succeeding call it
+  // will reach the desired if it is within the max velocity limits. Here, the order of the tests is
+  // important.
+  test_limit_enforcing(4.5, 0.0, 0.0, false);  // Helps to reset th prev_command internally
+  test_limit_enforcing(4.5, 1.0, 0.5, true);
+  test_limit_enforcing(4.8, 1.0, 0.2, true);
+  test_limit_enforcing(4.8, -1.0, -0.3, true);
+  test_limit_enforcing(4.8, -1.0, -0.8, true);
+  test_limit_enforcing(4.8, -1.0, -1.0, false);
+  test_limit_enforcing(-4.8, -1.0, -0.2, true);
+  test_limit_enforcing(-4.3, -1.0, -0.7, true);
+  test_limit_enforcing(-4.3, 0.0, -0.2, true);
+  test_limit_enforcing(-4.3, 0.0, 0.0, false);
+  test_limit_enforcing(-6.0, 1.0, 0.0, true);
+  test_limit_enforcing(-6.0, -1.0, 0.0, true);
+  test_limit_enforcing(6.0, 1.0, 0.0, true);
+  test_limit_enforcing(6.0, -1.0, 0.0, true);
 }
 
 // TEST_F(JointSaturationLimiterTest, when_no_posstate_expect_enforce_false)
