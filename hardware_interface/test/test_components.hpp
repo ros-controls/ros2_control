@@ -29,8 +29,7 @@ template <typename C, typename T>
 std::pair<bool, size_t> vector_contains(const std::vector<C> & vec, const T & element)
 {
   auto it = std::find_if(
-    vec.begin(), vec.end(),
-    [element](const auto & state_interface)
+    vec.begin(), vec.end(), [element](const auto & state_interface)
     { return state_interface->get_name() == std::string(element); });
 
   return std::make_pair(it != vec.end(), std::distance(vec.begin(), it));
