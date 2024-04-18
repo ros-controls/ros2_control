@@ -263,7 +263,6 @@ public:
   CONTROLLER_INTERFACE_PUBLIC
   virtual bool is_in_chained_mode() const = 0;
 
-  /// Method to stop any running async update cycle after finishing the current cycle.
   /**
    * Method to stop any running async update cycle after finishing the current cycle. This is needed
    * to be called before deactivating the controller by the controller_manager, so that the
