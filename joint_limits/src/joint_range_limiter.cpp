@@ -262,8 +262,10 @@ bool JointSaturationLimiter<JointLimits, JointControlInterfacesData>::on_enforce
     double desired_acc = desired.acceleration.value();
     if (
       joint_limits.has_deceleration_limits &&
-      ((desired.acceleration.value() < 0 && actual.velocity.value() > 0) ||
-       (desired.acceleration.value() > 0 && actual.velocity.value() < 0)))
+      ((desired.acceleration.value() < 0 && actual.velocity.has_value() &&
+        actual.velocity.value() > 0) ||
+       (desired.acceleration.value() > 0 && actual.velocity.has_value() &&
+        actual.velocity.value() < 0)))
     {
       // limit deceleration
       limits_enforced =
