@@ -24,17 +24,20 @@
 bool is_limited(double value, double min, double max) { return value < min || value > max; }
 
 std::pair<double, double> compute_position_limits(
-  const joint_limits::JointLimits & limits, double prev_command_pos, double dt)
+  const joint_limits::JointLimits & limits, const std::optional<double> & act_vel,
+  const std::optional<double> & prev_command_pos, double dt)
 {
   std::pair<double, double> pos_limits({limits.min_position, limits.max_position});
   if (limits.has_velocity_limits)
   {
-    const double delta_vel =
-      limits.has_acceleration_limits ? limits.max_acceleration * dt : limits.max_velocity;
+    const double act_vel_abs = act_vel.has_value() ? std::fabs(act_vel.value()) : 0.0;
+    const double delta_vel = limits.has_acceleration_limits
+                               ? act_vel_abs + (limits.max_acceleration * dt)
+                               : limits.max_velocity;
     const double max_vel = std::min(limits.max_velocity, delta_vel);
     const double delta_pos = max_vel * dt;
-    pos_limits.first = std::max(prev_command_pos - delta_pos, pos_limits.first);
-    pos_limits.second = std::min(prev_command_pos + delta_pos, pos_limits.second);
+    pos_limits.first = std::max(prev_command_pos.value() - delta_pos, pos_limits.first);
+    pos_limits.second = std::min(prev_command_pos.value() + delta_pos, pos_limits.second);
   }
   return pos_limits;
 }
@@ -222,7 +225,7 @@ bool JointSaturationLimiter<JointLimits, JointControlInterfacesData>::on_enforce
   if (desired.has_position())
   {
     const auto limits =
-      compute_position_limits(joint_limits, prev_command_.position.value(), dt_seconds);
+      compute_position_limits(joint_limits, actual.velocity, prev_command_.position, dt_seconds);
     limits_enforced = is_limited(desired.position.value(), limits.first, limits.second);
     desired.position = std::clamp(desired.position.value(), limits.first, limits.second);
   }
