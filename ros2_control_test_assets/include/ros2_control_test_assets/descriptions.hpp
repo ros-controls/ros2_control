@@ -86,6 +86,7 @@ const auto urdf_head =
     <parent link="link1"/>
     <child link="link2"/>
     <limit effort="0.1" lower="-3.14159265359" upper="3.14159265359" velocity="0.2"/>
+    <safety_controller soft_lower_limit="-1.5" soft_upper_limit="0.5" k_position="10.0" k_velocity="20.0"/>
   </joint>
   <link name="link2">
     <inertial>
