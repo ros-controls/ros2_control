@@ -554,6 +554,95 @@ TEST_F(JointSaturationLimiterTest, check_desired_jerk_only_cases)
   test_limit_enforcing(-1.5, -0.5, true);
 }
 
+TEST_F(JointSaturationLimiterTest, check_all_desired_references_limiting)
+{
+  SetupNode("joint_saturation_limiter");
+  ASSERT_TRUE(Load());
+
+  joint_limits::JointLimits limits;
+  limits.has_position_limits = true;
+  limits.min_position = -5.0;
+  limits.max_position = 5.0;
+  limits.has_velocity_limits = true;
+  limits.max_velocity = 1.0;
+  limits.has_acceleration_limits = true;
+  limits.max_acceleration = 0.5;
+  limits.has_deceleration_limits = true;
+  limits.max_deceleration = 0.25;
+  limits.has_jerk_limits = true;
+  limits.max_jerk = 2.0;
+  ASSERT_TRUE(Init(limits));
+  ASSERT_TRUE(joint_limiter_->configure(last_commanded_state_));
+
+  rclcpp::Duration period(1, 0);  // 1 second
+  auto test_limit_enforcing =
+    [&](
+      const std::optional<double> & actual_position, const std::optional<double> & actual_velocity,
+      double desired_position, double desired_velocity, double desired_acceleration,
+      double desired_jerk, double expected_position, double expected_velocity,
+      double expected_acceleration, double expected_jerk, bool is_clamped)
+  {
+    // Reset the desired and actual states
+    desired_state_ = {};
+    actual_state_ = {};
+    const double act_pos = actual_position.has_value() ? actual_position.value()
+                                                       : std::numeric_limits<double>::quiet_NaN();
+    const double act_vel = actual_velocity.has_value() ? actual_velocity.value()
+                                                       : std::numeric_limits<double>::quiet_NaN();
+    SCOPED_TRACE(
+      "Testing for actual position: " + std::to_string(act_pos) + ", actual velocity: " +
+      std::to_string(act_vel) + ", desired position: " + std::to_string(desired_position) +
+      ", desired velocity: " + std::to_string(desired_velocity) + ", desired acceleration: " +
+      std::to_string(desired_acceleration) + ", desired jerk: " + std::to_string(desired_jerk) +
+      ", expected position: " + std::to_string(expected_position) +
+      ", expected velocity: " + std::to_string(expected_velocity) + ", expected acceleration: " +
+      std::to_string(expected_acceleration) + ", expected jerk: " + std::to_string(expected_jerk) +
+      ", is clamped: " + std::to_string(is_clamped) +
+      " for the joint limits : " + limits.to_string());
+    if (actual_position.has_value())
+    {
+      actual_state_.position = actual_position.value();
+    }
+    if (actual_velocity.has_value())
+    {
+      actual_state_.velocity = actual_velocity.value();
+    }
+    desired_state_.position = desired_position;
+    desired_state_.velocity = desired_velocity;
+    desired_state_.acceleration = desired_acceleration;
+    desired_state_.jerk = desired_jerk;
+    ASSERT_EQ(is_clamped, joint_limiter_->enforce(actual_state_, desired_state_, period));
+    EXPECT_NEAR(desired_state_.position.value(), expected_position, COMMON_THRESHOLD);
+    EXPECT_NEAR(desired_state_.velocity.value(), expected_velocity, COMMON_THRESHOLD);
+    EXPECT_NEAR(desired_state_.acceleration.value(), expected_acceleration, COMMON_THRESHOLD);
+    EXPECT_NEAR(desired_state_.jerk.value(), expected_jerk, COMMON_THRESHOLD);
+  };
+
+  // Test cases when there is no actual position and velocity
+  // Desired position and velocity affected due to the acceleration limits
+  test_limit_enforcing(std::nullopt, std::nullopt, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, false);
+  test_limit_enforcing(std::nullopt, std::nullopt, 6.0, 2.0, 1.0, 0.5, 0.5, 0.5, 0.5, 0.5, true);
+  test_limit_enforcing(std::nullopt, std::nullopt, 6.0, 2.0, 1.0, 0.5, 1.0, 1.0, 0.5, 0.5, true);
+  test_limit_enforcing(std::nullopt, std::nullopt, 6.0, 2.0, 1.0, 0.5, 1.5, 1.0, 0.5, 0.5, true);
+  test_limit_enforcing(std::nullopt, std::nullopt, 6.0, 2.0, 1.0, 0.5, 2.0, 1.0, 0.5, 0.5, true);
+  test_limit_enforcing(std::nullopt, std::nullopt, 3.0, 2.0, 1.0, 0.5, 2.5, 1.0, 0.5, 0.5, true);
+  test_limit_enforcing(std::nullopt, std::nullopt, 3.0, 2.0, 1.0, 0.5, 3.0, 1.0, 0.5, 0.5, true);
+  test_limit_enforcing(std::nullopt, std::nullopt, 3.0, 1.0, 0.5, 0.5, 3.0, 1.0, 0.5, 0.5, false);
+
+  // Now enforce the limits with actual position and velocity
+  ASSERT_TRUE(Init(limits));
+  // Desired position and velocity affected due to the acceleration limits
+  test_limit_enforcing(0.5, 0.0, 6.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, true);
+  test_limit_enforcing(1.0, 0.0, 6.0, 0.0, 0.0, 0.0, 1.5, 0.0, 0.0, 0.0, true);
+  test_limit_enforcing(1.0, 0.0, 6.0, 0.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, true);
+  test_limit_enforcing(1.0, 0.0, -6.0, 0.0, 0.0, 0.0, 1.5, 0.0, 0.0, 0.0, true);
+  test_limit_enforcing(2.0, 0.0, 6.0, 2.0, 1.0, 0.5, 2.0, 0.5, 0.5, 0.5, true);
+  test_limit_enforcing(2.0, 0.5, 6.0, 2.0, 1.0, 0.5, 3.0, 1.0, 0.5, 0.5, true);
+  test_limit_enforcing(3.0, 0.5, 6.0, 2.0, 1.0, 0.5, 4.0, 1.0, 0.5, 0.5, true);
+  test_limit_enforcing(4.0, 0.5, 6.0, 2.0, 1.0, 0.5, 5.0, 1.0, 0.5, 0.5, true);
+  test_limit_enforcing(5.0, 0.5, 6.0, 2.0, 1.0, 0.5, 5.0, 0.0, 0.5, 0.5, true);
+}
+
 int main(int argc, char ** argv)
 {
   ::testing::InitGoogleTest(&argc, argv);
