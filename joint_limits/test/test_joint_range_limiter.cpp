@@ -71,7 +71,6 @@ TEST_F(JointSaturationLimiterTest, check_desired_position_only_cases)
   ASSERT_FALSE(desired_state_.has_effort());
   ASSERT_FALSE(desired_state_.has_jerk());
 
-  // The previous command does nothing in this case as there is no velocity limits
   // For hard limits, if there is no actual state but the desired state is outside the limit, then
   // saturate it to the limits
   ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
@@ -156,6 +155,95 @@ TEST_F(JointSaturationLimiterTest, check_desired_position_only_cases)
   ASSERT_FALSE(desired_state_.has_acceleration());
   ASSERT_FALSE(desired_state_.has_effort());
   ASSERT_FALSE(desired_state_.has_jerk());
+}
+
+TEST_F(JointSaturationLimiterTest, check_desired_velocity_only_cases)
+{
+  SetupNode("joint_saturation_limiter");
+  ASSERT_TRUE(Load());
+
+  joint_limits::JointLimits limits;
+  limits.has_position_limits = true;
+  limits.min_position = -5.0;
+  limits.max_position = 5.0;
+  limits.has_velocity_limits = true;
+  limits.max_velocity = 1.0;
+  ASSERT_TRUE(Init(limits));
+  // no size check occurs (yet) so expect true
+  ASSERT_TRUE(joint_limiter_->configure(last_commanded_state_));
+
+  // Reset the desired and actual states
+  desired_state_ = {};
+  actual_state_ = {};
+
+  rclcpp::Duration period(1, 0);  // 1 second
+  desired_state_.velocity = 2.0;
+  ASSERT_FALSE(desired_state_.has_position());
+  ASSERT_TRUE(desired_state_.has_velocity());
+  ASSERT_FALSE(desired_state_.has_acceleration());
+  ASSERT_FALSE(desired_state_.has_effort());
+  ASSERT_FALSE(desired_state_.has_jerk());
+
+  // For hard limits, if there is no actual state but the desired state is outside the limit, then
+  // saturate it to the limits
+  ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
+  ASSERT_FALSE(desired_state_.has_position());
+  ASSERT_TRUE(desired_state_.has_velocity());
+  EXPECT_NEAR(desired_state_.velocity.value(), limits.max_velocity, COMMON_THRESHOLD);
+  ASSERT_FALSE(desired_state_.has_acceleration());
+  ASSERT_FALSE(desired_state_.has_effort());
+  ASSERT_FALSE(desired_state_.has_jerk());
+
+  desired_state_.velocity = -5.0;
+  ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
+  ASSERT_FALSE(desired_state_.has_position());
+  ASSERT_TRUE(desired_state_.has_velocity());
+  EXPECT_NEAR(desired_state_.velocity.value(), -limits.max_velocity, COMMON_THRESHOLD);
+  ASSERT_FALSE(desired_state_.has_acceleration());
+  ASSERT_FALSE(desired_state_.has_effort());
+  ASSERT_FALSE(desired_state_.has_jerk());
+
+  // If the desired state is within the limits, then no saturation is needed
+  desired_state_.velocity = 1.0;
+  ASSERT_FALSE(joint_limiter_->enforce(actual_state_, desired_state_, period));
+  ASSERT_FALSE(desired_state_.has_position());
+  ASSERT_TRUE(desired_state_.has_velocity());
+  EXPECT_NEAR(desired_state_.velocity.value(), 1.0, COMMON_THRESHOLD);
+  ASSERT_FALSE(desired_state_.has_acceleration());
+  ASSERT_FALSE(desired_state_.has_effort());
+  ASSERT_FALSE(desired_state_.has_jerk());
+
+  // Now as the position limits are already configure, set the actual position nearby the limits,
+  // then the max velocity needs to adapt wrt to the position limits
+  // It is saturated as the position reported is close to the position limits
+  auto test_limit_enforcing =
+    [&](double actual_position, double desired_velocity, double expected_velocity, bool is_clamped)
+  {
+    SCOPED_TRACE(
+      "Testing for actual position: " + std::to_string(actual_position) +
+      ", desired velocity: " + std::to_string(desired_velocity) + ", expected velocity: " +
+      std::to_string(expected_velocity) + ", is clamped: " + std::to_string(is_clamped));
+    actual_state_.position = actual_position;
+    desired_state_.velocity = desired_velocity;
+    ASSERT_EQ(is_clamped, joint_limiter_->enforce(actual_state_, desired_state_, period));
+    ASSERT_FALSE(desired_state_.has_position());
+    ASSERT_TRUE(desired_state_.has_velocity());
+    EXPECT_NEAR(desired_state_.velocity.value(), expected_velocity, COMMON_THRESHOLD);
+    ASSERT_FALSE(desired_state_.has_acceleration());
+    ASSERT_FALSE(desired_state_.has_effort());
+    ASSERT_FALSE(desired_state_.has_jerk());
+  };
+  test_limit_enforcing(4.5, 5.0, 0.5, true);
+  test_limit_enforcing(4.8, 5.0, 0.2, true);
+  test_limit_enforcing(4.5, 0.3, 0.3, false);
+  test_limit_enforcing(4.5, 0.5, 0.5, false);
+  test_limit_enforcing(4.0, 0.5, 0.5, false);
+  test_limit_enforcing(-4.8, -6.0, -0.2, true);
+  test_limit_enforcing(4.3, 5.0, 0.7, true);
+  test_limit_enforcing(-4.5, -5.0, -0.5, true);
+  test_limit_enforcing(-4.5, -0.2, -0.2, false);
+  test_limit_enforcing(-3.0, -5.0, -1.0, true);
+  test_limit_enforcing(-3.0, -1.0, -1.0, false);
 }
 
 // TEST_F(JointSaturationLimiterTest, when_no_posstate_expect_enforce_false)
