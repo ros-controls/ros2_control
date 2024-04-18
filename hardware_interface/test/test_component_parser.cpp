@@ -154,7 +154,7 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_one_interface)
     EXPECT_TRUE(hardware_info.limits.at(joint).has_effort_limits);
     EXPECT_THAT(hardware_info.limits.at(joint).max_velocity, DoubleNear(0.2, 1e-5));
     EXPECT_THAT(hardware_info.limits.at(joint).max_effort, DoubleNear(0.1, 1e-5));
-    if(strcmp(joint, joint2_name) == 0)
+    if (strcmp(joint, joint2_name) == 0)
     {
       EXPECT_THAT(hardware_info.soft_limits.at(joint).max_position, DoubleNear(0.5, 1e-5));
       EXPECT_THAT(hardware_info.soft_limits.at(joint).min_position, DoubleNear(-1.0, 1e-5));
@@ -216,7 +216,7 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_multi_interface
     // effort and velocity limits won't change as they are above the main URDF hard limits
     EXPECT_THAT(hardware_info.limits.at(joint).max_velocity, DoubleNear(0.2, 1e-5));
     EXPECT_THAT(hardware_info.limits.at(joint).max_effort, DoubleNear(0.1, 1e-5));
-    if(strcmp(joint, joint2_name) == 0)
+    if (strcmp(joint, joint2_name) == 0)
     {
       EXPECT_THAT(hardware_info.soft_limits.at(joint).max_position, DoubleNear(0.5, 1e-5));
       EXPECT_THAT(hardware_info.soft_limits.at(joint).min_position, DoubleNear(-1.0, 1e-5));
@@ -284,7 +284,7 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_robot_with_sens
     EXPECT_TRUE(hardware_info.limits.at(joint).has_effort_limits);
     EXPECT_THAT(hardware_info.limits.at(joint).max_velocity, DoubleNear(0.2, 1e-5));
     EXPECT_THAT(hardware_info.limits.at(joint).max_effort, DoubleNear(0.1, 1e-5));
-    if(strcmp(joint, joint2_name) == 0)
+    if (strcmp(joint, joint2_name) == 0)
     {
       EXPECT_THAT(hardware_info.soft_limits.at(joint).max_position, DoubleNear(0.5, 1e-5));
       EXPECT_THAT(hardware_info.soft_limits.at(joint).min_position, DoubleNear(-1.0, 1e-5));
@@ -337,7 +337,7 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_robot_with_exte
     EXPECT_TRUE(hardware_info.limits.at(joint).has_effort_limits);
     EXPECT_THAT(hardware_info.limits.at(joint).max_velocity, DoubleNear(0.2, 1e-5));
     EXPECT_THAT(hardware_info.limits.at(joint).max_effort, DoubleNear(0.1, 1e-5));
-    if(strcmp(joint, joint2_name) == 0)
+    if (strcmp(joint, joint2_name) == 0)
     {
       EXPECT_THAT(hardware_info.soft_limits.at(joint).max_position, DoubleNear(0.5, 1e-5));
       EXPECT_THAT(hardware_info.soft_limits.at(joint).min_position, DoubleNear(-1.0, 1e-5));
@@ -424,7 +424,7 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_modular_robot
     EXPECT_TRUE(hardware_info.limits.at(joint).has_effort_limits);
     EXPECT_THAT(hardware_info.limits.at(joint).max_velocity, DoubleNear(0.2, 1e-5));
     EXPECT_THAT(hardware_info.limits.at(joint).max_effort, DoubleNear(0.1, 1e-5));
-    if(strcmp(joint, joint2_name) == 0)
+    if (strcmp(joint, joint2_name) == 0)
     {
       EXPECT_THAT(hardware_info.soft_limits.at(joint).max_position, DoubleNear(0.5, 1e-5));
       EXPECT_THAT(hardware_info.soft_limits.at(joint).min_position, DoubleNear(-1.0, 1e-5));
@@ -511,7 +511,7 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_modular_robot
     // effort and velocity limits won't change as they are above the main URDF hard limits
     EXPECT_THAT(hardware_info.limits.at(joint).max_velocity, DoubleNear(0.2, 1e-5));
     EXPECT_THAT(hardware_info.limits.at(joint).max_effort, DoubleNear(0.1, 1e-5));
-    if(strcmp(joint, joint2_name) == 0)
+    if (strcmp(joint, joint2_name) == 0)
     {
       EXPECT_THAT(hardware_info.soft_limits.at(joint).max_position, DoubleNear(0.5, 1e-5));
       EXPECT_THAT(hardware_info.soft_limits.at(joint).min_position, DoubleNear(-1.5, 1e-5));
@@ -580,7 +580,7 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_modular_robot
     // effort and velocity limits won't change as they are above the main URDF hard limits
     EXPECT_THAT(hardware_info.limits.at(joint).max_velocity, DoubleNear(0.2, 1e-5));
     EXPECT_THAT(hardware_info.limits.at(joint).max_effort, DoubleNear(0.1, 1e-5));
-    if(strcmp(joint, joint2_name) == 0)
+    if (strcmp(joint, joint2_name) == 0)
     {
       EXPECT_THAT(hardware_info.soft_limits.at(joint).max_position, DoubleNear(0.5, 1e-5));
       EXPECT_THAT(hardware_info.soft_limits.at(joint).min_position, DoubleNear(-1.5, 1e-5));
@@ -807,7 +807,7 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_robot_with_gpio
     EXPECT_TRUE(hardware_info.limits.at(joint).has_effort_limits);
     EXPECT_THAT(hardware_info.limits.at(joint).max_velocity, DoubleNear(0.2, 1e-5));
     EXPECT_THAT(hardware_info.limits.at(joint).max_effort, DoubleNear(0.1, 1e-5));
-    if(strcmp(joint, joint2_name) == 0)
+    if (strcmp(joint, joint2_name) == 0)
     {
       EXPECT_THAT(hardware_info.soft_limits.at(joint).max_position, DoubleNear(0.5, 1e-5));
       EXPECT_THAT(hardware_info.soft_limits.at(joint).min_position, DoubleNear(-1.0, 1e-5));
