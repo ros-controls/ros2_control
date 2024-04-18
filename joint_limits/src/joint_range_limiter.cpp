@@ -24,7 +24,7 @@
 bool is_limited(double value, double min, double max) { return value < min || value > max; }
 
 std::pair<double, double> compute_position_limits(
-  joint_limits::JointLimits limits, double prev_command_pos, double dt)
+  const joint_limits::JointLimits & limits, double prev_command_pos, double dt)
 {
   std::pair<double, double> pos_limits({limits.min_position, limits.max_position});
   if (limits.has_velocity_limits)
@@ -37,7 +37,7 @@ std::pair<double, double> compute_position_limits(
 }
 
 std::pair<double, double> compute_position_limits(
-  joint_limits::JointLimits limits, joint_limits::SoftJointLimits soft_limits,
+  const joint_limits::JointLimits & limits, const joint_limits::SoftJointLimits & soft_limits,
   double prev_command_pos, double dt)
 {
   std::pair<double, double> pos_limits({limits.min_position, limits.max_position});
@@ -62,7 +62,7 @@ std::pair<double, double> compute_position_limits(
 }
 
 std::pair<double, double> compute_velocity_limits(
-  const std::string & joint_name, joint_limits::JointLimits limits,
+  const std::string & joint_name, const joint_limits::JointLimits & limits,
   const std::optional<double> & act_pos, const std::optional<double> & prev_command_vel, double dt)
 {
   const double max_vel =
@@ -94,29 +94,30 @@ std::pair<double, double> compute_velocity_limits(
 }
 
 std::pair<double, double> compute_effort_limits(
-  joint_limits::JointLimits limits, double act_pos, double act_vel, double /*dt*/)
+  const joint_limits::JointLimits & limits, const std::optional<double> & act_pos,
+  const std::optional<double> & act_vel, double /*dt*/)
 {
   const double max_effort =
     limits.has_effort_limits ? limits.max_effort : std::numeric_limits<double>::infinity();
   std::pair<double, double> eff_limits({-max_effort, max_effort});
-  if (limits.has_position_limits)
+  if (limits.has_position_limits && act_pos.has_value() && act_vel.has_value())
   {
-    if ((act_pos <= limits.min_position) && (act_vel <= 0.0))
+    if ((act_pos.value() <= limits.min_position) && (act_vel.value() <= 0.0))
     {
       eff_limits.first = 0.0;
     }
-    else if ((act_pos >= limits.max_position) && (act_vel >= 0.0))
+    else if ((act_pos.value() >= limits.max_position) && (act_vel.value() >= 0.0))
     {
       eff_limits.second = 0.0;
     }
   }
-  if (limits.has_velocity_limits)
+  if (limits.has_velocity_limits && act_vel.has_value())
   {
-    if (act_vel < -limits.max_velocity)
+    if (act_vel.value() < -limits.max_velocity)
     {
       eff_limits.first = 0.0;
     }
-    else if (act_vel > limits.max_velocity)
+    else if (act_vel.value() > limits.max_velocity)
     {
       eff_limits.second = 0.0;
     }
@@ -234,8 +235,8 @@ bool JointSaturationLimiter<JointLimits, JointControlInterfacesData>::on_enforce
 
   if (desired.has_effort())
   {
-    const auto limits = compute_effort_limits(
-      joint_limits, actual.position.value(), actual.velocity.value(), dt_seconds);
+    const auto limits =
+      compute_effort_limits(joint_limits, actual.position, actual.velocity, dt_seconds);
     limits_enforced =
       limits_enforced || is_limited(desired.effort.value(), limits.first, limits.second);
     desired.effort = std::clamp(desired.effort.value(), limits.first, limits.second);
