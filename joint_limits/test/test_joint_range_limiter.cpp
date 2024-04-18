@@ -309,6 +309,121 @@ TEST_F(JointSaturationLimiterTest, check_desired_velocity_only_cases)
   test_limit_enforcing(6.0, -1.0, 0.0, true);
 }
 
+TEST_F(JointSaturationLimiterTest, check_desired_effort_only_cases)
+{
+  SetupNode("joint_saturation_limiter");
+  ASSERT_TRUE(Load());
+
+  joint_limits::JointLimits limits;
+  limits.has_position_limits = true;
+  limits.min_position = -5.0;
+  limits.max_position = 5.0;
+  limits.has_velocity_limits = true;
+  limits.max_velocity = 1.0;
+  limits.has_effort_limits = true;
+  limits.max_effort = 200.0;
+  ASSERT_TRUE(Init(limits));
+  ASSERT_TRUE(joint_limiter_->configure(last_commanded_state_));
+
+  // Reset the desired and actual states
+  desired_state_ = {};
+  actual_state_ = {};
+
+  rclcpp::Duration period(1, 0);  // 1 second
+  desired_state_.effort = 20.0;
+  EXPECT_FALSE(desired_state_.has_position());
+  EXPECT_FALSE(desired_state_.has_velocity());
+  EXPECT_FALSE(desired_state_.has_acceleration());
+  EXPECT_TRUE(desired_state_.has_effort());
+  EXPECT_FALSE(desired_state_.has_jerk());
+
+  // Now as the position limits are already configure, set the actual position nearby the limits,
+  // then the max velocity needs to adapt wrt to the position limits
+  // It is saturated as the position reported is close to the position limits
+  auto test_limit_enforcing = [&](
+                                const std::optional<double> & actual_position,
+                                const std::optional<double> & actual_velocity,
+                                double desired_effort, double expected_effort, bool is_clamped)
+  {
+    // Reset the desired and actual states
+    desired_state_ = {};
+    actual_state_ = {};
+    const double act_pos = actual_position.has_value() ? actual_position.value()
+                                                       : std::numeric_limits<double>::quiet_NaN();
+    const double act_vel = actual_velocity.has_value() ? actual_velocity.value()
+                                                       : std::numeric_limits<double>::quiet_NaN();
+    SCOPED_TRACE(
+      "Testing for actual position: " + std::to_string(act_pos) + ", actual velocity: " +
+      std::to_string(act_vel) + ", desired effort: " + std::to_string(desired_effort) +
+      ", expected effort: " + std::to_string(expected_effort) + ", is clamped: " +
+      std::to_string(is_clamped) + " for the joint limits : " + limits.to_string());
+    if (actual_position.has_value())
+    {
+      actual_state_.position = actual_position.value();
+    }
+    if (actual_velocity.has_value())
+    {
+      actual_state_.velocity = actual_velocity.value();
+    }
+    desired_state_.effort = desired_effort;
+    ASSERT_EQ(is_clamped, joint_limiter_->enforce(actual_state_, desired_state_, period));
+    EXPECT_FALSE(desired_state_.has_position());
+    EXPECT_FALSE(desired_state_.has_velocity());
+    EXPECT_TRUE(desired_state_.has_effort());
+    EXPECT_NEAR(desired_state_.effort.value(), expected_effort, COMMON_THRESHOLD);
+    EXPECT_FALSE(desired_state_.has_acceleration());
+    EXPECT_FALSE(desired_state_.has_jerk());
+  };
+
+  for (auto act_pos :
+       {std::optional<double>(std::nullopt), std::optional<double>(4.0),
+        std::optional<double>(-4.0)})
+  {
+    for (auto act_vel :
+         {std::optional<double>(std::nullopt), std::optional<double>(0.4),
+          std::optional<double>(-0.2)})
+    {
+      test_limit_enforcing(act_pos, act_vel, 20.0, 20.0, false);
+      test_limit_enforcing(act_pos, act_vel, 200.0, 200.0, false);
+      test_limit_enforcing(act_pos, act_vel, 201.0, 200.0, true);
+      test_limit_enforcing(act_pos, act_vel, 0.0, 0.0, false);
+      test_limit_enforcing(act_pos, act_vel, -20.0, -20.0, false);
+      test_limit_enforcing(act_pos, act_vel, -200.0, -200.0, false);
+      test_limit_enforcing(act_pos, act_vel, -201.0, -200.0, true);
+    }
+  }
+
+  // The convention is that the positive velocity/position will result in positive effort
+  // Now the cases where the actual position or the actual velocity is out of the limits
+  test_limit_enforcing(5.0, 0.0, 20.0, 0.0, true);
+  test_limit_enforcing(5.0, 0.0, 400.0, 0.0, true);
+  test_limit_enforcing(6.0, 0.0, 400.0, 0.0, true);
+  test_limit_enforcing(5.0, 0.0, -20.0, -20.0, false);
+  test_limit_enforcing(5.0, 0.0, -400.0, -200.0, true);
+  test_limit_enforcing(6.0, 0.0, -400.0, -200.0, true);
+
+  // At the limit, when trying to move away from the limit, it should allow
+  test_limit_enforcing(5.0, -0.2, 400.0, 200.0, true);
+  test_limit_enforcing(5.0, -0.2, -400.0, -200.0, true);
+  test_limit_enforcing(5.0, -0.2, 30.0, 30.0, false);
+  test_limit_enforcing(5.0, -0.2, -30.0, -30.0, false);
+  // For the positive velocity with limit, the effort is saturated
+  test_limit_enforcing(5.0, 0.2, 400.0, 0.0, true);
+  test_limit_enforcing(5.0, 0.2, 30.0, 0.0, true);
+  test_limit_enforcing(5.0, 0.2, -400.0, -200.0, true);
+  test_limit_enforcing(5.0, 0.2, -30.0, -30.0, false);
+
+  test_limit_enforcing(-5.0, 0.2, 20.0, 20.0, false);
+  test_limit_enforcing(-5.0, 0.2, 400.0, 200.0, true);
+  test_limit_enforcing(-5.0, 0.2, -20.0, -20.0, false);
+  test_limit_enforcing(-5.0, 0.2, -400.0, -200.0, true);
+  // For the negative velocity with limit, the effort is saturated
+  test_limit_enforcing(-5.0, -0.2, -400.0, 0.0, true);
+  test_limit_enforcing(-5.0, -0.2, -30.0, 0.0, true);
+  test_limit_enforcing(-5.0, -0.2, 400.0, 200.0, true);
+  test_limit_enforcing(-5.0, -0.2, 30.0, 30.0, false);
+}
+
 int main(int argc, char ** argv)
 {
   ::testing::InitGoogleTest(&argc, argv);
