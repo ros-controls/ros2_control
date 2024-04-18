@@ -15,6 +15,7 @@
 /// \author Sai Kishor Kothakota
 
 #include "test_joint_range_limiter.hpp"
+#include <limits>
 
 TEST_F(JointSaturationLimiterTest, when_loading_limiter_plugin_expect_loaded)
 {
@@ -184,46 +185,27 @@ TEST_F(JointSaturationLimiterTest, check_desired_velocity_only_cases)
   EXPECT_FALSE(desired_state_.has_effort());
   EXPECT_FALSE(desired_state_.has_jerk());
 
-  // For hard limits, if there is no actual state but the desired state is outside the limit, then
-  // saturate it to the limits
-  ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
-  EXPECT_FALSE(desired_state_.has_position());
-  EXPECT_TRUE(desired_state_.has_velocity());
-  EXPECT_NEAR(desired_state_.velocity.value(), limits.max_velocity, COMMON_THRESHOLD);
-  EXPECT_FALSE(desired_state_.has_acceleration());
-  EXPECT_FALSE(desired_state_.has_effort());
-  EXPECT_FALSE(desired_state_.has_jerk());
-
-  desired_state_.velocity = -5.0;
-  ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
-  EXPECT_FALSE(desired_state_.has_position());
-  EXPECT_TRUE(desired_state_.has_velocity());
-  EXPECT_NEAR(desired_state_.velocity.value(), -limits.max_velocity, COMMON_THRESHOLD);
-  EXPECT_FALSE(desired_state_.has_acceleration());
-  EXPECT_FALSE(desired_state_.has_effort());
-  EXPECT_FALSE(desired_state_.has_jerk());
-
-  // If the desired state is within the limits, then no saturation is needed
-  desired_state_.velocity = 1.0;
-  ASSERT_FALSE(joint_limiter_->enforce(actual_state_, desired_state_, period));
-  EXPECT_FALSE(desired_state_.has_position());
-  EXPECT_TRUE(desired_state_.has_velocity());
-  EXPECT_NEAR(desired_state_.velocity.value(), 1.0, COMMON_THRESHOLD);
-  EXPECT_FALSE(desired_state_.has_acceleration());
-  EXPECT_FALSE(desired_state_.has_effort());
-  EXPECT_FALSE(desired_state_.has_jerk());
-
   // Now as the position limits are already configure, set the actual position nearby the limits,
   // then the max velocity needs to adapt wrt to the position limits
   // It is saturated as the position reported is close to the position limits
-  auto test_limit_enforcing =
-    [&](double actual_position, double desired_velocity, double expected_velocity, bool is_clamped)
+  auto test_limit_enforcing = [&](
+                                const std::optional<double> & actual_position,
+                                double desired_velocity, double expected_velocity, bool is_clamped)
   {
+    // Reset the desired and actual states
+    desired_state_ = {};
+    actual_state_ = {};
+    const double act_pos = actual_position.has_value() ? actual_position.value()
+                                                       : std::numeric_limits<double>::quiet_NaN();
     SCOPED_TRACE(
-      "Testing for actual position: " + std::to_string(actual_position) +
+      "Testing for actual position: " + std::to_string(act_pos) +
       ", desired velocity: " + std::to_string(desired_velocity) + ", expected velocity: " +
-      std::to_string(expected_velocity) + ", is clamped: " + std::to_string(is_clamped));
-    actual_state_.position = actual_position;
+      std::to_string(expected_velocity) + ", is clamped: " + std::to_string(is_clamped) +
+      " for the joint limits : " + limits.to_string());
+    if (actual_position.has_value())
+    {
+      actual_state_.position = actual_position.value();
+    }
     desired_state_.velocity = desired_velocity;
     ASSERT_EQ(is_clamped, joint_limiter_->enforce(actual_state_, desired_state_, period));
     EXPECT_FALSE(desired_state_.has_position());
@@ -233,6 +215,22 @@ TEST_F(JointSaturationLimiterTest, check_desired_velocity_only_cases)
     EXPECT_FALSE(desired_state_.has_effort());
     EXPECT_FALSE(desired_state_.has_jerk());
   };
+
+  // Test cases when there is no actual position
+
+  // For hard limits, if there is no actual state but the desired state is outside the limit, then
+  // saturate it to the limits
+  test_limit_enforcing(std::nullopt, 2.0, 1.0, true);
+  test_limit_enforcing(std::nullopt, 1.1, 1.0, true);
+  test_limit_enforcing(std::nullopt, -5.0, -1.0, true);
+  test_limit_enforcing(std::nullopt, -std::numeric_limits<double>::infinity(), -1.0, true);
+  test_limit_enforcing(std::nullopt, std::numeric_limits<double>::infinity(), 1.0, true);
+  test_limit_enforcing(std::nullopt, -3.212, -1.0, true);
+  test_limit_enforcing(std::nullopt, -0.8, -0.8, false);
+  test_limit_enforcing(std::nullopt, 0.8, 0.8, false);
+  test_limit_enforcing(std::nullopt, 0.12, 0.12, false);
+  test_limit_enforcing(std::nullopt, 0.0, 0.0, false);
+
   test_limit_enforcing(4.5, 5.0, 0.5, true);
   test_limit_enforcing(4.8, 5.0, 0.2, true);
   test_limit_enforcing(4.5, 0.3, 0.3, false);
