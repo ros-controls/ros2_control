@@ -140,6 +140,22 @@ TEST_F(JointSaturationLimiterTest, check_desired_position_only_cases)
   ASSERT_FALSE(desired_state_.has_acceleration());
   ASSERT_FALSE(desired_state_.has_effort());
   ASSERT_FALSE(desired_state_.has_jerk());
+
+  // Now test when there are no position limits, then the desired position is not saturated
+  limits = joint_limits::JointLimits();
+  ASSERT_TRUE(Init(limits));
+  // Reset the desired and actual states
+  desired_state_ = {};
+  actual_state_ = {};
+  actual_state_.position = 2.0;
+  desired_state_.position = 5.0 * M_PI;
+  ASSERT_FALSE(joint_limiter_->enforce(actual_state_, desired_state_, period));
+  EXPECT_NEAR(desired_state_.position.value(), 5.0 * M_PI, COMMON_THRESHOLD);
+  ASSERT_TRUE(desired_state_.has_position());
+  ASSERT_FALSE(desired_state_.has_velocity());
+  ASSERT_FALSE(desired_state_.has_acceleration());
+  ASSERT_FALSE(desired_state_.has_effort());
+  ASSERT_FALSE(desired_state_.has_jerk());
 }
 
 // TEST_F(JointSaturationLimiterTest, when_no_posstate_expect_enforce_false)
