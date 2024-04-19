@@ -21,13 +21,14 @@ foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
 endforeach()
 
 add_library(test_components SHARED
-test/test_components/test_actuator.cpp
-test/test_components/test_sensor.cpp
-test/test_components/test_system.cpp
-test/test_components/test_actuator_exclusive_interfaces.cpp)
+  test/test_components/test_actuator.cpp
+  test/test_components/test_sensor.cpp
+  test/test_components/test_system.cpp
+  test/test_components/test_actuator_exclusive_interfaces.cpp
+)
 ament_target_dependencies(test_components hardware_interface pluginlib ros2_control_test_assets)
 install(TARGETS test_components
-DESTINATION lib
+  DESTINATION lib
 )
 pluginlib_export_plugin_description_file(
 hardware_interface test/test_components/test_components.xml)
