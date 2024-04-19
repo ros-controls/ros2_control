@@ -169,6 +169,5 @@ private:
   std::vector<JointState> current_states_;
 };
 
-
 #include "pluginlib/class_list_macros.hpp"  // NOLINT
 PLUGINLIB_EXPORT_CLASS(TestActuatorExclusiveInterfaces, hardware_interface::ActuatorInterface)
