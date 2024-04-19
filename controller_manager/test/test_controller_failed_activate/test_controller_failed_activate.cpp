@@ -44,14 +44,12 @@ TestControllerFailedActivate::on_configure(const rclcpp_lifecycle::State & /*pre
   return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
-
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
 TestControllerFailedActivate::on_activate(const rclcpp_lifecycle::State & /*previous_state&*/)
 {
-  //Simply simulate a controller that can not be activated
+  // Simply simulate a controller that can not be activated
   return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::FAILURE;
 }
-
 
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
 TestControllerFailedActivate::on_cleanup(const rclcpp_lifecycle::State & /*previous_state*/)
@@ -59,7 +57,7 @@ TestControllerFailedActivate::on_cleanup(const rclcpp_lifecycle::State & /*previ
   return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
-}  // namespace test_controller_with_interfaces
+}  // namespace test_controller_failed_activate
 
 #include "pluginlib/class_list_macros.hpp"
 
