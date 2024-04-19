@@ -51,7 +51,7 @@ class TestActuatorExclusive : public ActuatorInterface
 
     for (const auto & j : info.joints)
     {
-      (void)j; //Suppress unused warning
+      (void)j;  // Suppress unused warning
       current_states_.emplace_back(JointState{});
     }
 
