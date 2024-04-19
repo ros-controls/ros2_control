@@ -40,7 +40,7 @@ struct JointState
   double effort;
 };
 
-class TestActuatorExclusive : public ActuatorInterface
+class TestActuatorExclusiveInterfaces : public ActuatorInterface
 {
   CallbackReturn on_init(const hardware_interface::HardwareInfo & info) override
   {
@@ -169,15 +169,6 @@ private:
   std::vector<JointState> current_states_;
 };
 
-class TestUnitilizableActuatorExclusive : public TestActuatorExclusive
-{
-  CallbackReturn on_init(const hardware_interface::HardwareInfo & info) override
-  {
-    ActuatorInterface::on_init(info);
-    return CallbackReturn::ERROR;
-  }
-};
 
 #include "pluginlib/class_list_macros.hpp"  // NOLINT
-PLUGINLIB_EXPORT_CLASS(TestActuatorExclusive, hardware_interface::ActuatorInterface)
-PLUGINLIB_EXPORT_CLASS(TestUnitilizableActuatorExclusive, hardware_interface::ActuatorInterface)
+PLUGINLIB_EXPORT_CLASS(TestActuatorExclusiveInterfaces, hardware_interface::ActuatorInterface)
