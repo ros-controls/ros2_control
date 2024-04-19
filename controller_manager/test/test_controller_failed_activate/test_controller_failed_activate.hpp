@@ -65,12 +65,11 @@ public:
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_activate(
     const rclcpp_lifecycle::State & previous_state) override;
 
-
   CONTROLLER_MANAGER_PUBLIC
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_cleanup(
     const rclcpp_lifecycle::State & previous_state) override;
 };
 
-}  // namespace test_controller_with_interfaces
+}  // namespace test_controller_failed_activate
 
 #endif  // TEST_CONTROLLER_WITH_INTERFACES__TEST_CONTROLLER_WITH_INTERFACES_HPP_
