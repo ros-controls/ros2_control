@@ -25,5 +25,6 @@ Concepts
 
    Controller Manager <../controller_manager/doc/userdoc.rst>
    Controller Chaining / Cascade Control <../controller_manager/doc/controller_chaining.rst>
+   Joint Kinematics <../hardware_interface/doc/joints_userdoc.rst>
    Hardware Components <../hardware_interface/doc/hardware_components_userdoc.rst>
    Mock Components <../hardware_interface/doc/mock_components_userdoc.rst>
