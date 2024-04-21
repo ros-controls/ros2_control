@@ -99,7 +99,15 @@ public:
   std::pair<bool, T> trigger_async_update(
     const rclcpp::Time & time, const rclcpp::Duration & period)
   {
-    initialize_async_update_thread();
+    if (!is_initialized())
+    {
+      throw std::runtime_error("AsyncFunctionHandler: need to be initialized first!");
+    }
+    if (!is_running())
+    {
+      throw std::runtime_error(
+        "AsyncFunctionHandler: need to start the async update thread first before triggering!");
+    }
     std::unique_lock<std::mutex> lock(async_mtx_, std::try_to_lock);
     bool trigger_status = false;
     if (lock.owns_lock() && !trigger_in_progress_)
@@ -185,14 +193,13 @@ public:
     }
   }
 
-private:
   /// Initialize the async update thread
   /**
    * If the async update thread is not running, it will start the async update thread.
    * If the async update thread is already configured and running, does nothing and return
    * immediately.
    */
-  void initialize_async_update_thread()
+  void start_async_update_thread()
   {
     if (!is_initialized())
     {
@@ -209,7 +216,9 @@ private:
           // \note There might be an concurrency issue with the get_state() call here. This mightn't
           // be critical here as the state of the controller is not expected to change during the
           // update cycle
-          while (get_state_function_().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE &&
+          while ((get_state_function_().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE ||
+                  get_state_function_().id() ==
+                    lifecycle_msgs::msg::State::TRANSITION_STATE_ACTIVATING) &&
                  !async_update_stop_)
           {
             {
@@ -227,10 +236,13 @@ private:
             }
             cycle_end_condition_.notify_one();
           }
+          trigger_in_progress_ = false;
+          cycle_end_condition_.notify_one();
         });
     }
   }
 
+private:
   rclcpp::Time current_update_time_;
   rclcpp::Duration current_update_period_{0, 0};
 
