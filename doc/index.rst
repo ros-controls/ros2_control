@@ -16,12 +16,6 @@ API Documentation
 
 API documentation is parsed by doxygen and can be found `here <../../api/index.html>`_
 
-=========
-Features
-=========
-
-* :ref:`Command Line Interface (CLI) <ros2controlcli_userdoc>`
-
 ========
 Concepts
 ========
