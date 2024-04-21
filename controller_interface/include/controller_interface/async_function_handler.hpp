@@ -102,7 +102,7 @@ public:
     initialize_async_update_thread();
     std::unique_lock<std::mutex> lock(async_mtx_, std::try_to_lock);
     bool trigger_status = false;
-    if (!trigger_in_progress_ && lock.owns_lock())
+    if (lock.owns_lock() && !trigger_in_progress_)
     {
       trigger_in_progress_ = true;
       current_update_time_ = time;
