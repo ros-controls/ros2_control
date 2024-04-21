@@ -87,13 +87,12 @@ TEST_F(AsyncFunctionHandlerTest, check_initialization)
   ASSERT_FALSE(async_class.get_handler().is_stopped());
 
   // Once initialized, it should not be possible to initialize again
+  async_class.get_handler().start_async_update_thread();
   ASSERT_EQ(controller_interface::return_type::OK, async_class.trigger());
   ASSERT_TRUE(async_class.get_handler().is_initialized());
   ASSERT_TRUE(async_class.get_handler().is_running());
   ASSERT_FALSE(async_class.get_handler().is_stopped());
   ASSERT_THROW(async_class.initialize(), std::runtime_error);
-  // The preempt_async_update is already called with the destructor
-  // async_class.get_handler().preempt_async_update();
 }
 
 TEST_F(AsyncFunctionHandlerTest, check_triggering)
@@ -110,6 +109,9 @@ TEST_F(AsyncFunctionHandlerTest, check_triggering)
   ASSERT_TRUE(async_class.get_handler().is_initialized());
   ASSERT_FALSE(async_class.get_handler().is_running());
   ASSERT_FALSE(async_class.get_handler().is_stopped());
+  // It shouldn't be possible to trigger without starting the thread
+  ASSERT_THROW(async_class.trigger(), std::runtime_error);
+  async_class.get_handler().start_async_update_thread();
 
   EXPECT_EQ(async_class.get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
   ASSERT_EQ(controller_interface::return_type::OK, async_class.trigger());
@@ -143,6 +145,7 @@ TEST_F(AsyncFunctionHandlerTest, trigger_for_several_cycles)
   ASSERT_TRUE(async_class.get_handler().is_initialized());
   ASSERT_FALSE(async_class.get_handler().is_running());
   ASSERT_FALSE(async_class.get_handler().is_stopped());
+  async_class.get_handler().start_async_update_thread();
 
   EXPECT_EQ(async_class.get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
   for (int i = 1; i < 1e4; i++)
@@ -172,20 +175,19 @@ TEST_F(AsyncFunctionHandlerTest, test_with_deactivate_and_activate_cycles)
   ASSERT_TRUE(async_class.get_handler().is_initialized());
   ASSERT_FALSE(async_class.get_handler().is_running());
   ASSERT_TRUE(async_class.get_handler().is_stopped());
+  async_class.get_handler().start_async_update_thread();
 
   // The thread will start and end immediately when invoked in inactive state
-  for (size_t i = 0; i < 3; i++)
-  {
-    EXPECT_EQ(async_class.get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
-    ASSERT_EQ(controller_interface::return_type::OK, async_class.trigger());
-    async_class.get_handler().join_async_update_thread();
-    ASSERT_TRUE(async_class.get_handler().is_initialized());
-    ASSERT_FALSE(async_class.get_handler().is_running());
-    ASSERT_TRUE(async_class.get_handler().is_stopped());
-  }
+  async_class.get_handler().join_async_update_thread();
+  EXPECT_EQ(async_class.get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+  ASSERT_THROW(async_class.trigger(), std::runtime_error);
+  ASSERT_TRUE(async_class.get_handler().is_initialized());
+  ASSERT_FALSE(async_class.get_handler().is_running());
+  ASSERT_TRUE(async_class.get_handler().is_stopped());
 
   // Now activate it and launch again
   async_class.activate();
+  async_class.get_handler().start_async_update_thread();
   EXPECT_EQ(async_class.get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
   for (int i = 1; i < 100; i++)
   {
@@ -211,6 +213,7 @@ TEST_F(AsyncFunctionHandlerTest, test_with_deactivate_and_activate_cycles)
   // Now let's test the case of activating it and then deactivating it when the thread is waiting
   // for a trigger to start new update cycle execution
   async_class.activate();
+  async_class.get_handler().start_async_update_thread();
 
   EXPECT_EQ(async_class.get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
   ASSERT_EQ(controller_interface::return_type::OK, async_class.trigger());
