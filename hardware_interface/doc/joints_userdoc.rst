@@ -62,7 +62,7 @@ It can be defined in the following way in the URDF
 
 Mimic joints are an abstraction of the real world: They can be used to describe
 
-* simple parallel kinematics with linear dependencies of the joint positions and velocities 
+* simple parallel kinematics with linear dependencies of the joint positions and velocities
 * abstract complex groups of actuated joints, where the positions of several joints are directly controlled by low-level control loops and move synchronously.
 
 Mimic joints defined in the URDF are parsed from the resource manager and stored in a class variable of type ``HardwareInfo``, which can be accessed by the hardware components. The mimic joints must not have command interfaces but can have state interfaces.
