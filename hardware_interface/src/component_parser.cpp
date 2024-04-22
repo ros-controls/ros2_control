@@ -740,11 +740,12 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
         {
           if (std::isfinite(max_decel))
           {
-            limits.max_deceleration = max_decel;
+            limits.max_deceleration = std::fabs(max_decel);
             if (!std::isfinite(max_accel))
             {
               limits.max_acceleration = std::fabs(limits.max_deceleration);
             }
+            limits.has_deceleration_limits = true && itr.enable_limits;
           }
           if (std::isfinite(max_accel))
           {
@@ -752,10 +753,10 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
 
             if (!std::isfinite(limits.max_deceleration))
             {
-              limits.max_deceleration = -limits.max_acceleration;
+              limits.max_deceleration = std::fabs(limits.max_acceleration);
             }
+            limits.has_acceleration_limits = true && itr.enable_limits;
           }
-          limits.has_acceleration_limits = true && itr.enable_limits;
         }
       }
       else if (itr.name == "jerk")
