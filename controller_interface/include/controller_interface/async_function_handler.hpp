@@ -104,10 +104,12 @@ public:
     bool trigger_status = false;
     if (lock.owns_lock() && !trigger_in_progress_)
     {
-      trigger_in_progress_ = true;
-      current_update_time_ = time;
-      current_update_period_ = period;
-      lock.unlock();
+      {
+        std::unique_lock<std::mutex> scoped_lock(std::move(lock));
+        trigger_in_progress_ = true;
+        current_update_time_ = time;
+        current_update_period_ = period;
+      }
       async_update_condition_.notify_one();
       trigger_status = true;
     }
