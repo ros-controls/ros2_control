@@ -6,36 +6,41 @@
 Joint Kinematics for ros2_control
 ---------------------------------------------------------
 
+This page should give an overview of the joint kinematics in the context of ros2_control. It is intended to give a brief introduction to the topic and to explain the current implementation in ros2_control.
+
 Nomenclature
-************
+############
+
+Degrees of Freedom (DOF)
+  From `wikipedia <https://en.wikipedia.org/wiki/Degrees_of_freedom_(mechanics)>`__:
+
+    In physics, the degrees of freedom (DOF) of a mechanical system is the number of independent parameters that define its configuration or state.
 
 Joint
-######
-A joint is a connection between two links. In the ROS world, two types are typical: Revolute (having position limits; or continuous without position limits) or prismatic.
+  A joint is a connection between two links. In the ROS world, two types are typical: Revolute (having position limits; or continuous without position limits) or prismatic.
 
-In general, a joint can be actuated or non-actuated, also called passive. A passive joints can have degrees-of-freedom of one, e.g., a pendulum, but also can be part of a parallel-kinematic mechanism having zero degrees-of-freedom.
+  In general, a joint can be actuated or non-actuated, also called passive. Passive joints are joints that do not have their own actuation mechanism but instead allow movement by external forces or by being passively moved by other joints. A passive joint can have a DOF of one, such as a pendulum, or it can be part of a parallel kinematic mechanism with zero DOF.
 
 Serial Kinematics
-#################
-Every joint is independent of others, and the number of joints equals the degrees-of-freedom of the kinematic chain.
+  Serial kinematics refers to the arrangement of joints in a robotic manipulator where each joint is independent of the others, and the number of joints is equal to the DOF of the kinematic chain.
 
-Parallel Kinematics
-###################
-With parallel kinematics, or closed-loop kinematics, several joints are connected in a kinematic chain and are actuated together. This means that the joints are coupled and cannot be moved independently: In general, the number of degrees-of-freedom is lower than the number of joints. An example is a four-bar-linkage, having four links and four joints. It can have one or two actuators and, subsequently, one or two degrees-of-freedom despite having four joints. Furthermore, we can say that we have one (two) actuated joint and three (two) passive joints, which have to fulfil the kinematic constraints of the mechanism.
+  A typical example is an industrial robot with six revolute joints, having six DOF. Each joint can be actuated independently, and the end-effector can be moved to any position and orientation in the workspace.
 
+Kinematic Loops
+  On the other hand, kinematic loops, also known as closed-loop mechanisms, involve several joints that are connected in a kinematic chain and being actuated together. This means that the joints are coupled and cannot be moved independently: In general, the number of DOFs is smaller than the number of joints.
+  This structure is typical for parallel kinematic mechanisms, where the end-effector is connected to the base by several kinematic chains.
 
-Relevant for ros2_control
-*************************
+  An example is the four-bar linkage, which consists of four links and four joints. It can have one or two actuators and consequently one or two DOFs, despite having four joints. Furthermore, we can say that we have one (two) actuated joint and three (two) passive joints, which must satisfy the kinematic constraints of the mechanism.
 
 URDF
 #############
 
 URDF is the default format to describe robot kinematics in ROS. However, only serial kinematic chains are supported, except for the so-called mimic joints.
-From the `URDF <http://wiki.ros.org/urdf/XML/joint>`__ specification, we can read
+See the `URDF specification <http://wiki.ros.org/urdf/XML/joint>`__ for more details. For the mimic joints, we can read
 
   This tag is used to specify that the defined joint mimics another existing joint. The value of this joint can be computed as value = multiplier * other_joint_value + offset.
 
-It can be defined in the following way
+It can be defined in the following way in the URDF
 
   .. code-block:: xml
 
@@ -60,12 +65,48 @@ Mimic joints are an abstraction of the real world: They can be used to describe
 * simple parallel kinematics with linear dependencies of the joint positions
 * abstract complex groups of actuated joints, where the positions of several joints are directly controlled by low-level control loops and move synchronously.
 
-Mimic joints defined in the URDF are parsed from the resource manager and stored in a class variable of type ``HardwareInfo``. It can be used by custom hardware components to implement the mimic joint behavior. From our released packages, the following packages are already using this information:
+Mimic joints defined in the URDF are parsed from the resource manager and stored in a class variable of type ``HardwareInfo``, which can be accessed by the hardware components. Therefore, mimic joints must not have command interfaces but can have state interfaces.
+
+.. code-block:: xml
+
+  <ros2_control>
+    <joint name="right_finger_joint">
+      <command_interface name="effort"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="effort"/>
+    </joint>
+    <joint name="left_finger_joint">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="effort"/>
+    </joint>
+  </ros2_control>
+
+From the officially released packages, the following packages are already using this information:
 
 * :ref:`mock_components (generic system) <mock_components_userdoc>`
 * :ref:`gazebo_ros2_control <gazebo_ros2_control>`
 * :ref:`gz_ros2_control <gz_ros2_control>`
 
+As the URDF specifies only the kinematics, the mimic tag has to be independent of the hardware interface type used in ros2_control. This means that we interpret this info in the following way:
+
+* position = multiplier * other_joint_position + offset
+* velocity = multiplier * other_joint_velocity
+* acceleration = multiplier * other_joint_acceleration
+* For effort interfaces, this is not defined.
+
+If someone wants to deactivate the mimic joint behavior for whatever reason without changing the URDF, it can be done by setting the attribute ``mimic=false`` of the joint tag in the ``<ros2_control>`` section of the XML.
+
+.. code-block:: xml
+
+  <joint name="left_finger_joint" mimic="false">
+    <command_interface name="position"/>
+    <state_interface name="position"/>
+    <state_interface name="velocity"/>
+    <state_interface name="effort"/>
+  </joint>
 
 Transmission Interface
 #######################
