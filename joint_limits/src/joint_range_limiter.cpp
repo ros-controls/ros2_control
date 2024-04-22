@@ -138,7 +138,7 @@ namespace joint_limits
 {
 
 template <>
-bool JointSaturationLimiter<JointLimits, JointControlInterfacesData>::on_init()
+bool JointSaturationLimiter<JointControlInterfacesData>::on_init()
 {
   const bool result = (number_of_joints_ == 1);
   if (!result && has_logging_interface())
@@ -154,7 +154,7 @@ bool JointSaturationLimiter<JointLimits, JointControlInterfacesData>::on_init()
 }
 
 template <>
-bool JointSaturationLimiter<JointLimits, JointControlInterfacesData>::on_enforce(
+bool JointSaturationLimiter<JointControlInterfacesData>::on_enforce(
   JointControlInterfacesData & actual, JointControlInterfacesData & desired,
   const rclcpp::Duration & dt)
 {
@@ -308,10 +308,8 @@ bool JointSaturationLimiter<JointLimits, JointControlInterfacesData>::on_enforce
 
 // typedefs are needed here to avoid issues with macro expansion. ref:
 // https://stackoverflow.com/a/8942986
-typedef joint_limits::JointSaturationLimiter<
-  joint_limits::JointLimits, joint_limits::JointControlInterfacesData>
+typedef joint_limits::JointSaturationLimiter<joint_limits::JointControlInterfacesData>
   JointInterfacesSaturationLimiter;
-typedef joint_limits::JointLimiterInterface<
-  joint_limits::JointLimits, joint_limits::JointControlInterfacesData>
+typedef joint_limits::JointLimiterInterface<joint_limits::JointControlInterfacesData>
   JointInterfacesLimiterInterfaceBase;
 PLUGINLIB_EXPORT_CLASS(JointInterfacesSaturationLimiter, JointInterfacesLimiterInterfaceBase)

@@ -20,6 +20,7 @@
 #include <string>
 #include <vector>
 
+#include "joint_limits/joint_limits.hpp"
 #include "joint_limits/joint_limits_rosparam.hpp"
 #include "joint_limits/visibility_control.h"
 #include "rclcpp/node.hpp"
@@ -30,7 +31,7 @@
 namespace joint_limits
 {
 
-template <typename LimitsType, typename JointLimitsStateDataType>
+template <typename JointLimitsStateDataType>
 class JointLimiterInterface
 {
 public:
@@ -99,7 +100,7 @@ public:
         rcl_interfaces::msg::SetParametersResult set_parameters_result;
         set_parameters_result.successful = true;
 
-        std::vector<LimitsType> updated_joint_limits = joint_limits_;
+        std::vector<joint_limits::JointLimits> updated_joint_limits = joint_limits_;
         bool changed = false;
 
         for (size_t i = 0; i < number_of_joints_; ++i)
@@ -135,7 +136,8 @@ public:
    * Wrapper init method that accepts the joint names and their limits directly
    */
   JOINT_LIMITS_PUBLIC virtual bool init(
-    const std::vector<std::string> & joint_names, const std::vector<LimitsType> & joint_limits,
+    const std::vector<std::string> & joint_names,
+    const std::vector<joint_limits::JointLimits> & joint_limits,
     const rclcpp::node_interfaces::NodeParametersInterface::SharedPtr & param_itf,
     const rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr & logging_itf)
   {
@@ -253,13 +255,13 @@ protected:
 
   size_t number_of_joints_;
   std::vector<std::string> joint_names_;
-  std::vector<LimitsType> joint_limits_;
+  std::vector<joint_limits::JointLimits> joint_limits_;
   rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_param_itf_;
   rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging_itf_;
 
 private:
   rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr parameter_callback_;
-  realtime_tools::RealtimeBuffer<std::vector<LimitsType>> updated_limits_;
+  realtime_tools::RealtimeBuffer<std::vector<joint_limits::JointLimits>> updated_limits_;
 };
 
 }  // namespace joint_limits
