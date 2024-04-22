@@ -81,7 +81,8 @@ public:
     desired_state_ = last_commanded_state_;
     actual_state_ = last_commanded_state_;
     return joint_limiter_->init(
-      joint_names_, {limits}, nullptr, node_->get_node_logging_interface());
+      joint_names_, {limits}, std::vector<joint_limits::SoftJointLimits>(), nullptr,
+      node_->get_node_logging_interface());
   }
 
   bool Configure() { return joint_limiter_->configure(last_commanded_state_); }

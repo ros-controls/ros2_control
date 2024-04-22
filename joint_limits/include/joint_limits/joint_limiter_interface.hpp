@@ -138,12 +138,14 @@ public:
   JOINT_LIMITS_PUBLIC virtual bool init(
     const std::vector<std::string> & joint_names,
     const std::vector<joint_limits::JointLimits> & joint_limits,
+    const std::vector<joint_limits::SoftJointLimits> & soft_joint_limits,
     const rclcpp::node_interfaces::NodeParametersInterface::SharedPtr & param_itf,
     const rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr & logging_itf)
   {
     number_of_joints_ = joint_names.size();
     joint_names_ = joint_names;
     joint_limits_ = joint_limits;
+    soft_joint_limits_ = soft_joint_limits;
     node_param_itf_ = param_itf;
     node_logging_itf_ = logging_itf;
     updated_limits_.writeFromNonRT(joint_limits_);
@@ -256,6 +258,7 @@ protected:
   size_t number_of_joints_;
   std::vector<std::string> joint_names_;
   std::vector<joint_limits::JointLimits> joint_limits_;
+  std::vector<joint_limits::SoftJointLimits> soft_joint_limits_;
   rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_param_itf_;
   rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging_itf_;
 
