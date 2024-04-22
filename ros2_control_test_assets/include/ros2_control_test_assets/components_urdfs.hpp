@@ -462,6 +462,68 @@ const auto valid_urdf_ros2_control_system_robot_with_gpio_and_disabled_interface
     </gpio>
   </ros2_control>
 )";
+const auto valid_urdf_ros2_control_system_robot_with_gpio_and_disabled_interface_limits_2 =
+  R"(
+  <ros2_control name="RRBotSystemWithGPIO" type="system">
+    <hardware>
+      <plugin>ros2_control_demo_hardware/RRBotSystemWithGPIOHardware</plugin>
+      <param name="example_param_write_for_sec">2</param>
+      <param name="example_param_read_for_sec">2</param>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position">
+        <limits enable="false"/>
+        <param name="min">-1</param>
+        <param name="max">1</param>
+      </command_interface>
+      <command_interface name="velocity">
+        <param name="min">-0.05</param>
+        <param name="max">0.1</param>
+      </command_interface>
+      <command_interface name="effort">
+        <param name="min">-0.2</param>
+        <param name="max">0.2</param>
+      </command_interface>
+      <command_interface name="acceleration">
+        <param name="min">-0.5</param>
+        <param name="max">0.5</param>
+      </command_interface>
+      <command_interface name="jerk">
+        <param name="max">5.0</param>
+      </command_interface>
+      <state_interface name="position"/>
+    </joint>
+    <joint name="joint2">
+      <limits enable="false"/>
+      <command_interface name="position">
+        <param name="min">-1</param>
+        <param name="max">1</param>
+      </command_interface>
+      <command_interface name="velocity"/>
+      <command_interface name="effort"/>
+      <command_interface name="acceleration">
+        <param name="min">-0.3</param>
+        <param name="max">0.3</param>
+      </command_interface>
+      <command_interface name="jerk"/>
+      <state_interface name="position"/>
+    </joint>
+    <joint name="joint3">
+      <command_interface name="acceleration">
+        <param name="min">1.0</param>
+      </command_interface>
+      <command_interface name="unavailable">
+        <param name="min">-0.3</param>
+        <param name="max">0.3</param>
+      </command_interface>
+    </joint>
+    <gpio name="flange_IOS">
+      <command_interface name="digital_output" size="2" data_type="bool"/>
+      <state_interface name="analog_input" size="3"/>
+      <state_interface name="image" data_type="cv::Mat"/>
+    </gpio>
+  </ros2_control>
+)";
 
 const auto valid_urdf_ros2_control_parameter_empty =
   R"(
