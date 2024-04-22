@@ -20,6 +20,7 @@
 #include <memory>
 #include <vector>
 
+#include "joint_limiter_interface.hpp"
 #include "joint_limits/joint_limiter_interface.hpp"
 #include "rclcpp/clock.hpp"
 #include "rclcpp/duration.hpp"
@@ -33,8 +34,8 @@ namespace joint_limits
  * limit. For example, if a joint is close to its position limit, velocity and acceleration will be
  * reduced accordingly.
  */
-template <typename LimitsType, typename JointLimitsStateDataType>
-class JointSaturationLimiter : public JointLimiterInterface<LimitsType, JointLimitsStateDataType>
+template <typename JointLimitsStateDataType>
+class JointSaturationLimiter : public JointLimiterInterface<JointLimitsStateDataType>
 {
 public:
   /** \brief Constructor */
@@ -76,15 +77,15 @@ private:
   JointLimitsStateDataType prev_command_;
 };
 
-template <typename LimitsType, typename JointLimitsStateDataType>
-JointSaturationLimiter<LimitsType, JointLimitsStateDataType>::JointSaturationLimiter()
-: JointLimiterInterface<LimitsType, JointLimitsStateDataType>()
+template <typename JointLimitsStateDataType>
+JointSaturationLimiter<JointLimitsStateDataType>::JointSaturationLimiter()
+: JointLimiterInterface<JointLimitsStateDataType>()
 {
   clock_ = std::make_shared<rclcpp::Clock>(rclcpp::Clock(RCL_ROS_TIME));
 }
 
-template <typename LimitsType, typename JointLimitsStateDataType>
-JointSaturationLimiter<LimitsType, JointLimitsStateDataType>::~JointSaturationLimiter()
+template <typename JointLimitsStateDataType>
+JointSaturationLimiter<JointLimitsStateDataType>::~JointSaturationLimiter()
 {
 }
 

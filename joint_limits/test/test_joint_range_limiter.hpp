@@ -29,8 +29,7 @@
 
 const double COMMON_THRESHOLD = 1.0e-6;
 
-using JointLimiter = joint_limits::JointLimiterInterface<
-  joint_limits::JointLimits, joint_limits::JointControlInterfacesData>;
+using JointLimiter = joint_limits::JointLimiterInterface<joint_limits::JointControlInterfacesData>;
 
 class JointSaturationLimiterTest : public ::testing::Test
 {
@@ -99,8 +98,7 @@ public:
   : joint_limiter_type_("joint_limits/JointInterfacesSaturationLimiter"),
     joint_limiter_loader_(
       "joint_limits",
-      "joint_limits::JointLimiterInterface<joint_limits::JointLimits, "
-      "joint_limits::JointControlInterfacesData>")
+      "joint_limits::JointLimiterInterface<joint_limits::JointControlInterfacesData>")
   {
   }
 

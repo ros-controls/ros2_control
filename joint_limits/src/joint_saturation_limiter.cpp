@@ -26,7 +26,7 @@ constexpr double VALUE_CONSIDERED_ZERO = 1e-10;
 namespace joint_limits
 {
 template <>
-bool JointSaturationLimiter<JointLimits, trajectory_msgs::msg::JointTrajectoryPoint>::on_enforce(
+bool JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::on_enforce(
   trajectory_msgs::msg::JointTrajectoryPoint & current_joint_states,
   trajectory_msgs::msg::JointTrajectoryPoint & desired_joint_states, const rclcpp::Duration & dt)
 {
@@ -433,11 +433,9 @@ bool JointSaturationLimiter<JointLimits, trajectory_msgs::msg::JointTrajectoryPo
 // typedefs are needed here to avoid issues with macro expansion. ref:
 // https://stackoverflow.com/a/8942986
 typedef std::map<int, int> int_map;
-typedef joint_limits::JointSaturationLimiter<
-  joint_limits::JointLimits, trajectory_msgs::msg::JointTrajectoryPoint>
+typedef joint_limits::JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>
   JointTrajectoryPointSaturationLimiter;
-typedef joint_limits::JointLimiterInterface<
-  joint_limits::JointLimits, trajectory_msgs::msg::JointTrajectoryPoint>
+typedef joint_limits::JointLimiterInterface<trajectory_msgs::msg::JointTrajectoryPoint>
   JointTrajectoryPointLimiterInterfaceBase;
 PLUGINLIB_EXPORT_CLASS(
   JointTrajectoryPointSaturationLimiter, JointTrajectoryPointLimiterInterfaceBase)
