@@ -236,8 +236,6 @@ public:
             }
             cycle_end_condition_.notify_one();
           }
-          trigger_in_progress_ = false;
-          cycle_end_condition_.notify_one();
         });
     }
   }
