@@ -176,7 +176,10 @@ public:
   {
     if (is_running())
     {
-      async_update_stop_ = true;
+      {
+        std::unique_lock<std::mutex> lock(async_mtx_);
+        async_update_stop_ = true;
+      }
       async_update_condition_.notify_one();
       thread_.join();
     }
