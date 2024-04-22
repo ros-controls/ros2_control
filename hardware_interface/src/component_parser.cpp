@@ -769,13 +769,12 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
         }
         double min_jerk(std::numeric_limits<double>::quiet_NaN()),
           max_jerk(std::numeric_limits<double>::quiet_NaN());
-        if (!itr.max.empty() && retrieve_min_max_interface_values(itr, min_jerk, max_jerk))
+        if (
+          !itr.max.empty() && retrieve_min_max_interface_values(itr, min_jerk, max_jerk) &&
+          std::isfinite(max_jerk))
         {
-          if (std::isfinite(max_jerk))
-          {
-            limits.max_jerk = std::abs(max_jerk);
-            limits.has_jerk_limits = true && itr.enable_limits;
-          }
+          limits.max_jerk = std::abs(max_jerk);
+          limits.has_jerk_limits = true && itr.enable_limits;
         }
       }
       else
@@ -880,6 +879,8 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
           hw_info.mimic_joints.push_back(mimic_joint);
         }
       }
+      // TODO(christophfroehlich) remove this code if deprecated mimic attribute - branch
+      // from above is removed (double check here, but throws already above if not found in URDF)
       auto urdf_joint = model.getJoint(joint.name);
       if (!urdf_joint)
       {
