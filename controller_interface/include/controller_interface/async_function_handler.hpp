@@ -207,16 +207,17 @@ private:
           while (get_state_function_().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE &&
                  !async_update_stop_)
           {
-            std::unique_lock<std::mutex> lock(async_mtx_);
-            async_update_condition_.wait(
-              lock, [this] { return trigger_in_progress_ || async_update_stop_; });
-            if (async_update_stop_)
             {
-              break;
+              std::unique_lock<std::mutex> lock(async_mtx_);
+              async_update_condition_.wait(
+                lock, [this] { return trigger_in_progress_ || async_update_stop_; });
+              if (async_update_stop_)
+              {
+                break;
+              }
+              async_update_return_ = async_function_(current_update_time_, current_update_period_);
+              trigger_in_progress_ = false;
             }
-            async_update_return_ = async_function_(current_update_time_, current_update_period_);
-            trigger_in_progress_ = false;
-            lock.unlock();
             async_update_condition_.notify_one();
           }
         });
