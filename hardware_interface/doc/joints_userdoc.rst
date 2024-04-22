@@ -90,12 +90,7 @@ From the officially released packages, the following packages are already using 
 * :ref:`gazebo_ros2_control <gazebo_ros2_control>`
 * :ref:`gz_ros2_control <gz_ros2_control>`
 
-As the URDF specifies only the kinematics, the mimic tag has to be independent of the hardware interface type used in ros2_control. This means that we interpret this info in the following way:
-
-* position = multiplier * other_joint_position + offset
-* velocity = multiplier * other_joint_velocity
-* acceleration = multiplier * other_joint_acceleration
-* For effort interfaces, this is not defined.
+As the URDF specifies only the kinematics, the mimic tag has to be independent of the hardware interface type used in ros2_control. This means that we interpret this info in the following way: **position = multiplier * other_joint_position + offset**
 
 If someone wants to deactivate the mimic joint behavior for whatever reason without changing the URDF, it can be done by setting the attribute ``mimic=false`` of the joint tag in the ``<ros2_control>`` section of the XML.
 
