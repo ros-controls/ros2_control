@@ -419,6 +419,17 @@ const auto valid_urdf_ros2_control_system_robot_with_gpio_and_disabled_interface
         <param name="min">-0.05</param>
         <param name="max">0.1</param>
       </command_interface>
+      <command_interface name="effort">
+        <param name="min">-0.2</param>
+        <param name="max">0.2</param>
+      </command_interface>
+      <command_interface name="acceleration">
+        <param name="min">-0.5</param>
+        <param name="max">0.5</param>
+      </command_interface>
+      <command_interface name="jerk">
+        <param name="max">5.0</param>
+      </command_interface>
       <state_interface name="position"/>
     </joint>
     <joint name="joint2">
@@ -429,6 +440,13 @@ const auto valid_urdf_ros2_control_system_robot_with_gpio_and_disabled_interface
       </command_interface>
       <command_interface name="velocity"/>
       <command_interface name="effort"/>
+      <command_interface name="acceleration">
+        <param name="min">-0.3</param>
+        <param name="max">0.3</param>
+      </command_interface>
+      <command_interface name="jerk">
+        <param name="max">2.0</param>
+      </command_interface>
       <state_interface name="position"/>
     </joint>
     <gpio name="flange_IOS">

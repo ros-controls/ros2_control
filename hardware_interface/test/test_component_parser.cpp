@@ -32,6 +32,7 @@ protected:
   void SetUp() override {}
 };
 
+using hardware_interface::HW_IF_ACCELERATION;
 using hardware_interface::HW_IF_EFFORT;
 using hardware_interface::HW_IF_POSITION;
 using hardware_interface::HW_IF_VELOCITY;
@@ -805,13 +806,22 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_and_disabled_in
 
   EXPECT_EQ(hardware_info.joints[0].name, "joint1");
   EXPECT_EQ(hardware_info.joints[0].type, "joint");
-  EXPECT_THAT(hardware_info.joints[0].command_interfaces, SizeIs(2));
+  EXPECT_THAT(hardware_info.joints[0].command_interfaces, SizeIs(5));
   EXPECT_EQ(hardware_info.joints[0].command_interfaces[0].name, HW_IF_POSITION);
   EXPECT_EQ(hardware_info.joints[0].command_interfaces[0].data_type, "double");
   EXPECT_EQ(hardware_info.joints[0].command_interfaces[0].size, 1);
   EXPECT_EQ(hardware_info.joints[0].command_interfaces[1].name, HW_IF_VELOCITY);
   EXPECT_EQ(hardware_info.joints[0].command_interfaces[1].data_type, "double");
   EXPECT_EQ(hardware_info.joints[0].command_interfaces[1].size, 1);
+  EXPECT_EQ(hardware_info.joints[0].command_interfaces[2].name, HW_IF_EFFORT);
+  EXPECT_EQ(hardware_info.joints[0].command_interfaces[2].data_type, "double");
+  EXPECT_EQ(hardware_info.joints[0].command_interfaces[2].size, 1);
+  EXPECT_EQ(hardware_info.joints[0].command_interfaces[3].name, HW_IF_ACCELERATION);
+  EXPECT_EQ(hardware_info.joints[0].command_interfaces[3].data_type, "double");
+  EXPECT_EQ(hardware_info.joints[0].command_interfaces[3].size, 1);
+  EXPECT_EQ(hardware_info.joints[0].command_interfaces[4].name, "jerk");
+  EXPECT_EQ(hardware_info.joints[0].command_interfaces[4].data_type, "double");
+  EXPECT_EQ(hardware_info.joints[0].command_interfaces[4].size, 1);
   EXPECT_THAT(hardware_info.joints[0].state_interfaces, SizeIs(1));
   EXPECT_EQ(hardware_info.joints[0].state_interfaces[0].name, HW_IF_POSITION);
   EXPECT_EQ(hardware_info.joints[0].state_interfaces[0].data_type, "double");
@@ -819,7 +829,7 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_and_disabled_in
 
   EXPECT_EQ(hardware_info.joints[1].name, "joint2");
   EXPECT_EQ(hardware_info.joints[1].type, "joint");
-  EXPECT_THAT(hardware_info.joints[1].command_interfaces, SizeIs(3));
+  EXPECT_THAT(hardware_info.joints[1].command_interfaces, SizeIs(5));
   EXPECT_EQ(hardware_info.joints[1].command_interfaces[0].name, HW_IF_POSITION);
   EXPECT_EQ(hardware_info.joints[1].command_interfaces[0].data_type, "double");
   EXPECT_EQ(hardware_info.joints[1].command_interfaces[0].size, 1);
@@ -829,6 +839,12 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_and_disabled_in
   EXPECT_EQ(hardware_info.joints[1].command_interfaces[2].name, HW_IF_EFFORT);
   EXPECT_EQ(hardware_info.joints[1].command_interfaces[2].data_type, "double");
   EXPECT_EQ(hardware_info.joints[1].command_interfaces[2].size, 1);
+  EXPECT_EQ(hardware_info.joints[1].command_interfaces[3].name, HW_IF_ACCELERATION);
+  EXPECT_EQ(hardware_info.joints[1].command_interfaces[3].data_type, "double");
+  EXPECT_EQ(hardware_info.joints[1].command_interfaces[3].size, 1);
+  EXPECT_EQ(hardware_info.joints[1].command_interfaces[4].name, "jerk");
+  EXPECT_EQ(hardware_info.joints[1].command_interfaces[4].data_type, "double");
+  EXPECT_EQ(hardware_info.joints[1].command_interfaces[4].size, 1);
   EXPECT_THAT(hardware_info.joints[1].state_interfaces, SizeIs(1));
   EXPECT_EQ(hardware_info.joints[1].state_interfaces[0].name, HW_IF_POSITION);
   EXPECT_EQ(hardware_info.joints[1].state_interfaces[0].data_type, "double");
@@ -859,8 +875,15 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_and_disabled_in
     DoubleNear(std::numeric_limits<double>::min(), 1e-5));
   EXPECT_TRUE(hardware_info.limits.at("joint1").has_velocity_limits);
   EXPECT_TRUE(hardware_info.limits.at("joint1").has_effort_limits);
+  EXPECT_TRUE(hardware_info.limits.at("joint1").has_acceleration_limits);
+  EXPECT_TRUE(hardware_info.limits.at("joint1").has_deceleration_limits);
+  EXPECT_TRUE(hardware_info.limits.at("joint1").has_jerk_limits);
   EXPECT_THAT(hardware_info.limits.at("joint1").max_velocity, DoubleNear(0.05, 1e-5));
   EXPECT_THAT(hardware_info.limits.at("joint1").max_effort, DoubleNear(0.1, 1e-5));
+  EXPECT_THAT(hardware_info.limits.at("joint1").max_effort, DoubleNear(0.1, 1e-5));
+  EXPECT_THAT(hardware_info.limits.at("joint1").max_acceleration, DoubleNear(0.5, 1e-5));
+  EXPECT_THAT(hardware_info.limits.at("joint1").max_deceleration, DoubleNear(0.5, 1e-5));
+  EXPECT_THAT(hardware_info.limits.at("joint1").max_jerk, DoubleNear(5.0, 1e-5));
 
   EXPECT_FALSE(hardware_info.limits.at("joint2").has_position_limits);
   EXPECT_THAT(
@@ -873,6 +896,7 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_and_disabled_in
   EXPECT_FALSE(hardware_info.limits.at("joint2").has_effort_limits);
   EXPECT_FALSE(hardware_info.limits.at("joint2").has_acceleration_limits);
   EXPECT_FALSE(hardware_info.limits.at("joint2").has_deceleration_limits);
+  EXPECT_FALSE(hardware_info.limits.at("joint2").has_jerk_limits);
   EXPECT_THAT(hardware_info.limits.at("joint2").max_velocity, DoubleNear(0.2, 1e-5));
   EXPECT_THAT(hardware_info.limits.at("joint2").max_effort, DoubleNear(0.1, 1e-5));
 }
