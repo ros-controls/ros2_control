@@ -46,7 +46,7 @@ constexpr const auto kStateInterfaceTag = "state_interface";
 constexpr const auto kMinTag = "min";
 constexpr const auto kMaxTag = "max";
 constexpr const auto kLimitsTag = "limits";
-constexpr const auto kEnableTag = "enable";
+constexpr const auto kEnableAttribute = "enable";
 constexpr const auto kInitialValueTag = "initial_value";
 constexpr const auto kMimicAttribute = "mimic";
 constexpr const auto kDataTypeAttribute = "data_type";
@@ -299,7 +299,7 @@ hardware_interface::InterfaceInfo parse_interfaces_from_xml(
   if (limits_it)
   {
     interface.enable_limits =
-      parse_bool(get_attribute_value(limits_it, kEnableTag, limits_it->Name()));
+      parse_bool(get_attribute_value(limits_it, kEnableAttribute, limits_it->Name()));
   }
 
   // Optional initial_value attribute
@@ -351,7 +351,7 @@ ComponentInfo parse_component_from_xml(const tinyxml2::XMLElement * component_it
   const auto * limits_it = component_it->FirstChildElement(kLimitsTag);
   if (limits_it)
   {
-    enable_limits = parse_bool(get_attribute_value(limits_it, kEnableTag, limits_it->Name()));
+    enable_limits = parse_bool(get_attribute_value(limits_it, kEnableAttribute, limits_it->Name()));
   }
 
   // Parse all command interfaces
@@ -887,15 +887,15 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
         continue;
       }
       joint_limits::JointLimits limits;
-      const bool has_hard_limts = getJointLimits(urdf_joint, limits);
+      const bool has_hard_limits = getJointLimits(urdf_joint, limits);
       if (
-        !has_hard_limts &&
+        !has_hard_limits &&
         (urdf_joint->type == urdf::Joint::REVOLUTE || urdf_joint->type == urdf::Joint::PRISMATIC ||
          urdf_joint->type == urdf::Joint::CONTINUOUS))
       {
         throw std::runtime_error("Missing URDF joint limits for the Joint : " + joint.name);
       }
-      if (has_hard_limts)
+      if (has_hard_limits)
       {
         // Take the most restricted one
         update_interface_limits(joint.command_interfaces, limits);
