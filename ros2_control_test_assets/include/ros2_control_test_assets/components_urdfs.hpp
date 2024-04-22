@@ -462,7 +462,7 @@ const auto valid_urdf_ros2_control_system_robot_with_gpio_and_disabled_interface
     </gpio>
   </ros2_control>
 )";
-const auto valid_urdf_ros2_control_system_robot_with_gpio_and_disabled_interface_limits_2 =
+const auto valid_urdf_ros2_control_system_robot_with_unavailable_interfaces =
   R"(
   <ros2_control name="RRBotSystemWithGPIO" type="system">
     <hardware>
@@ -517,11 +517,6 @@ const auto valid_urdf_ros2_control_system_robot_with_gpio_and_disabled_interface
         <param name="max">0.3</param>
       </command_interface>
     </joint>
-    <gpio name="flange_IOS">
-      <command_interface name="digital_output" size="2" data_type="bool"/>
-      <state_interface name="analog_input" size="3"/>
-      <state_interface name="image" data_type="cv::Mat"/>
-    </gpio>
   </ros2_control>
 )";
 

@@ -920,12 +920,11 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_and_disabled_in
   EXPECT_THAT(hardware_info.limits.at("joint3").max_deceleration, DoubleNear(1.0, 1e-5));
 }
 
-TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_and_disabled_interfaces_2)
+TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_and_unavailable_interfaces)
 {
   std::string urdf_to_test =
     std::string(ros2_control_test_assets::urdf_head) +
-    ros2_control_test_assets::
-      valid_urdf_ros2_control_system_robot_with_gpio_and_disabled_interface_limits_2 +
+    ros2_control_test_assets::valid_urdf_ros2_control_system_robot_with_unavailable_interfaces +
     ros2_control_test_assets::urdf_tail;
   const auto control_hardware = parse_control_resources_from_urdf(urdf_to_test);
   ASSERT_THAT(control_hardware, SizeIs(1));
