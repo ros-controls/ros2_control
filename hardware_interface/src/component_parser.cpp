@@ -679,9 +679,9 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
       }
       catch (const std::invalid_argument & err)
       {
-        std::cerr << "Error parsing the limits for the interface : " << itf.name
-                  << " from the tags [" << kMinTag << " : '" << itf.min << "' and " << kMaxTag
-                  << " : '" << itf.max << "'] within " << kROS2ControlTag
+        std::cerr << "Error parsing the limits for the interface: " << itf.name
+                  << " from the tags [" << kMinTag << ": '" << itf.min << "' and " << kMaxTag
+                  << ": '" << itf.max << "'] within " << kROS2ControlTag
                   << " tag inside the URDF. Skipping it" << std::endl;
         return false;
       }
@@ -763,8 +763,8 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
       {
         if (!itr.min.empty())
         {
-          std::cerr << "Error parsing the limits for the interface : " << itr.name
-                    << " from the tag : " << kMinTag << " within " << kROS2ControlTag
+          std::cerr << "Error parsing the limits for the interface: " << itr.name
+                    << " from the tag: " << kMinTag << " within " << kROS2ControlTag
                     << " tag inside the URDF. Jerk only accepts max limits." << std::endl;
         }
         double min_jerk(std::numeric_limits<double>::quiet_NaN()),
@@ -782,10 +782,10 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
       {
         if (!itr.min.empty() || !itr.max.empty())
         {
-          std::cerr << "Unable to parse the limits for the interface : " << itr.name
+          std::cerr << "Unable to parse the limits for the interface: " << itr.name
                     << " from the tags [" << kMinTag << " and " << kMaxTag << "] within "
                     << kROS2ControlTag
-                    << " tag inside the URDF. Supported interfaces for joint limits are : "
+                    << " tag inside the URDF. Supported interfaces for joint limits are: "
                        "position, velocity, effort, acceleration and jerk."
                     << std::endl;
         }
@@ -894,7 +894,7 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
         (urdf_joint->type == urdf::Joint::REVOLUTE || urdf_joint->type == urdf::Joint::PRISMATIC ||
          urdf_joint->type == urdf::Joint::CONTINUOUS))
       {
-        throw std::runtime_error("Missing URDF joint limits for the Joint : " + joint.name);
+        throw std::runtime_error("Missing URDF joint limits for the Joint: " + joint.name);
       }
       if (has_hard_limits)
       {
