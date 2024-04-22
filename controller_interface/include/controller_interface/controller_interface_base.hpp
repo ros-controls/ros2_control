@@ -221,7 +221,8 @@ public:
    * \returns list of command interfaces for preceding controllers.
    */
   CONTROLLER_INTERFACE_PUBLIC
-  virtual std::vector<hardware_interface::CommandInterface> export_reference_interfaces() = 0;
+  virtual std::vector<std::shared_ptr<hardware_interface::CommandInterface>>
+  export_reference_interfaces() = 0;
 
   /**
    * Export interfaces for a chainable controller that can be used as state interface by other

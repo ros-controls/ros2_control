@@ -27,7 +27,8 @@ std::vector<hardware_interface::StateInterface> ControllerInterface::export_stat
   return {};
 }
 
-std::vector<hardware_interface::CommandInterface> ControllerInterface::export_reference_interfaces()
+std::vector<std::shared_ptr<hardware_interface::CommandInterface>>
+ControllerInterface::export_reference_interfaces()
 {
   return {};
 }
