@@ -2073,10 +2073,10 @@ controller_interface::return_type ControllerManager::update(
     std::string failed_controllers;
     for (const auto & controller : failed_controllers_list)
     {
-      failed_controllers += controller + " ";
+      failed_controllers += "\n\t- " + controller;
     }
     RCLCPP_ERROR(
-      get_logger(), "Deactivating controllers: %s, as their update resulted in an error",
+      get_logger(), "Deactivating following controllers as their update resulted in an error :%s",
       failed_controllers.c_str());
 
     deactivate_controllers(rt_controller_list, failed_controllers_list);
