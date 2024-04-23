@@ -1,0 +1,145 @@
+---
+controller_manager:
+  ros__parameters:
+    update_rate: 100
+
+    joint_state_broadcaster0:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    joint_state_broadcaster1:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    joint_state_broadcaster2:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    joint_state_broadcaster3:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    joint_state_broadcaster4:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    joint_state_broadcaster5:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    joint_state_broadcaster6:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    joint_state_broadcaster7:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    joint_state_broadcaster8:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    joint_state_broadcaster9:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    joint_state_broadcaster10:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    joint_state_broadcaster11:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    joint_state_broadcaster12:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    joint_state_broadcaster13:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    joint_state_broadcaster14:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    joint_state_broadcaster15:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    joint_state_broadcaster16:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    joint_state_broadcaster17:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    joint_state_broadcaster18:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    joint_state_broadcaster19:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    joint_state_broadcaster20:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    joint_state_broadcaster21:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    joint_state_broadcaster22:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    joint_state_broadcaster23:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    joint_state_broadcaster24:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    joint_state_broadcaster25:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    joint_state_broadcaster26:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    joint_state_broadcaster27:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    joint_state_broadcaster28:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    joint_state_broadcaster29:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    joint_state_broadcaster30:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    joint_state_broadcaster31:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    joint_state_broadcaster32:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    joint_state_broadcaster33:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    joint_state_broadcaster34:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    joint_state_broadcaster35:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    joint_state_broadcaster36:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    joint_state_broadcaster37:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    joint_state_broadcaster38:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    joint_state_broadcaster39:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    joint_state_broadcaster40:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    joint_state_broadcaster41:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    joint_state_broadcaster42:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    joint_state_broadcaster43:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    joint_state_broadcaster44:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    joint_state_broadcaster45:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    joint_state_broadcaster46:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    joint_state_broadcaster47:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    joint_state_broadcaster48:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    joint_state_broadcaster49:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    fts_broadcaster:
+      type: force_torque_sensor_broadcaster/ForceTorqueSensorBroadcaster
+
+    base_controller:
+      type: position_controllers/JointGroupPositionController
+
+    joint1_controller:
+      type: position_controllers/JointGroupPositionController
+
+    joint2_controller:
+      type: position_controllers/JointGroupPositionController
+
+fts_broadcaster:
+  ros__parameters:
+    sensor_name: base_ft_sensor
+    state_interface_names:
+      - force.x
+      - force.y
+      - force.z
+      - torque.x
+      - torque.y
+      - torque.z
+    frame_id: base_link
+    topic_name: base_wrench
+
+base_controller:
+  ros__parameters:
+    joints:
+      - base_joint
+
+joint1_controller:
+  ros__parameters:
+    joints:
+      - joint1
+
+joint2_controller:
+  ros__parameters:
+    joints:
+      - joint2
