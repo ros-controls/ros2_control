@@ -19,12 +19,20 @@ namespace hardware_interface
 {
 /// Constant defining position interface name
 constexpr char HW_IF_POSITION[] = "position";
+/// Constant defining absolute position interface name
+constexpr char HW_IF_ABSOLUTE_POSITION[] = "absolute_position";
 /// Constant defining velocity interface name
 constexpr char HW_IF_VELOCITY[] = "velocity";
 /// Constant defining acceleration interface name
 constexpr char HW_IF_ACCELERATION[] = "acceleration";
 /// Constant defining effort interface name
 constexpr char HW_IF_EFFORT[] = "effort";
+/// Constant defining torque interface name
+constexpr char HW_IF_TORQUE[] = "torque";
+/// Constant defining force interface name
+constexpr char HW_IF_FORCE[] = "force";
+/// Constant defining current interface name
+constexpr char HW_IF_CURRENT[] = "current";
 }  // namespace hardware_interface
 
 #endif  // HARDWARE_INTERFACE__TYPES__HARDWARE_INTERFACE_TYPE_VALUES_HPP_
