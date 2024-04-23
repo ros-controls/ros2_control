@@ -519,6 +519,46 @@ const auto valid_urdf_ros2_control_system_robot_with_unavailable_interfaces =
     </joint>
   </ros2_control>
 )";
+const auto valid_urdf_ros2_control_system_robot_with_all_interfaces =
+  R"(
+  <ros2_control name="RRBotSystemWithGPIO" type="system">
+    <hardware>
+      <plugin>ros2_control_demo_hardware/RRBotSystemWithGPIOHardware</plugin>
+      <param name="example_param_write_for_sec">2</param>
+      <param name="example_param_read_for_sec">2</param>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position">
+        <param name="min">-1</param>
+        <param name="max">1</param>
+      </command_interface>
+      <command_interface name="velocity">
+        <param name="min">-0.05</param>
+        <param name="max">0.1</param>
+      </command_interface>
+      <command_interface name="effort">
+        <param name="min">-0.2</param>
+        <param name="max">0.2</param>
+      </command_interface>
+      <command_interface name="acceleration">
+        <param name="min">-0.5</param>
+        <param name="max">0.5</param>
+      </command_interface>
+      <command_interface name="jerk">
+        <param name="max">5.0</param>
+      </command_interface>
+      <state_interface name="position"/>
+    </joint>
+    <joint name="joint2">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <command_interface name="effort"/>
+      <command_interface name="acceleration"/>
+      <command_interface name="jerk"/>
+      <state_interface name="position"/>
+    </joint>
+  </ros2_control>
+)";
 
 const auto valid_urdf_ros2_control_parameter_empty =
   R"(

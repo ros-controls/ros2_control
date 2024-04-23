@@ -654,38 +654,39 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
     ros2_control_it = ros2_control_it->NextSiblingElement(kROS2ControlTag);
   }
 
-  // Retrieve the limits from ros2_control command interface tags and override if restrictive
-  auto update_interface_limits = [](const auto & interfaces, joint_limits::JointLimits & limits)
+  auto retrieve_min_max_interface_values = [](const auto & itf, double & min, double & max) -> bool
   {
-    auto retrieve_min_max_interface_values = [](
-                                               const auto & itf, double & min, double & max) -> bool
+    try
     {
-      try
+      if (itf.min.empty() && itf.max.empty())
       {
-        if (itf.min.empty() && itf.max.empty())
-        {
-          // If the limits don't exist then return false as they are not retrieved
-          return false;
-        }
-        if (!itf.min.empty())
-        {
-          min = hardware_interface::stod(itf.min);
-        }
-        if (!itf.max.empty())
-        {
-          max = hardware_interface::stod(itf.max);
-        }
-        return true;
-      }
-      catch (const std::invalid_argument & err)
-      {
-        std::cerr << "Error parsing the limits for the interface: " << itf.name
-                  << " from the tags [" << kMinTag << ": '" << itf.min << "' and " << kMaxTag
-                  << ": '" << itf.max << "'] within " << kROS2ControlTag
-                  << " tag inside the URDF. Skipping it" << std::endl;
+        // If the limits don't exist then return false as they are not retrieved
         return false;
       }
-    };
+      if (!itf.min.empty())
+      {
+        min = hardware_interface::stod(itf.min);
+      }
+      if (!itf.max.empty())
+      {
+        max = hardware_interface::stod(itf.max);
+      }
+      return true;
+    }
+    catch (const std::invalid_argument & err)
+    {
+      std::cerr << "Error parsing the limits for the interface: " << itf.name << " from the tags ["
+                << kMinTag << ": '" << itf.min << "' and " << kMaxTag << ": '" << itf.max
+                << "'] within " << kROS2ControlTag << " tag inside the URDF. Skipping it"
+                << std::endl;
+      return false;
+    }
+  };
+
+  // Retrieve the limits from ros2_control command interface tags and override if restrictive
+  auto update_interface_limits =
+    [retrieve_min_max_interface_values](const auto & interfaces, joint_limits::JointLimits & limits)
+  {
     for (auto & itr : interfaces)
     {
       if (itr.name == hardware_interface::HW_IF_POSITION)
@@ -730,6 +731,116 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
             max_eff = std::min(std::abs(min_eff), max_eff);
             limits.max_effort = std::min(max_eff, limits.max_effort);
           }
+        }
+      }
+      else if (itr.name == hardware_interface::HW_IF_ACCELERATION)
+      {
+        double max_decel(std::numeric_limits<double>::quiet_NaN()),
+          max_accel(std::numeric_limits<double>::quiet_NaN());
+        if (retrieve_min_max_interface_values(itr, max_decel, max_accel))
+        {
+          if (std::isfinite(max_decel))
+          {
+            limits.max_deceleration = std::fabs(max_decel);
+            if (!std::isfinite(max_accel))
+            {
+              limits.max_acceleration = std::fabs(limits.max_deceleration);
+            }
+            limits.has_deceleration_limits = true && itr.enable_limits;
+          }
+          if (std::isfinite(max_accel))
+          {
+            limits.max_acceleration = max_accel;
+
+            if (!std::isfinite(limits.max_deceleration))
+            {
+              limits.max_deceleration = std::fabs(limits.max_acceleration);
+            }
+            limits.has_acceleration_limits = true && itr.enable_limits;
+          }
+        }
+      }
+      else if (itr.name == "jerk")
+      {
+        if (!itr.min.empty())
+        {
+          std::cerr << "Error parsing the limits for the interface: " << itr.name
+                    << " from the tag: " << kMinTag << " within " << kROS2ControlTag
+                    << " tag inside the URDF. Jerk only accepts max limits." << std::endl;
+        }
+        double min_jerk(std::numeric_limits<double>::quiet_NaN()),
+          max_jerk(std::numeric_limits<double>::quiet_NaN());
+        if (
+          !itr.max.empty() && retrieve_min_max_interface_values(itr, min_jerk, max_jerk) &&
+          std::isfinite(max_jerk))
+        {
+          limits.max_jerk = std::abs(max_jerk);
+          limits.has_jerk_limits = true && itr.enable_limits;
+        }
+      }
+      else
+      {
+        if (!itr.min.empty() || !itr.max.empty())
+        {
+          std::cerr << "Unable to parse the limits for the interface: " << itr.name
+                    << " from the tags [" << kMinTag << " and " << kMaxTag << "] within "
+                    << kROS2ControlTag
+                    << " tag inside the URDF. Supported interfaces for joint limits are: "
+                       "position, velocity, effort, acceleration and jerk."
+                    << std::endl;
+        }
+      }
+    }
+  };
+
+  // Retrieve the limits from ros2_control command interface tags
+  auto copy_interface_limits =
+    [retrieve_min_max_interface_values](const auto & interfaces, joint_limits::JointLimits & limits)
+  {
+    for (auto & itr : interfaces)
+    {
+      if (itr.name == hardware_interface::HW_IF_POSITION)
+      {
+        double min_pos, max_pos;
+        if (retrieve_min_max_interface_values(itr, min_pos, max_pos))
+        {
+          limits.min_position = std::max(min_pos, limits.min_position);
+          limits.max_position = std::min(max_pos, limits.max_position);
+          limits.has_position_limits = true && itr.enable_limits;
+        }
+        else
+        {
+          limits.min_position = std::numeric_limits<double>::min();
+          limits.max_position = std::numeric_limits<double>::max();
+          limits.has_position_limits = false;
+        }
+      }
+      else if (itr.name == hardware_interface::HW_IF_VELOCITY)
+      {
+        double min_vel, max_vel;
+        if (retrieve_min_max_interface_values(itr, min_vel, max_vel))
+        {
+          limits.max_velocity = std::min(std::abs(min_vel), max_vel);
+          limits.has_velocity_limits = true && itr.enable_limits;
+        }
+        else
+        {
+          limits.max_velocity = std::numeric_limits<double>::max();
+          limits.has_velocity_limits = false;
+        }
+      }
+      else if (itr.name == hardware_interface::HW_IF_EFFORT)
+      {
+        double min_eff, max_eff;
+        if (retrieve_min_max_interface_values(itr, min_eff, max_eff))
+        {
+          limits.max_effort = std::min(std::abs(min_eff), max_eff);
+          limits.has_effort_limits = true && itr.enable_limits;
+        }
+        else
+        {
+          limits.max_effort = std::numeric_limits<double>::max();
+          limits.has_effort_limits = false;
         }
       }
       else if (itr.name == hardware_interface::HW_IF_ACCELERATION)
@@ -884,7 +995,7 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
       auto urdf_joint = model.getJoint(joint.name);
       if (!urdf_joint)
       {
-        std::cerr << "Joint : '" + joint.name + "' not found in URDF. Skipping limits parsing!"
+        std::cerr << "Joint: '" + joint.name + "' not found in URDF. Skipping limits parsing!"
                   << std::endl;
         continue;
       }
@@ -893,8 +1004,13 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
       {
         // Take the most restricted one
         update_interface_limits(joint.command_interfaces, limits);
-        hw_info.limits[joint.name] = limits;
       }
+      else
+      {
+        // valid for continuous-joint type
+        copy_interface_limits(joint.command_interfaces, limits);
+      }
+      hw_info.limits[joint.name] = limits;
     }
   }
 

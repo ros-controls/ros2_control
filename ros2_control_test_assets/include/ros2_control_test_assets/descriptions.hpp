@@ -296,11 +296,10 @@ const auto urdf_head_continuous_missing_limits =
       </geometry>
     </collision>
   </link>
-  <joint name="joint2" type="revolute">
+  <joint name="joint2" type="continuous">
     <origin rpy="1.57079632679 0 0" xyz="0 0 0.9"/>
     <parent link="link1"/>
     <child link="link2"/>
-    <limit effort="0.1" lower="-3.14159265359" upper="3.14159265359" velocity="0.2"/>
   </joint>
   <link name="link2">
     <inertial>
