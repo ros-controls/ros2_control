@@ -217,14 +217,6 @@ def main(args=None):
             controller_manager_name = f"/{controller_manager_name}"
 
     try:
-        if not wait_for_controller_manager(
-            node, controller_manager_name, controller_manager_timeout
-        ):
-            node.get_logger().error(
-                bcolors.FAIL + "Controller manager not available" + bcolors.ENDC
-            )
-            return 1
-
         for controller_name in controller_names:
             prefixed_controller_name = controller_name
             if controller_namespace:
