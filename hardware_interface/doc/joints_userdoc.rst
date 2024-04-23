@@ -110,7 +110,7 @@ Mechanical transmissions transform effort/flow variables such that their product
 
 In robotics it is customary to place transmissions between actuators and joints. This interface adheres to this naming to identify the input and output spaces of the transformation. The provided interfaces allow bidirectional mappings between actuator and joint spaces for effort, velocity and position. Position is not a power variable, but the mappings can be implemented using the velocity map plus an integration constant representing the offset between actuator and joint zeros.
 
-The ``transmission_interface`` provides a base class and some implementations for plugins, which can be integrated and loaded by custom hardware components. They are not automatically loaded by any hardware component or the gazebo plugins.
+The ``transmission_interface`` provides a base class and some implementations for plugins, which can be integrated and loaded by custom hardware components. They are not automatically loaded by any hardware component or the gazebo plugins, each hardware component is responsible for loading the appropriate transmission interface to map the actuator readings to joint readings.
 
 Currently the following implementations are available:
 
