@@ -202,7 +202,6 @@ def main(args=None):
     controller_manager_name = args.controller_manager
     controller_namespace = args.namespace
     param_file = args.param_file
-    controller_type = args.controller_type
     controller_manager_timeout = args.controller_manager_timeout
 
     if param_file and not os.path.isfile(param_file):
@@ -227,6 +226,7 @@ def main(args=None):
             return 1
 
         for controller_name in controller_names:
+            controller_type = args.controller_type
             prefixed_controller_name = controller_name
             if controller_namespace:
                 prefixed_controller_name = controller_namespace + "/" + controller_name
