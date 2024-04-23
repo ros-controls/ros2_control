@@ -889,15 +889,7 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
         continue;
       }
       joint_limits::JointLimits limits;
-      const bool has_hard_limits = getJointLimits(urdf_joint, limits);
-      if (
-        !has_hard_limits &&
-        (urdf_joint->type == urdf::Joint::REVOLUTE || urdf_joint->type == urdf::Joint::PRISMATIC ||
-         urdf_joint->type == urdf::Joint::CONTINUOUS))
-      {
-        throw std::runtime_error("Missing URDF joint limits for the Joint: " + joint.name);
-      }
-      if (has_hard_limits)
+      if (getJointLimits(urdf_joint, limits))
       {
         // Take the most restricted one
         update_interface_limits(joint.command_interfaces, limits);

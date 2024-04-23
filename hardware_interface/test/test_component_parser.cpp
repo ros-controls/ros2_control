@@ -1039,6 +1039,15 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_and_unavailable
   EXPECT_THAT(hardware_info.limits.at("joint3").max_deceleration, DoubleNear(1.0, 1e-5));
 }
 
+TEST_F(TestComponentParser, throw_on_parse_invalid_urdf_system_missing_limits)
+{
+  std::string urdf_to_test =
+    std::string(ros2_control_test_assets::urdf_head_missing_limits) +
+    ros2_control_test_assets::valid_urdf_ros2_control_system_robot_with_unavailable_interfaces +
+    ros2_control_test_assets::urdf_tail;
+  EXPECT_THROW(parse_control_resources_from_urdf(urdf_to_test), std::runtime_error);
+}
+
 TEST_F(TestComponentParser, successfully_parse_parameter_empty)
 {
   const std::string urdf_to_test =
