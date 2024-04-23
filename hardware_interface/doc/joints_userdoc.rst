@@ -35,12 +35,9 @@ Kinematic Loops
 URDF
 #############
 
-URDF is the default format to describe robot kinematics in ROS. However, only serial kinematic chains are supported, except for the so-called mimic joints.
-See the `URDF specification <http://wiki.ros.org/urdf/XML/joint>`__ for more details. For the mimic joints, we can read
+URDF is the default format to describe robot kinematics in ROS. However, only serial kinematic chains are supported, except for the so-called mimic joints. See the `URDF specification <http://wiki.ros.org/urdf/XML/joint>`__ for more details.
 
-  This tag is used to specify that the defined joint mimics another existing joint. The value of this joint can be computed as value = multiplier * other_joint_value + offset.
-
-It can be defined in the following way in the URDF
+Mimic joints can be defined in the following way in the URDF
 
   .. code-block:: xml
 
@@ -60,10 +57,12 @@ It can be defined in the following way in the URDF
       <limit effort="1000.0" lower="0" upper="0.38" velocity="10"/>
     </joint>
 
-Mimic joints are an abstraction of the real world: They can be used to describe
+Mimic joints are an abstraction of the real world. For example, they can be used to describe
 
-* simple parallel kinematics with linear dependencies of the joint positions and velocities
-* abstract complex groups of actuated joints, where the positions of several joints are directly controlled by low-level control loops and move synchronously.
+* simple closed-loop kinematics with linear dependencies of the joint positions and velocities
+* links connected with belts, like belt and pulley systems or telescope arms
+* a simplified model of passive joints, e.g. a pendulum at the end-effector always pointing downwards
+* abstract complex groups of actuated joints, where several joints are directly controlled by low-level control loops and move synchronously. Without giving a real-world example, this could be several motors with their individual power electronics but commanded with the same setpoint.
 
 Mimic joints defined in the URDF are parsed from the resource manager and stored in a class variable of type ``HardwareInfo``, which can be accessed by the hardware components. The mimic joints must not have command interfaces but can have state interfaces.
 
