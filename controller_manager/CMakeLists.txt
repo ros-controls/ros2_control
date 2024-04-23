@@ -201,6 +201,16 @@ if(BUILD_TESTING)
   ament_target_dependencies(test_hardware_management_srvs
     controller_manager_msgs
   )
+
+  install(
+    DIRECTORY test
+    DESTINATION share/${PROJECT_NAME}
+  )
+
+  find_package(launch_testing_ament_cmake)
+  add_launch_test(test/test_spawner_integration.py
+    TIMEOUT 180
+  )
 endif()
 
 install(
