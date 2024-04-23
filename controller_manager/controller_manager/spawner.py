@@ -39,6 +39,7 @@ try:
     from rclpy.parameter import get_parameter_value
 except ImportError:
     from ros2param.api import get_parameter_value
+from rclpy.parameter import parameter_dict_from_yaml_file
 from rclpy.signals import SignalHandlerOptions
 from ros2param.api import call_set_parameters
 
@@ -237,6 +238,12 @@ def main(args=None):
                     + bcolors.ENDC
                 )
             else:
+                if not controller_type and param_file:
+                    params_dict = parameter_dict_from_yaml_file(
+                        param_file, True, [controller_name]
+                    )
+                    if "type" in params_dict:
+                        controller_type = params_dict["type"].value.string_value
                 if controller_type:
                     parameter = Parameter()
                     parameter.name = prefixed_controller_name + ".type"
