@@ -1053,6 +1053,15 @@ TEST_F(TestComponentParser, throw_on_parse_invalid_urdf_system_missing_limits)
   EXPECT_THROW(parse_control_resources_from_urdf(urdf_to_test), std::runtime_error);
 }
 
+TEST_F(TestComponentParser, throw_on_parse_urdf_system_with_command_fixed_joint)
+{
+  std::string urdf_to_test =
+    std::string(ros2_control_test_assets::urdf_head) +
+    ros2_control_test_assets::invalid_urdf_ros2_control_system_with_command_fixed_joint +
+    ros2_control_test_assets::urdf_tail;
+  EXPECT_THROW(parse_control_resources_from_urdf(urdf_to_test), std::runtime_error);
+}
+
 TEST_F(TestComponentParser, successfully_parse_urdf_system_continuous_missing_limits)
 {
   std::string urdf_to_test =

@@ -727,6 +727,21 @@ const auto invalid_urdf2_transmission_given_too_many_joints =
   </ros2_control>
 )";
 
+const auto invalid_urdf_ros2_control_system_with_command_fixed_joint =
+  R"(
+  <ros2_control name="2DOF_System_Robot_Position_Only" type="system">
+    <hardware>
+      <plugin>ros2_control_demo_hardware/2DOF_System_Hardware_Position_Only</plugin>
+      <param name="example_param_write_for_sec">2</param>
+      <param name="example_param_read_for_sec">2</param>
+    </hardware>
+    <joint name="tool_joint">
+      <command_interface name="position">
+      </command_interface>
+    </joint>
+  </ros2_control>
+)";
+
 }  // namespace ros2_control_test_assets
 
 #endif  // ROS2_CONTROL_TEST_ASSETS__COMPONENTS_URDFS_HPP_

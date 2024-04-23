@@ -1003,6 +1003,13 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
                   << std::endl;
         continue;
       }
+      if (urdf_joint->type == urdf::Joint::FIXED)
+      {
+        throw std::runtime_error(
+          "Joint '" + joint.name +
+          "' is of type 'fixed'. "
+          "Fixed joints do not make sense in ros2_control.");
+      }
       joint_limits::JointLimits limits;
       if (getJointLimits(urdf_joint, limits))
       {
