@@ -691,11 +691,15 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
     {
       if (itr.name == hardware_interface::HW_IF_POSITION)
       {
+        double min_pos(limits.min_position), max_pos(limits.max_position);
+        bool has_min_max_interface_values =
+          retrieve_min_max_interface_values(itr, min_pos, max_pos);
+        // position_limits can be restricted for continuous joints
+        limits.has_position_limits |= has_min_max_interface_values;
         limits.has_position_limits &= itr.enable_limits;
         if (limits.has_position_limits)
         {
-          double min_pos(limits.min_position), max_pos(limits.max_position);
-          if (retrieve_min_max_interface_values(itr, min_pos, max_pos))
+          if (has_min_max_interface_values)
           {
             limits.min_position = std::max(min_pos, limits.min_position);
             limits.max_position = std::min(max_pos, limits.max_position);
@@ -1007,7 +1011,7 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
       }
       else
       {
-        // valid for continuous-joint type
+        // valid for continuous-joint type only
         copy_interface_limits(joint.command_interfaces, limits);
       }
       hw_info.limits[joint.name] = limits;

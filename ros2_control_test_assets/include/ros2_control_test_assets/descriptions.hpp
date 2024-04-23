@@ -325,6 +325,97 @@ const auto urdf_head_continuous_missing_limits =
   </link>
 )";
 
+const auto urdf_head_continuous_with_limits =
+  R"(
+<?xml version="1.0" encoding="utf-8"?>
+<robot name="MinimalRobot">
+  <!-- Used for fixing robot -->
+  <link name="world"/>
+  <joint name="base_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+    <parent link="world"/>
+    <child link="base_link"/>
+  </joint>
+  <link name="base_link">
+    <inertial>
+      <mass value="0.01"/>
+      <origin xyz="0 0 0"/>
+      <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <cylinder length="0.2" radius="0.1"/>
+      </geometry>
+      <material name="DarkGrey">
+        <color rgba="0.4 0.4 0.4 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <cylinder length="1" radius="0.1"/>
+      </geometry>
+    </collision>
+  </link>
+  <joint name="joint1" type="continuous">
+    <origin rpy="-1.57079632679 0 0" xyz="0 0 0.2"/>
+    <parent link="base_link"/>
+    <child link="link1"/>
+    <limit effort="0.1" velocity="0.2"/>
+  </joint>
+  <link name="link1">
+    <inertial>
+      <mass value="0.01"/>
+      <origin xyz="0 0 0"/>
+      <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <cylinder length="1" radius="0.1"/>
+      </geometry>
+      <material name="DarkGrey">
+        <color rgba="0.4 0.4 0.4 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <cylinder length="1" radius="0.1"/>
+      </geometry>
+    </collision>
+  </link>
+  <joint name="joint2" type="continuous">
+    <origin rpy="1.57079632679 0 0" xyz="0 0 0.9"/>
+    <parent link="link1"/>
+    <child link="link2"/>
+    <limit effort="0.1" velocity="0.2"/>
+  </joint>
+  <link name="link2">
+    <inertial>
+      <mass value="0.01"/>
+      <origin xyz="0 0 0"/>
+      <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <cylinder length="1" radius="0.1"/>
+      </geometry>
+      <material name="DarkGrey">
+        <color rgba="0.4 0.4 0.4 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <cylinder length="1" radius="0.1"/>
+      </geometry>
+    </collision>
+  </link>
+)";
+
 const auto urdf_head_prismatic_missing_limits =
   R"(
 <?xml version="1.0" encoding="utf-8"?>

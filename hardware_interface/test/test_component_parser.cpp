@@ -1053,7 +1053,7 @@ TEST_F(TestComponentParser, throw_on_parse_invalid_urdf_system_missing_limits)
   EXPECT_THROW(parse_control_resources_from_urdf(urdf_to_test), std::runtime_error);
 }
 
-TEST_F(TestComponentParser, no_throw_on_parse_urdf_system_continuous_missing_limits)
+TEST_F(TestComponentParser, successfully_parse_urdf_system_continuous_missing_limits)
 {
   std::string urdf_to_test =
     std::string(ros2_control_test_assets::urdf_head_continuous_missing_limits) +
@@ -1074,8 +1074,10 @@ TEST_F(TestComponentParser, no_throw_on_parse_urdf_system_continuous_missing_lim
   EXPECT_TRUE(hardware_info.limits.at("joint1").has_acceleration_limits);
   EXPECT_TRUE(hardware_info.limits.at("joint1").has_deceleration_limits);
   EXPECT_TRUE(hardware_info.limits.at("joint1").has_jerk_limits);
-  EXPECT_THAT(hardware_info.limits.at("joint1").max_velocity, DoubleNear(0.05, 1e-5));
-  EXPECT_THAT(hardware_info.limits.at("joint1").max_effort, DoubleNear(0.2, 1e-5));
+  EXPECT_THAT(hardware_info.limits.at("joint1").max_velocity, DoubleNear(0.05, 1e-5))
+    << "velocity constraint from ros2_control_tag";
+  EXPECT_THAT(hardware_info.limits.at("joint1").max_effort, DoubleNear(0.2, 1e-5))
+    << "effort constraint from ros2_control_tag";
   EXPECT_THAT(hardware_info.limits.at("joint1").max_acceleration, DoubleNear(0.5, 1e-5));
   EXPECT_THAT(hardware_info.limits.at("joint1").max_deceleration, DoubleNear(0.5, 1e-5));
   EXPECT_THAT(hardware_info.limits.at("joint1").max_jerk, DoubleNear(5.0, 1e-5));
@@ -1084,6 +1086,48 @@ TEST_F(TestComponentParser, no_throw_on_parse_urdf_system_continuous_missing_lim
   EXPECT_FALSE(hardware_info.limits.at("joint2").has_position_limits);
   EXPECT_FALSE(hardware_info.limits.at("joint2").has_velocity_limits);
   EXPECT_FALSE(hardware_info.limits.at("joint2").has_effort_limits);
+  EXPECT_FALSE(hardware_info.limits.at("joint2").has_acceleration_limits);
+  EXPECT_FALSE(hardware_info.limits.at("joint2").has_deceleration_limits);
+  EXPECT_FALSE(hardware_info.limits.at("joint2").has_jerk_limits);
+}
+
+TEST_F(TestComponentParser, successfully_parse_urdf_system_continuous_with_limits)
+{
+  std::string urdf_to_test =
+    std::string(ros2_control_test_assets::urdf_head_continuous_with_limits) +
+    ros2_control_test_assets::valid_urdf_ros2_control_system_robot_with_all_interfaces +
+    ros2_control_test_assets::urdf_tail;
+  EXPECT_NO_THROW(parse_control_resources_from_urdf(urdf_to_test));
+
+  const auto control_hardware = parse_control_resources_from_urdf(urdf_to_test);
+  ASSERT_THAT(control_hardware, SizeIs(1));
+  auto hardware_info = control_hardware.front();
+
+  ASSERT_GT(hardware_info.limits.count("joint1"), 0);
+  EXPECT_TRUE(hardware_info.limits.at("joint1").has_position_limits);
+  EXPECT_THAT(hardware_info.limits.at("joint1").min_position, DoubleNear(-1.0, 1e-5));
+  EXPECT_THAT(hardware_info.limits.at("joint1").max_position, DoubleNear(1.0, 1e-5));
+  EXPECT_TRUE(hardware_info.limits.at("joint1").has_velocity_limits);
+  EXPECT_TRUE(hardware_info.limits.at("joint1").has_effort_limits);
+  EXPECT_TRUE(hardware_info.limits.at("joint1").has_acceleration_limits);
+  EXPECT_TRUE(hardware_info.limits.at("joint1").has_deceleration_limits);
+  EXPECT_TRUE(hardware_info.limits.at("joint1").has_jerk_limits);
+  EXPECT_THAT(hardware_info.limits.at("joint1").max_velocity, DoubleNear(0.05, 1e-5))
+    << "velocity URDF constraint overridden by ros2_control tag";
+  EXPECT_THAT(hardware_info.limits.at("joint1").max_effort, DoubleNear(0.1, 1e-5))
+    << "effort constraint from URDF";
+  EXPECT_THAT(hardware_info.limits.at("joint1").max_acceleration, DoubleNear(0.5, 1e-5));
+  EXPECT_THAT(hardware_info.limits.at("joint1").max_deceleration, DoubleNear(0.5, 1e-5));
+  EXPECT_THAT(hardware_info.limits.at("joint1").max_jerk, DoubleNear(5.0, 1e-5));
+
+  ASSERT_GT(hardware_info.limits.count("joint2"), 0);
+  EXPECT_FALSE(hardware_info.limits.at("joint2").has_position_limits);
+  EXPECT_TRUE(hardware_info.limits.at("joint2").has_velocity_limits);
+  EXPECT_TRUE(hardware_info.limits.at("joint2").has_effort_limits);
+  EXPECT_THAT(hardware_info.limits.at("joint2").max_velocity, DoubleNear(0.2, 1e-5))
+    << "velocity constraint from URDF";
+  EXPECT_THAT(hardware_info.limits.at("joint2").max_effort, DoubleNear(0.1, 1e-5))
+    << "effort constraint from URDF";
   EXPECT_FALSE(hardware_info.limits.at("joint2").has_acceleration_limits);
   EXPECT_FALSE(hardware_info.limits.at("joint2").has_deceleration_limits);
   EXPECT_FALSE(hardware_info.limits.at("joint2").has_jerk_limits);
