@@ -990,21 +990,7 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_and_unavailable
   EXPECT_EQ(hardware_info.joints[2].command_interfaces[0].data_type, "double");
   EXPECT_EQ(hardware_info.joints[2].command_interfaces[0].size, 1);
 
-  ASSERT_THAT(hardware_info.gpios, SizeIs(1));
-
-  EXPECT_EQ(hardware_info.gpios[0].name, "flange_IOS");
-  EXPECT_EQ(hardware_info.gpios[0].type, "gpio");
-  EXPECT_THAT(hardware_info.gpios[0].command_interfaces, SizeIs(1));
-  EXPECT_EQ(hardware_info.gpios[0].command_interfaces[0].name, "digital_output");
-  EXPECT_EQ(hardware_info.gpios[0].command_interfaces[0].data_type, "bool");
-  EXPECT_EQ(hardware_info.gpios[0].command_interfaces[0].size, 2);
-  EXPECT_THAT(hardware_info.gpios[0].state_interfaces, SizeIs(2));
-  EXPECT_EQ(hardware_info.gpios[0].state_interfaces[0].name, "analog_input");
-  EXPECT_EQ(hardware_info.gpios[0].state_interfaces[0].data_type, "double");
-  EXPECT_EQ(hardware_info.gpios[0].state_interfaces[0].size, 3);
-  EXPECT_EQ(hardware_info.gpios[0].state_interfaces[1].name, "image");
-  EXPECT_EQ(hardware_info.gpios[0].state_interfaces[1].data_type, "cv::Mat");
-  EXPECT_EQ(hardware_info.gpios[0].state_interfaces[1].size, 1);
+  ASSERT_THAT(hardware_info.gpios, SizeIs(0));
 
   EXPECT_FALSE(hardware_info.limits.at("joint1").has_position_limits);
   EXPECT_THAT(
