@@ -33,6 +33,8 @@ constexpr char HW_IF_TORQUE[] = "torque";
 constexpr char HW_IF_FORCE[] = "force";
 /// Constant defining current interface name
 constexpr char HW_IF_CURRENT[] = "current";
+/// Constant defining temperature interface name
+constexpr char HW_IF_TEMPERATURE[] = "temperature";
 }  // namespace hardware_interface
 
 #endif  // HARDWARE_INTERFACE__TYPES__HARDWARE_INTERFACE_TYPE_VALUES_HPP_
