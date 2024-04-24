@@ -171,7 +171,7 @@ def main(args=None):
     parser.add_argument(
         "-t",
         "--controller-type",
-        help="If not provided it should exist in the controller manager namespace",
+        help="If not provided it should exist in the controller manager namespace (deprecated)",
         default=None,
         required=False,
     )
@@ -203,6 +203,14 @@ def main(args=None):
     controller_namespace = args.namespace
     param_file = args.param_file
     controller_manager_timeout = args.controller_manager_timeout
+
+    if args.controller_type:
+        warnings.filterwarnings("always")
+        warnings.warn(
+            "The '--controller-type' argument is deprecated and will be removed in future releases."
+            " Declare the controller type parameter in the param file instead.",
+            DeprecationWarning,
+        )
 
     if param_file and not os.path.isfile(param_file):
         raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), param_file)
