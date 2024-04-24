@@ -225,7 +225,7 @@ Note that not all controllers have to be restarted, e.g., broadcasters.
 Restarting hardware
 ^^^^^^^^^^^^^^^^^^^^^
 
-If hardware gets restarted then you should go through its lifecycle again inorder to reconfigure and export the interfaces
+If hardware gets restarted then you should go through its lifecycle again in order to reconfigure and export the interfaces
 
 Hardware and Controller Errors
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
