@@ -15,3 +15,4 @@ jobs:
       ros_distro: rolling
       ref: master
       ros2_repo_branch: master
+      container: ubuntu:24.04
