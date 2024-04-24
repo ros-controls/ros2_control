@@ -2023,6 +2023,7 @@ controller_interface::return_type ControllerManager::update(
   ++update_loop_counter_;
   update_loop_counter_ %= update_rate_;
 
+  std::vector<std::string> failed_controllers_list;
   for (const auto & loaded_controller : rt_controller_list)
   {
     // TODO(v-lopez) we could cache this information
@@ -2061,10 +2062,24 @@ controller_interface::return_type ControllerManager::update(
 
         if (controller_ret != controller_interface::return_type::OK)
         {
+          failed_controllers_list.push_back(loaded_controller.info.name);
           ret = controller_ret;
         }
       }
     }
+  }
+  if (!failed_controllers_list.empty())
+  {
+    std::string failed_controllers;
+    for (const auto & controller : failed_controllers_list)
+    {
+      failed_controllers += "\n\t- " + controller;
+    }
+    RCLCPP_ERROR(
+      get_logger(), "Deactivating following controllers as their update resulted in an error :%s",
+      failed_controllers.c_str());
+
+    deactivate_controllers(rt_controller_list, failed_controllers_list);
   }
 
   // there are controllers to (de)activate
