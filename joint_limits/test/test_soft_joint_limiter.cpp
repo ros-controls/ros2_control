@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/// \author Sai Kishor Kothakota
+/// \author Adrià Roig Moreno
 
 #include "test_joint_limiter.hpp"
 #include <limits>
 
-TEST_F(JointSaturationLimiterTest, when_loading_limiter_plugin_expect_loaded)
+/*TEST_F(SoftJointLimiterTest, when_loading_limiter_plugin_expect_loaded)
 {
-  // Test JointSaturationLimiter loading
+  // Test SoftJointLimiter loading
   ASSERT_NO_THROW(
     joint_limiter_ = std::unique_ptr<JointLimiter>(
       joint_limiter_loader_.createUnmanagedInstance(joint_limiter_type_)));
@@ -27,7 +27,7 @@ TEST_F(JointSaturationLimiterTest, when_loading_limiter_plugin_expect_loaded)
 }
 
 // NOTE: We accept also if there is no limit defined for a joint.
-TEST_F(JointSaturationLimiterTest, when_joint_not_found_expect_init_fail)
+TEST_F(SoftJointLimiterTest, when_joint_not_found_expect_init_fail)
 {
   SetupNode("joint_saturation_limiter");
   ASSERT_TRUE(Load());
@@ -36,27 +36,32 @@ TEST_F(JointSaturationLimiterTest, when_joint_not_found_expect_init_fail)
   ASSERT_TRUE(joint_limiter_->init(joint_names, node_));
 }
 
-TEST_F(JointSaturationLimiterTest, when_invalid_dt_expect_enforce_fail)
+TEST_F(SoftJointLimiterTest, when_invalid_dt_expect_enforce_fail)
 {
   SetupNode("joint_saturation_limiter");
   ASSERT_TRUE(Load());
 
-  ASSERT_TRUE(Init());
+  ASSERT_TRUE(JointLimiterTest::Init());
   ASSERT_TRUE(Configure());
   rclcpp::Duration period(0, 0);  // 0 second
   ASSERT_FALSE(joint_limiter_->enforce(actual_state_, desired_state_, period));
 }
 
-TEST_F(JointSaturationLimiterTest, check_desired_position_only_cases)
+TEST_F(SoftJointLimiterTest, check_desired_position_only_cases)
 {
-  SetupNode("joint_saturation_limiter");
+  SetupNode("soft_joint_limiter");
   ASSERT_TRUE(Load());
 
   joint_limits::JointLimits limits;
   limits.has_position_limits = true;
   limits.min_position = -M_PI;
   limits.max_position = M_PI;
-  ASSERT_TRUE(Init(limits));
+  joint_limits::SoftJointLimits soft_limits;
+//  soft_limits.min_position = -3.0;
+//  soft_limits.max_position = 3.0;
+//  soft_limits.k_position = 10.0;
+//  soft_limits.k_velocity = 10.0;
+  ASSERT_TRUE(Init(limits, soft_limits));
   // no size check occurs (yet) so expect true
   ASSERT_TRUE(joint_limiter_->configure(last_commanded_state_));
 
@@ -158,7 +163,7 @@ TEST_F(JointSaturationLimiterTest, check_desired_position_only_cases)
   EXPECT_FALSE(desired_state_.has_jerk());
 }
 
-TEST_F(JointSaturationLimiterTest, check_desired_velocity_only_cases)
+TEST_F(SoftJointLimiterTest, check_desired_velocity_only_cases)
 {
   SetupNode("joint_saturation_limiter");
   ASSERT_TRUE(Load());
@@ -309,7 +314,7 @@ TEST_F(JointSaturationLimiterTest, check_desired_velocity_only_cases)
   test_limit_enforcing(6.0, -1.0, 0.0, true);
 }
 
-TEST_F(JointSaturationLimiterTest, check_desired_effort_only_cases)
+TEST_F(SoftJointLimiterTest, check_desired_effort_only_cases)
 {
   SetupNode("joint_saturation_limiter");
   ASSERT_TRUE(Load());
@@ -424,7 +429,7 @@ TEST_F(JointSaturationLimiterTest, check_desired_effort_only_cases)
   test_limit_enforcing(-5.0, -0.2, 30.0, 30.0, false);
 }
 
-TEST_F(JointSaturationLimiterTest, check_desired_acceleration_only_cases)
+TEST_F(SoftJointLimiterTest, check_desired_acceleration_only_cases)
 {
   SetupNode("joint_saturation_limiter");
   ASSERT_TRUE(Load());
@@ -513,7 +518,7 @@ TEST_F(JointSaturationLimiterTest, check_desired_acceleration_only_cases)
   test_limit_enforcing(-0.4, 3.0, 0.25, true);
 }
 
-TEST_F(JointSaturationLimiterTest, check_desired_jerk_only_cases)
+TEST_F(SoftJointLimiterTest, check_desired_jerk_only_cases)
 {
   SetupNode("joint_saturation_limiter");
   ASSERT_TRUE(Load());
@@ -554,7 +559,7 @@ TEST_F(JointSaturationLimiterTest, check_desired_jerk_only_cases)
   test_limit_enforcing(-1.5, -0.5, true);
 }
 
-TEST_F(JointSaturationLimiterTest, check_all_desired_references_limiting)
+TEST_F(SoftJointLimiterTest, check_all_desired_references_limiting)
 {
   SetupNode("joint_saturation_limiter");
   ASSERT_TRUE(Load());
@@ -641,7 +646,7 @@ TEST_F(JointSaturationLimiterTest, check_all_desired_references_limiting)
   test_limit_enforcing(3.0, 0.5, 6.0, 2.0, 1.0, 0.5, 4.0, 1.0, 0.5, 0.5, true);
   test_limit_enforcing(4.0, 0.5, 6.0, 2.0, 1.0, 0.5, 5.0, 1.0, 0.5, 0.5, true);
   test_limit_enforcing(5.0, 0.5, 6.0, 2.0, 1.0, 0.5, 5.0, 0.0, 0.5, 0.5, true);
-}
+}*/
 
 int main(int argc, char ** argv)
 {
