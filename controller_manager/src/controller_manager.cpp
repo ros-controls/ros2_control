@@ -1583,15 +1583,32 @@ void ControllerManager::activate_controllers(
     }
     controller->assign_interfaces(std::move(command_loans), std::move(state_loans));
 
-    const auto new_state = controller->get_node()->activate();
-    if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+    try
+    {
+      const auto new_state = controller->get_node()->activate();
+      if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+      {
+        RCLCPP_ERROR(
+          get_logger(),
+          "After activation, controller '%s' is in state '%s' (%d), expected '%s' (%d).",
+          controller->get_node()->get_name(), new_state.label().c_str(), new_state.id(),
+          hardware_interface::lifecycle_state_names::ACTIVE,
+          lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+      }
+    }
+    catch (const std::exception & e)
     {
       RCLCPP_ERROR(
-        get_logger(),
-        "After activation, controller '%s' is in state '%s' (%d), expected '%s' (%d).",
-        controller->get_node()->get_name(), new_state.label().c_str(), new_state.id(),
-        hardware_interface::lifecycle_state_names::ACTIVE,
-        lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+        get_logger(), "Caught exception while activating the controller '%s': %s",
+        controller_name.c_str(), e.what());
+      continue;
+    }
+    catch (...)
+    {
+      RCLCPP_ERROR(
+        get_logger(), "Caught unknown exception while activating the controller '%s'",
+        controller_name.c_str());
+      continue;
     }
 
     // if it is a chainable controller, make the reference interfaces available on activation
