@@ -1301,14 +1301,35 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::add_co
   }
 
   const rclcpp::NodeOptions controller_node_options = determine_controller_node_options(controller);
-  if (
-    controller.c->init(
-      controller.info.name, robot_description_, get_update_rate(), get_namespace(),
-      controller_node_options) == controller_interface::return_type::ERROR)
+  // Catch whatever exception the controller might throw
+  try
+  {
+    if (
+      controller.c->init(
+        controller.info.name, robot_description_, get_update_rate(), get_namespace(),
+        controller_node_options) == controller_interface::return_type::ERROR)
+    {
+      to.clear();
+      RCLCPP_ERROR(
+        get_logger(), "Could not initialize the controller named '%s'",
+        controller.info.name.c_str());
+      return nullptr;
+    }
+  }
+  catch (const std::exception & e)
   {
     to.clear();
     RCLCPP_ERROR(
-      get_logger(), "Could not initialize the controller named '%s'", controller.info.name.c_str());
+      get_logger(), "Caught exception while initializing controller '%s': %s",
+      controller.info.name.c_str(), e.what());
+    return nullptr;
+  }
+  catch (...)
+  {
+    to.clear();
+    RCLCPP_ERROR(
+      get_logger(), "Caught unknown exception while initializing controller '%s'",
+      controller.info.name.c_str());
     return nullptr;
   }
 
