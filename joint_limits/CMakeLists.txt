@@ -43,6 +43,16 @@ ament_target_dependencies(joint_limiter_interface PUBLIC ${THIS_PACKAGE_INCLUDE_
 # which is appropriate when building the dll but not consuming it.
 target_compile_definitions(joint_limiter_interface PRIVATE "JOINT_LIMITS_BUILDING_DLL")
 
+add_library(joint_limits_helpers SHARED
+  src/joint_limits_helpers.cpp
+)
+target_compile_features(joint_limits_helpers PUBLIC cxx_std_17)
+target_include_directories(joint_limits_helpers PUBLIC
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include/joint_limits>
+)
+ament_target_dependencies(joint_limits_helpers PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
+
 
 add_library(joint_saturation_limiter SHARED
   src/joint_saturation_limiter.cpp
@@ -114,6 +124,7 @@ install(TARGETS
     joint_limits
     joint_limiter_interface
     joint_saturation_limiter
+    joint_limits_helpers
   EXPORT export_joint_limits
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
