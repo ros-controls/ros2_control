@@ -1403,6 +1403,19 @@ void ControllerManager::deactivate_controllers(
       {
         const auto new_state = controller->get_node()->deactivate();
         controller->release_interfaces();
+
+        // if it is a chainable controller, make the reference interfaces unavailable on
+        // deactivation
+        if (controller->is_chainable())
+        {
+          resource_manager_->make_controller_reference_interfaces_unavailable(controller_name);
+        }
+        if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
+        {
+          RCLCPP_ERROR(
+            get_logger(), "After deactivating, controller '%s' is in state '%s', expected Inactive",
+            controller_name.c_str(), new_state.label().c_str());
+        }
       }
       catch (const std::exception & e)
       {
@@ -1417,17 +1430,6 @@ void ControllerManager::deactivate_controllers(
           get_logger(), "Caught unknown exception while deactivating the controller '%s'",
           controller_name.c_str());
         continue;
-      }
-      // if it is a chainable controller, make the reference interfaces unavailable on deactivation
-      if (controller->is_chainable())
-      {
-        resource_manager_->make_controller_reference_interfaces_unavailable(controller_name);
-      }
-      if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
-      {
-        RCLCPP_ERROR(
-          get_logger(), "After deactivating, controller '%s' is in state '%s', expected Inactive",
-          controller_name.c_str(), new_state.label().c_str());
       }
     }
   }
@@ -2151,7 +2153,7 @@ controller_interface::return_type ControllerManager::update(
         // Catch exceptions thrown by the controller update function
         try
         {
-          auto controller_ret = loaded_controller.c->update(time, controller_actual_period);
+          controller_ret = loaded_controller.c->update(time, controller_actual_period);
         }
         catch (const std::exception & e)
         {
