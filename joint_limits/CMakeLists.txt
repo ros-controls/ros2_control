@@ -57,6 +57,7 @@ ament_target_dependencies(joint_limits_helpers PUBLIC ${THIS_PACKAGE_INCLUDE_DEP
 add_library(joint_saturation_limiter SHARED
   src/joint_saturation_limiter.cpp
   src/joint_range_limiter.cpp
+  src/soft_joint_limiter.cpp
 )
 target_compile_features(joint_saturation_limiter PUBLIC cxx_std_17)
 target_include_directories(joint_saturation_limiter PUBLIC
