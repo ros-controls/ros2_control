@@ -1399,8 +1399,25 @@ void ControllerManager::deactivate_controllers(
     auto controller = found_it->c;
     if (is_controller_active(*controller))
     {
-      const auto new_state = controller->get_node()->deactivate();
-      controller->release_interfaces();
+      try
+      {
+        const auto new_state = controller->get_node()->deactivate();
+        controller->release_interfaces();
+      }
+      catch (const std::exception & e)
+      {
+        RCLCPP_ERROR(
+          get_logger(), "Caught exception while deactivating the  controller '%s': %s",
+          controller_name.c_str(), e.what());
+        continue;
+      }
+      catch (...)
+      {
+        RCLCPP_ERROR(
+          get_logger(), "Caught unknown exception while deactivating the controller '%s'",
+          controller_name.c_str());
+        continue;
+      }
       // if it is a chainable controller, make the reference interfaces unavailable on deactivation
       if (controller->is_chainable())
       {
