@@ -2086,7 +2086,26 @@ controller_interface::return_type ControllerManager::update(
       {
         const auto controller_actual_period =
           (time - *loaded_controller.next_update_cycle_time) + controller_period;
-        auto controller_ret = loaded_controller.c->update(time, controller_actual_period);
+        auto controller_ret = controller_interface::return_type::OK;
+        // Catch exceptions thrown by the controller update function
+        try
+        {
+          auto controller_ret = loaded_controller.c->update(time, controller_actual_period);
+        }
+        catch (const std::exception & e)
+        {
+          RCLCPP_ERROR(
+            get_logger(), "Caught exception while updating controller '%s': %s",
+            loaded_controller.info.name.c_str(), e.what());
+          controller_ret = controller_interface::return_type::ERROR;
+        }
+        catch (...)
+        {
+          RCLCPP_ERROR(
+            get_logger(), "Caught unknown exception while updating controller '%s'",
+            loaded_controller.info.name.c_str());
+          controller_ret = controller_interface::return_type::ERROR;
+        }
 
         if (
           *loaded_controller.next_update_cycle_time ==
