@@ -117,6 +117,15 @@ if(BUILD_TESTING)
     rclcpp
   )
 
+  ament_add_gtest(test_soft_joint_limiter test/test_soft_joint_limiter.cpp)
+  target_include_directories(test_soft_joint_limiter PRIVATE include)
+  target_link_libraries(test_soft_joint_limiter joint_limiter_interface)
+  ament_target_dependencies(
+    test_soft_joint_limiter
+    pluginlib
+    rclcpp
+  )
+
 endif()
 
 install(

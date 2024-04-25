@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef TEST_JOINT_RANGE_LIMITER_HPP_
-#define TEST_JOINT_RANGE_LIMITER_HPP_
+#ifndef TEST_JOINT_LIMITER_HPP_
+#define TEST_JOINT_LIMITER_HPP_
 
 #include <gtest/gtest.h>
 
@@ -31,7 +31,7 @@ const double COMMON_THRESHOLD = 1.0e-6;
 
 using JointLimiter = joint_limits::JointLimiterInterface<joint_limits::JointControlInterfacesData>;
 
-class JointSaturationLimiterTest : public ::testing::Test
+class JointLimiterTest : public ::testing::Test
 {
 public:
   void SetUp() override
@@ -95,12 +95,17 @@ public:
       actual_state_.velocity.value() + desired_state_.acceleration.value() * dt;
   }
 
-  JointSaturationLimiterTest()
-  : joint_limiter_type_("joint_limits/JointInterfacesSaturationLimiter"),
+  JointLimiterTest(const std::string &joint_limiter_type)
+  : joint_limiter_type_(joint_limiter_type),
     joint_limiter_loader_(
       "joint_limits",
       "joint_limits::JointLimiterInterface<joint_limits::JointControlInterfacesData>")
   {
+  }
+
+  virtual ~JointLimiterTest()
+  {
+
   }
 
   void TearDown() override { node_.reset(); }
@@ -119,4 +124,32 @@ protected:
   joint_limits::JointControlInterfacesData actual_state_;
 };
 
-#endif  // TEST_JOINT_RANGE_LIMITER_HPP_
+class JointSaturationLimiterTest : public JointLimiterTest
+{
+public:
+  JointSaturationLimiterTest()
+  : JointLimiterTest("joint_limits/JointInterfacesSaturationLimiter")
+  {
+  }
+};
+
+class SoftJointLimiterTest : public JointLimiterTest
+{
+public:
+  SoftJointLimiterTest()
+  : JointLimiterTest("joint_limits/JointInterfacesSoftLimiter")
+  {
+  }
+
+  bool Init(const joint_limits::JointLimits & limits,
+            const joint_limits::SoftJointLimits &soft_limits,
+            const std::string & joint_name = "foo_joint")
+  {
+    soft_limits_ = soft_limits;
+    return JointLimiterTest::Init(limits, joint_name);
+  }
+protected:
+  joint_limits::SoftJointLimits soft_limits_;
+};
+
+#endif  // TEST_JOINT_LIMITER_HPP_
