@@ -646,22 +646,49 @@ controller_interface::return_type ControllerManager::configure_controller(
       get_logger(), "Controller '%s' is cleaned-up before configuring", controller_name.c_str());
     // TODO(destogl): remove reference interface if chainable; i.e., add a separate method for
     // cleaning-up controllers?
-    new_state = controller->get_node()->cleanup();
-    if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
+    try
+    {
+      new_state = controller->get_node()->cleanup();
+      if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
+      {
+        RCLCPP_ERROR(
+          get_logger(), "Controller '%s' can not be cleaned-up before configuring",
+          controller_name.c_str());
+        return controller_interface::return_type::ERROR;
+      }
+    }
+    catch (...)
     {
       RCLCPP_ERROR(
-        get_logger(), "Controller '%s' can not be cleaned-up before configuring",
+        get_logger(), "Caught exception while cleaning-up controller '%s' before configuring",
         controller_name.c_str());
       return controller_interface::return_type::ERROR;
     }
   }
 
-  new_state = controller->configure();
-  if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
+  try
+  {
+    new_state = controller->configure();
+    if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
+    {
+      RCLCPP_ERROR(
+        get_logger(), "After configuring, controller '%s' is in state '%s' , expected inactive.",
+        controller_name.c_str(), new_state.label().c_str());
+      return controller_interface::return_type::ERROR;
+    }
+  }
+  catch (const std::exception & e)
   {
     RCLCPP_ERROR(
-      get_logger(), "After configuring, controller '%s' is in state '%s' , expected inactive.",
-      controller_name.c_str(), new_state.label().c_str());
+      get_logger(), "Caught exception while configuring controller '%s': %s",
+      controller_name.c_str(), e.what());
+    return controller_interface::return_type::ERROR;
+  }
+  catch (...)
+  {
+    RCLCPP_ERROR(
+      get_logger(), "Caught unknown exception while configuring controller '%s'",
+      controller_name.c_str());
     return controller_interface::return_type::ERROR;
   }
 
