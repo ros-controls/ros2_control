@@ -64,6 +64,8 @@ target_include_directories(joint_saturation_limiter PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/joint_limits>
 )
+target_link_libraries(joint_saturation_limiter PUBLIC joint_limits_helpers)
+
 ament_target_dependencies(joint_saturation_limiter PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.
@@ -110,7 +112,7 @@ if(BUILD_TESTING)
   target_include_directories(test_joint_range_limiter PRIVATE include)
   target_link_libraries(test_joint_range_limiter joint_limiter_interface)
   ament_target_dependencies(
-    test_joint_saturation_limiter
+    test_joint_range_limiter
     pluginlib
     rclcpp
   )
