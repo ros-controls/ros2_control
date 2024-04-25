@@ -562,11 +562,26 @@ controller_interface::return_type ControllerManager::unload_controller(
       get_logger(), "Controller '%s' is cleaned-up before unloading!", controller_name.c_str());
     // TODO(destogl): remove reference interface if chainable; i.e., add a separate method for
     // cleaning-up controllers?
-    const auto new_state = controller.c->get_node()->cleanup();
-    if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
+    try
     {
-      RCLCPP_WARN(
-        get_logger(), "Failed to clean-up the controller '%s' before unloading!",
+      const auto new_state = controller.c->get_node()->cleanup();
+      if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
+      {
+        RCLCPP_WARN(
+          get_logger(), "Failed to clean-up the controller '%s' before unloading!",
+          controller_name.c_str());
+      }
+    }
+    catch (const std::exception & e)
+    {
+      RCLCPP_ERROR(
+        get_logger(), "Failed to clean-up the controller '%s' before unloading: %s",
+        controller_name.c_str(), e.what());
+    }
+    catch (...)
+    {
+      RCLCPP_ERROR(
+        get_logger(), "Failed to clean-up the controller '%s' before unloading",
         controller_name.c_str());
     }
   }
