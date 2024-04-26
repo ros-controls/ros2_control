@@ -191,9 +191,25 @@ public:
   template <class HardwareT>
   bool configure_hardware(HardwareT & hardware)
   {
-    bool result = trigger_and_print_hardware_state_transition(
-      std::bind(&HardwareT::configure, &hardware), "configure", hardware.get_name(),
-      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+    bool result = false;
+    try
+    {
+      result = trigger_and_print_hardware_state_transition(
+        std::bind(&HardwareT::configure, &hardware), "configure", hardware.get_name(),
+        lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+    }
+    catch (const std::exception & ex)
+    {
+      RCUTILS_LOG_ERROR_NAMED(
+        "resource_manager", "Exception occurred while configuring hardware '%s': %s",
+        hardware.get_name().c_str(), ex.what());
+    }
+    catch (...)
+    {
+      RCUTILS_LOG_ERROR_NAMED(
+        "resource_manager", "Unknown exception occurred while configuring hardware '%s'",
+        hardware.get_name().c_str());
+    }
 
     if (result)
     {
