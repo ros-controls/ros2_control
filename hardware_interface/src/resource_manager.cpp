@@ -434,9 +434,25 @@ public:
   template <class HardwareT>
   bool deactivate_hardware(HardwareT & hardware)
   {
-    bool result = trigger_and_print_hardware_state_transition(
-      std::bind(&HardwareT::deactivate, &hardware), "deactivate", hardware.get_name(),
-      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+    bool result = false;
+    try
+    {
+      result = trigger_and_print_hardware_state_transition(
+        std::bind(&HardwareT::deactivate, &hardware), "deactivate", hardware.get_name(),
+        lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+    }
+    catch (const std::exception & ex)
+    {
+      RCUTILS_LOG_ERROR_NAMED(
+        "resource_manager", "Exception occurred while deactivating hardware '%s': %s",
+        hardware.get_name().c_str(), ex.what());
+    }
+    catch (...)
+    {
+      RCUTILS_LOG_ERROR_NAMED(
+        "resource_manager", "Unknown exception occurred while deactivating hardware '%s'",
+        hardware.get_name().c_str());
+    }
 
     if (result)
     {
