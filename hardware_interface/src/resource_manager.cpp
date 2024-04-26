@@ -95,35 +95,55 @@ public:
     std::vector<HardwareT> & container)
   {
     bool is_loaded = false;
-    RCUTILS_LOG_INFO_NAMED(
-      "resource_manager", "Loading hardware '%s' ", hardware_info.name.c_str());
-    // hardware_plugin_name has to match class name in plugin xml description
-    auto interface = std::unique_ptr<HardwareInterfaceT>(
-      loader.createUnmanagedInstance(hardware_info.hardware_plugin_name));
-    if (interface)
+    try
     {
       RCUTILS_LOG_INFO_NAMED(
-        "resource_manager", "Loaded hardware '%s' from plugin '%s'", hardware_info.name.c_str(),
-        hardware_info.hardware_plugin_name.c_str());
-      HardwareT hardware(std::move(interface));
-      container.emplace_back(std::move(hardware));
-      // initialize static data about hardware component to reduce later calls
-      HardwareComponentInfo component_info;
-      component_info.name = hardware_info.name;
-      component_info.type = hardware_info.type;
-      component_info.plugin_name = hardware_info.hardware_plugin_name;
-      component_info.is_async = hardware_info.is_async;
+        "resource_manager", "Loading hardware '%s' ", hardware_info.name.c_str());
+      // hardware_plugin_name has to match class name in plugin xml description
+      auto interface = std::unique_ptr<HardwareInterfaceT>(
+        loader.createUnmanagedInstance(hardware_info.hardware_plugin_name));
+      if (interface)
+      {
+        RCUTILS_LOG_INFO_NAMED(
+          "resource_manager", "Loaded hardware '%s' from plugin '%s'", hardware_info.name.c_str(),
+          hardware_info.hardware_plugin_name.c_str());
+        HardwareT hardware(std::move(interface));
+        container.emplace_back(std::move(hardware));
+        // initialize static data about hardware component to reduce later calls
+        HardwareComponentInfo component_info;
+        component_info.name = hardware_info.name;
+        component_info.type = hardware_info.type;
+        component_info.plugin_name = hardware_info.hardware_plugin_name;
+        component_info.is_async = hardware_info.is_async;
 
-      hardware_info_map_.insert(std::make_pair(component_info.name, component_info));
-      hardware_used_by_controllers_.insert(
-        std::make_pair(component_info.name, std::vector<std::string>()));
-      is_loaded = true;
+        hardware_info_map_.insert(std::make_pair(component_info.name, component_info));
+        hardware_used_by_controllers_.insert(
+          std::make_pair(component_info.name, std::vector<std::string>()));
+        is_loaded = true;
+      }
+      else
+      {
+        RCUTILS_LOG_ERROR_NAMED(
+          "resource_manager", "Failed to load hardware '%s' from plugin '%s'",
+          hardware_info.name.c_str(), hardware_info.hardware_plugin_name.c_str());
+      }
     }
-    else
+    catch (const pluginlib::PluginlibException & ex)
     {
       RCUTILS_LOG_ERROR_NAMED(
-        "resource_manager", "Failed to load hardware '%s' from plugin '%s'",
-        hardware_info.name.c_str(), hardware_info.hardware_plugin_name.c_str());
+        "resource_manager", "Exception while loading hardware: %s", ex.what());
+    }
+    catch (const std::exception & ex)
+    {
+      RCUTILS_LOG_ERROR_NAMED(
+        "resource_manager", "Exception occurred while loading hardware '%s': %s",
+        hardware_info.name.c_str(), ex.what());
+    }
+    catch (...)
+    {
+      RCUTILS_LOG_ERROR_NAMED(
+        "resource_manager", "Unknown exception occurred while loading hardware '%s'",
+        hardware_info.name.c_str());
     }
     return is_loaded;
   }
