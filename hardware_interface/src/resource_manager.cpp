@@ -1336,13 +1336,34 @@ bool ResourceManager::prepare_command_mode_switch(
         component.get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
         component.get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
       {
-        if (
-          return_type::OK !=
-          component.prepare_command_mode_switch(start_interfaces, stop_interfaces))
+        try
+        {
+          if (
+            return_type::OK !=
+            component.prepare_command_mode_switch(start_interfaces, stop_interfaces))
+          {
+            RCUTILS_LOG_ERROR_NAMED(
+              "resource_manager",
+              "Component '%s' did not accept command interfaces combination: \n%s",
+              component.get_name().c_str(), interfaces_to_string().c_str());
+            ret = false;
+          }
+        }
+        catch (const std::exception & e)
         {
           RCUTILS_LOG_ERROR_NAMED(
             "resource_manager",
-            "Component '%s' did not accept command interfaces combination: \n%s",
+            "Exception occurred while preparing command mode switch for component '%s' for the "
+            "interfaces: \n %s : %s",
+            component.get_name().c_str(), interfaces_to_string().c_str(), e.what());
+          ret = false;
+        }
+        catch (...)
+        {
+          RCUTILS_LOG_ERROR_NAMED(
+            "resource_manager",
+            "Unknown exception occurred while preparing command mode switch for component '%s' for "
+            "the interfaces: \n %s",
             component.get_name().c_str(), interfaces_to_string().c_str());
           ret = false;
         }
