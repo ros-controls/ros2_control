@@ -90,27 +90,42 @@ public:
   }
 
   template <class HardwareT, class HardwareInterfaceT>
-  void load_hardware(
+  bool load_hardware(
     const HardwareInfo & hardware_info, pluginlib::ClassLoader<HardwareInterfaceT> & loader,
     std::vector<HardwareT> & container)
   {
+    bool is_loaded = false;
     RCUTILS_LOG_INFO_NAMED(
       "resource_manager", "Loading hardware '%s' ", hardware_info.name.c_str());
     // hardware_plugin_name has to match class name in plugin xml description
     auto interface = std::unique_ptr<HardwareInterfaceT>(
       loader.createUnmanagedInstance(hardware_info.hardware_plugin_name));
-    HardwareT hardware(std::move(interface));
-    container.emplace_back(std::move(hardware));
-    // initialize static data about hardware component to reduce later calls
-    HardwareComponentInfo component_info;
-    component_info.name = hardware_info.name;
-    component_info.type = hardware_info.type;
-    component_info.plugin_name = hardware_info.hardware_plugin_name;
-    component_info.is_async = hardware_info.is_async;
+    if (interface)
+    {
+      RCUTILS_LOG_INFO_NAMED(
+        "resource_manager", "Loaded hardware '%s' from plugin '%s'", hardware_info.name.c_str(),
+        hardware_info.hardware_plugin_name.c_str());
+      HardwareT hardware(std::move(interface));
+      container.emplace_back(std::move(hardware));
+      // initialize static data about hardware component to reduce later calls
+      HardwareComponentInfo component_info;
+      component_info.name = hardware_info.name;
+      component_info.type = hardware_info.type;
+      component_info.plugin_name = hardware_info.hardware_plugin_name;
+      component_info.is_async = hardware_info.is_async;
 
-    hardware_info_map_.insert(std::make_pair(component_info.name, component_info));
-    hardware_used_by_controllers_.insert(
-      std::make_pair(component_info.name, std::vector<std::string>()));
+      hardware_info_map_.insert(std::make_pair(component_info.name, component_info));
+      hardware_used_by_controllers_.insert(
+        std::make_pair(component_info.name, std::vector<std::string>()));
+      is_loaded = true;
+    }
+    else
+    {
+      RCUTILS_LOG_ERROR_NAMED(
+        "resource_manager", "Failed to load hardware '%s' from plugin '%s'",
+        hardware_info.name.c_str(), hardware_info.hardware_plugin_name.c_str());
+    }
+    return is_loaded;
   }
 
   template <class HardwareT>
