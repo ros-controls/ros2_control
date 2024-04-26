@@ -119,21 +119,37 @@ public:
     RCUTILS_LOG_INFO_NAMED(
       "resource_manager", "Initialize hardware '%s' ", hardware_info.name.c_str());
 
-    const rclcpp_lifecycle::State new_state = hardware.initialize(hardware_info);
-
-    bool result = new_state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED;
-
-    if (result)
+    bool result = false;
+    try
     {
-      RCUTILS_LOG_INFO_NAMED(
-        "resource_manager", "Successful initialization of hardware '%s'",
+      const rclcpp_lifecycle::State new_state = hardware.initialize(hardware_info);
+      result = new_state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED;
+
+      if (result)
+      {
+        RCUTILS_LOG_INFO_NAMED(
+          "resource_manager", "Successful initialization of hardware '%s'",
+          hardware_info.name.c_str());
+      }
+      else
+      {
+        RCUTILS_LOG_INFO_NAMED(
+          "resource_manager", "Failed to initialize hardware '%s'", hardware_info.name.c_str());
+      }
+    }
+    catch (const std::exception & ex)
+    {
+      RCUTILS_LOG_ERROR_NAMED(
+        "resource_manager", "Exception occurred while initializing hardware '%s': %s",
+        hardware_info.name.c_str(), ex.what());
+    }
+    catch (...)
+    {
+      RCUTILS_LOG_ERROR_NAMED(
+        "resource_manager", "Unknown exception occurred while initializing hardware '%s'",
         hardware_info.name.c_str());
     }
-    else
-    {
-      RCUTILS_LOG_INFO_NAMED(
-        "resource_manager", "Failed to initialize hardware '%s'", hardware_info.name.c_str());
-    }
+
     return result;
   }
 
