@@ -1569,7 +1569,25 @@ HardwareReadWriteStatus ResourceManager::write(
   {
     for (auto & component : components)
     {
-      auto ret_val = component.write(time, period);
+      auto ret_val = return_type::OK;
+      try
+      {
+        ret_val = component.write(time, period);
+      }
+      catch (const std::exception & e)
+      {
+        RCUTILS_LOG_ERROR_NAMED(
+          "resource_manager", "Exception thrown during write of the component '%s': %s",
+          component.get_name().c_str(), e.what());
+        ret_val = return_type::ERROR;
+      }
+      catch (...)
+      {
+        RCUTILS_LOG_ERROR_NAMED(
+          "resource_manager", "Unknown exception thrown during write of the component '%s'",
+          component.get_name().c_str());
+        ret_val = return_type::ERROR;
+      }
       if (ret_val == return_type::ERROR)
       {
         read_write_status.ok = false;
