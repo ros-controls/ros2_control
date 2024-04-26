@@ -598,8 +598,26 @@ public:
   template <class HardwareT>
   void import_command_interfaces(HardwareT & hardware)
   {
-    auto interfaces = hardware.export_command_interfaces();
-    hardware_info_map_[hardware.get_name()].command_interfaces = add_command_interfaces(interfaces);
+    try
+    {
+      auto interfaces = hardware.export_command_interfaces();
+      hardware_info_map_[hardware.get_name()].command_interfaces =
+        add_command_interfaces(interfaces);
+    }
+    catch (const std::exception & ex)
+    {
+      RCUTILS_LOG_ERROR_NAMED(
+        "resource_manager",
+        "Exception occurred while importing command interfaces for the hardware '%s' : %s",
+        hardware.get_name().c_str(), ex.what());
+    }
+    catch (...)
+    {
+      RCUTILS_LOG_ERROR_NAMED(
+        "resource_manager",
+        "Unknown exception occurred while importing command interfaces for the hardware '%s'",
+        hardware.get_name().c_str());
+    }
   }
 
   /// Adds exported command interfaces into internal storage.
