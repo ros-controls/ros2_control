@@ -564,18 +564,35 @@ public:
   template <class HardwareT>
   void import_state_interfaces(HardwareT & hardware)
   {
-    auto interfaces = hardware.export_state_interfaces();
-    std::vector<std::string> interface_names;
-    interface_names.reserve(interfaces.size());
-    for (auto & interface : interfaces)
+    try
     {
-      auto key = interface.get_name();
-      state_interface_map_.emplace(std::make_pair(key, std::move(interface)));
-      interface_names.push_back(key);
+      auto interfaces = hardware.export_state_interfaces();
+      std::vector<std::string> interface_names;
+      interface_names.reserve(interfaces.size());
+      for (auto & interface : interfaces)
+      {
+        auto key = interface.get_name();
+        state_interface_map_.emplace(std::make_pair(key, std::move(interface)));
+        interface_names.push_back(key);
+      }
+      hardware_info_map_[hardware.get_name()].state_interfaces = interface_names;
+      available_state_interfaces_.reserve(
+        available_state_interfaces_.capacity() + interface_names.size());
     }
-    hardware_info_map_[hardware.get_name()].state_interfaces = interface_names;
-    available_state_interfaces_.reserve(
-      available_state_interfaces_.capacity() + interface_names.size());
+    catch (const std::exception & e)
+    {
+      RCUTILS_LOG_ERROR_NAMED(
+        "resource_manager",
+        "Exception occurred while importing state interfaces for the hardware '%s' : %s",
+        hardware.get_name().c_str(), e.what());
+    }
+    catch (...)
+    {
+      RCUTILS_LOG_ERROR_NAMED(
+        "resource_manager",
+        "Unknown exception occurred while importing state interfaces for the hardware '%s'",
+        hardware.get_name().c_str());
+    }
   }
 
   template <class HardwareT>
