@@ -364,9 +364,25 @@ public:
   template <class HardwareT>
   bool shutdown_hardware(HardwareT & hardware)
   {
-    bool result = trigger_and_print_hardware_state_transition(
-      std::bind(&HardwareT::shutdown, &hardware), "shutdown", hardware.get_name(),
-      lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED);
+    bool result = false;
+    try
+    {
+      result = trigger_and_print_hardware_state_transition(
+        std::bind(&HardwareT::shutdown, &hardware), "shutdown", hardware.get_name(),
+        lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED);
+    }
+    catch (const std::exception & ex)
+    {
+      RCUTILS_LOG_ERROR_NAMED(
+        "resource_manager", "Exception occurred while shutting down hardware '%s': %s",
+        hardware.get_name().c_str(), ex.what());
+    }
+    catch (...)
+    {
+      RCUTILS_LOG_ERROR_NAMED(
+        "resource_manager", "Unknown exception occurred while shutting down hardware '%s'",
+        hardware.get_name().c_str());
+    }
 
     if (result)
     {
