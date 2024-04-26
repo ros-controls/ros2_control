@@ -334,9 +334,25 @@ public:
   template <class HardwareT>
   bool cleanup_hardware(HardwareT & hardware)
   {
-    bool result = trigger_and_print_hardware_state_transition(
-      std::bind(&HardwareT::cleanup, &hardware), "cleanup", hardware.get_name(),
-      lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+    bool result = false;
+    try
+    {
+      result = trigger_and_print_hardware_state_transition(
+        std::bind(&HardwareT::cleanup, &hardware), "cleanup", hardware.get_name(),
+        lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+    }
+    catch (const std::exception & ex)
+    {
+      RCUTILS_LOG_ERROR_NAMED(
+        "resource_manager", "Exception occurred while cleaning up hardware '%s': %s",
+        hardware.get_name().c_str(), ex.what());
+    }
+    catch (...)
+    {
+      RCUTILS_LOG_ERROR_NAMED(
+        "resource_manager", "Unknown exception occurred while cleaning up hardware '%s'",
+        hardware.get_name().c_str());
+    }
 
     if (result)
     {
