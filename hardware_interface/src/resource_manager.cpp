@@ -90,7 +90,7 @@ public:
   }
 
   template <class HardwareT, class HardwareInterfaceT>
-  bool load_hardware(
+  [[nodiscard]] bool load_hardware(
     const HardwareInfo & hardware_info, pluginlib::ClassLoader<HardwareInterfaceT> & loader,
     std::vector<HardwareT> & container)
   {
@@ -545,7 +545,10 @@ public:
     auto load_and_init_actuators = [&](auto & container)
     {
       check_for_duplicates(hardware_info);
-      load_hardware<Actuator, ActuatorInterface>(hardware_info, actuator_loader_, container);
+      if (!load_hardware<Actuator, ActuatorInterface>(hardware_info, actuator_loader_, container))
+      {
+        return;
+      }
       if (initialize_hardware(hardware_info, container.back()))
       {
         import_state_interfaces(container.back());
@@ -575,7 +578,10 @@ public:
     auto load_and_init_sensors = [&](auto & container)
     {
       check_for_duplicates(hardware_info);
-      load_hardware<Sensor, SensorInterface>(hardware_info, sensor_loader_, container);
+      if (!load_hardware<Sensor, SensorInterface>(hardware_info, sensor_loader_, container))
+      {
+        return;
+      }
       if (initialize_hardware(hardware_info, container.back()))
       {
         import_state_interfaces(container.back());
@@ -604,7 +610,10 @@ public:
     auto load_and_init_systems = [&](auto & container)
     {
       check_for_duplicates(hardware_info);
-      load_hardware<System, SystemInterface>(hardware_info, system_loader_, container);
+      if (!load_hardware<System, SystemInterface>(hardware_info, system_loader_, container))
+      {
+        return;
+      }
       if (initialize_hardware(hardware_info, container.back()))
       {
         import_state_interfaces(container.back());
