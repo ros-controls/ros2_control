@@ -1389,7 +1389,26 @@ bool ResourceManager::perform_command_mode_switch(
     return true;
   }
 
-  auto call_perform_mode_switch = [&start_interfaces, &stop_interfaces](auto & components)
+  auto interfaces_to_string = [&]()
+  {
+    std::stringstream ss;
+    ss << "Start interfaces: " << std::endl << "[" << std::endl;
+    for (const auto & start_if : start_interfaces)
+    {
+      ss << "  " << start_if << std::endl;
+    }
+    ss << "]" << std::endl;
+    ss << "Stop interfaces: " << std::endl << "[" << std::endl;
+    for (const auto & stop_if : stop_interfaces)
+    {
+      ss << "  " << stop_if << std::endl;
+    }
+    ss << "]" << std::endl;
+    return ss.str();
+  };
+
+  auto call_perform_mode_switch =
+    [&start_interfaces, &stop_interfaces, &interfaces_to_string](auto & components)
   {
     bool ret = true;
     for (auto & component : components)
@@ -1398,13 +1417,35 @@ bool ResourceManager::perform_command_mode_switch(
         component.get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
         component.get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
       {
-        if (
-          return_type::OK !=
-          component.perform_command_mode_switch(start_interfaces, stop_interfaces))
+        try
+        {
+          if (
+            return_type::OK !=
+            component.perform_command_mode_switch(start_interfaces, stop_interfaces))
+          {
+            RCUTILS_LOG_ERROR_NAMED(
+              "resource_manager", "Component '%s' could not perform switch",
+              component.get_name().c_str());
+            ret = false;
+          }
+        }
+        catch (const std::exception & e)
         {
           RCUTILS_LOG_ERROR_NAMED(
-            "resource_manager", "Component '%s' could not perform switch",
-            component.get_name().c_str());
+            "resource_manager",
+            "Exception occurred while performing command mode switch for component '%s' for the "
+            "interfaces: \n %s : %s",
+            component.get_name().c_str(), interfaces_to_string().c_str(), e.what());
+          ret = false;
+        }
+        catch (...)
+        {
+          RCUTILS_LOG_ERROR_NAMED(
+            "resource_manager",
+            "Unknown exception occurred while performing command mode switch for component '%s' "
+            "for "
+            "the interfaces: \n %s",
+            component.get_name().c_str(), interfaces_to_string().c_str());
           ret = false;
         }
       }
