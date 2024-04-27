@@ -198,7 +198,8 @@ def main(args=None):
     parser.add_argument(
         "--fallback_controllers",
         help="Fallback controllers list are activated as a fallback strategy when the"
-        " spawned controllers fails",
+        " spawned controllers fails. When the argument is provided, it takes precedence over"
+        " the fallback_controllers list in the param file",
         default=None,
         nargs="+",
     )
@@ -324,9 +325,6 @@ def main(args=None):
                     parameter.name = prefixed_controller_name + ".fallback_controllers"
                     parameter.value = get_parameter_value(string_value=str(fallback_controllers))
 
-                    #parameter.value.type = ParameterType.PARAMETER_STRING_ARRAY
-                    #parameter.value.string_array_value = fallback_controllers
-
                     response = call_set_parameters(
                         node=node, node_name=controller_manager_name, parameters=[parameter]
                     )
@@ -336,7 +334,7 @@ def main(args=None):
                         node.get_logger().info(
                             bcolors.OKCYAN
                             + 'Setting fallback_controllers to ["'
-                            + ','.join(fallback_controllers)
+                            + ",".join(fallback_controllers)
                             + '"] for '
                             + bcolors.BOLD
                             + prefixed_controller_name
@@ -346,7 +344,7 @@ def main(args=None):
                         node.get_logger().fatal(
                             bcolors.FAIL
                             + 'Could not set fallback_controllers to ["'
-                            + ','.join(fallback_controllers)
+                            + ",".join(fallback_controllers)
                             + '"] for '
                             + bcolors.BOLD
                             + prefixed_controller_name
