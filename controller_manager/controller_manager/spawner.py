@@ -80,8 +80,8 @@ def has_service_names(node, node_name, node_namespace, service_names):
     return all(service in client_names for service in service_names)
 
 
-def is_controller_loaded(node, controller_manager, controller_name):
-    controllers = list_controllers(node, controller_manager).controller
+def is_controller_loaded(node, controller_manager, controller_name, service_timeout=0.0):
+    controllers = list_controllers(node, controller_manager, service_timeout).controller
     return any(c.name == controller_name for c in controllers)
 
 
@@ -131,6 +131,13 @@ def main(args=None):
         action="store_true",
     )
     parser.add_argument(
+        "--controller-manager-timeout",
+        help="Time to wait for the controller manager",
+        required=False,
+        default=0,
+        type=float,
+    )
+    parser.add_argument(
         "--activate-as-group",
         help="Activates all the parsed controllers list together instead of one by one."
         " Useful for activating all chainable controllers altogether",
@@ -145,6 +152,7 @@ def main(args=None):
     controller_namespace = args.namespace
     param_file = args.param_file
     controller_type = args.controller_type
+    timeout = args.controller_manager_timeout
 
     if param_file and not os.path.isfile(param_file):
         raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), param_file)
@@ -164,7 +172,7 @@ def main(args=None):
             if controller_namespace:
                 prefixed_controller_name = controller_namespace + "/" + controller_name
 
-            if is_controller_loaded(node, controller_manager_name, prefixed_controller_name):
+            if is_controller_loaded(node, controller_manager_name, prefixed_controller_name, timeout):
                 node.get_logger().warn(
                     bcolors.WARNING
                     + "Controller already loaded, skipping load_controller"
