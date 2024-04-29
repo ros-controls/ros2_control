@@ -28,14 +28,16 @@ from controller_manager_msgs.srv import (
 import rclpy
 
 
-def service_caller(node, service_name, service_type, request, service_timeout=10.0):
+def service_caller(node, service_name, service_type, request, service_timeout=0.0):
     cli = node.create_client(service_type, service_name)
 
     while not cli.service_is_ready():
-        node.get_logger().debug(
-            f"waiting {service_timeout} seconds for service {service_name} to become available..."
-        )
-        if not cli.wait_for_service(service_timeout):
+        node.get_logger().debug(f"waiting for service {service_name} to become available...")
+        if service_timeout:
+            if not cli.wait_for_service(service_timeout):
+                node.get_logger().fatal(f"Could not contact service {service_name}")
+                raise RuntimeError(f"Could not contact service {service_name}")
+        elif not cli.wait_for_service(10.0):
             node.get_logger().warn(f"Could not contact service {service_name}")
 
     node.get_logger().debug(f"requester: making request: {request}\n")
@@ -47,7 +49,7 @@ def service_caller(node, service_name, service_type, request, service_timeout=10
         raise RuntimeError(f"Exception while calling service: {future.exception()}")
 
 
-def configure_controller(node, controller_manager_name, controller_name, service_timeout=10.0):
+def configure_controller(node, controller_manager_name, controller_name, service_timeout=0.0):
     request = ConfigureController.Request()
     request.name = controller_name
     return service_caller(
@@ -59,7 +61,7 @@ def configure_controller(node, controller_manager_name, controller_name, service
     )
 
 
-def list_controllers(node, controller_manager_name, service_timeout=10.0):
+def list_controllers(node, controller_manager_name, service_timeout=0.0):
     request = ListControllers.Request()
     return service_caller(
         node,
@@ -70,7 +72,7 @@ def list_controllers(node, controller_manager_name, service_timeout=10.0):
     )
 
 
-def list_controller_types(node, controller_manager_name, service_timeout=10.0):
+def list_controller_types(node, controller_manager_name, service_timeout=0.0):
     request = ListControllerTypes.Request()
     return service_caller(
         node,
@@ -81,7 +83,7 @@ def list_controller_types(node, controller_manager_name, service_timeout=10.0):
     )
 
 
-def list_hardware_components(node, controller_manager_name, service_timeout=10.0):
+def list_hardware_components(node, controller_manager_name, service_timeout=0.0):
     request = ListHardwareComponents.Request()
     return service_caller(
         node,
@@ -92,7 +94,7 @@ def list_hardware_components(node, controller_manager_name, service_timeout=10.0
     )
 
 
-def list_hardware_interfaces(node, controller_manager_name, service_timeout=10.0):
+def list_hardware_interfaces(node, controller_manager_name, service_timeout=0.0):
     request = ListHardwareInterfaces.Request()
     return service_caller(
         node,
@@ -103,7 +105,7 @@ def list_hardware_interfaces(node, controller_manager_name, service_timeout=10.0
     )
 
 
-def load_controller(node, controller_manager_name, controller_name, service_timeout=10.0):
+def load_controller(node, controller_manager_name, controller_name, service_timeout=0.0):
     request = LoadController.Request()
     request.name = controller_name
     return service_caller(
@@ -115,7 +117,7 @@ def load_controller(node, controller_manager_name, controller_name, service_time
     )
 
 
-def reload_controller_libraries(node, controller_manager_name, force_kill, service_timeout=10.0):
+def reload_controller_libraries(node, controller_manager_name, force_kill, service_timeout=0.0):
     request = ReloadControllerLibraries.Request()
     request.force_kill = force_kill
     return service_caller(
@@ -127,9 +129,7 @@ def reload_controller_libraries(node, controller_manager_name, force_kill, servi
     )
 
 
-def set_hardware_component_state(
-    node, controller_manager_name, component_name, lifecyle_state, service_timeout=10.0
-):
+def set_hardware_component_state(node, controller_manager_name, component_name, lifecyle_state, service_timeout=0.0):
     request = SetHardwareComponentState.Request()
     request.name = component_name
     request.target_state = lifecyle_state
@@ -165,7 +165,7 @@ def switch_controllers(
     )
 
 
-def unload_controller(node, controller_manager_name, controller_name, service_timeout=10.0):
+def unload_controller(node, controller_manager_name, controller_name, service_timeout=0.0):
     request = UnloadController.Request()
     request.name = controller_name
     return service_caller(
