@@ -15,7 +15,7 @@
       </description>
     </class>
     <class name="joint_limits/JointInterfacesSoftLimiter"
-          type="JointInterfacesSoftLimiter,"
+          type="JointInterfacesSoftLimiter"
           base_class_type="joint_limits::JointLimiterInterface&lt;joint_limits::JointControlInterfacesData&gt;">
       <description>
         Simple joint range limiter performing clamping between the parsed soft limits and the parsed joint limits.
