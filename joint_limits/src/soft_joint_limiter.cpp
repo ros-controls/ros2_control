@@ -14,24 +14,28 @@
 
 /// \author Adrià Roig Moreno
 
-#include "joint_limits/soft_joint_limiter.hpp"
+#include "joint_limits/joint_saturation_limiter.hpp"
 #include "joint_limits/joint_limiter_struct.hpp"
 #include "joint_limits/joint_limits_helpers.hpp"
+#include <cmath>
 
-constexpr size_t ROS_LOG_THROTTLE_PERIOD = 1 * 1000;  // Milliseconds to throttle logs inside loops
 constexpr double VALUE_CONSIDERED_ZERO = 1e-10;
 
 namespace joint_limits
 {
-template <>
-bool SoftJointLimiter<JointControlInterfacesData>::on_init()
+
+class SoftJointLimiter : public JointSaturationLimiter<JointControlInterfacesData>
+{
+public:
+
+bool on_init()
 {
   const bool result = (number_of_joints_ == 1);
   if (!result && has_logging_interface())
   {
     RCLCPP_ERROR(
       node_logging_itf_->get_logger(),
-      "JointInterfacesSoftLimiter: Expects the number of joints to be 1, but given : "
+      "JointInterfacesSaturationLimiter: Expects the number of joints to be 1, but given : "
       "%zu",
       number_of_joints_);
   }
@@ -39,8 +43,7 @@ bool SoftJointLimiter<JointControlInterfacesData>::on_init()
   return result;
 }
 
-template <>
-bool SoftJointLimiter<JointControlInterfacesData>::on_enforce(
+bool on_enforce(
   JointControlInterfacesData & actual, JointControlInterfacesData & desired,
   const rclcpp::Duration & dt)
 {
@@ -54,7 +57,12 @@ bool SoftJointLimiter<JointControlInterfacesData>::on_enforce(
   }
 
   const auto hard_limits = joint_limits_[0];
-  const auto soft_joint_limits = soft_joint_limits_[0];
+  joint_limits::SoftJointLimits soft_joint_limits;
+  if(!soft_joint_limits_.empty())
+  {
+    soft_joint_limits = soft_joint_limits_[0];
+  }
+
   const std::string joint_name = joint_names_[0];
 
   if (!prev_command_.has_data())
@@ -109,35 +117,46 @@ bool SoftJointLimiter<JointControlInterfacesData>::on_enforce(
     }
   }
 
-  if(hard_limits.has_velocity_limits)
+  double soft_min_vel = -std::numeric_limits<double>::infinity();
+  double soft_max_vel = std::numeric_limits<double>::infinity();
+
+  if (hard_limits.has_velocity_limits)
   {
-    return false;
-  }
+    soft_min_vel = -hard_limits.max_velocity;
+    soft_max_vel = hard_limits.max_velocity;
 
-  double soft_min_vel = -hard_limits.max_velocity;
-  double soft_max_vel = hard_limits.max_velocity;
+    if(hard_limits.has_position_limits && has_soft_limits(soft_joint_limits))
+    {
+      soft_min_vel = std::clamp(-soft_joint_limits.k_position * (prev_command_.position.value() - soft_joint_limits.min_position),
+                                -hard_limits.max_velocity, hard_limits.max_velocity);
 
-  if (hard_limits.has_position_limits)
-  {
-    soft_min_vel = std::clamp(-soft_joint_limits.k_position * (prev_command_.position.value() - soft_joint_limits.min_position),
-                              -hard_limits.max_velocity, hard_limits.max_velocity);
-
-    soft_max_vel = std::clamp(-soft_joint_limits.k_position * (prev_command_.position.value() - soft_joint_limits.max_position),
-                              -hard_limits.max_velocity, hard_limits.max_velocity);
+      soft_max_vel = std::clamp(-soft_joint_limits.k_position * (prev_command_.position.value() - soft_joint_limits.max_position),
+                                -hard_limits.max_velocity, hard_limits.max_velocity);
+    }
   }
 
   if(desired.has_position())
   {
-    double pos_low  = prev_command_.position.value() + soft_min_vel * dt_seconds;
-    double pos_high = prev_command_.position.value() + soft_max_vel * dt_seconds;
+    const auto position_limits =
+      compute_position_limits(hard_limits, actual.velocity, prev_command_.position, dt_seconds);
 
-    if (hard_limits.has_position_limits)
+    double pos_low = -std::numeric_limits<double>::infinity();
+    double pos_high = std::numeric_limits<double>::infinity();
+
+    if(has_soft_position_limits(soft_joint_limits))
     {
-      const auto position_limits =
-        compute_position_limits(hard_limits, actual.velocity, prev_command_.position, dt_seconds);
-      pos_low  = std::max(pos_low,  position_limits.first);
-      pos_high = std::min(pos_high, position_limits.second);
+      pos_low = soft_joint_limits.min_position;
+      pos_high = soft_joint_limits.max_position;
     }
+
+    if(hard_limits.has_velocity_limits)
+    {
+      pos_low = prev_command_.position.value() + soft_min_vel * dt_seconds;
+      pos_high = prev_command_.position.value() + soft_max_vel * dt_seconds;
+    }
+
+    pos_low  = std::max(pos_low,  position_limits.first);
+    pos_high = std::min(pos_high, position_limits.second);
 
     limits_enforced = is_limited(desired.position.value(), pos_low, pos_high);
     desired.position = std::clamp(desired.position.value(), pos_low, pos_high);
@@ -161,20 +180,25 @@ bool SoftJointLimiter<JointControlInterfacesData>::on_enforce(
     desired.velocity = std::clamp(desired.velocity.value(), soft_min_vel, soft_max_vel);
   }
 
-  if(desired.has_effort() && hard_limits.has_effort_limits)
+  if(desired.has_effort())
   {
     const auto effort_limits =
           compute_effort_limits(hard_limits, actual.position, actual.velocity, dt_seconds);
 
-    double soft_min_eff = std::clamp(-soft_joint_limits.k_velocity * (prev_command_.velocity.value() - soft_min_vel),
-                                     -hard_limits.max_effort, hard_limits.max_effort);
+    double soft_min_eff = effort_limits.first;
+    double soft_max_eff = effort_limits.second;
 
-    double soft_max_eff = std::clamp(-soft_joint_limits.k_velocity * (prev_command_.velocity.value() - soft_max_vel),
-                                     -hard_limits.max_effort, hard_limits.max_effort);
+    if(hard_limits.has_effort_limits && std::isfinite(soft_joint_limits.k_velocity))
+    {
+      soft_min_eff = std::clamp(-soft_joint_limits.k_velocity * (prev_command_.velocity.value() - soft_min_vel),
+                                -hard_limits.max_effort, hard_limits.max_effort);
 
-    soft_min_vel = std::max(soft_min_eff,  effort_limits.first);
-    soft_max_vel = std::min(soft_max_eff, effort_limits.second);
+      soft_max_eff = std::clamp(-soft_joint_limits.k_velocity * (prev_command_.velocity.value() - soft_max_vel),
+                                -hard_limits.max_effort, hard_limits.max_effort);
 
+      soft_min_eff = std::max(soft_min_eff,  effort_limits.first);
+      soft_max_eff = std::min(soft_max_eff, effort_limits.second);
+    }
     limits_enforced = is_limited(desired.effort.value(), soft_min_eff, soft_max_eff) || limits_enforced;
     desired.effort = std::clamp(desired.effort.value(), soft_min_eff, soft_max_eff);
   }
@@ -201,12 +225,25 @@ bool SoftJointLimiter<JointControlInterfacesData>::on_enforce(
   return limits_enforced;
 }
 
+bool has_soft_position_limits(const joint_limits::SoftJointLimits &soft_joint_limits)
+{
+  return std::isfinite(soft_joint_limits.min_position) && std::isfinite(soft_joint_limits.max_position)
+      && (soft_joint_limits.max_position - soft_joint_limits.min_position) > VALUE_CONSIDERED_ZERO;
+}
+
+bool has_soft_limits(const joint_limits::SoftJointLimits &soft_joint_limits)
+{
+  return has_soft_position_limits(soft_joint_limits) && std::isfinite(soft_joint_limits.k_position)
+      && std::abs(soft_joint_limits.k_position) > VALUE_CONSIDERED_ZERO;
+}
+
+};
+
 } // namespace joint_limits
 
 #include "pluginlib/class_list_macros.hpp"
 
-typedef joint_limits::SoftJointLimiter<joint_limits::JointControlInterfacesData>
-  JointInterfacesSoftLimiter;
+typedef joint_limits::SoftJointLimiter JointInterfacesSoftLimiter;
 typedef joint_limits::JointLimiterInterface<joint_limits::JointControlInterfacesData>
   JointInterfacesLimiterInterfaceBase;
 PLUGINLIB_EXPORT_CLASS(
