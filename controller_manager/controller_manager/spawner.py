@@ -204,7 +204,9 @@ def main(args=None):
             if controller_namespace:
                 prefixed_controller_name = controller_namespace + "/" + controller_name
 
-            if is_controller_loaded(node, controller_manager_name, prefixed_controller_name, timeout):
+            if is_controller_loaded(
+                node, controller_manager_name, prefixed_controller_name, timeout
+            ):
                 node.get_logger().warn(
                     bcolors.WARNING
                     + "Controller already loaded, skipping load_controller"
