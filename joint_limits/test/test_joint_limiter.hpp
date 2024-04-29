@@ -145,11 +145,19 @@ public:
             const joint_limits::SoftJointLimits &soft_limits,
             const std::string & joint_name = "foo_joint")
   {
-    soft_limits_ = soft_limits;
-    return JointLimiterTest::Init(limits, joint_name);
+    joint_names_ = {joint_name};
+    num_joints_ = joint_names_.size();
+    last_commanded_state_.joint_name = joint_name;
+    last_commanded_state_.position = 0.0;
+    last_commanded_state_.velocity = 0.0;
+    last_commanded_state_.acceleration = 0.0;
+    last_commanded_state_.effort = 0.0;
+    desired_state_ = last_commanded_state_;
+    actual_state_ = last_commanded_state_;
+    return joint_limiter_->init(
+          joint_names_, {limits}, {soft_limits}, nullptr,
+          node_->get_node_logging_interface());
   }
-protected:
-  joint_limits::SoftJointLimits soft_limits_;
 };
 
 #endif  // TEST_JOINT_LIMITER_HPP_
