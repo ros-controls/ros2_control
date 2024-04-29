@@ -147,7 +147,6 @@ class TestActuatorExclusiveInterfaces : public ActuatorInterface
     {
       const auto && [joint_name, interface_name] = extract_joint_and_interface(interface);
 
-      // TODO make sure it is not possible to claim multiple interfaces of the same axis
       currently_claimed_joints_.push_back(joint_name);
     }
 
