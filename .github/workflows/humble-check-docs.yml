@@ -3,6 +3,8 @@ name: Check Docs
 on:
   workflow_dispatch:
   pull_request:
+    branches:
+      - humble
     paths:
       - '**.rst'
       - '**.md'
@@ -11,6 +13,6 @@ on:
 jobs:
   check-docs:
     name: Check Docs
-    uses: ros-controls/control.ros.org/.github/workflows/reusable-sphinx-check-single-version.yml@master
+    uses: ros-controls/control.ros.org/.github/workflows/reusable-sphinx-check-single-version.yml@humble
     with:
       ROS2_CONTROL_PR: ${{ github.ref }}
