@@ -194,6 +194,7 @@ if(BUILD_TESTING)
   target_link_libraries(test_release_interfaces
     controller_manager
     test_controller_with_interfaces
+    test_controller_failed_activate
     ros2_control_test_assets::ros2_control_test_assets
   )
 
