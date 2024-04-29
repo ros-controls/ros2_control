@@ -1,0 +1,29 @@
+name: Coverage Build - Jazzy
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+    paths:
+      - '**.hpp'
+      - '**.h'
+      - '**.cpp'
+      - '.github/workflows/jazzy-coverage-build.yml'
+      - '.pre-commit-config.yaml'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - '**.hpp'
+      - '**.h'
+      - '**.cpp'
+      - '.github/workflows/jazzy-coverage-build.yml'
+      - '.pre-commit-config.yaml'
+
+jobs:
+  coverage_jazzy:
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-build-coverage.yml@master
+    secrets: inherit
+    with:
+      ros_distro: jazzy
+      container: ubuntu:24.04
