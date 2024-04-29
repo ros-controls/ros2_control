@@ -9,6 +9,9 @@ on:
       - '**.h'
       - '**.cpp'
       - '.github/workflows/humble-coverage-build.yml'
+      - '**.yaml'
+      - '**/package.xml'
+      - '**/CMakeLists.txt'
   pull_request:
     branches:
       - humble
@@ -17,6 +20,9 @@ on:
       - '**.h'
       - '**.cpp'
       - '.github/workflows/humble-coverage-build.yml'
+      - '**.yaml'
+      - '**/package.xml'
+      - '**/CMakeLists.txt'
 
 jobs:
   coverage_humble:

@@ -9,6 +9,9 @@ on:
       - '**.h'
       - '**.cpp'
       - '.github/workflows/rolling-rhel-binary-build.yml'
+      - '**.yaml'
+      - '**/package.xml'
+      - '**/CMakeLists.txt'
   schedule:
     # Run every day to detect flakiness and broken dependencies
     - cron: '03 1 * * *'

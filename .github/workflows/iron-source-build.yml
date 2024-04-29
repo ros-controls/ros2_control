@@ -8,7 +8,10 @@ on:
       - '**.hpp'
       - '**.h'
       - '**.cpp'
-      - '.github/workflows/iron-source-build.ym'
+      - '.github/workflows/iron-source-build.yml'
+      - '**.yaml'
+      - '**/package.xml'
+      - '**/CMakeLists.txt'
   schedule:
     # Run every day to detect flakiness and broken dependencies
     - cron: '03 3 * * *'

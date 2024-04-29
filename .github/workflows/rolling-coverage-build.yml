@@ -9,7 +9,9 @@ on:
       - '**.h'
       - '**.cpp'
       - '.github/workflows/rolling-coverage-build.yml'
-      - '.pre-commit-config.yaml'
+      - '**.yaml'
+      - '**/package.xml'
+      - '**/CMakeLists.txt'
   pull_request:
     branches:
       - master
@@ -18,7 +20,9 @@ on:
       - '**.h'
       - '**.cpp'
       - '.github/workflows/rolling-coverage-build.yml'
-      - '.pre-commit-config.yaml'
+      - '**.yaml'
+      - '**/package.xml'
+      - '**/CMakeLists.txt'
 
 jobs:
   coverage_rolling:

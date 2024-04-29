@@ -9,6 +9,8 @@ on:
       - '**.h'
       - '**.cpp'
       - '.github/workflows/humble-abi-compatibility.yml'
+      - '**/package.xml'
+      - '**/CMakeLists.txt'
 
 jobs:
   abi_check:

@@ -9,6 +9,9 @@ on:
       - '**.h'
       - '**.cpp'
       - '.github/workflows/rolling-abi-compatibility.yml'
+      - '**.yaml'
+      - '**/package.xml'
+      - '**/CMakeLists.txt'
 
 jobs:
   abi_check:
