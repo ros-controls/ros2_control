@@ -20,7 +20,6 @@
 #include <memory>
 #include <vector>
 
-#include "joint_limiter_interface.hpp"
 #include "joint_limits/joint_limiter_interface.hpp"
 #include "rclcpp/clock.hpp"
 #include "rclcpp/duration.hpp"
@@ -72,7 +71,7 @@ public:
     JointLimitsStateDataType & current_joint_states,
     JointLimitsStateDataType & desired_joint_states, const rclcpp::Duration & dt) override;
 
-private:
+protected:
   rclcpp::Clock::SharedPtr clock_;
   JointLimitsStateDataType prev_command_;
 };
