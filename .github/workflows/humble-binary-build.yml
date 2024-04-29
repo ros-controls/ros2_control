@@ -7,9 +7,19 @@ on:
   pull_request:
     branches:
       - humble
+    paths:
+      - '**.hpp'
+      - '**.h'
+      - '**.cpp'
+      - '.github/workflows/humble-binary-build.yml'
   push:
     branches:
       - humble
+    paths:
+      - '**.hpp'
+      - '**.h'
+      - '**.cpp'
+      - '.github/workflows/humble-binary-build.yml'
   schedule:
     # Run every morning to detect flakiness and broken dependencies
     - cron: '03 1 * * *'

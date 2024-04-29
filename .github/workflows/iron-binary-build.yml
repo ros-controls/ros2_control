@@ -7,9 +7,19 @@ on:
   pull_request:
     branches:
       - iron
+    paths:
+      - '**.hpp'
+      - '**.h'
+      - '**.cpp'
+      - '.github/workflows/iron-binary-build.yml'
   push:
     branches:
       - iron
+    paths:
+      - '**.hpp'
+      - '**.h'
+      - '**.cpp'
+      - '.github/workflows/iron-binary-build.yml'
   schedule:
     # Run every morning to detect flakiness and broken dependencies
     - cron: '03 1 * * *'

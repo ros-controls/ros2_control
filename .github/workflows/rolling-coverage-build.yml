@@ -4,9 +4,21 @@ on:
   push:
     branches:
       - master
+    paths:
+      - '**.hpp'
+      - '**.h'
+      - '**.cpp'
+      - '.github/workflows/rolling-coverage-build.yml'
+      - '.pre-commit-config.yaml'
   pull_request:
     branches:
       - master
+    paths:
+      - '**.hpp'
+      - '**.h'
+      - '**.cpp'
+      - '.github/workflows/rolling-coverage-build.yml'
+      - '.pre-commit-config.yaml'
 
 jobs:
   coverage_rolling:

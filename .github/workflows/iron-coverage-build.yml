@@ -4,9 +4,19 @@ on:
   push:
     branches:
       - iron
+    paths:
+      - '**.hpp'
+      - '**.h'
+      - '**.cpp'
+      - '.github/workflows/iron-coverage-build.yml'
   pull_request:
     branches:
       - iron
+    paths:
+      - '**.hpp'
+      - '**.h'
+      - '**.cpp'
+      - '.github/workflows/iron-coverage-build.yml'
 
 jobs:
   coverage_iron:

@@ -4,9 +4,19 @@ on:
   push:
     branches:
       - humble
+    paths:
+      - '**.hpp'
+      - '**.h'
+      - '**.cpp'
+      - '.github/workflows/humble-coverage-build.yml'
   pull_request:
     branches:
       - humble
+    paths:
+      - '**.hpp'
+      - '**.h'
+      - '**.cpp'
+      - '.github/workflows/humble-coverage-build.yml'
 
 jobs:
   coverage_humble:

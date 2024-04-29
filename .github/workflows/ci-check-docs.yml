@@ -3,6 +3,10 @@ name: Check Docs
 on:
   workflow_dispatch:
   pull_request:
+    paths:
+      - '**.rst'
+      - '**.md'
+      - '**.yaml'
 
 jobs:
   check-docs:

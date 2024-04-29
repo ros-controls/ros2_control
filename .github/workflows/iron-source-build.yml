@@ -4,6 +4,11 @@ on:
   push:
     branches:
       - iron
+    paths:
+      - '**.hpp'
+      - '**.h'
+      - '**.cpp'
+      - '.github/workflows/iron-source-build.ym'
   schedule:
     # Run every day to detect flakiness and broken dependencies
     - cron: '03 3 * * *'
