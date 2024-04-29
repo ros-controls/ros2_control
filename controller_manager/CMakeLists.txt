@@ -203,6 +203,7 @@ if(BUILD_TESTING)
     controller_manager
     test_controller
     test_controller_with_interfaces
+    test_controller_failed_activate
     ros2_control_test_assets::ros2_control_test_assets
   )
 
