@@ -64,6 +64,6 @@ class LoadControllerVerb(VerbExtension):
 
             print(
                 f"Successfully loaded controller {args.controller_name} into "
-                f'state { "active" if args.set_state == "active" else "inactive" }'
+                f'state {"inactive" if args.set_state == "inactive" else "active"}'
             )
             return 0

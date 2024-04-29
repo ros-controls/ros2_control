@@ -15,3 +15,4 @@ jobs:
       ros_distro: iron
       ref: iron
       ros2_repo_branch: iron
+      os_name: ubuntu-22.04
