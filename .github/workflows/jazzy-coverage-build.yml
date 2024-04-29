@@ -1,30 +1,31 @@
 name: Coverage Build - Jazzy
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - master
-    paths:
-      - '**.hpp'
-      - '**.h'
-      - '**.cpp'
-      - '.github/workflows/jazzy-coverage-build.yml'
-      - '**.yaml'
-      - '**/package.xml'
-      - '**/CMakeLists.txt'
-      - 'codecov.yml'
-  pull_request:
-    branches:
-      - master
-    paths:
-      - '**.hpp'
-      - '**.h'
-      - '**.cpp'
-      - '.github/workflows/jazzy-coverage-build.yml'
-      - '**.yaml'
-      - '**/package.xml'
-      - '**/CMakeLists.txt'
-      - 'codecov.yml'
+  # TODO(anyone) activate when branched for Jazzy
+  # push:
+  #   branches:
+  #     - master
+  #   paths:
+  #     - '**.hpp'
+  #     - '**.h'
+  #     - '**.cpp'
+  #     - '.github/workflows/jazzy-coverage-build.yml'
+  #     - '**.yaml'
+  #     - '**/package.xml'
+  #     - '**/CMakeLists.txt'
+  #     - 'codecov.yml'
+  # pull_request:
+  #   branches:
+  #     - master
+  #   paths:
+  #     - '**.hpp'
+  #     - '**.h'
+  #     - '**.cpp'
+  #     - '.github/workflows/jazzy-coverage-build.yml'
+  #     - '**.yaml'
+  #     - '**/package.xml'
+  #     - '**/CMakeLists.txt'
+  #     - 'codecov.yml'
 
 jobs:
   coverage_jazzy:
