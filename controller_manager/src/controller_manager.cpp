@@ -1508,10 +1508,13 @@ void ControllerManager::activate_controllers(
     {
       RCLCPP_ERROR(
         get_logger(),
-        "After activation, controller '%s' is in state '%s' (%d), expected '%s' (%d).",
+        "After activation, controller '%s' is in state '%s' (%d), expected '%s' (%d). Releasing "
+        "interfaces!",
         controller->get_node()->get_name(), new_state.label().c_str(), new_state.id(),
         hardware_interface::lifecycle_state_names::ACTIVE,
         lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+      controller->release_interfaces();
+      return;
     }
 
     // if it is a chainable controller, make the reference interfaces available on activation
