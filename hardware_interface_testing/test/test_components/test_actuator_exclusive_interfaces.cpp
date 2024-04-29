@@ -17,6 +17,7 @@
 
 #include "hardware_interface/actuator_interface.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
+#include "rclcpp/rclcpp.hpp"
 #include "ros2_control_test_assets/test_hardware_interface_constants.hpp"
 
 using hardware_interface::ActuatorInterface;
@@ -124,7 +125,14 @@ class TestActuatorExclusiveInterfaces : public ActuatorInterface
           std::find(claimed_joint_copy.begin(), claimed_joint_copy.end(), joint_name) !=
           claimed_joint_copy.end())
         {
-          return hardware_interface::return_type::ERROR;
+          RCLCPP_ERROR_STREAM(
+            rclcpp::get_logger("TestActuatorExclusiveInterfaces"),
+            "Joint : " << joint_name
+                       << " is already claimed. This cannot happen as the hardware "
+                          "interface is exclusive.");
+          throw std::runtime_error(
+            "Joint : " + joint_name +
+            " is already claimed. This cannot happen as the hardware interface is exclusive.");
         }
       }
     }
