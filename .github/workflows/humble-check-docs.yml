@@ -1,4 +1,4 @@
-name: Check Docs
+name: Humble Check Docs
 
 on:
   workflow_dispatch:

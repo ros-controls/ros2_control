@@ -1,4 +1,4 @@
-name: Check Docs
+name: Jazzy Check Docs
 
 on:
   workflow_dispatch:
