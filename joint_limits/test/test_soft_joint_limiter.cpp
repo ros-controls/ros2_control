@@ -17,7 +17,7 @@
 #include "test_joint_limiter.hpp"
 #include <limits>
 
-/*TEST_F(SoftJointLimiterTest, when_loading_limiter_plugin_expect_loaded)
+TEST_F(SoftJointLimiterTest, when_loading_limiter_plugin_expect_loaded)
 {
   // Test SoftJointLimiter loading
   ASSERT_NO_THROW(
@@ -57,10 +57,6 @@ TEST_F(SoftJointLimiterTest, check_desired_position_only_cases)
   limits.min_position = -M_PI;
   limits.max_position = M_PI;
   joint_limits::SoftJointLimits soft_limits;
-//  soft_limits.min_position = -3.0;
-//  soft_limits.max_position = 3.0;
-//  soft_limits.k_position = 10.0;
-//  soft_limits.k_velocity = 10.0;
   ASSERT_TRUE(Init(limits, soft_limits));
   // no size check occurs (yet) so expect true
   ASSERT_TRUE(joint_limiter_->configure(last_commanded_state_));
@@ -103,10 +99,37 @@ TEST_F(SoftJointLimiterTest, check_desired_position_only_cases)
   EXPECT_FALSE(desired_state_.has_effort());
   EXPECT_FALSE(desired_state_.has_jerk());
 
+  soft_limits.max_position = 3.0;
+  ASSERT_TRUE(Init(limits, soft_limits));
+  desired_state_.position = 4.0;
+  ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
+  EXPECT_NEAR(desired_state_.position.value(), limits.max_position, COMMON_THRESHOLD);
+  soft_limits.min_position = 3.0;
+  ASSERT_TRUE(Init(limits, soft_limits));
+  desired_state_.position = 4.0;
+  ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
+  EXPECT_NEAR(desired_state_.position.value(), limits.max_position, COMMON_THRESHOLD);
+  soft_limits.min_position = 5.0;
+  ASSERT_TRUE(Init(limits, soft_limits));
+  desired_state_.position = 4.0;
+  ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
+  EXPECT_NEAR(desired_state_.position.value(), limits.max_position, COMMON_THRESHOLD);
+  soft_limits.min_position = -1.0;
+  ASSERT_TRUE(Init(limits, soft_limits));
+  desired_state_.position = 4.0;
+  ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
+  EXPECT_NEAR(desired_state_.position.value(), soft_limits.max_position, COMMON_THRESHOLD);
+  desired_state_.position = 0.0;
+  ASSERT_FALSE(joint_limiter_->enforce(actual_state_, desired_state_, period));
+  EXPECT_NEAR(desired_state_.position.value(), 0.0, COMMON_THRESHOLD);
+  desired_state_.position = -2.0;
+  ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
+  EXPECT_NEAR(desired_state_.position.value(), soft_limits.min_position, COMMON_THRESHOLD);
+
   // Now add the velocity limits
   limits.max_velocity = 1.0;
   limits.has_velocity_limits = true;
-  ASSERT_TRUE(Init(limits));
+  ASSERT_TRUE(Init(limits, soft_limits));
   // Reset the desired and actual states
   desired_state_ = {};
   actual_state_ = {};
@@ -132,7 +155,7 @@ TEST_F(SoftJointLimiterTest, check_desired_position_only_cases)
 
   // Now let's check the case where the actual position is at 2.0 and the desired position is -M_PI
   // with max velocity limit of 1.0
-  ASSERT_TRUE(Init(limits));
+  ASSERT_TRUE(Init(limits, soft_limits));
   // Reset the desired and actual states
   desired_state_ = {};
   actual_state_ = {};
@@ -148,7 +171,7 @@ TEST_F(SoftJointLimiterTest, check_desired_position_only_cases)
 
   // Now test when there are no position limits, then the desired position is not saturated
   limits = joint_limits::JointLimits();
-  ASSERT_TRUE(Init(limits));
+  ASSERT_TRUE(Init(limits, soft_limits));
   // Reset the desired and actual states
   desired_state_ = {};
   actual_state_ = {};
@@ -174,7 +197,8 @@ TEST_F(SoftJointLimiterTest, check_desired_velocity_only_cases)
   limits.max_position = 5.0;
   limits.has_velocity_limits = true;
   limits.max_velocity = 1.0;
-  ASSERT_TRUE(Init(limits));
+  joint_limits::SoftJointLimits soft_limits;
+  ASSERT_TRUE(Init(limits, soft_limits));
   // no size check occurs (yet) so expect true
   ASSERT_TRUE(joint_limiter_->configure(last_commanded_state_));
 
@@ -263,7 +287,7 @@ TEST_F(SoftJointLimiterTest, check_desired_velocity_only_cases)
   limits.has_acceleration_limits = true;
   limits.max_acceleration = 0.5;
   // When launching init, the prev_command_ within the limiter will be reset
-  ASSERT_TRUE(Init(limits));
+  ASSERT_TRUE(Init(limits, soft_limits));
   // Now the velocity limits are now saturated by the acceleration limits so in succeeding call it
   // will reach the desired if it is within the max velocity limits. Here, the order of the tests is
   // important.
@@ -294,7 +318,7 @@ TEST_F(SoftJointLimiterTest, check_desired_velocity_only_cases)
   limits.has_acceleration_limits = true;
   limits.max_acceleration = 0.5;
   // When launching init, the prev_command_ within the limiter will be reset
-  ASSERT_TRUE(Init(limits));
+  ASSERT_TRUE(Init(limits, soft_limits));
   // Now the velocity limits are now saturated by the acceleration limits so in succeeding call it
   // will reach the desired if it is within the max velocity limits. Here, the order of the tests is
   // important.
@@ -327,7 +351,8 @@ TEST_F(SoftJointLimiterTest, check_desired_effort_only_cases)
   limits.max_velocity = 1.0;
   limits.has_effort_limits = true;
   limits.max_effort = 200.0;
-  ASSERT_TRUE(Init(limits));
+  joint_limits::SoftJointLimits soft_limits;
+  ASSERT_TRUE(Init(limits, soft_limits));
   ASSERT_TRUE(joint_limiter_->configure(last_commanded_state_));
 
   // Reset the desired and actual states
@@ -437,7 +462,8 @@ TEST_F(SoftJointLimiterTest, check_desired_acceleration_only_cases)
   joint_limits::JointLimits limits;
   limits.has_acceleration_limits = true;
   limits.max_acceleration = 0.5;
-  ASSERT_TRUE(Init(limits));
+  joint_limits::SoftJointLimits soft_limits;
+  ASSERT_TRUE(Init(limits, soft_limits));
   ASSERT_TRUE(joint_limiter_->configure(last_commanded_state_));
 
   rclcpp::Duration period(1, 0);  // 1 second
@@ -487,7 +513,7 @@ TEST_F(SoftJointLimiterTest, check_desired_acceleration_only_cases)
   limits.has_deceleration_limits = true;
   limits.max_deceleration = 0.25;
   // When launching init, the prev_command_ within the limiter will be reset
-  ASSERT_TRUE(Init(limits));
+  ASSERT_TRUE(Init(limits, soft_limits));
 
   // If you don't have the actual velocity, the deceleration limits are not applied
   test_limit_enforcing(std::nullopt, 0.0, 0.0, false);
@@ -526,7 +552,8 @@ TEST_F(SoftJointLimiterTest, check_desired_jerk_only_cases)
   joint_limits::JointLimits limits;
   limits.has_jerk_limits = true;
   limits.max_jerk = 0.5;
-  ASSERT_TRUE(Init(limits));
+  joint_limits::SoftJointLimits soft_limits;
+  ASSERT_TRUE(Init(limits, soft_limits));
   ASSERT_TRUE(joint_limiter_->configure(last_commanded_state_));
 
   rclcpp::Duration period(1, 0);  // 1 second
@@ -576,7 +603,8 @@ TEST_F(SoftJointLimiterTest, check_all_desired_references_limiting)
   limits.max_deceleration = 0.25;
   limits.has_jerk_limits = true;
   limits.max_jerk = 2.0;
-  ASSERT_TRUE(Init(limits));
+  joint_limits::SoftJointLimits soft_limits;
+  ASSERT_TRUE(Init(limits, soft_limits));
   ASSERT_TRUE(joint_limiter_->configure(last_commanded_state_));
 
   rclcpp::Duration period(1, 0);  // 1 second
@@ -635,7 +663,7 @@ TEST_F(SoftJointLimiterTest, check_all_desired_references_limiting)
   test_limit_enforcing(std::nullopt, std::nullopt, 3.0, 1.0, 0.5, 0.5, 3.0, 1.0, 0.5, 0.5, false);
 
   // Now enforce the limits with actual position and velocity
-  ASSERT_TRUE(Init(limits));
+  ASSERT_TRUE(Init(limits, soft_limits));
   // Desired position and velocity affected due to the acceleration limits
   test_limit_enforcing(0.5, 0.0, 6.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, true);
   test_limit_enforcing(1.0, 0.0, 6.0, 0.0, 0.0, 0.0, 1.5, 0.0, 0.0, 0.0, true);
@@ -646,7 +674,7 @@ TEST_F(SoftJointLimiterTest, check_all_desired_references_limiting)
   test_limit_enforcing(3.0, 0.5, 6.0, 2.0, 1.0, 0.5, 4.0, 1.0, 0.5, 0.5, true);
   test_limit_enforcing(4.0, 0.5, 6.0, 2.0, 1.0, 0.5, 5.0, 1.0, 0.5, 0.5, true);
   test_limit_enforcing(5.0, 0.5, 6.0, 2.0, 1.0, 0.5, 5.0, 0.0, 0.5, 0.5, true);
-}*/
+}
 
 int main(int argc, char ** argv)
 {
