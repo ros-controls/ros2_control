@@ -23,9 +23,6 @@
 namespace joint_limits
 {
 
-constexpr size_t ROS_LOG_THROTTLE_PERIOD = 1 * 1000;  // Milliseconds to throttle logs inside loops
-constexpr double VALUE_CONSIDERED_ZERO = 1e-10;
-
 bool is_limited(double value, double min, double max);
 
 std::pair<double, double> compute_position_limits(
