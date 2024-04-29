@@ -15,6 +15,9 @@
 #ifndef CONTROLLER_INTERFACE__CHAINABLE_CONTROLLER_INTERFACE_HPP_
 #define CONTROLLER_INTERFACE__CHAINABLE_CONTROLLER_INTERFACE_HPP_
 
+#include <memory>
+#include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "controller_interface/controller_interface_base.hpp"
@@ -56,7 +59,8 @@ public:
   bool is_chainable() const final;
 
   CONTROLLER_INTERFACE_PUBLIC
-  std::vector<hardware_interface::CommandInterface> export_reference_interfaces() final;
+  std::vector<std::shared_ptr<hardware_interface::CommandInterface>> export_reference_interfaces()
+    final;
 
   CONTROLLER_INTERFACE_PUBLIC
   bool set_chained_mode(bool chained_mode) final;
@@ -115,7 +119,11 @@ protected:
     const rclcpp::Time & time, const rclcpp::Duration & period) = 0;
 
   /// Storage of values for reference interfaces
+  // BEGIN (Handle export change): for backward compatibility
   std::vector<double> reference_interfaces_;
+  // END
+  std::unordered_map<std::string, std::shared_ptr<hardware_interface::CommandInterface>>
+    reference_interfaces_ptrs_;
 
 private:
   /// A flag marking if a chainable controller is currently preceded by another controller.

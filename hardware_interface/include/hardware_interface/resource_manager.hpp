@@ -145,7 +145,8 @@ public:
    * \param[in] interfaces list of controller's reference interfaces as CommandInterfaces.
    */
   void import_controller_reference_interfaces(
-    const std::string & controller_name, std::vector<CommandInterface> & interfaces);
+    const std::string & controller_name,
+    const std::vector<std::shared_ptr<hardware_interface::CommandInterface>> & interfaces);
 
   /// Get list of reference interface of a controller.
   /**

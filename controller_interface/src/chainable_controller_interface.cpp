@@ -44,44 +44,63 @@ return_type ChainableControllerInterface::update(
   return ret;
 }
 
-std::vector<hardware_interface::CommandInterface>
+std::vector<std::shared_ptr<hardware_interface::CommandInterface>>
 ChainableControllerInterface::export_reference_interfaces()
 {
   auto reference_interfaces = on_export_reference_interfaces();
+  std::vector<std::shared_ptr<hardware_interface::CommandInterface>> reference_interfaces_ptrs_vec;
+  reference_interfaces_ptrs_vec.reserve(reference_interfaces.size());
 
+  // BEGIN (Handle export change): for backward compatibility
   // check if the "reference_interfaces_" variable is resized to number of interfaces
   if (reference_interfaces_.size() != reference_interfaces.size())
   {
     // TODO(destogl): Should here be "FATAL"? It is fatal in terms of controller but not for the
     // framework
-    RCLCPP_FATAL(
-      get_node()->get_logger(),
-      "The internal storage for reference values 'reference_interfaces_' variable has size '%zu', "
-      "but it is expected to have the size '%zu' equal to the number of exported reference "
-      "interfaces. No reference interface will be exported. Please correct and recompile "
-      "the controller with name '%s' and try again.",
-      reference_interfaces_.size(), reference_interfaces.size(), get_node()->get_name());
-    reference_interfaces.clear();
+    std::string error_msg =
+      "The internal storage for reference values 'reference_interfaces_' variable has size '" +
+      std::to_string(reference_interfaces_.size()) + "', but it is expected to have the size '" +
+      std::to_string(reference_interfaces.size()) +
+      "' equal to the number of exported reference interfaces. Please correct and recompile the "
+      "controller with name '" +
+      get_node()->get_name() + "' and try again.";
+    throw std::runtime_error(error_msg);
   }
+  // END
 
   // check if the names of the reference interfaces begin with the controller's name
-  for (const auto & interface : reference_interfaces)
+  const auto ref_interface_size = reference_interfaces.size();
+  for (auto & interface : reference_interfaces)
   {
     if (interface.get_prefix_name() != get_node()->get_name())
     {
-      RCLCPP_FATAL(
-        get_node()->get_logger(),
-        "The name of the interface '%s' does not begin with the controller's name. This is "
-        "mandatory "
-        " for reference interfaces. No reference interface will be exported. Please correct and "
-        "recompile the controller with name '%s' and try again.",
-        interface.get_name().c_str(), get_node()->get_name());
-      reference_interfaces.clear();
-      break;
+      std::string error_msg = "The name of the interface " + interface.get_name() +
+                              " does not begin with the controller's name. This is mandatory for "
+                              "reference interfaces. Please "
+                              "correct and recompile the controller with name " +
+                              get_node()->get_name() + " and try again.";
+      throw std::runtime_error(error_msg);
     }
+
+    std::shared_ptr<hardware_interface::CommandInterface> interface_ptr =
+      std::make_shared<hardware_interface::CommandInterface>(std::move(interface));
+    reference_interfaces_ptrs_vec.push_back(interface_ptr);
+    reference_interfaces_ptrs_.insert(std::make_pair(interface_ptr->get_name(), interface_ptr));
   }
 
-  return reference_interfaces;
+  if (reference_interfaces_ptrs_.size() != ref_interface_size)
+  {
+    std::string error_msg =
+      "The internal storage for reference ptrs 'reference_interfaces_ptrs_' variable has size '" +
+      std::to_string(reference_interfaces_ptrs_.size()) +
+      "', but it is expected to have the size '" + std::to_string(ref_interface_size) +
+      "' equal to the number of exported reference interfaces. Please correct and recompile the "
+      "controller with name '" +
+      get_node()->get_name() + "' and try again.";
+    throw std::runtime_error(error_msg);
+  }
+
+  return reference_interfaces_ptrs_vec;
 }
 
 bool ChainableControllerInterface::set_chained_mode(bool chained_mode)

@@ -686,13 +686,27 @@ controller_interface::return_type ControllerManager::configure_controller(
       get_logger(),
       "Controller '%s' is chainable. Interfaces are being exported to resource manager.",
       controller_name.c_str());
-    auto interfaces = controller->export_reference_interfaces();
-    if (interfaces.empty())
+
+    std::vector<std::shared_ptr<hardware_interface::CommandInterface>> interfaces;
+    try
     {
-      // TODO(destogl): Add test for this!
-      RCLCPP_ERROR(
-        get_logger(), "Controller '%s' is chainable, but does not export any reference interfaces.",
-        controller_name.c_str());
+      interfaces = controller->export_reference_interfaces();
+      if (interfaces.empty())
+      {
+        // TODO(destogl): Add test for this!
+        RCLCPP_ERROR(
+          get_logger(),
+          "Controller '%s' is chainable, but does not export any reference interfaces. Did you "
+          "override the on_export_method() correctly?",
+          controller_name.c_str());
+        return controller_interface::return_type::ERROR;
+      }
+    }
+    catch (const std::runtime_error & e)
+    {
+      RCLCPP_FATAL(
+        get_logger(), "Creation of the reference interfaces failed with following error: %s",
+        e.what());
       return controller_interface::return_type::ERROR;
     }
     resource_manager_->import_controller_reference_interfaces(controller_name, interfaces);
