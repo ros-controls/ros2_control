@@ -12,6 +12,7 @@ on:
       - '**.yaml'
       - '**/package.xml'
       - '**/CMakeLists.txt'
+      - 'codecov.yml'
   pull_request:
     branches:
       - master
@@ -23,6 +24,7 @@ on:
       - '**.yaml'
       - '**/package.xml'
       - '**/CMakeLists.txt'
+      - 'codecov.yml'
 
 jobs:
   coverage_rolling:
