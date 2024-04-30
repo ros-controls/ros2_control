@@ -2,6 +2,12 @@
 Changelog for package ros2controlcli
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* [CI] Specify runner/container images and codecov for joint_limits  (`#1504 <https://github.com/ros-controls/ros2_control/issues/1504>`_) (`#1520 <https://github.com/ros-controls/ros2_control/issues/1520>`_)
+* [CLI] Add `set_hardware_component_state` verb (`#1248 <https://github.com/ros-controls/ros2_control/issues/1248>`_) (`#1471 <https://github.com/ros-controls/ros2_control/issues/1471>`_)
+* Contributors: Christoph Fröhlich
+
 3.24.0 (2024-03-02)
 -------------------
 * Added spawner colours to `list_controllers` depending upon active or inactive (`#1409 <https://github.com/ros-controls/ros2_control/issues/1409>`_) (`#1425 <https://github.com/ros-controls/ros2_control/issues/1425>`_)

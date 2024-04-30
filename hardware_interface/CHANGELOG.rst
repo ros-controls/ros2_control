@@ -2,6 +2,14 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add missing calculate_dynamics (`#1498 <https://github.com/ros-controls/ros2_control/issues/1498>`_) (`#1512 <https://github.com/ros-controls/ros2_control/issues/1512>`_)
+* [Doc] Add documentation about initial_value regarding mock_hw (`#1352 <https://github.com/ros-controls/ros2_control/issues/1352>`_) (`#1514 <https://github.com/ros-controls/ros2_control/issues/1514>`_)
+* Move migration notes (`#1481 <https://github.com/ros-controls/ros2_control/issues/1481>`_)
+* Bump version of pre-commit hooks (backport `#1430 <https://github.com/ros-controls/ros2_control/issues/1430>`_) (`#1435 <https://github.com/ros-controls/ros2_control/issues/1435>`_)
+* Contributors: Christoph Fröhlich, Felix Exner
+
 3.24.0 (2024-03-02)
 -------------------
 * [CI] Code coverage + pre-commit (backport `#1413 <https://github.com/ros-controls/ros2_control/issues/1413>`_) (`#1415 <https://github.com/ros-controls/ros2_control/issues/1415>`_)
