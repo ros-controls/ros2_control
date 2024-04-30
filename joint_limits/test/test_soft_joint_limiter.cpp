@@ -16,6 +16,7 @@
 
 #include "test_joint_limiter.hpp"
 #include <limits>
+#include <cmath>
 
 TEST_F(SoftJointLimiterTest, when_loading_limiter_plugin_expect_loaded)
 {
@@ -332,9 +333,62 @@ TEST_F(SoftJointLimiterTest, check_desired_velocity_only_cases)
     EXPECT_FALSE(desired_state_.has_jerk());
   };
 
-  // Test cases when there is no actual position
-  // For hard limits, if there is no actual state but the desired state is outside the limit, then
-  // saturate it to the limits
+  auto test_generic_cases = [&] (const joint_limits::SoftJointLimits &soft_joint_limits)
+  {
+    ASSERT_TRUE(Init(limits, soft_joint_limits));
+
+    // Test cases when there is no actual position
+    // For hard limits, if there is no actual state but the desired state is outside the limit, then
+    // saturate it to the limits
+    test_limit_enforcing(std::nullopt, 2.0, 1.0, true);
+    test_limit_enforcing(std::nullopt, 1.1, 1.0, true);
+    test_limit_enforcing(std::nullopt, -5.0, -1.0, true);
+    test_limit_enforcing(std::nullopt, -std::numeric_limits<double>::infinity(), -1.0, true);
+    test_limit_enforcing(std::nullopt, std::numeric_limits<double>::infinity(), 1.0, true);
+    test_limit_enforcing(std::nullopt, -3.212, -1.0, true);
+    test_limit_enforcing(std::nullopt, -0.8, -0.8, false);
+    test_limit_enforcing(std::nullopt, 0.8, 0.8, false);
+    test_limit_enforcing(std::nullopt, 0.12, 0.12, false);
+    test_limit_enforcing(std::nullopt, 0.0, 0.0, false);
+
+    // The cases where the actual position value exist
+    test_limit_enforcing(4.5, 5.0, 0.5, true);
+    test_limit_enforcing(4.8, 5.0, 0.2, true);
+    test_limit_enforcing(4.5, 0.3, 0.3, false);
+    test_limit_enforcing(4.5, 0.5, 0.5, false);
+    test_limit_enforcing(5.0, 0.9, 0.0, true);
+    // When the position is out of the limits, then the velocity is saturated to zero
+    test_limit_enforcing(6.0, 2.0, 0.0, true);
+    test_limit_enforcing(6.0, -2.0, 0.0, true);
+    test_limit_enforcing(4.0, 0.5, 0.5, false);
+    test_limit_enforcing(-4.8, -6.0, -0.2, true);
+    test_limit_enforcing(4.3, 5.0, 0.7, true);
+    test_limit_enforcing(-4.5, -5.0, -0.5, true);
+    test_limit_enforcing(-4.5, -0.2, -0.2, false);
+    test_limit_enforcing(-3.0, -5.0, -1.0, true);
+    test_limit_enforcing(-3.0, -1.0, -1.0, false);
+    test_limit_enforcing(-5.0, -3.0, 0.0, true);
+    test_limit_enforcing(-5.0, -1.0, 0.0, true);
+    // When the position is out of the limits, then the velocity is saturated to zero
+    test_limit_enforcing(-6.0, -1.0, 0.0, true);
+    test_limit_enforcing(-6.0, -2.0, 0.0, true);
+    test_limit_enforcing(-6.0, 1.0, 0.0, true);
+  };
+
+  test_generic_cases(soft_limits);
+  soft_limits.k_position = 1.0;
+  test_generic_cases(soft_limits);
+  soft_limits.max_position = 10.0;
+  test_generic_cases(soft_limits);
+  soft_limits.min_position = -std::numeric_limits<double>::infinity();
+  test_generic_cases(soft_limits);
+  soft_limits.min_position = -10.0;
+  test_generic_cases(soft_limits);
+
+  soft_limits.k_position = 1.0;
+  soft_limits.max_position = 4.0;
+  soft_limits.min_position = -2.0;
+  ASSERT_TRUE(Init(limits, soft_limits));
   test_limit_enforcing(std::nullopt, 2.0, 1.0, true);
   test_limit_enforcing(std::nullopt, 1.1, 1.0, true);
   test_limit_enforcing(std::nullopt, -5.0, -1.0, true);
@@ -347,29 +401,45 @@ TEST_F(SoftJointLimiterTest, check_desired_velocity_only_cases)
   test_limit_enforcing(std::nullopt, 0.0, 0.0, false);
 
   // The cases where the actual position value exist
-  test_limit_enforcing(4.5, 5.0, 0.5, true);
-  test_limit_enforcing(4.8, 5.0, 0.2, true);
-  test_limit_enforcing(4.5, 0.3, 0.3, false);
-  test_limit_enforcing(4.5, 0.5, 0.5, false);
-  test_limit_enforcing(5.0, 0.9, 0.0, true);
-  // When the position is out of the limits, then the velocity is saturated to zero
+  test_limit_enforcing(3.0, 5.0, 1.0, true);
+  test_limit_enforcing(3.8, 5.0, 0.2, true);
+  test_limit_enforcing(3.5, 0.3, 0.3, false);
+  test_limit_enforcing(3.5, 0.5, 0.5, false);
+  test_limit_enforcing(3.8, 0.5, 0.2, true);
+
+  test_limit_enforcing(4.0, 0.5, 0.0, true);
+  test_limit_enforcing(-2.0, -0.5, 0.0, true);
+  test_limit_enforcing(4.0, -0.5, -0.5, false);
+  test_limit_enforcing(-2.0, 0.5, 0.5, false);
+  test_limit_enforcing(4.0, -3.0, -1.0, true);
+  test_limit_enforcing(-2.0, 3.0, 1.0, true);
+
+  test_limit_enforcing(4.8, 0.6, -M_PI / 180., true);
+  test_limit_enforcing(4.3, 5.0, -M_PI / 180., true);
+  test_limit_enforcing(-4.5, -0.2, M_PI / 180., true);
+  test_limit_enforcing(-3.0, -5.0, M_PI / 180., true);
+
+  test_limit_enforcing(4.8, -0.6, -M_PI / 180., true);
+  test_limit_enforcing(4.3, -5.0, -M_PI / 180., true);
+  test_limit_enforcing(-4.5, 0.2, M_PI / 180., true);
+  test_limit_enforcing(-3.0, 5.0, M_PI / 180., true);
+
   test_limit_enforcing(6.0, 2.0, 0.0, true);
   test_limit_enforcing(6.0, -2.0, 0.0, true);
-  test_limit_enforcing(4.0, 0.5, 0.5, false);
-  test_limit_enforcing(-4.8, -6.0, -0.2, true);
-  test_limit_enforcing(4.3, 5.0, 0.7, true);
-  test_limit_enforcing(-4.5, -5.0, -0.5, true);
-  test_limit_enforcing(-4.5, -0.2, -0.2, false);
-  test_limit_enforcing(-3.0, -5.0, -1.0, true);
-  test_limit_enforcing(-3.0, -1.0, -1.0, false);
-  test_limit_enforcing(-5.0, -3.0, 0.0, true);
-  test_limit_enforcing(-5.0, -1.0, 0.0, true);
-  // When the position is out of the limits, then the velocity is saturated to zero
-  test_limit_enforcing(-6.0, -1.0, 0.0, true);
   test_limit_enforcing(-6.0, -2.0, 0.0, true);
-  test_limit_enforcing(-6.0, 1.0, 0.0, true);
+  test_limit_enforcing(-6.0, 2.0, 0.0, true);
+
+  test_limit_enforcing(-5.0, -3.0, M_PI / 180., true);
+  test_limit_enforcing(-5.0, -1.0, M_PI / 180., true);
+  test_limit_enforcing(5.0, 3.0, -M_PI / 180., true);
+  test_limit_enforcing(5.0, 1.0, -M_PI / 180., true);
+  test_limit_enforcing(-5.0, 3.0, M_PI / 180., true);
+  test_limit_enforcing(-5.0, 1.0, M_PI / 180., true);
+  test_limit_enforcing(5.0, -3.0, -M_PI / 180., true);
+  test_limit_enforcing(5.0, -1.0, -M_PI / 180., true);
 
   // Now remove the position limits and only test with acceleration limits
+  soft_limits = joint_limits::SoftJointLimits();
   limits.has_position_limits = false;
   limits.has_acceleration_limits = true;
   limits.max_acceleration = 0.5;
@@ -540,6 +610,7 @@ TEST_F(SoftJointLimiterTest, check_desired_effort_only_cases)
   test_limit_enforcing(-5.0, -0.2, 400.0, 200.0, true);
   test_limit_enforcing(-5.0, -0.2, 30.0, 30.0, false);
 
+  // Check with high values of k_velocity (hard limits should be considered)
   soft_limits.k_velocity = 5000.0;
   ASSERT_TRUE(Init(limits, soft_limits));
   ASSERT_TRUE(joint_limiter_->configure(last_commanded_state_));
@@ -562,6 +633,7 @@ TEST_F(SoftJointLimiterTest, check_desired_effort_only_cases)
     }
   }
 
+  // Check with low values of k_velocity
   soft_limits.k_velocity = 300.0;
   ASSERT_TRUE(Init(limits, soft_limits));
   ASSERT_TRUE(joint_limiter_->configure(last_commanded_state_));
@@ -577,12 +649,6 @@ TEST_F(SoftJointLimiterTest, check_desired_effort_only_cases)
     test_limit_enforcing(act_pos, 0.5, -20.0, -20.0, false);
     test_limit_enforcing(act_pos, 0.5, -200.0, -200.0, false);
     test_limit_enforcing(act_pos, 0.5, -201.0, -200.0, true);
-  }
-
-  for (auto act_pos :
-       {std::optional<double>(std::nullopt), std::optional<double>(4.0),
-        std::optional<double>(-4.0)})
-  {
     test_limit_enforcing(act_pos, -0.5, 20.0, 20.0, false);
     test_limit_enforcing(act_pos, -0.5, 200.0, 200.0, false);
     test_limit_enforcing(act_pos, -0.5, 201.0, 200.0, true);
@@ -592,6 +658,7 @@ TEST_F(SoftJointLimiterTest, check_desired_effort_only_cases)
     test_limit_enforcing(act_pos, -0.5, -201.0, -150.0, true);
   }
 
+  // Check with low values of k_velocity and low soft_limits
   soft_limits.k_velocity = 300.0;
   soft_limits.k_position = 1.0;
   soft_limits.min_position = -4.0;
@@ -615,6 +682,7 @@ TEST_F(SoftJointLimiterTest, check_desired_effort_only_cases)
   test_limit_enforcing(0.0, -0.5, -200.0, -150.0, true);
   test_limit_enforcing(0.0, -0.5, -201.0, -150.0, true);
 
+  // Close to the soft limit with a velocity moving away from the limit
   test_limit_enforcing(-3.5, 0.5, 20.0, 20.0, false);
   test_limit_enforcing(-3.5, 0.5, 200.0, 150.0, true);
   test_limit_enforcing(-3.5, 0.5, 201.0, 150.0, true);
@@ -631,6 +699,7 @@ TEST_F(SoftJointLimiterTest, check_desired_effort_only_cases)
   test_limit_enforcing(3.5, -0.5, -200.0, -150.0, true);
   test_limit_enforcing(3.5, -0.5, -201.0, -150.0, true);
 
+  // Close to the soft limit with a velocity moving close to the limit
   test_limit_enforcing(3.5, 0.4, 20.0, 20.0, false);
   test_limit_enforcing(3.5, 0.4, 200.0, 30.0, true);
   test_limit_enforcing(3.5, 0.5, 200.0, 0.0, true);
@@ -648,6 +717,61 @@ TEST_F(SoftJointLimiterTest, check_desired_effort_only_cases)
   test_limit_enforcing(-3.5, -0.4, -200.0, -30.0, true);
   test_limit_enforcing(-3.5, -0.5, -200.0, 0.0, true);
   test_limit_enforcing(-3.5, -0.4, -201.0, -30.0, true);
+  
+  // Check with high values of k_velocity and high soft limits (higher than hard limits)
+  soft_limits.k_velocity = 500.0;
+  soft_limits.k_position = 1.0;
+  soft_limits.min_position = -10.0;
+  soft_limits.max_position = 10.0;
+  ASSERT_TRUE(Init(limits, soft_limits));
+  ASSERT_TRUE(joint_limiter_->configure(last_commanded_state_));
+
+  for (auto act_pos :
+       {std::optional<double>(std::nullopt), std::optional<double>(4.0),
+        std::optional<double>(-4.0)})
+  {
+    for (auto act_vel :
+         {std::optional<double>(std::nullopt), std::optional<double>(0.5),
+          std::optional<double>(-0.2)})
+    {
+      test_limit_enforcing(act_pos, act_vel, 20.0, 20.0, false);
+      test_limit_enforcing(act_pos, act_vel, 200.0, 200.0, false);
+      test_limit_enforcing(act_pos, act_vel, 201.0, 200.0, true);
+      test_limit_enforcing(act_pos, act_vel, 0.0, 0.0, false);
+      test_limit_enforcing(act_pos, act_vel, -20.0, -20.0, false);
+      test_limit_enforcing(act_pos, act_vel, -200.0, -200.0, false);
+      test_limit_enforcing(act_pos, act_vel, -201.0, -200.0, true);
+    }
+  }
+
+  // Check with low values of k_velocity and high soft limits (higher than hard limits)
+  soft_limits.k_velocity = 300.0;
+  soft_limits.k_position = 1.0;
+  soft_limits.min_position = -10.0;
+  soft_limits.max_position = 10.0;
+  ASSERT_TRUE(Init(limits, soft_limits));
+  ASSERT_TRUE(joint_limiter_->configure(last_commanded_state_));
+
+  for (auto act_pos :
+       {std::optional<double>(std::nullopt), std::optional<double>(4.0),
+        std::optional<double>(-4.0)})
+  {
+    test_limit_enforcing(act_pos, 0.5, 20.0, 20.0, false);
+    test_limit_enforcing(act_pos, 0.5, 200.0, 150.0, true);
+    test_limit_enforcing(act_pos, 0.5, 201.0, 150.0, true);
+    test_limit_enforcing(act_pos, 0.5, 0.0, 0.0, false);
+    test_limit_enforcing(act_pos, 0.5, -20.0, -20.0, false);
+    test_limit_enforcing(act_pos, 0.5, -200.0, -200.0, false);
+    test_limit_enforcing(act_pos, 0.5, -201.0, -200.0, true);
+
+    test_limit_enforcing(act_pos, -0.5, 20.0, 20.0, false);
+    test_limit_enforcing(act_pos, -0.5, 200.0, 200.0, false);
+    test_limit_enforcing(act_pos, -0.5, 201.0, 200.0, true);
+    test_limit_enforcing(act_pos, -0.5, 0.0, 0.0, false);
+    test_limit_enforcing(act_pos, -0.5, -20.0, -20.0, false);
+    test_limit_enforcing(act_pos, -0.5, -200.0, -150.0, true);
+    test_limit_enforcing(act_pos, -0.5, -201.0, -150.0, true);
+  }
 }
 
 TEST_F(SoftJointLimiterTest, check_desired_acceleration_only_cases)
