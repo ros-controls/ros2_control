@@ -135,7 +135,7 @@ bool on_enforce(
     soft_min_vel = -hard_limits.max_velocity;
     soft_max_vel = hard_limits.max_velocity;
 
-    if(hard_limits.has_position_limits && has_soft_limits(soft_joint_limits))
+    if(hard_limits.has_position_limits && has_soft_limits(soft_joint_limits) && std::isfinite(position))
     {
       soft_min_vel = std::clamp(-soft_joint_limits.k_position * (position - soft_joint_limits.min_position),
                                 -hard_limits.max_velocity, hard_limits.max_velocity);
@@ -143,7 +143,12 @@ bool on_enforce(
       soft_max_vel = std::clamp(-soft_joint_limits.k_position * (position - soft_joint_limits.max_position),
                                 -hard_limits.max_velocity, hard_limits.max_velocity);
 
-      if ((position < soft_joint_limits.min_position) || (position > soft_joint_limits.max_position))
+      if((position < hard_limits.min_position) || (position > hard_limits.max_position))
+      {
+        soft_min_vel = 0.0;
+        soft_max_vel = 0.0;
+      }
+      else if ((position < soft_joint_limits.min_position) || (position > soft_joint_limits.max_position))
       {
         constexpr double soft_limit_reach_velocity = 1.0 * (M_PI / 180.0);
         soft_min_vel = std::copysign(soft_limit_reach_velocity, soft_min_vel);
@@ -240,18 +245,22 @@ bool on_enforce(
   if(desired.has_position() && !std::isfinite(desired.position.value()) && actual.has_position())
   {
     desired.position = actual.position;
+    limits_enforced = true;
   }
   if(desired.has_velocity() && !std::isfinite(desired.velocity.value()))
   {
     desired.velocity = 0.0;
+    limits_enforced = true;
   }
   if(desired.has_acceleration() && !std::isfinite(desired.acceleration.value()))
   {
     desired.acceleration = 0.0;
+    limits_enforced = true;
   }
   if(desired.has_jerk() && !std::isfinite(desired.jerk.value()))
   {
     desired.jerk = 0.0;
+    limits_enforced = true;
   }
 
   prev_command_ = desired;
