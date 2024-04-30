@@ -2,6 +2,11 @@
 Changelog for package transmission_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* rosdoc2 for transmission_interface (`#1496 <https://github.com/ros-controls/ros2_control/issues/1496>`_) (`#1509 <https://github.com/ros-controls/ros2_control/issues/1509>`_)
+* Contributors: mergify[bot]
+
 2.40.0 (2024-03-02)
 -------------------
 

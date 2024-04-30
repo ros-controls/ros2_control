@@ -2,6 +2,12 @@
 Changelog for package ros2controlcli
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* [CI] Specify runner/container images and codecov for joint_limits  (`#1504 <https://github.com/ros-controls/ros2_control/issues/1504>`_) (`#1519 <https://github.com/ros-controls/ros2_control/issues/1519>`_)
+* [CLI] Add `set_hardware_component_state` verb (`#1248 <https://github.com/ros-controls/ros2_control/issues/1248>`_) (`#1470 <https://github.com/ros-controls/ros2_control/issues/1470>`_)
+* Contributors: mergify[bot]
+
 2.40.0 (2024-03-02)
 -------------------
 * [CI] Code coverage + pre-commit (backport `#1413 <https://github.com/ros-controls/ros2_control/issues/1413>`_) (`#1414 <https://github.com/ros-controls/ros2_control/issues/1414>`_)
