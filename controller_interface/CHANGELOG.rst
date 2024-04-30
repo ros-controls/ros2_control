@@ -2,8 +2,8 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.9.0 (2024-04-30)
+------------------
 * return the proper const object of the pointer in the const method (`#1494 <https://github.com/ros-controls/ros2_control/issues/1494>`_)
 * Contributors: Sai Kishor Kothakota
 
