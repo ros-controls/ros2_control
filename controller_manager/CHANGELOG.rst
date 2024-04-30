@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.25.0 (2024-04-30)
+-------------------
 * check for state of the controller node before cleanup (backport `#1363 <https://github.com/ros-controls/ros2_control/issues/1363>`_) (`#1379 <https://github.com/ros-controls/ros2_control/issues/1379>`_)
 * Bump version of pre-commit hooks (backport `#1430 <https://github.com/ros-controls/ros2_control/issues/1430>`_) (`#1435 <https://github.com/ros-controls/ros2_control/issues/1435>`_)
 * Contributors: mergify[bot]

@@ -2,8 +2,8 @@
 Changelog for package rqt_controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.25.0 (2024-04-30)
+-------------------
 * Add cm as dependency to rqt_cm (`#1447 <https://github.com/ros-controls/ros2_control/issues/1447>`_) (`#1460 <https://github.com/ros-controls/ros2_control/issues/1460>`_)
 * Contributors: mergify[bot]
 
