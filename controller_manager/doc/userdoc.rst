@@ -225,6 +225,10 @@ Note that not all controllers have to be restarted, e.g., broadcasters.
 Restarting hardware
 ^^^^^^^^^^^^^^^^^^^^^
 
-If hardware gets restarted then you should go through its lifecycle again.
-This can be simply achieved by returning ``ERROR`` from ``write`` and ``read`` methods of interface implementation.
-**NOT IMPLEMENTED YET - PLEASE STOP/RESTART ALL CONTROLLERS MANUALLY FOR NOW** The controller manager detects that and stops all the controllers that are commanding that hardware and restarts broadcasters that are listening to its states.
+If hardware gets restarted then you should go through its lifecycle again in order to reconfigure and export the interfaces
+
+Hardware and Controller Errors
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If the hardware during it's ``read`` or ``write`` method returns ``return_type::ERROR``, the controller manager will stop all controllers that are using the hardware's command and state interfaces.
+Likewise, if a controller returns ``return_type::ERROR`` from its ``update`` method, the controller manager will deactivate the respective controller. In future, the controller manager will try to start any fallback controllers if available.
