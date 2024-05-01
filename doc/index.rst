@@ -32,4 +32,5 @@ Concepts
    Controller Manager <../controller_manager/doc/userdoc.rst>
    Controller Chaining / Cascade Control <../controller_manager/doc/controller_chaining.rst>
    Hardware Components <../hardware_interface/doc/hardware_components_userdoc.rst>
+   Hardware Components <../hardware_interface/doc/error_and_warning_interfaces_userdoc.rst>
    Mock Components <../hardware_interface/doc/mock_components_userdoc.rst>

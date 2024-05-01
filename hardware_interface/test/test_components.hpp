@@ -1,4 +1,4 @@
-// Copyright 2020 ros2_control development team
+// Copyright 2020 ros2_control Development Team
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,29 +12,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef TRANSMISSION_INTERFACE__HANDLE_HPP_
-#define TRANSMISSION_INTERFACE__HANDLE_HPP_
+#ifndef TEST_COMPONENTS_HPP_
+#define TEST_COMPONENTS_HPP_
 
+#include <algorithm>
 #include <string>
+#include <utility>
+#include <vector>
 
 #include "hardware_interface/handle.hpp"
 
-namespace transmission_interface
+namespace test_components
 {
-/** A handle used to get and set a value on a given actuator interface. */
-class ActuatorHandle : public hardware_interface::Handle
+
+template <typename C, typename T>
+std::pair<bool, size_t> vector_contains(const std::vector<C> & vec, const T & element)
 {
-public:
-  using hardware_interface::Handle::Handle;
-};
+  auto it = std::find_if(
+    vec.begin(), vec.end(),
+    [element](const auto & state_interface)
+    { return state_interface->get_name() == std::string(element); });
 
-/** A handle used to get and set a value on a given joint interface. */
-class JointHandle : public hardware_interface::Handle
-{
-public:
-  using hardware_interface::Handle::Handle;
-};
+  return std::make_pair(it != vec.end(), std::distance(vec.begin(), it));
+}
 
-}  // namespace transmission_interface
-
-#endif  // TRANSMISSION_INTERFACE__HANDLE_HPP_
+}  // namespace test_components
+#endif  // TEST_COMPONENTS_HPP_
