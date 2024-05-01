@@ -76,6 +76,14 @@ controller_interface::return_type TestController::update(
   {
     for (size_t i = 0; i < command_interfaces_.size(); ++i)
     {
+      if (!std::isfinite(external_commands_for_testing_[i]))
+      {
+        RCLCPP_ERROR(
+          get_node()->get_logger(),
+          "External command value for command interface '%s' is not finite",
+          command_interfaces_[i].get_name().c_str());
+        return controller_interface::return_type::ERROR;
+      }
       RCLCPP_INFO(
         get_node()->get_logger(), "Setting value of command interface '%s' to %f",
         command_interfaces_[i].get_name().c_str(), external_commands_for_testing_[i]);
