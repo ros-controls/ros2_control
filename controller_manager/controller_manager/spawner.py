@@ -19,6 +19,7 @@ import os
 import sys
 import time
 import warnings
+import yaml
 
 from controller_manager import (
     configure_controller,
@@ -39,7 +40,6 @@ try:
     from rclpy.parameter import get_parameter_value
 except ImportError:
     from ros2param.api import get_parameter_value
-from rclpy.parameter import parameter_dict_from_yaml_file
 from rclpy.signals import SignalHandlerOptions
 from ros2param.api import call_set_parameters
 
@@ -134,6 +134,21 @@ def wait_for_controller_manager(node, controller_manager, timeout_duration):
 def is_controller_loaded(node, controller_manager, controller_name):
     controllers = list_controllers(node, controller_manager).controller
     return any(c.name == controller_name for c in controllers)
+
+
+def get_parameter_from_param_file(controller_name, parameter_file, parameter_name):
+    with open(parameter_file) as f:
+        parameters = yaml.safe_load(f)
+        if controller_name in parameters:
+            value = parameters[controller_name]
+            if not isinstance(value, dict) or "ros__parameters" not in value:
+                raise RuntimeError(
+                    f"YAML file : {parameter_file} is not a valid ROS parameter file for controller : {controller_name}"
+                )
+            if parameter_name in parameters[controller_name]["ros__parameters"]:
+                return parameters[controller_name]["ros__parameters"][parameter_name]
+            else:
+                return None
 
 
 def main(args=None):
@@ -312,13 +327,9 @@ def main(args=None):
                         return 1
 
                 if not fallback_controllers and param_file:
-                    params_dict = parameter_dict_from_yaml_file(
-                        param_file, True, [prefixed_controller_name]
+                    fallback_controllers = get_parameter_from_param_file(
+                        controller_name, param_file, "fallback_controllers"
                     )
-                    if "fallback_controllers" in params_dict:
-                        fallback_controllers = params_dict[
-                            "fallback_controllers"
-                        ].value.string_array_value
 
                 if fallback_controllers:
                     parameter = Parameter()
