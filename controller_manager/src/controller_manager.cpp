@@ -1963,20 +1963,18 @@ void ControllerManager::activate_controllers(
           hardware_interface::lifecycle_state_names::ACTIVE,
           lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
         controller->release_interfaces();
-        {
-          // Now prepare and perform the stop interface switching as this is needed for exclusive
-          // interfaces
-          if (
-            !command_interface_names.empty() &&
-            (!resource_manager_->prepare_command_mode_switch({}, command_interface_names) ||
-             !resource_manager_->perform_command_mode_switch({}, command_interface_names)))
-          {
-            RCLCPP_ERROR(
-              get_logger(),
-              "Error switching back the interfaces in the hardware as the controller activation "
-              "failed.");
-          }
-        }
+      // Now prepare and perform the stop interface switching as this is needed for exclusive
+      // interfaces
+      if (
+        !command_interface_names.empty() &&
+        (!resource_manager_->prepare_command_mode_switch({}, command_interface_names) ||
+         !resource_manager_->perform_command_mode_switch({}, command_interface_names)))
+      {
+        RCLCPP_ERROR(
+          get_logger(),
+          "Error switching back the interfaces in the hardware as the controller activation "
+          "failed.");
+      }
         return;
       }
     }
