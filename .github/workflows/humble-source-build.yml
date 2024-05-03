@@ -15,3 +15,4 @@ jobs:
       ros_distro: humble
       ref: humble
       ros2_repo_branch: humble
+      os_name: ubuntu-22.04
