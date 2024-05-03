@@ -779,67 +779,6 @@ void update_interface_limits(
   }
 }
 
-/**
- * @brief Copy the limits from ros2_control command interface tags if not URDF-limit tag is present
- * @param interfaces The interfaces to retrieve the limits from.
- * @param limits The joint limits to be set.
- */
-void copy_interface_limits(
-  const std::vector<InterfaceInfo> & interfaces, joint_limits::JointLimits & limits)
-{
-  for (auto & itr : interfaces)
-  {
-    if (itr.name == hardware_interface::HW_IF_POSITION)
-    {
-      double min_pos, max_pos;
-      if (detail::retrieve_min_max_interface_values(itr, min_pos, max_pos))
-      {
-        limits.min_position = std::max(min_pos, limits.min_position);
-        limits.max_position = std::min(max_pos, limits.max_position);
-        limits.has_position_limits = itr.enable_limits;
-      }
-      else
-      {
-        limits.min_position = std::numeric_limits<double>::min();
-        limits.max_position = std::numeric_limits<double>::max();
-        limits.has_position_limits = false;
-      }
-    }
-    else if (itr.name == hardware_interface::HW_IF_VELOCITY)
-    {
-      double min_vel, max_vel;
-      if (detail::retrieve_min_max_interface_values(itr, min_vel, max_vel))
-      {
-        limits.max_velocity = std::min(std::abs(min_vel), max_vel);
-        limits.has_velocity_limits = itr.enable_limits;
-      }
-      else
-      {
-        limits.max_velocity = std::numeric_limits<double>::max();
-        limits.has_velocity_limits = false;
-      }
-    }
-    else if (itr.name == hardware_interface::HW_IF_EFFORT)
-    {
-      double min_eff, max_eff;
-      if (detail::retrieve_min_max_interface_values(itr, min_eff, max_eff))
-      {
-        limits.max_effort = std::min(std::abs(min_eff), max_eff);
-        limits.has_effort_limits = itr.enable_limits;
-      }
-      else
-      {
-        limits.max_effort = std::numeric_limits<double>::max();
-        limits.has_effort_limits = false;
-      }
-    }
-    else
-    {
-      detail::set_custom_interface_values(itr, limits);
-    }
-  }
-}
-
 }  // namespace detail
 
 std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & urdf)
@@ -984,16 +923,9 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
           "Fixed joints do not make sense in ros2_control.");
       }
       joint_limits::JointLimits limits;
-      if (getJointLimits(urdf_joint, limits))
-      {
-        // Take the most restricted one
-        detail::update_interface_limits(joint.command_interfaces, limits);
-      }
-      else
-      {
-        // valid for continuous-joint type only
-        detail::copy_interface_limits(joint.command_interfaces, limits);
-      }
+      getJointLimits(urdf_joint, limits);
+      // Take the most restricted one. Also valid for continuous-joint type only
+      detail::update_interface_limits(joint.command_interfaces, limits);
       hw_info.limits[joint.name] = limits;
     }
   }
