@@ -670,7 +670,7 @@ void set_custom_interface_values(const InterfaceInfo & itr, joint_limits::JointL
         {
           limits.max_acceleration = std::fabs(limits.max_deceleration);
         }
-        limits.has_deceleration_limits = true && itr.enable_limits;
+        limits.has_deceleration_limits = itr.enable_limits;
       }
       if (std::isfinite(max_accel))
       {
@@ -680,7 +680,7 @@ void set_custom_interface_values(const InterfaceInfo & itr, joint_limits::JointL
         {
           limits.max_deceleration = std::fabs(limits.max_acceleration);
         }
-        limits.has_acceleration_limits = true && itr.enable_limits;
+        limits.has_acceleration_limits = itr.enable_limits;
       }
     }
   }
@@ -699,7 +699,7 @@ void set_custom_interface_values(const InterfaceInfo & itr, joint_limits::JointL
       std::isfinite(max_jerk))
     {
       limits.max_jerk = std::abs(max_jerk);
-      limits.has_jerk_limits = true && itr.enable_limits;
+      limits.has_jerk_limits = itr.enable_limits;
     }
   }
   else
@@ -799,7 +799,7 @@ void copy_interface_limits(
       {
         limits.min_position = std::max(min_pos, limits.min_position);
         limits.max_position = std::min(max_pos, limits.max_position);
-        limits.has_position_limits = true && itr.enable_limits;
+        limits.has_position_limits = itr.enable_limits;
       }
       else
       {
@@ -814,7 +814,7 @@ void copy_interface_limits(
       if (detail::retrieve_min_max_interface_values(itr, min_vel, max_vel))
       {
         limits.max_velocity = std::min(std::abs(min_vel), max_vel);
-        limits.has_velocity_limits = true && itr.enable_limits;
+        limits.has_velocity_limits = itr.enable_limits;
       }
       else
       {
@@ -828,7 +828,7 @@ void copy_interface_limits(
       if (detail::retrieve_min_max_interface_values(itr, min_eff, max_eff))
       {
         limits.max_effort = std::min(std::abs(min_eff), max_eff);
-        limits.has_effort_limits = true && itr.enable_limits;
+        limits.has_effort_limits = itr.enable_limits;
       }
       else
       {
