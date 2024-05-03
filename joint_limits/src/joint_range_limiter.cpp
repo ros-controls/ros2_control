@@ -18,9 +18,9 @@
 
 #include <algorithm>
 #include "joint_limits/joint_limiter_struct.hpp"
+#include "joint_limits/joint_limits_helpers.hpp"
 #include "rclcpp/duration.hpp"
 #include "rcutils/logging_macros.h"
-#include "joint_limits/joint_limits_helpers.hpp"
 
 namespace joint_limits
 {

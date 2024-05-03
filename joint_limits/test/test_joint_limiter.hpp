@@ -95,7 +95,7 @@ public:
       actual_state_.velocity.value() + desired_state_.acceleration.value() * dt;
   }
 
-  JointLimiterTest(const std::string &joint_limiter_type)
+  JointLimiterTest(const std::string & joint_limiter_type)
   : joint_limiter_type_(joint_limiter_type),
     joint_limiter_loader_(
       "joint_limits",
@@ -103,10 +103,7 @@ public:
   {
   }
 
-  virtual ~JointLimiterTest()
-  {
-
-  }
+  virtual ~JointLimiterTest() {}
 
   void TearDown() override { node_.reset(); }
 
@@ -127,8 +124,7 @@ protected:
 class JointSaturationLimiterTest : public JointLimiterTest
 {
 public:
-  JointSaturationLimiterTest()
-  : JointLimiterTest("joint_limits/JointInterfacesSaturationLimiter")
+  JointSaturationLimiterTest() : JointLimiterTest("joint_limits/JointInterfacesSaturationLimiter")
   {
   }
 };
@@ -136,14 +132,11 @@ public:
 class SoftJointLimiterTest : public JointLimiterTest
 {
 public:
-  SoftJointLimiterTest()
-  : JointLimiterTest("joint_limits/JointInterfacesSoftLimiter")
-  {
-  }
+  SoftJointLimiterTest() : JointLimiterTest("joint_limits/JointInterfacesSoftLimiter") {}
 
-  bool Init(const joint_limits::JointLimits & limits,
-            const joint_limits::SoftJointLimits &soft_limits,
-            const std::string & joint_name = "foo_joint")
+  bool Init(
+    const joint_limits::JointLimits & limits, const joint_limits::SoftJointLimits & soft_limits,
+    const std::string & joint_name = "foo_joint")
   {
     joint_names_ = {joint_name};
     num_joints_ = joint_names_.size();
@@ -155,8 +148,7 @@ public:
     desired_state_ = last_commanded_state_;
     actual_state_ = last_commanded_state_;
     return joint_limiter_->init(
-          joint_names_, {limits}, {soft_limits}, nullptr,
-          node_->get_node_logging_interface());
+      joint_names_, {limits}, {soft_limits}, nullptr, node_->get_node_logging_interface());
   }
 };
 

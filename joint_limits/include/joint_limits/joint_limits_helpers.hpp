@@ -17,8 +17,8 @@
 #ifndef JOINT_LIMITS__JOINT_LIMITS_HELPERS_HPP_
 #define JOINT_LIMITS__JOINT_LIMITS_HELPERS_HPP_
 
-#include "joint_limits/joint_limits.hpp"
 #include <optional>
+#include "joint_limits/joint_limits.hpp"
 
 namespace joint_limits
 {
@@ -38,8 +38,8 @@ std::pair<double, double> compute_effort_limits(
   const std::optional<double> & act_vel, double /*dt*/);
 
 std::pair<double, double> compute_acceleration_limits(
-    const JointLimits &limits, double desired_acceleration, std::optional<double> actual_velocity);
+  const JointLimits & limits, double desired_acceleration, std::optional<double> actual_velocity);
 
-} // namespace joint_limits
+}  // namespace joint_limits
 
-#endif // JOINT_LIMITS__JOINT_LIMITS_HELPERS_HPP_
+#endif  // JOINT_LIMITS__JOINT_LIMITS_HELPERS_HPP_
