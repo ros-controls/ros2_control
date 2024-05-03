@@ -14,8 +14,8 @@
 
 /// \author Sai Kishor Kothakota
 
-#include "test_joint_limiter.hpp"
 #include <limits>
+#include "test_joint_limiter.hpp"
 
 TEST_F(JointSaturationLimiterTest, when_loading_limiter_plugin_expect_loaded)
 {

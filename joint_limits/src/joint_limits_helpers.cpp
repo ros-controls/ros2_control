@@ -14,10 +14,10 @@
 
 /// \author Adrià Roig Moreno
 
-#include "rclcpp/logging.hpp"
 #include "joint_limits/joint_limits_helpers.hpp"
 #include <algorithm>
 #include <cmath>
+#include "rclcpp/logging.hpp"
 
 namespace joint_limits
 {
@@ -107,10 +107,12 @@ std::pair<double, double> compute_effort_limits(
   return eff_limits;
 }
 
-std::pair<double, double> compute_acceleration_limits(const joint_limits::JointLimits & limits, double desired_acceleration,
-                                                      std::optional<double> actual_velocity)
+std::pair<double, double> compute_acceleration_limits(
+  const joint_limits::JointLimits & limits, double desired_acceleration,
+  std::optional<double> actual_velocity)
 {
-  std::pair<double, double> acc_or_dec_limits(-std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity());
+  std::pair<double, double> acc_or_dec_limits(
+    -std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity());
   if (
     limits.has_deceleration_limits &&
     ((desired_acceleration < 0 && actual_velocity && actual_velocity > 0) ||
@@ -119,7 +121,7 @@ std::pair<double, double> compute_acceleration_limits(const joint_limits::JointL
     acc_or_dec_limits.first = -limits.max_deceleration;
     acc_or_dec_limits.second = limits.max_deceleration;
   }
-  else if(limits.has_acceleration_limits)
+  else if (limits.has_acceleration_limits)
   {
     acc_or_dec_limits.first = -limits.max_acceleration;
     acc_or_dec_limits.second = limits.max_acceleration;
@@ -127,4 +129,4 @@ std::pair<double, double> compute_acceleration_limits(const joint_limits::JointL
   return acc_or_dec_limits;
 }
 
-} // namespace joint_limits
+}  // namespace joint_limits

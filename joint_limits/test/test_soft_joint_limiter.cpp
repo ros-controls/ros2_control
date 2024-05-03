@@ -14,9 +14,9 @@
 
 /// \author Adrià Roig Moreno
 
-#include "test_joint_limiter.hpp"
-#include <limits>
 #include <cmath>
+#include <limits>
+#include "test_joint_limiter.hpp"
 
 TEST_F(SoftJointLimiterTest, when_loading_limiter_plugin_expect_loaded)
 {
@@ -112,7 +112,8 @@ TEST_F(SoftJointLimiterTest, check_desired_position_only_cases)
   desired_state_.position = 4.0;
   ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
   EXPECT_NEAR(desired_state_.position.value(), limits.max_position, COMMON_THRESHOLD);
-  // Check defining min_postion soft_limit greater than max_position soft_limit (shouldn't consider it)
+  // Check defining min_postion soft_limit greater than max_position soft_limit (shouldn't consider
+  // it)
   soft_limits.min_position = 5.0;
   ASSERT_TRUE(Init(limits, soft_limits));
   desired_state_.position = 4.0;
@@ -256,7 +257,8 @@ TEST_F(SoftJointLimiterTest, check_desired_position_only_cases)
   ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
   EXPECT_NEAR(desired_state_.position.value(), 1.75, COMMON_THRESHOLD);
 
-  // Now test when there are no position limits and soft limits, then the desired position is not saturated
+  // Now test when there are no position limits and soft limits, then the desired position is not
+  // saturated
   limits = joint_limits::JointLimits();
   soft_limits = joint_limits::SoftJointLimits();
   ASSERT_TRUE(Init(limits, soft_limits));
@@ -333,7 +335,7 @@ TEST_F(SoftJointLimiterTest, check_desired_velocity_only_cases)
     EXPECT_FALSE(desired_state_.has_jerk());
   };
 
-  auto test_generic_cases = [&] (const joint_limits::SoftJointLimits &soft_joint_limits)
+  auto test_generic_cases = [&](const joint_limits::SoftJointLimits & soft_joint_limits)
   {
     ASSERT_TRUE(Init(limits, soft_joint_limits));
 
@@ -717,7 +719,7 @@ TEST_F(SoftJointLimiterTest, check_desired_effort_only_cases)
   test_limit_enforcing(-3.5, -0.4, -200.0, -30.0, true);
   test_limit_enforcing(-3.5, -0.5, -200.0, 0.0, true);
   test_limit_enforcing(-3.5, -0.4, -201.0, -30.0, true);
-  
+
   // Check with high values of k_velocity and high soft limits (higher than hard limits)
   soft_limits.k_velocity = 500.0;
   soft_limits.k_position = 1.0;
