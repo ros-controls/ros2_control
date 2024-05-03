@@ -729,51 +729,48 @@ void update_interface_limits(
   {
     if (itr.name == hardware_interface::HW_IF_POSITION)
     {
+      limits.min_position = limits.has_position_limits && itr.enable_limits
+                              ? limits.min_position
+                              : -std::numeric_limits<double>::max();
+      limits.max_position = limits.has_position_limits && itr.enable_limits
+                              ? limits.max_position
+                              : std::numeric_limits<double>::max();
       double min_pos(limits.min_position), max_pos(limits.max_position);
-      bool has_min_max_interface_values =
-        detail::retrieve_min_max_interface_values(itr, min_pos, max_pos);
-      // position_limits can be restricted for continuous joints
-      limits.has_position_limits |= has_min_max_interface_values;
+      if (itr.enable_limits && detail::retrieve_min_max_interface_values(itr, min_pos, max_pos))
+      {
+        limits.min_position = std::max(min_pos, limits.min_position);
+        limits.max_position = std::min(max_pos, limits.max_position);
+        limits.has_position_limits = true;
+      }
       limits.has_position_limits &= itr.enable_limits;
-      if (limits.has_position_limits)
-      {
-        if (has_min_max_interface_values)
-        {
-          limits.min_position = std::max(min_pos, limits.min_position);
-          limits.max_position = std::min(max_pos, limits.max_position);
-        }
-      }
-      else
-      {
-        limits.min_position = std::numeric_limits<double>::min();
-        limits.max_position = std::numeric_limits<double>::max();
-      }
     }
     else if (itr.name == hardware_interface::HW_IF_VELOCITY)
     {
-      limits.has_velocity_limits &= itr.enable_limits;
-      if (limits.has_velocity_limits)
-      {  // Apply the most restrictive one in the case
-        double min_vel(-limits.max_velocity), max_vel(limits.max_velocity);
-        if (detail::retrieve_min_max_interface_values(itr, min_vel, max_vel))
-        {
-          max_vel = std::min(std::abs(min_vel), max_vel);
-          limits.max_velocity = std::min(max_vel, limits.max_velocity);
-        }
+      limits.max_velocity =
+        limits.has_velocity_limits ? limits.max_velocity : std::numeric_limits<double>::max();
+      // Apply the most restrictive one in the case
+      double min_vel(-limits.max_velocity), max_vel(limits.max_velocity);
+      if (itr.enable_limits && detail::retrieve_min_max_interface_values(itr, min_vel, max_vel))
+      {
+        max_vel = std::min(std::abs(min_vel), max_vel);
+        limits.max_velocity = std::min(max_vel, limits.max_velocity);
+        limits.has_velocity_limits = true;
       }
+      limits.has_velocity_limits &= itr.enable_limits;
     }
     else if (itr.name == hardware_interface::HW_IF_EFFORT)
     {
-      limits.has_effort_limits &= itr.enable_limits;
-      if (limits.has_effort_limits)
-      {  // Apply the most restrictive one in the case
-        double min_eff(-limits.max_effort), max_eff(limits.max_effort);
-        if (detail::retrieve_min_max_interface_values(itr, min_eff, max_eff))
-        {
-          max_eff = std::min(std::abs(min_eff), max_eff);
-          limits.max_effort = std::min(max_eff, limits.max_effort);
-        }
+      limits.max_effort =
+        limits.has_effort_limits ? limits.max_effort : std::numeric_limits<double>::max();
+      // Apply the most restrictive one in the case
+      double min_eff(-limits.max_effort), max_eff(limits.max_effort);
+      if (itr.enable_limits && detail::retrieve_min_max_interface_values(itr, min_eff, max_eff))
+      {
+        max_eff = std::min(std::abs(min_eff), max_eff);
+        limits.max_effort = std::min(max_eff, limits.max_effort);
+        limits.has_effort_limits = true;
       }
+      limits.has_effort_limits &= itr.enable_limits;
     }
     else
     {
