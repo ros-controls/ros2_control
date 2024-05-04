@@ -213,7 +213,7 @@ def main(args=None):
     parser.add_argument(
         "--fallback_controllers",
         help="Fallback controllers list are activated as a fallback strategy when the"
-        " spawned controllers fails. When the argument is provided, it takes precedence over"
+        " spawned controllers fail. When the argument is provided, it takes precedence over"
         " the fallback_controllers list in the param file",
         default=None,
         nargs="+",
