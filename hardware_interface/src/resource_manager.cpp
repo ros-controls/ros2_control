@@ -67,6 +67,26 @@ auto trigger_and_print_hardware_state_transition =
   return result;
 };
 
+std::string interfaces_to_string(
+  const std::vector<std::string> & start_interfaces,
+  const std::vector<std::string> & stop_interfaces)
+{
+  std::stringstream ss;
+  ss << "Start interfaces: " << std::endl << "[" << std::endl;
+  for (const auto & start_if : start_interfaces)
+  {
+    ss << "  " << start_if << std::endl;
+  }
+  ss << "]" << std::endl;
+  ss << "Stop interfaces: " << std::endl << "[" << std::endl;
+  for (const auto & stop_if : stop_interfaces)
+  {
+    ss << "  " << stop_if << std::endl;
+  }
+  ss << "]" << std::endl;
+  return ss.str();
+};
+
 class ResourceStorage
 {
   static constexpr const char * pkg_name = "hardware_interface";
@@ -1258,24 +1278,6 @@ bool ResourceManager::prepare_command_mode_switch(
     return true;
   }
 
-  auto interfaces_to_string = [&]()
-  {
-    std::stringstream ss;
-    ss << "Start interfaces: " << std::endl << "[" << std::endl;
-    for (const auto & start_if : start_interfaces)
-    {
-      ss << "  " << start_if << std::endl;
-    }
-    ss << "]" << std::endl;
-    ss << "Stop interfaces: " << std::endl << "[" << std::endl;
-    for (const auto & stop_if : stop_interfaces)
-    {
-      ss << "  " << stop_if << std::endl;
-    }
-    ss << "]" << std::endl;
-    return ss.str();
-  };
-
   // Check if interface exists
   std::stringstream ss_not_existing;
   ss_not_existing << "Not existing: " << std::endl << "[" << std::endl;
@@ -1297,7 +1299,8 @@ bool ResourceManager::prepare_command_mode_switch(
     ss_not_existing << "]" << std::endl;
     RCUTILS_LOG_ERROR_NAMED(
       "resource_manager", "Not acceptable command interfaces combination: \n%s%s",
-      interfaces_to_string().c_str(), ss_not_existing.str().c_str());
+      interfaces_to_string(start_interfaces, stop_interfaces).c_str(),
+      ss_not_existing.str().c_str());
     return false;
   }
 
@@ -1322,12 +1325,12 @@ bool ResourceManager::prepare_command_mode_switch(
     ss_not_available << "]" << std::endl;
     RCUTILS_LOG_ERROR_NAMED(
       "resource_manager", "Not acceptable command interfaces combination: \n%s%s",
-      interfaces_to_string().c_str(), ss_not_available.str().c_str());
+      interfaces_to_string(start_interfaces, stop_interfaces).c_str(),
+      ss_not_available.str().c_str());
     return false;
   }
 
-  auto call_prepare_mode_switch =
-    [&start_interfaces, &stop_interfaces, &interfaces_to_string](auto & components)
+  auto call_prepare_mode_switch = [&start_interfaces, &stop_interfaces](auto & components)
   {
     bool ret = true;
     for (auto & component : components)
@@ -1345,7 +1348,8 @@ bool ResourceManager::prepare_command_mode_switch(
             RCUTILS_LOG_ERROR_NAMED(
               "resource_manager",
               "Component '%s' did not accept command interfaces combination: \n%s",
-              component.get_name().c_str(), interfaces_to_string().c_str());
+              component.get_name().c_str(),
+              interfaces_to_string(start_interfaces, stop_interfaces).c_str());
             ret = false;
           }
         }
@@ -1355,7 +1359,8 @@ bool ResourceManager::prepare_command_mode_switch(
             "resource_manager",
             "Exception occurred while preparing command mode switch for component '%s' for the "
             "interfaces: \n %s : %s",
-            component.get_name().c_str(), interfaces_to_string().c_str(), e.what());
+            component.get_name().c_str(),
+            interfaces_to_string(start_interfaces, stop_interfaces).c_str(), e.what());
           ret = false;
         }
         catch (...)
@@ -1364,7 +1369,8 @@ bool ResourceManager::prepare_command_mode_switch(
             "resource_manager",
             "Unknown exception occurred while preparing command mode switch for component '%s' for "
             "the interfaces: \n %s",
-            component.get_name().c_str(), interfaces_to_string().c_str());
+            component.get_name().c_str(),
+            interfaces_to_string(start_interfaces, stop_interfaces).c_str());
           ret = false;
         }
       }
@@ -1389,26 +1395,7 @@ bool ResourceManager::perform_command_mode_switch(
     return true;
   }
 
-  auto interfaces_to_string = [&]()
-  {
-    std::stringstream ss;
-    ss << "Start interfaces: " << std::endl << "[" << std::endl;
-    for (const auto & start_if : start_interfaces)
-    {
-      ss << "  " << start_if << std::endl;
-    }
-    ss << "]" << std::endl;
-    ss << "Stop interfaces: " << std::endl << "[" << std::endl;
-    for (const auto & stop_if : stop_interfaces)
-    {
-      ss << "  " << stop_if << std::endl;
-    }
-    ss << "]" << std::endl;
-    return ss.str();
-  };
-
-  auto call_perform_mode_switch =
-    [&start_interfaces, &stop_interfaces, &interfaces_to_string](auto & components)
+  auto call_perform_mode_switch = [&start_interfaces, &stop_interfaces](auto & components)
   {
     bool ret = true;
     for (auto & component : components)
@@ -1435,7 +1422,8 @@ bool ResourceManager::perform_command_mode_switch(
             "resource_manager",
             "Exception occurred while performing command mode switch for component '%s' for the "
             "interfaces: \n %s : %s",
-            component.get_name().c_str(), interfaces_to_string().c_str(), e.what());
+            component.get_name().c_str(),
+            interfaces_to_string(start_interfaces, stop_interfaces).c_str(), e.what());
           ret = false;
         }
         catch (...)
@@ -1445,7 +1433,8 @@ bool ResourceManager::perform_command_mode_switch(
             "Unknown exception occurred while performing command mode switch for component '%s' "
             "for "
             "the interfaces: \n %s",
-            component.get_name().c_str(), interfaces_to_string().c_str());
+            component.get_name().c_str(),
+            interfaces_to_string(start_interfaces, stop_interfaces).c_str());
           ret = false;
         }
       }
