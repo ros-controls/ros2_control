@@ -11,4 +11,4 @@ jobs:
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-pre-commit.yml@master
     with:
       ros_distro: rolling
-      os_name: ubuntu-22.04
+      container: ubuntu:24.04

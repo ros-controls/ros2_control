@@ -2,6 +2,9 @@
 Changelog for package joint_limits
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.9.0 (2024-04-30)
+------------------
+
 4.8.0 (2024-03-27)
 ------------------
 * generate version.h file per package using the ament_generate_version_header  (`#1449 <https://github.com/ros-controls/ros2_control/issues/1449>`_)
