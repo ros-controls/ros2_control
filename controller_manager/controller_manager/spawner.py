@@ -210,6 +210,14 @@ def main(args=None):
         action="store_true",
         required=False,
     )
+    parser.add_argument(
+        "--fallback_controllers",
+        help="Fallback controllers list are activated as a fallback strategy when the"
+        " spawned controllers fail. When the argument is provided, it takes precedence over"
+        " the fallback_controllers list in the param file",
+        default=None,
+        nargs="+",
+    )
 
     command_line_args = rclpy.utilities.remove_ros_args(args=sys.argv)[1:]
     args = parser.parse_args(command_line_args)
@@ -249,6 +257,7 @@ def main(args=None):
             return 1
 
         for controller_name in controller_names:
+            fallback_controllers = args.fallback_controllers
             controller_type = args.controller_type
             prefixed_controller_name = controller_name
             if controller_namespace:
@@ -323,6 +332,43 @@ def main(args=None):
                             + 'Could not set controller params file to "'
                             + param_file
                             + '" for '
+                            + bcolors.BOLD
+                            + prefixed_controller_name
+                            + bcolors.ENDC
+                        )
+                        return 1
+
+                if not fallback_controllers and param_file:
+                    fallback_controllers = get_parameter_from_param_file(
+                        controller_name, param_file, "fallback_controllers"
+                    )
+
+                if fallback_controllers:
+                    parameter = Parameter()
+                    parameter.name = prefixed_controller_name + ".fallback_controllers"
+                    parameter.value = get_parameter_value(string_value=str(fallback_controllers))
+
+                    response = call_set_parameters(
+                        node=node, node_name=controller_manager_name, parameters=[parameter]
+                    )
+                    assert len(response.results) == 1
+                    result = response.results[0]
+                    if result.successful:
+                        node.get_logger().info(
+                            bcolors.OKCYAN
+                            + 'Setting fallback_controllers to ["'
+                            + ",".join(fallback_controllers)
+                            + '"] for '
+                            + bcolors.BOLD
+                            + prefixed_controller_name
+                            + bcolors.ENDC
+                        )
+                    else:
+                        node.get_logger().fatal(
+                            bcolors.FAIL
+                            + 'Could not set fallback_controllers to ["'
+                            + ",".join(fallback_controllers)
+                            + '"] for '
                             + bcolors.BOLD
                             + prefixed_controller_name
                             + bcolors.ENDC
