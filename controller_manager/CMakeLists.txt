@@ -189,6 +189,8 @@ if(BUILD_TESTING)
     test_controller
     ros2_control_test_assets::ros2_control_test_assets
   )
+  install(FILES test/test_controller_spawner_with_type.yaml
+  DESTINATION test)
 
   install(FILES test/test_controller_spawner_with_type.yaml
   DESTINATION test)

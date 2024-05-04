@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import warnings
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration, PythonExpression
@@ -67,6 +68,12 @@ def generate_controllers_spawner_launch_description(
     )
 
     if controller_type:
+        warnings.warn(
+            "The 'controller_type' argument is deprecated and will be removed in future releases."
+            " Declare the controller type parameter in the param file instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         spawner_arguments += ["--controller-type", controller_type]
 
     if controller_params_file:
