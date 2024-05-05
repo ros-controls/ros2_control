@@ -1810,10 +1810,10 @@ void ControllerManager::list_controllers_srv_cb(
           const std::string interface_name = reference.substr(prefix_name.size() + 1);
           controller_state.reference_interfaces.push_back(interface_name);
         }
-        for (const auto & estimate : exported_state_interfaces)
+        for (const auto & state_interface : exported_state_interfaces)
         {
           const std::string prefix_name = controllers[i].c->get_node()->get_name();
-          const std::string interface_name = estimate.substr(prefix_name.size() + 1);
+          const std::string interface_name = state_interface.substr(prefix_name.size() + 1);
           controller_state.exported_state_interfaces.push_back(interface_name);
         }
       }
