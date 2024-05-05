@@ -68,7 +68,7 @@ public:
   bool is_in_chained_mode() const final;
 
   CONTROLLER_INTERFACE_PUBLIC
-  bool toggle_references_from_subscribers(bool enable) final;
+  bool set_using_references_from_subscribers(bool enable) final;
 
 protected:
   /// Virtual method that each chainable controller should implement to export its read-only

@@ -261,10 +261,10 @@ public:
    * to toggle between the usage of reference from the subscribers or the external interfaces to
    * avoid potential concurrency in input commands
    *
-   * @return true if the toggle is successful and false if not
+   * @return true if the setting is successful and false if not
    */
   CONTROLLER_INTERFACE_PUBLIC
-  virtual bool toggle_references_from_subscribers(bool enable) = 0;
+  virtual bool set_using_references_from_subscribers(bool enable) = 0;
 
 protected:
   std::vector<hardware_interface::LoanedCommandInterface> command_interfaces_;

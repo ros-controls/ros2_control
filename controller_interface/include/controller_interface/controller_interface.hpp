@@ -80,7 +80,7 @@ public:
    * @return false
    */
   CONTROLLER_INTERFACE_PUBLIC
-  bool toggle_references_from_subscribers(bool enable) final;
+  bool set_using_references_from_subscribers(bool enable) final;
 };
 
 using ControllerInterfaceSharedPtr = std::shared_ptr<ControllerInterface>;

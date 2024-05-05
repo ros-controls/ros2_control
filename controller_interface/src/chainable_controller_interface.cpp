@@ -147,7 +147,7 @@ bool ChainableControllerInterface::set_chained_mode(bool chained_mode)
 
 bool ChainableControllerInterface::is_in_chained_mode() const { return in_chained_mode_; }
 
-bool ChainableControllerInterface::toggle_references_from_subscribers(bool enable)
+bool ChainableControllerInterface::set_using_references_from_subscribers(bool enable)
 {
   bool result = false;
   if (get_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)

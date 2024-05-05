@@ -1491,7 +1491,7 @@ void ControllerManager::deactivate_controllers(
         // deactivation
         if (controller->is_chainable())
         {
-          controller->toggle_references_from_subscribers(true);
+          controller->set_using_references_from_subscribers(true);
           resource_manager_->make_controller_exported_state_interfaces_unavailable(controller_name);
           resource_manager_->make_controller_reference_interfaces_unavailable(controller_name);
         }
@@ -1673,7 +1673,7 @@ void ControllerManager::activate_controllers(
     try
     {
       // enable references from the controller interfaces
-      controller->toggle_references_from_subscribers(false);
+      controller->set_using_references_from_subscribers(false);
       const auto new_state = controller->get_node()->activate();
       if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
       {
@@ -2880,12 +2880,12 @@ void ControllerManager::set_controllers_reference_interfaces_availability(
     {
       if (available)
       {
-        controller->toggle_references_from_subscribers(false);
+        controller->set_using_references_from_subscribers(false);
         resource_manager_->make_controller_reference_interfaces_available(request);
       }
       else
       {
-        controller->toggle_references_from_subscribers(true);
+        controller->set_using_references_from_subscribers(true);
         resource_manager_->make_controller_reference_interfaces_unavailable(request);
       }
     }
