@@ -75,12 +75,12 @@ protected:
   /// chainable interfaces.
   /**
    * Each chainable controller implements this methods where all its state(read only) interfaces are
-   * exported. The method has the same meaning as `export_internal_state_interfaces` method from
+   * exported. The method has the same meaning as `export_state_interfaces` method from
    * hardware_interface::SystemInterface or hardware_interface::ActuatorInterface.
    *
    * \returns list of StateInterfaces that other controller can use as their inputs.
    */
-  virtual std::vector<hardware_interface::StateInterface> on_export_internal_state_interfaces() = 0;
+  virtual std::vector<hardware_interface::StateInterface> on_export_state_interfaces() = 0;
 
   /// Virtual method that each chainable controller should implement to export its read/write
   /// chainable interfaces.
@@ -131,7 +131,7 @@ protected:
   virtual return_type update_and_write_commands(
     const rclcpp::Time & time, const rclcpp::Duration & period) = 0;
 
-  /// Storage of values for internal_state interfaces
+  /// Storage of values for state interfaces
   std::vector<double> state_interfaces_values_;
 
   /// Storage of values for reference interfaces

@@ -47,38 +47,37 @@ return_type ChainableControllerInterface::update(
 std::vector<hardware_interface::StateInterface>
 ChainableControllerInterface::export_state_interfaces()
 {
-  auto internal_state_interfaces = on_export_state_interfaces();
+  auto state_interfaces = on_export_state_interfaces();
   // check if the "state_interfaces_values_" variable is resized to number of interfaces
-  if (internal_state_interfaces_data_.size() != internal_state_interfaces.size())
+  if (state_interfaces_values_.size() != state_interfaces.size())
   {
     RCLCPP_FATAL(
       get_node()->get_logger(),
-      "The internal storage for internal state values 'internal_state_interfaces_data_' variable "
-      "has size '%zu', but it is expected to have the size '%zu' equal to the number of internal "
-      "state interfaces. No state interface will be exported. Please correct and recompile "
+      "The internal storage for exported state values 'state_interfaces_values_' variable has size "
+      "'%zu', but it is expected to have the size '%zu' equal to the number of exported state "
+      "interfaces. No state interface will be exported. Please correct and recompile "
       "the controller with name '%s' and try again.",
-      internal_state_interfaces_data_.size(), internal_state_interfaces.size(),
-      get_node()->get_name());
-    internal_state_interfaces.clear();
+      state_interfaces_values_.size(), state_interfaces.size(), get_node()->get_name());
+    state_interfaces.clear();
   }
 
   // check if the names of the controller state interfaces begin with the controller's name
-  for (const auto & interface : internal_state_interfaces)
+  for (const auto & interface : state_interfaces)
   {
     if (interface.get_prefix_name() != get_node()->get_name())
     {
       RCLCPP_FATAL(
         get_node()->get_logger(),
         "The name of the interface '%s' does not begin with the controller's name. This is "
-        "mandatory for internal state interfaces. No internal state interface will be exported. "
-        "Please correct and recompile the controller with name '%s' and try again.",
+        "mandatory for state interfaces. No state interface will be exported. Please "
+        "correct and recompile the controller with name '%s' and try again.",
         interface.get_name().c_str(), get_node()->get_name());
-      internal_state_interfaces.clear();
+      state_interfaces.clear();
       break;
     }
   }
 
-  return internal_state_interfaces;
+  return state_interfaces;
 }
 
 std::vector<hardware_interface::CommandInterface>
