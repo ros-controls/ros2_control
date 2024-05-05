@@ -534,6 +534,17 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_c
     controller_spec.info.parameters_file = parameters_file;
   }
 
+  const std::string fallback_ctrl_param = controller_name + ".fallback_controllers";
+  std::vector<std::string> fallback_controllers;
+  if (!has_parameter(fallback_ctrl_param))
+  {
+    declare_parameter(fallback_ctrl_param, rclcpp::ParameterType::PARAMETER_STRING_ARRAY);
+  }
+  if (get_parameter(fallback_ctrl_param, fallback_controllers) && !fallback_controllers.empty())
+  {
+    controller_spec.info.fallback_controllers_names = fallback_controllers;
+  }
+
   return add_controller_impl(controller_spec);
 }
 

@@ -25,6 +25,28 @@ constexpr char HW_IF_VELOCITY[] = "velocity";
 constexpr char HW_IF_ACCELERATION[] = "acceleration";
 /// Constant defining effort interface name
 constexpr char HW_IF_EFFORT[] = "effort";
+/// Constant defining torque interface name
+constexpr char HW_IF_TORQUE[] = "torque";
+/// Constant defining force interface name
+constexpr char HW_IF_FORCE[] = "force";
+/// Constant defining current interface name
+constexpr char HW_IF_CURRENT[] = "current";
+/// Constant defining temperature interface name
+constexpr char HW_IF_TEMPERATURE[] = "temperature";
+
+/// Gains interface constants
+/// Constant defining proportional gain interface name
+constexpr char HW_IF_PROPORTIONAL_GAIN[] = "proportional";
+/// Constant defining integral gain interface name
+constexpr char HW_IF_INTEGRAL_GAIN[] = "integral";
+/// Constant defining derivative gain interface name
+constexpr char HW_IF_DERIVATIVE_GAIN[] = "derivative";
+/// Constant defining integral clamp interface name
+constexpr char HW_IF_INTEGRAL_CLAMP_MAX[] = "integral_clamp_max";
+/// Constant defining integral clamp interface name
+constexpr char HW_IF_INTEGRAL_CLAMP_MIN[] = "integral_clamp_min";
+/// Constant defining the feedforward interface name
+constexpr char HW_IF_FEEDFORWARD[] = "feedforward";
 }  // namespace hardware_interface
 
 #endif  // HARDWARE_INTERFACE__TYPES__HARDWARE_INTERFACE_TYPE_VALUES_HPP_
