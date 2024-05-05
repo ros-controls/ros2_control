@@ -56,7 +56,7 @@ public:
   bool is_chainable() const final;
 
   CONTROLLER_INTERFACE_PUBLIC
-  std::vector<hardware_interface::StateInterface> export_internal_state_interfaces() final;
+  std::vector<hardware_interface::StateInterface> export_state_interfaces() final;
 
   CONTROLLER_INTERFACE_PUBLIC
   std::vector<hardware_interface::CommandInterface> export_reference_interfaces() final;
@@ -78,7 +78,7 @@ protected:
    * exported. The method has the same meaning as `export_internal_state_interfaces` method from
    * hardware_interface::SystemInterface or hardware_interface::ActuatorInterface.
    *
-   * \returns list of StateInterfaces that other controller can use as their outputs.
+   * \returns list of StateInterfaces that other controller can use as their inputs.
    */
   virtual std::vector<hardware_interface::StateInterface> on_export_internal_state_interfaces() = 0;
 
@@ -132,7 +132,7 @@ protected:
     const rclcpp::Time & time, const rclcpp::Duration & period) = 0;
 
   /// Storage of values for internal_state interfaces
-  std::vector<double> internal_state_interfaces_data_;
+  std::vector<double> state_interfaces_values_;
 
   /// Storage of values for reference interfaces
   std::vector<double> reference_interfaces_;

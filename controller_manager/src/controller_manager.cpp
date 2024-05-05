@@ -125,7 +125,7 @@ bool is_interface_a_chained_interface(
   {
     RCLCPP_DEBUG(
       rclcpp::get_logger("ControllerManager::utils"),
-      "Required interface '%s' with prefix '%s' is not a chained interface.",
+      "Required interface '%s' with prefix '%s' is not a chain interface.",
       interface_name.c_str(), interface_prefix.c_str());
 
     return false;

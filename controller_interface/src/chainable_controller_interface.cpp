@@ -45,14 +45,12 @@ return_type ChainableControllerInterface::update(
 }
 
 std::vector<hardware_interface::StateInterface>
-ChainableControllerInterface::export_internal_state_interfaces()
+ChainableControllerInterface::export_state_interfaces()
 {
-  auto internal_state_interfaces = on_export_internal_state_interfaces();
-  // check if the "internal_state_interfaces_data_" variable is resized to number of interfaces
+  auto internal_state_interfaces = on_export_state_interfaces();
+  // check if the "state_interfaces_values_" variable is resized to number of interfaces
   if (internal_state_interfaces_data_.size() != internal_state_interfaces.size())
   {
-    // TODO(destogl): Should here be "FATAL"? It is fatal in terms of controller but not for the
-    // framework
     RCLCPP_FATAL(
       get_node()->get_logger(),
       "The internal storage for internal state values 'internal_state_interfaces_data_' variable "
