@@ -95,7 +95,7 @@ public:
       actual_state_.velocity.value() + desired_state_.acceleration.value() * dt;
   }
 
-  JointLimiterTest(const std::string & joint_limiter_type)
+  explicit JointLimiterTest(const std::string & joint_limiter_type)
   : joint_limiter_type_(joint_limiter_type),
     joint_limiter_loader_(
       "joint_limits",
