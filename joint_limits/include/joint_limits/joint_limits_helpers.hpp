@@ -18,6 +18,8 @@
 #define JOINT_LIMITS__JOINT_LIMITS_HELPERS_HPP_
 
 #include <optional>
+#include <string>
+#include <utility>
 #include "joint_limits/joint_limits.hpp"
 
 namespace joint_limits
