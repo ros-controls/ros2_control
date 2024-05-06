@@ -255,17 +255,6 @@ public:
   CONTROLLER_INTERFACE_PUBLIC
   virtual bool is_in_chained_mode() const = 0;
 
-  /// A method to enable the usage of references from subscribers
-  /**
-   * Enable or disable the retrieval of references for a chainable controller. This methods helps
-   * to toggle between the usage of reference from the subscribers or the external interfaces to
-   * avoid potential concurrency in input commands
-   *
-   * @return true if the setting is successful and false if not
-   */
-  CONTROLLER_INTERFACE_PUBLIC
-  virtual bool set_using_references_from_subscribers(bool enable) = 0;
-
 protected:
   std::vector<hardware_interface::LoanedCommandInterface> command_interfaces_;
   std::vector<hardware_interface::LoanedStateInterface> state_interfaces_;

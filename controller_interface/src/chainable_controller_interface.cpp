@@ -30,7 +30,7 @@ return_type ChainableControllerInterface::update(
 {
   return_type ret = return_type::ERROR;
 
-  if (use_references_from_subscribers_)
+  if (!is_in_chained_mode())
   {
     ret = update_reference_from_subscribers(time, period);
     if (ret != return_type::OK)
@@ -146,26 +146,6 @@ bool ChainableControllerInterface::set_chained_mode(bool chained_mode)
 }
 
 bool ChainableControllerInterface::is_in_chained_mode() const { return in_chained_mode_; }
-
-bool ChainableControllerInterface::set_using_references_from_subscribers(bool enable)
-{
-  bool result = false;
-  if (get_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
-  {
-    use_references_from_subscribers_ = enable;
-    result = true;
-  }
-  else
-  {
-    RCLCPP_ERROR(
-      get_node()->get_logger(),
-      "Can not toggle the controller's references between subscribers and interfaces in '%s' "
-      "state. "
-      " Current state is '%s'.",
-      hardware_interface::lifecycle_state_names::ACTIVE, get_state().label().c_str());
-  }
-  return result;
-}
 
 bool ChainableControllerInterface::on_set_chained_mode(bool /*chained_mode*/) { return true; }
 

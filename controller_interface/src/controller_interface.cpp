@@ -42,6 +42,4 @@ bool ControllerInterface::set_chained_mode(bool /*chained_mode*/) { return false
 
 bool ControllerInterface::is_in_chained_mode() const { return false; }
 
-bool ControllerInterface::set_using_references_from_subscribers(bool /*enable*/) { return false; }
-
 }  // namespace controller_interface

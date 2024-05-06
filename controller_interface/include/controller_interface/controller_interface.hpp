@@ -73,14 +73,6 @@ public:
    */
   CONTROLLER_INTERFACE_PUBLIC
   bool is_in_chained_mode() const final;
-
-  /**
-   * A non-chainable controller cannot use references from subscribers
-   *
-   * @return false
-   */
-  CONTROLLER_INTERFACE_PUBLIC
-  bool set_using_references_from_subscribers(bool enable) final;
 };
 
 using ControllerInterfaceSharedPtr = std::shared_ptr<ControllerInterface>;

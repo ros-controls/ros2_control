@@ -67,9 +67,6 @@ public:
   CONTROLLER_INTERFACE_PUBLIC
   bool is_in_chained_mode() const final;
 
-  CONTROLLER_INTERFACE_PUBLIC
-  bool set_using_references_from_subscribers(bool enable) final;
-
 protected:
   /// Virtual method that each chainable controller should implement to export its read-only
   /// chainable interfaces.
@@ -140,10 +137,6 @@ protected:
 private:
   /// A flag marking if a chainable controller is currently preceded by another controller.
   bool in_chained_mode_ = false;
-
-  /// A flag marking whether to use references from subscribers or from the interfaces as input
-  /// commands
-  bool use_references_from_subscribers_ = false;
 };
 
 }  // namespace controller_interface
