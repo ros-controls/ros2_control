@@ -400,6 +400,166 @@ const auto valid_urdf_ros2_control_system_robot_with_size_and_data_type =
   </ros2_control>
 )";
 
+// 12. Industrial Robots with integrated GPIO with few disabled limits in joints
+const auto valid_urdf_ros2_control_system_robot_with_gpio_and_disabled_interface_limits =
+  R"(
+  <ros2_control name="RRBotSystemWithGPIO" type="system">
+    <hardware>
+      <plugin>ros2_control_demo_hardware/RRBotSystemWithGPIOHardware</plugin>
+      <param name="example_param_write_for_sec">2</param>
+      <param name="example_param_read_for_sec">2</param>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position">
+        <limits enable="false"/>
+        <param name="min">-1</param>
+        <param name="max">1</param>
+      </command_interface>
+      <command_interface name="velocity">
+        <param name="min">-0.05</param>
+        <param name="max">0.1</param>
+      </command_interface>
+      <command_interface name="effort">
+        <param name="min">-0.2</param>
+        <param name="max">0.2</param>
+      </command_interface>
+      <command_interface name="acceleration">
+        <param name="min">-0.5</param>
+        <param name="max">0.5</param>
+      </command_interface>
+      <command_interface name="jerk">
+        <param name="max">5.0</param>
+      </command_interface>
+      <state_interface name="position"/>
+    </joint>
+    <joint name="joint2">
+      <limits enable="false"/>
+      <command_interface name="position">
+        <param name="min">-1</param>
+        <param name="max">1</param>
+      </command_interface>
+      <command_interface name="velocity"/>
+      <command_interface name="effort"/>
+      <command_interface name="acceleration">
+        <param name="min">-0.3</param>
+        <param name="max">0.3</param>
+      </command_interface>
+      <command_interface name="jerk">
+        <param name="min">-2.0</param>
+        <param name="max">2.0</param>
+      </command_interface>
+      <state_interface name="position"/>
+    </joint>
+    <joint name="joint3">
+      <command_interface name="acceleration">
+        <param name="max">1.0</param>
+      </command_interface>
+    </joint>
+    <gpio name="flange_IOS">
+      <command_interface name="digital_output" size="2" data_type="bool"/>
+      <state_interface name="analog_input" size="3"/>
+      <state_interface name="image" data_type="cv::Mat"/>
+    </gpio>
+  </ros2_control>
+)";
+const auto valid_urdf_ros2_control_system_robot_with_unavailable_interfaces =
+  R"(
+  <ros2_control name="RRBotSystemWithGPIO" type="system">
+    <hardware>
+      <plugin>ros2_control_demo_hardware/RRBotSystemWithGPIOHardware</plugin>
+      <param name="example_param_write_for_sec">2</param>
+      <param name="example_param_read_for_sec">2</param>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position">
+        <limits enable="false"/>
+        <param name="min">-1</param>
+        <param name="max">1</param>
+      </command_interface>
+      <command_interface name="velocity">
+        <param name="min">-0.05</param>
+        <param name="max">0.1</param>
+      </command_interface>
+      <command_interface name="effort">
+        <param name="min">-0.2</param>
+        <param name="max">0.2</param>
+      </command_interface>
+      <command_interface name="acceleration">
+        <param name="min">-0.5</param>
+        <param name="max">0.5</param>
+      </command_interface>
+      <command_interface name="jerk">
+        <param name="max">5.0</param>
+      </command_interface>
+      <state_interface name="position"/>
+    </joint>
+    <joint name="joint2">
+      <limits enable="false"/>
+      <command_interface name="position">
+        <param name="min">-1</param>
+        <param name="max">1</param>
+      </command_interface>
+      <command_interface name="velocity"/>
+      <command_interface name="effort"/>
+      <command_interface name="acceleration">
+        <param name="min">-0.3</param>
+        <param name="max">0.3</param>
+      </command_interface>
+      <command_interface name="jerk"/>
+      <state_interface name="position"/>
+    </joint>
+    <joint name="joint3">
+      <command_interface name="acceleration">
+        <param name="min">1.0</param>
+      </command_interface>
+      <command_interface name="unavailable">
+        <param name="min">-0.3</param>
+        <param name="max">0.3</param>
+      </command_interface>
+    </joint>
+  </ros2_control>
+)";
+const auto valid_urdf_ros2_control_system_robot_with_all_interfaces =
+  R"(
+  <ros2_control name="RRBotSystemWithGPIO" type="system">
+    <hardware>
+      <plugin>ros2_control_demo_hardware/RRBotSystemWithGPIOHardware</plugin>
+      <param name="example_param_write_for_sec">2</param>
+      <param name="example_param_read_for_sec">2</param>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position">
+        <param name="min">-1</param>
+        <param name="max">1</param>
+      </command_interface>
+      <command_interface name="velocity">
+        <param name="min">-0.05</param>
+        <param name="max">0.1</param>
+      </command_interface>
+      <command_interface name="effort">
+        <param name="min">-0.2</param>
+        <param name="max">0.2</param>
+      </command_interface>
+      <command_interface name="acceleration">
+        <param name="min">-0.5</param>
+        <param name="max">0.5</param>
+      </command_interface>
+      <command_interface name="jerk">
+        <param name="max">5.0</param>
+      </command_interface>
+      <state_interface name="position"/>
+    </joint>
+    <joint name="joint2">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <command_interface name="effort"/>
+      <command_interface name="acceleration"/>
+      <command_interface name="jerk"/>
+      <state_interface name="position"/>
+    </joint>
+  </ros2_control>
+)";
+
 const auto valid_urdf_ros2_control_parameter_empty =
   R"(
   <ros2_control name="2DOF_System_Robot_Position_Only" type="system">
@@ -564,6 +724,21 @@ const auto invalid_urdf2_transmission_given_too_many_joints =
       <joint name="joint1" role="joint1"/>
       <joint name="joint2" role="joint2"/>
     </transmission>
+  </ros2_control>
+)";
+
+const auto invalid_urdf_ros2_control_system_with_command_fixed_joint =
+  R"(
+  <ros2_control name="2DOF_System_Robot_Position_Only" type="system">
+    <hardware>
+      <plugin>ros2_control_demo_hardware/2DOF_System_Hardware_Position_Only</plugin>
+      <param name="example_param_write_for_sec">2</param>
+      <param name="example_param_read_for_sec">2</param>
+    </hardware>
+    <joint name="tool_joint">
+      <command_interface name="position">
+      </command_interface>
+    </joint>
   </ros2_control>
 )";
 
