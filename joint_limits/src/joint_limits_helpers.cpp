@@ -139,8 +139,8 @@ std::pair<double, double> compute_acceleration_limits(
     -std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity());
   if (
     limits.has_deceleration_limits &&
-    ((desired_acceleration < 0 && actual_velocity && actual_velocity > 0) ||
-     (desired_acceleration > 0 && actual_velocity && actual_velocity < 0)))
+    ((desired_acceleration < 0 && actual_velocity && actual_velocity.value() > 0) ||
+     (desired_acceleration > 0 && actual_velocity && actual_velocity.value() < 0)))
   {
     acc_or_dec_limits.first = -limits.max_deceleration;
     acc_or_dec_limits.second = limits.max_deceleration;
