@@ -2430,23 +2430,17 @@ void ControllerManager::propagate_deactivation_of_chained_mode(
         ControllersListIterator following_ctrl_it;
         if (is_interface_a_chained_interface(ctrl_itf_name, controllers, following_ctrl_it))
         {
-          // If the preceding controller's state interfaces are in use by other controllers,
-          // then maintain the chained mode
-          if (!is_controller_exported_state_interfaces_inuse_by_other_controllers(
-                following_ctrl_it->info.name, controllers, deactivate_request_))
+          // currently iterated "controller" is preceding controller --> add following controller
+          // with matching interface name to "from" chained mode list (if not already in it)
+          if (
+            std::find(
+              from_chained_mode_request_.begin(), from_chained_mode_request_.end(),
+              following_ctrl_it->info.name) == from_chained_mode_request_.end())
           {
-            // currently iterated "controller" is preceding controller --> add following controller
-            // with matching interface name to "from" chained mode list (if not already in it)
-            if (
-              std::find(
-                from_chained_mode_request_.begin(), from_chained_mode_request_.end(),
-                following_ctrl_it->info.name) == from_chained_mode_request_.end())
-            {
-              from_chained_mode_request_.push_back(following_ctrl_it->info.name);
-              RCLCPP_DEBUG(
-                get_logger(), "Adding controller '%s' in 'from chained mode' request.",
-                following_ctrl_it->info.name.c_str());
-            }
+            from_chained_mode_request_.push_back(following_ctrl_it->info.name);
+            RCLCPP_DEBUG(
+              get_logger(), "Adding controller '%s' in 'from chained mode' request.",
+              following_ctrl_it->info.name.c_str());
           }
         }
       }
