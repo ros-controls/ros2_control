@@ -895,7 +895,6 @@ void ControllerManager::clear_requests()
   }
   to_chained_mode_request_.clear();
   from_chained_mode_request_.clear();
-  to_use_references_from_subscribers_.clear();
   activate_command_interface_request_.clear();
   deactivate_command_interface_request_.clear();
 }
@@ -1139,12 +1138,6 @@ controller_interface::return_type ControllerManager::switch_controller(
       from_chained_mode_request_.begin(), from_chained_mode_request_.end(), controller.info.name);
     bool in_from_chained_mode_list = from_chained_mode_list_it != from_chained_mode_request_.end();
 
-    auto to_use_ref_from_sub_it = std::find(
-      to_use_references_from_subscribers_.begin(), to_use_references_from_subscribers_.end(),
-      controller.info.name);
-    bool in_to_use_ref_from_sub_list =
-      to_use_ref_from_sub_it != to_use_references_from_subscribers_.end();
-
     auto deactivate_list_it =
       std::find(deactivate_request_.begin(), deactivate_request_.end(), controller.info.name);
     bool in_deactivate_list = deactivate_list_it != deactivate_request_.end();
@@ -1153,7 +1146,7 @@ controller_interface::return_type ControllerManager::switch_controller(
     const bool is_inactive = is_controller_inactive(*controller.c);
 
     // restart controllers that need to switch their 'chained mode' - add to (de)activate lists
-    if (in_to_chained_mode_list || in_from_chained_mode_list || in_to_use_ref_from_sub_list)
+    if (in_to_chained_mode_list || in_from_chained_mode_list)
     {
       if (is_active && !in_deactivate_list)
       {
@@ -2192,7 +2185,6 @@ void ControllerManager::manage_switch()
 
   switch_chained_mode(to_chained_mode_request_, true);
   switch_chained_mode(from_chained_mode_request_, false);
-  set_controllers_reference_interfaces_availability(to_use_references_from_subscribers_, false);
 
   // activate controllers once the switch is fully complete
   if (!switch_params_.activate_asap)
@@ -2440,23 +2432,8 @@ void ControllerManager::propagate_deactivation_of_chained_mode(
         {
           // If the preceding controller's state interfaces are in use by other controllers,
           // then maintain the chained mode
-          if (is_controller_exported_state_interfaces_inuse_by_other_controllers(
+          if (!is_controller_exported_state_interfaces_inuse_by_other_controllers(
                 following_ctrl_it->info.name, controllers, deactivate_request_))
-          {
-            auto found_it = std::find(
-              to_use_references_from_subscribers_.begin(),
-              to_use_references_from_subscribers_.end(), following_ctrl_it->info.name);
-            if (found_it == to_use_references_from_subscribers_.end())
-            {
-              // In this case we check if the interface is state only and then add to use
-              // references_from_subscribers list
-              to_use_references_from_subscribers_.push_back(following_ctrl_it->info.name);
-              RCLCPP_DEBUG(
-                get_logger(), "Adding controller '%s' in 'use references from subscriber' request.",
-                following_ctrl_it->info.name.c_str());
-            }
-          }
-          else
           {
             // currently iterated "controller" is preceding controller --> add following controller
             // with matching interface name to "from" chained mode list (if not already in it)
@@ -2466,11 +2443,8 @@ void ControllerManager::propagate_deactivation_of_chained_mode(
                 following_ctrl_it->info.name) == from_chained_mode_request_.end())
             {
               from_chained_mode_request_.push_back(following_ctrl_it->info.name);
-              to_use_references_from_subscribers_.push_back(following_ctrl_it->info.name);
               RCLCPP_DEBUG(
-                get_logger(),
-                "Adding controller '%s' in 'from chained mode' and 'use references from "
-                "subscriber' request.",
+                get_logger(), "Adding controller '%s' in 'from chained mode' request.",
                 following_ctrl_it->info.name.c_str());
             }
           }
@@ -2601,18 +2575,6 @@ controller_interface::return_type ControllerManager::check_following_controllers
           "should stay in chained mode.",
           following_ctrl_it->info.name.c_str());
       }
-      auto ref_from_sub_it = std::find(
-        to_use_references_from_subscribers_.begin(), to_use_references_from_subscribers_.end(),
-        following_ctrl_it->info.name);
-      if (found_it != to_use_references_from_subscribers_.end())
-      {
-        to_use_references_from_subscribers_.erase(ref_from_sub_it);
-        RCLCPP_DEBUG(
-          get_logger(),
-          "Removing controller '%s' in 'use references from subscriber' request because it "
-          "should stay in chained mode and accept references from the active controller.",
-          following_ctrl_it->info.name.c_str());
-      }
     }
   }
   return controller_interface::return_type::OK;
@@ -2650,8 +2612,6 @@ controller_interface::return_type ControllerManager::check_preceeding_controller
   {
     for (const auto & ref_itf_name : controller_interfaces)
     {
-      std::vector<ControllersListIterator> preceding_controllers_using_ref_itf;
-
       // TODO(destogl): This data could be cached after configuring controller into a map for faster
       // access here
       for (auto preceding_ctrl_it = controllers.begin(); preceding_ctrl_it != controllers.end();
@@ -2851,40 +2811,5 @@ rclcpp::NodeOptions ControllerManager::determine_controller_node_options(
   controller_node_options = controller_node_options.arguments(node_options_arguments);
   return controller_node_options;
 }
-
-void ControllerManager::set_controllers_reference_interfaces_availability(
-  const std::vector<std::string> & controllers, bool available)
-{
-  std::vector<ControllerSpec> & rt_controller_list =
-    rt_controllers_wrapper_.update_and_get_used_by_rt_list();
-
-  for (const auto & request : controllers)
-  {
-    auto found_it = std::find_if(
-      rt_controller_list.begin(), rt_controller_list.end(),
-      std::bind(controller_name_compare, std::placeholders::_1, request));
-    if (found_it == rt_controller_list.end())
-    {
-      RCLCPP_FATAL(
-        get_logger(),
-        "Got request to turn %s reference interfaces of controller '%s', but controller is not in "
-        "the realtime controller list. (This should never happen!)",
-        (available ? "ON" : "OFF"), request.c_str());
-      continue;
-    }
-    auto controller = found_it->c;
-    if (!is_controller_active(*controller))
-    {
-      if (available)
-      {
-        resource_manager_->make_controller_reference_interfaces_available(request);
-      }
-      else
-      {
-        resource_manager_->make_controller_reference_interfaces_unavailable(request);
-      }
-    }
-  }
-};
 
 }  // namespace controller_manager
