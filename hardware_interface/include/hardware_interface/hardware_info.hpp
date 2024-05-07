@@ -19,6 +19,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "joint_limits/joint_limits.hpp"
+
 namespace hardware_interface
 {
 /**
@@ -42,6 +44,8 @@ struct InterfaceInfo
   std::string data_type;
   /// (Optional) If the handle is an array, the size of the array. Used by GPIOs.
   int size;
+  /// (Optional) enable or disable the limits for the command interfaces
+  bool enable_limits;
 };
 
 /// @brief This structure stores information about a joint that is mimicking another joint
@@ -163,6 +167,10 @@ struct HardwareInfo
    * The XML contents prior to parsing
    */
   std::string original_xml;
+  /**
+   * The URDF parsed limits of the hardware components joint command interfaces
+   */
+  std::unordered_map<std::string, joint_limits::JointLimits> limits;
 };
 
 }  // namespace hardware_interface
