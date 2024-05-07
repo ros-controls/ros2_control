@@ -21,6 +21,19 @@
 
 namespace joint_limits
 {
+namespace internal
+{
+/**
+ * @brief Check if the limits are in the correct order and swap them if they are not.
+ */
+void check_and_swap_limits(std::pair<double, double> & limits)
+{
+  if (limits.first > limits.second)
+  {
+    std::swap(limits.first, limits.second);
+  }
+}
+}  // namespace internal
 
 bool is_limited(double value, double min, double max) { return value < min || value > max; }
 
@@ -40,6 +53,7 @@ std::pair<double, double> compute_position_limits(
     pos_limits.first = std::max(prev_command_pos.value() - delta_pos, pos_limits.first);
     pos_limits.second = std::min(prev_command_pos.value() + delta_pos, pos_limits.second);
   }
+  internal::check_and_swap_limits(pos_limits);
   return pos_limits;
 }
 
@@ -72,6 +86,15 @@ std::pair<double, double> compute_velocity_limits(
     vel_limits.first = std::max(prev_command_vel.value() - delta_vel, vel_limits.first);
     vel_limits.second = std::min(prev_command_vel.value() + delta_vel, vel_limits.second);
   }
+  RCLCPP_ERROR(
+    rclcpp::get_logger("joint_limiter_interface"),
+    "Joint velocity limits for joint '%s' are [%f, %f]", joint_name.c_str(), vel_limits.first,
+    vel_limits.second);
+  internal::check_and_swap_limits(vel_limits);
+  RCLCPP_ERROR(
+    rclcpp::get_logger("joint_limiter_interface"),
+    "After swapping Joint velocity limits for joint '%s' are [%f, %f]", joint_name.c_str(),
+    vel_limits.first, vel_limits.second);
   return vel_limits;
 }
 
@@ -104,6 +127,7 @@ std::pair<double, double> compute_effort_limits(
       eff_limits.second = 0.0;
     }
   }
+  internal::check_and_swap_limits(eff_limits);
   return eff_limits;
 }
 

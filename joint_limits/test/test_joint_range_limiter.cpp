@@ -299,7 +299,9 @@ TEST_F(JointSaturationLimiterTest, check_desired_velocity_only_cases)
   test_limit_enforcing(4.8, -1.0, -0.3, true);
   test_limit_enforcing(4.8, -1.0, -0.8, true);
   test_limit_enforcing(4.8, -1.0, -1.0, false);
-  test_limit_enforcing(4.8, -0.5, -0.5, false);
+  // here the velocity is saturated by the acceleration limits, if not then the velocity will be
+  // directly -0.2
+  test_limit_enforcing(-4.8, -2.0, -0.5, true);
   test_limit_enforcing(-4.8, -1.0, -0.2, true);
   test_limit_enforcing(-4.3, -1.0, -0.7, true);
   test_limit_enforcing(-4.3, 0.0, -0.2, true);
@@ -641,6 +643,7 @@ TEST_F(JointSaturationLimiterTest, check_all_desired_references_limiting)
   test_limit_enforcing(2.0, 0.5, 6.0, 2.0, 1.0, 0.5, 3.0, 1.0, 0.5, 0.5, true);
   test_limit_enforcing(3.0, 0.5, 6.0, 2.0, 1.0, 0.5, 4.0, 1.0, 0.5, 0.5, true);
   test_limit_enforcing(4.0, 0.5, 6.0, 2.0, 1.0, 0.5, 5.0, 1.0, 0.5, 0.5, true);
+  test_limit_enforcing(4.8, 0.5, 6.0, 2.0, 1.0, 0.5, 5.0, 0.5, 0.5, 0.5, true);
   test_limit_enforcing(5.0, 0.5, 6.0, 2.0, 1.0, 0.5, 5.0, 0.0, 0.5, 0.5, true);
 }
 
