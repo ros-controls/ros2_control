@@ -190,6 +190,12 @@ if(BUILD_TESTING)
     ros2_control_test_assets::ros2_control_test_assets
   )
 
+  install(FILES test/test_controller_spawner_with_fallback_controllers.yaml
+    DESTINATION test)
+
+  install(FILES test/test_controller_spawner_with_type.yaml
+  DESTINATION test)
+
   ament_add_gmock(test_hardware_management_srvs
     test/test_hardware_management_srvs.cpp
   )
