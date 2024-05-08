@@ -2,6 +2,15 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.10.0 (2024-05-08)
+-------------------
+* allow extra spawner arguments to not declare every argument in launch utils (`#1505 <https://github.com/ros-controls/ros2_control/issues/1505>`_)
+* Working async controllers and components [not synchronized] (`#1041 <https://github.com/ros-controls/ros2_control/issues/1041>`_)
+* Add fallback controllers list to the ControllerInfo (`#1503 <https://github.com/ros-controls/ros2_control/issues/1503>`_)
+* Add a functionality to look for the controller type in the params file when not parsed (`#1502 <https://github.com/ros-controls/ros2_control/issues/1502>`_)
+* Add controller exception handling in controller manager (`#1507 <https://github.com/ros-controls/ros2_control/issues/1507>`_)
+* Contributors: Márk Szitanics, Sai Kishor Kothakota
+
 4.9.0 (2024-04-30)
 ------------------
 * Deactivate the controllers when they return error similar to hardware (`#1499 <https://github.com/ros-controls/ros2_control/issues/1499>`_)

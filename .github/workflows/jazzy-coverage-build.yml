@@ -1,0 +1,35 @@
+name: Coverage Build - Jazzy
+on:
+  workflow_dispatch:
+  # TODO(anyone) activate when branched for Jazzy
+  # push:
+  #   branches:
+  #     - master
+  #   paths:
+  #     - '**.hpp'
+  #     - '**.h'
+  #     - '**.cpp'
+  #     - '.github/workflows/jazzy-coverage-build.yml'
+  #     - '**/package.xml'
+  #     - '**/CMakeLists.txt'
+  #     - 'ros2_control.jazzy.repos'
+  #     - 'codecov.yml'
+  # pull_request:
+  #   branches:
+  #     - master
+  #   paths:
+  #     - '**.hpp'
+  #     - '**.h'
+  #     - '**.cpp'
+  #     - '.github/workflows/jazzy-coverage-build.yml'
+  #     - '**/package.xml'
+  #     - '**/CMakeLists.txt'
+  #     - 'ros2_control.jazzy.repos'
+  #     - 'codecov.yml'
+
+jobs:
+  coverage_jazzy:
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-build-coverage.yml@master
+    secrets: inherit
+    with:
+      ros_distro: jazzy

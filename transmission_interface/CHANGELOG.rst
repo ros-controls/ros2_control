@@ -2,6 +2,9 @@
 Changelog for package transmission_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.10.0 (2024-05-08)
+-------------------
+
 4.9.0 (2024-04-30)
 ------------------
 * rosdoc2 for transmission_interface (`#1496 <https://github.com/ros-controls/ros2_control/issues/1496>`_)
