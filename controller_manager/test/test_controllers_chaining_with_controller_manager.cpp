@@ -932,7 +932,7 @@ TEST_P(
     POSITION_CONTROLLER_CLAIMED_INTERFACES, 10u, true);
   EXPECT_TRUE(pid_left_wheel_controller->is_in_chained_mode());
   EXPECT_TRUE(pid_right_wheel_controller->is_in_chained_mode());
-  ASSERT_TRUE(diff_drive_controller->is_in_chained_mode());
+  ASSERT_FALSE(diff_drive_controller->is_in_chained_mode());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, diff_drive_controller->get_state().id());
   // SensorFusionController continues to stay in the chained mode as it is still using the state
@@ -952,7 +952,7 @@ TEST_P(
     robot_localization_controller, ROBOT_LOCALIZATION_CONTROLLER, {}, 8u, true);
   EXPECT_TRUE(pid_left_wheel_controller->is_in_chained_mode());
   EXPECT_TRUE(pid_right_wheel_controller->is_in_chained_mode());
-  ASSERT_TRUE(diff_drive_controller->is_in_chained_mode());
+  ASSERT_FALSE(diff_drive_controller->is_in_chained_mode());
   ASSERT_FALSE(sensor_fusion_controller->is_in_chained_mode());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, diff_drive_controller->get_state().id());
@@ -968,7 +968,7 @@ TEST_P(
   DeactivateAndCheckController(odom_publisher_controller, ODOM_PUBLISHER_CONTROLLER, {}, 8u, true);
   EXPECT_TRUE(pid_left_wheel_controller->is_in_chained_mode());
   EXPECT_TRUE(pid_right_wheel_controller->is_in_chained_mode());
-  ASSERT_TRUE(diff_drive_controller->is_in_chained_mode());
+  ASSERT_FALSE(diff_drive_controller->is_in_chained_mode());
   ASSERT_FALSE(sensor_fusion_controller->is_in_chained_mode());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, diff_drive_controller->get_state().id());
@@ -1519,7 +1519,7 @@ TEST_P(
     POSITION_CONTROLLER_CLAIMED_INTERFACES, 2u, true);
   EXPECT_TRUE(pid_left_wheel_controller->is_in_chained_mode());
   EXPECT_TRUE(pid_right_wheel_controller->is_in_chained_mode());
-  EXPECT_TRUE(diff_drive_controller->is_in_chained_mode());
+  EXPECT_FALSE(diff_drive_controller->is_in_chained_mode());
   ASSERT_TRUE(sensor_fusion_controller->is_in_chained_mode());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, diff_drive_controller->get_state().id());
@@ -1544,7 +1544,7 @@ TEST_P(
     controller_interface::return_type::ERROR, true, true);
   EXPECT_TRUE(pid_left_wheel_controller->is_in_chained_mode());
   EXPECT_TRUE(pid_right_wheel_controller->is_in_chained_mode());
-  ASSERT_TRUE(diff_drive_controller->is_in_chained_mode());
+  ASSERT_FALSE(diff_drive_controller->is_in_chained_mode());
   ASSERT_TRUE(sensor_fusion_controller->is_in_chained_mode());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, diff_drive_controller->get_state().id());
@@ -1564,7 +1564,7 @@ TEST_P(
     expected.at(test_param.strictness).future_status);
   EXPECT_TRUE(pid_left_wheel_controller->is_in_chained_mode());
   EXPECT_TRUE(pid_right_wheel_controller->is_in_chained_mode());
-  ASSERT_TRUE(diff_drive_controller->is_in_chained_mode());
+  ASSERT_FALSE(diff_drive_controller->is_in_chained_mode());
   ASSERT_TRUE(sensor_fusion_controller->is_in_chained_mode());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, diff_drive_controller->get_state().id());
@@ -1582,7 +1582,7 @@ TEST_P(
     robot_localization_controller, ROBOT_LOCALIZATION_CONTROLLER, {}, 0u);
   EXPECT_TRUE(pid_left_wheel_controller->is_in_chained_mode());
   EXPECT_TRUE(pid_right_wheel_controller->is_in_chained_mode());
-  EXPECT_TRUE(diff_drive_controller->is_in_chained_mode());
+  ASSERT_FALSE(diff_drive_controller->is_in_chained_mode());
   ASSERT_FALSE(sensor_fusion_controller->is_in_chained_mode());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, diff_drive_controller->get_state().id());
@@ -1599,7 +1599,7 @@ TEST_P(
   DeactivateAndCheckController(sensor_fusion_controller, SENSOR_FUSION_CONTROLLER, {}, 0u);
   EXPECT_TRUE(pid_left_wheel_controller->is_in_chained_mode());
   EXPECT_TRUE(pid_right_wheel_controller->is_in_chained_mode());
-  EXPECT_TRUE(diff_drive_controller->is_in_chained_mode());
+  ASSERT_FALSE(diff_drive_controller->is_in_chained_mode());
   ASSERT_FALSE(sensor_fusion_controller->is_in_chained_mode());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, diff_drive_controller->get_state().id());
