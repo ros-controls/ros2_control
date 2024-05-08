@@ -2594,137 +2594,59 @@ controller_interface::return_type ControllerManager::check_preceeding_controller
     get_logger(), "Checking preceding controller of following controller with name '%s'.",
     controller_it->info.name.c_str());
 
-  for (const auto & preceeding_controller :
-       controller_chain_spec_[controller_it->info.name].preceding_controllers)
+  auto preceeding_controllers_list =
+    controller_chained_state_interfaces_cache_[controller_it->info.name];
+  preceeding_controllers_list.insert(
+    preceeding_controllers_list.end(),
+    controller_chained_reference_interfaces_cache_[controller_it->info.name].cbegin(),
+    controller_chained_reference_interfaces_cache_[controller_it->info.name].cend());
+
+  for (const auto & preceeding_controller : preceeding_controllers_list)
   {
     RCLCPP_DEBUG(get_logger(), "\t Preceding controller : '%s'.", preceeding_controller.c_str());
     auto found_it = std::find_if(
       controllers.begin(), controllers.end(),
       std::bind(controller_name_compare, std::placeholders::_1, preceeding_controller));
-    if (
-      is_controller_inactive(found_it->c) &&
-      std::find(activate_request_.begin(), activate_request_.end(), preceeding_controller) !=
-        activate_request_.end())
-    {
-      RCLCPP_WARN(
-        get_logger(),
-        "Could not deactivate controller with name '%s' because "
-        "preceding controller with name '%s' is inactive and will be activated.",
-        controller_it->info.name.c_str(), preceeding_controller.c_str());
-      return controller_interface::return_type::ERROR;
-    }
-    if (
-      is_controller_active(found_it->c) &&
-      std::find(deactivate_request_.begin(), deactivate_request_.end(), preceeding_controller) ==
-        deactivate_request_.end())
-    {
-      RCLCPP_WARN(
-        get_logger(),
-        "New Could not deactivate controller with name '%s' because "
-        "preceding controller with name '%s' is active and will not be deactivated.",
-        controller_it->info.name.c_str(), preceeding_controller.c_str());
-      return controller_interface::return_type::ERROR;
-    }
-  }
 
-  for (const auto & controller :
-       controller_chain_spec_[controller_it->info.name].following_controllers)
-  {
-    RCLCPP_DEBUG(get_logger(), "\t Following controller : '%s'.", controller.c_str());
-    auto found_it = std::find_if(
-      controllers.begin(), controllers.end(),
-      std::bind(controller_name_compare, std::placeholders::_1, controller));
     if (found_it != controllers.end())
     {
-      auto state_itfs = found_it->c->state_interface_configuration().names;
-      for (const auto & state_itf : state_itfs)
+      if (
+        is_controller_inactive(found_it->c) &&
+        std::find(activate_request_.begin(), activate_request_.end(), preceeding_controller) !=
+          activate_request_.end())
       {
-        if (is_interface_a_chained_interface(state_itf, controllers, found_it))
-        {
-          if (is_controller_active(found_it->c))
-          {
-            RCLCPP_WARN(
-              get_logger(),
-              "New Could not deactivate controller with name '%s' because "
-              "following controller with name '%s' is active.",
-              controller_it->info.name.c_str(), found_it->info.name.c_str());
-            return controller_interface::return_type::ERROR;
-          }
-        }
+        RCLCPP_WARN(
+          get_logger(),
+          "Could not deactivate controller with name '%s' because "
+          "preceding controller with name '%s' is inactive and will be activated.",
+          controller_it->info.name.c_str(), preceeding_controller.c_str());
+        return controller_interface::return_type::ERROR;
+      }
+      if (
+        is_controller_active(found_it->c) &&
+        std::find(deactivate_request_.begin(), deactivate_request_.end(), preceeding_controller) ==
+          deactivate_request_.end())
+      {
+        RCLCPP_WARN(
+          get_logger(),
+          "Could not deactivate controller with name '%s' because "
+          "preceding controller with name '%s' is active and will not be deactivated.",
+          controller_it->info.name.c_str(), preceeding_controller.c_str());
+        return controller_interface::return_type::ERROR;
       }
     }
   }
 
-  const auto ctrl_ref_itfs =
-    resource_manager_->get_controller_reference_interface_names(controller_it->info.name);
-  const auto ctrl_exp_state_itfs =
-    resource_manager_->get_controller_exported_state_interface_names(controller_it->info.name);
-  for (const auto & controller_interfaces : {ctrl_ref_itfs, ctrl_exp_state_itfs})
-  {
-    for (const auto & ref_itf_name : controller_interfaces)
-    {
-      // TODO(destogl): This data could be cached after configuring controller into a map for faster
-      // access here
-      for (auto preceding_ctrl_it = controllers.begin(); preceding_ctrl_it != controllers.end();
-           ++preceding_ctrl_it)
-      {
-        const auto preceding_ctrl_cmd_itfs =
-          preceding_ctrl_it->c->command_interface_configuration().names;
-        const auto preceding_ctrl_state_itfs =
-          preceding_ctrl_it->c->state_interface_configuration().names;
+  // TODO(destogl): this should be discussed how to it the best - just a placeholder for now
+  // else if (
+  //  strictness ==
+  //  controller_manager_msgs::srv::SwitchController::Request::MANIPULATE_CONTROLLERS_CHAIN)
+  // {
+  // // insert to the begin of activate request list to be activated before preceding
+  // controller
+  //   activate_request_.insert(activate_request_.begin(), preceding_ctrl_name);
+  // }
 
-        // if controller is not preceding go the next one
-        if (
-          (std::find(
-             preceding_ctrl_cmd_itfs.begin(), preceding_ctrl_cmd_itfs.end(), ref_itf_name) ==
-           preceding_ctrl_cmd_itfs.end()) &&
-          (std::find(
-             preceding_ctrl_state_itfs.begin(), preceding_ctrl_state_itfs.end(), ref_itf_name) ==
-           preceding_ctrl_state_itfs.end()))
-        {
-          continue;
-        }
-
-        // check if preceding controller will be activated
-        if (
-          is_controller_inactive(preceding_ctrl_it->c) &&
-          std::find(
-            activate_request_.begin(), activate_request_.end(), preceding_ctrl_it->info.name) !=
-            activate_request_.end())
-        {
-          RCLCPP_WARN(
-            get_logger(),
-            "Could not deactivate controller with name '%s' because "
-            "preceding controller with name '%s' will be activated. ",
-            controller_it->info.name.c_str(), preceding_ctrl_it->info.name.c_str());
-          return controller_interface::return_type::ERROR;
-        }
-        // check if preceding controller will not be deactivated
-        else if (
-          is_controller_active(preceding_ctrl_it->c) &&
-          std::find(
-            deactivate_request_.begin(), deactivate_request_.end(), preceding_ctrl_it->info.name) ==
-            deactivate_request_.end())
-        {
-          RCLCPP_WARN(
-            get_logger(),
-            "Could not deactivate controller with name '%s' because "
-            "preceding controller with name '%s' is active and will not be deactivated.",
-            controller_it->info.name.c_str(), preceding_ctrl_it->info.name.c_str());
-          return controller_interface::return_type::ERROR;
-        }
-        // TODO(destogl): this should be discussed how to it the best - just a placeholder for now
-        // else if (
-        //  strictness ==
-        //  controller_manager_msgs::srv::SwitchController::Request::MANIPULATE_CONTROLLERS_CHAIN)
-        // {
-        // // insert to the begin of activate request list to be activated before preceding
-        // controller
-        //   activate_request_.insert(activate_request_.begin(), preceding_ctrl_name);
-        // }
-      }
-    }
-  }
   return controller_interface::return_type::OK;
 }
 
