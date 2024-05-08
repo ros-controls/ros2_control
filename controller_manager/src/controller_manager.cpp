@@ -707,7 +707,8 @@ controller_interface::return_type ControllerManager::configure_controller(
   if (controller->is_async())
   {
     async_controller_threads_.emplace(
-      controller_name, std::make_unique<ControllerThreadWrapper>(controller, update_rate_));
+      controller_name,
+      std::make_unique<controller_interface::AsyncControllerThread>(controller, update_rate_));
   }
 
   const auto controller_update_rate = controller->get_update_rate();
@@ -2316,6 +2317,13 @@ std::pair<std::string, std::string> ControllerManager::split_command_interface(
 }
 
 unsigned int ControllerManager::get_update_rate() const { return update_rate_; }
+
+void ControllerManager::shutdown_async_controllers_and_components()
+{
+  async_controller_threads_.erase(
+    async_controller_threads_.begin(), async_controller_threads_.end());
+  resource_manager_->shutdown_async_components();
+}
 
 void ControllerManager::propagate_deactivation_of_chained_mode(
   const std::vector<ControllerSpec> & controllers)
