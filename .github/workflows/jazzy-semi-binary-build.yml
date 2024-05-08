@@ -1,4 +1,4 @@
-name: Rolling Semi-Binary Build
+name: Jazzy Semi-Binary Build
 # author: Denis Štogl <denis@stoglrobotics.de>
 # description: 'Build & test all dependencies from released (binary) packages.'
 
@@ -11,10 +11,10 @@ on:
       - '**.hpp'
       - '**.h'
       - '**.cpp'
-      - '.github/workflows/rolling-semi-binary-build.yml'
+      - '.github/workflows/jazzy-semi-binary-build.yml'
       - '**/package.xml'
       - '**/CMakeLists.txt'
-      - 'ros2_control.rolling.repos'
+      - 'ros2_control.jazzy.repos'
   push:
     branches:
       - master
@@ -22,10 +22,10 @@ on:
       - '**.hpp'
       - '**.h'
       - '**.cpp'
-      - '.github/workflows/rolling-semi-binary-build.yml'
+      - '.github/workflows/jazzy-semi-binary-build.yml'
       - '**/package.xml'
       - '**/CMakeLists.txt'
-      - 'ros2_control.rolling.repos'
+      - 'ros2_control.jazzy.repos'
   schedule:
     # Run every morning to detect flakiness and broken dependencies
     - cron: '03 1 * * *'
@@ -36,7 +36,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ROS_DISTRO: [rolling]
+        ROS_DISTRO: [jazzy]
         ROS_REPO: [main, testing]
     with:
       ros_distro: ${{ matrix.ROS_DISTRO }}

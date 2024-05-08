@@ -1,13 +1,13 @@
-name: Pre-Commit - Humble
+name: Pre-Commit - Jazzy
 
 on:
   workflow_dispatch:
   pull_request:
     branches:
-      - humble
+      - master
 
 jobs:
   pre-commit:
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-pre-commit.yml@master
     with:
-      ros_distro: humble
+      ros_distro: jazzy

@@ -1,4 +1,4 @@
-name: Rolling - ABI Compatibility Check
+name: Jazzy - ABI Compatibility Check
 on:
   workflow_dispatch:
   pull_request:
@@ -8,10 +8,10 @@ on:
       - '**.hpp'
       - '**.h'
       - '**.cpp'
-      - '.github/workflows/rolling-abi-compatibility.yml'
+      - '.github/workflows/jazzy-abi-compatibility.yml'
       - '**/package.xml'
       - '**/CMakeLists.txt'
-      - 'ros2_control-not-released.rolling.repos'
+      - 'ros2_control-not-released.jazzy.repos'
 
 jobs:
   abi_check:
@@ -20,7 +20,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ros-industrial/industrial_ci@master
         env:
-          ROS_DISTRO: rolling
+          ROS_DISTRO: jazzy
           ROS_REPO: testing
           ABICHECK_URL: github:${{ github.repository }}#${{ github.base_ref }}
           NOT_TEST_BUILD: true
