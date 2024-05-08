@@ -23,6 +23,7 @@
 #include <utility>
 #include <vector>
 
+#include "controller_interface/async_controller.hpp"
 #include "controller_interface/chainable_controller_interface.hpp"
 #include "controller_interface/controller_interface.hpp"
 #include "controller_interface/controller_interface_base.hpp"
@@ -193,6 +194,15 @@ public:
   // Per controller update rate support
   CONTROLLER_MANAGER_PUBLIC
   unsigned int get_update_rate() const;
+
+  /// Deletes all async controllers and components.
+  /**
+   * Needed to join the threads immediately after the control loop is ended
+   * to avoid unnecessary iterations. Otherwise
+   * the threads will be joined only when the controller manager gets destroyed.
+   */
+  CONTROLLER_MANAGER_PUBLIC
+  void shutdown_async_controllers_and_components();
 
 protected:
   CONTROLLER_MANAGER_PUBLIC
@@ -520,6 +530,12 @@ private:
   };
 
   SwitchParams switch_params_;
+<<<<<<< HEAD
+=======
+
+  std::unordered_map<std::string, std::unique_ptr<controller_interface::AsyncControllerThread>>
+    async_controller_threads_;
+>>>>>>> 2cbe470 (Working async controllers and components [not synchronized] (#1041))
 };
 
 }  // namespace controller_manager
