@@ -9,9 +9,9 @@ on:
       - '**.h'
       - '**.cpp'
       - '.github/workflows/iron-coverage-build.yml'
-      - '**.yaml'
       - '**/package.xml'
       - '**/CMakeLists.txt'
+      - 'ros2_control.iron.repos'
       - 'codecov.yml'
   pull_request:
     branches:
@@ -21,9 +21,9 @@ on:
       - '**.h'
       - '**.cpp'
       - '.github/workflows/iron-coverage-build.yml'
-      - '**.yaml'
       - '**/package.xml'
       - '**/CMakeLists.txt'
+      - 'ros2_control.iron.repos'
       - 'codecov.yml'
 
 jobs:

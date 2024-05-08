@@ -9,9 +9,9 @@ on:
       - '**.h'
       - '**.cpp'
       - '.github/workflows/iron-source-build.yml'
-      - '**.yaml'
       - '**/package.xml'
       - '**/CMakeLists.txt'
+      - 'ros2_control.iron.repos'
   schedule:
     # Run every day to detect flakiness and broken dependencies
     - cron: '03 3 * * *'

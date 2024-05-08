@@ -9,9 +9,9 @@ on:
       - '**.h'
       - '**.cpp'
       - '.github/workflows/jazzy-abi-compatibility.yml'
-      - '**.yaml'
       - '**/package.xml'
       - '**/CMakeLists.txt'
+      - 'ros2_control-not-released.jazzy.repos'
 
 jobs:
   abi_check:
