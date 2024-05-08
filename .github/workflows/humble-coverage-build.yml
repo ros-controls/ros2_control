@@ -32,4 +32,3 @@ jobs:
     secrets: inherit
     with:
       ros_distro: humble
-      os_name: ubuntu-22.04

@@ -32,4 +32,3 @@ jobs:
     secrets: inherit
     with:
       ros_distro: rolling
-      container: ubuntu:24.04
