@@ -819,6 +819,8 @@ controller_interface::return_type ControllerManager::configure_controller(
         controller_chain_spec_[controller_name].following_controllers, ctrl_it->info.name);
       add_element_to_list(
         controller_chain_spec_[ctrl_it->info.name].preceding_controllers, controller_name);
+      add_element_to_list(
+        controller_chained_reference_interfaces_cache_[ctrl_it->info.name], controller_name);
     }
   }
   // This is needed when we start exporting the state interfaces from the controllers
@@ -831,6 +833,8 @@ controller_interface::return_type ControllerManager::configure_controller(
         controller_chain_spec_[controller_name].preceding_controllers, ctrl_it->info.name);
       add_element_to_list(
         controller_chain_spec_[ctrl_it->info.name].following_controllers, controller_name);
+      add_element_to_list(
+        controller_chained_state_interfaces_cache_[ctrl_it->info.name], controller_name);
     }
   }
 
@@ -1439,6 +1443,8 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::add_co
   // initialize the data for the controller chain spec once it is loaded. It is needed, so when we
   // sort the controllers later, they will be added to the list
   controller_chain_spec_[controller.info.name] = ControllerChainSpec();
+  controller_chained_state_interfaces_cache_[controller.info.name] = {};
+  controller_chained_reference_interfaces_cache_[controller.info.name] = {};
 
   executor_->add_node(controller.c->get_node()->get_node_base_interface());
   to.emplace_back(controller);
