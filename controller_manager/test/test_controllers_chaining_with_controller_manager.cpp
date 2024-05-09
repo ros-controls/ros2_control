@@ -127,7 +127,7 @@ public:
     position_tracking_controller = std::make_shared<test_controller::TestController>();
     odom_publisher_controller = std::make_shared<test_controller::TestController>();
     sensor_fusion_controller = std::make_shared<TestableTestChainableController>();
-    robot_localization_controller = std::make_shared<test_controller::TestController>();
+    robot_localization_controller = std::make_shared<TestableTestChainableController>();
 
     // configure Left Wheel controller
     controller_interface::InterfaceConfiguration pid_left_cmd_ifs_cfg = {
@@ -193,6 +193,7 @@ public:
        std::string(SENSOR_FUSION_CONTROLLER) + "/odom_y",
        std::string(SENSOR_FUSION_CONTROLLER) + "/yaw"}};
     robot_localization_controller->set_state_interface_configuration(odom_ifs_cfg);
+    robot_localization_controller->set_exported_state_interface_names({"actual_pose"});
   }
 
   void CheckIfControllersAreAddedCorrectly()
@@ -329,14 +330,14 @@ public:
       position_tracking_controller->get_state().id(),
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
     EXPECT_EQ(cm_->resource_manager_->command_interface_keys().size(), number_of_cmd_itfs + 8);
-    EXPECT_EQ(cm_->resource_manager_->state_interface_keys().size(), number_of_state_itfs + 7);
+    EXPECT_EQ(cm_->resource_manager_->state_interface_keys().size(), number_of_state_itfs + 8);
 
     cm_->configure_controller(ODOM_PUBLISHER_CONTROLLER);
     EXPECT_EQ(
       position_tracking_controller->get_state().id(),
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
     EXPECT_EQ(cm_->resource_manager_->command_interface_keys().size(), number_of_cmd_itfs + 8);
-    EXPECT_EQ(cm_->resource_manager_->state_interface_keys().size(), number_of_state_itfs + 7);
+    EXPECT_EQ(cm_->resource_manager_->state_interface_keys().size(), number_of_state_itfs + 8);
   }
 
   template <
@@ -578,7 +579,7 @@ public:
   std::shared_ptr<TestableTestChainableController> diff_drive_controller;
   std::shared_ptr<TestableTestChainableController> diff_drive_controller_two;
   std::shared_ptr<TestableTestChainableController> sensor_fusion_controller;
-  std::shared_ptr<test_controller::TestController> robot_localization_controller;
+  std::shared_ptr<TestableTestChainableController> robot_localization_controller;
   std::shared_ptr<test_controller::TestController> odom_publisher_controller;
   std::shared_ptr<test_controller::TestController> position_tracking_controller;
 

@@ -91,6 +91,9 @@ public:
   CONTROLLER_MANAGER_PUBLIC
   void set_imu_sensor_name(const std::string & name);
 
+  CONTROLLER_MANAGER_PUBLIC
+  std::vector<double> get_state_interface_data() const;
+
   size_t internal_counter;
   controller_interface::InterfaceConfiguration cmd_iface_cfg_;
   controller_interface::InterfaceConfiguration state_iface_cfg_;
