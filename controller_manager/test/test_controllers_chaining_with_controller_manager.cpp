@@ -125,6 +125,7 @@ public:
     diff_drive_controller = std::make_shared<TestableTestChainableController>();
     diff_drive_controller_two = std::make_shared<TestableTestChainableController>();
     position_tracking_controller = std::make_shared<test_controller::TestController>();
+    position_tracking_controller_two = std::make_shared<test_controller::TestController>();
     odom_publisher_controller = std::make_shared<test_controller::TestController>();
     sensor_fusion_controller = std::make_shared<TestableTestChainableController>();
     robot_localization_controller = std::make_shared<TestableTestChainableController>();
@@ -194,11 +195,21 @@ public:
        std::string(SENSOR_FUSION_CONTROLLER) + "/yaw"}};
     robot_localization_controller->set_state_interface_configuration(odom_ifs_cfg);
     robot_localization_controller->set_exported_state_interface_names({"actual_pose"});
+
+    // configure Position Tracking controller Two
+    controller_interface::InterfaceConfiguration position_tracking_state_ifs_cfg = {
+      controller_interface::interface_configuration_type::INDIVIDUAL,
+      {std::string(ROBOT_LOCALIZATION_CONTROLLER) + "/actual_pose"}};
+    // in this simple example "vel_x" == "velocity left wheel" and "vel_y" == "velocity right wheel"
+    position_tracking_controller_two->set_command_interface_configuration(
+      position_tracking_cmd_ifs_cfg);
+    position_tracking_controller_two->set_state_interface_configuration(
+      position_tracking_state_ifs_cfg);
   }
 
   void CheckIfControllersAreAddedCorrectly()
   {
-    EXPECT_EQ(8u, cm_->get_loaded_controllers().size());
+    EXPECT_EQ(9u, cm_->get_loaded_controllers().size());
     EXPECT_EQ(2, pid_left_wheel_controller.use_count());
     EXPECT_EQ(2, pid_right_wheel_controller.use_count());
     EXPECT_EQ(2, diff_drive_controller.use_count());
@@ -207,6 +218,7 @@ public:
     EXPECT_EQ(2, sensor_fusion_controller.use_count());
     EXPECT_EQ(2, robot_localization_controller.use_count());
     EXPECT_EQ(2, odom_publisher_controller.use_count());
+    EXPECT_EQ(2, position_tracking_controller_two.use_count());
 
     EXPECT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
@@ -232,6 +244,9 @@ public:
     EXPECT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
       odom_publisher_controller->get_state().id());
+    EXPECT_EQ(
+      lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+      position_tracking_controller_two->get_state().id());
   }
 
   // order or controller configuration is not important therefore we can reuse the same method
@@ -335,6 +350,13 @@ public:
     cm_->configure_controller(ODOM_PUBLISHER_CONTROLLER);
     EXPECT_EQ(
       position_tracking_controller->get_state().id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+    EXPECT_EQ(cm_->resource_manager_->command_interface_keys().size(), number_of_cmd_itfs + 8);
+    EXPECT_EQ(cm_->resource_manager_->state_interface_keys().size(), number_of_state_itfs + 8);
+
+    cm_->configure_controller(POSITION_TRACKING_CONTROLLER_TWO);
+    EXPECT_EQ(
+      position_tracking_controller_two->get_state().id(),
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
     EXPECT_EQ(cm_->resource_manager_->command_interface_keys().size(), number_of_cmd_itfs + 8);
     EXPECT_EQ(cm_->resource_manager_->state_interface_keys().size(), number_of_state_itfs + 8);
@@ -553,6 +575,7 @@ public:
   static constexpr char SENSOR_FUSION_CONTROLLER[] = "sensor_fusion_controller";
   static constexpr char ROBOT_LOCALIZATION_CONTROLLER[] = "robot_localization_controller";
   static constexpr char ODOM_PUBLISHER_CONTROLLER[] = "odometry_publisher_controller";
+  static constexpr char POSITION_TRACKING_CONTROLLER_TWO[] = "position_tracking_controller_two";
 
   const std::vector<std::string> PID_LEFT_WHEEL_REFERENCE_INTERFACES = {
     "pid_left_wheel_controller/velocity"};
@@ -582,6 +605,7 @@ public:
   std::shared_ptr<TestableTestChainableController> robot_localization_controller;
   std::shared_ptr<test_controller::TestController> odom_publisher_controller;
   std::shared_ptr<test_controller::TestController> position_tracking_controller;
+  std::shared_ptr<test_controller::TestController> position_tracking_controller_two;
 
   testing::WithParamInterface<Strictness>::ParamType test_param;
 
@@ -636,6 +660,9 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers)
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
   cm_->add_controller(
     robot_localization_controller, ROBOT_LOCALIZATION_CONTROLLER,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    position_tracking_controller_two, POSITION_TRACKING_CONTROLLER_TWO,
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
 
   CheckIfControllersAreAddedCorrectly();
@@ -848,6 +875,9 @@ TEST_P(
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
   cm_->add_controller(
     robot_localization_controller, ROBOT_LOCALIZATION_CONTROLLER,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    position_tracking_controller_two, POSITION_TRACKING_CONTROLLER_TWO,
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
 
   CheckIfControllersAreAddedCorrectly();
@@ -1067,6 +1097,9 @@ TEST_P(
   cm_->add_controller(
     robot_localization_controller, ROBOT_LOCALIZATION_CONTROLLER,
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    position_tracking_controller_two, POSITION_TRACKING_CONTROLLER_TWO,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
 
   CheckIfControllersAreAddedCorrectly();
 
@@ -1182,6 +1215,9 @@ TEST_P(
   cm_->add_controller(
     robot_localization_controller, ROBOT_LOCALIZATION_CONTROLLER,
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    position_tracking_controller_two, POSITION_TRACKING_CONTROLLER_TWO,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
 
   CheckIfControllersAreAddedCorrectly();
 
@@ -1201,6 +1237,9 @@ TEST_P(
   ActivateAndCheckController(sensor_fusion_controller, SENSOR_FUSION_CONTROLLER, {}, 1u);
   ActivateAndCheckController(robot_localization_controller, ROBOT_LOCALIZATION_CONTROLLER, {}, 1u);
   ActivateAndCheckController(odom_publisher_controller, ODOM_PUBLISHER_CONTROLLER, {}, 1u);
+  ActivateAndCheckController(
+    position_tracking_controller, POSITION_TRACKING_CONTROLLER,
+    POSITION_CONTROLLER_CLAIMED_INTERFACES, 1u);
 
   // Verify that the other preceding controller is deactivated (diff_drive_controller_two) and other
   // depending controllers are active
@@ -1214,6 +1253,31 @@ TEST_P(
     robot_localization_controller->get_state().id());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, odom_publisher_controller->get_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    position_tracking_controller->get_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    position_tracking_controller_two->get_state().id());
+
+  // Deactivate position_tracking_controller and activate position_tracking_controller_two
+  switch_test_controllers(
+    {POSITION_TRACKING_CONTROLLER_TWO}, {POSITION_TRACKING_CONTROLLER}, test_param.strictness,
+    std::future_status::timeout, controller_interface::return_type::OK);
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    position_tracking_controller->get_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    position_tracking_controller_two->get_state().id());
+
+  // Now deactivate the position_tracking_controller_two and it should be in inactive state
+  switch_test_controllers(
+    {}, {POSITION_TRACKING_CONTROLLER_TWO}, test_param.strictness, std::future_status::timeout,
+    controller_interface::return_type::OK);
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    position_tracking_controller_two->get_state().id());
 
   // Deactivate the first preceding controller (diff_drive_controller) and
   // activate the other preceding controller (diff_drive_controller_two)
@@ -1273,6 +1337,9 @@ TEST_P(
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
   cm_->add_controller(
     robot_localization_controller, ROBOT_LOCALIZATION_CONTROLLER,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    position_tracking_controller_two, POSITION_TRACKING_CONTROLLER_TWO,
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
 
   CheckIfControllersAreAddedCorrectly();
@@ -1445,6 +1512,9 @@ TEST_P(
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
   cm_->add_controller(
     robot_localization_controller, ROBOT_LOCALIZATION_CONTROLLER,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    position_tracking_controller_two, POSITION_TRACKING_CONTROLLER_TWO,
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
 
   CheckIfControllersAreAddedCorrectly();
@@ -1695,6 +1765,9 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers_add
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
   cm_->add_controller(
     odom_publisher_controller, ODOM_PUBLISHER_CONTROLLER,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    position_tracking_controller_two, POSITION_TRACKING_CONTROLLER_TWO,
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
 
   CheckIfControllersAreAddedCorrectly();
