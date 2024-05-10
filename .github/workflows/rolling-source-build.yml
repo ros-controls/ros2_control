@@ -21,6 +21,6 @@ jobs:
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-ros-tooling-source-build.yml@master
     with:
       ros_distro: rolling
-      ref: master
+      ref: fix_source_build
       ros2_repo_branch: master
       container: ubuntu:24.04
