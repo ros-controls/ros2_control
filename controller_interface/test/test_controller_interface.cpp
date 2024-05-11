@@ -82,7 +82,8 @@ TEST(TestableControllerInterface, setting_update_rate_in_configure)
   ASSERT_EQ(controller.get_update_rate(), 2812u);
 
   // Test updating of update_rate parameter
-  EXPECT_EQ(std::system("ros2 param set /testable_controller_interface update_rate 623"), 0);
+  auto res = controller.get_node()->set_parameter(rclcpp::Parameter("update_rate", 623));
+  EXPECT_EQ(res.successful, true);
   // Keep the same update rate until transition from 'UNCONFIGURED' TO 'INACTIVE' does not happen
   controller.configure();  // No transition so the update rate should stay intact
   ASSERT_NE(controller.get_update_rate(), 623u);
