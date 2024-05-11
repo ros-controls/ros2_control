@@ -16,6 +16,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
 )
 
 find_package(ament_cmake REQUIRED)
+find_package(ament_cmake_gen_version_h REQUIRED)
 find_package(backward_ros REQUIRED)
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
@@ -145,4 +146,5 @@ install(TARGETS
 ament_export_targets(export_joint_limits HAS_LIBRARY_TARGET)
 ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
 ament_package()
-ament_generate_version_header(${PROJECT_NAME})
+# TODO(anyone) uncomment if https://github.com/ament/ament_cmake/pull/526 is merged
+# ament_generate_version_header(${PROJECT_NAME})

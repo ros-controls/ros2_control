@@ -2,6 +2,15 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.10.0 (2024-05-08)
+-------------------
+* Add hardware components exception handling in resource manager (`#1508 <https://github.com/ros-controls/ros2_control/issues/1508>`_)
+* Working async controllers and components [not synchronized] (`#1041 <https://github.com/ros-controls/ros2_control/issues/1041>`_)
+* Parse URDF joint hard limits into the HardwareInfo structure (`#1472 <https://github.com/ros-controls/ros2_control/issues/1472>`_)
+* Add fallback controllers list to the ControllerInfo (`#1503 <https://github.com/ros-controls/ros2_control/issues/1503>`_)
+* Add more common hardware interface type constants (`#1500 <https://github.com/ros-controls/ros2_control/issues/1500>`_)
+* Contributors: Márk Szitanics, Sai Kishor Kothakota
+
 4.9.0 (2024-04-30)
 ------------------
 * Add missing calculate_dynamics (`#1498 <https://github.com/ros-controls/ros2_control/issues/1498>`_)

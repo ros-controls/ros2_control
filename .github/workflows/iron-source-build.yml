@@ -4,6 +4,14 @@ on:
   push:
     branches:
       - iron
+    paths:
+      - '**.hpp'
+      - '**.h'
+      - '**.cpp'
+      - '.github/workflows/iron-source-build.yml'
+      - '**/package.xml'
+      - '**/CMakeLists.txt'
+      - 'ros2_control.iron.repos'
   schedule:
     # Run every day to detect flakiness and broken dependencies
     - cron: '03 3 * * *'
