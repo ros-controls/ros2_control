@@ -138,7 +138,7 @@ public:
         component_info.is_async = hardware_info.is_async;
 
         hardware_info_map_.insert(std::make_pair(component_info.name, component_info));
-        hw_group_state_.insert(std::make_pair(component_info.group, return_type:OK));
+        hw_group_state_.insert(std::make_pair(component_info.group, return_type::OK));
         hardware_used_by_controllers_.insert(
           std::make_pair(component_info.name, std::vector<std::string>()));
         is_loaded = true;
@@ -1612,7 +1612,8 @@ HardwareReadWriteStatus ResourceManager::read(
       {
         ret_val = component.read(time, period);
         const auto component_group = component.get_group_name();
-        ret_val = resource_storage_->update_hardware_component_group_state(component_group, ret_val);
+        ret_val =
+          resource_storage_->update_hardware_component_group_state(component_group, ret_val);
       }
       catch (const std::exception & e)
       {
@@ -1672,7 +1673,8 @@ HardwareReadWriteStatus ResourceManager::write(
       {
         ret_val = component.write(time, period);
         const auto component_group = component.get_group_name();
-        ret_val = resource_storage_->update_hardware_component_group_state(component_group, ret_val);
+        ret_val =
+          resource_storage_->update_hardware_component_group_state(component_group, ret_val);
       }
       catch (const std::exception & e)
       {
