@@ -1279,12 +1279,23 @@ TEST_P(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
     position_tracking_controller_two->get_state().id());
 
+  // Activate it again and deactivate it others to see if we can deactivate it in a group
+  switch_test_controllers(
+    {POSITION_TRACKING_CONTROLLER_TWO}, {}, test_param.strictness, std::future_status::timeout,
+    controller_interface::return_type::OK);
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    position_tracking_controller->get_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    position_tracking_controller_two->get_state().id());
+
   // Deactivate the first preceding controller (diff_drive_controller) and
   // activate the other preceding controller (diff_drive_controller_two)
   switch_test_controllers(
     {DIFF_DRIVE_CONTROLLER_TWO},
-    {DIFF_DRIVE_CONTROLLER, SENSOR_FUSION_CONTROLLER, ROBOT_LOCALIZATION_CONTROLLER,
-     ODOM_PUBLISHER_CONTROLLER},
+    {POSITION_TRACKING_CONTROLLER_TWO, DIFF_DRIVE_CONTROLLER, SENSOR_FUSION_CONTROLLER,
+     ROBOT_LOCALIZATION_CONTROLLER, ODOM_PUBLISHER_CONTROLLER},
     test_param.strictness, std::future_status::timeout, controller_interface::return_type::OK);
 
   // Following controllers should stay active
@@ -1306,6 +1317,42 @@ TEST_P(
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
     odom_publisher_controller->get_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    position_tracking_controller->get_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    position_tracking_controller_two->get_state().id());
+
+  // Activate all the controllers again in group and deactivate the diff_drive_controller_two
+  switch_test_controllers(
+    {POSITION_TRACKING_CONTROLLER_TWO, DIFF_DRIVE_CONTROLLER, SENSOR_FUSION_CONTROLLER,
+     ROBOT_LOCALIZATION_CONTROLLER, ODOM_PUBLISHER_CONTROLLER},
+    {DIFF_DRIVE_CONTROLLER_TWO}, test_param.strictness, std::future_status::timeout,
+    controller_interface::return_type::OK);
+  // Following controllers should stay active
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, pid_left_wheel_controller->get_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, pid_right_wheel_controller->get_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, diff_drive_controller->get_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    diff_drive_controller_two->get_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, sensor_fusion_controller->get_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    robot_localization_controller->get_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, odom_publisher_controller->get_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    position_tracking_controller->get_state().id());
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+    position_tracking_controller_two->get_state().id());
 }
 
 TEST_P(
