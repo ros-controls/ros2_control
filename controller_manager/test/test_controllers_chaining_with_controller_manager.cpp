@@ -946,7 +946,7 @@ TEST_P(
   EXPECT_TRUE(pid_left_wheel_controller->is_in_chained_mode());
   EXPECT_TRUE(pid_right_wheel_controller->is_in_chained_mode());
   ASSERT_TRUE(diff_drive_controller->is_in_chained_mode());
-  ASSERT_TRUE(sensor_fusion_controller->is_in_chained_mode());
+  ASSERT_FALSE(sensor_fusion_controller->is_in_chained_mode());
   ASSERT_EQ(robot_localization_controller->internal_counter, 3u);
   ASSERT_EQ(odom_publisher_controller->internal_counter, 1u);
 
@@ -968,7 +968,7 @@ TEST_P(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, diff_drive_controller->get_state().id());
   // SensorFusionController continues to stay in the chained mode as it is still using the state
   // interfaces
-  ASSERT_TRUE(sensor_fusion_controller->is_in_chained_mode());
+  ASSERT_FALSE(sensor_fusion_controller->is_in_chained_mode());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, sensor_fusion_controller->get_state().id());
   EXPECT_EQ(
@@ -1333,15 +1333,20 @@ TEST_P(
   // Following controllers should stay active
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, pid_left_wheel_controller->get_state().id());
+  EXPECT_TRUE(pid_left_wheel_controller->is_in_chained_mode());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, pid_right_wheel_controller->get_state().id());
+  EXPECT_TRUE(pid_left_wheel_controller->is_in_chained_mode());
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, diff_drive_controller->get_state().id());
+  EXPECT_TRUE(diff_drive_controller->is_in_chained_mode());
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
     diff_drive_controller_two->get_state().id());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, sensor_fusion_controller->get_state().id());
+  // This is false, because it only uses the state interfaces and exposes state interfaces
+  EXPECT_FALSE(sensor_fusion_controller->is_in_chained_mode());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
     robot_localization_controller->get_state().id());
@@ -1595,7 +1600,7 @@ TEST_P(
   EXPECT_TRUE(pid_left_wheel_controller->is_in_chained_mode());
   EXPECT_TRUE(pid_right_wheel_controller->is_in_chained_mode());
   EXPECT_TRUE(diff_drive_controller->is_in_chained_mode());
-  ASSERT_TRUE(sensor_fusion_controller->is_in_chained_mode());
+  ASSERT_FALSE(sensor_fusion_controller->is_in_chained_mode());
 
   // Verify that initially all of them are in active state
   EXPECT_EQ(
@@ -1638,7 +1643,7 @@ TEST_P(
   EXPECT_TRUE(pid_left_wheel_controller->is_in_chained_mode());
   EXPECT_TRUE(pid_right_wheel_controller->is_in_chained_mode());
   EXPECT_FALSE(diff_drive_controller->is_in_chained_mode());
-  ASSERT_TRUE(sensor_fusion_controller->is_in_chained_mode());
+  EXPECT_FALSE(sensor_fusion_controller->is_in_chained_mode());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, diff_drive_controller->get_state().id());
   // SensorFusionController continues to stay in the chained mode as it is still using the state
@@ -1663,7 +1668,7 @@ TEST_P(
   EXPECT_TRUE(pid_left_wheel_controller->is_in_chained_mode());
   EXPECT_TRUE(pid_right_wheel_controller->is_in_chained_mode());
   ASSERT_FALSE(diff_drive_controller->is_in_chained_mode());
-  ASSERT_TRUE(sensor_fusion_controller->is_in_chained_mode());
+  EXPECT_FALSE(sensor_fusion_controller->is_in_chained_mode());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, diff_drive_controller->get_state().id());
   EXPECT_EQ(
@@ -1683,7 +1688,7 @@ TEST_P(
   EXPECT_TRUE(pid_left_wheel_controller->is_in_chained_mode());
   EXPECT_TRUE(pid_right_wheel_controller->is_in_chained_mode());
   ASSERT_FALSE(diff_drive_controller->is_in_chained_mode());
-  ASSERT_TRUE(sensor_fusion_controller->is_in_chained_mode());
+  EXPECT_FALSE(sensor_fusion_controller->is_in_chained_mode());
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, diff_drive_controller->get_state().id());
   EXPECT_EQ(

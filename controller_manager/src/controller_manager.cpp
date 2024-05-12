@@ -2471,13 +2471,18 @@ controller_interface::return_type ControllerManager::check_following_controllers
     get_logger(), "Checking following controllers of preceding controller with name '%s'.",
     controller_it->info.name.c_str());
 
-  auto controller_interfaces = controller_it->c->command_interface_configuration().names;
-  auto controller_state_interfaces = controller_it->c->state_interface_configuration().names;
+  const auto controller_cmd_interfaces = controller_it->c->command_interface_configuration().names;
+  const auto controller_state_interfaces = controller_it->c->state_interface_configuration().names;
+  // get all interfaces of the controller
+  auto controller_interfaces = controller_cmd_interfaces;
   controller_interfaces.insert(
     controller_interfaces.end(), controller_state_interfaces.begin(),
     controller_state_interfaces.end());
   for (const auto & ctrl_itf_name : controller_interfaces)
   {
+    RCLCPP_ERROR(
+      get_logger(), "Checking interface '%s' of controller '%s'.", ctrl_itf_name.c_str(),
+      controller_it->info.name.c_str());
     ControllersListIterator following_ctrl_it;
     // Check if interface if reference interface and following controller exist.
     if (!is_interface_a_chained_interface(ctrl_itf_name, controllers, following_ctrl_it))
@@ -2555,17 +2560,23 @@ controller_interface::return_type ControllerManager::check_following_controllers
         following_ctrl_it->info.name);
       if (found_it == to_chained_mode_request_.end())
       {
-        to_chained_mode_request_.push_back(following_ctrl_it->info.name);
         // if it is a chainable controller, make the reference interfaces available on preactivation
         // (This is needed when you activate a couple of chainable controller altogether)
         // make all the exported interfaces of the controller available
         resource_manager_->make_controller_exported_state_interfaces_available(
           following_ctrl_it->info.name);
-        resource_manager_->make_controller_reference_interfaces_available(
-          following_ctrl_it->info.name);
-        RCLCPP_DEBUG(
-          get_logger(), "Adding controller '%s' in 'to chained mode' request.",
-          following_ctrl_it->info.name.c_str());
+        if (
+          std::find(
+            controller_cmd_interfaces.begin(), controller_cmd_interfaces.end(), ctrl_itf_name) !=
+          controller_cmd_interfaces.end())
+        {
+          resource_manager_->make_controller_reference_interfaces_available(
+            following_ctrl_it->info.name);
+          to_chained_mode_request_.push_back(following_ctrl_it->info.name);
+          RCLCPP_DEBUG(
+            get_logger(), "Adding controller '%s' in 'to chained mode' request.",
+            following_ctrl_it->info.name.c_str());
+        }
       }
     }
     else
