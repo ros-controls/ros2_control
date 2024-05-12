@@ -927,6 +927,16 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
       // Take the most restricted one. Also valid for continuous-joint type only
       detail::update_interface_limits(joint.command_interfaces, limits);
       hw_info.limits[joint.name] = limits;
+      joint_limits::SoftJointLimits soft_limits;
+      if (getSoftJointLimits(urdf_joint, soft_limits))
+      {
+        if (limits.has_position_limits)
+        {
+          soft_limits.min_position = std::max(soft_limits.min_position, limits.min_position);
+          soft_limits.max_position = std::min(soft_limits.max_position, limits.max_position);
+        }
+        hw_info.soft_limits[joint.name] = soft_limits;
+      }
     }
   }
 
