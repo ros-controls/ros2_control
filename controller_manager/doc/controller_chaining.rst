@@ -58,11 +58,11 @@ A Controller Base-Class: ChainableController
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 A ``ChainableController`` extends ``ControllerInterface`` class with ``virtual std::vector<hardware_interface::CommandInterface> export_reference_interfaces() = 0`` method as well as ``virtual std::vector<hardware_interface::StateInterface> export_state_interfaces() = 0`` method.
-This method should implement for each controller that **can be preceded** by another controller exporting all the reference/state interfaces.
-For simplicity reasons, it is assumed for now that controller's all reference interfaces are used by other controller. However, the state interfaces exported by the controller, can be used by multieple controllers at the same time and with the combination they want.
+This method should be implemented for each controller that **can be preceded** by another controller exporting all the reference/state interfaces.
+For simplicity reasons, it is assumed for now that controller's all reference interfaces are used by other controller. However, the state interfaces exported by the controller, can be used by multiple controllers at the same time and with the combination they want.
 Therefore, do not try to implement any exclusive combinations of reference interfaces, but rather write multiple controllers if you need exclusivity.
 
-The ``ChainableController`` base class implements ``void set_chained_mode(bool activate)`` that sets an internal flag that a controller is used by another controller (in chained mode) and calls ``virtual void on_set_chained_mode(bool activate) = 0`` that implements controller's specific actions when chained modes is activated or deactivated, e.g., deactivating subscribers.
+The ``ChainableController`` base class implements ``void set_chained_mode(bool activate)`` that sets an internal flag that a controller is used by another controller (in chained mode) and calls ``virtual void on_set_chained_mode(bool activate) = 0`` that implements controller's specific actions when chained mode is activated or deactivated, e.g., deactivating subscribers.
 
 As an example, PID controllers export one virtual interface ``pid_reference`` and stop their subscriber ``<controller_name>/pid_reference`` when used in chained mode.  'diff_drive_controller' controller exports list of virtual interfaces  ``<controller_name>/v_x``, ``<controller_name>/v_y``, and ``<controller_name>/w_z``, and stops subscribers from topics ``<controller_name>/cmd_vel`` and ``<controller_name>/cmd_vel_unstamped``. Its publishers can continue running.
 
