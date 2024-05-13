@@ -391,3 +391,9 @@ Hardware and Controller Errors
 
 If the hardware during it's ``read`` or ``write`` method returns ``return_type::ERROR``, the controller manager will stop all controllers that are using the hardware's command and state interfaces.
 Likewise, if a controller returns ``return_type::ERROR`` from its ``update`` method, the controller manager will deactivate the respective controller. In future, the controller manager will try to start any fallback controllers if available.
+
+Factors that affect Determinism
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+When run under the conditions determined in the above section, the determinism is assured upto the limitations of the hardware and the real-time kernel. However, there are some following situations that can affect the determinism:
+
+* When a controller fails to activate, the controller_manager will call the methods ``prepare_command_mode_switch`` and ``perform_command_mode_switch`` to stop the started interfaces. These calls can cause jitter in the main control loop.
