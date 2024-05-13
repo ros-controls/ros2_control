@@ -1496,6 +1496,7 @@ void ControllerManager::activate_controllers(
   const std::vector<ControllerSpec> & rt_controller_list,
   const std::vector<std::string> controllers_to_activate)
 {
+  std::vector<std::string> failed_controllers_command_interfaces;
   for (const auto & controller_name : controllers_to_activate)
   {
     auto found_it = std::find_if(
@@ -1596,46 +1597,36 @@ void ControllerManager::activate_controllers(
     }
     controller->assign_interfaces(std::move(command_loans), std::move(state_loans));
 
+    auto new_state = controller->get_state();
     try
     {
-      const auto new_state = controller->get_node()->activate();
-      if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
-      {
-        RCLCPP_ERROR(
-          get_logger(),
-          "After activation, controller '%s' is in state '%s' (%d), expected '%s' (%d). Releasing "
-          "interfaces!",
-          controller->get_node()->get_name(), new_state.label().c_str(), new_state.id(),
-          hardware_interface::lifecycle_state_names::ACTIVE,
-          lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
-        controller->release_interfaces();
-        // Now prepare and perform the stop interface switching as this is needed for exclusive
-        // interfaces
-        if (
-          !command_interface_names.empty() &&
-          (!resource_manager_->prepare_command_mode_switch({}, command_interface_names) ||
-           !resource_manager_->perform_command_mode_switch({}, command_interface_names)))
-        {
-          RCLCPP_ERROR(
-            get_logger(),
-            "Error switching back the interfaces in the hardware when the controller activation "
-            "failed.");
-        }
-        return;
-      }
+      new_state = controller->get_node()->activate();
     }
     catch (const std::exception & e)
     {
       RCLCPP_ERROR(
         get_logger(), "Caught exception while activating the controller '%s': %s",
         controller_name.c_str(), e.what());
-      continue;
     }
     catch (...)
     {
       RCLCPP_ERROR(
         get_logger(), "Caught unknown exception while activating the controller '%s'",
         controller_name.c_str());
+    }
+    if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+    {
+      RCLCPP_ERROR(
+        get_logger(),
+        "After activation, controller '%s' is in state '%s' (%d), expected '%s' (%d). Releasing "
+        "interfaces!",
+        controller->get_node()->get_name(), new_state.label().c_str(), new_state.id(),
+        hardware_interface::lifecycle_state_names::ACTIVE,
+        lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+      controller->release_interfaces();
+      failed_controllers_command_interfaces.insert(
+        failed_controllers_command_interfaces.end(), command_interface_names.begin(),
+        command_interface_names.end());
       continue;
     }
 
@@ -1649,6 +1640,18 @@ void ControllerManager::activate_controllers(
     {
       async_controller_threads_.at(controller_name)->activate();
     }
+  }
+  // Now prepare and perform the stop interface switching as this is needed for exclusive
+  // interfaces
+  if (
+    !failed_controllers_command_interfaces.empty() &&
+    (!resource_manager_->prepare_command_mode_switch({}, failed_controllers_command_interfaces) ||
+     !resource_manager_->perform_command_mode_switch({}, failed_controllers_command_interfaces)))
+  {
+    RCLCPP_ERROR(
+      get_logger(),
+      "Error switching back the interfaces in the hardware when the controller activation "
+      "failed.");
   }
 }
 
