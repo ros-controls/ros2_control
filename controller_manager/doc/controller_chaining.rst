@@ -66,6 +66,21 @@ The ``ChainableController`` base class implements ``void set_chained_mode(bool a
 
 As an example, PID controllers export one virtual interface ``pid_reference`` and stop their subscriber ``<controller_name>/pid_reference`` when used in chained mode.  'diff_drive_controller' controller exports list of virtual interfaces  ``<controller_name>/v_x``, ``<controller_name>/v_y``, and ``<controller_name>/w_z``, and stops subscribers from topics ``<controller_name>/cmd_vel`` and ``<controller_name>/cmd_vel_unstamped``. Its publishers can continue running.
 
+Nomenclature
+^^^^^^^^^^^^^^
+
+There are two types of interfaces within the context of ``ros2_control``: ``CommandInterface`` and ``StateInterface``.
+
+- The ``CommandInterface`` is a Read-Write type of interface that can be used to get and set values. Its typical use-case is to set command values to the hardware.
+- The ``StateInterface`` is a Read-Only type of interface that can be used to get values. Its typical use-case is to get actual state values from the hardware.
+
+These interfaces are utilized in different places within the controller in order to have a functional controller or controller chain that commands the hardware.
+
+- The ``virtual InterfaceConfiguration command_interface_configuration() const`` method defined in the ``ControllerInterface`` class is used to define the command interfaces used by the controller. These interfaces are used to command the hardware or the exposed reference interfaces from another controller. The ``controller_manager`` uses this configuration to claim the command interfaces from the ``ResourceManager``.
+- The ``virtual InterfaceConfiguration state_interface_configuration() const`` method defined in the ``ControllerInterface`` class is used to define the state interfaces used by the controller. These interfaces are used to get the actual state values from the hardware or the exposed state interfaces from another controller. The ``controller_manager`` uses this configuration to claim the state interfaces from the ``ResourceManager``.
+- The ``std::vector<hardware_interface::CommandInterface> export_reference_interfaces()`` method defined in the ``ChainableController`` class is used to define the reference interfaces exposed by the controller. These interfaces are used to command the controller from other controllers.
+- The ``std::vector<hardware_interface::StateInterface> export_state_interfaces()`` method defined in the ``ChainableController`` class is used to define the state interfaces exposed by the controller. These interfaces are used to get the actual state values from the controller by other controllers.
+
 Inner Resource Management
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
