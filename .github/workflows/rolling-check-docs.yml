@@ -9,6 +9,7 @@ on:
       - '**.rst'
       - '**.md'
       - '**.yaml'
+      - '.github/workflows/rolling-check-docs.yml'
 
 jobs:
   check-docs:
