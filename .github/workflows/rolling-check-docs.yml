@@ -1,8 +1,14 @@
-name: Check Docs
+name: Rolling Check Docs
 
 on:
   workflow_dispatch:
   pull_request:
+    branches:
+      - master
+    paths:
+      - '**.rst'
+      - '**.md'
+      - '**.yaml'
 
 jobs:
   check-docs:

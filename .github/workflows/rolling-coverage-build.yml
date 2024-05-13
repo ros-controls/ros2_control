@@ -4,9 +4,27 @@ on:
   push:
     branches:
       - master
+    paths:
+      - '**.hpp'
+      - '**.h'
+      - '**.cpp'
+      - '.github/workflows/rolling-coverage-build.yml'
+      - '**/package.xml'
+      - '**/CMakeLists.txt'
+      - 'ros2_control.rolling.repos'
+      - 'codecov.yml'
   pull_request:
     branches:
       - master
+    paths:
+      - '**.hpp'
+      - '**.h'
+      - '**.cpp'
+      - '.github/workflows/rolling-coverage-build.yml'
+      - '**/package.xml'
+      - '**/CMakeLists.txt'
+      - 'ros2_control.rolling.repos'
+      - 'codecov.yml'
 
 jobs:
   coverage_rolling:
@@ -14,4 +32,3 @@ jobs:
     secrets: inherit
     with:
       ros_distro: rolling
-      container: ubuntu:24.04
