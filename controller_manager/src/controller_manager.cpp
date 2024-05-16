@@ -328,7 +328,7 @@ void ControllerManager::subscribe_to_robot_description_topic()
   RCLCPP_INFO(
     get_logger(), "Subscribing to '~/robot_description' topic for robot description file.");
   robot_description_subscription_ = create_subscription<std_msgs::msg::String>(
-    "~/robot_description", rclcpp::QoS(1).transient_local(),
+    "robot_description", rclcpp::QoS(1).transient_local(),
     std::bind(&ControllerManager::robot_description_callback, this, std::placeholders::_1));
 }
 
