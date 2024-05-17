@@ -227,7 +227,8 @@ public:
                 lock, [this] { return trigger_in_progress_ || async_update_stop_; });
               if (!async_update_stop_)
               {
-                async_update_return_ = async_function_(current_update_time_, current_update_period_);
+                async_update_return_ =
+                  async_function_(current_update_time_, current_update_period_);
               }
               trigger_in_progress_ = false;
             }
