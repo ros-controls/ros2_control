@@ -171,6 +171,13 @@ struct HardwareInfo
    * The URDF parsed limits of the hardware components joint command interfaces
    */
   std::unordered_map<std::string, joint_limits::JointLimits> limits;
+
+  /**
+   * Map of software joint limits used for clamping the command where the key is the joint name.
+   * Optional If not specified or less restrictive than the JointLimits uses the previous
+   * JointLimits.
+   */
+  std::unordered_map<std::string, joint_limits::SoftJointLimits> soft_limits;
 };
 
 }  // namespace hardware_interface

@@ -2,6 +2,12 @@
 Changelog for package ros2controlcli
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.11.0 (2024-05-14)
+-------------------
+
+4.10.0 (2024-05-08)
+-------------------
+
 4.9.0 (2024-04-30)
 ------------------
 * [CI] Specify runner/container images and codecov for joint_limits  (`#1504 <https://github.com/ros-controls/ros2_control/issues/1504>`_)

@@ -1,17 +1,17 @@
-name: Humble Source Build
+name: Jazzy Source Build
 on:
   workflow_dispatch:
   push:
     branches:
-      - humble
+      - master
     paths:
       - '**.hpp'
       - '**.h'
       - '**.cpp'
-      - '.github/workflows/humble-source-build.yml'
+      - '.github/workflows/jazzy-source-build.yml'
       - '**/package.xml'
       - '**/CMakeLists.txt'
-      - 'ros2_control.humble.repos'
+      - 'ros2_control.jazzy.repos'
   schedule:
     # Run every day to detect flakiness and broken dependencies
     - cron: '03 3 * * *'
@@ -20,7 +20,7 @@ jobs:
   source:
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-ros-tooling-source-build.yml@master
     with:
-      ros_distro: humble
-      ref: humble
-      ros2_repo_branch: humble
-      os_name: ubuntu-22.04
+      ros_distro: jazzy
+      ref: master
+      ros2_repo_branch: master
+      container: ubuntu:24.04

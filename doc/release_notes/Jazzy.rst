@@ -70,6 +70,30 @@ hardware_interface
 ******************
 * A portable version for string-to-double conversion was added: ``hardware_interface::stod`` (`#1257 <https://github.com/ros-controls/ros2_control/pull/1257>`_)
 * ``test_components`` was moved to its own package (`#1325 <https://github.com/ros-controls/ros2_control/pull/1325>`_)
+* The ``ros2_control`` tag now supports parsing of the limits from the URDF into the ``HardwareInfo`` structure. More conservative limits can be defined using the ``min`` and ``max`` attributes per interface (`#1472 <https://github.com/ros-controls/ros2_control/pull/1472>`_)
+
+  .. code:: xml
+
+    <ros2_control name="RRBotSystemMutipleGPIOs" type="system">
+      <hardware>
+        <plugin>ros2_control_demo_hardware/RRBotSystemPositionOnlyHardware</plugin>
+        <param name="example_param_hw_start_duration_sec">2.0</param>
+        <param name="example_param_hw_stop_duration_sec">3.0</param>
+        <param name="example_param_hw_slowdown">2.0</param>
+      </hardware>
+      <joint name="joint1">
+        <command_interface name="position">
+          <param name="min">-1</param>
+          <param name="max">1</param>
+        </command_interface>
+        <command_interface name="velocity">
+          <limits enable="false"/>
+        </command_interface>
+        <state_interface name="position"/>
+      </joint>
+    </ros2_control>
+
+* Soft limits are also parsed from the URDF into the ``HardwareInfo`` structure for the defined joints (`#1488 <https://github.com/ros-controls/ros2_control/pull/1488>`_)
 
 joint_limits
 ************
