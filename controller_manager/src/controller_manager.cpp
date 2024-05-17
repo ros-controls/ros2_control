@@ -555,13 +555,6 @@ controller_interface::return_type ControllerManager::unload_controller(
       controller_name.c_str());
     return controller_interface::return_type::ERROR;
   }
-  if (controller.c->is_async())
-  {
-    RCLCPP_DEBUG(
-      get_logger(), "Removing controller '%s' from the list of async controllers",
-      controller_name.c_str());
-    async_controller_threads_.erase(controller_name);
-  }
 
   RCLCPP_DEBUG(get_logger(), "Cleanup controller");
   controller_chain_spec_cleanup(controller_chain_spec_, controller_name);
@@ -701,14 +694,6 @@ controller_interface::return_type ControllerManager::configure_controller(
       get_logger(), "Caught unknown exception while configuring controller '%s'",
       controller_name.c_str());
     return controller_interface::return_type::ERROR;
-  }
-
-  // ASYNCHRONOUS CONTROLLERS: Start background thread for update
-  if (controller->is_async())
-  {
-    async_controller_threads_.emplace(
-      controller_name,
-      std::make_unique<controller_interface::AsyncControllerThread>(controller, update_rate_));
   }
 
   const auto controller_update_rate = controller->get_update_rate();
@@ -1632,11 +1617,6 @@ void ControllerManager::activate_controllers(
     {
       resource_manager_->make_controller_reference_interfaces_available(controller_name);
     }
-
-    if (controller->is_async())
-    {
-      async_controller_threads_.at(controller_name)->activate();
-    }
   }
 }
 
@@ -2333,8 +2313,6 @@ unsigned int ControllerManager::get_update_rate() const { return update_rate_; }
 
 void ControllerManager::shutdown_async_controllers_and_components()
 {
-  async_controller_threads_.erase(
-    async_controller_threads_.begin(), async_controller_threads_.end());
   resource_manager_->shutdown_async_components();
 }
 

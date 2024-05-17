@@ -23,7 +23,6 @@
 #include <utility>
 #include <vector>
 
-#include "controller_interface/async_controller.hpp"
 #include "controller_interface/chainable_controller_interface.hpp"
 #include "controller_interface/controller_interface.hpp"
 #include "controller_interface/controller_interface_base.hpp"
@@ -572,9 +571,6 @@ private:
   };
 
   SwitchParams switch_params_;
-
-  std::unordered_map<std::string, std::unique_ptr<controller_interface::AsyncControllerThread>>
-    async_controller_threads_;
 };
 
 }  // namespace controller_manager
