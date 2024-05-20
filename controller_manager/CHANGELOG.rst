@@ -2,6 +2,11 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.11.0 (2024-05-14)
+-------------------
+* Add find_package for ament_cmake_gen_version_h (`#1534 <https://github.com/ros-controls/ros2_control/issues/1534>`_)
+* Contributors: Christoph Fröhlich
+
 4.10.0 (2024-05-08)
 -------------------
 * allow extra spawner arguments to not declare every argument in launch utils (`#1505 <https://github.com/ros-controls/ros2_control/issues/1505>`_)
