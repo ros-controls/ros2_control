@@ -912,7 +912,7 @@ public:
     }
     // If it is anything other than OK, change the return type of the hardware group state
     // to the respective return type
-    if (value > hw_group_state_.at(group_name))
+    if (value != return_type::OK)
     {
       hw_group_state_.at(group_name) = value;
     }

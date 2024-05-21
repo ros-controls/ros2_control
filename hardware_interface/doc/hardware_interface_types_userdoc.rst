@@ -45,7 +45,7 @@ Hardware Groups
 *****************************
 Hardware Component Groups serve as a critical organizational mechanism within complex systems, facilitating error handling and fault tolerance. By grouping related hardware components together, such as actuators within a manipulator, users can establish a unified framework for error detection and response.
 
-Hardware Component Groups play a vital role in propagating errors across interconnected hardware components. For instance, in a manipulator system, grouping actuators together allows for error propagation. If one actuator fails within the group, the error can propagate to the other actuators, signaling a potential issue across the system. By default, the actuator errors are isolated to their own hardware component, allowing the rest to continue operation unaffected. In the provided ROS2 control configuration, the ``<group>`` tag within each ``<ros2_control>`` block signifies the grouping of hardware components, enabling error propagation mechanisms within the system.
+Hardware Component Groups play a vital role in propagating errors across interconnected hardware components. For instance, in a manipulator system, grouping actuators together allows for error propagation. If one actuator fails within the group, the error can propagate to the other actuators, signaling a potential issue across the system. By default, the actuator errors are isolated to their own hardware component, allowing the rest to continue operation unaffected. In the provided ros2_control configuration, the ``<group>`` tag within each ``<ros2_control>`` block signifies the grouping of hardware components, enabling error propagation mechanisms within the system.
 
 Examples
 *****************************
