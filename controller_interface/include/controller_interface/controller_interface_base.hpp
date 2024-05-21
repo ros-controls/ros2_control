@@ -236,7 +236,7 @@ public:
   /**
    * Set chained mode of a chainable controller. This method triggers internal processes to switch
    * a chainable controller to "chained" mode and vice-versa. Setting controller to "chained" mode
-   * usually involves the usage of the controller's reference or state interfaces by the other
+   * usually involves the usage of the controller's reference interfaces by the other
    * controllers
    *
    * \returns true if mode is switched successfully and false if not.
