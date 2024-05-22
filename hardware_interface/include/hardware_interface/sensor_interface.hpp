@@ -173,7 +173,8 @@ public:
    *
    * \return vector of descriptions to the unlisted StateInterfaces
    */
-  virtual std::vector<hardware_interface::InterfaceDescription> export_state_interfaces_2()
+  virtual std::vector<hardware_interface::InterfaceDescription>
+  export_state_interface_descriptions()
   {
     // return empty vector by default.
     return {};
@@ -190,7 +191,7 @@ public:
   {
     // import the unlisted interfaces
     std::vector<hardware_interface::InterfaceDescription> unlisted_interface_descriptions =
-      export_state_interfaces_2();
+      export_state_interface_descriptions();
 
     std::vector<std::shared_ptr<StateInterface>> state_interfaces;
     state_interfaces.reserve(

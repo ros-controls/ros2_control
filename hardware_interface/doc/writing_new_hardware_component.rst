@@ -55,14 +55,14 @@ The following is a step-by-step guide to create source files, basic tests, and c
    #. Implement ``on_cleanup`` method, which does the opposite of ``on_configure``.
    #. ``Command-/StateInterfaces`` are now created and exported automatically by the framework via the ``on_export_command_interfaces()`` or ``on_export_state_interfaces()`` methods based on the interfaces defined in the ``ros2_control`` XML-tag, which gets parsed and the ``InterfaceDescription`` is created accordingly (check the `hardware_info.hpp <https://github.com/ros-controls/ros2_control/tree/{REPOS_FILE_BRANCH}/hardware_interface/include/hardware_interface/hardware_info.hpp>`__).
 
-      * To access the automatically created ``Command-/StateInterfaces`` we provide the ``std::unordered_map<std::string, InterfaceDescription>``, where the string is the fully qualified name of the interface and the ``InterfaceDescription`` is the configuration of the interface. The ``std::unordered_map<>`` are divided into ``type_state_interfaces_`` and ``type_command_interfaces_`` where type can be: ``joint``, ``sensor``, ``gpio`` and ``unlisted``. E.g. the ``CommandInterfaces`` for all joints can be found in the  ``joint_command_interfaces_`` map. The ``unlisted`` includes all interfaces not listed in the ``ros2_control`` XML-tag but were created by overriding the ``export_command_interfaces_2()`` or ``export_state_interfaces_2()`` function by creating some custom ``Command-/StateInterfaces``.
+      * To access the automatically created ``Command-/StateInterfaces`` we provide the ``std::unordered_map<std::string, InterfaceDescription>``, where the string is the fully qualified name of the interface and the ``InterfaceDescription`` is the configuration of the interface. The ``std::unordered_map<>`` are divided into ``type_state_interfaces_`` and ``type_command_interfaces_`` where type can be: ``joint``, ``sensor``, ``gpio`` and ``unlisted``. E.g. the ``CommandInterfaces`` for all joints can be found in the  ``joint_command_interfaces_`` map. The ``unlisted`` includes all interfaces not listed in the ``ros2_control`` XML-tag but were created by overriding the ``export_command_interface_descriptions()`` or ``export_state_interface_descriptions()`` function by creating some custom ``Command-/StateInterfaces``.
       * For the ``Sensor``-type hardware interface there is no ``export_command_interfaces`` method.
       * As a reminder, the full interface names have structure ``<joint_name>/<interface_type>``.
 
    #. (optional) If you want some unlisted ``Command-/StateInterfaces`` not included in the ``ros2_control`` XML-tag you can follow those steps:
 
-      #. Override the ``virtual std::vector<hardware_interface::InterfaceDescription> export_command_interfaces_2()`` or ``virtual std::vector<hardware_interface::InterfaceDescription> export_state_interfaces_2()``
-      #. Create the InterfaceDescription for each of the interfaces you want to create in the override ``export_command_interfaces_2()`` or ``export_state_interfaces_2()`` function, add it to a vector and return the vector:
+      #. Override the ``virtual std::vector<hardware_interface::InterfaceDescription> export_command_interface_descriptions()`` or ``virtual std::vector<hardware_interface::InterfaceDescription> export_state_interface_descriptions()``
+      #. Create the InterfaceDescription for each of the interfaces you want to create in the override ``export_command_interface_descriptions()`` or ``export_state_interface_descriptions()`` function, add it to a vector and return the vector:
 
          .. code-block:: c++
 
@@ -81,7 +81,7 @@ The following is a step-by-step guide to create source files, basic tests, and c
 
    #. (optional) In case the default implementation (``on_export_command_interfaces()`` or ``on_export_state_interfaces()`` ) for exporting the ``Command-/StateInterfaces`` is not enough you can override them. You should however consider the following things:
 
-      * If you want to have unlisted interfaces available you need to call the ``export_command_interfaces_2()`` or ``export_state_interfaces_2()`` and add them to the ``unlisted_command_interfaces_`` or ``unlisted_state_interfaces_``.
+      * If you want to have unlisted interfaces available you need to call the ``export_command_interface_descriptions()`` or ``export_state_interface_descriptions()`` and add them to the ``unlisted_command_interfaces_`` or ``unlisted_state_interfaces_``.
       * Don't forget to store the created ``Command-/StateInterfaces`` internally as you only return shared_ptrs and the resource manager will not provide access to the created ``Command-/StateInterfaces`` for the hardware. So you must take care of storing them yourself.
       * Names must be unique!
 
