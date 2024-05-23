@@ -10,6 +10,7 @@ on:
       - '**.hpp'
       - '**.h'
       - '**.cpp'
+      - '**.py'
       - '.github/workflows/rolling-abi-compatibility.yml'
       - '**/package.xml'
       - '**/CMakeLists.txt'
