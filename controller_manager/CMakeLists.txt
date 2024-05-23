@@ -21,6 +21,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_python REQUIRED)
 find_package(ament_cmake_core REQUIRED)
+find_package(ament_cmake_gen_version_h REQUIRED)
 find_package(backward_ros REQUIRED)
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
@@ -189,6 +190,12 @@ if(BUILD_TESTING)
     test_controller
     ros2_control_test_assets::ros2_control_test_assets
   )
+
+  install(FILES test/test_controller_spawner_with_fallback_controllers.yaml
+    DESTINATION test)
+
+  install(FILES test/test_controller_spawner_with_type.yaml
+  DESTINATION test)
 
   ament_add_gmock(test_hardware_management_srvs
     test/test_hardware_management_srvs.cpp

@@ -2,6 +2,26 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.11.0 (2024-05-14)
+-------------------
+* Add find_package for ament_cmake_gen_version_h (`#1534 <https://github.com/ros-controls/ros2_control/issues/1534>`_)
+* Contributors: Christoph Fröhlich
+
+4.10.0 (2024-05-08)
+-------------------
+* allow extra spawner arguments to not declare every argument in launch utils (`#1505 <https://github.com/ros-controls/ros2_control/issues/1505>`_)
+* Working async controllers and components [not synchronized] (`#1041 <https://github.com/ros-controls/ros2_control/issues/1041>`_)
+* Add fallback controllers list to the ControllerInfo (`#1503 <https://github.com/ros-controls/ros2_control/issues/1503>`_)
+* Add a functionality to look for the controller type in the params file when not parsed (`#1502 <https://github.com/ros-controls/ros2_control/issues/1502>`_)
+* Add controller exception handling in controller manager (`#1507 <https://github.com/ros-controls/ros2_control/issues/1507>`_)
+* Contributors: Márk Szitanics, Sai Kishor Kothakota
+
+4.9.0 (2024-04-30)
+------------------
+* Deactivate the controllers when they return error similar to hardware (`#1499 <https://github.com/ros-controls/ros2_control/issues/1499>`_)
+* Component parser: Get mimic information from URDF (`#1256 <https://github.com/ros-controls/ros2_control/issues/1256>`_)
+* Contributors: Christoph Fröhlich, Sai Kishor Kothakota
+
 4.8.0 (2024-03-27)
 ------------------
 * generate version.h file per package using the ament_generate_version_header  (`#1449 <https://github.com/ros-controls/ros2_control/issues/1449>`_)

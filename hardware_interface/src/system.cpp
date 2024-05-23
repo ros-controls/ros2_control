@@ -210,6 +210,8 @@ return_type System::perform_command_mode_switch(
 
 std::string System::get_name() const { return impl_->get_name(); }
 
+std::string System::get_group_name() const { return impl_->get_group_name(); }
+
 const rclcpp_lifecycle::State & System::get_state() const { return impl_->get_state(); }
 
 return_type System::read(const rclcpp::Time & time, const rclcpp::Duration & period)
