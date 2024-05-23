@@ -239,7 +239,7 @@ def main(args=None):
             else:
                 if controller_type:
                     parameter = Parameter()
-                    parameter.name = prefixed_controller_name + ".type"
+                    parameter.name = controller_name + ".type"
                     parameter.value = get_parameter_value(string_value=controller_type)
 
                     response = call_set_parameters(
@@ -271,7 +271,7 @@ def main(args=None):
 
                 if param_file:
                     parameter = Parameter()
-                    parameter.name = prefixed_controller_name + ".params_file"
+                    parameter.name = controller_name + ".params_file"
                     parameter.value = get_parameter_value(string_value=param_file)
 
                     response = call_set_parameters(
