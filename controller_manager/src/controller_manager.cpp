@@ -2152,7 +2152,9 @@ controller_interface::return_type ControllerManager::update(
         rclcpp::Time(0, 0, this->get_node_clock_interface()->get_clock()->get_clock_type()))
       {
         // it is zero after activation
-        RCLCPP_DEBUG(get_logger(), "Set next_update_cycle_time to %fs", time.seconds());
+        RCLCPP_DEBUG(
+          get_logger(), "Setting next_update_cycle_time to %fs for the controller : %s",
+          time.seconds(), loaded_controller.info.name.c_str());
         *loaded_controller.next_update_cycle_time = time;
       }
 
