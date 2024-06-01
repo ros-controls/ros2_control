@@ -2495,7 +2495,7 @@ bool ControllerManager::controller_sorting(
     }
 
     // If the ctrl_a's state interface is the one exported by the ctrl_b then ctrl_b should be
-    // infront of ctrl_a
+    // in front of ctrl_a
     // TODO(saikishor): deal with the state interface chaining in the sorting algorithm
     auto state_it = std::find_if(
       state_itfs.begin(), state_itfs.end(),
