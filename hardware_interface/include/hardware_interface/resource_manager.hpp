@@ -346,7 +346,7 @@ public:
    * \note it is assumed that `prepare_command_mode_switch` is called just before this method
    * with the same input arguments.
    * \param[in] start_interfaces vector of string identifiers for the command interfaces starting.
-   * \param[in] stop_interfaces vector of string identifiers for the command interfacs stopping.
+   * \param[in] stop_interfaces vector of string identifiers for the command interfaces stopping.
    * \return true if switch is performed, false if a component rejects switching.
    */
   bool perform_command_mode_switch(
