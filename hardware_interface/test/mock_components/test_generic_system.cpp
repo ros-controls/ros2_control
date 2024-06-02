@@ -96,6 +96,7 @@ protected:
   <ros2_control name="MockHardwareSystem" type="system">
     <hardware>
       <plugin>mock_components/GenericSystem</plugin>
+      <group>Hardware Group</group>
     </hardware>
     <joint name="joint1">
       <command_interface name="position"/>
@@ -121,6 +122,7 @@ protected:
   <ros2_control name="MockHardwareSystem" type="system">
     <hardware>
       <plugin>mock_components/GenericSystem</plugin>
+      <group>Hardware Group</group>
     </hardware>
     <joint name="joint1">
       <command_interface name="position"/>
@@ -289,6 +291,7 @@ protected:
   <ros2_control name="MockHardwareSystem" type="system">
     <hardware>
       <plugin>mock_components/GenericSystem</plugin>
+      <group>Hardware Group</group>
       <param name="position_state_following_offset">-3</param>
       <param name="custom_interface_with_following_offset">actual_position</param>
     </hardware>
@@ -351,6 +354,7 @@ protected:
   <ros2_control name="MockHardwareSystem" type="system">
     <hardware>
       <plugin>mock_components/GenericSystem</plugin>
+      <group>Hardware Group</group>
       <param name="example_param_write_for_sec">2</param>
       <param name="example_param_read_for_sec">2</param>
     </hardware>
@@ -579,6 +583,70 @@ protected:
     </joint>
   </ros2_control>
 )";
+
+    hardware_system_2dof_standard_interfaces_with_same_hardware_group_ =
+      R"(
+  <ros2_control name="MockHardwareSystem1" type="system">
+    <hardware>
+      <plugin>mock_components/GenericSystem</plugin>
+      <group>Hardware Group</group>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <state_interface name="position">
+        <param name="initial_value">3.45</param>
+      </state_interface>
+      <state_interface name="velocity"/>
+    </joint>
+  </ros2_control>
+  <ros2_control name="MockHardwareSystem2" type="system">
+    <hardware>
+      <plugin>mock_components/GenericSystem</plugin>
+      <group>Hardware Group</group>
+    </hardware>
+    <joint name="joint2">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <state_interface name="position">
+        <param name="initial_value">2.78</param>
+      </state_interface>
+      <state_interface name="velocity"/>
+    </joint>
+  </ros2_control>
+)";
+
+    hardware_system_2dof_standard_interfaces_with_two_diff_hw_groups_ =
+      R"(
+  <ros2_control name="MockHardwareSystem1" type="system">
+    <hardware>
+      <plugin>mock_components/GenericSystem</plugin>
+      <group>Hardware Group 1</group>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <state_interface name="position">
+        <param name="initial_value">3.45</param>
+      </state_interface>
+      <state_interface name="velocity"/>
+    </joint>
+  </ros2_control>
+  <ros2_control name="MockHardwareSystem2" type="system">
+    <hardware>
+      <plugin>mock_components/GenericSystem</plugin>
+      <group>Hardware Group 2</group>
+    </hardware>
+    <joint name="joint2">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <state_interface name="position">
+        <param name="initial_value">2.78</param>
+      </state_interface>
+      <state_interface name="velocity"/>
+    </joint>
+  </ros2_control>
+)";
   }
 
   std::string hardware_system_2dof_;
@@ -600,6 +668,8 @@ protected:
   std::string hardware_system_2dof_standard_interfaces_with_different_control_modes_;
   std::string valid_hardware_system_2dof_standard_interfaces_with_different_control_modes_;
   std::string disabled_commands_;
+  std::string hardware_system_2dof_standard_interfaces_with_same_hardware_group_;
+  std::string hardware_system_2dof_standard_interfaces_with_two_diff_hw_groups_;
 };
 
 // Forward declaration
@@ -814,7 +884,7 @@ void generic_system_functional_test(
   ASSERT_EQ(0.44, j2v_c.get_value());
 
   // write() does not change values
-  rm.write(TIME, PERIOD);
+  ASSERT_TRUE(rm.write(TIME, PERIOD).ok);
   ASSERT_EQ(3.45, j1p_s.get_value());
   ASSERT_EQ(0.0, j1v_s.get_value());
   ASSERT_EQ(2.78, j2p_s.get_value());
@@ -825,7 +895,7 @@ void generic_system_functional_test(
   ASSERT_EQ(0.44, j2v_c.get_value());
 
   // read() mirrors commands + offset to states
-  rm.read(TIME, PERIOD);
+  ASSERT_TRUE(rm.read(TIME, PERIOD).ok);
   ASSERT_EQ(0.11 + offset, j1p_s.get_value());
   ASSERT_EQ(0.22, j1v_s.get_value());
   ASSERT_EQ(0.33 + offset, j2p_s.get_value());
@@ -857,12 +927,182 @@ void generic_system_functional_test(
     status_map[component_name].state.label(), hardware_interface::lifecycle_state_names::INACTIVE);
 }
 
+void generic_system_error_group_test(
+  const std::string & urdf, const std::string component_prefix, bool validate_same_group)
+{
+  TestableResourceManager rm(urdf);
+  const std::string component1 = component_prefix + "1";
+  const std::string component2 = component_prefix + "2";
+  // check is hardware is configured
+  auto status_map = rm.get_components_status();
+  for (auto component : {component1, component2})
+  {
+    EXPECT_EQ(
+      status_map[component].state.label(), hardware_interface::lifecycle_state_names::UNCONFIGURED);
+    configure_components(rm, {component});
+    status_map = rm.get_components_status();
+    EXPECT_EQ(
+      status_map[component].state.label(), hardware_interface::lifecycle_state_names::INACTIVE);
+    activate_components(rm, {component});
+    status_map = rm.get_components_status();
+    EXPECT_EQ(
+      status_map[component].state.label(), hardware_interface::lifecycle_state_names::ACTIVE);
+  }
+
+  // Check initial values
+  hardware_interface::LoanedStateInterface j1p_s = rm.claim_state_interface("joint1/position");
+  hardware_interface::LoanedStateInterface j1v_s = rm.claim_state_interface("joint1/velocity");
+  hardware_interface::LoanedStateInterface j2p_s = rm.claim_state_interface("joint2/position");
+  hardware_interface::LoanedStateInterface j2v_s = rm.claim_state_interface("joint2/velocity");
+  hardware_interface::LoanedCommandInterface j1p_c = rm.claim_command_interface("joint1/position");
+  hardware_interface::LoanedCommandInterface j1v_c = rm.claim_command_interface("joint1/velocity");
+  hardware_interface::LoanedCommandInterface j2p_c = rm.claim_command_interface("joint2/position");
+  hardware_interface::LoanedCommandInterface j2v_c = rm.claim_command_interface("joint2/velocity");
+
+  // State interfaces without initial value are set to 0
+  ASSERT_EQ(3.45, j1p_s.get_value());
+  ASSERT_EQ(0.0, j1v_s.get_value());
+  ASSERT_EQ(2.78, j2p_s.get_value());
+  ASSERT_EQ(0.0, j2v_s.get_value());
+  ASSERT_TRUE(std::isnan(j1p_c.get_value()));
+  ASSERT_TRUE(std::isnan(j1v_c.get_value()));
+  ASSERT_TRUE(std::isnan(j2p_c.get_value()));
+  ASSERT_TRUE(std::isnan(j2v_c.get_value()));
+
+  // set some new values in commands
+  j1p_c.set_value(0.11);
+  j1v_c.set_value(0.22);
+  j2p_c.set_value(0.33);
+  j2v_c.set_value(0.44);
+
+  // State values should not be changed
+  ASSERT_EQ(3.45, j1p_s.get_value());
+  ASSERT_EQ(0.0, j1v_s.get_value());
+  ASSERT_EQ(2.78, j2p_s.get_value());
+  ASSERT_EQ(0.0, j2v_s.get_value());
+  ASSERT_EQ(0.11, j1p_c.get_value());
+  ASSERT_EQ(0.22, j1v_c.get_value());
+  ASSERT_EQ(0.33, j2p_c.get_value());
+  ASSERT_EQ(0.44, j2v_c.get_value());
+
+  // write() does not change values
+  ASSERT_TRUE(rm.write(TIME, PERIOD).ok);
+  ASSERT_EQ(3.45, j1p_s.get_value());
+  ASSERT_EQ(0.0, j1v_s.get_value());
+  ASSERT_EQ(2.78, j2p_s.get_value());
+  ASSERT_EQ(0.0, j2v_s.get_value());
+  ASSERT_EQ(0.11, j1p_c.get_value());
+  ASSERT_EQ(0.22, j1v_c.get_value());
+  ASSERT_EQ(0.33, j2p_c.get_value());
+  ASSERT_EQ(0.44, j2v_c.get_value());
+
+  // read() mirrors commands to states
+  ASSERT_TRUE(rm.read(TIME, PERIOD).ok);
+  ASSERT_EQ(0.11, j1p_s.get_value());
+  ASSERT_EQ(0.22, j1v_s.get_value());
+  ASSERT_EQ(0.33, j2p_s.get_value());
+  ASSERT_EQ(0.44, j2v_s.get_value());
+  ASSERT_EQ(0.11, j1p_c.get_value());
+  ASSERT_EQ(0.22, j1v_c.get_value());
+  ASSERT_EQ(0.33, j2p_c.get_value());
+  ASSERT_EQ(0.44, j2v_c.get_value());
+
+  // set some new values in commands
+  j1p_c.set_value(0.55);
+  j1v_c.set_value(0.66);
+  j2p_c.set_value(0.77);
+  j2v_c.set_value(0.88);
+
+  // state values should not be changed
+  ASSERT_EQ(0.11, j1p_s.get_value());
+  ASSERT_EQ(0.22, j1v_s.get_value());
+  ASSERT_EQ(0.33, j2p_s.get_value());
+  ASSERT_EQ(0.44, j2v_s.get_value());
+  ASSERT_EQ(0.55, j1p_c.get_value());
+  ASSERT_EQ(0.66, j1v_c.get_value());
+  ASSERT_EQ(0.77, j2p_c.get_value());
+  ASSERT_EQ(0.88, j2v_c.get_value());
+
+  // Error testing
+  j1p_c.set_value(std::numeric_limits<double>::infinity());
+  j1v_c.set_value(std::numeric_limits<double>::infinity());
+  // read() should now bring error in the first component
+  auto read_result = rm.read(TIME, PERIOD);
+  ASSERT_FALSE(read_result.ok);
+  if (validate_same_group)
+  {
+    // If they belong to the same group, show the error in all hardware components of same group
+    EXPECT_THAT(read_result.failed_hardware_names, ::testing::ElementsAre(component1, component2));
+  }
+  else
+  {
+    // If they don't belong to the same group, show the error in only that hardware component
+    EXPECT_THAT(read_result.failed_hardware_names, ::testing::ElementsAre(component1));
+  }
+
+  // Check initial values
+  ASSERT_FALSE(rm.state_interface_is_available("joint1/position"));
+  ASSERT_FALSE(rm.state_interface_is_available("joint1/velocity"));
+  ASSERT_FALSE(rm.command_interface_is_available("joint1/position"));
+  ASSERT_FALSE(rm.command_interface_is_available("joint1/velocity"));
+
+  if (validate_same_group)
+  {
+    ASSERT_FALSE(rm.state_interface_is_available("joint2/position"));
+    ASSERT_FALSE(rm.state_interface_is_available("joint2/velocity"));
+    ASSERT_FALSE(rm.command_interface_is_available("joint2/position"));
+    ASSERT_FALSE(rm.command_interface_is_available("joint2/velocity"));
+  }
+  else
+  {
+    ASSERT_TRUE(rm.state_interface_is_available("joint2/position"));
+    ASSERT_TRUE(rm.state_interface_is_available("joint2/velocity"));
+    ASSERT_TRUE(rm.command_interface_is_available("joint2/position"));
+    ASSERT_TRUE(rm.command_interface_is_available("joint2/velocity"));
+  }
+
+  // Error should be recoverable only after reactivating the hardware component
+  j1p_c.set_value(0.0);
+  j1v_c.set_value(0.0);
+  ASSERT_FALSE(rm.read(TIME, PERIOD).ok);
+
+  // Now it should be recoverable
+  deactivate_components(rm, {component1});
+  activate_components(rm, {component1});
+  ASSERT_TRUE(rm.read(TIME, PERIOD).ok);
+
+  deactivate_components(rm, {component1, component2});
+  status_map = rm.get_components_status();
+  EXPECT_EQ(
+    status_map[component1].state.label(), hardware_interface::lifecycle_state_names::INACTIVE);
+  EXPECT_EQ(
+    status_map[component2].state.label(), hardware_interface::lifecycle_state_names::INACTIVE);
+}
+
 TEST_F(TestGenericSystem, generic_system_2dof_functionality)
 {
   auto urdf = ros2_control_test_assets::urdf_head + hardware_system_2dof_standard_interfaces_ +
               ros2_control_test_assets::urdf_tail;
 
   generic_system_functional_test(urdf, {"MockHardwareSystem"});
+}
+
+TEST_F(TestGenericSystem, generic_system_2dof_error_propagation_different_group)
+{
+  auto urdf = ros2_control_test_assets::urdf_head +
+              hardware_system_2dof_standard_interfaces_with_two_diff_hw_groups_ +
+              ros2_control_test_assets::urdf_tail;
+
+  generic_system_error_group_test(urdf, {"MockHardwareSystem"}, false);
+}
+
+TEST_F(TestGenericSystem, generic_system_2dof_error_propagation_same_group)
+{
+  auto urdf = ros2_control_test_assets::urdf_head +
+              hardware_system_2dof_standard_interfaces_with_same_hardware_group_ +
+              ros2_control_test_assets::urdf_tail;
+
+  generic_system_error_group_test(urdf, {"MockHardwareSystem"}, true);
 }
 
 TEST_F(TestGenericSystem, generic_system_2dof_other_interfaces)

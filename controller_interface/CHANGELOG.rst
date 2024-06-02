@@ -2,6 +2,22 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.11.0 (2024-05-14)
+-------------------
+* Fix dependencies for source build (`#1533 <https://github.com/ros-controls/ros2_control/issues/1533>`_)
+* Add find_package for ament_cmake_gen_version_h (`#1534 <https://github.com/ros-controls/ros2_control/issues/1534>`_)
+* Contributors: Christoph Fröhlich
+
+4.10.0 (2024-05-08)
+-------------------
+* Working async controllers and components [not synchronized] (`#1041 <https://github.com/ros-controls/ros2_control/issues/1041>`_)
+* Contributors: Márk Szitanics
+
+4.9.0 (2024-04-30)
+------------------
+* return the proper const object of the pointer in the const method (`#1494 <https://github.com/ros-controls/ros2_control/issues/1494>`_)
+* Contributors: Sai Kishor Kothakota
+
 4.8.0 (2024-03-27)
 ------------------
 * generate version.h file per package using the ament_generate_version_header  (`#1449 <https://github.com/ros-controls/ros2_control/issues/1449>`_)

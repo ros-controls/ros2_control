@@ -353,7 +353,7 @@ public:
    * \note it is assumed that `prepare_command_mode_switch` is called just before this method
    * with the same input arguments.
    * \param[in] start_interfaces vector of string identifiers for the command interfaces starting.
-   * \param[in] stop_interfaces vector of string identifiers for the command interfacs stopping.
+   * \param[in] stop_interfaces vector of string identifiers for the command interfaces stopping.
    * \return true if switch is performed, false if a component rejects switching.
    */
   bool perform_command_mode_switch(
@@ -375,6 +375,12 @@ public:
    */
   return_type set_component_state(
     const std::string & component_name, rclcpp_lifecycle::State & target_state);
+
+  /// Deletes all async components from the resource storage
+  /**
+   * Needed to join the threads immediately after the control loop is ended.
+   */
+  void shutdown_async_components();
 
   /// Reads all loaded hardware components.
   /**

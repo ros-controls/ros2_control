@@ -1,3 +1,5 @@
+:github_url: https://github.com/ros-controls/ros2_control/blob/{REPOS_FILE_BRANCH}/doc/release_notes/Galactic.rst
+
 Foxy to Galactic
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
