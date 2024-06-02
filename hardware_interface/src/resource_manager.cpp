@@ -133,10 +133,12 @@ public:
         HardwareComponentInfo component_info;
         component_info.name = hardware_info.name;
         component_info.type = hardware_info.type;
+        component_info.group = hardware_info.group;
         component_info.plugin_name = hardware_info.hardware_plugin_name;
         component_info.is_async = hardware_info.is_async;
 
         hardware_info_map_.insert(std::make_pair(component_info.name, component_info));
+        hw_group_state_.insert(std::make_pair(component_info.group, return_type::OK));
         hardware_used_by_controllers_.insert(
           std::make_pair(component_info.name, std::vector<std::string>()));
         is_loaded = true;
@@ -298,6 +300,10 @@ public:
         async_component_threads_.at(hardware.get_name()).register_component(&hardware);
       }
     }
+    if (!hardware.get_group_name().empty())
+    {
+      hw_group_state_[hardware.get_group_name()] = return_type::OK;
+    }
     return result;
   }
 
@@ -380,6 +386,10 @@ public:
     {
       remove_all_hardware_interfaces_from_available_list(hardware.get_name());
     }
+    if (!hardware.get_group_name().empty())
+    {
+      hw_group_state_[hardware.get_group_name()] = return_type::OK;
+    }
     return result;
   }
 
@@ -414,6 +424,10 @@ public:
       // deimport_non_movement_command_interfaces(hardware);
       // deimport_state_interfaces(hardware);
       // use remove_command_interfaces(hardware);
+      if (!hardware.get_group_name().empty())
+      {
+        hw_group_state_[hardware.get_group_name()] = return_type::OK;
+      }
     }
     return result;
   }
@@ -925,6 +939,27 @@ public:
     }
   }
 
+  /**
+   * Returns the return type of the hardware component group state, if the return type is other
+   * than OK, then updates the return type of the group to the respective one
+   */
+  return_type update_hardware_component_group_state(
+    const std::string & group_name, const return_type & value)
+  {
+    // This is for the components that has no configured group
+    if (group_name.empty())
+    {
+      return value;
+    }
+    // If it is anything other than OK, change the return type of the hardware group state
+    // to the respective return type
+    if (value != return_type::OK)
+    {
+      hw_group_state_.at(group_name) = value;
+    }
+    return hw_group_state_.at(group_name);
+  }
+
   // hardware plugins
   pluginlib::ClassLoader<ActuatorInterface> actuator_loader_;
   pluginlib::ClassLoader<SensorInterface> sensor_loader_;
@@ -939,6 +974,7 @@ public:
   std::vector<System> async_systems_;
 
   std::unordered_map<std::string, HardwareComponentInfo> hardware_info_map_;
+  std::unordered_map<std::string, hardware_interface::return_type> hw_group_state_;
 
   /// Mapping between hardware and controllers that are using it (accessing data from it)
   std::unordered_map<std::string, std::vector<std::string>> hardware_used_by_controllers_;
@@ -1680,6 +1716,9 @@ HardwareReadWriteStatus ResourceManager::read(
       try
       {
         ret_val = component.read(time, period);
+        const auto component_group = component.get_group_name();
+        ret_val =
+          resource_storage_->update_hardware_component_group_state(component_group, ret_val);
       }
       catch (const std::exception & e)
       {
@@ -1738,6 +1777,9 @@ HardwareReadWriteStatus ResourceManager::write(
       try
       {
         ret_val = component.write(time, period);
+        const auto component_group = component.get_group_name();
+        ret_val =
+          resource_storage_->update_hardware_component_group_state(component_group, ret_val);
       }
       catch (const std::exception & e)
       {
