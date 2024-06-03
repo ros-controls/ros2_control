@@ -80,7 +80,7 @@ public:
   // enables external setting of values to command interfaces - used for simulation of hardware
   // errors
   double set_first_command_interface_value_to;
-  double update_period_ = 0;
+  rclcpp::Duration update_period_ = rclcpp::Duration::from_seconds(0.);
 };
 
 }  // namespace test_controller
