@@ -62,5 +62,4 @@ install(TARGETS joint_limits
 ament_export_targets(export_joint_limits HAS_LIBRARY_TARGET)
 ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
 ament_package()
-# TODO(anyone) uncomment if https://github.com/ament/ament_cmake/pull/526 is merged
-# ament_generate_version_header(${PROJECT_NAME})
+ament_generate_version_header(${PROJECT_NAME})
