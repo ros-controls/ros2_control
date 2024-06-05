@@ -1352,7 +1352,7 @@ void ResourceManager::publish_all_interface_values() const
   interface_values.states = state_interface_values;
   interface_values.commands = command_interface_values;
 
-  rt_interface_values_publisher_->lock();
+  rt_interface_values_publisher_->trylock();
   rt_interface_values_publisher_->msg_ = interface_values;
   rt_interface_values_publisher_->unlockAndPublish();
 }
