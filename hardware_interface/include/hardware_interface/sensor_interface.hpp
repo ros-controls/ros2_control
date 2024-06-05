@@ -129,6 +129,12 @@ public:
    */
   virtual std::string get_name() const { return info_.name; }
 
+  /// Get name of the actuator hardware group to which it belongs to.
+  /**
+   * \return group name.
+   */
+  virtual std::string get_group_name() const { return info_.group; }
+
   /// Get life-cycle state of the actuator hardware.
   /**
    * \return state.

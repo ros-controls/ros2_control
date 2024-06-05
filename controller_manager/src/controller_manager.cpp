@@ -2147,6 +2147,17 @@ controller_interface::return_type ControllerManager::update(
         run_controller_at_cm_rate ? period
                                   : rclcpp::Duration::from_seconds((1.0 / controller_update_rate));
 
+      if (
+        *loaded_controller.next_update_cycle_time ==
+        rclcpp::Time(0, 0, this->get_node_clock_interface()->get_clock()->get_clock_type()))
+      {
+        // it is zero after activation
+        RCLCPP_DEBUG(
+          get_logger(), "Setting next_update_cycle_time to %fs for the controller : %s",
+          time.seconds(), loaded_controller.info.name.c_str());
+        *loaded_controller.next_update_cycle_time = time;
+      }
+
       bool controller_go =
         (time ==
          rclcpp::Time(0, 0, this->get_node_clock_interface()->get_clock()->get_clock_type())) ||
@@ -2182,12 +2193,6 @@ controller_interface::return_type ControllerManager::update(
           controller_ret = controller_interface::return_type::ERROR;
         }
 
-        if (
-          *loaded_controller.next_update_cycle_time ==
-          rclcpp::Time(0, 0, this->get_node_clock_interface()->get_clock()->get_clock_type()))
-        {
-          *loaded_controller.next_update_cycle_time = time;
-        }
         *loaded_controller.next_update_cycle_time += controller_period;
 
         if (controller_ret != controller_interface::return_type::OK)

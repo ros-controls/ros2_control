@@ -133,6 +133,8 @@ struct HardwareInfo
   std::string name;
   /// Type of the hardware: actuator, sensor or system.
   std::string type;
+  ///  Hardware group to which the hardware belongs.
+  std::string group;
   /// Component is async
   bool is_async;
   /// Name of the pluginlib plugin of the hardware that will be loaded.

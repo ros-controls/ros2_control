@@ -459,7 +459,8 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
     return return_type::OK;
   }
 
-  auto mirror_command_to_state = [](auto & states_, auto commands_, size_t start_index = 0)
+  auto mirror_command_to_state =
+    [](auto & states_, auto commands_, size_t start_index = 0) -> return_type
   {
     for (size_t i = start_index; i < states_.size(); ++i)
     {
@@ -469,8 +470,13 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
         {
           states_[i][j] = commands_[i][j];
         }
+        if (std::isinf(commands_[i][j]))
+        {
+          return return_type::ERROR;
+        }
       }
     }
+    return return_type::OK;
   };
 
   for (size_t j = 0; j < joint_states_[POSITION_INTERFACE_INDEX].size(); ++j)
@@ -556,13 +562,11 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
 
   // do loopback on all other interfaces - starts from 1 or 3 because 0, 1, 3 are position,
   // velocity, and acceleration interface
-  if (calculate_dynamics_)
+  if (
+    mirror_command_to_state(joint_states_, joint_commands_, calculate_dynamics_ ? 3 : 1) !=
+    return_type::OK)
   {
-    mirror_command_to_state(joint_states_, joint_commands_, 3);
-  }
-  else
-  {
-    mirror_command_to_state(joint_states_, joint_commands_, 1);
+    return return_type::ERROR;
   }
 
   for (const auto & mimic_joint : info_.mimic_joints)

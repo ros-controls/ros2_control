@@ -62,7 +62,7 @@ controller_interface::InterfaceConfiguration TestController::state_interface_con
 controller_interface::return_type TestController::update(
   const rclcpp::Time & /*time*/, const rclcpp::Duration & period)
 {
-  update_period_ = period.seconds();
+  update_period_ = period;
   ++internal_counter;
 
   // set value to hardware to produce and test different behaviors there
