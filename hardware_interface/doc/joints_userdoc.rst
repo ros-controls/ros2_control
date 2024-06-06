@@ -125,7 +125,7 @@ Depending on the simulation plugin, different approaches can be used to simulate
 
 gazebo_ros2_control:
   * mimic joints
-  * closed-loop kinematics are supported with ``<gazebo>`` tags in the URDF, see, e.g., `here <http://classic.gazebosim.org/tutorials?tut=kinematic_loop&cat=#Split4-barlinkageinURDFwithanSDFormatfixedjoint>`__.
+  * closed-loop kinematics are supported with ``<gazebo>`` tags in the URDF, see, e.g., `here <http://classic.gazebosim.org/tutorials?tut=kinematic_loop>`__.
 
 gz_ros2_control:
   * mimic joints
