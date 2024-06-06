@@ -101,6 +101,18 @@ CallbackReturn TestController::on_configure(const rclcpp_lifecycle::State & /*pr
   return CallbackReturn::SUCCESS;
 }
 
+CallbackReturn TestController::on_activate(const rclcpp_lifecycle::State & /*previous_state*/)
+{
+  ++activate_calls;
+  return CallbackReturn::SUCCESS;
+}
+
+CallbackReturn TestController::on_deactivate(const rclcpp_lifecycle::State & /*previous_state*/)
+{
+  ++deactivate_calls;
+  return CallbackReturn::SUCCESS;
+}
+
 CallbackReturn TestController::on_cleanup(const rclcpp_lifecycle::State & /*previous_state*/)
 {
   if (simulate_cleanup_failure)
