@@ -340,37 +340,6 @@ private:
    */
   void clear_requests();
 
-#if 0
-  /// Check if all the following controllers will be in active state and in the chained mode
-  /// after controllers' switch.
-  /**
-   * Check recursively that all following controllers of the @controller_it
-   * - are already active,
-   * - will not be deactivated,
-   * - or will be activated.
-   * The following controllers are added to the request to switch in the chained mode or removed
-   * from the request to switch from the chained mode.
-   *
-   * For each controller the whole chain of following controllers is checked.
-   *
-   * NOTE: The automatically adding of following controller into activate list is not implemented
-   * yet.
-   *
-   * \param[in] controllers list with controllers.
-   * \param[in] strictness if value is equal "MANIPULATE_CONTROLLERS_CHAIN" then all following
-   * controllers will be automatically added to the activate request list if they are not in the
-   * deactivate request.
-   * \param[in] controller_it iterator to the controller for which the following controllers are
-   * checked.
-   *
-   * \returns return_type::OK if all following controllers pass the checks, otherwise
-   * return_type::ERROR.
-   */
-  controller_interface::return_type check_following_controllers_for_activate(
-    const std::vector<ControllerSpec> & controllers, int strictness,
-    const ControllersListIterator controller_it) const;
-#endif
-
   void extract_de_activate_command_interface_request(
     const std::vector<ControllerSpec> & controllers,
     const std::vector<std::string> & deactivate_request,
@@ -382,12 +351,42 @@ private:
     const std::vector<ControllerSpec> & controllers,
     const std::vector<std::string> & activate_request);
 
+  /**
+   * @brief Check for conflicts with the (de)activate request. If conflicts are detected, handle
+   * them by either raising an error (STRICT) or removing the conflicting controller from the
+   * request (BEST_EFFORT). Simultaneously, if the (de)activate request necessitates switching the
+   * chained mode of the following controller, make the corresponding 'from'/'to' chained mode
+   * request.
+   *
+   * NOTE: The input argument controllers must be sorted in the order of preceding and following.
+   * NOTE: strictness type "MANIPULATE_CONTROLLERS_CHAIN" is not implemented yet.
+   *
+   * \param[in] strictness if value is equal "MANIPULATE_CONTROLLERS_CHAIN" then all following
+   * controllers will be automatically added to the activate request list if they are not in the
+   * deactivate request.
+   * \param[in] controllers list with controllers.
+   * \param[in,out] deactivate_request A list of controller names requested for deactivation. If the
+   * strictness value is equal to "BEST_EFFORT", conflicting controllers found will be erased from
+   * the list. Additionally, if a following controller requiring a restart due to chained mode is
+   * found, it will be automatically added to the list.
+   * \param[in,out] activate_request A list of controller names requested for activation. If the
+   * strictness value is equal to "BEST_EFFORT", conflicting controllers found will be erased from
+   * the list. Additionally, if a following controller requiring a restart due to chained mode is
+   * found, it will be automatically added to the list.
+   * \param[out] from_chained_mode_request A list containing the names of following controllers that
+   * require switching from chained mode to non-chained mode, based on the requested (de)activation.
+   * \param[out] to_chained_mode_request A list containing the names of following controllers that
+   * require switching from non-chained mode to chained mode, based on the requested (de)activation.
+   *
+   * \returns return_type::OK if all (de)activate requests pass the checks, otherwise
+   * return_type::ERROR.
+   */
   controller_interface::return_type
   check_de_activate_request_conflict_and_create_chained_mode_request(
     const int strictness, const std::vector<ControllerSpec> & controllers,
     std::vector<std::string> & deactivate_request, std::vector<std::string> & activate_request,
-    std::vector<std::string> & to_chained_mode_request,
-    std::vector<std::string> & from_chained_mode_request) const;
+    std::vector<std::string> & from_chained_mode_request,
+    std::vector<std::string> & to_chained_mode_request) const;
 
   /**
    * @brief Inserts a controller into an ordered list based on dependencies to compute the

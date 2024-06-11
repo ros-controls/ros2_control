@@ -267,6 +267,289 @@ list_following_controllers(
   return following_ctrl_refs;
 }
 
+controller_interface::return_type check_de_activate_request_conflict_for_controller(
+  const rclcpp::Logger & logger, const int strictness,
+  const controller_manager::ControllerSpec & controller,
+  std::vector<std::string> & deactivate_request, std::vector<std::string> & activate_request)
+{
+  const auto handle_conflict = [&logger, strictness](const std::string & msg)
+  {
+    if (strictness == controller_manager_msgs::srv::SwitchController::Request::STRICT)
+    {
+      RCLCPP_ERROR(logger, "%s", msg.c_str());
+      return false;
+    }
+    RCLCPP_WARN(logger, "%s", msg.c_str());
+    return true;
+  };
+
+  auto ctrl_state = get_activation_state(controller, deactivate_request, activate_request);
+
+  // check for double stop
+  if (!ctrl_state.is_active && ctrl_state.in_deactivate_list)
+  {
+    if (!handle_conflict(
+          "Could not deactivate controller '" + controller.info.name + "' since it is not active"))
+    {
+      return controller_interface::return_type::ERROR;
+    }
+    remove_element_from_list(deactivate_request, controller.info.name);
+    ctrl_state.in_deactivate_list = false;
+  }
+
+  // check for doubled activation
+  if (ctrl_state.is_active && !ctrl_state.in_deactivate_list && ctrl_state.in_activate_list)
+  {
+    if (!handle_conflict(
+          "Could not activate controller '" + controller.info.name +
+          "' since it is already active"))
+    {
+      return controller_interface::return_type::ERROR;
+    }
+    remove_element_from_list(activate_request, controller.info.name);
+    ctrl_state.in_activate_list = false;
+  }
+
+  // check for illegal activation of an unconfigured/finalized controller
+  if (!ctrl_state.is_inactive && !ctrl_state.in_deactivate_list && ctrl_state.in_activate_list)
+  {
+    if (!handle_conflict(
+          "Could not activate controller '" + controller.info.name +
+          "' since it is not in inactive state"))
+    {
+      return controller_interface::return_type::ERROR;
+    }
+    remove_element_from_list(activate_request, controller.info.name);
+    ctrl_state.in_activate_list = false;
+  }
+
+  return controller_interface::return_type::OK;
+}
+
+enum class CheckConflictResult
+{
+  OK,
+  CheckNextFollowing,
+  CheckNextPreceding,
+  Error,
+};
+
+CheckConflictResult check_conflict_between_preceding_and_following(
+  const rclcpp::Logger & logger, const int strictness,
+  const controller_manager::ControllerSpec & preceding_ctrl,
+  const controller_manager::ControllerSpec & following_ctrl,
+  const ActivationState & preceding_state, const ActivationState & following_state,
+  std::vector<std::string> & deactivate_request, std::vector<std::string> & activate_request)
+{
+  const auto handle_conflict = [&logger, strictness](const std::string & msg)
+  {
+    if (strictness == controller_manager_msgs::srv::SwitchController::Request::STRICT)
+    {
+      RCLCPP_ERROR(logger, "%s", msg.c_str());
+      return false;
+    }
+    RCLCPP_WARN(logger, "%s", msg.c_str());
+    return true;
+  };
+
+  RCLCPP_ERROR(
+    logger, "Checking conflict between '%s' and '%s'", preceding_ctrl.info.name.c_str(),
+    following_ctrl.info.name.c_str());
+
+  // if neither the preceding nor the following is included in any request, no check is
+  // required, so proceed to the next following
+  if (
+    !preceding_state.in_activate_list && !preceding_state.in_deactivate_list &&
+    !following_state.in_activate_list && !following_state.in_deactivate_list)
+  {
+    RCLCPP_DEBUG(
+      logger,
+      "  - No need to check preceding '%s' and following '%s' because there are no requests",
+      preceding_ctrl.info.name.c_str(), following_ctrl.info.name.c_str());
+    return CheckConflictResult::CheckNextFollowing;
+  }
+
+  // if the preceding will be activated, check if the following is chainable
+  if (preceding_state.in_activate_list && !following_ctrl.c->is_chainable())
+  {
+    if (!handle_conflict(
+          "The preceding controller with name '" + preceding_ctrl.info.name +
+          "' cannot be activated because the following controller with name '" +
+          following_ctrl.info.name + "' is not chainable."))
+    {
+      return CheckConflictResult::Error;
+    }
+
+    // if BEST_EFFORT, remove the preceding controller from the activate list and proceed to the
+    // next preceding
+    remove_element_from_list(activate_request, preceding_ctrl.info.name);
+    return CheckConflictResult::CheckNextPreceding;
+  }
+
+  // check for conflict when preceding will be activated from inactive
+  if (preceding_state.is_inactive && preceding_state.in_activate_list)
+  {
+    // In the following cases, preceding cannot be activated, resulting in an error:
+    //  - the following is inactive and will not be activated
+    //  - the following is active and will be deactivated and will not be restarted
+    std::optional<bool> found_conflict = std::nullopt;
+    if (following_state.is_inactive && !following_state.in_activate_list)
+    {
+      found_conflict = handle_conflict(
+        "The controller with name '" + preceding_ctrl.info.name +
+        "' cannot be activated because the following controller with name '" +
+        following_ctrl.info.name + "' is inactive and will not be activated.");
+    }
+    if (
+      following_state.is_active && following_state.in_deactivate_list &&
+      !following_state.in_activate_list)
+    {
+      found_conflict = handle_conflict(
+        "The controller with name '" + preceding_ctrl.info.name +
+        "' cannot be activated because the following controller with name '" +
+        following_ctrl.info.name +
+        "' is active and will be deactivated but will not be activated.");
+    }
+
+    if (found_conflict.has_value())
+    {
+      if (!found_conflict.value())
+      {
+        return CheckConflictResult::Error;
+      }
+
+      // if BEST_EFFORT, remove the preceding controller from the activate list and proceed to the
+      // next preceding
+      remove_element_from_list(activate_request, preceding_ctrl.info.name);
+      return CheckConflictResult::CheckNextPreceding;
+    }
+  }
+
+  // check for conflict when preceding is active and will not be transitioned
+  if (
+    preceding_state.is_active && !preceding_state.in_deactivate_list &&
+    !preceding_state.in_activate_list)
+  {
+    // In the following cases, following cannot be deactivated (and thus cannot be restarted),
+    // resulting in an error:
+    // - the following is active and will be deactivated
+    // - the following is active and will be restarted
+    // In the end, an error occurs if following wll be deactivated, regardless of whether
+    // following will be restarted or not.
+    // (Note: Since preceding is active, following is always active, so there is no need to check if
+    // following is active.)
+    if (following_state.in_deactivate_list)
+    {
+      if (!handle_conflict(
+            "The following controller with name '" + following_ctrl.info.name +
+            "' cannot be deactivated because the preceding controller with name '" +
+            preceding_ctrl.info.name + "' is active and will not be deactivated and restarted."))
+      {
+        return CheckConflictResult::Error;
+      }
+
+      // if BEST_EFFORT, remove the following controller from the activate and deactivate
+      // list and proceed to the next following
+      remove_element_from_list(activate_request, following_ctrl.info.name);
+      remove_element_from_list(deactivate_request, following_ctrl.info.name);
+      return CheckConflictResult::CheckNextFollowing;
+    }
+  }
+
+  // check for conflict when preceding will be restarted from active
+  if (
+    preceding_state.is_active && preceding_state.in_deactivate_list &&
+    preceding_state.in_activate_list)
+  {
+    // In the following cases, following cannot be deactivated, resulting in an error:
+    // - the following is active and will be deactivated but will not be restarted
+    if (
+      following_state.is_active && following_state.in_deactivate_list &&
+      !following_state.in_activate_list)
+    {
+      if (!handle_conflict(
+            "The following controller with name '" + following_ctrl.info.name +
+            "' cannot be deactivated because the preceding controller with name '" +
+            preceding_ctrl.info.name + "' is active and will be restarted."))
+      {
+        return CheckConflictResult::Error;
+      }
+
+      // if BEST_EFFORT, remove the following controller from the deactivate list and proceed to
+      // the next following
+      remove_element_from_list(deactivate_request, following_ctrl.info.name);
+      return CheckConflictResult::CheckNextFollowing;
+    }
+  }
+
+  // No conflict occurs in other conditions, so return OK
+  return CheckConflictResult::OK;
+}
+
+void propagate_chained_mode(
+  const rclcpp::Logger & logger, const controller_manager::ControllerSpec & preceding_ctrl,
+  const controller_manager::ControllerSpec & following_ctrl,
+  const ActivationState & preceding_state, const ActivationState & following_state,
+  std::vector<std::string> & deactivate_request, std::vector<std::string> & activate_request,
+  std::vector<std::string> & from_chained_mode_request,
+  std::vector<std::string> & to_chained_mode_request,
+  hardware_interface::ResourceManager & resource_manager)
+{
+  bool in_to_chained_mode_list = false;
+  bool in_from_chained_mode_list = false;
+
+  const bool preceding_will_be_restarted =
+    preceding_state.in_deactivate_list && preceding_state.in_activate_list;
+  const bool following_will_be_restarted =
+    following_state.in_deactivate_list && following_state.in_activate_list;
+  const bool both_will_be_restarted = preceding_will_be_restarted && following_will_be_restarted;
+
+  // if the preceding will be deactivated and will not be restarted, or if both the
+  // preceding and following will be restarted, add the following to the 'from' chained
+  // mode request
+  if (
+    (preceding_state.in_deactivate_list && !preceding_will_be_restarted) || both_will_be_restarted)
+  {
+    add_element_to_list(from_chained_mode_request, following_ctrl.info.name);
+    in_from_chained_mode_list = true;
+  }
+
+  // if the preceding will be activated and will not be restarted, or if both the
+  // preceding and following will be restarted, add the following to the 'to' chained
+  // mode request
+  if ((preceding_state.in_activate_list && !preceding_will_be_restarted) || both_will_be_restarted)
+  {
+    add_element_to_list(to_chained_mode_request, following_ctrl.info.name);
+    in_to_chained_mode_list = true;
+
+    // if it is a chainable controller, make the reference interfaces available on
+    // preactivation (This is needed when you activate a couple of chainable controller
+    // altogether)
+    if (!following_ctrl.c->is_in_chained_mode())
+    {
+      resource_manager.make_controller_reference_interfaces_available(following_ctrl.info.name);
+    }
+  }
+
+  // if a change to the chained_mode has been requested and the following is active and will not
+  // be deactivated, the following will require a restart, so it should be added to
+  // the request
+  if (in_from_chained_mode_list || in_to_chained_mode_list)
+  {
+    if (following_state.is_active && !following_state.in_deactivate_list)
+    {
+      RCLCPP_DEBUG(
+        logger,
+        "Adding following controller with name '%s' to deactivate and activate request for "
+        "restart.",
+        following_ctrl.info.name.c_str());
+
+      add_element_to_list(deactivate_request, following_ctrl.info.name);
+      add_element_to_list(activate_request, following_ctrl.info.name);
+    };
+  }
+}
+
 }  // namespace
 
 namespace controller_manager
@@ -1102,8 +1385,8 @@ controller_interface::return_type ControllerManager::switch_controller(
   // following controller, make the corresponding 'from'/'to' chained mode request.
   if (
     check_de_activate_request_conflict_and_create_chained_mode_request(
-      strictness, controllers, deactivate_request_, activate_request_, to_chained_mode_request_,
-      from_chained_mode_request_) != controller_interface::return_type::OK)
+      strictness, controllers, deactivate_request_, activate_request_, from_chained_mode_request_,
+      to_chained_mode_request_) != controller_interface::return_type::OK)
   {
     RCLCPP_ERROR(get_logger(), "Aborting, no controller is switched! (::STRICT switch)");
     // reset all lists
@@ -2356,312 +2639,21 @@ void ControllerManager::cache_controller_interfaces_in_activate_request(
   }
 };
 
-enum class ConflictStatus
-{
-  NO_CONFLICT,
-  CONFLICT_WITH_BEST_EFFORT,
-  CONFLICT_WITH_STRICT,
-};
-
-controller_interface::return_type check_de_activate_request_conflict_for_controller(
-  const rclcpp::Logger & logger, const int strictness, const ControllerSpec & controller,
-  std::vector<std::string> & deactivate_request, std::vector<std::string> & activate_request)
-{
-  const auto handle_conflict = [&logger, strictness](const std::string & msg)
-  {
-    if (strictness == controller_manager_msgs::srv::SwitchController::Request::STRICT)
-    {
-      RCLCPP_ERROR(logger, "%s", msg.c_str());
-      return false;
-    }
-    RCLCPP_WARN(logger, "%s", msg.c_str());
-    return true;
-  };
-
-  auto ctrl_state = get_activation_state(controller, deactivate_request, activate_request);
-
-  // check for double stop
-  if (!ctrl_state.is_active && ctrl_state.in_deactivate_list)
-  {
-    if (!handle_conflict(
-          "Could not deactivate controller '" + controller.info.name + "' since it is not active"))
-    {
-      return controller_interface::return_type::ERROR;
-    }
-    remove_element_from_list(deactivate_request, controller.info.name);
-    ctrl_state.in_deactivate_list = false;
-  }
-
-  // check for doubled activation
-  if (ctrl_state.is_active && !ctrl_state.in_deactivate_list && ctrl_state.in_activate_list)
-  {
-    if (!handle_conflict(
-          "Could not activate controller '" + controller.info.name +
-          "' since it is already active"))
-    {
-      return controller_interface::return_type::ERROR;
-    }
-    remove_element_from_list(activate_request, controller.info.name);
-    ctrl_state.in_activate_list = false;
-  }
-
-  // check for illegal activation of an unconfigured/finalized controller
-  if (!ctrl_state.is_inactive && !ctrl_state.in_deactivate_list && ctrl_state.in_activate_list)
-  {
-    if (!handle_conflict(
-          "Could not activate controller '" + controller.info.name +
-          "' since it is not in inactive state"))
-    {
-      return controller_interface::return_type::ERROR;
-    }
-    remove_element_from_list(activate_request, controller.info.name);
-    ctrl_state.in_activate_list = false;
-  }
-
-  return controller_interface::return_type::OK;
-}
-
-enum class CheckConflictResult
-{
-  OK,
-  CheckNextFollowing,
-  CheckNextPreceding,
-  Error,
-};
-
-CheckConflictResult check_conflict_of_preceding_and_following(
-  const rclcpp::Logger & logger, const int strictness, const ControllerSpec & preceding_ctrl,
-  const ControllerSpec & following_ctrl, const ActivationState & preceding_state,
-  const ActivationState & following_state, std::vector<std::string> & deactivate_request,
-  std::vector<std::string> & activate_request)
-{
-  const auto handle_conflict = [&logger, strictness](const std::string & msg)
-  {
-    if (strictness == controller_manager_msgs::srv::SwitchController::Request::STRICT)
-    {
-      RCLCPP_ERROR(logger, "%s", msg.c_str());
-      return false;
-    }
-    RCLCPP_WARN(logger, "%s", msg.c_str());
-    return true;
-  };
-
-  RCLCPP_ERROR(
-    logger, "Checking conflict between '%s' and '%s'", preceding_ctrl.info.name.c_str(),
-    following_ctrl.info.name.c_str());
-
-  // if neither the preceding nor the following is included in any request, no check is
-  // required, so proceed to the next following
-  if (
-    !preceding_state.in_activate_list && !preceding_state.in_deactivate_list &&
-    !following_state.in_activate_list && !following_state.in_deactivate_list)
-  {
-    RCLCPP_DEBUG(
-      logger,
-      "  - No need to check preceding '%s' and following '%s' because there are no requests",
-      preceding_ctrl.info.name.c_str(), following_ctrl.info.name.c_str());
-    return CheckConflictResult::CheckNextFollowing;
-  }
-
-  // if the preceding will be activated, check if the following is chainable
-  if (preceding_state.in_activate_list && !following_ctrl.c->is_chainable())
-  {
-    if (!handle_conflict(
-          "The preceding controller with name '" + preceding_ctrl.info.name +
-          "' cannot be activated because the following controller with name '" +
-          following_ctrl.info.name + "' is not chainable."))
-    {
-      return CheckConflictResult::Error;
-    }
-
-    // if BEST_EFFORT, remove the preceding controller from the activate list and proceed to the
-    // next preceding
-    remove_element_from_list(activate_request, preceding_ctrl.info.name);
-    return CheckConflictResult::CheckNextPreceding;
-  }
-
-  // check for conflict when preceding will be activated from inactive
-  if (preceding_state.is_inactive && preceding_state.in_activate_list)
-  {
-    // 以下のいずれかの場合は preceding を activate できないためエラー
-    // 1-a. following が inactive で activate されない場合
-    // 1-b. following が active で deactivateされ、かつ、restart されない場合
-    // エラー発生かつstrictがBEST_EFFORTの場合は、precedingをactivateリストから削除
-
-    std::optional<bool> found_conflict = std::nullopt;
-    if (following_state.is_inactive && !following_state.in_activate_list)
-    {
-      found_conflict = handle_conflict(
-        "The controller with name '" + preceding_ctrl.info.name +
-        "' cannot be activated because the following controller with name '" +
-        following_ctrl.info.name + "' is inactive and will not be activated.");
-    }
-    if (
-      following_state.is_active && following_state.in_deactivate_list &&
-      !following_state.in_activate_list)
-    {
-      found_conflict = handle_conflict(
-        "The controller with name '" + preceding_ctrl.info.name +
-        "' cannot be activated because the following controller with name '" +
-        following_ctrl.info.name +
-        "' is active and will be deactivated but will not be activated.");
-    }
-
-    if (found_conflict.has_value())
-    {
-      if (!found_conflict.value())
-      {
-        return CheckConflictResult::Error;
-      }
-
-      // if BEST_EFFORT, remove the preceding controller from the activate list and proceed to the
-      // next preceding
-      remove_element_from_list(activate_request, preceding_ctrl.info.name);
-      return CheckConflictResult::CheckNextPreceding;
-    }
-  }
-
-  // check for conflict when preceding is active and will not be transitioned
-  if (
-    preceding_state.is_active && !preceding_state.in_deactivate_list &&
-    !preceding_state.in_activate_list)
-  {
-    // 以下のいずれかの場合は following を deactivate できない (結果として restart もできない)
-    // ためエラー
-    // 2-1. following が active で deactivate される場合
-    // 2-2. following が active で restart される場合
-    // -> 結局のところ、following が activate されるか否かを問わず、deactivate
-    // される場合はエラー(precedingがactiveの時、followingは必ずactiveなので、followingのactiveチェックは不要)
-    // エラー発生かつstrictがBEST_EFFORTの場合はfollowingをactivate/deactivateリストから削除
-    if (following_state.in_deactivate_list)
-    {
-      if (!handle_conflict(
-            "The following controller with name '" + following_ctrl.info.name +
-            "' cannot be deactivated because the preceding controller with name '" +
-            preceding_ctrl.info.name + "' is active and will not be deactivated and restarted."))
-      {
-        return CheckConflictResult::Error;
-      }
-
-      // if BEST_EFFORT, remove the following controller from the activate and deactivate
-      // list and proceed to the next following
-      remove_element_from_list(activate_request, following_ctrl.info.name);
-      remove_element_from_list(deactivate_request, following_ctrl.info.name);
-      return CheckConflictResult::CheckNextFollowing;
-    }
-  }
-
-  // check for conflict when preceding will be restarted from active
-  if (
-    preceding_state.is_active && preceding_state.in_deactivate_list &&
-    preceding_state.in_activate_list)
-  {
-    // following が active で deactivate され、かつ、restart しない場合は following を
-    // deactivate できないためエラー
-    // エラー発生かつstrictがBEST_EFFORTの場合はfollowingをdeactivateリストから削除
-    if (
-      following_state.is_active && following_state.in_deactivate_list &&
-      !following_state.in_activate_list)
-    {
-      if (!handle_conflict(
-            "The following controller with name '" + following_ctrl.info.name +
-            "' cannot be deactivated because the preceding controller with name '" +
-            preceding_ctrl.info.name + "' is active and will be restarted."))
-      {
-        return CheckConflictResult::Error;
-      }
-
-      // if BEST_EFFORT, remove the following controller from the deactivate list and proceed to
-      // the next following
-      remove_element_from_list(deactivate_request, following_ctrl.info.name);
-      return CheckConflictResult::CheckNextFollowing;
-    }
-  }
-
-  // No conflict occurs in other conditions, so return OK
-  return CheckConflictResult::OK;
-}
-
-void propagate_chained_mode(
-  const rclcpp::Logger & logger, const ControllerSpec & preceding_ctrl,
-  const ControllerSpec & following_ctrl, const ActivationState & preceding_state,
-  const ActivationState & following_state, std::vector<std::string> & deactivate_request,
-  std::vector<std::string> & activate_request, std::vector<std::string> & to_chained_mode_request,
-  std::vector<std::string> & from_chained_mode_request,
-  hardware_interface::ResourceManager & resource_manager)
-{
-  bool in_to_chained_mode_list = false;
-  bool in_from_chained_mode_list = false;
-
-  const bool preceding_will_be_restarted =
-    preceding_state.in_deactivate_list && preceding_state.in_activate_list;
-  const bool following_will_be_restarted =
-    following_state.in_deactivate_list && following_state.in_activate_list;
-  const bool both_will_be_restarted = preceding_will_be_restarted && following_will_be_restarted;
-
-  // if the preceding will be deactivated and will not be restarted, or if both the
-  // preceding and following will be restarted, add the following to the 'from' chained
-  // mode request
-  if (
-    (preceding_state.in_deactivate_list && !preceding_will_be_restarted) || both_will_be_restarted)
-  {
-    add_element_to_list(from_chained_mode_request, following_ctrl.info.name);
-    in_from_chained_mode_list = true;
-  }
-
-  // if the preceding will be activated and will not be restarted, or if both the
-  // preceding and following will be restarted, add the following to the 'to' chained
-  // mode request
-  if ((preceding_state.in_activate_list && !preceding_will_be_restarted) || both_will_be_restarted)
-  {
-    add_element_to_list(to_chained_mode_request, following_ctrl.info.name);
-    in_to_chained_mode_list = true;
-
-    // if it is a chainable controller, make the reference interfaces available on
-    // preactivation (This is needed when you activate a couple of chainable controller
-    // altogether)
-    if (!following_ctrl.c->is_in_chained_mode())
-    {
-      resource_manager.make_controller_reference_interfaces_available(following_ctrl.info.name);
-    }
-  }
-
-  // if a change to the chained_mode has been requested and the following is active and will not
-  // be deactivated, the following will require a restart, so it should be added to
-  // the request
-  if (in_from_chained_mode_list || in_to_chained_mode_list)
-  {
-    if (following_state.is_active && !following_state.in_deactivate_list)
-    {
-      RCLCPP_DEBUG(
-        logger,
-        "Adding following controller with name '%s' to deactivate and activate request for "
-        "restart.",
-        following_ctrl.info.name.c_str());
-
-      add_element_to_list(deactivate_request, following_ctrl.info.name);
-      add_element_to_list(activate_request, following_ctrl.info.name);
-    };
-  }
-}
-
 controller_interface::return_type
 ControllerManager::check_de_activate_request_conflict_and_create_chained_mode_request(
-  const int strictness, const std::vector<ControllerSpec> & controllers,
+  const int strictness, const std::vector<controller_manager::ControllerSpec> & controllers,
   std::vector<std::string> & deactivate_request, std::vector<std::string> & activate_request,
-  std::vector<std::string> & to_chained_mode_request,
-  std::vector<std::string> & from_chained_mode_request) const
+  std::vector<std::string> & from_chained_mode_request,
+  std::vector<std::string> & to_chained_mode_request) const
 {
-  const auto logger = get_logger();
-
   // check if there are controllers to (de)activate
   if (activate_request.empty() && deactivate_request.empty())
   {
-    RCLCPP_DEBUG(logger, "No controllers to (de)activate");
+    RCLCPP_DEBUG(get_logger(), "No controllers to (de)activate");
     return controller_interface::return_type::OK;
   }
 
-  // Check for consistency in the order of "preceding" to "following"
+  // Check for conflict in the order of "preceding" to "following"
   // Note: If the order of controllers is not sorted in the sequence of preceding -> following, the
   // subsequent processes will not function properly.
   for (const auto & controller : controllers)
@@ -2669,7 +2661,7 @@ ControllerManager::check_de_activate_request_conflict_and_create_chained_mode_re
     // check for conflict of (de)activate request for the controller
     if (
       check_de_activate_request_conflict_for_controller(
-        logger, strictness, controller, deactivate_request, activate_request) !=
+        get_logger(), strictness, controller, deactivate_request, activate_request) !=
       controller_interface::return_type::OK)
     {
       return controller_interface::return_type::ERROR;
@@ -2693,7 +2685,7 @@ ControllerManager::check_de_activate_request_conflict_and_create_chained_mode_re
     const auto & preceding_ctrl = controller;
     const auto & preceding_state = controller_state;
 
-    // check consistency of the preceding and each following controller
+    // check for conflict of the preceding and each following controller
     for (const auto & following_ctrl_ref : following_ctrl_refs)
     {
       const auto & following_ctrl = following_ctrl_ref.get();
@@ -2701,8 +2693,8 @@ ControllerManager::check_de_activate_request_conflict_and_create_chained_mode_re
       const auto following_state =
         get_activation_state(following_ctrl, deactivate_request, activate_request);
 
-      const auto check_result = check_conflict_of_preceding_and_following(
-        logger, strictness, preceding_ctrl, following_ctrl, preceding_state, following_state,
+      const auto check_result = check_conflict_between_preceding_and_following(
+        get_logger(), strictness, preceding_ctrl, following_ctrl, preceding_state, following_state,
         deactivate_request, activate_request);
 
       // based on the check result, select the next action
@@ -2711,16 +2703,18 @@ ControllerManager::check_de_activate_request_conflict_and_create_chained_mode_re
         // if no conflict is detected in the activate/deactivate request, proceed to
         // determine the chained_mode request
         propagate_chained_mode(
-          logger, preceding_ctrl, following_ctrl, preceding_state, following_state,
-          deactivate_request, activate_request, to_chained_mode_request, from_chained_mode_request,
+          get_logger(), preceding_ctrl, following_ctrl, preceding_state, following_state,
+          deactivate_request, activate_request, from_chained_mode_request, to_chained_mode_request,
           *resource_manager_);
       }
       else if (check_result == CheckConflictResult::CheckNextFollowing)
       {
+        // proceed to check the next following controller
         continue;
       }
       else if (check_result == CheckConflictResult::CheckNextPreceding)
       {
+        // proceed to check the next preceding controller
         break;
       }
       else
