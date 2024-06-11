@@ -486,7 +486,7 @@ CheckConflictResult check_conflict_between_preceding_and_following(
   return CheckConflictResult::OK;
 }
 
-void propagate_chained_mode(
+void update_chained_mode_request_of_following(
   const rclcpp::Logger & logger, const controller_manager::ControllerSpec & preceding_ctrl,
   const controller_manager::ControllerSpec & following_ctrl,
   const ActivationState & preceding_state, const ActivationState & following_state,
@@ -1230,7 +1230,7 @@ controller_interface::return_type ControllerManager::switch_controller(
 {
   switch_params_ = SwitchParams();
 
-  const auto validate_requests_and_internal_states = [this, &strictness]()
+  const auto check_request_and_internal_state_before_switch = [this, &strictness]()
   {
     if (!deactivate_request_.empty() || !activate_request_.empty())
     {
@@ -1272,7 +1272,7 @@ controller_interface::return_type ControllerManager::switch_controller(
     }
   };
 
-  validate_requests_and_internal_states();
+  check_request_and_internal_state_before_switch();
 
   RCLCPP_DEBUG(get_logger(), "Activating controllers:");
   for (const auto & controller : activate_controllers)
@@ -1344,35 +1344,6 @@ controller_interface::return_type ControllerManager::switch_controller(
     return ret;
   }
 
-  const auto show_list = [this](const std::string & tag)
-  {
-    RCLCPP_WARN(get_logger(), "[%s]----------------", tag.c_str());
-    RCLCPP_WARN(get_logger(), "Activating controllers:");
-    for (const auto & controller : activate_request_)
-    {
-      RCLCPP_WARN(get_logger(), " - %s", controller.c_str());
-    }
-    RCLCPP_WARN(get_logger(), "Deactivating controllers:");
-    for (const auto & controller : deactivate_request_)
-    {
-      RCLCPP_WARN(get_logger(), " - %s", controller.c_str());
-    }
-    RCLCPP_WARN(get_logger(), "to chained mode:");
-    for (const auto & req : to_chained_mode_request_)
-    {
-      RCLCPP_WARN(get_logger(), " - %s", req.c_str());
-    }
-    RCLCPP_WARN(get_logger(), "from chained mode:");
-    for (const auto & req : from_chained_mode_request_)
-    {
-      RCLCPP_WARN(get_logger(), " - %s", req.c_str());
-    }
-    RCLCPP_WARN(get_logger(), "----------------");
-  };
-
-  RCLCPP_WARN(get_logger(), "STRICTNESS: %d", strictness);
-  show_list("REQUEST");
-
   // lock controllers
   std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
 
@@ -1394,8 +1365,6 @@ controller_interface::return_type ControllerManager::switch_controller(
     return controller_interface::return_type::ERROR;
   }
 
-  show_list("FINALLY");
-
   // check if we need to request switch controllers after all the checks
   if (activate_request_.empty() && deactivate_request_.empty())
   {
@@ -1404,10 +1373,13 @@ controller_interface::return_type ControllerManager::switch_controller(
     return controller_interface::return_type::OK;
   }
 
+  // extract the command interfaces that need to be (de)activated
   extract_de_activate_command_interface_request(
     controllers, deactivate_request_, activate_request_, deactivate_command_interface_request_,
     activate_command_interface_request_);
 
+  // cache the mapping of state and command interfaces of the controllers that are being
+  // activated to the resource manager
   cache_controller_interfaces_in_activate_request(controllers, activate_request_);
 
   RCLCPP_DEBUG(get_logger(), "Request for command interfaces from activating controllers:");
@@ -1444,20 +1416,12 @@ controller_interface::return_type ControllerManager::switch_controller(
 
   // wait until switch is finished
   RCLCPP_DEBUG(get_logger(), "Requested atomic controller switch from realtime loop");
-  int timeout_count = 0;
   while (rclcpp::ok() && switch_params_.do_switch)
   {
     if (!rclcpp::ok())
     {
       return controller_interface::return_type::ERROR;
     }
-
-    if (++timeout_count > 10 * 3000)
-    {
-      RCLCPP_ERROR(get_logger(), "Timeout in atomic controller switch");
-      return controller_interface::return_type::ERROR;
-    }
-
     std::this_thread::sleep_for(std::chrono::microseconds(100));
   }
 
@@ -2700,9 +2664,12 @@ ControllerManager::check_de_activate_request_conflict_and_create_chained_mode_re
       // based on the check result, select the next action
       if (check_result == CheckConflictResult::OK)
       {
-        // if no conflict is detected in the activate/deactivate request, proceed to
-        // determine the chained_mode request
-        propagate_chained_mode(
+        // If no conflicts are found in the (de)activate request, determine if a change chained mode
+        // is necessary for the following controllers based on the request, and add them to
+        // the chained mode request if necessary. Additionally, if only preceding performs the
+        // activation state transition, a restart of the following controller is necessary to
+        // switch the chained mode, so add them to the (de)activate request.
+        update_chained_mode_request_of_following(
           get_logger(), preceding_ctrl, following_ctrl, preceding_state, following_state,
           deactivate_request, activate_request, from_chained_mode_request, to_chained_mode_request,
           *resource_manager_);
