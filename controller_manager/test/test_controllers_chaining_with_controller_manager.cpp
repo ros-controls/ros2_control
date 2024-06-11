@@ -1042,9 +1042,6 @@ TEST_P(
 
   // Test Case 6: following controller is deactivated but preceding controller will be activated
   // --> return error; controllers stay in the same state
-
-  RCLCPP_ERROR(cm_->get_logger(), "======================================");
-
   switch_test_controllers(
     {DIFF_DRIVE_CONTROLLER}, {PID_LEFT_WHEEL, PID_RIGHT_WHEEL}, test_param.strictness,
     expected.at(test_param.strictness).future_status,
@@ -1061,6 +1058,21 @@ TEST_P(
 
   // Test Case 7: following controller deactivation but preceding controller is active
   // --> return error; controllers stay in the same state as they were
+
+  const auto verify_all_controllers_are_still_be_active = [&]()
+  {
+    ASSERT_EQ(
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+      pid_left_wheel_controller->get_state().id());
+    ASSERT_EQ(
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+      pid_right_wheel_controller->get_state().id());
+    ASSERT_EQ(
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, diff_drive_controller->get_state().id());
+    ASSERT_EQ(
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
+      position_tracking_controller->get_state().id());
+  };
 
   // Activate all controllers for this test
   ActivateController(
@@ -1086,53 +1098,47 @@ TEST_P(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
     position_tracking_controller->get_state().id());
 
+  // Attempt to deactivate one of the lowest following controller
+  switch_test_controllers(
+    {}, {PID_LEFT_WHEEL}, test_param.strictness, std::future_status::ready,
+    expected.at(test_param.strictness).return_type);
+  verify_all_controllers_are_still_be_active();
+
+  // Attempt to deactivate another lowest following controller
+  switch_test_controllers(
+    {}, {PID_RIGHT_WHEEL}, test_param.strictness, std::future_status::ready,
+    expected.at(test_param.strictness).return_type);
+  verify_all_controllers_are_still_be_active();
+
   // Attempt to deactivate the lowest following controllers
   switch_test_controllers(
     {}, {PID_LEFT_WHEEL, PID_RIGHT_WHEEL}, test_param.strictness, std::future_status::ready,
     expected.at(test_param.strictness).return_type);
+  verify_all_controllers_are_still_be_active();
 
-  // All controllers should still be active
-  ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, pid_left_wheel_controller->get_state().id());
-  ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, pid_right_wheel_controller->get_state().id());
-  ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, diff_drive_controller->get_state().id());
-  ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
-    position_tracking_controller->get_state().id());
-
-  // Attempt to deactivate a following controller
+  // Attempt to deactivate the middle following controller
   switch_test_controllers(
-    {}, {PID_RIGHT_WHEEL}, test_param.strictness, std::future_status::ready,
+    {}, {DIFF_DRIVE_CONTROLLER}, test_param.strictness, std::future_status::ready,
     expected.at(test_param.strictness).return_type);
+  verify_all_controllers_are_still_be_active();
 
-  // All controllers should still be active
-  ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, pid_left_wheel_controller->get_state().id());
-  ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, pid_right_wheel_controller->get_state().id());
-  ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, diff_drive_controller->get_state().id());
-  ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
-    position_tracking_controller->get_state().id());
+  // Attempt to deactivate the middle following and one of the lowest following controller
+  switch_test_controllers(
+    {}, {DIFF_DRIVE_CONTROLLER, PID_LEFT_WHEEL}, test_param.strictness, std::future_status::ready,
+    expected.at(test_param.strictness).return_type);
+  verify_all_controllers_are_still_be_active();
+
+  // Attempt to deactivate the middle following and another lowest following controller
+  switch_test_controllers(
+    {}, {DIFF_DRIVE_CONTROLLER, PID_LEFT_WHEEL}, test_param.strictness, std::future_status::ready,
+    expected.at(test_param.strictness).return_type);
+  verify_all_controllers_are_still_be_active();
 
   // Attempt to deactivate all following controllers
   switch_test_controllers(
     {}, {PID_LEFT_WHEEL, PID_RIGHT_WHEEL, DIFF_DRIVE_CONTROLLER}, test_param.strictness,
     std::future_status::ready, expected.at(test_param.strictness).return_type);
-
-  // All controllers should still be active
-  ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, pid_left_wheel_controller->get_state().id());
-  ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, pid_right_wheel_controller->get_state().id());
-  ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, diff_drive_controller->get_state().id());
-  ASSERT_EQ(
-    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
-    position_tracking_controller->get_state().id());
+  verify_all_controllers_are_still_be_active();
 }
 
 TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers_adding_in_random_order)
