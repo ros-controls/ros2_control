@@ -1,0 +1,12 @@
+name: Auto Update pre-commit
+# Update pre-commit config and create PR if changes are detected
+# author: Christoph Fröhlich <christoph.froehlich@ait.ac.at>
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 1 * *'  # Runs at 00:00, on day 1 of the month
+
+jobs:
+  auto_update_and_create_pr:
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-update-pre-commit.yml@master

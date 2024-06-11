@@ -19,6 +19,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "joint_limits/joint_limits.hpp"
+
 namespace hardware_interface
 {
 /**
@@ -42,6 +44,25 @@ struct InterfaceInfo
   std::string data_type;
   /// (Optional) If the handle is an array, the size of the array. Used by GPIOs.
   int size;
+  /// (Optional) enable or disable the limits for the command interfaces
+  bool enable_limits;
+};
+
+/// @brief This structure stores information about a joint that is mimicking another joint
+struct MimicJoint
+{
+  std::size_t joint_index;
+  std::size_t mimicked_joint_index;
+  double multiplier = 1.0;
+  double offset = 0.0;
+};
+
+/// @brief This enum is used to store the mimic attribute of a joint
+enum class MimicAttribute
+{
+  NOT_SET,
+  TRUE,
+  FALSE
 };
 
 /**
@@ -54,6 +75,9 @@ struct ComponentInfo
   std::string name;
   /// Type of the component: sensor, joint, or GPIO.
   std::string type;
+
+  ///  Hold the value of the mimic attribute if given, NOT_SET otherwise
+  MimicAttribute is_mimic = MimicAttribute::NOT_SET;
 
   /**
    * Name of the command interfaces that can be set, e.g. "position", "velocity", etc.
@@ -109,6 +133,8 @@ struct HardwareInfo
   std::string name;
   /// Type of the hardware: actuator, sensor or system.
   std::string type;
+  ///  Hardware group to which the hardware belongs.
+  std::string group;
   /// Component is async
   bool is_async;
   /// Name of the pluginlib plugin of the hardware that will be loaded.
@@ -116,22 +142,26 @@ struct HardwareInfo
   /// (Optional) Key-value pairs for hardware parameters.
   std::unordered_map<std::string, std::string> hardware_parameters;
   /**
-   * Map of joints provided by the hardware where the key is the joint name.
+   * Vector of joints provided by the hardware.
    * Required for Actuator and System Hardware.
    */
   std::vector<ComponentInfo> joints;
   /**
-   * Map of sensors provided by the hardware where the key is the joint or link name.
+   * Vector of mimic joints.
+   */
+  std::vector<MimicJoint> mimic_joints;
+  /**
+   * Vector of sensors provided by the hardware.
    * Required for Sensor and optional for System Hardware.
    */
   std::vector<ComponentInfo> sensors;
   /**
-   * Map of GPIO provided by the hardware where the key is a descriptive name of the GPIO.
+   * Vector of GPIOs provided by the hardware.
    * Optional for any hardware components.
    */
   std::vector<ComponentInfo> gpios;
   /**
-   * Map of transmissions to calculate ration between joints and physical actuators.
+   * Vector of transmissions to calculate ratio between joints and physical actuators.
    * Optional for Actuator and System Hardware.
    */
   std::vector<TransmissionInfo> transmissions;
@@ -139,6 +169,17 @@ struct HardwareInfo
    * The XML contents prior to parsing
    */
   std::string original_xml;
+  /**
+   * The URDF parsed limits of the hardware components joint command interfaces
+   */
+  std::unordered_map<std::string, joint_limits::JointLimits> limits;
+
+  /**
+   * Map of software joint limits used for clamping the command where the key is the joint name.
+   * Optional If not specified or less restrictive than the JointLimits uses the previous
+   * JointLimits.
+   */
+  std::unordered_map<std::string, joint_limits::SoftJointLimits> soft_limits;
 };
 
 }  // namespace hardware_interface

@@ -14,6 +14,8 @@ Joints
 ``<joint>``-tag groups the interfaces associated with the joints of physical robots and actuators.
 They have command and state interfaces to set the goal values for hardware and read its current state.
 
+All joints defined in the ``<ros2_control>``-tag have to be present in the URDF received :ref:`by the controller manager <doc/ros2_control/controller_manager/doc/userdoc:subscribers>`.
+
 State interfaces of joints can be published as a ROS topic by means of the :ref:`joint_state_broadcaster <joint_state_broadcaster_userdoc>`
 
 Sensors
@@ -38,6 +40,12 @@ The ``<gpio>`` tag can be used as a child of all three types of hardware compone
 
 Because ports implemented as ``<gpio>``-tag are typically very application-specific, there exists no generic publisher
 within the ros2_control framework. A custom gpio-controller has to be implemented for each application. As an example, see :ref:`the GPIO controller example <ros2_control_demos_example_10_userdoc>` as part of the demo repository.
+
+Hardware Groups
+*****************************
+Hardware Component Groups serve as a critical organizational mechanism within complex systems, facilitating error handling and fault tolerance. By grouping related hardware components together, such as actuators within a manipulator, users can establish a unified framework for error detection and response.
+
+Hardware Component Groups play a vital role in propagating errors across interconnected hardware components. For instance, in a manipulator system, grouping actuators together allows for error propagation. If one actuator fails within the group, the error can propagate to the other actuators, signaling a potential issue across the system. By default, the actuator errors are isolated to their own hardware component, allowing the rest to continue operation unaffected. In the provided ros2_control configuration, the ``<group>`` tag within each ``<ros2_control>`` block signifies the grouping of hardware components, enabling error propagation mechanisms within the system.
 
 Examples
 *****************************
@@ -148,5 +156,68 @@ They can be combined together within the different hardware component types (sys
       <gpio name="calibration">
         <command_interface name="calibration_matrix_nr"/>
         <state_interface name="calibration_matrix_nr"/>
+      </gpio>
+    </ros2_control>
+
+4. Robot with multiple hardware components belonging to same group : ``Group1``
+
+   - RRBot System 1 and 2
+   - Digital: Total 4 inputs and 2 outputs
+   - Analog: Total 2 inputs and 1 output
+   - Vacuum valve at the flange (on/off)
+   - Group: Group1
+
+  .. code:: xml
+
+    <ros2_control name="RRBotSystem1" type="system">
+      <hardware>
+        <plugin>ros2_control_demo_hardware/RRBotSystemPositionOnlyHardware</plugin>
+        <group>Group1</group>
+        <param name="example_param_hw_start_duration_sec">2.0</param>
+        <param name="example_param_hw_stop_duration_sec">3.0</param>
+        <param name="example_param_hw_slowdown">2.0</param>
+      </hardware>
+      <joint name="joint1">
+        <command_interface name="position">
+          <param name="min">-1</param>
+          <param name="max">1</param>
+        </command_interface>
+        <state_interface name="position"/>
+      </joint>
+      <gpio name="flange_analog_IOs">
+        <command_interface name="analog_output1"/>
+        <state_interface name="analog_output1">    <!-- Needed to know current state of the output -->
+          <param name="initial_value">3.1</param>  <!-- Optional initial value for mock_hardware -->
+        </state_interface>
+        <state_interface name="analog_input1"/>
+        <state_interface name="analog_input2"/>
+      </gpio>
+      <gpio name="flange_vacuum">
+        <command_interface name="vacuum"/>
+        <state_interface name="vacuum"/>    <!-- Needed to know current state of the output -->
+      </gpio>
+    </ros2_control>
+    <ros2_control name="RRBotSystem2" type="system">
+      <hardware>
+        <plugin>ros2_control_demo_hardware/RRBotSystemPositionOnlyHardware</plugin>
+        <group>Group1</group>
+        <param name="example_param_hw_start_duration_sec">2.0</param>
+        <param name="example_param_hw_stop_duration_sec">3.0</param>
+        <param name="example_param_hw_slowdown">2.0</param>
+      </hardware>
+      <joint name="joint2">
+        <command_interface name="position">
+          <param name="min">-1</param>
+          <param name="max">1</param>
+        </command_interface>
+        <state_interface name="position"/>
+      </joint>
+      <gpio name="flange_digital_IOs">
+        <command_interface name="digital_output1"/>
+        <state_interface name="digital_output1"/>    <!-- Needed to know current state of the output -->
+        <command_interface name="digital_output2"/>
+        <state_interface name="digital_output2"/>
+        <state_interface name="digital_input1"/>
+        <state_interface name="digital_input2"/>
       </gpio>
     </ros2_control>

@@ -121,7 +121,7 @@ std::shared_ptr<rclcpp_lifecycle::LifecycleNode> ControllerInterfaceBase::get_no
   return node_;
 }
 
-std::shared_ptr<rclcpp_lifecycle::LifecycleNode> ControllerInterfaceBase::get_node() const
+std::shared_ptr<const rclcpp_lifecycle::LifecycleNode> ControllerInterfaceBase::get_node() const
 {
   if (!node_.get())
   {

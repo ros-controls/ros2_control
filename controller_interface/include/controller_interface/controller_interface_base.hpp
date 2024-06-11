@@ -26,6 +26,7 @@
 #include "hardware_interface/loaned_state_interface.hpp"
 
 #include "rclcpp/rclcpp.hpp"
+#include "rclcpp/version.h"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
 
 namespace controller_interface
@@ -144,7 +145,7 @@ public:
   std::shared_ptr<rclcpp_lifecycle::LifecycleNode> get_node();
 
   CONTROLLER_INTERFACE_PUBLIC
-  std::shared_ptr<rclcpp_lifecycle::LifecycleNode> get_node() const;
+  std::shared_ptr<const rclcpp_lifecycle::LifecycleNode> get_node() const;
 
   CONTROLLER_INTERFACE_PUBLIC
   const rclcpp_lifecycle::State & get_state() const;
@@ -172,7 +173,14 @@ public:
   CONTROLLER_INTERFACE_PUBLIC
   virtual rclcpp::NodeOptions define_custom_node_options() const
   {
+// \note The versions conditioning is added here to support the source-compatibility with Humble
+#if RCLCPP_VERSION_MAJOR >= 21
     return rclcpp::NodeOptions().enable_logger_service(true);
+#else
+    return rclcpp::NodeOptions()
+      .allow_undeclared_parameters(true)
+      .automatically_declare_parameters_from_overrides(true);
+#endif
   }
 
   /// Declare and initialize a parameter with a type.

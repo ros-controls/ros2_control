@@ -17,7 +17,6 @@
 #include "mock_components/generic_system.hpp"
 
 #include <algorithm>
-#include <charconv>
 #include <cmath>
 #include <iterator>
 #include <limits>
@@ -134,34 +133,6 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
       {
         joint_states_[j][i] = 0.0;
       }
-    }
-  }
-
-  // Search for mimic joints
-  for (auto i = 0u; i < info_.joints.size(); ++i)
-  {
-    const auto & joint = info_.joints.at(i);
-    if (joint.parameters.find("mimic") != joint.parameters.cend())
-    {
-      const auto mimicked_joint_it = std::find_if(
-        info_.joints.begin(), info_.joints.end(),
-        [&mimicked_joint =
-           joint.parameters.at("mimic")](const hardware_interface::ComponentInfo & joint_info)
-        { return joint_info.name == mimicked_joint; });
-      if (mimicked_joint_it == info_.joints.cend())
-      {
-        throw std::runtime_error(
-          std::string("Mimicked joint '") + joint.parameters.at("mimic") + "' not found");
-      }
-      MimicJoint mimic_joint;
-      mimic_joint.joint_index = i;
-      mimic_joint.mimicked_joint_index = std::distance(info_.joints.begin(), mimicked_joint_it);
-      auto param_it = joint.parameters.find("multiplier");
-      if (param_it != joint.parameters.end())
-      {
-        mimic_joint.multiplier = hardware_interface::stod(joint.parameters.at("multiplier"));
-      }
-      mimic_joints_.push_back(mimic_joint);
     }
   }
 
@@ -488,7 +459,8 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
     return return_type::OK;
   }
 
-  auto mirror_command_to_state = [](auto & states_, auto commands_, size_t start_index = 0)
+  auto mirror_command_to_state =
+    [](auto & states_, auto commands_, size_t start_index = 0) -> return_type
   {
     for (size_t i = start_index; i < states_.size(); ++i)
     {
@@ -498,8 +470,13 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
         {
           states_[i][j] = commands_[i][j];
         }
+        if (std::isinf(commands_[i][j]))
+        {
+          return return_type::ERROR;
+        }
       }
     }
+    return return_type::OK;
   };
 
   for (size_t j = 0; j < joint_states_[POSITION_INTERFACE_INDEX].size(); ++j)
@@ -585,20 +562,19 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
 
   // do loopback on all other interfaces - starts from 1 or 3 because 0, 1, 3 are position,
   // velocity, and acceleration interface
-  if (calculate_dynamics_)
+  if (
+    mirror_command_to_state(joint_states_, joint_commands_, calculate_dynamics_ ? 3 : 1) !=
+    return_type::OK)
   {
-    mirror_command_to_state(joint_states_, joint_commands_, 3);
-  }
-  else
-  {
-    mirror_command_to_state(joint_states_, joint_commands_, 1);
+    return return_type::ERROR;
   }
 
-  for (const auto & mimic_joint : mimic_joints_)
+  for (const auto & mimic_joint : info_.mimic_joints)
   {
     for (auto i = 0u; i < joint_states_.size(); ++i)
     {
       joint_states_[i][mimic_joint.joint_index] =
+        mimic_joint.offset +
         mimic_joint.multiplier * joint_states_[i][mimic_joint.mimicked_joint_index];
     }
   }
@@ -626,13 +602,13 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
     mirror_command_to_state(sensor_states_, sensor_mock_commands_);
   }
 
-  // do loopback on all gpio interfaces
   if (use_mock_gpio_command_interfaces_)
   {
     mirror_command_to_state(gpio_states_, gpio_mock_commands_);
   }
   else
   {
+    // do loopback on all gpio interfaces
     mirror_command_to_state(gpio_states_, gpio_commands_);
   }
 

@@ -2,7 +2,8 @@ cmake_minimum_required(VERSION 3.16)
 project(joint_limits LANGUAGES CXX)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
-  add_compile_options(-Wall -Wextra -Werror=conversion -Werror=unused-but-set-variable -Werror=return-type -Werror=shadow)
+  add_compile_options(-Wall -Wextra -Werror=conversion -Werror=unused-but-set-variable -Werror=return-type -Werror=shadow
+          -Werror=missing-braces)
 endif()
 
 set(THIS_PACKAGE_INCLUDE_DEPENDS
@@ -16,6 +17,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
 
 find_package(ament_cmake REQUIRED)
 find_package(backward_ros REQUIRED)
+find_package(ament_cmake_gen_version_h REQUIRED)
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
 endforeach()
@@ -111,3 +113,4 @@ install(TARGETS
 ament_export_targets(export_joint_limits HAS_LIBRARY_TARGET)
 ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
 ament_package()
+ament_generate_version_header(${PROJECT_NAME})

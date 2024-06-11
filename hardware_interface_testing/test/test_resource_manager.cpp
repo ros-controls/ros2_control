@@ -44,6 +44,7 @@ using ros2_control_test_assets::TEST_SYSTEM_HARDWARE_NAME;
 using ros2_control_test_assets::TEST_SYSTEM_HARDWARE_PLUGIN_NAME;
 using ros2_control_test_assets::TEST_SYSTEM_HARDWARE_STATE_INTERFACES;
 using ros2_control_test_assets::TEST_SYSTEM_HARDWARE_TYPE;
+using testing::SizeIs;
 
 auto configure_components =
   [](TestableResourceManager & rm, const std::vector<std::string> & components = {})
@@ -101,22 +102,23 @@ TEST_F(ResourceManagerTest, post_initialization_with_urdf)
   ASSERT_NO_THROW(rm.load_urdf(ros2_control_test_assets::minimal_robot_urdf));
 }
 
-TEST_F(ResourceManagerTest, test_unitilizable_hardware_validation)
+TEST_F(ResourceManagerTest, test_uninitializable_hardware_validation)
 {
-  // If the the hardware can not be initialized and load_urdf tried to validate the interfaces a
-  // runtime exception is thrown
+  // If the the hardware can not be initialized and load_urdf tried to validate
+  // the interfaces a runtime exception is thrown
   TestableResourceManager rm;
   ASSERT_THROW(
-    rm.load_urdf(ros2_control_test_assets::minimal_unitilizable_robot_urdf, true),
+    rm.load_urdf(ros2_control_test_assets::minimal_uninitializable_robot_urdf, true),
     std::runtime_error);
 }
 
-TEST_F(ResourceManagerTest, test_unitilizable_hardware_no_validation)
+TEST_F(ResourceManagerTest, test_uninitializable_hardware_no_validation)
 {
-  // If the the hardware can not be initialized and load_urdf didn't try to validate the interfaces,
-  // the interface should not show up
+  // If the the hardware can not be initialized and load_urdf didn't try to
+  // validate the interfaces, the interface should not show up
   TestableResourceManager rm;
-  EXPECT_NO_THROW(rm.load_urdf(ros2_control_test_assets::minimal_unitilizable_robot_urdf, false));
+  EXPECT_NO_THROW(
+    rm.load_urdf(ros2_control_test_assets::minimal_uninitializable_robot_urdf, false));
 
   // test actuator
   EXPECT_FALSE(rm.state_interface_exists("joint1/position"));
@@ -150,7 +152,7 @@ TEST_F(ResourceManagerTest, initialization_with_urdf_manual_validation)
   EXPECT_EQ(1u, rm.system_components_size());
 
   auto state_interface_keys = rm.state_interface_keys();
-  ASSERT_EQ(11u, state_interface_keys.size());
+  ASSERT_THAT(state_interface_keys, SizeIs(11));
   EXPECT_TRUE(rm.state_interface_exists("joint1/position"));
   EXPECT_TRUE(rm.state_interface_exists("joint1/velocity"));
   EXPECT_TRUE(rm.state_interface_exists("sensor1/velocity"));
@@ -158,7 +160,7 @@ TEST_F(ResourceManagerTest, initialization_with_urdf_manual_validation)
   EXPECT_TRUE(rm.state_interface_exists("joint3/position"));
 
   auto command_interface_keys = rm.command_interface_keys();
-  ASSERT_EQ(6u, command_interface_keys.size());
+  ASSERT_THAT(command_interface_keys, SizeIs(6));
   EXPECT_TRUE(rm.command_interface_exists("joint1/position"));
   EXPECT_TRUE(rm.command_interface_exists("joint2/velocity"));
   EXPECT_TRUE(rm.command_interface_exists("joint3/velocity"));
@@ -351,8 +353,8 @@ TEST_F(ResourceManagerTest, post_initialization_add_components)
   EXPECT_EQ(1u, rm.sensor_components_size());
   EXPECT_EQ(1u, rm.system_components_size());
 
-  ASSERT_EQ(11u, rm.state_interface_keys().size());
-  ASSERT_EQ(6u, rm.command_interface_keys().size());
+  ASSERT_THAT(rm.state_interface_keys(), SizeIs(11));
+  ASSERT_THAT(rm.command_interface_keys(), SizeIs(6));
 
   hardware_interface::HardwareInfo external_component_hw_info;
   external_component_hw_info.name = "ExternalComponent";
@@ -361,9 +363,9 @@ TEST_F(ResourceManagerTest, post_initialization_add_components)
   rm.import_component(std::make_unique<ExternalComponent>(), external_component_hw_info);
   EXPECT_EQ(2u, rm.actuator_components_size());
 
-  ASSERT_EQ(12u, rm.state_interface_keys().size());
+  ASSERT_THAT(rm.state_interface_keys(), SizeIs(12));
   EXPECT_TRUE(rm.state_interface_exists("external_joint/external_state_interface"));
-  ASSERT_EQ(7u, rm.command_interface_keys().size());
+  ASSERT_THAT(rm.command_interface_keys(), SizeIs(7));
   EXPECT_TRUE(rm.command_interface_exists("external_joint/external_command_interface"));
 
   auto status_map = rm.get_components_status();
@@ -874,7 +876,8 @@ TEST_F(ResourceManagerTest, resource_availability_and_claiming_in_lifecycle)
       std::bind(&TestableResourceManager::command_interface_is_claimed, &rm, _1), expected_result);
   };
 
-  // All resources start as UNCONFIGURED - All interfaces are imported but not available
+  // All resources start as UNCONFIGURED - All interfaces are imported but not
+  // available
   {
     check_interfaces(
       TEST_ACTUATOR_HARDWARE_COMMAND_INTERFACES,
@@ -954,7 +957,8 @@ TEST_F(ResourceManagerTest, resource_availability_and_claiming_in_lifecycle)
       TEST_SYSTEM_HARDWARE_STATE_INTERFACES, TEST_SYSTEM_HARDWARE_COMMAND_INTERFACES, false);
   }
 
-  // When actuator is activated all state- and command- interfaces become available
+  // When actuator is activated all state- and command- interfaces become
+  // available
   activate_components(rm, {TEST_ACTUATOR_HARDWARE_NAME});
   {
     check_interfaces(
@@ -1430,7 +1434,8 @@ public:
       check_if_interface_available(true, true);
     }
 
-    // read failure for both, TEST_ACTUATOR_HARDWARE_NAME and TEST_SYSTEM_HARDWARE_NAME
+    // read failure for both, TEST_ACTUATOR_HARDWARE_NAME and
+    // TEST_SYSTEM_HARDWARE_NAME
     claimed_itfs[0].set_value(fail_value);
     claimed_itfs[1].set_value(fail_value);
     {
@@ -1547,7 +1552,8 @@ public:
       check_if_interface_available(true, true);
     }
 
-    // deactivate both, TEST_ACTUATOR_HARDWARE_NAME and TEST_SYSTEM_HARDWARE_NAME
+    // deactivate both, TEST_ACTUATOR_HARDWARE_NAME and
+    // TEST_SYSTEM_HARDWARE_NAME
     claimed_itfs[0].set_value(deactivate_value);
     claimed_itfs[1].set_value(deactivate_value);
     {
