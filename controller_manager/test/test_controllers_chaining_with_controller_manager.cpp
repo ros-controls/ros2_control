@@ -68,6 +68,8 @@ class TestableTestChainableController : public test_chainable_controller::TestCh
   FRIEND_TEST(TestControllerChainingWithControllerManager, test_chained_controllers_reset);
   FRIEND_TEST(
     TestControllerChainingWithControllerManager, test_chained_controllers_reset_error_handling);
+  FRIEND_TEST(TestControllerChainingWithControllerManager, test_chained_controllers_ex);
+  FRIEND_TEST(TestControllerChainingWithControllerManager, test_chained_controllers_ex2);
 };
 
 class TestableControllerManager : public controller_manager::ControllerManager
@@ -105,6 +107,8 @@ class TestableControllerManager : public controller_manager::ControllerManager
   FRIEND_TEST(TestControllerChainingWithControllerManager, test_chained_controllers_reset);
   FRIEND_TEST(
     TestControllerChainingWithControllerManager, test_chained_controllers_reset_error_handling);
+  FRIEND_TEST(TestControllerChainingWithControllerManager, test_chained_controllers_ex);
+  FRIEND_TEST(TestControllerChainingWithControllerManager, test_chained_controllers_ex2);
 
 public:
   TestableControllerManager(
@@ -1311,6 +1315,12 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers_res
     ASSERT_EQ(1u, diff_drive_controller->deactivate_calls);         // +0
     ASSERT_EQ(1u, position_tracking_controller->deactivate_calls);  // +1 (reset)
 
+    // Verify that the controllers are still in the same chained mode
+    ASSERT_TRUE(pid_left_wheel_controller->is_in_chained_mode());
+    ASSERT_TRUE(pid_right_wheel_controller->is_in_chained_mode());
+    ASSERT_TRUE(diff_drive_controller->is_in_chained_mode());
+    ASSERT_FALSE(position_tracking_controller->is_in_chained_mode());
+
     // Verify update after reset most preceding controller
     // (internal_counter 5->6)
     UpdateAllControllerAndCheck({1024.0, 4096.0}, 5u);
@@ -1340,6 +1350,12 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers_res
     ASSERT_EQ(2u, pid_right_wheel_controller->deactivate_calls);    // +1 (reset)
     ASSERT_EQ(2u, diff_drive_controller->deactivate_calls);         // +1 (reset)
     ASSERT_EQ(2u, position_tracking_controller->deactivate_calls);  // +1 (reset)
+
+    // Verify that the controllers are still in the same chained mode
+    ASSERT_TRUE(pid_left_wheel_controller->is_in_chained_mode());
+    ASSERT_TRUE(pid_right_wheel_controller->is_in_chained_mode());
+    ASSERT_TRUE(diff_drive_controller->is_in_chained_mode());
+    ASSERT_FALSE(position_tracking_controller->is_in_chained_mode());
 
     // Verify update again after reset all controllers
     // (internal_counter 8->9->10)
@@ -1373,6 +1389,12 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers_res
     ASSERT_EQ(2u, pid_right_wheel_controller->deactivate_calls);    // +0
     ASSERT_EQ(3u, diff_drive_controller->deactivate_calls);         // +1 (reset)
     ASSERT_EQ(3u, position_tracking_controller->deactivate_calls);  // +1 (deactivate)
+
+    // Verify that the diff_drive_controller is no longer in chained mode
+    ASSERT_TRUE(pid_left_wheel_controller->is_in_chained_mode());
+    ASSERT_TRUE(pid_right_wheel_controller->is_in_chained_mode());
+    ASSERT_FALSE(diff_drive_controller->is_in_chained_mode());
+    ASSERT_FALSE(position_tracking_controller->is_in_chained_mode());
   }
 
   {
@@ -1397,6 +1419,12 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers_res
     ASSERT_EQ(3u, pid_right_wheel_controller->deactivate_calls);    // +1 (reset)
     ASSERT_EQ(4u, diff_drive_controller->deactivate_calls);         // +1 (reset)
     ASSERT_EQ(3u, position_tracking_controller->deactivate_calls);  // +0
+
+    // Verify that the controllers are still in the same chained mode
+    ASSERT_TRUE(pid_left_wheel_controller->is_in_chained_mode());
+    ASSERT_TRUE(pid_right_wheel_controller->is_in_chained_mode());
+    ASSERT_FALSE(diff_drive_controller->is_in_chained_mode());
+    ASSERT_FALSE(position_tracking_controller->is_in_chained_mode());
   }
 
   {
@@ -1424,6 +1452,12 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers_res
     ASSERT_EQ(3u, pid_right_wheel_controller->deactivate_calls);    // +0
     ASSERT_EQ(5u, diff_drive_controller->deactivate_calls);         // +1 (reset)
     ASSERT_EQ(3u, position_tracking_controller->deactivate_calls);  // +0
+
+    // Verify that the diff_drive_controller is in chained mode
+    ASSERT_TRUE(pid_left_wheel_controller->is_in_chained_mode());
+    ASSERT_TRUE(pid_right_wheel_controller->is_in_chained_mode());
+    ASSERT_TRUE(diff_drive_controller->is_in_chained_mode());
+    ASSERT_FALSE(position_tracking_controller->is_in_chained_mode());
   }
 }
 
@@ -1459,10 +1493,16 @@ TEST_P(
     ASSERT_EQ(1u, pid_right_wheel_controller->deactivate_calls);    // +0
     ASSERT_EQ(1u, diff_drive_controller->deactivate_calls);         // +0
     ASSERT_EQ(0u, position_tracking_controller->deactivate_calls);  // +0
+
+    // Verify that the controllers are still in the same chained mode
+    ASSERT_TRUE(pid_left_wheel_controller->is_in_chained_mode());
+    ASSERT_TRUE(pid_right_wheel_controller->is_in_chained_mode());
+    ASSERT_TRUE(diff_drive_controller->is_in_chained_mode());
+    ASSERT_FALSE(position_tracking_controller->is_in_chained_mode());
   }
   else if (test_param.strictness == BEST_EFFORT)
   {
-    // If BEST_EFFORT, since the stop request for the diff_drive_controller is accepted, and the
+    // If BEST_EFFORT, since the stop request for the diff_drive_controller is not accepted, and the
     // restart request for position_tracking_controller is accepted, and an OK response is returned
     switch_test_controllers(
       {POSITION_TRACKING_CONTROLLER}, {POSITION_TRACKING_CONTROLLER, DIFF_DRIVE_CONTROLLER},
@@ -1485,6 +1525,12 @@ TEST_P(
     ASSERT_EQ(1u, pid_right_wheel_controller->deactivate_calls);    // +0
     ASSERT_EQ(1u, diff_drive_controller->deactivate_calls);         // +0
     ASSERT_EQ(1u, position_tracking_controller->deactivate_calls);  // +1 (reset)
+
+    // Verify that the controllers are still in the same chained mode
+    ASSERT_TRUE(pid_left_wheel_controller->is_in_chained_mode());
+    ASSERT_TRUE(pid_right_wheel_controller->is_in_chained_mode());
+    ASSERT_TRUE(diff_drive_controller->is_in_chained_mode());
+    ASSERT_FALSE(position_tracking_controller->is_in_chained_mode());
   }
 }
 
@@ -1530,13 +1576,24 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers_res
       ASSERT_EQ(1u, pid_right_wheel_controller->deactivate_calls);
       ASSERT_EQ(1u, diff_drive_controller->deactivate_calls);
       ASSERT_EQ(0u, position_tracking_controller->deactivate_calls);
+
+      // All controllers chained mode should not be changed
+      ASSERT_TRUE(pid_left_wheel_controller->is_in_chained_mode());
+      ASSERT_TRUE(pid_right_wheel_controller->is_in_chained_mode());
+      ASSERT_TRUE(diff_drive_controller->is_in_chained_mode());
+      ASSERT_FALSE(position_tracking_controller->is_in_chained_mode());
     };
+    verify_all_controllers_are_active_and_not_reset();
 
     // Attempt to reset the lowest following controllers (pid_controllers)
     ResetControllers({PID_LEFT_WHEEL, PID_RIGHT_WHEEL}, exp.return_type, std::future_status::ready);
     verify_all_controllers_are_active_and_not_reset();
 
-    // Attempt to reset the lowest following controller (pid_right_wheel_controller)
+    // Attempt to reset the one of the lowest following controller (pid_left_wheel_controller)
+    ResetControllers({PID_LEFT_WHEEL}, exp.return_type, std::future_status::ready);
+    verify_all_controllers_are_active_and_not_reset();
+
+    // Attempt to reset another lowest following controller (pid_right_wheel_controller)
     ResetControllers({PID_RIGHT_WHEEL}, exp.return_type, std::future_status::ready);
     verify_all_controllers_are_active_and_not_reset();
 
@@ -1544,12 +1601,121 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers_res
     ResetControllers({DIFF_DRIVE_CONTROLLER}, exp.return_type, std::future_status::ready);
     verify_all_controllers_are_active_and_not_reset();
 
+    // Attempt to reset the middle following and one of the lowest following controller
+    ResetControllers(
+      {DIFF_DRIVE_CONTROLLER, PID_LEFT_WHEEL}, exp.return_type, std::future_status::ready);
+    verify_all_controllers_are_active_and_not_reset();
+
+    // Attempt to reset the middle following and another lowest following controller
+    ResetControllers(
+      {DIFF_DRIVE_CONTROLLER, PID_LEFT_WHEEL}, exp.return_type, std::future_status::ready);
+    verify_all_controllers_are_active_and_not_reset();
+
     // Attempt to reset the all following controllers (pid_controllers and diff_drive_controller)
     ResetControllers(
-      {PID_LEFT_WHEEL, PID_RIGHT_WHEEL, DIFF_DRIVE_CONTROLLER}, exp.return_type,
+      {DIFF_DRIVE_CONTROLLER, PID_LEFT_WHEEL, PID_RIGHT_WHEEL}, exp.return_type,
       std::future_status::ready);
     verify_all_controllers_are_active_and_not_reset();
   }
+}
+
+TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers_ex)
+{
+  SetupControllers();
+
+  // add all controllers - CONTROLLERS HAVE TO ADDED IN EXECUTION ORDER
+  cm_->add_controller(
+    position_tracking_controller, POSITION_TRACKING_CONTROLLER,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    diff_drive_controller, DIFF_DRIVE_CONTROLLER,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    diff_drive_controller_two, DIFF_DRIVE_CONTROLLER_TWO,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    pid_left_wheel_controller, PID_LEFT_WHEEL,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    pid_right_wheel_controller, PID_RIGHT_WHEEL,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+
+  CheckIfControllersAreAddedCorrectly();
+
+  ConfigureAndCheckControllers();
+
+  // Set ControllerManager into Debug-Mode output to have detailed output on updating controllers
+  cm_->get_logger().set_level(rclcpp::Logger::Level::Debug);
+  rclcpp::get_logger("ControllerManager::utils").set_level(rclcpp::Logger::Level::Debug);
+
+  // There is different error and timeout behavior depending on strictness
+  static std::unordered_map<int32_t, ExpectedBehaviorStruct> expected = {
+    {controller_manager_msgs::srv::SwitchController::Request::STRICT,
+     {controller_interface::return_type::ERROR, std::future_status::ready,
+      lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE}},
+    {controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT,
+     {controller_interface::return_type::OK, std::future_status::timeout,
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE}}};
+  const auto & exp = expected.at(test_param.strictness);
+
+  switch_test_controllers(
+    {POSITION_TRACKING_CONTROLLER, DIFF_DRIVE_CONTROLLER}, {}, test_param.strictness,
+    std::future_status::ready, exp.return_type);
+
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    pid_left_wheel_controller->get_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    pid_right_wheel_controller->get_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, diff_drive_controller->get_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    position_tracking_controller->get_state().id());
+
+  switch_test_controllers(
+    {POSITION_TRACKING_CONTROLLER, DIFF_DRIVE_CONTROLLER, PID_LEFT_WHEEL}, {},
+    test_param.strictness, exp.future_status, exp.return_type);
+
+  ASSERT_EQ(expected.at(test_param.strictness).state, pid_left_wheel_controller->get_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    pid_right_wheel_controller->get_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, diff_drive_controller->get_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    position_tracking_controller->get_state().id());
+
+  ASSERT_FALSE(pid_left_wheel_controller->is_in_chained_mode());
+  ASSERT_FALSE(pid_right_wheel_controller->is_in_chained_mode());
+  ASSERT_FALSE(diff_drive_controller->is_in_chained_mode());
+  ASSERT_FALSE(position_tracking_controller->is_in_chained_mode());
+
+  DeactivateController(PID_LEFT_WHEEL, exp.return_type, exp.future_status);
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    pid_left_wheel_controller->get_state().id());
+
+  switch_test_controllers(
+    {POSITION_TRACKING_CONTROLLER, DIFF_DRIVE_CONTROLLER, PID_RIGHT_WHEEL}, {},
+    test_param.strictness, exp.future_status, exp.return_type);
+
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    pid_left_wheel_controller->get_state().id());
+  ASSERT_EQ(expected.at(test_param.strictness).state, pid_right_wheel_controller->get_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, diff_drive_controller->get_state().id());
+  ASSERT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    position_tracking_controller->get_state().id());
+
+  ASSERT_FALSE(pid_left_wheel_controller->is_in_chained_mode());
+  ASSERT_FALSE(pid_right_wheel_controller->is_in_chained_mode());
+  ASSERT_FALSE(diff_drive_controller->is_in_chained_mode());
+  ASSERT_FALSE(position_tracking_controller->is_in_chained_mode());
 }
 
 INSTANTIATE_TEST_SUITE_P(
