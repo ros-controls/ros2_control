@@ -20,8 +20,8 @@
 #include <utility>
 #include <vector>
 
-#include "controller_interface/async_function_handler.hpp"
 #include "controller_interface/visibility_control.h"
+#include "realtime_tools/async_function_handler.hpp"
 
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/loaned_command_interface.hpp"
@@ -286,7 +286,7 @@ protected:
 
 private:
   std::shared_ptr<rclcpp_lifecycle::LifecycleNode> node_;
-  std::unique_ptr<ros2_control::AsyncFunctionHandler<return_type>> async_handler_;
+  std::unique_ptr<realtime_tools::AsyncFunctionHandler<return_type>> async_handler_;
 };
 
 using ControllerInterfaceBaseSharedPtr = std::shared_ptr<ControllerInterfaceBase>;
