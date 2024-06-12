@@ -96,7 +96,7 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
   }
   if (is_async_)
   {
-    async_handler_ = std::make_unique<ros2_control::AsyncFunctionHandler<return_type>>();
+    async_handler_ = std::make_unique<realtime_tools::AsyncFunctionHandler<return_type>>();
     async_handler_->init(
       std::bind(&ControllerInterfaceBase::get_state, this),
       std::bind(
