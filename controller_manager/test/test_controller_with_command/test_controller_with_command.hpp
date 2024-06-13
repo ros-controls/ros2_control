@@ -15,8 +15,7 @@
 #ifndef TEST_CONTROLLER_WITH_COMMAND__TEST_CONTROLLER_WITH_COMMAND_HPP_
 #define TEST_CONTROLLER_WITH_COMMAND__TEST_CONTROLLER_WITH_COMMAND_HPP_
 
-#include <memory>
-#include <string>
+#include <limits>
 
 #include "controller_interface/visibility_control.h"
 #include "controller_manager/controller_manager.hpp"
@@ -83,4 +82,4 @@ public:
 
 }  // namespace test_controller_with_command
 
-#endif  // TEST_CONTROLLER_WITH_INTERFACES__TEST_CONTROLLER_WITH_INTERFACES_HPP_
+#endif  // TEST_CONTROLLER_WITH_COMMAND__TEST_CONTROLLER_WITH_COMMAND_HPP_

@@ -22,6 +22,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 #include "controller_interface/controller_interface.hpp"
 #include "hardware_interface/controller_info.hpp"
