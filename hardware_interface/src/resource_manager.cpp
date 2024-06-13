@@ -142,6 +142,8 @@ public:
         component_info.name = hardware_info.name;
         component_info.type = hardware_info.type;
         component_info.group = hardware_info.group;
+        component_info.read_rate = cm_update_rate_;
+        component_info.write_rate = cm_update_rate_;
         component_info.plugin_name = hardware_info.hardware_plugin_name;
         component_info.is_async = hardware_info.is_async;
 
@@ -1839,7 +1841,12 @@ HardwareReadWriteStatus ResourceManager::read(
       auto ret_val = return_type::OK;
       try
       {
-        ret_val = component.read(time, period);
+        if (
+          resource_storage_->hardware_info_map_[component.get_name()].read_rate ==
+          resource_storage_->cm_update_rate_)
+        {
+          ret_val = component.read(time, period);
+        }
         const auto component_group = component.get_group_name();
         ret_val =
           resource_storage_->update_hardware_component_group_state(component_group, ret_val);
@@ -1900,7 +1907,12 @@ HardwareReadWriteStatus ResourceManager::write(
       auto ret_val = return_type::OK;
       try
       {
-        ret_val = component.write(time, period);
+        if (
+          resource_storage_->hardware_info_map_[component.get_name()].write_rate ==
+          resource_storage_->cm_update_rate_)
+        {
+          ret_val = component.write(time, period);
+        }
         const auto component_group = component.get_group_name();
         ret_val =
           resource_storage_->update_hardware_component_group_state(component_group, ret_val);
