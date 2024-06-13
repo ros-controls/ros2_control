@@ -91,7 +91,6 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
   {
     async_handler_ = std::make_unique<realtime_tools::AsyncFunctionHandler<return_type>>();
     async_handler_->init(
-      std::bind(&ControllerInterfaceBase::get_state, this),
       std::bind(
         &ControllerInterfaceBase::update, this, std::placeholders::_1, std::placeholders::_2));
     async_handler_->start_async_update_thread();
