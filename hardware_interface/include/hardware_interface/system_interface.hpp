@@ -368,6 +368,15 @@ public:
     if (info_.is_async)
     {
       bool trigger_status = true;
+      if (next_trigger_ == TriggerType::WRITE)
+      {
+        RCLCPP_WARN(
+          rclcpp::get_logger("SystemInterface"),
+          "Trigger read called while write async handler call is still pending for hardware "
+          "interface : '%s'. Skipping read cycle and will wait for a write cycle!",
+          info_.name.c_str());
+        return return_type::OK;
+      }
       if (write_async_handler_->is_trigger_cycle_in_progress())
       {
         RCLCPP_WARN(
@@ -387,6 +396,7 @@ public:
           info_.name.c_str());
         return return_type::OK;
       }
+      next_trigger_ = TriggerType::WRITE;
     }
     else
     {
@@ -423,6 +433,15 @@ public:
     if (info_.is_async)
     {
       bool trigger_status = true;
+      if (next_trigger_ == TriggerType::READ)
+      {
+        RCLCPP_WARN(
+          rclcpp::get_logger("SystemInterface"),
+          "Trigger write called while read async handler call is still pending for hardware "
+          "interface : '%s'. Skipping write cycle and will wait for a read cycle!",
+          info_.name.c_str());
+        return return_type::OK;
+      }
       if (read_async_handler_->is_trigger_cycle_in_progress())
       {
         RCLCPP_WARN(
@@ -442,6 +461,7 @@ public:
           info_.name.c_str());
         return return_type::OK;
       }
+      next_trigger_ = TriggerType::READ;
     }
     else
     {
@@ -562,6 +582,11 @@ private:
   // interface names to Handle accessed through getters/setters
   std::unordered_map<std::string, StateInterface::SharedPtr> system_states_;
   std::unordered_map<std::string, CommandInterface::SharedPtr> system_commands_;
+  enum class TriggerType
+  {
+    READ,
+    WRITE
+  } next_trigger_ = TriggerType::READ;
 };
 
 }  // namespace hardware_interface
