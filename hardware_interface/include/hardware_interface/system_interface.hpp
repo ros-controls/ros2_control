@@ -36,6 +36,7 @@
 #include "rclcpp/time.hpp"
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 #include "rclcpp_lifecycle/state.hpp"
+#include "realtime_tools/async_function_handler.hpp"
 
 namespace hardware_interface
 {
@@ -406,15 +407,35 @@ public:
    */
   return_type trigger_read(const rclcpp::Time & time, const rclcpp::Duration & period)
   {
+    return_type result = return_type::ERROR;
     if (info_.is_async)
     {
-      RCLCPP_ERROR(
-        rclcpp::get_logger("SystemInterface"),
-        "Trigger read called on async hardware interface %s is not implemented yet!",
-        info_.name.c_str());
-      return return_type::ERROR;
+      bool trigger_status = true;
+      if (write_async_handler_->is_trigger_cycle_in_progress())
+      {
+        RCLCPP_WARN(
+          rclcpp::get_logger("SystemInterface"),
+          "Trigger read called while write async handler is still in progress for hardware "
+          "interface : '%s'. Skipping read cycle!",
+          info_.name.c_str());
+        return return_type::OK;
+      }
+      std::tie(trigger_status, result) = read_async_handler_->trigger_async_update(time, period);
+      if (!trigger_status)
+      {
+        RCLCPP_WARN(
+          rclcpp::get_logger("SystemInterface"),
+          "Trigger read called while read async handler is still in progress for hardware "
+          "interface : '%s'. Failed to trigger read cycle!",
+          info_.name.c_str());
+        return return_type::OK;
+      }
     }
-    return read(time, period);
+    else
+    {
+      result = read(time, period);
+    }
+    return result;
   }
 
   /// Read the current state values from the actuator.
@@ -441,15 +462,35 @@ public:
    */
   return_type trigger_write(const rclcpp::Time & time, const rclcpp::Duration & period)
   {
+    return_type result = return_type::ERROR;
     if (info_.is_async)
     {
-      RCLCPP_ERROR(
-        rclcpp::get_logger("SystemInterface"),
-        "Trigger write called on async hardware interface %s is not implemented yet!",
-        info_.name.c_str());
-      return return_type::ERROR;
+      bool trigger_status = true;
+      if (read_async_handler_->is_trigger_cycle_in_progress())
+      {
+        RCLCPP_WARN(
+          rclcpp::get_logger("SystemInterface"),
+          "Trigger write called while read async handler is still in progress for hardware "
+          "interface : '%s'. Skipping write cycle!",
+          info_.name.c_str());
+        return return_type::OK;
+      }
+      std::tie(trigger_status, result) = write_async_handler_->trigger_async_update(time, period);
+      if (!trigger_status)
+      {
+        RCLCPP_WARN(
+          rclcpp::get_logger("SystemInterface"),
+          "Trigger write called while write async handler is still in progress for hardware "
+          "interface : '%s'. Failed to trigger write cycle!",
+          info_.name.c_str());
+        return return_type::OK;
+      }
     }
-    return write(time, period);
+    else
+    {
+      result = write(time, period);
+    }
+    return result;
   }
 
   /// Write the current command values to the actuator.
@@ -543,6 +584,8 @@ protected:
   std::unordered_map<std::string, InterfaceDescription> unlisted_command_interfaces_;
 
   rclcpp_lifecycle::State lifecycle_state_;
+  std::unique_ptr<realtime_tools::AsyncFunctionHandler<return_type>> read_async_handler_;
+  std::unique_ptr<realtime_tools::AsyncFunctionHandler<return_type>> write_async_handler_;
 
   // Exported Command- and StateInterfaces in order they are listed in the hardware description.
   std::vector<StateInterface::SharedPtr> joint_states_;

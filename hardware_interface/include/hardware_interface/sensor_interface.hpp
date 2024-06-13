@@ -34,6 +34,7 @@
 #include "rclcpp/time.hpp"
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 #include "rclcpp_lifecycle/state.hpp"
+#include "realtime_tools/async_function_handler.hpp"
 
 namespace hardware_interface
 {
@@ -230,15 +231,26 @@ public:
    */
   return_type trigger_read(const rclcpp::Time & time, const rclcpp::Duration & period)
   {
+    return_type result = return_type::ERROR;
     if (info_.is_async)
     {
-      RCLCPP_ERROR(
-        rclcpp::get_logger("SensorInterface"),
-        "Trigger read called on async hardware interface %s is not implemented yet!",
-        info_.name.c_str());
-      return return_type::ERROR;
+      bool trigger_status = true;
+      std::tie(trigger_status, result) = read_async_handler_->trigger_async_update(time, period);
+      if (!trigger_status)
+      {
+        RCLCPP_WARN(
+          rclcpp::get_logger("SensorInterface"),
+          "Trigger read called while read async handler is still in progress for hardware "
+          "interface : '%s'. Failed to trigger read cycle!",
+          info_.name.c_str());
+        return return_type::OK;
+      }
     }
-    return read(time, period);
+    else
+    {
+      result = read(time, period);
+    }
+    return result;
   }
 
   /// Read the current state values from the actuator.
@@ -319,6 +331,7 @@ protected:
   std::vector<StateInterface::SharedPtr> unlisted_states_;
 
   rclcpp_lifecycle::State lifecycle_state_;
+  std::unique_ptr<realtime_tools::AsyncFunctionHandler<return_type>> read_async_handler_;
 
 private:
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface_;
