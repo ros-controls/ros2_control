@@ -46,5 +46,10 @@ struct ControllerChainSpec
   std::vector<std::string> following_controllers;
   std::vector<std::string> preceding_controllers;
 };
+
+using ControllersMap = std::unordered_map<std::string, const controller_manager::ControllerSpec &>;
+using ControllerChainSpecsMap =
+  std::unordered_map<std::string, controller_manager::ControllerChainSpec>;
+
 }  // namespace controller_manager
 #endif  // CONTROLLER_MANAGER__CONTROLLER_SPEC_HPP_

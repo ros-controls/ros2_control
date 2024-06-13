@@ -354,9 +354,7 @@ private:
   /**
    * @brief Check for conflicts with the (de)activate request. If conflicts are detected, handle
    * them by either raising an error (STRICT) or removing the conflicting controller from the
-   * request (BEST_EFFORT). Simultaneously, if the (de)activate request necessitates switching the
-   * chained mode of the following controller, make the corresponding 'from'/'to' chained mode
-   * request.
+   * request (BEST_EFFORT).
    *
    * NOTE: The input argument controllers must be sorted in the order of preceding and following.
    * NOTE: strictness type "MANIPULATE_CONTROLLERS_CHAIN" is not implemented yet.
@@ -365,25 +363,47 @@ private:
    * controllers will be automatically added to the activate request list if they are not in the
    * deactivate request.
    * \param[in] controllers list with controllers.
+   * \param[in] controllers_map map with controllers.
    * \param[in,out] deactivate_request A list of controller names requested for deactivation. If the
    * strictness value is equal to "BEST_EFFORT", conflicting controllers found will be erased from
-   * the list. Additionally, if a following controller requiring a restart due to chained mode is
-   * found, it will be automatically added to the list.
+   * the list.
    * \param[in,out] activate_request A list of controller names requested for activation. If the
    * strictness value is equal to "BEST_EFFORT", conflicting controllers found will be erased from
-   * the list. Additionally, if a following controller requiring a restart due to chained mode is
-   * found, it will be automatically added to the list.
-   * \param[out] from_chained_mode_request A list containing the names of following controllers that
-   * require switching from chained mode to non-chained mode, based on the requested (de)activation.
-   * \param[out] to_chained_mode_request A list containing the names of following controllers that
-   * require switching from non-chained mode to chained mode, based on the requested (de)activation.
+   * the list.
    *
    * \returns return_type::OK if all (de)activate requests pass the checks, otherwise
    * return_type::ERROR.
    */
-  controller_interface::return_type
-  check_de_activate_request_conflict_and_create_chained_mode_request(
-    const int strictness, const std::vector<ControllerSpec> & controllers,
+  controller_interface::return_type check_controllers_for_de_activate(
+    const int strictness, const std::vector<controller_manager::ControllerSpec> & controllers,
+    const controller_manager::ControllersMap & controllers_map,
+    std::vector<std::string> & deactivate_request,
+    std::vector<std::string> & activate_request) const;
+
+  /**
+   * @brief Determine if a change chained mode is necessary for the following controllers based on
+   * the request, and add them to the chained mode request if necessary. Additionally, if only
+   * preceding performs the activation state transition, a restart of the following controller
+   * is necessary to switch the chained mode, so add them to the (de)activate request.
+   *
+   * NOTE: The input argument controllers must be sorted in the order of preceding and following.
+   *
+   * \param[in] controllers list with controllers.
+   * \param[in] controllers_map map with controllers.
+   * \param[in,out] deactivate_request A list of controller names requested for deactivation. If a
+   * following controller requiring a restart due to chained mode is found, it will be automatically
+   * added to the list.
+   * \param[in,out] activate_request A list of controller names requested for activation. If a
+   * following controller requiring a restart due to chained mode is found, it will be automatically
+   * added to the list.
+   * \param[out] from_chained_mode_request A list containing the names of following controllers that
+   * require switching from chained mode to non-chained mode, based on the requested (de)activation.
+   * \param[out] to_chained_mode_request A list containing the names of following controllers that
+   * require switching from non-chained mode to chained mode, based on the requested (de)activation.
+   */
+  void create_from_to_chained_mode_request(
+    const std::vector<controller_manager::ControllerSpec> & controllers,
+    const controller_manager::ControllersMap & controllers_map,
     std::vector<std::string> & deactivate_request, std::vector<std::string> & activate_request,
     std::vector<std::string> & from_chained_mode_request,
     std::vector<std::string> & to_chained_mode_request) const;
@@ -393,8 +413,8 @@ private:
    * controller chain.
    *
    * This method computes the controller chain by inserting the provided controller name into an
-   * ordered list of controllers based on dependencies. It ensures that controllers are inserted in
-   * the correct order so that dependencies are satisfied.
+   * ordered list of controllers based on dependencies. It ensures that controllers are inserted
+   * in the correct order so that dependencies are satisfied.
    *
    * @param ctrl_name The name of the controller to be inserted into the chain.
    * @param controller_iterator An iterator pointing to the position in the ordered list where the

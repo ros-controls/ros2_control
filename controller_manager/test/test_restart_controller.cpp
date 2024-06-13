@@ -16,7 +16,6 @@
 #include <gtest/gtest.h>
 #include <memory>
 #include <string>
-#include <tuple>
 #include <vector>
 
 #include "controller_interface/controller_interface.hpp"
@@ -29,10 +28,7 @@ using test_controller_with_command::SIMULATE_COMMAND_ACTIVATE_VALUE;
 using test_controller_with_command::SIMULATE_COMMAND_DEACTIVATE_VALUE;
 using test_controller_with_command::TEST_CONTROLLER_CLASS_NAME;
 using test_controller_with_command::TestControllerWithCommand;
-// using ::testing::_;
-// using ::testing::Return;
-const auto CONTROLLER_NAME_1 = "test_controller1";
-const auto CONTROLLER_NAME_2 = "test_controller2";
+const auto CONTROLLER_NAME = "test_controller1";
 using strvec = std::vector<std::string>;
 
 namespace
@@ -64,7 +60,7 @@ public:
   {
     // load controller
     test_controller = std::make_shared<TestControllerWithCommand>();
-    cm_->add_controller(test_controller, CONTROLLER_NAME_1, TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(test_controller, CONTROLLER_NAME, TEST_CONTROLLER_CLASS_NAME);
 
     EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
     EXPECT_EQ(2u, test_controller.use_count());
@@ -75,7 +71,7 @@ public:
   void configure_and_check_test_controller()
   {
     // configure controller
-    cm_->configure_controller(CONTROLLER_NAME_1);
+    cm_->configure_controller(CONTROLLER_NAME);
     EXPECT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, test_controller->get_state().id());
 
@@ -92,7 +88,7 @@ public:
       controller_interface::return_type::OK)
   {
     switch_test_controllers(
-      strvec{CONTROLLER_NAME_1}, strvec{}, strictness, expected_future_status,
+      strvec{CONTROLLER_NAME}, strvec{}, strictness, expected_future_status,
       expected_interface_status);
   }
 
@@ -123,7 +119,7 @@ public:
       controller_interface::return_type::OK)
   {
     switch_test_controllers(
-      strvec{}, strvec{CONTROLLER_NAME_1}, strictness, expected_future_status,
+      strvec{}, strvec{CONTROLLER_NAME}, strictness, expected_future_status,
       expected_interface_status);
   }
 
@@ -134,7 +130,7 @@ public:
       controller_interface::return_type::OK)
   {
     switch_test_controllers(
-      strvec{CONTROLLER_NAME_1}, strvec{CONTROLLER_NAME_1}, strictness, expected_future_status,
+      strvec{CONTROLLER_NAME}, strvec{CONTROLLER_NAME}, strictness, expected_future_status,
       expected_interface_status);
   }
 
@@ -225,9 +221,10 @@ TEST_P(TestRestartController, restart_inactive_controller)
     ASSERT_EQ(0u, test_controller->activate_calls);
     ASSERT_EQ(0u, test_controller->deactivate_calls);
   }
+
   // BEST_EFFORT: If restart is executed while inactive, only the start_controller process will be
   // effective, resulting in activation
-  else if (test_param.strictness == BEST_EFFORT)
+  if (test_param.strictness == BEST_EFFORT)
   {
     // State changed to active
     ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, test_controller->get_state().id());
@@ -238,10 +235,6 @@ TEST_P(TestRestartController, restart_inactive_controller)
 
     // Controller command should be restart to ACTIVATE_VALUE
     ASSERT_EQ(SIMULATE_COMMAND_ACTIVATE_VALUE, test_controller->simulate_command);
-  }
-  else
-  {
-    FAIL();
   }
 }
 
