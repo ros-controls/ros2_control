@@ -218,6 +218,29 @@ public:
     return state_interfaces;
   }
 
+  /// Triggers the read method synchronously or asynchronously depending on the HardwareInfo
+  /**
+   * The data readings from the physical hardware has to be updated
+   * and reflected accordingly in the exported state interfaces.
+   * That is, the data pointed by the interfaces shall be updated.
+   *
+   * \param[in] time The time at the start of this control loop iteration
+   * \param[in] period The measured time taken by the last control loop iteration
+   * \return return_type::OK if the read was successful, return_type::ERROR otherwise.
+   */
+  return_type trigger_read(const rclcpp::Time & time, const rclcpp::Duration & period)
+  {
+    if (info_.is_async)
+    {
+      RCLCPP_ERROR(
+        rclcpp::get_logger("SensorInterface"),
+        "Trigger read called on async hardware interface %s is not implemented yet!",
+        info_.name.c_str());
+      return return_type::ERROR;
+    }
+    return read(time, period);
+  }
+
   /// Read the current state values from the actuator.
   /**
    * The data readings from the physical hardware has to be updated

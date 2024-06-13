@@ -301,7 +301,7 @@ return_type Actuator::read(const rclcpp::Time & time, const rclcpp::Duration & p
     impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
     impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
   {
-    result = impl_->read(time, period);
+    result = impl_->trigger_read(time, period);
     if (result == return_type::ERROR)
     {
       error();
@@ -329,7 +329,7 @@ return_type Actuator::write(const rclcpp::Time & time, const rclcpp::Duration & 
     impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
     impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
   {
-    result = impl_->write(time, period);
+    result = impl_->trigger_write(time, period);
     if (result == return_type::ERROR)
     {
       error();

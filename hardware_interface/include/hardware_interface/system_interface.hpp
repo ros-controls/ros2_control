@@ -393,6 +393,30 @@ public:
     return return_type::OK;
   }
 
+  /// Triggers the read method synchronously or asynchronously depending on the HardwareInfo
+  /**
+   * The data readings from the physical hardware has to be updated
+   * and reflected accordingly in the exported state interfaces.
+   * That is, the data pointed by the interfaces shall be updated.
+   * The method is called in the resource_manager's read loop
+   *
+   * \param[in] time The time at the start of this control loop iteration
+   * \param[in] period The measured time taken by the last control loop iteration
+   * \return return_type::OK if the read was successful, return_type::ERROR otherwise.
+   */
+  return_type trigger_read(const rclcpp::Time & time, const rclcpp::Duration & period)
+  {
+    if (info_.is_async)
+    {
+      RCLCPP_ERROR(
+        rclcpp::get_logger("SystemInterface"),
+        "Trigger read called on async hardware interface %s is not implemented yet!",
+        info_.name.c_str());
+      return return_type::ERROR;
+    }
+    return read(time, period);
+  }
+
   /// Read the current state values from the actuator.
   /**
    * The data readings from the physical hardware has to be updated
@@ -404,6 +428,29 @@ public:
    * \return return_type::OK if the read was successful, return_type::ERROR otherwise.
    */
   virtual return_type read(const rclcpp::Time & time, const rclcpp::Duration & period) = 0;
+
+  /// Triggers the write method synchronously or asynchronously depending on the HardwareInfo
+  /**
+   * The physical hardware shall be updated with the latest value from
+   * the exported command interfaces.
+   * The method is called in the resource_manager's write loop
+   *
+   * \param[in] time The time at the start of this control loop iteration
+   * \param[in] period The measured time taken by the last control loop iteration
+   * \return return_type::OK if the read was successful, return_type::ERROR otherwise.
+   */
+  return_type trigger_write(const rclcpp::Time & time, const rclcpp::Duration & period)
+  {
+    if (info_.is_async)
+    {
+      RCLCPP_ERROR(
+        rclcpp::get_logger("SystemInterface"),
+        "Trigger write called on async hardware interface %s is not implemented yet!",
+        info_.name.c_str());
+      return return_type::ERROR;
+    }
+    return write(time, period);
+  }
 
   /// Write the current command values to the actuator.
   /**
