@@ -65,9 +65,9 @@ class TestableTestChainableController : public test_chainable_controller::TestCh
     test_chained_controllers_deactivation_error_handling);
   FRIEND_TEST(
     TestControllerChainingWithControllerManager, test_chained_controllers_adding_in_random_order);
-  FRIEND_TEST(TestControllerChainingWithControllerManager, test_chained_controllers_reset);
+  FRIEND_TEST(TestControllerChainingWithControllerManager, test_chained_controllers_restart);
   FRIEND_TEST(
-    TestControllerChainingWithControllerManager, test_chained_controllers_reset_error_handling);
+    TestControllerChainingWithControllerManager, test_chained_controllers_restart_error_handling);
   FRIEND_TEST(TestControllerChainingWithControllerManager, test_chained_controllers_ex);
   FRIEND_TEST(TestControllerChainingWithControllerManager, test_chained_controllers_ex2);
 };
@@ -104,9 +104,9 @@ class TestableControllerManager : public controller_manager::ControllerManager
     test_chained_controllers_deactivation_error_handling);
   FRIEND_TEST(
     TestControllerChainingWithControllerManager, test_chained_controllers_adding_in_random_order);
-  FRIEND_TEST(TestControllerChainingWithControllerManager, test_chained_controllers_reset);
+  FRIEND_TEST(TestControllerChainingWithControllerManager, test_chained_controllers_restart);
   FRIEND_TEST(
-    TestControllerChainingWithControllerManager, test_chained_controllers_reset_error_handling);
+    TestControllerChainingWithControllerManager, test_chained_controllers_restart_error_handling);
   FRIEND_TEST(TestControllerChainingWithControllerManager, test_chained_controllers_ex);
   FRIEND_TEST(TestControllerChainingWithControllerManager, test_chained_controllers_ex2);
 
@@ -390,7 +390,7 @@ public:
       {}, {controller_name}, test_param.strictness, expected_future_status, expected_return);
   }
 
-  void ResetControllers(
+  void RestartControllers(
     const std::vector<std::string> & controller_names,
     const controller_interface::return_type expected_return = controller_interface::return_type::OK,
     const std::future_status expected_future_status = std::future_status::timeout)
@@ -1272,7 +1272,7 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers_add
   UpdateAllControllerAndCheck(reference, 3u);
 }
 
-TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers_reset)
+TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers_restart)
 {
   SetupWithActivationAllControllersAndCheck();
 
@@ -1280,9 +1280,9 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers_res
   UpdateAllControllerAndCheck({32.0, 128.0}, 2u);
 
   {
-    // Reset the most preceding controller (position tracking controller)
+    // Restart the most preceding controller (position tracking controller)
     // (internal_counter 3->5)
-    ResetControllers({POSITION_TRACKING_CONTROLLER});
+    RestartControllers({POSITION_TRACKING_CONTROLLER});
 
     // Following controllers should stay active
     EXPECT_EQ(
@@ -1298,22 +1298,22 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers_res
       lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
       position_tracking_controller->get_state().id());
 
-    // Verify that the claimed state of the interface does not change before and after the reset
+    // Verify that the claimed state of the interface does not change before and after the restart
     check_command_interfaces_claimed(
       concat_vector(
         POSITION_CONTROLLER_CLAIMED_INTERFACES, DIFF_DRIVE_CLAIMED_INTERFACES,
         PID_LEFT_WHEEL_CLAIMED_INTERFACES, PID_RIGHT_WHEEL_CLAIMED_INTERFACES),
       POSITION_CONTROLLER_NOT_CLAIMED_INTERFACES);
 
-    // Verify that only the reset controller has its activate and deactivate calls incremented.
+    // Verify that only the restart controller has its activate and deactivate calls incremented.
     ASSERT_EQ(2u, pid_left_wheel_controller->activate_calls);       // +0
     ASSERT_EQ(2u, pid_right_wheel_controller->activate_calls);      // +0
     ASSERT_EQ(2u, diff_drive_controller->activate_calls);           // +0
-    ASSERT_EQ(2u, position_tracking_controller->activate_calls);    // +1 (reset)
+    ASSERT_EQ(2u, position_tracking_controller->activate_calls);    // +1 (restart)
     ASSERT_EQ(1u, pid_left_wheel_controller->deactivate_calls);     // +0
     ASSERT_EQ(1u, pid_right_wheel_controller->deactivate_calls);    // +0
     ASSERT_EQ(1u, diff_drive_controller->deactivate_calls);         // +0
-    ASSERT_EQ(1u, position_tracking_controller->deactivate_calls);  // +1 (reset)
+    ASSERT_EQ(1u, position_tracking_controller->deactivate_calls);  // +1 (restart)
 
     // Verify that the controllers are still in the same chained mode
     ASSERT_TRUE(pid_left_wheel_controller->is_in_chained_mode());
@@ -1321,20 +1321,20 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers_res
     ASSERT_TRUE(diff_drive_controller->is_in_chained_mode());
     ASSERT_FALSE(position_tracking_controller->is_in_chained_mode());
 
-    // Verify update after reset most preceding controller
+    // Verify update after restart most preceding controller
     // (internal_counter 5->6)
     UpdateAllControllerAndCheck({1024.0, 4096.0}, 5u);
   }
 
   {
-    // Reset all controllers
+    // Restart all controllers
     // (internal_counter 6->8)
     // Note : It is also important that the state where the internal_counter values
-    // between controllers are offset by +2 does not change due to the reset process)
-    ResetControllers(
+    // between controllers are offset by +2 does not change due to the restart process)
+    RestartControllers(
       {POSITION_TRACKING_CONTROLLER, DIFF_DRIVE_CONTROLLER, PID_LEFT_WHEEL, PID_RIGHT_WHEEL});
 
-    // Verify that the claimed state of the interface does not change before and after the reset
+    // Verify that the claimed state of the interface does not change before and after the restart
     check_command_interfaces_claimed(
       concat_vector(
         POSITION_CONTROLLER_CLAIMED_INTERFACES, DIFF_DRIVE_CLAIMED_INTERFACES,
@@ -1342,14 +1342,14 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers_res
       POSITION_CONTROLLER_NOT_CLAIMED_INTERFACES);
 
     // Verify that the activate and deactivate calls of all controllers are incremented
-    ASSERT_EQ(3u, pid_left_wheel_controller->activate_calls);       // +1 (reset)
-    ASSERT_EQ(3u, pid_right_wheel_controller->activate_calls);      // +1 (reset)
-    ASSERT_EQ(3u, diff_drive_controller->activate_calls);           // +1 (reset)
-    ASSERT_EQ(3u, position_tracking_controller->activate_calls);    // +1 (reset)
-    ASSERT_EQ(2u, pid_left_wheel_controller->deactivate_calls);     // +1 (reset)
-    ASSERT_EQ(2u, pid_right_wheel_controller->deactivate_calls);    // +1 (reset)
-    ASSERT_EQ(2u, diff_drive_controller->deactivate_calls);         // +1 (reset)
-    ASSERT_EQ(2u, position_tracking_controller->deactivate_calls);  // +1 (reset)
+    ASSERT_EQ(3u, pid_left_wheel_controller->activate_calls);       // +1 (restart)
+    ASSERT_EQ(3u, pid_right_wheel_controller->activate_calls);      // +1 (restart)
+    ASSERT_EQ(3u, diff_drive_controller->activate_calls);           // +1 (restart)
+    ASSERT_EQ(3u, position_tracking_controller->activate_calls);    // +1 (restart)
+    ASSERT_EQ(2u, pid_left_wheel_controller->deactivate_calls);     // +1 (restart)
+    ASSERT_EQ(2u, pid_right_wheel_controller->deactivate_calls);    // +1 (restart)
+    ASSERT_EQ(2u, diff_drive_controller->deactivate_calls);         // +1 (restart)
+    ASSERT_EQ(2u, position_tracking_controller->deactivate_calls);  // +1 (restart)
 
     // Verify that the controllers are still in the same chained mode
     ASSERT_TRUE(pid_left_wheel_controller->is_in_chained_mode());
@@ -1357,14 +1357,14 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers_res
     ASSERT_TRUE(diff_drive_controller->is_in_chained_mode());
     ASSERT_FALSE(position_tracking_controller->is_in_chained_mode());
 
-    // Verify update again after reset all controllers
+    // Verify update again after restart all controllers
     // (internal_counter 8->9->10)
     UpdateAllControllerAndCheck({16.0, 64.0}, 8u);
     UpdateAllControllerAndCheck({512.0, 2048.0}, 9u);
   }
 
   {
-    // Reset middle preceding/following controller (diff_drive_controller) and stop the most
+    // Restart middle preceding/following controller (diff_drive_controller) and stop the most
     // preceding controller (position_tracking_controller) simultaneously
     switch_test_controllers(
       {DIFF_DRIVE_CONTROLLER}, {DIFF_DRIVE_CONTROLLER, POSITION_TRACKING_CONTROLLER},
@@ -1383,11 +1383,11 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers_res
     // and only the deactivate count for position_tracking_controller is incremented.
     ASSERT_EQ(3u, pid_left_wheel_controller->activate_calls);       // +0
     ASSERT_EQ(3u, pid_right_wheel_controller->activate_calls);      // +0
-    ASSERT_EQ(4u, diff_drive_controller->activate_calls);           // +1 (reset)
+    ASSERT_EQ(4u, diff_drive_controller->activate_calls);           // +1 (restart)
     ASSERT_EQ(3u, position_tracking_controller->activate_calls);    // +0
     ASSERT_EQ(2u, pid_left_wheel_controller->deactivate_calls);     // +0
     ASSERT_EQ(2u, pid_right_wheel_controller->deactivate_calls);    // +0
-    ASSERT_EQ(3u, diff_drive_controller->deactivate_calls);         // +1 (reset)
+    ASSERT_EQ(3u, diff_drive_controller->deactivate_calls);         // +1 (restart)
     ASSERT_EQ(3u, position_tracking_controller->deactivate_calls);  // +1 (deactivate)
 
     // Verify that the diff_drive_controller is no longer in chained mode
@@ -1398,11 +1398,11 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers_res
   }
 
   {
-    // Reset the preceding controller (diff_drive_controller) and a following controller
+    // Restart the preceding controller (diff_drive_controller) and a following controller
     // (pid_right_wheel_controller)
-    ResetControllers({PID_RIGHT_WHEEL, DIFF_DRIVE_CONTROLLER});
+    RestartControllers({PID_RIGHT_WHEEL, DIFF_DRIVE_CONTROLLER});
 
-    // Verify that the claimed state of the interface does not change before and after the reset
+    // Verify that the claimed state of the interface does not change before and after the restart
     check_command_interfaces_claimed(
       concat_vector(
         DIFF_DRIVE_CLAIMED_INTERFACES, PID_LEFT_WHEEL_CLAIMED_INTERFACES,
@@ -1410,14 +1410,14 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers_res
       concat_vector(
         POSITION_CONTROLLER_NOT_CLAIMED_INTERFACES, POSITION_CONTROLLER_CLAIMED_INTERFACES));
 
-    // Verify that only the reset controller has its activate and deactivate calls incremented.
+    // Verify that only the restart controller has its activate and deactivate calls incremented.
     ASSERT_EQ(3u, pid_left_wheel_controller->activate_calls);       // +0
-    ASSERT_EQ(4u, pid_right_wheel_controller->activate_calls);      // +1 (reset)
-    ASSERT_EQ(5u, diff_drive_controller->activate_calls);           // +1 (reset)
+    ASSERT_EQ(4u, pid_right_wheel_controller->activate_calls);      // +1 (restart)
+    ASSERT_EQ(5u, diff_drive_controller->activate_calls);           // +1 (restart)
     ASSERT_EQ(3u, position_tracking_controller->activate_calls);    // +0
     ASSERT_EQ(2u, pid_left_wheel_controller->deactivate_calls);     // +0
-    ASSERT_EQ(3u, pid_right_wheel_controller->deactivate_calls);    // +1 (reset)
-    ASSERT_EQ(4u, diff_drive_controller->deactivate_calls);         // +1 (reset)
+    ASSERT_EQ(3u, pid_right_wheel_controller->deactivate_calls);    // +1 (restart)
+    ASSERT_EQ(4u, diff_drive_controller->deactivate_calls);         // +1 (restart)
     ASSERT_EQ(3u, position_tracking_controller->deactivate_calls);  // +0
 
     // Verify that the controllers are still in the same chained mode
@@ -1428,7 +1428,7 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers_res
   }
 
   {
-    // Reset middle preceding/following controller (diff_drive_controller) and start the most
+    // Restart middle preceding/following controller (diff_drive_controller) and start the most
     // preceding controller (position_tracking_controller) simultaneously
     switch_test_controllers(
       {POSITION_TRACKING_CONTROLLER, DIFF_DRIVE_CONTROLLER}, {DIFF_DRIVE_CONTROLLER},
@@ -1446,11 +1446,11 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers_res
     // and only the deactivate count for position_tracking_controller is incremented.
     ASSERT_EQ(3u, pid_left_wheel_controller->activate_calls);       // +0
     ASSERT_EQ(4u, pid_right_wheel_controller->activate_calls);      // +0
-    ASSERT_EQ(6u, diff_drive_controller->activate_calls);           // +1 (reset)
+    ASSERT_EQ(6u, diff_drive_controller->activate_calls);           // +1 (restart)
     ASSERT_EQ(4u, position_tracking_controller->activate_calls);    // +1 (activate)
     ASSERT_EQ(2u, pid_left_wheel_controller->deactivate_calls);     // +0
     ASSERT_EQ(3u, pid_right_wheel_controller->deactivate_calls);    // +0
-    ASSERT_EQ(5u, diff_drive_controller->deactivate_calls);         // +1 (reset)
+    ASSERT_EQ(5u, diff_drive_controller->deactivate_calls);         // +1 (restart)
     ASSERT_EQ(3u, position_tracking_controller->deactivate_calls);  // +0
 
     // Verify that the diff_drive_controller is in chained mode
@@ -1463,21 +1463,21 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers_res
 
 TEST_P(
   TestControllerChainingWithControllerManager,
-  test_chained_controllers_reset_preceding_and_stop_following)
+  test_chained_controllers_restart_preceding_and_stop_following)
 {
   SetupWithActivationAllControllersAndCheck();
 
-  // Reset the most preceding controller (position_tracking_controller) and stop the middle
+  // Restart the most preceding controller (position_tracking_controller) and stop the middle
   // following controller (diff_drive_controller) simultaneously
   if (test_param.strictness == STRICT)
   {
-    // If STRICT, since the preceding controller is reactivated by reset, can not stop the
+    // If STRICT, since the preceding controller is reactivated by restart, can not stop the
     // following controller and should be return error
     switch_test_controllers(
       {POSITION_TRACKING_CONTROLLER}, {POSITION_TRACKING_CONTROLLER, DIFF_DRIVE_CONTROLLER}, STRICT,
       std::future_status::ready, controller_interface::return_type::ERROR);
 
-    // Verify that the claimed state of the interface does not change before and after the reset
+    // Verify that the claimed state of the interface does not change before and after the restart
     check_command_interfaces_claimed(
       concat_vector(
         POSITION_CONTROLLER_CLAIMED_INTERFACES, DIFF_DRIVE_CLAIMED_INTERFACES,
@@ -1508,7 +1508,7 @@ TEST_P(
       {POSITION_TRACKING_CONTROLLER}, {POSITION_TRACKING_CONTROLLER, DIFF_DRIVE_CONTROLLER},
       BEST_EFFORT, std::future_status::timeout, controller_interface::return_type::OK);
 
-    // Verify that the claimed state of the interface does not change before and after the reset
+    // Verify that the claimed state of the interface does not change before and after the restart
     check_command_interfaces_claimed(
       concat_vector(
         POSITION_CONTROLLER_CLAIMED_INTERFACES, DIFF_DRIVE_CLAIMED_INTERFACES,
@@ -1520,11 +1520,11 @@ TEST_P(
     ASSERT_EQ(2u, pid_left_wheel_controller->activate_calls);       // +0
     ASSERT_EQ(2u, pid_right_wheel_controller->activate_calls);      // +0
     ASSERT_EQ(2u, diff_drive_controller->activate_calls);           // +0
-    ASSERT_EQ(2u, position_tracking_controller->activate_calls);    // +1 (reset)
+    ASSERT_EQ(2u, position_tracking_controller->activate_calls);    // +1 (restart)
     ASSERT_EQ(1u, pid_left_wheel_controller->deactivate_calls);     // +0
     ASSERT_EQ(1u, pid_right_wheel_controller->deactivate_calls);    // +0
     ASSERT_EQ(1u, diff_drive_controller->deactivate_calls);         // +0
-    ASSERT_EQ(1u, position_tracking_controller->deactivate_calls);  // +1 (reset)
+    ASSERT_EQ(1u, position_tracking_controller->deactivate_calls);  // +1 (restart)
 
     // Verify that the controllers are still in the same chained mode
     ASSERT_TRUE(pid_left_wheel_controller->is_in_chained_mode());
@@ -1534,7 +1534,7 @@ TEST_P(
   }
 }
 
-TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers_reset_error_handling)
+TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers_restart_error_handling)
 {
   SetupWithActivationAllControllersAndCheck();
 
@@ -1548,11 +1548,11 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers_res
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE}}};
   const auto & exp = expected.at(test_param.strictness);
 
-  // Test Case: reset following controllers but preceding controllers will not be reset
-  // --> return error; reset will not be executed and controllers stay in the same state as they
+  // Test Case: restart following controllers but preceding controllers will not be restart
+  // --> return error; restart will not be executed and controllers stay in the same state as they
   // were
   {
-    const auto verify_all_controllers_are_active_and_not_reset = [&]()
+    const auto verify_all_controllers_are_active_and_not_restart = [&]()
     {
       // All controllers should still be active
       ASSERT_EQ(
@@ -1583,39 +1583,40 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers_res
       ASSERT_TRUE(diff_drive_controller->is_in_chained_mode());
       ASSERT_FALSE(position_tracking_controller->is_in_chained_mode());
     };
-    verify_all_controllers_are_active_and_not_reset();
+    verify_all_controllers_are_active_and_not_restart();
 
-    // Attempt to reset the lowest following controllers (pid_controllers)
-    ResetControllers({PID_LEFT_WHEEL, PID_RIGHT_WHEEL}, exp.return_type, std::future_status::ready);
-    verify_all_controllers_are_active_and_not_reset();
+    // Attempt to restart the lowest following controllers (pid_controllers)
+    RestartControllers(
+      {PID_LEFT_WHEEL, PID_RIGHT_WHEEL}, exp.return_type, std::future_status::ready);
+    verify_all_controllers_are_active_and_not_restart();
 
-    // Attempt to reset the one of the lowest following controller (pid_left_wheel_controller)
-    ResetControllers({PID_LEFT_WHEEL}, exp.return_type, std::future_status::ready);
-    verify_all_controllers_are_active_and_not_reset();
+    // Attempt to restart the one of the lowest following controller (pid_left_wheel_controller)
+    RestartControllers({PID_LEFT_WHEEL}, exp.return_type, std::future_status::ready);
+    verify_all_controllers_are_active_and_not_restart();
 
-    // Attempt to reset another lowest following controller (pid_right_wheel_controller)
-    ResetControllers({PID_RIGHT_WHEEL}, exp.return_type, std::future_status::ready);
-    verify_all_controllers_are_active_and_not_reset();
+    // Attempt to restart another lowest following controller (pid_right_wheel_controller)
+    RestartControllers({PID_RIGHT_WHEEL}, exp.return_type, std::future_status::ready);
+    verify_all_controllers_are_active_and_not_restart();
 
-    // Attempt to reset the middle following controller (diff_drive_controller)
-    ResetControllers({DIFF_DRIVE_CONTROLLER}, exp.return_type, std::future_status::ready);
-    verify_all_controllers_are_active_and_not_reset();
+    // Attempt to restart the middle following controller (diff_drive_controller)
+    RestartControllers({DIFF_DRIVE_CONTROLLER}, exp.return_type, std::future_status::ready);
+    verify_all_controllers_are_active_and_not_restart();
 
-    // Attempt to reset the middle following and one of the lowest following controller
-    ResetControllers(
+    // Attempt to restart the middle following and one of the lowest following controller
+    RestartControllers(
       {DIFF_DRIVE_CONTROLLER, PID_LEFT_WHEEL}, exp.return_type, std::future_status::ready);
-    verify_all_controllers_are_active_and_not_reset();
+    verify_all_controllers_are_active_and_not_restart();
 
-    // Attempt to reset the middle following and another lowest following controller
-    ResetControllers(
+    // Attempt to restart the middle following and another lowest following controller
+    RestartControllers(
       {DIFF_DRIVE_CONTROLLER, PID_LEFT_WHEEL}, exp.return_type, std::future_status::ready);
-    verify_all_controllers_are_active_and_not_reset();
+    verify_all_controllers_are_active_and_not_restart();
 
-    // Attempt to reset the all following controllers (pid_controllers and diff_drive_controller)
-    ResetControllers(
+    // Attempt to restart the all following controllers (pid_controllers and diff_drive_controller)
+    RestartControllers(
       {DIFF_DRIVE_CONTROLLER, PID_LEFT_WHEEL, PID_RIGHT_WHEEL}, exp.return_type,
       std::future_status::ready);
-    verify_all_controllers_are_active_and_not_reset();
+    verify_all_controllers_are_active_and_not_restart();
   }
 }
 

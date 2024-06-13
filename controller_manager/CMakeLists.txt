@@ -134,11 +134,11 @@ if(BUILD_TESTING)
     ros2_control_test_assets::ros2_control_test_assets
   )
 
-  ament_add_gmock(test_reset_controller
-    test/test_reset_controller.cpp
+  ament_add_gmock(test_restart_controller
+    test/test_restart_controller.cpp
     APPEND_ENV AMENT_PREFIX_PATH=${ament_index_build_path}_$<CONFIG>
   )
-  target_link_libraries(test_reset_controller
+  target_link_libraries(test_restart_controller
     controller_manager
     test_controller_with_command
     ros2_control_test_assets::ros2_control_test_assets

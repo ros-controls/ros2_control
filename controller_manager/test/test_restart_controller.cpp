@@ -49,8 +49,9 @@ TestRestControllerStrictness test_best_effort{
   BEST_EFFORT, std::future_status::timeout, controller_interface::return_type::OK};
 }  // namespace
 
-class TestResetController : public ControllerManagerFixture<controller_manager::ControllerManager>,
-                            public testing::WithParamInterface<TestRestControllerStrictness>
+class TestRestartController
+: public ControllerManagerFixture<controller_manager::ControllerManager>,
+  public testing::WithParamInterface<TestRestControllerStrictness>
 {
 public:
   void SetUp() override
@@ -111,7 +112,7 @@ public:
     ASSERT_EQ(1u, test_controller->activate_calls);
     ASSERT_EQ(0u, test_controller->deactivate_calls);
 
-    // Controller command should be reset to ACTIVATE_VALUE
+    // Controller command should be restart to ACTIVATE_VALUE
     ASSERT_EQ(SIMULATE_COMMAND_ACTIVATE_VALUE, test_controller->simulate_command);
   }
 
@@ -126,7 +127,7 @@ public:
       expected_interface_status);
   }
 
-  void reset_test_controller(
+  void restart_test_controller(
     const int strictness,
     const std::future_status expected_future_status = std::future_status::timeout,
     const controller_interface::return_type expected_interface_status =
@@ -140,7 +141,7 @@ public:
   std::shared_ptr<TestControllerWithCommand> test_controller;
 };
 
-TEST_P(TestResetController, starting_and_stopping_a_controller)
+TEST_P(TestRestartController, starting_and_stopping_a_controller)
 {
   const auto test_param = GetParam();
 
@@ -164,12 +165,12 @@ TEST_P(TestResetController, starting_and_stopping_a_controller)
     ASSERT_EQ(1u, test_controller->activate_calls);
     ASSERT_EQ(1u, test_controller->deactivate_calls);
 
-    // Controller command should be reset to DEACTIVATE_VALUE
+    // Controller command should be restart to DEACTIVATE_VALUE
     ASSERT_EQ(SIMULATE_COMMAND_DEACTIVATE_VALUE, test_controller->simulate_command);
   }
 }
 
-TEST_P(TestResetController, can_reset_active_controller)
+TEST_P(TestRestartController, can_restart_active_controller)
 {
   const auto test_param = GetParam();
 
@@ -177,18 +178,18 @@ TEST_P(TestResetController, can_reset_active_controller)
   configure_and_check_test_controller();
 
   {
-    // Start controller before reset
+    // Start controller before restart
     start_and_check_test_controller(test_param.strictness);
     const double OVERRIDE_COMMAND_VALUE = 12121212.0;
 
-    // Override command to check reset behavior
+    // Override command to check restart behavior
     test_controller->simulate_command = OVERRIDE_COMMAND_VALUE;
     ASSERT_EQ(OVERRIDE_COMMAND_VALUE, test_controller->simulate_command);
   }
 
   {
-    // Reset controller
-    reset_test_controller(test_param.strictness);
+    // Restart controller
+    restart_test_controller(test_param.strictness);
 
     // State should be return active immediately (active -> inactive -> active)
     ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, test_controller->get_state().id());
@@ -197,23 +198,23 @@ TEST_P(TestResetController, can_reset_active_controller)
     ASSERT_EQ(2u, test_controller->activate_calls);
     ASSERT_EQ(1u, test_controller->deactivate_calls);
 
-    // Controller command should be reset to ACTIVATE_VALUE
+    // Controller command should be restart to ACTIVATE_VALUE
     ASSERT_EQ(SIMULATE_COMMAND_ACTIVATE_VALUE, test_controller->simulate_command);
   }
 }
 
-TEST_P(TestResetController, reset_inactive_controller)
+TEST_P(TestRestartController, restart_inactive_controller)
 {
   const auto test_param = GetParam();
 
   // Configure controller
   configure_and_check_test_controller();
 
-  // Reset controller without starting it
-  reset_test_controller(
+  // Restart controller without starting it
+  restart_test_controller(
     test_param.strictness, test_param.expected_future_status, test_param.expected_return);
 
-  // STRICT: can not reset inactive controller
+  // STRICT: can not restart inactive controller
   if (test_param.strictness == STRICT)
   {
     // State should not be changed
@@ -224,7 +225,7 @@ TEST_P(TestResetController, reset_inactive_controller)
     ASSERT_EQ(0u, test_controller->activate_calls);
     ASSERT_EQ(0u, test_controller->deactivate_calls);
   }
-  // BEST_EFFORT: If reset is executed while inactive, only the start_controller process will be
+  // BEST_EFFORT: If restart is executed while inactive, only the start_controller process will be
   // effective, resulting in activation
   else if (test_param.strictness == BEST_EFFORT)
   {
@@ -235,7 +236,7 @@ TEST_P(TestResetController, reset_inactive_controller)
     ASSERT_EQ(1u, test_controller->activate_calls);
     ASSERT_EQ(0u, test_controller->deactivate_calls);
 
-    // Controller command should be reset to ACTIVATE_VALUE
+    // Controller command should be restart to ACTIVATE_VALUE
     ASSERT_EQ(SIMULATE_COMMAND_ACTIVATE_VALUE, test_controller->simulate_command);
   }
   else
@@ -244,21 +245,21 @@ TEST_P(TestResetController, reset_inactive_controller)
   }
 }
 
-TEST_P(TestResetController, can_not_reset_unconfigured_controller)
+TEST_P(TestRestartController, can_not_restart_unconfigured_controller)
 {
   const auto test_param = GetParam();
 
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, test_controller->get_state().id());
 
-  // Can not reset unconfigured controller
-  reset_test_controller(
+  // Can not restart unconfigured controller
+  restart_test_controller(
     test_param.strictness, std::future_status::ready, test_param.expected_return);
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, test_controller->get_state().id());
 }
 
-TEST_P(TestResetController, can_not_reset_finalized_controller)
+TEST_P(TestRestartController, can_not_restart_finalized_controller)
 {
   const auto test_param = GetParam();
 
@@ -270,11 +271,11 @@ TEST_P(TestResetController, can_not_reset_finalized_controller)
     test_controller->get_node()->shutdown().id(),
     lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED);
 
-  // Can not reset finalized controller
-  reset_test_controller(
+  // Can not restart finalized controller
+  restart_test_controller(
     test_param.strictness, std::future_status::ready, test_param.expected_return);
   ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED, test_controller->get_state().id());
 }
 
 INSTANTIATE_TEST_SUITE_P(
-  test_strict_best_effort, TestResetController, testing::Values(test_strict, test_best_effort));
+  test_strict_best_effort, TestRestartController, testing::Values(test_strict, test_best_effort));

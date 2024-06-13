@@ -2560,7 +2560,7 @@ void ControllerManager::manage_switch()
 
   deactivate_controllers(rt_controller_list, deactivate_request_);
 
-  // When the same interface is specified for both 'from' and 'to' during a controller reset, it
+  // When the same interface is specified for both 'from' and 'to' during a controller restart, it
   // is necessary to switch in the order 'from' then 'to', in order to disable the chained mode
   // once and then enable it again.
   switch_chained_mode(from_chained_mode_request_, false);
