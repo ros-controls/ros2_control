@@ -451,8 +451,7 @@ controller_interface::return_type check_controller_for_de_activate(
 }
 
 void update_chained_mode_request_of_following(
-  const rclcpp::Logger & logger,
-  const controller_manager::ControllerSpec & following_ctrl,
+  const rclcpp::Logger & logger, const controller_manager::ControllerSpec & following_ctrl,
   const ActivationState & preceding_state, const ActivationState & following_state,
   std::vector<std::string> & deactivate_request, std::vector<std::string> & activate_request,
   std::vector<std::string> & from_chained_mode_request,
@@ -1192,6 +1191,10 @@ controller_interface::return_type ControllerManager::switch_controller(
   const std::vector<std::string> & deactivate_controllers, int strictness, bool activate_asap,
   const rclcpp::Duration & timeout)
 {
+  // NOTE: without the following lambda that captures "strictness", ABI compatibility will be lost
+  auto dummy_lambda_to_maintain_ABI_compatibility = [&strictness]() {};
+  (void)(dummy_lambda_to_maintain_ABI_compatibility);
+
   switch_params_ = SwitchParams();
 
   // check (de)activate request and internal state before switch
@@ -2726,9 +2729,8 @@ void ControllerManager::create_from_to_chained_mode_request(
       // preceding performs the activation state transition, a restart of the following controller
       // is necessary to switch the chained mode, so add them to the (de)activate request.
       update_chained_mode_request_of_following(
-        get_logger(), following_ctrl, preceding_state, following_state,
-        deactivate_request, activate_request, from_chained_mode_request, to_chained_mode_request,
-        *resource_manager_);
+        get_logger(), following_ctrl, preceding_state, following_state, deactivate_request,
+        activate_request, from_chained_mode_request, to_chained_mode_request, *resource_manager_);
     }
   }
 }
