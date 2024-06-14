@@ -149,4 +149,30 @@ bool ChainableControllerInterface::is_in_chained_mode() const { return in_chaine
 
 bool ChainableControllerInterface::on_set_chained_mode(bool /*chained_mode*/) { return true; }
 
+std::vector<hardware_interface::StateInterface>
+ChainableControllerInterface::on_export_state_interfaces()
+{
+  state_interfaces_values_.resize(exported_state_interface_names_.size(), 0.0);
+  std::vector<hardware_interface::StateInterface> state_interfaces;
+  for (size_t i = 0; i < exported_state_interface_names_.size(); ++i)
+  {
+    state_interfaces.emplace_back(hardware_interface::StateInterface(
+      get_node()->get_name(), exported_state_interface_names_[i], &state_interfaces_values_[i]));
+  }
+  return state_interfaces;
+}
+
+std::vector<hardware_interface::CommandInterface>
+ChainableControllerInterface::on_export_reference_interfaces()
+{
+  reference_interfaces_.resize(exported_reference_interface_names_.size(), 0.0);
+  std::vector<hardware_interface::CommandInterface> reference_interfaces;
+  for (size_t i = 0; i < exported_reference_interface_names_.size(); ++i)
+  {
+    reference_interfaces.emplace_back(hardware_interface::CommandInterface(
+      get_node()->get_name(), exported_reference_interface_names_[i], &reference_interfaces_[i]));
+  }
+  return reference_interfaces;
+}
+
 }  // namespace controller_interface
