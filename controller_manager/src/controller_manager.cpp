@@ -1328,7 +1328,7 @@ controller_interface::return_type ControllerManager::switch_controller(
   }
 
   // if the (de)activate request necessitates switching the chained mode of the
-  // following controller, make the corresponding 'from'/'to' chained mode
+  // following controller, create the corresponding 'from'/'to' chained mode
   // request.
   create_from_to_chained_mode_request(
     controllers, controllers_map, deactivate_request_, activate_request_,
@@ -2520,7 +2520,7 @@ void ControllerManager::extract_de_activate_command_interface_request(
       extract_interfaces_for_controller(controller, deactivate_command_interface_request);
     }
   }
-};
+}
 
 void ControllerManager::cache_controller_interfaces_in_activate_request(
   const std::vector<ControllerSpec> & controllers,
