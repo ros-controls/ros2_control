@@ -1742,6 +1742,133 @@ TEST_F(ResourceManagerTest, test_caching_of_controllers_to_hardware)
   }
 }
 
+class ResourceManagerTestReadWriteDifferentReadWriteRate : public ResourceManagerTest
+{
+public:
+  void setup_resource_manager_and_do_initial_checks()
+  {
+    rm = std::make_shared<TestableResourceManager>(
+      node_, ros2_control_test_assets::minimal_robot_urdf_with_different_hw_rw_rate, false);
+    activate_components(*rm);
+
+    cm_update_rate_ = 100u;  // The default value inside
+
+    auto status_map = rm->get_components_status();
+    EXPECT_EQ(
+      status_map[TEST_ACTUATOR_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+    EXPECT_EQ(
+      status_map[TEST_SYSTEM_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+    EXPECT_EQ(
+      status_map[TEST_SENSOR_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+    actuator_rw_rate_ = status_map[TEST_ACTUATOR_HARDWARE_NAME].read_rate;
+    system_rw_rate_ = status_map[TEST_SYSTEM_HARDWARE_NAME].read_rate;
+
+    claimed_itfs.push_back(
+      rm->claim_command_interface(TEST_ACTUATOR_HARDWARE_COMMAND_INTERFACES[0]));
+    claimed_itfs.push_back(rm->claim_command_interface(TEST_SYSTEM_HARDWARE_COMMAND_INTERFACES[0]));
+
+    state_itfs.push_back(rm->claim_state_interface(TEST_ACTUATOR_HARDWARE_STATE_INTERFACES[1]));
+    state_itfs.push_back(rm->claim_state_interface(TEST_SYSTEM_HARDWARE_STATE_INTERFACES[1]));
+
+    check_if_interface_available(true, true);
+    // with default values read and write should run without any problems
+    {
+      auto [ok, failed_hardware_names] = rm->read(time, duration);
+      EXPECT_TRUE(ok);
+      EXPECT_TRUE(failed_hardware_names.empty());
+    }
+    {
+      claimed_itfs[0].set_value(10.0);
+      claimed_itfs[1].set_value(20.0);
+      auto [ok, failed_hardware_names] = rm->write(time, duration);
+      EXPECT_TRUE(ok);
+      EXPECT_TRUE(failed_hardware_names.empty());
+    }
+
+    time = time + duration;
+    check_if_interface_available(true, true);
+  }
+
+  // check if all interfaces are available
+  void check_if_interface_available(const bool actuator_interfaces, const bool system_interfaces)
+  {
+    for (const auto & interface : TEST_ACTUATOR_HARDWARE_COMMAND_INTERFACES)
+    {
+      EXPECT_EQ(rm->command_interface_is_available(interface), actuator_interfaces);
+    }
+    for (const auto & interface : TEST_ACTUATOR_HARDWARE_STATE_INTERFACES)
+    {
+      EXPECT_EQ(rm->state_interface_is_available(interface), actuator_interfaces);
+    }
+    for (const auto & interface : TEST_SYSTEM_HARDWARE_COMMAND_INTERFACES)
+    {
+      EXPECT_EQ(rm->command_interface_is_available(interface), system_interfaces);
+    }
+    for (const auto & interface : TEST_SYSTEM_HARDWARE_STATE_INTERFACES)
+    {
+      EXPECT_EQ(rm->state_interface_is_available(interface), system_interfaces);
+    }
+  };
+
+  using FunctionT =
+    std::function<hardware_interface::HardwareReadWriteStatus(rclcpp::Time, rclcpp::Duration)>;
+
+  void check_read_and_write_cycles()
+  {
+    double prev_act_state_value = state_itfs[0].get_value();
+    double prev_system_state_value = state_itfs[1].get_value();
+
+    for (size_t i = 1; i < 100; i++)
+    {
+      auto [ok, failed_hardware_names] = rm->read(time, duration);
+      EXPECT_TRUE(ok);
+      EXPECT_TRUE(failed_hardware_names.empty());
+      if (i % (cm_update_rate_ / system_rw_rate_) == 0)
+      {
+        // The values are computations exactly within the mock systems
+        prev_act_state_value = claimed_itfs[0].get_value() / 2.0;
+        prev_system_state_value = claimed_itfs[1].get_value() / 2.0;
+        claimed_itfs[0].set_value(claimed_itfs[0].get_value() + 10.0);
+        claimed_itfs[1].set_value(claimed_itfs[1].get_value() + 20.0);
+      }
+      else if (i % (cm_update_rate_ / actuator_rw_rate_) == 0)
+      {
+        prev_act_state_value = claimed_itfs[0].get_value() / 2.0;
+        claimed_itfs[0].set_value(claimed_itfs[0].get_value() + 10.0);
+      }
+      ASSERT_EQ(state_itfs[0].get_value(), prev_act_state_value) << "Iteration i is " << i;
+      ASSERT_EQ(state_itfs[1].get_value(), prev_system_state_value) << "Iteration i is " << i;
+      auto [ok_write, failed_hardware_names_write] = rm->write(time, duration);
+      EXPECT_TRUE(ok_write);
+      EXPECT_TRUE(failed_hardware_names_write.empty());
+      time = time + duration;
+    }
+  }
+
+public:
+  std::shared_ptr<TestableResourceManager> rm;
+  unsigned int actuator_rw_rate_, system_rw_rate_, cm_update_rate_;
+  std::vector<hardware_interface::LoanedCommandInterface> claimed_itfs;
+  std::vector<hardware_interface::LoanedStateInterface> state_itfs;
+
+  rclcpp::Time time = rclcpp::Time(1657232, 0);
+  const rclcpp::Duration duration = rclcpp::Duration::from_seconds(0.01);
+
+  // values to set to hardware to simulate failure on read and write
+};
+
+TEST_F(
+  ResourceManagerTestReadWriteDifferentReadWriteRate,
+  test_components_with_different_read_write_freq_on_activate)
+{
+  setup_resource_manager_and_do_initial_checks();
+
+  check_read_and_write_cycles();
+}
+
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
