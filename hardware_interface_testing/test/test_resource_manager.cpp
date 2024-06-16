@@ -460,11 +460,11 @@ TEST_F(ResourceManagerTest, resource_status)
   // read_rate
   EXPECT_EQ(status_map[TEST_ACTUATOR_HARDWARE_NAME].read_rate, 50u);
   EXPECT_EQ(status_map[TEST_SENSOR_HARDWARE_NAME].read_rate, 20u);
-  EXPECT_EQ(status_map[TEST_SYSTEM_HARDWARE_NAME].read_rate, 100u);
+  EXPECT_EQ(status_map[TEST_SYSTEM_HARDWARE_NAME].read_rate, 25u);
   // write_rate
   EXPECT_EQ(status_map[TEST_ACTUATOR_HARDWARE_NAME].write_rate, 50u);
   EXPECT_EQ(status_map[TEST_SENSOR_HARDWARE_NAME].write_rate, 20u);
-  EXPECT_EQ(status_map[TEST_SYSTEM_HARDWARE_NAME].write_rate, 100u);
+  EXPECT_EQ(status_map[TEST_SYSTEM_HARDWARE_NAME].write_rate, 25u);
   // plugin_name
   EXPECT_EQ(
     status_map[TEST_ACTUATOR_HARDWARE_NAME].plugin_name, TEST_ACTUATOR_HARDWARE_PLUGIN_NAME);
