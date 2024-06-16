@@ -444,7 +444,8 @@ TEST_F(ResourceManagerTest, default_prepare_perform_switch)
 
 TEST_F(ResourceManagerTest, resource_status)
 {
-  TestableResourceManager rm(node_, ros2_control_test_assets::minimal_robot_urdf);
+  TestableResourceManager rm(
+    node_, ros2_control_test_assets::minimal_robot_urdf_with_different_hw_rw_rate);
 
   auto status_map = rm.get_components_status();
 
@@ -456,6 +457,14 @@ TEST_F(ResourceManagerTest, resource_status)
   EXPECT_EQ(status_map[TEST_ACTUATOR_HARDWARE_NAME].type, TEST_ACTUATOR_HARDWARE_TYPE);
   EXPECT_EQ(status_map[TEST_SENSOR_HARDWARE_NAME].type, TEST_SENSOR_HARDWARE_TYPE);
   EXPECT_EQ(status_map[TEST_SYSTEM_HARDWARE_NAME].type, TEST_SYSTEM_HARDWARE_TYPE);
+  // read_rate
+  EXPECT_EQ(status_map[TEST_ACTUATOR_HARDWARE_NAME].read_rate, 50u);
+  EXPECT_EQ(status_map[TEST_SENSOR_HARDWARE_NAME].read_rate, 20u);
+  EXPECT_EQ(status_map[TEST_SYSTEM_HARDWARE_NAME].read_rate, 100u);
+  // write_rate
+  EXPECT_EQ(status_map[TEST_ACTUATOR_HARDWARE_NAME].write_rate, 50u);
+  EXPECT_EQ(status_map[TEST_SENSOR_HARDWARE_NAME].write_rate, 20u);
+  EXPECT_EQ(status_map[TEST_SYSTEM_HARDWARE_NAME].write_rate, 100u);
   // plugin_name
   EXPECT_EQ(
     status_map[TEST_ACTUATOR_HARDWARE_NAME].plugin_name, TEST_ACTUATOR_HARDWARE_PLUGIN_NAME);

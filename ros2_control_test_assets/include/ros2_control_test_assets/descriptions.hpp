@@ -709,6 +709,55 @@ const auto async_hardware_resources =
   </ros2_control>
 )";
 
+const auto hardware_resources_with_different_rw_rates =
+  R"(
+  <ros2_control name="TestActuatorHardware" type="actuator" rw_rate="50">
+    <hardware>
+      <plugin>test_actuator</plugin>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <command_interface name="max_velocity" />
+    </joint>
+  </ros2_control>
+  <ros2_control name="TestSensorHardware" type="sensor" rw_rate="20">
+    <hardware>
+      <plugin>test_sensor</plugin>
+      <param name="example_param_write_for_sec">2</param>
+      <param name="example_param_read_for_sec">2</param>
+    </hardware>
+    <sensor name="sensor1">
+      <state_interface name="velocity"/>
+    </sensor>
+  </ros2_control>
+  <ros2_control name="TestSystemHardware" type="system" rw_rate="200">
+    <hardware>
+      <plugin>test_system</plugin>
+      <param name="example_param_write_for_sec">2</param>
+      <param name="example_param_read_for_sec">2</param>
+    </hardware>
+    <joint name="joint2">
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="acceleration"/>
+      <command_interface name="max_acceleration" />
+    </joint>
+    <joint name="joint3">
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="acceleration"/>
+    </joint>
+    <gpio name="configuration">
+      <command_interface name="max_tcp_jerk"/>
+      <state_interface name="max_tcp_jerk"/>
+    </gpio>
+  </ros2_control>
+)";
+
 const auto uninitializable_hardware_resources =
   R"(
   <ros2_control name="TestUninitializableActuatorHardware" type="actuator">
@@ -1938,6 +1987,9 @@ const auto minimal_robot_urdf =
   std::string(urdf_head) + std::string(hardware_resources) + std::string(urdf_tail);
 const auto minimal_async_robot_urdf =
   std::string(urdf_head) + std::string(async_hardware_resources) + std::string(urdf_tail);
+const auto minimal_robot_urdf_with_different_hw_rw_rate =
+  std::string(urdf_head) + std::string(hardware_resources_with_different_rw_rates) +
+  std::string(urdf_tail);
 const auto minimal_uninitializable_robot_urdf =
   std::string(urdf_head) + std::string(uninitializable_hardware_resources) + std::string(urdf_tail);
 
