@@ -91,6 +91,12 @@ public:
   const rclcpp_lifecycle::State & get_state() const;
 
   HARDWARE_INTERFACE_PUBLIC
+  const rclcpp::Time & get_last_read_time() const;
+
+  HARDWARE_INTERFACE_PUBLIC
+  const rclcpp::Time & get_last_write_time() const;
+
+  HARDWARE_INTERFACE_PUBLIC
   return_type read(const rclcpp::Time & time, const rclcpp::Duration & period);
 
   HARDWARE_INTERFACE_PUBLIC
@@ -98,6 +104,10 @@ public:
 
 private:
   std::unique_ptr<SystemInterface> impl_;
+  // Last read cycle time
+  rclcpp::Time last_read_cycle_time_;
+  // Last write cycle time
+  rclcpp::Time last_write_cycle_time_;
 };
 
 }  // namespace hardware_interface
