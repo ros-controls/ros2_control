@@ -1855,13 +1855,13 @@ HardwareReadWriteStatus ResourceManager::read(
         }
         else
         {
-          const double hw_read_period =
-            1.0 / resource_storage_->hardware_info_map_[component.get_name()].read_rate;
+          const rclcpp::Duration hw_read_period = rclcpp::Duration::from_seconds(
+            1.0 / resource_storage_->hardware_info_map_[component.get_name()].read_rate);
           if (
             component.get_last_read_time().seconds() == 0 ||
-            (time - component.get_last_read_time()).seconds() >= hw_read_period)
+            (time - component.get_last_read_time()).seconds() >= hw_read_period.seconds())
           {
-            ret_val = component.read(time, period);
+            ret_val = component.read(time, hw_read_period);
           }
         }
         const auto component_group = component.get_group_name();
@@ -1932,13 +1932,13 @@ HardwareReadWriteStatus ResourceManager::write(
         }
         else
         {
-          const double hw_write_period =
-            1.0 / resource_storage_->hardware_info_map_[component.get_name()].write_rate;
+          const rclcpp::Duration hw_write_period = rclcpp::Duration::from_seconds(
+            1.0 / resource_storage_->hardware_info_map_[component.get_name()].write_rate);
           if (
             component.get_last_write_time().seconds() == 0 ||
-            (time - component.get_last_write_time()).seconds() >= hw_write_period)
+            (time - component.get_last_write_time()).seconds() >= hw_write_period.seconds())
           {
-            ret_val = component.write(time, period);
+            ret_val = component.write(time, hw_write_period);
           }
         }
         const auto component_group = component.get_group_name();
