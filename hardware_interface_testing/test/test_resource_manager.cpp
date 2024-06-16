@@ -1826,7 +1826,7 @@ public:
   using FunctionT =
     std::function<hardware_interface::HardwareReadWriteStatus(rclcpp::Time, rclcpp::Duration)>;
 
-  void check_read_and_write_cycles()
+  void check_read_and_write_cycles(bool test_for_changing_values)
   {
     double prev_act_state_value = state_itfs[0].get_value();
     double prev_system_state_value = state_itfs[1].get_value();
@@ -1836,13 +1836,13 @@ public:
       auto [ok, failed_hardware_names] = rm->read(time, duration);
       EXPECT_TRUE(ok);
       EXPECT_TRUE(failed_hardware_names.empty());
-      if (i % (cm_update_rate_ / system_rw_rate_) == 0)
+      if (i % (cm_update_rate_ / system_rw_rate_) == 0 && test_for_changing_values)
       {
         // The values are computations exactly within the test_components
         prev_system_state_value = claimed_itfs[1].get_value() / 2.0;
         claimed_itfs[1].set_value(claimed_itfs[1].get_value() + 20.0);
       }
-      if (i % (cm_update_rate_ / actuator_rw_rate_) == 0)
+      if (i % (cm_update_rate_ / actuator_rw_rate_) == 0 && test_for_changing_values)
       {
         // The values are computations exactly within the test_components
         prev_act_state_value = claimed_itfs[0].get_value() / 2.0;
@@ -1877,7 +1877,7 @@ TEST_F(
 {
   setup_resource_manager_and_do_initial_checks();
 
-  check_read_and_write_cycles();
+  check_read_and_write_cycles(true);
 }
 
 TEST_F(
@@ -1905,7 +1905,7 @@ TEST_F(
     status_map[TEST_SENSOR_HARDWARE_NAME].state.id(),
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
 
-  check_read_and_write_cycles();
+  check_read_and_write_cycles(true);
 }
 
 int main(int argc, char ** argv)
