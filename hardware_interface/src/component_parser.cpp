@@ -234,14 +234,29 @@ std::string parse_data_type_attribute(const tinyxml2::XMLElement * elem)
 unsigned int parse_rw_rate_attribute(const tinyxml2::XMLElement * elem)
 {
   const tinyxml2::XMLAttribute * attr = elem->FindAttribute(kReadWriteRateAttribute);
-  const auto rw_rate = attr ? std::stoi(attr->Value()) : 0;
-  if (rw_rate < 0)
+  try
+  {
+    const auto rw_rate = attr ? std::stoi(attr->Value()) : 0;
+    if (rw_rate < 0)
+    {
+      throw std::runtime_error(
+        "Could not parse rw_rate tag in \"" + std::string(elem->Name()) + "\"." + "Got \"" +
+        std::to_string(rw_rate) + "\", but expected a positive integer.");
+    }
+    return static_cast<unsigned int>(rw_rate);
+  }
+  catch (const std::invalid_argument & e)
   {
     throw std::runtime_error(
-      "Could not parse rw_rate tag in \"" + std::string(elem->Name()) + "\"." + "Got \"" +
-      std::to_string(rw_rate) + "\", but expected a positive integer.");
+      "Could not parse rw_rate tag in \"" + std::string(elem->Name()) + "\"." +
+      " Invalid value : \"" + attr->Value() + "\", expected a positive integer.");
   }
-  return static_cast<unsigned int>(rw_rate);
+  catch (const std::out_of_range & e)
+  {
+    throw std::runtime_error(
+      "Could not parse rw_rate tag in \"" + std::string(elem->Name()) + "\"." +
+      " Out of range value : \"" + attr->Value() + "\", expected a positive valid integer.");
+  }
 }
 
 /// Parse is_async attribute
