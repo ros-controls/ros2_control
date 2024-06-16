@@ -758,6 +758,51 @@ const auto hardware_resources_with_different_rw_rates =
   </ros2_control>
 )";
 
+const auto hardware_resources_with_negative_rw_rates =
+  R"(
+  <ros2_control name="TestActuatorHardware" type="actuator" rw_rate="-50">
+    <hardware>
+      <plugin>test_actuator</plugin>
+    </hardware>
+    <joint name="right_finger_joint">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <command_interface name="max_velocity" />
+    </joint>
+  </ros2_control>
+)";
+
+const auto hardware_resources_invalid_with_text_in_rw_rates =
+  R"(
+  <ros2_control name="TestActuatorHardware" type="actuator" rw_rate="d 50">
+    <hardware>
+      <plugin>test_actuator</plugin>
+    </hardware>
+    <joint name="right_finger_joint">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <command_interface name="max_velocity" />
+    </joint>
+  </ros2_control>
+)";
+
+const auto hardware_resources_invalid_out_of_range_in_rw_rates =
+  R"(
+  <ros2_control name="TestActuatorHardware" type="actuator" rw_rate="12345678901">
+    <hardware>
+      <plugin>test_actuator</plugin>
+    </hardware>
+    <joint name="right_finger_joint">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <command_interface name="max_velocity" />
+    </joint>
+  </ros2_control>
+)";
+
 const auto uninitializable_hardware_resources =
   R"(
   <ros2_control name="TestUninitializableActuatorHardware" type="actuator">
