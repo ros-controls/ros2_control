@@ -235,6 +235,10 @@ const rclcpp_lifecycle::State & System::get_lifecycle_state() const
   return impl_->get_lifecycle_state();
 }
 
+const rclcpp::Time & System::get_last_read_time() const { return last_read_cycle_time_; }
+
+const rclcpp::Time & System::get_last_write_time() const { return last_write_cycle_time_; }
+
 return_type System::read(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
   std::unique_lock<std::recursive_mutex> lock(system_mutex_, std::try_to_lock);
@@ -247,6 +251,7 @@ return_type System::read(const rclcpp::Time & time, const rclcpp::Duration & per
   }
   if (lifecycleStateThatRequiresNoAction(impl_->get_lifecycle_state().id()))
   {
+    last_read_cycle_time_ = rclcpp::Time(0, 0, time.get_clock_type());
     return return_type::OK;
   }
   return_type result = return_type::ERROR;
@@ -259,6 +264,7 @@ return_type System::read(const rclcpp::Time & time, const rclcpp::Duration & per
     {
       error();
     }
+    last_read_cycle_time_ = time;
   }
   return result;
 }
@@ -275,6 +281,7 @@ return_type System::write(const rclcpp::Time & time, const rclcpp::Duration & pe
   }
   if (lifecycleStateThatRequiresNoAction(impl_->get_lifecycle_state().id()))
   {
+    last_write_cycle_time_ = rclcpp::Time(0, 0, time.get_clock_type());
     return return_type::OK;
   }
   return_type result = return_type::ERROR;
@@ -287,6 +294,7 @@ return_type System::write(const rclcpp::Time & time, const rclcpp::Duration & pe
     {
       error();
     }
+    last_write_cycle_time_ = time;
   }
   return result;
 }
