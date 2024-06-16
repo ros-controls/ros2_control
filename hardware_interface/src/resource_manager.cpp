@@ -1847,6 +1847,17 @@ HardwareReadWriteStatus ResourceManager::read(
         {
           ret_val = component.read(time, period);
         }
+        else
+        {
+          const double hw_read_period =
+            1.0 / resource_storage_->hardware_info_map_[component.get_name()].read_rate;
+          if (
+            component.get_last_read_time().seconds() == 0 ||
+            (time - component.get_last_read_time()).seconds() >= hw_read_period)
+          {
+            ret_val = component.read(time, period);
+          }
+        }
         const auto component_group = component.get_group_name();
         ret_val =
           resource_storage_->update_hardware_component_group_state(component_group, ret_val);
@@ -1912,6 +1923,17 @@ HardwareReadWriteStatus ResourceManager::write(
           resource_storage_->cm_update_rate_)
         {
           ret_val = component.write(time, period);
+        }
+        else
+        {
+          const double hw_write_period =
+            1.0 / resource_storage_->hardware_info_map_[component.get_name()].write_rate;
+          if (
+            component.get_last_write_time().seconds() == 0 ||
+            (time - component.get_last_write_time()).seconds() >= hw_write_period)
+          {
+            ret_val = component.write(time, period);
+          }
         }
         const auto component_group = component.get_group_name();
         ret_val =

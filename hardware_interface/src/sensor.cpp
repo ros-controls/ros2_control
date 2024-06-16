@@ -240,6 +240,8 @@ const rclcpp_lifecycle::State & Sensor::get_lifecycle_state() const
   return impl_->get_lifecycle_state();
 }
 
+const rclcpp::Time & Sensor::get_last_read_time() const { return last_read_cycle_time_; }
+
 return_type Sensor::read(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
   std::unique_lock<std::recursive_mutex> lock(sensors_mutex_, std::try_to_lock);
@@ -252,6 +254,7 @@ return_type Sensor::read(const rclcpp::Time & time, const rclcpp::Duration & per
   }
   if (lifecycleStateThatRequiresNoAction(impl_->get_lifecycle_state().id()))
   {
+    last_read_cycle_time_ = rclcpp::Time(0, 0, time.get_clock_type());
     return return_type::OK;
   }
   return_type result = return_type::ERROR;
@@ -264,6 +267,7 @@ return_type Sensor::read(const rclcpp::Time & time, const rclcpp::Duration & per
     {
       error();
     }
+    last_read_cycle_time_ = time;
   }
   return result;
 }
