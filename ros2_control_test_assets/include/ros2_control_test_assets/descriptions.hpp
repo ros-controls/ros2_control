@@ -732,7 +732,7 @@ const auto hardware_resources_with_different_rw_rates =
       <state_interface name="velocity"/>
     </sensor>
   </ros2_control>
-  <ros2_control name="TestSystemHardware" type="system" rw_rate="200">
+  <ros2_control name="TestSystemHardware" type="system" rw_rate="25">
     <hardware>
       <plugin>test_system</plugin>
       <param name="example_param_write_for_sec">2</param>
