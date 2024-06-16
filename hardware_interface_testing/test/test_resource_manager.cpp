@@ -1908,6 +1908,62 @@ TEST_F(
   check_read_and_write_cycles(true);
 }
 
+TEST_F(
+  ResourceManagerTestReadWriteDifferentReadWriteRate,
+  test_components_with_different_read_write_freq_on_unconfigured)
+{
+  setup_resource_manager_and_do_initial_checks();
+
+  // Now deactivate all the components and test the same as above
+  rclcpp_lifecycle::State state_unconfigured(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    hardware_interface::lifecycle_state_names::UNCONFIGURED);
+  rm->set_component_state(TEST_SYSTEM_HARDWARE_NAME, state_unconfigured);
+  rm->set_component_state(TEST_ACTUATOR_HARDWARE_NAME, state_unconfigured);
+  rm->set_component_state(TEST_SENSOR_HARDWARE_NAME, state_unconfigured);
+
+  auto status_map = rm->get_components_status();
+  EXPECT_EQ(
+    status_map[TEST_ACTUATOR_HARDWARE_NAME].state.id(),
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  EXPECT_EQ(
+    status_map[TEST_SYSTEM_HARDWARE_NAME].state.id(),
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  EXPECT_EQ(
+    status_map[TEST_SENSOR_HARDWARE_NAME].state.id(),
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+
+  check_read_and_write_cycles(false);
+}
+
+TEST_F(
+  ResourceManagerTestReadWriteDifferentReadWriteRate,
+  test_components_with_different_read_write_freq_on_finalized)
+{
+  setup_resource_manager_and_do_initial_checks();
+
+  // Now deactivate all the components and test the same as above
+  rclcpp_lifecycle::State state_finalized(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED,
+    hardware_interface::lifecycle_state_names::FINALIZED);
+  rm->set_component_state(TEST_SYSTEM_HARDWARE_NAME, state_finalized);
+  rm->set_component_state(TEST_ACTUATOR_HARDWARE_NAME, state_finalized);
+  rm->set_component_state(TEST_SENSOR_HARDWARE_NAME, state_finalized);
+
+  auto status_map = rm->get_components_status();
+  EXPECT_EQ(
+    status_map[TEST_ACTUATOR_HARDWARE_NAME].state.id(),
+    lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED);
+  EXPECT_EQ(
+    status_map[TEST_SYSTEM_HARDWARE_NAME].state.id(),
+    lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED);
+  EXPECT_EQ(
+    status_map[TEST_SENSOR_HARDWARE_NAME].state.id(),
+    lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED);
+
+  check_read_and_write_cycles(false);
+}
+
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
