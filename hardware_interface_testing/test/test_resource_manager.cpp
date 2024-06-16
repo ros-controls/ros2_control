@@ -1880,6 +1880,34 @@ TEST_F(
   check_read_and_write_cycles();
 }
 
+TEST_F(
+  ResourceManagerTestReadWriteDifferentReadWriteRate,
+  test_components_with_different_read_write_freq_on_deactivate)
+{
+  setup_resource_manager_and_do_initial_checks();
+
+  // Now deactivate all the components and test the same as above
+  rclcpp_lifecycle::State state_inactive(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    hardware_interface::lifecycle_state_names::INACTIVE);
+  rm->set_component_state(TEST_SYSTEM_HARDWARE_NAME, state_inactive);
+  rm->set_component_state(TEST_ACTUATOR_HARDWARE_NAME, state_inactive);
+  rm->set_component_state(TEST_SENSOR_HARDWARE_NAME, state_inactive);
+
+  auto status_map = rm->get_components_status();
+  EXPECT_EQ(
+    status_map[TEST_ACTUATOR_HARDWARE_NAME].state.id(),
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+  EXPECT_EQ(
+    status_map[TEST_SYSTEM_HARDWARE_NAME].state.id(),
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+  EXPECT_EQ(
+    status_map[TEST_SENSOR_HARDWARE_NAME].state.id(),
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+
+  check_read_and_write_cycles();
+}
+
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
