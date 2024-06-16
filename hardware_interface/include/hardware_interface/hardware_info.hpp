@@ -174,6 +174,8 @@ struct HardwareInfo
   std::string type;
   ///  Hardware group to which the hardware belongs.
   std::string group;
+  /// Component's read and write rates in Hz.
+  unsigned int rw_rate;
   /// Component is async
   bool is_async;
   /// Name of the pluginlib plugin of the hardware that will be loaded.
