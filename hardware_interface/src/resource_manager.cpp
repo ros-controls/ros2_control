@@ -142,8 +142,14 @@ public:
         component_info.name = hardware_info.name;
         component_info.type = hardware_info.type;
         component_info.group = hardware_info.group;
-        component_info.read_rate = cm_update_rate_;
-        component_info.write_rate = cm_update_rate_;
+        component_info.read_rate =
+          (hardware_info.rw_rate == 0 || hardware_info.rw_rate > cm_update_rate_)
+            ? cm_update_rate_
+            : hardware_info.rw_rate;
+        component_info.write_rate =
+          (hardware_info.rw_rate == 0 || hardware_info.rw_rate > cm_update_rate_)
+            ? cm_update_rate_
+            : hardware_info.rw_rate;
         component_info.plugin_name = hardware_info.hardware_plugin_name;
         component_info.is_async = hardware_info.is_async;
 
