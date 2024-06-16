@@ -1763,6 +1763,16 @@ public:
     EXPECT_EQ(
       status_map[TEST_SENSOR_HARDWARE_NAME].state.id(),
       lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+
+    // read_rate
+    EXPECT_EQ(status_map[TEST_ACTUATOR_HARDWARE_NAME].read_rate, 50u);
+    EXPECT_EQ(status_map[TEST_SENSOR_HARDWARE_NAME].read_rate, 20u);
+    EXPECT_EQ(status_map[TEST_SYSTEM_HARDWARE_NAME].read_rate, 25u);
+    // write_rate
+    EXPECT_EQ(status_map[TEST_ACTUATOR_HARDWARE_NAME].write_rate, 50u);
+    EXPECT_EQ(status_map[TEST_SENSOR_HARDWARE_NAME].write_rate, 20u);
+    EXPECT_EQ(status_map[TEST_SYSTEM_HARDWARE_NAME].write_rate, 25u);
+
     actuator_rw_rate_ = status_map[TEST_ACTUATOR_HARDWARE_NAME].read_rate;
     system_rw_rate_ = status_map[TEST_SYSTEM_HARDWARE_NAME].read_rate;
 
@@ -1828,19 +1838,20 @@ public:
       EXPECT_TRUE(failed_hardware_names.empty());
       if (i % (cm_update_rate_ / system_rw_rate_) == 0)
       {
-        // The values are computations exactly within the mock systems
-        prev_act_state_value = claimed_itfs[0].get_value() / 2.0;
+        // The values are computations exactly within the test_components
         prev_system_state_value = claimed_itfs[1].get_value() / 2.0;
-        claimed_itfs[0].set_value(claimed_itfs[0].get_value() + 10.0);
         claimed_itfs[1].set_value(claimed_itfs[1].get_value() + 20.0);
       }
-      else if (i % (cm_update_rate_ / actuator_rw_rate_) == 0)
+      if (i % (cm_update_rate_ / actuator_rw_rate_) == 0)
       {
+        // The values are computations exactly within the test_components
         prev_act_state_value = claimed_itfs[0].get_value() / 2.0;
         claimed_itfs[0].set_value(claimed_itfs[0].get_value() + 10.0);
       }
-      ASSERT_EQ(state_itfs[0].get_value(), prev_act_state_value) << "Iteration i is " << i;
-      ASSERT_EQ(state_itfs[1].get_value(), prev_system_state_value) << "Iteration i is " << i;
+      // Even though we skip some read and write iterations, the state interafces should be the same
+      // as previous updated one until the next cycle
+      ASSERT_EQ(state_itfs[0].get_value(), prev_act_state_value);
+      ASSERT_EQ(state_itfs[1].get_value(), prev_system_state_value);
       auto [ok_write, failed_hardware_names_write] = rm->write(time, duration);
       EXPECT_TRUE(ok_write);
       EXPECT_TRUE(failed_hardware_names_write.empty());
