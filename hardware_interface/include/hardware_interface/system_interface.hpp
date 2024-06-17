@@ -100,6 +100,17 @@ public:
   virtual CallbackReturn on_init(const HardwareInfo & hardware_info)
   {
     info_ = hardware_info;
+    if (info_.is_async)
+    {
+      read_async_handler_ = std::make_unique<realtime_tools::AsyncFunctionHandler<return_type>>();
+      write_async_handler_ = std::make_unique<realtime_tools::AsyncFunctionHandler<return_type>>();
+      read_async_handler_->init(
+        std::bind(&SystemInterface::read, this, std::placeholders::_1, std::placeholders::_2));
+      read_async_handler_->start_async_update_thread();
+      write_async_handler_->init(
+        std::bind(&SystemInterface::write, this, std::placeholders::_1, std::placeholders::_2));
+      write_async_handler_->start_async_update_thread();
+    }
     return CallbackReturn::SUCCESS;
   };
 
