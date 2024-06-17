@@ -94,6 +94,43 @@ hardware_interface
     </ros2_control>
 
 * Soft limits are also parsed from the URDF into the ``HardwareInfo`` structure for the defined joints (`#1488 <https://github.com/ros-controls/ros2_control/pull/1488>`_)
+* The ``ros2_control`` tag now supports parsing read/write rate ``rw_rate`` for the each hardware component parsed through the URDF (`#1570 <https://github.com/ros-controls/ros2_control/pull/1570>`_)
+
+  .. code:: xml
+
+    <ros2_control name="RRBotSystemMutipleGPIOs" type="system" rw_rate="500">
+      <hardware>
+        <plugin>ros2_control_demo_hardware/RRBotSystemPositionOnlyHardware</plugin>
+        <param name="example_param_hw_start_duration_sec">2.0</param>
+        <param name="example_param_hw_stop_duration_sec">3.0</param>
+        <param name="example_param_hw_slowdown">2.0</param>
+      </hardware>
+      <joint name="joint1">
+        <command_interface name="position"/>
+        <command_interface name="velocity"/>
+        <state_interface name="position"/>
+      </joint>
+      <joint name="joint2">
+        <command_interface name="position"/>
+        <state_interface name="position"/>
+      </joint>
+    </ros2_control>
+    <ros2_control name="MultimodalGripper" type="actuator" rw_rate="200">
+      <hardware>
+        <plugin>ros2_control_demo_hardware/MultimodalGripper</plugin>
+      </hardware>
+      <joint name="parallel_fingers">
+        <command_interface name="position">
+          <param name="min">0</param>
+          <param name="max">100</param>
+        </command_interface>
+        <state_interface name="position"/>
+      </joint>
+      <gpio name="suction">
+        <command_interface name="suction"/>
+        <state_interface name="suction"/>
+      </gpio>
+    </ros2_control>
 
 joint_limits
 ************
