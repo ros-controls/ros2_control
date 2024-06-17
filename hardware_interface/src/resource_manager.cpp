@@ -906,6 +906,7 @@ public:
     available_command_interfaces_.clear();
 
     claimed_command_interface_map_.clear();
+  }
 
   /**
    * Returns the return type of the hardware component group state, if the return type is other
