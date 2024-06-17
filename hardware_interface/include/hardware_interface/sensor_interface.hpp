@@ -112,6 +112,13 @@ public:
     clock_interface_ = clock_interface;
     sensor_logger_ = logger.get_child("hardware_component.sensor." + hardware_info.name);
     info_ = hardware_info;
+    if (info_.is_async)
+    {
+      read_async_handler_ = std::make_unique<realtime_tools::AsyncFunctionHandler<return_type>>();
+      read_async_handler_->init(
+        std::bind(&SensorInterface::read, this, std::placeholders::_1, std::placeholders::_2));
+      read_async_handler_->start_async_update_thread();
+    }
     return on_init(hardware_info);
   };
 

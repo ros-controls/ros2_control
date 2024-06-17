@@ -381,7 +381,7 @@ public:
       if (next_trigger_ == TriggerType::WRITE)
       {
         RCLCPP_WARN(
-          rclcpp::get_logger("SystemInterface"),
+          rclcpp::get_logger("ActuatorInterface"),
           "Trigger read called while write async handler call is still pending for hardware "
           "interface : '%s'. Skipping read cycle and will wait for a write cycle!",
           info_.name.c_str());
