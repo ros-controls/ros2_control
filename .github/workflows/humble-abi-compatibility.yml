@@ -4,6 +4,15 @@ on:
   pull_request:
     branches:
       - humble
+    paths:
+      - '**.hpp'
+      - '**.h'
+      - '**.cpp'
+      - '**.py'
+      - '.github/workflows/humble-abi-compatibility.yml'
+      - '**/package.xml'
+      - '**/CMakeLists.txt'
+      - 'ros2_control-not-released.humble.repos'
 
 jobs:
   abi_check:

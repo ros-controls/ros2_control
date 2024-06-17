@@ -4,6 +4,15 @@ on:
   push:
     branches:
       - iron
+    paths:
+      - '**.hpp'
+      - '**.h'
+      - '**.cpp'
+      - '**.py'
+      - '.github/workflows/iron-source-build.yml'
+      - '**/package.xml'
+      - '**/CMakeLists.txt'
+      - 'ros2_control.iron.repos'
   schedule:
     # Run every day to detect flakiness and broken dependencies
     - cron: '03 3 * * *'
@@ -15,3 +24,4 @@ jobs:
       ros_distro: iron
       ref: iron
       ros2_repo_branch: iron
+      os_name: ubuntu-22.04

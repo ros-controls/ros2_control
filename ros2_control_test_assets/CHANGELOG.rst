@@ -2,6 +2,21 @@
 Changelog for package ros2_control_test_assets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.11.0 (2024-05-14)
+-------------------
+* Parse URDF soft_limits into the HardwareInfo structure (`#1488 <https://github.com/ros-controls/ros2_control/issues/1488>`_)
+* Contributors: adriaroig
+
+4.10.0 (2024-05-08)
+-------------------
+* Parse URDF joint hard limits into the HardwareInfo structure (`#1472 <https://github.com/ros-controls/ros2_control/issues/1472>`_)
+* Contributors: Sai Kishor Kothakota
+
+4.9.0 (2024-04-30)
+------------------
+* Component parser: Get mimic information from URDF (`#1256 <https://github.com/ros-controls/ros2_control/issues/1256>`_)
+* Contributors: Christoph Fröhlich
+
 4.8.0 (2024-03-27)
 ------------------
 

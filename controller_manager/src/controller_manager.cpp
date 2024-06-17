@@ -484,6 +484,17 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_c
     controller_spec.info.parameters_file = parameters_file;
   }
 
+  const std::string fallback_ctrl_param = controller_name + ".fallback_controllers";
+  std::vector<std::string> fallback_controllers;
+  if (!has_parameter(fallback_ctrl_param))
+  {
+    declare_parameter(fallback_ctrl_param, rclcpp::ParameterType::PARAMETER_STRING_ARRAY);
+  }
+  if (get_parameter(fallback_ctrl_param, fallback_controllers) && !fallback_controllers.empty())
+  {
+    controller_spec.info.fallback_controllers_names = fallback_controllers;
+  }
+
   return add_controller_impl(controller_spec);
 }
 
@@ -564,11 +575,26 @@ controller_interface::return_type ControllerManager::unload_controller(
       get_logger(), "Controller '%s' is cleaned-up before unloading!", controller_name.c_str());
     // TODO(destogl): remove reference interface if chainable; i.e., add a separate method for
     // cleaning-up controllers?
-    const auto new_state = controller.c->get_node()->cleanup();
-    if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
+    try
     {
-      RCLCPP_WARN(
-        get_logger(), "Failed to clean-up the controller '%s' before unloading!",
+      const auto new_state = controller.c->get_node()->cleanup();
+      if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
+      {
+        RCLCPP_WARN(
+          get_logger(), "Failed to clean-up the controller '%s' before unloading!",
+          controller_name.c_str());
+      }
+    }
+    catch (const std::exception & e)
+    {
+      RCLCPP_ERROR(
+        get_logger(), "Failed to clean-up the controller '%s' before unloading: %s",
+        controller_name.c_str(), e.what());
+    }
+    catch (...)
+    {
+      RCLCPP_ERROR(
+        get_logger(), "Failed to clean-up the controller '%s' before unloading",
         controller_name.c_str());
     }
   }
@@ -633,22 +659,49 @@ controller_interface::return_type ControllerManager::configure_controller(
       get_logger(), "Controller '%s' is cleaned-up before configuring", controller_name.c_str());
     // TODO(destogl): remove reference interface if chainable; i.e., add a separate method for
     // cleaning-up controllers?
-    new_state = controller->get_node()->cleanup();
-    if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
+    try
+    {
+      new_state = controller->get_node()->cleanup();
+      if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
+      {
+        RCLCPP_ERROR(
+          get_logger(), "Controller '%s' can not be cleaned-up before configuring",
+          controller_name.c_str());
+        return controller_interface::return_type::ERROR;
+      }
+    }
+    catch (...)
     {
       RCLCPP_ERROR(
-        get_logger(), "Controller '%s' can not be cleaned-up before configuring",
+        get_logger(), "Caught exception while cleaning-up controller '%s' before configuring",
         controller_name.c_str());
       return controller_interface::return_type::ERROR;
     }
   }
 
-  new_state = controller->configure();
-  if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
+  try
+  {
+    new_state = controller->configure();
+    if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
+    {
+      RCLCPP_ERROR(
+        get_logger(), "After configuring, controller '%s' is in state '%s' , expected inactive.",
+        controller_name.c_str(), new_state.label().c_str());
+      return controller_interface::return_type::ERROR;
+    }
+  }
+  catch (const std::exception & e)
   {
     RCLCPP_ERROR(
-      get_logger(), "After configuring, controller '%s' is in state '%s' , expected inactive.",
-      controller_name.c_str(), new_state.label().c_str());
+      get_logger(), "Caught exception while configuring controller '%s': %s",
+      controller_name.c_str(), e.what());
+    return controller_interface::return_type::ERROR;
+  }
+  catch (...)
+  {
+    RCLCPP_ERROR(
+      get_logger(), "Caught unknown exception while configuring controller '%s'",
+      controller_name.c_str());
     return controller_interface::return_type::ERROR;
   }
 
@@ -656,7 +709,8 @@ controller_interface::return_type ControllerManager::configure_controller(
   if (controller->is_async())
   {
     async_controller_threads_.emplace(
-      controller_name, std::make_unique<ControllerThreadWrapper>(controller, update_rate_));
+      controller_name,
+      std::make_unique<controller_interface::AsyncControllerThread>(controller, update_rate_));
   }
 
   const auto controller_update_rate = controller->get_update_rate();
@@ -1288,14 +1342,35 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::add_co
   }
 
   const rclcpp::NodeOptions controller_node_options = determine_controller_node_options(controller);
-  if (
-    controller.c->init(
-      controller.info.name, robot_description_, get_update_rate(), get_namespace(),
-      controller_node_options) == controller_interface::return_type::ERROR)
+  // Catch whatever exception the controller might throw
+  try
+  {
+    if (
+      controller.c->init(
+        controller.info.name, robot_description_, get_update_rate(), get_namespace(),
+        controller_node_options) == controller_interface::return_type::ERROR)
+    {
+      to.clear();
+      RCLCPP_ERROR(
+        get_logger(), "Could not initialize the controller named '%s'",
+        controller.info.name.c_str());
+      return nullptr;
+    }
+  }
+  catch (const std::exception & e)
   {
     to.clear();
     RCLCPP_ERROR(
-      get_logger(), "Could not initialize the controller named '%s'", controller.info.name.c_str());
+      get_logger(), "Caught exception while initializing controller '%s': %s",
+      controller.info.name.c_str(), e.what());
+    return nullptr;
+  }
+  catch (...)
+  {
+    to.clear();
+    RCLCPP_ERROR(
+      get_logger(), "Caught unknown exception while initializing controller '%s'",
+      controller.info.name.c_str());
     return nullptr;
   }
 
@@ -1338,18 +1413,37 @@ void ControllerManager::deactivate_controllers(
     auto controller = found_it->c;
     if (is_controller_active(*controller))
     {
-      const auto new_state = controller->get_node()->deactivate();
-      controller->release_interfaces();
-      // if it is a chainable controller, make the reference interfaces unavailable on deactivation
-      if (controller->is_chainable())
+      try
       {
-        resource_manager_->make_controller_reference_interfaces_unavailable(controller_name);
+        const auto new_state = controller->get_node()->deactivate();
+        controller->release_interfaces();
+
+        // if it is a chainable controller, make the reference interfaces unavailable on
+        // deactivation
+        if (controller->is_chainable())
+        {
+          resource_manager_->make_controller_reference_interfaces_unavailable(controller_name);
+        }
+        if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
+        {
+          RCLCPP_ERROR(
+            get_logger(), "After deactivating, controller '%s' is in state '%s', expected Inactive",
+            controller_name.c_str(), new_state.label().c_str());
+        }
       }
-      if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
+      catch (const std::exception & e)
       {
         RCLCPP_ERROR(
-          get_logger(), "After deactivating, controller '%s' is in state '%s', expected Inactive",
-          controller_name.c_str(), new_state.label().c_str());
+          get_logger(), "Caught exception while deactivating the  controller '%s': %s",
+          controller_name.c_str(), e.what());
+        continue;
+      }
+      catch (...)
+      {
+        RCLCPP_ERROR(
+          get_logger(), "Caught unknown exception while deactivating the controller '%s'",
+          controller_name.c_str());
+        continue;
       }
     }
   }
@@ -1505,15 +1599,32 @@ void ControllerManager::activate_controllers(
     }
     controller->assign_interfaces(std::move(command_loans), std::move(state_loans));
 
-    const auto new_state = controller->get_node()->activate();
-    if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+    try
+    {
+      const auto new_state = controller->get_node()->activate();
+      if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+      {
+        RCLCPP_ERROR(
+          get_logger(),
+          "After activation, controller '%s' is in state '%s' (%d), expected '%s' (%d).",
+          controller->get_node()->get_name(), new_state.label().c_str(), new_state.id(),
+          hardware_interface::lifecycle_state_names::ACTIVE,
+          lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+      }
+    }
+    catch (const std::exception & e)
     {
       RCLCPP_ERROR(
-        get_logger(),
-        "After activation, controller '%s' is in state '%s' (%d), expected '%s' (%d).",
-        controller->get_node()->get_name(), new_state.label().c_str(), new_state.id(),
-        hardware_interface::lifecycle_state_names::ACTIVE,
-        lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+        get_logger(), "Caught exception while activating the controller '%s': %s",
+        controller_name.c_str(), e.what());
+      continue;
+    }
+    catch (...)
+    {
+      RCLCPP_ERROR(
+        get_logger(), "Caught unknown exception while activating the controller '%s'",
+        controller_name.c_str());
+      continue;
     }
 
     // if it is a chainable controller, make the reference interfaces available on activation
@@ -2025,6 +2136,7 @@ controller_interface::return_type ControllerManager::update(
   ++update_loop_counter_;
   update_loop_counter_ %= update_rate_;
 
+  std::vector<std::string> failed_controllers_list;
   for (const auto & loaded_controller : rt_controller_list)
   {
     // TODO(v-lopez) we could cache this information
@@ -2036,6 +2148,17 @@ controller_interface::return_type ControllerManager::update(
       const auto controller_period =
         run_controller_at_cm_rate ? period
                                   : rclcpp::Duration::from_seconds((1.0 / controller_update_rate));
+
+      if (
+        *loaded_controller.next_update_cycle_time ==
+        rclcpp::Time(0, 0, this->get_node_clock_interface()->get_clock()->get_clock_type()))
+      {
+        // it is zero after activation
+        RCLCPP_DEBUG(
+          get_logger(), "Setting next_update_cycle_time to %fs for the controller : %s",
+          time.seconds(), loaded_controller.info.name.c_str());
+        *loaded_controller.next_update_cycle_time = time;
+      }
 
       bool controller_go =
         (time ==
@@ -2051,22 +2174,49 @@ controller_interface::return_type ControllerManager::update(
       {
         const auto controller_actual_period =
           (time - *loaded_controller.next_update_cycle_time) + controller_period;
-        auto controller_ret = loaded_controller.c->update(time, controller_actual_period);
-
-        if (
-          *loaded_controller.next_update_cycle_time ==
-          rclcpp::Time(0, 0, this->get_node_clock_interface()->get_clock()->get_clock_type()))
+        auto controller_ret = controller_interface::return_type::OK;
+        // Catch exceptions thrown by the controller update function
+        try
         {
-          *loaded_controller.next_update_cycle_time = time;
+          controller_ret = loaded_controller.c->update(time, controller_actual_period);
         }
+        catch (const std::exception & e)
+        {
+          RCLCPP_ERROR(
+            get_logger(), "Caught exception while updating controller '%s': %s",
+            loaded_controller.info.name.c_str(), e.what());
+          controller_ret = controller_interface::return_type::ERROR;
+        }
+        catch (...)
+        {
+          RCLCPP_ERROR(
+            get_logger(), "Caught unknown exception while updating controller '%s'",
+            loaded_controller.info.name.c_str());
+          controller_ret = controller_interface::return_type::ERROR;
+        }
+
         *loaded_controller.next_update_cycle_time += controller_period;
 
         if (controller_ret != controller_interface::return_type::OK)
         {
+          failed_controllers_list.push_back(loaded_controller.info.name);
           ret = controller_ret;
         }
       }
     }
+  }
+  if (!failed_controllers_list.empty())
+  {
+    std::string failed_controllers;
+    for (const auto & controller : failed_controllers_list)
+    {
+      failed_controllers += "\n\t- " + controller;
+    }
+    RCLCPP_ERROR(
+      get_logger(), "Deactivating following controllers as their update resulted in an error :%s",
+      failed_controllers.c_str());
+
+    deactivate_controllers(rt_controller_list, failed_controllers_list);
   }
 
   // there are controllers to (de)activate
@@ -2174,6 +2324,13 @@ std::pair<std::string, std::string> ControllerManager::split_command_interface(
 }
 
 unsigned int ControllerManager::get_update_rate() const { return update_rate_; }
+
+void ControllerManager::shutdown_async_controllers_and_components()
+{
+  async_controller_threads_.erase(
+    async_controller_threads_.begin(), async_controller_threads_.end());
+  resource_manager_->shutdown_async_components();
+}
 
 void ControllerManager::propagate_deactivation_of_chained_mode(
   const std::vector<ControllerSpec> & controllers)
