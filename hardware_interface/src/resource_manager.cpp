@@ -193,6 +193,18 @@ public:
             hardware.get_name().c_str(), interface.c_str());
         }
       }
+<<<<<<< HEAD
+=======
+
+      if (hardware_info_map_[hardware.get_name()].is_async)
+      {
+        async_component_threads_.emplace(
+          std::piecewise_construct, std::forward_as_tuple(hardware.get_name()),
+          std::forward_as_tuple(cm_update_rate_, clock_interface_));
+
+        async_component_threads_.at(hardware.get_name()).register_component(&hardware);
+      }
+>>>>>>> 2cbe470 (Working async controllers and components [not synchronized] (#1041))
     }
     return result;
   }
@@ -1226,6 +1238,13 @@ return_type ResourceManager::set_component_state(
   }
 
   return result;
+}
+
+void ResourceManager::shutdown_async_components()
+{
+  resource_storage_->async_component_threads_.erase(
+    resource_storage_->async_component_threads_.begin(),
+    resource_storage_->async_component_threads_.end());
 }
 
 // CM API: Called in "update"-thread

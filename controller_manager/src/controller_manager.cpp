@@ -744,6 +744,24 @@ controller_interface::return_type ControllerManager::configure_controller(
       controller_name.c_str(), new_state.label().c_str());
     return controller_interface::return_type::ERROR;
   }
+<<<<<<< HEAD
+=======
+  catch (...)
+  {
+    RCLCPP_ERROR(
+      get_logger(), "Caught unknown exception while configuring controller '%s'",
+      controller_name.c_str());
+    return controller_interface::return_type::ERROR;
+  }
+
+  // ASYNCHRONOUS CONTROLLERS: Start background thread for update
+  if (controller->is_async())
+  {
+    async_controller_threads_.emplace(
+      controller_name,
+      std::make_unique<controller_interface::AsyncControllerThread>(controller, update_rate_));
+  }
+>>>>>>> 2cbe470 (Working async controllers and components [not synchronized] (#1041))
 
   const auto controller_update_rate = controller->get_update_rate();
   const auto cm_update_rate = get_update_rate();
@@ -2134,6 +2152,13 @@ std::pair<std::string, std::string> ControllerManager::split_command_interface(
 }
 
 unsigned int ControllerManager::get_update_rate() const { return update_rate_; }
+
+void ControllerManager::shutdown_async_controllers_and_components()
+{
+  async_controller_threads_.erase(
+    async_controller_threads_.begin(), async_controller_threads_.end());
+  resource_manager_->shutdown_async_components();
+}
 
 void ControllerManager::propagate_deactivation_of_chained_mode(
   const std::vector<ControllerSpec> & controllers)
