@@ -49,7 +49,8 @@ class HARDWARE_INTERFACE_PUBLIC ResourceManager
 {
 public:
   /// Default constructor for the Resource Manager.
-  ResourceManager(rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface = nullptr);
+  explicit ResourceManager(
+    rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface = nullptr);
 
   /// Constructor for the Resource Manager.
   /**

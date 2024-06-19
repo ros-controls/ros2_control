@@ -98,7 +98,8 @@ class ResourceStorage
 public:
   // TODO(VX792): Change this when HW ifs get their own update rate,
   // because the ResourceStorage really shouldn't know about the cm's parameters
-  ResourceStorage(rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface = nullptr)
+  explicit ResourceStorage(
+    rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface = nullptr)
   : actuator_loader_(pkg_name, actuator_interface_name),
     sensor_loader_(pkg_name, sensor_interface_name),
     system_loader_(pkg_name, system_interface_name),
