@@ -702,10 +702,10 @@ const auto async_hardware_resources =
       <state_interface name="velocity"/>
       <state_interface name="acceleration"/>
     </joint>
-    <joint name="configuration">
+    <gpio name="configuration">
       <command_interface name="max_tcp_jerk"/>
       <state_interface name="max_tcp_jerk"/>
-    </joint>
+    </gpio>
   </ros2_control>
 )";
 
@@ -796,10 +796,10 @@ const auto hardware_resources_not_existing_actuator_plugin =
       <state_interface name="velocity"/>
       <state_interface name="acceleration"/>
     </joint>
-      <joint name="configuration">
+    <gpio name="configuration">
       <command_interface name="max_tcp_jerk"/>
       <state_interface name="max_tcp_jerk"/>
-    </joint>
+    </gpio>
   </ros2_control>
 )";
 
@@ -845,10 +845,10 @@ const auto hardware_resources_not_existing_sensor_plugin =
       <state_interface name="velocity"/>
       <state_interface name="acceleration"/>
     </joint>
-    <joint name="configuration">
+    <gpio name="configuration">
       <command_interface name="max_tcp_jerk"/>
       <state_interface name="max_tcp_jerk"/>
-    </joint>
+    </gpio>
   </ros2_control>
 )";
 const auto hardware_resources_not_existing_system_plugin =
@@ -893,10 +893,10 @@ const auto hardware_resources_not_existing_system_plugin =
       <state_interface name="velocity"/>
       <state_interface name="acceleration"/>
     </joint>
-      <joint name="configuration">
+    <gpio name="configuration">
       <command_interface name="max_tcp_jerk"/>
       <state_interface name="max_tcp_jerk"/>
-    </joint>
+    </gpio>
   </ros2_control>
 )";
 
@@ -942,10 +942,10 @@ const auto hardware_resources_duplicated_component =
       <state_interface name="velocity"/>
       <state_interface name="acceleration"/>
     </joint>
-    <joint name="configuration">
+    <gpio name="configuration">
       <command_interface name="max_tcp_jerk"/>
       <state_interface name="max_tcp_jerk"/>
-    </joint>
+    </gpio>
   </ros2_control>
 )";
 

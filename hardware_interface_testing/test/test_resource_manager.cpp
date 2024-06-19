@@ -102,15 +102,6 @@ TEST_F(ResourceManagerTest, post_initialization_with_urdf)
   ASSERT_NO_THROW(rm.load_and_initialize_components(ros2_control_test_assets::minimal_robot_urdf));
 }
 
-TEST_F(ResourceManagerTest, test_uninitializable_hardware_validation)
-{
-  // If the the hardware can not be initialized and load_and_initialize_components tried to validate
-  // the interfaces a runtime exception is thrown
-  TestableResourceManager rm;
-  EXPECT_FALSE(
-    rm.load_and_initialize_components(ros2_control_test_assets::uninitializable_hardware_resources));
-}
-
 void test_load_and_initialized_components_failure(const std::string & urdf)
 {
   TestableResourceManager rm;
@@ -145,7 +136,7 @@ void test_load_and_initialized_components_failure(const std::string & urdf)
   EXPECT_FALSE(rm.command_interface_exists("joint3/max_acceleration"));
 }
 
-TEST_F(ResourceManagerTest, test_unitilizable_hardware_no_validation)
+TEST_F(ResourceManagerTest, test_unitilizable_hardware)
 {
   SCOPED_TRACE("test_unitilizable_hardware_no_validation");
   // If the the hardware can not be initialized and load_and_initialize_components didn't try to
