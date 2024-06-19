@@ -132,7 +132,7 @@ public:
    * \note All starting and stopping interface keys are passed to all components, so the function
    * should return return_type::OK by default when given interface keys not relevant for this
    * component. \param[in] start_interfaces vector of string identifiers for the command interfaces
-   * starting. \param[in] stop_interfaces vector of string identifiers for the command interfacs
+   * starting. \param[in] stop_interfaces vector of string identifiers for the command interfaces
    * stopping. \return return_type::OK if the new command interface combination can be prepared, or
    * if the interface key is not relevant to this system. Returns return_type::ERROR otherwise.
    */
@@ -151,7 +151,7 @@ public:
    * \note All starting and stopping interface keys are passed to all components, so the function
    * should return return_type::OK by default when given interface keys not relevant for this
    * component. \param[in] start_interfaces vector of string identifiers for the command interfaces
-   * starting. \param[in] stop_interfaces vector of string identifiers for the command interfacs
+   * starting. \param[in] stop_interfaces vector of string identifiers for the command interfaces
    * stopping. \return return_type::OK if the new command interface combination can be switched to,
    * or if the interface key is not relevant to this system. Returns return_type::ERROR otherwise.
    */
