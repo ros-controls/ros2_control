@@ -193,9 +193,9 @@ public:
   // the executor (see issue #260).
   // rclcpp::CallbackGroup::SharedPtr deterministic_callback_group_;
 
-  /// Interface for extenal components to check if Resouce Manager is initialized.
+  /// Interface for external components to check if Resource Manager is initialized.
   /**
-   * Checks if components in Resouce Manager are loaded and initialized.
+   * Checks if components in Resource Manager are loaded and initialized.
    * \returns true if they are initialized, false otherwise.
    */
   CONTROLLER_MANAGER_PUBLIC

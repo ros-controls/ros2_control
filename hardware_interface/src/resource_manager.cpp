@@ -98,8 +98,7 @@ class ResourceStorage
 public:
   // TODO(VX792): Change this when HW ifs get their own update rate,
   // because the ResourceStorage really shouldn't know about the cm's parameters
-  ResourceStorage(
-    rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface = nullptr)
+  ResourceStorage(rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface = nullptr)
   : actuator_loader_(pkg_name, actuator_interface_name),
     sensor_loader_(pkg_name, sensor_interface_name),
     system_loader_(pkg_name, system_interface_name),
@@ -981,7 +980,8 @@ ResourceManager::ResourceManager(
 ResourceManager::~ResourceManager() = default;
 
 ResourceManager::ResourceManager(
-  const std::string & urdf, bool activate_all, const unsigned int update_rate, rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
+  const std::string & urdf, bool activate_all, const unsigned int update_rate,
+  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
 : resource_storage_(std::make_unique<ResourceStorage>(clock_interface))
 {
   load_and_initialize_components(urdf, update_rate);
@@ -998,7 +998,8 @@ ResourceManager::ResourceManager(
 }
 
 // CM API: Called in "callback/slow"-thread
-bool ResourceManager::load_and_initialize_components(const std::string & urdf, const unsigned int update_rate)
+bool ResourceManager::load_and_initialize_components(
+  const std::string & urdf, const unsigned int update_rate)
 {
   components_are_loaded_and_initialized_ = true;
 

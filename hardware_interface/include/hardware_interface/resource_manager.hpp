@@ -49,8 +49,7 @@ class HARDWARE_INTERFACE_PUBLIC ResourceManager
 {
 public:
   /// Default constructor for the Resource Manager.
-  ResourceManager(
-    rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface = nullptr);
+  ResourceManager(rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface = nullptr);
 
   /// Constructor for the Resource Manager.
   /**
@@ -67,7 +66,8 @@ public:
    * used for triggering async components.
    */
   explicit ResourceManager(
-    const std::string & urdf, bool activate_all = false, const unsigned int update_rate = 100, rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface = nullptr);
+    const std::string & urdf, bool activate_all = false, const unsigned int update_rate = 100,
+    rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface = nullptr);
 
   ResourceManager(const ResourceManager &) = delete;
 
@@ -83,7 +83,8 @@ public:
    * \param[in] update_rate update rate of  the main control loop, i.e., of the controller manager.
    * \returns false if URDF validation has failed.
    */
-  virtual bool load_and_initialize_components(const std::string & urdf, const unsigned int update_rate = 100);
+  virtual bool load_and_initialize_components(
+    const std::string & urdf, const unsigned int update_rate = 100);
 
   /**
    * @brief if the resource manager load_and_initialize_components(...) function has been called
