@@ -1,0 +1,57 @@
+joint_saturation_limiter:
+  ros__parameters:
+    joint_limits:
+      # Get full specification from parameter server
+      foo_joint:
+        has_position_limits: true
+        min_position: -5.0
+        max_position: 5.0
+        has_velocity_limits: true
+        max_velocity: 2.0
+        has_acceleration_limits: true
+        max_acceleration: 5.0
+        has_deceleration_limits: true
+        max_deceleration: 7.5
+        has_jerk_limits: true
+        max_jerk: 100.0
+        has_effort_limits: true
+        max_effort: 20.0
+        angle_wraparound: true  # should be ignored, has position limits
+        has_soft_limits: true
+        k_position: 10.0
+        k_velocity: 20.0
+        soft_lower_limit: 0.1
+        soft_upper_limit: 0.9
+
+      foo_joint_no_effort:
+        has_position_limits: true
+        min_position: -5.0
+        max_position: 5.0
+        has_velocity_limits: true
+        max_velocity: 2.0
+        has_acceleration_limits: true
+        max_acceleration: 5.0
+        has_deceleration_limits: true
+        max_deceleration: 7.5
+        has_jerk_limits: true
+        max_jerk: 100.0
+        has_effort_limits: false
+        max_effort: 20.0
+        angle_wraparound: true  # should be ignored, has position limits
+        has_soft_limits: true
+        k_position: 10.0
+        k_velocity: 20.0
+        soft_lower_limit: 0.1
+        soft_upper_limit: 0.9
+
+joint_saturation_limiter_nodeclimit:
+  ros__parameters:
+    joint_limits:
+      foo_joint:
+        has_position_limits: true
+        min_position: -5.0
+        max_position: 5.0
+        has_velocity_limits: true
+        max_velocity: 2.0
+        has_acceleration_limits: true
+        max_acceleration: 5.0

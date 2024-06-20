@@ -1,0 +1,11 @@
+<class_libraries>
+  <library path="joint_saturation_limiter">
+    <class name="joint_limits/JointSaturationLimiter"
+          type="joint_limits::JointSaturationLimiter&lt;joint_limits::JointLimits&gt;"
+          base_class_type="joint_limits::JointLimiterInterface&lt;joint_limits::JointLimits&gt;">
+      <description>
+        Simple joint limiter using clamping approach. Warning: clamping can cause discontinuities.
+      </description>
+    </class>
+  </library>
+</class_libraries>
