@@ -48,18 +48,6 @@ std::vector<hardware_interface::StateInterface>
 ChainableControllerInterface::export_state_interfaces()
 {
   auto state_interfaces = on_export_state_interfaces();
-  // check if the "state_interfaces_values_" variable is resized to number of interfaces
-  if (state_interfaces_values_.size() != state_interfaces.size())
-  {
-    RCLCPP_FATAL(
-      get_node()->get_logger(),
-      "The internal storage for exported state values 'state_interfaces_values_' variable has size "
-      "'%zu', but it is expected to have the size '%zu' equal to the number of exported state "
-      "interfaces. No state interface will be exported. Please correct and recompile "
-      "the controller with name '%s' and try again.",
-      state_interfaces_values_.size(), state_interfaces.size(), get_node()->get_name());
-    state_interfaces.clear();
-  }
 
   // check if the names of the controller state interfaces begin with the controller's name
   for (const auto & interface : state_interfaces)
@@ -84,21 +72,6 @@ std::vector<hardware_interface::CommandInterface>
 ChainableControllerInterface::export_reference_interfaces()
 {
   auto reference_interfaces = on_export_reference_interfaces();
-
-  // check if the "reference_interfaces_" variable is resized to number of interfaces
-  if (reference_interfaces_.size() != reference_interfaces.size())
-  {
-    // TODO(destogl): Should here be "FATAL"? It is fatal in terms of controller but not for the
-    // framework
-    RCLCPP_FATAL(
-      get_node()->get_logger(),
-      "The internal storage for reference values 'reference_interfaces_' variable has size '%zu', "
-      "but it is expected to have the size '%zu' equal to the number of exported reference "
-      "interfaces. No reference interface will be exported. Please correct and recompile "
-      "the controller with name '%s' and try again.",
-      reference_interfaces_.size(), reference_interfaces.size(), get_node()->get_name());
-    reference_interfaces.clear();
-  }
 
   // check if the names of the reference interfaces begin with the controller's name
   for (const auto & interface : reference_interfaces)

@@ -74,27 +74,6 @@ TEST_F(ChainableControllerInterfaceTest, export_reference_interfaces)
   EXPECT_EQ(reference_interfaces[0].get_value(), INTERFACE_VALUE);
 }
 
-TEST_F(ChainableControllerInterfaceTest, interfaces_storage_not_correct_size)
-{
-  TestableChainableControllerInterface controller;
-
-  // initialize, create node
-  const auto node_options = controller.define_custom_node_options();
-  ASSERT_EQ(
-    controller.init(TEST_CONTROLLER_NAME, "", 50.0, "", node_options),
-    controller_interface::return_type::OK);
-  ASSERT_NO_THROW(controller.get_node());
-
-  // expect empty return because storage is not resized
-  controller.reference_interfaces_.clear();
-  auto reference_interfaces = controller.export_reference_interfaces();
-  ASSERT_THAT(reference_interfaces, IsEmpty());
-  // expect empty return because storage is not resized
-  controller.state_interfaces_values_.clear();
-  auto exported_state_interfaces = controller.export_state_interfaces();
-  ASSERT_THAT(exported_state_interfaces, IsEmpty());
-}
-
 TEST_F(ChainableControllerInterfaceTest, interfaces_prefix_is_not_node_name)
 {
   TestableChainableControllerInterface controller;
