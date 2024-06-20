@@ -20,6 +20,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "control_msgs/msg/dynamic_interface_values.hpp"
+#include "control_msgs/msg/interface_value.hpp"
 #include "hardware_interface/actuator.hpp"
 #include "hardware_interface/hardware_component_info.hpp"
 #include "hardware_interface/hardware_info.hpp"
@@ -33,6 +35,7 @@
 #include "rclcpp/duration.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp/time.hpp"
+#include "realtime_tools/realtime_publisher.h"
 
 namespace hardware_interface
 {
@@ -51,7 +54,8 @@ public:
   /// Default constructor for the Resource Manager.
   ResourceManager(
     unsigned int update_rate = 100,
-    rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface = nullptr);
+    rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface = nullptr,
+    const std::string & fully_qualified_ctrl_mng_node_name = "");
 
   /// Constructor for the Resource Manager.
   /**
@@ -71,11 +75,14 @@ public:
   explicit ResourceManager(
     const std::string & urdf, bool validate_interfaces = true, bool activate_all = false,
     unsigned int update_rate = 100,
-    rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface = nullptr);
+    rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface = nullptr,
+    const std::string & fully_qualified_ctrl_mng_node_name = "");
 
   ResourceManager(const ResourceManager &) = delete;
 
   ~ResourceManager();
+
+  rclcpp::Node::SharedPtr get_publisher_node() const;
 
   /// Load resources from on a given URDF.
   /**
@@ -414,6 +421,24 @@ public:
   bool state_interface_exists(const std::string & key) const;
 
 private:
+  /**
+   * We want to publish the values of all available State-/CommandInterfaces. In order to do this we
+   * need to have a node which publishes the values. This function creates a node relative to the
+   * ControllerManager's namespace and name, as well as a RealtimePublisher for publishing the
+   * values.
+   *
+   * \param[in] fully_qualified_ctrl_mng_node_name the full qualified name of the controller manager
+   * e.g. /namespace/controller_manager_1
+   */
+  void create_interface_value_publisher(const std::string & fully_qualified_ctrl_mng_node_name);
+
+  /**
+   * Get all the values from the available State-/CommandInterface and publish them on the
+   * "~/interface_values" topic as diagnosis topic.
+   *
+   */
+  void publish_all_interface_values() const;
+
   void validate_storage(const std::vector<hardware_interface::HardwareInfo> & hardware_info) const;
 
   void release_command_interface(const std::string & key);
@@ -423,6 +448,12 @@ private:
   mutable std::recursive_mutex resource_interfaces_lock_;
   mutable std::recursive_mutex claimed_command_interfaces_lock_;
   mutable std::recursive_mutex resources_lock_;
+
+  rclcpp::Node::SharedPtr interface_value_publisher_node_;
+  rclcpp::Publisher<control_msgs::msg::DynamicInterfaceValues>::SharedPtr
+    interface_values_publisher_;
+  std::unique_ptr<realtime_tools::RealtimePublisher<control_msgs::msg::DynamicInterfaceValues>>
+    rt_interface_values_publisher_;
 
   std::unique_ptr<ResourceStorage> resource_storage_;
 

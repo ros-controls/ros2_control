@@ -37,6 +37,7 @@
 #include "lifecycle_msgs/msg/state.hpp"
 #include "pluginlib/class_loader.hpp"
 #include "rcutils/logging_macros.h"
+#include "std_msgs/msg/header.h"
 
 namespace hardware_interface
 {
@@ -963,18 +964,22 @@ public:
 };
 
 ResourceManager::ResourceManager(
-  unsigned int update_rate, rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
+  unsigned int update_rate, rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface,
+  const std::string & fully_qualified_ctrl_mng_node_name)
 : resource_storage_(std::make_unique<ResourceStorage>(update_rate, clock_interface))
 {
+  create_interface_value_publisher(fully_qualified_ctrl_mng_node_name);
 }
 
 ResourceManager::~ResourceManager() = default;
 
 ResourceManager::ResourceManager(
   const std::string & urdf, bool validate_interfaces, bool activate_all, unsigned int update_rate,
-  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
+  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface,
+  const std::string & fully_qualified_ctrl_mng_node_name)
 : resource_storage_(std::make_unique<ResourceStorage>(update_rate, clock_interface))
 {
+  create_interface_value_publisher(fully_qualified_ctrl_mng_node_name);
   load_urdf(urdf, validate_interfaces);
 
   if (activate_all)
@@ -986,6 +991,25 @@ ResourceManager::ResourceManager(
       set_component_state(hw_info.first, state);
     }
   }
+}
+
+void ResourceManager::create_interface_value_publisher(
+  const std::string & fully_qualified_ctrl_mng_node_name)
+{
+  rclcpp::NodeOptions options;
+  interface_value_publisher_node_ = rclcpp::Node::make_shared(
+    "resource_manager_publisher_node", fully_qualified_ctrl_mng_node_name, options);
+  interface_values_publisher_ =
+    interface_value_publisher_node_->create_publisher<control_msgs::msg::DynamicInterfaceValues>(
+      "~/interface_values", 10);
+  rt_interface_values_publisher_ =
+    std::make_unique<realtime_tools::RealtimePublisher<control_msgs::msg::DynamicInterfaceValues>>(
+      interface_values_publisher_);
+}
+
+rclcpp::Node::SharedPtr ResourceManager::get_publisher_node() const
+{
+  return interface_value_publisher_node_;
 }
 
 // CM API: Called in "callback/slow"-thread
@@ -1656,6 +1680,58 @@ HardwareReadWriteStatus ResourceManager::read(
   return read_write_status;
 }
 
+void ResourceManager::publish_all_interface_values() const
+{
+  control_msgs::msg::DynamicInterfaceValues interface_values;
+  interface_values.header.stamp = resource_storage_->clock_interface_->get_clock()->now();
+
+  control_msgs::msg::InterfaceValue state_interface_values;
+  for (const auto & state_interface_name : resource_storage_->available_state_interfaces_)
+  {
+    if (const auto iter = resource_storage_->state_interface_map_.find(state_interface_name);
+        iter != resource_storage_->state_interface_map_.end())
+    {
+      state_interface_values.interface_names.push_back(state_interface_name);
+      state_interface_values.values.push_back(iter->second.get_value());
+    }
+    else
+    {
+      RCUTILS_LOG_WARN_NAMED(
+        "resource_manager",
+        "State interface '%s' is in available in state_interface_map_, but could not get the "
+        "interface",
+        state_interface_name.c_str());
+    }
+  }
+
+  control_msgs::msg::InterfaceValue command_interface_values;
+  for (const auto & command_interface_name : resource_storage_->available_command_interfaces_)
+  {
+    if (const auto iter = resource_storage_->command_interface_map_.find(command_interface_name);
+        iter != resource_storage_->command_interface_map_.end())
+    {
+      command_interface_values.interface_names.push_back(command_interface_name);
+      command_interface_values.values.push_back(iter->second.get_value());
+    }
+    else
+    {
+      RCUTILS_LOG_WARN_NAMED(
+        "resource_manager",
+        "command interface '%s' is available in command_interface_map_, but could not get the "
+        "interface",
+        command_interface_name.c_str());
+    }
+  }
+  interface_values.states = state_interface_values;
+  interface_values.commands = command_interface_values;
+
+  if(rt_interface_values_publisher_->trylock())
+  {
+    rt_interface_values_publisher_->msg_ = interface_values;
+    rt_interface_values_publisher_->unlockAndPublish();
+  }
+}
+
 // CM API: Called in "update"-thread
 HardwareReadWriteStatus ResourceManager::write(
   const rclcpp::Time & time, const rclcpp::Duration & period)
@@ -1663,6 +1739,8 @@ HardwareReadWriteStatus ResourceManager::write(
   std::lock_guard<std::recursive_mutex> guard(resources_lock_);
   read_write_status.ok = true;
   read_write_status.failed_hardware_names.clear();
+
+  publish_all_interface_values();
 
   auto write_components = [&](auto & components)
   {
