@@ -931,6 +931,38 @@ public:
     return hw_group_state_.at(group_name);
   }
 
+  /// Gets the logger for the resource storage
+  /**
+   * \return logger of the resource storage
+   */
+  rclcpp::Logger get_logger() const
+  {
+    if (logger_interface_)
+    {
+      return logger_interface_->get_logger().get_child("ResourceManager");
+    }
+    else
+    {
+      return rclcpp::get_logger("ResourceManager");
+    }
+  }
+
+  /// Gets the clock for the resource storage
+  /**
+   * \return clock of the resource storage
+   */
+  rclcpp::Clock get_clock() const
+  {
+    if (clock_interface_)
+    {
+      return *clock_interface_->get_clock();
+    }
+    else
+    {
+      return rclcpp::Clock(RCL_ROS_TIME);
+    }
+  }
+
   // hardware plugins
   pluginlib::ClassLoader<ActuatorInterface> actuator_loader_;
   pluginlib::ClassLoader<SensorInterface> sensor_loader_;
@@ -1791,6 +1823,10 @@ bool ResourceManager::state_interface_exists(const std::string & key) const
 }
 
 // END: "used only in tests and locally"
+
+rclcpp::Logger ResourceManager::get_logger() const { return resource_storage_->get_logger(); }
+
+rclcpp::Clock ResourceManager::get_clock() const { return resource_storage_->get_clock(); }
 
 // BEGIN: private methods
 

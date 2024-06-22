@@ -410,6 +410,18 @@ public:
   bool state_interface_exists(const std::string & key) const;
 
 protected:
+  /// Gets the logger for the resource manager
+  /**
+   * \return logger of the resource manager
+   */
+  rclcpp::Logger get_logger() const;
+
+  /// Gets the clock for the resource manager
+  /**
+   * \return clock of the resource manager
+   */
+  rclcpp::Clock get_clock() const;
+
   bool components_are_loaded_and_initialized_ = false;
 
   mutable std::recursive_mutex resource_interfaces_lock_;
