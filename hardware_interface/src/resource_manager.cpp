@@ -99,11 +99,13 @@ public:
   // TODO(VX792): Change this when HW ifs get their own update rate,
   // because the ResourceStorage really shouldn't know about the cm's parameters
   explicit ResourceStorage(
-    rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface = nullptr)
+    rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface = nullptr,
+    rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logger_interface = nullptr)
   : actuator_loader_(pkg_name, actuator_interface_name),
     sensor_loader_(pkg_name, sensor_interface_name),
     system_loader_(pkg_name, system_interface_name),
-    clock_interface_(clock_interface)
+    clock_interface_(clock_interface),
+    logger_interface_(logger_interface)
   {
   }
 
@@ -970,11 +972,13 @@ public:
   // Used by async components.
   unsigned int cm_update_rate_ = 100;
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface_;
+  rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logger_interface_;
 };
 
 ResourceManager::ResourceManager(
-  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
-: resource_storage_(std::make_unique<ResourceStorage>(clock_interface))
+  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface,
+  rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logger_interface)
+: resource_storage_(std::make_unique<ResourceStorage>(clock_interface, logger_interface))
 {
 }
 
@@ -982,8 +986,9 @@ ResourceManager::~ResourceManager() = default;
 
 ResourceManager::ResourceManager(
   const std::string & urdf, bool activate_all, const unsigned int update_rate,
-  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
-: resource_storage_(std::make_unique<ResourceStorage>(clock_interface))
+  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface,
+  rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logger_interface)
+: resource_storage_(std::make_unique<ResourceStorage>(clock_interface, logger_interface))
 {
   load_and_initialize_components(urdf, update_rate);
 
