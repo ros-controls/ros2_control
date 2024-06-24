@@ -797,11 +797,13 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
   tinyxml2::XMLDocument doc;
   if (!doc.Parse(urdf.c_str()) && doc.Error())
   {
-    throw std::runtime_error("invalid URDF passed in to robot parser");
+    throw std::runtime_error(
+      "invalid URDF passed in to robot parser: " + std::string(doc.ErrorStr()));
   }
   if (doc.Error())
   {
-    throw std::runtime_error("invalid URDF passed in to robot parser");
+    throw std::runtime_error(
+      "invalid URDF passed in to robot parser: " + std::string(doc.ErrorStr()));
   }
 
   // Find robot tag
@@ -875,7 +877,7 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
         auto urdf_joint = model.getJoint(joint.name);
         if (!urdf_joint)
         {
-          throw std::runtime_error("Joint " + joint.name + " not found in URDF");
+          throw std::runtime_error("Joint '" + joint.name + "' not found in URDF");
         }
         if (!urdf_joint->mimic && joint.is_mimic == MimicAttribute::TRUE)
         {
