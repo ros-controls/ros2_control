@@ -930,11 +930,11 @@ public:
   {
     if (logger_interface_)
     {
-      return logger_interface_->get_logger().get_child("ResourceManager");
+      return logger_interface_->get_logger().get_child("resource_manager");
     }
     else
     {
-      return rclcpp::get_logger("ResourceManager");
+      return rclcpp::get_logger("resource_manager");
     }
   }
 

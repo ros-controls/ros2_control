@@ -239,11 +239,11 @@ protected:
     if (logger_interface_)
     {
       return logger_interface_->get_logger().get_child(
-        "ResourceManager.hardware_component.actuator." + info_.name);
+        "resource_manager.hardware_component.actuator." + info_.name);
     }
     else
     {
-      return rclcpp::get_logger("ResourceManager.hardware_component.actuator." + info_.name);
+      return rclcpp::get_logger("resource_manager.hardware_component.actuator." + info_.name);
     }
   }
 
