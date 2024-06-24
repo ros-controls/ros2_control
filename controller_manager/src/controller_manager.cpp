@@ -963,6 +963,16 @@ controller_interface::return_type ControllerManager::switch_controller(
 
   const std::vector<ControllerSpec> & controllers = rt_controllers_wrapper_.get_updated_list(guard);
 
+LABEL_CHECK_REQUEST:
+  // Set these interfaces as unavailable when clearing requests to avoid leaving them in available
+  // state without the controller being in active state
+  for (const auto & controller_name : to_chained_mode_request_)
+  {
+    resource_manager_->make_controller_reference_interfaces_unavailable(controller_name);
+  }
+  to_chained_mode_request_.clear();
+  from_chained_mode_request_.clear();
+
   // if a preceding controller is deactivated, all first-level controllers should be switched 'from'
   // chained mode
   propagate_deactivation_of_chained_mode(controllers);
@@ -1006,7 +1016,7 @@ controller_interface::return_type ControllerManager::switch_controller(
         // remove controller that can not be activated from the activation request and step-back
         // iterator to correctly step to the next element in the list in the loop
         activate_request_.erase(ctrl_it);
-        --ctrl_it;
+        goto LABEL_CHECK_REQUEST;
       }
       if (strictness == controller_manager_msgs::srv::SwitchController::Request::STRICT)
       {
@@ -1052,7 +1062,7 @@ controller_interface::return_type ControllerManager::switch_controller(
         // remove controller that can not be activated from the activation request and step-back
         // iterator to correctly step to the next element in the list in the loop
         deactivate_request_.erase(ctrl_it);
-        --ctrl_it;
+        goto LABEL_CHECK_REQUEST;
       }
       if (strictness == controller_manager_msgs::srv::SwitchController::Request::STRICT)
       {
