@@ -25,6 +25,8 @@
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 #include "rclcpp/duration.hpp"
+#include "rclcpp/node_interfaces/node_clock_interface.hpp"
+#include "rclcpp/node_interfaces/node_logging_interface.hpp"
 #include "rclcpp/time.hpp"
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 #include "rclcpp_lifecycle/state.hpp"
@@ -89,6 +91,26 @@ public:
 
   virtual ~SystemInterface() = default;
 
+  /// Initialization of the hardware interface from data parsed from the robot's URDF and also the
+  /// clock and logger interfaces.
+  /**
+   * \param[in] hardware_info structure with data from URDF.
+   * \param[in] clock_interface pointer to the clock interface.
+   * \param[in] logger_interface pointer to the logger interface.
+   * \returns CallbackReturn::SUCCESS if required data are provided and can be parsed.
+   * \returns CallbackReturn::ERROR if any error happens or data are missing.
+   */
+  CallbackReturn init(
+    const HardwareInfo & hardware_info,
+    rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface,
+    rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logger_interface)
+  {
+    clock_interface_ = clock_interface;
+    logger_interface_ = logger_interface;
+    info_ = hardware_info;
+    return on_init(hardware_info);
+  };
+
   /// Initialization of the hardware interface from data parsed from the robot's URDF.
   /**
    * \param[in] hardware_info structure with data from URDF.
@@ -97,7 +119,6 @@ public:
    */
   virtual CallbackReturn on_init(const HardwareInfo & hardware_info)
   {
-    info_ = hardware_info;
     return CallbackReturn::SUCCESS;
   };
 
@@ -210,8 +231,20 @@ public:
   void set_state(const rclcpp_lifecycle::State & new_state) { lifecycle_state_ = new_state; }
 
 protected:
+  rclcpp::Logger get_logger() const
+  {
+    return logger_interface_->get_logger().get_child(
+      "ResourceManager.hardware_component.system." + info_.name);
+  }
+
+  rclcpp::Clock get_clock() const { return *(clock_interface_->get_clock()); }
+
   HardwareInfo info_;
   rclcpp_lifecycle::State lifecycle_state_;
+
+private:
+  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface_;
+  rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logger_interface_;
 };
 
 }  // namespace hardware_interface

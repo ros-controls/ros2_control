@@ -41,7 +41,7 @@ const rclcpp_lifecycle::State & Sensor::initialize(
 {
   if (impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN)
   {
-    switch (impl_->on_init(sensor_info))
+    switch (impl_->init(sensor_info, clock_interface, logger_interface))
     {
       case CallbackReturn::SUCCESS:
         impl_->set_state(rclcpp_lifecycle::State(
