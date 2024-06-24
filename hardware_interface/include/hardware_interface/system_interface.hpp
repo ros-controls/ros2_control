@@ -231,12 +231,20 @@ public:
   void set_state(const rclcpp_lifecycle::State & new_state) { lifecycle_state_ = new_state; }
 
 protected:
+  /// Get the logger of the SystemInterface.
+  /**
+   * \return logger of the SystemInterface.
+   */
   rclcpp::Logger get_logger() const
   {
     return logger_interface_->get_logger().get_child(
       "ResourceManager.hardware_component.system." + info_.name);
   }
 
+  /// Get the clock of the SystemInterface.
+  /**
+   * \return clock of the SystemInterface.
+   */
   rclcpp::Clock get_clock() const { return *(clock_interface_->get_clock()); }
 
   HardwareInfo info_;
