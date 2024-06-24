@@ -28,7 +28,9 @@ from controller_manager_msgs.srv import (
 import rclpy
 
 
-def service_caller(node, service_name, service_type, request, service_timeout=10.0):
+def service_caller(
+    node, service_name, service_type, request, service_timeout=10.0, max_attempts=3
+):
     cli = node.create_client(service_type, service_name)
 
     if not cli.service_is_ready():
@@ -39,12 +41,18 @@ def service_caller(node, service_name, service_type, request, service_timeout=10
             raise RuntimeError(f"Could not contact service {service_name}")
 
     node.get_logger().debug(f"requester: making request: {request}\n")
-    future = cli.call_async(request)
-    rclpy.spin_until_future_complete(node, future)
-    if future.result() is not None:
-        return future.result()
-    else:
-        raise RuntimeError(f"Exception while calling service: {future.exception()}")
+    future = None
+    for attempt in range(max_attempts):  # This is a rather arbitrary retry number
+        future = cli.call_async(request)
+        rclpy.spin_until_future_complete(node, future, timeout_sec=service_timeout)
+        if future.result() is None:
+            node.get_logger().warning(
+                f"Failed getting a result from calling {service_name} in "
+                f"{service_timeout}. (Attempt {attempt} of {max_attempts}.)"
+            )
+        else:
+            return future.result()
+    raise RuntimeError(f"Exception while calling service {service_name}: {future.exception()}")
 
 
 def configure_controller(node, controller_manager_name, controller_name, service_timeout=10.0):

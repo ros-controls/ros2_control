@@ -131,8 +131,12 @@ def wait_for_controller_manager(node, controller_manager, timeout_duration):
     return False
 
 
-def is_controller_loaded(node, controller_manager, controller_name):
-    controllers = list_controllers(node, controller_manager).controller
+def is_controller_loaded(
+    node, controller_manager, controller_name, controller_manager_timeout=10.0
+):
+    controllers = list_controllers(
+        node, controller_manager, service_timeout=controller_manager_timeout
+    ).controller
     return any(c.name == controller_name for c in controllers)
 
 
@@ -248,14 +252,6 @@ def main(args=None):
             controller_manager_name = f"/{controller_manager_name}"
 
     try:
-        if not wait_for_controller_manager(
-            node, controller_manager_name, controller_manager_timeout
-        ):
-            node.get_logger().error(
-                bcolors.FAIL + "Controller manager not available" + bcolors.ENDC
-            )
-            return 1
-
         for controller_name in controller_names:
             fallback_controllers = args.fallback_controllers
             controller_type = args.controller_type
@@ -263,7 +259,12 @@ def main(args=None):
             if controller_namespace:
                 prefixed_controller_name = controller_namespace + "/" + controller_name
 
-            if is_controller_loaded(node, controller_manager_name, prefixed_controller_name):
+            if is_controller_loaded(
+                node,
+                controller_manager_name,
+                prefixed_controller_name,
+                controller_manager_timeout=controller_manager_timeout,
+            ):
                 node.get_logger().warn(
                     bcolors.WARNING
                     + "Controller already loaded, skipping load_controller"
