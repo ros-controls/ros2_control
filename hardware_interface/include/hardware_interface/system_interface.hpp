@@ -237,15 +237,32 @@ protected:
    */
   rclcpp::Logger get_logger() const
   {
-    return logger_interface_->get_logger().get_child(
-      "ResourceManager.hardware_component.system." + info_.name);
+    if (logger_interface_)
+    {
+      return logger_interface_->get_logger().get_child(
+        "ResourceManager.hardware_component.system." + info_.name);
+    }
+    else
+    {
+      return rclcpp::get_logger("ResourceManager.hardware_component.system." + info_.name);
+    }
   }
 
   /// Get the clock of the SystemInterface.
   /**
    * \return clock of the SystemInterface.
    */
-  rclcpp::Clock get_clock() const { return *(clock_interface_->get_clock()); }
+  rclcpp::Clock get_clock() const
+  {
+    if (clock_interface_)
+    {
+      return *(clock_interface_->get_clock());
+    }
+    else
+    {
+      return rclcpp::Clock(RCL_ROS_TIME);
+    }
+  }
 
   HardwareInfo info_;
   rclcpp_lifecycle::State lifecycle_state_;
