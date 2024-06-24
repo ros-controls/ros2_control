@@ -116,7 +116,7 @@ public:
    * \returns CallbackReturn::SUCCESS if required data are provided and can be parsed.
    * \returns CallbackReturn::ERROR if any error happens or data are missing.
    */
-  virtual CallbackReturn on_init(const HardwareInfo & hardware_info)
+  virtual CallbackReturn on_init(const HardwareInfo & /*hardware_info*/)
   {
     return CallbackReturn::SUCCESS;
   };
