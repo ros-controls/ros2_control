@@ -425,7 +425,7 @@ TEST(TestComponentInterfaces, dummy_actuator)
   hardware_interface::Actuator actuator_hw(std::make_unique<test_components::DummyActuator>());
 
   hardware_interface::HardwareInfo mock_hw_info{};
-  auto state = actuator_hw.initialize(mock_hw_info);
+  auto state = actuator_hw.initialize(mock_hw_info, nullptr, nullptr);
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
 
@@ -515,7 +515,7 @@ TEST(TestComponentInterfaces, dummy_sensor)
   hardware_interface::Sensor sensor_hw(std::make_unique<test_components::DummySensor>());
 
   hardware_interface::HardwareInfo mock_hw_info{};
-  auto state = sensor_hw.initialize(mock_hw_info);
+  auto state = sensor_hw.initialize(mock_hw_info, nullptr, nullptr);
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
 
@@ -546,7 +546,7 @@ TEST(TestComponentInterfaces, dummy_system)
   hardware_interface::System system_hw(std::make_unique<test_components::DummySystem>());
 
   hardware_interface::HardwareInfo mock_hw_info{};
-  auto state = system_hw.initialize(mock_hw_info);
+  auto state = system_hw.initialize(mock_hw_info, nullptr, nullptr);
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
 
@@ -670,7 +670,7 @@ TEST(TestComponentInterfaces, dummy_command_mode_system)
   hardware_interface::System system_hw(
     std::make_unique<test_components::DummySystemPreparePerform>());
   hardware_interface::HardwareInfo mock_hw_info{};
-  auto state = system_hw.initialize(mock_hw_info);
+  auto state = system_hw.initialize(mock_hw_info, nullptr, nullptr);
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
 
@@ -701,7 +701,7 @@ TEST(TestComponentInterfaces, dummy_actuator_read_error_behavior)
   hardware_interface::Actuator actuator_hw(std::make_unique<test_components::DummyActuator>());
 
   hardware_interface::HardwareInfo mock_hw_info{};
-  auto state = actuator_hw.initialize(mock_hw_info);
+  auto state = actuator_hw.initialize(mock_hw_info, nullptr, nullptr);
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
 
@@ -760,7 +760,7 @@ TEST(TestComponentInterfaces, dummy_actuator_write_error_behavior)
   hardware_interface::Actuator actuator_hw(std::make_unique<test_components::DummyActuator>());
 
   hardware_interface::HardwareInfo mock_hw_info{};
-  auto state = actuator_hw.initialize(mock_hw_info);
+  auto state = actuator_hw.initialize(mock_hw_info, nullptr, nullptr);
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
 
@@ -819,7 +819,7 @@ TEST(TestComponentInterfaces, dummy_sensor_read_error_behavior)
   hardware_interface::Sensor sensor_hw(std::make_unique<test_components::DummySensor>());
 
   hardware_interface::HardwareInfo mock_hw_info{};
-  auto state = sensor_hw.initialize(mock_hw_info);
+  auto state = sensor_hw.initialize(mock_hw_info, nullptr, nullptr);
 
   auto state_interfaces = sensor_hw.export_state_interfaces();
   // Updated because is is INACTIVE
@@ -883,7 +883,7 @@ TEST(TestComponentInterfaces, dummy_system_read_error_behavior)
   hardware_interface::System system_hw(std::make_unique<test_components::DummySystem>());
 
   hardware_interface::HardwareInfo mock_hw_info{};
-  auto state = system_hw.initialize(mock_hw_info);
+  auto state = system_hw.initialize(mock_hw_info, nullptr, nullptr);
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
 
@@ -947,7 +947,7 @@ TEST(TestComponentInterfaces, dummy_system_write_error_behavior)
   hardware_interface::System system_hw(std::make_unique<test_components::DummySystem>());
 
   hardware_interface::HardwareInfo mock_hw_info{};
-  auto state = system_hw.initialize(mock_hw_info);
+  auto state = system_hw.initialize(mock_hw_info, nullptr, nullptr);
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
 
