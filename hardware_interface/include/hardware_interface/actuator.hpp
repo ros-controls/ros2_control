@@ -24,6 +24,8 @@
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/visibility_control.h"
 #include "rclcpp/duration.hpp"
+#include "rclcpp/node_interfaces/node_clock_interface.hpp"
+#include "rclcpp/node_interfaces/node_logging_interface.hpp"
 #include "rclcpp/time.hpp"
 #include "rclcpp_lifecycle/state.hpp"
 
@@ -44,7 +46,10 @@ public:
   ~Actuator() = default;
 
   HARDWARE_INTERFACE_PUBLIC
-  const rclcpp_lifecycle::State & initialize(const HardwareInfo & actuator_info);
+  const rclcpp_lifecycle::State & initialize(
+    const HardwareInfo & actuator_info,
+    rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface = nullptr,
+    rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logger_interface = nullptr);
 
   HARDWARE_INTERFACE_PUBLIC
   const rclcpp_lifecycle::State & configure();

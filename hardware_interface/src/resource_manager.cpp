@@ -179,7 +179,8 @@ public:
     bool result = false;
     try
     {
-      const rclcpp_lifecycle::State new_state = hardware.initialize(hardware_info);
+      const rclcpp_lifecycle::State new_state =
+        hardware.initialize(hardware_info, clock_interface_, logger_interface_);
       result = new_state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED;
 
       if (result)
