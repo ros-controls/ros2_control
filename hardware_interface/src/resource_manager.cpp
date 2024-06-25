@@ -959,6 +959,10 @@ public:
   pluginlib::ClassLoader<SensorInterface> sensor_loader_;
   pluginlib::ClassLoader<SystemInterface> system_loader_;
 
+  // Logger and Clock interfaces
+  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface_;
+  rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logger_interface_;
+
   std::vector<Actuator> actuators_;
   std::vector<Sensor> sensors_;
   std::vector<System> systems_;
@@ -994,8 +998,6 @@ public:
   // Update rate of the controller manager, and the clock interface of its node
   // Used by async components.
   unsigned int cm_update_rate_ = 100;
-  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface_;
-  rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logger_interface_;
 };
 
 ResourceManager::ResourceManager(
