@@ -25,8 +25,8 @@
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/visibility_control.h"
 #include "rclcpp/duration.hpp"
+#include "rclcpp/logging.hpp"
 #include "rclcpp/node_interfaces/node_clock_interface.hpp"
-#include "rclcpp/node_interfaces/node_logging_interface.hpp"
 #include "rclcpp/time.hpp"
 #include "rclcpp_lifecycle/state.hpp"
 
