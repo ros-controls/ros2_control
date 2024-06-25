@@ -104,9 +104,12 @@ public:
   : actuator_loader_(pkg_name, actuator_interface_name),
     sensor_loader_(pkg_name, sensor_interface_name),
     system_loader_(pkg_name, system_interface_name),
-    clock_interface_(clock_interface),
-    logger_interface_(logger_interface)
+    clock_interface_(clock_interface)
   {
+    if (logger_interface)
+    {
+      rm_logger_ = logger_interface->get_logger().get_child("resource_manager");
+    }
   }
 
   template <class HardwareT, class HardwareInterfaceT>
@@ -926,17 +929,7 @@ public:
   /**
    * \return logger of the resource storage
    */
-  rclcpp::Logger get_logger() const
-  {
-    if (logger_interface_)
-    {
-      return logger_interface_->get_logger().get_child("resource_manager");
-    }
-    else
-    {
-      return rclcpp::get_logger("resource_manager");
-    }
-  }
+  const rclcpp::Logger & get_logger() const { return rm_logger_; }
 
   /// Gets the clock for the resource storage
   /**
@@ -962,6 +955,7 @@ public:
   // Logger and Clock interfaces
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface_;
   rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logger_interface_;
+  rclcpp::Logger rm_logger_ = rclcpp::get_logger("resource_manager");
 
   std::vector<Actuator> actuators_;
   std::vector<Sensor> sensors_;
