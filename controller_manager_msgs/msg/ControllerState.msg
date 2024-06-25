@@ -6,5 +6,6 @@ string[] required_command_interfaces        # command interfaces required by con
 string[] required_state_interfaces        # state interfaces required by controller
 bool is_chainable        # specifies whether or not controller can export references for a controller chain
 bool is_chained        # specifies whether or not controller's exported references are claimed by another controller
+string[] exported_state_interfaces        # state interfaces to be exported (only applicable if is_chainable is true)
 string[] reference_interfaces        # references to be exported (only applicable if is_chainable is true)
 ChainConnection[] chain_connections        # specifies list of controllers and their exported references that the controller is chained to

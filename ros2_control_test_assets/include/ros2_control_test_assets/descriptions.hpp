@@ -1306,6 +1306,23 @@ const auto diffbot_urdf =
       <state_interface name="velocity"/>
     </joint>
   </ros2_control>
+  <ros2_control name="TestIMUSensorHardware" type="sensor">
+    <hardware>
+      <plugin>test_hardware_components/TestIMUSensor</plugin>
+    </hardware>
+    <sensor name="base_imu">
+      <state_interface name="orientation.x"/>
+      <state_interface name="orientation.y"/>
+      <state_interface name="orientation.z"/>
+      <state_interface name="orientation.w"/>
+      <state_interface name="angular_velocity.x"/>
+      <state_interface name="angular_velocity.y"/>
+      <state_interface name="angular_velocity.z"/>
+      <state_interface name="linear_acceleration.x"/>
+      <state_interface name="linear_acceleration.y"/>
+      <state_interface name="linear_acceleration.z"/>
+    </sensor>
+  </ros2_control>
 </robot>
 )";
 

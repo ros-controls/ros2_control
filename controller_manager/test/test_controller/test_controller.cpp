@@ -128,6 +128,16 @@ void TestController::set_state_interface_configuration(
   state_iface_cfg_ = cfg;
 }
 
+std::vector<double> TestController::get_state_interface_data() const
+{
+  std::vector<double> state_intr_data;
+  for (const auto & interface : state_interfaces_)
+  {
+    state_intr_data.push_back(interface.get_value());
+  }
+  return state_intr_data;
+}
+
 }  // namespace test_controller
 
 #include "pluginlib/class_list_macros.hpp"

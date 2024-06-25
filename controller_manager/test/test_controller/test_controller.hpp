@@ -66,6 +66,9 @@ public:
   CONTROLLER_MANAGER_PUBLIC
   void set_state_interface_configuration(const controller_interface::InterfaceConfiguration & cfg);
 
+  CONTROLLER_MANAGER_PUBLIC
+  std::vector<double> get_state_interface_data() const;
+
   const std::string & getRobotDescription() const;
 
   unsigned int internal_counter = 0;
