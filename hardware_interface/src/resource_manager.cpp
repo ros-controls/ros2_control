@@ -1012,6 +1012,7 @@ bool ResourceManager::load_and_initialize_components(
   const std::string sensor_type = "sensor";
   const std::string actuator_type = "actuator";
 
+  std::lock_guard<std::recursive_mutex> resource_guard(resources_lock_);
   for (const auto & individual_hardware_info : hardware_info)
   {
     // Check for identical names
