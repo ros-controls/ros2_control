@@ -75,7 +75,8 @@ class SensorInterface : public rclcpp_lifecycle::node_interfaces::LifecycleNodeI
 public:
   SensorInterface()
   : lifecycle_state_(rclcpp_lifecycle::State(
-      lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN, lifecycle_state_names::UNKNOWN))
+      lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN, lifecycle_state_names::UNKNOWN)),
+    sensor_logger_(rclcpp::get_logger("sensor_interface"))
   {
   }
 
@@ -100,12 +101,11 @@ public:
    * \returns CallbackReturn::ERROR if any error happens or data are missing.
    */
   CallbackReturn init(
-    const HardwareInfo & hardware_info,
-    rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface,
-    rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logger_interface)
+    const HardwareInfo & hardware_info, rclcpp::Logger logger,
+    rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
   {
     clock_interface_ = clock_interface;
-    logger_interface_ = logger_interface;
+    sensor_logger_ = logger.get_child("hardware_component.sensor." + hardware_info.name);
     info_ = hardware_info;
     return on_init(hardware_info);
   };
@@ -173,18 +173,7 @@ protected:
   /**
    * \return logger of the SensorInterface.
    */
-  rclcpp::Logger get_logger() const
-  {
-    if (logger_interface_)
-    {
-      return logger_interface_->get_logger().get_child(
-        "resource_manager.hardware_component.sensor." + info_.name);
-    }
-    else
-    {
-      return rclcpp::get_logger("resource_manager.hardware_component.sensor." + info_.name);
-    }
-  }
+  rclcpp::Logger get_logger() const { return sensor_logger_; }
 
   /// Get the clock of the SensorInterface.
   /**
@@ -207,7 +196,7 @@ protected:
 
 private:
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface_;
-  rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logger_interface_;
+  rclcpp::Logger sensor_logger_;
 };
 
 }  // namespace hardware_interface

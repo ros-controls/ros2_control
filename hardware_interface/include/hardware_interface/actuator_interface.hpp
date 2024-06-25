@@ -75,7 +75,8 @@ class ActuatorInterface : public rclcpp_lifecycle::node_interfaces::LifecycleNod
 public:
   ActuatorInterface()
   : lifecycle_state_(rclcpp_lifecycle::State(
-      lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN, lifecycle_state_names::UNKNOWN))
+      lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN, lifecycle_state_names::UNKNOWN)),
+    actuator_logger_(rclcpp::get_logger("actuator_interface"))
   {
   }
 
@@ -100,12 +101,11 @@ public:
    * \returns CallbackReturn::ERROR if any error happens or data are missing.
    */
   CallbackReturn init(
-    const HardwareInfo & hardware_info,
-    rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface,
-    rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logger_interface)
+    const HardwareInfo & hardware_info, rclcpp::Logger logger,
+    rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
   {
     clock_interface_ = clock_interface;
-    logger_interface_ = logger_interface;
+    actuator_logger_ = logger.get_child("hardware_component.actuator." + hardware_info.name);
     info_ = hardware_info;
     return on_init(hardware_info);
   };
@@ -234,18 +234,7 @@ protected:
   /**
    * \return logger of the ActuatorInterface.
    */
-  rclcpp::Logger get_logger() const
-  {
-    if (logger_interface_)
-    {
-      return logger_interface_->get_logger().get_child(
-        "resource_manager.hardware_component.actuator." + info_.name);
-    }
-    else
-    {
-      return rclcpp::get_logger("resource_manager.hardware_component.actuator." + info_.name);
-    }
-  }
+  rclcpp::Logger get_logger() const { return actuator_logger_; }
 
   /// Get the clock of the ActuatorInterface.
   /**
@@ -268,7 +257,7 @@ protected:
 
 private:
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface_;
-  rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logger_interface_;
+  rclcpp::Logger actuator_logger_;
 };
 
 }  // namespace hardware_interface

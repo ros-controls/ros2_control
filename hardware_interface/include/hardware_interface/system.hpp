@@ -48,9 +48,8 @@ public:
 
   HARDWARE_INTERFACE_PUBLIC
   const rclcpp_lifecycle::State & initialize(
-    const HardwareInfo & system_info,
-    rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface,
-    rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logger_interface);
+    const HardwareInfo & system_info, rclcpp::Logger logger,
+    rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface);
 
   HARDWARE_INTERFACE_PUBLIC
   const rclcpp_lifecycle::State & configure();

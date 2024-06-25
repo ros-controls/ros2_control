@@ -35,13 +35,12 @@ using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface
 System::System(std::unique_ptr<SystemInterface> impl) : impl_(std::move(impl)) {}
 
 const rclcpp_lifecycle::State & System::initialize(
-  const HardwareInfo & system_info,
-  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface,
-  rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logger_interface)
+  const HardwareInfo & system_info, rclcpp::Logger logger,
+  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
 {
   if (impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN)
   {
-    switch (impl_->init(system_info, clock_interface, logger_interface))
+    switch (impl_->init(system_info, logger, clock_interface))
     {
       case CallbackReturn::SUCCESS:
         impl_->set_state(rclcpp_lifecycle::State(
