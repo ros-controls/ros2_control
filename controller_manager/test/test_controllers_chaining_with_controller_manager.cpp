@@ -12,10 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#define TEST_BUG1
-#define TEST_BUG2
-#define TEST_BUG3
-
 #include <gtest/gtest.h>
 #include <memory>
 #include <string>
@@ -786,15 +782,10 @@ TEST_P(
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, diff_drive_controller->get_state().id());
 
-  // !---- <BUG1> ----
-#ifdef TEST_BUG1
   // Check if the controllers are not in chained mode
-  ASSERT_FALSE(pid_left_wheel_controller
-                 ->is_in_chained_mode());  // !BUG: should be not in chained mode but is in
+  ASSERT_FALSE(pid_left_wheel_controller->is_in_chained_mode());
   ASSERT_FALSE(pid_right_wheel_controller->is_in_chained_mode());
   ASSERT_FALSE(diff_drive_controller->is_in_chained_mode());
-#endif
-  // !---- </BUG1> ----
 }
 
 TEST_P(
@@ -832,8 +823,6 @@ TEST_P(
   EXPECT_FALSE(pid_right_wheel_controller->is_in_chained_mode());
   ASSERT_FALSE(diff_drive_controller->is_in_chained_mode());
 
-  // !---- <BUG2> ----
-#ifdef TEST_BUG2
   // Test Case: Trying to activate a preceding controller and one of the following controller
   // --> return error; preceding controller are not activated,
   // BUT following controller IS activated
@@ -866,12 +855,9 @@ TEST_P(
     position_tracking_controller->get_state().id());
 
   // Check if the controllers are not in chained mode
-  ASSERT_FALSE(pid_left_wheel_controller
-                 ->is_in_chained_mode());  // !BUG: should be not in chained mode but is in
+  ASSERT_FALSE(pid_left_wheel_controller->is_in_chained_mode());
   ASSERT_FALSE(pid_right_wheel_controller->is_in_chained_mode());
   ASSERT_FALSE(diff_drive_controller->is_in_chained_mode());
-#endif
-  // !---- </BUG2> ----
 }
 
 TEST_P(
@@ -1075,8 +1061,6 @@ TEST_P(
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, diff_drive_controller->get_state().id());
 
-  // !---- <BUG3> ----
-#ifdef TEST_BUG3
   // Test Case: middle preceding/following controller deactivation but the most preceding and the
   // lowest following controllers are active
   // --> return error; controllers stay in the same state as they were
@@ -1100,10 +1084,7 @@ TEST_P(
   // Attempt to deactivate the middle preceding/following controller
   switch_test_controllers(
     {}, {DIFF_DRIVE_CONTROLLER}, test_param.strictness, std::future_status::ready,
-    expected.at(test_param.strictness)
-      .return_type);  // !BUG: If BEST_EFFORT, all controllers should stay the same state as they
-                      // were, but a deadlock may occur during the switch_controller process,
-                      // causing the test to timeout.
+    expected.at(test_param.strictness).return_type);
 
   // All controllers should still be active
   ASSERT_EQ(
@@ -1115,8 +1096,6 @@ TEST_P(
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
     position_tracking_controller->get_state().id());
-#endif
-  // !---- </BUG3> ----
 }
 
 TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers_adding_in_random_order)
