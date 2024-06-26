@@ -2458,7 +2458,7 @@ controller_interface::return_type ControllerManager::check_following_controllers
     }
   }
   return controller_interface::return_type::OK;
-};
+}
 
 ControllerManager::CheckDeActivateRequestResult ControllerManager::check_activate_requests(
   const std::vector<ControllerSpec> & controllers, int strictness)
@@ -2522,7 +2522,7 @@ ControllerManager::CheckDeActivateRequestResult ControllerManager::check_activat
   return CheckDeActivateRequestResult::OK;
 }
 
-controller_interface::return_type ControllerManager::check_preceeding_controllers_for_deactivate(
+controller_interface::return_type ControllerManager::check_preceding_controllers_for_deactivate(
   const std::vector<ControllerSpec> & controllers, int /*strictness*/,
   const ControllersListIterator controller_it)
 {
@@ -2648,7 +2648,7 @@ ControllerManager::CheckDeActivateRequestResult ControllerManager::check_deactiv
     }
     else
     {
-      status = check_preceeding_controllers_for_deactivate(controllers, strictness, controller_it);
+      status = check_preceding_controllers_for_deactivate(controllers, strictness, controller_it);
     }
 
     if (status != controller_interface::return_type::OK)

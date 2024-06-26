@@ -421,13 +421,13 @@ private:
    * \returns return_type::OK if all preceding controllers pass the checks, otherwise
    * return_type::ERROR.
    */
-  controller_interface::return_type check_preceeding_controllers_for_deactivate(
+  controller_interface::return_type check_preceding_controllers_for_deactivate(
     const std::vector<ControllerSpec> & controllers, int strictness,
     const ControllersListIterator controller_it);
 
   /**
    * Check if all deactivate requests are valid.
-   * Perform a detailed check internally by calling check_preceeding_controllers_for_deactivate.
+   * Perform a detailed check internally by calling check_preceding_controllers_for_deactivate.
    *
    * \param[in] controllers list with controllers.
    * \param[in] strictness if value is equal "MANIPULATE_CONTROLLERS_CHAIN" then all following
