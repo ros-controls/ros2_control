@@ -1334,12 +1334,6 @@ controller_interface::return_type ControllerManager::switch_controller(
     controllers, controllers_map, deactivate_request_, activate_request_,
     from_chained_mode_request_, to_chained_mode_request_);
 
-  // In manage_switch, deactivation needs to be performed in the order of preceding, following, and
-  // activation needs to be performed in the reverse order of following, preceding. Therefore, the
-  // (de)activate requests are sorted in advance here.
-  sort_list_by_another(deactivate_request_, ordered_controllers_names_, false);
-  sort_list_by_another(activate_request_, ordered_controllers_names_, true);
-
   // check if we need to request switch controllers after all the checks
   if (activate_request_.empty() && deactivate_request_.empty())
   {
@@ -1551,7 +1545,7 @@ void ControllerManager::deactivate_controllers(
 
         // If it is a chainable controller, make the reference interfaces unavailable on
         // deactivation.
-        // However, if it will be activated asap for a restart due to subsequent processes in
+        // However, if it will be activated asap for restart due to subsequent processes in
         // manage_switch, the reference_interface needs to remain available to ensure the success of
         // the switch_chained_mode process, so this case is an exception.
         const bool will_be_restarted_asap = switch_params_.do_switch &&
@@ -2249,10 +2243,6 @@ void ControllerManager::manage_switch()
   // When the same controller is specified for both 'from' and 'to' for restarting a controller, it
   // is necessary to switch in the order 'from' then 'to', in order to disable the chained mode
   // once and then enable it again.
-
-  // When the same controller is specified for both 'from' and 'to' during a restart, it is
-  // necessary to switch in the sequence of 'from' then 'to' to temporarily disable and then
-  // re-enable the chained mode.
   switch_chained_mode(from_chained_mode_request_, false);
   switch_chained_mode(to_chained_mode_request_, true);
 
