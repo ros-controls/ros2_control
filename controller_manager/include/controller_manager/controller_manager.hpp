@@ -329,6 +329,13 @@ protected:
   std::unique_ptr<hardware_interface::ResourceManager> resource_manager_;
 
 private:
+  enum class CheckDeActivateRequestResult
+  {
+    OK,
+    ERROR,
+    RETRY
+  };
+
   std::vector<std::string> get_controller_names();
   std::pair<std::string, std::string> split_command_interface(
     const std::string & command_interface);
@@ -339,6 +346,7 @@ private:
    * and "control loop" threads.
    */
   void clear_requests();
+  void clear_chained_mode_requests();
 
   /**
    * If a controller is deactivated all following controllers (if any exist) should be switched
@@ -377,6 +385,23 @@ private:
     const std::vector<ControllerSpec> & controllers, int strictness,
     const ControllersListIterator controller_it);
 
+  /**
+   * Check if all activate requests are valid.
+   * Perform a detailed check internally by calling check_following_controllers_for_activate.
+   *
+   * \param[in] controllers list with controllers.
+   * \param[in] strictness if value is equal "MANIPULATE_CONTROLLERS_CHAIN" then all following
+   * controllers will be automatically added to the activate request list if they are not in the
+   * deactivate request.
+   *
+   * \returns If all activate requests pass the check, return CheckDeActivateRequestResult::OK. If
+   * an error occurs during the check, the processing will differ based on the value of strictness:
+   * if BEST_EFFORT, erase the target controller from the activate_request and return
+   * CheckDeActivateRequestResult::RETRY; if STRICT, return CheckDeActivateRequestResult::ERROR.
+   */
+  CheckDeActivateRequestResult check_activate_requests(
+    const std::vector<ControllerSpec> & controllers, int strictness);
+
   /// Check if all the preceding controllers will be in inactive state after controllers' switch.
   /**
    * Check that all preceding controllers of the @controller_it
@@ -399,6 +424,23 @@ private:
   controller_interface::return_type check_preceeding_controllers_for_deactivate(
     const std::vector<ControllerSpec> & controllers, int strictness,
     const ControllersListIterator controller_it);
+
+  /**
+   * Check if all deactivate requests are valid.
+   * Perform a detailed check internally by calling check_preceeding_controllers_for_deactivate.
+   *
+   * \param[in] controllers list with controllers.
+   * \param[in] strictness if value is equal "MANIPULATE_CONTROLLERS_CHAIN" then all following
+   * controllers will be automatically added to the activate request list if they are not in the
+   * deactivate request.
+   *
+   * \returns If all deactivate requests pass the check, return CheckDeActivateRequestResult::OK. If
+   * an error occurs during the check, the processing will differ based on the value of strictness:
+   * if BEST_EFFORT, erase the target controller from the deactivate_request and return
+   * CheckDeActivateRequestResult::RETRY; if STRICT, return CheckDeActivateRequestResult::ERROR.
+   */
+  CheckDeActivateRequestResult check_deactivate_requests(
+    const std::vector<ControllerSpec> & controllers, int strictness);
 
   /**
    * @brief Inserts a controller into an ordered list based on dependencies to compute the
