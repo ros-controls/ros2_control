@@ -1114,7 +1114,7 @@ TEST_P(
   TestControllerChainingWithControllerManager,
   test_chained_controllers_activation_switching_error_handling)
 {
-  // Test Case 3: In terms of current implementation.
+  // Test Case 5: In terms of current implementation.
   // Example: Need two diff drive controllers, one should be deactivated,
   // and the other should be activated. Following controller should stay in activated state.
   SetupControllers();
@@ -1217,7 +1217,7 @@ TEST_P(
   ActivateAndCheckController(
     pid_right_wheel_controller, PID_RIGHT_WHEEL, PID_RIGHT_WHEEL_CLAIMED_INTERFACES, 1u);
 
-  // Test Case 5: Deactivating a preceding controller that is not active --> return error;
+  // Test Case 6: Deactivating a preceding controller that is not active --> return error;
   // all controller stay in the same state
 
   // There is different error and timeout behavior depending on strictness
@@ -1247,7 +1247,7 @@ TEST_P(
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, diff_drive_controller->get_state().id());
 
-  // Test Case 6: following controller is deactivated but preceding controller will be activated
+  // Test Case 7: following controller is deactivated but preceding controller will be activated
   // --> return error; controllers stay in the same state
 
   switch_test_controllers(
@@ -1264,7 +1264,7 @@ TEST_P(
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, diff_drive_controller->get_state().id());
 
-  // Test Case 7: following controller deactivation but preceding controller is active
+  // Test Case 8: following controller deactivation but preceding controller is active
   // --> return error; controllers stay in the same state as they were
 
   const auto verify_all_controllers_are_still_be_active = [&]()
@@ -1752,7 +1752,7 @@ TEST_P(TestControllerChainingWithControllerManager, test_chained_controllers_res
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE}}};
   const auto & exp = expected.at(test_param.strictness);
 
-  // Test Case 8: restart following controllers but preceding controllers will not be restart
+  // Test Case 9: restart following controllers but preceding controllers will not be restart
   // --> return error; restart will not be executed and controllers stay in the same state as they
   // were
   {
