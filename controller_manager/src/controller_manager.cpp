@@ -975,12 +975,14 @@ controller_interface::return_type ControllerManager::switch_controller(
     // 'from' chained mode
     propagate_deactivation_of_chained_mode(controllers);
 
-    if (const auto result = check_activate_requests(controllers, strictness);
+    // we need to check the requests in the order of deactivate and activate to consider the case
+    // where the controller will be restarted is included in the (de)activate request
+    if (const auto result = check_deactivate_requests(controllers, strictness);
         result != CheckDeActivateRequestResult::OK)
     {
       return result;
     }
-    if (const auto result = check_deactivate_requests(controllers, strictness);
+    if (const auto result = check_activate_requests(controllers, strictness);
         result != CheckDeActivateRequestResult::OK)
     {
       return result;
@@ -1362,9 +1364,16 @@ void ControllerManager::deactivate_controllers(
         const auto new_state = controller->get_node()->deactivate();
         controller->release_interfaces();
 
-        // if it is a chainable controller, make the reference interfaces unavailable on
-        // deactivation
-        if (controller->is_chainable())
+        // If it is a chainable controller, make the reference interfaces unavailable on
+        // deactivation.
+        // However, if it will be activated asap for restart due to subsequent processes in
+        // manage_switch, the reference_interface needs to remain available to ensure the success of
+        // the switch_chained_mode process, so this case is an exception.
+        const bool will_be_restarted_asap =
+          switch_params_.do_switch && switch_params_.activate_asap &&
+          (std::find(activate_request_.begin(), activate_request_.end(), controller_name) !=
+           activate_request_.end());
+        if (controller->is_chainable() && !will_be_restarted_asap)
         {
           resource_manager_->make_controller_reference_interfaces_unavailable(controller_name);
         }
@@ -2052,8 +2061,11 @@ void ControllerManager::manage_switch()
 
   deactivate_controllers(rt_controller_list, deactivate_request_);
 
-  switch_chained_mode(to_chained_mode_request_, true);
+  // When the same controller is specified for both 'from' and 'to' for restarting a controller, it
+  // is necessary to switch in the order 'from' then 'to', in order to disable the chained mode
+  // once and then enable it again.
   switch_chained_mode(from_chained_mode_request_, false);
+  switch_chained_mode(to_chained_mode_request_, true);
 
   // activate controllers once the switch is fully complete
   if (!switch_params_.activate_asap)
@@ -2365,24 +2377,28 @@ controller_interface::return_type ControllerManager::check_following_controllers
       return controller_interface::return_type::ERROR;
     }
 
+    const bool following_will_be_activated =
+      std::find(activate_request_.begin(), activate_request_.end(), following_ctrl_it->info.name) !=
+      activate_request_.end();
+    const bool following_will_be_deactivated =
+      std::find(
+        deactivate_request_.begin(), deactivate_request_.end(), following_ctrl_it->info.name) !=
+      deactivate_request_.end();
+
     if (is_controller_active(following_ctrl_it->c))
     {
-      // will following controller be deactivated?
-      if (
-        std::find(
-          deactivate_request_.begin(), deactivate_request_.end(), following_ctrl_it->info.name) !=
-        deactivate_request_.end())
+      // will following controller be deactivated and will not be restarted?
+      if (following_will_be_deactivated && !following_will_be_activated)
       {
         RCLCPP_WARN(
-          get_logger(), "The following controller with name '%s' will be deactivated.",
+          get_logger(),
+          "The following controller with name '%s' will be deactivated and will not be restarted.",
           following_ctrl_it->info.name.c_str());
         return controller_interface::return_type::ERROR;
       }
     }
     // check if following controller will not be activated
-    else if (
-      std::find(activate_request_.begin(), activate_request_.end(), following_ctrl_it->info.name) ==
-      activate_request_.end())
+    else if (!following_will_be_activated)
     {
       RCLCPP_WARN(
         get_logger(),
@@ -2551,12 +2567,22 @@ controller_interface::return_type ControllerManager::check_preceeding_controller
         continue;
       }
 
-      // check if preceding controller will be activated
-      if (
-        is_controller_inactive(preceding_ctrl_it->c) &&
+      const bool following_will_be_activated =
+        std::find(activate_request_.begin(), activate_request_.end(), controller_it->info.name) !=
+        activate_request_.end();
+      const bool preceding_will_be_deactivated =
+        std::find(
+          deactivate_request_.begin(), deactivate_request_.end(), preceding_ctrl_it->info.name) !=
+        deactivate_request_.end();
+      const bool preceding_will_be_activated =
         std::find(
           activate_request_.begin(), activate_request_.end(), preceding_ctrl_it->info.name) !=
-          activate_request_.end())
+        activate_request_.end();
+      const bool preceding_will_be_restarted =
+        preceding_will_be_deactivated && preceding_will_be_activated;
+
+      // check if preceding controller will be activated
+      if (is_controller_inactive(preceding_ctrl_it->c) && preceding_will_be_activated)
       {
         RCLCPP_WARN(
           get_logger(),
@@ -2566,16 +2592,25 @@ controller_interface::return_type ControllerManager::check_preceeding_controller
         return controller_interface::return_type::ERROR;
       }
       // check if preceding controller will not be deactivated
-      else if (
-        is_controller_active(preceding_ctrl_it->c) &&
-        std::find(
-          deactivate_request_.begin(), deactivate_request_.end(), preceding_ctrl_it->info.name) ==
-          deactivate_request_.end())
+      else if (is_controller_active(preceding_ctrl_it->c) && !preceding_will_be_deactivated)
       {
         RCLCPP_WARN(
           get_logger(),
           "Could not deactivate controller with name '%s' because "
           "preceding controller with name '%s' is active and will not be deactivated.",
+          controller_it->info.name.c_str(), preceding_ctrl_it->info.name.c_str());
+        return controller_interface::return_type::ERROR;
+      }
+      // check if only following controller will not be restarted despite preceding will not be
+      // restarted
+      else if (
+        is_controller_active(preceding_ctrl_it->c) && !following_will_be_activated &&
+        preceding_will_be_restarted)
+      {
+        RCLCPP_WARN(
+          get_logger(),
+          "Could not deactivate and restart controller with name '%s' because "
+          "preceding controller with name '%s' is active and will not be restarted.",
           controller_it->info.name.c_str(), preceding_ctrl_it->info.name.c_str());
         return controller_interface::return_type::ERROR;
       }

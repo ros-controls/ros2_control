@@ -58,6 +58,9 @@ public:
   CallbackReturn on_activate(const rclcpp_lifecycle::State & previous_state) override;
 
   CONTROLLER_MANAGER_PUBLIC
+  CallbackReturn on_deactivate(const rclcpp_lifecycle::State & previous_state) override;
+
+  CONTROLLER_MANAGER_PUBLIC
   CallbackReturn on_cleanup(const rclcpp_lifecycle::State & previous_state) override;
 
   CONTROLLER_MANAGER_PUBLIC
@@ -80,7 +83,12 @@ public:
   CONTROLLER_MANAGER_PUBLIC
   void set_reference_interface_names(const std::vector<std::string> & reference_interface_names);
 
-  size_t internal_counter;
+  size_t internal_counter = 0;
+
+  // Variable where we store when activate or deactivate was called
+  size_t activate_calls = 0;
+  size_t deactivate_calls = 0;
+
   controller_interface::InterfaceConfiguration cmd_iface_cfg_;
   controller_interface::InterfaceConfiguration state_iface_cfg_;
   std::vector<std::string> reference_interface_names_;
