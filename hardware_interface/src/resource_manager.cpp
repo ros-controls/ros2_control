@@ -935,17 +935,7 @@ public:
   /**
    * \return clock of the resource storage
    */
-  rclcpp::Clock get_clock() const
-  {
-    if (clock_interface_)
-    {
-      return *clock_interface_->get_clock();
-    }
-    else
-    {
-      return rclcpp::Clock(RCL_ROS_TIME);
-    }
-  }
+  rclcpp::Clock::SharedPtr get_clock() const { return clock_interface_->get_clock(); }
 
   // hardware plugins
   pluginlib::ClassLoader<ActuatorInterface> actuator_loader_;
@@ -1811,7 +1801,10 @@ bool ResourceManager::state_interface_exists(const std::string & key) const
 
 rclcpp::Logger ResourceManager::get_logger() const { return resource_storage_->get_logger(); }
 
-rclcpp::Clock ResourceManager::get_clock() const { return resource_storage_->get_clock(); }
+rclcpp::Clock::SharedPtr ResourceManager::get_clock() const
+{
+  return resource_storage_->get_clock();
+}
 
 // BEGIN: private methods
 

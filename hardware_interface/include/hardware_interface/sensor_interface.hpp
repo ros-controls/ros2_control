@@ -179,17 +179,7 @@ protected:
   /**
    * \return clock of the SensorInterface.
    */
-  rclcpp::Clock get_clock() const
-  {
-    if (clock_interface_)
-    {
-      return *(clock_interface_->get_clock());
-    }
-    else
-    {
-      return rclcpp::Clock(RCL_ROS_TIME);
-    }
-  }
+  rclcpp::Clock::SharedPtr get_clock() const { return clock_interface_->get_clock(); }
 
   HardwareInfo info_;
   rclcpp_lifecycle::State lifecycle_state_;

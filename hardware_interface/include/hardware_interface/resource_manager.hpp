@@ -420,7 +420,7 @@ protected:
   /**
    * \return clock of the resource manager
    */
-  rclcpp::Clock get_clock() const;
+  rclcpp::Clock::SharedPtr get_clock() const;
 
   bool components_are_loaded_and_initialized_ = false;
 
