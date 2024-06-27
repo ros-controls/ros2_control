@@ -74,7 +74,9 @@ public:
     if (robot_description_.empty())
     {
       cm_ = std::make_shared<CtrlMgr>(
-        std::make_unique<hardware_interface::ResourceManager>(), executor_, TEST_CM_NAME);
+        std::make_unique<hardware_interface::ResourceManager>(
+          rm_node_->get_node_clock_interface(), rm_node_->get_node_logging_interface()),
+        executor_, TEST_CM_NAME);
     }
     else
     {
@@ -83,7 +85,9 @@ public:
       if (pass_urdf_as_parameter_)
       {
         cm_ = std::make_shared<CtrlMgr>(
-          std::make_unique<hardware_interface::ResourceManager>(robot_description_, true, true),
+          std::make_unique<hardware_interface::ResourceManager>(
+            robot_description_, rm_node_->get_node_clock_interface(),
+            rm_node_->get_node_logging_interface(), true, 100),
           executor_, TEST_CM_NAME);
       }
       else
@@ -93,7 +97,9 @@ public:
 
         // this is just a workaround to skip passing
         cm_ = std::make_shared<CtrlMgr>(
-          std::make_unique<hardware_interface::ResourceManager>(), executor_, TEST_CM_NAME);
+          std::make_unique<hardware_interface::ResourceManager>(
+            rm_node_->get_node_clock_interface(), rm_node_->get_node_logging_interface()),
+          executor_, TEST_CM_NAME);
         // mimic topic call
         auto msg = std_msgs::msg::String();
         msg.data = robot_description_;
@@ -158,6 +164,9 @@ public:
   const std::string robot_description_;
   const bool pass_urdf_as_parameter_;
   rclcpp::Time time_;
+
+protected:
+  rclcpp::Node::SharedPtr rm_node_ = std::make_shared<rclcpp::Node>("ResourceManager");
 };
 
 class TestControllerManagerSrvs

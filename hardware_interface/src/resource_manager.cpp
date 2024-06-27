@@ -99,13 +99,18 @@ public:
   // TODO(VX792): Change this when HW ifs get their own update rate,
   // because the ResourceStorage really shouldn't know about the cm's parameters
   explicit ResourceStorage(
-    rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface = nullptr,
-    rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logger_interface = nullptr)
+    rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface,
+    rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logger_interface)
   : actuator_loader_(pkg_name, actuator_interface_name),
     sensor_loader_(pkg_name, sensor_interface_name),
     system_loader_(pkg_name, system_interface_name),
     clock_interface_(clock_interface)
   {
+    if (!clock_interface_)
+    {
+      throw std::invalid_argument(
+        "Clock interface is nullptr. ResourceManager needs a valid clock interface.");
+    }
     if (logger_interface)
     {
       rm_logger_ = logger_interface->get_logger().get_child("resource_manager");
@@ -994,9 +999,9 @@ ResourceManager::ResourceManager(
 ResourceManager::~ResourceManager() = default;
 
 ResourceManager::ResourceManager(
-  const std::string & urdf, bool activate_all, const unsigned int update_rate,
-  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface,
-  rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logger_interface)
+  const std::string & urdf, rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface,
+  rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logger_interface, bool activate_all,
+  const unsigned int update_rate)
 : resource_storage_(std::make_unique<ResourceStorage>(clock_interface, logger_interface))
 {
   load_and_initialize_components(urdf, update_rate);
