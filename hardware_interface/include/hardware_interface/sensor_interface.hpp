@@ -25,9 +25,11 @@
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 #include "rclcpp/duration.hpp"
+#include "rclcpp/logging.hpp"
 #include "rclcpp/time.hpp"
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 #include "rclcpp_lifecycle/state.hpp"
+#include "realtime_tools/async_function_handler.hpp"
 
 namespace hardware_interface
 {
@@ -97,6 +99,13 @@ public:
   virtual CallbackReturn on_init(const HardwareInfo & hardware_info)
   {
     info_ = hardware_info;
+    if (info_.is_async)
+    {
+      read_async_handler_ = std::make_unique<realtime_tools::AsyncFunctionHandler<return_type>>();
+      read_async_handler_->init(
+        std::bind(&SensorInterface::read, this, std::placeholders::_1, std::placeholders::_2));
+      read_async_handler_->start_async_update_thread();
+    }
     return CallbackReturn::SUCCESS;
   };
 
@@ -110,6 +119,40 @@ public:
    * \return vector of state interfaces
    */
   virtual std::vector<StateInterface> export_state_interfaces() = 0;
+
+  /// Triggers the read method synchronously or asynchronously depending on the HardwareInfo
+  /**
+   * The data readings from the physical hardware has to be updated
+   * and reflected accordingly in the exported state interfaces.
+   * That is, the data pointed by the interfaces shall be updated.
+   *
+   * \param[in] time The time at the start of this control loop iteration
+   * \param[in] period The measured time taken by the last control loop iteration
+   * \return return_type::OK if the read was successful, return_type::ERROR otherwise.
+   */
+  return_type trigger_read(const rclcpp::Time & time, const rclcpp::Duration & period)
+  {
+    return_type result = return_type::ERROR;
+    if (info_.is_async)
+    {
+      bool trigger_status = true;
+      std::tie(trigger_status, result) = read_async_handler_->trigger_async_update(time, period);
+      if (!trigger_status)
+      {
+        RCLCPP_WARN(
+          rclcpp::get_logger("SensorInterface"),
+          "Trigger read called while read async handler is still in progress for hardware "
+          "interface : '%s'. Failed to trigger read cycle!",
+          info_.name.c_str());
+        return return_type::OK;
+      }
+    }
+    else
+    {
+      result = read(time, period);
+    }
+    return result;
+  }
 
   /// Read the current state values from the actuator.
   /**
@@ -150,6 +193,7 @@ public:
 protected:
   HardwareInfo info_;
   rclcpp_lifecycle::State lifecycle_state_;
+  std::unique_ptr<realtime_tools::AsyncFunctionHandler<return_type>> read_async_handler_;
 };
 
 }  // namespace hardware_interface
