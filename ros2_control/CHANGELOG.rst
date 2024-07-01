@@ -2,8 +2,8 @@
 Changelog for package ros2_control
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.12.0 (2024-07-01)
+-------------------
 * Add custom rosdoc2 config for ros2_control metapackage (`#1484 <https://github.com/ros-controls/ros2_control/issues/1484>`_)
 * Contributors: Christoph Fröhlich
 
