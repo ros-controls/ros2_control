@@ -1,0 +1,25 @@
+<class_libraries>
+  <library path="joint_saturation_limiter">
+    <class name="joint_limits/JointTrajectoryPointSaturationLimiter"
+          type="JointTrajectoryPointSaturationLimiter"
+          base_class_type="joint_limits::JointLimiterInterface&lt;trajectory_msgs::msg::JointTrajectoryPoint&gt;">
+      <description>
+        Simple joint limiter using clamping approach. Warning: clamping can cause discontinuities.
+      </description>
+    </class>
+    <class name="joint_limits/JointInterfacesSaturationLimiter"
+          type="JointInterfacesSaturationLimiter"
+          base_class_type="joint_limits::JointLimiterInterface&lt;joint_limits::JointControlInterfacesData&gt;">
+      <description>
+        Simple joint range limiter using clamping approach with the parsed limits.
+      </description>
+    </class>
+    <class name="joint_limits/JointInterfacesSoftLimiter"
+          type="JointInterfacesSoftLimiter"
+          base_class_type="joint_limits::JointLimiterInterface&lt;joint_limits::JointControlInterfacesData&gt;">
+      <description>
+        Simple joint range limiter performing clamping between the parsed soft limits and the parsed joint limits.
+      </description>
+    </class>
+  </library>
+</class_libraries>
