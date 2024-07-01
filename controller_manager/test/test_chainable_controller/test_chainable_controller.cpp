@@ -134,12 +134,21 @@ CallbackReturn TestChainableController::on_configure(
 CallbackReturn TestChainableController::on_activate(
   const rclcpp_lifecycle::State & /*previous_state*/)
 {
+  ++activate_calls;
+
   if (!is_in_chained_mode())
   {
     auto msg = rt_command_ptr_.readFromRT();
     (*msg)->data = reference_interfaces_;
   }
 
+  return CallbackReturn::SUCCESS;
+}
+
+CallbackReturn TestChainableController::on_deactivate(
+  const rclcpp_lifecycle::State & /*previous_state*/)
+{
+  ++deactivate_calls;
   return CallbackReturn::SUCCESS;
 }
 
