@@ -63,8 +63,7 @@ public:
   void SetUp() override
   {
     executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
-    cm_ = std::make_shared<controller_manager::ControllerManager>(
-      std::make_unique<hardware_interface::ResourceManager>(), executor_, TEST_CM_NAME);
+    cm_ = std::make_shared<controller_manager::ControllerManager>(executor_, TEST_CM_NAME);
     run_updater_ = false;
 
     cm_->set_parameter(
@@ -369,8 +368,7 @@ public:
   void SetUp() override
   {
     executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
-    cm_ = std::make_shared<controller_manager::ControllerManager>(
-      std::make_unique<hardware_interface::ResourceManager>(), executor_, TEST_CM_NAME);
+    cm_ = std::make_shared<controller_manager::ControllerManager>(executor_, TEST_CM_NAME);
     run_updater_ = false;
 
     // TODO(destogl): separate this to init_tests method where parameter can be set for each test

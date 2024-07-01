@@ -83,6 +83,13 @@ public:
     const rclcpp::NodeOptions & options = get_cm_node_options());
 
   CONTROLLER_MANAGER_PUBLIC
+  ControllerManager(
+    std::shared_ptr<rclcpp::Executor> executor, const std::string & urdf,
+    bool activate_all_hw_components, const std::string & manager_node_name = "controller_manager",
+    const std::string & node_namespace = "",
+    const rclcpp::NodeOptions & options = get_cm_node_options());
+
+  CONTROLLER_MANAGER_PUBLIC
   virtual ~ControllerManager() = default;
 
   CONTROLLER_MANAGER_PUBLIC

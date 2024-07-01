@@ -39,7 +39,8 @@ public:
     executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
     cm_ = std::make_shared<controller_manager::ControllerManager>(
       std::make_unique<hardware_interface::ResourceManager>(
-        ros2_control_test_assets::minimal_robot_urdf, true, true),
+        ros2_control_test_assets::minimal_robot_urdf, rm_node_->get_node_clock_interface(),
+        rm_node_->get_node_logging_interface(), true),
       executor_, TEST_CM_NAME, TEST_NAMESPACE);
     run_updater_ = false;
   }

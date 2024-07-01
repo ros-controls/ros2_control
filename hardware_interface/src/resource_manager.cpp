@@ -99,12 +99,22 @@ public:
   // TODO(VX792): Change this when HW ifs get their own update rate,
   // because the ResourceStorage really shouldn't know about the cm's parameters
   explicit ResourceStorage(
-    rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface = nullptr)
+    rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface,
+    rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logger_interface)
   : actuator_loader_(pkg_name, actuator_interface_name),
     sensor_loader_(pkg_name, sensor_interface_name),
     system_loader_(pkg_name, system_interface_name),
     clock_interface_(clock_interface)
   {
+    if (!clock_interface_)
+    {
+      throw std::invalid_argument(
+        "Clock interface is nullptr. ResourceManager needs a valid clock interface.");
+    }
+    if (logger_interface)
+    {
+      rm_logger_ = logger_interface->get_logger().get_child("resource_manager");
+    }
   }
 
   template <class HardwareT, class HardwareInterfaceT>
@@ -115,15 +125,14 @@ public:
     bool is_loaded = false;
     try
     {
-      RCUTILS_LOG_INFO_NAMED(
-        "resource_manager", "Loading hardware '%s' ", hardware_info.name.c_str());
+      RCLCPP_INFO(get_logger(), "Loading hardware '%s' ", hardware_info.name.c_str());
       // hardware_plugin_name has to match class name in plugin xml description
       auto interface = std::unique_ptr<HardwareInterfaceT>(
         loader.createUnmanagedInstance(hardware_info.hardware_plugin_name));
       if (interface)
       {
-        RCUTILS_LOG_INFO_NAMED(
-          "resource_manager", "Loaded hardware '%s' from plugin '%s'", hardware_info.name.c_str(),
+        RCLCPP_INFO(
+          get_logger(), "Loaded hardware '%s' from plugin '%s'", hardware_info.name.c_str(),
           hardware_info.hardware_plugin_name.c_str());
         HardwareT hardware(std::move(interface));
         container.emplace_back(std::move(hardware));
@@ -143,26 +152,25 @@ public:
       }
       else
       {
-        RCUTILS_LOG_ERROR_NAMED(
-          "resource_manager", "Failed to load hardware '%s' from plugin '%s'",
-          hardware_info.name.c_str(), hardware_info.hardware_plugin_name.c_str());
+        RCLCPP_ERROR(
+          get_logger(), "Failed to load hardware '%s' from plugin '%s'", hardware_info.name.c_str(),
+          hardware_info.hardware_plugin_name.c_str());
       }
     }
     catch (const pluginlib::PluginlibException & ex)
     {
-      RCUTILS_LOG_ERROR_NAMED(
-        "resource_manager", "Exception while loading hardware: %s", ex.what());
+      RCLCPP_ERROR(get_logger(), "Exception while loading hardware: %s", ex.what());
     }
     catch (const std::exception & ex)
     {
-      RCUTILS_LOG_ERROR_NAMED(
-        "resource_manager", "Exception occurred while loading hardware '%s': %s",
+      RCLCPP_ERROR(
+        get_logger(), "Exception occurred while loading hardware '%s': %s",
         hardware_info.name.c_str(), ex.what());
     }
     catch (...)
     {
-      RCUTILS_LOG_ERROR_NAMED(
-        "resource_manager", "Unknown exception occurred while loading hardware '%s'",
+      RCLCPP_ERROR(
+        get_logger(), "Unknown exception occurred while loading hardware '%s'",
         hardware_info.name.c_str());
     }
     return is_loaded;
@@ -171,37 +179,36 @@ public:
   template <class HardwareT>
   bool initialize_hardware(const HardwareInfo & hardware_info, HardwareT & hardware)
   {
-    RCUTILS_LOG_INFO_NAMED(
-      "resource_manager", "Initialize hardware '%s' ", hardware_info.name.c_str());
+    RCLCPP_INFO(get_logger(), "Initialize hardware '%s' ", hardware_info.name.c_str());
 
     bool result = false;
     try
     {
-      const rclcpp_lifecycle::State new_state = hardware.initialize(hardware_info);
+      const rclcpp_lifecycle::State new_state =
+        hardware.initialize(hardware_info, rm_logger_, clock_interface_);
       result = new_state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED;
 
       if (result)
       {
-        RCUTILS_LOG_INFO_NAMED(
-          "resource_manager", "Successful initialization of hardware '%s'",
-          hardware_info.name.c_str());
+        RCLCPP_INFO(
+          get_logger(), "Successful initialization of hardware '%s'", hardware_info.name.c_str());
       }
       else
       {
-        RCUTILS_LOG_INFO_NAMED(
-          "resource_manager", "Failed to initialize hardware '%s'", hardware_info.name.c_str());
+        RCLCPP_ERROR(
+          get_logger(), "Failed to initialize hardware '%s'", hardware_info.name.c_str());
       }
     }
     catch (const std::exception & ex)
     {
-      RCUTILS_LOG_ERROR_NAMED(
-        "resource_manager", "Exception occurred while initializing hardware '%s': %s",
+      RCLCPP_ERROR(
+        get_logger(), "Exception occurred while initializing hardware '%s': %s",
         hardware_info.name.c_str(), ex.what());
     }
     catch (...)
     {
-      RCUTILS_LOG_ERROR_NAMED(
-        "resource_manager", "Unknown exception occurred while initializing hardware '%s'",
+      RCLCPP_ERROR(
+        get_logger(), "Unknown exception occurred while initializing hardware '%s'",
         hardware_info.name.c_str());
     }
 
@@ -220,14 +227,14 @@ public:
     }
     catch (const std::exception & ex)
     {
-      RCUTILS_LOG_ERROR_NAMED(
-        "resource_manager", "Exception occurred while configuring hardware '%s': %s",
+      RCLCPP_ERROR(
+        get_logger(), "Exception occurred while configuring hardware '%s': %s",
         hardware.get_name().c_str(), ex.what());
     }
     catch (...)
     {
-      RCUTILS_LOG_ERROR_NAMED(
-        "resource_manager", "Unknown exception occurred while configuring hardware '%s'",
+      RCLCPP_ERROR(
+        get_logger(), "Unknown exception occurred while configuring hardware '%s'",
         hardware.get_name().c_str());
     }
 
@@ -247,16 +254,16 @@ public:
         if (found_it == available_state_interfaces_.end())
         {
           available_state_interfaces_.emplace_back(interface);
-          RCUTILS_LOG_DEBUG_NAMED(
-            "resource_manager", "(hardware '%s'): '%s' state interface added into available list",
+          RCLCPP_DEBUG(
+            get_logger(), "(hardware '%s'): '%s' state interface added into available list",
             hardware.get_name().c_str(), interface.c_str());
         }
         else
         {
           // TODO(destogl): do here error management if interfaces are only partially added into
           // "available" list - this should never be the case!
-          RCUTILS_LOG_WARN_NAMED(
-            "resource_manager",
+          RCLCPP_WARN(
+            get_logger(),
             "(hardware '%s'): '%s' state interface already in available list."
             " This can happen due to multiple calls to 'configure'",
             hardware.get_name().c_str(), interface.c_str());
@@ -273,16 +280,16 @@ public:
         if (found_it == available_command_interfaces_.end())
         {
           available_command_interfaces_.emplace_back(interface);
-          RCUTILS_LOG_DEBUG_NAMED(
-            "resource_manager", "(hardware '%s'): '%s' command interface added into available list",
+          RCLCPP_DEBUG(
+            get_logger(), "(hardware '%s'): '%s' command interface added into available list",
             hardware.get_name().c_str(), interface.c_str());
         }
         else
         {
           // TODO(destogl): do here error management if interfaces are only partially added into
           // "available" list - this should never be the case!
-          RCUTILS_LOG_WARN_NAMED(
-            "resource_manager",
+          RCLCPP_WARN(
+            get_logger(),
             "(hardware '%s'): '%s' command interface already in available list."
             " This can happen due to multiple calls to 'configure'",
             hardware.get_name().c_str(), interface.c_str());
@@ -316,16 +323,16 @@ public:
       if (found_it != available_command_interfaces_.end())
       {
         available_command_interfaces_.erase(found_it);
-        RCUTILS_LOG_DEBUG_NAMED(
-          "resource_manager", "(hardware '%s'): '%s' command interface removed from available list",
+        RCLCPP_DEBUG(
+          get_logger(), "(hardware '%s'): '%s' command interface removed from available list",
           hardware_name.c_str(), interface.c_str());
       }
       else
       {
         // TODO(destogl): do here error management if interfaces are only partially added into
         // "available" list - this should never be the case!
-        RCUTILS_LOG_WARN_NAMED(
-          "resource_manager",
+        RCLCPP_WARN(
+          get_logger(),
           "(hardware '%s'): '%s' command interface not in available list. "
           "This should not happen (hint: multiple cleanup calls).",
           hardware_name.c_str(), interface.c_str());
@@ -340,16 +347,16 @@ public:
       if (found_it != available_state_interfaces_.end())
       {
         available_state_interfaces_.erase(found_it);
-        RCUTILS_LOG_DEBUG_NAMED(
-          "resource_manager", "(hardware '%s'): '%s' state interface removed from available list",
+        RCLCPP_DEBUG(
+          get_logger(), "(hardware '%s'): '%s' state interface removed from available list",
           hardware_name.c_str(), interface.c_str());
       }
       else
       {
         // TODO(destogl): do here error management if interfaces are only partially added into
         // "available" list - this should never be the case!
-        RCUTILS_LOG_WARN_NAMED(
-          "resource_manager",
+        RCLCPP_WARN(
+          get_logger(),
           "(hardware '%s'): '%s' state interface not in available list. "
           "This should not happen (hint: multiple cleanup calls).",
           hardware_name.c_str(), interface.c_str());
@@ -369,14 +376,14 @@ public:
     }
     catch (const std::exception & ex)
     {
-      RCUTILS_LOG_ERROR_NAMED(
-        "resource_manager", "Exception occurred while cleaning up hardware '%s': %s",
+      RCLCPP_ERROR(
+        get_logger(), "Exception occurred while cleaning up hardware '%s': %s",
         hardware.get_name().c_str(), ex.what());
     }
     catch (...)
     {
-      RCUTILS_LOG_ERROR_NAMED(
-        "resource_manager", "Unknown exception occurred while cleaning up hardware '%s'",
+      RCLCPP_ERROR(
+        get_logger(), "Unknown exception occurred while cleaning up hardware '%s'",
         hardware.get_name().c_str());
     }
 
@@ -403,14 +410,14 @@ public:
     }
     catch (const std::exception & ex)
     {
-      RCUTILS_LOG_ERROR_NAMED(
-        "resource_manager", "Exception occurred while shutting down hardware '%s': %s",
+      RCLCPP_ERROR(
+        get_logger(), "Exception occurred while shutting down hardware '%s': %s",
         hardware.get_name().c_str(), ex.what());
     }
     catch (...)
     {
-      RCUTILS_LOG_ERROR_NAMED(
-        "resource_manager", "Unknown exception occurred while shutting down hardware '%s'",
+      RCLCPP_ERROR(
+        get_logger(), "Unknown exception occurred while shutting down hardware '%s'",
         hardware.get_name().c_str());
     }
 
@@ -442,14 +449,14 @@ public:
     }
     catch (const std::exception & ex)
     {
-      RCUTILS_LOG_ERROR_NAMED(
-        "resource_manager", "Exception occurred while activating hardware '%s': %s",
+      RCLCPP_ERROR(
+        get_logger(), "Exception occurred while activating hardware '%s': %s",
         hardware.get_name().c_str(), ex.what());
     }
     catch (...)
     {
-      RCUTILS_LOG_ERROR_NAMED(
-        "resource_manager", "Unknown exception occurred while activating hardware '%s'",
+      RCLCPP_ERROR(
+        get_logger(), "Unknown exception occurred while activating hardware '%s'",
         hardware.get_name().c_str());
     }
 
@@ -477,14 +484,14 @@ public:
     }
     catch (const std::exception & ex)
     {
-      RCUTILS_LOG_ERROR_NAMED(
-        "resource_manager", "Exception occurred while deactivating hardware '%s': %s",
+      RCLCPP_ERROR(
+        get_logger(), "Exception occurred while deactivating hardware '%s': %s",
         hardware.get_name().c_str(), ex.what());
     }
     catch (...)
     {
-      RCUTILS_LOG_ERROR_NAMED(
-        "resource_manager", "Unknown exception occurred while deactivating hardware '%s'",
+      RCLCPP_ERROR(
+        get_logger(), "Unknown exception occurred while deactivating hardware '%s'",
         hardware.get_name().c_str());
     }
 
@@ -523,8 +530,8 @@ public:
             break;
           case State::PRIMARY_STATE_FINALIZED:
             result = false;
-            RCUTILS_LOG_WARN_NAMED(
-              "resource_manager", "hardware '%s' is in finalized state and can be only destroyed.",
+            RCLCPP_WARN(
+              get_logger(), "hardware '%s' is in finalized state and can be only destroyed.",
               hardware.get_name().c_str());
             break;
         }
@@ -543,8 +550,8 @@ public:
             break;
           case State::PRIMARY_STATE_FINALIZED:
             result = false;
-            RCUTILS_LOG_WARN_NAMED(
-              "resource_manager", "hardware '%s' is in finalized state and can be only destroyed.",
+            RCLCPP_WARN(
+              get_logger(), "hardware '%s' is in finalized state and can be only destroyed.",
               hardware.get_name().c_str());
             break;
         }
@@ -567,8 +574,8 @@ public:
             break;
           case State::PRIMARY_STATE_FINALIZED:
             result = false;
-            RCUTILS_LOG_WARN_NAMED(
-              "resource_manager", "hardware '%s' is in finalized state and can be only destroyed.",
+            RCLCPP_WARN(
+              get_logger(), "hardware '%s' is in finalized state and can be only destroyed.",
               hardware.get_name().c_str());
             break;
         }
@@ -615,15 +622,15 @@ public:
     }
     catch (const std::exception & e)
     {
-      RCUTILS_LOG_ERROR_NAMED(
-        "resource_manager",
+      RCLCPP_ERROR(
+        get_logger(),
         "Exception occurred while importing state interfaces for the hardware '%s' : %s",
         hardware.get_name().c_str(), e.what());
     }
     catch (...)
     {
-      RCUTILS_LOG_ERROR_NAMED(
-        "resource_manager",
+      RCLCPP_ERROR(
+        get_logger(),
         "Unknown exception occurred while importing state interfaces for the hardware '%s'",
         hardware.get_name().c_str());
     }
@@ -640,15 +647,15 @@ public:
     }
     catch (const std::exception & ex)
     {
-      RCUTILS_LOG_ERROR_NAMED(
-        "resource_manager",
+      RCLCPP_ERROR(
+        get_logger(),
         "Exception occurred while importing command interfaces for the hardware '%s' : %s",
         hardware.get_name().c_str(), ex.what());
     }
     catch (...)
     {
-      RCUTILS_LOG_ERROR_NAMED(
-        "resource_manager",
+      RCLCPP_ERROR(
+        get_logger(),
         "Unknown exception occurred while importing command interfaces for the hardware '%s'",
         hardware.get_name().c_str());
     }
@@ -713,9 +720,8 @@ public:
       }
       else
       {
-        RCUTILS_LOG_ERROR_NAMED(
-          "resource_manager",
-          "Actuator hardware component '%s' from plugin '%s' failed to initialize.",
+        RCLCPP_WARN(
+          get_logger(), "Actuator hardware component '%s' from plugin '%s' failed to initialize.",
           hardware_info.name.c_str(), hardware_info.hardware_plugin_name.c_str());
         return false;
       }
@@ -746,9 +752,8 @@ public:
       }
       else
       {
-        RCUTILS_LOG_ERROR_NAMED(
-          "resource_manager",
-          "Sensor hardware component '%s' from plugin '%s' failed to initialize.",
+        RCLCPP_WARN(
+          get_logger(), "Sensor hardware component '%s' from plugin '%s' failed to initialize.",
           hardware_info.name.c_str(), hardware_info.hardware_plugin_name.c_str());
         return false;
       }
@@ -780,9 +785,8 @@ public:
       }
       else
       {
-        RCUTILS_LOG_ERROR_NAMED(
-          "resource_manager",
-          "System hardware component '%s' from plugin '%s' failed to initialize.",
+        RCLCPP_WARN(
+          get_logger(), "System hardware component '%s' from plugin '%s' failed to initialize.",
           hardware_info.name.c_str(), hardware_info.hardware_plugin_name.c_str());
         return false;
       }
@@ -812,9 +816,8 @@ public:
       }
       else
       {
-        RCUTILS_LOG_WARN_NAMED(
-          "resource_manager",
-          "Actuator hardware component '%s' from plugin '%s' failed to initialize.",
+        RCLCPP_WARN(
+          get_logger(), "Actuator hardware component '%s' from plugin '%s' failed to initialize.",
           hardware_info.name.c_str(), hardware_info.hardware_plugin_name.c_str());
       }
     };
@@ -841,9 +844,8 @@ public:
       }
       else
       {
-        RCUTILS_LOG_WARN_NAMED(
-          "resource_manager",
-          "Sensor hardware component '%s' from plugin '%s' failed to initialize.",
+        RCLCPP_WARN(
+          get_logger(), "Sensor hardware component '%s' from plugin '%s' failed to initialize.",
           hardware_info.name.c_str(), hardware_info.hardware_plugin_name.c_str());
       }
     };
@@ -871,9 +873,8 @@ public:
       }
       else
       {
-        RCUTILS_LOG_WARN_NAMED(
-          "resource_manager",
-          "System hardware component '%s' from plugin '%s' failed to initialize.",
+        RCLCPP_WARN(
+          get_logger(), "System hardware component '%s' from plugin '%s' failed to initialize.",
           hardware_info.name.c_str(), hardware_info.hardware_plugin_name.c_str());
       }
     };
@@ -929,10 +930,27 @@ public:
     return hw_group_state_.at(group_name);
   }
 
+  /// Gets the logger for the resource storage
+  /**
+   * \return logger of the resource storage
+   */
+  const rclcpp::Logger & get_logger() const { return rm_logger_; }
+
+  /// Gets the clock for the resource storage
+  /**
+   * \return clock of the resource storage
+   */
+  rclcpp::Clock::SharedPtr get_clock() const { return clock_interface_->get_clock(); }
+
   // hardware plugins
   pluginlib::ClassLoader<ActuatorInterface> actuator_loader_;
   pluginlib::ClassLoader<SensorInterface> sensor_loader_;
   pluginlib::ClassLoader<SystemInterface> system_loader_;
+
+  // Logger and Clock interfaces
+  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface_;
+  rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logger_interface_;
+  rclcpp::Logger rm_logger_ = rclcpp::get_logger("resource_manager");
 
   std::vector<Actuator> actuators_;
   std::vector<Sensor> sensors_;
@@ -969,21 +987,22 @@ public:
   // Update rate of the controller manager, and the clock interface of its node
   // Used by async components.
   unsigned int cm_update_rate_ = 100;
-  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface_;
 };
 
 ResourceManager::ResourceManager(
-  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
-: resource_storage_(std::make_unique<ResourceStorage>(clock_interface))
+  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface,
+  rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logger_interface)
+: resource_storage_(std::make_unique<ResourceStorage>(clock_interface, logger_interface))
 {
 }
 
 ResourceManager::~ResourceManager() = default;
 
 ResourceManager::ResourceManager(
-  const std::string & urdf, bool activate_all, const unsigned int update_rate,
-  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
-: resource_storage_(std::make_unique<ResourceStorage>(clock_interface))
+  const std::string & urdf, rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface,
+  rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logger_interface, bool activate_all,
+  const unsigned int update_rate)
+: resource_storage_(std::make_unique<ResourceStorage>(clock_interface, logger_interface))
 {
   load_and_initialize_components(urdf, update_rate);
 
@@ -1166,9 +1185,8 @@ void ResourceManager::make_controller_reference_interfaces_unavailable(
     if (found_it != resource_storage_->available_command_interfaces_.end())
     {
       resource_storage_->available_command_interfaces_.erase(found_it);
-      RCUTILS_LOG_DEBUG_NAMED(
-        "resource_manager", "'%s' command interface removed from available list",
-        interface.c_str());
+      RCLCPP_DEBUG(
+        get_logger(), "'%s' command interface removed from available list", interface.c_str());
     }
   }
 }
@@ -1382,8 +1400,8 @@ bool ResourceManager::prepare_command_mode_switch(
   if (!(check_exist(start_interfaces) && check_exist(stop_interfaces)))
   {
     ss_not_existing << "]" << std::endl;
-    RCUTILS_LOG_ERROR_NAMED(
-      "resource_manager", "Not acceptable command interfaces combination: \n%s%s",
+    RCLCPP_ERROR(
+      get_logger(), "Not acceptable command interfaces combination: \n%s%s",
       interfaces_to_string(start_interfaces, stop_interfaces).c_str(),
       ss_not_existing.str().c_str());
     return false;
@@ -1408,14 +1426,15 @@ bool ResourceManager::prepare_command_mode_switch(
   if (!(check_available(start_interfaces) && check_available(stop_interfaces)))
   {
     ss_not_available << "]" << std::endl;
-    RCUTILS_LOG_ERROR_NAMED(
-      "resource_manager", "Not acceptable command interfaces combination: \n%s%s",
+    RCLCPP_ERROR(
+      get_logger(), "Not acceptable command interfaces combination: \n%s%s",
       interfaces_to_string(start_interfaces, stop_interfaces).c_str(),
       ss_not_available.str().c_str());
     return false;
   }
 
-  auto call_prepare_mode_switch = [&start_interfaces, &stop_interfaces](auto & components)
+  auto call_prepare_mode_switch =
+    [&start_interfaces, &stop_interfaces, logger = get_logger()](auto & components)
   {
     bool ret = true;
     for (auto & component : components)
@@ -1430,9 +1449,8 @@ bool ResourceManager::prepare_command_mode_switch(
             return_type::OK !=
             component.prepare_command_mode_switch(start_interfaces, stop_interfaces))
           {
-            RCUTILS_LOG_ERROR_NAMED(
-              "resource_manager",
-              "Component '%s' did not accept command interfaces combination: \n%s",
+            RCLCPP_ERROR(
+              logger, "Component '%s' did not accept command interfaces combination: \n%s",
               component.get_name().c_str(),
               interfaces_to_string(start_interfaces, stop_interfaces).c_str());
             ret = false;
@@ -1440,8 +1458,8 @@ bool ResourceManager::prepare_command_mode_switch(
         }
         catch (const std::exception & e)
         {
-          RCUTILS_LOG_ERROR_NAMED(
-            "resource_manager",
+          RCLCPP_ERROR(
+            logger,
             "Exception occurred while preparing command mode switch for component '%s' for the "
             "interfaces: \n %s : %s",
             component.get_name().c_str(),
@@ -1450,8 +1468,8 @@ bool ResourceManager::prepare_command_mode_switch(
         }
         catch (...)
         {
-          RCUTILS_LOG_ERROR_NAMED(
-            "resource_manager",
+          RCLCPP_ERROR(
+            logger,
             "Unknown exception occurred while preparing command mode switch for component '%s' for "
             "the interfaces: \n %s",
             component.get_name().c_str(),
@@ -1480,7 +1498,8 @@ bool ResourceManager::perform_command_mode_switch(
     return true;
   }
 
-  auto call_perform_mode_switch = [&start_interfaces, &stop_interfaces](auto & components)
+  auto call_perform_mode_switch =
+    [&start_interfaces, &stop_interfaces, logger = get_logger()](auto & components)
   {
     bool ret = true;
     for (auto & component : components)
@@ -1495,16 +1514,15 @@ bool ResourceManager::perform_command_mode_switch(
             return_type::OK !=
             component.perform_command_mode_switch(start_interfaces, stop_interfaces))
           {
-            RCUTILS_LOG_ERROR_NAMED(
-              "resource_manager", "Component '%s' could not perform switch",
-              component.get_name().c_str());
+            RCLCPP_ERROR(
+              logger, "Component '%s' could not perform switch", component.get_name().c_str());
             ret = false;
           }
         }
         catch (const std::exception & e)
         {
-          RCUTILS_LOG_ERROR_NAMED(
-            "resource_manager",
+          RCLCPP_ERROR(
+            logger,
             "Exception occurred while performing command mode switch for component '%s' for the "
             "interfaces: \n %s : %s",
             component.get_name().c_str(),
@@ -1513,8 +1531,8 @@ bool ResourceManager::perform_command_mode_switch(
         }
         catch (...)
         {
-          RCUTILS_LOG_ERROR_NAMED(
-            "resource_manager",
+          RCLCPP_ERROR(
+            logger,
             "Unknown exception occurred while performing command mode switch for component '%s' "
             "for "
             "the interfaces: \n %s",
@@ -1545,9 +1563,8 @@ return_type ResourceManager::set_component_state(
 
   if (found_it == resource_storage_->hardware_info_map_.end())
   {
-    RCUTILS_LOG_INFO_NAMED(
-      "resource_manager", "Hardware Component with name '%s' does not exists",
-      component_name.c_str());
+    RCLCPP_INFO(
+      get_logger(), "Hardware Component with name '%s' does not exists", component_name.c_str());
     return return_type::ERROR;
   }
 
@@ -1665,15 +1682,15 @@ HardwareReadWriteStatus ResourceManager::read(
       }
       catch (const std::exception & e)
       {
-        RCUTILS_LOG_ERROR_NAMED(
-          "resource_manager", "Exception thrown durind read of the component '%s': %s",
+        RCLCPP_ERROR(
+          get_logger(), "Exception thrown durind read of the component '%s': %s",
           component.get_name().c_str(), e.what());
         ret_val = return_type::ERROR;
       }
       catch (...)
       {
-        RCUTILS_LOG_ERROR_NAMED(
-          "resource_manager", "Unknown exception thrown during read of the component '%s'",
+        RCLCPP_ERROR(
+          get_logger(), "Unknown exception thrown during read of the component '%s'",
           component.get_name().c_str());
         ret_val = return_type::ERROR;
       }
@@ -1726,15 +1743,15 @@ HardwareReadWriteStatus ResourceManager::write(
       }
       catch (const std::exception & e)
       {
-        RCUTILS_LOG_ERROR_NAMED(
-          "resource_manager", "Exception thrown during write of the component '%s': %s",
+        RCLCPP_ERROR(
+          get_logger(), "Exception thrown during write of the component '%s': %s",
           component.get_name().c_str(), e.what());
         ret_val = return_type::ERROR;
       }
       catch (...)
       {
-        RCUTILS_LOG_ERROR_NAMED(
-          "resource_manager", "Unknown exception thrown during write of the component '%s'",
+        RCLCPP_ERROR(
+          get_logger(), "Unknown exception thrown during write of the component '%s'",
           component.get_name().c_str());
         ret_val = return_type::ERROR;
       }
@@ -1788,6 +1805,13 @@ bool ResourceManager::state_interface_exists(const std::string & key) const
 }
 
 // END: "used only in tests and locally"
+
+rclcpp::Logger ResourceManager::get_logger() const { return resource_storage_->get_logger(); }
+
+rclcpp::Clock::SharedPtr ResourceManager::get_clock() const
+{
+  return resource_storage_->get_clock();
+}
 
 // BEGIN: private methods
 

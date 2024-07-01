@@ -158,15 +158,15 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
     {
       index_custom_interface_with_following_offset_ =
         std::distance(other_interfaces_.begin(), if_it);
-      RCUTILS_LOG_INFO_NAMED(
-        "mock_generic_system", "Custom interface with following offset '%s' found at index: %zu.",
+      RCLCPP_INFO(
+        get_logger(), "Custom interface with following offset '%s' found at index: %zu.",
         custom_interface_with_following_offset_.c_str(),
         index_custom_interface_with_following_offset_);
     }
     else
     {
-      RCUTILS_LOG_WARN_NAMED(
-        "mock_generic_system",
+      RCLCPP_WARN(
+        get_logger(),
         "Custom interface with following offset '%s' does not exist. Offset will not be applied",
         custom_interface_with_following_offset_.c_str());
     }
@@ -356,8 +356,8 @@ return_type GenericSystem::prepare_command_mode_switch(
       {
         if (!calculate_dynamics_)
         {
-          RCUTILS_LOG_WARN_NAMED(
-            "mock_generic_system",
+          RCLCPP_WARN(
+            get_logger(),
             "Requested velocity mode for joint '%s' without dynamics calculation enabled - this "
             "might lead to wrong feedback and unexpected behavior.",
             info_.joints[joint_index].name.c_str());
@@ -368,8 +368,8 @@ return_type GenericSystem::prepare_command_mode_switch(
       {
         if (!calculate_dynamics_)
         {
-          RCUTILS_LOG_WARN_NAMED(
-            "mock_generic_system",
+          RCLCPP_WARN(
+            get_logger(),
             "Requested acceleration mode for joint '%s' without dynamics calculation enabled - "
             "this might lead to wrong feedback and unexpected behavior.",
             info_.joints[joint_index].name.c_str());
@@ -379,9 +379,8 @@ return_type GenericSystem::prepare_command_mode_switch(
     }
     else
     {
-      RCUTILS_LOG_DEBUG_NAMED(
-        "mock_generic_system", "Got interface '%s' that is not joint - nothing to do!",
-        key.c_str());
+      RCLCPP_DEBUG(
+        get_logger(), "Got interface '%s' that is not joint - nothing to do!", key.c_str());
     }
   }
 
@@ -390,8 +389,8 @@ return_type GenericSystem::prepare_command_mode_switch(
     // There has to always be at least one control mode from the above three set
     if (joint_found_in_x_requests_[i] == FOUND_ONCE_FLAG)
     {
-      RCUTILS_LOG_ERROR_NAMED(
-        "mock_generic_system", "Joint '%s' has to have '%s', '%s', or '%s' interface!",
+      RCLCPP_ERROR(
+        get_logger(), "Joint '%s' has to have '%s', '%s', or '%s' interface!",
         info_.joints[i].name.c_str(), hardware_interface::HW_IF_POSITION,
         hardware_interface::HW_IF_VELOCITY, hardware_interface::HW_IF_ACCELERATION);
       ret_val = hardware_interface::return_type::ERROR;
@@ -400,8 +399,8 @@ return_type GenericSystem::prepare_command_mode_switch(
     // Currently we don't support multiple interface request
     if (joint_found_in_x_requests_[i] > (FOUND_ONCE_FLAG + 1))
     {
-      RCUTILS_LOG_ERROR_NAMED(
-        "mock_generic_system",
+      RCLCPP_ERROR(
+        get_logger(),
         "Got multiple (%zu) starting interfaces for joint '%s' - this is not "
         "supported!",
         joint_found_in_x_requests_[i] - FOUND_ONCE_FLAG, info_.joints[i].name.c_str());
@@ -454,8 +453,7 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
 {
   if (command_propagation_disabled_)
   {
-    RCUTILS_LOG_WARN_NAMED(
-      "mock_generic_system", "Command propagation is disabled - no values will be returned!");
+    RCLCPP_WARN(get_logger(), "Command propagation is disabled - no values will be returned!");
     return return_type::OK;
   }
 
