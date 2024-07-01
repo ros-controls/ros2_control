@@ -557,13 +557,6 @@ controller_interface::return_type ControllerManager::unload_controller(
       controller_name.c_str());
     return controller_interface::return_type::ERROR;
   }
-  if (controller.c->is_async())
-  {
-    RCLCPP_DEBUG(
-      get_logger(), "Removing controller '%s' from the list of async controllers",
-      controller_name.c_str());
-    async_controller_threads_.erase(controller_name);
-  }
 
   RCLCPP_DEBUG(get_logger(), "Cleanup controller");
   controller_chain_spec_cleanup(controller_chain_spec_, controller_name);
@@ -703,14 +696,6 @@ controller_interface::return_type ControllerManager::configure_controller(
       get_logger(), "Caught unknown exception while configuring controller '%s'",
       controller_name.c_str());
     return controller_interface::return_type::ERROR;
-  }
-
-  // ASYNCHRONOUS CONTROLLERS: Start background thread for update
-  if (controller->is_async())
-  {
-    async_controller_threads_.emplace(
-      controller_name,
-      std::make_unique<controller_interface::AsyncControllerThread>(controller, update_rate_));
   }
 
   const auto controller_update_rate = controller->get_update_rate();
@@ -1415,6 +1400,8 @@ void ControllerManager::deactivate_controllers(
     {
       try
       {
+        // This is needed by the async controllers to finish their current cycle
+        controller->stop_async_update_cycle();
         const auto new_state = controller->get_node()->deactivate();
         controller->release_interfaces();
 
@@ -1631,11 +1618,6 @@ void ControllerManager::activate_controllers(
     if (controller->is_chainable())
     {
       resource_manager_->make_controller_reference_interfaces_available(controller_name);
-    }
-
-    if (controller->is_async())
-    {
-      async_controller_threads_.at(controller_name)->activate();
     }
   }
 }
@@ -2141,7 +2123,7 @@ controller_interface::return_type ControllerManager::update(
   {
     // TODO(v-lopez) we could cache this information
     // https://github.com/ros-controls/ros2_control/issues/153
-    if (!loaded_controller.c->is_async() && is_controller_active(*loaded_controller.c))
+    if (is_controller_active(*loaded_controller.c))
     {
       const auto controller_update_rate = loaded_controller.c->get_update_rate();
       const bool run_controller_at_cm_rate = (controller_update_rate >= update_rate_);
@@ -2175,10 +2157,12 @@ controller_interface::return_type ControllerManager::update(
         const auto controller_actual_period =
           (time - *loaded_controller.next_update_cycle_time) + controller_period;
         auto controller_ret = controller_interface::return_type::OK;
+        bool trigger_status = true;
         // Catch exceptions thrown by the controller update function
         try
         {
-          controller_ret = loaded_controller.c->update(time, controller_actual_period);
+          std::tie(trigger_status, controller_ret) =
+            loaded_controller.c->trigger_update(time, controller_actual_period);
         }
         catch (const std::exception & e)
         {
@@ -2196,6 +2180,15 @@ controller_interface::return_type ControllerManager::update(
         }
 
         *loaded_controller.next_update_cycle_time += controller_period;
+        if (!trigger_status)
+        {
+          RCLCPP_WARN(
+            get_logger(),
+            "The controller '%s' missed an update cycle at time : '%f', will trigger next update "
+            "cycle at around : '%f'",
+            loaded_controller.info.name.c_str(), time.seconds(),
+            loaded_controller.next_update_cycle_time->seconds());
+        }
 
         if (controller_ret != controller_interface::return_type::OK)
         {
@@ -2327,8 +2320,6 @@ unsigned int ControllerManager::get_update_rate() const { return update_rate_; }
 
 void ControllerManager::shutdown_async_controllers_and_components()
 {
-  async_controller_threads_.erase(
-    async_controller_threads_.begin(), async_controller_threads_.end());
   resource_manager_->shutdown_async_components();
 }
 

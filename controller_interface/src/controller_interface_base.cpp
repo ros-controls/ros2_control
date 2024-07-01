@@ -16,7 +16,6 @@
 
 #include <memory>
 #include <string>
-#include <utility>
 #include <vector>
 
 #include "hardware_interface/types/lifecycle_state_names.hpp"
@@ -89,6 +88,14 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
     update_rate_ = static_cast<unsigned int>(get_node()->get_parameter("update_rate").as_int());
     is_async_ = get_node()->get_parameter("is_async").as_bool();
   }
+  if (is_async_)
+  {
+    async_handler_ = std::make_unique<realtime_tools::AsyncFunctionHandler<return_type>>();
+    async_handler_->init(
+      std::bind(
+        &ControllerInterfaceBase::update, this, std::placeholders::_1, std::placeholders::_2));
+    async_handler_->start_async_update_thread();
+  }
 
   return get_node()->configure();
 }
@@ -110,6 +117,19 @@ void ControllerInterfaceBase::release_interfaces()
 const rclcpp_lifecycle::State & ControllerInterfaceBase::get_state() const
 {
   return node_->get_current_state();
+}
+
+std::pair<bool, return_type> ControllerInterfaceBase::trigger_update(
+  const rclcpp::Time & time, const rclcpp::Duration & period)
+{
+  if (is_async())
+  {
+    return async_handler_->trigger_async_update(time, period);
+  }
+  else
+  {
+    return std::make_pair(true, update(time, period));
+  }
 }
 
 std::shared_ptr<rclcpp_lifecycle::LifecycleNode> ControllerInterfaceBase::get_node()
@@ -136,4 +156,11 @@ bool ControllerInterfaceBase::is_async() const { return is_async_; }
 
 const std::string & ControllerInterfaceBase::get_robot_description() const { return urdf_; }
 
+void ControllerInterfaceBase::stop_async_update_cycle()
+{
+  if (is_async() && async_handler_ && async_handler_->is_running())
+  {
+    async_handler_->stop_async_update();
+  }
+}
 }  // namespace controller_interface
