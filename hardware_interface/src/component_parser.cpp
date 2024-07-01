@@ -563,11 +563,13 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
   tinyxml2::XMLDocument doc;
   if (!doc.Parse(urdf.c_str()) && doc.Error())
   {
-    throw std::runtime_error("invalid URDF passed in to robot parser");
+    throw std::runtime_error(
+      "invalid URDF passed in to robot parser: " + std::string(doc.ErrorStr()));
   }
   if (doc.Error())
   {
-    throw std::runtime_error("invalid URDF passed in to robot parser");
+    throw std::runtime_error(
+      "invalid URDF passed in to robot parser: " + std::string(doc.ErrorStr()));
   }
 
   // Find robot tag
