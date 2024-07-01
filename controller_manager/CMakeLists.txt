@@ -72,6 +72,17 @@ if(BUILD_TESTING)
     DESTINATION lib
   )
 
+  add_library(test_controller_with_command SHARED
+    test/test_controller_with_command/test_controller_with_command.cpp)
+  target_link_libraries(test_controller_with_command PUBLIC controller_manager)
+  target_compile_definitions(test_controller_with_command PRIVATE "CONTROLLER_MANAGER_BUILDING_DLL")
+  pluginlib_export_plugin_description_file(
+    controller_interface test/test_controller_with_command/test_controller_with_command.xml)
+  install(
+    TARGETS test_controller_with_command
+    DESTINATION lib
+  )
+
   add_library(test_chainable_controller SHARED
     test/test_chainable_controller/test_chainable_controller.cpp
   )
@@ -120,6 +131,16 @@ if(BUILD_TESTING)
     controller_manager
     test_controller
     test_controller_failed_init
+    ros2_control_test_assets::ros2_control_test_assets
+  )
+
+  ament_add_gmock(test_restart_controller
+    test/test_restart_controller.cpp
+    APPEND_ENV AMENT_PREFIX_PATH=${ament_index_build_path}_$<CONFIG>
+  )
+  target_link_libraries(test_restart_controller
+    controller_manager
+    test_controller_with_command
     ros2_control_test_assets::ros2_control_test_assets
   )
 
