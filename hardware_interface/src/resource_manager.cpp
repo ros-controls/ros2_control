@@ -132,6 +132,14 @@ public:
         component_info.name = hardware_info.name;
         component_info.type = hardware_info.type;
         component_info.group = hardware_info.group;
+        component_info.read_rate =
+          (hardware_info.rw_rate == 0 || hardware_info.rw_rate > cm_update_rate_)
+            ? cm_update_rate_
+            : hardware_info.rw_rate;
+        component_info.write_rate =
+          (hardware_info.rw_rate == 0 || hardware_info.rw_rate > cm_update_rate_)
+            ? cm_update_rate_
+            : hardware_info.rw_rate;
         component_info.plugin_name = hardware_info.hardware_plugin_name;
         component_info.is_async = hardware_info.is_async;
 
@@ -1658,7 +1666,26 @@ HardwareReadWriteStatus ResourceManager::read(
       auto ret_val = return_type::OK;
       try
       {
-        ret_val = component.read(time, period);
+        if (
+          resource_storage_->hardware_info_map_[component.get_name()].read_rate ==
+          resource_storage_->cm_update_rate_)
+        {
+          ret_val = component.read(time, period);
+        }
+        else
+        {
+          const rclcpp::Duration hw_read_period = rclcpp::Duration::from_seconds(
+            1.0 / resource_storage_->hardware_info_map_[component.get_name()].read_rate);
+          if (
+            component.get_last_read_time().seconds() == 0 ||
+            (time - component.get_last_read_time()) >= hw_read_period)
+          {
+            const rclcpp::Duration actual_period = component.get_last_read_time().seconds() == 0
+                                                     ? hw_read_period
+                                                     : time - component.get_last_read_time();
+            ret_val = component.read(time, actual_period);
+          }
+        }
         const auto component_group = component.get_group_name();
         ret_val =
           resource_storage_->update_hardware_component_group_state(component_group, ret_val);
@@ -1719,7 +1746,26 @@ HardwareReadWriteStatus ResourceManager::write(
       auto ret_val = return_type::OK;
       try
       {
-        ret_val = component.write(time, period);
+        if (
+          resource_storage_->hardware_info_map_[component.get_name()].write_rate ==
+          resource_storage_->cm_update_rate_)
+        {
+          ret_val = component.write(time, period);
+        }
+        else
+        {
+          const rclcpp::Duration hw_write_period = rclcpp::Duration::from_seconds(
+            1.0 / resource_storage_->hardware_info_map_[component.get_name()].write_rate);
+          if (
+            component.get_last_write_time().seconds() == 0 ||
+            (time - component.get_last_write_time()) >= hw_write_period)
+          {
+            const rclcpp::Duration actual_period = component.get_last_write_time().seconds() == 0
+                                                     ? hw_write_period
+                                                     : time - component.get_last_read_time();
+            ret_val = component.write(time, actual_period);
+          }
+        }
         const auto component_group = component.get_group_name();
         ret_val =
           resource_storage_->update_hardware_component_group_state(component_group, ret_val);
