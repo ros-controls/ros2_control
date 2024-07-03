@@ -193,7 +193,24 @@ public:
   // the executor (see issue #260).
   // rclcpp::CallbackGroup::SharedPtr deterministic_callback_group_;
 
-  // Per controller update rate support
+  /// Interface for external components to check if Resource Manager is initialized.
+  /**
+   * Checks if components in Resource Manager are loaded and initialized.
+   * \returns true if they are initialized, false otherwise.
+   */
+  CONTROLLER_MANAGER_PUBLIC
+  bool is_resource_manager_initialized() const
+  {
+    return resource_manager_ && resource_manager_->are_components_initialized();
+  }
+
+  /// Update rate of the main control loop in the controller manager.
+  /**
+   * Update rate of the main control loop in the controller manager.
+   * The method is used for per-controller update rate support.
+   *
+   * \returns update rate of the controller manager.
+   */
   CONTROLLER_MANAGER_PUBLIC
   unsigned int get_update_rate() const;
 

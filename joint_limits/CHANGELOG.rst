@@ -2,6 +2,12 @@
 Changelog for package joint_limits
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.12.0 (2024-07-01)
+-------------------
+* Reactivate generate_version_header (`#1544 <https://github.com/ros-controls/ros2_control/issues/1544>`_)
+* Bump version of pre-commit hooks (`#1556 <https://github.com/ros-controls/ros2_control/issues/1556>`_)
+* Contributors: Christoph Fröhlich, github-actions[bot]
+
 4.11.0 (2024-05-14)
 -------------------
 * Fix dependencies for source build (`#1533 <https://github.com/ros-controls/ros2_control/issues/1533>`_)

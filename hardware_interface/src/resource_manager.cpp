@@ -60,7 +60,7 @@ auto trigger_and_print_hardware_state_transition =
   }
   else
   {
-    RCUTILS_LOG_INFO_NAMED(
+    RCUTILS_LOG_ERROR_NAMED(
       "resource_manager", "Failed to '%s' hardware '%s'", transition_name.c_str(),
       hardware_name.c_str());
   }
@@ -98,13 +98,11 @@ class ResourceStorage
 public:
   // TODO(VX792): Change this when HW ifs get their own update rate,
   // because the ResourceStorage really shouldn't know about the cm's parameters
-  ResourceStorage(
-    unsigned int update_rate = 100,
+  explicit ResourceStorage(
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface = nullptr)
   : actuator_loader_(pkg_name, actuator_interface_name),
     sensor_loader_(pkg_name, sensor_interface_name),
     system_loader_(pkg_name, system_interface_name),
-    cm_update_rate_(update_rate),
     clock_interface_(clock_interface)
   {
   }
@@ -699,26 +697,14 @@ public:
     }
   }
 
-  void check_for_duplicates(const HardwareInfo & hardware_info)
-  {
-    // Check for identical names
-    if (hardware_info_map_.find(hardware_info.name) != hardware_info_map_.end())
-    {
-      throw std::runtime_error(
-        "Hardware name " + hardware_info.name +
-        " is duplicated. Please provide a unique 'name' in the URDF.");
-    }
-  }
-
   // TODO(destogl): Propagate "false" up, if happens in initialize_hardware
-  void load_and_initialize_actuator(const HardwareInfo & hardware_info)
+  bool load_and_initialize_actuator(const HardwareInfo & hardware_info)
   {
     auto load_and_init_actuators = [&](auto & container)
     {
-      check_for_duplicates(hardware_info);
       if (!load_hardware<Actuator, ActuatorInterface>(hardware_info, actuator_loader_, container))
       {
-        return;
+        return false;
       }
       if (initialize_hardware(hardware_info, container.back()))
       {
@@ -727,31 +713,32 @@ public:
       }
       else
       {
-        RCUTILS_LOG_WARN_NAMED(
+        RCUTILS_LOG_ERROR_NAMED(
           "resource_manager",
           "Actuator hardware component '%s' from plugin '%s' failed to initialize.",
           hardware_info.name.c_str(), hardware_info.hardware_plugin_name.c_str());
+        return false;
       }
+      return true;
     };
 
     if (hardware_info.is_async)
     {
-      load_and_init_actuators(async_actuators_);
+      return load_and_init_actuators(async_actuators_);
     }
     else
     {
-      load_and_init_actuators(actuators_);
+      return load_and_init_actuators(actuators_);
     }
   }
 
-  void load_and_initialize_sensor(const HardwareInfo & hardware_info)
+  bool load_and_initialize_sensor(const HardwareInfo & hardware_info)
   {
     auto load_and_init_sensors = [&](auto & container)
     {
-      check_for_duplicates(hardware_info);
       if (!load_hardware<Sensor, SensorInterface>(hardware_info, sensor_loader_, container))
       {
-        return;
+        return false;
       }
       if (initialize_hardware(hardware_info, container.back()))
       {
@@ -759,31 +746,32 @@ public:
       }
       else
       {
-        RCUTILS_LOG_WARN_NAMED(
+        RCUTILS_LOG_ERROR_NAMED(
           "resource_manager",
           "Sensor hardware component '%s' from plugin '%s' failed to initialize.",
           hardware_info.name.c_str(), hardware_info.hardware_plugin_name.c_str());
+        return false;
       }
+      return true;
     };
 
     if (hardware_info.is_async)
     {
-      load_and_init_sensors(async_sensors_);
+      return load_and_init_sensors(async_sensors_);
     }
     else
     {
-      load_and_init_sensors(sensors_);
+      return load_and_init_sensors(sensors_);
     }
   }
 
-  void load_and_initialize_system(const HardwareInfo & hardware_info)
+  bool load_and_initialize_system(const HardwareInfo & hardware_info)
   {
     auto load_and_init_systems = [&](auto & container)
     {
-      check_for_duplicates(hardware_info);
       if (!load_hardware<System, SystemInterface>(hardware_info, system_loader_, container))
       {
-        return;
+        return false;
       }
       if (initialize_hardware(hardware_info, container.back()))
       {
@@ -792,20 +780,22 @@ public:
       }
       else
       {
-        RCUTILS_LOG_WARN_NAMED(
+        RCUTILS_LOG_ERROR_NAMED(
           "resource_manager",
           "System hardware component '%s' from plugin '%s' failed to initialize.",
           hardware_info.name.c_str(), hardware_info.hardware_plugin_name.c_str());
+        return false;
       }
+      return true;
     };
 
     if (hardware_info.is_async)
     {
-      load_and_init_systems(async_systems_);
+      return load_and_init_systems(async_systems_);
     }
     else
     {
-      load_and_init_systems(systems_);
+      return load_and_init_systems(systems_);
     }
   }
 
@@ -898,6 +888,26 @@ public:
     }
   }
 
+  void clear()
+  {
+    actuators_.clear();
+    sensors_.clear();
+    systems_.clear();
+
+    async_actuators_.clear();
+    async_sensors_.clear();
+    async_systems_.clear();
+
+    hardware_info_map_.clear();
+    state_interface_map_.clear();
+    command_interface_map_.clear();
+
+    available_state_interfaces_.clear();
+    available_command_interfaces_.clear();
+
+    claimed_command_interface_map_.clear();
+  }
+
   /**
    * Returns the return type of the hardware component group state, if the return type is other
    * than OK, then updates the return type of the group to the respective one
@@ -958,24 +968,24 @@ public:
 
   // Update rate of the controller manager, and the clock interface of its node
   // Used by async components.
-  unsigned int cm_update_rate_;
+  unsigned int cm_update_rate_ = 100;
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface_;
 };
 
 ResourceManager::ResourceManager(
-  unsigned int update_rate, rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
-: resource_storage_(std::make_unique<ResourceStorage>(update_rate, clock_interface))
+  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
+: resource_storage_(std::make_unique<ResourceStorage>(clock_interface))
 {
 }
 
 ResourceManager::~ResourceManager() = default;
 
 ResourceManager::ResourceManager(
-  const std::string & urdf, bool validate_interfaces, bool activate_all, unsigned int update_rate,
+  const std::string & urdf, bool activate_all, const unsigned int update_rate,
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
-: resource_storage_(std::make_unique<ResourceStorage>(update_rate, clock_interface))
+: resource_storage_(std::make_unique<ResourceStorage>(clock_interface))
 {
-  load_urdf(urdf, validate_interfaces);
+  load_and_initialize_components(urdf, update_rate);
 
   if (activate_all)
   {
@@ -989,50 +999,87 @@ ResourceManager::ResourceManager(
 }
 
 // CM API: Called in "callback/slow"-thread
-void ResourceManager::load_urdf(
-  const std::string & urdf, bool validate_interfaces, bool load_and_initialize_components)
+bool ResourceManager::load_and_initialize_components(
+  const std::string & urdf, const unsigned int update_rate)
 {
-  is_urdf_loaded__ = true;
+  components_are_loaded_and_initialized_ = true;
+
+  resource_storage_->cm_update_rate_ = update_rate;
+
+  const auto hardware_info = hardware_interface::parse_control_resources_from_urdf(urdf);
+
   const std::string system_type = "system";
   const std::string sensor_type = "sensor";
   const std::string actuator_type = "actuator";
 
-  const auto hardware_info = hardware_interface::parse_control_resources_from_urdf(urdf);
-  if (load_and_initialize_components)
+  std::lock_guard<std::recursive_mutex> resource_guard(resources_lock_);
+  for (const auto & individual_hardware_info : hardware_info)
   {
-    for (const auto & individual_hardware_info : hardware_info)
+    // Check for identical names
+    if (
+      resource_storage_->hardware_info_map_.find(individual_hardware_info.name) !=
+      resource_storage_->hardware_info_map_.end())
     {
-      if (individual_hardware_info.type == actuator_type)
+      RCUTILS_LOG_ERROR_NAMED(
+        "resource_manager",
+        "Hardware name %s is duplicated. Please provide a unique 'name' "
+        "in the URDF.",
+        individual_hardware_info.name.c_str());
+      components_are_loaded_and_initialized_ = false;
+      break;
+    }
+
+    if (individual_hardware_info.type == actuator_type)
+    {
+      std::scoped_lock guard(resource_interfaces_lock_, claimed_command_interfaces_lock_);
+      if (!resource_storage_->load_and_initialize_actuator(individual_hardware_info))
       {
-        std::scoped_lock guard(resource_interfaces_lock_, claimed_command_interfaces_lock_);
-        resource_storage_->load_and_initialize_actuator(individual_hardware_info);
+        components_are_loaded_and_initialized_ = false;
+        break;
       }
-      if (individual_hardware_info.type == sensor_type)
+    }
+    if (individual_hardware_info.type == sensor_type)
+    {
+      std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
+      if (!resource_storage_->load_and_initialize_sensor(individual_hardware_info))
       {
-        std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
-        resource_storage_->load_and_initialize_sensor(individual_hardware_info);
+        components_are_loaded_and_initialized_ = false;
+        break;
       }
-      if (individual_hardware_info.type == system_type)
+    }
+    if (individual_hardware_info.type == system_type)
+    {
+      std::scoped_lock guard(resource_interfaces_lock_, claimed_command_interfaces_lock_);
+      if (!resource_storage_->load_and_initialize_system(individual_hardware_info))
       {
-        std::scoped_lock guard(resource_interfaces_lock_, claimed_command_interfaces_lock_);
-        resource_storage_->load_and_initialize_system(individual_hardware_info);
+        components_are_loaded_and_initialized_ = false;
+        break;
       }
     }
   }
 
-  // throw on missing state and command interfaces, not specified keys are being ignored
-  if (validate_interfaces)
+  if (components_are_loaded_and_initialized_ && validate_storage(hardware_info))
   {
-    validate_storage(hardware_info);
+    std::lock_guard<std::recursive_mutex> guard(resources_lock_);
+    read_write_status.failed_hardware_names.reserve(
+      resource_storage_->actuators_.size() + resource_storage_->sensors_.size() +
+      resource_storage_->systems_.size());
+  }
+  else
+  {
+    std::scoped_lock guard(resource_interfaces_lock_, claimed_command_interfaces_lock_);
+    resource_storage_->clear();
+    // cleanup everything
+    components_are_loaded_and_initialized_ = false;
   }
 
-  std::lock_guard<std::recursive_mutex> guard(resources_lock_);
-  read_write_status.failed_hardware_names.reserve(
-    resource_storage_->actuators_.size() + resource_storage_->sensors_.size() +
-    resource_storage_->systems_.size());
+  return components_are_loaded_and_initialized_;
 }
 
-bool ResourceManager::is_urdf_already_loaded() const { return is_urdf_loaded__; }
+bool ResourceManager::are_components_initialized() const
+{
+  return components_are_loaded_and_initialized_;
+}
 
 // CM API: Called in "update"-thread
 LoanedStateInterface ResourceManager::claim_state_interface(const std::string & key)
@@ -1551,6 +1598,7 @@ return_type ResourceManager::set_component_state(
     return false;
   };
 
+  std::lock_guard<std::recursive_mutex> guard(resources_lock_);
   bool found = find_set_component_state(
     std::bind(&ResourceStorage::set_component_state<Actuator>, resource_storage_.get(), _1, _2),
     resource_storage_->actuators_);
@@ -1743,7 +1791,7 @@ bool ResourceManager::state_interface_exists(const std::string & key) const
 
 // BEGIN: private methods
 
-void ResourceManager::validate_storage(
+bool ResourceManager::validate_storage(
   const std::vector<hardware_interface::HardwareInfo> & hardware_info) const
 {
   std::vector<std::string> missing_state_keys = {};
@@ -1799,20 +1847,28 @@ void ResourceManager::validate_storage(
 
   if (!missing_state_keys.empty() || !missing_command_keys.empty())
   {
-    std::string err_msg = "Wrong state or command interface configuration.\n";
-    err_msg += "missing state interfaces:\n";
+    std::string message = "Wrong state or command interface configuration.\n";
+    message += "missing state interfaces:\n";
     for (const auto & missing_key : missing_state_keys)
     {
-      err_msg += "' " + missing_key + " '" + "\t";
+      message += " " + missing_key + "\t";
     }
-    err_msg += "\nmissing command interfaces:\n";
+    message += "\nmissing command interfaces:\n";
     for (const auto & missing_key : missing_command_keys)
     {
-      err_msg += "' " + missing_key + " '" + "\t";
+      message += " " + missing_key + "\t";
     }
 
-    throw std::runtime_error(err_msg);
+    RCUTILS_LOG_ERROR_NAMED(
+      "resource_manager",
+      "Discrepancy between robot description file (urdf) and actually exported HW interfaces.\n"
+      "Details: %s",
+      message.c_str());
+
+    return false;
   }
+
+  return true;
 }
 
 // END: private methods
