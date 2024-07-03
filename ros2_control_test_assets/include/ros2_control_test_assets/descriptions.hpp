@@ -1664,47 +1664,6 @@ const auto gripper_hardware_resources_mimic_true_no_command_if =
   </ros2_control>
   )";
 
-// TODO(christophfroehlich) delete deprecated config test
-const auto gripper_hardware_resources_mimic_deprecated =
-  R"(
-  <ros2_control name="TestGripper" type="system">
-    <joint name="right_finger_joint">
-      <command_interface name="effort"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-      <state_interface name="effort"/>
-    </joint>
-    <joint name="left_finger_joint">
-      <param name="mimic">right_finger_joint</param>
-      <param name="multiplier">2</param>
-      <param name="offset">1</param>
-      <command_interface name="position"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-    </joint>
-  </ros2_control>
-  )";
-
-const auto gripper_hardware_resources_mimic_deprecated_unknown_joint =
-  R"(
-  <ros2_control name="TestGripper" type="system">
-    <joint name="right_finger_joint">
-      <command_interface name="effort"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-      <state_interface name="effort"/>
-    </joint>
-    <joint name="left_finger_joint">
-      <param name="mimic">middle_finger_joint</param>
-      <param name="multiplier">1</param>
-      <command_interface name="position"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-    </joint>
-  </ros2_control>
-  )";
-// end delete deprecated config test
-
 const auto gripper_hardware_resources_mimic_true_command_if =
   R"(
   <ros2_control name="TestGripper" type="system">
