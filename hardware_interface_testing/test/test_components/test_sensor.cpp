@@ -30,7 +30,7 @@ class TestSensor : public SensorInterface
       return CallbackReturn::ERROR;
     }
     // can only give feedback state for velocity
-    if (info_.sensors[0].state_interfaces.size() != 1)
+    if (info_.sensors[0].state_interfaces.size() == 2)
     {
       return CallbackReturn::ERROR;
     }
