@@ -104,7 +104,8 @@ public:
   : actuator_loader_(pkg_name, actuator_interface_name),
     sensor_loader_(pkg_name, sensor_interface_name),
     system_loader_(pkg_name, system_interface_name),
-    clock_interface_(clock_interface)
+    clock_interface_(clock_interface),
+    rm_logger_(rclcpp::get_logger("resource_manager"))
   {
     if (!clock_interface_)
     {
@@ -950,7 +951,7 @@ public:
   // Logger and Clock interfaces
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface_;
   rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr logger_interface_;
-  rclcpp::Logger rm_logger_ = rclcpp::get_logger("resource_manager");
+  rclcpp::Logger rm_logger_;
 
   std::vector<Actuator> actuators_;
   std::vector<Sensor> sensors_;
