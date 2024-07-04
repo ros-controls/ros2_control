@@ -253,7 +253,7 @@ ControllerManager::ControllerManager(
 {
   if (!get_parameter("update_rate", update_rate_))
   {
-    RCLCPP_WARN(get_logger(), "'update_rate' parameter not set, using default value.");
+    RCLCPP_WARN(get_logger(), "'update_rate' parameter not set, using default value of %d Hz.", update_rate_);
   }
 
   if (is_resource_manager_initialized())
