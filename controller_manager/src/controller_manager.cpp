@@ -180,6 +180,7 @@ rclcpp::NodeOptions get_cm_node_options()
   // Required for getting types of controllers to be loaded via service call
   node_options.allow_undeclared_parameters(true);
   node_options.automatically_declare_parameters_from_overrides(true);
+// \note The versions conditioning is added here to support the source-compatibility until Humble
 #if RCLCPP_VERSION_MAJOR >= 21
   node_options.enable_logger_service(true);
 #endif
