@@ -57,6 +57,12 @@ public:
   CallbackReturn on_configure(const rclcpp_lifecycle::State & previous_state) override;
 
   CONTROLLER_MANAGER_PUBLIC
+  CallbackReturn on_activate(const rclcpp_lifecycle::State & previous_state) override;
+
+  CONTROLLER_MANAGER_PUBLIC
+  CallbackReturn on_deactivate(const rclcpp_lifecycle::State & previous_state) override;
+
+  CONTROLLER_MANAGER_PUBLIC
   CallbackReturn on_cleanup(const rclcpp_lifecycle::State & previous_state) override;
 
   CONTROLLER_MANAGER_PUBLIC
@@ -69,6 +75,11 @@ public:
   const std::string & getRobotDescription() const;
 
   unsigned int internal_counter = 0;
+
+  // Variable where we store when activate or deactivate was called
+  size_t activate_calls = 0;
+  size_t deactivate_calls = 0;
+
   bool simulate_cleanup_failure = false;
   // Variable where we store when cleanup was called, pointer because the controller
   // is usually destroyed after cleanup
