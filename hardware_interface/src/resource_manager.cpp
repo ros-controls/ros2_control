@@ -654,6 +654,47 @@ public:
     }
   }
 
+  /// Adds exported state interfaces into internal storage.
+  /**
+   * Adds state interfaces to the internal storage. State interfaces exported from hardware or
+   * chainable controllers are moved to the map with name-interface pairs and available list's
+   * size is increased to reserve storage when interface change theirs status in real-time
+   * control loop.
+   *
+   * \param[interfaces] list of state interface to add into storage.
+   * \returns list of interface names that are added into internal storage. The output is used to
+   * avoid additional iterations to cache interface names, e.g., for initializing info structures.
+   */
+  std::vector<std::string> add_state_interfaces(std::vector<StateInterface> & interfaces)
+  {
+    std::vector<std::string> interface_names;
+    interface_names.reserve(interfaces.size());
+    for (auto & interface : interfaces)
+    {
+      auto key = interface.get_name();
+      state_interface_map_.emplace(std::make_pair(key, std::move(interface)));
+      interface_names.push_back(key);
+    }
+    available_state_interfaces_.reserve(
+      available_state_interfaces_.capacity() + interface_names.size());
+
+    return interface_names;
+  }
+
+  /// Removes state interfaces from internal storage.
+  /**
+   * State interface are removed from the maps with theirs storage and their claimed status.
+   *
+   * \param[interface_names] list of state interface names to remove from storage.
+   */
+  void remove_state_interfaces(const std::vector<std::string> & interface_names)
+  {
+    for (const auto & interface : interface_names)
+    {
+      state_interface_map_.erase(interface);
+    }
+  }
+
   /// Adds exported command interfaces into internal storage.
   /**
    * Add command interfaces to the internal storage. Command interfaces exported from hardware or
@@ -948,7 +989,9 @@ public:
   /// Mapping between hardware and controllers that are using it (accessing data from it)
   std::unordered_map<std::string, std::vector<std::string>> hardware_used_by_controllers_;
 
-  /// Mapping between controllers and list of reference interfaces they are using
+  /// Mapping between controllers and list of interfaces they are using
+  std::unordered_map<std::string, std::vector<std::string>>
+    controllers_exported_state_interfaces_map_;
   std::unordered_map<std::string, std::vector<std::string>> controllers_reference_interfaces_map_;
 
   /// Storage of all available state interfaces
@@ -1120,6 +1163,68 @@ bool ResourceManager::state_interface_is_available(const std::string & name) con
            resource_storage_->available_state_interfaces_.begin(),
            resource_storage_->available_state_interfaces_.end(),
            name) != resource_storage_->available_state_interfaces_.end();
+}
+
+// CM API: Called in "callback/slow"-thread
+void ResourceManager::import_controller_exported_state_interfaces(
+  const std::string & controller_name, std::vector<StateInterface> & interfaces)
+{
+  std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
+  auto interface_names = resource_storage_->add_state_interfaces(interfaces);
+  resource_storage_->controllers_exported_state_interfaces_map_[controller_name] = interface_names;
+}
+
+// CM API: Called in "callback/slow"-thread
+std::vector<std::string> ResourceManager::get_controller_exported_state_interface_names(
+  const std::string & controller_name)
+{
+  return resource_storage_->controllers_exported_state_interfaces_map_.at(controller_name);
+}
+
+// CM API: Called in "update"-thread
+void ResourceManager::make_controller_exported_state_interfaces_available(
+  const std::string & controller_name)
+{
+  auto interface_names =
+    resource_storage_->controllers_exported_state_interfaces_map_.at(controller_name);
+  std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
+  resource_storage_->available_state_interfaces_.insert(
+    resource_storage_->available_state_interfaces_.end(), interface_names.begin(),
+    interface_names.end());
+}
+
+// CM API: Called in "update"-thread
+void ResourceManager::make_controller_exported_state_interfaces_unavailable(
+  const std::string & controller_name)
+{
+  auto interface_names =
+    resource_storage_->controllers_exported_state_interfaces_map_.at(controller_name);
+
+  std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
+  for (const auto & interface : interface_names)
+  {
+    auto found_it = std::find(
+      resource_storage_->available_state_interfaces_.begin(),
+      resource_storage_->available_state_interfaces_.end(), interface);
+    if (found_it != resource_storage_->available_state_interfaces_.end())
+    {
+      resource_storage_->available_state_interfaces_.erase(found_it);
+      RCUTILS_LOG_DEBUG_NAMED(
+        "resource_manager", "'%s' state interface removed from available list", interface.c_str());
+    }
+  }
+}
+
+// CM API: Called in "callback/slow"-thread
+void ResourceManager::remove_controller_exported_state_interfaces(
+  const std::string & controller_name)
+{
+  auto interface_names =
+    resource_storage_->controllers_exported_state_interfaces_map_.at(controller_name);
+  resource_storage_->controllers_exported_state_interfaces_map_.erase(controller_name);
+
+  std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
+  resource_storage_->remove_state_interfaces(interface_names);
 }
 
 // CM API: Called in "callback/slow"-thread

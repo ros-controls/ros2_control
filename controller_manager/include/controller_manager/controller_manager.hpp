@@ -573,6 +573,9 @@ private:
   std::vector<std::string> activate_command_interface_request_,
     deactivate_command_interface_request_;
 
+  std::map<std::string, std::vector<std::string>> controller_chained_reference_interfaces_cache_;
+  std::map<std::string, std::vector<std::string>> controller_chained_state_interfaces_cache_;
+
   std::string robot_description_;
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr robot_description_subscription_;
 
