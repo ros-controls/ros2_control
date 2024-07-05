@@ -1213,6 +1213,18 @@ TEST_P(
   cm_->add_controller(
     pid_right_wheel_controller, PID_RIGHT_WHEEL,
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    odom_publisher_controller, ODOM_PUBLISHER_CONTROLLER,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    sensor_fusion_controller, SENSOR_FUSION_CONTROLLER,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    robot_localization_controller, ROBOT_LOCALIZATION_CONTROLLER,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  cm_->add_controller(
+    position_tracking_controller_two, POSITION_TRACKING_CONTROLLER_TWO,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
 
   CheckIfControllersAreAddedCorrectly();
 
