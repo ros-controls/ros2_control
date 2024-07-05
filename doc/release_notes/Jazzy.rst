@@ -20,6 +20,9 @@ For details see the controller_manager section.
 * Pass URDF to controllers on init (`#1088 <https://github.com/ros-controls/ros2_control/pull/1088>`_).
 * Pass controller manager update rate on the init of the controller interface  (`#1141 <https://github.com/ros-controls/ros2_control/pull/1141>`_)
 * A method to get node options to setup the controller node #api-breaking (`#1169 <https://github.com/ros-controls/ros2_control/pull/1169>`_)
+* Export state interfaces from the chainable controller #api-breaking (`#1021 <https://github.com/ros-controls/ros2_control/pull/1021>`_)
+
+  * All chainable controllers must implement the method ``export_state_interfaces`` to export the state interfaces, similar to ``export_reference_interfaces`` method that is exporting the reference interfaces.
 
 controller_manager
 ******************

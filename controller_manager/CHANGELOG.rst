@@ -2,6 +2,14 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.12.0 (2024-07-01)
+-------------------
+* [rqt_controller_manager] Add hardware components (`#1455 <https://github.com/ros-controls/ros2_control/issues/1455>`_)
+* [RM] Rename `load_urdf` method to `load_and_initialize_components` and add error handling there to avoid stack crashing when error happens. (`#1354 <https://github.com/ros-controls/ros2_control/issues/1354>`_)
+* Fix update `period` for the first update after activation (`#1551 <https://github.com/ros-controls/ros2_control/issues/1551>`_)
+* Bump version of pre-commit hooks (`#1556 <https://github.com/ros-controls/ros2_control/issues/1556>`_)
+* Contributors: Christoph Fröhlich, Dr. Denis, github-actions[bot]
+
 4.11.0 (2024-05-14)
 -------------------
 * Add find_package for ament_cmake_gen_version_h (`#1534 <https://github.com/ros-controls/ros2_control/issues/1534>`_)

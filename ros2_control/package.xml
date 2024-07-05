@@ -1,10 +1,12 @@
 <?xml version="1.0"?>
 <package format="3">
   <name>ros2_control</name>
-  <version>4.11.0</version>
+  <version>4.12.0</version>
   <description>Metapackage for ROS2 control related packages</description>
   <maintainer email="bence.magyar.robotics@gmail.com">Bence Magyar</maintainer>
   <maintainer email="denis@stoglrobotics.de">Denis Štogl</maintainer>
+
+  <url type="website">https://control.ros.org</url>
 
   <license>Apache License 2.0</license>
 
@@ -21,5 +23,6 @@
 
   <export>
     <build_type>ament_cmake</build_type>
+    <rosdoc2>rosdoc2.yaml</rosdoc2>
   </export>
 </package>

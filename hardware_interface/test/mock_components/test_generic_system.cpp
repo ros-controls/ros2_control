@@ -696,9 +696,8 @@ public:
 
   TestableResourceManager() : hardware_interface::ResourceManager() {}
 
-  TestableResourceManager(
-    const std::string & urdf, bool validate_interfaces = true, bool activate_all = false)
-  : hardware_interface::ResourceManager(urdf, validate_interfaces, activate_all)
+  explicit TestableResourceManager(const std::string & urdf, bool activate_all = false)
+  : hardware_interface::ResourceManager(urdf, activate_all)
   {
   }
 };
