@@ -1190,6 +1190,7 @@ TEST_P(
   ASSERT_FALSE(pid_left_wheel_controller->is_in_chained_mode());
   ASSERT_FALSE(pid_right_wheel_controller->is_in_chained_mode());
   ASSERT_FALSE(diff_drive_controller->is_in_chained_mode());
+  ASSERT_FALSE(sensor_fusion_controller->is_in_chained_mode());
 }
 
 TEST_P(
