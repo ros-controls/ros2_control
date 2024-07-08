@@ -59,7 +59,8 @@ std::pair<double, double> compute_position_limits(
 
 std::pair<double, double> compute_velocity_limits(
   const std::string & joint_name, const joint_limits::JointLimits & limits,
-  const std::optional<double> & act_pos, const std::optional<double> & prev_command_vel, double dt)
+  const double & desired_vel, const std::optional<double> & act_pos,
+  const std::optional<double> & prev_command_vel, double dt)
 {
   const double max_vel =
     limits.has_velocity_limits ? limits.max_velocity : std::numeric_limits<double>::infinity();
@@ -70,13 +71,16 @@ std::pair<double, double> compute_velocity_limits(
     const double min_vel_with_pos_limits = (limits.min_position - act_pos.value()) / dt;
     vel_limits.first = std::max(min_vel_with_pos_limits, vel_limits.first);
     vel_limits.second = std::min(max_vel_with_pos_limits, vel_limits.second);
-    if (act_pos.value() > limits.max_position || act_pos.value() < limits.min_position)
+    if (
+      (act_pos.value() > limits.max_position && desired_vel >= 0.0) ||
+      (act_pos.value() < limits.min_position && desired_vel <= 0.0))
     {
       RCLCPP_ERROR_ONCE(
         rclcpp::get_logger("joint_limiter_interface"),
-        "Joint position is out of bounds for the joint : '%s'. Joint velocity limits will be "
+        "Joint position %.5f is out of bounds[%.5f, %.5f] for the joint and we want to move "
+        "further into bounds with vel %.5f: '%s'. Joint velocity limits will be "
         "restrictred to zero.",
-        joint_name.c_str());
+        act_pos.value(), limits.min_position, limits.max_position, desired_vel, joint_name.c_str());
       vel_limits = {0.0, 0.0};
     }
   }
