@@ -2434,7 +2434,7 @@ controller_interface::return_type ControllerManager::check_following_controllers
     controller_state_interfaces.end());
   for (const auto & ctrl_itf_name : controller_interfaces)
   {
-    RCLCPP_ERROR(
+    RCLCPP_DEBUG(
       get_logger(), "Checking interface '%s' of controller '%s'.", ctrl_itf_name.c_str(),
       controller_it->info.name.c_str());
     ControllersListIterator following_ctrl_it;
