@@ -179,6 +179,10 @@ rclcpp::NodeOptions get_cm_node_options()
   // Required for getting types of controllers to be loaded via service call
   node_options.allow_undeclared_parameters(true);
   node_options.automatically_declare_parameters_from_overrides(true);
+// \note The versions conditioning is added here to support the source-compatibility until Humble
+#if RCLCPP_VERSION_MAJOR >= 21
+  node_options.enable_logger_service(true);
+#endif
   return node_options;
 }
 
@@ -186,8 +190,8 @@ ControllerManager::ControllerManager(
   std::shared_ptr<rclcpp::Executor> executor, const std::string & manager_node_name,
   const std::string & node_namespace, const rclcpp::NodeOptions & options)
 : rclcpp::Node(manager_node_name, node_namespace, options),
-  resource_manager_(
-    std::make_unique<hardware_interface::ResourceManager>(this->get_node_clock_interface())),
+  resource_manager_(std::make_unique<hardware_interface::ResourceManager>(
+    this->get_node_clock_interface(), this->get_node_logging_interface())),
   diagnostics_updater_(this),
   executor_(executor),
   loader_(std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
@@ -198,7 +202,8 @@ ControllerManager::ControllerManager(
 {
   if (!get_parameter("update_rate", update_rate_))
   {
-    RCLCPP_WARN(get_logger(), "'update_rate' parameter not set, using default value.");
+    RCLCPP_WARN(
+      get_logger(), "'update_rate' parameter not set, using default value of %d Hz.", update_rate_);
   }
 
   robot_description_ = "";
@@ -230,6 +235,40 @@ ControllerManager::ControllerManager(
 }
 
 ControllerManager::ControllerManager(
+  std::shared_ptr<rclcpp::Executor> executor, const std::string & urdf,
+  bool activate_all_hw_components, const std::string & manager_node_name,
+  const std::string & node_namespace, const rclcpp::NodeOptions & options)
+: rclcpp::Node(manager_node_name, node_namespace, options),
+  update_rate_(get_parameter_or<int>("update_rate", 100)),
+  resource_manager_(std::make_unique<hardware_interface::ResourceManager>(
+    urdf, this->get_node_clock_interface(), this->get_node_logging_interface(),
+    activate_all_hw_components, update_rate_)),
+  diagnostics_updater_(this),
+  executor_(executor),
+  loader_(std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
+    kControllerInterfaceNamespace, kControllerInterfaceClassName)),
+  chainable_loader_(
+    std::make_shared<pluginlib::ClassLoader<controller_interface::ChainableControllerInterface>>(
+      kControllerInterfaceNamespace, kChainableControllerInterfaceClassName))
+{
+  if (!get_parameter("update_rate", update_rate_))
+  {
+    RCLCPP_WARN(
+      get_logger(), "'update_rate' parameter not set, using default value of %d Hz.", update_rate_);
+  }
+
+  if (is_resource_manager_initialized())
+  {
+    init_services();
+  }
+  subscribe_to_robot_description_topic();
+
+  diagnostics_updater_.setHardwareID("ros2_control");
+  diagnostics_updater_.add(
+    "Controllers Activity", this, &ControllerManager::controller_activity_diagnostic_callback);
+}
+
+ControllerManager::ControllerManager(
   std::unique_ptr<hardware_interface::ResourceManager> resource_manager,
   std::shared_ptr<rclcpp::Executor> executor, const std::string & manager_node_name,
   const std::string & node_namespace, const rclcpp::NodeOptions & options)
@@ -245,7 +284,8 @@ ControllerManager::ControllerManager(
 {
   if (!get_parameter("update_rate", update_rate_))
   {
-    RCLCPP_WARN(get_logger(), "'update_rate' parameter not set, using default value.");
+    RCLCPP_WARN(
+      get_logger(), "'update_rate' parameter not set, using default value of %d Hz.", update_rate_);
   }
 
   if (is_resource_manager_initialized())
