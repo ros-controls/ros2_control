@@ -86,7 +86,7 @@ From the officially released packages, the following packages are already using 
 
 * :ref:`mock_components (generic system) <mock_components_userdoc>`
 * :ref:`gazebo_ros2_control <gazebo_ros2_control>`
-* :ref:`gz_ros2_control <gz_ros2_control>`
+* :ref:`ign_ros2_control <ign_ros2_control>`
 
 As the URDF specifies only the kinematics, the mimic tag has to be independent of the hardware interface type used in ros2_control. This means that we interpret this info in the following way:
 
