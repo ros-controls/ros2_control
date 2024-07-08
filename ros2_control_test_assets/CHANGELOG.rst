@@ -2,8 +2,8 @@
 Changelog for package ros2_control_test_assets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.13.0 (2024-07-08)
+-------------------
 * [ControllerChaining] Export state interfaces from chainable controllers (`#1021 <https://github.com/ros-controls/ros2_control/issues/1021>`_)
 * Remove mimic parameter from ros2_control tag (`#1553 <https://github.com/ros-controls/ros2_control/issues/1553>`_)
 * Contributors: Christoph Fröhlich, Sai Kishor Kothakota

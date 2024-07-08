@@ -2,8 +2,8 @@
 Changelog for package joint_limits
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.13.0 (2024-07-08)
+-------------------
 * [JointLimits] Add Saturation Joint Limiter that uses clamping method (`#971 <https://github.com/ros-controls/ros2_control/issues/971>`_)
 * Contributors: Dr. Denis
 
