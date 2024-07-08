@@ -166,7 +166,8 @@ bool JointSoftLimiter::on_enforce(
   if (desired.has_velocity())
   {
     const auto velocity_limits = compute_velocity_limits(
-      joint_name, hard_limits, actual.position, prev_command_.velocity, dt_seconds);
+      joint_name, hard_limits, desired.velocity.value(), actual.position, prev_command_.velocity,
+      dt_seconds);
 
     if (hard_limits.has_acceleration_limits && actual.has_velocity())
     {

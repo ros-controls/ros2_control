@@ -57,7 +57,8 @@ std::pair<double, double> compute_position_limits(
  */
 std::pair<double, double> compute_velocity_limits(
   const std::string & joint_name, const joint_limits::JointLimits & limits,
-  const std::optional<double> & act_pos, const std::optional<double> & prev_command_vel, double dt);
+  const double & desired_vel, const std::optional<double> & act_pos,
+  const std::optional<double> & prev_command_vel, double dt);
 
 /**
  * @brief Computes the effort limits based on the position and velocity limits.

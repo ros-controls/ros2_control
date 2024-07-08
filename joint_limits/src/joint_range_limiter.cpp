@@ -121,7 +121,8 @@ bool JointSaturationLimiter<JointControlInterfacesData>::on_enforce(
   if (desired.has_velocity())
   {
     const auto limits = compute_velocity_limits(
-      joint_name, joint_limits, actual.position, prev_command_.velocity, dt_seconds);
+      joint_name, joint_limits, desired.velocity.value(), actual.position, prev_command_.velocity,
+      dt_seconds);
     limits_enforced =
       is_limited(desired.velocity.value(), limits.first, limits.second) || limits_enforced;
     desired.velocity = std::clamp(desired.velocity.value(), limits.first, limits.second);
