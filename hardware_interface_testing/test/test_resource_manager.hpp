@@ -19,6 +19,7 @@
 
 #include <gmock/gmock.h>
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -31,6 +32,8 @@ public:
   static void SetUpTestCase() {}
 
   void SetUp() {}
+
+  rclcpp::Node node_{"ResourceManagerTest"};
 };
 
 // Forward declaration
@@ -50,10 +53,16 @@ public:
   FRIEND_TEST(ResourceManagerTest, resource_availability_and_claiming_in_lifecycle);
   FRIEND_TEST(ResourceManagerTest, test_uninitializable_hardware_no_validation);
 
-  TestableResourceManager() : hardware_interface::ResourceManager() {}
+  explicit TestableResourceManager(rclcpp::Node & node)
+  : hardware_interface::ResourceManager(
+      node.get_node_clock_interface(), node.get_node_logging_interface())
+  {
+  }
 
-  explicit TestableResourceManager(const std::string & urdf, bool activate_all = false)
-  : hardware_interface::ResourceManager(urdf, activate_all)
+  explicit TestableResourceManager(
+    rclcpp::Node & node, const std::string & urdf, bool activate_all = false)
+  : hardware_interface::ResourceManager(
+      urdf, node.get_node_clock_interface(), node.get_node_logging_interface(), activate_all, 100)
   {
   }
 };

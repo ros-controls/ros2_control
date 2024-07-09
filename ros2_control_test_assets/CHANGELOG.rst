@@ -2,6 +2,12 @@
 Changelog for package ros2_control_test_assets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.13.0 (2024-07-08)
+-------------------
+* [ControllerChaining] Export state interfaces from chainable controllers (`#1021 <https://github.com/ros-controls/ros2_control/issues/1021>`_)
+* Remove mimic parameter from ros2_control tag (`#1553 <https://github.com/ros-controls/ros2_control/issues/1553>`_)
+* Contributors: Christoph Fröhlich, Sai Kishor Kothakota
+
 4.12.0 (2024-07-01)
 -------------------
 * [RM] Rename `load_urdf` method to `load_and_initialize_components` and add error handling there to avoid stack crashing when error happens. (`#1354 <https://github.com/ros-controls/ros2_control/issues/1354>`_)

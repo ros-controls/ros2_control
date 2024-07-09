@@ -2,6 +2,11 @@
 Changelog for package joint_limits
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.13.0 (2024-07-08)
+-------------------
+* [JointLimits] Add Saturation Joint Limiter that uses clamping method (`#971 <https://github.com/ros-controls/ros2_control/issues/971>`_)
+* Contributors: Dr. Denis
+
 4.12.0 (2024-07-01)
 -------------------
 * Reactivate generate_version_header (`#1544 <https://github.com/ros-controls/ros2_control/issues/1544>`_)

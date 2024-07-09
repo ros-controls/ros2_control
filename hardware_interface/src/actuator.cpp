@@ -36,11 +36,13 @@ using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface
 
 Actuator::Actuator(std::unique_ptr<ActuatorInterface> impl) : impl_(std::move(impl)) {}
 
-const rclcpp_lifecycle::State & Actuator::initialize(const HardwareInfo & actuator_info)
+const rclcpp_lifecycle::State & Actuator::initialize(
+  const HardwareInfo & actuator_info, rclcpp::Logger logger,
+  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
 {
   if (impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN)
   {
-    switch (impl_->on_init(actuator_info))
+    switch (impl_->init(actuator_info, logger, clock_interface))
     {
       case CallbackReturn::SUCCESS:
         impl_->set_state(rclcpp_lifecycle::State(

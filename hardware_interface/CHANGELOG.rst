@@ -2,6 +2,13 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.13.0 (2024-07-08)
+-------------------
+* [ResourceManager] Propagate access to logger and clock interfaces to HardwareComponent (`#1585 <https://github.com/ros-controls/ros2_control/issues/1585>`_)
+* [ControllerChaining] Export state interfaces from chainable controllers (`#1021 <https://github.com/ros-controls/ros2_control/issues/1021>`_)
+* Remove mimic parameter from ros2_control tag (`#1553 <https://github.com/ros-controls/ros2_control/issues/1553>`_)
+* Contributors: Christoph Fröhlich, Sai Kishor Kothakota
+
 4.12.0 (2024-07-01)
 -------------------
 * Add resources_lock\_ lock_guards to avoid race condition when loading robot_description through topic (`#1451 <https://github.com/ros-controls/ros2_control/issues/1451>`_)

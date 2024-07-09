@@ -2,6 +2,11 @@
 Changelog for package ros2controlcli
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.13.0 (2024-07-08)
+-------------------
+* Remove ament linters (`#1601 <https://github.com/ros-controls/ros2_control/issues/1601>`_)
+* Contributors: Bence Magyar
+
 4.12.0 (2024-07-01)
 -------------------
 
