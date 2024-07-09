@@ -31,7 +31,9 @@ def print_controller_state(c, args, col_width_name, col_width_state, col_width_t
     elif c.state == "unconfigured":
         state_color = bcolors.WARNING
 
-    print(f"{state_color}{c.name:<{col_width_name}}{bcolors.ENDC} {c.type:<{col_width_type}}  {state_color}{c.state:<{col_width_state}}{bcolors.ENDC}")
+    print(
+        f"{state_color}{c.name:<{col_width_name}}{bcolors.ENDC} {c.type:<{col_width_type}}  {state_color}{c.state:<{col_width_state}}{bcolors.ENDC}"
+    )
     if args.claimed_interfaces or args.verbose:
         print("\tclaimed interfaces:")
         for claimed_interface in c.claimed_interfaces:
