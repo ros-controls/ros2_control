@@ -2,8 +2,8 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.26.0 (2024-07-09)
+-------------------
 * Fix dependencies for source build (`#1533 <https://github.com/ros-controls/ros2_control/issues/1533>`_) (`#1536 <https://github.com/ros-controls/ros2_control/issues/1536>`_)
 * Contributors: mergify[bot]
 
