@@ -184,11 +184,11 @@ private:
   std::vector<std::string> start_modes_ = {"position", "position"};
   std::vector<bool> stop_modes_ = {false, false};
 
-  std::array<double, 2> position_command_ = {0.0, 0.0};
-  std::array<double, 2> velocity_command_ = {0.0, 0.0};
-  std::array<double, 2> position_state_ = {0.0, 0.0};
-  std::array<double, 2> velocity_state_ = {0.0, 0.0};
-  std::array<double, 2> acceleration_state_ = {0.0, 0.0};
+  std::array<double, 2> position_command_ = {{0.0, 0.0}};
+  std::array<double, 2> velocity_command_ = {{0.0, 0.0}};
+  std::array<double, 2> position_state_ = {{0.0, 0.0}};
+  std::array<double, 2> velocity_state_ = {{0.0, 0.0}};
+  std::array<double, 2> acceleration_state_ = {{0.0, 0.0}};
 };
 
 }  // namespace test_hardware_components

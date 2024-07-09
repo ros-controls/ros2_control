@@ -2,6 +2,40 @@
 Changelog for package ros2controlcli
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.13.0 (2024-07-08)
+-------------------
+* Remove ament linters (`#1601 <https://github.com/ros-controls/ros2_control/issues/1601>`_)
+* Contributors: Bence Magyar
+
+4.12.0 (2024-07-01)
+-------------------
+
+4.11.0 (2024-05-14)
+-------------------
+
+4.10.0 (2024-05-08)
+-------------------
+
+4.9.0 (2024-04-30)
+------------------
+* [CI] Specify runner/container images and codecov for joint_limits  (`#1504 <https://github.com/ros-controls/ros2_control/issues/1504>`_)
+* [CLI] Add `set_hardware_component_state` verb (`#1248 <https://github.com/ros-controls/ros2_control/issues/1248>`_)
+* Contributors: Christoph Fröhlich
+
+4.8.0 (2024-03-27)
+------------------
+
+4.7.0 (2024-03-22)
+------------------
+
+4.6.0 (2024-03-02)
+------------------
+* Added spawner colours to `list_controllers` depending upon active or inactive (`#1409 <https://github.com/ros-controls/ros2_control/issues/1409>`_)
+* Contributors: Soham Patil
+
+4.5.0 (2024-02-12)
+------------------
+
 4.4.0 (2024-01-31)
 ------------------
 

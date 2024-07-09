@@ -17,7 +17,6 @@
 #include "mock_components/generic_system.hpp"
 
 #include <algorithm>
-#include <charconv>
 #include <cmath>
 #include <iterator>
 #include <limits>
@@ -137,34 +136,6 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
     }
   }
 
-  // Search for mimic joints
-  for (auto i = 0u; i < info_.joints.size(); ++i)
-  {
-    const auto & joint = info_.joints.at(i);
-    if (joint.parameters.find("mimic") != joint.parameters.cend())
-    {
-      const auto mimicked_joint_it = std::find_if(
-        info_.joints.begin(), info_.joints.end(),
-        [&mimicked_joint =
-           joint.parameters.at("mimic")](const hardware_interface::ComponentInfo & joint_info)
-        { return joint_info.name == mimicked_joint; });
-      if (mimicked_joint_it == info_.joints.cend())
-      {
-        throw std::runtime_error(
-          std::string("Mimicked joint '") + joint.parameters.at("mimic") + "' not found");
-      }
-      MimicJoint mimic_joint;
-      mimic_joint.joint_index = i;
-      mimic_joint.mimicked_joint_index = std::distance(info_.joints.begin(), mimicked_joint_it);
-      auto param_it = joint.parameters.find("multiplier");
-      if (param_it != joint.parameters.end())
-      {
-        mimic_joint.multiplier = hardware_interface::stod(joint.parameters.at("multiplier"));
-      }
-      mimic_joints_.push_back(mimic_joint);
-    }
-  }
-
   // search for non-standard joint interfaces
   for (const auto & joint : info_.joints)
   {
@@ -187,15 +158,15 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
     {
       index_custom_interface_with_following_offset_ =
         std::distance(other_interfaces_.begin(), if_it);
-      RCUTILS_LOG_INFO_NAMED(
-        "mock_generic_system", "Custom interface with following offset '%s' found at index: %zu.",
+      RCLCPP_INFO(
+        get_logger(), "Custom interface with following offset '%s' found at index: %zu.",
         custom_interface_with_following_offset_.c_str(),
         index_custom_interface_with_following_offset_);
     }
     else
     {
-      RCUTILS_LOG_WARN_NAMED(
-        "mock_generic_system",
+      RCLCPP_WARN(
+        get_logger(),
         "Custom interface with following offset '%s' does not exist. Offset will not be applied",
         custom_interface_with_following_offset_.c_str());
     }
@@ -385,8 +356,8 @@ return_type GenericSystem::prepare_command_mode_switch(
       {
         if (!calculate_dynamics_)
         {
-          RCUTILS_LOG_WARN_NAMED(
-            "mock_generic_system",
+          RCLCPP_WARN(
+            get_logger(),
             "Requested velocity mode for joint '%s' without dynamics calculation enabled - this "
             "might lead to wrong feedback and unexpected behavior.",
             info_.joints[joint_index].name.c_str());
@@ -397,8 +368,8 @@ return_type GenericSystem::prepare_command_mode_switch(
       {
         if (!calculate_dynamics_)
         {
-          RCUTILS_LOG_WARN_NAMED(
-            "mock_generic_system",
+          RCLCPP_WARN(
+            get_logger(),
             "Requested acceleration mode for joint '%s' without dynamics calculation enabled - "
             "this might lead to wrong feedback and unexpected behavior.",
             info_.joints[joint_index].name.c_str());
@@ -408,9 +379,8 @@ return_type GenericSystem::prepare_command_mode_switch(
     }
     else
     {
-      RCUTILS_LOG_DEBUG_NAMED(
-        "mock_generic_system", "Got interface '%s' that is not joint - nothing to do!",
-        key.c_str());
+      RCLCPP_DEBUG(
+        get_logger(), "Got interface '%s' that is not joint - nothing to do!", key.c_str());
     }
   }
 
@@ -419,8 +389,8 @@ return_type GenericSystem::prepare_command_mode_switch(
     // There has to always be at least one control mode from the above three set
     if (joint_found_in_x_requests_[i] == FOUND_ONCE_FLAG)
     {
-      RCUTILS_LOG_ERROR_NAMED(
-        "mock_generic_system", "Joint '%s' has to have '%s', '%s', or '%s' interface!",
+      RCLCPP_ERROR(
+        get_logger(), "Joint '%s' has to have '%s', '%s', or '%s' interface!",
         info_.joints[i].name.c_str(), hardware_interface::HW_IF_POSITION,
         hardware_interface::HW_IF_VELOCITY, hardware_interface::HW_IF_ACCELERATION);
       ret_val = hardware_interface::return_type::ERROR;
@@ -429,8 +399,8 @@ return_type GenericSystem::prepare_command_mode_switch(
     // Currently we don't support multiple interface request
     if (joint_found_in_x_requests_[i] > (FOUND_ONCE_FLAG + 1))
     {
-      RCUTILS_LOG_ERROR_NAMED(
-        "mock_generic_system",
+      RCLCPP_ERROR(
+        get_logger(),
         "Got multiple (%zu) starting interfaces for joint '%s' - this is not "
         "supported!",
         joint_found_in_x_requests_[i] - FOUND_ONCE_FLAG, info_.joints[i].name.c_str());
@@ -483,12 +453,12 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
 {
   if (command_propagation_disabled_)
   {
-    RCUTILS_LOG_WARN_NAMED(
-      "mock_generic_system", "Command propagation is disabled - no values will be returned!");
+    RCLCPP_WARN(get_logger(), "Command propagation is disabled - no values will be returned!");
     return return_type::OK;
   }
 
-  auto mirror_command_to_state = [](auto & states_, auto commands_, size_t start_index = 0)
+  auto mirror_command_to_state =
+    [](auto & states_, auto commands_, size_t start_index = 0) -> return_type
   {
     for (size_t i = start_index; i < states_.size(); ++i)
     {
@@ -498,8 +468,13 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
         {
           states_[i][j] = commands_[i][j];
         }
+        if (std::isinf(commands_[i][j]))
+        {
+          return return_type::ERROR;
+        }
       }
     }
+    return return_type::OK;
   };
 
   for (size_t j = 0; j < joint_states_[POSITION_INTERFACE_INDEX].size(); ++j)
@@ -585,20 +560,19 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
 
   // do loopback on all other interfaces - starts from 1 or 3 because 0, 1, 3 are position,
   // velocity, and acceleration interface
-  if (calculate_dynamics_)
+  if (
+    mirror_command_to_state(joint_states_, joint_commands_, calculate_dynamics_ ? 3 : 1) !=
+    return_type::OK)
   {
-    mirror_command_to_state(joint_states_, joint_commands_, 3);
-  }
-  else
-  {
-    mirror_command_to_state(joint_states_, joint_commands_, 1);
+    return return_type::ERROR;
   }
 
-  for (const auto & mimic_joint : mimic_joints_)
+  for (const auto & mimic_joint : info_.mimic_joints)
   {
     for (auto i = 0u; i < joint_states_.size(); ++i)
     {
       joint_states_[i][mimic_joint.joint_index] =
+        mimic_joint.offset +
         mimic_joint.multiplier * joint_states_[i][mimic_joint.mimicked_joint_index];
     }
   }
@@ -626,13 +600,13 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
     mirror_command_to_state(sensor_states_, sensor_mock_commands_);
   }
 
-  // do loopback on all gpio interfaces
   if (use_mock_gpio_command_interfaces_)
   {
     mirror_command_to_state(gpio_states_, gpio_mock_commands_);
   }
   else
   {
+    // do loopback on all gpio interfaces
     mirror_command_to_state(gpio_states_, gpio_commands_);
   }
 

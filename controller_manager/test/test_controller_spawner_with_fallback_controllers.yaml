@@ -1,0 +1,13 @@
+ctrl_1:
+  ros__parameters:
+    joint_names: ["joint1"]
+
+ctrl_2:
+  ros__parameters:
+    joint_names: ["joint2"]
+    fallback_controllers: ["ctrl_6", "ctrl_7", "ctrl_8"]
+
+ctrl_3:
+  ros__parameters:
+    joint_names: ["joint3"]
+    fallback_controllers: ["ctrl_9"]

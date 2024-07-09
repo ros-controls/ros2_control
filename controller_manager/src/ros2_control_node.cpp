@@ -83,6 +83,8 @@ int main(int argc, char ** argv)
         next_iteration_time += period;
         std::this_thread::sleep_until(next_iteration_time);
       }
+
+      cm->shutdown_async_controllers_and_components();
     });
 
   executor->add_node(cm);

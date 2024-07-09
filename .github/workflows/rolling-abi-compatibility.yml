@@ -4,6 +4,15 @@ on:
   pull_request:
     branches:
       - master
+    paths:
+      - '**.hpp'
+      - '**.h'
+      - '**.cpp'
+      - '**.py'
+      - '.github/workflows/rolling-abi-compatibility.yml'
+      - '**/package.xml'
+      - '**/CMakeLists.txt'
+      - 'ros2_control-not-released.rolling.repos'
 
 jobs:
   abi_check:

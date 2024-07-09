@@ -2,6 +2,45 @@
 Changelog for package ros2_control_test_assets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.13.0 (2024-07-08)
+-------------------
+* [ControllerChaining] Export state interfaces from chainable controllers (`#1021 <https://github.com/ros-controls/ros2_control/issues/1021>`_)
+* Remove mimic parameter from ros2_control tag (`#1553 <https://github.com/ros-controls/ros2_control/issues/1553>`_)
+* Contributors: Christoph Fröhlich, Sai Kishor Kothakota
+
+4.12.0 (2024-07-01)
+-------------------
+* [RM] Rename `load_urdf` method to `load_and_initialize_components` and add error handling there to avoid stack crashing when error happens. (`#1354 <https://github.com/ros-controls/ros2_control/issues/1354>`_)
+* [Feature] Hardware Components Grouping (`#1458 <https://github.com/ros-controls/ros2_control/issues/1458>`_)
+* Contributors: Dr. Denis, Sai Kishor Kothakota
+
+4.11.0 (2024-05-14)
+-------------------
+* Parse URDF soft_limits into the HardwareInfo structure (`#1488 <https://github.com/ros-controls/ros2_control/issues/1488>`_)
+* Contributors: adriaroig
+
+4.10.0 (2024-05-08)
+-------------------
+* Parse URDF joint hard limits into the HardwareInfo structure (`#1472 <https://github.com/ros-controls/ros2_control/issues/1472>`_)
+* Contributors: Sai Kishor Kothakota
+
+4.9.0 (2024-04-30)
+------------------
+* Component parser: Get mimic information from URDF (`#1256 <https://github.com/ros-controls/ros2_control/issues/1256>`_)
+* Contributors: Christoph Fröhlich
+
+4.8.0 (2024-03-27)
+------------------
+
+4.7.0 (2024-03-22)
+------------------
+
+4.6.0 (2024-03-02)
+------------------
+
+4.5.0 (2024-02-12)
+------------------
+
 4.4.0 (2024-01-31)
 ------------------
 

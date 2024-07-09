@@ -70,7 +70,9 @@ public:
   {
     executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
     cm_ = std::make_shared<CtrlMgr>(
-      std::make_unique<hardware_interface::ResourceManager>(), executor_, TEST_CM_NAME);
+      std::make_unique<hardware_interface::ResourceManager>(
+        rm_node_->get_node_clock_interface(), rm_node_->get_node_logging_interface()),
+      executor_, TEST_CM_NAME);
     // We want to be able to not pass robot description immediately
     if (!robot_description_.empty())
     {
@@ -144,6 +146,9 @@ public:
   bool run_updater_;
   const std::string robot_description_;
   rclcpp::Time time_;
+
+protected:
+  rclcpp::Node::SharedPtr rm_node_ = std::make_shared<rclcpp::Node>("ResourceManager");
 };
 
 class TestControllerManagerSrvs

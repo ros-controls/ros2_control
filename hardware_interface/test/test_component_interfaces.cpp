@@ -341,12 +341,12 @@ class DummySystem : public hardware_interface::SystemInterface
 
 private:
   std::array<double, 3> position_state_ = {
-    std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
-    std::numeric_limits<double>::quiet_NaN()};
+    {std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
+     std::numeric_limits<double>::quiet_NaN()}};
   std::array<double, 3> velocity_state_ = {
-    std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
-    std::numeric_limits<double>::quiet_NaN()};
-  std::array<double, 3> velocity_command_ = {0.0, 0.0, 0.0};
+    {std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
+     std::numeric_limits<double>::quiet_NaN()}};
+  std::array<double, 3> velocity_command_ = {{0.0, 0.0, 0.0}};
 
   // Helper variables to initiate error on read
   unsigned int read_calls_ = 0;
@@ -425,7 +425,8 @@ TEST(TestComponentInterfaces, dummy_actuator)
   hardware_interface::Actuator actuator_hw(std::make_unique<test_components::DummyActuator>());
 
   hardware_interface::HardwareInfo mock_hw_info{};
-  auto state = actuator_hw.initialize(mock_hw_info);
+  rclcpp::Logger logger = rclcpp::get_logger("test_actuator_components");
+  auto state = actuator_hw.initialize(mock_hw_info, logger, nullptr);
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
 
@@ -515,7 +516,8 @@ TEST(TestComponentInterfaces, dummy_sensor)
   hardware_interface::Sensor sensor_hw(std::make_unique<test_components::DummySensor>());
 
   hardware_interface::HardwareInfo mock_hw_info{};
-  auto state = sensor_hw.initialize(mock_hw_info);
+  rclcpp::Logger logger = rclcpp::get_logger("test_sensor_components");
+  auto state = sensor_hw.initialize(mock_hw_info, logger, nullptr);
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
 
@@ -546,7 +548,8 @@ TEST(TestComponentInterfaces, dummy_system)
   hardware_interface::System system_hw(std::make_unique<test_components::DummySystem>());
 
   hardware_interface::HardwareInfo mock_hw_info{};
-  auto state = system_hw.initialize(mock_hw_info);
+  rclcpp::Logger logger = rclcpp::get_logger("test_system_components");
+  auto state = system_hw.initialize(mock_hw_info, logger, nullptr);
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
 
@@ -670,7 +673,8 @@ TEST(TestComponentInterfaces, dummy_command_mode_system)
   hardware_interface::System system_hw(
     std::make_unique<test_components::DummySystemPreparePerform>());
   hardware_interface::HardwareInfo mock_hw_info{};
-  auto state = system_hw.initialize(mock_hw_info);
+  rclcpp::Logger logger = rclcpp::get_logger("test_system_components");
+  auto state = system_hw.initialize(mock_hw_info, logger, nullptr);
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
 
@@ -701,7 +705,8 @@ TEST(TestComponentInterfaces, dummy_actuator_read_error_behavior)
   hardware_interface::Actuator actuator_hw(std::make_unique<test_components::DummyActuator>());
 
   hardware_interface::HardwareInfo mock_hw_info{};
-  auto state = actuator_hw.initialize(mock_hw_info);
+  rclcpp::Logger logger = rclcpp::get_logger("test_actuator_components");
+  auto state = actuator_hw.initialize(mock_hw_info, logger, nullptr);
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
 
@@ -760,7 +765,8 @@ TEST(TestComponentInterfaces, dummy_actuator_write_error_behavior)
   hardware_interface::Actuator actuator_hw(std::make_unique<test_components::DummyActuator>());
 
   hardware_interface::HardwareInfo mock_hw_info{};
-  auto state = actuator_hw.initialize(mock_hw_info);
+  rclcpp::Logger logger = rclcpp::get_logger("test_actuator_components");
+  auto state = actuator_hw.initialize(mock_hw_info, logger, nullptr);
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
 
@@ -819,7 +825,8 @@ TEST(TestComponentInterfaces, dummy_sensor_read_error_behavior)
   hardware_interface::Sensor sensor_hw(std::make_unique<test_components::DummySensor>());
 
   hardware_interface::HardwareInfo mock_hw_info{};
-  auto state = sensor_hw.initialize(mock_hw_info);
+  rclcpp::Logger logger = rclcpp::get_logger("test_sensor_components");
+  auto state = sensor_hw.initialize(mock_hw_info, logger, nullptr);
 
   auto state_interfaces = sensor_hw.export_state_interfaces();
   // Updated because is is INACTIVE
@@ -883,7 +890,8 @@ TEST(TestComponentInterfaces, dummy_system_read_error_behavior)
   hardware_interface::System system_hw(std::make_unique<test_components::DummySystem>());
 
   hardware_interface::HardwareInfo mock_hw_info{};
-  auto state = system_hw.initialize(mock_hw_info);
+  rclcpp::Logger logger = rclcpp::get_logger("test_system_components");
+  auto state = system_hw.initialize(mock_hw_info, logger, nullptr);
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
 
@@ -947,7 +955,8 @@ TEST(TestComponentInterfaces, dummy_system_write_error_behavior)
   hardware_interface::System system_hw(std::make_unique<test_components::DummySystem>());
 
   hardware_interface::HardwareInfo mock_hw_info{};
-  auto state = system_hw.initialize(mock_hw_info);
+  rclcpp::Logger logger = rclcpp::get_logger("test_system_components");
+  auto state = system_hw.initialize(mock_hw_info, logger, nullptr);
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
 

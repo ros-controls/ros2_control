@@ -4,6 +4,15 @@ on:
   pull_request:
     branches:
       - iron
+    paths:
+      - '**.hpp'
+      - '**.h'
+      - '**.cpp'
+      - '**.py'
+      - '.github/workflows/iron-abi-compatibility.yml'
+      - '**/package.xml'
+      - '**/CMakeLists.txt'
+      - 'ros2_control-not-released.iron.repos'
 
 jobs:
   abi_check:

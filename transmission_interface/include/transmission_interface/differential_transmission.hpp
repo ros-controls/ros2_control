@@ -31,7 +31,9 @@ namespace transmission_interface
 /**
  *
  * This transmission relates <b>two actuators</b> and <b>two joints</b> through a differential
- * mechanism, as illustrated below. \image html differential_transmission.png
+ * mechanism, as illustrated below.
+ *
+ * \image html differential_transmission.png
  *
  * <CENTER>
  * <table>
