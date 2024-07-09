@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-from controller_manager import list_controllers
+from controller_manager import list_controllers, list_hardware_components
 
 import rclpy
 
@@ -28,7 +28,7 @@ def service_caller(service_name, service_type, request):
     try:
         rclpy.init()
 
-        node = rclpy.create_node(f"ros2controlcli_{ service_name.replace('/', '') }_requester")
+        node = rclpy.create_node(f"ros2controlcli_{service_name.replace('/', '')}_requester")
 
         cli = node.create_client(service_type, service_name)
 
@@ -38,14 +38,14 @@ def service_caller(service_name, service_type, request):
             if not cli.wait_for_service(2.0):
                 raise RuntimeError(f"Could not contact service {service_name}")
 
-        node.get_logger().debug(f"requester: making request: { repr(request) }\n")
+        node.get_logger().debug(f"requester: making request: {repr(request)}\n")
         future = cli.call_async(request)
         rclpy.spin_until_future_complete(node, future)
         if future.result() is not None:
             return future.result()
         else:
             future_exception = future.exception()
-            raise RuntimeError(f"Exception while calling service: { repr(future_exception) }")
+            raise RuntimeError(f"Exception while calling service: {repr(future_exception)}")
     finally:
         node.destroy_node()
         rclpy.shutdown()
@@ -73,6 +73,20 @@ class LoadedControllerNameCompleter:
         with DirectNode(parsed_args) as node:
             controllers = list_controllers(node, parsed_args.controller_manager).controller
             return [c.name for c in controllers if c.state in self.valid_states]
+
+
+class LoadedHardwareComponentNameCompleter:
+    """Callable returning a list of loaded hardware components."""
+
+    def __init__(self, valid_states=["active", "inactive", "configured", "unconfigured"]):
+        self.valid_states = valid_states
+
+    def __call__(self, prefix, parsed_args, **kwargs):
+        with DirectNode(parsed_args) as node:
+            hardware_components = list_hardware_components(
+                node, parsed_args.controller_manager
+            ).component
+            return [c.name for c in hardware_components if c.state.label in self.valid_states]
 
 
 def add_controller_mgr_parsers(parser):

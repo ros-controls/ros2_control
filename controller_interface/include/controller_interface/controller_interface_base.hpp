@@ -26,6 +26,7 @@
 #include "hardware_interface/loaned_state_interface.hpp"
 
 #include "rclcpp/rclcpp.hpp"
+#include "rclcpp/version.h"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
 
 namespace controller_interface
@@ -144,7 +145,7 @@ public:
   std::shared_ptr<rclcpp_lifecycle::LifecycleNode> get_node();
 
   CONTROLLER_INTERFACE_PUBLIC
-  std::shared_ptr<rclcpp_lifecycle::LifecycleNode> get_node() const;
+  std::shared_ptr<const rclcpp_lifecycle::LifecycleNode> get_node() const;
 
   CONTROLLER_INTERFACE_PUBLIC
   const rclcpp_lifecycle::State & get_state() const;
@@ -172,7 +173,14 @@ public:
   CONTROLLER_INTERFACE_PUBLIC
   virtual rclcpp::NodeOptions define_custom_node_options() const
   {
+// \note The versions conditioning is added here to support the source-compatibility with Humble
+#if RCLCPP_VERSION_MAJOR >= 21
     return rclcpp::NodeOptions().enable_logger_service(true);
+#else
+    return rclcpp::NodeOptions()
+      .allow_undeclared_parameters(true)
+      .automatically_declare_parameters_from_overrides(true);
+#endif
   }
 
   /// Declare and initialize a parameter with a type.
@@ -217,10 +225,19 @@ public:
   virtual std::vector<hardware_interface::CommandInterface> export_reference_interfaces() = 0;
 
   /**
+   * Export interfaces for a chainable controller that can be used as state interface by other
+   * controllers.
+   *
+   * \returns list of state interfaces for preceding controllers.
+   */
+  CONTROLLER_INTERFACE_PUBLIC
+  virtual std::vector<hardware_interface::StateInterface> export_state_interfaces() = 0;
+
+  /**
    * Set chained mode of a chainable controller. This method triggers internal processes to switch
    * a chainable controller to "chained" mode and vice-versa. Setting controller to "chained" mode
-   * usually involves disabling of subscribers and other external interfaces to avoid potential
-   * concurrency in input commands.
+   * usually involves the usage of the controller's reference interfaces by the other
+   * controllers
    *
    * \returns true if mode is switched successfully and false if not.
    */
