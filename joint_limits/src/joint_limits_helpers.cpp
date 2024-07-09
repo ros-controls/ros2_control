@@ -75,8 +75,9 @@ std::pair<double, double> compute_velocity_limits(
       (act_pos.value() > limits.max_position && desired_vel >= 0.0) ||
       (act_pos.value() < limits.min_position && desired_vel <= 0.0))
     {
-      RCLCPP_ERROR_ONCE(
+      RCLCPP_WARN_EXPRESSION(
         rclcpp::get_logger("joint_limiter_interface"),
+        prev_command_vel.has_value() && prev_command_vel.value() != 0.0,
         "Joint position %.5f is out of bounds[%.5f, %.5f] for the joint and we want to move "
         "further into bounds with vel %.5f: '%s'. Joint velocity limits will be "
         "restrictred to zero.",
