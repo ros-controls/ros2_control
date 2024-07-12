@@ -146,7 +146,7 @@ TEST_F(ResourceManagerTest, test_uninitializable_hardware)
     ros2_control_test_assets::minimal_uninitializable_robot_urdf);
 }
 
-TEST_F(ResourceManagerTest, uninitialization_with_urdf_and_manual_validation)
+TEST_F(ResourceManagerTest, initialization_with_urdf_and_manual_validation)
 {
   // we validate the results manually
   TestableResourceManager rm(node_, ros2_control_test_assets::minimal_robot_urdf, false);
