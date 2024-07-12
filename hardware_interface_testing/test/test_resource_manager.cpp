@@ -137,16 +137,16 @@ void test_load_and_initialized_components_failure(const std::string & urdf)
   EXPECT_FALSE(rm.command_interface_exists("joint3/max_acceleration"));
 }
 
-TEST_F(ResourceManagerTest, test_unitializable_hardware)
+TEST_F(ResourceManagerTest, test_uninitializable_hardware)
 {
-  SCOPED_TRACE("test_unitializable_hardware_no_validation");
+  SCOPED_TRACE("test_uninitializable_hardware_no_validation");
   // If the the hardware can not be initialized and load_and_initialize_components didn't try to
   // validate the interfaces, the interface should not show up
   test_load_and_initialized_components_failure(
     ros2_control_test_assets::minimal_uninitializable_robot_urdf);
 }
 
-TEST_F(ResourceManagerTest, initialization_with_urdf_and_manual_validation)
+TEST_F(ResourceManagerTest, uninitialization_with_urdf_and_manual_validation)
 {
   // we validate the results manually
   TestableResourceManager rm(node_, ros2_control_test_assets::minimal_robot_urdf, false);
