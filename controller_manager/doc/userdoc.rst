@@ -129,6 +129,21 @@ There are two scripts to interact with controller manager from launch files:
       -c CONTROLLER_MANAGER, --controller-manager CONTROLLER_MANAGER
                             Name of the controller manager ROS node
 
+rqt_controller_manager
+----------------------
+A GUI tool to interact with the controller manager services to be able to switch the lifecycle states of the controllers as well as the hardware components.
+
+.. image:: images/rqt_controller_manager.png
+
+It can be launched independently using the following command or as rqt plugin.
+
+.. code-block:: console
+
+    ros2 run rqt_controller_manager rqt_controller_manager
+
+   * Double-click on a controller or hardware component to show the additional info.
+   * Right-click on a controller or hardware component to show a context menu with options for lifecycle management.
+
 Using the Controller Manager in a Process
 -----------------------------------------
 
