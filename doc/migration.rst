@@ -64,6 +64,7 @@ controller_manager
         <child link="finger_left"/>
         <limit effort="1000.0" lower="0" upper="0.38" velocity="10"/>
       </joint>
+* The support for the ``description`` parameter for loading the URDF was removed (`#1358 <https://github.com/ros-controls/ros2_control/pull/1358>`_). Use ``robot_description`` topic instead, e.g., you can use the `robot_state_publisher <https://index.ros.org/p/robot_state_publisher/github-ros-robot_state_publisher/#{DISTRO}>`_. For an example, see `this PR <https://github.com/ros-controls/ros2_control_demos/pull/456>`_ where the change was applied to the demo repository.
 
 hardware_interface
 ******************

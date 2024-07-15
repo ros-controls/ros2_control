@@ -68,6 +68,7 @@ controller_manager
       </joint>
 
    The parameters within the ``ros2_control`` tag are not supported any more.
+* The support for the ``description`` parameter for loading the URDF was removed (`#1358 <https://github.com/ros-controls/ros2_control/pull/1358>`_).
 
 hardware_interface
 ******************
