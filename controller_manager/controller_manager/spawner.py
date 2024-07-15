@@ -175,6 +175,7 @@ def main(args=None):
     controller_manager_name = args.controller_manager
     controller_namespace = args.namespace
     param_file = args.param_file
+    controller_manager_timeout = args.controller_manager_timeout
 
     if args.controller_type:
         warnings.filterwarnings("always")
