@@ -83,6 +83,13 @@ public:
     const rclcpp::NodeOptions & options = get_cm_node_options());
 
   CONTROLLER_MANAGER_PUBLIC
+  ControllerManager(
+    std::shared_ptr<rclcpp::Executor> executor, const std::string & urdf,
+    bool activate_all_hw_components, const std::string & manager_node_name = "controller_manager",
+    const std::string & node_namespace = "",
+    const rclcpp::NodeOptions & options = get_cm_node_options());
+
+  CONTROLLER_MANAGER_PUBLIC
   virtual ~ControllerManager() = default;
 
   CONTROLLER_MANAGER_PUBLIC
@@ -193,7 +200,24 @@ public:
   // the executor (see issue #260).
   // rclcpp::CallbackGroup::SharedPtr deterministic_callback_group_;
 
-  // Per controller update rate support
+  /// Interface for external components to check if Resource Manager is initialized.
+  /**
+   * Checks if components in Resource Manager are loaded and initialized.
+   * \returns true if they are initialized, false otherwise.
+   */
+  CONTROLLER_MANAGER_PUBLIC
+  bool is_resource_manager_initialized() const
+  {
+    return resource_manager_ && resource_manager_->are_components_initialized();
+  }
+
+  /// Update rate of the main control loop in the controller manager.
+  /**
+   * Update rate of the main control loop in the controller manager.
+   * The method is used for per-controller update rate support.
+   *
+   * \returns update rate of the controller manager.
+   */
   CONTROLLER_MANAGER_PUBLIC
   unsigned int get_update_rate() const;
 
@@ -555,6 +579,9 @@ private:
   std::vector<std::string> to_chained_mode_request_, from_chained_mode_request_;
   std::vector<std::string> activate_command_interface_request_,
     deactivate_command_interface_request_;
+
+  std::map<std::string, std::vector<std::string>> controller_chained_reference_interfaces_cache_;
+  std::map<std::string, std::vector<std::string>> controller_chained_state_interfaces_cache_;
 
   std::string robot_description_;
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr robot_description_subscription_;
