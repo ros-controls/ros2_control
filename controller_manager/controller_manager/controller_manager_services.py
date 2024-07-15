@@ -32,7 +32,7 @@ def service_caller(node, service_name, service_type, request, service_timeout=0.
     cli = node.create_client(service_type, service_name)
 
     while not cli.service_is_ready():
-        node.get_logger().debug(f"waiting for service {service_name} to become available...")
+        node.get_logger().info(f"waiting for service {service_name} to become available...")
         if service_timeout:
             if not cli.wait_for_service(service_timeout):
                 node.get_logger().fatal(f"Could not contact service {service_name}")
