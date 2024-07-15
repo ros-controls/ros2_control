@@ -206,7 +206,7 @@ def main(args=None):
                 prefixed_controller_name = controller_namespace + "/" + controller_name
 
             if is_controller_loaded(
-                node, controller_manager_name, prefixed_controller_name, timeout
+                node, controller_manager_name, prefixed_controller_name, controller_manager_timeout
             ):
                 node.get_logger().warn(
                     bcolors.WARNING
