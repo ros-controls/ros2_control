@@ -75,7 +75,7 @@ public:
 
   ResourceManager(const ResourceManager &) = delete;
 
-  ~ResourceManager();
+  virtual ~ResourceManager();
 
   /// Load resources from on a given URDF.
   /**
