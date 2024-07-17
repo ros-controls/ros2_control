@@ -118,10 +118,10 @@ public:
       write_async_handler_ = std::make_unique<realtime_tools::AsyncFunctionHandler<return_type>>();
       read_async_handler_->init(
         std::bind(&ActuatorInterface::read, this, std::placeholders::_1, std::placeholders::_2));
-      read_async_handler_->start_async_update_thread();
+      read_async_handler_->start_thread();
       write_async_handler_->init(
         std::bind(&ActuatorInterface::write, this, std::placeholders::_1, std::placeholders::_2));
-      write_async_handler_->start_async_update_thread();
+      write_async_handler_->start_thread();
     }
     return on_init(hardware_info);
   };
@@ -396,7 +396,7 @@ public:
           info_.name.c_str());
         return return_type::OK;
       }
-      std::tie(trigger_status, result) = read_async_handler_->trigger_async_update(time, period);
+      std::tie(trigger_status, result) = read_async_handler_->trigger_async_callback(time, period);
       if (!trigger_status)
       {
         RCLCPP_WARN(
@@ -461,7 +461,7 @@ public:
           info_.name.c_str());
         return return_type::OK;
       }
-      std::tie(trigger_status, result) = write_async_handler_->trigger_async_update(time, period);
+      std::tie(trigger_status, result) = write_async_handler_->trigger_async_callback(time, period);
       if (!trigger_status)
       {
         RCLCPP_WARN(
