@@ -90,10 +90,9 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
   if (is_async_)
   {
     async_handler_ = std::make_unique<realtime_tools::AsyncFunctionHandler<return_type>>();
-    async_handler_->init(
-      std::bind(
-        &ControllerInterfaceBase::update, this, std::placeholders::_1, std::placeholders::_2));
-    async_handler_->start_async_update_thread();
+    async_handler_->init(std::bind(
+      &ControllerInterfaceBase::update, this, std::placeholders::_1, std::placeholders::_2));
+    async_handler_->start_thread();
   }
 
   return get_node()->configure();
@@ -123,7 +122,7 @@ std::pair<bool, return_type> ControllerInterfaceBase::trigger_update(
 {
   if (is_async())
   {
-    return async_handler_->trigger_async_update(time, period);
+    return async_handler_->trigger_async_callback(time, period);
   }
   else
   {
@@ -159,7 +158,7 @@ void ControllerInterfaceBase::stop_async_update_cycle()
 {
   if (is_async() && async_handler_ && async_handler_->is_running())
   {
-    async_handler_->stop_async_update();
+    async_handler_->stop_thread();
   }
 }
 }  // namespace controller_interface
