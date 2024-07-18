@@ -850,8 +850,8 @@ controller_interface::return_type ControllerManager::configure_controller(
   }
 
   // let's update the list of following and preceding controllers
-  const auto cmd_itfs = controller->command_interface_configuration().names;
-  const auto state_itfs = controller->state_interface_configuration().names;
+  const auto cmd_itfs = found_it->get_remapped_command_interface_configuration().names;
+  const auto state_itfs = found_it->get_remapped_state_interface_configuration().names;
   for (const auto & cmd_itf : cmd_itfs)
   {
     controller_manager::ControllersListIterator ctrl_it;
@@ -1294,7 +1294,7 @@ controller_interface::return_type ControllerManager::switch_controller(
     const auto extract_interfaces_for_controller =
       [this](const ControllerSpec ctrl, std::vector<std::string> & request_interface_list)
     {
-      auto command_interface_config = ctrl.c->command_interface_configuration();
+      auto command_interface_config = ctrl.get_remapped_command_interface_configuration();
       std::vector<std::string> command_interface_names = {};
       if (command_interface_config.type == controller_interface::interface_configuration_type::ALL)
       {
@@ -1329,7 +1329,7 @@ controller_interface::return_type ControllerManager::switch_controller(
     {
       std::vector<std::string> interface_names = {};
 
-      auto command_interface_config = controller.c->command_interface_configuration();
+      auto command_interface_config = controller.get_remapped_command_interface_configuration();
       if (command_interface_config.type == controller_interface::interface_configuration_type::ALL)
       {
         interface_names = resource_manager_->available_command_interfaces();
@@ -1342,7 +1342,7 @@ controller_interface::return_type ControllerManager::switch_controller(
       }
 
       std::vector<std::string> interfaces = {};
-      auto state_interface_config = controller.c->state_interface_configuration();
+      auto state_interface_config = controller.get_remapped_state_interface_configuration();
       if (state_interface_config.type == controller_interface::interface_configuration_type::ALL)
       {
         interfaces = resource_manager_->available_state_interfaces();
@@ -1439,7 +1439,7 @@ controller_interface::return_type ControllerManager::switch_controller(
   {
     if (is_controller_active(controller.c))
     {
-      auto command_interface_config = controller.c->command_interface_configuration();
+      auto command_interface_config = controller.get_remapped_command_interface_configuration();
       if (command_interface_config.type == controller_interface::interface_configuration_type::ALL)
       {
         controller.info.claimed_interfaces = resource_manager_->available_command_interfaces();
@@ -1674,7 +1674,7 @@ void ControllerManager::activate_controllers(
 
     bool assignment_successful = true;
     // assign command interfaces to the controller
-    auto command_interface_config = controller->command_interface_configuration();
+    auto command_interface_config = found_it->get_remapped_command_interface_configuration();
     // default to controller_interface::configuration_type::NONE
     std::vector<std::string> command_interface_names = {};
     if (command_interface_config.type == controller_interface::interface_configuration_type::ALL)
@@ -1722,7 +1722,7 @@ void ControllerManager::activate_controllers(
     }
 
     // assign state interfaces to the controller
-    auto state_interface_config = controller->state_interface_configuration();
+    auto state_interface_config = found_it->get_remapped_state_interface_configuration();
     // default to controller_interface::configuration_type::NONE
     std::vector<std::string> state_interface_names = {};
     if (state_interface_config.type == controller_interface::interface_configuration_type::ALL)
@@ -1842,7 +1842,7 @@ void ControllerManager::list_controllers_srv_cb(
     // Get information about interfaces if controller are in 'inactive' or 'active' state
     if (is_controller_active(controllers[i].c) || is_controller_inactive(controllers[i].c))
     {
-      auto command_interface_config = controllers[i].c->command_interface_configuration();
+      auto command_interface_config = controllers[i].get_remapped_command_interface_configuration();
       if (command_interface_config.type == controller_interface::interface_configuration_type::ALL)
       {
         controller_state.required_command_interfaces = resource_manager_->command_interface_keys();
@@ -1854,7 +1854,7 @@ void ControllerManager::list_controllers_srv_cb(
         controller_state.required_command_interfaces = command_interface_config.names;
       }
 
-      auto state_interface_config = controllers[i].c->state_interface_configuration();
+      auto state_interface_config = controllers[i].get_remapped_state_interface_configuration();
       if (state_interface_config.type == controller_interface::interface_configuration_type::ALL)
       {
         controller_state.required_state_interfaces = resource_manager_->state_interface_keys();
@@ -2633,8 +2633,10 @@ void ControllerManager::propagate_deactivation_of_chained_mode(
         break;
       }
 
-      const auto ctrl_cmd_itf_names = controller.c->command_interface_configuration().names;
-      const auto ctrl_state_itf_names = controller.c->state_interface_configuration().names;
+      const auto ctrl_cmd_itf_names =
+        controller.get_remapped_command_interface_configuration().names;
+      const auto ctrl_state_itf_names =
+        controller.get_remapped_state_interface_configuration().names;
       auto ctrl_itf_names = ctrl_cmd_itf_names;
       ctrl_itf_names.insert(
         ctrl_itf_names.end(), ctrl_state_itf_names.begin(), ctrl_state_itf_names.end());
@@ -2671,8 +2673,10 @@ controller_interface::return_type ControllerManager::check_following_controllers
     get_logger(), "Checking following controllers of preceding controller with name '%s'.",
     controller_it->info.name.c_str());
 
-  const auto controller_cmd_interfaces = controller_it->c->command_interface_configuration().names;
-  const auto controller_state_interfaces = controller_it->c->state_interface_configuration().names;
+  const auto controller_cmd_interfaces =
+    controller_it->get_remapped_command_interface_configuration().names;
+  const auto controller_state_interfaces =
+    controller_it->get_remapped_state_interface_configuration().names;
   // get all interfaces of the controller
   auto controller_interfaces = controller_cmd_interfaces;
   controller_interfaces.insert(

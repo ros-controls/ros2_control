@@ -19,6 +19,7 @@
 #ifndef CONTROLLER_MANAGER__CONTROLLER_SPEC_HPP_
 #define CONTROLLER_MANAGER__CONTROLLER_SPEC_HPP_
 
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
