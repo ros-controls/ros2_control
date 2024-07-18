@@ -137,9 +137,9 @@ void test_load_and_initialized_components_failure(const std::string & urdf)
   EXPECT_FALSE(rm.command_interface_exists("joint3/max_acceleration"));
 }
 
-TEST_F(ResourceManagerTest, test_unitilizable_hardware)
+TEST_F(ResourceManagerTest, test_uninitializable_hardware)
 {
-  SCOPED_TRACE("test_unitilizable_hardware_no_validation");
+  SCOPED_TRACE("test_uninitializable_hardware_no_validation");
   // If the the hardware can not be initialized and load_and_initialize_components didn't try to
   // validate the interfaces, the interface should not show up
   test_load_and_initialized_components_failure(

@@ -48,7 +48,7 @@ jitter, using a lowlatency kernel can improve things a lot with being really eas
 Subscribers
 -----------
 
-~/robot_description [std_msgs::msg::String]
+robot_description [std_msgs::msg::String]
   String with the URDF xml, e.g., from ``robot_state_publisher``.
   Reloading of the URDF is not supported yet.
   All joints defined in the ``<ros2_control>``-tag have to be present in the URDF.
