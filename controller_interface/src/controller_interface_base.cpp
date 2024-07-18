@@ -242,4 +242,16 @@ void ControllerInterfaceBase::wait_for_trigger_update_to_finish()
     async_handler_->wait_for_trigger_cycle_to_finish();
   }
 }
+
+const std::map<std::string, std::string> &
+controller_interface::ControllerInterfaceBase::get_state_interfaces_remap() const
+{
+  return state_interfaces_remap_;
+}
+
+const std::map<std::string, std::string> &
+controller_interface::ControllerInterfaceBase::get_command_interfaces_remap() const
+{
+  return command_interfaces_remap_;
+}
 }  // namespace controller_interface
