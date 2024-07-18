@@ -38,6 +38,50 @@ struct ControllerSpec
   hardware_interface::ControllerInfo info;
   controller_interface::ControllerInterfaceBaseSharedPtr c;
   std::shared_ptr<rclcpp::Time> next_update_cycle_time;
+
+  controller_interface::InterfaceConfiguration get_remapped_command_interface_configuration() const
+  {
+    return get_remapped_interface_configuration(
+      c->command_interface_configuration(), c->get_command_interfaces_remap());
+  }
+
+  controller_interface::InterfaceConfiguration get_remapped_state_interface_configuration() const
+  {
+    return get_remapped_interface_configuration(
+      c->state_interface_configuration(), c->get_state_interfaces_remap());
+  }
+
+private:
+  controller_interface::InterfaceConfiguration get_remapped_interface_configuration(
+    const controller_interface::InterfaceConfiguration & interface_cfg,
+    const std::map<std::string, std::string> & remap) const
+  {
+    if (interface_cfg.type != controller_interface::interface_configuration_type::INDIVIDUAL)
+    {
+      return interface_cfg;
+    }
+    else
+    {
+      if (c->get_command_interfaces_remap().empty())
+      {
+        return interface_cfg;
+      }
+      else
+      {
+        controller_interface::InterfaceConfiguration remapped_cmd_itf_cfg = interface_cfg;
+        for (auto & [key, value] : remap)
+        {
+          auto it =
+            std::find(remapped_cmd_itf_cfg.names.begin(), remapped_cmd_itf_cfg.names.end(), key);
+          if (it != remapped_cmd_itf_cfg.names.end())
+          {
+            *it = value;
+          }
+        }
+        return remapped_cmd_itf_cfg;
+      }
+    }
+  }
 };
 
 struct ControllerChainSpec
