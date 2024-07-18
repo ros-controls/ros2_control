@@ -172,4 +172,16 @@ bool ControllerInterfaceBase::is_async() const { return is_async_; }
 
 const std::string & ControllerInterfaceBase::get_robot_description() const { return urdf_; }
 
+const std::map<std::string, std::string> &
+controller_interface::ControllerInterfaceBase::get_state_interfaces_remap() const
+{
+  return state_interfaces_remap_;
+}
+
+const std::map<std::string, std::string> &
+controller_interface::ControllerInterfaceBase::get_command_interfaces_remap() const
+{
+  return command_interfaces_remap_;
+}
+
 }  // namespace controller_interface

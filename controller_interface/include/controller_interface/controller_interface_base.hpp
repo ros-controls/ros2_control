@@ -271,6 +271,24 @@ public:
   CONTROLLER_INTERFACE_PUBLIC
   virtual bool is_in_chained_mode() const = 0;
 
+  /// Get the remapping of state interfaces defined in the controller namespace
+  /**
+   * Get the remapping of state interfaces defined in the controller namespace
+   *
+   * \returns map of state interfaces remapping
+   */
+  CONTROLLER_INTERFACE_PUBLIC
+  const std::map<std::string, std::string> & get_state_interfaces_remap() const;
+
+  /// Get the remapping of command interfaces defined in the controller namespace
+  /**
+   * Get the remapping of command interfaces defined in the controller namespace
+   *
+   * \returns map of command interfaces remapping
+   */
+  CONTROLLER_INTERFACE_PUBLIC
+  const std::map<std::string, std::string> & get_command_interfaces_remap() const;
+
 protected:
   std::vector<hardware_interface::LoanedCommandInterface> command_interfaces_;
   std::vector<hardware_interface::LoanedStateInterface> state_interfaces_;
