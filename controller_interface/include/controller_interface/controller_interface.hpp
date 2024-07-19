@@ -16,7 +16,6 @@
 #define CONTROLLER_INTERFACE__CONTROLLER_INTERFACE_HPP_
 
 #include <memory>
-#include <string>
 #include <vector>
 
 #include "controller_interface/controller_interface_base.hpp"
