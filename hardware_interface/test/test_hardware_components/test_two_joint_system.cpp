@@ -13,7 +13,6 @@
 // limitations under the License.
 
 #include <array>
-#include <memory>
 #include <vector>
 
 #include "hardware_interface/system_interface.hpp"
