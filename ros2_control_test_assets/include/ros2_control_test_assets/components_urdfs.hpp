@@ -15,8 +15,6 @@
 #ifndef ROS2_CONTROL_TEST_ASSETS__COMPONENTS_URDFS_HPP_
 #define ROS2_CONTROL_TEST_ASSETS__COMPONENTS_URDFS_HPP_
 
-#include <string>
-
 namespace ros2_control_test_assets
 {
 // 1. Industrial Robots with only one interface
