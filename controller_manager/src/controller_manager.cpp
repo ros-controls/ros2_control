@@ -220,20 +220,7 @@ ControllerManager::ControllerManager(
     std::make_shared<pluginlib::ClassLoader<controller_interface::ChainableControllerInterface>>(
       kControllerInterfaceNamespace, kChainableControllerInterfaceClassName))
 {
-  if (!get_parameter("update_rate", update_rate_))
-  {
-    RCLCPP_WARN(
-      get_logger(), "'update_rate' parameter not set, using default value of %d Hz.", update_rate_);
-  }
-
-  if (is_resource_manager_initialized())
-  {
-    init_services();
-  }
-
-  diagnostics_updater_.setHardwareID("ros2_control");
-  diagnostics_updater_.add(
-    "Controllers Activity", this, &ControllerManager::controller_activity_diagnostic_callback);
+  init_controller_manager();
 }
 
 ControllerManager::ControllerManager(
@@ -262,16 +249,19 @@ void ControllerManager::init_controller_manager()
       get_logger(), "'update_rate' parameter not set, using default value of %d Hz.", update_rate_);
   }
 
-  robot_description_notification_timer_ = create_wall_timer(
-    std::chrono::seconds(1),
-    [&]()
-    {
-      RCLCPP_WARN(
-        get_logger(), "Waiting for data on 'robot_description' topic to finish initialization");
-    });
   if (is_resource_manager_initialized())
   {
     init_services();
+  }
+  else
+  {
+    robot_description_notification_timer_ = create_wall_timer(
+      std::chrono::seconds(1),
+      [&]()
+      {
+        RCLCPP_WARN(
+          get_logger(), "Waiting for data on 'robot_description' topic to finish initialization");
+      });
   }
 
   // set QoS to transient local to get messages that have already been published
@@ -305,6 +295,10 @@ void ControllerManager::robot_description_callback(const std_msgs::msg::String &
   init_resource_manager(robot_description_);
   if (is_resource_manager_initialized())
   {
+    RCLCPP_INFO(
+      get_logger(),
+      "Resource Manager has been successfully initialized. Starting Controller Manager "
+      "services...");
     init_services();
   }
 }
@@ -374,9 +368,6 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
       State::PRIMARY_STATE_ACTIVE, hardware_interface::lifecycle_state_names::ACTIVE);
     resource_manager_->set_component_state(component, active_state);
   }
-
-  // Init CM services first after the URDF is loaded an components are set
-  init_services();
   robot_description_notification_timer_->cancel();
 }
 
