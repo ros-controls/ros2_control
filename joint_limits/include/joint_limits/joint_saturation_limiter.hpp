@@ -18,12 +18,9 @@
 #define JOINT_LIMITS__JOINT_SATURATION_LIMITER_HPP_
 
 #include <memory>
-#include <string>
-#include <utility>
 #include <vector>
 
 #include "joint_limits/joint_limiter_interface.hpp"
-#include "joint_limits/joint_limits.hpp"
 #include "rclcpp/clock.hpp"
 #include "rclcpp/duration.hpp"
 

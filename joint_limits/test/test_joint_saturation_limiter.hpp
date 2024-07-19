@@ -23,7 +23,6 @@
 #include "joint_limits/joint_limiter_interface.hpp"
 #include "joint_limits/joint_limits.hpp"
 #include "pluginlib/class_loader.hpp"
-#include "rclcpp/duration.hpp"
 #include "rclcpp/node.hpp"
 #include "trajectory_msgs/msg/joint_trajectory_point.hpp"
 
