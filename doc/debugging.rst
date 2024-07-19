@@ -78,3 +78,4 @@ References
 
 * [ROS2 and GDB](https://juraph.com/miscellaneous/ros2_and_gdb/)
 * [Using GDB to debug a plugin](https://stackoverflow.com/questions/10919832/how-to-use-gdb-to-debug-a-plugin)
+* [GDB CLI Tutorial](https://www.cs.umd.edu/~srhuang/teaching/cmsc212/gdb-tutorial-handout.pdf)
