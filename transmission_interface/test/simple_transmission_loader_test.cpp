@@ -20,11 +20,9 @@
 
 #include "hardware_interface/component_parser.hpp"
 #include "hardware_interface/hardware_info.hpp"
-#include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "pluginlib/class_loader.hpp"
 #include "ros2_control_test_assets/descriptions.hpp"
 #include "transmission_interface/simple_transmission.hpp"
-#include "transmission_interface/simple_transmission_loader.hpp"
 #include "transmission_interface/transmission_loader.hpp"
 
 using testing::DoubleNear;
