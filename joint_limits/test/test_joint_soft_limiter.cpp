@@ -18,9 +18,9 @@
 #include <limits>
 #include "test_joint_limiter.hpp"
 
-TEST_F(SoftJointLimiterTest, when_loading_limiter_plugin_expect_loaded)
+TEST_F(JointSoftLimiterTest, when_loading_limiter_plugin_expect_loaded)
 {
-  // Test SoftJointLimiter loading
+  // Test JointSoftLimiter loading
   ASSERT_NO_THROW(
     joint_limiter_ = std::unique_ptr<JointLimiter>(
       joint_limiter_loader_.createUnmanagedInstance(joint_limiter_type_)));
@@ -28,7 +28,7 @@ TEST_F(SoftJointLimiterTest, when_loading_limiter_plugin_expect_loaded)
 }
 
 // NOTE: We accept also if there is no limit defined for a joint.
-TEST_F(SoftJointLimiterTest, when_joint_not_found_expect_init_fail)
+TEST_F(JointSoftLimiterTest, when_joint_not_found_expect_init_fail)
 {
   SetupNode("joint_saturation_limiter");
   ASSERT_TRUE(Load());
@@ -37,7 +37,7 @@ TEST_F(SoftJointLimiterTest, when_joint_not_found_expect_init_fail)
   ASSERT_TRUE(joint_limiter_->init(joint_names, node_));
 }
 
-TEST_F(SoftJointLimiterTest, when_invalid_dt_expect_enforce_fail)
+TEST_F(JointSoftLimiterTest, when_invalid_dt_expect_enforce_fail)
 {
   SetupNode("joint_saturation_limiter");
   ASSERT_TRUE(Load());
@@ -48,7 +48,7 @@ TEST_F(SoftJointLimiterTest, when_invalid_dt_expect_enforce_fail)
   ASSERT_FALSE(joint_limiter_->enforce(actual_state_, desired_state_, period));
 }
 
-TEST_F(SoftJointLimiterTest, check_desired_position_only_cases)
+TEST_F(JointSoftLimiterTest, check_desired_position_only_cases)
 {
   SetupNode("soft_joint_limiter");
   ASSERT_TRUE(Load());
@@ -276,7 +276,7 @@ TEST_F(SoftJointLimiterTest, check_desired_position_only_cases)
   EXPECT_FALSE(desired_state_.has_jerk());
 }
 
-TEST_F(SoftJointLimiterTest, check_desired_velocity_only_cases)
+TEST_F(JointSoftLimiterTest, check_desired_velocity_only_cases)
 {
   SetupNode("joint_saturation_limiter");
   ASSERT_TRUE(Load());
@@ -500,7 +500,7 @@ TEST_F(SoftJointLimiterTest, check_desired_velocity_only_cases)
   test_limit_enforcing(6.0, -1.0, 0.0, true);
 }
 
-TEST_F(SoftJointLimiterTest, check_desired_effort_only_cases)
+TEST_F(JointSoftLimiterTest, check_desired_effort_only_cases)
 {
   SetupNode("joint_saturation_limiter");
   ASSERT_TRUE(Load());
@@ -779,7 +779,7 @@ TEST_F(SoftJointLimiterTest, check_desired_effort_only_cases)
   }
 }
 
-TEST_F(SoftJointLimiterTest, check_desired_acceleration_only_cases)
+TEST_F(JointSoftLimiterTest, check_desired_acceleration_only_cases)
 {
   SetupNode("joint_saturation_limiter");
   ASSERT_TRUE(Load());
@@ -869,7 +869,7 @@ TEST_F(SoftJointLimiterTest, check_desired_acceleration_only_cases)
   test_limit_enforcing(-0.4, 3.0, 0.25, true);
 }
 
-TEST_F(SoftJointLimiterTest, check_desired_jerk_only_cases)
+TEST_F(JointSoftLimiterTest, check_desired_jerk_only_cases)
 {
   SetupNode("joint_saturation_limiter");
   ASSERT_TRUE(Load());
@@ -911,7 +911,7 @@ TEST_F(SoftJointLimiterTest, check_desired_jerk_only_cases)
   test_limit_enforcing(-1.5, -0.5, true);
 }
 
-TEST_F(SoftJointLimiterTest, check_all_desired_references_limiting)
+TEST_F(JointSoftLimiterTest, check_all_desired_references_limiting)
 {
   SetupNode("joint_saturation_limiter");
   ASSERT_TRUE(Load());
