@@ -1,8 +1,7 @@
 Debugging
 ^^^^^^^^^
 
-All controllers and hardware interfaces are plugins that are loaded into the ``controller_manager``. Therefore the debugger
-needs to be attached to the controller_manager
+All controllers and hardware interfaces are plugins that are loaded into the ``controller_manager``. Therefore the debugger needs to be attached to the controller_manager
 
 How-To
 ******************
@@ -12,9 +11,10 @@ How-To
   .. code-block:: bash
 
     sudo apt install xterm gdb gdbserver
+
 * Make sure you run a debug/release with debug information build: 
   This is done by passing ``--cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo`` to colcon build.
-  Remember that in Release builds some breakpoints might not behave as you think as the the corresponding line might have been removed by the optimizer. For certain cases a full Debug build (``--cmake-args -DCMAKE_BUILD_TYPE=Debug``)
+  Remember that in Release builds some breakpoints might not behave as you expect as the the corresponding line might have been optimized by the compiler. For such cases, a full Debug build (``--cmake-args -DCMAKE_BUILD_TYPE=Debug``) is recommended.
 
 * Adapt the launch file to run the controller manager with the debugger attached:
 
@@ -27,8 +27,8 @@ How-To
   * Version B: Run it with gdbserver:
 
     Add ``prefix=['gdbserver localhost:3000']`` to the ``controller_manager`` node entry in your launch file.
-    Afterwards you can either attach a gdb cli instance or any IDE of your choice to that gdbserver instance. 
-    You probably want to make sure to start your debugger from a terminal where you sourced your workspace in order to have to find all paths
+    Afterwards, you can either attach a gdb CLI instance or any IDE of your choice to that gdbserver instance. 
+    Ensure you start your debugger from a terminal where you have sourced your workspace to properly resolve all paths.
 
   Example launch file entry:
 
@@ -69,8 +69,7 @@ Additional notes
   The ``update/on_activate`` method of a controller and the ``read/write/on_activate/perform_command_mode_switch`` methods of a hardware interface all run in the context
   of the realtime update loop. Setting breakpoints there can and will cause issues which might even break your hardware in the worst case.
   
-  From experience it might be better to either use (also just carefully) std::cout debugging the realtime context or add additional 
-  debug state interfaces (or publishers in case of a controller) for debugging. 
+From experience, it might be better to use meaningful logs for the real-time context (with caution) or to add additional debug state interfaces (or publishers in the case of a controller). 
 
-  Running the controller_manager + your plugin with gdb can nevertheless we really useful for debugging errors such as segfaults as you can gather a full ``backtrace``
+  However, running the controller_manager and your plugin with gdb can still be very useful for debugging errors such as segfaults, as you can gather a full ``backtrace``.
 
