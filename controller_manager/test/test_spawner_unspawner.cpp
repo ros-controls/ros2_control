@@ -393,9 +393,11 @@ TEST_F(
   robot_description_sending_timer_ = cm_->create_wall_timer(
     std::chrono::milliseconds(2500), [&]() { pass_robot_description_to_cm_and_rm(); });
 
-  ControllerManagerRunner cm_runner(this);
-  EXPECT_EQ(call_spawner("ctrl_1 -c test_controller_manager"), 0)
-    << "could not activate control because not robot description";
+  {
+    ControllerManagerRunner cm_runner(this);
+    EXPECT_EQ(call_spawner("ctrl_1 -c test_controller_manager"), 0)
+      << "could not activate control because not robot description";
+  }
 
   ASSERT_EQ(cm_->get_loaded_controllers().size(), 1ul);
   {
