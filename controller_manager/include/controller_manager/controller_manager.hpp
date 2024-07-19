@@ -18,7 +18,6 @@
 #include <map>
 #include <memory>
 #include <string>
-#include <tuple>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -42,17 +41,12 @@
 #include "controller_manager_msgs/srv/unload_controller.hpp"
 
 #include "diagnostic_updater/diagnostic_updater.hpp"
-#include "hardware_interface/handle.hpp"
 #include "hardware_interface/resource_manager.hpp"
 
 #include "pluginlib/class_loader.hpp"
 
 #include "rclcpp/executor.hpp"
 #include "rclcpp/node.hpp"
-#include "rclcpp/node_interfaces/node_logging_interface.hpp"
-#include "rclcpp/node_interfaces/node_parameters_interface.hpp"
-#include "rclcpp/parameter.hpp"
-#include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
 
 namespace controller_manager

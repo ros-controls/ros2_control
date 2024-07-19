@@ -15,7 +15,6 @@
 #ifndef TEST_CONTROLLER__TEST_CONTROLLER_HPP_
 #define TEST_CONTROLLER__TEST_CONTROLLER_HPP_
 
-#include <memory>
 #include <string>
 #include <vector>
 
