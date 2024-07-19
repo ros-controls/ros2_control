@@ -258,12 +258,12 @@ public:
 protected:
   std::vector<hardware_interface::LoanedCommandInterface> command_interfaces_;
   std::vector<hardware_interface::LoanedStateInterface> state_interfaces_;
-  unsigned int update_rate_ = 0;
-  bool is_async_ = false;
-  std::string urdf_ = "";
 
 private:
   std::shared_ptr<rclcpp_lifecycle::LifecycleNode> node_;
+  unsigned int update_rate_ = 0;
+  bool is_async_ = false;
+  std::string urdf_ = "";
 };
 
 using ControllerInterfaceBaseSharedPtr = std::shared_ptr<ControllerInterfaceBase>;
