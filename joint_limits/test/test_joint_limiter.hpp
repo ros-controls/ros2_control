@@ -129,10 +129,10 @@ public:
   }
 };
 
-class SoftJointLimiterTest : public JointLimiterTest
+class JointSoftLimiterTest : public JointLimiterTest
 {
 public:
-  SoftJointLimiterTest() : JointLimiterTest("joint_limits/JointInterfacesSoftLimiter") {}
+  JointSoftLimiterTest() : JointLimiterTest("joint_limits/JointInterfacesSoftLimiter") {}
 
   bool Init(
     const joint_limits::JointLimits & limits, const joint_limits::SoftJointLimits & soft_limits,

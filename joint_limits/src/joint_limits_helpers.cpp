@@ -86,12 +86,12 @@ std::pair<double, double> compute_velocity_limits(
     vel_limits.first = std::max(prev_command_vel.value() - delta_vel, vel_limits.first);
     vel_limits.second = std::min(prev_command_vel.value() + delta_vel, vel_limits.second);
   }
-  RCLCPP_ERROR(
+  RCLCPP_DEBUG(
     rclcpp::get_logger("joint_limiter_interface"),
     "Joint velocity limits for joint '%s' are [%f, %f]", joint_name.c_str(), vel_limits.first,
     vel_limits.second);
   internal::check_and_swap_limits(vel_limits);
-  RCLCPP_ERROR(
+  RCLCPP_DEBUG(
     rclcpp::get_logger("joint_limiter_interface"),
     "After swapping Joint velocity limits for joint '%s' are [%f, %f]", joint_name.c_str(),
     vel_limits.first, vel_limits.second);

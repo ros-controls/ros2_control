@@ -57,7 +57,7 @@ ament_target_dependencies(joint_limits_helpers PUBLIC ${THIS_PACKAGE_INCLUDE_DEP
 add_library(joint_saturation_limiter SHARED
   src/joint_saturation_limiter.cpp
   src/joint_range_limiter.cpp
-  src/soft_joint_limiter.cpp
+  src/joint_soft_limiter.cpp
 )
 target_compile_features(joint_saturation_limiter PUBLIC cxx_std_17)
 target_include_directories(joint_saturation_limiter PUBLIC
@@ -117,11 +117,11 @@ if(BUILD_TESTING)
     rclcpp
   )
 
-  ament_add_gtest(test_soft_joint_limiter test/test_soft_joint_limiter.cpp)
-  target_include_directories(test_soft_joint_limiter PRIVATE include)
-  target_link_libraries(test_soft_joint_limiter joint_limiter_interface)
+  ament_add_gtest(test_joint_soft_limiter test/test_joint_soft_limiter.cpp)
+  target_include_directories(test_joint_soft_limiter PRIVATE include)
+  target_link_libraries(test_joint_soft_limiter joint_limiter_interface)
   ament_target_dependencies(
-    test_soft_joint_limiter
+    test_joint_soft_limiter
     pluginlib
     rclcpp
   )
