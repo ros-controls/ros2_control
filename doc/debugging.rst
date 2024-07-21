@@ -71,11 +71,11 @@ Additional notes
 
 From experience, it might be better to use meaningful logs for the real-time context (with caution) or to add additional debug state interfaces (or publishers in the case of a controller).
 
-  However, running the controller_manager and your plugin with gdb can still be very useful for debugging errors such as segfaults, as you can gather a full ``backtrace``.
+However, running the controller_manager and your plugin with gdb can still be very useful for debugging errors such as segfaults, as you can gather a full backtrace.
 
 References
 ***********
 
-* [ROS2 and GDB](https://juraph.com/miscellaneous/ros2_and_gdb/)
-* [Using GDB to debug a plugin](https://stackoverflow.com/questions/10919832/how-to-use-gdb-to-debug-a-plugin)
-* [GDB CLI Tutorial](https://www.cs.umd.edu/~srhuang/teaching/cmsc212/gdb-tutorial-handout.pdf)
+* `ROS 2 and GDB <https://juraph.com/miscellaneous/ros2_and_gdb/>`_
+* `Using GDB to debug a plugin <https://stackoverflow.com/questions/10919832/how-to-use-gdb-to-debug-a-plugin>`_
+* `GDB CLI Tutorial <https://www.cs.umd.edu/~srhuang/teaching/cmsc212/gdb-tutorial-handout.pdf>`_
