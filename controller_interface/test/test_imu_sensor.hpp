@@ -19,11 +19,11 @@
 #ifndef TEST_IMU_SENSOR_HPP_
 #define TEST_IMU_SENSOR_HPP_
 
+#include <gmock/gmock.h>
+
 #include <memory>
 #include <string>
 #include <vector>
-
-#include "gmock/gmock.h"
 
 #include "semantic_components/imu_sensor.hpp"
 

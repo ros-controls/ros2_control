@@ -14,7 +14,6 @@
 
 #include "controller_manager/controller_manager.hpp"
 
-#include <list>
 #include <memory>
 #include <string>
 #include <utility>
@@ -24,7 +23,6 @@
 #include "controller_manager_msgs/msg/hardware_component_state.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
-#include "rclcpp/rclcpp.hpp"
 #include "rclcpp/version.h"
 #include "rclcpp_lifecycle/state.hpp"
 

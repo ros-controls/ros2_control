@@ -16,7 +16,6 @@
 #define TRANSMISSION_INTERFACE__DIFFERENTIAL_TRANSMISSION_HPP_
 
 #include <cassert>
-#include <set>
 #include <string>
 #include <vector>
 

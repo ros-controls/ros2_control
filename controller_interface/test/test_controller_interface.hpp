@@ -16,7 +16,6 @@
 #define TEST_CONTROLLER_INTERFACE_HPP_
 
 #include "controller_interface/controller_interface.hpp"
-#include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 
 constexpr char TEST_CONTROLLER_NAME[] = "testable_controller_interface";
 

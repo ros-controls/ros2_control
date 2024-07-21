@@ -22,22 +22,18 @@
 #include <memory>
 #include <string>
 #include <thread>
-#include <utility>
 #include <vector>
 
 #include "controller_interface/controller_interface.hpp"
 
 #include "controller_manager/controller_manager.hpp"
-#include "controller_manager_msgs/srv/list_hardware_interfaces.hpp"
 #include "controller_manager_msgs/srv/switch_controller.hpp"
 
-#include "rclcpp/rclcpp.hpp"
 #include "rclcpp/utilities.hpp"
 
 #include "std_msgs/msg/string.hpp"
 
 #include "ros2_control_test_assets/descriptions.hpp"
-#include "test_controller_failed_init/test_controller_failed_init.hpp"
 
 namespace
 {

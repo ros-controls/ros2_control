@@ -22,7 +22,6 @@
 
 #include "controller_manager/controller_manager.hpp"
 #include "controller_manager_msgs/msg/hardware_component_state.hpp"
-#include "controller_manager_msgs/srv/list_controllers.hpp"
 #include "controller_manager_msgs/srv/set_hardware_component_state.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"

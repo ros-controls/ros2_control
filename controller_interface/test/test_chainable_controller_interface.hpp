@@ -15,14 +15,13 @@
 #ifndef TEST_CHAINABLE_CONTROLLER_INTERFACE_HPP_
 #define TEST_CHAINABLE_CONTROLLER_INTERFACE_HPP_
 
+#include <gmock/gmock.h>
+
 #include <string>
 #include <vector>
 
-#include "gmock/gmock.h"
-
 #include "controller_interface/chainable_controller_interface.hpp"
 #include "hardware_interface/handle.hpp"
-#include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 
 constexpr char TEST_CONTROLLER_NAME[] = "testable_chainable_controller";
 constexpr double INTERFACE_VALUE = 1989.0;
