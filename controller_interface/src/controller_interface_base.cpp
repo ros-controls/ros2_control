@@ -83,7 +83,7 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
   // Other solution is to add check into the LifecycleNode if a transition is valid to trigger
   if (get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
   {
-    update_rate_ = get_node()->get_parameter("update_rate").as_int();
+    update_rate_ = static_cast<unsigned int>(get_node()->get_parameter("update_rate").as_int());
   }
 
   return get_node()->configure();
