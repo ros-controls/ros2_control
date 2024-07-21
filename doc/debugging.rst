@@ -1,7 +1,7 @@
 Debugging
 ^^^^^^^^^
 
-All controllers and hardware interfaces are plugins that are loaded into the ``controller_manager``. Therefore the debugger needs to be attached to the controller_manager
+All controllers and hardware components are plugins that are loaded into the ``controller_manager``. Therefore the debugger needs to be attached to the controller_manager.
 
 How-To
 ******************
@@ -12,9 +12,9 @@ How-To
 
     sudo apt install xterm gdb gdbserver
 
-* Make sure you run a debug/release with debug information build: 
+* Make sure you run a "debug" or "release with debug information" build: 
   This is done by passing ``--cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo`` to colcon build.
-  Remember that in Release builds some breakpoints might not behave as you expect as the the corresponding line might have been optimized by the compiler. For such cases, a full Debug build (``--cmake-args -DCMAKE_BUILD_TYPE=Debug``) is recommended.
+  Remember that in release builds some breakpoints might not behave as you expect as the the corresponding line might have been optimized by the compiler. For such cases, a full Debug build (``--cmake-args -DCMAKE_BUILD_TYPE=Debug``) is recommended.
 
 * Adapt the launch file to run the controller manager with the debugger attached:
 
@@ -22,7 +22,7 @@ How-To
 
     Add ``prefix=['xterm -e gdb -ex run --args']`` to the ``controller_manager`` node entry in your launch file.
     Due to the way ros2launch works we need to run the specific node in a separate terminal instance. 
-    See a gdb cli tutorial for further steps
+    See a gdb cli tutorial for further steps.
 
   * Version B: Run it with gdbserver:
 
@@ -57,7 +57,7 @@ Additional notes
 
 * Debugging plugins
 
-  You can only set breakpoints in plugins after the plugin has been loaded. In the ros2control context this means after the controller / hardware interface has been loaded:
+  You can only set breakpoints in plugins after the plugin has been loaded. In the ros2_control context this means after the controller / hardware component has been loaded:
 
 * Debug builds
 
@@ -66,7 +66,7 @@ Additional notes
 
 * Realtime
 
-  The ``update/on_activate`` method of a controller and the ``read/write/on_activate/perform_command_mode_switch`` methods of a hardware interface all run in the context
+  The ``update/on_activate`` method of a controller and the ``read/write/on_activate/perform_command_mode_switch`` methods of a hardware component all run in the context
   of the realtime update loop. Setting breakpoints there can and will cause issues which might even break your hardware in the worst case.
   
 From experience, it might be better to use meaningful logs for the real-time context (with caution) or to add additional debug state interfaces (or publishers in the case of a controller). 
