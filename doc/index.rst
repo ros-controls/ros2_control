@@ -28,3 +28,12 @@ Concepts
    Joint Kinematics <../hardware_interface/doc/joints_userdoc.rst>
    Hardware Components <../hardware_interface/doc/hardware_components_userdoc.rst>
    Mock Components <../hardware_interface/doc/mock_components_userdoc.rst>
+
+=====================================
+Guidelines and Best Practices
+=====================================
+
+.. toctree::
+   :titlesonly:
+
+   Debugging the Controller Manager and Plugins <debugging.rst>
