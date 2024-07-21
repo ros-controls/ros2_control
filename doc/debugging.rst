@@ -46,7 +46,7 @@ How-To
         remappings=[
             ("~/robot_description", "/robot_description")
         ],
-        prefix=['xterm -e gdb -ex run --args']`  # or prefix=['gdbserver localhost:3000']
+        prefix=['xterm -e gdb -ex run --args']  # or prefix=['gdbserver localhost:3000']
     )
 
     ld.add_action(controller_manager)
