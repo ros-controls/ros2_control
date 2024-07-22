@@ -35,6 +35,7 @@
 #include "hardware_interface/system_interface.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 #include "pluginlib/class_loader.hpp"
+#include "rclcpp/logging.hpp"
 #include "rcutils/logging_macros.h"
 
 namespace hardware_interface
