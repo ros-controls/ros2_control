@@ -37,7 +37,7 @@ int main(int argc, char ** argv)
 
   std::shared_ptr<rclcpp::Executor> executor =
     std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
-  std::string manager_node_name = "controller_manager";
+  std::string manager_node_name = "controller_test_manager";
 
   auto cm = std::make_shared<controller_manager::ControllerManager>(executor, manager_node_name);
 
