@@ -39,13 +39,12 @@ from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_testing.actions import ReadyToTest
 
-# import launch_testing.markers
 import rclpy
 from rclpy.node import Node
 
 
 # Executes the given launch file and checks if all nodes can be started
-@pytest.mark.rostest
+@pytest.mark.launch_test
 def generate_test_description():
 
     launch_include = IncludeLaunchDescription(
@@ -72,7 +71,7 @@ class TestFixture(unittest.TestCase):
         self.node.destroy_node()
         rclpy.shutdown()
 
-    def test_node_start(self, proc_output):
+    def test_node_start(self):
         start = time.time()
         found = False
         while time.time() - start < 2.0 and not found:
