@@ -28,19 +28,18 @@
 #
 # Author: Christoph Froehlich
 
-import os
 import pytest
 import unittest
 import time
 
-from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription
-from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.substitutions import PathJoinSubstitution
+from launch_ros.substitutions import FindPackageShare
 from launch_testing.actions import ReadyToTest
 
 import launch_testing.markers
 import rclpy
+import launch_ros.actions
 from rclpy.node import Node
 
 
@@ -48,16 +47,22 @@ from rclpy.node import Node
 @pytest.mark.launch_test
 def generate_test_description():
 
-    launch_include = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(
-                get_package_share_directory("controller_manager"),
-                "../../test/cm.launch.py",
-            )
-        ),
+    robot_controllers = PathJoinSubstitution(
+        [
+            FindPackageShare("controller_manager"),
+            "test",
+            "test_ros2_control_node.yaml",
+        ]
     )
 
-    return LaunchDescription([launch_include, ReadyToTest()])
+    control_node = launch_ros.actions.Node(
+        package="controller_manager",
+        executable="ros2_control_node",
+        parameters=[robot_controllers],
+        output="both",
+    )
+
+    return LaunchDescription([control_node, ReadyToTest()])
 
 
 # This is our test fixture. Each method is a test case.
