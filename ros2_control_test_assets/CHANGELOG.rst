@@ -2,8 +2,8 @@
 Changelog for package ros2_control_test_assets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.14.0 (2024-07-23)
+-------------------
 * Unused header cleanup (`#1627 <https://github.com/ros-controls/ros2_control/issues/1627>`_)
 * Contributors: Henry Moore
 

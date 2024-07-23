@@ -2,8 +2,8 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.14.0 (2024-07-23)
+-------------------
 * Unused header cleanup (`#1627 <https://github.com/ros-controls/ros2_control/issues/1627>`_)
 * move critical variables to the private context (`#1623 <https://github.com/ros-controls/ros2_control/issues/1623>`_)
 * Contributors: Henry Moore, Sai Kishor Kothakota

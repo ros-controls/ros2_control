@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.14.0 (2024-07-23)
+-------------------
 * Unused header cleanup (`#1627 <https://github.com/ros-controls/ros2_control/issues/1627>`_)
 * Remove noqa (`#1626 <https://github.com/ros-controls/ros2_control/issues/1626>`_)
 * Fix controller starting with later load of robot description test (`#1624 <https://github.com/ros-controls/ros2_control/issues/1624>`_)

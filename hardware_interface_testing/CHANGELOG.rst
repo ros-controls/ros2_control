@@ -2,8 +2,8 @@
 Changelog for package hardware_interface_testing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.14.0 (2024-07-23)
+-------------------
 * Unused header cleanup (`#1627 <https://github.com/ros-controls/ros2_control/issues/1627>`_)
 * Fix typos in test_resource_manager.cpp (`#1609 <https://github.com/ros-controls/ros2_control/issues/1609>`_)
 * Contributors: Henry Moore, Parker Drouillard
