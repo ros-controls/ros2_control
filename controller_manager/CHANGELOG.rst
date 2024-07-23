@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.42.0 (2024-07-23)
+-------------------
 * Remove noqa (`#1626 <https://github.com/ros-controls/ros2_control/issues/1626>`_) (`#1628 <https://github.com/ros-controls/ros2_control/issues/1628>`_)
 * Bump version of pre-commit hooks (backport `#1556 <https://github.com/ros-controls/ros2_control/issues/1556>`_) (`#1557 <https://github.com/ros-controls/ros2_control/issues/1557>`_)
 * Contributors: mergify[bot]
