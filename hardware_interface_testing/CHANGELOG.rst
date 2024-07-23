@@ -2,6 +2,12 @@
 Changelog for package hardware_interface_testing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Unused header cleanup (`#1627 <https://github.com/ros-controls/ros2_control/issues/1627>`_)
+* Fix typos in test_resource_manager.cpp (`#1609 <https://github.com/ros-controls/ros2_control/issues/1609>`_)
+* Contributors: Henry Moore, Parker Drouillard
+
 4.13.0 (2024-07-08)
 -------------------
 * [ResourceManager] Propagate access to logger and clock interfaces to HardwareComponent (`#1585 <https://github.com/ros-controls/ros2_control/issues/1585>`_)
