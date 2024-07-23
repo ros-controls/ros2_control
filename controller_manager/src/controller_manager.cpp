@@ -1297,7 +1297,6 @@ controller_interface::return_type ControllerManager::switch_controller(
   }
 
   // start the atomic controller switching
-  std::unique_lock<std::mutex> switch_params_guard(switch_params_.mutex);
   switch_params_.strictness = strictness;
   switch_params_.activate_asap = activate_asap;
   if (timeout == rclcpp::Duration{0, 0})
@@ -1310,9 +1309,9 @@ controller_interface::return_type ControllerManager::switch_controller(
     switch_params_.timeout = timeout.to_chrono<std::chrono::nanoseconds>();
   }
   switch_params_.do_switch = true;
-
   // wait until switch is finished
   RCLCPP_DEBUG(get_logger(), "Requested atomic controller switch from realtime loop");
+  std::unique_lock<std::mutex> switch_params_guard(switch_params_.mutex, std::defer_lock);
   if (!switch_params_.cv.wait_for(
         switch_params_guard, switch_params_.timeout, [this] { return !switch_params_.do_switch; }))
   {
@@ -2156,7 +2155,12 @@ void ControllerManager::read(const rclcpp::Time & time, const rclcpp::Duration &
 
 void ControllerManager::manage_switch()
 {
-  std::lock_guard<std::mutex> guard(switch_params_.mutex);
+  std::unique_lock<std::mutex> guard(switch_params_.mutex, std::try_to_lock);
+  if (!guard.owns_lock())
+  {
+    RCLCPP_DEBUG(get_logger(), "Unable to lock switch mutex. Retrying in next cycle.");
+    return;
+  }
   // Ask hardware interfaces to change mode
   if (!resource_manager_->perform_command_mode_switch(
         activate_command_interface_request_, deactivate_command_interface_request_))
