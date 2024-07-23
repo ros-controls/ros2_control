@@ -15,7 +15,6 @@
 #include "test_controller.hpp"
 
 #include <limits>
-#include <memory>
 #include <string>
 
 #include "lifecycle_msgs/msg/state.hpp"

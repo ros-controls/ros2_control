@@ -12,14 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <algorithm>
 #include <chrono>
 #include <memory>
 #include <string>
 #include <thread>
 
 #include "controller_manager/controller_manager.hpp"
-#include "rclcpp/rclcpp.hpp"
 #include "realtime_tools/thread_priority.hpp"
 
 using namespace std::chrono_literals;

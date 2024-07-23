@@ -20,7 +20,6 @@
 #include <string>
 #include <vector>
 
-#include "joint_limits/joint_limits.hpp"
 #include "joint_limits/joint_limits_rosparam.hpp"
 #include "joint_limits/visibility_control.h"
 #include "rclcpp/node.hpp"

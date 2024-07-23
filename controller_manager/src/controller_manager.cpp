@@ -14,7 +14,6 @@
 
 #include "controller_manager/controller_manager.hpp"
 
-#include <list>
 #include <memory>
 #include <string>
 #include <utility>
@@ -24,7 +23,6 @@
 #include "controller_manager_msgs/msg/hardware_component_state.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
-#include "rclcpp/rclcpp.hpp"
 #include "rclcpp/version.h"
 #include "rclcpp_lifecycle/state.hpp"
 
@@ -200,38 +198,7 @@ ControllerManager::ControllerManager(
     std::make_shared<pluginlib::ClassLoader<controller_interface::ChainableControllerInterface>>(
       kControllerInterfaceNamespace, kChainableControllerInterfaceClassName))
 {
-  if (!get_parameter("update_rate", update_rate_))
-  {
-    RCLCPP_WARN(
-      get_logger(), "'update_rate' parameter not set, using default value of %d Hz.", update_rate_);
-  }
-
-  robot_description_ = "";
-  // TODO(destogl): remove support at the end of 2023
-  get_parameter("robot_description", robot_description_);
-  if (robot_description_.empty())
-  {
-    subscribe_to_robot_description_topic();
-  }
-  else
-  {
-    RCLCPP_WARN(
-      get_logger(),
-      "[Deprecated] Passing the robot description parameter directly to the control_manager node "
-      "is deprecated. Use the 'robot_description' topic from 'robot_state_publisher' instead.");
-    init_resource_manager(robot_description_);
-    if (is_resource_manager_initialized())
-    {
-      RCLCPP_WARN(
-        get_logger(),
-        "You have to restart the framework when using robot description from parameter!");
-      init_services();
-    }
-  }
-
-  diagnostics_updater_.setHardwareID("ros2_control");
-  diagnostics_updater_.add(
-    "Controllers Activity", this, &ControllerManager::controller_activity_diagnostic_callback);
+  init_controller_manager();
 }
 
 ControllerManager::ControllerManager(
@@ -251,21 +218,7 @@ ControllerManager::ControllerManager(
     std::make_shared<pluginlib::ClassLoader<controller_interface::ChainableControllerInterface>>(
       kControllerInterfaceNamespace, kChainableControllerInterfaceClassName))
 {
-  if (!get_parameter("update_rate", update_rate_))
-  {
-    RCLCPP_WARN(
-      get_logger(), "'update_rate' parameter not set, using default value of %d Hz.", update_rate_);
-  }
-
-  if (is_resource_manager_initialized())
-  {
-    init_services();
-  }
-  subscribe_to_robot_description_topic();
-
-  diagnostics_updater_.setHardwareID("ros2_control");
-  diagnostics_updater_.add(
-    "Controllers Activity", this, &ControllerManager::controller_activity_diagnostic_callback);
+  init_controller_manager();
 }
 
 ControllerManager::ControllerManager(
@@ -282,6 +235,12 @@ ControllerManager::ControllerManager(
     std::make_shared<pluginlib::ClassLoader<controller_interface::ChainableControllerInterface>>(
       kControllerInterfaceNamespace, kChainableControllerInterfaceClassName))
 {
+  init_controller_manager();
+}
+
+void ControllerManager::init_controller_manager()
+{
+  // Get parameters needed for RT "update" loop to work
   if (!get_parameter("update_rate", update_rate_))
   {
     RCLCPP_WARN(
@@ -292,15 +251,17 @@ ControllerManager::ControllerManager(
   {
     init_services();
   }
-  subscribe_to_robot_description_topic();
+  else
+  {
+    robot_description_notification_timer_ = create_wall_timer(
+      std::chrono::seconds(1),
+      [&]()
+      {
+        RCLCPP_WARN(
+          get_logger(), "Waiting for data on 'robot_description' topic to finish initialization");
+      });
+  }
 
-  diagnostics_updater_.setHardwareID("ros2_control");
-  diagnostics_updater_.add(
-    "Controllers Activity", this, &ControllerManager::controller_activity_diagnostic_callback);
-}
-
-void ControllerManager::subscribe_to_robot_description_topic()
-{
   // set QoS to transient local to get messages that have already been published
   // (if robot state publisher starts before controller manager)
   robot_description_subscription_ = create_subscription<std_msgs::msg::String>(
@@ -309,6 +270,11 @@ void ControllerManager::subscribe_to_robot_description_topic()
   RCLCPP_INFO(
     get_logger(), "Subscribing to '%s' topic for robot description.",
     robot_description_subscription_->get_topic_name());
+
+  // Setup diagnostics
+  diagnostics_updater_.setHardwareID("ros2_control");
+  diagnostics_updater_.add(
+    "Controllers Activity", this, &ControllerManager::controller_activity_diagnostic_callback);
 }
 
 void ControllerManager::robot_description_callback(const std_msgs::msg::String & robot_description)
@@ -321,13 +287,16 @@ void ControllerManager::robot_description_callback(const std_msgs::msg::String &
   {
     RCLCPP_WARN(
       get_logger(),
-      "ResourceManager has already loaded an urdf file. Ignoring attempt to reload a robot "
-      "description file.");
+      "ResourceManager has already loaded a urdf. Ignoring attempt to reload a robot description.");
     return;
   }
   init_resource_manager(robot_description_);
   if (is_resource_manager_initialized())
   {
+    RCLCPP_INFO(
+      get_logger(),
+      "Resource Manager has been successfully initialized. Starting Controller Manager "
+      "services...");
     init_services();
   }
 }
@@ -397,6 +366,7 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
       State::PRIMARY_STATE_ACTIVE, hardware_interface::lifecycle_state_names::ACTIVE);
     resource_manager_->set_component_state(component, active_state);
   }
+  robot_description_notification_timer_->cancel();
 }
 
 void ControllerManager::init_services()
@@ -898,6 +868,15 @@ controller_interface::return_type ControllerManager::switch_controller(
   const std::vector<std::string> & deactivate_controllers, int strictness, bool activate_asap,
   const rclcpp::Duration & timeout)
 {
+  if (!is_resource_manager_initialized())
+  {
+    RCLCPP_ERROR(
+      get_logger(),
+      "Resource Manager is not initialized yet! Please provide robot description on "
+      "'robot_description' topic before trying to switch controllers.");
+    return controller_interface::return_type::ERROR;
+  }
+
   switch_params_ = SwitchParams();
 
   if (!deactivate_request_.empty() || !activate_request_.empty())

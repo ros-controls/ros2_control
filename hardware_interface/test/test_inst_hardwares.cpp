@@ -15,11 +15,8 @@
 #include <gmock/gmock.h>
 
 #include "hardware_interface/actuator.hpp"
-#include "hardware_interface/actuator_interface.hpp"
 #include "hardware_interface/sensor.hpp"
-#include "hardware_interface/sensor_interface.hpp"
 #include "hardware_interface/system.hpp"
-#include "hardware_interface/system_interface.hpp"
 
 class TestInstantiationHardwares : public ::testing::Test
 {

@@ -15,11 +15,8 @@
 #ifndef TEST_CONTROLLER_WITH_INTERFACES__TEST_CONTROLLER_WITH_INTERFACES_HPP_
 #define TEST_CONTROLLER_WITH_INTERFACES__TEST_CONTROLLER_WITH_INTERFACES_HPP_
 
-#include <memory>
-#include <string>
-
-#include "controller_interface/visibility_control.h"
-#include "controller_manager/controller_manager.hpp"
+#include "controller_interface/controller_interface.hpp"
+#include "controller_manager/visibility_control.h"
 
 namespace test_controller_with_interfaces
 {

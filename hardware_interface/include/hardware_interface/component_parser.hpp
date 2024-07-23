@@ -16,7 +16,6 @@
 #define HARDWARE_INTERFACE__COMPONENT_PARSER_HPP_
 
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 #include "hardware_interface/hardware_info.hpp"
