@@ -2,6 +2,11 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Small improvements to the error output in component parser to make debugging easier. (backport `#1580 <https://github.com/ros-controls/ros2_control/issues/1580>`_) (`#1582 <https://github.com/ros-controls/ros2_control/issues/1582>`_)
+* Contributors: mergify[bot]
+
 3.26.0 (2024-07-09)
 -------------------
 * Fix link to gazebosim.org (`#1563 <https://github.com/ros-controls/ros2_control/issues/1563>`_) (`#1565 <https://github.com/ros-controls/ros2_control/issues/1565>`_)
