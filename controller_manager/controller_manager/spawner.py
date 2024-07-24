@@ -331,7 +331,7 @@ def main(args=None):
 
                 if fallback_controllers:
                     parameter = Parameter()
-                    parameter.name = prefixed_controller_name + ".fallback_controllers"
+                    parameter.name = controller_name + ".fallback_controllers"
                     parameter.value = get_parameter_value(string_value=str(fallback_controllers))
 
                     response = call_set_parameters(
