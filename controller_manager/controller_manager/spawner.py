@@ -227,9 +227,9 @@ def main(args=None):
     node = Node("spawner_" + controller_names[0])
 
     if not controller_manager_name.startswith("/"):
-        spawner_namespace = node.get_namespace()
-        if spawner_namespace != "/":
-            controller_manager_name = f"{spawner_namespace}/{controller_manager_name}"
+        spawner_namespace = args.namespace
+        if spawner_namespace != "/" and spawner_namespace != "":
+            controller_manager_name = f"/{spawner_namespace}/{controller_manager_name}"
         else:
             controller_manager_name = f"/{controller_manager_name}"
 
