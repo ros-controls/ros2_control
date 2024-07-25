@@ -47,7 +47,7 @@ public:
    * \returns empty list.
    */
   CONTROLLER_INTERFACE_PUBLIC
-  std::vector<hardware_interface::StateInterface> export_state_interfaces() final;
+  std::vector<std::shared_ptr<hardware_interface::StateInterface>> export_state_interfaces() final;
 
   /**
    * Controller has no reference interfaces.

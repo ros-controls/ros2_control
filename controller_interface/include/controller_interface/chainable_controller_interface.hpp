@@ -59,10 +59,7 @@ public:
   bool is_chainable() const final;
 
   CONTROLLER_INTERFACE_PUBLIC
-  std::vector<hardware_interface::StateInterface> export_state_interfaces() final;
-
-  CONTROLLER_INTERFACE_PUBLIC
-  std::vector<hardware_interface::StateInterface> export_state_interfaces() final;
+  std::vector<std::shared_ptr<hardware_interface::StateInterface>> export_state_interfaces() final;
 
   CONTROLLER_INTERFACE_PUBLIC
   std::vector<std::shared_ptr<hardware_interface::CommandInterface>> export_reference_interfaces()

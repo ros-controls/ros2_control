@@ -171,7 +171,8 @@ TEST(TestComponentInterfaces, dummy_actuator_default_custom_export)
   const std::vector<hardware_interface::HardwareInfo> control_resources =
     hardware_interface::parse_control_resources_from_urdf(urdf_to_test);
   const hardware_interface::HardwareInfo dummy_actuator = control_resources[0];
-  auto state = actuator_hw.initialize(dummy_actuator);
+  rclcpp::Logger logger = rclcpp::get_logger("test_actuator_component");
+  auto state = actuator_hw.initialize(dummy_actuator, logger, nullptr);
 
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
@@ -235,7 +236,8 @@ TEST(TestComponentInterfaces, dummy_sensor_default_custom_export)
   const std::vector<hardware_interface::HardwareInfo> control_resources =
     hardware_interface::parse_control_resources_from_urdf(urdf_to_test);
   const hardware_interface::HardwareInfo voltage_sensor_res = control_resources[0];
-  auto state = sensor_hw.initialize(voltage_sensor_res);
+  rclcpp::Logger logger = rclcpp::get_logger("test_sensor_component");
+  auto state = sensor_hw.initialize(voltage_sensor_res, logger, nullptr);
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
 
@@ -271,7 +273,8 @@ TEST(TestComponentInterfaces, dummy_system_default_custom_export)
   const std::vector<hardware_interface::HardwareInfo> control_resources =
     hardware_interface::parse_control_resources_from_urdf(urdf_to_test);
   const hardware_interface::HardwareInfo dummy_system = control_resources[0];
-  auto state = system_hw.initialize(dummy_system);
+  rclcpp::Logger logger = rclcpp::get_logger("test_system_component");
+  auto state = system_hw.initialize(dummy_system, logger, nullptr);
   EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
   EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
 

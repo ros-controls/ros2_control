@@ -606,40 +606,29 @@ public:
   template <class HardwareT>
   void import_state_interfaces(HardwareT & hardware)
   {
-    try
-    {
-      std::vector<std::string> interface_names;
-      std::vector<std::shared_ptr<StateInterface>> interfaces = hardware.export_state_interfaces();
+    std::vector<std::string> interface_names;
+    std::vector<std::shared_ptr<StateInterface>> interfaces = hardware.export_state_interfaces();
 
-      interface_names.reserve(interfaces.size());
-      for (auto const & interface : interfaces)
+    interface_names.reserve(interfaces.size());
+    for (auto const & interface : interfaces)
+    {
+      try
       {
-        const auto [it, success] =
-          state_interface_map_.insert(std::make_pair(interface->get_name(), interface));
-        if (!success)
-        {
-          std::string msg(
-            "ResourceStorage: Tried to insert StateInterface with already existing key. Insert[" +
-            interface->get_name() + "]");
-          throw std::runtime_error(msg);
-        }
-        interface_names.push_back(interface->get_name());
+        interface_names.push_back(add_state_interface(interface));
+      }
+      // We don't want to crash during runtime because a StateInterface could not be added
+      catch (const std::exception & e)
+      {
+        RCLCPP_WARN(
+          get_logger(),
+          "Exception occurred while importing state interfaces for the hardware '%s' : %s",
+          hardware.get_name().c_str(), e.what());
       }
     }
-    catch (const std::exception & e)
-    {
-      RCLCPP_ERROR(
-        get_logger(),
-        "Exception occurred while importing state interfaces for the hardware '%s' : %s",
-        hardware.get_name().c_str(), e.what());
-    }
-    catch (...)
-    {
-      RCLCPP_ERROR(
-        get_logger(),
-        "Unknown exception occurred while importing state interfaces for the hardware '%s'",
-        hardware.get_name().c_str());
-    }
+
+    hardware_info_map_[hardware.get_name()].state_interfaces = interface_names;
+    available_state_interfaces_.reserve(
+      available_state_interfaces_.capacity() + interface_names.size());
   }
 
   void insert_command_interface(const std::shared_ptr<CommandInterface> command_interface)
@@ -700,6 +689,19 @@ public:
     }
   }
 
+  std::string add_state_interface(std::shared_ptr<StateInterface> interface)
+  {
+    auto interface_name = interface->get_name();
+    const auto [it, success] = state_interface_map_.emplace(interface_name, interface);
+    if (!success)
+    {
+      std::string msg(
+        "ResourceStorage: Tried to insert StateInterface with already existing key. Insert[" +
+        interface->get_name() + "]");
+      throw std::runtime_error(msg);
+    }
+    return interface_name;
+  }
   /// Adds exported state interfaces into internal storage.
   /**
    * Adds state interfaces to the internal storage. State interfaces exported from hardware or
@@ -711,15 +713,23 @@ public:
    * \returns list of interface names that are added into internal storage. The output is used to
    * avoid additional iterations to cache interface names, e.g., for initializing info structures.
    */
-  std::vector<std::string> add_state_interfaces(std::vector<StateInterface> & interfaces)
+  std::vector<std::string> add_state_interfaces(
+    std::vector<std::shared_ptr<StateInterface>> & interfaces)
   {
     std::vector<std::string> interface_names;
     interface_names.reserve(interfaces.size());
     for (auto & interface : interfaces)
     {
-      auto key = interface.get_name();
-      state_interface_map_.emplace(std::make_pair(key, std::move(interface)));
-      interface_names.push_back(key);
+      try
+      {
+        interface_names.push_back(add_state_interface(interface));
+      }
+      // We don't want to crash during runtime because a StateInterface could not be added
+      catch (const std::exception & e)
+      {
+        RCLCPP_WARN(
+          get_logger(), "Exception occurred while importing state interfaces: %s", e.what());
+      }
     }
     available_state_interfaces_.reserve(
       available_state_interfaces_.capacity() + interface_names.size());
@@ -1243,7 +1253,7 @@ bool ResourceManager::state_interface_is_available(const std::string & name) con
 
 // CM API: Called in "callback/slow"-thread
 void ResourceManager::import_controller_exported_state_interfaces(
-  const std::string & controller_name, std::vector<StateInterface> & interfaces)
+  const std::string & controller_name, std::vector<std::shared_ptr<StateInterface>> & interfaces)
 {
   std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
   auto interface_names = resource_storage_->add_state_interfaces(interfaces);

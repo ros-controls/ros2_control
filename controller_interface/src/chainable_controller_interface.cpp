@@ -44,52 +44,32 @@ return_type ChainableControllerInterface::update(
   return ret;
 }
 
-std::vector<hardware_interface::StateInterface>
+std::vector<std::shared_ptr<hardware_interface::StateInterface>>
 ChainableControllerInterface::export_state_interfaces()
 {
   auto state_interfaces = on_export_state_interfaces();
+  std::vector<std::shared_ptr<hardware_interface::StateInterface>> state_interfaces_ptrs_vec;
+  state_interfaces_ptrs_vec.reserve(state_interfaces.size());
 
   // check if the names of the controller state interfaces begin with the controller's name
-  for (const auto & interface : state_interfaces)
+  for (auto & interface : state_interfaces)
   {
     if (interface.get_prefix_name() != get_node()->get_name())
     {
-      RCLCPP_FATAL(
-        get_node()->get_logger(),
-        "The name of the interface '%s' does not begin with the controller's name. This is "
+      std::string error_msg =
+        "The name of the interface '" + interface.get_name() +
+        "' does not begin with the controller's name. This is "
         "mandatory for state interfaces. No state interface will be exported. Please "
-        "correct and recompile the controller with name '%s' and try again.",
-        interface.get_name().c_str(), get_node()->get_name());
-      state_interfaces.clear();
-      break;
+        "correct and recompile the controller with name '" +
+        get_node()->get_name() + "' and try again.";
+      throw std::runtime_error(error_msg);
     }
+
+    state_interfaces_ptrs_vec.push_back(
+      std::make_shared<hardware_interface::StateInterface>(interface));
   }
 
-  return state_interfaces;
-}
-
-std::vector<std::shared_ptr<hardware_interface::CommandInterface>>
-ChainableControllerInterface::export_state_interfaces()
-{
-  auto state_interfaces = on_export_state_interfaces();
-
-  // check if the names of the controller state interfaces begin with the controller's name
-  for (const auto & interface : state_interfaces)
-  {
-    if (interface.get_prefix_name() != get_node()->get_name())
-    {
-      RCLCPP_FATAL(
-        get_node()->get_logger(),
-        "The name of the interface '%s' does not begin with the controller's name. This is "
-        "mandatory for state interfaces. No state interface will be exported. Please "
-        "correct and recompile the controller with name '%s' and try again.",
-        interface.get_name().c_str(), get_node()->get_name());
-      state_interfaces.clear();
-      break;
-    }
-  }
-
-  return state_interfaces;
+  return state_interfaces_ptrs_vec;
 }
 
 std::vector<std::shared_ptr<hardware_interface::CommandInterface>>
@@ -187,8 +167,8 @@ ChainableControllerInterface::on_export_state_interfaces()
   std::vector<hardware_interface::StateInterface> state_interfaces;
   for (size_t i = 0; i < exported_state_interface_names_.size(); ++i)
   {
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-      get_node()->get_name(), exported_state_interface_names_[i], &state_interfaces_values_[i]));
+    state_interfaces.emplace_back(
+      get_node()->get_name(), exported_state_interface_names_[i], &state_interfaces_values_[i]);
   }
   return state_interfaces;
 }

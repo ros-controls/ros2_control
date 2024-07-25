@@ -752,12 +752,13 @@ controller_interface::return_type ControllerManager::configure_controller(
       get_logger(),
       "Controller '%s' is chainable. Interfaces are being exported to resource manager.",
       controller_name.c_str());
-    auto state_interfaces = controller->export_state_interfaces();
-    std::vector<std::shared_ptr<hardware_interface::CommandInterface>> interfaces;
+    std::vector<std::shared_ptr<hardware_interface::StateInterface>> state_interfaces;
+    std::vector<std::shared_ptr<hardware_interface::CommandInterface>> ref_interfaces;
     try
     {
-      interfaces = controller->export_reference_interfaces();
-      if (interfaces.empty() && state_interfaces.empty())
+      state_interfaces = controller->export_state_interfaces();
+      ref_interfaces = controller->export_reference_interfaces();
+      if (ref_interfaces.empty() && state_interfaces.empty())
       {
         // TODO(destogl): Add test for this!
         RCLCPP_ERROR(
