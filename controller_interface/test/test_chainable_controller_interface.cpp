@@ -15,6 +15,7 @@
 #include "test_chainable_controller_interface.hpp"
 
 #include <gmock/gmock.h>
+#include <memory>
 
 using ::testing::IsEmpty;
 using ::testing::SizeIs;
@@ -51,7 +52,7 @@ TEST_F(ChainableControllerInterfaceTest, export_state_interfaces)
   EXPECT_EQ(exported_state_interfaces[0]->get_prefix_name(), TEST_CONTROLLER_NAME);
   EXPECT_EQ(exported_state_interfaces[0]->get_interface_name(), "test_state");
 
-  EXPECT_EQ(exported_state_interfaces[0]->get_value(), INTERFACE_VALUE);
+  EXPECT_EQ(exported_state_interfaces[0]->get_value(), EXPORTED_STATE_INTERFACE_VALUE);
 }
 
 TEST_F(ChainableControllerInterfaceTest, export_reference_interfaces)
@@ -88,10 +89,15 @@ TEST_F(ChainableControllerInterfaceTest, interfaces_prefix_is_not_node_name)
   controller.set_name_prefix_of_reference_interfaces("some_not_correct_interface_prefix");
 
   // expect empty return because interface prefix is not equal to the node name
-  auto reference_interfaces = controller.export_reference_interfaces();
-  ASSERT_THAT(reference_interfaces, IsEmpty());
+  std::vector<std::shared_ptr<hardware_interface::CommandInterface>> exported_reference_interfaces;
+  EXPECT_THROW(
+    { exported_reference_interfaces = controller.export_reference_interfaces(); },
+    std::runtime_error);
+  ASSERT_THAT(exported_reference_interfaces, IsEmpty());
   // expect empty return because interface prefix is not equal to the node name
-  auto exported_state_interfaces = controller.export_state_interfaces();
+  std::vector<std::shared_ptr<hardware_interface::StateInterface>> exported_state_interfaces;
+  EXPECT_THROW(
+    { exported_state_interfaces = controller.export_state_interfaces(); }, std::runtime_error);
   ASSERT_THAT(exported_state_interfaces, IsEmpty());
 }
 

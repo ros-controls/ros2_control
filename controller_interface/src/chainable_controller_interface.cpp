@@ -57,9 +57,9 @@ ChainableControllerInterface::export_state_interfaces()
     if (interface.get_prefix_name() != get_node()->get_name())
     {
       std::string error_msg =
-        "The name of the interface '" + interface.get_name() +
-        "' does not begin with the controller's name. This is "
-        "mandatory for state interfaces. No state interface will be exported. Please "
+        "The prefix of the interface '" + interface.get_prefix_name() +
+        "' does not equal the controller's name '" + get_node()->get_name() +
+        "'. This is mandatory for state interfaces. No state interface will be exported. Please "
         "correct and recompile the controller with name '" +
         get_node()->get_name() + "' and try again.";
       throw std::runtime_error(error_msg);
