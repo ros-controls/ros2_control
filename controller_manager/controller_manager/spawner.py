@@ -136,17 +136,20 @@ def is_controller_loaded(node, controller_manager, controller_name):
     return any(c.name == controller_name for c in controllers)
 
 
-def get_parameter_from_param_file(controller_name, parameter_file, parameter_name):
+def get_parameter_from_param_file(controller_name, namespace, parameter_file, parameter_name):
     with open(parameter_file) as f:
+        namespaced_controller = (
+            controller_name if namespace == "/" else f"{namespace}/{controller_name}"
+        )
         parameters = yaml.safe_load(f)
-        if controller_name in parameters:
-            value = parameters[controller_name]
+        if namespaced_controller in parameters:
+            value = parameters[namespaced_controller]
             if not isinstance(value, dict) or "ros__parameters" not in value:
                 raise RuntimeError(
-                    f"YAML file : {parameter_file} is not a valid ROS parameter file for controller : {controller_name}"
+                    f"YAML file : {parameter_file} is not a valid ROS parameter file for controller : {namespaced_controller}"
                 )
-            if parameter_name in parameters[controller_name]["ros__parameters"]:
-                return parameters[controller_name]["ros__parameters"][parameter_name]
+            if parameter_name in parameters[namespaced_controller]["ros__parameters"]:
+                return parameters[namespaced_controller]["ros__parameters"][parameter_name]
             else:
                 return None
 
@@ -169,9 +172,7 @@ def main(args=None):
         default=None,
         required=False,
     )
-    parser.add_argument(
-        "-n", "--namespace", help="Namespace for the controller", default="", required=False
-    )
+
     parser.add_argument(
         "--load-only",
         help="Only load the controller and leave unconfigured.",
@@ -217,7 +218,6 @@ def main(args=None):
     args = parser.parse_args(command_line_args)
     controller_names = args.controller_names
     controller_manager_name = args.controller_manager
-    controller_namespace = args.namespace
     param_file = args.param_file
     controller_manager_timeout = args.controller_manager_timeout
 
@@ -227,9 +227,8 @@ def main(args=None):
     node = Node("spawner_" + controller_names[0])
 
     if not controller_manager_name.startswith("/"):
-        spawner_namespace = args.namespace
-        if spawner_namespace != "/" and spawner_namespace != "":
-            controller_manager_name = f"/{spawner_namespace}/{controller_manager_name}"
+        if node.get_namespace() != "/":
+            controller_manager_name = f"{node.get_namespace()}/{controller_manager_name}"
         else:
             controller_manager_name = f"/{controller_manager_name}"
 
@@ -244,9 +243,6 @@ def main(args=None):
 
         for controller_name in controller_names:
             fallback_controllers = args.fallback_controllers
-            prefixed_controller_name = controller_name
-            if controller_namespace:
-                prefixed_controller_name = controller_namespace + "/" + controller_name
 
             if is_controller_loaded(node, controller_manager_name, controller_name):
                 node.get_logger().warn(
@@ -258,7 +254,9 @@ def main(args=None):
                 controller_type = (
                     None
                     if param_file is None
-                    else get_parameter_from_param_file(controller_name, param_file, "type")
+                    else get_parameter_from_param_file(
+                        controller_name, node.get_namespace(), param_file, "type"
+                    )
                 )
                 if controller_type:
                     parameter = Parameter()
@@ -277,7 +275,7 @@ def main(args=None):
                             + controller_type
                             + '" for '
                             + bcolors.BOLD
-                            + prefixed_controller_name
+                            + controller_name
                             + bcolors.ENDC
                         )
                     else:
@@ -287,7 +285,7 @@ def main(args=None):
                             + controller_type
                             + '" for '
                             + bcolors.BOLD
-                            + prefixed_controller_name
+                            + controller_name
                             + bcolors.ENDC
                         )
                         return 1
@@ -309,7 +307,7 @@ def main(args=None):
                             + param_file
                             + '" for '
                             + bcolors.BOLD
-                            + prefixed_controller_name
+                            + controller_name
                             + bcolors.ENDC
                         )
                     else:
@@ -319,14 +317,14 @@ def main(args=None):
                             + param_file
                             + '" for '
                             + bcolors.BOLD
-                            + prefixed_controller_name
+                            + controller_name
                             + bcolors.ENDC
                         )
                         return 1
 
                 if not fallback_controllers and param_file:
                     fallback_controllers = get_parameter_from_param_file(
-                        controller_name, param_file, "fallback_controllers"
+                        controller_name, node.get_namespace(), param_file, "fallback_controllers"
                     )
 
                 if fallback_controllers:
@@ -346,7 +344,7 @@ def main(args=None):
                             + ",".join(fallback_controllers)
                             + '"] for '
                             + bcolors.BOLD
-                            + prefixed_controller_name
+                            + controller_name
                             + bcolors.ENDC
                         )
                     else:
@@ -356,7 +354,7 @@ def main(args=None):
                             + ",".join(fallback_controllers)
                             + '"] for '
                             + bcolors.BOLD
-                            + prefixed_controller_name
+                            + controller_name
                             + bcolors.ENDC
                         )
                         return 1
@@ -367,16 +365,12 @@ def main(args=None):
                         bcolors.FAIL
                         + "Failed loading controller "
                         + bcolors.BOLD
-                        + prefixed_controller_name
+                        + controller_name
                         + bcolors.ENDC
                     )
                     return 1
                 node.get_logger().info(
-                    bcolors.OKBLUE
-                    + "Loaded "
-                    + bcolors.BOLD
-                    + prefixed_controller_name
-                    + bcolors.ENDC
+                    bcolors.OKBLUE + "Loaded " + bcolors.BOLD + controller_name + bcolors.ENDC
                 )
 
             if not args.load_only:
@@ -401,7 +395,7 @@ def main(args=None):
                         bcolors.OKGREEN
                         + "Configured and activated "
                         + bcolors.BOLD
-                        + prefixed_controller_name
+                        + controller_name
                         + bcolors.ENDC
                     )
 
