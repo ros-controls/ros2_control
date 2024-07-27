@@ -172,7 +172,13 @@ def main(args=None):
         default=None,
         required=False,
     )
-
+    parser.add_argument(
+        "-n",
+        "--namespace",
+        help="Namespace for the controller_manager and the controller(s) (deprecated)",
+        default=None,
+        required=False,
+    )
     parser.add_argument(
         "--load-only",
         help="Only load the controller and leave unconfigured.",
@@ -226,9 +232,28 @@ def main(args=None):
 
     node = Node("spawner_" + controller_names[0])
 
+    if node.get_namespace() != "/" and args.namespace:
+        raise RuntimeError(
+            f"Setting namespace through both '--namespace {args.namespace}' arg and the ROS 2 standard way "
+            f"'--ros-args -r __ns:={node.get_namespace()}' is not allowed!"
+        )
+
+    if args.namespace:
+        warnings.filterwarnings("always")
+        warnings.warn(
+            "The '--namespace' argument is deprecated and will be removed in future releases."
+            " Use the ROS 2 standard way of setting the node namespacing using --ros-args -r __ns:=<namespace>",
+            DeprecationWarning,
+        )
+
+    spawner_namespace = args.namespace if args.namespace else node.get_namespace()
+
+    if not spawner_namespace.startswith("/"):
+        spawner_namespace = f"/{spawner_namespace}"
+
     if not controller_manager_name.startswith("/"):
-        if node.get_namespace() != "/":
-            controller_manager_name = f"{node.get_namespace()}/{controller_manager_name}"
+        if spawner_namespace and spawner_namespace != "/":
+            controller_manager_name = f"{spawner_namespace}/{controller_manager_name}"
         else:
             controller_manager_name = f"/{controller_manager_name}"
 
@@ -255,7 +280,7 @@ def main(args=None):
                     None
                     if param_file is None
                     else get_parameter_from_param_file(
-                        controller_name, node.get_namespace(), param_file, "type"
+                        controller_name, spawner_namespace, param_file, "type"
                     )
                 )
                 if controller_type:
