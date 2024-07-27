@@ -498,9 +498,10 @@ TEST_F(TestLoadControllerWithNamespacedCM, multi_ctrls_test_type_in_param)
   cm_->set_parameter(rclcpp::Parameter("ctrl_3.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
 
   ControllerManagerRunner cm_runner(this);
-  EXPECT_EQ(call_spawner("ctrl_1 ctrl_2 -c test_controller_manager -n foo_namespace"), 0);
   EXPECT_EQ(call_spawner("ctrl_1 ctrl_2 -c test_controller_manager"), 256)
     << "Should fail without defining the namespace";
+  EXPECT_EQ(
+    call_spawner("ctrl_1 ctrl_2 -c test_controller_manager --ros-args -r __ns:=/foo_namespace"), 0);
 
   auto validate_loaded_controllers = [&]()
   {
@@ -527,7 +528,8 @@ TEST_F(TestLoadControllerWithNamespacedCM, multi_ctrls_test_type_in_param)
 
   // Try to spawn again multiple but one of them is already active, it should fail because already
   // active
-  EXPECT_NE(call_spawner("ctrl_1 ctrl_3 -c /foo_namespace/test_controller_manager"), 0)
+  EXPECT_NE(
+    call_spawner("ctrl_1 ctrl_3 -c test_controller_manager --ros-args -r __ns:=/foo_namespace"), 0)
     << "Cannot configure from active";
 
   std::vector<std::string> start_controllers = {};
@@ -537,7 +539,8 @@ TEST_F(TestLoadControllerWithNamespacedCM, multi_ctrls_test_type_in_param)
     controller_manager_msgs::srv::SwitchController::Request::STRICT, true, rclcpp::Duration(0, 0));
 
   // We should be able to reconfigure and activate a configured controller
-  EXPECT_EQ(call_spawner("ctrl_1 ctrl_3 -c foo_namespace/test_controller_manager"), 0);
+  EXPECT_EQ(
+    call_spawner("ctrl_1 ctrl_3 -c test_controller_manager --ros-args -r __ns:=/foo_namespace"), 0);
 
   ASSERT_EQ(cm_->get_loaded_controllers().size(), 3ul);
   {
@@ -555,7 +558,8 @@ TEST_F(TestLoadControllerWithNamespacedCM, multi_ctrls_test_type_in_param)
   }
 
   // We should be able to reconfigure and activate am unconfigured loaded controller
-  EXPECT_EQ(call_spawner("ctrl_1 ctrl_2 -c test_controller_manager -n foo_namespace"), 0);
+  EXPECT_EQ(
+    call_spawner("ctrl_1 ctrl_2 -c test_controller_manager --ros-args -r __ns:=/foo_namespace"), 0);
   ASSERT_EQ(cm_->get_loaded_controllers().size(), 3ul);
   {
     validate_loaded_controllers();
@@ -564,7 +568,8 @@ TEST_F(TestLoadControllerWithNamespacedCM, multi_ctrls_test_type_in_param)
   // Unload and reload
   EXPECT_EQ(call_unspawner("ctrl_1 ctrl_3 -c foo_namespace/test_controller_manager"), 0);
   ASSERT_EQ(cm_->get_loaded_controllers().size(), 1ul) << "Controller should have been unloaded";
-  EXPECT_EQ(call_spawner("ctrl_1 ctrl_3 -c test_controller_manager -n foo_namespace"), 0);
+  EXPECT_EQ(
+    call_spawner("ctrl_1 ctrl_3 -c test_controller_manager --ros-args -r __ns:=/foo_namespace"), 0);
   ASSERT_EQ(cm_->get_loaded_controllers().size(), 3ul) << "Controller should have been loaded";
   {
     validate_loaded_controllers();
@@ -574,8 +579,8 @@ TEST_F(TestLoadControllerWithNamespacedCM, multi_ctrls_test_type_in_param)
   EXPECT_EQ(call_unspawner("ctrl_1 ctrl_2 ctrl_3 -c /foo_namespace/test_controller_manager"), 0);
   ASSERT_EQ(cm_->get_loaded_controllers().size(), 0ul) << "Controller should have been unloaded";
   EXPECT_EQ(
-    call_spawner(
-      "ctrl_1 ctrl_2 ctrl_3 -c test_controller_manager --activate-as-group -n foo_namespace"),
+    call_spawner("ctrl_1 ctrl_2 ctrl_3 -c test_controller_manager --activate-as-group --ros-args "
+                 "-r __ns:=/foo_namespace"),
     0);
   ASSERT_EQ(cm_->get_loaded_controllers().size(), 3ul) << "Controller should have been loaded";
   {
