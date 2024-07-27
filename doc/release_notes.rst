@@ -69,6 +69,7 @@ controller_manager
 
    The parameters within the ``ros2_control`` tag are not supported any more.
 * The support for the ``description`` parameter for loading the URDF was removed (`#1358 <https://github.com/ros-controls/ros2_control/pull/1358>`_).
+* The ``--controller-type`` or ``-t`` spawner arg is removed. Now the controller type is defined in the controller configuration file with ``type`` field (`#1639 <https://github.com/ros-controls/ros2_control/pull/1639>`_).
 
 hardware_interface
 ******************

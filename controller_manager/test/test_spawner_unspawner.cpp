@@ -244,22 +244,6 @@ TEST_F(TestLoadController, multi_ctrls_test_type_in_param)
   }
 }
 
-TEST_F(TestLoadController, spawner_test_type_in_arg)
-{
-  // Provide controller type via -t argument
-  EXPECT_EQ(
-    call_spawner(
-      "ctrl_2 -c test_controller_manager -t " +
-      std::string(test_controller::TEST_CONTROLLER_CLASS_NAME)),
-    0);
-
-  ASSERT_EQ(cm_->get_loaded_controllers().size(), 1ul);
-  auto ctrl_2 = cm_->get_loaded_controllers()[0];
-  ASSERT_EQ(ctrl_2.info.name, "ctrl_2");
-  ASSERT_EQ(ctrl_2.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
-  ASSERT_EQ(ctrl_2.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
-}
-
 TEST_F(TestLoadController, spawner_test_type_in_params_file)
 {
   const std::string test_file_path = ament_index_cpp::get_package_prefix("controller_manager") +
