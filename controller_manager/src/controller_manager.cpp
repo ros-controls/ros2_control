@@ -848,6 +848,7 @@ controller_interface::return_type ControllerManager::configure_controller(
 
 void ControllerManager::clear_requests()
 {
+  switch_params_.do_switch = false;
   deactivate_request_.clear();
   activate_request_.clear();
   // Set these interfaces as unavailable when clearing requests to avoid leaving them in available
