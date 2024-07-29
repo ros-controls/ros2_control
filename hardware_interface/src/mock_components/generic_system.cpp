@@ -59,8 +59,8 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
   };
 
   // check if to create mock command interface for sensor
-  auto it = info_.hardware_parameters.find("mock_sensor_commands");
-  if (it != info_.hardware_parameters.end())
+  auto it = get_hardware_info().hardware_parameters.find("mock_sensor_commands");
+  if (it != get_hardware_info().hardware_parameters.end())
   {
     use_mock_sensor_command_interfaces_ = hardware_interface::parse_bool(it->second);
   }
@@ -70,8 +70,8 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
   }
 
   // check if to create mock command interface for gpio
-  it = info_.hardware_parameters.find("mock_gpio_commands");
-  if (it != info_.hardware_parameters.end())
+  it = get_hardware_info().hardware_parameters.find("mock_gpio_commands");
+  if (it != get_hardware_info().hardware_parameters.end())
   {
     use_mock_gpio_command_interfaces_ = hardware_interface::parse_bool(it->second);
   }
@@ -82,7 +82,7 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
 
   // check if there is parameter that disables commands
   // this way we simulate disconnected driver
-  it = info_.hardware_parameters.find("disable_commands");
+  it = get_hardware_info().hardware_parameters.find("disable_commands");
   if (it != info.hardware_parameters.end())
   {
     command_propagation_disabled_ = hardware_interface::parse_bool(it->second);
@@ -93,7 +93,7 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
   }
 
   // check if there is parameter that enables dynamic calculation
-  it = info_.hardware_parameters.find("calculate_dynamics");
+  it = get_hardware_info().hardware_parameters.find("calculate_dynamics");
   if (it != info.hardware_parameters.end())
   {
     calculate_dynamics_ = hardware_interface::parse_bool(it->second);
@@ -107,12 +107,12 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
   position_state_following_offset_ = 0.0;
   custom_interface_with_following_offset_ = "";
 
-  it = info_.hardware_parameters.find("position_state_following_offset");
-  if (it != info_.hardware_parameters.end())
+  it = get_hardware_info().hardware_parameters.find("position_state_following_offset");
+  if (it != get_hardware_info().hardware_parameters.end())
   {
     position_state_following_offset_ = hardware_interface::stod(it->second);
-    it = info_.hardware_parameters.find("custom_interface_with_following_offset");
-    if (it != info_.hardware_parameters.end())
+    it = get_hardware_info().hardware_parameters.find("custom_interface_with_following_offset");
+    if (it != get_hardware_info().hardware_parameters.end())
     {
       custom_interface_with_following_offset_ = it->second;
     }
@@ -121,9 +121,10 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
   index_custom_interface_with_following_offset_ = std::numeric_limits<size_t>::max();
 
   // Initialize storage for standard interfaces
-  initialize_storage_vectors(joint_commands_, joint_states_, standard_interfaces_, info_.joints);
+  initialize_storage_vectors(
+    joint_commands_, joint_states_, standard_interfaces_, get_hardware_info().joints);
   // set all values without initial values to 0
-  for (auto i = 0u; i < info_.joints.size(); i++)
+  for (auto i = 0u; i < get_hardware_info().joints.size(); i++)
   {
     for (auto j = 0u; j < standard_interfaces_.size(); j++)
     {
@@ -135,7 +136,7 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
   }
 
   // search for non-standard joint interfaces
-  for (const auto & joint : info_.joints)
+  for (const auto & joint : get_hardware_info().joints)
   {
     // populate non-standard command interfaces to other_interfaces_
     populate_non_standard_interfaces(joint.command_interfaces, other_interfaces_);
@@ -145,7 +146,8 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
   }
 
   // Initialize storage for non-standard interfaces
-  initialize_storage_vectors(other_commands_, other_states_, other_interfaces_, info_.joints);
+  initialize_storage_vectors(
+    other_commands_, other_states_, other_interfaces_, get_hardware_info().joints);
 
   // when following offset is used on custom interface then find its index
   if (!custom_interface_with_following_offset_.empty())
@@ -170,7 +172,7 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
     }
   }
 
-  for (const auto & sensor : info_.sensors)
+  for (const auto & sensor : get_hardware_info().sensors)
   {
     for (const auto & interface : sensor.state_interfaces)
     {
@@ -183,10 +185,10 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
     }
   }
   initialize_storage_vectors(
-    sensor_mock_commands_, sensor_states_, sensor_interfaces_, info_.sensors);
+    sensor_mock_commands_, sensor_states_, sensor_interfaces_, get_hardware_info().sensors);
 
   // search for gpio interfaces
-  for (const auto & gpio : info_.gpios)
+  for (const auto & gpio : get_hardware_info().gpios)
   {
     // populate non-standard command interfaces to gpio_interfaces_
     populate_non_standard_interfaces(gpio.command_interfaces, gpio_interfaces_);
@@ -198,12 +200,14 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
   // Mock gpio command interfaces
   if (use_mock_gpio_command_interfaces_)
   {
-    initialize_storage_vectors(gpio_mock_commands_, gpio_states_, gpio_interfaces_, info_.gpios);
+    initialize_storage_vectors(
+      gpio_mock_commands_, gpio_states_, gpio_interfaces_, get_hardware_info().gpios);
   }
   // Real gpio command interfaces
   else
   {
-    initialize_storage_vectors(gpio_commands_, gpio_states_, gpio_interfaces_, info_.gpios);
+    initialize_storage_vectors(
+      gpio_commands_, gpio_states_, gpio_interfaces_, get_hardware_info().gpios);
   }
 
   return CallbackReturn::SUCCESS;
@@ -214,9 +218,9 @@ std::vector<hardware_interface::StateInterface> GenericSystem::export_state_inte
   std::vector<hardware_interface::StateInterface> state_interfaces;
 
   // Joints' state interfaces
-  for (auto i = 0u; i < info_.joints.size(); i++)
+  for (auto i = 0u; i < get_hardware_info().joints.size(); i++)
   {
-    const auto & joint = info_.joints[i];
+    const auto & joint = get_hardware_info().joints[i];
     for (const auto & interface : joint.state_interfaces)
     {
       // Add interface: if not in the standard list then use "other" interface list
@@ -236,14 +240,15 @@ std::vector<hardware_interface::StateInterface> GenericSystem::export_state_inte
 
   // Sensor state interfaces
   if (!populate_interfaces(
-        info_.sensors, sensor_interfaces_, sensor_states_, state_interfaces, true))
+        get_hardware_info().sensors, sensor_interfaces_, sensor_states_, state_interfaces, true))
   {
     throw std::runtime_error(
       "Interface is not found in the standard nor other list. This should never happen!");
   };
 
   // GPIO state interfaces
-  if (!populate_interfaces(info_.gpios, gpio_interfaces_, gpio_states_, state_interfaces, true))
+  if (!populate_interfaces(
+        get_hardware_info().gpios, gpio_interfaces_, gpio_states_, state_interfaces, true))
   {
     throw std::runtime_error("Interface is not found in the gpio list. This should never happen!");
   }
@@ -256,9 +261,9 @@ std::vector<hardware_interface::CommandInterface> GenericSystem::export_command_
   std::vector<hardware_interface::CommandInterface> command_interfaces;
 
   // Joints' state interfaces
-  for (size_t i = 0; i < info_.joints.size(); ++i)
+  for (size_t i = 0; i < get_hardware_info().joints.size(); ++i)
   {
-    const auto & joint = info_.joints[i];
+    const auto & joint = get_hardware_info().joints[i];
     for (const auto & interface : joint.command_interfaces)
     {
       // Add interface: if not in the standard list than use "other" interface list
@@ -278,13 +283,14 @@ std::vector<hardware_interface::CommandInterface> GenericSystem::export_command_
     }
   }
   // Set position control mode per default
-  joint_control_mode_.resize(info_.joints.size(), POSITION_INTERFACE_INDEX);
+  joint_control_mode_.resize(get_hardware_info().joints.size(), POSITION_INTERFACE_INDEX);
 
   // Mock sensor command interfaces
   if (use_mock_sensor_command_interfaces_)
   {
     if (!populate_interfaces(
-          info_.sensors, sensor_interfaces_, sensor_mock_commands_, command_interfaces, true))
+          get_hardware_info().sensors, sensor_interfaces_, sensor_mock_commands_,
+          command_interfaces, true))
     {
       throw std::runtime_error(
         "Interface is not found in the standard nor other list. This should never happen!");
@@ -295,7 +301,8 @@ std::vector<hardware_interface::CommandInterface> GenericSystem::export_command_
   if (use_mock_gpio_command_interfaces_)
   {
     if (!populate_interfaces(
-          info_.gpios, gpio_interfaces_, gpio_mock_commands_, command_interfaces, true))
+          get_hardware_info().gpios, gpio_interfaces_, gpio_mock_commands_, command_interfaces,
+          true))
     {
       throw std::runtime_error(
         "Interface is not found in the gpio list. This should never happen!");
@@ -305,7 +312,7 @@ std::vector<hardware_interface::CommandInterface> GenericSystem::export_command_
   else
   {
     if (!populate_interfaces(
-          info_.gpios, gpio_interfaces_, gpio_commands_, command_interfaces, false))
+          get_hardware_info().gpios, gpio_interfaces_, gpio_commands_, command_interfaces, false))
     {
       throw std::runtime_error(
         "Interface is not found in the gpio list. This should never happen!");
@@ -328,29 +335,30 @@ return_type GenericSystem::prepare_command_mode_switch(
 
   const size_t FOUND_ONCE_FLAG = 1000000;
 
+  const auto & info = get_hardware_info();
   std::vector<size_t> joint_found_in_x_requests_;
-  joint_found_in_x_requests_.resize(info_.joints.size(), 0);
+  joint_found_in_x_requests_.resize(info.joints.size(), 0);
 
   for (const auto & key : start_interfaces)
   {
     // check if interface is joint
     auto joint_it_found = std::find_if(
-      info_.joints.begin(), info_.joints.end(),
+      info.joints.begin(), info.joints.end(),
       [key](const auto & joint) { return (key.find(joint.name) != std::string::npos); });
 
-    if (joint_it_found != info_.joints.end())
+    if (joint_it_found != info.joints.end())
     {
-      const size_t joint_index = std::distance(info_.joints.begin(), joint_it_found);
+      const size_t joint_index = std::distance(info.joints.begin(), joint_it_found);
       if (joint_found_in_x_requests_[joint_index] == 0)
       {
         joint_found_in_x_requests_[joint_index] = FOUND_ONCE_FLAG;
       }
 
-      if (key == info_.joints[joint_index].name + "/" + hardware_interface::HW_IF_POSITION)
+      if (key == info.joints[joint_index].name + "/" + hardware_interface::HW_IF_POSITION)
       {
         joint_found_in_x_requests_[joint_index] += 1;
       }
-      if (key == info_.joints[joint_index].name + "/" + hardware_interface::HW_IF_VELOCITY)
+      if (key == info.joints[joint_index].name + "/" + hardware_interface::HW_IF_VELOCITY)
       {
         if (!calculate_dynamics_)
         {
@@ -358,11 +366,11 @@ return_type GenericSystem::prepare_command_mode_switch(
             get_logger(),
             "Requested velocity mode for joint '%s' without dynamics calculation enabled - this "
             "might lead to wrong feedback and unexpected behavior.",
-            info_.joints[joint_index].name.c_str());
+            info.joints[joint_index].name.c_str());
         }
         joint_found_in_x_requests_[joint_index] += 1;
       }
-      if (key == info_.joints[joint_index].name + "/" + hardware_interface::HW_IF_ACCELERATION)
+      if (key == info.joints[joint_index].name + "/" + hardware_interface::HW_IF_ACCELERATION)
       {
         if (!calculate_dynamics_)
         {
@@ -370,7 +378,7 @@ return_type GenericSystem::prepare_command_mode_switch(
             get_logger(),
             "Requested acceleration mode for joint '%s' without dynamics calculation enabled - "
             "this might lead to wrong feedback and unexpected behavior.",
-            info_.joints[joint_index].name.c_str());
+            info.joints[joint_index].name.c_str());
         }
         joint_found_in_x_requests_[joint_index] += 1;
       }
@@ -382,14 +390,14 @@ return_type GenericSystem::prepare_command_mode_switch(
     }
   }
 
-  for (size_t i = 0; i < info_.joints.size(); ++i)
+  for (size_t i = 0; i < info.joints.size(); ++i)
   {
     // There has to always be at least one control mode from the above three set
     if (joint_found_in_x_requests_[i] == FOUND_ONCE_FLAG)
     {
       RCLCPP_ERROR(
         get_logger(), "Joint '%s' has to have '%s', '%s', or '%s' interface!",
-        info_.joints[i].name.c_str(), hardware_interface::HW_IF_POSITION,
+        info.joints[i].name.c_str(), hardware_interface::HW_IF_POSITION,
         hardware_interface::HW_IF_VELOCITY, hardware_interface::HW_IF_ACCELERATION);
       ret_val = hardware_interface::return_type::ERROR;
     }
@@ -401,7 +409,7 @@ return_type GenericSystem::prepare_command_mode_switch(
         get_logger(),
         "Got multiple (%zu) starting interfaces for joint '%s' - this is not "
         "supported!",
-        joint_found_in_x_requests_[i] - FOUND_ONCE_FLAG, info_.joints[i].name.c_str());
+        joint_found_in_x_requests_[i] - FOUND_ONCE_FLAG, info.joints[i].name.c_str());
       ret_val = hardware_interface::return_type::ERROR;
     }
   }
@@ -421,23 +429,24 @@ return_type GenericSystem::perform_command_mode_switch(
   for (const auto & key : start_interfaces)
   {
     // check if interface is joint
+    const auto & info = get_hardware_info();
     auto joint_it_found = std::find_if(
-      info_.joints.begin(), info_.joints.end(),
+      info.joints.begin(), info.joints.end(),
       [key](const auto & joint) { return (key.find(joint.name) != std::string::npos); });
 
-    if (joint_it_found != info_.joints.end())
+    if (joint_it_found != info.joints.end())
     {
-      const size_t joint_index = std::distance(info_.joints.begin(), joint_it_found);
+      const size_t joint_index = std::distance(info.joints.begin(), joint_it_found);
 
-      if (key == info_.joints[joint_index].name + "/" + hardware_interface::HW_IF_POSITION)
+      if (key == info.joints[joint_index].name + "/" + hardware_interface::HW_IF_POSITION)
       {
         joint_control_mode_[joint_index] = POSITION_INTERFACE_INDEX;
       }
-      if (key == info_.joints[joint_index].name + "/" + hardware_interface::HW_IF_VELOCITY)
+      if (key == info.joints[joint_index].name + "/" + hardware_interface::HW_IF_VELOCITY)
       {
         joint_control_mode_[joint_index] = VELOCITY_INTERFACE_INDEX;
       }
-      if (key == info_.joints[joint_index].name + "/" + hardware_interface::HW_IF_ACCELERATION)
+      if (key == info.joints[joint_index].name + "/" + hardware_interface::HW_IF_ACCELERATION)
       {
         joint_control_mode_[joint_index] = ACCELERATION_INTERFACE_INDEX;
       }
@@ -565,7 +574,7 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
     return return_type::ERROR;
   }
 
-  for (const auto & mimic_joint : info_.mimic_joints)
+  for (const auto & mimic_joint : get_hardware_info().mimic_joints)
   {
     for (auto i = 0u; i < joint_states_.size(); ++i)
     {
