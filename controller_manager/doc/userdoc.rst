@@ -158,7 +158,7 @@ There are two scripts to interact with controller manager from launch files:
       -p PARAM_FILE, --param-file PARAM_FILE
                             Controller param file to be loaded into controller node before configure
       -n NAMESPACE, --namespace NAMESPACE
-                            Namespace for the controller_manager and the controller(s) (deprecated)
+                            DEPRECATED Namespace for the controller_manager and the controller(s)
       --load-only           Only load the controller and leave unconfigured.
       --inactive            Load and configure the controller, however do not activate them
       -u, --unload-on-kill  Wait until this application is interrupted and unload controller
