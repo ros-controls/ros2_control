@@ -67,22 +67,42 @@ std::pair<double, double> compute_velocity_limits(
   std::pair<double, double> vel_limits({-max_vel, max_vel});
   if (limits.has_position_limits && act_pos.has_value())
   {
-    const double max_vel_with_pos_limits = (limits.max_position - act_pos.value()) / dt;
-    const double min_vel_with_pos_limits = (limits.min_position - act_pos.value()) / dt;
+    const double actual_pos = act_pos.value();
+    const double max_vel_with_pos_limits = (limits.max_position - actual_pos) / dt;
+    const double min_vel_with_pos_limits = (limits.min_position - actual_pos) / dt;
     vel_limits.first = std::max(min_vel_with_pos_limits, vel_limits.first);
     vel_limits.second = std::min(max_vel_with_pos_limits, vel_limits.second);
-    if (
-      (act_pos.value() > limits.max_position && desired_vel >= 0.0) ||
-      (act_pos.value() < limits.min_position && desired_vel <= 0.0))
+
+    if (actual_pos > limits.max_position || actual_pos < limits.min_position)
     {
-      RCLCPP_WARN_EXPRESSION(
-        rclcpp::get_logger("joint_limiter_interface"),
-        prev_command_vel.has_value() && prev_command_vel.value() != 0.0,
-        "Joint position %.5f is out of bounds[%.5f, %.5f] for the joint and we want to move "
-        "further into bounds with vel %.5f: '%s'. Joint velocity limits will be "
-        "restrictred to zero.",
-        act_pos.value(), limits.min_position, limits.max_position, desired_vel, joint_name.c_str());
-      vel_limits = {0.0, 0.0};
+      if (
+        (actual_pos < (limits.max_position + internal::POSITION_BOUNDS_TOLERANCE) &&
+         (actual_pos > limits.min_position) && desired_vel >= 0.0) ||
+        (actual_pos > (limits.min_position - internal::POSITION_BOUNDS_TOLERANCE) &&
+         (actual_pos < limits.max_position) && desired_vel <= 0.0))
+      {
+        RCLCPP_WARN_EXPRESSION(
+          rclcpp::get_logger("joint_limiter_interface"),
+          prev_command_vel.has_value() && prev_command_vel.value() != 0.0,
+          "Joint position %.5f is out of bounds[%.5f, %.5f] for the joint and we want to move "
+          "further into bounds with vel %.5f: '%s'. Joint velocity limits will be "
+          "restrictred to zero.",
+          actual_pos, limits.min_position, limits.max_position, desired_vel, joint_name.c_str());
+        vel_limits = {0.0, 0.0};
+      }
+      // If the joint reports a position way out of bounds, then it would mean something is
+      // extremely wrong, so no velocity command should be allowed as it might damage the robot
+      else if (
+        (actual_pos > (limits.max_position + internal::POSITION_BOUNDS_TOLERANCE)) ||
+        (actual_pos < (limits.min_position - internal::POSITION_BOUNDS_TOLERANCE)))
+      {
+        RCLCPP_ERROR_ONCE(
+          rclcpp::get_logger("joint_limiter_interface"),
+          "Joint position is out of bounds for the joint : '%s'. Joint velocity limits will be "
+          "restricted to zero.",
+          joint_name.c_str());
+        vel_limits = {0.0, 0.0};
+      }
     }
   }
   if (limits.has_acceleration_limits && prev_command_vel.has_value())
