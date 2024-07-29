@@ -24,6 +24,10 @@
 
 namespace joint_limits
 {
+namespace internal
+{
+constexpr double POSITION_BOUNDS_TOLERANCE = 0.002;
+}
 
 /**
  * @brief Checks if a value is limited by the given limits.

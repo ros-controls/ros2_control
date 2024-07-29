@@ -15,6 +15,7 @@
 /// \author Sai Kishor Kothakota
 
 #include <limits>
+#include "joint_limits/joint_limits_helpers.hpp"
 #include "test_joint_limiter.hpp"
 
 TEST_F(JointSaturationLimiterTest, when_loading_limiter_plugin_expect_loaded)
@@ -252,6 +253,25 @@ TEST_F(JointSaturationLimiterTest, check_desired_velocity_only_cases)
   test_limit_enforcing(-6.0, -1.0, 0.0, true);
   test_limit_enforcing(-6.0, -2.0, 0.0, true);
   test_limit_enforcing(-6.0, 1.0, 0.0, true);
+  // If the reported actual position is within the limits and the tolerance, then the velocity is
+  // allowed to move into the range, but not away from the range
+  test_limit_enforcing(
+    -5.0 - joint_limits::internal::POSITION_BOUNDS_TOLERANCE / 2.0, -3.0, 0.0, true);
+  test_limit_enforcing(
+    -5.0 - joint_limits::internal::POSITION_BOUNDS_TOLERANCE / 2.0, 1.0, 1.0, false);
+  test_limit_enforcing(
+    -5.0 - joint_limits::internal::POSITION_BOUNDS_TOLERANCE / 2.0, 0.2, 0.2, false);
+  test_limit_enforcing(
+    -5.0 - joint_limits::internal::POSITION_BOUNDS_TOLERANCE / 2.0, 2.0, 1.0, true);
+
+  test_limit_enforcing(
+    5.0 + joint_limits::internal::POSITION_BOUNDS_TOLERANCE / 2.0, 3.0, 0.0, true);
+  test_limit_enforcing(
+    5.0 + joint_limits::internal::POSITION_BOUNDS_TOLERANCE / 2.0, -1.0, -1.0, false);
+  test_limit_enforcing(
+    5.0 + joint_limits::internal::POSITION_BOUNDS_TOLERANCE / 2.0, -0.2, -0.2, false);
+  test_limit_enforcing(
+    5.0 + joint_limits::internal::POSITION_BOUNDS_TOLERANCE / 2.0, -2.0, -1.0, true);
 
   // Now remove the position limits and only test with acceleration limits
   limits.has_position_limits = false;
