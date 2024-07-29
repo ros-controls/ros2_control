@@ -175,7 +175,7 @@ def main(args=None):
     parser.add_argument(
         "-n",
         "--namespace",
-        help="Namespace for the controller_manager and the controller(s) (deprecated)",
+        help="DEPRECATED Namespace for the controller_manager and the controller(s)",
         default=None,
         required=False,
     )
