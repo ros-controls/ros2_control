@@ -149,7 +149,7 @@ There are two scripts to interact with controller manager from launch files:
                       controller_name
 
     positional arguments:
-      controller_name       Name of the controller
+      controller_names      List of controllers
 
     options:
       -h, --help            show this help message and exit
@@ -158,14 +158,16 @@ There are two scripts to interact with controller manager from launch files:
       -p PARAM_FILE, --param-file PARAM_FILE
                             Controller param file to be loaded into controller node before configure
       -n NAMESPACE, --namespace NAMESPACE
-                            Namespace for the controller
+                            DEPRECATED Namespace for the controller_manager and the controller(s)
       --load-only           Only load the controller and leave unconfigured.
       --inactive            Load and configure the controller, however do not activate them
-      -t CONTROLLER_TYPE, --controller-type CONTROLLER_TYPE
-                            If not provided it should exist in the controller manager namespace
       -u, --unload-on-kill  Wait until this application is interrupted and unload controller
       --controller-manager-timeout CONTROLLER_MANAGER_TIMEOUT
                             Time to wait for the controller manager
+      --activate-as-group   Activates all the parsed controllers list together instead of one by one. Useful for activating all chainable controllers altogether
+      --fallback_controllers FALLBACK_CONTROLLERS [FALLBACK_CONTROLLERS ...]
+                            Fallback controllers list are activated as a fallback strategy when the spawned controllers fail. When the argument is provided, it takes precedence over the fallback_controllers list in the
+                            param file
 
 
 ``unspawner``
