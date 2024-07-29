@@ -166,6 +166,7 @@ def main(args=None):
         "-p",
         "--param-file",
         help="Controller param file to be loaded into controller node before configure",
+        default=None,
         required=False,
     )
     parser.add_argument(
@@ -181,13 +182,6 @@ def main(args=None):
         "--inactive",
         help="Load and configure the controller, however do not activate them",
         action="store_true",
-        required=False,
-    )
-    parser.add_argument(
-        "-t",
-        "--controller-type",
-        help="If not provided it should exist in the controller manager namespace (deprecated)",
-        default=None,
         required=False,
     )
     parser.add_argument(
@@ -227,14 +221,6 @@ def main(args=None):
     param_file = args.param_file
     controller_manager_timeout = args.controller_manager_timeout
 
-    if args.controller_type:
-        warnings.filterwarnings("always")
-        warnings.warn(
-            "The '--controller-type' argument is deprecated and will be removed in future releases."
-            " Declare the controller type parameter in the param file instead.",
-            DeprecationWarning,
-        )
-
     if param_file and not os.path.isfile(param_file):
         raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), param_file)
 
@@ -258,7 +244,6 @@ def main(args=None):
 
         for controller_name in controller_names:
             fallback_controllers = args.fallback_controllers
-            controller_type = args.controller_type
             prefixed_controller_name = controller_name
             if controller_namespace:
                 prefixed_controller_name = controller_namespace + "/" + controller_name
@@ -270,10 +255,11 @@ def main(args=None):
                     + bcolors.ENDC
                 )
             else:
-                if not controller_type and param_file:
-                    controller_type = get_parameter_from_param_file(
-                        controller_name, param_file, "type"
-                    )
+                controller_type = (
+                    None
+                    if param_file is None
+                    else get_parameter_from_param_file(controller_name, param_file, "type")
+                )
                 if controller_type:
                     parameter = Parameter()
                     parameter.name = prefixed_controller_name + ".type"
