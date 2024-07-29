@@ -349,7 +349,7 @@ def main(args=None):
 
                 if not fallback_controllers and param_file:
                     fallback_controllers = get_parameter_from_param_file(
-                        controller_name, node.get_namespace(), param_file, "fallback_controllers"
+                        controller_name, spawner_namespace, param_file, "fallback_controllers"
                     )
 
                 if fallback_controllers:
