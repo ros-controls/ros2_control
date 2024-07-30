@@ -917,16 +917,20 @@ controller_interface::return_type ControllerManager::switch_controller(
     strictness = controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT;
   }
 
-  RCLCPP_DEBUG(get_logger(), "Activating controllers:");
+  std::string activate_list, deactivate_list;
   for (const auto & controller : activate_controllers)
   {
-    RCLCPP_DEBUG(get_logger(), " - %s", controller.c_str());
+    activate_list += controller + " ";
   }
-  RCLCPP_DEBUG(get_logger(), "Deactivating controllers:");
   for (const auto & controller : deactivate_controllers)
   {
-    RCLCPP_DEBUG(get_logger(), " - %s", controller.c_str());
+    deactivate_list += controller + " ";
   }
+  RCLCPP_INFO_EXPRESSION(
+    get_logger(), !activate_list.empty(), "Activating controllers: [ %s]", activate_list.c_str());
+  RCLCPP_INFO_EXPRESSION(
+    get_logger(), !deactivate_list.empty(), "Deactivating controllers: [ %s]",
+    deactivate_list.c_str());
 
   const auto list_controllers = [this, strictness](
                                   const std::vector<std::string> & controller_list,
