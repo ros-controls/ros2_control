@@ -2131,13 +2131,28 @@ void ControllerManager::read(const rclcpp::Time & time, const rclcpp::Duration &
   if (!ok)
   {
     std::vector<std::string> stop_request = {};
+    std::string failed_hardware_string;
     // Determine controllers to stop
     for (const auto & hardware_name : failed_hardware_names)
     {
+      failed_hardware_string += hardware_name + " ";
       auto controllers = resource_manager_->get_cached_controllers_to_hardware(hardware_name);
       stop_request.insert(stop_request.end(), controllers.begin(), controllers.end());
     }
-
+    std::string stop_request_string;
+    for (const auto & controller : stop_request)
+    {
+      stop_request_string += controller + " ";
+    }
+    RCLCPP_ERROR(
+      get_logger(),
+      "Deactivating following hardware components as their read cycle resulted in an error : [ %s]",
+      failed_hardware_string.c_str());
+    RCLCPP_ERROR_EXPRESSION(
+      get_logger(), !stop_request_string.empty(),
+      "Deactivating following controllers as their hardware components read cycle resulted in an "
+      "error : [ %s]",
+      stop_request_string.c_str());
     std::vector<ControllerSpec> & rt_controller_list =
       rt_controllers_wrapper_.update_and_get_used_by_rt_list();
     deactivate_controllers(rt_controller_list, stop_request);
@@ -2286,13 +2301,29 @@ void ControllerManager::write(const rclcpp::Time & time, const rclcpp::Duration 
   if (!ok)
   {
     std::vector<std::string> stop_request = {};
+    std::string failed_hardware_string;
     // Determine controllers to stop
     for (const auto & hardware_name : failed_hardware_names)
     {
+      failed_hardware_string += hardware_name + " ";
       auto controllers = resource_manager_->get_cached_controllers_to_hardware(hardware_name);
       stop_request.insert(stop_request.end(), controllers.begin(), controllers.end());
     }
-
+    std::string stop_request_string;
+    for (const auto & controller : stop_request)
+    {
+      stop_request_string += controller + " ";
+    }
+    RCLCPP_ERROR(
+      get_logger(),
+      "Deactivating following hardware components as their write cycle resulted in an error : [ "
+      "%s]",
+      failed_hardware_string.c_str());
+    RCLCPP_ERROR_EXPRESSION(
+      get_logger(), !stop_request_string.empty(),
+      "Deactivating following controllers as their hardware components write cycle resulted in an "
+      "error : [ %s]",
+      stop_request_string.c_str());
     std::vector<ControllerSpec> & rt_controller_list =
       rt_controllers_wrapper_.update_and_get_used_by_rt_list();
     deactivate_controllers(rt_controller_list, stop_request);
