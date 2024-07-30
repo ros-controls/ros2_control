@@ -2,6 +2,15 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.42.0 (2024-07-23)
+-------------------
+* Small improvements to the error output in component parser to make debugging easier. (backport `#1580 <https://github.com/ros-controls/ros2_control/issues/1580>`_) (`#1581 <https://github.com/ros-controls/ros2_control/issues/1581>`_)
+* Update joints_userdoc.rst (`#1604 <https://github.com/ros-controls/ros2_control/issues/1604>`_)
+* Fix link to gazebosim.org (`#1563 <https://github.com/ros-controls/ros2_control/issues/1563>`_) (`#1564 <https://github.com/ros-controls/ros2_control/issues/1564>`_)
+* Add doc page about joint kinematics (`#1497 <https://github.com/ros-controls/ros2_control/issues/1497>`_) (`#1559 <https://github.com/ros-controls/ros2_control/issues/1559>`_)
+* Bump version of pre-commit hooks (backport `#1556 <https://github.com/ros-controls/ros2_control/issues/1556>`_) (`#1557 <https://github.com/ros-controls/ros2_control/issues/1557>`_)
+* Contributors: Christoph Fröhlich, mergify[bot]
+
 2.41.0 (2024-04-30)
 -------------------
 * Add missing calculate_dynamics (`#1498 <https://github.com/ros-controls/ros2_control/issues/1498>`_) (`#1511 <https://github.com/ros-controls/ros2_control/issues/1511>`_)
