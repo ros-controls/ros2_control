@@ -2,6 +2,17 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+3.27.0 (2024-07-23)
+-------------------
+* Remove noqa (`#1626 <https://github.com/ros-controls/ros2_control/issues/1626>`_) (`#1629 <https://github.com/ros-controls/ros2_control/issues/1629>`_)
+* Contributors: mergify[bot]
+
+3.26.0 (2024-07-09)
+-------------------
+* [rqt_controller_manager] Add hardware components (`#1455 <https://github.com/ros-controls/ros2_control/issues/1455>`_) (`#1587 <https://github.com/ros-controls/ros2_control/issues/1587>`_)
+* Bump version of pre-commit hooks (backport `#1556 <https://github.com/ros-controls/ros2_control/issues/1556>`_) (`#1558 <https://github.com/ros-controls/ros2_control/issues/1558>`_)
+* Contributors: mergify[bot]
+
 3.25.0 (2024-04-30)
 -------------------
 * check for state of the controller node before cleanup (backport `#1363 <https://github.com/ros-controls/ros2_control/issues/1363>`_) (`#1379 <https://github.com/ros-controls/ros2_control/issues/1379>`_)
