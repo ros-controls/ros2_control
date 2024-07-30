@@ -15,6 +15,7 @@
 #include "controller_manager/controller_manager.hpp"
 
 #include <memory>
+#include <set>
 #include <string>
 #include <utility>
 #include <vector>
