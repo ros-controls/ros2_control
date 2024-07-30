@@ -530,12 +530,16 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_c
       get_logger(), "The 'type' param was not defined for '%s'.", controller_name.c_str());
     return nullptr;
   }
+  RCLCPP_INFO(
+    get_logger(), "Loading controller : '%s' of type '%s'", controller_name.c_str(),
+    controller_type.c_str());
   return load_controller(controller_name, controller_type);
 }
 
 controller_interface::return_type ControllerManager::unload_controller(
   const std::string & controller_name)
 {
+  RCLCPP_INFO(get_logger(), "Unloading controller : '%s'", controller_name.c_str());
   std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
   std::vector<ControllerSpec> & to = rt_controllers_wrapper_.get_unused_list(guard);
   const std::vector<ControllerSpec> & from = rt_controllers_wrapper_.get_updated_list(guard);
@@ -633,7 +637,7 @@ std::vector<ControllerSpec> ControllerManager::get_loaded_controllers() const
 controller_interface::return_type ControllerManager::configure_controller(
   const std::string & controller_name)
 {
-  RCLCPP_INFO(get_logger(), "Configuring controller '%s'", controller_name.c_str());
+  RCLCPP_INFO(get_logger(), "Configuring controller : '%s'", controller_name.c_str());
 
   const auto & controllers = get_loaded_controllers();
 
