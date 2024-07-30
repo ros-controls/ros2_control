@@ -764,7 +764,7 @@ void ResourceManager::load_urdf(
   const std::string sensor_type = "sensor";
   const std::string actuator_type = "actuator";
 
-  const auto hardware_info = hardware_interface::parse_control_resources_from_urdf(urdf);  
+  const auto hardware_info = hardware_interface::parse_control_resources_from_urdf(urdf);
   if (load_and_initialize_components)
   {
     std::lock_guard<std::recursive_mutex> resource_guard(resources_lock_);
