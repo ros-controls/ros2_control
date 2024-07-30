@@ -232,7 +232,7 @@ public:
   /**
    * \return logger of the ActuatorInterface.
    */
-  rclcpp::Logger get_logger() { return actuator_logger_; }
+  rclcpp::Logger get_logger() const { return actuator_logger_; }
 
   /// Get the clock of the ActuatorInterface.
   /**

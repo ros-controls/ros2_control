@@ -171,7 +171,7 @@ public:
   /**
    * \return logger of the SensorInterface.
    */
-  rclcpp::Logger get_logger() { return sensor_logger_; }
+  rclcpp::Logger get_logger() const { return sensor_logger_; }
 
   /// Get the clock of the SensorInterface.
   /**
