@@ -539,7 +539,7 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_c
 controller_interface::return_type ControllerManager::unload_controller(
   const std::string & controller_name)
 {
-  RCLCPP_INFO(get_logger(), "Unloading controller : '%s'", controller_name.c_str());
+  RCLCPP_INFO(get_logger(), "Unloading controller: '%s'", controller_name.c_str());
   std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
   std::vector<ControllerSpec> & to = rt_controllers_wrapper_.get_unused_list(guard);
   const std::vector<ControllerSpec> & from = rt_controllers_wrapper_.get_updated_list(guard);
@@ -637,7 +637,7 @@ std::vector<ControllerSpec> ControllerManager::get_loaded_controllers() const
 controller_interface::return_type ControllerManager::configure_controller(
   const std::string & controller_name)
 {
-  RCLCPP_INFO(get_logger(), "Configuring controller : '%s'", controller_name.c_str());
+  RCLCPP_INFO(get_logger(), "Configuring controller: '%s'", controller_name.c_str());
 
   const auto & controllers = get_loaded_controllers();
 
@@ -2154,12 +2154,12 @@ void ControllerManager::read(const rclcpp::Time & time, const rclcpp::Duration &
     }
     RCLCPP_ERROR(
       get_logger(),
-      "Deactivating following hardware components as their read cycle resulted in an error : [ %s]",
+      "Deactivating following hardware components as their read cycle resulted in an error: [ %s]",
       failed_hardware_string.c_str());
     RCLCPP_ERROR_EXPRESSION(
       get_logger(), !stop_request_string.empty(),
       "Deactivating following controllers as their hardware components read cycle resulted in an "
-      "error : [ %s]",
+      "error: [ %s]",
       stop_request_string.c_str());
     std::vector<ControllerSpec> & rt_controller_list =
       rt_controllers_wrapper_.update_and_get_used_by_rt_list();
@@ -2324,13 +2324,13 @@ void ControllerManager::write(const rclcpp::Time & time, const rclcpp::Duration 
     }
     RCLCPP_ERROR(
       get_logger(),
-      "Deactivating following hardware components as their write cycle resulted in an error : [ "
+      "Deactivating following hardware components as their write cycle resulted in an error: [ "
       "%s]",
       failed_hardware_string.c_str());
     RCLCPP_ERROR_EXPRESSION(
       get_logger(), !stop_request_string.empty(),
       "Deactivating following controllers as their hardware components write cycle resulted in an "
-      "error : [ %s]",
+      "error: [ %s]",
       stop_request_string.c_str());
     std::vector<ControllerSpec> & rt_controller_list =
       rt_controllers_wrapper_.update_and_get_used_by_rt_list();
