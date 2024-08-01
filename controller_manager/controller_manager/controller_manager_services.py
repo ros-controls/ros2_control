@@ -26,6 +26,7 @@ from controller_manager_msgs.srv import (
 )
 
 import rclpy
+import yaml
 
 
 class ServiceNotFoundError(Exception):
@@ -180,3 +181,23 @@ def unload_controller(node, controller_manager_name, controller_name, service_ti
         request,
         service_timeout,
     )
+
+
+def get_parameter_from_param_file(controller_name, namespace, parameter_file, parameter_name):
+    with open(parameter_file) as f:
+        namespaced_controller = (
+            controller_name if namespace == "/" else f"{namespace}/{controller_name}"
+        )
+        parameters = yaml.safe_load(f)
+        if namespaced_controller in parameters:
+            value = parameters[namespaced_controller]
+            if not isinstance(value, dict) or "ros__parameters" not in value:
+                raise RuntimeError(
+                    f"YAML file : {parameter_file} is not a valid ROS parameter file for controller : {namespaced_controller}"
+                )
+            if parameter_name in parameters[namespaced_controller]["ros__parameters"]:
+                return parameters[namespaced_controller]["ros__parameters"][parameter_name]
+            else:
+                return None
+        else:
+            return None
