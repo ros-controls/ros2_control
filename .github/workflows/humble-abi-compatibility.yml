@@ -1,8 +1,6 @@
 name: Humble - ABI Compatibility Check
 on:
   workflow_dispatch:
-    branches:
-      - humble
   pull_request:
     branches:
       - humble
