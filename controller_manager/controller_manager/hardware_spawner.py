@@ -17,26 +17,13 @@ import argparse
 import sys
 import time
 
-from controller_manager import set_hardware_component_state
+from controller_manager import set_hardware_component_state, bcolors
 
 from lifecycle_msgs.msg import State
 import rclpy
 from rclpy.duration import Duration
 from rclpy.node import Node
 from rclpy.signals import SignalHandlerOptions
-
-
-# from https://stackoverflow.com/a/287944
-class bcolors:
-    HEADER = "\033[95m"
-    OKBLUE = "\033[94m"
-    OKCYAN = "\033[96m"
-    OKGREEN = "\033[92m"
-    WARNING = "\033[93m"
-    FAIL = "\033[91m"
-    ENDC = "\033[0m"
-    BOLD = "\033[1m"
-    UNDERLINE = "\033[4m"
 
 
 def first_match(iterable, predicate):

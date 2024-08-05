@@ -27,6 +27,7 @@ from controller_manager import (
     switch_controllers,
     unload_controller,
     get_parameter_from_param_file,
+    bcolors,
 )
 
 import rclpy
@@ -42,20 +43,6 @@ except ImportError:
     from ros2param.api import get_parameter_value
 from rclpy.signals import SignalHandlerOptions
 from ros2param.api import call_set_parameters
-
-# from https://stackoverflow.com/a/287944
-
-
-class bcolors:
-    HEADER = "\033[95m"
-    OKBLUE = "\033[94m"
-    OKCYAN = "\033[96m"
-    OKGREEN = "\033[92m"
-    WARNING = "\033[93m"
-    FAIL = "\033[91m"
-    ENDC = "\033[0m"
-    BOLD = "\033[1m"
-    UNDERLINE = "\033[4m"
 
 
 def first_match(iterable, predicate):
