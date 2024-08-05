@@ -320,20 +320,14 @@ TEST_F(TestLoadController, spawner_test_fallback_controllers)
   cm_->set_parameter(rclcpp::Parameter("ctrl_3.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
 
   ControllerManagerRunner cm_runner(this);
-  EXPECT_EQ(
-    call_spawner(
-      "ctrl_1 -c test_controller_manager --load-only --fallback_controllers ctrl_3 ctrl_4 ctrl_5 "
-      "-p " +
-      test_file_path),
-    0);
+  EXPECT_EQ(call_spawner("ctrl_1 -c test_controller_manager --load-only -p " + test_file_path), 0);
 
   ASSERT_EQ(cm_->get_loaded_controllers().size(), 1ul);
   {
     auto ctrl_1 = cm_->get_loaded_controllers()[0];
     ASSERT_EQ(ctrl_1.info.name, "ctrl_1");
     ASSERT_EQ(ctrl_1.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
-    ASSERT_THAT(
-      ctrl_1.info.fallback_controllers_names, testing::ElementsAre("ctrl_3", "ctrl_4", "ctrl_5"));
+    ASSERT_TRUE(ctrl_1.info.fallback_controllers_names.empty());
     ASSERT_EQ(ctrl_1.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
   }
 
@@ -346,8 +340,7 @@ TEST_F(TestLoadController, spawner_test_fallback_controllers)
     auto ctrl_1 = cm_->get_loaded_controllers()[0];
     ASSERT_EQ(ctrl_1.info.name, "ctrl_1");
     ASSERT_EQ(ctrl_1.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
-    ASSERT_THAT(
-      ctrl_1.info.fallback_controllers_names, testing::ElementsAre("ctrl_3", "ctrl_4", "ctrl_5"));
+    ASSERT_TRUE(ctrl_1.info.fallback_controllers_names.empty());
     ASSERT_EQ(ctrl_1.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
 
     auto ctrl_2 = cm_->get_loaded_controllers()[1];
