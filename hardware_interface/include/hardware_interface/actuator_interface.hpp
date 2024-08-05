@@ -114,14 +114,24 @@ public:
     info_ = hardware_info;
     if (info_.is_async)
     {
-      read_async_handler_ = std::make_unique<realtime_tools::AsyncFunctionHandler<return_type>>();
-      write_async_handler_ = std::make_unique<realtime_tools::AsyncFunctionHandler<return_type>>();
-      read_async_handler_->init(
-        std::bind(&ActuatorInterface::read, this, std::placeholders::_1, std::placeholders::_2));
-      read_async_handler_->start_thread();
-      write_async_handler_->init(
-        std::bind(&ActuatorInterface::write, this, std::placeholders::_1, std::placeholders::_2));
-      write_async_handler_->start_thread();
+      async_handler_ = std::make_unique<realtime_tools::AsyncFunctionHandler<return_type>>();
+      async_handler_->init(
+        [this](const rclcpp::Time & time, const rclcpp::Duration & period)
+        {
+          if (next_trigger_ == TriggerType::READ)
+          {
+            const auto ret = read(time, period);
+            next_trigger_ = TriggerType::WRITE;
+            return ret;
+          }
+          else
+          {
+            const auto ret = write(time, period);
+            next_trigger_ = TriggerType::READ;
+            return ret;
+          }
+        });
+      async_handler_->start_thread();
     }
     return on_init(hardware_info);
   };
@@ -381,32 +391,22 @@ public:
       if (next_trigger_ == TriggerType::WRITE)
       {
         RCLCPP_WARN(
-          rclcpp::get_logger("ActuatorInterface"),
+          get_logger(),
           "Trigger read called while write async handler call is still pending for hardware "
           "interface : '%s'. Skipping read cycle and will wait for a write cycle!",
           info_.name.c_str());
         return return_type::OK;
       }
-      if (write_async_handler_->is_trigger_cycle_in_progress())
-      {
-        RCLCPP_WARN(
-          rclcpp::get_logger("ActuatorInterface"),
-          "Trigger read called while write async handler is still in progress for hardware "
-          "interface : '%s'. Skipping read cycle!",
-          info_.name.c_str());
-        return return_type::OK;
-      }
-      std::tie(trigger_status, result) = read_async_handler_->trigger_async_callback(time, period);
+      std::tie(trigger_status, result) = async_handler_->trigger_async_callback(time, period);
       if (!trigger_status)
       {
         RCLCPP_WARN(
-          rclcpp::get_logger("ActuatorInterface"),
-          "Trigger read called while read async handler is still in progress for hardware "
+          get_logger(),
+          "Trigger read called while write async trigger is still in progress for hardware "
           "interface : '%s'. Failed to trigger read cycle!",
           info_.name.c_str());
         return return_type::OK;
       }
-      next_trigger_ = TriggerType::WRITE;
     }
     else
     {
@@ -446,32 +446,22 @@ public:
       if (next_trigger_ == TriggerType::READ)
       {
         RCLCPP_WARN(
-          rclcpp::get_logger("ActuatorInterface"),
+          get_logger(),
           "Trigger write called while read async handler call is still pending for hardware "
           "interface : '%s'. Skipping write cycle and will wait for a read cycle!",
           info_.name.c_str());
         return return_type::OK;
       }
-      if (read_async_handler_->is_trigger_cycle_in_progress())
-      {
-        RCLCPP_WARN(
-          rclcpp::get_logger("ActuatorInterface"),
-          "Trigger write called while read async handler is still in progress for hardware "
-          "interface : '%s'. Skipping write cycle!",
-          info_.name.c_str());
-        return return_type::OK;
-      }
-      std::tie(trigger_status, result) = write_async_handler_->trigger_async_callback(time, period);
+      std::tie(trigger_status, result) = async_handler_->trigger_async_callback(time, period);
       if (!trigger_status)
       {
         RCLCPP_WARN(
-          rclcpp::get_logger("ActuatorInterface"),
-          "Trigger write called while write async handler is still in progress for hardware "
+          get_logger(),
+          "Trigger write called while read async trigger is still in progress for hardware "
           "interface : '%s'. Failed to trigger write cycle!",
           info_.name.c_str());
         return return_type::OK;
       }
-      next_trigger_ = TriggerType::READ;
     }
     else
     {
@@ -573,8 +563,7 @@ protected:
   std::vector<CommandInterface::SharedPtr> unlisted_commands_;
 
   rclcpp_lifecycle::State lifecycle_state_;
-  std::unique_ptr<realtime_tools::AsyncFunctionHandler<return_type>> read_async_handler_;
-  std::unique_ptr<realtime_tools::AsyncFunctionHandler<return_type>> write_async_handler_;
+  std::unique_ptr<realtime_tools::AsyncFunctionHandler<return_type>> async_handler_;
 
 private:
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface_;
@@ -586,7 +575,8 @@ private:
   {
     READ,
     WRITE
-  } next_trigger_ = TriggerType::READ;
+  };
+  std::atomic<TriggerType> next_trigger_ = TriggerType::READ;
 };
 
 }  // namespace hardware_interface
