@@ -144,14 +144,6 @@ def main(args=None):
         action="store_true",
         required=False,
     )
-    parser.add_argument(
-        "--fallback_controllers",
-        help="Fallback controllers list are activated as a fallback strategy when the"
-        " spawned controllers fail. When the argument is provided, it takes precedence over"
-        " the fallback_controllers list in the param file",
-        default=None,
-        nargs="+",
-    )
 
     command_line_args = rclpy.utilities.remove_ros_args(args=sys.argv)[1:]
     args = parser.parse_args(command_line_args)
@@ -192,7 +184,6 @@ def main(args=None):
 
     try:
         for controller_name in controller_names:
-            fallback_controllers = args.fallback_controllers
 
             if is_controller_loaded(
                 node, controller_manager_name, controller_name, controller_manager_timeout
@@ -274,11 +265,13 @@ def main(args=None):
                         )
                         return 1
 
-                if not fallback_controllers and param_file:
-                    fallback_controllers = get_parameter_from_param_file(
+                fallback_controllers = (
+                    None
+                    if param_file is None
+                    else get_parameter_from_param_file(
                         controller_name, spawner_namespace, param_file, "fallback_controllers"
                     )
-
+                )
                 if fallback_controllers:
                     parameter = Parameter()
                     parameter.name = controller_name + ".fallback_controllers"
