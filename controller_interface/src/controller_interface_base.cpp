@@ -35,6 +35,7 @@ return_type ControllerInterfaceBase::init(
   {
     auto_declare<int>("update_rate", cm_update_rate);
     auto_declare<bool>("is_async", false);
+    auto_declare<bool>("thread_priority", 50);
   }
   catch (const std::exception & e)
   {
@@ -89,9 +90,16 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
   }
   if (is_async_)
   {
+    const unsigned int thread_priority =
+      static_cast<unsigned int>(get_node()->get_parameter("thread_priority").as_int());
+    RCLCPP_INFO_STREAM(
+      get_node()->get_logger(),
+      "Starting async handler with scheduler priority: " << thread_priority);
     async_handler_ = std::make_unique<realtime_tools::AsyncFunctionHandler<return_type>>();
-    async_handler_->init(std::bind(
-      &ControllerInterfaceBase::update, this, std::placeholders::_1, std::placeholders::_2));
+    async_handler_->init(
+      std::bind(
+        &ControllerInterfaceBase::update, this, std::placeholders::_1, std::placeholders::_2),
+      thread_priority);
     async_handler_->start_thread();
   }
 
