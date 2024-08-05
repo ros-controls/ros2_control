@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.15.0 (2024-08-05)
+-------------------
 * Add missing include for executors (`#1653 <https://github.com/ros-controls/ros2_control/issues/1653>`_)
 * Fix the namespaced controller_manager spawner + added tests (`#1640 <https://github.com/ros-controls/ros2_control/issues/1640>`_)
 * CM: Add missing includes (`#1641 <https://github.com/ros-controls/ros2_control/issues/1641>`_)
