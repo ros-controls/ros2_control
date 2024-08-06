@@ -879,6 +879,8 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_robot_with_gpio
   EXPECT_EQ(
     hardware_info.hardware_plugin_name, "ros2_control_demo_hardware/RRBotSystemWithGPIOHardware");
 
+  ASSERT_FALSE(hardware_info.is_async);
+  ASSERT_EQ(hardware_info.thread_priority, std::numeric_limits<int>::max());
   ASSERT_THAT(hardware_info.joints, SizeIs(2));
 
   EXPECT_EQ(hardware_info.joints[0].name, "joint1");
@@ -949,6 +951,8 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_with_size_and_d
 
   ASSERT_THAT(hardware_info.joints, SizeIs(1));
 
+  ASSERT_FALSE(hardware_info.is_async);
+  ASSERT_EQ(hardware_info.thread_priority, std::numeric_limits<int>::max());
   EXPECT_EQ(hardware_info.joints[0].name, "joint1");
   EXPECT_EQ(hardware_info.joints[0].type, "joint");
   EXPECT_THAT(hardware_info.joints[0].command_interfaces, SizeIs(1));
@@ -1337,6 +1341,59 @@ TEST_F(TestComponentParser, successfully_parse_urdf_system_continuous_with_limit
   EXPECT_FALSE(hardware_info.limits.at("joint2").has_jerk_limits);
 }
 
+TEST_F(TestComponentParser, successfully_parse_valid_urdf_async_components)
+{
+  std::string urdf_to_test = ros2_control_test_assets::minimal_async_robot_urdf;
+  const auto control_hardware = parse_control_resources_from_urdf(urdf_to_test);
+  ASSERT_THAT(control_hardware, SizeIs(3));
+  auto hardware_info = control_hardware[0];
+
+  // Actuator
+  EXPECT_EQ(hardware_info.name, "TestActuatorHardware");
+  EXPECT_EQ(hardware_info.type, "actuator");
+  ASSERT_THAT(hardware_info.group, IsEmpty());
+  ASSERT_THAT(hardware_info.joints, SizeIs(1));
+  ASSERT_TRUE(hardware_info.is_async);
+  ASSERT_EQ(hardware_info.thread_priority, 30);
+
+  EXPECT_EQ(hardware_info.joints[0].name, "joint1");
+  EXPECT_EQ(hardware_info.joints[0].type, "joint");
+
+  // Sensor
+  hardware_info = control_hardware[1];
+  EXPECT_EQ(hardware_info.name, "TestSensorHardware");
+  EXPECT_EQ(hardware_info.type, "sensor");
+  ASSERT_THAT(hardware_info.group, IsEmpty());
+  ASSERT_THAT(hardware_info.joints, IsEmpty());
+  ASSERT_THAT(hardware_info.sensors, SizeIs(1));
+  ASSERT_TRUE(hardware_info.is_async);
+  ASSERT_EQ(hardware_info.thread_priority, 50);
+
+  EXPECT_EQ(hardware_info.sensors[0].name, "sensor1");
+  EXPECT_EQ(hardware_info.sensors[0].type, "sensor");
+  EXPECT_THAT(hardware_info.sensors[0].state_interfaces, SizeIs(1));
+  EXPECT_THAT(hardware_info.sensors[0].command_interfaces, IsEmpty());
+  EXPECT_THAT(hardware_info.sensors[0].state_interfaces[0].name, "velocity");
+
+  // System
+  hardware_info = control_hardware[2];
+  EXPECT_EQ(hardware_info.name, "TestSystemHardware");
+  EXPECT_EQ(hardware_info.type, "system");
+  ASSERT_THAT(hardware_info.group, IsEmpty());
+  ASSERT_THAT(hardware_info.joints, SizeIs(2));
+  ASSERT_THAT(hardware_info.gpios, SizeIs(1));
+
+  EXPECT_EQ(hardware_info.joints[0].name, "joint2");
+  EXPECT_EQ(hardware_info.joints[0].type, "joint");
+
+  EXPECT_EQ(hardware_info.joints[1].name, "joint3");
+  EXPECT_EQ(hardware_info.joints[1].type, "joint");
+  EXPECT_EQ(hardware_info.gpios[0].name, "configuration");
+  EXPECT_EQ(hardware_info.gpios[0].type, "gpio");
+  ASSERT_TRUE(hardware_info.is_async);
+  ASSERT_EQ(hardware_info.thread_priority, 70);
+}
+
 TEST_F(TestComponentParser, successfully_parse_parameter_empty)
 {
   const std::string urdf_to_test =
@@ -1375,6 +1432,16 @@ TEST_F(TestComponentParser, successfully_parse_parameter_empty)
     EXPECT_THAT(hardware_info.limits.at(joint).max_velocity, DoubleNear(0.2, 1e-5));
     EXPECT_THAT(hardware_info.limits.at(joint).max_effort, DoubleNear(0.1, 1e-5));
   }
+}
+
+TEST_F(TestComponentParser, successfully_parse_valid_urdf_async_invalid_thread_priority)
+{
+  std::string urdf_to_test = std::string(ros2_control_test_assets::urdf_head) +
+                             "<ros2_control name='TestActuatorHardware' type='actuator' "
+                             "is_async='true' thread_priority='-30'/>" +
+                             std::string(ros2_control_test_assets::urdf_tail);
+  ;
+  ASSERT_THROW(parse_control_resources_from_urdf(urdf_to_test), std::runtime_error);
 }
 
 TEST_F(TestComponentParser, negative_size_throws_error)
