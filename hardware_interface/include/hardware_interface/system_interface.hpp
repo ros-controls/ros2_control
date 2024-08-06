@@ -117,6 +117,8 @@ public:
     info_ = hardware_info;
     if (info_.is_async)
     {
+      RCLCPP_INFO_STREAM(
+        get_logger(), "Starting async handler with scheduler priority: " << info_.thread_priority);
       async_handler_ = std::make_unique<realtime_tools::AsyncFunctionHandler<return_type>>();
       async_handler_->init(
         [this](const rclcpp::Time & time, const rclcpp::Duration & period)
@@ -133,7 +135,8 @@ public:
             next_trigger_ = TriggerType::READ;
             return ret;
           }
-        });
+        },
+        info_.thread_priority);
       async_handler_->start_thread();
     }
     return on_init(hardware_info);
