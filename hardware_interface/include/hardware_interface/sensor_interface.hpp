@@ -114,9 +114,12 @@ public:
     info_ = hardware_info;
     if (info_.is_async)
     {
+      RCLCPP_INFO_STREAM(
+        get_logger(), "Starting async handler with scheduler priority: " << info_.thread_priority);
       read_async_handler_ = std::make_unique<realtime_tools::AsyncFunctionHandler<return_type>>();
       read_async_handler_->init(
-        std::bind(&SensorInterface::read, this, std::placeholders::_1, std::placeholders::_2));
+        std::bind(&SensorInterface::read, this, std::placeholders::_1, std::placeholders::_2),
+        info_.thread_priority);
       read_async_handler_->start_thread();
     }
     return on_init(hardware_info);
