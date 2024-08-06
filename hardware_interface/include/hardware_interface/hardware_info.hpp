@@ -176,6 +176,8 @@ struct HardwareInfo
   std::string group;
   /// Component is async
   bool is_async;
+  /// Async thread priority
+  int thread_priority;
   /// Name of the pluginlib plugin of the hardware that will be loaded.
   std::string hardware_plugin_name;
   /// (Optional) Key-value pairs for hardware parameters.
