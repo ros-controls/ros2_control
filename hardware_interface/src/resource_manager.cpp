@@ -1855,16 +1855,16 @@ HardwareReadWriteStatus ResourceManager::read(
         }
         else
         {
-          const rclcpp::Duration hw_read_period = rclcpp::Duration::from_seconds(
-            1.0 / resource_storage_->hardware_info_map_[component.get_name()].read_rate);
+          const double read_rate =
+            resource_storage_->hardware_info_map_[component.get_name()].read_rate;
           const auto current_time = resource_storage_->get_clock()->now();
           if (
             component.get_last_read_time().seconds() == 0 ||
-            (current_time - component.get_last_read_time()) >= hw_read_period)
+            (current_time - component.get_last_read_time()).seconds() * read_rate >= 0.99)
           {
             const rclcpp::Duration actual_period =
               component.get_last_read_time().seconds() == 0
-                ? hw_read_period
+                ? rclcpp::Duration::from_seconds(1.0 / read_rate)
                 : current_time - component.get_last_read_time();
             ret_val = component.read(time, actual_period);
           }
@@ -1937,16 +1937,16 @@ HardwareReadWriteStatus ResourceManager::write(
         }
         else
         {
-          const rclcpp::Duration hw_write_period = rclcpp::Duration::from_seconds(
-            1.0 / resource_storage_->hardware_info_map_[component.get_name()].write_rate);
+          const double write_rate =
+            resource_storage_->hardware_info_map_[component.get_name()].write_rate;
           const auto current_time = resource_storage_->get_clock()->now();
           if (
             component.get_last_write_time().seconds() == 0 ||
-            (current_time - component.get_last_write_time()) >= hw_write_period)
+            (current_time - component.get_last_write_time()).seconds() * write_rate >= 0.99)
           {
             const rclcpp::Duration actual_period =
               component.get_last_write_time().seconds() == 0
-                ? hw_write_period
+                ? rclcpp::Duration::from_seconds(1.0 / write_rate)
                 : current_time - component.get_last_write_time();
             ret_val = component.write(time, actual_period);
           }
