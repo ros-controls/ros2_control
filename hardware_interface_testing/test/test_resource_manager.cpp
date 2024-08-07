@@ -1752,6 +1752,7 @@ public:
     activate_components(*rm);
 
     cm_update_rate_ = 100u;  // The default value inside
+    time = node_.get_clock()->now();
 
     auto status_map = rm->get_components_status();
     EXPECT_EQ(
@@ -1848,14 +1849,15 @@ public:
         prev_act_state_value = claimed_itfs[0].get_value() / 2.0;
         claimed_itfs[0].set_value(claimed_itfs[0].get_value() + 10.0);
       }
-      // Even though we skip some read and write iterations, the state interafces should be the same
+      // Even though we skip some read and write iterations, the state interfaces should be the same
       // as previous updated one until the next cycle
       ASSERT_EQ(state_itfs[0].get_value(), prev_act_state_value);
       ASSERT_EQ(state_itfs[1].get_value(), prev_system_state_value);
       auto [ok_write, failed_hardware_names_write] = rm->write(time, duration);
       EXPECT_TRUE(ok_write);
       EXPECT_TRUE(failed_hardware_names_write.empty());
-      time = time + duration;
+      node_.get_clock()->sleep_until(time + duration);
+      time = node_.get_clock()->now();
     }
   }
 
