@@ -53,6 +53,8 @@ const rclcpp_lifecycle::State & Actuator::initialize(
     switch (impl_->init(actuator_info, logger, clock_interface))
     {
       case CallbackReturn::SUCCESS:
+        last_read_cycle_time_ = clock_interface->get_clock()->now();
+        last_write_cycle_time_ = clock_interface->get_clock()->now();
         impl_->set_lifecycle_state(rclcpp_lifecycle::State(
           lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
           lifecycle_state_names::UNCONFIGURED));
@@ -298,7 +300,7 @@ return_type Actuator::read(const rclcpp::Time & time, const rclcpp::Duration & p
   }
   if (lifecycleStateThatRequiresNoAction(impl_->get_lifecycle_state().id()))
   {
-    last_read_cycle_time_ = rclcpp::Time(0, 0, time.get_clock_type());
+    last_read_cycle_time_ = time;
     return return_type::OK;
   }
   return_type result = return_type::ERROR;
@@ -328,7 +330,7 @@ return_type Actuator::write(const rclcpp::Time & time, const rclcpp::Duration & 
   }
   if (lifecycleStateThatRequiresNoAction(impl_->get_lifecycle_state().id()))
   {
-    last_write_cycle_time_ = rclcpp::Time(0, 0, time.get_clock_type());
+    last_write_cycle_time_ = time;
     return return_type::OK;
   }
   return_type result = return_type::ERROR;

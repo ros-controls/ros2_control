@@ -1858,15 +1858,10 @@ HardwareReadWriteStatus ResourceManager::read(
           const double read_rate =
             resource_storage_->hardware_info_map_[component.get_name()].read_rate;
           const auto current_time = resource_storage_->get_clock()->now();
-          if (
-            component.get_last_read_time().seconds() == 0 ||
-            (current_time - component.get_last_read_time()).seconds() * read_rate >= 0.99)
+          const rclcpp::Duration actual_period = current_time - component.get_last_read_time();
+          if (actual_period.seconds() * read_rate >= 0.99)
           {
-            const rclcpp::Duration actual_period =
-              component.get_last_read_time().seconds() == 0
-                ? rclcpp::Duration::from_seconds(1.0 / read_rate)
-                : current_time - component.get_last_read_time();
-            ret_val = component.read(time, actual_period);
+            ret_val = component.read(current_time, actual_period);
           }
         }
         const auto component_group = component.get_group_name();
@@ -1940,15 +1935,10 @@ HardwareReadWriteStatus ResourceManager::write(
           const double write_rate =
             resource_storage_->hardware_info_map_[component.get_name()].write_rate;
           const auto current_time = resource_storage_->get_clock()->now();
-          if (
-            component.get_last_write_time().seconds() == 0 ||
-            (current_time - component.get_last_write_time()).seconds() * write_rate >= 0.99)
+          const rclcpp::Duration actual_period = current_time - component.get_last_write_time();
+          if (actual_period.seconds() * write_rate >= 0.99)
           {
-            const rclcpp::Duration actual_period =
-              component.get_last_write_time().seconds() == 0
-                ? rclcpp::Duration::from_seconds(1.0 / write_rate)
-                : current_time - component.get_last_write_time();
-            ret_val = component.write(time, actual_period);
+            ret_val = component.write(current_time, actual_period);
           }
         }
         const auto component_group = component.get_group_name();
