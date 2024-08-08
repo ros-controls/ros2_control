@@ -27,6 +27,15 @@ from controller_manager_msgs.srv import (
 
 import rclpy
 import yaml
+from rcl_interfaces.msg import Parameter
+
+# @note: The versions conditioning is added here to support the source-compatibility with Humble
+# The `get_parameter_value` function is moved to `rclpy.parameter` module from `ros2param.api` module from version 3.6.0
+try:
+    from rclpy.parameter import get_parameter_value
+except ImportError:
+    from ros2param.api import get_parameter_value
+from ros2param.api import call_set_parameters
 
 
 # from https://stackoverflow.com/a/287944
@@ -209,3 +218,43 @@ def get_parameter_from_param_file(controller_name, namespace, parameter_file, pa
                 return None
         else:
             return None
+
+
+def set_controller_parameters(
+    node, controller_manager_name, controller_name, parameter_name, parameter_value
+):
+    parameter = Parameter()
+    parameter.name = controller_name + "." + parameter_name
+    parameter.value = get_parameter_value(string_value=parameter_value)
+
+    response = call_set_parameters(
+        node=node, node_name=controller_manager_name, parameters=[parameter]
+    )
+    assert len(response.results) == 1
+    result = response.results[0]
+    if result.successful:
+        node.get_logger().info(
+            bcolors.OKCYAN
+            + 'Setting controller param "'
+            + parameter_name
+            + '" to "'
+            + parameter_value
+            + '" for '
+            + bcolors.BOLD
+            + controller_name
+            + bcolors.ENDC
+        )
+    else:
+        node.get_logger().fatal(
+            bcolors.FAIL
+            + 'Could not set controller param "'
+            + parameter_name
+            + '" to "'
+            + parameter_value
+            + '" for '
+            + bcolors.BOLD
+            + controller_name
+            + bcolors.ENDC
+        )
+        return False
+    return True
