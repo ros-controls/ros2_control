@@ -841,6 +841,7 @@ controller_interface::return_type ControllerManager::configure_controller(
 
 void ControllerManager::clear_requests()
 {
+  switch_params_.do_switch = false;
   deactivate_request_.clear();
   activate_request_.clear();
   // Set these interfaces as unavailable when clearing requests to avoid leaving them in available
@@ -860,7 +861,21 @@ controller_interface::return_type ControllerManager::switch_controller(
   const std::vector<std::string> & deactivate_controllers, int strictness, bool activate_asap,
   const rclcpp::Duration & timeout)
 {
+<<<<<<< HEAD
   switch_params_ = SwitchParams();
+=======
+  if (!is_resource_manager_initialized())
+  {
+    RCLCPP_ERROR(
+      get_logger(),
+      "Resource Manager is not initialized yet! Please provide robot description on "
+      "'robot_description' topic before trying to switch controllers.");
+    return controller_interface::return_type::ERROR;
+  }
+
+  // reset the switch param internal variables
+  switch_params_.reset();
+>>>>>>> a1ad523 (refactor SwitchParams to fix the incosistencies in the spawner tests (#1638))
 
   if (!deactivate_request_.empty() || !activate_request_.empty())
   {
@@ -1261,19 +1276,27 @@ controller_interface::return_type ControllerManager::switch_controller(
   // start the atomic controller switching
   switch_params_.strictness = strictness;
   switch_params_.activate_asap = activate_asap;
-  switch_params_.init_time = rclcpp::Clock().now();
-  switch_params_.timeout = timeout;
+  if (timeout == rclcpp::Duration{0, 0})
+  {
+    RCLCPP_INFO_ONCE(get_logger(), "Switch controller timeout is set to 0, using default 1s!");
+    switch_params_.timeout = std::chrono::nanoseconds(1'000'000'000);
+  }
+  else
+  {
+    switch_params_.timeout = timeout.to_chrono<std::chrono::nanoseconds>();
+  }
   switch_params_.do_switch = true;
-
   // wait until switch is finished
   RCLCPP_DEBUG(get_logger(), "Requested atomic controller switch from realtime loop");
-  while (rclcpp::ok() && switch_params_.do_switch)
+  std::unique_lock<std::mutex> switch_params_guard(switch_params_.mutex, std::defer_lock);
+  if (!switch_params_.cv.wait_for(
+        switch_params_guard, switch_params_.timeout, [this] { return !switch_params_.do_switch; }))
   {
-    if (!rclcpp::ok())
-    {
-      return controller_interface::return_type::ERROR;
-    }
-    std::this_thread::sleep_for(std::chrono::microseconds(100));
+    RCLCPP_ERROR(
+      get_logger(), "Switch controller timed out after %f seconds!",
+      static_cast<double>(switch_params_.timeout.count()) / 1e9);
+    clear_requests();
+    return controller_interface::return_type::ERROR;
   }
 
   // copy the controllers spec from the used to the unused list
@@ -2075,6 +2098,48 @@ void ControllerManager::read(const rclcpp::Time & time, const rclcpp::Duration &
   }
 }
 
+<<<<<<< HEAD
+=======
+void ControllerManager::manage_switch()
+{
+  std::unique_lock<std::mutex> guard(switch_params_.mutex, std::try_to_lock);
+  if (!guard.owns_lock())
+  {
+    RCLCPP_DEBUG(get_logger(), "Unable to lock switch mutex. Retrying in next cycle.");
+    return;
+  }
+  // Ask hardware interfaces to change mode
+  if (!resource_manager_->perform_command_mode_switch(
+        activate_command_interface_request_, deactivate_command_interface_request_))
+  {
+    RCLCPP_ERROR(get_logger(), "Error while performing mode switch.");
+  }
+
+  std::vector<ControllerSpec> & rt_controller_list =
+    rt_controllers_wrapper_.update_and_get_used_by_rt_list();
+
+  deactivate_controllers(rt_controller_list, deactivate_request_);
+
+  switch_chained_mode(to_chained_mode_request_, true);
+  switch_chained_mode(from_chained_mode_request_, false);
+
+  // activate controllers once the switch is fully complete
+  if (!switch_params_.activate_asap)
+  {
+    activate_controllers(rt_controller_list, activate_request_);
+  }
+  else
+  {
+    // activate controllers as soon as their required joints are done switching
+    activate_controllers_asap(rt_controller_list, activate_request_);
+  }
+
+  // All controllers switched --> switching done
+  switch_params_.do_switch = false;
+  switch_params_.cv.notify_all();
+}
+
+>>>>>>> a1ad523 (refactor SwitchParams to fix the incosistencies in the spawner tests (#1638))
 controller_interface::return_type ControllerManager::update(
   const rclcpp::Time & time, const rclcpp::Duration & period)
 {
