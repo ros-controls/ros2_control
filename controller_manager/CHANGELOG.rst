@@ -2,6 +2,16 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.15.0 (2024-08-05)
+-------------------
+* Add missing include for executors (`#1653 <https://github.com/ros-controls/ros2_control/issues/1653>`_)
+* Fix the namespaced controller_manager spawner + added tests (`#1640 <https://github.com/ros-controls/ros2_control/issues/1640>`_)
+* CM: Add missing includes (`#1641 <https://github.com/ros-controls/ros2_control/issues/1641>`_)
+* Fix rst markup (`#1642 <https://github.com/ros-controls/ros2_control/issues/1642>`_)
+* Add a pytest launch file to test ros2_control_node (`#1636 <https://github.com/ros-controls/ros2_control/issues/1636>`_)
+* [CM] Remove deprecated spawner args (`#1639 <https://github.com/ros-controls/ros2_control/issues/1639>`_)
+* Contributors: Christoph Fröhlich, Sai Kishor Kothakota
+
 4.14.0 (2024-07-23)
 -------------------
 * Unused header cleanup (`#1627 <https://github.com/ros-controls/ros2_control/issues/1627>`_)
