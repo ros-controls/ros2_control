@@ -25,6 +25,7 @@ from .controller_manager_services import (
     unload_controller,
     get_parameter_from_param_file,
     set_controller_parameters,
+    set_controller_parameters_from_param_file,
     bcolors,
 )
 
@@ -41,5 +42,6 @@ __all__ = [
     "unload_controller",
     "get_parameter_from_param_file",
     "set_controller_parameters",
+    "set_controller_parameters_from_param_file",
     "bcolors",
 ]

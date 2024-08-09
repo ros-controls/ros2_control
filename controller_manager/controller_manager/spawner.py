@@ -26,8 +26,7 @@ from controller_manager import (
     load_controller,
     switch_controllers,
     unload_controller,
-    get_parameter_from_param_file,
-    set_controller_parameters,
+    set_controller_parameters_from_param_file,
     bcolors,
 )
 from controller_manager.controller_manager_services import ServiceNotFoundError
@@ -174,31 +173,14 @@ def main(args=None):
                 )
             else:
                 if param_file:
-                    set_controller_parameters(
-                        node, controller_manager_name, controller_name, "param_file", param_file
-                    )
-
-                    controller_type = get_parameter_from_param_file(
-                        controller_name, spawner_namespace, param_file, "type"
-                    )
-                    if controller_type:
-                        if not set_controller_parameters(
-                            node, controller_manager_name, controller_name, "type", controller_type
-                        ):
-                            return 1
-
-                    fallback_controllers = get_parameter_from_param_file(
-                        controller_name, spawner_namespace, param_file, "fallback_controllers"
-                    )
-                    if fallback_controllers:
-                        if not set_controller_parameters(
-                            node,
-                            controller_manager_name,
-                            controller_name,
-                            "fallback_controllers",
-                            fallback_controllers,
-                        ):
-                            return 1
+                    if not set_controller_parameters_from_param_file(
+                        node,
+                        controller_manager_name,
+                        controller_name,
+                        param_file,
+                        spawner_namespace,
+                    ):
+                        return 1
 
                 ret = load_controller(node, controller_manager_name, controller_name)
                 if not ret.ok:

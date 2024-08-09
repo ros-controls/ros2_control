@@ -264,3 +264,36 @@ def set_controller_parameters(
         )
         return False
     return True
+
+
+def set_controller_parameters_from_param_file(
+    node, controller_manager_name, controller_name, parameter_file, namespace=None
+):
+    if parameter_file:
+        spawner_namespace = namespace if namespace else node.get_namespace()
+        set_controller_parameters(
+            node, controller_manager_name, controller_name, "param_file", parameter_file
+        )
+
+        controller_type = get_parameter_from_param_file(
+            controller_name, spawner_namespace, parameter_file, "type"
+        )
+        if controller_type:
+            if not set_controller_parameters(
+                node, controller_manager_name, controller_name, "type", controller_type
+            ):
+                return False
+
+        fallback_controllers = get_parameter_from_param_file(
+            controller_name, spawner_namespace, parameter_file, "fallback_controllers"
+        )
+        if fallback_controllers:
+            if not set_controller_parameters(
+                node,
+                controller_manager_name,
+                controller_name,
+                "fallback_controllers",
+                fallback_controllers,
+            ):
+                return False
+    return True
