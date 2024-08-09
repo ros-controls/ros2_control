@@ -509,14 +509,25 @@ private:
 
   struct SwitchParams
   {
-    bool do_switch = {false};
-    bool started = {false};
-    rclcpp::Time init_time = {rclcpp::Time::max()};
+    void reset()
+    {
+      do_switch = false;
+      started = false;
+      strictness = 0;
+      activate_asap = false;
+    }
+
+    bool do_switch;
+    bool started;
 
     // Switch options
-    int strictness = {0};
-    bool activate_asap = {false};
-    rclcpp::Duration timeout = rclcpp::Duration{0, 0};
+    int strictness;
+    bool activate_asap;
+    std::chrono::nanoseconds timeout;
+
+    // conditional variable and mutex to wait for the switch to complete
+    std::condition_variable cv;
+    std::mutex mutex;
   };
 
   SwitchParams switch_params_;
