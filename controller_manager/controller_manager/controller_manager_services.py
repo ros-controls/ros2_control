@@ -230,7 +230,8 @@ def set_controller_parameters(
 ):
     parameter = Parameter()
     parameter.name = controller_name + "." + parameter_name
-    parameter.value = get_parameter_value(string_value=parameter_value)
+    parameter_string = str(parameter_value)
+    parameter.value = get_parameter_value(string_value=parameter_string)
 
     response = call_set_parameters(
         node=node, node_name=controller_manager_name, parameters=[parameter]
@@ -243,7 +244,7 @@ def set_controller_parameters(
             + 'Setting controller param "'
             + parameter_name
             + '" to "'
-            + parameter_value
+            + parameter_string
             + '" for '
             + bcolors.BOLD
             + controller_name
@@ -255,7 +256,7 @@ def set_controller_parameters(
             + 'Could not set controller param "'
             + parameter_name
             + '" to "'
-            + parameter_value
+            + parameter_string
             + '" for '
             + bcolors.BOLD
             + controller_name
