@@ -27,22 +27,14 @@ from controller_manager import (
     switch_controllers,
     unload_controller,
     get_parameter_from_param_file,
+    set_controller_parameters,
     bcolors,
 )
 from controller_manager.controller_manager_services import ServiceNotFoundError
 
 import rclpy
-from rcl_interfaces.msg import Parameter
 from rclpy.node import Node
-
-# @note: The versions conditioning is added here to support the source-compatibility with Humble
-# The `get_parameter_value` function is moved to `rclpy.parameter` module from `ros2param.api` module from version 3.6.0
-try:
-    from rclpy.parameter import get_parameter_value
-except ImportError:
-    from ros2param.api import get_parameter_value
 from rclpy.signals import SignalHandlerOptions
-from ros2param.api import call_set_parameters
 
 
 def first_match(iterable, predicate):
@@ -181,115 +173,32 @@ def main(args=None):
                     + bcolors.ENDC
                 )
             else:
-                controller_type = (
-                    None
-                    if param_file is None
-                    else get_parameter_from_param_file(
+                if param_file:
+                    set_controller_parameters(
+                        node, controller_manager_name, controller_name, "param_file", param_file
+                    )
+
+                    controller_type = get_parameter_from_param_file(
                         controller_name, spawner_namespace, param_file, "type"
                     )
-                )
-                if controller_type:
-                    parameter = Parameter()
-                    parameter.name = controller_name + ".type"
-                    parameter.value = get_parameter_value(string_value=controller_type)
+                    if controller_type:
+                        if not set_controller_parameters(
+                            node, controller_manager_name, controller_name, "type", controller_type
+                        ):
+                            return 1
 
-                    response = call_set_parameters(
-                        node=node, node_name=controller_manager_name, parameters=[parameter]
-                    )
-                    assert len(response.results) == 1
-                    result = response.results[0]
-                    if result.successful:
-                        node.get_logger().info(
-                            bcolors.OKCYAN
-                            + 'Set controller type to "'
-                            + controller_type
-                            + '" for '
-                            + bcolors.BOLD
-                            + controller_name
-                            + bcolors.ENDC
-                        )
-                    else:
-                        node.get_logger().fatal(
-                            bcolors.FAIL
-                            + 'Could not set controller type to "'
-                            + controller_type
-                            + '" for '
-                            + bcolors.BOLD
-                            + controller_name
-                            + bcolors.ENDC
-                        )
-                        return 1
-
-                if param_file:
-                    parameter = Parameter()
-                    parameter.name = controller_name + ".params_file"
-                    parameter.value = get_parameter_value(string_value=param_file)
-
-                    response = call_set_parameters(
-                        node=node, node_name=controller_manager_name, parameters=[parameter]
-                    )
-                    assert len(response.results) == 1
-                    result = response.results[0]
-                    if result.successful:
-                        node.get_logger().info(
-                            bcolors.OKCYAN
-                            + 'Set controller params file to "'
-                            + param_file
-                            + '" for '
-                            + bcolors.BOLD
-                            + controller_name
-                            + bcolors.ENDC
-                        )
-                    else:
-                        node.get_logger().fatal(
-                            bcolors.FAIL
-                            + 'Could not set controller params file to "'
-                            + param_file
-                            + '" for '
-                            + bcolors.BOLD
-                            + controller_name
-                            + bcolors.ENDC
-                        )
-                        return 1
-
-                fallback_controllers = (
-                    None
-                    if param_file is None
-                    else get_parameter_from_param_file(
+                    fallback_controllers = get_parameter_from_param_file(
                         controller_name, spawner_namespace, param_file, "fallback_controllers"
                     )
-                )
-                if fallback_controllers:
-                    parameter = Parameter()
-                    parameter.name = controller_name + ".fallback_controllers"
-                    parameter.value = get_parameter_value(string_value=str(fallback_controllers))
-
-                    response = call_set_parameters(
-                        node=node, node_name=controller_manager_name, parameters=[parameter]
-                    )
-                    assert len(response.results) == 1
-                    result = response.results[0]
-                    if result.successful:
-                        node.get_logger().info(
-                            bcolors.OKCYAN
-                            + 'Setting fallback_controllers to ["'
-                            + ",".join(fallback_controllers)
-                            + '"] for '
-                            + bcolors.BOLD
-                            + controller_name
-                            + bcolors.ENDC
-                        )
-                    else:
-                        node.get_logger().fatal(
-                            bcolors.FAIL
-                            + 'Could not set fallback_controllers to ["'
-                            + ",".join(fallback_controllers)
-                            + '"] for '
-                            + bcolors.BOLD
-                            + controller_name
-                            + bcolors.ENDC
-                        )
-                        return 1
+                    if fallback_controllers:
+                        if not set_controller_parameters(
+                            node,
+                            controller_manager_name,
+                            controller_name,
+                            "fallback_controllers",
+                            fallback_controllers,
+                        ):
+                            return 1
 
                 ret = load_controller(node, controller_manager_name, controller_name)
                 if not ret.ok:
