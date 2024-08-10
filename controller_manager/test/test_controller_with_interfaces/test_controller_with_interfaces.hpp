@@ -15,16 +15,16 @@
 #ifndef TEST_CONTROLLER_WITH_INTERFACES__TEST_CONTROLLER_WITH_INTERFACES_HPP_
 #define TEST_CONTROLLER_WITH_INTERFACES__TEST_CONTROLLER_WITH_INTERFACES_HPP_
 
+#include <string>
 #include "controller_interface/controller_interface.hpp"
 #include "controller_manager/visibility_control.h"
+#include "hardware_interface/types/hardware_interface_type_values.hpp"
 
 namespace test_controller_with_interfaces
 {
 // Corresponds to the name listed within the pluginglib xml
 constexpr char TEST_CONTROLLER_WITH_INTERFACES_CLASS_NAME[] =
   "controller_manager/test_controller_with_interfaces";
-// Corresponds to the command interface to claim
-constexpr char TEST_CONTROLLER_COMMAND_INTERFACE[] = "joint1/effort";
 class TestControllerWithInterfaces : public controller_interface::ControllerInterface
 {
 public:
@@ -38,7 +38,7 @@ public:
   {
     return controller_interface::InterfaceConfiguration{
       controller_interface::interface_configuration_type::INDIVIDUAL,
-      {TEST_CONTROLLER_COMMAND_INTERFACE}};
+      {joint_name_ + "/" + hardware_interface::HW_IF_EFFORT}};
   }
 
   controller_interface::InterfaceConfiguration state_interface_configuration() const override
@@ -61,6 +61,9 @@ public:
   CONTROLLER_MANAGER_PUBLIC
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_cleanup(
     const rclcpp_lifecycle::State & previous_state) override;
+
+protected:
+  std::string joint_name_;
 };
 
 }  // namespace test_controller_with_interfaces
