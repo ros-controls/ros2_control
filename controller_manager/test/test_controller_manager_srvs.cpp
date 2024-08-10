@@ -155,18 +155,19 @@ TEST_F(TestControllerManagerSrvs, list_controllers_srv)
     result->controller[0].claimed_interfaces,
     UnorderedElementsAre(
       "joint2/velocity", "joint3/velocity", "joint2/max_acceleration", "configuration/max_tcp_jerk",
-      "joint1/position", "joint1/max_velocity"));
+      "joint1/position", "joint1/max_velocity", "joint1/effort"));
   ASSERT_THAT(
     result->controller[0].required_command_interfaces,
     UnorderedElementsAre(
       "configuration/max_tcp_jerk", "joint1/max_velocity", "joint1/position",
-      "joint2/max_acceleration", "joint2/velocity", "joint3/velocity"));
+      "joint2/max_acceleration", "joint2/velocity", "joint3/velocity", "joint1/effort"));
   ASSERT_THAT(
     result->controller[0].required_state_interfaces,
     UnorderedElementsAre(
       "configuration/max_tcp_jerk", "joint1/position", "joint1/some_unlisted_interface",
       "joint1/velocity", "joint2/acceleration", "joint2/position", "joint2/velocity",
-      "joint3/acceleration", "joint3/position", "joint3/velocity", "sensor1/velocity"));
+      "joint3/acceleration", "joint3/position", "joint3/velocity", "sensor1/velocity",
+      "joint1/effort"));
 
   // Switch with a very low timeout 1 ns and it should fail as there is no enough time to switch
   ASSERT_EQ(
@@ -209,13 +210,14 @@ TEST_F(TestControllerManagerSrvs, list_controllers_srv)
     result->controller[0].required_command_interfaces,
     UnorderedElementsAre(
       "configuration/max_tcp_jerk", "joint1/max_velocity", "joint1/position",
-      "joint2/max_acceleration", "joint2/velocity", "joint3/velocity"));
+      "joint2/max_acceleration", "joint2/velocity", "joint3/velocity", "joint1/effort"));
   ASSERT_THAT(
     result->controller[0].required_state_interfaces,
     UnorderedElementsAre(
       "configuration/max_tcp_jerk", "joint1/position", "joint1/some_unlisted_interface",
       "joint1/velocity", "joint2/acceleration", "joint2/position", "joint2/velocity",
-      "joint3/acceleration", "joint3/position", "joint3/velocity", "sensor1/velocity"));
+      "joint3/acceleration", "joint3/position", "joint3/velocity", "sensor1/velocity",
+      "joint1/effort"));
 
   ASSERT_EQ(
     controller_interface::return_type::OK,

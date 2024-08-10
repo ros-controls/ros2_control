@@ -61,6 +61,12 @@ class TestActuator : public ActuatorInterface
     state_interfaces.emplace_back(hardware_interface::StateInterface(
       get_hardware_info().joints[0].name, get_hardware_info().joints[0].state_interfaces[1].name,
       &velocity_state_));
+    if (get_hardware_info().joints[0].state_interfaces.size() > 2)
+    {
+      state_interfaces.emplace_back(hardware_interface::StateInterface(
+        get_hardware_info().joints[0].name, get_hardware_info().joints[0].state_interfaces[2].name,
+        &effort_state_));
+    }
     state_interfaces.emplace_back(hardware_interface::StateInterface(
       get_hardware_info().joints[0].name, "some_unlisted_interface", nullptr));
 
@@ -79,6 +85,12 @@ class TestActuator : public ActuatorInterface
       command_interfaces.emplace_back(hardware_interface::CommandInterface(
         get_hardware_info().joints[0].name,
         get_hardware_info().joints[0].command_interfaces[1].name, &max_velocity_command_));
+    }
+    if (get_hardware_info().joints[0].command_interfaces.size() > 2)
+    {
+      command_interfaces.emplace_back(hardware_interface::CommandInterface(
+        get_hardware_info().joints[0].name,
+        get_hardware_info().joints[0].command_interfaces[2].name, &effort_command_));
     }
 
     return command_interfaces;
@@ -115,6 +127,7 @@ class TestActuator : public ActuatorInterface
     {
       return return_type::DEACTIVATE;
     }
+    effort_state_ = effort_command_ / 2;
     // The next line is for the testing purposes. We need value to be changed to
     // be sure that the feedback from hardware to controllers in the chain is
     // working as it should. This makes value checks clearer and confirms there
@@ -147,6 +160,8 @@ private:
   double velocity_state_ = 0.0;
   double velocity_command_ = 0.0;
   double max_velocity_command_ = 0.0;
+  double effort_state_ = 0.0;
+  double effort_command_ = 0.0;
 };
 
 class TestUninitializableActuator : public TestActuator

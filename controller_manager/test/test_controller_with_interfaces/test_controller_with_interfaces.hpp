@@ -24,7 +24,7 @@ namespace test_controller_with_interfaces
 constexpr char TEST_CONTROLLER_WITH_INTERFACES_CLASS_NAME[] =
   "controller_manager/test_controller_with_interfaces";
 // Corresponds to the command interface to claim
-constexpr char TEST_CONTROLLER_COMMAND_INTERFACE[] = "joint2/velocity";
+constexpr char TEST_CONTROLLER_COMMAND_INTERFACE[] = "joint1/effort";
 class TestControllerWithInterfaces : public controller_interface::ControllerInterface
 {
 public:
