@@ -28,7 +28,6 @@
 #include "lifecycle_msgs/msg/state.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp_lifecycle/state.hpp"
-#include "ros2_control_test_assets/components_urdfs.hpp"
 #include "ros2_control_test_assets/descriptions.hpp"
 
 namespace

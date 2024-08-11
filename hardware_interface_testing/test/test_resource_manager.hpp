@@ -19,9 +19,10 @@
 
 #include <gmock/gmock.h>
 
-#include <memory>
 #include <string>
 #include <vector>
+
+#include <rclcpp/node.hpp>
 
 #include "hardware_interface/resource_manager.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"

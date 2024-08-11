@@ -15,10 +15,6 @@
 #ifndef HARDWARE_INTERFACE__LEXICAL_CASTS_HPP_
 #define HARDWARE_INTERFACE__LEXICAL_CASTS_HPP_
 
-#include <locale>
-#include <optional>
-#include <sstream>
-#include <stdexcept>
 #include <string>
 
 #include "hardware_interface/visibility_control.h"

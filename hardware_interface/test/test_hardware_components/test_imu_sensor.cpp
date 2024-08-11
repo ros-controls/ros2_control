@@ -18,7 +18,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <memory>
 #include <random>
 #include <vector>
 
@@ -39,7 +38,7 @@ class TestIMUSensor : public SensorInterface
       return CallbackReturn::ERROR;
     }
 
-    const auto & state_interfaces = info_.sensors[0].state_interfaces;
+    const auto & state_interfaces = get_hardware_info().sensors[0].state_interfaces;
     if (state_interfaces.size() != 10)
     {
       return CallbackReturn::ERROR;
@@ -66,7 +65,7 @@ class TestIMUSensor : public SensorInterface
   {
     std::vector<StateInterface> state_interfaces;
 
-    const std::string & sensor_name = info_.sensors[0].name;
+    const std::string & sensor_name = get_hardware_info().sensors[0].name;
     state_interfaces.emplace_back(
       hardware_interface::StateInterface(sensor_name, "orientation.x", &orientation_.x));
     state_interfaces.emplace_back(

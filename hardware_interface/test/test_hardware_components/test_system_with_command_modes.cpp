@@ -32,11 +32,11 @@ public:
     }
 
     // Can only control two joints
-    if (info_.joints.size() != 2)
+    if (get_hardware_info().joints.size() != 2)
     {
       return CallbackReturn::ERROR;
     }
-    for (const hardware_interface::ComponentInfo & joint : info_.joints)
+    for (const hardware_interface::ComponentInfo & joint : get_hardware_info().joints)
     {
       // Can control in position or velocity
       const auto & command_interfaces = joint.command_interfaces;
@@ -77,14 +77,17 @@ public:
   std::vector<hardware_interface::StateInterface> export_state_interfaces() override
   {
     std::vector<hardware_interface::StateInterface> state_interfaces;
-    for (auto i = 0u; i < info_.joints.size(); i++)
+    for (auto i = 0u; i < get_hardware_info().joints.size(); i++)
     {
       state_interfaces.emplace_back(hardware_interface::StateInterface(
-        info_.joints[i].name, hardware_interface::HW_IF_POSITION, &position_state_[i]));
+        get_hardware_info().joints[i].name, hardware_interface::HW_IF_POSITION,
+        &position_state_[i]));
       state_interfaces.emplace_back(hardware_interface::StateInterface(
-        info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &velocity_state_[i]));
+        get_hardware_info().joints[i].name, hardware_interface::HW_IF_VELOCITY,
+        &velocity_state_[i]));
       state_interfaces.emplace_back(hardware_interface::StateInterface(
-        info_.joints[i].name, hardware_interface::HW_IF_ACCELERATION, &acceleration_state_[i]));
+        get_hardware_info().joints[i].name, hardware_interface::HW_IF_ACCELERATION,
+        &acceleration_state_[i]));
     }
 
     return state_interfaces;
@@ -93,12 +96,14 @@ public:
   std::vector<hardware_interface::CommandInterface> export_command_interfaces() override
   {
     std::vector<hardware_interface::CommandInterface> command_interfaces;
-    for (auto i = 0u; i < info_.joints.size(); i++)
+    for (auto i = 0u; i < get_hardware_info().joints.size(); i++)
     {
       command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        info_.joints[i].name, hardware_interface::HW_IF_POSITION, &position_command_[i]));
+        get_hardware_info().joints[i].name, hardware_interface::HW_IF_POSITION,
+        &position_command_[i]));
       command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &velocity_command_[i]));
+        get_hardware_info().joints[i].name, hardware_interface::HW_IF_VELOCITY,
+        &velocity_command_[i]));
     }
 
     return command_interfaces;
@@ -127,20 +132,20 @@ public:
     stop_modes_.clear();
     for (const auto & key : start_interfaces)
     {
-      for (auto i = 0u; i < info_.joints.size(); i++)
+      for (auto i = 0u; i < get_hardware_info().joints.size(); i++)
       {
-        if (key == info_.joints[i].name + "/" + hardware_interface::HW_IF_POSITION)
+        if (key == get_hardware_info().joints[i].name + "/" + hardware_interface::HW_IF_POSITION)
         {
           start_modes_.push_back(hardware_interface::HW_IF_POSITION);
         }
-        if (key == info_.joints[i].name + "/" + hardware_interface::HW_IF_VELOCITY)
+        if (key == get_hardware_info().joints[i].name + "/" + hardware_interface::HW_IF_VELOCITY)
         {
           start_modes_.push_back(hardware_interface::HW_IF_VELOCITY);
         }
       }
     }
     // Example Criteria 1 - Starting: All interfaces must be given a new mode at the same time
-    if (start_modes_.size() != 0 && start_modes_.size() != info_.joints.size())
+    if (start_modes_.size() != 0 && start_modes_.size() != get_hardware_info().joints.size())
     {
       return hardware_interface::return_type::ERROR;
     }
@@ -148,9 +153,9 @@ public:
     // Stopping interfaces
     for (const auto & key : stop_interfaces)
     {
-      for (auto i = 0u; i < info_.joints.size(); i++)
+      for (auto i = 0u; i < get_hardware_info().joints.size(); i++)
       {
-        if (key.find(info_.joints[i].name) != std::string::npos)
+        if (key.find(get_hardware_info().joints[i].name) != std::string::npos)
         {
           stop_modes_.push_back(true);
         }

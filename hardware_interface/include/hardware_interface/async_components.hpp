@@ -17,15 +17,12 @@
 
 #include <atomic>
 #include <thread>
-#include <type_traits>
 #include <variant>
 
 #include "hardware_interface/actuator.hpp"
 #include "hardware_interface/sensor.hpp"
 #include "hardware_interface/system.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
-#include "rclcpp/duration.hpp"
-#include "rclcpp/node.hpp"
 #include "rclcpp/time.hpp"
 
 namespace hardware_interface

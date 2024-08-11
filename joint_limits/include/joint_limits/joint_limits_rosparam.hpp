@@ -22,7 +22,7 @@
 #include <vector>
 
 #include "joint_limits/joint_limits.hpp"
-#include "rclcpp/rclcpp.hpp"
+#include "rclcpp/node.hpp"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
 
 namespace  // utilities

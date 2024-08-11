@@ -13,8 +13,9 @@
 // limitations under the License.
 
 /// \author Adolfo Rodriguez Tsouroukdissian
+#include <gtest/gtest.h>
+
 #include "joint_limits/joint_limits_urdf.hpp"
-#include "gtest/gtest.h"
 
 using std::string;
 

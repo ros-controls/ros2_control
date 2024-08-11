@@ -27,11 +27,10 @@
 #include "hardware_interface/loaned_state_interface.hpp"
 #include "hardware_interface/sensor.hpp"
 #include "hardware_interface/system.hpp"
+#include "hardware_interface/system_interface.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
-#include "hardware_interface/types/lifecycle_state_names.hpp"
-#include "lifecycle_msgs/msg/state.hpp"
 #include "rclcpp/duration.hpp"
-#include "rclcpp/node.hpp"
+#include "rclcpp/node_interfaces/node_logging_interface.hpp"
 #include "rclcpp/time.hpp"
 
 namespace hardware_interface
@@ -75,7 +74,7 @@ public:
 
   ResourceManager(const ResourceManager &) = delete;
 
-  ~ResourceManager();
+  virtual ~ResourceManager();
 
   /// Load resources from on a given URDF.
   /**
