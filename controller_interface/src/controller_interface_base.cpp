@@ -95,9 +95,12 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
                                     const std::string & remap_namespace,
                                     std::map<std::string, std::string> & remappings) -> bool
   {
-    if (!node_->has_parameter(remap_namespace))
+    for (auto & [key, value] : remappings)
     {
-      node_->declare_parameters(remap_namespace, remappings);
+      if (!node_->has_parameter(remap_namespace + "." + key))
+      {
+        node_->declare_parameter(remap_namespace + "." + key, value);
+      }
     }
     return node_->get_parameters(remap_namespace, remappings);
   };
