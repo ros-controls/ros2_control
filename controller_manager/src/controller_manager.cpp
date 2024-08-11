@@ -841,21 +841,8 @@ controller_interface::return_type ControllerManager::switch_controller(
   const std::vector<std::string> & deactivate_controllers, int strictness, bool activate_asap,
   const rclcpp::Duration & timeout)
 {
-<<<<<<< HEAD
-  switch_params_ = SwitchParams();
-=======
-  if (!is_resource_manager_initialized())
-  {
-    RCLCPP_ERROR(
-      get_logger(),
-      "Resource Manager is not initialized yet! Please provide robot description on "
-      "'robot_description' topic before trying to switch controllers.");
-    return controller_interface::return_type::ERROR;
-  }
-
   // reset the switch param internal variables
   switch_params_.reset();
->>>>>>> a1ad523 (refactor SwitchParams to fix the incosistencies in the spawner tests (#1638))
 
   if (!deactivate_request_.empty() || !activate_request_.empty())
   {
@@ -1329,6 +1316,12 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::add_co
 
 void ControllerManager::manage_switch()
 {
+  std::unique_lock<std::mutex> guard(switch_params_.mutex, std::try_to_lock);
+  if (!guard.owns_lock())
+  {
+    RCLCPP_DEBUG(get_logger(), "Unable to lock switch mutex. Retrying in next cycle.");
+    return;
+  }
   // Ask hardware interfaces to change mode
   if (!resource_manager_->perform_command_mode_switch(
         activate_command_interface_request_, deactivate_command_interface_request_))
@@ -1353,6 +1346,9 @@ void ControllerManager::manage_switch()
   }
 
   // TODO(destogl): move here "do_switch = false"
+
+  switch_params_.do_switch = false;
+  switch_params_.cv.notify_all();
 }
 
 void ControllerManager::deactivate_controllers()
@@ -2022,66 +2018,7 @@ std::vector<std::string> ControllerManager::get_controller_names()
 
 void ControllerManager::read(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
-<<<<<<< HEAD
   resource_manager_->read(time, period);
-=======
-  auto [ok, failed_hardware_names] = resource_manager_->read(time, period);
-
-  if (!ok)
-  {
-    std::vector<std::string> stop_request = {};
-    // Determine controllers to stop
-    for (const auto & hardware_name : failed_hardware_names)
-    {
-      auto controllers = resource_manager_->get_cached_controllers_to_hardware(hardware_name);
-      stop_request.insert(stop_request.end(), controllers.begin(), controllers.end());
-    }
-
-    std::vector<ControllerSpec> & rt_controller_list =
-      rt_controllers_wrapper_.update_and_get_used_by_rt_list();
-    deactivate_controllers(rt_controller_list, stop_request);
-    // TODO(destogl): do auto-start of broadcasters
-  }
-}
-
-void ControllerManager::manage_switch()
-{
-  std::unique_lock<std::mutex> guard(switch_params_.mutex, std::try_to_lock);
-  if (!guard.owns_lock())
-  {
-    RCLCPP_DEBUG(get_logger(), "Unable to lock switch mutex. Retrying in next cycle.");
-    return;
-  }
-  // Ask hardware interfaces to change mode
-  if (!resource_manager_->perform_command_mode_switch(
-        activate_command_interface_request_, deactivate_command_interface_request_))
-  {
-    RCLCPP_ERROR(get_logger(), "Error while performing mode switch.");
-  }
-
-  std::vector<ControllerSpec> & rt_controller_list =
-    rt_controllers_wrapper_.update_and_get_used_by_rt_list();
-
-  deactivate_controllers(rt_controller_list, deactivate_request_);
-
-  switch_chained_mode(to_chained_mode_request_, true);
-  switch_chained_mode(from_chained_mode_request_, false);
-
-  // activate controllers once the switch is fully complete
-  if (!switch_params_.activate_asap)
-  {
-    activate_controllers(rt_controller_list, activate_request_);
-  }
-  else
-  {
-    // activate controllers as soon as their required joints are done switching
-    activate_controllers_asap(rt_controller_list, activate_request_);
-  }
-
-  // All controllers switched --> switching done
-  switch_params_.do_switch = false;
-  switch_params_.cv.notify_all();
->>>>>>> a1ad523 (refactor SwitchParams to fix the incosistencies in the spawner tests (#1638))
 }
 
 controller_interface::return_type ControllerManager::update(
