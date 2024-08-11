@@ -28,6 +28,7 @@ from controller_manager import (
     switch_controllers,
     unload_controller,
 )
+from controller_manager.controller_manager_services import ServiceNotFoundError
 
 import rclpy
 from rcl_interfaces.msg import Parameter
@@ -211,7 +212,9 @@ def main(args=None):
         for controller_name in controller_names:
             fallback_controllers = args.fallback_controllers
 
-            if is_controller_loaded(node, controller_manager_name, controller_name, controller_manager_timeout):
+            if is_controller_loaded(
+                node, controller_manager_name, controller_name, controller_manager_timeout
+            ):
                 node.get_logger().warn(
                     bcolors.WARNING
                     + "Controller already loaded, skipping load_controller"
@@ -415,6 +418,8 @@ def main(args=None):
         return 0
     except KeyboardInterrupt:
         pass
+    except ServiceNotFoundError as err:
+        node.get_logger().fatal(str(err))
     finally:
         rclpy.shutdown()
 

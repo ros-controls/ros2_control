@@ -19,6 +19,7 @@ import sys
 import warnings
 
 from controller_manager import switch_controllers, unload_controller
+from controller_manager.controller_manager_services import ServiceNotFoundError
 
 import rclpy
 from rclpy.node import Node
@@ -59,6 +60,8 @@ def main(args=None):
         return 0
     except KeyboardInterrupt:
         pass
+    except ServiceNotFoundError as err:
+        node.get_logger().fatal(str(err))
     finally:
         rclpy.shutdown()
 

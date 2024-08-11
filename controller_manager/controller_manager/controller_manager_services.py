@@ -28,6 +28,10 @@ from controller_manager_msgs.srv import (
 import rclpy
 
 
+class ServiceNotFoundError(Exception):
+    pass
+
+
 def service_caller(node, service_name, service_type, request, service_timeout=0.0):
     cli = node.create_client(service_type, service_name)
 
@@ -35,8 +39,7 @@ def service_caller(node, service_name, service_type, request, service_timeout=0.
         node.get_logger().info(f"waiting for service {service_name} to become available...")
         if service_timeout:
             if not cli.wait_for_service(service_timeout):
-                node.get_logger().fatal(f"Could not contact service {service_name}")
-                raise RuntimeError(f"Could not contact service {service_name}")
+                raise ServiceNotFoundError(f"Could not contact service {service_name}")
         elif not cli.wait_for_service(10.0):
             node.get_logger().warn(f"Could not contact service {service_name}")
 
