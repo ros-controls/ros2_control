@@ -32,47 +32,10 @@ return_type ControllerInterfaceBase::init(
     controller_name, node_namespace, node_options,
     false);  // disable LifecycleNode service interfaces
 
-  auto retrieve_remap_interface = [this](
-                                    const std::string & remap_namespace,
-                                    std::map<std::string, std::string> & remappings) -> bool
-  {
-    if (!node_->has_parameter(remap_namespace))
-    {
-      node_->declare_parameters(remap_namespace, remappings);
-    }
-    return node_->get_parameters(remap_namespace, remappings);
-  };
-
   try
   {
     auto_declare<int>("update_rate", cm_update_rate);
     auto_declare<bool>("is_async", false);
-    if (
-      retrieve_remap_interface("remap.state_interfaces", state_interfaces_remap_) &&
-      !state_interfaces_remap_.empty())
-    {
-      RCLCPP_WARN(
-        node_->get_logger(),
-        "The controller : %s will be able to remap the following state interfaces:",
-        controller_name.c_str());
-      for (const auto & [key, value] : state_interfaces_remap_)
-      {
-        RCLCPP_INFO(node_->get_logger(), "\t'%s' to '%s'", key.c_str(), value.c_str());
-      }
-    }
-    if (
-      retrieve_remap_interface("remap.command_interfaces", command_interfaces_remap_) &&
-      !command_interfaces_remap_.empty())
-    {
-      RCLCPP_WARN(
-        node_->get_logger(),
-        "The controller : %s will be able to remap the following command interfaces:",
-        controller_name.c_str());
-      for (const auto & [key, value] : command_interfaces_remap_)
-      {
-        RCLCPP_INFO(node_->get_logger(), "\t'%s' to '%s'", key.c_str(), value.c_str());
-      }
-    }
   }
   catch (const std::exception & e)
   {
@@ -126,7 +89,67 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
     is_async_ = get_node()->get_parameter("is_async").as_bool();
   }
 
-  return get_node()->configure();
+  const auto & state = get_node()->configure();
+
+  auto retrieve_remap_interface = [this](
+                                    const std::string & remap_namespace,
+                                    std::map<std::string, std::string> & remappings) -> bool
+  {
+    if (!node_->has_parameter(remap_namespace))
+    {
+      node_->declare_parameters(remap_namespace, remappings);
+    }
+    return node_->get_parameters(remap_namespace, remappings);
+  };
+
+  // set the map keys and values by iteratinf over the names
+  const auto & state_itf = state_interface_configuration();
+  const auto & cmd_itfs = command_interface_configuration();
+  for (const auto & interface : state_itf.names)
+  {
+    state_interfaces_remap_[interface] = interface;
+  }
+  for (const auto & interface : cmd_itfs.names)
+  {
+    command_interfaces_remap_[interface] = interface;
+  }
+
+  if (retrieve_remap_interface("remap.state_interfaces", state_interfaces_remap_))
+  {
+    if (std::any_of(
+          state_interfaces_remap_.begin(), state_interfaces_remap_.end(),
+          [](const auto & pair) { return pair.first != pair.second; }))
+    {
+      RCLCPP_WARN(
+        node_->get_logger(),
+        "The controller : %s will remap the following state interfaces:", get_node()->get_name());
+      for (const auto & [key, value] : state_interfaces_remap_)
+      {
+        RCLCPP_WARN_EXPRESSION(
+          node_->get_logger(), key != value, "\t'%s' to '%s'", key.c_str(), value.c_str());
+      }
+    }
+  }
+  if (
+    retrieve_remap_interface("remap.command_interfaces", command_interfaces_remap_) &&
+    !command_interfaces_remap_.empty())
+  {
+    if (std::any_of(
+          command_interfaces_remap_.begin(), command_interfaces_remap_.end(),
+          [](const auto & pair) { return pair.first != pair.second; }))
+    {
+      RCLCPP_WARN(
+        node_->get_logger(),
+        "The controller : %s will remap the following command interfaces:", get_node()->get_name());
+      for (const auto & [key, value] : command_interfaces_remap_)
+      {
+        RCLCPP_WARN_EXPRESSION(
+          node_->get_logger(), key != value, "\t'%s' to '%s'", key.c_str(), value.c_str());
+      }
+    }
+  }
+
+  return state;
 }
 
 void ControllerInterfaceBase::assign_interfaces(
