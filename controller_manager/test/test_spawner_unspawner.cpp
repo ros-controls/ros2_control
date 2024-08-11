@@ -83,9 +83,10 @@ TEST_F(TestLoadController, spawner_with_no_arguments_errors)
   EXPECT_NE(call_spawner(""), 0) << "Missing mandatory arguments";
 }
 
-TEST_F(TestLoadController, spawner_without_manager_errors)
+TEST_F(TestLoadController, spawner_without_manager_errors_with_given_timeout)
 {
-  EXPECT_NE(call_spawner("ctrl_1"), 0) << "Wrong controller manager name";
+  EXPECT_NE(call_spawner("ctrl_1 --controller-manager-timeout 1.0"), 0)
+    << "Wrong controller manager name";
 }
 
 TEST_F(TestLoadController, spawner_without_type_parameter_or_arg_errors)
@@ -278,7 +279,9 @@ TEST_F(TestLoadController, spawner_test_type_in_params_file)
 
   EXPECT_EQ(
     call_spawner(
-      "ctrl_with_parameters_and_no_type -c test_controller_manager -p " + test_file_path),
+      "ctrl_with_parameters_and_no_type -c test_controller_manager --controller-manager-timeout "
+      "1.0 -p " +
+      test_file_path),
     256);
   // Will still be same as the current call will fail
   ASSERT_EQ(cm_->get_loaded_controllers().size(), 2ul);
@@ -416,7 +419,7 @@ TEST_F(TestLoadControllerWithoutRobotDescription, when_no_robot_description_spaw
   cm_->set_parameter(rclcpp::Parameter("ctrl_1.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
 
   ControllerManagerRunner cm_runner(this);
-  EXPECT_EQ(call_spawner("ctrl_1 -c test_controller_manager"), 256)
+  EXPECT_EQ(call_spawner("ctrl_1 -c test_controller_manager --controller-manager-timeout 1.0"), 256)
     << "could not spawn controller because not robot description and not services for controller "
        "manager are active";
 }
@@ -498,7 +501,8 @@ TEST_F(TestLoadControllerWithNamespacedCM, multi_ctrls_test_type_in_param)
   cm_->set_parameter(rclcpp::Parameter("ctrl_3.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
 
   ControllerManagerRunner cm_runner(this);
-  EXPECT_EQ(call_spawner("ctrl_1 ctrl_2 -c test_controller_manager"), 256)
+  EXPECT_EQ(
+    call_spawner("ctrl_1 ctrl_2 -c test_controller_manager --controller-manager-timeout 1.0"), 256)
     << "Should fail without defining the namespace";
   EXPECT_EQ(
     call_spawner("ctrl_1 ctrl_2 -c test_controller_manager --ros-args -r __ns:=/foo_namespace"), 0);
@@ -597,7 +601,7 @@ TEST_F(TestLoadControllerWithNamespacedCM, spawner_test_type_in_params_file)
   EXPECT_EQ(
     call_spawner(
       "ctrl_with_parameters_and_type chainable_ctrl_with_parameters_and_type --load-only -c "
-      "test_controller_manager -p " +
+      "test_controller_manager --controller-manager-timeout 1.0 -p " +
       test_file_path),
     256)
     << "Should fail without the namespacing it";
@@ -657,21 +661,21 @@ TEST_F(
   EXPECT_EQ(
     call_spawner(
       "ctrl_with_parameters_and_type chainable_ctrl_with_parameters_and_type --load-only -c "
-      "test_controller_manager -p " +
+      "test_controller_manager --controller-manager-timeout 1.0 -p " +
       test_file_path),
     256)
     << "Should fail without the namespacing it";
   EXPECT_EQ(
     call_spawner(
       "ctrl_with_parameters_and_type chainable_ctrl_with_parameters_and_type --load-only -c "
-      "test_controller_manager --namespace foo_namespace -p " +
+      "test_controller_manager --namespace foo_namespace --controller-manager-timeout 1.0 -p " +
       test_file_path + " --ros-args -r __ns:=/random_namespace"),
     256)
     << "Should fail when parsed namespace through both way with different namespaces";
   EXPECT_EQ(
     call_spawner(
       "ctrl_with_parameters_and_type chainable_ctrl_with_parameters_and_type --load-only -c "
-      "test_controller_manager --namespace foo_namespace -p " +
+      "test_controller_manager --namespace foo_namespace --controller-manager-timeout 1.0 -p" +
       test_file_path + " --ros-args -r __ns:=/foo_namespace"),
     256)
     << "Should fail when parsed namespace through both ways even with same namespacing name";
