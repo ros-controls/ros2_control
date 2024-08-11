@@ -767,6 +767,14 @@ controller_interface::return_type ControllerManager::configure_controller(
 
   try
   {
+    const auto avilable_state_interfaces = resource_manager_->available_state_interfaces();
+    std::map<std::string, std::string> default_state_interfaces_remap;
+    std::for_each(
+      avilable_state_interfaces.begin(), avilable_state_interfaces.end(),
+      [&default_state_interfaces_remap](const auto & state_interface)
+      { default_state_interfaces_remap[state_interface] = state_interface; });
+    controller->get_node()->declare_parameters(
+      "remap.state_interfaces", default_state_interfaces_remap);
     new_state = controller->configure();
     if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
     {
