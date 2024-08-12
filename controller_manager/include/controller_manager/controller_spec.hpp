@@ -63,24 +63,17 @@ private:
     }
     else
     {
-      if (c->get_command_interfaces_remap().empty())
+      controller_interface::InterfaceConfiguration remapped_cmd_itf_cfg = interface_cfg;
+      for (auto & [key, value] : remap)
       {
-        return interface_cfg;
-      }
-      else
-      {
-        controller_interface::InterfaceConfiguration remapped_cmd_itf_cfg = interface_cfg;
-        for (auto & [key, value] : remap)
+        auto it =
+          std::find(remapped_cmd_itf_cfg.names.begin(), remapped_cmd_itf_cfg.names.end(), key);
+        if (it != remapped_cmd_itf_cfg.names.end())
         {
-          auto it =
-            std::find(remapped_cmd_itf_cfg.names.begin(), remapped_cmd_itf_cfg.names.end(), key);
-          if (it != remapped_cmd_itf_cfg.names.end())
-          {
-            *it = value;
-          }
+          *it = value;
         }
-        return remapped_cmd_itf_cfg;
       }
+      return remapped_cmd_itf_cfg;
     }
   }
 };
