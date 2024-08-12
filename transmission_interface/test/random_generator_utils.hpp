@@ -30,7 +30,7 @@ using std::vector;
 struct RandomDoubleGenerator
 {
 public:
-  RandomDoubleGenerator(double min_val, double max_val, unsigned int seed=1234) 
+  RandomDoubleGenerator(double min_val, double max_val, unsigned int seed = 1234)
   : min_val_(min_val), max_val_(max_val)
   {
     srand(seed);
