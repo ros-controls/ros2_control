@@ -315,4 +315,30 @@ TEST_F(TestControllerInterfacesRemapping, check_resource_manager_resources)
     ASSERT_TRUE(cm_->resource_manager_->command_interface_is_claimed(itf))
       << "The command interface is supposed to be claimed by the controller : " << itf;
   }
+
+  EXPECT_EQ(
+    std::system(
+      std::string(
+        "ros2 run controller_manager unspawner controller_joint1 -c test_controller_manager")
+        .c_str()),
+    0);
+  ASSERT_FALSE(cm_->resource_manager_->command_interface_is_claimed("joint1/effort"));
+
+  // Now unspawn the controller_joint2 and controller_joint3 and see if the respective interfaces
+  // are released
+  EXPECT_EQ(
+    std::system(
+      std::string(
+        "ros2 run controller_manager unspawner controller_joint2 -c test_controller_manager")
+        .c_str()),
+    0);
+  ASSERT_FALSE(cm_->resource_manager_->command_interface_is_claimed("joint2/torque"));
+
+  EXPECT_EQ(
+    std::system(
+      std::string(
+        "ros2 run controller_manager unspawner controller_joint3 -c test_controller_manager")
+        .c_str()),
+    0);
+  ASSERT_FALSE(cm_->resource_manager_->command_interface_is_claimed("joint3/force"));
 }
