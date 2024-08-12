@@ -40,13 +40,13 @@ struct ControllerSpec
   controller_interface::ControllerInterfaceBaseSharedPtr c;
   std::shared_ptr<rclcpp::Time> next_update_cycle_time;
 
-  controller_interface::InterfaceConfiguration get_remapped_command_interface_configuration() const
+  controller_interface::InterfaceConfiguration get_command_interface_configuration() const
   {
     return get_remapped_interface_configuration(
       c->command_interface_configuration(), c->get_command_interfaces_remap());
   }
 
-  controller_interface::InterfaceConfiguration get_remapped_state_interface_configuration() const
+  controller_interface::InterfaceConfiguration get_state_interface_configuration() const
   {
     return get_remapped_interface_configuration(
       c->state_interface_configuration(), c->get_state_interfaces_remap());
