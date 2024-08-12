@@ -62,6 +62,7 @@ def main(args=None):
         pass
     except ServiceNotFoundError as err:
         node.get_logger().fatal(str(err))
+        return 1
     finally:
         rclpy.shutdown()
 
