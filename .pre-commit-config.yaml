@@ -37,7 +37,7 @@ repos:
 
   # Python hooks
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.16.0
+    rev: v3.17.0
     hooks:
     -   id: pyupgrade
         args: [--py36-plus]
@@ -133,7 +133,7 @@ repos:
         exclude: CHANGELOG\.rst|\.(svg|pyc|drawio)$
 
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.28.6
+    rev: 0.29.1
     hooks:
       - id: check-github-workflows
         args: ["--verbose"]

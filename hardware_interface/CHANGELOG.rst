@@ -2,6 +2,12 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.15.0 (2024-08-05)
+-------------------
+* [RM] Add `get_hardware_info` method to the Hardware Components (`#1643 <https://github.com/ros-controls/ros2_control/issues/1643>`_)
+* add missing rclcpp logging include for Humble compatibility build (`#1635 <https://github.com/ros-controls/ros2_control/issues/1635>`_)
+* Contributors: Sai Kishor Kothakota
+
 4.14.0 (2024-07-23)
 -------------------
 * Unused header cleanup (`#1627 <https://github.com/ros-controls/ros2_control/issues/1627>`_)
