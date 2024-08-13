@@ -924,13 +924,17 @@ controller_interface::return_type ControllerManager::switch_controller(
   }
 
   std::string activate_list, deactivate_list;
+  activate_list.reserve(500);
+  deactivate_list.reserve(500);
   for (const auto & controller : activate_controllers)
   {
-    activate_list += controller + " ";
+    activate_list.append(controller);
+    activate_list.append(" ");
   }
   for (const auto & controller : deactivate_controllers)
   {
-    deactivate_list += controller + " ";
+    deactivate_list.append(controller);
+    deactivate_list.append(" ");
   }
   RCLCPP_INFO_EXPRESSION(
     get_logger(), !activate_list.empty(), "Activating controllers: [ %s]", activate_list.c_str());
