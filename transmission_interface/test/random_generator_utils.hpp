@@ -33,11 +33,7 @@ public:
   RandomDoubleGenerator(double min_val, double max_val, unsigned int seed = 1234)
   : min_val_(min_val), max_val_(max_val)
   {
-<<<<<<< HEAD
-    srand(time(nullptr));
-=======
     srand(seed);
->>>>>>> ace8416 (Fix flaky transmission_interface tests by making them deterministic. (#1665))
   }
   double operator()()
   {
