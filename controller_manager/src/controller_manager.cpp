@@ -2140,17 +2140,21 @@ void ControllerManager::read(const rclcpp::Time & time, const rclcpp::Duration &
   {
     std::vector<std::string> stop_request = {};
     std::string failed_hardware_string;
+    failed_hardware_string.reserve(500);
     // Determine controllers to stop
     for (const auto & hardware_name : failed_hardware_names)
     {
-      failed_hardware_string += hardware_name + " ";
+      failed_hardware_string.append(hardware_name);
+      failed_hardware_string.append(" ");
       auto controllers = resource_manager_->get_cached_controllers_to_hardware(hardware_name);
       stop_request.insert(stop_request.end(), controllers.begin(), controllers.end());
     }
     std::string stop_request_string;
+    stop_request_string.reserve(500);
     for (const auto & controller : stop_request)
     {
-      stop_request_string += controller + " ";
+      stop_request_string.append(controller);
+      stop_request_string.append(" ");
     }
     RCLCPP_ERROR(
       get_logger(),
@@ -2310,17 +2314,21 @@ void ControllerManager::write(const rclcpp::Time & time, const rclcpp::Duration 
   {
     std::vector<std::string> stop_request = {};
     std::string failed_hardware_string;
+    failed_hardware_string.reserve(500);
     // Determine controllers to stop
     for (const auto & hardware_name : failed_hardware_names)
     {
-      failed_hardware_string += hardware_name + " ";
+      failed_hardware_string.append(hardware_name);
+      failed_hardware_string.append(" ");
       auto controllers = resource_manager_->get_cached_controllers_to_hardware(hardware_name);
       stop_request.insert(stop_request.end(), controllers.begin(), controllers.end());
     }
     std::string stop_request_string;
+    stop_request_string.reserve(500);
     for (const auto & controller : stop_request)
     {
-      stop_request_string += controller + " ";
+      stop_request_string.append(controller);
+      stop_request_string.append(" ");
     }
     RCLCPP_ERROR(
       get_logger(),
