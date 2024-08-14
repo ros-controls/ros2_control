@@ -27,10 +27,10 @@ from controller_manager import (
     switch_controllers,
     unload_controller,
 )
+from controller_manager.controller_manager_services import ServiceNotFoundError
 
 import rclpy
 from rcl_interfaces.msg import Parameter
-from rclpy.duration import Duration
 from rclpy.node import Node
 from rclpy.signals import SignalHandlerOptions
 from ros2param.api import call_set_parameters
@@ -55,6 +55,7 @@ def first_match(iterable, predicate):
     return next((n for n in iterable if predicate(n)), None)
 
 
+<<<<<<< HEAD
 def wait_for_value_or(function, node, timeout, default, description):
     while node.get_clock().now() < timeout:
         result = function()
@@ -67,6 +68,8 @@ def wait_for_value_or(function, node, timeout, default, description):
     return default
 
 
+=======
+>>>>>>> af4b48f (Handle waiting in Spawner and align Hardware Spawner functionality (#1562))
 def combine_name_and_namespace(name_and_namespace):
     node_name, namespace = name_and_namespace
     return namespace + ("" if namespace.endswith("/") else "/") + node_name
@@ -87,46 +90,8 @@ def has_service_names(node, node_name, node_namespace, service_names):
     return all(service in client_names for service in service_names)
 
 
-def wait_for_controller_manager(node, controller_manager, timeout_duration):
-    # List of service names from controller_manager we wait for
-    service_names = (
-        f"{controller_manager}/configure_controller",
-        f"{controller_manager}/list_controllers",
-        f"{controller_manager}/list_controller_types",
-        f"{controller_manager}/list_hardware_components",
-        f"{controller_manager}/list_hardware_interfaces",
-        f"{controller_manager}/load_controller",
-        f"{controller_manager}/reload_controller_libraries",
-        f"{controller_manager}/switch_controller",
-        f"{controller_manager}/unload_controller",
-    )
-
-    # Wait for controller_manager
-    timeout = node.get_clock().now() + Duration(seconds=timeout_duration)
-    node_and_namespace = wait_for_value_or(
-        lambda: find_node_and_namespace(node, controller_manager),
-        node,
-        timeout,
-        None,
-        f"'{controller_manager}' node to exist",
-    )
-
-    # Wait for the services if the node was found
-    if node_and_namespace:
-        node_name, namespace = node_and_namespace
-        return wait_for_value_or(
-            lambda: has_service_names(node, node_name, namespace, service_names),
-            node,
-            timeout,
-            False,
-            f"'{controller_manager}' services to be available",
-        )
-
-    return False
-
-
-def is_controller_loaded(node, controller_manager, controller_name):
-    controllers = list_controllers(node, controller_manager).controller
+def is_controller_loaded(node, controller_manager, controller_name, service_timeout=0.0):
+    controllers = list_controllers(node, controller_manager, service_timeout).controller
     return any(c.name == controller_name for c in controllers)
 
 
@@ -186,8 +151,8 @@ def main(args=None):
         "--controller-manager-timeout",
         help="Time to wait for the controller manager",
         required=False,
-        default=10,
-        type=int,
+        default=0,
+        type=float,
     )
     parser.add_argument(
         "--activate-as-group",
@@ -219,18 +184,27 @@ def main(args=None):
             controller_manager_name = f"/{controller_manager_name}"
 
     try:
+<<<<<<< HEAD
         if not wait_for_controller_manager(
             node, controller_manager_name, controller_manager_timeout
         ):
             node.get_logger().error("Controller manager not available")
             return 1
 
+=======
+>>>>>>> af4b48f (Handle waiting in Spawner and align Hardware Spawner functionality (#1562))
         for controller_name in controller_names:
             prefixed_controller_name = controller_name
             if controller_namespace:
                 prefixed_controller_name = controller_namespace + "/" + controller_name
 
+<<<<<<< HEAD
             if is_controller_loaded(node, controller_manager_name, prefixed_controller_name):
+=======
+            if is_controller_loaded(
+                node, controller_manager_name, controller_name, controller_manager_timeout
+            ):
+>>>>>>> af4b48f (Handle waiting in Spawner and align Hardware Spawner functionality (#1562))
                 node.get_logger().warn(
                     bcolors.WARNING
                     + "Controller already loaded, skipping load_controller"
@@ -393,6 +367,11 @@ def main(args=None):
 
             node.get_logger().info("Unloaded controller")
         return 0
+    except KeyboardInterrupt:
+        pass
+    except ServiceNotFoundError as err:
+        node.get_logger().fatal(str(err))
+        return 1
     finally:
         rclpy.shutdown()
 
