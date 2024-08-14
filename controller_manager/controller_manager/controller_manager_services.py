@@ -41,6 +41,30 @@ def service_caller(
     call_timeout=10.0,
     max_attempts=3,
 ):
+    """
+    Abstraction of a service call.
+
+    Has an optional timeout to find the service and a mechanism
+    to retry a call of no response is received.
+
+    @param node Node object to be associated with
+    @type rclpy.node.Node
+    @param service_name Service URL
+    @type str
+    @param request The request to be sent
+    @type service request type
+    @param service_timeout Timeout (in seconds) to wait until the service is available. 0 means
+    waiting forever, retrying every 10 seconds.
+    @type float
+    @param call_timeout Timeout (in seconds) for getting a response
+    @type float
+    @param max_attempts Number of attempts until a valid response is received. With some
+    middlewares it can happen, that the service response doesn't reach the client leaving it in
+    a waiting state forever.
+    @type int
+    @return The service response
+
+    """
     cli = node.create_client(service_type, service_name)
 
     while not cli.service_is_ready():
@@ -53,7 +77,7 @@ def service_caller(
 
     node.get_logger().debug(f"requester: making request: {request}\n")
     future = None
-    for attempt in range(max_attempts):  # This is a rather arbitrary retry number
+    for attempt in range(max_attempts):
         future = cli.call_async(request)
         rclpy.spin_until_future_complete(node, future, timeout_sec=call_timeout)
         if future.result() is None:
