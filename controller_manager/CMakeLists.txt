@@ -211,10 +211,8 @@ if(BUILD_TESTING)
     controller_manager_msgs
   )
 
-  install(
-    DIRECTORY test
-    DESTINATION share/${PROJECT_NAME}
-  )
+  install(FILES test/test_controllers.yaml
+  DESTINATION test)
 
   find_package(launch_testing_ament_cmake REQUIRED)
   add_launch_test(test/test_spawner_integration.py

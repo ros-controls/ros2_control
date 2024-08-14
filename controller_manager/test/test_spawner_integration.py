@@ -91,10 +91,6 @@ active_controllers = [
     "joint_state_broadcaster47",
     "joint_state_broadcaster48",
     "joint_state_broadcaster49",
-    "fts_broadcaster",
-    "base_controller",
-    "joint1_controller",
-    "joint2_controller",
 ]
 
 
