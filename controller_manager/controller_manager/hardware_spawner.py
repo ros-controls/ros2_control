@@ -16,7 +16,11 @@
 import argparse
 import sys
 
-from controller_manager import set_hardware_component_state
+from controller_manager import (
+    list_hardware_components,
+    set_hardware_component_state,
+)
+from controller_manager.controller_manager_services import ServiceNotFoundError
 
 from lifecycle_msgs.msg import State
 import rclpy
@@ -62,6 +66,9 @@ def has_service_names(node, node_name, node_namespace, service_names):
     return all(service in client_names for service in service_names)
 
 
+def is_hardware_component_loaded(node, controller_manager, hardware_component, service_timeout=0.0):
+    components = list_hardware_components(node, hardware_component, service_timeout).component
+    return any(c.name == hardware_component for c in components)
 def handle_set_component_state_service_call(
     node, controller_manager_name, component, target_state, action
 ):
@@ -119,6 +126,13 @@ def main(args=None):
         default="controller_manager",
         required=False,
     )
+    parser.add_argument(
+        "--controller-manager-timeout",
+        help="Time to wait for the controller manager",
+        required=False,
+        default=0,
+        type=float,
+    )
     # add arguments which are mutually exclusive
     activate_or_confiigure_grp.add_argument(
         "--activate",
@@ -136,6 +150,7 @@ def main(args=None):
     command_line_args = rclpy.utilities.remove_ros_args(args=sys.argv)[1:]
     args = parser.parse_args(command_line_args)
     controller_manager_name = args.controller_manager
+    controller_manager_timeout = args.controller_manager_timeout
     hardware_component = [args.hardware_component_name]
     activate = args.activate
     configure = args.configure
@@ -149,7 +164,15 @@ def main(args=None):
             controller_manager_name = f"/{controller_manager_name}"
 
     try:
-        if activate:
+        if not is_hardware_component_loaded(
+            node, controller_manager_name, hardware_component, controller_manager_timeout
+        ):
+            node.get_logger().warn(
+                    bcolors.WARNING
+                    + "Hardware Component is not loaded - state can not be changed."
+                    + bcolors.ENDC
+            )
+        elif activate:
             activate_components(node, controller_manager_name, hardware_component)
         elif configure:
             configure_components(node, controller_manager_name, hardware_component)
@@ -161,6 +184,9 @@ def main(args=None):
             return 0
     except KeyboardInterrupt:
         pass
+    except ServiceNotFoundError as err:
+        node.get_logger().fatal(str(err))
+        return 1
     finally:
         rclpy.shutdown()
 
