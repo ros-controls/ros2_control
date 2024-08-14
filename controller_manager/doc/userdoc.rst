@@ -164,6 +164,7 @@ It can be launched independently using the following command or as rqt plugin.
    * Double-click on a controller or hardware component to show the additional info.
    * Right-click on a controller or hardware component to show a context menu with options for lifecycle management.
 
+
 Using the Controller Manager in a Process
 -----------------------------------------
 
