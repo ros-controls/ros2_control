@@ -4,6 +4,15 @@ on:
   pull_request:
     branches:
       - master
+    paths:
+      - '**.hpp'
+      - '**.h'
+      - '**.cpp'
+      - '**.py'
+      - '.github/workflows/rolling-rhel-binary-build.yml'
+      - '**/package.xml'
+      - '**/CMakeLists.txt'
+      - 'ros2_control.jazzy.repos'
   schedule:
     # Run every day to detect flakiness and broken dependencies
     - cron: '03 1 * * *'

@@ -20,7 +20,7 @@ from launch_ros.actions import Node
 
 
 def generate_load_controller_launch_description(
-    controller_name, controller_type=None, controller_params_file=None
+    controller_name, controller_params_file=None, extra_spawner_args=[]
 ):
     """
     Generate launch description for loading a controller using spawner.
@@ -29,17 +29,17 @@ def generate_load_controller_launch_description(
     'unload_on_kill' LaunchArguments and a Node action that runs the controller_manager
     spawner node to load and activate a controller
 
-    Examples # noqa: D416
+    Examples
     --------
-      # Assuming the controller type and controller parameters are known to the controller_manager
+      # Assuming the controller parameters are known to the controller_manager
       generate_load_controller_launch_description('joint_state_broadcaster')
 
-      # Passing controller type and controller parameter file to load
+      # Passing controller parameter file to load the controller (Controller type is retrieved from config file)
       generate_load_controller_launch_description(
         'joint_state_broadcaster',
-        controller_type='joint_state_broadcaster/JointStateBroadcaster',
         controller_params_file=os.path.join(get_package_share_directory('my_pkg'),
-                                            'config', 'controller_params.yaml')
+                                            'config', 'controller_params.yaml'),
+        extra_spawner_args=[--load-only]
         )
 
     """
@@ -60,9 +60,6 @@ def generate_load_controller_launch_description(
         LaunchConfiguration("controller_manager_name"),
     ]
 
-    if controller_type:
-        spawner_arguments += ["--controller-type", controller_type]
-
     if controller_params_file:
         spawner_arguments += ["--param-file", controller_params_file]
 
@@ -78,6 +75,9 @@ def generate_load_controller_launch_description(
             ]
         )
     ]
+
+    if extra_spawner_args:
+        spawner_arguments += extra_spawner_args
 
     spawner = Node(
         package="controller_manager",

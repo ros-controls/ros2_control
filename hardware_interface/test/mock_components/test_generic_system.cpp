@@ -26,8 +26,8 @@
 #include "hardware_interface/resource_manager.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
+#include "rclcpp/node.hpp"
 #include "rclcpp_lifecycle/state.hpp"
-#include "ros2_control_test_assets/components_urdfs.hpp"
 #include "ros2_control_test_assets/descriptions.hpp"
 
 namespace
@@ -96,6 +96,7 @@ protected:
   <ros2_control name="MockHardwareSystem" type="system">
     <hardware>
       <plugin>mock_components/GenericSystem</plugin>
+      <group>Hardware Group</group>
     </hardware>
     <joint name="joint1">
       <command_interface name="position"/>
@@ -121,6 +122,7 @@ protected:
   <ros2_control name="MockHardwareSystem" type="system">
     <hardware>
       <plugin>mock_components/GenericSystem</plugin>
+      <group>Hardware Group</group>
     </hardware>
     <joint name="joint1">
       <command_interface name="position"/>
@@ -289,6 +291,7 @@ protected:
   <ros2_control name="MockHardwareSystem" type="system">
     <hardware>
       <plugin>mock_components/GenericSystem</plugin>
+      <group>Hardware Group</group>
       <param name="position_state_following_offset">-3</param>
       <param name="custom_interface_with_following_offset">actual_position</param>
     </hardware>
@@ -351,6 +354,7 @@ protected:
   <ros2_control name="MockHardwareSystem" type="system">
     <hardware>
       <plugin>mock_components/GenericSystem</plugin>
+      <group>Hardware Group</group>
       <param name="example_param_write_for_sec">2</param>
       <param name="example_param_read_for_sec">2</param>
     </hardware>
@@ -579,6 +583,70 @@ protected:
     </joint>
   </ros2_control>
 )";
+
+    hardware_system_2dof_standard_interfaces_with_same_hardware_group_ =
+      R"(
+  <ros2_control name="MockHardwareSystem1" type="system">
+    <hardware>
+      <plugin>mock_components/GenericSystem</plugin>
+      <group>Hardware Group</group>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <state_interface name="position">
+        <param name="initial_value">3.45</param>
+      </state_interface>
+      <state_interface name="velocity"/>
+    </joint>
+  </ros2_control>
+  <ros2_control name="MockHardwareSystem2" type="system">
+    <hardware>
+      <plugin>mock_components/GenericSystem</plugin>
+      <group>Hardware Group</group>
+    </hardware>
+    <joint name="joint2">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <state_interface name="position">
+        <param name="initial_value">2.78</param>
+      </state_interface>
+      <state_interface name="velocity"/>
+    </joint>
+  </ros2_control>
+)";
+
+    hardware_system_2dof_standard_interfaces_with_two_diff_hw_groups_ =
+      R"(
+  <ros2_control name="MockHardwareSystem1" type="system">
+    <hardware>
+      <plugin>mock_components/GenericSystem</plugin>
+      <group>Hardware Group 1</group>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <state_interface name="position">
+        <param name="initial_value">3.45</param>
+      </state_interface>
+      <state_interface name="velocity"/>
+    </joint>
+  </ros2_control>
+  <ros2_control name="MockHardwareSystem2" type="system">
+    <hardware>
+      <plugin>mock_components/GenericSystem</plugin>
+      <group>Hardware Group 2</group>
+    </hardware>
+    <joint name="joint2">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <state_interface name="position">
+        <param name="initial_value">2.78</param>
+      </state_interface>
+      <state_interface name="velocity"/>
+    </joint>
+  </ros2_control>
+)";
   }
 
   std::string hardware_system_2dof_;
@@ -600,6 +668,9 @@ protected:
   std::string hardware_system_2dof_standard_interfaces_with_different_control_modes_;
   std::string valid_hardware_system_2dof_standard_interfaces_with_different_control_modes_;
   std::string disabled_commands_;
+  std::string hardware_system_2dof_standard_interfaces_with_same_hardware_group_;
+  std::string hardware_system_2dof_standard_interfaces_with_two_diff_hw_groups_;
+  rclcpp::Node node_ = rclcpp::Node("TestGenericSystem");
 };
 
 // Forward declaration
@@ -624,11 +695,16 @@ public:
   FRIEND_TEST(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_mock_command);
   FRIEND_TEST(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio_mock_command_True);
 
-  TestableResourceManager() : hardware_interface::ResourceManager() {}
+  explicit TestableResourceManager(rclcpp::Node & node)
+  : hardware_interface::ResourceManager(
+      node.get_node_clock_interface(), node.get_node_logging_interface())
+  {
+  }
 
-  TestableResourceManager(
-    const std::string & urdf, bool validate_interfaces = true, bool activate_all = false)
-  : hardware_interface::ResourceManager(urdf, validate_interfaces, activate_all)
+  explicit TestableResourceManager(
+    rclcpp::Node & node, const std::string & urdf, bool activate_all = false)
+  : hardware_interface::ResourceManager(
+      urdf, node.get_node_clock_interface(), node.get_node_logging_interface(), activate_all, 100)
   {
   }
 };
@@ -675,7 +751,7 @@ TEST_F(TestGenericSystem, load_generic_system_2dof)
 {
   auto urdf = ros2_control_test_assets::urdf_head + hardware_system_2dof_ +
               ros2_control_test_assets::urdf_tail;
-  ASSERT_NO_THROW(TestableResourceManager rm(urdf));
+  ASSERT_NO_THROW(TestableResourceManager rm(node_, urdf));
 }
 
 // Test inspired by hardware_interface/test_resource_manager.cpp
@@ -683,7 +759,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_symetric_interfaces)
 {
   auto urdf = ros2_control_test_assets::urdf_head + hardware_system_2dof_ +
               ros2_control_test_assets::urdf_tail;
-  TestableResourceManager rm(urdf);
+  TestableResourceManager rm(node_, urdf);
   // Activate components to get all interfaces available
   activate_components(rm, {"MockHardwareSystem"});
 
@@ -714,7 +790,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_asymetric_interfaces)
 {
   auto urdf = ros2_control_test_assets::urdf_head + hardware_system_2dof_asymetric_ +
               ros2_control_test_assets::urdf_tail;
-  TestableResourceManager rm(urdf);
+  TestableResourceManager rm(node_, urdf);
   // Activate components to get all interfaces available
   activate_components(rm, {"MockHardwareSystem"});
 
@@ -762,7 +838,8 @@ void generic_system_functional_test(
   const std::string & urdf, const std::string component_name = "GenericSystem2dof",
   const double offset = 0)
 {
-  TestableResourceManager rm(urdf);
+  rclcpp::Node node("test_generic_system");
+  TestableResourceManager rm(node, urdf);
   // check is hardware is configured
   auto status_map = rm.get_components_status();
   EXPECT_EQ(
@@ -814,7 +891,7 @@ void generic_system_functional_test(
   ASSERT_EQ(0.44, j2v_c.get_value());
 
   // write() does not change values
-  rm.write(TIME, PERIOD);
+  ASSERT_TRUE(rm.write(TIME, PERIOD).ok);
   ASSERT_EQ(3.45, j1p_s.get_value());
   ASSERT_EQ(0.0, j1v_s.get_value());
   ASSERT_EQ(2.78, j2p_s.get_value());
@@ -825,7 +902,7 @@ void generic_system_functional_test(
   ASSERT_EQ(0.44, j2v_c.get_value());
 
   // read() mirrors commands + offset to states
-  rm.read(TIME, PERIOD);
+  ASSERT_TRUE(rm.read(TIME, PERIOD).ok);
   ASSERT_EQ(0.11 + offset, j1p_s.get_value());
   ASSERT_EQ(0.22, j1v_s.get_value());
   ASSERT_EQ(0.33 + offset, j2p_s.get_value());
@@ -857,6 +934,159 @@ void generic_system_functional_test(
     status_map[component_name].state.label(), hardware_interface::lifecycle_state_names::INACTIVE);
 }
 
+void generic_system_error_group_test(
+  const std::string & urdf, const std::string component_prefix, bool validate_same_group)
+{
+  rclcpp::Node node("test_generic_system");
+  TestableResourceManager rm(node, urdf);
+  const std::string component1 = component_prefix + "1";
+  const std::string component2 = component_prefix + "2";
+  // check is hardware is configured
+  auto status_map = rm.get_components_status();
+  for (auto component : {component1, component2})
+  {
+    EXPECT_EQ(
+      status_map[component].state.label(), hardware_interface::lifecycle_state_names::UNCONFIGURED);
+    configure_components(rm, {component});
+    status_map = rm.get_components_status();
+    EXPECT_EQ(
+      status_map[component].state.label(), hardware_interface::lifecycle_state_names::INACTIVE);
+    activate_components(rm, {component});
+    status_map = rm.get_components_status();
+    EXPECT_EQ(
+      status_map[component].state.label(), hardware_interface::lifecycle_state_names::ACTIVE);
+  }
+
+  // Check initial values
+  hardware_interface::LoanedStateInterface j1p_s = rm.claim_state_interface("joint1/position");
+  hardware_interface::LoanedStateInterface j1v_s = rm.claim_state_interface("joint1/velocity");
+  hardware_interface::LoanedStateInterface j2p_s = rm.claim_state_interface("joint2/position");
+  hardware_interface::LoanedStateInterface j2v_s = rm.claim_state_interface("joint2/velocity");
+  hardware_interface::LoanedCommandInterface j1p_c = rm.claim_command_interface("joint1/position");
+  hardware_interface::LoanedCommandInterface j1v_c = rm.claim_command_interface("joint1/velocity");
+  hardware_interface::LoanedCommandInterface j2p_c = rm.claim_command_interface("joint2/position");
+  hardware_interface::LoanedCommandInterface j2v_c = rm.claim_command_interface("joint2/velocity");
+
+  // State interfaces without initial value are set to 0
+  ASSERT_EQ(3.45, j1p_s.get_value());
+  ASSERT_EQ(0.0, j1v_s.get_value());
+  ASSERT_EQ(2.78, j2p_s.get_value());
+  ASSERT_EQ(0.0, j2v_s.get_value());
+  ASSERT_TRUE(std::isnan(j1p_c.get_value()));
+  ASSERT_TRUE(std::isnan(j1v_c.get_value()));
+  ASSERT_TRUE(std::isnan(j2p_c.get_value()));
+  ASSERT_TRUE(std::isnan(j2v_c.get_value()));
+
+  // set some new values in commands
+  j1p_c.set_value(0.11);
+  j1v_c.set_value(0.22);
+  j2p_c.set_value(0.33);
+  j2v_c.set_value(0.44);
+
+  // State values should not be changed
+  ASSERT_EQ(3.45, j1p_s.get_value());
+  ASSERT_EQ(0.0, j1v_s.get_value());
+  ASSERT_EQ(2.78, j2p_s.get_value());
+  ASSERT_EQ(0.0, j2v_s.get_value());
+  ASSERT_EQ(0.11, j1p_c.get_value());
+  ASSERT_EQ(0.22, j1v_c.get_value());
+  ASSERT_EQ(0.33, j2p_c.get_value());
+  ASSERT_EQ(0.44, j2v_c.get_value());
+
+  // write() does not change values
+  ASSERT_TRUE(rm.write(TIME, PERIOD).ok);
+  ASSERT_EQ(3.45, j1p_s.get_value());
+  ASSERT_EQ(0.0, j1v_s.get_value());
+  ASSERT_EQ(2.78, j2p_s.get_value());
+  ASSERT_EQ(0.0, j2v_s.get_value());
+  ASSERT_EQ(0.11, j1p_c.get_value());
+  ASSERT_EQ(0.22, j1v_c.get_value());
+  ASSERT_EQ(0.33, j2p_c.get_value());
+  ASSERT_EQ(0.44, j2v_c.get_value());
+
+  // read() mirrors commands to states
+  ASSERT_TRUE(rm.read(TIME, PERIOD).ok);
+  ASSERT_EQ(0.11, j1p_s.get_value());
+  ASSERT_EQ(0.22, j1v_s.get_value());
+  ASSERT_EQ(0.33, j2p_s.get_value());
+  ASSERT_EQ(0.44, j2v_s.get_value());
+  ASSERT_EQ(0.11, j1p_c.get_value());
+  ASSERT_EQ(0.22, j1v_c.get_value());
+  ASSERT_EQ(0.33, j2p_c.get_value());
+  ASSERT_EQ(0.44, j2v_c.get_value());
+
+  // set some new values in commands
+  j1p_c.set_value(0.55);
+  j1v_c.set_value(0.66);
+  j2p_c.set_value(0.77);
+  j2v_c.set_value(0.88);
+
+  // state values should not be changed
+  ASSERT_EQ(0.11, j1p_s.get_value());
+  ASSERT_EQ(0.22, j1v_s.get_value());
+  ASSERT_EQ(0.33, j2p_s.get_value());
+  ASSERT_EQ(0.44, j2v_s.get_value());
+  ASSERT_EQ(0.55, j1p_c.get_value());
+  ASSERT_EQ(0.66, j1v_c.get_value());
+  ASSERT_EQ(0.77, j2p_c.get_value());
+  ASSERT_EQ(0.88, j2v_c.get_value());
+
+  // Error testing
+  j1p_c.set_value(std::numeric_limits<double>::infinity());
+  j1v_c.set_value(std::numeric_limits<double>::infinity());
+  // read() should now bring error in the first component
+  auto read_result = rm.read(TIME, PERIOD);
+  ASSERT_FALSE(read_result.ok);
+  if (validate_same_group)
+  {
+    // If they belong to the same group, show the error in all hardware components of same group
+    EXPECT_THAT(read_result.failed_hardware_names, ::testing::ElementsAre(component1, component2));
+  }
+  else
+  {
+    // If they don't belong to the same group, show the error in only that hardware component
+    EXPECT_THAT(read_result.failed_hardware_names, ::testing::ElementsAre(component1));
+  }
+
+  // Check initial values
+  ASSERT_FALSE(rm.state_interface_is_available("joint1/position"));
+  ASSERT_FALSE(rm.state_interface_is_available("joint1/velocity"));
+  ASSERT_FALSE(rm.command_interface_is_available("joint1/position"));
+  ASSERT_FALSE(rm.command_interface_is_available("joint1/velocity"));
+
+  if (validate_same_group)
+  {
+    ASSERT_FALSE(rm.state_interface_is_available("joint2/position"));
+    ASSERT_FALSE(rm.state_interface_is_available("joint2/velocity"));
+    ASSERT_FALSE(rm.command_interface_is_available("joint2/position"));
+    ASSERT_FALSE(rm.command_interface_is_available("joint2/velocity"));
+  }
+  else
+  {
+    ASSERT_TRUE(rm.state_interface_is_available("joint2/position"));
+    ASSERT_TRUE(rm.state_interface_is_available("joint2/velocity"));
+    ASSERT_TRUE(rm.command_interface_is_available("joint2/position"));
+    ASSERT_TRUE(rm.command_interface_is_available("joint2/velocity"));
+  }
+
+  // Error should be recoverable only after reactivating the hardware component
+  j1p_c.set_value(0.0);
+  j1v_c.set_value(0.0);
+  ASSERT_FALSE(rm.read(TIME, PERIOD).ok);
+
+  // Now it should be recoverable
+  deactivate_components(rm, {component1});
+  activate_components(rm, {component1});
+  ASSERT_TRUE(rm.read(TIME, PERIOD).ok);
+
+  deactivate_components(rm, {component1, component2});
+  status_map = rm.get_components_status();
+  EXPECT_EQ(
+    status_map[component1].state.label(), hardware_interface::lifecycle_state_names::INACTIVE);
+  EXPECT_EQ(
+    status_map[component2].state.label(), hardware_interface::lifecycle_state_names::INACTIVE);
+}
+
 TEST_F(TestGenericSystem, generic_system_2dof_functionality)
 {
   auto urdf = ros2_control_test_assets::urdf_head + hardware_system_2dof_standard_interfaces_ +
@@ -865,11 +1095,29 @@ TEST_F(TestGenericSystem, generic_system_2dof_functionality)
   generic_system_functional_test(urdf, {"MockHardwareSystem"});
 }
 
+TEST_F(TestGenericSystem, generic_system_2dof_error_propagation_different_group)
+{
+  auto urdf = ros2_control_test_assets::urdf_head +
+              hardware_system_2dof_standard_interfaces_with_two_diff_hw_groups_ +
+              ros2_control_test_assets::urdf_tail;
+
+  generic_system_error_group_test(urdf, {"MockHardwareSystem"}, false);
+}
+
+TEST_F(TestGenericSystem, generic_system_2dof_error_propagation_same_group)
+{
+  auto urdf = ros2_control_test_assets::urdf_head +
+              hardware_system_2dof_standard_interfaces_with_same_hardware_group_ +
+              ros2_control_test_assets::urdf_tail;
+
+  generic_system_error_group_test(urdf, {"MockHardwareSystem"}, true);
+}
+
 TEST_F(TestGenericSystem, generic_system_2dof_other_interfaces)
 {
   auto urdf = ros2_control_test_assets::urdf_head + hardware_system_2dof_with_other_interface_ +
               ros2_control_test_assets::urdf_tail;
-  TestableResourceManager rm(urdf);
+  TestableResourceManager rm(node_, urdf);
   // Activate components to get all interfaces available
   activate_components(rm, {"MockHardwareSystem"});
 
@@ -952,7 +1200,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_sensor)
 {
   auto urdf = ros2_control_test_assets::urdf_head + hardware_system_2dof_with_sensor_ +
               ros2_control_test_assets::urdf_tail;
-  TestableResourceManager rm(urdf);
+  TestableResourceManager rm(node_, urdf);
   // Activate components to get all interfaces available
   activate_components(rm, {"MockHardwareSystem"});
 
@@ -1051,7 +1299,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_sensor)
 void TestGenericSystem::test_generic_system_with_mock_sensor_commands(
   std::string & urdf, const std::string & component_name)
 {
-  TestableResourceManager rm(urdf);
+  TestableResourceManager rm(node_, urdf);
   // Activate components to get all interfaces available
   activate_components(rm, {component_name});
 
@@ -1191,7 +1439,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_sensor_mock_command_True)
 void TestGenericSystem::test_generic_system_with_mimic_joint(
   std::string & urdf, const std::string & component_name)
 {
-  TestableResourceManager rm(urdf);
+  TestableResourceManager rm(node_, urdf);
   // Activate components to get all interfaces available
   activate_components(rm, {component_name});
 
@@ -1288,7 +1536,7 @@ TEST_F(TestGenericSystem, generic_system_2dof_functionality_with_offset_custom_i
 
   const double offset = -3;
 
-  TestableResourceManager rm(urdf);
+  TestableResourceManager rm(node_, urdf);
 
   const std::string hardware_name = "MockHardwareSystem";
 
@@ -1401,7 +1649,7 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio)
 {
   auto urdf = ros2_control_test_assets::urdf_head +
               valid_urdf_ros2_control_system_robot_with_gpio_ + ros2_control_test_assets::urdf_tail;
-  TestableResourceManager rm(urdf);
+  TestableResourceManager rm(node_, urdf);
 
   const std::string hardware_name = "MockHardwareSystem";
 
@@ -1498,7 +1746,7 @@ TEST_F(TestGenericSystem, valid_urdf_ros2_control_system_robot_with_gpio)
 void TestGenericSystem::test_generic_system_with_mock_gpio_commands(
   std::string & urdf, const std::string & component_name)
 {
-  TestableResourceManager rm(urdf);
+  TestableResourceManager rm(node_, urdf);
 
   // check is hardware is started
   auto status_map = rm.get_components_status();
@@ -1624,7 +1872,7 @@ TEST_F(TestGenericSystem, sensor_with_initial_value)
 {
   auto urdf = ros2_control_test_assets::urdf_head + sensor_with_initial_value_ +
               ros2_control_test_assets::urdf_tail;
-  TestableResourceManager rm(urdf);
+  TestableResourceManager rm(node_, urdf);
   // Activate components to get all interfaces available
   activate_components(rm, {"MockHardwareSystem"});
 
@@ -1652,7 +1900,7 @@ TEST_F(TestGenericSystem, gpio_with_initial_value)
 {
   auto urdf = ros2_control_test_assets::urdf_head + gpio_with_initial_value_ +
               ros2_control_test_assets::urdf_tail;
-  TestableResourceManager rm(urdf);
+  TestableResourceManager rm(node_, urdf);
   // Activate components to get all interfaces available
   activate_components(rm, {"MockHardwareSystem"});
 
@@ -1673,7 +1921,7 @@ TEST_F(TestGenericSystem, simple_dynamics_pos_vel_acc_control_modes_interfaces)
               hardware_system_2dof_standard_interfaces_with_different_control_modes_ +
               ros2_control_test_assets::urdf_tail;
 
-  TestableResourceManager rm(urdf);
+  TestableResourceManager rm(node_, urdf);
   // Activate components to get all interfaces available
   activate_components(rm, {"MockHardwareSystem"});
 
@@ -1867,7 +2115,7 @@ TEST_F(TestGenericSystem, disabled_commands_flag_is_active)
 {
   auto urdf =
     ros2_control_test_assets::urdf_head + disabled_commands_ + ros2_control_test_assets::urdf_tail;
-  TestableResourceManager rm(urdf);
+  TestableResourceManager rm(node_, urdf);
   // Activate components to get all interfaces available
   activate_components(rm, {"MockHardwareSystem"});
 
@@ -1916,7 +2164,7 @@ TEST_F(TestGenericSystem, prepare_command_mode_switch_works_with_all_example_tag
     [&](
       const std::string & urdf, const std::string & urdf_head = ros2_control_test_assets::urdf_head)
   {
-    TestableResourceManager rm(urdf_head + urdf + ros2_control_test_assets::urdf_tail);
+    TestableResourceManager rm(node_, urdf_head + urdf + ros2_control_test_assets::urdf_tail);
     rclcpp_lifecycle::State state(lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, "active");
     rm.set_component_state("MockHardwareSystem", state);
     auto start_interfaces = rm.command_interface_keys();
@@ -1952,4 +2200,11 @@ TEST_F(TestGenericSystem, prepare_command_mode_switch_works_with_all_example_tag
   ASSERT_TRUE(check_prepare_command_mode_switch(
     valid_hardware_system_2dof_standard_interfaces_with_different_control_modes_));
   ASSERT_TRUE(check_prepare_command_mode_switch(disabled_commands_));
+}
+
+int main(int argc, char ** argv)
+{
+  rclcpp::init(argc, argv);
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

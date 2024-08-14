@@ -21,6 +21,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_python REQUIRED)
 find_package(ament_cmake_core REQUIRED)
+find_package(ament_cmake_gen_version_h REQUIRED)
 find_package(backward_ros REQUIRED)
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
@@ -151,6 +152,7 @@ if(BUILD_TESTING)
   )
   target_link_libraries(test_controller_manager_urdf_passing
     controller_manager
+    test_controller
     ros2_control_test_assets::ros2_control_test_assets
   )
   ament_target_dependencies(test_controller_manager_urdf_passing
@@ -183,12 +185,19 @@ if(BUILD_TESTING)
 
   ament_add_gmock(test_spawner_unspawner
     test/test_spawner_unspawner.cpp
+    TIMEOUT 120
   )
   target_link_libraries(test_spawner_unspawner
     controller_manager
     test_controller
     ros2_control_test_assets::ros2_control_test_assets
   )
+
+  install(FILES test/test_controller_spawner_with_fallback_controllers.yaml
+    DESTINATION test)
+
+  install(FILES test/test_controller_spawner_with_type.yaml
+  DESTINATION test)
 
   ament_add_gmock(test_hardware_management_srvs
     test/test_hardware_management_srvs.cpp
@@ -211,6 +220,11 @@ if(BUILD_TESTING)
   add_launch_test(test/test_spawner_integration.py
     TIMEOUT 180
   )
+
+  find_package(ament_cmake_pytest REQUIRED)
+  install(FILES test/test_ros2_control_node.yaml
+    DESTINATION test)
+  ament_add_pytest_test(test_ros2_control_node test/test_ros2_control_node_launch.py)
 endif()
 
 install(

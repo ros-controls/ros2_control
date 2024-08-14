@@ -16,10 +16,8 @@
 #define HARDWARE_INTERFACE__HANDLE_HPP_
 
 #include <string>
-#include <utility>
 
 #include "hardware_interface/macros.hpp"
-#include "hardware_interface/visibility_control.h"
 
 namespace hardware_interface
 {

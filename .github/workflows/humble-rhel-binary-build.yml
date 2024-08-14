@@ -4,6 +4,15 @@ on:
   pull_request:
     branches:
       - humble
+    paths:
+      - '**.hpp'
+      - '**.h'
+      - '**.cpp'
+      - '**.py'
+      - '.github/workflows/humble-rhel-binary-build.yml'
+      - '**/package.xml'
+      - '**/CMakeLists.txt'
+      - 'ros2_control.humble.repos'
   schedule:
     # Run every day to detect flakiness and broken dependencies
     - cron: '03 1 * * *'

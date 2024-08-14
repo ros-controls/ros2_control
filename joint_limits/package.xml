@@ -1,10 +1,10 @@
 <package format="3">
   <name>joint_limits</name>
-  <version>4.8.0</version>
-  <description>Interfaces for handling of joint limits for controllers or hardware.</description>
+  <version>4.15.0</version>
+  <description>Package with interfaces for handling of joint limits in controllers or in hardware. The package also implements Saturation Joint Limiter for position-velocity-acceleration set and other individual interfaces.</description>
 
   <maintainer email="bence.magyar.robotics@gmail.com">Bence Magyar</maintainer>
-  <maintainer email="denis@stogl.de">Denis Štogl</maintainer>
+  <maintainer email="denis.stogl@stoglrobotics.de">Denis Štogl</maintainer>
 
   <license>Apache License 2.0</license>
 
@@ -15,12 +15,19 @@
   <buildtool_depend>ament_cmake</buildtool_depend>
   <buildtool_depend>ament_cmake_gen_version_h</buildtool_depend>
 
+  <depend>backward_ros</depend>
+  <depend>pluginlib</depend>
+  <depend>realtime_tools</depend>
   <depend>rclcpp</depend>
   <depend>rclcpp_lifecycle</depend>
+  <depend>trajectory_msgs</depend>
   <depend>urdf</depend>
 
-  <test_depend>launch_testing_ament_cmake</test_depend>
+  <test_depend>ament_cmake_gmock</test_depend>
   <test_depend>ament_cmake_gtest</test_depend>
+  <test_depend>generate_parameter_library</test_depend>
+  <test_depend>launch_ros</test_depend>
+  <test_depend>launch_testing_ament_cmake</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

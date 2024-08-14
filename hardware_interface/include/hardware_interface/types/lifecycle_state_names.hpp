@@ -17,8 +17,6 @@
 #ifndef HARDWARE_INTERFACE__TYPES__LIFECYCLE_STATE_NAMES_HPP_
 #define HARDWARE_INTERFACE__TYPES__LIFECYCLE_STATE_NAMES_HPP_
 
-#include <string>
-
 namespace hardware_interface
 {
 namespace lifecycle_state_names

@@ -11,4 +11,3 @@ jobs:
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-pre-commit.yml@master
     with:
       ros_distro: iron
-      os_name: ubuntu-22.04

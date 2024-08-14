@@ -28,7 +28,7 @@ def service_caller(service_name, service_type, request):
     try:
         rclpy.init()
 
-        node = rclpy.create_node(f"ros2controlcli_{ service_name.replace('/', '') }_requester")
+        node = rclpy.create_node(f"ros2controlcli_{service_name.replace('/', '')}_requester")
 
         cli = node.create_client(service_type, service_name)
 
@@ -38,14 +38,14 @@ def service_caller(service_name, service_type, request):
             if not cli.wait_for_service(2.0):
                 raise RuntimeError(f"Could not contact service {service_name}")
 
-        node.get_logger().debug(f"requester: making request: { repr(request) }\n")
+        node.get_logger().debug(f"requester: making request: {repr(request)}\n")
         future = cli.call_async(request)
         rclpy.spin_until_future_complete(node, future)
         if future.result() is not None:
             return future.result()
         else:
             future_exception = future.exception()
-            raise RuntimeError(f"Exception while calling service: { repr(future_exception) }")
+            raise RuntimeError(f"Exception while calling service: {repr(future_exception)}")
     finally:
         node.destroy_node()
         rclpy.shutdown()

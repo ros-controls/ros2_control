@@ -28,27 +28,74 @@ Features:
 Parameters
 ,,,,,,,,,,
 
+A full example including all optional parameters (with default values):
+
+.. code-block:: xml
+
+  <ros2_control name="MockHardwareSystem" type="system">
+    <hardware>
+      <plugin>mock_components/GenericSystem</plugin>
+      <param name="calculate_dynamics">false</param>
+      <param name="custom_interface_with_following_offset"></param>
+      <param name="disable_commands">false</param>
+      <param name="mock_gpio_commands">false</param>
+      <param name="mock_sensor_commands">false</param>
+      <param name="position_state_following_offset">0.0</param>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <state_interface name="position">
+        <param name="initial_value">3.45</param>
+      </state_interface>
+      <state_interface name="velocity"/>
+      <state_interface name="acceleration"/>
+    </joint>
+    <joint name="joint2">
+      <command_interface name="velocity"/>
+      <command_interface name="acceleration"/>
+      <state_interface name="position">
+        <param name="initial_value">2.78</param>
+      </state_interface>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="acceleration"/>
+    </joint>
+    <gpio name="flange_vacuum">
+      <command_interface name="vacuum"/>
+      <state_interface name="vacuum" data_type="double"/>
+    </gpio>
+  </ros2_control>
+
+See :ref:`example_2 <ros2_control_demos_example_2_userdoc>` for an example using ``calculate_dynamics`` or :ref:`example_10 <ros2_control_demos_example_10_userdoc>` for using in combination with GPIO interfaces.
+
+Component Parameters
+####################
+
+calculate_dynamics (optional; boolean; default: false)
+  Calculation of states from commands by using Euler-forward integration or finite differences.
+
+custom_interface_with_following_offset (optional; string; default: "")
+  Mapping of offsetted commands to a custom interface.
+
 disable_commands (optional; boolean; default: false)
   Disables mirroring commands to states.
   This option is helpful to simulate an erroneous connection to the hardware when nothing breaks, but suddenly there is no feedback from a hardware interface.
   Or it can help you to test your setup when the hardware is running without feedback, i.e., in open loop configuration.
 
-mock_sensor_commands (optional; boolean; default: false)
-  Creates fake command interfaces for faking sensor measurements with an external command.
-  Those interfaces are usually used by a :ref:`forward controller <forward_command_controller_userdoc>` to provide access from ROS-world.
-
 mock_gpio_commands (optional; boolean; default: false)
   Creates fake command interfaces for faking GPIO states with an external command.
   Those interfaces are usually used by a :ref:`forward controller <forward_command_controller_userdoc>` to provide access from ROS-world.
 
+mock_sensor_commands (optional; boolean; default: false)
+  Creates fake command interfaces for faking sensor measurements with an external command.
+  Those interfaces are usually used by a :ref:`forward controller <forward_command_controller_userdoc>` to provide access from ROS-world.
+
 position_state_following_offset (optional; double; default: 0.0)
-  Following offset added to the commanded values when mirrored to states.
+  Following offset added to the commanded values when mirrored to states. Only applied, if ``custom_interface_with_following_offset`` is false.
 
-custom_interface_with_following_offset (optional; string; default: "")
-  Mapping of offsetted commands to a custom interface.
-
-Per-interface Parameters
-,,,,,,,,,,,,,,,,,,,,,,,,
+Per-Interface Parameters
+########################
 
 initial_value (optional; double)
   Initial value of certain state interface directly after startup. Example:

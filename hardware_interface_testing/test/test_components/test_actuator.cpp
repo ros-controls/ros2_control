@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <memory>
 #include <vector>
 
 #include "hardware_interface/actuator_interface.hpp"
@@ -32,16 +31,21 @@ class TestActuator : public ActuatorInterface
       return CallbackReturn::ERROR;
     }
 
+    if (get_hardware_info().joints[0].state_interfaces[1].name == "does_not_exist")
+    {
+      return CallbackReturn::ERROR;
+    }
+
     /*
      * a hardware can optional prove for incorrect info here.
      *
      * // can only control one joint
-     * if (info_.joints.size() != 1) {return CallbackReturn::ERROR;}
+     * if (get_hardware_info().joints.size() != 1) {return CallbackReturn::ERROR;}
      * // can only control in position
-     * if (info_.joints[0].command_interfaces.size() != 1) {return
+     * if (get_hardware_info().joints[0].command_interfaces.size() != 1) {return
      * CallbackReturn::ERROR;}
      * // can only give feedback state for position and velocity
-     * if (info_.joints[0].state_interfaces.size() != 2) {return
+     * if (get_hardware_info().joints[0].state_interfaces.size() != 2) {return
      * CallbackReturn::ERROR;}
      */
 
@@ -52,11 +56,13 @@ class TestActuator : public ActuatorInterface
   {
     std::vector<StateInterface> state_interfaces;
     state_interfaces.emplace_back(hardware_interface::StateInterface(
-      info_.joints[0].name, info_.joints[0].state_interfaces[0].name, &position_state_));
+      get_hardware_info().joints[0].name, get_hardware_info().joints[0].state_interfaces[0].name,
+      &position_state_));
     state_interfaces.emplace_back(hardware_interface::StateInterface(
-      info_.joints[0].name, info_.joints[0].state_interfaces[1].name, &velocity_state_));
-    state_interfaces.emplace_back(
-      hardware_interface::StateInterface(info_.joints[0].name, "some_unlisted_interface", nullptr));
+      get_hardware_info().joints[0].name, get_hardware_info().joints[0].state_interfaces[1].name,
+      &velocity_state_));
+    state_interfaces.emplace_back(hardware_interface::StateInterface(
+      get_hardware_info().joints[0].name, "some_unlisted_interface", nullptr));
 
     return state_interfaces;
   }
@@ -65,12 +71,14 @@ class TestActuator : public ActuatorInterface
   {
     std::vector<CommandInterface> command_interfaces;
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      info_.joints[0].name, info_.joints[0].command_interfaces[0].name, &velocity_command_));
+      get_hardware_info().joints[0].name, get_hardware_info().joints[0].command_interfaces[0].name,
+      &velocity_command_));
 
-    if (info_.joints[0].command_interfaces.size() > 1)
+    if (get_hardware_info().joints[0].command_interfaces.size() > 1)
     {
       command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        info_.joints[0].name, info_.joints[0].command_interfaces[1].name, &max_velocity_command_));
+        get_hardware_info().joints[0].name,
+        get_hardware_info().joints[0].command_interfaces[1].name, &max_velocity_command_));
     }
 
     return command_interfaces;

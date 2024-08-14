@@ -15,10 +15,12 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   rcutils
   TinyXML2
   tinyxml2_vendor
+  joint_limits
   urdf
 )
 
 find_package(ament_cmake REQUIRED)
+find_package(ament_cmake_gen_version_h REQUIRED)
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
 endforeach()
@@ -84,6 +86,7 @@ if(BUILD_TESTING)
   add_library(test_hardware_components SHARED
   test/test_hardware_components/test_single_joint_actuator.cpp
   test/test_hardware_components/test_force_torque_sensor.cpp
+  test/test_hardware_components/test_imu_sensor.cpp
   test/test_hardware_components/test_two_joint_system.cpp
   test/test_hardware_components/test_system_with_command_modes.cpp
   )

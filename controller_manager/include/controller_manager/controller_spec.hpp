@@ -19,11 +19,10 @@
 #ifndef CONTROLLER_MANAGER__CONTROLLER_SPEC_HPP_
 #define CONTROLLER_MANAGER__CONTROLLER_SPEC_HPP_
 
-#include <map>
 #include <memory>
 #include <string>
 #include <vector>
-#include "controller_interface/controller_interface.hpp"
+#include "controller_interface/controller_interface_base.hpp"
 #include "hardware_interface/controller_info.hpp"
 
 namespace controller_manager

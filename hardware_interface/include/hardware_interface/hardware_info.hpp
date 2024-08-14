@@ -19,6 +19,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "joint_limits/joint_limits.hpp"
+
 namespace hardware_interface
 {
 /**
@@ -42,6 +44,8 @@ struct InterfaceInfo
   std::string data_type;
   /// (Optional) If the handle is an array, the size of the array. Used by GPIOs.
   int size;
+  /// (Optional) enable or disable the limits for the command interfaces
+  bool enable_limits;
 };
 
 /// @brief This structure stores information about a joint that is mimicking another joint
@@ -129,6 +133,8 @@ struct HardwareInfo
   std::string name;
   /// Type of the hardware: actuator, sensor or system.
   std::string type;
+  ///  Hardware group to which the hardware belongs.
+  std::string group;
   /// Component is async
   bool is_async;
   /// Name of the pluginlib plugin of the hardware that will be loaded.
@@ -163,6 +169,17 @@ struct HardwareInfo
    * The XML contents prior to parsing
    */
   std::string original_xml;
+  /**
+   * The URDF parsed limits of the hardware components joint command interfaces
+   */
+  std::unordered_map<std::string, joint_limits::JointLimits> limits;
+
+  /**
+   * Map of software joint limits used for clamping the command where the key is the joint name.
+   * Optional If not specified or less restrictive than the JointLimits uses the previous
+   * JointLimits.
+   */
+  std::unordered_map<std::string, joint_limits::SoftJointLimits> soft_limits;
 };
 
 }  // namespace hardware_interface

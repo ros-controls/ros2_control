@@ -15,7 +15,6 @@
 #ifndef TEST_CONTROLLER__TEST_CONTROLLER_HPP_
 #define TEST_CONTROLLER__TEST_CONTROLLER_HPP_
 
-#include <memory>
 #include <string>
 #include <vector>
 
@@ -66,6 +65,9 @@ public:
   CONTROLLER_MANAGER_PUBLIC
   void set_state_interface_configuration(const controller_interface::InterfaceConfiguration & cfg);
 
+  CONTROLLER_MANAGER_PUBLIC
+  std::vector<double> get_state_interface_data() const;
+
   const std::string & getRobotDescription() const;
 
   unsigned int internal_counter = 0;
@@ -80,7 +82,7 @@ public:
   // enables external setting of values to command interfaces - used for simulation of hardware
   // errors
   double set_first_command_interface_value_to;
-  double update_period_ = 0;
+  rclcpp::Duration update_period_ = rclcpp::Duration::from_seconds(0.);
 };
 
 }  // namespace test_controller

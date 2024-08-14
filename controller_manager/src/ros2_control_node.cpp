@@ -12,14 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <algorithm>
 #include <chrono>
 #include <memory>
 #include <string>
 #include <thread>
 
 #include "controller_manager/controller_manager.hpp"
-#include "rclcpp/rclcpp.hpp"
+#include "rclcpp/executors.hpp"
 #include "realtime_tools/thread_priority.hpp"
 
 using namespace std::chrono_literals;
@@ -83,6 +82,8 @@ int main(int argc, char ** argv)
         next_iteration_time += period;
         std::this_thread::sleep_until(next_iteration_time);
       }
+
+      cm->shutdown_async_controllers_and_components();
     });
 
   executor->add_node(cm);

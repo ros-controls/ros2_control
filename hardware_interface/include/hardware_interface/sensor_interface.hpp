@@ -15,7 +15,6 @@
 #ifndef HARDWARE_INTERFACE__SENSOR_INTERFACE_HPP_
 #define HARDWARE_INTERFACE__SENSOR_INTERFACE_HPP_
 
-#include <memory>
 #include <string>
 #include <vector>
 
@@ -25,6 +24,8 @@
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 #include "rclcpp/duration.hpp"
+#include "rclcpp/logger.hpp"
+#include "rclcpp/node_interfaces/node_clock_interface.hpp"
 #include "rclcpp/time.hpp"
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 #include "rclcpp_lifecycle/state.hpp"
@@ -73,7 +74,8 @@ class SensorInterface : public rclcpp_lifecycle::node_interfaces::LifecycleNodeI
 public:
   SensorInterface()
   : lifecycle_state_(rclcpp_lifecycle::State(
-      lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN, lifecycle_state_names::UNKNOWN))
+      lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN, lifecycle_state_names::UNKNOWN)),
+    sensor_logger_(rclcpp::get_logger("sensor_interface"))
   {
   }
 
@@ -88,15 +90,33 @@ public:
 
   virtual ~SensorInterface() = default;
 
+  /// Initialization of the hardware interface from data parsed from the robot's URDF and also the
+  /// clock and logger interfaces.
+  /**
+   * \param[in] hardware_info structure with data from URDF.
+   * \param[in] clock_interface pointer to the clock interface.
+   * \param[in] logger_interface pointer to the logger interface.
+   * \returns CallbackReturn::SUCCESS if required data are provided and can be parsed.
+   * \returns CallbackReturn::ERROR if any error happens or data are missing.
+   */
+  CallbackReturn init(
+    const HardwareInfo & hardware_info, rclcpp::Logger logger,
+    rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
+  {
+    clock_interface_ = clock_interface;
+    sensor_logger_ = logger.get_child("hardware_component.sensor." + hardware_info.name);
+    info_ = hardware_info;
+    return on_init(hardware_info);
+  };
+
   /// Initialization of the hardware interface from data parsed from the robot's URDF.
   /**
    * \param[in] hardware_info structure with data from URDF.
    * \returns CallbackReturn::SUCCESS if required data are provided and can be parsed.
    * \returns CallbackReturn::ERROR if any error happens or data are missing.
    */
-  virtual CallbackReturn on_init(const HardwareInfo & hardware_info)
+  virtual CallbackReturn on_init(const HardwareInfo & /*hardware_info*/)
   {
-    info_ = hardware_info;
     return CallbackReturn::SUCCESS;
   };
 
@@ -129,6 +149,12 @@ public:
    */
   virtual std::string get_name() const { return info_.name; }
 
+  /// Get name of the actuator hardware group to which it belongs to.
+  /**
+   * \return group name.
+   */
+  virtual std::string get_group_name() const { return info_.group; }
+
   /// Get life-cycle state of the actuator hardware.
   /**
    * \return state.
@@ -141,9 +167,31 @@ public:
    */
   void set_state(const rclcpp_lifecycle::State & new_state) { lifecycle_state_ = new_state; }
 
+  /// Get the logger of the SensorInterface.
+  /**
+   * \return logger of the SensorInterface.
+   */
+  rclcpp::Logger get_logger() const { return sensor_logger_; }
+
+  /// Get the clock of the SensorInterface.
+  /**
+   * \return clock of the SensorInterface.
+   */
+  rclcpp::Clock::SharedPtr get_clock() const { return clock_interface_->get_clock(); }
+
+  /// Get the hardware info of the SensorInterface.
+  /**
+   * \return hardware info of the SensorInterface.
+   */
+  const HardwareInfo & get_hardware_info() const { return info_; }
+
 protected:
   HardwareInfo info_;
   rclcpp_lifecycle::State lifecycle_state_;
+
+private:
+  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface_;
+  rclcpp::Logger sensor_logger_;
 };
 
 }  // namespace hardware_interface

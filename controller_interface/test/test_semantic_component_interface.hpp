@@ -19,11 +19,12 @@
 #ifndef TEST_SEMANTIC_COMPONENT_INTERFACE_HPP_
 #define TEST_SEMANTIC_COMPONENT_INTERFACE_HPP_
 
+#include <gmock/gmock.h>
+
 #include <memory>
 #include <string>
 
 #include "geometry_msgs/msg/wrench.hpp"
-#include "gmock/gmock.h"
 #include "semantic_components/semantic_component_interface.hpp"
 
 // implementing and friending so we can access member variables
