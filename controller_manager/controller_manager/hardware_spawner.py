@@ -66,9 +66,13 @@ def has_service_names(node, node_name, node_namespace, service_names):
     return all(service in client_names for service in service_names)
 
 
-def is_hardware_component_loaded(node, controller_manager, hardware_component, service_timeout=0.0):
+def is_hardware_component_loaded(
+    node, controller_manager, hardware_component, service_timeout=0.0
+):
     components = list_hardware_components(node, hardware_component, service_timeout).component
     return any(c.name == hardware_component for c in components)
+
+
 def handle_set_component_state_service_call(
     node, controller_manager_name, component, target_state, action
 ):
@@ -168,9 +172,9 @@ def main(args=None):
             node, controller_manager_name, hardware_component, controller_manager_timeout
         ):
             node.get_logger().warn(
-                    bcolors.WARNING
-                    + "Hardware Component is not loaded - state can not be changed."
-                    + bcolors.ENDC
+                bcolors.WARNING
+                + "Hardware Component is not loaded - state can not be changed."
+                + bcolors.ENDC
             )
         elif activate:
             activate_components(node, controller_manager_name, hardware_component)
