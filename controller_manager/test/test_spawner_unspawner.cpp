@@ -69,14 +69,15 @@ protected:
 int call_spawner(const std::string extra_args)
 {
   std::string spawner_script =
-    "coverage run $(ros2 pkg prefix controller_manager)/lib/controller_manager/spawner ";
+    "python3 -m coverage run $(ros2 pkg prefix controller_manager)/lib/controller_manager/spawner ";
   return std::system((spawner_script + extra_args).c_str());
 }
 
 int call_unspawner(const std::string extra_args)
 {
   std::string spawner_script =
-    "coverage run $(ros2 pkg prefix controller_manager)/lib/controller_manager/unspawner ";
+    "python3 -m coverage run $(ros2 pkg prefix "
+    "controller_manager)/lib/controller_manager/unspawner ";
   return std::system((spawner_script + extra_args).c_str());
 }
 
@@ -303,7 +304,8 @@ TEST_F(TestLoadController, unload_on_kill)
   cm_->set_parameter(rclcpp::Parameter("ctrl_3.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
   std::stringstream ss;
   ss << "timeout --signal=INT 5 "
-     << "python3 -m $(ros2 pkg prefix controller_manager)/lib/controller_manager/spawner "
+     << "python3 -m coverage run $(ros2 pkg prefix "
+        "controller_manager)/lib/controller_manager/spawner "
      << "ctrl_3 -c test_controller_manager --unload-on-kill";
 
   EXPECT_NE(std::system(ss.str().c_str()), 0)
