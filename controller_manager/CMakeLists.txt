@@ -185,6 +185,7 @@ if(BUILD_TESTING)
 
   ament_add_gmock(test_spawner_unspawner
     test/test_spawner_unspawner.cpp
+    TIMEOUT 120
   )
   target_link_libraries(test_spawner_unspawner
     controller_manager
@@ -209,6 +210,11 @@ if(BUILD_TESTING)
   ament_target_dependencies(test_hardware_management_srvs
     controller_manager_msgs
   )
+
+  find_package(ament_cmake_pytest REQUIRED)
+  install(FILES test/test_ros2_control_node.yaml
+    DESTINATION test)
+  ament_add_pytest_test(test_ros2_control_node test/test_ros2_control_node_launch.py)
 endif()
 
 install(

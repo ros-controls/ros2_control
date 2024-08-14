@@ -42,7 +42,8 @@ public:
   HARDWARE_INTERFACE_PUBLIC
   explicit Sensor(std::unique_ptr<SensorInterface> impl);
 
-  Sensor(Sensor && other) = default;
+  HARDWARE_INTERFACE_PUBLIC
+  explicit Sensor(Sensor && other) noexcept;
 
   ~Sensor() = default;
 
@@ -89,6 +90,7 @@ public:
 
 private:
   std::unique_ptr<SensorInterface> impl_;
+  mutable std::recursive_mutex sensors_mutex_;
 };
 
 }  // namespace hardware_interface

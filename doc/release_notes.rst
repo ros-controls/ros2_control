@@ -21,8 +21,7 @@ For details see the controller_manager section.
 * Pass controller manager update rate on the init of the controller interface  (`#1141 <https://github.com/ros-controls/ros2_control/pull/1141>`_)
 * A method to get node options to setup the controller node #api-breaking (`#1169 <https://github.com/ros-controls/ros2_control/pull/1169>`_)
 * Export state interfaces from the chainable controller #api-breaking (`#1021 <https://github.com/ros-controls/ros2_control/pull/1021>`_)
-
-  * All chainable controllers must implement the method ``export_state_interfaces`` to export the state interfaces, similar to ``export_reference_interfaces`` method that is exporting the reference interfaces.
+* All chainable controllers must implement the method ``export_state_interfaces`` to export the state interfaces, similar to ``export_reference_interfaces`` method that is exporting the reference interfaces.
 
 controller_manager
 ******************
@@ -69,6 +68,8 @@ controller_manager
 
    The parameters within the ``ros2_control`` tag are not supported any more.
 * The support for the ``description`` parameter for loading the URDF was removed (`#1358 <https://github.com/ros-controls/ros2_control/pull/1358>`_).
+* The ``--controller-type`` or ``-t`` spawner arg is removed. Now the controller type is defined in the controller configuration file with ``type`` field (`#1639 <https://github.com/ros-controls/ros2_control/pull/1639>`_).
+* The ``--namespace`` or ``-n`` spawner arg is deprecated. Now the spawner namespace can be defined using the ROS 2 standard way (`#1640 <https://github.com/ros-controls/ros2_control/pull/1640>`_).
 
 hardware_interface
 ******************
@@ -99,6 +100,7 @@ hardware_interface
 
 * Soft limits are also parsed from the URDF into the ``HardwareInfo`` structure for the defined joints (`#1488 <https://github.com/ros-controls/ros2_control/pull/1488>`_)
 * Access to logger and clock through ``get_logger`` and ``get_clock`` methods in ResourceManager and HardwareComponents ``Actuator``, ``Sensor`` and ``System`` (`#1585 <https://github.com/ros-controls/ros2_control/pull/1585>`_)
+* Added ``get_hardware_info`` method to the hardware components interface to access the ``HardwareInfo`` instead of accessing the variable ``info_`` directly (`#1643 <https://github.com/ros-controls/ros2_control/pull/1643>`_)
 
 joint_limits
 ************

@@ -25,6 +25,7 @@
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
+#include "rclcpp/logging.hpp"
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 #include "rclcpp_lifecycle/state.hpp"
 
@@ -35,10 +36,17 @@ using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface
 
 Actuator::Actuator(std::unique_ptr<ActuatorInterface> impl) : impl_(std::move(impl)) {}
 
+Actuator::Actuator(Actuator && other) noexcept
+{
+  std::lock_guard<std::recursive_mutex> lock(other.actuators_mutex_);
+  impl_ = std::move(other.impl_);
+}
+
 const rclcpp_lifecycle::State & Actuator::initialize(
   const HardwareInfo & actuator_info, rclcpp::Logger logger,
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
 {
+  std::unique_lock<std::recursive_mutex> lock(actuators_mutex_);
   if (impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN)
   {
     switch (impl_->init(actuator_info, logger, clock_interface))
@@ -60,6 +68,7 @@ const rclcpp_lifecycle::State & Actuator::initialize(
 
 const rclcpp_lifecycle::State & Actuator::configure()
 {
+  std::unique_lock<std::recursive_mutex> lock(actuators_mutex_);
   if (impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
   {
     switch (impl_->on_configure(impl_->get_state()))
@@ -83,6 +92,7 @@ const rclcpp_lifecycle::State & Actuator::configure()
 
 const rclcpp_lifecycle::State & Actuator::cleanup()
 {
+  std::unique_lock<std::recursive_mutex> lock(actuators_mutex_);
   if (impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
   {
     switch (impl_->on_cleanup(impl_->get_state()))
@@ -103,6 +113,7 @@ const rclcpp_lifecycle::State & Actuator::cleanup()
 
 const rclcpp_lifecycle::State & Actuator::shutdown()
 {
+  std::unique_lock<std::recursive_mutex> lock(actuators_mutex_);
   if (
     impl_->get_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN &&
     impl_->get_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED)
@@ -124,6 +135,7 @@ const rclcpp_lifecycle::State & Actuator::shutdown()
 
 const rclcpp_lifecycle::State & Actuator::activate()
 {
+  std::unique_lock<std::recursive_mutex> lock(actuators_mutex_);
   if (impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
   {
     switch (impl_->on_activate(impl_->get_state()))
@@ -146,6 +158,7 @@ const rclcpp_lifecycle::State & Actuator::activate()
 
 const rclcpp_lifecycle::State & Actuator::deactivate()
 {
+  std::unique_lock<std::recursive_mutex> lock(actuators_mutex_);
   if (impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
   {
     switch (impl_->on_deactivate(impl_->get_state()))
@@ -168,6 +181,7 @@ const rclcpp_lifecycle::State & Actuator::deactivate()
 
 const rclcpp_lifecycle::State & Actuator::error()
 {
+  std::unique_lock<std::recursive_mutex> lock(actuators_mutex_);
   if (impl_->get_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN)
   {
     switch (impl_->on_error(impl_->get_state()))
@@ -221,6 +235,14 @@ const rclcpp_lifecycle::State & Actuator::get_state() const { return impl_->get_
 
 return_type Actuator::read(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
+  std::unique_lock<std::recursive_mutex> lock(actuators_mutex_, std::try_to_lock);
+  if (!lock.owns_lock())
+  {
+    RCLCPP_DEBUG(
+      impl_->get_logger(), "Skipping read() call for actuator '%s' since it is locked",
+      impl_->get_name().c_str());
+    return return_type::OK;
+  }
   if (
     impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED ||
     impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED)
@@ -243,6 +265,14 @@ return_type Actuator::read(const rclcpp::Time & time, const rclcpp::Duration & p
 
 return_type Actuator::write(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
+  std::unique_lock<std::recursive_mutex> lock(actuators_mutex_, std::try_to_lock);
+  if (!lock.owns_lock())
+  {
+    RCLCPP_DEBUG(
+      impl_->get_logger(), "Skipping write() call for actuator '%s' since it is locked",
+      impl_->get_name().c_str());
+    return return_type::OK;
+  }
   if (
     impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED ||
     impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED)

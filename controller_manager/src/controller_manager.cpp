@@ -15,6 +15,7 @@
 #include "controller_manager/controller_manager.hpp"
 
 #include <memory>
+#include <set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -529,12 +530,16 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_c
       get_logger(), "The 'type' param was not defined for '%s'.", controller_name.c_str());
     return nullptr;
   }
+  RCLCPP_INFO(
+    get_logger(), "Loading controller : '%s' of type '%s'", controller_name.c_str(),
+    controller_type.c_str());
   return load_controller(controller_name, controller_type);
 }
 
 controller_interface::return_type ControllerManager::unload_controller(
   const std::string & controller_name)
 {
+  RCLCPP_INFO(get_logger(), "Unloading controller: '%s'", controller_name.c_str());
   std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
   std::vector<ControllerSpec> & to = rt_controllers_wrapper_.get_unused_list(guard);
   const std::vector<ControllerSpec> & from = rt_controllers_wrapper_.get_updated_list(guard);
@@ -632,7 +637,7 @@ std::vector<ControllerSpec> ControllerManager::get_loaded_controllers() const
 controller_interface::return_type ControllerManager::configure_controller(
   const std::string & controller_name)
 {
-  RCLCPP_INFO(get_logger(), "Configuring controller '%s'", controller_name.c_str());
+  RCLCPP_INFO(get_logger(), "Configuring controller: '%s'", controller_name.c_str());
 
   const auto & controllers = get_loaded_controllers();
 
@@ -848,6 +853,7 @@ controller_interface::return_type ControllerManager::configure_controller(
 
 void ControllerManager::clear_requests()
 {
+  switch_params_.do_switch = false;
   deactivate_request_.clear();
   activate_request_.clear();
   // Set these interfaces as unavailable when clearing requests to avoid leaving them in available
@@ -877,7 +883,8 @@ controller_interface::return_type ControllerManager::switch_controller(
     return controller_interface::return_type::ERROR;
   }
 
-  switch_params_ = SwitchParams();
+  // reset the switch param internal variables
+  switch_params_.reset();
 
   if (!deactivate_request_.empty() || !activate_request_.empty())
   {
@@ -916,16 +923,24 @@ controller_interface::return_type ControllerManager::switch_controller(
     strictness = controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT;
   }
 
-  RCLCPP_DEBUG(get_logger(), "Activating controllers:");
+  std::string activate_list, deactivate_list;
+  activate_list.reserve(500);
+  deactivate_list.reserve(500);
   for (const auto & controller : activate_controllers)
   {
-    RCLCPP_DEBUG(get_logger(), " - %s", controller.c_str());
+    activate_list.append(controller);
+    activate_list.append(" ");
   }
-  RCLCPP_DEBUG(get_logger(), "Deactivating controllers:");
   for (const auto & controller : deactivate_controllers)
   {
-    RCLCPP_DEBUG(get_logger(), " - %s", controller.c_str());
+    deactivate_list.append(controller);
+    deactivate_list.append(" ");
   }
+  RCLCPP_INFO_EXPRESSION(
+    get_logger(), !activate_list.empty(), "Activating controllers: [ %s]", activate_list.c_str());
+  RCLCPP_INFO_EXPRESSION(
+    get_logger(), !deactivate_list.empty(), "Deactivating controllers: [ %s]",
+    deactivate_list.c_str());
 
   const auto list_controllers = [this, strictness](
                                   const std::vector<std::string> & controller_list,
@@ -1298,19 +1313,27 @@ controller_interface::return_type ControllerManager::switch_controller(
   // start the atomic controller switching
   switch_params_.strictness = strictness;
   switch_params_.activate_asap = activate_asap;
-  switch_params_.init_time = rclcpp::Clock().now();
-  switch_params_.timeout = timeout;
+  if (timeout == rclcpp::Duration{0, 0})
+  {
+    RCLCPP_INFO_ONCE(get_logger(), "Switch controller timeout is set to 0, using default 1s!");
+    switch_params_.timeout = std::chrono::nanoseconds(1'000'000'000);
+  }
+  else
+  {
+    switch_params_.timeout = timeout.to_chrono<std::chrono::nanoseconds>();
+  }
   switch_params_.do_switch = true;
-
   // wait until switch is finished
   RCLCPP_DEBUG(get_logger(), "Requested atomic controller switch from realtime loop");
-  while (rclcpp::ok() && switch_params_.do_switch)
+  std::unique_lock<std::mutex> switch_params_guard(switch_params_.mutex, std::defer_lock);
+  if (!switch_params_.cv.wait_for(
+        switch_params_guard, switch_params_.timeout, [this] { return !switch_params_.do_switch; }))
   {
-    if (!rclcpp::ok())
-    {
-      return controller_interface::return_type::ERROR;
-    }
-    std::this_thread::sleep_for(std::chrono::microseconds(100));
+    RCLCPP_ERROR(
+      get_logger(), "Switch controller timed out after %f seconds!",
+      static_cast<double>(switch_params_.timeout.count()) / 1e9);
+    clear_requests();
+    return controller_interface::return_type::ERROR;
   }
 
   // copy the controllers spec from the used to the unused list
@@ -2130,13 +2153,32 @@ void ControllerManager::read(const rclcpp::Time & time, const rclcpp::Duration &
   if (!ok)
   {
     std::vector<std::string> stop_request = {};
+    std::string failed_hardware_string;
+    failed_hardware_string.reserve(500);
     // Determine controllers to stop
     for (const auto & hardware_name : failed_hardware_names)
     {
+      failed_hardware_string.append(hardware_name);
+      failed_hardware_string.append(" ");
       auto controllers = resource_manager_->get_cached_controllers_to_hardware(hardware_name);
       stop_request.insert(stop_request.end(), controllers.begin(), controllers.end());
     }
-
+    std::string stop_request_string;
+    stop_request_string.reserve(500);
+    for (const auto & controller : stop_request)
+    {
+      stop_request_string.append(controller);
+      stop_request_string.append(" ");
+    }
+    RCLCPP_ERROR(
+      get_logger(),
+      "Deactivating following hardware components as their read cycle resulted in an error: [ %s]",
+      failed_hardware_string.c_str());
+    RCLCPP_ERROR_EXPRESSION(
+      get_logger(), !stop_request_string.empty(),
+      "Deactivating following controllers as their hardware components read cycle resulted in an "
+      "error: [ %s]",
+      stop_request_string.c_str());
     std::vector<ControllerSpec> & rt_controller_list =
       rt_controllers_wrapper_.update_and_get_used_by_rt_list();
     deactivate_controllers(rt_controller_list, stop_request);
@@ -2146,6 +2188,12 @@ void ControllerManager::read(const rclcpp::Time & time, const rclcpp::Duration &
 
 void ControllerManager::manage_switch()
 {
+  std::unique_lock<std::mutex> guard(switch_params_.mutex, std::try_to_lock);
+  if (!guard.owns_lock())
+  {
+    RCLCPP_DEBUG(get_logger(), "Unable to lock switch mutex. Retrying in next cycle.");
+    return;
+  }
   // Ask hardware interfaces to change mode
   if (!resource_manager_->perform_command_mode_switch(
         activate_command_interface_request_, deactivate_command_interface_request_))
@@ -2174,6 +2222,7 @@ void ControllerManager::manage_switch()
 
   // All controllers switched --> switching done
   switch_params_.do_switch = false;
+  switch_params_.cv.notify_all();
 }
 
 controller_interface::return_type ControllerManager::update(
@@ -2285,13 +2334,33 @@ void ControllerManager::write(const rclcpp::Time & time, const rclcpp::Duration 
   if (!ok)
   {
     std::vector<std::string> stop_request = {};
+    std::string failed_hardware_string;
+    failed_hardware_string.reserve(500);
     // Determine controllers to stop
     for (const auto & hardware_name : failed_hardware_names)
     {
+      failed_hardware_string.append(hardware_name);
+      failed_hardware_string.append(" ");
       auto controllers = resource_manager_->get_cached_controllers_to_hardware(hardware_name);
       stop_request.insert(stop_request.end(), controllers.begin(), controllers.end());
     }
-
+    std::string stop_request_string;
+    stop_request_string.reserve(500);
+    for (const auto & controller : stop_request)
+    {
+      stop_request_string.append(controller);
+      stop_request_string.append(" ");
+    }
+    RCLCPP_ERROR(
+      get_logger(),
+      "Deactivating following hardware components as their write cycle resulted in an error: [ "
+      "%s]",
+      failed_hardware_string.c_str());
+    RCLCPP_ERROR_EXPRESSION(
+      get_logger(), !stop_request_string.empty(),
+      "Deactivating following controllers as their hardware components write cycle resulted in an "
+      "error: [ %s]",
+      stop_request_string.c_str());
     std::vector<ControllerSpec> & rt_controller_list =
       rt_controllers_wrapper_.update_and_get_used_by_rt_list();
     deactivate_controllers(rt_controller_list, stop_request);

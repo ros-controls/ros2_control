@@ -1770,7 +1770,6 @@ void ResourceManager::shutdown_async_components()
 HardwareReadWriteStatus ResourceManager::read(
   const rclcpp::Time & time, const rclcpp::Duration & period)
 {
-  std::lock_guard<std::recursive_mutex> guard(resources_lock_);
   read_write_status.ok = true;
   read_write_status.failed_hardware_names.clear();
 
@@ -1831,7 +1830,6 @@ HardwareReadWriteStatus ResourceManager::read(
 HardwareReadWriteStatus ResourceManager::write(
   const rclcpp::Time & time, const rclcpp::Duration & period)
 {
-  std::lock_guard<std::recursive_mutex> guard(resources_lock_);
   read_write_status.ok = true;
   read_write_status.failed_hardware_names.clear();
 

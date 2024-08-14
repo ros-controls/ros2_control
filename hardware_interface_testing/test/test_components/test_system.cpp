@@ -34,7 +34,7 @@ class TestSystem : public SystemInterface
     }
 
     // Simulating initialization error
-    if (info_.joints[0].state_interfaces[1].name == "does_not_exist")
+    if (get_hardware_info().joints[0].state_interfaces[1].name == "does_not_exist")
     {
       return CallbackReturn::ERROR;
     }
@@ -44,22 +44,23 @@ class TestSystem : public SystemInterface
 
   std::vector<StateInterface> export_state_interfaces() override
   {
+    const auto info = get_hardware_info();
     std::vector<StateInterface> state_interfaces;
-    for (auto i = 0u; i < info_.joints.size(); ++i)
+    for (auto i = 0u; i < info.joints.size(); ++i)
     {
       state_interfaces.emplace_back(hardware_interface::StateInterface(
-        info_.joints[i].name, hardware_interface::HW_IF_POSITION, &position_state_[i]));
+        info.joints[i].name, hardware_interface::HW_IF_POSITION, &position_state_[i]));
       state_interfaces.emplace_back(hardware_interface::StateInterface(
-        info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &velocity_state_[i]));
+        info.joints[i].name, hardware_interface::HW_IF_VELOCITY, &velocity_state_[i]));
       state_interfaces.emplace_back(hardware_interface::StateInterface(
-        info_.joints[i].name, hardware_interface::HW_IF_ACCELERATION, &acceleration_state_[i]));
+        info.joints[i].name, hardware_interface::HW_IF_ACCELERATION, &acceleration_state_[i]));
     }
 
-    if (info_.gpios.size() > 0)
+    if (info.gpios.size() > 0)
     {
       // Add configuration/max_tcp_jerk interface
       state_interfaces.emplace_back(hardware_interface::StateInterface(
-        info_.gpios[0].name, info_.gpios[0].state_interfaces[0].name, &configuration_state_));
+        info.gpios[0].name, info.gpios[0].state_interfaces[0].name, &configuration_state_));
     }
 
     return state_interfaces;
@@ -67,22 +68,22 @@ class TestSystem : public SystemInterface
 
   std::vector<CommandInterface> export_command_interfaces() override
   {
+    const auto info = get_hardware_info();
     std::vector<CommandInterface> command_interfaces;
-    for (auto i = 0u; i < info_.joints.size(); ++i)
+    for (auto i = 0u; i < info.joints.size(); ++i)
     {
       command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &velocity_command_[i]));
+        info.joints[i].name, hardware_interface::HW_IF_VELOCITY, &velocity_command_[i]));
     }
     // Add max_acceleration command interface
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      info_.joints[0].name, info_.joints[0].command_interfaces[1].name,
-      &max_acceleration_command_));
+      info.joints[0].name, info.joints[0].command_interfaces[1].name, &max_acceleration_command_));
 
-    if (info_.gpios.size() > 0)
+    if (info.gpios.size() > 0)
     {
       // Add configuration/max_tcp_jerk interface
       command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        info_.gpios[0].name, info_.gpios[0].command_interfaces[0].name, &configuration_command_));
+        info.gpios[0].name, info.gpios[0].command_interfaces[0].name, &configuration_command_));
     }
 
     return command_interfaces;

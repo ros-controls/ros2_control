@@ -29,6 +29,7 @@
 #include "controller_manager/controller_manager.hpp"
 #include "controller_manager_msgs/srv/switch_controller.hpp"
 
+#include "rclcpp/executors.hpp"
 #include "rclcpp/utilities.hpp"
 
 #include "std_msgs/msg/string.hpp"
@@ -61,14 +62,15 @@ class ControllerManagerFixture : public ::testing::Test
 {
 public:
   explicit ControllerManagerFixture(
-    const std::string & robot_description = ros2_control_test_assets::minimal_robot_urdf)
+    const std::string & robot_description = ros2_control_test_assets::minimal_robot_urdf,
+    const std::string & cm_namespace = "")
   : robot_description_(robot_description)
   {
     executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
     cm_ = std::make_shared<CtrlMgr>(
       std::make_unique<hardware_interface::ResourceManager>(
         rm_node_->get_node_clock_interface(), rm_node_->get_node_logging_interface()),
-      executor_, TEST_CM_NAME);
+      executor_, TEST_CM_NAME, cm_namespace);
     // We want to be able to not pass robot description immediately
     if (!robot_description_.empty())
     {

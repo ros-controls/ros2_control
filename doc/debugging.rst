@@ -65,10 +65,11 @@ Additional notes
 
 * Realtime
 
-.. warning::
-  The ``update/on_activate/on_deactivate`` method of a controller and the ``read/write/on_activate/perform_command_mode_switch`` methods of a hardware component all run in the context of the realtime update loop. Setting breakpoints there can and will cause issues that might even break your hardware in the worst case.
+  .. warning::
 
-From experience, it might be better to use meaningful logs for the real-time context (with caution) or to add additional debug state interfaces (or publishers in the case of a controller).
+    The ``update/on_activate/on_deactivate`` method of a controller and the ``read/write/on_activate/perform_command_mode_switch`` methods of a hardware component all run in the context of the realtime update loop. Setting breakpoints there can and will cause issues that might even break your hardware in the worst case.
+
+  From experience, it might be better to use meaningful logs for the real-time context (with caution) or to add additional debug state interfaces (or publishers in the case of a controller).
 
 However, running the controller_manager and your plugin with gdb can still be very useful for debugging errors such as segfaults, as you can gather a full backtrace.
 

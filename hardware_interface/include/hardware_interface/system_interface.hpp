@@ -25,6 +25,7 @@
 #include "lifecycle_msgs/msg/state.hpp"
 #include "rclcpp/duration.hpp"
 #include "rclcpp/logger.hpp"
+#include "rclcpp/logging.hpp"
 #include "rclcpp/node_interfaces/node_clock_interface.hpp"
 #include "rclcpp/time.hpp"
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
@@ -229,7 +230,6 @@ public:
    */
   void set_state(const rclcpp_lifecycle::State & new_state) { lifecycle_state_ = new_state; }
 
-protected:
   /// Get the logger of the SystemInterface.
   /**
    * \return logger of the SystemInterface.
@@ -242,6 +242,13 @@ protected:
    */
   rclcpp::Clock::SharedPtr get_clock() const { return clock_interface_->get_clock(); }
 
+  /// Get the hardware info of the SystemInterface.
+  /**
+   * \return hardware info of the SystemInterface.
+   */
+  const HardwareInfo & get_hardware_info() const { return info_; }
+
+protected:
   HardwareInfo info_;
   rclcpp_lifecycle::State lifecycle_state_;
 
