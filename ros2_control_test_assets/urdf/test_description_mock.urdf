@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <robot name="MinimalRobot">
   <link name="world"/>
-  <joint name="base_joint" type="fixed">
+  <joint name="base_joint" type="revolute">
     <origin rpy="0 0 0" xyz="0 0 0"/>
     <parent link="world"/>
     <child link="base_link"/>
+    <limit effort="0.1" lower="-3.14159265359" upper="3.14159265359" velocity="0.2"/>
   </joint>
   <link name="base_link">
     <collision>
