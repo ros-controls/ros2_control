@@ -42,7 +42,8 @@ public:
   HARDWARE_INTERFACE_PUBLIC
   explicit Actuator(std::unique_ptr<ActuatorInterface> impl);
 
-  Actuator(Actuator && other) = default;
+  HARDWARE_INTERFACE_PUBLIC
+  explicit Actuator(Actuator && other) noexcept;
 
   ~Actuator() = default;
 
@@ -102,6 +103,7 @@ public:
 
 private:
   std::unique_ptr<ActuatorInterface> impl_;
+  mutable std::recursive_mutex actuators_mutex_;
 };
 
 }  // namespace hardware_interface

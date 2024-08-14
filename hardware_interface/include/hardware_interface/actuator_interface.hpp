@@ -416,7 +416,6 @@ public:
     return actuator_commands_.at(interface_name)->get_value();
   }
 
-protected:
   /// Get the logger of the ActuatorInterface.
   /**
    * \return logger of the ActuatorInterface.
@@ -435,6 +434,7 @@ protected:
    */
   const HardwareInfo & get_hardware_info() const { return info_; }
 
+protected:
   HardwareInfo info_;
   std::unordered_map<std::string, InterfaceDescription> joint_state_interfaces_;
   std::unordered_map<std::string, InterfaceDescription> joint_command_interfaces_;

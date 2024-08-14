@@ -31,6 +31,7 @@
 #include "lifecycle_msgs/msg/state.hpp"
 #include "rclcpp/duration.hpp"
 #include "rclcpp/logger.hpp"
+#include "rclcpp/logging.hpp"
 #include "rclcpp/node_interfaces/node_clock_interface.hpp"
 #include "rclcpp/time.hpp"
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
@@ -435,7 +436,7 @@ public:
    * \return state.
    */
   void set_state(const rclcpp_lifecycle::State & new_state) { lifecycle_state_ = new_state; }
-
+  
   void set_state(const std::string & interface_name, const double & value)
   {
     system_states_.at(interface_name)->set_value(value);
@@ -456,7 +457,6 @@ public:
     return system_commands_.at(interface_name)->get_value();
   }
 
-protected:
   /// Get the logger of the SystemInterface.
   /**
    * \return logger of the SystemInterface.
@@ -475,6 +475,7 @@ protected:
    */
   const HardwareInfo & get_hardware_info() const { return info_; }
 
+protected:
   HardwareInfo info_;
   std::unordered_map<std::string, InterfaceDescription> joint_state_interfaces_;
   std::unordered_map<std::string, InterfaceDescription> joint_command_interfaces_;

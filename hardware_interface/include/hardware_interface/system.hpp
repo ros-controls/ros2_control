@@ -42,7 +42,8 @@ public:
   HARDWARE_INTERFACE_PUBLIC
   explicit System(std::unique_ptr<SystemInterface> impl);
 
-  System(System && other) = default;
+  HARDWARE_INTERFACE_PUBLIC
+  explicit System(System && other) noexcept;
 
   ~System() = default;
 
@@ -102,6 +103,7 @@ public:
 
 private:
   std::unique_ptr<SystemInterface> impl_;
+  mutable std::recursive_mutex system_mutex_;
 };
 
 }  // namespace hardware_interface

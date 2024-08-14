@@ -266,7 +266,6 @@ public:
     return sensor_states_.at(interface_name)->get_value();
   }
 
-protected:
   /// Get the logger of the SensorInterface.
   /**
    * \return logger of the SensorInterface.
@@ -285,6 +284,7 @@ protected:
    */
   const HardwareInfo & get_hardware_info() const { return info_; }
 
+protected:
   HardwareInfo info_;
 
   std::unordered_map<std::string, InterfaceDescription> sensor_state_interfaces_;

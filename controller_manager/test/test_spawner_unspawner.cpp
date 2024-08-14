@@ -27,6 +27,7 @@
 
 using ::testing::_;
 using ::testing::Return;
+const char coveragepy_script[] = "python3 -m coverage run --append --branch";
 
 using namespace std::chrono_literals;
 class TestLoadController : public ControllerManagerFixture<controller_manager::ControllerManager>
@@ -68,14 +69,18 @@ protected:
 
 int call_spawner(const std::string extra_args)
 {
-  std::string spawner_script = "ros2 run controller_manager spawner ";
+  std::string spawner_script =
+    std::string(coveragepy_script) +
+    " $(ros2 pkg prefix controller_manager)/lib/controller_manager/spawner ";
   return std::system((spawner_script + extra_args).c_str());
 }
 
 int call_unspawner(const std::string extra_args)
 {
-  std::string spawner_script = "ros2 run controller_manager unspawner ";
-  return std::system((spawner_script + extra_args).c_str());
+  std::string unspawner_script =
+    std::string(coveragepy_script) +
+    " $(ros2 pkg prefix controller_manager)/lib/controller_manager/unspawner ";
+  return std::system((unspawner_script + extra_args).c_str());
 }
 
 TEST_F(TestLoadController, spawner_with_no_arguments_errors)
@@ -298,11 +303,12 @@ TEST_F(TestLoadController, unload_on_kill)
 {
   // Launch spawner with unload on kill
   // timeout command will kill it after the specified time with signal SIGINT
+  cm_->set_parameter(rclcpp::Parameter("ctrl_3.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
   std::stringstream ss;
   ss << "timeout --signal=INT 5 "
-     << "ros2 run controller_manager spawner "
-     << "ctrl_3 -c test_controller_manager -t "
-     << std::string(test_controller::TEST_CONTROLLER_CLASS_NAME) << " --unload-on-kill";
+     << std::string(coveragepy_script) +
+          " $(ros2 pkg prefix controller_manager)/lib/controller_manager/spawner "
+     << "ctrl_3 -c test_controller_manager --unload-on-kill";
 
   EXPECT_NE(std::system(ss.str().c_str()), 0)
     << "timeout should have killed spawner and returned non 0 code";
