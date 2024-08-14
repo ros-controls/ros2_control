@@ -46,7 +46,7 @@ class ListHardwareComponentsVerb(VerbExtension):
                 if component.state.id == State.PRIMARY_STATE_UNCONFIGURED:
                     activity_color = bcolors.WARNING
                 if component.state.id == State.PRIMARY_STATE_INACTIVE:
-                    activity_color = bcolors.OKCYAN
+                    activity_color = bcolors.MAGENTA
                 if component.state.id == State.PRIMARY_STATE_ACTIVE:
                     activity_color = bcolors.OKGREEN
 
