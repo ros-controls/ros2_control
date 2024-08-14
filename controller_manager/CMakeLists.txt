@@ -216,7 +216,7 @@ if(BUILD_TESTING)
     DESTINATION share/${PROJECT_NAME}
   )
 
-  find_package(launch_testing_ament_cmake)
+  find_package(launch_testing_ament_cmake REQUIRED)
   add_launch_test(test/test_spawner_integration.py
     TIMEOUT 180
   )
