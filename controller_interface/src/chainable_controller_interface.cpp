@@ -52,7 +52,7 @@ ChainableControllerInterface::export_state_interfaces()
   state_interfaces_ptrs_vec.reserve(state_interfaces.size());
 
   // check if the names of the controller state interfaces begin with the controller's name
-  for (auto & interface : state_interfaces)
+  for (const auto & interface : state_interfaces)
   {
     if (interface.get_prefix_name() != get_node()->get_name())
     {
