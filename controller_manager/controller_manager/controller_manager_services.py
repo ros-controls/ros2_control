@@ -33,7 +33,13 @@ class ServiceNotFoundError(Exception):
 
 
 def service_caller(
-    node, service_name, service_type, request, service_timeout=0.0, max_attempts=3
+    node,
+    service_name,
+    service_type,
+    request,
+    service_timeout=0.0,
+    call_timeout=10.0,
+    max_attempts=3,
 ):
     cli = node.create_client(service_type, service_name)
 
@@ -49,7 +55,7 @@ def service_caller(
     future = None
     for attempt in range(max_attempts):  # This is a rather arbitrary retry number
         future = cli.call_async(request)
-        rclpy.spin_until_future_complete(node, future, timeout_sec=service_timeout)
+        rclpy.spin_until_future_complete(node, future, timeout_sec=call_timeout)
         if future.result() is None:
             node.get_logger().warning(
                 f"Failed getting a result from calling {service_name} in "
