@@ -15,10 +15,7 @@
 #ifndef TEST_CONTROLLER_FAILED_INIT__TEST_CONTROLLER_FAILED_INIT_HPP_
 #define TEST_CONTROLLER_FAILED_INIT__TEST_CONTROLLER_FAILED_INIT_HPP_
 
-#include <memory>
-#include <string>
-
-#include "controller_manager/controller_manager.hpp"
+#include "controller_interface/controller_interface.hpp"
 #include "controller_manager/visibility_control.h"
 
 namespace test_controller_failed_init

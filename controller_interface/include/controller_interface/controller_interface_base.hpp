@@ -25,7 +25,6 @@
 #include "hardware_interface/loaned_command_interface.hpp"
 #include "hardware_interface/loaned_state_interface.hpp"
 
-#include "rclcpp/rclcpp.hpp"
 #include "rclcpp/version.h"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
 
@@ -225,10 +224,19 @@ public:
   virtual std::vector<hardware_interface::CommandInterface> export_reference_interfaces() = 0;
 
   /**
+   * Export interfaces for a chainable controller that can be used as state interface by other
+   * controllers.
+   *
+   * \returns list of state interfaces for preceding controllers.
+   */
+  CONTROLLER_INTERFACE_PUBLIC
+  virtual std::vector<hardware_interface::StateInterface> export_state_interfaces() = 0;
+
+  /**
    * Set chained mode of a chainable controller. This method triggers internal processes to switch
    * a chainable controller to "chained" mode and vice-versa. Setting controller to "chained" mode
-   * usually involves disabling of subscribers and other external interfaces to avoid potential
-   * concurrency in input commands.
+   * usually involves the usage of the controller's reference interfaces by the other
+   * controllers
    *
    * \returns true if mode is switched successfully and false if not.
    */
@@ -249,12 +257,12 @@ public:
 protected:
   std::vector<hardware_interface::LoanedCommandInterface> command_interfaces_;
   std::vector<hardware_interface::LoanedStateInterface> state_interfaces_;
-  unsigned int update_rate_ = 0;
-  bool is_async_ = false;
-  std::string urdf_ = "";
 
 private:
   std::shared_ptr<rclcpp_lifecycle::LifecycleNode> node_;
+  unsigned int update_rate_ = 0;
+  bool is_async_ = false;
+  std::string urdf_ = "";
 };
 
 using ControllerInterfaceBaseSharedPtr = std::shared_ptr<ControllerInterfaceBase>;

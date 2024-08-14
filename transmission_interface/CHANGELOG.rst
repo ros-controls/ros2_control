@@ -2,6 +2,20 @@
 Changelog for package transmission_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.15.0 (2024-08-05)
+-------------------
+
+4.14.0 (2024-07-23)
+-------------------
+* Unused header cleanup (`#1627 <https://github.com/ros-controls/ros2_control/issues/1627>`_)
+* Contributors: Henry Moore
+
+4.13.0 (2024-07-08)
+-------------------
+
+4.12.0 (2024-07-01)
+-------------------
+
 4.11.0 (2024-05-14)
 -------------------
 * Add find_package for ament_cmake_gen_version_h (`#1534 <https://github.com/ros-controls/ros2_control/issues/1534>`_)

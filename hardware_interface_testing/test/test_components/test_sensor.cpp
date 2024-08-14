@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <memory>
 #include <vector>
 
 #include "hardware_interface/sensor_interface.hpp"
@@ -30,7 +29,7 @@ class TestSensor : public SensorInterface
       return CallbackReturn::ERROR;
     }
     // can only give feedback state for velocity
-    if (info_.sensors[0].state_interfaces.size() != 1)
+    if (get_hardware_info().sensors[0].state_interfaces.size() == 2)
     {
       return CallbackReturn::ERROR;
     }
@@ -41,7 +40,8 @@ class TestSensor : public SensorInterface
   {
     std::vector<StateInterface> state_interfaces;
     state_interfaces.emplace_back(hardware_interface::StateInterface(
-      info_.sensors[0].name, info_.sensors[0].state_interfaces[0].name, &velocity_state_));
+      get_hardware_info().sensors[0].name, get_hardware_info().sensors[0].state_interfaces[0].name,
+      &velocity_state_));
 
     return state_interfaces;
   }

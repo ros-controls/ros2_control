@@ -15,8 +15,6 @@
 #ifndef TRANSMISSION_INTERFACE__HANDLE_HPP_
 #define TRANSMISSION_INTERFACE__HANDLE_HPP_
 
-#include <string>
-
 #include "hardware_interface/handle.hpp"
 
 namespace transmission_interface

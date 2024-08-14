@@ -14,19 +14,18 @@
 
 #include "controller_interface/controller_interface.hpp"
 
-#include <memory>
-#include <string>
-#include <utility>
 #include <vector>
-
-#include "hardware_interface/types/lifecycle_state_names.hpp"
-#include "lifecycle_msgs/msg/state.hpp"
 
 namespace controller_interface
 {
 ControllerInterface::ControllerInterface() : ControllerInterfaceBase() {}
 
 bool ControllerInterface::is_chainable() const { return false; }
+
+std::vector<hardware_interface::StateInterface> ControllerInterface::export_state_interfaces()
+{
+  return {};
+}
 
 std::vector<hardware_interface::CommandInterface> ControllerInterface::export_reference_interfaces()
 {

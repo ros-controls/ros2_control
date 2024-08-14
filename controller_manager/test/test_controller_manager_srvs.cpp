@@ -22,7 +22,6 @@
 #include "controller_manager_test_common.hpp"
 
 #include "controller_interface/controller_interface.hpp"
-#include "controller_manager/controller_manager.hpp"
 #include "controller_manager_msgs/srv/list_controller_types.hpp"
 #include "controller_manager_msgs/srv/list_controllers.hpp"
 #include "controller_manager_msgs/srv/list_hardware_interfaces.hpp"
@@ -169,9 +168,38 @@ TEST_F(TestControllerManagerSrvs, list_controllers_srv)
       "joint1/velocity", "joint2/acceleration", "joint2/position", "joint2/velocity",
       "joint3/acceleration", "joint3/position", "joint3/velocity", "sensor1/velocity"));
 
+  // Switch with a very low timeout 1 ns and it should fail as there is no enough time to switch
+  ASSERT_EQ(
+    controller_interface::return_type::ERROR,
+    cm_->switch_controller(
+      {}, {test_controller::TEST_CONTROLLER_NAME},
+      controller_manager_msgs::srv::SwitchController::Request::STRICT, true,
+      rclcpp::Duration(0, 1)));
+
+  result = call_service_and_wait(*client, request, srv_executor);
+  ASSERT_EQ(1u, result->controller.size());
+  ASSERT_EQ("active", result->controller[0].state);
+  ASSERT_THAT(
+    result->controller[0].claimed_interfaces,
+    UnorderedElementsAre(
+      "joint2/velocity", "joint3/velocity", "joint2/max_acceleration", "configuration/max_tcp_jerk",
+      "joint1/position", "joint1/max_velocity"));
+  ASSERT_THAT(
+    result->controller[0].required_command_interfaces,
+    UnorderedElementsAre(
+      "configuration/max_tcp_jerk", "joint1/max_velocity", "joint1/position",
+      "joint2/max_acceleration", "joint2/velocity", "joint3/velocity"));
+  ASSERT_THAT(
+    result->controller[0].required_state_interfaces,
+    UnorderedElementsAre(
+      "configuration/max_tcp_jerk", "joint1/position", "joint1/some_unlisted_interface",
+      "joint1/velocity", "joint2/acceleration", "joint2/position", "joint2/velocity",
+      "joint3/acceleration", "joint3/position", "joint3/velocity", "sensor1/velocity"));
+
+  // Try again with higher timeout
   cm_->switch_controller(
     {}, {test_controller::TEST_CONTROLLER_NAME},
-    controller_manager_msgs::srv::SwitchController::Request::STRICT, true, rclcpp::Duration(0, 0));
+    controller_manager_msgs::srv::SwitchController::Request::STRICT, true, rclcpp::Duration(3, 0));
 
   result = call_service_and_wait(*client, request, srv_executor);
   ASSERT_EQ(1u, result->controller.size());
@@ -980,34 +1008,37 @@ TEST_F(TestControllerManagerSrvs, list_sorted_independent_chained_controllers)
   // add controllers
   /// @todo add controllers in random order
   /// For now, adding the ordered case to see that current sorting doesn't change order
-  cm_->add_controller(
-    test_chained_controller_2, TEST_CHAINED_CONTROLLER_2,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_chained_controller_6, TEST_CHAINED_CONTROLLER_6,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_chained_controller_1, TEST_CHAINED_CONTROLLER_1,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_chained_controller_7, TEST_CHAINED_CONTROLLER_7,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_controller_1, TEST_CONTROLLER_1, test_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_chained_controller_5, TEST_CHAINED_CONTROLLER_5,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_chained_controller_3, TEST_CHAINED_CONTROLLER_3,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_chained_controller_4, TEST_CHAINED_CONTROLLER_4,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_controller_2, TEST_CONTROLLER_2, test_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_chained_controller_8, TEST_CHAINED_CONTROLLER_8,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  {
+    ControllerManagerRunner cm_runner(this);
+    cm_->add_controller(
+      test_chained_controller_2, TEST_CHAINED_CONTROLLER_2,
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_chained_controller_6, TEST_CHAINED_CONTROLLER_6,
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_chained_controller_1, TEST_CHAINED_CONTROLLER_1,
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_chained_controller_7, TEST_CHAINED_CONTROLLER_7,
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_controller_1, TEST_CONTROLLER_1, test_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_chained_controller_5, TEST_CHAINED_CONTROLLER_5,
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_chained_controller_3, TEST_CHAINED_CONTROLLER_3,
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_chained_controller_4, TEST_CHAINED_CONTROLLER_4,
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_controller_2, TEST_CONTROLLER_2, test_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_chained_controller_8, TEST_CHAINED_CONTROLLER_8,
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  }
 
   // get controller list before configure
   auto result = call_service_and_wait(*client, request, srv_executor);
@@ -1233,40 +1264,40 @@ TEST_F(TestControllerManagerSrvs, list_large_number_of_controllers_with_chains)
   // add controllers
   /// @todo add controllers in random order
   /// For now, adding the ordered case to see that current sorting doesn't change order
-  cm_->add_controller(
-    test_chained_controller_2, TEST_CHAINED_CONTROLLER_2,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_chained_controller_6, TEST_CHAINED_CONTROLLER_6,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_chained_controller_1, TEST_CHAINED_CONTROLLER_1,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_chained_controller_7, TEST_CHAINED_CONTROLLER_7,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_controller_1, TEST_CONTROLLER_1, test_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_chained_controller_5, TEST_CHAINED_CONTROLLER_5,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_chained_controller_3, TEST_CHAINED_CONTROLLER_3,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_chained_controller_4, TEST_CHAINED_CONTROLLER_4,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_controller_2, TEST_CONTROLLER_2, test_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_chained_controller_8, TEST_CHAINED_CONTROLLER_8,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  cm_->add_controller(
-    test_chained_controller_9, TEST_CHAINED_CONTROLLER_9,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-
   {
     ControllerManagerRunner cm_runner(this);
+    cm_->add_controller(
+      test_chained_controller_2, TEST_CHAINED_CONTROLLER_2,
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_chained_controller_6, TEST_CHAINED_CONTROLLER_6,
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_chained_controller_1, TEST_CHAINED_CONTROLLER_1,
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_chained_controller_7, TEST_CHAINED_CONTROLLER_7,
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_controller_1, TEST_CONTROLLER_1, test_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_chained_controller_5, TEST_CHAINED_CONTROLLER_5,
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_chained_controller_3, TEST_CHAINED_CONTROLLER_3,
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_chained_controller_4, TEST_CHAINED_CONTROLLER_4,
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_controller_2, TEST_CONTROLLER_2, test_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_chained_controller_8, TEST_CHAINED_CONTROLLER_8,
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+    cm_->add_controller(
+      test_chained_controller_9, TEST_CHAINED_CONTROLLER_9,
+      test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+
     for (auto random_ctrl : random_controllers_list)
     {
       cm_->add_controller(

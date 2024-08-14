@@ -21,7 +21,6 @@
 using hardware_interface::HW_IF_EFFORT;
 using hardware_interface::HW_IF_POSITION;
 using hardware_interface::HW_IF_VELOCITY;
-using std::vector;
 using transmission_interface::ActuatorHandle;
 using transmission_interface::Exception;
 using transmission_interface::JointHandle;

@@ -2,6 +2,27 @@
 Changelog for package hardware_interface_testing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.15.0 (2024-08-05)
+-------------------
+* [RM] Add `get_hardware_info` method to the Hardware Components (`#1643 <https://github.com/ros-controls/ros2_control/issues/1643>`_)
+* Contributors: Sai Kishor Kothakota
+
+4.14.0 (2024-07-23)
+-------------------
+* Unused header cleanup (`#1627 <https://github.com/ros-controls/ros2_control/issues/1627>`_)
+* Fix typos in test_resource_manager.cpp (`#1609 <https://github.com/ros-controls/ros2_control/issues/1609>`_)
+* Contributors: Henry Moore, Parker Drouillard
+
+4.13.0 (2024-07-08)
+-------------------
+* [ResourceManager] Propagate access to logger and clock interfaces to HardwareComponent (`#1585 <https://github.com/ros-controls/ros2_control/issues/1585>`_)
+* Contributors: Sai Kishor Kothakota
+
+4.12.0 (2024-07-01)
+-------------------
+* [RM] Rename `load_urdf` method to `load_and_initialize_components` and add error handling there to avoid stack crashing when error happens. (`#1354 <https://github.com/ros-controls/ros2_control/issues/1354>`_)
+* Contributors: Dr. Denis
+
 4.11.0 (2024-05-14)
 -------------------
 

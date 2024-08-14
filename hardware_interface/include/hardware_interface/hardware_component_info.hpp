@@ -19,7 +19,6 @@
 #ifndef HARDWARE_INTERFACE__HARDWARE_COMPONENT_INFO_HPP_
 #define HARDWARE_INTERFACE__HARDWARE_COMPONENT_INFO_HPP_
 
-#include <memory>
 #include <string>
 #include <vector>
 

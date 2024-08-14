@@ -15,7 +15,6 @@
 #ifndef TEST_CONTROLLER__TEST_CONTROLLER_HPP_
 #define TEST_CONTROLLER__TEST_CONTROLLER_HPP_
 
-#include <memory>
 #include <string>
 #include <vector>
 
@@ -65,6 +64,9 @@ public:
 
   CONTROLLER_MANAGER_PUBLIC
   void set_state_interface_configuration(const controller_interface::InterfaceConfiguration & cfg);
+
+  CONTROLLER_MANAGER_PUBLIC
+  std::vector<double> get_state_interface_data() const;
 
   const std::string & getRobotDescription() const;
 

@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <locale>
+#include <optional>
+#include <sstream>
+
 #include "hardware_interface/lexical_casts.hpp"
 
 namespace hardware_interface

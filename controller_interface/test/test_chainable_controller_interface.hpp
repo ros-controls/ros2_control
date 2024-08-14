@@ -15,38 +15,41 @@
 #ifndef TEST_CHAINABLE_CONTROLLER_INTERFACE_HPP_
 #define TEST_CHAINABLE_CONTROLLER_INTERFACE_HPP_
 
+#include <gmock/gmock.h>
+
 #include <string>
 #include <vector>
 
-#include "gmock/gmock.h"
-
 #include "controller_interface/chainable_controller_interface.hpp"
 #include "hardware_interface/handle.hpp"
-#include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 
 constexpr char TEST_CONTROLLER_NAME[] = "testable_chainable_controller";
 constexpr double INTERFACE_VALUE = 1989.0;
 constexpr double INTERFACE_VALUE_SUBSCRIBER_ERROR = 12345.0;
 constexpr double INTERFACE_VALUE_UPDATE_ERROR = 67890.0;
 constexpr double INTERFACE_VALUE_INITIAL_REF = 1984.0;
+constexpr double EXPORTED_STATE_INTERFACE_VALUE = 21833.0;
+constexpr double EXPORTED_STATE_INTERFACE_VALUE_IN_CHAINMODE = 82802.0;
 
 class TestableChainableControllerInterface
 : public controller_interface::ChainableControllerInterface
 {
 public:
-  FRIEND_TEST(ChainableControllerInterfaceTest, reference_interfaces_storage_not_correct_size);
+  FRIEND_TEST(ChainableControllerInterfaceTest, interfaces_storage_not_correct_size);
   FRIEND_TEST(ChainableControllerInterfaceTest, test_update_logic);
 
   TestableChainableControllerInterface()
   {
     reference_interfaces_.reserve(1);
     reference_interfaces_.push_back(INTERFACE_VALUE);
+    state_interfaces_values_.reserve(1);
+    state_interfaces_values_.push_back(EXPORTED_STATE_INTERFACE_VALUE);
   }
 
   controller_interface::CallbackReturn on_init() override
   {
     // set default value
-    name_prefix_of_reference_interfaces_ = get_node()->get_name();
+    name_prefix_of_interfaces_ = get_node()->get_name();
 
     return controller_interface::CallbackReturn::SUCCESS;
   }
@@ -64,12 +67,23 @@ public:
   }
 
   // Implementation of ChainableController virtual methods
+  std::vector<hardware_interface::StateInterface> on_export_state_interfaces() override
+  {
+    std::vector<hardware_interface::StateInterface> state_interfaces;
+
+    state_interfaces.push_back(hardware_interface::StateInterface(
+      name_prefix_of_interfaces_, "test_state", &state_interfaces_values_[0]));
+
+    return state_interfaces;
+  }
+
+  // Implementation of ChainableController virtual methods
   std::vector<hardware_interface::CommandInterface> on_export_reference_interfaces() override
   {
     std::vector<hardware_interface::CommandInterface> command_interfaces;
 
     command_interfaces.push_back(hardware_interface::CommandInterface(
-      name_prefix_of_reference_interfaces_, "test_itf", &reference_interfaces_[0]));
+      name_prefix_of_interfaces_, "test_itf", &reference_interfaces_[0]));
 
     return command_interfaces;
   }
@@ -78,6 +92,7 @@ public:
   {
     if (reference_interfaces_[0] == 0.0)
     {
+      state_interfaces_values_[0] = EXPORTED_STATE_INTERFACE_VALUE_IN_CHAINMODE;
       return true;
     }
     else
@@ -107,13 +122,14 @@ public:
     }
 
     reference_interfaces_[0] -= 1;
+    state_interfaces_values_[0] += 1;
 
     return controller_interface::return_type::OK;
   }
 
   void set_name_prefix_of_reference_interfaces(const std::string & prefix)
   {
-    name_prefix_of_reference_interfaces_ = prefix;
+    name_prefix_of_interfaces_ = prefix;
   }
 
   void set_new_reference_interface_value(const double ref_itf_value)
@@ -121,7 +137,7 @@ public:
     reference_interface_value_ = ref_itf_value;
   }
 
-  std::string name_prefix_of_reference_interfaces_;
+  std::string name_prefix_of_interfaces_;
   double reference_interface_value_ = INTERFACE_VALUE_INITIAL_REF;
 };
 
