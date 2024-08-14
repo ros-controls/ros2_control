@@ -301,11 +301,11 @@ TEST_F(TestLoadController, unload_on_kill)
 {
   // Launch spawner with unload on kill
   // timeout command will kill it after the specified time with signal SIGINT
+  cm_->set_parameter(rclcpp::Parameter("ctrl_3.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
   std::stringstream ss;
   ss << "timeout --signal=INT 5 "
-     << "ros2 run controller_manager spawner "
-     << "ctrl_3 -c test_controller_manager -t "
-     << std::string(test_controller::TEST_CONTROLLER_CLASS_NAME) << " --unload-on-kill";
+     << "ros2 run controller_manager spawner ctrl_3 -c test_controller_manager"
+     << " --unload-on-kill";
 
   EXPECT_NE(std::system(ss.str().c_str()), 0)
     << "timeout should have killed spawner and returned non 0 code";
