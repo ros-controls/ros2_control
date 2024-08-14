@@ -33,7 +33,7 @@ class ServiceNotFoundError(Exception):
 
 
 def service_caller(
-    node, service_name, service_type, request, service_timeout=10.0, max_attempts=3
+    node, service_name, service_type, request, service_timeout=0.0, max_attempts=3
 ):
     cli = node.create_client(service_type, service_name)
 
