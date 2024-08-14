@@ -83,7 +83,7 @@ def service_caller(
         if future.result() is None:
             node.get_logger().warning(
                 f"Failed getting a result from calling {service_name} in "
-                f"{service_timeout}. (Attempt {attempt} of {max_attempts}.)"
+                f"{service_timeout}. (Attempt {attempt+1} of {max_attempts}.)"
             )
         else:
             return future.result()
