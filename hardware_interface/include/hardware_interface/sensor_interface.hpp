@@ -167,7 +167,6 @@ public:
    */
   void set_state(const rclcpp_lifecycle::State & new_state) { lifecycle_state_ = new_state; }
 
-protected:
   /// Get the logger of the SensorInterface.
   /**
    * \return logger of the SensorInterface.
@@ -186,6 +185,7 @@ protected:
    */
   const HardwareInfo & get_hardware_info() const { return info_; }
 
+protected:
   HardwareInfo info_;
   rclcpp_lifecycle::State lifecycle_state_;
 
