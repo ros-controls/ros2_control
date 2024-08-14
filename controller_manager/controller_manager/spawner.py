@@ -54,22 +54,6 @@ class bcolors:
 def first_match(iterable, predicate):
     return next((n for n in iterable if predicate(n)), None)
 
-
-<<<<<<< HEAD
-def wait_for_value_or(function, node, timeout, default, description):
-    while node.get_clock().now() < timeout:
-        result = function()
-        if result:
-            return result
-        node.get_logger().info(
-            f"Waiting for {description}", throttle_duration_sec=2, skip_first=True
-        )
-        time.sleep(0.2)
-    return default
-
-
-=======
->>>>>>> af4b48f (Handle waiting in Spawner and align Hardware Spawner functionality (#1562))
 def combine_name_and_namespace(name_and_namespace):
     node_name, namespace = name_and_namespace
     return namespace + ("" if namespace.endswith("/") else "/") + node_name
@@ -184,27 +168,14 @@ def main(args=None):
             controller_manager_name = f"/{controller_manager_name}"
 
     try:
-<<<<<<< HEAD
-        if not wait_for_controller_manager(
-            node, controller_manager_name, controller_manager_timeout
-        ):
-            node.get_logger().error("Controller manager not available")
-            return 1
-
-=======
->>>>>>> af4b48f (Handle waiting in Spawner and align Hardware Spawner functionality (#1562))
         for controller_name in controller_names:
             prefixed_controller_name = controller_name
             if controller_namespace:
                 prefixed_controller_name = controller_namespace + "/" + controller_name
 
-<<<<<<< HEAD
-            if is_controller_loaded(node, controller_manager_name, prefixed_controller_name):
-=======
             if is_controller_loaded(
                 node, controller_manager_name, controller_name, controller_manager_timeout
             ):
->>>>>>> af4b48f (Handle waiting in Spawner and align Hardware Spawner functionality (#1562))
                 node.get_logger().warn(
                     bcolors.WARNING
                     + "Controller already loaded, skipping load_controller"
