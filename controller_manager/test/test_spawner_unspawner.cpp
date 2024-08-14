@@ -68,13 +68,13 @@ protected:
 
 int call_spawner(const std::string extra_args)
 {
-  std::string spawner_script = "ros2 run controller_manager spawner ";
+  std::string spawner_script = "coverage run controller_manager.spawner ";
   return std::system((spawner_script + extra_args).c_str());
 }
 
 int call_unspawner(const std::string extra_args)
 {
-  std::string spawner_script = "ros2 run controller_manager unspawner ";
+  std::string spawner_script = "coverage run controller_manager.unspawner ";
   return std::system((spawner_script + extra_args).c_str());
 }
 
@@ -301,8 +301,8 @@ TEST_F(TestLoadController, unload_on_kill)
   cm_->set_parameter(rclcpp::Parameter("ctrl_3.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
   std::stringstream ss;
   ss << "timeout --signal=INT 5 "
-     << "ros2 run controller_manager spawner ctrl_3 -c test_controller_manager"
-     << " --unload-on-kill";
+     << "coverage run controller_manager.spawner "
+     << "ctrl_3 -c test_controller_manager --unload-on-kill";
 
   EXPECT_NE(std::system(ss.str().c_str()), 0)
     << "timeout should have killed spawner and returned non 0 code";
