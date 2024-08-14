@@ -87,7 +87,9 @@ def service_caller(
             )
         else:
             return future.result()
-    raise RuntimeError(f"Exception while calling service {service_name}: {future.exception()}")
+    raise RuntimeError(
+        f"Could not successfully call service {service_name} in {max_attempts} attempts."
+    )
 
 
 def configure_controller(node, controller_manager_name, controller_name, service_timeout=0.0):
