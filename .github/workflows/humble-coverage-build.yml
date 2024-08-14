@@ -30,8 +30,7 @@ on:
 
 jobs:
   coverage_humble:
-    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-build-coverage.yml@debug
+    uses: ros-controls/ros2_control_ci/.github/workflows/reusable-build-coverage.yml@mster
     secrets: inherit
     with:
       ros_distro: humble
-      debug: true
