@@ -1,3 +1,4 @@
+---
 controller_manager:
   ros__parameters:
     update_rate: 100  # Hz
@@ -8,4 +9,5 @@ ctrl_with_parameters_and_type:
     joint_names: ["joint0"]
 
 joint_state_broadcaster:
-  type: joint_state_broadcaster/JointStateBroadcaster
+  ros__parameters:
+    type: joint_state_broadcaster/JointStateBroadcaster
