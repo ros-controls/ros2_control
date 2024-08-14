@@ -45,21 +45,6 @@ def first_match(iterable, predicate):
     return next((n for n in iterable if predicate(n)), None)
 
 
-<<<<<<< HEAD
-def wait_for_value_or(function, node, timeout, default, description):
-    while node.get_clock().now() < timeout:
-        result = function()
-        if result:
-            return result
-        node.get_logger().info(
-            f"Waiting for {description}", throttle_duration_sec=2, skip_first=True
-        )
-        time.sleep(0.2)
-    return default
-
-
-=======
->>>>>>> af4b48f (Handle waiting in Spawner and align Hardware Spawner functionality (#1562))
 def combine_name_and_namespace(name_and_namespace):
     node_name, namespace = name_and_namespace
     return namespace + ("" if namespace.endswith("/") else "/") + node_name
