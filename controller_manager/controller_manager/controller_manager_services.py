@@ -132,13 +132,9 @@ def reload_controller_libraries(node, controller_manager_name, force_kill, servi
     )
 
 
-<<<<<<< HEAD
-def set_hardware_component_state(node, controller_manager_name, component_name, lifecyle_state):
-=======
 def set_hardware_component_state(
     node, controller_manager_name, component_name, lifecyle_state, service_timeout=0.0
 ):
->>>>>>> af4b48f (Handle waiting in Spawner and align Hardware Spawner functionality (#1562))
     request = SetHardwareComponentState.Request()
     request.name = component_name
     request.target_state = lifecyle_state
