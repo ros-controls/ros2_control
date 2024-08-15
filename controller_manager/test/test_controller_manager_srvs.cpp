@@ -166,9 +166,38 @@ TEST_F(TestControllerManagerSrvs, list_controllers_srv)
       "joint1/velocity", "joint2/acceleration", "joint2/position", "joint2/velocity",
       "joint3/acceleration", "joint3/position", "joint3/velocity", "sensor1/velocity"));
 
+  // Switch with a very low timeout 1 ns and it should fail as there is no enough time to switch
+  ASSERT_EQ(
+    controller_interface::return_type::ERROR,
+    cm_->switch_controller(
+      {}, {test_controller::TEST_CONTROLLER_NAME},
+      controller_manager_msgs::srv::SwitchController::Request::STRICT, true,
+      rclcpp::Duration(0, 1)));
+
+  result = call_service_and_wait(*client, request, srv_executor);
+  ASSERT_EQ(1u, result->controller.size());
+  ASSERT_EQ("active", result->controller[0].state);
+  ASSERT_THAT(
+    result->controller[0].claimed_interfaces,
+    UnorderedElementsAre(
+      "joint2/velocity", "joint3/velocity", "joint2/max_acceleration", "configuration/max_tcp_jerk",
+      "joint1/position", "joint1/max_velocity"));
+  ASSERT_THAT(
+    result->controller[0].required_command_interfaces,
+    UnorderedElementsAre(
+      "configuration/max_tcp_jerk", "joint1/max_velocity", "joint1/position",
+      "joint2/max_acceleration", "joint2/velocity", "joint3/velocity"));
+  ASSERT_THAT(
+    result->controller[0].required_state_interfaces,
+    UnorderedElementsAre(
+      "configuration/max_tcp_jerk", "joint1/position", "joint1/some_unlisted_interface",
+      "joint1/velocity", "joint2/acceleration", "joint2/position", "joint2/velocity",
+      "joint3/acceleration", "joint3/position", "joint3/velocity", "sensor1/velocity"));
+
+  // Try again with higher timeout
   cm_->switch_controller(
     {}, {test_controller::TEST_CONTROLLER_NAME},
-    controller_manager_msgs::srv::SwitchController::Request::STRICT, true, rclcpp::Duration(0, 0));
+    controller_manager_msgs::srv::SwitchController::Request::STRICT, true, rclcpp::Duration(3, 0));
 
   result = call_service_and_wait(*client, request, srv_executor);
   ASSERT_EQ(1u, result->controller.size());

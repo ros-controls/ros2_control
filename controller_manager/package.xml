@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format2.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="2">
   <name>controller_manager</name>
-  <version>2.41.0</version>
+  <version>2.42.0</version>
   <description>Description of controller_manager</description>
   <maintainer email="bence.magyar.robotics@gmail.com">Bence Magyar</maintainer>
   <maintainer email="denis@stoglrobotics.de">Denis Štogl</maintainer>
@@ -28,6 +28,8 @@
   <depend>std_msgs</depend>
 
   <test_depend>ament_cmake_gmock</test_depend>
+  <test_depend>ament_cmake_pytest</test_depend>
+  <test_depend>python3-coverage</test_depend>
   <test_depend>hardware_interface_testing</test_depend>
   <test_depend>ros2_control_test_assets</test_depend>
 

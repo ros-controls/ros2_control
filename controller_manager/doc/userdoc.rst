@@ -81,6 +81,7 @@ There are two scripts to interact with controller manager from launch files:
 
   1. ``spawner`` - loads, configures and start a controller on startup.
   2. ``unspawner`` - stops and unloads a controller.
+  3. ``hardware_spawner`` - activates and configures a hardware component.
 
 
 ``spawner``
@@ -127,6 +128,26 @@ There are two scripts to interact with controller manager from launch files:
       -c CONTROLLER_MANAGER, --controller-manager CONTROLLER_MANAGER
                             Name of the controller manager ROS node
 
+``hardware_spawner``
+^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: console
+
+    $ ros2 run controller_manager hardware_spawner -h
+    usage: hardware_spawner [-h] [-c CONTROLLER_MANAGER] (--activate | --configure) hardware_component_name
+
+    positional arguments:
+      hardware_component_name
+                            The name of the hardware component which should be activated.
+
+    options:
+      -h, --help            show this help message and exit
+      -c CONTROLLER_MANAGER, --controller-manager CONTROLLER_MANAGER
+                            Name of the controller manager ROS node
+      --activate            Activates the given components. Note: Components are by default configured before activated.
+      --configure           Configures the given components.
+
+
 rqt_controller_manager
 ----------------------
 A GUI tool to interact with the controller manager services to be able to switch the lifecycle states of the controllers as well as the hardware components.
@@ -141,6 +162,7 @@ It can be launched independently using the following command or as rqt plugin.
 
    * Double-click on a controller or hardware component to show the additional info.
    * Right-click on a controller or hardware component to show a context menu with options for lifecycle management.
+
 
 Using the Controller Manager in a Process
 -----------------------------------------
