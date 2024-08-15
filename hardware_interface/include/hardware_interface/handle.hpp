@@ -15,7 +15,6 @@
 #ifndef HARDWARE_INTERFACE__HANDLE_HPP_
 #define HARDWARE_INTERFACE__HANDLE_HPP_
 
-#include <limits>
 #include <memory>
 #include <string>
 #include <utility>
@@ -28,7 +27,7 @@
 namespace hardware_interface
 {
 
-typedef std::variant<double> HANDLE_DATATYPE;
+using HANDLE_DATATYPE = std::variant<double>;
 
 /// A handle used to get and set a value on a given interface.
 class Handle
