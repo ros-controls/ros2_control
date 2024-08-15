@@ -55,6 +55,7 @@ class bcolors:
 def first_match(iterable, predicate):
     return next((n for n in iterable if predicate(n)), None)
 
+
 def combine_name_and_namespace(name_and_namespace):
     node_name, namespace = name_and_namespace
     return namespace + ("" if namespace.endswith("/") else "/") + node_name
@@ -287,11 +288,7 @@ def main(args=None):
                     )
                     return 1
                 node.get_logger().info(
-                    bcolors.OKBLUE
-                    + "Loaded "
-                    + bcolors.BOLD
-                    + controller_name
-                    + bcolors.ENDC
+                    bcolors.OKBLUE + "Loaded " + bcolors.BOLD + controller_name + bcolors.ENDC
                 )
 
             if not args.load_only:

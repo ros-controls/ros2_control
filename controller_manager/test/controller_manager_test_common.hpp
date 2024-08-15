@@ -67,8 +67,7 @@ class ControllerManagerFixture : public ::testing::Test
 public:
   explicit ControllerManagerFixture(
     const std::string & robot_description = ros2_control_test_assets::minimal_robot_urdf,
-    const bool & pass_urdf_as_parameter = false,
-    const std::string & cm_namespace = "")
+    const bool & pass_urdf_as_parameter = false, const std::string & cm_namespace = "")
   : robot_description_(robot_description), pass_urdf_as_parameter_(pass_urdf_as_parameter)
   {
     executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
