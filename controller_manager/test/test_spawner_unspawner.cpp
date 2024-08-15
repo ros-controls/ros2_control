@@ -381,7 +381,7 @@ TEST_F(TestLoadController, spawner_with_many_controllers)
   const std::string controller_base_name = "ctrl_";
   for (size_t i = 0; i < num_controllers; i++)
   {
-    std::string controller_name = controller_base_name + std::to_string(static_cast<int>(i));
+    const std::string controller_name = controller_base_name + std::to_string(static_cast<int>(i));
     cm_->set_parameter(
       rclcpp::Parameter(controller_name + ".type", test_controller::TEST_CONTROLLER_CLASS_NAME));
     ss << controller_name << " ";

@@ -44,8 +44,8 @@ def service_caller(
     """
     Abstraction of a service call.
 
-    Has an optional timeout to find the service and a mechanism
-    to retry a call of no response is received.
+    Has an optional timeout to find the service, receive the answer to a call
+    and a mechanism to retry a call of no response is received.
 
     @param node Node object to be associated with
     @type rclpy.node.Node
@@ -88,7 +88,7 @@ def service_caller(
         else:
             return future.result()
     raise RuntimeError(
-        f"Could not successfully call service {service_name} in {max_attempts} attempts."
+        f"Could not successfully call service {service_name} after {max_attempts} attempts."
     )
 
 
