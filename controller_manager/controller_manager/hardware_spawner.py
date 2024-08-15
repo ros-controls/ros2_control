@@ -15,13 +15,15 @@
 
 import argparse
 import sys
-import time
 
-from controller_manager import set_hardware_component_state
+from controller_manager import (
+    list_hardware_components,
+    set_hardware_component_state,
+)
+from controller_manager.controller_manager_services import ServiceNotFoundError
 
 from lifecycle_msgs.msg import State
 import rclpy
-from rclpy.duration import Duration
 from rclpy.node import Node
 from rclpy.signals import SignalHandlerOptions
 
@@ -41,18 +43,6 @@ class bcolors:
 
 def first_match(iterable, predicate):
     return next((n for n in iterable if predicate(n)), None)
-
-
-def wait_for_value_or(function, node, timeout, default, description):
-    while node.get_clock().now() < timeout:
-        result = function()
-        if result:
-            return result
-        node.get_logger().info(
-            f"Waiting for {description}", throttle_duration_sec=2, skip_first=True
-        )
-        time.sleep(0.2)
-    return default
 
 
 def combine_name_and_namespace(name_and_namespace):
@@ -76,35 +66,11 @@ def has_service_names(node, node_name, node_namespace, service_names):
     return all(service in client_names for service in service_names)
 
 
-def wait_for_controller_manager(node, controller_manager, timeout_duration):
-    # List of service names from controller_manager we wait for
-    service_names = (
-        f"{controller_manager}/list_hardware_components",
-        f"{controller_manager}/set_hardware_component_state",
-    )
-
-    # Wait for controller_manager
-    timeout = node.get_clock().now() + Duration(seconds=timeout_duration)
-    node_and_namespace = wait_for_value_or(
-        lambda: find_node_and_namespace(node, controller_manager),
-        node,
-        timeout,
-        None,
-        f"'{controller_manager}' node to exist",
-    )
-
-    # Wait for the services if the node was found
-    if node_and_namespace:
-        node_name, namespace = node_and_namespace
-        return wait_for_value_or(
-            lambda: has_service_names(node, node_name, namespace, service_names),
-            node,
-            timeout,
-            False,
-            f"'{controller_manager}' services to be available",
-        )
-
-    return False
+def is_hardware_component_loaded(
+    node, controller_manager, hardware_component, service_timeout=0.0
+):
+    components = list_hardware_components(node, hardware_component, service_timeout).component
+    return any(c.name == hardware_component for c in components)
 
 
 def handle_set_component_state_service_call(
@@ -168,10 +134,9 @@ def main(args=None):
         "--controller-manager-timeout",
         help="Time to wait for the controller manager",
         required=False,
-        default=10,
-        type=int,
+        default=0,
+        type=float,
     )
-
     # add arguments which are mutually exclusive
     activate_or_confiigure_grp.add_argument(
         "--activate",
@@ -203,13 +168,15 @@ def main(args=None):
             controller_manager_name = f"/{controller_manager_name}"
 
     try:
-        if not wait_for_controller_manager(
-            node, controller_manager_name, controller_manager_timeout
+        if not is_hardware_component_loaded(
+            node, controller_manager_name, hardware_component, controller_manager_timeout
         ):
-            node.get_logger().error("Controller manager not available")
-            return 1
-
-        if activate:
+            node.get_logger().warn(
+                bcolors.WARNING
+                + "Hardware Component is not loaded - state can not be changed."
+                + bcolors.ENDC
+            )
+        elif activate:
             activate_components(node, controller_manager_name, hardware_component)
         elif configure:
             configure_components(node, controller_manager_name, hardware_component)
@@ -219,6 +186,11 @@ def main(args=None):
             )
             parser.print_help()
             return 0
+    except KeyboardInterrupt:
+        pass
+    except ServiceNotFoundError as err:
+        node.get_logger().fatal(str(err))
+        return 1
     finally:
         rclpy.shutdown()
 
