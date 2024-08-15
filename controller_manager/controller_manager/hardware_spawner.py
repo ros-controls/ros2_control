@@ -57,7 +57,7 @@ def has_service_names(node, node_name, node_namespace, service_names):
 def is_hardware_component_loaded(
     node, controller_manager, hardware_component, service_timeout=0.0
 ):
-    components = list_hardware_components(node, hardware_component, service_timeout).component
+    components = list_hardware_components(node, controller_manager, service_timeout).component
     return any(c.name == hardware_component for c in components)
 
 
@@ -105,11 +105,12 @@ def configure_components(node, controller_manager_name, components_to_configure)
 def main(args=None):
     rclpy.init(args=args, signal_handler_options=SignalHandlerOptions.NO)
     parser = argparse.ArgumentParser()
-    activate_or_confiigure_grp = parser.add_mutually_exclusive_group(required=True)
+    activate_or_configure_grp = parser.add_mutually_exclusive_group(required=True)
 
     parser.add_argument(
         "hardware_component_name",
         help="The name of the hardware component which should be activated.",
+        nargs="+"
     )
     parser.add_argument(
         "-c",
@@ -126,13 +127,13 @@ def main(args=None):
         type=float,
     )
     # add arguments which are mutually exclusive
-    activate_or_confiigure_grp.add_argument(
+    activate_or_configure_grp.add_argument(
         "--activate",
         help="Activates the given components. Note: Components are by default configured before activated. ",
         action="store_true",
         required=False,
     )
-    activate_or_confiigure_grp.add_argument(
+    activate_or_configure_grp.add_argument(
         "--configure",
         help="Configures the given components.",
         action="store_true",
@@ -141,11 +142,14 @@ def main(args=None):
 
     command_line_args = rclpy.utilities.remove_ros_args(args=sys.argv)[1:]
     args = parser.parse_args(command_line_args)
+    hardware_component = args.hardware_component_name
     controller_manager_name = args.controller_manager
     controller_manager_timeout = args.controller_manager_timeout
-    hardware_component = [args.hardware_component_name]
     activate = args.activate
     configure = args.configure
+
+    print(f"CMD Arguments: {command_line_args}")
+    print(f"Arguments: {args}")
 
     node = Node("hardware_spawner")
     if not controller_manager_name.startswith("/"):
