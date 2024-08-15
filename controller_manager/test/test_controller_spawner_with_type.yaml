@@ -1,0 +1,27 @@
+ctrl_with_parameters_and_type:
+  ros__parameters:
+    type: "controller_manager/test_controller"
+    joint_names: ["joint0"]
+
+chainable_ctrl_with_parameters_and_type:
+  ros__parameters:
+    type: "controller_manager/test_chainable_controller"
+    joint_names: ["joint1"]
+
+ctrl_with_parameters_and_no_type:
+  ros__parameters:
+    joint_names: ["joint2"]
+
+/foo_namespace/ctrl_with_parameters_and_type:
+  ros__parameters:
+    type: "controller_manager/test_controller"
+    joint_names: ["joint1"]
+
+/foo_namespace/chainable_ctrl_with_parameters_and_type:
+  ros__parameters:
+    type: "controller_manager/test_chainable_controller"
+    joint_names: ["joint1"]
+
+/foo_namespace/ctrl_with_parameters_and_no_type:
+  ros__parameters:
+    joint_names: ["joint2"]
