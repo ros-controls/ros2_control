@@ -169,7 +169,6 @@ def main(args=None):
     args = parser.parse_args(command_line_args)
     controller_names = args.controller_names
     controller_manager_name = args.controller_manager
-    controller_namespace = args.namespace
     param_file = args.param_file
     controller_manager_timeout = args.controller_manager_timeout
 
@@ -178,19 +177,25 @@ def main(args=None):
 
     node = Node("spawner_" + controller_names[0])
 
+    if node.get_namespace() != "/" and args.namespace:
+        raise RuntimeError(
+            f"Setting namespace through both '--namespace {args.namespace}' arg and the ROS 2 standard way "
+            f"'--ros-args -r __ns:={node.get_namespace()}' is not allowed!"
+        )
+
+    spawner_namespace = args.namespace if args.namespace else node.get_namespace()
+
+    if not spawner_namespace.startswith("/"):
+        spawner_namespace = f"/{spawner_namespace}"
+
     if not controller_manager_name.startswith("/"):
-        spawner_namespace = node.get_namespace()
-        if spawner_namespace != "/":
+        if spawner_namespace and spawner_namespace != "/":
             controller_manager_name = f"{spawner_namespace}/{controller_manager_name}"
         else:
             controller_manager_name = f"/{controller_manager_name}"
 
     try:
         for controller_name in controller_names:
-            prefixed_controller_name = controller_name
-            if controller_namespace:
-                prefixed_controller_name = controller_namespace + "/" + controller_name
-
             if is_controller_loaded(
                 node, controller_manager_name, controller_name, controller_manager_timeout
             ):
@@ -201,7 +206,7 @@ def main(args=None):
                 )
             else:
                 controller_type = (
-                    None
+                    args.controller_type
                     if param_file is None
                     else get_parameter_from_param_file(
                         controller_name, spawner_namespace, param_file, "type"
@@ -209,7 +214,7 @@ def main(args=None):
                 )
                 if controller_type:
                     parameter = Parameter()
-                    parameter.name = prefixed_controller_name + ".type"
+                    parameter.name = controller_name + ".type"
                     parameter.value = get_parameter_value(string_value=controller_type)
 
                     response = call_set_parameters(
@@ -224,7 +229,7 @@ def main(args=None):
                             + controller_type
                             + '" for '
                             + bcolors.BOLD
-                            + prefixed_controller_name
+                            + controller_name
                             + bcolors.ENDC
                         )
                     else:
@@ -234,14 +239,14 @@ def main(args=None):
                             + controller_type
                             + '" for '
                             + bcolors.BOLD
-                            + prefixed_controller_name
+                            + controller_name
                             + bcolors.ENDC
                         )
                         return 1
 
                 if param_file:
                     parameter = Parameter()
-                    parameter.name = prefixed_controller_name + ".params_file"
+                    parameter.name = controller_name + ".params_file"
                     parameter.value = get_parameter_value(string_value=param_file)
 
                     response = call_set_parameters(
@@ -256,7 +261,7 @@ def main(args=None):
                             + param_file
                             + '" for '
                             + bcolors.BOLD
-                            + prefixed_controller_name
+                            + controller_name
                             + bcolors.ENDC
                         )
                     else:
@@ -266,7 +271,7 @@ def main(args=None):
                             + param_file
                             + '" for '
                             + bcolors.BOLD
-                            + prefixed_controller_name
+                            + controller_name
                             + bcolors.ENDC
                         )
                         return 1
@@ -277,7 +282,7 @@ def main(args=None):
                         bcolors.FAIL
                         + "Failed loading controller "
                         + bcolors.BOLD
-                        + prefixed_controller_name
+                        + controller_name
                         + bcolors.ENDC
                     )
                     return 1
@@ -285,7 +290,7 @@ def main(args=None):
                     bcolors.OKBLUE
                     + "Loaded "
                     + bcolors.BOLD
-                    + prefixed_controller_name
+                    + controller_name
                     + bcolors.ENDC
                 )
 
@@ -311,7 +316,7 @@ def main(args=None):
                         bcolors.OKGREEN
                         + "Configured and activated "
                         + bcolors.BOLD
-                        + prefixed_controller_name
+                        + controller_name
                         + bcolors.ENDC
                     )
 
