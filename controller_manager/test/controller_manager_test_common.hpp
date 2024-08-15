@@ -169,7 +169,6 @@ public:
   const std::string robot_description_;
   rclcpp::Time time_;
   const bool pass_urdf_as_parameter_;
-  rclcpp::Time time_;
 };
 
 class TestControllerManagerSrvs
