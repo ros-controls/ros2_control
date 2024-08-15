@@ -15,14 +15,10 @@
 #ifndef HARDWARE_INTERFACE__HANDLE_HPP_
 #define HARDWARE_INTERFACE__HANDLE_HPP_
 
-#include <memory>
 #include <string>
-#include <utility>
 #include <variant>
 
-#include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/macros.hpp"
-#include "hardware_interface/visibility_control.h"
 
 namespace hardware_interface
 {
