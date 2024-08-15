@@ -169,10 +169,14 @@ if(BUILD_TESTING)
   ament_add_gmock(
     test_spawner_unspawner
     test/test_spawner_unspawner.cpp
+    TIMEOUT 120
   )
   target_include_directories(test_spawner_unspawner PRIVATE include)
   target_link_libraries(test_spawner_unspawner ${PROJECT_NAME} test_controller)
   ament_target_dependencies(test_spawner_unspawner ros2_control_test_assets)
+
+  install(FILES test/test_controller_spawner_with_type.yaml
+  DESTINATION test)
 
   ament_add_gmock(
     test_hardware_management_srvs
