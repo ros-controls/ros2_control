@@ -23,6 +23,7 @@
 #include "controller_manager/controller_manager.hpp"
 #include "controller_manager_test_common.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
+#include "test_chainable_controller/test_chainable_controller.hpp"
 #include "test_controller/test_controller.hpp"
 
 using ::testing::_;
@@ -253,51 +254,11 @@ TEST_F(TestLoadController, spawner_test_type_in_arg)
       std::string(test_controller::TEST_CONTROLLER_CLASS_NAME)),
     0);
 
-<<<<<<< HEAD
   ASSERT_EQ(cm_->get_loaded_controllers().size(), 1ul);
   auto ctrl_2 = cm_->get_loaded_controllers()[0];
   ASSERT_EQ(ctrl_2.info.name, "ctrl_2");
   ASSERT_EQ(ctrl_2.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
   ASSERT_EQ(ctrl_2.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
-=======
-  ASSERT_EQ(cm_->get_loaded_controllers().size(), 2ul);
-
-  auto ctrl_with_parameters_and_type = cm_->get_loaded_controllers()[0];
-  ASSERT_EQ(ctrl_with_parameters_and_type.info.name, "ctrl_with_parameters_and_type");
-  ASSERT_EQ(ctrl_with_parameters_and_type.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
-  ASSERT_EQ(
-    ctrl_with_parameters_and_type.c->get_state().id(),
-    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
-
-  auto chain_ctrl_with_parameters_and_type = cm_->get_loaded_controllers()[1];
-  ASSERT_EQ(
-    chain_ctrl_with_parameters_and_type.info.name, "chainable_ctrl_with_parameters_and_type");
-  ASSERT_EQ(
-    chain_ctrl_with_parameters_and_type.info.type,
-    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  ASSERT_EQ(
-    chain_ctrl_with_parameters_and_type.c->get_state().id(),
-    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
-
-  EXPECT_EQ(
-    call_spawner(
-      "ctrl_with_parameters_and_no_type -c test_controller_manager --controller-manager-timeout "
-      "1.0 -p " +
-      test_file_path),
-    256);
-  // Will still be same as the current call will fail
-  ASSERT_EQ(cm_->get_loaded_controllers().size(), 2ul);
-
-  auto ctrl_1 = cm_->get_loaded_controllers()[0];
-  ASSERT_EQ(ctrl_1.info.name, "ctrl_with_parameters_and_type");
-  ASSERT_EQ(ctrl_1.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
-  ASSERT_EQ(ctrl_1.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
-
-  auto ctrl_2 = cm_->get_loaded_controllers()[1];
-  ASSERT_EQ(ctrl_2.info.name, "chainable_ctrl_with_parameters_and_type");
-  ASSERT_EQ(ctrl_2.info.type, test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  ASSERT_EQ(ctrl_2.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
->>>>>>> af4b48f (Handle waiting in Spawner and align Hardware Spawner functionality (#1562))
 }
 
 TEST_F(TestLoadController, unload_on_kill)
@@ -314,63 +275,6 @@ TEST_F(TestLoadController, unload_on_kill)
     << "timeout should have killed spawner and returned non 0 code";
 
   ASSERT_EQ(cm_->get_loaded_controllers().size(), 0ul);
-}
-<<<<<<< HEAD
-=======
-
-TEST_F(TestLoadController, spawner_test_fallback_controllers)
-{
-  const std::string test_file_path = ament_index_cpp::get_package_prefix("controller_manager") +
-                                     "/test/test_controller_spawner_with_fallback_controllers.yaml";
-
-  cm_->set_parameter(rclcpp::Parameter("ctrl_1.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
-  cm_->set_parameter(rclcpp::Parameter("ctrl_2.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
-  cm_->set_parameter(rclcpp::Parameter("ctrl_3.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
-
-  ControllerManagerRunner cm_runner(this);
-  EXPECT_EQ(
-    call_spawner(
-      "ctrl_1 -c test_controller_manager --load-only --fallback_controllers ctrl_3 ctrl_4 ctrl_5 "
-      "-p " +
-      test_file_path),
-    0);
-
-  ASSERT_EQ(cm_->get_loaded_controllers().size(), 1ul);
-  {
-    auto ctrl_1 = cm_->get_loaded_controllers()[0];
-    ASSERT_EQ(ctrl_1.info.name, "ctrl_1");
-    ASSERT_EQ(ctrl_1.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
-    ASSERT_THAT(
-      ctrl_1.info.fallback_controllers_names, testing::ElementsAre("ctrl_3", "ctrl_4", "ctrl_5"));
-    ASSERT_EQ(ctrl_1.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
-  }
-
-  // Try to spawn now the controller with fallback controllers inside the yaml
-  EXPECT_EQ(
-    call_spawner("ctrl_2 ctrl_3 -c test_controller_manager --load-only -p " + test_file_path), 0);
-
-  ASSERT_EQ(cm_->get_loaded_controllers().size(), 3ul);
-  {
-    auto ctrl_1 = cm_->get_loaded_controllers()[0];
-    ASSERT_EQ(ctrl_1.info.name, "ctrl_1");
-    ASSERT_EQ(ctrl_1.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
-    ASSERT_THAT(
-      ctrl_1.info.fallback_controllers_names, testing::ElementsAre("ctrl_3", "ctrl_4", "ctrl_5"));
-    ASSERT_EQ(ctrl_1.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
-
-    auto ctrl_2 = cm_->get_loaded_controllers()[1];
-    ASSERT_EQ(ctrl_2.info.name, "ctrl_2");
-    ASSERT_EQ(ctrl_2.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
-    ASSERT_THAT(
-      ctrl_2.info.fallback_controllers_names, testing::ElementsAre("ctrl_6", "ctrl_7", "ctrl_8"));
-    ASSERT_EQ(ctrl_2.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
-
-    auto ctrl_3 = cm_->get_loaded_controllers()[2];
-    ASSERT_EQ(ctrl_3.info.name, "ctrl_3");
-    ASSERT_EQ(ctrl_3.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
-    ASSERT_THAT(ctrl_3.info.fallback_controllers_names, testing::ElementsAre("ctrl_9"));
-    ASSERT_EQ(ctrl_3.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
-  }
 }
 
 class TestLoadControllerWithoutRobotDescription
@@ -460,7 +364,7 @@ class TestLoadControllerWithNamespacedCM
 public:
   TestLoadControllerWithNamespacedCM()
   : ControllerManagerFixture<controller_manager::ControllerManager>(
-      ros2_control_test_assets::minimal_robot_urdf, "foo_namespace")
+      ros2_control_test_assets::minimal_robot_urdf, false, "foo_namespace")
   {
   }
 
@@ -730,4 +634,3 @@ TEST_F(
   ASSERT_EQ(ctrl_2.info.type, test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
   ASSERT_EQ(ctrl_2.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
 }
->>>>>>> af4b48f (Handle waiting in Spawner and align Hardware Spawner functionality (#1562))

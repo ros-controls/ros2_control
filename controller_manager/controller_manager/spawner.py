@@ -19,6 +19,7 @@ import os
 import sys
 import time
 import warnings
+import yaml
 
 from controller_manager import (
     configure_controller,
@@ -78,6 +79,24 @@ def has_service_names(node, node_name, node_namespace, service_names):
 def is_controller_loaded(node, controller_manager, controller_name, service_timeout=0.0):
     controllers = list_controllers(node, controller_manager, service_timeout).controller
     return any(c.name == controller_name for c in controllers)
+
+
+def get_parameter_from_param_file(controller_name, namespace, parameter_file, parameter_name):
+    with open(parameter_file) as f:
+        namespaced_controller = (
+            controller_name if namespace == "/" else f"{namespace}/{controller_name}"
+        )
+        parameters = yaml.safe_load(f)
+        if namespaced_controller in parameters:
+            value = parameters[namespaced_controller]
+            if not isinstance(value, dict) or "ros__parameters" not in value:
+                raise RuntimeError(
+                    f"YAML file : {parameter_file} is not a valid ROS parameter file for controller : {namespaced_controller}"
+                )
+            if parameter_name in parameters[namespaced_controller]["ros__parameters"]:
+                return parameters[namespaced_controller]["ros__parameters"][parameter_name]
+            else:
+                return None
 
 
 def main(args=None):
@@ -146,7 +165,6 @@ def main(args=None):
     controller_manager_name = args.controller_manager
     controller_namespace = args.namespace
     param_file = args.param_file
-    controller_type = args.controller_type
     controller_manager_timeout = args.controller_manager_timeout
 
     if param_file and not os.path.isfile(param_file):
@@ -176,6 +194,13 @@ def main(args=None):
                     + bcolors.ENDC
                 )
             else:
+                controller_type = (
+                    None
+                    if param_file is None
+                    else get_parameter_from_param_file(
+                        controller_name, spawner_namespace, param_file, "type"
+                    )
+                )
                 if controller_type:
                     parameter = Parameter()
                     parameter.name = prefixed_controller_name + ".type"
