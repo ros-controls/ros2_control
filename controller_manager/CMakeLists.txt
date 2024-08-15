@@ -211,14 +211,6 @@ if(BUILD_TESTING)
     controller_manager_msgs
   )
 
-  install(FILES test/test_controllers.yaml
-  DESTINATION test)
-
-  find_package(launch_testing_ament_cmake REQUIRED)
-  add_launch_test(test/test_spawner_integration.py
-    TIMEOUT 180
-  )
-
   find_package(ament_cmake_pytest REQUIRED)
   install(FILES test/test_ros2_control_node.yaml
     DESTINATION test)

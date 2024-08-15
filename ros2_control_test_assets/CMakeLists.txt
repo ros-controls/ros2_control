@@ -14,10 +14,6 @@ install(
   DIRECTORY include/
   DESTINATION include/ros2_control_test_assets
 )
-install(
-  DIRECTORY urdf
-  DESTINATION share/${PROJECT_NAME}
-)
 install(TARGETS ros2_control_test_assets
   EXPORT export_ros2_control_test_assets
   ARCHIVE DESTINATION lib

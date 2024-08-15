@@ -374,6 +374,32 @@ TEST_F(TestLoadController, spawner_test_fallback_controllers)
   }
 }
 
+TEST_F(TestLoadController, spawner_with_many_controllers)
+{
+  std::stringstream ss;
+  const size_t num_controllers = 50;
+  const std::string controller_base_name = "ctrl_";
+  for (size_t i = 0; i < num_controllers; i++)
+  {
+    std::string controller_name = controller_base_name + std::to_string(static_cast<int>(i));
+    cm_->set_parameter(
+      rclcpp::Parameter(controller_name + ".type", test_controller::TEST_CONTROLLER_CLASS_NAME));
+    ss << controller_name << " ";
+  }
+
+  ControllerManagerRunner cm_runner(this);
+  EXPECT_EQ(call_spawner(ss.str() + " -c test_controller_manager"), 0);
+
+  ASSERT_EQ(cm_->get_loaded_controllers().size(), num_controllers);
+
+  for (size_t i = 0; i < num_controllers; i++)
+  {
+    auto ctrl = cm_->get_loaded_controllers()[i];
+    ASSERT_EQ(ctrl.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
+    ASSERT_EQ(ctrl.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+  }
+}
+
 class TestLoadControllerWithoutRobotDescription
 : public ControllerManagerFixture<controller_manager::ControllerManager>
 {
