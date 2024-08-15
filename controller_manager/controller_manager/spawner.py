@@ -281,11 +281,7 @@ def main(args=None):
                     )
                     return 1
                 node.get_logger().info(
-                    bcolors.OKBLUE
-                    + "Loaded "
-                    + bcolors.BOLD
-                    + controller_name
-                    + bcolors.ENDC
+                    bcolors.OKBLUE + "Loaded " + bcolors.BOLD + controller_name + bcolors.ENDC
                 )
 
             if not args.load_only:
