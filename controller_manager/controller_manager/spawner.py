@@ -41,7 +41,7 @@ from ros2param.api import get_parameter_value
 
 
 class bcolors:
-    HEADER = "\033[95m"
+    MAGENTA = "\033[95m"
     OKBLUE = "\033[94m"
     OKCYAN = "\033[96m"
     OKGREEN = "\033[92m"
