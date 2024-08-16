@@ -277,8 +277,6 @@ TEST_F(TestLoadController, unload_on_kill)
   ASSERT_EQ(cm_->get_loaded_controllers().size(), 0ul);
 }
 
-<<<<<<< HEAD
-=======
 TEST_F(TestLoadController, spawner_test_fallback_controllers)
 {
   const std::string test_file_path = ament_index_cpp::get_package_prefix("controller_manager") +
@@ -360,7 +358,6 @@ TEST_F(TestLoadController, spawner_with_many_controllers)
   }
 }
 
->>>>>>> 80c264f (Robustify controller spawner and add integration test with many controllers (#1501))
 class TestLoadControllerWithoutRobotDescription
 : public ControllerManagerFixture<controller_manager::ControllerManager>
 {
