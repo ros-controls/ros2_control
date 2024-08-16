@@ -44,53 +44,91 @@ return_type ChainableControllerInterface::update(
   return ret;
 }
 
-std::vector<hardware_interface::StateInterface>
+std::vector<std::shared_ptr<hardware_interface::StateInterface>>
 ChainableControllerInterface::export_state_interfaces()
 {
   auto state_interfaces = on_export_state_interfaces();
+  std::vector<std::shared_ptr<hardware_interface::StateInterface>> state_interfaces_ptrs_vec;
+  state_interfaces_ptrs_vec.reserve(state_interfaces.size());
 
   // check if the names of the controller state interfaces begin with the controller's name
   for (const auto & interface : state_interfaces)
   {
     if (interface.get_prefix_name() != get_node()->get_name())
     {
-      RCLCPP_FATAL(
-        get_node()->get_logger(),
-        "The name of the interface '%s' does not begin with the controller's name. This is "
-        "mandatory for state interfaces. No state interface will be exported. Please "
-        "correct and recompile the controller with name '%s' and try again.",
-        interface.get_name().c_str(), get_node()->get_name());
-      state_interfaces.clear();
-      break;
+      std::string error_msg =
+        "The prefix of the interface '" + interface.get_prefix_name() +
+        "' does not equal the controller's name '" + get_node()->get_name() +
+        "'. This is mandatory for state interfaces. No state interface will be exported. Please "
+        "correct and recompile the controller with name '" +
+        get_node()->get_name() + "' and try again.";
+      throw std::runtime_error(error_msg);
     }
+
+    state_interfaces_ptrs_vec.push_back(
+      std::make_shared<hardware_interface::StateInterface>(interface));
   }
 
-  return state_interfaces;
+  return state_interfaces_ptrs_vec;
 }
 
-std::vector<hardware_interface::CommandInterface>
+std::vector<std::shared_ptr<hardware_interface::CommandInterface>>
 ChainableControllerInterface::export_reference_interfaces()
 {
   auto reference_interfaces = on_export_reference_interfaces();
+  std::vector<std::shared_ptr<hardware_interface::CommandInterface>> reference_interfaces_ptrs_vec;
+  reference_interfaces_ptrs_vec.reserve(reference_interfaces.size());
+
+  // BEGIN (Handle export change): for backward compatibility
+  // check if the "reference_interfaces_" variable is resized to number of interfaces
+  if (reference_interfaces_.size() != reference_interfaces.size())
+  {
+    // TODO(destogl): Should here be "FATAL"? It is fatal in terms of controller but not for the
+    // framework
+    std::string error_msg =
+      "The internal storage for reference values 'reference_interfaces_' variable has size '" +
+      std::to_string(reference_interfaces_.size()) + "', but it is expected to have the size '" +
+      std::to_string(reference_interfaces.size()) +
+      "' equal to the number of exported reference interfaces. Please correct and recompile the "
+      "controller with name '" +
+      get_node()->get_name() + "' and try again.";
+    throw std::runtime_error(error_msg);
+  }
+  // END
 
   // check if the names of the reference interfaces begin with the controller's name
-  for (const auto & interface : reference_interfaces)
+  const auto ref_interface_size = reference_interfaces.size();
+  for (auto & interface : reference_interfaces)
   {
     if (interface.get_prefix_name() != get_node()->get_name())
     {
-      RCLCPP_FATAL(
-        get_node()->get_logger(),
-        "The name of the interface '%s' does not begin with the controller's name. This is "
-        "mandatory "
-        " for reference interfaces. No reference interface will be exported. Please correct and "
-        "recompile the controller with name '%s' and try again.",
-        interface.get_name().c_str(), get_node()->get_name());
-      reference_interfaces.clear();
-      break;
+      std::string error_msg = "The name of the interface " + interface.get_name() +
+                              " does not begin with the controller's name. This is mandatory for "
+                              "reference interfaces. Please "
+                              "correct and recompile the controller with name " +
+                              get_node()->get_name() + " and try again.";
+      throw std::runtime_error(error_msg);
     }
+
+    std::shared_ptr<hardware_interface::CommandInterface> interface_ptr =
+      std::make_shared<hardware_interface::CommandInterface>(std::move(interface));
+    reference_interfaces_ptrs_vec.push_back(interface_ptr);
+    reference_interfaces_ptrs_.insert(std::make_pair(interface_ptr->get_name(), interface_ptr));
   }
 
-  return reference_interfaces;
+  if (reference_interfaces_ptrs_.size() != ref_interface_size)
+  {
+    std::string error_msg =
+      "The internal storage for reference ptrs 'reference_interfaces_ptrs_' variable has size '" +
+      std::to_string(reference_interfaces_ptrs_.size()) +
+      "', but it is expected to have the size '" + std::to_string(ref_interface_size) +
+      "' equal to the number of exported reference interfaces. Please correct and recompile the "
+      "controller with name '" +
+      get_node()->get_name() + "' and try again.";
+    throw std::runtime_error(error_msg);
+  }
+
+  return reference_interfaces_ptrs_vec;
 }
 
 bool ChainableControllerInterface::set_chained_mode(bool chained_mode)
@@ -130,8 +168,8 @@ ChainableControllerInterface::on_export_state_interfaces()
   std::vector<hardware_interface::StateInterface> state_interfaces;
   for (size_t i = 0; i < exported_state_interface_names_.size(); ++i)
   {
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-      get_node()->get_name(), exported_state_interface_names_[i], &state_interfaces_values_[i]));
+    state_interfaces.emplace_back(
+      get_node()->get_name(), exported_state_interface_names_[i], &state_interfaces_values_[i]);
   }
   return state_interfaces;
 }
