@@ -252,6 +252,90 @@ TEST_F(TestLoadController, unload_on_kill)
   ASSERT_EQ(cm_->get_loaded_controllers().size(), 0ul);
 }
 
+<<<<<<< HEAD
+=======
+TEST_F(TestLoadController, spawner_test_fallback_controllers)
+{
+  const std::string test_file_path = ament_index_cpp::get_package_prefix("controller_manager") +
+                                     "/test/test_controller_spawner_with_fallback_controllers.yaml";
+
+  cm_->set_parameter(rclcpp::Parameter("ctrl_1.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
+  cm_->set_parameter(rclcpp::Parameter("ctrl_2.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
+  cm_->set_parameter(rclcpp::Parameter("ctrl_3.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
+
+  ControllerManagerRunner cm_runner(this);
+  EXPECT_EQ(
+    call_spawner(
+      "ctrl_1 -c test_controller_manager --load-only --fallback_controllers ctrl_3 ctrl_4 ctrl_5 "
+      "-p " +
+      test_file_path),
+    0);
+
+  ASSERT_EQ(cm_->get_loaded_controllers().size(), 1ul);
+  {
+    auto ctrl_1 = cm_->get_loaded_controllers()[0];
+    ASSERT_EQ(ctrl_1.info.name, "ctrl_1");
+    ASSERT_EQ(ctrl_1.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
+    ASSERT_THAT(
+      ctrl_1.info.fallback_controllers_names, testing::ElementsAre("ctrl_3", "ctrl_4", "ctrl_5"));
+    ASSERT_EQ(ctrl_1.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  }
+
+  // Try to spawn now the controller with fallback controllers inside the yaml
+  EXPECT_EQ(
+    call_spawner("ctrl_2 ctrl_3 -c test_controller_manager --load-only -p " + test_file_path), 0);
+
+  ASSERT_EQ(cm_->get_loaded_controllers().size(), 3ul);
+  {
+    auto ctrl_1 = cm_->get_loaded_controllers()[0];
+    ASSERT_EQ(ctrl_1.info.name, "ctrl_1");
+    ASSERT_EQ(ctrl_1.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
+    ASSERT_THAT(
+      ctrl_1.info.fallback_controllers_names, testing::ElementsAre("ctrl_3", "ctrl_4", "ctrl_5"));
+    ASSERT_EQ(ctrl_1.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+
+    auto ctrl_2 = cm_->get_loaded_controllers()[1];
+    ASSERT_EQ(ctrl_2.info.name, "ctrl_2");
+    ASSERT_EQ(ctrl_2.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
+    ASSERT_THAT(
+      ctrl_2.info.fallback_controllers_names, testing::ElementsAre("ctrl_6", "ctrl_7", "ctrl_8"));
+    ASSERT_EQ(ctrl_2.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+
+    auto ctrl_3 = cm_->get_loaded_controllers()[2];
+    ASSERT_EQ(ctrl_3.info.name, "ctrl_3");
+    ASSERT_EQ(ctrl_3.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
+    ASSERT_THAT(ctrl_3.info.fallback_controllers_names, testing::ElementsAre("ctrl_9"));
+    ASSERT_EQ(ctrl_3.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  }
+}
+
+TEST_F(TestLoadController, spawner_with_many_controllers)
+{
+  std::stringstream ss;
+  const size_t num_controllers = 50;
+  const std::string controller_base_name = "ctrl_";
+  for (size_t i = 0; i < num_controllers; i++)
+  {
+    const std::string controller_name = controller_base_name + std::to_string(static_cast<int>(i));
+    cm_->set_parameter(
+      rclcpp::Parameter(controller_name + ".type", test_controller::TEST_CONTROLLER_CLASS_NAME));
+    ss << controller_name << " ";
+  }
+
+  ControllerManagerRunner cm_runner(this);
+  EXPECT_EQ(call_spawner(ss.str() + " -c test_controller_manager"), 0);
+
+  ASSERT_EQ(cm_->get_loaded_controllers().size(), num_controllers);
+
+  for (size_t i = 0; i < num_controllers; i++)
+  {
+    auto ctrl = cm_->get_loaded_controllers()[i];
+    ASSERT_EQ(ctrl.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
+    ASSERT_EQ(ctrl.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+  }
+}
+
+>>>>>>> 80c264f (Robustify controller spawner and add integration test with many controllers (#1501))
 class TestLoadControllerWithoutRobotDescription
 : public ControllerManagerFixture<controller_manager::ControllerManager>
 {
