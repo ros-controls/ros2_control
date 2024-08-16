@@ -18,13 +18,13 @@ A generic example which shows the structure is provided below. More specific exa
 
 .. code:: xml
 
-    <ros2_control name="Name_of_the_hardware" type="system|sensor|actuator">
+    <ros2_control name="Name_of_the_hardware" type="system">
       <hardware>
         <plugin>library_name/ClassName</plugin>
         <!-- added to hardware_parameters -->
         <param name="example_param">value</param>
       </hardware>
-      <joint|gpio|sensor name="name_of_the_component">
+      <joint name="name_of_the_component">
         <command_interface name="interface_name">
           <!-- All of them are optional. `data_type` and `size` are used for GPIOs. Size is length of an array. -->
           <param name="min">-1</param>
@@ -38,7 +38,7 @@ A generic example which shows the structure is provided below. More specific exa
         </command_interface>
         <!-- Short form to define StateInterface. Can be extended like CommandInterface. -->
         <state_interface name="position"/>
-      </joint|gpio|sensor>
+      </joint>
     </ros2_control>
 
 Joints
