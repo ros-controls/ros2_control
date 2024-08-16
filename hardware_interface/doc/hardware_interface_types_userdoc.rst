@@ -26,7 +26,7 @@ A generic example which shows the structure is provided below. More specific exa
       </hardware>
       <joint|gpio|sensor name="name_of_the_component">
         <command_interface name="interface_name">
-          <!-- All of them are optional. Data_type and size are used for GPIOs. Size length of array. -->
+          <!-- All of them are optional. `data_type` and `size` are used for GPIOs. Size is length of an array. -->
           <param name="min">-1</param>
           <param name="max">1</param>
           <param name="initial_value">0.0</param>
