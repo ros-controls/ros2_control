@@ -11,7 +11,7 @@ The following sections describe the different hardware interface types and their
 
 Overview
 *****************************
-Hardware in ros2_control is described as URDF and internally parsed and encapsulated as ``HardwareInfo``. 
+Hardware in ros2_control is described as URDF and internally parsed and encapsulated as ``HardwareInfo``.
 The definition can be found in the `ros2_control repository <https://github.com/ros-controls/ros2_control/blob/master/hardware_interface/include/hardware_interface/hardware_info.hpp>`_.
 You can check this classes to see what attributes are available for each of the xml tags.
 A generic example which shows the structure is provided below. More specific examples can be found in the Example part below.
