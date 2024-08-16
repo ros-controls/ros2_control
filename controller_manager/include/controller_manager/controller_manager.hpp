@@ -18,7 +18,6 @@
 #include <map>
 #include <memory>
 #include <string>
-#include <tuple>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -42,17 +41,12 @@
 #include "controller_manager_msgs/srv/unload_controller.hpp"
 
 #include "diagnostic_updater/diagnostic_updater.hpp"
-#include "hardware_interface/handle.hpp"
 #include "hardware_interface/resource_manager.hpp"
 
 #include "pluginlib/class_loader.hpp"
 
 #include "rclcpp/executor.hpp"
 #include "rclcpp/node.hpp"
-#include "rclcpp/node_interfaces/node_logging_interface.hpp"
-#include "rclcpp/node_interfaces/node_parameters_interface.hpp"
-#include "rclcpp/parameter.hpp"
-#include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
 
 namespace controller_manager
@@ -79,6 +73,13 @@ public:
   ControllerManager(
     std::shared_ptr<rclcpp::Executor> executor,
     const std::string & manager_node_name = "controller_manager",
+    const std::string & node_namespace = "",
+    const rclcpp::NodeOptions & options = get_cm_node_options());
+
+  CONTROLLER_MANAGER_PUBLIC
+  ControllerManager(
+    std::shared_ptr<rclcpp::Executor> executor, const std::string & urdf,
+    bool activate_all_hw_components, const std::string & manager_node_name = "controller_manager",
     const std::string & node_namespace = "",
     const rclcpp::NodeOptions & options = get_cm_node_options());
 
@@ -193,7 +194,24 @@ public:
   // the executor (see issue #260).
   // rclcpp::CallbackGroup::SharedPtr deterministic_callback_group_;
 
-  // Per controller update rate support
+  /// Interface for external components to check if Resource Manager is initialized.
+  /**
+   * Checks if components in Resource Manager are loaded and initialized.
+   * \returns true if they are initialized, false otherwise.
+   */
+  CONTROLLER_MANAGER_PUBLIC
+  bool is_resource_manager_initialized() const
+  {
+    return resource_manager_ && resource_manager_->are_components_initialized();
+  }
+
+  /// Update rate of the main control loop in the controller manager.
+  /**
+   * Update rate of the main control loop in the controller manager.
+   * The method is used for per-controller update rate support.
+   *
+   * \returns update rate of the controller manager.
+   */
   CONTROLLER_MANAGER_PUBLIC
   unsigned int get_update_rate() const;
 
@@ -332,7 +350,7 @@ private:
   std::vector<std::string> get_controller_names();
   std::pair<std::string, std::string> split_command_interface(
     const std::string & command_interface);
-  void subscribe_to_robot_description_topic();
+  void init_controller_manager();
 
   /**
    * Clear request lists used when switching controllers. The lists are shared between "callback"
@@ -556,19 +574,34 @@ private:
   std::vector<std::string> activate_command_interface_request_,
     deactivate_command_interface_request_;
 
+  std::map<std::string, std::vector<std::string>> controller_chained_reference_interfaces_cache_;
+  std::map<std::string, std::vector<std::string>> controller_chained_state_interfaces_cache_;
+
   std::string robot_description_;
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr robot_description_subscription_;
+  rclcpp::TimerBase::SharedPtr robot_description_notification_timer_;
 
   struct SwitchParams
   {
-    bool do_switch = {false};
-    bool started = {false};
-    rclcpp::Time init_time = {rclcpp::Time::max()};
+    void reset()
+    {
+      do_switch = false;
+      started = false;
+      strictness = 0;
+      activate_asap = false;
+    }
+
+    bool do_switch;
+    bool started;
 
     // Switch options
-    int strictness = {0};
-    bool activate_asap = {false};
-    rclcpp::Duration timeout = rclcpp::Duration{0, 0};
+    int strictness;
+    bool activate_asap;
+    std::chrono::nanoseconds timeout;
+
+    // conditional variable and mutex to wait for the switch to complete
+    std::condition_variable cv;
+    std::mutex mutex;
   };
 
   SwitchParams switch_params_;

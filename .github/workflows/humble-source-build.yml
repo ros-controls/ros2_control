@@ -8,6 +8,7 @@ on:
       - '**.hpp'
       - '**.h'
       - '**.cpp'
+      - '**.py'
       - '.github/workflows/humble-source-build.yml'
       - '**/package.xml'
       - '**/CMakeLists.txt'

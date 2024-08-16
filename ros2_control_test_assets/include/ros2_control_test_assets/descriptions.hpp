@@ -660,6 +660,55 @@ const auto hardware_resources =
   </ros2_control>
 )";
 
+const auto async_hardware_resources =
+  R"(
+  <ros2_control name="TestActuatorHardware" type="actuator" is_async="true">
+    <hardware>
+      <plugin>test_actuator</plugin>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <command_interface name="max_velocity" />
+    </joint>
+  </ros2_control>
+  <ros2_control name="TestSensorHardware" type="sensor" is_async="true">
+    <hardware>
+      <plugin>test_sensor</plugin>
+      <param name="example_param_write_for_sec">2</param>
+      <param name="example_param_read_for_sec">2</param>
+    </hardware>
+    <sensor name="sensor1">
+      <state_interface name="velocity"/>
+    </sensor>
+  </ros2_control>
+  <ros2_control name="TestSystemHardware" type="system" is_async="true">
+    <hardware>
+      <plugin>test_system</plugin>
+      <param name="example_param_write_for_sec">2</param>
+      <param name="example_param_read_for_sec">2</param>
+    </hardware>
+    <joint name="joint2">
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="acceleration"/>
+      <command_interface name="max_acceleration" />
+    </joint>
+    <joint name="joint3">
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="acceleration"/>
+    </joint>
+    <gpio name="configuration">
+      <command_interface name="max_tcp_jerk"/>
+      <state_interface name="max_tcp_jerk"/>
+    </gpio>
+  </ros2_control>
+)";
+
 const auto uninitializable_hardware_resources =
   R"(
   <ros2_control name="TestUninitializableActuatorHardware" type="actuator">
@@ -705,7 +754,243 @@ const auto uninitializable_hardware_resources =
   </ros2_control>
 )";
 
-const auto hardware_resources_missing_state_keys =
+const auto hardware_resources_not_existing_actuator_plugin =
+  R"(
+  <ros2_control name="TestActuatorHardware" type="actuator">
+    <hardware>
+      <plugin>test_actuator23</plugin>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <command_interface name="max_velocity" />
+    </joint>
+  </ros2_control>
+  <ros2_control name="TestSensorHardware" type="sensor">
+    <hardware>
+      <plugin>test_sensor</plugin>
+      <param name="example_param_write_for_sec">2</param>
+      <param name="example_param_read_for_sec">2</param>
+    </hardware>
+    <sensor name="sensor1">
+      <state_interface name="velocity"/>
+    </sensor>
+  </ros2_control>
+  <ros2_control name="TestSystemHardware" type="system">
+    <hardware>
+      <plugin>test_system</plugin>
+      <param name="example_param_write_for_sec">2</param>
+      <param name="example_param_read_for_sec">2</param>
+    </hardware>
+    <joint name="joint2">
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="acceleration"/>
+      <command_interface name="max_acceleration" />
+    </joint>
+    <joint name="joint3">
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="acceleration"/>
+    </joint>
+    <gpio name="configuration">
+      <command_interface name="max_tcp_jerk"/>
+      <state_interface name="max_tcp_jerk"/>
+    </gpio>
+  </ros2_control>
+)";
+
+const auto hardware_resources_not_existing_sensor_plugin =
+  R"(
+  <ros2_control name="TestActuatorHardware" type="actuator">
+    <hardware>
+      <plugin>test_actuator</plugin>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <command_interface name="max_velocity" />
+    </joint>
+  </ros2_control>
+  <ros2_control name="TestSensorHardware" type="sensor">
+    <hardware>
+      <plugin>test_sensor23</plugin>
+      <param name="example_param_write_for_sec">2</param>
+      <param name="example_param_read_for_sec">2</param>
+    </hardware>
+    <sensor name="sensor1">
+      <state_interface name="velocity"/>
+    </sensor>
+  </ros2_control>
+  <ros2_control name="TestSystemHardware" type="system">
+    <hardware>
+      <plugin>test_system</plugin>
+      <param name="example_param_write_for_sec">2</param>
+      <param name="example_param_read_for_sec">2</param>
+    </hardware>
+    <joint name="joint2">
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="acceleration"/>
+      <command_interface name="max_acceleration" />
+    </joint>
+    <joint name="joint3">
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="acceleration"/>
+    </joint>
+    <gpio name="configuration">
+      <command_interface name="max_tcp_jerk"/>
+      <state_interface name="max_tcp_jerk"/>
+    </gpio>
+  </ros2_control>
+)";
+const auto hardware_resources_not_existing_system_plugin =
+  R"(
+  <ros2_control name="TestActuatorHardware" type="actuator">
+    <hardware>
+      <plugin>test_actuator</plugin>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <command_interface name="max_velocity" />
+    </joint>
+  </ros2_control>
+  <ros2_control name="TestSensorHardware" type="sensor">
+    <hardware>
+      <plugin>test_sensor</plugin>
+      <param name="example_param_write_for_sec">2</param>
+      <param name="example_param_read_for_sec">2</param>
+    </hardware>
+    <sensor name="sensor1">
+      <state_interface name="velocity"/>
+    </sensor>
+  </ros2_control>
+  <ros2_control name="TestSystemHardware" type="system">
+    <hardware>
+      <plugin>test_system23</plugin>
+      <param name="example_param_write_for_sec">2</param>
+      <param name="example_param_read_for_sec">2</param>
+    </hardware>
+    <joint name="joint2">
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="acceleration"/>
+      <command_interface name="max_acceleration" />
+    </joint>
+    <joint name="joint3">
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="acceleration"/>
+    </joint>
+    <gpio name="configuration">
+      <command_interface name="max_tcp_jerk"/>
+      <state_interface name="max_tcp_jerk"/>
+    </gpio>
+  </ros2_control>
+)";
+
+const auto hardware_resources_duplicated_component =
+  R"(
+  <ros2_control name="TestActuatorHardware" type="actuator">
+    <hardware>
+      <plugin>test_actuator</plugin>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <command_interface name="max_velocity" />
+    </joint>
+  </ros2_control>
+  <ros2_control name="TestActuatorHardware" type="sensor">
+    <hardware>
+      <plugin>test_sensor</plugin>
+      <param name="example_param_write_for_sec">2</param>
+      <param name="example_param_read_for_sec">2</param>
+    </hardware>
+    <sensor name="sensor1">
+      <state_interface name="velocity"/>
+    </sensor>
+  </ros2_control>
+  <ros2_control name="TestSystemHardware" type="system">
+    <hardware>
+      <plugin>test_system</plugin>
+      <param name="example_param_write_for_sec">2</param>
+      <param name="example_param_read_for_sec">2</param>
+    </hardware>
+    <joint name="joint2">
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="acceleration"/>
+      <command_interface name="max_acceleration" />
+    </joint>
+    <joint name="joint3">
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="acceleration"/>
+    </joint>
+    <gpio name="configuration">
+      <command_interface name="max_tcp_jerk"/>
+      <state_interface name="max_tcp_jerk"/>
+    </gpio>
+  </ros2_control>
+)";
+
+const auto hardware_resources_actuator_initializaion_error =
+  R"(
+  <ros2_control name="TestActuatorHardware" type="actuator">
+    <hardware>
+      <plugin>test_actuator</plugin>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <state_interface name="does_not_exist"/>
+    </joint>
+  </ros2_control>
+  <ros2_control name="TestSensorHardware" type="sensor">
+    <hardware>
+      <plugin>test_sensor</plugin>
+      <param name="example_param_write_for_sec">2</param>
+      <param name="example_param_read_for_sec">2</param>
+    </hardware>
+    <sensor name="sensor1">
+      <state_interface name="velocity"/>
+    </sensor>
+  </ros2_control>
+  <ros2_control name="TestSystemHardware" type="system">
+    <hardware>
+      <plugin>test_system</plugin>
+      <param name="example_param_write_for_sec">2</param>
+      <param name="example_param_read_for_sec">2</param>
+    </hardware>
+    <joint name="joint2">
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+    <joint name="joint3">
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+  </ros2_control>
+)";
+
+const auto hardware_resources_sensor_initializaion_error =
   R"(
   <ros2_control name="TestActuatorHardware" type="actuator">
     <hardware>
@@ -737,11 +1022,98 @@ const auto hardware_resources_missing_state_keys =
     <joint name="joint2">
       <command_interface name="velocity"/>
       <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+    <joint name="joint3">
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+  </ros2_control>
+)";
+
+const auto hardware_resources_system_initializaion_error =
+  R"(
+  <ros2_control name="TestActuatorHardware" type="actuator">
+    <hardware>
+      <plugin>test_actuator</plugin>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+  </ros2_control>
+  <ros2_control name="TestSensorHardware" type="sensor">
+    <hardware>
+      <plugin>test_sensor</plugin>
+      <param name="example_param_write_for_sec">2</param>
+      <param name="example_param_read_for_sec">2</param>
+    </hardware>
+    <sensor name="sensor1">
+      <state_interface name="velocity"/>
+    </sensor>
+  </ros2_control>
+  <ros2_control name="TestSystemHardware" type="system">
+    <hardware>
+      <plugin>test_system</plugin>
+      <param name="example_param_write_for_sec">2</param>
+      <param name="example_param_read_for_sec">2</param>
+    </hardware>
+    <joint name="joint2">
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
       <state_interface name="does_not_exist"/>
     </joint>
     <joint name="joint3">
       <command_interface name="velocity"/>
       <state_interface name="position"/>
+      <state_interface name="does_not_exist"/>
+    </joint>
+  </ros2_control>
+)";
+
+const auto hardware_resources_missing_state_keys =
+  R"(
+  <ros2_control name="TestActuatorHardware" type="actuator">
+    <hardware>
+      <plugin>test_actuator</plugin>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="does_not_exist"/>
+    </joint>
+  </ros2_control>
+  <ros2_control name="TestSensorHardware" type="sensor">
+    <hardware>
+      <plugin>test_sensor</plugin>
+      <param name="example_param_write_for_sec">2</param>
+      <param name="example_param_read_for_sec">2</param>
+    </hardware>
+    <sensor name="sensor1">
+      <state_interface name="velocity"/>
+      <state_interface name="does_not_exist"/>
+      <state_interface name="does_not_exist"/>
+    </sensor>
+  </ros2_control>
+  <ros2_control name="TestSystemHardware" type="system">
+    <hardware>
+      <plugin>test_system</plugin>
+      <param name="example_param_write_for_sec">2</param>
+      <param name="example_param_read_for_sec">2</param>
+    </hardware>
+    <joint name="joint2">
+      <command_interface name="velocity"/>
+      <command_interface name="max_acceleration"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+    <joint name="joint3">
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
       <state_interface name="does_not_exist"/>
     </joint>
   </ros2_control>
@@ -778,13 +1150,15 @@ const auto hardware_resources_missing_command_keys =
     </hardware>
     <joint name="joint2">
       <command_interface name="velocity"/>
-      <command_interface name="does_not_exist"/>
+      <command_interface name="max_acceleration"/>
       <state_interface name="position"/>
+      <state_interface name="velocity"/>
     </joint>
     <joint name="joint3">
       <command_interface name="velocity"/>
       <command_interface name="does_not_exist"/>
       <state_interface name="position"/>
+      <state_interface name="velocity"/>
     </joint>
   </ros2_control>
 )";
@@ -931,6 +1305,23 @@ const auto diffbot_urdf =
       <command_interface name="velocity"/>
       <state_interface name="velocity"/>
     </joint>
+  </ros2_control>
+  <ros2_control name="TestIMUSensorHardware" type="sensor">
+    <hardware>
+      <plugin>test_hardware_components/TestIMUSensor</plugin>
+    </hardware>
+    <sensor name="base_imu">
+      <state_interface name="orientation.x"/>
+      <state_interface name="orientation.y"/>
+      <state_interface name="orientation.z"/>
+      <state_interface name="orientation.w"/>
+      <state_interface name="angular_velocity.x"/>
+      <state_interface name="angular_velocity.y"/>
+      <state_interface name="angular_velocity.z"/>
+      <state_interface name="linear_acceleration.x"/>
+      <state_interface name="linear_acceleration.y"/>
+      <state_interface name="linear_acceleration.z"/>
+    </sensor>
   </ros2_control>
 </robot>
 )";
@@ -1290,47 +1681,6 @@ const auto gripper_hardware_resources_mimic_true_no_command_if =
   </ros2_control>
   )";
 
-// TODO(christophfroehlich) delete deprecated config test
-const auto gripper_hardware_resources_mimic_deprecated =
-  R"(
-  <ros2_control name="TestGripper" type="system">
-    <joint name="right_finger_joint">
-      <command_interface name="effort"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-      <state_interface name="effort"/>
-    </joint>
-    <joint name="left_finger_joint">
-      <param name="mimic">right_finger_joint</param>
-      <param name="multiplier">2</param>
-      <param name="offset">1</param>
-      <command_interface name="position"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-    </joint>
-  </ros2_control>
-  )";
-
-const auto gripper_hardware_resources_mimic_deprecated_unknown_joint =
-  R"(
-  <ros2_control name="TestGripper" type="system">
-    <joint name="right_finger_joint">
-      <command_interface name="effort"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-      <state_interface name="effort"/>
-    </joint>
-    <joint name="left_finger_joint">
-      <param name="mimic">middle_finger_joint</param>
-      <param name="multiplier">1</param>
-      <command_interface name="position"/>
-      <state_interface name="position"/>
-      <state_interface name="velocity"/>
-    </joint>
-  </ros2_control>
-  )";
-// end delete deprecated config test
-
 const auto gripper_hardware_resources_mimic_true_command_if =
   R"(
   <ros2_control name="TestGripper" type="system">
@@ -1367,8 +1717,34 @@ const auto gripper_hardware_resources_mimic_false_command_if =
 
 const auto minimal_robot_urdf =
   std::string(urdf_head) + std::string(hardware_resources) + std::string(urdf_tail);
+const auto minimal_async_robot_urdf =
+  std::string(urdf_head) + std::string(async_hardware_resources) + std::string(urdf_tail);
 const auto minimal_uninitializable_robot_urdf =
   std::string(urdf_head) + std::string(uninitializable_hardware_resources) + std::string(urdf_tail);
+
+const auto minimal_robot_not_existing_actuator_plugin =
+  std::string(urdf_head) + std::string(hardware_resources_not_existing_actuator_plugin) +
+  std::string(urdf_tail);
+const auto minimal_robot_not_existing_sensors_plugin =
+  std::string(urdf_head) + std::string(hardware_resources_not_existing_sensor_plugin) +
+  std::string(urdf_tail);
+const auto minimal_robot_not_existing_system_plugin =
+  std::string(urdf_head) + std::string(hardware_resources_not_existing_system_plugin) +
+  std::string(urdf_tail);
+
+const auto minimal_robot_duplicated_component =
+  std::string(urdf_head) + std::string(hardware_resources_duplicated_component) +
+  std::string(urdf_tail);
+
+const auto minimal_robot_actuator_initialization_error =
+  std::string(urdf_head) + std::string(hardware_resources_not_existing_actuator_plugin) +
+  std::string(urdf_tail);
+const auto minimal_robot_sensor_initialization_error =
+  std::string(urdf_head) + std::string(hardware_resources_sensor_initializaion_error) +
+  std::string(urdf_tail);
+const auto minimal_robot_system_initialization_error =
+  std::string(urdf_head) + std::string(hardware_resources_system_initializaion_error) +
+  std::string(urdf_tail);
 
 const auto minimal_robot_missing_state_keys_urdf =
   std::string(urdf_head) + std::string(hardware_resources_missing_state_keys) +

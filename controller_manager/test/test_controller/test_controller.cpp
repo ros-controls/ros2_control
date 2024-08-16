@@ -15,7 +15,6 @@
 #include "test_controller.hpp"
 
 #include <limits>
-#include <memory>
 #include <string>
 
 #include "lifecycle_msgs/msg/state.hpp"
@@ -62,7 +61,7 @@ controller_interface::InterfaceConfiguration TestController::state_interface_con
 controller_interface::return_type TestController::update(
   const rclcpp::Time & /*time*/, const rclcpp::Duration & period)
 {
-  update_period_ = period.seconds();
+  update_period_ = period;
   ++internal_counter;
 
   // set value to hardware to produce and test different behaviors there
@@ -126,6 +125,16 @@ void TestController::set_state_interface_configuration(
   const controller_interface::InterfaceConfiguration & cfg)
 {
   state_iface_cfg_ = cfg;
+}
+
+std::vector<double> TestController::get_state_interface_data() const
+{
+  std::vector<double> state_intr_data;
+  for (const auto & interface : state_interfaces_)
+  {
+    state_intr_data.push_back(interface.get_value());
+  }
+  return state_intr_data;
 }
 
 }  // namespace test_controller

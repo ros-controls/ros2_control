@@ -34,11 +34,20 @@ using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface
 
 System::System(std::unique_ptr<SystemInterface> impl) : impl_(std::move(impl)) {}
 
-const rclcpp_lifecycle::State & System::initialize(const HardwareInfo & system_info)
+System::System(System && other) noexcept
 {
+  std::lock_guard<std::recursive_mutex> lock(other.system_mutex_);
+  impl_ = std::move(other.impl_);
+}
+
+const rclcpp_lifecycle::State & System::initialize(
+  const HardwareInfo & system_info, rclcpp::Logger logger,
+  rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface)
+{
+  std::unique_lock<std::recursive_mutex> lock(system_mutex_);
   if (impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN)
   {
-    switch (impl_->on_init(system_info))
+    switch (impl_->init(system_info, logger, clock_interface))
     {
       case CallbackReturn::SUCCESS:
         impl_->set_state(rclcpp_lifecycle::State(
@@ -57,6 +66,7 @@ const rclcpp_lifecycle::State & System::initialize(const HardwareInfo & system_i
 
 const rclcpp_lifecycle::State & System::configure()
 {
+  std::unique_lock<std::recursive_mutex> lock(system_mutex_);
   if (impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
   {
     switch (impl_->on_configure(impl_->get_state()))
@@ -80,6 +90,7 @@ const rclcpp_lifecycle::State & System::configure()
 
 const rclcpp_lifecycle::State & System::cleanup()
 {
+  std::unique_lock<std::recursive_mutex> lock(system_mutex_);
   if (impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
   {
     switch (impl_->on_cleanup(impl_->get_state()))
@@ -100,6 +111,7 @@ const rclcpp_lifecycle::State & System::cleanup()
 
 const rclcpp_lifecycle::State & System::shutdown()
 {
+  std::unique_lock<std::recursive_mutex> lock(system_mutex_);
   if (
     impl_->get_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN &&
     impl_->get_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED)
@@ -121,6 +133,7 @@ const rclcpp_lifecycle::State & System::shutdown()
 
 const rclcpp_lifecycle::State & System::activate()
 {
+  std::unique_lock<std::recursive_mutex> lock(system_mutex_);
   if (impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
   {
     switch (impl_->on_activate(impl_->get_state()))
@@ -143,6 +156,7 @@ const rclcpp_lifecycle::State & System::activate()
 
 const rclcpp_lifecycle::State & System::deactivate()
 {
+  std::unique_lock<std::recursive_mutex> lock(system_mutex_);
   if (impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
   {
     switch (impl_->on_deactivate(impl_->get_state()))
@@ -165,6 +179,7 @@ const rclcpp_lifecycle::State & System::deactivate()
 
 const rclcpp_lifecycle::State & System::error()
 {
+  std::unique_lock<std::recursive_mutex> lock(system_mutex_);
   if (impl_->get_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN)
   {
     switch (impl_->on_error(impl_->get_state()))
@@ -210,10 +225,20 @@ return_type System::perform_command_mode_switch(
 
 std::string System::get_name() const { return impl_->get_name(); }
 
+std::string System::get_group_name() const { return impl_->get_group_name(); }
+
 const rclcpp_lifecycle::State & System::get_state() const { return impl_->get_state(); }
 
 return_type System::read(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
+  std::unique_lock<std::recursive_mutex> lock(system_mutex_, std::try_to_lock);
+  if (!lock.owns_lock())
+  {
+    RCLCPP_DEBUG(
+      impl_->get_logger(), "Skipping read() call for system '%s' since it is locked",
+      impl_->get_name().c_str());
+    return return_type::OK;
+  }
   if (
     impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED ||
     impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED)
@@ -236,6 +261,14 @@ return_type System::read(const rclcpp::Time & time, const rclcpp::Duration & per
 
 return_type System::write(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
+  std::unique_lock<std::recursive_mutex> lock(system_mutex_, std::try_to_lock);
+  if (!lock.owns_lock())
+  {
+    RCLCPP_DEBUG(
+      impl_->get_logger(), "Skipping write() call for system '%s' since it is locked",
+      impl_->get_name().c_str());
+    return return_type::OK;
+  }
   if (
     impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED ||
     impl_->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED)

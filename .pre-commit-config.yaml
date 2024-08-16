@@ -26,6 +26,7 @@ repos:
       - id: check-symlinks
       - id: check-xml
       - id: check-yaml
+        args: ["--allow-multiple-documents"]
       - id: debug-statements
       - id: end-of-file-fixer
       - id: mixed-line-ending
@@ -36,7 +37,7 @@ repos:
 
   # Python hooks
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.15.2
+    rev: v3.17.0
     hooks:
     -   id: pyupgrade
         args: [--py36-plus]
@@ -55,14 +56,14 @@ repos:
         args: ["--line-length=99"]
 
   - repo: https://github.com/pycqa/flake8
-    rev: 7.0.0
+    rev: 7.1.0
     hooks:
     - id: flake8
       args: ["--extend-ignore=E501"]
 
   # CPP hooks
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: v18.1.4
+    rev: v18.1.8
     hooks:
       - id: clang-format
         args: ['-fallback-style=none', '-i']
@@ -125,14 +126,14 @@ repos:
   # Spellcheck in comments and docs
   # skipping of *.svg files is not working...
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.2.6
+    rev: v2.3.0
     hooks:
       - id: codespell
         args: ['--write-changes', '--uri-ignore-words-list=ist', '-L manuel']
         exclude: CHANGELOG\.rst|\.(svg|pyc|drawio)$
 
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.28.2
+    rev: 0.29.1
     hooks:
       - id: check-github-workflows
         args: ["--verbose"]

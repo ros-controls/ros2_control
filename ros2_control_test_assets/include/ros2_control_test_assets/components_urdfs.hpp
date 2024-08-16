@@ -15,8 +15,6 @@
 #ifndef ROS2_CONTROL_TEST_ASSETS__COMPONENTS_URDFS_HPP_
 #define ROS2_CONTROL_TEST_ASSETS__COMPONENTS_URDFS_HPP_
 
-#include <string>
-
 namespace ros2_control_test_assets
 {
 // 1. Industrial Robots with only one interface
@@ -236,6 +234,7 @@ const auto valid_urdf_ros2_control_actuator_modular_robot =
   <ros2_control name="RRBotModularJoint1"  type="actuator">
     <hardware>
       <plugin>ros2_control_demo_hardware/PositionActuatorHardware</plugin>
+      <group>Hardware Group</group>
       <param name="example_param_write_for_sec">1.23</param>
       <param name="example_param_read_for_sec">3</param>
     </hardware>
@@ -250,6 +249,7 @@ const auto valid_urdf_ros2_control_actuator_modular_robot =
   <ros2_control name="RRBotModularJoint2"  type="actuator">
     <hardware>
       <plugin>ros2_control_demo_hardware/PositionActuatorHardware</plugin>
+      <group>Hardware Group</group>
       <param name="example_param_write_for_sec">1.23</param>
       <param name="example_param_read_for_sec">3</param>
     </hardware>
@@ -270,6 +270,7 @@ const auto valid_urdf_ros2_control_actuator_modular_robot_sensors =
   <ros2_control name="RRBotModularJoint1" type="actuator">
     <hardware>
       <plugin>ros2_control_demo_hardware/VelocityActuatorHardware</plugin>
+      <group>Hardware Group 1</group>
       <param name="example_param_write_for_sec">1.23</param>
       <param name="example_param_read_for_sec">3</param>
     </hardware>
@@ -290,6 +291,7 @@ const auto valid_urdf_ros2_control_actuator_modular_robot_sensors =
   <ros2_control name="RRBotModularJoint2" type="actuator">
     <hardware>
       <plugin>ros2_control_demo_hardware/VelocityActuatorHardware</plugin>
+      <group>Hardware Group 2</group>
       <param name="example_param_write_for_sec">1.23</param>
       <param name="example_param_read_for_sec">3</param>
     </hardware>
@@ -304,6 +306,7 @@ const auto valid_urdf_ros2_control_actuator_modular_robot_sensors =
   <ros2_control name="RRBotModularPositionSensorJoint1" type="sensor">
     <hardware>
       <plugin>ros2_control_demo_hardware/PositionSensorHardware</plugin>
+      <group>Hardware Group 1</group>
       <param name="example_param_read_for_sec">2</param>
     </hardware>
     <joint name="joint1">
@@ -313,6 +316,7 @@ const auto valid_urdf_ros2_control_actuator_modular_robot_sensors =
   <ros2_control name="RRBotModularPositionSensorJoint2" type="sensor">
     <hardware>
       <plugin>ros2_control_demo_hardware/PositionSensorHardware</plugin>
+      <group>Hardware Group 2</group>
       <param name="example_param_read_for_sec">2</param>
     </hardware>
     <joint name="joint2">

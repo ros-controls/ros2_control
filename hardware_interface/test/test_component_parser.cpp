@@ -113,6 +113,7 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_one_interface)
 
   EXPECT_EQ(hardware_info.name, "RRBotSystemPositionOnly");
   EXPECT_EQ(hardware_info.type, "system");
+  ASSERT_THAT(hardware_info.group, IsEmpty());
   EXPECT_EQ(
     hardware_info.hardware_plugin_name,
     "ros2_control_demo_hardware/RRBotSystemPositionOnlyHardware");
@@ -176,6 +177,7 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_multi_interface
 
   EXPECT_EQ(hardware_info.name, "RRBotSystemMultiInterface");
   EXPECT_EQ(hardware_info.type, "system");
+  ASSERT_THAT(hardware_info.group, IsEmpty());
   EXPECT_EQ(
     hardware_info.hardware_plugin_name,
     "ros2_control_demo_hardware/RRBotSystemMultiInterfaceHardware");
@@ -238,6 +240,7 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_robot_with_sens
 
   EXPECT_EQ(hardware_info.name, "RRBotSystemWithSensor");
   EXPECT_EQ(hardware_info.type, "system");
+  ASSERT_THAT(hardware_info.group, IsEmpty());
   EXPECT_EQ(
     hardware_info.hardware_plugin_name, "ros2_control_demo_hardware/RRBotSystemWithSensorHardware");
   ASSERT_THAT(hardware_info.hardware_parameters, SizeIs(2));
@@ -408,6 +411,7 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_robot_with_exte
 
   EXPECT_EQ(hardware_info.name, "RRBotSystemPositionOnlyWithExternalSensor");
   EXPECT_EQ(hardware_info.type, "system");
+  ASSERT_THAT(hardware_info.group, IsEmpty());
   EXPECT_EQ(
     hardware_info.hardware_plugin_name,
     "ros2_control_demo_hardware/RRBotSystemPositionOnlyHardware");
@@ -474,6 +478,7 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_modular_robot
   auto hardware_info = control_hardware.at(0);
 
   EXPECT_EQ(hardware_info.name, "RRBotModularJoint1");
+  EXPECT_EQ(hardware_info.group, "Hardware Group");
   EXPECT_EQ(hardware_info.type, "actuator");
   EXPECT_EQ(
     hardware_info.hardware_plugin_name, "ros2_control_demo_hardware/PositionActuatorHardware");
@@ -502,6 +507,7 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_modular_robot
   hardware_info = control_hardware.at(1);
 
   EXPECT_EQ(hardware_info.name, "RRBotModularJoint2");
+  EXPECT_EQ(hardware_info.group, "Hardware Group");
   EXPECT_EQ(hardware_info.type, "actuator");
   EXPECT_EQ(
     hardware_info.hardware_plugin_name, "ros2_control_demo_hardware/PositionActuatorHardware");
@@ -547,6 +553,7 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_modular_robot
   auto hardware_info = control_hardware.at(0);
 
   EXPECT_EQ(hardware_info.name, "RRBotModularJoint1");
+  EXPECT_EQ(hardware_info.group, "Hardware Group 1");
   EXPECT_EQ(hardware_info.type, "actuator");
   EXPECT_EQ(
     hardware_info.hardware_plugin_name, "ros2_control_demo_hardware/VelocityActuatorHardware");
@@ -586,6 +593,7 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_modular_robot
   hardware_info = control_hardware.at(1);
 
   EXPECT_EQ(hardware_info.name, "RRBotModularJoint2");
+  EXPECT_EQ(hardware_info.group, "Hardware Group 2");
   EXPECT_EQ(hardware_info.type, "actuator");
   EXPECT_EQ(
     hardware_info.hardware_plugin_name, "ros2_control_demo_hardware/VelocityActuatorHardware");
@@ -625,6 +633,7 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_modular_robot
   hardware_info = control_hardware.at(2);
 
   EXPECT_EQ(hardware_info.name, "RRBotModularPositionSensorJoint1");
+  EXPECT_EQ(hardware_info.group, "Hardware Group 1");
   EXPECT_EQ(hardware_info.type, "sensor");
   EXPECT_EQ(
     hardware_info.hardware_plugin_name, "ros2_control_demo_hardware/PositionSensorHardware");
@@ -656,6 +665,7 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_actuator_modular_robot
   hardware_info = control_hardware.at(3);
 
   EXPECT_EQ(hardware_info.name, "RRBotModularPositionSensorJoint2");
+  EXPECT_EQ(hardware_info.group, "Hardware Group 2");
   EXPECT_EQ(hardware_info.type, "sensor");
   EXPECT_EQ(
     hardware_info.hardware_plugin_name, "ros2_control_demo_hardware/PositionSensorHardware");
@@ -704,6 +714,7 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_system_multi_joints_tr
 
   EXPECT_EQ(hardware_info.name, "RRBotModularWrist");
   EXPECT_EQ(hardware_info.type, "system");
+  ASSERT_THAT(hardware_info.group, IsEmpty());
   EXPECT_EQ(
     hardware_info.hardware_plugin_name, "ros2_control_demo_hardware/ActuatorHardwareMultiDOF");
   ASSERT_THAT(hardware_info.hardware_parameters, SizeIs(2));
@@ -746,6 +757,7 @@ TEST_F(TestComponentParser, successfully_parse_valid_urdf_sensor_only)
 
   EXPECT_EQ(hardware_info.name, "CameraWithIMU");
   EXPECT_EQ(hardware_info.type, "sensor");
+  ASSERT_THAT(hardware_info.group, IsEmpty());
   EXPECT_EQ(hardware_info.hardware_plugin_name, "ros2_control_demo_hardware/CameraWithIMUSensor");
   ASSERT_THAT(hardware_info.hardware_parameters, SizeIs(1));
   EXPECT_EQ(hardware_info.hardware_parameters.at("example_param_read_for_sec"), "2");
@@ -1430,35 +1442,6 @@ TEST_F(TestComponentParser, gripper_no_mimic_valid_config)
   EXPECT_EQ(hw_info[0].mimic_joints[0].mimicked_joint_index, 0);
   EXPECT_EQ(hw_info[0].mimic_joints[0].joint_index, 1);
 }
-
-// TODO(christophfroehlich) delete deprecated config test
-TEST_F(TestComponentParser, gripper_mimic_deprecated_valid_config)
-{
-  const auto urdf_to_test =
-    std::string(ros2_control_test_assets::gripper_urdf_head) +
-    std::string(ros2_control_test_assets::gripper_hardware_resources_mimic_deprecated) +
-    std::string(ros2_control_test_assets::urdf_tail);
-  std::vector<hardware_interface::HardwareInfo> hw_info;
-  ASSERT_NO_THROW(hw_info = parse_control_resources_from_urdf(urdf_to_test));
-  ASSERT_THAT(hw_info, SizeIs(1));
-  ASSERT_THAT(hw_info[0].mimic_joints, SizeIs(1));
-  EXPECT_DOUBLE_EQ(hw_info[0].mimic_joints[0].multiplier, 2.0);
-  EXPECT_DOUBLE_EQ(hw_info[0].mimic_joints[0].offset, 1.0);
-  EXPECT_EQ(hw_info[0].mimic_joints[0].mimicked_joint_index, 0);
-  EXPECT_EQ(hw_info[0].mimic_joints[0].joint_index, 1);
-}
-
-TEST_F(TestComponentParser, gripper_mimic_deprecated_unknown_joint_throws_error)
-{
-  const auto urdf_to_test =
-    std::string(ros2_control_test_assets::gripper_urdf_head) +
-    std::string(
-      ros2_control_test_assets::gripper_hardware_resources_mimic_deprecated_unknown_joint) +
-    std::string(ros2_control_test_assets::urdf_tail);
-  std::vector<hardware_interface::HardwareInfo> hw_info;
-  ASSERT_THROW(parse_control_resources_from_urdf(urdf_to_test), std::runtime_error);
-}
-// end delete deprecated config test
 
 TEST_F(TestComponentParser, gripper_mimic_with_unknown_joint_throws_error)
 {

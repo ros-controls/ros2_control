@@ -13,7 +13,6 @@
 // limitations under the License.
 
 #include <array>
-#include <memory>
 #include <vector>
 
 #include "hardware_interface/system_interface.hpp"
@@ -36,11 +35,11 @@ class TestTwoJointSystem : public SystemInterface
     }
 
     // can only control two joint
-    if (info_.joints.size() != 2)
+    if (get_hardware_info().joints.size() != 2)
     {
       return CallbackReturn::ERROR;
     }
-    for (const auto & joint : info_.joints)
+    for (const auto & joint : get_hardware_info().joints)
     {
       // can only control in position
       const auto & command_interfaces = joint.command_interfaces;
@@ -71,10 +70,11 @@ class TestTwoJointSystem : public SystemInterface
   std::vector<StateInterface> export_state_interfaces() override
   {
     std::vector<StateInterface> state_interfaces;
-    for (auto i = 0u; i < info_.joints.size(); ++i)
+    for (auto i = 0u; i < get_hardware_info().joints.size(); ++i)
     {
       state_interfaces.emplace_back(hardware_interface::StateInterface(
-        info_.joints[i].name, hardware_interface::HW_IF_POSITION, &position_state_[i]));
+        get_hardware_info().joints[i].name, hardware_interface::HW_IF_POSITION,
+        &position_state_[i]));
     }
 
     return state_interfaces;
@@ -83,10 +83,11 @@ class TestTwoJointSystem : public SystemInterface
   std::vector<CommandInterface> export_command_interfaces() override
   {
     std::vector<CommandInterface> command_interfaces;
-    for (auto i = 0u; i < info_.joints.size(); ++i)
+    for (auto i = 0u; i < get_hardware_info().joints.size(); ++i)
     {
       command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        info_.joints[i].name, hardware_interface::HW_IF_POSITION, &position_command_[i]));
+        get_hardware_info().joints[i].name, hardware_interface::HW_IF_POSITION,
+        &position_command_[i]));
     }
 
     return command_interfaces;

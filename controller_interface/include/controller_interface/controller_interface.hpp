@@ -16,7 +16,6 @@
 #define CONTROLLER_INTERFACE__CONTROLLER_INTERFACE_HPP_
 
 #include <memory>
-#include <string>
 #include <vector>
 
 #include "controller_interface/controller_interface_base.hpp"
@@ -41,6 +40,14 @@ public:
    */
   CONTROLLER_INTERFACE_PUBLIC
   bool is_chainable() const final;
+
+  /**
+   * A non-chainable controller doesn't export any state interfaces.
+   *
+   * \returns empty list.
+   */
+  CONTROLLER_INTERFACE_PUBLIC
+  std::vector<hardware_interface::StateInterface> export_state_interfaces() final;
 
   /**
    * Controller has no reference interfaces.
