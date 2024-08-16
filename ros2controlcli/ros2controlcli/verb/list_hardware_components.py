@@ -54,14 +54,7 @@ class ListHardwareComponentsVerb(VerbExtension):
                     f"Hardware Component {idx+1}\n\tname: {activity_color}{component.name}{bcolors.ENDC}\n\ttype: {component.type}"
                 )
                 if hasattr(component, "plugin_name"):
-<<<<<<< HEAD
-                    plugin_name = component.plugin_name
-                # Keep compatibility to the obsolete filed name in Humble
-                elif hasattr(component, "class_type"):
-                    plugin_name = component.class_type
-=======
                     plugin_name = f"{component.plugin_name}"
->>>>>>> cce79eb (Make list controller and list hardware components immediately visualize the state. (#1606))
                 else:
                     plugin_name = f"{bcolors.WARNING}plugin name missing!{bcolors.ENDC}"
 
