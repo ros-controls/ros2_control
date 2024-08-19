@@ -252,7 +252,15 @@ TEST_F(TestLoadController, multi_ctrls_test_type_in_param)
 
 TEST_F(TestLoadController, spawner_test_type_in_arg)
 {
+<<<<<<< HEAD
   // Provide controller type via -t argument
+=======
+  const std::string test_file_path = ament_index_cpp::get_package_prefix("controller_manager") +
+                                     "/test/test_controller_spawner_with_type.yaml";
+
+  ControllerManagerRunner cm_runner(this);
+  // Provide controller type via the parsed file
+>>>>>>> 079392b (Fix spawner tests timeout (#1692))
   EXPECT_EQ(
     call_spawner(
       "ctrl_2 -c test_controller_manager -t " +
@@ -270,6 +278,11 @@ TEST_F(TestLoadController, unload_on_kill)
 {
   // Launch spawner with unload on kill
   // timeout command will kill it after the specified time with signal SIGINT
+<<<<<<< HEAD
+=======
+  ControllerManagerRunner cm_runner(this);
+  cm_->set_parameter(rclcpp::Parameter("ctrl_3.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
+>>>>>>> 079392b (Fix spawner tests timeout (#1692))
   std::stringstream ss;
   ss << "timeout --signal=INT 5 "
      << std::string(coveragepy_script) +
@@ -538,6 +551,7 @@ TEST_F(TestLoadControllerWithNamespacedCM, spawner_test_type_in_params_file)
   const std::string test_file_path = ament_index_cpp::get_package_prefix("controller_manager") +
                                      "/test/test_controller_spawner_with_type.yaml";
 
+  ControllerManagerRunner cm_runner(this);
   // Provide controller type via the parsed file
   EXPECT_EQ(
     call_spawner(
@@ -598,6 +612,7 @@ TEST_F(
   const std::string test_file_path = ament_index_cpp::get_package_prefix("controller_manager") +
                                      "/test/test_controller_spawner_with_type.yaml";
 
+  ControllerManagerRunner cm_runner(this);
   // Provide controller type via the parsed file
   EXPECT_EQ(
     call_spawner(
