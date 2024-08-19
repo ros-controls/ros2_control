@@ -21,7 +21,7 @@ from ros2node.api import NodeNameCompleter
 
 from ros2param.api import call_list_parameters
 
-
+import argparse
 
 
 class ControllerNameCompleter:
@@ -62,8 +62,14 @@ class LoadedHardwareComponentNameCompleter:
             return [c.name for c in hardware_components if c.state.label in self.valid_states]
 
 
+class ParserROSArgs(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        values = [option_string] + values
+        setattr(namespace, "argv", values)
+
+
 def add_controller_mgr_parsers(parser):
-    """Parser arguments to get controller manager node name, defaults to /controller_manager."""
+    """Parser arguments to get controller manager node name, defaults to controller_manager."""
     arg = parser.add_argument(
         "-c",
         "--controller-manager",
@@ -74,4 +80,10 @@ def add_controller_mgr_parsers(parser):
     arg.completer = NodeNameCompleter(include_hidden_nodes_key="include_hidden_nodes")
     parser.add_argument(
         "--include-hidden-nodes", action="store_true", help="Consider hidden nodes as well"
+    )
+    parser.add_argument(
+        "--ros-args",
+        nargs=argparse.REMAINDER,
+        help="Pass arbitrary arguments to the executable",
+        action=ParserROSArgs,
     )
