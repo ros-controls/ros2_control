@@ -16,6 +16,8 @@
 
 #include <gmock/gmock.h>
 #include <memory>
+#include <string>
+#include <vector>
 
 #include "rclcpp/executor_options.hpp"
 #include "rclcpp/executors/multi_threaded_executor.hpp"
@@ -57,13 +59,16 @@ TEST(TestableControllerInterface, init)
 TEST(TestableControllerInterface, setting_update_rate_in_configure)
 {
   // mocks the declaration of overrides parameters in a yaml file
-  char const * const argv[] = {"", "--ros-args", "-p", "update_rate:=2812"};
-  int argc = arrlen(argv);
-  rclcpp::init(argc, argv);
+  rclcpp::init(0, nullptr);
 
   TestableControllerInterface controller;
   // initialize, create node
-  const auto node_options = controller.define_custom_node_options();
+  auto node_options = controller.define_custom_node_options();
+  std::vector<std::string> node_options_arguments = node_options.arguments();
+  node_options_arguments.push_back("--ros-args");
+  node_options_arguments.push_back("-p");
+  node_options_arguments.push_back("update_rate:=2812");
+  node_options = node_options.arguments(node_options_arguments);
   ASSERT_EQ(
     controller.init(TEST_CONTROLLER_NAME, "", 1.0, "", node_options),
     controller_interface::return_type::OK);
