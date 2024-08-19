@@ -27,6 +27,7 @@ from ros2cli.verb import VerbExtension
 
 from ros2controlcli.api import add_controller_mgr_parsers, ControllerNameCompleter
 import os
+from argparse import OPTIONAL
 
 
 class LoadControllerVerb(VerbExtension):
@@ -39,7 +40,7 @@ class LoadControllerVerb(VerbExtension):
         arg = parser.add_argument(
             "param_file",
             help="The YAML file with the controller parameters",
-            nargs="?",
+            nargs=OPTIONAL,
             default=None,
         )
         arg = parser.add_argument(
