@@ -52,7 +52,7 @@ class LoadControllerVerb(VerbExtension):
         add_controller_mgr_parsers(parser)
 
     def main(self, *, args):
-        with NodeStrategy(args) as node:
+        with NodeStrategy(args).direct_node as node:
             controllers = list_controllers(node, args.controller_manager, 20.0).controller
             if any(c.name == args.controller_name for c in controllers):
                 print(
