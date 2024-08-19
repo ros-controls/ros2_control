@@ -174,11 +174,12 @@ public:
   {
 // \note The versions conditioning is added here to support the source-compatibility with Humble
 #if RCLCPP_VERSION_MAJOR >= 21
-    return rclcpp::NodeOptions().enable_logger_service(true);
+    return rclcpp::NodeOptions().enable_logger_service(true).use_global_arguments(false);
 #else
     return rclcpp::NodeOptions()
       .allow_undeclared_parameters(true)
-      .automatically_declare_parameters_from_overrides(true);
+      .automatically_declare_parameters_from_overrides(true)
+      .use_global_arguments(false);
 #endif
   }
 
