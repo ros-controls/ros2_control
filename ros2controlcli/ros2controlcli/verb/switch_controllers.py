@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from controller_manager import switch_controllers
+from controller_manager import switch_controllers, bcolors
 
 from ros2cli.node.direct import add_arguments
 from ros2cli.node.strategy import NodeStrategy
@@ -63,7 +63,12 @@ class SwitchControllersVerb(VerbExtension):
                 args.switch_timeout,
             )
             if not response.ok:
-                return "Error switching controllers, check controller_manager logs"
+                print(
+                    bcolors.FAIL
+                    + "Error switching controllers, check controller_manager logs"
+                    + bcolors.ENDC
+                )
+                return 1
 
-            print("Successfully switched controllers")
+            print(bcolors.OKBLUE + "Successfully switched controllers" + bcolors.ENDC)
             return 0
