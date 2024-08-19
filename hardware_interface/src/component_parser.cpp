@@ -905,7 +905,7 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
   return hardware_info;
 }
 
-std::vector<InterfaceDescription> parse_state_interface_descriptions_from_hardware_info(
+std::vector<InterfaceDescription> parse_state_interface_descriptions(
   const std::vector<ComponentInfo> & component_info)
 {
   std::vector<InterfaceDescription> component_state_interface_descriptions;
@@ -922,7 +922,7 @@ std::vector<InterfaceDescription> parse_state_interface_descriptions_from_hardwa
   return component_state_interface_descriptions;
 }
 
-std::vector<InterfaceDescription> parse_command_interface_descriptions_from_hardware_info(
+std::vector<InterfaceDescription> parse_command_interface_descriptions(
   const std::vector<ComponentInfo> & component_info)
 {
   std::vector<InterfaceDescription> component_command_interface_descriptions;
