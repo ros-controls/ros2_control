@@ -95,7 +95,7 @@ def add_controller_mgr_parsers(parser):
         "-c",
         "--controller-manager",
         help="Name of the controller manager ROS node",
-        default="/controller_manager",
+        default="controller_manager",
         required=False,
     )
     arg.completer = NodeNameCompleter(include_hidden_nodes_key="include_hidden_nodes")
