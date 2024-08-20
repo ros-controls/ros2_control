@@ -346,8 +346,6 @@ TEST_F(TestLoadController, spawner_test_fallback_controllers)
     ASSERT_EQ(ctrl_1.info.name, "ctrl_1");
     ASSERT_EQ(ctrl_1.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
     ASSERT_TRUE(ctrl_1.info.fallback_controllers_names.empty());
-    ASSERT_THAT(
-      ctrl_1.info.fallback_controllers_names, testing::ElementsAre("ctrl_3", "ctrl_4", "ctrl_5"));
     ASSERT_EQ(
       ctrl_1.c->get_lifecycle_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
   }
@@ -362,8 +360,6 @@ TEST_F(TestLoadController, spawner_test_fallback_controllers)
     ASSERT_EQ(ctrl_1.info.name, "ctrl_1");
     ASSERT_EQ(ctrl_1.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
     ASSERT_TRUE(ctrl_1.info.fallback_controllers_names.empty());
-    ASSERT_THAT(
-      ctrl_1.info.fallback_controllers_names, testing::ElementsAre("ctrl_3", "ctrl_4", "ctrl_5"));
     ASSERT_EQ(
       ctrl_1.c->get_lifecycle_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
 
