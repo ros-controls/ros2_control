@@ -406,7 +406,7 @@ TEST_F(TestLoadController, spawner_with_many_controllers)
   {
     auto ctrl = cm_->get_loaded_controllers()[i];
     ASSERT_EQ(ctrl.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
-    ASSERT_EQ(ctrl.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+    ASSERT_EQ(ctrl.c->get_lifecycle_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
   }
 }
 
