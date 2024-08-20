@@ -56,17 +56,13 @@ class LoadControllerVerb(VerbExtension):
             controllers = list_controllers(node, args.controller_manager, 20.0).controller
             if any(c.name == args.controller_name for c in controllers):
                 print(
-                    bcolors.WARNING
-                    + f"Controller : {args.controller_name} already loaded, skipping load_controller!"
-                    + bcolors.ENDC
+                    f"{bcolors.WARNING}Controller : {args.controller_name} already loaded, skipping load_controller!{bcolors.ENDC}"
                 )
             else:
                 if args.param_file:
                     if not os.path.exists(args.param_file):
                         print(
-                            bcolors.FAIL
-                            + f"Controller parameter file : {args.param_file} does not exist, Aborting!"
-                            + bcolors.ENDC
+                            f"{bcolors.FAIL}Controller parameter file : {args.param_file} does not exist, Aborting!{bcolors.ENDC}"
                         )
                         return 1
                     if not os.path.isabs(args.param_file):
@@ -84,15 +80,11 @@ class LoadControllerVerb(VerbExtension):
                 ret = load_controller(node, args.controller_manager, args.controller_name)
                 if not ret.ok:
                     print(
-                        bcolors.FAIL
-                        + f"Failed loading controller {args.controller_name} check controller_manager logs"
-                        + bcolors.ENDC
+                        f"{bcolors.FAIL}Failed loading controller {args.controller_name} check controller_manager logs{bcolors.ENDC}"
                     )
                     return 1
                 print(
-                    bcolors.OKBLUE
-                    + f"Successfully loaded controller {args.controller_name}"
-                    + bcolors.ENDC
+                    f"{bcolors.OKBLUE}Successfully loaded controller {args.controller_name}{bcolors.ENDC}"
                 )
 
             if args.set_state:
@@ -103,9 +95,7 @@ class LoadControllerVerb(VerbExtension):
                 )
                 if not response.ok:
                     print(
-                        bcolors.FAIL
-                        + f"Error configuring controller : {args.controller_name}"
-                        + bcolors.ENDC
+                        f"{bcolors.FAIL}Error configuring controller : {args.controller_name}{bcolors.ENDC}"
                     )
                     return 1
 
@@ -115,15 +105,11 @@ class LoadControllerVerb(VerbExtension):
                     )
                     if not response.ok:
                         print(
-                            bcolors.FAIL
-                            + f"Error activating controller : {args.controller_name}, check controller_manager logs"
-                            + bcolors.ENDC
+                            f"{bcolors.FAIL}Error activating controller : {args.controller_name}, check controller_manager logs{bcolors.ENDC}"
                         )
                         return 1
 
                 print(
-                    bcolors.OKBLUE
-                    + f"Successfully loaded controller {args.controller_name} into state {args.set_state}"
-                    + bcolors.ENDC
+                    f"{bcolors.OKBLUE}Successfully loaded controller {args.controller_name} into state {args.set_state}{bcolors.ENDC}"
                 )
                 return 0

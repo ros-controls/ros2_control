@@ -35,15 +35,11 @@ class UnloadControllerVerb(VerbExtension):
             response = unload_controller(node, args.controller_manager, args.controller_name)
             if not response.ok:
                 print(
-                    bcolors.FAIL
-                    + f"Error unloading controller {args.controller_name}, check controller_manager logs"
-                    + bcolors.ENDC
+                    f"{bcolors.FAIL}Error unloading controller {args.controller_name}, check controller_manager logs{bcolors.ENDC}"
                 )
                 return 1
 
             print(
-                bcolors.OKBLUE
-                + f"Successfully unloaded controller {args.controller_name}"
-                + bcolors.ENDC
+                f"{bcolors.OKBLUE}Successfully unloaded controller {args.controller_name}{bcolors.ENDC}"
             )
             return 0
