@@ -40,9 +40,9 @@ struct InterfaceInfo
   std::string max;
   /// (Optional) Initial value of the interface.
   std::string initial_value;
-  /// (Optional) The datatype of the interface, e.g. "bool", "int". Used by GPIOs.
+  /// (Optional) The datatype of the interface, e.g. "bool", "int".
   std::string data_type;
-  /// (Optional) If the handle is an array, the size of the array. Used by GPIOs.
+  /// (Optional) If the handle is an array, the size of the array.
   int size;
   /// (Optional) enable or disable the limits for the command interfaces
   bool enable_limits;
@@ -124,6 +124,41 @@ struct TransmissionInfo
   std::vector<ActuatorInfo> actuators;
   /// (Optional) Key-value pairs of custom parameters
   std::unordered_map<std::string, std::string> parameters;
+};
+
+/**
+ * This structure stores information about an interface for a specific hardware which should be
+ * instantiated internally.
+ */
+struct InterfaceDescription
+{
+  InterfaceDescription(const std::string & prefix_name_in, const InterfaceInfo & interface_info_in)
+  : prefix_name(prefix_name_in),
+    interface_info(interface_info_in),
+    interface_name(prefix_name + "/" + interface_info.name)
+  {
+  }
+
+  /**
+   * Name of the interface defined by the user.
+   */
+  std::string prefix_name;
+
+  /**
+   * Information about the Interface type (position, velocity,...) as well as limits and so on.
+   */
+  InterfaceInfo interface_info;
+
+  /**
+   * Name of the interface
+   */
+  std::string interface_name;
+
+  std::string get_prefix_name() const { return prefix_name; }
+
+  std::string get_interface_name() const { return interface_info.name; }
+
+  std::string get_name() const { return interface_name; }
 };
 
 /// This structure stores information about hardware defined in a robot's URDF.
