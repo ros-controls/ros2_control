@@ -905,4 +905,38 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
   return hardware_info;
 }
 
+std::vector<InterfaceDescription> parse_state_interface_descriptions(
+  const std::vector<ComponentInfo> & component_info)
+{
+  std::vector<InterfaceDescription> component_state_interface_descriptions;
+  component_state_interface_descriptions.reserve(component_info.size());
+
+  for (const auto & component : component_info)
+  {
+    for (const auto & state_interface : component.state_interfaces)
+    {
+      component_state_interface_descriptions.emplace_back(
+        InterfaceDescription(component.name, state_interface));
+    }
+  }
+  return component_state_interface_descriptions;
+}
+
+std::vector<InterfaceDescription> parse_command_interface_descriptions(
+  const std::vector<ComponentInfo> & component_info)
+{
+  std::vector<InterfaceDescription> component_command_interface_descriptions;
+  component_command_interface_descriptions.reserve(component_info.size());
+
+  for (const auto & component : component_info)
+  {
+    for (const auto & command_interface : component.command_interfaces)
+    {
+      component_command_interface_descriptions.emplace_back(
+        InterfaceDescription(component.name, command_interface));
+    }
+  }
+  return component_command_interface_descriptions;
+}
+
 }  // namespace hardware_interface

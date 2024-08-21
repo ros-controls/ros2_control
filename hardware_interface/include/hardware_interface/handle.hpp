@@ -15,9 +15,11 @@
 #ifndef HARDWARE_INTERFACE__HANDLE_HPP_
 #define HARDWARE_INTERFACE__HANDLE_HPP_
 
+#include <limits>
 #include <string>
 #include <variant>
 
+#include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/macros.hpp"
 
 namespace hardware_interface
@@ -29,6 +31,8 @@ using HANDLE_DATATYPE = std::variant<double>;
 class Handle
 {
 public:
+  [[deprecated("Use InterfaceDescription for initializing the Interface")]]
+
   Handle(
     const std::string & prefix_name, const std::string & interface_name,
     double * value_ptr = nullptr)
@@ -36,10 +40,24 @@ public:
   {
   }
 
+  explicit Handle(const InterfaceDescription & interface_description)
+  : prefix_name_(interface_description.prefix_name),
+    interface_name_(interface_description.interface_info.name)
+  {
+    // As soon as multiple datatypes are used in HANDLE_DATATYPE
+    // we need to initialize according the type passed in interface description
+    value_ = std::numeric_limits<double>::quiet_NaN();
+    value_ptr_ = std::get_if<double>(&value_);
+  }
+
+  [[deprecated("Use InterfaceDescription for initializing the Interface")]]
+
   explicit Handle(const std::string & interface_name)
   : interface_name_(interface_name), value_ptr_(nullptr)
   {
   }
+
+  [[deprecated("Use InterfaceDescription for initializing the Interface")]]
 
   explicit Handle(const char * interface_name)
   : interface_name_(interface_name), value_ptr_(nullptr)
@@ -103,10 +121,8 @@ protected:
 class StateInterface : public Handle
 {
 public:
-  explicit StateInterface(
-    const std::string & prefix_name, const std::string & interface_name,
-    double * value_ptr = nullptr)
-  : Handle(prefix_name, interface_name, value_ptr)
+  explicit StateInterface(const InterfaceDescription & interface_description)
+  : Handle(interface_description)
   {
   }
 
@@ -120,10 +136,8 @@ public:
 class CommandInterface : public Handle
 {
 public:
-  explicit CommandInterface(
-    const std::string & prefix_name, const std::string & interface_name,
-    double * value_ptr = nullptr)
-  : Handle(prefix_name, interface_name, value_ptr)
+  explicit CommandInterface(const InterfaceDescription & interface_description)
+  : Handle(interface_description)
   {
   }
   /// CommandInterface copy constructor is actively deleted.

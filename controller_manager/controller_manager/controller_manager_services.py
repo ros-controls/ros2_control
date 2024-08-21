@@ -320,7 +320,7 @@ def set_controller_parameters_from_param_file(
     if parameter_file:
         spawner_namespace = namespace if namespace else node.get_namespace()
         set_controller_parameters(
-            node, controller_manager_name, controller_name, "param_file", parameter_file
+            node, controller_manager_name, controller_name, "params_file", parameter_file
         )
 
         controller_type = get_parameter_from_param_file(
