@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.16.0 (2024-08-22)
+-------------------
 * inform user what reason is for not setting rt policy, inform is policy (`#1705 <https://github.com/ros-controls/ros2_control/issues/1705>`_)
 * Fix params_file typo in spawner and update release notes for use_global_arguments (`#1701 <https://github.com/ros-controls/ros2_control/issues/1701>`_)
 * Fix spawner tests timeout (`#1692 <https://github.com/ros-controls/ros2_control/issues/1692>`_)

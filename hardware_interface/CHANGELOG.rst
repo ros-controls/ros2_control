@@ -2,8 +2,8 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.16.0 (2024-08-22)
+-------------------
 * Use handle_name\_ variable instead of allocating for every `get_name` call (`#1706 <https://github.com/ros-controls/ros2_control/issues/1706>`_)
 * Introduce Creation of Handles with InterfaceDescription (variant support) (`#1679 <https://github.com/ros-controls/ros2_control/issues/1679>`_)
 * Preparation of Handles for Variant Support (`#1678 <https://github.com/ros-controls/ros2_control/issues/1678>`_)
