@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.43.0 (2024-08-22)
+-------------------
 * Infrom user why rt policy could not be set, infrom if is set. (backport `#1705 <https://github.com/ros-controls/ros2_control/issues/1705>`_) (`#1708 <https://github.com/ros-controls/ros2_control/issues/1708>`_)
 * Make list controller and list hardware components immediately visualize the state. (backport `#1606 <https://github.com/ros-controls/ros2_control/issues/1606>`_) (`#1690 <https://github.com/ros-controls/ros2_control/issues/1690>`_)
 * Robustify spawner (backport `#1501 <https://github.com/ros-controls/ros2_control/issues/1501>`_) (`#1686 <https://github.com/ros-controls/ros2_control/issues/1686>`_)
