@@ -12,7 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+<<<<<<< HEAD
 #include <algorithm>
+=======
+#include <errno.h>
+>>>>>>> dd352eb (inform user what reason is for not setting rt policy, inform is policy (#1705))
 #include <chrono>
 #include <memory>
 #include <string>
@@ -50,6 +54,7 @@ int main(int argc, char ** argv)
     {
       if (realtime_tools::has_realtime_kernel())
       {
+<<<<<<< HEAD
         if (!realtime_tools::configure_sched_fifo(kSchedPriority))
         {
           RCLCPP_WARN(cm->get_logger(), "Could not enable FIFO RT scheduling policy");
@@ -58,6 +63,20 @@ int main(int argc, char ** argv)
       else
       {
         RCLCPP_INFO(cm->get_logger(), "RT kernel is recommended for better performance");
+=======
+        RCLCPP_WARN(
+          cm->get_logger(),
+          "Could not enable FIFO RT scheduling policy: with error number <%i>(%s). See "
+          "[https://control.ros.org/master/doc/ros2_control/controller_manager/doc/userdoc.html] "
+          "for details on how to enable realtime scheduling.",
+          errno, strerror(errno));
+      }
+      else
+      {
+        RCLCPP_INFO(
+          cm->get_logger(), "Successful set up FIFO RT scheduling policy with priority %i.",
+          kSchedPriority);
+>>>>>>> dd352eb (inform user what reason is for not setting rt policy, inform is policy (#1705))
       }
 
       // for calculating sleep time
