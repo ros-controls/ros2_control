@@ -2,6 +2,11 @@
 Changelog for package transmission_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix flaky transmission_interface tests by making them deterministic. (`#1665 <https://github.com/ros-controls/ros2_control/issues/1665>`_) (`#1671 <https://github.com/ros-controls/ros2_control/issues/1671>`_)
+* Contributors: mergify[bot]
+
 3.27.0 (2024-07-23)
 -------------------
 
