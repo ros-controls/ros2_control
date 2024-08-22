@@ -2,6 +2,11 @@
 Changelog for package ros2controlcli
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+3.28.0 (2024-08-22)
+-------------------
+* Make list controller and list hardware components immediately visualize the state. (`#1606 <https://github.com/ros-controls/ros2_control/issues/1606>`_) (`#1691 <https://github.com/ros-controls/ros2_control/issues/1691>`_)
+* Contributors: mergify[bot]
+
 3.27.0 (2024-07-23)
 -------------------
 
