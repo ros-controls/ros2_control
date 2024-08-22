@@ -2,6 +2,9 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.43.0 (2024-08-22)
+-------------------
+
 2.42.0 (2024-07-23)
 -------------------
 * Small improvements to the error output in component parser to make debugging easier. (backport `#1580 <https://github.com/ros-controls/ros2_control/issues/1580>`_) (`#1581 <https://github.com/ros-controls/ros2_control/issues/1581>`_)
