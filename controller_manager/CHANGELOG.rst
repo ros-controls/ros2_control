@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.28.0 (2024-08-22)
+-------------------
 * Inform user why rt policy could not be set, inform if is set. (backport `#1705 <https://github.com/ros-controls/ros2_control/issues/1705>`_) (`#1709 <https://github.com/ros-controls/ros2_control/issues/1709>`_)
 * [CI] Backport `#1636 <https://github.com/ros-controls/ros2_control/issues/1636>`_ `#1668 <https://github.com/ros-controls/ros2_control/issues/1668>`_ and fix coverage on jammy (`#1677 <https://github.com/ros-controls/ros2_control/issues/1677>`_) (`#1693 <https://github.com/ros-controls/ros2_control/issues/1693>`_)
 * Make list controller and list hardware components immediately visualize the state. (`#1606 <https://github.com/ros-controls/ros2_control/issues/1606>`_) (`#1691 <https://github.com/ros-controls/ros2_control/issues/1691>`_)
