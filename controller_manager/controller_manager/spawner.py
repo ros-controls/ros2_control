@@ -210,13 +210,13 @@ def main(args=None):
                     + bcolors.ENDC
                 )
             else:
-                if controller_ros_args := args.controller_ros_args.split():
+                if controller_ros_args := args.controller_ros_args:
                     if not set_controller_parameters(
                         node,
                         controller_manager_name,
                         controller_name,
                         "node_options_args",
-                        controller_ros_args,
+                        controller_ros_args.split(),
                     ):
                         return 1
                 if param_files:
