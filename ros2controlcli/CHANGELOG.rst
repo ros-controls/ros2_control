@@ -2,6 +2,12 @@
 Changelog for package ros2controlcli
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.16.0 (2024-08-22)
+-------------------
+* Refactor spawner to be able to reuse code for ros2controlcli (`#1661 <https://github.com/ros-controls/ros2_control/issues/1661>`_)
+* Make list controller and list hardware components immediately visualize the state. (`#1606 <https://github.com/ros-controls/ros2_control/issues/1606>`_)
+* Contributors: Dr. Denis, Sai Kishor Kothakota
+
 4.15.0 (2024-08-05)
 -------------------
 

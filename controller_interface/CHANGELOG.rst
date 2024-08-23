@@ -2,6 +2,12 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.16.0 (2024-08-22)
+-------------------
+* Fix params_file typo in spawner and update release notes for use_global_arguments (`#1701 <https://github.com/ros-controls/ros2_control/issues/1701>`_)
+* Avoid using the global arguments for internal controller nodes (`#1694 <https://github.com/ros-controls/ros2_control/issues/1694>`_)
+* Contributors: Sai Kishor Kothakota
+
 4.15.0 (2024-08-05)
 -------------------
 

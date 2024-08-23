@@ -38,7 +38,7 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
  * which are exported
  */
 HARDWARE_INTERFACE_PUBLIC
-std::vector<InterfaceDescription> parse_state_interface_descriptions_from_hardware_info(
+std::vector<InterfaceDescription> parse_state_interface_descriptions(
   const std::vector<ComponentInfo> & component_info);
 
 /**
@@ -47,7 +47,7 @@ std::vector<InterfaceDescription> parse_state_interface_descriptions_from_hardwa
  * which are exported
  */
 HARDWARE_INTERFACE_PUBLIC
-std::vector<InterfaceDescription> parse_command_interface_descriptions_from_hardware_info(
+std::vector<InterfaceDescription> parse_command_interface_descriptions(
   const std::vector<ComponentInfo> & component_info);
 
 }  // namespace hardware_interface

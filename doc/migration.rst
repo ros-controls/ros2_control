@@ -2,6 +2,10 @@
 
 Iron to Jazzy
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+controller_interface
+********************
+* The changes from `(PR #1694) <https://github.com/ros-controls/ros2_control/pull/1694>`__ will affect how the controllers will be loading the parameters. Defining parameters in a single yaml file and loading it to the controller_manager node alone will no longer work.
+  In order to load the parameters to the controllers properly, it is needed to use ``--param-file`` option from the spawner. This is because the controllers will now set ``use_global_arguments`` from `NodeOptions <https://docs.ros.org/en/rolling/p/rclcpp/generated/classrclcpp_1_1NodeOptions.html#_CPPv4N6rclcpp11NodeOptions20use_global_argumentsEb>`__ to false, to avoid getting influenced by global arguments.
 
 controller_manager
 ******************

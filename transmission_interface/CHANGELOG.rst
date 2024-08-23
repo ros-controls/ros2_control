@@ -2,6 +2,12 @@
 Changelog for package transmission_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.16.0 (2024-08-22)
+-------------------
+* Preparation of Handles for Variant Support (`#1678 <https://github.com/ros-controls/ros2_control/issues/1678>`_)
+* Fix flaky transmission_interface tests by making them deterministic. (`#1665 <https://github.com/ros-controls/ros2_control/issues/1665>`_)
+* Contributors: Manuel Muth, sgmurray
+
 4.15.0 (2024-08-05)
 -------------------
 

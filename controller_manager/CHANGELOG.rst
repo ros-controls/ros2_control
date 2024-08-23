@@ -2,6 +2,21 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.16.0 (2024-08-22)
+-------------------
+* inform user what reason is for not setting rt policy, inform is policy (`#1705 <https://github.com/ros-controls/ros2_control/issues/1705>`_)
+* Fix params_file typo in spawner and update release notes for use_global_arguments (`#1701 <https://github.com/ros-controls/ros2_control/issues/1701>`_)
+* Fix spawner tests timeout (`#1692 <https://github.com/ros-controls/ros2_control/issues/1692>`_)
+* Refactor spawner to be able to reuse code for ros2controlcli (`#1661 <https://github.com/ros-controls/ros2_control/issues/1661>`_)
+* Robustify controller spawner and add integration test with many controllers (`#1501 <https://github.com/ros-controls/ros2_control/issues/1501>`_)
+* Handle waiting in Spawner and align Hardware Spawner functionality (`#1562 <https://github.com/ros-controls/ros2_control/issues/1562>`_)
+* Make list controller and list hardware components immediately visualize the state. (`#1606 <https://github.com/ros-controls/ros2_control/issues/1606>`_)
+* [CI] Add coveragepy and remove ignore: test (`#1668 <https://github.com/ros-controls/ros2_control/issues/1668>`_)
+* Fix spawner unload on kill test (`#1675 <https://github.com/ros-controls/ros2_control/issues/1675>`_)
+* [CM] Add more logging for easier debugging (`#1645 <https://github.com/ros-controls/ros2_control/issues/1645>`_)
+* refactor SwitchParams to fix the incosistencies in the spawner tests (`#1638 <https://github.com/ros-controls/ros2_control/issues/1638>`_)
+* Contributors: Bence Magyar, Christoph Fröhlich, Dr. Denis, Felix Exner (fexner), Manuel Muth, Sai Kishor Kothakota
+
 4.15.0 (2024-08-05)
 -------------------
 * Add missing include for executors (`#1653 <https://github.com/ros-controls/ros2_control/issues/1653>`_)
