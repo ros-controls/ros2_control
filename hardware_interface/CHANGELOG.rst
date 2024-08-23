@@ -2,6 +2,14 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.16.0 (2024-08-22)
+-------------------
+* Use handle_name\_ variable instead of allocating for every `get_name` call (`#1706 <https://github.com/ros-controls/ros2_control/issues/1706>`_)
+* Introduce Creation of Handles with InterfaceDescription (variant support) (`#1679 <https://github.com/ros-controls/ros2_control/issues/1679>`_)
+* Preparation of Handles for Variant Support (`#1678 <https://github.com/ros-controls/ros2_control/issues/1678>`_)
+* [RM] Decouple read/write cycles of each component with mutex to not block other components (`#1646 <https://github.com/ros-controls/ros2_control/issues/1646>`_)
+* Contributors: Manuel Muth, Sai Kishor Kothakota
+
 4.15.0 (2024-08-05)
 -------------------
 * [RM] Add `get_hardware_info` method to the Hardware Components (`#1643 <https://github.com/ros-controls/ros2_control/issues/1643>`_)

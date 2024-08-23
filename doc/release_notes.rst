@@ -22,6 +22,8 @@ For details see the controller_manager section.
 * A method to get node options to setup the controller node #api-breaking (`#1169 <https://github.com/ros-controls/ros2_control/pull/1169>`_)
 * Export state interfaces from the chainable controller #api-breaking (`#1021 <https://github.com/ros-controls/ros2_control/pull/1021>`_)
 * All chainable controllers must implement the method ``export_state_interfaces`` to export the state interfaces, similar to ``export_reference_interfaces`` method that is exporting the reference interfaces.
+* The controllers will now set ``use_global_arguments`` from `NodeOptions <https://docs.ros.org/en/rolling/p/rclcpp/generated/classrclcpp_1_1NodeOptions.html#_CPPv4N6rclcpp11NodeOptions20use_global_argumentsEb>`__ to false, to avoid getting influenced by global arguments (Issue : `#1684 <https://github.com/ros-controls/ros2_control/issues/1684>`_) (`#1694 <https://github.com/ros-controls/ros2_control/pull/1694>`_).
+  From now on, in order to set the parameters to the controller, the ``--param-file`` option from spawner should be used.
 
 controller_manager
 ******************

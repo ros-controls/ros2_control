@@ -2843,6 +2843,7 @@ rclcpp::NodeOptions ControllerManager::determine_controller_node_options(
   }
 
   controller_node_options = controller_node_options.arguments(node_options_arguments);
+  controller_node_options.use_global_arguments(false);
   return controller_node_options;
 }
 

@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <errno.h>
 #include <chrono>
 #include <memory>
 #include <string>
@@ -51,10 +52,16 @@ int main(int argc, char ** argv)
       {
         RCLCPP_WARN(
           cm->get_logger(),
-          "Could not enable FIFO RT scheduling policy. Consider setting up your user to do FIFO RT "
-          "scheduling. See "
+          "Could not enable FIFO RT scheduling policy: with error number <%i>(%s). See "
           "[https://control.ros.org/master/doc/ros2_control/controller_manager/doc/userdoc.html] "
-          "for details.");
+          "for details on how to enable realtime scheduling.",
+          errno, strerror(errno));
+      }
+      else
+      {
+        RCLCPP_INFO(
+          cm->get_logger(), "Successful set up FIFO RT scheduling policy with priority %i.",
+          kSchedPriority);
       }
 
       // for calculating sleep time

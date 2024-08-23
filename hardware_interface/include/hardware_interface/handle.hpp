@@ -15,9 +15,11 @@
 #ifndef HARDWARE_INTERFACE__HANDLE_HPP_
 #define HARDWARE_INTERFACE__HANDLE_HPP_
 
+#include <limits>
 #include <string>
 #include <variant>
 
+#include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/macros.hpp"
 
 namespace hardware_interface
@@ -29,20 +31,40 @@ using HANDLE_DATATYPE = std::variant<double>;
 class Handle
 {
 public:
+  [[deprecated("Use InterfaceDescription for initializing the Interface")]]
+
   Handle(
     const std::string & prefix_name, const std::string & interface_name,
     double * value_ptr = nullptr)
-  : prefix_name_(prefix_name), interface_name_(interface_name), value_ptr_(value_ptr)
+  : prefix_name_(prefix_name),
+    interface_name_(interface_name),
+    handle_name_(prefix_name_ + "/" + interface_name_),
+    value_ptr_(value_ptr)
   {
   }
+
+  explicit Handle(const InterfaceDescription & interface_description)
+  : prefix_name_(interface_description.prefix_name),
+    interface_name_(interface_description.interface_info.name),
+    handle_name_(prefix_name_ + "/" + interface_name_)
+  {
+    // As soon as multiple datatypes are used in HANDLE_DATATYPE
+    // we need to initialize according the type passed in interface description
+    value_ = std::numeric_limits<double>::quiet_NaN();
+    value_ptr_ = std::get_if<double>(&value_);
+  }
+
+  [[deprecated("Use InterfaceDescription for initializing the Interface")]]
 
   explicit Handle(const std::string & interface_name)
-  : interface_name_(interface_name), value_ptr_(nullptr)
+  : interface_name_(interface_name), handle_name_("/" + interface_name_), value_ptr_(nullptr)
   {
   }
 
+  [[deprecated("Use InterfaceDescription for initializing the Interface")]]
+
   explicit Handle(const char * interface_name)
-  : interface_name_(interface_name), value_ptr_(nullptr)
+  : interface_name_(interface_name), handle_name_("/" + interface_name_), value_ptr_(nullptr)
   {
   }
 
@@ -59,12 +81,12 @@ public:
   /// Returns true if handle references a value.
   inline operator bool() const { return value_ptr_ != nullptr; }
 
-  const std::string get_name() const { return prefix_name_ + "/" + interface_name_; }
+  const std::string & get_name() const { return handle_name_; }
 
   const std::string & get_interface_name() const { return interface_name_; }
 
   [[deprecated(
-    "Replaced by get_name method, which is semantically more correct")]] const std::string
+    "Replaced by get_name method, which is semantically more correct")]] const std::string &
   get_full_name() const
   {
     return get_name();
@@ -93,6 +115,7 @@ public:
 protected:
   std::string prefix_name_;
   std::string interface_name_;
+  std::string handle_name_;
   HANDLE_DATATYPE value_;
   // BEGIN (Handle export change): for backward compatibility
   // TODO(Manuel) redeclare as HANDLE_DATATYPE * value_ptr_ if old functionality is removed
@@ -103,10 +126,8 @@ protected:
 class StateInterface : public Handle
 {
 public:
-  explicit StateInterface(
-    const std::string & prefix_name, const std::string & interface_name,
-    double * value_ptr = nullptr)
-  : Handle(prefix_name, interface_name, value_ptr)
+  explicit StateInterface(const InterfaceDescription & interface_description)
+  : Handle(interface_description)
   {
   }
 
@@ -120,10 +141,8 @@ public:
 class CommandInterface : public Handle
 {
 public:
-  explicit CommandInterface(
-    const std::string & prefix_name, const std::string & interface_name,
-    double * value_ptr = nullptr)
-  : Handle(prefix_name, interface_name, value_ptr)
+  explicit CommandInterface(const InterfaceDescription & interface_description)
+  : Handle(interface_description)
   {
   }
   /// CommandInterface copy constructor is actively deleted.
