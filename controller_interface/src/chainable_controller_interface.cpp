@@ -50,6 +50,8 @@ ChainableControllerInterface::export_state_interfaces()
   auto state_interfaces = on_export_state_interfaces();
   std::vector<std::shared_ptr<hardware_interface::StateInterface>> state_interfaces_ptrs_vec;
   state_interfaces_ptrs_vec.reserve(state_interfaces.size());
+  ordered_exported_state_interfaces_.reserve(state_interfaces.size());
+  exported_state_interface_names_.reserve(state_interfaces.size());
 
   // check if the names of the controller state interfaces begin with the controller's name
   for (const auto & interface : state_interfaces)
@@ -64,9 +66,29 @@ ChainableControllerInterface::export_state_interfaces()
         get_node()->get_name() + "' and try again.";
       throw std::runtime_error(error_msg);
     }
-
-    state_interfaces_ptrs_vec.push_back(
-      std::make_shared<hardware_interface::StateInterface>(interface));
+    auto state_interface = std::make_shared<hardware_interface::StateInterface>(interface);
+    const auto interface_name = state_interface->get_name();
+    auto [it, succ] = exported_state_interfaces_.insert({inteface_name, state_interface});
+    // either we have name duplicate which we want to avoid under all circumstances since interfaces
+    // need to be uniquely identify able or something else really went wrong. In any case abort and
+    // inform cm by throwing exception
+    if (!succ)
+    {
+      std::string error_msg =
+        "Could not insert StateInterface<" + inteface_name +
+        "> into exported_state_interfaces_ map. Check if you export duplicates. The "
+        "map returned iterator with interface_name<" +
+        it->second->get_name() +
+        ">. If its a duplicate adjust exportation of InterfacesDescription so that all the "
+        "interface names are unique.";
+      exported_state_interfaces_.clear();
+      exported_state_interface_names_.clear();
+      state_interfaces_ptrs_vec.clear();
+      throw std::runtime_error(error_msg);
+    }
+    ordered_exported_state_interfaces_.push_back(state_interface);
+    exported_state_interface_names_.push_back(interface_name);
+    state_interfaces_ptrs_vec.push_back(state_interface);
   }
 
   return state_interfaces_ptrs_vec;
@@ -78,6 +100,8 @@ ChainableControllerInterface::export_reference_interfaces()
   auto reference_interfaces = on_export_reference_interfaces();
   std::vector<std::shared_ptr<hardware_interface::CommandInterface>> reference_interfaces_ptrs_vec;
   reference_interfaces_ptrs_vec.reserve(reference_interfaces.size());
+  exported_reference_interface_names_.reserve(reference_interfaces.size());
+  ordered_reference_interfaces_.reserve(reference_interfaces.size());
 
   // BEGIN (Handle export change): for backward compatibility
   // check if the "reference_interfaces_" variable is resized to number of interfaces
@@ -110,10 +134,31 @@ ChainableControllerInterface::export_reference_interfaces()
       throw std::runtime_error(error_msg);
     }
 
-    std::shared_ptr<hardware_interface::CommandInterface> interface_ptr =
+    std::shared_ptr<hardware_interface::CommandInterface> reference_interface =
       std::make_shared<hardware_interface::CommandInterface>(std::move(interface));
-    reference_interfaces_ptrs_vec.push_back(interface_ptr);
-    reference_interfaces_ptrs_.insert(std::make_pair(interface_ptr->get_name(), interface_ptr));
+    const auto inteface_name = reference_interface->get_name();
+    // check the exported interface name is unique
+    auto [it, succ] = reference_interfaces_ptrs_.insert({inteface_name, reference_interface});
+    // either we have name duplicate which we want to avoid under all circumstances since interfaces
+    // need to be uniquely identify able or something else really went wrong. In any case abort and
+    // inform cm by throwing exception
+    if (!succ)
+    {
+      std::string error_msg =
+        "Could not insert Reference interface<" + inteface_name +
+        "> into reference_interfaces_ map. Check if you export duplicates. The "
+        "map returned iterator with interface_name<" +
+        it->second->get_name() +
+        ">. If its a duplicate adjust exportation of InterfacesDescription so that all the "
+        "interface names are unique.";
+      reference_interfaces_.clear();
+      exported_reference_interface_names_.clear();
+      reference_interfaces_ptrs_vec.clear();
+      throw std::runtime_error(error_msg);
+    }
+    ordered_reference_interfaces_.push_back(reference_interface);
+    exported_reference_interface_names_.push_back(inteface_name);
+    reference_interfaces_ptrs_vec.push_back(reference_interface);
   }
 
   if (reference_interfaces_ptrs_.size() != ref_interface_size)

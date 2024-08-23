@@ -134,13 +134,20 @@ protected:
 
   /// Storage of values for state interfaces
   std::vector<std::string> exported_state_interface_names_;
+  std::vector<std::shared_ptr<hardware_interface::StateInterface>>
+    ordered_exported_state_interfaces_;
+  std::unordered_map<std::string, std::shared_ptr<hardware_interface::StateInterface>>
+    exported_state_interfaces_;
+  // BEGIN (Handle export change): for backward compatibility
   std::vector<double> state_interfaces_values_;
+  // END
 
   /// Storage of values for reference interfaces
   std::vector<std::string> exported_reference_interface_names_;
   // BEGIN (Handle export change): for backward compatibility
   std::vector<double> reference_interfaces_;
   // END
+  std::vector<std::shared_ptr<hardware_interface::CommandInterface>> ordered_reference_interfaces_;
   std::unordered_map<std::string, std::shared_ptr<hardware_interface::CommandInterface>>
     reference_interfaces_ptrs_;
 
