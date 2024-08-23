@@ -1253,10 +1253,16 @@ bool ResourceManager::state_interface_is_available(const std::string & name) con
 
 // CM API: Called in "callback/slow"-thread
 void ResourceManager::import_controller_exported_state_interfaces(
-  const std::string & controller_name, std::vector<std::shared_ptr<StateInterface>> & interfaces)
+  const std::string & controller_name, std::vector<StateInterface> & interfaces)
 {
   std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
-  auto interface_names = resource_storage_->add_state_interfaces(interfaces);
+  std::vector<std::shared_ptr<StateInterface>> interface_ptrs;
+  interface_ptrs.reserve(interfaces.size());
+  for (auto & interface : interfaces)
+  {
+    interface_ptrs.push_back(std::make_shared<StateInterface>(interface));
+  }
+  auto interface_names = resource_storage_->add_state_interfaces(interface_ptrs);
   resource_storage_->controllers_exported_state_interfaces_map_[controller_name] = interface_names;
 }
 
@@ -1316,10 +1322,16 @@ void ResourceManager::remove_controller_exported_state_interfaces(
 // CM API: Called in "callback/slow"-thread
 void ResourceManager::import_controller_reference_interfaces(
   const std::string & controller_name,
-  const std::vector<std::shared_ptr<hardware_interface::CommandInterface>> & interfaces)
+  std::vector<hardware_interface::CommandInterface> & interfaces)
 {
   std::scoped_lock guard(resource_interfaces_lock_, claimed_command_interfaces_lock_);
-  auto interface_names = resource_storage_->add_command_interfaces(interfaces);
+  std::vector<std::shared_ptr<CommandInterface>> interface_ptrs;
+  interface_ptrs.reserve(interfaces.size());
+  for (auto & interface : interfaces)
+  {
+    interface_ptrs.push_back(std::make_shared<CommandInterface>(std::move(interface)));
+  }
+  auto interface_names = resource_storage_->add_command_interfaces(interface_ptrs);
   resource_storage_->controllers_reference_interfaces_map_[controller_name] = interface_names;
 }
 
