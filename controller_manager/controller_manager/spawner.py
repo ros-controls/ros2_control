@@ -26,6 +26,7 @@ from controller_manager import (
     load_controller,
     switch_controllers,
     unload_controller,
+    set_controller_parameters,
     set_controller_parameters_from_param_file,
     bcolors,
 )
@@ -122,6 +123,12 @@ def main(args=None):
         action="store_true",
         required=False,
     )
+    parser.add_argument(
+        "--controller-ros-args",
+        help="The --ros-args to be passed to the controller node for remapping topics etc",
+        default=None,
+        required=False,
+    )
 
     command_line_args = rclpy.utilities.remove_ros_args(args=sys.argv)[1:]
     args = parser.parse_args(command_line_args)
@@ -172,6 +179,15 @@ def main(args=None):
                     + bcolors.ENDC
                 )
             else:
+                if controller_ros_args := args.controller_ros_args.split():
+                    if not set_controller_parameters(
+                        node,
+                        controller_manager_name,
+                        controller_name,
+                        "node_options_args",
+                        controller_ros_args,
+                    ):
+                        return 1
                 if param_file:
                     if not set_controller_parameters_from_param_file(
                         node,
