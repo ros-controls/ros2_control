@@ -41,6 +41,9 @@ struct ControllerInfo
 
   /// List of fallback controller names to be activated if this controller fails.
   std::vector<std::string> fallback_controllers_names;
+
+  /// Controller node options arguments
+  std::vector<std::string> node_options_args;
 };
 
 }  // namespace hardware_interface
