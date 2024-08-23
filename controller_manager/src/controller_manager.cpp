@@ -24,6 +24,7 @@
 #include "controller_manager_msgs/msg/hardware_component_state.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
+#include "rcl/arguments.h"
 #include "rclcpp/version.h"
 #include "rclcpp_lifecycle/state.hpp"
 
@@ -197,7 +198,8 @@ ControllerManager::ControllerManager(
     kControllerInterfaceNamespace, kControllerInterfaceClassName)),
   chainable_loader_(
     std::make_shared<pluginlib::ClassLoader<controller_interface::ChainableControllerInterface>>(
-      kControllerInterfaceNamespace, kChainableControllerInterfaceClassName))
+      kControllerInterfaceNamespace, kChainableControllerInterfaceClassName)),
+  cm_node_options_(options)
 {
   init_controller_manager();
 }
@@ -217,7 +219,8 @@ ControllerManager::ControllerManager(
     kControllerInterfaceNamespace, kControllerInterfaceClassName)),
   chainable_loader_(
     std::make_shared<pluginlib::ClassLoader<controller_interface::ChainableControllerInterface>>(
-      kControllerInterfaceNamespace, kChainableControllerInterfaceClassName))
+      kControllerInterfaceNamespace, kChainableControllerInterfaceClassName)),
+  cm_node_options_(options)
 {
   init_controller_manager();
 }
@@ -234,7 +237,8 @@ ControllerManager::ControllerManager(
     kControllerInterfaceNamespace, kControllerInterfaceClassName)),
   chainable_loader_(
     std::make_shared<pluginlib::ClassLoader<controller_interface::ChainableControllerInterface>>(
-      kControllerInterfaceNamespace, kChainableControllerInterfaceClassName))
+      kControllerInterfaceNamespace, kChainableControllerInterfaceClassName)),
+  cm_node_options_(options)
 {
   init_controller_manager();
 }
@@ -2819,14 +2823,30 @@ rclcpp::NodeOptions ControllerManager::determine_controller_node_options(
 
   rclcpp::NodeOptions controller_node_options = controller.c->define_custom_node_options();
   std::vector<std::string> node_options_arguments = controller_node_options.arguments();
-  const std::string ros_args_arg = "--ros-args";
+
+  for (const std::string & arg : cm_node_options_.arguments())
+  {
+    if (arg.find("__ns") != std::string::npos || arg.find("__node") != std::string::npos)
+    {
+      if (
+        node_options_arguments.back() == RCL_REMAP_FLAG ||
+        node_options_arguments.back() == RCL_SHORT_REMAP_FLAG)
+      {
+        node_options_arguments.pop_back();
+      }
+      continue;
+    }
+
+    node_options_arguments.push_back(arg);
+  }
+
   if (controller.info.parameters_file.has_value())
   {
-    if (!check_for_element(node_options_arguments, ros_args_arg))
+    if (!check_for_element(node_options_arguments, RCL_ROS_ARGS_FLAG))
     {
-      node_options_arguments.push_back(ros_args_arg);
+      node_options_arguments.push_back(RCL_ROS_ARGS_FLAG);
     }
-    node_options_arguments.push_back("--params-file");
+    node_options_arguments.push_back(RCL_PARAM_FILE_FLAG);
     node_options_arguments.push_back(controller.info.parameters_file.value());
   }
 
@@ -2834,13 +2854,24 @@ rclcpp::NodeOptions ControllerManager::determine_controller_node_options(
   const rclcpp::Parameter use_sim_time = this->get_parameter("use_sim_time");
   if (use_sim_time.as_bool())
   {
-    if (!check_for_element(node_options_arguments, ros_args_arg))
+    if (!check_for_element(node_options_arguments, RCL_ROS_ARGS_FLAG))
     {
-      node_options_arguments.push_back(ros_args_arg);
+      node_options_arguments.push_back(RCL_ROS_ARGS_FLAG);
     }
-    node_options_arguments.push_back("-p");
+    node_options_arguments.push_back(RCL_PARAM_FLAG);
     node_options_arguments.push_back("use_sim_time:=true");
   }
+
+  std::string arguments;
+  arguments.reserve(1000);
+  for (const auto & arg : node_options_arguments)
+  {
+    arguments.append(arg);
+    arguments.append(" ");
+  }
+  RCLCPP_INFO(
+    get_logger(), "Controller '%s' node arguments: %s", controller.info.name.c_str(),
+    arguments.c_str());
 
   controller_node_options = controller_node_options.arguments(node_options_arguments);
   controller_node_options.use_global_arguments(false);
