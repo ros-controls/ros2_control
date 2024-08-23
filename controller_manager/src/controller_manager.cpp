@@ -616,6 +616,17 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_c
     controller_spec.info.fallback_controllers_names = fallback_controllers;
   }
 
+  const std::string node_options_args_param = controller_name + ".node_options_args";
+  std::vector<std::string> node_options_args;
+  if (!has_parameter(node_options_args_param))
+  {
+    declare_parameter(node_options_args_param, rclcpp::ParameterType::PARAMETER_STRING_ARRAY);
+  }
+  if (get_parameter(node_options_args_param, node_options_args) && !node_options_args.empty())
+  {
+    controller_spec.info.node_options_args = node_options_args;
+  }
+
   return add_controller_impl(controller_spec);
 }
 
@@ -3473,6 +3484,18 @@ rclcpp::NodeOptions ControllerManager::determine_controller_node_options(
     }
     node_options_arguments.push_back(RCL_PARAM_FLAG);
     node_options_arguments.push_back("use_sim_time:=true");
+  }
+
+  // Add options parsed through the spawner
+  if (
+    !controller.info.node_options_args.empty() &&
+    !check_for_element(controller.info.node_options_args, ros_args_arg))
+  {
+    node_options_arguments.push_back(ros_args_arg);
+  }
+  for (const auto & arg : controller.info.node_options_args)
+  {
+    node_options_arguments.push_back(arg);
   }
 
   std::string arguments;
