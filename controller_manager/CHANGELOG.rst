@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.16.1 (2024-08-24)
+-------------------
 * propage a portion of global args to the controller nodes (`#1712 <https://github.com/ros-controls/ros2_control/issues/1712>`_)
 * Contributors: Sai Kishor Kothakota
 
