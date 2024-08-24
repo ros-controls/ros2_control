@@ -3489,7 +3489,7 @@ rclcpp::NodeOptions ControllerManager::determine_controller_node_options(
   // Add options parsed through the spawner
   if (
     !controller.info.node_options_args.empty() &&
-    !check_for_element(controller.info.node_options_args, RCL_ROS_ARGS_FLAG)
+    !check_for_element(controller.info.node_options_args, RCL_ROS_ARGS_FLAG))
   {
     node_options_arguments.push_back(RCL_ROS_ARGS_FLAG);
   }
