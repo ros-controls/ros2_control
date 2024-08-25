@@ -3464,6 +3464,18 @@ rclcpp::NodeOptions ControllerManager::determine_controller_node_options(
     node_options_arguments.push_back(arg);
   }
 
+  // Add deprecation notice if the arguments are from the controller_manager node
+  if (
+    check_for_element(node_options_arguments, RCL_REMAP_FLAG) ||
+    check_for_element(node_options_arguments, RCL_SHORT_REMAP_FLAG))
+  {
+    RCLCPP_WARN(
+      get_logger(),
+      "The use of remapping arguments to the controller_manager node is deprecated. Please use the "
+      "'--controller-ros-args' argument of the spawner to pass remapping arguments to the "
+      "controller node.");
+  }
+
   for (const auto & parameters_file : controller.info.parameters_files)
   {
     if (!check_for_element(node_options_arguments, RCL_ROS_ARGS_FLAG))
