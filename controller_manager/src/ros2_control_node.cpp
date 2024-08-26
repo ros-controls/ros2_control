@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <errno.h>
 #include <chrono>
 #include <memory>
 #include <string>
@@ -40,7 +41,22 @@ int main(int argc, char ** argv)
     std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
   std::string manager_node_name = "controller_manager";
 
-  auto cm = std::make_shared<controller_manager::ControllerManager>(executor, manager_node_name);
+  rclcpp::NodeOptions cm_node_options = controller_manager::get_cm_node_options();
+  std::vector<std::string> node_arguments = cm_node_options.arguments();
+  for (int i = 1; i < argc; ++i)
+  {
+    if (node_arguments.empty() && std::string(argv[i]) != "--ros-args")
+    {
+      // A simple way to reject non ros args
+      continue;
+    }
+    RCLCPP_INFO(rclcpp::get_logger("CM args"), "Adding argument: %s", argv[i]);
+    node_arguments.push_back(argv[i]);
+  }
+  cm_node_options.arguments(node_arguments);
+
+  auto cm = std::make_shared<controller_manager::ControllerManager>(
+    executor, manager_node_name, "", cm_node_options);
 
   RCLCPP_INFO(cm->get_logger(), "update rate is %d Hz", cm->get_update_rate());
 
@@ -51,10 +67,16 @@ int main(int argc, char ** argv)
       {
         RCLCPP_WARN(
           cm->get_logger(),
-          "Could not enable FIFO RT scheduling policy. Consider setting up your user to do FIFO RT "
-          "scheduling. See "
+          "Could not enable FIFO RT scheduling policy: with error number <%i>(%s). See "
           "[https://control.ros.org/master/doc/ros2_control/controller_manager/doc/userdoc.html] "
-          "for details.");
+          "for details on how to enable realtime scheduling.",
+          errno, strerror(errno));
+      }
+      else
+      {
+        RCLCPP_INFO(
+          cm->get_logger(), "Successful set up FIFO RT scheduling policy with priority %i.",
+          kSchedPriority);
       }
 
       // for calculating sleep time
