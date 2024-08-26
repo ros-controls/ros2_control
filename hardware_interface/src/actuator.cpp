@@ -247,6 +247,7 @@ return_type Actuator::read(const rclcpp::Time & time, const rclcpp::Duration & p
     return return_type::OK;
   }
   if (
+    impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN ||
     impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED ||
     impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED)
   {
@@ -277,6 +278,7 @@ return_type Actuator::write(const rclcpp::Time & time, const rclcpp::Duration & 
     return return_type::OK;
   }
   if (
+    impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN ||
     impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED ||
     impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED)
   {

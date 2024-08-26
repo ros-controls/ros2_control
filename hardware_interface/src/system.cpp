@@ -243,6 +243,7 @@ return_type System::read(const rclcpp::Time & time, const rclcpp::Duration & per
     return return_type::OK;
   }
   if (
+    impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN ||
     impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED ||
     impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED)
   {
@@ -273,6 +274,7 @@ return_type System::write(const rclcpp::Time & time, const rclcpp::Duration & pe
     return return_type::OK;
   }
   if (
+    impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN ||
     impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED ||
     impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED)
   {
