@@ -80,7 +80,7 @@ public:
   std::string get_group_name() const;
 
   HARDWARE_INTERFACE_PUBLIC
-  const rclcpp_lifecycle::State & get_state() const;
+  const rclcpp_lifecycle::State & get_lifecycle_state() const;
 
   HARDWARE_INTERFACE_PUBLIC
   return_type read(const rclcpp::Time & time, const rclcpp::Duration & period);

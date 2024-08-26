@@ -133,7 +133,9 @@ struct TransmissionInfo
 struct InterfaceDescription
 {
   InterfaceDescription(const std::string & prefix_name_in, const InterfaceInfo & interface_info_in)
-  : prefix_name(prefix_name_in), interface_info(interface_info_in)
+  : prefix_name(prefix_name_in),
+    interface_info(interface_info_in),
+    interface_name(prefix_name + "/" + interface_info.name)
   {
   }
 
@@ -147,9 +149,16 @@ struct InterfaceDescription
    */
   InterfaceInfo interface_info;
 
-  std::string get_name() const { return prefix_name + "/" + interface_info.name; }
+  /**
+   * Name of the interface
+   */
+  std::string interface_name;
 
-  std::string get_interface_type() const { return interface_info.name; }
+  std::string get_prefix_name() const { return prefix_name; }
+
+  std::string get_interface_name() const { return interface_info.name; }
+
+  std::string get_name() const { return interface_name; }
 };
 
 /// This structure stores information about hardware defined in a robot's URDF.

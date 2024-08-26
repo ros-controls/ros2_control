@@ -514,7 +514,7 @@ public:
     switch (target_state.id())
     {
       case State::PRIMARY_STATE_UNCONFIGURED:
-        switch (hardware.get_state().id())
+        switch (hardware.get_lifecycle_state().id())
         {
           case State::PRIMARY_STATE_UNCONFIGURED:
             result = true;
@@ -538,7 +538,7 @@ public:
         }
         break;
       case State::PRIMARY_STATE_INACTIVE:
-        switch (hardware.get_state().id())
+        switch (hardware.get_lifecycle_state().id())
         {
           case State::PRIMARY_STATE_UNCONFIGURED:
             result = configure_hardware(hardware);
@@ -558,7 +558,7 @@ public:
         }
         break;
       case State::PRIMARY_STATE_ACTIVE:
-        switch (hardware.get_state().id())
+        switch (hardware.get_lifecycle_state().id())
         {
           case State::PRIMARY_STATE_UNCONFIGURED:
             result = configure_hardware(hardware);
@@ -582,7 +582,7 @@ public:
         }
         break;
       case State::PRIMARY_STATE_FINALIZED:
-        switch (hardware.get_state().id())
+        switch (hardware.get_lifecycle_state().id())
         {
           case State::PRIMARY_STATE_UNCONFIGURED:
             result = shutdown_hardware(hardware);
@@ -1529,7 +1529,8 @@ std::unordered_map<std::string, HardwareComponentInfo> ResourceManager::get_comp
   {
     for (auto & component : container)
     {
-      resource_storage_->hardware_info_map_[component.get_name()].state = component.get_state();
+      resource_storage_->hardware_info_map_[component.get_name()].state =
+        component.get_lifecycle_state();
     }
   };
 
@@ -1613,8 +1614,9 @@ bool ResourceManager::prepare_command_mode_switch(
     for (auto & component : components)
     {
       if (
-        component.get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
-        component.get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+        component.get_lifecycle_state().id() ==
+          lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
+        component.get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
       {
         try
         {
@@ -1678,8 +1680,9 @@ bool ResourceManager::perform_command_mode_switch(
     for (auto & component : components)
     {
       if (
-        component.get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
-        component.get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+        component.get_lifecycle_state().id() ==
+          lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
+        component.get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
       {
         try
         {

@@ -429,13 +429,16 @@ public:
   /**
    * \return state.
    */
-  const rclcpp_lifecycle::State & get_state() const { return lifecycle_state_; }
+  const rclcpp_lifecycle::State & get_lifecycle_state() const { return lifecycle_state_; }
 
   /// Set life-cycle state of the actuator hardware.
   /**
    * \return state.
    */
-  void set_state(const rclcpp_lifecycle::State & new_state) { lifecycle_state_ = new_state; }
+  void set_lifecycle_state(const rclcpp_lifecycle::State & new_state)
+  {
+    lifecycle_state_ = new_state;
+  }
   
   void set_state(const std::string & interface_name, const double & value)
   {
@@ -455,7 +458,7 @@ public:
   double get_command(const std::string & interface_name) const
   {
     return system_commands_.at(interface_name)->get_value();
-  }
+  } 
 
   /// Get the logger of the SystemInterface.
   /**

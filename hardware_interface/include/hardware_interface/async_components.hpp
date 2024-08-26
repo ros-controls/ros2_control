@@ -84,7 +84,9 @@ public:
           TimePoint next_iteration_time =
             TimePoint(std::chrono::nanoseconds(clock_interface_->get_clock()->now().nanoseconds()));
 
-          if (component->get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+          if (
+            component->get_lifecycle_state().id() ==
+            lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
           {
             auto current_time = clock_interface_->get_clock()->now();
             auto measured_period = current_time - previous_time;
