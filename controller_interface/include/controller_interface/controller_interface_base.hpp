@@ -147,7 +147,7 @@ public:
   std::shared_ptr<const rclcpp_lifecycle::LifecycleNode> get_node() const;
 
   CONTROLLER_INTERFACE_PUBLIC
-  const rclcpp_lifecycle::State & get_state() const;
+  const rclcpp_lifecycle::State & get_lifecycle_state() const;
 
   CONTROLLER_INTERFACE_PUBLIC
   unsigned int get_update_rate() const;

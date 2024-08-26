@@ -83,7 +83,7 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
   // Then we don't need to do state-machine related checks.
   //
   // Other solution is to add check into the LifecycleNode if a transition is valid to trigger
-  if (get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
+  if (get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
   {
     update_rate_ = static_cast<unsigned int>(get_node()->get_parameter("update_rate").as_int());
     is_async_ = get_node()->get_parameter("is_async").as_bool();
@@ -106,7 +106,7 @@ void ControllerInterfaceBase::release_interfaces()
   state_interfaces_.clear();
 }
 
-const rclcpp_lifecycle::State & ControllerInterfaceBase::get_state() const
+const rclcpp_lifecycle::State & ControllerInterfaceBase::get_lifecycle_state() const
 {
   return node_->get_current_state();
 }

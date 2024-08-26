@@ -58,7 +58,8 @@ static const rmw_qos_profile_t qos_services = {
 
 inline bool is_controller_inactive(const controller_interface::ControllerInterfaceBase & controller)
 {
-  return controller.get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE;
+  return controller.get_lifecycle_state().id() ==
+         lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE;
 }
 
 inline bool is_controller_inactive(
@@ -69,7 +70,7 @@ inline bool is_controller_inactive(
 
 inline bool is_controller_active(const controller_interface::ControllerInterfaceBase & controller)
 {
-  return controller.get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE;
+  return controller.get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE;
 }
 
 inline bool is_controller_active(
@@ -659,7 +660,7 @@ controller_interface::return_type ControllerManager::configure_controller(
   }
   auto controller = found_it->c;
 
-  auto state = controller->get_state();
+  auto state = controller->get_lifecycle_state();
   if (
     state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE ||
     state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED)
@@ -670,7 +671,7 @@ controller_interface::return_type ControllerManager::configure_controller(
     return controller_interface::return_type::ERROR;
   }
 
-  auto new_state = controller->get_state();
+  auto new_state = controller->get_lifecycle_state();
   if (state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
   {
     RCLCPP_DEBUG(
@@ -1744,7 +1745,7 @@ void ControllerManager::list_controllers_srv_cb(
     controller_state.name = controllers[i].info.name;
     controller_state.type = controllers[i].info.type;
     controller_state.claimed_interfaces = controllers[i].info.claimed_interfaces;
-    controller_state.state = controllers[i].c->get_state().label();
+    controller_state.state = controllers[i].c->get_lifecycle_state().label();
     controller_state.is_chainable = controllers[i].c->is_chainable();
     controller_state.is_chained = controllers[i].c->is_in_chained_mode();
 
@@ -2728,7 +2729,7 @@ void ControllerManager::controller_activity_diagnostic_callback(
     {
       all_active = false;
     }
-    stat.add(controllers[i].info.name, controllers[i].c->get_state().label());
+    stat.add(controllers[i].info.name, controllers[i].c->get_lifecycle_state().label());
   }
 
   if (all_active)
