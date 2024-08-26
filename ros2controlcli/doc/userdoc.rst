@@ -48,7 +48,7 @@ list_controllers
                             List controller's exported references
       --verbose, -v         List controller's claimed interfaces, required state interfaces and required command interfaces
       -c CONTROLLER_MANAGER, --controller-manager CONTROLLER_MANAGER
-                            Name of the controller manager ROS node
+                            Name of the controller manager ROS node (default: controller_manager)
       --include-hidden-nodes
                             Consider hidden nodes as well
       --ros-args ...        Pass arbitrary arguments to the executable
@@ -77,7 +77,7 @@ list_controller_types
                             Spin time in seconds to wait for discovery (only applies when not using an already running daemon)
       -s, --use-sim-time    Enable ROS simulation time
       -c CONTROLLER_MANAGER, --controller-manager CONTROLLER_MANAGER
-                            Name of the controller manager ROS node
+                            Name of the controller manager ROS node (default: controller_manager)
       --include-hidden-nodes
                             Consider hidden nodes as well
       --ros-args ...        Pass arbitrary arguments to the executable
@@ -109,7 +109,7 @@ list_hardware_components
       -s, --use-sim-time    Enable ROS simulation time
       --verbose, -v         List hardware components with command and state interfaces
       -c CONTROLLER_MANAGER, --controller-manager CONTROLLER_MANAGER
-                            Name of the controller manager ROS node
+                            Name of the controller manager ROS node (default: controller_manager)
       --include-hidden-nodes
                             Consider hidden nodes as well
       --ros-args ...        Pass arbitrary arguments to the executable
@@ -142,7 +142,7 @@ list_hardware_interfaces
                             Spin time in seconds to wait for discovery (only applies when not using an already running daemon)
       -s, --use-sim-time    Enable ROS simulation time
       -c CONTROLLER_MANAGER, --controller-manager CONTROLLER_MANAGER
-                            Name of the controller manager ROS node
+                            Name of the controller manager ROS node (default: controller_manager)
       --include-hidden-nodes
                             Consider hidden nodes as well
       --ros-args ...        Pass arbitrary arguments to the executable
@@ -181,7 +181,7 @@ load_controller
       --set-state {inactive,active}
                             Set the state of the loaded controller
       -c CONTROLLER_MANAGER, --controller-manager CONTROLLER_MANAGER
-                            Name of the controller manager ROS node
+                            Name of the controller manager ROS node (default: controller_manager)
       --include-hidden-nodes
                             Consider hidden nodes as well
       --ros-args ...        Pass arbitrary arguments to the executable
@@ -203,7 +203,7 @@ reload_controller_libraries
       -s, --use-sim-time    Enable ROS simulation time
       --force-kill          Force stop of loaded controllers
       -c CONTROLLER_MANAGER, --controller-manager CONTROLLER_MANAGER
-                            Name of the controller manager ROS node
+                            Name of the controller manager ROS node (default: controller_manager)
       --include-hidden-nodes
                             Consider hidden nodes as well
       --ros-args ...        Pass arbitrary arguments to the executable
@@ -228,7 +228,7 @@ set_controller_state
                             Spin time in seconds to wait for discovery (only applies when not using an already running daemon)
       -s, --use-sim-time    Enable ROS simulation time
       -c CONTROLLER_MANAGER, --controller-manager CONTROLLER_MANAGER
-                            Name of the controller manager ROS node
+                            Name of the controller manager ROS node (default: controller_manager)
       --include-hidden-nodes
                             Consider hidden nodes as well
       --ros-args ...        Pass arbitrary arguments to the executable
@@ -255,7 +255,7 @@ set_hardware_component_state
                             Spin time in seconds to wait for discovery (only applies when not using an already running daemon)
       -s, --use-sim-time    Enable ROS simulation time
       -c CONTROLLER_MANAGER, --controller-manager CONTROLLER_MANAGER
-                            Name of the controller manager ROS node
+                            Name of the controller manager ROS node (default: controller_manager)
       --include-hidden-nodes
                             Consider hidden nodes as well
       --ros-args ...        Pass arbitrary arguments to the executable
@@ -285,7 +285,7 @@ switch_controllers
       --switch-timeout SWITCH_TIMEOUT
                             Timeout for switching controllers
       -c CONTROLLER_MANAGER, --controller-manager CONTROLLER_MANAGER
-                            Name of the controller manager ROS node
+                            Name of the controller manager ROS node (default: controller_manager)
       --include-hidden-nodes
                             Consider hidden nodes as well
       --ros-args ...        Pass arbitrary arguments to the executable
@@ -309,7 +309,7 @@ unload_controller
                             Spin time in seconds to wait for discovery (only applies when not using an already running daemon)
       -s, --use-sim-time    Enable ROS simulation time
       -c CONTROLLER_MANAGER, --controller-manager CONTROLLER_MANAGER
-                            Name of the controller manager ROS node
+                            Name of the controller manager ROS node (default: controller_manager)
       --include-hidden-nodes
                             Consider hidden nodes as well
       --ros-args ...        Pass arbitrary arguments to the executable
@@ -330,7 +330,7 @@ view_controller_chains
                             Spin time in seconds to wait for discovery (only applies when not using an already running daemon)
       -s, --use-sim-time    Enable ROS simulation time
       -c CONTROLLER_MANAGER, --controller-manager CONTROLLER_MANAGER
-                            Name of the controller manager ROS node
+                            Name of the controller manager ROS node (default: controller_manager)
       --include-hidden-nodes
                             Consider hidden nodes as well
       --ros-args ...        Pass arbitrary arguments to the executable

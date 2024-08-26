@@ -73,7 +73,7 @@ def add_controller_mgr_parsers(parser):
     arg = parser.add_argument(
         "-c",
         "--controller-manager",
-        help="Name of the controller manager ROS node",
+        help="Name of the controller manager ROS node (default: controller_manager)",
         default="controller_manager",
         required=False,
     )
