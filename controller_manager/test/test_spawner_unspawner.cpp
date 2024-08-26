@@ -321,6 +321,25 @@ TEST_F(TestLoadController, unload_on_kill)
   ASSERT_EQ(cm_->get_loaded_controllers().size(), 0ul);
 }
 
+TEST_F(TestLoadController, unload_on_kill_activate_as_group)
+{
+  // Launch spawner with unload on kill
+  // timeout command will kill it after the specified time with signal SIGINT
+  ControllerManagerRunner cm_runner(this);
+  cm_->set_parameter(rclcpp::Parameter("ctrl_3.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
+  cm_->set_parameter(rclcpp::Parameter("ctrl_2.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
+  std::stringstream ss;
+  ss << "timeout --signal=INT 5 "
+     << std::string(coveragepy_script) +
+          " $(ros2 pkg prefix controller_manager)/lib/controller_manager/spawner "
+     << "ctrl_3 ctrl_2 --activate-as-group -c test_controller_manager --unload-on-kill";
+
+  EXPECT_NE(std::system(ss.str().c_str()), 0)
+    << "timeout should have killed spawner and returned non 0 code";
+
+  ASSERT_EQ(cm_->get_loaded_controllers().size(), 0ul);
+}
+
 TEST_F(TestLoadController, spawner_test_fallback_controllers)
 {
   const std::string test_file_path = ament_index_cpp::get_package_prefix("controller_manager") +
