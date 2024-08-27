@@ -288,14 +288,6 @@ const rclcpp::Time & System::get_last_write_time() const { return last_write_cyc
 
 return_type System::read(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
-  std::unique_lock<std::recursive_mutex> lock(system_mutex_, std::try_to_lock);
-  if (!lock.owns_lock())
-  {
-    RCLCPP_DEBUG(
-      impl_->get_logger(), "Skipping read() call for system '%s' since it is locked",
-      impl_->get_name().c_str());
-    return return_type::OK;
-  }
   if (lifecycleStateThatRequiresNoAction(impl_->get_lifecycle_state().id()))
   {
     last_read_cycle_time_ = time;
@@ -318,14 +310,6 @@ return_type System::read(const rclcpp::Time & time, const rclcpp::Duration & per
 
 return_type System::write(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
-  std::unique_lock<std::recursive_mutex> lock(system_mutex_, std::try_to_lock);
-  if (!lock.owns_lock())
-  {
-    RCLCPP_DEBUG(
-      impl_->get_logger(), "Skipping write() call for system '%s' since it is locked",
-      impl_->get_name().c_str());
-    return return_type::OK;
-  }
   if (lifecycleStateThatRequiresNoAction(impl_->get_lifecycle_state().id()))
   {
     last_write_cycle_time_ = time;
@@ -346,4 +330,5 @@ return_type System::write(const rclcpp::Time & time, const rclcpp::Duration & pe
   return result;
 }
 
+std::recursive_mutex & System::get_mutex() { return system_mutex_; }
 }  // namespace hardware_interface

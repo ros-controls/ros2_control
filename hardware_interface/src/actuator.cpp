@@ -290,14 +290,6 @@ const rclcpp::Time & Actuator::get_last_write_time() const { return last_write_c
 
 return_type Actuator::read(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
-  std::unique_lock<std::recursive_mutex> lock(actuators_mutex_, std::try_to_lock);
-  if (!lock.owns_lock())
-  {
-    RCLCPP_DEBUG(
-      impl_->get_logger(), "Skipping read() call for actuator '%s' since it is locked",
-      impl_->get_name().c_str());
-    return return_type::OK;
-  }
   if (lifecycleStateThatRequiresNoAction(impl_->get_lifecycle_state().id()))
   {
     last_read_cycle_time_ = time;
@@ -320,14 +312,6 @@ return_type Actuator::read(const rclcpp::Time & time, const rclcpp::Duration & p
 
 return_type Actuator::write(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
-  std::unique_lock<std::recursive_mutex> lock(actuators_mutex_, std::try_to_lock);
-  if (!lock.owns_lock())
-  {
-    RCLCPP_DEBUG(
-      impl_->get_logger(), "Skipping write() call for actuator '%s' since it is locked",
-      impl_->get_name().c_str());
-    return return_type::OK;
-  }
   if (lifecycleStateThatRequiresNoAction(impl_->get_lifecycle_state().id()))
   {
     last_write_cycle_time_ = time;
@@ -348,4 +332,5 @@ return_type Actuator::write(const rclcpp::Time & time, const rclcpp::Duration & 
   return result;
 }
 
+std::recursive_mutex & Actuator::get_mutex() { return actuators_mutex_; }
 }  // namespace hardware_interface

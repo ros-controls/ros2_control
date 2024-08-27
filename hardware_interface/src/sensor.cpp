@@ -245,14 +245,6 @@ const rclcpp::Time & Sensor::get_last_read_time() const { return last_read_cycle
 
 return_type Sensor::read(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
-  std::unique_lock<std::recursive_mutex> lock(sensors_mutex_, std::try_to_lock);
-  if (!lock.owns_lock())
-  {
-    RCLCPP_DEBUG(
-      impl_->get_logger(), "Skipping read() call for the sensor '%s' since it is locked",
-      impl_->get_name().c_str());
-    return return_type::OK;
-  }
   if (lifecycleStateThatRequiresNoAction(impl_->get_lifecycle_state().id()))
   {
     last_read_cycle_time_ = time;
@@ -273,4 +265,5 @@ return_type Sensor::read(const rclcpp::Time & time, const rclcpp::Duration & per
   return result;
 }
 
+std::recursive_mutex & Sensor::get_mutex() { return sensors_mutex_; }
 }  // namespace hardware_interface
