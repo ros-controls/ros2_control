@@ -1804,8 +1804,9 @@ HardwareReadWriteStatus ResourceManager::read(
       try
       {
         if (
+          resource_storage_->hardware_info_map_[component.get_name()].read_rate == 0 ||
           resource_storage_->hardware_info_map_[component.get_name()].read_rate ==
-          resource_storage_->cm_update_rate_)
+            resource_storage_->cm_update_rate_)
         {
           ret_val = component.read(time, period);
         }
@@ -1889,8 +1890,9 @@ HardwareReadWriteStatus ResourceManager::write(
       try
       {
         if (
+          resource_storage_->hardware_info_map_[component.get_name()].write_rate == 0 ||
           resource_storage_->hardware_info_map_[component.get_name()].write_rate ==
-          resource_storage_->cm_update_rate_)
+            resource_storage_->cm_update_rate_)
         {
           ret_val = component.write(time, period);
         }
