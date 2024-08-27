@@ -40,6 +40,7 @@ Sensor::Sensor(Sensor && other) noexcept
 {
   std::lock_guard<std::recursive_mutex> lock(other.sensors_mutex_);
   impl_ = std::move(other.impl_);
+  last_read_cycle_time_ = other.last_read_cycle_time_;
 }
 
 const rclcpp_lifecycle::State & Sensor::initialize(
