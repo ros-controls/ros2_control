@@ -245,7 +245,9 @@ def unload_controller(node, controller_manager_name, controller_name, service_ti
     )
 
 
-def get_parameter_from_param_file(controller_name, namespace, parameter_file, parameter_name):
+def get_parameter_from_param_file(
+    node, controller_name, namespace, parameter_file, parameter_name
+):
     with open(parameter_file) as f:
         namespaced_controller = (
             controller_name if namespace == "/" else f"{namespace}/{controller_name}"
@@ -263,25 +265,29 @@ def get_parameter_from_param_file(controller_name, namespace, parameter_file, pa
         ]:
             if key in parameters:
                 if key == controller_name and controller_name != namespaced_controller:
-                    raise RuntimeError(
-                        f"YAML file : {parameter_file} is not a valid ROS parameter file for controller node : {namespaced_controller}"
+                    node.get_logger().fatal(
+                        f"{bcolors.FAIL}Missing namespace : {namespace} or wildcard in parameter file for controller : {controller_name}{bcolors.ENDC}"
                     )
+                    break
                 controller_param_dict = parameters[key]
                 break
             if WILDCARD_KEY in parameters and key in parameters[WILDCARD_KEY]:
                 controller_param_dict = parameters[WILDCARD_KEY][key]
                 break
 
-        if controller_param_dict:
-            if (
-                not isinstance(controller_param_dict, dict)
-                or ROS_PARAMS_KEY not in controller_param_dict
-            ):
-                raise RuntimeError(
-                    f"YAML file : {parameter_file} is not a valid ROS parameter file for controller node : {namespaced_controller}"
-                )
-            if parameter_name in controller_param_dict[ROS_PARAMS_KEY]:
-                return controller_param_dict[ROS_PARAMS_KEY][parameter_name]
+        if controller_param_dict is None:
+            node.get_logger().fatal(
+                f"{bcolors.FAIL}Controller : {namespaced_controller} parameters not found in parameter file : {parameter_file}{bcolors.ENDC}"
+            )
+        if (
+            not isinstance(controller_param_dict, dict)
+            or ROS_PARAMS_KEY not in controller_param_dict
+        ):
+            raise RuntimeError(
+                f"YAML file : {parameter_file} is not a valid ROS parameter file for controller node : {namespaced_controller}"
+            )
+        if parameter_name in controller_param_dict[ROS_PARAMS_KEY]:
+            return controller_param_dict[ROS_PARAMS_KEY][parameter_name]
 
         return None
 
@@ -337,7 +343,7 @@ def set_controller_parameters_from_param_file(
         )
 
         controller_type = get_parameter_from_param_file(
-            controller_name, spawner_namespace, parameter_file, "type"
+            node, controller_name, spawner_namespace, parameter_file, "type"
         )
         if controller_type:
             if not set_controller_parameters(
@@ -346,7 +352,7 @@ def set_controller_parameters_from_param_file(
                 return False
 
         fallback_controllers = get_parameter_from_param_file(
-            controller_name, spawner_namespace, parameter_file, "fallback_controllers"
+            node, controller_name, spawner_namespace, parameter_file, "fallback_controllers"
         )
         if fallback_controllers:
             if not set_controller_parameters(
