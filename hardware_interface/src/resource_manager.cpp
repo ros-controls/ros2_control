@@ -1792,6 +1792,14 @@ HardwareReadWriteStatus ResourceManager::read(
   {
     for (auto & component : components)
     {
+      std::unique_lock<std::recursive_mutex> lock(component.get_mutex(), std::try_to_lock);
+      if (!lock.owns_lock())
+      {
+        RCLCPP_DEBUG(
+          get_logger(), "Skipping read() call for the component '%s' since it is locked",
+          component.get_name().c_str());
+        continue;
+      }
       auto ret_val = return_type::OK;
       try
       {
@@ -1869,6 +1877,14 @@ HardwareReadWriteStatus ResourceManager::write(
   {
     for (auto & component : components)
     {
+      std::unique_lock<std::recursive_mutex> lock(component.get_mutex(), std::try_to_lock);
+      if (!lock.owns_lock())
+      {
+        RCLCPP_DEBUG(
+          get_logger(), "Skipping write() call for the component '%s' since it is locked",
+          component.get_name().c_str());
+        continue;
+      }
       auto ret_val = return_type::OK;
       try
       {

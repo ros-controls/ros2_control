@@ -91,6 +91,9 @@ public:
   HARDWARE_INTERFACE_PUBLIC
   return_type write(const rclcpp::Time &, const rclcpp::Duration &) { return return_type::OK; }
 
+  HARDWARE_INTERFACE_PUBLIC
+  std::recursive_mutex & get_mutex();
+
 private:
   std::unique_ptr<SensorInterface> impl_;
   mutable std::recursive_mutex sensors_mutex_;

@@ -107,6 +107,9 @@ public:
   HARDWARE_INTERFACE_PUBLIC
   return_type write(const rclcpp::Time & time, const rclcpp::Duration & period);
 
+  HARDWARE_INTERFACE_PUBLIC
+  std::recursive_mutex & get_mutex();
+
 private:
   std::unique_ptr<SystemInterface> impl_;
   mutable std::recursive_mutex system_mutex_;
