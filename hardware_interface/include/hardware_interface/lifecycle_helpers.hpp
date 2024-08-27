@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef HARDWARE_INTERFACE__HELPERS_HPP_
-#define HARDWARE_INTERFACE__HELPERS_HPP_
+#ifndef HARDWARE_INTERFACE__LIFECYCLE_HELPERS_HPP_
+#define HARDWARE_INTERFACE__LIFECYCLE_HELPERS_HPP_
 
 #include <lifecycle_msgs/msg/state.hpp>
 
@@ -27,4 +27,4 @@ constexpr bool lifecycleStateThatRequiresNoAction(const lifecycle_msgs::msg::Sta
 }
 }  // namespace hardware_interface
 
-#endif  // HARDWARE_INTERFACE__HELPERS_HPP_
+#endif  // HARDWARE_INTERFACE__LIFECYCLE_HELPERS_HPP_
