@@ -250,19 +250,36 @@ def get_parameter_from_param_file(controller_name, namespace, parameter_file, pa
         namespaced_controller = (
             controller_name if namespace == "/" else f"{namespace}/{controller_name}"
         )
+        WILDCARD_KEY = "/**"
+        ROS_PARAMS_KEY = "ros__parameters"
         parameters = yaml.safe_load(f)
-        if namespaced_controller in parameters:
-            value = parameters[namespaced_controller]
-            if not isinstance(value, dict) or "ros__parameters" not in value:
+        controller_param_dict = None
+        # check for the parameter in 'controller_name' or 'namespaced_controller' or '/**/namespaced_controller' or '/**/controller_name'
+        for key in [
+            controller_name,
+            namespaced_controller,
+            f"{WILDCARD_KEY}/{controller_name}",
+            f"{WILDCARD_KEY}/{namespaced_controller}",
+        ]:
+            if key in parameters:
+                controller_param_dict = parameters[key]
+                break
+            if WILDCARD_KEY in parameters and key in parameters[WILDCARD_KEY]:
+                controller_param_dict = parameters[WILDCARD_KEY][key]
+                break
+
+        if controller_param_dict:
+            if (
+                not isinstance(controller_param_dict, dict)
+                or ROS_PARAMS_KEY not in controller_param_dict
+            ):
                 raise RuntimeError(
-                    f"YAML file : {parameter_file} is not a valid ROS parameter file for controller : {namespaced_controller}"
+                    f"YAML file : {parameter_file} is not a valid ROS parameter file for controller node : {namespaced_controller}"
                 )
-            if parameter_name in parameters[namespaced_controller]["ros__parameters"]:
-                return parameters[namespaced_controller]["ros__parameters"][parameter_name]
-            else:
-                return None
-        else:
-            return None
+            if parameter_name in controller_param_dict[ROS_PARAMS_KEY]:
+                return controller_param_dict[ROS_PARAMS_KEY][parameter_name]
+
+        return None
 
 
 def set_controller_parameters(
