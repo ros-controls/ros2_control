@@ -31,8 +31,8 @@ TestController::TestController()
 controller_interface::InterfaceConfiguration TestController::command_interface_configuration() const
 {
   if (
-    get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
-    get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+    get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
+    get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
   {
     return cmd_iface_cfg_;
   }
@@ -46,8 +46,8 @@ controller_interface::InterfaceConfiguration TestController::command_interface_c
 controller_interface::InterfaceConfiguration TestController::state_interface_configuration() const
 {
   if (
-    get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
-    get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+    get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE ||
+    get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
   {
     return state_iface_cfg_;
   }

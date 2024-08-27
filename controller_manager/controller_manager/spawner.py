@@ -234,7 +234,7 @@ def main(args=None):
 
             node.get_logger().info(
                 bcolors.OKGREEN
-                + "Configured and activated all the parsed controllers list!"
+                + f"Configured and activated all the parsed controllers list : {controller_names}!"
                 + bcolors.ENDC
             )
 
@@ -258,16 +258,25 @@ def main(args=None):
                     )
                     return 1
 
-                node.get_logger().info("Deactivated controller")
-
-            ret = unload_controller(node, controller_manager_name, controller_name)
-            if not ret.ok:
-                node.get_logger().error(
-                    bcolors.FAIL + "Failed to unload controller" + bcolors.ENDC
+                node.get_logger().info(
+                    f"Successfully deactivated controllers : {controller_names}"
                 )
-                return 1
 
-            node.get_logger().info("Unloaded controller")
+            unload_status = True
+            for controller_name in controller_names:
+                ret = unload_controller(node, controller_manager_name, controller_name)
+                if not ret.ok:
+                    unload_status = False
+                    node.get_logger().error(
+                        bcolors.FAIL
+                        + f"Failed to unload controller : {controller_name}"
+                        + bcolors.ENDC
+                    )
+
+            if unload_status:
+                node.get_logger().info(f"Successfully unloaded controllers : {controller_names}")
+            else:
+                return 1
         return 0
     except KeyboardInterrupt:
         pass

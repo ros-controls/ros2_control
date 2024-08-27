@@ -41,7 +41,22 @@ int main(int argc, char ** argv)
     std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
   std::string manager_node_name = "controller_manager";
 
-  auto cm = std::make_shared<controller_manager::ControllerManager>(executor, manager_node_name);
+  rclcpp::NodeOptions cm_node_options = controller_manager::get_cm_node_options();
+  std::vector<std::string> node_arguments = cm_node_options.arguments();
+  for (int i = 1; i < argc; ++i)
+  {
+    if (node_arguments.empty() && std::string(argv[i]) != "--ros-args")
+    {
+      // A simple way to reject non ros args
+      continue;
+    }
+    RCLCPP_INFO(rclcpp::get_logger("CM args"), "Adding argument: %s", argv[i]);
+    node_arguments.push_back(argv[i]);
+  }
+  cm_node_options.arguments(node_arguments);
+
+  auto cm = std::make_shared<controller_manager::ControllerManager>(
+    executor, manager_node_name, "", cm_node_options);
 
   RCLCPP_INFO(cm->get_logger(), "update rate is %d Hz", cm->get_update_rate());
 
