@@ -48,7 +48,7 @@ struct InterfaceInfo
   bool enable_limits;
   /// (Optional) Key-value pairs of command/stateInterface parameters. This is
   /// useful for drivers that operate on protocols like modbus, where each
-  /// interface needs own address(register), datatype, ...
+  /// interface needs own address(register), datatype, etc.
   std::unordered_map<std::string, std::string> parameters;
 };
 
