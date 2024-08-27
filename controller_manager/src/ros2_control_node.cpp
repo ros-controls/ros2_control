@@ -50,7 +50,6 @@ int main(int argc, char ** argv)
       // A simple way to reject non ros args
       continue;
     }
-    RCLCPP_INFO(rclcpp::get_logger("CM args"), "Adding argument: %s", argv[i]);
     node_arguments.push_back(argv[i]);
   }
   cm_node_options.arguments(node_arguments);
