@@ -262,6 +262,10 @@ def get_parameter_from_param_file(controller_name, namespace, parameter_file, pa
             f"{WILDCARD_KEY}/{namespaced_controller}",
         ]:
             if key in parameters:
+                if key == controller_name and controller_name != namespaced_controller:
+                    raise RuntimeError(
+                        f"YAML file : {parameter_file} is not a valid ROS parameter file for controller node : {namespaced_controller}"
+                    )
                 controller_param_dict = parameters[key]
                 break
             if WILDCARD_KEY in parameters and key in parameters[WILDCARD_KEY]:
