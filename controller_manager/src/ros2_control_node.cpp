@@ -60,12 +60,20 @@ int main(int argc, char ** argv)
             "for details on how to enable realtime scheduling.",
             errno, strerror(errno));
         }
+        else
+        {
+          RCLCPP_INFO(
+            cm->get_logger(), "Successful set up FIFO RT scheduling policy with priority %i.",
+            kSchedPriority);
+        }
       }
       else
       {
-        RCLCPP_INFO(
-          cm->get_logger(), "Successful set up FIFO RT scheduling policy with priority %i.",
-          kSchedPriority);
+        RCLCPP_WARN(
+          cm->get_logger(),
+          "No real-time kernel detected on this system. See "
+          "[https://control.ros.org/master/doc/ros2_control/controller_manager/doc/userdoc.html] "
+          "for details on how to enable realtime scheduling.");
       }
 
       // for calculating sleep time
