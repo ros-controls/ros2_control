@@ -9,6 +9,38 @@ The ``ros2_control`` framework provides a set of hardware interface types that c
 a hardware component for a specific robot or device.
 The following sections describe the different hardware interface types and their usage.
 
+Overview
+*****************************
+Hardware in ros2_control is described as URDF and internally parsed and encapsulated as ``HardwareInfo``.
+The definition can be found in the `ros2_control repository <https://github.com/ros-controls/ros2_control/blob/master/hardware_interface/include/hardware_interface/hardware_info.hpp>`_.
+You can check the structs defined there to see what attributes are available for each of the xml tags.
+A generic example which shows the structure is provided below. More specific examples can be found in the Example part below.
+
+.. code:: xml
+
+    <ros2_control name="Name_of_the_hardware" type="system">
+      <hardware>
+        <plugin>library_name/ClassName</plugin>
+        <!-- added to hardware_parameters -->
+        <param name="example_param">value</param>
+      </hardware>
+      <joint name="name_of_the_component">
+        <command_interface name="interface_name">
+          <!-- All of them are optional. `data_type` and `size` are used for GPIOs. Size is length of an array. -->
+          <param name="min">-1</param>
+          <param name="max">1</param>
+          <param name="initial_value">0.0</param>
+          <param name="data_type"></param>
+          <param name="size">5</param>
+           <!-- Optional. Added to the key/value storage parameters -->
+          <param name="own_param_1">some_value</param>
+          <param name="own_param_2">other_value</param>
+        </command_interface>
+        <!-- Short form to define StateInterface. Can be extended like CommandInterface. -->
+        <state_interface name="position"/>
+      </joint>
+    </ros2_control>
+
 Joints
 *****************************
 ``<joint>``-tag groups the interfaces associated with the joints of physical robots and actuators.

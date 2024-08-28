@@ -313,6 +313,13 @@ hardware_interface::InterfaceInfo parse_interfaces_from_xml(
   interface.data_type = "double";
   interface.size = 1;
 
+  // Parse parameters
+  const auto * params_it = interfaces_it->FirstChildElement(kParamTag);
+  if (params_it)
+  {
+    interface.parameters = parse_parameters_from_xml(params_it);
+  }
+
   return interface;
 }
 
