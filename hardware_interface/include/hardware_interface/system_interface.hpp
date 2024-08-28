@@ -138,19 +138,19 @@ public:
   void import_state_interface_descriptions(const HardwareInfo & hardware_info)
   {
     auto joint_state_interface_descriptions =
-      parse_state_interface_descriptions_from_hardware_info(hardware_info.joints);
+      parse_state_interface_descriptions(hardware_info.joints);
     for (const auto & description : joint_state_interface_descriptions)
     {
       joint_state_interfaces_.insert(std::make_pair(description.get_name(), description));
     }
     auto sensor_state_interface_descriptions =
-      parse_state_interface_descriptions_from_hardware_info(hardware_info.sensors);
+      parse_state_interface_descriptions(hardware_info.sensors);
     for (const auto & description : sensor_state_interface_descriptions)
     {
       sensor_state_interfaces_.insert(std::make_pair(description.get_name(), description));
     }
     auto gpio_state_interface_descriptions =
-      parse_state_interface_descriptions_from_hardware_info(hardware_info.gpios);
+      parse_state_interface_descriptions(hardware_info.gpios);
     for (const auto & description : gpio_state_interface_descriptions)
     {
       gpio_state_interfaces_.insert(std::make_pair(description.get_name(), description));
@@ -164,13 +164,13 @@ public:
   void import_command_interface_descriptions(const HardwareInfo & hardware_info)
   {
     auto joint_command_interface_descriptions =
-      parse_command_interface_descriptions_from_hardware_info(hardware_info.joints);
+      parse_command_interface_descriptions(hardware_info.joints);
     for (const auto & description : joint_command_interface_descriptions)
     {
       joint_command_interfaces_.insert(std::make_pair(description.get_name(), description));
     }
     auto gpio_command_interface_descriptions =
-      parse_command_interface_descriptions_from_hardware_info(hardware_info.gpios);
+      parse_command_interface_descriptions(hardware_info.gpios);
     for (const auto & description : gpio_command_interface_descriptions)
     {
       gpio_command_interfaces_.insert(std::make_pair(description.get_name(), description));

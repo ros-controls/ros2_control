@@ -134,7 +134,7 @@ public:
   virtual void import_state_interface_descriptions(const HardwareInfo & hardware_info)
   {
     auto sensor_state_interface_descriptions =
-      parse_state_interface_descriptions_from_hardware_info(hardware_info.sensors);
+      parse_state_interface_descriptions(hardware_info.sensors);
     for (const auto & description : sensor_state_interface_descriptions)
     {
       sensor_state_interfaces_.insert(std::make_pair(description.get_name(), description));
