@@ -98,6 +98,10 @@ class ListControllersVerb(VerbExtension):
         with NodeStrategy(args) as node:
             response = list_controllers(node, args.controller_manager)
 
+            if not response.controller:
+                print("No controllers are currently loaded!")
+                return 0
+
             # Structure data as table for nicer output
             col_width_name = max(len(ctrl.name) for ctrl in response.controller)
             col_width_type = max(len(ctrl.type) for ctrl in response.controller)
