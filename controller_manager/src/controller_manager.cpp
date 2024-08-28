@@ -346,7 +346,13 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
           RCLCPP_INFO(
             get_logger(), "Setting component '%s' to '%s' state.", component.c_str(),
             state.label().c_str());
-          resource_manager_->set_component_state(component, state);
+          if (
+            resource_manager_->set_component_state(component, state) ==
+            hardware_interface::return_type::ERROR)
+          {
+            throw std::runtime_error(
+              "Failed to set the state of the component : " + component + " to " + state.label());
+          }
           components_to_activate.erase(component);
         }
       }
@@ -370,7 +376,13 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
   {
     rclcpp_lifecycle::State active_state(
       State::PRIMARY_STATE_ACTIVE, hardware_interface::lifecycle_state_names::ACTIVE);
-    resource_manager_->set_component_state(component, active_state);
+    if (
+      resource_manager_->set_component_state(component, active_state) ==
+      hardware_interface::return_type::ERROR)
+    {
+      throw std::runtime_error(
+        "Failed to set the state of the component : " + component + " to " + active_state.label());
+    }
   }
   robot_description_notification_timer_->cancel();
 }
