@@ -175,8 +175,9 @@ public:
     "by the Framework.")]] virtual std::vector<StateInterface>
   export_state_interfaces()
   {
-    // return empty vector by default. For backward compatibility we check if all vectors is empty
-    // and if so call on_export_state_interfaces()
+    // return empty vector by default. For backward compatibility we try calling
+    // export_state_interfaces() and only when empty vector is returned call
+    // on_export_state_interfaces()
     return {};
   }
 
@@ -254,8 +255,9 @@ public:
     "by the Framework.")]] virtual std::vector<CommandInterface>
   export_command_interfaces()
   {
-    // return empty vector by default. For backward compatibility we check if all vectors is empty
-    // and if so call on_export_command_interfaces()
+    // return empty vector by default. For backward compatibility we try calling
+    // export_command_interfaces() and only when empty vector is returned call
+    // on_export_command_interfaces()
     return {};
   }
 
