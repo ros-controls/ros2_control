@@ -180,7 +180,9 @@ const rclcpp_lifecycle::State & System::deactivate()
 const rclcpp_lifecycle::State & System::error()
 {
   std::unique_lock<std::recursive_mutex> lock(system_mutex_);
-  if (impl_->get_lifecycle_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN)
+  if (
+    impl_->get_lifecycle_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN &&
+    impl_->get_lifecycle_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
   {
     switch (impl_->on_error(impl_->get_lifecycle_state()))
     {
