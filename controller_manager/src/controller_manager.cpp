@@ -480,7 +480,7 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_c
       get_logger(),
       "Caught unknown exception while loading the controller '%s' of plugin type '%s'",
       controller_name.c_str(), controller_type.c_str());
-    return nullptr;
+    throw;
   }
 
   ControllerSpec controller_spec;
