@@ -556,12 +556,20 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_c
       controller = chainable_loader_->createSharedInstance(controller_type);
     }
   }
-  catch (const pluginlib::CreateClassException & e)
+  catch (const std::exception & e)
   {
     RCLCPP_ERROR(
-      get_logger(), "Error happened during creation of controller '%s' with type '%s':\n%s",
+      get_logger(), "Caught exception while loading the controller '%s' of plugin type '%s':\n%s",
       controller_name.c_str(), controller_type.c_str(), e.what());
     return nullptr;
+  }
+  catch (...)
+  {
+    RCLCPP_ERROR(
+      get_logger(),
+      "Caught unknown exception while loading the controller '%s' of plugin type '%s'",
+      controller_name.c_str(), controller_type.c_str());
+    throw;
   }
 
   ControllerSpec controller_spec;
