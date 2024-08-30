@@ -351,7 +351,8 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
             hardware_interface::return_type::ERROR)
           {
             throw std::runtime_error(
-              "Failed to set the initial state of the component : " + component + " to " + state.label());
+              "Failed to set the initial state of the component : " + component + " to " +
+              state.label());
           }
           components_to_activate.erase(component);
         }
@@ -381,7 +382,8 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
       hardware_interface::return_type::ERROR)
     {
       throw std::runtime_error(
-        "Failed to set the initial state of the component : " + component + " to " + active_state.label());
+        "Failed to set the initial state of the component : " + component + " to " +
+        active_state.label());
     }
   }
   robot_description_notification_timer_->cancel();
