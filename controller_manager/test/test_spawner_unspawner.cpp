@@ -283,57 +283,6 @@ TEST_F(TestLoadController, unload_on_kill)
   ASSERT_EQ(cm_->get_loaded_controllers().size(), 0ul);
 }
 
-<<<<<<< HEAD
-=======
-TEST_F(TestLoadController, spawner_test_fallback_controllers)
-{
-  const std::string test_file_path = ament_index_cpp::get_package_prefix("controller_manager") +
-                                     "/test/test_controller_spawner_with_fallback_controllers.yaml";
-
-  cm_->set_parameter(rclcpp::Parameter("ctrl_1.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
-  cm_->set_parameter(rclcpp::Parameter("ctrl_2.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
-  cm_->set_parameter(rclcpp::Parameter("ctrl_3.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
-
-  ControllerManagerRunner cm_runner(this);
-  EXPECT_EQ(call_spawner("ctrl_1 -c test_controller_manager --load-only -p " + test_file_path), 0);
-
-  ASSERT_EQ(cm_->get_loaded_controllers().size(), 1ul);
-  {
-    auto ctrl_1 = cm_->get_loaded_controllers()[0];
-    ASSERT_EQ(ctrl_1.info.name, "ctrl_1");
-    ASSERT_EQ(ctrl_1.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
-    ASSERT_TRUE(ctrl_1.info.fallback_controllers_names.empty());
-    ASSERT_EQ(ctrl_1.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
-  }
-
-  // Try to spawn now the controller with fallback controllers inside the yaml
-  EXPECT_EQ(
-    call_spawner("ctrl_2 ctrl_3 -c test_controller_manager --load-only -p " + test_file_path), 0);
-
-  ASSERT_EQ(cm_->get_loaded_controllers().size(), 3ul);
-  {
-    auto ctrl_1 = cm_->get_loaded_controllers()[0];
-    ASSERT_EQ(ctrl_1.info.name, "ctrl_1");
-    ASSERT_EQ(ctrl_1.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
-    ASSERT_TRUE(ctrl_1.info.fallback_controllers_names.empty());
-    ASSERT_EQ(ctrl_1.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
-
-    auto ctrl_2 = cm_->get_loaded_controllers()[1];
-    ASSERT_EQ(ctrl_2.info.name, "ctrl_2");
-    ASSERT_EQ(ctrl_2.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
-    ASSERT_THAT(
-      ctrl_2.info.fallback_controllers_names, testing::ElementsAre("ctrl_6", "ctrl_7", "ctrl_8"));
-    ASSERT_EQ(ctrl_2.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
-
-    auto ctrl_3 = cm_->get_loaded_controllers()[2];
-    ASSERT_EQ(ctrl_3.info.name, "ctrl_3");
-    ASSERT_EQ(ctrl_3.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
-    ASSERT_THAT(ctrl_3.info.fallback_controllers_names, testing::ElementsAre("ctrl_9"));
-    ASSERT_EQ(ctrl_3.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
-  }
-}
-
->>>>>>> 0631e3e (Refactor spawner to be able to reuse code for ros2controlcli (#1661))
 TEST_F(TestLoadController, spawner_with_many_controllers)
 {
   std::stringstream ss;
