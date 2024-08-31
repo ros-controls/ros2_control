@@ -26,6 +26,7 @@ from controller_manager import (
     load_controller,
     switch_controllers,
     unload_controller,
+    set_controller_parameters,
     set_controller_parameters_from_param_file,
     bcolors,
 )
@@ -165,6 +166,15 @@ def main(args=None):
                     + bcolors.ENDC
                 )
             else:
+                if args.controller_type:
+                    if not set_controller_parameters(
+                        node,
+                        controller_manager_name,
+                        controller_name,
+                        "type",
+                        args.controller_type,
+                    ):
+                        return 1
                 if param_file:
                     if not set_controller_parameters_from_param_file(
                         node,
