@@ -26,6 +26,7 @@ from controller_manager import (
     load_controller,
     switch_controllers,
     unload_controller,
+    set_controller_parameters,
     set_controller_parameters_from_param_file,
     bcolors,
 )
@@ -33,10 +34,6 @@ from controller_manager.controller_manager_services import ServiceNotFoundError
 
 import rclpy
 from rclpy.node import Node
-<<<<<<< HEAD
-from rclpy.parameter import get_parameter_value
-=======
->>>>>>> 0631e3e (Refactor spawner to be able to reuse code for ros2controlcli (#1661))
 from rclpy.signals import SignalHandlerOptions
 
 
@@ -160,10 +157,6 @@ def main(args=None):
 
     try:
         for controller_name in controller_names:
-<<<<<<< HEAD
-=======
-
->>>>>>> 0631e3e (Refactor spawner to be able to reuse code for ros2controlcli (#1661))
             if is_controller_loaded(
                 node, controller_manager_name, controller_name, controller_manager_timeout
             ):
@@ -173,77 +166,15 @@ def main(args=None):
                     + bcolors.ENDC
                 )
             else:
-<<<<<<< HEAD
-                controller_type = (
-                    args.controller_type
-                    if param_file is None
-                    else get_parameter_from_param_file(
-                        controller_name, spawner_namespace, param_file, "type"
-                    )
-                )
-                if controller_type:
-                    parameter = Parameter()
-                    parameter.name = controller_name + ".type"
-                    parameter.value = get_parameter_value(string_value=controller_type)
-
-                    response = call_set_parameters(
-                        node=node, node_name=controller_manager_name, parameters=[parameter]
-                    )
-                    assert len(response.results) == 1
-                    result = response.results[0]
-                    if result.successful:
-                        node.get_logger().info(
-                            bcolors.OKCYAN
-                            + 'Set controller type to "'
-                            + controller_type
-                            + '" for '
-                            + bcolors.BOLD
-                            + controller_name
-                            + bcolors.ENDC
-                        )
-                    else:
-                        node.get_logger().fatal(
-                            bcolors.FAIL
-                            + 'Could not set controller type to "'
-                            + controller_type
-                            + '" for '
-                            + bcolors.BOLD
-                            + controller_name
-                            + bcolors.ENDC
-                        )
+                if args.controller_type:
+                    if not set_controller_parameters(
+                        node,
+                        controller_manager_name,
+                        controller_name,
+                        "type",
+                        args.controller_type,
+                    ):
                         return 1
-
-                if param_file:
-                    parameter = Parameter()
-                    parameter.name = controller_name + ".params_file"
-                    parameter.value = get_parameter_value(string_value=param_file)
-
-                    response = call_set_parameters(
-                        node=node, node_name=controller_manager_name, parameters=[parameter]
-                    )
-                    assert len(response.results) == 1
-                    result = response.results[0]
-                    if result.successful:
-                        node.get_logger().info(
-                            bcolors.OKCYAN
-                            + 'Set controller params file to "'
-                            + param_file
-                            + '" for '
-                            + bcolors.BOLD
-                            + controller_name
-                            + bcolors.ENDC
-                        )
-                    else:
-                        node.get_logger().fatal(
-                            bcolors.FAIL
-                            + 'Could not set controller params file to "'
-                            + param_file
-                            + '" for '
-                            + bcolors.BOLD
-                            + controller_name
-                            + bcolors.ENDC
-                        )
-=======
                 if param_file:
                     if not set_controller_parameters_from_param_file(
                         node,
@@ -252,7 +183,6 @@ def main(args=None):
                         param_file,
                         spawner_namespace,
                     ):
->>>>>>> 0631e3e (Refactor spawner to be able to reuse code for ros2controlcli (#1661))
                         return 1
 
                 ret = load_controller(node, controller_manager_name, controller_name)
