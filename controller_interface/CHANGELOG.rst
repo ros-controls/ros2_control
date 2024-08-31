@@ -2,6 +2,9 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+3.28.0 (2024-08-22)
+-------------------
+
 3.27.0 (2024-07-23)
 -------------------
 * [ControllerInterface] Avoid warning about conversion from `int64_t` to `unsigned int` (`#1173 <https://github.com/ros-controls/ros2_control/issues/1173>`_) (`#1630 <https://github.com/ros-controls/ros2_control/issues/1630>`_)
