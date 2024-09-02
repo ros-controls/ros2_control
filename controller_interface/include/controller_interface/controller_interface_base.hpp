@@ -105,12 +105,12 @@ public:
   virtual InterfaceConfiguration state_interface_configuration() const = 0;
 
   CONTROLLER_INTERFACE_PUBLIC
-  void assign_interfaces(
+  virtual void assign_interfaces(
     std::vector<hardware_interface::LoanedCommandInterface> && command_interfaces,
     std::vector<hardware_interface::LoanedStateInterface> && state_interfaces);
 
   CONTROLLER_INTERFACE_PUBLIC
-  void release_interfaces();
+  virtual void release_interfaces();
 
   CONTROLLER_INTERFACE_PUBLIC
   return_type init(
