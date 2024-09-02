@@ -250,7 +250,7 @@ def get_parameter_from_param_file(
 ):
     with open(parameter_file) as f:
         namespaced_controller = (
-            controller_name if namespace == "/" else f"{namespace}/{controller_name}"
+            f"/{controller_name}" if namespace == "/" else f"{namespace}/{controller_name}"
         )
         WILDCARD_KEY = "/**"
         ROS_PARAMS_KEY = "ros__parameters"
@@ -261,10 +261,10 @@ def get_parameter_from_param_file(
             controller_name,
             namespaced_controller,
             f"{WILDCARD_KEY}/{controller_name}",
-            f"{WILDCARD_KEY}/{namespaced_controller}",
+            f"{WILDCARD_KEY}{namespaced_controller}",
         ]:
             if key in parameters:
-                if key == controller_name and controller_name != namespaced_controller:
+                if key == controller_name and namespace != "/":
                     node.get_logger().fatal(
                         f"{bcolors.FAIL}Missing namespace : {namespace} or wildcard in parameter file for controller : {controller_name}{bcolors.ENDC}"
                     )
