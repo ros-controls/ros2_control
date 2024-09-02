@@ -21,6 +21,7 @@
 
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/hardware_info.hpp"
+#include "hardware_interface/lifecycle_helpers.hpp"
 #include "hardware_interface/system_interface.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
@@ -242,9 +243,7 @@ return_type System::read(const rclcpp::Time & time, const rclcpp::Duration & per
       impl_->get_name().c_str());
     return return_type::OK;
   }
-  if (
-    impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED ||
-    impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED)
+  if (lifecycleStateThatRequiresNoAction(impl_->get_lifecycle_state().id()))
   {
     return return_type::OK;
   }
@@ -272,9 +271,7 @@ return_type System::write(const rclcpp::Time & time, const rclcpp::Duration & pe
       impl_->get_name().c_str());
     return return_type::OK;
   }
-  if (
-    impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED ||
-    impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED)
+  if (lifecycleStateThatRequiresNoAction(impl_->get_lifecycle_state().id()))
   {
     return return_type::OK;
   }
