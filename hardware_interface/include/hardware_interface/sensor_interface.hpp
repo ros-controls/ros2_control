@@ -159,13 +159,16 @@ public:
   /**
    * \return state.
    */
-  const rclcpp_lifecycle::State & get_state() const { return lifecycle_state_; }
+  const rclcpp_lifecycle::State & get_lifecycle_state() const { return lifecycle_state_; }
 
   /// Set life-cycle state of the actuator hardware.
   /**
    * \return state.
    */
-  void set_state(const rclcpp_lifecycle::State & new_state) { lifecycle_state_ = new_state; }
+  void set_lifecycle_state(const rclcpp_lifecycle::State & new_state)
+  {
+    lifecycle_state_ = new_state;
+  }
 
   /// Get the logger of the SensorInterface.
   /**

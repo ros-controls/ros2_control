@@ -97,7 +97,7 @@ bool ChainableControllerInterface::set_chained_mode(bool chained_mode)
 {
   bool result = false;
 
-  if (get_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+  if (get_lifecycle_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
   {
     result = on_set_chained_mode(chained_mode);
 
@@ -112,7 +112,8 @@ bool ChainableControllerInterface::set_chained_mode(bool chained_mode)
       get_node()->get_logger(),
       "Can not change controller's chained mode because it is no in '%s' state. "
       "Current state is '%s'.",
-      hardware_interface::lifecycle_state_names::UNCONFIGURED, get_state().label().c_str());
+      hardware_interface::lifecycle_state_names::UNCONFIGURED,
+      get_lifecycle_state().label().c_str());
   }
 
   return result;

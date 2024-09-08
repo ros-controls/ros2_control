@@ -111,7 +111,8 @@ TEST_F(TestLoadController, spawner_test_type_in_param)
     auto ctrl_1 = cm_->get_loaded_controllers()[0];
     ASSERT_EQ(ctrl_1.info.name, "ctrl_1");
     ASSERT_EQ(ctrl_1.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
-    ASSERT_EQ(ctrl_1.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+    ASSERT_EQ(
+      ctrl_1.c->get_lifecycle_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
   }
 
   // Try to spawn again, it should fail because already active
@@ -131,7 +132,8 @@ TEST_F(TestLoadController, spawner_test_type_in_param)
     auto ctrl_1 = cm_->get_loaded_controllers()[0];
     ASSERT_EQ(ctrl_1.info.name, "ctrl_1");
     ASSERT_EQ(ctrl_1.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
-    ASSERT_EQ(ctrl_1.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+    ASSERT_EQ(
+      ctrl_1.c->get_lifecycle_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
   }
 
   cm_->switch_controller(
@@ -147,7 +149,8 @@ TEST_F(TestLoadController, spawner_test_type_in_param)
     auto ctrl_1 = cm_->get_loaded_controllers()[0];
     ASSERT_EQ(ctrl_1.info.name, "ctrl_1");
     ASSERT_EQ(ctrl_1.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
-    ASSERT_EQ(ctrl_1.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+    ASSERT_EQ(
+      ctrl_1.c->get_lifecycle_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
   }
 
   // Unload and reload
@@ -159,7 +162,8 @@ TEST_F(TestLoadController, spawner_test_type_in_param)
     auto ctrl_1 = cm_->get_loaded_controllers()[0];
     ASSERT_EQ(ctrl_1.info.name, "ctrl_1");
     ASSERT_EQ(ctrl_1.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
-    ASSERT_EQ(ctrl_1.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+    ASSERT_EQ(
+      ctrl_1.c->get_lifecycle_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
   }
 }
 
@@ -186,7 +190,8 @@ TEST_F(TestLoadController, multi_ctrls_test_type_in_param)
         [&](const auto & controller) { return controller.info.name == controller_name; });
       ASSERT_TRUE(it != loaded_controllers.end());
       ASSERT_EQ(ctrl.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
-      ASSERT_EQ(ctrl.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+      ASSERT_EQ(
+        ctrl.c->get_lifecycle_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
     }
   };
 
@@ -270,7 +275,7 @@ TEST_F(TestLoadController, spawner_test_type_in_params_file)
   ASSERT_EQ(ctrl_with_parameters_and_type.info.name, "ctrl_with_parameters_and_type");
   ASSERT_EQ(ctrl_with_parameters_and_type.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
   ASSERT_EQ(
-    ctrl_with_parameters_and_type.c->get_state().id(),
+    ctrl_with_parameters_and_type.c->get_lifecycle_state().id(),
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
 
   auto chain_ctrl_with_parameters_and_type = cm_->get_loaded_controllers()[1];
@@ -280,7 +285,7 @@ TEST_F(TestLoadController, spawner_test_type_in_params_file)
     chain_ctrl_with_parameters_and_type.info.type,
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
   ASSERT_EQ(
-    chain_ctrl_with_parameters_and_type.c->get_state().id(),
+    chain_ctrl_with_parameters_and_type.c->get_lifecycle_state().id(),
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
 
   EXPECT_EQ(
@@ -295,12 +300,14 @@ TEST_F(TestLoadController, spawner_test_type_in_params_file)
   auto ctrl_1 = cm_->get_loaded_controllers()[0];
   ASSERT_EQ(ctrl_1.info.name, "ctrl_with_parameters_and_type");
   ASSERT_EQ(ctrl_1.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
-  ASSERT_EQ(ctrl_1.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  ASSERT_EQ(
+    ctrl_1.c->get_lifecycle_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
 
   auto ctrl_2 = cm_->get_loaded_controllers()[1];
   ASSERT_EQ(ctrl_2.info.name, "chainable_ctrl_with_parameters_and_type");
   ASSERT_EQ(ctrl_2.info.type, test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  ASSERT_EQ(ctrl_2.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  ASSERT_EQ(
+    ctrl_2.c->get_lifecycle_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
 }
 
 TEST_F(TestLoadController, unload_on_kill)
@@ -314,6 +321,25 @@ TEST_F(TestLoadController, unload_on_kill)
      << std::string(coveragepy_script) +
           " $(ros2 pkg prefix controller_manager)/lib/controller_manager/spawner "
      << "ctrl_3 -c test_controller_manager --unload-on-kill";
+
+  EXPECT_NE(std::system(ss.str().c_str()), 0)
+    << "timeout should have killed spawner and returned non 0 code";
+
+  ASSERT_EQ(cm_->get_loaded_controllers().size(), 0ul);
+}
+
+TEST_F(TestLoadController, unload_on_kill_activate_as_group)
+{
+  // Launch spawner with unload on kill
+  // timeout command will kill it after the specified time with signal SIGINT
+  ControllerManagerRunner cm_runner(this);
+  cm_->set_parameter(rclcpp::Parameter("ctrl_3.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
+  cm_->set_parameter(rclcpp::Parameter("ctrl_2.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
+  std::stringstream ss;
+  ss << "timeout --signal=INT 5 "
+     << std::string(coveragepy_script) +
+          " $(ros2 pkg prefix controller_manager)/lib/controller_manager/spawner "
+     << "ctrl_3 ctrl_2 --activate-as-group -c test_controller_manager --unload-on-kill";
 
   EXPECT_NE(std::system(ss.str().c_str()), 0)
     << "timeout should have killed spawner and returned non 0 code";
@@ -339,7 +365,8 @@ TEST_F(TestLoadController, spawner_test_fallback_controllers)
     ASSERT_EQ(ctrl_1.info.name, "ctrl_1");
     ASSERT_EQ(ctrl_1.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
     ASSERT_TRUE(ctrl_1.info.fallback_controllers_names.empty());
-    ASSERT_EQ(ctrl_1.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+    ASSERT_EQ(
+      ctrl_1.c->get_lifecycle_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
   }
 
   // Try to spawn now the controller with fallback controllers inside the yaml
@@ -352,20 +379,23 @@ TEST_F(TestLoadController, spawner_test_fallback_controllers)
     ASSERT_EQ(ctrl_1.info.name, "ctrl_1");
     ASSERT_EQ(ctrl_1.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
     ASSERT_TRUE(ctrl_1.info.fallback_controllers_names.empty());
-    ASSERT_EQ(ctrl_1.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+    ASSERT_EQ(
+      ctrl_1.c->get_lifecycle_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
 
     auto ctrl_2 = cm_->get_loaded_controllers()[1];
     ASSERT_EQ(ctrl_2.info.name, "ctrl_2");
     ASSERT_EQ(ctrl_2.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
     ASSERT_THAT(
       ctrl_2.info.fallback_controllers_names, testing::ElementsAre("ctrl_6", "ctrl_7", "ctrl_8"));
-    ASSERT_EQ(ctrl_2.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+    ASSERT_EQ(
+      ctrl_2.c->get_lifecycle_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
 
     auto ctrl_3 = cm_->get_loaded_controllers()[2];
     ASSERT_EQ(ctrl_3.info.name, "ctrl_3");
     ASSERT_EQ(ctrl_3.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
     ASSERT_THAT(ctrl_3.info.fallback_controllers_names, testing::ElementsAre("ctrl_9"));
-    ASSERT_EQ(ctrl_3.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+    ASSERT_EQ(
+      ctrl_3.c->get_lifecycle_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
   }
 }
 
@@ -391,7 +421,7 @@ TEST_F(TestLoadController, spawner_with_many_controllers)
   {
     auto ctrl = cm_->get_loaded_controllers()[i];
     ASSERT_EQ(ctrl.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
-    ASSERT_EQ(ctrl.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+    ASSERT_EQ(ctrl.c->get_lifecycle_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
   }
 }
 
@@ -472,7 +502,8 @@ TEST_F(
     auto ctrl_1 = cm_->get_loaded_controllers()[0];
     ASSERT_EQ(ctrl_1.info.name, "ctrl_1");
     ASSERT_EQ(ctrl_1.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
-    ASSERT_EQ(ctrl_1.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+    ASSERT_EQ(
+      ctrl_1.c->get_lifecycle_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
   }
 }
 
@@ -548,7 +579,8 @@ TEST_F(TestLoadControllerWithNamespacedCM, multi_ctrls_test_type_in_param)
         [&](const auto & controller) { return controller.info.name == controller_name; });
       ASSERT_TRUE(it != loaded_controllers.end());
       ASSERT_EQ(ctrl.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
-      ASSERT_EQ(ctrl.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+      ASSERT_EQ(
+        ctrl.c->get_lifecycle_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
     }
   };
 
@@ -646,7 +678,7 @@ TEST_F(TestLoadControllerWithNamespacedCM, spawner_test_type_in_params_file)
   ASSERT_EQ(ctrl_with_parameters_and_type.info.name, "ctrl_with_parameters_and_type");
   ASSERT_EQ(ctrl_with_parameters_and_type.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
   ASSERT_EQ(
-    ctrl_with_parameters_and_type.c->get_state().id(),
+    ctrl_with_parameters_and_type.c->get_lifecycle_state().id(),
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
 
   auto chain_ctrl_with_parameters_and_type = cm_->get_loaded_controllers()[1];
@@ -656,7 +688,7 @@ TEST_F(TestLoadControllerWithNamespacedCM, spawner_test_type_in_params_file)
     chain_ctrl_with_parameters_and_type.info.type,
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
   ASSERT_EQ(
-    chain_ctrl_with_parameters_and_type.c->get_state().id(),
+    chain_ctrl_with_parameters_and_type.c->get_lifecycle_state().id(),
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
 
   EXPECT_EQ(
@@ -671,12 +703,14 @@ TEST_F(TestLoadControllerWithNamespacedCM, spawner_test_type_in_params_file)
   auto ctrl_1 = cm_->get_loaded_controllers()[0];
   ASSERT_EQ(ctrl_1.info.name, "ctrl_with_parameters_and_type");
   ASSERT_EQ(ctrl_1.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
-  ASSERT_EQ(ctrl_1.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  ASSERT_EQ(
+    ctrl_1.c->get_lifecycle_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
 
   auto ctrl_2 = cm_->get_loaded_controllers()[1];
   ASSERT_EQ(ctrl_2.info.name, "chainable_ctrl_with_parameters_and_type");
   ASSERT_EQ(ctrl_2.info.type, test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  ASSERT_EQ(ctrl_2.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  ASSERT_EQ(
+    ctrl_2.c->get_lifecycle_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
 }
 
 TEST_F(
@@ -722,7 +756,7 @@ TEST_F(
   ASSERT_EQ(ctrl_with_parameters_and_type.info.name, "ctrl_with_parameters_and_type");
   ASSERT_EQ(ctrl_with_parameters_and_type.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
   ASSERT_EQ(
-    ctrl_with_parameters_and_type.c->get_state().id(),
+    ctrl_with_parameters_and_type.c->get_lifecycle_state().id(),
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
 
   auto chain_ctrl_with_parameters_and_type = cm_->get_loaded_controllers()[1];
@@ -732,7 +766,7 @@ TEST_F(
     chain_ctrl_with_parameters_and_type.info.type,
     test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
   ASSERT_EQ(
-    chain_ctrl_with_parameters_and_type.c->get_state().id(),
+    chain_ctrl_with_parameters_and_type.c->get_lifecycle_state().id(),
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
 
   EXPECT_EQ(
@@ -747,10 +781,12 @@ TEST_F(
   auto ctrl_1 = cm_->get_loaded_controllers()[0];
   ASSERT_EQ(ctrl_1.info.name, "ctrl_with_parameters_and_type");
   ASSERT_EQ(ctrl_1.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
-  ASSERT_EQ(ctrl_1.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  ASSERT_EQ(
+    ctrl_1.c->get_lifecycle_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
 
   auto ctrl_2 = cm_->get_loaded_controllers()[1];
   ASSERT_EQ(ctrl_2.info.name, "chainable_ctrl_with_parameters_and_type");
   ASSERT_EQ(ctrl_2.info.type, test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  ASSERT_EQ(ctrl_2.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  ASSERT_EQ(
+    ctrl_2.c->get_lifecycle_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
 }
