@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.28.1 (2024-09-11)
+-------------------
 * fix: the print of the information in control node was in wrong order (`#1726 <https://github.com/ros-controls/ros2_control/issues/1726>`_) (`#1727 <https://github.com/ros-controls/ros2_control/issues/1727>`_)
 * Contributors: mergify[bot]
 
