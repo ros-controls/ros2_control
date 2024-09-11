@@ -39,7 +39,7 @@ class SetHardwareComponentStateVerb(VerbExtension):
         add_controller_mgr_parsers(parser)
 
     def main(self, *, args):
-        with NodeStrategy(args) as node:
+        with NodeStrategy(args).direct_node as node:
 
             if args.state == "unconfigured":
 

@@ -95,7 +95,7 @@ class ListControllersVerb(VerbExtension):
         add_controller_mgr_parsers(parser)
 
     def main(self, *, args):
-        with NodeStrategy(args) as node:
+        with NodeStrategy(args).direct_node as node:
             response = list_controllers(node, args.controller_manager)
 
             if not response.controller:
