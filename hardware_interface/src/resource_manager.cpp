@@ -686,6 +686,7 @@ void ResourceManager::load_urdf(
 
   const auto hardware_info = hardware_interface::parse_control_resources_from_urdf(urdf);
   if (load_and_initialize_components)
+    std::lock_guard<std::recursive_mutex> resource_guard(resources_lock_);
   {
     for (const auto & individual_hardware_info : hardware_info)
     {
@@ -1209,6 +1210,7 @@ return_type ResourceManager::set_component_state(
     return false;
   };
 
+  std::lock_guard<std::recursive_mutex> guard(resources_lock_);
   bool found = find_set_component_state(
     std::bind(&ResourceStorage::set_component_state<Actuator>, resource_storage_.get(), _1, _2),
     resource_storage_->actuators_);
