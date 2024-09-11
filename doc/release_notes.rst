@@ -118,3 +118,15 @@ ros2controlcli
   .. code-block:: bash
 
     ros2 control set_hardware_component_state <hardware_component_name> <state>
+
+* The ``load_controller`` now supports parsing of the params file (`#1703 <https://github.com/ros-controls/ros2_control/pull/1703>`_).
+
+  .. code-block:: bash
+
+    ros2 control load_controller <controller_name> <realtive_or_absolute_file_path>
+
+* All the ros2controlcli verbs now support the namespacing through the ROS 2 standard way (`#1703 <https://github.com/ros-controls/ros2_control/pull/1703>`_).
+
+  .. code-block:: bash
+
+    ros2 control <verb> <arguments> --ros-args -r __ns:=<namespace>
