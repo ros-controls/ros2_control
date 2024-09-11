@@ -1808,6 +1808,7 @@ HardwareReadWriteStatus ResourceManager::read(
       }
       if (ret_val == return_type::ERROR)
       {
+        component.error();
         read_write_status.ok = false;
         read_write_status.failed_hardware_names.push_back(component.get_name());
         resource_storage_->remove_all_hardware_interfaces_from_available_list(component.get_name());
@@ -1868,6 +1869,7 @@ HardwareReadWriteStatus ResourceManager::write(
       }
       if (ret_val == return_type::ERROR)
       {
+        component.error();
         read_write_status.ok = false;
         read_write_status.failed_hardware_names.push_back(component.get_name());
         resource_storage_->remove_all_hardware_interfaces_from_available_list(component.get_name());
