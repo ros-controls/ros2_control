@@ -15,11 +15,14 @@
 #ifndef TEST_CONTROLLER__TEST_CONTROLLER_HPP_
 #define TEST_CONTROLLER__TEST_CONTROLLER_HPP_
 
+#include <memory>
 #include <string>
 #include <vector>
 
 #include "controller_interface/controller_interface.hpp"
 #include "controller_manager/visibility_control.h"
+#include "example_interfaces/srv/set_bool.hpp"
+#include "rclcpp/rclcpp.hpp"
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 
 namespace test_controller
@@ -68,10 +71,9 @@ public:
   CONTROLLER_MANAGER_PUBLIC
   std::vector<double> get_state_interface_data() const;
 
-  const std::string & getRobotDescription() const;
-
   void set_external_commands_for_testing(const std::vector<double> & commands);
 
+  rclcpp::Service<example_interfaces::srv::SetBool>::SharedPtr service_;
   unsigned int internal_counter = 0;
   bool simulate_cleanup_failure = false;
   // Variable where we store when cleanup was called, pointer because the controller

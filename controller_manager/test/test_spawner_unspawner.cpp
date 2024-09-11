@@ -664,6 +664,45 @@ TEST_F(TestLoadController, spawner_with_many_controllers)
   }
 }
 
+TEST_F(TestLoadController, test_spawner_parsed_controller_ros_args)
+{
+  ControllerManagerRunner cm_runner(this);
+  cm_->set_parameter(rclcpp::Parameter("ctrl_1.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
+  cm_->set_parameter(rclcpp::Parameter("ctrl_2.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
+  std::stringstream ss;
+
+  EXPECT_EQ(call_spawner("ctrl_1 -c test_controller_manager"), 0);
+  ASSERT_EQ(cm_->get_loaded_controllers().size(), 1ul);
+
+  // Now as the controller is active, we can call check for the service
+  std::shared_ptr<rclcpp::Node> node = rclcpp::Node::make_shared("set_bool_client");
+  auto set_bool_service = node->create_client<example_interfaces::srv::SetBool>("/set_bool");
+  ASSERT_FALSE(set_bool_service->wait_for_service(std::chrono::seconds(2)));
+  ASSERT_FALSE(set_bool_service->service_is_ready());
+  // Now check the service availability in the controller namespace
+  auto ctrl_1_set_bool_service =
+    node->create_client<example_interfaces::srv::SetBool>("/ctrl_1/set_bool");
+  ASSERT_TRUE(ctrl_1_set_bool_service->wait_for_service(std::chrono::seconds(2)));
+  ASSERT_TRUE(ctrl_1_set_bool_service->service_is_ready());
+
+  // Now test the remapping of the service name with the controller_ros_args
+  EXPECT_EQ(
+    call_spawner(
+      "ctrl_2 -c test_controller_manager --controller-ros-args '-r /ctrl_2/set_bool:=/set_bool'"),
+    0);
+
+  ASSERT_EQ(cm_->get_loaded_controllers().size(), 2ul);
+
+  // Now as the controller is active, we can call check for the remapped service
+  ASSERT_TRUE(set_bool_service->wait_for_service(std::chrono::seconds(2)));
+  ASSERT_TRUE(set_bool_service->service_is_ready());
+  // Now check the service availability in the controller namespace
+  auto ctrl_2_set_bool_service =
+    node->create_client<example_interfaces::srv::SetBool>("/ctrl_2/set_bool");
+  ASSERT_FALSE(ctrl_2_set_bool_service->wait_for_service(std::chrono::seconds(2)));
+  ASSERT_FALSE(ctrl_2_set_bool_service->service_is_ready());
+}
+
 class TestLoadControllerWithoutRobotDescription
 : public ControllerManagerFixture<controller_manager::ControllerManager>
 {

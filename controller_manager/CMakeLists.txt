@@ -58,10 +58,12 @@ target_link_libraries(ros2_control_node PRIVATE
 if(BUILD_TESTING)
   find_package(ament_cmake_gmock REQUIRED)
   find_package(ros2_control_test_assets REQUIRED)
+  find_package(example_interfaces REQUIRED)
 
   # Plugin Libraries that are built and installed for use in testing
   add_library(test_controller SHARED test/test_controller/test_controller.cpp)
   target_link_libraries(test_controller PUBLIC controller_manager)
+  ament_target_dependencies(test_controller PUBLIC example_interfaces)
   target_compile_definitions(test_controller PRIVATE "CONTROLLER_MANAGER_BUILDING_DLL")
   pluginlib_export_plugin_description_file(controller_interface test/test_controller/test_controller.xml)
   install(
