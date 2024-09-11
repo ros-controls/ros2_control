@@ -2,8 +2,8 @@
 Changelog for package ros2controlcli
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.43.1 (2024-09-11)
+-------------------
 * [ros2controlcli] fix list_controllers when no controllers are loaded (`#1721 <https://github.com/ros-controls/ros2_control/issues/1721>`_) (`#1722 <https://github.com/ros-controls/ros2_control/issues/1722>`_)
 * Contributors: mergify[bot]
 
