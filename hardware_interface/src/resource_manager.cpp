@@ -609,7 +609,7 @@ public:
   void import_state_interfaces(HardwareT & hardware)
   {
     std::vector<std::string> interface_names;
-    std::vector<std::shared_ptr<StateInterface>> interfaces = hardware.export_state_interfaces();
+    std::vector<StateInterface::SharedPtr> interfaces = hardware.export_state_interfaces();
 
     interface_names.reserve(interfaces.size());
     for (auto const & interface : interfaces)
@@ -633,24 +633,16 @@ public:
       available_state_interfaces_.capacity() + interface_names.size());
   }
 
-  void insert_command_interface(const std::shared_ptr<CommandInterface> command_interface)
+  void insert_command_interface(const CommandInterface::SharedPtr command_interface)
   {
     const auto [it, success] = command_interface_map_.insert(
       std::make_pair(command_interface->get_name(), command_interface));
     if (!success)
     {
-<<<<<<< hardware_interfaces_getter_setter
       std::string msg(
         "ResourceStorage: Tried to insert CommandInterface with already existing key. Insert[" +
         command_interface->get_name() + "]");
       throw std::runtime_error(msg);
-=======
-      RCLCPP_ERROR(
-        get_logger(),
-        "Exception of type : %s occurred while importing state interfaces for the hardware '%s' : "
-        "%s",
-        typeid(e).name(), hardware.get_name().c_str(), e.what());
->>>>>>> master
     }
   }
 
@@ -676,8 +668,7 @@ public:
   {
     try
     {
-      std::vector<std::shared_ptr<CommandInterface>> interfaces =
-        hardware.export_command_interfaces();
+      std::vector<CommandInterface::SharedPtr> interfaces = hardware.export_command_interfaces();
 
       hardware_info_map_[hardware.get_name()].command_interfaces =
         add_command_interfaces(interfaces);
@@ -700,7 +691,7 @@ public:
     }
   }
 
-  std::string add_state_interface(std::shared_ptr<StateInterface> interface)
+  std::string add_state_interface(StateInterface::SharedPtr interface)
   {
     auto interface_name = interface->get_name();
     const auto [it, success] = state_interface_map_.emplace(interface_name, interface);
@@ -724,8 +715,7 @@ public:
    * \returns list of interface names that are added into internal storage. The output is used to
    * avoid additional iterations to cache interface names, e.g., for initializing info structures.
    */
-  std::vector<std::string> add_state_interfaces(
-    std::vector<std::shared_ptr<StateInterface>> & interfaces)
+  std::vector<std::string> add_state_interfaces(std::vector<StateInterface::SharedPtr> & interfaces)
   {
     std::vector<std::string> interface_names;
     interface_names.reserve(interfaces.size());
@@ -791,7 +781,7 @@ public:
   }
 
   std::vector<std::string> add_command_interfaces(
-    const std::vector<std::shared_ptr<CommandInterface>> & interfaces)
+    const std::vector<CommandInterface::SharedPtr> & interfaces)
   {
     std::vector<std::string> interface_names;
     interface_names.reserve(interfaces.size());
@@ -1091,9 +1081,9 @@ public:
   std::unordered_map<std::string, std::vector<std::string>> controllers_reference_interfaces_map_;
 
   /// Storage of all available state interfaces
-  std::map<std::string, std::shared_ptr<StateInterface>> state_interface_map_;
+  std::map<std::string, StateInterface::SharedPtr> state_interface_map_;
   /// Storage of all available command interfaces
-  std::map<std::string, std::shared_ptr<CommandInterface>> command_interface_map_;
+  std::map<std::string, CommandInterface::SharedPtr> command_interface_map_;
 
   /// Vectors with interfaces available to controllers (depending on hardware component state)
   std::vector<std::string> available_state_interfaces_;
@@ -1267,7 +1257,7 @@ void ResourceManager::import_controller_exported_state_interfaces(
   const std::string & controller_name, std::vector<StateInterface> & interfaces)
 {
   std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
-  std::vector<std::shared_ptr<StateInterface>> interface_ptrs;
+  std::vector<StateInterface::SharedPtr> interface_ptrs;
   interface_ptrs.reserve(interfaces.size());
   for (auto & interface : interfaces)
   {
@@ -1336,7 +1326,7 @@ void ResourceManager::import_controller_reference_interfaces(
   std::vector<hardware_interface::CommandInterface> & interfaces)
 {
   std::scoped_lock guard(resource_interfaces_lock_, claimed_command_interfaces_lock_);
-  std::vector<std::shared_ptr<CommandInterface>> interface_ptrs;
+  std::vector<CommandInterface::SharedPtr> interface_ptrs;
   interface_ptrs.reserve(interfaces.size());
   for (auto & interface : interfaces)
   {

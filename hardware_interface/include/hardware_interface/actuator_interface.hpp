@@ -169,7 +169,7 @@ public:
    * \return vector of state interfaces
    */
   [[deprecated(
-    "Replaced by vector<std::shared_ptr<StateInterface>> on_export_state_interfaces() method. "
+    "Replaced by vector<StateInterface::SharedPtr> on_export_state_interfaces() method. "
     "Exporting is "
     "handled "
     "by the Framework.")]] virtual std::vector<StateInterface>
@@ -204,13 +204,13 @@ public:
    *
    * \return vector of shared pointers to the created and stored StateInterfaces
    */
-  virtual std::vector<std::shared_ptr<StateInterface>> on_export_state_interfaces()
+  virtual std::vector<StateInterface::SharedPtr> on_export_state_interfaces()
   {
     // import the unlisted interfaces
     std::vector<hardware_interface::InterfaceDescription> unlisted_interface_descriptions =
       export_state_interface_descriptions();
 
-    std::vector<std::shared_ptr<StateInterface>> state_interfaces;
+    std::vector<StateInterface::SharedPtr> state_interfaces;
     state_interfaces.reserve(
       unlisted_interface_descriptions.size() + joint_state_interfaces_.size());
 
@@ -249,7 +249,7 @@ public:
    * \return vector of state interfaces
    */
   [[deprecated(
-    "Replaced by vector<std::shared_ptr<CommandInterface>> on_export_command_interfaces() method. "
+    "Replaced by vector<CommandInterface::SharedPtr> on_export_command_interfaces() method. "
     "Exporting is "
     "handled "
     "by the Framework.")]] virtual std::vector<CommandInterface>
@@ -284,13 +284,13 @@ public:
    *
    * \return vector of shared pointers to the created and stored CommandInterfaces
    */
-  virtual std::vector<std::shared_ptr<CommandInterface>> on_export_command_interfaces()
+  virtual std::vector<CommandInterface::SharedPtr> on_export_command_interfaces()
   {
     // import the unlisted interfaces
     std::vector<hardware_interface::InterfaceDescription> unlisted_interface_descriptions =
       export_command_interface_descriptions();
 
-    std::vector<std::shared_ptr<CommandInterface>> command_interfaces;
+    std::vector<CommandInterface::SharedPtr> command_interfaces;
     command_interfaces.reserve(
       unlisted_interface_descriptions.size() + joint_command_interfaces_.size());
 
@@ -453,11 +453,11 @@ protected:
   std::unordered_map<std::string, InterfaceDescription> unlisted_command_interfaces_;
 
   // Exported Command- and StateInterfaces in order they are listed in the hardware description.
-  std::vector<std::shared_ptr<StateInterface>> joint_states_;
-  std::vector<std::shared_ptr<CommandInterface>> joint_commands_;
+  std::vector<StateInterface::SharedPtr> joint_states_;
+  std::vector<CommandInterface::SharedPtr> joint_commands_;
 
-  std::vector<std::shared_ptr<StateInterface>> unlisted_states_;
-  std::vector<std::shared_ptr<CommandInterface>> unlisted_commands_;
+  std::vector<StateInterface::SharedPtr> unlisted_states_;
+  std::vector<CommandInterface::SharedPtr> unlisted_commands_;
 
   rclcpp_lifecycle::State lifecycle_state_;
 
@@ -465,8 +465,8 @@ private:
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface_;
   rclcpp::Logger actuator_logger_;
   // interface names to Handle accessed through getters/setters
-  std::unordered_map<std::string, std::shared_ptr<StateInterface>> actuator_states_;
-  std::unordered_map<std::string, std::shared_ptr<CommandInterface>> actuator_commands_;
+  std::unordered_map<std::string, StateInterface::SharedPtr> actuator_states_;
+  std::unordered_map<std::string, CommandInterface::SharedPtr> actuator_commands_;
 };
 
 }  // namespace hardware_interface

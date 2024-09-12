@@ -204,7 +204,7 @@ const rclcpp_lifecycle::State & Actuator::error()
   return impl_->get_lifecycle_state();
 }
 
-std::vector<std::shared_ptr<StateInterface>> Actuator::export_state_interfaces()
+std::vector<StateInterface::SharedPtr> Actuator::export_state_interfaces()
 {
   // TODO(karsten1987): Might be worth to do some brief sanity check here
   // BEGIN (Handle export change): for backward compatibility, can be removed if
@@ -223,7 +223,7 @@ std::vector<std::shared_ptr<StateInterface>> Actuator::export_state_interfaces()
 
   // BEGIN (Handle export change): for backward compatibility, can be removed if
   // export_command_interfaces() method is removed
-  std::vector<std::shared_ptr<StateInterface>> interface_ptrs;
+  std::vector<StateInterface::SharedPtr> interface_ptrs;
   interface_ptrs.reserve(interfaces.size());
   for (auto const & interface : interfaces)
   {
@@ -233,7 +233,7 @@ std::vector<std::shared_ptr<StateInterface>> Actuator::export_state_interfaces()
   // END: for backward compatibility
 }
 
-std::vector<std::shared_ptr<CommandInterface>> Actuator::export_command_interfaces()
+std::vector<CommandInterface::SharedPtr> Actuator::export_command_interfaces()
 {
   // TODO(karsten1987): Might be worth to do some brief sanity check here
   // BEGIN (Handle export change): for backward compatibility, can be removed if
@@ -251,7 +251,7 @@ std::vector<std::shared_ptr<CommandInterface>> Actuator::export_command_interfac
   }
   // BEGIN (Handle export change): for backward compatibility, can be removed if
   // export_command_interfaces() method is removed
-  std::vector<std::shared_ptr<CommandInterface>> interface_ptrs;
+  std::vector<CommandInterface::SharedPtr> interface_ptrs;
   interface_ptrs.reserve(interfaces.size());
   for (auto & interface : interfaces)
   {

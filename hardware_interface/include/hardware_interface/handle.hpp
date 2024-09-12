@@ -16,6 +16,7 @@
 #define HARDWARE_INTERFACE__HANDLE_HPP_
 
 #include <limits>
+#include <memory>
 #include <string>
 #include <variant>
 
@@ -136,6 +137,8 @@ public:
   StateInterface(StateInterface && other) = default;
 
   using Handle::Handle;
+
+  using SharedPtr = std::shared_ptr<StateInterface>;
 };
 
 class CommandInterface : public Handle
@@ -156,6 +159,8 @@ public:
   CommandInterface(CommandInterface && other) = default;
 
   using Handle::Handle;
+
+  using SharedPtr = std::shared_ptr<CommandInterface>;
 };
 
 }  // namespace hardware_interface

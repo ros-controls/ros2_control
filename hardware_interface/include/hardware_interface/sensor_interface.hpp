@@ -154,7 +154,7 @@ public:
    * \return vector of state interfaces
    */
   [[deprecated(
-    "Replaced by vector<std::shared_ptr<StateInterface>> on_export_state_interfaces() method. "
+    "Replaced by vector<StateInterface::SharedPtr> on_export_state_interfaces() method. "
     "Exporting is handled "
     "by the Framework.")]] virtual std::vector<StateInterface>
   export_state_interfaces()
@@ -188,13 +188,13 @@ public:
    *
    * \return vector of shared pointers to the created and stored StateInterfaces
    */
-  virtual std::vector<std::shared_ptr<StateInterface>> on_export_state_interfaces()
+  virtual std::vector<StateInterface::SharedPtr> on_export_state_interfaces()
   {
     // import the unlisted interfaces
     std::vector<hardware_interface::InterfaceDescription> unlisted_interface_descriptions =
       export_state_interface_descriptions();
 
-    std::vector<std::shared_ptr<StateInterface>> state_interfaces;
+    std::vector<StateInterface::SharedPtr> state_interfaces;
     state_interfaces.reserve(
       unlisted_interface_descriptions.size() + sensor_state_interfaces_.size());
 
@@ -297,8 +297,8 @@ protected:
   std::unordered_map<std::string, InterfaceDescription> unlisted_state_interfaces_;
 
   // Exported Command- and StateInterfaces in order they are listed in the hardware description.
-  std::vector<std::shared_ptr<StateInterface>> sensor_states_;
-  std::vector<std::shared_ptr<StateInterface>> unlisted_states_;
+  std::vector<StateInterface::SharedPtr> sensor_states_;
+  std::vector<StateInterface::SharedPtr> unlisted_states_;
 
   rclcpp_lifecycle::State lifecycle_state_;
 
@@ -306,7 +306,7 @@ private:
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface_;
   rclcpp::Logger sensor_logger_;
   // interface names to Handle accessed through getters/setters
-  std::unordered_map<std::string, std::shared_ptr<StateInterface>> sensor_states_map_;
+  std::unordered_map<std::string, StateInterface::SharedPtr> sensor_states_map_;
 };
 
 }  // namespace hardware_interface

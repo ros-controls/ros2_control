@@ -203,7 +203,7 @@ const rclcpp_lifecycle::State & Sensor::error()
   return impl_->get_lifecycle_state();
 }
 
-std::vector<std::shared_ptr<StateInterface>> Sensor::export_state_interfaces()
+std::vector<StateInterface::SharedPtr> Sensor::export_state_interfaces()
 {
   // TODO(karsten1987): Might be worth to do some brief sanity check here
   // BEGIN (Handle export change): for backward compatibility, can be removed if
@@ -222,7 +222,7 @@ std::vector<std::shared_ptr<StateInterface>> Sensor::export_state_interfaces()
 
   // BEGIN (Handle export change): for backward compatibility, can be removed if
   // export_command_interfaces() method is removed
-  std::vector<std::shared_ptr<StateInterface>> interface_ptrs;
+  std::vector<StateInterface::SharedPtr> interface_ptrs;
   interface_ptrs.reserve(interfaces.size());
   for (auto const & interface : interfaces)
   {
