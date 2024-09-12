@@ -32,10 +32,10 @@ using namespace std::chrono_literals;
 class TestHardwareSpawner : public ControllerManagerFixture<controller_manager::ControllerManager>
 {
 public:
-  TestHardwareSpawner()
-  : ControllerManagerFixture<controller_manager::ControllerManager>()
+  TestHardwareSpawner() : ControllerManagerFixture<controller_manager::ControllerManager>()
   {
-    cm_->set_parameter(rclcpp::Parameter("hardware_components_initial_state.unconfigured", "TestSystemHardware"));
+    cm_->set_parameter(
+      rclcpp::Parameter("hardware_components_initial_state.unconfigured", "TestSystemHardware"));
   }
 
   void SetUp() override
@@ -43,11 +43,11 @@ public:
     ControllerManagerFixture::SetUp();
 
     update_executor_ =
-    std::make_shared<rclcpp::executors::MultiThreadedExecutor>(rclcpp::ExecutorOptions(), 2);
+      std::make_shared<rclcpp::executors::MultiThreadedExecutor>(rclcpp::ExecutorOptions(), 2);
 
     update_executor_->add_node(cm_);
     update_executor_spin_future_ =
-    std::async(std::launch::async, [this]() -> void { update_executor_->spin(); });
+      std::async(std::launch::async, [this]() -> void { update_executor_->spin(); });
     // This sleep is needed to prevent a too fast test from ending before the
     // executor has began to spin, which causes it to hang
     std::this_thread::sleep_for(50ms);
@@ -80,14 +80,14 @@ TEST_F(TestHardwareSpawner, spawner_without_manager_errors_with_given_timeout)
 
 TEST_F(TestHardwareSpawner, spawner_without_component_name_argument)
 {
-  EXPECT_NE(call_spawner("-c test_controller_manager"), 0) <<
-  "Missing component name argument parameter";
+  EXPECT_NE(call_spawner("-c test_controller_manager"), 0)
+    << "Missing component name argument parameter";
 }
 
 TEST_F(TestHardwareSpawner, spawner_non_exising_hardware_component)
 {
-  EXPECT_NE(call_spawner("TestSystemHardware1 -c test_controller_manager"), 0) <<
-  "Missing component name argument parameter";
+  EXPECT_NE(call_spawner("TestSystemHardware1 -c test_controller_manager"), 0)
+    << "Missing component name argument parameter";
 }
 
 TEST_F(TestHardwareSpawner, set_component_to_configured_state_and_back_to_activated)
@@ -97,7 +97,6 @@ TEST_F(TestHardwareSpawner, set_component_to_configured_state_and_back_to_activa
   EXPECT_EQ(call_spawner("TestSystemHardware --activate -c test_controller_manager"), 0);
 }
 
-
 class TestHardwareSpawnerWithoutRobotDescription
 : public ControllerManagerFixture<controller_manager::ControllerManager>
 {
@@ -105,7 +104,9 @@ public:
   TestHardwareSpawnerWithoutRobotDescription()
   : ControllerManagerFixture<controller_manager::ControllerManager>("")
   {
-    cm_->set_parameter(rclcpp::Parameter("hardware_components_initial_state.unconfigured", "TestSystemHardware"));
+    cm_->set_parameter(rclcpp::Parameter(
+      "hardware_components_initial_state.unconfigured",
+      std::vector<std::string>{"TestSystemHardware"}));
   }
 
 public:
@@ -123,11 +124,11 @@ public:
       });
 
     update_executor_ =
-    std::make_shared<rclcpp::executors::MultiThreadedExecutor>(rclcpp::ExecutorOptions(), 2);
+      std::make_shared<rclcpp::executors::MultiThreadedExecutor>(rclcpp::ExecutorOptions(), 2);
 
     update_executor_->add_node(cm_);
     update_executor_spin_future_ =
-    std::async(std::launch::async, [this]() -> void { update_executor_->spin(); });
+      std::async(std::launch::async, [this]() -> void { update_executor_->spin(); });
     // This sleep is needed to prevent a too fast test from ending before the
     // executor has began to spin, which causes it to hang
     std::this_thread::sleep_for(50ms);
@@ -147,21 +148,30 @@ protected:
 
 TEST_F(TestHardwareSpawnerWithoutRobotDescription, when_no_robot_description_spawner_times_out)
 {
-  EXPECT_EQ(call_spawner("TestSystemHardware --configure -c test_controller_manager --controller-manager-timeout 1.0"), 256)
-    << "could not change hardware state because not robot description and not services for controller "
+  EXPECT_EQ(
+    call_spawner(
+      "TestSystemHardware --configure -c test_controller_manager --controller-manager-timeout 1.0"),
+    256)
+    << "could not change hardware state because not robot description and not services for "
+       "controller "
        "manager are active";
 }
 
-TEST_F(
-  TestHardwareSpawnerWithoutRobotDescription,
-  spawner_with_later_load_of_robot_description)
+TEST_F(TestHardwareSpawnerWithoutRobotDescription, spawner_with_later_load_of_robot_description)
 {
   // Delay sending robot description
   robot_description_sending_timer_ = cm_->create_wall_timer(
     std::chrono::milliseconds(2500), [&]() { pass_robot_description_to_cm_and_rm(); });
 
-  EXPECT_EQ(call_spawner("TestSystemHardware --configure -c test_controller_manager"), 1)
+  EXPECT_EQ(
+    call_spawner(
+      "TestSystemHardware --configure -c test_controller_manager --controller-manager-timeout 1.0"),
+    256)
     << "could not activate control because not robot description";
+  EXPECT_EQ(
+    call_spawner(
+      "TestSystemHardware --configure -c test_controller_manager --controller-manager-timeout 2.5"),
+    0);
 }
 
 class TestHardwareSpawnerWithNamespacedCM
@@ -172,7 +182,8 @@ public:
   : ControllerManagerFixture<controller_manager::ControllerManager>(
       ros2_control_test_assets::minimal_robot_urdf, "foo_namespace")
   {
-    cm_->set_parameter(rclcpp::Parameter("hardware_components_initial_state.unconfigured", "TestSystemHardware"));
+    cm_->set_parameter(
+      rclcpp::Parameter("hardware_components_initial_state.unconfigured", "TestSystemHardware"));
   }
 
 public:
@@ -181,11 +192,11 @@ public:
     ControllerManagerFixture::SetUp();
 
     update_executor_ =
-    std::make_shared<rclcpp::executors::MultiThreadedExecutor>(rclcpp::ExecutorOptions(), 2);
+      std::make_shared<rclcpp::executors::MultiThreadedExecutor>(rclcpp::ExecutorOptions(), 2);
 
     update_executor_->add_node(cm_);
     update_executor_spin_future_ =
-    std::async(std::launch::async, [this]() -> void { update_executor_->spin(); });
+      std::async(std::launch::async, [this]() -> void { update_executor_->spin(); });
     // This sleep is needed to prevent a too fast test from ending before the
     // executor has began to spin, which causes it to hang
     std::this_thread::sleep_for(50ms);
@@ -203,8 +214,12 @@ TEST_F(TestHardwareSpawnerWithNamespacedCM, set_component_to_configured_state_cm
 {
   ControllerManagerRunner cm_runner(this);
   EXPECT_EQ(
-    call_spawner("TestSystemHardware --configure -c test_controller_manager --controller-manager-timeout 1.0"), 256)
+    call_spawner(
+      "TestSystemHardware --configure -c test_controller_manager --controller-manager-timeout 1.0"),
+    256)
     << "Should fail without defining the namespace";
   EXPECT_EQ(
-    call_spawner("TestSystemHardware --configure -c test_controller_manager --ros-args -r __ns:=/foo_namespace"), 0);
+    call_spawner("TestSystemHardware --configure -c test_controller_manager --ros-args -r "
+                 "__ns:=/foo_namespace"),
+    0);
 }
