@@ -146,9 +146,6 @@ def main(args=None):
     activate = args.activate
     configure = args.configure
 
-    print(f"CMD Arguments: {command_line_args}")
-    print(f"Arguments: {args}")
-
     node = Node("hardware_spawner")
     if not controller_manager_name.startswith("/"):
         spawner_namespace = node.get_namespace()
