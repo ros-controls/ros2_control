@@ -82,24 +82,22 @@ def handle_set_component_state_service_call(
         )
 
 
-def activate_components(node, controller_manager_name, components_to_activate):
+def activate_component(node, controller_manager_name, component_to_activate):
     active_state = State()
     active_state.id = State.PRIMARY_STATE_ACTIVE
     active_state.label = "active"
-    for component in components_to_activate:
-        handle_set_component_state_service_call(
-            node, controller_manager_name, component, active_state, "activated"
-        )
+    handle_set_component_state_service_call(
+        node, controller_manager_name, component_to_activate, active_state, "activated"
+    )
 
 
-def configure_components(node, controller_manager_name, components_to_configure):
+def configure_component(node, controller_manager_name, component_to_configure):
     inactive_state = State()
     inactive_state.id = State.PRIMARY_STATE_INACTIVE
     inactive_state.label = "inactive"
-    for component in components_to_configure:
-        handle_set_component_state_service_call(
-            node, controller_manager_name, component, inactive_state, "configured"
-        )
+    handle_set_component_state_service_call(
+        node, controller_manager_name, component_to_configure, inactive_state, "configured"
+    )
 
 
 def main(args=None):
@@ -108,9 +106,9 @@ def main(args=None):
     activate_or_configure_grp = parser.add_mutually_exclusive_group(required=True)
 
     parser.add_argument(
-        "hardware_component_name",
-        help="The name of the hardware component which should be activated.",
-        nargs="+"
+        "hardware_component_names",
+        help="The name of the hardware components which should be activated.",
+        nargs="+",
     )
     parser.add_argument(
         "-c",
@@ -142,7 +140,7 @@ def main(args=None):
 
     command_line_args = rclpy.utilities.remove_ros_args(args=sys.argv)[1:]
     args = parser.parse_args(command_line_args)
-    hardware_component = args.hardware_component_name
+    hardware_components = args.hardware_component_names
     controller_manager_name = args.controller_manager
     controller_manager_timeout = args.controller_manager_timeout
     activate = args.activate
@@ -160,24 +158,25 @@ def main(args=None):
             controller_manager_name = f"/{controller_manager_name}"
 
     try:
-        if not is_hardware_component_loaded(
-            node, controller_manager_name, hardware_component, controller_manager_timeout
-        ):
-            node.get_logger().warn(
-                bcolors.WARNING
-                + "Hardware Component is not loaded - state can not be changed."
-                + bcolors.ENDC
-            )
-        elif activate:
-            activate_components(node, controller_manager_name, hardware_component)
-        elif configure:
-            configure_components(node, controller_manager_name, hardware_component)
-        else:
-            node.get_logger().error(
-                'You need to either specify if the hardware component should be activated with the "--activate" flag or configured with the "--configure" flag'
-            )
-            parser.print_help()
-            return 0
+        for hardware_component in hardware_components:
+            if not is_hardware_component_loaded(
+                node, controller_manager_name, hardware_component, controller_manager_timeout
+            ):
+                node.get_logger().warn(
+                    bcolors.WARNING
+                    + "Hardware Component is not loaded - state can not be changed."
+                    + bcolors.ENDC
+                )
+            elif activate:
+                activate_component(node, controller_manager_name, hardware_component)
+            elif configure:
+                configure_component(node, controller_manager_name, hardware_component)
+            else:
+                node.get_logger().error(
+                    'You need to either specify if the hardware component should be activated with the "--activate" flag or configured with the "--configure" flag'
+                )
+                parser.print_help()
+                return 0
     except KeyboardInterrupt:
         pass
     except ServiceNotFoundError as err:
