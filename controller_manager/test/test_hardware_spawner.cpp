@@ -63,7 +63,9 @@ protected:
 
 int call_spawner(const std::string extra_args)
 {
-  std::string spawner_script = "ros2 run controller_manager hardware_spawner ";
+  std::string spawner_script =
+    "python3 -m coverage run --append --branch $(ros2 pkg prefix "
+    "controller_manager)/lib/controller_manager/hardware_spawner ";
   return std::system((spawner_script + extra_args).c_str());
 }
 
