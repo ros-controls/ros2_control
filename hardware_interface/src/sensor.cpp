@@ -205,7 +205,6 @@ const rclcpp_lifecycle::State & Sensor::error()
 
 std::vector<StateInterface::SharedPtr> Sensor::export_state_interfaces()
 {
-  // TODO(karsten1987): Might be worth to do some brief sanity check here
   // BEGIN (Handle export change): for backward compatibility, can be removed if
   // export_command_interfaces() method is removed
   std::vector<StateInterface> interfaces = impl_->export_state_interfaces();

@@ -204,7 +204,6 @@ const rclcpp_lifecycle::State & System::error()
 
 std::vector<StateInterface::SharedPtr> System::export_state_interfaces()
 {
-  // TODO(karsten1987): Might be worth to do some brief sanity check here
   // BEGIN (Handle export change): for backward compatibility, can be removed if
   // export_command_interfaces() method is removed
   std::vector<StateInterface> interfaces = impl_->export_state_interfaces();
@@ -233,7 +232,6 @@ std::vector<StateInterface::SharedPtr> System::export_state_interfaces()
 
 std::vector<CommandInterface::SharedPtr> System::export_command_interfaces()
 {
-  // TODO(karsten1987): Might be worth to do some brief sanity check here
   // BEGIN (Handle export change): for backward compatibility, can be removed if
   // export_command_interfaces() method is removed
   std::vector<CommandInterface> interfaces = impl_->export_command_interfaces();
