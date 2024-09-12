@@ -17,6 +17,7 @@
 
 #include <functional>
 #include <string>
+#include <thread>
 #include <utility>
 
 #include "hardware_interface/handle.hpp"
@@ -75,7 +76,15 @@ public:
 
   const std::string & get_prefix_name() const { return state_interface_.get_prefix_name(); }
 
-  double get_value() const { return state_interface_.get_value(); }
+  double get_value() const
+  {
+    double value;
+    while (!state_interface_.get_value(value))
+    {
+      std::this_thread::sleep_for(std::chrono::microseconds(10));
+    }
+    return value;
+  }
 
 protected:
   const StateInterface & state_interface_;
