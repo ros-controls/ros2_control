@@ -160,13 +160,15 @@ public:
     }
     catch (const pluginlib::PluginlibException & ex)
     {
-      RCLCPP_ERROR(get_logger(), "Exception while loading hardware: %s", ex.what());
+      RCLCPP_ERROR(
+        get_logger(), "Caught exception of type : %s while loading hardware: %s", typeid(ex).name(),
+        ex.what());
     }
     catch (const std::exception & ex)
     {
       RCLCPP_ERROR(
-        get_logger(), "Exception occurred while loading hardware '%s': %s",
-        hardware_info.name.c_str(), ex.what());
+        get_logger(), "Exception of type : %s occurred while loading hardware '%s': %s",
+        typeid(ex).name(), hardware_info.name.c_str(), ex.what());
     }
     catch (...)
     {
@@ -203,8 +205,8 @@ public:
     catch (const std::exception & ex)
     {
       RCLCPP_ERROR(
-        get_logger(), "Exception occurred while initializing hardware '%s': %s",
-        hardware_info.name.c_str(), ex.what());
+        get_logger(), "Exception of type : %s occurred while initializing hardware '%s': %s",
+        typeid(ex).name(), hardware_info.name.c_str(), ex.what());
     }
     catch (...)
     {
@@ -229,8 +231,8 @@ public:
     catch (const std::exception & ex)
     {
       RCLCPP_ERROR(
-        get_logger(), "Exception occurred while configuring hardware '%s': %s",
-        hardware.get_name().c_str(), ex.what());
+        get_logger(), "Exception of type : %s occurred while configuring hardware '%s': %s",
+        typeid(ex).name(), hardware.get_name().c_str(), ex.what());
     }
     catch (...)
     {
@@ -378,8 +380,8 @@ public:
     catch (const std::exception & ex)
     {
       RCLCPP_ERROR(
-        get_logger(), "Exception occurred while cleaning up hardware '%s': %s",
-        hardware.get_name().c_str(), ex.what());
+        get_logger(), "Exception of type : %s occurred while cleaning up hardware '%s': %s",
+        typeid(ex).name(), hardware.get_name().c_str(), ex.what());
     }
     catch (...)
     {
@@ -412,8 +414,8 @@ public:
     catch (const std::exception & ex)
     {
       RCLCPP_ERROR(
-        get_logger(), "Exception occurred while shutting down hardware '%s': %s",
-        hardware.get_name().c_str(), ex.what());
+        get_logger(), "Exception of type : %s occurred while shutting down hardware '%s': %s",
+        typeid(ex).name(), hardware.get_name().c_str(), ex.what());
     }
     catch (...)
     {
@@ -451,8 +453,8 @@ public:
     catch (const std::exception & ex)
     {
       RCLCPP_ERROR(
-        get_logger(), "Exception occurred while activating hardware '%s': %s",
-        hardware.get_name().c_str(), ex.what());
+        get_logger(), "Exception of type : %s occurred while activating hardware '%s': %s",
+        typeid(ex).name(), hardware.get_name().c_str(), ex.what());
     }
     catch (...)
     {
@@ -486,8 +488,8 @@ public:
     catch (const std::exception & ex)
     {
       RCLCPP_ERROR(
-        get_logger(), "Exception occurred while deactivating hardware '%s': %s",
-        hardware.get_name().c_str(), ex.what());
+        get_logger(), "Exception of type : %s occurred while deactivating hardware '%s': %s",
+        typeid(ex).name(), hardware.get_name().c_str(), ex.what());
     }
     catch (...)
     {
@@ -637,10 +639,18 @@ public:
       std::make_pair(command_interface->get_name(), command_interface));
     if (!success)
     {
+<<<<<<< hardware_interfaces_getter_setter
       std::string msg(
         "ResourceStorage: Tried to insert CommandInterface with already existing key. Insert[" +
         command_interface->get_name() + "]");
       throw std::runtime_error(msg);
+=======
+      RCLCPP_ERROR(
+        get_logger(),
+        "Exception of type : %s occurred while importing state interfaces for the hardware '%s' : "
+        "%s",
+        typeid(e).name(), hardware.get_name().c_str(), e.what());
+>>>>>>> master
     }
   }
 
@@ -677,8 +687,9 @@ public:
     {
       RCLCPP_ERROR(
         get_logger(),
-        "Exception occurred while importing command interfaces for the hardware '%s' : %s",
-        hardware.get_name().c_str(), ex.what());
+        "Exception of type : %s occurred while importing command interfaces for the hardware '%s' "
+        ": %s",
+        typeid(ex).name(), hardware.get_name().c_str(), ex.what());
     }
     catch (...)
     {
@@ -1647,9 +1658,9 @@ bool ResourceManager::prepare_command_mode_switch(
         {
           RCLCPP_ERROR(
             logger,
-            "Exception occurred while preparing command mode switch for component '%s' for the "
-            "interfaces: \n %s : %s",
-            component.get_name().c_str(),
+            "Exception of type : %s occurred while preparing command mode switch for component "
+            "'%s' for the interfaces: \n %s : %s",
+            typeid(e).name(), component.get_name().c_str(),
             interfaces_to_string(start_interfaces, stop_interfaces).c_str(), e.what());
           ret = false;
         }
@@ -1711,9 +1722,9 @@ bool ResourceManager::perform_command_mode_switch(
         {
           RCLCPP_ERROR(
             logger,
-            "Exception occurred while performing command mode switch for component '%s' for the "
-            "interfaces: \n %s : %s",
-            component.get_name().c_str(),
+            "Exception of type : %s occurred while performing command mode switch for component "
+            "'%s' for the interfaces: \n %s : %s",
+            typeid(e).name(), component.get_name().c_str(),
             interfaces_to_string(start_interfaces, stop_interfaces).c_str(), e.what());
           ret = false;
         }
@@ -1870,8 +1881,8 @@ HardwareReadWriteStatus ResourceManager::read(
       catch (const std::exception & e)
       {
         RCLCPP_ERROR(
-          get_logger(), "Exception thrown durind read of the component '%s': %s",
-          component.get_name().c_str(), e.what());
+          get_logger(), "Exception of type : %s thrown during read of the component '%s': %s",
+          typeid(e).name(), component.get_name().c_str(), e.what());
         ret_val = return_type::ERROR;
       }
       catch (...)
@@ -1883,6 +1894,7 @@ HardwareReadWriteStatus ResourceManager::read(
       }
       if (ret_val == return_type::ERROR)
       {
+        component.error();
         read_write_status.ok = false;
         read_write_status.failed_hardware_names.push_back(component.get_name());
         resource_storage_->remove_all_hardware_interfaces_from_available_list(component.get_name());
@@ -1930,8 +1942,8 @@ HardwareReadWriteStatus ResourceManager::write(
       catch (const std::exception & e)
       {
         RCLCPP_ERROR(
-          get_logger(), "Exception thrown during write of the component '%s': %s",
-          component.get_name().c_str(), e.what());
+          get_logger(), "Exception of type : %s thrown during write of the component '%s': %s",
+          typeid(e).name(), component.get_name().c_str(), e.what());
         ret_val = return_type::ERROR;
       }
       catch (...)
@@ -1943,6 +1955,7 @@ HardwareReadWriteStatus ResourceManager::write(
       }
       if (ret_val == return_type::ERROR)
       {
+        component.error();
         read_write_status.ok = false;
         read_write_status.failed_hardware_names.push_back(component.get_name());
         resource_storage_->remove_all_hardware_interfaces_from_available_list(component.get_name());

@@ -24,6 +24,7 @@ For details see the controller_manager section.
 * All chainable controllers must implement the method ``export_state_interfaces`` to export the state interfaces, similar to ``export_reference_interfaces`` method that is exporting the reference interfaces.
 * The controllers will now set ``use_global_arguments`` from `NodeOptions <https://docs.ros.org/en/rolling/p/rclcpp/generated/classrclcpp_1_1NodeOptions.html#_CPPv4N6rclcpp11NodeOptions20use_global_argumentsEb>`__ to false, to avoid getting influenced by global arguments (Issue : `#1684 <https://github.com/ros-controls/ros2_control/issues/1684>`_) (`#1694 <https://github.com/ros-controls/ros2_control/pull/1694>`_). From now on, in order to set the parameters to the controller, the ``--param-file`` option from spawner should be used.
 * With (`#1683 <https://github.com/ros-controls/ros2_control/pull/1683>`_) the ``rclcpp_lifecycle::State & get_state()`` and ``void set_state(const rclcpp_lifecycle::State & new_state)`` are replaced by ``rclcpp_lifecycle::State & get_lifecycle_state()`` and ``void set_lifecycle_state(const rclcpp_lifecycle::State & new_state)``. This change affects controllers and hardware. This is related to (`#1240 <https://github.com/ros-controls/ros2_control/pull/1240>`_) as variant support introduces ``get_state`` and ``set_state`` methods for setting/getting state of handles.
+* The ``assign_interfaces`` and ``release_interfaces`` methods are now virtual, so that the user can override them to store the interfaces into custom variable types, so that the user can have the flexibility to take the ownership of the loaned interfaces to the controller (`#1743 <https://github.com/ros-controls/ros2_control/pull/1743>`_)
 
 controller_manager
 ******************
@@ -104,6 +105,7 @@ hardware_interface
 * Access to logger and clock through ``get_logger`` and ``get_clock`` methods in ResourceManager and HardwareComponents ``Actuator``, ``Sensor`` and ``System`` (`#1585 <https://github.com/ros-controls/ros2_control/pull/1585>`_)
 * Added ``get_hardware_info`` method to the hardware components interface to access the ``HardwareInfo`` instead of accessing the variable ``info_`` directly (`#1643 <https://github.com/ros-controls/ros2_control/pull/1643>`_)
 * With (`#1683 <https://github.com/ros-controls/ros2_control/pull/1683>`_) the ``rclcpp_lifecycle::State & get_state()`` and ``void set_state(const rclcpp_lifecycle::State & new_state)`` are replaced by ``rclcpp_lifecycle::State & get_lifecycle_state()`` and ``void set_lifecycle_state(const rclcpp_lifecycle::State & new_state)``. This change affects controllers and hardware. This is related to (`#1240 <https://github.com/ros-controls/ros2_control/pull/1240>`_) as variant support introduces ``get_state`` and ``set_state`` methods for setting/getting state of handles.
+* With (`#1421 <https://github.com/ros-controls/ros2_control/pull/1421>`_) a key-value storage is added to InterfaceInfo. This allows to define extra params with per Command-/StateInterface in the ``.ros2_control.xacro`` file.
 
 joint_limits
 ************
@@ -126,3 +128,15 @@ ros2controlcli
   .. code-block:: bash
 
     ros2 control set_hardware_component_state <hardware_component_name> <state>
+
+* The ``load_controller`` now supports parsing of the params file (`#1703 <https://github.com/ros-controls/ros2_control/pull/1703>`_).
+
+  .. code-block:: bash
+
+    ros2 control load_controller <controller_name> <realtive_or_absolute_file_path>
+
+* All the ros2controlcli verbs now support the namespacing through the ROS 2 standard way (`#1703 <https://github.com/ros-controls/ros2_control/pull/1703>`_).
+
+  .. code-block:: bash
+
+    ros2 control <verb> <arguments> --ros-args -r __ns:=<namespace>

@@ -2,6 +2,15 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.17.0 (2024-09-11)
+-------------------
+* Log exception type when catching the exception (`#1749 <https://github.com/ros-controls/ros2_control/issues/1749>`_)
+* [CM] Handle other exceptions while loading the controller plugin (`#1731 <https://github.com/ros-controls/ros2_control/issues/1731>`_)
+* remove unnecessary log of the CM args (`#1720 <https://github.com/ros-controls/ros2_control/issues/1720>`_)
+* Fix unload of controllers when spawned with `--unload-on-kill` (`#1717 <https://github.com/ros-controls/ros2_control/issues/1717>`_)
+* Rename `get_state` and `set_state` Functions to `get/set_lifecylce_state` (variant support) (`#1683 <https://github.com/ros-controls/ros2_control/issues/1683>`_)
+* Contributors: Manuel Muth, Sai Kishor Kothakota
+
 4.16.1 (2024-08-24)
 -------------------
 * propage a portion of global args to the controller nodes (`#1712 <https://github.com/ros-controls/ros2_control/issues/1712>`_)

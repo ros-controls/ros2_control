@@ -202,7 +202,7 @@ class ViewControllerChainsVerb(VerbExtension):
         add_controller_mgr_parsers(parser)
 
     def main(self, *, args):
-        with NodeStrategy(args) as node:
+        with NodeStrategy(args).direct_node as node:
             list_controllers_response = list_controllers(node, args.controller_manager)
             list_hardware_response = list_hardware_interfaces(node, args.controller_manager)
             parse_response(list_controllers_response, list_hardware_response)

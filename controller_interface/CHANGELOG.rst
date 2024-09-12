@@ -2,6 +2,11 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.17.0 (2024-09-11)
+-------------------
+* Rename `get_state` and `set_state` Functions to `get/set_lifecylce_state` (variant support) (`#1683 <https://github.com/ros-controls/ros2_control/issues/1683>`_)
+* Contributors: Manuel Muth
+
 4.16.1 (2024-08-24)
 -------------------
 

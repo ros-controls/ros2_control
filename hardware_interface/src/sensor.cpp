@@ -21,6 +21,7 @@
 
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/hardware_info.hpp"
+#include "hardware_interface/lifecycle_helpers.hpp"
 #include "hardware_interface/sensor_interface.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
@@ -181,7 +182,9 @@ const rclcpp_lifecycle::State & Sensor::deactivate()
 const rclcpp_lifecycle::State & Sensor::error()
 {
   std::unique_lock<std::recursive_mutex> lock(sensors_mutex_);
-  if (impl_->get_lifecycle_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN)
+  if (
+    impl_->get_lifecycle_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN &&
+    impl_->get_lifecycle_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
   {
     switch (impl_->on_error(impl_->get_lifecycle_state()))
     {
@@ -248,9 +251,7 @@ return_type Sensor::read(const rclcpp::Time & time, const rclcpp::Duration & per
       impl_->get_name().c_str());
     return return_type::OK;
   }
-  if (
-    impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED ||
-    impl_->get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED)
+  if (lifecycleStateThatRequiresNoAction(impl_->get_lifecycle_state().id()))
   {
     return return_type::OK;
   }

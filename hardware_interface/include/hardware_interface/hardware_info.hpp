@@ -46,6 +46,10 @@ struct InterfaceInfo
   int size;
   /// (Optional) enable or disable the limits for the command interfaces
   bool enable_limits;
+  /// (Optional) Key-value pairs of command/stateInterface parameters. This is
+  /// useful for drivers that operate on protocols like modbus, where each
+  /// interface needs own address(register), datatype, etc.
+  std::unordered_map<std::string, std::string> parameters;
 };
 
 /// @brief This structure stores information about a joint that is mimicking another joint
