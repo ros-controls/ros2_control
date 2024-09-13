@@ -169,11 +169,11 @@ bool ControllerInterfaceBase::is_async() const { return is_async_; }
 
 const std::string & ControllerInterfaceBase::get_robot_description() const { return urdf_; }
 
-void ControllerInterfaceBase::stop_async_update_cycle()
+void ControllerInterfaceBase::wait_for_trigger_update_to_finish()
 {
   if (is_async() && async_handler_ && async_handler_->is_running())
   {
-    async_handler_->stop_thread();
+    async_handler_->wait_for_trigger_cycle_to_finish();
   }
 }
 }  // namespace controller_interface

@@ -1296,6 +1296,18 @@ controller_interface::return_type ControllerManager::switch_controller(
     RCLCPP_DEBUG(get_logger(), " - %s", interface.c_str());
   }
 
+  // wait for deactivating async controllers to finish their current cycle
+  for (const auto & controller : deactivate_request_)
+  {
+    auto controller_it = std::find_if(
+      controllers.begin(), controllers.end(),
+      std::bind(controller_name_compare, std::placeholders::_1, controller));
+    if (controller_it != controllers.end())
+    {
+      controller_it->c->wait_for_trigger_update_to_finish();
+    }
+  }
+
   if (
     !activate_command_interface_request_.empty() || !deactivate_command_interface_request_.empty())
   {
@@ -1475,8 +1487,6 @@ void ControllerManager::deactivate_controllers(
     {
       try
       {
-        // This is needed by the async controllers to finish their current cycle
-        controller->stop_async_update_cycle();
         const auto new_state = controller->get_node()->deactivate();
         controller->release_interfaces();
 
