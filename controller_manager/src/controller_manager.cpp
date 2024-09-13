@@ -2310,7 +2310,13 @@ controller_interface::return_type ControllerManager::update(
         }
 
         *loaded_controller.next_update_cycle_time += controller_period;
-        if (!trigger_status)
+
+        if (controller_ret != controller_interface::return_type::OK)
+        {
+          failed_controllers_list.push_back(loaded_controller.info.name);
+          ret = controller_ret;
+        }
+        else if (!trigger_status)
         {
           RCLCPP_WARN(
             get_logger(),
@@ -2318,12 +2324,6 @@ controller_interface::return_type ControllerManager::update(
             "cycle at around : '%f'",
             loaded_controller.info.name.c_str(), time.seconds(),
             loaded_controller.next_update_cycle_time->seconds());
-        }
-
-        if (controller_ret != controller_interface::return_type::OK)
-        {
-          failed_controllers_list.push_back(loaded_controller.info.name);
-          ret = controller_ret;
         }
       }
     }
