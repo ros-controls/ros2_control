@@ -56,7 +56,14 @@ return_type ControllerInterfaceBase::init(
     std::bind(&ControllerInterfaceBase::on_configure, this, std::placeholders::_1));
 
   node_->register_on_cleanup(
-    std::bind(&ControllerInterfaceBase::on_cleanup, this, std::placeholders::_1));
+    [this](const rclcpp_lifecycle::State & previous_state) -> CallbackReturn
+    {
+      if (is_async() && async_handler_ && async_handler_->is_running())
+      {
+        async_handler_->stop_thread();
+      }
+      return on_cleanup(previous_state);
+    });
 
   node_->register_on_activate(
     std::bind(&ControllerInterfaceBase::on_activate, this, std::placeholders::_1));
