@@ -35,7 +35,7 @@ return_type ControllerInterfaceBase::init(
   {
     auto_declare<int>("update_rate", cm_update_rate);
     auto_declare<bool>("is_async", false);
-    auto_declare<bool>("thread_priority", 50);
+    auto_declare<int>("thread_priority", 50);
   }
   catch (const std::exception & e)
   {
