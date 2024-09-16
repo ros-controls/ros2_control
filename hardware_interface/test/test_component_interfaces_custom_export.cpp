@@ -69,7 +69,7 @@ class DummyActuatorDefault : public hardware_interface::ActuatorInterface
     return interfaces;
   }
 
-  std::vector<hardware_interface::InterfaceDescription> export_command_interface_descriptions()
+  std::vector<hardware_interface::InterfaceDescription> export_unlisted_command_interface_descriptions()
     override
   {
     std::vector<hardware_interface::InterfaceDescription> interfaces;
@@ -133,7 +133,7 @@ class DummySystemDefault : public hardware_interface::SystemInterface
     return interfaces;
   }
 
-  std::vector<hardware_interface::InterfaceDescription> export_command_interface_descriptions()
+  std::vector<hardware_interface::InterfaceDescription> export_unlisted_command_interface_descriptions()
     override
   {
     std::vector<hardware_interface::InterfaceDescription> interfaces;
