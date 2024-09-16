@@ -169,9 +169,6 @@ public:
    * Override this method to export custom StateInterfaces which are not defined in the URDF file.
    * Those interfaces will be added to the unlisted_state_interfaces_ map.
    *
-   *  Note method name is going to be changed to export_state_interfaces() as soon as the deprecated
-   * version is removed.
-   *
    * \return vector of descriptions to the unlisted StateInterfaces
    */
   virtual std::vector<hardware_interface::InterfaceDescription>
