@@ -73,7 +73,7 @@ const rclcpp_lifecycle::State & System::configure()
     switch (impl_->on_configure(impl_->get_lifecycle_state()))
     {
       case CallbackReturn::SUCCESS:
-              impl_->set_lifecycle_state(rclcpp_lifecycle::State(
+        impl_->set_lifecycle_state(rclcpp_lifecycle::State(
           lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, lifecycle_state_names::INACTIVE));
         break;
       case CallbackReturn::FAILURE:
