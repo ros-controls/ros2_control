@@ -137,8 +137,8 @@ Migration of unlisted Command-/StateInterfaces not defined in ``ros2_control`` X
 --------------------------------------------------------------------------------------
 If you want some unlisted ``Command-/StateInterfaces`` not included in the ``ros2_control`` XML-tag you can follow those steps:
 
-1. Override the ``virtual std::vector<hardware_interface::InterfaceDescription> export_command_interfaces_2()`` or ``virtual std::vector<hardware_interface::InterfaceDescription> export_state_interfaces_2()``
-2. Create the InterfaceDescription for each of the interfaces you want to create in the override ``export_command_interfaces_2()`` or ``export_state_interfaces_2()`` function, add it to a vector and return the vector:
+1. Override the ``virtual std::vector<hardware_interface::InterfaceDescription> export_unlisted_command_interfaces()`` or ``virtual std::vector<hardware_interface::InterfaceDescription> export_unlisted_state_interfaces()``
+2. Create the InterfaceDescription for each of the interfaces you want to create in the override ``export_unlisted_command_interfaces()`` or ``export_unlisted_state_interfaces()`` function, add it to a vector and return the vector:
 
   .. code-block:: c++
 
@@ -159,6 +159,6 @@ Custom export of Command-/StateInterfaces
 ----------------------------------------------
 In case the default implementation (``on_export_command_interfaces()`` or ``on_export_state_interfaces()`` ) for exporting the ``Command-/StateInterfaces`` is not enough you can override them. You should however consider the following things:
 
-* If you want to have unlisted interfaces available you need to call the ``export_command_interfaces_2()`` or ``export_state_interfaces_2()`` and add them to the ``unlisted_command_interfaces_`` or ``unlisted_state_interfaces_``.
-* Don't forget to store the created ``Command-/StateInterfaces`` internally as you only return ``shared_ptrs`` and the resource manager will not provide access to the created ``Command-/StateInterfaces`` for the hardware. So you must take care of storing them yourself.
+* If you want to have unlisted interfaces available you need to call the ``export_unlisted_command_interfaces()`` or ``export_unlisted_state_interfaces()`` and add them to the ``unlisted_command_interfaces_`` or ``unlisted_state_interfaces_``.
+* Don't forget to store the created ``Command-/StateInterfaces`` internally as you only return ``std::shared_ptr``s and the resource manager will not provide access to the created ``Command-/StateInterface``s for the hardware. So you must take care of storing them yourself.
 * Names must be unique!
