@@ -198,8 +198,7 @@ public:
     state_interfaces.reserve(
       unlisted_interface_descriptions.size() + sensor_state_interfaces_.size());
 
-    // add InterfaceDescriptions and create the StateInterfaces from the descriptions and add to
-    // maps.
+    // add InterfaceDescriptions and create StateInterfaces from the descriptions and add to maps.
     for (const auto & description : unlisted_interface_descriptions)
     {
       auto name = description.get_name();
@@ -212,8 +211,7 @@ public:
 
     for (const auto & [name, descr] : sensor_state_interfaces_)
     {
-      // TODO(Manuel) maybe check for duplicates otherwise only the first appearance of "name" is
-      // inserted
+      // TODO(Manuel) check for duplicates otherwise only the first appearance of "name" is inserted
       auto state_interface = std::make_shared<StateInterface>(descr);
       sensor_states_map_.insert(std::make_pair(name, state_interface));
       sensor_states_.push_back(state_interface);
