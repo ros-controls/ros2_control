@@ -225,6 +225,24 @@ void extract_command_interfaces_for_controller(
     request_interface_list.end(), command_interface_names.begin(), command_interface_names.end());
 }
 
+void get_controller_list_command_interfaces(
+  const std::vector<std::string> & controllers_list,
+  const std::vector<controller_manager::ControllerSpec> & controllers_spec,
+  const hardware_interface::ResourceManager & resource_manager,
+  std::vector<std::string> & request_interface_list)
+{
+  for (const auto & controller_name : controllers_list)
+  {
+    auto found_it = std::find_if(
+      controllers_spec.begin(), controllers_spec.end(),
+      std::bind(controller_name_compare, std::placeholders::_1, controller_name));
+    if (found_it != controllers_spec.end())
+    {
+      extract_command_interfaces_for_controller(
+        *found_it, resource_manager, request_interface_list);
+    }
+  }
+}
 }  // namespace
 
 namespace controller_manager
