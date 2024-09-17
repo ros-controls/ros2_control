@@ -2372,6 +2372,21 @@ controller_interface::return_type ControllerManager::update(
       get_logger(), "Deactivating following controllers as their update resulted in an error :%s",
       failed_controllers.c_str());
 
+    std::vector<std::string> failed_controller_interfaces;
+    failed_controller_interfaces.reserve(500);
+    get_controller_list_command_interfaces(
+      failed_controllers_list, rt_controller_list, *resource_manager_,
+      failed_controller_interfaces);
+    if (!failed_controller_interfaces.empty())
+    {
+      if (!(resource_manager_->prepare_command_mode_switch({}, failed_controller_interfaces) &&
+            resource_manager_->perform_command_mode_switch({}, failed_controller_interfaces)))
+      {
+        RCLCPP_ERROR(
+          get_logger(),
+          "Error while attempting mode switch when deactivating controllers in update cycle!");
+      }
+    }
     deactivate_controllers(rt_controller_list, failed_controllers_list);
   }
 
