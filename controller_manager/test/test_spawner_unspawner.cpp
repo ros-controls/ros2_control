@@ -33,6 +33,7 @@ const char coveragepy_script[] = "python3 -m coverage run --append --branch";
 using namespace std::chrono_literals;
 class TestLoadController : public ControllerManagerFixture<controller_manager::ControllerManager>
 {
+public:
   void SetUp() override
   {
     ControllerManagerFixture::SetUp();
@@ -41,9 +42,9 @@ class TestLoadController : public ControllerManagerFixture<controller_manager::C
       std::chrono::milliseconds(10),
       [&]()
       {
-        cm_->read(TIME, PERIOD);
-        cm_->update(TIME, PERIOD);
-        cm_->write(TIME, PERIOD);
+        cm_->read(time_, PERIOD);
+        cm_->update(time_, PERIOD);
+        cm_->write(time_, PERIOD);
       });
 
     update_executor_ =
@@ -236,11 +237,75 @@ TEST_F(TestLoadController, spawner_test_type_in_arg)
   ASSERT_EQ(ctrl_2.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
 }
 
+TEST_F(TestLoadController, spawner_test_type_in_params_file)
+{
+  const std::string test_file_path = ament_index_cpp::get_package_prefix("controller_manager") +
+                                     "/test/test_controller_spawner_with_type.yaml";
+
+  ControllerManagerRunner cm_runner(this);
+  // Provide controller type via the parsed file
+  EXPECT_EQ(
+    call_spawner(
+      "ctrl_with_parameters_and_type chainable_ctrl_with_parameters_and_type --load-only -c "
+      "test_controller_manager -p " +
+      test_file_path),
+    0);
+
+  ASSERT_EQ(cm_->get_loaded_controllers().size(), 2ul);
+
+  auto ctrl_with_parameters_and_type = cm_->get_loaded_controllers()[0];
+  ASSERT_EQ(ctrl_with_parameters_and_type.info.name, "ctrl_with_parameters_and_type");
+  ASSERT_EQ(ctrl_with_parameters_and_type.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
+  ASSERT_EQ(
+    ctrl_with_parameters_and_type.c->get_state().id(),
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  ASSERT_EQ(
+    cm_->get_parameter("ctrl_with_parameters_and_type.params_file").as_string(), test_file_path);
+
+  auto chain_ctrl_with_parameters_and_type = cm_->get_loaded_controllers()[1];
+  ASSERT_EQ(
+    chain_ctrl_with_parameters_and_type.info.name, "chainable_ctrl_with_parameters_and_type");
+  ASSERT_EQ(
+    chain_ctrl_with_parameters_and_type.info.type,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  ASSERT_EQ(
+    chain_ctrl_with_parameters_and_type.c->get_state().id(),
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  ASSERT_EQ(
+    cm_->get_parameter("chainable_ctrl_with_parameters_and_type.params_file").as_string(),
+    test_file_path);
+
+  EXPECT_EQ(
+    call_spawner(
+      "ctrl_with_parameters_and_no_type -c test_controller_manager --controller-manager-timeout "
+      "1.0 -p " +
+      test_file_path),
+    256);
+  // Will still be same as the current call will fail
+  ASSERT_EQ(cm_->get_loaded_controllers().size(), 2ul);
+
+  auto ctrl_1 = cm_->get_loaded_controllers()[0];
+  ASSERT_EQ(ctrl_1.info.name, "ctrl_with_parameters_and_type");
+  ASSERT_EQ(ctrl_1.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
+  ASSERT_EQ(ctrl_1.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  ASSERT_EQ(
+    cm_->get_parameter("ctrl_with_parameters_and_type.params_file").as_string(), test_file_path);
+
+  auto ctrl_2 = cm_->get_loaded_controllers()[1];
+  ASSERT_EQ(ctrl_2.info.name, "chainable_ctrl_with_parameters_and_type");
+  ASSERT_EQ(ctrl_2.info.type, test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  ASSERT_EQ(ctrl_2.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  ASSERT_EQ(
+    cm_->get_parameter("chainable_ctrl_with_parameters_and_type.params_file").as_string(),
+    test_file_path);
+}
+
 TEST_F(TestLoadController, unload_on_kill)
 {
   // Launch spawner with unload on kill
   // timeout command will kill it after the specified time with signal SIGINT
   ControllerManagerRunner cm_runner(this);
+  cm_->set_parameter(rclcpp::Parameter("ctrl_3.type", test_controller::TEST_CONTROLLER_CLASS_NAME));
   std::stringstream ss;
   ss << "timeout --signal=INT 5 "
      << std::string(coveragepy_script) +
@@ -552,6 +617,8 @@ TEST_F(TestLoadControllerWithNamespacedCM, spawner_test_type_in_params_file)
   ASSERT_EQ(
     ctrl_with_parameters_and_type.c->get_state().id(),
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  ASSERT_EQ(
+    cm_->get_parameter("ctrl_with_parameters_and_type.params_file").as_string(), test_file_path);
 
   auto chain_ctrl_with_parameters_and_type = cm_->get_loaded_controllers()[1];
   ASSERT_EQ(
@@ -562,6 +629,9 @@ TEST_F(TestLoadControllerWithNamespacedCM, spawner_test_type_in_params_file)
   ASSERT_EQ(
     chain_ctrl_with_parameters_and_type.c->get_state().id(),
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  ASSERT_EQ(
+    cm_->get_parameter("chainable_ctrl_with_parameters_and_type.params_file").as_string(),
+    test_file_path);
 
   EXPECT_EQ(
     call_spawner(
@@ -576,11 +646,16 @@ TEST_F(TestLoadControllerWithNamespacedCM, spawner_test_type_in_params_file)
   ASSERT_EQ(ctrl_1.info.name, "ctrl_with_parameters_and_type");
   ASSERT_EQ(ctrl_1.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
   ASSERT_EQ(ctrl_1.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  ASSERT_EQ(
+    cm_->get_parameter("ctrl_with_parameters_and_type.params_file").as_string(), test_file_path);
 
   auto ctrl_2 = cm_->get_loaded_controllers()[1];
   ASSERT_EQ(ctrl_2.info.name, "chainable_ctrl_with_parameters_and_type");
   ASSERT_EQ(ctrl_2.info.type, test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
   ASSERT_EQ(ctrl_2.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  ASSERT_EQ(
+    cm_->get_parameter("chainable_ctrl_with_parameters_and_type.params_file").as_string(),
+    test_file_path);
 }
 
 TEST_F(
@@ -628,6 +703,8 @@ TEST_F(
   ASSERT_EQ(
     ctrl_with_parameters_and_type.c->get_state().id(),
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  ASSERT_EQ(
+    cm_->get_parameter("ctrl_with_parameters_and_type.params_file").as_string(), test_file_path);
 
   auto chain_ctrl_with_parameters_and_type = cm_->get_loaded_controllers()[1];
   ASSERT_EQ(
@@ -638,6 +715,9 @@ TEST_F(
   ASSERT_EQ(
     chain_ctrl_with_parameters_and_type.c->get_state().id(),
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  ASSERT_EQ(
+    cm_->get_parameter("chainable_ctrl_with_parameters_and_type.params_file").as_string(),
+    test_file_path);
 
   EXPECT_EQ(
     call_spawner(
@@ -652,9 +732,14 @@ TEST_F(
   ASSERT_EQ(ctrl_1.info.name, "ctrl_with_parameters_and_type");
   ASSERT_EQ(ctrl_1.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
   ASSERT_EQ(ctrl_1.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  ASSERT_EQ(
+    cm_->get_parameter("ctrl_with_parameters_and_type.params_file").as_string(), test_file_path);
 
   auto ctrl_2 = cm_->get_loaded_controllers()[1];
   ASSERT_EQ(ctrl_2.info.name, "chainable_ctrl_with_parameters_and_type");
   ASSERT_EQ(ctrl_2.info.type, test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
   ASSERT_EQ(ctrl_2.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  ASSERT_EQ(
+    cm_->get_parameter("chainable_ctrl_with_parameters_and_type.params_file").as_string(),
+    test_file_path);
 }
