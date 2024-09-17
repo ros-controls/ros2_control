@@ -2278,6 +2278,8 @@ void ControllerManager::read(const rclcpp::Time & time, const rclcpp::Duration &
     std::vector<std::string> stop_request = {};
     std::string failed_hardware_string;
     failed_hardware_string.reserve(500);
+    std::vector<std::string> failed_controller_interfaces;
+    failed_controller_interfaces.reserve(500);
     // Determine controllers to stop
     for (const auto & hardware_name : failed_hardware_names)
     {
@@ -2302,8 +2304,21 @@ void ControllerManager::read(const rclcpp::Time & time, const rclcpp::Duration &
       "Deactivating following controllers as their hardware components read cycle resulted in an "
       "error: [ %s]",
       stop_request_string.c_str());
+
     std::vector<ControllerSpec> & rt_controller_list =
       rt_controllers_wrapper_.update_and_get_used_by_rt_list();
+    get_controller_list_command_interfaces(
+      stop_request, rt_controller_list, *resource_manager_, failed_controller_interfaces);
+    if (!failed_controller_interfaces.empty())
+    {
+      if (!(resource_manager_->prepare_command_mode_switch({}, failed_controller_interfaces) &&
+            resource_manager_->perform_command_mode_switch({}, failed_controller_interfaces)))
+      {
+        RCLCPP_ERROR(
+          get_logger(),
+          "Error while performing mode switch when deactivating controllers in read cycle!");
+      }
+    }
     deactivate_controllers(rt_controller_list, stop_request);
     // TODO(destogl): do auto-start of broadcasters
   }
