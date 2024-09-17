@@ -2501,6 +2501,26 @@ controller_interface::return_type ControllerManager::update(
       RCLCPP_ERROR(
         get_logger(), "Activating fallback controllers : [ %s]", controllers_string.c_str());
     }
+    std::vector<std::string> failed_controller_interfaces, fallback_controller_interfaces;
+    failed_controller_interfaces.reserve(500);
+    get_controller_list_command_interfaces(
+      failed_controllers_list, rt_controller_list, *resource_manager_,
+      failed_controller_interfaces);
+    get_controller_list_command_interfaces(
+      cumulative_fallback_controllers, rt_controller_list, *resource_manager_,
+      fallback_controller_interfaces);
+    if (!failed_controller_interfaces.empty())
+    {
+      if (!(resource_manager_->prepare_command_mode_switch(
+              fallback_controller_interfaces, failed_controller_interfaces) &&
+            resource_manager_->perform_command_mode_switch(
+              fallback_controller_interfaces, failed_controller_interfaces)))
+      {
+        RCLCPP_ERROR(
+          get_logger(),
+          "Error while attempting mode switch when deactivating controllers in update cycle!");
+      }
+    }
     deactivate_controllers(rt_controller_list, active_controllers_using_interfaces);
     if (!cumulative_fallback_controllers.empty())
     {
