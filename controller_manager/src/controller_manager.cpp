@@ -205,6 +205,26 @@ void get_active_controllers_using_command_interfaces_of_controller(
   }
 }
 
+void extract_command_interfaces_for_controller(
+  const controller_manager::ControllerSpec & ctrl,
+  const hardware_interface::ResourceManager & resource_manager,
+  std::vector<std::string> & request_interface_list)
+{
+  auto command_interface_config = ctrl.c->command_interface_configuration();
+  std::vector<std::string> command_interface_names = {};
+  if (command_interface_config.type == controller_interface::interface_configuration_type::ALL)
+  {
+    command_interface_names = resource_manager.available_command_interfaces();
+  }
+  if (
+    command_interface_config.type == controller_interface::interface_configuration_type::INDIVIDUAL)
+  {
+    command_interface_names = command_interface_config.names;
+  }
+  request_interface_list.insert(
+    request_interface_list.end(), command_interface_names.begin(), command_interface_names.end());
+}
+
 }  // namespace
 
 namespace controller_manager
@@ -1306,33 +1326,15 @@ controller_interface::return_type ControllerManager::switch_controller(
       activate_request_.erase(activate_list_it);
     }
 
-    const auto extract_interfaces_for_controller =
-      [this](const ControllerSpec ctrl, std::vector<std::string> & request_interface_list)
-    {
-      auto command_interface_config = ctrl.c->command_interface_configuration();
-      std::vector<std::string> command_interface_names = {};
-      if (command_interface_config.type == controller_interface::interface_configuration_type::ALL)
-      {
-        command_interface_names = resource_manager_->available_command_interfaces();
-      }
-      if (
-        command_interface_config.type ==
-        controller_interface::interface_configuration_type::INDIVIDUAL)
-      {
-        command_interface_names = command_interface_config.names;
-      }
-      request_interface_list.insert(
-        request_interface_list.end(), command_interface_names.begin(),
-        command_interface_names.end());
-    };
-
     if (in_activate_list)
     {
-      extract_interfaces_for_controller(controller, activate_command_interface_request_);
+      extract_command_interfaces_for_controller(
+        controller, *resource_manager_, activate_command_interface_request_);
     }
     if (in_deactivate_list)
     {
-      extract_interfaces_for_controller(controller, deactivate_command_interface_request_);
+      extract_command_interfaces_for_controller(
+        controller, *resource_manager_, deactivate_command_interface_request_);
     }
 
     // cache mapping between hardware and controllers for stopping when read/write error happens
