@@ -104,13 +104,26 @@ public:
   CONTROLLER_INTERFACE_PUBLIC
   virtual InterfaceConfiguration state_interface_configuration() const = 0;
 
+  /// Method that assigns the Loaned interfaces to the controller.
+  /**
+   * Method used by the controller_manager to assign the interfaces to the controller.
+   * \note When this method is overridden, the user has to also implement the `release_interfaces`
+   * method by overriding it to release the interfaces.
+   *
+   * \param[in] command_interfaces vector of command interfaces to be assigned to the controller.
+   * \param[in] state_interfaces vector of state interfaces to be assigned to the controller.
+   */
   CONTROLLER_INTERFACE_PUBLIC
-  void assign_interfaces(
+  virtual void assign_interfaces(
     std::vector<hardware_interface::LoanedCommandInterface> && command_interfaces,
     std::vector<hardware_interface::LoanedStateInterface> && state_interfaces);
 
+  /// Method that releases the Loaned interfaces from the controller.
+  /**
+   * Method used by the controller_manager to release the interfaces from the controller.
+   */
   CONTROLLER_INTERFACE_PUBLIC
-  void release_interfaces();
+  virtual void release_interfaces();
 
   CONTROLLER_INTERFACE_PUBLIC
   return_type init(

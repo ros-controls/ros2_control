@@ -28,7 +28,7 @@ class ListHardwareInterfacesVerb(VerbExtension):
         add_controller_mgr_parsers(parser)
 
     def main(self, *, args):
-        with NodeStrategy(args) as node:
+        with NodeStrategy(args).direct_node as node:
             hardware_interfaces = list_hardware_interfaces(node, args.controller_manager)
             command_interfaces = sorted(
                 hardware_interfaces.command_interfaces, key=lambda hwi: hwi.name
