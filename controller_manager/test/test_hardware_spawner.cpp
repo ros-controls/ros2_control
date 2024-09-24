@@ -28,11 +28,51 @@
 using ::testing::_;
 using ::testing::Return;
 
-using namespace std::chrono_literals;
-class TestHardwareSpawner : public ControllerManagerFixture<controller_manager::ControllerManager>
+class RMServiceCaller
 {
 public:
-  TestHardwareSpawner() : ControllerManagerFixture<controller_manager::ControllerManager>()
+  RMServiceCaller(const std::string & cm_name)
+  {
+    list_srv_node_ = std::make_shared<rclcpp::Node>("list_srv_client");
+    srv_executor_.add_node(list_srv_node_);
+    list_hw_components_client_ =
+      list_srv_node_->create_client<controller_manager_msgs::srv::ListHardwareComponents>(
+        cm_name + "/list_hardware_components");
+  }
+
+  lifecycle_msgs::msg::State get_component_state(const std::string & component_name)
+  {
+    auto request =
+      std::make_shared<controller_manager_msgs::srv::ListHardwareComponents::Request>();
+    EXPECT_TRUE(list_hw_components_client_->wait_for_service(std::chrono::milliseconds(500)));
+    auto future = list_hw_components_client_->async_send_request(request);
+    EXPECT_EQ(srv_executor_.spin_until_future_complete(future), rclcpp::FutureReturnCode::SUCCESS);
+    auto result = future.get();
+
+    auto it = std::find_if(
+      std::begin(result->component), std::end(result->component),
+      [&component_name](const auto & cmp) { return cmp.name == component_name; });
+
+    EXPECT_NE(it, std::end(result->component));
+
+    return it->state;
+  };
+
+protected:
+  rclcpp::executors::SingleThreadedExecutor srv_executor_;
+  rclcpp::Node::SharedPtr list_srv_node_;
+  rclcpp::Client<controller_manager_msgs::srv::ListHardwareComponents>::SharedPtr
+    list_hw_components_client_;
+};
+
+using namespace std::chrono_literals;
+class TestHardwareSpawner : public ControllerManagerFixture<controller_manager::ControllerManager>,
+                            public RMServiceCaller
+{
+public:
+  TestHardwareSpawner()
+  : ControllerManagerFixture<controller_manager::ControllerManager>(),
+    RMServiceCaller(TEST_CM_NAME)
   {
     cm_->set_parameter(
       rclcpp::Parameter("hardware_components_initial_state.unconfigured", "TestSystemHardware"));
@@ -95,16 +135,21 @@ TEST_F(TestHardwareSpawner, spawner_non_exising_hardware_component)
 TEST_F(TestHardwareSpawner, set_component_to_configured_state_and_back_to_activated)
 {
   EXPECT_EQ(call_spawner("TestSystemHardware --configure -c test_controller_manager"), 0);
+  EXPECT_EQ(
+    get_component_state("TestSystemHardware").id,
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
 
   EXPECT_EQ(call_spawner("TestSystemHardware --activate -c test_controller_manager"), 0);
+  EXPECT_EQ(
+    get_component_state("TestSystemHardware").id, lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
 }
 
 class TestHardwareSpawnerWithoutRobotDescription
-: public ControllerManagerFixture<controller_manager::ControllerManager>
+: public ControllerManagerFixture<controller_manager::ControllerManager>, public RMServiceCaller
 {
 public:
   TestHardwareSpawnerWithoutRobotDescription()
-  : ControllerManagerFixture<controller_manager::ControllerManager>("")
+  : ControllerManagerFixture<controller_manager::ControllerManager>(""), RMServiceCaller(TEST_CM_NAME)
   {
     cm_->set_parameter(rclcpp::Parameter(
       "hardware_components_initial_state.unconfigured",
@@ -174,15 +219,20 @@ TEST_F(TestHardwareSpawnerWithoutRobotDescription, spawner_with_later_load_of_ro
     call_spawner(
       "TestSystemHardware --configure -c test_controller_manager --controller-manager-timeout 2.5"),
     0);
+  EXPECT_EQ(
+    get_component_state("TestSystemHardware").id,
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
 }
 
 class TestHardwareSpawnerWithNamespacedCM
-: public ControllerManagerFixture<controller_manager::ControllerManager>
+: public ControllerManagerFixture<controller_manager::ControllerManager>,
+  public RMServiceCaller
 {
 public:
   TestHardwareSpawnerWithNamespacedCM()
   : ControllerManagerFixture<controller_manager::ControllerManager>(
-      ros2_control_test_assets::minimal_robot_urdf, "foo_namespace")
+      ros2_control_test_assets::minimal_robot_urdf, "foo_namespace"),
+    RMServiceCaller("foo_namespace/" + std::string(TEST_CM_NAME))
   {
     cm_->set_parameter(
       rclcpp::Parameter("hardware_components_initial_state.unconfigured", "TestSystemHardware"));
@@ -224,4 +274,8 @@ TEST_F(TestHardwareSpawnerWithNamespacedCM, set_component_to_configured_state_cm
     call_spawner("TestSystemHardware --configure -c test_controller_manager --ros-args -r "
                  "__ns:=/foo_namespace"),
     0);
+
+  EXPECT_EQ(
+    get_component_state("TestSystemHardware").id,
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
 }
