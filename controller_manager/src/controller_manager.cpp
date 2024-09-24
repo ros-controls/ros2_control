@@ -2735,6 +2735,16 @@ controller_interface::return_type ControllerManager::check_preceeding_controller
 void ControllerManager::controller_activity_diagnostic_callback(
   diagnostic_updater::DiagnosticStatusWrapper & stat)
 {
+  bool atleast_one_hw_active = false;
+  const auto hw_components_info = resource_manager_->get_components_status();
+  for (const auto & [component_name, component_info] : hw_components_info)
+  {
+    if (component_info.state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+    {
+      atleast_one_hw_active = true;
+      break;
+    }
+  }
   // lock controllers
   std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
   const std::vector<ControllerSpec> & controllers = rt_controllers_wrapper_.get_updated_list(guard);
@@ -2748,13 +2758,25 @@ void ControllerManager::controller_activity_diagnostic_callback(
     stat.add(controllers[i].info.name, controllers[i].c->get_lifecycle_state().label());
   }
 
-  if (all_active)
+  if (!atleast_one_hw_active)
   {
-    stat.summary(diagnostic_msgs::msg::DiagnosticStatus::OK, "All controllers are active");
+    stat.summary(
+      diagnostic_msgs::msg::DiagnosticStatus::ERROR,
+      "No hardware components are currently active to activate controllers");
   }
   else
   {
-    stat.summary(diagnostic_msgs::msg::DiagnosticStatus::OK, "Not all controllers are active");
+    if (controllers.empty())
+    {
+      stat.summary(
+        diagnostic_msgs::msg::DiagnosticStatus::WARN, "No controllers are currently loaded");
+    }
+    else
+    {
+      stat.summary(
+        diagnostic_msgs::msg::DiagnosticStatus::OK,
+        all_active ? "All controllers are active" : "Not all controllers are active");
+    }
   }
 }
 
