@@ -31,7 +31,7 @@ using ::testing::Return;
 class RMServiceCaller
 {
 public:
-  RMServiceCaller(const std::string & cm_name)
+  explicit RMServiceCaller(const std::string & cm_name)
   {
     list_srv_node_ = std::make_shared<rclcpp::Node>("list_srv_client");
     srv_executor_.add_node(list_srv_node_);
@@ -71,8 +71,7 @@ class TestHardwareSpawner : public ControllerManagerFixture<controller_manager::
 {
 public:
   TestHardwareSpawner()
-  : ControllerManagerFixture<controller_manager::ControllerManager>(),
-    RMServiceCaller(TEST_CM_NAME)
+  : ControllerManagerFixture<controller_manager::ControllerManager>(), RMServiceCaller(TEST_CM_NAME)
   {
     cm_->set_parameter(
       rclcpp::Parameter("hardware_components_initial_state.unconfigured", "TestSystemHardware"));
@@ -145,11 +144,13 @@ TEST_F(TestHardwareSpawner, set_component_to_configured_state_and_back_to_activa
 }
 
 class TestHardwareSpawnerWithoutRobotDescription
-: public ControllerManagerFixture<controller_manager::ControllerManager>, public RMServiceCaller
+: public ControllerManagerFixture<controller_manager::ControllerManager>,
+  public RMServiceCaller
 {
 public:
   TestHardwareSpawnerWithoutRobotDescription()
-  : ControllerManagerFixture<controller_manager::ControllerManager>(""), RMServiceCaller(TEST_CM_NAME)
+  : ControllerManagerFixture<controller_manager::ControllerManager>(""),
+    RMServiceCaller(TEST_CM_NAME)
   {
     cm_->set_parameter(rclcpp::Parameter(
       "hardware_components_initial_state.unconfigured",
