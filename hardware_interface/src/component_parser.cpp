@@ -31,6 +31,8 @@
 namespace
 {
 constexpr const auto kRobotTag = "robot";
+constexpr const auto kSDFTag = "sdf";
+constexpr const auto kModelTag = "model";
 constexpr const auto kROS2ControlTag = "ros2_control";
 constexpr const auto kHardwareTag = "hardware";
 constexpr const auto kPluginNameTag = "plugin";
@@ -812,15 +814,21 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
       "invalid URDF passed in to robot parser: " + std::string(doc.ErrorStr()));
   }
 
-  // Find robot tag
+  // Find robot or sdf tag
   const tinyxml2::XMLElement * robot_it = doc.RootElement();
+  const tinyxml2::XMLElement * ros2_control_it;
 
-  if (std::string(kRobotTag) != robot_it->Name())
+  if (std::string(kRobotTag) == robot_it->Name())
   {
-    throw std::runtime_error("the robot tag is not root element in URDF");
+    ros2_control_it = robot_it->FirstChildElement(kROS2ControlTag);
+  } else if (std::string(kSDFTag) == robot_it->Name()) {
+    //find model tag in sdf tag
+    const tinyxml2::XMLElement * model_it = robot_it->FirstChildElement(kModelTag);
+    ros2_control_it = model_it->FirstChildElement(kROS2ControlTag);
+  } else {
+    throw std::runtime_error("the robot tag is not root element in URDF or sdf tag is not root element in SDF");
   }
-
-  const tinyxml2::XMLElement * ros2_control_it = robot_it->FirstChildElement(kROS2ControlTag);
+  
   if (!ros2_control_it)
   {
     throw std::runtime_error("no " + std::string(kROS2ControlTag) + " tag");
