@@ -2819,7 +2819,7 @@ void ControllerManager::hardware_components_diagnostic_callback(
     if (!atleast_one_hw_active)
     {
       stat.summary(
-        diagnostic_msgs::msg::DiagnosticStatus::ERROR,
+        diagnostic_msgs::msg::DiagnosticStatus::WARN,
         "No hardware components are currently active");
     }
     else
