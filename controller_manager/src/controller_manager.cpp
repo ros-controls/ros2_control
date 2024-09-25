@@ -281,6 +281,9 @@ void ControllerManager::init_controller_manager()
   diagnostics_updater_.setHardwareID("ros2_control");
   diagnostics_updater_.add(
     "Controllers Activity", this, &ControllerManager::controller_activity_diagnostic_callback);
+  diagnostics_updater_.add(
+    "Hardware Components Activity", this,
+    &ControllerManager::hardware_components_diagnostic_callback);
 }
 
 void ControllerManager::robot_description_callback(const std_msgs::msg::String & robot_description)
@@ -2776,6 +2779,52 @@ void ControllerManager::controller_activity_diagnostic_callback(
       stat.summary(
         diagnostic_msgs::msg::DiagnosticStatus::OK,
         all_active ? "All controllers are active" : "Not all controllers are active");
+    }
+  }
+}
+
+void ControllerManager::hardware_components_diagnostic_callback(
+  diagnostic_updater::DiagnosticStatusWrapper & stat)
+{
+  bool all_active = true;
+  bool atleast_one_hw_active = false;
+  const auto hw_components_info = resource_manager_->get_components_status();
+  for (const auto & [component_name, component_info] : hw_components_info)
+  {
+    stat.add(component_name, component_info.state.label());
+    if (component_info.state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+    {
+      all_active = false;
+    }
+    else
+    {
+      atleast_one_hw_active = true;
+    }
+  }
+  if (!is_resource_manager_initialized())
+  {
+    stat.summary(
+      diagnostic_msgs::msg::DiagnosticStatus::ERROR, "Resource manager is not yet initialized!");
+  }
+  else if (hw_components_info.empty())
+  {
+    stat.summary(
+      diagnostic_msgs::msg::DiagnosticStatus::ERROR, "No hardware components are loaded!");
+  }
+  else
+  {
+    if (!atleast_one_hw_active)
+    {
+      stat.summary(
+        diagnostic_msgs::msg::DiagnosticStatus::ERROR,
+        "No hardware components are currently active");
+    }
+    else
+    {
+      stat.summary(
+        diagnostic_msgs::msg::DiagnosticStatus::OK, all_active
+                                                      ? "All hardware components are active"
+                                                      : "Not all hardware components are active");
     }
   }
 }
