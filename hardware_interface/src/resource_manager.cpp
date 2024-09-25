@@ -672,7 +672,6 @@ public:
 
       hardware_info_map_[hardware.get_name()].command_interfaces =
         add_command_interfaces(interfaces);
-      // TODO(Manuel) END: for backward compatibility
     }
     catch (const std::exception & ex)
     {

@@ -326,7 +326,6 @@ class DummySensorDefault : public hardware_interface::SensorInterface
       return hardware_interface::CallbackReturn::ERROR;
     }
 
-    // We hardcode the info
     return CallbackReturn::SUCCESS;
   }
 
@@ -524,7 +523,6 @@ class DummySystemDefault : public hardware_interface::SystemInterface
     {
       return hardware_interface::CallbackReturn::ERROR;
     }
-    // We hardcode the info
     return CallbackReturn::SUCCESS;
   }
 

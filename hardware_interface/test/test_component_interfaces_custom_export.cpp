@@ -38,8 +38,6 @@
 #include "ros2_control_test_assets/descriptions.hpp"
 #include "test_components.hpp"
 
-// Values to send over command interface to trigger error in write and read methods
-
 namespace
 {
 const auto TIME = rclcpp::Time(0);
@@ -57,7 +55,8 @@ class DummyActuatorDefault : public hardware_interface::ActuatorInterface
 {
   std::string get_name() const override { return "DummyActuatorDefault"; }
 
-  std::vector<hardware_interface::InterfaceDescription> export_unlisted_state_interface_descriptions()
+  std::vector<hardware_interface::InterfaceDescription>
+  export_unlisted_state_interface_descriptions()
     override
   {
     std::vector<hardware_interface::InterfaceDescription> interfaces;
@@ -69,7 +68,8 @@ class DummyActuatorDefault : public hardware_interface::ActuatorInterface
     return interfaces;
   }
 
-  std::vector<hardware_interface::InterfaceDescription> export_unlisted_command_interface_descriptions()
+  std::vector<hardware_interface::InterfaceDescription>
+  export_unlisted_command_interface_descriptions()
     override
   {
     std::vector<hardware_interface::InterfaceDescription> interfaces;
@@ -98,7 +98,8 @@ class DummySensorDefault : public hardware_interface::SensorInterface
 {
   std::string get_name() const override { return "DummySensorDefault"; }
 
-  std::vector<hardware_interface::InterfaceDescription> export_unlisted_state_interface_descriptions()
+  std::vector<hardware_interface::InterfaceDescription>
+  export_unlisted_state_interface_descriptions()
     override
   {
     std::vector<hardware_interface::InterfaceDescription> interfaces;
@@ -121,7 +122,8 @@ class DummySystemDefault : public hardware_interface::SystemInterface
 {
   std::string get_name() const override { return "DummySystemDefault"; }
 
-  std::vector<hardware_interface::InterfaceDescription> export_unlisted_state_interface_descriptions()
+  std::vector<hardware_interface::InterfaceDescription>
+  export_unlisted_state_interface_descriptions()
     override
   {
     std::vector<hardware_interface::InterfaceDescription> interfaces;
@@ -133,7 +135,8 @@ class DummySystemDefault : public hardware_interface::SystemInterface
     return interfaces;
   }
 
-  std::vector<hardware_interface::InterfaceDescription> export_unlisted_command_interface_descriptions()
+  std::vector<hardware_interface::InterfaceDescription>
+  export_unlisted_command_interface_descriptions()
     override
   {
     std::vector<hardware_interface::InterfaceDescription> interfaces;
