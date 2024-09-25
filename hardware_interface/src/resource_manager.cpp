@@ -609,7 +609,7 @@ public:
   void import_state_interfaces(HardwareT & hardware)
   {
     std::vector<StateInterface::SharedPtr> interfaces = hardware.export_state_interfaces();
-    const auto interface_names = add_state_interfaces(interface);
+    const auto interface_names = add_state_interfaces(interfaces);
 
     RCLCPP_WARN(
       get_logger(),
