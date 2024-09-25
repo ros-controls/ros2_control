@@ -608,25 +608,13 @@ public:
   template <class HardwareT>
   void import_state_interfaces(HardwareT & hardware)
   {
-    std::vector<std::string> interface_names;
     std::vector<StateInterface::SharedPtr> interfaces = hardware.export_state_interfaces();
+    const auto interface_names = add_state_interfaces(interface);
 
-    interface_names.reserve(interfaces.size());
-    for (auto const & interface : interfaces)
-    {
-      try
-      {
-        interface_names.push_back(add_state_interface(interface));
-      }
-      // We don't want to crash during runtime because a StateInterface could not be added
-      catch (const std::exception & e)
-      {
-        RCLCPP_WARN(
-          get_logger(),
-          "Exception occurred while importing state interfaces for the hardware '%s' : %s",
-          hardware.get_name().c_str(), e.what());
-      }
-    }
+    RCLCPP_WARN(
+      get_logger(),
+      "Importing state interfaces for the hardware '%s' returned no state interfaces.",
+      hardware.get_name().c_str());
 
     hardware_info_map_[hardware.get_name()].state_interfaces = interface_names;
     available_state_interfaces_.reserve(
