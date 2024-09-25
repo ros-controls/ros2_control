@@ -16,6 +16,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   rclcpp
   realtime_tools
   std_msgs
+  libstatistics_collector
 )
 
 find_package(ament_cmake REQUIRED)

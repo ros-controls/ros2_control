@@ -24,6 +24,7 @@
 #include <vector>
 #include "controller_interface/controller_interface_base.hpp"
 #include "hardware_interface/controller_info.hpp"
+#include "libstatistics_collector/moving_average_statistics/moving_average.hpp"
 
 namespace controller_manager
 {
@@ -38,6 +39,8 @@ struct ControllerSpec
   hardware_interface::ControllerInfo info;
   controller_interface::ControllerInterfaceBaseSharedPtr c;
   std::shared_ptr<rclcpp::Time> last_update_cycle_time;
+  std::shared_ptr<libstatistics_collector::moving_average_statistics::MovingAverageStatistics>
+    statistics;
 };
 
 struct ControllerChainSpec
