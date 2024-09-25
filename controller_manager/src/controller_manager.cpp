@@ -284,6 +284,9 @@ void ControllerManager::init_controller_manager()
   diagnostics_updater_.add(
     "Hardware Components Activity", this,
     &ControllerManager::hardware_components_diagnostic_callback);
+  diagnostics_updater_.add(
+    "Controller Manager Activity", this,
+    &ControllerManager::controller_manager_diagnostic_callback);
 }
 
 void ControllerManager::robot_description_callback(const std_msgs::msg::String & robot_description)
@@ -2825,6 +2828,30 @@ void ControllerManager::hardware_components_diagnostic_callback(
         diagnostic_msgs::msg::DiagnosticStatus::OK, all_active
                                                       ? "All hardware components are active"
                                                       : "Not all hardware components are active");
+    }
+  }
+}
+
+void ControllerManager::controller_manager_diagnostic_callback(
+  diagnostic_updater::DiagnosticStatusWrapper & stat)
+{
+  stat.add("update_rate", std::to_string(get_update_rate()));
+  if (is_resource_manager_initialized())
+  {
+    stat.summary(diagnostic_msgs::msg::DiagnosticStatus::OK, "Controller Manager is running");
+  }
+  else
+  {
+    if (robot_description_.empty())
+    {
+      stat.summary(
+        diagnostic_msgs::msg::DiagnosticStatus::WARN, "Waiting for robot description....");
+    }
+    else
+    {
+      stat.summary(
+        diagnostic_msgs::msg::DiagnosticStatus::ERROR,
+        "Resource Manager is not initialized properly!");
     }
   }
 }

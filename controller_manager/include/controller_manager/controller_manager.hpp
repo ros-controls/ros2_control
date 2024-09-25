@@ -445,6 +445,8 @@ private:
 
   void hardware_components_diagnostic_callback(diagnostic_updater::DiagnosticStatusWrapper & stat);
 
+  void controller_manager_diagnostic_callback(diagnostic_updater::DiagnosticStatusWrapper & stat);
+
   /**
    * @brief determine_controller_node_options - A method that retrieves the controller defined node
    * options and adapts them, based on if there is a params file to be loaded or the use_sim_time
