@@ -160,5 +160,5 @@ Custom export of Command-/StateInterfaces
 In case the default implementation (``on_export_command_interfaces()`` or ``on_export_state_interfaces()`` ) for exporting the ``Command-/StateInterfaces`` is not enough you can override them. You should however consider the following things:
 
 * If you want to have unlisted interfaces available you need to call the ``export_unlisted_command_interfaces()`` or ``export_unlisted_state_interfaces()`` and add them to the ``unlisted_command_interfaces_`` or ``unlisted_state_interfaces_``.
-* Don't forget to store the created ``Command-/StateInterfaces`` internally as you only return ``std::shared_ptr``s and the resource manager will not provide access to the created ``Command-/StateInterface``s for the hardware. So you must take care of storing them yourself.
+* Don't forget to store the created ``Command-/StateInterfaces`` internally as you only return ``std::shared_ptr`` and the resource manager will not provide access to the created ``Command-/StateInterface`` for the hardware. So you must take care of storing them yourself.
 * Names must be unique!
