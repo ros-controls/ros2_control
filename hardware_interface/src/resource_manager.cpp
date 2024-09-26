@@ -608,7 +608,7 @@ public:
   template <class HardwareT>
   void import_state_interfaces(HardwareT & hardware)
   {
-    std::vector<StateInterface::SharedPtr> interfaces = hardware.export_state_interfaces();
+    std::vector<StateInterface::ConstSharedPtr> interfaces = hardware.export_state_interfaces();
     const auto interface_names = add_state_interfaces(interfaces);
 
     RCLCPP_WARN(
@@ -678,7 +678,7 @@ public:
     }
   }
 
-  std::string add_state_interface(StateInterface::SharedPtr interface)
+  std::string add_state_interface(StateInterface::ConstSharedPtr interface)
   {
     auto interface_name = interface->get_name();
     const auto [it, success] = state_interface_map_.emplace(interface_name, interface);
@@ -702,7 +702,8 @@ public:
    * \returns list of interface names that are added into internal storage. The output is used to
    * avoid additional iterations to cache interface names, e.g., for initializing info structures.
    */
-  std::vector<std::string> add_state_interfaces(std::vector<StateInterface::SharedPtr> & interfaces)
+  std::vector<std::string> add_state_interfaces(
+    std::vector<StateInterface::ConstSharedPtr> & interfaces)
   {
     std::vector<std::string> interface_names;
     interface_names.reserve(interfaces.size());
@@ -1068,7 +1069,7 @@ public:
   std::unordered_map<std::string, std::vector<std::string>> controllers_reference_interfaces_map_;
 
   /// Storage of all available state interfaces
-  std::map<std::string, StateInterface::SharedPtr> state_interface_map_;
+  std::map<std::string, StateInterface::ConstSharedPtr> state_interface_map_;
   /// Storage of all available command interfaces
   std::map<std::string, CommandInterface::SharedPtr> command_interface_map_;
 
