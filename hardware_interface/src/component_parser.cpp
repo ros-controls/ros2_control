@@ -929,6 +929,22 @@ std::vector<InterfaceDescription> parse_state_interface_descriptions(
   return component_state_interface_descriptions;
 }
 
+void parse_state_interface_descriptions(
+  const std::vector<ComponentInfo> & component_info,
+  std::unordered_map<std::string, InterfaceDescription> & state_interfaces_map)
+{
+  state_interfaces_map.reserve(state_interfaces_map.size() + component_info.size());
+
+  for (const auto & component : component_info)
+  {
+    for (const auto & state_interface : component.state_interfaces)
+    {
+      InterfaceDescription description(component.name, state_interface);
+      state_interfaces_map.insert(std::make_pair(description.get_name(), description));
+    }
+  }
+}
+
 std::vector<InterfaceDescription> parse_command_interface_descriptions(
   const std::vector<ComponentInfo> & component_info)
 {
@@ -944,6 +960,22 @@ std::vector<InterfaceDescription> parse_command_interface_descriptions(
     }
   }
   return component_command_interface_descriptions;
+}
+
+void parse_command_interface_descriptions(
+  const std::vector<ComponentInfo> & component_info,
+  std::unordered_map<std::string, InterfaceDescription> & command_interfaces_map)
+{
+  command_interfaces_map.reserve(command_interfaces_map.size() + component_info.size());
+
+  for (const auto & component : component_info)
+  {
+    for (const auto & command_interface : component.command_interfaces)
+    {
+      InterfaceDescription description(component.name, command_interface);
+      command_interfaces_map.insert(std::make_pair(description.get_name(), description));
+    }
+  }
 }
 
 }  // namespace hardware_interface
