@@ -1949,7 +1949,7 @@ void ControllerManager::activate_controllers(
     }
     controller->assign_interfaces(std::move(command_loans), std::move(state_loans));
 
-    auto new_state = controller->get_state();
+    auto new_state = controller->get_lifecycle_state();
     try
     {
       found_it->periodicity_statistics->Reset();

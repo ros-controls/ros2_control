@@ -355,10 +355,10 @@ TEST_F(TestReleaseExclusiveInterfaces, test_exclusive_interface_switching_failur
 
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    abstract_test_controller1.c->get_state().id());
+    abstract_test_controller1.c->get_lifecycle_state().id());
   ASSERT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-    abstract_test_controller2.c->get_state().id());
+    abstract_test_controller2.c->get_lifecycle_state().id());
 
   {  // Test starting the first controller
     RCLCPP_INFO(cm_->get_logger(), "Starting controller #1");
@@ -373,10 +373,10 @@ TEST_F(TestReleaseExclusiveInterfaces, test_exclusive_interface_switching_failur
     EXPECT_EQ(controller_interface::return_type::OK, switch_future.get());
     ASSERT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-      abstract_test_controller1.c->get_state().id());
+      abstract_test_controller1.c->get_lifecycle_state().id());
     ASSERT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-      abstract_test_controller2.c->get_state().id());
+      abstract_test_controller2.c->get_lifecycle_state().id());
   }
 
   {  // Test starting the second controller when the first is running
@@ -393,9 +393,9 @@ TEST_F(TestReleaseExclusiveInterfaces, test_exclusive_interface_switching_failur
     EXPECT_EQ(controller_interface::return_type::OK, switch_future.get());
     ASSERT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
-      abstract_test_controller1.c->get_state().id());
+      abstract_test_controller1.c->get_lifecycle_state().id());
     ASSERT_EQ(
       lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE,
-      abstract_test_controller2.c->get_state().id());
+      abstract_test_controller2.c->get_lifecycle_state().id());
   }
 }
