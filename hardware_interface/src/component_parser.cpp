@@ -821,14 +821,19 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
   if (std::string(kRobotTag) == robot_it->Name())
   {
     ros2_control_it = robot_it->FirstChildElement(kROS2ControlTag);
-  } else if (std::string(kSDFTag) == robot_it->Name()) {
-    //find model tag in sdf tag
+  }
+  else if (std::string(kSDFTag) == robot_it->Name())
+  {
+    // find model tag in sdf tag
     const tinyxml2::XMLElement * model_it = robot_it->FirstChildElement(kModelTag);
     ros2_control_it = model_it->FirstChildElement(kROS2ControlTag);
-  } else {
-    throw std::runtime_error("the robot tag is not root element in URDF or sdf tag is not root element in SDF");
   }
-  
+  else
+  {
+    throw std::runtime_error(
+      "the robot tag is not root element in URDF or sdf tag is not root element in SDF");
+  }
+
   if (!ros2_control_it)
   {
     throw std::runtime_error("no " + std::string(kROS2ControlTag) + " tag");
