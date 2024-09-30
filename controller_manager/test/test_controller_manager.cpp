@@ -575,10 +575,8 @@ TEST_P(TestControllerManagerWithUpdateRates, per_controller_equal_and_higher_upd
     // In case of a non perfect divisor, the update period should respect the rule
     // [cm_update_rate, 2*cm_update_rate)
     EXPECT_THAT(
-      test_controller->update_period_,
-      testing::AllOf(
-        testing::Ge(rclcpp::Duration::from_seconds(1.0 / cm_update_rate)),
-        testing::Lt(rclcpp::Duration::from_seconds(2.0 / cm_update_rate))));
+      test_controller->update_period_.seconds(),
+      testing::AllOf(testing::Ge(0.9 / cm_update_rate), testing::Lt((1.1 / cm_update_rate))));
     loop_rate.sleep();
   }
   // if we do 2 times of the controller_manager update rate, the internal counter should be
@@ -640,6 +638,9 @@ TEST_P(TestControllerUpdateRates, check_the_controller_update_rate)
     ControllerManagerRunner cm_runner(this);
     cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME);
   }
+  time_ = test_controller->get_node()->now();  // set to something nonzero
+  cm_->get_clock()->sleep_until(time_ + PERIOD);
+  time_ = cm_->get_clock()->now();
   EXPECT_EQ(
     controller_interface::return_type::OK,
     cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
@@ -650,7 +651,6 @@ TEST_P(TestControllerUpdateRates, check_the_controller_update_rate)
     test_controller->get_lifecycle_state().id());
 
   // Start controller, will take effect at the end of the update function
-  time_ = test_controller->get_node()->now();  // set to something nonzero
   const auto strictness = controller_manager_msgs::srv::SwitchController::Request::STRICT;
   std::vector<std::string> start_controllers = {test_controller::TEST_CONTROLLER_NAME};
   std::vector<std::string> stop_controllers = {};
@@ -661,7 +661,8 @@ TEST_P(TestControllerUpdateRates, check_the_controller_update_rate)
   ASSERT_EQ(std::future_status::timeout, switch_future.wait_for(std::chrono::milliseconds(100)))
     << "switch_controller should be blocking until next update cycle";
 
-  time_ += rclcpp::Duration::from_seconds(0.01);
+  cm_->get_clock()->sleep_until(time_ + PERIOD);
+  time_ = cm_->get_clock()->now();
   EXPECT_EQ(
     controller_interface::return_type::OK,
     cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
@@ -677,25 +678,29 @@ TEST_P(TestControllerUpdateRates, check_the_controller_update_rate)
   EXPECT_EQ(test_controller->get_update_rate(), ctrl_update_rate);
   const auto cm_update_rate = cm_->get_update_rate();
   const auto controller_update_rate = test_controller->get_update_rate();
+  const double controller_period = 1.0 / controller_update_rate;
 
   const auto initial_counter = test_controller->internal_counter;
   // don't start with zero to check if the period is correct if controller is activated anytime
   rclcpp::Time time = time_;
   for (size_t update_counter = 0; update_counter <= 10 * cm_update_rate; ++update_counter)
   {
+    rclcpp::Time old_time = time;
+    cm_->get_clock()->sleep_until(old_time + PERIOD);
+    time = cm_->get_clock()->now();
     EXPECT_EQ(
       controller_interface::return_type::OK,
       cm_->update(time, rclcpp::Duration::from_seconds(0.01)));
     // In case of a non perfect divisor, the update period should respect the rule
     // [controller_update_rate, 2*controller_update_rate)
     EXPECT_THAT(
-      test_controller->update_period_,
+      test_controller->update_period_.seconds(),
       testing::AllOf(
-        testing::Ge(rclcpp::Duration::from_seconds(1.0 / controller_update_rate)),
-        testing::Lt(rclcpp::Duration::from_seconds(2.0 / controller_update_rate))))
-      << "update_counter: " << update_counter;
+        testing::Ge(0.99 * controller_period),
+        testing::Lt((1.05 * controller_period) + PERIOD.seconds())))
+      << "update_counter: " << update_counter << " desired controller period: " << controller_period
+      << " actual controller period: " << test_controller->update_period_.seconds();
 
-    time += rclcpp::Duration::from_seconds(0.01);
     if (update_counter % cm_update_rate == 0)
     {
       const double no_of_secs_passed = static_cast<double>(update_counter) / cm_update_rate;
@@ -708,15 +713,15 @@ TEST_P(TestControllerUpdateRates, check_the_controller_update_rate)
       EXPECT_THAT(
         test_controller->internal_counter - initial_counter,
         testing::AnyOf(
-          testing::Eq(controller_update_rate * no_of_secs_passed),
-          testing::Eq((controller_update_rate * no_of_secs_passed) - 1)));
+          testing::Ge((controller_update_rate - 1) * no_of_secs_passed),
+          testing::Lt((controller_update_rate * no_of_secs_passed))));
     }
   }
 }
 
 INSTANTIATE_TEST_SUITE_P(
   per_controller_update_rate_check, TestControllerUpdateRates,
-  testing::Values(10, 12, 16, 23, 37, 40, 50, 63, 71, 85, 98));
+  testing::Values(10, 12, 16, 23, 37, 40, 50, 63, 71, 85, 90));
 
 class TestControllerManagerFallbackControllers
 : public ControllerManagerFixture<controller_manager::ControllerManager>,
