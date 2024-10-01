@@ -2294,19 +2294,12 @@ controller_interface::return_type ControllerManager::update(
         update_loop_counter_, controller_go ? "True" : "False",
         loaded_controller.info.name.c_str());
 
-      RCLCPP_DEBUG(get_logger(), "The update time is %f", time.seconds());
       if (controller_go)
       {
         auto controller_ret = controller_interface::return_type::OK;
         // Catch exceptions thrown by the controller update function
         try
         {
-          RCLCPP_DEBUG(
-            get_logger(),
-            "[%s] The measured period is %f and the controller period is %f and ratio : %f",
-            loaded_controller.info.name.c_str(), controller_actual_period.seconds(),
-            controller_period.seconds(),
-            controller_actual_period.seconds() * controller_update_rate);
           controller_ret = loaded_controller.c->update(current_time, controller_actual_period);
         }
         catch (const std::exception & e)
@@ -2325,9 +2318,6 @@ controller_interface::return_type ControllerManager::update(
         }
 
         *loaded_controller.last_update_cycle_time = current_time;
-        RCLCPP_DEBUG(
-          get_logger(), "[%s] Setting last_update_cycle_time to %fs for the controller",
-          loaded_controller.info.name.c_str(), loaded_controller.last_update_cycle_time->seconds());
 
         if (controller_ret != controller_interface::return_type::OK)
         {
