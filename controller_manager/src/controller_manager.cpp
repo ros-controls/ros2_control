@@ -488,7 +488,7 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_c
   controller_spec.c = controller;
   controller_spec.info.name = controller_name;
   controller_spec.info.type = controller_type;
-  controller_spec.next_update_cycle_time = std::make_shared<rclcpp::Time>(
+  controller_spec.last_update_cycle_time = std::make_shared<rclcpp::Time>(
     0, 0, this->get_node_clock_interface()->get_clock()->get_clock_type());
 
   // We have to fetch the parameters_file at the time of loading the controller, because this way we
@@ -1589,8 +1589,8 @@ void ControllerManager::activate_controllers(
       continue;
     }
     auto controller = found_it->c;
-    // reset the next update cycle time for newly activated controllers
-    *found_it->next_update_cycle_time =
+    // reset the last update cycle time for newly activated controllers
+    *found_it->last_update_cycle_time =
       rclcpp::Time(0, 0, this->get_node_clock_interface()->get_clock()->get_clock_type());
 
     bool assignment_successful = true;
@@ -2269,36 +2269,45 @@ controller_interface::return_type ControllerManager::update(
         run_controller_at_cm_rate ? period
                                   : rclcpp::Duration::from_seconds((1.0 / controller_update_rate));
 
+      const rclcpp::Time current_time = get_clock()->now();
       if (
-        *loaded_controller.next_update_cycle_time ==
+        *loaded_controller.last_update_cycle_time ==
         rclcpp::Time(0, 0, this->get_node_clock_interface()->get_clock()->get_clock_type()))
       {
         // it is zero after activation
+        *loaded_controller.last_update_cycle_time = current_time - controller_period;
         RCLCPP_DEBUG(
-          get_logger(), "Setting next_update_cycle_time to %fs for the controller : %s",
-          time.seconds(), loaded_controller.info.name.c_str());
-        *loaded_controller.next_update_cycle_time = time;
+          get_logger(), "Setting last_update_cycle_time to %fs for the controller : %s",
+          loaded_controller.last_update_cycle_time->seconds(), loaded_controller.info.name.c_str());
       }
+      const auto controller_actual_period =
+        (current_time - *loaded_controller.last_update_cycle_time);
 
-      bool controller_go =
+      const bool controller_go =
+        run_controller_at_cm_rate ||
         (time ==
          rclcpp::Time(0, 0, this->get_node_clock_interface()->get_clock()->get_clock_type())) ||
-        (time.seconds() >= loaded_controller.next_update_cycle_time->seconds());
+        (controller_actual_period.seconds() * controller_update_rate >= 0.99);
 
       RCLCPP_DEBUG(
         get_logger(), "update_loop_counter: '%d ' controller_go: '%s ' controller_name: '%s '",
         update_loop_counter_, controller_go ? "True" : "False",
         loaded_controller.info.name.c_str());
 
+      RCLCPP_DEBUG(get_logger(), "The update time is %f", time.seconds());
       if (controller_go)
       {
-        const auto controller_actual_period =
-          (time - *loaded_controller.next_update_cycle_time) + controller_period;
         auto controller_ret = controller_interface::return_type::OK;
         // Catch exceptions thrown by the controller update function
         try
         {
-          controller_ret = loaded_controller.c->update(time, controller_actual_period);
+          RCLCPP_DEBUG(
+            get_logger(),
+            "[%s] The measured period is %f and the controller period is %f and ratio : %f",
+            loaded_controller.info.name.c_str(), controller_actual_period.seconds(),
+            controller_period.seconds(),
+            controller_actual_period.seconds() * controller_update_rate);
+          controller_ret = loaded_controller.c->update(current_time, controller_actual_period);
         }
         catch (const std::exception & e)
         {
@@ -2315,7 +2324,10 @@ controller_interface::return_type ControllerManager::update(
           controller_ret = controller_interface::return_type::ERROR;
         }
 
-        *loaded_controller.next_update_cycle_time += controller_period;
+        *loaded_controller.last_update_cycle_time = current_time;
+        RCLCPP_DEBUG(
+          get_logger(), "[%s] Setting last_update_cycle_time to %fs for the controller",
+          loaded_controller.info.name.c_str(), loaded_controller.last_update_cycle_time->seconds());
 
         if (controller_ret != controller_interface::return_type::OK)
         {
