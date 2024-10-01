@@ -2379,7 +2379,6 @@ controller_interface::return_type ControllerManager::update(
         update_loop_counter_, controller_go ? "True" : "False",
         loaded_controller.info.name.c_str());
 
-      RCLCPP_DEBUG(get_logger(), "The update time is %f", time.seconds());
       if (controller_go)
       {
         auto controller_ret = controller_interface::return_type::OK;
@@ -2406,9 +2405,6 @@ controller_interface::return_type ControllerManager::update(
         }
 
         *loaded_controller.last_update_cycle_time = current_time;
-        RCLCPP_DEBUG(
-          get_logger(), "[%s] Setting last_update_cycle_time to %fs for the controller",
-          loaded_controller.info.name.c_str(), loaded_controller.last_update_cycle_time->seconds());
 
         if (controller_ret != controller_interface::return_type::OK)
         {
