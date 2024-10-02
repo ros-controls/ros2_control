@@ -59,11 +59,10 @@ public:
   bool is_chainable() const final;
 
   CONTROLLER_INTERFACE_PUBLIC
-  std::vector<std::shared_ptr<hardware_interface::StateInterface>> export_state_interfaces() final;
+  std::vector<hardware_interface::StateInterface::SharedPtr> export_state_interfaces() final;
 
   CONTROLLER_INTERFACE_PUBLIC
-  std::vector<std::shared_ptr<hardware_interface::CommandInterface>> export_reference_interfaces()
-    final;
+  std::vector<hardware_interface::CommandInterface::SharedPtr> export_reference_interfaces() final;
 
   CONTROLLER_INTERFACE_PUBLIC
   bool set_chained_mode(bool chained_mode) final;
@@ -134,9 +133,8 @@ protected:
 
   /// Storage of values for state interfaces
   std::vector<std::string> exported_state_interface_names_;
-  std::vector<std::shared_ptr<hardware_interface::StateInterface>>
-    ordered_exported_state_interfaces_;
-  std::unordered_map<std::string, std::shared_ptr<hardware_interface::StateInterface>>
+  std::vector<hardware_interface::StateInterface::SharedPtr> ordered_exported_state_interfaces_;
+  std::unordered_map<std::string, hardware_interface::StateInterface::SharedPtr>
     exported_state_interfaces_;
   // BEGIN (Handle export change): for backward compatibility
   std::vector<double> state_interfaces_values_;
@@ -147,8 +145,8 @@ protected:
   // BEGIN (Handle export change): for backward compatibility
   std::vector<double> reference_interfaces_;
   // END
-  std::vector<std::shared_ptr<hardware_interface::CommandInterface>> ordered_reference_interfaces_;
-  std::unordered_map<std::string, std::shared_ptr<hardware_interface::CommandInterface>>
+  std::vector<hardware_interface::CommandInterface::SharedPtr> ordered_reference_interfaces_;
+  std::unordered_map<std::string, hardware_interface::CommandInterface::SharedPtr>
     reference_interfaces_ptrs_;
 
 private:

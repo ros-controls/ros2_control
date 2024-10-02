@@ -1230,7 +1230,7 @@ TEST_F(ResourceManagerTest, managing_controllers_reference_interfaces)
     CONTROLLER_NAME + "/" + REFERENCE_INTERFACE_NAMES[1],
     CONTROLLER_NAME + "/" + REFERENCE_INTERFACE_NAMES[2]};
 
-  std::vector<std::shared_ptr<hardware_interface::CommandInterface>> reference_interfaces;
+  std::vector<hardware_interface::CommandInterface::SharedPtr> reference_interfaces;
   std::vector<double> reference_interface_values = {1.0, 2.0, 3.0};
 
   for (size_t i = 0; i < REFERENCE_INTERFACE_NAMES.size(); ++i)

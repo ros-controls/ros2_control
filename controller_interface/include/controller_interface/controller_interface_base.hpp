@@ -235,7 +235,7 @@ public:
    * \returns list of command interfaces for preceding controllers.
    */
   CONTROLLER_INTERFACE_PUBLIC
-  virtual std::vector<std::shared_ptr<hardware_interface::CommandInterface>>
+  virtual std::vector<hardware_interface::CommandInterface::SharedPtr>
   export_reference_interfaces() = 0;
 
   /**
@@ -245,8 +245,7 @@ public:
    * \returns list of state interfaces for preceding controllers.
    */
   CONTROLLER_INTERFACE_PUBLIC
-  virtual std::vector<std::shared_ptr<hardware_interface::StateInterface>>
-  export_state_interfaces() = 0;
+  virtual std::vector<hardware_interface::StateInterface::SharedPtr> export_state_interfaces() = 0;
 
   /**
    * Set chained mode of a chainable controller. This method triggers internal processes to switch

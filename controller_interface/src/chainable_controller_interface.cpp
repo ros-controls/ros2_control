@@ -44,11 +44,11 @@ return_type ChainableControllerInterface::update(
   return ret;
 }
 
-std::vector<std::shared_ptr<hardware_interface::StateInterface>>
+std::vector<hardware_interface::StateInterface::SharedPtr>
 ChainableControllerInterface::export_state_interfaces()
 {
   auto state_interfaces = on_export_state_interfaces();
-  std::vector<std::shared_ptr<hardware_interface::StateInterface>> state_interfaces_ptrs_vec;
+  std::vector<hardware_interface::StateInterface::SharedPtr> state_interfaces_ptrs_vec;
   state_interfaces_ptrs_vec.reserve(state_interfaces.size());
   ordered_exported_state_interfaces_.reserve(state_interfaces.size());
   exported_state_interface_names_.reserve(state_interfaces.size());
@@ -94,11 +94,11 @@ ChainableControllerInterface::export_state_interfaces()
   return state_interfaces_ptrs_vec;
 }
 
-std::vector<std::shared_ptr<hardware_interface::CommandInterface>>
+std::vector<hardware_interface::CommandInterface::SharedPtr>
 ChainableControllerInterface::export_reference_interfaces()
 {
   auto reference_interfaces = on_export_reference_interfaces();
-  std::vector<std::shared_ptr<hardware_interface::CommandInterface>> reference_interfaces_ptrs_vec;
+  std::vector<hardware_interface::CommandInterface::SharedPtr> reference_interfaces_ptrs_vec;
   reference_interfaces_ptrs_vec.reserve(reference_interfaces.size());
   exported_reference_interface_names_.reserve(reference_interfaces.size());
   ordered_reference_interfaces_.reserve(reference_interfaces.size());
@@ -134,7 +134,7 @@ ChainableControllerInterface::export_reference_interfaces()
       throw std::runtime_error(error_msg);
     }
 
-    std::shared_ptr<hardware_interface::CommandInterface> reference_interface =
+    hardware_interface::CommandInterface::SharedPtr reference_interface =
       std::make_shared<hardware_interface::CommandInterface>(std::move(interface));
     const auto inteface_name = reference_interface->get_name();
     // check the exported interface name is unique

@@ -89,13 +89,13 @@ TEST_F(ChainableControllerInterfaceTest, interfaces_prefix_is_not_node_name)
   controller.set_name_prefix_of_reference_interfaces("some_not_correct_interface_prefix");
 
   // expect empty return because interface prefix is not equal to the node name
-  std::vector<std::shared_ptr<hardware_interface::CommandInterface>> exported_reference_interfaces;
+  std::vector<hardware_interface::CommandInterface::SharedPtr> exported_reference_interfaces;
   EXPECT_THROW(
     { exported_reference_interfaces = controller.export_reference_interfaces(); },
     std::runtime_error);
   ASSERT_THAT(exported_reference_interfaces, IsEmpty());
   // expect empty return because interface prefix is not equal to the node name
-  std::vector<std::shared_ptr<hardware_interface::StateInterface>> exported_state_interfaces;
+  std::vector<hardware_interface::StateInterface::SharedPtr> exported_state_interfaces;
   EXPECT_THROW(
     { exported_state_interfaces = controller.export_state_interfaces(); }, std::runtime_error);
   ASSERT_THAT(exported_state_interfaces, IsEmpty());

@@ -771,8 +771,8 @@ controller_interface::return_type ControllerManager::configure_controller(
       get_logger(),
       "Controller '%s' is chainable. Interfaces are being exported to resource manager.",
       controller_name.c_str());
-    std::vector<std::shared_ptr<hardware_interface::StateInterface>> state_interfaces;
-    std::vector<std::shared_ptr<hardware_interface::CommandInterface>> ref_interfaces;
+    std::vector<hardware_interface::StateInterface::SharedPtr> state_interfaces;
+    std::vector<hardware_interface::CommandInterface::SharedPtr> ref_interfaces;
     try
     {
       state_interfaces = controller->export_state_interfaces();

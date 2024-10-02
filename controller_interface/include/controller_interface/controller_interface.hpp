@@ -47,7 +47,7 @@ public:
    * \returns empty list.
    */
   CONTROLLER_INTERFACE_PUBLIC
-  std::vector<std::shared_ptr<hardware_interface::StateInterface>> export_state_interfaces() final;
+  std::vector<hardware_interface::StateInterface::SharedPtr> export_state_interfaces() final;
 
   /**
    * Controller has no reference interfaces.
@@ -55,8 +55,7 @@ public:
    * \returns empty list.
    */
   CONTROLLER_INTERFACE_PUBLIC
-  std::vector<std::shared_ptr<hardware_interface::CommandInterface>> export_reference_interfaces()
-    final;
+  std::vector<hardware_interface::CommandInterface::SharedPtr> export_reference_interfaces() final;
 
   /**
    * Controller is not chainable, therefore no chained mode can be set.
