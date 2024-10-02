@@ -68,14 +68,14 @@ ChainableControllerInterface::export_state_interfaces()
     }
     auto state_interface = std::make_shared<hardware_interface::StateInterface>(interface);
     const auto interface_name = state_interface->get_name();
-    auto [it, succ] = exported_state_interfaces_.insert({inteface_name, state_interface});
+    auto [it, succ] = exported_state_interfaces_.insert({interface_name, state_interface});
     // either we have name duplicate which we want to avoid under all circumstances since interfaces
     // need to be uniquely identify able or something else really went wrong. In any case abort and
     // inform cm by throwing exception
     if (!succ)
     {
       std::string error_msg =
-        "Could not insert StateInterface<" + inteface_name +
+        "Could not insert StateInterface<" + interface_name +
         "> into exported_state_interfaces_ map. Check if you export duplicates. The "
         "map returned iterator with interface_name<" +
         it->second->get_name() +
