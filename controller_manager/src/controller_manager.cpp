@@ -2368,6 +2368,12 @@ controller_interface::return_type ControllerManager::update(
       const auto controller_actual_period =
         (current_time - *loaded_controller.last_update_cycle_time);
 
+      /// @note The factor 0.99 is used to avoid the controllers skipping update cycles due to the
+      /// jitter in the system sleep cycles.
+      // For instance, A controller running at 50 Hz and the CM running at 100Hz, then when we have
+      // an update cycle at 0.019s (ideally, the controller should only trigger >= 0.02s), if we
+      // wait for next cycle, then trigger will happen at ~0.029 sec and this is creating an issue
+      // to keep up with the controller update rate (see issue #1769).
       const bool controller_go =
         run_controller_at_cm_rate ||
         (time ==
