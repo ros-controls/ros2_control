@@ -107,8 +107,6 @@ ChainableControllerInterface::export_reference_interfaces()
   // check if the "reference_interfaces_" variable is resized to number of interfaces
   if (reference_interfaces_.size() != reference_interfaces.size())
   {
-    // TODO(destogl): Should here be "FATAL"? It is fatal in terms of controller but not for the
-    // framework
     std::string error_msg =
       "The internal storage for reference values 'reference_interfaces_' variable has size '" +
       std::to_string(reference_interfaces_.size()) + "', but it is expected to have the size '" +

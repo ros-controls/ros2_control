@@ -1241,7 +1241,7 @@ bool ResourceManager::state_interface_is_available(const std::string & name) con
 
 // CM API: Called in "callback/slow"-thread
 void ResourceManager::import_controller_exported_state_interfaces(
-  const std::string & controller_name, std::vector<std::shared_ptr<StateInterface>> & interfaces)
+  const std::string & controller_name, std::vector<StateInterface::SharedPtr> & interfaces)
 {
   std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
   auto interface_names = resource_storage_->add_state_interfaces(interfaces);
