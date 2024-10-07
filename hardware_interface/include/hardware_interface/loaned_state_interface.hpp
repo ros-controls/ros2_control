@@ -40,7 +40,7 @@ public:
   {
   }
 
-  LoanedStateInterface(StateInterface::SharedPtr state_interface)
+  explicit LoanedStateInterface(StateInterface::SharedPtr state_interface)
   : LoanedStateInterface(state_interface, nullptr)
   {
   }
