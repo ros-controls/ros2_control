@@ -1207,7 +1207,7 @@ LoanedStateInterface ResourceManager::claim_state_interface(const std::string & 
   }
 
   std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
-  return LoanedStateInterface(*(resource_storage_->state_interface_map_.at(key)));
+  return LoanedStateInterface(resource_storage_->state_interface_map_.at(key));
 }
 
 // CM API: Called in "callback/slow"-thread
@@ -1440,7 +1440,7 @@ LoanedCommandInterface ResourceManager::claim_command_interface(const std::strin
   resource_storage_->claimed_command_interface_map_[key] = true;
   std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
   return LoanedCommandInterface(
-    *(resource_storage_->command_interface_map_.at(key)),
+    resource_storage_->command_interface_map_.at(key),
     std::bind(&ResourceManager::release_command_interface, this, key));
 }
 
