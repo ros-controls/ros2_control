@@ -44,11 +44,11 @@ return_type ChainableControllerInterface::update(
   return ret;
 }
 
-std::vector<hardware_interface::StateInterface::SharedPtr>
+std::vector<hardware_interface::StateInterface::ConstSharedPtr>
 ChainableControllerInterface::export_state_interfaces()
 {
   auto state_interfaces = on_export_state_interfaces();
-  std::vector<hardware_interface::StateInterface::SharedPtr> state_interfaces_ptrs_vec;
+  std::vector<hardware_interface::StateInterface::ConstSharedPtr> state_interfaces_ptrs_vec;
   state_interfaces_ptrs_vec.reserve(state_interfaces.size());
   ordered_exported_state_interfaces_.reserve(state_interfaces.size());
   exported_state_interface_names_.reserve(state_interfaces.size());
@@ -88,7 +88,8 @@ ChainableControllerInterface::export_state_interfaces()
     }
     ordered_exported_state_interfaces_.push_back(state_interface);
     exported_state_interface_names_.push_back(interface_name);
-    state_interfaces_ptrs_vec.push_back(state_interface);
+    state_interfaces_ptrs_vec.push_back(
+      std::const_pointer_cast<const hardware_interface::StateInterface>(state_interface));
   }
 
   return state_interfaces_ptrs_vec;

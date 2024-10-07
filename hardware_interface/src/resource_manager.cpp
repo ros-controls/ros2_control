@@ -608,7 +608,7 @@ public:
   template <class HardwareT>
   void import_state_interfaces(HardwareT & hardware)
   {
-    std::vector<StateInterface::ConstSharedPtr> interfaces = hardware.export_state_interfaces();
+    auto interfaces = hardware.export_state_interfaces();
     const auto interface_names = add_state_interfaces(interfaces);
 
     RCLCPP_WARN(
@@ -1242,7 +1242,7 @@ bool ResourceManager::state_interface_is_available(const std::string & name) con
 
 // CM API: Called in "callback/slow"-thread
 void ResourceManager::import_controller_exported_state_interfaces(
-  const std::string & controller_name, std::vector<StateInterface::SharedPtr> & interfaces)
+  const std::string & controller_name, std::vector<StateInterface::ConstSharedPtr> & interfaces)
 {
   std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
   auto interface_names = resource_storage_->add_state_interfaces(interfaces);
