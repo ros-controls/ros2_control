@@ -93,6 +93,19 @@ ChainableControllerInterface::export_state_interfaces()
       std::const_pointer_cast<const hardware_interface::StateInterface>(state_interface));
   }
 
+  if (exported_state_interfaces_.size() != state_interfaces.size())
+  {
+    std::string error_msg =
+      "The internal storage for state interface ptrs 'exported_state_interfaces_' variable has "
+      "size '" +
+      std::to_string(exported_state_interfaces_.size()) +
+      "', but it is expected to have the size '" + std::to_string(state_interfaces.size()) +
+      "' equal to the number of exported reference interfaces. Please correct and recompile the "
+      "controller with name '" +
+      get_node()->get_name() + "' and try again.";
+    throw std::runtime_error(error_msg);
+  }
+
   return state_interfaces_ptrs_vec;
 }
 
