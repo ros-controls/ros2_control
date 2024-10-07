@@ -141,7 +141,7 @@ public:
    * \param[in] interfaces list of controller's state interfaces as StateInterfaces.
    */
   void import_controller_exported_state_interfaces(
-    const std::string & controller_name, std::vector<StateInterface> & interfaces);
+    const std::string & controller_name, std::vector<StateInterface::SharedPtr> & interfaces);
 
   /// Get list of exported tate interface of a controller.
   /**
@@ -195,7 +195,7 @@ public:
    */
   void import_controller_reference_interfaces(
     const std::string & controller_name,
-    std::vector<hardware_interface::CommandInterface> & interfaces);
+    const std::vector<hardware_interface::CommandInterface::SharedPtr> & interfaces);
 
   /// Get list of reference interface of a controller.
   /**
