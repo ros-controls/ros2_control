@@ -346,7 +346,14 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
           RCLCPP_INFO(
             get_logger(), "Setting component '%s' to '%s' state.", component.c_str(),
             state.label().c_str());
-          resource_manager_->set_component_state(component, state);
+          if (
+            resource_manager_->set_component_state(component, state) ==
+            hardware_interface::return_type::ERROR)
+          {
+            throw std::runtime_error(
+              "Failed to set the initial state of the component : " + component + " to " +
+              state.label());
+          }
           components_to_activate.erase(component);
         }
       }
@@ -370,7 +377,14 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
   {
     rclcpp_lifecycle::State active_state(
       State::PRIMARY_STATE_ACTIVE, hardware_interface::lifecycle_state_names::ACTIVE);
-    resource_manager_->set_component_state(component, active_state);
+    if (
+      resource_manager_->set_component_state(component, active_state) ==
+      hardware_interface::return_type::ERROR)
+    {
+      throw std::runtime_error(
+        "Failed to set the initial state of the component : " + component + " to " +
+        active_state.label());
+    }
   }
   robot_description_notification_timer_->cancel();
 }
@@ -771,15 +785,28 @@ controller_interface::return_type ControllerManager::configure_controller(
       get_logger(),
       "Controller '%s' is chainable. Interfaces are being exported to resource manager.",
       controller_name.c_str());
-    auto state_interfaces = controller->export_state_interfaces();
-    auto ref_interfaces = controller->export_reference_interfaces();
-    if (ref_interfaces.empty() && state_interfaces.empty())
+    std::vector<hardware_interface::StateInterface::SharedPtr> state_interfaces;
+    std::vector<hardware_interface::CommandInterface::SharedPtr> ref_interfaces;
+    try
     {
-      // TODO(destogl): Add test for this!
-      RCLCPP_ERROR(
-        get_logger(),
-        "Controller '%s' is chainable, but does not export any state or reference interfaces.",
-        controller_name.c_str());
+      state_interfaces = controller->export_state_interfaces();
+      ref_interfaces = controller->export_reference_interfaces();
+      if (ref_interfaces.empty() && state_interfaces.empty())
+      {
+        // TODO(destogl): Add test for this!
+        RCLCPP_ERROR(
+          get_logger(),
+          "Controller '%s' is chainable, but does not export any reference interfaces. Did you "
+          "override the on_export_method() correctly?",
+          controller_name.c_str());
+        return controller_interface::return_type::ERROR;
+      }
+    }
+    catch (const std::runtime_error & e)
+    {
+      RCLCPP_FATAL(
+        get_logger(), "Creation of the reference interfaces failed with following error: %s",
+        e.what());
       return controller_interface::return_type::ERROR;
     }
     resource_manager_->import_controller_reference_interfaces(controller_name, ref_interfaces);
