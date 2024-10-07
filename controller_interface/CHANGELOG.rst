@@ -2,8 +2,8 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.18.0 (2024-10-07)
+-------------------
 * Adapt controller Reference/StateInterfaces to New Way of Exporting (variant support) (`#1689 <https://github.com/ros-controls/ros2_control/issues/1689>`_)
 * [ControllerInterface] Fix to properly propagate the controller NodeOptions (`#1762 <https://github.com/ros-controls/ros2_control/issues/1762>`_)
 * [Controller Interface] Make assign and release interfaces virtual (`#1743 <https://github.com/ros-controls/ros2_control/issues/1743>`_)
