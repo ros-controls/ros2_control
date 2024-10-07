@@ -40,6 +40,11 @@ public:
   {
   }
 
+  LoanedStateInterface(StateInterface::SharedPtr state_interface)
+  : LoanedStateInterface(state_interface, nullptr)
+  {
+  }
+
   LoanedStateInterface(StateInterface::SharedPtr state_interface, Deleter && deleter)
   : state_interface_(*state_interface), deleter_(std::forward<Deleter>(deleter))
   {
