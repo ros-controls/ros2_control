@@ -147,7 +147,7 @@ protected:
   // END
   std::vector<hardware_interface::CommandInterface::SharedPtr> ordered_reference_interfaces_;
   std::unordered_map<std::string, hardware_interface::CommandInterface::SharedPtr>
-    reference_interfaces_ptrs_;
+    exported_reference_interfaces_;
 
 private:
   /// A flag marking if a chainable controller is currently preceded by another controller.

@@ -151,7 +151,7 @@ ChainableControllerInterface::export_reference_interfaces()
       std::make_shared<hardware_interface::CommandInterface>(std::move(interface));
     const auto interface_name = reference_interface->get_interface_name();
     // check the exported interface name is unique
-    auto [it, succ] = reference_interfaces_ptrs_.insert({interface_name, reference_interface});
+    auto [it, succ] = exported_reference_interfaces_.insert({interface_name, reference_interface});
     // either we have name duplicate which we want to avoid under all circumstances since interfaces
     // need to be uniquely identify able or something else really went wrong. In any case abort and
     // inform cm by throwing exception
@@ -174,11 +174,12 @@ ChainableControllerInterface::export_reference_interfaces()
     reference_interfaces_ptrs_vec.push_back(reference_interface);
   }
 
-  if (reference_interfaces_ptrs_.size() != ref_interface_size)
+  if (exported_reference_interfaces_.size() != ref_interface_size)
   {
     std::string error_msg =
-      "The internal storage for reference ptrs 'reference_interfaces_ptrs_' variable has size '" +
-      std::to_string(reference_interfaces_ptrs_.size()) +
+      "The internal storage for exported reference ptrs 'exported_reference_interfaces_' variable "
+      "has size '" +
+      std::to_string(exported_reference_interfaces_.size()) +
       "', but it is expected to have the size '" + std::to_string(ref_interface_size) +
       "' equal to the number of exported reference interfaces. Please correct and recompile the "
       "controller with name '" +
