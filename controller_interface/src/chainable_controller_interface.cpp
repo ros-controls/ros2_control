@@ -68,7 +68,7 @@ ChainableControllerInterface::export_state_interfaces()
       throw std::runtime_error(error_msg);
     }
     auto state_interface = std::make_shared<hardware_interface::StateInterface>(interface);
-    const auto interface_name = state_interface->get_name();
+    const auto interface_name = state_interface->get_interface_name();
     auto [it, succ] = exported_state_interfaces_.insert({interface_name, state_interface});
     // either we have name duplicate which we want to avoid under all circumstances since interfaces
     // need to be uniquely identify able or something else really went wrong. In any case abort and
@@ -136,7 +136,7 @@ ChainableControllerInterface::export_reference_interfaces()
 
     hardware_interface::CommandInterface::SharedPtr reference_interface =
       std::make_shared<hardware_interface::CommandInterface>(std::move(interface));
-    const auto interface_name = reference_interface->get_name();
+    const auto interface_name = reference_interface->get_interface_name();
     // check the exported interface name is unique
     auto [it, succ] = reference_interfaces_ptrs_.insert({interface_name, reference_interface});
     // either we have name duplicate which we want to avoid under all circumstances since interfaces
