@@ -16,6 +16,7 @@
 
 #include <vector>
 
+#include "controller_interface/helpers.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 
@@ -87,7 +88,7 @@ ChainableControllerInterface::export_state_interfaces()
       throw std::runtime_error(error_msg);
     }
     ordered_exported_state_interfaces_.push_back(state_interface);
-    exported_state_interface_names_.push_back(interface_name);
+    add_element_to_list(exported_state_interface_names_, interface_name);
     state_interfaces_ptrs_vec.push_back(
       std::const_pointer_cast<const hardware_interface::StateInterface>(state_interface));
   }
@@ -135,16 +136,16 @@ ChainableControllerInterface::export_reference_interfaces()
 
     hardware_interface::CommandInterface::SharedPtr reference_interface =
       std::make_shared<hardware_interface::CommandInterface>(std::move(interface));
-    const auto inteface_name = reference_interface->get_name();
+    const auto interface_name = reference_interface->get_name();
     // check the exported interface name is unique
-    auto [it, succ] = reference_interfaces_ptrs_.insert({inteface_name, reference_interface});
+    auto [it, succ] = reference_interfaces_ptrs_.insert({interface_name, reference_interface});
     // either we have name duplicate which we want to avoid under all circumstances since interfaces
     // need to be uniquely identify able or something else really went wrong. In any case abort and
     // inform cm by throwing exception
     if (!succ)
     {
       std::string error_msg =
-        "Could not insert Reference interface<" + inteface_name +
+        "Could not insert Reference interface<" + interface_name +
         "> into reference_interfaces_ map. Check if you export duplicates. The "
         "map returned iterator with interface_name<" +
         it->second->get_name() +
@@ -156,7 +157,7 @@ ChainableControllerInterface::export_reference_interfaces()
       throw std::runtime_error(error_msg);
     }
     ordered_reference_interfaces_.push_back(reference_interface);
-    exported_reference_interface_names_.push_back(inteface_name);
+    add_element_to_list(exported_reference_interface_names_, interface_name);
     reference_interfaces_ptrs_vec.push_back(reference_interface);
   }
 
