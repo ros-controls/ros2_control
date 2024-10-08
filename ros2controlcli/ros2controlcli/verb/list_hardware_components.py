@@ -15,6 +15,8 @@
 from controller_manager import list_hardware_components
 from controller_manager.spawner import bcolors
 
+from lifecycle_msgs.msg import State
+
 from ros2cli.node.direct import add_arguments
 from ros2cli.node.strategy import NodeStrategy
 from ros2cli.verb import VerbExtension
@@ -39,20 +41,29 @@ class ListHardwareComponentsVerb(VerbExtension):
             hardware_components = list_hardware_components(node, args.controller_manager)
 
             for idx, component in enumerate(hardware_components.component):
+                # Set activity color for nicer visualization
+                activity_color = bcolors.FAIL
+                if component.state.id == State.PRIMARY_STATE_UNCONFIGURED:
+                    activity_color = bcolors.WARNING
+                if component.state.id == State.PRIMARY_STATE_INACTIVE:
+                    activity_color = bcolors.MAGENTA
+                if component.state.id == State.PRIMARY_STATE_ACTIVE:
+                    activity_color = bcolors.OKGREEN
+
                 print(
-                    f"Hardware Component {idx+1}\n\tname: {component.name}\n\ttype: {component.type}"
+                    f"Hardware Component {idx+1}\n\tname: {activity_color}{component.name}{bcolors.ENDC}\n\ttype: {component.type}"
                 )
                 if hasattr(component, "plugin_name"):
-                    plugin_name = component.plugin_name
+                    plugin_name = f"{component.plugin_name}"
                 # Keep compatibility to the obsolete filed name in Humble
                 elif hasattr(component, "class_type"):
-                    plugin_name = component.class_type
+                    plugin_name = f"{component.class_type}"
                 else:
                     plugin_name = f"{bcolors.WARNING}plugin name missing!{bcolors.ENDC}"
 
                 print(
                     f"\tplugin name: {plugin_name}\n"
-                    f"\tstate: id={component.state.id} label={component.state.label}\n"
+                    f"\tstate: id={component.state.id} label={activity_color}{component.state.label}{bcolors.ENDC}\n"
                     f"\tcommand interfaces"
                 )
                 for cmd_interface in component.command_interfaces:

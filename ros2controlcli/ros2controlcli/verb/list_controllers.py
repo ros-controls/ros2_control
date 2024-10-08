@@ -22,7 +22,7 @@ from ros2cli.verb import VerbExtension
 from ros2controlcli.api import add_controller_mgr_parsers
 
 
-def print_controller_state(c, args):
+def print_controller_state(c, args, col_width_name, col_width_state, col_width_type):
     state_color = ""
     if c.state == "active":
         state_color = bcolors.OKGREEN
@@ -31,7 +31,9 @@ def print_controller_state(c, args):
     elif c.state == "unconfigured":
         state_color = bcolors.WARNING
 
-    print(f"{c.name:20s}[{c.type:20s}] {state_color}{c.state:10s}{bcolors.ENDC}")
+    print(
+        f"{state_color}{c.name:<{col_width_name}}{bcolors.ENDC} {c.type:<{col_width_type}}  {state_color}{c.state:<{col_width_state}}{bcolors.ENDC}"
+    )
     if args.claimed_interfaces or args.verbose:
         print("\tclaimed interfaces:")
         for claimed_interface in c.claimed_interfaces:
@@ -96,7 +98,17 @@ class ListControllersVerb(VerbExtension):
     def main(self, *, args):
         with NodeStrategy(args) as node:
             response = list_controllers(node, args.controller_manager)
+
+            if not response.controller:
+                print("No controllers are currently loaded!")
+                return 0
+
+            # Structure data as table for nicer output
+            col_width_name = max(len(ctrl.name) for ctrl in response.controller)
+            col_width_type = max(len(ctrl.type) for ctrl in response.controller)
+            col_width_state = max(len(ctrl.state) for ctrl in response.controller)
+
             for c in response.controller:
-                print_controller_state(c, args)
+                print_controller_state(c, args, col_width_name, col_width_state, col_width_type)
 
             return 0
