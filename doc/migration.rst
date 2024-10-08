@@ -75,3 +75,90 @@ hardware_interface
 ******************
 * ``test_components`` was moved to its own package. Update the dependencies if you are using them. (`#1325 <https://github.com/ros-controls/ros2_control/pull/1325>`_)
 * With (`#1683 <https://github.com/ros-controls/ros2_control/pull/1683>`_) the ``rclcpp_lifecycle::State & get_state()`` and ``void set_state(const rclcpp_lifecycle::State & new_state)`` are replaced by ``rclcpp_lifecycle::State & get_lifecycle_state()`` and ``void set_lifecycle_state(const rclcpp_lifecycle::State & new_state)``. This change affects controllers and hardware. This is related to (`#1240 <https://github.com/ros-controls/ros2_control/pull/1240>`_) as variant support introduces ``get_state`` and ``set_state`` methods for setting/getting state of handles.
+
+Adaption of Command-/StateInterfaces
+***************************************
+
+* ``Command-/StateInterfaces`` are now created and exported automatically by the framework via the ``on_export_command_interfaces()`` or ``on_export_state_interfaces()`` methods based on the interfaces defined in the ``ros2_control`` XML-tag, which get parsed and the ``InterfaceDescription`` is created accordingly (check the `hardware_info.hpp <https://github.com/ros-controls/ros2_control/tree/{REPOS_FILE_BRANCH}/hardware_interface/include/hardware_interface/hardware_info.hpp>`__). The memory is now allocated in the handle itself.
+
+Migration of Command-/StateInterfaces
+-------------------------------------
+To adapt to the new way of creating and exporting ``Command-/StateInterfaces`` follow those steps:
+
+1. Delete the ``std::vector<hardware_interface::CommandInterface> export_command_interfaces() override`` and ``std::vector<hardware_interface::StateInterface> export_state_interfaces() override``.
+2. Delete allocated memory for any ``Command-/StateInterfaces``, e.g.:
+
+  * If you have a ``std::vector<double> hw_commands_;`` for joints' ``CommandInterfaces`` delete the definition and any usage/appearance.
+  * Wherever you iterated over a state/command or accessed commands like this:
+
+.. code-block:: c++
+
+    // states
+    for (uint i = 0; i < hw_states_.size(); i++)
+    {
+      hw_states_[i] = 0;
+      auto some_state = hw_states_[i];
+    }
+
+    // commands
+    for (uint i = 0; i < hw_commands_.size(); i++)
+    {
+      hw_commands_[i] = 0;
+      auto some_command = hw_commands_[i];
+    }
+
+    // specific state/command
+    hw_commands_[x] = hw_states_[y];
+
+replace it with
+
+.. code-block:: c++
+
+  // states replace with this
+  for (const auto & [name, descr] : joint_state_interfaces_)
+  {
+    set_state(name, 0.0);
+    auto some_state = get_state(name);
+  }
+
+  //commands replace with this
+  for (const auto & [name, descr] : joint_commands_interfaces_)
+  {
+    set_command(name, 0.0);
+    auto some_command = get_command(name);
+  }
+
+  // replace specific state/command, for this you need to store the names which are strings
+  // somewhere or know them. However be careful since the names are fully qualified names which
+  // means that the prefix is included for the name: E.g.: prefix/joint_1/velocity
+  set_command(name_of_command_interface_x, get_state(name_of_state_interface_y));
+
+Migration of unlisted Command-/StateInterfaces not defined in ``ros2_control`` XML-tag
+--------------------------------------------------------------------------------------
+If you want some unlisted ``Command-/StateInterfaces`` not included in the ``ros2_control`` XML-tag you can follow those steps:
+
+1. Override the ``virtual std::vector<hardware_interface::InterfaceDescription> export_unlisted_command_interfaces()`` or ``virtual std::vector<hardware_interface::InterfaceDescription> export_unlisted_state_interfaces()``
+2. Create the InterfaceDescription for each of the interfaces you want to create in the override ``export_unlisted_command_interfaces()`` or ``export_unlisted_state_interfaces()`` function, add it to a vector and return the vector:
+
+  .. code-block:: c++
+
+    std::vector<hardware_interface::InterfaceDescription> my_unlisted_interfaces;
+
+    InterfaceInfo unlisted_interface;
+    unlisted_interface.name = "some_unlisted_interface";
+    unlisted_interface.min = "-5.0";
+    unlisted_interface.data_type = "double";
+    my_unlisted_interfaces.push_back(InterfaceDescription(info_.name, unlisted_interface));
+
+    return my_unlisted_interfaces;
+
+3. The unlisted interface will then be stored in either the ``unlisted_command_interfaces_`` or ``unlisted_state_interfaces_`` map depending in which function they are created.
+4. You can access it like any other interface with the ``get_state(name)``, ``set_state(name, value)``, ``get_command(name)`` or ``set_command(name, value)``. E.g. ``get_state("some_unlisted_interface")``.
+
+Custom export of Command-/StateInterfaces
+----------------------------------------------
+In case the default implementation (``on_export_command_interfaces()`` or ``on_export_state_interfaces()`` ) for exporting the ``Command-/StateInterfaces`` is not enough you can override them. You should however consider the following things:
+
+* If you want to have unlisted interfaces available you need to call the ``export_unlisted_command_interfaces()`` or ``export_unlisted_state_interfaces()`` and add them to the ``unlisted_command_interfaces_`` or ``unlisted_state_interfaces_``.
+* Don't forget to store the created ``Command-/StateInterfaces`` internally as you only return ``std::shared_ptr`` and the resource manager will not provide access to the created ``Command-/StateInterface`` for the hardware. So you must take care of storing them yourself.
+* Names must be unique!

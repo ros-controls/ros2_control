@@ -185,14 +185,15 @@ public:
   CONTROLLER_INTERFACE_PUBLIC
   virtual rclcpp::NodeOptions define_custom_node_options() const
   {
+    rclcpp::NodeOptions node_options;
 // \note The versions conditioning is added here to support the source-compatibility with Humble
 #if RCLCPP_VERSION_MAJOR >= 21
-    return rclcpp::NodeOptions().enable_logger_service(true);
+    node_options.enable_logger_service(true);
 #else
-    return rclcpp::NodeOptions()
-      .allow_undeclared_parameters(true)
-      .automatically_declare_parameters_from_overrides(true);
+    node_options.allow_undeclared_parameters(true);
+    node_options.automatically_declare_parameters_from_overrides(true);
 #endif
+    return node_options;
   }
 
   /// Declare and initialize a parameter with a type.
@@ -234,7 +235,8 @@ public:
    * \returns list of command interfaces for preceding controllers.
    */
   CONTROLLER_INTERFACE_PUBLIC
-  virtual std::vector<hardware_interface::CommandInterface> export_reference_interfaces() = 0;
+  virtual std::vector<hardware_interface::CommandInterface::SharedPtr>
+  export_reference_interfaces() = 0;
 
   /**
    * Export interfaces for a chainable controller that can be used as state interface by other
@@ -243,7 +245,8 @@ public:
    * \returns list of state interfaces for preceding controllers.
    */
   CONTROLLER_INTERFACE_PUBLIC
-  virtual std::vector<hardware_interface::StateInterface> export_state_interfaces() = 0;
+  virtual std::vector<hardware_interface::StateInterface::ConstSharedPtr>
+  export_state_interfaces() = 0;
 
   /**
    * Set chained mode of a chainable controller. This method triggers internal processes to switch

@@ -625,6 +625,81 @@ const auto valid_urdf_ros2_control_system_robot_with_all_interfaces =
       <command_interface name="jerk"/>
       <state_interface name="position"/>
     </joint>
+   </ros2_control>
+)";
+
+// Voltage Sensor only
+const auto valid_urdf_ros2_control_voltage_sensor_only =
+  R"(
+  <ros2_control name="SingleJointVoltage" type="sensor">
+    <hardware>
+      <plugin>ros2_control_demo_hardware/SingleJointVoltageSensor</plugin>
+      <param name="example_param_read_for_sec">2</param>
+    </hardware>
+    <sensor name="joint1">
+      <state_interface name="voltage" initial_value="0.0"/>
+    </sensor>
+  </ros2_control>
+)";
+
+const auto valid_urdf_ros2_control_dummy_actuator_only =
+  R"(
+  <ros2_control name="ActuatorModularJoint1" type="actuator">
+    <hardware>
+      <plugin>ros2_control_demo_hardware/VelocityActuatorHardware</plugin>
+      <param name="example_param_write_for_sec">1.13</param>
+      <param name="example_param_read_for_sec">3</param>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="velocity">
+        <param name="min">-1</param>
+        <param name="max">1</param>
+      </command_interface>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+    <transmission name="transmission1">
+      <plugin>transmission_interface/RotationToLinerTansmission</plugin>
+      <joint name="joint1" role="joint1">
+        <mechanical_reduction>325.949</mechanical_reduction>
+      </joint>
+      <param name="additional_special_parameter">1337</param>
+    </transmission>
+  </ros2_control>
+)";
+
+const auto valid_urdf_ros2_control_dummy_system_robot =
+  R"(
+  <ros2_control name="RRBotSystemWithGPIO" type="system">
+    <hardware>
+      <plugin>ros2_control_demo_hardware/RRBotSystemWithGPIOHardware</plugin>
+      <param name="example_param_write_for_sec">2</param>
+      <param name="example_param_read_for_sec">2</param>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="velocity">
+        <param name="min">-1</param>
+        <param name="max">1</param>
+      </command_interface>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+    <joint name="joint2">
+      <command_interface name="velocity">
+        <param name="min">-1</param>
+        <param name="max">1</param>
+      </command_interface>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+    <joint name="joint3">
+      <command_interface name="velocity">
+        <param name="min">-1</param>
+        <param name="max">1</param>
+      </command_interface>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
   </ros2_control>
 )";
 
