@@ -204,7 +204,7 @@ const rclcpp_lifecycle::State & Actuator::error()
   return impl_->get_lifecycle_state();
 }
 
-std::vector<StateInterface::SharedPtr> Actuator::export_state_interfaces()
+std::vector<StateInterface::ConstSharedPtr> Actuator::export_state_interfaces()
 {
   // BEGIN (Handle export change): for backward compatibility, can be removed if
   // export_command_interfaces() method is removed
@@ -222,11 +222,11 @@ std::vector<StateInterface::SharedPtr> Actuator::export_state_interfaces()
 
   // BEGIN (Handle export change): for backward compatibility, can be removed if
   // export_command_interfaces() method is removed
-  std::vector<StateInterface::SharedPtr> interface_ptrs;
+  std::vector<StateInterface::ConstSharedPtr> interface_ptrs;
   interface_ptrs.reserve(interfaces.size());
   for (auto const & interface : interfaces)
   {
-    interface_ptrs.emplace_back(std::make_shared<StateInterface>(interface));
+    interface_ptrs.emplace_back(std::make_shared<const StateInterface>(interface));
   }
   return interface_ptrs;
   // END: for backward compatibility
