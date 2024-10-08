@@ -973,7 +973,7 @@ controller_interface::return_type ControllerManager::switch_controller(
     {
       RCLCPP_WARN(
         get_logger(),
-        "Controller with name '%s' is not inactive so its following"
+        "Controller with name '%s' is not inactive so its following "
         "controllers do not have to be checked, because it cannot be activated.",
         controller_it->info.name.c_str());
       ret = controller_interface::return_type::ERROR;

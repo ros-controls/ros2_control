@@ -2,6 +2,11 @@
 Changelog for package ros2controlcli
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.43.1 (2024-09-11)
+-------------------
+* [ros2controlcli] fix list_controllers when no controllers are loaded (`#1721 <https://github.com/ros-controls/ros2_control/issues/1721>`_) (`#1722 <https://github.com/ros-controls/ros2_control/issues/1722>`_)
+* Contributors: mergify[bot]
+
 2.43.0 (2024-08-22)
 -------------------
 * Make list controller and list hardware components immediately visualize the state. (backport `#1606 <https://github.com/ros-controls/ros2_control/issues/1606>`_) (`#1690 <https://github.com/ros-controls/ros2_control/issues/1690>`_)

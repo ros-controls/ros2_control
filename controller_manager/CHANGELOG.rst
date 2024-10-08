@@ -2,6 +2,12 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.43.1 (2024-09-11)
+-------------------
+* controller_manager: Add space to string literal concatenation (`#1245 <https://github.com/ros-controls/ros2_control/issues/1245>`_) (`#1747 <https://github.com/ros-controls/ros2_control/issues/1747>`_)
+* fix: the print of the information in control node was in wrong order (`#1726 <https://github.com/ros-controls/ros2_control/issues/1726>`_)
+* Contributors: Manuel Muth, roscan-tech
+
 2.43.0 (2024-08-22)
 -------------------
 * Infrom user why rt policy could not be set, infrom if is set. (backport `#1705 <https://github.com/ros-controls/ros2_control/issues/1705>`_) (`#1708 <https://github.com/ros-controls/ros2_control/issues/1708>`_)
