@@ -28,13 +28,25 @@ class LoanedStateInterface
 public:
   using Deleter = std::function<void(void)>;
 
-  explicit LoanedStateInterface(StateInterface & state_interface)
+  [[deprecated("Replaced by the new version using shared_ptr")]] explicit LoanedStateInterface(
+    const StateInterface & state_interface)
   : LoanedStateInterface(state_interface, nullptr)
   {
   }
 
-  LoanedStateInterface(StateInterface & state_interface, Deleter && deleter)
+  [[deprecated("Replaced by the new version using shared_ptr")]] LoanedStateInterface(
+    const StateInterface & state_interface, Deleter && deleter)
   : state_interface_(state_interface), deleter_(std::forward<Deleter>(deleter))
+  {
+  }
+
+  explicit LoanedStateInterface(StateInterface::ConstSharedPtr state_interface)
+  : LoanedStateInterface(state_interface, nullptr)
+  {
+  }
+
+  LoanedStateInterface(StateInterface::ConstSharedPtr state_interface, Deleter && deleter)
+  : state_interface_(*state_interface), deleter_(std::forward<Deleter>(deleter))
   {
   }
 
@@ -66,7 +78,7 @@ public:
   double get_value() const { return state_interface_.get_value(); }
 
 protected:
-  StateInterface & state_interface_;
+  const StateInterface & state_interface_;
   Deleter deleter_;
 };
 
