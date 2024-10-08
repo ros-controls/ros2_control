@@ -154,7 +154,7 @@ public:
    * \return vector of state interfaces
    */
   [[deprecated(
-    "Replaced by vector<StateInterface::SharedPtr> on_export_state_interfaces() method. "
+    "Replaced by vector<StateInterface::ConstSharedPtr> on_export_state_interfaces() method. "
     "Exporting is handled "
     "by the Framework.")]] virtual std::vector<StateInterface>
   export_state_interfaces()
@@ -185,13 +185,13 @@ public:
    *
    * \return vector of shared pointers to the created and stored StateInterfaces
    */
-  virtual std::vector<StateInterface::SharedPtr> on_export_state_interfaces()
+  virtual std::vector<StateInterface::ConstSharedPtr> on_export_state_interfaces()
   {
     // import the unlisted interfaces
     std::vector<hardware_interface::InterfaceDescription> unlisted_interface_descriptions =
       export_unlisted_state_interface_descriptions();
 
-    std::vector<StateInterface::SharedPtr> state_interfaces;
+    std::vector<StateInterface::ConstSharedPtr> state_interfaces;
     state_interfaces.reserve(
       unlisted_interface_descriptions.size() + sensor_state_interfaces_.size());
 
@@ -203,7 +203,7 @@ public:
       auto state_interface = std::make_shared<StateInterface>(description);
       sensor_states_map_.insert(std::make_pair(name, state_interface));
       unlisted_states_.push_back(state_interface);
-      state_interfaces.push_back(state_interface);
+      state_interfaces.push_back(std::const_pointer_cast<const StateInterface>(state_interface));
     }
 
     for (const auto & [name, descr] : sensor_state_interfaces_)
@@ -212,7 +212,7 @@ public:
       auto state_interface = std::make_shared<StateInterface>(descr);
       sensor_states_map_.insert(std::make_pair(name, state_interface));
       sensor_states_.push_back(state_interface);
-      state_interfaces.push_back(state_interface);
+      state_interfaces.push_back(std::const_pointer_cast<const StateInterface>(state_interface));
     }
 
     return state_interfaces;
