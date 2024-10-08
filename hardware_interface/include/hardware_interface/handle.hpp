@@ -139,6 +139,7 @@ public:
   using Handle::Handle;
 
   using SharedPtr = std::shared_ptr<StateInterface>;
+  using ConstSharedPtr = std::shared_ptr<const StateInterface>;
 };
 
 class CommandInterface : public Handle
