@@ -116,7 +116,7 @@ ChainableControllerInterface::export_reference_interfaces()
   std::vector<hardware_interface::CommandInterface::SharedPtr> reference_interfaces_ptrs_vec;
   reference_interfaces_ptrs_vec.reserve(reference_interfaces.size());
   exported_reference_interface_names_.reserve(reference_interfaces.size());
-  ordered_reference_interfaces_.reserve(reference_interfaces.size());
+  ordered_exported_reference_interfaces_.reserve(reference_interfaces.size());
 
   // BEGIN (Handle export change): for backward compatibility
   // check if the "reference_interfaces_" variable is resized to number of interfaces
@@ -169,7 +169,7 @@ ChainableControllerInterface::export_reference_interfaces()
       reference_interfaces_ptrs_vec.clear();
       throw std::runtime_error(error_msg);
     }
-    ordered_reference_interfaces_.push_back(reference_interface);
+    ordered_exported_reference_interfaces_.push_back(reference_interface);
     add_element_to_list(exported_reference_interface_names_, interface_name);
     reference_interfaces_ptrs_vec.push_back(reference_interface);
   }

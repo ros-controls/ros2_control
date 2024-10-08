@@ -145,7 +145,8 @@ protected:
   // BEGIN (Handle export change): for backward compatibility
   std::vector<double> reference_interfaces_;
   // END
-  std::vector<hardware_interface::CommandInterface::SharedPtr> ordered_reference_interfaces_;
+  std::vector<hardware_interface::CommandInterface::SharedPtr>
+    ordered_exported_reference_interfaces_;
   std::unordered_map<std::string, hardware_interface::CommandInterface::SharedPtr>
     exported_reference_interfaces_;
 
