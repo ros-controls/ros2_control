@@ -1,6 +1,9 @@
 name: Humble Source Build
 on:
   workflow_dispatch:
+  pull_request:
+    branches:
+      - humble
   push:
     branches:
       - humble
