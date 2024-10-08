@@ -95,7 +95,7 @@ TEST_F(ChainableControllerInterfaceTest, interfaces_prefix_is_not_node_name)
     std::runtime_error);
   ASSERT_THAT(exported_reference_interfaces, IsEmpty());
   // expect empty return because interface prefix is not equal to the node name
-  std::vector<hardware_interface::StateInterface::SharedPtr> exported_state_interfaces;
+  std::vector<hardware_interface::StateInterface::ConstSharedPtr> exported_state_interfaces;
   EXPECT_THROW(
     { exported_state_interfaces = controller.export_state_interfaces(); }, std::runtime_error);
   ASSERT_THAT(exported_state_interfaces, IsEmpty());

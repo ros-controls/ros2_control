@@ -22,7 +22,7 @@ ControllerInterface::ControllerInterface() : ControllerInterfaceBase() {}
 
 bool ControllerInterface::is_chainable() const { return false; }
 
-std::vector<hardware_interface::StateInterface::SharedPtr>
+std::vector<hardware_interface::StateInterface::ConstSharedPtr>
 ControllerInterface::export_state_interfaces()
 {
   return {};

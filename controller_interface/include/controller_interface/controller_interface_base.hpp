@@ -245,7 +245,8 @@ public:
    * \returns list of state interfaces for preceding controllers.
    */
   CONTROLLER_INTERFACE_PUBLIC
-  virtual std::vector<hardware_interface::StateInterface::SharedPtr> export_state_interfaces() = 0;
+  virtual std::vector<hardware_interface::StateInterface::ConstSharedPtr>
+  export_state_interfaces() = 0;
 
   /**
    * Set chained mode of a chainable controller. This method triggers internal processes to switch
