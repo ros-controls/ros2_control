@@ -802,16 +802,16 @@ controller_interface::return_type ControllerManager::configure_controller(
         // TODO(destogl): Add test for this!
         RCLCPP_ERROR(
           get_logger(),
-          "Controller '%s' is chainable, but does not export any reference interfaces. Did you "
-          "override the on_export_method() correctly?",
+          "Controller '%s' is chainable, but does not export any state or reference interfaces. "
+          "Did you override the on_export_method() correctly?",
           controller_name.c_str());
         return controller_interface::return_type::ERROR;
       }
     }
-    catch (const std::runtime_error & e)
+    catch (const std::exception & e)
     {
       RCLCPP_FATAL(
-        get_logger(), "Creation of the reference interfaces failed with following error: %s",
+        get_logger(), "Export of the state or reference interfaces failed with following error: %s",
         e.what());
       return controller_interface::return_type::ERROR;
     }
