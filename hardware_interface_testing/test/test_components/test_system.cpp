@@ -104,6 +104,12 @@ class TestSystem : public SystemInterface
     {
       return return_type::DEACTIVATE;
     }
+    // The next line is for the testing purposes. We need value to be changed to
+    // be sure that the feedback from hardware to controllers in the chain is
+    // working as it should. This makes value checks clearer and confirms there
+    // is no "state = command" line or some other mixture of interfaces
+    // somewhere in the test stack.
+    velocity_state_[0] = velocity_command_[0] / 2.0;
     return return_type::OK;
   }
 

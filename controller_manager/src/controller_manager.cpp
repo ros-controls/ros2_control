@@ -2502,7 +2502,6 @@ void ControllerManager::shutdown_async_controllers_and_components()
 {
   async_controller_threads_.erase(
     async_controller_threads_.begin(), async_controller_threads_.end());
-  resource_manager_->shutdown_async_components();
 }
 
 void ControllerManager::propagate_deactivation_of_chained_mode(

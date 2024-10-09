@@ -662,7 +662,7 @@ const auto hardware_resources =
 
 const auto async_hardware_resources =
   R"(
-  <ros2_control name="TestActuatorHardware" type="actuator" is_async="true">
+  <ros2_control name="TestActuatorHardware" type="actuator" is_async="true" thread_priority="30">
     <hardware>
       <plugin>test_actuator</plugin>
     </hardware>
@@ -683,7 +683,7 @@ const auto async_hardware_resources =
       <state_interface name="velocity"/>
     </sensor>
   </ros2_control>
-  <ros2_control name="TestSystemHardware" type="system" is_async="true">
+  <ros2_control name="TestSystemHardware" type="system" is_async="true" thread_priority="70">
     <hardware>
       <plugin>test_system</plugin>
       <param name="example_param_write_for_sec">2</param>
