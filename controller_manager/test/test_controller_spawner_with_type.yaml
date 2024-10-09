@@ -25,3 +25,28 @@ ctrl_with_parameters_and_no_type:
 /foo_namespace/ctrl_with_parameters_and_no_type:
   ros__parameters:
     joint_names: ["joint2"]
+
+controller_joint1:
+  ros__parameters:
+    type: "controller_manager/test_controller_with_interfaces"
+    joint_name: "joint1"
+
+controller_joint2:
+  ros__parameters:
+    type: "controller_manager/test_controller_with_interfaces"
+    joint_name: "joint2"
+    remap:
+      state_interfaces:
+        "joint2/effort": "joint2/torque"
+      command_interfaces:
+        "joint2/effort": "joint2/torque"
+
+controller_joint3:
+  ros__parameters:
+    type: "controller_manager/test_controller_with_interfaces"
+    joint_name: "joint3"
+    remap:
+      state_interfaces:
+        "joint3/effort": "joint3/force"
+      command_interfaces:
+        "joint3/effort": "joint3/force"

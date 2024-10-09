@@ -197,3 +197,148 @@ TEST_F(TestReleaseInterfaces, switch_controllers_same_interface)
       abstract_test_controller2.c->get_lifecycle_state().id());
   }
 }
+
+class TestControllerInterfacesRemapping;
+
+class TestableControllerManager : public controller_manager::ControllerManager
+{
+  friend TestControllerInterfacesRemapping;
+
+  FRIEND_TEST(TestControllerInterfacesRemapping, check_resource_manager_resources);
+
+public:
+  TestableControllerManager(
+    std::unique_ptr<hardware_interface::ResourceManager> resource_manager,
+    std::shared_ptr<rclcpp::Executor> executor,
+    const std::string & manager_node_name = "controller_manager",
+    const std::string & node_namespace = "")
+  : controller_manager::ControllerManager(
+      std::move(resource_manager), executor, manager_node_name, node_namespace)
+  {
+  }
+};
+
+class TestControllerInterfacesRemapping : public ControllerManagerFixture<TestableControllerManager>
+{
+public:
+  TestControllerInterfacesRemapping()
+  : ControllerManagerFixture<TestableControllerManager>(
+      std::string(ros2_control_test_assets::urdf_head) +
+      std::string(ros2_control_test_assets::hardware_resources_with_types_of_effort) +
+      std::string(ros2_control_test_assets::urdf_tail))
+  {
+  }
+
+  void SetUp() override
+  {
+    ControllerManagerFixture::SetUp();
+
+    update_timer_ = cm_->create_wall_timer(
+      std::chrono::milliseconds(10),
+      [&]()
+      {
+        cm_->read(time_, PERIOD);
+        cm_->update(time_, PERIOD);
+        cm_->write(time_, PERIOD);
+      });
+
+    update_executor_ =
+      std::make_shared<rclcpp::executors::MultiThreadedExecutor>(rclcpp::ExecutorOptions(), 2);
+
+    update_executor_->add_node(cm_);
+    update_executor_spin_future_ =
+      std::async(std::launch::async, [this]() -> void { update_executor_->spin(); });
+    // This sleep is needed to prevent a too fast test from ending before the
+    // executor has began to spin, which causes it to hang
+    using namespace std::chrono_literals;
+    std::this_thread::sleep_for(50ms);
+  }
+
+  void TearDown() override { update_executor_->cancel(); }
+
+protected:
+  rclcpp::TimerBase::SharedPtr update_timer_;
+
+  // Using a MultiThreadedExecutor so we can call update on a separate thread from service callbacks
+  std::shared_ptr<rclcpp::Executor> update_executor_;
+  std::future<void> update_executor_spin_future_;
+};
+
+TEST_F(TestControllerInterfacesRemapping, check_resource_manager_resources)
+{
+  ASSERT_TRUE(cm_->is_resource_manager_initialized());
+  ASSERT_TRUE(cm_->resource_manager_->are_components_initialized());
+  std::vector<std::string> expected_command_interfaces(
+    {"joint1/position", "joint1/max_velocity", "joint1/effort", "joint2/position",
+     "joint2/max_velocity", "joint2/torque", "joint3/position", "joint3/max_velocity",
+     "joint3/force"});
+  std::vector<std::string> expected_state_interfaces(
+    {"joint1/position", "joint1/velocity", "joint1/effort", "joint2/position", "joint2/velocity",
+     "joint2/torque", "joint3/position", "joint3/velocity", "joint3/force"});
+
+  for (const auto & itf : expected_command_interfaces)
+  {
+    ASSERT_TRUE(cm_->resource_manager_->command_interface_is_available(itf))
+      << "Couldn't find command interface: " << itf;
+    ASSERT_FALSE(cm_->resource_manager_->command_interface_is_claimed(itf))
+      << "The command interface is not supposed to be claimed by any controller: " << itf;
+  }
+  for (const auto & itf : expected_state_interfaces)
+  {
+    ASSERT_TRUE(cm_->resource_manager_->state_interface_is_available(itf))
+      << "Couldn't find state interface: " << itf;
+  }
+
+  // There is no effort interface for joint2 and joint3
+  ASSERT_FALSE(cm_->resource_manager_->command_interface_is_available("joint2/effort"));
+  ASSERT_FALSE(cm_->resource_manager_->command_interface_is_available("joint3/effort"));
+
+  const std::string test_file_path = ament_index_cpp::get_package_prefix("controller_manager") +
+                                     "/test/test_controller_spawner_with_type.yaml";
+
+  // Provide controller type via the parsed file
+  ControllerManagerRunner cm_runner(this);
+  EXPECT_EQ(
+    std::system(std::string(
+                  "ros2 run controller_manager spawner controller_joint1 controller_joint2 "
+                  "controller_joint3 -c test_controller_manager -p " +
+                  test_file_path)
+                  .c_str()),
+    0);
+
+  // once the controllers are successfully started, check the command interfaces are remapped as
+  // expected
+  for (const auto & itf : {"joint1/effort", "joint2/torque", "joint3/force"})
+  {
+    ASSERT_TRUE(cm_->resource_manager_->command_interface_is_available(itf))
+      << "The command interface are not supposed to be available: " << itf;
+    ASSERT_TRUE(cm_->resource_manager_->command_interface_is_claimed(itf))
+      << "The command interface is supposed to be claimed by the controller : " << itf;
+  }
+
+  EXPECT_EQ(
+    std::system(
+      std::string(
+        "ros2 run controller_manager unspawner controller_joint1 -c test_controller_manager")
+        .c_str()),
+    0);
+  ASSERT_FALSE(cm_->resource_manager_->command_interface_is_claimed("joint1/effort"));
+
+  // Now unspawn the controller_joint2 and controller_joint3 and see if the respective interfaces
+  // are released
+  EXPECT_EQ(
+    std::system(
+      std::string(
+        "ros2 run controller_manager unspawner controller_joint2 -c test_controller_manager")
+        .c_str()),
+    0);
+  ASSERT_FALSE(cm_->resource_manager_->command_interface_is_claimed("joint2/torque"));
+
+  EXPECT_EQ(
+    std::system(
+      std::string(
+        "ros2 run controller_manager unspawner controller_joint3 -c test_controller_manager")
+        .c_str()),
+    0);
+  ASSERT_FALSE(cm_->resource_manager_->command_interface_is_claimed("joint3/force"));
+}
