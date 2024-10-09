@@ -459,7 +459,6 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
       "'hardware_components_initial_state' parameter structure.");
     rclcpp_lifecycle::State active_state(
       State::PRIMARY_STATE_ACTIVE, hardware_interface::lifecycle_state_names::ACTIVE);
-<<<<<<< HEAD
     for (const auto & component : activate_components_on_start)
     {
       resource_manager_->set_component_state(component, active_state);
@@ -473,16 +472,14 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
     {
       rclcpp_lifecycle::State active_state(
         State::PRIMARY_STATE_ACTIVE, hardware_interface::lifecycle_state_names::ACTIVE);
-      resource_manager_->set_component_state(component, active_state);
-=======
-    if (
-      resource_manager_->set_component_state(component, active_state) ==
-      hardware_interface::return_type::ERROR)
-    {
-      throw std::runtime_error(
-        "Failed to set the initial state of the component : " + component + " to " +
-        active_state.label());
->>>>>>> 1c7a5d1 ([CM] Throw an exception when the components initially fail to be in the required state (#1729))
+      if (
+        resource_manager_->set_component_state(component, active_state) ==
+        hardware_interface::return_type::ERROR)
+      {
+        throw std::runtime_error(
+          "Failed to set the initial state of the component : " + component + " to " +
+          active_state.label());
+      }
     }
   }
 }
