@@ -44,6 +44,7 @@ if(BUILD_TESTING)
 
   find_package(hardware_interface REQUIRED)
   find_package(sensor_msgs REQUIRED)
+  find_package(geometry_msgs REQUIRED)
 
   ament_add_gmock(test_controller_interface test/test_controller_interface.cpp)
   target_link_libraries(test_controller_interface ${PROJECT_NAME})
@@ -87,6 +88,13 @@ if(BUILD_TESTING)
     test_imu_sensor
     hardware_interface
     sensor_msgs
+  )
+
+  ament_add_gmock(test_pose_sensor test/test_pose_sensor.cpp)
+  target_include_directories(test_pose_sensor PRIVATE include)
+  ament_target_dependencies(test_pose_sensor
+    hardware_interface
+    geometry_msgs
   )
 endif()
 
