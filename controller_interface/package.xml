@@ -18,6 +18,7 @@
   <build_export_depend>rclcpp_lifecycle</build_export_depend>
 
   <test_depend>ament_cmake_gmock</test_depend>
+  <test_depend>geometry_msgs</test_depend>
   <test_depend>sensor_msgs</test_depend>
 
   <export>

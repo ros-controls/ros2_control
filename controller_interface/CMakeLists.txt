@@ -32,6 +32,7 @@ target_compile_definitions(controller_interface PRIVATE "CONTROLLER_INTERFACE_BU
 
 if(BUILD_TESTING)
   find_package(ament_cmake_gmock REQUIRED)
+  find_package(geometry_msgs REQUIRED)
   find_package(sensor_msgs REQUIRED)
 
   ament_add_gmock(test_controller_interface test/test_controller_interface.cpp)
@@ -69,6 +70,15 @@ if(BUILD_TESTING)
   )
   ament_target_dependencies(test_imu_sensor
     sensor_msgs
+  )
+
+  ament_add_gmock(test_pose_sensor test/test_pose_sensor.cpp)
+  target_link_libraries(test_pose_sensor
+    controller_interface
+    hardware_interface::hardware_interface
+  )
+  ament_target_dependencies(test_pose_sensor
+    geometry_msgs
   )
 endif()
 
