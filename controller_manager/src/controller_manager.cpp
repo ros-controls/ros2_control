@@ -473,6 +473,7 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
         throw std::runtime_error(
           "Failed to set the initial state of the component : " + component + " to " +
           active_state.label());
+      }
     }
   }
 }
