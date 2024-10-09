@@ -9,6 +9,7 @@ endif()
 set(THIS_PACKAGE_INCLUDE_DEPENDS
   hardware_interface
   rclcpp_lifecycle
+  realtime_tools
 )
 
 find_package(ament_cmake REQUIRED)
