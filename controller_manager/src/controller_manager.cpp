@@ -281,6 +281,12 @@ void ControllerManager::init_controller_manager()
   diagnostics_updater_.setHardwareID("ros2_control");
   diagnostics_updater_.add(
     "Controllers Activity", this, &ControllerManager::controller_activity_diagnostic_callback);
+  diagnostics_updater_.add(
+    "Hardware Components Activity", this,
+    &ControllerManager::hardware_components_diagnostic_callback);
+  diagnostics_updater_.add(
+    "Controller Manager Activity", this,
+    &ControllerManager::controller_manager_diagnostic_callback);
 }
 
 void ControllerManager::robot_description_callback(const std_msgs::msg::String & robot_description)
@@ -346,7 +352,14 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
           RCLCPP_INFO(
             get_logger(), "Setting component '%s' to '%s' state.", component.c_str(),
             state.label().c_str());
-          resource_manager_->set_component_state(component, state);
+          if (
+            resource_manager_->set_component_state(component, state) ==
+            hardware_interface::return_type::ERROR)
+          {
+            throw std::runtime_error(
+              "Failed to set the initial state of the component : " + component + " to " +
+              state.label());
+          }
           components_to_activate.erase(component);
         }
       }
@@ -370,7 +383,14 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
   {
     rclcpp_lifecycle::State active_state(
       State::PRIMARY_STATE_ACTIVE, hardware_interface::lifecycle_state_names::ACTIVE);
-    resource_manager_->set_component_state(component, active_state);
+    if (
+      resource_manager_->set_component_state(component, active_state) ==
+      hardware_interface::return_type::ERROR)
+    {
+      throw std::runtime_error(
+        "Failed to set the initial state of the component : " + component + " to " +
+        active_state.label());
+    }
   }
   robot_description_notification_timer_->cancel();
 }
@@ -771,15 +791,28 @@ controller_interface::return_type ControllerManager::configure_controller(
       get_logger(),
       "Controller '%s' is chainable. Interfaces are being exported to resource manager.",
       controller_name.c_str());
-    auto state_interfaces = controller->export_state_interfaces();
-    auto ref_interfaces = controller->export_reference_interfaces();
-    if (ref_interfaces.empty() && state_interfaces.empty())
+    std::vector<hardware_interface::StateInterface::ConstSharedPtr> state_interfaces;
+    std::vector<hardware_interface::CommandInterface::SharedPtr> ref_interfaces;
+    try
     {
-      // TODO(destogl): Add test for this!
-      RCLCPP_ERROR(
-        get_logger(),
-        "Controller '%s' is chainable, but does not export any state or reference interfaces.",
-        controller_name.c_str());
+      state_interfaces = controller->export_state_interfaces();
+      ref_interfaces = controller->export_reference_interfaces();
+      if (ref_interfaces.empty() && state_interfaces.empty())
+      {
+        // TODO(destogl): Add test for this!
+        RCLCPP_ERROR(
+          get_logger(),
+          "Controller '%s' is chainable, but does not export any state or reference interfaces. "
+          "Did you override the on_export_method() correctly?",
+          controller_name.c_str());
+        return controller_interface::return_type::ERROR;
+      }
+    }
+    catch (const std::exception & e)
+    {
+      RCLCPP_FATAL(
+        get_logger(), "Export of the state or reference interfaces failed with following error: %s",
+        e.what());
       return controller_interface::return_type::ERROR;
     }
     resource_manager_->import_controller_reference_interfaces(controller_name, ref_interfaces);
@@ -2735,6 +2768,16 @@ controller_interface::return_type ControllerManager::check_preceeding_controller
 void ControllerManager::controller_activity_diagnostic_callback(
   diagnostic_updater::DiagnosticStatusWrapper & stat)
 {
+  bool atleast_one_hw_active = false;
+  const auto hw_components_info = resource_manager_->get_components_status();
+  for (const auto & [component_name, component_info] : hw_components_info)
+  {
+    if (component_info.state.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+    {
+      atleast_one_hw_active = true;
+      break;
+    }
+  }
   // lock controllers
   std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
   const std::vector<ControllerSpec> & controllers = rt_controllers_wrapper_.get_updated_list(guard);
@@ -2748,13 +2791,95 @@ void ControllerManager::controller_activity_diagnostic_callback(
     stat.add(controllers[i].info.name, controllers[i].c->get_lifecycle_state().label());
   }
 
-  if (all_active)
+  if (!atleast_one_hw_active)
   {
-    stat.summary(diagnostic_msgs::msg::DiagnosticStatus::OK, "All controllers are active");
+    stat.summary(
+      diagnostic_msgs::msg::DiagnosticStatus::ERROR,
+      "No hardware components are currently active to activate controllers");
   }
   else
   {
-    stat.summary(diagnostic_msgs::msg::DiagnosticStatus::OK, "Not all controllers are active");
+    if (controllers.empty())
+    {
+      stat.summary(
+        diagnostic_msgs::msg::DiagnosticStatus::WARN, "No controllers are currently loaded");
+    }
+    else
+    {
+      stat.summary(
+        diagnostic_msgs::msg::DiagnosticStatus::OK,
+        all_active ? "All controllers are active" : "Not all controllers are active");
+    }
+  }
+}
+
+void ControllerManager::hardware_components_diagnostic_callback(
+  diagnostic_updater::DiagnosticStatusWrapper & stat)
+{
+  bool all_active = true;
+  bool atleast_one_hw_active = false;
+  const auto hw_components_info = resource_manager_->get_components_status();
+  for (const auto & [component_name, component_info] : hw_components_info)
+  {
+    stat.add(component_name, component_info.state.label());
+    if (component_info.state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+    {
+      all_active = false;
+    }
+    else
+    {
+      atleast_one_hw_active = true;
+    }
+  }
+  if (!is_resource_manager_initialized())
+  {
+    stat.summary(
+      diagnostic_msgs::msg::DiagnosticStatus::ERROR, "Resource manager is not yet initialized!");
+  }
+  else if (hw_components_info.empty())
+  {
+    stat.summary(
+      diagnostic_msgs::msg::DiagnosticStatus::ERROR, "No hardware components are loaded!");
+  }
+  else
+  {
+    if (!atleast_one_hw_active)
+    {
+      stat.summary(
+        diagnostic_msgs::msg::DiagnosticStatus::WARN,
+        "No hardware components are currently active");
+    }
+    else
+    {
+      stat.summary(
+        diagnostic_msgs::msg::DiagnosticStatus::OK, all_active
+                                                      ? "All hardware components are active"
+                                                      : "Not all hardware components are active");
+    }
+  }
+}
+
+void ControllerManager::controller_manager_diagnostic_callback(
+  diagnostic_updater::DiagnosticStatusWrapper & stat)
+{
+  stat.add("update_rate", std::to_string(get_update_rate()));
+  if (is_resource_manager_initialized())
+  {
+    stat.summary(diagnostic_msgs::msg::DiagnosticStatus::OK, "Controller Manager is running");
+  }
+  else
+  {
+    if (robot_description_.empty())
+    {
+      stat.summary(
+        diagnostic_msgs::msg::DiagnosticStatus::WARN, "Waiting for robot description....");
+    }
+    else
+    {
+      stat.summary(
+        diagnostic_msgs::msg::DiagnosticStatus::ERROR,
+        "Resource Manager is not initialized properly!");
+    }
   }
 }
 

@@ -15,12 +15,18 @@
 #ifndef HARDWARE_INTERFACE__SYSTEM_INTERFACE_HPP_
 #define HARDWARE_INTERFACE__SYSTEM_INTERFACE_HPP_
 
+#include <limits>
+#include <memory>
 #include <string>
+#include <unordered_map>
+#include <utility>
 #include <vector>
 
+#include "hardware_interface/component_parser.hpp"
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
+#include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 #include "rclcpp/duration.hpp"
@@ -117,32 +123,236 @@ public:
    * \returns CallbackReturn::SUCCESS if required data are provided and can be parsed.
    * \returns CallbackReturn::ERROR if any error happens or data are missing.
    */
-  virtual CallbackReturn on_init(const HardwareInfo & /*hardware_info*/)
+  virtual CallbackReturn on_init(const HardwareInfo & hardware_info)
   {
+    info_ = hardware_info;
+    import_state_interface_descriptions(info_);
+    import_command_interface_descriptions(info_);
     return CallbackReturn::SUCCESS;
   };
 
+  /**
+   * Import the InterfaceDescription for the StateInterfaces from the HardwareInfo.
+   * Separate them into the possible types: Joint, GPIO, Sensor and store them.
+   */
+  void import_state_interface_descriptions(const HardwareInfo & hardware_info)
+  {
+    auto joint_state_interface_descriptions =
+      parse_state_interface_descriptions(hardware_info.joints);
+    for (const auto & description : joint_state_interface_descriptions)
+    {
+      joint_state_interfaces_.insert(std::make_pair(description.get_name(), description));
+    }
+    auto sensor_state_interface_descriptions =
+      parse_state_interface_descriptions(hardware_info.sensors);
+    for (const auto & description : sensor_state_interface_descriptions)
+    {
+      sensor_state_interfaces_.insert(std::make_pair(description.get_name(), description));
+    }
+    auto gpio_state_interface_descriptions =
+      parse_state_interface_descriptions(hardware_info.gpios);
+    for (const auto & description : gpio_state_interface_descriptions)
+    {
+      gpio_state_interfaces_.insert(std::make_pair(description.get_name(), description));
+    }
+  }
+
+  /**
+   * Import the InterfaceDescription for the CommandInterfaces from the HardwareInfo.
+   * Separate them into the possible types: Joint and GPIO and store them.
+   */
+  void import_command_interface_descriptions(const HardwareInfo & hardware_info)
+  {
+    auto joint_command_interface_descriptions =
+      parse_command_interface_descriptions(hardware_info.joints);
+    for (const auto & description : joint_command_interface_descriptions)
+    {
+      joint_command_interfaces_.insert(std::make_pair(description.get_name(), description));
+    }
+    auto gpio_command_interface_descriptions =
+      parse_command_interface_descriptions(hardware_info.gpios);
+    for (const auto & description : gpio_command_interface_descriptions)
+    {
+      gpio_command_interfaces_.insert(std::make_pair(description.get_name(), description));
+    }
+  }
+
   /// Exports all state interfaces for this hardware interface.
   /**
-   * The state interfaces have to be created and transferred according
-   * to the hardware info passed in for the configuration.
+   * Old way of exporting the StateInterfaces. If a empty vector is returned then
+   * the on_export_state_interfaces() method is called. If a vector with StateInterfaces is returned
+   * then the exporting of the StateInterfaces is only done with this function and the ownership is
+   * transferred to the resource manager. The set_command(...), get_command(...), ..., can then not
+   * be used.
    *
    * Note the ownership over the state interfaces is transferred to the caller.
    *
    * \return vector of state interfaces
    */
-  virtual std::vector<StateInterface> export_state_interfaces() = 0;
+  [[deprecated(
+    "Replaced by vector<StateInterface::ConstSharedPtr> on_export_state_interfaces() method. "
+    "Exporting is handled "
+    "by the Framework.")]] virtual std::vector<StateInterface>
+  export_state_interfaces()
+  {
+    // return empty vector by default. For backward compatibility we try calling
+    // export_state_interfaces() and only when empty vector is returned call
+    // on_export_state_interfaces()
+    return {};
+  }
+
+  /**
+   * Override this method to export custom StateInterfaces which are not defined in the URDF file.
+   * Those interfaces will be added to the unlisted_state_interfaces_ map.
+   *
+   * \return vector of descriptions to the unlisted StateInterfaces
+   */
+  virtual std::vector<hardware_interface::InterfaceDescription>
+  export_unlisted_state_interface_descriptions()
+  {
+    // return empty vector by default.
+    return {};
+  }
+
+  /**
+   * Default implementation for exporting the StateInterfaces. The StateInterfaces are created
+   * according to the InterfaceDescription. The memory accessed by the controllers and hardware is
+   * assigned here and resides in the system_interface.
+   *
+   * \return vector of shared pointers to the created and stored StateInterfaces
+   */
+  std::vector<StateInterface::ConstSharedPtr> on_export_state_interfaces()
+  {
+    // import the unlisted interfaces
+    std::vector<hardware_interface::InterfaceDescription> unlisted_interface_descriptions =
+      export_unlisted_state_interface_descriptions();
+
+    std::vector<StateInterface::ConstSharedPtr> state_interfaces;
+    state_interfaces.reserve(
+      unlisted_interface_descriptions.size() + joint_state_interfaces_.size() +
+      sensor_state_interfaces_.size() + gpio_state_interfaces_.size());
+
+    // add InterfaceDescriptions and create the StateInterfaces from the descriptions and add to
+    // maps.
+    for (const auto & description : unlisted_interface_descriptions)
+    {
+      auto name = description.get_name();
+      unlisted_state_interfaces_.insert(std::make_pair(name, description));
+      auto state_interface = std::make_shared<StateInterface>(description);
+      system_states_.insert(std::make_pair(name, state_interface));
+      unlisted_states_.push_back(state_interface);
+      state_interfaces.push_back(std::const_pointer_cast<const StateInterface>(state_interface));
+    }
+
+    for (const auto & [name, descr] : joint_state_interfaces_)
+    {
+      auto state_interface = std::make_shared<StateInterface>(descr);
+      system_states_.insert(std::make_pair(name, state_interface));
+      joint_states_.push_back(state_interface);
+      state_interfaces.push_back(std::const_pointer_cast<const StateInterface>(state_interface));
+    }
+    for (const auto & [name, descr] : sensor_state_interfaces_)
+    {
+      auto state_interface = std::make_shared<StateInterface>(descr);
+      system_states_.insert(std::make_pair(name, state_interface));
+      sensor_states_.push_back(state_interface);
+      state_interfaces.push_back(std::const_pointer_cast<const StateInterface>(state_interface));
+    }
+    for (const auto & [name, descr] : gpio_state_interfaces_)
+    {
+      auto state_interface = std::make_shared<StateInterface>(descr);
+      system_states_.insert(std::make_pair(name, state_interface));
+      gpio_states_.push_back(state_interface);
+      state_interfaces.push_back(std::const_pointer_cast<const StateInterface>(state_interface));
+    }
+    return state_interfaces;
+  }
 
   /// Exports all command interfaces for this hardware interface.
   /**
-   * The command interfaces have to be created and transferred according
-   * to the hardware info passed in for the configuration.
+   * Old way of exporting the CommandInterfaces. If a empty vector is returned then
+   * the on_export_command_interfaces() method is called. If a vector with CommandInterfaces is
+   * returned then the exporting of the CommandInterfaces is only done with this function and the
+   * ownership is transferred to the resource manager. The set_command(...), get_command(...), ...,
+   * can then not be used.
    *
    * Note the ownership over the state interfaces is transferred to the caller.
    *
-   * \return vector of command interfaces
+   * \return vector of state interfaces
    */
-  virtual std::vector<CommandInterface> export_command_interfaces() = 0;
+  [[deprecated(
+    "Replaced by vector<CommandInterface::SharedPtr> on_export_command_interfaces() method. "
+    "Exporting is "
+    "handled "
+    "by the Framework.")]] virtual std::vector<CommandInterface>
+  export_command_interfaces()
+  {
+    // return empty vector by default. For backward compatibility we try calling
+    // export_command_interfaces() and only when empty vector is returned call
+    // on_export_command_interfaces()
+    return {};
+  }
+
+  /**
+   * Override this method to export custom CommandInterfaces which are not defined in the URDF file.
+   * Those interfaces will be added to the unlisted_command_interfaces_ map.
+   *
+   * \return vector of descriptions to the unlisted CommandInterfaces
+   */
+  virtual std::vector<hardware_interface::InterfaceDescription>
+  export_unlisted_command_interface_descriptions()
+  {
+    // return empty vector by default.
+    return {};
+  }
+
+  /**
+   * Default implementation for exporting the CommandInterfaces. The CommandInterfaces are created
+   * according to the InterfaceDescription. The memory accessed by the controllers and hardware is
+   * assigned here and resides in the system_interface.
+   *
+   * \return vector of shared pointers to the created and stored CommandInterfaces
+   */
+  std::vector<CommandInterface::SharedPtr> on_export_command_interfaces()
+  {
+    // import the unlisted interfaces
+    std::vector<hardware_interface::InterfaceDescription> unlisted_interface_descriptions =
+      export_unlisted_command_interface_descriptions();
+
+    std::vector<CommandInterface::SharedPtr> command_interfaces;
+    command_interfaces.reserve(
+      unlisted_interface_descriptions.size() + joint_command_interfaces_.size() +
+      gpio_command_interfaces_.size());
+
+    // add InterfaceDescriptions and create the CommandInterfaces from the descriptions and add to
+    // maps.
+    for (const auto & description : unlisted_interface_descriptions)
+    {
+      auto name = description.get_name();
+      unlisted_command_interfaces_.insert(std::make_pair(name, description));
+      auto command_interface = std::make_shared<CommandInterface>(description);
+      system_commands_.insert(std::make_pair(name, command_interface));
+      unlisted_commands_.push_back(command_interface);
+      command_interfaces.push_back(command_interface);
+    }
+
+    for (const auto & [name, descr] : joint_command_interfaces_)
+    {
+      auto command_interface = std::make_shared<CommandInterface>(descr);
+      system_commands_.insert(std::make_pair(name, command_interface));
+      joint_commands_.push_back(command_interface);
+      command_interfaces.push_back(command_interface);
+    }
+
+    for (const auto & [name, descr] : gpio_command_interfaces_)
+    {
+      auto command_interface = std::make_shared<CommandInterface>(descr);
+      system_commands_.insert(std::make_pair(name, command_interface));
+      gpio_commands_.push_back(command_interface);
+      command_interfaces.push_back(command_interface);
+    }
+    return command_interfaces;
+  }
 
   /// Prepare for a new command interface switch.
   /**
@@ -233,6 +443,26 @@ public:
     lifecycle_state_ = new_state;
   }
 
+  void set_state(const std::string & interface_name, const double & value)
+  {
+    system_states_.at(interface_name)->set_value(value);
+  }
+
+  double get_state(const std::string & interface_name) const
+  {
+    return system_states_.at(interface_name)->get_value();
+  }
+
+  void set_command(const std::string & interface_name, const double & value)
+  {
+    system_commands_.at(interface_name)->set_value(value);
+  }
+
+  double get_command(const std::string & interface_name) const
+  {
+    return system_commands_.at(interface_name)->get_value();
+  }
+
   /// Get the logger of the SystemInterface.
   /**
    * \return logger of the SystemInterface.
@@ -253,11 +483,38 @@ public:
 
 protected:
   HardwareInfo info_;
+  // interface names to InterfaceDescription
+  std::unordered_map<std::string, InterfaceDescription> joint_state_interfaces_;
+  std::unordered_map<std::string, InterfaceDescription> joint_command_interfaces_;
+
+  std::unordered_map<std::string, InterfaceDescription> sensor_state_interfaces_;
+
+  std::unordered_map<std::string, InterfaceDescription> gpio_state_interfaces_;
+  std::unordered_map<std::string, InterfaceDescription> gpio_command_interfaces_;
+
+  std::unordered_map<std::string, InterfaceDescription> unlisted_state_interfaces_;
+  std::unordered_map<std::string, InterfaceDescription> unlisted_command_interfaces_;
+
   rclcpp_lifecycle::State lifecycle_state_;
+
+  // Exported Command- and StateInterfaces in order they are listed in the hardware description.
+  std::vector<StateInterface::SharedPtr> joint_states_;
+  std::vector<CommandInterface::SharedPtr> joint_commands_;
+
+  std::vector<StateInterface::SharedPtr> sensor_states_;
+
+  std::vector<StateInterface::SharedPtr> gpio_states_;
+  std::vector<CommandInterface::SharedPtr> gpio_commands_;
+
+  std::vector<StateInterface::SharedPtr> unlisted_states_;
+  std::vector<CommandInterface::SharedPtr> unlisted_commands_;
 
 private:
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr clock_interface_;
   rclcpp::Logger system_logger_;
+  // interface names to Handle accessed through getters/setters
+  std::unordered_map<std::string, StateInterface::SharedPtr> system_states_;
+  std::unordered_map<std::string, CommandInterface::SharedPtr> system_commands_;
 };
 
 }  // namespace hardware_interface

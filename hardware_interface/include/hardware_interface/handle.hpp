@@ -16,6 +16,7 @@
 #define HARDWARE_INTERFACE__HANDLE_HPP_
 
 #include <limits>
+#include <memory>
 #include <string>
 #include <variant>
 
@@ -44,9 +45,9 @@ public:
   }
 
   explicit Handle(const InterfaceDescription & interface_description)
-  : prefix_name_(interface_description.prefix_name),
-    interface_name_(interface_description.interface_info.name),
-    handle_name_(prefix_name_ + "/" + interface_name_)
+  : prefix_name_(interface_description.get_prefix_name()),
+    interface_name_(interface_description.get_interface_name()),
+    handle_name_(interface_description.get_name())
   {
     // As soon as multiple datatypes are used in HANDLE_DATATYPE
     // we need to initialize according the type passed in interface description
@@ -136,6 +137,9 @@ public:
   StateInterface(StateInterface && other) = default;
 
   using Handle::Handle;
+
+  using SharedPtr = std::shared_ptr<StateInterface>;
+  using ConstSharedPtr = std::shared_ptr<const StateInterface>;
 };
 
 class CommandInterface : public Handle
@@ -156,6 +160,8 @@ public:
   CommandInterface(CommandInterface && other) = default;
 
   using Handle::Handle;
+
+  using SharedPtr = std::shared_ptr<CommandInterface>;
 };
 
 }  // namespace hardware_interface
