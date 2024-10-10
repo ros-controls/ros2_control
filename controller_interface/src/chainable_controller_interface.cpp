@@ -16,6 +16,7 @@
 
 #include <vector>
 
+#include "controller_interface/helpers.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 
@@ -67,7 +68,7 @@ ChainableControllerInterface::export_state_interfaces()
       throw std::runtime_error(error_msg);
     }
     auto state_interface = std::make_shared<hardware_interface::StateInterface>(interface);
-    const auto interface_name = state_interface->get_name();
+    const auto interface_name = state_interface->get_interface_name();
     auto [it, succ] = exported_state_interfaces_.insert({interface_name, state_interface});
     // either we have name duplicate which we want to avoid under all circumstances since interfaces
     // need to be uniquely identify able or something else really went wrong. In any case abort and
@@ -87,9 +88,22 @@ ChainableControllerInterface::export_state_interfaces()
       throw std::runtime_error(error_msg);
     }
     ordered_exported_state_interfaces_.push_back(state_interface);
-    exported_state_interface_names_.push_back(interface_name);
+    add_element_to_list(exported_state_interface_names_, interface_name);
     state_interfaces_ptrs_vec.push_back(
       std::const_pointer_cast<const hardware_interface::StateInterface>(state_interface));
+  }
+
+  if (exported_state_interfaces_.size() != state_interfaces.size())
+  {
+    std::string error_msg =
+      "The internal storage for state interface ptrs 'exported_state_interfaces_' variable has "
+      "size '" +
+      std::to_string(exported_state_interfaces_.size()) +
+      "', but it is expected to have the size '" + std::to_string(state_interfaces.size()) +
+      "' equal to the number of exported reference interfaces. Please correct and recompile the "
+      "controller with name '" +
+      get_node()->get_name() + "' and try again.";
+    throw std::runtime_error(error_msg);
   }
 
   return state_interfaces_ptrs_vec;
@@ -102,7 +116,7 @@ ChainableControllerInterface::export_reference_interfaces()
   std::vector<hardware_interface::CommandInterface::SharedPtr> reference_interfaces_ptrs_vec;
   reference_interfaces_ptrs_vec.reserve(reference_interfaces.size());
   exported_reference_interface_names_.reserve(reference_interfaces.size());
-  ordered_reference_interfaces_.reserve(reference_interfaces.size());
+  ordered_exported_reference_interfaces_.reserve(reference_interfaces.size());
 
   // BEGIN (Handle export change): for backward compatibility
   // check if the "reference_interfaces_" variable is resized to number of interfaces
@@ -135,16 +149,16 @@ ChainableControllerInterface::export_reference_interfaces()
 
     hardware_interface::CommandInterface::SharedPtr reference_interface =
       std::make_shared<hardware_interface::CommandInterface>(std::move(interface));
-    const auto inteface_name = reference_interface->get_name();
+    const auto interface_name = reference_interface->get_interface_name();
     // check the exported interface name is unique
-    auto [it, succ] = reference_interfaces_ptrs_.insert({inteface_name, reference_interface});
+    auto [it, succ] = exported_reference_interfaces_.insert({interface_name, reference_interface});
     // either we have name duplicate which we want to avoid under all circumstances since interfaces
     // need to be uniquely identify able or something else really went wrong. In any case abort and
     // inform cm by throwing exception
     if (!succ)
     {
       std::string error_msg =
-        "Could not insert Reference interface<" + inteface_name +
+        "Could not insert Reference interface<" + interface_name +
         "> into reference_interfaces_ map. Check if you export duplicates. The "
         "map returned iterator with interface_name<" +
         it->second->get_name() +
@@ -155,16 +169,17 @@ ChainableControllerInterface::export_reference_interfaces()
       reference_interfaces_ptrs_vec.clear();
       throw std::runtime_error(error_msg);
     }
-    ordered_reference_interfaces_.push_back(reference_interface);
-    exported_reference_interface_names_.push_back(inteface_name);
+    ordered_exported_reference_interfaces_.push_back(reference_interface);
+    add_element_to_list(exported_reference_interface_names_, interface_name);
     reference_interfaces_ptrs_vec.push_back(reference_interface);
   }
 
-  if (reference_interfaces_ptrs_.size() != ref_interface_size)
+  if (exported_reference_interfaces_.size() != ref_interface_size)
   {
     std::string error_msg =
-      "The internal storage for reference ptrs 'reference_interfaces_ptrs_' variable has size '" +
-      std::to_string(reference_interfaces_ptrs_.size()) +
+      "The internal storage for exported reference ptrs 'exported_reference_interfaces_' variable "
+      "has size '" +
+      std::to_string(exported_reference_interfaces_.size()) +
       "', but it is expected to have the size '" + std::to_string(ref_interface_size) +
       "' equal to the number of exported reference interfaces. Please correct and recompile the "
       "controller with name '" +
