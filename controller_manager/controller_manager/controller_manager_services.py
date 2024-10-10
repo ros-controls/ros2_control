@@ -278,21 +278,27 @@ def get_parameter_from_param_file(
                     )
                     break
                 controller_param_dict = parameters[key]
-                break
+
             if WILDCARD_KEY in parameters and key in parameters[WILDCARD_KEY]:
                 controller_param_dict = parameters[WILDCARD_KEY][key]
+
+            if controller_param_dict and (
+                not isinstance(controller_param_dict, dict)
+                or ROS_PARAMS_KEY not in controller_param_dict
+            ):
+                raise RuntimeError(
+                    f"YAML file : {parameter_file} is not a valid ROS parameter file for controller node : {namespaced_controller}"
+                )
+            if (
+                controller_param_dict
+                and ROS_PARAMS_KEY in controller_param_dict
+                and parameter_name in controller_param_dict[ROS_PARAMS_KEY]
+            ):
                 break
 
         if controller_param_dict is None:
             node.get_logger().fatal(
                 f"{bcolors.FAIL}Controller : {namespaced_controller} parameters not found in parameter file : {parameter_file}{bcolors.ENDC}"
-            )
-        if (
-            not isinstance(controller_param_dict, dict)
-            or ROS_PARAMS_KEY not in controller_param_dict
-        ):
-            raise RuntimeError(
-                f"YAML file : {parameter_file} is not a valid ROS parameter file for controller node : {namespaced_controller}"
             )
         if parameter_name in controller_param_dict[ROS_PARAMS_KEY]:
             return controller_param_dict[ROS_PARAMS_KEY][parameter_name]
