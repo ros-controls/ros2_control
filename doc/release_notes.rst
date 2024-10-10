@@ -7,3 +7,9 @@ This list summarizes the changes between Humble (previous) and Iron (current) re
 .. note::
 
   This list was created in July 2024, earlier changes may not be included.
+
+controller_interface
+********************
+For details see the controller_manager section.
+
+* The new ``PoseSensor`` semantic component provides a standard interface for hardware providing cartesian poses (`#1775 <https://github.com/ros-controls/ros2_control/pull/1775>`_)
