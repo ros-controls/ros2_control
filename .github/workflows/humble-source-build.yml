@@ -25,6 +25,6 @@ jobs:
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-ros-tooling-source-build.yml@master
     with:
       ros_distro: humble
-      ref: humble
+      ref: fix/source
       ros2_repo_branch: humble
       os_name: ubuntu-22.04
