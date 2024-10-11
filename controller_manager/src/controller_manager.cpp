@@ -1121,34 +1121,30 @@ controller_interface::return_type ControllerManager::switch_controller(
       status = check_following_controllers_for_activate(controllers, strictness, controller_it);
     }
 
-    const auto & fallback_list = controller_it->info.fallback_controllers_names;
-    if (!fallback_list.empty())
+    for (const auto & fb_ctrl : controller_it->info.fallback_controllers_names)
     {
-      for (const auto & fb_ctrl : fallback_list)
+      auto fb_ctrl_it = std::find_if(
+        controllers.begin(), controllers.end(),
+        std::bind(controller_name_compare, std::placeholders::_1, fb_ctrl));
+      if (fb_ctrl_it == controllers.end())
       {
-        auto fb_ctrl_it = std::find_if(
-          controllers.begin(), controllers.end(),
-          std::bind(controller_name_compare, std::placeholders::_1, fb_ctrl));
-        if (fb_ctrl_it == controllers.end())
+        RCLCPP_ERROR(
+          get_logger(),
+          "Unable to find the fallback controller : '%s' of the controller : '%s' "
+          "within the controller list",
+          fb_ctrl.c_str(), controller_it->info.name.c_str());
+        status = controller_interface::return_type::ERROR;
+      }
+      else
+      {
+        if (!is_controller_inactive(fb_ctrl_it->c))
         {
-          RCLCPP_WARN(
+          RCLCPP_ERROR(
             get_logger(),
-            "Unable to find the fallback controller : %s of the controller : %s "
-            "within the controller list",
-            fb_ctrl.c_str(), controller_it->info.name.c_str());
+            "Controller with name '%s' cannot be activated, as it's fallback controller : '%s'"
+            " need to be configured and be in inactive state!",
+            controller_it->info.name.c_str(), fb_ctrl.c_str());
           status = controller_interface::return_type::ERROR;
-        }
-        else
-        {
-          if (!is_controller_inactive(fb_ctrl_it->c))
-          {
-            RCLCPP_WARN(
-              get_logger(),
-              "Controller with name '%s' cannot be activated, as it's fallback controller : %s"
-              " need to be configured and in inactive state!",
-              controller_it->info.name.c_str(), fb_ctrl.c_str());
-            status = controller_interface::return_type::ERROR;
-          }
         }
       }
     }
