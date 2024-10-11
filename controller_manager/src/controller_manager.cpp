@@ -1146,6 +1146,26 @@ controller_interface::return_type ControllerManager::switch_controller(
             controller_it->info.name.c_str(), fb_ctrl.c_str());
           status = controller_interface::return_type::ERROR;
         }
+        if (!resource_manager_->command_interfaces_are_available(
+              fb_ctrl_it->c->command_interface_configuration().names))
+        {
+          RCLCPP_ERROR(
+            get_logger(),
+            "Controller with name '%s' cannot be activated, as not all of its fallback "
+            "controller's : '%s' command interfaces are currently available!",
+            controller_it->info.name.c_str(), fb_ctrl.c_str());
+          status = controller_interface::return_type::ERROR;
+        }
+        if (!resource_manager_->state_interfaces_are_available(
+              fb_ctrl_it->c->state_interface_configuration().names))
+        {
+          RCLCPP_ERROR(
+            get_logger(),
+            "Controller with name '%s' cannot be activated, as not all of its fallback "
+            "controller's : '%s' state interfaces are currently available!",
+            controller_it->info.name.c_str(), fb_ctrl.c_str());
+          status = controller_interface::return_type::ERROR;
+        }
       }
     }
 
