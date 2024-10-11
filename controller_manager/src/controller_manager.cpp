@@ -2455,7 +2455,7 @@ controller_interface::return_type ControllerManager::update(
                 fallback_controller, rt_controller_list, active_controllers_using_interfaces);
             }
 
-            deactivate_controllers(rt_controller_list, {loaded_controller.info.name});
+            deactivate_controllers(rt_controller_list, active_controllers_using_interfaces);
             activate_controllers(
               rt_controller_list, loaded_controller.info.fallback_controllers_names);
           }
