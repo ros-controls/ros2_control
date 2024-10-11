@@ -71,7 +71,7 @@ public:
   const rclcpp_lifecycle::State & error();
 
   HARDWARE_INTERFACE_PUBLIC
-  std::vector<StateInterface> export_state_interfaces();
+  std::vector<StateInterface::ConstSharedPtr> export_state_interfaces();
 
   HARDWARE_INTERFACE_PUBLIC
   std::string get_name() const;

@@ -19,8 +19,8 @@ from launch.substitutions import LaunchConfiguration, PythonExpression
 from launch_ros.actions import Node
 
 
-def generate_load_controller_launch_description(
-    controller_name, controller_params_file=None, extra_spawner_args=[]
+def generate_controllers_spawner_launch_description(
+    controller_names: list, controller_params_file=None, extra_spawner_args=[]
 ):
     """
     Generate launch description for loading a controller using spawner.
@@ -32,11 +32,11 @@ def generate_load_controller_launch_description(
     Examples
     --------
       # Assuming the controller parameters are known to the controller_manager
-      generate_load_controller_launch_description('joint_state_broadcaster')
+      generate_controllers_spawner_launch_description(['joint_state_broadcaster'])
 
       # Passing controller parameter file to load the controller (Controller type is retrieved from config file)
-      generate_load_controller_launch_description(
-        'joint_state_broadcaster',
+      generate_controllers_spawner_launch_description(
+        ['joint_state_broadcaster'],
         controller_params_file=os.path.join(get_package_share_directory('my_pkg'),
                                             'config', 'controller_params.yaml'),
         extra_spawner_args=[--load-only]
@@ -54,11 +54,13 @@ def generate_load_controller_launch_description(
         description="Wait until the node is interrupted and then unload controller",
     )
 
-    spawner_arguments = [
-        controller_name,
-        "--controller-manager",
-        LaunchConfiguration("controller_manager_name"),
-    ]
+    spawner_arguments = controller_names
+    spawner_arguments.extend(
+        [
+            "--controller-manager",
+            LaunchConfiguration("controller_manager_name"),
+        ]
+    )
 
     if controller_params_file:
         spawner_arguments += ["--param-file", controller_params_file]
@@ -93,4 +95,14 @@ def generate_load_controller_launch_description(
             declare_unload_on_kill,
             spawner,
         ]
+    )
+
+
+def generate_load_controller_launch_description(
+    controller_name: str, controller_params_file=None, extra_spawner_args=[]
+):
+    return generate_controllers_spawner_launch_description(
+        controller_names=[controller_name],
+        controller_params_file=controller_params_file,
+        extra_spawner_args=extra_spawner_args,
     )
