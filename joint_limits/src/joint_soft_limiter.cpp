@@ -96,13 +96,13 @@ bool JointSoftLimiter::on_enforce(
   double soft_max_vel = std::numeric_limits<double>::infinity();
   double position = std::numeric_limits<double>::infinity();
 
-  if (prev_command_.has_position() && std::isfinite(prev_command_.position.value()))
-  {
-    position = prev_command_.position.value();
-  }
-  else if (actual.has_position())
+  if (actual.has_position())
   {
     position = actual.position.value();
+  }
+  else if (prev_command_.has_position() && std::isfinite(prev_command_.position.value()))
+  {
+    position = prev_command_.position.value();
   }
 
   if (hard_limits.has_velocity_limits)
@@ -122,7 +122,9 @@ bool JointSoftLimiter::on_enforce(
         -soft_joint_limits.k_position * (position - soft_joint_limits.max_position),
         -hard_limits.max_velocity, hard_limits.max_velocity);
 
-      if ((position < hard_limits.min_position) || (position > hard_limits.max_position))
+      if (
+        (position < (hard_limits.min_position - internal::POSITION_BOUNDS_TOLERANCE)) ||
+        (position > (hard_limits.max_position + internal::POSITION_BOUNDS_TOLERANCE)))
       {
         soft_min_vel = 0.0;
         soft_max_vel = 0.0;
@@ -130,7 +132,7 @@ bool JointSoftLimiter::on_enforce(
       else if (
         (position < soft_joint_limits.min_position) || (position > soft_joint_limits.max_position))
       {
-        constexpr double soft_limit_reach_velocity = 1.0 * (M_PI / 180.0);
+        const double soft_limit_reach_velocity = 1.0 * (M_PI / 180.0);
         soft_min_vel = std::copysign(soft_limit_reach_velocity, soft_min_vel);
         soft_max_vel = std::copysign(soft_limit_reach_velocity, soft_max_vel);
       }

@@ -214,6 +214,11 @@ TEST_F(JointSoftLimiterTest, check_desired_position_only_cases)
   desired_state_.position = 2.0;
   ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
   EXPECT_NEAR(desired_state_.position.value(), 1.0, COMMON_THRESHOLD);
+  actual_state_.position = 0.95;
+  desired_state_.position = 2.0;
+  ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
+  EXPECT_NEAR(desired_state_.position.value(), 1.95, COMMON_THRESHOLD);
+  actual_state_.position = 1.5;
   desired_state_.position = 2.0;
   ASSERT_FALSE(joint_limiter_->enforce(actual_state_, desired_state_, period));
   EXPECT_NEAR(desired_state_.position.value(), 2.0, COMMON_THRESHOLD);
@@ -228,21 +233,40 @@ TEST_F(JointSoftLimiterTest, check_desired_position_only_cases)
   desired_state_.position = 2.0;
   ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
   EXPECT_NEAR(desired_state_.position.value(), 1.0, COMMON_THRESHOLD);
+  actual_state_.position = 0.45;
+  desired_state_.position = 2.0;
+  ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
+  EXPECT_NEAR(desired_state_.position.value(), 1.45, COMMON_THRESHOLD);
+  actual_state_.position = 0.95;
   desired_state_.position = 2.0;
   ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
   EXPECT_NEAR(desired_state_.position.value(), 1.5, COMMON_THRESHOLD);
 
-  soft_limits.k_position = 2.0;
+  // The case of no actual position feedback
+  soft_limits.k_position = 0.5;
   soft_limits.max_position = 1.5;
   soft_limits.min_position = -1.5;
   ASSERT_TRUE(Init(limits, soft_limits));
-  desired_state_.position = 2.0;
-  ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
-  EXPECT_NEAR(desired_state_.position.value(), 1.0, COMMON_THRESHOLD);
+  actual_state_.position = std::nullopt;
+  desired_state_.position = 0.2;
+  ASSERT_FALSE(joint_limiter_->enforce(actual_state_, desired_state_, period));
+  EXPECT_NEAR(desired_state_.position.value(), 0.2, COMMON_THRESHOLD);
+  auto prev_command_state = desired_state_;
+  while (desired_state_.position.value() < (soft_limits.max_position - COMMON_THRESHOLD))
+  {
+    desired_state_.position = 2.0;
+    double expected_pos =
+      prev_command_state.position.value() +
+      (soft_limits.max_position - prev_command_state.position.value()) * soft_limits.k_position;
+    ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
+    EXPECT_NEAR(desired_state_.position.value(), expected_pos, COMMON_THRESHOLD);
+    prev_command_state = desired_state_;
+  }
   desired_state_.position = 2.0;
   ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
   EXPECT_NEAR(desired_state_.position.value(), 1.5, COMMON_THRESHOLD);
 
+  // More generic test case
   soft_limits.k_position = 0.5;
   soft_limits.max_position = 2.0;
   soft_limits.min_position = -2.0;
@@ -250,12 +274,17 @@ TEST_F(JointSoftLimiterTest, check_desired_position_only_cases)
   desired_state_.position = 2.0;
   ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
   EXPECT_NEAR(desired_state_.position.value(), 1.0, COMMON_THRESHOLD);
-  desired_state_.position = 2.0;
-  ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
-  EXPECT_NEAR(desired_state_.position.value(), 1.5, COMMON_THRESHOLD);
-  desired_state_.position = 2.0;
-  ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
-  EXPECT_NEAR(desired_state_.position.value(), 1.75, COMMON_THRESHOLD);
+  actual_state_.position = 0.2;
+  while (actual_state_.position.value() < (desired_state_.position.value() - COMMON_THRESHOLD))
+  {
+    desired_state_.position = 2.0;
+    double expected_pos =
+      actual_state_.position.value() +
+      (soft_limits.max_position - actual_state_.position.value()) * soft_limits.k_position;
+    ASSERT_TRUE(joint_limiter_->enforce(actual_state_, desired_state_, period));
+    EXPECT_NEAR(desired_state_.position.value(), expected_pos, COMMON_THRESHOLD);
+    actual_state_.position = expected_pos;
+  }
 
   // Now test when there are no position limits and soft limits, then the desired position is not
   // saturated
