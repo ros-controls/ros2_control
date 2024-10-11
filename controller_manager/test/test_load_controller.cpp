@@ -72,7 +72,7 @@ TEST_F(TestLoadController, can_set_and_get_non_default_update_rate)
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if->get_lifecycle_state().id());
 
-  EXPECT_EQ(cm_->get_update_rate(), controller_if->get_update_rate());
+  EXPECT_EQ(100u, controller_if->get_update_rate());
 }
 
 class TestLoadedController : public TestLoadController
