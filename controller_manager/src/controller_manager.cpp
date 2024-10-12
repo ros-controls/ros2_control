@@ -2851,7 +2851,7 @@ ControllerManager::check_fallback_controllers_state_pre_activation(
           controller_it->info.name.c_str(), fb_ctrl.c_str());
         return controller_interface::return_type::ERROR;
       }
-      for (const auto fb_cmd_itf : fb_ctrl_it->c->command_interface_configuration().names)
+      for (const auto & fb_cmd_itf : fb_ctrl_it->c->command_interface_configuration().names)
       {
         if (!resource_manager_->command_interface_is_available(fb_cmd_itf))
         {
@@ -2912,7 +2912,7 @@ ControllerManager::check_fallback_controllers_state_pre_activation(
           }
         }
       }
-      for (const auto fb_state_itf : fb_ctrl_it->c->state_interface_configuration().names)
+      for (const auto & fb_state_itf : fb_ctrl_it->c->state_interface_configuration().names)
       {
         if (!resource_manager_->state_interface_is_available(fb_state_itf))
         {
