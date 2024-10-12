@@ -1240,24 +1240,6 @@ bool ResourceManager::state_interface_is_available(const std::string & name) con
            name) != resource_storage_->available_state_interfaces_.end();
 }
 
-bool ResourceManager::state_interfaces_are_available(
-  const std::vector<std::string> & interface_names) const
-{
-  std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
-  for (const auto & interface : interface_names)
-  {
-    if (
-      std::find(
-        resource_storage_->available_state_interfaces_.begin(),
-        resource_storage_->available_state_interfaces_.end(),
-        interface) == resource_storage_->available_state_interfaces_.end())
-    {
-      return false;
-    }
-  }
-  return true;
-}
-
 // CM API: Called in "callback/slow"-thread
 void ResourceManager::import_controller_exported_state_interfaces(
   const std::string & controller_name, std::vector<StateInterface::ConstSharedPtr> & interfaces)
@@ -1497,24 +1479,6 @@ bool ResourceManager::command_interface_is_available(const std::string & name) c
            resource_storage_->available_command_interfaces_.begin(),
            resource_storage_->available_command_interfaces_.end(),
            name) != resource_storage_->available_command_interfaces_.end();
-}
-
-bool ResourceManager::command_interfaces_are_available(
-  const std::vector<std::string> & interface_names) const
-{
-  std::lock_guard<std::recursive_mutex> guard(resource_interfaces_lock_);
-  for (const auto & interface : interface_names)
-  {
-    if (
-      std::find(
-        resource_storage_->available_command_interfaces_.begin(),
-        resource_storage_->available_command_interfaces_.end(),
-        interface) == resource_storage_->available_command_interfaces_.end())
-    {
-      return false;
-    }
-  }
-  return true;
 }
 
 void ResourceManager::import_component(

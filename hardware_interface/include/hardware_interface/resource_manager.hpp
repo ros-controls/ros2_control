@@ -130,13 +130,6 @@ public:
    */
   bool state_interface_is_available(const std::string & name) const;
 
-  /// Checks whether the given list of state interface are available or not.
-  /**
-   * \param[in] interface_names a vector of strings identifying the interface to check.
-   * \return true if all interfaces are available, false otherwise.
-   */
-  bool state_interfaces_are_available(const std::vector<std::string> & interface_names) const;
-
   /// Add controllers' exported state interfaces to resource manager.
   /**
    * Interface for transferring management of exported state interfaces to resource manager.
@@ -306,13 +299,6 @@ public:
    * \return true if interface is available, false otherwise.
    */
   bool command_interface_is_available(const std::string & interface) const;
-
-  /// Checks whether the given list of command interface are available or not.
-  /**
-   * \param[in] interface_names a vector of strings identifying the interface to check.
-   * \return true if all interfaces are available, false otherwise.
-   */
-  bool command_interfaces_are_available(const std::vector<std::string> & interface_names) const;
 
   /// Return the number size_t of loaded actuator components.
   /**
