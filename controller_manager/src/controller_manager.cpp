@@ -2390,26 +2390,6 @@ controller_interface::return_type ControllerManager::update(
         if (controller_ret != controller_interface::return_type::OK)
         {
           failed_controllers_list.push_back(loaded_controller.info.name);
-          if (!loaded_controller.info.fallback_controllers_names.empty())
-          {
-            RCLCPP_ERROR(
-              get_logger(), "Error updating controller '%s', switching to fallback controllers",
-              loaded_controller.info.name.c_str());
-
-            std::vector<std::string> active_controllers_using_interfaces{
-              loaded_controller.info.name};
-            active_controllers_using_interfaces.reserve(500);
-            for (const auto & fallback_controller :
-                 loaded_controller.info.fallback_controllers_names)
-            {
-              get_active_controllers_using_command_interfaces_of_controller(
-                fallback_controller, rt_controller_list, active_controllers_using_interfaces);
-            }
-
-            deactivate_controllers(rt_controller_list, active_controllers_using_interfaces);
-            activate_controllers(
-              rt_controller_list, loaded_controller.info.fallback_controllers_names);
-          }
           ret = controller_ret;
         }
       }
@@ -2423,10 +2403,36 @@ controller_interface::return_type ControllerManager::update(
       failed_controllers += "\n\t- " + controller;
     }
     RCLCPP_ERROR(
-      get_logger(), "Deactivating following controllers as their update resulted in an error :%s",
+      get_logger(),
+      "Deactivating following controllers as their update resulted in an error! Will try to switch "
+      "to their fallback controllers if available :%s",
       failed_controllers.c_str());
 
-    deactivate_controllers(rt_controller_list, failed_controllers_list);
+    std::vector<std::string> active_controllers_using_interfaces(failed_controllers_list);
+    active_controllers_using_interfaces.reserve(500);
+    std::vector<std::string> cumulative_fallback_controllers;
+    cumulative_fallback_controllers.reserve(500);
+
+    for (const auto & failed_ctrl : failed_controllers_list)
+    {
+      auto ctrl_it = std::find_if(
+        rt_controller_list.begin(), rt_controller_list.end(),
+        std::bind(controller_name_compare, std::placeholders::_1, failed_ctrl));
+      if (ctrl_it != rt_controller_list.end())
+      {
+        for (const auto & fallback_controller : ctrl_it->info.fallback_controllers_names)
+        {
+          cumulative_fallback_controllers.push_back(fallback_controller);
+          get_active_controllers_using_command_interfaces_of_controller(
+            fallback_controller, rt_controller_list, active_controllers_using_interfaces);
+        }
+      }
+    }
+    deactivate_controllers(rt_controller_list, active_controllers_using_interfaces);
+    if (!cumulative_fallback_controllers.empty())
+    {
+      activate_controllers(rt_controller_list, cumulative_fallback_controllers);
+    }
   }
 
   // there are controllers to (de)activate
