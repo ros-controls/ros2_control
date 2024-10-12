@@ -197,10 +197,7 @@ void get_active_controllers_using_command_interfaces_of_controller(
       // doesn't exist in the list already
       if (
         is_controller_active(controller.c) &&
-        std::find(ctrl_cmd_itfs.begin(), ctrl_cmd_itfs.end(), cmd_itf) != ctrl_cmd_itfs.end() &&
-        std::find(
-          controllers_using_command_interfaces.begin(), controllers_using_command_interfaces.end(),
-          controller.info.name) == controllers_using_command_interfaces.end())
+        std::find(ctrl_cmd_itfs.begin(), ctrl_cmd_itfs.end(), cmd_itf) != ctrl_cmd_itfs.end())
       {
         add_element_to_list(controllers_using_command_interfaces, controller.info.name);
       }
