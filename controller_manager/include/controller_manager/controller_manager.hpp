@@ -128,6 +128,12 @@ public:
     return add_controller_impl(controller_spec);
   }
 
+  controller_interface::ControllerInterfaceBaseSharedPtr add_controller(
+    const ControllerSpec & controller_spec)
+  {
+    return add_controller_impl(controller_spec);
+  }
+
   /// configure_controller Configure controller by name calling their "configure" method.
   /**
    * \param[in] controller_name as a string.
