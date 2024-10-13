@@ -26,6 +26,29 @@ from controller_manager_msgs.srv import (
 )
 
 import rclpy
+import yaml
+from rcl_interfaces.msg import Parameter
+
+# @note: The versions conditioning is added here to support the source-compatibility with Humble
+# The `get_parameter_value` function is moved to `rclpy.parameter` module from `ros2param.api` module from version 3.6.0
+try:
+    from rclpy.parameter import get_parameter_value
+except ImportError:
+    from ros2param.api import get_parameter_value
+from ros2param.api import call_set_parameters
+
+
+# from https://stackoverflow.com/a/287944
+class bcolors:
+    MAGENTA = "\033[95m"
+    OKBLUE = "\033[94m"
+    OKCYAN = "\033[96m"
+    OKGREEN = "\033[92m"
+    WARNING = "\033[93m"
+    FAIL = "\033[91m"
+    ENDC = "\033[0m"
+    BOLD = "\033[1m"
+    UNDERLINE = "\033[4m"
 
 
 class ServiceNotFoundError(Exception):
@@ -220,3 +243,84 @@ def unload_controller(node, controller_manager_name, controller_name, service_ti
         request,
         service_timeout,
     )
+
+
+def get_parameter_from_param_file(controller_name, namespace, parameter_file, parameter_name):
+    with open(parameter_file) as f:
+        namespaced_controller = (
+            controller_name if namespace == "/" else f"{namespace}/{controller_name}"
+        )
+        parameters = yaml.safe_load(f)
+        if namespaced_controller in parameters:
+            value = parameters[namespaced_controller]
+            if not isinstance(value, dict) or "ros__parameters" not in value:
+                raise RuntimeError(
+                    f"YAML file : {parameter_file} is not a valid ROS parameter file for controller : {namespaced_controller}"
+                )
+            if parameter_name in parameters[namespaced_controller]["ros__parameters"]:
+                return parameters[namespaced_controller]["ros__parameters"][parameter_name]
+            else:
+                return None
+        else:
+            return None
+
+
+def set_controller_parameters(
+    node, controller_manager_name, controller_name, parameter_name, parameter_value
+):
+    parameter = Parameter()
+    parameter.name = controller_name + "." + parameter_name
+    parameter_string = str(parameter_value)
+    parameter.value = get_parameter_value(string_value=parameter_string)
+
+    response = call_set_parameters(
+        node=node, node_name=controller_manager_name, parameters=[parameter]
+    )
+    assert len(response.results) == 1
+    result = response.results[0]
+    if result.successful:
+        node.get_logger().info(
+            bcolors.OKCYAN
+            + 'Setting controller param "'
+            + parameter_name
+            + '" to "'
+            + parameter_string
+            + '" for '
+            + bcolors.BOLD
+            + controller_name
+            + bcolors.ENDC
+        )
+    else:
+        node.get_logger().fatal(
+            bcolors.FAIL
+            + 'Could not set controller param "'
+            + parameter_name
+            + '" to "'
+            + parameter_string
+            + '" for '
+            + bcolors.BOLD
+            + controller_name
+            + bcolors.ENDC
+        )
+        return False
+    return True
+
+
+def set_controller_parameters_from_param_file(
+    node, controller_manager_name, controller_name, parameter_file, namespace=None
+):
+    if parameter_file:
+        spawner_namespace = namespace if namespace else node.get_namespace()
+        set_controller_parameters(
+            node, controller_manager_name, controller_name, "param_file", parameter_file
+        )
+
+        controller_type = get_parameter_from_param_file(
+            controller_name, spawner_namespace, parameter_file, "type"
+        )
+        if controller_type:
+            if not set_controller_parameters(
+                node, controller_manager_name, controller_name, "type", controller_type
+            ):
+                return False
+    return True
