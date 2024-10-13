@@ -19,7 +19,6 @@ import os
 import sys
 import time
 import warnings
-import yaml
 
 from controller_manager import (
     configure_controller,
@@ -27,29 +26,15 @@ from controller_manager import (
     load_controller,
     switch_controllers,
     unload_controller,
+    set_controller_parameters,
+    set_controller_parameters_from_param_file,
+    bcolors,
 )
 from controller_manager.controller_manager_services import ServiceNotFoundError
 
 import rclpy
-from rcl_interfaces.msg import Parameter
 from rclpy.node import Node
-from rclpy.parameter import get_parameter_value
 from rclpy.signals import SignalHandlerOptions
-from ros2param.api import call_set_parameters
-
-# from https://stackoverflow.com/a/287944
-
-
-class bcolors:
-    HEADER = "\033[95m"
-    OKBLUE = "\033[94m"
-    OKCYAN = "\033[96m"
-    OKGREEN = "\033[92m"
-    WARNING = "\033[93m"
-    FAIL = "\033[91m"
-    ENDC = "\033[0m"
-    BOLD = "\033[1m"
-    UNDERLINE = "\033[4m"
 
 
 def first_match(iterable, predicate):
@@ -79,24 +64,6 @@ def has_service_names(node, node_name, node_namespace, service_names):
 def is_controller_loaded(node, controller_manager, controller_name, service_timeout=0.0):
     controllers = list_controllers(node, controller_manager, service_timeout).controller
     return any(c.name == controller_name for c in controllers)
-
-
-def get_parameter_from_param_file(controller_name, namespace, parameter_file, parameter_name):
-    with open(parameter_file) as f:
-        namespaced_controller = (
-            controller_name if namespace == "/" else f"{namespace}/{controller_name}"
-        )
-        parameters = yaml.safe_load(f)
-        if namespaced_controller in parameters:
-            value = parameters[namespaced_controller]
-            if not isinstance(value, dict) or "ros__parameters" not in value:
-                raise RuntimeError(
-                    f"YAML file : {parameter_file} is not a valid ROS parameter file for controller : {namespaced_controller}"
-                )
-            if parameter_name in parameters[namespaced_controller]["ros__parameters"]:
-                return parameters[namespaced_controller]["ros__parameters"][parameter_name]
-            else:
-                return None
 
 
 def main(args=None):
@@ -199,75 +166,23 @@ def main(args=None):
                     + bcolors.ENDC
                 )
             else:
-                controller_type = (
-                    args.controller_type
-                    if param_file is None
-                    else get_parameter_from_param_file(
-                        controller_name, spawner_namespace, param_file, "type"
-                    )
-                )
-                if controller_type:
-                    parameter = Parameter()
-                    parameter.name = controller_name + ".type"
-                    parameter.value = get_parameter_value(string_value=controller_type)
-
-                    response = call_set_parameters(
-                        node=node, node_name=controller_manager_name, parameters=[parameter]
-                    )
-                    assert len(response.results) == 1
-                    result = response.results[0]
-                    if result.successful:
-                        node.get_logger().info(
-                            bcolors.OKCYAN
-                            + 'Set controller type to "'
-                            + controller_type
-                            + '" for '
-                            + bcolors.BOLD
-                            + controller_name
-                            + bcolors.ENDC
-                        )
-                    else:
-                        node.get_logger().fatal(
-                            bcolors.FAIL
-                            + 'Could not set controller type to "'
-                            + controller_type
-                            + '" for '
-                            + bcolors.BOLD
-                            + controller_name
-                            + bcolors.ENDC
-                        )
+                if args.controller_type:
+                    if not set_controller_parameters(
+                        node,
+                        controller_manager_name,
+                        controller_name,
+                        "type",
+                        args.controller_type,
+                    ):
                         return 1
-
                 if param_file:
-                    parameter = Parameter()
-                    parameter.name = controller_name + ".params_file"
-                    parameter.value = get_parameter_value(string_value=param_file)
-
-                    response = call_set_parameters(
-                        node=node, node_name=controller_manager_name, parameters=[parameter]
-                    )
-                    assert len(response.results) == 1
-                    result = response.results[0]
-                    if result.successful:
-                        node.get_logger().info(
-                            bcolors.OKCYAN
-                            + 'Set controller params file to "'
-                            + param_file
-                            + '" for '
-                            + bcolors.BOLD
-                            + controller_name
-                            + bcolors.ENDC
-                        )
-                    else:
-                        node.get_logger().fatal(
-                            bcolors.FAIL
-                            + 'Could not set controller params file to "'
-                            + param_file
-                            + '" for '
-                            + bcolors.BOLD
-                            + controller_name
-                            + bcolors.ENDC
-                        )
+                    if not set_controller_parameters_from_param_file(
+                        node,
+                        controller_manager_name,
+                        controller_name,
+                        param_file,
+                        spawner_namespace,
+                    ):
                         return 1
 
                 ret = load_controller(node, controller_manager_name, controller_name)

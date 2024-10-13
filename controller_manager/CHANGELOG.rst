@@ -2,6 +2,21 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+3.28.1 (2024-09-11)
+-------------------
+* fix: the print of the information in control node was in wrong order (`#1726 <https://github.com/ros-controls/ros2_control/issues/1726>`_) (`#1727 <https://github.com/ros-controls/ros2_control/issues/1727>`_)
+* Contributors: mergify[bot]
+
+3.28.0 (2024-08-22)
+-------------------
+* Inform user why rt policy could not be set, inform if is set. (backport `#1705 <https://github.com/ros-controls/ros2_control/issues/1705>`_) (`#1709 <https://github.com/ros-controls/ros2_control/issues/1709>`_)
+* [CI] Backport `#1636 <https://github.com/ros-controls/ros2_control/issues/1636>`_ `#1668 <https://github.com/ros-controls/ros2_control/issues/1668>`_ and fix coverage on jammy (`#1677 <https://github.com/ros-controls/ros2_control/issues/1677>`_) (`#1693 <https://github.com/ros-controls/ros2_control/issues/1693>`_)
+* Make list controller and list hardware components immediately visualize the state. (`#1606 <https://github.com/ros-controls/ros2_control/issues/1606>`_) (`#1691 <https://github.com/ros-controls/ros2_control/issues/1691>`_)
+* Robustify spawner (backport `#1501 <https://github.com/ros-controls/ros2_control/issues/1501>`_) (`#1687 <https://github.com/ros-controls/ros2_control/issues/1687>`_)
+* Handle on waiting (backport `#1562 <https://github.com/ros-controls/ros2_control/issues/1562>`_) (`#1681 <https://github.com/ros-controls/ros2_control/issues/1681>`_)
+* refactor SwitchParams to fix the incosistencies in the spawner tests (backport `#1638 <https://github.com/ros-controls/ros2_control/issues/1638>`_) (`#1660 <https://github.com/ros-controls/ros2_control/issues/1660>`_)
+* Contributors: mergify[bot]
+
 3.27.0 (2024-07-23)
 -------------------
 * Remove noqa (`#1626 <https://github.com/ros-controls/ros2_control/issues/1626>`_) (`#1629 <https://github.com/ros-controls/ros2_control/issues/1629>`_)
