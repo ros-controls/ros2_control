@@ -7,3 +7,8 @@ This list summarizes the changes between Galactic (previous) and Humble (current
 .. note::
 
   This list was created in July 2024, earlier changes may not be included.
+
+controller_interface
+********************
+
+* The new ``PoseSensor`` semantic component provides a standard interface for hardware providing cartesian poses (`#1775 <https://github.com/ros-controls/ros2_control/pull/1775>`_)
