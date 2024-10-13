@@ -112,7 +112,14 @@ def main(args=None):
         "--controller-manager-timeout",
         help="Time to wait for the controller manager",
         required=False,
-        default=0,
+        default=0.0,
+        type=float,
+    )
+    parser.add_argument(
+        "--controller-manager-switch-timeout",
+        help="Time to wait for the controller manager to switch controllers",
+        required=False,
+        default=10.0,
         type=float,
     )
     parser.add_argument(
@@ -129,6 +136,7 @@ def main(args=None):
     controller_manager_name = args.controller_manager
     param_file = args.param_file
     controller_manager_timeout = args.controller_manager_timeout
+    controller_manager_switch_timeout = args.controller_manager_switch_timeout
 
     if param_file and not os.path.isfile(param_file):
         raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), param_file)
@@ -206,7 +214,13 @@ def main(args=None):
 
                 if not args.inactive and not args.activate_as_group:
                     ret = switch_controllers(
-                        node, controller_manager_name, [], [controller_name], True, True, 5.0
+                        node,
+                        controller_manager_name,
+                        [],
+                        [controller_name],
+                        True,
+                        True,
+                        controller_manager_switch_timeout,
                     )
                     if not ret.ok:
                         node.get_logger().error(
@@ -224,7 +238,13 @@ def main(args=None):
 
         if not args.inactive and args.activate_as_group:
             ret = switch_controllers(
-                node, controller_manager_name, [], controller_names, True, True, 5.0
+                node,
+                controller_manager_name,
+                [],
+                controller_names,
+                True,
+                True,
+                controller_manager_switch_timeout,
             )
             if not ret.ok:
                 node.get_logger().error(
@@ -250,7 +270,13 @@ def main(args=None):
                 node.get_logger().info("Interrupt captured, deactivating and unloading controller")
                 # TODO(saikishor) we might have an issue in future, if any of these controllers is in chained mode
                 ret = switch_controllers(
-                    node, controller_manager_name, controller_names, [], True, True, 5.0
+                    node,
+                    controller_manager_name,
+                    controller_names,
+                    [],
+                    True,
+                    True,
+                    controller_manager_switch_timeout,
                 )
                 if not ret.ok:
                     node.get_logger().error(

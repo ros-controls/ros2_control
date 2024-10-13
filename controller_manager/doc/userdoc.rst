@@ -145,9 +145,9 @@ There are two scripts to interact with controller manager from launch files:
 .. code-block:: console
 
     $ ros2 run controller_manager spawner -h
-    usage: spawner [-h] [-c CONTROLLER_MANAGER] [-p PARAM_FILE] [-n NAMESPACE] [--load-only] [--inactive] [-t CONTROLLER_TYPE] [-u]
-                      [--controller-manager-timeout CONTROLLER_MANAGER_TIMEOUT]
-                      controller_name
+    usage: spawner [-h] [-c CONTROLLER_MANAGER] [-p PARAM_FILE] [-n NAMESPACE] [--load-only] [--inactive] [-u] [--controller-manager-timeout CONTROLLER_MANAGER_TIMEOUT]
+                  [--controller-manager-switch-timeout CONTROLLER_MANAGER_SWITCH_TIMEOUT] [--activate-as-group]
+                  controller_names [controller_names ...]
 
     positional arguments:
       controller_names      List of controllers
@@ -165,10 +165,9 @@ There are two scripts to interact with controller manager from launch files:
       -u, --unload-on-kill  Wait until this application is interrupted and unload controller
       --controller-manager-timeout CONTROLLER_MANAGER_TIMEOUT
                             Time to wait for the controller manager
+      --controller-manager-switch-timeout CONTROLLER_MANAGER_SWITCH_TIMEOUT
+                            Time to wait for the controller manager to switch controllers
       --activate-as-group   Activates all the parsed controllers list together instead of one by one. Useful for activating all chainable controllers altogether
-      --fallback_controllers FALLBACK_CONTROLLERS [FALLBACK_CONTROLLERS ...]
-                            Fallback controllers list are activated as a fallback strategy when the spawned controllers fail. When the argument is provided, it takes precedence over the fallback_controllers list in the
-                            param file
 
 
 ``unspawner``
@@ -177,15 +176,17 @@ There are two scripts to interact with controller manager from launch files:
 .. code-block:: console
 
     $ ros2 run controller_manager unspawner -h
-    usage: unspawner [-h] [-c CONTROLLER_MANAGER] controller_name
+    usage: unspawner [-h] [-c CONTROLLER_MANAGER] [--controller-manager-switch-timeout CONTROLLER_MANAGER_SWITCH_TIMEOUT] controller_names [controller_names ...]
 
     positional arguments:
-      controller_name       Name of the controller
+      controller_names      Name of the controller
 
-    optional arguments:
+    options:
       -h, --help            show this help message and exit
       -c CONTROLLER_MANAGER, --controller-manager CONTROLLER_MANAGER
                             Name of the controller manager ROS node
+      --controller-manager-switch-timeout CONTROLLER_MANAGER_SWITCH_TIMEOUT
+                            Time to wait for the controller manager to switch controllers
 
 ``hardware_spawner``
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -193,7 +194,7 @@ There are two scripts to interact with controller manager from launch files:
 .. code-block:: console
 
     $ ros2 run controller_manager hardware_spawner -h
-    usage: hardware_spawner [-h] [-c CONTROLLER_MANAGER] (--activate | --configure) hardware_component_name
+    usage: hardware_spawner [-h] [-c CONTROLLER_MANAGER] [--controller-manager-timeout CONTROLLER_MANAGER_TIMEOUT] (--activate | --configure) hardware_component_name
 
     positional arguments:
       hardware_component_name
@@ -203,6 +204,8 @@ There are two scripts to interact with controller manager from launch files:
       -h, --help            show this help message and exit
       -c CONTROLLER_MANAGER, --controller-manager CONTROLLER_MANAGER
                             Name of the controller manager ROS node
+      --controller-manager-timeout CONTROLLER_MANAGER_TIMEOUT
+                            Time to wait for the controller manager
       --activate            Activates the given components. Note: Components are by default configured before activated.
       --configure           Configures the given components.
 

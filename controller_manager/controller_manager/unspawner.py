@@ -36,17 +36,31 @@ def main(args=None):
         default="/controller_manager",
         required=False,
     )
+    parser.add_argument(
+        "--controller-manager-switch-timeout",
+        help="Time to wait for the controller manager to switch controllers",
+        required=False,
+        default=10.0,
+        type=float,
+    )
 
     command_line_args = rclpy.utilities.remove_ros_args(args=sys.argv)[1:]
     args = parser.parse_args(command_line_args)
     controller_names = args.controller_names
     controller_manager_name = args.controller_manager
+    controller_manager_switch_timeout = args.controller_manager_switch_timeout
 
     node = Node("unspawner_" + controller_names[0])
     try:
         # Ignore returncode, because message is already printed and we'll try to unload anyway
         ret = switch_controllers(
-            node, controller_manager_name, controller_names, [], True, True, 5.0
+            node,
+            controller_manager_name,
+            controller_names,
+            [],
+            True,
+            True,
+            controller_manager_switch_timeout,
         )
         node.get_logger().info("Deactivated controller")
 
