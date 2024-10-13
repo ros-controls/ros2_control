@@ -1117,7 +1117,10 @@ controller_interface::return_type ControllerManager::switch_controller(
       status = check_following_controllers_for_activate(controllers, strictness, controller_it);
     }
 
-    status = check_fallback_controllers_state_pre_activation(controllers, controller_it);
+    if (status == controller_interface::return_type::OK)
+    {
+      status = check_fallback_controllers_state_pre_activation(controllers, controller_it);
+    }
 
     if (status != controller_interface::return_type::OK)
     {
