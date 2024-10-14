@@ -166,7 +166,7 @@ There are two scripts to interact with controller manager from launch files:
       --controller-manager-timeout CONTROLLER_MANAGER_TIMEOUT
                             Time to wait for the controller manager
       --switch-timeout SWITCH_TIMEOUT
-                            Time to wait for a successful state switch of controllers. Useful if the controller_manager is not immediately ready, e.g., paused
+                            Time to wait for a successful state switch of controllers. Useful if controllers cannot be switched immediately, e.g., paused
                             simulations at startup
       --activate-as-group   Activates all the parsed controllers list together instead of one by one. Useful for activating all chainable controllers altogether
 
@@ -187,7 +187,7 @@ There are two scripts to interact with controller manager from launch files:
       -c CONTROLLER_MANAGER, --controller-manager CONTROLLER_MANAGER
                             Name of the controller manager ROS node
       --switch-timeout SWITCH_TIMEOUT
-                            Time to wait for a successful state switch of controllers. Useful if the controller_manager is not immediately ready, e.g., paused
+                            Time to wait for a successful state switch of controllers. Useful if controllers cannot be switched immediately, e.g., paused
                             simulations at startup
 
 ``hardware_spawner``
