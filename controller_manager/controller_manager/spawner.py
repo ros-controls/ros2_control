@@ -121,7 +121,7 @@ def main(args=None):
         " Useful if the controller_manager is not immediately ready, e.g.,"
         " paused simulations at startup",
         required=False,
-        default=1.0,
+        default=5.0,
         type=float,
     )
     parser.add_argument(
