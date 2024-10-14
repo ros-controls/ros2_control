@@ -571,6 +571,15 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_c
   }
   if (get_parameter(fallback_ctrl_param, fallback_controllers) && !fallback_controllers.empty())
   {
+    if (
+      std::find(fallback_controllers.begin(), fallback_controllers.end(), controller_name) !=
+      fallback_controllers.end())
+    {
+      RCLCPP_ERROR(
+        get_logger(), "Controller '%s' cannot be a fallback controller for itself.",
+        controller_name.c_str());
+      return nullptr;
+    }
     controller_spec.info.fallback_controllers_names = fallback_controllers;
   }
 

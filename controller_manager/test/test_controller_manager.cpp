@@ -538,6 +538,27 @@ class TestControllerManagerFallbackControllers
 {
 };
 
+TEST_F(TestControllerManagerFallbackControllers, test_failure_on_same_controller_in_fallback_list)
+{
+  controller_interface::InterfaceConfiguration cmd_itfs_cfg;
+  cmd_itfs_cfg.type = controller_interface::interface_configuration_type::INDIVIDUAL;
+  cmd_itfs_cfg.names = {"joint1/position"};
+  auto test_controller_1 = std::make_shared<test_controller::TestController>();
+  test_controller_1->set_command_interface_configuration(cmd_itfs_cfg);
+  const std::string test_controller_1_name = "test_controller_1";
+
+  const std::vector<std::string> fallback_controllers = {test_controller_1_name, "random_ctrl2"};
+  rclcpp::Parameter fallback_ctrls_parameter(
+    test_controller_1_name + std::string(".fallback_controllers"), fallback_controllers);
+  cm_->set_parameter(fallback_ctrls_parameter);
+  {
+    ControllerManagerRunner cm_runner(this);
+    ASSERT_EQ(
+      nullptr,
+      cm_->load_controller(test_controller_1_name, test_controller::TEST_CONTROLLER_CLASS_NAME));
+  }
+}
+
 TEST_F(TestControllerManagerFallbackControllers, test_fallback_controllers_activation_simple_case)
 {
   const auto strictness = controller_manager_msgs::srv::SwitchController::Request::STRICT;
