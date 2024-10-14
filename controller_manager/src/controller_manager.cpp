@@ -175,7 +175,7 @@ void controller_chain_spec_cleanup(
 void get_active_controllers_using_command_interfaces_of_controller(
   const std::string & controller_name,
   const std::vector<controller_manager::ControllerSpec> & controllers,
-  std::vector<std::string> controllers_using_command_interfaces)
+  std::vector<std::string> &controllers_using_command_interfaces)
 {
   auto it = std::find_if(
     controllers.begin(), controllers.end(),
@@ -2860,12 +2860,12 @@ ControllerManager::check_fallback_controllers_state_pre_activation(
     }
     else
     {
-      if (!is_controller_inactive(fb_ctrl_it->c))
+      if (!(is_controller_inactive(fb_ctrl_it->c) || is_controller_active(fb_ctrl_it->c)))
       {
         RCLCPP_ERROR(
           get_logger(),
           "Controller with name '%s' cannot be activated, as it's fallback controller : '%s'"
-          " need to be configured and be in inactive state!",
+          " need to be configured and be in inactive/active state!",
           controller_it->info.name.c_str(), fb_ctrl.c_str());
         return controller_interface::return_type::ERROR;
       }
