@@ -37,10 +37,12 @@ def main(args=None):
         required=False,
     )
     parser.add_argument(
-        "--controller-manager-switch-timeout",
-        help="Time to wait for the controller manager to switch controllers",
+        "--switch-timeout",
+        help="Time to wait for a successful state switch of controllers."
+        " Useful if the controller_manager is not immediately ready, e.g.,"
+        " paused simulations at startup",
         required=False,
-        default=10.0,
+        default=1.0,
         type=float,
     )
 
@@ -48,7 +50,7 @@ def main(args=None):
     args = parser.parse_args(command_line_args)
     controller_names = args.controller_names
     controller_manager_name = args.controller_manager
-    controller_manager_switch_timeout = args.controller_manager_switch_timeout
+    switch_timeout = args.switch_timeout
 
     node = Node("unspawner_" + controller_names[0])
     try:
@@ -60,7 +62,7 @@ def main(args=None):
             [],
             True,
             True,
-            controller_manager_switch_timeout,
+            switch_timeout,
         )
         node.get_logger().info("Deactivated controller")
 

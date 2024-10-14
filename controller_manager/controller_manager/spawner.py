@@ -116,10 +116,12 @@ def main(args=None):
         type=float,
     )
     parser.add_argument(
-        "--controller-manager-switch-timeout",
-        help="Time to wait for the controller manager to switch controllers",
+        "--switch-timeout",
+        help="Time to wait for a successful state switch of controllers."
+        " Useful if the controller_manager is not immediately ready, e.g.,"
+        " paused simulations at startup",
         required=False,
-        default=10.0,
+        default=1.0,
         type=float,
     )
     parser.add_argument(
@@ -136,7 +138,7 @@ def main(args=None):
     controller_manager_name = args.controller_manager
     param_file = args.param_file
     controller_manager_timeout = args.controller_manager_timeout
-    controller_manager_switch_timeout = args.controller_manager_switch_timeout
+    switch_timeout = args.switch_timeout
 
     if param_file and not os.path.isfile(param_file):
         raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), param_file)
@@ -220,7 +222,7 @@ def main(args=None):
                         [controller_name],
                         True,
                         True,
-                        controller_manager_switch_timeout,
+                        switch_timeout,
                     )
                     if not ret.ok:
                         node.get_logger().error(
@@ -244,7 +246,7 @@ def main(args=None):
                 controller_names,
                 True,
                 True,
-                controller_manager_switch_timeout,
+                switch_timeout,
             )
             if not ret.ok:
                 node.get_logger().error(
@@ -276,7 +278,7 @@ def main(args=None):
                     [],
                     True,
                     True,
-                    controller_manager_switch_timeout,
+                    switch_timeout,
                 )
                 if not ret.ok:
                     node.get_logger().error(
