@@ -16,12 +16,13 @@
 #define HARDWARE_INTERFACE__LOANED_STATE_INTERFACE_HPP_
 
 #include <functional>
+#include <limits>
 #include <string>
 #include <thread>
 #include <utility>
 
 #include "hardware_interface/handle.hpp"
-
+#include "rclcpp/logging.hpp"
 namespace hardware_interface
 {
 class LoanedStateInterface
@@ -57,6 +58,17 @@ public:
 
   virtual ~LoanedStateInterface()
   {
+    auto logger = rclcpp::get_logger(state_interface_.get_name());
+    RCLCPP_WARN_EXPRESSION(
+      logger,
+      (get_value_statistics_.failed_counter > 0 || get_value_statistics_.timeout_counter > 0),
+      "LoanedStateInterface %s has %u (%.2f %%) timeouts and  %u (%.2f %%) missed calls out of %u "
+      "get_value calls",
+      state_interface_.get_name().c_str(), get_value_statistics_.timeout_counter,
+      (get_value_statistics_.timeout_counter * 100.0) / get_value_statistics_.total_counter,
+      get_value_statistics_.failed_counter,
+      (get_value_statistics_.failed_counter * 100.0) / get_value_statistics_.total_counter,
+      get_value_statistics_.total_counter);
     if (deleter_)
     {
       deleter_();
@@ -79,16 +91,54 @@ public:
   double get_value() const
   {
     double value;
+    if (get_value(value))
+    {
+      return value;
+    }
+    else
+    {
+      return std::numeric_limits<double>::quiet_NaN();
+    }
+  }
+
+  template <typename T>
+  [[nodiscard]] bool get_value(T & value, unsigned int max_tries = 10) const
+  {
+    unsigned int nr_tries = 0;
+    get_value_statistics_.total_counter++;
     while (!state_interface_.get_value(value))
     {
-      std::this_thread::sleep_for(std::chrono::microseconds(10));
+      get_value_statistics_.failed_counter++;
+      ++nr_tries;
+      if (nr_tries == max_tries)
+      {
+        get_value_statistics_.timeout_counter++;
+        return false;
+      }
+      std::this_thread::yield();
     }
-    return value;
+    return true;
   }
 
 protected:
   const StateInterface & state_interface_;
   Deleter deleter_;
+
+private:
+  struct HandleRTStatistics
+  {
+    unsigned int total_counter;
+    unsigned int failed_counter;
+    unsigned int timeout_counter;
+
+    void reset()
+    {
+      total_counter = 0;
+      failed_counter = 0;
+      timeout_counter = 0;
+    }
+  };
+  mutable HandleRTStatistics get_value_statistics_;
 };
 
 }  // namespace hardware_interface
