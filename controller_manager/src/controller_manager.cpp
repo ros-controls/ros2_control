@@ -175,7 +175,7 @@ void controller_chain_spec_cleanup(
 void get_active_controllers_using_command_interfaces_of_controller(
   const std::string & controller_name,
   const std::vector<controller_manager::ControllerSpec> & controllers,
-  std::vector<std::string> &controllers_using_command_interfaces)
+  std::vector<std::string> & controllers_using_command_interfaces)
 {
   auto it = std::find_if(
     controllers.begin(), controllers.end(),
@@ -2409,17 +2409,6 @@ controller_interface::return_type ControllerManager::update(
   }
   if (!failed_controllers_list.empty())
   {
-    std::string failed_controllers;
-    for (const auto & controller : failed_controllers_list)
-    {
-      failed_controllers += "\n\t- " + controller;
-    }
-    RCLCPP_ERROR(
-      get_logger(),
-      "Deactivating following controllers as their update resulted in an error! Will try to switch "
-      "to their fallback controllers if available :%s",
-      failed_controllers.c_str());
-
     std::vector<std::string> active_controllers_using_interfaces(failed_controllers_list);
     active_controllers_using_interfaces.reserve(500);
     std::vector<std::string> cumulative_fallback_controllers;
@@ -2439,6 +2428,42 @@ controller_interface::return_type ControllerManager::update(
             fallback_controller, rt_controller_list, active_controllers_using_interfaces);
         }
       }
+    }
+    std::string controllers_string;
+    controllers_string.reserve(500);
+    for (const auto & controller : failed_controllers_list)
+    {
+      controllers_string.append(controller);
+      controllers_string.append(" ");
+    }
+    RCLCPP_ERROR(
+      get_logger(), "Deactivating controllers : [ %s] as their update resulted in an error!",
+      controllers_string.c_str());
+    if (active_controllers_using_interfaces.size() > failed_controllers_list.size())
+    {
+      controllers_string.clear();
+      for (size_t i = failed_controllers_list.size();
+           i < active_controllers_using_interfaces.size(); i++)
+      {
+        controllers_string.append(active_controllers_using_interfaces[i]);
+        controllers_string.append(" ");
+      }
+      RCLCPP_ERROR_EXPRESSION(
+        get_logger(), !controllers_string.empty(),
+        "Deactivating controllers : [ %s] using the command interfaces needed for the fallback "
+        "controllers to activate.",
+        controllers_string.c_str());
+    }
+    if (!cumulative_fallback_controllers.empty())
+    {
+      controllers_string.clear();
+      for (const auto & controller : cumulative_fallback_controllers)
+      {
+        controllers_string.append(controller);
+        controllers_string.append(" ");
+      }
+      RCLCPP_ERROR(
+        get_logger(), "Activating fallback controllers : [ %s]", controllers_string.c_str());
     }
     deactivate_controllers(rt_controller_list, active_controllers_using_interfaces);
     if (!cumulative_fallback_controllers.empty())
