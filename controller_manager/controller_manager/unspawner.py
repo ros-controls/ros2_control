@@ -39,7 +39,7 @@ def main(args=None):
     parser.add_argument(
         "--switch-timeout",
         help="Time to wait for a successful state switch of controllers."
-        " Useful if the controller_manager is not immediately ready, e.g.,"
+        " Useful when switching cannot be performed immediately, e.g.,"
         " paused simulations at startup",
         required=False,
         default=5.0,
