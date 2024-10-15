@@ -20,12 +20,20 @@
 #include <cmath>
 #include <iterator>
 #include <limits>
+#include <random>
 #include <string>
 #include <vector>
 
 #include "hardware_interface/lexical_casts.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "rclcpp/logging.hpp"
+
+namespace
+{
+std::random_device rd;                 // Obtain a random number from hardware
+std::mt19937 gen(rd());                // Seed the generator
+std::normal_distribution<> d(0, 0.1);  // Gaussian noise with mean 0, stddev 1
+}  // namespace
 
 namespace mock_components
 {
@@ -101,6 +109,17 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
   else
   {
     calculate_dynamics_ = false;
+  }
+
+  // check if to create mock command interface for gpio
+  it = get_hardware_info().hardware_parameters.find("add_noise_to_sensors");
+  if (it != get_hardware_info().hardware_parameters.end())
+  {
+    add_noise_to_sensors_ = hardware_interface::parse_bool(it->second);
+  }
+  else
+  {
+    add_noise_to_sensors_ = false;
   }
 
   // process parameters about state following
@@ -598,6 +617,20 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
       else if (!std::isnan(other_commands_[i][j]))
       {
         other_states_[i][j] = other_commands_[i][j];
+      }
+    }
+  }
+
+  if (add_noise_to_sensors_)
+  {
+    for (auto & sensor_interfaces : sensor_states_)
+    {
+      for (auto & sensor_value : sensor_interfaces)
+      {
+        {
+          const double noise = d(gen);
+          sensor_value += noise;
+        }
       }
     }
   }

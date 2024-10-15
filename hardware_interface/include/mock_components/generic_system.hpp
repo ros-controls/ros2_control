@@ -113,6 +113,7 @@ private:
 
   bool use_mock_gpio_command_interfaces_;
   bool use_mock_sensor_command_interfaces_;
+  bool add_noise_to_sensors_;
 
   double position_state_following_offset_;
   std::string custom_interface_with_following_offset_;
