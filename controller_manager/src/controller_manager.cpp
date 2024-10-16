@@ -170,6 +170,41 @@ void controller_chain_spec_cleanup(
   }
   ctrl_chain_spec.erase(controller);
 }
+
+// Gets the list of active controllers that use the command interface of the given controller
+void get_active_controllers_using_command_interfaces_of_controller(
+  const std::string & controller_name,
+  const std::vector<controller_manager::ControllerSpec> & controllers,
+  std::vector<std::string> & controllers_using_command_interfaces)
+{
+  auto it = std::find_if(
+    controllers.begin(), controllers.end(),
+    std::bind(controller_name_compare, std::placeholders::_1, controller_name));
+  if (it == controllers.end())
+  {
+    RCLCPP_ERROR(
+      rclcpp::get_logger("ControllerManager::utils"),
+      "Controller '%s' not found in the list of controllers.", controller_name.c_str());
+    return;
+  }
+  const auto cmd_itfs = it->c->command_interface_configuration().names;
+  for (const auto & cmd_itf : cmd_itfs)
+  {
+    for (const auto & controller : controllers)
+    {
+      const auto ctrl_cmd_itfs = controller.c->command_interface_configuration().names;
+      // check if the controller is active and has the command interface and make sure that it
+      // doesn't exist in the list already
+      if (
+        is_controller_active(controller.c) &&
+        std::find(ctrl_cmd_itfs.begin(), ctrl_cmd_itfs.end(), cmd_itf) != ctrl_cmd_itfs.end())
+      {
+        add_element_to_list(controllers_using_command_interfaces, controller.info.name);
+      }
+    }
+  }
+}
+
 }  // namespace
 
 namespace controller_manager
@@ -536,6 +571,15 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_c
   }
   if (get_parameter(fallback_ctrl_param, fallback_controllers) && !fallback_controllers.empty())
   {
+    if (
+      std::find(fallback_controllers.begin(), fallback_controllers.end(), controller_name) !=
+      fallback_controllers.end())
+    {
+      RCLCPP_ERROR(
+        get_logger(), "Controller '%s' cannot be a fallback controller for itself.",
+        controller_name.c_str());
+      return nullptr;
+    }
     controller_spec.info.fallback_controllers_names = fallback_controllers;
   }
 
@@ -1080,6 +1124,11 @@ controller_interface::return_type ControllerManager::switch_controller(
     else
     {
       status = check_following_controllers_for_activate(controllers, strictness, controller_it);
+    }
+
+    if (status == controller_interface::return_type::OK)
+    {
+      status = check_fallback_controllers_state_pre_activation(controllers, controller_it);
     }
 
     if (status != controller_interface::return_type::OK)
@@ -2360,16 +2409,68 @@ controller_interface::return_type ControllerManager::update(
   }
   if (!failed_controllers_list.empty())
   {
-    std::string failed_controllers;
+    const auto FALLBACK_STACK_MAX_SIZE = 500;
+    std::vector<std::string> active_controllers_using_interfaces(failed_controllers_list);
+    active_controllers_using_interfaces.reserve(FALLBACK_STACK_MAX_SIZE);
+    std::vector<std::string> cumulative_fallback_controllers;
+    cumulative_fallback_controllers.reserve(FALLBACK_STACK_MAX_SIZE);
+
+    for (const auto & failed_ctrl : failed_controllers_list)
+    {
+      auto ctrl_it = std::find_if(
+        rt_controller_list.begin(), rt_controller_list.end(),
+        std::bind(controller_name_compare, std::placeholders::_1, failed_ctrl));
+      if (ctrl_it != rt_controller_list.end())
+      {
+        for (const auto & fallback_controller : ctrl_it->info.fallback_controllers_names)
+        {
+          cumulative_fallback_controllers.push_back(fallback_controller);
+          get_active_controllers_using_command_interfaces_of_controller(
+            fallback_controller, rt_controller_list, active_controllers_using_interfaces);
+        }
+      }
+    }
+    std::string controllers_string;
+    controllers_string.reserve(500);
     for (const auto & controller : failed_controllers_list)
     {
-      failed_controllers += "\n\t- " + controller;
+      controllers_string.append(controller);
+      controllers_string.append(" ");
     }
     RCLCPP_ERROR(
-      get_logger(), "Deactivating following controllers as their update resulted in an error :%s",
-      failed_controllers.c_str());
-
-    deactivate_controllers(rt_controller_list, failed_controllers_list);
+      get_logger(), "Deactivating controllers : [ %s] as their update resulted in an error!",
+      controllers_string.c_str());
+    if (active_controllers_using_interfaces.size() > failed_controllers_list.size())
+    {
+      controllers_string.clear();
+      for (size_t i = failed_controllers_list.size();
+           i < active_controllers_using_interfaces.size(); i++)
+      {
+        controllers_string.append(active_controllers_using_interfaces[i]);
+        controllers_string.append(" ");
+      }
+      RCLCPP_ERROR_EXPRESSION(
+        get_logger(), !controllers_string.empty(),
+        "Deactivating controllers : [ %s] using the command interfaces needed for the fallback "
+        "controllers to activate.",
+        controllers_string.c_str());
+    }
+    if (!cumulative_fallback_controllers.empty())
+    {
+      controllers_string.clear();
+      for (const auto & controller : cumulative_fallback_controllers)
+      {
+        controllers_string.append(controller);
+        controllers_string.append(" ");
+      }
+      RCLCPP_ERROR(
+        get_logger(), "Activating fallback controllers : [ %s]", controllers_string.c_str());
+    }
+    deactivate_controllers(rt_controller_list, active_controllers_using_interfaces);
+    if (!cumulative_fallback_controllers.empty())
+    {
+      activate_controllers(rt_controller_list, cumulative_fallback_controllers);
+    }
   }
 
   // there are controllers to (de)activate
@@ -2762,6 +2863,162 @@ controller_interface::return_type ControllerManager::check_preceeding_controller
   //   activate_request_.insert(activate_request_.begin(), preceding_ctrl_name);
   // }
 
+  return controller_interface::return_type::OK;
+}
+
+controller_interface::return_type
+ControllerManager::check_fallback_controllers_state_pre_activation(
+  const std::vector<ControllerSpec> & controllers, const ControllersListIterator controller_it)
+{
+  for (const auto & fb_ctrl : controller_it->info.fallback_controllers_names)
+  {
+    auto fb_ctrl_it = std::find_if(
+      controllers.begin(), controllers.end(),
+      std::bind(controller_name_compare, std::placeholders::_1, fb_ctrl));
+    if (fb_ctrl_it == controllers.end())
+    {
+      RCLCPP_ERROR(
+        get_logger(),
+        "Unable to find the fallback controller : '%s' of the controller : '%s' "
+        "within the controller list",
+        fb_ctrl.c_str(), controller_it->info.name.c_str());
+      return controller_interface::return_type::ERROR;
+    }
+    else
+    {
+      if (!(is_controller_inactive(fb_ctrl_it->c) || is_controller_active(fb_ctrl_it->c)))
+      {
+        RCLCPP_ERROR(
+          get_logger(),
+          "Controller with name '%s' cannot be activated, as it's fallback controller : '%s'"
+          " need to be configured and be in inactive/active state!",
+          controller_it->info.name.c_str(), fb_ctrl.c_str());
+        return controller_interface::return_type::ERROR;
+      }
+      for (const auto & fb_cmd_itf : fb_ctrl_it->c->command_interface_configuration().names)
+      {
+        if (!resource_manager_->command_interface_is_available(fb_cmd_itf))
+        {
+          ControllersListIterator following_ctrl_it;
+          if (is_interface_a_chained_interface(fb_cmd_itf, controllers, following_ctrl_it))
+          {
+            // if following_ctrl_it is inactive and it is in the fallback list of the
+            // controller_it and then check it it's exported reference interface names list if
+            // it's available
+            if (is_controller_inactive(following_ctrl_it->c))
+            {
+              if (
+                std::find(
+                  controller_it->info.fallback_controllers_names.begin(),
+                  controller_it->info.fallback_controllers_names.end(),
+                  following_ctrl_it->info.name) !=
+                controller_it->info.fallback_controllers_names.end())
+              {
+                const auto exported_ref_itfs =
+                  resource_manager_->get_controller_reference_interface_names(
+                    following_ctrl_it->info.name);
+                if (
+                  std::find(exported_ref_itfs.begin(), exported_ref_itfs.end(), fb_cmd_itf) ==
+                  exported_ref_itfs.end())
+                {
+                  RCLCPP_ERROR(
+                    get_logger(),
+                    "Controller with name '%s' cannot be activated, as the command interface : "
+                    "'%s' required by its fallback controller : '%s' is not exported by the "
+                    "controller : '%s' in the current fallback list!",
+                    controller_it->info.name.c_str(), fb_cmd_itf.c_str(), fb_ctrl.c_str(),
+                    following_ctrl_it->info.name.c_str());
+                  return controller_interface::return_type::ERROR;
+                }
+              }
+              else
+              {
+                RCLCPP_ERROR(
+                  get_logger(),
+                  "Controller with name '%s' cannot be activated, as the command interface : "
+                  "'%s' required by its fallback controller : '%s' is not available as the "
+                  "controller is not in active state!. May be consider adding this controller to "
+                  "the fallback list of the controller : '%s' or already have it activated.",
+                  controller_it->info.name.c_str(), fb_cmd_itf.c_str(), fb_ctrl.c_str(),
+                  following_ctrl_it->info.name.c_str());
+                return controller_interface::return_type::ERROR;
+              }
+            }
+          }
+          else
+          {
+            RCLCPP_ERROR(
+              get_logger(),
+              "Controller with name '%s' cannot be activated, as not all of its fallback "
+              "controller's : '%s' command interfaces are currently available!",
+              controller_it->info.name.c_str(), fb_ctrl.c_str());
+            return controller_interface::return_type::ERROR;
+          }
+        }
+      }
+      for (const auto & fb_state_itf : fb_ctrl_it->c->state_interface_configuration().names)
+      {
+        if (!resource_manager_->state_interface_is_available(fb_state_itf))
+        {
+          ControllersListIterator following_ctrl_it;
+          if (is_interface_a_chained_interface(fb_state_itf, controllers, following_ctrl_it))
+          {
+            // if following_ctrl_it is inactive and it is in the fallback list of the
+            // controller_it and then check it it's exported reference interface names list if
+            // it's available
+            if (is_controller_inactive(following_ctrl_it->c))
+            {
+              if (
+                std::find(
+                  controller_it->info.fallback_controllers_names.begin(),
+                  controller_it->info.fallback_controllers_names.end(),
+                  following_ctrl_it->info.name) !=
+                controller_it->info.fallback_controllers_names.end())
+              {
+                const auto exported_state_itfs =
+                  resource_manager_->get_controller_exported_state_interface_names(
+                    following_ctrl_it->info.name);
+                if (
+                  std::find(exported_state_itfs.begin(), exported_state_itfs.end(), fb_state_itf) ==
+                  exported_state_itfs.end())
+                {
+                  RCLCPP_ERROR(
+                    get_logger(),
+                    "Controller with name '%s' cannot be activated, as the state interface : "
+                    "'%s' required by its fallback controller : '%s' is not exported by the "
+                    "controller : '%s' in the current fallback list!",
+                    controller_it->info.name.c_str(), fb_state_itf.c_str(), fb_ctrl.c_str(),
+                    following_ctrl_it->info.name.c_str());
+                  return controller_interface::return_type::ERROR;
+                }
+              }
+              else
+              {
+                RCLCPP_ERROR(
+                  get_logger(),
+                  "Controller with name '%s' cannot be activated, as the state interface : "
+                  "'%s' required by its fallback controller : '%s' is not available as the "
+                  "controller is not in active state!. May be consider adding this controller to "
+                  "the fallback list of the controller : '%s' or already have it activated.",
+                  controller_it->info.name.c_str(), fb_state_itf.c_str(), fb_ctrl.c_str(),
+                  following_ctrl_it->info.name.c_str());
+                return controller_interface::return_type::ERROR;
+              }
+            }
+          }
+          else
+          {
+            RCLCPP_ERROR(
+              get_logger(),
+              "Controller with name '%s' cannot be activated, as not all of its fallback "
+              "controller's : '%s' state interfaces are currently available!",
+              controller_it->info.name.c_str(), fb_ctrl.c_str());
+            return controller_interface::return_type::ERROR;
+          }
+        }
+      }
+    }
+  }
   return controller_interface::return_type::OK;
 }
 

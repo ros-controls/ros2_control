@@ -87,6 +87,18 @@ update_rate (mandatory; integer)
   Name of a plugin exported using ``pluginlib`` for a controller.
   This is a class from which controller's instance with name "``controller_name``" is created.
 
+<controller_name>.params_file
+  The absolute path to the YAML file with parameters for the controller.
+  The file should contain the parameters for the controller in the standard ROS 2 YAML format.
+
+<controller_name>.fallback_controllers
+  List of controllers that are activated as a fallback strategy, when the spawned controllers fail by returning ``return_type::ERROR`` during the ``update`` cycle.
+  It is recommended to add all the controllers needed for the fallback strategy to the list, including the chainable controllers whose interfaces are used by the main fallback controllers.
+
+.. warning::
+  The fallback controllers activation is subject to the availability of the state and command interfaces at the time of activation.
+  It is recommended to test the fallback strategy in simulation before deploying it on the real robot.
+
 Handling Multiple Controller Managers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
