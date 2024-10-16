@@ -2409,10 +2409,11 @@ controller_interface::return_type ControllerManager::update(
   }
   if (!failed_controllers_list.empty())
   {
+    const auto FALLBACK_STACK_MAX_SIZE = 500;
     std::vector<std::string> active_controllers_using_interfaces(failed_controllers_list);
-    active_controllers_using_interfaces.reserve(500);
+    active_controllers_using_interfaces.reserve(FALLBACK_STACK_MAX_SIZE);
     std::vector<std::string> cumulative_fallback_controllers;
-    cumulative_fallback_controllers.reserve(500);
+    cumulative_fallback_controllers.reserve(FALLBACK_STACK_MAX_SIZE);
 
     for (const auto & failed_ctrl : failed_controllers_list)
     {

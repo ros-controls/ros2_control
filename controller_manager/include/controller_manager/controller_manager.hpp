@@ -424,7 +424,7 @@ private:
     const std::vector<ControllerSpec> & controllers, int strictness,
     const ControllersListIterator controller_it);
 
-  /// The methood to check if the fallback controllers of the given controllers are in the right
+  /// Checks if the fallback controllers of the given controllers are in the right
   /// state, so they can be activated immediately
   /**
    * \param[in] controllers is a list of controllers to activate.
