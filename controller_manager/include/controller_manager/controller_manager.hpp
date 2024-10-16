@@ -604,6 +604,25 @@ private:
   };
 
   SwitchParams switch_params_;
+
+  struct RTBufferVariables
+  {
+    const std::string & get_concatenated_string(const std::vector<std::string> & strings, bool clear_string)
+    {
+      concatenated_string.clear();
+      for (const auto & str : strings) {
+        concatenated_string.append(controller);
+        concatenated_string.append(" ");
+      }
+      return concatenated_string;
+    }
+
+    std::vector<std::string> stop_request;
+    std::string stop_request_string;
+    std::vector<std::string> failed_hardware_components;
+    std::string concatenated_string;
+    std::vector<std::string> failed_controllers_list;
+  }
 };
 
 }  // namespace controller_manager
