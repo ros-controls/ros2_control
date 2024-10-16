@@ -769,7 +769,7 @@ TEST_F(TestControllerManagerFallbackControllers, test_failure_on_fallback_contro
     controller_spec.info.name = test_controller_1_name;
     controller_spec.info.type = "test_controller::TestController";
     controller_spec.info.fallback_controllers_names = {test_controller_2_name};
-    controller_spec.next_update_cycle_time = std::make_shared<rclcpp::Time>(0);
+    controller_spec.last_update_cycle_time = std::make_shared<rclcpp::Time>(0);
     ControllerManagerRunner cm_runner(this);
     cm_->add_controller(controller_spec);  // add controller_1
 
@@ -777,7 +777,7 @@ TEST_F(TestControllerManagerFallbackControllers, test_failure_on_fallback_contro
     controller_spec.info.name = test_controller_2_name;
     controller_spec.info.type = "test_controller::TestController";
     controller_spec.info.fallback_controllers_names = {};
-    controller_spec.next_update_cycle_time = std::make_shared<rclcpp::Time>(0);
+    controller_spec.last_update_cycle_time = std::make_shared<rclcpp::Time>(0);
     cm_->add_controller(controller_spec);  // add controller_2
   }
   EXPECT_EQ(2u, cm_->get_loaded_controllers().size());
@@ -851,7 +851,7 @@ TEST_F(TestControllerManagerFallbackControllers, test_fallback_controllers_activ
     controller_spec.info.name = test_controller_1_name;
     controller_spec.info.type = "test_controller::TestController";
     controller_spec.info.fallback_controllers_names = {test_controller_2_name};
-    controller_spec.next_update_cycle_time = std::make_shared<rclcpp::Time>(0);
+    controller_spec.last_update_cycle_time = std::make_shared<rclcpp::Time>(0);
     ControllerManagerRunner cm_runner(this);
     cm_->add_controller(controller_spec);  // add controller_1
 
@@ -859,7 +859,7 @@ TEST_F(TestControllerManagerFallbackControllers, test_fallback_controllers_activ
     controller_spec.info.name = test_controller_2_name;
     controller_spec.info.type = "test_controller::TestController";
     controller_spec.info.fallback_controllers_names = {};
-    controller_spec.next_update_cycle_time = std::make_shared<rclcpp::Time>(0);
+    controller_spec.last_update_cycle_time = std::make_shared<rclcpp::Time>(0);
     cm_->add_controller(controller_spec);  // add controller_2
   }
   EXPECT_EQ(2u, cm_->get_loaded_controllers().size());
@@ -949,7 +949,7 @@ TEST_F(
     controller_spec.info.name = test_controller_1_name;
     controller_spec.info.type = "test_controller::TestController";
     controller_spec.info.fallback_controllers_names = {test_controller_2_name};
-    controller_spec.next_update_cycle_time = std::make_shared<rclcpp::Time>(0);
+    controller_spec.last_update_cycle_time = std::make_shared<rclcpp::Time>(0);
     ControllerManagerRunner cm_runner(this);
     cm_->add_controller(controller_spec);  // add controller_1
 
@@ -957,7 +957,7 @@ TEST_F(
     controller_spec.info.name = test_controller_2_name;
     controller_spec.info.type = "test_controller::TestController";
     controller_spec.info.fallback_controllers_names = {};
-    controller_spec.next_update_cycle_time = std::make_shared<rclcpp::Time>(0);
+    controller_spec.last_update_cycle_time = std::make_shared<rclcpp::Time>(0);
     cm_->add_controller(controller_spec);  // add controller_2
   }
   EXPECT_EQ(2u, cm_->get_loaded_controllers().size());
@@ -1038,7 +1038,7 @@ TEST_F(
     controller_spec.info.name = test_controller_1_name;
     controller_spec.info.type = "test_controller::TestController";
     controller_spec.info.fallback_controllers_names = {test_controller_2_name};
-    controller_spec.next_update_cycle_time = std::make_shared<rclcpp::Time>(0);
+    controller_spec.last_update_cycle_time = std::make_shared<rclcpp::Time>(0);
     ControllerManagerRunner cm_runner(this);
     cm_->add_controller(controller_spec);  // add controller_1
 
@@ -1046,7 +1046,7 @@ TEST_F(
     controller_spec.info.name = test_controller_2_name;
     controller_spec.info.type = "test_controller::TestController";
     controller_spec.info.fallback_controllers_names = {};
-    controller_spec.next_update_cycle_time = std::make_shared<rclcpp::Time>(0);
+    controller_spec.last_update_cycle_time = std::make_shared<rclcpp::Time>(0);
     cm_->add_controller(controller_spec);  // add controller_2
   }
   EXPECT_EQ(2u, cm_->get_loaded_controllers().size());
@@ -1134,7 +1134,7 @@ TEST_F(
     controller_spec.info.type = "test_controller::TestController";
     controller_spec.info.fallback_controllers_names = {
       test_controller_2_name, test_controller_3_name};
-    controller_spec.next_update_cycle_time = std::make_shared<rclcpp::Time>(0);
+    controller_spec.last_update_cycle_time = std::make_shared<rclcpp::Time>(0);
     ControllerManagerRunner cm_runner(this);
     cm_->add_controller(controller_spec);  // add controller_1
 
@@ -1142,14 +1142,14 @@ TEST_F(
     controller_spec.info.name = test_controller_2_name;
     controller_spec.info.type = "test_controller::TestController";
     controller_spec.info.fallback_controllers_names = {};
-    controller_spec.next_update_cycle_time = std::make_shared<rclcpp::Time>(0);
+    controller_spec.last_update_cycle_time = std::make_shared<rclcpp::Time>(0);
     cm_->add_controller(controller_spec);  // add controller_2
 
     controller_spec.c = test_controller_3;
     controller_spec.info.name = test_controller_3_name;
     controller_spec.info.type = "test_controller::TestController";
     controller_spec.info.fallback_controllers_names = {};
-    controller_spec.next_update_cycle_time = std::make_shared<rclcpp::Time>(0);
+    controller_spec.last_update_cycle_time = std::make_shared<rclcpp::Time>(0);
     cm_->add_controller(controller_spec);  // add controller_3
   }
 
@@ -1284,7 +1284,7 @@ TEST_F(
     controller_spec.info.type = "test_controller::TestController";
     controller_spec.info.fallback_controllers_names = {
       test_controller_2_name, test_controller_3_name};
-    controller_spec.next_update_cycle_time = std::make_shared<rclcpp::Time>(0);
+    controller_spec.last_update_cycle_time = std::make_shared<rclcpp::Time>(0);
     ControllerManagerRunner cm_runner(this);
     cm_->add_controller(controller_spec);  // add controller_1
 
@@ -1292,21 +1292,21 @@ TEST_F(
     controller_spec.info.name = test_controller_2_name;
     controller_spec.info.type = "test_controller::TestController";
     controller_spec.info.fallback_controllers_names = {};
-    controller_spec.next_update_cycle_time = std::make_shared<rclcpp::Time>(0);
+    controller_spec.last_update_cycle_time = std::make_shared<rclcpp::Time>(0);
     cm_->add_controller(controller_spec);  // add controller_2
 
     controller_spec.c = test_controller_3;
     controller_spec.info.name = test_controller_3_name;
     controller_spec.info.type = "test_controller::TestController";
     controller_spec.info.fallback_controllers_names = {};
-    controller_spec.next_update_cycle_time = std::make_shared<rclcpp::Time>(0);
+    controller_spec.last_update_cycle_time = std::make_shared<rclcpp::Time>(0);
     cm_->add_controller(controller_spec);  // add controller_3
 
     controller_spec.c = test_controller_4;
     controller_spec.info.name = test_controller_4_name;
     controller_spec.info.type = "test_chainable_controller::TestChainableController";
     controller_spec.info.fallback_controllers_names = {};
-    controller_spec.next_update_cycle_time = std::make_shared<rclcpp::Time>(0);
+    controller_spec.last_update_cycle_time = std::make_shared<rclcpp::Time>(0);
     cm_->add_controller(controller_spec);  // add controller_4
   }
 
@@ -1386,7 +1386,7 @@ TEST_F(
     controller_spec.info.name = test_controller_1_name;
     controller_spec.info.type = "test_controller::TestController";
     controller_spec.info.fallback_controllers_names = {test_controller_3_name};
-    controller_spec.next_update_cycle_time = std::make_shared<rclcpp::Time>(0);
+    controller_spec.last_update_cycle_time = std::make_shared<rclcpp::Time>(0);
     cm_->add_controller(controller_spec);  // add controller_1
 
     EXPECT_EQ(
@@ -1418,7 +1418,7 @@ TEST_F(
     // available
     controller_spec.info.fallback_controllers_names = {
       test_controller_4_name, test_controller_3_name, test_controller_2_name};
-    controller_spec.next_update_cycle_time = std::make_shared<rclcpp::Time>(0);
+    controller_spec.last_update_cycle_time = std::make_shared<rclcpp::Time>(0);
     cm_->add_controller(controller_spec);  // add controller_1
 
     EXPECT_EQ(
@@ -1514,7 +1514,7 @@ TEST_F(
     controller_spec.info.type = "test_controller::TestController";
     controller_spec.info.fallback_controllers_names = {
       test_controller_2_name, test_controller_4_name};
-    controller_spec.next_update_cycle_time = std::make_shared<rclcpp::Time>(0);
+    controller_spec.last_update_cycle_time = std::make_shared<rclcpp::Time>(0);
     ControllerManagerRunner cm_runner(this);
     cm_->add_controller(controller_spec);  // add controller_1
 
@@ -1522,21 +1522,21 @@ TEST_F(
     controller_spec.info.name = test_controller_2_name;
     controller_spec.info.type = "test_controller::TestController";
     controller_spec.info.fallback_controllers_names = {};
-    controller_spec.next_update_cycle_time = std::make_shared<rclcpp::Time>(0);
+    controller_spec.last_update_cycle_time = std::make_shared<rclcpp::Time>(0);
     cm_->add_controller(controller_spec);  // add controller_2
 
     controller_spec.c = test_controller_3;
     controller_spec.info.name = test_controller_3_name;
     controller_spec.info.type = "test_controller::TestController";
     controller_spec.info.fallback_controllers_names = {};
-    controller_spec.next_update_cycle_time = std::make_shared<rclcpp::Time>(0);
+    controller_spec.last_update_cycle_time = std::make_shared<rclcpp::Time>(0);
     cm_->add_controller(controller_spec);  // add controller_3
 
     controller_spec.c = test_controller_4;
     controller_spec.info.name = test_controller_4_name;
     controller_spec.info.type = "test_chainable_controller::TestChainableController";
     controller_spec.info.fallback_controllers_names = {};
-    controller_spec.next_update_cycle_time = std::make_shared<rclcpp::Time>(0);
+    controller_spec.last_update_cycle_time = std::make_shared<rclcpp::Time>(0);
     cm_->add_controller(controller_spec);  // add controller_4
   }
 
@@ -1622,7 +1622,7 @@ TEST_F(
     controller_spec.info.type = "test_controller::TestController";
     controller_spec.info.fallback_controllers_names = {
       test_controller_3_name, test_controller_4_name};
-    controller_spec.next_update_cycle_time = std::make_shared<rclcpp::Time>(0);
+    controller_spec.last_update_cycle_time = std::make_shared<rclcpp::Time>(0);
     cm_->add_controller(controller_spec);  // add controller_1
 
     EXPECT_EQ(
