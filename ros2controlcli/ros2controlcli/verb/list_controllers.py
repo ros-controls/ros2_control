@@ -52,8 +52,12 @@ def print_controller_state(c, args, col_width_name, col_width_state, col_width_t
                 print(f"\t\t{reference:20s}")
     if args.reference_interfaces or args.verbose:
         print("\texported reference interfaces:")
-        for reference_interfaces in c.reference_interfaces:
-            print(f"\t\t{reference_interfaces}")
+        for reference_interface in c.reference_interfaces:
+            print(f"\t\t{reference_interface}")
+    if args.reference_interfaces or args.verbose:
+        print("\texported state interfaces:")
+        for exported_state_interface in c.exported_state_interfaces:
+            print(f"\t\t{exported_state_interface}")
 
 
 class ListControllersVerb(VerbExtension):
