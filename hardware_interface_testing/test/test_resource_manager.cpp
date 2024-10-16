@@ -1733,6 +1733,206 @@ TEST_F(ResourceManagerTest, test_caching_of_controllers_to_hardware)
   }
 }
 
+class ResourceManagerTestAsyncReadWrite : public ResourceManagerTest
+{
+public:
+  void setup_resource_manager_and_do_initial_checks()
+  {
+    const auto minimal_robot_urdf_async =
+      std::string(ros2_control_test_assets::urdf_head) +
+      std::string(ros2_control_test_assets::async_hardware_resources) +
+      std::string(ros2_control_test_assets::urdf_tail);
+    rm = std::make_shared<TestableResourceManager>(node_, minimal_robot_urdf_async, false);
+    activate_components(*rm);
+
+    auto status_map = rm->get_components_status();
+    EXPECT_EQ(
+      status_map[TEST_ACTUATOR_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+    EXPECT_EQ(
+      status_map[TEST_SYSTEM_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+    EXPECT_EQ(
+      status_map[TEST_SENSOR_HARDWARE_NAME].state.id(),
+      lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
+
+    // Check that all the components are async
+    ASSERT_TRUE(status_map[TEST_ACTUATOR_HARDWARE_NAME].is_async);
+    ASSERT_TRUE(status_map[TEST_SYSTEM_HARDWARE_NAME].is_async);
+    ASSERT_TRUE(status_map[TEST_SENSOR_HARDWARE_NAME].is_async);
+
+    claimed_itfs.push_back(
+      rm->claim_command_interface(TEST_ACTUATOR_HARDWARE_COMMAND_INTERFACES[0]));
+    claimed_itfs.push_back(rm->claim_command_interface(TEST_SYSTEM_HARDWARE_COMMAND_INTERFACES[0]));
+
+    state_itfs.push_back(rm->claim_state_interface(TEST_ACTUATOR_HARDWARE_STATE_INTERFACES[1]));
+    state_itfs.push_back(rm->claim_state_interface(TEST_SYSTEM_HARDWARE_STATE_INTERFACES[1]));
+
+    check_if_interface_available(true, true);
+    // with default values read and write should run without any problems
+    {
+      auto [ok, failed_hardware_names] = rm->read(time, duration);
+      EXPECT_TRUE(ok);
+      EXPECT_TRUE(failed_hardware_names.empty());
+    }
+    {
+      // claimed_itfs[0].set_value(10.0);
+      // claimed_itfs[1].set_value(20.0);
+      auto [ok, failed_hardware_names] = rm->write(time, duration);
+      EXPECT_TRUE(ok);
+      EXPECT_TRUE(failed_hardware_names.empty());
+    }
+    time = time + duration;
+    check_if_interface_available(true, true);
+  }
+
+  // check if all interfaces are available
+  void check_if_interface_available(const bool actuator_interfaces, const bool system_interfaces)
+  {
+    for (const auto & interface : TEST_ACTUATOR_HARDWARE_COMMAND_INTERFACES)
+    {
+      EXPECT_EQ(rm->command_interface_is_available(interface), actuator_interfaces);
+    }
+    for (const auto & interface : TEST_ACTUATOR_HARDWARE_STATE_INTERFACES)
+    {
+      EXPECT_EQ(rm->state_interface_is_available(interface), actuator_interfaces);
+    }
+    for (const auto & interface : TEST_SYSTEM_HARDWARE_COMMAND_INTERFACES)
+    {
+      EXPECT_EQ(rm->command_interface_is_available(interface), system_interfaces);
+    }
+    for (const auto & interface : TEST_SYSTEM_HARDWARE_STATE_INTERFACES)
+    {
+      EXPECT_EQ(rm->state_interface_is_available(interface), system_interfaces);
+    }
+  };
+
+  void check_read_and_write_cycles(bool check_for_updated_values)
+  {
+    double prev_act_state_value = state_itfs[0].get_value();
+    double prev_system_state_value = state_itfs[1].get_value();
+    const double actuator_increment = 10.0;
+    const double system_increment = 20.0;
+    for (size_t i = 1; i < 100; i++)
+    {
+      auto [ok, failed_hardware_names] = rm->read(time, duration);
+      EXPECT_TRUE(ok);
+      EXPECT_TRUE(failed_hardware_names.empty());
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+      // The values are computations exactly within the test_components
+      if (check_for_updated_values)
+      {
+        prev_system_state_value = claimed_itfs[1].get_value() / 2.0;
+        prev_act_state_value = claimed_itfs[0].get_value() / 2.0;
+      }
+      claimed_itfs[0].set_value(claimed_itfs[0].get_value() + actuator_increment);
+      claimed_itfs[1].set_value(claimed_itfs[1].get_value() + system_increment);
+      // This is needed to account for any missing hits to the read and write cycles as the tests
+      // are going to be run on a non-RT operating system
+      ASSERT_NEAR(state_itfs[0].get_value(), prev_act_state_value, actuator_increment / 2.0);
+      ASSERT_NEAR(state_itfs[1].get_value(), prev_system_state_value, system_increment / 2.0);
+      auto [ok_write, failed_hardware_names_write] = rm->write(time, duration);
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+      EXPECT_TRUE(ok_write);
+      EXPECT_TRUE(failed_hardware_names_write.empty());
+      time = time + duration;
+    }
+  }
+
+public:
+  std::shared_ptr<TestableResourceManager> rm;
+  unsigned int actuator_rw_rate_, system_rw_rate_, cm_update_rate_;
+  std::vector<hardware_interface::LoanedCommandInterface> claimed_itfs;
+  std::vector<hardware_interface::LoanedStateInterface> state_itfs;
+
+  rclcpp::Time time = rclcpp::Time(1657232, 0);
+  const rclcpp::Duration duration = rclcpp::Duration::from_seconds(0.01);
+};
+
+TEST_F(ResourceManagerTestAsyncReadWrite, test_components_with_async_components_on_activate)
+{
+  setup_resource_manager_and_do_initial_checks();
+  check_read_and_write_cycles(true);
+}
+
+TEST_F(ResourceManagerTestAsyncReadWrite, test_components_with_async_components_on_deactivate)
+{
+  setup_resource_manager_and_do_initial_checks();
+
+  // Now deactivate all the components and test the same as above
+  rclcpp_lifecycle::State state_inactive(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    hardware_interface::lifecycle_state_names::INACTIVE);
+  rm->set_component_state(TEST_SYSTEM_HARDWARE_NAME, state_inactive);
+  rm->set_component_state(TEST_ACTUATOR_HARDWARE_NAME, state_inactive);
+  rm->set_component_state(TEST_SENSOR_HARDWARE_NAME, state_inactive);
+
+  auto status_map = rm->get_components_status();
+  EXPECT_EQ(
+    status_map[TEST_ACTUATOR_HARDWARE_NAME].state.id(),
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+  EXPECT_EQ(
+    status_map[TEST_SYSTEM_HARDWARE_NAME].state.id(),
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+  EXPECT_EQ(
+    status_map[TEST_SENSOR_HARDWARE_NAME].state.id(),
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
+
+  check_read_and_write_cycles(true);
+}
+
+TEST_F(ResourceManagerTestAsyncReadWrite, test_components_with_async_components_on_unconfigured)
+{
+  setup_resource_manager_and_do_initial_checks();
+
+  // Now deactivate all the components and test the same as above
+  rclcpp_lifecycle::State state_unconfigured(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    hardware_interface::lifecycle_state_names::UNCONFIGURED);
+  rm->set_component_state(TEST_SYSTEM_HARDWARE_NAME, state_unconfigured);
+  rm->set_component_state(TEST_ACTUATOR_HARDWARE_NAME, state_unconfigured);
+  rm->set_component_state(TEST_SENSOR_HARDWARE_NAME, state_unconfigured);
+
+  auto status_map = rm->get_components_status();
+  EXPECT_EQ(
+    status_map[TEST_ACTUATOR_HARDWARE_NAME].state.id(),
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  EXPECT_EQ(
+    status_map[TEST_SYSTEM_HARDWARE_NAME].state.id(),
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  EXPECT_EQ(
+    status_map[TEST_SENSOR_HARDWARE_NAME].state.id(),
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+
+  check_read_and_write_cycles(false);
+}
+
+TEST_F(ResourceManagerTestAsyncReadWrite, test_components_with_async_components_on_finalized)
+{
+  setup_resource_manager_and_do_initial_checks();
+
+  // Now deactivate all the components and test the same as above
+  rclcpp_lifecycle::State state_finalized(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED,
+    hardware_interface::lifecycle_state_names::FINALIZED);
+  rm->set_component_state(TEST_SYSTEM_HARDWARE_NAME, state_finalized);
+  rm->set_component_state(TEST_ACTUATOR_HARDWARE_NAME, state_finalized);
+  rm->set_component_state(TEST_SENSOR_HARDWARE_NAME, state_finalized);
+
+  auto status_map = rm->get_components_status();
+  EXPECT_EQ(
+    status_map[TEST_ACTUATOR_HARDWARE_NAME].state.id(),
+    lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED);
+  EXPECT_EQ(
+    status_map[TEST_SYSTEM_HARDWARE_NAME].state.id(),
+    lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED);
+  EXPECT_EQ(
+    status_map[TEST_SENSOR_HARDWARE_NAME].state.id(),
+    lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED);
+
+  check_read_and_write_cycles(false);
+}
+
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
