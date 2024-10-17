@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import warnings
 from controller_manager import list_controllers, bcolors
 
 from ros2cli.node.direct import add_arguments
@@ -50,10 +51,14 @@ def print_controller_state(c, args, col_width_name, col_width_state, col_width_t
         for connection in c.chain_connections:
             for reference in connection.reference_interfaces:
                 print(f"\t\t{reference:20s}")
-    if args.reference_interfaces or args.verbose:
+    if args.reference_interfaces or args.exported_interfaces or args.verbose:
         print("\texported reference interfaces:")
-        for reference_interfaces in c.reference_interfaces:
-            print(f"\t\t{reference_interfaces}")
+        for reference_interface in c.reference_interfaces:
+            print(f"\t\t{reference_interface}")
+    if args.reference_interfaces or args.exported_interfaces or args.verbose:
+        print("\texported state interfaces:")
+        for exported_state_interface in c.exported_state_interfaces:
+            print(f"\t\t{exported_state_interface}")
 
 
 class ListControllersVerb(VerbExtension):
@@ -87,6 +92,11 @@ class ListControllersVerb(VerbExtension):
             help="List controller's exported references",
         )
         parser.add_argument(
+            "--exported-interfaces",
+            action="store_true",
+            help="List controller's exported state and reference interfaces",
+        )
+        parser.add_argument(
             "--verbose",
             "-v",
             action="store_true",
@@ -97,6 +107,13 @@ class ListControllersVerb(VerbExtension):
     def main(self, *, args):
         with NodeStrategy(args).direct_node as node:
             response = list_controllers(node, args.controller_manager)
+
+            if args.reference_interfaces:
+                warnings.filterwarnings("always")
+                warnings.warn(
+                    "The '--reference-interfaces' argument is deprecated and will be removed in future releases. Use '--exported-interfaces' instead.",
+                    DeprecationWarning,
+                )
 
             if not response.controller:
                 print("No controllers are currently loaded!")
