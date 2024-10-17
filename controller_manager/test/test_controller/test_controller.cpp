@@ -137,6 +137,11 @@ std::vector<double> TestController::get_state_interface_data() const
   return state_intr_data;
 }
 
+void TestController::set_external_commands_for_testing(const std::vector<double> & commands)
+{
+  external_commands_for_testing_ = commands;
+}
+
 }  // namespace test_controller
 
 #include "pluginlib/class_list_macros.hpp"
