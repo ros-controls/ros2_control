@@ -60,6 +60,17 @@ struct InterfaceConfiguration
   std::vector<std::string> names = {};
 };
 
+struct ControllerUpdateStats
+{
+  void reset()
+  {
+    total_triggers = 0;
+    failed_triggers = 0;
+  }
+
+  unsigned int total_triggers;
+  unsigned int failed_triggers;
+};
 /**
  * Base interface class  for an controller. The interface may not be used to implement a controller.
  * The class provides definitions for `ControllerInterface` and `ChainableControllerInterface`
@@ -312,6 +323,7 @@ private:
   unsigned int update_rate_ = 0;
   bool is_async_ = false;
   std::string urdf_ = "";
+  ControllerUpdateStats trigger_stats_;
 };
 
 using ControllerInterfaceBaseSharedPtr = std::shared_ptr<ControllerInterfaceBase>;

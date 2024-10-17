@@ -127,6 +127,7 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
       thread_priority);
     async_handler_->start_thread();
   }
+  trigger_stats_.reset();
 
   return get_node()->configure();
 }
@@ -153,9 +154,19 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::get_lifecycle_state() c
 std::pair<bool, return_type> ControllerInterfaceBase::trigger_update(
   const rclcpp::Time & time, const rclcpp::Duration & period)
 {
+  trigger_stats_.total_triggers++;
   if (is_async())
   {
-    return async_handler_->trigger_async_callback(time, period);
+    const auto result = async_handler_->trigger_async_callback(time, period);
+    if (!result.first)
+    {
+      trigger_stats_.failed_triggers++;
+      RCLCPP_WARN_THROTTLE(
+        get_node()->get_logger(), *get_node()->get_clock(), 20000,
+        "The controller missed %u update cycles out of %u total triggers.",
+        trigger_stats_.failed_triggers, trigger_stats_.total_triggers);
+    }
+    return result;
   }
   else
   {

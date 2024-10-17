@@ -2409,15 +2409,6 @@ controller_interface::return_type ControllerManager::update(
           failed_controllers_list.push_back(loaded_controller.info.name);
           ret = controller_ret;
         }
-        else if (!trigger_status)
-        {
-          RCLCPP_WARN(
-            get_logger(),
-            "The controller '%s' missed an update cycle at time : '%f', will trigger next update "
-            "cycle at around : '%f'",
-            loaded_controller.info.name.c_str(), time.seconds(),
-            loaded_controller.next_update_cycle_time->seconds());
-        }
       }
     }
   }
