@@ -157,9 +157,9 @@ There are two scripts to interact with controller manager from launch files:
 .. code-block:: console
 
     $ ros2 run controller_manager spawner -h
-    usage: spawner [-h] [-c CONTROLLER_MANAGER] [-p PARAM_FILE] [-n NAMESPACE] [--load-only] [--inactive] [-t CONTROLLER_TYPE] [-u]
-                      [--controller-manager-timeout CONTROLLER_MANAGER_TIMEOUT]
-                      controller_name
+    usage: spawner [-h] [-c CONTROLLER_MANAGER] [-p PARAM_FILE] [-n NAMESPACE] [--load-only] [--inactive] [-u] [--controller-manager-timeout CONTROLLER_MANAGER_TIMEOUT]
+                  [--activate-as-group] [--controller-ros-args CONTROLLER_ROS_ARGS]
+                  controller_names [controller_names ...]
 
     positional arguments:
       controller_names      List of controllers
@@ -178,9 +178,8 @@ There are two scripts to interact with controller manager from launch files:
       --controller-manager-timeout CONTROLLER_MANAGER_TIMEOUT
                             Time to wait for the controller manager
       --activate-as-group   Activates all the parsed controllers list together instead of one by one. Useful for activating all chainable controllers altogether
-      --fallback_controllers FALLBACK_CONTROLLERS [FALLBACK_CONTROLLERS ...]
-                            Fallback controllers list are activated as a fallback strategy when the spawned controllers fail. When the argument is provided, it takes precedence over the fallback_controllers list in the
-                            param file
+      --controller-ros-args CONTROLLER_ROS_ARGS
+                            The --ros-args to be passed to the controller node for remapping topics etc
 
 
 The parsed controller config file can follow the same conventions as the typical ROS 2 parameter file format. Now, the spawner can handle config files with wildcard entries and also the controller name in the absolute namespace. See the following examples on the config files:
