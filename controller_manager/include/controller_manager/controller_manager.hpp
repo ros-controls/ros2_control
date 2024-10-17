@@ -607,10 +607,22 @@ private:
 
   struct RTBufferVariables
   {
-    const std::string & get_concatenated_string(
-      const std::vector<std::string> & strings, bool clear_string)
+    RTBufferVariables()
     {
-      concatenated_string.clear();
+      deactivate_controllers_list.reserve(1000);
+      activate_controllers_list.reserve(1000);
+      concatenated_string.reserve(5000);
+      failed_hardware_components.reserve(2000);
+      failed_controllers_list.reserve(2000);
+    }
+
+    const std::string & get_concatenated_string(
+      const std::vector<std::string> & strings, bool clear_string = true)
+    {
+      if (clear_string)
+      {
+        concatenated_string.clear();
+      }
       for (const auto & str : strings)
       {
         concatenated_string.append(str);
@@ -619,12 +631,13 @@ private:
       return concatenated_string;
     }
 
-    std::vector<std::string> stop_request;
-    std::string stop_request_string;
+    std::vector<std::string> deactivate_controllers_list;
+    std::vector<std::string> activate_controllers_list;
     std::vector<std::string> failed_hardware_components;
     std::string concatenated_string;
     std::vector<std::string> failed_controllers_list;
   };
+  RTBufferVariables rt_buffer_;
 };
 
 }  // namespace controller_manager
