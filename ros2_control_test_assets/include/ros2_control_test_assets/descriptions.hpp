@@ -621,7 +621,9 @@ const auto hardware_resources =
       <command_interface name="position"/>
       <state_interface name="position"/>
       <state_interface name="velocity"/>
+      <state_interface name="effort"/>
       <command_interface name="max_velocity" />
+      <command_interface name="effort" />
     </joint>
   </ros2_control>
   <ros2_control name="TestSensorHardware" type="sensor">
@@ -1159,6 +1161,49 @@ const auto hardware_resources_missing_command_keys =
       <command_interface name="does_not_exist"/>
       <state_interface name="position"/>
       <state_interface name="velocity"/>
+    </joint>
+  </ros2_control>
+)";
+
+const auto hardware_resources_with_types_of_effort =
+  R"(
+  <ros2_control name="TestActuatorHardware1" type="actuator">
+    <hardware>
+      <plugin>test_actuator</plugin>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="effort"/>
+      <command_interface name="max_velocity" />
+      <command_interface name="effort" />
+    </joint>
+  </ros2_control>
+  <ros2_control name="TestActuatorHardware2" type="actuator">
+    <hardware>
+      <plugin>test_actuator</plugin>
+    </hardware>
+    <joint name="joint2">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="torque"/>
+      <command_interface name="max_velocity" />
+      <command_interface name="torque" />
+    </joint>
+  </ros2_control>
+  <ros2_control name="TestActuatorHardware3" type="actuator">
+    <hardware>
+      <plugin>test_actuator</plugin>
+    </hardware>
+    <joint name="joint3">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="force"/>
+      <command_interface name="max_velocity" />
+      <command_interface name="force" />
     </joint>
   </ros2_control>
 )";
@@ -1758,9 +1803,9 @@ const auto minimal_robot_missing_command_keys_urdf =
 [[maybe_unused]] const std::string TEST_ACTUATOR_HARDWARE_TYPE = "actuator";
 [[maybe_unused]] const std::string TEST_ACTUATOR_HARDWARE_PLUGIN_NAME = "test_actuator";
 [[maybe_unused]] const std::vector<std::string> TEST_ACTUATOR_HARDWARE_COMMAND_INTERFACES = {
-  "joint1/position", "joint1/max_velocity"};
+  "joint1/position", "joint1/max_velocity", "joint1/effort"};
 [[maybe_unused]] const std::vector<std::string> TEST_ACTUATOR_HARDWARE_STATE_INTERFACES = {
-  "joint1/position", "joint1/velocity", "joint1/some_unlisted_interface"};
+  "joint1/position", "joint1/velocity", "joint1/effort", "joint1/some_unlisted_interface"};
 
 [[maybe_unused]] const std::string TEST_SENSOR_HARDWARE_NAME = "TestSensorHardware";
 [[maybe_unused]] const std::string TEST_SENSOR_HARDWARE_TYPE = "sensor";
