@@ -99,9 +99,7 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
   {
     const unsigned int thread_priority =
       static_cast<unsigned int>(get_node()->get_parameter("thread_priority").as_int());
-    RCLCPP_INFO_STREAM(
-      get_node()->get_logger(),
-      "Starting async handler with scheduler priority: " << thread_priority);
+    RCLCPP_INFO(get_node()->get_logger(), "Starting async handler with scheduler priority: %d", thread_priority);
     async_handler_ = std::make_unique<realtime_tools::AsyncFunctionHandler<return_type>>();
     async_handler_->init(
       std::bind(
