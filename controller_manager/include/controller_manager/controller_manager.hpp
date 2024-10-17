@@ -629,6 +629,38 @@ private:
 
   SwitchParams switch_params_;
 
+  struct RTBufferVariables
+  {
+    RTBufferVariables()
+    {
+      deactivate_controllers_list.reserve(1000);
+      activate_controllers_using_interfaces_list.reserve(1000);
+      fallback_controllers_list.reserve(1000);
+      concatenated_string.reserve(5000);
+    }
+
+    const std::string & get_concatenated_string(
+      const std::vector<std::string> & strings, bool clear_string = true)
+    {
+      if (clear_string)
+      {
+        concatenated_string.clear();
+      }
+      for (const auto & str : strings)
+      {
+        concatenated_string.append(str);
+        concatenated_string.append(" ");
+      }
+      return concatenated_string;
+    }
+
+    std::vector<std::string> deactivate_controllers_list;
+    std::vector<std::string> activate_controllers_using_interfaces_list;
+    std::vector<std::string> fallback_controllers_list;
+    std::string concatenated_string;
+  };
+  RTBufferVariables rt_buffer_;
+
   std::unordered_map<std::string, std::unique_ptr<controller_interface::AsyncControllerThread>>
     async_controller_threads_;
 };
