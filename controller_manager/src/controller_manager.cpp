@@ -2522,7 +2522,7 @@ controller_interface::return_type ControllerManager::update(
       "configuration (use_sim_time parameter) and if a valid clock source is available");
   }
 
-  std::vector<std::string> failed_controllers_list;
+  rt_buffer_.deactivate_controllers_list.clear();
   for (const auto & loaded_controller : rt_controller_list)
   {
     // TODO(v-lopez) we could cache this information
@@ -2620,21 +2620,18 @@ controller_interface::return_type ControllerManager::update(
 
         if (controller_ret != controller_interface::return_type::OK)
         {
-          failed_controllers_list.push_back(loaded_controller.info.name);
+          rt_buffer_.deactivate_controllers_list.push_back(loaded_controller.info.name);
           ret = controller_ret;
         }
       }
     }
   }
-  if (!failed_controllers_list.empty())
+  if (!rt_buffer_.deactivate_controllers_list.empty())
   {
-    const auto FALLBACK_STACK_MAX_SIZE = 500;
-    std::vector<std::string> active_controllers_using_interfaces(failed_controllers_list);
-    active_controllers_using_interfaces.reserve(FALLBACK_STACK_MAX_SIZE);
-    std::vector<std::string> cumulative_fallback_controllers;
-    cumulative_fallback_controllers.reserve(FALLBACK_STACK_MAX_SIZE);
+    rt_buffer_.fallback_controllers_list.clear();
+    rt_buffer_.activate_controllers_using_interfaces_list.clear();
 
-    for (const auto & failed_ctrl : failed_controllers_list)
+    for (const auto & failed_ctrl : rt_buffer_.deactivate_controllers_list)
     {
       auto ctrl_it = std::find_if(
         rt_controller_list.begin(), rt_controller_list.end(),
@@ -2643,55 +2640,39 @@ controller_interface::return_type ControllerManager::update(
       {
         for (const auto & fallback_controller : ctrl_it->info.fallback_controllers_names)
         {
-          cumulative_fallback_controllers.push_back(fallback_controller);
+          rt_buffer_.fallback_controllers_list.push_back(fallback_controller);
           get_active_controllers_using_command_interfaces_of_controller(
-            fallback_controller, rt_controller_list, active_controllers_using_interfaces);
+            fallback_controller, rt_controller_list,
+            rt_buffer_.activate_controllers_using_interfaces_list);
         }
       }
     }
-    std::string controllers_string;
-    controllers_string.reserve(500);
-    for (const auto & controller : failed_controllers_list)
-    {
-      controllers_string.append(controller);
-      controllers_string.append(" ");
-    }
+
     RCLCPP_ERROR(
       get_logger(), "Deactivating controllers : [ %s] as their update resulted in an error!",
-      controllers_string.c_str());
-    if (active_controllers_using_interfaces.size() > failed_controllers_list.size())
-    {
-      controllers_string.clear();
-      for (size_t i = failed_controllers_list.size();
-           i < active_controllers_using_interfaces.size(); i++)
-      {
-        controllers_string.append(active_controllers_using_interfaces[i]);
-        controllers_string.append(" ");
-      }
-      RCLCPP_ERROR_EXPRESSION(
-        get_logger(), !controllers_string.empty(),
-        "Deactivating controllers : [ %s] using the command interfaces needed for the fallback "
-        "controllers to activate.",
-        controllers_string.c_str());
-    }
-    if (!cumulative_fallback_controllers.empty())
-    {
-      controllers_string.clear();
-      for (const auto & controller : cumulative_fallback_controllers)
-      {
-        controllers_string.append(controller);
-        controllers_string.append(" ");
-      }
-      RCLCPP_ERROR(
-        get_logger(), "Activating fallback controllers : [ %s]", controllers_string.c_str());
-    }
+      rt_buffer_.get_concatenated_string(rt_buffer_.deactivate_controllers_list).c_str());
+    RCLCPP_ERROR_EXPRESSION(
+      get_logger(), !rt_buffer_.activate_controllers_using_interfaces_list.empty(),
+      "Deactivating controllers : [ %s] using the command interfaces needed for the fallback "
+      "controllers to activate.",
+      rt_buffer_.get_concatenated_string(rt_buffer_.activate_controllers_using_interfaces_list)
+        .c_str());
+    RCLCPP_ERROR_EXPRESSION(
+      get_logger(), !rt_buffer_.fallback_controllers_list.empty(),
+      "Activating fallback controllers : [ %s]",
+      rt_buffer_.get_concatenated_string(rt_buffer_.fallback_controllers_list).c_str());
+    std::for_each(
+      rt_buffer_.activate_controllers_using_interfaces_list.begin(),
+      rt_buffer_.activate_controllers_using_interfaces_list.end(),
+      [this](const std::string & controller)
+      { add_element_to_list(rt_buffer_.deactivate_controllers_list, controller); });
     std::vector<std::string> failed_controller_interfaces, fallback_controller_interfaces;
     failed_controller_interfaces.reserve(500);
     get_controller_list_command_interfaces(
-      failed_controllers_list, rt_controller_list, *resource_manager_,
+      rt_buffer_.deactivate_controllers_list, rt_controller_list, *resource_manager_,
       failed_controller_interfaces);
     get_controller_list_command_interfaces(
-      cumulative_fallback_controllers, rt_controller_list, *resource_manager_,
+      rt_buffer_.fallback_controllers_list, rt_controller_list, *resource_manager_,
       fallback_controller_interfaces);
     if (!failed_controller_interfaces.empty())
     {
@@ -2705,10 +2686,10 @@ controller_interface::return_type ControllerManager::update(
           "Error while attempting mode switch when deactivating controllers in update cycle!");
       }
     }
-    deactivate_controllers(rt_controller_list, active_controllers_using_interfaces);
-    if (!cumulative_fallback_controllers.empty())
+    deactivate_controllers(rt_controller_list, rt_buffer_.deactivate_controllers_list);
+    if (!rt_buffer_.fallback_controllers_list.empty())
     {
-      activate_controllers(rt_controller_list, cumulative_fallback_controllers);
+      activate_controllers(rt_controller_list, rt_buffer_.fallback_controllers_list);
     }
   }
 
