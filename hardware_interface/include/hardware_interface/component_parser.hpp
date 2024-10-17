@@ -16,6 +16,7 @@
 #define HARDWARE_INTERFACE__COMPONENT_PARSER_HPP_
 
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "hardware_interface/hardware_info.hpp"
@@ -43,6 +44,16 @@ std::vector<InterfaceDescription> parse_state_interface_descriptions(
 
 /**
  * \param[in] component_info information about a component (gpio, joint, sensor)
+ * \param[out] state_interfaces_map unordered_map filled with information about hardware's
+ * StateInterfaces for the component which are exported
+ */
+HARDWARE_INTERFACE_PUBLIC
+void parse_state_interface_descriptions(
+  const std::vector<ComponentInfo> & component_info,
+  std::unordered_map<std::string, InterfaceDescription> & state_interfaces_map);
+
+/**
+ * \param[in] component_info information about a component (gpio, joint, sensor)
  * \return vector filled with information about hardware's CommandInterfaces for the component
  * which are exported
  */
@@ -50,5 +61,14 @@ HARDWARE_INTERFACE_PUBLIC
 std::vector<InterfaceDescription> parse_command_interface_descriptions(
   const std::vector<ComponentInfo> & component_info);
 
+/**
+ * \param[in] component_info information about a component (gpio, joint, sensor)
+ * \param[out] command_interfaces_map unordered_map filled with information about hardware's
+ * CommandInterfaces for the component which are exported
+ */
+HARDWARE_INTERFACE_PUBLIC
+void parse_command_interface_descriptions(
+  const std::vector<ComponentInfo> & component_info,
+  std::unordered_map<std::string, InterfaceDescription> & command_interfaces_map);
 }  // namespace hardware_interface
 #endif  // HARDWARE_INTERFACE__COMPONENT_PARSER_HPP_
