@@ -164,7 +164,7 @@ public:
    *
    * \param[in] time The time at the start of this control loop iteration
    * \param[in] period The measured time taken by the last control loop iteration
-   * \returns return_type::OK if update is successfully, otherwise return_type::ERROR.
+   * \returns A pair with the first element being a boolean indicating if the async callback method was triggered and the second element being the last return value of the async function. For more details check the AsyncFunctionHandler implementation in `realtime_tools` package.
    */
   CONTROLLER_INTERFACE_PUBLIC
   std::pair<bool, return_type> trigger_update(
