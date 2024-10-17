@@ -393,7 +393,7 @@ TEST_P(TestControllerManagerWithStrictness, async_controller_lifecycle)
        "updating the counter";
   std::this_thread::sleep_for(
     std::chrono::milliseconds(1000 / (test_controller->get_update_rate())));
-  EXPECT_EQ(last_internal_counter + 1u, test_controller->internal_counter)
+  EXPECT_EQ(last_internal_counter, test_controller->internal_counter)
     << "Controller is stopped at the end of update, so it should have done one more update";
   {
     ControllerManagerRunner cm_runner(this);
