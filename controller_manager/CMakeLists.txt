@@ -194,6 +194,15 @@ if(BUILD_TESTING)
     ros2_control_test_assets::ros2_control_test_assets
   )
 
+  ament_add_gmock(test_hardware_spawner
+    test/test_hardware_spawner
+    TIMEOUT 120
+  )
+  target_link_libraries(test_hardware_spawner
+    controller_manager
+    ros2_control_test_assets::ros2_control_test_assets
+  )
+
   install(FILES test/test_controller_spawner_with_fallback_controllers.yaml
     DESTINATION test)
 
