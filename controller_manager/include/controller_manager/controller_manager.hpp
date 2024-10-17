@@ -631,11 +631,13 @@ private:
 
   struct RTBufferVariables
   {
-    const std::string & get_concatenated_string(const std::vector<std::string> & strings, bool clear_string)
+    const std::string & get_concatenated_string(
+      const std::vector<std::string> & strings, bool clear_string)
     {
       concatenated_string.clear();
-      for (const auto & str : strings) {
-        concatenated_string.append(controller);
+      for (const auto & str : strings)
+      {
+        concatenated_string.append(str);
         concatenated_string.append(" ");
       }
       return concatenated_string;
@@ -646,7 +648,7 @@ private:
     std::vector<std::string> failed_hardware_components;
     std::string concatenated_string;
     std::vector<std::string> failed_controllers_list;
-  }
+  };
 
   std::unordered_map<std::string, std::unique_ptr<controller_interface::AsyncControllerThread>>
     async_controller_threads_;
