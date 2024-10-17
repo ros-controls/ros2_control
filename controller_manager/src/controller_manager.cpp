@@ -2337,6 +2337,17 @@ controller_interface::return_type ControllerManager::update(
     // https://github.com/ros-controls/ros2_control/issues/153
     if (is_controller_active(*loaded_controller.c))
     {
+      if (
+        switch_params_.do_switch && loaded_controller.c->is_async() &&
+        std::find(
+          deactivate_request_.begin(), deactivate_request_.end(), loaded_controller.info.name) !=
+          deactivate_request_.end())
+      {
+        RCLCPP_DEBUG(
+          get_logger(), "Skipping update for async controller '%s' as it is being deactivated",
+          loaded_controller.info.name.c_str());
+        continue;
+      }
       const auto controller_update_rate = loaded_controller.c->get_update_rate();
       const bool run_controller_at_cm_rate = (controller_update_rate >= update_rate_);
       const auto controller_period =
