@@ -634,10 +634,9 @@ private:
     RTBufferVariables()
     {
       deactivate_controllers_list.reserve(1000);
-      activate_controllers_list.reserve(1000);
+      activate_controllers_using_interfaces_list.reserve(1000);
+      fallback_controllers_list.reserve(1000);
       concatenated_string.reserve(5000);
-      failed_hardware_components.reserve(2000);
-      failed_controllers_list.reserve(2000);
     }
 
     const std::string & get_concatenated_string(
@@ -656,10 +655,9 @@ private:
     }
 
     std::vector<std::string> deactivate_controllers_list;
-    std::vector<std::string> activate_controllers_list;
-    std::vector<std::string> failed_hardware_components;
+    std::vector<std::string> activate_controllers_using_interfaces_list;
+    std::vector<std::string> fallback_controllers_list;
     std::string concatenated_string;
-    std::vector<std::string> failed_controllers_list;
   };
   RTBufferVariables rt_buffer_;
 
