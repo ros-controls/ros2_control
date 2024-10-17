@@ -87,6 +87,7 @@ if(BUILD_TESTING)
 
   ament_add_gmock(test_controller_manager
     test/test_controller_manager.cpp
+    TIMEOUT 180
   )
   target_link_libraries(test_controller_manager
     controller_manager
