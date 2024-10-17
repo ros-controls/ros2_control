@@ -2430,36 +2430,26 @@ void ControllerManager::read(const rclcpp::Time & time, const rclcpp::Duration &
 
   if (!ok)
   {
-    std::vector<std::string> stop_request = {};
-    std::string failed_hardware_string;
-    failed_hardware_string.reserve(500);
+    rt_buffer_.deactivate_controllers_list.clear();
     // Determine controllers to stop
     for (const auto & hardware_name : failed_hardware_names)
     {
-      failed_hardware_string.append(hardware_name);
-      failed_hardware_string.append(" ");
       auto controllers = resource_manager_->get_cached_controllers_to_hardware(hardware_name);
-      stop_request.insert(stop_request.end(), controllers.begin(), controllers.end());
-    }
-    std::string stop_request_string;
-    stop_request_string.reserve(500);
-    for (const auto & controller : stop_request)
-    {
-      stop_request_string.append(controller);
-      stop_request_string.append(" ");
+      rt_buffer_.deactivate_controllers_list.insert(
+        rt_buffer_.deactivate_controllers_list.end(), controllers.begin(), controllers.end());
     }
     RCLCPP_ERROR(
       get_logger(),
       "Deactivating following hardware components as their read cycle resulted in an error: [ %s]",
-      failed_hardware_string.c_str());
+      rt_buffer_.get_concatenated_string(failed_hardware_names).c_str());
     RCLCPP_ERROR_EXPRESSION(
-      get_logger(), !stop_request_string.empty(),
+      get_logger(), !rt_buffer_.deactivate_controllers_list.empty(),
       "Deactivating following controllers as their hardware components read cycle resulted in an "
       "error: [ %s]",
-      stop_request_string.c_str());
+      rt_buffer_.get_concatenated_string(rt_buffer_.deactivate_controllers_list).c_str());
     std::vector<ControllerSpec> & rt_controller_list =
       rt_controllers_wrapper_.update_and_get_used_by_rt_list();
-    deactivate_controllers(rt_controller_list, stop_request);
+    deactivate_controllers(rt_controller_list, rt_buffer_.deactivate_controllers_list);
     // TODO(destogl): do auto-start of broadcasters
   }
 }
