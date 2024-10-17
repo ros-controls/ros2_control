@@ -114,6 +114,60 @@ There are two scripts to interact with controller manager from launch files:
                             Time to wait for the controller manager
 
 
+The parsed controller config file can follow the same conventions as the typical ROS 2 parameter file format. Now, the spawner can handle config files with wildcard entries and also the controller name in the absolute namespace. See the following examples on the config files:
+
+ .. code-block:: yaml
+
+    /**/position_trajectory_controller:
+    ros__parameters:
+      type: joint_trajectory_controller/JointTrajectoryController
+      joints:
+        - joint1
+        - joint2
+
+      command_interfaces:
+        - position
+        .....
+
+ .. code-block:: yaml
+
+    /position_trajectory_controller:
+    ros__parameters:
+      type: joint_trajectory_controller/JointTrajectoryController
+      joints:
+        - joint1
+        - joint2
+
+      command_interfaces:
+        - position
+        .....
+
+ .. code-block:: yaml
+
+    position_trajectory_controller:
+    ros__parameters:
+      type: joint_trajectory_controller/JointTrajectoryController
+      joints:
+        - joint1
+        - joint2
+
+      command_interfaces:
+        - position
+        .....
+
+ .. code-block:: yaml
+
+    /rrbot_1/position_trajectory_controller:
+    ros__parameters:
+      type: joint_trajectory_controller/JointTrajectoryController
+      joints:
+        - joint1
+        - joint2
+
+      command_interfaces:
+        - position
+        .....
+
 ``unspawner``
 ^^^^^^^^^^^^^^^^
 
