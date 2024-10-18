@@ -18,6 +18,7 @@
   <depend>tinyxml2_vendor</depend>
   <depend>joint_limits</depend>
   <depend>urdf</depend>
+  <depend>sdformat_urdf</depend>
 
   <build_depend>rcutils</build_depend>
   <exec_depend>rcutils</exec_depend>
