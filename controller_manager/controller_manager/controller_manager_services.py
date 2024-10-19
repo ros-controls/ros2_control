@@ -253,6 +253,39 @@ def unload_controller(node, controller_manager_name, controller_name, service_ti
     )
 
 
+def get_params_files_with_controller_parameters(
+    node, controller_name: str, namespace: str, parameter_files: list
+):
+    controller_parameter_files = []
+    for parameter_file in parameter_files:
+        if parameter_file in controller_parameter_files:
+            continue
+        with open(parameter_file) as f:
+            namespaced_controller = (
+                f"/{controller_name}" if namespace == "/" else f"{namespace}/{controller_name}"
+            )
+            WILDCARD_KEY = "/**"
+            parameters = yaml.safe_load(f)
+            # check for the parameter in 'controller_name' or 'namespaced_controller' or '/**/namespaced_controller' or '/**/controller_name'
+            for key in [
+                controller_name,
+                namespaced_controller,
+                f"{WILDCARD_KEY}/{controller_name}",
+                f"{WILDCARD_KEY}{namespaced_controller}",
+            ]:
+                if key in parameters:
+                    if key == controller_name and namespace != "/":
+                        node.get_logger().fatal(
+                            f"{bcolors.FAIL}Missing namespace : {namespace} or wildcard in parameter file for controller : {controller_name}{bcolors.ENDC}"
+                        )
+                        break
+                    controller_parameter_files.append(parameter_file)
+
+                if WILDCARD_KEY in parameters and key in parameters[WILDCARD_KEY]:
+                    controller_parameter_files.append(parameter_file)
+    return controller_parameter_files
+
+
 def get_parameter_from_param_files(
     node, controller_name: str, namespace: str, parameter_files: list, parameter_name: str
 ):
@@ -350,14 +383,21 @@ def set_controller_parameters(
 def set_controller_parameters_from_param_files(
     node, controller_manager_name: str, controller_name: str, parameter_files: list, namespace=None
 ):
-    if parameter_files:
-        spawner_namespace = namespace if namespace else node.get_namespace()
+    spawner_namespace = namespace if namespace else node.get_namespace()
+    controller_parameter_files = get_params_files_with_controller_parameters(
+        node, controller_name, spawner_namespace, parameter_files
+    )
+    if controller_parameter_files:
         set_controller_parameters(
-            node, controller_manager_name, controller_name, "params_file", parameter_files
+            node,
+            controller_manager_name,
+            controller_name,
+            "params_file",
+            controller_parameter_files,
         )
 
         controller_type = get_parameter_from_param_files(
-            node, controller_name, spawner_namespace, parameter_files, "type"
+            node, controller_name, spawner_namespace, controller_parameter_files, "type"
         )
         if controller_type and not set_controller_parameters(
             node, controller_manager_name, controller_name, "type", controller_type
@@ -365,7 +405,11 @@ def set_controller_parameters_from_param_files(
             return False
 
         fallback_controllers = get_parameter_from_param_files(
-            node, controller_name, spawner_namespace, parameter_files, "fallback_controllers"
+            node,
+            controller_name,
+            spawner_namespace,
+            controller_parameter_files,
+            "fallback_controllers",
         )
         if fallback_controllers:
             if not set_controller_parameters(
