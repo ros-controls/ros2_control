@@ -34,7 +34,7 @@ struct ControllerInfo
   std::string type;
 
   /// Controller param file
-  std::optional<std::string> parameters_file;
+  std::optional<std::vector<std::string>> parameters_files;
 
   /// List of claimed interfaces by the controller.
   std::vector<std::string> claimed_interfaces;
