@@ -551,16 +551,16 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_c
   // read_only params, dynamic maps lists etc
   // Now check if the parameters_file parameter exist
   const std::string param_name = controller_name + ".params_file";
-  std::string parameters_file;
+  std::vector<std::string> parameters_files;
 
   // Check if parameter has been declared
   if (!has_parameter(param_name))
   {
-    declare_parameter(param_name, rclcpp::ParameterType::PARAMETER_STRING);
+    declare_parameter(param_name, rclcpp::ParameterType::PARAMETER_STRING_ARRAY);
   }
-  if (get_parameter(param_name, parameters_file) && !parameters_file.empty())
+  if (get_parameter(param_name, parameters_files) && !parameters_files.empty())
   {
-    controller_spec.info.parameters_file = parameters_file;
+    controller_spec.info.parameters_files = parameters_files;
   }
 
   const std::string fallback_ctrl_param = controller_name + ".fallback_controllers";
@@ -3242,14 +3242,17 @@ rclcpp::NodeOptions ControllerManager::determine_controller_node_options(
     node_options_arguments.push_back(arg);
   }
 
-  if (controller.info.parameters_file.has_value())
+  if (controller.info.parameters_files.has_value())
   {
-    if (!check_for_element(node_options_arguments, RCL_ROS_ARGS_FLAG))
+    for (const auto & parameters_file : controller.info.parameters_files.value())
     {
-      node_options_arguments.push_back(RCL_ROS_ARGS_FLAG);
+      if (!check_for_element(node_options_arguments, RCL_ROS_ARGS_FLAG))
+      {
+        node_options_arguments.push_back(RCL_ROS_ARGS_FLAG);
+      }
+      node_options_arguments.push_back(RCL_PARAM_FILE_FLAG);
+      node_options_arguments.push_back(parameters_file);
     }
-    node_options_arguments.push_back(RCL_PARAM_FILE_FLAG);
-    node_options_arguments.push_back(controller.info.parameters_file.value());
   }
 
   // ensure controller's `use_sim_time` parameter matches controller_manager's

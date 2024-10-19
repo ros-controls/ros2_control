@@ -17,7 +17,7 @@ from controller_manager import (
     load_controller,
     list_controllers,
     switch_controllers,
-    set_controller_parameters_from_param_file,
+    set_controller_parameters_from_param_files,
     bcolors,
 )
 
@@ -68,11 +68,11 @@ class LoadControllerVerb(VerbExtension):
                     if not os.path.isabs(args.param_file):
                         args.param_file = os.path.join(os.getcwd(), args.param_file)
 
-                    if not set_controller_parameters_from_param_file(
+                    if not set_controller_parameters_from_param_files(
                         node,
                         args.controller_manager,
                         args.controller_name,
-                        args.param_file,
+                        [args.param_file],
                         node.get_namespace(),
                     ):
                         return 1
