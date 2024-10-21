@@ -1443,6 +1443,36 @@ TEST_F(TestComponentParser, gripper_no_mimic_valid_config)
   EXPECT_EQ(hw_info[0].mimic_joints[0].joint_index, 1);
 }
 
+TEST_F(TestComponentParser, negative_rw_rates_throws_error)
+{
+  const auto urdf_to_test =
+    std::string(ros2_control_test_assets::gripper_urdf_head) +
+    std::string(ros2_control_test_assets::hardware_resources_with_negative_rw_rates) +
+    std::string(ros2_control_test_assets::urdf_tail);
+  std::vector<hardware_interface::HardwareInfo> hw_info;
+  ASSERT_THROW(parse_control_resources_from_urdf(urdf_to_test), std::runtime_error);
+}
+
+TEST_F(TestComponentParser, invalid_rw_rates_throws_error)
+{
+  const auto urdf_to_test =
+    std::string(ros2_control_test_assets::gripper_urdf_head) +
+    std::string(ros2_control_test_assets::hardware_resources_invalid_with_text_in_rw_rates) +
+    std::string(ros2_control_test_assets::urdf_tail);
+  std::vector<hardware_interface::HardwareInfo> hw_info;
+  ASSERT_THROW(parse_control_resources_from_urdf(urdf_to_test), std::runtime_error);
+}
+
+TEST_F(TestComponentParser, invalid_rw_rates_out_of_range)
+{
+  const auto urdf_to_test =
+    std::string(ros2_control_test_assets::gripper_urdf_head) +
+    std::string(ros2_control_test_assets::hardware_resources_invalid_out_of_range_in_rw_rates) +
+    std::string(ros2_control_test_assets::urdf_tail);
+  std::vector<hardware_interface::HardwareInfo> hw_info;
+  ASSERT_THROW(parse_control_resources_from_urdf(urdf_to_test), std::runtime_error);
+}
+
 TEST_F(TestComponentParser, gripper_mimic_with_unknown_joint_throws_error)
 {
   const auto urdf_to_test =
