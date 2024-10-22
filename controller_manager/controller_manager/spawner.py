@@ -60,8 +60,12 @@ def has_service_names(node, node_name, node_namespace, service_names):
     return all(service in client_names for service in service_names)
 
 
-def is_controller_loaded(node, controller_manager, controller_name, service_timeout=0.0):
-    controllers = list_controllers(node, controller_manager, service_timeout).controller
+def is_controller_loaded(
+    node, controller_manager, controller_name, service_timeout=0.0, call_timeout=10.0
+):
+    controllers = list_controllers(
+        node, controller_manager, service_timeout, call_timeout
+    ).controller
     return any(c.name == controller_name for c in controllers)
 
 
@@ -110,9 +114,16 @@ def main(args=None):
     )
     parser.add_argument(
         "--controller-manager-timeout",
-        help="Time to wait for the controller manager",
+        help="Time to wait for the controller manager service to be available",
         required=False,
         default=0,
+        type=float,
+    )
+    parser.add_argument(
+        "--controller-manager-call-timeout",
+        help="Time to wait for the service response from the controller manager",
+        required=False,
+        default=10.0,
         type=float,
     )
     parser.add_argument(
@@ -129,6 +140,7 @@ def main(args=None):
     controller_manager_name = args.controller_manager
     param_file = args.param_file
     controller_manager_timeout = args.controller_manager_timeout
+    controller_manager_call_timeout = args.controller_manager_call_timeout
 
     if param_file and not os.path.isfile(param_file):
         raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), param_file)
@@ -164,7 +176,11 @@ def main(args=None):
         for controller_name in controller_names:
 
             if is_controller_loaded(
-                node, controller_manager_name, controller_name, controller_manager_timeout
+                node,
+                controller_manager_name,
+                controller_name,
+                controller_manager_timeout,
+                controller_manager_call_timeout,
             ):
                 node.get_logger().warn(
                     bcolors.WARNING
@@ -197,7 +213,13 @@ def main(args=None):
                 )
 
             if not args.load_only:
-                ret = configure_controller(node, controller_manager_name, controller_name)
+                ret = configure_controller(
+                    node,
+                    controller_manager_name,
+                    controller_name,
+                    controller_manager_timeout,
+                    controller_manager_call_timeout,
+                )
                 if not ret.ok:
                     node.get_logger().error(
                         bcolors.FAIL + "Failed to configure controller" + bcolors.ENDC
@@ -206,7 +228,14 @@ def main(args=None):
 
                 if not args.inactive and not args.activate_as_group:
                     ret = switch_controllers(
-                        node, controller_manager_name, [], [controller_name], True, True, 5.0
+                        node,
+                        controller_manager_name,
+                        [],
+                        [controller_name],
+                        True,
+                        True,
+                        controller_manager_timeout,
+                        controller_manager_call_timeout,
                     )
                     if not ret.ok:
                         node.get_logger().error(
@@ -224,7 +253,14 @@ def main(args=None):
 
         if not args.inactive and args.activate_as_group:
             ret = switch_controllers(
-                node, controller_manager_name, [], controller_names, True, True, 5.0
+                node,
+                controller_manager_name,
+                [],
+                controller_names,
+                True,
+                True,
+                controller_manager_timeout,
+                controller_manager_call_timeout,
             )
             if not ret.ok:
                 node.get_logger().error(
@@ -250,7 +286,14 @@ def main(args=None):
                 node.get_logger().info("Interrupt captured, deactivating and unloading controller")
                 # TODO(saikishor) we might have an issue in future, if any of these controllers is in chained mode
                 ret = switch_controllers(
-                    node, controller_manager_name, controller_names, [], True, True, 5.0
+                    node,
+                    controller_manager_name,
+                    controller_names,
+                    [],
+                    True,
+                    True,
+                    controller_manager_timeout,
+                    controller_manager_call_timeout,
                 )
                 if not ret.ok:
                     node.get_logger().error(
