@@ -113,7 +113,7 @@ def service_caller(
         rclpy.spin_until_future_complete(node, future, timeout_sec=call_timeout)
         if future.result() is None:
             node.get_logger().warning(
-                f"Failed getting a result from calling {service_name} in "
+                f"Failed getting a result from calling {fully_qualified_service_name} in "
                 f"{call_timeout}. (Attempt {attempt+1} of {max_attempts}.)"
             )
         else:
