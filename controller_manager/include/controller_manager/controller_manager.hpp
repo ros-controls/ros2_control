@@ -22,7 +22,6 @@
 #include <utility>
 #include <vector>
 
-#include "controller_interface/async_controller.hpp"
 #include "controller_interface/chainable_controller_interface.hpp"
 #include "controller_interface/controller_interface.hpp"
 #include "controller_interface/controller_interface_base.hpp"
@@ -125,6 +124,12 @@ public:
     controller_spec.info.name = controller_name;
     controller_spec.info.type = controller_type;
     controller_spec.next_update_cycle_time = std::make_shared<rclcpp::Time>(0);
+    return add_controller_impl(controller_spec);
+  }
+
+  controller_interface::ControllerInterfaceBaseSharedPtr add_controller(
+    const ControllerSpec & controller_spec)
+  {
     return add_controller_impl(controller_spec);
   }
 
@@ -418,6 +423,18 @@ private:
     const std::vector<ControllerSpec> & controllers, int strictness,
     const ControllersListIterator controller_it);
 
+  /// Checks if the fallback controllers of the given controllers are in the right
+  /// state, so they can be activated immediately
+  /**
+   * \param[in] controllers is a list of controllers to activate.
+   * \param[in] controller_it is the iterator pointing to the controller to be activated.
+   * \return return_type::OK if all fallback controllers are in the right state, otherwise
+   * return_type::ERROR.
+   */
+  CONTROLLER_MANAGER_PUBLIC
+  controller_interface::return_type check_fallback_controllers_state_pre_activation(
+    const std::vector<ControllerSpec> & controllers, const ControllersListIterator controller_it);
+
   /**
    * @brief Inserts a controller into an ordered list based on dependencies to compute the
    * controller chain.
@@ -610,9 +627,6 @@ private:
   };
 
   SwitchParams switch_params_;
-
-  std::unordered_map<std::string, std::unique_ptr<controller_interface::AsyncControllerThread>>
-    async_controller_threads_;
 };
 
 }  // namespace controller_manager

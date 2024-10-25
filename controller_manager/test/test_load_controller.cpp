@@ -66,13 +66,13 @@ TEST_F(TestLoadController, can_set_and_get_non_default_update_rate)
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
     controller_if->get_lifecycle_state().id());
 
-  controller_if->get_node()->set_parameter({"update_rate", 1337});
+  controller_if->get_node()->set_parameter({"update_rate", 50});
 
   cm_->configure_controller("test_controller_01");
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, controller_if->get_lifecycle_state().id());
 
-  EXPECT_EQ(1337u, controller_if->get_update_rate());
+  EXPECT_EQ(50u, controller_if->get_update_rate());
 }
 
 class TestLoadedController : public TestLoadController
