@@ -18,6 +18,7 @@
 #include <limits>
 #include <memory>
 #include <mutex>
+#include <shared_mutex>
 #include <string>
 #include <utility>
 #include <variant>
@@ -73,8 +74,8 @@ public:
 
   Handle(const Handle & other) noexcept
   {
-    std::unique_lock<std::recursive_mutex> lock(other.handle_mutex_);
-    std::unique_lock<std::recursive_mutex> lock_this(handle_mutex_);
+    std::unique_lock<std::shared_mutex> lock(other.handle_mutex_);
+    std::unique_lock<std::shared_mutex> lock_this(handle_mutex_);
     prefix_name_ = other.prefix_name_;
     interface_name_ = other.interface_name_;
     handle_name_ = other.handle_name_;
@@ -84,8 +85,8 @@ public:
 
   Handle(Handle && other) noexcept
   {
-    std::unique_lock<std::recursive_mutex> lock(other.handle_mutex_);
-    std::unique_lock<std::recursive_mutex> lock_this(handle_mutex_);
+    std::unique_lock<std::shared_mutex> lock(other.handle_mutex_);
+    std::unique_lock<std::shared_mutex> lock_this(handle_mutex_);
     prefix_name_ = std::move(other.prefix_name_);
     interface_name_ = std::move(other.interface_name_);
     handle_name_ = std::move(other.handle_name_);
@@ -97,8 +98,8 @@ public:
   {
     if (this != &other)
     {
-      std::unique_lock<std::recursive_mutex> lock(other.handle_mutex_);
-      std::unique_lock<std::recursive_mutex> lock_this(handle_mutex_);
+      std::unique_lock<std::shared_mutex> lock(other.handle_mutex_);
+      std::unique_lock<std::shared_mutex> lock_this(handle_mutex_);
       prefix_name_ = other.prefix_name_;
       interface_name_ = other.interface_name_;
       handle_name_ = other.handle_name_;
@@ -112,8 +113,8 @@ public:
   {
     if (this != &other)
     {
-      std::unique_lock<std::recursive_mutex> lock(other.handle_mutex_);
-      std::unique_lock<std::recursive_mutex> lock_this(handle_mutex_);
+      std::unique_lock<std::shared_mutex> lock(other.handle_mutex_);
+      std::unique_lock<std::shared_mutex> lock_this(handle_mutex_);
       prefix_name_ = std::move(other.prefix_name_);
       interface_name_ = std::move(other.interface_name_);
       handle_name_ = std::move(other.handle_name_);
@@ -144,7 +145,7 @@ public:
   [[deprecated("Use bool get_value(double & value) instead to retrieve the value.")]]
   double get_value() const
   {
-    std::unique_lock<std::recursive_mutex> lock(handle_mutex_, std::try_to_lock);
+    std::shared_lock<std::shared_mutex> lock(handle_mutex_, std::try_to_lock);
     if (!lock.owns_lock())
     {
       return std::numeric_limits<double>::quiet_NaN();
@@ -158,7 +159,7 @@ public:
 
   [[nodiscard]] bool get_value(double & value) const
   {
-    std::unique_lock<std::recursive_mutex> lock(handle_mutex_, std::try_to_lock);
+    std::shared_lock<std::shared_mutex> lock(handle_mutex_, std::try_to_lock);
     if (!lock.owns_lock())
     {
       return false;
@@ -173,7 +174,7 @@ public:
 
   [[nodiscard]] bool set_value(double value)
   {
-    std::unique_lock<std::recursive_mutex> lock(handle_mutex_, std::try_to_lock);
+    std::unique_lock<std::shared_mutex> lock(handle_mutex_, std::try_to_lock);
     if (!lock.owns_lock())
     {
       return false;
@@ -195,7 +196,7 @@ protected:
   // TODO(Manuel) redeclare as HANDLE_DATATYPE * value_ptr_ if old functionality is removed
   double * value_ptr_;
   // END
-  mutable std::recursive_mutex handle_mutex_;
+  mutable std::shared_mutex handle_mutex_;
 };
 
 class StateInterface : public Handle
