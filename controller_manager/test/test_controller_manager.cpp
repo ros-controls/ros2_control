@@ -446,16 +446,18 @@ TEST_P(TestControllerUpdateRates, check_the_controller_update_rate)
     time += rclcpp::Duration::from_seconds(0.01);
     if (update_counter % cm_update_rate == 0)
     {
-      const auto no_of_secs_passed = update_counter / cm_update_rate;
+      const double no_of_secs_passed = static_cast<double>(update_counter) / cm_update_rate;
       // NOTE: here EXPECT_NEAR is used because it is observed that in the first iteration of whole
       // cycle of cm_update_rate counts, there is one count missing, but in rest of the 9 cycles it
       // is clearly tracking, so adding 1 here won't affect the final count.
       // For instance, a controller with update rate 37 Hz, seems to have 36 in the first update
       // cycle and then on accumulating 37 on every other update cycle so at the end of the 10
       // cycles it will have 369 instead of 370.
-      EXPECT_NEAR(
+      EXPECT_THAT(
         test_controller->internal_counter - initial_counter,
-        (controller_update_rate * no_of_secs_passed), 1);
+        testing::AnyOf(
+          testing::Eq(controller_update_rate * no_of_secs_passed),
+          testing::Eq((controller_update_rate * no_of_secs_passed) - 1)));
     }
   }
 }
