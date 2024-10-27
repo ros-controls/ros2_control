@@ -2,7 +2,10 @@ cmake_minimum_required(VERSION 3.5)
 project(transmission_interface)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic -Wconversion)
+add_compile_options(-Wall -Wextra -Werror=conversion -Werror=unused-but-set-variable -Werror=return-type
+  # deactivating this, because of issue in upstream class_loader_imp.hpp
+  # -Werror=shadow
+)
 endif()
 
 set(THIS_PACKAGE_INCLUDE_DEPENDS

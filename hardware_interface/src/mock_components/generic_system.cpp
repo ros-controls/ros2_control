@@ -594,12 +594,12 @@ return_type GenericSystem::read(const rclcpp::Time & /*time*/, const rclcpp::Dur
     }
     else
     {
-      for (size_t j = 0; j < joint_states_[POSITION_INTERFACE_INDEX].size(); ++j)
+      for (size_t k = 0; k < joint_states_[POSITION_INTERFACE_INDEX].size(); ++k)
       {
-        if (!std::isnan(joint_commands_[POSITION_INTERFACE_INDEX][j]))
+        if (!std::isnan(joint_commands_[POSITION_INTERFACE_INDEX][k]))
         {
-          joint_states_[POSITION_INTERFACE_INDEX][j] =  // apply offset to positions only
-            joint_commands_[POSITION_INTERFACE_INDEX][j] +
+          joint_states_[POSITION_INTERFACE_INDEX][k] =  // apply offset to positions only
+            joint_commands_[POSITION_INTERFACE_INDEX][k] +
             (custom_interface_with_following_offset_.empty() ? position_state_following_offset_
                                                              : 0.0);
         }
