@@ -79,7 +79,9 @@ def main(args=None):
     parser.add_argument(
         "-p",
         "--param-file",
-        help="Controller param file to be loaded into controller node before configure",
+        help="Controller param file to be loaded into controller node before configure. "
+        "Parse multiple times to load different files for different controllers or to "
+        "override the parameters of the same controller.",
         default=None,
         action="append",
         required=False,
