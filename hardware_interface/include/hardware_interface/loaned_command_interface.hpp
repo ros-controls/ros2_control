@@ -35,23 +35,17 @@ public:
     CommandInterface & command_interface)
   : LoanedCommandInterface(command_interface, nullptr)
   {
-    get_value_statistics_.reset();
-    set_value_statistics_.reset();
   }
 
   [[deprecated("Replaced by the new version using shared_ptr")]] LoanedCommandInterface(
     CommandInterface & command_interface, Deleter && deleter)
   : command_interface_(command_interface), deleter_(std::forward<Deleter>(deleter))
   {
-    get_value_statistics_.reset();
-    set_value_statistics_.reset();
   }
 
   LoanedCommandInterface(CommandInterface::SharedPtr command_interface, Deleter && deleter)
   : command_interface_(*command_interface), deleter_(std::forward<Deleter>(deleter))
   {
-    get_value_statistics_.reset();
-    set_value_statistics_.reset();
   }
 
   LoanedCommandInterface(const LoanedCommandInterface & other) = delete;
@@ -64,22 +58,22 @@ public:
     RCLCPP_WARN_EXPRESSION(
       rclcpp::get_logger(get_name()),
       (get_value_statistics_.failed_counter > 0 || get_value_statistics_.timeout_counter > 0),
-      "LoanedCommandInterface %s has %u (%f %%) timeouts and  %u (%f %%) missed calls out of %u "
-      "get_value calls",
+      "LoanedCommandInterface %s has %u (%.4f %%) timeouts and %u (~ %.4f %%) missed calls out of "
+      "%u get_value calls",
       get_name().c_str(), get_value_statistics_.timeout_counter,
       (get_value_statistics_.timeout_counter * 100.0) / get_value_statistics_.total_counter,
       get_value_statistics_.failed_counter,
-      (get_value_statistics_.failed_counter * 100.0) / get_value_statistics_.total_counter,
+      (get_value_statistics_.failed_counter * 10.0) / get_value_statistics_.total_counter,
       get_value_statistics_.total_counter);
     RCLCPP_WARN_EXPRESSION(
       rclcpp::get_logger(get_name()),
       (set_value_statistics_.failed_counter > 0 || set_value_statistics_.timeout_counter > 0),
-      "LoanedCommandInterface %s has %u (%f %%) timeouts and  %u (%f %%) missed calls out of %u "
-      "set_value calls",
+      "LoanedCommandInterface %s has %u (%.4f %%) timeouts and  %u (~ %.4f %%) missed calls out of "
+      "%u set_value calls",
       get_name().c_str(), set_value_statistics_.timeout_counter,
       (set_value_statistics_.timeout_counter * 100.0) / set_value_statistics_.total_counter,
       set_value_statistics_.failed_counter,
-      (set_value_statistics_.failed_counter * 100.0) / set_value_statistics_.total_counter,
+      (set_value_statistics_.failed_counter * 10.0) / set_value_statistics_.total_counter,
       set_value_statistics_.total_counter);
     if (deleter_)
     {
@@ -104,14 +98,14 @@ public:
   [[nodiscard]] bool set_value(T value, unsigned int max_tries = 10)
   {
     unsigned int nr_tries = 0;
-    set_value_statistics_.total_counter++;
+    ++set_value_statistics_.total_counter;
     while (!command_interface_.set_value(value))
     {
-      set_value_statistics_.failed_counter++;
+      ++set_value_statistics_.failed_counter;
       ++nr_tries;
       if (nr_tries == max_tries)
       {
-        set_value_statistics_.timeout_counter++;
+        ++set_value_statistics_.timeout_counter;
         return false;
       }
       std::this_thread::yield();
@@ -136,14 +130,14 @@ public:
   [[nodiscard]] bool get_value(T & value, unsigned int max_tries = 10) const
   {
     unsigned int nr_tries = 0;
-    get_value_statistics_.total_counter++;
+    ++get_value_statistics_.total_counter;
     while (!command_interface_.get_value(value))
     {
-      get_value_statistics_.failed_counter++;
+      ++get_value_statistics_.failed_counter;
       ++nr_tries;
       if (nr_tries == max_tries)
       {
-        get_value_statistics_.timeout_counter++;
+        ++get_value_statistics_.timeout_counter;
         return false;
       }
       std::this_thread::yield();
@@ -158,16 +152,9 @@ protected:
 private:
   struct HandleRTStatistics
   {
-    unsigned int total_counter;
-    unsigned int failed_counter;
-    unsigned int timeout_counter;
-
-    void reset()
-    {
-      total_counter = 0;
-      failed_counter = 0;
-      timeout_counter = 0;
-    }
+    unsigned int total_counter = 0;
+    unsigned int failed_counter = 0;
+    unsigned int timeout_counter = 0;
   };
   mutable HandleRTStatistics get_value_statistics_;
   HandleRTStatistics set_value_statistics_;

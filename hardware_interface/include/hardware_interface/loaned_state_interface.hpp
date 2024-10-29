@@ -62,12 +62,12 @@ public:
     RCLCPP_WARN_EXPRESSION(
       logger,
       (get_value_statistics_.failed_counter > 0 || get_value_statistics_.timeout_counter > 0),
-      "LoanedStateInterface %s has %u (%.2f %%) timeouts and  %u (%.2f %%) missed calls out of %u "
+      "LoanedStateInterface %s has %u (%.4f %%) timeouts and %u (%.4f %%) missed calls out of %u "
       "get_value calls",
       state_interface_.get_name().c_str(), get_value_statistics_.timeout_counter,
       (get_value_statistics_.timeout_counter * 100.0) / get_value_statistics_.total_counter,
       get_value_statistics_.failed_counter,
-      (get_value_statistics_.failed_counter * 100.0) / get_value_statistics_.total_counter,
+      (get_value_statistics_.failed_counter * 10.0) / get_value_statistics_.total_counter,
       get_value_statistics_.total_counter);
     if (deleter_)
     {
@@ -105,14 +105,14 @@ public:
   [[nodiscard]] bool get_value(T & value, unsigned int max_tries = 10) const
   {
     unsigned int nr_tries = 0;
-    get_value_statistics_.total_counter++;
+    ++get_value_statistics_.total_counter;
     while (!state_interface_.get_value(value))
     {
-      get_value_statistics_.failed_counter++;
+      ++get_value_statistics_.failed_counter;
       ++nr_tries;
       if (nr_tries == max_tries)
       {
-        get_value_statistics_.timeout_counter++;
+        ++get_value_statistics_.timeout_counter;
         return false;
       }
       std::this_thread::yield();
@@ -127,16 +127,9 @@ protected:
 private:
   struct HandleRTStatistics
   {
-    unsigned int total_counter;
-    unsigned int failed_counter;
-    unsigned int timeout_counter;
-
-    void reset()
-    {
-      total_counter = 0;
-      failed_counter = 0;
-      timeout_counter = 0;
-    }
+    unsigned int total_counter = 0;
+    unsigned int failed_counter = 0;
+    unsigned int timeout_counter = 0;
   };
   mutable HandleRTStatistics get_value_statistics_;
 };
