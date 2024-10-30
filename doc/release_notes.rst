@@ -77,6 +77,7 @@ controller_manager
 * The ``--namespace`` or ``-n`` spawner arg is deprecated. Now the spawner namespace can be defined using the ROS 2 standard way (`#1640 <https://github.com/ros-controls/ros2_control/pull/1640>`_).
 * Added support for the wildcard entries for the controller configuration files (`#1724 <https://github.com/ros-controls/ros2_control/pull/1724>`_).
 * ``--switch-timeout`` was added as parameter to the helper scripts ``spawner.py`` and ``unspawner.py``. Useful if controllers cannot be switched immediately, e.g., paused simulations at startup (`#1790 <https://github.com/ros-controls/ros2_control/pull/1790>`_).
+* The ``ros2_control_node`` node now accepts the ``thread_priority`` parameter to set the scheduler priority of the controller_manager's RT thread (`#1820 <https://github.com/ros-controls/ros2_control/pull/1820>`_).
 
 hardware_interface
 ******************
