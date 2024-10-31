@@ -262,11 +262,13 @@ The parsed controller config file can follow the same conventions as the typical
 .. code-block:: console
 
     $ ros2 run controller_manager hardware_spawner -h
-    usage: hardware_spawner [-h] [-c CONTROLLER_MANAGER] [--controller-manager-timeout CONTROLLER_MANAGER_TIMEOUT] (--activate | --configure) hardware_component_name
+    usage: hardware_spawner [-h] [-c CONTROLLER_MANAGER] [--controller-manager-timeout CONTROLLER_MANAGER_TIMEOUT]
+                            (--activate | --configure)
+                            hardware_component_names [hardware_component_names ...]
 
     positional arguments:
-      hardware_component_name
-                            The name of the hardware component which should be activated.
+      hardware_component_names
+                            The name of the hardware components which should be activated.
 
     options:
       -h, --help            show this help message and exit
