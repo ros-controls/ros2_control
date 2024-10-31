@@ -57,7 +57,7 @@ int main(int argc, char ** argv)
   auto cm = std::make_shared<controller_manager::ControllerManager>(
     executor, manager_node_name, "", cm_node_options);
 
-  const bool lock_memory = cm->get_parameter_or<bool>("lock_memory", false);
+  const bool lock_memory = cm->get_parameter_or<bool>("lock_memory", true);
   std::string message;
   if (lock_memory && !realtime_tools::lock_memory(message))
   {
