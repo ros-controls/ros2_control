@@ -20,7 +20,7 @@
 
 #include "controller_manager/controller_manager.hpp"
 #include "rclcpp/executors.hpp"
-#include "realtime_tools/thread_priority.hpp"
+#include "realtime_tools/realtime_helpers.hpp"
 
 using namespace std::chrono_literals;
 
