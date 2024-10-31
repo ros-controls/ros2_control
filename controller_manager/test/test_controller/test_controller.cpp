@@ -61,6 +61,10 @@ controller_interface::InterfaceConfiguration TestController::state_interface_con
 controller_interface::return_type TestController::update(
   const rclcpp::Time & /*time*/, const rclcpp::Duration & period)
 {
+  if (is_async())
+  {
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000 / (2 * get_update_rate())));
+  }
   update_period_ = period;
   ++internal_counter;
 
@@ -135,6 +139,11 @@ std::vector<double> TestController::get_state_interface_data() const
     state_intr_data.push_back(interface.get_value());
   }
   return state_intr_data;
+}
+
+void TestController::set_external_commands_for_testing(const std::vector<double> & commands)
+{
+  external_commands_for_testing_ = commands;
 }
 
 }  // namespace test_controller

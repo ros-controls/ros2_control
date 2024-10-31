@@ -58,11 +58,15 @@ int main(int argc, char ** argv)
     executor, manager_node_name, "", cm_node_options);
 
   RCLCPP_INFO(cm->get_logger(), "update rate is %d Hz", cm->get_update_rate());
+  const int thread_priority = cm->get_parameter_or<int>("thread_priority", kSchedPriority);
+  RCLCPP_INFO(
+    cm->get_logger(), "Spawning %s RT thread with scheduler priority: %d", cm->get_name(),
+    thread_priority);
 
   std::thread cm_thread(
-    [cm]()
+    [cm, thread_priority]()
     {
-      if (!realtime_tools::configure_sched_fifo(kSchedPriority))
+      if (!realtime_tools::configure_sched_fifo(thread_priority))
       {
         RCLCPP_WARN(
           cm->get_logger(),
