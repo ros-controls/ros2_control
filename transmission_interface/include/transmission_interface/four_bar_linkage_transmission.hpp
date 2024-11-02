@@ -45,8 +45,8 @@ namespace transmission_interface
  * </td>
  * <td>
  * \f{eqnarray*}{
- * \tau_{j_1} & = & n_{j_1} n_{a_1} \tau_{a_1} + n_{a_2} \tau_{a_2} \\
- * \tau_{j_2} & = & n_{j_2} n_{a_2} \tau_{a_2}
+ * \tau_{j_1} & = & n_{j_1} n_{a_1} \tau_{a_1} + n_{a_2} \tau_{a_2}  \\
+ * \tau_{j_2} & = & n_{j_2} n_{a_2} \tau_{a_2}2}
  * \f}
  * </td>
  * <td>
@@ -68,7 +68,7 @@ namespace transmission_interface
  * <td>
  * \f{eqnarray*}{
  * \tau_{a_1} & = & \frac{\tau_{j_1} - \tau_{j_2}/n_{j_2}} {n_{j_1} n_{a_1}} \\
- * \tau_{a_2} & = & \tau_{j_2} / ({n_{j_2} n_{a_2})
+ * \tau_{a_2} & = & \frac{\tau_{j_2}} {n_{j_2} n_{a_2}}
  * \f}
  * </td>
  * <td>
