@@ -2,6 +2,18 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* add thread_priority option to the ros2_control_node (`#1820 <https://github.com/ros-controls/ros2_control/issues/1820>`_) (`#1825 <https://github.com/ros-controls/ros2_control/issues/1825>`_)
+* Fix timeout value in std output (backport `#1807 <https://github.com/ros-controls/ros2_control/issues/1807>`_) (`#1813 <https://github.com/ros-controls/ros2_control/issues/1813>`_)
+* Improve launch utils to support the multiple controller names (`#1782 <https://github.com/ros-controls/ros2_control/issues/1782>`_) (`#1784 <https://github.com/ros-controls/ros2_control/issues/1784>`_)
+* allow extra spawner arguments to not declare every argument in launch utils (`#1505 <https://github.com/ros-controls/ros2_control/issues/1505>`_) (`#1793 <https://github.com/ros-controls/ros2_control/issues/1793>`_)
+* Refactor spawner to be able to reuse code for ros2controlcli (backport `#1661 <https://github.com/ros-controls/ros2_control/issues/1661>`_) (`#1696 <https://github.com/ros-controls/ros2_control/issues/1696>`_)
+* [CM] Handle other exceptions while loading the controller plugin (`#1731 <https://github.com/ros-controls/ros2_control/issues/1731>`_) (`#1734 <https://github.com/ros-controls/ros2_control/issues/1734>`_)
+* [CM] Throw an exception when the components initially fail to be in the required state (backport `#1729 <https://github.com/ros-controls/ros2_control/issues/1729>`_) (`#1778 <https://github.com/ros-controls/ros2_control/issues/1778>`_)
+* Fix spawner tests timeout on source builds (backport `#1692 <https://github.com/ros-controls/ros2_control/issues/1692>`_) (`#1698 <https://github.com/ros-controls/ros2_control/issues/1698>`_)
+* Contributors: mergify[bot]
+
 3.28.1 (2024-09-11)
 -------------------
 * fix: the print of the information in control node was in wrong order (`#1726 <https://github.com/ros-controls/ros2_control/issues/1726>`_) (`#1727 <https://github.com/ros-controls/ros2_control/issues/1727>`_)

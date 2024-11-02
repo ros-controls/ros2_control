@@ -2,6 +2,11 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add resources_lock\_ lock_guards to avoid race condition when loading robot_description through topic (backport `#1451 <https://github.com/ros-controls/ros2_control/issues/1451>`_) (`#1600 <https://github.com/ros-controls/ros2_control/issues/1600>`_)
+* Contributors: mergify[bot]
+
 3.28.1 (2024-09-11)
 -------------------
 
