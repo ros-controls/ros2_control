@@ -91,6 +91,7 @@ if(BUILD_TESTING)
   target_link_libraries(test_controller_manager
     controller_manager
     test_controller
+    test_chainable_controller
     ros2_control_test_assets::ros2_control_test_assets
   )
 
@@ -190,6 +191,15 @@ if(BUILD_TESTING)
   target_link_libraries(test_spawner_unspawner
     controller_manager
     test_controller
+    ros2_control_test_assets::ros2_control_test_assets
+  )
+
+  ament_add_gmock(test_hardware_spawner
+    test/test_hardware_spawner
+    TIMEOUT 120
+  )
+  target_link_libraries(test_hardware_spawner
+    controller_manager
     ros2_control_test_assets::ros2_control_test_assets
   )
 

@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format2.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="2">
   <name>controller_interface</name>
-  <version>4.18.0</version>
+  <version>4.19.0</version>
   <description>Description of controller_interface</description>
   <maintainer email="bence.magyar.robotics@gmail.com">Bence Magyar</maintainer>
   <maintainer email="denis@stoglrobotics.de">Denis Štogl</maintainer>
@@ -12,11 +12,15 @@
   <buildtool_depend>ament_cmake_gen_version_h</buildtool_depend>
 
   <build_depend>hardware_interface</build_depend>
+  <build_depend>realtime_tools</build_depend>
   <build_depend>rclcpp_lifecycle</build_depend>
   <build_depend>sensor_msgs</build_depend>
 
   <build_export_depend>hardware_interface</build_export_depend>
+  <build_export_depend>realtime_tools</build_export_depend>
   <build_export_depend>rclcpp_lifecycle</build_export_depend>
+
+  <exec_depend>realtime_tools</exec_depend>
 
   <test_depend>ament_cmake_gmock</test_depend>
   <test_depend>geometry_msgs</test_depend>
