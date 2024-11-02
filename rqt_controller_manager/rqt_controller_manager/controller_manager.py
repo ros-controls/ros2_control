@@ -260,7 +260,7 @@ class ControllerManager(Plugin):
             if action is action_configure:
                 configure_controller(self._node, self._cm_name, ctrl.name)
             elif action is action_spawn:
-                load_controller(self._node, self._cm_name, ctrl.name)
+                configure_controller(self._node, self._cm_name, ctrl.name)
                 self._activate_controller(ctrl.name)
         else:
             # Assume controller isn't loaded

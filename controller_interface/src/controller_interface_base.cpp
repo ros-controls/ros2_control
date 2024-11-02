@@ -16,7 +16,6 @@
 
 #include <memory>
 #include <string>
-#include <utility>
 #include <vector>
 
 #include "lifecycle_msgs/msg/state.hpp"
@@ -28,14 +27,16 @@ return_type ControllerInterfaceBase::init(
   const std::string & node_namespace, const rclcpp::NodeOptions & node_options)
 {
   urdf_ = urdf;
+  update_rate_ = cm_update_rate;
   node_ = std::make_shared<rclcpp_lifecycle::LifecycleNode>(
     controller_name, node_namespace, node_options,
     false);  // disable LifecycleNode service interfaces
 
   try
   {
-    auto_declare<int>("update_rate", cm_update_rate);
+    auto_declare<int>("update_rate", update_rate_);
     auto_declare<bool>("is_async", false);
+    auto_declare<int>("thread_priority", 50);
   }
   catch (const std::exception & e)
   {
@@ -56,7 +57,14 @@ return_type ControllerInterfaceBase::init(
     std::bind(&ControllerInterfaceBase::on_configure, this, std::placeholders::_1));
 
   node_->register_on_cleanup(
-    std::bind(&ControllerInterfaceBase::on_cleanup, this, std::placeholders::_1));
+    [this](const rclcpp_lifecycle::State & previous_state) -> CallbackReturn
+    {
+      if (is_async() && async_handler_ && async_handler_->is_running())
+      {
+        async_handler_->stop_thread();
+      }
+      return on_cleanup(previous_state);
+    });
 
   node_->register_on_activate(
     std::bind(&ControllerInterfaceBase::on_activate, this, std::placeholders::_1));
@@ -85,9 +93,41 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
   // Other solution is to add check into the LifecycleNode if a transition is valid to trigger
   if (get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED)
   {
-    update_rate_ = static_cast<unsigned int>(get_node()->get_parameter("update_rate").as_int());
+    const auto update_rate = get_node()->get_parameter("update_rate").as_int();
+    if (update_rate < 0)
+    {
+      RCLCPP_ERROR(get_node()->get_logger(), "Update rate cannot be a negative value!");
+      return get_lifecycle_state();
+    }
+    if (update_rate_ != 0u && update_rate > update_rate_)
+    {
+      RCLCPP_WARN(
+        get_node()->get_logger(),
+        "The update rate of the controller : '%ld Hz' cannot be higher than the update rate of the "
+        "controller manager : '%d Hz'. Setting it to the update rate of the controller manager.",
+        update_rate, update_rate_);
+    }
+    else
+    {
+      update_rate_ = static_cast<unsigned int>(update_rate);
+    }
     is_async_ = get_node()->get_parameter("is_async").as_bool();
   }
+  if (is_async_)
+  {
+    const unsigned int thread_priority =
+      static_cast<unsigned int>(get_node()->get_parameter("thread_priority").as_int());
+    RCLCPP_INFO(
+      get_node()->get_logger(), "Starting async handler with scheduler priority: %d",
+      thread_priority);
+    async_handler_ = std::make_unique<realtime_tools::AsyncFunctionHandler<return_type>>();
+    async_handler_->init(
+      std::bind(
+        &ControllerInterfaceBase::update, this, std::placeholders::_1, std::placeholders::_2),
+      thread_priority);
+    async_handler_->start_thread();
+  }
+  trigger_stats_.reset();
 
   return get_node()->configure();
 }
@@ -109,6 +149,29 @@ void ControllerInterfaceBase::release_interfaces()
 const rclcpp_lifecycle::State & ControllerInterfaceBase::get_lifecycle_state() const
 {
   return node_->get_current_state();
+}
+
+std::pair<bool, return_type> ControllerInterfaceBase::trigger_update(
+  const rclcpp::Time & time, const rclcpp::Duration & period)
+{
+  trigger_stats_.total_triggers++;
+  if (is_async())
+  {
+    const auto result = async_handler_->trigger_async_callback(time, period);
+    if (!result.first)
+    {
+      trigger_stats_.failed_triggers++;
+      RCLCPP_WARN_THROTTLE(
+        get_node()->get_logger(), *get_node()->get_clock(), 20000,
+        "The controller missed %u update cycles out of %u total triggers.",
+        trigger_stats_.failed_triggers, trigger_stats_.total_triggers);
+    }
+    return result;
+  }
+  else
+  {
+    return std::make_pair(true, update(time, period));
+  }
 }
 
 std::shared_ptr<rclcpp_lifecycle::LifecycleNode> ControllerInterfaceBase::get_node()
@@ -135,4 +198,11 @@ bool ControllerInterfaceBase::is_async() const { return is_async_; }
 
 const std::string & ControllerInterfaceBase::get_robot_description() const { return urdf_; }
 
+void ControllerInterfaceBase::wait_for_trigger_update_to_finish()
+{
+  if (is_async() && async_handler_ && async_handler_->is_running())
+  {
+    async_handler_->wait_for_trigger_cycle_to_finish();
+  }
+}
 }  // namespace controller_interface
