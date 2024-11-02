@@ -2,8 +2,8 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.29.0 (2024-11-02)
+-------------------
 * `PoseSensor` semantic component (backport `#1775 <https://github.com/ros-controls/ros2_control/issues/1775>`_) (`#1786 <https://github.com/ros-controls/ros2_control/issues/1786>`_)
 * Contributors: mergify[bot]
 

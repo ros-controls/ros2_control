@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.29.0 (2024-11-02)
+-------------------
 * add thread_priority option to the ros2_control_node (`#1820 <https://github.com/ros-controls/ros2_control/issues/1820>`_) (`#1825 <https://github.com/ros-controls/ros2_control/issues/1825>`_)
 * Fix timeout value in std output (backport `#1807 <https://github.com/ros-controls/ros2_control/issues/1807>`_) (`#1813 <https://github.com/ros-controls/ros2_control/issues/1813>`_)
 * Improve launch utils to support the multiple controller names (`#1782 <https://github.com/ros-controls/ros2_control/issues/1782>`_) (`#1784 <https://github.com/ros-controls/ros2_control/issues/1784>`_)
