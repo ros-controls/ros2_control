@@ -317,16 +317,14 @@ TEST_F(TestLoadController, spawner_test_type_in_params_file)
   auto ctrl_1 = cm_->get_loaded_controllers()[0];
   ASSERT_EQ(ctrl_1.info.name, "ctrl_with_parameters_and_type");
   ASSERT_EQ(ctrl_1.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
-  ASSERT_EQ(
-    ctrl_1.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  ASSERT_EQ(ctrl_1.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
   ASSERT_EQ(
     cm_->get_parameter("ctrl_with_parameters_and_type.params_file").as_string(), test_file_path);
 
   auto ctrl_2 = cm_->get_loaded_controllers()[1];
   ASSERT_EQ(ctrl_2.info.name, "chainable_ctrl_with_parameters_and_type");
   ASSERT_EQ(ctrl_2.info.type, test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
-  ASSERT_EQ(
-    ctrl_2.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  ASSERT_EQ(ctrl_2.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
   ASSERT_EQ(
     cm_->get_parameter("chainable_ctrl_with_parameters_and_type.params_file").as_string(),
     test_file_path);
