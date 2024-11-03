@@ -267,6 +267,69 @@ TEST_F(TestLoadController, spawner_test_type_in_arg)
   ASSERT_EQ(ctrl_2.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
 }
 
+TEST_F(TestLoadController, spawner_test_type_in_params_file)
+{
+  const std::string test_file_path = ament_index_cpp::get_package_prefix("controller_manager") +
+                                     "/test/test_controller_spawner_with_type.yaml";
+
+  ControllerManagerRunner cm_runner(this);
+  // Provide controller type via the parsed file
+  EXPECT_EQ(
+    call_spawner(
+      "ctrl_with_parameters_and_type chainable_ctrl_with_parameters_and_type --load-only -c "
+      "test_controller_manager -p " +
+      test_file_path),
+    0);
+
+  ASSERT_EQ(cm_->get_loaded_controllers().size(), 2ul);
+
+  auto ctrl_with_parameters_and_type = cm_->get_loaded_controllers()[0];
+  ASSERT_EQ(ctrl_with_parameters_and_type.info.name, "ctrl_with_parameters_and_type");
+  ASSERT_EQ(ctrl_with_parameters_and_type.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
+  ASSERT_EQ(
+    ctrl_with_parameters_and_type.c->get_state().id(),
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  ASSERT_EQ(
+    cm_->get_parameter("ctrl_with_parameters_and_type.params_file").as_string(), test_file_path);
+
+  auto chain_ctrl_with_parameters_and_type = cm_->get_loaded_controllers()[1];
+  ASSERT_EQ(
+    chain_ctrl_with_parameters_and_type.info.name, "chainable_ctrl_with_parameters_and_type");
+  ASSERT_EQ(
+    chain_ctrl_with_parameters_and_type.info.type,
+    test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  ASSERT_EQ(
+    chain_ctrl_with_parameters_and_type.c->get_state().id(),
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  ASSERT_EQ(
+    cm_->get_parameter("chainable_ctrl_with_parameters_and_type.params_file").as_string(),
+    test_file_path);
+
+  EXPECT_EQ(
+    call_spawner(
+      "ctrl_with_parameters_and_no_type -c test_controller_manager --controller-manager-timeout "
+      "1.0 -p " +
+      test_file_path),
+    256);
+  // Will still be same as the current call will fail
+  ASSERT_EQ(cm_->get_loaded_controllers().size(), 2ul);
+
+  auto ctrl_1 = cm_->get_loaded_controllers()[0];
+  ASSERT_EQ(ctrl_1.info.name, "ctrl_with_parameters_and_type");
+  ASSERT_EQ(ctrl_1.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
+  ASSERT_EQ(ctrl_1.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  ASSERT_EQ(
+    cm_->get_parameter("ctrl_with_parameters_and_type.params_file").as_string(), test_file_path);
+
+  auto ctrl_2 = cm_->get_loaded_controllers()[1];
+  ASSERT_EQ(ctrl_2.info.name, "chainable_ctrl_with_parameters_and_type");
+  ASSERT_EQ(ctrl_2.info.type, test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
+  ASSERT_EQ(ctrl_2.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  ASSERT_EQ(
+    cm_->get_parameter("chainable_ctrl_with_parameters_and_type.params_file").as_string(),
+    test_file_path);
+}
+
 TEST_F(TestLoadController, unload_on_kill)
 {
   // Launch spawner with unload on kill
@@ -583,6 +646,8 @@ TEST_F(TestLoadControllerWithNamespacedCM, spawner_test_type_in_params_file)
   ASSERT_EQ(
     ctrl_with_parameters_and_type.c->get_state().id(),
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  ASSERT_EQ(
+    cm_->get_parameter("ctrl_with_parameters_and_type.params_file").as_string(), test_file_path);
 
   auto chain_ctrl_with_parameters_and_type = cm_->get_loaded_controllers()[1];
   ASSERT_EQ(
@@ -593,6 +658,9 @@ TEST_F(TestLoadControllerWithNamespacedCM, spawner_test_type_in_params_file)
   ASSERT_EQ(
     chain_ctrl_with_parameters_and_type.c->get_state().id(),
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  ASSERT_EQ(
+    cm_->get_parameter("chainable_ctrl_with_parameters_and_type.params_file").as_string(),
+    test_file_path);
 
   EXPECT_EQ(
     call_spawner(
@@ -607,11 +675,16 @@ TEST_F(TestLoadControllerWithNamespacedCM, spawner_test_type_in_params_file)
   ASSERT_EQ(ctrl_1.info.name, "ctrl_with_parameters_and_type");
   ASSERT_EQ(ctrl_1.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
   ASSERT_EQ(ctrl_1.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  ASSERT_EQ(
+    cm_->get_parameter("ctrl_with_parameters_and_type.params_file").as_string(), test_file_path);
 
   auto ctrl_2 = cm_->get_loaded_controllers()[1];
   ASSERT_EQ(ctrl_2.info.name, "chainable_ctrl_with_parameters_and_type");
   ASSERT_EQ(ctrl_2.info.type, test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
   ASSERT_EQ(ctrl_2.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  ASSERT_EQ(
+    cm_->get_parameter("chainable_ctrl_with_parameters_and_type.params_file").as_string(),
+    test_file_path);
 }
 
 TEST_F(
@@ -659,6 +732,8 @@ TEST_F(
   ASSERT_EQ(
     ctrl_with_parameters_and_type.c->get_state().id(),
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  ASSERT_EQ(
+    cm_->get_parameter("ctrl_with_parameters_and_type.params_file").as_string(), test_file_path);
 
   auto chain_ctrl_with_parameters_and_type = cm_->get_loaded_controllers()[1];
   ASSERT_EQ(
@@ -669,6 +744,9 @@ TEST_F(
   ASSERT_EQ(
     chain_ctrl_with_parameters_and_type.c->get_state().id(),
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  ASSERT_EQ(
+    cm_->get_parameter("chainable_ctrl_with_parameters_and_type.params_file").as_string(),
+    test_file_path);
 
   EXPECT_EQ(
     call_spawner(
@@ -683,9 +761,14 @@ TEST_F(
   ASSERT_EQ(ctrl_1.info.name, "ctrl_with_parameters_and_type");
   ASSERT_EQ(ctrl_1.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
   ASSERT_EQ(ctrl_1.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  ASSERT_EQ(
+    cm_->get_parameter("ctrl_with_parameters_and_type.params_file").as_string(), test_file_path);
 
   auto ctrl_2 = cm_->get_loaded_controllers()[1];
   ASSERT_EQ(ctrl_2.info.name, "chainable_ctrl_with_parameters_and_type");
   ASSERT_EQ(ctrl_2.info.type, test_chainable_controller::TEST_CONTROLLER_CLASS_NAME);
   ASSERT_EQ(ctrl_2.c->get_state().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  ASSERT_EQ(
+    cm_->get_parameter("chainable_ctrl_with_parameters_and_type.params_file").as_string(),
+    test_file_path);
 }
