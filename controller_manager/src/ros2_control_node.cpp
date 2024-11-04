@@ -57,6 +57,13 @@ int main(int argc, char ** argv)
   auto cm = std::make_shared<controller_manager::ControllerManager>(
     executor, manager_node_name, "", cm_node_options);
 
+  const bool lock_memory = cm->get_parameter_or<bool>("lock_memory", true);
+  std::string message;
+  if (lock_memory && !realtime_tools::lock_memory(message))
+  {
+    RCLCPP_WARN(cm->get_logger(), "Unable to lock the memory : '%s'", message.c_str());
+  }
+
   RCLCPP_INFO(cm->get_logger(), "update rate is %d Hz", cm->get_update_rate());
   const int thread_priority = cm->get_parameter_or<int>("thread_priority", kSchedPriority);
   RCLCPP_INFO(
