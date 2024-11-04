@@ -192,7 +192,7 @@ if(BUILD_TESTING)
   )
 
   ament_add_gmock(test_hardware_spawner
-    test/test_hardware_spawner
+    test/test_hardware_spawner.cpp
     TIMEOUT 120
   )
   target_link_libraries(test_hardware_spawner
