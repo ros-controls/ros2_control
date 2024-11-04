@@ -68,22 +68,16 @@ int main(int argc, char ** argv)
         {
           RCLCPP_INFO(
             cm->get_logger(), "Successful set up FIFO RT scheduling policy with priority %i.",
-            kSchedPriority);
+            thread_priority);
         }
       }
       else
       {
-<<<<<<< HEAD
         RCLCPP_WARN(
           cm->get_logger(),
           "No real-time kernel detected on this system. See "
           "[https://control.ros.org/master/doc/ros2_control/controller_manager/doc/userdoc.html] "
           "for details on how to enable realtime scheduling.");
-=======
-        RCLCPP_INFO(
-          cm->get_logger(), "Successful set up FIFO RT scheduling policy with priority %i.",
-          thread_priority);
->>>>>>> be0a339 (fix: typo use thread_priority (#1844))
       }
 
       // for calculating sleep time
