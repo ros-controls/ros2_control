@@ -156,16 +156,18 @@ TEST_F(ResourceManagerTest, initialization_with_urdf_and_manual_validation)
   EXPECT_EQ(1u, rm.system_components_size());
 
   auto state_interface_keys = rm.state_interface_keys();
-  ASSERT_THAT(state_interface_keys, SizeIs(11));
+  ASSERT_THAT(state_interface_keys, SizeIs(12));
   EXPECT_TRUE(rm.state_interface_exists("joint1/position"));
   EXPECT_TRUE(rm.state_interface_exists("joint1/velocity"));
+  EXPECT_TRUE(rm.state_interface_exists("joint1/effort"));
   EXPECT_TRUE(rm.state_interface_exists("sensor1/velocity"));
   EXPECT_TRUE(rm.state_interface_exists("joint2/position"));
   EXPECT_TRUE(rm.state_interface_exists("joint3/position"));
 
   auto command_interface_keys = rm.command_interface_keys();
-  ASSERT_THAT(command_interface_keys, SizeIs(6));
+  ASSERT_THAT(command_interface_keys, SizeIs(7));
   EXPECT_TRUE(rm.command_interface_exists("joint1/position"));
+  EXPECT_TRUE(rm.command_interface_exists("joint1/effort"));
   EXPECT_TRUE(rm.command_interface_exists("joint2/velocity"));
   EXPECT_TRUE(rm.command_interface_exists("joint3/velocity"));
 }
@@ -397,8 +399,8 @@ TEST_F(ResourceManagerTest, post_initialization_add_components)
   EXPECT_EQ(1u, rm.sensor_components_size());
   EXPECT_EQ(1u, rm.system_components_size());
 
-  ASSERT_THAT(rm.state_interface_keys(), SizeIs(11));
-  ASSERT_THAT(rm.command_interface_keys(), SizeIs(6));
+  ASSERT_THAT(rm.state_interface_keys(), SizeIs(12));
+  ASSERT_THAT(rm.command_interface_keys(), SizeIs(7));
 
   hardware_interface::HardwareInfo external_component_hw_info;
   external_component_hw_info.name = "ExternalComponent";
@@ -407,9 +409,9 @@ TEST_F(ResourceManagerTest, post_initialization_add_components)
   rm.import_component(std::make_unique<ExternalComponent>(), external_component_hw_info);
   EXPECT_EQ(2u, rm.actuator_components_size());
 
-  ASSERT_THAT(rm.state_interface_keys(), SizeIs(12));
+  ASSERT_THAT(rm.state_interface_keys(), SizeIs(13));
   EXPECT_TRUE(rm.state_interface_exists("external_joint/external_state_interface"));
-  ASSERT_THAT(rm.command_interface_keys(), SizeIs(7));
+  ASSERT_THAT(rm.command_interface_keys(), SizeIs(8));
   EXPECT_TRUE(rm.command_interface_exists("external_joint/external_command_interface"));
 
   auto status_map = rm.get_components_status();

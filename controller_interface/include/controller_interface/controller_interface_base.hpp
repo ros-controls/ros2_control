@@ -15,6 +15,7 @@
 #ifndef CONTROLLER_INTERFACE__CONTROLLER_INTERFACE_BASE_HPP_
 #define CONTROLLER_INTERFACE__CONTROLLER_INTERFACE_BASE_HPP_
 
+#include <map>
 #include <memory>
 #include <string>
 #include <utility>
@@ -313,12 +314,32 @@ public:
   CONTROLLER_INTERFACE_PUBLIC
   void wait_for_trigger_update_to_finish();
 
+  /// Get the remapping of state interfaces defined in the controller namespace
+  /**
+   * Get the remapping of state interfaces defined in the controller namespace
+   *
+   * \returns map of state interfaces remapping
+   */
+  CONTROLLER_INTERFACE_PUBLIC
+  const std::map<std::string, std::string> & get_state_interfaces_remap() const;
+
+  /// Get the remapping of command interfaces defined in the controller namespace
+  /**
+   * Get the remapping of command interfaces defined in the controller namespace
+   *
+   * \returns map of command interfaces remapping
+   */
+  CONTROLLER_INTERFACE_PUBLIC
+  const std::map<std::string, std::string> & get_command_interfaces_remap() const;
+
 protected:
   std::vector<hardware_interface::LoanedCommandInterface> command_interfaces_;
   std::vector<hardware_interface::LoanedStateInterface> state_interfaces_;
 
 private:
   std::shared_ptr<rclcpp_lifecycle::LifecycleNode> node_;
+  std::map<std::string, std::string> state_interfaces_remap_;
+  std::map<std::string, std::string> command_interfaces_remap_;
   std::unique_ptr<realtime_tools::AsyncFunctionHandler<return_type>> async_handler_;
   unsigned int update_rate_ = 0;
   bool is_async_ = false;

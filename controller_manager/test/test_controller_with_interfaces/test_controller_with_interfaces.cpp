@@ -24,6 +24,7 @@ TestControllerWithInterfaces::TestControllerWithInterfaces()
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
 TestControllerWithInterfaces::on_init()
 {
+  auto_declare<std::string>("joint_name", "joint1");
   return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
@@ -36,6 +37,7 @@ controller_interface::return_type TestControllerWithInterfaces::update(
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
 TestControllerWithInterfaces::on_configure(const rclcpp_lifecycle::State & /*previous_state&*/)
 {
+  get_node()->get_parameter("joint_name", joint_name_);
   return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
