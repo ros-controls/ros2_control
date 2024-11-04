@@ -125,8 +125,8 @@ public:
    * \pre Handles are valid and matching in size
    */
   void configure(
-    const std::vector<JointHandle> & joint_handles,
-    const std::vector<ActuatorHandle> & actuator_handles) override;
+    const std::vector<JointHandle::SharedPtr> & joint_handles,
+    const std::vector<ActuatorHandle::SharedPtr> & actuator_handles) override;
 
   /// Transform variables from actuator to joint space.
   /**
@@ -159,13 +159,13 @@ protected:
   std::vector<double> joint_reduction_;
   std::vector<double> joint_offset_;
 
-  std::vector<JointHandle> joint_position_;
-  std::vector<JointHandle> joint_velocity_;
-  std::vector<JointHandle> joint_effort_;
+  std::vector<JointHandle::SharedPtr> joint_position_;
+  std::vector<JointHandle::SharedPtr> joint_velocity_;
+  std::vector<JointHandle::SharedPtr> joint_effort_;
 
-  std::vector<ActuatorHandle> actuator_position_;
-  std::vector<ActuatorHandle> actuator_velocity_;
-  std::vector<ActuatorHandle> actuator_effort_;
+  std::vector<ActuatorHandle::SharedPtr> actuator_position_;
+  std::vector<ActuatorHandle::SharedPtr> actuator_velocity_;
+  std::vector<ActuatorHandle::SharedPtr> actuator_effort_;
 };
 
 inline DifferentialTransmission::DifferentialTransmission(
@@ -191,8 +191,8 @@ inline DifferentialTransmission::DifferentialTransmission(
 }
 
 void DifferentialTransmission::configure(
-  const std::vector<JointHandle> & joint_handles,
-  const std::vector<ActuatorHandle> & actuator_handles)
+  const std::vector<JointHandle::SharedPtr> & joint_handles,
+  const std::vector<ActuatorHandle::SharedPtr> & actuator_handles)
 {
   if (joint_handles.empty())
   {
@@ -264,11 +264,11 @@ inline void DifferentialTransmission::actuator_to_joint()
   {
     assert(act_pos[0] && act_pos[1] && joint_pos[0] && joint_pos[1]);
 
-    joint_pos[0].set_value(
-      (act_pos[0].get_value() / ar[0] + act_pos[1].get_value() / ar[1]) / (2.0 * jr[0]) +
+    joint_pos[0]->set_value(
+      (act_pos[0]->get_value() / ar[0] + act_pos[1]->get_value() / ar[1]) / (2.0 * jr[0]) +
       joint_offset_[0]);
-    joint_pos[1].set_value(
-      (act_pos[0].get_value() / ar[0] - act_pos[1].get_value() / ar[1]) / (2.0 * jr[1]) +
+    joint_pos[1]->set_value(
+      (act_pos[0]->get_value() / ar[0] - act_pos[1]->get_value() / ar[1]) / (2.0 * jr[1]) +
       joint_offset_[1]);
   }
 
@@ -278,10 +278,10 @@ inline void DifferentialTransmission::actuator_to_joint()
   {
     assert(act_vel[0] && act_vel[1] && joint_vel[0] && joint_vel[1]);
 
-    joint_vel[0].set_value(
-      (act_vel[0].get_value() / ar[0] + act_vel[1].get_value() / ar[1]) / (2.0 * jr[0]));
-    joint_vel[1].set_value(
-      (act_vel[0].get_value() / ar[0] - act_vel[1].get_value() / ar[1]) / (2.0 * jr[1]));
+    joint_vel[0]->set_value(
+      (act_vel[0]->get_value() / ar[0] + act_vel[1]->get_value() / ar[1]) / (2.0 * jr[0]));
+    joint_vel[1]->set_value(
+      (act_vel[0]->get_value() / ar[0] - act_vel[1]->get_value() / ar[1]) / (2.0 * jr[1]));
   }
 
   auto & act_eff = actuator_effort_;
@@ -290,10 +290,10 @@ inline void DifferentialTransmission::actuator_to_joint()
   {
     assert(act_eff[0] && act_eff[1] && joint_eff[0] && joint_eff[1]);
 
-    joint_eff[0].set_value(
-      jr[0] * (act_eff[0].get_value() * ar[0] + act_eff[1].get_value() * ar[1]));
-    joint_eff[1].set_value(
-      jr[1] * (act_eff[0].get_value() * ar[0] - act_eff[1].get_value() * ar[1]));
+    joint_eff[0]->set_value(
+      jr[0] * (act_eff[0]->get_value() * ar[0] + act_eff[1]->get_value() * ar[1]));
+    joint_eff[1]->set_value(
+      jr[1] * (act_eff[0]->get_value() * ar[0] - act_eff[1]->get_value() * ar[1]));
   }
 }
 
@@ -309,10 +309,10 @@ inline void DifferentialTransmission::joint_to_actuator()
     assert(act_pos[0] && act_pos[1] && joint_pos[0] && joint_pos[1]);
 
     double joints_offset_applied[2] = {
-      joint_pos[0].get_value() - joint_offset_[0], joint_pos[1].get_value() - joint_offset_[1]};
-    act_pos[0].set_value(
+      joint_pos[0]->get_value() - joint_offset_[0], joint_pos[1]->get_value() - joint_offset_[1]};
+    act_pos[0]->set_value(
       (joints_offset_applied[0] * jr[0] + joints_offset_applied[1] * jr[1]) * ar[0]);
-    act_pos[1].set_value(
+    act_pos[1]->set_value(
       (joints_offset_applied[0] * jr[0] - joints_offset_applied[1] * jr[1]) * ar[1]);
   }
 
@@ -322,10 +322,10 @@ inline void DifferentialTransmission::joint_to_actuator()
   {
     assert(act_vel[0] && act_vel[1] && joint_vel[0] && joint_vel[1]);
 
-    act_vel[0].set_value(
-      (joint_vel[0].get_value() * jr[0] + joint_vel[1].get_value() * jr[1]) * ar[0]);
-    act_vel[1].set_value(
-      (joint_vel[0].get_value() * jr[0] - joint_vel[1].get_value() * jr[1]) * ar[1]);
+    act_vel[0]->set_value(
+      (joint_vel[0]->get_value() * jr[0] + joint_vel[1]->get_value() * jr[1]) * ar[0]);
+    act_vel[1]->set_value(
+      (joint_vel[0]->get_value() * jr[0] - joint_vel[1]->get_value() * jr[1]) * ar[1]);
   }
 
   auto & act_eff = actuator_effort_;
@@ -334,10 +334,10 @@ inline void DifferentialTransmission::joint_to_actuator()
   {
     assert(act_eff[0] && act_eff[1] && joint_eff[0] && joint_eff[1]);
 
-    act_eff[0].set_value(
-      (joint_eff[0].get_value() / jr[0] + joint_eff[1].get_value() / jr[1]) / (2.0 * ar[0]));
-    act_eff[1].set_value(
-      (joint_eff[0].get_value() / jr[0] - joint_eff[1].get_value() / jr[1]) / (2.0 * ar[1]));
+    act_eff[0]->set_value(
+      (joint_eff[0]->get_value() / jr[0] + joint_eff[1]->get_value() / jr[1]) / (2.0 * ar[0]));
+    act_eff[1]->set_value(
+      (joint_eff[0]->get_value() / jr[0] - joint_eff[1]->get_value() / jr[1]) / (2.0 * ar[1]));
   }
 }
 

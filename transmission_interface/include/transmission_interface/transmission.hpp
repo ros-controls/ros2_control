@@ -47,9 +47,31 @@ class Transmission
 public:
   virtual ~Transmission() = default;
 
+  [[deprecated("Use the configure() function with shared pointers instead.")]]
   virtual void configure(
     const std::vector<JointHandle> & joint_handles,
-    const std::vector<ActuatorHandle> & actuator_handles) = 0;
+    const std::vector<ActuatorHandle> & actuator_handles)
+  {
+    std::vector<JointHandle::SharedPtr> joint_handles_shared_ptr;
+    joint_handles_shared_ptr.reserve(joint_handles.size());
+    for (const auto & joint_handle : joint_handles)
+    {
+      joint_handles_shared_ptr.push_back(std::make_shared<JointHandle>(joint_handle));
+    }
+
+    std::vector<ActuatorHandle::SharedPtr> actuator_handles_shared_ptr;
+    actuator_handles_shared_ptr.reserve(actuator_handles.size());
+    for (const auto & actuator_handle : actuator_handles)
+    {
+      actuator_handles_shared_ptr.push_back(std::make_shared<ActuatorHandle>(actuator_handle));
+    }
+
+    configure(joint_handles_shared_ptr, actuator_handles_shared_ptr);
+  }
+
+  virtual void configure(
+    const std::vector<JointHandle::SharedPtr> & joint_handles,
+    const std::vector<ActuatorHandle::SharedPtr> & actuator_handles) = 0;
 
   /// Transform \e effort variables from actuator to joint space.
   /**
