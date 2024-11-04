@@ -201,6 +201,19 @@ void FourBarLinkageTransmission::configure(
     throw Exception("No actuator handles were passed in");
   }
 
+  if (std::any_of(
+        joint_handles.cbegin(), joint_handles.cend(), [](const auto & handle) { return !handle; }))
+  {
+    throw Exception("Null pointers in joint handles");
+  }
+
+  if (std::any_of(
+        actuator_handles.cbegin(), actuator_handles.cend(),
+        [](const auto & handle) { return !handle; }))
+  {
+    throw Exception("Null pointers in actuator handles");
+  }
+
   const auto joint_names = get_names(joint_handles);
   if (joint_names.size() != 2)
   {
