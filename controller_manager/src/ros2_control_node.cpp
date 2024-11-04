@@ -79,7 +79,7 @@ int main(int argc, char ** argv)
       {
         RCLCPP_INFO(
           cm->get_logger(), "Successful set up FIFO RT scheduling policy with priority %i.",
-          kSchedPriority);
+          thread_priority);
       }
 
       // for calculating sleep time
