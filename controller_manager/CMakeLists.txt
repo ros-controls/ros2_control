@@ -171,9 +171,29 @@ if(BUILD_TESTING)
     test/test_spawner_unspawner.cpp
     TIMEOUT 120
   )
+<<<<<<< HEAD
   target_include_directories(test_spawner_unspawner PRIVATE include)
   target_link_libraries(test_spawner_unspawner ${PROJECT_NAME} test_controller)
   ament_target_dependencies(test_spawner_unspawner ros2_control_test_assets)
+=======
+  target_link_libraries(test_spawner_unspawner
+    controller_manager
+    test_controller
+    ros2_control_test_assets::ros2_control_test_assets
+  )
+
+  ament_add_gmock(test_hardware_spawner
+    test/test_hardware_spawner.cpp
+    TIMEOUT 120
+  )
+  target_link_libraries(test_hardware_spawner
+    controller_manager
+    ros2_control_test_assets::ros2_control_test_assets
+  )
+
+  install(FILES test/test_controller_spawner_with_fallback_controllers.yaml
+    DESTINATION test)
+>>>>>>> 434f7f5 (Fix CMP0115 (#1830))
 
   install(FILES test/test_controller_spawner_with_type.yaml
   DESTINATION test)
