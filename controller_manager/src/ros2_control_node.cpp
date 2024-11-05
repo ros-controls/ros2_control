@@ -64,6 +64,17 @@ int main(int argc, char ** argv)
     RCLCPP_WARN(cm->get_logger(), "Unable to lock the memory : '%s'", message.c_str());
   }
 
+  const int cpu_affinity = cm->get_parameter_or<int>("cpu_affinity", -1);
+  if (cpu_affinity >= 0)
+  {
+    const auto affinity_result = realtime_tools::set_current_thread_affinity(cpu_affinity);
+    if (!affinity_result.first)
+    {
+      RCLCPP_WARN(
+        cm->get_logger(), "Unable to set the CPU affinity : '%s'", affinity_result.second.c_str());
+    }
+  }
+
   RCLCPP_INFO(cm->get_logger(), "update rate is %d Hz", cm->get_update_rate());
   const int thread_priority = cm->get_parameter_or<int>("thread_priority", kSchedPriority);
   RCLCPP_INFO(
