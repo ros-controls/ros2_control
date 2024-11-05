@@ -596,7 +596,7 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_c
   controller_spec.c = controller;
   controller_spec.info.name = controller_name;
   controller_spec.info.type = controller_type;
-  controller_spec.next_update_cycle_time = std::make_shared<rclcpp::Time>(
+  controller_spec.last_update_cycle_time = std::make_shared<rclcpp::Time>(
     0, 0, this->get_node_clock_interface()->get_clock()->get_clock_type());
 
   // We have to fetch the parameters_file at the time of loading the controller, because this way we
@@ -1545,8 +1545,8 @@ void ControllerManager::activate_controllers(
     }
     auto controller = found_it->c;
     auto controller_name = found_it->info.name;
-    // reset the next update cycle time for newly activated controllers
-    *found_it->next_update_cycle_time =
+    // reset the last update cycle time for newly activated controllers
+    *found_it->last_update_cycle_time =
       rclcpp::Time(0, 0, this->get_node_clock_interface()->get_clock()->get_clock_type());
 
     bool assignment_successful = true;
@@ -2139,10 +2139,31 @@ controller_interface::return_type ControllerManager::update(
         run_controller_at_cm_rate ? period
                                   : rclcpp::Duration::from_seconds((1.0 / controller_update_rate));
 
-      bool controller_go =
+      const rclcpp::Time current_time = get_clock()->now();
+      if (
+        *loaded_controller.last_update_cycle_time ==
+        rclcpp::Time(0, 0, this->get_node_clock_interface()->get_clock()->get_clock_type()))
+      {
+        // it is zero after activation
+        *loaded_controller.last_update_cycle_time = current_time - controller_period;
+        RCLCPP_DEBUG(
+          get_logger(), "Setting last_update_cycle_time to %fs for the controller : %s",
+          loaded_controller.last_update_cycle_time->seconds(), loaded_controller.info.name.c_str());
+      }
+      const auto controller_actual_period =
+        (current_time - *loaded_controller.last_update_cycle_time);
+
+      /// @note The factor 0.99 is used to avoid the controllers skipping update cycles due to the
+      /// jitter in the system sleep cycles.
+      // For instance, A controller running at 50 Hz and the CM running at 100Hz, then when we have
+      // an update cycle at 0.019s (ideally, the controller should only trigger >= 0.02s), if we
+      // wait for next cycle, then trigger will happen at ~0.029 sec and this is creating an issue
+      // to keep up with the controller update rate (see issue #1769).
+      const bool controller_go =
+        run_controller_at_cm_rate ||
         (time ==
          rclcpp::Time(0, 0, this->get_node_clock_interface()->get_clock()->get_clock_type())) ||
-        (time.seconds() >= loaded_controller.next_update_cycle_time->seconds());
+        (controller_actual_period.seconds() * controller_update_rate >= 0.99);
 
       RCLCPP_DEBUG(
         get_logger(), "update_loop_counter: '%d ' controller_go: '%s ' controller_name: '%s '",
@@ -2151,15 +2172,28 @@ controller_interface::return_type ControllerManager::update(
 
       if (controller_go)
       {
-        auto controller_ret = loaded_controller.c->update(time, controller_period);
-
-        if (
-          *loaded_controller.next_update_cycle_time ==
-          rclcpp::Time(0, 0, this->get_node_clock_interface()->get_clock()->get_clock_type()))
+        auto controller_ret = controller_interface::return_type::OK;
+        // Catch exceptions thrown by the controller update function
+        try
         {
-          *loaded_controller.next_update_cycle_time = time;
+          controller_ret = loaded_controller.c->update(time, controller_period);
         }
-        *loaded_controller.next_update_cycle_time += controller_period;
+        catch (const std::exception & e)
+        {
+          RCLCPP_ERROR(
+            get_logger(), "Caught exception of type : %s while updating controller '%s': %s",
+            typeid(e).name(), loaded_controller.info.name.c_str(), e.what());
+          controller_ret = controller_interface::return_type::ERROR;
+        }
+        catch (...)
+        {
+          RCLCPP_ERROR(
+            get_logger(), "Caught unknown exception while updating controller '%s'",
+            loaded_controller.info.name.c_str());
+          controller_ret = controller_interface::return_type::ERROR;
+        }
+
+        *loaded_controller.last_update_cycle_time = current_time;
 
         if (controller_ret != controller_interface::return_type::OK)
         {
