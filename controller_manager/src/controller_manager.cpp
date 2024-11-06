@@ -545,8 +545,8 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_c
   controller_spec.info.type = controller_type;
   controller_spec.last_update_cycle_time = std::make_shared<rclcpp::Time>(
     0, 0, this->get_node_clock_interface()->get_clock()->get_clock_type());
-  controller_spec.statistics =
-    std::make_shared<libstatistics_collector::moving_average_statistics::MovingAverageStatistics>();
+  controller_spec.execution_time_statistics = std::make_shared<MovingAverageStatistics>();
+  controller_spec.periodicity_statistics = std::make_shared<MovingAverageStatistics>();
 
   // We have to fetch the parameters_file at the time of loading the controller, because this way we
   // can load them at the creation of the LifeCycleNode and this helps in using the features such as
@@ -1764,8 +1764,9 @@ void ControllerManager::activate_controllers(
 
     try
     {
-      found_it->statistics->Reset();
-      found_it->statistics->AddMeasurement(1.0 / controller->get_update_rate());
+      found_it->periodicity_statistics->Reset();
+      found_it->periodicity_statistics->AddMeasurement(controller->get_update_rate());
+      found_it->execution_time_statistics->Reset();
       const auto new_state = controller->get_node()->activate();
       if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
       {
@@ -2391,7 +2392,8 @@ controller_interface::return_type ControllerManager::update(
 
       if (controller_go)
       {
-        loaded_controller.statistics->AddMeasurement(controller_actual_period.seconds());
+        loaded_controller.periodicity_statistics->AddMeasurement(
+          1.0 / controller_actual_period.seconds());
         auto controller_ret = controller_interface::return_type::OK;
         bool trigger_status = true;
         // Catch exceptions thrown by the controller update function
@@ -2401,6 +2403,11 @@ controller_interface::return_type ControllerManager::update(
             loaded_controller.c->trigger_update(time, controller_actual_period);
           trigger_status = trigger_result.ok;
           controller_ret = trigger_result.result;
+          if (trigger_status)
+          {
+            loaded_controller.execution_time_statistics->AddMeasurement(
+              static_cast<double>(trigger_result.execution_time.count()) / 1.e3);
+          }
         }
         catch (const std::exception & e)
         {
