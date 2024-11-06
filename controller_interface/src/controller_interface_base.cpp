@@ -159,9 +159,10 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::get_lifecycle_state() c
   return node_->get_current_state();
 }
 
-std::pair<bool, return_type> ControllerInterfaceBase::trigger_update(
+ControllerUpdateStatus ControllerInterfaceBase::trigger_update(
   const rclcpp::Time & time, const rclcpp::Duration & period)
 {
+  ControllerUpdateStatus status;
   trigger_stats_.total_triggers++;
   if (is_async())
   {
@@ -174,12 +175,19 @@ std::pair<bool, return_type> ControllerInterfaceBase::trigger_update(
         "The controller missed %u update cycles out of %u total triggers.",
         trigger_stats_.failed_triggers, trigger_stats_.total_triggers);
     }
-    return result;
+    status.ok = result.first;
+    status.result = result.second;
+    status.execution_time = async_handler_->get_last_execution_time();
   }
   else
   {
-    return std::make_pair(true, update(time, period));
+    const auto start_time = std::chrono::steady_clock::now();
+    status.ok = true;
+    status.result = update(time, period);
+    status.execution_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
+      std::chrono::steady_clock::now() - start_time);
   }
+  return status;
 }
 
 std::shared_ptr<rclcpp_lifecycle::LifecycleNode> ControllerInterfaceBase::get_node()

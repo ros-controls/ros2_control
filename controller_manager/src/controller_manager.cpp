@@ -2397,8 +2397,10 @@ controller_interface::return_type ControllerManager::update(
         // Catch exceptions thrown by the controller update function
         try
         {
-          std::tie(trigger_status, controller_ret) =
+          const auto trigger_result =
             loaded_controller.c->trigger_update(time, controller_actual_period);
+          trigger_status = trigger_result.ok;
+          controller_ret = trigger_result.result;
         }
         catch (const std::exception & e)
         {
