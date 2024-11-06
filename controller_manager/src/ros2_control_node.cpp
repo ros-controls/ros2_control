@@ -109,7 +109,7 @@ int main(int argc, char ** argv)
         next_iteration_time{cm_now};
 
       // for calculating the measured period of the loop
-      rclcpp::Time previous_time = cm->now();
+      rclcpp::Time previous_time = cm->now() - period;
 
       while (rclcpp::ok())
       {

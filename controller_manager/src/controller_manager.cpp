@@ -313,6 +313,7 @@ void ControllerManager::init_controller_manager()
     robot_description_subscription_->get_topic_name());
 
   // Setup diagnostics
+  periodicity_stats_.Reset();
   diagnostics_updater_.setHardwareID("ros2_control");
   diagnostics_updater_.add(
     "Controllers Activity", this, &ControllerManager::controller_activity_diagnostic_callback);
@@ -2248,6 +2249,7 @@ std::vector<std::string> ControllerManager::get_controller_names()
 
 void ControllerManager::read(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
+  periodicity_stats_.AddMeasurement(period.seconds());
   auto [ok, failed_hardware_names] = resource_manager_->read(time, period);
 
   if (!ok)

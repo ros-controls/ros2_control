@@ -603,6 +603,8 @@ private:
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr robot_description_subscription_;
   rclcpp::TimerBase::SharedPtr robot_description_notification_timer_;
 
+  controller_manager::MovingAverageStatistics periodicity_stats_;
+
   struct SwitchParams
   {
     void reset()
