@@ -3146,7 +3146,14 @@ void ControllerManager::hardware_components_diagnostic_callback(
 void ControllerManager::controller_manager_diagnostic_callback(
   diagnostic_updater::DiagnosticStatusWrapper & stat)
 {
+  const std::string periodicity_stat_name = "periodicity";
   stat.add("update_rate", std::to_string(get_update_rate()));
+  stat.add(periodicity_stat_name + ".average", std::to_string(periodicity_stats_.Average()));
+  stat.add(
+    periodicity_stat_name + ".standard_deviation",
+    std::to_string(periodicity_stats_.StandardDeviation()));
+  stat.add(periodicity_stat_name + ".min", std::to_string(periodicity_stats_.Min()));
+  stat.add(periodicity_stat_name + ".max", std::to_string(periodicity_stats_.Max()));
   if (is_resource_manager_initialized())
   {
     stat.summary(diagnostic_msgs::msg::DiagnosticStatus::OK, "Controller Manager is running");
