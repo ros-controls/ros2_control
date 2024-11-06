@@ -158,7 +158,7 @@ There are two scripts to interact with controller manager from launch files:
 
     $ ros2 run controller_manager spawner -h
     usage: spawner [-h] [-c CONTROLLER_MANAGER] [-p PARAM_FILE] [-n NAMESPACE] [--load-only] [--inactive] [-t CONTROLLER_TYPE] [-u]
-                      [--controller-manager-timeout CONTROLLER_MANAGER_TIMEOUT]
+                      [--controller-manager-timeout CONTROLLER_MANAGER_TIMEOUT] [--controller-manager-call-timeout CONTROLLER_MANAGER_CALL_TIMEOUT]
                       controller_name
 
     positional arguments:
@@ -176,7 +176,9 @@ There are two scripts to interact with controller manager from launch files:
       --inactive            Load and configure the controller, however do not activate them
       -u, --unload-on-kill  Wait until this application is interrupted and unload controller
       --controller-manager-timeout CONTROLLER_MANAGER_TIMEOUT
-                            Time to wait for the controller manager
+                            Time to wait for the controller 
+      --controller-manager-call-timeout CONTROLLER_MANAGER_CALL_TIMEOUT
+                            Time to wait for the service response from the controller manager
       --activate-as-group   Activates all the parsed controllers list together instead of one by one. Useful for activating all chainable controllers altogether
       --fallback_controllers FALLBACK_CONTROLLERS [FALLBACK_CONTROLLERS ...]
                             Fallback controllers list are activated as a fallback strategy when the spawned controllers fail. When the argument is provided, it takes precedence over the fallback_controllers list in the
