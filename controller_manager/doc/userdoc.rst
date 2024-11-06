@@ -176,7 +176,7 @@ There are two scripts to interact with controller manager from launch files:
       --inactive            Load and configure the controller, however do not activate them
       -u, --unload-on-kill  Wait until this application is interrupted and unload controller
       --controller-manager-timeout CONTROLLER_MANAGER_TIMEOUT
-                            Time to wait for the controller 
+                            Time to wait for the controller manager service to be available
       --controller-manager-call-timeout CONTROLLER_MANAGER_CALL_TIMEOUT
                             Time to wait for the service response from the controller manager
       --activate-as-group   Activates all the parsed controllers list together instead of one by one. Useful for activating all chainable controllers altogether
