@@ -2405,10 +2405,10 @@ controller_interface::return_type ControllerManager::update(
             loaded_controller.c->trigger_update(time, controller_actual_period);
           trigger_status = trigger_result.ok;
           controller_ret = trigger_result.result;
-          if (trigger_status)
+          if (trigger_status && trigger_result.execution_time.has_value())
           {
             loaded_controller.execution_time_statistics->AddMeasurement(
-              static_cast<double>(trigger_result.execution_time.count()) / 1.e3);
+              static_cast<double>(trigger_result.execution_time.value().count()) / 1.e3);
           }
         }
         catch (const std::exception & e)

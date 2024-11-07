@@ -177,7 +177,11 @@ ControllerUpdateStatus ControllerInterfaceBase::trigger_update(
     }
     status.ok = result.first;
     status.result = result.second;
-    status.execution_time = async_handler_->get_last_execution_time();
+    const auto execution_time = async_handler_->get_last_execution_time();
+    if (execution_time.count() > 0)
+    {
+      status.execution_time = execution_time;
+    }
   }
   else
   {

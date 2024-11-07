@@ -76,7 +76,7 @@ struct ControllerUpdateStatus
 {
   bool ok = true;
   return_type result = return_type::OK;
-  std::chrono::nanoseconds execution_time = std::chrono::nanoseconds(0);
+  std::optional<std::chrono::nanoseconds> execution_time = std::nullopt;
 };
 
 /**
