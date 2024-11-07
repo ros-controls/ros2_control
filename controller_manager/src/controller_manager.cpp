@@ -3076,13 +3076,32 @@ void ControllerManager::controller_activity_diagnostic_callback(
   std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
   const std::vector<ControllerSpec> & controllers = rt_controllers_wrapper_.get_updated_list(guard);
   bool all_active = true;
+  const std::string periodicity_suffix = ".periodicity";
+  const std::string state_suffix = ".state";
+  auto make_stats_string =
+    [](const auto & statistics_data, const std::string & measurement_unit) -> std::string
+  {
+    std::ostringstream oss;
+    oss << std::fixed << std::setprecision(2);
+    oss << "Avg: " << statistics_data.average << " [" << statistics_data.min << " - "
+        << statistics_data.max << "]" << " " << measurement_unit
+        << ", StdDev: " << statistics_data.standard_deviation;
+    return oss.str();
+  };
   for (size_t i = 0; i < controllers.size(); ++i)
   {
     if (!is_controller_active(controllers[i].c))
     {
       all_active = false;
     }
-    stat.add(controllers[i].info.name, controllers[i].c->get_lifecycle_state().label());
+    stat.add(
+      controllers[i].info.name + state_suffix, controllers[i].c->get_lifecycle_state().label());
+    stat.add(
+      controllers[i].info.name + periodicity_suffix,
+      make_stats_string(controllers[i].execution_time_statistics->GetStatistics(), "us"));
+    stat.add(
+      controllers[i].info.name + periodicity_suffix,
+      make_stats_string(controllers[i].periodicity_statistics->GetStatistics(), "Hz"));
   }
 
   if (!atleast_one_hw_active)
