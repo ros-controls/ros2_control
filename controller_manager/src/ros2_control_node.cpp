@@ -42,35 +42,10 @@ int main(int argc, char ** argv)
     std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
   std::string manager_node_name = "controller_manager";
 
-<<<<<<< HEAD
   auto cm = std::make_shared<controller_manager::ControllerManager>(executor, manager_node_name);
-=======
-  rclcpp::NodeOptions cm_node_options = controller_manager::get_cm_node_options();
-  std::vector<std::string> node_arguments = cm_node_options.arguments();
-  for (int i = 1; i < argc; ++i)
-  {
-    if (node_arguments.empty() && std::string(argv[i]) != "--ros-args")
-    {
-      // A simple way to reject non ros args
-      continue;
-    }
-    node_arguments.push_back(argv[i]);
-  }
-  cm_node_options.arguments(node_arguments);
-
-  auto cm = std::make_shared<controller_manager::ControllerManager>(
-    executor, manager_node_name, "", cm_node_options);
 
   const bool use_sim_time = cm->get_parameter_or("use_sim_time", false);
-  rclcpp::Rate rate(cm->get_update_rate(), cm->get_clock());
-
-  const bool lock_memory = cm->get_parameter_or<bool>("lock_memory", true);
-  std::string message;
-  if (lock_memory && !realtime_tools::lock_memory(message))
-  {
-    RCLCPP_WARN(cm->get_logger(), "Unable to lock the memory : '%s'", message.c_str());
-  }
->>>>>>> d714e8b ([ros2_control_node] Handle simulation environment clocks (#1810))
+  rclcpp::Rate rate(cm->get_update_rate());
 
   const int cpu_affinity = cm->get_parameter_or<int>("cpu_affinity", -1);
   if (cpu_affinity >= 0)
