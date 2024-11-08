@@ -2403,22 +2403,15 @@ controller_interface::return_type ControllerManager::update(
             loaded_controller.c->trigger_update(time, controller_actual_period);
           trigger_status = trigger_result.ok;
           controller_ret = trigger_result.result;
-          if (trigger_status)
+          if (trigger_status && trigger_result.execution_time.has_value())
           {
-            loaded_controller.periodicity_statistics->AddMeasurement(
-              1.0 / controller_actual_period.seconds());
-            if (trigger_result.execution_time.has_value())
-            {
-              loaded_controller.execution_time_statistics->AddMeasurement(
-                static_cast<double>(trigger_result.execution_time.value().count()) / 1.e3);
-            }
+            loaded_controller.execution_time_statistics->AddMeasurement(
+              static_cast<double>(trigger_result.execution_time.value().count()) / 1.e3);
           }
-          else
+          if (trigger_status && trigger_result.period.has_value())
           {
-            // If an async controller misses it's trigger cycle, then it has to wait for next
-            // trigger cycle
             loaded_controller.periodicity_statistics->AddMeasurement(
-              1.0 / (controller_actual_period + controller_period).seconds());
+              1.0 / trigger_result.period.value().seconds());
           }
         }
         catch (const std::exception & e)
