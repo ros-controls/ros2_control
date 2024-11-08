@@ -20,13 +20,8 @@
 #include <thread>
 
 #include "controller_manager/controller_manager.hpp"
-<<<<<<< HEAD
 #include "rclcpp/rclcpp.hpp"
-#include "realtime_tools/thread_priority.hpp"
-=======
-#include "rclcpp/executors.hpp"
 #include "realtime_tools/realtime_helpers.hpp"
->>>>>>> 8fa60db (change from thread_priority.hpp to realtime_helpers.hpp (#1829))
 
 using namespace std::chrono_literals;
 
