@@ -2,6 +2,20 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* change from thread_priority.hpp to realtime_helpers.hpp (`#1829 <https://github.com/ros-controls/ros2_control/issues/1829>`_)
+* Use Clock instead of Rate for backward compatibility of rolling (`#1864 <https://github.com/ros-controls/ros2_control/issues/1864>`_)
+* [ros2_control_node] Handle simulation environment clocks (`#1810 <https://github.com/ros-controls/ros2_control/issues/1810>`_)
+* [CM] Fix controller missing update cycles in a real setup (`#1774 <https://github.com/ros-controls/ros2_control/issues/1774>`_)
+* [ros2_control_node] Add option to set the CPU affinity  (`#1852 <https://github.com/ros-controls/ros2_control/issues/1852>`_)
+* [ros2_control_node] Add the realtime_tools lock_memory method to prevent page faults (`#1822 <https://github.com/ros-controls/ros2_control/issues/1822>`_)
+* Fix CMP0115 (`#1830 <https://github.com/ros-controls/ros2_control/issues/1830>`_)
+* fix: typo use thread_priority (`#1844 <https://github.com/ros-controls/ros2_control/issues/1844>`_)
+* Fix Hardware spawner and add tests for it (`#1759 <https://github.com/ros-controls/ros2_control/issues/1759>`_)
+* add thread_priority option to the ros2_control_node (`#1820 <https://github.com/ros-controls/ros2_control/issues/1820>`_)
+* Contributors: Baris Yazici, Christoph Fröhlich, Felix Exner (fexner), Sai Kishor Kothakota
+
 4.19.0 (2024-10-26)
 -------------------
 * Fix timeout value in std output (`#1807 <https://github.com/ros-controls/ros2_control/issues/1807>`_)
