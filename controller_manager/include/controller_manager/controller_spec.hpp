@@ -39,6 +39,13 @@ using MovingAverageStatistics =
  */
 struct ControllerSpec
 {
+  ControllerSpec()
+  {
+    last_update_cycle_time = std::make_shared<rclcpp::Time>(0, 0, RCL_CLOCK_UNINITIALIZED);
+    execution_time_statistics = std::make_shared<MovingAverageStatistics>();
+    periodicity_statistics = std::make_shared<MovingAverageStatistics>();
+  }
+
   hardware_interface::ControllerInfo info;
   controller_interface::ControllerInterfaceBaseSharedPtr c;
   std::shared_ptr<rclcpp::Time> last_update_cycle_time;
