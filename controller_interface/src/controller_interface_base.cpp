@@ -166,6 +166,7 @@ ControllerUpdateStatus ControllerInterfaceBase::trigger_update(
   trigger_stats_.total_triggers++;
   if (is_async())
   {
+    const rclcpp::Time & last_trigger_time = async_handler_->get_current_callback_time();
     const auto result = async_handler_->trigger_async_callback(time, period);
     if (!result.first)
     {
@@ -182,6 +183,10 @@ ControllerUpdateStatus ControllerInterfaceBase::trigger_update(
     {
       status.execution_time = execution_time;
     }
+    if (last_trigger_time.get_clock_type() != RCL_CLOCK_UNINITIALIZED)
+    {
+      status.period = time - last_trigger_time;
+    }
   }
   else
   {
@@ -190,6 +195,7 @@ ControllerUpdateStatus ControllerInterfaceBase::trigger_update(
     status.result = update(time, period);
     status.execution_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
       std::chrono::steady_clock::now() - start_time);
+    status.period = period;
   }
   return status;
 }
