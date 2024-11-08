@@ -45,7 +45,6 @@ int main(int argc, char ** argv)
   auto cm = std::make_shared<controller_manager::ControllerManager>(executor, manager_node_name);
 
   const bool use_sim_time = cm->get_parameter_or("use_sim_time", false);
-  rclcpp::Rate rate(cm->get_update_rate(), cm->get_clock());
 
   const bool lock_memory = cm->get_parameter_or<bool>("lock_memory", true);
   std::string message;
@@ -72,7 +71,7 @@ int main(int argc, char ** argv)
     thread_priority);
 
   std::thread cm_thread(
-    [cm, thread_priority, use_sim_time, &rate]()
+    [cm, thread_priority, use_sim_time]()
     {
       if (realtime_tools::has_realtime_kernel())
       {
@@ -126,7 +125,7 @@ int main(int argc, char ** argv)
         next_iteration_time += period;
         if (use_sim_time)
         {
-          rate.sleep();
+          cm->get_clock()->sleep_until(current_time + period);
         }
         else
         {
