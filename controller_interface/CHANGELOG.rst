@@ -2,8 +2,8 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.20.0 (2024-11-08)
+-------------------
 * reset the async variables upon activation to work post exceptions (`#1860 <https://github.com/ros-controls/ros2_control/issues/1860>`_)
 * [CM] Fix controller missing update cycles in a real setup (`#1774 <https://github.com/ros-controls/ros2_control/issues/1774>`_)
 * Contributors: Sai Kishor Kothakota

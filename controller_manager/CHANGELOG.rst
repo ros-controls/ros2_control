@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.20.0 (2024-11-08)
+-------------------
 * change from thread_priority.hpp to realtime_helpers.hpp (`#1829 <https://github.com/ros-controls/ros2_control/issues/1829>`_)
 * Use Clock instead of Rate for backward compatibility of rolling (`#1864 <https://github.com/ros-controls/ros2_control/issues/1864>`_)
 * [ros2_control_node] Handle simulation environment clocks (`#1810 <https://github.com/ros-controls/ros2_control/issues/1810>`_)
