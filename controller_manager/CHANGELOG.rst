@@ -2,6 +2,29 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* [ros2_control_node] Handle simulation environment clocks (backport `#1810 <https://github.com/ros-controls/ros2_control/issues/1810>`_) (`#1862 <https://github.com/ros-controls/ros2_control/issues/1862>`_)
+* Change from thread_priority.hpp to realtime_helpers.hpp (backport `#1829 <https://github.com/ros-controls/ros2_control/issues/1829>`_) (`#1866 <https://github.com/ros-controls/ros2_control/issues/1866>`_)
+* [ros2_control_node] Add option to set the CPU affinity  (backport `#1852 <https://github.com/ros-controls/ros2_control/issues/1852>`_) (`#1856 <https://github.com/ros-controls/ros2_control/issues/1856>`_)
+* [ros2_control_node] Add the realtime_tools lock_memory method to prevent page faults (backport `#1822 <https://github.com/ros-controls/ros2_control/issues/1822>`_) (`#1850 <https://github.com/ros-controls/ros2_control/issues/1850>`_)
+* fix: typo use thread_priority (backport `#1844 <https://github.com/ros-controls/ros2_control/issues/1844>`_) (`#1847 <https://github.com/ros-controls/ros2_control/issues/1847>`_)
+* [Spawner] Add support for wildcard entries in the controller param files  (`#1724 <https://github.com/ros-controls/ros2_control/issues/1724>`_) (`#1835 <https://github.com/ros-controls/ros2_control/issues/1835>`_)
+* Add test coverage for `params_file` parameter in spawner/unspawner tests (`#1754 <https://github.com/ros-controls/ros2_control/issues/1754>`_) (`#1838 <https://github.com/ros-controls/ros2_control/issues/1838>`_)
+* Fix unload of controllers when spawned with `--unload-on-kill` (`#1717 <https://github.com/ros-controls/ros2_control/issues/1717>`_) (`#1842 <https://github.com/ros-controls/ros2_control/issues/1842>`_)
+* add thread_priority option to the ros2_control_node (`#1820 <https://github.com/ros-controls/ros2_control/issues/1820>`_) (`#1824 <https://github.com/ros-controls/ros2_control/issues/1824>`_)
+* Add few warning compiler options to error (backport `#1181 <https://github.com/ros-controls/ros2_control/issues/1181>`_) (`#1816 <https://github.com/ros-controls/ros2_control/issues/1816>`_)
+* Add -Wconversion flag to protect future developments (`#1053 <https://github.com/ros-controls/ros2_control/issues/1053>`_) (`#1815 <https://github.com/ros-controls/ros2_control/issues/1815>`_)
+* Fix timeout value in std output (backport `#1807 <https://github.com/ros-controls/ros2_control/issues/1807>`_) (`#1812 <https://github.com/ros-controls/ros2_control/issues/1812>`_)
+* Improve launch utils to support the multiple controller names (`#1782 <https://github.com/ros-controls/ros2_control/issues/1782>`_) (`#1783 <https://github.com/ros-controls/ros2_control/issues/1783>`_)
+* allow extra spawner arguments to not declare every argument in launch utils (`#1505 <https://github.com/ros-controls/ros2_control/issues/1505>`_) (`#1792 <https://github.com/ros-controls/ros2_control/issues/1792>`_)
+* Refactor spawner to be able to reuse code for ros2controlcli (backport `#1661 <https://github.com/ros-controls/ros2_control/issues/1661>`_) (`#1695 <https://github.com/ros-controls/ros2_control/issues/1695>`_)
+* [rqt_controller_manager] Add hardware components (`#1455 <https://github.com/ros-controls/ros2_control/issues/1455>`_) (`#1586 <https://github.com/ros-controls/ros2_control/issues/1586>`_)
+* [CM] Handle other exceptions while loading the controller plugin (`#1731 <https://github.com/ros-controls/ros2_control/issues/1731>`_) (`#1733 <https://github.com/ros-controls/ros2_control/issues/1733>`_)
+* [CM] Throw an exception when the components initially fail to be in the required state (backport `#1729 <https://github.com/ros-controls/ros2_control/issues/1729>`_) (`#1777 <https://github.com/ros-controls/ros2_control/issues/1777>`_)
+* Fix spawner tests timeout on source builds (backport `#1692 <https://github.com/ros-controls/ros2_control/issues/1692>`_) (`#1697 <https://github.com/ros-controls/ros2_control/issues/1697>`_)
+* Contributors: mergify[bot]
+
 2.43.1 (2024-09-11)
 -------------------
 * controller_manager: Add space to string literal concatenation (`#1245 <https://github.com/ros-controls/ros2_control/issues/1245>`_) (`#1747 <https://github.com/ros-controls/ros2_control/issues/1747>`_)

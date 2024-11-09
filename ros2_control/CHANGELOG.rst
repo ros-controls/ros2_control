@@ -2,6 +2,11 @@
 Changelog for package ros2_control
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add custom rosdoc2 config for ros2_control metapackage (`#1484 <https://github.com/ros-controls/ros2_control/issues/1484>`_) (`#1588 <https://github.com/ros-controls/ros2_control/issues/1588>`_)
+* Contributors: mergify[bot]
+
 2.43.1 (2024-09-11)
 -------------------
 

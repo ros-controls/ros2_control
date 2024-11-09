@@ -2,6 +2,13 @@
 Changelog for package hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add few warning compiler options to error (backport `#1181 <https://github.com/ros-controls/ros2_control/issues/1181>`_) (`#1816 <https://github.com/ros-controls/ros2_control/issues/1816>`_)
+* Add -Wconversion flag to protect future developments (`#1053 <https://github.com/ros-controls/ros2_control/issues/1053>`_) (`#1815 <https://github.com/ros-controls/ros2_control/issues/1815>`_)
+* Add resources_lock\_ lock_guards to avoid race condition when loading robot_description through topic (backport `#1451 <https://github.com/ros-controls/ros2_control/issues/1451>`_) (`#1599 <https://github.com/ros-controls/ros2_control/issues/1599>`_)
+* Contributors: mergify[bot]
+
 2.43.1 (2024-09-11)
 -------------------
 

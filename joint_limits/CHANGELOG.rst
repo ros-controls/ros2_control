@@ -2,6 +2,12 @@
 Changelog for package joint_limits
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add few warning compiler options to error (backport `#1181 <https://github.com/ros-controls/ros2_control/issues/1181>`_) (`#1816 <https://github.com/ros-controls/ros2_control/issues/1816>`_)
+* Add -Wconversion flag to protect future developments (`#1053 <https://github.com/ros-controls/ros2_control/issues/1053>`_) (`#1815 <https://github.com/ros-controls/ros2_control/issues/1815>`_)
+* Contributors: mergify[bot]
+
 2.43.1 (2024-09-11)
 -------------------
 
