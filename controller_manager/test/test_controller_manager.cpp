@@ -577,6 +577,17 @@ TEST_P(TestControllerManagerWithUpdateRates, per_controller_equal_and_higher_upd
     EXPECT_THAT(
       test_controller->update_period_.seconds(),
       testing::AllOf(testing::Ge(0.9 / cm_update_rate), testing::Lt((1.1 / cm_update_rate))));
+    ASSERT_EQ(
+      test_controller->internal_counter,
+      cm_->get_loaded_controllers()[0].execution_time_statistics->GetCount());
+    ASSERT_EQ(
+      test_controller->internal_counter - 1,
+      cm_->get_loaded_controllers()[0].periodicity_statistics->GetCount())
+      << "The first update is not counted in periodicity statistics";
+    EXPECT_THAT(
+      cm_->get_loaded_controllers()[0].periodicity_statistics->Average(),
+      testing::AllOf(
+        testing::Ge(0.95 * cm_->get_update_rate()), testing::Lt((1.05 * cm_->get_update_rate()))));
     loop_rate.sleep();
   }
   // if we do 2 times of the controller_manager update rate, the internal counter should be
