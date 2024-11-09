@@ -191,8 +191,6 @@ if(BUILD_TESTING)
     ros2_control_test_assets::ros2_control_test_assets
   )
 
-<<<<<<< HEAD
-=======
   ament_add_gmock(test_hardware_spawner
     test/test_hardware_spawner
     TIMEOUT 120
@@ -202,10 +200,6 @@ if(BUILD_TESTING)
     ros2_control_test_assets::ros2_control_test_assets
   )
 
-  install(FILES test/test_controller_spawner_with_fallback_controllers.yaml
-    DESTINATION test)
-
->>>>>>> 5dbd6d5 (Fix Hardware spawner and add tests for it (#1759))
   install(FILES test/test_controller_spawner_with_type.yaml
   DESTINATION test)
 
