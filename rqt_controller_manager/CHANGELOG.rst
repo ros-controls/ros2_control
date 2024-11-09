@@ -2,8 +2,8 @@
 Changelog for package rqt_controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.44.0 (2024-11-09)
+-------------------
 * fix: call configure_controller  on 'unconfigured' state instead load_controller (`#1794 <https://github.com/ros-controls/ros2_control/issues/1794>`_) (`#1797 <https://github.com/ros-controls/ros2_control/issues/1797>`_)
 * [rqt_controller_manager] Add hardware components (`#1455 <https://github.com/ros-controls/ros2_control/issues/1455>`_) (`#1586 <https://github.com/ros-controls/ros2_control/issues/1586>`_)
 * Contributors: mergify[bot]

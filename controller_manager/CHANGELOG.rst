@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.44.0 (2024-11-09)
+-------------------
 * [ros2_control_node] Handle simulation environment clocks (backport `#1810 <https://github.com/ros-controls/ros2_control/issues/1810>`_) (`#1862 <https://github.com/ros-controls/ros2_control/issues/1862>`_)
 * Change from thread_priority.hpp to realtime_helpers.hpp (backport `#1829 <https://github.com/ros-controls/ros2_control/issues/1829>`_) (`#1866 <https://github.com/ros-controls/ros2_control/issues/1866>`_)
 * [ros2_control_node] Add option to set the CPU affinity  (backport `#1852 <https://github.com/ros-controls/ros2_control/issues/1852>`_) (`#1856 <https://github.com/ros-controls/ros2_control/issues/1856>`_)
