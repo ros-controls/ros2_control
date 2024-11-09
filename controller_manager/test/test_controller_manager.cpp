@@ -683,6 +683,8 @@ TEST_P(TestControllerUpdateRates, check_the_controller_update_rate)
   const auto initial_counter = test_controller->internal_counter;
   // don't start with zero to check if the period is correct if controller is activated anytime
   rclcpp::Time time = time_;
+  const auto exp_periodicity =
+    cm_update_rate / std::ceil(static_cast<double>(cm_update_rate) / controller_update_rate);
   for (size_t update_counter = 0; update_counter <= 10 * cm_update_rate; ++update_counter)
   {
     rclcpp::Time old_time = time;
@@ -691,19 +693,36 @@ TEST_P(TestControllerUpdateRates, check_the_controller_update_rate)
     EXPECT_EQ(
       controller_interface::return_type::OK,
       cm_->update(time, rclcpp::Duration::from_seconds(0.01)));
-    // In case of a non perfect divisor, the update period should respect the rule
-    // [controller_update_rate, 2*controller_update_rate)
-    EXPECT_THAT(
-      test_controller->update_period_.seconds(),
-      testing::AllOf(
-        testing::Gt(0.99 * controller_period),
-        testing::Lt((1.05 * controller_period) + PERIOD.seconds())))
-      << "update_counter: " << update_counter << " desired controller period: " << controller_period
-      << " actual controller period: " << test_controller->update_period_.seconds();
 
-    if (update_counter % cm_update_rate == 0)
+    if (test_controller->internal_counter - initial_counter > 0)
+    {
+      // In case of a non perfect divisor, the update period should respect the rule
+      // [controller_update_rate, 2*controller_update_rate)
+      EXPECT_THAT(
+        test_controller->update_period_.seconds(),
+        testing::AllOf(
+          testing::Gt(0.99 * controller_period),
+          testing::Lt((1.05 * controller_period) + PERIOD.seconds())))
+        << "update_counter: " << update_counter
+        << " desired controller period: " << controller_period
+        << " actual controller period: " << test_controller->update_period_.seconds();
+    }
+    else
+    {
+      // Check that the first cycle update period is zero
+      EXPECT_EQ(test_controller->update_period_.seconds(), 0.0);
+    }
+
+    if (update_counter > 0 && update_counter % cm_update_rate == 0)
     {
       const double no_of_secs_passed = static_cast<double>(update_counter) / cm_update_rate;
+      const auto actual_counter = test_controller->internal_counter - initial_counter;
+      const unsigned int exp_counter =
+        static_cast<unsigned int>(exp_periodicity * no_of_secs_passed);
+      SCOPED_TRACE(
+        "The internal counter is : " + std::to_string(actual_counter) + " [" +
+        std::to_string(exp_counter - 1) + ", " + std::to_string(exp_counter + 1) +
+        "] and number of seconds passed : " + std::to_string(no_of_secs_passed));
       // NOTE: here EXPECT_NEAR is used because it is observed that in the first iteration of whole
       // cycle of cm_update_rate counts, there is one count missing, but in rest of the 9 cycles it
       // is clearly tracking, so adding 1 here won't affect the final count.
@@ -711,10 +730,17 @@ TEST_P(TestControllerUpdateRates, check_the_controller_update_rate)
       // cycle and then on accumulating 37 on every other update cycle so at the end of the 10
       // cycles it will have 369 instead of 370.
       EXPECT_THAT(
-        test_controller->internal_counter - initial_counter,
-        testing::AnyOf(
-          testing::Ge((controller_update_rate - 1) * no_of_secs_passed),
-          testing::Lt((controller_update_rate * no_of_secs_passed))));
+        actual_counter, testing::AnyOf(testing::Ge(exp_counter - 1), testing::Le(exp_counter + 1)));
+      ASSERT_EQ(
+        test_controller->internal_counter,
+        cm_->get_loaded_controllers()[0].execution_time_statistics->GetCount());
+      ASSERT_EQ(
+        test_controller->internal_counter - 1,
+        cm_->get_loaded_controllers()[0].periodicity_statistics->GetCount())
+        << "The first update is not counted in periodicity statistics";
+      EXPECT_THAT(
+        cm_->get_loaded_controllers()[0].periodicity_statistics->Average(),
+        testing::AllOf(testing::Ge(0.95 * exp_periodicity), testing::Lt((1.05 * exp_periodicity))));
     }
   }
 }
