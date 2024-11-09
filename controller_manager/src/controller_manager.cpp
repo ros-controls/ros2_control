@@ -1766,7 +1766,6 @@ void ControllerManager::activate_controllers(
     try
     {
       found_it->periodicity_statistics->Reset();
-      found_it->periodicity_statistics->AddMeasurement(controller->get_update_rate());
       found_it->execution_time_statistics->Reset();
       const auto new_state = controller->get_node()->activate();
       if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
