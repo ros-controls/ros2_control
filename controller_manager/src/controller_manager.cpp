@@ -2361,12 +2361,14 @@ controller_interface::return_type ControllerManager::update(
                                   : rclcpp::Duration::from_seconds((1.0 / controller_update_rate));
 
       const rclcpp::Time current_time = get_clock()->now();
+      bool first_update_cycle = false;
       if (
         *loaded_controller.last_update_cycle_time ==
         rclcpp::Time(0, 0, this->get_node_clock_interface()->get_clock()->get_clock_type()))
       {
+        first_update_cycle = true;
         // it is zero after activation
-        *loaded_controller.last_update_cycle_time = current_time - controller_period;
+        *loaded_controller.last_update_cycle_time = current_time;
         RCLCPP_DEBUG(
           get_logger(), "Setting last_update_cycle_time to %fs for the controller : %s",
           loaded_controller.last_update_cycle_time->seconds(), loaded_controller.info.name.c_str());
@@ -2384,7 +2386,7 @@ controller_interface::return_type ControllerManager::update(
         run_controller_at_cm_rate ||
         (time ==
          rclcpp::Time(0, 0, this->get_node_clock_interface()->get_clock()->get_clock_type())) ||
-        (controller_actual_period.seconds() * controller_update_rate >= 0.99);
+        (controller_actual_period.seconds() * controller_update_rate >= 0.99) || first_update_cycle;
 
       RCLCPP_DEBUG(
         get_logger(), "update_loop_counter: '%d ' controller_go: '%s ' controller_name: '%s '",
@@ -2407,7 +2409,7 @@ controller_interface::return_type ControllerManager::update(
             loaded_controller.execution_time_statistics->AddMeasurement(
               static_cast<double>(trigger_result.execution_time.value().count()) / 1.e3);
           }
-          if (trigger_status && trigger_result.period.has_value())
+          if (!first_update_cycle && trigger_status && trigger_result.period.has_value())
           {
             loaded_controller.periodicity_statistics->AddMeasurement(
               1.0 / trigger_result.period.value().seconds());
