@@ -741,6 +741,9 @@ TEST_P(TestControllerUpdateRates, check_the_controller_update_rate)
       EXPECT_THAT(
         cm_->get_loaded_controllers()[0].periodicity_statistics->Average(),
         testing::AllOf(testing::Ge(0.95 * exp_periodicity), testing::Lt((1.05 * exp_periodicity))));
+      EXPECT_LT(
+        cm_->get_loaded_controllers()[0].execution_time_statistics->Average(),
+        50.0);  // 50 microseconds
     }
   }
 }
