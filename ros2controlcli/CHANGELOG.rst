@@ -2,6 +2,9 @@
 Changelog for package ros2controlcli
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.20.0 (2024-11-08)
+-------------------
+
 4.19.0 (2024-10-26)
 -------------------
 * [ros2controlcli] Fix the missing exported state interface printing (`#1800 <https://github.com/ros-controls/ros2_control/issues/1800>`_)
