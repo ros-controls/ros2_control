@@ -181,7 +181,6 @@ if(BUILD_TESTING)
   )
   target_link_libraries(test_hardware_spawner
     controller_manager
-    ros2_control_test_assets::ros2_control_test_assets
   )
 
   install(FILES test/test_controller_spawner_with_type.yaml
