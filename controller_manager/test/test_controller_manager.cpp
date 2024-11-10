@@ -366,6 +366,7 @@ TEST_P(TestControllerManagerWithStrictness, async_controller_lifecycle)
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, test_controller->get_lifecycle_state().id());
 
+  time_ = cm_->get_clock()->now();
   EXPECT_EQ(
     controller_interface::return_type::OK,
     cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
@@ -373,6 +374,21 @@ TEST_P(TestControllerManagerWithStrictness, async_controller_lifecycle)
   std::this_thread::sleep_for(
     std::chrono::milliseconds(1000 / (test_controller->get_update_rate())));
   EXPECT_EQ(test_controller->internal_counter, 1u);
+  EXPECT_EQ(test_controller->update_period_.seconds(), 0.0)
+    << "The first trigger cycle should have zero period";
+
+  const double exp_period = (cm_->get_clock()->now() - time_).seconds();
+  time_ = cm_->get_clock()->now();
+  EXPECT_EQ(
+    controller_interface::return_type::OK,
+    cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
+  EXPECT_EQ(test_controller->internal_counter, 1u);
+  std::this_thread::sleep_for(
+    std::chrono::milliseconds(1000 / (test_controller->get_update_rate())));
+  EXPECT_EQ(test_controller->internal_counter, 2u);
+  EXPECT_THAT(
+    test_controller->update_period_.seconds(),
+    testing::AllOf(testing::Gt(0.6 * exp_period), testing::Lt((1.4 * exp_period))));
   size_t last_internal_counter = test_controller->internal_counter;
 
   // Stop controller, will take effect at the end of the update function
