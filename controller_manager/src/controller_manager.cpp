@@ -3106,8 +3106,15 @@ void ControllerManager::controller_activity_diagnostic_callback(
         << ", StdDev: " << statistics_data.standard_deviation;
     return oss.str();
   };
+
+  // Variable to define the overall status of the controller diagnostics
+  auto level = diagnostic_msgs::msg::DiagnosticStatus::OK;
+
+  std::vector<std::string> high_exec_time_controllers;
+  std::vector<std::string> bad_periodicity_async_controllers;
   for (size_t i = 0; i < controllers.size(); ++i)
   {
+    const bool is_async = controllers[i].c->is_async();
     if (!is_controller_active(controllers[i].c))
     {
       all_active = false;
@@ -3116,37 +3123,102 @@ void ControllerManager::controller_activity_diagnostic_callback(
       controllers[i].info.name + state_suffix, controllers[i].c->get_lifecycle_state().label());
     if (is_controller_active(controllers[i].c))
     {
+      const auto periodicity_stats = controllers[i].periodicity_statistics->GetStatistics();
+      const auto exec_time_stats = controllers[i].execution_time_statistics->GetStatistics();
       stat.add(
-        controllers[i].info.name + exec_time_suffix,
-        make_stats_string(controllers[i].execution_time_statistics->GetStatistics(), "us"));
-      if (controllers[i].c->is_async())
+        controllers[i].info.name + exec_time_suffix, make_stats_string(exec_time_stats, "us"));
+      if (is_async)
       {
         stat.add(
           controllers[i].info.name + periodicity_suffix,
-          make_stats_string(controllers[i].periodicity_statistics->GetStatistics(), "Hz"));
+          make_stats_string(periodicity_stats, "Hz"));
+        const double periodicity_percentage =
+          (periodicity_stats.average / static_cast<double>(controllers[i].c->get_update_rate())) *
+          100;
+        const double periodicity_std_dev_percentage =
+          (periodicity_stats.standard_deviation / periodicity_stats.average) * 100.0;
+        if (
+          periodicity_percentage < periodicity_mean_error_threshold ||
+          periodicity_std_dev_percentage > periodicity_std_dev_error_threshold)
+        {
+          level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
+          add_element_to_list(bad_periodicity_async_controllers, controllers[i].info.name);
+        }
+        else if (
+          periodicity_percentage < periodicity_mean_warn_threshold ||
+          periodicity_std_dev_percentage > periodicity_std_dev_warn_threshold)
+        {
+          if (level != diagnostic_msgs::msg::DiagnosticStatus::ERROR)
+          {
+            level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
+          }
+          add_element_to_list(bad_periodicity_async_controllers, controllers[i].info.name);
+        }
+      }
+      const double max_exp_exec_time =
+        is_async ? 1.e6 / controllers[i].c->get_update_rate() : 0.0;
+      if (
+        (exec_time_stats.average - max_exp_exec_time) > exec_time_mean_error_threshold ||
+        (max_exp_exec_time > 0.0 &&
+         (exec_time_stats.standard_deviation / exec_time_stats.average) * 100.0 >
+           exec_time_std_dev_error_threshold))
+      {
+        level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
+        high_exec_time_controllers.push_back(controllers[i].info.name);
+      }
+      else if (
+        (exec_time_stats.average - max_exp_exec_time) > exec_time_mean_warn_threshold ||
+        (max_exp_exec_time > 0.0 &&
+         (exec_time_stats.standard_deviation / exec_time_stats.average) * 100.0 >
+           exec_time_std_dev_warn_threshold))
+      {
+        if (level != diagnostic_msgs::msg::DiagnosticStatus::ERROR)
+        {
+          level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
+        }
+        high_exec_time_controllers.push_back(controllers[i].info.name);
       }
     }
   }
 
+  stat.summary(
+    diagnostic_msgs::msg::DiagnosticStatus::OK,
+    all_active ? "All controllers are active" : "Not all controllers are active");
+
+  if (!high_exec_time_controllers.empty())
+  {
+    std::string high_exec_time_controllers_string;
+    for (const auto & controller : high_exec_time_controllers)
+    {
+      high_exec_time_controllers_string.append(controller);
+      high_exec_time_controllers_string.append(" ");
+    }
+    stat.mergeSummary(
+      level, "\nControllers with high execution time : [ " + high_exec_time_controllers_string + "]");
+  }
+  if (!bad_periodicity_async_controllers.empty())
+  {
+    std::string bad_periodicity_async_controllers_string;
+    for (const auto & controller : bad_periodicity_async_controllers)
+    {
+      bad_periodicity_async_controllers_string.append(controller);
+      bad_periodicity_async_controllers_string.append(" ");
+    }
+    stat.mergeSummary(
+      level,
+      "\nControllers with bad periodicity : [ " + bad_periodicity_async_controllers_string + "]");
+  }
+
   if (!atleast_one_hw_active)
   {
-    stat.summary(
+    stat.mergeSummary(
       diagnostic_msgs::msg::DiagnosticStatus::ERROR,
       "No hardware components are currently active to activate controllers");
   }
-  else
+  else if (controllers.empty())
   {
-    if (controllers.empty())
-    {
-      stat.summary(
-        diagnostic_msgs::msg::DiagnosticStatus::WARN, "No controllers are currently loaded");
-    }
-    else
-    {
-      stat.summary(
-        diagnostic_msgs::msg::DiagnosticStatus::OK,
-        all_active ? "All controllers are active" : "Not all controllers are active");
-    }
+    stat.mergeSummary(
+      diagnostic_msgs::msg::DiagnosticStatus::WARN, "No controllers are currently loaded");
   }
 }
 
