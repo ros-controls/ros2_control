@@ -3073,24 +3073,24 @@ void ControllerManager::controller_activity_diagnostic_callback(
   const std::string param_prefix = "diagnostics.threshold.controllers";
   const std::string periodicity_suffix = ".periodicity";
   const std::string exec_time_suffix = ".execution_time";
-  const std::string mean_suffix = ".mean";
+  const std::string mean_error_suffix = ".mean_error";
   const std::string std_dev_suffix = ".standard_deviation";
   const std::string state_suffix = ".state";
 
   // Get threshold values from param server
   const double periodicity_mean_warn_threshold =
-    this->get_parameter_or(param_prefix + periodicity_suffix + mean_suffix + ".warn", 5.0);
+    this->get_parameter_or(param_prefix + periodicity_suffix + mean_error_suffix + ".warn", 5.0);
   const double periodicity_mean_error_threshold =
-    this->get_parameter_or(param_prefix + periodicity_suffix + mean_suffix + ".error", 10.0);
+    this->get_parameter_or(param_prefix + periodicity_suffix + mean_error_suffix + ".error", 10.0);
   const double periodicity_std_dev_warn_threshold =
     this->get_parameter_or(param_prefix + periodicity_suffix + std_dev_suffix + ".warn", 5.0);
   const double periodicity_std_dev_error_threshold =
     this->get_parameter_or(param_prefix + periodicity_suffix + std_dev_suffix + ".error", 10.0);
 
   const double exec_time_mean_warn_threshold =
-    this->get_parameter_or(param_prefix + exec_time_suffix + mean_suffix + ".warn", 1000.0);
+    this->get_parameter_or(param_prefix + exec_time_suffix + mean_error_suffix + ".warn", 1000.0);
   const double exec_time_mean_error_threshold =
-    this->get_parameter_or(param_prefix + exec_time_suffix + mean_suffix + ".error", 2000.0);
+    this->get_parameter_or(param_prefix + exec_time_suffix + mean_error_suffix + ".error", 2000.0);
   const double exec_time_std_dev_warn_threshold =
     this->get_parameter_or(param_prefix + exec_time_suffix + std_dev_suffix + ".warn", 100.0);
   const double exec_time_std_dev_error_threshold =
