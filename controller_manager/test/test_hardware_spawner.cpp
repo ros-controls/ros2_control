@@ -232,7 +232,7 @@ class TestHardwareSpawnerWithNamespacedCM
 public:
   TestHardwareSpawnerWithNamespacedCM()
   : ControllerManagerFixture<controller_manager::ControllerManager>(
-      ros2_control_test_assets::minimal_robot_urdf, "foo_namespace"),
+      ros2_control_test_assets::minimal_robot_urdf, false, "foo_namespace"),
     RMServiceCaller("foo_namespace/" + std::string(TEST_CM_NAME))
   {
     cm_->set_parameter(
