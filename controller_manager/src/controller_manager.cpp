@@ -3092,9 +3092,9 @@ void ControllerManager::controller_activity_diagnostic_callback(
   const double exec_time_mean_error_threshold =
     this->get_parameter_or(param_prefix + exec_time_suffix + mean_suffix + ".error", 2000.0);
   const double exec_time_std_dev_warn_threshold =
-    this->get_parameter_or(param_prefix + periodicity_suffix + std_dev_suffix + ".warn", 5.0);
+    this->get_parameter_or(param_prefix + exec_time_suffix + std_dev_suffix + ".warn", 100.0);
   const double exec_time_std_dev_error_threshold =
-    this->get_parameter_or(param_prefix + periodicity_suffix + std_dev_suffix + ".error", 10.0);
+    this->get_parameter_or(param_prefix + exec_time_suffix + std_dev_suffix + ".error", 200.0);
 
   auto make_stats_string =
     [](const auto & statistics_data, const std::string & measurement_unit) -> std::string
@@ -3102,7 +3102,7 @@ void ControllerManager::controller_activity_diagnostic_callback(
     std::ostringstream oss;
     oss << std::fixed << std::setprecision(2);
     oss << "Avg: " << statistics_data.average << " [" << statistics_data.min << " - "
-        << statistics_data.max << "]" << " " << measurement_unit
+        << statistics_data.max << "] " << measurement_unit
         << ", StdDev: " << statistics_data.standard_deviation;
     return oss.str();
   };
@@ -3131,22 +3131,20 @@ void ControllerManager::controller_activity_diagnostic_callback(
       {
         stat.add(
           controllers[i].info.name + periodicity_suffix,
-          make_stats_string(periodicity_stats, "Hz"));
-        const double periodicity_percentage =
-          (periodicity_stats.average / static_cast<double>(controllers[i].c->get_update_rate())) *
-          100;
-        const double periodicity_std_dev_percentage =
-          (periodicity_stats.standard_deviation / periodicity_stats.average) * 100.0;
+          make_stats_string(periodicity_stats, "Hz") +
+            " -> Desired : " + std::to_string(controllers[i].c->get_update_rate()) + " Hz");
+        const double periodicity_error = std::abs(
+          periodicity_stats.average - static_cast<double>(controllers[i].c->get_update_rate()));
         if (
-          periodicity_percentage < periodicity_mean_error_threshold ||
-          periodicity_std_dev_percentage > periodicity_std_dev_error_threshold)
+          periodicity_error > periodicity_mean_error_threshold ||
+          periodicity_stats.standard_deviation > periodicity_std_dev_error_threshold)
         {
           level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
           add_element_to_list(bad_periodicity_async_controllers, controllers[i].info.name);
         }
         else if (
-          periodicity_percentage < periodicity_mean_warn_threshold ||
-          periodicity_std_dev_percentage > periodicity_std_dev_warn_threshold)
+          periodicity_error > periodicity_mean_warn_threshold ||
+          periodicity_stats.standard_deviation > periodicity_std_dev_warn_threshold)
         {
           if (level != diagnostic_msgs::msg::DiagnosticStatus::ERROR)
           {
@@ -3155,22 +3153,17 @@ void ControllerManager::controller_activity_diagnostic_callback(
           add_element_to_list(bad_periodicity_async_controllers, controllers[i].info.name);
         }
       }
-      const double max_exp_exec_time =
-        is_async ? 1.e6 / controllers[i].c->get_update_rate() : 0.0;
+      const double max_exp_exec_time = is_async ? 1.e6 / controllers[i].c->get_update_rate() : 0.0;
       if (
         (exec_time_stats.average - max_exp_exec_time) > exec_time_mean_error_threshold ||
-        (max_exp_exec_time > 0.0 &&
-         (exec_time_stats.standard_deviation / exec_time_stats.average) * 100.0 >
-           exec_time_std_dev_error_threshold))
+        exec_time_stats.standard_deviation > exec_time_std_dev_error_threshold)
       {
         level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
         high_exec_time_controllers.push_back(controllers[i].info.name);
       }
       else if (
         (exec_time_stats.average - max_exp_exec_time) > exec_time_mean_warn_threshold ||
-        (max_exp_exec_time > 0.0 &&
-         (exec_time_stats.standard_deviation / exec_time_stats.average) * 100.0 >
-           exec_time_std_dev_warn_threshold))
+        exec_time_stats.standard_deviation > exec_time_std_dev_warn_threshold)
       {
         if (level != diagnostic_msgs::msg::DiagnosticStatus::ERROR)
         {
@@ -3194,7 +3187,8 @@ void ControllerManager::controller_activity_diagnostic_callback(
       high_exec_time_controllers_string.append(" ");
     }
     stat.mergeSummary(
-      level, "\nControllers with high execution time : [ " + high_exec_time_controllers_string + "]");
+      level,
+      "\nControllers with high execution time : [ " + high_exec_time_controllers_string + "]");
   }
   if (!bad_periodicity_async_controllers.empty())
   {
