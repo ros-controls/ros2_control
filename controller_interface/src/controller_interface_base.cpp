@@ -166,7 +166,7 @@ ControllerUpdateStatus ControllerInterfaceBase::trigger_update(
   trigger_stats_.total_triggers++;
   if (is_async())
   {
-    const rclcpp::Time & last_trigger_time = async_handler_->get_current_callback_time();
+    const rclcpp::Time last_trigger_time = async_handler_->get_current_callback_time();
     const auto result = async_handler_->trigger_async_callback(time, period);
     if (!result.first)
     {
