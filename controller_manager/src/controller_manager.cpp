@@ -3266,13 +3266,13 @@ void ControllerManager::controller_manager_diagnostic_callback(
   diagnostic_updater::DiagnosticStatusWrapper & stat)
 {
   const std::string periodicity_stat_name = "periodicity";
+  const auto cm_stats = periodicity_stats_.GetStatistics();
   stat.add("update_rate", std::to_string(get_update_rate()));
-  stat.add(periodicity_stat_name + ".average", std::to_string(periodicity_stats_.Average()));
+  stat.add(periodicity_stat_name + ".average", std::to_string(cm_stats.average));
   stat.add(
-    periodicity_stat_name + ".standard_deviation",
-    std::to_string(periodicity_stats_.StandardDeviation()));
-  stat.add(periodicity_stat_name + ".min", std::to_string(periodicity_stats_.Min()));
-  stat.add(periodicity_stat_name + ".max", std::to_string(periodicity_stats_.Max()));
+    periodicity_stat_name + ".standard_deviation", std::to_string(cm_stats.standard_deviation));
+  stat.add(periodicity_stat_name + ".min", std::to_string(cm_stats.min));
+  stat.add(periodicity_stat_name + ".max", std::to_string(cm_stats.max));
   if (is_resource_manager_initialized())
   {
     stat.summary(diagnostic_msgs::msg::DiagnosticStatus::OK, "Controller Manager is running");
@@ -3307,19 +3307,19 @@ void ControllerManager::controller_manager_diagnostic_callback(
   const double periodicity_std_dev_error_threshold =
     this->get_parameter_or(param_prefix + periodicity_suffix + std_dev_suffix + ".error", 10.0);
 
-  const double periodicity_error = std::abs(periodicity_stats_.Average() - get_update_rate());
+  const double periodicity_error = std::abs(cm_stats.average - get_update_rate());
   const std::string diag_summary =
-    "Controller Manager has bad periodicity : " + std::to_string(periodicity_stats_.Average()) +
+    "Controller Manager has bad periodicity : " + std::to_string(cm_stats.average) +
     " Hz. Expected consistent " + std::to_string(get_update_rate()) + " Hz";
   if (
     periodicity_error > periodicity_mean_error_threshold ||
-    periodicity_stats_.StandardDeviation() > periodicity_std_dev_error_threshold)
+    cm_stats.standard_deviation > periodicity_std_dev_error_threshold)
   {
     stat.mergeSummary(diagnostic_msgs::msg::DiagnosticStatus::ERROR, diag_summary);
   }
   else if (
     periodicity_error > periodicity_mean_warn_threshold ||
-    periodicity_stats_.StandardDeviation() > periodicity_std_dev_warn_threshold)
+    cm_stats.standard_deviation > periodicity_std_dev_warn_threshold)
   {
     stat.mergeSummary(diagnostic_msgs::msg::DiagnosticStatus::WARN, diag_summary);
   }
