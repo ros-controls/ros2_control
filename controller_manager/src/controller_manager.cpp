@@ -3096,9 +3096,12 @@ void ControllerManager::controller_activity_diagnostic_callback(
       stat.add(
         controllers[i].info.name + exec_time_suffix,
         make_stats_string(controllers[i].execution_time_statistics->GetStatistics(), "us"));
-      stat.add(
-        controllers[i].info.name + periodicity_suffix,
-        make_stats_string(controllers[i].periodicity_statistics->GetStatistics(), "Hz"));
+      if (controllers[i].c->is_async())
+      {
+        stat.add(
+          controllers[i].info.name + periodicity_suffix,
+          make_stats_string(controllers[i].periodicity_statistics->GetStatistics(), "Hz"));
+      }
     }
   }
 
