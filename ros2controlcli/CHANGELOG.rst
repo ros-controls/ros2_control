@@ -2,6 +2,11 @@
 Changelog for package ros2controlcli
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.44.0 (2024-11-09)
+-------------------
+* Refactor spawner to be able to reuse code for ros2controlcli (backport `#1661 <https://github.com/ros-controls/ros2_control/issues/1661>`_) (`#1695 <https://github.com/ros-controls/ros2_control/issues/1695>`_)
+* Contributors: mergify[bot]
+
 2.43.1 (2024-09-11)
 -------------------
 * [ros2controlcli] fix list_controllers when no controllers are loaded (`#1721 <https://github.com/ros-controls/ros2_control/issues/1721>`_) (`#1722 <https://github.com/ros-controls/ros2_control/issues/1722>`_)
