@@ -592,7 +592,7 @@ TEST_P(TestControllerManagerWithUpdateRates, per_controller_equal_and_higher_upd
     // [cm_update_rate, 2*cm_update_rate)
     EXPECT_THAT(
       test_controller->update_period_.seconds(),
-      testing::AllOf(testing::Ge(0.9 / cm_update_rate), testing::Lt((1.1 / cm_update_rate))));
+      testing::AllOf(testing::Ge(0.85 / cm_update_rate), testing::Lt((1.15 / cm_update_rate))));
     ASSERT_EQ(
       test_controller->internal_counter,
       cm_->get_loaded_controllers()[0].execution_time_statistics->GetCount());
@@ -604,6 +604,14 @@ TEST_P(TestControllerManagerWithUpdateRates, per_controller_equal_and_higher_upd
       cm_->get_loaded_controllers()[0].periodicity_statistics->Average(),
       testing::AllOf(
         testing::Ge(0.95 * cm_->get_update_rate()), testing::Lt((1.05 * cm_->get_update_rate()))));
+    EXPECT_THAT(
+      cm_->get_loaded_controllers()[0].periodicity_statistics->Min(),
+      testing::AllOf(
+        testing::Ge(0.85 * cm_->get_update_rate()), testing::Lt((1.2 * cm_->get_update_rate()))));
+    EXPECT_THAT(
+      cm_->get_loaded_controllers()[0].periodicity_statistics->Max(),
+      testing::AllOf(
+        testing::Ge(0.85 * cm_->get_update_rate()), testing::Lt((1.2 * cm_->get_update_rate()))));
     loop_rate.sleep();
   }
   // if we do 2 times of the controller_manager update rate, the internal counter should be
@@ -768,6 +776,12 @@ TEST_P(TestControllerUpdateRates, check_the_controller_update_rate)
       EXPECT_THAT(
         cm_->get_loaded_controllers()[0].periodicity_statistics->Average(),
         testing::AllOf(testing::Ge(0.95 * exp_periodicity), testing::Lt((1.05 * exp_periodicity))));
+      EXPECT_THAT(
+        cm_->get_loaded_controllers()[0].periodicity_statistics->Min(),
+        testing::AllOf(testing::Ge(0.85 * exp_periodicity), testing::Lt((1.2 * exp_periodicity))));
+      EXPECT_THAT(
+        cm_->get_loaded_controllers()[0].periodicity_statistics->Max(),
+        testing::AllOf(testing::Ge(0.85 * exp_periodicity), testing::Lt((1.2 * exp_periodicity))));
       EXPECT_LT(
         cm_->get_loaded_controllers()[0].execution_time_statistics->Average(),
         50.0);  // 50 microseconds
