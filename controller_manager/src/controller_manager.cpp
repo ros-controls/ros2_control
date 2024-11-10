@@ -3291,6 +3291,38 @@ void ControllerManager::controller_manager_diagnostic_callback(
         "Resource Manager is not initialized properly!");
     }
   }
+
+  const std::string param_prefix = "diagnostics.threshold.controller_manager";
+  const std::string periodicity_suffix = ".periodicity";
+  const std::string mean_error_suffix = ".mean_error";
+  const std::string std_dev_suffix = ".standard_deviation";
+
+  // Get threshold values from param server
+  const double periodicity_mean_warn_threshold =
+    this->get_parameter_or(param_prefix + periodicity_suffix + mean_error_suffix + ".warn", 5.0);
+  const double periodicity_mean_error_threshold =
+    this->get_parameter_or(param_prefix + periodicity_suffix + mean_error_suffix + ".error", 10.0);
+  const double periodicity_std_dev_warn_threshold =
+    this->get_parameter_or(param_prefix + periodicity_suffix + std_dev_suffix + ".warn", 5.0);
+  const double periodicity_std_dev_error_threshold =
+    this->get_parameter_or(param_prefix + periodicity_suffix + std_dev_suffix + ".error", 10.0);
+
+  const double periodicity_error = std::abs(periodicity_stats_.Average() - get_update_rate());
+  const std::string diag_summary =
+    "Controller Manager has bad periodicity : " + std::to_string(periodicity_stats_.Average()) +
+    " Hz. Expected consistent " + std::to_string(get_update_rate()) + " Hz";
+  if (
+    periodicity_error > periodicity_mean_error_threshold ||
+    periodicity_stats_.StandardDeviation() > periodicity_std_dev_error_threshold)
+  {
+    stat.mergeSummary(diagnostic_msgs::msg::DiagnosticStatus::ERROR, diag_summary);
+  }
+  else if (
+    periodicity_error > periodicity_mean_warn_threshold ||
+    periodicity_stats_.StandardDeviation() > periodicity_std_dev_warn_threshold)
+  {
+    stat.mergeSummary(diagnostic_msgs::msg::DiagnosticStatus::WARN, diag_summary);
+  }
 }
 
 void ControllerManager::update_list_with_controller_chain(
