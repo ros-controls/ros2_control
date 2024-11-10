@@ -179,9 +179,9 @@ if(BUILD_TESTING)
     test/test_hardware_spawner.cpp
     TIMEOUT 120
   )
-  target_link_libraries(test_hardware_spawner
-    controller_manager
-  )
+  target_include_directories(test_hardware_spawner PRIVATE include)
+  target_link_libraries(test_hardware_spawner ${PROJECT_NAME})
+  ament_target_dependencies(test_hardware_spawner ros2_control_test_assets)
 
   install(FILES test/test_controller_spawner_with_type.yaml
   DESTINATION test)
