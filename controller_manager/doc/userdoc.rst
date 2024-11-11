@@ -100,19 +100,19 @@ update_rate (mandatory; integer)
   It is recommended to test the fallback strategy in simulation before deploying it on the real robot.
 
 diagnostics.threshold.controller_manager.periodicity.mean_error.warn
-  The warning threshold for the mean error of the controller manager update loop.
+  The warning threshold for the mean error of the controller manager's periodicity.
   If the mean error exceeds this threshold, a warning diagnostic will be published.
 
 diagnostics.threshold.controller_manager.periodicity.mean_error.error
-  The error threshold for the mean error of the controller manager update loop.
+  The error threshold for the mean error of the controller manager's periodicity.
   If the mean error exceeds this threshold, an error diagnostic will be published.
 
 diagnostics.threshold.controller_manager.periodicity.standard_deviation.warn
-  The warning threshold for the standard deviation of the controller manager update loop.
+  The warning threshold for the standard deviation of the controller manager's periodicity.
   If the standard deviation exceeds this threshold, a warning diagnostic will be published.
 
 diagnostics.threshold.controller_manager.periodicity.standard_deviation.error
-  The error threshold for the standard deviation of the controller manager update loop.
+  The error threshold for the standard deviation of the controller manager's periodicity.
   If the standard deviation exceeds this threshold, an error diagnostic will be published.
 
 diagnostics.threshold.controllers.periodicity.mean_error.warn
@@ -146,6 +146,11 @@ diagnostics.threshold.controllers.execution_time.standard_deviation.warn
 diagnostics.threshold.controllers.execution_time.standard_deviation.error
   The error threshold for the standard deviation of the controller execution time.
   If the standard deviation exceeds this threshold, an error diagnostic will be published.
+
+.. note::
+  The ``periodicity`` diagnostics will be published only for the asynchronous controllers, because any affect to the synchronous controllers will be reflected directly in the controller manager's periodicity.
+
+  The ``execution_time`` diagnostics will be published for all controllers. The ``mean_error`` for a synchronous controller will be computed against zero, as it should be as low as possible. However, the ``mean_error`` for an asynchronous controller will be computed against the controller's desired update period, as the controller can take a maximum of the desired period cycle to execute it's update cycle.
 
 Handling Multiple Controller Managers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
