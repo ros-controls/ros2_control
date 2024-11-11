@@ -99,6 +99,54 @@ update_rate (mandatory; integer)
   The fallback controllers activation is subject to the availability of the state and command interfaces at the time of activation.
   It is recommended to test the fallback strategy in simulation before deploying it on the real robot.
 
+diagnostics.threshold.controller_manager.periodicity.mean_error.warn
+  The warning threshold for the mean error of the controller manager update loop.
+  If the mean error exceeds this threshold, a warning diagnostic will be published.
+
+diagnostics.threshold.controller_manager.periodicity.mean_error.error
+  The error threshold for the mean error of the controller manager update loop.
+  If the mean error exceeds this threshold, an error diagnostic will be published.
+
+diagnostics.threshold.controller_manager.periodicity.standard_deviation.warn
+  The warning threshold for the standard deviation of the controller manager update loop.
+  If the standard deviation exceeds this threshold, a warning diagnostic will be published.
+
+diagnostics.threshold.controller_manager.periodicity.standard_deviation.error
+  The error threshold for the standard deviation of the controller manager update loop.
+  If the standard deviation exceeds this threshold, an error diagnostic will be published.
+
+diagnostics.threshold.controllers.periodicity.mean_error.warn
+  The warning threshold for the mean error of the controller update loop.
+  If the mean error exceeds this threshold, a warning diagnostic will be published.
+
+diagnostics.threshold.controllers.periodicity.mean_error.error
+  The error threshold for the mean error of the controller update loop.
+  If the mean error exceeds this threshold, an error diagnostic will be published.
+
+diagnostics.threshold.controllers.periodicity.standard_deviation.warn
+  The warning threshold for the standard deviation of the controller update loop.
+  If the standard deviation exceeds this threshold, a warning diagnostic will be published.
+
+diagnostics.threshold.controllers.periodicity.standard_deviation.error
+  The error threshold for the standard deviation of the controller update loop.
+  If the standard deviation exceeds this threshold, an error diagnostic will be published.
+
+diagnostics.threshold.controllers.execution_time.mean_error.warn
+  The warning threshold for the mean error of the controller execution time.
+  If the mean error exceeds this threshold, a warning diagnostic will be published.
+
+diagnostics.threshold.controllers.execution_time.mean_error.error
+  The error threshold for the mean error of the controller execution time.
+  If the mean error exceeds this threshold, an error diagnostic will be published.
+
+diagnostics.threshold.controllers.execution_time.standard_deviation.warn
+  The warning threshold for the standard deviation of the controller execution time.
+  If the standard deviation exceeds this threshold, a warning diagnostic will be published.
+
+diagnostics.threshold.controllers.execution_time.standard_deviation.error
+  The error threshold for the standard deviation of the controller execution time.
+  If the standard deviation exceeds this threshold, an error diagnostic will be published.
+
 Handling Multiple Controller Managers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
