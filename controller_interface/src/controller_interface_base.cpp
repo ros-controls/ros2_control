@@ -67,7 +67,15 @@ return_type ControllerInterfaceBase::init(
     });
 
   node_->register_on_activate(
-    std::bind(&ControllerInterfaceBase::on_activate, this, std::placeholders::_1));
+    [this](const rclcpp_lifecycle::State & previous_state) -> CallbackReturn
+    {
+      if (is_async() && async_handler_ && async_handler_->is_running())
+      {
+        // This is needed if it is disabled due to a thrown exception in the async callback thread
+        async_handler_->reset_variables();
+      }
+      return on_activate(previous_state);
+    });
 
   node_->register_on_deactivate(
     std::bind(&ControllerInterfaceBase::on_deactivate, this, std::placeholders::_1));

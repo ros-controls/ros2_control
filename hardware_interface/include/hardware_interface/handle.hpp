@@ -17,7 +17,10 @@
 
 #include <limits>
 #include <memory>
+#include <mutex>
+#include <shared_mutex>
 #include <string>
+#include <utility>
 #include <variant>
 
 #include "hardware_interface/hardware_info.hpp"
@@ -69,13 +72,57 @@ public:
   {
   }
 
-  Handle(const Handle & other) = default;
+  Handle(const Handle & other) noexcept
+  {
+    std::unique_lock<std::shared_mutex> lock(other.handle_mutex_);
+    std::unique_lock<std::shared_mutex> lock_this(handle_mutex_);
+    prefix_name_ = other.prefix_name_;
+    interface_name_ = other.interface_name_;
+    handle_name_ = other.handle_name_;
+    value_ = other.value_;
+    value_ptr_ = other.value_ptr_;
+  }
 
-  Handle(Handle && other) = default;
+  Handle(Handle && other) noexcept
+  {
+    std::unique_lock<std::shared_mutex> lock(other.handle_mutex_);
+    std::unique_lock<std::shared_mutex> lock_this(handle_mutex_);
+    prefix_name_ = std::move(other.prefix_name_);
+    interface_name_ = std::move(other.interface_name_);
+    handle_name_ = std::move(other.handle_name_);
+    value_ = std::move(other.value_);
+    value_ptr_ = std::move(other.value_ptr_);
+  }
 
-  Handle & operator=(const Handle & other) = default;
+  Handle & operator=(const Handle & other)
+  {
+    if (this != &other)
+    {
+      std::unique_lock<std::shared_mutex> lock(other.handle_mutex_);
+      std::unique_lock<std::shared_mutex> lock_this(handle_mutex_);
+      prefix_name_ = other.prefix_name_;
+      interface_name_ = other.interface_name_;
+      handle_name_ = other.handle_name_;
+      value_ = other.value_;
+      value_ptr_ = other.value_ptr_;
+    }
+    return *this;
+  }
 
-  Handle & operator=(Handle && other) = default;
+  Handle & operator=(Handle && other)
+  {
+    if (this != &other)
+    {
+      std::unique_lock<std::shared_mutex> lock(other.handle_mutex_);
+      std::unique_lock<std::shared_mutex> lock_this(handle_mutex_);
+      prefix_name_ = std::move(other.prefix_name_);
+      interface_name_ = std::move(other.interface_name_);
+      handle_name_ = std::move(other.handle_name_);
+      value_ = std::move(other.value_);
+      value_ptr_ = std::move(other.value_ptr_);
+    }
+    return *this;
+  }
 
   virtual ~Handle() = default;
 
@@ -95,8 +142,14 @@ public:
 
   const std::string & get_prefix_name() const { return prefix_name_; }
 
+  [[deprecated("Use bool get_value(double & value) instead to retrieve the value.")]]
   double get_value() const
   {
+    std::shared_lock<std::shared_mutex> lock(handle_mutex_, std::try_to_lock);
+    if (!lock.owns_lock())
+    {
+      return std::numeric_limits<double>::quiet_NaN();
+    }
     // BEGIN (Handle export change): for backward compatibility
     // TODO(Manuel) return value_ if old functionality is removed
     THROW_ON_NULLPTR(value_ptr_);
@@ -104,12 +157,33 @@ public:
     // END
   }
 
-  void set_value(double value)
+  [[nodiscard]] bool get_value(double & value) const
   {
+    std::shared_lock<std::shared_mutex> lock(handle_mutex_, std::try_to_lock);
+    if (!lock.owns_lock())
+    {
+      return false;
+    }
+    // BEGIN (Handle export change): for backward compatibility
+    // TODO(Manuel) set value directly if old functionality is removed
+    THROW_ON_NULLPTR(value_ptr_);
+    value = *value_ptr_;
+    return true;
+    // END
+  }
+
+  [[nodiscard]] bool set_value(double value)
+  {
+    std::unique_lock<std::shared_mutex> lock(handle_mutex_, std::try_to_lock);
+    if (!lock.owns_lock())
+    {
+      return false;
+    }
     // BEGIN (Handle export change): for backward compatibility
     // TODO(Manuel) set value_ directly if old functionality is removed
     THROW_ON_NULLPTR(this->value_ptr_);
     *this->value_ptr_ = value;
+    return true;
     // END
   }
 
@@ -122,6 +196,7 @@ protected:
   // TODO(Manuel) redeclare as HANDLE_DATATYPE * value_ptr_ if old functionality is removed
   double * value_ptr_;
   // END
+  mutable std::shared_mutex handle_mutex_;
 };
 
 class StateInterface : public Handle

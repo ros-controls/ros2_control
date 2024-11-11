@@ -87,6 +87,7 @@ if(BUILD_TESTING)
 
   ament_add_gmock(test_controller_manager
     test/test_controller_manager.cpp
+    TIMEOUT 180
   )
   target_link_libraries(test_controller_manager
     controller_manager
@@ -210,7 +211,7 @@ if(BUILD_TESTING)
   )
 
   ament_add_gmock(test_hardware_spawner
-    test/test_hardware_spawner
+    test/test_hardware_spawner.cpp
     TIMEOUT 120
   )
   target_link_libraries(test_hardware_spawner

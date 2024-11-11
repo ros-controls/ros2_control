@@ -2,6 +2,9 @@
 Changelog for package rqt_controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.20.0 (2024-11-08)
+-------------------
+
 4.19.0 (2024-10-26)
 -------------------
 * fix: call configure_controller  on 'unconfigured' state instead load_controller (`#1794 <https://github.com/ros-controls/ros2_control/issues/1794>`_)
