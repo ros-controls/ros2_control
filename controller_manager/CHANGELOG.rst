@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.30.0 (2024-11-12)
+-------------------
 * [ros2_control_node] Handle simulation environment clocks (backport `#1810 <https://github.com/ros-controls/ros2_control/issues/1810>`_) (`#1863 <https://github.com/ros-controls/ros2_control/issues/1863>`_)
 * Fix CMP0115 (`#1830 <https://github.com/ros-controls/ros2_control/issues/1830>`_) (`#1849 <https://github.com/ros-controls/ros2_control/issues/1849>`_)
 * Fix Hardware spawner and add tests for it (backport `#1759 <https://github.com/ros-controls/ros2_control/issues/1759>`_) (`#1828 <https://github.com/ros-controls/ros2_control/issues/1828>`_)

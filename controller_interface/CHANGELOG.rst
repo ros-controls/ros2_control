@@ -2,8 +2,8 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.30.0 (2024-11-12)
+-------------------
 * [CM] Fix controller missing update cycles in a real setup (`#1774 <https://github.com/ros-controls/ros2_control/issues/1774>`_) (`#1858 <https://github.com/ros-controls/ros2_control/issues/1858>`_)
 * Contributors: mergify[bot]
 
