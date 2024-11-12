@@ -48,6 +48,8 @@
 #include "rclcpp/node.hpp"
 #include "std_msgs/msg/string.hpp"
 
+#include "controller_manager_parameters.hpp"
+
 namespace controller_manager
 {
 using ControllersListIterator = std::vector<controller_manager::ControllerSpec>::const_iterator;
@@ -473,6 +475,7 @@ private:
    */
   rclcpp::NodeOptions determine_controller_node_options(const ControllerSpec & controller) const;
 
+  std::shared_ptr<controller_manager::ParamListener> cm_param_listener_;
   diagnostic_updater::Updater diagnostics_updater_;
 
   std::shared_ptr<rclcpp::Executor> executor_;
