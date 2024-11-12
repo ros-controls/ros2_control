@@ -2,6 +2,21 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* [ros2_control_node] Handle simulation environment clocks (backport `#1810 <https://github.com/ros-controls/ros2_control/issues/1810>`_) (`#1863 <https://github.com/ros-controls/ros2_control/issues/1863>`_)
+* Fix CMP0115 (`#1830 <https://github.com/ros-controls/ros2_control/issues/1830>`_) (`#1849 <https://github.com/ros-controls/ros2_control/issues/1849>`_)
+* Fix Hardware spawner and add tests for it (backport `#1759 <https://github.com/ros-controls/ros2_control/issues/1759>`_) (`#1828 <https://github.com/ros-controls/ros2_control/issues/1828>`_)
+* Change from thread_priority.hpp to realtime_helpers.hpp (backport `#1829 <https://github.com/ros-controls/ros2_control/issues/1829>`_) (`#1867 <https://github.com/ros-controls/ros2_control/issues/1867>`_)
+* [CM] Fix controller missing update cycles in a real setup (`#1774 <https://github.com/ros-controls/ros2_control/issues/1774>`_) (`#1858 <https://github.com/ros-controls/ros2_control/issues/1858>`_)
+* [ros2_control_node] Add option to set the CPU affinity  (`#1852 <https://github.com/ros-controls/ros2_control/issues/1852>`_) (`#1857 <https://github.com/ros-controls/ros2_control/issues/1857>`_)
+* [ros2_control_node] Add the realtime_tools lock_memory method to prevent page faults (backport `#1822 <https://github.com/ros-controls/ros2_control/issues/1822>`_) (`#1851 <https://github.com/ros-controls/ros2_control/issues/1851>`_)
+* fix: typo use thread_priority (backport `#1844 <https://github.com/ros-controls/ros2_control/issues/1844>`_) (`#1846 <https://github.com/ros-controls/ros2_control/issues/1846>`_)
+* [Spawner] Add support for wildcard entries in the controller param files  (`#1724 <https://github.com/ros-controls/ros2_control/issues/1724>`_) (`#1836 <https://github.com/ros-controls/ros2_control/issues/1836>`_)
+* Add test coverage for `params_file` parameter in spawner/unspawner tests (backport `#1754 <https://github.com/ros-controls/ros2_control/issues/1754>`_) (`#1839 <https://github.com/ros-controls/ros2_control/issues/1839>`_)
+* Fix unload of controllers when spawned with `--unload-on-kill` (`#1717 <https://github.com/ros-controls/ros2_control/issues/1717>`_) (`#1843 <https://github.com/ros-controls/ros2_control/issues/1843>`_)
+* Contributors: mergify[bot]
+
 3.29.0 (2024-11-02)
 -------------------
 * add thread_priority option to the ros2_control_node (`#1820 <https://github.com/ros-controls/ros2_control/issues/1820>`_) (`#1825 <https://github.com/ros-controls/ros2_control/issues/1825>`_)

@@ -2,6 +2,11 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* [CM] Fix controller missing update cycles in a real setup (`#1774 <https://github.com/ros-controls/ros2_control/issues/1774>`_) (`#1858 <https://github.com/ros-controls/ros2_control/issues/1858>`_)
+* Contributors: mergify[bot]
+
 3.29.0 (2024-11-02)
 -------------------
 * `PoseSensor` semantic component (backport `#1775 <https://github.com/ros-controls/ros2_control/issues/1775>`_) (`#1786 <https://github.com/ros-controls/ros2_control/issues/1786>`_)

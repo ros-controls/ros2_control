@@ -2,6 +2,9 @@
 Changelog for package ros2controlcli
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 3.29.0 (2024-11-02)
 -------------------
 * Refactor spawner to be able to reuse code for ros2controlcli (backport `#1661 <https://github.com/ros-controls/ros2_control/issues/1661>`_) (`#1696 <https://github.com/ros-controls/ros2_control/issues/1696>`_)
