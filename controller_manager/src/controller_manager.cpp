@@ -28,6 +28,8 @@
 #include "rclcpp/version.h"
 #include "rclcpp_lifecycle/state.hpp"
 
+#include "controller_manager_parameters.hpp"
+
 namespace  // utility
 {
 static constexpr const char * kControllerInterfaceNamespace = "controller_interface";

@@ -48,10 +48,9 @@
 #include "rclcpp/node.hpp"
 #include "std_msgs/msg/string.hpp"
 
-#include "controller_manager_parameters.hpp"
-
 namespace controller_manager
 {
+class ParamListener;
 using ControllersListIterator = std::vector<controller_manager::ControllerSpec>::const_iterator;
 
 CONTROLLER_MANAGER_PUBLIC rclcpp::NodeOptions get_cm_node_options();
