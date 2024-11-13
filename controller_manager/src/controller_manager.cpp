@@ -239,6 +239,7 @@ ControllerManager::ControllerManager(
       kControllerInterfaceNamespace, kChainableControllerInterfaceClassName)),
   cm_node_options_(options)
 {
+  initialize_parameters();
   init_controller_manager();
 }
 
@@ -247,10 +248,6 @@ ControllerManager::ControllerManager(
   bool activate_all_hw_components, const std::string & manager_node_name,
   const std::string & node_namespace, const rclcpp::NodeOptions & options)
 : rclcpp::Node(manager_node_name, node_namespace, options),
-  update_rate_(get_parameter_or<int>("update_rate", 100)),
-  resource_manager_(std::make_unique<hardware_interface::ResourceManager>(
-    urdf, this->get_node_clock_interface(), this->get_node_logging_interface(),
-    activate_all_hw_components, update_rate_)),
   diagnostics_updater_(this),
   executor_(executor),
   loader_(std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
@@ -260,6 +257,10 @@ ControllerManager::ControllerManager(
       kControllerInterfaceNamespace, kChainableControllerInterfaceClassName)),
   cm_node_options_(options)
 {
+  initialize_parameters();
+  resource_manager_ = std::make_unique<hardware_interface::ResourceManager>(
+    urdf, this->get_node_clock_interface(), this->get_node_logging_interface(),
+    activate_all_hw_components, params_->update_rate);
   init_controller_manager();
 }
 
@@ -278,18 +279,13 @@ ControllerManager::ControllerManager(
       kControllerInterfaceNamespace, kChainableControllerInterfaceClassName)),
   cm_node_options_(options)
 {
+  initialize_parameters();
   init_controller_manager();
 }
 
 void ControllerManager::init_controller_manager()
 {
   // Get parameters needed for RT "update" loop to work
-  if (!get_parameter("update_rate", update_rate_))
-  {
-    RCLCPP_WARN(
-      get_logger(), "'update_rate' parameter not set, using default value of %d Hz.", update_rate_);
-  }
-
   if (is_resource_manager_initialized())
   {
     init_services();
@@ -325,6 +321,25 @@ void ControllerManager::init_controller_manager()
   diagnostics_updater_.add(
     "Controller Manager Activity", this,
     &ControllerManager::controller_manager_diagnostic_callback);
+}
+
+void ControllerManager::initialize_parameters()
+{
+  // Initialize parameters
+  try
+  {
+    cm_param_listener_ = std::make_shared<controller_manager::ParamListener>(
+      this->get_node_parameters_interface(), this->get_logger());
+    params_ = std::make_shared<controller_manager::Params>(cm_param_listener_->get_params());
+    update_rate_ = static_cast<unsigned int>(params_->update_rate);
+  }
+  catch (const std::exception & e)
+  {
+    RCLCPP_ERROR(
+      this->get_logger(),
+      "Exception thrown while initializing controller manager parameters: %s \n", e.what());
+    throw e;
+  }
 }
 
 void ControllerManager::robot_description_callback(const std_msgs::msg::String & robot_description)
@@ -3072,31 +3087,14 @@ void ControllerManager::controller_activity_diagnostic_callback(
   std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
   const std::vector<ControllerSpec> & controllers = rt_controllers_wrapper_.get_updated_list(guard);
   bool all_active = true;
-  const std::string param_prefix = "diagnostics.threshold.controllers";
   const std::string periodicity_suffix = ".periodicity";
   const std::string exec_time_suffix = ".execution_time";
-  const std::string mean_error_suffix = ".mean_error";
-  const std::string std_dev_suffix = ".standard_deviation";
   const std::string state_suffix = ".state";
 
-  // Get threshold values from param server
-  const double periodicity_mean_warn_threshold =
-    this->get_parameter_or(param_prefix + periodicity_suffix + mean_error_suffix + ".warn", 5.0);
-  const double periodicity_mean_error_threshold =
-    this->get_parameter_or(param_prefix + periodicity_suffix + mean_error_suffix + ".error", 10.0);
-  const double periodicity_std_dev_warn_threshold =
-    this->get_parameter_or(param_prefix + periodicity_suffix + std_dev_suffix + ".warn", 5.0);
-  const double periodicity_std_dev_error_threshold =
-    this->get_parameter_or(param_prefix + periodicity_suffix + std_dev_suffix + ".error", 10.0);
-
-  const double exec_time_mean_warn_threshold =
-    this->get_parameter_or(param_prefix + exec_time_suffix + mean_error_suffix + ".warn", 1000.0);
-  const double exec_time_mean_error_threshold =
-    this->get_parameter_or(param_prefix + exec_time_suffix + mean_error_suffix + ".error", 2000.0);
-  const double exec_time_std_dev_warn_threshold =
-    this->get_parameter_or(param_prefix + exec_time_suffix + std_dev_suffix + ".warn", 100.0);
-  const double exec_time_std_dev_error_threshold =
-    this->get_parameter_or(param_prefix + exec_time_suffix + std_dev_suffix + ".error", 200.0);
+  if (cm_param_listener_->is_old(*params_))
+  {
+    *params_ = cm_param_listener_->get_params();
+  }
 
   auto make_stats_string =
     [](const auto & statistics_data, const std::string & measurement_unit) -> std::string
@@ -3138,15 +3136,19 @@ void ControllerManager::controller_activity_diagnostic_callback(
         const double periodicity_error = std::abs(
           periodicity_stats.average - static_cast<double>(controllers[i].c->get_update_rate()));
         if (
-          periodicity_error > periodicity_mean_error_threshold ||
-          periodicity_stats.standard_deviation > periodicity_std_dev_error_threshold)
+          periodicity_error >
+            params_->diagnostics.threshold.controllers.periodicity.mean_error.error ||
+          periodicity_stats.standard_deviation >
+            params_->diagnostics.threshold.controllers.periodicity.standard_deviation.error)
         {
           level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
           add_element_to_list(bad_periodicity_async_controllers, controllers[i].info.name);
         }
         else if (
-          periodicity_error > periodicity_mean_warn_threshold ||
-          periodicity_stats.standard_deviation > periodicity_std_dev_warn_threshold)
+          periodicity_error >
+            params_->diagnostics.threshold.controllers.periodicity.mean_error.warn ||
+          periodicity_stats.standard_deviation >
+            params_->diagnostics.threshold.controllers.periodicity.standard_deviation.warn)
         {
           if (level != diagnostic_msgs::msg::DiagnosticStatus::ERROR)
           {
@@ -3157,15 +3159,19 @@ void ControllerManager::controller_activity_diagnostic_callback(
       }
       const double max_exp_exec_time = is_async ? 1.e6 / controllers[i].c->get_update_rate() : 0.0;
       if (
-        (exec_time_stats.average - max_exp_exec_time) > exec_time_mean_error_threshold ||
-        exec_time_stats.standard_deviation > exec_time_std_dev_error_threshold)
+        (exec_time_stats.average - max_exp_exec_time) >
+          params_->diagnostics.threshold.controllers.execution_time.mean_error.error ||
+        exec_time_stats.standard_deviation >
+          params_->diagnostics.threshold.controllers.execution_time.standard_deviation.error)
       {
         level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
         high_exec_time_controllers.push_back(controllers[i].info.name);
       }
       else if (
-        (exec_time_stats.average - max_exp_exec_time) > exec_time_mean_warn_threshold ||
-        exec_time_stats.standard_deviation > exec_time_std_dev_warn_threshold)
+        (exec_time_stats.average - max_exp_exec_time) >
+          params_->diagnostics.threshold.controllers.execution_time.mean_error.warn ||
+        exec_time_stats.standard_deviation >
+          params_->diagnostics.threshold.controllers.execution_time.standard_deviation.warn)
       {
         if (level != diagnostic_msgs::msg::DiagnosticStatus::ERROR)
         {
@@ -3294,34 +3300,23 @@ void ControllerManager::controller_manager_diagnostic_callback(
     }
   }
 
-  const std::string param_prefix = "diagnostics.threshold.controller_manager";
-  const std::string periodicity_suffix = ".periodicity";
-  const std::string mean_error_suffix = ".mean_error";
-  const std::string std_dev_suffix = ".standard_deviation";
-
-  // Get threshold values from param server
-  const double periodicity_mean_warn_threshold =
-    this->get_parameter_or(param_prefix + periodicity_suffix + mean_error_suffix + ".warn", 5.0);
-  const double periodicity_mean_error_threshold =
-    this->get_parameter_or(param_prefix + periodicity_suffix + mean_error_suffix + ".error", 10.0);
-  const double periodicity_std_dev_warn_threshold =
-    this->get_parameter_or(param_prefix + periodicity_suffix + std_dev_suffix + ".warn", 5.0);
-  const double periodicity_std_dev_error_threshold =
-    this->get_parameter_or(param_prefix + periodicity_suffix + std_dev_suffix + ".error", 10.0);
-
   const double periodicity_error = std::abs(cm_stats.average - get_update_rate());
   const std::string diag_summary =
     "Controller Manager has bad periodicity : " + std::to_string(cm_stats.average) +
     " Hz. Expected consistent " + std::to_string(get_update_rate()) + " Hz";
   if (
-    periodicity_error > periodicity_mean_error_threshold ||
-    cm_stats.standard_deviation > periodicity_std_dev_error_threshold)
+    periodicity_error >
+      params_->diagnostics.threshold.controller_manager.periodicity.mean_error.error ||
+    cm_stats.standard_deviation >
+      params_->diagnostics.threshold.controller_manager.periodicity.standard_deviation.error)
   {
     stat.mergeSummary(diagnostic_msgs::msg::DiagnosticStatus::ERROR, diag_summary);
   }
   else if (
-    periodicity_error > periodicity_mean_warn_threshold ||
-    cm_stats.standard_deviation > periodicity_std_dev_warn_threshold)
+    periodicity_error >
+      params_->diagnostics.threshold.controller_manager.periodicity.mean_error.warn ||
+    cm_stats.standard_deviation >
+      params_->diagnostics.threshold.controller_manager.periodicity.standard_deviation.warn)
   {
     stat.mergeSummary(diagnostic_msgs::msg::DiagnosticStatus::WARN, diag_summary);
   }
