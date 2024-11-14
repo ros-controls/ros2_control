@@ -28,9 +28,6 @@ on:
       - '**/package.xml'
       - '**/CMakeLists.txt'
       - 'ros2_control.rolling.repos'
-  schedule:
-    # Run every morning to detect flakiness and broken dependencies
-    - cron: '03 1 * * *'
 
 jobs:
   build-on-jazzy:
