@@ -28,9 +28,6 @@ on:
       - '**/package.xml'
       - '**/CMakeLists.txt'
       - 'ros2_control.rolling.repos'
-  schedule:
-    # Run every morning to detect flakiness and broken dependencies
-    - cron: '03 1 * * *'
 
 jobs:
   build-on-jazzy:
@@ -39,7 +36,7 @@ jobs:
       fail-fast: false
       matrix:
         ROS_DISTRO: [jazzy]
-        ROS_REPO: [main, testing]
+        ROS_REPO: [testing]
     with:
       ros_distro: ${{ matrix.ROS_DISTRO }}
       ros_repo: ${{ matrix.ROS_REPO }}
