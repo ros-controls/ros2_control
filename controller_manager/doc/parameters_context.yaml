@@ -5,14 +5,14 @@ hardware_components_initial_state: |
     Detailed explanation of each parameter is given below.
     The full structure of the map is given in the following example:
 
-  .. code-block:: yaml
+    .. code-block:: yaml
 
-      hardware_components_initial_state:
-        unconfigured:
-          - "arm1"
-          - "arm2"
-        inactive:
-          - "base3"
+        hardware_components_initial_state:
+          unconfigured:
+            - "arm1"
+            - "arm2"
+          inactive:
+            - "base3"
 
 diagnostics.threshold.controllers.periodicity: |
   The ``periodicity`` diagnostics will be published only for the asynchronous controllers, because any affect to the synchronous controllers will be reflected directly in the controller manager's periodicity.

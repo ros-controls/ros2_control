@@ -415,6 +415,11 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
     }
   };
 
+  if (cm_param_listener_->is_old(*params_))
+  {
+    *params_ = cm_param_listener_->get_params();
+  }
+
   // unconfigured (loaded only)
   set_components_to_state(
     params_->hardware_components_initial_state.unconfigured,
