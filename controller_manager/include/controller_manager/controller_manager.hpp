@@ -80,7 +80,7 @@ public:
     const std::string & node_namespace = "",
     const rclcpp::NodeOptions & options = get_cm_node_options());
 
-  virtual ~ControllerManager() = default;
+  virtual ~ControllerManager();
 
   void robot_description_callback(const std_msgs::msg::String & msg);
 

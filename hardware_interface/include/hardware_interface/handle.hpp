@@ -24,6 +24,7 @@
 #include <variant>
 
 #include "hardware_interface/hardware_info.hpp"
+#include "hardware_interface/introspection.hpp"
 #include "hardware_interface/macros.hpp"
 
 namespace hardware_interface
@@ -207,6 +208,23 @@ public:
   {
   }
 
+  void registerIntrospection() const
+  {
+    if (std::holds_alternative<double>(value_))
+    {
+      std::function<double()> f = [this]() { return *value_ptr_; };
+      REGISTER_ENTITY(DEFAULT_REGISTRY_KEY, "state_interface." + get_name(), f);
+    }
+  }
+
+  void unregisterIntrospection() const
+  {
+    if (std::holds_alternative<double>(value_))
+    {
+      UNREGISTER_ENTITY(DEFAULT_REGISTRY_KEY, "state_interface." + get_name());
+    }
+  }
+
   StateInterface(const StateInterface & other) = default;
 
   StateInterface(StateInterface && other) = default;
@@ -233,6 +251,27 @@ public:
   CommandInterface(const CommandInterface & other) = delete;
 
   CommandInterface(CommandInterface && other) = default;
+
+  void registerIntrospection() const
+  {
+    if (std::holds_alternative<double>(value_))
+    {
+      RCLCPP_INFO_STREAM(
+        rclcpp::get_logger("command_interface"), "Registering handle: " << get_name());
+      std::function<double()> f = [this]() { return *value_ptr_; };
+      REGISTER_ENTITY(DEFAULT_REGISTRY_KEY, "command_interface." + get_name(), f);
+    }
+  }
+
+  void unregisterIntrospection() const
+  {
+    if (std::holds_alternative<double>(value_))
+    {
+      RCLCPP_INFO_STREAM(
+        rclcpp::get_logger("command_interface"), "Unregistering handle: " << get_name());
+      UNREGISTER_ENTITY(DEFAULT_REGISTRY_KEY, "command_interface." + get_name());
+    }
+  }
 
   using Handle::Handle;
 
