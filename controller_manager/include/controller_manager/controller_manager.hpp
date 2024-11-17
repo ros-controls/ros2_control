@@ -83,7 +83,7 @@ public:
     const rclcpp::NodeOptions & options = get_cm_node_options());
 
   CONTROLLER_MANAGER_PUBLIC
-  virtual ~ControllerManager() = default;
+  virtual ~ControllerManager();
 
   CONTROLLER_MANAGER_PUBLIC
   void robot_description_callback(const std_msgs::msg::String & msg);
