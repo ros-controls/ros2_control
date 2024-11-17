@@ -21,6 +21,7 @@
   <depend>joint_limits</depend>
   <depend>urdf</depend>
   <depend>sdformat_urdf</depend>
+  <depend>pal_statistics</depend>
 
   <build_depend>rcutils</build_depend>
   <exec_depend>rcutils</exec_depend>

@@ -18,6 +18,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   tinyxml2_vendor
   joint_limits
   urdf
+  pal_statistics
 )
 
 find_package(ament_cmake REQUIRED)
