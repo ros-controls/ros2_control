@@ -57,32 +57,6 @@ robot_description [std_msgs::msg::String]
 Parameters
 -----------
 
-hardware_components_initial_state
-  Map of parameters for controlled lifecycle management of hardware components.
-  The names of the components are defined as attribute of ``<ros2_control>``-tag in ``robot_description``.
-  Hardware components found in ``robot_description``, but without explicit state definition will be immediately activated.
-  Detailed explanation of each parameter is given below.
-  The full structure of the map is given in the following example:
-
-.. code-block:: yaml
-
-    hardware_components_initial_state:
-      unconfigured:
-        - "arm1"
-        - "arm2"
-      inactive:
-        - "base3"
-
-hardware_components_initial_state.unconfigured (optional; list<string>; default: empty)
-  Defines which hardware components will be only loaded immediately when controller manager is started.
-
-hardware_components_initial_state.inactive (optional; list<string>; default: empty)
-  Defines which hardware components will be configured immediately when controller manager is started.
-
-update_rate (mandatory; integer)
-  The frequency of controller manager's real-time update loop.
-  This loop reads states from hardware, updates controller and writes commands to hardware.
-
 <controller_name>.type
   Name of a plugin exported using ``pluginlib`` for a controller.
   This is a class from which controller's instance with name "``controller_name``" is created.
@@ -99,58 +73,15 @@ update_rate (mandatory; integer)
   The fallback controllers activation is subject to the availability of the state and command interfaces at the time of activation.
   It is recommended to test the fallback strategy in simulation before deploying it on the real robot.
 
-diagnostics.threshold.controller_manager.periodicity.mean_error.warn
-  The warning threshold for the mean error of the controller manager's periodicity.
-  If the mean error exceeds this threshold, a warning diagnostic will be published.
+.. generate_parameter_library_details::
+  ../src/controller_manager_parameters.yaml
+  parameters_context.yaml
 
-diagnostics.threshold.controller_manager.periodicity.mean_error.error
-  The error threshold for the mean error of the controller manager's periodicity.
-  If the mean error exceeds this threshold, an error diagnostic will be published.
+**An example parameter file:**
 
-diagnostics.threshold.controller_manager.periodicity.standard_deviation.warn
-  The warning threshold for the standard deviation of the controller manager's periodicity.
-  If the standard deviation exceeds this threshold, a warning diagnostic will be published.
+.. generate_parameter_library_default::
+  ../src/controller_manager_parameters.yaml
 
-diagnostics.threshold.controller_manager.periodicity.standard_deviation.error
-  The error threshold for the standard deviation of the controller manager's periodicity.
-  If the standard deviation exceeds this threshold, an error diagnostic will be published.
-
-diagnostics.threshold.controllers.periodicity.mean_error.warn
-  The warning threshold for the mean error of the controller update loop.
-  If the mean error exceeds this threshold, a warning diagnostic will be published.
-
-diagnostics.threshold.controllers.periodicity.mean_error.error
-  The error threshold for the mean error of the controller update loop.
-  If the mean error exceeds this threshold, an error diagnostic will be published.
-
-diagnostics.threshold.controllers.periodicity.standard_deviation.warn
-  The warning threshold for the standard deviation of the controller update loop.
-  If the standard deviation exceeds this threshold, a warning diagnostic will be published.
-
-diagnostics.threshold.controllers.periodicity.standard_deviation.error
-  The error threshold for the standard deviation of the controller update loop.
-  If the standard deviation exceeds this threshold, an error diagnostic will be published.
-
-diagnostics.threshold.controllers.execution_time.mean_error.warn
-  The warning threshold for the mean error of the controller execution time.
-  If the mean error exceeds this threshold, a warning diagnostic will be published.
-
-diagnostics.threshold.controllers.execution_time.mean_error.error
-  The error threshold for the mean error of the controller execution time.
-  If the mean error exceeds this threshold, an error diagnostic will be published.
-
-diagnostics.threshold.controllers.execution_time.standard_deviation.warn
-  The warning threshold for the standard deviation of the controller execution time.
-  If the standard deviation exceeds this threshold, a warning diagnostic will be published.
-
-diagnostics.threshold.controllers.execution_time.standard_deviation.error
-  The error threshold for the standard deviation of the controller execution time.
-  If the standard deviation exceeds this threshold, an error diagnostic will be published.
-
-.. note::
-  The ``periodicity`` diagnostics will be published only for the asynchronous controllers, because any affect to the synchronous controllers will be reflected directly in the controller manager's periodicity.
-
-  The ``execution_time`` diagnostics will be published for all controllers. The ``mean_error`` for a synchronous controller will be computed against zero, as it should be as low as possible. However, the ``mean_error`` for an asynchronous controller will be computed against the controller's desired update period, as the controller can take a maximum of the desired period cycle to execute it's update cycle.
 
 Handling Multiple Controller Managers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
