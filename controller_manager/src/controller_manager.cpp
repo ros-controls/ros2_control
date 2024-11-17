@@ -383,51 +383,47 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
   using lifecycle_msgs::msg::State;
 
   auto set_components_to_state =
-    [&](const std::string & parameter_name, rclcpp_lifecycle::State state)
+    [&](const std::vector<std::string> & components_to_set, rclcpp_lifecycle::State state)
   {
-    std::vector<std::string> components_to_set = std::vector<std::string>({});
-    if (get_parameter(parameter_name, components_to_set))
+    for (const auto & component : components_to_set)
     {
-      for (const auto & component : components_to_set)
+      if (component.empty())
       {
-        if (component.empty())
+        continue;
+      }
+      if (components_to_activate.find(component) == components_to_activate.end())
+      {
+        RCLCPP_WARN(
+          get_logger(), "Hardware component '%s' is unknown, therefore not set in '%s' state.",
+          component.c_str(), state.label().c_str());
+      }
+      else
+      {
+        RCLCPP_INFO(
+          get_logger(), "Setting component '%s' to '%s' state.", component.c_str(),
+          state.label().c_str());
+        if (
+          resource_manager_->set_component_state(component, state) ==
+          hardware_interface::return_type::ERROR)
         {
-          continue;
+          throw std::runtime_error(
+            "Failed to set the initial state of the component : " + component + " to " +
+            state.label());
         }
-        if (components_to_activate.find(component) == components_to_activate.end())
-        {
-          RCLCPP_WARN(
-            get_logger(), "Hardware component '%s' is unknown, therefore not set in '%s' state.",
-            component.c_str(), state.label().c_str());
-        }
-        else
-        {
-          RCLCPP_INFO(
-            get_logger(), "Setting component '%s' to '%s' state.", component.c_str(),
-            state.label().c_str());
-          if (
-            resource_manager_->set_component_state(component, state) ==
-            hardware_interface::return_type::ERROR)
-          {
-            throw std::runtime_error(
-              "Failed to set the initial state of the component : " + component + " to " +
-              state.label());
-          }
-          components_to_activate.erase(component);
-        }
+        components_to_activate.erase(component);
       }
     }
   };
 
   // unconfigured (loaded only)
   set_components_to_state(
-    "hardware_components_initial_state.unconfigured",
+    params_->hardware_components_initial_state.unconfigured,
     rclcpp_lifecycle::State(
       State::PRIMARY_STATE_UNCONFIGURED, hardware_interface::lifecycle_state_names::UNCONFIGURED));
 
   // inactive (configured)
   set_components_to_state(
-    "hardware_components_initial_state.inactive",
+    params_->hardware_components_initial_state.inactive,
     rclcpp_lifecycle::State(
       State::PRIMARY_STATE_INACTIVE, hardware_interface::lifecycle_state_names::INACTIVE));
 
