@@ -6,6 +6,27 @@ controller_manager:
     description: "The frequency of controller manager's real-time update loop. This loop reads states from hardware, updates controller and writes commands to hardware."
   }
 
+  hardware_components_initial_state:
+    unconfigured: {
+      type: string_array,
+      default_value: [],
+      description: "Defines which hardware components will be only loaded immediately when controller manager is started.",
+      read_only: true,
+      validation: {
+        unique<>: null,
+      }
+    }
+
+    inactive: {
+      type: string_array,
+      default_value: [],
+      description: "Defines which hardware components will be configured immediately when controller manager is started.",
+      read_only: true,
+      validation: {
+        unique<>: null,
+      }
+    }
+
   diagnostics:
     threshold:
       controller_manager:
