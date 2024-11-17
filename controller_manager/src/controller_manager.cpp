@@ -22,6 +22,7 @@
 
 #include "controller_interface/controller_interface_base.hpp"
 #include "controller_manager_msgs/msg/hardware_component_state.hpp"
+#include "hardware_interface/introspection.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 #include "rcl/arguments.h"
@@ -279,6 +280,11 @@ ControllerManager::ControllerManager(
   init_controller_manager();
 }
 
+ControllerManager::~ControllerManager()
+{
+  STOP_PUBLISHER_THREAD(hardware_interface::DEFAULT_REGISTRY_KEY);
+}
+
 void ControllerManager::init_controller_manager()
 {
   // Get parameters needed for RT "update" loop to work
@@ -322,6 +328,10 @@ void ControllerManager::init_controller_manager()
   diagnostics_updater_.add(
     "Controller Manager Activity", this,
     &ControllerManager::controller_manager_diagnostic_callback);
+  INITIALIZE_REGISTRY(
+    this, hardware_interface::DEFAULT_INTROSPECTION_TOPIC,
+    hardware_interface::DEFAULT_REGISTRY_KEY);
+  START_PUBLISH_THREAD(hardware_interface::DEFAULT_REGISTRY_KEY);
 }
 
 void ControllerManager::robot_description_callback(const std_msgs::msg::String & robot_description)
@@ -2491,6 +2501,8 @@ controller_interface::return_type ControllerManager::update(
   {
     manage_switch();
   }
+
+  PUBLISH_ASYNC_STATISTICS(hardware_interface::DEFAULT_REGISTRY_KEY);
 
   return ret;
 }
