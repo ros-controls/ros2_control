@@ -31,6 +31,8 @@
 namespace
 {
 constexpr const auto kRobotTag = "robot";
+constexpr const auto kSDFTag = "sdf";
+constexpr const auto kModelTag = "model";
 constexpr const auto kROS2ControlTag = "ros2_control";
 constexpr const auto kHardwareTag = "hardware";
 constexpr const auto kPluginNameTag = "plugin";
@@ -812,15 +814,26 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
       "invalid URDF passed in to robot parser: " + std::string(doc.ErrorStr()));
   }
 
-  // Find robot tag
+  // Find robot or sdf tag
   const tinyxml2::XMLElement * robot_it = doc.RootElement();
+  const tinyxml2::XMLElement * ros2_control_it;
 
-  if (std::string(kRobotTag) != robot_it->Name())
+  if (std::string(kRobotTag) == robot_it->Name())
   {
-    throw std::runtime_error("the robot tag is not root element in URDF");
+    ros2_control_it = robot_it->FirstChildElement(kROS2ControlTag);
+  }
+  else if (std::string(kSDFTag) == robot_it->Name())
+  {
+    // find model tag in sdf tag
+    const tinyxml2::XMLElement * model_it = robot_it->FirstChildElement(kModelTag);
+    ros2_control_it = model_it->FirstChildElement(kROS2ControlTag);
+  }
+  else
+  {
+    throw std::runtime_error(
+      "the robot tag is not root element in URDF or sdf tag is not root element in SDF");
   }
 
-  const tinyxml2::XMLElement * ros2_control_it = robot_it->FirstChildElement(kROS2ControlTag);
   if (!ros2_control_it)
   {
     throw std::runtime_error("no " + std::string(kROS2ControlTag) + " tag");
@@ -929,6 +942,22 @@ std::vector<InterfaceDescription> parse_state_interface_descriptions(
   return component_state_interface_descriptions;
 }
 
+void parse_state_interface_descriptions(
+  const std::vector<ComponentInfo> & component_info,
+  std::unordered_map<std::string, InterfaceDescription> & state_interfaces_map)
+{
+  state_interfaces_map.reserve(state_interfaces_map.size() + component_info.size());
+
+  for (const auto & component : component_info)
+  {
+    for (const auto & state_interface : component.state_interfaces)
+    {
+      InterfaceDescription description(component.name, state_interface);
+      state_interfaces_map.insert(std::make_pair(description.get_name(), description));
+    }
+  }
+}
+
 std::vector<InterfaceDescription> parse_command_interface_descriptions(
   const std::vector<ComponentInfo> & component_info)
 {
@@ -944,6 +973,22 @@ std::vector<InterfaceDescription> parse_command_interface_descriptions(
     }
   }
   return component_command_interface_descriptions;
+}
+
+void parse_command_interface_descriptions(
+  const std::vector<ComponentInfo> & component_info,
+  std::unordered_map<std::string, InterfaceDescription> & command_interfaces_map)
+{
+  command_interfaces_map.reserve(command_interfaces_map.size() + component_info.size());
+
+  for (const auto & component : component_info)
+  {
+    for (const auto & command_interface : component.command_interfaces)
+    {
+      InterfaceDescription description(component.name, command_interface);
+      command_interfaces_map.insert(std::make_pair(description.get_name(), description));
+    }
+  }
 }
 
 }  // namespace hardware_interface
