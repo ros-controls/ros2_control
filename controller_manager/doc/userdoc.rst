@@ -90,39 +90,34 @@ There are two scripts to interact with controller manager from launch files:
 .. code-block:: console
 
     $ ros2 run controller_manager spawner -h
-<<<<<<< HEAD
-    usage: spawner [-h] [-c CONTROLLER_MANAGER] [-p PARAM_FILE] [--load-only] [--stopped] [-t CONTROLLER_TYPE] [-u]
-                      [--controller-manager-timeout CONTROLLER_MANAGER_TIMEOUT]
-                      controller_name
-=======
-    usage: spawner [-h] [-c CONTROLLER_MANAGER] [-p PARAM_FILE] [-n NAMESPACE] [--load-only] [--inactive] [-u] [--controller-manager-timeout CONTROLLER_MANAGER_TIMEOUT]
-                  [--switch-timeout SWITCH_TIMEOUT] [--activate-as-group]
+    usage: spawner [-h] [-c CONTROLLER_MANAGER] [-p PARAM_FILE] [-n NAMESPACE] [--load-only] [--stopped] [--inactive] [-t CONTROLLER_TYPE] [-u]
+                  [--controller-manager-timeout CONTROLLER_MANAGER_TIMEOUT] [--switch-timeout SWITCH_TIMEOUT] [--activate-as-group]
                   controller_names [controller_names ...]
->>>>>>> 23bd1c3 (Add CM `switch_controller` service timeout as parameter to spawner.py (#1790))
 
     positional arguments:
-      controller_name       Name of the controller
+      controller_names      List of controllers
 
-    optional arguments:
+    options:
       -h, --help            show this help message and exit
       -c CONTROLLER_MANAGER, --controller-manager CONTROLLER_MANAGER
                             Name of the controller manager ROS node
       -p PARAM_FILE, --param-file PARAM_FILE
                             Controller param file to be loaded into controller node before configure
+      -n NAMESPACE, --namespace NAMESPACE
+                            Namespace for the controller
       --load-only           Only load the controller and leave unconfigured.
-      --stopped             Load and configure the controller, however do not start them
+      --stopped             Load and configure the controller, however do not activate them
+      --inactive            Load and configure the controller, however do not activate them
       -t CONTROLLER_TYPE, --controller-type CONTROLLER_TYPE
                             If not provided it should exist in the controller manager namespace
       -u, --unload-on-kill  Wait until this application is interrupted and unload controller
       --controller-manager-timeout CONTROLLER_MANAGER_TIMEOUT
                             Time to wait for the controller manager
-<<<<<<< HEAD
-=======
       --switch-timeout SWITCH_TIMEOUT
-                            Time to wait for a successful state switch of controllers. Useful if controllers cannot be switched immediately, e.g., paused
-                            simulations at startup
-      --activate-as-group   Activates all the parsed controllers list together instead of one by one. Useful for activating all chainable controllers altogether
->>>>>>> 23bd1c3 (Add CM `switch_controller` service timeout as parameter to spawner.py (#1790))
+                            Time to wait for a successful state switch of controllers. Useful when switching cannot be performed immediately, e.g.,
+                            paused simulations at startup
+      --activate-as-group   Activates all the parsed controllers list together instead of one by one. Useful for activating all chainable controllers
+                            altogether
 
 
 The parsed controller config file can follow the same conventions as the typical ROS 2 parameter file format. Now, the spawner can handle config files with wildcard entries and also the controller name in the absolute namespace. See the following examples on the config files:
