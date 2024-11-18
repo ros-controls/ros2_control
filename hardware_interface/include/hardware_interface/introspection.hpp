@@ -22,7 +22,7 @@
 namespace hardware_interface
 {
 constexpr char DEFAULT_REGISTRY_KEY[] = "ros2_control";
-constexpr char DEFAULT_INTROSPECTION_TOPIC[] = "introspection_data";
+constexpr char DEFAULT_INTROSPECTION_TOPIC[] = "~/introspection_data";
 }  // namespace hardware_interface
 
 #endif  // HARDWARE_INTERFACE__INTROSPECTION_HPP_
