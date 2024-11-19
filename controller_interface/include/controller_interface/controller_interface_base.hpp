@@ -26,6 +26,7 @@
 #include "hardware_interface/loaned_command_interface.hpp"
 #include "hardware_interface/loaned_state_interface.hpp"
 
+#include "pal_statistics/pal_statistics_utils.hpp"
 #include "rclcpp/version.h"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
 
@@ -305,6 +306,15 @@ public:
    */
   void wait_for_trigger_update_to_finish();
 
+  CONTROLLER_INTERFACE_PUBLIC
+  std::string get_name() const;
+
+  /// Enable or disable introspection of the controller.
+  /**
+   * \param[in] enable Enable introspection if true, disable otherwise.
+   */
+  void enable_introspection(bool enable);
+
 protected:
   std::vector<hardware_interface::LoanedCommandInterface> command_interfaces_;
   std::vector<hardware_interface::LoanedStateInterface> state_interfaces_;
@@ -316,6 +326,9 @@ private:
   bool is_async_ = false;
   std::string urdf_ = "";
   ControllerUpdateStats trigger_stats_;
+
+protected:
+  pal_statistics::RegistrationsRAII stats_registrations_;
 };
 
 using ControllerInterfaceBaseSharedPtr = std::shared_ptr<ControllerInterfaceBase>;
