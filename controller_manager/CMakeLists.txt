@@ -212,6 +212,7 @@ if(BUILD_TESTING)
   )
   target_link_libraries(test_hardware_spawner
     controller_manager
+    test_controller
     ros2_control_test_assets::ros2_control_test_assets
   )
 
