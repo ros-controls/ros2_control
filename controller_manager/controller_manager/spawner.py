@@ -116,7 +116,16 @@ def main(args=None):
         "--controller-manager-timeout",
         help="Time to wait for the controller manager service to be available",
         required=False,
-        default=0,
+        default=0.0,
+        type=float,
+    )
+    parser.add_argument(
+        "--switch-timeout",
+        help="Time to wait for a successful state switch of controllers."
+        " Useful when switching cannot be performed immediately, e.g.,"
+        " paused simulations at startup",
+        required=False,
+        default=5.0,
         type=float,
     )
     parser.add_argument(
@@ -141,6 +150,7 @@ def main(args=None):
     param_file = args.param_file
     controller_manager_timeout = args.controller_manager_timeout
     controller_manager_call_timeout = args.controller_manager_call_timeout
+    switch_timeout = args.switch_timeout
 
     if param_file and not os.path.isfile(param_file):
         raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), param_file)
@@ -234,7 +244,7 @@ def main(args=None):
                         [controller_name],
                         True,
                         True,
-                        controller_manager_timeout,
+                        switch_timeout,
                         controller_manager_call_timeout,
                     )
                     if not ret.ok:
@@ -259,7 +269,7 @@ def main(args=None):
                 controller_names,
                 True,
                 True,
-                controller_manager_timeout,
+                switch_timeout,
                 controller_manager_call_timeout,
             )
             if not ret.ok:
@@ -292,7 +302,7 @@ def main(args=None):
                     [],
                     True,
                     True,
-                    controller_manager_timeout,
+                    switch_timeout,
                     controller_manager_call_timeout,
                 )
                 if not ret.ok:
