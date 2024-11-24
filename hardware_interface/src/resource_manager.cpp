@@ -611,11 +611,13 @@ public:
     auto interfaces = hardware.export_state_interfaces();
     const auto interface_names = add_state_interfaces(interfaces);
 
-    RCLCPP_WARN(
-      get_logger(),
-      "Importing state interfaces for the hardware '%s' returned no state interfaces.",
-      hardware.get_name().c_str());
-
+    if (interface_names.empty())
+    {
+      RCLCPP_WARN(
+        get_logger(),
+        "Importing state interfaces for the hardware '%s' returned no state interfaces.",
+        hardware.get_name().c_str());
+    }
     hardware_info_map_[hardware.get_name()].state_interfaces = interface_names;
     available_state_interfaces_.reserve(
       available_state_interfaces_.capacity() + interface_names.size());
