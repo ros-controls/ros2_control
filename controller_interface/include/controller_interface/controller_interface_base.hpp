@@ -17,9 +17,11 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "controller_interface/visibility_control.h"
+#include "realtime_tools/async_function_handler.hpp"
 
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/loaned_command_interface.hpp"
@@ -58,6 +60,17 @@ struct InterfaceConfiguration
   std::vector<std::string> names = {};
 };
 
+struct ControllerUpdateStats
+{
+  void reset()
+  {
+    total_triggers = 0;
+    failed_triggers = 0;
+  }
+
+  unsigned int total_triggers;
+  unsigned int failed_triggers;
+};
 /**
  * Base interface class  for an controller. The interface may not be used to implement a controller.
  * The class provides definitions for `ControllerInterface` and `ChainableControllerInterface`
@@ -147,11 +160,28 @@ public:
    * **The method called in the (real-time) control loop.**
    *
    * \param[in] time The time at the start of this control loop iteration
-   * \param[in] period The measured time taken by the last control loop iteration
+   * \param[in] period The measured time since the last control loop iteration
    * \returns return_type::OK if update is successfully, otherwise return_type::ERROR.
    */
   CONTROLLER_INTERFACE_PUBLIC
   virtual return_type update(const rclcpp::Time & time, const rclcpp::Duration & period) = 0;
+
+  /**
+   * Trigger update method. This method is used by the controller_manager to trigger the update
+   * method of the controller.
+   * The method is used to trigger the update method of the controller synchronously or
+   * asynchronously, based on the controller configuration.
+   * **The method called in the (real-time) control loop.**
+   *
+   * \param[in] time The time at the start of this control loop iteration
+   * \param[in] period The measured time taken by the last control loop iteration
+   * \returns A pair with the first element being a boolean indicating if the async callback method
+   * was triggered and the second element being the last return value of the async function. For
+   * more details check the AsyncFunctionHandler implementation in `realtime_tools` package.
+   */
+  CONTROLLER_INTERFACE_PUBLIC
+  std::pair<bool, return_type> trigger_update(
+    const rclcpp::Time & time, const rclcpp::Duration & period);
 
   CONTROLLER_INTERFACE_PUBLIC
   std::shared_ptr<rclcpp_lifecycle::LifecycleNode> get_node();
@@ -270,15 +300,30 @@ public:
   CONTROLLER_INTERFACE_PUBLIC
   virtual bool is_in_chained_mode() const = 0;
 
+  /**
+   * Method to wait for any running async update cycle to finish after finishing the current cycle.
+   * This is needed to be called before deactivating the controller by the controller_manager, so
+   * that the interfaces still exist when the controller finishes its cycle and then it's exits.
+   *
+   * \note **The method is not real-time safe and shouldn't be called in the control loop.**
+   *
+   * If the controller is running in async mode, the method will wait for the current async update
+   * to finish. If the controller is not running in async mode, the method will do nothing.
+   */
+  CONTROLLER_INTERFACE_PUBLIC
+  void wait_for_trigger_update_to_finish();
+
 protected:
   std::vector<hardware_interface::LoanedCommandInterface> command_interfaces_;
   std::vector<hardware_interface::LoanedStateInterface> state_interfaces_;
 
 private:
   std::shared_ptr<rclcpp_lifecycle::LifecycleNode> node_;
+  std::unique_ptr<realtime_tools::AsyncFunctionHandler<return_type>> async_handler_;
   unsigned int update_rate_ = 0;
   bool is_async_ = false;
   std::string urdf_ = "";
+  ControllerUpdateStats trigger_stats_;
 };
 
 using ControllerInterfaceBaseSharedPtr = std::shared_ptr<ControllerInterfaceBase>;

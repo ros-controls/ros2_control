@@ -22,7 +22,6 @@
 #include <utility>
 #include <vector>
 
-#include "controller_interface/async_controller.hpp"
 #include "controller_interface/chainable_controller_interface.hpp"
 #include "controller_interface/controller_interface.hpp"
 #include "controller_interface/controller_interface_base.hpp"
@@ -124,7 +123,7 @@ public:
     controller_spec.c = controller;
     controller_spec.info.name = controller_name;
     controller_spec.info.type = controller_type;
-    controller_spec.next_update_cycle_time = std::make_shared<rclcpp::Time>(0);
+    controller_spec.last_update_cycle_time = std::make_shared<rclcpp::Time>(0);
     return add_controller_impl(controller_spec);
   }
 
@@ -628,9 +627,6 @@ private:
   };
 
   SwitchParams switch_params_;
-
-  std::unordered_map<std::string, std::unique_ptr<controller_interface::AsyncControllerThread>>
-    async_controller_threads_;
 };
 
 }  // namespace controller_manager

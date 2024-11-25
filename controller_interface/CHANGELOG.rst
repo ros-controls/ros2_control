@@ -2,6 +2,21 @@
 Changelog for package controller_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.20.0 (2024-11-08)
+-------------------
+* reset the async variables upon activation to work post exceptions (`#1860 <https://github.com/ros-controls/ros2_control/issues/1860>`_)
+* [CM] Fix controller missing update cycles in a real setup (`#1774 <https://github.com/ros-controls/ros2_control/issues/1774>`_)
+* Contributors: Sai Kishor Kothakota
+
+4.19.0 (2024-10-26)
+-------------------
+* [CM] Async Function Handler for Controllers (`#1489 <https://github.com/ros-controls/ros2_control/issues/1489>`_)
+* Check the update_rate set to the controllers to be a valid one (`#1788 <https://github.com/ros-controls/ros2_control/issues/1788>`_)
+* [PR-1689] Follow-up PR of the controller interface variants integration (`#1779 <https://github.com/ros-controls/ros2_control/issues/1779>`_)
+* Add `PoseSensor` semantic component (`#1775 <https://github.com/ros-controls/ros2_control/issues/1775>`_)
+* [RM/HW] Constify the exported state interfaces using ConstSharedPtr (`#1767 <https://github.com/ros-controls/ros2_control/issues/1767>`_)
+* Contributors: RobertWilbrandt, Sai Kishor Kothakota
+
 4.18.0 (2024-10-07)
 -------------------
 * Adapt controller Reference/StateInterfaces to New Way of Exporting (variant support) (`#1689 <https://github.com/ros-controls/ros2_control/issues/1689>`_)
