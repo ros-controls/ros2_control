@@ -158,7 +158,7 @@ There are two scripts to interact with controller manager from launch files:
 
     $ ros2 run controller_manager spawner -h
     usage: spawner [-h] [-c CONTROLLER_MANAGER] [-p PARAM_FILE] [-n NAMESPACE] [--load-only] [--inactive] [-u] [--controller-manager-timeout CONTROLLER_MANAGER_TIMEOUT]
-                  [--switch-timeout SWITCH_TIMEOUT] [--activate-as-group] [--service-call-timeout service_call_timeout]
+                  [--switch-timeout SWITCH_TIMEOUT] [--activate-as-group] [--service-call-timeout SERVICE_CALL_TIMEOUT]
                   controller_names [controller_names ...]
 
     positional arguments:
