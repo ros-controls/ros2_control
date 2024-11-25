@@ -129,7 +129,7 @@ def main(args=None):
         type=float,
     )
     parser.add_argument(
-        "--controller-manager-call-timeout",
+        "--service-call-timeout",
         help="Time to wait for the service response from the controller manager",
         required=False,
         default=10.0,
@@ -149,7 +149,7 @@ def main(args=None):
     controller_manager_name = args.controller_manager
     param_file = args.param_file
     controller_manager_timeout = args.controller_manager_timeout
-    controller_manager_call_timeout = args.controller_manager_call_timeout
+    service_call_timeout = args.service_call_timeout
     switch_timeout = args.switch_timeout
 
     if param_file and not os.path.isfile(param_file):
@@ -190,7 +190,7 @@ def main(args=None):
                 controller_manager_name,
                 controller_name,
                 controller_manager_timeout,
-                controller_manager_call_timeout,
+                service_call_timeout,
             ):
                 node.get_logger().warn(
                     bcolors.WARNING
@@ -228,7 +228,7 @@ def main(args=None):
                     controller_manager_name,
                     controller_name,
                     controller_manager_timeout,
-                    controller_manager_call_timeout,
+                    service_call_timeout,
                 )
                 if not ret.ok:
                     node.get_logger().error(
@@ -245,7 +245,7 @@ def main(args=None):
                         True,
                         True,
                         switch_timeout,
-                        controller_manager_call_timeout,
+                        service_call_timeout,
                     )
                     if not ret.ok:
                         node.get_logger().error(
@@ -270,7 +270,7 @@ def main(args=None):
                 True,
                 True,
                 switch_timeout,
-                controller_manager_call_timeout,
+                service_call_timeout,
             )
             if not ret.ok:
                 node.get_logger().error(
@@ -303,7 +303,7 @@ def main(args=None):
                     True,
                     True,
                     switch_timeout,
-                    controller_manager_call_timeout,
+                    service_call_timeout,
                 )
                 if not ret.ok:
                     node.get_logger().error(
