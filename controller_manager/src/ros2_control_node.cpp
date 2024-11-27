@@ -59,7 +59,7 @@ int main(int argc, char ** argv)
 
   const bool use_sim_time = cm->get_parameter_or("use_sim_time", false);
 
-  const bool lock_memory = cm->get_parameter_or<bool>("lock_memory", true);
+  const bool lock_memory = cm->get_parameter_or<bool>("lock_memory", false);
   std::string message;
   if (lock_memory && !realtime_tools::lock_memory(message))
   {
