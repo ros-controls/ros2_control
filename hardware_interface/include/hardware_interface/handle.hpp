@@ -212,7 +212,8 @@ public:
   {
     if (std::holds_alternative<double>(value_))
     {
-      std::function<double()> f = [this]() { return *value_ptr_; };
+      std::function<double()> f = [this]()
+      { return value_ptr_ ? *value_ptr_ : std::numeric_limits<double>::quiet_NaN(); };
       REGISTER_ENTITY(DEFAULT_REGISTRY_KEY, "state_interface." + get_name(), f);
     }
   }
@@ -258,7 +259,8 @@ public:
     {
       RCLCPP_INFO_STREAM(
         rclcpp::get_logger("command_interface"), "Registering handle: " << get_name());
-      std::function<double()> f = [this]() { return *value_ptr_; };
+      std::function<double()> f = [this]()
+      { return value_ptr_ ? *value_ptr_ : std::numeric_limits<double>::quiet_NaN(); };
       REGISTER_ENTITY(DEFAULT_REGISTRY_KEY, "command_interface." + get_name(), f);
     }
   }
