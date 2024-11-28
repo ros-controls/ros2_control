@@ -139,9 +139,6 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
         &ControllerInterfaceBase::update, this, std::placeholders::_1, std::placeholders::_2),
       thread_priority);
     async_handler_->start_thread();
-    REGISTER_DEFAULT_INTROSPECTION(
-      "execution_time",
-      std::function<int()>([this]() { return async_handler_->get_last_execution_time().count(); }));
   }
   REGISTER_DEFAULT_INTROSPECTION("total_triggers", &trigger_stats_.total_triggers);
   REGISTER_DEFAULT_INTROSPECTION("failed_triggers", &trigger_stats_.failed_triggers);
