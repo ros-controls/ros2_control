@@ -169,7 +169,7 @@ There are two scripts to interact with controller manager from launch files:
       -c CONTROLLER_MANAGER, --controller-manager CONTROLLER_MANAGER
                             Name of the controller manager ROS node
       -p PARAM_FILE, --param-file PARAM_FILE
-                            Controller param file to be loaded into controller node before configure
+                            Controller param file to be loaded into controller node before configure. Pass multiple times to load different files for different controllers or to override the parameters of the same controller.
       -n NAMESPACE, --namespace NAMESPACE
                             DEPRECATED Namespace for the controller_manager and the controller(s)
       --load-only           Only load the controller and leave unconfigured.
