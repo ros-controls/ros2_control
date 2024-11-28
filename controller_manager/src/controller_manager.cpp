@@ -24,6 +24,7 @@
 #include "controller_manager_msgs/msg/hardware_component_state.hpp"
 #include "hardware_interface/types/lifecycle_state_names.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
+#include "rcl/arguments.h"
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_lifecycle/state.hpp"
 
@@ -594,16 +595,16 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_c
   // read_only params, dynamic maps lists etc
   // Now check if the parameters_file parameter exist
   const std::string param_name = controller_name + ".params_file";
-  std::string parameters_file;
+  std::vector<std::string> parameters_files;
 
   // Check if parameter has been declared
   if (!has_parameter(param_name))
   {
-    declare_parameter(param_name, rclcpp::ParameterType::PARAMETER_STRING);
+    declare_parameter(param_name, rclcpp::ParameterType::PARAMETER_STRING_ARRAY);
   }
-  if (get_parameter(param_name, parameters_file) && !parameters_file.empty())
+  if (get_parameter(param_name, parameters_files) && !parameters_files.empty())
   {
-    controller_spec.info.parameters_file = parameters_file;
+    controller_spec.info.parameters_files = parameters_files;
   }
 
   return add_controller_impl(controller_spec);
@@ -2564,26 +2565,28 @@ rclcpp::NodeOptions ControllerManager::determine_controller_node_options(
       .allow_undeclared_parameters(true)
       .automatically_declare_parameters_from_overrides(true);
   std::vector<std::string> node_options_arguments = controller_node_options.arguments();
-  const std::string ros_args_arg = "--ros-args";
-  if (controller.info.parameters_file.has_value())
+  if (controller.info.parameters_files.has_value())
   {
-    if (!check_for_element(node_options_arguments, ros_args_arg))
+    for (const auto & parameters_file : controller.info.parameters_files.value())
     {
-      node_options_arguments.push_back(ros_args_arg);
+      if (!check_for_element(node_options_arguments, RCL_ROS_ARGS_FLAG))
+      {
+        node_options_arguments.push_back(RCL_ROS_ARGS_FLAG);
+      }
+      node_options_arguments.push_back(RCL_PARAM_FILE_FLAG);
+      node_options_arguments.push_back(parameters_file);
     }
-    node_options_arguments.push_back("--params-file");
-    node_options_arguments.push_back(controller.info.parameters_file.value());
   }
 
   // ensure controller's `use_sim_time` parameter matches controller_manager's
   const rclcpp::Parameter use_sim_time = this->get_parameter("use_sim_time");
   if (use_sim_time.as_bool())
   {
-    if (!check_for_element(node_options_arguments, ros_args_arg))
+    if (!check_for_element(node_options_arguments, RCL_ROS_ARGS_FLAG))
     {
-      node_options_arguments.push_back(ros_args_arg);
+      node_options_arguments.push_back(RCL_ROS_ARGS_FLAG);
     }
-    node_options_arguments.push_back("-p");
+    node_options_arguments.push_back(RCL_PARAM_FLAG);
     node_options_arguments.push_back("use_sim_time:=true");
   }
 
