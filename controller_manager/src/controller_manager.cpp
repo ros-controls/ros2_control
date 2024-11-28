@@ -553,7 +553,7 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_c
   const std::string param_name = controller_name + ".params_file";
   controller_spec.info.parameters_files.clear();
 
-  // Check if parameter has been declared
+  // get_parameter checks if parameter has been declared
   rclcpp::Parameter params_files_parameter;
   if (get_parameter(param_name, params_files_parameter))
   {
