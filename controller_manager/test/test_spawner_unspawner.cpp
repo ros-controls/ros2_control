@@ -397,6 +397,61 @@ TEST_F(TestLoadController, unload_on_kill_activate_as_group)
   ASSERT_EQ(cm_->get_loaded_controllers().size(), 0ul);
 }
 
+TEST_F(TestLoadController, spawner_test_to_check_parameter_overriding)
+{
+  const std::string main_test_file_path =
+    ament_index_cpp::get_package_prefix("controller_manager") +
+    "/test/test_controller_spawner_with_type.yaml";
+  const std::string overriding_test_file_path =
+    ament_index_cpp::get_package_prefix("controller_manager") +
+    "/test/test_controller_overriding_parameters.yaml";
+
+  ControllerManagerRunner cm_runner(this);
+  EXPECT_EQ(
+    call_spawner(
+      "ctrl_with_parameters_and_type --load-only -c "
+      "test_controller_manager -p " +
+      main_test_file_path + " -p " + overriding_test_file_path),
+    0);
+
+  ASSERT_EQ(cm_->get_loaded_controllers().size(), 1ul);
+
+  auto ctrl_with_parameters_and_type = cm_->get_loaded_controllers()[0];
+  ASSERT_EQ(ctrl_with_parameters_and_type.info.name, "ctrl_with_parameters_and_type");
+  ASSERT_EQ(ctrl_with_parameters_and_type.info.type, test_controller::TEST_CONTROLLER_CLASS_NAME);
+  ASSERT_EQ(
+    ctrl_with_parameters_and_type.c->get_lifecycle_state().id(),
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+  ASSERT_THAT(
+    cm_->get_parameter("ctrl_with_parameters_and_type.params_file").as_string_array(),
+    std::vector<std::string>({main_test_file_path, overriding_test_file_path}));
+  auto ctrl_node = ctrl_with_parameters_and_type.c->get_node();
+  ASSERT_THAT(
+    ctrl_with_parameters_and_type.info.parameters_files,
+    std::vector<std::string>({main_test_file_path, overriding_test_file_path}));
+  if (!ctrl_node->has_parameter("joint_names"))
+  {
+    ctrl_node->declare_parameter("joint_names", std::vector<std::string>({"random_joint"}));
+  }
+  ASSERT_THAT(
+    ctrl_node->get_parameter("joint_names").as_string_array(),
+    std::vector<std::string>({"joint0"}));
+
+  if (!ctrl_node->has_parameter("interface_name"))
+  {
+    ctrl_node->declare_parameter("interface_name", "invalid_interface");
+  }
+  ASSERT_EQ(ctrl_node->get_parameter("interface_name").as_string(), "impedance")
+    << "The parameter should be "
+       "overridden";
+
+  if (!ctrl_node->has_parameter("joint_offset"))
+  {
+    ctrl_node->declare_parameter("joint_offset", -M_PI);
+  }
+  ASSERT_EQ(ctrl_node->get_parameter("joint_offset").as_double(), 0.2);
+}
+
 TEST_F(TestLoadController, spawner_test_fallback_controllers)
 {
   const std::string test_file_path = ament_index_cpp::get_package_prefix("controller_manager") +
