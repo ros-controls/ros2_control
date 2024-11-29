@@ -280,13 +280,16 @@ TEST_F(TestLoadController, spawner_test_with_params_file_string_parameter)
     lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
   ASSERT_EQ(
     cm_->get_parameter("ctrl_with_parameters_and_type.params_file").as_string(), test_file_path);
+  auto ctrl_node = ctrl_with_parameters_and_type.c->get_node();
   ASSERT_THAT(
     ctrl_with_parameters_and_type.info.parameters_files,
     std::vector<std::string>({test_file_path}));
-  ctrl_with_parameters_and_type.c->get_node()->declare_parameter(
-    "joint_names", std::vector<std::string>({"random_joint"}));
+  if (!ctrl_node->has_parameter("joint_names"))
+  {
+    ctrl_node->declare_parameter("joint_names", std::vector<std::string>({"random_joint"}));
+  }
   ASSERT_THAT(
-    ctrl_with_parameters_and_type.c->get_node()->get_parameter("joint_names").as_string_array(),
+    ctrl_node->get_parameter("joint_names").as_string_array(),
     std::vector<std::string>({"joint0"}));
 }
 
