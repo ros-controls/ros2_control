@@ -256,6 +256,12 @@ TEST_F(TestLoadController, spawner_test_with_params_file_string_parameter)
   ASSERT_THAT(
     ctrl_node->get_parameter("joint_names").as_string_array(),
     std::vector<std::string>({"joint0"}));
+
+  if (!ctrl_node->has_parameter("interface_name"))
+  {
+    ctrl_node->declare_parameter("interface_name", "invalid_interface");
+  }
+  ASSERT_EQ(ctrl_node->get_parameter("interface_name").as_string(), "position");
 }
 
 TEST_F(TestLoadController, spawner_test_type_in_arg)
