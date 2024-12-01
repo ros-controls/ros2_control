@@ -2366,7 +2366,7 @@ controller_interface::return_type ControllerManager::update(
         run_controller_at_cm_rate ? period
                                   : rclcpp::Duration::from_seconds((1.0 / controller_update_rate));
 
-      const rclcpp::Time current_time = get_clock()->now();
+      rclcpp::Time current_time = get_clock()->now();
       rclcpp::Duration controller_actual_period(0, 0);
       if (
         current_time ==
@@ -2374,23 +2374,19 @@ controller_interface::return_type ControllerManager::update(
       {
         // this can happen with sim_time until the /clock is received
         RCLCPP_INFO(get_logger(), "No clock received, use default controller_period");
-        controller_actual_period = controller_period;
+        current_time = time;
       }
-      else
+      if (
+        *loaded_controller.last_update_cycle_time ==
+        rclcpp::Time(0, 0, this->get_node_clock_interface()->get_clock()->get_clock_type()))
       {
-        if (
-          *loaded_controller.last_update_cycle_time ==
-          rclcpp::Time(0, 0, this->get_node_clock_interface()->get_clock()->get_clock_type()))
-        {
-          // it is zero after activation
-          *loaded_controller.last_update_cycle_time = current_time - controller_period;
-          RCLCPP_DEBUG(
-            get_logger(), "Setting last_update_cycle_time to %fs for the controller : %s",
-            loaded_controller.last_update_cycle_time->seconds(),
-            loaded_controller.info.name.c_str());
-        }
-        controller_actual_period = (current_time - *loaded_controller.last_update_cycle_time);
+        // it is zero after activation
+        *loaded_controller.last_update_cycle_time = current_time - controller_period;
+        RCLCPP_DEBUG(
+          get_logger(), "Setting last_update_cycle_time to %fs for the controller : %s",
+          loaded_controller.last_update_cycle_time->seconds(), loaded_controller.info.name.c_str());
       }
+      controller_actual_period = (current_time - *loaded_controller.last_update_cycle_time);
 
       /// @note The factor 0.99 is used to avoid the controllers skipping update cycles due to the
       /// jitter in the system sleep cycles.
