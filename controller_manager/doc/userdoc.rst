@@ -141,9 +141,9 @@ There are two scripts to interact with controller manager from launch files:
 .. code-block:: console
 
     $ ros2 run controller_manager spawner -h
-    usage: spawner [-h] [-c CONTROLLER_MANAGER] [-p PARAM_FILE] [-n NAMESPACE] [--load-only] [--inactive] [-t CONTROLLER_TYPE] [-u]
-                      [--controller-manager-timeout CONTROLLER_MANAGER_TIMEOUT]
-                      controller_name
+    usage: spawner [-h] [-c CONTROLLER_MANAGER] [-p PARAM_FILE] [-n NAMESPACE] [--load-only] [--inactive] [-u] [--controller-manager-timeout CONTROLLER_MANAGER_TIMEOUT]
+                  [--switch-timeout SWITCH_TIMEOUT] [--activate-as-group] [--service-call-timeout SERVICE_CALL_TIMEOUT]
+                  controller_names [controller_names ...]
 
     positional arguments:
       controller_names      List of controllers
@@ -153,18 +153,20 @@ There are two scripts to interact with controller manager from launch files:
       -c CONTROLLER_MANAGER, --controller-manager CONTROLLER_MANAGER
                             Name of the controller manager ROS node
       -p PARAM_FILE, --param-file PARAM_FILE
-                            Controller param file to be loaded into controller node before configure
+                            Controller param file to be loaded into controller node before configure. Pass multiple times to load different files for different controllers or to override the parameters of the same controller.
       -n NAMESPACE, --namespace NAMESPACE
                             DEPRECATED Namespace for the controller_manager and the controller(s)
       --load-only           Only load the controller and leave unconfigured.
       --inactive            Load and configure the controller, however do not activate them
       -u, --unload-on-kill  Wait until this application is interrupted and unload controller
       --controller-manager-timeout CONTROLLER_MANAGER_TIMEOUT
-                            Time to wait for the controller manager
+                            Time to wait for the controller manager service to be available
+      --service-call-timeout SERVICE_CALL_TIMEOUT
+                            Time to wait for the service response from the controller manager
+      --switch-timeout SWITCH_TIMEOUT
+                            Time to wait for a successful state switch of controllers. Useful if controllers cannot be switched immediately, e.g., paused
+                            simulations at startup
       --activate-as-group   Activates all the parsed controllers list together instead of one by one. Useful for activating all chainable controllers altogether
-      --fallback_controllers FALLBACK_CONTROLLERS [FALLBACK_CONTROLLERS ...]
-                            Fallback controllers list are activated as a fallback strategy when the spawned controllers fail. When the argument is provided, it takes precedence over the fallback_controllers list in the
-                            param file
 
 
 The parsed controller config file can follow the same conventions as the typical ROS 2 parameter file format. Now, the spawner can handle config files with wildcard entries and also the controller name in the absolute namespace. See the following examples on the config files:
@@ -227,15 +229,18 @@ The parsed controller config file can follow the same conventions as the typical
 .. code-block:: console
 
     $ ros2 run controller_manager unspawner -h
-    usage: unspawner [-h] [-c CONTROLLER_MANAGER] controller_name
+    usage: unspawner [-h] [-c CONTROLLER_MANAGER] [--switch-timeout SWITCH_TIMEOUT] controller_names [controller_names ...]
 
     positional arguments:
-      controller_name       Name of the controller
+      controller_names      Name of the controller
 
-    optional arguments:
+    options:
       -h, --help            show this help message and exit
       -c CONTROLLER_MANAGER, --controller-manager CONTROLLER_MANAGER
                             Name of the controller manager ROS node
+      --switch-timeout SWITCH_TIMEOUT
+                            Time to wait for a successful state switch of controllers. Useful if controllers cannot be switched immediately, e.g., paused
+                            simulations at startup
 
 ``hardware_spawner``
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -303,6 +308,38 @@ The workaround for this is to specify another node name remap rule in the ``Node
 
       auto cm = std::make_shared<controller_manager::ControllerManager>(
         executor, "_target_node_name", "some_optional_namespace", options);
+
+Launching controller_manager with ros2_control_node
+---------------------------------------------------
+
+The controller_manager can be launched with the ros2_control_node executable. The following example shows how to launch the controller_manager with the ros2_control_node executable:
+
+.. code-block:: python
+
+    control_node = Node(
+        package="controller_manager",
+        executable="ros2_control_node",
+        parameters=[robot_controllers],
+        output="both",
+    )
+
+The ros2_control_node executable uses the following parameters from the ``controller_manager`` node:
+
+lock_memory (optional; bool; default: false)
+  Locks the memory of the ``controller_manager`` node at startup to physical RAM in order to avoid page faults
+  and to prevent the node from being swapped out to disk.
+  Find more information about the setup for memory locking in the following link : `How to set ulimit values <https://access.redhat.com/solutions/61334>`_
+  The following command can be used to set the memory locking limit temporarily : ``ulimit -l unlimited``.
+
+cpu_affinity (optional; int; default: -1)
+  Sets the CPU affinity of the ``controller_manager`` node to the specified CPU core.
+  The value of -1 means that the CPU affinity is not set.
+
+thread_priority (optional; int; default: 50)
+  Sets the thread priority of the ``controller_manager`` node to the specified value. The value must be between 0 and 99.
+
+use_sim_time (optional; bool; default: false)
+  Enables the use of simulation time in the ``controller_manager`` node.
 
 Concepts
 -----------
