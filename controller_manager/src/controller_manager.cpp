@@ -2366,30 +2366,27 @@ controller_interface::return_type ControllerManager::update(
         run_controller_at_cm_rate ? period
                                   : rclcpp::Duration::from_seconds((1.0 / controller_update_rate));
 
-      rclcpp::Time current_time = get_clock()->now();
-      rclcpp::Duration controller_actual_period(0, 0);
-      if (
-        current_time ==
-        rclcpp::Time(0, 0, this->get_node_clock_interface()->get_clock()->get_clock_type()))
+      rclcpp::Time current_time;
+      if (get_clock()->started())
       {
-        if (
-          time ==
-          rclcpp::Time(0, 0, this->get_node_clock_interface()->get_clock()->get_clock_type()))
-        {
-          throw std::runtime_error(
-            "No clock received, and time argument is zero. Check your controller_manager node's "
-            "clock configuration (use_sim_time parameter) and if a valid clock source is "
-            "available. Also pass a proper time argument to the update method.");
-        }
-        else
-        {
-          // this can happen with use_sim_time=true until the /clock is received
-          RCLCPP_WARN(
-            get_logger(),
-            "No clock received, using time argument instead! Check your node's clock "
-            "configuration (use_sim_time parameter) and if a valid clock source is available");
-          current_time = time;
-        }
+        current_time = get_clock()->now();
+      }
+      else if (
+        time == rclcpp::Time(0, 0, this->get_node_clock_interface()->get_clock()->get_clock_type()))
+      {
+        throw std::runtime_error(
+          "No clock received, and time argument is zero. Check your controller_manager node's "
+          "clock configuration (use_sim_time parameter) and if a valid clock source is "
+          "available. Also pass a proper time argument to the update method.");
+      }
+      else
+      {
+        // this can happen with use_sim_time=true until the /clock is received
+        RCLCPP_WARN(
+          get_logger(),
+          "No clock received, using time argument instead! Check your node's clock "
+          "configuration (use_sim_time parameter) and if a valid clock source is available.");
+        current_time = time;
       }
       if (
         *loaded_controller.last_update_cycle_time ==
@@ -2412,6 +2409,7 @@ controller_interface::return_type ControllerManager::update(
           get_logger(), "Setting last_update_cycle_time to %fs for the controller : %s",
           loaded_controller.last_update_cycle_time->seconds(), loaded_controller.info.name.c_str());
       }
+      rclcpp::Duration controller_actual_period(0, 0);
       if (current_time > *loaded_controller.last_update_cycle_time)
       {
         // the nominal case
