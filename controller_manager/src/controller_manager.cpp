@@ -2372,21 +2372,58 @@ controller_interface::return_type ControllerManager::update(
         current_time ==
         rclcpp::Time(0, 0, this->get_node_clock_interface()->get_clock()->get_clock_type()))
       {
-        // this can happen with sim_time until the /clock is received
-        RCLCPP_WARN(get_logger(), "No clock received, using default controller_period!");
-        current_time = time;
+        if (
+          time ==
+          rclcpp::Time(0, 0, this->get_node_clock_interface()->get_clock()->get_clock_type()))
+        {
+          throw std::runtime_error(
+            "No clock received, and time argument is zero. Check your controller_manager node's "
+            "clock configuration (use_sim_time parameter) and if a valid clock source is "
+            "available. Also pass a proper time argument to the update method.");
+        }
+        else
+        {
+          // this can happen with use_sim_time=true until the /clock is received
+          RCLCPP_WARN(
+            get_logger(),
+            "No clock received, using time argument instead! Check your node's clock "
+            "configuration (use_sim_time parameter) and if a valid clock source is available");
+          current_time = time;
+        }
       }
       if (
         *loaded_controller.last_update_cycle_time ==
         rclcpp::Time(0, 0, this->get_node_clock_interface()->get_clock()->get_clock_type()))
       {
-        // it is zero after activation
-        *loaded_controller.last_update_cycle_time = current_time - controller_period;
+        // last_update_cycle_time is zero after activation
+        if (
+          current_time <
+          rclcpp::Time(0, 0, this->get_node_clock_interface()->get_clock()->get_clock_type()) +
+            controller_period)
+        {
+          // can't store negative time
+          *loaded_controller.last_update_cycle_time = current_time;
+        }
+        else
+        {
+          *loaded_controller.last_update_cycle_time = current_time - controller_period;
+        }
         RCLCPP_DEBUG(
           get_logger(), "Setting last_update_cycle_time to %fs for the controller : %s",
           loaded_controller.last_update_cycle_time->seconds(), loaded_controller.info.name.c_str());
       }
-      controller_actual_period = (current_time - *loaded_controller.last_update_cycle_time);
+      if (current_time > *loaded_controller.last_update_cycle_time)
+      {
+        // the nominal case
+        controller_actual_period = (current_time - *loaded_controller.last_update_cycle_time);
+      }
+      else
+      {
+        controller_actual_period = controller_period;
+        RCLCPP_DEBUG(
+          get_logger(), "Using default controller_period %fs for the controller : %s",
+          controller_actual_period.seconds(), loaded_controller.info.name.c_str());
+      }
 
       /// @note The factor 0.99 is used to avoid the controllers skipping update cycles due to the
       /// jitter in the system sleep cycles.
