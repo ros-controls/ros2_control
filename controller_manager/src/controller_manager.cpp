@@ -2373,7 +2373,7 @@ controller_interface::return_type ControllerManager::update(
         rclcpp::Time(0, 0, this->get_node_clock_interface()->get_clock()->get_clock_type()))
       {
         // this can happen with sim_time until the /clock is received
-        RCLCPP_INFO(get_logger(), "No clock received, use default controller_period");
+        RCLCPP_WARN(get_logger(), "No clock received, using default controller_period!");
         current_time = time;
       }
       if (
