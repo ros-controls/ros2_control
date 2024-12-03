@@ -184,7 +184,13 @@ if(BUILD_TESTING)
   ament_target_dependencies(test_hardware_spawner ros2_control_test_assets)
 
   install(FILES test/test_controller_spawner_with_type.yaml
-  DESTINATION test)
+    DESTINATION test)
+
+  install(FILES test/test_controller_spawner_with_basic_controllers.yaml
+    DESTINATION test)
+
+  install(FILES test/test_controller_overriding_parameters.yaml
+    DESTINATION test)
 
   ament_add_gmock(
     test_hardware_management_srvs
