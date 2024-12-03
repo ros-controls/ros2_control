@@ -57,32 +57,6 @@ robot_description [std_msgs::msg::String]
 Parameters
 -----------
 
-hardware_components_initial_state
-  Map of parameters for controlled lifecycle management of hardware components.
-  The names of the components are defined as attribute of ``<ros2_control>``-tag in ``robot_description``.
-  Hardware components found in ``robot_description``, but without explicit state definition will be immediately activated.
-  Detailed explanation of each parameter is given below.
-  The full structure of the map is given in the following example:
-
-.. code-block:: yaml
-
-    hardware_components_initial_state:
-      unconfigured:
-        - "arm1"
-        - "arm2"
-      inactive:
-        - "base3"
-
-hardware_components_initial_state.unconfigured (optional; list<string>; default: empty)
-  Defines which hardware components will be only loaded immediately when controller manager is started.
-
-hardware_components_initial_state.inactive (optional; list<string>; default: empty)
-  Defines which hardware components will be configured immediately when controller manager is started.
-
-update_rate (mandatory; integer)
-  The frequency of controller manager's real-time update loop.
-  This loop reads states from hardware, updates controller and writes commands to hardware.
-
 <controller_name>.type
   Name of a plugin exported using ``pluginlib`` for a controller.
   This is a class from which controller's instance with name "``controller_name``" is created.
@@ -98,6 +72,16 @@ update_rate (mandatory; integer)
 .. warning::
   The fallback controllers activation is subject to the availability of the state and command interfaces at the time of activation.
   It is recommended to test the fallback strategy in simulation before deploying it on the real robot.
+
+.. generate_parameter_library_details::
+  ../src/controller_manager_parameters.yaml
+  parameters_context.yaml
+
+**An example parameter file:**
+
+.. generate_parameter_library_default::
+  ../src/controller_manager_parameters.yaml
+
 
 Handling Multiple Controller Managers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
