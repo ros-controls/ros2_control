@@ -27,7 +27,7 @@ from controller_manager import (
     switch_controllers,
     unload_controller,
     set_controller_parameters,
-    set_controller_parameters_from_param_file,
+    set_controller_parameters_from_param_files,
     bcolors,
 )
 from controller_manager.controller_manager_services import ServiceNotFoundError
@@ -85,7 +85,11 @@ def main(args=None):
     parser.add_argument(
         "-p",
         "--param-file",
-        help="Controller param file to be loaded into controller node before configure",
+        help="Controller param file to be loaded into controller node before configure. "
+        "Pass multiple times to load different files for different controllers or to "
+        "override the parameters of the same controller.",
+        default=None,
+        action="append",
         required=False,
     )
     parser.add_argument(
@@ -157,13 +161,15 @@ def main(args=None):
     args = parser.parse_args(command_line_args)
     controller_names = args.controller_names
     controller_manager_name = args.controller_manager
-    param_file = args.param_file
+    param_files = args.param_file
     controller_manager_timeout = args.controller_manager_timeout
     service_call_timeout = args.service_call_timeout
     switch_timeout = args.switch_timeout
 
-    if param_file and not os.path.isfile(param_file):
-        raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), param_file)
+    if param_files:
+        for param_file in param_files:
+            if not os.path.isfile(param_file):
+                raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), param_file)
 
     node = Node("spawner_" + controller_names[0])
 
@@ -208,12 +214,12 @@ def main(args=None):
                         args.controller_type,
                     ):
                         return 1
-                if param_file:
-                    if not set_controller_parameters_from_param_file(
+                if param_files:
+                    if not set_controller_parameters_from_param_files(
                         node,
                         controller_manager_name,
                         controller_name,
-                        param_file,
+                        param_files,
                         spawner_namespace,
                     ):
                         return 1
