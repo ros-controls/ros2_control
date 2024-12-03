@@ -178,7 +178,7 @@ public:
    *
    * \return vector of shared pointers to the created and stored StateInterfaces
    */
-  std::vector<StateInterface::ConstSharedPtr> on_export_state_interfaces()
+  virtual std::vector<StateInterface::ConstSharedPtr> on_export_state_interfaces()
   {
     // import the unlisted interfaces
     std::vector<hardware_interface::InterfaceDescription> unlisted_interface_descriptions =
@@ -270,7 +270,7 @@ public:
    *
    * \return vector of shared pointers to the created and stored CommandInterfaces
    */
-  std::vector<CommandInterface::SharedPtr> on_export_command_interfaces()
+  virtual std::vector<CommandInterface::SharedPtr> on_export_command_interfaces()
   {
     // import the unlisted interfaces
     std::vector<hardware_interface::InterfaceDescription> unlisted_interface_descriptions =
