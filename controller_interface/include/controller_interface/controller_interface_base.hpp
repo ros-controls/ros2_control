@@ -72,9 +72,19 @@ struct ControllerUpdateStats
   unsigned int failed_triggers;
 };
 
+/**
+ * Struct to store the status of the controller update method.
+ * The status contains information if the update was triggered successfully, the result of the
+ * update method and the execution duration of the update method. The status is used to provide
+ * feedback to the controller_manager.
+ * @var successful: true if the update was triggered successfully, false if not.
+ * @var result: return_type::OK if update is successfully, otherwise return_type::ERROR.
+ * @var execution_time: duration of the execution of the update method.
+ * @var period: period of the update method.
+ */
 struct ControllerUpdateStatus
 {
-  bool ok = true;
+  bool successful = true;
   return_type result = return_type::OK;
   std::optional<std::chrono::nanoseconds> execution_time = std::nullopt;
   std::optional<rclcpp::Duration> period = std::nullopt;

@@ -2432,7 +2432,7 @@ controller_interface::return_type ControllerManager::update(
         {
           const auto trigger_result =
             loaded_controller.c->trigger_update(current_time, controller_actual_period);
-          trigger_status = trigger_result.ok;
+          trigger_status = trigger_result.successful;
           controller_ret = trigger_result.result;
           if (trigger_status && trigger_result.execution_time.has_value())
           {

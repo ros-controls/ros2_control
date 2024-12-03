@@ -176,7 +176,7 @@ ControllerUpdateStatus ControllerInterfaceBase::trigger_update(
         "The controller missed %u update cycles out of %u total triggers.",
         trigger_stats_.failed_triggers, trigger_stats_.total_triggers);
     }
-    status.ok = result.first;
+    status.successful = result.first;
     status.result = result.second;
     const auto execution_time = async_handler_->get_last_execution_time();
     if (execution_time.count() > 0)
@@ -191,7 +191,7 @@ ControllerUpdateStatus ControllerInterfaceBase::trigger_update(
   else
   {
     const auto start_time = std::chrono::steady_clock::now();
-    status.ok = true;
+    status.successful = true;
     status.result = update(time, period);
     status.execution_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
       std::chrono::steady_clock::now() - start_time);
