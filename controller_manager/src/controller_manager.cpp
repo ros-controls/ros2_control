@@ -2382,10 +2382,11 @@ controller_interface::return_type ControllerManager::update(
       else
       {
         // this can happen with use_sim_time=true until the /clock is received
-        RCLCPP_WARN(
-          get_logger(),
+        rclcpp::Clock clock = rclcpp::Clock();
+        RCLCPP_WARN_THROTTLE(
+          get_logger(), clock, 1000,
           "No clock received, using time argument instead! Check your node's clock "
-          "configuration (use_sim_time parameter) and if a valid clock source is available.");
+          "configuration (use_sim_time parameter) and if a valid clock source is available");
         current_time = time;
       }
       if (
