@@ -71,6 +71,25 @@ struct ControllerUpdateStats
   unsigned int total_triggers;
   unsigned int failed_triggers;
 };
+
+/**
+ * Struct to store the status of the controller update method.
+ * The status contains information if the update was triggered successfully, the result of the
+ * update method and the execution duration of the update method. The status is used to provide
+ * feedback to the controller_manager.
+ * @var successful: true if the update was triggered successfully, false if not.
+ * @var result: return_type::OK if update is successfully, otherwise return_type::ERROR.
+ * @var execution_time: duration of the execution of the update method.
+ * @var period: period of the update method.
+ */
+struct ControllerUpdateStatus
+{
+  bool successful = true;
+  return_type result = return_type::OK;
+  std::optional<std::chrono::nanoseconds> execution_time = std::nullopt;
+  std::optional<rclcpp::Duration> period = std::nullopt;
+};
+
 /**
  * Base interface class  for an controller. The interface may not be used to implement a controller.
  * The class provides definitions for `ControllerInterface` and `ChainableControllerInterface`
@@ -175,13 +194,11 @@ public:
    *
    * \param[in] time The time at the start of this control loop iteration
    * \param[in] period The measured time taken by the last control loop iteration
-   * \returns A pair with the first element being a boolean indicating if the async callback method
-   * was triggered and the second element being the last return value of the async function. For
-   * more details check the AsyncFunctionHandler implementation in `realtime_tools` package.
+   * \returns ControllerUpdateStatus. The status contains information if the update was triggered
+   * successfully, the result of the update method and the execution duration of the update method.
    */
   CONTROLLER_INTERFACE_PUBLIC
-  std::pair<bool, return_type> trigger_update(
-    const rclcpp::Time & time, const rclcpp::Duration & period);
+  ControllerUpdateStatus trigger_update(const rclcpp::Time & time, const rclcpp::Duration & period);
 
   CONTROLLER_INTERFACE_PUBLIC
   std::shared_ptr<rclcpp_lifecycle::LifecycleNode> get_node();
