@@ -60,10 +60,13 @@ int main(int argc, char ** argv)
   const bool use_sim_time = cm->get_parameter_or("use_sim_time", false);
 
   const bool lock_memory = cm->get_parameter_or<bool>("lock_memory", false);
-  std::string message;
-  if (lock_memory && !realtime_tools::lock_memory(message))
+  if (lock_memory)
   {
-    RCLCPP_WARN(cm->get_logger(), "Unable to lock the memory : '%s'", message.c_str());
+    auto lock_result = realtime_tools::lock_memory();
+    if (!lock_result.first)
+    {
+      RCLCPP_WARN(cm->get_logger(), "Unable to lock the memory : '%s'", lock_result.second.c_str());
+    }
   }
 
   const int cpu_affinity = cm->get_parameter_or<int>("cpu_affinity", -1);
