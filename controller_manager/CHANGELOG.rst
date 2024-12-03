@@ -2,6 +2,12 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add CM `switch_controller` service timeout as parameter to spawner.py (backport `#1790 <https://github.com/ros-controls/ros2_control/issues/1790>`_) (`#1879 <https://github.com/ros-controls/ros2_control/issues/1879>`_)
+* Fix Hardware spawner and add tests for it (backport `#1759 <https://github.com/ros-controls/ros2_control/issues/1759>`_) (`#1827 <https://github.com/ros-controls/ros2_control/issues/1827>`_)
+* Contributors: mergify[bot]
+
 2.44.0 (2024-11-09)
 -------------------
 * [ros2_control_node] Handle simulation environment clocks (backport `#1810 <https://github.com/ros-controls/ros2_control/issues/1810>`_) (`#1862 <https://github.com/ros-controls/ros2_control/issues/1862>`_)
