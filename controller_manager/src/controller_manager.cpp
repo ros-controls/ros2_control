@@ -2420,35 +2420,13 @@ controller_interface::return_type ControllerManager::update(
       {
         // last_update_cycle_time is zero after activation
         first_update_cycle = true;
-        if (
-          current_time <
-          rclcpp::Time(0, 0, this->get_node_clock_interface()->get_clock()->get_clock_type()) +
-            controller_period)
-        {
-          // can't store negative time
-          *loaded_controller.last_update_cycle_time = current_time;
-        }
-        else
-        {
-          *loaded_controller.last_update_cycle_time = current_time - controller_period;
-        }
+        *loaded_controller.last_update_cycle_time = current_time;
         RCLCPP_DEBUG(
           get_logger(), "Setting last_update_cycle_time to %fs for the controller : %s",
           loaded_controller.last_update_cycle_time->seconds(), loaded_controller.info.name.c_str());
       }
-      rclcpp::Duration controller_actual_period(0, 0);
-      if (current_time > *loaded_controller.last_update_cycle_time)
-      {
-        // the nominal case
-        controller_actual_period = (current_time - *loaded_controller.last_update_cycle_time);
-      }
-      else
-      {
-        controller_actual_period = controller_period;
-        RCLCPP_DEBUG(
-          get_logger(), "Using default controller_period %fs for the controller : %s",
-          controller_actual_period.seconds(), loaded_controller.info.name.c_str());
-      }
+      const auto controller_actual_period =
+        (current_time - *loaded_controller.last_update_cycle_time);
 
       /// @note The factor 0.99 is used to avoid the controllers skipping update cycles due to the
       /// jitter in the system sleep cycles.
