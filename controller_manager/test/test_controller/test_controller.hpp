@@ -70,6 +70,8 @@ public:
 
   const std::string & getRobotDescription() const;
 
+  void set_external_commands_for_testing(const std::vector<double> & commands);
+
   unsigned int internal_counter = 0;
   bool simulate_cleanup_failure = false;
   // Variable where we store when cleanup was called, pointer because the controller

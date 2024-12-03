@@ -22,7 +22,6 @@
 #include <utility>
 #include <vector>
 
-#include "controller_interface/async_controller.hpp"
 #include "controller_interface/chainable_controller_interface.hpp"
 #include "controller_interface/controller_interface.hpp"
 #include "controller_interface/controller_interface_base.hpp"
@@ -51,6 +50,8 @@
 
 namespace controller_manager
 {
+class ParamListener;
+class Params;
 using ControllersListIterator = std::vector<controller_manager::ControllerSpec>::const_iterator;
 
 CONTROLLER_MANAGER_PUBLIC rclcpp::NodeOptions get_cm_node_options();
@@ -124,7 +125,13 @@ public:
     controller_spec.c = controller;
     controller_spec.info.name = controller_name;
     controller_spec.info.type = controller_type;
-    controller_spec.next_update_cycle_time = std::make_shared<rclcpp::Time>(0);
+    controller_spec.last_update_cycle_time = std::make_shared<rclcpp::Time>(0);
+    return add_controller_impl(controller_spec);
+  }
+
+  controller_interface::ControllerInterfaceBaseSharedPtr add_controller(
+    const ControllerSpec & controller_spec)
+  {
     return add_controller_impl(controller_spec);
   }
 
@@ -341,7 +348,7 @@ protected:
 
   // Per controller update rate support
   unsigned int update_loop_counter_ = 0;
-  unsigned int update_rate_ = 100;
+  unsigned int update_rate_;
   std::vector<std::vector<std::string>> chained_controllers_configuration_;
 
   std::unique_ptr<hardware_interface::ResourceManager> resource_manager_;
@@ -351,6 +358,8 @@ private:
   std::pair<std::string, std::string> split_command_interface(
     const std::string & command_interface);
   void init_controller_manager();
+
+  void initialize_parameters();
 
   /**
    * Clear request lists used when switching controllers. The lists are shared between "callback"
@@ -418,6 +427,18 @@ private:
     const std::vector<ControllerSpec> & controllers, int strictness,
     const ControllersListIterator controller_it);
 
+  /// Checks if the fallback controllers of the given controllers are in the right
+  /// state, so they can be activated immediately
+  /**
+   * \param[in] controllers is a list of controllers to activate.
+   * \param[in] controller_it is the iterator pointing to the controller to be activated.
+   * \return return_type::OK if all fallback controllers are in the right state, otherwise
+   * return_type::ERROR.
+   */
+  CONTROLLER_MANAGER_PUBLIC
+  controller_interface::return_type check_fallback_controllers_state_pre_activation(
+    const std::vector<ControllerSpec> & controllers, const ControllersListIterator controller_it);
+
   /**
    * @brief Inserts a controller into an ordered list based on dependencies to compute the
    * controller chain.
@@ -456,6 +477,8 @@ private:
    */
   rclcpp::NodeOptions determine_controller_node_options(const ControllerSpec & controller) const;
 
+  std::shared_ptr<controller_manager::ParamListener> cm_param_listener_;
+  std::shared_ptr<controller_manager::Params> params_;
   diagnostic_updater::Updater diagnostics_updater_;
 
   std::shared_ptr<rclcpp::Executor> executor_;
@@ -586,6 +609,8 @@ private:
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr robot_description_subscription_;
   rclcpp::TimerBase::SharedPtr robot_description_notification_timer_;
 
+  controller_manager::MovingAverageStatistics periodicity_stats_;
+
   struct SwitchParams
   {
     void reset()
@@ -610,9 +635,6 @@ private:
   };
 
   SwitchParams switch_params_;
-
-  std::unordered_map<std::string, std::unique_ptr<controller_interface::AsyncControllerThread>>
-    async_controller_threads_;
 };
 
 }  // namespace controller_manager

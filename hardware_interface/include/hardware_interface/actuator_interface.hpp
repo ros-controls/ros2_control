@@ -123,38 +123,10 @@ public:
   virtual CallbackReturn on_init(const HardwareInfo & hardware_info)
   {
     info_ = hardware_info;
-    import_state_interface_descriptions(info_);
-    import_command_interface_descriptions(info_);
+    parse_state_interface_descriptions(info_.joints, joint_state_interfaces_);
+    parse_command_interface_descriptions(info_.joints, joint_command_interfaces_);
     return CallbackReturn::SUCCESS;
   };
-
-  /**
-   * Import the InterfaceDescription for the StateInterfaces from the HardwareInfo.
-   * Separate them into the possible types: Joint and store them.
-   */
-  virtual void import_state_interface_descriptions(const HardwareInfo & hardware_info)
-  {
-    auto joint_state_interface_descriptions =
-      parse_state_interface_descriptions(hardware_info.joints);
-    for (const auto & description : joint_state_interface_descriptions)
-    {
-      joint_state_interfaces_.insert(std::make_pair(description.get_name(), description));
-    }
-  }
-
-  /**
-   * Import the InterfaceDescription for the CommandInterfaces from the HardwareInfo.
-   * Separate them into the possible types: Joint and store them.
-   */
-  virtual void import_command_interface_descriptions(const HardwareInfo & hardware_info)
-  {
-    auto joint_command_interface_descriptions =
-      parse_command_interface_descriptions(hardware_info.joints);
-    for (const auto & description : joint_command_interface_descriptions)
-    {
-      joint_command_interfaces_.insert(std::make_pair(description.get_name(), description));
-    }
-  }
 
   /// Exports all state interfaces for this hardware interface.
   /**

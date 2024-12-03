@@ -26,7 +26,7 @@ from controller_manager import (
     load_controller,
     switch_controllers,
     unload_controller,
-    set_controller_parameters_from_param_file,
+    set_controller_parameters_from_param_files,
     bcolors,
 )
 from controller_manager.controller_manager_services import ServiceNotFoundError
@@ -60,8 +60,12 @@ def has_service_names(node, node_name, node_namespace, service_names):
     return all(service in client_names for service in service_names)
 
 
-def is_controller_loaded(node, controller_manager, controller_name, service_timeout=0.0):
-    controllers = list_controllers(node, controller_manager, service_timeout).controller
+def is_controller_loaded(
+    node, controller_manager, controller_name, service_timeout=0.0, call_timeout=10.0
+):
+    controllers = list_controllers(
+        node, controller_manager, service_timeout, call_timeout
+    ).controller
     return any(c.name == controller_name for c in controllers)
 
 
@@ -79,8 +83,11 @@ def main(args=None):
     parser.add_argument(
         "-p",
         "--param-file",
-        help="Controller param file to be loaded into controller node before configure",
+        help="Controller param file to be loaded into controller node before configure. "
+        "Pass multiple times to load different files for different controllers or to "
+        "override the parameters of the same controller.",
         default=None,
+        action="append",
         required=False,
     )
     parser.add_argument(
@@ -110,9 +117,25 @@ def main(args=None):
     )
     parser.add_argument(
         "--controller-manager-timeout",
-        help="Time to wait for the controller manager",
+        help="Time to wait for the controller manager service to be available",
         required=False,
-        default=0,
+        default=0.0,
+        type=float,
+    )
+    parser.add_argument(
+        "--switch-timeout",
+        help="Time to wait for a successful state switch of controllers."
+        " Useful when switching cannot be performed immediately, e.g.,"
+        " paused simulations at startup",
+        required=False,
+        default=5.0,
+        type=float,
+    )
+    parser.add_argument(
+        "--service-call-timeout",
+        help="Time to wait for the service response from the controller manager",
+        required=False,
+        default=10.0,
         type=float,
     )
     parser.add_argument(
@@ -127,11 +150,15 @@ def main(args=None):
     args = parser.parse_args(command_line_args)
     controller_names = args.controller_names
     controller_manager_name = args.controller_manager
-    param_file = args.param_file
+    param_files = args.param_file
     controller_manager_timeout = args.controller_manager_timeout
+    service_call_timeout = args.service_call_timeout
+    switch_timeout = args.switch_timeout
 
-    if param_file and not os.path.isfile(param_file):
-        raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), param_file)
+    if param_files:
+        for param_file in param_files:
+            if not os.path.isfile(param_file):
+                raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), param_file)
 
     node = Node("spawner_" + controller_names[0])
 
@@ -164,7 +191,11 @@ def main(args=None):
         for controller_name in controller_names:
 
             if is_controller_loaded(
-                node, controller_manager_name, controller_name, controller_manager_timeout
+                node,
+                controller_manager_name,
+                controller_name,
+                controller_manager_timeout,
+                service_call_timeout,
             ):
                 node.get_logger().warn(
                     bcolors.WARNING
@@ -172,12 +203,12 @@ def main(args=None):
                     + bcolors.ENDC
                 )
             else:
-                if param_file:
-                    if not set_controller_parameters_from_param_file(
+                if param_files:
+                    if not set_controller_parameters_from_param_files(
                         node,
                         controller_manager_name,
                         controller_name,
-                        param_file,
+                        param_files,
                         spawner_namespace,
                     ):
                         return 1
@@ -197,7 +228,13 @@ def main(args=None):
                 )
 
             if not args.load_only:
-                ret = configure_controller(node, controller_manager_name, controller_name)
+                ret = configure_controller(
+                    node,
+                    controller_manager_name,
+                    controller_name,
+                    controller_manager_timeout,
+                    service_call_timeout,
+                )
                 if not ret.ok:
                     node.get_logger().error(
                         bcolors.FAIL + "Failed to configure controller" + bcolors.ENDC
@@ -206,7 +243,14 @@ def main(args=None):
 
                 if not args.inactive and not args.activate_as_group:
                     ret = switch_controllers(
-                        node, controller_manager_name, [], [controller_name], True, True, 5.0
+                        node,
+                        controller_manager_name,
+                        [],
+                        [controller_name],
+                        True,
+                        True,
+                        switch_timeout,
+                        service_call_timeout,
                     )
                     if not ret.ok:
                         node.get_logger().error(
@@ -224,7 +268,14 @@ def main(args=None):
 
         if not args.inactive and args.activate_as_group:
             ret = switch_controllers(
-                node, controller_manager_name, [], controller_names, True, True, 5.0
+                node,
+                controller_manager_name,
+                [],
+                controller_names,
+                True,
+                True,
+                switch_timeout,
+                service_call_timeout,
             )
             if not ret.ok:
                 node.get_logger().error(
@@ -250,7 +301,14 @@ def main(args=None):
                 node.get_logger().info("Interrupt captured, deactivating and unloading controller")
                 # TODO(saikishor) we might have an issue in future, if any of these controllers is in chained mode
                 ret = switch_controllers(
-                    node, controller_manager_name, controller_names, [], True, True, 5.0
+                    node,
+                    controller_manager_name,
+                    controller_names,
+                    [],
+                    True,
+                    True,
+                    switch_timeout,
+                    service_call_timeout,
                 )
                 if not ret.ok:
                     node.get_logger().error(

@@ -16,6 +16,8 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   rclcpp
   realtime_tools
   std_msgs
+  libstatistics_collector
+  generate_parameter_library
 )
 
 find_package(ament_cmake REQUIRED)
@@ -27,6 +29,10 @@ foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
 endforeach()
 
+generate_parameter_library(controller_manager_parameters
+  src/controller_manager_parameters.yaml
+)
+
 add_library(controller_manager SHARED
   src/controller_manager.cpp
 )
@@ -34,6 +40,9 @@ target_compile_features(controller_manager PUBLIC cxx_std_17)
 target_include_directories(controller_manager PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/controller_manager>
+)
+target_link_libraries(controller_manager PUBLIC
+  controller_manager_parameters
 )
 ament_target_dependencies(controller_manager PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
@@ -87,10 +96,12 @@ if(BUILD_TESTING)
 
   ament_add_gmock(test_controller_manager
     test/test_controller_manager.cpp
+    TIMEOUT 180
   )
   target_link_libraries(test_controller_manager
     controller_manager
     test_controller
+    test_chainable_controller
     ros2_control_test_assets::ros2_control_test_assets
   )
 
@@ -193,11 +204,23 @@ if(BUILD_TESTING)
     ros2_control_test_assets::ros2_control_test_assets
   )
 
+  ament_add_gmock(test_hardware_spawner
+    test/test_hardware_spawner.cpp
+    TIMEOUT 120
+  )
+  target_link_libraries(test_hardware_spawner
+    controller_manager
+    ros2_control_test_assets::ros2_control_test_assets
+  )
+
   install(FILES test/test_controller_spawner_with_fallback_controllers.yaml
     DESTINATION test)
 
   install(FILES test/test_controller_spawner_with_type.yaml
   DESTINATION test)
+
+  install(FILES test/test_controller_overriding_parameters.yaml
+    DESTINATION test)
 
   ament_add_gmock(test_hardware_management_srvs
     test/test_hardware_management_srvs.cpp
@@ -222,7 +245,7 @@ install(
   DESTINATION include/controller_manager
 )
 install(
-  TARGETS controller_manager
+  TARGETS controller_manager controller_manager_parameters
   EXPORT export_controller_manager
   RUNTIME DESTINATION bin
   LIBRARY DESTINATION lib

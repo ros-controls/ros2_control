@@ -24,9 +24,13 @@
 #include <vector>
 #include "controller_interface/controller_interface_base.hpp"
 #include "hardware_interface/controller_info.hpp"
+#include "libstatistics_collector/moving_average_statistics/moving_average.hpp"
 
 namespace controller_manager
 {
+
+using MovingAverageStatistics =
+  libstatistics_collector::moving_average_statistics::MovingAverageStatistics;
 /// Controller Specification
 /**
  * This struct contains both a pointer to a given controller, \ref c, as well
@@ -35,9 +39,18 @@ namespace controller_manager
  */
 struct ControllerSpec
 {
+  ControllerSpec()
+  {
+    last_update_cycle_time = std::make_shared<rclcpp::Time>(0, 0, RCL_CLOCK_UNINITIALIZED);
+    execution_time_statistics = std::make_shared<MovingAverageStatistics>();
+    periodicity_statistics = std::make_shared<MovingAverageStatistics>();
+  }
+
   hardware_interface::ControllerInfo info;
   controller_interface::ControllerInterfaceBaseSharedPtr c;
-  std::shared_ptr<rclcpp::Time> next_update_cycle_time;
+  std::shared_ptr<rclcpp::Time> last_update_cycle_time;
+  std::shared_ptr<MovingAverageStatistics> execution_time_statistics;
+  std::shared_ptr<MovingAverageStatistics> periodicity_statistics;
 };
 
 struct ControllerChainSpec
