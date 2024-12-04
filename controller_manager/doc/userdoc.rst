@@ -325,7 +325,7 @@ The controller_manager can be launched with the ros2_control_node executable. Th
 
 The ros2_control_node executable uses the following parameters from the ``controller_manager`` node:
 
-lock_memory (optional; bool; default: false)
+lock_memory (optional; bool; default: false for a non-realtime kernel, true for a realtime kernel)
   Locks the memory of the ``controller_manager`` node at startup to physical RAM in order to avoid page faults
   and to prevent the node from being swapped out to disk.
   Find more information about the setup for memory locking in the following link : `How to set ulimit values <https://access.redhat.com/solutions/61334>`_
