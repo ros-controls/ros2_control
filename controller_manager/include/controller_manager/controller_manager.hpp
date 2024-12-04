@@ -50,6 +50,8 @@
 
 namespace controller_manager
 {
+class ParamListener;
+class Params;
 using ControllersListIterator = std::vector<controller_manager::ControllerSpec>::const_iterator;
 
 CONTROLLER_MANAGER_PUBLIC rclcpp::NodeOptions get_cm_node_options();
@@ -346,7 +348,7 @@ protected:
 
   // Per controller update rate support
   unsigned int update_loop_counter_ = 0;
-  unsigned int update_rate_ = 100;
+  unsigned int update_rate_;
   std::vector<std::vector<std::string>> chained_controllers_configuration_;
 
   std::unique_ptr<hardware_interface::ResourceManager> resource_manager_;
@@ -356,6 +358,8 @@ private:
   std::pair<std::string, std::string> split_command_interface(
     const std::string & command_interface);
   void init_controller_manager();
+
+  void initialize_parameters();
 
   /**
    * Clear request lists used when switching controllers. The lists are shared between "callback"
@@ -473,6 +477,8 @@ private:
    */
   rclcpp::NodeOptions determine_controller_node_options(const ControllerSpec & controller) const;
 
+  std::shared_ptr<controller_manager::ParamListener> cm_param_listener_;
+  std::shared_ptr<controller_manager::Params> params_;
   diagnostic_updater::Updater diagnostics_updater_;
 
   std::shared_ptr<rclcpp::Executor> executor_;
@@ -602,6 +608,8 @@ private:
   std::string robot_description_;
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr robot_description_subscription_;
   rclcpp::TimerBase::SharedPtr robot_description_notification_timer_;
+
+  controller_manager::MovingAverageStatistics periodicity_stats_;
 
   struct SwitchParams
   {

@@ -28,6 +28,8 @@
 #include "rclcpp/version.h"
 #include "rclcpp_lifecycle/state.hpp"
 
+#include "controller_manager_parameters.hpp"
+
 namespace  // utility
 {
 static constexpr const char * kControllerInterfaceNamespace = "controller_interface";
@@ -237,6 +239,7 @@ ControllerManager::ControllerManager(
       kControllerInterfaceNamespace, kChainableControllerInterfaceClassName)),
   cm_node_options_(options)
 {
+  initialize_parameters();
   init_controller_manager();
 }
 
@@ -245,10 +248,6 @@ ControllerManager::ControllerManager(
   bool activate_all_hw_components, const std::string & manager_node_name,
   const std::string & node_namespace, const rclcpp::NodeOptions & options)
 : rclcpp::Node(manager_node_name, node_namespace, options),
-  update_rate_(get_parameter_or<int>("update_rate", 100)),
-  resource_manager_(std::make_unique<hardware_interface::ResourceManager>(
-    urdf, this->get_node_clock_interface(), this->get_node_logging_interface(),
-    activate_all_hw_components, update_rate_)),
   diagnostics_updater_(this),
   executor_(executor),
   loader_(std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
@@ -258,6 +257,10 @@ ControllerManager::ControllerManager(
       kControllerInterfaceNamespace, kChainableControllerInterfaceClassName)),
   cm_node_options_(options)
 {
+  initialize_parameters();
+  resource_manager_ = std::make_unique<hardware_interface::ResourceManager>(
+    urdf, this->get_node_clock_interface(), this->get_node_logging_interface(),
+    activate_all_hw_components, params_->update_rate);
   init_controller_manager();
 }
 
@@ -276,18 +279,13 @@ ControllerManager::ControllerManager(
       kControllerInterfaceNamespace, kChainableControllerInterfaceClassName)),
   cm_node_options_(options)
 {
+  initialize_parameters();
   init_controller_manager();
 }
 
 void ControllerManager::init_controller_manager()
 {
   // Get parameters needed for RT "update" loop to work
-  if (!get_parameter("update_rate", update_rate_))
-  {
-    RCLCPP_WARN(
-      get_logger(), "'update_rate' parameter not set, using default value of %d Hz.", update_rate_);
-  }
-
   if (is_resource_manager_initialized())
   {
     init_services();
@@ -313,6 +311,7 @@ void ControllerManager::init_controller_manager()
     robot_description_subscription_->get_topic_name());
 
   // Setup diagnostics
+  periodicity_stats_.Reset();
   diagnostics_updater_.setHardwareID("ros2_control");
   diagnostics_updater_.add(
     "Controllers Activity", this, &ControllerManager::controller_activity_diagnostic_callback);
@@ -322,6 +321,25 @@ void ControllerManager::init_controller_manager()
   diagnostics_updater_.add(
     "Controller Manager Activity", this,
     &ControllerManager::controller_manager_diagnostic_callback);
+}
+
+void ControllerManager::initialize_parameters()
+{
+  // Initialize parameters
+  try
+  {
+    cm_param_listener_ = std::make_shared<controller_manager::ParamListener>(
+      this->get_node_parameters_interface(), this->get_logger());
+    params_ = std::make_shared<controller_manager::Params>(cm_param_listener_->get_params());
+    update_rate_ = static_cast<unsigned int>(params_->update_rate);
+  }
+  catch (const std::exception & e)
+  {
+    RCLCPP_ERROR(
+      this->get_logger(),
+      "Exception thrown while initializing controller manager parameters: %s \n", e.what());
+    throw e;
+  }
 }
 
 void ControllerManager::robot_description_callback(const std_msgs::msg::String & robot_description)
@@ -365,51 +383,52 @@ void ControllerManager::init_resource_manager(const std::string & robot_descript
   using lifecycle_msgs::msg::State;
 
   auto set_components_to_state =
-    [&](const std::string & parameter_name, rclcpp_lifecycle::State state)
+    [&](const std::vector<std::string> & components_to_set, rclcpp_lifecycle::State state)
   {
-    std::vector<std::string> components_to_set = std::vector<std::string>({});
-    if (get_parameter(parameter_name, components_to_set))
+    for (const auto & component : components_to_set)
     {
-      for (const auto & component : components_to_set)
+      if (component.empty())
       {
-        if (component.empty())
+        continue;
+      }
+      if (components_to_activate.find(component) == components_to_activate.end())
+      {
+        RCLCPP_WARN(
+          get_logger(), "Hardware component '%s' is unknown, therefore not set in '%s' state.",
+          component.c_str(), state.label().c_str());
+      }
+      else
+      {
+        RCLCPP_INFO(
+          get_logger(), "Setting component '%s' to '%s' state.", component.c_str(),
+          state.label().c_str());
+        if (
+          resource_manager_->set_component_state(component, state) ==
+          hardware_interface::return_type::ERROR)
         {
-          continue;
+          throw std::runtime_error(
+            "Failed to set the initial state of the component : " + component + " to " +
+            state.label());
         }
-        if (components_to_activate.find(component) == components_to_activate.end())
-        {
-          RCLCPP_WARN(
-            get_logger(), "Hardware component '%s' is unknown, therefore not set in '%s' state.",
-            component.c_str(), state.label().c_str());
-        }
-        else
-        {
-          RCLCPP_INFO(
-            get_logger(), "Setting component '%s' to '%s' state.", component.c_str(),
-            state.label().c_str());
-          if (
-            resource_manager_->set_component_state(component, state) ==
-            hardware_interface::return_type::ERROR)
-          {
-            throw std::runtime_error(
-              "Failed to set the initial state of the component : " + component + " to " +
-              state.label());
-          }
-          components_to_activate.erase(component);
-        }
+        components_to_activate.erase(component);
       }
     }
   };
 
+  if (cm_param_listener_->is_old(*params_))
+  {
+    *params_ = cm_param_listener_->get_params();
+  }
+
   // unconfigured (loaded only)
   set_components_to_state(
-    "hardware_components_initial_state.unconfigured",
+    params_->hardware_components_initial_state.unconfigured,
     rclcpp_lifecycle::State(
       State::PRIMARY_STATE_UNCONFIGURED, hardware_interface::lifecycle_state_names::UNCONFIGURED));
 
   // inactive (configured)
   set_components_to_state(
-    "hardware_components_initial_state.inactive",
+    params_->hardware_components_initial_state.inactive,
     rclcpp_lifecycle::State(
       State::PRIMARY_STATE_INACTIVE, hardware_interface::lifecycle_state_names::INACTIVE));
 
@@ -545,22 +564,36 @@ controller_interface::ControllerInterfaceBaseSharedPtr ControllerManager::load_c
   controller_spec.info.type = controller_type;
   controller_spec.last_update_cycle_time = std::make_shared<rclcpp::Time>(
     0, 0, this->get_node_clock_interface()->get_clock()->get_clock_type());
+  controller_spec.execution_time_statistics = std::make_shared<MovingAverageStatistics>();
+  controller_spec.periodicity_statistics = std::make_shared<MovingAverageStatistics>();
 
   // We have to fetch the parameters_file at the time of loading the controller, because this way we
   // can load them at the creation of the LifeCycleNode and this helps in using the features such as
   // read_only params, dynamic maps lists etc
   // Now check if the parameters_file parameter exist
   const std::string param_name = controller_name + ".params_file";
-  std::string parameters_file;
+  controller_spec.info.parameters_files.clear();
 
-  // Check if parameter has been declared
-  if (!has_parameter(param_name))
+  // get_parameter checks if parameter has been declared/set
+  rclcpp::Parameter params_files_parameter;
+  if (get_parameter(param_name, params_files_parameter))
   {
-    declare_parameter(param_name, rclcpp::ParameterType::PARAMETER_STRING);
-  }
-  if (get_parameter(param_name, parameters_file) && !parameters_file.empty())
-  {
-    controller_spec.info.parameters_file = parameters_file;
+    if (params_files_parameter.get_type() == rclcpp::ParameterType::PARAMETER_STRING_ARRAY)
+    {
+      controller_spec.info.parameters_files = params_files_parameter.as_string_array();
+    }
+    else if (params_files_parameter.get_type() == rclcpp::ParameterType::PARAMETER_STRING)
+    {
+      controller_spec.info.parameters_files.push_back(params_files_parameter.as_string());
+    }
+    else
+    {
+      RCLCPP_ERROR(
+        get_logger(),
+        "The 'params_file' param needs to be a string or a string array for '%s', but it is of "
+        "type %s",
+        controller_name.c_str(), params_files_parameter.get_type_name().c_str());
+    }
   }
 
   const std::string fallback_ctrl_param = controller_name + ".fallback_controllers";
@@ -1762,6 +1795,8 @@ void ControllerManager::activate_controllers(
 
     try
     {
+      found_it->periodicity_statistics->Reset();
+      found_it->execution_time_statistics->Reset();
       const auto new_state = controller->get_node()->activate();
       if (new_state.id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
       {
@@ -2243,6 +2278,7 @@ std::vector<std::string> ControllerManager::get_controller_names()
 
 void ControllerManager::read(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
+  periodicity_stats_.AddMeasurement(1.0 / period.seconds());
   auto [ok, failed_hardware_names] = resource_manager_->read(time, period);
 
   if (!ok)
@@ -2354,13 +2390,37 @@ controller_interface::return_type ControllerManager::update(
         run_controller_at_cm_rate ? period
                                   : rclcpp::Duration::from_seconds((1.0 / controller_update_rate));
 
-      const rclcpp::Time current_time = get_clock()->now();
+      rclcpp::Time current_time;
+      bool first_update_cycle = false;
+      if (get_clock()->started())
+      {
+        current_time = get_clock()->now();
+      }
+      else if (
+        time == rclcpp::Time(0, 0, this->get_node_clock_interface()->get_clock()->get_clock_type()))
+      {
+        throw std::runtime_error(
+          "No clock received, and time argument is zero. Check your controller_manager node's "
+          "clock configuration (use_sim_time parameter) and if a valid clock source is "
+          "available. Also pass a proper time argument to the update method.");
+      }
+      else
+      {
+        // this can happen with use_sim_time=true until the /clock is received
+        rclcpp::Clock clock = rclcpp::Clock();
+        RCLCPP_WARN_THROTTLE(
+          get_logger(), clock, 1000,
+          "No clock received, using time argument instead! Check your node's clock "
+          "configuration (use_sim_time parameter) and if a valid clock source is available");
+        current_time = time;
+      }
       if (
         *loaded_controller.last_update_cycle_time ==
         rclcpp::Time(0, 0, this->get_node_clock_interface()->get_clock()->get_clock_type()))
       {
-        // it is zero after activation
-        *loaded_controller.last_update_cycle_time = current_time - controller_period;
+        // last_update_cycle_time is zero after activation
+        first_update_cycle = true;
+        *loaded_controller.last_update_cycle_time = current_time;
         RCLCPP_DEBUG(
           get_logger(), "Setting last_update_cycle_time to %fs for the controller : %s",
           loaded_controller.last_update_cycle_time->seconds(), loaded_controller.info.name.c_str());
@@ -2378,7 +2438,7 @@ controller_interface::return_type ControllerManager::update(
         run_controller_at_cm_rate ||
         (time ==
          rclcpp::Time(0, 0, this->get_node_clock_interface()->get_clock()->get_clock_type())) ||
-        (controller_actual_period.seconds() * controller_update_rate >= 0.99);
+        (controller_actual_period.seconds() * controller_update_rate >= 0.99) || first_update_cycle;
 
       RCLCPP_DEBUG(
         get_logger(), "update_loop_counter: '%d ' controller_go: '%s ' controller_name: '%s '",
@@ -2392,8 +2452,20 @@ controller_interface::return_type ControllerManager::update(
         // Catch exceptions thrown by the controller update function
         try
         {
-          std::tie(trigger_status, controller_ret) =
-            loaded_controller.c->trigger_update(time, controller_actual_period);
+          const auto trigger_result =
+            loaded_controller.c->trigger_update(current_time, controller_actual_period);
+          trigger_status = trigger_result.successful;
+          controller_ret = trigger_result.result;
+          if (trigger_status && trigger_result.execution_time.has_value())
+          {
+            loaded_controller.execution_time_statistics->AddMeasurement(
+              static_cast<double>(trigger_result.execution_time.value().count()) / 1.e3);
+          }
+          if (!first_update_cycle && trigger_status && trigger_result.period.has_value())
+          {
+            loaded_controller.periodicity_statistics->AddMeasurement(
+              1.0 / trigger_result.period.value().seconds());
+          }
         }
         catch (const std::exception & e)
         {
@@ -3050,34 +3122,140 @@ void ControllerManager::controller_activity_diagnostic_callback(
   std::lock_guard<std::recursive_mutex> guard(rt_controllers_wrapper_.controllers_lock_);
   const std::vector<ControllerSpec> & controllers = rt_controllers_wrapper_.get_updated_list(guard);
   bool all_active = true;
+  const std::string periodicity_suffix = ".periodicity";
+  const std::string exec_time_suffix = ".execution_time";
+  const std::string state_suffix = ".state";
+
+  if (cm_param_listener_->is_old(*params_))
+  {
+    *params_ = cm_param_listener_->get_params();
+  }
+
+  auto make_stats_string =
+    [](const auto & statistics_data, const std::string & measurement_unit) -> std::string
+  {
+    std::ostringstream oss;
+    oss << std::fixed << std::setprecision(2);
+    oss << "Avg: " << statistics_data.average << " [" << statistics_data.min << " - "
+        << statistics_data.max << "] " << measurement_unit
+        << ", StdDev: " << statistics_data.standard_deviation;
+    return oss.str();
+  };
+
+  // Variable to define the overall status of the controller diagnostics
+  auto level = diagnostic_msgs::msg::DiagnosticStatus::OK;
+
+  std::vector<std::string> high_exec_time_controllers;
+  std::vector<std::string> bad_periodicity_async_controllers;
   for (size_t i = 0; i < controllers.size(); ++i)
   {
+    const bool is_async = controllers[i].c->is_async();
     if (!is_controller_active(controllers[i].c))
     {
       all_active = false;
     }
-    stat.add(controllers[i].info.name, controllers[i].c->get_lifecycle_state().label());
+    stat.add(
+      controllers[i].info.name + state_suffix, controllers[i].c->get_lifecycle_state().label());
+    if (is_controller_active(controllers[i].c))
+    {
+      const auto periodicity_stats = controllers[i].periodicity_statistics->GetStatistics();
+      const auto exec_time_stats = controllers[i].execution_time_statistics->GetStatistics();
+      stat.add(
+        controllers[i].info.name + exec_time_suffix, make_stats_string(exec_time_stats, "us"));
+      if (is_async)
+      {
+        stat.add(
+          controllers[i].info.name + periodicity_suffix,
+          make_stats_string(periodicity_stats, "Hz") +
+            " -> Desired : " + std::to_string(controllers[i].c->get_update_rate()) + " Hz");
+        const double periodicity_error = std::abs(
+          periodicity_stats.average - static_cast<double>(controllers[i].c->get_update_rate()));
+        if (
+          periodicity_error >
+            params_->diagnostics.threshold.controllers.periodicity.mean_error.error ||
+          periodicity_stats.standard_deviation >
+            params_->diagnostics.threshold.controllers.periodicity.standard_deviation.error)
+        {
+          level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
+          add_element_to_list(bad_periodicity_async_controllers, controllers[i].info.name);
+        }
+        else if (
+          periodicity_error >
+            params_->diagnostics.threshold.controllers.periodicity.mean_error.warn ||
+          periodicity_stats.standard_deviation >
+            params_->diagnostics.threshold.controllers.periodicity.standard_deviation.warn)
+        {
+          if (level != diagnostic_msgs::msg::DiagnosticStatus::ERROR)
+          {
+            level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
+          }
+          add_element_to_list(bad_periodicity_async_controllers, controllers[i].info.name);
+        }
+      }
+      const double max_exp_exec_time = is_async ? 1.e6 / controllers[i].c->get_update_rate() : 0.0;
+      if (
+        (exec_time_stats.average - max_exp_exec_time) >
+          params_->diagnostics.threshold.controllers.execution_time.mean_error.error ||
+        exec_time_stats.standard_deviation >
+          params_->diagnostics.threshold.controllers.execution_time.standard_deviation.error)
+      {
+        level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
+        high_exec_time_controllers.push_back(controllers[i].info.name);
+      }
+      else if (
+        (exec_time_stats.average - max_exp_exec_time) >
+          params_->diagnostics.threshold.controllers.execution_time.mean_error.warn ||
+        exec_time_stats.standard_deviation >
+          params_->diagnostics.threshold.controllers.execution_time.standard_deviation.warn)
+      {
+        if (level != diagnostic_msgs::msg::DiagnosticStatus::ERROR)
+        {
+          level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
+        }
+        high_exec_time_controllers.push_back(controllers[i].info.name);
+      }
+    }
+  }
+
+  stat.summary(
+    diagnostic_msgs::msg::DiagnosticStatus::OK,
+    all_active ? "All controllers are active" : "Not all controllers are active");
+
+  if (!high_exec_time_controllers.empty())
+  {
+    std::string high_exec_time_controllers_string;
+    for (const auto & controller : high_exec_time_controllers)
+    {
+      high_exec_time_controllers_string.append(controller);
+      high_exec_time_controllers_string.append(" ");
+    }
+    stat.mergeSummary(
+      level,
+      "\nControllers with high execution time : [ " + high_exec_time_controllers_string + "]");
+  }
+  if (!bad_periodicity_async_controllers.empty())
+  {
+    std::string bad_periodicity_async_controllers_string;
+    for (const auto & controller : bad_periodicity_async_controllers)
+    {
+      bad_periodicity_async_controllers_string.append(controller);
+      bad_periodicity_async_controllers_string.append(" ");
+    }
+    stat.mergeSummary(
+      level,
+      "\nControllers with bad periodicity : [ " + bad_periodicity_async_controllers_string + "]");
   }
 
   if (!atleast_one_hw_active)
   {
-    stat.summary(
+    stat.mergeSummary(
       diagnostic_msgs::msg::DiagnosticStatus::ERROR,
       "No hardware components are currently active to activate controllers");
   }
-  else
+  else if (controllers.empty())
   {
-    if (controllers.empty())
-    {
-      stat.summary(
-        diagnostic_msgs::msg::DiagnosticStatus::WARN, "No controllers are currently loaded");
-    }
-    else
-    {
-      stat.summary(
-        diagnostic_msgs::msg::DiagnosticStatus::OK,
-        all_active ? "All controllers are active" : "Not all controllers are active");
-    }
+    stat.mergeSummary(
+      diagnostic_msgs::msg::DiagnosticStatus::WARN, "No controllers are currently loaded");
   }
 }
 
@@ -3130,7 +3308,14 @@ void ControllerManager::hardware_components_diagnostic_callback(
 void ControllerManager::controller_manager_diagnostic_callback(
   diagnostic_updater::DiagnosticStatusWrapper & stat)
 {
+  const std::string periodicity_stat_name = "periodicity";
+  const auto cm_stats = periodicity_stats_.GetStatistics();
   stat.add("update_rate", std::to_string(get_update_rate()));
+  stat.add(periodicity_stat_name + ".average", std::to_string(cm_stats.average));
+  stat.add(
+    periodicity_stat_name + ".standard_deviation", std::to_string(cm_stats.standard_deviation));
+  stat.add(periodicity_stat_name + ".min", std::to_string(cm_stats.min));
+  stat.add(periodicity_stat_name + ".max", std::to_string(cm_stats.max));
   if (is_resource_manager_initialized())
   {
     stat.summary(diagnostic_msgs::msg::DiagnosticStatus::OK, "Controller Manager is running");
@@ -3148,6 +3333,27 @@ void ControllerManager::controller_manager_diagnostic_callback(
         diagnostic_msgs::msg::DiagnosticStatus::ERROR,
         "Resource Manager is not initialized properly!");
     }
+  }
+
+  const double periodicity_error = std::abs(cm_stats.average - get_update_rate());
+  const std::string diag_summary =
+    "Controller Manager has bad periodicity : " + std::to_string(cm_stats.average) +
+    " Hz. Expected consistent " + std::to_string(get_update_rate()) + " Hz";
+  if (
+    periodicity_error >
+      params_->diagnostics.threshold.controller_manager.periodicity.mean_error.error ||
+    cm_stats.standard_deviation >
+      params_->diagnostics.threshold.controller_manager.periodicity.standard_deviation.error)
+  {
+    stat.mergeSummary(diagnostic_msgs::msg::DiagnosticStatus::ERROR, diag_summary);
+  }
+  else if (
+    periodicity_error >
+      params_->diagnostics.threshold.controller_manager.periodicity.mean_error.warn ||
+    cm_stats.standard_deviation >
+      params_->diagnostics.threshold.controller_manager.periodicity.standard_deviation.warn)
+  {
+    stat.mergeSummary(diagnostic_msgs::msg::DiagnosticStatus::WARN, diag_summary);
   }
 }
 
@@ -3250,14 +3456,14 @@ rclcpp::NodeOptions ControllerManager::determine_controller_node_options(
     node_options_arguments.push_back(arg);
   }
 
-  if (controller.info.parameters_file.has_value())
+  for (const auto & parameters_file : controller.info.parameters_files)
   {
     if (!check_for_element(node_options_arguments, RCL_ROS_ARGS_FLAG))
     {
       node_options_arguments.push_back(RCL_ROS_ARGS_FLAG);
     }
     node_options_arguments.push_back(RCL_PARAM_FILE_FLAG);
-    node_options_arguments.push_back(controller.info.parameters_file.value());
+    node_options_arguments.push_back(parameters_file);
   }
 
   // ensure controller's `use_sim_time` parameter matches controller_manager's

@@ -59,7 +59,8 @@ int main(int argc, char ** argv)
 
   const bool use_sim_time = cm->get_parameter_or("use_sim_time", false);
 
-  const bool lock_memory = cm->get_parameter_or<bool>("lock_memory", true);
+  const bool has_realtime = realtime_tools::has_realtime_kernel();
+  const bool lock_memory = cm->get_parameter_or<bool>("lock_memory", has_realtime);
   std::string message;
   if (lock_memory && !realtime_tools::lock_memory(message))
   {
@@ -109,7 +110,7 @@ int main(int argc, char ** argv)
         next_iteration_time{cm_now};
 
       // for calculating the measured period of the loop
-      rclcpp::Time previous_time = cm->now();
+      rclcpp::Time previous_time = cm->now() - period;
 
       while (rclcpp::ok())
       {
