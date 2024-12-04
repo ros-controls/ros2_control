@@ -44,7 +44,7 @@ bool is_limited(double value, double min, double max);
  * @param act_vel The actual velocity of the joint.
  * @param prev_command_pos The previous commanded position of the joint.
  * @param dt The time step.
- * @return The position limits.
+ * @return The position limits, first is the lower limit and second is the upper limit.
  */
 std::pair<double, double> compute_position_limits(
   const joint_limits::JointLimits & limits, const std::optional<double> & act_vel,
@@ -57,7 +57,7 @@ std::pair<double, double> compute_position_limits(
  * @param act_pos The actual position of the joint.
  * @param prev_command_vel The previous commanded velocity of the joint.
  * @param dt The time step.
- * @return The velocity limits.
+ * @return The velocity limits, first is the lower limit and second is the upper limit.
  */
 std::pair<double, double> compute_velocity_limits(
   const std::string & joint_name, const joint_limits::JointLimits & limits,
@@ -70,7 +70,7 @@ std::pair<double, double> compute_velocity_limits(
  * @param act_pos The actual position of the joint.
  * @param act_vel The actual velocity of the joint.
  * @param dt The time step.
- * @return The effort limits.
+ * @return The effort limits, first is the lower limit and second is the upper limit.
  */
 std::pair<double, double> compute_effort_limits(
   const joint_limits::JointLimits & limits, const std::optional<double> & act_pos,
@@ -82,7 +82,7 @@ std::pair<double, double> compute_effort_limits(
  * @param limits The joint limits.
  * @param desired_acceleration The desired acceleration.
  * @param actual_velocity The actual velocity of the joint.
- * @return The acceleration limits.
+ * @return The acceleration limits, first is the lower limit and second is the upper limit.
  */
 std::pair<double, double> compute_acceleration_limits(
   const JointLimits & limits, double desired_acceleration, std::optional<double> actual_velocity);
