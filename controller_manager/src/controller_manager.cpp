@@ -286,7 +286,7 @@ ControllerManager::ControllerManager(
 
 ControllerManager::~ControllerManager()
 {
-  STOP_PUBLISHER_THREAD(hardware_interface::DEFAULT_REGISTRY_KEY);
+  CLEAR_ALL_REGISTRIES();
 }
 
 void ControllerManager::init_controller_manager()
