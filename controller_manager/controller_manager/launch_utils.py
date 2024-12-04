@@ -148,7 +148,10 @@ def generate_load_controller_launch_description(
     controller_params_files = [controller_params_file] if controller_params_file else None
     return generate_controllers_spawner_launch_description(
         controller_names=[controller_name],
+<<<<<<< HEAD
         controller_type=controller_type,
+=======
+>>>>>>> 3052b58 (Fix the launch_utils regression (#1909))
         controller_params_files=controller_params_files,
         extra_spawner_args=extra_spawner_args,
     )
