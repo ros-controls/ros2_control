@@ -2390,14 +2390,36 @@ controller_interface::return_type ControllerManager::update(
         run_controller_at_cm_rate ? period
                                   : rclcpp::Duration::from_seconds((1.0 / controller_update_rate));
 
-      const rclcpp::Time current_time = get_clock()->now();
+      rclcpp::Time current_time;
       bool first_update_cycle = false;
+      if (get_clock()->started())
+      {
+        current_time = get_clock()->now();
+      }
+      else if (
+        time == rclcpp::Time(0, 0, this->get_node_clock_interface()->get_clock()->get_clock_type()))
+      {
+        throw std::runtime_error(
+          "No clock received, and time argument is zero. Check your controller_manager node's "
+          "clock configuration (use_sim_time parameter) and if a valid clock source is "
+          "available. Also pass a proper time argument to the update method.");
+      }
+      else
+      {
+        // this can happen with use_sim_time=true until the /clock is received
+        rclcpp::Clock clock = rclcpp::Clock();
+        RCLCPP_WARN_THROTTLE(
+          get_logger(), clock, 1000,
+          "No clock received, using time argument instead! Check your node's clock "
+          "configuration (use_sim_time parameter) and if a valid clock source is available");
+        current_time = time;
+      }
       if (
         *loaded_controller.last_update_cycle_time ==
         rclcpp::Time(0, 0, this->get_node_clock_interface()->get_clock()->get_clock_type()))
       {
+        // last_update_cycle_time is zero after activation
         first_update_cycle = true;
-        // it is zero after activation
         *loaded_controller.last_update_cycle_time = current_time;
         RCLCPP_DEBUG(
           get_logger(), "Setting last_update_cycle_time to %fs for the controller : %s",
