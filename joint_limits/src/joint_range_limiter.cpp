@@ -17,7 +17,7 @@
 #include "joint_limits/joint_saturation_limiter.hpp"
 
 #include <algorithm>
-#include "joint_limits/joint_limiter_struct.hpp"
+#include "joint_limits/data_structures.hpp"
 #include "joint_limits/joint_limits_helpers.hpp"
 #include "rclcpp/duration.hpp"
 #include "rcutils/logging_macros.h"

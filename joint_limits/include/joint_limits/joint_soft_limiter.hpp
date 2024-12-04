@@ -18,7 +18,7 @@
 #define JOINT_LIMITS__JOINT_SOFT_LIMITER_HPP_
 
 #include <cmath>
-#include "joint_limits/joint_limiter_struct.hpp"
+#include "joint_limits/data_structures.hpp"
 #include "joint_limits/joint_limits_helpers.hpp"
 #include "joint_limits/joint_saturation_limiter.hpp"
 

@@ -14,8 +14,8 @@
 
 /// \author Sai Kishor Kothakota
 
-#ifndef JOINT_LIMITS__JOINT_LIMITER_STRUCT_HPP_
-#define JOINT_LIMITS__JOINT_LIMITER_STRUCT_HPP_
+#ifndef JOINT_LIMITS__DATA_STRUCTURES_HPP_
+#define JOINT_LIMITS__DATA_STRUCTURES_HPP_
 
 #include <memory>
 #include <optional>
@@ -63,4 +63,4 @@ struct JointInterfacesCommandLimiterData
 };
 
 }  // namespace joint_limits
-#endif  // JOINT_LIMITS__JOINT_LIMITER_STRUCT_HPP_
+#endif  // JOINT_LIMITS__DATA_STRUCTURES_HPP_
