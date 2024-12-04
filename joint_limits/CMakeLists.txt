@@ -108,7 +108,7 @@ if(BUILD_TESTING)
     rclcpp
   )
 
-  ament_add_gtest(test_joint_range_limiter test/test_joint_range_limiter.cpp)
+  ament_add_gmock(test_joint_range_limiter test/test_joint_range_limiter.cpp)
   target_include_directories(test_joint_range_limiter PRIVATE include)
   target_link_libraries(test_joint_range_limiter joint_limiter_interface)
   ament_target_dependencies(
@@ -117,7 +117,7 @@ if(BUILD_TESTING)
     rclcpp
   )
 
-  ament_add_gtest(test_joint_soft_limiter test/test_joint_soft_limiter.cpp)
+  ament_add_gmock(test_joint_soft_limiter test/test_joint_soft_limiter.cpp)
   target_include_directories(test_joint_soft_limiter PRIVATE include)
   target_link_libraries(test_joint_soft_limiter joint_limiter_interface)
   ament_target_dependencies(
