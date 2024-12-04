@@ -467,7 +467,7 @@ class DummySystem : public hardware_interface::SystemInterface
       return hardware_interface::return_type::ERROR;
     }
 
-    for (auto i = 0; i < 3; ++i)
+    for (size_t i = 0; i < 3; ++i)
     {
       position_state_[i] += velocity_command_[0];
       velocity_state_[i] = velocity_command_[0];
@@ -477,7 +477,7 @@ class DummySystem : public hardware_interface::SystemInterface
 
   CallbackReturn on_shutdown(const rclcpp_lifecycle::State & /*previous_state*/) override
   {
-    for (auto i = 0ul; i < 3; ++i)
+    for (size_t i = 0; i < 3; ++i)
     {
       velocity_state_[i] = 0.0;
     }
@@ -573,7 +573,7 @@ class DummySystemDefault : public hardware_interface::SystemInterface
       return hardware_interface::return_type::ERROR;
     }
 
-    for (auto i = 0; i < 3; ++i)
+    for (size_t i = 0; i < 3; ++i)
     {
       auto current_pos = get_state(position_states_[i]);
       set_state(position_states_[i], current_pos + get_command(velocity_commands_[i]));
