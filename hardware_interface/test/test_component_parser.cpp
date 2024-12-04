@@ -1443,6 +1443,36 @@ TEST_F(TestComponentParser, gripper_no_mimic_valid_config)
   EXPECT_EQ(hw_info[0].mimic_joints[0].joint_index, 1);
 }
 
+TEST_F(TestComponentParser, negative_rw_rates_throws_error)
+{
+  const auto urdf_to_test =
+    std::string(ros2_control_test_assets::gripper_urdf_head) +
+    std::string(ros2_control_test_assets::hardware_resources_with_negative_rw_rates) +
+    std::string(ros2_control_test_assets::urdf_tail);
+  std::vector<hardware_interface::HardwareInfo> hw_info;
+  ASSERT_THROW(parse_control_resources_from_urdf(urdf_to_test), std::runtime_error);
+}
+
+TEST_F(TestComponentParser, invalid_rw_rates_throws_error)
+{
+  const auto urdf_to_test =
+    std::string(ros2_control_test_assets::gripper_urdf_head) +
+    std::string(ros2_control_test_assets::hardware_resources_invalid_with_text_in_rw_rates) +
+    std::string(ros2_control_test_assets::urdf_tail);
+  std::vector<hardware_interface::HardwareInfo> hw_info;
+  ASSERT_THROW(parse_control_resources_from_urdf(urdf_to_test), std::runtime_error);
+}
+
+TEST_F(TestComponentParser, invalid_rw_rates_out_of_range)
+{
+  const auto urdf_to_test =
+    std::string(ros2_control_test_assets::gripper_urdf_head) +
+    std::string(ros2_control_test_assets::hardware_resources_invalid_out_of_range_in_rw_rates) +
+    std::string(ros2_control_test_assets::urdf_tail);
+  std::vector<hardware_interface::HardwareInfo> hw_info;
+  ASSERT_THROW(parse_control_resources_from_urdf(urdf_to_test), std::runtime_error);
+}
+
 TEST_F(TestComponentParser, gripper_mimic_with_unknown_joint_throws_error)
 {
   const auto urdf_to_test =
@@ -1615,4 +1645,39 @@ TEST_F(TestComponentParser, parse_gpio_command_interface_descriptions_from_hardw
   EXPECT_EQ(gpio_state_descriptions[1].get_prefix_name(), "flange_vacuum");
   EXPECT_EQ(gpio_state_descriptions[1].get_interface_name(), "vacuum");
   EXPECT_EQ(gpio_state_descriptions[1].get_name(), "flange_vacuum/vacuum");
+}
+
+TEST_F(TestComponentParser, successfully_parse_valid_sdf)
+{
+  std::string sdf_to_test = ros2_control_test_assets::diff_drive_robot_sdf;
+  const auto control_hardware = parse_control_resources_from_urdf(sdf_to_test);
+  ASSERT_THAT(control_hardware, SizeIs(1));
+  const auto hardware_info = control_hardware.front();
+
+  EXPECT_EQ(hardware_info.name, "GazeboSimSystem");
+  EXPECT_EQ(hardware_info.type, "system");
+  ASSERT_THAT(hardware_info.group, IsEmpty());
+  EXPECT_EQ(hardware_info.hardware_plugin_name, "gz_ros2_control/GazeboSimSystem");
+
+  ASSERT_THAT(hardware_info.joints, SizeIs(2));
+
+  EXPECT_EQ(hardware_info.joints[0].name, "left_wheel_joint");
+  EXPECT_EQ(hardware_info.joints[0].type, "joint");
+  ASSERT_THAT(hardware_info.joints[0].command_interfaces, SizeIs(1));
+  EXPECT_EQ(hardware_info.joints[0].command_interfaces[0].name, HW_IF_VELOCITY);
+  EXPECT_EQ(hardware_info.joints[0].command_interfaces[0].min, "-10");
+  EXPECT_EQ(hardware_info.joints[0].command_interfaces[0].max, "10");
+  ASSERT_THAT(hardware_info.joints[0].state_interfaces, SizeIs(2));
+  EXPECT_EQ(hardware_info.joints[0].state_interfaces[0].name, HW_IF_VELOCITY);
+  EXPECT_EQ(hardware_info.joints[0].state_interfaces[1].name, HW_IF_POSITION);
+
+  EXPECT_EQ(hardware_info.joints[1].name, "right_wheel_joint");
+  EXPECT_EQ(hardware_info.joints[1].type, "joint");
+  ASSERT_THAT(hardware_info.joints[1].command_interfaces, SizeIs(1));
+  EXPECT_EQ(hardware_info.joints[1].command_interfaces[0].name, HW_IF_VELOCITY);
+  EXPECT_EQ(hardware_info.joints[1].command_interfaces[0].min, "-10");
+  EXPECT_EQ(hardware_info.joints[1].command_interfaces[0].max, "10");
+  ASSERT_THAT(hardware_info.joints[1].state_interfaces, SizeIs(2));
+  EXPECT_EQ(hardware_info.joints[1].state_interfaces[0].name, HW_IF_VELOCITY);
+  EXPECT_EQ(hardware_info.joints[1].state_interfaces[1].name, HW_IF_POSITION);
 }

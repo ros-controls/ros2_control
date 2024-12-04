@@ -142,6 +142,10 @@ public:
         component_info.name = hardware_info.name;
         component_info.type = hardware_info.type;
         component_info.group = hardware_info.group;
+        component_info.rw_rate =
+          (hardware_info.rw_rate == 0 || hardware_info.rw_rate > cm_update_rate_)
+            ? cm_update_rate_
+            : hardware_info.rw_rate;
         component_info.plugin_name = hardware_info.hardware_plugin_name;
         component_info.is_async = hardware_info.is_async;
 
@@ -1836,10 +1840,35 @@ HardwareReadWriteStatus ResourceManager::read(
   {
     for (auto & component : components)
     {
+      std::unique_lock<std::recursive_mutex> lock(component.get_mutex(), std::try_to_lock);
+      if (!lock.owns_lock())
+      {
+        RCLCPP_DEBUG(
+          get_logger(), "Skipping read() call for the component '%s' since it is locked",
+          component.get_name().c_str());
+        continue;
+      }
       auto ret_val = return_type::OK;
       try
       {
-        ret_val = component.read(time, period);
+        if (
+          resource_storage_->hardware_info_map_[component.get_name()].rw_rate == 0 ||
+          resource_storage_->hardware_info_map_[component.get_name()].rw_rate ==
+            resource_storage_->cm_update_rate_)
+        {
+          ret_val = component.read(time, period);
+        }
+        else
+        {
+          const double read_rate =
+            resource_storage_->hardware_info_map_[component.get_name()].rw_rate;
+          const auto current_time = resource_storage_->get_clock()->now();
+          const rclcpp::Duration actual_period = current_time - component.get_last_read_time();
+          if (actual_period.seconds() * read_rate >= 0.99)
+          {
+            ret_val = component.read(current_time, actual_period);
+          }
+        }
         const auto component_group = component.get_group_name();
         ret_val =
           resource_storage_->update_hardware_component_group_state(component_group, ret_val);
@@ -1897,10 +1926,35 @@ HardwareReadWriteStatus ResourceManager::write(
   {
     for (auto & component : components)
     {
+      std::unique_lock<std::recursive_mutex> lock(component.get_mutex(), std::try_to_lock);
+      if (!lock.owns_lock())
+      {
+        RCLCPP_DEBUG(
+          get_logger(), "Skipping write() call for the component '%s' since it is locked",
+          component.get_name().c_str());
+        continue;
+      }
       auto ret_val = return_type::OK;
       try
       {
-        ret_val = component.write(time, period);
+        if (
+          resource_storage_->hardware_info_map_[component.get_name()].rw_rate == 0 ||
+          resource_storage_->hardware_info_map_[component.get_name()].rw_rate ==
+            resource_storage_->cm_update_rate_)
+        {
+          ret_val = component.write(time, period);
+        }
+        else
+        {
+          const double write_rate =
+            resource_storage_->hardware_info_map_[component.get_name()].rw_rate;
+          const auto current_time = resource_storage_->get_clock()->now();
+          const rclcpp::Duration actual_period = current_time - component.get_last_write_time();
+          if (actual_period.seconds() * write_rate >= 0.99)
+          {
+            ret_val = component.write(current_time, actual_period);
+          }
+        }
         const auto component_group = component.get_group_name();
         ret_val =
           resource_storage_->update_hardware_component_group_state(component_group, ret_val);

@@ -709,6 +709,100 @@ const auto async_hardware_resources =
   </ros2_control>
 )";
 
+const auto hardware_resources_with_different_rw_rates =
+  R"(
+  <ros2_control name="TestActuatorHardware" type="actuator" rw_rate="50">
+    <hardware>
+      <plugin>test_actuator</plugin>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <command_interface name="max_velocity" />
+    </joint>
+  </ros2_control>
+  <ros2_control name="TestSensorHardware" type="sensor" rw_rate="20">
+    <hardware>
+      <plugin>test_sensor</plugin>
+      <param name="example_param_write_for_sec">2</param>
+      <param name="example_param_read_for_sec">2</param>
+    </hardware>
+    <sensor name="sensor1">
+      <state_interface name="velocity"/>
+    </sensor>
+  </ros2_control>
+  <ros2_control name="TestSystemHardware" type="system" rw_rate="25">
+    <hardware>
+      <plugin>test_system</plugin>
+      <param name="example_param_write_for_sec">2</param>
+      <param name="example_param_read_for_sec">2</param>
+    </hardware>
+    <joint name="joint2">
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="acceleration"/>
+      <command_interface name="max_acceleration" />
+    </joint>
+    <joint name="joint3">
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="acceleration"/>
+    </joint>
+    <gpio name="configuration">
+      <command_interface name="max_tcp_jerk"/>
+      <state_interface name="max_tcp_jerk"/>
+    </gpio>
+  </ros2_control>
+)";
+
+const auto hardware_resources_with_negative_rw_rates =
+  R"(
+  <ros2_control name="TestActuatorHardware" type="actuator" rw_rate="-50">
+    <hardware>
+      <plugin>test_actuator</plugin>
+    </hardware>
+    <joint name="right_finger_joint">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <command_interface name="max_velocity" />
+    </joint>
+  </ros2_control>
+)";
+
+const auto hardware_resources_invalid_with_text_in_rw_rates =
+  R"(
+  <ros2_control name="TestActuatorHardware" type="actuator" rw_rate="d 50">
+    <hardware>
+      <plugin>test_actuator</plugin>
+    </hardware>
+    <joint name="right_finger_joint">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <command_interface name="max_velocity" />
+    </joint>
+  </ros2_control>
+)";
+
+const auto hardware_resources_invalid_out_of_range_in_rw_rates =
+  R"(
+  <ros2_control name="TestActuatorHardware" type="actuator" rw_rate="12345678901">
+    <hardware>
+      <plugin>test_actuator</plugin>
+    </hardware>
+    <joint name="right_finger_joint">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <command_interface name="max_velocity" />
+    </joint>
+  </ros2_control>
+)";
+
 const auto uninitializable_hardware_resources =
   R"(
   <ros2_control name="TestUninitializableActuatorHardware" type="actuator">
@@ -1715,10 +1809,232 @@ const auto gripper_hardware_resources_mimic_false_command_if =
   </ros2_control>
   )";
 
+const auto diff_drive_robot_sdf =
+  R"(
+<?xml version="1.0" ?>
+<sdf version="1.8">
+  <model canonical_link="base_link" name="my_robot">
+    <!-- BASE -->
+    <link name="base_link">
+      <must_be_base_link>true</must_be_base_link>
+    </link>
+    <!-- CHASSIS -->
+    <joint name="chassis_joint" type="fixed">
+      <parent>base_link</parent>
+      <child>chassis_link</child>
+      <pose relative_to="base_link">0 0 0.075 0 0 0</pose>
+    </joint>
+    <link name="chassis_link">
+      <pose relative_to="chassis_joint"/>
+      <visual name="chassis_link_visual">
+        <geometry>
+          <box>
+            <size>
+                0.3 0.3 0.15
+              </size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>1 1 1 1</ambient>
+          <diffuse>1 1 1 1</diffuse>
+        </material>
+      </visual>
+      <collision name="chassis_link_collision">
+        <geometry>
+          <box>
+            <size>
+                0.3 0.3 0.15
+              </size>
+          </box>
+        </geometry>
+      </collision>
+      <inertial>
+        <mass>0.5</mass>
+        <inertia>
+          <ixx>0.0046875</ixx>
+          <ixy>0.0</ixy>
+          <ixz>0.0</ixz>
+          <iyy>0.0046875</iyy>
+          <iyz>0.0</iyz>
+          <izz>0.0075</izz>
+        </inertia>
+      </inertial>
+    </link>
+    <!-- lEFT WHEEL -->
+    <joint name="left_wheel_joint" type="revolute">
+      <parent>chassis_link</parent>
+      <child>left_wheel_link</child>
+      <pose relative_to="chassis_link">0.09 0.16999999999999998 -0.075 -1.5707963267948966 0 0</pose>
+      <axis>
+        <xyz>0 0 1</xyz>
+        <limit>
+          <lower>-inf</lower>
+          <upper>inf</upper>
+        </limit>
+      </axis>
+    </joint>
+    <link name="left_wheel_link">
+      <pose relative_to="left_wheel_joint"/>
+      <visual name="left_wheel_link_visual">
+        <geometry>
+          <cylinder>
+            <radius>0.05</radius>
+            <length>0.04</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0 0 1</ambient>
+          <diffuse>0 0 1</diffuse>
+        </material>
+      </visual>
+      <collision name="left_wheel_link_collision">
+        <geometry>
+          <cylinder>
+            <radius>0.05</radius>
+            <length>0.04</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      <inertial>
+        <mass>0.1</mass>
+        <inertia>
+          <ixx>7.583333333333335e-05</ixx>
+          <ixy>0.0</ixy>
+          <ixz>0.0</ixz>
+          <iyy>7.583333333333335e-05</iyy>
+          <iyz>0.0</iyz>
+          <izz>0.00012500000000000003</izz>
+        </inertia>
+      </inertial>
+    </link>
+    <!-- RIGHT WHEEL -->
+    <joint name="right_wheel_joint" type="revolute">
+      <parent>chassis_link</parent>
+      <child>right_wheel_link</child>
+      <pose relative_to="chassis_link">0.09 -0.16999999999999998 -0.075 -1.5707963267948966 0 0</pose>
+      <axis>
+        <xyz>0 0 1</xyz>
+        <!-- limit would not be specified because if the type was continuous -->
+        <limit>
+          <lower>-inf</lower>
+          <upper>inf</upper>
+        </limit>
+      </axis>
+    </joint>
+    <link name="right_wheel_link">
+      <pose relative_to="right_wheel_joint"/>
+      <visual name="right_wheel_link_visual">
+        <geometry>
+          <cylinder>
+            <radius>0.05</radius>
+            <length>0.04</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0 0 1</ambient>
+          <diffuse>0 0 1</diffuse>
+        </material>
+      </visual>
+      <collision name="right_wheel_link_collision">
+        <geometry>
+          <cylinder>
+            <radius>0.05</radius>
+            <length>0.04</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      <inertial>
+        <mass>0.1</mass>
+        <inertia>
+          <ixx>7.583333333333335e-05</ixx>
+          <ixy>0.0</ixy>
+          <ixz>0.0</ixz>
+          <iyy>7.583333333333335e-05</iyy>
+          <iyz>0.0</iyz>
+          <izz>0.00012500000000000003</izz>
+        </inertia>
+      </inertial>
+    </link>
+    <!-- CASTER -->
+    <joint name="caster_joint" type="revolute">
+      <parent>chassis_link</parent>
+      <child>caster_link</child>
+      <pose relative_to="chassis_link">-0.09 0 -0.075 0 0 0</pose>
+      <axis>
+        <xyz>1 1 1</xyz>
+        <limit>
+          <lower>-inf</lower>
+          <upper>inf</upper>
+        </limit>
+      </axis>
+    </joint>
+    <link name="caster_link">
+      <pose relative_to="caster_joint"/>
+      <visual name="caster_link_visual">
+        <geometry>
+          <sphere>
+            <radius>0.05</radius>
+          </sphere>
+        </geometry>
+        <material>
+          <ambient>0 0 1</ambient>
+          <diffuse>0 0 1</diffuse>
+        </material>
+      </visual>
+      <collision name="caster_link_collision">
+        <geometry>
+          <sphere>
+            <radius>0.05</radius>
+          </sphere>
+        </geometry>
+      </collision>
+      <inertial>
+        <mass>0.1</mass>
+        <inertia>
+          <ixx>0.00010000000000000002</ixx>
+          <ixy>0.0</ixy>
+          <ixz>0.0</ixz>
+          <iyy>0.00010000000000000002</iyy>
+          <iyz>0.0</iyz>
+          <izz>0.00010000000000000002</izz>
+        </inertia>
+      </inertial>
+    </link>
+    <ros2_control name="GazeboSimSystem" type="system">
+      <hardware>
+        <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+      </hardware>
+      <joint name="left_wheel_joint">
+        <command_interface name="velocity">
+          <param name="min">-10</param>
+          <param name="max">10</param>
+        </command_interface>
+        <state_interface name="velocity"/>
+        <state_interface name="position"/>
+      </joint>
+      <joint name="right_wheel_joint">
+        <command_interface name="velocity">
+          <param name="min">-10</param>
+          <param name="max">10</param>
+        </command_interface>
+        <state_interface name="velocity"/>
+        <state_interface name="position"/>
+      </joint>
+    </ros2_control>
+    <plugin filename="libgz_ros2_control-system.so" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+      <parameters>/path/to/config.yml</parameters>
+    </plugin>
+  </model>
+</sdf>
+)";
+
 const auto minimal_robot_urdf =
   std::string(urdf_head) + std::string(hardware_resources) + std::string(urdf_tail);
 const auto minimal_async_robot_urdf =
   std::string(urdf_head) + std::string(async_hardware_resources) + std::string(urdf_tail);
+const auto minimal_robot_urdf_with_different_hw_rw_rate =
+  std::string(urdf_head) + std::string(hardware_resources_with_different_rw_rates) +
+  std::string(urdf_tail);
 const auto minimal_uninitializable_robot_urdf =
   std::string(urdf_head) + std::string(uninitializable_hardware_resources) + std::string(urdf_tail);
 
