@@ -142,11 +142,7 @@ public:
         component_info.name = hardware_info.name;
         component_info.type = hardware_info.type;
         component_info.group = hardware_info.group;
-        component_info.read_rate =
-          (hardware_info.rw_rate == 0 || hardware_info.rw_rate > cm_update_rate_)
-            ? cm_update_rate_
-            : hardware_info.rw_rate;
-        component_info.write_rate =
+        component_info.rw_rate =
           (hardware_info.rw_rate == 0 || hardware_info.rw_rate > cm_update_rate_)
             ? cm_update_rate_
             : hardware_info.rw_rate;
@@ -1856,8 +1852,8 @@ HardwareReadWriteStatus ResourceManager::read(
       try
       {
         if (
-          resource_storage_->hardware_info_map_[component.get_name()].read_rate == 0 ||
-          resource_storage_->hardware_info_map_[component.get_name()].read_rate ==
+          resource_storage_->hardware_info_map_[component.get_name()].rw_rate == 0 ||
+          resource_storage_->hardware_info_map_[component.get_name()].rw_rate ==
             resource_storage_->cm_update_rate_)
         {
           ret_val = component.read(time, period);
@@ -1865,7 +1861,7 @@ HardwareReadWriteStatus ResourceManager::read(
         else
         {
           const double read_rate =
-            resource_storage_->hardware_info_map_[component.get_name()].read_rate;
+            resource_storage_->hardware_info_map_[component.get_name()].rw_rate;
           const auto current_time = resource_storage_->get_clock()->now();
           const rclcpp::Duration actual_period = current_time - component.get_last_read_time();
           if (actual_period.seconds() * read_rate >= 0.99)
@@ -1942,8 +1938,8 @@ HardwareReadWriteStatus ResourceManager::write(
       try
       {
         if (
-          resource_storage_->hardware_info_map_[component.get_name()].write_rate == 0 ||
-          resource_storage_->hardware_info_map_[component.get_name()].write_rate ==
+          resource_storage_->hardware_info_map_[component.get_name()].rw_rate == 0 ||
+          resource_storage_->hardware_info_map_[component.get_name()].rw_rate ==
             resource_storage_->cm_update_rate_)
         {
           ret_val = component.write(time, period);
@@ -1951,7 +1947,7 @@ HardwareReadWriteStatus ResourceManager::write(
         else
         {
           const double write_rate =
-            resource_storage_->hardware_info_map_[component.get_name()].write_rate;
+            resource_storage_->hardware_info_map_[component.get_name()].rw_rate;
           const auto current_time = resource_storage_->get_clock()->now();
           const rclcpp::Duration actual_period = current_time - component.get_last_write_time();
           if (actual_period.seconds() * write_rate >= 0.99)

@@ -457,14 +457,10 @@ TEST_F(ResourceManagerTest, resource_status)
   EXPECT_EQ(status_map[TEST_ACTUATOR_HARDWARE_NAME].type, TEST_ACTUATOR_HARDWARE_TYPE);
   EXPECT_EQ(status_map[TEST_SENSOR_HARDWARE_NAME].type, TEST_SENSOR_HARDWARE_TYPE);
   EXPECT_EQ(status_map[TEST_SYSTEM_HARDWARE_NAME].type, TEST_SYSTEM_HARDWARE_TYPE);
-  // read_rate
-  EXPECT_EQ(status_map[TEST_ACTUATOR_HARDWARE_NAME].read_rate, 50u);
-  EXPECT_EQ(status_map[TEST_SENSOR_HARDWARE_NAME].read_rate, 20u);
-  EXPECT_EQ(status_map[TEST_SYSTEM_HARDWARE_NAME].read_rate, 25u);
-  // write_rate
-  EXPECT_EQ(status_map[TEST_ACTUATOR_HARDWARE_NAME].write_rate, 50u);
-  EXPECT_EQ(status_map[TEST_SENSOR_HARDWARE_NAME].write_rate, 20u);
-  EXPECT_EQ(status_map[TEST_SYSTEM_HARDWARE_NAME].write_rate, 25u);
+  // read/write_rate
+  EXPECT_EQ(status_map[TEST_ACTUATOR_HARDWARE_NAME].rw_rate, 50u);
+  EXPECT_EQ(status_map[TEST_SENSOR_HARDWARE_NAME].rw_rate, 20u);
+  EXPECT_EQ(status_map[TEST_SYSTEM_HARDWARE_NAME].rw_rate, 25u);
   // plugin_name
   EXPECT_EQ(
     status_map[TEST_ACTUATOR_HARDWARE_NAME].plugin_name, TEST_ACTUATOR_HARDWARE_PLUGIN_NAME);
@@ -1765,17 +1761,13 @@ public:
       status_map[TEST_SENSOR_HARDWARE_NAME].state.id(),
       lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE);
 
-    // read_rate
-    EXPECT_EQ(status_map[TEST_ACTUATOR_HARDWARE_NAME].read_rate, 50u);
-    EXPECT_EQ(status_map[TEST_SENSOR_HARDWARE_NAME].read_rate, 20u);
-    EXPECT_EQ(status_map[TEST_SYSTEM_HARDWARE_NAME].read_rate, 25u);
-    // write_rate
-    EXPECT_EQ(status_map[TEST_ACTUATOR_HARDWARE_NAME].write_rate, 50u);
-    EXPECT_EQ(status_map[TEST_SENSOR_HARDWARE_NAME].write_rate, 20u);
-    EXPECT_EQ(status_map[TEST_SYSTEM_HARDWARE_NAME].write_rate, 25u);
+    // read/write_rate
+    EXPECT_EQ(status_map[TEST_ACTUATOR_HARDWARE_NAME].rw_rate, 50u);
+    EXPECT_EQ(status_map[TEST_SENSOR_HARDWARE_NAME].rw_rate, 20u);
+    EXPECT_EQ(status_map[TEST_SYSTEM_HARDWARE_NAME].rw_rate, 25u);
 
-    actuator_rw_rate_ = status_map[TEST_ACTUATOR_HARDWARE_NAME].read_rate;
-    system_rw_rate_ = status_map[TEST_SYSTEM_HARDWARE_NAME].read_rate;
+    actuator_rw_rate_ = status_map[TEST_ACTUATOR_HARDWARE_NAME].rw_rate;
+    system_rw_rate_ = status_map[TEST_SYSTEM_HARDWARE_NAME].rw_rate;
 
     claimed_itfs.push_back(
       rm->claim_command_interface(TEST_ACTUATOR_HARDWARE_COMMAND_INTERFACES[0]));

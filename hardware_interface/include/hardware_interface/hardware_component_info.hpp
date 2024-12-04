@@ -48,11 +48,8 @@ struct HardwareComponentInfo
   /// Component is async
   bool is_async;
 
-  //// read rate
-  unsigned int read_rate;
-
-  //// write rate
-  unsigned int write_rate;
+  //// read/write rate
+  unsigned int rw_rate;
 
   /// Component current state.
   rclcpp_lifecycle::State state;
