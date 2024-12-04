@@ -56,7 +56,8 @@ int main(int argc, char ** argv)
         cm->get_logger(), "Unable to set the CPU affinity : '%s'", affinity_result.second.c_str());
     }
   }
-  const bool lock_memory = cm->get_parameter_or<bool>("lock_memory", true);
+  const bool has_realtime = realtime_tools::has_realtime_kernel();
+  const bool lock_memory = cm->get_parameter_or<bool>("lock_memory", has_realtime);
   std::string message;
   if (lock_memory && !realtime_tools::lock_memory(message))
   {
