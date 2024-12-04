@@ -55,7 +55,7 @@ jobs:
     with:
       ros_distro: jazzy
       ros_repo: testing
-      upstream_workspace: ros2_control-not-released.jazzy.repos
+      upstream_workspace: ros2_control.jazzy.repos
       ref_for_scheduled_build: master
       additional_debs: clang
       c_compiler: clang
