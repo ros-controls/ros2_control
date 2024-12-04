@@ -126,7 +126,7 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
   if (is_async_)
   {
     const int thread_priority =
-      static_cast<int>(get_node()->get_parameter("thread_priority").as_int());
+     get_node()->get_parameter("thread_priority").as_int();
     RCLCPP_INFO(
       get_node()->get_logger(), "Starting async handler with scheduler priority: %d",
       thread_priority);
