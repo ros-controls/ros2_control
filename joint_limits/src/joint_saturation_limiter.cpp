@@ -434,7 +434,9 @@ bool JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>::on_enfo
 // typedefs are needed here to avoid issues with macro expansion. ref:
 // https://stackoverflow.com/a/8942986
 using int_map = std::map<int, int>;
-using JointTrajectoryPointSaturationLimiter = joint_limits::JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>;
-using JointTrajectoryPointLimiterInterfaceBase = joint_limits::JointLimiterInterface<trajectory_msgs::msg::JointTrajectoryPoint>;
+using JointTrajectoryPointSaturationLimiter =
+  joint_limits::JointSaturationLimiter<trajectory_msgs::msg::JointTrajectoryPoint>;
+using JointTrajectoryPointLimiterInterfaceBase =
+  joint_limits::JointLimiterInterface<trajectory_msgs::msg::JointTrajectoryPoint>;
 PLUGINLIB_EXPORT_CLASS(
   JointTrajectoryPointSaturationLimiter, JointTrajectoryPointLimiterInterfaceBase)
