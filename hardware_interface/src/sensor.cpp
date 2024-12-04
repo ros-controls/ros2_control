@@ -40,6 +40,7 @@ Sensor::Sensor(Sensor && other) noexcept
 {
   std::lock_guard<std::recursive_mutex> lock(other.sensors_mutex_);
   impl_ = std::move(other.impl_);
+  last_read_cycle_time_ = other.last_read_cycle_time_;
 }
 
 const rclcpp_lifecycle::State & Sensor::initialize(
@@ -52,6 +53,7 @@ const rclcpp_lifecycle::State & Sensor::initialize(
     switch (impl_->init(sensor_info, logger, clock_interface))
     {
       case CallbackReturn::SUCCESS:
+        last_read_cycle_time_ = clock_interface->get_clock()->now();
         impl_->set_lifecycle_state(rclcpp_lifecycle::State(
           lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
           lifecycle_state_names::UNCONFIGURED));
@@ -240,18 +242,13 @@ const rclcpp_lifecycle::State & Sensor::get_lifecycle_state() const
   return impl_->get_lifecycle_state();
 }
 
+const rclcpp::Time & Sensor::get_last_read_time() const { return last_read_cycle_time_; }
+
 return_type Sensor::read(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
-  std::unique_lock<std::recursive_mutex> lock(sensors_mutex_, std::try_to_lock);
-  if (!lock.owns_lock())
-  {
-    RCLCPP_DEBUG(
-      impl_->get_logger(), "Skipping read() call for the sensor '%s' since it is locked",
-      impl_->get_name().c_str());
-    return return_type::OK;
-  }
   if (lifecycleStateThatRequiresNoAction(impl_->get_lifecycle_state().id()))
   {
+    last_read_cycle_time_ = time;
     return return_type::OK;
   }
   return_type result = return_type::ERROR;
@@ -264,8 +261,10 @@ return_type Sensor::read(const rclcpp::Time & time, const rclcpp::Duration & per
     {
       error();
     }
+    last_read_cycle_time_ = time;
   }
   return result;
 }
 
+std::recursive_mutex & Sensor::get_mutex() { return sensors_mutex_; }
 }  // namespace hardware_interface
