@@ -61,6 +61,7 @@ return_type ControllerInterfaceBase::init(
   node_->register_on_cleanup(
     [this](const rclcpp_lifecycle::State & previous_state) -> CallbackReturn
     {
+      enable_introspection(false);
       if (is_async() && async_handler_ && async_handler_->is_running())
       {
         async_handler_->stop_thread();
