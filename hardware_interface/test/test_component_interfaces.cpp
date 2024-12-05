@@ -1052,7 +1052,6 @@ TEST(TestComponentInterfaces, dummy_sensor_default_joint)
   auto state_interfaces = sensor_hw.export_state_interfaces();
   ASSERT_EQ(2u, state_interfaces.size());
 
-  std::cout << "test 1" << std::endl;
   auto [contains_sens1_vol, si_sens1_vol] =
     test_components::vector_contains(state_interfaces, "sens1/voltage");
   ASSERT_TRUE(contains_sens1_vol);
@@ -1060,7 +1059,6 @@ TEST(TestComponentInterfaces, dummy_sensor_default_joint)
   EXPECT_EQ("voltage", state_interfaces[si_sens1_vol]->get_interface_name());
   EXPECT_EQ("sens1", state_interfaces[si_sens1_vol]->get_prefix_name());
   EXPECT_TRUE(std::isnan(state_interfaces[si_sens1_vol]->get_value()));
-  std::cout << "test 2" << std::endl;
 
   auto [contains_joint1_pos, si_joint1_pos] =
     test_components::vector_contains(state_interfaces, "joint1/position");
@@ -1070,7 +1068,6 @@ TEST(TestComponentInterfaces, dummy_sensor_default_joint)
   EXPECT_EQ("joint1", state_interfaces[si_joint1_pos]->get_prefix_name());
   EXPECT_TRUE(std::isnan(state_interfaces[si_joint1_pos]->get_value()));
 
-  std::cout << "test 3" << std::endl;
   // Not updated because is is UNCONFIGURED
   sensor_hw.read(TIME, PERIOD);
   EXPECT_TRUE(std::isnan(state_interfaces[si_sens1_vol]->get_value()));
