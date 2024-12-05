@@ -24,7 +24,7 @@ namespace hardware_interface
 constexpr char DEFAULT_REGISTRY_KEY[] = "ros2_control";
 constexpr char DEFAULT_INTROSPECTION_TOPIC[] = "~/introspection_data";
 
-#define REGISTER_DEFAULT_INTROSPECTION(ID, ENTITY)                           \
+#define REGISTER_ROS2_CONTROL_INTROSPECTION(ID, ENTITY)                      \
   REGISTER_ENTITY(                                                           \
     hardware_interface::DEFAULT_REGISTRY_KEY, get_name() + "." + ID, ENTITY, \
     &stats_registrations_, false)
