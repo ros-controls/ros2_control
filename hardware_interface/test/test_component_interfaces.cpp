@@ -1043,42 +1043,43 @@ TEST(TestComponentInterfaces, dummy_sensor_default_joint)
   const std::vector<hardware_interface::HardwareInfo> control_resources =
     hardware_interface::parse_control_resources_from_urdf(urdf_to_test);
   const hardware_interface::HardwareInfo sensor_res = control_resources[0];
-  rclcpp::Logger logger = rclcpp::get_logger("test_sensor_component");
-  auto state = sensor_hw.initialize(sensor_res, logger, nullptr);
-  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
-  EXPECT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
+  rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("test_system_components");
+  auto state =
+    sensor_hw.initialize(sensor_res, node->get_logger(), node->get_node_clock_interface());
+  ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED, state.id());
+  ASSERT_EQ(hardware_interface::lifecycle_state_names::UNCONFIGURED, state.label());
 
   auto state_interfaces = sensor_hw.export_state_interfaces();
   ASSERT_EQ(2u, state_interfaces.size());
-  {
-    auto [contains, position] = test_components::vector_contains(state_interfaces, "sens1/voltage");
-    EXPECT_TRUE(contains);
-    EXPECT_EQ("sens1/voltage", state_interfaces[position]->get_name());
-    EXPECT_EQ("voltage", state_interfaces[position]->get_interface_name());
-    EXPECT_EQ("sens1", state_interfaces[position]->get_prefix_name());
-    EXPECT_TRUE(std::isnan(state_interfaces[position]->get_value()));
-  }
-  {
-    auto [contains, position] =
-      test_components::vector_contains(state_interfaces, "joint1/position");
-    EXPECT_TRUE(contains);
-    EXPECT_EQ("joint1/position", state_interfaces[position]->get_name());
-    EXPECT_EQ("position", state_interfaces[position]->get_interface_name());
-    EXPECT_EQ("joint1", state_interfaces[position]->get_prefix_name());
-    EXPECT_TRUE(std::isnan(state_interfaces[position]->get_value()));
-  }
 
+  std::cout << "test 1" << std::endl;
+  auto [contains_sens1_vol, si_sens1_vol] =
+    test_components::vector_contains(state_interfaces, "sens1/voltage");
+  ASSERT_TRUE(contains_sens1_vol);
+  EXPECT_EQ("sens1/voltage", state_interfaces[si_sens1_vol]->get_name());
+  EXPECT_EQ("voltage", state_interfaces[si_sens1_vol]->get_interface_name());
+  EXPECT_EQ("sens1", state_interfaces[si_sens1_vol]->get_prefix_name());
+  EXPECT_TRUE(std::isnan(state_interfaces[si_sens1_vol]->get_value()));
+  std::cout << "test 2" << std::endl;
+
+  auto [contains_joint1_pos, si_joint1_pos] =
+    test_components::vector_contains(state_interfaces, "joint1/position");
+  ASSERT_TRUE(contains_joint1_pos);
+  EXPECT_EQ("joint1/position", state_interfaces[si_joint1_pos]->get_name());
+  EXPECT_EQ("position", state_interfaces[si_joint1_pos]->get_interface_name());
+  EXPECT_EQ("joint1", state_interfaces[si_joint1_pos]->get_prefix_name());
+  EXPECT_TRUE(std::isnan(state_interfaces[si_joint1_pos]->get_value()));
+
+  std::cout << "test 3" << std::endl;
   // Not updated because is is UNCONFIGURED
-  auto si_sens1_vol = test_components::vector_contains(state_interfaces, "sens1/voltage").second;
-  auto si_joint1_pos = test_components::vector_contains(state_interfaces, "joint1/position").second;
   sensor_hw.read(TIME, PERIOD);
   EXPECT_TRUE(std::isnan(state_interfaces[si_sens1_vol]->get_value()));
   EXPECT_TRUE(std::isnan(state_interfaces[si_joint1_pos]->get_value()));
 
   // Updated because is is INACTIVE
   state = sensor_hw.configure();
-  EXPECT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, state.id());
-  EXPECT_EQ(hardware_interface::lifecycle_state_names::INACTIVE, state.label());
+  ASSERT_EQ(lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE, state.id());
+  ASSERT_EQ(hardware_interface::lifecycle_state_names::INACTIVE, state.label());
   EXPECT_EQ(0.0, state_interfaces[si_sens1_vol]->get_value());
   EXPECT_EQ(10.0, state_interfaces[si_joint1_pos]->get_value());
 
