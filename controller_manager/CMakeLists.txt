@@ -16,6 +16,8 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   rclcpp
   realtime_tools
   std_msgs
+  libstatistics_collector
+  generate_parameter_library
 )
 
 find_package(ament_cmake REQUIRED)
@@ -27,6 +29,10 @@ foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
 endforeach()
 
+generate_parameter_library(controller_manager_parameters
+  src/controller_manager_parameters.yaml
+)
+
 add_library(controller_manager SHARED
   src/controller_manager.cpp
 )
@@ -34,6 +40,9 @@ target_compile_features(controller_manager PUBLIC cxx_std_17)
 target_include_directories(controller_manager PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/controller_manager>
+)
+target_link_libraries(controller_manager PUBLIC
+  controller_manager_parameters
 )
 ament_target_dependencies(controller_manager PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
@@ -236,7 +245,7 @@ install(
   DESTINATION include/controller_manager
 )
 install(
-  TARGETS controller_manager
+  TARGETS controller_manager controller_manager_parameters
   EXPORT export_controller_manager
   RUNTIME DESTINATION bin
   LIBRARY DESTINATION lib

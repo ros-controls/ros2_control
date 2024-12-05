@@ -366,6 +366,7 @@ TEST_P(TestControllerManagerWithStrictness, async_controller_lifecycle)
   EXPECT_EQ(
     lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, test_controller->get_lifecycle_state().id());
 
+  time_ = cm_->get_clock()->now();
   EXPECT_EQ(
     controller_interface::return_type::OK,
     cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
@@ -373,6 +374,21 @@ TEST_P(TestControllerManagerWithStrictness, async_controller_lifecycle)
   std::this_thread::sleep_for(
     std::chrono::milliseconds(1000 / (test_controller->get_update_rate())));
   EXPECT_EQ(test_controller->internal_counter, 1u);
+  EXPECT_EQ(test_controller->update_period_.seconds(), 0.0)
+    << "The first trigger cycle should have zero period";
+
+  const double exp_period = (cm_->get_clock()->now() - time_).seconds();
+  time_ = cm_->get_clock()->now();
+  EXPECT_EQ(
+    controller_interface::return_type::OK,
+    cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
+  EXPECT_EQ(test_controller->internal_counter, 1u);
+  std::this_thread::sleep_for(
+    std::chrono::milliseconds(1000 / (test_controller->get_update_rate())));
+  EXPECT_EQ(test_controller->internal_counter, 2u);
+  EXPECT_THAT(
+    test_controller->update_period_.seconds(),
+    testing::AllOf(testing::Gt(0.6 * exp_period), testing::Lt((1.4 * exp_period))));
   size_t last_internal_counter = test_controller->internal_counter;
 
   // Stop controller, will take effect at the end of the update function
@@ -576,7 +592,26 @@ TEST_P(TestControllerManagerWithUpdateRates, per_controller_equal_and_higher_upd
     // [cm_update_rate, 2*cm_update_rate)
     EXPECT_THAT(
       test_controller->update_period_.seconds(),
-      testing::AllOf(testing::Ge(0.9 / cm_update_rate), testing::Lt((1.1 / cm_update_rate))));
+      testing::AllOf(testing::Ge(0.85 / cm_update_rate), testing::Lt((1.15 / cm_update_rate))));
+    ASSERT_EQ(
+      test_controller->internal_counter,
+      cm_->get_loaded_controllers()[0].execution_time_statistics->GetCount());
+    ASSERT_EQ(
+      test_controller->internal_counter - 1,
+      cm_->get_loaded_controllers()[0].periodicity_statistics->GetCount())
+      << "The first update is not counted in periodicity statistics";
+    EXPECT_THAT(
+      cm_->get_loaded_controllers()[0].periodicity_statistics->Average(),
+      testing::AllOf(
+        testing::Ge(0.95 * cm_->get_update_rate()), testing::Lt((1.05 * cm_->get_update_rate()))));
+    EXPECT_THAT(
+      cm_->get_loaded_controllers()[0].periodicity_statistics->Min(),
+      testing::AllOf(
+        testing::Ge(0.85 * cm_->get_update_rate()), testing::Lt((1.2 * cm_->get_update_rate()))));
+    EXPECT_THAT(
+      cm_->get_loaded_controllers()[0].periodicity_statistics->Max(),
+      testing::AllOf(
+        testing::Ge(0.85 * cm_->get_update_rate()), testing::Lt((1.2 * cm_->get_update_rate()))));
     loop_rate.sleep();
   }
   // if we do 2 times of the controller_manager update rate, the internal counter should be
@@ -683,6 +718,8 @@ TEST_P(TestControllerUpdateRates, check_the_controller_update_rate)
   const auto initial_counter = test_controller->internal_counter;
   // don't start with zero to check if the period is correct if controller is activated anytime
   rclcpp::Time time = time_;
+  const auto exp_periodicity =
+    cm_update_rate / std::ceil(static_cast<double>(cm_update_rate) / controller_update_rate);
   for (size_t update_counter = 0; update_counter <= 10 * cm_update_rate; ++update_counter)
   {
     rclcpp::Time old_time = time;
@@ -691,19 +728,36 @@ TEST_P(TestControllerUpdateRates, check_the_controller_update_rate)
     EXPECT_EQ(
       controller_interface::return_type::OK,
       cm_->update(time, rclcpp::Duration::from_seconds(0.01)));
-    // In case of a non perfect divisor, the update period should respect the rule
-    // [controller_update_rate, 2*controller_update_rate)
-    EXPECT_THAT(
-      test_controller->update_period_.seconds(),
-      testing::AllOf(
-        testing::Gt(0.99 * controller_period),
-        testing::Lt((1.05 * controller_period) + PERIOD.seconds())))
-      << "update_counter: " << update_counter << " desired controller period: " << controller_period
-      << " actual controller period: " << test_controller->update_period_.seconds();
 
-    if (update_counter % cm_update_rate == 0)
+    if (test_controller->internal_counter - initial_counter > 0)
+    {
+      // In case of a non perfect divisor, the update period should respect the rule
+      // [controller_update_rate, 2*controller_update_rate)
+      EXPECT_THAT(
+        test_controller->update_period_.seconds(),
+        testing::AllOf(
+          testing::Gt(0.99 * controller_period),
+          testing::Lt((1.05 * controller_period) + PERIOD.seconds())))
+        << "update_counter: " << update_counter
+        << " desired controller period: " << controller_period
+        << " actual controller period: " << test_controller->update_period_.seconds();
+    }
+    else
+    {
+      // Check that the first cycle update period is zero
+      EXPECT_EQ(test_controller->update_period_.seconds(), 0.0);
+    }
+
+    if (update_counter > 0 && update_counter % cm_update_rate == 0)
     {
       const double no_of_secs_passed = static_cast<double>(update_counter) / cm_update_rate;
+      const auto actual_counter = test_controller->internal_counter - initial_counter;
+      const unsigned int exp_counter =
+        static_cast<unsigned int>(exp_periodicity * no_of_secs_passed);
+      SCOPED_TRACE(
+        "The internal counter is : " + std::to_string(actual_counter) + " [" +
+        std::to_string(exp_counter - 1) + ", " + std::to_string(exp_counter + 1) +
+        "] and number of seconds passed : " + std::to_string(no_of_secs_passed));
       // NOTE: here EXPECT_NEAR is used because it is observed that in the first iteration of whole
       // cycle of cm_update_rate counts, there is one count missing, but in rest of the 9 cycles it
       // is clearly tracking, so adding 1 here won't affect the final count.
@@ -711,10 +765,26 @@ TEST_P(TestControllerUpdateRates, check_the_controller_update_rate)
       // cycle and then on accumulating 37 on every other update cycle so at the end of the 10
       // cycles it will have 369 instead of 370.
       EXPECT_THAT(
-        test_controller->internal_counter - initial_counter,
-        testing::AnyOf(
-          testing::Ge((controller_update_rate - 1) * no_of_secs_passed),
-          testing::Lt((controller_update_rate * no_of_secs_passed))));
+        actual_counter, testing::AnyOf(testing::Ge(exp_counter - 1), testing::Le(exp_counter + 1)));
+      ASSERT_EQ(
+        test_controller->internal_counter,
+        cm_->get_loaded_controllers()[0].execution_time_statistics->GetCount());
+      ASSERT_EQ(
+        test_controller->internal_counter - 1,
+        cm_->get_loaded_controllers()[0].periodicity_statistics->GetCount())
+        << "The first update is not counted in periodicity statistics";
+      EXPECT_THAT(
+        cm_->get_loaded_controllers()[0].periodicity_statistics->Average(),
+        testing::AllOf(testing::Ge(0.95 * exp_periodicity), testing::Lt((1.05 * exp_periodicity))));
+      EXPECT_THAT(
+        cm_->get_loaded_controllers()[0].periodicity_statistics->Min(),
+        testing::AllOf(testing::Ge(0.85 * exp_periodicity), testing::Lt((1.2 * exp_periodicity))));
+      EXPECT_THAT(
+        cm_->get_loaded_controllers()[0].periodicity_statistics->Max(),
+        testing::AllOf(testing::Ge(0.85 * exp_periodicity), testing::Lt((1.2 * exp_periodicity))));
+      EXPECT_LT(
+        cm_->get_loaded_controllers()[0].execution_time_statistics->Average(),
+        50.0);  // 50 microseconds
     }
   }
 }
@@ -722,6 +792,148 @@ TEST_P(TestControllerUpdateRates, check_the_controller_update_rate)
 INSTANTIATE_TEST_SUITE_P(
   per_controller_update_rate_check, TestControllerUpdateRates,
   testing::Values(10, 12, 16, 23, 37, 40, 50, 63, 71, 85, 90));
+
+class TestAsyncControllerUpdateRates
+: public ControllerManagerFixture<controller_manager::ControllerManager>
+{
+};
+
+TEST_F(TestAsyncControllerUpdateRates, check_the_async_controller_update_rate_and_stats)
+{
+  const unsigned int ctrl_update_rate = cm_->get_update_rate() / 2;
+  auto test_controller = std::make_shared<test_controller::TestController>();
+  cm_->add_controller(
+    test_controller, test_controller::TEST_CONTROLLER_NAME,
+    test_controller::TEST_CONTROLLER_CLASS_NAME);
+  EXPECT_EQ(1u, cm_->get_loaded_controllers().size());
+  EXPECT_EQ(2, test_controller.use_count());
+
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED,
+    test_controller->get_lifecycle_state().id());
+
+  test_controller->get_node()->set_parameter({"update_rate", static_cast<int>(ctrl_update_rate)});
+  test_controller->get_node()->set_parameter({"is_async", true});
+  // configure controller
+  {
+    ControllerManagerRunner cm_runner(this);
+    cm_->configure_controller(test_controller::TEST_CONTROLLER_NAME);
+  }
+  ASSERT_TRUE(test_controller->is_async());
+  time_ = test_controller->get_node()->now();  // set to something nonzero
+  cm_->get_clock()->sleep_until(time_ + PERIOD);
+  time_ = cm_->get_clock()->now();
+  EXPECT_EQ(
+    controller_interface::return_type::OK,
+    cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
+  EXPECT_EQ(0u, test_controller->internal_counter) << "Controller is not started";
+
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE,
+    test_controller->get_lifecycle_state().id());
+
+  // Start controller, will take effect at the end of the update function
+  const auto strictness = controller_manager_msgs::srv::SwitchController::Request::STRICT;
+  std::vector<std::string> start_controllers = {test_controller::TEST_CONTROLLER_NAME};
+  std::vector<std::string> stop_controllers = {};
+  auto switch_future = std::async(
+    std::launch::async, &controller_manager::ControllerManager::switch_controller, cm_,
+    start_controllers, stop_controllers, strictness, true, rclcpp::Duration(0, 0));
+
+  ASSERT_EQ(std::future_status::timeout, switch_future.wait_for(std::chrono::milliseconds(100)))
+    << "switch_controller should be blocking until next update cycle";
+
+  cm_->get_clock()->sleep_until(time_ + PERIOD);
+  time_ = cm_->get_clock()->now();
+  EXPECT_EQ(
+    controller_interface::return_type::OK,
+    cm_->update(time_, rclcpp::Duration::from_seconds(0.01)));
+  EXPECT_EQ(0u, test_controller->internal_counter) << "Controller is started at the end of update";
+  {
+    ControllerManagerRunner cm_runner(this);
+    EXPECT_EQ(controller_interface::return_type::OK, switch_future.get());
+  }
+
+  EXPECT_EQ(
+    lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE, test_controller->get_lifecycle_state().id());
+
+  EXPECT_EQ(test_controller->get_update_rate(), ctrl_update_rate);
+  const auto cm_update_rate = cm_->get_update_rate();
+  const auto controller_update_rate = test_controller->get_update_rate();
+  const double controller_period = 1.0 / controller_update_rate;
+
+  const auto initial_counter = test_controller->internal_counter;
+  // don't start with zero to check if the period is correct if controller is activated anytime
+  rclcpp::Time time = time_;
+  const auto exp_periodicity =
+    cm_update_rate / std::ceil(static_cast<double>(cm_update_rate) / controller_update_rate);
+  for (size_t update_counter = 0; update_counter <= 10 * cm_update_rate; ++update_counter)
+  {
+    rclcpp::Time old_time = time;
+    cm_->get_clock()->sleep_until(old_time + PERIOD);
+    time = cm_->get_clock()->now();
+    EXPECT_EQ(
+      controller_interface::return_type::OK,
+      cm_->update(time, rclcpp::Duration::from_seconds(0.01)));
+
+    // the async controllers will have to wait for one cycle to have the correct update period in
+    // the controller
+    if (test_controller->internal_counter - initial_counter > 1)
+    {
+      EXPECT_THAT(
+        test_controller->update_period_.seconds(),
+        testing::AllOf(
+          testing::Gt(0.99 * controller_period),
+          testing::Lt((1.05 * controller_period) + PERIOD.seconds())))
+        << "update_counter: " << update_counter
+        << " desired controller period: " << controller_period
+        << " actual controller period: " << test_controller->update_period_.seconds();
+    }
+    // else
+    // {
+    //   // Check that the first cycle update period is zero
+    //   EXPECT_EQ(test_controller->update_period_.seconds(), 0.0);
+    // }
+
+    if (update_counter > 0 && update_counter % cm_update_rate == 0)
+    {
+      const double no_of_secs_passed = static_cast<double>(update_counter) / cm_update_rate;
+      const auto actual_counter = test_controller->internal_counter - initial_counter;
+      const unsigned int exp_counter =
+        static_cast<unsigned int>(exp_periodicity * no_of_secs_passed);
+      SCOPED_TRACE(
+        "The internal counter is : " + std::to_string(actual_counter) + " [" +
+        std::to_string(exp_counter - 1) + ", " + std::to_string(exp_counter + 1) +
+        "] and number of seconds passed : " + std::to_string(no_of_secs_passed));
+      // NOTE: here EXPECT_THAT is used because it is observed that in the first iteration of whole
+      // cycle of cm_update_rate counts, there is one count missing, but in rest of the 9 cycles it
+      // is clearly tracking, so adding 1 here won't affect the final count.
+      // For instance, a controller with update rate 37 Hz, seems to have 36 in the first update
+      // cycle and then on accumulating 37 on every other update cycle so at the end of the 10
+      // cycles it will have 369 instead of 370.
+      EXPECT_THAT(
+        actual_counter, testing::AnyOf(testing::Ge(exp_counter - 1), testing::Le(exp_counter + 1)));
+      EXPECT_THAT(
+        cm_->get_loaded_controllers()[0].execution_time_statistics->GetCount(),
+        testing::AnyOf(testing::Ge(exp_counter - 1), testing::Le(exp_counter)));
+      EXPECT_THAT(
+        cm_->get_loaded_controllers()[0].periodicity_statistics->GetCount(),
+        testing::AnyOf(testing::Ge(exp_counter - 1), testing::Le(exp_counter)));
+      EXPECT_THAT(
+        cm_->get_loaded_controllers()[0].periodicity_statistics->Average(),
+        testing::AllOf(testing::Ge(0.95 * exp_periodicity), testing::Lt((1.05 * exp_periodicity))));
+      EXPECT_THAT(
+        cm_->get_loaded_controllers()[0].periodicity_statistics->Min(),
+        testing::AllOf(testing::Ge(0.85 * exp_periodicity), testing::Lt((1.2 * exp_periodicity))));
+      EXPECT_THAT(
+        cm_->get_loaded_controllers()[0].periodicity_statistics->Max(),
+        testing::AllOf(testing::Ge(0.85 * exp_periodicity), testing::Lt((1.2 * exp_periodicity))));
+      EXPECT_LT(
+        cm_->get_loaded_controllers()[0].execution_time_statistics->Average(),
+        12000);  // more or less 12 milliseconds considering the waittime in the controller
+    }
+  }
+}
 
 class TestControllerManagerFallbackControllers
 : public ControllerManagerFixture<controller_manager::ControllerManager>,
