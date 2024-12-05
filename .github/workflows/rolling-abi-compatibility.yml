@@ -17,7 +17,7 @@ on:
 concurrency:
   # cancel previous runs of the same workflow, except for pushes on master branch
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref != 'master' }}
+  cancel-in-progress: ${{ !startsWith(github.ref, '/refs/heads') }}
 
 jobs:
   abi_check:

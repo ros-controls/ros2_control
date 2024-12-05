@@ -31,7 +31,7 @@ on:
 concurrency:
   # cancel previous runs of the same workflow, except for pushes on humble branch
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref != 'humble' }}
+  cancel-in-progress: ${{ !startsWith(github.ref, '/refs/heads') }}
 
 jobs:
   coverage_humble:
