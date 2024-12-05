@@ -284,10 +284,7 @@ ControllerManager::ControllerManager(
   init_controller_manager();
 }
 
-ControllerManager::~ControllerManager()
-{
-  CLEAR_ALL_REGISTRIES();
-}
+ControllerManager::~ControllerManager() { CLEAR_ALL_REGISTRIES(); }
 
 void ControllerManager::init_controller_manager()
 {
