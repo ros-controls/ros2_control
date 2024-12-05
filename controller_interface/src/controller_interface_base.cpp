@@ -143,8 +143,8 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
       thread_priority);
     async_handler_->start_thread();
   }
-  REGISTER_DEFAULT_INTROSPECTION("total_triggers", &trigger_stats_.total_triggers);
-  REGISTER_DEFAULT_INTROSPECTION("failed_triggers", &trigger_stats_.failed_triggers);
+  REGISTER_ROS2_CONTROL_INTROSPECTION("total_triggers", &trigger_stats_.total_triggers);
+  REGISTER_ROS2_CONTROL_INTROSPECTION("failed_triggers", &trigger_stats_.failed_triggers);
   trigger_stats_.reset();
 
   return get_node()->configure();
