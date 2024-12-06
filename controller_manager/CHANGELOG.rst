@@ -2,8 +2,8 @@
 Changelog for package controller_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.21.0 (2024-12-06)
+-------------------
 * Use the .hpp headers from realtime_tools package (`#1916 <https://github.com/ros-controls/ros2_control/issues/1916>`_)
 * CM: Check if a valid time is received (`#1901 <https://github.com/ros-controls/ros2_control/issues/1901>`_)
 * Lock memory by default on a realtime system setup (`#1896 <https://github.com/ros-controls/ros2_control/issues/1896>`_)
