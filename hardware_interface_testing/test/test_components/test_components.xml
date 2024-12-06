@@ -35,4 +35,10 @@
       Test Uninitializable System
     </description>
   </class>
+
+  <class name="test_actuator_exclusive_interfaces" type="TestActuatorExclusiveInterfaces" base_class_type="hardware_interface::ActuatorInterface">
+    <description>
+      Test Actuator with Exclusive Interfaces
+    </description>
+  </class>
 </library>

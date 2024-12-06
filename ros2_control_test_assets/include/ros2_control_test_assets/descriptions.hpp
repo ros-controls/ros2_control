@@ -1257,6 +1257,59 @@ const auto hardware_resources_missing_command_keys =
   </ros2_control>
 )";
 
+const auto hardware_resources_with_exclusive_interface =
+  R"(
+  <ros2_control name="TestActuatorHardware1" type="actuator">
+    <hardware>
+      <plugin>test_actuator_exclusive_interfaces</plugin>
+    </hardware>
+    <joint name="joint1">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <command_interface name="effort"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="effort"/>
+    </joint>
+  </ros2_control>
+  <ros2_control name="TestActuatorHardware2" type="actuator">
+    <hardware>
+      <plugin>test_actuator_exclusive_interfaces</plugin>
+    </hardware>
+    <joint name="joint2">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <command_interface name="effort"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="effort"/>
+    </joint>
+  </ros2_control>
+  <ros2_control name="TestActuatorHardware3" type="actuator">
+    <hardware>
+      <plugin>test_actuator_exclusive_interfaces</plugin>
+    </hardware>
+    <joint name="joint3">
+      <command_interface name="position"/>
+      <command_interface name="velocity"/>
+      <command_interface name="effort"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="effort"/>
+    </joint>
+  </ros2_control>
+  <ros2_control name="TestSensorHardware" type="sensor">
+    <hardware>
+      <plugin>test_sensor</plugin>
+      <param name="example_param_write_for_sec">2</param>
+      <param name="example_param_read_for_sec">2</param>
+    </hardware>
+    <sensor name="sensor1">
+      <state_interface name="velocity"/>
+    </sensor>
+  </ros2_control>
+)";
+
 const auto diffbot_urdf =
   R"(
 <?xml version="1.0" ?>
