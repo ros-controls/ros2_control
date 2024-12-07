@@ -636,7 +636,24 @@ const auto valid_urdf_ros2_control_voltage_sensor_only =
       <plugin>ros2_control_demo_hardware/SingleJointVoltageSensor</plugin>
       <param name="example_param_read_for_sec">2</param>
     </hardware>
-    <sensor name="joint1">
+    <sensor name="sens1">
+      <state_interface name="voltage" initial_value="0.0"/>
+    </sensor>
+  </ros2_control>
+)";
+
+// Joint+Voltage Sensor
+const auto valid_urdf_ros2_control_joint_voltage_sensor =
+  R"(
+  <ros2_control name="SingleJointVoltage" type="sensor">
+    <hardware>
+      <plugin>ros2_control_demo_hardware/SingleJointVoltageSensor</plugin>
+      <param name="example_param_read_for_sec">2</param>
+    </hardware>
+    <joint name="joint1">
+      <state_interface name="position"/>
+    </joint>
+    <sensor name="sens1">
       <state_interface name="voltage" initial_value="0.0"/>
     </sensor>
   </ros2_control>
