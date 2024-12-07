@@ -18,6 +18,7 @@
 #include <string>
 #include <vector>
 
+#include "hardware_interface/introspection.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 
 namespace controller_interface
