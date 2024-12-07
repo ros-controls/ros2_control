@@ -222,15 +222,6 @@ public:
   CONTROLLER_MANAGER_PUBLIC
   unsigned int get_update_rate() const;
 
-  /// Deletes all async controllers and components.
-  /**
-   * Needed to join the threads immediately after the control loop is ended
-   * to avoid unnecessary iterations. Otherwise
-   * the threads will be joined only when the controller manager gets destroyed.
-   */
-  CONTROLLER_MANAGER_PUBLIC
-  void shutdown_async_controllers_and_components();
-
 protected:
   CONTROLLER_MANAGER_PUBLIC
   void init_services();
