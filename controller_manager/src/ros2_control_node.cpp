@@ -67,10 +67,22 @@ int main(int argc, char ** argv)
     RCLCPP_WARN(cm->get_logger(), "Unable to lock the memory : '%s'", message.c_str());
   }
 
-  const int cpu_affinity = cm->get_parameter_or<int>("cpu_affinity", -1);
-  if (cpu_affinity >= 0)
+  rclcpp::Parameter cpu_affinity_param;
+  if (cm->get_parameter("cpu_affinity", cpu_affinity_param))
   {
-    const auto affinity_result = realtime_tools::set_current_thread_affinity(cpu_affinity);
+    std::vector<int> cpus = {};
+    if (cpu_affinity_param.get_type() == rclcpp::ParameterType::PARAMETER_INTEGER)
+    {
+      cpus = {cpu_affinity_param.as_int()};
+    }
+    else if (cpu_affinity_param.get_type() == rclcpp::ParameterType::PARAMETER_INTEGER_ARRAY)
+    {
+      const auto cpu_affinity_param_array = cpu_affinity_param.as_integer_array();
+      std::for_each(
+        cpu_affinity_param_array.begin(), cpu_affinity_param_array.end(),
+        [&cpus](int cpu) { cpus.push_back(static_cast<int>(cpu)); });
+    }
+    const auto affinity_result = realtime_tools::set_current_thread_affinity(cpus);
     if (!affinity_result.first)
     {
       RCLCPP_WARN(

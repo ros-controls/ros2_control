@@ -331,9 +331,10 @@ lock_memory (optional; bool; default: false for a non-realtime kernel, true for 
   Find more information about the setup for memory locking in the following link : `How to set ulimit values <https://access.redhat.com/solutions/61334>`_
   The following command can be used to set the memory locking limit temporarily : ``ulimit -l unlimited``.
 
-cpu_affinity (optional; int; default: -1)
+cpu_affinity (optional; int (or) int_array;)
   Sets the CPU affinity of the ``controller_manager`` node to the specified CPU core.
-  The value of -1 means that the CPU affinity is not set.
+  If it is an integer, the node's affinity will be set to the specified CPU core.
+  If it is an array of integers, the node's affinity will be set to the specified set of CPU cores.
 
 thread_priority (optional; int; default: 50)
   Sets the thread priority of the ``controller_manager`` node to the specified value. The value must be between 0 and 99.
