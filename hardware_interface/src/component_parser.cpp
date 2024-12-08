@@ -187,7 +187,7 @@ std::size_t parse_size_attribute(const tinyxml2::XMLElement * elem)
   std::regex int_re("[1-9][0-9]*");
   if (std::regex_match(s, int_re))
   {
-    size = std::stoi(s);
+    size = static_cast<size_t>(std::stoi(s));
   }
   else
   {
@@ -923,7 +923,7 @@ std::vector<HardwareInfo> parse_control_resources_from_urdf(const std::string & 
           {
             throw std::runtime_error("Mimic joint '" + name + "' not found in <ros2_control> tag");
           }
-          return std::distance(hw_info.joints.begin(), it);
+          return static_cast<size_t>(std::distance(hw_info.joints.begin(), it));
         };
 
         MimicJoint mimic_joint;
