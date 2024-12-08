@@ -64,6 +64,32 @@ int main(int argc, char ** argv)
     RCLCPP_WARN(cm->get_logger(), "Unable to lock the memory : '%s'", message.c_str());
   }
 
+<<<<<<< HEAD
+=======
+  rclcpp::Parameter cpu_affinity_param;
+  if (cm->get_parameter("cpu_affinity", cpu_affinity_param))
+  {
+    std::vector<int> cpus = {};
+    if (cpu_affinity_param.get_type() == rclcpp::ParameterType::PARAMETER_INTEGER)
+    {
+      cpus = {static_cast<int>(cpu_affinity_param.as_int())};
+    }
+    else if (cpu_affinity_param.get_type() == rclcpp::ParameterType::PARAMETER_INTEGER_ARRAY)
+    {
+      const auto cpu_affinity_param_array = cpu_affinity_param.as_integer_array();
+      std::for_each(
+        cpu_affinity_param_array.begin(), cpu_affinity_param_array.end(),
+        [&cpus](int cpu) { cpus.push_back(static_cast<int>(cpu)); });
+    }
+    const auto affinity_result = realtime_tools::set_current_thread_affinity(cpus);
+    if (!affinity_result.first)
+    {
+      RCLCPP_WARN(
+        cm->get_logger(), "Unable to set the CPU affinity : '%s'", affinity_result.second.c_str());
+    }
+  }
+
+>>>>>>> 6e896bf ([CI] Add clang job, setup concurrency, use rt_tools humble branch (#1910))
   RCLCPP_INFO(cm->get_logger(), "update rate is %d Hz", cm->get_update_rate());
   const int thread_priority = cm->get_parameter_or<int>("thread_priority", kSchedPriority);
   RCLCPP_INFO(

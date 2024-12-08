@@ -308,7 +308,7 @@ class DummySystem : public hardware_interface::SystemInterface
       return hardware_interface::return_type::ERROR;
     }
 
-    for (auto i = 0; i < 3; ++i)
+    for (size_t i = 0; i < 3; ++i)
     {
       position_state_[i] += velocity_command_[0];
       velocity_state_[i] = velocity_command_[0];
@@ -318,7 +318,7 @@ class DummySystem : public hardware_interface::SystemInterface
 
   CallbackReturn on_shutdown(const rclcpp_lifecycle::State & /*previous_state*/) override
   {
-    for (auto i = 0ul; i < 3; ++i)
+    for (size_t i = 0; i < 3; ++i)
     {
       velocity_state_[i] = 0.0;
     }
@@ -344,9 +344,121 @@ private:
     std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
     std::numeric_limits<double>::quiet_NaN()};
   std::array<double, 3> velocity_state_ = {
+<<<<<<< HEAD
     std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
     std::numeric_limits<double>::quiet_NaN()};
   std::array<double, 3> velocity_command_ = {0.0, 0.0, 0.0};
+=======
+    {std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
+     std::numeric_limits<double>::quiet_NaN()}};
+  std::array<double, 3> velocity_command_ = {{0.0, 0.0, 0.0}};
+
+  // Helper variables to initiate error on read
+  unsigned int read_calls_ = 0;
+  unsigned int write_calls_ = 0;
+  bool recoverable_error_happened_ = false;
+};
+// END
+
+class DummySystemDefault : public hardware_interface::SystemInterface
+{
+  CallbackReturn on_init(const hardware_interface::HardwareInfo & info) override
+  {
+    if (
+      hardware_interface::SystemInterface::on_init(info) !=
+      hardware_interface::CallbackReturn::SUCCESS)
+    {
+      return hardware_interface::CallbackReturn::ERROR;
+    }
+    return CallbackReturn::SUCCESS;
+  }
+
+  CallbackReturn on_configure(const rclcpp_lifecycle::State & /*previous_state*/) override
+  {
+    for (auto i = 0ul; i < 3; ++i)
+    {
+      set_state(position_states_[i], 0.0);
+      set_state(velocity_states_[i], 0.0);
+    }
+    // reset command only if error is initiated
+    if (recoverable_error_happened_)
+    {
+      for (auto i = 0ul; i < 3; ++i)
+      {
+        set_command(velocity_commands_[i], 0.0);
+      }
+    }
+
+    read_calls_ = 0;
+    write_calls_ = 0;
+
+    return CallbackReturn::SUCCESS;
+  }
+
+  std::string get_name() const override { return "DummySystemDefault"; }
+
+  hardware_interface::return_type read(
+    const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
+  {
+    ++read_calls_;
+    if (read_calls_ == TRIGGER_READ_WRITE_ERROR_CALLS)
+    {
+      return hardware_interface::return_type::ERROR;
+    }
+
+    // no-op, state is getting propagated within write.
+    return hardware_interface::return_type::OK;
+  }
+
+  hardware_interface::return_type write(
+    const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
+  {
+    ++write_calls_;
+    if (write_calls_ == TRIGGER_READ_WRITE_ERROR_CALLS)
+    {
+      return hardware_interface::return_type::ERROR;
+    }
+
+    for (size_t i = 0; i < 3; ++i)
+    {
+      auto current_pos = get_state(position_states_[i]);
+      set_state(position_states_[i], current_pos + get_command(velocity_commands_[i]));
+      set_state(velocity_states_[i], get_command(velocity_commands_[i]));
+    }
+    return hardware_interface::return_type::OK;
+  }
+
+  CallbackReturn on_shutdown(const rclcpp_lifecycle::State & /*previous_state*/) override
+  {
+    for (const auto & velocity_state : velocity_states_)
+    {
+      set_state(velocity_state, 0.0);
+    }
+    return CallbackReturn::SUCCESS;
+  }
+
+  CallbackReturn on_error(const rclcpp_lifecycle::State & /*previous_state*/) override
+  {
+    if (!recoverable_error_happened_)
+    {
+      recoverable_error_happened_ = true;
+      return CallbackReturn::SUCCESS;
+    }
+    else
+    {
+      return CallbackReturn::ERROR;
+    }
+    return CallbackReturn::FAILURE;
+  }
+
+private:
+  std::vector<std::string> position_states_ = {
+    "joint1/position", "joint2/position", "joint3/position"};
+  std::vector<std::string> velocity_states_ = {
+    "joint1/velocity", "joint2/velocity", "joint3/velocity"};
+  std::vector<std::string> velocity_commands_ = {
+    "joint1/velocity", "joint2/velocity", "joint3/velocity"};
+>>>>>>> 6e896bf ([CI] Add clang job, setup concurrency, use rt_tools humble branch (#1910))
 
   // Helper variables to initiate error on read
   unsigned int read_calls_ = 0;

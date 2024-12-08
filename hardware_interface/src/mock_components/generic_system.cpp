@@ -144,7 +144,11 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
       custom_interface_with_following_offset_ = it->second;
     }
   }
+<<<<<<< HEAD
   // its extremlly improbably that std::distance results int this value - therefore default
+=======
+  // it's extremely improbable that std::distance results in this value - therefore default
+>>>>>>> 6e896bf ([CI] Add clang job, setup concurrency, use rt_tools humble branch (#1910))
   index_custom_interface_with_following_offset_ = std::numeric_limits<size_t>::max();
 
   // Initialize storage for standard interfaces
@@ -210,9 +214,15 @@ CallbackReturn GenericSystem::on_init(const hardware_interface::HardwareInfo & i
     if (if_it != other_interfaces_.end())
     {
       index_custom_interface_with_following_offset_ =
+<<<<<<< HEAD
         std::distance(other_interfaces_.begin(), if_it);
       RCUTILS_LOG_INFO_NAMED(
         "mock_generic_system", "Custom interface with following offset '%s' found at index: %zu.",
+=======
+        static_cast<size_t>(std::distance(other_interfaces_.begin(), if_it));
+      RCLCPP_INFO(
+        get_logger(), "Custom interface with following offset '%s' found at index: %zu.",
+>>>>>>> 6e896bf ([CI] Add clang job, setup concurrency, use rt_tools humble branch (#1910))
         custom_interface_with_following_offset_.c_str(),
         index_custom_interface_with_following_offset_);
     }
@@ -395,7 +405,12 @@ return_type GenericSystem::prepare_command_mode_switch(
 
     if (joint_it_found != info_.joints.end())
     {
+<<<<<<< HEAD
       const size_t joint_index = std::distance(info_.joints.begin(), joint_it_found);
+=======
+      const size_t joint_index =
+        static_cast<size_t>(std::distance(info.joints.begin(), joint_it_found));
+>>>>>>> 6e896bf ([CI] Add clang job, setup concurrency, use rt_tools humble branch (#1910))
       if (joint_found_in_x_requests_[joint_index] == 0)
       {
         joint_found_in_x_requests_[joint_index] = FOUND_ONCE_FLAG;
@@ -483,7 +498,12 @@ return_type GenericSystem::perform_command_mode_switch(
 
     if (joint_it_found != info_.joints.end())
     {
+<<<<<<< HEAD
       const size_t joint_index = std::distance(info_.joints.begin(), joint_it_found);
+=======
+      const size_t joint_index =
+        static_cast<size_t>(std::distance(info.joints.begin(), joint_it_found));
+>>>>>>> 6e896bf ([CI] Add clang job, setup concurrency, use rt_tools humble branch (#1910))
 
       if (key == info_.joints[joint_index].name + "/" + hardware_interface::HW_IF_POSITION)
       {
@@ -673,7 +693,7 @@ bool GenericSystem::get_interface(
   auto it = std::find(interface_list.begin(), interface_list.end(), interface_name);
   if (it != interface_list.end())
   {
-    auto j = std::distance(interface_list.begin(), it);
+    auto j = static_cast<size_t>(std::distance(interface_list.begin(), it));
     interfaces.emplace_back(name, *it, &values[j][vector_index]);
     return true;
   }
@@ -706,7 +726,7 @@ void GenericSystem::initialize_storage_vectors(
       // If interface name is found in the interfaces list
       if (it != interfaces.end())
       {
-        auto index = std::distance(interfaces.begin(), it);
+        auto index = static_cast<size_t>(std::distance(interfaces.begin(), it));
 
         // Check the initial_value param is used
         if (!interface.initial_value.empty())
