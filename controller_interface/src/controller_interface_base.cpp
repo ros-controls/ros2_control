@@ -34,7 +34,9 @@ return_type ControllerInterfaceBase::init(
 
   try
   {
-    auto_declare<int>("update_rate", update_rate_);
+    // no rclcpp::ParameterValue unsigned int specialization
+    auto_declare<int>("update_rate", static_cast<int>(update_rate_));
+
     auto_declare<bool>("is_async", false);
     auto_declare<int>("thread_priority", 50);
   }
@@ -123,8 +125,8 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
   }
   if (is_async_)
   {
-    const unsigned int thread_priority =
-      static_cast<unsigned int>(get_node()->get_parameter("thread_priority").as_int());
+    const int thread_priority =
+      static_cast<int>(get_node()->get_parameter("thread_priority").as_int());
     RCLCPP_INFO(
       get_node()->get_logger(), "Starting async handler with scheduler priority: %d",
       thread_priority);
