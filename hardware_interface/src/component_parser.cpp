@@ -174,7 +174,7 @@ std::size_t parse_size_attribute(const tinyxml2::XMLElement * elem)
   std::regex int_re("[1-9][0-9]*");
   if (std::regex_match(s, int_re))
   {
-    size = std::stoi(s);
+    size = static_cast<size_t>(std::stoi(s));
   }
   else
   {
