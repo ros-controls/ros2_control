@@ -33,7 +33,15 @@ return_type ControllerInterfaceBase::init(
 
   try
   {
+<<<<<<< HEAD
     auto_declare<int>("update_rate", 0);
+=======
+    // no rclcpp::ParameterValue unsigned int specialization
+    auto_declare<int>("update_rate", static_cast<int>(update_rate_));
+
+    auto_declare<bool>("is_async", false);
+    auto_declare<int>("thread_priority", 50);
+>>>>>>> 6e896bf ([CI] Add clang job, setup concurrency, use rt_tools humble branch (#1910))
   }
   catch (const std::exception & e)
   {
@@ -85,6 +93,24 @@ const rclcpp_lifecycle::State & ControllerInterfaceBase::configure()
   {
     update_rate_ = static_cast<unsigned int>(get_node()->get_parameter("update_rate").as_int());
   }
+<<<<<<< HEAD
+=======
+  if (is_async_)
+  {
+    const int thread_priority =
+      static_cast<int>(get_node()->get_parameter("thread_priority").as_int());
+    RCLCPP_INFO(
+      get_node()->get_logger(), "Starting async handler with scheduler priority: %d",
+      thread_priority);
+    async_handler_ = std::make_unique<realtime_tools::AsyncFunctionHandler<return_type>>();
+    async_handler_->init(
+      std::bind(
+        &ControllerInterfaceBase::update, this, std::placeholders::_1, std::placeholders::_2),
+      thread_priority);
+    async_handler_->start_thread();
+  }
+  trigger_stats_.reset();
+>>>>>>> 6e896bf ([CI] Add clang job, setup concurrency, use rt_tools humble branch (#1910))
 
   return get_node()->configure();
 }

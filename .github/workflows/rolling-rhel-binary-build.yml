@@ -17,6 +17,13 @@ on:
     # Run every day to detect flakiness and broken dependencies
     - cron: '03 1 * * *'
 
+<<<<<<< HEAD
+=======
+concurrency:
+  # cancel previous runs of the same workflow, except for pushes on master branch
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, '/refs/heads') }}
+>>>>>>> 6e896bf ([CI] Add clang job, setup concurrency, use rt_tools humble branch (#1910))
 
 jobs:
   rhel_semi_binary_build:
