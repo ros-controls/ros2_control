@@ -28,6 +28,11 @@ on:
       - 'ros2_control.humble.repos'
       - 'codecov.yml'
 
+concurrency:
+  # cancel previous runs of the same workflow, except for pushes on humble branch
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, '/refs/heads') }}
+
 jobs:
   coverage_humble:
     uses: ros-controls/ros2_control_ci/.github/workflows/reusable-build-coverage.yml@master
